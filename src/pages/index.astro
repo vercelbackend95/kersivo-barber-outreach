@@ -2,6 +2,7 @@
 import "../styles/tokens.css";
 import "../styles/global.css";
 import "../styles/components/buttons.css";
+import "../styles/components/hero.css";
 ---
 
 <html lang="pl">
@@ -14,54 +15,139 @@ import "../styles/components/buttons.css";
 		<title>Kersivo Barber Outreach</title>
 	</head>
 	<body>
-		<main class="container home">
-			<section class="surface home__hero">
-				<p class="home__tag">Global style foundation</p>
-				<h1>Kersivo Barber Outreach</h1>
-				<p>
-					To jest pełny, globalny system typografii i stylistyki: ostre krawędzie, mocny kontrast,
-					jeden akcent kolorystyczny i konsekwentne CTA.
-				</p>
-				<p class="muted">Nagłówki: Bebas Neue. Body/UI: Inter. Zero pills.</p>
-				<div class="home__buttons">
-					<button class="btn btn--primary">Umów demo</button>
-					<button class="btn btn--secondary">Zobacz ofertę</button>
-					<button class="btn btn--ghost">Dowiedz się więcej</button>
-				</div>
-			</section>
-
-			<section class="home__grid">
-				<article class="surface home__card">
-					<h2>Typografia</h2>
-					<h3>Hierarchy preview</h3>
-					<p>
-						Treść body ma spokojny rytm czytania dzięki line-height opartemu o token i neutralny kolor
-						tła.
-					</p>
-					<ul class="home__list">
-						<li>H1–H3: display, uppercase, tracking.</li>
-						<li>Body/UI: Inter, czytelna grubość i spacing.</li>
-						<li>Muted copy: token <code>--muted</code>.</li>
-					</ul>
-				</article>
-
-				<article class="surface home__card">
-					<h2>CTA States</h2>
-					<p>
-						Wszystkie warianty przycisków działają na tokenach i obsługują stany: hover, active,
-						disabled oraz focus-visible.
-					</p>
-					<div class="home__actions">
-						<button class="btn btn--primary">Primary</button>
-						<button class="btn btn--secondary">Secondary</button>
-						<button class="btn btn--ghost">Ghost</button>
-						<button class="btn btn--primary" disabled>Disabled</button>
+		<main class="hero103">
+			<section class="hero103__section">
+				<div class="container hero103__layout">
+					<div class="hero103__content">
+						<p class="hero103__eyebrow">Kersivo Barber Outreach</p>
+						<h1>Zdobądź więcej klientów dla swojego barbershopu</h1>
+						<p class="hero103__lead">
+							Budujemy przewidywalny system lead generation dla barberów — szybkie wdrożenie, jasny
+							koszt i skalowanie, które naprawdę działa.
+						</p>
+						<div class="hero103__actions">
+							<a class="btn btn--primary" href="#">Umów demo</a>
+							<a class="btn btn--ghost hero103__guide" href="#">
+								Przewodnik po outreachu dla barberów
+								<span aria-hidden="true" class="hero103__arrow">→</span>
+							</a>
+						</div>
 					</div>
-					<p class="muted">
-						Link accent test:
-						<a href="#">sprawdź styl linków i focus ring</a>
-					</p>
-				</article>
+
+					<div class="hero103__media" aria-hidden="true">
+						<div class="hero103__image hero103__image--main">
+							<img
+								src="https://deifkwefumgah.cloudfront.net/shadcnblocks/block/placeholder-1.svg"
+								alt=""
+								loading="lazy"
+							/>
+						</div>
+						<div class="hero103__image hero103__image--top-left">
+							<img
+								src="https://deifkwefumgah.cloudfront.net/shadcnblocks/block/placeholder-2.svg"
+								alt=""
+								loading="lazy"
+							/>
+						</div>
+						<div class="hero103__image hero103__image--bottom-left">
+							<img
+								src="https://deifkwefumgah.cloudfront.net/shadcnblocks/block/placeholder-3.svg"
+								alt=""
+								loading="lazy"
+							/>
+						</div>
+						<div class="hero103__image hero103__image--right">
+							<img
+								src="https://deifkwefumgah.cloudfront.net/shadcnblocks/block/placeholder-4.svg"
+								alt=""
+								loading="lazy"
+							/>
+						</div>
+					</div>
+				</div>
+
+				<div class="hero103__brands">
+					<p>Zaufali nam najszybciej rosnący barberzy i studia premium</p>
+					<div class="hero103__marquee" aria-label="Partnerzy technologiczni">
+						<div class="hero103__marquee-inner">
+							<ul class="hero103__track" role="list">
+								<li>
+									<img
+										src="https://deifkwefumgah.cloudfront.net/shadcnblocks/block/logos/react-wordmark-white.svg"
+										alt="React"
+										loading="lazy"
+									/>
+								</li>
+								<li>
+									<img
+										src="https://deifkwefumgah.cloudfront.net/shadcnblocks/block/logos/shadcn-ui-wordmark-white.svg"
+										alt="Shadcn UI"
+										loading="lazy"
+									/>
+								</li>
+								<li>
+									<img
+										src="https://deifkwefumgah.cloudfront.net/shadcnblocks/block/logos/supabase-wordmark-white.svg"
+										alt="Supabase"
+										loading="lazy"
+									/>
+								</li>
+								<li>
+									<img
+										src="https://deifkwefumgah.cloudfront.net/shadcnblocks/block/logos/tailwind-wordmark-white.svg"
+										alt="Tailwind CSS"
+										loading="lazy"
+									/>
+								</li>
+								<li>
+									<img
+										src="https://deifkwefumgah.cloudfront.net/shadcnblocks/block/logos/vercel-wordmark-white.svg"
+										alt="Vercel"
+										loading="lazy"
+									/>
+								</li>
+							</ul>
+
+							<ul class="hero103__track" role="list" aria-hidden="true">
+								<li>
+									<img
+										src="https://deifkwefumgah.cloudfront.net/shadcnblocks/block/logos/react-wordmark-white.svg"
+										alt=""
+										loading="lazy"
+									/>
+								</li>
+								<li>
+									<img
+										src="https://deifkwefumgah.cloudfront.net/shadcnblocks/block/logos/shadcn-ui-wordmark-white.svg"
+										alt=""
+										loading="lazy"
+									/>
+								</li>
+								<li>
+									<img
+										src="https://deifkwefumgah.cloudfront.net/shadcnblocks/block/logos/supabase-wordmark-white.svg"
+										alt=""
+										loading="lazy"
+									/>
+								</li>
+								<li>
+									<img
+										src="https://deifkwefumgah.cloudfront.net/shadcnblocks/block/logos/tailwind-wordmark-white.svg"
+										alt=""
+										loading="lazy"
+									/>
+								</li>
+								<li>
+									<img
+										src="https://deifkwefumgah.cloudfront.net/shadcnblocks/block/logos/vercel-wordmark-white.svg"
+										alt=""
+										loading="lazy"
+									/>
+								</li>
+							</ul>
+						</div>
+					</div>
+				</div>
 			</section>
 		</main>
 	</body>
