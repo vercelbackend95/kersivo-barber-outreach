@@ -1,0 +1,116 @@
+---
+const comparisonRows = [
+  {
+    feature: "Lead Qualification",
+    icon: "👥",
+    kersivo: "Barber-focused lead scoring and intent filtering",
+    competitor: "Generic contact forms with no fit scoring",
+    kersivoPositive: true,
+    competitorPositive: false,
+  },
+  {
+    feature: "Brand Customization",
+    icon: "🏷️",
+    kersivo: "Full white-label scripts and outreach voice",
+    competitor: "Basic template edits only",
+    kersivoPositive: true,
+    competitorPositive: true,
+  },
+  {
+    feature: "Automation & Integrations",
+    icon: "⚙️",
+    kersivo: "CRM-ready workflows and clear API handoff",
+    competitor: "Limited or manual integrations",
+    kersivoPositive: true,
+    competitorPositive: false,
+  },
+  {
+    feature: "Performance Reporting",
+    icon: "📈",
+    kersivo: "Revenue-focused reporting built for owners",
+    competitor: "Clicks and vanity metrics",
+    kersivoPositive: true,
+    competitorPositive: false,
+    badge: "New",
+  },
+  {
+    feature: "Support",
+    icon: "🎧",
+    kersivo: "Dedicated support with strategic check-ins",
+    competitor: "Ticket-based support only",
+    kersivoPositive: true,
+    competitorPositive: false,
+  },
+];
+---
+
+<section class="compare3" aria-label="Comparison section">
+  <div class="container">
+    <div class="compare3__header">
+      <p class="compare3__eyebrow">Comparison</p>
+      <h2>See How Kersivo Compares</h2>
+      <p class="compare3__lead">
+        Discover why barbershop owners choose Kersivo over generic outreach services.
+      </p>
+    </div>
+
+    <div class="compare3__table-wrap">
+      <div class="compare3__table" role="table" aria-label="Kersivo vs alternatives">
+        <div class="compare3__cell compare3__cell--head"></div>
+        <div class="compare3__cell compare3__cell--brand compare3__cell--highlight" role="columnheader">
+          <img
+            src="https://deifkwefumgah.cloudfront.net/shadcnblocks/block/block-1.svg"
+            alt="Kersivo logo"
+            class="compare3__logo"
+            loading="lazy"
+          />
+          <p class="compare3__brand-name">Kersivo</p>
+          <p class="compare3__brand-copy">Built for barber outreach and booked appointments</p>
+        </div>
+        <div class="compare3__cell compare3__cell--brand" role="columnheader">
+          <img
+            src="https://deifkwefumgah.cloudfront.net/shadcnblocks/block/block-2.svg"
+            alt="Other agencies logo"
+            class="compare3__logo"
+            loading="lazy"
+          />
+          <p class="compare3__brand-name">Typical Agencies</p>
+          <p class="compare3__brand-copy">Broad marketing support for many niches</p>
+        </div>
+
+        {
+          comparisonRows.map((row) => (
+            <>
+              <div class="compare3__cell compare3__cell--feature" role="rowheader">
+                <span class="compare3__feature-icon" aria-hidden="true">{row.icon}</span>
+                <span>{row.feature}</span>
+                {row.badge && <span class="compare3__badge">{row.badge}</span>}
+              </div>
+              <div class="compare3__cell compare3__cell--highlight compare3__cell--value" role="cell">
+                <span class={`compare3__status ${row.kersivoPositive ? "is-positive" : "is-negative"}`} aria-hidden="true">
+                  {row.kersivoPositive ? "✓" : "—"}
+                </span>
+                <span>{row.kersivo}</span>
+              </div>
+              <div class="compare3__cell compare3__cell--value" role="cell">
+                <span
+                  class={`compare3__status ${row.competitorPositive ? "is-positive" : "is-negative"}`}
+                  aria-hidden="true"
+                >
+                  {row.competitorPositive ? "✓" : "—"}
+                </span>
+                <span>{row.competitor}</span>
+              </div>
+            </>
+          ))
+        }
+
+        <div class="compare3__cell"></div>
+        <div class="compare3__cell compare3__cell--highlight compare3__cell--cta">
+          <a class="btn btn--primary compare3__button" href="#">Book a Strategy Call</a>
+        </div>
+        <div class="compare3__cell"></div>
+      </div>
+    </div>
+  </div>
+</section>
