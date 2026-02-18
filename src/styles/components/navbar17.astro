@@ -1,0 +1,137 @@
+---
+const navLogo = {
+  url: "#",
+  src: "https://deifkwefumgah.cloudfront.net/shadcnblocks/block/logos/shadcnblockscom-icon.svg",
+  alt: "Kersivo logo",
+  title: "Kersivo",
+};
+
+const navItems = [
+  { name: "Home", link: "#" },
+  { name: "Services", link: "#" },
+  { name: "Pricing", link: "#" },
+  { name: "Contact", link: "#" },
+];
+---
+
+<header class="navbar17" data-navbar17>
+  <div class="container navbar17__wrap">
+    <a href={navLogo.url} class="navbar17__brand" aria-label="Kersivo home">
+      <img src={navLogo.src} alt={navLogo.alt} width="32" height="32" loading="lazy" />
+      <span>{navLogo.title}</span>
+    </a>
+
+    <nav class="navbar17__desktop" aria-label="Primary">
+      <ul class="navbar17__list" data-nav-list>
+        {navItems.map((item, index) => (
+          <li>
+            <a
+              href={item.link}
+              class={`navbar17__link ${index === 0 ? "is-active" : ""}`}
+              data-nav-item
+              data-nav-name={item.name}
+            >
+              {item.name}
+            </a>
+          </li>
+        ))}
+        <span class="navbar17__indicator" data-nav-indicator aria-hidden="true"></span>
+      </ul>
+    </nav>
+
+    <div class="navbar17__actions">
+      <a href="#" class="btn btn--secondary">Sign Up</a>
+    </div>
+
+    <button class="navbar17__toggle" type="button" aria-expanded="false" aria-controls="mobile-menu" data-nav-toggle>
+      <span class="navbar17__toggle-icon" aria-hidden="true"></span>
+      <span class="sr-only">Toggle navigation menu</span>
+    </button>
+  </div>
+
+  <nav id="mobile-menu" class="navbar17__mobile" aria-label="Mobile primary" data-mobile-nav hidden>
+    <ul>
+      {navItems.map((item, index) => (
+        <li>
+          <a
+            href={item.link}
+            class={`navbar17__mobile-link ${index === 0 ? "is-active" : ""}`}
+            data-mobile-item
+            data-nav-name={item.name}
+          >
+            {item.name}
+          </a>
+        </li>
+      ))}
+      <li class="navbar17__mobile-cta-wrap">
+        <a href="#" class="btn btn--secondary navbar17__mobile-cta">Sign Up</a>
+      </li>
+    </ul>
+  </nav>
+</header>
+
+<script>
+  const navbar = document.querySelector("[data-navbar17]");
+
+  if (navbar) {
+    const links = Array.from(navbar.querySelectorAll("[data-nav-item]"));
+    const mobileLinks = Array.from(navbar.querySelectorAll("[data-mobile-item]"));
+    const indicator = navbar.querySelector("[data-nav-indicator]");
+    const navList = navbar.querySelector("[data-nav-list]");
+    const toggle = navbar.querySelector("[data-nav-toggle]");
+    const mobileNav = navbar.querySelector("[data-mobile-nav]");
+
+    const setActive = (name) => {
+      links.forEach((link) => {
+        link.classList.toggle("is-active", link.dataset.navName === name);
+      });
+
+      mobileLinks.forEach((link) => {
+        link.classList.toggle("is-active", link.dataset.navName === name);
+      });
+
+      const activeDesktop = links.find((link) => link.classList.contains("is-active"));
+
+      if (activeDesktop instanceof HTMLElement && indicator instanceof HTMLElement && navList instanceof HTMLElement) {
+        const listRect = navList.getBoundingClientRect();
+        const activeRect = activeDesktop.getBoundingClientRect();
+
+        indicator.style.width = `${activeRect.width}px`;
+        indicator.style.transform = `translateX(${activeRect.left - listRect.left}px)`;
+      }
+    };
+
+    links.forEach((link) => {
+      link.addEventListener("click", () => {
+        setActive(link.dataset.navName || "");
+      });
+    });
+
+    mobileLinks.forEach((link) => {
+      link.addEventListener("click", () => {
+        setActive(link.dataset.navName || "");
+        if (toggle instanceof HTMLButtonElement && mobileNav instanceof HTMLElement) {
+          toggle.setAttribute("aria-expanded", "false");
+          mobileNav.hidden = true;
+        }
+      });
+    });
+
+    if (toggle instanceof HTMLButtonElement && mobileNav instanceof HTMLElement) {
+      toggle.addEventListener("click", () => {
+        const isOpen = toggle.getAttribute("aria-expanded") === "true";
+        toggle.setAttribute("aria-expanded", String(!isOpen));
+        mobileNav.hidden = isOpen;
+      });
+    }
+
+    window.addEventListener("resize", () => {
+      const activeDesktop = links.find((link) => link.classList.contains("is-active"));
+      if (activeDesktop) {
+        setActive(activeDesktop.dataset.navName || "");
+      }
+    });
+
+    setActive(links[0]?.dataset.navName || "");
+  }
+</script>
