@@ -1,0 +1,100 @@
+---
+interface Props {
+  className?: string;
+}
+
+const { className = "" } = Astro.props as Props;
+---
+
+<section class={`feature228 ${className}`.trim()} aria-labelledby="feature228-title">
+  <div class="container">
+    <div class="feature228__layout">
+      <div class="feature228__content">
+        <h2 id="feature228-title">
+          Smart Outreach,
+          <br />
+          Smart Growth
+        </h2>
+        <p class="feature228__lead">
+          Transform your barbershop pipeline with intelligent automation that adapts to your workflow
+          and enhances daily lead conversion.
+        </p>
+
+        <div class="feature228__grid">
+          <article class="feature228__item">
+            <span class="feature228__icon" aria-hidden="true">✦</span>
+            <h3>Intelligent Messaging</h3>
+            <p>
+              Control timing, channel, and follow-up logic with smart messaging that responds to each
+              lead stage and improves consistency.
+            </p>
+          </article>
+
+          <article class="feature228__item">
+            <span class="feature228__icon" aria-hidden="true">◉</span>
+            <h3>Advanced Security</h3>
+            <p>
+              Monitor every conversation from one place with alerts, status visibility, and protection
+              against dropped opportunities.
+            </p>
+          </article>
+
+          <article class="feature228__item">
+            <div class="feature228__badges" aria-hidden="true">
+              <span class="feature228__badge feature228__badge--accent">Apple</span>
+              <span class="feature228__badge">Google</span>
+            </div>
+            <h3>Ecosystem Integration</h3>
+            <p>
+              Seamlessly connect with Apple and Google ecosystems for a unified campaign workflow
+              across your key tools.
+            </p>
+          </article>
+
+          <article class="feature228__item">
+            <div class="feature228__badges" aria-hidden="true">
+              <span class="feature228__badge">X</span>
+              <span class="feature228__badge">Facebook</span>
+            </div>
+            <h3>Social Connectivity</h3>
+            <p>
+              Publish and distribute content across major social platforms including X and Facebook with
+              one-click consistency.
+            </p>
+          </article>
+        </div>
+      </div>
+
+      <div class="feature228__media" aria-hidden="true">
+        <div class="feature228__media-column">
+          <img
+            src="https://deifkwefumgah.cloudfront.net/shadcnblocks/block/placeholder-2.svg"
+            alt=""
+            loading="lazy"
+            class="feature228__img feature228__img--top"
+          />
+          <img
+            src="https://deifkwefumgah.cloudfront.net/shadcnblocks/block/placeholder-3.svg"
+            alt=""
+            loading="lazy"
+            class="feature228__img feature228__img--bottom"
+          />
+        </div>
+
+        <div class="feature228__phone-shell">
+          <div class="feature228__phone-body">
+            <div class="feature228__phone-speaker" />
+            <div class="feature228__phone-screen-wrap">
+              <img
+                src="https://deifkwefumgah.cloudfront.net/shadcnblocks/block/placeholder-1.svg"
+                alt=""
+                loading="lazy"
+                class="feature228__phone-screen"
+              />
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
