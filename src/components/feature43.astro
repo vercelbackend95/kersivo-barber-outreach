@@ -1,0 +1,92 @@
+---
+interface Feature {
+  heading: string;
+  description: string;
+  icon: string;
+}
+
+interface Props {
+  title?: string;
+  features?: Feature[];
+  buttonText?: string;
+  buttonUrl?: string;
+}
+
+const {
+  title = "Fully Featured Outreach System for Modern Barbershops",
+  features = [
+    {
+      heading: "Quality",
+      description:
+        "Built with attention to detail and proven outreach best practices. Every touchpoint is refined for reliability and consistent booking performance.",
+      icon: "↗",
+    },
+    {
+      heading: "Experience",
+      description:
+        "Crafted for real barbershop workflows. From first contact to booked appointment, every step is intuitive, clear, and easy to scale.",
+      icon: "▦",
+    },
+    {
+      heading: "Support",
+      description:
+        "Get strategic guidance, practical documentation, and responsive human support so your team keeps momentum without guesswork.",
+      icon: "◉",
+    },
+    {
+      heading: "Innovation",
+      description:
+        "Stay ahead with modern automation patterns and conversion-first messaging frameworks designed for the barber market.",
+      icon: "✦",
+    },
+    {
+      heading: "Results",
+      description:
+        "Use a system tested in real campaigns that prioritizes outcomes you care about: qualified leads, booked calls, and returning clients.",
+      icon: "▣",
+    },
+    {
+      heading: "Efficiency",
+      description:
+        "Launch faster with lean execution and low-friction workflows that save time while improving campaign consistency.",
+      icon: "⌁",
+    },
+  ],
+  buttonText = "See All Features",
+  buttonUrl = "#",
+} = Astro.props as Props;
+---
+
+<section class="feature43" aria-labelledby="feature43-title">
+  <div class="container feature43__container">
+    {
+      title && (
+        <div class="feature43__header">
+          <h2 id="feature43-title">{title}</h2>
+        </div>
+      )
+    }
+
+    <div class="feature43__grid">
+      {
+        features.map((feature) => (
+          <article class="feature43__card">
+            <div class="feature43__icon-wrap" aria-hidden="true">
+              <span class="feature43__icon">{feature.icon}</span>
+            </div>
+            <h3>{feature.heading}</h3>
+            <p>{feature.description}</p>
+          </article>
+        ))
+      }
+    </div>
+
+    {
+      buttonUrl && (
+        <div class="feature43__actions">
+          <a class="btn btn--secondary feature43__button" href={buttonUrl}>{buttonText}</a>
+        </div>
+      )
+    }
+  </div>
+</section>
