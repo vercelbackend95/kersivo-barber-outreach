@@ -1,0 +1,72 @@
+---
+interface Step {
+  number: string;
+  label: string;
+  title: string;
+  description: string;
+  status: string;
+}
+
+const steps: Step[] = [
+  {
+    number: "01",
+    label: "Message",
+    title: "Tell us what your barbershop needs",
+    description: "Send one message with your goals and we map the fastest outreach setup for your shop.",
+    status: "One message to start",
+  },
+  {
+    number: "02",
+    label: "Build",
+    title: "We build your outreach system",
+    description: "We prepare your scripts, pages, and automation flow so you can review everything before it goes live.",
+    status: "Preview & approve",
+  },
+  {
+    number: "03",
+    label: "Launch",
+    title: "Start getting booked appointments",
+    description: "Once approved, your full barber outreach setup is published and ready to bring in new clients.",
+    status: "Live on your domain",
+  },
+];
+---
+
+<section class="timeline13" aria-labelledby="timeline13-title">
+  <div class="container timeline13__container">
+    <div class="timeline13__intro">
+      <h2 id="timeline13-title">How it works</h2>
+      <p>
+        A simple three-step rollout built for busy barbershop owners.
+      </p>
+    </div>
+
+    <div class="timeline13__surface surface">
+      <div class="timeline13__track" aria-hidden="true">
+        <span class="timeline13__line timeline13__line--base"></span>
+        <span class="timeline13__line timeline13__line--active"></span>
+        {
+          steps.map((step) => (
+            <span class="timeline13__dot" data-step={step.number}></span>
+          ))
+        }
+      </div>
+
+      <div class="timeline13__grid">
+        {
+          steps.map((step) => (
+            <article class="timeline13__step">
+              <div class="timeline13__chip" aria-label={`Step ${step.number}: ${step.label}`}>
+                <span>{step.number}</span>
+                <span>{step.label}</span>
+              </div>
+              <h3>{step.title}</h3>
+              <p>{step.description}</p>
+              <small class="timeline13__status">{step.status}</small>
+            </article>
+          ))
+        }
+      </div>
+    </div>
+  </div>
+</section>
