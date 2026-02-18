@@ -1,0 +1,72 @@
+---
+interface Bullet {
+  text: string;
+}
+
+interface Props {
+  eyebrow?: string;
+  title?: string;
+  highlightedWord?: string;
+  description?: string;
+  bullets?: Bullet[];
+  ctaText?: string;
+  ctaUrl?: string;
+  imageUrl?: string;
+  imageAlt?: string;
+}
+
+const {
+  eyebrow = "Built for Serious Barbershop Owners",
+  title = "Grow reliable monthly income from predictable outreach",
+  highlightedWord = "income",
+  description =
+    "Launch a conversion-focused pipeline without wasting hours on random tactics. We help you get qualified leads and booked appointments every week.",
+  bullets = [
+    { text: "Average 9% lead-to-booking conversion improvement" },
+    { text: "Clear reporting and campaign updates every week" },
+    { text: "Human-crafted messaging tuned for barber clients" },
+  ],
+  ctaText = "Start Now",
+  ctaUrl = "#",
+  imageUrl =
+    "https://images.unsplash.com/photo-1621605815971-fbc98d665033?auto=format&fit=crop&w=1280&q=80",
+  imageAlt = "Barber preparing tools in a modern barbershop",
+} = Astro.props as Props;
+
+const highlightTitle = title.replace(highlightedWord, `<span class=\"hero108__highlight\">${highlightedWord}</span>`);
+---
+
+<section class="hero108" aria-labelledby="hero108-title">
+  <div class="container hero108__layout">
+    <div class="hero108__content">
+      <p class="hero108__eyebrow">{eyebrow}</p>
+      <h2 id="hero108-title" set:html={highlightTitle} />
+      <p class="hero108__description">{description}</p>
+
+      <ul class="hero108__list" aria-label="Core benefits">
+        {
+          bullets.map((bullet) => (
+            <li class="hero108__list-item">
+              <span class="hero108__check" aria-hidden="true">
+                <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                  <path d="M5 12.5L9.2 16.7L19 7" stroke="currentColor" stroke-width="2.5" stroke-linecap="square" stroke-linejoin="miter"></path>
+                </svg>
+              </span>
+              <span>{bullet.text}</span>
+            </li>
+          ))
+        }
+      </ul>
+
+      <a class="btn btn--primary hero108__cta" href={ctaUrl}>
+        <span>{ctaText}</span>
+        <span class="hero108__arrow" aria-hidden="true">→</span>
+      </a>
+    </div>
+
+    <div class="hero108__media">
+      <img src={imageUrl} alt={imageAlt} loading="lazy" />
+      <div class="hero108__overlay" aria-hidden="true"></div>
+    </div>
+  </div>
+</section>
