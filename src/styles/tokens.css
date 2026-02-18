@@ -1,13 +1,14 @@
 :root {
-  --bg: #0c0c0d;
-  --surface: #151516;
-  --fg: #f4f3ef;
-  --muted: #b8b4ab;
-  --border: #2a2a2d;
-  --accent: #f39c12;
-  --accent-contrast: #111111;
-  --accent-hover: #ffb23f;
-  --focus: #ffd27a;
+  --bg: #0b0d10;
+  --surface: #11151b;
+  --fg: #f3f1eb;
+  --muted: #b7bdc7;
+  --border: #252c36;
+  --accent: #d72638;
+  --accent-contrast: #0b0d10;
+  --accent-hover: #ff2e45;
+  --focus: #ff4d5f;
+
 
   --font-heading: "Bebas Neue", "Arial Narrow", Impact, sans-serif;
   --font-body: "Inter", "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
