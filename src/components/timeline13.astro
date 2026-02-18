@@ -32,7 +32,7 @@ const steps: Step[] = [
 ];
 ---
 
-<section class="timeline13" aria-labelledby="timeline13-title">
+<section class="timeline13" aria-labelledby="timeline13-title" data-timeline13>
   <div class="container timeline13__container">
     <div class="timeline13__intro">
       <h2 id="timeline13-title">How it works</h2>
@@ -54,8 +54,11 @@ const steps: Step[] = [
 
       <div class="timeline13__grid">
         {
-          steps.map((step) => (
-            <article class="timeline13__step">
+          steps.map((step, index) => (
+            <article
+              class="timeline13__step"
+              data-timeline13-step={index === 0 ? "first" : undefined}
+            >
               <div class="timeline13__chip" aria-label={`Step ${step.number}: ${step.label}`}>
                 <span>{step.number}</span>
                 <span>{step.label}</span>
@@ -70,3 +73,27 @@ const steps: Step[] = [
     </div>
   </div>
 </section>
+
+<script>
+  const timeline = document.querySelector("[data-timeline13]");
+  const firstStep = timeline?.querySelector('[data-timeline13-step="first"]');
+
+  if (timeline && firstStep) {
+    const observer = new IntersectionObserver(
+      (entries) => {
+        for (const entry of entries) {
+          if (entry.isIntersecting) {
+            timeline.classList.add("is-active");
+            observer.disconnect();
+            break;
+          }
+        }
+      },
+      {
+        threshold: 0.6,
+      },
+    );
+
+    observer.observe(firstStep);
+  }
+</script>

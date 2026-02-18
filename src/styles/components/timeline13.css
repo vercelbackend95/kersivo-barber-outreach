@@ -47,6 +47,11 @@
 
 .timeline13__line--active {
   background: var(--accent);
+  clip-path: inset(0 0 100% 0);
+  animation: none;
+}
+
+.timeline13.is-active .timeline13__line--active {
   animation: timeline13-reveal-mobile 4s linear forwards;
 }
 
@@ -149,6 +154,10 @@
   }
 
   .timeline13__line--active {
+    clip-path: inset(0 100% 0 0);
+  }
+
+  .timeline13.is-active .timeline13__line--active {
     animation: timeline13-reveal-desktop 4s linear forwards;
   }
 
