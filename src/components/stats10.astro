@@ -1,0 +1,52 @@
+---
+const statsData = [
+  {
+    logo: "https://deifkwefumgah.cloudfront.net/shadcnblocks/block/logos/company/fictional-company-logo-1.svg",
+    avatar: "https://deifkwefumgah.cloudfront.net/shadcnblocks/block/avatar-1.webp",
+    avatarFallback: "A",
+    heading: "89%",
+    text: "Stop spending on ads with zero conversions",
+    href: "#",
+  },
+  {
+    logo: "https://deifkwefumgah.cloudfront.net/shadcnblocks/block/logos/company/fictional-company-logo-2.svg",
+    avatar: "https://deifkwefumgah.cloudfront.net/shadcnblocks/block/avatar-2.webp",
+    avatarFallback: "B",
+    heading: "7 HRS",
+    text: "Daily savings on ad management",
+    href: "#",
+  },
+  {
+    logo: "https://deifkwefumgah.cloudfront.net/shadcnblocks/block/logos/company/fictional-company-logo-3.svg",
+    avatar: "https://deifkwefumgah.cloudfront.net/shadcnblocks/block/avatar-3.webp",
+    avatarFallback: "C",
+    heading: "2,540%",
+    text: "Growth in overall client ad investment",
+    href: "#",
+  },
+];
+---
+
+<section class="stats10" aria-label="Campaign performance stats">
+  <div class="container stats10__container">
+    <div class="stats10__grid">
+      {
+        statsData.map(({ logo, avatar, avatarFallback, heading, text, href }, index) => (
+          <a class="stats10__card-link" href={href} aria-label={`Open case study ${index + 1}`}>
+            <article class="stats10__card">
+              <div class="stats10__brand-row">
+                <div class="stats10__avatar-wrap" aria-hidden="true">
+                  <img class="stats10__avatar" src={avatar} alt="" loading="lazy" />
+                  <span class="stats10__avatar-fallback">{avatarFallback}</span>
+                </div>
+                <img class="stats10__logo" src={logo} alt="" loading="lazy" />
+              </div>
+              <p class="stats10__heading">{heading}</p>
+              <p class="stats10__text">{text}</p>
+            </article>
+          </a>
+        ))
+      }
+    </div>
+  </div>
+</section>
