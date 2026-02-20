@@ -1,0 +1,61 @@
+---
+interface CtaButton {
+  text: string;
+  url: string;
+}
+
+interface Props {
+  heading?: string;
+  description?: string;
+  buttons?: {
+    primary?: CtaButton;
+    secondary?: CtaButton;
+  };
+  className?: string;
+}
+
+const {
+  heading = "Ready to Fill More Chairs Every Week?",
+  description =
+    "Book a short strategy call and get a clear outreach plan tailored to your barbershop, local market, and revenue targets.",
+  buttons = {
+    primary: {
+      text: "Book a Strategy Call",
+      url: "#",
+    },
+    secondary: {
+      text: "See How It Works",
+      url: "#",
+    },
+  },
+  className = "",
+} = Astro.props as Props;
+---
+
+<section class={`cta10 ${className}`.trim()} aria-labelledby="cta10-title">
+  <div class="container">
+    <div class="cta10__panel">
+      <div class="cta10__content">
+        <h3 id="cta10-title">{heading}</h3>
+        <p>{description}</p>
+      </div>
+
+      <div class="cta10__actions">
+        {
+          buttons.secondary && (
+            <a href={buttons.secondary.url} class="btn btn--secondary">
+              {buttons.secondary.text}
+            </a>
+          )
+        }
+        {
+          buttons.primary && (
+            <a href={buttons.primary.url} class="btn btn--primary">
+              {buttons.primary.text}
+            </a>
+          )
+        }
+      </div>
+    </div>
+  </div>
+</section>
