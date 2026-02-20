@@ -1,0 +1,94 @@
+---
+interface FaqItem {
+  question: string;
+  answer: string;
+}
+
+interface Props {
+  heading?: string;
+  subHeading?: string;
+  supportHeading?: string;
+  supportText?: string;
+  supportLinkLabel?: string;
+  supportLinkHref?: string;
+  faqs?: FaqItem[];
+}
+
+const {
+  heading = "Common Questions & Answers",
+  subHeading = "Find out all the essential details about our platform and how it can serve your needs.",
+  supportHeading = "Still have questions?",
+  supportText = "We're here to provide clarity and assist with any queries you may have.",
+  supportLinkLabel = "Contact Support",
+  supportLinkHref = "#",
+  faqs = [
+    {
+      question: "What is a FAQ and why is it important?",
+      answer:
+        "FAQ stands for Frequently Asked Questions. It provides answers to common questions about a product or service. A clear FAQ helps visitors get instant information without contacting support.",
+    },
+    {
+      question: "Why should I use a FAQ on my website or app?",
+      answer:
+        "A FAQ gives users quick help 24/7. It improves the customer experience and reduces repetitive support questions so your team can focus on higher-impact conversations.",
+    },
+    {
+      question: "How do I effectively create a FAQ section?",
+      answer:
+        "Start by collecting the most frequent questions from prospects and clients. Then write concise, practical answers in plain language and update them as your offer evolves.",
+    },
+    {
+      question: "What are the benefits of having a well-maintained FAQ section?",
+      answer:
+        "It improves trust, shortens decision time, and lowers support load. A maintained FAQ keeps information accurate and helps users solve issues faster.",
+    },
+    {
+      question: "How should I organize my FAQ for optimal usability?",
+      answer:
+        "Group questions into clear categories and order them by priority. Keep each entry scannable with a short question title and a direct answer.",
+    },
+    {
+      question: "How often should I update my FAQ, and why is it necessary?",
+      answer:
+        "Review your FAQ regularly—especially after changing pricing, onboarding, integrations, or workflows. Current content prevents confusion and keeps conversion friction low.",
+    },
+  ],
+} = Astro.props as Props;
+---
+
+<section class="faq4" aria-labelledby="faq4-title">
+  <div class="container faq4__container">
+    <div class="faq4__header">
+      <p class="faq4__badge">FAQ</p>
+      <h2 id="faq4-title">{heading}</h2>
+      <p>{subHeading}</p>
+    </div>
+
+    <div class="faq4__list" role="list">
+      {
+        faqs.map((faq, index) => (
+          <details class="faq4__item" name="faq4-group" role="listitem">
+            <summary>
+              <span>{faq.question}</span>
+              <span class="faq4__icon" aria-hidden="true">→</span>
+            </summary>
+            <p>{faq.answer}</p>
+          </details>
+        ))
+      }
+    </div>
+
+    <hr class="faq4__separator" />
+
+    <div class="faq4__footer">
+      <div>
+        <h3>{supportHeading}</h3>
+        <p>{supportText}</p>
+      </div>
+      <a href={supportLinkHref} class="faq4__support-link">
+        {supportLinkLabel}
+        <span aria-hidden="true">→</span>
+      </a>
+    </div>
+  </div>
+</section>
