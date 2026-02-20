@@ -1,0 +1,88 @@
+.contact16 {
+  background: var(--bg);
+  padding-block: clamp(3rem, 9vw, 6rem);
+}
+
+.contact16__title {
+  font-size: clamp(2.2rem, 8vw, 5rem);
+}
+
+.contact16__title sup {
+  font-size: 0.5em;
+  top: -0.2em;
+}
+
+.contact16__layout {
+  margin-top: clamp(2rem, 8vw, 5rem);
+  display: grid;
+  gap: var(--space-xl);
+}
+
+.contact16__info {
+  display: grid;
+  gap: var(--space-lg);
+}
+
+.contact16__description {
+  color: color-mix(in srgb, var(--muted) 80%, var(--fg) 20%);
+  max-width: 42ch;
+}
+
+.contact16__links {
+  display: grid;
+  gap: var(--space-sm);
+}
+
+.contact16__links a {
+  color: color-mix(in srgb, var(--fg) 60%, transparent);
+  text-decoration: none;
+  border-bottom: 1px solid transparent;
+  width: fit-content;
+  transition: color 160ms ease, border-color 160ms ease;
+}
+
+.contact16__links a:hover {
+  color: var(--fg);
+  border-color: var(--border);
+}
+
+.contact16__form {
+  display: grid;
+  gap: var(--space-xs);
+}
+
+.contact16__form label {
+  display: block;
+}
+
+.contact16__form input {
+  width: 100%;
+  background: transparent;
+  border: 0;
+  border-bottom: 1px solid color-mix(in srgb, var(--fg) 20%, transparent);
+  padding: 1rem 0;
+  border-radius: 0;
+  color: var(--fg);
+}
+
+.contact16__form input::placeholder {
+  color: color-mix(in srgb, var(--fg) 35%, transparent);
+}
+
+.contact16__form input:focus-visible {
+  outline: 2px solid var(--focus);
+  outline-offset: 4px;
+}
+
+.contact16__submit {
+  margin-top: var(--space-lg);
+  justify-self: start;
+}
+
+@media (min-width: 64rem) {
+  .contact16__layout {
+    grid-template-columns: minmax(0, 24rem) minmax(0, 1fr);
+    align-items: start;
+    gap: 4rem;
+  }
+}
