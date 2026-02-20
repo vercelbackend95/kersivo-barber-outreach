@@ -1,0 +1,136 @@
+.integrations3a {
+  padding-block: clamp(3rem, 8vw, 6rem);
+  background: var(--bg);
+}
+
+.integrations3a__container {
+  display: grid;
+  gap: var(--space-lg);
+}
+
+.integrations3a__header {
+  display: grid;
+  gap: var(--space-xs);
+}
+
+.integrations3a__header h2 {
+  font-size: clamp(2rem, 5vw, 3rem);
+}
+
+.integrations3a__header p {
+  color: var(--muted);
+  max-width: 58ch;
+}
+
+.integrations3a__grid {
+  list-style: none;
+  margin: 0;
+  padding: 1px;
+  display: grid;
+  gap: 1px;
+  background: var(--border);
+}
+
+.integrations3a__item {
+  margin: 0;
+  padding: 0;
+}
+
+.integrations3a__card {
+  height: 100%;
+  display: grid;
+  grid-template-rows: auto 1fr;
+  gap: var(--space-md);
+  padding: var(--space-md);
+  background: var(--surface);
+  border-radius: var(--radius-sm);
+  text-decoration: none;
+  color: var(--fg);
+  transition: background-color 160ms ease;
+}
+
+.integrations3a__card:hover {
+  background: color-mix(in srgb, var(--surface) 78%, var(--fg) 22%);
+}
+
+.integrations3a__card-top {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: var(--space-sm);
+}
+
+.integrations3a__logo {
+  width: 2.25rem;
+  height: 2.25rem;
+}
+
+.integrations3a__logo--invert {
+  filter: invert(1);
+}
+
+.integrations3a__badge {
+  border: 1px solid var(--border);
+  color: var(--fg);
+  background: color-mix(in srgb, var(--accent) 25%, var(--surface));
+  font-size: 0.75rem;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  padding: 0.2rem 0.45rem;
+  border-radius: var(--radius-sm);
+}
+
+.integrations3a__arrow {
+  font-size: 1.2rem;
+  line-height: 1;
+  color: var(--muted);
+  opacity: 0;
+  transform: translateX(-0.15rem);
+  transition: opacity 160ms ease, transform 160ms ease;
+}
+
+.integrations3a__card:hover .integrations3a__arrow,
+.integrations3a__card:focus-visible .integrations3a__arrow {
+  opacity: 1;
+  transform: translateX(0);
+}
+
+.integrations3a__card-copy {
+  display: grid;
+  gap: var(--space-2xs);
+}
+
+.integrations3a__name {
+  font-size: 1rem;
+  font-weight: 700;
+}
+
+.integrations3a__description {
+  font-size: 0.95rem;
+  color: var(--muted);
+}
+
+@media (min-width: 42rem) {
+  .integrations3a__grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .integrations3a__logo {
+    width: 3rem;
+    height: 3rem;
+  }
+}
+
+@media (min-width: 64rem) {
+  .integrations3a__grid {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .integrations3a__card,
+  .integrations3a__arrow {
+    transition: none;
+  }
+}

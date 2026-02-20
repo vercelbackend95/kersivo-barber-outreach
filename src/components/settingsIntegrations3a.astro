@@ -1,0 +1,143 @@
+---
+interface IntegrationItem {
+  image: string;
+  title: string;
+  description: string;
+  isConnected?: boolean;
+  link: string;
+  imageClass?: string;
+}
+
+interface Props {
+  heading?: string;
+  subHeading?: string;
+  integrations?: IntegrationItem[];
+}
+
+const {
+  heading = "Connect your favorite tools",
+  subHeading = "Save time using popular integrations to keep your barber outreach workflow synced.",
+  integrations = [
+    {
+      image: "https://deifkwefumgah.cloudfront.net/shadcnblocks/block/logos/slack-icon.svg",
+      title: "Slack",
+      description: "Send instant lead alerts straight to your team channel.",
+      isConnected: true,
+      link: "#",
+    },
+    {
+      image: "https://deifkwefumgah.cloudfront.net/shadcnblocks/block/mainline/logos/drive.svg",
+      title: "Google Drive",
+      description: "Store scripts, reports, and client assets in one place.",
+      isConnected: true,
+      link: "#",
+    },
+    {
+      image: "https://deifkwefumgah.cloudfront.net/shadcnblocks/block/logos/notion-icon.svg",
+      title: "Notion",
+      description: "Keep your outreach SOPs and campaign notes organized.",
+      isConnected: true,
+      link: "#",
+      imageClass: "integrations3a__logo--invert",
+    },
+    {
+      image: "https://deifkwefumgah.cloudfront.net/shadcnblocks/block/mainline/logos/jira.svg",
+      title: "Jira",
+      description: "Track implementation tasks and monthly improvement sprints.",
+      link: "#",
+    },
+    {
+      image: "https://deifkwefumgah.cloudfront.net/shadcnblocks/block/mainline/logos/asana.svg",
+      title: "Asana",
+      description: "Assign outreach tasks and follow-ups with clear ownership.",
+      link: "#",
+    },
+    {
+      image: "https://deifkwefumgah.cloudfront.net/shadcnblocks/block/logos/dropbox-icon.svg",
+      title: "Dropbox",
+      description: "Share haircut offer creatives and campaign files securely.",
+      link: "#",
+    },
+    {
+      image: "https://deifkwefumgah.cloudfront.net/shadcnblocks/block/logos/figma-icon.svg",
+      title: "Figma",
+      description: "Review and approve ad visuals before launch.",
+      link: "#",
+    },
+    {
+      image: "https://deifkwefumgah.cloudfront.net/shadcnblocks/block/logos/github-icon.svg",
+      title: "GitHub",
+      description: "Version control landing page and automation updates.",
+      isConnected: true,
+      link: "#",
+      imageClass: "integrations3a__logo--invert",
+    },
+    {
+      image: "https://deifkwefumgah.cloudfront.net/shadcnblocks/block/ecommerce/payment-methods/stripe.svg",
+      title: "Stripe",
+      description: "Collect subscription payments with clean reporting.",
+      link: "#",
+    },
+    {
+      image: "https://deifkwefumgah.cloudfront.net/shadcnblocks/block/mainline/logos/confluence.svg",
+      title: "Confluence",
+      description: "Build a shared playbook for outreach execution.",
+      link: "#",
+    },
+    {
+      image: "https://deifkwefumgah.cloudfront.net/shadcnblocks/block/mainline/logos/monday.svg",
+      title: "Monday",
+      description: "Monitor campaign status and onboarding timelines.",
+      link: "#",
+    },
+    {
+      image: "https://deifkwefumgah.cloudfront.net/shadcnblocks/block/mainline/logos/excel.svg",
+      title: "Excel",
+      description: "Analyze conversion data and revenue trends quickly.",
+      isConnected: true,
+      link: "#",
+    },
+  ],
+} = Astro.props as Props;
+---
+
+<section class="integrations3a" aria-labelledby="integrations3a-title">
+  <div class="container integrations3a__container">
+    <div class="integrations3a__header">
+      <h2 id="integrations3a-title">{heading}</h2>
+      <p>{subHeading}</p>
+    </div>
+
+    <ul class="integrations3a__grid">
+      {
+        integrations.map((integration, index) => (
+          <li class="integrations3a__item" key={`${integration.title}-${index}`}>
+            <a class="integrations3a__card" href={integration.link}>
+              <div class="integrations3a__card-top">
+                <img
+                  class:list={["integrations3a__logo", integration.imageClass]}
+                  src={integration.image}
+                  alt={integration.title}
+                  loading="lazy"
+                />
+
+                {
+                  integration.isConnected ? (
+                    <span class="integrations3a__badge">Connected</span>
+                  ) : (
+                    <span class="integrations3a__arrow" aria-hidden="true">→</span>
+                  )
+                }
+              </div>
+
+              <div class="integrations3a__card-copy">
+                <p class="integrations3a__name">{integration.title}</p>
+                <p class="integrations3a__description">{integration.description}</p>
+              </div>
+            </a>
+          </li>
+        ))
+      }
+    </ul>
+  </div>
+</section>
