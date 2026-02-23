@@ -27,7 +27,20 @@ export const POST: APIRoute = async ({ request }) => {
 
   await prisma.rateLimitEvent.create({ data: { ip, action: 'booking_create' } });
 
-  const parsed = bookingCreateSchema.safeParse(await request.json());
+  const rawBody = await request.text();
+  if (!rawBody.trim()) {
+    return new Response(JSON.stringify({ error: 'Request body is required and must be valid JSON.' }), { status: 400 });
+  }
+
+  let payload: unknown;
+  try {
+    payload = JSON.parse(rawBody);
+  } catch {
+    return new Response(JSON.stringify({ error: 'Invalid JSON body.' }), { status: 400 });
+  }
+
+  const parsed = bookingCreateSchema.safeParse(payload);
+
   if (!parsed.success) {
     return new Response(JSON.stringify({ error: 'Invalid request', issues: parsed.error.flatten() }), { status: 400 });
   }

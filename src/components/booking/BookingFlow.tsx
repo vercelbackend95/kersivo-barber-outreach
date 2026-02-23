@@ -65,11 +65,12 @@ export default function BookingFlow({ services, barbers }: Props) {
       setMessage('Please choose a valid date.');
       return;
     }
-
+    const payload = { serviceId, barberId, date: isoDate, time, fullName, email, phone };
     const res = await fetch('/api/bookings/create', {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ serviceId, barberId, date: isoDate, time, fullName, email, phone })
+      headers: { 'content-type': 'application/json' },
+      body: JSON.stringify(payload)
+
     });
     const data = await res.json();
     setMessage(res.ok ? 'Booking created. Check email for confirmation magic link.' : data.error || 'Unable to create booking.');
