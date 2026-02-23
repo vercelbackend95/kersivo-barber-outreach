@@ -4,15 +4,28 @@ import { createPendingBooking } from '../../../lib/booking/service';
 import { checkBookingRateLimit } from '../../../lib/rate-limit/bookingRateLimit';
 import { prisma } from '../../../lib/db/client';
 
-export const POST: APIRoute = async ({ request, clientAddress }) => {
-  const ip = clientAddress ?? request.headers.get('x-forwarded-for') ?? 'unknown';
-  const limit = checkBookingRateLimit(ip.toString());
+const getRequestIp = (request: Request): string => {
+  const forwardedFor = request.headers.get('x-forwarded-for');
+  if (forwardedFor) {
+    const firstIp = forwardedFor.split(',')[0]?.trim();
+    if (firstIp) return firstIp;
+  }
+
+  const realIp = request.headers.get('x-real-ip')?.trim();
+  if (realIp) return realIp;
+
+  return 'local';
+};
+
+export const POST: APIRoute = async ({ request }) => {
+  const ip = getRequestIp(request);
+  const limit = checkBookingRateLimit(ip);
 
   if (!limit.ok) {
     return new Response(JSON.stringify({ error: 'Too many attempts. Try later.', retryAfter: limit.retryAfterSeconds }), { status: 429 });
   }
 
-  await prisma.rateLimitEvent.create({ data: { ip: ip.toString(), action: 'booking_create' } });
+  await prisma.rateLimitEvent.create({ data: { ip, action: 'booking_create' } });
 
   const parsed = bookingCreateSchema.safeParse(await request.json());
   if (!parsed.success) {
