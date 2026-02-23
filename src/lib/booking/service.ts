@@ -196,9 +196,19 @@ export async function cancelByManageToken(token: string) {
 export async function rescheduleByToken(input: { token: string; serviceId: string; barberId: string; date: string; time: string; }) {
   const existing = await resolveManageTokenBooking(input.token);
 
+  if (existing.status === BookingStatus.EXPIRED) {
+    throw new BookingActionError('This booking has expired and can no longer be rescheduled.', 409);
+  }
+
+  if (isCancelledStatus(existing.status)) {
+    throw new BookingActionError(CANCELLED_BOOKING_MESSAGE, 409);
+  }
+
+  if (existing.status !== BookingStatus.CONFIRMED) {
+    throw new BookingActionError('Only confirmed bookings can be rescheduled.', 409);
+  }
 
   const settings = await prisma.shopSettings.findFirstOrThrow();
-  if (!canCancelOrReschedule(existing.startAt, settings.rescheduleWindowHours)) throw new BookingActionError('Reschedule window has passed.', 409);
   const service = await prisma.service.findUniqueOrThrow({ where: { id: input.serviceId } });
   const [h, m] = input.time.split(':').map(Number);
   const startAt = toUtcFromLondon(input.date, h * 60 + m);
@@ -207,31 +217,22 @@ export async function rescheduleByToken(input: { token: string; serviceId: strin
   return prisma.$transaction(async (tx) => {
     await ensureSlotAvailable(tx, { barberId: input.barberId, startAt, endAt, ignoreBookingId: existing.id });
 
-    const newBooking = await tx.booking.create({
+    // Sanity rule: rescheduling must mutate the existing booking row (same id), never create another booking.
+    return tx.booking.update({
+      where: { id: existing.id },
+
       data: {
         service: { connect: { id: input.serviceId } },
         barber: { connect: { id: input.barberId } },
-        fullName: existing.fullName,
-        email: existing.email,
-        phone: existing.phone,
         startAt,
         endAt,
-        status: BookingStatus.CONFIRMED,
-        parentBookingId: existing.id,
-        manageTokenHash: existing.manageTokenHash,
-        manageTokenExpiresAt: existing.manageTokenExpiresAt,
-        paymentRequired: existing.paymentRequired,
-        depositAmountPence: existing.depositAmountPence,
-        paymentStatus: existing.paymentStatus,
-        stripeCheckoutSessionId: existing.stripeCheckoutSessionId,
-        paidAt: existing.paidAt
-            },
+        rescheduledAt: new Date(),
+        originalStartAt: existing.originalStartAt ?? existing.startAt,
+        originalEndAt: existing.originalEndAt ?? existing.endAt,
+        status: BookingStatus.CONFIRMED
+      },
+
       include: { service: true, barber: true }
-
     });
-
-    await tx.booking.update({ where: { id: existing.id }, data: { status: BookingStatus.RESCHEDULED, newBookingId: newBooking.id } });
-
-    return newBooking;
   }, { isolationLevel: Prisma.TransactionIsolationLevel.Serializable });
 }

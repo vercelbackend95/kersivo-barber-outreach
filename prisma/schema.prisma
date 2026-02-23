@@ -97,6 +97,9 @@ model Booking {
   phone                   String?
   startAt                 DateTime
   endAt                   DateTime
+  originalStartAt         DateTime?
+  originalEndAt           DateTime?
+  rescheduledAt           DateTime?
   status                  BookingStatus @default(PENDING_CONFIRMATION)
   notes                   String?
   parentBookingId         String?

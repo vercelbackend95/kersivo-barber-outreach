@@ -4,17 +4,31 @@ import React, { useEffect, useMemo, useState } from 'react';
 type Service = { id: string; name: string; durationMinutes: number; fromPriceText?: string | null };
 type Barber = { id: string; name: string };
 
-type BookingCreatePayload = {
+
+type BookingPayload = {
   serviceId: string;
   barberId: string;
   date: string;
   time: string;
+};
+
+type BookingCreatePayload = BookingPayload & {
   fullName: string;
   email: string;
   phone?: string;
 };
 
-type Props = { services: Service[]; barbers: Barber[] };
+
+type BookingReschedulePayload = BookingPayload & {
+  token: string;
+};
+
+type Props = {
+  services: Service[];
+  barbers: Barber[];
+  mode?: 'create' | 'reschedule';
+  token?: string;
+};
 
 function normalizeToIsoDate(input: string): string | null {
   const trimmed = input.trim();
@@ -37,7 +51,8 @@ function normalizeToIsoDate(input: string): string | null {
   return `${dmyMatch[3]}-${dmyMatch[2]}-${dmyMatch[1]}`;
 }
 
-export default function BookingFlow({ services, barbers }: Props) {
+
+export default function BookingFlow({ services, barbers, mode = 'create', token = '' }: Props) {
   const [serviceId, setServiceId] = useState(services[0]?.id ?? '');
   const [barberId, setBarberId] = useState(barbers[0]?.id ?? '');
   const [date, setDate] = useState(new Date().toISOString().slice(0, 10));
@@ -71,9 +86,6 @@ export default function BookingFlow({ services, barbers }: Props) {
   async function submit() {
     setMessage('');
 
-    const normalizedFullName = fullName.trim();
-    const normalizedEmail = email.trim();
-    const normalizedPhone = phone.trim();
 
     if (!serviceId || !barberId) {
       setMessage('Please choose a service and barber.');
@@ -90,6 +102,43 @@ export default function BookingFlow({ services, barbers }: Props) {
       setMessage('Please select an available time.');
       return;
     }
+
+    if (mode === 'reschedule') {
+      if (!token) {
+        setMessage('Missing reschedule token. Please use the manage link from your email.');
+        return;
+      }
+
+      const payload: BookingReschedulePayload = {
+        token,
+        serviceId,
+        barberId,
+        date: isoDate,
+        time
+      };
+
+      const res = await fetch('/api/bookings/reschedule', {
+        method: 'POST',
+        headers: {
+          'content-type': 'application/json'
+        },
+        body: JSON.stringify(payload)
+      });
+
+      const data = await res.json().catch(() => ({} as { error?: string; booking?: { startAt?: string } }));
+      if (!res.ok) {
+        setMessage(data.error || 'Unable to reschedule booking.');
+        return;
+      }
+
+      const startAt = data.booking?.startAt ? new Date(data.booking.startAt).toLocaleString('en-GB', { timeZone: 'Europe/London' }) : `${isoDate} ${time}`;
+      setMessage(`Booking rescheduled successfully. New time: ${startAt}.`);
+      return;
+    }
+
+    const normalizedFullName = fullName.trim();
+    const normalizedEmail = email.trim();
+    const normalizedPhone = phone.trim();
 
     if (!normalizedFullName || !normalizedEmail) {
       setMessage('Please provide your full name and email.');
@@ -120,8 +169,9 @@ export default function BookingFlow({ services, barbers }: Props) {
 
   return (
     <section className="surface booking-shell">
-      <h1>Book Now</h1>
-      <p className="muted">Timezone: Europe/London • Confirmation required by email.</p>
+
+      <h1>{mode === 'reschedule' ? 'Reschedule Booking' : 'Book Now'}</h1>
+      <p className="muted">Timezone: Europe/London • {mode === 'reschedule' ? 'Choose a new slot and submit once.' : 'Confirmation required by email.'}</p>
 
       <label>Service</label>
       <select value={serviceId} onChange={(e) => setServiceId(e.target.value)}>
@@ -151,14 +201,18 @@ export default function BookingFlow({ services, barbers }: Props) {
         {slots.length === 0 && <p className="muted">No slots available for this date.</p>}
       </div>
 
-      <label>Full name</label>
-      <input value={fullName} onChange={(e) => setFullName(e.target.value)} />
-      <label>Email</label>
-      <input type="email" value={email} onChange={(e) => setEmail(e.target.value)} />
-      <label>Phone (optional)</label>
-      <input value={phone} onChange={(e) => setPhone(e.target.value)} />
+      {mode === 'create' && (
+        <>
+          <label>Full name</label>
+          <input value={fullName} onChange={(e) => setFullName(e.target.value)} />
+          <label>Email</label>
+          <input type="email" value={email} onChange={(e) => setEmail(e.target.value)} />
+          <label>Phone (optional)</label>
+          <input value={phone} onChange={(e) => setPhone(e.target.value)} />
+        </>
+      )}
 
-      <button type="button" className="btn btn--primary" disabled={!time || !fullName || !email} onClick={submit}>Create booking</button>
+      <button type="button" className="btn btn--primary" disabled={!time || (mode === 'create' && (!fullName || !email))} onClick={submit}>{mode === 'reschedule' ? 'Reschedule booking' : 'Create booking'}</button>
       {message && <p>{message}</p>}
     </section>
   );

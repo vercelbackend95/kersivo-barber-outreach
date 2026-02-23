@@ -22,8 +22,8 @@ const [services, barbers] = await Promise.all([
         {
           tokenStatus.valid ? (
             <>
-              <p class="muted">Pick a new slot, then submit with same details. Token-managed reschedule is handled by API endpoint.</p>
-              <BookingFlow client:load services={services} barbers={barbers} />
+            <p class="muted">Pick a new slot to update your confirmed booking.</p>
+              <BookingFlow client:load mode="reschedule" token={token} services={services} barbers={barbers} />
             </>
           ) : (
             <p>{tokenStatus.message}</p>

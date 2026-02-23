@@ -1,7 +1,6 @@
 import React, { useEffect, useState } from 'react';
 
-type Booking = { id: string; fullName: string; email: string; status: string; startAt: string; barber: { name: string }; service: { name: string } };
-
+type Booking = { id: string; fullName: string; email: string; status: string; startAt: string; rescheduledAt?: string | null; barber: { name: string }; service: { name: string } };
 export default function AdminPanel() {
   const [secret, setSecret] = useState('');
   const [loggedIn, setLoggedIn] = useState(false);
@@ -30,7 +29,7 @@ export default function AdminPanel() {
       <table className="admin-table">
         <thead><tr><th>Client</th><th>Email</th><th>Service</th><th>Barber</th><th>Status</th><th>Start</th></tr></thead>
         <tbody>
-          {bookings.map((booking) => <tr key={booking.id}><td>{booking.fullName}</td><td>{booking.email}</td><td>{booking.service?.name}</td><td>{booking.barber?.name}</td><td>{booking.status}</td><td>{new Date(booking.startAt).toLocaleString('en-GB', { timeZone: 'Europe/London' })}</td></tr>)}
+          {bookings.map((booking) => <tr key={booking.id}><td>{booking.fullName}</td><td>{booking.email}</td><td>{booking.service?.name}</td><td>{booking.barber?.name}</td><td>{booking.status === 'CONFIRMED' && booking.rescheduledAt ? 'CONFIRMED · RESCHEDULED' : booking.status}</td><td>{new Date(booking.startAt).toLocaleString('en-GB', { timeZone: 'Europe/London' })}</td></tr>)}
         </tbody>
       </table>
     </section>
