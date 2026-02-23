@@ -1,3 +1,5 @@
+export const prerender = false;
+
 import type { APIRoute } from 'astro';
 import { rescheduleSchema } from '../../../lib/booking/schemas';
 import { rescheduleByToken } from '../../../lib/booking/service';

@@ -1,3 +1,5 @@
+export const prerender = false;
+
 import type { APIRoute } from 'astro';
 import { bookingCreateSchema } from '../../../lib/booking/schemas';
 import { createPendingBooking } from '../../../lib/booking/service';

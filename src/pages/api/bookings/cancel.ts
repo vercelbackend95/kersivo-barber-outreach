@@ -1,3 +1,5 @@
+export const prerender = false;
+
 import type { APIRoute } from 'astro';
 import { tokenSchema } from '../../../lib/booking/schemas';
 import { cancelByManageToken } from '../../../lib/booking/service';
