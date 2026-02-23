@@ -6,13 +6,23 @@ import { generateSlots } from '../../lib/booking/slots';
 import { expirePendingBookings } from '../../lib/booking/service';
 import { londonDayOfWeekFromIsoDate, normalizeToIsoDate } from '../../lib/booking/time';
 
-export const GET: APIRoute = async ({ url }) => {
-  const barberId = url.searchParams.get('barberId') ?? url.searchParams.get('barber_id');
-  const serviceId = url.searchParams.get('serviceId') ?? url.searchParams.get('service_id');
-  const rawDate = url.searchParams.get('date');
+export const prerender = false;
+
+export const GET: APIRoute = async ({ request }) => {
+  const searchParams = new URL(request.url).searchParams;
+  const query = Object.fromEntries(searchParams.entries());
+  const serviceId = searchParams.get('serviceId') ?? searchParams.get('service_id') ?? searchParams.get('service');
+  const barberId = searchParams.get('barberId') ?? searchParams.get('barber_id') ?? searchParams.get('barber');
+  const rawDate = searchParams.get('date');
+
+
+  if (import.meta.env.DEV) {
+    console.info('[availability][dev] raw request url', request.url);
+    console.info('[availability][dev] search params snapshot', query);
+  }
 
   if (!barberId || !serviceId || !rawDate) {
-    return new Response(JSON.stringify({ error: 'Missing required params.' }), { status: 400 });
+    return new Response(JSON.stringify({ error: 'Missing required params. Expected serviceId, barberId, and date.' }), { status: 400 });
   }
 
   const date = normalizeToIsoDate(rawDate);
@@ -23,6 +33,15 @@ export const GET: APIRoute = async ({ url }) => {
   const dayOfWeek = londonDayOfWeekFromIsoDate(date);
   if (dayOfWeek == null) {
     return new Response(JSON.stringify({ error: 'Invalid date value.' }), { status: 400 });
+  }
+
+  if (import.meta.env.DEV) {
+    console.info('[availability][dev] incoming params', {
+      query,
+      serviceId,
+      barberId,
+      rawDate
+    });
   }
 
   await expirePendingBookings();
@@ -36,13 +55,14 @@ export const GET: APIRoute = async ({ url }) => {
 
   const slots = generateSlots({ date, service, rules, confirmedBookings: bookings, timeOff, settings });
 
-  console.info('[availability] resolved', {
-    rawDate,
-    parsedDate: date,
-    dayOfWeek,
-    rulesFound: rules.length,
-    slotsReturned: slots.length
-  });
+  if (import.meta.env.DEV) {
+    console.info('[availability][dev] resolved', {
+      normalizedDate: date,
+      dayOfWeek,
+      rulesFound: rules.length,
+      slotsReturned: slots.length
+    });
+  }
 
   return new Response(JSON.stringify({ slots }));
 };
