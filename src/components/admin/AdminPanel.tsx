@@ -84,6 +84,23 @@ function formatLastUpdated(lastUpdatedAt: number | null, nowMs: number) {
   const diffMin = Math.floor(diffSec / 60);
   return `${diffMin}m ago`;
 }
+function normalizeSearchValue(value: string) {
+  return value.trim().toLowerCase();
+}
+
+function getBookingSearchScore(booking: Booking, normalizedQuery: string) {
+  const email = normalizeSearchValue(booking.email ?? '');
+  const fullName = normalizeSearchValue(booking.fullName ?? '');
+
+  if (email === normalizedQuery) return 6;
+  if (email.startsWith(normalizedQuery)) return 5;
+  if (email.includes(normalizedQuery)) return 4;
+  if (fullName === normalizedQuery) return 3;
+  if (fullName.startsWith(normalizedQuery)) return 2;
+  if (fullName.includes(normalizedQuery)) return 1;
+  return 0;
+}
+
 
 export default function AdminPanel() {
   const [secret, setSecret] = useState('');
@@ -96,6 +113,7 @@ export default function AdminPanel() {
   const [isRefreshing, setIsRefreshing] = useState(false);
   const [lastUpdatedAt, setLastUpdatedAt] = useState<number | null>(null);
   const [nowMs, setNowMs] = useState(() => Date.now());
+  const [clientSearchQuery, setClientSearchQuery] = useState('');
 
   const inFlightRef = useRef(false);
   const pollingStoppedRef = useRef(false);
@@ -255,6 +273,31 @@ export default function AdminPanel() {
   const upcomingBookings = useMemo(() => getUpcomingBookings(bookings), [bookings]);
   const nextBooking = upcomingBookings[0] ?? null;
   const secondNextBooking = upcomingBookings[1] ?? null;
+  const normalizedClientSearchQuery = useMemo(() => normalizeSearchValue(clientSearchQuery), [clientSearchQuery]);
+
+  const visibleBookings = useMemo(() => {
+    if (!normalizedClientSearchQuery) {
+      return bookings;
+    }
+
+    return bookings
+      .map((booking, index) => ({
+        booking,
+        score: getBookingSearchScore(booking, normalizedClientSearchQuery),
+        index
+      }))
+      .filter((entry) => entry.score > 0)
+      .sort((a, b) => {
+        if (b.score !== a.score) return b.score - a.score;
+
+        const startAtDiff = new Date(a.booking.startAt).getTime() - new Date(b.booking.startAt).getTime();
+        if (startAtDiff !== 0) return startAtDiff;
+
+        return a.index - b.index;
+      })
+      .map((entry) => entry.booking);
+  }, [bookings, normalizedClientSearchQuery]);
+
 
   function goToBooking(bookingId: string) {
     const row = document.getElementById(`booking-row-${bookingId}`);
@@ -263,6 +306,10 @@ export default function AdminPanel() {
     setHighlightedBookingId(bookingId);
     window.setTimeout(() => setHighlightedBookingId((current) => (current === bookingId ? null : current)), 2000);
   }
+  function clearClientSearch() {
+    setClientSearchQuery('');
+  }
+
 
   if (isCheckingSession) {
     return <section className="surface booking-shell"><h1>Admin</h1><p className="muted">Checking session…</p></section>;
@@ -299,10 +346,29 @@ export default function AdminPanel() {
       {error && <p className="muted">{error}</p>}
 
       <p className="muted">Bookings</p>
+        <div className="admin-search-row">
+        <input
+          type="search"
+          value={clientSearchQuery}
+          onChange={(event) => setClientSearchQuery(event.target.value)}
+          onKeyDown={(event) => {
+            if (event.key === 'Escape') {
+              clearClientSearch();
+            }
+          }}
+          placeholder="Search by client name or email…"
+          aria-label="Search by client name or email"
+        />
+        {clientSearchQuery && (
+          <button type="button" className="btn btn--ghost admin-search-clear" onClick={clearClientSearch} aria-label="Clear search">
+            X
+          </button>
+        )}
+      </div>
       <table className="admin-table">
         <thead><tr><th>Client</th><th>Email</th><th>Service</th><th>Barber</th><th>Status</th><th>Start</th></tr></thead>
         <tbody>
-          {bookings.map((booking) => {
+          {visibleBookings.map((booking) => {
             const isFocused = highlightedBookingId === booking.id;
             const isUpdated = updatedBookingIds.includes(booking.id);
             const rowClassName = [isFocused ? 'admin-row--highlighted' : '', isUpdated ? 'admin-row--updated' : ''].filter(Boolean).join(' ');
