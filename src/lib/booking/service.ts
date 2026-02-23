@@ -3,7 +3,7 @@ import { prisma } from '../db/client';
 import { canCancelOrReschedule, pendingExpiryDate } from './policies';
 import { generateToken, hashToken } from './tokens';
 import { addMinutes, toUtcFromLondon } from './time';
-import { sendBookingConfirmationEmail, sendManageBookingEmail } from '../email/sender';
+import { sendBookingConfirmationEmail, sendManageBookingEmail, sendRescheduledBookingEmail } from '../email/sender';
 
 const CANCELLED_BOOKING_MESSAGE = 'This booking is already cancelled. Please create a new booking.';
 const MANAGE_LINKS_NOT_READY_MESSAGE = 'Please confirm your booking first. Manage links become active after confirmation.';
@@ -214,7 +214,7 @@ export async function rescheduleByToken(input: { token: string; serviceId: strin
   const startAt = toUtcFromLondon(input.date, h * 60 + m);
   const endAt = addMinutes(startAt, service.durationMinutes + (service.bufferMinutes || settings.defaultBufferMinutes));
 
-  return prisma.$transaction(async (tx) => {
+ const updatedBooking = await prisma.$transaction(async (tx) => {
     await ensureSlotAvailable(tx, { barberId: input.barberId, startAt, endAt, ignoreBookingId: existing.id });
 
     // Sanity rule: rescheduling must mutate the existing booking row (same id), never create another booking.
@@ -235,4 +235,22 @@ export async function rescheduleByToken(input: { token: string; serviceId: strin
       include: { service: true, barber: true }
     });
   }, { isolationLevel: Prisma.TransactionIsolationLevel.Serializable });
+  
+  const baseUrl = import.meta.env.PUBLIC_SITE_URL ?? process.env.PUBLIC_SITE_URL ?? 'http://localhost:4321';
+  const settingsForEmail = await prisma.shopSettings.findFirstOrThrow();
+  await sendRescheduledBookingEmail({
+    to: updatedBooking.email,
+    fullName: updatedBooking.fullName,
+    cancelUrl: `${baseUrl}/book/cancel?token=${input.token}`,
+    rescheduleUrl: `${baseUrl}/book/reschedule?token=${input.token}`,
+    shopName: settingsForEmail.name,
+    serviceName: updatedBooking.service.name,
+    barberName: updatedBooking.barber.name,
+    startAt: updatedBooking.startAt,
+    previousStartAt: updatedBooking.originalStartAt,
+    previousEndAt: updatedBooking.originalEndAt
+  });
+
+  return updatedBooking;
+
 }

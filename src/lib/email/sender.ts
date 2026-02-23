@@ -21,22 +21,29 @@ function renderBookingSummary(input: BookingEmailBaseInput): string {
 }
 
 async function sendEmail(input: { to: string; subject: string; html: string; devLogLabel: string; devPayload: Record<string, string> }) {
-
-
   if (!RESEND_API_KEY) {
     console.log(input.devLogLabel, input.devPayload);
     return;
   }
 
-  const { Resend } = await import('resend');
-  const resend = new Resend(RESEND_API_KEY);
+  try {
+    const { Resend } = await import('resend');
+    const resend = new Resend(RESEND_API_KEY);
 
-  await resend.emails.send({
-    from: FROM_EMAIL,
-        to: input.to,
-    subject: input.subject,
-    html: input.html
-  });
+
+    await resend.emails.send({
+      from: FROM_EMAIL,
+      to: input.to,
+      subject: input.subject,
+      html: input.html
+    });
+
+    console.info('[EMAIL] Sent', { to: input.to, subject: input.subject });
+  } catch (error) {
+    console.error('[EMAIL] Failed to send', { to: input.to, subject: input.subject, error });
+    throw error;
+  }
+
 }
 
 export async function sendBookingConfirmationEmail(input: BookingEmailBaseInput & { confirmUrl: string }) {
@@ -47,7 +54,6 @@ export async function sendBookingConfirmationEmail(input: BookingEmailBaseInput 
   ${summaryHtml}`;
 
   await sendEmail({
-
     to: input.to,
     subject: 'Confirm your booking',
     html,
@@ -88,6 +94,51 @@ export async function sendManageBookingEmail(input: BookingEmailBaseInput & { ca
       serviceName: input.serviceName,
       barberName: input.barberName,
       startAt: input.startAt.toISOString()
+    }
+
+  });
+}
+export async function sendRescheduledBookingEmail(
+  input: BookingEmailBaseInput & {
+    cancelUrl: string;
+    rescheduleUrl: string;
+    previousStartAt?: Date | null;
+    previousEndAt?: Date | null;
+  }
+) {
+  const summaryHtml = renderBookingSummary(input);
+  const previousDateTime =
+    input.previousStartAt && input.previousEndAt
+      ? formatInTimeZone(input.previousStartAt, 'Europe/London', "EEEE d MMMM yyyy 'at' HH:mm")
+      : null;
+
+  const previousSummaryHtml = previousDateTime ? `<p><strong>Previous:</strong> ${previousDateTime} (Europe/London)</p>` : '';
+
+  const html = `<p>Hi ${input.fullName},</p>
+  <p>Your booking has been rescheduled.</p>
+  <ul>
+    <li><a href="${input.rescheduleUrl}">Reschedule booking</a></li>
+    <li><a href="${input.cancelUrl}">Cancel booking</a></li>
+  </ul>
+  ${summaryHtml}
+  ${previousSummaryHtml}`;
+
+  await sendEmail({
+    to: input.to,
+    subject: 'Your booking has been rescheduled',
+    html,
+    devLogLabel: '[DEV EMAIL] Rescheduled booking',
+    devPayload: {
+      to: input.to,
+      fullName: input.fullName,
+      cancelUrl: input.cancelUrl,
+      rescheduleUrl: input.rescheduleUrl,
+      shopName: input.shopName,
+      serviceName: input.serviceName,
+      barberName: input.barberName,
+      startAt: input.startAt.toISOString(),
+      previousStartAt: input.previousStartAt?.toISOString() ?? '',
+      previousEndAt: input.previousEndAt?.toISOString() ?? ''
     }
 
   });
