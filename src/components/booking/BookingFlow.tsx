@@ -71,6 +71,15 @@ export default function BookingFlow({ services, barbers }: Props) {
   async function submit() {
     setMessage('');
 
+    const normalizedFullName = fullName.trim();
+    const normalizedEmail = email.trim();
+    const normalizedPhone = phone.trim();
+
+    if (!serviceId || !barberId) {
+      setMessage('Please choose a service and barber.');
+      return;
+    }
+
     const isoDate = normalizeToIsoDate(date);
     if (!isoDate) {
       setMessage('Please choose a valid date.');
@@ -82,14 +91,19 @@ export default function BookingFlow({ services, barbers }: Props) {
       return;
     }
 
+    if (!normalizedFullName || !normalizedEmail) {
+      setMessage('Please provide your full name and email.');
+      return;
+    }
+
     const payload: BookingCreatePayload = {
       serviceId,
       barberId,
       date: isoDate,
       time,
-      fullName,
-      email,
-      ...(phone ? { phone } : {})
+      fullName: normalizedFullName,
+      email: normalizedEmail,
+      ...(normalizedPhone ? { phone: normalizedPhone } : {})
     };
 
     const res = await fetch('/api/bookings/create', {
