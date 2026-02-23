@@ -1,11 +1,17 @@
 import type { APIContext } from 'astro';
+import { getAdminSessionCookieName, getSessionSecret, verifyAdminSessionToken } from './session';
 
 export function isAdminAuthorized(context: APIContext): boolean {
   const secret = import.meta.env.ADMIN_SECRET ?? process.env.ADMIN_SECRET;
-  if (!secret) return false;
-  const cookie = context.cookies.get('admin_auth')?.value;
+  const sessionSecret = getSessionSecret();
+
+  const cookieToken = context.cookies.get(getAdminSessionCookieName())?.value;
+  if (cookieToken && sessionSecret && verifyAdminSessionToken(cookieToken, sessionSecret)) {
+    return true;
+  }
+
   const header = context.request.headers.get('x-admin-secret');
-  return cookie === secret || header === secret;
+  return !!secret && header === secret;
 }
 
 export function requireAdmin(context: APIContext): Response | null {

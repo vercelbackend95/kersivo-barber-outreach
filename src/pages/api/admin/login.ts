@@ -1,15 +1,28 @@
 export const prerender = false;
 
 import type { APIRoute } from 'astro';
+import {
+  createAdminSessionToken,
+  getAdminSessionCookieName,
+  getAdminSessionCookieOptions,
+  getSessionSecret
+} from '../../../lib/admin/session';
 
 export const POST: APIRoute = async ({ request, cookies }) => {
   const data = await request.json();
-  const secret = import.meta.env.ADMIN_SECRET ?? process.env.ADMIN_SECRET;
+  const adminSecret = import.meta.env.ADMIN_SECRET ?? process.env.ADMIN_SECRET;
+  const sessionSecret = getSessionSecret();
 
-  if (!secret || data?.secret !== secret) {
+  if (!adminSecret || !sessionSecret || data?.secret !== adminSecret) {
     return new Response(JSON.stringify({ error: 'Invalid secret' }), { status: 401 });
   }
 
-  cookies.set('admin_auth', secret, { httpOnly: true, sameSite: 'lax', path: '/' });
+  const token = createAdminSessionToken(sessionSecret);
+  cookies.set(
+    getAdminSessionCookieName(),
+    token,
+    getAdminSessionCookieOptions(import.meta.env.PROD)
+  );
+
   return new Response(JSON.stringify({ ok: true }));
 };

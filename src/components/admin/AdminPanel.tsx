@@ -88,6 +88,7 @@ function formatLastUpdated(lastUpdatedAt: number | null, nowMs: number) {
 export default function AdminPanel() {
   const [secret, setSecret] = useState('');
   const [loggedIn, setLoggedIn] = useState(false);
+  const [isCheckingSession, setIsCheckingSession] = useState(true);
   const [bookings, setBookings] = useState<Booking[]>([]);
   const [error, setError] = useState('');
   const [highlightedBookingId, setHighlightedBookingId] = useState<string | null>(null);
@@ -171,6 +172,52 @@ export default function AdminPanel() {
     void fetchBookings();
   }
 
+  async function logout() {
+    await fetch('/api/admin/logout', {
+      method: 'POST',
+      credentials: 'same-origin'
+    });
+
+    pollingStoppedRef.current = true;
+    previousSignaturesRef.current = new Map();
+    setBookings([]);
+    setLoggedIn(false);
+    setSecret('');
+    setError('');
+  }
+
+  useEffect(() => {
+    let isMounted = true;
+
+    async function checkSession() {
+      try {
+        const response = await fetch('/api/admin/session', { credentials: 'same-origin' });
+        if (!isMounted) return;
+
+        if (response.ok) {
+          pollingStoppedRef.current = false;
+          setLoggedIn(true);
+          return;
+        }
+
+        setLoggedIn(false);
+      } catch {
+        if (!isMounted) return;
+        setLoggedIn(false);
+      } finally {
+        if (isMounted) {
+          setIsCheckingSession(false);
+        }
+      }
+    }
+
+    void checkSession();
+
+    return () => {
+      isMounted = false;
+    };
+  }, []);
+
   useEffect(() => {
     if (!loggedIn || pollingStoppedRef.current) return;
 
@@ -217,6 +264,10 @@ export default function AdminPanel() {
     window.setTimeout(() => setHighlightedBookingId((current) => (current === bookingId ? null : current)), 2000);
   }
 
+  if (isCheckingSession) {
+    return <section className="surface booking-shell"><h1>Admin</h1><p className="muted">Checking session…</p></section>;
+  }
+
   if (!loggedIn) {
     return <section className="surface booking-shell"><h1>Admin</h1><label>Admin secret</label><input type="password" value={secret} onChange={(e) => setSecret(e.target.value)} /><button className="btn btn--primary" onClick={login}>Login</button>{error && <p>{error}</p>}</section>;
   }
@@ -241,6 +292,7 @@ export default function AdminPanel() {
         <div className="admin-refresh-controls">
           {isRefreshing && <span className="admin-refreshing" aria-live="polite">Refreshing…</span>}
           <button type="button" className="btn btn--ghost" onClick={() => void fetchBookings()} disabled={isRefreshing}>Refresh</button>
+          <button type="button" className="btn btn--secondary" onClick={() => void logout()}>Logout</button>
         </div>
       </div>
 
