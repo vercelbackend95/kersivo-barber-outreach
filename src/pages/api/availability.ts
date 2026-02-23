@@ -7,8 +7,8 @@ import { expirePendingBookings } from '../../lib/booking/service';
 import { londonDayOfWeekFromIsoDate, normalizeToIsoDate } from '../../lib/booking/time';
 
 export const GET: APIRoute = async ({ url }) => {
-  const barberId = url.searchParams.get('barberId');
-  const serviceId = url.searchParams.get('serviceId');
+  const barberId = url.searchParams.get('barberId') ?? url.searchParams.get('barber_id');
+  const serviceId = url.searchParams.get('serviceId') ?? url.searchParams.get('service_id');
   const rawDate = url.searchParams.get('date');
 
   if (!barberId || !serviceId || !rawDate) {
