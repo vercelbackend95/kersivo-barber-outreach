@@ -1,0 +1,79 @@
+---
+interface NavItem {
+  name: string;
+  href: string;
+}
+
+interface Footer50Props {
+  heading?: string;
+  description?: string;
+  ctaText?: string;
+  ctaHref?: string;
+  navigation?: NavItem[];
+  social?: NavItem[];
+  legal?: NavItem[];
+  brandName?: string;
+  className?: string;
+}
+
+const {
+  heading = "Start your free trial today",
+  description = "The fit-for-purpose tool for planning and building modern software products.",
+  ctaText = "Get started",
+  ctaHref = "#",
+  navigation = [
+    { name: "Product", href: "#" },
+    { name: "About Us", href: "/about" },
+    { name: "Pricing", href: "/pricing" },
+    { name: "FAQ", href: "/faq" },
+    { name: "Contact", href: "/contact" },
+  ],
+  social = [
+    { name: "Twitter", href: "#" },
+    { name: "LinkedIn", href: "#" },
+  ],
+  legal = [{ name: "Privacy Policy", href: "/privacy" }],
+  brandName = "mainline",
+  className = "",
+} = Astro.props as Footer50Props;
+---
+
+<footer class={`footer50 ${className}`.trim()} aria-label="Footer">
+  <div class="container footer50__intro">
+    <h2>{heading}</h2>
+    <p>{description}</p>
+    <div>
+      <a class="btn btn--primary footer50__cta" href={ctaHref}>{ctaText}</a>
+    </div>
+  </div>
+
+  <nav class="container footer50__nav" aria-label="Footer navigation">
+    <ul class="footer50__menu">
+      {navigation.map((item) => (
+        <li>
+          <a href={item.href}>{item.name}</a>
+        </li>
+      ))}
+      {social.map((item) => (
+        <li>
+          <a href={item.href} class="footer50__social-link">
+            {item.name}
+            <span aria-hidden="true" class="footer50__arrow">↗</span>
+          </a>
+        </li>
+      ))}
+    </ul>
+
+    <ul class="footer50__legal">
+      {legal.map((item) => (
+        <li>
+          <a href={item.href}>{item.name}</a>
+        </li>
+      ))}
+    </ul>
+  </nav>
+
+  <div class="footer50__brand" aria-label={brandName}>
+    <span>{brandName}</span>
+  </div>
+</footer>

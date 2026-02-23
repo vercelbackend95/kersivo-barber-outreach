@@ -25,6 +25,8 @@ import "../styles/components/faq4.css";
 import "../styles/components/cta10.css";
 import Contact16 from "../components/contact16.astro";
 import "../styles/components/contact16.css";
+import Footer50 from "../components/footer50.astro";
+import "../styles/components/footer50.css";
 ---
 
 <html lang="en">
@@ -100,7 +102,28 @@ import "../styles/components/contact16.css";
 			<Faq4 />
 			<Cta10 />
 			<Contact16 />
-			
+			<Footer50
+				heading="Ready to Fill Your Chairs?"
+				description="Book a quick strategy call and we will map a predictable outreach plan for your barbershop in under 20 minutes."
+				ctaText="Book a Strategy Call"
+				ctaHref="#"
+				brandName="Kersivo"
+				navigation={[
+					{ name: "Services", href: "#" },
+					{ name: "Case Studies", href: "#" },
+					{ name: "Pricing", href: "#" },
+					{ name: "FAQ", href: "#" },
+					{ name: "Contact", href: "#" },
+				]}
+				social={[
+					{ name: "Instagram", href: "#" },
+					{ name: "Facebook", href: "#" },
+				]}
+				legal={[
+					{ name: "Privacy Policy", href: "#" },
+					{ name: "Terms", href: "#" },
+				]}
+			/>
 		</main>
 	</body>
 </html>

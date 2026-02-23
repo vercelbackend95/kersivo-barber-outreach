@@ -1,0 +1,93 @@
+.footer50 {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 3rem;
+  padding-top: 4rem;
+  padding-bottom: 2rem;
+  border-top: 1px solid var(--border);
+}
+
+.footer50__intro {
+  display: grid;
+  gap: 0.75rem;
+  text-align: center;
+}
+
+.footer50__intro p {
+  color: var(--muted);
+  max-width: 38rem;
+  margin-inline: auto;
+}
+
+.footer50__cta {
+  margin-top: 0.5rem;
+}
+
+.footer50__nav {
+  display: grid;
+  gap: 1rem;
+  justify-items: center;
+}
+
+.footer50__menu,
+.footer50__legal {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.75rem 1.25rem;
+  justify-content: center;
+}
+
+.footer50__menu a {
+  color: var(--fg);
+  text-decoration: none;
+  font-weight: 600;
+}
+
+.footer50__social-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.15rem;
+}
+
+.footer50__arrow {
+  font-size: 0.9em;
+}
+
+.footer50__legal a {
+  color: var(--muted);
+  text-decoration: none;
+  font-size: 0.875rem;
+}
+
+.footer50__brand {
+  width: 100%;
+  border-top: 1px solid var(--border);
+  padding-top: 1rem;
+}
+
+.footer50__brand span {
+  display: block;
+  text-align: center;
+  font-family: var(--font-heading);
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: color-mix(in srgb, var(--fg) 80%, var(--muted));
+  font-size: clamp(2rem, 10vw, 5rem);
+  line-height: 1;
+}
+
+@media (min-width: 64rem) {
+  .footer50 {
+    gap: 3.5rem;
+    padding-top: 5rem;
+  }
+
+  .footer50__menu,
+  .footer50__legal {
+    gap: 1rem 1.5rem;
+  }
+}
