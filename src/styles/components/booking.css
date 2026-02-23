@@ -143,3 +143,22 @@
     grid-template-columns: repeat(4, minmax(0, 1fr));
   }
 }
+
+
+.admin-inline-success {
+  margin: 0;
+  color: var(--accent);
+  font-size: 0.95rem;
+}
+
+.admin-inline-error {
+  margin: 0;
+  color: var(--fg);
+  border: 1px solid var(--border);
+  background: var(--surface);
+  padding: 0.5rem;
+}
+
+.admin-cancel-btn {
+  min-width: 6.5rem;
+}

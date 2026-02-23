@@ -142,4 +142,36 @@ export async function sendRescheduledBookingEmail(
     }
 
   });
+  
+
+export async function sendShopCancelledBookingEmail(
+  input: BookingEmailBaseInput & {
+    reason?: string;
+  }
+) {
+  const summaryHtml = renderBookingSummary(input);
+  const reasonHtml = input.reason ? `<p><strong>Reason:</strong> ${input.reason}</p>` : '';
+
+  const html = `<p>Hi ${input.fullName},</p>
+  <p>Your booking has been cancelled by the shop.</p>
+  ${summaryHtml}
+  ${reasonHtml}`;
+
+  await sendEmail({
+    to: input.to,
+    subject: 'Your booking has been cancelled',
+    html,
+    devLogLabel: '[DEV EMAIL] Booking cancelled by shop',
+    devPayload: {
+      to: input.to,
+      fullName: input.fullName,
+      reason: input.reason ?? '',
+      shopName: input.shopName,
+      serviceName: input.serviceName,
+      barberName: input.barberName,
+      startAt: input.startAt.toISOString()
+    }
+  });
+}
+
 }

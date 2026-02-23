@@ -18,3 +18,8 @@ export const rescheduleSchema = tokenSchema.extend({
   date: z.string().regex(/^\d{4}-\d{2}-\d{2}$/),
   time: z.string().regex(/^\d{2}:\d{2}$/)
 });
+
+export const adminCancelBookingSchema = z.object({
+  bookingId: z.string().min(1),
+  reason: z.string().trim().max(500).optional()
+});

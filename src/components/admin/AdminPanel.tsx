@@ -106,6 +106,10 @@ function getBookingSearchScore(booking: Booking, normalizedQuery: string) {
 function isCancelledStatus(status: string) {
   return status.startsWith('CANCELLED');
 }
+function canBeCancelledByShop(booking: Booking) {
+  return booking.status === 'CONFIRMED';
+}
+
 
 function matchesTabFilter(booking: Booking, activeFilter: BookingFilterTab) {
   if (activeFilter === 'confirmed') {
@@ -148,6 +152,9 @@ export default function AdminPanel() {
   const [nowMs, setNowMs] = useState(() => Date.now());
   const [clientSearchQuery, setClientSearchQuery] = useState('');
   const [activeFilter, setActiveFilter] = useState<BookingFilterTab>('confirmed');
+  const [cancelSuccessMessage, setCancelSuccessMessage] = useState('');
+  const [cancelErrorMessage, setCancelErrorMessage] = useState('');
+  const [cancelLoadingBookingId, setCancelLoadingBookingId] = useState<string | null>(null);
 
   const inFlightRef = useRef(false);
   const pollingStoppedRef = useRef(false);
@@ -358,6 +365,45 @@ export default function AdminPanel() {
   function clearClientSearch() {
     setClientSearchQuery('');
   }
+  async function cancelBookingByShop(booking: Booking) {
+    if (!canBeCancelledByShop(booking)) return;
+
+    const confirmed = window.confirm('Cancel this booking? The client will be notified by email.');
+    if (!confirmed) return;
+
+    setCancelSuccessMessage('');
+    setCancelErrorMessage('');
+    setCancelLoadingBookingId(booking.id);
+
+    try {
+      const response = await fetch('/api/admin/bookings/cancel', {
+        method: 'POST',
+        credentials: 'same-origin',
+        headers: { 'content-type': 'application/json' },
+        body: JSON.stringify({ bookingId: booking.id })
+      });
+
+      const payload = (await response.json().catch(() => ({}))) as { error?: string };
+
+      if (!response.ok) {
+        if (response.status === 409) {
+          setCancelErrorMessage(payload.error || 'This booking is already cancelled or expired.');
+          return;
+        }
+
+        setCancelErrorMessage(payload.error || 'Could not cancel booking right now. Please try again.');
+        return;
+      }
+
+      setCancelSuccessMessage('Booking cancelled successfully.');
+      await fetchBookings();
+    } catch {
+      setCancelErrorMessage('Could not cancel booking right now. Please try again.');
+    } finally {
+      setCancelLoadingBookingId(null);
+    }
+  }
+
 
 
   if (isCheckingSession) {
@@ -393,6 +439,8 @@ export default function AdminPanel() {
       </div>
 
       {error && <p className="muted">{error}</p>}
+      {cancelSuccessMessage && <p className="admin-inline-success" role="status" aria-live="polite">{cancelSuccessMessage}</p>}
+      {cancelErrorMessage && <p className="admin-inline-error" role="alert">{cancelErrorMessage}</p>}
 
       <p className="muted">Bookings</p>
       <div className="admin-filter-tabs" role="tablist" aria-label="Booking status filters">
@@ -430,14 +478,13 @@ export default function AdminPanel() {
         )}
       </div>
       <table className="admin-table">
-        <thead><tr><th>Client</th><th>Email</th><th>Service</th><th>Barber</th><th>Status</th><th>Start</th></tr></thead>
+        <thead><tr><th>Client</th><th>Email</th><th>Service</th><th>Barber</th><th>Status</th><th>Start</th><th>Actions</th></tr></thead>
         <tbody>
           {visibleBookings.map((booking) => {
             const isFocused = highlightedBookingId === booking.id;
             const isUpdated = updatedBookingIds.includes(booking.id);
             const rowClassName = [isFocused ? 'admin-row--highlighted' : '', isUpdated ? 'admin-row--updated' : ''].filter(Boolean).join(' ');
-
-            return <tr id={`booking-row-${booking.id}`} className={rowClassName} key={booking.id}><td>{booking.fullName}</td><td>{booking.email}</td><td>{booking.service?.name}</td><td>{booking.barber?.name}</td><td>{booking.status === 'CONFIRMED' && booking.rescheduledAt ? 'CONFIRMED · RESCHEDULED' : booking.status}</td><td>{new Date(booking.startAt).toLocaleString('en-GB', { timeZone: ADMIN_TIMEZONE })}</td></tr>;
+            return <tr id={`booking-row-${booking.id}`} className={rowClassName} key={booking.id}><td>{booking.fullName}</td><td>{booking.email}</td><td>{booking.service?.name}</td><td>{booking.barber?.name}</td><td>{booking.status === 'CONFIRMED' && booking.rescheduledAt ? 'CONFIRMED · RESCHEDULED' : booking.status}</td><td>{new Date(booking.startAt).toLocaleString('en-GB', { timeZone: ADMIN_TIMEZONE })}</td><td>{canBeCancelledByShop(booking) ? <button type="button" className="btn btn--secondary admin-cancel-btn" onClick={() => void cancelBookingByShop(booking)} disabled={cancelLoadingBookingId === booking.id}>{cancelLoadingBookingId === booking.id ? 'Cancelling…' : 'Cancel'}</button> : null}</td></tr>;
           })}
         </tbody>
       </table>

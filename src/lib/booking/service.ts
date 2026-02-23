@@ -3,8 +3,7 @@ import { prisma } from '../db/client';
 import { canCancelOrReschedule, pendingExpiryDate } from './policies';
 import { generateToken, hashToken } from './tokens';
 import { addMinutes, toUtcFromLondon } from './time';
-import { sendBookingConfirmationEmail, sendManageBookingEmail, sendRescheduledBookingEmail } from '../email/sender';
-
+import { sendBookingConfirmationEmail, sendManageBookingEmail, sendRescheduledBookingEmail, sendShopCancelledBookingEmail } from '../email/sender';
 const CANCELLED_BOOKING_MESSAGE = 'This booking is already cancelled. Please create a new booking.';
 const MANAGE_LINKS_NOT_READY_MESSAGE = 'Please confirm your booking first. Manage links become active after confirmation.';
 
@@ -192,6 +191,44 @@ export async function cancelByManageToken(token: string) {
   if (!canCancelOrReschedule(booking.startAt, settings.cancellationWindowHours)) throw new BookingActionError('Cancellation window has passed.', 409);
   return prisma.booking.update({ where: { id: booking.id }, data: { status: BookingStatus.CANCELLED_BY_CLIENT } });
 }
+
+export async function cancelByShop(input: { bookingId: string; reason?: string }) {
+  const booking = await prisma.booking.findUnique({
+    where: { id: input.bookingId },
+    include: { barber: true, service: true }
+  });
+
+  if (!booking) {
+    throw new BookingActionError('Booking not found.', 404);
+  }
+
+  if (booking.status === BookingStatus.EXPIRED || isCancelledStatus(booking.status)) {
+    throw new BookingActionError('This booking has already been cancelled or expired.', 409);
+  }
+
+  const settings = await prisma.shopSettings.findFirstOrThrow();
+
+  const updatedBooking = await prisma.booking.update({
+    where: { id: booking.id },
+    data: {
+      status: 'CANCELLED_BY_SHOP' as BookingStatus
+    },
+    include: { barber: true, service: true }
+  });
+
+  await sendShopCancelledBookingEmail({
+    to: updatedBooking.email,
+    fullName: updatedBooking.fullName,
+    shopName: settings.name,
+    serviceName: updatedBooking.service.name,
+    barberName: updatedBooking.barber.name,
+    startAt: updatedBooking.startAt,
+    reason: input.reason
+  });
+
+  return updatedBooking;
+}
+
 
 export async function rescheduleByToken(input: { token: string; serviceId: string; barberId: string; date: string; time: string; }) {
   const existing = await resolveManageTokenBooking(input.token);
