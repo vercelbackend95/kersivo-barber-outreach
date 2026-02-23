@@ -1,9 +1,31 @@
+// src/components/booking/BookingFlow.tsx
 import React, { useEffect, useMemo, useState } from 'react';
 
 type Service = { id: string; name: string; durationMinutes: number; fromPriceText?: string | null };
 type Barber = { id: string; name: string };
 
 type Props = { services: Service[]; barbers: Barber[] };
+
+function normalizeToIsoDate(input: string): string | null {
+  const trimmed = input.trim();
+
+  const isoMatch = trimmed.match(/^(\d{4})-(\d{2})-(\d{2})$/);
+  if (isoMatch) return `${isoMatch[1]}-${isoMatch[2]}-${isoMatch[3]}`;
+
+  const dmyMatch = trimmed.match(/^(\d{2})\/(\d{2})\/(\d{4})$/);
+  if (!dmyMatch) return null;
+
+  const day = Number(dmyMatch[1]);
+  const month = Number(dmyMatch[2]);
+  const year = Number(dmyMatch[3]);
+  const validated = new Date(Date.UTC(year, month - 1, day));
+
+  if (validated.getUTCFullYear() !== year || validated.getUTCMonth() !== month - 1 || validated.getUTCDate() !== day) {
+    return null;
+  }
+
+  return `${dmyMatch[3]}-${dmyMatch[2]}-${dmyMatch[1]}`;
+}
 
 export default function BookingFlow({ services, barbers }: Props) {
   const [serviceId, setServiceId] = useState(services[0]?.id ?? '');
@@ -18,7 +40,15 @@ export default function BookingFlow({ services, barbers }: Props) {
 
   useEffect(() => {
     if (!serviceId || !barberId || !date) return;
-    fetch(`/api/availability?serviceId=${serviceId}&barberId=${barberId}&date=${date}`)
+
+    const isoDate = normalizeToIsoDate(date);
+    if (!isoDate) {
+      setSlots([]);
+      setTime('');
+      return;
+    }
+
+    fetch(`/api/availability?serviceId=${serviceId}&barberId=${barberId}&date=${isoDate}`)
       .then((res) => res.json())
       .then((data) => {
         setSlots(data.slots ?? []);
@@ -30,10 +60,16 @@ export default function BookingFlow({ services, barbers }: Props) {
 
   async function submit() {
     setMessage('');
+    const isoDate = normalizeToIsoDate(date);
+    if (!isoDate) {
+      setMessage('Please choose a valid date.');
+      return;
+    }
+
     const res = await fetch('/api/bookings/create', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ serviceId, barberId, date, time, fullName, email, phone })
+      body: JSON.stringify({ serviceId, barberId, date: isoDate, time, fullName, email, phone })
     });
     const data = await res.json();
     setMessage(res.ok ? 'Booking created. Check email for confirmation magic link.' : data.error || 'Unable to create booking.');
@@ -59,7 +95,16 @@ export default function BookingFlow({ services, barbers }: Props) {
 
       <label>Available times {selectedService ? `for ${selectedService.name}` : ''}</label>
       <div className="slot-grid">
-        {slots.map((slot) => <button type="button" key={slot} className={time === slot ? 'btn primary' : 'btn secondary'} onClick={() => setTime(slot)}>{slot}</button>)}
+        {slots.map((slot) => (
+          <button
+            type="button"
+            key={slot}
+            className={time === slot ? 'btn btn--primary' : 'btn btn--secondary'}
+            onClick={() => setTime(slot)}
+          >
+            {slot}
+          </button>
+        ))}
         {slots.length === 0 && <p className="muted">No slots available for this date.</p>}
       </div>
 
