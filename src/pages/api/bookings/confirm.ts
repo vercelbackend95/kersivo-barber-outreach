@@ -12,6 +12,8 @@ export const POST: APIRoute = async ({ request }) => {
     const booking = await confirmBookingByToken(parsed.data.token);
     return new Response(JSON.stringify({ booking }));
   } catch (error) {
-    return new Response(JSON.stringify({ error: error instanceof Error ? error.message : 'Unable to confirm.' }), { status: 400 });
+    const status = error instanceof BookingActionError ? error.statusCode : 400;
+    return new Response(JSON.stringify({ error: error instanceof Error ? error.message : 'Unable to confirm.' }), { status });
+
   }
 };

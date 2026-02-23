@@ -5,6 +5,59 @@ import { generateToken, hashToken } from './tokens';
 import { addMinutes, toUtcFromLondon } from './time';
 import { sendBookingMagicLinkEmail } from '../email/sender';
 
+const CANCELLED_BOOKING_MESSAGE = 'This booking is already cancelled. Please create a new booking.';
+
+export class BookingActionError extends Error {
+  statusCode: number;
+
+  constructor(message: string, statusCode = 400) {
+    super(message);
+    this.name = 'BookingActionError';
+    this.statusCode = statusCode;
+  }
+}
+
+function isCancelledStatus(status: BookingStatus): boolean {
+  return status === BookingStatus.CANCELLED_BY_CLIENT || status === BookingStatus.CANCELLED_BY_ADMIN;
+}
+
+async function resolveConfirmTokenBooking(token: string) {
+  const hashed = hashToken(token);
+  const booking = await prisma.booking.findFirst({ where: { confirmTokenHash: hashed } });
+  if (!booking) throw new BookingActionError('Invalid token.');
+
+  if (isCancelledStatus(booking.status)) {
+    throw new BookingActionError(CANCELLED_BOOKING_MESSAGE, 409);
+  }
+
+  return booking;
+}
+
+async function resolveManageTokenBooking(token: string) {
+  const hashed = hashToken(token);
+  const booking = await prisma.booking.findFirst({ where: { manageTokenHash: hashed }, include: { barber: true, service: true } });
+  if (!booking) throw new BookingActionError('Invalid token.');
+
+  if (isCancelledStatus(booking.status)) {
+    throw new BookingActionError(CANCELLED_BOOKING_MESSAGE, 409);
+  }
+
+  return booking;
+}
+
+export async function getRescheduleTokenStatus(token: string): Promise<{ valid: true } | { valid: false; message: string }> {
+  try {
+    await resolveManageTokenBooking(token);
+    return { valid: true };
+  } catch (error) {
+    if (error instanceof BookingActionError) {
+      return { valid: false, message: error.message };
+    }
+
+    return { valid: false, message: 'Unable to validate booking token.' };
+  }
+}
+
 export async function expirePendingBookings() {
   await prisma.booking.updateMany({
     where: {
@@ -89,11 +142,9 @@ export async function createPendingBooking(input: {
 
 export async function confirmBookingByToken(token: string) {
   await expirePendingBookings();
-  const hashed = hashToken(token);
-  const booking = await prisma.booking.findFirst({ where: { confirmTokenHash: hashed } });
-  if (!booking) throw new Error('Invalid token.');
-  if (booking.status !== BookingStatus.PENDING_CONFIRMATION) throw new Error('Booking cannot be confirmed.');
-  if (!booking.confirmTokenExpiresAt || booking.confirmTokenExpiresAt < new Date()) throw new Error('Token expired.');
+  const booking = await resolveConfirmTokenBooking(token);
+  if (booking.status !== BookingStatus.PENDING_CONFIRMATION) throw new BookingActionError('Booking cannot be confirmed.', 409);
+  if (!booking.confirmTokenExpiresAt || booking.confirmTokenExpiresAt < new Date()) throw new BookingActionError('Token expired.');
 
   return prisma.booking.update({
     where: { id: booking.id },
@@ -103,21 +154,24 @@ export async function confirmBookingByToken(token: string) {
 }
 
 export async function cancelByManageToken(token: string) {
-  const hashed = hashToken(token);
-  const booking = await prisma.booking.findFirst({ where: { manageTokenHash: hashed }, include: { barber: true, service: true } });
-  if (!booking) throw new Error('Invalid token.');
-  const settings = await prisma.shopSettings.findFirstOrThrow();
-  if (!canCancelOrReschedule(booking.startAt, settings.cancellationWindowHours)) throw new Error('Cancellation window has passed.');
+    const booking = await resolveManageTokenBooking(token);
+  if (booking.status !== BookingStatus.PENDING_CONFIRMATION && booking.status !== BookingStatus.CONFIRMED) {
+    throw new BookingActionError('Booking cannot be cancelled.', 409);
+  }
 
+  const settings = await prisma.shopSettings.findFirstOrThrow();
+  if (!canCancelOrReschedule(booking.startAt, settings.cancellationWindowHours)) throw new BookingActionError('Cancellation window has passed.', 409);
   return prisma.booking.update({ where: { id: booking.id }, data: { status: BookingStatus.CANCELLED_BY_CLIENT } });
 }
 
 export async function rescheduleByToken(input: { token: string; serviceId: string; barberId: string; date: string; time: string; }) {
-  const hashed = hashToken(input.token);
-  const existing = await prisma.booking.findFirst({ where: { manageTokenHash: hashed }, include: { service: true } });
-  if (!existing) throw new Error('Invalid token.');
+  const existing = await resolveManageTokenBooking(input.token);
+  if (existing.status !== BookingStatus.PENDING_CONFIRMATION && existing.status !== BookingStatus.CONFIRMED) {
+    throw new BookingActionError('Booking cannot be rescheduled.', 409);
+  }
+
   const settings = await prisma.shopSettings.findFirstOrThrow();
-  if (!canCancelOrReschedule(existing.startAt, settings.rescheduleWindowHours)) throw new Error('Reschedule window has passed.');
+  if (!canCancelOrReschedule(existing.startAt, settings.rescheduleWindowHours)) throw new BookingActionError('Reschedule window has passed.', 409);
   const service = await prisma.service.findUniqueOrThrow({ where: { id: input.serviceId } });
   const [h, m] = input.time.split(':').map(Number);
   const startAt = toUtcFromLondon(input.date, h * 60 + m);

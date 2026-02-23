@@ -2,7 +2,7 @@ export const prerender = false;
 
 import type { APIRoute } from 'astro';
 import { tokenSchema } from '../../../lib/booking/schemas';
-import { cancelByManageToken } from '../../../lib/booking/service';
+import { BookingActionError, confirmBookingByToken } from '../../../lib/booking/service';
 
 export const POST: APIRoute = async ({ request }) => {
   const parsed = tokenSchema.safeParse(await request.json());
