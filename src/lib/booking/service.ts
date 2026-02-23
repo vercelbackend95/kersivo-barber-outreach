@@ -18,7 +18,7 @@ export class BookingActionError extends Error {
 }
 
 function isCancelledStatus(status: BookingStatus): boolean {
-  return status === BookingStatus.CANCELLED_BY_CLIENT || status === BookingStatus.CANCELLED_BY_ADMIN;
+  return status === BookingStatus.CANCELLED_BY_CLIENT || status === BookingStatus.CANCELLED_BY_ADMIN || String(status) === 'CANCELLED_BY_SHOP';
 }
 
 async function resolveConfirmTokenBooking(token: string) {
