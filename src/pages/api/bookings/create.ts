@@ -19,13 +19,18 @@ const getRequestIp = (request: Request): string => {
 
 export const POST: APIRoute = async ({ request }) => {
   const ip = getRequestIp(request);
-  const limit = checkBookingRateLimit(ip);
 
-  if (!limit.ok) {
-    return new Response(JSON.stringify({ error: 'Too many attempts. Try later.', retryAfter: limit.retryAfterSeconds }), { status: 429 });
+  if (!import.meta.env.DEV) {
+    const limit = checkBookingRateLimit(ip);
+
+    if (!limit.ok) {
+      return new Response(JSON.stringify({ error: 'Too many attempts. Try later.', retryAfter: limit.retryAfterSeconds }), {
+        status: 429,
+      });
+    }
+
+    await prisma.rateLimitEvent.create({ data: { ip, action: 'booking_create' } });
   }
-
-  await prisma.rateLimitEvent.create({ data: { ip, action: 'booking_create' } });
 
   const rawBody = await request.text();
   if (!rawBody.trim()) {
