@@ -1,0 +1,134 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum BookingStatus {
+  PENDING_CONFIRMATION
+  CONFIRMED
+  CANCELLED_BY_CLIENT
+  CANCELLED_BY_ADMIN
+  RESCHEDULED
+  EXPIRED
+}
+
+enum PaymentStatus {
+  UNPAID
+  PAID
+}
+
+model ShopSettings {
+  id                          String   @id @default(cuid())
+  name                        String
+  timezone                    String   @default("Europe/London")
+  cancellationWindowHours     Int      @default(2)
+  rescheduleWindowHours       Int      @default(2)
+  pendingConfirmationMins     Int      @default(15)
+  slotIntervalMinutes         Int      @default(15)
+  defaultBufferMinutes        Int      @default(0)
+  createdAt                   DateTime @default(now())
+  updatedAt                   DateTime @updatedAt
+}
+
+model Service {
+  id              String   @id @default(cuid())
+  name            String
+  durationMinutes Int
+  bufferMinutes   Int      @default(0)
+  fromPriceText   String?
+  active          Boolean  @default(true)
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+  bookings        Booking[]
+}
+
+model Barber {
+  id         String             @id @default(cuid())
+  name       String
+  email      String?
+  active     Boolean            @default(true)
+  createdAt  DateTime           @default(now())
+  updatedAt  DateTime           @updatedAt
+  bookings   Booking[]
+  rules      AvailabilityRule[]
+  timeOff    BarberTimeOff[]
+}
+
+model AvailabilityRule {
+  id            String   @id @default(cuid())
+  barberId      String
+  dayOfWeek     Int
+  startMinutes  Int
+  endMinutes    Int
+  breakStartMin Int?
+  breakEndMin   Int?
+  active        Boolean  @default(true)
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  barber Barber @relation(fields: [barberId], references: [id], onDelete: Cascade)
+
+  @@index([barberId, dayOfWeek])
+}
+
+model BarberTimeOff {
+  id        String   @id @default(cuid())
+  barberId  String
+  startsAt  DateTime
+  endsAt    DateTime
+  reason    String?
+  createdAt DateTime @default(now())
+
+  barber Barber @relation(fields: [barberId], references: [id], onDelete: Cascade)
+
+  @@index([barberId, startsAt, endsAt])
+}
+
+model Booking {
+  id                      String        @id @default(cuid())
+  serviceId               String
+  barberId                String
+  fullName                String
+  email                   String
+  phone                   String?
+  startAt                 DateTime
+  endAt                   DateTime
+  status                  BookingStatus @default(PENDING_CONFIRMATION)
+  notes                   String?
+  parentBookingId         String?
+  newBookingId            String?
+
+  confirmTokenHash        String?
+  confirmTokenExpiresAt   DateTime?
+  manageTokenHash         String
+  manageTokenExpiresAt    DateTime?
+
+  paymentRequired         Boolean       @default(false)
+  depositAmountPence      Int?
+  paymentStatus           PaymentStatus?
+  stripeCheckoutSessionId String?
+  paidAt                  DateTime?
+
+  createdAt               DateTime      @default(now())
+  updatedAt               DateTime      @updatedAt
+
+  service Service @relation(fields: [serviceId], references: [id])
+  barber  Barber  @relation(fields: [barberId], references: [id])
+
+  @@index([barberId, startAt, endAt])
+  @@index([status])
+  @@index([email])
+}
+
+model RateLimitEvent {
+  id        String   @id @default(cuid())
+  ip        String
+  action    String
+  createdAt DateTime @default(now())
+
+  @@index([ip, action, createdAt])
+}

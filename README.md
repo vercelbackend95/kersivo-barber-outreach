@@ -1,43 +1,60 @@
-# Astro Starter Kit: Minimal
-
-```sh
-npm create astro@latest -- --template minimal
-```
-
-> 🧑‍🚀 **Seasoned astronaut?** Delete this file. Have fun!
-
-## 🚀 Project Structure
-
-Inside of your Astro project, you'll see the following folders and files:
-
-```text
-/
-├── public/
-├── src/
-│   └── pages/
-│       └── index.astro
-└── package.json
-```
-
-Astro looks for `.astro` or `.md` files in the `src/pages/` directory. Each page is exposed as a route based on its file name.
-
-There's nothing special about `src/components/`, but that's where we like to put any Astro/React/Vue/Svelte/Preact components.
-
-Any static assets, like images, can be placed in the `public/` directory.
-
-## 🧞 Commands
-
-All commands are run from the root of the project, from a terminal:
-
-| Command                   | Action                                           |
-| :------------------------ | :----------------------------------------------- |
-| `npm install`             | Installs dependencies                            |
-| `npm run dev`             | Starts local dev server at `localhost:4321`      |
-| `npm run build`           | Build your production site to `./dist/`          |
-| `npm run preview`         | Preview your build locally, before deploying     |
-| `npm run astro ...`       | Run CLI commands like `astro add`, `astro check` |
-| `npm run astro -- --help` | Get help using the Astro CLI                     |
-
-## 👀 Want to learn more?
-
-Feel free to check [our documentation](https://docs.astro.build) or jump into our [Discord server](https://astro.build/chat).
+# Kersivo Booking Lite v1
+Astro + React (TypeScript) booking system for barbershops.
+## Setup
+1. Install dependencies:
+   ```bash
+   npm install
+   ```
+2. Create Neon Postgres database and set `DATABASE_URL` in `.env`.
+3. Run Prisma migrations:
+   ```bash
+   npx prisma migrate dev
+   ```
+4. Seed demo data:
+   ```bash
+   npx prisma db seed
+   ```
+5. Configure email:
+   - Production: set `RESEND_API_KEY` and `FROM_EMAIL`
+   - Dev fallback: leave `RESEND_API_KEY` empty to log magic links in console.
+6. Set `ADMIN_SECRET` for admin panel login.
+7. Run app:
+   ```bash
+   npm run dev
+   ```
+## Demo flow
+- Public booking: `/book`
+- Confirm booking magic link: `/book/confirm?token=...`
+- Cancel: `/book/cancel?token=...`
+- Reschedule: `/book/reschedule?token=...`
+- Admin panel: `/admin`
+## Included seed
+- Shop: Demo Barbershop
+- Barbers: Jay, Mason, Luca
+- Services:
+  - Haircut (30)
+  - Skin Fade (45)
+  - Beard Trim (20)
+  - Haircut + Beard (50)
+- Availability: Mon-Sat 10:00-18:00, break 13:00-13:30, Sunday closed
+## API routes
+- `POST /api/bookings/create`
+- `POST /api/bookings/confirm`
+- `POST /api/bookings/cancel`
+- `POST /api/bookings/reschedule`
+- `GET /api/availability?barberId=...&serviceId=...&date=YYYY-MM-DD`
+- Admin:
+  - `GET/POST /api/admin/services`
+  - `GET/POST /api/admin/barbers`
+  - `GET/POST /api/admin/availability`
+  - `GET/POST /api/admin/timeoff`
+  - `GET /api/admin/bookings`
+  - `POST /api/admin/bookings/manual`
+## Deposits-ready schema (v2 prep)
+Bookings already include:
+- `paymentRequired`
+- `depositAmountPence`
+- `paymentStatus` (`UNPAID` / `PAID`)
+- `stripeCheckoutSessionId`
+- `paidAt`
+No Stripe integration in v1.

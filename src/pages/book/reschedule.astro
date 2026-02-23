@@ -1,0 +1,14 @@
+---
+import BookingFlow from '../../components/booking/BookingFlow';
+import '../../styles/tokens.css';
+import '../../styles/global.css';
+import '../../styles/components/booking.css';
+import '../../styles/components/buttons.css';
+import { prisma } from '../../lib/db/client';
+const token = Astro.url.searchParams.get('token') ?? '';
+const [services, barbers] = await Promise.all([
+  prisma.service.findMany({ where: { active: true }, orderBy: { createdAt: 'asc' } }),
+  prisma.barber.findMany({ where: { active: true }, orderBy: { createdAt: 'asc' } })
+]);
+---
+<html lang="en"><body><main class="container page-wrap"><section class="surface booking-shell"><h1>Reschedule booking</h1><p class="muted">Pick a new slot, then submit with same details. Token-managed reschedule is handled by API endpoint.</p><p>Token: {token ? 'validating in request payload' : 'missing token'}</p><BookingFlow client:load services={services} barbers={barbers} /></section></main></body></html>

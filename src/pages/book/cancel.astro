@@ -1,0 +1,12 @@
+---
+import '../../styles/tokens.css';
+import '../../styles/global.css';
+import '../../styles/components/booking.css';
+const token = Astro.url.searchParams.get('token') ?? '';
+let response;
+if (token) {
+  const apiResponse = await fetch(new URL('/api/bookings/cancel', Astro.url), { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ token }) });
+  response = await apiResponse.json();
+}
+---
+<html lang="en"><body><main class="container page-wrap"><section class="surface booking-shell"><h1>Cancel booking</h1><p>{response?.error ? response.error : 'Booking cancelled successfully.'}</p></section></main></body></html>
