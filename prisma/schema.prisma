@@ -35,7 +35,7 @@ model ShopSettings {
 }
 
 model Service {
-  id              String   @id @default(cuid())
+  id              String   @id
   name            String
   durationMinutes Int
   bufferMinutes   Int      @default(0)
