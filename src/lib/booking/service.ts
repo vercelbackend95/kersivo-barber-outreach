@@ -3,9 +3,10 @@ import { prisma } from '../db/client';
 import { canCancelOrReschedule, pendingExpiryDate } from './policies';
 import { generateToken, hashToken } from './tokens';
 import { addMinutes, toUtcFromLondon } from './time';
-import { sendBookingMagicLinkEmail } from '../email/sender';
+import { sendBookingConfirmationEmail, sendManageBookingEmail } from '../email/sender';
 
 const CANCELLED_BOOKING_MESSAGE = 'This booking is already cancelled. Please create a new booking.';
+const MANAGE_LINKS_NOT_READY_MESSAGE = 'Please confirm your booking first. Manage links become active after confirmation.';
 
 export class BookingActionError extends Error {
   statusCode: number;
@@ -28,6 +29,10 @@ async function resolveConfirmTokenBooking(token: string) {
 
   if (isCancelledStatus(booking.status)) {
     throw new BookingActionError(CANCELLED_BOOKING_MESSAGE, 409);
+  }
+
+    if (booking.status !== BookingStatus.CONFIRMED) {
+    throw new BookingActionError(MANAGE_LINKS_NOT_READY_MESSAGE, 409);
   }
 
   return booking;
@@ -103,7 +108,6 @@ export async function createPendingBooking(input: {
   const endAt = addMinutes(startAt, service.durationMinutes + (service.bufferMinutes || settings.defaultBufferMinutes));
 
   const confirmToken = generateToken();
-  const manageToken = generateToken();
 
   const booking = await prisma.$transaction(async (tx) => {
     await ensureSlotAvailable(tx, { barberId: input.barberId, startAt, endAt });
@@ -120,7 +124,7 @@ export async function createPendingBooking(input: {
         status: BookingStatus.PENDING_CONFIRMATION,
         confirmTokenHash: hashToken(confirmToken),
         confirmTokenExpiresAt: pendingExpiryDate(settings),
-        manageTokenHash: hashToken(manageToken),
+        manageTokenHash: null,
         paymentRequired: false,
         paymentStatus: null
       },
@@ -129,12 +133,14 @@ export async function createPendingBooking(input: {
   }, { isolationLevel: Prisma.TransactionIsolationLevel.Serializable });
 
   const baseUrl = import.meta.env.PUBLIC_SITE_URL ?? process.env.PUBLIC_SITE_URL ?? 'http://localhost:4321';
-  await sendBookingMagicLinkEmail({
+  await sendBookingConfirmationEmail({
     to: booking.email,
     fullName: booking.fullName,
     confirmUrl: `${baseUrl}/book/confirm?token=${confirmToken}`,
-    cancelUrl: `${baseUrl}/book/cancel?token=${manageToken}`,
-    rescheduleUrl: `${baseUrl}/book/reschedule?token=${manageToken}`
+    shopName: settings.name,
+    serviceName: booking.service.name,
+    barberName: booking.barber.name,
+    startAt: booking.startAt
   });
 
   return booking;
@@ -143,21 +149,45 @@ export async function createPendingBooking(input: {
 export async function confirmBookingByToken(token: string) {
   await expirePendingBookings();
   const booking = await resolveConfirmTokenBooking(token);
-  if (booking.status !== BookingStatus.PENDING_CONFIRMATION) throw new BookingActionError('Booking cannot be confirmed.', 409);
+  if (booking.status !== BookingStatus.PENDING_CONFIRMATION) throw new BookingActionError('This booking is already confirmed.', 409);
   if (!booking.confirmTokenExpiresAt || booking.confirmTokenExpiresAt < new Date()) throw new BookingActionError('Token expired.');
 
-  return prisma.booking.update({
-    where: { id: booking.id },
-    data: { status: BookingStatus.CONFIRMED, confirmTokenHash: null, confirmTokenExpiresAt: null },
-    include: { barber: true, service: true }
+  const manageToken = generateToken();
+
+  const { confirmedBooking, settings } = await prisma.$transaction(async (tx) => {
+    const updatedBooking = await tx.booking.update({
+      where: { id: booking.id },
+      data: {
+        status: BookingStatus.CONFIRMED,
+        confirmTokenHash: null,
+        confirmTokenExpiresAt: null,
+        manageTokenHash: hashToken(manageToken)
+      },
+      include: { barber: true, service: true }
+    });
+
+    const shopSettings = await tx.shopSettings.findFirstOrThrow();
+
+    return { confirmedBooking: updatedBooking, settings: shopSettings };
   });
+
+  const baseUrl = import.meta.env.PUBLIC_SITE_URL ?? process.env.PUBLIC_SITE_URL ?? 'http://localhost:4321';
+  await sendManageBookingEmail({
+    to: confirmedBooking.email,
+    fullName: confirmedBooking.fullName,
+    cancelUrl: `${baseUrl}/book/cancel?token=${manageToken}`,
+    rescheduleUrl: `${baseUrl}/book/reschedule?token=${manageToken}`,
+    shopName: settings.name,
+    serviceName: confirmedBooking.service.name,
+    barberName: confirmedBooking.barber.name,
+    startAt: confirmedBooking.startAt
+  });
+
+  return confirmedBooking;
 }
 
 export async function cancelByManageToken(token: string) {
-    const booking = await resolveManageTokenBooking(token);
-  if (booking.status !== BookingStatus.PENDING_CONFIRMATION && booking.status !== BookingStatus.CONFIRMED) {
-    throw new BookingActionError('Booking cannot be cancelled.', 409);
-  }
+  const booking = await resolveManageTokenBooking(token);
 
   const settings = await prisma.shopSettings.findFirstOrThrow();
   if (!canCancelOrReschedule(booking.startAt, settings.cancellationWindowHours)) throw new BookingActionError('Cancellation window has passed.', 409);
@@ -166,9 +196,7 @@ export async function cancelByManageToken(token: string) {
 
 export async function rescheduleByToken(input: { token: string; serviceId: string; barberId: string; date: string; time: string; }) {
   const existing = await resolveManageTokenBooking(input.token);
-  if (existing.status !== BookingStatus.PENDING_CONFIRMATION && existing.status !== BookingStatus.CONFIRMED) {
-    throw new BookingActionError('Booking cannot be rescheduled.', 409);
-  }
+
 
   const settings = await prisma.shopSettings.findFirstOrThrow();
   if (!canCancelOrReschedule(existing.startAt, settings.rescheduleWindowHours)) throw new BookingActionError('Reschedule window has passed.', 409);

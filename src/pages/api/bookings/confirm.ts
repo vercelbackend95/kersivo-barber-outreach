@@ -2,7 +2,7 @@ export const prerender = false;
 
 import type { APIRoute } from 'astro';
 import { tokenSchema } from '../../../lib/booking/schemas';
-import { confirmBookingByToken } from '../../../lib/booking/service';
+import { BookingActionError, confirmBookingByToken } from '../../../lib/booking/service';
 
 export const POST: APIRoute = async ({ request }) => {
   const parsed = tokenSchema.safeParse(await request.json());
@@ -14,6 +14,5 @@ export const POST: APIRoute = async ({ request }) => {
   } catch (error) {
     const status = error instanceof BookingActionError ? error.statusCode : 400;
     return new Response(JSON.stringify({ error: error instanceof Error ? error.message : 'Unable to confirm.' }), { status });
-
   }
 };

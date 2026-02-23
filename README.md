@@ -11,14 +11,27 @@ Astro + React (TypeScript) booking system for barbershops.
    ```bash
    npx prisma migrate reset
    ```
-4. Configure email:
-   - Production: set `RESEND_API_KEY` and `FROM_EMAIL`
-   - Dev fallback: leave `RESEND_API_KEY` empty to log magic links in console.
+4. Configure email + URLs:
+   - `RESEND_API_KEY`: required for real email delivery via Resend.
+   - `FROM_EMAIL`: sender identity used by Resend (must be verified in your Resend account).
+   - `PUBLIC_SITE_URL`: public base URL used to generate confirm/cancel/reschedule links in emails (for local dev use `http://localhost:4321`).
+   - If `RESEND_API_KEY` is missing, the app falls back to console logs for booking links.
+
 5. Set `ADMIN_SECRET` for admin panel login.
 6. Run app:
    ```bash
    npm run dev
    ```
+## Booking email flow (Plan A)
+- `POST /api/bookings/create`
+  - Creates booking as `PENDING_CONFIRMATION`
+  - Generates and emails only the confirmation link (`Confirm your booking`)
+- `POST /api/bookings/confirm`
+  - Confirms booking
+  - Generates manage token
+  - Sends second email (`Manage your booking`) with cancel + reschedule links
+- Cancel/reschedule links are valid only for `CONFIRMED` bookings.
+
 
 ## Demo flow
 - Public booking: `/book`
