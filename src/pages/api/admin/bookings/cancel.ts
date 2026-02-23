@@ -23,7 +23,20 @@ export const POST: APIRoute = async (ctx) => {
     return new Response(JSON.stringify({ booking, message: 'Booking cancelled successfully.' }), { status: 200 });
   } catch (error) {
     if (error instanceof BookingActionError) {
-      return new Response(JSON.stringify({ error: error.message }), { status: error.statusCode });
+      return new Response(
+        JSON.stringify({
+          error: error.message,
+          code: 'BOOKING_ACTION_ERROR',
+          status: error.statusCode
+        }),
+        { status: error.statusCode }
+      );
+    }
+
+    console.error('Unhandled error while cancelling booking from admin endpoint.', error);
+    if (error instanceof Error && error.stack) {
+      console.error(error.stack);
+
     }
 
     return new Response(JSON.stringify({ error: 'Unable to cancel booking right now. Please try again.' }), { status: 500 });

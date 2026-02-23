@@ -383,11 +383,27 @@ export default function AdminPanel() {
         body: JSON.stringify({ bookingId: booking.id })
       });
 
-      const payload = (await response.json().catch(() => ({}))) as { error?: string };
+      const payload = (await response.json().catch(() => ({}))) as {
+        error?: string;
+        details?: string;
+        message?: string;
+      };
+
 
       if (!response.ok) {
         if (response.status === 409) {
-          setCancelErrorMessage(payload.error || 'This booking is already cancelled or expired.');
+                   setCancelErrorMessage(payload.error || payload.details || 'This booking is already cancelled or expired.');
+          return;
+        }
+
+        if (response.status === 404) {
+          setCancelErrorMessage(payload.error || payload.details || 'Booking not found. It may have been removed already.');
+          return;
+        }
+
+        if (response.status < 500) {
+          setCancelErrorMessage(payload.error || payload.details || payload.message || 'Unable to cancel booking due to request error.');
+
           return;
         }
 

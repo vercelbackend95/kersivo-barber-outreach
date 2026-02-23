@@ -206,25 +206,36 @@ export async function cancelByShop(input: { bookingId: string; reason?: string }
     throw new BookingActionError('This booking has already been cancelled or expired.', 409);
   }
 
-  const settings = await prisma.shopSettings.findFirstOrThrow();
-
   const updatedBooking = await prisma.booking.update({
     where: { id: booking.id },
     data: {
-      status: 'CANCELLED_BY_SHOP' as BookingStatus
+      status: BookingStatus.CANCELLED_BY_SHOP
     },
     include: { barber: true, service: true }
   });
 
-  await sendShopCancelledBookingEmail({
-    to: updatedBooking.email,
-    fullName: updatedBooking.fullName,
-    shopName: settings.name,
-    serviceName: updatedBooking.service.name,
-    barberName: updatedBooking.barber.name,
-    startAt: updatedBooking.startAt,
-    reason: input.reason
-  });
+  try {
+    const settings = await prisma.shopSettings.findFirstOrThrow();
+    await sendShopCancelledBookingEmail({
+      to: updatedBooking.email,
+      fullName: updatedBooking.fullName,
+      shopName: settings.name,
+      serviceName: updatedBooking.service.name,
+      barberName: updatedBooking.barber.name,
+      startAt: updatedBooking.startAt,
+      reason: input.reason
+    });
+  } catch (error) {
+    console.warn('Failed to send shop cancellation email.', {
+      bookingId: updatedBooking.id,
+      error: error instanceof Error ? error.message : error
+    });
+
+    if (error instanceof Error && error.stack) {
+      console.warn(error.stack);
+    }
+  }
+
 
   return updatedBooking;
 }
