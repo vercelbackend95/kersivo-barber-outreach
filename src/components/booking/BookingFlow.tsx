@@ -4,6 +4,16 @@ import React, { useEffect, useMemo, useState } from 'react';
 type Service = { id: string; name: string; durationMinutes: number; fromPriceText?: string | null };
 type Barber = { id: string; name: string };
 
+type BookingCreatePayload = {
+  serviceId: string;
+  barberId: string;
+  date: string;
+  time: string;
+  fullName: string;
+  email: string;
+  phone?: string;
+};
+
 type Props = { services: Service[]; barbers: Barber[] };
 
 function normalizeToIsoDate(input: string): string | null {
@@ -60,19 +70,37 @@ export default function BookingFlow({ services, barbers }: Props) {
 
   async function submit() {
     setMessage('');
+
     const isoDate = normalizeToIsoDate(date);
     if (!isoDate) {
       setMessage('Please choose a valid date.');
       return;
     }
-    const payload = { serviceId, barberId, date: isoDate, time, fullName, email, phone };
+
+    if (!time) {
+      setMessage('Please select an available time.');
+      return;
+    }
+
+    const payload: BookingCreatePayload = {
+      serviceId,
+      barberId,
+      date: isoDate,
+      time,
+      fullName,
+      email,
+      ...(phone ? { phone } : {})
+    };
+
     const res = await fetch('/api/bookings/create', {
       method: 'POST',
-      headers: { 'content-type': 'application/json' },
+      headers: {
+        'content-type': 'application/json'
+      },
       body: JSON.stringify(payload)
-
     });
-    const data = await res.json();
+
+    const data = await res.json().catch(() => ({} as { error?: string }));
     setMessage(res.ok ? 'Booking created. Check email for confirmation magic link.' : data.error || 'Unable to create booking.');
   }
 
@@ -116,7 +144,7 @@ export default function BookingFlow({ services, barbers }: Props) {
       <label>Phone (optional)</label>
       <input value={phone} onChange={(e) => setPhone(e.target.value)} />
 
-      <button className="btn btn--primary" disabled={!time || !fullName || !email} onClick={submit}>Create booking</button>
+      <button type="button" className="btn btn--primary" disabled={!time || !fullName || !email} onClick={submit}>Create booking</button>
       {message && <p>{message}</p>}
     </section>
   );
