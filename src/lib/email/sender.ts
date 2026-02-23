@@ -1,4 +1,5 @@
 import { formatInTimeZone } from 'date-fns-tz';
+
 const RESEND_API_KEY = import.meta.env.RESEND_API_KEY ?? process.env.RESEND_API_KEY;
 const FROM_EMAIL = import.meta.env.FROM_EMAIL ?? process.env.FROM_EMAIL ?? 'onboarding@resend.dev';
 
@@ -19,8 +20,14 @@ function renderBookingSummary(input: BookingEmailBaseInput): string {
   <p><strong>Barber:</strong> ${input.barberName}</p>
   <p><strong>Date & time (Europe/London):</strong> ${londonDateTime}</p>`;
 }
+async function sendEmail(input: {
+  to: string;
+  subject: string;
+  html: string;
+  devLogLabel: string;
+  devPayload: Record<string, string>;
+}) {
 
-async function sendEmail(input: { to: string; subject: string; html: string; devLogLabel: string; devPayload: Record<string, string> }) {
   if (!RESEND_API_KEY) {
     console.log(input.devLogLabel, input.devPayload);
     return;
@@ -29,7 +36,6 @@ async function sendEmail(input: { to: string; subject: string; html: string; dev
   try {
     const { Resend } = await import('resend');
     const resend = new Resend(RESEND_API_KEY);
-
 
     await resend.emails.send({
       from: FROM_EMAIL,
@@ -43,7 +49,6 @@ async function sendEmail(input: { to: string; subject: string; html: string; dev
     console.error('[EMAIL] Failed to send', { to: input.to, subject: input.subject, error });
     throw error;
   }
-
 }
 
 export async function sendBookingConfirmationEmail(input: BookingEmailBaseInput & { confirmUrl: string }) {
@@ -95,9 +100,9 @@ export async function sendManageBookingEmail(input: BookingEmailBaseInput & { ca
       barberName: input.barberName,
       startAt: input.startAt.toISOString()
     }
-
   });
 }
+
 export async function sendRescheduledBookingEmail(
   input: BookingEmailBaseInput & {
     cancelUrl: string;
@@ -140,10 +145,8 @@ export async function sendRescheduledBookingEmail(
       previousStartAt: input.previousStartAt?.toISOString() ?? '',
       previousEndAt: input.previousEndAt?.toISOString() ?? ''
     }
-
   });
-  
-
+}
 export async function sendShopCancelledBookingEmail(
   input: BookingEmailBaseInput & {
     reason?: string;
@@ -174,4 +177,3 @@ export async function sendShopCancelledBookingEmail(
   });
 }
 
-}
