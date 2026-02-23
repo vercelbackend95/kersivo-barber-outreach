@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
 type Booking = {
   id: string;
@@ -13,6 +13,9 @@ type Booking = {
 };
 
 const ADMIN_TIMEZONE = 'Europe/London';
+const POLL_INTERVAL_MS = 15000;
+const LAST_UPDATED_REFRESH_MS = 1000;
+const UPDATED_ROW_HIGHLIGHT_MS = 2000;
 
 function formatRelativeTime(startAt: string, endAt: string) {
   const nowMs = Date.now();
@@ -59,25 +62,150 @@ function describeAfterThat(booking: Booking) {
   return `After that: ${booking.barber?.name ?? 'Unknown barber'} — ${booking.service?.name ?? 'Service'} — ${formatStartTime(booking.startAt)} (${formatRelativeTime(booking.startAt, booking.endAt)})`;
 }
 
+function toSignature(booking: Booking) {
+  return [
+    booking.id,
+    booking.fullName,
+    booking.email,
+    booking.status,
+    booking.startAt,
+    booking.endAt,
+    booking.rescheduledAt ?? '',
+    booking.barber?.name ?? '',
+    booking.service?.name ?? ''
+  ].join('|');
+}
+
+function formatLastUpdated(lastUpdatedAt: number | null, nowMs: number) {
+  if (!lastUpdatedAt) return 'never';
+  const diffSec = Math.floor((nowMs - lastUpdatedAt) / 1000);
+  if (diffSec <= 4) return 'just now';
+  if (diffSec < 60) return `${diffSec}s ago`;
+  const diffMin = Math.floor(diffSec / 60);
+  return `${diffMin}m ago`;
+}
+
 export default function AdminPanel() {
   const [secret, setSecret] = useState('');
   const [loggedIn, setLoggedIn] = useState(false);
   const [bookings, setBookings] = useState<Booking[]>([]);
   const [error, setError] = useState('');
+  const [highlightedBookingId, setHighlightedBookingId] = useState<string | null>(null);
+  const [updatedBookingIds, setUpdatedBookingIds] = useState<string[]>([]);
+  const [isRefreshing, setIsRefreshing] = useState(false);
+  const [lastUpdatedAt, setLastUpdatedAt] = useState<number | null>(null);
+  const [nowMs, setNowMs] = useState(() => Date.now());
+
+  const inFlightRef = useRef(false);
+  const pollingStoppedRef = useRef(false);
+  const previousSignaturesRef = useRef<Map<string, string>>(new Map());
+  const updatedRowsTimeoutRef = useRef<number | null>(null);
+
+  const fetchBookings = useCallback(async () => {
+    if (!loggedIn || pollingStoppedRef.current || inFlightRef.current) return;
+
+    inFlightRef.current = true;
+    setIsRefreshing(true);
+    const scrollY = window.scrollY;
+
+    try {
+      const response = await fetch('/api/admin/bookings', { credentials: 'same-origin' });
+
+      if (response.status === 401) {
+        pollingStoppedRef.current = true;
+        setLoggedIn(false);
+        setError('Session expired. Please log in again.');
+        return;
+      }
+
+      if (!response.ok) {
+        throw new Error(`Fetch failed with status ${response.status}`);
+      }
+
+      const data = (await response.json()) as { bookings?: Booking[] };
+      const incomingBookings = data.bookings ?? [];
+      const nextSignatures = new Map(incomingBookings.map((booking) => [booking.id, toSignature(booking)]));
+      const changedIds = incomingBookings
+        .filter((booking) => previousSignaturesRef.current.get(booking.id) !== nextSignatures.get(booking.id))
+        .map((booking) => booking.id);
+
+      setBookings(incomingBookings);
+      previousSignaturesRef.current = nextSignatures;
+      setLastUpdatedAt(Date.now());
+
+      if (changedIds.length) {
+        setUpdatedBookingIds(changedIds);
+        if (updatedRowsTimeoutRef.current) {
+          window.clearTimeout(updatedRowsTimeoutRef.current);
+        }
+        updatedRowsTimeoutRef.current = window.setTimeout(() => setUpdatedBookingIds([]), UPDATED_ROW_HIGHLIGHT_MS);
+      }
+
+      window.requestAnimationFrame(() => {
+        window.scrollTo({ top: scrollY });
+      });
+    } catch {
+      setError('Could not refresh bookings right now.');
+    } finally {
+      inFlightRef.current = false;
+      setIsRefreshing(false);
+    }
+  }, [loggedIn]);
 
   async function login() {
-    const res = await fetch('/api/admin/login', { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ secret }) });
+    setError('');
+    const res = await fetch('/api/admin/login', {
+      method: 'POST',
+      headers: { 'content-type': 'application/json' },
+      body: JSON.stringify({ secret })
+    });
+
     setLoggedIn(res.ok);
-    if (!res.ok) setError('Invalid secret');
+    if (!res.ok) {
+      setError('Invalid secret');
+      return;
+    }
+
+    pollingStoppedRef.current = false;
+    previousSignaturesRef.current = new Map();
+    void fetchBookings();
   }
 
   useEffect(() => {
+    if (!loggedIn || pollingStoppedRef.current) return;
+
+    void fetchBookings();
+    const intervalId = window.setInterval(() => {
+      void fetchBookings();
+    }, POLL_INTERVAL_MS);
+
+    return () => {
+      window.clearInterval(intervalId);
+    };
+  }, [fetchBookings, loggedIn]);
+
+  useEffect(() => {
     if (!loggedIn) return;
-    fetch('/api/admin/bookings').then((r) => r.json()).then((data) => setBookings(data.bookings ?? []));
+
+    const timerId = window.setInterval(() => {
+      setNowMs(Date.now());
+    }, LAST_UPDATED_REFRESH_MS);
+
+    return () => {
+      window.clearInterval(timerId);
+    };
   }, [loggedIn]);
 
-  const [highlightedBookingId, setHighlightedBookingId] = useState<string | null>(null);
-  const upcomingBookings = getUpcomingBookings(bookings);
+  useEffect(() => {
+    return () => {
+      pollingStoppedRef.current = true;
+      if (updatedRowsTimeoutRef.current) {
+        window.clearTimeout(updatedRowsTimeoutRef.current);
+      }
+    };
+  }, []);
+
+  const upcomingBookings = useMemo(() => getUpcomingBookings(bookings), [bookings]);
   const nextBooking = upcomingBookings[0] ?? null;
   const secondNextBooking = upcomingBookings[1] ?? null;
 
@@ -107,11 +235,28 @@ export default function AdminPanel() {
           <p className="admin-next-primary">Next: No upcoming confirmed bookings.</p>
         )}
       </div>
+
+      <div className="admin-refresh-row">
+        <p className="muted admin-last-updated">Last updated: {formatLastUpdated(lastUpdatedAt, nowMs)}</p>
+        <div className="admin-refresh-controls">
+          {isRefreshing && <span className="admin-refreshing" aria-live="polite">Refreshing…</span>}
+          <button type="button" className="btn btn--ghost" onClick={() => void fetchBookings()} disabled={isRefreshing}>Refresh</button>
+        </div>
+      </div>
+
+      {error && <p className="muted">{error}</p>}
+
       <p className="muted">Bookings</p>
       <table className="admin-table">
         <thead><tr><th>Client</th><th>Email</th><th>Service</th><th>Barber</th><th>Status</th><th>Start</th></tr></thead>
         <tbody>
-          {bookings.map((booking) => <tr id={`booking-row-${booking.id}`} className={highlightedBookingId === booking.id ? 'admin-row--highlighted' : ''} key={booking.id}><td>{booking.fullName}</td><td>{booking.email}</td><td>{booking.service?.name}</td><td>{booking.barber?.name}</td><td>{booking.status === 'CONFIRMED' && booking.rescheduledAt ? 'CONFIRMED · RESCHEDULED' : booking.status}</td><td>{new Date(booking.startAt).toLocaleString('en-GB', { timeZone: ADMIN_TIMEZONE })}</td></tr>)}
+          {bookings.map((booking) => {
+            const isFocused = highlightedBookingId === booking.id;
+            const isUpdated = updatedBookingIds.includes(booking.id);
+            const rowClassName = [isFocused ? 'admin-row--highlighted' : '', isUpdated ? 'admin-row--updated' : ''].filter(Boolean).join(' ');
+
+            return <tr id={`booking-row-${booking.id}`} className={rowClassName} key={booking.id}><td>{booking.fullName}</td><td>{booking.email}</td><td>{booking.service?.name}</td><td>{booking.barber?.name}</td><td>{booking.status === 'CONFIRMED' && booking.rescheduledAt ? 'CONFIRMED · RESCHEDULED' : booking.status}</td><td>{new Date(booking.startAt).toLocaleString('en-GB', { timeZone: ADMIN_TIMEZONE })}</td></tr>;
+          })}
         </tbody>
       </table>
     </section>

@@ -52,8 +52,36 @@
   color: var(--muted);
 }
 
+.admin-refresh-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-sm);
+  flex-wrap: wrap;
+}
+
+.admin-refresh-controls {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-xs);
+}
+
+.admin-last-updated {
+  margin: 0;
+}
+
+.admin-refreshing {
+  color: var(--muted);
+  font-size: 0.9rem;
+}
+
 .admin-row--highlighted {
   outline: 2px solid var(--focus);
   outline-offset: -2px;
   background: var(--surface);
+}
+
+.admin-row--updated {
+  background: color-mix(in srgb, var(--accent) 14%, var(--surface));
+  transition: background-color 1.2s ease;
 }
