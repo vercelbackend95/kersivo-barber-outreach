@@ -12,6 +12,8 @@ type Booking = {
   service: { name: string };
 };
 
+type BookingFilterTab = 'confirmed' | 'rescheduled' | 'pending' | 'cancelled';
+
 const ADMIN_TIMEZONE = 'Europe/London';
 const POLL_INTERVAL_MS = 15000;
 const LAST_UPDATED_REFRESH_MS = 1000;
@@ -101,6 +103,37 @@ function getBookingSearchScore(booking: Booking, normalizedQuery: string) {
   return 0;
 }
 
+function isCancelledStatus(status: string) {
+  return status.startsWith('CANCELLED');
+}
+
+function matchesTabFilter(booking: Booking, activeFilter: BookingFilterTab) {
+  if (activeFilter === 'confirmed') {
+    return booking.status === 'CONFIRMED' && !booking.rescheduledAt;
+  }
+
+  if (activeFilter === 'rescheduled') {
+    return booking.status === 'CONFIRMED' && Boolean(booking.rescheduledAt);
+  }
+
+  if (activeFilter === 'pending') {
+    return booking.status === 'PENDING_CONFIRMATION';
+  }
+
+  return isCancelledStatus(booking.status);
+}
+
+function sortByFilter(bookingA: Booking, bookingB: Booking, activeFilter: BookingFilterTab) {
+  const startAtA = new Date(bookingA.startAt).getTime();
+  const startAtB = new Date(bookingB.startAt).getTime();
+
+  if (activeFilter === 'cancelled') {
+    return startAtB - startAtA;
+  }
+
+  return startAtA - startAtB;
+}
+
 
 export default function AdminPanel() {
   const [secret, setSecret] = useState('');
@@ -114,6 +147,7 @@ export default function AdminPanel() {
   const [lastUpdatedAt, setLastUpdatedAt] = useState<number | null>(null);
   const [nowMs, setNowMs] = useState(() => Date.now());
   const [clientSearchQuery, setClientSearchQuery] = useState('');
+  const [activeFilter, setActiveFilter] = useState<BookingFilterTab>('confirmed');
 
   const inFlightRef = useRef(false);
   const pollingStoppedRef = useRef(false);
@@ -275,12 +309,27 @@ export default function AdminPanel() {
   const secondNextBooking = upcomingBookings[1] ?? null;
   const normalizedClientSearchQuery = useMemo(() => normalizeSearchValue(clientSearchQuery), [clientSearchQuery]);
 
+  const bookingsByTab = useMemo(() => {
+    return {
+      confirmed: bookings.filter((booking) => matchesTabFilter(booking, 'confirmed')).length,
+      rescheduled: bookings.filter((booking) => matchesTabFilter(booking, 'rescheduled')).length,
+      pending: bookings.filter((booking) => matchesTabFilter(booking, 'pending')).length,
+      cancelled: bookings.filter((booking) => matchesTabFilter(booking, 'cancelled')).length
+    };
+  }, [bookings]);
+
+  const filteredBookings = useMemo(() => {
+    return bookings
+      .filter((booking) => matchesTabFilter(booking, activeFilter))
+      .sort((bookingA, bookingB) => sortByFilter(bookingA, bookingB, activeFilter));
+  }, [activeFilter, bookings]);
+
   const visibleBookings = useMemo(() => {
     if (!normalizedClientSearchQuery) {
-      return bookings;
+      return filteredBookings;
     }
 
-    return bookings
+    return filteredBookings
       .map((booking, index) => ({
         booking,
         score: getBookingSearchScore(booking, normalizedClientSearchQuery),
@@ -296,7 +345,7 @@ export default function AdminPanel() {
         return a.index - b.index;
       })
       .map((entry) => entry.booking);
-  }, [bookings, normalizedClientSearchQuery]);
+  }, [filteredBookings, normalizedClientSearchQuery]);
 
 
   function goToBooking(bookingId: string) {
@@ -346,7 +395,22 @@ export default function AdminPanel() {
       {error && <p className="muted">{error}</p>}
 
       <p className="muted">Bookings</p>
-        <div className="admin-search-row">
+      <div className="admin-filter-tabs" role="tablist" aria-label="Booking status filters">
+        <button type="button" className={`admin-filter-tab ${activeFilter === 'confirmed' ? 'admin-filter-tab--active' : ''}`} role="tab" aria-selected={activeFilter === 'confirmed'} onClick={() => setActiveFilter('confirmed')}>
+          Confirmed <span className="admin-filter-count">({bookingsByTab.confirmed})</span>
+        </button>
+        <button type="button" className={`admin-filter-tab ${activeFilter === 'rescheduled' ? 'admin-filter-tab--active' : ''}`} role="tab" aria-selected={activeFilter === 'rescheduled'} onClick={() => setActiveFilter('rescheduled')}>
+          Rescheduled <span className="admin-filter-count">({bookingsByTab.rescheduled})</span>
+        </button>
+        <button type="button" className={`admin-filter-tab ${activeFilter === 'pending' ? 'admin-filter-tab--active' : ''}`} role="tab" aria-selected={activeFilter === 'pending'} onClick={() => setActiveFilter('pending')}>
+          Pending <span className="admin-filter-count">({bookingsByTab.pending})</span>
+        </button>
+        <button type="button" className={`admin-filter-tab ${activeFilter === 'cancelled' ? 'admin-filter-tab--active' : ''}`} role="tab" aria-selected={activeFilter === 'cancelled'} onClick={() => setActiveFilter('cancelled')}>
+          Cancelled <span className="admin-filter-count">({bookingsByTab.cancelled})</span>
+        </button>
+      </div>
+
+      <div className="admin-search-row">
         <input
           type="search"
           value={clientSearchQuery}

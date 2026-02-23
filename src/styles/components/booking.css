@@ -100,3 +100,46 @@
   min-width: 2.2rem;
   padding-inline: 0.65rem;
 }
+
+
+.admin-filter-tabs {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: var(--space-xs);
+}
+
+.admin-filter-tab {
+  border: 1px solid var(--border);
+  background: var(--bg);
+  color: var(--fg);
+  padding: 0.6rem 0.7rem;
+  text-align: left;
+  font: inherit;
+  cursor: pointer;
+}
+
+.admin-filter-tab:hover {
+  border-color: var(--accent);
+}
+
+.admin-filter-tab:focus-visible {
+  outline: 2px solid var(--focus);
+  outline-offset: 2px;
+}
+
+.admin-filter-tab--active {
+  background: var(--accent);
+  border-color: var(--accent);
+  color: var(--accent-contrast);
+}
+
+.admin-filter-count {
+  color: inherit;
+  opacity: 0.85;
+}
+
+@media (min-width: 48rem) {
+  .admin-filter-tabs {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+  }
+}
