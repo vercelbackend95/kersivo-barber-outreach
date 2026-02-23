@@ -20,8 +20,8 @@ export const POST: APIRoute = async (ctx) => {
 
   const booking = await prisma.booking.create({
     data: {
-      serviceId: parsed.data.serviceId,
-      barberId: parsed.data.barberId,
+      service: { connect: { id: parsed.data.serviceId } },
+      barber: { connect: { id: parsed.data.barberId } },
       fullName: parsed.data.fullName,
       email: parsed.data.email,
       phone: parsed.data.phone || null,
@@ -29,7 +29,9 @@ export const POST: APIRoute = async (ctx) => {
       endAt,
       status: BookingStatus.CONFIRMED,
       manageTokenHash: `manual-${Date.now()}`
-    }
+        },
+    include: { service: true, barber: true }
+
   });
 
   return new Response(JSON.stringify({ booking }));

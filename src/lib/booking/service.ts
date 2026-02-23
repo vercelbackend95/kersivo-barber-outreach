@@ -114,8 +114,9 @@ export async function createPendingBooking(input: {
 
     return tx.booking.create({
       data: {
-        serviceId: input.serviceId,
-        barberId: input.barberId,
+        service: { connect: { id: input.serviceId } },
+        barber: { connect: { id: input.barberId } },
+
         fullName: input.fullName,
         email: input.email,
         phone: input.phone || null,
@@ -210,8 +211,8 @@ export async function rescheduleByToken(input: { token: string; serviceId: strin
 
     const newBooking = await tx.booking.create({
       data: {
-        serviceId: input.serviceId,
-        barberId: input.barberId,
+        service: { connect: { id: input.serviceId } },
+        barber: { connect: { id: input.barberId } },
         fullName: existing.fullName,
         email: existing.email,
         phone: existing.phone,
@@ -226,7 +227,9 @@ export async function rescheduleByToken(input: { token: string; serviceId: strin
         paymentStatus: existing.paymentStatus,
         stripeCheckoutSessionId: existing.stripeCheckoutSessionId,
         paidAt: existing.paidAt
-      }
+            },
+      include: { service: true, barber: true }
+
     });
 
     await tx.booking.update({ where: { id: existing.id }, data: { status: BookingStatus.RESCHEDULED, newBookingId: newBooking.id } });
