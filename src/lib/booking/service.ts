@@ -31,9 +31,6 @@ async function resolveConfirmTokenBooking(token: string) {
     throw new BookingActionError(CANCELLED_BOOKING_MESSAGE, 409);
   }
 
-    if (booking.status !== BookingStatus.CONFIRMED) {
-    throw new BookingActionError(MANAGE_LINKS_NOT_READY_MESSAGE, 409);
-  }
 
   return booking;
 }
@@ -126,6 +123,7 @@ export async function createPendingBooking(input: {
         confirmTokenHash: hashToken(confirmToken),
         confirmTokenExpiresAt: pendingExpiryDate(settings),
         manageTokenHash: null,
+        manageTokenExpiresAt: null,
         paymentRequired: false,
         paymentStatus: null
       },
