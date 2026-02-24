@@ -52,6 +52,19 @@ type ClientProfilePayload = {
 
 type BookingFilterTab = 'confirmed' | 'rescheduled' | 'pending' | 'cancelled';
 type AdminBookingView = 'today' | 'all';
+type AdminSectionTab = 'bookings' | 'reports';
+
+type ReportsPayload = {
+  range: {
+    from: string;
+    to: string;
+    tz: string;
+  };
+  bookingsThisWeek: number;
+  cancelledRate: number;
+  mostPopularService: { name: string; count: number } | null;
+  busiestBarber: { name: string; count: number } | null;
+};
 
 const ADMIN_TIMEZONE = 'Europe/London';
 const SLOT_STEP_MINUTES = 15;
@@ -159,6 +172,9 @@ export default function AdminPanel() {
   const [clientSearchQuery, setClientSearchQuery] = useState('');
   const [activeFilter, setActiveFilter] = useState<BookingFilterTab>('confirmed');
   const [activeView, setActiveView] = useState<AdminBookingView>('today');
+  const [activeSection, setActiveSection] = useState<AdminSectionTab>('bookings');
+  const [reports, setReports] = useState<ReportsPayload | null>(null);
+  const [reportsError, setReportsError] = useState('');
   const [cancelSuccessMessage, setCancelSuccessMessage] = useState('');
   const [cancelErrorMessage, setCancelErrorMessage] = useState('');
   const [cancelLoadingBookingId, setCancelLoadingBookingId] = useState<string | null>(null);
@@ -198,6 +214,28 @@ export default function AdminPanel() {
       setBarbers(data.barbers ?? []);
     }
   }, []);
+  const fetchReports = useCallback(async () => {
+    if (!loggedIn) return;
+
+    setReportsError('');
+    const response = await fetch('/api/admin/reports?range=week', { credentials: 'same-origin' });
+
+    if (response.status === 401) {
+      pollingStoppedRef.current = true;
+      setLoggedIn(false);
+      setError('Session expired. Please log in again.');
+      return;
+    }
+
+    if (!response.ok) {
+      setReportsError('Could not load reports right now.');
+      return;
+    }
+
+    const data = (await response.json()) as ReportsPayload;
+    setReports(data);
+  }, [loggedIn]);
+
 
 
   const fetchBookings = useCallback(async () => {
@@ -242,7 +280,7 @@ export default function AdminPanel() {
   }, [activeView, loggedIn]);
 
   useEffect(() => { void (async () => { try { const response = await fetch('/api/admin/session', { credentials: 'same-origin' }); setLoggedIn(response.ok); } finally { setIsCheckingSession(false); } })(); }, []);
-  useEffect(() => { if (!loggedIn) return; void fetchBookings(); void fetchBarbers(); void fetchTimeBlocks(); const id = window.setInterval(() => { void fetchBookings(); void fetchTimeBlocks(); }, POLL_INTERVAL_MS); return () => window.clearInterval(id); }, [fetchBookings, fetchBarbers, fetchTimeBlocks, loggedIn]);
+  useEffect(() => { if (!loggedIn) return; void fetchBookings(); void fetchBarbers(); void fetchTimeBlocks(); void fetchReports(); const id = window.setInterval(() => { void fetchBookings(); void fetchTimeBlocks(); void fetchReports(); }, POLL_INTERVAL_MS); return () => window.clearInterval(id); }, [fetchBookings, fetchBarbers, fetchReports, fetchTimeBlocks, loggedIn]);
   useEffect(() => { if (!loggedIn) return; const id = window.setInterval(() => setNowMs(Date.now()), LAST_UPDATED_REFRESH_MS); return () => window.clearInterval(id); }, [loggedIn]);
 
   const normalizedClientSearchQuery = useMemo(() => normalizeSearchValue(clientSearchQuery), [clientSearchQuery]);
@@ -364,11 +402,16 @@ export default function AdminPanel() {
     <section className="surface booking-shell">
       <h1>Admin Dashboard</h1>
       <div className="admin-next-block"><p className="admin-next-primary">{activeView === 'today' ? `Today: ${bookings.length} bookings` : `All: ${bookings.length} bookings`}</p>{nextBooking && <p className="admin-next-secondary">Next: {nextBooking.barber?.name} — {nextBooking.service?.name} — {formatStartTime(nextBooking.startAt)} ({formatRelativeTime(nextBooking.startAt, nextBooking.endAt)})</p>}</div>
-      <div className="admin-refresh-row"><p className="muted admin-last-updated">Last updated: {formatLastUpdated(lastUpdatedAt, nowMs)}</p><div className="admin-refresh-controls"><button type="button" className="btn btn--ghost" onClick={() => void fetchBookings()} disabled={isRefreshing}>Refresh</button><button type="button" className="btn btn--secondary" onClick={() => void logout()}>Logout</button></div></div>
+      <div className="admin-refresh-row"><p className="muted admin-last-updated">Last updated: {formatLastUpdated(lastUpdatedAt, nowMs)}</p><div className="admin-refresh-controls"><button type="button" className="btn btn--ghost" onClick={() => { void fetchBookings(); void fetchTimeBlocks(); void fetchReports(); }} disabled={isRefreshing}>Refresh</button><button type="button" className="btn btn--secondary" onClick={() => void logout()}>Logout</button></div></div>
+
+      <div className="admin-view-tabs" role="tablist" aria-label="Admin sections"><button type="button" className={`admin-filter-tab ${activeSection === 'bookings' ? 'admin-filter-tab--active' : ''}`} onClick={() => setActiveSection('bookings')}>Bookings</button><button type="button" className={`admin-filter-tab ${activeSection === 'reports' ? 'admin-filter-tab--active' : ''}`} onClick={() => setActiveSection('reports')}>Reports</button></div>
 
       {cancelSuccessMessage && <p className="admin-inline-success">{cancelSuccessMessage}</p>}
       {cancelErrorMessage && <p className="admin-inline-error">{cancelErrorMessage}</p>}
-            {activeView === 'today' && (
+      {activeSection === 'bookings' && (
+        <>
+          {activeView === 'today' && (
+
         <section className="admin-quick-blocks">
           <h2>Quick blocks</h2>
           <div className="admin-quick-scope"><label htmlFor="block-scope">Applies to</label><select id="block-scope" value={blockScopeBarberId} onChange={(event) => setBlockScopeBarberId(event.target.value)}><option value="all">All barbers</option>{barbers.map((barber) => <option key={barber.id} value={barber.id}>{barber.name}</option>)}</select></div>
@@ -379,7 +422,7 @@ export default function AdminPanel() {
           <h3>Today's blocks</h3>
           <ul className="admin-blocks-list">{timeBlocks.length === 0 ? <li className="muted">No blocks yet.</li> : timeBlocks.map((block) => <li key={block.id}><div><strong>{block.title}</strong><p className="muted">{block.barber?.name ?? 'All barbers'} · {formatBlockRange(block.startAt, block.endAt)}</p></div><button type="button" className="btn btn--ghost" onClick={() => void deleteTimeBlock(block.id)}>Remove</button></li>)}</ul>
         </section>
-      )}
+  )}
 
 
       <div className="admin-view-tabs" role="tablist" aria-label="Admin views"><button type="button" className={`admin-filter-tab ${activeView === 'today' ? 'admin-filter-tab--active' : ''}`} onClick={() => setActiveView('today')}>Today</button><button type="button" className={`admin-filter-tab ${activeView === 'all' ? 'admin-filter-tab--active' : ''}`} onClick={() => setActiveView('all')}>All bookings</button></div>
@@ -399,6 +442,23 @@ export default function AdminPanel() {
           ))}
         </tbody>
       </table>
+              </>
+      )}
+
+      {activeSection === 'reports' && (
+        <section className="admin-reports" aria-live="polite">
+          <h2>Reports</h2>
+          <p className="muted">This week (Europe/London)</p>
+          {reportsError && <p className="admin-inline-error">{reportsError}</p>}
+          <div className="admin-reports-grid">
+            <article className="admin-kpi-card"><p className="admin-kpi-label">Bookings this week</p><p className="admin-kpi-value">{reports?.bookingsThisWeek ?? 0}</p></article>
+            <article className="admin-kpi-card"><p className="admin-kpi-label">Cancelled rate</p><p className="admin-kpi-value">{`${(reports?.cancelledRate ?? 0).toFixed(1)}%`}</p></article>
+            <article className="admin-kpi-card"><p className="admin-kpi-label">Most popular service</p><p className="admin-kpi-value">{reports?.mostPopularService ? `${reports.mostPopularService.name} (${reports.mostPopularService.count})` : 'No confirmed bookings'}</p></article>
+            <article className="admin-kpi-card"><p className="admin-kpi-label">Busiest barber</p><p className="admin-kpi-value">{reports?.busiestBarber ? `${reports.busiestBarber.name} (${reports.busiestBarber.count})` : 'No confirmed bookings'}</p></article>
+          </div>
+        </section>
+      )}
+
       {showHolidayModal && (
         <div className="admin-client-modal-backdrop" role="presentation" onClick={() => setShowHolidayModal(false)}>
           <form className="admin-client-modal" onSubmit={(event) => void submitHoliday(event)} onClick={(event) => event.stopPropagation()}>
