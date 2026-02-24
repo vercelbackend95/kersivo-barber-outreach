@@ -34,7 +34,9 @@ model ShopSettings {
   createdAt                   DateTime @default(now())
   updatedAt                   DateTime @updatedAt
   clients                     Client[]
+  timeBlocks                  TimeBlock[]
 }
+
 
 model Client {
   id        String   @id @default(cuid())
@@ -75,6 +77,7 @@ model Barber {
   bookings   Booking[]
   rules      AvailabilityRule[]
   timeOff    BarberTimeOff[]
+  timeBlocks TimeBlock[]
 }
 
 model AvailabilityRule {
@@ -106,6 +109,24 @@ model BarberTimeOff {
 
   @@index([barberId, startsAt, endsAt])
 }
+
+model TimeBlock {
+  id        String   @id @default(cuid())
+  shopId    String
+  barberId  String?
+  title     String
+  startAt   DateTime
+  endAt     DateTime
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  shop   ShopSettings @relation(fields: [shopId], references: [id], onDelete: Cascade)
+  barber Barber?      @relation(fields: [barberId], references: [id], onDelete: Cascade)
+
+  @@index([barberId, startAt])
+  @@index([shopId, startAt])
+}
+
 
 model Booking {
   id                      String        @id @default(cuid())

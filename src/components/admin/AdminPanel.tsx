@@ -1,4 +1,5 @@
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { formatInTimeZone, fromZonedTime, toZonedTime } from 'date-fns-tz';
 
 type Booking = {
   id: string;
@@ -12,6 +13,22 @@ type Booking = {
   barber: { name: string };
   service: { name: string };
 };
+
+type Barber = {
+  id: string;
+  name: string;
+};
+
+type TimeBlock = {
+  id: string;
+  title: string;
+  barberId?: string | null;
+  startAt: string;
+  endAt: string;
+  barber?: { id: string; name: string } | null;
+};
+
+
 type ClientProfile = {
   id: string;
   fullName?: string | null;
@@ -37,6 +54,7 @@ type BookingFilterTab = 'confirmed' | 'rescheduled' | 'pending' | 'cancelled';
 type AdminBookingView = 'today' | 'all';
 
 const ADMIN_TIMEZONE = 'Europe/London';
+const SLOT_STEP_MINUTES = 15;
 const POLL_INTERVAL_MS = 15000;
 const LAST_UPDATED_REFRESH_MS = 1000;
 const UPDATED_ROW_HIGHLIGHT_MS = 2000;
@@ -74,6 +92,9 @@ function formatLastUpdated(lastUpdatedAt: number | null, nowMs: number) {
 }
 
 const normalizeSearchValue = (value: string) => value.trim().toLowerCase();
+const isCancelledStatus = (status: string) => status.startsWith('CANCELLED');
+const canBeCancelledByShop = (booking: Booking) => booking.status === 'CONFIRMED';
+
 
 function getBookingSearchScore(booking: Booking, normalizedQuery: string) {
   const email = normalizeSearchValue(booking.email ?? '');
@@ -87,8 +108,6 @@ function getBookingSearchScore(booking: Booking, normalizedQuery: string) {
   return 0;
 }
 
-const isCancelledStatus = (status: string) => status.startsWith('CANCELLED');
-const canBeCancelledByShop = (booking: Booking) => booking.status === 'CONFIRMED';
 
 
 function matchesTabFilter(booking: Booking, activeFilter: BookingFilterTab) {
@@ -96,10 +115,26 @@ function matchesTabFilter(booking: Booking, activeFilter: BookingFilterTab) {
   if (activeFilter === 'confirmed') return booking.status === 'CONFIRMED' && !booking.rescheduledAt;
   if (activeFilter === 'rescheduled') return booking.status === 'CONFIRMED' && Boolean(booking.rescheduledAt);
   if (activeFilter === 'pending') return booking.status === 'PENDING_CONFIRMATION';
-
-
   return isCancelledStatus(booking.status);
 }
+function roundUpLondon(now: Date, stepMinutes = SLOT_STEP_MINUTES) {
+  const zoned = toZonedTime(now, ADMIN_TIMEZONE);
+  const year = zoned.getFullYear();
+  const month = zoned.getMonth();
+  const day = zoned.getDate();
+  const hours = zoned.getHours();
+  const minutes = zoned.getMinutes();
+  const rounded = Math.ceil(minutes / stepMinutes) * stepMinutes;
+  const withCarry = new Date(year, month, day, hours, rounded, 0, 0);
+  return fromZonedTime(withCarry, ADMIN_TIMEZONE);
+}
+function formatLocalInputValue(date: Date) {
+  return formatInTimeZone(date, ADMIN_TIMEZONE, "yyyy-MM-dd'T'HH:mm");
+}
+
+function formatBlockRange(startAt: string, endAt: string) {
+  return `${new Date(startAt).toLocaleString('en-GB', { timeZone: ADMIN_TIMEZONE })} → ${new Date(endAt).toLocaleString('en-GB', { timeZone: ADMIN_TIMEZONE })}`;
+
 
 export default function AdminPanel() {
   const [secret, setSecret] = useState('');
