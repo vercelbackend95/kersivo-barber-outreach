@@ -1,0 +1,26 @@
+---
+import '../../styles/tokens.css';
+import '../../styles/global.css';
+import '../../styles/components/buttons.css';
+import '../../styles/components/shop.css';
+
+const sessionId = Astro.url.searchParams.get('session_id');
+---
+<html lang="en">
+  <head><meta charset="utf-8" /><meta name="viewport" content="width=device-width" /><title>Payment successful</title></head>
+  <body>
+    <main class="container shop-page">
+      <section class="shop-card shop-success-card">
+        <div class="shop-card-body">
+          <h1>Payment successful. Pick up in store.</h1>
+          <p class="muted">Your order is confirmed. Please bring this confirmation when collecting.</p>
+          {sessionId ? <p class="muted">Session: {sessionId}</p> : null}
+          <a href="/shop" class="btn btn--primary">Back to shop</a>
+        </div>
+      </section>
+    </main>
+    <script>
+      localStorage.removeItem('kersivo_shop_cart_v1_5');
+    </script>
+  </body>
+</html>

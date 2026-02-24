@@ -177,3 +177,28 @@ export async function sendShopCancelledBookingEmail(
   });
 }
 
+export async function sendShopOrderConfirmationEmail(input: {
+  to: string;
+  itemLines: string[];
+  totalFormatted: string;
+}) {
+  const listHtml = input.itemLines.map((line) => `<li>${line}</li>`).join('');
+  const html = `<p>Thank you for your order.</p>
+  <p>Your payment was successful and your order is ready for in-store pickup.</p>
+  <ul>${listHtml}</ul>
+  <p><strong>Total paid:</strong> ${input.totalFormatted}</p>
+  <p>Please bring your confirmation email when collecting.</p>`;
+
+  await sendEmail({
+    to: input.to,
+    subject: 'Order confirmed — pick up in store',
+    html,
+    devLogLabel: '[DEV EMAIL] Shop order confirmation',
+    devPayload: {
+      to: input.to,
+      totalFormatted: input.totalFormatted,
+      items: input.itemLines.join(' | ')
+    }
+  });
+}
+

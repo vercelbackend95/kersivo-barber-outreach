@@ -1,5 +1,5 @@
 # Kersivo Booking Lite v1
-Astro + React (TypeScript) booking system for barbershops.
+Astro + React (TypeScript) booking + shop system for barbershops.
 
 ## Setup
 1. Install dependencies:
@@ -15,86 +15,55 @@ Astro + React (TypeScript) booking system for barbershops.
    ```bash
    npx prisma generate
    ```
-   `npm install` also runs this automatically through the `postinstall` script, but keep running it manually after pulling fresh migrations.
-5. Configure email + URLs:
+5. Configure environment:
    - `RESEND_API_KEY`: required for real email delivery via Resend.
    - `FROM_EMAIL`: sender identity used by Resend (must be verified in your Resend account).
-   - `PUBLIC_SITE_URL`: public base URL used to generate confirm/cancel/reschedule links in emails (for local dev use `http://localhost:4321`).
-   - If `RESEND_API_KEY` is missing, the app falls back to console logs for booking links.
+   - `PUBLIC_SITE_URL`: public base URL used by booking + shop links (for local dev: `http://localhost:4321`).
+   - `STRIPE_SECRET_KEY`: Stripe API secret key used for checkout session creation.
+   - `STRIPE_WEBHOOK_SECRET`: Stripe webhook secret used to verify `/api/shop/webhook`.
+   - If `RESEND_API_KEY` is missing, the app falls back to console logs for outgoing email contents.
+
 
 6. Set `ADMIN_SECRET` for admin panel login.
 7. Run app:
    ```bash
    npm run dev
    ```
-## Booking email flow (Plan A)
-- `POST /api/bookings/create`
-  - Creates booking as `PENDING_CONFIRMATION`
-  - Generates and emails only the confirmation link (`Confirm your booking`)
-- `POST /api/bookings/confirm`
-  - Confirms booking
-  - Generates manage token
-  - Sends second email (`Manage your booking`) with cancel + reschedule links
-- Cancel/reschedule links are valid only for `CONFIRMED` bookings.
+## Stripe local webhook testing
+1. Start app locally (`npm run dev`).
+2. Start Stripe CLI forwarding to local webhook:
+   ```bash
+   stripe listen --forward-to localhost:4321/api/shop/webhook
+   ```
+3. Copy webhook signing secret shown by Stripe CLI into `.env` as `STRIPE_WEBHOOK_SECRET`.
+4. Complete a test checkout from `/shop`.
+
 
 
 ## Demo flow
 - Public booking: `/book`
-- Confirm booking magic link: `/book/confirm?token=...`
-- Cancel: `/book/cancel?token=...`
-- Reschedule: `/book/reschedule?token=...`
+- Public shop: `/shop`
+- Shop success: `/shop/success?session_id=...`
+- Shop cancelled: `/shop/cancelled`
 - Admin panel: `/admin`
 
-## Included seed
-- Shop: Demo Barbershop (`demo-shop`)
-- Barbers:
-  - Jay (`seed-jay`)
-  - Mason (`seed-mason`)
-  - Luca (`seed-luca`)
-- Services:
-  - Haircut (30) — `svc-haircut`
-  - Skin Fade (45) — `svc-skin-fade`
-  - Beard Trim (20) — `svc-beard-trim`
-  - Haircut + Beard (50) — `svc-haircut-beard`
-- Availability: Mon-Sat 10:00-18:00, break 13:00-13:30, Sunday closed
+## Shop Lite v1.5 (GBP, pickup only)
+- Cart is client-side (`localStorage`) and supports quantity +/- and remove.
+- Checkout endpoint: `POST /api/shop/checkout`.
+- Stripe webhook endpoint: `POST /api/shop/webhook`.
+- Order lookup endpoint (public): `GET /api/shop/order-by-session?session_id=...`.
+- Admin orders:
+  - `GET /api/admin/shop/orders`
+  - `GET /api/admin/shop/orders/:id`
+  - `POST /api/admin/shop/orders/:id/collect`
 
-## Availability check (serviceId mismatch fix)
-After reset + seed, this request should return `200` with slots on a weekday:
+## Manual test checklist
+1. Add products in Admin → Shop → Products.
+2. Open `/shop`, add multiple products to cart, adjust quantity, provide customer email.
+3. Click **Checkout (Pickup)** and complete Stripe test payment.
+4. Verify `/shop/success` and cart clear on refresh.
+5. Verify order appears in Admin → Shop → Orders as `PAID`.
+6. Open order details and click **Mark as collected**.
+7. Verify status updates to `COLLECTED`.
+8. Verify customer receives email subject: `Order confirmed — pick up in store` (via Resend, or console log fallback).
 
-```bash
-curl "http://localhost:4321/api/availability?serviceId=svc-haircut&barberId=seed-luca&date=2026-02-24"
-```
-## Shop products (Step 1)
-- Admin → Shop → Products now supports CRUD backed by the database.
-- Public page `/shop` lists active products for `demo-shop` with a placeholder **Buy & pick up** CTA.
-- Product visibility is controlled by `active` (toggle off in admin to hide from `/shop`).
-
-
-## API routes
-- `POST /api/bookings/create`
-- `POST /api/bookings/confirm`
-- `POST /api/bookings/cancel`
-- `POST /api/bookings/reschedule`
-- `GET /api/availability?barberId=...&serviceId=...&date=YYYY-MM-DD`
-- Admin:
-  - `GET/POST /api/admin/services`
-  - `GET/POST /api/admin/barbers`
-  - `GET/POST /api/admin/availability`
-  - `GET/POST /api/admin/timeoff`
-  - `GET /api/admin/bookings`
-  - `POST /api/admin/bookings/manual`
-  - `GET /api/admin/shop/products`
-  - `POST /api/admin/shop/products/create`
-  - `POST /api/admin/shop/products/update`
-  - `POST /api/admin/shop/products/toggle`
-  - `POST /api/admin/shop/products/delete`
-
-## Deposits-ready schema (v2 prep)
-Bookings already include:
-- `paymentRequired`
-- `depositAmountPence`
-- `paymentStatus` (`UNPAID` / `PAID`)
-- `stripeCheckoutSessionId`
-- `paidAt`
-
-No Stripe integration in v1.

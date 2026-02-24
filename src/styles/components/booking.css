@@ -469,3 +469,21 @@
   flex-wrap: wrap;
   gap: 0.35rem;
 }
+
+.admin-orders-panel {
+  display: grid;
+  gap: var(--space-sm);
+}
+
+.admin-order-detail {
+  border: 1px solid var(--border);
+  background: var(--bg);
+  padding: var(--space-sm);
+  display: grid;
+  gap: 0.35rem;
+}
+
+.admin-order-detail h3,
+.admin-order-detail p {
+  margin: 0;
+}

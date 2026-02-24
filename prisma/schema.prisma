@@ -22,6 +22,11 @@ enum PaymentStatus {
   PAID
 }
 
+enum OrderStatus {
+  PAID
+  COLLECTED
+}
+
 model ShopSettings {
   id                          String   @id @default(cuid())
   name                        String
@@ -36,6 +41,7 @@ model ShopSettings {
   clients                     Client[]
   timeBlocks                  TimeBlock[]
   products                    Product[]
+  orders                      Order[]
 }
 
 
@@ -186,10 +192,47 @@ model Product {
   updatedAt   DateTime @updatedAt
 
   shop ShopSettings @relation(fields: [shopId], references: [id], onDelete: Cascade)
+  orderItems OrderItem[]
 
   @@index([shopId, active])
   @@index([shopId, sortOrder])
 }
+model Order {
+  id              String      @id @default(cuid())
+  shopId          String
+  customerEmail   String
+  status          OrderStatus @default(PAID)
+  currency        String      @default("gbp")
+  totalPence      Int
+  stripeSessionId String      @unique
+  paidAt          DateTime?
+  collectedAt     DateTime?
+  createdAt       DateTime    @default(now())
+  updatedAt       DateTime    @updatedAt
+
+  shop  ShopSettings @relation(fields: [shopId], references: [id], onDelete: Cascade)
+  items OrderItem[]
+
+  @@index([shopId, createdAt])
+  @@index([shopId, status])
+}
+
+model OrderItem {
+  id                     String @id @default(cuid())
+  orderId                String
+  productId              String
+  nameSnapshot           String
+  unitPricePenceSnapshot Int
+  quantity               Int
+  lineTotalPence         Int
+
+  order   Order   @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  product Product @relation(fields: [productId], references: [id], onDelete: Restrict)
+
+  @@index([orderId])
+  @@index([productId])
+}
+
 
 
 model RateLimitEvent {
