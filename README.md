@@ -15,6 +15,7 @@ Astro + React (TypeScript) booking system for barbershops.
    ```bash
    npx prisma generate
    ```
+   `npm install` also runs this automatically through the `postinstall` script, but keep running it manually after pulling fresh migrations.
 5. Configure email + URLs:
    - `RESEND_API_KEY`: required for real email delivery via Resend.
    - `FROM_EMAIL`: sender identity used by Resend (must be verified in your Resend account).

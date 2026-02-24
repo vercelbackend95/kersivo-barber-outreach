@@ -4,6 +4,7 @@ import type { APIRoute } from 'astro';
 import { formatInTimeZone } from 'date-fns-tz';
 import { requireAdmin } from '../../../../lib/admin/auth';
 import { prisma } from '../../../../lib/db/client';
+import { getTimeBlockDelegate } from '../../../../lib/db/timeBlocks';
 import { toUtcFromLondon, addMinutes } from '../../../../lib/booking/time';
 
 const ADMIN_TIMEZONE = 'Europe/London';
@@ -24,7 +25,13 @@ export const GET: APIRoute = async (ctx) => {
     ? { shopId: shop.id, endAt: { gte: now } }
     : { shopId: shop.id, startAt: { lt: tomorrowStart }, endAt: { gt: todayStart } };
 
-  const timeBlocks = await prisma.timeBlock.findMany({
+  const timeBlockDelegate = getTimeBlockDelegate();
+  if (!timeBlockDelegate) {
+    return new Response(JSON.stringify({ timeBlocks: [] }));
+  }
+
+  const timeBlocks = await timeBlockDelegate.findMany({
+
     where,
     orderBy: { startAt: 'asc' },
     include: { barber: { select: { id: true, name: true } } }

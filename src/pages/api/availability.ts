@@ -2,6 +2,7 @@
 import type { APIRoute } from 'astro';
 import { BookingStatus } from '@prisma/client';
 import { prisma } from '../../lib/db/client';
+import { getTimeBlockDelegate } from '../../lib/db/timeBlocks';
 import { generateSlots } from '../../lib/booking/slots';
 import { expirePendingBookings } from '../../lib/booking/service';
 import { addMinutes, londonDayOfWeekFromIsoDate, normalizeToIsoDate, toUtcFromLondon } from '../../lib/booking/time';
@@ -49,6 +50,9 @@ export const GET: APIRoute = async ({ request }) => {
 
   await expirePendingBookings();
   const settings = await prisma.shopSettings.findFirstOrThrow();
+    const timeBlockDelegate = getTimeBlockDelegate();
+
+
 
   const [service, rules, bookings, timeOff, timeBlocks] = await Promise.all([
 
@@ -56,15 +60,18 @@ export const GET: APIRoute = async ({ request }) => {
     prisma.availabilityRule.findMany({ where: { barberId, active: true, dayOfWeek } }),
     prisma.booking.findMany({ where: { barberId, status: { in: [BookingStatus.CONFIRMED, BookingStatus.PENDING_CONFIRMATION] } }, select: { startAt: true, endAt: true } }),
     prisma.barberTimeOff.findMany({ where: { barberId }, select: { startsAt: true, endsAt: true } }),
-    prisma.timeBlock.findMany({
-      where: {
-        shopId: settings.id,
-        OR: [{ barberId }, { barberId: null }],
-        startAt: { lt: dayEndUtc },
-        endAt: { gt: dayStartUtc }
-      },
-      select: { startAt: true, endAt: true }
-    })
+    timeBlockDelegate
+      ? timeBlockDelegate.findMany({
+          where: {
+            shopId: settings.id,
+            OR: [{ barberId }, { barberId: null }],
+            startAt: { lt: dayEndUtc },
+            endAt: { gt: dayStartUtc }
+          },
+          select: { startAt: true, endAt: true }
+        })
+      : Promise.resolve([])
+
 
   ]);
 

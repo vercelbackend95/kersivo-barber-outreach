@@ -4,6 +4,7 @@ import type { APIRoute } from 'astro';
 import { z } from 'zod';
 import { requireAdmin } from '../../../../lib/admin/auth';
 import { prisma } from '../../../../lib/db/client';
+import { getTimeBlockDelegate } from '../../../../lib/db/timeBlocks';
 
 const schema = z.object({
   title: z.string().min(1).max(80),
@@ -34,7 +35,13 @@ export const POST: APIRoute = async (ctx) => {
     if (!barber) return new Response(JSON.stringify({ error: 'Barber not found.' }), { status: 404 });
   }
 
-  const timeBlock = await prisma.timeBlock.create({
+  const timeBlockDelegate = getTimeBlockDelegate();
+  if (!timeBlockDelegate) {
+    return new Response(JSON.stringify({ error: 'Prisma client is missing the timeBlock delegate. Run `npx prisma generate`.' }), { status: 500 });
+  }
+
+  const timeBlock = await timeBlockDelegate.create({
+
     data: {
       shopId: shop.id,
       barberId: barberId ?? null,
