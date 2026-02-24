@@ -29,6 +29,34 @@ Astro + React (TypeScript) booking + shop system for barbershops.
    ```bash
    npm run dev
    ```
+
+## Neon recovery for failed shop migration (P3009)
+If Neon shows a failed migration for `20260224153000_add_shop_orders`, recover with:
+
+```bash
+# Option A (most common): migration partially ran on Neon, so mark it as applied
+npx prisma migrate resolve --applied 20260224153000_add_shop_orders
+
+# Option B: if Neon has none of the objects from that migration, mark it rolled back instead
+npx prisma migrate resolve --rolled-back 20260224153000_add_shop_orders
+
+# Then apply remaining migrations
+npx prisma migrate deploy
+```
+
+For demo/local reset (fresh DB + seed):
+
+```bash
+npx prisma migrate reset --force
+```
+
+Or seed only:
+
+```bash
+npx prisma db seed
+```
+
+
 ## Stripe local webhook testing
 1. Start app locally (`npm run dev`).
 2. Start Stripe CLI forwarding to local webhook:

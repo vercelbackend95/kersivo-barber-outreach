@@ -2,12 +2,22 @@ import { PrismaClient } from '@prisma/client';
 
 const prisma = new PrismaClient();
 
+const DEMO_SHOP_ID = 'demo-shop';
+
 async function main() {
   await prisma.shopSettings.upsert({
-    where: { id: 'demo-shop' },
-    update: { name: 'Demo Barbershop' },
+    where: { id: DEMO_SHOP_ID },
+    update: {
+      name: 'Demo Barbershop',
+      timezone: 'Europe/London',
+      cancellationWindowHours: 2,
+      rescheduleWindowHours: 2,
+      pendingConfirmationMins: 15,
+      slotIntervalMinutes: 15,
+      defaultBufferMinutes: 0
+    },
     create: {
-      id: 'demo-shop',
+      id: DEMO_SHOP_ID,
       name: 'Demo Barbershop',
       timezone: 'Europe/London',
       cancellationWindowHours: 2,

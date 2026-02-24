@@ -2,6 +2,9 @@ import { prisma } from './client';
 
 export const DEMO_SHOP_ID = 'demo-shop';
 
+const SHOP_SETTINGS_MISSING_MESSAGE =
+  'ShopSettings is missing. Run `npx prisma db seed` to create demo shop settings (id: demo-shop).';
+
 export async function resolveShopId(): Promise<string> {
   const demoShop = await prisma.shopSettings.findUnique({
     where: { id: DEMO_SHOP_ID },
@@ -10,6 +13,25 @@ export async function resolveShopId(): Promise<string> {
 
   if (demoShop) return demoShop.id;
 
-  const fallback = await prisma.shopSettings.findFirstOrThrow({ select: { id: true } });
-  return fallback.id;
+  if (process.env.NODE_ENV !== 'production') {
+    const createdDemoShop = await prisma.shopSettings.upsert({
+      where: { id: DEMO_SHOP_ID },
+      update: {},
+      create: {
+        id: DEMO_SHOP_ID,
+        name: 'Demo Barbershop',
+        timezone: 'Europe/London',
+        cancellationWindowHours: 2,
+        rescheduleWindowHours: 2,
+        pendingConfirmationMins: 15,
+        slotIntervalMinutes: 15,
+        defaultBufferMinutes: 0
+      },
+      select: { id: true }
+    });
+
+    return createdDemoShop.id;
+  }
+
+  throw new Error(SHOP_SETTINGS_MISSING_MESSAGE);
 }
