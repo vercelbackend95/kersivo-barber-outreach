@@ -108,6 +108,10 @@
   grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: var(--space-xs);
 }
+.admin-view-tabs--three {
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+
 
 .admin-filter-tabs {
   display: grid;
@@ -312,5 +316,45 @@
 @media (min-width: 48rem) {
   .admin-reports-grid {
     grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+
+.admin-history-filters {
+  border: 1px solid var(--border);
+  background: var(--surface);
+  padding: var(--space-sm);
+  display: grid;
+  gap: var(--space-xs);
+}
+
+.admin-history-row {
+  display: grid;
+  gap: 0.35rem;
+}
+
+.admin-filter-tabs--history {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.admin-history-date-grid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: var(--space-xs);
+}
+
+.admin-history-date-grid > div {
+  display: grid;
+  gap: 0.35rem;
+}
+
+@media (min-width: 48rem) {
+  .admin-filter-tabs--history {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+  }
+
+  .admin-history-date-grid {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    align-items: end;
   }
 }

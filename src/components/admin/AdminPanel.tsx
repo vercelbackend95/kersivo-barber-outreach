@@ -51,7 +51,9 @@ type ClientProfilePayload = {
 
 
 type BookingFilterTab = 'confirmed' | 'rescheduled' | 'pending' | 'cancelled';
-type AdminBookingView = 'today' | 'all';
+type AdminBookingView = 'today' | 'all' | 'history';
+type HistoryPreset = 'last7' | 'last30' | 'overall' | 'custom';
+
 type AdminSectionTab = 'bookings' | 'reports';
 
 type ReportsPayload = {
@@ -71,6 +73,23 @@ const SLOT_STEP_MINUTES = 15;
 const POLL_INTERVAL_MS = 15000;
 const LAST_UPDATED_REFRESH_MS = 1000;
 const UPDATED_ROW_HIGHLIGHT_MS = 2000;
+
+function getTodayLondonDate() {
+  return formatInTimeZone(new Date(), ADMIN_TIMEZONE, 'yyyy-MM-dd');
+}
+
+function shiftLondonDate(date: string, days: number) {
+  const atMidnight = fromZonedTime(`${date}T00:00:00.000`, ADMIN_TIMEZONE);
+  return formatInTimeZone(new Date(atMidnight.getTime() + days * 24 * 60 * 60 * 1000), ADMIN_TIMEZONE, 'yyyy-MM-dd');
+}
+
+function getHistoryPresetDates(preset: HistoryPreset) {
+  const today = getTodayLondonDate();
+  if (preset === 'overall') return { from: '', to: '' };
+  if (preset === 'last30') return { from: shiftLondonDate(today, -30), to: today };
+  return { from: shiftLondonDate(today, -7), to: today };
+}
+
 
 function formatRelativeTime(startAt: string, endAt: string) {
   const nowMs = Date.now();
@@ -173,6 +192,13 @@ export default function AdminPanel() {
   const [activeFilter, setActiveFilter] = useState<BookingFilterTab>('confirmed');
   const [activeView, setActiveView] = useState<AdminBookingView>('today');
   const [activeSection, setActiveSection] = useState<AdminSectionTab>('bookings');
+  const [historyBarberId, setHistoryBarberId] = useState<string>('all');
+  const [historyPreset, setHistoryPreset] = useState<HistoryPreset>('last7');
+  const [historyFrom, setHistoryFrom] = useState(() => getHistoryPresetDates('last7').from);
+  const [historyTo, setHistoryTo] = useState(() => getHistoryPresetDates('last7').to);
+  const [historyCursor, setHistoryCursor] = useState<string | null>(null);
+  const [historyHasMore, setHistoryHasMore] = useState(false);
+  const [historyLoadingMore, setHistoryLoadingMore] = useState(false);
   const [reports, setReports] = useState<ReportsPayload | null>(null);
   const [reportsError, setReportsError] = useState('');
   const [cancelSuccessMessage, setCancelSuccessMessage] = useState('');
@@ -238,14 +264,25 @@ export default function AdminPanel() {
 
 
 
-  const fetchBookings = useCallback(async () => {
+  const fetchBookings = useCallback(async (appendHistory = false) => {
     if (!loggedIn || pollingStoppedRef.current || inFlightRef.current) return;
+    if (activeView === 'history' && !appendHistory) setHistoryCursor(null);
 
     inFlightRef.current = true;
     setIsRefreshing(true);
 
     try {
-      const endpoint = activeView === 'today' ? '/api/admin/bookings?range=today' : '/api/admin/bookings';
+      const endpoint = (() => {
+        if (activeView === 'today') return '/api/admin/bookings?range=today';
+        if (activeView === 'all') return '/api/admin/bookings';
+        const params = new URLSearchParams({ view: 'history', barberId: historyBarberId, limit: '50' });
+        if (historyPreset !== 'custom') params.set('preset', historyPreset);
+        if (historyFrom) params.set('from', historyFrom);
+        if (historyTo) params.set('to', historyTo);
+        if (appendHistory && historyCursor) params.set('cursor', historyCursor);
+        return `/api/admin/bookings?${params.toString()}`;
+      })();
+
       const response = await fetch(endpoint, { credentials: 'same-origin' });
 
       if (response.status === 401) {
@@ -256,12 +293,18 @@ export default function AdminPanel() {
       }
       if (!response.ok) throw new Error('Fetch failed');
 
-      const data = (await response.json()) as { bookings?: Booking[] };
+      const data = (await response.json()) as { bookings?: Booking[]; hasMore?: boolean; cursor?: string | null };
       const incomingBookings = data.bookings ?? [];
-      const nextSignatures = new Map(incomingBookings.map((b) => [b.id, [b.id, b.fullName, b.email, b.status, b.startAt, b.endAt, b.rescheduledAt ?? '', b.barber?.name ?? '', b.service?.name ?? '', b.clientId ?? ''].join('|')]));
-      const changedIds = incomingBookings.filter((b) => previousSignaturesRef.current.get(b.id) !== nextSignatures.get(b.id)).map((b) => b.id);
+      const mergedBookings = appendHistory ? [...bookings, ...incomingBookings] : incomingBookings;
+      const nextSignatures = new Map(mergedBookings.map((b) => [b.id, [b.id, b.fullName, b.email, b.status, b.startAt, b.endAt, b.rescheduledAt ?? '', b.barber?.name ?? '', b.service?.name ?? '', b.clientId ?? ''].join('|')]));
+      const changedIds = mergedBookings.filter((b) => previousSignaturesRef.current.get(b.id) !== nextSignatures.get(b.id)).map((b) => b.id);
 
-      setBookings(incomingBookings);
+      setBookings(mergedBookings);
+      if (activeView === 'history') {
+        setHistoryHasMore(Boolean(data.hasMore));
+        setHistoryCursor(data.cursor ?? null);
+      }
+
       previousSignaturesRef.current = nextSignatures;
       setLastUpdatedAt(Date.now());
 
@@ -276,12 +319,26 @@ export default function AdminPanel() {
     } finally {
       inFlightRef.current = false;
       setIsRefreshing(false);
+      setHistoryLoadingMore(false);
     }
-  }, [activeView, loggedIn]);
+  }, [activeView, bookings, historyBarberId, historyCursor, historyFrom, historyPreset, historyTo, loggedIn]);
+
+  const loadMoreHistory = useCallback(async () => {
+    if (!historyHasMore || historyLoadingMore || activeView !== 'history') return;
+    setHistoryLoadingMore(true);
+    await fetchBookings(true);
+  }, [activeView, fetchBookings, historyHasMore, historyLoadingMore]);
+
 
   useEffect(() => { void (async () => { try { const response = await fetch('/api/admin/session', { credentials: 'same-origin' }); setLoggedIn(response.ok); } finally { setIsCheckingSession(false); } })(); }, []);
-  useEffect(() => { if (!loggedIn) return; void fetchBookings(); void fetchBarbers(); void fetchTimeBlocks(); void fetchReports(); const id = window.setInterval(() => { void fetchBookings(); void fetchTimeBlocks(); void fetchReports(); }, POLL_INTERVAL_MS); return () => window.clearInterval(id); }, [fetchBookings, fetchBarbers, fetchReports, fetchTimeBlocks, loggedIn]);
+  useEffect(() => { if (!loggedIn) return; if (activeView !== 'history') void fetchBookings(); void fetchBarbers(); void fetchTimeBlocks(); void fetchReports(); const id = window.setInterval(() => { if (activeView !== 'history') void fetchBookings(); void fetchTimeBlocks(); void fetchReports(); }, POLL_INTERVAL_MS); return () => window.clearInterval(id); }, [activeView, fetchBookings, fetchBarbers, fetchReports, fetchTimeBlocks, loggedIn]);
   useEffect(() => { if (!loggedIn) return; const id = window.setInterval(() => setNowMs(Date.now()), LAST_UPDATED_REFRESH_MS); return () => window.clearInterval(id); }, [loggedIn]);
+  useEffect(() => {
+    if (!loggedIn || activeView !== 'history') return;
+    const timeoutId = window.setTimeout(() => { void fetchBookings(); }, 300);
+    return () => window.clearTimeout(timeoutId);
+  }, [activeView, fetchBookings, historyBarberId, historyFrom, historyPreset, historyTo, loggedIn]);
+
 
   const normalizedClientSearchQuery = useMemo(() => normalizeSearchValue(clientSearchQuery), [clientSearchQuery]);
 
@@ -401,7 +458,7 @@ export default function AdminPanel() {
   return (
     <section className="surface booking-shell">
       <h1>Admin Dashboard</h1>
-      <div className="admin-next-block"><p className="admin-next-primary">{activeView === 'today' ? `Today: ${bookings.length} bookings` : `All: ${bookings.length} bookings`}</p>{nextBooking && <p className="admin-next-secondary">Next: {nextBooking.barber?.name} — {nextBooking.service?.name} — {formatStartTime(nextBooking.startAt)} ({formatRelativeTime(nextBooking.startAt, nextBooking.endAt)})</p>}</div>
+      <div className="admin-next-block"><p className="admin-next-primary">{activeView === 'today' ? `Today: ${bookings.length} bookings` : activeView === 'all' ? `All: ${bookings.length} bookings` : `History: ${bookings.length} bookings`}</p>{nextBooking && activeView !== 'history' && <p className="admin-next-secondary">Next: {nextBooking.barber?.name} — {nextBooking.service?.name} — {formatStartTime(nextBooking.startAt)} ({formatRelativeTime(nextBooking.startAt, nextBooking.endAt)})</p>}</div>
       <div className="admin-refresh-row"><p className="muted admin-last-updated">Last updated: {formatLastUpdated(lastUpdatedAt, nowMs)}</p><div className="admin-refresh-controls"><button type="button" className="btn btn--ghost" onClick={() => { void fetchBookings(); void fetchTimeBlocks(); void fetchReports(); }} disabled={isRefreshing}>Refresh</button><button type="button" className="btn btn--secondary" onClick={() => void logout()}>Logout</button></div></div>
 
       <div className="admin-view-tabs" role="tablist" aria-label="Admin sections"><button type="button" className={`admin-filter-tab ${activeSection === 'bookings' ? 'admin-filter-tab--active' : ''}`} onClick={() => setActiveSection('bookings')}>Bookings</button><button type="button" className={`admin-filter-tab ${activeSection === 'reports' ? 'admin-filter-tab--active' : ''}`} onClick={() => setActiveSection('reports')}>Reports</button></div>
@@ -425,7 +482,36 @@ export default function AdminPanel() {
   )}
 
 
-      <div className="admin-view-tabs" role="tablist" aria-label="Admin views"><button type="button" className={`admin-filter-tab ${activeView === 'today' ? 'admin-filter-tab--active' : ''}`} onClick={() => setActiveView('today')}>Today</button><button type="button" className={`admin-filter-tab ${activeView === 'all' ? 'admin-filter-tab--active' : ''}`} onClick={() => setActiveView('all')}>All bookings</button></div>
+      <div className="admin-view-tabs admin-view-tabs--three" role="tablist" aria-label="Admin views"><button type="button" className={`admin-filter-tab ${activeView === 'today' ? 'admin-filter-tab--active' : ''}`} onClick={() => setActiveView('today')}>Today</button><button type="button" className={`admin-filter-tab ${activeView === 'all' ? 'admin-filter-tab--active' : ''}`} onClick={() => setActiveView('all')}>All bookings</button><button type="button" className={`admin-filter-tab ${activeView === 'history' ? 'admin-filter-tab--active' : ''}`} onClick={() => setActiveView('history')}>History</button></div>
+      {activeView === 'history' && (
+        <section className="admin-history-filters">
+          <div className="admin-history-row">
+            <label htmlFor="history-barber">Barber</label>
+            <select id="history-barber" value={historyBarberId} onChange={(event) => setHistoryBarberId(event.target.value)}>
+              <option value="all">All barbers</option>
+              {barbers.map((barber) => <option key={barber.id} value={barber.id}>{barber.name}</option>)}
+            </select>
+          </div>
+          <div className="admin-filter-tabs admin-filter-tabs--history" role="tablist" aria-label="History range presets">
+            <button type="button" className={`admin-filter-tab ${historyPreset === 'last7' ? 'admin-filter-tab--active' : ''}`} onClick={() => { const next = getHistoryPresetDates('last7'); setHistoryPreset('last7'); setHistoryFrom(next.from); setHistoryTo(next.to); }}>Last 7 days</button>
+            <button type="button" className={`admin-filter-tab ${historyPreset === 'last30' ? 'admin-filter-tab--active' : ''}`} onClick={() => { const next = getHistoryPresetDates('last30'); setHistoryPreset('last30'); setHistoryFrom(next.from); setHistoryTo(next.to); }}>Last 30 days</button>
+            <button type="button" className={`admin-filter-tab ${historyPreset === 'overall' ? 'admin-filter-tab--active' : ''}`} onClick={() => { const next = getHistoryPresetDates('overall'); setHistoryPreset('overall'); setHistoryFrom(next.from); setHistoryTo(next.to); }}>Overall</button>
+            <button type="button" className={`admin-filter-tab ${historyPreset === 'custom' ? 'admin-filter-tab--active' : ''}`} onClick={() => setHistoryPreset('custom')}>Custom</button>
+          </div>
+          <div className="admin-history-date-grid">
+            <div>
+              <label htmlFor="history-from">From</label>
+              <input id="history-from" type="date" value={historyFrom} onChange={(event) => { setHistoryFrom(event.target.value); setHistoryPreset('custom'); }} />
+            </div>
+            <div>
+              <label htmlFor="history-to">To</label>
+              <input id="history-to" type="date" value={historyTo} onChange={(event) => { setHistoryTo(event.target.value); setHistoryPreset('custom'); }} />
+            </div>
+            <button type="button" className="btn btn--secondary" onClick={() => void fetchBookings()}>Apply</button>
+          </div>
+        </section>
+      )}
+
       <div className="admin-filter-tabs" role="tablist" aria-label="Booking status filters"><button type="button" className={`admin-filter-tab ${activeFilter === 'confirmed' ? 'admin-filter-tab--active' : ''}`} onClick={() => setActiveFilter('confirmed')}>Confirmed</button><button type="button" className={`admin-filter-tab ${activeFilter === 'rescheduled' ? 'admin-filter-tab--active' : ''}`} onClick={() => setActiveFilter('rescheduled')}>Rescheduled</button><button type="button" className={`admin-filter-tab ${activeFilter === 'pending' ? 'admin-filter-tab--active' : ''}`} onClick={() => setActiveFilter('pending')}>Pending</button><button type="button" className={`admin-filter-tab ${activeFilter === 'cancelled' ? 'admin-filter-tab--active' : ''}`} onClick={() => setActiveFilter('cancelled')}>Cancelled</button></div>
       <div className="admin-search-row"><input type="search" value={clientSearchQuery} onChange={(e) => setClientSearchQuery(e.target.value)} placeholder="Search by client name or email…" aria-label="Search by client name or email" /></div>
 
@@ -442,6 +528,7 @@ export default function AdminPanel() {
           ))}
         </tbody>
       </table>
+            {activeView === 'history' && historyHasMore && <button type="button" className="btn btn--secondary" onClick={() => void loadMoreHistory()} disabled={historyLoadingMore}>{historyLoadingMore ? 'Loading…' : 'Load more'}</button>}
               </>
       )}
 
