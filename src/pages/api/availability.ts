@@ -4,7 +4,7 @@ import { BookingStatus } from '@prisma/client';
 import { prisma } from '../../lib/db/client';
 import { generateSlots } from '../../lib/booking/slots';
 import { expirePendingBookings } from '../../lib/booking/service';
-import { londonDayOfWeekFromIsoDate, normalizeToIsoDate } from '../../lib/booking/time';
+import { addMinutes, londonDayOfWeekFromIsoDate, normalizeToIsoDate, toUtcFromLondon } from '../../lib/booking/time';
 
 export const prerender = false;
 
@@ -43,17 +43,32 @@ export const GET: APIRoute = async ({ request }) => {
       rawDate
     });
   }
+  const dayStartUtc = toUtcFromLondon(date, 0);
+  const dayEndUtc = addMinutes(dayStartUtc, 24 * 60);
+
 
   await expirePendingBookings();
-  const [settings, service, rules, bookings, timeOff] = await Promise.all([
-    prisma.shopSettings.findFirstOrThrow(),
+  const settings = await prisma.shopSettings.findFirstOrThrow();
+
+  const [service, rules, bookings, timeOff, timeBlocks] = await Promise.all([
+
     prisma.service.findUniqueOrThrow({ where: { id: serviceId } }),
     prisma.availabilityRule.findMany({ where: { barberId, active: true, dayOfWeek } }),
     prisma.booking.findMany({ where: { barberId, status: { in: [BookingStatus.CONFIRMED, BookingStatus.PENDING_CONFIRMATION] } }, select: { startAt: true, endAt: true } }),
-    prisma.barberTimeOff.findMany({ where: { barberId }, select: { startsAt: true, endsAt: true } })
+    prisma.barberTimeOff.findMany({ where: { barberId }, select: { startsAt: true, endsAt: true } }),
+    prisma.timeBlock.findMany({
+      where: {
+        shopId: settings.id,
+        OR: [{ barberId }, { barberId: null }],
+        startAt: { lt: dayEndUtc },
+        endAt: { gt: dayStartUtc }
+      },
+      select: { startAt: true, endAt: true }
+    })
+
   ]);
 
-  const slots = generateSlots({ date, service, rules, confirmedBookings: bookings, timeOff, settings });
+  const slots = generateSlots({ date, service, rules, confirmedBookings: bookings, timeOff, timeBlocks, settings });
 
   if (import.meta.env.DEV) {
     console.info('[availability][dev] resolved', {

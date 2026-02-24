@@ -1,5 +1,5 @@
 // src/lib/booking/slots.ts
-import type { AvailabilityRule, BarberTimeOff, Booking, Service, ShopSettings } from '@prisma/client';
+import type { AvailabilityRule, BarberTimeOff, Booking, Service, ShopSettings, TimeBlock } from '@prisma/client';
 import { hasAnyOverlap } from './overlap';
 import { addMinutes, londonDateKey, londonDayOfWeekFromIsoDate, minutesInLondonDay, toUtcFromLondon } from './time';
 
@@ -9,6 +9,7 @@ type SlotInput = {
   rules: AvailabilityRule[];
   confirmedBookings: Pick<Booking, 'startAt' | 'endAt'>[];
   timeOff: Pick<BarberTimeOff, 'startsAt' | 'endsAt'>[];
+  timeBlocks: Pick<TimeBlock, 'startAt' | 'endAt'>[];
   settings: ShopSettings;
 };
 
@@ -40,6 +41,10 @@ export function generateSlots(input: SlotInput): string[] {
 
     const collidesTimeOff = hasAnyOverlap({ startAt, endAt }, input.timeOff.map((b) => ({ startAt: b.startsAt, endAt: b.endsAt })));
     if (collidesTimeOff) continue;
+    const collidesTimeBlock = hasAnyOverlap({ startAt, endAt }, input.timeBlocks.map((b) => ({ startAt: b.startAt, endAt: b.endAt })));
+    if (collidesTimeBlock) continue;
+
+
 
     const hh = String(Math.floor(minutesInLondonDay(startAt) / 60)).padStart(2, '0');
     const mm = String(minutesInLondonDay(startAt) % 60).padStart(2, '0');

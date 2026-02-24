@@ -232,3 +232,43 @@
   border-radius: var(--radius-sm);
   padding: 0.7rem;
 }
+
+.admin-quick-blocks {
+  border: 1px solid var(--border);
+  background: var(--surface);
+  padding: var(--space-sm);
+  display: grid;
+  gap: var(--space-xs);
+}
+
+.admin-quick-scope {
+  display: grid;
+  gap: 0.35rem;
+}
+
+.admin-quick-actions {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: var(--space-xs);
+}
+
+.admin-blocks-list {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  display: grid;
+  gap: var(--space-xs);
+}
+
+.admin-blocks-list li {
+  border: 1px solid var(--border);
+  padding: var(--space-xs);
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: var(--space-xs);
+}
+
+.admin-blocks-list p {
+  margin: 0.2rem 0 0;
+}

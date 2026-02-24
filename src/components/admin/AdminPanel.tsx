@@ -125,8 +125,7 @@ function roundUpLondon(now: Date, stepMinutes = SLOT_STEP_MINUTES) {
   const hours = zoned.getHours();
   const minutes = zoned.getMinutes();
   const rounded = Math.ceil(minutes / stepMinutes) * stepMinutes;
-  const withCarry = new Date(year, month, day, hours, rounded, 0, 0);
-  return fromZonedTime(withCarry, ADMIN_TIMEZONE);
+  return fromZonedTime(new Date(year, month, day, hours, rounded, 0, 0), ADMIN_TIMEZONE);
 }
 function formatLocalInputValue(date: Date) {
   return formatInTimeZone(date, ADMIN_TIMEZONE, "yyyy-MM-dd'T'HH:mm");
@@ -135,14 +134,24 @@ function formatLocalInputValue(date: Date) {
 function formatBlockRange(startAt: string, endAt: string) {
   return `${new Date(startAt).toLocaleString('en-GB', { timeZone: ADMIN_TIMEZONE })} → ${new Date(endAt).toLocaleString('en-GB', { timeZone: ADMIN_TIMEZONE })}`;
 
+}
+function nextLunchWindow(now: Date) {
+  const zonedNow = toZonedTime(now, ADMIN_TIMEZONE);
+  const noon = fromZonedTime(new Date(zonedNow.getFullYear(), zonedNow.getMonth(), zonedNow.getDate(), 12, 0, 0, 0), ADMIN_TIMEZONE);
+  if (now < noon) return { startAt: noon, endAt: new Date(noon.getTime() + 30 * 60000) };
+  const startAt = roundUpLondon(now, SLOT_STEP_MINUTES);
+  return { startAt, endAt: new Date(startAt.getTime() + 30 * 60000) };
+}
+
 
 export default function AdminPanel() {
   const [secret, setSecret] = useState('');
   const [loggedIn, setLoggedIn] = useState(false);
   const [isCheckingSession, setIsCheckingSession] = useState(true);
   const [bookings, setBookings] = useState<Booking[]>([]);
+  const [barbers, setBarbers] = useState<Barber[]>([]);
+  const [timeBlocks, setTimeBlocks] = useState<TimeBlock[]>([]);
   const [error, setError] = useState('');
-  const [highlightedBookingId, setHighlightedBookingId] = useState<string | null>(null);
   const [updatedBookingIds, setUpdatedBookingIds] = useState<string[]>([]);
   const [isRefreshing, setIsRefreshing] = useState(false);
   const [lastUpdatedAt, setLastUpdatedAt] = useState<number | null>(null);
@@ -153,6 +162,13 @@ export default function AdminPanel() {
   const [cancelSuccessMessage, setCancelSuccessMessage] = useState('');
   const [cancelErrorMessage, setCancelErrorMessage] = useState('');
   const [cancelLoadingBookingId, setCancelLoadingBookingId] = useState<string | null>(null);
+  const [blockScopeBarberId, setBlockScopeBarberId] = useState<string>('all');
+  const [blockSuccessMessage, setBlockSuccessMessage] = useState('');
+  const [blockErrorMessage, setBlockErrorMessage] = useState('');
+  const [showHolidayModal, setShowHolidayModal] = useState(false);
+  const [holidayStartInput, setHolidayStartInput] = useState(() => formatLocalInputValue(roundUpLondon(new Date(), SLOT_STEP_MINUTES)));
+  const [holidayEndInput, setHolidayEndInput] = useState(() => formatLocalInputValue(new Date(roundUpLondon(new Date(), SLOT_STEP_MINUTES).getTime() + 30 * 60000)));
+  const [holidayAllDay, setHolidayAllDay] = useState(false);
 
   const [selectedClientId, setSelectedClientId] = useState<string | null>(null);
   const [clientProfile, setClientProfile] = useState<ClientProfilePayload | null>(null);
@@ -166,6 +182,23 @@ export default function AdminPanel() {
   const pollingStoppedRef = useRef(false);
   const previousSignaturesRef = useRef<Map<string, string>>(new Map());
   const updatedRowsTimeoutRef = useRef<number | null>(null);
+
+  const fetchTimeBlocks = useCallback(async () => {
+    const response = await fetch('/api/admin/timeblocks?range=today', { credentials: 'same-origin' });
+    if (response.ok) {
+      const data = (await response.json()) as { timeBlocks?: TimeBlock[] };
+      setTimeBlocks(data.timeBlocks ?? []);
+    }
+  }, []);
+
+  const fetchBarbers = useCallback(async () => {
+    const response = await fetch('/api/admin/barbers', { credentials: 'same-origin' });
+    if (response.ok) {
+      const data = (await response.json()) as { barbers?: Barber[] };
+      setBarbers(data.barbers ?? []);
+    }
+  }, []);
+
 
   const fetchBookings = useCallback(async () => {
     if (!loggedIn || pollingStoppedRef.current || inFlightRef.current) return;
@@ -209,7 +242,7 @@ export default function AdminPanel() {
   }, [activeView, loggedIn]);
 
   useEffect(() => { void (async () => { try { const response = await fetch('/api/admin/session', { credentials: 'same-origin' }); setLoggedIn(response.ok); } finally { setIsCheckingSession(false); } })(); }, []);
-  useEffect(() => { if (!loggedIn) return; void fetchBookings(); const id = window.setInterval(() => void fetchBookings(), POLL_INTERVAL_MS); return () => window.clearInterval(id); }, [fetchBookings, loggedIn]);
+  useEffect(() => { if (!loggedIn) return; void fetchBookings(); void fetchBarbers(); void fetchTimeBlocks(); const id = window.setInterval(() => { void fetchBookings(); void fetchTimeBlocks(); }, POLL_INTERVAL_MS); return () => window.clearInterval(id); }, [fetchBookings, fetchBarbers, fetchTimeBlocks, loggedIn]);
   useEffect(() => { if (!loggedIn) return; const id = window.setInterval(() => setNowMs(Date.now()), LAST_UPDATED_REFRESH_MS); return () => window.clearInterval(id); }, [loggedIn]);
 
   const normalizedClientSearchQuery = useMemo(() => normalizeSearchValue(clientSearchQuery), [clientSearchQuery]);
@@ -247,10 +280,7 @@ export default function AdminPanel() {
     if (!selectedClientId) return;
     setNotesSaving(true);
     const response = await fetch(`/api/admin/clients/${selectedClientId}/notes`, {
-      method: 'POST',
-      credentials: 'same-origin',
-      headers: { 'content-type': 'application/json' },
-      body: JSON.stringify({ notes: notesDraft })
+      method: 'POST', credentials: 'same-origin', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ notes: notesDraft })
     });
     if (response.ok && clientProfile) {
       setClientProfile({ ...clientProfile, client: { ...clientProfile.client, notes: notesDraft } });
@@ -269,6 +299,60 @@ export default function AdminPanel() {
     const response = await fetch('/api/admin/bookings/cancel', { method: 'POST', credentials: 'same-origin', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ bookingId: booking.id }) });
     if (response.ok) { setCancelSuccessMessage('Booking cancelled successfully.'); await fetchBookings(); } else { setCancelErrorMessage('Could not cancel booking right now.'); }
     setCancelLoadingBookingId(null);
+}
+
+  async function createTimeBlock(title: string, startAt: Date, endAt: Date) {
+    setBlockErrorMessage('');
+    setBlockSuccessMessage('');
+    const response = await fetch('/api/admin/timeblocks/create', {
+      method: 'POST',
+      credentials: 'same-origin',
+      headers: { 'content-type': 'application/json' },
+      body: JSON.stringify({ title, startAt: startAt.toISOString(), endAt: endAt.toISOString(), barberId: blockScopeBarberId === 'all' ? null : blockScopeBarberId })
+    });
+    if (!response.ok) {
+      setBlockErrorMessage('Could not create time block.');
+      return;
+    }
+    setBlockSuccessMessage('Time block created.');
+    await Promise.all([fetchBookings(), fetchTimeBlocks()]);
+  }
+
+  async function handleQuickBlock30() {
+    const startAt = roundUpLondon(new Date(), SLOT_STEP_MINUTES);
+    const endAt = new Date(startAt.getTime() + 30 * 60000);
+    await createTimeBlock('Blocked', startAt, endAt);
+  }
+
+  async function handleQuickLunch() {
+    const { startAt, endAt } = nextLunchWindow(new Date());
+    await createTimeBlock('Lunch', startAt, endAt);
+  }
+
+  async function submitHoliday(event: React.FormEvent) {
+    event.preventDefault();
+    const startAt = holidayAllDay
+      ? fromZonedTime(new Date(`${holidayStartInput.slice(0, 10)}T00:00:00`), ADMIN_TIMEZONE)
+      : fromZonedTime(new Date(holidayStartInput), ADMIN_TIMEZONE);
+    const endAt = holidayAllDay
+      ? fromZonedTime(new Date(`${holidayEndInput.slice(0, 10)}T23:59:00`), ADMIN_TIMEZONE)
+      : fromZonedTime(new Date(holidayEndInput), ADMIN_TIMEZONE);
+    await createTimeBlock('Holiday', startAt, endAt);
+    setShowHolidayModal(false);
+  }
+
+  async function deleteTimeBlock(id: string) {
+    setBlockErrorMessage('');
+    setBlockSuccessMessage('');
+    const response = await fetch('/api/admin/timeblocks/delete', {
+      method: 'POST', credentials: 'same-origin', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ id })
+    });
+    if (!response.ok) {
+      setBlockErrorMessage('Could not remove time block.');
+      return;
+    }
+    setBlockSuccessMessage('Time block removed.');
+    await Promise.all([fetchBookings(), fetchTimeBlocks()]);
 
   }
 
@@ -284,6 +368,19 @@ export default function AdminPanel() {
 
       {cancelSuccessMessage && <p className="admin-inline-success">{cancelSuccessMessage}</p>}
       {cancelErrorMessage && <p className="admin-inline-error">{cancelErrorMessage}</p>}
+            {activeView === 'today' && (
+        <section className="admin-quick-blocks">
+          <h2>Quick blocks</h2>
+          <div className="admin-quick-scope"><label htmlFor="block-scope">Applies to</label><select id="block-scope" value={blockScopeBarberId} onChange={(event) => setBlockScopeBarberId(event.target.value)}><option value="all">All barbers</option>{barbers.map((barber) => <option key={barber.id} value={barber.id}>{barber.name}</option>)}</select></div>
+          <div className="admin-quick-actions"><button type="button" className="btn btn--secondary" onClick={() => void handleQuickBlock30()}>Block 30 min</button><button type="button" className="btn btn--secondary" onClick={() => void handleQuickLunch()}>Lunch</button><button type="button" className="btn btn--secondary" onClick={() => setShowHolidayModal(true)}>Holiday</button></div>
+          {blockSuccessMessage && <p className="admin-inline-success">{blockSuccessMessage}</p>}
+          {blockErrorMessage && <p className="admin-inline-error">{blockErrorMessage}</p>}
+
+          <h3>Today's blocks</h3>
+          <ul className="admin-blocks-list">{timeBlocks.length === 0 ? <li className="muted">No blocks yet.</li> : timeBlocks.map((block) => <li key={block.id}><div><strong>{block.title}</strong><p className="muted">{block.barber?.name ?? 'All barbers'} · {formatBlockRange(block.startAt, block.endAt)}</p></div><button type="button" className="btn btn--ghost" onClick={() => void deleteTimeBlock(block.id)}>Remove</button></li>)}</ul>
+        </section>
+      )}
+
 
       <div className="admin-view-tabs" role="tablist" aria-label="Admin views"><button type="button" className={`admin-filter-tab ${activeView === 'today' ? 'admin-filter-tab--active' : ''}`} onClick={() => setActiveView('today')}>Today</button><button type="button" className={`admin-filter-tab ${activeView === 'all' ? 'admin-filter-tab--active' : ''}`} onClick={() => setActiveView('all')}>All bookings</button></div>
       <div className="admin-filter-tabs" role="tablist" aria-label="Booking status filters"><button type="button" className={`admin-filter-tab ${activeFilter === 'confirmed' ? 'admin-filter-tab--active' : ''}`} onClick={() => setActiveFilter('confirmed')}>Confirmed</button><button type="button" className={`admin-filter-tab ${activeFilter === 'rescheduled' ? 'admin-filter-tab--active' : ''}`} onClick={() => setActiveFilter('rescheduled')}>Rescheduled</button><button type="button" className={`admin-filter-tab ${activeFilter === 'pending' ? 'admin-filter-tab--active' : ''}`} onClick={() => setActiveFilter('pending')}>Pending</button><button type="button" className={`admin-filter-tab ${activeFilter === 'cancelled' ? 'admin-filter-tab--active' : ''}`} onClick={() => setActiveFilter('cancelled')}>Cancelled</button></div>
@@ -293,8 +390,8 @@ export default function AdminPanel() {
         <thead><tr><th>Client</th><th>Email</th><th>Service</th><th>Barber</th><th>Status</th><th>Start</th><th>Actions</th></tr></thead>
         <tbody>
           {visibleBookings.map((booking) => (
-            <tr id={`booking-row-${booking.id}`} className={highlightedBookingId === booking.id ? 'admin-row--highlighted' : ''} key={booking.id}>
-              <td><button type="button" className="admin-link-button" onClick={() => void openClientProfile(booking.clientId)}>{booking.fullName}</button></td>
+            <tr className={updatedBookingIds.includes(booking.id) ? 'admin-row--updated' : ''} key={booking.id}>
+<td><button type="button" className="admin-link-button" onClick={() => void openClientProfile(booking.clientId)}>{booking.fullName}</button></td>
               <td><button type="button" className="admin-link-button" onClick={() => void openClientProfile(booking.clientId)}>{booking.email}</button></td>
               <td>{booking.service?.name}</td><td>{booking.barber?.name}</td><td>{booking.status === 'CONFIRMED' && booking.rescheduledAt ? 'CONFIRMED · RESCHEDULED' : booking.status}</td><td>{new Date(booking.startAt).toLocaleString('en-GB', { timeZone: ADMIN_TIMEZONE })}</td>
               <td>{canBeCancelledByShop(booking) ? <button type="button" className="btn btn--secondary admin-cancel-btn" onClick={() => void cancelBookingByShop(booking)} disabled={cancelLoadingBookingId === booking.id}>{cancelLoadingBookingId === booking.id ? 'Cancelling…' : 'Cancel'}</button> : null}</td>
@@ -302,6 +399,20 @@ export default function AdminPanel() {
           ))}
         </tbody>
       </table>
+      {showHolidayModal && (
+        <div className="admin-client-modal-backdrop" role="presentation" onClick={() => setShowHolidayModal(false)}>
+          <form className="admin-client-modal" onSubmit={(event) => void submitHoliday(event)} onClick={(event) => event.stopPropagation()}>
+            <div className="admin-client-modal-head"><h2>Holiday block</h2><button type="button" className="btn btn--ghost" onClick={() => setShowHolidayModal(false)}>Close</button></div>
+            <label htmlFor="holiday-start">Start</label>
+            <input id="holiday-start" type="datetime-local" value={holidayStartInput} onChange={(event) => setHolidayStartInput(event.target.value)} required />
+            <label htmlFor="holiday-end">End</label>
+            <input id="holiday-end" type="datetime-local" value={holidayEndInput} onChange={(event) => setHolidayEndInput(event.target.value)} required />
+            <label><input type="checkbox" checked={holidayAllDay} onChange={(event) => setHolidayAllDay(event.target.checked)} /> All day</label>
+            <button type="submit" className="btn btn--primary">Create holiday block</button>
+          </form>
+        </div>
+      )}
+
 
       {selectedClientId && (
         <div className="admin-client-modal-backdrop" role="presentation" onClick={() => setSelectedClientId(null)}>
@@ -309,17 +420,7 @@ export default function AdminPanel() {
             <div className="admin-client-modal-head"><h2>Client profile</h2><button type="button" className="btn btn--ghost" onClick={() => setSelectedClientId(null)}>Close</button></div>
             {isClientLoading && <p className="muted">Loading…</p>}
             {clientError && <p className="admin-inline-error">{clientError}</p>}
-            {clientProfile && (
-              <>
-                <p><strong>{clientProfile.client.fullName || 'Unnamed client'}</strong><br />{clientProfile.client.email}<br />{clientProfile.client.phone || 'No phone'}</p>
-                <div className="admin-client-stats"><p>Total visits: {clientProfile.stats.totalBookings}</p><p>Last visit: {clientProfile.stats.lastBookingAt ? new Date(clientProfile.stats.lastBookingAt).toLocaleString('en-GB', { timeZone: ADMIN_TIMEZONE }) : '—'}</p><p>Cancelled: {clientProfile.stats.cancelledCount}</p></div>
-                <h3>Recent bookings</h3>
-                <ul className="admin-client-bookings">{clientProfile.recentBookings.map((item) => <li key={item.id}>{new Date(item.startAt).toLocaleString('en-GB', { timeZone: ADMIN_TIMEZONE })} · {item.status} · {item.service?.name} · {item.barber?.name}</li>)}</ul>
-                <label htmlFor="client-notes">Notes</label>
-                <textarea id="client-notes" value={notesDraft} onChange={(event) => setNotesDraft(event.target.value)} rows={5} />
-                <button type="button" className="btn btn--primary" onClick={() => void saveNotes()} disabled={notesSaving}>{notesSaving ? 'Saving…' : 'Save notes'}</button>
-              </>
-            )}
+            {clientProfile && (<><p><strong>{clientProfile.client.fullName || 'Unnamed client'}</strong><br />{clientProfile.client.email}<br />{clientProfile.client.phone || 'No phone'}</p><div className="admin-client-stats"><p>Total visits: {clientProfile.stats.totalBookings}</p><p>Last visit: {clientProfile.stats.lastBookingAt ? new Date(clientProfile.stats.lastBookingAt).toLocaleString('en-GB', { timeZone: ADMIN_TIMEZONE }) : '—'}</p><p>Cancelled: {clientProfile.stats.cancelledCount}</p></div><h3>Recent bookings</h3><ul className="admin-client-bookings">{clientProfile.recentBookings.map((item) => <li key={item.id}>{new Date(item.startAt).toLocaleString('en-GB', { timeZone: ADMIN_TIMEZONE })} · {item.status} · {item.service?.name} · {item.barber?.name}</li>)}</ul><label htmlFor="client-notes">Notes</label><textarea id="client-notes" value={notesDraft} onChange={(event) => setNotesDraft(event.target.value)} rows={5} /><button type="button" className="btn btn--primary" onClick={() => void saveNotes()} disabled={notesSaving}>{notesSaving ? 'Saving…' : 'Save notes'}</button></>)}
           </div>
 
         </div>
