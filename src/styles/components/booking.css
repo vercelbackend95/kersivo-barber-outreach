@@ -358,3 +358,68 @@
     align-items: end;
   }
 }
+
+.admin-shell {
+  display: grid;
+  gap: var(--space-sm);
+}
+
+.admin-sidebar {
+  border: 1px solid var(--border);
+  background: var(--surface);
+  padding: var(--space-sm);
+  display: grid;
+  gap: var(--space-sm);
+}
+
+.admin-sidebar-title {
+  margin: 0;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+.admin-sidebar-nav {
+  display: grid;
+  gap: var(--space-xs);
+}
+
+.admin-sidebar-link {
+  border: 1px solid var(--border);
+  background: var(--bg);
+  color: var(--fg);
+  padding: 0.6rem 0.7rem;
+  text-align: left;
+  font: inherit;
+  cursor: pointer;
+}
+
+.admin-sidebar-link:hover {
+  border-color: var(--accent);
+}
+
+.admin-sidebar-link:focus-visible {
+  outline: 2px solid var(--focus);
+  outline-offset: 2px;
+}
+
+.admin-sidebar-link--active {
+  background: var(--accent);
+  border-color: var(--accent);
+  color: var(--accent-contrast);
+}
+
+.admin-main-content {
+  min-width: 0;
+}
+
+@media (min-width: 64rem) {
+  .admin-shell {
+    grid-template-columns: minmax(12rem, 14rem) minmax(0, 1fr);
+    align-items: start;
+  }
+
+  .admin-sidebar {
+    position: sticky;
+    top: var(--space-sm);
+  }
+}
