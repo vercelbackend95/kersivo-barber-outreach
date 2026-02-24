@@ -11,14 +11,18 @@ Astro + React (TypeScript) booking system for barbershops.
    ```bash
    npx prisma migrate reset
    ```
-4. Configure email + URLs:
+4. Regenerate Prisma client after schema changes/migrations:
+   ```bash
+   npx prisma generate
+   ```
+5. Configure email + URLs:
    - `RESEND_API_KEY`: required for real email delivery via Resend.
    - `FROM_EMAIL`: sender identity used by Resend (must be verified in your Resend account).
    - `PUBLIC_SITE_URL`: public base URL used to generate confirm/cancel/reschedule links in emails (for local dev use `http://localhost:4321`).
    - If `RESEND_API_KEY` is missing, the app falls back to console logs for booking links.
 
-5. Set `ADMIN_SECRET` for admin panel login.
-6. Run app:
+6. Set `ADMIN_SECRET` for admin panel login.
+7. Run app:
    ```bash
    npm run dev
    ```

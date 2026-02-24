@@ -79,7 +79,20 @@ async function upsertClientForBooking(
   input: { email: string; fullName?: string | null; phone?: string | null }
 ) {
   const shopId = await getPrimaryShopId(tx);
-  return tx.client.upsert({
+  const clientDelegate = (tx as Prisma.TransactionClient & { client?: { upsert?: Function } }).client;
+
+  if (!clientDelegate || typeof clientDelegate.upsert !== 'function') {
+    if (process.env.NODE_ENV !== 'production') {
+      console.error('Prisma delegate "client" is unavailable on transaction client. Check generated Prisma client + schema model names.', {
+        delegates: Object.keys(tx as object).filter((key) => !key.startsWith('$')).sort()
+      });
+    }
+
+    throw new Error('Database client model delegate is unavailable. Expected `prisma.client` from `model Client`. Run `npx prisma generate` after schema changes.');
+  }
+
+  return clientDelegate.upsert({
+
     where: { shopId_email: { shopId, email: input.email } },
     update: {
       fullName: input.fullName ?? undefined,
