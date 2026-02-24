@@ -6,6 +6,7 @@ import '../styles/components/shop.css';
 import { prisma } from '../lib/db/client';
 import { resolveShopId } from '../lib/db/shopScope';
 import { formatGbp } from '../lib/shop/money';
+import ShopCartDrawer from '../components/shop/ShopCartDrawer.astro';
 
 const shopId = await resolveShopId();
 const products = await prisma.product.findMany({
@@ -26,11 +27,11 @@ const products = await prisma.product.findMany({
     <title>Shop | Kersivo Barber Outreach</title>
   </head>
   <body>
-    <main class="container shop-page" data-products={JSON.stringify(products)}>
+    <main class="container shop-page">
       <header class="shop-header">
         <p class="shop-eyebrow">Demo shop</p>
         <h1>Products</h1>
-        <p class="muted">Add products to cart, pay online in GBP, and pick up in-store.</p>
+        <p class="muted">Add products to cart and confirm pickup orders in GBP.</p>
       </header>
 
       <section class="shop-grid" aria-label="Products">
@@ -53,149 +54,8 @@ const products = await prisma.product.findMany({
           </article>
         ))}
       </section>
-      
-      <section class="cart-panel" aria-label="Mini cart">
-        <h2>Mini cart</h2>
-        <div id="cart-items" class="cart-items"></div>
-        <label class="cart-email-label" for="customer-email">Email for receipt</label>
-        <input id="customer-email" type="email" autocomplete="email" placeholder="you@example.com" class="cart-email-input" />
-        <p class="cart-subtotal">Subtotal: <strong id="cart-subtotal">£0.00</strong></p>
-        <button type="button" class="btn btn--primary" id="checkout-button">Checkout (Pickup)</button>
-        <p id="cart-feedback" class="muted"></p>
-      </section>
+      <ShopCartDrawer products={products} />
     </main>
-    
-    <script type="module">
-      const CART_KEY = 'kersivo_shop_cart_v1_5';
-      const root = document.querySelector('.shop-page');
-      const products = JSON.parse(root?.dataset.products || '[]');
-      const productsMap = new Map(products.map((product) => [product.id, product]));
-      const cartItemsContainer = document.getElementById('cart-items');
-      const subtotalEl = document.getElementById('cart-subtotal');
-      const checkoutButton = document.getElementById('checkout-button');
-      const feedbackEl = document.getElementById('cart-feedback');
-      const customerEmailEl = document.getElementById('customer-email');
-
-      const formatGbp = (pence) => new Intl.NumberFormat('en-GB', { style: 'currency', currency: 'GBP' }).format(pence / 100);
-
-      function getCart() {
-        try {
-          return JSON.parse(localStorage.getItem(CART_KEY) || '[]');
-        } catch {
-          return [];
-        }
-      }
-
-      function setCart(cart) {
-        localStorage.setItem(CART_KEY, JSON.stringify(cart));
-      }
-
-      function renderCart() {
-        const cart = getCart();
-        if (cart.length === 0) {
-          cartItemsContainer.innerHTML = '<p class="muted">Your cart is empty.</p>';
-          subtotalEl.textContent = formatGbp(0);
-          return;
-        }
-
-        let subtotal = 0;
-        cartItemsContainer.innerHTML = '';
-        for (const item of cart) {
-          const product = productsMap.get(item.productId);
-          if (!product) continue;
-          const lineTotal = product.pricePence * item.quantity;
-          subtotal += lineTotal;
-
-          const row = document.createElement('div');
-          row.className = 'cart-row';
-          row.innerHTML = `
-            <div>
-              <p class="cart-item-name">${product.name}</p>
-              <p class="muted">${formatGbp(product.pricePence)} each</p>
-            </div>
-            <div class="cart-row-actions">
-              <button type="button" class="btn btn--ghost" data-minus="${item.productId}">-</button>
-              <span>${item.quantity}</span>
-              <button type="button" class="btn btn--ghost" data-plus="${item.productId}">+</button>
-              <button type="button" class="btn btn--secondary" data-remove="${item.productId}">Remove</button>
-            </div>
-          `;
-          cartItemsContainer.append(row);
-        }
-
-        subtotalEl.textContent = formatGbp(subtotal);
-      }
-
-      function updateQuantity(productId, delta) {
-        const cart = getCart();
-        const idx = cart.findIndex((item) => item.productId === productId);
-        if (idx === -1) return;
-        cart[idx].quantity += delta;
-        if (cart[idx].quantity <= 0) cart.splice(idx, 1);
-        setCart(cart);
-        renderCart();
-      }
-
-      function addToCart(productId) {
-        const cart = getCart();
-        const idx = cart.findIndex((item) => item.productId === productId);
-        if (idx === -1) cart.push({ productId, quantity: 1 });
-        else cart[idx].quantity += 1;
-        setCart(cart);
-        renderCart();
-      }
-
-      document.querySelectorAll('[data-add-to-cart]').forEach((button) => {
-        button.addEventListener('click', () => addToCart(button.dataset.addToCart));
-      });
-
-      cartItemsContainer.addEventListener('click', (event) => {
-        const target = event.target;
-        if (!(target instanceof HTMLElement)) return;
-        if (target.dataset.plus) updateQuantity(target.dataset.plus, 1);
-        if (target.dataset.minus) updateQuantity(target.dataset.minus, -1);
-        if (target.dataset.remove) {
-          const cart = getCart().filter((item) => item.productId !== target.dataset.remove);
-          setCart(cart);
-          renderCart();
-        }
-      });
-
-      checkoutButton.addEventListener('click', async () => {
-        feedbackEl.textContent = '';
-        const cart = getCart();
-        const customerEmail = customerEmailEl.value.trim();
-
-        if (!customerEmail || !customerEmail.includes('@')) {
-          feedbackEl.textContent = 'Please enter a valid email.';
-          return;
-        }
-        if (cart.length === 0) {
-          feedbackEl.textContent = 'Your cart is empty.';
-          return;
-        }
-
-        checkoutButton.disabled = true;
-        checkoutButton.textContent = 'Redirecting…';
-
-        try {
-          const response = await fetch('/api/shop/checkout', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ items: cart, customerEmail })
-          });
-          const payload = await response.json();
-          if (!response.ok) throw new Error(payload.error || 'Checkout failed.');
-          window.location.href = payload.url;
-        } catch (error) {
-          feedbackEl.textContent = error instanceof Error ? error.message : 'Checkout failed.';
-          checkoutButton.disabled = false;
-          checkoutButton.textContent = 'Checkout (Pickup)';
-        }
-      });
-
-      renderCart();
-    </script>
 
   </body>
 </html>

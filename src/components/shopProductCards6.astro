@@ -1,82 +1,58 @@
 ---
-interface ProductItem {
-  collection: string;
-  name: string;
-  image: string;
-  price: string;
-  salePrice?: string;
-  badge?: "Sale" | "Sold out";
-  href: string;
-}
+import { prisma } from '../lib/db/client';
+import { resolveShopId } from '../lib/db/shopScope';
+import { formatGbp } from '../lib/shop/money';
 
-const products: ProductItem[] = [
-  {
-    collection: "Barber Essentials",
-    name: "Precision Fade Comb",
-    image:
-      "https://deifkwefumgah.cloudfront.net/shadcnblocks/block/ecommerce/other/jascent-leung-CubSQS4iYEE-unsplash-3.jpg",
-    price: "$59.00",
-    salePrice: "$49.00",
-    badge: "Sale",
-    href: "#",
-  },
-  {
-    collection: "Shop Growth",
-    name: "Client Rebooking Cards",
-    image:
-      "https://deifkwefumgah.cloudfront.net/shadcnblocks/block/ecommerce/other/jascent-leung-wyEh0ZnwUFM-unsplash-3.jpg",
-    price: "$29.00",
-    href: "#",
-  },
-  {
-    collection: "Premium Tools",
-    name: "Textured Cape Pro",
-    image:
-      "https://deifkwefumgah.cloudfront.net/shadcnblocks/block/ecommerce/other/jascent-leung-kfv-hU9ZVkk-unsplash-3.jpg",
-    price: "$79.00",
-    badge: "Sold out",
-    href: "#",
-  },
-];
+const shopId = await resolveShopId();
+const products = await prisma.product.findMany({
+  where: { shopId, active: true },
+  orderBy: [{ featured: 'desc' }, { sortOrder: 'asc' }, { updatedAt: 'desc' }],
+  take: 3
+});
+
 ---
 
 <section class="shop6" aria-labelledby="shop6-title">
   <div class="container shop6__container">
     <div class="shop6__header">
       <p class="shop6__eyebrow">Shop</p>
-      <h2 id="shop6-title">Grab Barber Products That Convert</h2>
-      <p>
-        Pick from three bestsellers inspired by the Shadcnblocks product-card6 layout.
-      </p>
+      <h2 id="shop6-title">Barber Products Ready for Pickup</h2>
+      <p>These featured products are synced with Admin → Shop → Products.</p>
+
     </div>
 
     <ul class="shop6__grid">
-      {products.map((product, index) => (
+      {products.length === 0 ? (
+        <li class="shop6__item">
+          <article class="shop6__card">
+            <div class="shop6__content">
+              <h3>No products yet</h3>
+              <p class="muted">Add products in Admin to publish them on the landing page and /shop.</p>
+            </div>
+          </article>
+        </li>
+      ) : products.map((product, index) => (
+
         <li class="shop6__item" key={`${product.name}-${index}`}>
           <article class="shop6__card">
-            <a class="shop6__image-link" href={product.href}>
-              <img src={product.image} alt={product.name} loading="lazy" />
-            </a>
+            {product.imageUrl ? (
+              <img src={product.imageUrl} alt={product.name} loading="lazy" class="shop6__image" />
+            ) : (
+              <div class="shop6__image shop6__image--placeholder" aria-hidden="true"></div>
+            )}
+
 
             <div class="shop6__content">
-              {product.badge && (
-                <p class:list={["shop6__badge", product.badge === "Sold out" && "shop6__badge--muted"]}>
-                  {product.badge}
-                </p>
-              )}
-
-              <a class="shop6__collection" href={product.href}>{product.collection}</a>
+              <p class="shop6__collection">Featured item</p>
               <h3>{product.name}</h3>
 
               <div class="shop6__footer">
-                <p class="shop6__price">
-                  {product.salePrice && <span class="shop6__sale">{product.salePrice}</span>}
-                  <span class:list={[product.salePrice && "shop6__regular"]}>{product.price}</span>
-                </p>
+               <p class="shop6__price">{formatGbp(product.pricePence)}</p>
 
                 <div class="shop6__actions">
-                  <a class="btn btn--primary" href={product.href}>Shop now</a>
-                  <a class="btn btn--ghost" href={product.href}>Quick view</a>
+                  <button class="btn btn--primary" type="button" data-add-to-cart={product.id}>Add to cart</button>
+                  <a class="btn btn--ghost" href="/shop">View in shop</a>
+
                 </div>
               </div>
             </div>

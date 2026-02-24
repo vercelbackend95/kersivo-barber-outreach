@@ -147,6 +147,18 @@ export default function ShopAdminPanel() {
     }
   }, [activeTab]);
 
+  useEffect(() => {
+    if (activeTab !== 'orders') return;
+    const intervalId = window.setInterval(() => {
+      void fetchOrders();
+      if (selectedOrder) {
+        void fetchOrderDetails(selectedOrder.id);
+      }
+    }, 15000);
+
+    return () => window.clearInterval(intervalId);
+  }, [activeTab, selectedOrder]);
+
 
   function resetForm() {
     setForm(EMPTY_FORM);

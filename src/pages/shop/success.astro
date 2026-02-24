@@ -4,23 +4,23 @@ import '../../styles/global.css';
 import '../../styles/components/buttons.css';
 import '../../styles/components/shop.css';
 
-const sessionId = Astro.url.searchParams.get('session_id');
+const orderId = Astro.url.searchParams.get('orderId');
 ---
 <html lang="en">
-  <head><meta charset="utf-8" /><meta name="viewport" content="width=device-width" /><title>Payment successful</title></head>
+  <head><meta charset="utf-8" /><meta name="viewport" content="width=device-width" /><title>Order confirmed</title></head>
   <body>
     <main class="container shop-page">
       <section class="shop-card shop-success-card">
         <div class="shop-card-body">
-          <h1>Payment successful. Pick up in store.</h1>
-          <p class="muted">Your order is confirmed. Please bring this confirmation when collecting.</p>
-          {sessionId ? <p class="muted">Session: {sessionId}</p> : null}
+          <h1>Order confirmed. Pick up in store.</h1>
+          <p class="muted">Your pickup order is confirmed and paid in demo mode.</p>
+          {orderId ? <p class="muted">Order ID: {orderId}</p> : null}
           <a href="/shop" class="btn btn--primary">Back to shop</a>
         </div>
       </section>
     </main>
     <script>
-      localStorage.removeItem('kersivo_shop_cart_v1_5');
+      localStorage.removeItem('kersivo_shop_cart_v2');
     </script>
   </body>
 </html>

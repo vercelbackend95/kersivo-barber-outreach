@@ -204,7 +204,7 @@ model Order {
   status          OrderStatus @default(PAID)
   currency        String      @default("gbp")
   totalPence      Int
-  stripeSessionId String      @unique
+  stripeSessionId String?     @unique
   paidAt          DateTime?
   collectedAt     DateTime?
   createdAt       DateTime    @default(now())

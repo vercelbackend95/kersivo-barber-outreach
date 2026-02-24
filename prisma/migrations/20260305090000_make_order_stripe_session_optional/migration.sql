@@ -1,0 +1,1 @@
+ALTER TABLE "Order" ALTER COLUMN "stripeSessionId" DROP NOT NULL;

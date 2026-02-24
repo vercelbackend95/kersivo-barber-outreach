@@ -3,18 +3,22 @@ export const prerender = false;
 import type { APIRoute } from 'astro';
 import { prisma } from '../../../lib/db/client';
 import { resolveShopId } from '../../../lib/db/shopScope';
-import { createCheckoutSession } from '../../../lib/shop/stripe';
+port { sendShopOrderConfirmationEmail } from '../../../lib/email/sender';
+import { formatGbp } from '../../../lib/shop/money';
+
 
 type CheckoutInput = {
   items: Array<{ productId: string; quantity: number }>;
   customerEmail: string;
 };
+const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+
 
 export const POST: APIRoute = async ({ request }) => {
   try {
     const body = (await request.json()) as CheckoutInput;
     const customerEmail = body.customerEmail?.trim().toLowerCase();
-    if (!customerEmail || !customerEmail.includes('@')) {
+    if (!customerEmail || !EMAIL_REGEX.test(customerEmail)) {
       return new Response(JSON.stringify({ error: 'Valid customer email is required.' }), { status: 400 });
     }
 
@@ -44,40 +48,41 @@ export const POST: APIRoute = async ({ request }) => {
       const quantity = quantityByProduct.get(product.id) ?? 0;
       return {
         productId: product.id,
-        name: product.name,
-        unitPricePence: product.pricePence,
+        nameSnapshot: product.name,
+        unitPricePenceSnapshot: product.pricePence,
         quantity,
         lineTotalPence: product.pricePence * quantity
       };
     });
 
     const totalPence = snapshot.reduce((sum, item) => sum + item.lineTotalPence, 0);
-    const publicSiteUrl = import.meta.env.PUBLIC_SITE_URL ?? process.env.PUBLIC_SITE_URL;
-    if (!publicSiteUrl) {
-      return new Response(JSON.stringify({ error: 'PUBLIC_SITE_URL is not configured.' }), { status: 500 });
-    }
+    const order = await prisma.order.create({
+      data: {
 
-    const session = await createCheckoutSession({
-      customerEmail,
-      successUrl: `${publicSiteUrl}/shop/success?session_id={CHECKOUT_SESSION_ID}`,
-      cancelUrl: `${publicSiteUrl}/shop/cancelled`,
-      lineItems: snapshot.map((item) => ({
-        name: item.name,
-        quantity: item.quantity,
-        unitAmount: item.unitPricePence
-      })),
-      metadata: {
         shopId,
         customerEmail,
+        status: 'PAID',
         currency: 'gbp',
-        totalPence: String(totalPence),
-        cart: JSON.stringify(snapshot)
-      }
+
+              totalPence,
+        paidAt: new Date(),
+        items: {
+          create: snapshot
+        }
+      },
+      select: { id: true }
     });
 
-    return new Response(JSON.stringify({ url: session.url }), { status: 200 });
+    await sendShopOrderConfirmationEmail({
+      to: customerEmail,
+      totalFormatted: formatGbp(totalPence),
+      itemLines: snapshot.map((item) => `${item.nameSnapshot} × ${item.quantity} — ${formatGbp(item.lineTotalPence)}`)
+
+    });
+
+    return new Response(JSON.stringify({ orderId: order.id }), { status: 200 });
   } catch (error) {
     console.error('Checkout error', error);
-    return new Response(JSON.stringify({ error: 'Unable to start checkout.' }), { status: 500 });
+    return new Response(JSON.stringify({ error: 'Unable to complete checkout.' }), { status: 500 });
   }
 };

@@ -19,8 +19,10 @@ import "../styles/components/hero108.css";
 import Hero108 from "../components/hero108.astro";
 import SettingsIntegrations3a from "../components/settingsIntegrations3a.astro";
 import ShopProductCards6 from "../components/shopProductCards6.astro";
+import ShopCartDrawer from "../components/shop/ShopCartDrawer.astro";
 import "../styles/components/settingsIntegrations3a.css";
 import "../styles/components/shopProductCards6.css";
+mport "../styles/components/shop.css";
 import Faq4 from "../components/faq4.astro";
 import Cta10 from "../components/cta10.astro";
 import "../styles/components/faq4.css";
@@ -29,6 +31,14 @@ import Contact16 from "../components/contact16.astro";
 import "../styles/components/contact16.css";
 import Footer50 from "../components/footer50.astro";
 import "../styles/components/footer50.css";
+import { prisma } from '../lib/db/client';
+import { resolveShopId } from '../lib/db/shopScope';
+
+const shopId = await resolveShopId();
+const products = await prisma.product.findMany({
+  where: { shopId, active: true },
+  orderBy: [{ featured: 'desc' }, { sortOrder: 'asc' }, { updatedAt: 'desc' }]
+});
 ---
 
 <html lang="en">
@@ -102,6 +112,7 @@ import "../styles/components/footer50.css";
 			<Hero108 />
 			<SettingsIntegrations3a />
 			<ShopProductCards6 />
+			<ShopCartDrawer products={products} />
 			<Faq4 />
 			<Cta10 />
 			<Contact16 />
