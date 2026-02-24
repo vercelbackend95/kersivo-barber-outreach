@@ -1,0 +1,59 @@
+---
+import '../styles/tokens.css';
+import '../styles/global.css';
+import '../styles/components/buttons.css';
+import '../styles/components/shop.css';
+import { prisma } from '../lib/db/client';
+import { resolveShopId } from '../lib/db/shopScope';
+
+const shopId = await resolveShopId();
+const products = await prisma.product.findMany({
+  where: { shopId, active: true },
+  orderBy: [{ featured: 'desc' }, { sortOrder: 'asc' }, { updatedAt: 'desc' }]
+});
+
+function formatPrice(pricePence: number): string {
+  return new Intl.NumberFormat('en-GB', { style: 'currency', currency: 'GBP' }).format(pricePence / 100);
+}
+---
+
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+    <link rel="icon" href="/favicon.ico" />
+    <meta name="viewport" content="width=device-width" />
+    <meta name="generator" content={Astro.generator} />
+    <title>Shop | Kersivo Barber Outreach</title>
+  </head>
+  <body>
+    <main class="container shop-page">
+      <header class="shop-header">
+        <p class="shop-eyebrow">Demo shop</p>
+        <h1>Products</h1>
+        <p class="muted">Browse products and reserve for pickup in the barbershop.</p>
+      </header>
+
+      <section class="shop-grid" aria-label="Products">
+        {products.length === 0 ? (
+          <article class="shop-card">
+            <h2>No products yet</h2>
+            <p class="muted">Products added in Admin → Shop will appear here.</p>
+          </article>
+        ) : products.map((product) => (
+          <article class="shop-card" key={product.id}>
+            {product.imageUrl ? <img src={product.imageUrl} alt={product.name} class="shop-image" loading="lazy" /> : null}
+            <div class="shop-card-body">
+              <div class="shop-card-head">
+                <h2>{product.name}</h2>
+                <p class="shop-price">{formatPrice(product.pricePence)}</p>
+              </div>
+              {product.description ? <p class="muted">{product.description}</p> : null}
+              <button type="button" class="btn btn--primary">Buy &amp; pick up</button>
+            </div>
+          </article>
+        ))}
+      </section>
+    </main>
+  </body>
+</html>

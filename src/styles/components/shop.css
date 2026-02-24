@@ -1,0 +1,64 @@
+.shop-page {
+  padding-block: var(--space-xl);
+  display: grid;
+  gap: var(--space-md);
+}
+
+.shop-header {
+  display: grid;
+  gap: 0.35rem;
+}
+
+.shop-eyebrow {
+  margin: 0;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--muted);
+}
+
+.shop-grid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: var(--space-sm);
+}
+
+.shop-card {
+  border: 1px solid var(--border);
+  background: var(--surface);
+  display: grid;
+}
+
+.shop-image {
+  width: 100%;
+  aspect-ratio: 16 / 10;
+  object-fit: cover;
+  border-bottom: 1px solid var(--border);
+}
+
+.shop-card-body {
+  padding: var(--space-sm);
+  display: grid;
+  gap: var(--space-xs);
+}
+
+.shop-card-head {
+  display: flex;
+  justify-content: space-between;
+  gap: var(--space-xs);
+  align-items: baseline;
+}
+
+.shop-card h2 {
+  margin: 0;
+}
+
+.shop-price {
+  margin: 0;
+  font-weight: 700;
+}
+
+@media (min-width: 48rem) {
+  .shop-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}

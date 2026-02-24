@@ -64,6 +64,11 @@ After reset + seed, this request should return `200` with slots on a weekday:
 ```bash
 curl "http://localhost:4321/api/availability?serviceId=svc-haircut&barberId=seed-luca&date=2026-02-24"
 ```
+## Shop products (Step 1)
+- Admin → Shop → Products now supports CRUD backed by the database.
+- Public page `/shop` lists active products for `demo-shop` with a placeholder **Buy & pick up** CTA.
+- Product visibility is controlled by `active` (toggle off in admin to hide from `/shop`).
+
 
 ## API routes
 - `POST /api/bookings/create`
@@ -78,6 +83,11 @@ curl "http://localhost:4321/api/availability?serviceId=svc-haircut&barberId=seed
   - `GET/POST /api/admin/timeoff`
   - `GET /api/admin/bookings`
   - `POST /api/admin/bookings/manual`
+  - `GET /api/admin/shop/products`
+  - `POST /api/admin/shop/products/create`
+  - `POST /api/admin/shop/products/update`
+  - `POST /api/admin/shop/products/toggle`
+  - `POST /api/admin/shop/products/delete`
 
 ## Deposits-ready schema (v2 prep)
 Bookings already include:

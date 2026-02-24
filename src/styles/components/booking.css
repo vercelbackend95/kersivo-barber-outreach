@@ -9,7 +9,9 @@
 }
 
 .booking-shell input,
-.booking-shell select {
+.booking-shell select,
+.booking-shell textarea {
+
   border: 1px solid var(--border);
   background: var(--bg);
   color: var(--fg);
@@ -422,4 +424,48 @@
     position: sticky;
     top: var(--space-sm);
   }
+}
+
+
+.admin-products-panel {
+  gap: var(--space-sm);
+}
+
+.admin-products-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-xs);
+}
+
+.admin-product-form {
+  border: 1px solid var(--border);
+  padding: var(--space-sm);
+  background: var(--bg);
+  display: grid;
+  gap: var(--space-xs);
+}
+
+.admin-product-form h3 {
+  margin: 0;
+}
+
+.admin-product-form label {
+  display: grid;
+  gap: 0.3rem;
+}
+
+.admin-product-checkbox {
+  display: flex !important;
+  align-items: center;
+  gap: 0.45rem;
+}
+
+.admin-products-table-wrap {
+  overflow-x: auto;
+}
+
+.admin-products-row-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.35rem;
 }
