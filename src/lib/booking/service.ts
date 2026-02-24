@@ -68,6 +68,32 @@ export async function expirePendingBookings() {
     data: { status: BookingStatus.EXPIRED }
   });
 }
+async function getPrimaryShopId(tx?: Prisma.TransactionClient) {
+  const client = tx ?? prisma;
+  const shop = await client.shopSettings.findFirstOrThrow({ select: { id: true } });
+  return shop.id;
+}
+
+async function upsertClientForBooking(
+  tx: Prisma.TransactionClient,
+  input: { email: string; fullName?: string | null; phone?: string | null }
+) {
+  const shopId = await getPrimaryShopId(tx);
+  return tx.client.upsert({
+    where: { shopId_email: { shopId, email: input.email } },
+    update: {
+      fullName: input.fullName ?? undefined,
+      phone: input.phone ?? undefined
+    },
+    create: {
+      shopId,
+      email: input.email,
+      fullName: input.fullName ?? null,
+      phone: input.phone ?? null
+    }
+  });
+}
+
 
 async function ensureSlotAvailable(tx: Prisma.TransactionClient, input: {
   barberId: string; startAt: Date; endAt: Date; ignoreBookingId?: string;
@@ -107,11 +133,19 @@ export async function createPendingBooking(input: {
 
   const booking = await prisma.$transaction(async (tx) => {
     await ensureSlotAvailable(tx, { barberId: input.barberId, startAt, endAt });
+      const client = await upsertClientForBooking(tx, {
+      email: input.email,
+      fullName: input.fullName,
+      phone: input.phone || null
+    });
+
+
 
     return tx.booking.create({
       data: {
         service: { connect: { id: input.serviceId } },
         barber: { connect: { id: input.barberId } },
+        client: { connect: { id: client.id } },
 
         fullName: input.fullName,
         email: input.email,
@@ -153,9 +187,16 @@ export async function confirmBookingByToken(token: string) {
   const manageToken = generateToken();
 
   const { confirmedBooking, settings } = await prisma.$transaction(async (tx) => {
+      const client = await upsertClientForBooking(tx, {
+      email: booking.email,
+      fullName: booking.fullName,
+      phone: booking.phone
+    });
+
     const updatedBooking = await tx.booking.update({
       where: { id: booking.id },
       data: {
+        clientId: client.id,
         status: BookingStatus.CONFIRMED,
         confirmTokenHash: null,
         confirmTokenExpiresAt: null,
