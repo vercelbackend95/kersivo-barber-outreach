@@ -13,6 +13,7 @@ type Booking = {
 };
 
 type BookingFilterTab = 'confirmed' | 'rescheduled' | 'pending' | 'cancelled';
+type AdminBookingView = 'today' | 'all';
 
 const ADMIN_TIMEZONE = 'Europe/London';
 const POLL_INTERVAL_MS = 15000;
@@ -86,6 +87,7 @@ function formatLastUpdated(lastUpdatedAt: number | null, nowMs: number) {
   const diffMin = Math.floor(diffSec / 60);
   return `${diffMin}m ago`;
 }
+
 function normalizeSearchValue(value: string) {
   return value.trim().toLowerCase();
 }
@@ -106,10 +108,10 @@ function getBookingSearchScore(booking: Booking, normalizedQuery: string) {
 function isCancelledStatus(status: string) {
   return status.startsWith('CANCELLED');
 }
+
 function canBeCancelledByShop(booking: Booking) {
   return booking.status === 'CONFIRMED';
 }
-
 
 function matchesTabFilter(booking: Booking, activeFilter: BookingFilterTab) {
   if (activeFilter === 'confirmed') {
@@ -138,7 +140,6 @@ function sortByFilter(bookingA: Booking, bookingB: Booking, activeFilter: Bookin
   return startAtA - startAtB;
 }
 
-
 export default function AdminPanel() {
   const [secret, setSecret] = useState('');
   const [loggedIn, setLoggedIn] = useState(false);
@@ -152,6 +153,7 @@ export default function AdminPanel() {
   const [nowMs, setNowMs] = useState(() => Date.now());
   const [clientSearchQuery, setClientSearchQuery] = useState('');
   const [activeFilter, setActiveFilter] = useState<BookingFilterTab>('confirmed');
+  const [activeView, setActiveView] = useState<AdminBookingView>('today');
   const [cancelSuccessMessage, setCancelSuccessMessage] = useState('');
   const [cancelErrorMessage, setCancelErrorMessage] = useState('');
   const [cancelLoadingBookingId, setCancelLoadingBookingId] = useState<string | null>(null);
@@ -169,7 +171,8 @@ export default function AdminPanel() {
     const scrollY = window.scrollY;
 
     try {
-      const response = await fetch('/api/admin/bookings', { credentials: 'same-origin' });
+      const endpoint = activeView === 'today' ? '/api/admin/bookings?range=today' : '/api/admin/bookings';
+      const response = await fetch(endpoint, { credentials: 'same-origin' });
 
       if (response.status === 401) {
         pollingStoppedRef.current = true;
@@ -210,7 +213,7 @@ export default function AdminPanel() {
       inFlightRef.current = false;
       setIsRefreshing(false);
     }
-  }, [loggedIn]);
+  }, [activeView, loggedIn]);
 
   async function login() {
     setError('');
@@ -354,7 +357,6 @@ export default function AdminPanel() {
       .map((entry) => entry.booking);
   }, [filteredBookings, normalizedClientSearchQuery]);
 
-
   function goToBooking(bookingId: string) {
     const row = document.getElementById(`booking-row-${bookingId}`);
     if (!row) return;
@@ -362,9 +364,11 @@ export default function AdminPanel() {
     setHighlightedBookingId(bookingId);
     window.setTimeout(() => setHighlightedBookingId((current) => (current === bookingId ? null : current)), 2000);
   }
+
   function clearClientSearch() {
     setClientSearchQuery('');
   }
+
   async function cancelBookingByShop(booking: Booking) {
     if (!canBeCancelledByShop(booking)) return;
 
@@ -389,10 +393,9 @@ export default function AdminPanel() {
         message?: string;
       };
 
-
       if (!response.ok) {
         if (response.status === 409) {
-                   setCancelErrorMessage(payload.error || payload.details || 'This booking is already cancelled or expired.');
+          setCancelErrorMessage(payload.error || payload.details || 'This booking is already cancelled or expired.');
           return;
         }
 
@@ -403,7 +406,6 @@ export default function AdminPanel() {
 
         if (response.status < 500) {
           setCancelErrorMessage(payload.error || payload.details || payload.message || 'Unable to cancel booking due to request error.');
-
           return;
         }
 
@@ -420,8 +422,6 @@ export default function AdminPanel() {
     }
   }
 
-
-
   if (isCheckingSession) {
     return <section className="surface booking-shell"><h1>Admin</h1><p className="muted">Checking session…</p></section>;
   }
@@ -433,7 +433,17 @@ export default function AdminPanel() {
   return (
     <section className="surface booking-shell">
       <h1>Admin Dashboard</h1>
+      <div className="admin-view-tabs" role="tablist" aria-label="Admin views">
+        <button type="button" className={`admin-filter-tab ${activeView === 'today' ? 'admin-filter-tab--active' : ''}`} role="tab" aria-selected={activeView === 'today'} onClick={() => setActiveView('today')}>
+          Today
+        </button>
+        <button type="button" className={`admin-filter-tab ${activeView === 'all' ? 'admin-filter-tab--active' : ''}`} role="tab" aria-selected={activeView === 'all'} onClick={() => setActiveView('all')}>
+          All bookings
+        </button>
+      </div>
+
       <div className="admin-next-block" aria-live="polite">
+        <p className="admin-next-primary">{activeView === 'today' ? `Today: ${bookings.length} bookings` : `All: ${bookings.length} bookings`}</p>
         {nextBooking ? (
           <>
             <p className="admin-next-primary">{describeBooking(nextBooking)}</p>
@@ -493,17 +503,23 @@ export default function AdminPanel() {
           </button>
         )}
       </div>
-      <table className="admin-table">
-        <thead><tr><th>Client</th><th>Email</th><th>Service</th><th>Barber</th><th>Status</th><th>Start</th><th>Actions</th></tr></thead>
-        <tbody>
-          {visibleBookings.map((booking) => {
-            const isFocused = highlightedBookingId === booking.id;
-            const isUpdated = updatedBookingIds.includes(booking.id);
-            const rowClassName = [isFocused ? 'admin-row--highlighted' : '', isUpdated ? 'admin-row--updated' : ''].filter(Boolean).join(' ');
-            return <tr id={`booking-row-${booking.id}`} className={rowClassName} key={booking.id}><td>{booking.fullName}</td><td>{booking.email}</td><td>{booking.service?.name}</td><td>{booking.barber?.name}</td><td>{booking.status === 'CONFIRMED' && booking.rescheduledAt ? 'CONFIRMED · RESCHEDULED' : booking.status}</td><td>{new Date(booking.startAt).toLocaleString('en-GB', { timeZone: ADMIN_TIMEZONE })}</td><td>{canBeCancelledByShop(booking) ? <button type="button" className="btn btn--secondary admin-cancel-btn" onClick={() => void cancelBookingByShop(booking)} disabled={cancelLoadingBookingId === booking.id}>{cancelLoadingBookingId === booking.id ? 'Cancelling…' : 'Cancel'}</button> : null}</td></tr>;
-          })}
-        </tbody>
-      </table>
+
+      {activeView === 'today' && bookings.length === 0 ? (
+        <p className="muted">No bookings scheduled for today.</p>
+      ) : (
+        <table className="admin-table">
+          <thead><tr><th>Client</th><th>Email</th><th>Service</th><th>Barber</th><th>Status</th><th>Start</th><th>Actions</th></tr></thead>
+          <tbody>
+            {visibleBookings.map((booking) => {
+              const isFocused = highlightedBookingId === booking.id;
+              const isUpdated = updatedBookingIds.includes(booking.id);
+              const rowClassName = [isFocused ? 'admin-row--highlighted' : '', isUpdated ? 'admin-row--updated' : ''].filter(Boolean).join(' ');
+
+              return <tr id={`booking-row-${booking.id}`} className={rowClassName} key={booking.id}><td>{booking.fullName}</td><td>{booking.email}</td><td>{booking.service?.name}</td><td>{booking.barber?.name}</td><td>{booking.status === 'CONFIRMED' && booking.rescheduledAt ? 'CONFIRMED · RESCHEDULED' : booking.status}</td><td>{new Date(booking.startAt).toLocaleString('en-GB', { timeZone: ADMIN_TIMEZONE })}</td><td>{canBeCancelledByShop(booking) ? <button type="button" className="btn btn--secondary admin-cancel-btn" onClick={() => void cancelBookingByShop(booking)} disabled={cancelLoadingBookingId === booking.id}>{cancelLoadingBookingId === booking.id ? 'Cancelling…' : 'Cancel'}</button> : null}</td></tr>;
+            })}
+          </tbody>
+        </table>
+      )}
     </section>
   );
 }
