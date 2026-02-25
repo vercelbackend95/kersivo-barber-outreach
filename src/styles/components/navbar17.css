@@ -81,6 +81,47 @@
 .navbar17__actions {
   display: flex;
   align-items: center;
+    gap: var(--space-xs);
+}
+
+.navbar17__cart-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.45rem;
+  padding: 0.5rem 0.7rem;
+  border: 1px solid var(--border);
+  background: var(--surface);
+  color: var(--fg);
+  font-weight: 600;
+  letter-spacing: 0.02em;
+}
+
+.navbar17__cart-btn:hover {
+  background: color-mix(in srgb, var(--surface) 72%, var(--accent));
+}
+
+.navbar17__cart-btn:focus-visible {
+  outline: 3px solid var(--focus);
+  outline-offset: 2px;
+}
+
+.navbar17__cart-badge {
+  min-width: 1.3rem;
+  height: 1.3rem;
+  display: inline-grid;
+  place-items: center;
+  padding: 0 0.2rem;
+  border: 1px solid var(--border);
+  background: var(--accent);
+  color: var(--accent-contrast);
+  font-size: 0.75rem;
+  line-height: 1;
+}
+
+.navbar17__cart-badge.is-empty {
+  background: var(--surface);
+  color: var(--muted);
+
 }
 
 .navbar17__toggle {
@@ -114,7 +155,7 @@
 
 .navbar17__toggle-icon::before,
 .navbar17__toggle-icon::after {
-  content: "";
+  content: '';
   position: absolute;
   left: 0;
 }
@@ -127,15 +168,15 @@
   top: 0.34rem;
 }
 
-.navbar17__toggle[aria-expanded="true"] .navbar17__toggle-icon {
+.navbar17__toggle[aria-expanded='true'] .navbar17__toggle-icon {
   background: transparent;
 }
 
-.navbar17__toggle[aria-expanded="true"] .navbar17__toggle-icon::before {
+.navbar17__toggle[aria-expanded='true'] .navbar17__toggle-icon::before {
   transform: translateY(0.34rem) rotate(45deg);
 }
 
-.navbar17__toggle[aria-expanded="true"] .navbar17__toggle-icon::after {
+.navbar17__toggle[aria-expanded='true'] .navbar17__toggle-icon::after {
   transform: translateY(-0.34rem) rotate(-45deg);
 }
 
@@ -167,6 +208,15 @@
   border-left-color: var(--accent);
   color: var(--fg);
 }
+.navbar17__mobile-cart-wrap {
+  padding: 0.65rem 0.25rem 0 0.25rem;
+}
+
+.navbar17__cart-btn--mobile {
+  width: 100%;
+  justify-content: center;
+}
+
 
 .navbar17__mobile-cta-wrap {
   padding: 0.6rem 0.25rem 0 0.25rem;

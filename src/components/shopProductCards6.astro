@@ -50,7 +50,18 @@ const products = await prisma.product.findMany({
                <p class="shop6__price">{formatGbp(product.pricePence)}</p>
 
                 <div class="shop6__actions">
-                  <button class="btn btn--primary" type="button" data-add-to-cart={product.id}>Add to cart</button>
+                  <button
+                    class="btn btn--primary"
+                    type="button"
+                    data-add-to-cart
+                    data-product-id={product.id}
+                    data-product-name={product.name}
+                    data-product-price-pence={String(product.pricePence)}
+                    data-product-image-url={product.imageUrl ?? ''}
+                  >
+                    Add to cart
+                  </button>
+
                   <a class="btn btn--ghost" href="/shop">View in shop</a>
 
                 </div>

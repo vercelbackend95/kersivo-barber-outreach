@@ -1,80 +1,230 @@
 export const CART_STORAGE_KEY = 'kersivo_shop_cart_v2';
-export const CART_OPEN_EVENT = 'kersivo:cart-open';
-export const CART_CLOSE_EVENT = 'kersivo:cart-close';
-export const CART_UPDATED_EVENT = 'kersivo:cart-updated';
+
 
 export type CartItem = {
   productId: string;
+  name: string;
+  pricePence: number;
+  imageUrl?: string;
+
   quantity: number;
 };
 
-let cartOpen = false;
+export type AddCartItemInput = {
+  productId: string;
+  name: string;
+  pricePence: number;
+  imageUrl?: string;
+  quantity?: number;
+};
 
-function emit(eventName: string) {
-  window.dispatchEvent(new CustomEvent(eventName));
+type CartState = {
+  items: CartItem[];
+  isOpen: boolean;
+};
+
+const state: CartState = {
+  items: [],
+  isOpen: false
+};
+
+
+const listeners = new Set<() => void>();
+let isHydrated = false;
+let storageListenerBound = false;
+
+function emitChange() {
+  for (const listener of listeners) {
+    listener();
+  }
+
 }
 
-export function readCart(): CartItem[] {
+function toSafeItem(item: Partial<CartItem>): CartItem | null {
+  const productId = String(item.productId ?? '').trim();
+  const name = String(item.name ?? '').trim();
+  const pricePence = Math.max(0, Math.floor(Number(item.pricePence ?? 0)));
+  const quantity = Math.max(1, Math.floor(Number(item.quantity ?? 1)));
+
+  if (!productId || !name) {
+    return null;
+  }
+
+  return {
+    productId,
+    name,
+    pricePence,
+    imageUrl: item.imageUrl ? String(item.imageUrl) : undefined,
+    quantity
+  };
+}
+
+function readFromStorage(): CartItem[] {
+  if (typeof window === 'undefined') {
+    return [];
+  }
+
+
   try {
-    const parsed = JSON.parse(localStorage.getItem(CART_STORAGE_KEY) ?? '[]') as CartItem[];
-    if (!Array.isArray(parsed)) return [];
+    const parsed = JSON.parse(window.localStorage.getItem(CART_STORAGE_KEY) ?? '[]') as Partial<CartItem>[];
+    if (!Array.isArray(parsed)) {
+      return [];
+    }
+
+
     return parsed
-      .map((item) => ({ productId: String(item.productId), quantity: Math.max(0, Math.floor(item.quantity ?? 0)) }))
-      .filter((item) => item.productId && item.quantity > 0);
+      .map((item) => toSafeItem(item))
+      .filter((item): item is CartItem => Boolean(item));
+
   } catch {
     return [];
   }
 }
 
-function writeCart(items: CartItem[]) {
-  localStorage.setItem(CART_STORAGE_KEY, JSON.stringify(items));
-  emit(CART_UPDATED_EVENT);
+function writeToStorage(items: CartItem[]) {
+  if (typeof window === 'undefined') {
+    return;
+  }
+
+  window.localStorage.setItem(CART_STORAGE_KEY, JSON.stringify(items));
+
 }
 
-export function addItem(productId: string, qty = 1) {
-  const quantity = Math.max(1, Math.floor(qty));
-  const cart = readCart();
-  const index = cart.findIndex((item) => item.productId === productId);
-  if (index === -1) {
-    cart.push({ productId, quantity });
-  } else {
-    cart[index].quantity += quantity;
+function ensureHydrated() {
+  if (typeof window === 'undefined' || isHydrated) {
+    return;
+
   }
-  writeCart(cart);
+  
+  state.items = readFromStorage();
+  isHydrated = true;
+
+  if (!storageListenerBound) {
+    window.addEventListener('storage', (event) => {
+      if (event.key !== CART_STORAGE_KEY) {
+        return;
+      }
+      state.items = readFromStorage();
+      emitChange();
+    });
+    storageListenerBound = true;
+  }
+}
+
+function updateItems(nextItems: CartItem[]) {
+  state.items = nextItems;
+  writeToStorage(state.items);
+  emitChange();
+}
+
+export function subscribe(listener: () => void) {
+  listeners.add(listener);
+  return () => {
+    listeners.delete(listener);
+  };
+}
+
+export function getItems() {
+  ensureHydrated();
+  return state.items;
+}
+
+export function addItem(input: AddCartItemInput) {
+  ensureHydrated();
+
+  const safeProductId = String(input.productId).trim();
+  const safeName = String(input.name).trim();
+  const safePrice = Math.max(0, Math.floor(Number(input.pricePence)));
+  const quantity = Math.max(1, Math.floor(Number(input.quantity ?? 1)));
+
+  if (!safeProductId || !safeName) {
+    return;
+  }
+
+  const existingIndex = state.items.findIndex((item) => item.productId === safeProductId);
+  if (existingIndex === -1) {
+    updateItems([
+      ...state.items,
+      {
+        productId: safeProductId,
+        name: safeName,
+        pricePence: safePrice,
+        imageUrl: input.imageUrl,
+        quantity
+      }
+    ]);
+    return;
+  }
+
+  const nextItems = [...state.items];
+  nextItems[existingIndex] = {
+    ...nextItems[existingIndex],
+    name: safeName,
+    pricePence: safePrice,
+    imageUrl: input.imageUrl ?? nextItems[existingIndex].imageUrl,
+    quantity: nextItems[existingIndex].quantity + quantity
+  };
+  updateItems(nextItems);
+
 }
 
 export function removeItem(productId: string) {
-  writeCart(readCart().filter((item) => item.productId !== productId));
+  ensureHydrated();
+  updateItems(state.items.filter((item) => item.productId !== productId));
+
 }
 
-export function setQty(productId: string, qty: number) {
-  const quantity = Math.floor(qty);
-  const cart = readCart();
-  const index = cart.findIndex((item) => item.productId === productId);
-  if (index === -1) return;
+export function setQuantity(productId: string, quantity: number) {
+  ensureHydrated();
+  const nextQuantity = Math.floor(Number(quantity));
+  const nextItems = [...state.items];
+  const itemIndex = nextItems.findIndex((item) => item.productId === productId);
+  if (itemIndex === -1) {
+    return;
 
-  if (quantity <= 0) {
-    cart.splice(index, 1);
-  } else {
-    cart[index].quantity = quantity;
   }
-  writeCart(cart);
+  
+  if (nextQuantity <= 0) {
+    nextItems.splice(itemIndex, 1);
+    updateItems(nextItems);
+    return;
+  }
+
+  nextItems[itemIndex] = {
+    ...nextItems[itemIndex],
+    quantity: nextQuantity
+  };
+  updateItems(nextItems);
 }
 
-export function clearCart() {
-  writeCart([]);
+export function clear() {
+  ensureHydrated();
+  updateItems([]);
+
+}
+
+export function getSubtotalPence() {
+  ensureHydrated();
+  return state.items.reduce((sum, item) => sum + item.pricePence * item.quantity, 0);
+
 }
 
 export function openCart() {
-  cartOpen = true;
-  emit(CART_OPEN_EVENT);
+  ensureHydrated();
+  state.isOpen = true;
+  emitChange();
+
 }
 
 export function closeCart() {
-  cartOpen = false;
-  emit(CART_CLOSE_EVENT);
+  ensureHydrated();
+  state.isOpen = false;
+  emitChange();
+
 }
 
-export function isCartOpen() {
-  return cartOpen;
+export function isOpen() {
+  ensureHydrated();
+  return state.isOpen;
+
 }

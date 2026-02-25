@@ -1,143 +1,119 @@
 ---
-import Navbar17 from "../components/navbar17.astro";
-import "../styles/tokens.css";
-import "../styles/global.css";
-import "../styles/components/buttons.css";
-import "../styles/components/navbar17.css";
-import "../styles/components/hero.css";
-import "../styles/components/stats10.css";
-import "../styles/components/compare3.css";
-import "../styles/components/timeline13.css";
-import Stats10 from "../components/stats10.astro";
-import Compare3 from "../components/compare3.astro";
-import Timeline13 from "../components/timeline13.astro";
-import Feature43 from "../components/feature43.astro";
-import Feature228 from "../components/feature228.astro";
-import "../styles/components/feature43.css";
-import "../styles/components/feature228.css";
-import "../styles/components/hero108.css";
-import Hero108 from "../components/hero108.astro";
-import SettingsIntegrations3a from "../components/settingsIntegrations3a.astro";
-import ShopProductCards6 from "../components/shopProductCards6.astro";
-import ShopCartDrawer from "../components/shop/ShopCartDrawer.astro";
-import "../styles/components/settingsIntegrations3a.css";
-import "../styles/components/shopProductCards6.css";
-import "../styles/components/shop.css";
-import Faq4 from "../components/faq4.astro";
-import Cta10 from "../components/cta10.astro";
-import "../styles/components/faq4.css";
-import "../styles/components/cta10.css";
-import Contact16 from "../components/contact16.astro";
-import "../styles/components/contact16.css";
-import Footer50 from "../components/footer50.astro";
-import "../styles/components/footer50.css";
-import { prisma } from '../lib/db/client';
-import { resolveShopId } from '../lib/db/shopScope';
+import MainLayout from '@/layouts/MainLayout.astro';
+import '../styles/components/hero.css';
+import '../styles/components/stats10.css';
+import '../styles/components/compare3.css';
+import '../styles/components/timeline13.css';
+import Stats10 from '../components/stats10.astro';
+import Compare3 from '../components/compare3.astro';
+import Timeline13 from '../components/timeline13.astro';
+import Feature43 from '../components/feature43.astro';
+import Feature228 from '../components/feature228.astro';
+import '../styles/components/feature43.css';
+import '../styles/components/feature228.css';
+import '../styles/components/hero108.css';
+import Hero108 from '../components/hero108.astro';
+import SettingsIntegrations3a from '../components/settingsIntegrations3a.astro';
+import ShopProductCards6 from '../components/shopProductCards6.astro';
+import '../styles/components/settingsIntegrations3a.css';
+import '../styles/components/shopProductCards6.css';
+import Faq4 from '../components/faq4.astro';
+import Cta10 from '../components/cta10.astro';
+import '../styles/components/faq4.css';
+import '../styles/components/cta10.css';
+import Contact16 from '../components/contact16.astro';
+import '../styles/components/contact16.css';
+import Footer50 from '../components/footer50.astro';
+import '../styles/components/footer50.css';
 
-const shopId = await resolveShopId();
-const products = await prisma.product.findMany({
-  where: { shopId, active: true },
-  orderBy: [{ featured: 'desc' }, { sortOrder: 'asc' }, { updatedAt: 'desc' }]
-});
 ---
 
-<html lang="en">
-	<head>
-		<meta charset="utf-8" />
-		<link rel="icon" type="image/svg+xml" href="/favicon.svg" />
-		<link rel="icon" href="/favicon.ico" />
-		<meta name="viewport" content="width=device-width" />
-		<meta name="generator" content={Astro.generator} />
-		<title>Kersivo Barber Outreach</title>
-	</head>
-	<body>
-		<Navbar17 />
-		<main class="hero103">
-			<section class="hero103__section">
-				<div class="container hero103__layout">
-					<div class="hero103__content">
-						<p class="hero103__eyebrow">Kersivo Barber Outreach</p>
-						<h1>Get More Clients for Your Barbershop</h1>
-						<p class="hero103__lead">
-							We build a predictable lead generation system for barbers — fast onboarding, transparent
-							pricing, and scalable growth that actually works.
-						</p>
-						<div class="hero103__actions">
-							<a class="btn btn--primary" href="#">Book a Demo</a>
-							<a class="btn btn--ghost hero103__guide" href="#">
-								Outreach Guide for Barbers
-								<span aria-hidden="true" class="hero103__arrow">→</span>
-							</a>
-						</div>
-					</div>
+<MainLayout title="Kersivo Barber Outreach">
+  <main class="hero103">
+    <section class="hero103__section">
+      <div class="container hero103__layout">
+        <div class="hero103__content">
+          <p class="hero103__eyebrow">Kersivo Barber Outreach</p>
+          <h1>Get More Clients for Your Barbershop</h1>
+          <p class="hero103__lead">
+            We build a predictable lead generation system for barbers — fast onboarding, transparent
+            pricing, and scalable growth that actually works.
+          </p>
+          <div class="hero103__actions">
+            <a class="btn btn--primary" href="#">Book a Demo</a>
+            <a class="btn btn--ghost hero103__guide" href="#">
+              Outreach Guide for Barbers
+              <span aria-hidden="true" class="hero103__arrow">→</span>
+            </a>
+          </div>
+        </div>
 
-					<div class="hero103__media" aria-hidden="true">
-						<div class="hero103__image hero103__image--main">
-							<img
-								src="https://deifkwefumgah.cloudfront.net/shadcnblocks/block/placeholder-1.svg"
-								alt=""
-								loading="lazy"
-							/>
-						</div>
-						<div class="hero103__image hero103__image--top-left">
-							<img
-								src="https://deifkwefumgah.cloudfront.net/shadcnblocks/block/placeholder-2.svg"
-								alt=""
-								loading="lazy"
-							/>
-						</div>
-						<div class="hero103__image hero103__image--bottom-left">
-							<img
-								src="https://deifkwefumgah.cloudfront.net/shadcnblocks/block/placeholder-3.svg"
-								alt=""
-								loading="lazy"
-							/>
-						</div>
-						<div class="hero103__image hero103__image--right">
-							<img
-								src="https://deifkwefumgah.cloudfront.net/shadcnblocks/block/placeholder-4.svg"
-								alt=""
-								loading="lazy"
-							/>
-						</div>
-					</div>
-				</div>
 
-			</section>
-			<Stats10 />
-			<Compare3 />
-			<Feature43 />
-			<Feature228 />
-			<Timeline13 />
-			<Hero108 />
-			<SettingsIntegrations3a />
-			<ShopProductCards6 />
-			<ShopCartDrawer products={products} />
-			<Faq4 />
-			<Cta10 />
-			<Contact16 />
-			<Footer50
-				heading="Ready to Fill Your Chairs?"
-				description="Book a quick strategy call and we will map a predictable outreach plan for your barbershop in under 20 minutes."
-				ctaText="Book a Strategy Call"
-				ctaHref="#"
-				brandName="Kersivo"
-				navigation={[
-					{ name: "Services", href: "#" },
-					{ name: "Case Studies", href: "#" },
-					{ name: "Pricing", href: "#" },
-					{ name: "FAQ", href: "#" },
-					{ name: "Contact", href: "#" },
-				]}
-				social={[
-					{ name: "Instagram", href: "#" },
-					{ name: "Facebook", href: "#" },
-				]}
-				legal={[
-					{ name: "Privacy Policy", href: "#" },
-					{ name: "Terms", href: "#" },
-				]}
-			/>
-		</main>
-	</body>
-</html>
+			         <div class="hero103__media" aria-hidden="true">
+          <div class="hero103__image hero103__image--main">
+            <img
+              src="https://deifkwefumgah.cloudfront.net/shadcnblocks/block/placeholder-1.svg"
+              alt=""
+              loading="lazy"
+            />
+          </div>
+          <div class="hero103__image hero103__image--top-left">
+            <img
+              src="https://deifkwefumgah.cloudfront.net/shadcnblocks/block/placeholder-2.svg"
+              alt=""
+              loading="lazy"
+            />
+          </div>
+          <div class="hero103__image hero103__image--bottom-left">
+            <img
+              src="https://deifkwefumgah.cloudfront.net/shadcnblocks/block/placeholder-3.svg"
+              alt=""
+              loading="lazy"
+            />
+          </div>
+          <div class="hero103__image hero103__image--right">
+            <img
+              src="https://deifkwefumgah.cloudfront.net/shadcnblocks/block/placeholder-4.svg"
+              alt=""
+              loading="lazy"
+            />
+          </div>
+        </div>
+      </div>
+    </section>
+    <Stats10 />
+    <Compare3 />
+    <Feature43 />
+    <Feature228 />
+    <Timeline13 />
+    <Hero108 />
+    <SettingsIntegrations3a />
+    <ShopProductCards6 />
+    <Faq4 />
+    <Cta10 />
+    <Contact16 />
+    <Footer50
+      heading="Ready to Fill Your Chairs?"
+      description="Book a quick strategy call and we will map a predictable outreach plan for your barbershop in under 20 minutes."
+      ctaText="Book a Strategy Call"
+      ctaHref="#"
+      brandName="Kersivo"
+      navigation={[
+        { name: 'Services', href: '#' },
+        { name: 'Case Studies', href: '#' },
+        { name: 'Pricing', href: '#' },
+        { name: 'FAQ', href: '#' },
+        { name: 'Contact', href: '#' }
+      ]}
+      social={[
+        { name: 'Instagram', href: '#' },
+        { name: 'Facebook', href: '#' }
+      ]}
+      legal={[
+        { name: 'Privacy Policy', href: '#' },
+        { name: 'Terms', href: '#' }
+      ]}
+    />
+  </main>
+</MainLayout>
+

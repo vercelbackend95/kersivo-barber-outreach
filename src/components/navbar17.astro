@@ -1,16 +1,16 @@
 ---
 const navLogo = {
-  url: "#",
-  src: "https://deifkwefumgah.cloudfront.net/shadcnblocks/block/logos/shadcnblockscom-icon.svg",
-  alt: "Kersivo logo",
-  title: "Kersivo",
+  url: '#',
+  src: 'https://deifkwefumgah.cloudfront.net/shadcnblocks/block/logos/shadcnblockscom-icon.svg',
+  alt: 'Kersivo logo',
+  title: 'Kersivo'
 };
 
 const navItems = [
-  { name: "Home", link: "#" },
-  { name: "Services", link: "#" },
-  { name: "Pricing", link: "#" },
-  { name: "Contact", link: "#" },
+  { name: 'Home', link: '#' },
+  { name: 'Services', link: '#' },
+  { name: 'Pricing', link: '#' },
+  { name: 'Contact', link: '#' }
 ];
 ---
 
@@ -27,7 +27,7 @@ const navItems = [
           <li>
             <a
               href={item.link}
-              class={`navbar17__link ${index === 0 ? "is-active" : ""}`}
+              class={`navbar17__link ${index === 0 ? 'is-active' : ''}`}
               data-nav-item
               data-nav-name={item.name}
             >
@@ -40,6 +40,11 @@ const navItems = [
     </nav>
 
     <div class="navbar17__actions">
+        <button type="button" class="navbar17__cart-btn" data-open-cart aria-label="Open cart">
+        <span aria-hidden="true">🛒</span>
+        <span>Cart</span>
+        <span class="navbar17__cart-badge" data-cart-count>0</span>
+      </button>
       <a href="#" class="btn btn--secondary">Sign Up</a>
     </div>
 
@@ -55,7 +60,7 @@ const navItems = [
         <li>
           <a
             href={item.link}
-            class={`navbar17__mobile-link ${index === 0 ? "is-active" : ""}`}
+            class={`navbar17__mobile-link ${index === 0 ? 'is-active' : ''}`}
             data-mobile-item
             data-nav-name={item.name}
           >
@@ -63,6 +68,13 @@ const navItems = [
           </a>
         </li>
       ))}
+            <li class="navbar17__mobile-cart-wrap">
+        <button type="button" class="navbar17__cart-btn navbar17__cart-btn--mobile" data-open-cart aria-label="Open cart">
+          <span aria-hidden="true">🛒</span>
+          <span>Cart</span>
+          <span class="navbar17__cart-badge" data-cart-count>0</span>
+        </button>
+      </li>
       <li class="navbar17__mobile-cta-wrap">
         <a href="#" class="btn btn--secondary navbar17__mobile-cta">Sign Up</a>
       </li>
@@ -70,27 +82,30 @@ const navItems = [
   </nav>
 </header>
 
-<script>
-  const navbar = document.querySelector("[data-navbar17]");
+<script type="module">
+  import { getItems, openCart, subscribe } from '@/lib/shop/cartStore';
+
+  const navbar = document.querySelector('[data-navbar17]');
 
   if (navbar) {
-    const links = Array.from(navbar.querySelectorAll("[data-nav-item]"));
-    const mobileLinks = Array.from(navbar.querySelectorAll("[data-mobile-item]"));
-    const indicator = navbar.querySelector("[data-nav-indicator]");
-    const navList = navbar.querySelector("[data-nav-list]");
-    const toggle = navbar.querySelector("[data-nav-toggle]");
-    const mobileNav = navbar.querySelector("[data-mobile-nav]");
+    const links = Array.from(navbar.querySelectorAll('[data-nav-item]'));
+    const mobileLinks = Array.from(navbar.querySelectorAll('[data-mobile-item]'));
+    const indicator = navbar.querySelector('[data-nav-indicator]');
+    const navList = navbar.querySelector('[data-nav-list]');
+    const toggle = navbar.querySelector('[data-nav-toggle]');
+    const mobileNav = navbar.querySelector('[data-mobile-nav]');
+    const cartButtons = Array.from(navbar.querySelectorAll('[data-open-cart]'));
+    const cartBadges = Array.from(navbar.querySelectorAll('[data-cart-count]'));
 
     const setActive = (name) => {
       links.forEach((link) => {
-        link.classList.toggle("is-active", link.dataset.navName === name);
+        link.classList.toggle('is-active', link.dataset.navName === name);
       });
 
       mobileLinks.forEach((link) => {
-        link.classList.toggle("is-active", link.dataset.navName === name);
+        link.classList.toggle('is-active', link.dataset.navName === name);
       });
-
-      const activeDesktop = links.find((link) => link.classList.contains("is-active"));
+      const activeDesktop = links.find((link) => link.classList.contains('is-active'));
 
       if (activeDesktop instanceof HTMLElement && indicator instanceof HTMLElement && navList instanceof HTMLElement) {
         const listRect = navList.getBoundingClientRect();
@@ -100,38 +115,58 @@ const navItems = [
         indicator.style.transform = `translateX(${activeRect.left - listRect.left}px)`;
       }
     };
+    const renderCartCount = () => {
+      const itemCount = getItems().reduce((count, item) => count + item.quantity, 0);
+      cartBadges.forEach((badge) => {
+        badge.textContent = String(itemCount);
+        badge.classList.toggle('is-empty', itemCount === 0);
+      });
+    };
+
 
     links.forEach((link) => {
-      link.addEventListener("click", () => {
-        setActive(link.dataset.navName || "");
+      link.addEventListener('click', () => {
+        setActive(link.dataset.navName || '');
       });
     });
 
     mobileLinks.forEach((link) => {
-      link.addEventListener("click", () => {
-        setActive(link.dataset.navName || "");
+      link.addEventListener('click', () => {
+        setActive(link.dataset.navName || '');
         if (toggle instanceof HTMLButtonElement && mobileNav instanceof HTMLElement) {
-          toggle.setAttribute("aria-expanded", "false");
+          toggle.setAttribute('aria-expanded', 'false');
+          mobileNav.hidden = true;
+        }
+      });
+    });
+
+    cartButtons.forEach((button) => {
+      button.addEventListener('click', () => {
+        openCart();
+        if (toggle instanceof HTMLButtonElement && mobileNav instanceof HTMLElement) {
+          toggle.setAttribute('aria-expanded', 'false');
           mobileNav.hidden = true;
         }
       });
     });
 
     if (toggle instanceof HTMLButtonElement && mobileNav instanceof HTMLElement) {
-      toggle.addEventListener("click", () => {
-        const isOpen = toggle.getAttribute("aria-expanded") === "true";
-        toggle.setAttribute("aria-expanded", String(!isOpen));
+      toggle.addEventListener('click', () => {
+        const isOpen = toggle.getAttribute('aria-expanded') === 'true';
+        toggle.setAttribute('aria-expanded', String(!isOpen));
         mobileNav.hidden = isOpen;
       });
     }
 
-    window.addEventListener("resize", () => {
-      const activeDesktop = links.find((link) => link.classList.contains("is-active"));
+    window.addEventListener('resize', () => {
+      const activeDesktop = links.find((link) => link.classList.contains('is-active'));
       if (activeDesktop) {
-        setActive(activeDesktop.dataset.navName || "");
+        setActive(activeDesktop.dataset.navName || '');
       }
     });
 
-    setActive(links[0]?.dataset.navName || "");
+    setActive(links[0]?.dataset.navName || '');
+    renderCartCount();
+    subscribe(renderCartCount);
   }
 </script>
