@@ -21,12 +21,30 @@ export type AddCartItemInput = {
 type CartState = {
   items: CartItem[];
   isOpen: boolean;
+  email: string;
+};
+
+export type CartSnapshot = {
+  items: CartItem[];
+  isOpen: boolean;
+  subtotalPence: number;
+  email: string;
 };
 
 const state: CartState = {
   items: [],
-  isOpen: false
+  isOpen: false,
+  email: ''
 };
+
+const SERVER_SNAPSHOT: CartSnapshot = Object.freeze({
+  items: [],
+  isOpen: false,
+  subtotalPence: 0,
+  email: ''
+});
+
+let clientSnapshot: CartSnapshot = SERVER_SNAPSHOT;
 
 
 const listeners = new Set<() => void>();
@@ -34,6 +52,13 @@ let isHydrated = false;
 let storageListenerBound = false;
 
 function emitChange() {
+  clientSnapshot = {
+    items: state.items,
+    isOpen: state.isOpen,
+    subtotalPence: state.items.reduce((sum, item) => sum + item.pricePence * item.quantity, 0),
+    email: state.email
+  };
+
   for (const listener of listeners) {
     listener();
   }
@@ -98,6 +123,7 @@ function ensureHydrated() {
   
   state.items = readFromStorage();
   isHydrated = true;
+  emitChange();
 
   if (!storageListenerBound) {
     window.addEventListener('storage', (event) => {
@@ -118,10 +144,20 @@ function updateItems(nextItems: CartItem[]) {
 }
 
 export function subscribe(listener: () => void) {
+  ensureHydrated();
   listeners.add(listener);
   return () => {
     listeners.delete(listener);
   };
+}
+
+export function getSnapshot(): CartSnapshot {
+  ensureHydrated();
+  return clientSnapshot;
+}
+
+export function getServerSnapshot(): CartSnapshot {
+  return SERVER_SNAPSHOT;
 }
 
 export function getItems() {

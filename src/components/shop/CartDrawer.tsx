@@ -2,9 +2,8 @@ import { useEffect, useSyncExternalStore } from 'react';
 import {
   addItem,
   closeCart,
-  getItems,
-  getSubtotalPence,
-  isOpen,
+  getServerSnapshot,
+  getSnapshot,
   openCart,
   removeItem,
   setQuantity,
@@ -13,11 +12,7 @@ import {
 } from '@/lib/shop/cartStore';
 
 function useCartSnapshot() {
-  return useSyncExternalStore(subscribe, () => ({
-    items: getItems(),
-    subtotalPence: getSubtotalPence(),
-    open: isOpen()
-  }));
+  return useSyncExternalStore(subscribe, getSnapshot, getServerSnapshot);
 }
 
 function formatGbp(pence: number) {
@@ -44,7 +39,7 @@ function getProductFromButton(button: HTMLElement): CartItem | null {
 }
 
 export default function CartDrawer() {
-  const { items, subtotalPence, open } = useCartSnapshot();
+  const { items, subtotalPence, isOpen: open } = useCartSnapshot();
   const cartCount = items.reduce((count, item) => count + item.quantity, 0);
 
   useEffect(() => {
