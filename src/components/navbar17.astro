@@ -83,7 +83,7 @@ const navItems = [
 </header>
 
 <script type="module">
-  import { getItems, openCart, subscribe } from '@/lib/shop/cartStore';
+  import { getSnapshot, openCart, subscribe } from '@/lib/shop/cartStore';
 
   const navbar = document.querySelector('[data-navbar17]');
 
@@ -116,7 +116,7 @@ const navItems = [
       }
     };
     const renderCartCount = () => {
-      const itemCount = getItems().reduce((count, item) => count + item.quantity, 0);
+      const itemCount = getSnapshot().items.reduce((count, item) => count + item.quantity, 0);
       cartBadges.forEach((badge) => {
         badge.textContent = String(itemCount);
         badge.classList.toggle('is-empty', itemCount === 0);
@@ -167,6 +167,10 @@ const navItems = [
 
     setActive(links[0]?.dataset.navName || '');
     renderCartCount();
-    subscribe(renderCartCount);
+    const unsubscribeCart = subscribe(renderCartCount);
+
+    window.addEventListener('pagehide', () => {
+      unsubscribeCart();
+    });
   }
 </script>

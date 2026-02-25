@@ -31,11 +31,20 @@ export type CartSnapshot = {
   email: string;
 };
 
-const state: CartState = {
-  items: [],
-  isOpen: false,
-  email: ''
+type CartStoreSingleton = {
+  state: CartState;
+  clientSnapshot: CartSnapshot;
+  listeners: Set<() => void>;
+  isHydrated: boolean;
+  storageListenerBound: boolean;
+
 };
+
+declare global {
+  // eslint-disable-next-line no-var
+  var __KERSIVO_CART_STORE__: CartStoreSingleton | undefined;
+}
+
 
 const SERVER_SNAPSHOT: CartSnapshot = Object.freeze({
   items: [],
@@ -44,22 +53,34 @@ const SERVER_SNAPSHOT: CartSnapshot = Object.freeze({
   email: ''
 });
 
-let clientSnapshot: CartSnapshot = SERVER_SNAPSHOT;
-
-
-const listeners = new Set<() => void>();
-let isHydrated = false;
-let storageListenerBound = false;
-
-function emitChange() {
-  clientSnapshot = {
-    items: state.items,
-    isOpen: state.isOpen,
-    subtotalPence: state.items.reduce((sum, item) => sum + item.pricePence * item.quantity, 0),
-    email: state.email
+const store: CartStoreSingleton =
+  globalThis.__KERSIVO_CART_STORE__ ??
+  {
+    state: {
+      items: [],
+      isOpen: false,
+      email: ''
+    },
+    clientSnapshot: SERVER_SNAPSHOT,
+    listeners: new Set<() => void>(),
+    isHydrated: false,
+    storageListenerBound: false
   };
 
-  for (const listener of listeners) {
+
+
+globalThis.__KERSIVO_CART_STORE__ = store;
+
+function emitChange() {
+  store.clientSnapshot = {
+    items: store.state.items,
+    isOpen: store.state.isOpen,
+    subtotalPence: store.state.items.reduce((sum, item) => sum + item.pricePence * item.quantity, 0),
+    email: store.state.email
+
+  };
+
+  for (const listener of store.listeners) {
     listener();
   }
 
@@ -116,44 +137,46 @@ function writeToStorage(items: CartItem[]) {
 }
 
 function ensureHydrated() {
-  if (typeof window === 'undefined' || isHydrated) {
+  if (typeof window === 'undefined' || store.isHydrated) {
     return;
 
   }
   
-  state.items = readFromStorage();
-  isHydrated = true;
+  store.state.items = readFromStorage();
+  store.isHydrated = true;
+
   emitChange();
 
-  if (!storageListenerBound) {
+  if (!store.storageListenerBound) {
     window.addEventListener('storage', (event) => {
       if (event.key !== CART_STORAGE_KEY) {
         return;
       }
-      state.items = readFromStorage();
+      store.state.items = readFromStorage();
       emitChange();
     });
-    storageListenerBound = true;
+    store.storageListenerBound = true;
   }
 }
 
 function updateItems(nextItems: CartItem[]) {
-  state.items = nextItems;
-  writeToStorage(state.items);
+  store.state.items = nextItems;
+  writeToStorage(store.state.items);
+
   emitChange();
 }
 
 export function subscribe(listener: () => void) {
   ensureHydrated();
-  listeners.add(listener);
+  store.listeners.add(listener);
   return () => {
-    listeners.delete(listener);
+    store.listeners.delete(listener);
   };
 }
 
 export function getSnapshot(): CartSnapshot {
   ensureHydrated();
-  return clientSnapshot;
+  return store.clientSnapshot;
 }
 
 export function getServerSnapshot(): CartSnapshot {
@@ -162,7 +185,7 @@ export function getServerSnapshot(): CartSnapshot {
 
 export function getItems() {
   ensureHydrated();
-  return state.items;
+  return store.state.items;
 }
 
 export function addItem(input: AddCartItemInput) {
@@ -177,10 +200,10 @@ export function addItem(input: AddCartItemInput) {
     return;
   }
 
-  const existingIndex = state.items.findIndex((item) => item.productId === safeProductId);
+  const existingIndex = store.state.items.findIndex((item) => item.productId === safeProductId);
   if (existingIndex === -1) {
     updateItems([
-      ...state.items,
+      ...store.state.items,
       {
         productId: safeProductId,
         name: safeName,
@@ -192,7 +215,7 @@ export function addItem(input: AddCartItemInput) {
     return;
   }
 
-  const nextItems = [...state.items];
+  const nextItems = [...store.state.items];
   nextItems[existingIndex] = {
     ...nextItems[existingIndex],
     name: safeName,
@@ -206,14 +229,14 @@ export function addItem(input: AddCartItemInput) {
 
 export function removeItem(productId: string) {
   ensureHydrated();
-  updateItems(state.items.filter((item) => item.productId !== productId));
+  updateItems(store.state.items.filter((item) => item.productId !== productId));
 
 }
 
 export function setQuantity(productId: string, quantity: number) {
   ensureHydrated();
   const nextQuantity = Math.floor(Number(quantity));
-  const nextItems = [...state.items];
+  const nextItems = [...store.state.items];
   const itemIndex = nextItems.findIndex((item) => item.productId === productId);
   if (itemIndex === -1) {
     return;
@@ -241,26 +264,26 @@ export function clear() {
 
 export function getSubtotalPence() {
   ensureHydrated();
-  return state.items.reduce((sum, item) => sum + item.pricePence * item.quantity, 0);
+  return store.state.items.reduce((sum, item) => sum + item.pricePence * item.quantity, 0);
 
 }
 
 export function openCart() {
   ensureHydrated();
-  state.isOpen = true;
+  store.state.isOpen = true;
   emitChange();
 
 }
 
 export function closeCart() {
   ensureHydrated();
-  state.isOpen = false;
+  store.state.isOpen = false;
   emitChange();
 
 }
 
 export function isOpen() {
   ensureHydrated();
-  return state.isOpen;
+  return store.state.isOpen;
 
 }
