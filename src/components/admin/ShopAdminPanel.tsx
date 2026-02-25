@@ -201,6 +201,7 @@ export default function ShopAdminPanel() {
   const [orders, setOrders] = useState<OrderListItem[]>([]);
   const [ordersLoading, setOrdersLoading] = useState(false);
   const [selectedOrder, setSelectedOrder] = useState<OrderDetail | null>(null);
+  const [ordersUnauthorized, setOrdersUnauthorized] = useState(false);
 
   const [salesPreset, setSalesPreset] = useState<SalesRangePreset>('30');
   const [salesFrom, setSalesFrom] = useState(() => getRangeDates('30').from);
@@ -241,7 +242,7 @@ export default function ShopAdminPanel() {
     setLoading(true);
     setError(null);
     try {
-      const response = await fetch('/api/admin/shop/products');
+      const response = await fetch('/api/admin/shop/products', { credentials: 'include' });
       const payload = await response.json();
       if (!response.ok) throw new Error(payload.error || 'Could not fetch products.');
       setProducts(payload.products as Product[]);
@@ -254,9 +255,17 @@ export default function ShopAdminPanel() {
   async function fetchOrders() {
     setOrdersLoading(true);
     setError(null);
+    setOrdersUnauthorized(false);
     try {
-      const response = await fetch('/api/admin/shop/orders');
+      const response = await fetch('/api/admin/shop/orders', { credentials: 'include' });
       const payload = await response.json();
+            if (response.status === 401) {
+        setOrders([]);
+        setSelectedOrder(null);
+        setOrdersUnauthorized(true);
+        return;
+      }
+
       if (!response.ok) throw new Error(payload.error || 'Could not fetch orders.');
       setOrders(payload.orders as OrderListItem[]);
     } catch (fetchError) {
@@ -269,8 +278,14 @@ export default function ShopAdminPanel() {
   async function fetchOrderDetails(orderId: string) {
     setError(null);
     try {
-      const response = await fetch(`/api/admin/shop/orders/${orderId}`);
+     const response = await fetch(`/api/admin/shop/orders/${orderId}`, { credentials: 'include' });
       const payload = await response.json();
+            if (response.status === 401) {
+        setSelectedOrder(null);
+        setOrdersUnauthorized(true);
+        return;
+      }
+
       if (!response.ok) throw new Error(payload.error || 'Could not fetch order details.');
       setSelectedOrder(payload.order as OrderDetail);
     } catch (fetchError) {
@@ -303,7 +318,7 @@ export default function ShopAdminPanel() {
     }
 
     try {
-      const response = await fetch(`/api/admin/shop/sales?${query.toString()}`);
+      const response = await fetch(`/api/admin/shop/sales?${query.toString()}`, { credentials: 'include' });
       const payload = await response.json();
       if (!response.ok) throw new Error(payload.error || 'Could not fetch sales analytics.');
       setSalesData(payload as SalesResponse);
@@ -318,7 +333,7 @@ export default function ShopAdminPanel() {
     setGeneratingDemo(true);
     setSalesError(null);
     try {
-      const response = await fetch('/api/admin/shop/sales/demo', { method: 'POST' });
+      const response = await fetch('/api/admin/shop/sales/demo', { method: 'POST', credentials: 'include' });
       const payload = await response.json();
       if (!response.ok) throw new Error(payload.error || 'Could not generate demo sales data.');
       setSuccess(typeof payload.message === 'string' ? payload.message : 'Demo sales data generated.');
@@ -413,6 +428,7 @@ export default function ShopAdminPanel() {
       const endpoint = form.id ? '/api/admin/shop/products/update' : '/api/admin/shop/products/create';
       const response = await fetch(endpoint, {
         method: 'POST',
+        credentials: 'include',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           id: form.id,
@@ -444,6 +460,7 @@ export default function ShopAdminPanel() {
     try {
       const response = await fetch('/api/admin/shop/products/toggle', {
         method: 'POST',
+        credentials: 'include',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ id: productId, field, value })
       });
@@ -462,6 +479,7 @@ export default function ShopAdminPanel() {
     try {
       const response = await fetch('/api/admin/shop/products/delete', {
         method: 'POST',
+        credentials: 'include',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ id: productId })
       });
@@ -477,8 +495,14 @@ export default function ShopAdminPanel() {
     setError(null);
     setSuccess(null);
     try {
-      const response = await fetch(`/api/admin/shop/orders/${orderId}/collect`, { method: 'POST' });
+      const response = await fetch(`/api/admin/shop/orders/${orderId}/collect`, { method: 'POST', credentials: 'include' });
       const payload = await response.json();
+            if (response.status === 401) {
+        setOrdersUnauthorized(true);
+        setSelectedOrder(null);
+        return;
+      }
+
       if (!response.ok) throw new Error(payload.error || 'Unable to mark order as collected.');
       await fetchOrders();
       await fetchOrderDetails(orderId);
@@ -582,11 +606,17 @@ export default function ShopAdminPanel() {
           <div className="admin-products-actions">
             <button type="button" className="btn btn--ghost" onClick={() => void fetchOrders()} disabled={ordersLoading}>{ordersLoading ? 'Refreshing…' : 'Refresh orders'}</button>
           </div>
+                    {ordersUnauthorized ? (
+            <div className="admin-inline-error" role="alert">
+              <p>Session expired — please log in again.</p>
+              <a href="/admin" className="btn btn--secondary">Go to admin login</a>
+            </div>
+          ) : null}
+
           <div className="admin-products-table-wrap">
             <table className="admin-table">
              <thead><tr><th>Created</th><th>Paid</th><th>Customer email</th><th>Total</th><th>Status</th><th>Items</th><th>Action</th></tr></thead>              <tbody>
-                {orders.length === 0 ? (<tr><td colSpan={7}>No orders yet.</td></tr>) : orders.map((order) => (                  <tr key={order.id}>
-                    <td>{new Date(order.createdAt).toLocaleString('en-GB')}</td>
+                {!ordersUnauthorized && orders.length === 0 ? (<tr><td colSpan={7}>No orders yet.</td></tr>) : orders.map((order) => (                  <tr key={order.id}>                    <td>{new Date(order.createdAt).toLocaleString('en-GB')}</td>
                     <td>{order.paidAt ? new Date(order.paidAt).toLocaleString('en-GB') : '—'}</td>
                     <td>{order.customerEmail}</td>
                     <td>{formatPrice(order.totalPence)}</td>
