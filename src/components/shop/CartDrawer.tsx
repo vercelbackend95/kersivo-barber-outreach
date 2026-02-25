@@ -43,6 +43,15 @@ export default function CartDrawer() {
   const cartCount = items.reduce((count, item) => count + item.quantity, 0);
 
   useEffect(() => {
+    const badges = Array.from(document.querySelectorAll('[data-navbar-cart-badge]'));
+
+    badges.forEach((badge) => {
+      badge.textContent = String(cartCount);
+      badge.classList.toggle('is-empty', cartCount === 0);
+    });
+  }, [cartCount]);
+
+  useEffect(() => {
     const onDocumentClick = (event: MouseEvent) => {
       const target = event.target;
       if (!(target instanceof Element)) {

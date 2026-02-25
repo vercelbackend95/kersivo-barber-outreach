@@ -14,10 +14,7 @@ const { class: className = '' } = Astro.props;
 </button>
 
 <script type="module">
-  import { getItemCount, openCart, subscribe } from '@/lib/shop/cartStore';
-
-  const globalKey = '__KERSIVO_NAVBAR_CART_SYNC__';
-  const globalObject = window;
+  import { getItemCount, openCart } from '@/lib/shop/cartStore';
 
   const renderCount = () => {
     const count = getItemCount();
@@ -54,15 +51,6 @@ const { class: className = '' } = Astro.props;
   };
 
   refreshNavbarCart();
-
-  if (!globalObject[globalKey]) {
-    globalObject[globalKey] = {
-      unsubscribe: subscribe(() => {
-        refreshNavbarCart();
-      })
-    };
-  }
-
   document.addEventListener('astro:page-load', refreshNavbarCart);
   document.addEventListener('astro:after-swap', refreshNavbarCart);
 </script>
