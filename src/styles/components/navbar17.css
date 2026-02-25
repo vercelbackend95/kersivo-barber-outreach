@@ -125,6 +125,10 @@
 
 }
 
+.navbar17__cart-btn--top-mobile {
+  display: none;
+}
+
 .navbar17__toggle {
   display: none;
   place-items: center;
@@ -247,6 +251,11 @@
   .navbar17__desktop,
   .navbar17__actions {
     display: none;
+  }
+
+  .navbar17__cart-btn--top-mobile {
+    display: inline-flex;
+    justify-self: end;
   }
 
   .navbar17__toggle {
