@@ -157,6 +157,11 @@
   }
 }
 
+  .admin-filter-tabs--metric {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+
 
 .admin-inline-success {
   margin: 0;
@@ -519,6 +524,11 @@
   display: grid;
   gap: var(--space-xs);
 }
+
+.admin-filter-tabs--metric {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
 
 .admin-sales-custom-dates {
   display: grid;

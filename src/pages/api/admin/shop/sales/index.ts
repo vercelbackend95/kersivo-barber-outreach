@@ -12,7 +12,7 @@ const TZ = 'Europe/London';
 const PAID_STATUSES = ['PAID', 'COLLECTED'] as const;
 const DEFAULT_RANGE_DAYS = 30;
 
-type SalesDatePoint = { date: string; revenuePence: number; units?: number };
+type SalesDatePoint = { date: string; revenuePence: number; units: number };
 
 type SalesLeaderboardRow = {
   productId: string;
@@ -143,7 +143,7 @@ async function buildSalesResponse(
   });
 
   const selectedSet = productIds.length > 0 ? new Set(productIds) : null;
-  const overallByDay = new Map<string, number>();
+  const overallByDay = new Map<string, { revenuePence: number; units: number }>();
   const productDayMap = new Map<string, Map<string, { revenuePence: number; units: number }>>();
   const leaderboardMap = new Map<string, SalesLeaderboardRow>();
 
@@ -164,7 +164,11 @@ async function buildSalesResponse(
 
     for (const item of filteredItems) {
       revenuePence += item.lineTotalPence;
-      overallByDay.set(day, (overallByDay.get(day) ?? 0) + item.lineTotalPence);
+      const overallValue = overallByDay.get(day) ?? { revenuePence: 0, units: 0 };
+      overallValue.revenuePence += item.lineTotalPence;
+      overallValue.units += item.quantity;
+      overallByDay.set(day, overallValue);
+
 
       const productBuckets = productDayMap.get(item.productId) ?? new Map<string, { revenuePence: number; units: number }>();
       const existingDay = productBuckets.get(day) ?? { revenuePence: 0, units: 0 };
@@ -192,7 +196,11 @@ async function buildSalesResponse(
   });
 
   const overall: SalesDatePoint[] | undefined = includeOverall
-    ? dayBuckets.map((date) => ({ date, revenuePence: overallByDay.get(date) ?? 0 }))
+    ? dayBuckets.map((date) => {
+        const value = overallByDay.get(date) ?? { revenuePence: 0, units: 0 };
+        return { date, revenuePence: value.revenuePence, units: value.units };
+      })
+
     : undefined;
 
   const products = Array.from(productDayMap.entries())

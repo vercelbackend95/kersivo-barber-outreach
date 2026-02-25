@@ -3,6 +3,7 @@ import React, { useEffect, useMemo, useState } from 'react';
 type ShopTab = 'products' | 'orders' | 'sales';
 type SalesRangePreset = '7' | '30' | '90' | 'custom';
 
+type SalesMetric = 'revenue' | 'units';
 
 type Product = {
   id: string;
@@ -52,7 +53,7 @@ type SalesResponse = {
     bestProduct?: { productId: string; name: string; revenuePence: number; units: number };
   };
   series: {
-    overall?: Array<{ date: string; revenuePence: number }>;
+    overall?: Array<{ date: string; revenuePence: number; units: number }>;
     products?: Array<{
       productId: string;
       name: string;
@@ -76,7 +77,7 @@ type ProductFormState = {
 type SalesChartSeries = {
   key: string;
   name: string;
-  points: Array<{ date: string; revenuePence: number }>;
+  points: Array<{ date: string; revenuePence: number; units: number }>;
 };
 
 
@@ -117,16 +118,18 @@ function getRangeDates(preset: Exclude<SalesRangePreset, 'custom'>): { from: str
   return { from, to };
 }
 
-function MiniLineChart({ series }: { series: SalesChartSeries[] }) {
-  const width = 900;
+function MiniLineChart({ series, metric }: { series: SalesChartSeries[]; metric: SalesMetric }) {
+    const width = 900;
   const height = 320;
   const padding = { top: 20, right: 20, bottom: 36, left: 54 };
   const colors = ['var(--accent)', 'var(--fg)', 'var(--muted)', 'var(--accent-hover)'];
 
   const allPoints = series.flatMap((line) => line.points);
   const allDates = Array.from(new Set(allPoints.map((point) => point.date))).sort((a, b) => a.localeCompare(b));
-  const maxValue = Math.max(0, ...allPoints.map((point) => point.revenuePence));
-  const yMax = Math.max(maxValue, 100);
+  const values = allPoints.map((point) => (metric === 'revenue' ? point.revenuePence : point.units));
+  const maxValue = Math.max(0, ...values);
+  const yMax = Math.max(maxValue, metric === 'revenue' ? 100 : 1);
+
 
   const innerWidth = width - padding.left - padding.right;
   const innerHeight = height - padding.top - padding.bottom;
@@ -140,31 +143,47 @@ function MiniLineChart({ series }: { series: SalesChartSeries[] }) {
   const yPosition = (value: number): number => padding.top + (1 - value / yMax) * innerHeight;
 
   const ticks = 4;
-  const yTicks = Array.from({ length: ticks + 1 }).map((_, index) => Math.round((yMax / ticks) * (ticks - index)));
+  const formatAxisValue = (value: number): string => (metric === 'revenue' ? `£${(value / 100).toFixed(2)}` : `${Math.round(value)}`);
+  const formatTooltipValue = (value: number): string => (metric === 'revenue' ? formatPrice(value) : `${Math.round(value)} units`);
+
 
   return (
     <div className="admin-sales-chart-inner">
-      <svg viewBox={`0 0 ${width} ${height}`} className="admin-sales-chart-svg" role="img" aria-label="Sales revenue chart">
+      <svg
+        viewBox={`0 0 ${width} ${height}`}
+        className="admin-sales-chart-svg"
+        role="img"
+        aria-label={`Sales ${metric === 'revenue' ? 'revenue' : 'units'} chart`}
+      >
+
         {yTicks.map((tick) => (
           <g key={`tick-${tick}`}>
             <line x1={padding.left} y1={yPosition(tick)} x2={width - padding.right} y2={yPosition(tick)} className="admin-sales-grid-line" />
-            <text x={padding.left - 8} y={yPosition(tick) + 4} textAnchor="end" className="admin-sales-axis-label">£{Math.round(tick / 100)}</text>
+            <text x={padding.left - 8} y={yPosition(tick) + 4} textAnchor="end" className="admin-sales-axis-label">{formatAxisValue(tick)}</text>
           </g>
         ))}
 
         {series.map((line, lineIndex) => {
           const path = line.points
-            .map((point, pointIndex) => `${pointIndex === 0 ? 'M' : 'L'} ${xPosition(point.date)} ${yPosition(point.revenuePence)}`)
-            .join(' ');
+           .map((point, pointIndex) => {
+              const value = metric === 'revenue' ? point.revenuePence : point.units;
+              return `${pointIndex === 0 ? 'M' : 'L'} ${xPosition(point.date)} ${yPosition(value)}`;
+            })
+
+          .join(' ');
 
           return (
             <g key={line.key}>
               <path d={path} fill="none" stroke={colors[lineIndex % colors.length]} strokeWidth="2" />
-              {line.points.map((point) => (
-                <circle key={`${line.key}-${point.date}`} cx={xPosition(point.date)} cy={yPosition(point.revenuePence)} r="2.25" fill={colors[lineIndex % colors.length]}>
-                  <title>{`${new Date(`${point.date}T00:00:00`).toLocaleDateString('en-GB')} · ${line.name}: ${formatPrice(point.revenuePence)}`}</title>
-                </circle>
-              ))}
+              {line.points.map((point) => {
+                const value = metric === 'revenue' ? point.revenuePence : point.units;
+                return (
+                  <circle key={`${line.key}-${point.date}`} cx={xPosition(point.date)} cy={yPosition(value)} r="2.25" fill={colors[lineIndex % colors.length]}>
+                    <title>{`${new Date(`${point.date}T00:00:00`).toLocaleDateString('en-GB')} · ${line.name}: ${formatTooltipValue(value)}`}</title>
+                  </circle>
+                );
+              })}
+
             </g>
           );
         })}
@@ -208,6 +227,7 @@ export default function ShopAdminPanel() {
   const [salesTo, setSalesTo] = useState(() => getCurrentYmdInLondon());
   const [includeOverall, setIncludeOverall] = useState(true);
   const [selectedProductIds, setSelectedProductIds] = useState<string[]>([]);
+    const [salesMetric, setSalesMetric] = useState<SalesMetric>('revenue');
   const [salesLoading, setSalesLoading] = useState(false);
   const [salesError, setSalesError] = useState<string | null>(null);
   const [salesData, setSalesData] = useState<SalesResponse | null>(null);
@@ -230,7 +250,7 @@ export default function ShopAdminPanel() {
       lines.push({
         key: productSeries.productId,
         name: productSeries.name,
-        points: productSeries.points.map((point) => ({ date: point.date, revenuePence: point.revenuePence }))
+        points: productSeries.points.map((point) => ({ date: point.date, revenuePence: point.revenuePence, units: point.units }))
       });
     }
 
@@ -309,10 +329,6 @@ export default function ShopAdminPanel() {
       query.set('range', preset);
     }
 
-    if (!includeOverall) {
-      query.set('includeOverall', 'false');
-    }
-
     if (selectedProductIds.length > 0) {
       query.set('productIds', selectedProductIds.join(','));
     }
@@ -362,8 +378,7 @@ export default function ShopAdminPanel() {
   useEffect(() => {
     if (activeTab !== 'sales') return;
     void fetchSales();
-  }, [activeTab, salesPreset, salesFrom, salesTo, includeOverall, selectedProductIds.join(',')]);
-
+  }, [activeTab, salesPreset, salesFrom, salesTo, selectedProductIds.join(',')]);
 
   useEffect(() => {
     if (activeTab !== 'orders') return;
@@ -681,6 +696,13 @@ export default function ShopAdminPanel() {
                 <label>To<input type="date" value={salesTo} onChange={(event) => setSalesTo(event.target.value)} /></label>
               </div>
             ) : null}
+                        <div className="admin-filter-tabs admin-filter-tabs--metric" role="tablist" aria-label="Sales metric toggle">
+              <button type="button" className={`admin-filter-tab ${salesMetric === 'revenue' ? 'admin-filter-tab--active' : ''}`} onClick={() => setSalesMetric('revenue')}>Revenue (£)</button>
+              <button type="button" className={`admin-filter-tab ${salesMetric === 'units' ? 'admin-filter-tab--active' : ''}`} onClick={() => setSalesMetric('units')}>Units</button>
+            </div>
+
+
+
 
             <label className="admin-product-checkbox"><input type="checkbox" checked={includeOverall} onChange={(event) => setIncludeOverall(event.target.checked)} />Include Overall line</label>
 
@@ -715,7 +737,7 @@ export default function ShopAdminPanel() {
           ) : (
             <>
               <div className="admin-sales-chart-wrap">
-                <MiniLineChart series={chartSeries} />
+                <MiniLineChart series={chartSeries} metric={salesMetric} />
               </div>
 
               <div className="admin-products-table-wrap">
