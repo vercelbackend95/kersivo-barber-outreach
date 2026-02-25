@@ -627,3 +627,168 @@
   width: 0.85rem;
   height: 0.35rem;
 }
+
+.admin-view-tabs--four {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+@media (min-width: 48rem) {
+  .admin-view-tabs--four {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+  }
+}
+
+.admin-timeline {
+  border: 1px solid var(--border);
+  background: var(--surface);
+}
+
+.admin-timeline-scroll {
+  overflow-x: auto;
+  min-width: 100%;
+}
+
+.admin-timeline-scale-row,
+.admin-timeline-lane-row {
+  display: grid;
+  grid-template-columns: 7.5rem minmax(42rem, 1fr);
+}
+
+.admin-timeline-barber-header,
+.admin-timeline-lane-label {
+  border-right: 1px solid var(--border);
+  border-bottom: 1px solid var(--border);
+  padding: 0.6rem;
+  background: var(--bg);
+  font-weight: 700;
+}
+
+.admin-timeline-scale {
+  position: relative;
+  min-height: 2.8rem;
+  border-bottom: 1px solid var(--border);
+  background: var(--bg);
+}
+
+.admin-timeline-lane-canvas {
+  position: relative;
+  border-bottom: 1px solid var(--border);
+  background: var(--surface);
+}
+
+.admin-timeline-tick,
+.admin-timeline-grid-line,
+.admin-timeline-now-indicator {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+}
+
+.admin-timeline-tick--minor {
+  width: 1px;
+  background: color-mix(in srgb, var(--border) 60%, transparent);
+}
+
+.admin-timeline-tick--major {
+  width: 1px;
+  background: var(--border);
+}
+
+.admin-timeline-tick--major em {
+  position: absolute;
+  top: 0.3rem;
+  left: 0.3rem;
+  font-style: normal;
+  color: var(--muted);
+  font-size: 0.74rem;
+}
+
+.admin-timeline-grid-line {
+  width: 1px;
+  background: color-mix(in srgb, var(--border) 45%, transparent);
+}
+
+.admin-timeline-now-indicator {
+  width: 2px;
+  background: var(--accent);
+}
+
+.admin-timeline-card {
+  position: absolute;
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  overflow: hidden;
+  text-align: left;
+}
+
+.admin-timeline-card--block {
+  background: color-mix(in srgb, var(--muted) 24%, var(--surface));
+  color: var(--fg);
+  pointer-events: none;
+  padding: 0.3rem 0.4rem;
+}
+
+.admin-timeline-card--block p {
+  margin: 0;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  font-size: 0.8rem;
+}
+
+.admin-timeline-card--booking {
+  background: color-mix(in srgb, var(--accent) 14%, var(--surface));
+  border-left: 3px solid var(--accent);
+  color: var(--fg);
+  padding: 0.25rem 0.4rem;
+  cursor: pointer;
+  display: grid;
+  gap: 0.1rem;
+}
+
+.admin-timeline-card--booking:hover {
+  border-color: var(--accent-hover);
+}
+
+.admin-timeline-card--booking:focus-visible {
+  outline: 2px solid var(--focus);
+  outline-offset: 1px;
+}
+
+.admin-timeline-card-time,
+.admin-timeline-card-client,
+.admin-timeline-card-status,
+.admin-timeline-card-service {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.admin-timeline-card-time {
+  color: var(--muted);
+  font-size: 0.72rem;
+}
+
+.admin-timeline-card-service {
+  font-size: 0.8rem;
+}
+
+.admin-timeline-card-client {
+  font-size: 0.74rem;
+}
+
+.admin-timeline-card-status {
+  justify-self: start;
+  border: 1px solid var(--border);
+  padding: 0 0.2rem;
+  font-size: 0.65rem;
+  font-style: normal;
+  letter-spacing: 0.02em;
+  background: var(--bg);
+}
+
+.admin-timeline-empty {
+  border: 1px solid var(--border);
+  background: var(--surface);
+  padding: var(--space-sm);
+}

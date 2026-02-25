@@ -1,14 +1,17 @@
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { formatInTimeZone, fromZonedTime, toZonedTime } from 'date-fns-tz';
+import TodayTimeline from './TodayTimeline';
 
 type Booking = {
   id: string;
+  barberId: string;
   clientId?: string | null;
   fullName: string;
   email: string;
   status: string;
   startAt: string;
   endAt: string;
+   notes?: string | null;
   rescheduledAt?: string | null;
   barber: { name: string };
   service: { name: string };
@@ -51,7 +54,7 @@ type ClientProfilePayload = {
 
 
 type BookingFilterTab = 'confirmed' | 'rescheduled' | 'pending' | 'cancelled';
-type AdminBookingView = 'today' | 'all' | 'history';
+type AdminBookingView = 'today' | 'timeline' | 'all' | 'history';
 type HistoryPreset = 'last7' | 'last30' | 'overall' | 'custom';
 
 type AdminSectionTab = 'bookings' | 'reports';
@@ -222,6 +225,11 @@ export default function BookingsAdminPanel({ isActive }: BookingsAdminPanelProps
   const [clientError, setClientError] = useState('');
   const [notesDraft, setNotesDraft] = useState('');
   const [notesSaving, setNotesSaving] = useState(false);
+  const [selectedTimelineBooking, setSelectedTimelineBooking] = useState<Booking | null>(null);
+  const [timelineNotesDraft, setTimelineNotesDraft] = useState('');
+  const [timelineNotesSaving, setTimelineNotesSaving] = useState(false);
+  const [timelineNotesMessage, setTimelineNotesMessage] = useState('');
+
 
 
   const inFlightRef = useRef(false);
@@ -277,7 +285,7 @@ export default function BookingsAdminPanel({ isActive }: BookingsAdminPanelProps
 
     try {
       const endpoint = (() => {
-        if (activeView === 'today') return '/api/admin/bookings?range=today';
+        if (activeView === 'today' || activeView === 'timeline') return '/api/admin/bookings?range=today';
         if (activeView === 'all') return '/api/admin/bookings';
         const params = new URLSearchParams({ view: 'history', barberId: historyBarberId, limit: '50' });
         if (historyPreset !== 'custom') params.set('preset', historyPreset);
@@ -387,6 +395,36 @@ export default function BookingsAdminPanel({ isActive }: BookingsAdminPanelProps
     setNotesSaving(false);
 
   }
+  function openTimelineBooking(booking: Booking) {
+    setSelectedTimelineBooking(booking);
+    setTimelineNotesDraft(booking.notes ?? '');
+    setTimelineNotesMessage('');
+  }
+
+  async function saveTimelineBookingNotes() {
+    if (!selectedTimelineBooking) return;
+    setTimelineNotesSaving(true);
+    setTimelineNotesMessage('');
+
+    const response = await fetch(`/api/admin/bookings/${selectedTimelineBooking.id}/notes`, {
+      method: 'PATCH',
+      credentials: 'same-origin',
+      headers: { 'content-type': 'application/json' },
+      body: JSON.stringify({ notes: timelineNotesDraft })
+    });
+
+    if (!response.ok) {
+      setTimelineNotesMessage('Could not save booking notes.');
+      setTimelineNotesSaving(false);
+      return;
+    }
+
+    setTimelineNotesMessage('Notes saved.');
+    setBookings((current) => current.map((item) => (item.id === selectedTimelineBooking.id ? { ...item, notes: timelineNotesDraft } : item)));
+    setSelectedTimelineBooking((current) => (current ? { ...current, notes: timelineNotesDraft } : current));
+    setTimelineNotesSaving(false);
+  }
+
 
   async function login() { const res = await fetch('/api/admin/login', { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ secret }) }); setLoggedIn(res.ok); if (!res.ok) setError('Invalid secret'); }
   async function logout() { await fetch('/api/admin/logout', { method: 'POST', credentials: 'same-origin' }); setBookings([]); setLoggedIn(false); }
@@ -396,7 +434,7 @@ export default function BookingsAdminPanel({ isActive }: BookingsAdminPanelProps
     setCancelLoadingBookingId(booking.id);
 
     const response = await fetch('/api/admin/bookings/cancel', { method: 'POST', credentials: 'same-origin', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ bookingId: booking.id }) });
-    if (response.ok) { setCancelSuccessMessage('Booking cancelled successfully.'); await fetchBookings(); } else { setCancelErrorMessage('Could not cancel booking right now.'); }
+    if (response.    if (response.ok) { setCancelSuccessMessage('Booking cancelled successfully.'); await fetchBookings(); if (selectedTimelineBooking?.id === booking.id) { setSelectedTimelineBooking((current) => (current ? { ...current, status: 'CANCELLED_BY_SHOP' } : current)); } } else { setCancelErrorMessage('Could not cancel booking right now.'); }) { setCancelSuccessMessage('Booking cancelled successfully.'); await fetchBookings(); } else { setCancelErrorMessage('Could not cancel booking right now.'); }
     setCancelLoadingBookingId(null);
 }
 
@@ -463,8 +501,7 @@ export default function BookingsAdminPanel({ isActive }: BookingsAdminPanelProps
   return (
     <section className="surface booking-shell">
       <h1>Admin Dashboard</h1>
-      <div className="admin-next-block"><p className="admin-next-primary">{activeView === 'today' ? `Today: ${bookings.length} bookings` : activeView === 'all' ? `All: ${bookings.length} bookings` : `History: ${bookings.length} bookings`}</p>{nextBooking && activeView !== 'history' && <p className="admin-next-secondary">Next: {nextBooking.barber?.name} — {nextBooking.service?.name} — {formatStartTime(nextBooking.startAt)} ({formatRelativeTime(nextBooking.startAt, nextBooking.endAt)})</p>}</div>
-      <div className="admin-refresh-row"><p className="muted admin-last-updated">Last updated: {formatLastUpdated(lastUpdatedAt, nowMs)}</p><div className="admin-refresh-controls"><button type="button" className="btn btn--ghost" onClick={() => { void fetchBookings(); void fetchTimeBlocks(); void fetchReports(); }} disabled={isRefreshing}>Refresh</button><button type="button" className="btn btn--secondary" onClick={() => void logout()}>Logout</button></div></div>
+      <div className="admin-next-block"><p className="admin-next-primary">{activeView === 'today' ? `Today: ${bookings.length} bookings` : activeView === 'timeline' ? `Timeline: ${bookings.length} bookings` : activeView === 'all' ? `All: ${bookings.length} bookings` : `History: ${bookings.length} bookings`}</p>{nextBooking && activeView !== 'history' && <p className="admin-next-secondary">Next: {nextBooking.barber?.name} — {nextBooking.service?.name} — {formatStartTime(nextBooking.startAt)} ({formatRelativeTime(nextBooking.startAt, nextBooking.endAt)})</p>}</div>      <div className="admin-refresh-row"><p className="muted admin-last-updated">Last updated: {formatLastUpdated(lastUpdatedAt, nowMs)}</p><div className="admin-refresh-controls"><button type="button" className="btn btn--ghost" onClick={() => { void fetchBookings(); void fetchTimeBlocks(); void fetchReports(); }} disabled={isRefreshing}>Refresh</button><button type="button" className="btn btn--secondary" onClick={() => void logout()}>Logout</button></div></div>
 
       <div className="admin-view-tabs" role="tablist" aria-label="Admin sections"><button type="button" className={`admin-filter-tab ${activeSection === 'bookings' ? 'admin-filter-tab--active' : ''}`} onClick={() => setActiveSection('bookings')}>Bookings</button><button type="button" className={`admin-filter-tab ${activeSection === 'reports' ? 'admin-filter-tab--active' : ''}`} onClick={() => setActiveSection('reports')}>Reports</button></div>
 
@@ -472,8 +509,7 @@ export default function BookingsAdminPanel({ isActive }: BookingsAdminPanelProps
       {cancelErrorMessage && <p className="admin-inline-error">{cancelErrorMessage}</p>}
       {activeSection === 'bookings' && (
         <>
-          {activeView === 'today' && (
-
+          {(activeView === 'today' || activeView === 'timeline') && (
         <section className="admin-quick-blocks">
           <h2>Quick blocks</h2>
           <div className="admin-quick-scope"><label htmlFor="block-scope">Applies to</label><select id="block-scope" value={blockScopeBarberId} onChange={(event) => setBlockScopeBarberId(event.target.value)}><option value="all">All barbers</option>{barbers.map((barber) => <option key={barber.id} value={barber.id}>{barber.name}</option>)}</select></div>
@@ -487,8 +523,7 @@ export default function BookingsAdminPanel({ isActive }: BookingsAdminPanelProps
   )}
 
 
-      <div className="admin-view-tabs admin-view-tabs--three" role="tablist" aria-label="Admin views"><button type="button" className={`admin-filter-tab ${activeView === 'today' ? 'admin-filter-tab--active' : ''}`} onClick={() => setActiveView('today')}>Today</button><button type="button" className={`admin-filter-tab ${activeView === 'all' ? 'admin-filter-tab--active' : ''}`} onClick={() => setActiveView('all')}>All bookings</button><button type="button" className={`admin-filter-tab ${activeView === 'history' ? 'admin-filter-tab--active' : ''}`} onClick={() => setActiveView('history')}>History</button></div>
-      {activeView === 'history' && (
+      <div className="admin-view-tabs admin-view-tabs--four" role="tablist" aria-label="Admin views"><button type="button" className={`admin-filter-tab ${activeView === 'today' ? 'admin-filter-tab--active' : ''}`} onClick={() => setActiveView('today')}>Today</button><button type="button" className={`admin-filter-tab ${activeView === 'timeline' ? 'admin-filter-tab--active' : ''}`} onClick={() => setActiveView('timeline')}>Timeline</button><button type="button" className={`admin-filter-tab ${activeView === 'all' ? 'admin-filter-tab--active' : ''}`} onClick={() => setActiveView('all')}>All bookings</button><button type="button" className={`admin-filter-tab ${activeView === 'history' ? 'admin-filter-tab--active' : ''}`} onClick={() => setActiveView('history')}>History</button></div>      {activeView === 'history' && (
         <section className="admin-history-filters">
           <div className="admin-history-row">
             <label htmlFor="history-barber">Barber</label>
@@ -519,18 +554,30 @@ export default function BookingsAdminPanel({ isActive }: BookingsAdminPanelProps
 
       <div className="admin-filter-tabs" role="tablist" aria-label="Booking status filters"><button type="button" className={`admin-filter-tab ${activeFilter === 'confirmed' ? 'admin-filter-tab--active' : ''}`} onClick={() => setActiveFilter('confirmed')}>Confirmed</button><button type="button" className={`admin-filter-tab ${activeFilter === 'rescheduled' ? 'admin-filter-tab--active' : ''}`} onClick={() => setActiveFilter('rescheduled')}>Rescheduled</button><button type="button" className={`admin-filter-tab ${activeFilter === 'pending' ? 'admin-filter-tab--active' : ''}`} onClick={() => setActiveFilter('pending')}>Pending</button><button type="button" className={`admin-filter-tab ${activeFilter === 'cancelled' ? 'admin-filter-tab--active' : ''}`} onClick={() => setActiveFilter('cancelled')}>Cancelled</button></div>
       <div className="admin-search-row"><input type="search" value={clientSearchQuery} onChange={(e) => setClientSearchQuery(e.target.value)} placeholder="Search by client name or email..." aria-label="Search by client name or email" /></div>
-      <table className="admin-table">
-        <thead><tr><th>Client</th><th>Email</th><th>Service</th><th>Barber</th><th>Status</th><th>Start</th><th>Actions</th></tr></thead>
-        <tbody>
-          {visibleBookings.map((booking) => (
-            <tr className={updatedBookingIds.includes(booking.id) ? 'admin-row--updated' : ''} key={booking.id}>
-<td><button type="button" className="admin-link-button" onClick={() => void openClientProfile(booking.clientId)}>{booking.fullName}</button></td>
-              <td><button type="button" className="admin-link-button" onClick={() => void openClientProfile(booking.clientId)}>{booking.email}</button></td>
-              <td>{booking.service?.name}</td><td>{booking.barber?.name}</td><td>{booking.status === 'CONFIRMED' && booking.rescheduledAt ? 'CONFIRMED · RESCHEDULED' : booking.status}</td><td>{new Date(booking.startAt).toLocaleString('en-GB', { timeZone: ADMIN_TIMEZONE })}</td>
-              <td>{canBeCancelledByShop(booking) ? <button type="button" className="btn btn--secondary admin-cancel-btn" onClick={() => void cancelBookingByShop(booking)} disabled={cancelLoadingBookingId === booking.id}>{cancelLoadingBookingId === booking.id ? 'Cancelling...' : 'Cancel'}</button> : null}</td>            </tr>
-          ))}
-        </tbody>
-      </table>
+      {activeView === 'timeline' ? (
+        <TodayTimeline
+          barbers={barbers}
+          bookings={visibleBookings}
+          timeBlocks={timeBlocks}
+          nowMs={nowMs}
+          onBookingClick={openTimelineBooking}
+        />
+      ) : (
+        <table className="admin-table">
+          <thead><tr><th>Client</th><th>Email</th><th>Service</th><th>Barber</th><th>Status</th><th>Start</th><th>Actions</th></tr></thead>
+          <tbody>
+            {visibleBookings.map((booking) => (
+              <tr className={updatedBookingIds.includes(booking.id) ? 'admin-row--updated' : ''} key={booking.id}>
+                <td><button type="button" className="admin-link-button" onClick={() => void openClientProfile(booking.clientId)}>{booking.fullName}</button></td>
+                <td><button type="button" className="admin-link-button" onClick={() => void openClientProfile(booking.clientId)}>{booking.email}</button></td>
+                <td>{booking.service?.name}</td><td>{booking.barber?.name}</td><td>{booking.status === 'CONFIRMED' && booking.rescheduledAt ? 'CONFIRMED · RESCHEDULED' : booking.status}</td><td>{new Date(booking.startAt).toLocaleString('en-GB', { timeZone: ADMIN_TIMEZONE })}</td>
+                <td>{canBeCancelledByShop(booking) ? <button type="button" className="btn btn--secondary admin-cancel-btn" onClick={() => void cancelBookingByShop(booking)} disabled={cancelLoadingBookingId === booking.id}>{cancelLoadingBookingId === booking.id ? 'Cancelling...' : 'Cancel'}</button> : null}</td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      )}
+
             {activeView === 'history' && historyHasMore && <button type="button" className="btn btn--secondary" onClick={() => void loadMoreHistory()} disabled={historyLoadingMore}>{historyLoadingMore ? 'Loading...' : 'Load more'}</button>}              </>
       )}
 
@@ -561,6 +608,27 @@ export default function BookingsAdminPanel({ isActive }: BookingsAdminPanelProps
           </form>
         </div>
       )}
+
+      {selectedTimelineBooking && (
+        <div className="admin-client-modal-backdrop" role="presentation" onClick={() => setSelectedTimelineBooking(null)}>
+          <div className="admin-client-modal" role="dialog" aria-modal="true" aria-label="Booking quick actions" onClick={(event) => event.stopPropagation()}>
+            <div className="admin-client-modal-head"><h2>Booking quick actions</h2><button type="button" className="btn btn--ghost" onClick={() => setSelectedTimelineBooking(null)}>Close</button></div>
+            <p><strong>{selectedTimelineBooking.fullName}</strong><br />{selectedTimelineBooking.email}</p>
+            <p>{selectedTimelineBooking.service?.name} · {selectedTimelineBooking.barber?.name}</p>
+            <p>{new Date(selectedTimelineBooking.startAt).toLocaleString('en-GB', { timeZone: ADMIN_TIMEZONE })} → {new Date(selectedTimelineBooking.endAt).toLocaleTimeString('en-GB', { timeZone: ADMIN_TIMEZONE, hour: '2-digit', minute: '2-digit' })}</p>
+            <div className="admin-quick-actions">
+              <button type="button" className="btn btn--secondary" onClick={() => void cancelBookingByShop(selectedTimelineBooking)} disabled={!canBeCancelledByShop(selectedTimelineBooking) || cancelLoadingBookingId === selectedTimelineBooking.id}>{cancelLoadingBookingId === selectedTimelineBooking.id ? 'Cancelling...' : 'Cancel'}</button>
+              <button type="button" className="btn btn--ghost" disabled title="Coming next">Reschedule</button>
+              <button type="button" className="btn btn--ghost" onClick={() => setTimelineNotesMessage('')}>Notes</button>
+            </div>
+            <label htmlFor="booking-notes">Notes</label>
+            <textarea id="booking-notes" rows={4} value={timelineNotesDraft} onChange={(event) => setTimelineNotesDraft(event.target.value)} />
+            {timelineNotesMessage ? <p className={timelineNotesMessage === 'Notes saved.' ? 'admin-inline-success' : 'admin-inline-error'}>{timelineNotesMessage}</p> : null}
+            <button type="button" className="btn btn--primary" onClick={() => void saveTimelineBookingNotes()} disabled={timelineNotesSaving}>{timelineNotesSaving ? 'Saving...' : 'Save notes'}</button>
+          </div>
+        </div>
+      )}
+
 
 
       {selectedClientId && (
