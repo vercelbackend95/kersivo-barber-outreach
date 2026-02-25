@@ -487,3 +487,133 @@
 .admin-order-detail p {
   margin: 0;
 }
+
+.admin-sales-panel {
+  display: grid;
+  gap: var(--space-sm);
+}
+
+.admin-sales-kpis {
+  display: grid;
+  grid-template-columns: repeat(1, minmax(0, 1fr));
+  gap: var(--space-xs);
+}
+
+.admin-sales-kpi {
+  border: 1px solid var(--border);
+  background: var(--surface);
+  padding: var(--space-sm);
+  display: grid;
+  gap: 0.25rem;
+}
+
+.admin-sales-kpi p,
+.admin-sales-kpi strong {
+  margin: 0;
+}
+
+.admin-sales-controls {
+  border: 1px solid var(--border);
+  background: var(--bg);
+  padding: var(--space-sm);
+  display: grid;
+  gap: var(--space-xs);
+}
+
+.admin-sales-custom-dates {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: var(--space-xs);
+}
+
+.admin-sales-custom-dates label {
+  display: grid;
+  gap: 0.25rem;
+}
+
+.admin-sales-product-picker {
+  display: grid;
+  gap: 0.35rem;
+}
+
+.admin-sales-product-picker p {
+  margin: 0;
+}
+
+.admin-sales-product-list {
+  display: grid;
+  gap: 0.35rem;
+  max-height: 10rem;
+  overflow: auto;
+  border: 1px solid var(--border);
+  padding: var(--space-xs);
+}
+
+.admin-sales-chart-wrap {
+  border: 1px solid var(--border);
+  background: var(--surface);
+  padding: var(--space-xs);
+}
+
+.admin-sales-empty {
+  border: 1px solid var(--border);
+  background: var(--surface);
+  padding: var(--space-sm);
+}
+
+.admin-sales-empty p {
+  margin: 0;
+}
+
+@media (min-width: 48rem) {
+  .admin-sales-kpis {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (min-width: 72rem) {
+  .admin-sales-kpis {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+  }
+}
+
+.admin-sales-chart-inner {
+  display: grid;
+  gap: 0.5rem;
+}
+
+.admin-sales-chart-svg {
+  width: 100%;
+  height: auto;
+  display: block;
+}
+
+.admin-sales-grid-line {
+  stroke: var(--border);
+  stroke-width: 1;
+}
+
+.admin-sales-axis-label {
+  fill: var(--muted);
+  font-size: 0.75rem;
+  font-family: var(--font-body);
+}
+
+.admin-sales-legend {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem 0.75rem;
+}
+
+.admin-sales-legend-item {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  font-size: 0.8rem;
+}
+
+.admin-sales-legend-item i {
+  display: inline-block;
+  width: 0.85rem;
+  height: 0.35rem;
+}
