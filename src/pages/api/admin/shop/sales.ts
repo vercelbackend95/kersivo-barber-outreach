@@ -3,9 +3,9 @@ export const prerender = false;
 import type { APIRoute } from 'astro';
 import { Prisma } from '@prisma/client';
 import { fromZonedTime, formatInTimeZone } from 'date-fns-tz';
-import { requireAdmin } from '../../../../../lib/admin/auth';
-import { prisma } from '../../../../../lib/db/client';
-import { resolveShopId } from '../../../../../lib/db/shopScope';
+import { requireAdmin } from '../../../../lib/admin/auth';
+import { prisma } from '../../../../lib/db/client';
+import { resolveShopId } from '../../../../lib/db/shopScope';
 
 const TZ = 'Europe/London';
 const PAID_STATUSES = ['PAID', 'COLLECTED'] as const;
