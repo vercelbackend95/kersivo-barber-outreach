@@ -16,6 +16,19 @@ const { class: className = '' } = Astro.props;
 <script type="module">
   import { getItemCount, openCart } from '@/lib/shop/cartStore';
 
+  const forceOpenDrawerClass = () => {
+    const drawers = Array.from(document.querySelectorAll('.cart-drawer'));
+
+    drawers.forEach((drawer) => {
+      if (!(drawer instanceof HTMLElement)) {
+        return;
+      }
+
+      drawer.classList.add('cart-drawer--open');
+      drawer.setAttribute('aria-hidden', 'false');
+    });
+  };
+
   const renderCount = () => {
     const count = getItemCount();
     const badges = Array.from(document.querySelectorAll('[data-navbar-cart-badge]'));
@@ -41,6 +54,7 @@ const { class: className = '' } = Astro.props;
       button.dataset.cartSyncBound = 'true';
       button.addEventListener('click', () => {
         openCart();
+        forceOpenDrawerClass();
       });
     });
   };
