@@ -11,6 +11,8 @@ import {
   type CartItem
 } from '@/lib/shop/cartStore';
 
+const CART_OPEN_REQUEST_EVENT = 'kersivo:cart-open-request';
+
 function useCartSnapshot() {
   return useSyncExternalStore(subscribe, getSnapshot, getServerSnapshot);
 }
@@ -50,6 +52,17 @@ export default function CartDrawer() {
       badge.classList.toggle('is-empty', cartCount === 0);
     });
   }, [cartCount]);
+
+  useEffect(() => {
+    const onOpenRequest = () => {
+      openCart();
+    };
+
+    window.addEventListener(CART_OPEN_REQUEST_EVENT, onOpenRequest);
+    return () => {
+      window.removeEventListener(CART_OPEN_REQUEST_EVENT, onOpenRequest);
+    };
+  }, []);
 
   useEffect(() => {
     const onDocumentClick = (event: MouseEvent) => {

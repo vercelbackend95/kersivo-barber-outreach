@@ -14,7 +14,7 @@ const { class: className = '' } = Astro.props;
 </button>
 
 <script type="module">
-  import { getItemCount, openCart } from '@/lib/shop/cartStore';
+  const CART_OPEN_REQUEST_EVENT = 'kersivo:cart-open-request';
 
   const forceOpenDrawerClass = () => {
     const drawers = Array.from(document.querySelectorAll('.cart-drawer'));
@@ -26,16 +26,6 @@ const { class: className = '' } = Astro.props;
 
       drawer.classList.add('cart-drawer--open');
       drawer.setAttribute('aria-hidden', 'false');
-    });
-  };
-
-  const renderCount = () => {
-    const count = getItemCount();
-    const badges = Array.from(document.querySelectorAll('[data-navbar-cart-badge]'));
-
-    badges.forEach((badge) => {
-      badge.textContent = String(count);
-      badge.classList.toggle('is-empty', count === 0);
     });
   };
 
@@ -53,7 +43,7 @@ const { class: className = '' } = Astro.props;
 
       button.dataset.cartSyncBound = 'true';
       button.addEventListener('click', () => {
-        openCart();
+        window.dispatchEvent(new CustomEvent(CART_OPEN_REQUEST_EVENT));
         forceOpenDrawerClass();
       });
     });
@@ -61,7 +51,6 @@ const { class: className = '' } = Astro.props;
 
   const refreshNavbarCart = () => {
     bindCartButtons();
-    renderCount();
   };
 
   refreshNavbarCart();
