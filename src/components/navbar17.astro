@@ -1,5 +1,5 @@
 ---
-import NavbarCartButton from '@/components/shop/NavbarCartButton';
+import NavbarCartButton from '@/components/shop/NavbarCartButton.astro';
 
 const navLogo = {
   url: '#',
@@ -42,7 +42,7 @@ const navItems = [
     </nav>
 
     <div class="navbar17__actions">
-      <NavbarCartButton className="navbar17__cart-btn" client:load />
+      <NavbarCartButton class="navbar17__cart-btn" />
       <a href="#" class="btn btn--secondary">Sign Up</a>
     </div>
 
@@ -67,7 +67,7 @@ const navItems = [
         </li>
       ))}
       <li class="navbar17__mobile-cart-wrap">
-        <NavbarCartButton className="navbar17__cart-btn navbar17__cart-btn--mobile" client:load />
+        <NavbarCartButton class="navbar17__cart-btn navbar17__cart-btn--mobile" />
       </li>
       <li class="navbar17__mobile-cta-wrap">
         <a href="#" class="btn btn--secondary navbar17__mobile-cta">Sign Up</a>

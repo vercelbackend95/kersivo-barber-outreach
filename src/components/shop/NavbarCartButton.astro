@@ -1,0 +1,44 @@
+---
+type Props = {
+  class?: string;
+};
+
+const { class: className = '' } = Astro.props;
+---
+
+<button type="button" class={className} aria-label="Open cart" data-navbar-cart-button>
+  <span aria-hidden="true">🛒</span>
+  <span>Cart</span>
+  <span class="navbar17__cart-badge is-empty" data-navbar-cart-badge>0</span>
+</button>
+
+<script type="module">
+  import { openCart, subscribe, getSnapshot } from '@/lib/shop/cartStore';
+
+  const cartButtons = Array.from(document.querySelectorAll('[data-navbar-cart-button]'));
+
+  const getItemCount = () => getSnapshot().items.reduce((sum, item) => sum + item.quantity, 0);
+
+  const renderCount = (count) => {
+    const badges = Array.from(document.querySelectorAll('[data-navbar-cart-badge]'));
+
+    badges.forEach((badge) => {
+      badge.textContent = String(count);
+      badge.classList.toggle('is-empty', count === 0);
+    });
+  };
+
+  const handleCartClick = () => {
+    openCart();
+  };
+
+  cartButtons.forEach((button) => {
+    button.addEventListener('click', handleCartClick);
+  });
+
+  renderCount(getItemCount());
+
+  subscribe(() => {
+    renderCount(getItemCount());
+  });
+</script>
