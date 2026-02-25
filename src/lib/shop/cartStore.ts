@@ -1,5 +1,4 @@
-import { useSyncExternalStore } from 'react';
-
+// src/lib/shop/cartStore.ts
 export const CART_STORAGE_KEY = 'kersivo_shop_cart_v2';
 
 
@@ -33,12 +32,6 @@ export type CartSnapshot = {
   email: string;
 };
 
-export type CartSummary = {
-  itemCount: number;
-  subtotalPence: number;
-  isOpen: boolean;
-};
-
 type CartStoreSingleton = {
   state: CartState;
   clientSnapshot: CartSnapshot;
@@ -59,12 +52,6 @@ const SERVER_SNAPSHOT: CartSnapshot = Object.freeze({
   isOpen: false,
   subtotalPence: 0,
   email: ''
-});
-
-const SERVER_SUMMARY: CartSummary = Object.freeze({
-  itemCount: 0,
-  subtotalPence: 0,
-  isOpen: false
 });
 
 const store: CartStoreSingleton =
@@ -197,25 +184,14 @@ export function getServerSnapshot(): CartSnapshot {
   return SERVER_SNAPSHOT;
 }
 
-function toSummary(snapshot: CartSnapshot): CartSummary {
-  return {
-    itemCount: snapshot.items.reduce((sum, item) => sum + item.quantity, 0),
-    subtotalPence: snapshot.subtotalPence,
-    isOpen: snapshot.isOpen
-  };
-}
-
-export function useCartSummary(): CartSummary {
-  return useSyncExternalStore(
-    subscribe,
-    () => toSummary(getSnapshot()),
-    () => SERVER_SUMMARY
-  );
-}
-
 export function getItems() {
   ensureHydrated();
   return store.state.items;
+}
+
+export function getItemCount() {
+  ensureHydrated();
+  return store.state.items.reduce((sum, item) => sum + item.quantity, 0);
 }
 
 export function addItem(input: AddCartItemInput) {
