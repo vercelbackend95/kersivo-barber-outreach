@@ -95,3 +95,6 @@ npx prisma db seed
 7. Verify status updates to `COLLECTED`.
 8. Verify customer receives email subject: `Order confirmed — pick up in store` (via Resend, or console log fallback).
 
+## SSR build on Vercel
+SSR build requires adapter; use Vercel adapter + output: server.
+
