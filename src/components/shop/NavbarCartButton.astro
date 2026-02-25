@@ -16,9 +16,11 @@ const { class: className = '' } = Astro.props;
 <script type="module">
   import { getItemCount, openCart, subscribe } from '@/lib/shop/cartStore';
 
-  const kersivoWindow = window as Window & { __KERSIVO_NAVBAR_CART_SYNC__?: boolean };
+  const globalKey = '__KERSIVO_NAVBAR_CART_SYNC__';
+  const globalObject = window;
 
-  const renderCount = (count: number) => {
+  const renderCount = () => {
+    const count = getItemCount();
     const badges = Array.from(document.querySelectorAll('[data-navbar-cart-badge]'));
 
     badges.forEach((badge) => {
@@ -31,23 +33,36 @@ const { class: className = '' } = Astro.props;
     const cartButtons = Array.from(document.querySelectorAll('[data-navbar-cart-button]'));
 
     cartButtons.forEach((button) => {
-      if (button instanceof HTMLButtonElement && button.dataset.cartSyncBound !== 'true') {
-        button.dataset.cartSyncBound = 'true';
-        button.addEventListener('click', () => {
-          openCart();
-        });
+      if (!(button instanceof HTMLButtonElement)) {
+        return;
       }
+
+      if (button.dataset.cartSyncBound === 'true') {
+        return;
+      }
+
+      button.dataset.cartSyncBound = 'true';
+      button.addEventListener('click', () => {
+        openCart();
+      });
     });
   };
 
-  bindCartButtons();
-  renderCount(getItemCount());
+  const refreshNavbarCart = () => {
+    bindCartButtons();
+    renderCount();
+  };
 
-  if (!kersivoWindow.__KERSIVO_NAVBAR_CART_SYNC__) {
-    kersivoWindow.__KERSIVO_NAVBAR_CART_SYNC__ = true;
-    subscribe(() => {
-      bindCartButtons();
-      renderCount(getItemCount());
-    });
+  refreshNavbarCart();
+
+  if (!globalObject[globalKey]) {
+    globalObject[globalKey] = {
+      unsubscribe: subscribe(() => {
+        refreshNavbarCart();
+      })
+    };
   }
+
+  document.addEventListener('astro:page-load', refreshNavbarCart);
+  document.addEventListener('astro:after-swap', refreshNavbarCart);
 </script>
