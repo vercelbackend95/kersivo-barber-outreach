@@ -1,20 +1,31 @@
-import React, { useCallback, useEffect, useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import AdminLayout from './AdminLayout';
 import BookingsAdminPanel from './BookingsAdminPanel';
 import ShopAdminPanel from './ShopAdminPanel';
 
-type AdminTopSection = 'bookings' | 'shop';
+export type AdminSection =
+  | 'bookings_dashboard'
+  | 'bookings_blocks'
+  | 'shop_products'
+  | 'shop_orders'
+  | 'shop_sales';
 
-function getSectionFromUrl(): AdminTopSection {
-  if (typeof window === 'undefined') return 'bookings';
+
+function getSectionFromUrl(): AdminSection {
+  if (typeof window === 'undefined') return 'bookings_dashboard';
+
   const section = new URLSearchParams(window.location.search).get('section');
-  return section === 'shop' ? 'shop' : 'bookings';
+  if (section === 'bookings_blocks') return 'bookings_blocks';
+  if (section === 'shop_orders') return 'shop_orders';
+  if (section === 'shop_sales') return 'shop_sales';
+  if (section === 'shop_products') return 'shop_products';
+  return 'bookings_dashboard';
 
 }
 
 
 export default function AdminPanel() {
-    const [activeSection, setActiveSection] = useState<AdminTopSection>('bookings');
+  const [activeSection, setActiveSection] = useState<AdminSection>('bookings_dashboard');
 
   useEffect(() => {
     setActiveSection(getSectionFromUrl());
@@ -26,7 +37,7 @@ export default function AdminPanel() {
 
   }, []);
 
-  const handleSectionChange = useCallback((section: AdminTopSection) => {
+  const handleSectionChange = useCallback((section: AdminSection) => {
     setActiveSection(section);
     const params = new URLSearchParams(window.location.search);
     params.set('section', section);
@@ -35,11 +46,26 @@ export default function AdminPanel() {
     window.history.replaceState({}, '', nextUrl);
 
   }, []);
+  const shopTab = useMemo(() => {
+    if (activeSection === 'shop_orders') return 'orders';
+    if (activeSection === 'shop_sales') return 'sales';
+    return 'products';
+  }, [activeSection]);
+
+  const isBookingsSection = activeSection === 'bookings_dashboard' || activeSection === 'bookings_blocks';
+
 
   return (
-        <AdminLayout activeSection={activeSection} onChangeSection={handleSectionChange}>
-      <BookingsAdminPanel isActive={activeSection === 'bookings'} />
-      {activeSection === 'shop' ? <ShopAdminPanel /> : null}
+    <AdminLayout activeSection={activeSection} onChangeSection={handleSectionChange}>
+      <BookingsAdminPanel
+        isActive={isBookingsSection}
+        mode={activeSection === 'bookings_blocks' ? 'blocks' : 'dashboard'}
+        onBackToDashboard={() => handleSectionChange('bookings_dashboard')}
+      />
+      {activeSection === 'shop_products' || activeSection === 'shop_orders' || activeSection === 'shop_sales' ? (
+        <ShopAdminPanel initialTab={shopTab} />
+      ) : null}
+
     </AdminLayout>
 
   );

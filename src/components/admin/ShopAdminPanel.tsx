@@ -267,8 +267,13 @@ function MiniLineChart({ series, metric }: { series: SalesChartSeries[]; metric:
 }
 
 
-export default function ShopAdminPanel() {
-  const [activeTab, setActiveTab] = useState<ShopTab>('products');
+type ShopAdminPanelProps = {
+  initialTab?: ShopTab;
+};
+
+export default function ShopAdminPanel({ initialTab = 'products' }: ShopAdminPanelProps) {
+  const [activeTab, setActiveTab] = useState<ShopTab>(initialTab);
+
   const [products, setProducts] = useState<Product[]>([]);
   const [loading, setLoading] = useState(false);
   const [saving, setSaving] = useState(false);
@@ -297,6 +302,13 @@ export default function ShopAdminPanel() {
     () => [...products].sort((a, b) => a.sortOrder - b.sortOrder || Date.parse(b.updatedAt) - Date.parse(a.updatedAt)),
     [products]
   );
+  
+
+  useEffect(() => {
+    setActiveTab(initialTab);
+  }, [initialTab]);
+
+
   const chartSeries = useMemo(() => {
     if (!salesData) return [] as SalesChartSeries[];
 

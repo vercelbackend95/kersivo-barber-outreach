@@ -390,6 +390,33 @@
   gap: var(--space-xs);
 }
 
+.admin-sidebar-group {
+  display: grid;
+  gap: var(--space-xs);
+}
+
+.admin-sidebar-group-title {
+  margin: 0;
+  color: var(--muted);
+  font-size: 0.8rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.admin-sidebar-divider {
+  height: 1px;
+  background: var(--border);
+}
+
+.admin-quick-blocks-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-xs);
+  flex-wrap: wrap;
+}
+
+
 .admin-sidebar-link {
   border: 1px solid var(--border);
   background: var(--bg);

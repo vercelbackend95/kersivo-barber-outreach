@@ -177,13 +177,18 @@ function nextLunchWindow(now: Date) {
   const startAt = roundUpLondon(now, SLOT_STEP_MINUTES);
   return { startAt, endAt: new Date(startAt.getTime() + 30 * 60000) };
 }
+type BookingsAdminMode = 'dashboard' | 'blocks';
+
 
 
 type BookingsAdminPanelProps = {
   isActive: boolean;
+    mode: BookingsAdminMode;
+  onBackToDashboard?: () => void;
+
 };
 
-export default function BookingsAdminPanel({ isActive }: BookingsAdminPanelProps) {
+export default function BookingsAdminPanel({ isActive, mode, onBackToDashboard }: BookingsAdminPanelProps) {
   const [secret, setSecret] = useState('');
   const [loggedIn, setLoggedIn] = useState(false);
   const [isCheckingSession, setIsCheckingSession] = useState(true);
@@ -350,6 +355,11 @@ export default function BookingsAdminPanel({ isActive }: BookingsAdminPanelProps
     const timeoutId = window.setTimeout(() => { void fetchBookings(); }, 300);
     return () => window.clearTimeout(timeoutId);
   }, [activeView, fetchBookings, historyBarberId, historyFrom, historyPreset, historyTo, isActive, loggedIn]);
+  useEffect(() => {
+    if (mode === 'blocks' && activeSection !== 'bookings') {
+      setActiveSection('bookings');
+    }
+  }, [activeSection, mode]);
 
 
   const normalizedClientSearchQuery = useMemo(() => normalizeSearchValue(clientSearchQuery), [clientSearchQuery]);
@@ -511,24 +521,29 @@ export default function BookingsAdminPanel({ isActive }: BookingsAdminPanelProps
       <h1>Admin Dashboard</h1>
       <div className="admin-next-block"><p className="admin-next-primary">{activeView === 'today' ? `Today: ${bookings.length} bookings` : activeView === 'timeline' ? `Timeline: ${bookings.length} bookings` : activeView === 'all' ? `All: ${bookings.length} bookings` : `History: ${bookings.length} bookings`}</p>{nextBooking && activeView !== 'history' && <p className="admin-next-secondary">Next: {nextBooking.barber?.name} — {nextBooking.service?.name} — {formatStartTime(nextBooking.startAt)} ({formatRelativeTime(nextBooking.startAt, nextBooking.endAt)})</p>}</div>      <div className="admin-refresh-row"><p className="muted admin-last-updated">Last updated: {formatLastUpdated(lastUpdatedAt, nowMs)}</p><div className="admin-refresh-controls"><button type="button" className="btn btn--ghost" onClick={() => { void fetchBookings(); void fetchTimeBlocks(); void fetchReports(); }} disabled={isRefreshing}>Refresh</button><button type="button" className="btn btn--secondary" onClick={() => void logout()}>Logout</button></div></div>
 
-      <div className="admin-view-tabs" role="tablist" aria-label="Admin sections"><button type="button" className={`admin-filter-tab ${activeSection === 'bookings' ? 'admin-filter-tab--active' : ''}`} onClick={() => setActiveSection('bookings')}>Bookings</button><button type="button" className={`admin-filter-tab ${activeSection === 'reports' ? 'admin-filter-tab--active' : ''}`} onClick={() => setActiveSection('reports')}>Reports</button></div>
-
+      {mode !== 'blocks' ? <div className="admin-view-tabs" role="tablist" aria-label="Admin sections"><button type="button" className={`admin-filter-tab ${activeSection === 'bookings' ? 'admin-filter-tab--active' : ''}`} onClick={() => setActiveSection('bookings')}>Bookings</button><button type="button" className={`admin-filter-tab ${activeSection === 'reports' ? 'admin-filter-tab--active' : ''}`} onClick={() => setActiveSection('reports')}>Reports</button></div> : null}
       {cancelSuccessMessage && <p className="admin-inline-success">{cancelSuccessMessage}</p>}
       {cancelErrorMessage && <p className="admin-inline-error">{cancelErrorMessage}</p>}
       {activeSection === 'bookings' && (
         <>
-          {(activeView === 'today' || activeView === 'timeline') && (
-        <section className="admin-quick-blocks">
-          <h2>Quick blocks</h2>
-          <div className="admin-quick-scope"><label htmlFor="block-scope">Applies to</label><select id="block-scope" value={blockScopeBarberId} onChange={(event) => setBlockScopeBarberId(event.target.value)}><option value="all">All barbers</option>{barbers.map((barber) => <option key={barber.id} value={barber.id}>{barber.name}</option>)}</select></div>
-          <div className="admin-quick-actions"><button type="button" className="btn btn--secondary" onClick={() => void handleQuickBlock30()}>Block 30 min</button><button type="button" className="btn btn--secondary" onClick={() => void handleQuickLunch()}>Lunch</button><button type="button" className="btn btn--secondary" onClick={() => setShowHolidayModal(true)}>Holiday</button></div>
-          {blockSuccessMessage && <p className="admin-inline-success">{blockSuccessMessage}</p>}
-          {blockErrorMessage && <p className="admin-inline-error">{blockErrorMessage}</p>}
 
-          <h3>Today's blocks</h3>
-          <ul className="admin-blocks-list">{timeBlocks.length === 0 ? <li className="muted">No blocks yet.</li> : timeBlocks.map((block) => <li key={block.id}><div><strong>{block.title}</strong><p className="muted">{block.barber?.name ?? 'All barbers'} · {formatBlockRange(block.startAt, block.endAt)}</p></div><button type="button" className="btn btn--ghost" onClick={() => void deleteTimeBlock(block.id)}>Remove</button></li>)}</ul>
-        </section>
-  )}
+          {mode === 'blocks' ? (
+            <section className="admin-quick-blocks">
+              <div className="admin-quick-blocks-head">
+                <h2>Quick blocks</h2>
+                {onBackToDashboard ? <button type="button" className="btn btn--ghost" onClick={onBackToDashboard}>Back to Dashboard</button> : null}
+              </div>
+              <p className="muted">These blocks affect booking availability for today.</p>
+              <div className="admin-quick-scope"><label htmlFor="block-scope">Applies to</label><select id="block-scope" value={blockScopeBarberId} onChange={(event) => setBlockScopeBarberId(event.target.value)}><option value="all">All barbers</option>{barbers.map((barber) => <option key={barber.id} value={barber.id}>{barber.name}</option>)}</select></div>
+              <div className="admin-quick-actions"><button type="button" className="btn btn--secondary" onClick={() => void handleQuickBlock30()}>Block 30 min</button><button type="button" className="btn btn--secondary" onClick={() => void handleQuickLunch()}>Lunch</button><button type="button" className="btn btn--secondary" onClick={() => setShowHolidayModal(true)}>Holiday</button></div>
+              {blockSuccessMessage && <p className="admin-inline-success">{blockSuccessMessage}</p>}
+              {blockErrorMessage && <p className="admin-inline-error">{blockErrorMessage}</p>}
+
+              <h3>Today's blocks</h3>
+              <ul className="admin-blocks-list">{timeBlocks.length === 0 ? <li className="muted">No blocks yet.</li> : timeBlocks.map((block) => <li key={block.id}><div><strong>{block.title}</strong><p className="muted">{block.barber?.name ?? 'All barbers'} · {formatBlockRange(block.startAt, block.endAt)}</p></div><button type="button" className="btn btn--ghost" onClick={() => void deleteTimeBlock(block.id)}>Remove</button></li>)}</ul>
+            </section>
+          ) : (
+      <>
 
 
       <div className="admin-view-tabs admin-view-tabs--four" role="tablist" aria-label="Admin views"><button type="button" className={`admin-filter-tab ${activeView === 'today' ? 'admin-filter-tab--active' : ''}`} onClick={() => setActiveView('today')}>Today</button><button type="button" className={`admin-filter-tab ${activeView === 'timeline' ? 'admin-filter-tab--active' : ''}`} onClick={() => setActiveView('timeline')}>Timeline</button><button type="button" className={`admin-filter-tab ${activeView === 'all' ? 'admin-filter-tab--active' : ''}`} onClick={() => setActiveView('all')}>All bookings</button><button type="button" className={`admin-filter-tab ${activeView === 'history' ? 'admin-filter-tab--active' : ''}`} onClick={() => setActiveView('history')}>History</button></div>      {activeView === 'history' && (
@@ -586,10 +601,12 @@ export default function BookingsAdminPanel({ isActive }: BookingsAdminPanelProps
         </table>
       )}
 
-            {activeView === 'history' && historyHasMore && <button type="button" className="btn btn--secondary" onClick={() => void loadMoreHistory()} disabled={historyLoadingMore}>{historyLoadingMore ? 'Loading...' : 'Load more'}</button>}              </>
-      )}
+      {activeView === 'history' && historyHasMore && <button type="button" className="btn btn--secondary" onClick={() => void loadMoreHistory()} disabled={historyLoadingMore}>{historyLoadingMore ? 'Loading...' : 'Load more'}</button>}
+      </>
+          )}
+        </>      )}
 
-      {activeSection === 'reports' && (
+      {mode !== 'blocks' && activeSection === 'reports' && (
         <section className="admin-reports" aria-live="polite">
           <h2>Reports</h2>
           <p className="muted">This week (Europe/London)</p>
