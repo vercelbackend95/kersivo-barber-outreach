@@ -11,7 +11,8 @@
     "prisma:generate": "prisma generate",
     "postinstall": "prisma generate",
     "seed": "prisma db seed",
-    "test": "vitest run"
+    "test": "vitest run",
+    "vercel:dev": "vercel dev"
   },
   "dependencies": {
     "@astrojs/react": "^4.4.2",

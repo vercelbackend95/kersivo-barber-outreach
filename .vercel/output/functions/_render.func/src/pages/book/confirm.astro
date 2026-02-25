@@ -1,0 +1,14 @@
+---
+import '../../styles/tokens.css';
+import '../../styles/global.css';
+import '../../styles/components/booking.css';
+const token = Astro.url.searchParams.get('token') ?? '';
+let response;
+let booking;
+if (token) {
+  const apiResponse = await fetch(new URL('/api/bookings/confirm', Astro.url), { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ token }) });
+  response = await apiResponse.json();
+  booking = response.booking;
+}
+---
+<html lang="en"><body><main class="container page-wrap"><section class="surface booking-shell"><h1>Booking confirmation</h1>{booking ? <><p>Your booking is now confirmed.</p><p>{booking.service.name} with {booking.barber.name}</p><p>{new Date(booking.startAt).toLocaleString('en-GB', { timeZone: 'Europe/London' })}</p></> : <p>{response?.error ?? 'Missing token.'}</p>}</section></main></body></html>
