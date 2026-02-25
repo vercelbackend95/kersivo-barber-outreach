@@ -58,6 +58,7 @@ export const POST: APIRoute = async (ctx) => {
       },
       include: { service: true, barber: true }
     });
+  });
 
   return new Response(JSON.stringify({ booking }));
 };
