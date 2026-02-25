@@ -196,7 +196,7 @@ export default function CartDrawer() {
           Subtotal: <strong>{formatGbp(subtotalPence)}</strong>
         </p>
         <button type="button" className="btn btn--primary cart-buy-button" onClick={() => void onBuyPickup()} disabled={checkoutLoading}>
-          {checkoutLoading ? 'Creating checkout…' : 'BUY (PICKUP)'}
+          {checkoutLoading ? 'Creating checkout...' : 'BUY (PICKUP)'}
         </button>
       </aside>
 

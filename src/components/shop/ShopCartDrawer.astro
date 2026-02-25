@@ -110,8 +110,7 @@ const { products = [] } = Astro.props;
     }
 
     checkoutButton.disabled = true;
-    checkoutButton.textContent = 'Processing…';
-
+    checkoutButton.textContent = 'Processing...';
     try {
       const response = await fetch('/api/shop/checkout', {
         method: 'POST',

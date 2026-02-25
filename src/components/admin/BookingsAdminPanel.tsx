@@ -456,7 +456,7 @@ export default function BookingsAdminPanel({ isActive }: BookingsAdminPanelProps
   }
 
   if (!isActive) return null;
-  if (isCheckingSession) return <section className="surface booking-shell"><h1>Admin</h1><p className="muted">Checking session…</p></section>;
+  if (isCheckingSession) return <section className="surface booking-shell"><h1>Admin</h1><p className="muted">Checking session...</p></section>;
   if (!loggedIn) return <section className="surface booking-shell"><h1>Admin</h1><label>Admin secret</label><input type="password" value={secret} onChange={(e) => setSecret(e.target.value)} /><button className="btn btn--primary" onClick={login}>Login</button>{error && <p>{error}</p>}</section>;
 
 
@@ -518,8 +518,7 @@ export default function BookingsAdminPanel({ isActive }: BookingsAdminPanelProps
       )}
 
       <div className="admin-filter-tabs" role="tablist" aria-label="Booking status filters"><button type="button" className={`admin-filter-tab ${activeFilter === 'confirmed' ? 'admin-filter-tab--active' : ''}`} onClick={() => setActiveFilter('confirmed')}>Confirmed</button><button type="button" className={`admin-filter-tab ${activeFilter === 'rescheduled' ? 'admin-filter-tab--active' : ''}`} onClick={() => setActiveFilter('rescheduled')}>Rescheduled</button><button type="button" className={`admin-filter-tab ${activeFilter === 'pending' ? 'admin-filter-tab--active' : ''}`} onClick={() => setActiveFilter('pending')}>Pending</button><button type="button" className={`admin-filter-tab ${activeFilter === 'cancelled' ? 'admin-filter-tab--active' : ''}`} onClick={() => setActiveFilter('cancelled')}>Cancelled</button></div>
-      <div className="admin-search-row"><input type="search" value={clientSearchQuery} onChange={(e) => setClientSearchQuery(e.target.value)} placeholder="Search by client name or email…" aria-label="Search by client name or email" /></div>
-
+      <div className="admin-search-row"><input type="search" value={clientSearchQuery} onChange={(e) => setClientSearchQuery(e.target.value)} placeholder="Search by client name or email..." aria-label="Search by client name or email" /></div>
       <table className="admin-table">
         <thead><tr><th>Client</th><th>Email</th><th>Service</th><th>Barber</th><th>Status</th><th>Start</th><th>Actions</th></tr></thead>
         <tbody>
@@ -528,13 +527,11 @@ export default function BookingsAdminPanel({ isActive }: BookingsAdminPanelProps
 <td><button type="button" className="admin-link-button" onClick={() => void openClientProfile(booking.clientId)}>{booking.fullName}</button></td>
               <td><button type="button" className="admin-link-button" onClick={() => void openClientProfile(booking.clientId)}>{booking.email}</button></td>
               <td>{booking.service?.name}</td><td>{booking.barber?.name}</td><td>{booking.status === 'CONFIRMED' && booking.rescheduledAt ? 'CONFIRMED · RESCHEDULED' : booking.status}</td><td>{new Date(booking.startAt).toLocaleString('en-GB', { timeZone: ADMIN_TIMEZONE })}</td>
-              <td>{canBeCancelledByShop(booking) ? <button type="button" className="btn btn--secondary admin-cancel-btn" onClick={() => void cancelBookingByShop(booking)} disabled={cancelLoadingBookingId === booking.id}>{cancelLoadingBookingId === booking.id ? 'Cancelling…' : 'Cancel'}</button> : null}</td>
-            </tr>
+              <td>{canBeCancelledByShop(booking) ? <button type="button" className="btn btn--secondary admin-cancel-btn" onClick={() => void cancelBookingByShop(booking)} disabled={cancelLoadingBookingId === booking.id}>{cancelLoadingBookingId === booking.id ? 'Cancelling...' : 'Cancel'}</button> : null}</td>            </tr>
           ))}
         </tbody>
       </table>
-            {activeView === 'history' && historyHasMore && <button type="button" className="btn btn--secondary" onClick={() => void loadMoreHistory()} disabled={historyLoadingMore}>{historyLoadingMore ? 'Loading…' : 'Load more'}</button>}
-              </>
+            {activeView === 'history' && historyHasMore && <button type="button" className="btn btn--secondary" onClick={() => void loadMoreHistory()} disabled={historyLoadingMore}>{historyLoadingMore ? 'Loading...' : 'Load more'}</button>}              </>
       )}
 
       {activeSection === 'reports' && (
@@ -570,10 +567,9 @@ export default function BookingsAdminPanel({ isActive }: BookingsAdminPanelProps
         <div className="admin-client-modal-backdrop" role="presentation" onClick={() => setSelectedClientId(null)}>
           <div className="admin-client-modal" role="dialog" aria-modal="true" aria-label="Client profile" onClick={(event) => event.stopPropagation()}>
             <div className="admin-client-modal-head"><h2>Client profile</h2><button type="button" className="btn btn--ghost" onClick={() => setSelectedClientId(null)}>Close</button></div>
-            {isClientLoading && <p className="muted">Loading…</p>}
+            {isClientLoading && <p className="muted">Loading...</p>}
             {clientError && <p className="admin-inline-error">{clientError}</p>}
-            {clientProfile && (<><p><strong>{clientProfile.client.fullName || 'Unnamed client'}</strong><br />{clientProfile.client.email}<br />{clientProfile.client.phone || 'No phone'}</p><div className="admin-client-stats"><p>Total visits: {clientProfile.stats.totalBookings}</p><p>Last visit: {clientProfile.stats.lastBookingAt ? new Date(clientProfile.stats.lastBookingAt).toLocaleString('en-GB', { timeZone: ADMIN_TIMEZONE }) : '—'}</p><p>Cancelled: {clientProfile.stats.cancelledCount}</p></div><h3>Recent bookings</h3><ul className="admin-client-bookings">{clientProfile.recentBookings.map((item) => <li key={item.id}>{new Date(item.startAt).toLocaleString('en-GB', { timeZone: ADMIN_TIMEZONE })} · {item.status} · {item.service?.name} · {item.barber?.name}</li>)}</ul><label htmlFor="client-notes">Notes</label><textarea id="client-notes" value={notesDraft} onChange={(event) => setNotesDraft(event.target.value)} rows={5} /><button type="button" className="btn btn--primary" onClick={() => void saveNotes()} disabled={notesSaving}>{notesSaving ? 'Saving…' : 'Save notes'}</button></>)}
-          </div>
+            {clientProfile && (<><p><strong>{clientProfile.client.fullName || 'Unnamed client'}</strong><br />{clientProfile.client.email}<br />{clientProfile.client.phone || 'No phone'}</p><div className="admin-client-stats"><p>Total visits: {clientProfile.stats.totalBookings}</p><p>Last visit: {clientProfile.stats.lastBookingAt ? new Date(clientProfile.stats.lastBookingAt).toLocaleString('en-GB', { timeZone: ADMIN_TIMEZONE }) : '—'}</p><p>Cancelled: {clientProfile.stats.cancelledCount}</p></div><h3>Recent bookings</h3><ul className="admin-client-bookings">{clientProfile.recentBookings.map((item) => <li key={item.id}>{new Date(item.startAt).toLocaleString('en-GB', { timeZone: ADMIN_TIMEZONE })} · {item.status} · {item.service?.name} · {item.barber?.name}</li>)}</ul><label htmlFor="client-notes">Notes</label><textarea id="client-notes" value={notesDraft} onChange={(event) => setNotesDraft(event.target.value)} rows={5} /><button type="button" className="btn btn--primary" onClick={() => void saveNotes()} disabled={notesSaving}>{notesSaving ? 'Saving...' : 'Save notes'}</button></>)}          </div>
 
         </div>
 

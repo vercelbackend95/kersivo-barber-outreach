@@ -79,6 +79,14 @@ type SalesChartSeries = {
   name: string;
   points: Array<{ date: string; revenuePence: number; units: number }>;
 };
+type SalesChartErrorBoundaryProps = {
+  children: React.ReactNode;
+};
+
+type SalesChartErrorBoundaryState = {
+  hasError: boolean;
+};
+
 
 
 const EMPTY_FORM: ProductFormState = {
@@ -117,17 +125,68 @@ function getRangeDates(preset: Exclude<SalesRangePreset, 'custom'>): { from: str
 
   return { from, to };
 }
+class SalesChartErrorBoundary extends React.Component<SalesChartErrorBoundaryProps, SalesChartErrorBoundaryState> {
+  state: SalesChartErrorBoundaryState = { hasError: false };
+
+  static getDerivedStateFromError(): SalesChartErrorBoundaryState {
+    return { hasError: true };
+  }
+
+  componentDidCatch(error: Error) {
+    console.error('Sales chart rendering error:', error);
+  }
+
+  handleRetry = () => {
+    this.setState({ hasError: false });
+  };
+
+  render() {
+    if (this.state.hasError) {
+      return (
+        <div className="admin-inline-error" role="alert">
+          <p>Sales chart failed to load. Please refresh.</p>
+          <button type="button" className="btn btn--secondary" onClick={this.handleRetry}>Retry</button>
+        </div>
+      );
+    }
+
+    return this.props.children;
+  }
+}
+
 
 function MiniLineChart({ series, metric }: { series: SalesChartSeries[]; metric: SalesMetric }) {
-    const width = 900;
+  if (series.length === 0 || series.every((line) => line.points.length === 0)) {
+    return (
+      <div className="admin-sales-empty">
+        <p>No sales yet.</p>
+      </div>
+    );
+  }
+
+  const width = 900;
+
   const height = 320;
   const padding = { top: 20, right: 20, bottom: 36, left: 54 };
   const colors = ['var(--accent)', 'var(--fg)', 'var(--muted)', 'var(--accent-hover)'];
 
-  const allPoints = series.flatMap((line) => line.points);
+  const safeSeries = series
+    .map((line) => ({ ...line, points: line.points ?? [] }))
+    .filter((line) => line.points.length > 0);
+
+  if (safeSeries.length === 0) {
+    return (
+      <div className="admin-sales-empty">
+        <p>No sales yet.</p>
+      </div>
+    );
+  }
+
+  const allPoints = safeSeries.flatMap((line) => line.points);
+
   const allDates = Array.from(new Set(allPoints.map((point) => point.date))).sort((a, b) => a.localeCompare(b));
   const values = allPoints.map((point) => (metric === 'revenue' ? point.revenuePence : point.units));
-  const maxValue = Math.max(0, ...values);
+  const maxValue = values.length > 0 ? Math.max(0, ...values) : 0;
   const yMax = Math.max(maxValue, metric === 'revenue' ? 100 : 1);
 
 
@@ -143,6 +202,7 @@ function MiniLineChart({ series, metric }: { series: SalesChartSeries[]; metric:
   const yPosition = (value: number): number => padding.top + (1 - value / yMax) * innerHeight;
 
   const ticks = 4;
+  const yTicks = Array.from({ length: ticks + 1 }, (_, index) => (yMax / ticks) * index);
   const formatAxisValue = (value: number): string => (metric === 'revenue' ? `£${(value / 100).toFixed(2)}` : `${Math.round(value)}`);
   const formatTooltipValue = (value: number): string => (metric === 'revenue' ? formatPrice(value) : `${Math.round(value)} units`);
 
@@ -163,9 +223,9 @@ function MiniLineChart({ series, metric }: { series: SalesChartSeries[]; metric:
           </g>
         ))}
 
-        {series.map((line, lineIndex) => {
+        {safeSeries.map((line, lineIndex) => {
           const path = line.points
-           .map((point, pointIndex) => {
+            .map((point, pointIndex) => {
               const value = metric === 'revenue' ? point.revenuePence : point.units;
               return `${pointIndex === 0 ? 'M' : 'L'} ${xPosition(point.date)} ${yPosition(value)}`;
             })
@@ -196,7 +256,7 @@ function MiniLineChart({ series, metric }: { series: SalesChartSeries[]; metric:
       </svg>
 
       <div className="admin-sales-legend">
-        {series.map((line, index) => (
+        {safeSeries.map((line, index) => (
           <span key={`legend-${line.key}`} className="admin-sales-legend-item">
             <i style={{ background: colors[index % colors.length] }} />{line.name}
           </span>
@@ -560,8 +620,7 @@ export default function ShopAdminPanel() {
         <div className="admin-reports admin-products-panel">
           <div className="admin-products-actions">
             <button type="button" className="btn btn--primary" onClick={startCreate}>Add product</button>
-            <button type="button" className="btn btn--ghost" onClick={() => void fetchProducts()} disabled={loading}>{loading ? 'Refreshing…' : 'Refresh'}</button>
-          </div>
+            <button type="button" className="btn btn--ghost" onClick={() => void fetchProducts()} disabled={loading}>{loading ? 'Refreshing...' : 'Refresh'}</button>          </div>
 
           {error ? <p className="admin-inline-error">{error}</p> : null}
           {success ? <p className="admin-inline-success">{success}</p> : null}
@@ -579,8 +638,7 @@ export default function ShopAdminPanel() {
 
 
               <div className="admin-products-actions">
-                <button type="submit" className="btn btn--primary" disabled={saving}>{saving ? 'Saving…' : 'Save product'}</button>
-                <button type="button" className="btn btn--secondary" onClick={resetForm}>Cancel</button>
+                <button type="submit" className="btn btn--primary" disabled={saving}>{saving ? 'Saving...' : 'Save product'}</button>                <button type="button" className="btn btn--secondary" onClick={resetForm}>Cancel</button>
               </div>
             </form>
           ) : null}
@@ -619,8 +677,7 @@ export default function ShopAdminPanel() {
           {error ? <p className="admin-inline-error">{error}</p> : null}
           {success ? <p className="admin-inline-success">{success}</p> : null}
           <div className="admin-products-actions">
-            <button type="button" className="btn btn--ghost" onClick={() => void fetchOrders()} disabled={ordersLoading}>{ordersLoading ? 'Refreshing…' : 'Refresh orders'}</button>
-          </div>
+            <button type="button" className="btn btn--ghost" onClick={() => void fetchOrders()} disabled={ordersLoading}>{ordersLoading ? 'Refreshing...' : 'Refresh orders'}</button>          </div>
                     {ordersUnauthorized ? (
             <div className="admin-inline-error" role="alert">
               <p>Session expired — please log in again.</p>
@@ -723,21 +780,21 @@ export default function ShopAdminPanel() {
             </div>
 
             <div className="admin-products-actions">
-              <button type="button" className="btn btn--primary" onClick={() => void fetchSales()} disabled={salesLoading}>{salesLoading ? 'Loading…' : 'Refresh sales'}</button>
-              {import.meta.env.DEV ? (
-                <button type="button" className="btn btn--secondary" onClick={() => void generateDemoSales()} disabled={generatingDemo}>{generatingDemo ? 'Generating…' : 'Generate demo sales data'}</button>
-              ) : null}
+              <button type="button" className="btn btn--primary" onClick={() => void fetchSales()} disabled={salesLoading}>{salesLoading ? 'Loading...' : 'Refresh sales'}</button>              {import.meta.env.DEV ? (
+                <button type="button" className="btn btn--secondary" onClick={() => void generateDemoSales()} disabled={generatingDemo}>{generatingDemo ? 'Generating...' : 'Generate demo sales data'}</button>              ) : null}
             </div>
           </div>
 
-          {(salesData?.kpis.ordersCount ?? 0) === 0 ? (
+          {(salesData?.kpis.ordersCount ?? 0) === 0 || chartSeries.length === 0 ? (
             <div className="admin-sales-empty">
               <p>No sales yet.</p>
             </div>
           ) : (
             <>
               <div className="admin-sales-chart-wrap">
-                <MiniLineChart series={chartSeries} metric={salesMetric} />
+                <SalesChartErrorBoundary>
+                  <MiniLineChart series={chartSeries} metric={salesMetric} />
+                </SalesChartErrorBoundary>
               </div>
 
               <div className="admin-products-table-wrap">
