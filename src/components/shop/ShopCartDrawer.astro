@@ -16,8 +16,7 @@ const { products = [] } = Astro.props;
 </aside>
 
 <script type="module" define:vars={{ products }}>
-  import { addItem, clearCart, closeCart, openCart, readCart, removeItem, setQty, CART_CLOSE_EVENT, CART_OPEN_EVENT, CART_UPDATED_EVENT } from '../../lib/shop/cartStore';
-
+  import { addItem, clearCart, closeCart, openCart, readCart, removeItem, setQty, CART_CLOSE_EVENT, CART_OPEN_EVENT, CART_UPDATED_EVENT } from '@/lib/shop/cartStore';
   const productsMap = new Map(products.map((product) => [product.id, product]));
   const drawer = document.querySelector('[data-cart-drawer]');
   const cartItemsContainer = drawer?.querySelector('[data-cart-items]');

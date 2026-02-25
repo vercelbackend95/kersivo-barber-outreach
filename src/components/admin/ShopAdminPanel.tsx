@@ -317,10 +317,10 @@ export default function ShopAdminPanel() {
     setGeneratingDemo(true);
     setSalesError(null);
     try {
-      const response = await fetch('/api/admin/shop/sales', { method: 'POST' });
+      const response = await fetch('/api/admin/shop/sales/demo', { method: 'POST' });
       const payload = await response.json();
       if (!response.ok) throw new Error(payload.error || 'Could not generate demo sales data.');
-      setSuccess('Demo sales data generated.');
+      setSuccess(typeof payload.message === 'string' ? payload.message : 'Demo sales data generated.');
       await fetchSales();
       await fetchOrders();
     } catch (generateError) {
