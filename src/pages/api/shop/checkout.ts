@@ -3,7 +3,7 @@ export const prerender = false;
 import type { APIRoute } from 'astro';
 import { prisma } from '../../../lib/db/client';
 import { resolveShopId } from '../../../lib/db/shopScope';
-port { sendShopOrderConfirmationEmail } from '../../../lib/email/sender';
+import { sendShopOrderConfirmationEmail } from '../../../lib/email/sender';
 import { formatGbp } from '../../../lib/shop/money';
 
 
