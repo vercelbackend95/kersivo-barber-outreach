@@ -22,6 +22,7 @@ type OrderListItem = {
   totalPence: number;
   currency: string;
   createdAt: string;
+  paidAt: string | null;
   _count: { items: number };
 };
 
@@ -583,11 +584,10 @@ export default function ShopAdminPanel() {
           </div>
           <div className="admin-products-table-wrap">
             <table className="admin-table">
-              <thead><tr><th>Date</th><th>Customer email</th><th>Total</th><th>Status</th><th>Items</th><th>Action</th></tr></thead>
-              <tbody>
-                {orders.length === 0 ? (<tr><td colSpan={6}>No orders yet.</td></tr>) : orders.map((order) => (
-                  <tr key={order.id}>
+             <thead><tr><th>Created</th><th>Paid</th><th>Customer email</th><th>Total</th><th>Status</th><th>Items</th><th>Action</th></tr></thead>              <tbody>
+                {orders.length === 0 ? (<tr><td colSpan={7}>No orders yet.</td></tr>) : orders.map((order) => (                  <tr key={order.id}>
                     <td>{new Date(order.createdAt).toLocaleString('en-GB')}</td>
+                    <td>{order.paidAt ? new Date(order.paidAt).toLocaleString('en-GB') : '—'}</td>
                     <td>{order.customerEmail}</td>
                     <td>{formatPrice(order.totalPence)}</td>
                     <td>{order.status}</td>
@@ -605,6 +605,9 @@ export default function ShopAdminPanel() {
               <p><strong>Email:</strong> {selectedOrder.customerEmail}</p>
               <p><strong>Status:</strong> {selectedOrder.status}</p>
               <p><strong>Total:</strong> {formatPrice(selectedOrder.totalPence)}</p>
+              <p><strong>Created:</strong> {new Date(selectedOrder.createdAt).toLocaleString('en-GB')}</p>
+              <p><strong>Paid:</strong> {selectedOrder.paidAt ? new Date(selectedOrder.paidAt).toLocaleString('en-GB') : '—'}</p>
+              <p><strong>Collected:</strong> {selectedOrder.collectedAt ? new Date(selectedOrder.collectedAt).toLocaleString('en-GB') : '—'}</p>
               <div className="admin-products-table-wrap">
                 <table className="admin-table">
                   <thead><tr><th>Item</th><th>Unit</th><th>Qty</th><th>Line total</th></tr></thead>

@@ -267,6 +267,12 @@ export function clear() {
   updateItems([]);
 
 }
+export function setEmail(email: string) {
+  ensureHydrated();
+  store.state.email = String(email ?? '').trim();
+  emitChange();
+}
+
 
 export function getSubtotalPence() {
   ensureHydrated();

@@ -16,6 +16,7 @@ type CartSnapshotItem = {
 
 type StripeEvent = {
   type: string;
+  created: number;
   data: {
     object: {
       id: string;
@@ -48,7 +49,7 @@ export const POST: APIRoute = async ({ request }) => {
 
     const session = await retrieveCheckoutSession(sessionId);
     const metadata = session.metadata ?? event.data.object.metadata ?? {};
-    const customerEmail = (session.metadata?.customerEmail ?? event.data.object.customer_email ?? '').toLowerCase();
+    const customerEmail = (metadata.email ?? event.data.object.customer_email ?? '').trim().toLowerCase();
     const shopId = metadata.shopId;
 
     if (!shopId || !customerEmail) {
@@ -63,6 +64,9 @@ export const POST: APIRoute = async ({ request }) => {
     const totalPence = typeof session.amount_total === 'number'
       ? session.amount_total
       : cart.reduce((sum, item) => sum + item.lineTotalPence, 0);
+          const paidAt = Number.isFinite(event.created) ? new Date(event.created * 1000) : new Date();
+
+
 
     await prisma.order.create({
       data: {
@@ -72,7 +76,7 @@ export const POST: APIRoute = async ({ request }) => {
         currency: 'gbp',
         totalPence,
         stripeSessionId: sessionId,
-        paidAt: new Date(),
+        paidAt,
         items: {
           create: cart.map((item) => ({
             productId: item.productId,

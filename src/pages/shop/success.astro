@@ -4,22 +4,62 @@ import '../../styles/global.css';
 import '../../styles/components/buttons.css';
 import '../../styles/components/shop.css';
 
-const orderId = Astro.url.searchParams.get('orderId');
+const sessionId = Astro.url.searchParams.get('session_id');
 ---
 <html lang="en">
-  <head><meta charset="utf-8" /><meta name="viewport" content="width=device-width" /><title>Order confirmed</title></head>
+  <head><meta charset="utf-8" /><meta name="viewport" content="width=device-width" /><title>Payment successful</title></head>
   <body>
     <main class="container shop-page">
       <section class="shop-card shop-success-card">
         <div class="shop-card-body">
-          <h1>Order confirmed. Pick up in store.</h1>
-          <p class="muted">Your pickup order is confirmed and paid in demo mode.</p>
-          {orderId ? <p class="muted">Order ID: {orderId}</p> : null}
+          <h1>Payment successful. Pick up in store.</h1>
+          <p class="muted">Your payment is confirmed in Stripe test mode.</p>
+          {sessionId ? <p class="muted">Session ID: {sessionId}</p> : null}
+          <div class="shop-order-summary" data-order-summary hidden>
+            <h2>Order summary</h2>
+            <p class="muted" data-order-summary-total></p>
+            <ul data-order-summary-items></ul>
+          </div>
+
           <a href="/shop" class="btn btn--primary">Back to shop</a>
         </div>
       </section>
     </main>
-    <script>
+    <script is:inline define:vars={{ sessionId }}>
+      
+      async function loadOrderSummary() {
+        if (!sessionId) return;
+
+        const summary = document.querySelector('[data-order-summary]');
+        const total = document.querySelector('[data-order-summary-total]');
+        const list = document.querySelector('[data-order-summary-items]');
+        if (!summary || !total || !list) return;
+
+        try {
+          const response = await fetch(`/api/shop/order-by-session?session_id=${encodeURIComponent(sessionId)}`);
+          if (!response.ok) return;
+
+          const payload = await response.json();
+          const order = payload.order;
+          if (!order) return;
+
+          total.textContent = `Total paid: ${new Intl.NumberFormat('en-GB', { style: 'currency', currency: 'GBP' }).format(order.totalPence / 100)}`;
+
+          list.innerHTML = '';
+          for (const item of order.items ?? []) {
+            const row = document.createElement('li');
+            row.textContent = `${item.nameSnapshot} × ${item.quantity}`;
+            list.append(row);
+          }
+
+          summary.hidden = false;
+        } catch {
+          // no-op, summary is optional
+        }
+      }
+
+      loadOrderSummary();
+
       localStorage.removeItem('kersivo_shop_cart_v2');
     </script>
   </body>

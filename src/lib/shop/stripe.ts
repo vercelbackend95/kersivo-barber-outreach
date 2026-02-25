@@ -4,7 +4,7 @@ type StripeCheckoutParams = {
   customerEmail: string;
   successUrl: string;
   cancelUrl: string;
-  lineItems: Array<{ name: string; unitAmount: number; quantity: number }>;
+  lineItems: Array<{ productId: string; name: string; unitAmount: number; quantity: number; imageUrl?: string }>;
   metadata: Record<string, string>;
 };
 
@@ -38,6 +38,11 @@ export async function createCheckoutSession(params: StripeCheckoutParams): Promi
     body.set(`line_items[${index}][price_data][currency]`, 'gbp');
     body.set(`line_items[${index}][price_data][unit_amount]`, String(item.unitAmount));
     body.set(`line_items[${index}][price_data][product_data][name]`, item.name);
+    body.set(`line_items[${index}][price_data][product_data][metadata][productId]`, item.productId);
+    if (item.imageUrl) {
+     body.set(`line_items[${index}][price_data][product_data][images][0]`, item.imageUrl);
+    }
+ 
     body.set(`line_items[${index}][quantity]`, String(item.quantity));
   });
 
@@ -67,9 +72,13 @@ export async function createCheckoutSession(params: StripeCheckoutParams): Promi
 
 export async function retrieveCheckoutSession(sessionId: string): Promise<StripeSession> {
   const secretKey = getSecretKey();
-  const response = await fetch(`${STRIPE_API_BASE}/checkout/sessions/${encodeURIComponent(sessionId)}`, {
-    headers: { Authorization: `Bearer ${secretKey}` }
-  });
+  const response = await fetch(
+    `${STRIPE_API_BASE}/checkout/sessions/${encodeURIComponent(sessionId)}?expand[]=line_items.data.price.product`,
+    {
+      headers: { Authorization: `Bearer ${secretKey}` }
+    }
+  );
+
 
   if (!response.ok) {
     const text = await response.text();

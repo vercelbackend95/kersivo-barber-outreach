@@ -3,28 +3,39 @@ export const prerender = false;
 import type { APIRoute } from 'astro';
 import { prisma } from '../../../lib/db/client';
 import { resolveShopId } from '../../../lib/db/shopScope';
-import { sendShopOrderConfirmationEmail } from '../../../lib/email/sender';
-import { formatGbp } from '../../../lib/shop/money';
+import { createCheckoutSession } from '../../../lib/shop/stripe';
 
 
 type CheckoutInput = {
+  email: string;
   items: Array<{ productId: string; quantity: number }>;
-  customerEmail: string;
 };
+
 const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+
+function getPublicSiteUrl() {
+  const configured = (import.meta.env.PUBLIC_SITE_URL ?? process.env.PUBLIC_SITE_URL ?? 'http://localhost:4321').trim();
+  return configured.replace(/\/$/, '');
+}
 
 
 export const POST: APIRoute = async ({ request }) => {
   try {
     const body = (await request.json()) as CheckoutInput;
-    const customerEmail = body.customerEmail?.trim().toLowerCase();
-    if (!customerEmail || !EMAIL_REGEX.test(customerEmail)) {
-      return new Response(JSON.stringify({ error: 'Valid customer email is required.' }), { status: 400 });
+    const email = body.email?.trim().toLowerCase();
+
+    if (!email || !EMAIL_REGEX.test(email)) {
+      return new Response(JSON.stringify({ error: 'Valid email is required.' }), { status: 400 });
+
     }
 
     const requestedItems = (body.items ?? [])
-      .map((item) => ({ productId: item.productId, quantity: Math.max(0, Math.floor(item.quantity ?? 0)) }))
-      .filter((item) => item.productId && item.quantity > 0);
+      .map((item) => ({
+        productId: String(item.productId ?? '').trim(),
+        quantity: Math.floor(Number(item.quantity ?? 0))
+      }))
+      .filter((item) => item.productId && item.quantity >= 1);
+
 
     if (requestedItems.length === 0) {
       return new Response(JSON.stringify({ error: 'Cart is empty.' }), { status: 400 });
@@ -37,7 +48,18 @@ export const POST: APIRoute = async ({ request }) => {
 
     const shopId = await resolveShopId();
     const products = await prisma.product.findMany({
-      where: { shopId, id: { in: [...quantityByProduct.keys()] }, active: true }
+      where: {
+        shopId,
+        id: { in: [...quantityByProduct.keys()] },
+        active: true
+      },
+      select: {
+        id: true,
+        name: true,
+        pricePence: true,
+        imageUrl: true
+      }
+
     });
 
     if (products.length !== quantityByProduct.size) {
@@ -51,38 +73,45 @@ export const POST: APIRoute = async ({ request }) => {
         nameSnapshot: product.name,
         unitPricePenceSnapshot: product.pricePence,
         quantity,
-        lineTotalPence: product.pricePence * quantity
+        lineTotalPence: product.pricePence * quantity,
+        imageUrl: product.imageUrl ?? ''
       };
     });
 
-    const totalPence = snapshot.reduce((sum, item) => sum + item.lineTotalPence, 0);
-    const order = await prisma.order.create({
-      data: {
+    const baseUrl = getPublicSiteUrl();
+    const session = await createCheckoutSession({
+      customerEmail: email,
+      successUrl: `${baseUrl}/shop/success?session_id={CHECKOUT_SESSION_ID}`,
+      cancelUrl: `${baseUrl}/shop/cancelled`,
+      lineItems: snapshot.map((item) => ({
+        productId: item.productId,
+        name: item.nameSnapshot,
+        unitAmount: item.unitPricePenceSnapshot,
+        quantity: item.quantity,
+        imageUrl: item.imageUrl || undefined
+      })),
+      metadata: {
 
         shopId,
-        customerEmail,
-        status: 'PAID',
-        currency: 'gbp',
+        email,
+        cart: JSON.stringify(
+          snapshot.map((item) => ({
+            productId: item.productId,
+            name: item.nameSnapshot,
+            unitPricePence: item.unitPricePenceSnapshot,
+            quantity: item.quantity,
+            lineTotalPence: item.lineTotalPence
+          }))
+        )
+      }
 
-              totalPence,
-        paidAt: new Date(),
-        items: {
-          create: snapshot
-        }
-      },
-      select: { id: true }
-    });
-
-    await sendShopOrderConfirmationEmail({
-      to: customerEmail,
-      totalFormatted: formatGbp(totalPence),
-      itemLines: snapshot.map((item) => `${item.nameSnapshot} × ${item.quantity} — ${formatGbp(item.lineTotalPence)}`)
 
     });
 
-    return new Response(JSON.stringify({ orderId: order.id }), { status: 200 });
+    return new Response(JSON.stringify({ url: session.url }), { status: 200 });
   } catch (error) {
-    console.error('Checkout error', error);
-    return new Response(JSON.stringify({ error: 'Unable to complete checkout.' }), { status: 500 });
+    console.error('Checkout session creation failed', error);
+    return new Response(JSON.stringify({ error: 'Unable to create checkout session.' }), { status: 500 });
+
   }
 };

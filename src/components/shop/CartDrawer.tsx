@@ -1,4 +1,4 @@
-import { useEffect, useSyncExternalStore } from 'react';
+import { useEffect, useState, useSyncExternalStore } from 'react';
 import {
   addItem,
   closeCart,
@@ -6,12 +6,14 @@ import {
   getSnapshot,
   openCart,
   removeItem,
+  setEmail,
   setQuantity,
   subscribe,
   type CartItem
 } from '@/lib/shop/cartStore';
 
 const CART_OPEN_REQUEST_EVENT = 'kersivo:cart-open-request';
+const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
 function useCartSnapshot() {
   return useSyncExternalStore(subscribe, getSnapshot, getServerSnapshot);
@@ -41,7 +43,10 @@ function getProductFromButton(button: HTMLElement): CartItem | null {
 }
 
 export default function CartDrawer() {
-  const { items, subtotalPence, isOpen: open } = useCartSnapshot();
+  const { items, subtotalPence, isOpen: open, email } = useCartSnapshot();
+  const [checkoutLoading, setCheckoutLoading] = useState(false);
+  const [checkoutError, setCheckoutError] = useState<string | null>(null);
+
   const cartCount = items.reduce((count, item) => count + item.quantity, 0);
 
   useEffect(() => {
@@ -83,6 +88,7 @@ export default function CartDrawer() {
 
       addItem(product);
       openCart();
+      setCheckoutError(null);
     };
 
     document.addEventListener('click', onDocumentClick);
@@ -90,6 +96,46 @@ export default function CartDrawer() {
       document.removeEventListener('click', onDocumentClick);
     };
   }, []);
+  const onBuyPickup = async () => {
+    setCheckoutError(null);
+
+    if (items.length === 0) {
+      setCheckoutError('Your cart is empty.');
+      return;
+    }
+
+    const safeEmail = email.trim().toLowerCase();
+    if (!EMAIL_REGEX.test(safeEmail)) {
+      setCheckoutError('Please enter a valid email for receipt.');
+      return;
+    }
+
+    setCheckoutLoading(true);
+    try {
+      const response = await fetch('/api/shop/checkout', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          email: safeEmail,
+          items: items.map((item) => ({ productId: item.productId, quantity: item.quantity }))
+        })
+      });
+      const payload = await response.json();
+      if (!response.ok) {
+        throw new Error(payload.error || 'Unable to start checkout.');
+      }
+
+      if (!payload.url || typeof payload.url !== 'string') {
+        throw new Error('Stripe checkout URL is missing.');
+      }
+
+      window.location.href = payload.url;
+    } catch (error) {
+      setCheckoutError(error instanceof Error ? error.message : 'Unable to start checkout.');
+      setCheckoutLoading(false);
+    }
+  };
+
 
   return (
     <>
@@ -140,11 +186,18 @@ export default function CartDrawer() {
           autoComplete="email"
           placeholder="you@example.com"
           className="cart-email-input"
+          value={email}
+          onChange={(event) => setEmail(event.target.value)}
+
         />
+        {checkoutError ? <p className="cart-checkout-error">{checkoutError}</p> : null}
 
         <p className="cart-subtotal">
           Subtotal: <strong>{formatGbp(subtotalPence)}</strong>
         </p>
+        <button type="button" className="btn btn--primary cart-buy-button" onClick={() => void onBuyPickup()} disabled={checkoutLoading}>
+          {checkoutLoading ? 'Creating checkout…' : 'BUY (PICKUP)'}
+        </button>
       </aside>
 
       {open ? <button type="button" className="cart-drawer__backdrop" aria-label="Close cart drawer" onClick={closeCart} /> : null}
