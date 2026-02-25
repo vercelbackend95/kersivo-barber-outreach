@@ -101,14 +101,28 @@ async function buildSalesResponse(
   const fromUtc = fromZonedTime(`${from}T00:00:00`, TZ);
   const toExclusiveUtc = fromZonedTime(`${to}T00:00:00`, TZ);
   toExclusiveUtc.setUTCDate(toExclusiveUtc.getUTCDate() + 1);
+  const salesTimestampSql = Prisma.sql`COALESCE(o."paidAt", o."createdAt")`;
+  const dayBucketSql = Prisma.sql`date_trunc('day', (${salesTimestampSql} AT TIME ZONE ${TZ}))::date`;
+
 
   const paidWhere = {
     shopId,
-    status: { in: [...PAID_STATUSES] },
-    createdAt: {
-      gte: fromUtc,
-      lt: toExclusiveUtc
-    }
+    status: { in: [...PAID_STATUSES] },    OR: [
+      {
+        paidAt: {
+          gte: fromUtc,
+          lt: toExclusiveUtc
+        }
+      },
+      {
+        paidAt: null,
+        createdAt: {
+          gte: fromUtc,
+          lt: toExclusiveUtc
+        }
+      }
+    ]
+
   } as const;
 
   const [ordersAgg, productRows] = await Promise.all([
@@ -165,15 +179,16 @@ async function buildSalesResponse(
   if (includeOverall) {
     const overallRows = await prisma.$queryRaw<Array<{ day: string; revenue_pence: bigint | number }>>(Prisma.sql`
       SELECT
-        TO_CHAR(((o."createdAt" AT TIME ZONE ${TZ})::date), 'YYYY-MM-DD') AS day,
+        TO_CHAR(${dayBucketSql}, 'YYYY-MM-DD') AS day,
         COALESCE(SUM(o."totalPence"), 0) AS revenue_pence
       FROM "Order" o
       WHERE o."shopId" = ${shopId}
         AND o."status" IN (${Prisma.join(PAID_STATUS_ENUM_SQL)})
-        AND o."createdAt" >= ${fromUtc}
-        AND o."createdAt" < ${toExclusiveUtc}
-      GROUP BY ((o."createdAt" AT TIME ZONE ${TZ})::date)
-      ORDER BY ((o."createdAt" AT TIME ZONE ${TZ})::date) ASC
+        AND ${salesTimestampSql} >= ${fromUtc}
+        AND ${salesTimestampSql} < ${toExclusiveUtc}
+      GROUP BY ${dayBucketSql}
+      ORDER BY day ASC
+
     `);
 
     const overallMap = new Map(overallRows.map((row) => [row.day, Number(row.revenue_pence)]));
@@ -189,20 +204,22 @@ async function buildSalesResponse(
 
   const products = await Promise.all(
     selectedProducts.map(async (product) => {
-      const rows = await prisma.$queryRaw<Array<{ day: string; revenue_pence: bigint | number; units: bigint | number }>>(Prisma.sql`
+      const rows = await prisma.$queryRaw<Array<{ day: string; product_id: string; revenue_pence: bigint | number; units: bigint | number }>>(Prisma.sql`
         SELECT
-          TO_CHAR(((o."createdAt" AT TIME ZONE ${TZ})::date), 'YYYY-MM-DD') AS day,
+          TO_CHAR(${dayBucketSql}, 'YYYY-MM-DD') AS day,
+          oi."productId" AS product_id,
           COALESCE(SUM(oi."lineTotalPence"), 0) AS revenue_pence,
           COALESCE(SUM(oi."quantity"), 0) AS units
         FROM "OrderItem" oi
         INNER JOIN "Order" o ON o."id" = oi."orderId"
         WHERE o."shopId" = ${shopId}
           AND o."status" IN (${Prisma.join(PAID_STATUS_ENUM_SQL)})
-          AND o."createdAt" >= ${fromUtc}
-          AND o."createdAt" < ${toExclusiveUtc}
+          AND ${salesTimestampSql} >= ${fromUtc}
+          AND ${salesTimestampSql} < ${toExclusiveUtc}
           AND oi."productId" = ${product.id}
-        GROUP BY ((o."createdAt" AT TIME ZONE ${TZ})::date)
-        ORDER BY ((o."createdAt" AT TIME ZONE ${TZ})::date) ASC
+        GROUP BY ${dayBucketSql}, oi."productId"
+        ORDER BY day ASC
+
       `);
 
       const byDate = new Map(rows.map((row) => [row.day, { revenuePence: Number(row.revenue_pence), units: Number(row.units) }]));
