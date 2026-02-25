@@ -9,6 +9,8 @@ import { resolveShopId } from '../../../../lib/db/shopScope';
 
 const TZ = 'Europe/London';
 const PAID_STATUSES = ['PAID', 'COLLECTED'] as const;
+// "Order"."status" is a Postgres enum, so raw SQL literals must be cast to "OrderStatus".
+const PAID_STATUS_ENUM_SQL = PAID_STATUSES.map((status) => Prisma.sql`${status}::"OrderStatus"`);
 
 type SalesDatePoint = { date: string; revenuePence: number; units?: number };
 
@@ -167,7 +169,7 @@ async function buildSalesResponse(
         COALESCE(SUM(o."totalPence"), 0) AS revenue_pence
       FROM "Order" o
       WHERE o."shopId" = ${shopId}
-        AND o."status" IN (${Prisma.join(PAID_STATUSES)})
+        AND o."status" IN (${Prisma.join(PAID_STATUS_ENUM_SQL)})
         AND o."createdAt" >= ${fromUtc}
         AND o."createdAt" < ${toExclusiveUtc}
       GROUP BY ((o."createdAt" AT TIME ZONE ${TZ})::date)
@@ -195,7 +197,7 @@ async function buildSalesResponse(
         FROM "OrderItem" oi
         INNER JOIN "Order" o ON o."id" = oi."orderId"
         WHERE o."shopId" = ${shopId}
-          AND o."status" IN (${Prisma.join(PAID_STATUSES)})
+          AND o."status" IN (${Prisma.join(PAID_STATUS_ENUM_SQL)})
           AND o."createdAt" >= ${fromUtc}
           AND o."createdAt" < ${toExclusiveUtc}
           AND oi."productId" = ${product.id}
