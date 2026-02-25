@@ -1,16 +1,15 @@
+// src/pages/api/admin/shop/sales.ts
 export const prerender = false;
 
 import type { APIRoute } from 'astro';
-import { Prisma } from '@prisma/client';
 import { fromZonedTime, formatInTimeZone } from 'date-fns-tz';
 import { requireAdmin } from '../../../../lib/admin/auth';
 import { prisma } from '../../../../lib/db/client';
 import { resolveShopId } from '../../../../lib/db/shopScope';
+import { toLondonDateBucket } from '../../../../lib/time/londonDateBucket';
 
 const TZ = 'Europe/London';
 const PAID_STATUSES = ['PAID', 'COLLECTED'] as const;
-// "Order"."status" is a Postgres enum, so raw SQL literals must be cast to "OrderStatus".
-const PAID_STATUS_ENUM_SQL = PAID_STATUSES.map((status) => Prisma.sql`${status}::"OrderStatus"`);
 
 type SalesDatePoint = { date: string; revenuePence: number; units?: number };
 
@@ -101,13 +100,11 @@ async function buildSalesResponse(
   const fromUtc = fromZonedTime(`${from}T00:00:00`, TZ);
   const toExclusiveUtc = fromZonedTime(`${to}T00:00:00`, TZ);
   toExclusiveUtc.setUTCDate(toExclusiveUtc.getUTCDate() + 1);
-  const salesTimestampSql = Prisma.sql`COALESCE(o."paidAt", o."createdAt")`;
-  const dayBucketSql = Prisma.sql`date_trunc('day', (${salesTimestampSql} AT TIME ZONE ${TZ}))::date`;
-
 
   const paidWhere = {
     shopId,
-    status: { in: [...PAID_STATUSES] },    OR: [
+    status: { in: [...PAID_STATUSES] },
+    OR: [
       {
         paidAt: {
           gte: fromUtc,
@@ -122,47 +119,108 @@ async function buildSalesResponse(
         }
       }
     ]
-
   } as const;
 
-  const [ordersAgg, productRows] = await Promise.all([
-    prisma.order.aggregate({
+  const [orders, selectedProducts] = await Promise.all([
+    prisma.order.findMany({
       where: paidWhere,
-      _sum: { totalPence: true },
-      _count: { id: true }
-    }),
-    prisma.orderItem.groupBy({
-      by: ['productId'],
-      where: {
-        order: paidWhere
-      },
-      _sum: {
-        quantity: true,
-        lineTotalPence: true
+      select: {
+        id: true,
+        totalPence: true,
+        paidAt: true,
+        createdAt: true,
+        items: {
+          select: {
+            productId: true,
+            nameSnapshot: true,
+            quantity: true,
+            lineTotalPence: true,
+            product: {
+              select: { id: true, name: true }
+            }
+          }
+        }
       }
-    })
+    }),
+    productIds.length
+      ? prisma.product.findMany({
+          where: { shopId, id: { in: productIds } },
+          select: { id: true, name: true }
+        })
+      : Promise.resolve([])
   ]);
 
-  const productMeta = productRows.length
-    ? await prisma.product.findMany({
-        where: {
-          shopId,
-          id: { in: productRows.map((row) => row.productId) }
-        },
-        select: { id: true, name: true }
-      })
-    : [];
+  const dateKeys = getDateKeys(from, to);
+  const dateKeySet = new Set(dateKeys);
+  const selectedProductIdSet = new Set(selectedProducts.map((product) => product.id));
 
-  const nameMap = new Map(productMeta.map((product) => [product.id, product.name]));
+  const overallByDate = new Map<string, number>();
+  if (includeOverall) {
+    for (const dateKey of dateKeys) {
+      overallByDate.set(dateKey, 0);
+    }
+  }
 
-  const leaderboard: SalesLeaderboardRow[] = productRows
-    .map((row) => ({
-      productId: row.productId,
-      name: nameMap.get(row.productId) ?? 'Unknown product',
-      units: row._sum.quantity ?? 0,
-      revenuePence: row._sum.lineTotalPence ?? 0
-    }))
-    .sort((a, b) => b.revenuePence - a.revenuePence || b.units - a.units || a.name.localeCompare(b.name));
+  const selectedProductSeries = new Map<string, Map<string, { revenuePence: number; units: number }>>();
+  for (const product of selectedProducts) {
+    const byDate = new Map<string, { revenuePence: number; units: number }>();
+    for (const dateKey of dateKeys) {
+      byDate.set(dateKey, { revenuePence: 0, units: 0 });
+    }
+    selectedProductSeries.set(product.id, byDate);
+  }
+
+  const leaderboardMap = new Map<string, SalesLeaderboardRow>();
+
+  let revenuePence = 0;
+  let ordersCount = 0;
+
+  for (const order of orders) {
+    const salesDate = order.paidAt ?? order.createdAt;
+    const dateKey = toLondonDateBucket(salesDate);
+    if (!dateKeySet.has(dateKey)) {
+      continue;
+    }
+
+    revenuePence += order.totalPence;
+    ordersCount += 1;
+
+    if (includeOverall) {
+      overallByDate.set(dateKey, (overallByDate.get(dateKey) ?? 0) + order.totalPence);
+    }
+
+    for (const item of order.items) {
+      const existing = leaderboardMap.get(item.productId);
+      if (existing) {
+        existing.units += item.quantity;
+        existing.revenuePence += item.lineTotalPence;
+      } else {
+        leaderboardMap.set(item.productId, {
+          productId: item.productId,
+          name: item.product?.name ?? item.nameSnapshot ?? 'Unknown product',
+          units: item.quantity,
+          revenuePence: item.lineTotalPence
+        });
+      }
+
+      if (!selectedProductIdSet.has(item.productId)) {
+        continue;
+      }
+
+      const byDate = selectedProductSeries.get(item.productId);
+      const point = byDate?.get(dateKey);
+      if (!point) {
+        continue;
+      }
+
+      point.revenuePence += item.lineTotalPence;
+      point.units += item.quantity;
+    }
+  }
+
+  const leaderboard = Array.from(leaderboardMap.values()).sort(
+    (a, b) => b.revenuePence - a.revenuePence || b.units - a.units || a.name.localeCompare(b.name)
+  );
 
   const bestProduct = leaderboard[0]
     ? {
@@ -173,75 +231,29 @@ async function buildSalesResponse(
       }
     : undefined;
 
-  const dateKeys = getDateKeys(from, to);
+  const overall: SalesDatePoint[] | undefined = includeOverall
+    ? dateKeys.map((date) => ({ date, revenuePence: overallByDate.get(date) ?? 0 }))
+    : undefined;
 
-  let overall: SalesDatePoint[] | undefined;
-  if (includeOverall) {
-    const overallRows = await prisma.$queryRaw<Array<{ day: string; revenue_pence: bigint | number }>>(Prisma.sql`
-      SELECT
-        TO_CHAR(${dayBucketSql}, 'YYYY-MM-DD') AS day,
-        COALESCE(SUM(o."totalPence"), 0) AS revenue_pence
-      FROM "Order" o
-      WHERE o."shopId" = ${shopId}
-        AND o."status" IN (${Prisma.join(PAID_STATUS_ENUM_SQL)})
-        AND ${salesTimestampSql} >= ${fromUtc}
-        AND ${salesTimestampSql} < ${toExclusiveUtc}
-      GROUP BY ${dayBucketSql}
-      ORDER BY day ASC
-
-    `);
-
-    const overallMap = new Map(overallRows.map((row) => [row.day, Number(row.revenue_pence)]));
-    overall = dateKeys.map((date) => ({ date, revenuePence: overallMap.get(date) ?? 0 }));
-  }
-
-  const selectedProducts = productIds.length
-    ? await prisma.product.findMany({
-        where: { shopId, id: { in: productIds } },
-        select: { id: true, name: true }
-      })
-    : [];
-
-  const products = await Promise.all(
-    selectedProducts.map(async (product) => {
-      const rows = await prisma.$queryRaw<Array<{ day: string; product_id: string; revenue_pence: bigint | number; units: bigint | number }>>(Prisma.sql`
-        SELECT
-          TO_CHAR(${dayBucketSql}, 'YYYY-MM-DD') AS day,
-          oi."productId" AS product_id,
-          COALESCE(SUM(oi."lineTotalPence"), 0) AS revenue_pence,
-          COALESCE(SUM(oi."quantity"), 0) AS units
-        FROM "OrderItem" oi
-        INNER JOIN "Order" o ON o."id" = oi."orderId"
-        WHERE o."shopId" = ${shopId}
-          AND o."status" IN (${Prisma.join(PAID_STATUS_ENUM_SQL)})
-          AND ${salesTimestampSql} >= ${fromUtc}
-          AND ${salesTimestampSql} < ${toExclusiveUtc}
-          AND oi."productId" = ${product.id}
-        GROUP BY ${dayBucketSql}, oi."productId"
-        ORDER BY day ASC
-
-      `);
-
-      const byDate = new Map(rows.map((row) => [row.day, { revenuePence: Number(row.revenue_pence), units: Number(row.units) }]));
-
-      return {
-        productId: product.id,
-        name: product.name,
-        points: dateKeys.map((date) => ({
-          date,
-          revenuePence: byDate.get(date)?.revenuePence ?? 0,
-          units: byDate.get(date)?.units ?? 0
-        }))
-      };
-    })
-  );
+  const products = selectedProducts.map((product) => {
+    const pointsByDate = selectedProductSeries.get(product.id);
+    return {
+      productId: product.id,
+      name: product.name,
+      points: dateKeys.map((date) => ({
+        date,
+        revenuePence: pointsByDate?.get(date)?.revenuePence ?? 0,
+        units: pointsByDate?.get(date)?.units ?? 0
+      }))
+    };
+  });
 
   const responsePayload = {
     range: { from, to, tz: TZ },
     kpis: {
-      revenuePence: ordersAgg._sum.totalPence ?? 0,
-      ordersCount: ordersAgg._count.id,
-      avgOrderValuePence: ordersAgg._count.id > 0 ? Math.round((ordersAgg._sum.totalPence ?? 0) / ordersAgg._count.id) : 0,
+      revenuePence,
+      ordersCount,
+      avgOrderValuePence: ordersCount > 0 ? Math.round(revenuePence / ordersCount) : 0,
       bestProduct
     },
     series: {
