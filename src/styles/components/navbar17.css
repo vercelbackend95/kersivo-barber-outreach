@@ -75,6 +75,7 @@
   width: 0;
   height: 2px;
   background: var(--accent);
+  pointer-events: none;
   transition: transform 220ms ease, width 220ms ease;
 }
 

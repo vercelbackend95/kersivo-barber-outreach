@@ -1,4 +1,6 @@
 ---
+import NavbarCartButton from '@/components/shop/NavbarCartButton';
+
 const navLogo = {
   url: '#',
   src: 'https://deifkwefumgah.cloudfront.net/shadcnblocks/block/logos/shadcnblockscom-icon.svg',
@@ -40,11 +42,7 @@ const navItems = [
     </nav>
 
     <div class="navbar17__actions">
-        <button type="button" class="navbar17__cart-btn" data-open-cart aria-label="Open cart">
-        <span aria-hidden="true">🛒</span>
-        <span>Cart</span>
-        <span class="navbar17__cart-badge" data-cart-count>0</span>
-      </button>
+      <NavbarCartButton className="navbar17__cart-btn" client:load />
       <a href="#" class="btn btn--secondary">Sign Up</a>
     </div>
 
@@ -68,12 +66,8 @@ const navItems = [
           </a>
         </li>
       ))}
-            <li class="navbar17__mobile-cart-wrap">
-        <button type="button" class="navbar17__cart-btn navbar17__cart-btn--mobile" data-open-cart aria-label="Open cart">
-          <span aria-hidden="true">🛒</span>
-          <span>Cart</span>
-          <span class="navbar17__cart-badge" data-cart-count>0</span>
-        </button>
+      <li class="navbar17__mobile-cart-wrap">
+        <NavbarCartButton className="navbar17__cart-btn navbar17__cart-btn--mobile" client:load />
       </li>
       <li class="navbar17__mobile-cta-wrap">
         <a href="#" class="btn btn--secondary navbar17__mobile-cta">Sign Up</a>
@@ -83,8 +77,6 @@ const navItems = [
 </header>
 
 <script type="module">
-  import { getSnapshot, openCart, subscribe } from '@/lib/shop/cartStore';
-
   const navbar = document.querySelector('[data-navbar17]');
 
   if (navbar) {
@@ -94,8 +86,6 @@ const navItems = [
     const navList = navbar.querySelector('[data-nav-list]');
     const toggle = navbar.querySelector('[data-nav-toggle]');
     const mobileNav = navbar.querySelector('[data-mobile-nav]');
-    const cartButtons = Array.from(navbar.querySelectorAll('[data-open-cart]'));
-    const cartBadges = Array.from(navbar.querySelectorAll('[data-cart-count]'));
 
     const setActive = (name) => {
       links.forEach((link) => {
@@ -115,14 +105,6 @@ const navItems = [
         indicator.style.transform = `translateX(${activeRect.left - listRect.left}px)`;
       }
     };
-    const renderCartCount = () => {
-      const itemCount = getSnapshot().items.reduce((count, item) => count + item.quantity, 0);
-      cartBadges.forEach((badge) => {
-        badge.textContent = String(itemCount);
-        badge.classList.toggle('is-empty', itemCount === 0);
-      });
-    };
-
 
     links.forEach((link) => {
       link.addEventListener('click', () => {
@@ -133,16 +115,6 @@ const navItems = [
     mobileLinks.forEach((link) => {
       link.addEventListener('click', () => {
         setActive(link.dataset.navName || '');
-        if (toggle instanceof HTMLButtonElement && mobileNav instanceof HTMLElement) {
-          toggle.setAttribute('aria-expanded', 'false');
-          mobileNav.hidden = true;
-        }
-      });
-    });
-
-    cartButtons.forEach((button) => {
-      button.addEventListener('click', () => {
-        openCart();
         if (toggle instanceof HTMLButtonElement && mobileNav instanceof HTMLElement) {
           toggle.setAttribute('aria-expanded', 'false');
           mobileNav.hidden = true;
@@ -166,11 +138,5 @@ const navItems = [
     });
 
     setActive(links[0]?.dataset.navName || '');
-    renderCartCount();
-    const unsubscribeCart = subscribe(renderCartCount);
-
-    window.addEventListener('pagehide', () => {
-      unsubscribeCart();
-    });
   }
 </script>
