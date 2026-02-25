@@ -434,7 +434,15 @@ export default function BookingsAdminPanel({ isActive }: BookingsAdminPanelProps
     setCancelLoadingBookingId(booking.id);
 
     const response = await fetch('/api/admin/bookings/cancel', { method: 'POST', credentials: 'same-origin', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ bookingId: booking.id }) });
-    if (response.    if (response.ok) { setCancelSuccessMessage('Booking cancelled successfully.'); await fetchBookings(); if (selectedTimelineBooking?.id === booking.id) { setSelectedTimelineBooking((current) => (current ? { ...current, status: 'CANCELLED_BY_SHOP' } : current)); } } else { setCancelErrorMessage('Could not cancel booking right now.'); }) { setCancelSuccessMessage('Booking cancelled successfully.'); await fetchBookings(); } else { setCancelErrorMessage('Could not cancel booking right now.'); }
+    if (response.ok) {
+      setCancelSuccessMessage('Booking cancelled successfully.');
+      await fetchBookings();
+      if (selectedTimelineBooking?.id === booking.id) {
+        setSelectedTimelineBooking((current) => (current ? { ...current, status: 'CANCELLED_BY_SHOP' } : current));
+      }
+    } else {
+      setCancelErrorMessage('Could not cancel booking right now.');
+    }
     setCancelLoadingBookingId(null);
 }
 
