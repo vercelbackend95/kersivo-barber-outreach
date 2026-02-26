@@ -15,6 +15,7 @@ type TimelineBooking = {
   endAt: string;
   barberId?: string;
   notes?: string | null;
+  rescheduledAt?: string | null;
   barber: { name: string };
   service: { name: string };
 };
@@ -95,6 +96,15 @@ function compactStatus(status: string) {
   if (status.startsWith('CANCELLED')) return 'CANCELLED';
   return status;
 }
+function getBookingTimelineStatus(booking: TimelineBooking) {
+  if (booking.status.startsWith('CANCELLED')) return 'cancelled';
+  if (booking.status === 'PENDING_CONFIRMATION') return 'pending';
+  const hasRescheduledFlag = Boolean(booking.rescheduledAt) || booking.status.includes('RESCHEDULED');
+  if (hasRescheduledFlag) return 'rescheduled';
+  if (booking.status === 'CONFIRMED') return 'confirmed';
+  return 'pending';
+}
+
 
 function buildLanes(barbers: TimelineBarber[], bookings: TimelineBooking[], timeBlocks: TimelineTimeBlock[]): LaneModel[] {
   const allBarbersById = new Map(barbers.map((barber) => [barber.id, barber]));
@@ -273,7 +283,7 @@ export default function TodayTimeline({ barbers, bookings, timeBlocks, nowMs, on
                 <button
                   type="button"
                   key={item.id}
-                  className="admin-timeline-card admin-timeline-card--booking"
+                  className={`admin-timeline-card admin-timeline-card--booking admin-timeline-card--${getBookingTimelineStatus(item.booking)}`}
                   style={{ left: `${item.leftPct}%`, width: `${item.widthPct}%`, top: `${item.topPx}px`, height: `${item.heightPx}px` }}
                   onClick={() => onBookingClick(item.booking)}
                 >
@@ -286,6 +296,12 @@ export default function TodayTimeline({ barbers, bookings, timeBlocks, nowMs, on
             </div>
           </div>
         ))}
+      </div>
+            <div className="admin-timeline-legend" aria-label="Timeline status legend">
+        <span className="admin-timeline-legend-item"><i className="admin-timeline-legend-swatch admin-timeline-legend-swatch--confirmed" aria-hidden="true" />Confirmed</span>
+        <span className="admin-timeline-legend-item"><i className="admin-timeline-legend-swatch admin-timeline-legend-swatch--pending" aria-hidden="true" />Pending</span>
+        <span className="admin-timeline-legend-item"><i className="admin-timeline-legend-swatch admin-timeline-legend-swatch--cancelled" aria-hidden="true" />Cancelled</span>
+        <span className="admin-timeline-legend-item"><i className="admin-timeline-legend-swatch admin-timeline-legend-swatch--rescheduled" aria-hidden="true" />Rescheduled</span>
       </div>
     </section>
   );

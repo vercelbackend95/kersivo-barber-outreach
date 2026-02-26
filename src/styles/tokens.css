@@ -8,6 +8,12 @@
   --accent-contrast: #0b0d10;
   --accent-hover: #ff2e45;
   --focus: #ff4d5f;
+  
+  --status-confirmed: #22c55e;
+  --status-pending: #eab308;
+  --status-rescheduled: #a855f7;
+  --status-cancelled: var(--accent);
+
 
 
   --font-heading: "Bebas Neue", "Arial Narrow", Impact, sans-serif;

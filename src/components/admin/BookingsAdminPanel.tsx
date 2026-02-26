@@ -377,7 +377,11 @@ export default function BookingsAdminPanel({ isActive, mode, onBackToDashboard }
 
   const nextBooking = upcomingBookings[0] ?? null;
   const currentBookingView = mode === 'history' ? 'history' : activeView;
-  const filteredBookings = useMemo(() => bookings.filter((b) => matchesTabFilter(b, activeFilter)), [bookings, activeFilter]);
+  const filteredBookings = useMemo(() => {
+    if (mode !== 'history' && activeView === 'timeline') return bookings;
+    return bookings.filter((b) => matchesTabFilter(b, activeFilter));
+  }, [activeFilter, activeView, bookings, mode]);
+
 
   const visibleBookings = useMemo(() => {
     if (!normalizedClientSearchQuery) return filteredBookings;
@@ -584,7 +588,7 @@ export default function BookingsAdminPanel({ isActive, mode, onBackToDashboard }
         </section>
       )}
 
-      <div className={`admin-filter-tabs ${isMobileDashboard ? 'admin-chip-row' : ''}`} role="tablist" aria-label="Booking status filters"><button type="button" className={`admin-filter-tab ${activeFilter === 'confirmed' ? 'admin-filter-tab--active' : ''}`} onClick={() => setActiveFilter('confirmed')}>Confirmed</button><button type="button" className={`admin-filter-tab ${activeFilter === 'rescheduled' ? 'admin-filter-tab--active' : ''}`} onClick={() => setActiveFilter('rescheduled')}>Rescheduled</button><button type="button" className={`admin-filter-tab ${activeFilter === 'pending' ? 'admin-filter-tab--active' : ''}`} onClick={() => setActiveFilter('pending')}>Pending</button><button type="button" className={`admin-filter-tab ${activeFilter === 'cancelled' ? 'admin-filter-tab--active' : ''}`} onClick={() => setActiveFilter('cancelled')}>Cancelled</button></div>
+      {!(mode !== 'history' && activeView === 'timeline') ? <div className={`admin-filter-tabs ${isMobileDashboard ? 'admin-chip-row' : ''}`} role="tablist" aria-label="Booking status filters"><button type="button" className={`admin-filter-tab ${activeFilter === 'confirmed' ? 'admin-filter-tab--active' : ''}`} onClick={() => setActiveFilter('confirmed')}>Confirmed</button><button type="button" className={`admin-filter-tab ${activeFilter === 'rescheduled' ? 'admin-filter-tab--active' : ''}`} onClick={() => setActiveFilter('rescheduled')}>Rescheduled</button><button type="button" className={`admin-filter-tab ${activeFilter === 'pending' ? 'admin-filter-tab--active' : ''}`} onClick={() => setActiveFilter('pending')}>Pending</button><button type="button" className={`admin-filter-tab ${activeFilter === 'cancelled' ? 'admin-filter-tab--active' : ''}`} onClick={() => setActiveFilter('cancelled')}>Cancelled</button></div> : null}
       <div className={`admin-search-row ${isMobileDashboard ? 'admin-search-row--sticky' : ''}`}><input type="search" value={clientSearchQuery} onChange={(e) => setClientSearchQuery(e.target.value)} placeholder="Search by client name or email..." aria-label="Search by client name or email" /></div>
 
       {mode !== 'history' && activeView === 'timeline' ? (
