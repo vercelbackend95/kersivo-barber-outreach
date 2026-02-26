@@ -851,11 +851,21 @@
 .admin-timeline {
   border: 1px solid var(--border);
   background: var(--surface);
+  width: 100%;
+  max-width: 100%;
+  overflow: hidden;
+
 }
 
 .admin-timeline-scroll {
   overflow-x: auto;
   min-width: 100%;
+    overflow-y: hidden;
+  max-width: 100%;
+  -webkit-overflow-scrolling: touch;
+  overscroll-behavior-x: contain;
+  touch-action: pan-x;
+
 }
 
 .admin-timeline-scale-row,
@@ -1068,11 +1078,18 @@
 
   .admin-timeline-scroll {
     position: relative;
+        max-width: 100%;
+    touch-action: pan-x;
+
   }
 
   .admin-timeline-scale-row,
   .admin-timeline-lane-row {
-    grid-template-columns: 6rem minmax(44rem, 1fr);
+    grid-template-columns: 5.5rem minmax(40rem, 56rem);
+    width: fit-content;
+    min-width: 100%;
+    max-width: 61.5rem;
+
   }
 
   .admin-timeline-scale-row {
