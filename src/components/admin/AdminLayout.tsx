@@ -24,9 +24,20 @@ const shopItems: SectionItem[] = [
   { section: 'shop_orders', label: 'Orders' },
   { section: 'shop_sales', label: 'Sales' },
 ];
+export const ADMIN_MOBILE_BREAKPOINT_PX = 768;
+
 
 export default function AdminLayout({ activeSection, onChangeSection, children }: AdminLayoutProps) {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+    const [isMobile, setIsMobile] = useState(() => {
+    if (typeof window === 'undefined') {
+      return false;
+    }
+
+    return window.matchMedia(`(max-width: ${ADMIN_MOBILE_BREAKPOINT_PX}px)`).matches;
+  });
+
+
   const mobileDrawerRef = useRef<HTMLDivElement | null>(null);
   const mobileOpenButtonRef = useRef<HTMLButtonElement | null>(null);
 
@@ -77,6 +88,38 @@ export default function AdminLayout({ activeSection, onChangeSection, children }
       </div>
     </>
   ), [activeSection]);
+  useEffect(() => {
+    if (typeof window === 'undefined') {
+      return;
+    }
+
+    const mediaQuery = window.matchMedia(`(max-width: ${ADMIN_MOBILE_BREAKPOINT_PX}px)`);
+
+    const handleViewportChange = (event: MediaQueryListEvent | MediaQueryList) => {
+      const matches = 'matches' in event ? event.matches : mediaQuery.matches;
+      setIsMobile(matches);
+      console.log('isMobile', matches);
+    };
+
+    handleViewportChange(mediaQuery);
+
+    const listener = (event: MediaQueryListEvent) => {
+      handleViewportChange(event);
+    };
+
+    mediaQuery.addEventListener('change', listener);
+
+    return () => {
+      mediaQuery.removeEventListener('change', listener);
+    };
+  }, []);
+
+  useEffect(() => {
+    if (!isMobile) {
+      setIsMobileMenuOpen(false);
+    }
+  }, [isMobile]);
+
 
   useEffect(() => {
     if (!isMobileMenuOpen) {
@@ -127,58 +170,71 @@ export default function AdminLayout({ activeSection, onChangeSection, children }
 
   return (
     <div className="admin-shell">
-      <aside className="admin-sidebar" aria-label="Admin sections">
-        <h1 className="admin-sidebar-title">Admin</h1>
-        {menuGroups}
-      </aside>
+      {!isMobile && (
+        <aside className="admin-sidebar" aria-label="Admin sections">
+          <h1 className="admin-sidebar-title">Admin</h1>
+          {menuGroups}
+        </aside>
+      )}
+
 
       <section className="admin-main-content">
-        <header className="admin-mobile-header" aria-label="Admin mobile header">
-          <p className="admin-mobile-title">Admin</p>
-          <button
-            ref={mobileOpenButtonRef}
-            type="button"
-            className="admin-mobile-menu-button"
-            onClick={() => setIsMobileMenuOpen(true)}
-            aria-label="Open admin menu"
-            aria-expanded={isMobileMenuOpen}
-            aria-controls="admin-mobile-drawer"
-          >
-            ☰
-          </button>
-        </header>
+        {isMobile && (
+          <header className="admin-mobile-header" aria-label="Admin mobile header">
+            <p className="admin-mobile-title">Admin</p>
+            <button
+              ref={mobileOpenButtonRef}
+              type="button"
+              className="admin-mobile-menu-button"
+              onClick={() => setIsMobileMenuOpen(true)}
+              aria-label="Open admin menu"
+              aria-expanded={isMobileMenuOpen}
+              aria-controls="admin-mobile-drawer"
+            >
+              ☰
+            </button>
+          </header>
+        )}
+
         {children}
       </section>
 
       <div
-        className={`admin-mobile-overlay ${isMobileMenuOpen ? 'admin-mobile-overlay--open' : ''}`}
-        onClick={() => setIsMobileMenuOpen(false)}
-        aria-hidden={!isMobileMenuOpen}
-      />
-      <aside
-        id="admin-mobile-drawer"
-        ref={mobileDrawerRef}
-        className={`admin-mobile-drawer ${isMobileMenuOpen ? 'admin-mobile-drawer--open' : ''}`}
-        aria-label="Admin menu drawer"
-        aria-hidden={!isMobileMenuOpen}
-      >
-        <div className="admin-mobile-drawer-head">
-          <p className="admin-mobile-title">Admin</p>
-          <button
-            type="button"
-            className="admin-mobile-close-button"
+      {isMobile && (
+        <>
+          <div
+            className={`admin-mobile-overlay ${isMobileMenuOpen ? 'admin-mobile-overlay--open' : ''}`}
+
             onClick={() => setIsMobileMenuOpen(false)}
-            aria-label="Close admin menu"
+            aria-hidden={!isMobileMenuOpen}
+          />
+          <aside
+            id="admin-mobile-drawer"
+            ref={mobileDrawerRef}
+            className={`admin-mobile-drawer ${isMobileMenuOpen ? 'admin-mobile-drawer--open' : ''}`}
+            aria-label="Admin menu drawer"
+            aria-hidden={!isMobileMenuOpen}
           >
-            ✕
-          </button>
-        </div>
-        {menuGroups}
-        <div className="admin-sidebar-divider" role="presentation" />
-        <button type="button" className="btn btn--secondary admin-mobile-logout" onClick={() => void handleLogout()}>
-          Logout
-        </button>
-      </aside>
+            <div className="admin-mobile-drawer-head">
+              <p className="admin-mobile-title">Admin</p>
+              <button
+                type="button"
+                className="admin-mobile-close-button"
+                onClick={() => setIsMobileMenuOpen(false)}
+                aria-label="Close admin menu"
+              >
+                ✕
+              </button>
+            </div>
+            {menuGroups}
+            <div className="admin-sidebar-divider" role="presentation" />
+            <button type="button" className="btn btn--secondary admin-mobile-logout" onClick={() => void handleLogout()}>
+              Logout
+            </button>
+          </aside>
+        </>
+      )}
+
     </div>
   );
 }
