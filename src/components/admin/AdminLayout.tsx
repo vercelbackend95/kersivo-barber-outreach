@@ -12,14 +12,11 @@ type SectionItem = {
   label: string;
 };
 
-const bookingItems: SectionItem[] = [
+const menuItems: SectionItem[] = [
   { section: 'bookings_dashboard', label: 'Dashboard' },
   { section: 'bookings_blocks', label: 'Quick Blocks' },
   { section: 'bookings_reports', label: 'Reports' },
   { section: 'bookings_history', label: 'History' },
-];
-
-const shopItems: SectionItem[] = [
   { section: 'shop_products', label: 'Products' },
   { section: 'shop_orders', label: 'Orders' },
   { section: 'shop_sales', label: 'Sales' },
@@ -40,42 +37,19 @@ export default function AdminLayout({ activeSection, onChangeSection, children }
     window.location.reload();
   };
 
-  const menuGroups = useMemo(() => (
-    <>
-      <div className="admin-sidebar-group" aria-label="Bookings navigation">
-        <p className="admin-sidebar-group-title">Bookings</p>
-        <nav className="admin-sidebar-nav">
-          {bookingItems.map((item) => (
-            <button
-              key={item.section}
-              type="button"
-              className={`admin-sidebar-link ${activeSection === item.section ? 'admin-sidebar-link--active' : ''}`}
-              onClick={() => onSelectSection(item.section)}
-            >
-              {item.label}
-            </button>
-          ))}
-        </nav>
-      </div>
-
-      <div className="admin-sidebar-divider" role="presentation" />
-
-      <div className="admin-sidebar-group" aria-label="Shop navigation">
-        <p className="admin-sidebar-group-title">Shop</p>
-        <nav className="admin-sidebar-nav">
-          {shopItems.map((item) => (
-            <button
-              key={item.section}
-              type="button"
-              className={`admin-sidebar-link ${activeSection === item.section ? 'admin-sidebar-link--active' : ''}`}
-              onClick={() => onSelectSection(item.section)}
-            >
-              {item.label}
-            </button>
-          ))}
-        </nav>
-      </div>
-    </>
+  const menu = useMemo(() => (
+    <nav className="admin-sidebar-nav" aria-label="Admin navigation">
+      {menuItems.map((item) => (
+        <button
+          key={item.section}
+          type="button"
+          className={`admin-sidebar-link ${activeSection === item.section ? 'admin-sidebar-link--active' : ''}`}
+          onClick={() => onSelectSection(item.section)}
+        >
+          {item.label}
+        </button>
+      ))}
+    </nav>
   ), [activeSection]);
 
   useEffect(() => {
@@ -128,13 +102,13 @@ export default function AdminLayout({ activeSection, onChangeSection, children }
   return (
     <div className="admin-shell">
       <aside className="admin-sidebar" aria-label="Admin sections">
-        <h1 className="admin-sidebar-title">Admin</h1>
-        {menuGroups}
+        <h1 className="admin-sidebar-title">ADMIN</h1>
+        {menu}
       </aside>
 
       <section className="admin-main-content">
         <header className="admin-mobile-header" aria-label="Admin mobile header">
-          <p className="admin-mobile-title">Admin</p>
+          <p className="admin-mobile-title">ADMIN</p>
           <button
             ref={mobileOpenButtonRef}
             type="button"
@@ -163,7 +137,7 @@ export default function AdminLayout({ activeSection, onChangeSection, children }
         aria-hidden={!isMobileMenuOpen}
       >
         <div className="admin-mobile-drawer-head">
-          <p className="admin-mobile-title">Admin</p>
+          <p className="admin-mobile-title">ADMIN</p>
           <button
             type="button"
             className="admin-mobile-close-button"
@@ -173,8 +147,7 @@ export default function AdminLayout({ activeSection, onChangeSection, children }
             ✕
           </button>
         </div>
-        {menuGroups}
-        <div className="admin-sidebar-divider" role="presentation" />
+        {menu}
         <button type="button" className="btn btn--secondary admin-mobile-logout" onClick={() => void handleLogout()}>
           Logout
         </button>

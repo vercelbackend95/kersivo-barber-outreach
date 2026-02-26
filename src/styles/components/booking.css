@@ -374,11 +374,14 @@
   }
 }
 
-.admin-shell {
+ .admin-shell {
   display: grid;
   gap: var(--space-sm);
 }
 .admin-mobile-header {
+  position: sticky;
+  top: 0;
+  z-index: 20;
   display: flex;
   align-items: center;
   justify-content: space-between;
