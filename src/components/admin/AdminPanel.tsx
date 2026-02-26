@@ -6,6 +6,8 @@ import ShopAdminPanel from './ShopAdminPanel';
 export type AdminSection =
   | 'bookings_dashboard'
   | 'bookings_blocks'
+  | 'bookings_reports'
+  | 'bookings_history'
   | 'shop_products'
   | 'shop_orders'
   | 'shop_sales';
@@ -16,6 +18,8 @@ function getSectionFromUrl(): AdminSection {
 
   const section = new URLSearchParams(window.location.search).get('section');
   if (section === 'bookings_blocks') return 'bookings_blocks';
+  if (section === 'bookings_reports') return 'bookings_reports';
+  if (section === 'bookings_history') return 'bookings_history';
   if (section === 'shop_orders') return 'shop_orders';
   if (section === 'shop_sales') return 'shop_sales';
   if (section === 'shop_products') return 'shop_products';
@@ -52,14 +56,26 @@ export default function AdminPanel() {
     return 'products';
   }, [activeSection]);
 
-  const isBookingsSection = activeSection === 'bookings_dashboard' || activeSection === 'bookings_blocks';
+  const isBookingsSection =
+    activeSection === 'bookings_dashboard'
+    || activeSection === 'bookings_blocks'
+    || activeSection === 'bookings_reports'
+    || activeSection === 'bookings_history';
 
 
   return (
     <AdminLayout activeSection={activeSection} onChangeSection={handleSectionChange}>
       <BookingsAdminPanel
         isActive={isBookingsSection}
-        mode={activeSection === 'bookings_blocks' ? 'blocks' : 'dashboard'}
+        mode={
+          activeSection === 'bookings_blocks'
+            ? 'blocks'
+            : activeSection === 'bookings_reports'
+              ? 'reports'
+              : activeSection === 'bookings_history'
+                ? 'history'
+                : 'dashboard'
+        }
         onBackToDashboard={() => handleSectionChange('bookings_dashboard')}
       />
       {activeSection === 'shop_products' || activeSection === 'shop_orders' || activeSection === 'shop_sales' ? (

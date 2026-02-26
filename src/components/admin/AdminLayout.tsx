@@ -31,6 +31,20 @@ export default function AdminLayout({ activeSection, onChangeSection, children }
             >
               Quick Blocks
             </button>
+            <button
+              type="button"
+              className={`admin-sidebar-link ${activeSection === 'bookings_reports' ? 'admin-sidebar-link--active' : ''}`}
+              onClick={() => onChangeSection('bookings_reports')}
+            >
+              Reports
+            </button>
+            <button
+              type="button"
+              className={`admin-sidebar-link ${activeSection === 'bookings_history' ? 'admin-sidebar-link--active' : ''}`}
+              onClick={() => onChangeSection('bookings_history')}
+            >
+              History
+            </button>
           </nav>
         </div>
 

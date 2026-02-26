@@ -54,10 +54,9 @@ type ClientProfilePayload = {
 
 
 type BookingFilterTab = 'confirmed' | 'rescheduled' | 'pending' | 'cancelled';
-type AdminBookingView = 'today' | 'timeline' | 'all' | 'history';
+type AdminBookingView = 'today' | 'timeline' | 'all';
 type HistoryPreset = 'last7' | 'last30' | 'overall' | 'custom';
 
-type AdminSectionTab = 'bookings' | 'reports';
 
 type ReportsPayload = {
   range: {
@@ -177,8 +176,7 @@ function nextLunchWindow(now: Date) {
   const startAt = roundUpLondon(now, SLOT_STEP_MINUTES);
   return { startAt, endAt: new Date(startAt.getTime() + 30 * 60000) };
 }
-type BookingsAdminMode = 'dashboard' | 'blocks';
-
+type BookingsAdminMode = 'dashboard' | 'blocks' | 'reports' | 'history';
 
 
 type BookingsAdminPanelProps = {
@@ -203,7 +201,6 @@ export default function BookingsAdminPanel({ isActive, mode, onBackToDashboard }
   const [clientSearchQuery, setClientSearchQuery] = useState('');
   const [activeFilter, setActiveFilter] = useState<BookingFilterTab>('confirmed');
   const [activeView, setActiveView] = useState<AdminBookingView>('today');
-  const [activeSection, setActiveSection] = useState<AdminSectionTab>('bookings');
   const [historyBarberId, setHistoryBarberId] = useState<string>('all');
   const [historyPreset, setHistoryPreset] = useState<HistoryPreset>('last7');
   const [historyFrom, setHistoryFrom] = useState(() => getHistoryPresetDates('last7').from);
@@ -283,21 +280,23 @@ export default function BookingsAdminPanel({ isActive, mode, onBackToDashboard }
 
   const fetchBookings = useCallback(async (appendHistory = false) => {
     if (!loggedIn || !isActive || pollingStoppedRef.current || inFlightRef.current) return;
-    if (activeView === 'history' && !appendHistory) setHistoryCursor(null);
+    if (mode === 'history' && !appendHistory) setHistoryCursor(null);
 
     inFlightRef.current = true;
     setIsRefreshing(true);
 
     try {
       const endpoint = (() => {
+          if (mode === 'history') {
+          const params = new URLSearchParams({ view: 'history', barberId: historyBarberId, limit: '50' });
+          if (historyPreset !== 'custom') params.set('preset', historyPreset);
+          if (historyFrom) params.set('from', historyFrom);
+          if (historyTo) params.set('to', historyTo);
+          if (appendHistory && historyCursor) params.set('cursor', historyCursor);
+          return `/api/admin/bookings?${params.toString()}`;
+        }
         if (activeView === 'today' || activeView === 'timeline') return '/api/admin/bookings?range=today';
-        if (activeView === 'all') return '/api/admin/bookings';
-        const params = new URLSearchParams({ view: 'history', barberId: historyBarberId, limit: '50' });
-        if (historyPreset !== 'custom') params.set('preset', historyPreset);
-        if (historyFrom) params.set('from', historyFrom);
-        if (historyTo) params.set('to', historyTo);
-        if (appendHistory && historyCursor) params.set('cursor', historyCursor);
-        return `/api/admin/bookings?${params.toString()}`;
+        return '/api/admin/bookings';
       })();
 
       const response = await fetch(endpoint, { credentials: 'same-origin' });
@@ -317,7 +316,7 @@ export default function BookingsAdminPanel({ isActive, mode, onBackToDashboard }
       const changedIds = mergedBookings.filter((b) => previousSignaturesRef.current.get(b.id) !== nextSignatures.get(b.id)).map((b) => b.id);
 
       setBookings(mergedBookings);
-      if (activeView === 'history') {
+      if (mode === 'history') {
         setHistoryHasMore(Boolean(data.hasMore));
         setHistoryCursor(data.cursor ?? null);
       }
@@ -338,28 +337,22 @@ export default function BookingsAdminPanel({ isActive, mode, onBackToDashboard }
       setIsRefreshing(false);
       setHistoryLoadingMore(false);
     }
-  }, [activeView, bookings, historyBarberId, historyCursor, historyFrom, historyPreset, historyTo, loggedIn]);
-
+  }, [activeView, bookings, historyBarberId, historyCursor, historyFrom, historyPreset, historyTo, loggedIn, mode, isActive]);
   const loadMoreHistory = useCallback(async () => {
-    if (!historyHasMore || historyLoadingMore || activeView !== 'history') return;
+    if (!historyHasMore || historyLoadingMore || mode !== 'history') return;
     setHistoryLoadingMore(true);
     await fetchBookings(true);
-  }, [activeView, fetchBookings, historyHasMore, historyLoadingMore]);
+  }, [fetchBookings, historyHasMore, historyLoadingMore, mode]);
 
 
   useEffect(() => { void (async () => { try { const response = await fetch('/api/admin/session', { credentials: 'same-origin' }); setLoggedIn(response.ok); } finally { setIsCheckingSession(false); } })(); }, []);
-  useEffect(() => { if (!loggedIn || !isActive) return; if (activeView !== 'history') void fetchBookings(); void fetchBarbers(); void fetchTimeBlocks(); void fetchReports(); const id = window.setInterval(() => { if (activeView !== 'history') void fetchBookings(); void fetchTimeBlocks(); void fetchReports(); }, POLL_INTERVAL_MS); return () => window.clearInterval(id); }, [activeView, fetchBookings, fetchBarbers, fetchReports, fetchTimeBlocks, isActive, loggedIn]);
+  useEffect(() => { if (!loggedIn || !isActive) return; if (mode !== 'history') void fetchBookings(); void fetchBarbers(); void fetchTimeBlocks(); void fetchReports(); const id = window.setInterval(() => { if (mode !== 'history') void fetchBookings(); void fetchTimeBlocks(); void fetchReports(); }, POLL_INTERVAL_MS); return () => window.clearInterval(id); }, [activeView, fetchBookings, fetchBarbers, fetchReports, fetchTimeBlocks, isActive, loggedIn, mode]);
   useEffect(() => { if (!loggedIn || !isActive) return; const id = window.setInterval(() => setNowMs(Date.now()), LAST_UPDATED_REFRESH_MS); return () => window.clearInterval(id); }, [isActive, loggedIn]);
   useEffect(() => {
-    if (!loggedIn || !isActive || activeView !== 'history') return;
+    if (!loggedIn || !isActive || mode !== 'history') return;
     const timeoutId = window.setTimeout(() => { void fetchBookings(); }, 300);
     return () => window.clearTimeout(timeoutId);
-  }, [activeView, fetchBookings, historyBarberId, historyFrom, historyPreset, historyTo, isActive, loggedIn]);
-  useEffect(() => {
-    if (mode === 'blocks' && activeSection !== 'bookings') {
-      setActiveSection('bookings');
-    }
-  }, [activeSection, mode]);
+  }, [fetchBookings, historyBarberId, historyFrom, historyPreset, historyTo, isActive, loggedIn, mode]);
 
 
   const normalizedClientSearchQuery = useMemo(() => normalizeSearchValue(clientSearchQuery), [clientSearchQuery]);
@@ -367,6 +360,7 @@ export default function BookingsAdminPanel({ isActive, mode, onBackToDashboard }
 
   const upcomingBookings = useMemo(() => getUpcomingBookings(bookings), [bookings]);
   const nextBooking = upcomingBookings[0] ?? null;
+  const currentBookingView = mode === 'history' ? 'history' : activeView;
   const filteredBookings = useMemo(() => bookings.filter((b) => matchesTabFilter(b, activeFilter)), [bookings, activeFilter]);
 
   const visibleBookings = useMemo(() => {
@@ -519,12 +513,10 @@ export default function BookingsAdminPanel({ isActive, mode, onBackToDashboard }
   return (
     <section className="surface booking-shell">
       <h1>Admin Dashboard</h1>
-      <div className="admin-next-block"><p className="admin-next-primary">{activeView === 'today' ? `Today: ${bookings.length} bookings` : activeView === 'timeline' ? `Timeline: ${bookings.length} bookings` : activeView === 'all' ? `All: ${bookings.length} bookings` : `History: ${bookings.length} bookings`}</p>{nextBooking && activeView !== 'history' && <p className="admin-next-secondary">Next: {nextBooking.barber?.name} — {nextBooking.service?.name} — {formatStartTime(nextBooking.startAt)} ({formatRelativeTime(nextBooking.startAt, nextBooking.endAt)})</p>}</div>      <div className="admin-refresh-row"><p className="muted admin-last-updated">Last updated: {formatLastUpdated(lastUpdatedAt, nowMs)}</p><div className="admin-refresh-controls"><button type="button" className="btn btn--ghost" onClick={() => { void fetchBookings(); void fetchTimeBlocks(); void fetchReports(); }} disabled={isRefreshing}>Refresh</button><button type="button" className="btn btn--secondary" onClick={() => void logout()}>Logout</button></div></div>
-
-      {mode !== 'blocks' ? <div className="admin-view-tabs" role="tablist" aria-label="Admin sections"><button type="button" className={`admin-filter-tab ${activeSection === 'bookings' ? 'admin-filter-tab--active' : ''}`} onClick={() => setActiveSection('bookings')}>Bookings</button><button type="button" className={`admin-filter-tab ${activeSection === 'reports' ? 'admin-filter-tab--active' : ''}`} onClick={() => setActiveSection('reports')}>Reports</button></div> : null}
+      <div className="admin-next-block"><p className="admin-next-primary">{currentBookingView === 'today' ? `Today: ${bookings.length} bookings` : currentBookingView === 'timeline' ? `Timeline: ${bookings.length} bookings` : currentBookingView === 'all' ? `All: ${bookings.length} bookings` : `History: ${bookings.length} bookings`}</p>{nextBooking && mode !== 'history' && <p className="admin-next-secondary">Next: {nextBooking.barber?.name} — {nextBooking.service?.name} — {formatStartTime(nextBooking.startAt)} ({formatRelativeTime(nextBooking.startAt, nextBooking.endAt)})</p>}</div>      <div className="admin-refresh-row"><p className="muted admin-last-updated">Last updated: {formatLastUpdated(lastUpdatedAt, nowMs)}</p><div className="admin-refresh-controls"><button type="button" className="btn btn--ghost" onClick={() => { void fetchBookings(); void fetchTimeBlocks(); void fetchReports(); }} disabled={isRefreshing}>Refresh</button><button type="button" className="btn btn--secondary" onClick={() => void logout()}>Logout</button></div></div>
       {cancelSuccessMessage && <p className="admin-inline-success">{cancelSuccessMessage}</p>}
       {cancelErrorMessage && <p className="admin-inline-error">{cancelErrorMessage}</p>}
-      {activeSection === 'bookings' && (
+      {mode !== 'reports' && (
         <>
 
           {mode === 'blocks' ? (
@@ -546,7 +538,7 @@ export default function BookingsAdminPanel({ isActive, mode, onBackToDashboard }
       <>
 
 
-      <div className="admin-view-tabs admin-view-tabs--four" role="tablist" aria-label="Admin views"><button type="button" className={`admin-filter-tab ${activeView === 'today' ? 'admin-filter-tab--active' : ''}`} onClick={() => setActiveView('today')}>Today</button><button type="button" className={`admin-filter-tab ${activeView === 'timeline' ? 'admin-filter-tab--active' : ''}`} onClick={() => setActiveView('timeline')}>Timeline</button><button type="button" className={`admin-filter-tab ${activeView === 'all' ? 'admin-filter-tab--active' : ''}`} onClick={() => setActiveView('all')}>All bookings</button><button type="button" className={`admin-filter-tab ${activeView === 'history' ? 'admin-filter-tab--active' : ''}`} onClick={() => setActiveView('history')}>History</button></div>      {activeView === 'history' && (
+      {mode === 'dashboard' && <div className="admin-view-tabs admin-view-tabs--four" role="tablist" aria-label="Admin views"><button type="button" className={`admin-filter-tab ${activeView === 'today' ? 'admin-filter-tab--active' : ''}`} onClick={() => setActiveView('today')}>Today</button><button type="button" className={`admin-filter-tab ${activeView === 'timeline' ? 'admin-filter-tab--active' : ''}`} onClick={() => setActiveView('timeline')}>Timeline</button><button type="button" className={`admin-filter-tab ${activeView === 'all' ? 'admin-filter-tab--active' : ''}`} onClick={() => setActiveView('all')}>All bookings</button></div>}      {mode === 'history' && (
         <section className="admin-history-filters">
           <div className="admin-history-row">
             <label htmlFor="history-barber">Barber</label>
@@ -577,7 +569,7 @@ export default function BookingsAdminPanel({ isActive, mode, onBackToDashboard }
 
       <div className="admin-filter-tabs" role="tablist" aria-label="Booking status filters"><button type="button" className={`admin-filter-tab ${activeFilter === 'confirmed' ? 'admin-filter-tab--active' : ''}`} onClick={() => setActiveFilter('confirmed')}>Confirmed</button><button type="button" className={`admin-filter-tab ${activeFilter === 'rescheduled' ? 'admin-filter-tab--active' : ''}`} onClick={() => setActiveFilter('rescheduled')}>Rescheduled</button><button type="button" className={`admin-filter-tab ${activeFilter === 'pending' ? 'admin-filter-tab--active' : ''}`} onClick={() => setActiveFilter('pending')}>Pending</button><button type="button" className={`admin-filter-tab ${activeFilter === 'cancelled' ? 'admin-filter-tab--active' : ''}`} onClick={() => setActiveFilter('cancelled')}>Cancelled</button></div>
       <div className="admin-search-row"><input type="search" value={clientSearchQuery} onChange={(e) => setClientSearchQuery(e.target.value)} placeholder="Search by client name or email..." aria-label="Search by client name or email" /></div>
-      {activeView === 'timeline' ? (
+      {mode !== 'history' && activeView === 'timeline' ? (
         <TodayTimeline
           barbers={barbers}
           bookings={visibleBookings}
@@ -601,12 +593,11 @@ export default function BookingsAdminPanel({ isActive, mode, onBackToDashboard }
         </table>
       )}
 
-      {activeView === 'history' && historyHasMore && <button type="button" className="btn btn--secondary" onClick={() => void loadMoreHistory()} disabled={historyLoadingMore}>{historyLoadingMore ? 'Loading...' : 'Load more'}</button>}
-      </>
+      {mode === 'history' && historyHasMore && <button type="button" className="btn btn--secondary" onClick={() => void loadMoreHistory()} disabled={historyLoadingMore}>{historyLoadingMore ? 'Loading...' : 'Load more'}</button>}      </>
           )}
         </>      )}
 
-      {mode !== 'blocks' && activeSection === 'reports' && (
+      {mode === 'reports' && (
         <section className="admin-reports" aria-live="polite">
           <h2>Reports</h2>
           <p className="muted">This week (Europe/London)</p>
