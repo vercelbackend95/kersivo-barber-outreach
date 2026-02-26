@@ -554,10 +554,8 @@
 
   }
 
-@media (min-width: 769px) {
-  .admin-sidebar {
-    display: block;
-
+  .admin-mobile-logout {
+    width: 100%;
   }
 }
 
