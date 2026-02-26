@@ -116,6 +116,10 @@ function getUpcomingBookings(bookings: Booking[]) {
   const nowMs = Date.now();
   return bookings.filter((b) => b.status === 'CONFIRMED').filter((b) => new Date(b.endAt).getTime() > nowMs).sort((a, b) => new Date(a.startAt).getTime() - new Date(b.startAt).getTime());
 }
+function isTodayInLondon(value: string, todayLondonDate: string) {
+  return formatInTimeZone(new Date(value), ADMIN_TIMEZONE, 'yyyy-MM-dd') === todayLondonDate;
+}
+
 
 function formatLastUpdated(lastUpdatedAt: number | null, nowMs: number) {
   if (!lastUpdatedAt) return 'never';
@@ -200,7 +204,7 @@ export default function BookingsAdminPanel({ isActive, mode, onBackToDashboard }
   const [nowMs, setNowMs] = useState(() => Date.now());
   const [clientSearchQuery, setClientSearchQuery] = useState('');
   const [activeFilter, setActiveFilter] = useState<BookingFilterTab>('confirmed');
-  const [activeView, setActiveView] = useState<AdminBookingView>('today');
+  const [activeView, setActiveView] = useState<AdminBookingView>('timeline');
   const [historyBarberId, setHistoryBarberId] = useState<string>('all');
   const [historyPreset, setHistoryPreset] = useState<HistoryPreset>('last7');
   const [historyFrom, setHistoryFrom] = useState(() => getHistoryPresetDates('last7').from);
@@ -358,7 +362,10 @@ export default function BookingsAdminPanel({ isActive, mode, onBackToDashboard }
   const normalizedClientSearchQuery = useMemo(() => normalizeSearchValue(clientSearchQuery), [clientSearchQuery]);
 
 
-  const upcomingBookings = useMemo(() => getUpcomingBookings(bookings), [bookings]);
+  const todayLondonDate = useMemo(() => getTodayLondonDate(), [nowMs]);
+  const todayBookings = useMemo(() => bookings.filter((booking) => isTodayInLondon(booking.startAt, todayLondonDate)), [bookings, todayLondonDate]);
+  const upcomingBookings = useMemo(() => getUpcomingBookings(todayBookings), [todayBookings]);
+
   const nextBooking = upcomingBookings[0] ?? null;
   const currentBookingView = mode === 'history' ? 'history' : activeView;
   const filteredBookings = useMemo(() => bookings.filter((b) => matchesTabFilter(b, activeFilter)), [bookings, activeFilter]);
@@ -513,7 +520,7 @@ export default function BookingsAdminPanel({ isActive, mode, onBackToDashboard }
   return (
     <section className="surface booking-shell">
       <h1>Admin Dashboard</h1>
-      <div className="admin-next-block"><p className="admin-next-primary">{currentBookingView === 'today' ? `Today: ${bookings.length} bookings` : currentBookingView === 'timeline' ? `Timeline: ${bookings.length} bookings` : currentBookingView === 'all' ? `All: ${bookings.length} bookings` : `History: ${bookings.length} bookings`}</p>{nextBooking && mode !== 'history' && <p className="admin-next-secondary">Next: {nextBooking.barber?.name} — {nextBooking.service?.name} — {formatStartTime(nextBooking.startAt)} ({formatRelativeTime(nextBooking.startAt, nextBooking.endAt)})</p>}</div>      <div className="admin-refresh-row"><p className="muted admin-last-updated">Last updated: {formatLastUpdated(lastUpdatedAt, nowMs)}</p><div className="admin-refresh-controls"><button type="button" className="btn btn--ghost" onClick={() => { void fetchBookings(); void fetchTimeBlocks(); void fetchReports(); }} disabled={isRefreshing}>Refresh</button><button type="button" className="btn btn--secondary" onClick={() => void logout()}>Logout</button></div></div>
+      <div className="admin-next-block"><p className="admin-next-primary">{currentBookingView === 'history' ? `History: ${bookings.length} bookings` : `Today: ${todayBookings.length} bookings`}</p>{nextBooking && mode !== 'history' && <p className="admin-next-secondary">Next: {nextBooking.barber?.name} — {nextBooking.service?.name} — {formatStartTime(nextBooking.startAt)} ({formatRelativeTime(nextBooking.startAt, nextBooking.endAt)})</p>}</div>      <div className="admin-refresh-row"><p className="muted admin-last-updated">Last updated: {formatLastUpdated(lastUpdatedAt, nowMs)}</p><div className="admin-refresh-controls"><button type="button" className="btn btn--ghost" onClick={() => { void fetchBookings(); void fetchTimeBlocks(); void fetchReports(); }} disabled={isRefreshing}>Refresh</button><button type="button" className="btn btn--secondary" onClick={() => void logout()}>Logout</button></div></div>
       {cancelSuccessMessage && <p className="admin-inline-success">{cancelSuccessMessage}</p>}
       {cancelErrorMessage && <p className="admin-inline-error">{cancelErrorMessage}</p>}
       {mode !== 'reports' && (
@@ -537,8 +544,7 @@ export default function BookingsAdminPanel({ isActive, mode, onBackToDashboard }
           ) : (
       <>
 
-
-      {mode === 'dashboard' && <div className="admin-view-tabs admin-view-tabs--four" role="tablist" aria-label="Admin views"><button type="button" className={`admin-filter-tab ${activeView === 'today' ? 'admin-filter-tab--active' : ''}`} onClick={() => setActiveView('today')}>Today</button><button type="button" className={`admin-filter-tab ${activeView === 'timeline' ? 'admin-filter-tab--active' : ''}`} onClick={() => setActiveView('timeline')}>Timeline</button><button type="button" className={`admin-filter-tab ${activeView === 'all' ? 'admin-filter-tab--active' : ''}`} onClick={() => setActiveView('all')}>All bookings</button></div>}      {mode === 'history' && (
+      {mode === 'dashboard' && <div className="admin-view-tabs admin-view-tabs--four" role="tablist" aria-label="Admin views"><button type="button" className={`admin-filter-tab ${activeView === 'timeline' ? 'admin-filter-tab--active' : ''}`} onClick={() => setActiveView('timeline')}>Timeline</button><button type="button" className={`admin-filter-tab ${activeView === 'today' ? 'admin-filter-tab--active' : ''}`} onClick={() => setActiveView('today')}>Today</button><button type="button" className={`admin-filter-tab ${activeView === 'all' ? 'admin-filter-tab--active' : ''}`} onClick={() => setActiveView('all')}>All bookings</button></div>}      {mode === 'history' && (
         <section className="admin-history-filters">
           <div className="admin-history-row">
             <label htmlFor="history-barber">Barber</label>
