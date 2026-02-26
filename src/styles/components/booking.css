@@ -97,6 +97,74 @@
 .admin-search-row input {
   flex: 1;
 }
+.admin-desktop-title {
+  display: none;
+}
+
+.admin-mobile-dashboard-appbar {
+  display: none;
+}
+
+.admin-chip-row {
+  display: flex;
+  gap: var(--space-xs);
+  overflow-x: auto;
+  overflow-y: hidden;
+  padding-bottom: 0.2rem;
+  scrollbar-width: thin;
+}
+
+.admin-chip-row .admin-filter-tab {
+  flex: 0 0 auto;
+  border-radius: 4px;
+  white-space: nowrap;
+  text-align: center;
+}
+
+.admin-booking-cards {
+  display: grid;
+  gap: var(--space-xs);
+}
+
+.admin-booking-card {
+  border: 1px solid var(--border);
+  background: var(--surface);
+  padding: var(--space-xs);
+  display: grid;
+  gap: 0.3rem;
+}
+
+.admin-booking-card--updated {
+  background: color-mix(in srgb, var(--accent) 14%, var(--surface));
+}
+
+.admin-booking-card p {
+  margin: 0;
+}
+
+.admin-booking-card-top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-xs);
+}
+
+.admin-booking-card-status {
+  border: 1px solid var(--border);
+  background: var(--bg);
+  padding: 0.1rem 0.35rem;
+  font-size: 0.74rem;
+}
+
+.admin-booking-card-barber {
+  color: var(--muted);
+}
+
+.admin-booking-card-email {
+  color: var(--muted);
+  font-size: 0.85rem;
+}
+
 
 .admin-search-clear {
   min-width: 2.2rem;
@@ -938,4 +1006,89 @@
   border: 1px solid var(--border);
   background: var(--surface);
   padding: var(--space-sm);
+}
+
+@media (max-width: 768px) {
+  .admin-mobile-dashboard-appbar {
+    position: sticky;
+    top: 0;
+    z-index: 35;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: var(--space-xs);
+    border: 1px solid var(--border);
+    background: var(--surface);
+    padding: 0.45rem 0.55rem;
+  }
+
+  .admin-mobile-dashboard-title {
+    margin: 0;
+    font-weight: 700;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+  }
+
+  .admin-next-block--mobile-sticky {
+    position: sticky;
+    top: 3.2rem;
+    z-index: 32;
+    gap: 0.15rem;
+    padding: 0.45rem 0.55rem;
+    line-height: 1.3;
+  }
+
+  .admin-next-block--mobile-sticky .admin-next-primary {
+    font-size: 0.9rem;
+  }
+
+  .admin-next-block--mobile-sticky .admin-next-secondary {
+    font-size: 0.75rem;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  .admin-refresh-row {
+    font-size: 0.8rem;
+  }
+
+  .admin-search-row--sticky {
+    position: sticky;
+    top: 6.2rem;
+    z-index: 31;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    padding: 0.4rem;
+  }
+
+  .admin-search-row--sticky input {
+    min-height: 2.4rem;
+  }
+
+  .admin-timeline-scroll {
+    position: relative;
+  }
+
+  .admin-timeline-scale-row,
+  .admin-timeline-lane-row {
+    grid-template-columns: 6rem minmax(44rem, 1fr);
+  }
+
+  .admin-timeline-scale-row {
+    position: sticky;
+    top: 0;
+    z-index: 20;
+  }
+
+  .admin-timeline-barber-header,
+  .admin-timeline-lane-label {
+    position: sticky;
+    left: 0;
+    z-index: 18;
+  }
+
+  .admin-timeline-barber-header {
+    z-index: 21;
+  }
 }

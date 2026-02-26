@@ -75,6 +75,7 @@ const SLOT_STEP_MINUTES = 15;
 const POLL_INTERVAL_MS = 15000;
 const LAST_UPDATED_REFRESH_MS = 1000;
 const UPDATED_ROW_HIGHLIGHT_MS = 2000;
+const MOBILE_BREAKPOINT_PX = 768;
 
 function getTodayLondonDate() {
   return formatInTimeZone(new Date(), ADMIN_TIMEZONE, 'yyyy-MM-dd');
@@ -235,7 +236,7 @@ export default function BookingsAdminPanel({ isActive, mode, onBackToDashboard }
   const [timelineNotesDraft, setTimelineNotesDraft] = useState('');
   const [timelineNotesSaving, setTimelineNotesSaving] = useState(false);
   const [timelineNotesMessage, setTimelineNotesMessage] = useState('');
-
+  const [isMobileViewport, setIsMobileViewport] = useState(false);
 
 
   const inFlightRef = useRef(false);
@@ -357,6 +358,14 @@ export default function BookingsAdminPanel({ isActive, mode, onBackToDashboard }
     const timeoutId = window.setTimeout(() => { void fetchBookings(); }, 300);
     return () => window.clearTimeout(timeoutId);
   }, [fetchBookings, historyBarberId, historyFrom, historyPreset, historyTo, isActive, loggedIn, mode]);
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+    const mediaQuery = window.matchMedia(`(max-width: ${MOBILE_BREAKPOINT_PX}px)`);
+    const update = () => setIsMobileViewport(mediaQuery.matches);
+    update();
+    mediaQuery.addEventListener('change', update);
+    return () => mediaQuery.removeEventListener('change', update);
+  }, []);
 
 
   const normalizedClientSearchQuery = useMemo(() => normalizeSearchValue(clientSearchQuery), [clientSearchQuery]);
@@ -375,7 +384,7 @@ export default function BookingsAdminPanel({ isActive, mode, onBackToDashboard }
     return filteredBookings.map((booking, index) => ({ booking, score: getBookingSearchScore(booking, normalizedClientSearchQuery), index })).filter((entry) => entry.score > 0).sort((a, b) => b.score - a.score).map((entry) => entry.booking);
 
   }, [filteredBookings, normalizedClientSearchQuery]);
-
+  const isMobileDashboard = mode === 'dashboard' && isMobileViewport;
   async function openClientProfile(clientId?: string | null) {
     if (!clientId) return;
     setSelectedClientId(clientId);
@@ -519,8 +528,19 @@ export default function BookingsAdminPanel({ isActive, mode, onBackToDashboard }
 
   return (
     <section className="surface booking-shell">
-      <h1>Admin Dashboard</h1>
-      <div className="admin-next-block"><p className="admin-next-primary">{currentBookingView === 'history' ? `History: ${bookings.length} bookings` : `Today: ${todayBookings.length} bookings`}</p>{nextBooking && mode !== 'history' && <p className="admin-next-secondary">Next: {nextBooking.barber?.name} — {nextBooking.service?.name} — {formatStartTime(nextBooking.startAt)} ({formatRelativeTime(nextBooking.startAt, nextBooking.endAt)})</p>}</div>      <div className="admin-refresh-row"><p className="muted admin-last-updated">Last updated: {formatLastUpdated(lastUpdatedAt, nowMs)}</p><div className="admin-refresh-controls"><button type="button" className="btn btn--ghost" onClick={() => { void fetchBookings(); void fetchTimeBlocks(); void fetchReports(); }} disabled={isRefreshing}>Refresh</button><button type="button" className="btn btn--secondary" onClick={() => void logout()}>Logout</button></div></div>
+      <h1 className={isMobileDashboard ? 'admin-desktop-title' : ''}>Admin Dashboard</h1>
+      {isMobileDashboard ? (
+        <div className="admin-mobile-dashboard-appbar">
+          <p className="admin-mobile-dashboard-title">Dashboard</p>
+          <div className="admin-refresh-controls">
+            <button type="button" className="btn btn--ghost" onClick={() => { void fetchBookings(); void fetchTimeBlocks(); void fetchReports(); }} disabled={isRefreshing}>Refresh</button>
+            <button type="button" className="btn btn--secondary" onClick={() => void logout()}>Logout</button>
+          </div>
+        </div>
+      ) : null}
+      <div className={`admin-next-block ${isMobileDashboard ? 'admin-next-block--mobile-sticky' : ''}`}><p className="admin-next-primary">{currentBookingView === 'history' ? `History: ${bookings.length} bookings` : `Today: ${todayBookings.length} bookings`}</p>{nextBooking && mode !== 'history' && <p className="admin-next-secondary">Next: {nextBooking.barber?.name} — {nextBooking.service?.name} — {formatStartTime(nextBooking.startAt)} ({formatRelativeTime(nextBooking.startAt, nextBooking.endAt)})</p>}</div>
+      <div className="admin-refresh-row"><p className="muted admin-last-updated">Last updated: {formatLastUpdated(lastUpdatedAt, nowMs)}</p>{isMobileDashboard ? null : <div className="admin-refresh-controls"><button type="button" className="btn btn--ghost" onClick={() => { void fetchBookings(); void fetchTimeBlocks(); void fetchReports(); }} disabled={isRefreshing}>Refresh</button><button type="button" className="btn btn--secondary" onClick={() => void logout()}>Logout</button></div>}</div>
+
       {cancelSuccessMessage && <p className="admin-inline-success">{cancelSuccessMessage}</p>}
       {cancelErrorMessage && <p className="admin-inline-error">{cancelErrorMessage}</p>}
       {mode !== 'reports' && (
@@ -544,7 +564,7 @@ export default function BookingsAdminPanel({ isActive, mode, onBackToDashboard }
           ) : (
       <>
 
-      {mode === 'dashboard' && <div className="admin-view-tabs admin-view-tabs--four" role="tablist" aria-label="Admin views"><button type="button" className={`admin-filter-tab ${activeView === 'timeline' ? 'admin-filter-tab--active' : ''}`} onClick={() => setActiveView('timeline')}>Timeline</button><button type="button" className={`admin-filter-tab ${activeView === 'today' ? 'admin-filter-tab--active' : ''}`} onClick={() => setActiveView('today')}>Today</button><button type="button" className={`admin-filter-tab ${activeView === 'all' ? 'admin-filter-tab--active' : ''}`} onClick={() => setActiveView('all')}>All bookings</button></div>}      {mode === 'history' && (
+      {mode === 'dashboard' && <div className={`admin-view-tabs admin-view-tabs--four ${isMobileDashboard ? 'admin-chip-row' : ''}`} role="tablist" aria-label="Admin views"><button type="button" className={`admin-filter-tab ${activeView === 'timeline' ? 'admin-filter-tab--active' : ''}`} onClick={() => setActiveView('timeline')}>Timeline</button><button type="button" className={`admin-filter-tab ${activeView === 'today' ? 'admin-filter-tab--active' : ''}`} onClick={() => setActiveView('today')}>Today</button><button type="button" className={`admin-filter-tab ${activeView === 'all' ? 'admin-filter-tab--active' : ''}`} onClick={() => setActiveView('all')}>All bookings</button></div>}      {mode === 'history' && (
         <section className="admin-history-filters">
           <div className="admin-history-row">
             <label htmlFor="history-barber">Barber</label>
@@ -573,8 +593,9 @@ export default function BookingsAdminPanel({ isActive, mode, onBackToDashboard }
         </section>
       )}
 
-      <div className="admin-filter-tabs" role="tablist" aria-label="Booking status filters"><button type="button" className={`admin-filter-tab ${activeFilter === 'confirmed' ? 'admin-filter-tab--active' : ''}`} onClick={() => setActiveFilter('confirmed')}>Confirmed</button><button type="button" className={`admin-filter-tab ${activeFilter === 'rescheduled' ? 'admin-filter-tab--active' : ''}`} onClick={() => setActiveFilter('rescheduled')}>Rescheduled</button><button type="button" className={`admin-filter-tab ${activeFilter === 'pending' ? 'admin-filter-tab--active' : ''}`} onClick={() => setActiveFilter('pending')}>Pending</button><button type="button" className={`admin-filter-tab ${activeFilter === 'cancelled' ? 'admin-filter-tab--active' : ''}`} onClick={() => setActiveFilter('cancelled')}>Cancelled</button></div>
-      <div className="admin-search-row"><input type="search" value={clientSearchQuery} onChange={(e) => setClientSearchQuery(e.target.value)} placeholder="Search by client name or email..." aria-label="Search by client name or email" /></div>
+      <div className={`admin-filter-tabs ${isMobileDashboard ? 'admin-chip-row' : ''}`} role="tablist" aria-label="Booking status filters"><button type="button" className={`admin-filter-tab ${activeFilter === 'confirmed' ? 'admin-filter-tab--active' : ''}`} onClick={() => setActiveFilter('confirmed')}>Confirmed</button><button type="button" className={`admin-filter-tab ${activeFilter === 'rescheduled' ? 'admin-filter-tab--active' : ''}`} onClick={() => setActiveFilter('rescheduled')}>Rescheduled</button><button type="button" className={`admin-filter-tab ${activeFilter === 'pending' ? 'admin-filter-tab--active' : ''}`} onClick={() => setActiveFilter('pending')}>Pending</button><button type="button" className={`admin-filter-tab ${activeFilter === 'cancelled' ? 'admin-filter-tab--active' : ''}`} onClick={() => setActiveFilter('cancelled')}>Cancelled</button></div>
+      <div className={`admin-search-row ${isMobileDashboard ? 'admin-search-row--sticky' : ''}`}><input type="search" value={clientSearchQuery} onChange={(e) => setClientSearchQuery(e.target.value)} placeholder="Search by client name or email..." aria-label="Search by client name or email" /></div>
+
       {mode !== 'history' && activeView === 'timeline' ? (
         <TodayTimeline
           barbers={barbers}
@@ -583,6 +604,22 @@ export default function BookingsAdminPanel({ isActive, mode, onBackToDashboard }
           nowMs={nowMs}
           onBookingClick={openTimelineBooking}
         />
+              ) : isMobileDashboard && mode !== 'history' ? (
+        <div className="admin-booking-cards" aria-live="polite">
+          {visibleBookings.map((booking) => (
+            <article className={`admin-booking-card ${updatedBookingIds.includes(booking.id) ? 'admin-booking-card--updated' : ''}`} key={booking.id}>
+              <div className="admin-booking-card-top">
+                <p><strong>{formatStartTime(booking.startAt)}</strong> · {booking.service?.name}</p>
+                <span className="admin-booking-card-status">{booking.status === 'CONFIRMED' && booking.rescheduledAt ? 'CONFIRMED · RESCHEDULED' : booking.status}</span>
+              </div>
+              <p className="admin-booking-card-barber">Barber: {booking.barber?.name}</p>
+              <button type="button" className="admin-link-button" onClick={() => void openClientProfile(booking.clientId)}>{booking.fullName}</button>
+              <p className="admin-booking-card-email">{booking.email}</p>
+              {canBeCancelledByShop(booking) ? <button type="button" className="btn btn--secondary" onClick={() => void cancelBookingByShop(booking)} disabled={cancelLoadingBookingId === booking.id}>{cancelLoadingBookingId === booking.id ? 'Cancelling...' : 'Cancel'}</button> : null}
+            </article>
+          ))}
+        </div>
+
       ) : (
         <table className="admin-table">
           <thead><tr><th>Client</th><th>Email</th><th>Service</th><th>Barber</th><th>Status</th><th>Start</th><th>Actions</th></tr></thead>
