@@ -97,16 +97,12 @@
 .admin-search-row input {
   flex: 1;
 }
-.admin-desktop-title {
-  display: none;
-}
 
-.admin-mobile-dashboard-appbar {
-  display: none;
-}
 
 .admin-chip-row {
-  display: flex;
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+
   gap: var(--space-xs);
   overflow-x: auto;
   overflow-y: hidden;
@@ -115,10 +111,9 @@
 }
 
 .admin-chip-row .admin-filter-tab {
-  flex: 0 0 auto;
   border-radius: 4px;
-  white-space: nowrap;
   text-align: center;
+  white-space: normal;
 }
 
 .admin-booking-cards {
@@ -1009,29 +1004,34 @@
 }
 
 @media (max-width: 768px) {
-  .admin-mobile-dashboard-appbar {
-    position: sticky;
-    top: 0;
-    z-index: 35;
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    gap: var(--space-xs);
-    border: 1px solid var(--border);
-    background: var(--surface);
-    padding: 0.45rem 0.55rem;
+  .admin-main-content,
+  .booking-shell {
+    width: 100%;
+    min-width: 0;
+    overflow-x: hidden;
+
   }
 
-  .admin-mobile-dashboard-title {
-    margin: 0;
-    font-weight: 700;
-    letter-spacing: 0.04em;
-    text-transform: uppercase;
+  .admin-view-tabs,
+  .admin-filter-tabs,
+  .admin-refresh-row,
+  .admin-search-row {
+    min-width: 0;
+  }
+
+  .admin-filter-tab {
+    padding: 0.5rem 0.45rem;
+    font-size: 0.8rem;
+    line-height: 1.2;
+    text-align: center;
+    white-space: normal;
+    word-break: break-word;
+
   }
 
   .admin-next-block--mobile-sticky {
     position: sticky;
-    top: 3.2rem;
+    top: 3.1rem;
     z-index: 32;
     gap: 0.15rem;
     padding: 0.45rem 0.55rem;
@@ -1055,7 +1055,7 @@
 
   .admin-search-row--sticky {
     position: sticky;
-    top: 6.2rem;
+    top: 5.9rem;
     z-index: 31;
     background: var(--surface);
     border: 1px solid var(--border);

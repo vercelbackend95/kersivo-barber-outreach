@@ -528,16 +528,7 @@ export default function BookingsAdminPanel({ isActive, mode, onBackToDashboard }
 
   return (
     <section className="surface booking-shell">
-      <h1 className={isMobileDashboard ? 'admin-desktop-title' : ''}>Admin Dashboard</h1>
-      {isMobileDashboard ? (
-        <div className="admin-mobile-dashboard-appbar">
-          <p className="admin-mobile-dashboard-title">Dashboard</p>
-          <div className="admin-refresh-controls">
-            <button type="button" className="btn btn--ghost" onClick={() => { void fetchBookings(); void fetchTimeBlocks(); void fetchReports(); }} disabled={isRefreshing}>Refresh</button>
-            <button type="button" className="btn btn--secondary" onClick={() => void logout()}>Logout</button>
-          </div>
-        </div>
-      ) : null}
+      <h1>Admin Dashboard</h1>
       <div className={`admin-next-block ${isMobileDashboard ? 'admin-next-block--mobile-sticky' : ''}`}><p className="admin-next-primary">{currentBookingView === 'history' ? `History: ${bookings.length} bookings` : `Today: ${todayBookings.length} bookings`}</p>{nextBooking && mode !== 'history' && <p className="admin-next-secondary">Next: {nextBooking.barber?.name} — {nextBooking.service?.name} — {formatStartTime(nextBooking.startAt)} ({formatRelativeTime(nextBooking.startAt, nextBooking.endAt)})</p>}</div>
       <div className="admin-refresh-row"><p className="muted admin-last-updated">Last updated: {formatLastUpdated(lastUpdatedAt, nowMs)}</p>{isMobileDashboard ? null : <div className="admin-refresh-controls"><button type="button" className="btn btn--ghost" onClick={() => { void fetchBookings(); void fetchTimeBlocks(); void fetchReports(); }} disabled={isRefreshing}>Refresh</button><button type="button" className="btn btn--secondary" onClick={() => void logout()}>Logout</button></div>}</div>
 
