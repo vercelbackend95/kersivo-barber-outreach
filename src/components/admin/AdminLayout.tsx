@@ -199,7 +199,7 @@ export default function AdminLayout({ activeSection, onChangeSection, children }
         {children}
       </section>
 
-      <div
+
       {isMobile && (
         <>
           <div
