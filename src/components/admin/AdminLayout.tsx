@@ -12,6 +12,7 @@ type SectionItem = {
   label: string;
 };
 
+
 const menuItems: SectionItem[] = [
   { section: 'bookings_dashboard', label: 'Dashboard' },
   { section: 'bookings_blocks', label: 'Quick Blocks' },
@@ -75,8 +76,7 @@ export default function AdminLayout({ activeSection, onChangeSection, children }
       }
 
       if (event.key !== 'Tab' || !focusable || focusable.length === 0) {
-        return;
-      }
+@@ -106,79 +80,78 @@ export default function AdminLayout({ activeSection, onChangeSection, children }
 
       if (event.shiftKey && document.activeElement === firstFocusable) {
         event.preventDefault();
