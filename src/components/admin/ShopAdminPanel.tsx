@@ -308,6 +308,13 @@ export default function ShopAdminPanel({ initialTab = 'products' }: ShopAdminPan
     setActiveTab(initialTab);
   }, [initialTab]);
 
+    const activeSectionLabel = useMemo(() => {
+    if (activeTab === 'orders') return 'Orders';
+    if (activeTab === 'sales') return 'Sales';
+    return 'Products';
+  }, [activeTab]);
+
+
 
   const chartSeries = useMemo(() => {
     if (!salesData) return [] as SalesChartSeries[];
@@ -622,11 +629,7 @@ export default function ShopAdminPanel({ initialTab = 'products' }: ShopAdminPan
     <section className="booking-shell" aria-live="polite">
       <h2>Shop</h2>
 
-      <div className="admin-view-tabs admin-view-tabs--three" role="tablist" aria-label="Shop sections">
-        <button type="button" className={`admin-filter-tab ${activeTab === 'products' ? 'admin-filter-tab--active' : ''}`} onClick={() => setActiveTab('products')}>Products</button>
-        <button type="button" className={`admin-filter-tab ${activeTab === 'orders' ? 'admin-filter-tab--active' : ''}`} onClick={() => setActiveTab('orders')}>Orders</button>
-        <button type="button" className={`admin-filter-tab ${activeTab === 'sales' ? 'admin-filter-tab--active' : ''}`} onClick={() => setActiveTab('sales')}>Sales</button>
-      </div>
+      <p className="admin-shop-kicker muted">{activeSectionLabel}</p>
 
       {activeTab === 'products' && (
         <div className="admin-reports admin-products-panel">

@@ -146,6 +146,14 @@
   color: var(--accent-contrast);
 }
 
+.admin-shop-kicker {
+  margin: calc(var(--space-xs) * -0.5) 0 var(--space-sm);
+  font-size: 0.9rem;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+
 .admin-filter-count {
   color: inherit;
   opacity: 0.85;
