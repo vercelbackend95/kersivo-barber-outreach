@@ -394,7 +394,7 @@
   border: 1px solid var(--border);
   background: var(--surface);
   padding: var(--space-sm);
-  display: grid;
+  display: none;
   gap: var(--space-sm);
 }
 
@@ -549,10 +549,6 @@
 
 
 @media (max-width: 768px) {
-  .admin-sidebar {
-    display: none;
-
-  }
 
   .admin-mobile-logout {
     width: 100%;
@@ -560,13 +556,20 @@
 }
 
 
-@media (min-width: 64rem) {
+@media (min-width: 48.0625rem) {
+  .admin-mobile-header,
+  .admin-mobile-overlay,
+  .admin-mobile-drawer {
+    display: none;
+  }
+
   .admin-shell {
     grid-template-columns: minmax(12rem, 14rem) minmax(0, 1fr);
     align-items: start;
   }
 
   .admin-sidebar {
+    display: grid;
     position: sticky;
     top: var(--space-sm);
   }
