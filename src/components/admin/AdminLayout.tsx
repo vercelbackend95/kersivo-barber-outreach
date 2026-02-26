@@ -76,7 +76,9 @@ export default function AdminLayout({ activeSection, onChangeSection, children }
       }
 
       if (event.key !== 'Tab' || !focusable || focusable.length === 0) {
-@@ -106,79 +80,78 @@ export default function AdminLayout({ activeSection, onChangeSection, children }
+        return;
+      }
+
 
       if (event.shiftKey && document.activeElement === firstFocusable) {
         event.preventDefault();
