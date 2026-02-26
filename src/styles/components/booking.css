@@ -378,6 +378,10 @@
   display: grid;
   gap: var(--space-sm);
 }
+.admin-mobile-header {
+  display: none;
+}
+
 
 .admin-sidebar {
   border: 1px solid var(--border);
@@ -453,6 +457,108 @@
 .admin-main-content {
   min-width: 0;
 }
+.admin-mobile-overlay {
+  display: none;
+}
+
+.admin-mobile-drawer {
+  display: none;
+}
+
+@media (max-width: 48rem) {
+  .admin-sidebar {
+    display: none;
+  }
+
+  .admin-mobile-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    border: 1px solid var(--border);
+    background: var(--surface);
+    padding: 0.6rem 0.75rem;
+    margin-bottom: var(--space-sm);
+  }
+
+  .admin-mobile-title {
+    margin: 0;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+  }
+
+  .admin-mobile-menu-button,
+  .admin-mobile-close-button {
+    border: 1px solid var(--border);
+    background: var(--bg);
+    color: var(--fg);
+    width: 2.25rem;
+    height: 2.25rem;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    font: inherit;
+    font-size: 1.1rem;
+    line-height: 1;
+  }
+
+  .admin-mobile-menu-button:focus-visible,
+  .admin-mobile-close-button:focus-visible,
+  .admin-mobile-logout:focus-visible {
+    outline: 2px solid var(--focus);
+    outline-offset: 2px;
+  }
+
+  .admin-mobile-overlay {
+    display: block;
+    position: fixed;
+    inset: 0;
+    background: color-mix(in srgb, var(--bg) 55%, transparent);
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 180ms ease;
+    z-index: 50;
+  }
+
+  .admin-mobile-overlay--open {
+    opacity: 1;
+    pointer-events: auto;
+  }
+
+  .admin-mobile-drawer {
+    display: grid;
+    grid-template-rows: auto 1fr auto auto;
+    gap: var(--space-sm);
+    position: fixed;
+    top: 0;
+    right: 0;
+    height: 100dvh;
+    width: min(80vw, 20rem);
+    background: var(--surface);
+    border-left: 1px solid var(--border);
+    padding: var(--space-sm);
+    transform: translateX(100%);
+    transition: transform 220ms ease;
+    z-index: 60;
+    overflow-y: auto;
+  }
+
+  .admin-mobile-drawer--open {
+    transform: translateX(0);
+  }
+
+  .admin-mobile-drawer-head {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: var(--space-xs);
+  }
+
+  .admin-mobile-logout {
+    width: 100%;
+  }
+}
+
 
 @media (min-width: 64rem) {
   .admin-shell {
