@@ -205,8 +205,7 @@ function getTickRows() {
   return { majorTicks, minorTicks };
 }
 
-export default function TodayTimeline({ barbers, bookings, timeBlocks, nowMs, onBookingClick }: TodayTimelineProps) {
-  export default function TodayTimeline({ barbers, bookings, timeBlocks, nowMs, selectedDate, onBookingClick }: TodayTimelineProps) {
+export default function TodayTimeline({ barbers, bookings, timeBlocks, nowMs, selectedDate, onBookingClick }: TodayTimelineProps) {
   const lanes = useMemo(() => buildLanes(barbers, bookings, timeBlocks), [barbers, bookings, timeBlocks]);
   const ticks = useMemo(() => getTickRows(), []);
 
