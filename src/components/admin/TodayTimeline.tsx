@@ -1,4 +1,4 @@
-import React, { useMemo } from 'react';
+import React, { memo, useEffect, useMemo, useRef } from 'react';
 import { formatInTimeZone } from 'date-fns-tz';
 
 type TimelineBarber = {
@@ -59,8 +59,9 @@ type TodayTimelineProps = {
   barbers: TimelineBarber[];
   bookings: TimelineBooking[];
   timeBlocks: TimelineTimeBlock[];
-  nowMs: number;
-    selectedDate: string;
+  selectedDate: string;
+  scrollContainerRef?: React.RefObject<HTMLDivElement | null>;
+
   onBookingClick: (booking: TimelineBooking) => void;
 };
 
@@ -71,6 +72,7 @@ const TIMELINE_TOTAL_MINUTES = (TIMELINE_END_HOUR - TIMELINE_START_HOUR) * 60;
 const BOOKING_CARD_HEIGHT = 56;
 const BOOKING_STACK_GAP = 6;
 const LANE_INNER_PADDING = 8;
+const NOW_INDICATOR_REFRESH_MS = 30000;
 
 function getMinuteOfDay(isoDate: string) {
   const hours = Number(formatInTimeZone(isoDate, ADMIN_TIMEZONE, 'HH'));
@@ -205,19 +207,52 @@ function getTickRows() {
   return { majorTicks, minorTicks };
 }
 
-export default function TodayTimeline({ barbers, bookings, timeBlocks, nowMs, selectedDate, onBookingClick }: TodayTimelineProps) {
-  const lanes = useMemo(() => buildLanes(barbers, bookings, timeBlocks), [barbers, bookings, timeBlocks]);
-  const ticks = useMemo(() => getTickRows(), []);
+type NowIndicatorProps = {
+  selectedDate: string;
+};
 
-  const currentLondonMinute = useMemo(() => {
-    const now = new Date(nowMs);
+function updateNowIndicatorPosition(indicator: HTMLSpanElement, selectedDate: string) {
+  const currentMs = Date.now();
+  const currentLondonMinute = (() => {
+    const now = new Date(currentMs);
+
     const hour = Number(formatInTimeZone(now, ADMIN_TIMEZONE, 'HH'));
     const minute = Number(formatInTimeZone(now, ADMIN_TIMEZONE, 'mm'));
     return hour * 60 + minute - TIMELINE_START_HOUR * 60;
-  }, [nowMs]);
+  })();
 
-  const todayLondon = formatInTimeZone(new Date(nowMs), ADMIN_TIMEZONE, 'yyyy-MM-dd');
-  const showNowIndicator = selectedDate === todayLondon && currentLondonMinute >= 0 && currentLondonMinute <= TIMELINE_TOTAL_MINUTES;
+  const todayLondon = formatInTimeZone(new Date(currentMs), ADMIN_TIMEZONE, 'yyyy-MM-dd');
+  const shouldShow = selectedDate === todayLondon && currentLondonMinute >= 0 && currentLondonMinute <= TIMELINE_TOTAL_MINUTES;
+
+  indicator.style.display = shouldShow ? 'block' : 'none';
+  if (!shouldShow) return;
+
+  indicator.style.left = `${(currentLondonMinute / TIMELINE_TOTAL_MINUTES) * 100}%`;
+}
+
+const NowIndicator = memo(function NowIndicator({ selectedDate }: NowIndicatorProps) {
+  const indicatorRef = useRef<HTMLSpanElement | null>(null);
+
+
+  useEffect(() => {
+    const indicator = indicatorRef.current;
+    if (!indicator) return;
+
+    updateNowIndicatorPosition(indicator, selectedDate);
+    const intervalId = window.setInterval(() => {
+      updateNowIndicatorPosition(indicator, selectedDate);
+    }, NOW_INDICATOR_REFRESH_MS);
+
+    return () => window.clearInterval(intervalId);
+  }, [selectedDate]);
+
+  return <span ref={indicatorRef} className="admin-timeline-now-indicator" aria-hidden="true" />;
+});
+
+function TodayTimeline({ barbers, bookings, timeBlocks, selectedDate, onBookingClick, scrollContainerRef }: TodayTimelineProps) {
+  const lanes = useMemo(() => buildLanes(barbers, bookings, timeBlocks), [barbers, bookings, timeBlocks]);
+  const ticks = useMemo(() => getTickRows(), []);
+
 
 
   if (lanes.length === 0) {
@@ -230,7 +265,7 @@ export default function TodayTimeline({ barbers, bookings, timeBlocks, nowMs, se
 
   return (
     <section className="admin-timeline" aria-label={`Timeline for ${selectedDate}`}>
-      <div className="admin-timeline-scroll">
+      <div className="admin-timeline-scroll" ref={scrollContainerRef}>
         <div className="admin-timeline-scale-row">
           <div className="admin-timeline-barber-header">Barber</div>
           <div className="admin-timeline-scale" role="presentation">
@@ -250,12 +285,7 @@ export default function TodayTimeline({ barbers, bookings, timeBlocks, nowMs, se
                 <em>{tick.label}</em>
               </span>
             ))}
-            {showNowIndicator ? (
-              <span
-                className="admin-timeline-now-indicator"
-                style={{ left: `${(currentLondonMinute / TIMELINE_TOTAL_MINUTES) * 100}%` }}
-              />
-            ) : null}
+            <NowIndicator selectedDate={selectedDate} />
           </div>
         </div>
 
@@ -309,3 +339,4 @@ export default function TodayTimeline({ barbers, bookings, timeBlocks, nowMs, se
     </section>
   );
 }
+export default memo(TodayTimeline);

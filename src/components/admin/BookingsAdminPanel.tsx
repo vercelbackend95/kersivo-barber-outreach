@@ -133,6 +133,30 @@ function formatLastUpdated(lastUpdatedAt: number | null, nowMs: number) {
   if (diffSec < 60) return `${diffSec}s ago`;
   return `${Math.floor(diffSec / 60)}m ago`;
 }
+function bookingRefreshSignature(booking: Booking) {
+  return [
+    booking.id,
+    booking.status,
+    booking.startAt,
+    booking.endAt,
+    booking.barberId,
+    booking.rescheduledAt ?? ''
+  ].join('|');
+}
+
+function timeBlockRefreshSignature(block: TimeBlock) {
+  return [block.id, block.title, block.startAt, block.endAt, block.barberId ?? 'all'].join('|');
+}
+
+function hasCollectionChanged<T>(prev: T[], next: T[], getSignature: (item: T) => string) {
+  if (prev.length !== next.length) return true;
+  const previousById = new Map(prev.map((item) => [getSignature(item), true]));
+  for (const item of next) {
+    if (!previousById.has(getSignature(item))) return true;
+  }
+  return false;
+}
+
 
 const normalizeSearchValue = (value: string) => value.trim().toLowerCase();
 const canBeCancelledByShop = (booking: Booking) => booking.status === 'CONFIRMED';
@@ -236,21 +260,71 @@ export default function BookingsAdminPanel({ isActive, mode, onBackToDashboard }
   const timelineDateInputRef = useRef<HTMLInputElement | null>(null);
 
   const inFlightRef = useRef(false);
+    const timeBlocksInFlightRef = useRef(false);
   const pollingStoppedRef = useRef(false);
+    const bookingsRequestIdRef = useRef(0);
+  const timeBlocksRequestIdRef = useRef(0);
+
   const previousSignaturesRef = useRef<Map<string, string>>(new Map());
   const updatedRowsTimeoutRef = useRef<number | null>(null);
+  const timelineScrollRef = useRef<HTMLDivElement | null>(null);
+  const timelineScrollRestoreRef = useRef<{ left: number; top: number } | null>(null);
+  const timelineScrollRafRef = useRef<number | null>(null);
+
+
+  const captureTimelineScroll = useCallback(() => {
+    const container = timelineScrollRef.current;
+    if (!container) return;
+    timelineScrollRestoreRef.current = {
+      left: container.scrollLeft,
+      top: container.scrollTop
+    };
+  }, []);
+
+  const restoreTimelineScroll = useCallback(() => {
+    if (timelineScrollRafRef.current) {
+      window.cancelAnimationFrame(timelineScrollRafRef.current);
+    }
+    timelineScrollRafRef.current = window.requestAnimationFrame(() => {
+      const container = timelineScrollRef.current;
+      const savedPosition = timelineScrollRestoreRef.current;
+      if (!container || !savedPosition) return;
+      container.scrollLeft = savedPosition.left;
+      container.scrollTop = savedPosition.top;
+      timelineScrollRestoreRef.current = null;
+    });
+  }, []);
 
   const fetchTimeBlocks = useCallback(async () => {
-    const endpoint = activeView === 'timeline'
-      ? `/api/admin/timeblocks?date=${encodeURIComponent(timelineDate)}`
-      : '/api/admin/timeblocks?range=today';
-    const response = await fetch(endpoint, { credentials: 'same-origin' });
+    if (timeBlocksInFlightRef.current) return;
+    timeBlocksInFlightRef.current = true;
+    const requestId = ++timeBlocksRequestIdRef.current;
 
-    if (response.ok) {
+
+    try {
+      const endpoint = activeView === 'timeline'
+        ? `/api/admin/timeblocks?date=${encodeURIComponent(timelineDate)}`
+        : '/api/admin/timeblocks?range=today';
+      const response = await fetch(endpoint, { credentials: 'same-origin' });
+      if (!response.ok) return;
+
       const data = (await response.json()) as { timeBlocks?: TimeBlock[] };
-      setTimeBlocks(data.timeBlocks ?? []);
+      if (requestId !== timeBlocksRequestIdRef.current) return;
+
+      const incomingBlocks = data.timeBlocks ?? [];
+      const changed = hasCollectionChanged(timeBlocks, incomingBlocks, timeBlockRefreshSignature);
+      if (!changed) return;
+
+      if (activeView === 'timeline') captureTimelineScroll();
+      setTimeBlocks(incomingBlocks);
+      if (activeView === 'timeline') restoreTimelineScroll();
+    } finally {
+      if (requestId === timeBlocksRequestIdRef.current) {
+        timeBlocksInFlightRef.current = false;
+      }
+
     }
- }, [activeView, timelineDate]);
+ }, [activeView, captureTimelineScroll, restoreTimelineScroll, timeBlocks, timelineDate]);
 
   const fetchBarbers = useCallback(async () => {
     const response = await fetch('/api/admin/barbers', { credentials: 'same-origin' });
@@ -288,6 +362,7 @@ export default function BookingsAdminPanel({ isActive, mode, onBackToDashboard }
     if (mode === 'history' && !appendHistory) setHistoryCursor(null);
 
     inFlightRef.current = true;
+        const requestId = ++bookingsRequestIdRef.current;
     setIsRefreshing(true);
 
     try {
@@ -317,12 +392,18 @@ export default function BookingsAdminPanel({ isActive, mode, onBackToDashboard }
       if (!response.ok) throw new Error('Fetch failed');
 
       const data = (await response.json()) as { bookings?: Booking[]; hasMore?: boolean; cursor?: string | null };
+            if (requestId !== bookingsRequestIdRef.current) return;
       const incomingBookings = data.bookings ?? [];
       const mergedBookings = appendHistory ? [...bookings, ...incomingBookings] : incomingBookings;
-      const nextSignatures = new Map(mergedBookings.map((b) => [b.id, [b.id, b.fullName, b.email, b.status, b.startAt, b.endAt, b.rescheduledAt ?? '', b.barber?.name ?? '', b.service?.name ?? '', b.clientId ?? ''].join('|')]));
+      const nextSignatures = new Map(mergedBookings.map((b) => [b.id, bookingRefreshSignature(b)]));
       const changedIds = mergedBookings.filter((b) => previousSignaturesRef.current.get(b.id) !== nextSignatures.get(b.id)).map((b) => b.id);
+      const shouldUpdateBookings = appendHistory || hasCollectionChanged(bookings, mergedBookings, bookingRefreshSignature);
+      if (shouldUpdateBookings) {
+        if (activeView === 'timeline') captureTimelineScroll();
+        setBookings(mergedBookings);
+        if (activeView === 'timeline') restoreTimelineScroll();
+      }
 
-      setBookings(mergedBookings);
       if (mode === 'history') {
         setHistoryHasMore(Boolean(data.hasMore));
         setHistoryCursor(data.cursor ?? null);
@@ -331,7 +412,7 @@ export default function BookingsAdminPanel({ isActive, mode, onBackToDashboard }
       previousSignaturesRef.current = nextSignatures;
       setLastUpdatedAt(Date.now());
 
-      if (changedIds.length) {
+      if (shouldUpdateBookings && changedIds.length) {
         setUpdatedBookingIds(changedIds);
         if (updatedRowsTimeoutRef.current) window.clearTimeout(updatedRowsTimeoutRef.current);
         updatedRowsTimeoutRef.current = window.setTimeout(() => setUpdatedBookingIds([]), UPDATED_ROW_HIGHLIGHT_MS);
@@ -340,11 +421,14 @@ export default function BookingsAdminPanel({ isActive, mode, onBackToDashboard }
     } catch {
       setError('Could not refresh bookings right now.');
     } finally {
-      inFlightRef.current = false;
+      if (requestId === bookingsRequestIdRef.current) {
+        inFlightRef.current = false;
+      }
+
       setIsRefreshing(false);
       setHistoryLoadingMore(false);
     }
-  }, [activeView, bookings, historyBarberId, historyCursor, historyFrom, historyPreset, historyTo, loggedIn, mode, isActive, timelineDate]);
+  }, [activeView, bookings, captureTimelineScroll, historyBarberId, historyCursor, historyFrom, historyPreset, historyTo, isActive, loggedIn, mode, restoreTimelineScroll, timelineDate]);
   const loadMoreHistory = useCallback(async () => {
     if (!historyHasMore || historyLoadingMore || mode !== 'history') return;
     setHistoryLoadingMore(true);
@@ -360,6 +444,13 @@ export default function BookingsAdminPanel({ isActive, mode, onBackToDashboard }
     const timeoutId = window.setTimeout(() => { void fetchBookings(); }, 300);
     return () => window.clearTimeout(timeoutId);
   }, [fetchBookings, historyBarberId, historyFrom, historyPreset, historyTo, isActive, loggedIn, mode]);
+    useEffect(() => () => {
+    if (timelineScrollRafRef.current) {
+      window.cancelAnimationFrame(timelineScrollRafRef.current);
+    }
+  }, []);
+
+
   useEffect(() => {
     if (typeof window === 'undefined') return;
     const mediaQuery = window.matchMedia(`(max-width: ${MOBILE_BREAKPOINT_PX}px)`);
@@ -432,11 +523,11 @@ export default function BookingsAdminPanel({ isActive, mode, onBackToDashboard }
     setNotesSaving(false);
 
   }
-  function openTimelineBooking(booking: Booking) {
+  const openTimelineBooking = useCallback((booking: Booking) => {
     setSelectedTimelineBooking(booking);
     setTimelineNotesDraft(booking.notes ?? '');
     setTimelineNotesMessage('');
-  }
+  }, []);
 
   async function saveTimelineBookingNotes() {
     if (!selectedTimelineBooking) return;
@@ -639,14 +730,14 @@ export default function BookingsAdminPanel({ isActive, mode, onBackToDashboard }
 
       {mode !== 'history' && activeView === 'timeline' ? (
                 <>
-          {isRefreshing ? <p className="admin-timeline-loading muted">Loading timeline…</p> : null}
 
         <TodayTimeline
           barbers={barbers}
           bookings={visibleBookings}
           timeBlocks={timeBlocks}
-          nowMs={nowMs}
-                    selectedDate={timelineDate}
+          selectedDate={timelineDate}
+          scrollContainerRef={timelineScrollRef}
+
           onBookingClick={openTimelineBooking}
         />
                 </>
