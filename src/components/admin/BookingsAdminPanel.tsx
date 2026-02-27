@@ -174,6 +174,17 @@ function getBookingSearchScore(booking: Booking, normalizedQuery: string) {
   if (fullName.includes(normalizedQuery)) return 1;
   return 0;
 }
+function escapeRegExp(value: string) {
+  return value.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+}
+
+function isKeyboardEditableTarget(target: EventTarget | null) {
+  if (!(target instanceof HTMLElement)) return false;
+  const tagName = target.tagName.toLowerCase();
+  if (tagName === 'input' || tagName === 'textarea' || tagName === 'select') return true;
+  return target.isContentEditable;
+}
+
 
 function roundUpLondon(now: Date, stepMinutes = SLOT_STEP_MINUTES) {
   const zoned = toZonedTime(now, ADMIN_TIMEZONE);
@@ -222,6 +233,9 @@ export default function BookingsAdminPanel({ isActive, mode, onBackToDashboard }
   const [lastUpdatedAt, setLastUpdatedAt] = useState<number | null>(null);
   const [nowMs, setNowMs] = useState(() => Date.now());
   const [clientSearchQuery, setClientSearchQuery] = useState('');
+    const [debouncedSearchQuery, setDebouncedSearchQuery] = useState('');
+  const [isSearchDebouncing, setIsSearchDebouncing] = useState(false);
+
   const [activeView, setActiveView] = useState<AdminBookingView>('timeline');
   const [selectedDate, setSelectedDate] = useState(() => getTodayLondonDate());
   const [historyBarberId, setHistoryBarberId] = useState<string>('all');
@@ -267,6 +281,7 @@ export default function BookingsAdminPanel({ isActive, mode, onBackToDashboard }
   const previousSignaturesRef = useRef<Map<string, string>>(new Map());
   const updatedRowsTimeoutRef = useRef<number | null>(null);
   const timelineScrollRef = useRef<HTMLDivElement | null>(null);
+    const searchInputRef = useRef<HTMLInputElement | null>(null);
   const timelineScrollRestoreRef = useRef<{ left: number; top: number } | null>(null);
   const timelineScrollRafRef = useRef<number | null>(null);
 
@@ -455,8 +470,55 @@ export default function BookingsAdminPanel({ isActive, mode, onBackToDashboard }
     return () => mediaQuery.removeEventListener('change', update);
   }, []);
 
+  useEffect(() => {
+    setIsSearchDebouncing(clientSearchQuery !== debouncedSearchQuery);
+    const timeoutId = window.setTimeout(() => {
+      setDebouncedSearchQuery(clientSearchQuery);
+      setIsSearchDebouncing(false);
+    }, 150);
+    return () => window.clearTimeout(timeoutId);
+  }, [clientSearchQuery, debouncedSearchQuery]);
 
-  const normalizedClientSearchQuery = useMemo(() => normalizeSearchValue(clientSearchQuery), [clientSearchQuery]);
+  useEffect(() => {
+    const onGlobalKeyDown = (event: KeyboardEvent) => {
+      const activeElement = document.activeElement;
+      const isSearchFocused = activeElement === searchInputRef.current;
+
+      if ((event.ctrlKey || event.metaKey) && event.key.toLowerCase() === 'k') {
+        if (isKeyboardEditableTarget(event.target) || isKeyboardEditableTarget(activeElement)) return;
+        event.preventDefault();
+        searchInputRef.current?.focus();
+        searchInputRef.current?.select();
+        return;
+      }
+
+      if (event.key !== 'Escape') return;
+
+      if (isSearchFocused) {
+        if (clientSearchQuery) {
+          event.preventDefault();
+          setClientSearchQuery('');
+          setDebouncedSearchQuery('');
+        } else {
+          searchInputRef.current?.blur();
+        }
+        return;
+      }
+
+      if (isKeyboardEditableTarget(event.target) || isKeyboardEditableTarget(activeElement)) return;
+      if (!clientSearchQuery) return;
+      event.preventDefault();
+      setClientSearchQuery('');
+      setDebouncedSearchQuery('');
+    };
+
+    window.addEventListener('keydown', onGlobalKeyDown);
+    return () => window.removeEventListener('keydown', onGlobalKeyDown);
+  }, [clientSearchQuery]);
+
+
+  const normalizedClientSearchQuery = useMemo(() => normalizeSearchValue(debouncedSearchQuery), [debouncedSearchQuery]);
+
 
 
   const todayLondonDate = useMemo(() => getTodayLondonDate(), [nowMs]);
@@ -473,6 +535,24 @@ export default function BookingsAdminPanel({ isActive, mode, onBackToDashboard }
     return filteredBookings.map((booking, index) => ({ booking, score: getBookingSearchScore(booking, normalizedClientSearchQuery), index })).filter((entry) => entry.score > 0).sort((a, b) => b.score - a.score).map((entry) => entry.booking);
 
   }, [filteredBookings, normalizedClientSearchQuery]);
+    const searchResultsLabel = useMemo(() => {
+    if (isSearchDebouncing) return 'Searching...';
+    if (!normalizedClientSearchQuery) return '';
+    if (visibleBookings.length === 0) return 'No matches';
+    return `${visibleBookings.length} matches`;
+  }, [isSearchDebouncing, normalizedClientSearchQuery, visibleBookings.length]);
+
+  const highlightMatch = useCallback((value: string) => {
+    if (!normalizedClientSearchQuery) return value;
+    const pattern = new RegExp(`(${escapeRegExp(normalizedClientSearchQuery)})`, 'ig');
+    const parts = value.split(pattern);
+    return parts.map((part, index) => {
+      const isMatch = part.toLowerCase() === normalizedClientSearchQuery;
+      if (!isMatch) return <React.Fragment key={`${part}-${index}`}>{part}</React.Fragment>;
+      return <mark key={`${part}-${index}`} className="admin-search-highlight">{part}</mark>;
+    });
+  }, [normalizedClientSearchQuery]);
+
   const isMobileDashboard = mode === 'dashboard' && isMobileViewport;
   const isTimelineView = mode === 'dashboard' && activeView === 'timeline';
   const selectedDateLabel = useMemo(() => formatTimelineDateLabel(selectedDate), [selectedDate]);
@@ -722,7 +802,39 @@ export default function BookingsAdminPanel({ isActive, mode, onBackToDashboard }
         </section>
       )}
 
-      <div className={`admin-search-row ${isMobileDashboard ? 'admin-search-row--sticky' : ''}`}><input type="search" value={clientSearchQuery} onChange={(e) => setClientSearchQuery(e.target.value)} placeholder="Search by client name or email..." aria-label="Search by client name or email" /></div>
+      <div className={`admin-search-row ${isMobileDashboard ? 'admin-search-row--sticky' : ''}`}>
+        <div className={`admin-search-field ${clientSearchQuery ? 'admin-search-field--has-clear' : ''}`}>
+          <span className="admin-search-icon" aria-hidden="true">
+            <svg viewBox="0 0 24 24" focusable="false" aria-hidden="true">
+              <path d="M10.5 3a7.5 7.5 0 0 1 5.975 12.034l4.245 4.246a1 1 0 1 1-1.414 1.414l-4.246-4.245A7.5 7.5 0 1 1 10.5 3Zm0 2a5.5 5.5 0 1 0 0 11 5.5 5.5 0 0 0 0-11Z" fill="currentColor" />
+            </svg>
+          </span>
+          <input
+            ref={searchInputRef}
+            type="search"
+            value={clientSearchQuery}
+            onChange={(event) => setClientSearchQuery(event.target.value)}
+            placeholder="Search client or email…"
+            aria-label="Search client or email"
+          />
+          {searchResultsLabel ? <span className="admin-search-feedback" aria-live="polite">{searchResultsLabel}</span> : null}
+          {clientSearchQuery ? (
+            <button
+              type="button"
+              className="admin-search-clear"
+              onClick={() => {
+                setClientSearchQuery('');
+                setDebouncedSearchQuery('');
+                searchInputRef.current?.focus();
+              }}
+              aria-label="Clear search"
+            >
+              ×
+            </button>
+          ) : null}
+        </div>
+      </div>
+
 
       {mode !== 'history' && activeView === 'timeline' ? (
         <AdminErrorBoundary>
@@ -731,6 +843,7 @@ export default function BookingsAdminPanel({ isActive, mode, onBackToDashboard }
             bookings={visibleBookings}
             timeBlocks={timeBlocks}
             selectedDate={selectedDate}
+            isSearchActive={Boolean(normalizedClientSearchQuery)}
             scrollContainerRef={timelineScrollRef}
             onBookingClick={openTimelineBooking}
           />
@@ -745,8 +858,9 @@ export default function BookingsAdminPanel({ isActive, mode, onBackToDashboard }
                 <span className="admin-booking-card-status">{booking.status === 'CONFIRMED' && booking.rescheduledAt ? 'CONFIRMED · RESCHEDULED' : booking.status}</span>
               </div>
               <p className="admin-booking-card-barber">Barber: {booking.barber?.name}</p>
-              <button type="button" className="admin-link-button" onClick={() => void openClientProfile(booking.clientId)}>{booking.fullName}</button>
-              <p className="admin-booking-card-email">{booking.email}</p>
+              <button type="button" className="admin-link-button" onClick={() => void openClientProfile(booking.clientId)}>{highlightMatch(booking.fullName)}</button>
+              <p className="admin-booking-card-email">{highlightMatch(booking.email)}</p>
+
               {canBeCancelledByShop(booking) ? <button type="button" className="btn btn--secondary" onClick={() => void cancelBookingByShop(booking)} disabled={cancelLoadingBookingId === booking.id}>{cancelLoadingBookingId === booking.id ? 'Cancelling...' : 'Cancel'}</button> : null}
             </article>
           ))}
@@ -759,8 +873,9 @@ export default function BookingsAdminPanel({ isActive, mode, onBackToDashboard }
             <tbody>
               {visibleBookings.map((booking) => (
                 <tr className={updatedBookingIds.includes(booking.id) ? 'admin-row--updated' : ''} key={booking.id}>
-                  <td><button type="button" className="admin-link-button" onClick={() => void openClientProfile(booking.clientId)}>{booking.fullName}</button></td>
-                  <td className="admin-table-col-email"><button type="button" className="admin-link-button" onClick={() => void openClientProfile(booking.clientId)}>{booking.email}</button></td>
+                  <td><button type="button" className="admin-link-button" onClick={() => void openClientProfile(booking.clientId)}>{highlightMatch(booking.fullName)}</button></td>
+                  <td className="admin-table-col-email"><button type="button" className="admin-link-button" onClick={() => void openClientProfile(booking.clientId)}>{highlightMatch(booking.email)}</button></td>
+
                   <td className="admin-table-col-service">{booking.service?.name}</td><td>{booking.barber?.name}</td><td>{booking.status === 'CONFIRMED' && booking.rescheduledAt ? 'CONFIRMED · RESCHEDULED' : booking.status}</td><td className="admin-table-col-start">{new Date(booking.startAt).toLocaleString('en-GB', { timeZone: ADMIN_TIMEZONE })}</td>
                   <td className="admin-table-col-actions">{canBeCancelledByShop(booking) ? <button type="button" className="btn btn--secondary admin-cancel-btn" onClick={() => void cancelBookingByShop(booking)} disabled={cancelLoadingBookingId === booking.id}>{cancelLoadingBookingId === booking.id ? 'Cancelling...' : 'Cancel'}</button> : null}</td>
                 </tr>

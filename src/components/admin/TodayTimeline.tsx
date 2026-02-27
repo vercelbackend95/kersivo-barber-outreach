@@ -61,6 +61,7 @@ type TodayTimelineProps = {
   bookings: TimelineBooking[];
   timeBlocks: TimelineTimeBlock[];
   selectedDate: string;
+  isSearchActive?: boolean;
   scrollContainerRef?: React.RefObject<HTMLDivElement | null>;
 
   onBookingClick: (booking: TimelineBooking) => void;
@@ -262,7 +263,7 @@ const NowIndicator = memo(function NowIndicator({ selectedDate }: NowIndicatorPr
   return <span ref={indicatorRef} className="admin-timeline-now-indicator" aria-hidden="true" />;
 });
 
-function TodayTimeline({ barbers, bookings, timeBlocks, selectedDate, onBookingClick, scrollContainerRef }: TodayTimelineProps) {
+function TodayTimeline({ barbers, bookings, timeBlocks, selectedDate, isSearchActive = false, onBookingClick, scrollContainerRef }: TodayTimelineProps) {
   const lanes = useMemo(() => buildLanes(barbers, bookings, timeBlocks), [barbers, bookings, timeBlocks]);
   const ticks = useMemo(() => getTickRows(), []);
 
@@ -329,7 +330,7 @@ function TodayTimeline({ barbers, bookings, timeBlocks, selectedDate, onBookingC
                 <button
                   type="button"
                   key={item.id}
-                  className={`admin-timeline-card admin-timeline-card--booking admin-timeline-card--${getBookingTimelineStatus(item.booking)}`}
+                  className={`admin-timeline-card admin-timeline-card--booking admin-timeline-card--${getBookingTimelineStatus(item.booking)} ${isSearchActive ? 'admin-timeline-card--search-match' : ''}`}
                   style={{ left: `${item.leftPct}%`, width: `${item.widthPct}%`, top: `${item.topPx}px`, height: `${item.heightPx}px` }}
                   onClick={() => onBookingClick(item.booking)}
                                     title={`${item.startLabel} · ${item.booking.service?.name ?? 'Service'} · ${item.booking.fullName}`}
@@ -351,5 +352,6 @@ function TodayTimeline({ barbers, bookings, timeBlocks, selectedDate, onBookingC
     </section>
   );
 }
+
 
 export default memo(TodayTimeline);
