@@ -1079,14 +1079,20 @@
   border-left: 3px solid var(--border);
 
   color: var(--fg);
-  padding: 0.25rem 0.4rem;
+  padding: 0.3rem 0.45rem;
+  min-width: 72px;
+
   cursor: pointer;
-  display: grid;
-  gap: 0.1rem;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: 0.05rem;
+
 }
 
 .admin-timeline-card--booking:hover {
   border-color: var(--accent-hover);
+    box-shadow: 0 0 0 1px color-mix(in srgb, var(--accent-hover) 30%, transparent);
 }
 
 .admin-timeline-card--booking:focus-visible {
@@ -1151,36 +1157,67 @@
 
 
 .admin-timeline-card-time,
-.admin-timeline-card-client,
-.admin-timeline-card-status,
-.admin-timeline-card-service {
+.admin-timeline-card-meta,
+.admin-timeline-card-service,
+.admin-timeline-card-client {
+  max-width: 100%;
+  min-width: 0;
+
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
 }
 
 .admin-timeline-card-time {
-  color: var(--muted);
-  font-size: 0.72rem;
+    color: var(--fg);
+  font-size: 0.9rem;
+  font-weight: 700;
+  line-height: 1.1;
 }
 
-.admin-timeline-card-service {
-  font-size: 0.8rem;
-}
-
-.admin-timeline-card-client {
-  font-size: 0.74rem;
-}
-
-.admin-timeline-card-status {
-  justify-self: start;
-  border: 1px solid var(--border);
-  padding: 0 0.2rem;
-  font-size: 0.65rem;
-  font-style: normal;
+.admin-timeline-card-meta {
+  display: flex;
+  align-items: center;
+  gap: 0.2rem;
+  min-width: 0;
+  margin: 0;
+  font-size: 0.7rem;
+  font-weight: 600;
   letter-spacing: 0.02em;
-  background: var(--bg);
+  line-height: 1.1;
+
+  color: var(--muted);
+
 }
+
+.admin-timeline-card-service,
+.admin-timeline-card-client,
+.admin-timeline-card-separator {
+  flex-shrink: 1;
+  min-width: 0;
+
+}
+
+.admin-timeline-card-service,
+.admin-timeline-card-client,
+.admin-timeline-card-separator {
+  flex-shrink: 1;
+  min-width: 0;
+
+}
+
+
+@media (max-width: 640px) {
+  .admin-timeline-card--booking {
+    min-width: 64px;
+    padding: 0.25rem 0.35rem;
+  }
+
+  .admin-timeline-card-service,
+  .admin-timeline-card-separator {
+    display: none;
+  }
+
 
 .admin-timeline-empty {
   border: 1px solid var(--border);

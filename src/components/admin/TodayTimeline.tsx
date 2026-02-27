@@ -73,6 +73,12 @@ const BOOKING_CARD_HEIGHT = 56;
 const BOOKING_STACK_GAP = 6;
 const LANE_INNER_PADDING = 8;
 const NOW_INDICATOR_REFRESH_MS = 30000;
+const SERVICE_CODE_MAP: Record<string, string> = {
+  haircut: 'CUT',
+  'skin fade': 'FADE',
+  'beard trim': 'BEARD',
+  'haircut + beard': 'H+B'
+};
 
 function getMinuteOfDay(isoDate: string) {
   const hours = Number(formatInTimeZone(isoDate, ADMIN_TIMEZONE, 'HH'));
@@ -94,11 +100,30 @@ function getTimelinePosition(startAt: string, endAt: string) {
   };
 }
 
-function compactStatus(status: string) {
-  if (status === 'PENDING_CONFIRMATION') return 'PENDING';
-  if (status.startsWith('CANCELLED')) return 'CANCELLED';
-  return status;
+function getServiceCode(name: string) {
+  const normalizedName = name.trim().toLowerCase();
+  if (SERVICE_CODE_MAP[normalizedName]) return SERVICE_CODE_MAP[normalizedName];
+
+  const words = normalizedName.split(/\s+/).filter(Boolean);
+  if (words.length === 0) return 'SRV';
+  if (words.length === 1) return words[0].slice(0, 5).toUpperCase();
+
+  return words
+    .slice(0, 3)
+    .map((word) => word[0]?.toUpperCase() ?? '')
+    .join('');
+
 }
+
+function getInitials(fullName: string) {
+  const parts = fullName.trim().split(/\s+/).filter(Boolean);
+  if (parts.length === 0) return 'NA';
+  if (parts.length === 1) return parts[0].slice(0, 2).toUpperCase();
+
+  return `${parts[0][0] ?? ''}${parts[parts.length - 1][0] ?? ''}`.toUpperCase();
+}
+
+
 function getBookingTimelineStatus(booking: TimelineBooking) {
   if (booking.status.startsWith('CANCELLED')) return 'cancelled';
   if (booking.status === 'PENDING_CONFIRMATION') return 'pending';
@@ -319,11 +344,10 @@ function TodayTimeline({ barbers, bookings, timeBlocks, selectedDate, onBookingC
                   className={`admin-timeline-card admin-timeline-card--booking admin-timeline-card--${getBookingTimelineStatus(item.booking)}`}
                   style={{ left: `${item.leftPct}%`, width: `${item.widthPct}%`, top: `${item.topPx}px`, height: `${item.heightPx}px` }}
                   onClick={() => onBookingClick(item.booking)}
+                                    title={`${item.startLabel} · ${item.booking.service?.name ?? 'Service'} · ${item.booking.fullName}`}
                 >
                   <span className="admin-timeline-card-time">{item.startLabel}</span>
                   <strong className="admin-timeline-card-service">{item.booking.service?.name}</strong>
-                  <span className="admin-timeline-card-client">{item.booking.fullName}</span>
-                  <em className="admin-timeline-card-status">{compactStatus(item.booking.status)}</em>
                 </button>
               ))}
             </div>
