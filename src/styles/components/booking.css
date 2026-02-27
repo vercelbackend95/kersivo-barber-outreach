@@ -1079,6 +1079,23 @@
     overflow-x: hidden;
 
   }
+  .booking-shell .admin-search-row,
+  .booking-shell .admin-table,
+  .booking-shell .admin-timeline {
+    margin-inline: calc(var(--space-lg) * -1);
+    width: calc(100% + (var(--space-lg) * 2));
+    max-width: none;
+  }
+
+  .booking-shell .admin-search-row {
+    padding-inline: 0;
+  }
+
+  .booking-shell .admin-table th,
+  .booking-shell .admin-table td {
+    padding-inline: 0;
+  }
+
 
   .admin-view-tabs,
   .admin-filter-tabs,
