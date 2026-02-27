@@ -256,7 +256,6 @@ export default function BookingsAdminPanel({ isActive, mode, onBackToDashboard }
   const [isMobileViewport, setIsMobileViewport] = useState(false);
 
 
-  const selectedDateInputRef = useRef<HTMLInputElement | null>(null);
 
   const inFlightRef = useRef(false);
     const timeBlocksInFlightRef = useRef(false);
@@ -477,16 +476,6 @@ export default function BookingsAdminPanel({ isActive, mode, onBackToDashboard }
   const isTimelineView = mode === 'dashboard' && activeView === 'timeline';
   const selectedDateLabel = useMemo(() => formatTimelineDateLabel(selectedDate), [selectedDate]);
 
-  function openSelectedDatePicker() {
-    const input = selectedDateInputRef.current;
-
-    if (!input) return;
-    if ('showPicker' in HTMLInputElement.prototype && typeof input.showPicker === 'function') {
-      input.showPicker();
-      return;
-    }
-    input.click();
-  }
 
 
   async function openClientProfile(clientId?: string | null) {
@@ -675,38 +664,31 @@ export default function BookingsAdminPanel({ isActive, mode, onBackToDashboard }
                   >
                     {tabLabel}
                   </button>
-                  <button
-                    type="button"
+                    <label
                     className="admin-filter-tab-calendar"
                     onClick={(event) => {
                       event.stopPropagation();
-                      openSelectedDatePicker();
                     }}
                     aria-label={`Choose ${view} date`}
-                    title={`Choose ${view} date`}
                   >
+                                        <input
+                      type="date"
+                      className="admin-filter-tab-calendar-input"
+                      value={selectedDate}
+                      onChange={(event) => setSelectedDate(event.target.value)}
+                      onClick={(event) => event.stopPropagation()}
+                      aria-label="Select date"
+                    />
+
                     <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">
                       <path d="M7 2a1 1 0 0 1 1 1v1h8V3a1 1 0 1 1 2 0v1h1a3 3 0 0 1 3 3v11a4 4 0 0 1-4 4H6a4 4 0 0 1-4-4V7a3 3 0 0 1 3-3h1V3a1 1 0 0 1 1-1Zm13 8H4v8a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-8ZM5 6a1 1 0 0 0-1 1v1h16V7a1 1 0 0 0-1-1H5Z" />
                     </svg>
-                  </button>
+                                      </label>
                 </div>
               );
             })}
 
           </div>
-          {mode === 'dashboard' ? (
-            <div>
-              <input
-                ref={selectedDateInputRef}
-                type="date"
-                className="admin-timeline-date-input"
-                value={selectedDate}
-                onChange={(event) => setSelectedDate(event.target.value)}
-                aria-label={`${activeView === 'timeline' ? 'Timeline' : 'List'} date`}
-
-              />
-            </div>
-          ) : null}
         </>
       )}
       {mode === 'history' && (
