@@ -53,7 +53,6 @@ type ClientProfilePayload = {
 };
 
 
-type BookingFilterTab = 'confirmed' | 'rescheduled' | 'pending' | 'cancelled';
 type AdminBookingView = 'today' | 'timeline' | 'all';
 type HistoryPreset = 'last7' | 'last30' | 'overall' | 'custom';
 
@@ -131,7 +130,6 @@ function formatLastUpdated(lastUpdatedAt: number | null, nowMs: number) {
 }
 
 const normalizeSearchValue = (value: string) => value.trim().toLowerCase();
-const isCancelledStatus = (status: string) => status.startsWith('CANCELLED');
 const canBeCancelledByShop = (booking: Booking) => booking.status === 'CONFIRMED';
 
 
@@ -147,15 +145,6 @@ function getBookingSearchScore(booking: Booking, normalizedQuery: string) {
   return 0;
 }
 
-
-
-function matchesTabFilter(booking: Booking, activeFilter: BookingFilterTab) {
-
-  if (activeFilter === 'confirmed') return booking.status === 'CONFIRMED' && !booking.rescheduledAt;
-  if (activeFilter === 'rescheduled') return booking.status === 'CONFIRMED' && Boolean(booking.rescheduledAt);
-  if (activeFilter === 'pending') return booking.status === 'PENDING_CONFIRMATION';
-  return isCancelledStatus(booking.status);
-}
 function roundUpLondon(now: Date, stepMinutes = SLOT_STEP_MINUTES) {
   const zoned = toZonedTime(now, ADMIN_TIMEZONE);
   const year = zoned.getFullYear();
@@ -204,7 +193,6 @@ export default function BookingsAdminPanel({ isActive, mode, onBackToDashboard }
   const [lastUpdatedAt, setLastUpdatedAt] = useState<number | null>(null);
   const [nowMs, setNowMs] = useState(() => Date.now());
   const [clientSearchQuery, setClientSearchQuery] = useState('');
-  const [activeFilter, setActiveFilter] = useState<BookingFilterTab>('confirmed');
   const [activeView, setActiveView] = useState<AdminBookingView>('timeline');
   const [historyBarberId, setHistoryBarberId] = useState<string>('all');
   const [historyPreset, setHistoryPreset] = useState<HistoryPreset>('last7');
@@ -377,10 +365,7 @@ export default function BookingsAdminPanel({ isActive, mode, onBackToDashboard }
 
   const nextBooking = upcomingBookings[0] ?? null;
   const currentBookingView = mode === 'history' ? 'history' : activeView;
-  const filteredBookings = useMemo(() => {
-    if (mode !== 'history' && activeView === 'timeline') return bookings;
-    return bookings.filter((b) => matchesTabFilter(b, activeFilter));
-  }, [activeFilter, activeView, bookings, mode]);
+  const filteredBookings = useMemo(() => bookings, [bookings]);
 
 
   const visibleBookings = useMemo(() => {
@@ -588,7 +573,6 @@ export default function BookingsAdminPanel({ isActive, mode, onBackToDashboard }
         </section>
       )}
 
-      {!(mode !== 'history' && activeView === 'timeline') ? <div className={`admin-filter-tabs ${isMobileDashboard ? 'admin-chip-row' : ''}`} role="tablist" aria-label="Booking status filters"><button type="button" className={`admin-filter-tab ${activeFilter === 'confirmed' ? 'admin-filter-tab--active' : ''}`} onClick={() => setActiveFilter('confirmed')}>Confirmed</button><button type="button" className={`admin-filter-tab ${activeFilter === 'rescheduled' ? 'admin-filter-tab--active' : ''}`} onClick={() => setActiveFilter('rescheduled')}>Rescheduled</button><button type="button" className={`admin-filter-tab ${activeFilter === 'pending' ? 'admin-filter-tab--active' : ''}`} onClick={() => setActiveFilter('pending')}>Pending</button><button type="button" className={`admin-filter-tab ${activeFilter === 'cancelled' ? 'admin-filter-tab--active' : ''}`} onClick={() => setActiveFilter('cancelled')}>Cancelled</button></div> : null}
       <div className={`admin-search-row ${isMobileDashboard ? 'admin-search-row--sticky' : ''}`}><input type="search" value={clientSearchQuery} onChange={(e) => setClientSearchQuery(e.target.value)} placeholder="Search by client name or email..." aria-label="Search by client name or email" /></div>
 
       {mode !== 'history' && activeView === 'timeline' ? (
