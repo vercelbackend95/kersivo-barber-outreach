@@ -29,6 +29,12 @@
   width: 100%;
   border-collapse: collapse;
 }
+.listTableWrap {
+  min-width: 0;
+  max-width: 100%;
+  overflow-x: auto;
+}
+
 
 .admin-table th,
 .admin-table td {
@@ -694,6 +700,36 @@
     top: var(--space-sm);
   }
 }
+
+  .admin-table {
+    min-width: 56.25rem;
+  }
+
+  .admin-table-col-email {
+    max-width: 16rem;
+  }
+
+  .admin-table-col-email .admin-link-button {
+    display: inline-block;
+    max-width: 100%;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  .admin-table-col-service {
+    max-width: 12rem;
+    overflow-wrap: anywhere;
+  }
+
+  .admin-table-col-start {
+    white-space: nowrap;
+  }
+
+  .admin-table-col-actions {
+    width: 1%;
+    white-space: nowrap;
+  }
 
 
 .admin-products-panel {
