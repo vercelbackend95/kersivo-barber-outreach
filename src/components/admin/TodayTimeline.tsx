@@ -73,7 +73,7 @@ const TIMELINE_TOTAL_MINUTES = (TIMELINE_END_HOUR - TIMELINE_START_HOUR) * 60;
 const BOOKING_CARD_HEIGHT = 56;
 const BOOKING_STACK_GAP = 6;
 const LANE_INNER_PADDING = 8;
-
+const NOW_INDICATOR_REFRESH_MS = 15000;
 
 function getInitials(fullName: string) {
   const parts = fullName.trim().split(/\s+/).filter(Boolean);
@@ -222,11 +222,11 @@ const NowIndicator = memo(function NowIndicator({ selectedDate }: NowIndicatorPr
   useEffect(() => {
     const indicator = indicatorRef.current;
     if (!indicator) return;
-
+    const refreshMs = typeof NOW_INDICATOR_REFRESH_MS === 'number' ? NOW_INDICATOR_REFRESH_MS : 15000;
     updateNowIndicatorPosition(indicator, selectedDate);
     const intervalId = window.setInterval(() => {
       updateNowIndicatorPosition(indicator, selectedDate);
-    }, NOW_INDICATOR_REFRESH_MS);
+    }, refreshMs);
 
     return () => window.clearInterval(intervalId);
   }, [selectedDate]);

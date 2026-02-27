@@ -1,6 +1,7 @@
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { formatInTimeZone, fromZonedTime, toZonedTime } from 'date-fns-tz';
 import TodayTimeline from './TodayTimeline';
+import AdminErrorBoundary from './AdminErrorBoundary';
 
 type Booking = {
   id: string;
@@ -726,17 +727,18 @@ export default function BookingsAdminPanel({ isActive, mode, onBackToDashboard }
       {mode !== 'history' && activeView === 'timeline' ? (
                 <>
 
-        <TodayTimeline
-          barbers={barbers}
-          bookings={visibleBookings}
-          timeBlocks={timeBlocks}
-          selectedDate={selectedDate}
-          scrollContainerRef={timelineScrollRef}
+        <AdminErrorBoundary>
+          <TodayTimeline
+            barbers={barbers}
+            bookings={visibleBookings}
+            timeBlocks={timeBlocks}
+            selectedDate={selectedDate}
+            scrollContainerRef={timelineScrollRef}
+            onBookingClick={openTimelineBooking}
+          />
+        </AdminErrorBoundary>
+      ) : isMobileDashboard && mode !== 'history' ? (
 
-          onBookingClick={openTimelineBooking}
-        />
-                </>
-              ) : isMobileDashboard && mode !== 'history' ? (
         <div className="admin-booking-cards" aria-live="polite">
           {visibleBookings.map((booking) => (
             <article className={`admin-booking-card ${updatedBookingIds.includes(booking.id) ? 'admin-booking-card--updated' : ''}`} key={booking.id}>
