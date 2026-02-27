@@ -13,17 +13,21 @@ export const GET: APIRoute = async (ctx) => {
   const unauthorized = requireAdmin(ctx);
   if (unauthorized) return unauthorized;
 
-  const range = new URL(ctx.request.url).searchParams.get('range') ?? 'today';
+  const searchParams = new URL(ctx.request.url).searchParams;
+  const range = searchParams.get('range') ?? 'today';
+  const date = searchParams.get('date');
+
   const shop = await prisma.shopSettings.findFirstOrThrow({ select: { id: true } });
 
   const now = new Date();
-  const todayIso = formatInTimeZone(now, ADMIN_TIMEZONE, 'yyyy-MM-dd');
-  const todayStart = toUtcFromLondon(todayIso, 0);
-  const tomorrowStart = addMinutes(todayStart, 24 * 60);
+  const dayIso = date || formatInTimeZone(now, ADMIN_TIMEZONE, 'yyyy-MM-dd');
+  const dayStart = toUtcFromLondon(dayIso, 0);
+  const nextDayStart = addMinutes(dayStart, 24 * 60);
+
 
   const where = range === 'upcoming'
     ? { shopId: shop.id, endAt: { gte: now } }
-    : { shopId: shop.id, startAt: { lt: tomorrowStart }, endAt: { gt: todayStart } };
+    : { shopId: shop.id, startAt: { lt: nextDayStart }, endAt: { gt: dayStart } };
 
   const timeBlockDelegate = getTimeBlockDelegate();
   if (!timeBlockDelegate) {

@@ -79,6 +79,11 @@ const MOBILE_BREAKPOINT_PX = 768;
 function getTodayLondonDate() {
   return formatInTimeZone(new Date(), ADMIN_TIMEZONE, 'yyyy-MM-dd');
 }
+function formatTimelineDateLabel(date: string) {
+  const dateAtLondonMidnight = fromZonedTime(`${date}T00:00:00.000`, ADMIN_TIMEZONE);
+  return formatInTimeZone(dateAtLondonMidnight, ADMIN_TIMEZONE, 'EEE dd MMM');
+}
+
 
 function shiftLondonDate(date: string, days: number) {
   const atMidnight = fromZonedTime(`${date}T00:00:00.000`, ADMIN_TIMEZONE);
@@ -194,6 +199,7 @@ export default function BookingsAdminPanel({ isActive, mode, onBackToDashboard }
   const [nowMs, setNowMs] = useState(() => Date.now());
   const [clientSearchQuery, setClientSearchQuery] = useState('');
   const [activeView, setActiveView] = useState<AdminBookingView>('timeline');
+  const [timelineDate, setTimelineDate] = useState(() => getTodayLondonDate());
   const [historyBarberId, setHistoryBarberId] = useState<string>('all');
   const [historyPreset, setHistoryPreset] = useState<HistoryPreset>('last7');
   const [historyFrom, setHistoryFrom] = useState(() => getHistoryPresetDates('last7').from);
@@ -227,18 +233,24 @@ export default function BookingsAdminPanel({ isActive, mode, onBackToDashboard }
   const [isMobileViewport, setIsMobileViewport] = useState(false);
 
 
+  const timelineDateInputRef = useRef<HTMLInputElement | null>(null);
+
   const inFlightRef = useRef(false);
   const pollingStoppedRef = useRef(false);
   const previousSignaturesRef = useRef<Map<string, string>>(new Map());
   const updatedRowsTimeoutRef = useRef<number | null>(null);
 
   const fetchTimeBlocks = useCallback(async () => {
-    const response = await fetch('/api/admin/timeblocks?range=today', { credentials: 'same-origin' });
+    const endpoint = activeView === 'timeline'
+      ? `/api/admin/timeblocks?date=${encodeURIComponent(timelineDate)}`
+      : '/api/admin/timeblocks?range=today';
+    const response = await fetch(endpoint, { credentials: 'same-origin' });
+
     if (response.ok) {
       const data = (await response.json()) as { timeBlocks?: TimeBlock[] };
       setTimeBlocks(data.timeBlocks ?? []);
     }
-  }, []);
+ }, [activeView, timelineDate]);
 
   const fetchBarbers = useCallback(async () => {
     const response = await fetch('/api/admin/barbers', { credentials: 'same-origin' });
@@ -288,7 +300,9 @@ export default function BookingsAdminPanel({ isActive, mode, onBackToDashboard }
           if (appendHistory && historyCursor) params.set('cursor', historyCursor);
           return `/api/admin/bookings?${params.toString()}`;
         }
-        if (activeView === 'today' || activeView === 'timeline') return '/api/admin/bookings?range=today';
+        if (activeView === 'today') return '/api/admin/bookings?range=today';
+        if (activeView === 'timeline') return `/api/admin/bookings?date=${encodeURIComponent(timelineDate)}&mode=day`;
+
         return '/api/admin/bookings';
       })();
 
@@ -330,7 +344,7 @@ export default function BookingsAdminPanel({ isActive, mode, onBackToDashboard }
       setIsRefreshing(false);
       setHistoryLoadingMore(false);
     }
-  }, [activeView, bookings, historyBarberId, historyCursor, historyFrom, historyPreset, historyTo, loggedIn, mode, isActive]);
+  }, [activeView, bookings, historyBarberId, historyCursor, historyFrom, historyPreset, historyTo, loggedIn, mode, isActive, timelineDate]);
   const loadMoreHistory = useCallback(async () => {
     if (!historyHasMore || historyLoadingMore || mode !== 'history') return;
     setHistoryLoadingMore(true);
@@ -374,6 +388,20 @@ export default function BookingsAdminPanel({ isActive, mode, onBackToDashboard }
 
   }, [filteredBookings, normalizedClientSearchQuery]);
   const isMobileDashboard = mode === 'dashboard' && isMobileViewport;
+    const isTimelineView = mode === 'dashboard' && activeView === 'timeline';
+  const timelineDateLabel = useMemo(() => formatTimelineDateLabel(timelineDate), [timelineDate]);
+
+  function openTimelineDatePicker() {
+    const input = timelineDateInputRef.current;
+    if (!input) return;
+    if ('showPicker' in HTMLInputElement.prototype && typeof input.showPicker === 'function') {
+      input.showPicker();
+      return;
+    }
+    input.click();
+  }
+
+
   async function openClientProfile(clientId?: string | null) {
     if (!clientId) return;
     setSelectedClientId(clientId);
@@ -544,7 +572,41 @@ export default function BookingsAdminPanel({ isActive, mode, onBackToDashboard }
           ) : (
       <>
 
-      {mode === 'dashboard' && <div className={`admin-view-tabs admin-view-tabs--four ${isMobileDashboard ? 'admin-chip-row' : ''}`} role="tablist" aria-label="Admin views"><button type="button" className={`admin-filter-tab ${activeView === 'timeline' ? 'admin-filter-tab--active' : ''}`} onClick={() => setActiveView('timeline')}>Timeline</button><button type="button" className={`admin-filter-tab ${activeView === 'today' ? 'admin-filter-tab--active' : ''}`} onClick={() => setActiveView('today')}>Today</button><button type="button" className={`admin-filter-tab ${activeView === 'all' ? 'admin-filter-tab--active' : ''}`} onClick={() => setActiveView('all')}>All bookings</button></div>}      {mode === 'history' && (
+      {mode === 'dashboard' && (
+        <>
+          <div className={`admin-view-tabs admin-view-tabs--four ${isMobileDashboard ? 'admin-chip-row' : ''}`} role="tablist" aria-label="Admin views">
+            <button type="button" className={`admin-filter-tab ${activeView === 'timeline' ? 'admin-filter-tab--active' : ''}`} onClick={() => setActiveView('timeline')}>Timeline</button>
+            <button type="button" className={`admin-filter-tab ${activeView === 'today' ? 'admin-filter-tab--active' : ''}`} onClick={() => setActiveView('today')}>Today</button>
+            <button type="button" className={`admin-filter-tab ${activeView === 'all' ? 'admin-filter-tab--active' : ''}`} onClick={() => setActiveView('all')}>All bookings</button>
+          </div>
+          {isTimelineView ? (
+            <div className="admin-timeline-date-row">
+              <p className="admin-timeline-date-label muted">Timeline · {timelineDateLabel}</p>
+              <button
+                type="button"
+                className="admin-timeline-calendar-btn"
+                onClick={openTimelineDatePicker}
+                aria-label="Choose timeline date"
+                title="Choose timeline date"
+              >
+                <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+                  <path d="M7 2a1 1 0 0 1 1 1v1h8V3a1 1 0 1 1 2 0v1h1a3 3 0 0 1 3 3v11a4 4 0 0 1-4 4H6a4 4 0 0 1-4-4V7a3 3 0 0 1 3-3h1V3a1 1 0 0 1 1-1Zm13 8H4v8a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-8ZM5 6a1 1 0 0 0-1 1v1h16V7a1 1 0 0 0-1-1H5Z" />
+                </svg>
+              </button>
+              <input
+                ref={timelineDateInputRef}
+                type="date"
+                className="admin-timeline-date-input"
+                value={timelineDate}
+                onChange={(event) => setTimelineDate(event.target.value)}
+                aria-label="Timeline date"
+              />
+            </div>
+          ) : null}
+        </>
+      )}
+      {mode === 'history' && (
+
         <section className="admin-history-filters">
           <div className="admin-history-row">
             <label htmlFor="history-barber">Barber</label>
@@ -576,13 +638,18 @@ export default function BookingsAdminPanel({ isActive, mode, onBackToDashboard }
       <div className={`admin-search-row ${isMobileDashboard ? 'admin-search-row--sticky' : ''}`}><input type="search" value={clientSearchQuery} onChange={(e) => setClientSearchQuery(e.target.value)} placeholder="Search by client name or email..." aria-label="Search by client name or email" /></div>
 
       {mode !== 'history' && activeView === 'timeline' ? (
+                <>
+          {isRefreshing ? <p className="admin-timeline-loading muted">Loading timeline…</p> : null}
+
         <TodayTimeline
           barbers={barbers}
           bookings={visibleBookings}
           timeBlocks={timeBlocks}
           nowMs={nowMs}
+                    selectedDate={timelineDate}
           onBookingClick={openTimelineBooking}
         />
+                </>
               ) : isMobileDashboard && mode !== 'history' ? (
         <div className="admin-booking-cards" aria-live="polite">
           {visibleBookings.map((booking) => (

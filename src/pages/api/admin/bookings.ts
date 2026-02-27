@@ -5,19 +5,20 @@ import { prisma } from '../../../lib/db/client';
 
 const ADMIN_TIMEZONE = 'Europe/London';
 
+
+function getLondonDayRange(date: string) {
+    const startAt = fromZonedTime(`${date}T00:00:00.000`, ADMIN_TIMEZONE);
+  return {
+    gte: startAt,
+    lt: new Date(startAt.getTime() + 24 * 60 * 60 * 1000)
+
+  };
+}
 function getTodayRangeInLondon() {
   const todayInLondon = formatInTimeZone(new Date(), ADMIN_TIMEZONE, 'yyyy-MM-dd');
-  return {
-    gte: fromZonedTime(`${todayInLondon}T00:00:00.000`, ADMIN_TIMEZONE),
-    lt: fromZonedTime(`${todayInLondon}T23:59:59.999`, ADMIN_TIMEZONE)
-  };
+  return getLondonDayRange(todayInLondon);
 }
-function getLondonDayRange(date: string) {
-  return {
-    gte: fromZonedTime(`${date}T00:00:00.000`, ADMIN_TIMEZONE),
-    lte: fromZonedTime(`${date}T23:59:59.999`, ADMIN_TIMEZONE)
-  };
-}
+
 
 function getHistoryPresetRange(preset: string | null) {
   const todayInLondon = formatInTimeZone(new Date(), ADMIN_TIMEZONE, 'yyyy-MM-dd');
@@ -54,7 +55,7 @@ export const GET: APIRoute = async (ctx) => {
     const effectiveFrom = from ?? fallbackRange.from;
     const effectiveTo = to ?? fallbackRange.to;
     const startAtFilter = effectiveFrom && effectiveTo
-      ? { ...getLondonDayRange(effectiveFrom), ...{ lte: getLondonDayRange(effectiveTo).lte } }
+      ? { gte: getLondonDayRange(effectiveFrom).gte, lt: getLondonDayRange(effectiveTo).lt }
       : undefined;
 
     const bookings = await prisma.booking.findMany({
@@ -91,7 +92,8 @@ export const GET: APIRoute = async (ctx) => {
   const startAtRange = range === 'today'
     ? getTodayRangeInLondon()
     : date
-      ? { gte: new Date(`${date}T00:00:00.000Z`), lt: new Date(`${date}T23:59:59.999Z`) }
+      ? getLondonDayRange(date)
+
       : undefined;
 
   const bookings = await prisma.booking.findMany({

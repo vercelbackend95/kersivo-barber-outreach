@@ -210,6 +210,59 @@
   color: var(--accent-contrast);
 }
 
+.admin-timeline-date-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-xs);
+}
+
+.admin-timeline-date-label {
+  margin: 0;
+  font-size: 0.85rem;
+}
+
+.admin-timeline-calendar-btn {
+  width: 2rem;
+  height: 2rem;
+  border: 1px solid var(--border);
+  background: var(--bg);
+  color: var(--muted);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+}
+
+.admin-timeline-calendar-btn svg {
+  width: 1rem;
+  height: 1rem;
+  fill: currentColor;
+}
+
+.admin-timeline-calendar-btn:hover {
+  border-color: var(--accent-hover);
+  color: var(--fg);
+}
+
+.admin-timeline-calendar-btn:focus-visible {
+  outline: 2px solid var(--focus);
+  outline-offset: 2px;
+}
+
+.admin-timeline-date-input {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  opacity: 0;
+  pointer-events: none;
+}
+
+.admin-timeline-loading {
+  margin: 0;
+  font-size: 0.85rem;
+}
+
 .admin-shop-kicker {
   margin: calc(var(--space-xs) * -0.5) 0 var(--space-sm);
   font-size: 0.9rem;

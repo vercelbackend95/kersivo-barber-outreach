@@ -60,6 +60,7 @@ type TodayTimelineProps = {
   bookings: TimelineBooking[];
   timeBlocks: TimelineTimeBlock[];
   nowMs: number;
+    selectedDate: string;
   onBookingClick: (booking: TimelineBooking) => void;
 };
 
@@ -205,6 +206,7 @@ function getTickRows() {
 }
 
 export default function TodayTimeline({ barbers, bookings, timeBlocks, nowMs, onBookingClick }: TodayTimelineProps) {
+  export default function TodayTimeline({ barbers, bookings, timeBlocks, nowMs, selectedDate, onBookingClick }: TodayTimelineProps) {
   const lanes = useMemo(() => buildLanes(barbers, bookings, timeBlocks), [barbers, bookings, timeBlocks]);
   const ticks = useMemo(() => getTickRows(), []);
 
@@ -215,7 +217,9 @@ export default function TodayTimeline({ barbers, bookings, timeBlocks, nowMs, on
     return hour * 60 + minute - TIMELINE_START_HOUR * 60;
   }, [nowMs]);
 
-  const showNowIndicator = currentLondonMinute >= 0 && currentLondonMinute <= TIMELINE_TOTAL_MINUTES;
+  const todayLondon = formatInTimeZone(new Date(nowMs), ADMIN_TIMEZONE, 'yyyy-MM-dd');
+  const showNowIndicator = selectedDate === todayLondon && currentLondonMinute >= 0 && currentLondonMinute <= TIMELINE_TOTAL_MINUTES;
+
 
   if (lanes.length === 0) {
     return (
@@ -226,7 +230,7 @@ export default function TodayTimeline({ barbers, bookings, timeBlocks, nowMs, on
   }
 
   return (
-    <section className="admin-timeline" aria-label="Today timeline">
+    <section className="admin-timeline" aria-label={`Timeline for ${selectedDate}`}>
       <div className="admin-timeline-scroll">
         <div className="admin-timeline-scale-row">
           <div className="admin-timeline-barber-header">Barber</div>
