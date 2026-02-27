@@ -86,15 +86,25 @@
 .admin-search-field {
   position: relative;
   width: 100%;
+    --admin-search-clear-right: 10px;
+  --admin-search-clear-size: 36px;
+  --admin-search-feedback-gap: 10px;
+  --admin-search-feedback-width: 110px;
+
 }
 
 
 .admin-search-row input {
   flex: 1;
-    width: 100%;
+  width: 100%;
   min-height: 2.6rem;
   padding-left: 2.2rem;
-  padding-right: 8.4rem;
+  padding-right: calc(var(--admin-search-clear-right) + var(--admin-search-feedback-width) + 10px);
+}
+
+.admin-search-field--has-clear input {
+  padding-right: calc(var(--admin-search-clear-right) + var(--admin-search-clear-size) + var(--admin-search-feedback-gap) + var(--admin-search-feedback-width) + 10px);
+
 }
 
 .admin-search-row input:focus-visible {
@@ -122,15 +132,23 @@
 .admin-search-feedback {
   position: absolute;
   top: 50%;
-  right: 0.85rem;
+  right: var(--admin-search-clear-right);
   transform: translateY(-50%);
+    width: var(--admin-search-feedback-width);
+  max-width: var(--admin-search-feedback-width);
+
   font-size: 0.72rem;
   color: var(--muted);
   pointer-events: none;
+    overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  text-align: right;
+
 }
 
-.admin-search-field--has-clear input {
-  padding-right: 10.8rem;
+.admin-search-field--has-clear .admin-search-feedback {
+  right: calc(var(--admin-search-clear-right) + var(--admin-search-clear-size) + var(--admin-search-feedback-gap));
 
 }
 
@@ -197,11 +215,14 @@
 
 .admin-search-clear {
   position: absolute;
-  right: 0.4rem;
+  right: var(--admin-search-clear-right);
   top: 50%;
   transform: translateY(-50%);
-  min-width: 2rem;
-  min-height: 2rem;
+  width: var(--admin-search-clear-size);
+  height: var(--admin-search-clear-size);
+  min-width: var(--admin-search-clear-size);
+  min-height: var(--admin-search-clear-size);
+
   border: 1px solid var(--border);
   background: var(--bg);
   color: var(--fg);
@@ -220,8 +241,7 @@
 }
 
 .admin-timeline-card--booking.admin-timeline-card--search-match {
-  border-color: color-mix(in srgb, var(--accent) 55%, var(--border));
-  box-shadow: 0 0 0 1px color-mix(in srgb, var(--accent) 35%, transparent);
+  box-shadow: 0 0 0 1px color-mix(in srgb, var(--focus) 50%, transparent);
 
 }
 

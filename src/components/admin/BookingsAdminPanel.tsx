@@ -803,7 +803,7 @@ export default function BookingsAdminPanel({ isActive, mode, onBackToDashboard }
       )}
 
       <div className={`admin-search-row ${isMobileDashboard ? 'admin-search-row--sticky' : ''}`}>
-        <div className={`admin-search-field ${clientSearchQuery ? 'admin-search-field--has-clear' : ''}`}>
+        <div className={`admin-search-field ${clientSearchQuery ? 'admin-search-field--has-clear' : ''} ${searchResultsLabel ? 'admin-search-field--has-feedback' : ''}`}>
           <span className="admin-search-icon" aria-hidden="true">
             <svg viewBox="0 0 24 24" focusable="false" aria-hidden="true">
               <path d="M10.5 3a7.5 7.5 0 0 1 5.975 12.034l4.245 4.246a1 1 0 1 1-1.414 1.414l-4.246-4.245A7.5 7.5 0 1 1 10.5 3Zm0 2a5.5 5.5 0 1 0 0 11 5.5 5.5 0 0 0 0-11Z" fill="currentColor" />
