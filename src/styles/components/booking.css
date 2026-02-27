@@ -1143,8 +1143,9 @@
     top: 5.9rem;
     z-index: 31;
     background: var(--surface);
-    border: 1px solid var(--border);
-    padding: 0.4rem;
+    border: 0;
+    padding: 0;
+
   }
 
   .admin-search-row--sticky input {
@@ -1153,8 +1154,20 @@
 
   .admin-timeline-scroll {
     position: relative;
-        max-width: 100%;
+    max-width: 100%;
     touch-action: pan-x;
+    margin-bottom: 0;
+
+  }
+
+  .admin-timeline {
+    min-height: 0;
+    height: auto;
+    padding-bottom: 0;
+  }
+
+  .admin-timeline-legend {
+    margin-bottom: 0;
 
   }
 
