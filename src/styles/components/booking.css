@@ -60,27 +60,10 @@
   color: var(--muted);
 }
 
-.admin-refresh-row {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: var(--space-sm);
-  flex-wrap: wrap;
-}
-
-.admin-refresh-controls {
-  display: inline-flex;
-  align-items: center;
-  gap: var(--space-xs);
-}
-
-.admin-last-updated {
+.admin-next-updated {
   margin: 0;
-}
-
-.admin-refreshing {
   color: var(--muted);
-  font-size: 0.9rem;
+  font-size: 0.8rem;
 }
 
 .admin-row--highlighted {
@@ -1204,7 +1187,6 @@
 
   .admin-view-tabs,
   .admin-filter-tabs,
-  .admin-refresh-row,
   .admin-search-row {
     min-width: 0;
   }
@@ -1239,8 +1221,9 @@
     text-overflow: ellipsis;
   }
 
-  .admin-refresh-row {
-    font-size: 0.8rem;
+  .admin-next-block--mobile-sticky .admin-next-updated {
+    font-size: 0.7rem;
+
   }
 
   .admin-search-row--sticky {
