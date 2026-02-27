@@ -1,7 +1,7 @@
 import React, { memo, useEffect, useMemo, useRef } from 'react';
 import { formatInTimeZone } from 'date-fns-tz';
 import { getServiceCode } from '../../lib/booking/serviceCode';
-
+import { minutesInLondonDay } from '../../lib/booking/time';
 type TimelineBarber = {
   id: string;
   name: string;
@@ -74,6 +74,34 @@ const BOOKING_CARD_HEIGHT = 56;
 const BOOKING_STACK_GAP = 6;
 const LANE_INNER_PADDING = 8;
 const NOW_INDICATOR_REFRESH_MS = 15000;
+let hasLoggedInvalidTimelineDate = false;
+
+function getMinuteOfDay(input: Date | string): number {
+  const date = input instanceof Date ? input : new Date(input);
+  if (Number.isNaN(date.getTime())) {
+    if (import.meta.env.DEV && !hasLoggedInvalidTimelineDate) {
+      console.warn('[TodayTimeline] Invalid date provided to getMinuteOfDay.', input);
+      hasLoggedInvalidTimelineDate = true;
+    }
+    return 0;
+  }
+
+  return minutesInLondonDay(date);
+}
+
+function getTimelinePosition(startAt: Date | string, endAt: Date | string) {
+  const timelineStartMinute = TIMELINE_START_HOUR * 60;
+  const rawStart = getMinuteOfDay(startAt) - timelineStartMinute;
+  const rawEnd = getMinuteOfDay(endAt) - timelineStartMinute;
+  const clampedStart = Math.max(0, Math.min(rawStart, TIMELINE_TOTAL_MINUTES));
+  const clampedEnd = Math.max(clampedStart, Math.min(rawEnd, TIMELINE_TOTAL_MINUTES));
+  const widthMinutes = clampedEnd - clampedStart;
+
+  return {
+    leftPct: (clampedStart / TIMELINE_TOTAL_MINUTES) * 100,
+    widthPct: (widthMinutes / TIMELINE_TOTAL_MINUTES) * 100
+  };
+}
 
 function getInitials(fullName: string) {
   const parts = fullName.trim().split(/\s+/).filter(Boolean);
@@ -323,4 +351,5 @@ function TodayTimeline({ barbers, bookings, timeBlocks, selectedDate, onBookingC
     </section>
   );
 }
+
 export default memo(TodayTimeline);
