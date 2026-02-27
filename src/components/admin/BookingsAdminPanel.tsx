@@ -725,8 +725,6 @@ export default function BookingsAdminPanel({ isActive, mode, onBackToDashboard }
       <div className={`admin-search-row ${isMobileDashboard ? 'admin-search-row--sticky' : ''}`}><input type="search" value={clientSearchQuery} onChange={(e) => setClientSearchQuery(e.target.value)} placeholder="Search by client name or email..." aria-label="Search by client name or email" /></div>
 
       {mode !== 'history' && activeView === 'timeline' ? (
-                <>
-
         <AdminErrorBoundary>
           <TodayTimeline
             barbers={barbers}
@@ -771,10 +769,12 @@ export default function BookingsAdminPanel({ isActive, mode, onBackToDashboard }
           </table>
         </div>
       )}
+      {mode === 'history' && historyHasMore && <button type="button" className="btn btn--secondary" onClick={() => void loadMoreHistory()} disabled={historyLoadingMore}>{historyLoadingMore ? 'Loading...' : 'Load more'}</button>}
+    </>
+  )}
+</>
+      )}
 
-      {mode === 'history' && historyHasMore && <button type="button" className="btn btn--secondary" onClick={() => void loadMoreHistory()} disabled={historyLoadingMore}>{historyLoadingMore ? 'Loading...' : 'Load more'}</button>}      </>
-          )}
-        </>      )}
 
       {mode === 'reports' && (
         <section className="admin-reports" aria-live="polite">
