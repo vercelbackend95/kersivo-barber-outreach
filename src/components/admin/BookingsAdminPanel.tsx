@@ -554,7 +554,7 @@ export default function BookingsAdminPanel({ isActive, mode, onBackToDashboard }
 
 
   async function login() { const res = await fetch('/api/admin/login', { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ secret }) }); setLoggedIn(res.ok); if (!res.ok) setError('Invalid secret'); }
-  async function logout() { await fetch('/api/admin/logout', { method: 'POST', credentials: 'same-origin' }); setBookings([]); setLoggedIn(false); }
+
 
 
   async function cancelBookingByShop(booking: Booking) {
@@ -637,7 +637,7 @@ export default function BookingsAdminPanel({ isActive, mode, onBackToDashboard }
     <section className="surface booking-shell">
       <h1>Admin Dashboard</h1>
       <div className={`admin-next-block ${isMobileDashboard ? 'admin-next-block--mobile-sticky' : ''}`}><p className="admin-next-primary">{currentBookingView === 'history' ? `History: ${bookings.length} bookings` : `Today: ${todayBookings.length} bookings`}</p>{nextBooking && mode !== 'history' && <p className="admin-next-secondary">Next: {nextBooking.barber?.name} — {nextBooking.service?.name} — {formatStartTime(nextBooking.startAt)} ({formatRelativeTime(nextBooking.startAt, nextBooking.endAt)})</p>}</div>
-      <div className="admin-refresh-row"><p className="muted admin-last-updated">Last updated: {formatLastUpdated(lastUpdatedAt, nowMs)}</p>{isMobileDashboard ? null : <div className="admin-refresh-controls"><button type="button" className="btn btn--ghost" onClick={() => { void fetchBookings(); void fetchTimeBlocks(); void fetchReports(); }} disabled={isRefreshing}>Refresh</button><button type="button" className="btn btn--secondary" onClick={() => void logout()}>Logout</button></div>}</div>
+      <div className="admin-refresh-row"><p className="muted admin-last-updated">Last updated: {formatLastUpdated(lastUpdatedAt, nowMs)}</p>{isMobileDashboard ? null : <div className="admin-refresh-controls"><button type="button" className="btn btn--ghost" onClick={() => { void fetchBookings(); void fetchTimeBlocks(); void fetchReports(); }} disabled={isRefreshing}>Refresh</button></div>}</div>
 
       {cancelSuccessMessage && <p className="admin-inline-success">{cancelSuccessMessage}</p>}
       {cancelErrorMessage && <p className="admin-inline-error">{cancelErrorMessage}</p>}

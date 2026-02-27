@@ -35,7 +35,7 @@ export default function AdminLayout({ activeSection, onChangeSection, children }
 
   const handleLogout = async () => {
     await fetch('/api/admin/logout', { method: 'POST', credentials: 'same-origin' });
-    window.location.reload();
+    window.location.assign('/admin');
   };
 
   const menu = useMemo(() => (
@@ -106,6 +106,12 @@ export default function AdminLayout({ activeSection, onChangeSection, children }
       <aside className="admin-sidebar" aria-label="Admin sections">
         <h1 className="admin-sidebar-title">ADMIN</h1>
         {menu}
+                <div className="admin-sidebar-logout-wrap">
+          <div className="admin-sidebar-divider" aria-hidden="true" />
+          <button type="button" className="btn btn--secondary admin-sidebar-logout" onClick={() => void handleLogout()}>
+            Logout
+          </button>
+        </div>
       </aside>
 
       <section className="admin-main-content">

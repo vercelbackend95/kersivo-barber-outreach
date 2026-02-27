@@ -533,6 +533,7 @@
 .admin-sidebar-nav {
   display: grid;
   gap: var(--space-xs);
+  flex: 1;
 }
 
 .admin-sidebar-group {
@@ -552,6 +553,18 @@
   height: 1px;
   background: var(--border);
 }
+
+.admin-sidebar-logout-wrap {
+  margin-top: auto;
+  display: grid;
+  gap: var(--space-xs);
+  padding-top: var(--space-xs);
+}
+
+.admin-sidebar-logout {
+  width: 100%;
+}
+
 
 .admin-quick-blocks-head {
   display: flex;
@@ -695,9 +708,11 @@
   }
 
   .admin-sidebar {
-    display: grid;
+    display: flex;
+    flex-direction: column;
     position: sticky;
     top: var(--space-sm);
+    min-height: calc(100dvh - (var(--space-sm) * 2));
   }
 }
 
