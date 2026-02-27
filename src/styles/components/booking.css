@@ -1211,12 +1211,30 @@
   .admin-timeline-card--booking {
     min-width: 64px;
     padding: 0.25rem 0.35rem;
+        justify-content: center;
+    gap: 0.1rem;
+
   }
 
-  .admin-timeline-card-service,
-  .admin-timeline-card-separator {
+  .admin-timeline-card-time {
+    font-size: 0.8rem;
+    line-height: 1.05;
+  }
+
+  .admin-timeline-card-service {
+    display: block;
+    font-size: 0.72rem;
+    line-height: 1.05;
+    font-weight: 700;
+
+  }
+
+  .admin-timeline-card-separator,
+  .admin-timeline-card-client,
+  .admin-timeline-card-meta {
     display: none;
   }
+}
 
 
 .admin-timeline-empty {

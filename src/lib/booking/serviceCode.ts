@@ -1,4 +1,12 @@
-const SERVICE_CODE_MAP: Record<string, string> = {
+const SERVICE_CODE_BY_ID: Record<string, string> = {
+  'svc-haircut': 'H',
+  'svc-skin-fade': 'FD',
+  'svc-beard-trim': 'BT',
+  'svc-haircut-beard': 'H+B'
+};
+
+const SERVICE_CODE_BY_NAME: Record<string, string> = {
+
   haircut: 'H',
   'skin fade': 'FD',
   'beard trim': 'BT',
@@ -6,11 +14,21 @@ const SERVICE_CODE_MAP: Record<string, string> = {
   'haircut & beard': 'H+B'
 };
 
-export function getServiceCode(serviceName: string): string {
-  const normalizedName = serviceName.trim().replace(/\s+/g, ' ').toLowerCase();
+type ServiceCodeInput =
+  | string
+  | {
+      id?: string | null;
+      name?: string | null;
+    };
+
+function normalizeServiceName(serviceName: string): string {
+  return serviceName.trim().replace(/\s+/g, ' ').toLowerCase();
+}
+
+function getFallbackCodeFromName(serviceName: string): string {
+  const normalizedName = normalizeServiceName(serviceName);
   if (!normalizedName) return 'SRV';
 
-  if (SERVICE_CODE_MAP[normalizedName]) return SERVICE_CODE_MAP[normalizedName];
 
   const words = normalizedName.split(' ').filter(Boolean);
   if (words.length >= 2) {
@@ -19,6 +37,17 @@ export function getServiceCode(serviceName: string): string {
       .map((word) => word.slice(0, 1).toUpperCase())
       .join('');
   }
+  return normalizedName.slice(0, 2).toUpperCase();
+}
 
-  return normalizedName.slice(0, 3).toUpperCase();
+export function getServiceCode(input: ServiceCodeInput): string {
+  const serviceId = typeof input === 'string' ? '' : (input.id ?? '').trim().toLowerCase();
+  const serviceName = typeof input === 'string' ? input : input.name ?? '';
+  const normalizedName = normalizeServiceName(serviceName);
+
+  if (serviceId && SERVICE_CODE_BY_ID[serviceId]) return SERVICE_CODE_BY_ID[serviceId];
+  if (normalizedName && SERVICE_CODE_BY_NAME[normalizedName]) return SERVICE_CODE_BY_NAME[normalizedName];
+
+  return getFallbackCodeFromName(serviceName);
+
 }

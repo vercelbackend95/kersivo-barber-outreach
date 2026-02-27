@@ -18,7 +18,7 @@ type TimelineBooking = {
   notes?: string | null;
   rescheduledAt?: string | null;
   barber: { name: string };
-  service: { name: string };
+  service: { id?: string; name: string };
 };
 
 type TimelineTimeBlock = {
@@ -335,7 +335,7 @@ function TodayTimeline({ barbers, bookings, timeBlocks, selectedDate, onBookingC
                                     title={`${item.startLabel} · ${item.booking.service?.name ?? 'Service'} · ${item.booking.fullName}`}
                 >
                   <span className="admin-timeline-card-time">{item.startLabel}</span>
-                  <strong className="admin-timeline-card-service">{getServiceCode(item.booking.service?.name ?? '')}</strong>
+                  <strong className="admin-timeline-card-service">{getServiceCode({ id: item.booking.service?.id, name: item.booking.service?.name })}</strong>
                 </button>
               ))}
             </div>
