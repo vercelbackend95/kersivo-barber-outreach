@@ -1,5 +1,6 @@
 import React, { memo, useEffect, useMemo, useRef } from 'react';
 import { formatInTimeZone } from 'date-fns-tz';
+import { getServiceCode } from '../../lib/booking/serviceCode';
 
 type TimelineBarber = {
   id: string;
@@ -72,48 +73,7 @@ const TIMELINE_TOTAL_MINUTES = (TIMELINE_END_HOUR - TIMELINE_START_HOUR) * 60;
 const BOOKING_CARD_HEIGHT = 56;
 const BOOKING_STACK_GAP = 6;
 const LANE_INNER_PADDING = 8;
-const NOW_INDICATOR_REFRESH_MS = 30000;
-const SERVICE_CODE_MAP: Record<string, string> = {
-  haircut: 'CUT',
-  'skin fade': 'FADE',
-  'beard trim': 'BEARD',
-  'haircut + beard': 'H+B'
-};
 
-function getMinuteOfDay(isoDate: string) {
-  const hours = Number(formatInTimeZone(isoDate, ADMIN_TIMEZONE, 'HH'));
-  const minutes = Number(formatInTimeZone(isoDate, ADMIN_TIMEZONE, 'mm'));
-  return hours * 60 + minutes;
-}
-
-function getTimelinePosition(startAt: string, endAt: string) {
-  const timelineStartMinute = TIMELINE_START_HOUR * 60;
-  const rawStart = getMinuteOfDay(startAt) - timelineStartMinute;
-  const rawEnd = getMinuteOfDay(endAt) - timelineStartMinute;
-  const clampedStart = Math.max(0, Math.min(TIMELINE_TOTAL_MINUTES, rawStart));
-  const clampedEnd = Math.max(clampedStart + 1, Math.min(TIMELINE_TOTAL_MINUTES, rawEnd));
-
-  return {
-    leftPct: (clampedStart / TIMELINE_TOTAL_MINUTES) * 100,
-    widthPct: (Math.max(15, clampedEnd - clampedStart) / TIMELINE_TOTAL_MINUTES) * 100,
-    clampedStart
-  };
-}
-
-function getServiceCode(name: string) {
-  const normalizedName = name.trim().toLowerCase();
-  if (SERVICE_CODE_MAP[normalizedName]) return SERVICE_CODE_MAP[normalizedName];
-
-  const words = normalizedName.split(/\s+/).filter(Boolean);
-  if (words.length === 0) return 'SRV';
-  if (words.length === 1) return words[0].slice(0, 5).toUpperCase();
-
-  return words
-    .slice(0, 3)
-    .map((word) => word[0]?.toUpperCase() ?? '')
-    .join('');
-
-}
 
 function getInitials(fullName: string) {
   const parts = fullName.trim().split(/\s+/).filter(Boolean);
@@ -347,7 +307,7 @@ function TodayTimeline({ barbers, bookings, timeBlocks, selectedDate, onBookingC
                                     title={`${item.startLabel} · ${item.booking.service?.name ?? 'Service'} · ${item.booking.fullName}`}
                 >
                   <span className="admin-timeline-card-time">{item.startLabel}</span>
-                  <strong className="admin-timeline-card-service">{item.booking.service?.name}</strong>
+                  <strong className="admin-timeline-card-service">{getServiceCode(item.booking.service?.name ?? '')}</strong>
                 </button>
               ))}
             </div>
