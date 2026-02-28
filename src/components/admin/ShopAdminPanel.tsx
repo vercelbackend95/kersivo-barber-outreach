@@ -181,31 +181,30 @@ type MiniLineChartProps = {
 type SeriesPillsProps = {
   seriesList: SalesSeriesPill[];
   activeKeys: string[];
-  overallEnabled: boolean;
   onToggle: (seriesKey: string) => void;
-  onToggleOverall: () => void;
   maxHintVisible: boolean;
+    emptySelectionHintVisible: boolean;
 };
 
 function SeriesPills({
   seriesList,
   activeKeys,
-  overallEnabled,
   onToggle,
-  onToggleOverall,
-  maxHintVisible
+    maxHintVisible,
+  emptySelectionHintVisible
+
 }: SeriesPillsProps) {
   return (
     <div className="admin-sales-series-pills-wrap" aria-live="polite">
       <div className="admin-sales-series-pills" role="group" aria-label="Chart series selection">
         {seriesList.map((series) => {
-          const active = series.isOverall ? overallEnabled : activeKeys.includes(series.key);
+          const active = activeKeys.includes(series.key);
           return (
             <button
               key={series.key}
               type="button"
               className={`admin-sales-series-pill ${active ? 'admin-sales-series-pill--active' : ''}`}
-              onClick={series.isOverall ? onToggleOverall : () => onToggle(series.key)}
+              onClick={() => onToggle(series.key)}
               aria-pressed={active}
               aria-label={`${active ? 'Hide' : 'Show'} ${series.label} line`}
             >
@@ -216,6 +215,7 @@ function SeriesPills({
         })}
       </div>
       {maxHintVisible ? <p className="admin-sales-series-hint">Max 3 products</p> : null}
+            {emptySelectionHintVisible ? <p className="admin-sales-series-hint">Select a product to display data</p> : null}
     </div>
   );
 }
@@ -258,32 +258,26 @@ function MiniLineChart({
   }, [useResponsiveResize]);
 
 
-  if (series.length === 0 || series.every((line) => line.points.length === 0)) {
-    return (
-      <div className="admin-sales-empty">
-        <p>No sales yet.</p>
-      </div>
-    );
-  }
+
   const width = dimensions.width;
   const chartHeight = dimensions.height;
 
   const padding = { top: 20, right: 20, bottom: 36, left: 54 };
   const colorBySeriesKey = new Map(series.map((line, index) => [line.key, SALES_SERIES_COLORS[index % SALES_SERIES_COLORS.length]]));
-
+  colorBySeriesKey.set('__empty__', 'var(--border)');
   const safeSeries = series
     .map((line) => ({ ...line, points: line.points ?? [] }))
     .filter((line) => line.points.length > 0);
 
-  if (safeSeries.length === 0) {
-    return (
-      <div className="admin-sales-empty">
-        <p>No sales yet.</p>
-      </div>
-    );
-  }
+  const fallbackDates = ['start', 'end'];
+  const fallbackSeries: SalesChartSeries = {
+    key: '__empty__',
+    name: 'No data',
+    points: fallbackDates.map((date) => ({ date, revenuePence: 0, units: 0 }))
+  };
+  const seriesForChart = safeSeries.length > 0 ? safeSeries : [fallbackSeries];
+  const allPoints = seriesForChart.flatMap((line) => line.points);
 
-  const allPoints = safeSeries.flatMap((line) => line.points);
 
   const allDates = Array.from(new Set(allPoints.map((point) => point.date))).sort((a, b) => a.localeCompare(b));
   const values = allPoints.map((point) => (metric === 'revenue' ? point.revenuePence : point.units));
@@ -341,7 +335,7 @@ function MiniLineChart({
           </g>
         ))}
 
-        {safeSeries.map((line) => {
+        {seriesForChart.map((line) => {
           const path = line.points
             .map((point, pointIndex) => {
               const value = metric === 'revenue' ? point.revenuePence : point.units;
@@ -353,7 +347,7 @@ function MiniLineChart({
           return (
             <g key={line.key}>
               <path d={path} fill="none" stroke={colorBySeriesKey.get(line.key)} strokeWidth="2" />
-              {line.points.map((point) => {
+              {line.key === '__empty__' ? null : line.points.map((point) => {
                 const value = metric === 'revenue' ? point.revenuePence : point.units;
                 return (
                   <circle key={`${line.key}-${point.date}`} cx={xPosition(point.date)} cy={yPosition(value)} r="2.25" fill={colorBySeriesKey.get(line.key)}>
@@ -366,7 +360,7 @@ function MiniLineChart({
           );
         })}
 
-        {allDates.filter((_, index) => index % Math.max(1, Math.ceil(allDates.length / 6)) === 0 || index === allDates.length - 1).map((date) => (
+        {allDates.filter((date, index) => date !== 'start' && date !== 'end' && (index % Math.max(1, Math.ceil(allDates.length / 6)) === 0 || index === allDates.length - 1)).map((date) => (
           <text key={`x-${date}`} x={xPosition(date)} y={chartHeight - 12} textAnchor="middle" className="admin-sales-axis-label">
             {new Date(`${date}T00:00:00`).toLocaleDateString('en-GB', { day: '2-digit', month: '2-digit' })}
           </text>
@@ -404,14 +398,12 @@ export default function ShopAdminPanel({ initialTab = 'products' }: ShopAdminPan
   const [salesPreset, setSalesPreset] = useState<SalesRangePreset>('30');
   const [salesFrom, setSalesFrom] = useState(() => getRangeDates('30').from);
   const [salesTo, setSalesTo] = useState(() => getCurrentYmdInLondon());
-  const [includeOverall, setIncludeOverall] = useState(true);
-  const [selectedProductIds, setSelectedProductIds] = useState<string[]>([]);
+  const [activeSeriesKeys, setActiveSeriesKeys] = useState<string[]>(['overall']);
     const [salesMetric, setSalesMetric] = useState<SalesMetric>('revenue');
   const [salesLoading, setSalesLoading] = useState(false);
   const [salesError, setSalesError] = useState<string | null>(null);
   const [salesData, setSalesData] = useState<SalesResponse | null>(null);
     const [showSelectionLimitHint, setShowSelectionLimitHint] = useState(false);
-  const [generatingDemo, setGeneratingDemo] = useState(false);
   const [isMobileSalesView, setIsMobileSalesView] = useState(false);
   const [isSalesChartExpanded, setIsSalesChartExpanded] = useState(false);
 
@@ -542,10 +534,7 @@ export default function ShopAdminPanel({ initialTab = 'products' }: ShopAdminPan
     [allSalesSeries]
   );
 
-  const chartSeries = useMemo(() => allSalesSeries.filter((series) => {
-    if (series.key === 'overall') return includeOverall;
-    return selectedProductIds.includes(series.key);
-  }), [allSalesSeries, includeOverall, selectedProductIds]);
+  const chartSeries = useMemo(() => allSalesSeries.filter((series) => activeSeriesKeys.includes(series.key)), [activeSeriesKeys, allSalesSeries]);
 
 
 
@@ -632,23 +621,6 @@ export default function ShopAdminPanel({ initialTab = 'products' }: ShopAdminPan
     }
   }
 
-  async function generateDemoSales() {
-    setGeneratingDemo(true);
-    setSalesError(null);
-    try {
-      const response = await fetch('/api/admin/shop/sales/demo', { method: 'POST', credentials: 'include' });
-      const payload = await response.json();
-      if (!response.ok) throw new Error(payload.error || 'Could not generate demo sales data.');
-      setSuccess(typeof payload.message === 'string' ? payload.message : 'Demo sales data generated.');
-      await fetchSales();
-      await fetchOrders();
-    } catch (generateError) {
-      setSalesError(generateError instanceof Error ? generateError.message : 'Could not generate demo sales data.');
-    } finally {
-      setGeneratingDemo(false);
-    }
-  }
-
 
   useEffect(() => {
     void fetchProducts();
@@ -676,17 +648,27 @@ export default function ShopAdminPanel({ initialTab = 'products' }: ShopAdminPan
   }, []);
 
   useEffect(() => {
-    const productSeriesIds = allSalesSeries.filter((series) => series.key !== 'overall').map((series) => series.key);
-    if (productSeriesIds.length === 0) {
-      setSelectedProductIds([]);
+    const validSeriesIds = allSalesSeries.map((series) => series.key);
+    const productSeriesIds = validSeriesIds.filter((seriesId) => seriesId !== 'overall');
+    if (validSeriesIds.length === 0) {
+      setActiveSeriesKeys(['overall']);
+
       hasInitializedSeriesSelectionRef.current = false;
       return;
     }
-    setSelectedProductIds((previous) => {
-      const valid = previous.filter((id) => productSeriesIds.includes(id)).slice(0, 3);
-      if (valid.length > 0 || hasInitializedSeriesSelectionRef.current) return valid;
+    setActiveSeriesKeys((previous) => {
+      const base = previous.filter((seriesKey) => validSeriesIds.includes(seriesKey));
+      const hasOverallSeries = validSeriesIds.includes('overall');
+      const withOverall = hasOverallSeries
+        ? (base.includes('overall') ? base : ['overall', ...base])
+        : base.filter((seriesKey) => seriesKey !== 'overall');
+      const productSelection = withOverall.filter((seriesKey) => seriesKey !== 'overall').slice(0, 3);
+      if ((productSelection.length > 0 || hasInitializedSeriesSelectionRef.current) && withOverall.length > 0) {
+        return withOverall.includes('overall') ? ['overall', ...productSelection] : productSelection;
+      }
+
       hasInitializedSeriesSelectionRef.current = true;
-      return productSeriesIds.slice(0, 3);
+      return hasOverallSeries ? ['overall', ...productSeriesIds.slice(0, 3)] : productSeriesIds.slice(0, 3);
     });
   }, [allSalesSeries]);
 
@@ -932,26 +914,37 @@ export default function ShopAdminPanel({ initialTab = 'products' }: ShopAdminPan
       setError(collectError instanceof Error ? collectError.message : 'Unable to mark order as collected.');
     }
   }
-  function toggleProductSelection(productId: string) {
-    setSelectedProductIds((previous) => {
-      if (previous.includes(productId)) {
-        return previous.filter((id) => id !== productId);
+  function toggleSeriesSelection(seriesKey: string) {
+    setActiveSeriesKeys((previous) => {
+      const isOverallSeries = seriesKey === 'overall';
+      if (previous.includes(seriesKey)) {
+        return previous.filter((key) => key !== seriesKey);
+
       }
-      if (previous.length >= 3) {
+      if (!isOverallSeries) {
+        const selectedProductsCount = previous.filter((key) => key !== 'overall').length;
+        if (selectedProductsCount >= 3) {
                 setShowSelectionLimitHint(true);
-        if (limitHintTimeoutRef.current) {
-          window.clearTimeout(limitHintTimeoutRef.current);
+          if (limitHintTimeoutRef.current) {
+            window.clearTimeout(limitHintTimeoutRef.current);
+          }
         }
         limitHintTimeoutRef.current = window.setTimeout(() => {
           setShowSelectionLimitHint(false);
         }, 2000);
+      }
 
         return previous;
+      setShowSelectionLimitHint(false);
+      if (isOverallSeries) {
+        return ['overall', ...previous.filter((key) => key !== 'overall')];
       }
-            setShowSelectionLimitHint(false);
-      return [...previous, productId];
+
+      return [...previous, seriesKey];
     });
   }
+
+
 
   function applyPreset(nextPreset: Exclude<SalesRangePreset, 'custom'>) {
     const dates = getRangeDates(nextPreset);
@@ -1210,21 +1203,7 @@ export default function ShopAdminPanel({ initialTab = 'products' }: ShopAdminPan
             </div>
 
 
-
-
-            <label className="admin-product-checkbox"><input type="checkbox" checked={includeOverall} onChange={(event) => setIncludeOverall(event.target.checked)} />Include Overall line</label>
-
-            <div className="admin-products-actions">
-              <button type="button" className="btn btn--primary" onClick={() => void fetchSales()} disabled={salesLoading}>{salesLoading ? 'Loading...' : 'Refresh sales'}</button>              {import.meta.env.DEV ? (
-                <button type="button" className="btn btn--secondary" onClick={() => void generateDemoSales()} disabled={generatingDemo}>{generatingDemo ? 'Generating...' : 'Generate demo sales data'}</button>              ) : null}
-            </div>
-          </div>
-
-          {(salesData?.kpis.ordersCount ?? 0) === 0 || chartSeries.length === 0 ? (
-            <div className="admin-sales-empty">
-              <p>No sales yet.</p>
-            </div>
-          ) : (
+</div>
             <>
               <div className="admin-sales-chart-wrap">
                                 {isMobileSalesView ? (
@@ -1251,11 +1230,11 @@ export default function ShopAdminPanel({ initialTab = 'products' }: ShopAdminPan
                 
                 <SeriesPills
                   seriesList={seriesPills}
-                  activeKeys={selectedProductIds}
-                  overallEnabled={includeOverall}
-                  onToggle={toggleProductSelection}
-                  onToggleOverall={() => setIncludeOverall((previous) => !previous)}
+                  activeKeys={activeSeriesKeys}
+                  onToggle={toggleSeriesSelection}
+
                   maxHintVisible={showSelectionLimitHint}
+                                    emptySelectionHintVisible={chartSeries.length === 0}
                 />
 
               </div>
@@ -1276,13 +1255,13 @@ export default function ShopAdminPanel({ initialTab = 'products' }: ShopAdminPan
                         useResponsiveResize
                       />
                     </SalesChartErrorBoundary>
-                                        <SeriesPills
+                    <SeriesPills
                       seriesList={seriesPills}
-                      activeKeys={selectedProductIds}
-                      overallEnabled={includeOverall}
-                      onToggle={toggleProductSelection}
-                      onToggleOverall={() => setIncludeOverall((previous) => !previous)}
+                      activeKeys={activeSeriesKeys}
+                      onToggle={toggleSeriesSelection}
+
                       maxHintVisible={showSelectionLimitHint}
+                                            emptySelectionHintVisible={chartSeries.length === 0}
                     />
 
                   </div>
@@ -1305,7 +1284,6 @@ export default function ShopAdminPanel({ initialTab = 'products' }: ShopAdminPan
                 </table>
               </div>
             </>
-          )}
         </div>
       )}
 

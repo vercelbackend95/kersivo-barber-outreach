@@ -1282,6 +1282,7 @@
 .admin-sales-panel {
   display: grid;
   gap: var(--space-sm);
+    padding-bottom: calc(var(--space-sm) + env(safe-area-inset-bottom));
 }
 
 .admin-sales-kpis {
@@ -1405,15 +1406,18 @@
   min-height: 2.35rem;
   display: inline-flex;
   align-items: center;
-    gap: 0.45rem;
+  gap: 0.45rem;
   border: 1px solid var(--border);
-  background: transparent;
+  background: color-mix(in srgb, var(--surface) 92%, var(--bg) 8%);
   color: var(--muted);
-  padding: 0.35rem 0.65rem;
+  padding: 0.4rem 0.7rem;
   font-size: 0.8rem;
+    transition: border-color 0.15s ease, background-color 0.15s ease, color 0.15s ease;
 }
 .admin-sales-series-pill--active {
-  background: var(--bg);
+  border-color: var(--accent);
+  background: color-mix(in srgb, var(--accent) 14%, var(--surface) 86%);
+
   color: var(--fg);
 }
 .admin-sales-series-pill__swatch {
@@ -1940,9 +1944,9 @@
   }
   .admin-sales-series-pill {
     min-height: 2.25rem;
-
     font-size: 0.75rem;
-
+    flex: 0 1 auto;
+    white-space: nowrap;
   }
 
   .admin-products-table-wrap {
