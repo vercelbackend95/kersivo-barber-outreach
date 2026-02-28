@@ -996,6 +996,13 @@
   -webkit-tap-highlight-color: transparent;
   transition: opacity 120ms ease;
 }
+.dnd-handle {
+  touch-action: none;
+  -webkit-touch-callout: none;
+  -webkit-user-select: none;
+  user-select: none;
+}
+
 
 .admin-drag-handle--flash {
   opacity: 0.65;

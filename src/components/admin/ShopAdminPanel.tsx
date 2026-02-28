@@ -908,7 +908,7 @@ export default function ShopAdminPanel({ initialTab = 'products' }: ShopAdminPan
       if (moveEvent.pointerId !== pointerId) return;
       const deltaX = Math.abs(moveEvent.clientX - pointerX);
       const deltaY = Math.abs(moveEvent.clientY - pointerY);
-      if (deltaX > 5 || deltaY > 5) {
+      if (deltaX > 8 || deltaY > 8) {
         clearPending();
       }
     };
@@ -940,7 +940,7 @@ export default function ShopAdminPanel({ initialTab = 'products' }: ShopAdminPan
       debugDnd('onDragStart', { activeId: productId, overId: productId, inputType: 'pointer' });
 
 
-    }, 200);
+    }, 250);
   }
   function onDragTouchStart(event: React.TouchEvent<HTMLButtonElement>, productId: string) {
     if (!canReorder || dragState) return;
@@ -1118,7 +1118,7 @@ export default function ShopAdminPanel({ initialTab = 'products' }: ShopAdminPan
                   <input type="url" value={form.imageUrl} onChange={(event) => setForm((prev) => ({ ...prev, imageUrl: event.target.value }))} placeholder="https://..." />
                 </label>
                 <div className="admin-product-image-preview" aria-hidden="true">
-                  {form.imageUrl.trim() ? <img src={form.imageUrl} alt="Preview" /> : <span>No image preview</span>}
+                  {form.imageUrl.trim() ? <img src={form.imageUrl} alt="Preview" draggable={false} /> : <span>No image preview</span>}
                 </div>
 
                 <label className="admin-product-field">Name
@@ -1152,7 +1152,7 @@ export default function ShopAdminPanel({ initialTab = 'products' }: ShopAdminPan
 
           ) : null}
 
-          <div className="admin-products-cards">
+          <div className={`admin-products-cards ${dragState ? 'admin-products-cards--dragging' : ''}`} style={dragState ? { touchAction: 'none' } : undefined}>
             {filteredProducts.length === 0 ? (
               <article className="admin-product-card"><p>No products yet.</p></article>
             ) : filteredProducts.map((product) => {
@@ -1168,7 +1168,7 @@ export default function ShopAdminPanel({ initialTab = 'products' }: ShopAdminPan
 
                 >
                   <div className="admin-product-card-main">
-                    <div className="admin-product-thumb">{product.imageUrl ? <img src={product.imageUrl} alt={product.name} loading="lazy" /> : <span>No image</span>}</div>
+                    <div className="admin-product-thumb">{product.imageUrl ? <img src={product.imageUrl} alt={product.name} loading="lazy" draggable={false} /> : <span>No image</span>}</div>
                     <div>
                       <h4>{product.name}</h4>
                       <p className="admin-product-price">{formatPrice(product.pricePence)}</p>
@@ -1176,10 +1176,13 @@ export default function ShopAdminPanel({ initialTab = 'products' }: ShopAdminPan
                     </div>
                     <button
                       type="button"
-                      className={`admin-drag-handle ${handleFlashId === product.id ? 'admin-drag-handle--flash' : ''}`}
+                      className={`admin-drag-handle dnd-handle ${handleFlashId === product.id ? 'admin-drag-handle--flash' : ''}`}
                       aria-label={`Reorder ${product.name}`}
                       disabled={!canReorder}
                       onContextMenu={(event) => event.preventDefault()}
+                                            onDragStart={(event) => event.preventDefault()}
+                      draggable={false}
+
                       onPointerDown={(event) => onDragPressStart(event, product.id)}
                       onPointerUp={(event) => {
                         debugDnd('handle:pointerup', event);
