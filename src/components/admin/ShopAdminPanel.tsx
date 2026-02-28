@@ -87,8 +87,9 @@ type DragState = {
 
 const DEBUG_DND = false;
 const TOUCH_DRAG_DELAY_MS = 250;
-const TOUCH_DRAG_TOLERANCE_PX = 8;
+const TOUCH_DRAG_TOLERANCE_PX = 12;
 const POINTER_DRAG_DISTANCE_PX = 8;
+
 
 type SalesChartSeries = {
   key: string;
