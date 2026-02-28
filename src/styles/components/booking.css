@@ -705,7 +705,14 @@
 
 .admin-main-content {
   min-width: 0;
-    width: 100%;
+  width: 100%;
+}
+
+.admin-mobile-edge {
+  width: 100%;
+  max-width: 100%;
+  min-width: 0;
+
 }
 .admin-mobile-title {
   margin: 0;
@@ -1141,10 +1148,23 @@
   .admin-page-wrap .admin-main-content {
     padding-inline: 0;
   }
+ .admin-mobile-edge {
+    box-sizing: border-box;
+    width: 100%;
+    max-width: 100%;
+    margin-inline: 0;
+    padding-left: max(12px, env(safe-area-inset-left));
+    padding-right: max(12px, env(safe-area-inset-right));
+    overflow-x: clip;
+  }
+
 
   .admin-page-wrap .booking-shell {
     width: 100%;
-    padding-inline: 0.5rem;
+    max-width: 100%;
+    margin-inline: 0;
+    padding-inline: 0;
+
   }
 
   .admin-page-wrap .booking-shell > h2,
@@ -1252,6 +1272,12 @@
 .admin-order-detail p {
   margin: 0;
 }
+.admin-products-table-wrap {
+  width: 100%;
+  max-width: 100%;
+  overflow-x: auto;
+}
+
 
 .admin-sales-panel {
   display: grid;
@@ -1681,15 +1707,20 @@
   .booking-shell {
     width: 100%;
     min-width: 0;
-    overflow-x: hidden;
+    max-width: 100%;
+    overflow-x: visible;
+
 
   }
   .booking-shell .admin-search-row,
   .booking-shell .admin-table,
-  .booking-shell .admin-timeline {
-    margin-inline: calc(var(--space-lg) * -1);
-    width: calc(100% + (var(--space-lg) * 2));
-    max-width: none;
+  .booking-shell .admin-timeline,
+  .booking-shell .admin-sales-chart-wrap,
+  .booking-shell .admin-products-table-wrap {
+    margin-inline: 0;
+    width: 100%;
+    max-width: 100%;
+
   }
 
   .booking-shell .admin-search-row {
@@ -1698,14 +1729,19 @@
 
   .booking-shell .admin-table th,
   .booking-shell .admin-table td {
-    padding-inline: 0;
+    padding-inline: 0.5rem;
   }
 
 
   .admin-view-tabs,
   .admin-filter-tabs,
-  .admin-search-row {
+  .admin-search-row,
+  .admin-search-field,
+  .admin-sales-panel,
+  .admin-sales-chart-inner {
+
     min-width: 0;
+        max-width: 100%;
   }
 
   .admin-filter-tab {
@@ -1768,10 +1804,19 @@
     font-size: 0.68rem;
 
   }
-
+  .admin-timeline {
+    min-height: 0;
+    height: auto;
+    padding-bottom: 0;
+    overflow: hidden;
+}
   .admin-timeline-scroll {
     position: relative;
+        width: 100%;
     max-width: 100%;
+        overflow-x: auto;
+    overflow-y: hidden;
+
     touch-action: pan-x;
     margin-bottom: 0;
 
@@ -1793,7 +1838,7 @@
     grid-template-columns: 5.5rem minmax(40rem, 56rem);
     width: fit-content;
     min-width: 100%;
-    max-width: 61.5rem;
+    max-width: none;
 
   }
 
@@ -1813,6 +1858,39 @@
   .admin-timeline-barber-header {
     z-index: 21;
   }
+  
+  .admin-sales-chart-wrap {
+    padding: 0.5rem;
+    overflow: hidden;
+  }
+
+  .admin-sales-chart-svg {
+    width: 100%;
+    max-width: 100%;
+    height: auto;
+  }
+
+  .admin-products-table-wrap {
+    width: 100%;
+    max-width: 100%;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+  }
+}
+
+
+@media (max-width: 47.99rem) {
+  .admin-page-wrap {
+    width: 100%;
+    max-width: 100%;
+    margin-inline: 0;
+    padding-inline: 0;
+  }
+
+  .admin-page-wrap.admin-page-wrap {
+    width: 100%;
+  }
+
 }
 
 @media (max-width: 47.99rem) {

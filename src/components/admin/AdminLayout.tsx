@@ -114,7 +114,7 @@ export default function AdminLayout({ activeSection, onChangeSection, children }
         </div>
       </aside>
 
-      <section className="admin-main-content">
+      <section className="admin-main-content admin-mobile-edge">
         <header className="admin-mobile-header" aria-label="Admin mobile header">
           <p className="admin-mobile-title">ADMIN</p>
           <button
