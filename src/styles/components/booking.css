@@ -930,6 +930,14 @@
   z-index: 30;
 
 }
+.admin-product-card--overlay {
+  position: fixed;
+  width: min(96vw, 44rem);
+  transform: translate(-50%, -50%) scale(1.02);
+  pointer-events: none;
+  z-index: 120;
+}
+
 
 .admin-product-card-main {
   display: grid;
@@ -973,6 +981,9 @@
 }
 
 .admin-drag-handle {
+    position: relative;
+  z-index: 2;
+
   min-width: 2.8rem;
   min-height: 2.8rem;
   border: 1px solid var(--border);
