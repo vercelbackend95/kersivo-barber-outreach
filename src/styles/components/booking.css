@@ -909,10 +909,6 @@
 
   gap: var(--space-xs);
 }
-.admin-products-cards--dragging {
-  user-select: none;
-}
-
 
 .admin-product-card {
   border: 1px solid var(--border);
@@ -923,14 +919,6 @@
   gap: var(--space-xs);
     transition: transform 150ms ease, box-shadow 160ms ease;
 }
-
-.admin-product-card--dragging {
-  transform: scale(1.02);
-  box-shadow: 0 1.2rem 2.2rem color-mix(in srgb, var(--bg) 60%, transparent);
-  z-index: 30;
-
-}
-
 
 .admin-product-card-main {
   display: grid;
@@ -973,38 +961,6 @@
   font-size: 0.8rem;
 }
 
-.admin-drag-handle {
-  position: relative;
-  z-index: 6;
-  pointer-events: auto;
-  min-width: 2.8rem;
-  min-height: 2.8rem;
-  border: 1px solid var(--border);
-  background: var(--bg);
-  color: var(--fg);
-  touch-action: none;
-    -webkit-user-select: none;
-  user-select: none;
-  -webkit-touch-callout: none;
-  -webkit-tap-highlight-color: transparent;
-  transition: opacity 120ms ease;
-}
-.sortable-chosen {
-  transform: scale(1.02);
-  box-shadow: 0 1.2rem 2.2rem color-mix(in srgb, var(--bg) 60%, transparent);
-
-}
-
-.sortable-ghost {
-  opacity: 0.4;
-
-}
-
-.admin-drag-handle--debug {
-  border-color: var(--accent);
-  box-shadow: 0 0 0 2px var(--accent);
-}
-
 
 
 .admin-product-switches {
@@ -1032,6 +988,40 @@
   height: 1.1rem;
 
 }
+
+.admin-reorder-controls {
+  display: grid;
+  gap: 0.35rem;
+}
+
+.admin-reorder-btn {
+  min-width: 2.8rem;
+  min-height: 2.8rem;
+  border: 1px solid var(--border);
+  background: var(--bg);
+  color: var(--fg);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 700;
+  transition: background 120ms ease, color 120ms ease, border-color 120ms ease, opacity 120ms ease;
+}
+
+.admin-reorder-btn:hover:not(:disabled) {
+  border-color: var(--accent);
+  color: var(--accent);
+}
+
+.admin-reorder-btn:focus-visible {
+  outline: 2px solid var(--focus);
+  outline-offset: 2px;
+}
+
+.admin-reorder-btn:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
 
 .admin-products-actions {
   display: flex;
@@ -1743,5 +1733,12 @@
 
   .admin-timeline-barber-header {
     z-index: 21;
+  }
+}
+
+@media (max-width: 47.99rem) {
+  .admin-reorder-btn {
+    min-width: 2.75rem;
+    min-height: 2.75rem;
   }
 }

@@ -1,6 +1,5 @@
-import React, { useEffect, useMemo, useRef, useState } from 'react';
-import Sortable from 'sortablejs';
 
+import React, { useEffect, useMemo, useState } from 'react';
 type ShopTab = 'products' | 'orders' | 'sales';
 type SalesRangePreset = '7' | '30' | '90' | 'custom';
 
@@ -311,14 +310,6 @@ export default function ShopAdminPanel({ initialTab = 'products' }: ShopAdminPan
   const [productSavingById, setProductSavingById] = useState<Record<string, boolean>>({});
   const [productStatusById, setProductStatusById] = useState<Record<string, string>>({});
   const [formInitial, setFormInitial] = useState<ProductFormState>(EMPTY_FORM);
-  const [draggingProductId, setDraggingProductId] = useState<string | null>(null);
-
-    const listRef = useRef<HTMLDivElement | null>(null);
-  const sortableRef = useRef<Sortable | null>(null);
-
-  const pendingOrderBeforeSaveRef = useRef<string[]>([]);
-
-
   const sortedProducts = useMemo(
     () => [...products].sort((a, b) => a.sortOrder - b.sortOrder || Date.parse(b.updatedAt) - Date.parse(a.updatedAt)),
     [products]
@@ -389,58 +380,6 @@ export default function ShopAdminPanel({ initialTab = 'products' }: ShopAdminPan
     if (activeTab === 'sales') return 'Sales';
     return 'Products';
   }, [activeTab]);
-
-
-
-  useEffect(() => {
-    if (!listRef.current) return;
-
-    if (!canReorder || productSortMode !== 'manual') {
-      if (sortableRef.current) {
-        sortableRef.current.destroy();
-        sortableRef.current = null;
-      }
-      return;
-    }
-
-    const sortable = Sortable.create(listRef.current, {
-      handle: '.js-dnd-handle',
-      animation: 150,
-      delay: 200,
-      delayOnTouchOnly: true,
-      touchStartThreshold: 3,
-      ghostClass: 'sortable-ghost',
-      chosenClass: 'sortable-chosen',
-      dragClass: 'sortable-drag',
-      forceFallback: true,
-      fallbackTolerance: 5,
-      onChoose: (event) => {
-        const productId = event.item.getAttribute('data-id');
-        setDraggingProductId(productId);
-      },
-      onUnchoose: () => setDraggingProductId(null),
-      onEnd: async () => {
-        setDraggingProductId(null);
-        const container = listRef.current;
-        if (!container) return;
-
-        const orderedIds = Array.from(container.querySelectorAll<HTMLElement>('[data-id]'))
-          .map((item) => item.dataset.id)
-          .filter((id): id is string => Boolean(id));
-
-        await saveManualOrder(orderedIds);
-      }
-    });
-
-    sortableRef.current = sortable;
-
-    return () => {
-      sortable.destroy();
-      if (sortableRef.current === sortable) {
-        sortableRef.current = null;
-      }
-    };
-  }, [canReorder, productSortMode]);
 
 
 
@@ -757,7 +696,6 @@ export default function ShopAdminPanel({ initialTab = 'products' }: ShopAdminPan
     if (orderedIds.length === 0) return;
 
     const previous = manualOrderIds;
-    pendingOrderBeforeSaveRef.current = previous;
 
     setManualOrderIds(orderedIds);
     setProducts((previousProducts) => {
@@ -778,7 +716,7 @@ export default function ShopAdminPanel({ initialTab = 'products' }: ShopAdminPan
       if (Array.isArray(payload.products)) {
         setProducts(payload.products as Product[]);
       }
-      setSuccess('Order saved.');
+      setSuccess('Order updated.');
     } catch (reorderError) {
       setManualOrderIds(previous);
             setProducts((previousProducts) => {
@@ -787,10 +725,26 @@ export default function ShopAdminPanel({ initialTab = 'products' }: ShopAdminPan
       });
 
       setError(reorderError instanceof Error ? reorderError.message : 'Unable to save order.');
-    } finally {
-      pendingOrderBeforeSaveRef.current = [];
     }
   }
+  function moveItemUp(index: number) {
+    if (!canReorder || index <= 0) return;
+    const orderedIds = manualProducts.map((product) => product.id);
+    const nextOrderedIds = [...orderedIds];
+    const [movedId] = nextOrderedIds.splice(index, 1);
+    nextOrderedIds.splice(index - 1, 0, movedId);
+    void saveManualOrder(nextOrderedIds);
+  }
+
+  function moveItemDown(index: number) {
+    if (!canReorder || index < 0 || index >= manualProducts.length - 1) return;
+    const orderedIds = manualProducts.map((product) => product.id);
+    const nextOrderedIds = [...orderedIds];
+    const [movedId] = nextOrderedIds.splice(index, 1);
+    nextOrderedIds.splice(index + 1, 0, movedId);
+    void saveManualOrder(nextOrderedIds);
+  }
+
 
 
   async function markCollected(orderId: string) {
@@ -876,7 +830,7 @@ export default function ShopAdminPanel({ initialTab = 'products' }: ShopAdminPan
               </div>
               <p className="admin-products-count muted">{filteredProducts.length} products • {featuredCount} featured</p>
             </div>
-            {!canReorder && productSortMode === 'manual' ? <p className="muted">Clear search/filter to reorder manually.</p> : null}
+            {!canReorder && productSortMode === 'manual' ? <p className="muted">Reordering is available only in All view with no search.</p> : null}
           </div>
 
 
@@ -930,17 +884,18 @@ export default function ShopAdminPanel({ initialTab = 'products' }: ShopAdminPan
 
           ) : null}
 
-          <div ref={listRef} className={`admin-products-cards ${draggingProductId ? 'admin-products-cards--dragging' : ''}`}>
+          <div className="admin-products-cards">
             {filteredProducts.length === 0 ? (
               <article className="admin-product-card"><p>No products yet.</p></article>
-            ) : filteredProducts.map((product) => {
-              const isDragging = draggingProductId === product.id;
+                          ) : filteredProducts.map((product, index) => {
               const isSavingCard = Boolean(productSavingById[product.id]);
+                            const isFirstItem = index === 0;
+              const isLastItem = index === filteredProducts.length - 1;
+
               return (
                 <article
                   key={product.id}
-                  className={`admin-product-card ${isDragging ? 'admin-product-card--dragging' : ''}`}
-                  data-id={product.id}
+                  className="admin-product-card"
 
                 >
                   <div className="admin-product-card-main">
@@ -950,19 +905,29 @@ export default function ShopAdminPanel({ initialTab = 'products' }: ShopAdminPan
                       <p className="admin-product-price">{formatPrice(product.pricePence)}</p>
                       <p className="admin-product-meta muted">Updated {new Date(product.updatedAt).toLocaleString('en-GB')} • Sort {product.sortOrder}</p>
                     </div>
-                    <button
-                      type="button"
-                      className="admin-drag-handle js-dnd-handle"
-                      aria-label={`Reorder ${product.name}`}
-                      disabled={!canReorder}
-                      onContextMenu={(event) => event.preventDefault()}
+                    {productSortMode === 'manual' ? (
+                      <div className="admin-reorder-controls" role="group" aria-label={`Reorder ${product.name}`}>
+                        <button
+                          type="button"
+                          className="admin-reorder-btn"
+                          aria-label={`Move ${product.name} up`}
+                          disabled={!canReorder || isFirstItem}
+                          onClick={() => moveItemUp(index)}
+                        >
+                          ▲
+                        </button>
+                        <button
+                          type="button"
+                          className="admin-reorder-btn"
+                          aria-label={`Move ${product.name} down`}
+                          disabled={!canReorder || isLastItem}
+                          onClick={() => moveItemDown(index)}
+                        >
+                          ▼
+                        </button>
+                      </div>
+                    ) : null}
 
-                      draggable={false}
-
-                      onDragStart={(event) => event.preventDefault()}
-                    >
-                      ⋮⋮
-                    </button>
                   </div>
 
                   <div className="admin-product-switches admin-product-switches--card">
