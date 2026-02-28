@@ -83,6 +83,12 @@ type DragState = {
   pointerY: number;
   overId: string;
 };
+type PendingDragState = {
+  pointerId: number;
+  startX: number;
+  startY: number;
+};
+
 
 type SalesChartSeries = {
   key: string;
@@ -316,10 +322,14 @@ export default function ShopAdminPanel({ initialTab = 'products' }: ShopAdminPan
   const [productStatusById, setProductStatusById] = useState<Record<string, string>>({});
   const [formInitial, setFormInitial] = useState<ProductFormState>(EMPTY_FORM);
   const [dragState, setDragState] = useState<DragState | null>(null);
+    const [pendingDragState, setPendingDragState] = useState<PendingDragState | null>(null);
+  const [handleFlashId, setHandleFlashId] = useState<string | null>(null);
+
   const dragCardRefs = useRef<Record<string, HTMLDivElement | null>>({});
   const dragPressTimerRef = useRef<number | null>(null);
   const dragRafRef = useRef<number | null>(null);
   const dragLatestYRef = useRef(0);
+    const handleFlashTimerRef = useRef<number | null>(null);
   const pendingOrderBeforeSaveRef = useRef<string[]>([]);
 
 
@@ -396,6 +406,7 @@ export default function ShopAdminPanel({ initialTab = 'products' }: ShopAdminPan
 
     const handleMove = (event: PointerEvent) => {
       if (event.pointerId !== dragState.pointerId) return;
+            event.preventDefault();
       dragLatestYRef.current = event.clientY;
       if (dragRafRef.current) return;
       dragRafRef.current = window.requestAnimationFrame(() => {
@@ -446,6 +457,43 @@ export default function ShopAdminPanel({ initialTab = 'products' }: ShopAdminPan
       window.removeEventListener('pointercancel', handleUp);
     };
   }, [dragState, manualProducts]);
+  useEffect(() => {
+    if (!pendingDragState || dragState) return;
+
+    const tolerance = 5;
+    const handlePendingMove = (event: PointerEvent) => {
+      if (event.pointerId !== pendingDragState.pointerId) return;
+      const deltaX = Math.abs(event.clientX - pendingDragState.startX);
+      const deltaY = Math.abs(event.clientY - pendingDragState.startY);
+      if (deltaX > tolerance || deltaY > tolerance) {
+        onDragPressEnd();
+      }
+    };
+
+    const handlePendingEnd = (event: PointerEvent) => {
+      if (event.pointerId !== pendingDragState.pointerId) return;
+      onDragPressEnd();
+    };
+
+    window.addEventListener('pointermove', handlePendingMove, { passive: true });
+    window.addEventListener('pointerup', handlePendingEnd, { passive: true });
+    window.addEventListener('pointercancel', handlePendingEnd, { passive: true });
+
+    return () => {
+      window.removeEventListener('pointermove', handlePendingMove);
+      window.removeEventListener('pointerup', handlePendingEnd);
+      window.removeEventListener('pointercancel', handlePendingEnd);
+    };
+  }, [dragState, pendingDragState]);
+
+  useEffect(() => {
+    return () => {
+      if (handleFlashTimerRef.current) {
+        window.clearTimeout(handleFlashTimerRef.current);
+      }
+    };
+  }, []);
+
 
 
     const activeSectionLabel = useMemo(() => {
@@ -792,15 +840,26 @@ export default function ShopAdminPanel({ initialTab = 'products' }: ShopAdminPan
 
   function onDragPressStart(event: React.PointerEvent<HTMLButtonElement>, productId: string) {
     if (!canReorder || dragState) return;
+        event.preventDefault();
     pendingOrderBeforeSaveRef.current = manualOrderIds;
     const pointerId = event.pointerId;
+        const pointerX = event.clientX;
     const pointerY = event.clientY;
+        setPendingDragState({ pointerId, startX: pointerX, startY: pointerY });
     dragPressTimerRef.current = window.setTimeout(() => {
+            setPendingDragState(null);
+      setHandleFlashId(productId);
+      if (handleFlashTimerRef.current) {
+        window.clearTimeout(handleFlashTimerRef.current);
+      }
+      handleFlashTimerRef.current = window.setTimeout(() => setHandleFlashId((previous) => (previous === productId ? null : previous)), 180);
+
       setDragState({ id: productId, pointerId, pointerY, overId: productId });
-    }, 240);
+    }, 200);
   }
 
   function onDragPressEnd() {
+        setPendingDragState(null);
     if (dragPressTimerRef.current) {
       window.clearTimeout(dragPressTimerRef.current);
       dragPressTimerRef.current = null;
@@ -966,10 +1025,16 @@ export default function ShopAdminPanel({ initialTab = 'products' }: ShopAdminPan
                     </div>
                     <button
                       type="button"
-                      className="admin-drag-handle"
+                      className={`admin-drag-handle ${handleFlashId === product.id ? 'admin-drag-handle--flash' : ''}`}
                       aria-label={`Reorder ${product.name}`}
                       disabled={!canReorder}
+                                            onContextMenu={(event) => event.preventDefault()}
                       onPointerDown={(event) => onDragPressStart(event, product.id)}
+                                            onTouchStart={(event) => {
+                        if (!canReorder) return;
+                        event.preventDefault();
+                      }}
+
                       onPointerUp={onDragPressEnd}
                       onPointerCancel={onDragPressEnd}
                     >

@@ -909,6 +909,10 @@
 
   gap: var(--space-xs);
 }
+.admin-products-cards--dragging {
+  user-select: none;
+}
+
 
 .admin-product-card {
   border: 1px solid var(--border);
@@ -921,8 +925,10 @@
 }
 
 .admin-product-card--dragging {
-  transform: scale(1.015);
-  box-shadow: 0 1rem 2rem color-mix(in srgb, var(--bg) 65%, transparent);
+  transform: scale(1.02);
+  box-shadow: 0 1.2rem 2.2rem color-mix(in srgb, var(--bg) 60%, transparent);
+  z-index: 30;
+
 }
 
 .admin-product-card-main {
@@ -973,6 +979,16 @@
   background: var(--bg);
   color: var(--fg);
   touch-action: none;
+    -webkit-user-select: none;
+  user-select: none;
+  -webkit-touch-callout: none;
+  -webkit-tap-highlight-color: transparent;
+  transition: opacity 120ms ease;
+}
+
+.admin-drag-handle--flash {
+  opacity: 0.65;
+
 }
 
 .admin-product-switches {
