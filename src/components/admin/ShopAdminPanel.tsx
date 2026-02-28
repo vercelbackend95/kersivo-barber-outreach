@@ -1,5 +1,4 @@
-
-import React, { useEffect, useMemo, useState } from 'react';
+import React, { useEffect, useMemo, useRef, useState } from 'react';
 type ShopTab = 'products' | 'orders' | 'sales';
 type SalesRangePreset = '7' | '30' | '90' | 'custom';
 
@@ -160,7 +159,52 @@ class SalesChartErrorBoundary extends React.Component<SalesChartErrorBoundaryPro
 }
 
 
-function MiniLineChart({ series, metric }: { series: SalesChartSeries[]; metric: SalesMetric }) {
+type MiniLineChartProps = {
+  series: SalesChartSeries[];
+  metric: SalesMetric;
+  height?: string;
+  onExpand?: () => void;
+  isFullscreen?: boolean;
+  useResponsiveResize?: boolean;
+};
+
+function MiniLineChart({
+  series,
+  metric,
+  height,
+  onExpand,
+  isFullscreen = false,
+  useResponsiveResize = false
+}: MiniLineChartProps) {
+  const chartCanvasRef = useRef<HTMLDivElement | null>(null);
+  const [dimensions, setDimensions] = useState({ width: 900, height: 320 });
+
+  useEffect(() => {
+    if (!useResponsiveResize || !chartCanvasRef.current) return undefined;
+
+    const element = chartCanvasRef.current;
+    const updateDimensions = () => {
+      const nextWidth = Math.max(320, Math.round(element.clientWidth));
+      const nextHeight = Math.max(220, Math.round(element.clientHeight));
+      setDimensions((prev) => {
+        if (prev.width === nextWidth && prev.height === nextHeight) return prev;
+        return { width: nextWidth, height: nextHeight };
+      });
+    };
+
+    updateDimensions();
+
+    if (typeof window === 'undefined' || typeof ResizeObserver === 'undefined') return undefined;
+    const observer = new ResizeObserver(() => {
+      updateDimensions();
+    });
+    observer.observe(element);
+    return () => {
+      observer.disconnect();
+    };
+  }, [useResponsiveResize]);
+
+
   if (series.length === 0 || series.every((line) => line.points.length === 0)) {
     return (
       <div className="admin-sales-empty">
@@ -168,10 +212,9 @@ function MiniLineChart({ series, metric }: { series: SalesChartSeries[]; metric:
       </div>
     );
   }
+  const width = dimensions.width;
+  const chartHeight = dimensions.height;
 
-  const width = 900;
-
-  const height = 320;
   const padding = { top: 20, right: 20, bottom: 36, left: 54 };
   const colors = ['var(--accent)', 'var(--fg)', 'var(--muted)', 'var(--accent-hover)'];
 
@@ -196,7 +239,7 @@ function MiniLineChart({ series, metric }: { series: SalesChartSeries[]; metric:
 
 
   const innerWidth = width - padding.left - padding.right;
-  const innerHeight = height - padding.top - padding.bottom;
+  const innerHeight = chartHeight - padding.top - padding.bottom;
 
   const xPosition = (date: string): number => {
     const index = allDates.indexOf(date);
@@ -213,13 +256,30 @@ function MiniLineChart({ series, metric }: { series: SalesChartSeries[]; metric:
 
 
   return (
-    <div className="admin-sales-chart-inner">
-      <svg
-        viewBox={`0 0 ${width} ${height}`}
-        className="admin-sales-chart-svg"
-        role="img"
-        aria-label={`Sales ${metric === 'revenue' ? 'revenue' : 'units'} chart`}
+    <div className={`admin-sales-chart-inner ${isFullscreen ? 'admin-sales-chart-inner--fullscreen' : ''}`}>
+      <div
+        ref={chartCanvasRef}
+        className={`admin-sales-chart-canvas ${onExpand ? 'admin-sales-chart-canvas--clickable' : ''}`}
+        style={height ? { height } : undefined}
+        onClick={onExpand}
+        role={onExpand ? 'button' : undefined}
+        tabIndex={onExpand ? 0 : undefined}
+        onKeyDown={onExpand ? (event) => {
+          if (event.key === 'Enter' || event.key === ' ') {
+            event.preventDefault();
+            onExpand();
+          }
+        } : undefined}
+        aria-label={onExpand ? 'Tap to expand sales chart' : undefined}
+
       >
+        <svg
+          viewBox={`0 0 ${width} ${chartHeight}`}
+          preserveAspectRatio="none"
+          className="admin-sales-chart-svg"
+          role="img"
+          aria-label={`Sales ${metric === 'revenue' ? 'revenue' : 'units'} chart`}
+        >
 
         {yTicks.map((tick) => (
           <g key={`tick-${tick}`}>
@@ -254,13 +314,15 @@ function MiniLineChart({ series, metric }: { series: SalesChartSeries[]; metric:
         })}
 
         {allDates.filter((_, index) => index % Math.max(1, Math.ceil(allDates.length / 6)) === 0 || index === allDates.length - 1).map((date) => (
-          <text key={`x-${date}`} x={xPosition(date)} y={height - 12} textAnchor="middle" className="admin-sales-axis-label">
+          <text key={`x-${date}`} x={xPosition(date)} y={chartHeight - 12} textAnchor="middle" className="admin-sales-axis-label">
             {new Date(`${date}T00:00:00`).toLocaleDateString('en-GB', { day: '2-digit', month: '2-digit' })}
           </text>
         ))}
-      </svg>
+                </svg>
+      </div>
 
-      <div className="admin-sales-legend">
+
+      <div className={`admin-sales-legend ${isFullscreen ? 'admin-sales-legend--fullscreen' : ''}`}>
         {safeSeries.map((line, index) => (
           <span key={`legend-${line.key}`} className="admin-sales-legend-item">
             <i style={{ background: colors[index % colors.length] }} />{line.name}
@@ -302,6 +364,8 @@ export default function ShopAdminPanel({ initialTab = 'products' }: ShopAdminPan
   const [salesError, setSalesError] = useState<string | null>(null);
   const [salesData, setSalesData] = useState<SalesResponse | null>(null);
   const [generatingDemo, setGeneratingDemo] = useState(false);
+  const [isMobileSalesView, setIsMobileSalesView] = useState(false);
+  const [isSalesChartExpanded, setIsSalesChartExpanded] = useState(false);
 
     const [productSearch, setProductSearch] = useState('');
   const [productFilter, setProductFilter] = useState<ProductFilter>('all');
@@ -317,6 +381,20 @@ export default function ShopAdminPanel({ initialTab = 'products' }: ShopAdminPan
   
 
   const productMap = useMemo(() => new Map(products.map((product) => [product.id, product])), [products]);
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+    const mediaQuery = window.matchMedia('(max-width: 47.99rem)');
+    const handleChange = () => {
+      setIsMobileSalesView(mediaQuery.matches);
+      if (!mediaQuery.matches) setIsSalesChartExpanded(false);
+    };
+    handleChange();
+    mediaQuery.addEventListener('change', handleChange);
+    return () => {
+      mediaQuery.removeEventListener('change', handleChange);
+    };
+  }, []);
+
 
   const manualProducts = useMemo(() => {
     const validIds = manualOrderIds.filter((id) => productMap.has(id));
@@ -1069,10 +1147,49 @@ export default function ShopAdminPanel({ initialTab = 'products' }: ShopAdminPan
           ) : (
             <>
               <div className="admin-sales-chart-wrap">
+                                {isMobileSalesView ? (
+                  <button
+                    type="button"
+                    className="admin-sales-expand-btn"
+                    onClick={() => setIsSalesChartExpanded(true)}
+                    aria-label="Expand sales chart"
+                  >
+                    Expand
+                  </button>
+                ) : null}
+
                 <SalesChartErrorBoundary>
-                  <MiniLineChart series={chartSeries} metric={salesMetric} />
+                  <MiniLineChart
+                    series={chartSeries}
+                    metric={salesMetric}
+                    height={isMobileSalesView ? 'clamp(280px, 45vh, 520px)' : undefined}
+                    onExpand={isMobileSalesView ? () => setIsSalesChartExpanded(true) : undefined}
+                    useResponsiveResize={isMobileSalesView}
+                  />
+
                 </SalesChartErrorBoundary>
               </div>
+              {isMobileSalesView && isSalesChartExpanded ? (
+                <div className="admin-sales-modal" role="dialog" aria-modal="true" aria-label="Expanded sales chart">
+                  <button type="button" className="admin-sales-modal-backdrop" onClick={() => setIsSalesChartExpanded(false)} aria-label="Close expanded chart" />
+                  <div className="admin-sales-modal-panel">
+                    <div className="admin-sales-modal-header">
+                      <p>Sales chart</p>
+                      <button type="button" className="btn btn--secondary" onClick={() => setIsSalesChartExpanded(false)}>Close</button>
+                    </div>
+                    <SalesChartErrorBoundary>
+                      <MiniLineChart
+                        series={chartSeries}
+                        metric={salesMetric}
+                        height="70vh"
+                        isFullscreen
+                        useResponsiveResize
+                      />
+                    </SalesChartErrorBoundary>
+                  </div>
+                </div>
+              ) : null}
+
 
               <div className="admin-products-table-wrap">
                 <table className="admin-table">
