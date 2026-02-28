@@ -981,9 +981,9 @@
 }
 
 .admin-drag-handle {
-    position: relative;
+  position: relative;
   z-index: 2;
-
+  pointer-events: auto;
   min-width: 2.8rem;
   min-height: 2.8rem;
   border: 1px solid var(--border);

@@ -79,12 +79,13 @@ type ProductSortMode = 'manual' | 'newest' | 'price' | 'name';
 
 type DragState = {
   id: string;
+    inputType: 'pointer' | 'touch';
   pointerId: number;
-    pointerX: number;
   pointerY: number;
   overId: string;
 };
 
+const DEBUG_DND = false;
 
 type SalesChartSeries = {
   key: string;
@@ -324,6 +325,7 @@ export default function ShopAdminPanel({ initialTab = 'products' }: ShopAdminPan
   const dragPressTimerRef = useRef<number | null>(null);
   const dragRafRef = useRef<number | null>(null);
   const dragLatestPointerRef = useRef({ x: 0, y: 0 });
+    const dragLatestTouchRef = useRef<{ identifier: number; x: number; y: number } | null>(null);
   const handleFlashTimerRef = useRef<number | null>(null);
   const pendingActivationCleanupRef = useRef<(() => void) | null>(null);
 
@@ -375,6 +377,26 @@ export default function ShopAdminPanel({ initialTab = 'products' }: ShopAdminPan
   const formPricePence = useMemo(() => penceFromGbp(form.priceGbp), [form.priceGbp]);
   const formValid = useMemo(() => form.name.trim().length > 0 && formPricePence > 0, [form.name, formPricePence]);
 
+  const debugDnd = (source: string, eventOrPayload: Event | React.SyntheticEvent | Record<string, unknown>) => {
+    if (!DEBUG_DND) return;
+    if (eventOrPayload instanceof Event) {
+      const target = eventOrPayload.target as HTMLElement | null;
+      const currentTarget = eventOrPayload.currentTarget as HTMLElement | null;
+      const pointerType = 'pointerType' in eventOrPayload ? (eventOrPayload as PointerEvent).pointerType : undefined;
+      console.info('[products-dnd:event]', { source, type: eventOrPayload.type, pointerType, target: target?.tagName, currentTarget: currentTarget?.tagName });
+      return;
+    }
+    if ('nativeEvent' in eventOrPayload) {
+      const nativeEvent = eventOrPayload.nativeEvent;
+      const target = eventOrPayload.target as HTMLElement | null;
+      const currentTarget = eventOrPayload.currentTarget as HTMLElement | null;
+      const pointerType = 'pointerType' in nativeEvent ? (nativeEvent as PointerEvent).pointerType : undefined;
+      console.info('[products-dnd:event]', { source, type: nativeEvent.type, pointerType, target: target?.tagName, currentTarget: currentTarget?.tagName });
+      return;
+    }
+    console.info('[products-dnd:state]', { source, ...eventOrPayload });
+  };
+
 
   useEffect(() => {
     setActiveTab(initialTab);
@@ -401,10 +423,9 @@ export default function ShopAdminPanel({ initialTab = 'products' }: ShopAdminPan
     document.body.style.touchAction = 'none';
     document.body.style.overflow = 'hidden';
 
-    const handleMove = (event: PointerEvent) => {
-      if (event.pointerId !== dragState.pointerId) return;
-      event.preventDefault();
-      dragLatestPointerRef.current = { x: event.clientX, y: event.clientY };
+    const handleDragPosition = (pointerX: number, pointerY: number) => {
+      dragLatestPointerRef.current = { x: pointerX, y: pointerY };
+
 
       if (dragRafRef.current) return;
       dragRafRef.current = window.requestAnimationFrame(() => {
@@ -434,10 +455,37 @@ export default function ShopAdminPanel({ initialTab = 'products' }: ShopAdminPan
         });
       });
     };
+    const handleMove = (event: PointerEvent) => {
+      if (dragState.inputType !== 'pointer' || event.pointerId !== dragState.pointerId) return;
+      event.preventDefault();
+      handleDragPosition(event.clientX, event.clientY);
+    };
+
+    const handleTouchMove = (event: TouchEvent) => {
+      if (dragState.inputType !== 'touch') return;
+      const matchingTouch = Array.from(event.changedTouches).find((touch) => touch.identifier === dragState.pointerId)
+        ?? Array.from(event.touches).find((touch) => touch.identifier === dragState.pointerId);
+      if (!matchingTouch) return;
+      event.preventDefault();
+      handleDragPosition(matchingTouch.clientX, matchingTouch.clientY);
+    };
+
 
     const handleUp = (event: PointerEvent) => {
-      if (event.pointerId !== dragState.pointerId) return;
-            console.info('[products-drag] onDragEnd', { activeId: dragState.id, overId: dragState.overId });
+      if (dragState.inputType !== 'pointer' || event.pointerId !== dragState.pointerId) return;
+      debugDnd('onDragEnd', { activeId: dragState.id, overId: dragState.overId, inputType: dragState.inputType });
+      dragLatestTouchRef.current = null;
+      void saveManualOrder();
+      setDragState(null);
+    };
+
+    const handleTouchEnd = (event: TouchEvent) => {
+      if (dragState.inputType !== 'touch') return;
+      const matchingTouch = Array.from(event.changedTouches).find((touch) => touch.identifier === dragState.pointerId);
+      if (!matchingTouch) return;
+      debugDnd('onDragEnd', { activeId: dragState.id, overId: dragState.overId, inputType: dragState.inputType });
+      dragLatestTouchRef.current = null;
+
       void saveManualOrder();
       setDragState(null);
     };
@@ -445,6 +493,10 @@ export default function ShopAdminPanel({ initialTab = 'products' }: ShopAdminPan
     window.addEventListener('pointermove', handleMove, { passive: false });
     window.addEventListener('pointerup', handleUp, { passive: true });
     window.addEventListener('pointercancel', handleUp, { passive: true });
+        window.addEventListener('touchmove', handleTouchMove, { passive: false });
+    window.addEventListener('touchend', handleTouchEnd, { passive: true });
+    window.addEventListener('touchcancel', handleTouchEnd, { passive: true });
+
 
     return () => {
       if (dragRafRef.current) {
@@ -456,8 +508,22 @@ export default function ShopAdminPanel({ initialTab = 'products' }: ShopAdminPan
       window.removeEventListener('pointermove', handleMove);
       window.removeEventListener('pointerup', handleUp);
       window.removeEventListener('pointercancel', handleUp);
+            window.removeEventListener('touchmove', handleTouchMove);
+      window.removeEventListener('touchend', handleTouchEnd);
+      window.removeEventListener('touchcancel', handleTouchEnd);
+
     };
   }, [dragState, manualProducts]);
+  useEffect(() => {
+    if (!DEBUG_DND) return;
+    const onDocumentCaptureTouchStart = (event: TouchEvent) => {
+      debugDnd('document:capture:touchstart', event);
+    };
+    document.addEventListener('touchstart', onDocumentCaptureTouchStart, true);
+    return () => document.removeEventListener('touchstart', onDocumentCaptureTouchStart, true);
+  }, []);
+
+
 
 
   useEffect(() => {
@@ -825,6 +891,7 @@ export default function ShopAdminPanel({ initialTab = 'products' }: ShopAdminPan
     const pointerX = event.clientX;
     const pointerY = event.clientY;
     dragLatestPointerRef.current = { x: pointerX, y: pointerY };
+    debugDnd('handle:pointerdown', event);
 
     const clearPending = () => {
       if (dragPressTimerRef.current) {
@@ -869,14 +936,73 @@ export default function ShopAdminPanel({ initialTab = 'products' }: ShopAdminPan
       }
       handleFlashTimerRef.current = window.setTimeout(() => setHandleFlashId((previous) => (previous === productId ? null : previous)), 180);
 
-      setDragState({ id: productId, pointerId, pointerX, pointerY, overId: productId });
-      console.info('[products-drag] onDragStart', { activeId: productId, overId: productId });
+      setDragState({ id: productId, inputType: 'pointer', pointerId, pointerX, pointerY, overId: productId });
+      debugDnd('onDragStart', { activeId: productId, overId: productId, inputType: 'pointer' });
+
 
     }, 200);
   }
+  function onDragTouchStart(event: React.TouchEvent<HTMLButtonElement>, productId: string) {
+    if (!canReorder || dragState) return;
+    onDragPressEnd();
+    pendingOrderBeforeSaveRef.current = manualOrderIds;
+    const touch = event.changedTouches[0] ?? event.touches[0];
+    if (!touch) return;
+    dragLatestTouchRef.current = { identifier: touch.identifier, x: touch.clientX, y: touch.clientY };
+    debugDnd('handle:touchstart', event);
+
+    const clearPending = () => {
+      if (dragPressTimerRef.current) {
+        window.clearTimeout(dragPressTimerRef.current);
+        dragPressTimerRef.current = null;
+      }
+      if (pendingActivationCleanupRef.current) {
+        pendingActivationCleanupRef.current();
+        pendingActivationCleanupRef.current = null;
+      }
+    };
+
+    const handlePendingTouchMove = (moveEvent: TouchEvent) => {
+      const touchPoint = Array.from(moveEvent.changedTouches).find((candidate) => candidate.identifier === touch.identifier)
+        ?? Array.from(moveEvent.touches).find((candidate) => candidate.identifier === touch.identifier);
+      if (!touchPoint) return;
+      const deltaX = Math.abs(touchPoint.clientX - touch.clientX);
+      const deltaY = Math.abs(touchPoint.clientY - touch.clientY);
+      if (deltaX > 5 || deltaY > 5) {
+        clearPending();
+      }
+    };
+
+    const handlePendingTouchEnd = (endEvent: TouchEvent) => {
+      const touchPoint = Array.from(endEvent.changedTouches).find((candidate) => candidate.identifier === touch.identifier);
+      if (!touchPoint) return;
+      clearPending();
+    };
+
+    window.addEventListener('touchmove', handlePendingTouchMove, { passive: true });
+    window.addEventListener('touchend', handlePendingTouchEnd, { passive: true });
+    window.addEventListener('touchcancel', handlePendingTouchEnd, { passive: true });
+    pendingActivationCleanupRef.current = () => {
+      window.removeEventListener('touchmove', handlePendingTouchMove);
+      window.removeEventListener('touchend', handlePendingTouchEnd);
+      window.removeEventListener('touchcancel', handlePendingTouchEnd);
+    };
+
+    dragPressTimerRef.current = window.setTimeout(() => {
+      clearPending();
+      setHandleFlashId(productId);
+      if (handleFlashTimerRef.current) {
+        window.clearTimeout(handleFlashTimerRef.current);
+      }
+      handleFlashTimerRef.current = window.setTimeout(() => setHandleFlashId((previous) => (previous === productId ? null : previous)), 180);
+      setDragState({ id: productId, inputType: 'touch', pointerId: touch.identifier, pointerX: touch.clientX, pointerY: touch.clientY, overId: productId });
+      debugDnd('onDragStart', { activeId: productId, overId: productId, inputType: 'touch' });
+    }, 200);
+  }
+
 
   function onDragPressEnd() {
-
+    debugDnd('handle:pressend', { dragging: Boolean(dragState) });
     if (dragPressTimerRef.current) {
       window.clearTimeout(dragPressTimerRef.current);
       dragPressTimerRef.current = null;
@@ -1037,6 +1163,9 @@ export default function ShopAdminPanel({ initialTab = 'products' }: ShopAdminPan
                   key={product.id}
                   className={`admin-product-card ${isDragging ? 'admin-product-card--dragging' : ''}`}
                   ref={(element) => { dragCardRefs.current[product.id] = element; }}
+                                    onPointerDown={(event) => debugDnd('row:pointerdown', event)}
+                  onTouchStart={(event) => debugDnd('row:touchstart', event)}
+
                 >
                   <div className="admin-product-card-main">
                     <div className="admin-product-thumb">{product.imageUrl ? <img src={product.imageUrl} alt={product.name} loading="lazy" /> : <span>No image</span>}</div>
@@ -1050,15 +1179,23 @@ export default function ShopAdminPanel({ initialTab = 'products' }: ShopAdminPan
                       className={`admin-drag-handle ${handleFlashId === product.id ? 'admin-drag-handle--flash' : ''}`}
                       aria-label={`Reorder ${product.name}`}
                       disabled={!canReorder}
-                                            onContextMenu={(event) => event.preventDefault()}
+                      onContextMenu={(event) => event.preventDefault()}
                       onPointerDown={(event) => onDragPressStart(event, product.id)}
-                                            onTouchStartCapture={(event) => {
-                        if (!canReorder) return;
-                        event.preventDefault();
+                      onPointerUp={(event) => {
+                        debugDnd('handle:pointerup', event);
+                        onDragPressEnd();
+
                       }}
 
-                      onPointerUp={onDragPressEnd}
+                      onTouchStart={(event) => onDragTouchStart(event, product.id)}
+                      onTouchEnd={(event) => {
+                        debugDnd('handle:touchend', event);
+                        onDragPressEnd();
+                      }}
+                      onClick={(event) => debugDnd('handle:click', event)}
+
                       onPointerCancel={onDragPressEnd}
+                                            onTouchCancel={onDragPressEnd}
                     >
                       ⋮⋮
                     </button>
