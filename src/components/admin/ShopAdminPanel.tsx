@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useState } from 'react';
+import React, { useEffect, useMemo, useRef, useState } from 'react';
 
 type ShopTab = 'products' | 'orders' | 'sales';
 type SalesRangePreset = '7' | '30' | '90' | 'custom';
@@ -74,6 +74,16 @@ type ProductFormState = {
   featured: boolean;
   sortOrder: number;
 };
+type ProductFilter = 'all' | 'active' | 'inactive' | 'featured';
+type ProductSortMode = 'manual' | 'newest' | 'price' | 'name';
+
+type DragState = {
+  id: string;
+  pointerId: number;
+  pointerY: number;
+  overId: string;
+};
+
 type SalesChartSeries = {
   key: string;
   name: string;
@@ -298,15 +308,145 @@ export default function ShopAdminPanel({ initialTab = 'products' }: ShopAdminPan
   const [salesData, setSalesData] = useState<SalesResponse | null>(null);
   const [generatingDemo, setGeneratingDemo] = useState(false);
 
+    const [productSearch, setProductSearch] = useState('');
+  const [productFilter, setProductFilter] = useState<ProductFilter>('all');
+  const [productSortMode, setProductSortMode] = useState<ProductSortMode>('manual');
+  const [manualOrderIds, setManualOrderIds] = useState<string[]>([]);
+  const [productSavingById, setProductSavingById] = useState<Record<string, boolean>>({});
+  const [productStatusById, setProductStatusById] = useState<Record<string, string>>({});
+  const [formInitial, setFormInitial] = useState<ProductFormState>(EMPTY_FORM);
+  const [dragState, setDragState] = useState<DragState | null>(null);
+  const dragCardRefs = useRef<Record<string, HTMLDivElement | null>>({});
+  const dragPressTimerRef = useRef<number | null>(null);
+  const dragRafRef = useRef<number | null>(null);
+  const dragLatestYRef = useRef(0);
+  const pendingOrderBeforeSaveRef = useRef<string[]>([]);
+
+
   const sortedProducts = useMemo(
     () => [...products].sort((a, b) => a.sortOrder - b.sortOrder || Date.parse(b.updatedAt) - Date.parse(a.updatedAt)),
     [products]
   );
   
 
+  const productMap = useMemo(() => new Map(products.map((product) => [product.id, product])), [products]);
+
+  const manualProducts = useMemo(() => {
+    const validIds = manualOrderIds.filter((id) => productMap.has(id));
+    const missingIds = sortedProducts.map((product) => product.id).filter((id) => !validIds.includes(id));
+    return [...validIds, ...missingIds]
+      .map((id) => productMap.get(id))
+      .filter((product): product is Product => Boolean(product));
+  }, [manualOrderIds, productMap, sortedProducts]);
+
+  const baseProducts = useMemo(() => {
+    if (productSortMode === 'manual') return manualProducts;
+    const source = [...sortedProducts];
+    if (productSortMode === 'newest') {
+      return source.sort((a, b) => Date.parse(b.updatedAt) - Date.parse(a.updatedAt));
+    }
+    if (productSortMode === 'price') {
+      return source.sort((a, b) => b.pricePence - a.pricePence || a.name.localeCompare(b.name));
+    }
+    return source.sort((a, b) => a.name.localeCompare(b.name));
+  }, [manualProducts, productSortMode, sortedProducts]);
+
+  const filteredProducts = useMemo(() => {
+    const query = productSearch.trim().toLowerCase();
+    return baseProducts.filter((product) => {
+      if (productFilter === 'active' && !product.active) return false;
+      if (productFilter === 'inactive' && product.active) return false;
+      if (productFilter === 'featured' && !product.featured) return false;
+      if (!query) return true;
+      return product.name.toLowerCase().includes(query) || (product.description || '').toLowerCase().includes(query);
+    });
+  }, [baseProducts, productFilter, productSearch]);
+
+  const featuredCount = useMemo(() => products.filter((product) => product.featured).length, [products]);
+  const canReorder = productSortMode === 'manual' && productFilter === 'all' && productSearch.trim().length === 0;
+  const formDirty = useMemo(() => JSON.stringify(form) !== JSON.stringify(formInitial), [form, formInitial]);
+  const formPricePence = useMemo(() => penceFromGbp(form.priceGbp), [form.priceGbp]);
+  const formValid = useMemo(() => form.name.trim().length > 0 && formPricePence > 0, [form.name, formPricePence]);
+
+
   useEffect(() => {
     setActiveTab(initialTab);
   }, [initialTab]);
+  useEffect(() => {
+    setManualOrderIds(sortedProducts.map((product) => product.id));
+  }, [sortedProducts]);
+
+  useEffect(() => {
+    if (!formOpen) return;
+    const onKeyDown = (event: KeyboardEvent) => {
+      if (event.key === 'Escape') {
+        resetForm();
+      }
+    };
+    window.addEventListener('keydown', onKeyDown);
+    return () => window.removeEventListener('keydown', onKeyDown);
+  }, [formOpen]);
+
+  useEffect(() => {
+    if (!dragState) return;
+    const previousTouchAction = document.body.style.touchAction;
+    const previousOverflow = document.body.style.overflow;
+    document.body.style.touchAction = 'none';
+    document.body.style.overflow = 'hidden';
+
+    const handleMove = (event: PointerEvent) => {
+      if (event.pointerId !== dragState.pointerId) return;
+      dragLatestYRef.current = event.clientY;
+      if (dragRafRef.current) return;
+      dragRafRef.current = window.requestAnimationFrame(() => {
+        dragRafRef.current = null;
+        const pointerY = dragLatestYRef.current;
+        let overId = dragState.overId;
+        for (const product of manualProducts) {
+          const element = dragCardRefs.current[product.id];
+          if (!element) continue;
+          const rect = element.getBoundingClientRect();
+          if (pointerY >= rect.top && pointerY <= rect.bottom) {
+            overId = product.id;
+            break;
+          }
+        }
+        setDragState((previous) => (previous ? { ...previous, pointerY, overId } : previous));
+        setManualOrderIds((previous) => {
+          const fromIndex = previous.indexOf(dragState.id);
+          const toIndex = previous.indexOf(overId);
+          if (fromIndex < 0 || toIndex < 0 || fromIndex === toIndex) return previous;
+          const next = [...previous];
+          const [moved] = next.splice(fromIndex, 1);
+          next.splice(toIndex, 0, moved);
+          return next;
+        });
+      });
+    };
+
+    const handleUp = (event: PointerEvent) => {
+      if (event.pointerId !== dragState.pointerId) return;
+      void saveManualOrder();
+      setDragState(null);
+    };
+
+    window.addEventListener('pointermove', handleMove, { passive: false });
+    window.addEventListener('pointerup', handleUp, { passive: true });
+    window.addEventListener('pointercancel', handleUp, { passive: true });
+
+    return () => {
+      if (dragRafRef.current) {
+        window.cancelAnimationFrame(dragRafRef.current);
+        dragRafRef.current = null;
+      }
+      document.body.style.touchAction = previousTouchAction;
+      document.body.style.overflow = previousOverflow;
+      window.removeEventListener('pointermove', handleMove);
+      window.removeEventListener('pointerup', handleUp);
+      window.removeEventListener('pointercancel', handleUp);
+    };
+  }, [dragState, manualProducts]);
+
 
     const activeSectionLabel = useMemo(() => {
     if (activeTab === 'orders') return 'Orders';
@@ -474,18 +614,20 @@ export default function ShopAdminPanel({ initialTab = 'products' }: ShopAdminPan
 
   function resetForm() {
     setForm(EMPTY_FORM);
+        setFormInitial(EMPTY_FORM);
     setFormOpen(false);
   }
 
   function startCreate() {
     setForm(EMPTY_FORM);
+        setFormInitial(EMPTY_FORM);
     setFormOpen(true);
     setError(null);
     setSuccess(null);
   }
 
   function startEdit(product: Product) {
-    setForm({
+    const nextForm = {
       id: product.id,
       name: product.name,
       description: product.description || '',
@@ -494,7 +636,10 @@ export default function ShopAdminPanel({ initialTab = 'products' }: ShopAdminPan
       active: product.active,
       featured: product.featured,
       sortOrder: product.sortOrder
-    });
+          };
+    setForm(nextForm);
+    setFormInitial(nextForm);
+
     setFormOpen(true);
     setError(null);
     setSuccess(null);
@@ -530,8 +675,9 @@ export default function ShopAdminPanel({ initialTab = 'products' }: ShopAdminPan
           description: form.description.trim(),
           pricePence,
           imageUrl: form.imageUrl.trim(),
-          active: form.active,
-          featured: form.featured,
+          active: form.featured ? true : form.active,
+          featured: form.active ? form.featured : false,
+
           sortOrder: form.sortOrder
         })
       });
@@ -548,22 +694,53 @@ export default function ShopAdminPanel({ initialTab = 'products' }: ShopAdminPan
     }
   }
 
-  async function toggleField(productId: string, field: 'active' | 'featured', value: boolean) {
-    setError(null);
-    setSuccess(null);
+  async function patchProductFlags(productId: string, patch: { active?: boolean; featured?: boolean }) {
+    const existing = products.find((product) => product.id === productId);
+    if (!existing) return;
+
+    const nextActive = patch.active ?? existing.active;
+    const nextFeatured = patch.featured ?? existing.featured;
+    const normalized = {
+      active: nextFeatured ? true : nextActive,
+      featured: nextActive ? nextFeatured : false
+    };
+
+    const previousProducts = products;
+    setProductSavingById((previous) => ({ ...previous, [productId]: true }));
+    setProductStatusById((previous) => ({ ...previous, [productId]: 'Saving…' }));
+    setProducts((previous) => previous.map((product) => (
+      product.id === productId ? { ...product, active: normalized.active, featured: normalized.featured } : product
+    )));
+
+
     try {
-      const response = await fetch('/api/admin/shop/products/toggle', {
-        method: 'POST',
+      const response = await fetch(`/api/admin/shop/products/${productId}`, {
+        method: 'PATCH',
+
         credentials: 'include',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ id: productId, field, value })
+        body: JSON.stringify(normalized)
       });
       const payload = await response.json();
       if (!response.ok) throw new Error(payload.error || 'Unable to update product.');
-      await fetchProducts();
-      setSuccess('Product updated.');
+      setProducts((previous) => previous.map((product) => (product.id === productId ? payload.product as Product : product)));
+      setProductStatusById((previous) => ({ ...previous, [productId]: 'Saved' }));
+      window.setTimeout(() => {
+        setProductStatusById((previous) => {
+          const next = { ...previous };
+          delete next[productId];
+          return next;
+        });
+      }, 900);
+
     } catch (toggleError) {
+            setProducts(previousProducts);
+      setProductStatusById((previous) => ({ ...previous, [productId]: '' }));
+
       setError(toggleError instanceof Error ? toggleError.message : 'Unable to update product.');
+          } finally {
+      setProductSavingById((previous) => ({ ...previous, [productId]: false }));
+
     }
   }
 
@@ -585,13 +762,59 @@ export default function ShopAdminPanel({ initialTab = 'products' }: ShopAdminPan
       setError(deleteError instanceof Error ? deleteError.message : 'Unable to disable product.');
     }
   }
+  
+  async function saveManualOrder() {
+    if (!canReorder) return;
+    const orderedIds = manualOrderIds;
+    if (orderedIds.length === 0) return;
+    const previous = pendingOrderBeforeSaveRef.current.length > 0 ? pendingOrderBeforeSaveRef.current : sortedProducts.map((product) => product.id);
+
+    try {
+      const response = await fetch('/api/admin/shop/products/reorder', {
+        method: 'POST',
+        credentials: 'include',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ orderedIds })
+      });
+      const payload = await response.json();
+      if (!response.ok) throw new Error(payload.error || 'Unable to save order.');
+      if (Array.isArray(payload.products)) {
+        setProducts(payload.products as Product[]);
+      }
+      setSuccess('Order saved.');
+    } catch (reorderError) {
+      setManualOrderIds(previous);
+      setError(reorderError instanceof Error ? reorderError.message : 'Unable to save order.');
+    } finally {
+      pendingOrderBeforeSaveRef.current = [];
+    }
+  }
+
+  function onDragPressStart(event: React.PointerEvent<HTMLButtonElement>, productId: string) {
+    if (!canReorder || dragState) return;
+    pendingOrderBeforeSaveRef.current = manualOrderIds;
+    const pointerId = event.pointerId;
+    const pointerY = event.clientY;
+    dragPressTimerRef.current = window.setTimeout(() => {
+      setDragState({ id: productId, pointerId, pointerY, overId: productId });
+    }, 240);
+  }
+
+  function onDragPressEnd() {
+    if (dragPressTimerRef.current) {
+      window.clearTimeout(dragPressTimerRef.current);
+      dragPressTimerRef.current = null;
+    }
+  }
+
+
   async function markCollected(orderId: string) {
     setError(null);
     setSuccess(null);
     try {
       const response = await fetch(`/api/admin/shop/orders/${orderId}/collect`, { method: 'POST', credentials: 'include' });
       const payload = await response.json();
-            if (response.status === 401) {
+      if (response.status === 401) {
         setOrdersUnauthorized(true);
         setSelectedOrder(null);
         return;
@@ -633,56 +856,141 @@ export default function ShopAdminPanel({ initialTab = 'products' }: ShopAdminPan
 
       {activeTab === 'products' && (
         <div className="admin-reports admin-products-panel">
-          <div className="admin-products-actions">
-            <button type="button" className="btn btn--primary" onClick={startCreate}>Add product</button>
-            <button type="button" className="btn btn--ghost" onClick={() => void fetchProducts()} disabled={loading}>{loading ? 'Refreshing...' : 'Refresh'}</button>          </div>
+          <div className="admin-products-toolbar">
+            <div className="admin-products-toolbar-top">
+              <input
+                value={productSearch}
+                onChange={(event) => setProductSearch(event.target.value)}
+                type="search"
+                className="admin-products-search"
+                placeholder="Search products"
+                aria-label="Search products"
+              />
+              <div className="admin-products-toolbar-actions">
+                <button type="button" className="btn btn--primary" onClick={startCreate}>Add product</button>
+                <select value={productSortMode} onChange={(event) => setProductSortMode(event.target.value as ProductSortMode)} className="admin-products-sort">
+                  <option value="manual">Manual order</option>
+                  <option value="newest">Newest</option>
+                  <option value="price">Price</option>
+                  <option value="name">Name</option>
+                </select>
+              </div>
+            </div>
+            <div className="admin-products-toolbar-row">
+              <div className="admin-products-filters" role="tablist" aria-label="Product filters">
+                {(['all', 'active', 'inactive', 'featured'] as ProductFilter[]).map((filter) => (
+                  <button
+                    key={filter}
+                    type="button"
+                    className={`admin-filter-tab ${productFilter === filter ? 'admin-filter-tab--active' : ''}`}
+                    onClick={() => setProductFilter(filter)}
+                  >
+                    {filter === 'all' ? 'All' : filter === 'active' ? 'Active' : filter === 'inactive' ? 'Inactive' : 'Featured'}
+                  </button>
+                ))}
+              </div>
+              <p className="admin-products-count muted">{filteredProducts.length} products • {featuredCount} featured</p>
+            </div>
+            {!canReorder && productSortMode === 'manual' ? <p className="muted">Clear search/filter to reorder manually.</p> : null}
+          </div>
+
 
           {error ? <p className="admin-inline-error">{error}</p> : null}
           {success ? <p className="admin-inline-success">{success}</p> : null}
 
           {formOpen ? (
-            <form className="admin-product-form" onSubmit={saveProduct}>
-              <h3>{form.id ? 'Edit product' : 'Add product'}</h3>
-              <label>Name<input value={form.name} onChange={(event) => setForm((prev) => ({ ...prev, name: event.target.value }))} required /></label>
-              <label>Description<textarea value={form.description} onChange={(event) => setForm((prev) => ({ ...prev, description: event.target.value }))} rows={3} /></label>
-              <label>Price (GBP)<input type="number" min="0.01" step="0.01" value={form.priceGbp} onChange={(event) => setForm((prev) => ({ ...prev, priceGbp: event.target.value }))} required /></label>
-              <label>Image URL<input type="url" value={form.imageUrl} onChange={(event) => setForm((prev) => ({ ...prev, imageUrl: event.target.value }))} placeholder="https://..." /></label>
-              <label>Sort order<input type="number" value={form.sortOrder} onChange={(event) => setForm((prev) => ({ ...prev, sortOrder: Number.parseInt(event.target.value, 10) || 0 }))} /></label>
-              <label className="admin-product-checkbox"><input type="checkbox" checked={form.active} onChange={(event) => setForm((prev) => ({ ...prev, active: event.target.checked }))} />Active</label>
-              <label className="admin-product-checkbox"><input type="checkbox" checked={form.featured} onChange={(event) => setForm((prev) => ({ ...prev, featured: event.target.checked }))} />Featured</label>
+            <div className="admin-product-sheet-backdrop" onClick={resetForm}>
+              <form className="admin-product-sheet" onSubmit={saveProduct} onClick={(event) => event.stopPropagation()}>
+                <div className="admin-product-sheet-head">
+                  <h3>{form.id ? 'Edit product' : 'Add product'}</h3>
+                  <button type="button" className="btn btn--ghost" onClick={resetForm}>Close</button>
+                </div>
+                <p className="admin-product-unsaved muted">{formDirty ? 'Unsaved changes' : 'All changes saved'}</p>
 
+                <label className="admin-product-field">Image URL
+                  <input type="url" value={form.imageUrl} onChange={(event) => setForm((prev) => ({ ...prev, imageUrl: event.target.value }))} placeholder="https://..." />
+                </label>
+                <div className="admin-product-image-preview" aria-hidden="true">
+                  {form.imageUrl.trim() ? <img src={form.imageUrl} alt="Preview" /> : <span>No image preview</span>}
+                </div>
 
-              <div className="admin-products-actions">
-                <button type="submit" className="btn btn--primary" disabled={saving}>{saving ? 'Saving...' : 'Save product'}</button>                <button type="button" className="btn btn--secondary" onClick={resetForm}>Cancel</button>
-              </div>
-            </form>
+                <label className="admin-product-field">Name
+                  <input value={form.name} onChange={(event) => setForm((prev) => ({ ...prev, name: event.target.value }))} required />
+                </label>
+                <label className="admin-product-field">Price (GBP)
+                  <div className="admin-price-input-wrap"><span>£</span><input inputMode="decimal" value={form.priceGbp} onChange={(event) => setForm((prev) => ({ ...prev, priceGbp: event.target.value.replace(/[^0-9.,]/g, '') }))} required /></div>
+                </label>
+                <label className="admin-product-field">Description
+                  <textarea value={form.description} onChange={(event) => setForm((prev) => ({ ...prev, description: event.target.value }))} rows={4} />
+                </label>
+
+                <div className="admin-product-switches">
+                  <label className="admin-product-toggle"><span>Active</span><input type="checkbox" checked={form.active} onChange={(event) => setForm((prev) => ({ ...prev, active: event.target.checked, featured: event.target.checked ? prev.featured : false }))} /></label>
+                  <label className="admin-product-toggle"><span>Featured</span><input type="checkbox" checked={form.featured} onChange={(event) => setForm((prev) => ({ ...prev, featured: event.target.checked, active: event.target.checked ? true : prev.active }))} /></label>
+                </div>
+
+                <details className="admin-product-advanced">
+                  <summary>Advanced</summary>
+                  <label className="admin-product-field">Sort order
+                    <input type="number" value={form.sortOrder} onChange={(event) => setForm((prev) => ({ ...prev, sortOrder: Number.parseInt(event.target.value, 10) || 0 }))} />
+                  </label>
+                </details>
+
+                <div className="admin-product-sheet-footer">
+                  <button type="button" className="btn btn--secondary" onClick={resetForm}>Cancel</button>
+                  <button type="submit" className="btn btn--primary" disabled={saving || !formValid || !formDirty}>{saving ? 'Saving...' : 'Save product'}</button>
+                </div>
+              </form>
+            </div>
+
           ) : null}
 
-          <div className="admin-products-table-wrap">
-            <table className="admin-table">
-              <thead><tr><th>Name</th><th>Price</th><th>Active</th><th>Featured</th><th>Sort</th><th>Updated</th><th>Actions</th></tr></thead>
-              <tbody>
-                {sortedProducts.length === 0 ? (<tr><td colSpan={7}>No products yet.</td></tr>) : sortedProducts.map((product) => (
-                  <tr key={product.id}>
-                    <td>{product.name}</td>
-                    <td>{formatPrice(product.pricePence)}</td>
-                    <td>{product.active ? 'Yes' : 'No'}</td>
-                    <td>{product.featured ? 'Yes' : 'No'}</td>
-                    <td>{product.sortOrder}</td>
-                    <td>{new Date(product.updatedAt).toLocaleString('en-GB')}</td>
-                    <td>
-                      <div className="admin-products-row-actions">
-                        <button type="button" className="btn btn--ghost" onClick={() => startEdit(product)}>Edit</button>
-                        <button type="button" className="btn btn--ghost" onClick={() => void toggleField(product.id, 'active', !product.active)}>{product.active ? 'Deactivate' : 'Activate'}</button>
-                        <button type="button" className="btn btn--ghost" onClick={() => void toggleField(product.id, 'featured', !product.featured)}>{product.featured ? 'Unfeature' : 'Feature'}</button>
-                        <button type="button" className="btn btn--secondary" onClick={() => void disableProduct(product.id)}>Delete</button>
+          <div className="admin-products-cards">
+            {filteredProducts.length === 0 ? (
+              <article className="admin-product-card"><p>No products yet.</p></article>
+            ) : filteredProducts.map((product) => {
+              const isDragging = dragState?.id === product.id;
+              const isSavingCard = Boolean(productSavingById[product.id]);
+              return (
+                <article
+                  key={product.id}
+                  className={`admin-product-card ${isDragging ? 'admin-product-card--dragging' : ''}`}
+                  ref={(element) => { dragCardRefs.current[product.id] = element; }}
+                >
+                  <div className="admin-product-card-main">
+                    <div className="admin-product-thumb">{product.imageUrl ? <img src={product.imageUrl} alt={product.name} loading="lazy" /> : <span>No image</span>}</div>
+                    <div>
+                      <h4>{product.name}</h4>
+                      <p className="admin-product-price">{formatPrice(product.pricePence)}</p>
+                      <p className="admin-product-meta muted">Updated {new Date(product.updatedAt).toLocaleString('en-GB')} • Sort {product.sortOrder}</p>
+                    </div>
+                    <button
+                      type="button"
+                      className="admin-drag-handle"
+                      aria-label={`Reorder ${product.name}`}
+                      disabled={!canReorder}
+                      onPointerDown={(event) => onDragPressStart(event, product.id)}
+                      onPointerUp={onDragPressEnd}
+                      onPointerCancel={onDragPressEnd}
+                    >
+                      ⋮⋮
+                    </button>
+                  </div>
 
-                      </div>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
+                  <div className="admin-product-switches admin-product-switches--card">
+                    <label className="admin-product-toggle"><span>Active</span><input type="checkbox" checked={product.active} disabled={isSavingCard} onChange={(event) => void patchProductFlags(product.id, { active: event.target.checked })} /></label>
+                    <label className="admin-product-toggle"><span>Featured</span><input type="checkbox" checked={product.featured} disabled={isSavingCard} onChange={(event) => void patchProductFlags(product.id, { featured: event.target.checked })} /></label>
+                  </div>
+
+                  <div className="admin-products-actions">
+                    <button type="button" className="btn btn--ghost" onClick={() => startEdit(product)}>Edit</button>
+                    <button type="button" className="btn btn--secondary" onClick={() => void disableProduct(product.id)}>Delete</button>
+                    <span className="admin-product-saving muted">{isSavingCard ? 'Saving…' : (productStatusById[product.id] || '')}</span>
+                  </div>
+                </article>
+              );
+            })}
+
           </div>
         </div>
       )}
