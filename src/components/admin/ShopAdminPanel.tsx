@@ -86,6 +86,9 @@ type DragState = {
 };
 
 const DEBUG_DND = false;
+const TOUCH_DRAG_DELAY_MS = 250;
+const TOUCH_DRAG_TOLERANCE_PX = 8;
+const POINTER_DRAG_DISTANCE_PX = 8;
 
 type SalesChartSeries = {
   key: string;
@@ -378,12 +381,12 @@ export default function ShopAdminPanel({ initialTab = 'products' }: ShopAdminPan
   const formValid = useMemo(() => form.name.trim().length > 0 && formPricePence > 0, [form.name, formPricePence]);
 
   const debugDnd = (source: string, eventOrPayload: Event | React.SyntheticEvent | Record<string, unknown>) => {
-    if (!DEBUG_DND) return;
+    if (!(import.meta.env.DEV && DEBUG_DND)) return;
     if (eventOrPayload instanceof Event) {
       const target = eventOrPayload.target as HTMLElement | null;
       const currentTarget = eventOrPayload.currentTarget as HTMLElement | null;
       const pointerType = 'pointerType' in eventOrPayload ? (eventOrPayload as PointerEvent).pointerType : undefined;
-      console.info('[products-dnd:event]', { source, type: eventOrPayload.type, pointerType, target: target?.tagName, currentTarget: currentTarget?.tagName });
+      console.info('[products-dnd:event]', { source, type: eventOrPayload.type, pointerType, manualReorderEnabled: canReorder, target: target?.tagName, currentTarget: currentTarget?.tagName });
       return;
     }
     if ('nativeEvent' in eventOrPayload) {
@@ -391,10 +394,10 @@ export default function ShopAdminPanel({ initialTab = 'products' }: ShopAdminPan
       const target = eventOrPayload.target as HTMLElement | null;
       const currentTarget = eventOrPayload.currentTarget as HTMLElement | null;
       const pointerType = 'pointerType' in nativeEvent ? (nativeEvent as PointerEvent).pointerType : undefined;
-      console.info('[products-dnd:event]', { source, type: nativeEvent.type, pointerType, target: target?.tagName, currentTarget: currentTarget?.tagName });
+       console.info('[products-dnd:event]', { source, type: nativeEvent.type, pointerType, manualReorderEnabled: canReorder, target: target?.tagName, currentTarget: currentTarget?.tagName });
       return;
     }
-    console.info('[products-dnd:state]', { source, ...eventOrPayload });
+    console.info('[products-dnd:state]', { source, manualReorderEnabled: canReorder, ...eventOrPayload });
   };
 
 
@@ -443,7 +446,7 @@ export default function ShopAdminPanel({ initialTab = 'products' }: ShopAdminPan
             break;
           }
         }
-        setDragState((previous) => (previous ? { ...previous, pointerX, pointerY, overId } : previous));
+        debugDnd('onDragMove', { activeId: dragState.id, overId, inputType: dragState.inputType });
         setManualOrderIds((previous) => {
           const fromIndex = previous.indexOf(dragState.id);
           const toIndex = previous.indexOf(overId);
@@ -471,19 +474,20 @@ export default function ShopAdminPanel({ initialTab = 'products' }: ShopAdminPan
     };
 
 
-    const handleUp = (event: PointerEvent) => {
+     const handleUp = (event: PointerEvent) => {
       if (dragState.inputType !== 'pointer' || event.pointerId !== dragState.pointerId) return;
-      debugDnd('onDragEnd', { activeId: dragState.id, overId: dragState.overId, inputType: dragState.inputType });
+      debugDnd(event.type === 'pointercancel' ? 'onDragCancel' : 'onDragEnd', { activeId: dragState.id, overId: dragState.overId, inputType: dragState.inputType });
       dragLatestTouchRef.current = null;
       void saveManualOrder();
       setDragState(null);
     };
 
+
     const handleTouchEnd = (event: TouchEvent) => {
       if (dragState.inputType !== 'touch') return;
       const matchingTouch = Array.from(event.changedTouches).find((touch) => touch.identifier === dragState.pointerId);
       if (!matchingTouch) return;
-      debugDnd('onDragEnd', { activeId: dragState.id, overId: dragState.overId, inputType: dragState.inputType });
+      debugDnd(event.type === 'touchcancel' ? 'onDragCancel' : 'onDragEnd', { activeId: dragState.id, overId: dragState.overId, inputType: dragState.inputType });
       dragLatestTouchRef.current = null;
 
       void saveManualOrder();
@@ -515,7 +519,7 @@ export default function ShopAdminPanel({ initialTab = 'products' }: ShopAdminPan
     };
   }, [dragState, manualProducts]);
   useEffect(() => {
-    if (!DEBUG_DND) return;
+    if (!(import.meta.env.DEV && DEBUG_DND)) return;
     const onDocumentCaptureTouchStart = (event: TouchEvent) => {
       debugDnd('document:capture:touchstart', event);
     };
@@ -908,7 +912,7 @@ export default function ShopAdminPanel({ initialTab = 'products' }: ShopAdminPan
       if (moveEvent.pointerId !== pointerId) return;
       const deltaX = Math.abs(moveEvent.clientX - pointerX);
       const deltaY = Math.abs(moveEvent.clientY - pointerY);
-      if (deltaX > 8 || deltaY > 8) {
+      if (deltaX > POINTER_DRAG_DISTANCE_PX || deltaY > POINTER_DRAG_DISTANCE_PX) {
         clearPending();
       }
     };
@@ -940,10 +944,11 @@ export default function ShopAdminPanel({ initialTab = 'products' }: ShopAdminPan
       debugDnd('onDragStart', { activeId: productId, overId: productId, inputType: 'pointer' });
 
 
-    }, 250);
+    }, TOUCH_DRAG_DELAY_MS);
   }
   function onDragTouchStart(event: React.TouchEvent<HTMLButtonElement>, productId: string) {
     if (!canReorder || dragState) return;
+        event.preventDefault();
     onDragPressEnd();
     pendingOrderBeforeSaveRef.current = manualOrderIds;
     const touch = event.changedTouches[0] ?? event.touches[0];
@@ -968,7 +973,7 @@ export default function ShopAdminPanel({ initialTab = 'products' }: ShopAdminPan
       if (!touchPoint) return;
       const deltaX = Math.abs(touchPoint.clientX - touch.clientX);
       const deltaY = Math.abs(touchPoint.clientY - touch.clientY);
-      if (deltaX > 5 || deltaY > 5) {
+      if (deltaX > TOUCH_DRAG_TOLERANCE_PX || deltaY > TOUCH_DRAG_TOLERANCE_PX) {
         clearPending();
       }
     };
@@ -997,7 +1002,7 @@ export default function ShopAdminPanel({ initialTab = 'products' }: ShopAdminPan
       handleFlashTimerRef.current = window.setTimeout(() => setHandleFlashId((previous) => (previous === productId ? null : previous)), 180);
       setDragState({ id: productId, inputType: 'touch', pointerId: touch.identifier, pointerX: touch.clientX, pointerY: touch.clientY, overId: productId });
       debugDnd('onDragStart', { activeId: productId, overId: productId, inputType: 'touch' });
-    }, 200);
+    }, TOUCH_DRAG_DELAY_MS);
   }
 
 
@@ -1176,7 +1181,7 @@ export default function ShopAdminPanel({ initialTab = 'products' }: ShopAdminPan
                     </div>
                     <button
                       type="button"
-                      className={`admin-drag-handle dnd-handle ${handleFlashId === product.id ? 'admin-drag-handle--flash' : ''}`}
+                      className={`admin-drag-handle dnd-handle ${handleFlashId === product.id ? 'admin-drag-handle--flash' : ''} ${(import.meta.env.DEV && DEBUG_DND) ? 'admin-drag-handle--debug' : ''}`}
                       aria-label={`Reorder ${product.name}`}
                       disabled={!canReorder}
                       onContextMenu={(event) => event.preventDefault()}
