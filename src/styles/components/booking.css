@@ -705,6 +705,7 @@
 
 .admin-main-content {
   min-width: 0;
+    width: 100%;
 }
 .admin-mobile-title {
   margin: 0;
@@ -1129,6 +1130,84 @@
 .admin-product-advanced summary {
   cursor: pointer;
 }
+@media (max-width: 40rem) {
+  .admin-page-wrap {
+    width: 100%;
+    max-width: 100%;
+    margin-inline: 0;
+    padding-inline: 0;
+  }
+
+  .admin-page-wrap .admin-main-content {
+    padding-inline: 0;
+  }
+
+  .admin-page-wrap .booking-shell {
+    width: 100%;
+    padding-inline: 0.5rem;
+  }
+
+  .admin-page-wrap .booking-shell > h2,
+  .admin-page-wrap .booking-shell > .admin-shop-kicker {
+    padding-inline: 0.5rem;
+  }
+
+  .admin-page-wrap .booking-shell > .admin-products-panel {
+    border: 0;
+    box-shadow: none;
+    background: transparent;
+    padding-inline: 0;
+  }
+
+  .admin-page-wrap .admin-products-toolbar {
+    top: 4.6rem;
+    border-inline: 0;
+    box-shadow: none;
+    padding-inline: 0.5rem;
+  }
+
+  .admin-page-wrap .admin-products-toolbar-top {
+    grid-template-columns: 1fr;
+  }
+
+  .admin-page-wrap .admin-products-toolbar-actions {
+    grid-template-columns: minmax(0, 3fr) minmax(0, 2fr);
+  }
+
+  .admin-page-wrap .admin-products-toolbar-row {
+    gap: 0.75rem;
+  }
+
+  .admin-page-wrap .admin-products-filters {
+    flex-wrap: nowrap;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  .admin-page-wrap .admin-filter-tab {
+    flex: 0 0 auto;
+    min-height: 2.75rem;
+    white-space: nowrap;
+  }
+
+  .admin-page-wrap .admin-products-cards {
+    gap: 0.75rem;
+  }
+
+  .admin-page-wrap .admin-product-card {
+    width: 100%;
+    border-inline: 0;
+    box-shadow: none;
+    padding-inline: 0.5rem;
+  }
+
+  .admin-page-wrap .admin-products-actions .btn,
+  .admin-page-wrap .admin-product-toggle,
+  .admin-page-wrap .admin-reorder-btn {
+    min-height: 2.75rem;
+  }
+}
+
 
 @media (min-width: 48.0625rem) {
   .admin-products-toolbar {
