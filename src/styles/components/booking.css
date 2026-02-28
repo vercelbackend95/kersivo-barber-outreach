@@ -930,13 +930,6 @@
   z-index: 30;
 
 }
-.admin-product-card--overlay {
-  position: fixed;
-  width: min(96vw, 44rem);
-  transform: translate(-50%, -50%) scale(1.02);
-  pointer-events: none;
-  z-index: 120;
-}
 
 
 .admin-product-card-main {
@@ -996,16 +989,14 @@
   -webkit-tap-highlight-color: transparent;
   transition: opacity 120ms ease;
 }
-.dnd-handle {
-  touch-action: none;
-  -webkit-touch-callout: none;
-  -webkit-user-select: none;
-  user-select: none;
+.sortable-chosen {
+  transform: scale(1.02);
+  box-shadow: 0 1.2rem 2.2rem color-mix(in srgb, var(--bg) 60%, transparent);
+
 }
 
-
-.admin-drag-handle--flash {
-  opacity: 0.65;
+.sortable-ghost {
+  opacity: 0.4;
 
 }
 

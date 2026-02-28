@@ -1,4 +1,5 @@
 import React, { useEffect, useMemo, useRef, useState } from 'react';
+import Sortable from 'sortablejs';
 
 type ShopTab = 'products' | 'orders' | 'sales';
 type SalesRangePreset = '7' | '30' | '90' | 'custom';
@@ -77,18 +78,6 @@ type ProductFormState = {
 type ProductFilter = 'all' | 'active' | 'inactive' | 'featured';
 type ProductSortMode = 'manual' | 'newest' | 'price' | 'name';
 
-type DragState = {
-  id: string;
-  inputType: 'pointer';
-  pointerId: number;
-    pointerX: number;
-  pointerY: number;
-  overId: string;
-};
-
-const DEBUG_DND = false;
-const TOUCH_DRAG_DELAY_MS = 250;
-const POINTER_DRAG_DISTANCE_PX = 8;
 
 
 type SalesChartSeries = {
@@ -322,15 +311,10 @@ export default function ShopAdminPanel({ initialTab = 'products' }: ShopAdminPan
   const [productSavingById, setProductSavingById] = useState<Record<string, boolean>>({});
   const [productStatusById, setProductStatusById] = useState<Record<string, string>>({});
   const [formInitial, setFormInitial] = useState<ProductFormState>(EMPTY_FORM);
-  const [dragState, setDragState] = useState<DragState | null>(null);
-  const [handleFlashId, setHandleFlashId] = useState<string | null>(null);
+  const [draggingProductId, setDraggingProductId] = useState<string | null>(null);
 
-  const dragCardRefs = useRef<Record<string, HTMLDivElement | null>>({});
-  const dragPressTimerRef = useRef<number | null>(null);
-  const dragRafRef = useRef<number | null>(null);
-  const dragLatestPointerRef = useRef({ x: 0, y: 0 });
-  const handleFlashTimerRef = useRef<number | null>(null);
-  const pendingActivationCleanupRef = useRef<(() => void) | null>(null);
+    const listRef = useRef<HTMLDivElement | null>(null);
+  const sortableRef = useRef<Sortable | null>(null);
 
   const pendingOrderBeforeSaveRef = useRef<string[]>([]);
 
@@ -380,25 +364,7 @@ export default function ShopAdminPanel({ initialTab = 'products' }: ShopAdminPan
   const formPricePence = useMemo(() => penceFromGbp(form.priceGbp), [form.priceGbp]);
   const formValid = useMemo(() => form.name.trim().length > 0 && formPricePence > 0, [form.name, formPricePence]);
 
-  const debugDnd = (source: string, eventOrPayload: Event | React.SyntheticEvent | Record<string, unknown>) => {
-    if (!(import.meta.env.DEV && DEBUG_DND)) return;
-    if (eventOrPayload instanceof Event) {
-      const target = eventOrPayload.target as HTMLElement | null;
-      const currentTarget = eventOrPayload.currentTarget as HTMLElement | null;
-      const pointerType = 'pointerType' in eventOrPayload ? (eventOrPayload as PointerEvent).pointerType : undefined;
-      console.info('[products-dnd:event]', { source, type: eventOrPayload.type, pointerType, manualReorderEnabled: canReorder, target: target?.tagName, currentTarget: currentTarget?.tagName });
-      return;
-    }
-    if ('nativeEvent' in eventOrPayload) {
-      const nativeEvent = eventOrPayload.nativeEvent;
-      const target = eventOrPayload.target as HTMLElement | null;
-      const currentTarget = eventOrPayload.currentTarget as HTMLElement | null;
-      const pointerType = 'pointerType' in nativeEvent ? (nativeEvent as PointerEvent).pointerType : undefined;
-       console.info('[products-dnd:event]', { source, type: nativeEvent.type, pointerType, manualReorderEnabled: canReorder, target: target?.tagName, currentTarget: currentTarget?.tagName });
-      return;
-    }
-    console.info('[products-dnd:state]', { source, manualReorderEnabled: canReorder, ...eventOrPayload });
-  };
+
 
 
   useEffect(() => {
@@ -418,104 +384,63 @@ export default function ShopAdminPanel({ initialTab = 'products' }: ShopAdminPan
     window.addEventListener('keydown', onKeyDown);
     return () => window.removeEventListener('keydown', onKeyDown);
   }, [formOpen]);
-
-  useEffect(() => {
-    if (!dragState) return;
-    const previousTouchAction = document.body.style.touchAction;
-    const previousOverflow = document.body.style.overflow;
-    document.body.style.touchAction = 'none';
-    document.body.style.overflow = 'hidden';
-
-    const handleDragPosition = (pointerX: number, pointerY: number) => {
-      dragLatestPointerRef.current = { x: pointerX, y: pointerY };
-
-
-      if (dragRafRef.current) return;
-      dragRafRef.current = window.requestAnimationFrame(() => {
-        dragRafRef.current = null;
-        const pointerX = dragLatestPointerRef.current.x;
-        const pointerY = dragLatestPointerRef.current.y;
-
-        let overId = dragState.overId;
-        for (const product of manualProducts) {
-          const element = dragCardRefs.current[product.id];
-          if (!element) continue;
-          const rect = element.getBoundingClientRect();
-          if (pointerY >= rect.top && pointerY <= rect.bottom) {
-            overId = product.id;
-            break;
-          }
-        }
-                setDragState((previous) => {
-          if (!previous || previous.pointerId !== dragState.pointerId) return previous;
-          if (previous.pointerX === pointerX && previous.pointerY === pointerY && previous.overId === overId) return previous;
-          return { ...previous, pointerX, pointerY, overId };
-        });
-
-        debugDnd('onDragMove', { activeId: dragState.id, overId, inputType: dragState.inputType });
-        setManualOrderIds((previous) => {
-          const fromIndex = previous.indexOf(dragState.id);
-          const toIndex = previous.indexOf(overId);
-          if (fromIndex < 0 || toIndex < 0 || fromIndex === toIndex) return previous;
-          const next = [...previous];
-          const [moved] = next.splice(fromIndex, 1);
-          next.splice(toIndex, 0, moved);
-          return next;
-        });
-      });
-    };
-    const handleMove = (event: PointerEvent) => {
-      if (event.pointerId !== dragState.pointerId) return;
-      event.preventDefault();
-      handleDragPosition(event.clientX, event.clientY);
-    };
-
-    const handleUp = (event: PointerEvent) => {
-      if (event.pointerId !== dragState.pointerId) return;
-      debugDnd(event.type === 'pointercancel' ? 'onDragCancel' : 'onDragEnd', { activeId: dragState.id, overId: dragState.overId, inputType: dragState.inputType });
-      void saveManualOrder();
-      setDragState(null);
-    };
-
-    window.addEventListener('pointermove', handleMove, { passive: false });
-    window.addEventListener('pointerup', handleUp, { passive: true });
-    window.addEventListener('pointercancel', handleUp, { passive: true });
-
-
-    return () => {
-      if (dragRafRef.current) {
-        window.cancelAnimationFrame(dragRafRef.current);
-        dragRafRef.current = null;
-      }
-      document.body.style.touchAction = previousTouchAction;
-      document.body.style.overflow = previousOverflow;
-      window.removeEventListener('pointermove', handleMove);
-      window.removeEventListener('pointerup', handleUp);
-      window.removeEventListener('pointercancel', handleUp);
-
-    };
-  }, [dragState, manualProducts]);
-
-  useEffect(() => {
-    return () => {
-      if (handleFlashTimerRef.current) {
-        window.clearTimeout(handleFlashTimerRef.current);
-      }
-            if (pendingActivationCleanupRef.current) {
-        pendingActivationCleanupRef.current();
-        pendingActivationCleanupRef.current = null;
-      }
-
-    };
-  }, []);
-
-
-
     const activeSectionLabel = useMemo(() => {
     if (activeTab === 'orders') return 'Orders';
     if (activeTab === 'sales') return 'Sales';
     return 'Products';
   }, [activeTab]);
+
+
+
+  useEffect(() => {
+    if (!listRef.current) return;
+
+    if (!canReorder || productSortMode !== 'manual') {
+      if (sortableRef.current) {
+        sortableRef.current.destroy();
+        sortableRef.current = null;
+      }
+      return;
+    }
+
+    const sortable = Sortable.create(listRef.current, {
+      handle: '.js-dnd-handle',
+      animation: 150,
+      delay: 200,
+      delayOnTouchOnly: true,
+      touchStartThreshold: 3,
+      ghostClass: 'sortable-ghost',
+      chosenClass: 'sortable-chosen',
+      dragClass: 'sortable-drag',
+      forceFallback: true,
+      fallbackTolerance: 5,
+      onChoose: (event) => {
+        const productId = event.item.getAttribute('data-id');
+        setDraggingProductId(productId);
+      },
+      onUnchoose: () => setDraggingProductId(null),
+      onEnd: async () => {
+        setDraggingProductId(null);
+        const container = listRef.current;
+        if (!container) return;
+
+        const orderedIds = Array.from(container.querySelectorAll<HTMLElement>('[data-id]'))
+          .map((item) => item.dataset.id)
+          .filter((id): id is string => Boolean(id));
+
+        await saveManualOrder(orderedIds);
+      }
+    });
+
+    sortableRef.current = sortable;
+
+    return () => {
+      sortable.destroy();
+      if (sortableRef.current === sortable) {
+        sortableRef.current = null;
+      }
+    };
+  }, [canReorder, productSortMode]);
 
 
 
@@ -826,11 +751,20 @@ export default function ShopAdminPanel({ initialTab = 'products' }: ShopAdminPan
     }
   }
   
-  async function saveManualOrder() {
+  async function saveManualOrder(orderedIds: string[]) {
     if (!canReorder) return;
-    const orderedIds = manualOrderIds;
+
     if (orderedIds.length === 0) return;
-    const previous = pendingOrderBeforeSaveRef.current.length > 0 ? pendingOrderBeforeSaveRef.current : sortedProducts.map((product) => product.id);
+
+    const previous = manualOrderIds;
+    pendingOrderBeforeSaveRef.current = previous;
+
+    setManualOrderIds(orderedIds);
+    setProducts((previousProducts) => {
+      const orderLookup = new Map(orderedIds.map((id, index) => [id, index]));
+      return [...previousProducts].sort((a, b) => (orderLookup.get(a.id) ?? Number.MAX_SAFE_INTEGER) - (orderLookup.get(b.id) ?? Number.MAX_SAFE_INTEGER));
+    });
+
 
     try {
       const response = await fetch('/api/admin/shop/products/reorder', {
@@ -847,100 +781,15 @@ export default function ShopAdminPanel({ initialTab = 'products' }: ShopAdminPan
       setSuccess('Order saved.');
     } catch (reorderError) {
       setManualOrderIds(previous);
+            setProducts((previousProducts) => {
+        const orderLookup = new Map(previous.map((id, index) => [id, index]));
+        return [...previousProducts].sort((a, b) => (orderLookup.get(a.id) ?? Number.MAX_SAFE_INTEGER) - (orderLookup.get(b.id) ?? Number.MAX_SAFE_INTEGER));
+      });
+
       setError(reorderError instanceof Error ? reorderError.message : 'Unable to save order.');
     } finally {
       pendingOrderBeforeSaveRef.current = [];
     }
-  }
-
-  function onDragPressStart(event: React.PointerEvent<HTMLButtonElement>, productId: string) {
-    if (!canReorder || dragState) return;
-    if (event.button !== 0) return;
-    event.preventDefault();
-    event.stopPropagation();
-    event.currentTarget.setPointerCapture(event.pointerId);
-    onDragPressEnd(event.currentTarget);
-
-    pendingOrderBeforeSaveRef.current = manualOrderIds;
-    const pointerId = event.pointerId;
-    const pointerX = event.clientX;
-    const pointerY = event.clientY;
-    dragLatestPointerRef.current = { x: pointerX, y: pointerY };
-    debugDnd('handle:pointerdown', event);
-
-    const clearPending = () => {
-      if (dragPressTimerRef.current) {
-        window.clearTimeout(dragPressTimerRef.current);
-        dragPressTimerRef.current = null;
-      }
-      if (pendingActivationCleanupRef.current) {
-        pendingActivationCleanupRef.current();
-        pendingActivationCleanupRef.current = null;
-      }
-    };
-
-    const handlePendingPointerMove = (moveEvent: PointerEvent) => {
-      if (moveEvent.pointerId !== pointerId) return;
-      const deltaX = Math.abs(moveEvent.clientX - pointerX);
-      const deltaY = Math.abs(moveEvent.clientY - pointerY);
-      if (deltaX > POINTER_DRAG_DISTANCE_PX || deltaY > POINTER_DRAG_DISTANCE_PX) {
-        clearPending();
-      }
-    };
-
-    const handlePendingPointerEnd = (endEvent: PointerEvent) => {
-      if (endEvent.pointerId !== pointerId) return;
-      clearPending();
-    };
-
-    window.addEventListener('pointermove', handlePendingPointerMove, { passive: true });
-    window.addEventListener('pointerup', handlePendingPointerEnd, { passive: true });
-    window.addEventListener('pointercancel', handlePendingPointerEnd, { passive: true });
-    pendingActivationCleanupRef.current = () => {
-      window.removeEventListener('pointermove', handlePendingPointerMove);
-      window.removeEventListener('pointerup', handlePendingPointerEnd);
-      window.removeEventListener('pointercancel', handlePendingPointerEnd);
-    };
-
-
-    dragPressTimerRef.current = window.setTimeout(() => {
-      clearPending();
-      setHandleFlashId(productId);
-      if (handleFlashTimerRef.current) {
-        window.clearTimeout(handleFlashTimerRef.current);
-      }
-      handleFlashTimerRef.current = window.setTimeout(() => setHandleFlashId((previous) => (previous === productId ? null : previous)), 180);
-
-      setDragState({ id: productId, inputType: 'pointer', pointerId, pointerX, pointerY, overId: productId });
-      debugDnd('onDragStart', { activeId: productId, overId: productId, inputType: 'pointer' });
-
-
-    }, TOUCH_DRAG_DELAY_MS);
-  }
-  
-
-
-  function onDragPressEnd(handleElement?: HTMLButtonElement) {
-    debugDnd('handle:pressend', { dragging: Boolean(dragState) });
-    if (dragPressTimerRef.current) {
-      window.clearTimeout(dragPressTimerRef.current);
-      dragPressTimerRef.current = null;
-    }
-        if (pendingActivationCleanupRef.current) {
-      pendingActivationCleanupRef.current();
-      pendingActivationCleanupRef.current = null;
-    }
-    if (handleElement) {
-      try {
-        if (dragState) {
-          handleElement.releasePointerCapture(dragState.pointerId);
-        }
-      } catch {
-        // noop: pointer capture may already be released
-      }
-    }
-
-
   }
 
 
@@ -1081,18 +930,17 @@ export default function ShopAdminPanel({ initialTab = 'products' }: ShopAdminPan
 
           ) : null}
 
-          <div className={`admin-products-cards ${dragState ? 'admin-products-cards--dragging' : ''}`} style={dragState ? { touchAction: 'none' } : undefined}>
+          <div ref={listRef} className={`admin-products-cards ${draggingProductId ? 'admin-products-cards--dragging' : ''}`}>
             {filteredProducts.length === 0 ? (
               <article className="admin-product-card"><p>No products yet.</p></article>
             ) : filteredProducts.map((product) => {
-              const isDragging = dragState?.id === product.id;
+              const isDragging = draggingProductId === product.id;
               const isSavingCard = Boolean(productSavingById[product.id]);
               return (
                 <article
                   key={product.id}
                   className={`admin-product-card ${isDragging ? 'admin-product-card--dragging' : ''}`}
-                  ref={(element) => { dragCardRefs.current[product.id] = element; }}
-                                    onPointerDown={(event) => debugDnd('row:pointerdown', event)}
+                  data-id={product.id}
 
                 >
                   <div className="admin-product-card-main">
@@ -1104,21 +952,14 @@ export default function ShopAdminPanel({ initialTab = 'products' }: ShopAdminPan
                     </div>
                     <button
                       type="button"
-                      className={`admin-drag-handle dnd-handle ${handleFlashId === product.id ? 'admin-drag-handle--flash' : ''} ${(import.meta.env.DEV && DEBUG_DND) ? 'admin-drag-handle--debug' : ''}`}
+                      className="admin-drag-handle js-dnd-handle"
                       aria-label={`Reorder ${product.name}`}
                       disabled={!canReorder}
                       onContextMenu={(event) => event.preventDefault()}
-                                            onDragStart={(event) => event.preventDefault()}
+
                       draggable={false}
 
-                      onPointerDown={(event) => onDragPressStart(event, product.id)}
-                      onPointerUp={(event) => {
-                        debugDnd('handle:pointerup', event);
-                        onDragPressEnd(event.currentTarget);
-                      }}
-                      onClick={(event) => debugDnd('handle:click', event)}
-
-                      onPointerCancel={(event) => onDragPressEnd(event.currentTarget)}
+                      onDragStart={(event) => event.preventDefault()}
                     >
                       ⋮⋮
                     </button>
@@ -1137,21 +978,7 @@ export default function ShopAdminPanel({ initialTab = 'products' }: ShopAdminPan
                 </article>
               );
             })}
-            {dragState ? (
-              <article
-                className="admin-product-card admin-product-card--dragging admin-product-card--overlay"
-                aria-hidden="true"
-                style={{ top: `${dragState.pointerY}px`, left: `${dragState.pointerX}px` }}
-              >
-                <div className="admin-product-card-main">
-                  <div className="admin-product-thumb"><span>⋮⋮</span></div>
-                  <div>
-                    <h4>{productMap.get(dragState.id)?.name ?? 'Moving product'}</h4>
-                    <p className="admin-product-meta muted">Dragging…</p>
-                  </div>
-                </div>
-              </article>
-            ) : null}
+
 
           </div>
         </div>
