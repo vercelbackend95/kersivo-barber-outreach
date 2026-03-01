@@ -788,17 +788,12 @@ export default function BookingsAdminPanel({ isActive, mode, onBackToDashboard }
             <button type="button" className={`admin-filter-tab ${historyPreset === 'overall' ? 'admin-filter-tab--active' : ''}`} onClick={() => { const next = getHistoryPresetDates('overall'); setHistoryPreset('overall'); setHistoryFrom(next.from); setHistoryTo(next.to); }}>Overall</button>
             <button type="button" className={`admin-filter-tab ${historyPreset === 'custom' ? 'admin-filter-tab--active' : ''}`} onClick={() => setHistoryPreset('custom')}>Custom</button>
           </div>
-          <div className="admin-history-date-grid">
-            <div>
-              <label htmlFor="history-from">From</label>
-              <input id="history-from" type="date" value={historyFrom} onChange={(event) => { setHistoryFrom(event.target.value); setHistoryPreset('custom'); }} />
+          {historyPreset === 'custom' ? (
+            <div className="admin-sales-custom-dates">
+              <label htmlFor="history-from">From<input id="history-from" type="date" value={historyFrom} onChange={(event) => { setHistoryFrom(event.target.value); setHistoryPreset('custom'); }} /></label>
+              <label htmlFor="history-to">To<input id="history-to" type="date" value={historyTo} onChange={(event) => { setHistoryTo(event.target.value); setHistoryPreset('custom'); }} /></label>
             </div>
-            <div>
-              <label htmlFor="history-to">To</label>
-              <input id="history-to" type="date" value={historyTo} onChange={(event) => { setHistoryTo(event.target.value); setHistoryPreset('custom'); }} />
-            </div>
-            <button type="button" className="btn btn--secondary" onClick={() => void fetchBookings()}>Apply</button>
-          </div>
+                      ) : null}
         </section>
       )}
 
