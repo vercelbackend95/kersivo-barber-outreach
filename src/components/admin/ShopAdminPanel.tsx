@@ -99,7 +99,7 @@ type SalesChartErrorBoundaryState = {
   hasError: boolean;
 };
 const MAX_SELECTED_PRODUCTS = 5;
-const SALES_SELECTION_LIMIT_MESSAGE = 'You can compare up to 5 products.';
+const SALES_SELECTION_LIMIT_MESSAGE = 'Max 5 products can be compared.';
 
 
 function useBodyScrollLock(isLocked: boolean): void {
@@ -218,51 +218,54 @@ type MiniLineChartProps = {
 
 type SeriesPillsProps = {
   seriesList: SalesSeriesPill[];
-  activeKeys: string[];
-  onToggle: (seriesKey: string) => void;
+  onRemove: (seriesKey: string) => void;
   maxHintVisible: boolean;
-    emptySelectionHintVisible: boolean;
+  emptySelectionHintVisible: boolean;
 };
 
 function SeriesPills({
   seriesList,
-  activeKeys,
-  onToggle,
-    maxHintVisible,
+ onRemove,
+  maxHintVisible,
+
   emptySelectionHintVisible
 
 }: SeriesPillsProps) {
   return (
     <div className="admin-sales-series-pills-wrap" aria-live="polite">
-      <div className="admin-sales-series-pills" role="group" aria-label="Chart series selection">
-        {seriesList.map((series) => {
-          const active = activeKeys.includes(series.key);
-          return (
-            <button
-              key={series.key}
-              type="button"
-              className={`admin-sales-series-pill ${active ? 'admin-sales-series-pill--active' : ''}`}
-              onClick={() => onToggle(series.key)}
-              aria-pressed={active}
-              aria-label={`${active ? 'Hide' : 'Show'} ${series.label} line`}
-            >
-              <span className="admin-sales-series-pill__swatch" style={{ background: series.color }} aria-hidden="true" />
-              <span>{series.label}</span>
-            </button>
-          );
-        })}
+      <div className="admin-sales-series-pills" role="list" aria-label="Chart series legend">
+        {seriesList.map((series) => (
+          <span
+            key={series.key}
+            className="admin-sales-series-pill admin-sales-series-pill--active"
+            role="listitem"
+          >
+            <span className="admin-sales-series-pill__swatch" style={{ background: series.color }} aria-hidden="true" />
+            <span>{series.label}</span>
+            {!series.isOverall ? (
+              <button
+                type="button"
+                className="admin-sales-series-pill__remove"
+                onClick={() => onRemove(series.key)}
+                aria-label={`Remove ${series.label}`}
+              >
+                ×
+              </button>
+            ) : null}
+          </span>
+        ))}
+
       </div>
       {maxHintVisible ? <p className="admin-sales-series-hint">{SALES_SELECTION_LIMIT_MESSAGE}</p> : null}
-            {emptySelectionHintVisible ? <p className="admin-sales-series-hint">Select a product to display data</p> : null}
+      {emptySelectionHintVisible ? <p className="admin-sales-series-hint">Select a product to display data</p> : null}
     </div>
   );
 }
 
 function useProductSeriesSelection(allSalesSeries: SalesChartSeries[]) {
-  const [selectedIds, setSelectedIds] = useState<string[]>(['overall']);
+  const [enabledProductIds, setEnabledProductIds] = useState<Set<string>>(new Set());
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const timeoutRef = useRef<number | null>(null);
-  const hasInitializedSelectionRef = useRef(false);
 
   useEffect(() => {
     return () => {
@@ -273,27 +276,12 @@ function useProductSeriesSelection(allSalesSeries: SalesChartSeries[]) {
   }, []);
 
   useEffect(() => {
-    const validSeriesIds = allSalesSeries.map((series) => series.key);
-    const productSeriesIds = validSeriesIds.filter((seriesId) => seriesId !== 'overall');
-    if (validSeriesIds.length === 0) {
-      setSelectedIds(['overall']);
-      hasInitializedSelectionRef.current = false;
-      return;
-    }
+    const validProductIds = new Set(allSalesSeries.filter((series) => series.key !== 'overall').map((series) => series.key));
+    setEnabledProductIds((previous) => {
+      const next = new Set(Array.from(previous).filter((seriesId) => validProductIds.has(seriesId)));
+      if (next.size === previous.size) return previous;
+      return next;
 
-    setSelectedIds((previous) => {
-      const base = previous.filter((seriesKey) => validSeriesIds.includes(seriesKey));
-      const hasOverallSeries = validSeriesIds.includes('overall');
-      const withOverall = hasOverallSeries
-        ? (base.includes('overall') ? base : ['overall', ...base])
-        : base.filter((seriesKey) => seriesKey !== 'overall');
-      const productSelection = withOverall.filter((seriesKey) => seriesKey !== 'overall').slice(0, MAX_SELECTED_PRODUCTS);
-      if ((productSelection.length > 0 || hasInitializedSelectionRef.current) && withOverall.length > 0) {
-        return withOverall.includes('overall') ? ['overall', ...productSelection] : productSelection;
-      }
-
-      hasInitializedSelectionRef.current = true;
-      return hasOverallSeries ? ['overall', ...productSeriesIds.slice(0, MAX_SELECTED_PRODUCTS)] : productSeriesIds.slice(0, MAX_SELECTED_PRODUCTS);
     });
   }, [allSalesSeries]);
 
@@ -315,52 +303,48 @@ function useProductSeriesSelection(allSalesSeries: SalesChartSeries[]) {
     }
   };
 
-  const toggleProduct = (seriesKey: string) => {
-    setSelectedIds((previous) => {
-      const isOverallSeries = seriesKey === 'overall';
-      if (previous.includes(seriesKey)) {
-        const nextSelection = previous.filter((key) => key !== seriesKey);
-        if (nextSelection.filter((key) => key !== 'overall').length < MAX_SELECTED_PRODUCTS) {
-          clearLimitError();
-        }
-        return nextSelection;
+  const addProduct = (seriesKey: string) => {
+    setEnabledProductIds((previous) => {
+      if (previous.has(seriesKey)) {
+        return previous;
+
       }
 
-      if (!isOverallSeries) {
-        const selectedProductsCount = previous.filter((key) => key !== 'overall').length;
-        if (selectedProductsCount >= MAX_SELECTED_PRODUCTS) {
-          setLimitError();
-          return previous;
+      if (previous.size >= MAX_SELECTED_PRODUCTS) {
+        setLimitError();
+        return previous;
+
         }
       }
 
       clearLimitError();
-      if (isOverallSeries) {
-        return ['overall', ...previous.filter((key) => key !== 'overall')];
-      }
+      const next = new Set(previous);
+      next.add(seriesKey);
+      return next;
 
-      return [...previous, seriesKey];
     });
   };
 
   const removeProduct = (seriesKey: string) => {
-    setSelectedIds((previous) => {
-      const nextSelection = previous.filter((key) => key !== seriesKey);
-      if (nextSelection.filter((key) => key !== 'overall').length < MAX_SELECTED_PRODUCTS) {
-        clearLimitError();
-      }
-      return nextSelection;
+    setEnabledProductIds((previous) => {
+      if (!previous.has(seriesKey)) return previous;
+      const next = new Set(previous);
+      next.delete(seriesKey);
+      clearLimitError();
+      return next;
+
     });
   };
 
-  const selectedProductCount = selectedIds.filter((key) => key !== 'overall').length;
-  const canSelectMore = selectedProductCount < MAX_SELECTED_PRODUCTS;
+const activeSeriesKeys = allSalesSeries.some((series) => series.key === 'overall')
+    ? ['overall', ...Array.from(enabledProductIds)]
+    : Array.from(enabledProductIds);
+
 
   return {
-    selectedIds,
-    toggleProduct,
+    activeSeriesKeys,
+    addProduct,
     removeProduct,
-    canSelectMore,
     errorMessage
   };
 }
@@ -698,25 +682,29 @@ export default function ShopAdminPanel({ initialTab = 'products' }: ShopAdminPan
   );
 
   const {
-    selectedIds: activeSeriesKeys,
-    toggleProduct: toggleSeriesSelection,
+    activeSeriesKeys,
+    addProduct: addSeriesSelection,
+
     removeProduct: removeSeriesSelection,
     errorMessage: selectionLimitMessage
   } = useProductSeriesSelection(allSalesSeries);
 
   const chartSeries = useMemo(() => allSalesSeries.filter((series) => activeSeriesKeys.includes(series.key)), [activeSeriesKeys, allSalesSeries]);
-  const selectedProducts = useMemo(
-    () => seriesPills.filter((series) => series.key !== 'overall' && activeSeriesKeys.includes(series.key)),
-    [activeSeriesKeys, seriesPills]
-  );
+  const legendSeries = useMemo(() => seriesPills.filter((series) => activeSeriesKeys.includes(series.key)), [activeSeriesKeys, seriesPills]);
   const filteredExpandableProducts = useMemo(() => {
     const normalizedQuery = expandedProductSearch.trim().toLowerCase();
     return seriesPills.filter((series) => {
-      if (series.key === 'overall') return false;
+      if (activeSeriesKeys.includes(series.key)) return false;
       if (!normalizedQuery) return true;
       return series.label.toLowerCase().includes(normalizedQuery);
     });
-  }, [expandedProductSearch, seriesPills]);
+  }, [activeSeriesKeys, expandedProductSearch, seriesPills]);
+
+  const handleAddSeriesSelection = (seriesKey: string) => {
+    addSeriesSelection(seriesKey);
+    setExpandedProductSearch('');
+  };
+
 
 
 
@@ -1350,12 +1338,12 @@ export default function ShopAdminPanel({ initialTab = 'products' }: ShopAdminPan
                 </SalesChartErrorBoundary>
                 
                 <SeriesPills
-                  seriesList={seriesPills}
-                  activeKeys={activeSeriesKeys}
-                  onToggle={toggleSeriesSelection}
+                 seriesList={legendSeries}
+                  onRemove={removeSeriesSelection}
+
 
                   maxHintVisible={Boolean(selectionLimitMessage)}
-                                    emptySelectionHintVisible={chartSeries.length === 0}
+                  emptySelectionHintVisible={chartSeries.length === 0}
                 />
 
               </div>
@@ -1381,26 +1369,6 @@ export default function ShopAdminPanel({ initialTab = 'products' }: ShopAdminPan
               ) : null}
 
                     <div className="admin-sales-modal-selector">
-                      {selectedProducts.length > 0 ? (
-                        <div className="admin-sales-selected-tray" aria-label="Selected products">
-                          <p className="admin-sales-selected-tray__label">Selected</p>
-                          <div className="admin-sales-selected-tray__chips">
-                            {selectedProducts.map((product) => (
-                              <span key={`selected-${product.key}`} className="admin-sales-selected-chip">
-                                <span>{product.label}</span>
-                                <button
-                                  type="button"
-                                  className="admin-sales-selected-chip__remove"
-                                  onClick={() => removeSeriesSelection(product.key)}
-                                  aria-label={`Remove ${product.label}`}
-                                >
-                                  ×
-                                </button>
-                              </span>
-                            ))}
-                          </div>
-                        </div>
-                      ) : null}
 
                       <label className="admin-sales-modal-search-wrap">
                         <span className="sr-only">Search products</span>
@@ -1414,13 +1382,20 @@ export default function ShopAdminPanel({ initialTab = 'products' }: ShopAdminPan
                         />
                       </label>
 
-                      <SeriesPills
-                        seriesList={filteredExpandableProducts}
-                        activeKeys={activeSeriesKeys}
-                        onToggle={toggleSeriesSelection}
-                        maxHintVisible={Boolean(selectionLimitMessage)}
-                        emptySelectionHintVisible={chartSeries.length === 0}
-                      />
+                      <div className="admin-sales-search-results" role="list" aria-label="Search results">
+                        {filteredExpandableProducts.map((series) => (
+                          <button
+                            key={`search-${series.key}`}
+                            type="button"
+                            className="admin-sales-search-result"
+                            onClick={() => handleAddSeriesSelection(series.key)}
+                          >
+                            <span className="admin-sales-series-pill__swatch" style={{ background: series.color }} aria-hidden="true" />
+                            <span>{series.label}</span>
+                          </button>
+                        ))}
+                      </div>
+
                     </div>
 
 
