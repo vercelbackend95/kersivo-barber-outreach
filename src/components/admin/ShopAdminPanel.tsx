@@ -148,8 +148,9 @@ const EMPTY_FORM: ProductFormState = {
   featured: false,
   sortOrder: 0
 };
-const PRODUCT_SLOT_COLORS = ['var(--accent)', 'var(--focus)', 'var(--accent-hover)', 'var(--accent-contrast)', 'var(--fg)'];
-const OVERALL_SERIES_COLOR = 'var(--muted)';
+const PRODUCT_SLOT_COLORS = ['#E6EAF0', '#7DD3FC', '#5EEAD4', '#FBBF24', '#C4B5FD'];
+const OVERALL_COLOR = '#E11D2E';
+
 const DEFAULT_PRODUCT_SERIES_COLOR = 'var(--border)';
 
 
@@ -213,7 +214,9 @@ class SalesChartErrorBoundary extends React.Component<SalesChartErrorBoundaryPro
 type MiniLineChartProps = {
   series: SalesChartSeries[];
   metric: SalesMetric;
-    getSeriesColor: (seriesKey: string) => string;
+  getSeriesColor: (seriesKey: string) => string;
+  getSeriesStrokeWidth?: (seriesKey: string) => number;
+
   height?: string;
   onExpand?: () => void;
   isFullscreen?: boolean;
@@ -360,7 +363,9 @@ function useProductSeriesSelection(allSalesSeries: SalesChartSeries[]) {
 function MiniLineChart({
   series,
   metric,
-    getSeriesColor,
+  getSeriesColor,
+  getSeriesStrokeWidth,
+
   height,
   onExpand,
   isFullscreen = false,
@@ -493,7 +498,13 @@ function MiniLineChart({
 
           return (
             <g key={line.key}>
-              <path d={path} fill="none" stroke={getSeriesColor(line.key)} strokeWidth="2" />
+              <path
+                d={path}
+                fill="none"
+                stroke={getSeriesColor(line.key)}
+                strokeWidth={getSeriesStrokeWidth ? getSeriesStrokeWidth(line.key) : 2}
+              />
+
               {line.key === '__empty__' ? null : line.points.map((point) => {
                 const value = metric === 'revenue' ? point.revenuePence : point.units;
                 return (
@@ -685,17 +696,24 @@ export default function ShopAdminPanel({ initialTab = 'products' }: ShopAdminPan
     removeProduct: removeSeriesSelection,
     errorMessage: selectionLimitMessage
   } = useProductSeriesSelection(allSalesSeries);
-  const getProductSlotColor = useCallback((productId: string): string => {
+  const getSlotColor = useCallback((productId: string): string => {
     const slotIndex = selectedProductIds.indexOf(productId);
-    if (slotIndex < 0) return DEFAULT_PRODUCT_SERIES_COLOR;
-    return PRODUCT_SLOT_COLORS[slotIndex] ?? DEFAULT_PRODUCT_SERIES_COLOR;
+    return slotIndex >= 0 ? PRODUCT_SLOT_COLORS[slotIndex] : PRODUCT_SLOT_COLORS[0];
   }, [selectedProductIds]);
 
   const getSeriesColor = useCallback((seriesKey: string): string => {
-    if (seriesKey === 'overall') return OVERALL_SERIES_COLOR;
+    if (seriesKey === 'overall') return OVERALL_COLOR;
     if (seriesKey === '__empty__') return DEFAULT_PRODUCT_SERIES_COLOR;
-    return getProductSlotColor(seriesKey);
-  }, [getProductSlotColor]);
+    return getSlotColor(seriesKey);
+  }, [getSlotColor]);
+
+  const getSeriesStrokeWidth = useCallback((seriesKey: string): number => {
+    if (seriesKey === 'overall' || seriesKey === '__empty__') return 2;
+    const slotIndex = selectedProductIds.indexOf(seriesKey);
+    if (slotIndex === 0) return 3;
+    return 2;
+  }, [selectedProductIds]);
+
 
   const seriesPills = useMemo(
     () => allSalesSeries.map((series) => ({
@@ -1349,7 +1367,9 @@ export default function ShopAdminPanel({ initialTab = 'products' }: ShopAdminPan
                   <MiniLineChart
                     series={chartSeries}
                     metric={salesMetric}
-                                        getSeriesColor={getSeriesColor}
+                    getSeriesColor={getSeriesColor}
+                    getSeriesStrokeWidth={getSeriesStrokeWidth}
+
                     height={isMobileSalesView ? 'clamp(280px, 45vh, 520px)' : undefined}
                     onExpand={isMobileSalesView ? () => setIsSalesChartExpanded(true) : undefined}
                     useResponsiveResize={isMobileSalesView}
@@ -1379,7 +1399,7 @@ export default function ShopAdminPanel({ initialTab = 'products' }: ShopAdminPan
                       <MiniLineChart
                         series={chartSeries}
                         metric={salesMetric}
-                        getSeriesColor={getSeriesColor}
+                        getSeriesStrokeWidth={getSeriesStrokeWidth}
                         height="clamp(220px, 34vh, 320px)"
                         useResponsiveResize
                       />
