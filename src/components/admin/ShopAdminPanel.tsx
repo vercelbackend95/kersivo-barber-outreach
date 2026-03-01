@@ -314,7 +314,7 @@ function useProductSeriesSelection(allSalesSeries: SalesChartSeries[]) {
         setLimitError();
         return previous;
 
-        }
+        
       }
 
       clearLimitError();
