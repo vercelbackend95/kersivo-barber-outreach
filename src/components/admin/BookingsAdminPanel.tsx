@@ -786,43 +786,46 @@ export default function BookingsAdminPanel({ isActive, mode, onBackToDashboard }
         <section className="admin-history-filters">
           <div className="admin-history-row">
             <label htmlFor="history-barber">Barber</label>
-            <select id="history-barber" value={historyBarberId} onChange={(event) => setHistoryBarberId(event.target.value)}>
-              <option value="all">All barbers</option>
-              {barbers.map((barber) => <option key={barber.id} value={barber.id}>{barber.name}</option>)}
-            </select>
-          </div>
-          <div className="admin-history-date-filter-wrap">
-            <button
-              type="button"
-              className={`admin-history-date-trigger ${historyDateRange ? 'admin-history-date-trigger--active' : ''}`}
-              aria-label={historyDateRangeLabel ? `Selected date range: ${historyDateRangeLabel}` : 'Open date range picker'}
-              onClick={() => setIsHistoryDatePickerOpen((current) => !current)}
-            >
-              <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">
-                <path d="M7 2a1 1 0 0 1 1 1v1h8V3a1 1 0 1 1 2 0v1h1a3 3 0 0 1 3 3v11a4 4 0 0 1-4 4H6a4 4 0 0 1-4-4V7a3 3 0 0 1 3-3h1V3a1 1 0 0 1 1-1Zm13 8H4v8a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-8ZM5 6a1 1 0 0 0-1 1v1h16V7a1 1 0 0 0-1-1H5Z" />
-              </svg>
-              {historyDateRangeLabel ? <span>{historyDateRangeLabel}</span> : null}
-            </button>
-            {historyDateRange ? (
-              <button
-                type="button"
-                className="admin-history-date-clear"
-                onClick={() => setHistoryDateRange(null)}
-                aria-label="Clear date range"
-              >
-                ×
-              </button>
-            ) : null}
-            {isHistoryDatePickerOpen ? (
-              <div className="admin-history-date-picker" role="dialog" aria-label="Choose history date range">
-                <div className="admin-sales-custom-dates">
-                  <label htmlFor="history-from">From<input id="history-from" type="date" value={historyFromInput} onChange={(event) => setHistoryDateRange((current) => ({ from: event.target.value ? fromZonedTime(`${event.target.value}T00:00:00.000`, ADMIN_TIMEZONE) : current?.from, to: current?.to }))} /></label>
-                  <label htmlFor="history-to">To<input id="history-to" type="date" value={historyToInput} onChange={(event) => setHistoryDateRange((current) => ({ from: current?.from, to: event.target.value ? fromZonedTime(`${event.target.value}T00:00:00.000`, ADMIN_TIMEZONE) : current?.to }))} /></label>
-                </div>
-                <button type="button" className="btn btn--ghost" onClick={() => setHistoryDateRange(null)}>Clear dates</button>
+            <div className="admin-history-barber-controls">
+              <div className="admin-history-barber-select-wrap">
+                <select id="history-barber" value={historyBarberId} onChange={(event) => setHistoryBarberId(event.target.value)}>
+                  <option value="all">All barbers</option>
+                  {barbers.map((barber) => <option key={barber.id} value={barber.id}>{barber.name}</option>)}
+                </select>
               </div>
-            ) : null}
-
+                            <div className="admin-history-date-filter-wrap">
+                <button
+                  type="button"
+                  className={`admin-history-date-trigger ${historyDateRange ? 'admin-history-date-trigger--active' : ''}`}
+                  aria-label={historyDateRangeLabel ? `Selected date range: ${historyDateRangeLabel}` : 'Open date range picker'}
+                  onClick={() => setIsHistoryDatePickerOpen((current) => !current)}
+                >
+                  <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+                    <path d="M7 2a1 1 0 0 1 1 1v1h8V3a1 1 0 1 1 2 0v1h1a3 3 0 0 1 3 3v11a4 4 0 0 1-4 4H6a4 4 0 0 1-4-4V7a3 3 0 0 1 3-3h1V3a1 1 0 0 1 1-1Zm13 8H4v8a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-8ZM5 6a1 1 0 0 0-1 1v1h16V7a1 1 0 0 0-1-1H5Z" />
+                  </svg>
+                  {historyDateRangeLabel ? <span>{historyDateRangeLabel}</span> : null}
+                </button>
+                {historyDateRange ? (
+                  <button
+                    type="button"
+                    className="admin-history-date-clear"
+                    onClick={() => setHistoryDateRange(null)}
+                    aria-label="Clear date range"
+                  >
+                    ×
+                  </button>
+                ) : null}
+                {isHistoryDatePickerOpen ? (
+                  <div className="admin-history-date-picker" role="dialog" aria-label="Choose history date range">
+                    <div className="admin-sales-custom-dates">
+                      <label htmlFor="history-from">From<input id="history-from" type="date" value={historyFromInput} onChange={(event) => setHistoryDateRange((current) => ({ from: event.target.value ? fromZonedTime(`${event.target.value}T00:00:00.000`, ADMIN_TIMEZONE) : current?.from, to: current?.to }))} /></label>
+                      <label htmlFor="history-to">To<input id="history-to" type="date" value={historyToInput} onChange={(event) => setHistoryDateRange((current) => ({ from: current?.from, to: event.target.value ? fromZonedTime(`${event.target.value}T00:00:00.000`, ADMIN_TIMEZONE) : current?.to }))} /></label>
+                    </div>
+                    <button type="button" className="btn btn--ghost" onClick={() => setHistoryDateRange(null)}>Clear dates</button>
+                  </div>
+                ) : null}
+              </div>
+            </div>
           </div>
         </section>
       )}
