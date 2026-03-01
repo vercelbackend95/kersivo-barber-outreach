@@ -98,6 +98,9 @@ type SalesChartErrorBoundaryProps = {
 type SalesChartErrorBoundaryState = {
   hasError: boolean;
 };
+const MAX_SELECTED_PRODUCTS = 5;
+const SALES_SELECTION_LIMIT_MESSAGE = 'You can compare up to 5 products.';
+
 
 function useBodyScrollLock(isLocked: boolean): void {
   useEffect(() => {
@@ -249,10 +252,117 @@ function SeriesPills({
           );
         })}
       </div>
-      {maxHintVisible ? <p className="admin-sales-series-hint">Max 3 products</p> : null}
+      {maxHintVisible ? <p className="admin-sales-series-hint">{SALES_SELECTION_LIMIT_MESSAGE}</p> : null}
             {emptySelectionHintVisible ? <p className="admin-sales-series-hint">Select a product to display data</p> : null}
     </div>
   );
+}
+
+function useProductSeriesSelection(allSalesSeries: SalesChartSeries[]) {
+  const [selectedIds, setSelectedIds] = useState<string[]>(['overall']);
+  const [errorMessage, setErrorMessage] = useState<string | null>(null);
+  const timeoutRef = useRef<number | null>(null);
+  const hasInitializedSelectionRef = useRef(false);
+
+  useEffect(() => {
+    return () => {
+      if (timeoutRef.current) {
+        window.clearTimeout(timeoutRef.current);
+      }
+    };
+  }, []);
+
+  useEffect(() => {
+    const validSeriesIds = allSalesSeries.map((series) => series.key);
+    const productSeriesIds = validSeriesIds.filter((seriesId) => seriesId !== 'overall');
+    if (validSeriesIds.length === 0) {
+      setSelectedIds(['overall']);
+      hasInitializedSelectionRef.current = false;
+      return;
+    }
+
+    setSelectedIds((previous) => {
+      const base = previous.filter((seriesKey) => validSeriesIds.includes(seriesKey));
+      const hasOverallSeries = validSeriesIds.includes('overall');
+      const withOverall = hasOverallSeries
+        ? (base.includes('overall') ? base : ['overall', ...base])
+        : base.filter((seriesKey) => seriesKey !== 'overall');
+      const productSelection = withOverall.filter((seriesKey) => seriesKey !== 'overall').slice(0, MAX_SELECTED_PRODUCTS);
+      if ((productSelection.length > 0 || hasInitializedSelectionRef.current) && withOverall.length > 0) {
+        return withOverall.includes('overall') ? ['overall', ...productSelection] : productSelection;
+      }
+
+      hasInitializedSelectionRef.current = true;
+      return hasOverallSeries ? ['overall', ...productSeriesIds.slice(0, MAX_SELECTED_PRODUCTS)] : productSeriesIds.slice(0, MAX_SELECTED_PRODUCTS);
+    });
+  }, [allSalesSeries]);
+
+  const setLimitError = () => {
+    setErrorMessage(SALES_SELECTION_LIMIT_MESSAGE);
+    if (timeoutRef.current) {
+      window.clearTimeout(timeoutRef.current);
+    }
+    timeoutRef.current = window.setTimeout(() => {
+      setErrorMessage(null);
+    }, 2000);
+  };
+
+  const clearLimitError = () => {
+    setErrorMessage(null);
+    if (timeoutRef.current) {
+      window.clearTimeout(timeoutRef.current);
+      timeoutRef.current = null;
+    }
+  };
+
+  const toggleProduct = (seriesKey: string) => {
+    setSelectedIds((previous) => {
+      const isOverallSeries = seriesKey === 'overall';
+      if (previous.includes(seriesKey)) {
+        const nextSelection = previous.filter((key) => key !== seriesKey);
+        if (nextSelection.filter((key) => key !== 'overall').length < MAX_SELECTED_PRODUCTS) {
+          clearLimitError();
+        }
+        return nextSelection;
+      }
+
+      if (!isOverallSeries) {
+        const selectedProductsCount = previous.filter((key) => key !== 'overall').length;
+        if (selectedProductsCount >= MAX_SELECTED_PRODUCTS) {
+          setLimitError();
+          return previous;
+        }
+      }
+
+      clearLimitError();
+      if (isOverallSeries) {
+        return ['overall', ...previous.filter((key) => key !== 'overall')];
+      }
+
+      return [...previous, seriesKey];
+    });
+  };
+
+  const removeProduct = (seriesKey: string) => {
+    setSelectedIds((previous) => {
+      const nextSelection = previous.filter((key) => key !== seriesKey);
+      if (nextSelection.filter((key) => key !== 'overall').length < MAX_SELECTED_PRODUCTS) {
+        clearLimitError();
+      }
+      return nextSelection;
+    });
+  };
+
+  const selectedProductCount = selectedIds.filter((key) => key !== 'overall').length;
+  const canSelectMore = selectedProductCount < MAX_SELECTED_PRODUCTS;
+
+  return {
+    selectedIds,
+    toggleProduct,
+    removeProduct,
+    canSelectMore,
+    errorMessage
+  };
 }
 
 
@@ -452,15 +562,13 @@ export default function ShopAdminPanel({ initialTab = 'products' }: ShopAdminPan
   const [salesPreset, setSalesPreset] = useState<SalesRangePreset>('30');
   const [salesFrom, setSalesFrom] = useState(() => getRangeDates('30').from);
   const [salesTo, setSalesTo] = useState(() => getCurrentYmdInLondon());
-  const [activeSeriesKeys, setActiveSeriesKeys] = useState<string[]>(['overall']);
-    const [salesMetric, setSalesMetric] = useState<SalesMetric>('revenue');
+  const [salesMetric, setSalesMetric] = useState<SalesMetric>('revenue');
   const [salesLoading, setSalesLoading] = useState(false);
   const [salesError, setSalesError] = useState<string | null>(null);
   const [salesData, setSalesData] = useState<SalesResponse | null>(null);
-    const [showSelectionLimitHint, setShowSelectionLimitHint] = useState(false);
   const [isMobileSalesView, setIsMobileSalesView] = useState(false);
   const [isSalesChartExpanded, setIsSalesChartExpanded] = useState(false);
-
+  const [expandedProductSearch, setExpandedProductSearch] = useState('');
     useBodyScrollLock(isMobileSalesView && isSalesChartExpanded);
 
 
@@ -471,8 +579,6 @@ export default function ShopAdminPanel({ initialTab = 'products' }: ShopAdminPan
   const [productSavingById, setProductSavingById] = useState<Record<string, boolean>>({});
   const [productStatusById, setProductStatusById] = useState<Record<string, string>>({});
   const [formInitial, setFormInitial] = useState<ProductFormState>(EMPTY_FORM);
-    const limitHintTimeoutRef = useRef<number | null>(null);
-  const hasInitializedSeriesSelectionRef = useRef(false);
 
   const sortedProducts = useMemo(
     () => [...products].sort((a, b) => a.sortOrder - b.sortOrder || Date.parse(b.updatedAt) - Date.parse(a.updatedAt)),
@@ -591,7 +697,27 @@ export default function ShopAdminPanel({ initialTab = 'products' }: ShopAdminPan
     [allSalesSeries]
   );
 
+  const {
+    selectedIds: activeSeriesKeys,
+    toggleProduct: toggleSeriesSelection,
+    removeProduct: removeSeriesSelection,
+    errorMessage: selectionLimitMessage
+  } = useProductSeriesSelection(allSalesSeries);
+
   const chartSeries = useMemo(() => allSalesSeries.filter((series) => activeSeriesKeys.includes(series.key)), [activeSeriesKeys, allSalesSeries]);
+  const selectedProducts = useMemo(
+    () => seriesPills.filter((series) => series.key !== 'overall' && activeSeriesKeys.includes(series.key)),
+    [activeSeriesKeys, seriesPills]
+  );
+  const filteredExpandableProducts = useMemo(() => {
+    const normalizedQuery = expandedProductSearch.trim().toLowerCase();
+    return seriesPills.filter((series) => {
+      if (series.key === 'overall') return false;
+      if (!normalizedQuery) return true;
+      return series.label.toLowerCase().includes(normalizedQuery);
+    });
+  }, [expandedProductSearch, seriesPills]);
+
 
 
 
@@ -696,38 +822,6 @@ export default function ShopAdminPanel({ initialTab = 'products' }: ShopAdminPan
     void fetchSales();
   }, [activeTab, salesPreset, salesFrom, salesTo]);
 
-  useEffect(() => {
-    return () => {
-      if (limitHintTimeoutRef.current) {
-        window.clearTimeout(limitHintTimeoutRef.current);
-      }
-    };
-  }, []);
-
-  useEffect(() => {
-    const validSeriesIds = allSalesSeries.map((series) => series.key);
-    const productSeriesIds = validSeriesIds.filter((seriesId) => seriesId !== 'overall');
-    if (validSeriesIds.length === 0) {
-      setActiveSeriesKeys(['overall']);
-
-      hasInitializedSeriesSelectionRef.current = false;
-      return;
-    }
-    setActiveSeriesKeys((previous) => {
-      const base = previous.filter((seriesKey) => validSeriesIds.includes(seriesKey));
-      const hasOverallSeries = validSeriesIds.includes('overall');
-      const withOverall = hasOverallSeries
-        ? (base.includes('overall') ? base : ['overall', ...base])
-        : base.filter((seriesKey) => seriesKey !== 'overall');
-      const productSelection = withOverall.filter((seriesKey) => seriesKey !== 'overall').slice(0, 3);
-      if ((productSelection.length > 0 || hasInitializedSeriesSelectionRef.current) && withOverall.length > 0) {
-        return withOverall.includes('overall') ? ['overall', ...productSelection] : productSelection;
-      }
-
-      hasInitializedSeriesSelectionRef.current = true;
-      return hasOverallSeries ? ['overall', ...productSeriesIds.slice(0, 3)] : productSeriesIds.slice(0, 3);
-    });
-  }, [allSalesSeries]);
 
 
   useEffect(() => {
@@ -971,37 +1065,6 @@ export default function ShopAdminPanel({ initialTab = 'products' }: ShopAdminPan
       setError(collectError instanceof Error ? collectError.message : 'Unable to mark order as collected.');
     }
   }
-  function toggleSeriesSelection(seriesKey: string) {
-    setActiveSeriesKeys((previous) => {
-      const isOverallSeries = seriesKey === 'overall';
-      if (previous.includes(seriesKey)) {
-        return previous.filter((key) => key !== seriesKey);
-
-      }
-      if (!isOverallSeries) {
-        const selectedProductsCount = previous.filter((key) => key !== 'overall').length;
-        if (selectedProductsCount >= 3) {
-          setShowSelectionLimitHint(true);
-          if (limitHintTimeoutRef.current) {
-            window.clearTimeout(limitHintTimeoutRef.current);
-          }
-                    limitHintTimeoutRef.current = window.setTimeout(() => {
-            setShowSelectionLimitHint(false);
-          }, 2000);
-          return previous;
-
-        }
-      }
-
-      setShowSelectionLimitHint(false);
-      if (isOverallSeries) {
-        return ['overall', ...previous.filter((key) => key !== 'overall')];
-      }
-
-      return [...previous, seriesKey];
-    });
-  }
-
 
 
   function applyPreset(nextPreset: Exclude<SalesRangePreset, 'custom'>) {
@@ -1291,7 +1354,7 @@ export default function ShopAdminPanel({ initialTab = 'products' }: ShopAdminPan
                   activeKeys={activeSeriesKeys}
                   onToggle={toggleSeriesSelection}
 
-                  maxHintVisible={showSelectionLimitHint}
+                  maxHintVisible={Boolean(selectionLimitMessage)}
                                     emptySelectionHintVisible={chartSeries.length === 0}
                 />
 
@@ -1308,22 +1371,57 @@ export default function ShopAdminPanel({ initialTab = 'products' }: ShopAdminPan
                       <MiniLineChart
                         series={chartSeries}
                         metric={salesMetric}
-                        isFullscreen
+                        height="clamp(220px, 34vh, 320px)"
                         useResponsiveResize
                       />
                     </SalesChartErrorBoundary>
-                    <SeriesPills
-                      seriesList={seriesPills}
-                      activeKeys={activeSeriesKeys}
-                      onToggle={toggleSeriesSelection}
-
-                      maxHintVisible={showSelectionLimitHint}
-                                            emptySelectionHintVisible={chartSeries.length === 0}
-                    />
 
                   </div>
                 </div>
               ) : null}
+
+                    <div className="admin-sales-modal-selector">
+                      {selectedProducts.length > 0 ? (
+                        <div className="admin-sales-selected-tray" aria-label="Selected products">
+                          <p className="admin-sales-selected-tray__label">Selected</p>
+                          <div className="admin-sales-selected-tray__chips">
+                            {selectedProducts.map((product) => (
+                              <span key={`selected-${product.key}`} className="admin-sales-selected-chip">
+                                <span>{product.label}</span>
+                                <button
+                                  type="button"
+                                  className="admin-sales-selected-chip__remove"
+                                  onClick={() => removeSeriesSelection(product.key)}
+                                  aria-label={`Remove ${product.label}`}
+                                >
+                                  ×
+                                </button>
+                              </span>
+                            ))}
+                          </div>
+                        </div>
+                      ) : null}
+
+                      <label className="admin-sales-modal-search-wrap">
+                        <span className="sr-only">Search products</span>
+                        <input
+                          type="search"
+                          className="admin-sales-modal-search"
+                          value={expandedProductSearch}
+                          onChange={(event) => setExpandedProductSearch(event.target.value)}
+                          placeholder="Search products"
+                          aria-label="Search products"
+                        />
+                      </label>
+
+                      <SeriesPills
+                        seriesList={filteredExpandableProducts}
+                        activeKeys={activeSeriesKeys}
+                        onToggle={toggleSeriesSelection}
+                        maxHintVisible={Boolean(selectionLimitMessage)}
+                        emptySelectionHintVisible={chartSeries.length === 0}
+                      />
+                    </div>
 
 
               <div className="admin-products-table-wrap">

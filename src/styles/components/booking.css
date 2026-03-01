@@ -1487,8 +1487,7 @@
   left: 0;
   right: 0;
   bottom: 0;
-  height: 100vh;
-  height: 100dvh;
+  height: min(85dvh, 720px);
   background: var(--surface);
   border: 1px solid var(--border);
   border-bottom: 0;
@@ -1499,6 +1498,7 @@
   display: flex;
   flex-direction: column;
   gap: 0.5rem;
+    overflow: hidden;
   overscroll-behavior: contain;
   pointer-events: auto;
 
@@ -1517,9 +1517,88 @@
 
 .admin-sales-chart-inner--fullscreen {
   display: flex;
+  flex: 0 0 auto;
+  min-height: 0;
+}
+.admin-sales-modal-selector {
+  display: grid;
+  gap: 0.55rem;
   flex: 1 1 auto;
   min-height: 0;
 }
+
+.admin-sales-selected-tray {
+  display: grid;
+  gap: 0.4rem;
+}
+
+.admin-sales-selected-tray__label {
+  margin: 0;
+  font-size: 0.75rem;
+  color: var(--muted);
+}
+
+.admin-sales-selected-tray__chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.45rem;
+}
+
+.admin-sales-selected-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  min-height: 2rem;
+  border: 1px solid var(--border);
+  background: color-mix(in srgb, var(--surface) 90%, var(--bg) 10%);
+  color: var(--fg);
+  padding: 0.3rem 0.5rem;
+  font-size: 0.75rem;
+}
+
+.admin-sales-selected-chip__remove {
+  border: 0;
+  background: transparent;
+  color: var(--muted);
+  cursor: pointer;
+  font-size: 1rem;
+  line-height: 1;
+  padding: 0;
+}
+
+.admin-sales-selected-chip__remove:hover,
+.admin-sales-selected-chip__remove:focus-visible {
+  color: var(--accent);
+}
+
+.admin-sales-modal-search-wrap {
+  display: block;
+}
+
+.admin-sales-modal-search {
+  width: 100%;
+  min-height: 2.4rem;
+  border: 1px solid var(--border);
+  background: var(--bg);
+  color: var(--fg);
+  padding: 0.45rem 0.6rem;
+}
+
+.admin-sales-modal-search:focus-visible {
+  outline: 2px solid var(--focus);
+  outline-offset: 1px;
+}
+
+.admin-sales-modal-selector .admin-sales-series-pills-wrap {
+  margin-top: 0;
+  min-height: 0;
+}
+
+.admin-sales-modal-selector .admin-sales-series-pills {
+  flex-wrap: wrap;
+  overflow-y: auto;
+}
+
 
 .admin-sales-chart-inner--fullscreen .admin-sales-chart-canvas {
   flex: 1 1 auto;
