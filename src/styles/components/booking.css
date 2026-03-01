@@ -579,15 +579,18 @@
   align-items: center;
   gap: 0.75rem;
   flex-wrap: nowrap;
+    justify-content: space-between;
 }
 
-.admin-history-barber-select-wrap {
+.admin-history-recent-barbers {
   flex: 1 1 auto;
-  min-width: min(16rem, 100%);
-}
+  min-width: 0;
+  display: flex;
+  align-items: center;
+  gap: 0.45rem;
+  overflow-x: auto;
+  padding-bottom: 0.2rem;
 
-.admin-history-barber-select-wrap select {
-  width: 100%;
 }
 
 
@@ -602,23 +605,32 @@
   .admin-history-barber-controls {
     flex-wrap: wrap;
   }
+  .admin-history-date-filter-wrap {
+    margin-left: auto;
+  }
+
 
 }
 
 .admin-history-date-trigger {
   display: inline-flex;
   align-items: center;
-  gap: 0.35rem;
-  border: 1px solid var(--border);
+  justify-content: center;
+    border: 1px solid var(--border);
   background: var(--bg);
   color: var(--fg);
-  min-height: 2.25rem;
-  padding: 0 0.65rem;
+  width: 3rem;
+  min-width: 3rem;
+  height: 3rem;
+  min-height: 3rem;
+  padding: 0;
+
 }
 
 .admin-history-date-trigger svg {
-  width: 1rem;
-  height: 1rem;
+  width: 1.3rem;
+  height: 1.3rem;
+
   fill: currentColor;
 }
 
@@ -635,6 +647,85 @@
   color: var(--fg);
   line-height: 1;
 }
+.admin-history-avatar {
+  width: 2.35rem;
+  min-width: 2.35rem;
+  height: 2.35rem;
+  border: 1px solid var(--border);
+  background: var(--bg);
+  color: var(--fg);
+  font-size: 0.74rem;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.admin-history-avatar.is-active {
+  border-color: var(--accent);
+  box-shadow: inset 0 0 0 1px var(--accent);
+}
+
+.admin-history-avatar--all {
+  font-size: 0.68rem;
+}
+
+.admin-history-avatar--tone-0 { background: color-mix(in srgb, var(--accent) 22%, var(--bg)); }
+.admin-history-avatar--tone-1 { background: color-mix(in srgb, var(--accent) 16%, var(--bg)); }
+.admin-history-avatar--tone-2 { background: color-mix(in srgb, var(--accent) 12%, var(--bg)); }
+.admin-history-avatar--tone-3 { background: color-mix(in srgb, var(--accent) 26%, var(--bg)); }
+.admin-history-avatar--tone-4 { background: color-mix(in srgb, var(--accent) 18%, var(--bg)); }
+.admin-history-avatar--tone-5 { background: color-mix(in srgb, var(--accent) 30%, var(--bg)); }
+
+.admin-history-more {
+  position: relative;
+  margin-left: 0.1rem;
+}
+
+.admin-history-more-trigger {
+  width: 2.25rem;
+  min-width: 2.25rem;
+  height: 2.25rem;
+  border: 1px solid var(--border);
+  background: var(--bg);
+  color: var(--fg);
+  font-size: 1rem;
+  line-height: 1;
+}
+
+.admin-history-more-menu {
+  position: absolute;
+  top: calc(100% + 0.35rem);
+  right: 0;
+  z-index: 40;
+  min-width: 12rem;
+  max-height: min(18rem, 65vh);
+  overflow: auto;
+  border: 1px solid var(--border);
+  background: var(--surface);
+  display: grid;
+}
+
+.admin-history-more-item {
+  border: 0;
+  border-bottom: 1px solid var(--border);
+  background: var(--surface);
+  color: var(--fg);
+  text-align: left;
+  padding: 0.55rem 0.65rem;
+}
+
+.admin-history-more-item:last-child {
+  border-bottom: 0;
+}
+
+.admin-history-more-item.is-active {
+  color: var(--accent);
+  background: color-mix(in srgb, var(--accent) 10%, var(--surface));
+}
+
 
 .admin-history-date-picker {
   position: fixed;

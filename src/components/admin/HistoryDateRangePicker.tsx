@@ -203,14 +203,13 @@ export default function HistoryDateRangePicker({ dateRange, isMobileViewport, ti
         ref={triggerRef}
         type="button"
         className={`admin-history-date-trigger ${dateRange ? 'admin-history-date-trigger--active' : ''}`}
-        aria-label={historyDateRangeLabel ? `Selected date range: ${historyDateRangeLabel}` : 'Open date range picker'}
+        aria-label="Select date range"
         aria-expanded={isOpen}
         onClick={() => setIsOpen((current) => !current)}
       >
         <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">
           <path d="M7 2a1 1 0 0 1 1 1v1h8V3a1 1 0 1 1 2 0v1h1a3 3 0 0 1 3 3v11a4 4 0 0 1-4 4H6a4 4 0 0 1-4-4V7a3 3 0 0 1 3-3h1V3a1 1 0 0 1 1-1Zm13 8H4v8a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-8ZM5 6a1 1 0 0 0-1 1v1h16V7a1 1 0 0 0-1-1H5Z" />
         </svg>
-        {historyDateRangeLabel ? <span>{historyDateRangeLabel}</span> : <span>Date range</span>}
       </button>
 
       {dateRange ? (

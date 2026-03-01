@@ -168,6 +168,24 @@ function getBookingSearchScore(booking: Booking, normalizedQuery: string) {
 function escapeRegExp(value: string) {
   return value.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
 }
+function getInitials(name: string) {
+  return name
+    .split(/\s+/)
+    .filter(Boolean)
+    .slice(0, 2)
+    .map((segment) => segment[0]?.toUpperCase() ?? '')
+    .join('') || '?';
+}
+
+function hashValue(value: string) {
+  let hash = 0;
+  for (let index = 0; index < value.length; index += 1) {
+    hash = (hash << 5) - hash + value.charCodeAt(index);
+    hash |= 0;
+  }
+  return Math.abs(hash);
+}
+
 
 function isKeyboardEditableTarget(target: EventTarget | null) {
   if (!(target instanceof HTMLElement)) return false;
@@ -231,6 +249,8 @@ export default function BookingsAdminPanel({ isActive, mode, onBackToDashboard }
   const [selectedDate, setSelectedDate] = useState(() => getTodayLondonDate());
   const [historyBarberId, setHistoryBarberId] = useState<string>('all');
   const [historyDateRange, setHistoryDateRange] = useState<HistoryDateRange | null>(null);
+  const [isHistoryMoreOpen, setIsHistoryMoreOpen] = useState(false);
+  const historyMoreRef = useRef<HTMLDivElement | null>(null);
 
 
   const [historyCursor, setHistoryCursor] = useState<string | null>(null);
@@ -372,7 +392,7 @@ export default function BookingsAdminPanel({ isActive, mode, onBackToDashboard }
     try {
       const endpoint = (() => {
           if (mode === 'history') {
-          const params = new URLSearchParams({ view: 'history', barberId: historyBarberId, limit: '50' });
+          const params = new URLSearchParams({ view: 'history', barberId: 'all', limit: '50' });
           if (historyDateRange?.from && historyDateRange?.to) {
             params.set('from', formatInTimeZone(historyDateRange.from, ADMIN_TIMEZONE, 'yyyy-MM-dd'));
             params.set('to', formatInTimeZone(historyDateRange.to, ADMIN_TIMEZONE, 'yyyy-MM-dd'));
@@ -430,7 +450,7 @@ export default function BookingsAdminPanel({ isActive, mode, onBackToDashboard }
 
       setHistoryLoadingMore(false);
     }
-  }, [activeView, bookings, captureTimelineScroll, historyBarberId, historyCursor, historyDateRange, isActive, loggedIn, mode, restoreTimelineScroll, selectedDate]);
+  }, [activeView, bookings, captureTimelineScroll, historyCursor, historyDateRange, isActive, loggedIn, mode, restoreTimelineScroll, selectedDate]);
   const loadMoreHistory = useCallback(async () => {
     if (!historyHasMore || historyLoadingMore || mode !== 'history') return;
     setHistoryLoadingMore(true);
@@ -445,7 +465,29 @@ export default function BookingsAdminPanel({ isActive, mode, onBackToDashboard }
     if (!loggedIn || !isActive || mode !== 'history') return;
     const timeoutId = window.setTimeout(() => { void fetchBookings(); }, 300);
     return () => window.clearTimeout(timeoutId);
-  }, [fetchBookings, historyBarberId, historyDateRange, isActive, loggedIn, mode]);
+  }, [fetchBookings, historyDateRange, isActive, loggedIn, mode]);
+
+  useEffect(() => {
+    if (!isHistoryMoreOpen) return;
+
+    const handleOutsideClick = (event: MouseEvent) => {
+      const target = event.target as Node;
+      if (historyMoreRef.current?.contains(target)) return;
+      setIsHistoryMoreOpen(false);
+    };
+
+    const handleEscape = (event: KeyboardEvent) => {
+      if (event.key === 'Escape') setIsHistoryMoreOpen(false);
+    };
+
+    document.addEventListener('mousedown', handleOutsideClick);
+    window.addEventListener('keydown', handleEscape);
+    return () => {
+      document.removeEventListener('mousedown', handleOutsideClick);
+      window.removeEventListener('keydown', handleEscape);
+    };
+  }, [isHistoryMoreOpen]);
+
     useEffect(() => () => {
     if (timelineScrollRafRef.current) {
       window.cancelAnimationFrame(timelineScrollRafRef.current);
@@ -521,8 +563,36 @@ export default function BookingsAdminPanel({ isActive, mode, onBackToDashboard }
   const currentBookingView = mode === 'history' ? 'history' : activeView;
   const filteredBookings = useMemo(() => {
     if (mode !== 'history') return bookings;
-    return [...bookings].sort((a, b) => new Date(b.startAt).getTime() - new Date(a.startAt).getTime());
+    return [...bookings]
+      .filter((booking) => historyBarberId === 'all' || booking.barberId === historyBarberId)
+      .sort((a, b) => new Date(b.startAt).getTime() - new Date(a.startAt).getTime());
+  }, [bookings, historyBarberId, mode]);
+
+  const allBarbersSorted = useMemo(() => [...barbers].sort((a, b) => a.name.localeCompare(b.name, 'en')), [barbers]);
+
+  const recentHistoryBarberIds = useMemo(() => {
+    if (mode !== 'history') return [] as string[];
+    const latestByBarber = new Map<string, number>();
+
+    for (const booking of bookings) {
+      const current = latestByBarber.get(booking.barberId) ?? Number.NEGATIVE_INFINITY;
+      const startAtMs = new Date(booking.startAt).getTime();
+      if (startAtMs > current) latestByBarber.set(booking.barberId, startAtMs);
+    }
+
+    return [...latestByBarber.entries()]
+      .sort((a, b) => b[1] - a[1])
+      .slice(0, 5)
+      .map(([barberId]) => barberId);
+
   }, [bookings, mode]);
+  const recentBarbers = useMemo(() => {
+    const byId = new Map(barbers.map((barber) => [barber.id, barber]));
+    return recentHistoryBarberIds
+      .map((barberId) => byId.get(barberId))
+      .filter((barber): barber is Barber => Boolean(barber));
+  }, [barbers, recentHistoryBarberIds]);
+
 
 
 
@@ -772,13 +842,81 @@ export default function BookingsAdminPanel({ isActive, mode, onBackToDashboard }
 
         <section className="admin-history-filters">
           <div className="admin-history-row">
-            <label htmlFor="history-barber">Barber</label>
+            <label>Recent barbers</label>
             <div className="admin-history-barber-controls">
-              <div className="admin-history-barber-select-wrap">
-                <select id="history-barber" value={historyBarberId} onChange={(event) => setHistoryBarberId(event.target.value)}>
-                  <option value="all">All barbers</option>
-                  {barbers.map((barber) => <option key={barber.id} value={barber.id}>{barber.name}</option>)}
-                </select>
+              <div className="admin-history-recent-barbers" role="group" aria-label="Recent barbers">
+                <button
+                  type="button"
+                  className={`admin-history-avatar admin-history-avatar--all ${historyBarberId === 'all' ? 'is-active' : ''}`}
+                  onClick={() => setHistoryBarberId('all')}
+                  aria-pressed={historyBarberId === 'all'}
+                >
+                  ALL
+                </button>
+                {recentBarbers.map((barber) => {
+                  const hashIndex = hashValue(`${barber.id}:${barber.name}`) % 6;
+                  const initials = getInitials(barber.name);
+                  const isActive = historyBarberId === barber.id;
+
+                  return (
+                    <button
+                      key={barber.id}
+                      type="button"
+                      className={`admin-history-avatar admin-history-avatar--tone-${hashIndex} ${isActive ? 'is-active' : ''}`}
+                      onClick={() => setHistoryBarberId(barber.id)}
+                      aria-pressed={isActive}
+                      aria-label={`Filter by ${barber.name}`}
+                      title={barber.name}
+                    >
+                      <span>{initials}</span>
+                    </button>
+                  );
+                })}
+
+                <div className="admin-history-more" ref={historyMoreRef}>
+                  <button
+                    type="button"
+                    className="admin-history-more-trigger"
+                    onClick={() => setIsHistoryMoreOpen((current) => !current)}
+                    aria-haspopup="menu"
+                    aria-expanded={isHistoryMoreOpen}
+                    aria-label="Show all barbers"
+                  >
+                    …
+                  </button>
+                  {isHistoryMoreOpen ? (
+                    <div className="admin-history-more-menu" role="menu" aria-label="All barbers">
+                      <button
+                        type="button"
+                        role="menuitemradio"
+                        aria-checked={historyBarberId === 'all'}
+                        className={`admin-history-more-item ${historyBarberId === 'all' ? 'is-active' : ''}`}
+                        onClick={() => {
+                          setHistoryBarberId('all');
+                          setIsHistoryMoreOpen(false);
+                        }}
+                      >
+                        All barbers
+                      </button>
+                      {allBarbersSorted.map((barber) => (
+                        <button
+                          key={barber.id}
+                          type="button"
+                          role="menuitemradio"
+                          aria-checked={historyBarberId === barber.id}
+                          className={`admin-history-more-item ${historyBarberId === barber.id ? 'is-active' : ''}`}
+                          onClick={() => {
+                            setHistoryBarberId(barber.id);
+                            setIsHistoryMoreOpen(false);
+                          }}
+                        >
+                          {barber.name}
+                        </button>
+                      ))}
+                    </div>
+                  ) : null}
+                </div>
+
               </div>
               <HistoryDateRangePicker
                 dateRange={historyDateRange}
