@@ -1414,14 +1414,18 @@
 .admin-sales-series-pills-wrap {
   display: grid;
   gap: 0.45rem;
+    margin-top: auto;
   padding: 0.2rem 0 calc(0.4rem + env(safe-area-inset-bottom));
 }
 
 .admin-sales-series-pills {
-
   display: flex;
-  flex-wrap: wrap;
   gap: 0.45rem;
+  flex-wrap: nowrap;
+  overflow-x: auto;
+  overflow-y: hidden;
+  -webkit-overflow-scrolling: touch;
+
 }
 
 
@@ -1465,6 +1469,9 @@
   position: fixed;
   inset: 0;
   z-index: 80;
+    overscroll-behavior: contain;
+  pointer-events: auto;
+
 }
 
 .admin-sales-modal-backdrop {
@@ -1472,33 +1479,52 @@
   inset: 0;
   border: 0;
   background: color-mix(in srgb, var(--bg) 75%, var(--fg) 25%);
+    pointer-events: auto;
 }
 
 .admin-sales-modal-panel {
-  position: absolute;
+  position: fixed;
   left: 0;
   right: 0;
   bottom: 0;
-  height: 85vh;
+  height: 100vh;
+  height: 100dvh;
   background: var(--surface);
   border: 1px solid var(--border);
   border-bottom: 0;
   border-top-left-radius: 6px;
   border-top-right-radius: 6px;
   padding: var(--space-sm);
-  display: grid;
-  align-content: start;
+  padding-bottom: calc(var(--space-sm) + env(safe-area-inset-bottom));
+  display: flex;
+  flex-direction: column;
   gap: 0.5rem;
+  overscroll-behavior: contain;
+  pointer-events: auto;
+
 }
 
 .admin-sales-modal-header {
   display: flex;
   align-items: center;
   justify-content: space-between;
+    flex: 0 0 auto;
 }
 
 .admin-sales-modal-header p {
   margin: 0;
+}
+
+.admin-sales-chart-inner--fullscreen {
+  display: flex;
+  flex: 1 1 auto;
+  min-height: 0;
+}
+
+.admin-sales-chart-inner--fullscreen .admin-sales-chart-canvas {
+  flex: 1 1 auto;
+  min-height: 0;
+  touch-action: none;
 }
 
 

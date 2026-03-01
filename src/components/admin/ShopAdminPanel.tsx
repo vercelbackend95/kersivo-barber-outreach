@@ -99,6 +99,41 @@ type SalesChartErrorBoundaryState = {
   hasError: boolean;
 };
 
+function useBodyScrollLock(isLocked: boolean): void {
+  useEffect(() => {
+    if (!isLocked || typeof window === 'undefined') return undefined;
+
+    const scrollY = window.scrollY;
+    const { body } = document;
+    const previousStyles = {
+      position: body.style.position,
+      top: body.style.top,
+      left: body.style.left,
+      right: body.style.right,
+      width: body.style.width,
+      overflow: body.style.overflow
+    };
+
+    body.style.position = 'fixed';
+    body.style.top = `-${scrollY}px`;
+    body.style.left = '0';
+    body.style.right = '0';
+    body.style.width = '100%';
+    body.style.overflow = 'hidden';
+
+    return () => {
+      const restoredScrollY = Number.parseInt(body.style.top || '0', 10) * -1;
+      body.style.position = previousStyles.position;
+      body.style.top = previousStyles.top;
+      body.style.left = previousStyles.left;
+      body.style.right = previousStyles.right;
+      body.style.width = previousStyles.width;
+      body.style.overflow = previousStyles.overflow;
+      window.scrollTo(0, Number.isFinite(restoredScrollY) ? restoredScrollY : scrollY);
+    };
+  }, [isLocked]);
+}
+
 
 
 const EMPTY_FORM: ProductFormState = {
@@ -425,6 +460,9 @@ export default function ShopAdminPanel({ initialTab = 'products' }: ShopAdminPan
     const [showSelectionLimitHint, setShowSelectionLimitHint] = useState(false);
   const [isMobileSalesView, setIsMobileSalesView] = useState(false);
   const [isSalesChartExpanded, setIsSalesChartExpanded] = useState(false);
+
+    useBodyScrollLock(isMobileSalesView && isSalesChartExpanded);
+
 
     const [productSearch, setProductSearch] = useState('');
   const [productFilter, setProductFilter] = useState<ProductFilter>('all');
@@ -1270,7 +1308,6 @@ export default function ShopAdminPanel({ initialTab = 'products' }: ShopAdminPan
                       <MiniLineChart
                         series={chartSeries}
                         metric={salesMetric}
-                        height="70vh"
                         isFullscreen
                         useResponsiveResize
                       />
