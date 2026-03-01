@@ -924,17 +924,18 @@ export default function ShopAdminPanel({ initialTab = 'products' }: ShopAdminPan
       if (!isOverallSeries) {
         const selectedProductsCount = previous.filter((key) => key !== 'overall').length;
         if (selectedProductsCount >= 3) {
-                setShowSelectionLimitHint(true);
+          setShowSelectionLimitHint(true);
           if (limitHintTimeoutRef.current) {
             window.clearTimeout(limitHintTimeoutRef.current);
           }
+                    limitHintTimeoutRef.current = window.setTimeout(() => {
+            setShowSelectionLimitHint(false);
+          }, 2000);
+          return previous;
+
         }
-        limitHintTimeoutRef.current = window.setTimeout(() => {
-          setShowSelectionLimitHint(false);
-        }, 2000);
       }
 
-        return previous;
       setShowSelectionLimitHint(false);
       if (isOverallSeries) {
         return ['overall', ...previous.filter((key) => key !== 'overall')];
