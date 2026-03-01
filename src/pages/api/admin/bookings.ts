@@ -20,42 +20,20 @@ function getTodayRangeInLondon() {
 }
 
 
-function getHistoryPresetRange(preset: string | null) {
-  const todayInLondon = formatInTimeZone(new Date(), ADMIN_TIMEZONE, 'yyyy-MM-dd');
-  const todayStart = fromZonedTime(`${todayInLondon}T00:00:00.000`, ADMIN_TIMEZONE);
-
-  if (preset === 'last30') {
-    return {
-      from: formatInTimeZone(new Date(todayStart.getTime() - 30 * 24 * 60 * 60 * 1000), ADMIN_TIMEZONE, 'yyyy-MM-dd'),
-      to: todayInLondon
-    };
-  }
-  if (preset === 'overall') return { from: null, to: null };
-  return {
-    from: formatInTimeZone(new Date(todayStart.getTime() - 7 * 24 * 60 * 60 * 1000), ADMIN_TIMEZONE, 'yyyy-MM-dd'),
-    to: todayInLondon
-  };
-}
-
-
 export const GET: APIRoute = async (ctx) => {
   const unauthorized = requireAdmin(ctx); if (unauthorized) return unauthorized;
   const view = ctx.url.searchParams.get('view');
 
   if (view === 'history') {
     const barberId = ctx.url.searchParams.get('barberId');
-    const preset = ctx.url.searchParams.get('preset');
     const from = ctx.url.searchParams.get('from');
     const to = ctx.url.searchParams.get('to');
     const limit = Math.min(Math.max(Number(ctx.url.searchParams.get('limit') || '50'), 1), 100);
     const cursor = ctx.url.searchParams.get('cursor');
     const [cursorStartAt, cursorId] = cursor ? cursor.split('|') : [null, null];
+    const startAtFilter = from && to
+      ? { gte: getLondonDayRange(from).gte, lt: getLondonDayRange(to).lt }
 
-    const fallbackRange = getHistoryPresetRange(preset);
-    const effectiveFrom = from ?? fallbackRange.from;
-    const effectiveTo = to ?? fallbackRange.to;
-    const startAtFilter = effectiveFrom && effectiveTo
-      ? { gte: getLondonDayRange(effectiveFrom).gte, lt: getLondonDayRange(effectiveTo).lt }
       : undefined;
 
     const bookings = await prisma.booking.findMany({

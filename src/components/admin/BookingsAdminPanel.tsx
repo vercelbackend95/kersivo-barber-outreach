@@ -55,7 +55,11 @@ type ClientProfilePayload = {
 
 
 type AdminBookingView = 'timeline' | 'list';
-type HistoryPreset = 'last7' | 'last30' | 'overall' | 'custom';
+type HistoryDateRange = {
+  from?: Date;
+  to?: Date;
+};
+
 
 
 type ReportsPayload = {
@@ -84,20 +88,6 @@ function formatTimelineDateLabel(date: string) {
   const dateAtLondonMidnight = fromZonedTime(`${date}T00:00:00.000`, ADMIN_TIMEZONE);
   return formatInTimeZone(dateAtLondonMidnight, ADMIN_TIMEZONE, 'EEE dd MMM');
 }
-
-
-function shiftLondonDate(date: string, days: number) {
-  const atMidnight = fromZonedTime(`${date}T00:00:00.000`, ADMIN_TIMEZONE);
-  return formatInTimeZone(new Date(atMidnight.getTime() + days * 24 * 60 * 60 * 1000), ADMIN_TIMEZONE, 'yyyy-MM-dd');
-}
-
-function getHistoryPresetDates(preset: HistoryPreset) {
-  const today = getTodayLondonDate();
-  if (preset === 'overall') return { from: '', to: '' };
-  if (preset === 'last30') return { from: shiftLondonDate(today, -30), to: today };
-  return { from: shiftLondonDate(today, -7), to: today };
-}
-
 
 function formatRelativeTime(startAt: string, endAt: string) {
   const nowMs = Date.now();
@@ -239,9 +229,9 @@ export default function BookingsAdminPanel({ isActive, mode, onBackToDashboard }
   const [activeView, setActiveView] = useState<AdminBookingView>('timeline');
   const [selectedDate, setSelectedDate] = useState(() => getTodayLondonDate());
   const [historyBarberId, setHistoryBarberId] = useState<string>('all');
-  const [historyPreset, setHistoryPreset] = useState<HistoryPreset>('last7');
-  const [historyFrom, setHistoryFrom] = useState(() => getHistoryPresetDates('last7').from);
-  const [historyTo, setHistoryTo] = useState(() => getHistoryPresetDates('last7').to);
+  const [historyDateRange, setHistoryDateRange] = useState<HistoryDateRange | null>(null);
+  const [isHistoryDatePickerOpen, setIsHistoryDatePickerOpen] = useState(false);
+
   const [historyCursor, setHistoryCursor] = useState<string | null>(null);
   const [historyHasMore, setHistoryHasMore] = useState(false);
   const [historyLoadingMore, setHistoryLoadingMore] = useState(false);
@@ -284,6 +274,19 @@ export default function BookingsAdminPanel({ isActive, mode, onBackToDashboard }
     const searchInputRef = useRef<HTMLInputElement | null>(null);
   const timelineScrollRestoreRef = useRef<{ left: number; top: number } | null>(null);
   const timelineScrollRafRef = useRef<number | null>(null);
+
+  const historyFromInput = useMemo(
+    () => (historyDateRange?.from ? formatInTimeZone(historyDateRange.from, ADMIN_TIMEZONE, 'yyyy-MM-dd') : ''),
+    [historyDateRange]
+  );
+  const historyToInput = useMemo(
+    () => (historyDateRange?.to ? formatInTimeZone(historyDateRange.to, ADMIN_TIMEZONE, 'yyyy-MM-dd') : ''),
+    [historyDateRange]
+  );
+  const historyDateRangeLabel = useMemo(() => {
+    if (!historyDateRange?.from || !historyDateRange?.to) return '';
+    return `${formatInTimeZone(historyDateRange.from, ADMIN_TIMEZONE, 'dd MMM')} - ${formatInTimeZone(historyDateRange.to, ADMIN_TIMEZONE, 'dd MMM')}`;
+  }, [historyDateRange]);
 
 
   const captureTimelineScroll = useCallback(() => {
@@ -383,9 +386,11 @@ export default function BookingsAdminPanel({ isActive, mode, onBackToDashboard }
       const endpoint = (() => {
           if (mode === 'history') {
           const params = new URLSearchParams({ view: 'history', barberId: historyBarberId, limit: '50' });
-          if (historyPreset !== 'custom') params.set('preset', historyPreset);
-          if (historyFrom) params.set('from', historyFrom);
-          if (historyTo) params.set('to', historyTo);
+          if (historyDateRange?.from && historyDateRange?.to) {
+            params.set('from', formatInTimeZone(historyDateRange.from, ADMIN_TIMEZONE, 'yyyy-MM-dd'));
+            params.set('to', formatInTimeZone(historyDateRange.to, ADMIN_TIMEZONE, 'yyyy-MM-dd'));
+          }
+
           if (appendHistory && historyCursor) params.set('cursor', historyCursor);
           return `/api/admin/bookings?${params.toString()}`;
         }
@@ -438,7 +443,7 @@ export default function BookingsAdminPanel({ isActive, mode, onBackToDashboard }
 
       setHistoryLoadingMore(false);
     }
-  }, [activeView, bookings, captureTimelineScroll, historyBarberId, historyCursor, historyFrom, historyPreset, historyTo, isActive, loggedIn, mode, restoreTimelineScroll, selectedDate]);
+  }, [activeView, bookings, captureTimelineScroll, historyBarberId, historyCursor, historyDateRange, isActive, loggedIn, mode, restoreTimelineScroll, selectedDate]);
   const loadMoreHistory = useCallback(async () => {
     if (!historyHasMore || historyLoadingMore || mode !== 'history') return;
     setHistoryLoadingMore(true);
@@ -453,7 +458,7 @@ export default function BookingsAdminPanel({ isActive, mode, onBackToDashboard }
     if (!loggedIn || !isActive || mode !== 'history') return;
     const timeoutId = window.setTimeout(() => { void fetchBookings(); }, 300);
     return () => window.clearTimeout(timeoutId);
-  }, [fetchBookings, historyBarberId, historyFrom, historyPreset, historyTo, isActive, loggedIn, mode]);
+  }, [fetchBookings, historyBarberId, historyDateRange, isActive, loggedIn, mode]);
     useEffect(() => () => {
     if (timelineScrollRafRef.current) {
       window.cancelAnimationFrame(timelineScrollRafRef.current);
@@ -527,7 +532,11 @@ export default function BookingsAdminPanel({ isActive, mode, onBackToDashboard }
 
   const nextBooking = upcomingBookings[0] ?? null;
   const currentBookingView = mode === 'history' ? 'history' : activeView;
-  const filteredBookings = useMemo(() => bookings, [bookings]);
+  const filteredBookings = useMemo(() => {
+    if (mode !== 'history') return bookings;
+    return [...bookings].sort((a, b) => new Date(b.startAt).getTime() - new Date(a.startAt).getTime());
+  }, [bookings, mode]);
+
 
 
   const visibleBookings = useMemo(() => {
@@ -782,18 +791,39 @@ export default function BookingsAdminPanel({ isActive, mode, onBackToDashboard }
               {barbers.map((barber) => <option key={barber.id} value={barber.id}>{barber.name}</option>)}
             </select>
           </div>
-          <div className="admin-filter-tabs admin-filter-tabs--history" role="tablist" aria-label="History range presets">
-            <button type="button" className={`admin-filter-tab ${historyPreset === 'last7' ? 'admin-filter-tab--active' : ''}`} onClick={() => { const next = getHistoryPresetDates('last7'); setHistoryPreset('last7'); setHistoryFrom(next.from); setHistoryTo(next.to); }}>Last 7 days</button>
-            <button type="button" className={`admin-filter-tab ${historyPreset === 'last30' ? 'admin-filter-tab--active' : ''}`} onClick={() => { const next = getHistoryPresetDates('last30'); setHistoryPreset('last30'); setHistoryFrom(next.from); setHistoryTo(next.to); }}>Last 30 days</button>
-            <button type="button" className={`admin-filter-tab ${historyPreset === 'overall' ? 'admin-filter-tab--active' : ''}`} onClick={() => { const next = getHistoryPresetDates('overall'); setHistoryPreset('overall'); setHistoryFrom(next.from); setHistoryTo(next.to); }}>Overall</button>
-            <button type="button" className={`admin-filter-tab ${historyPreset === 'custom' ? 'admin-filter-tab--active' : ''}`} onClick={() => setHistoryPreset('custom')}>Custom</button>
+          <div className="admin-history-date-filter-wrap">
+            <button
+              type="button"
+              className={`admin-history-date-trigger ${historyDateRange ? 'admin-history-date-trigger--active' : ''}`}
+              aria-label={historyDateRangeLabel ? `Selected date range: ${historyDateRangeLabel}` : 'Open date range picker'}
+              onClick={() => setIsHistoryDatePickerOpen((current) => !current)}
+            >
+              <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+                <path d="M7 2a1 1 0 0 1 1 1v1h8V3a1 1 0 1 1 2 0v1h1a3 3 0 0 1 3 3v11a4 4 0 0 1-4 4H6a4 4 0 0 1-4-4V7a3 3 0 0 1 3-3h1V3a1 1 0 0 1 1-1Zm13 8H4v8a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-8ZM5 6a1 1 0 0 0-1 1v1h16V7a1 1 0 0 0-1-1H5Z" />
+              </svg>
+              {historyDateRangeLabel ? <span>{historyDateRangeLabel}</span> : null}
+            </button>
+            {historyDateRange ? (
+              <button
+                type="button"
+                className="admin-history-date-clear"
+                onClick={() => setHistoryDateRange(null)}
+                aria-label="Clear date range"
+              >
+                ×
+              </button>
+            ) : null}
+            {isHistoryDatePickerOpen ? (
+              <div className="admin-history-date-picker" role="dialog" aria-label="Choose history date range">
+                <div className="admin-sales-custom-dates">
+                  <label htmlFor="history-from">From<input id="history-from" type="date" value={historyFromInput} onChange={(event) => setHistoryDateRange((current) => ({ from: event.target.value ? fromZonedTime(`${event.target.value}T00:00:00.000`, ADMIN_TIMEZONE) : current?.from, to: current?.to }))} /></label>
+                  <label htmlFor="history-to">To<input id="history-to" type="date" value={historyToInput} onChange={(event) => setHistoryDateRange((current) => ({ from: current?.from, to: event.target.value ? fromZonedTime(`${event.target.value}T00:00:00.000`, ADMIN_TIMEZONE) : current?.to }))} /></label>
+                </div>
+                <button type="button" className="btn btn--ghost" onClick={() => setHistoryDateRange(null)}>Clear dates</button>
+              </div>
+            ) : null}
+
           </div>
-          {historyPreset === 'custom' ? (
-            <div className="admin-sales-custom-dates">
-              <label htmlFor="history-from">From<input id="history-from" type="date" value={historyFrom} onChange={(event) => { setHistoryFrom(event.target.value); setHistoryPreset('custom'); }} /></label>
-              <label htmlFor="history-to">To<input id="history-to" type="date" value={historyTo} onChange={(event) => { setHistoryTo(event.target.value); setHistoryPreset('custom'); }} /></label>
-            </div>
-                      ) : null}
         </section>
       )}
 
