@@ -229,6 +229,7 @@ function MiniLineChart({
   isFullscreen = false,
   useResponsiveResize = false
 }: MiniLineChartProps) {
+    const isEmptySelection = series.length === 0;
   const chartCanvasRef = useRef<HTMLDivElement | null>(null);
   const [dimensions, setDimensions] = useState({ width: 900, height: 320 });
 
@@ -298,7 +299,18 @@ function MiniLineChart({
 
   const ticks = 4;
   const yTicks = Array.from({ length: ticks + 1 }, (_, index) => (yMax / ticks) * index);
-  const formatAxisValue = (value: number): string => (metric === 'revenue' ? `£${(value / 100).toFixed(2)}` : `${Math.round(value)}`);
+  const formatAxisValue = (value: number): string => {
+    if (metric === 'revenue') {
+      return new Intl.NumberFormat('en-GB', {
+        style: 'currency',
+        currency: 'GBP',
+        maximumFractionDigits: 0,
+        minimumFractionDigits: 0
+      }).format(value / 100);
+    }
+    return `${Math.round(value)}`;
+  };
+
   const formatTooltipValue = (value: number): string => (metric === 'revenue' ? formatPrice(value) : `${Math.round(value)} units`);
 
 
@@ -366,6 +378,13 @@ function MiniLineChart({
           </text>
         ))}
                 </svg>
+                        {isEmptySelection ? (
+          <div className="admin-sales-chart-overlay" aria-live="polite">
+            <p>No products selected</p>
+            <p>Enable a product below to display data.</p>
+          </div>
+        ) : null}
+
       </div>
 
 

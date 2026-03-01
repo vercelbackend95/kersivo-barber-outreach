@@ -1364,6 +1364,7 @@
 .admin-sales-chart-canvas {
   width: 100%;
   height: 320px;
+    position: relative;
 }
 
 .admin-sales-chart-canvas--clickable {
@@ -1376,6 +1377,28 @@
   height: 100%;
   display: block;
 }
+.admin-sales-chart-overlay {
+  position: absolute;
+  inset: 0;
+  display: grid;
+  align-content: center;
+  justify-items: center;
+  gap: 0.4rem;
+  text-align: center;
+  color: var(--muted);
+  pointer-events: none;
+  padding: var(--space-sm);
+}
+
+.admin-sales-chart-overlay p {
+  margin: 0;
+}
+
+.admin-sales-chart-overlay p:first-child {
+  color: var(--fg);
+  font-weight: 600;
+}
+
 
 .admin-sales-grid-line {
   stroke: var(--border);
