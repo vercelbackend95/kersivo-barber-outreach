@@ -1,4 +1,5 @@
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import OrdersDataTable22 from './OrdersDataTable22';
 type ShopTab = 'products' | 'orders' | 'sales';
 type SalesRangePreset = '7' | '30' | '90' | 'custom';
 
@@ -557,7 +558,10 @@ export default function ShopAdminPanel({ initialTab = 'products' }: ShopAdminPan
 
   const [orders, setOrders] = useState<OrderListItem[]>([]);
   const [ordersLoading, setOrdersLoading] = useState(false);
-  const [selectedOrder, setSelectedOrder] = useState<OrderDetail | null>(null);
+  const [expandedOrderId, setExpandedOrderId] = useState<string | null>(null);
+  const [orderDetailsById, setOrderDetailsById] = useState<Record<string, OrderDetail>>({});
+  const [orderDetailsLoadingId, setOrderDetailsLoadingId] = useState<string | null>(null);
+
   const [ordersUnauthorized, setOrdersUnauthorized] = useState(false);
 
   const [salesPreset, setSalesPreset] = useState<SalesRangePreset>('30');
@@ -769,7 +773,9 @@ export default function ShopAdminPanel({ initialTab = 'products' }: ShopAdminPan
       const payload = await response.json();
             if (response.status === 401) {
         setOrders([]);
-        setSelectedOrder(null);
+        setExpandedOrderId(null);
+        setOrderDetailsById({});
+
         setOrdersUnauthorized(true);
         return;
       }
@@ -785,19 +791,25 @@ export default function ShopAdminPanel({ initialTab = 'products' }: ShopAdminPan
 
   async function fetchOrderDetails(orderId: string) {
     setError(null);
+    setOrderDetailsLoadingId(orderId);
     try {
      const response = await fetch(`/api/admin/shop/orders/${orderId}`, { credentials: 'include' });
       const payload = await response.json();
             if (response.status === 401) {
-        setSelectedOrder(null);
+        setExpandedOrderId(null);
         setOrdersUnauthorized(true);
         return;
       }
 
       if (!response.ok) throw new Error(payload.error || 'Could not fetch order details.');
-      setSelectedOrder(payload.order as OrderDetail);
+      const detail = payload.order as OrderDetail;
+      setOrderDetailsById((previous) => ({ ...previous, [detail.id]: detail }));
+
     } catch (fetchError) {
       setError(fetchError instanceof Error ? fetchError.message : 'Could not fetch order details.');
+          } finally {
+      setOrderDetailsLoadingId((previous) => (previous === orderId ? null : previous));
+
     }
   }
 
@@ -853,13 +865,14 @@ export default function ShopAdminPanel({ initialTab = 'products' }: ShopAdminPan
     if (activeTab !== 'orders') return;
     const intervalId = window.setInterval(() => {
       void fetchOrders();
-      if (selectedOrder) {
-        void fetchOrderDetails(selectedOrder.id);
+      if (expandedOrderId) {
+        void fetchOrderDetails(expandedOrderId);
+
       }
     }, 15000);
 
     return () => window.clearInterval(intervalId);
-  }, [activeTab, selectedOrder]);
+  }, [activeTab, expandedOrderId]);
 
 
   function resetForm() {
@@ -1078,7 +1091,7 @@ export default function ShopAdminPanel({ initialTab = 'products' }: ShopAdminPan
       const payload = await response.json();
       if (response.status === 401) {
         setOrdersUnauthorized(true);
-        setSelectedOrder(null);
+        setExpandedOrderId(null);
         return;
       }
 
@@ -1090,6 +1103,18 @@ export default function ShopAdminPanel({ initialTab = 'products' }: ShopAdminPan
       setError(collectError instanceof Error ? collectError.message : 'Unable to mark order as collected.');
     }
   }
+  function toggleOrderExpand(orderId: string) {
+    if (expandedOrderId === orderId) {
+      setExpandedOrderId(null);
+      return;
+    }
+
+    setExpandedOrderId(orderId);
+    if (!orderDetailsById[orderId]) {
+      void fetchOrderDetails(orderId);
+    }
+  }
+
 
 
   function applyPreset(nextPreset: Exclude<SalesRangePreset, 'custom'>) {
@@ -1267,54 +1292,27 @@ export default function ShopAdminPanel({ initialTab = 'products' }: ShopAdminPan
           {error ? <p className="admin-inline-error">{error}</p> : null}
           {success ? <p className="admin-inline-success">{success}</p> : null}
           <div className="admin-products-actions">
-            <button type="button" className="btn btn--ghost" onClick={() => void fetchOrders()} disabled={ordersLoading}>{ordersLoading ? 'Refreshing...' : 'Refresh orders'}</button>          </div>
-                    {ordersUnauthorized ? (
+            <button type="button" className="btn btn--ghost" onClick={() => void fetchOrders()} disabled={ordersLoading}>{ordersLoading ? 'Refreshing...' : 'Refresh orders'}</button>
+          </div>
+          {ordersUnauthorized ? (
+
+
             <div className="admin-inline-error" role="alert">
               <p>Session expired — please log in again.</p>
               <a href="/admin" className="btn btn--secondary">Go to admin login</a>
             </div>
           ) : null}
 
-          <div className="admin-products-table-wrap">
-            <table className="admin-table">
-             <thead><tr><th>Created</th><th>Paid</th><th>Customer email</th><th>Total</th><th>Status</th><th>Items</th><th>Action</th></tr></thead>              <tbody>
-                {!ordersUnauthorized && orders.length === 0 ? (<tr><td colSpan={7}>No orders yet.</td></tr>) : orders.map((order) => (                  <tr key={order.id}>                    <td>{new Date(order.createdAt).toLocaleString('en-GB')}</td>
-                    <td>{order.paidAt ? new Date(order.paidAt).toLocaleString('en-GB') : '—'}</td>
-                    <td>{order.customerEmail}</td>
-                    <td>{formatPrice(order.totalPence)}</td>
-                    <td>{order.status}</td>
-                    <td>{order._count.items}</td>
-                    <td><button type="button" className="btn btn--ghost" onClick={() => void fetchOrderDetails(order.id)}>View</button></td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
+          <OrdersDataTable22
+            orders={orders}
+            expandedOrderId={expandedOrderId}
+            onToggleExpand={toggleOrderExpand}
+            orderDetailsById={orderDetailsById}
+            orderDetailsLoadingId={orderDetailsLoadingId}
+            onMarkCollected={(orderId) => void markCollected(orderId)}
+            ordersUnauthorized={ordersUnauthorized}
+          />
 
-          {selectedOrder ? (
-            <article className="admin-order-detail">
-              <h3>Order details</h3>
-              <p><strong>Email:</strong> {selectedOrder.customerEmail}</p>
-              <p><strong>Status:</strong> {selectedOrder.status}</p>
-              <p><strong>Total:</strong> {formatPrice(selectedOrder.totalPence)}</p>
-              <p><strong>Created:</strong> {new Date(selectedOrder.createdAt).toLocaleString('en-GB')}</p>
-              <p><strong>Paid:</strong> {selectedOrder.paidAt ? new Date(selectedOrder.paidAt).toLocaleString('en-GB') : '—'}</p>
-              <p><strong>Collected:</strong> {selectedOrder.collectedAt ? new Date(selectedOrder.collectedAt).toLocaleString('en-GB') : '—'}</p>
-              <div className="admin-products-table-wrap">
-                <table className="admin-table">
-                  <thead><tr><th>Item</th><th>Unit</th><th>Qty</th><th>Line total</th></tr></thead>
-                  <tbody>
-                    {selectedOrder.items.map((item) => (
-                      <tr key={item.id}><td>{item.nameSnapshot}</td><td>{formatPrice(item.unitPricePenceSnapshot)}</td><td>{item.quantity}</td><td>{formatPrice(item.lineTotalPence)}</td></tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
-              {selectedOrder.status === 'PAID' ? (
-                <button type="button" className="btn btn--primary" onClick={() => void markCollected(selectedOrder.id)}>Mark as collected</button>
-              ) : null}
-            </article>
-          ) : null}
         </div>
       )}
       {activeTab === 'sales' && (
