@@ -592,11 +592,10 @@
 
 
 .admin-history-date-filter-wrap {
-  position: relative;
   display: flex;
   align-items: center;
   gap: 0.35rem;
-    flex: 0 0 auto;
+  flex: 0 0 auto;
 }
 
 @media (max-width: 22rem) {
@@ -638,16 +637,121 @@
 }
 
 .admin-history-date-picker {
-  position: absolute;
-  z-index: 30;
-  top: calc(100% + 0.35rem);
-  right: 0;
-  width: min(100%, 24rem);
+  position: fixed;
+  z-index: 70;
+  width: min(92vw, 22.5rem);
+  max-width: min(92vw, 22.5rem);
+  max-height: min(88vh, 42rem);
+  overflow: auto;
+
   border: 1px solid var(--border);
   background: var(--surface);
   padding: var(--space-xs);
   display: grid;
-  gap: var(--space-xs);
+    gap: 0.5rem;
+    }
+
+.admin-history-date-picker--desktop {
+  box-shadow: 0 12px 24px color-mix(in srgb, var(--bg) 75%, transparent);
+}
+
+.admin-history-date-picker--mobile {
+  left: 50%;
+  top: 50%;
+  transform: translate(-50%, -50%);
+}
+
+.admin-history-dialog-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 60;
+  border: 0;
+  background: color-mix(in srgb, var(--bg) 68%, transparent);
+}
+
+.admin-history-picker-summary p {
+  margin: 0;
+  color: var(--muted);
+  font-size: 0.85rem;
+}
+
+.admin-history-picker-months {
+  display: grid;
+  gap: 0.5rem;
+}
+
+.admin-history-picker-months--double {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.admin-history-calendar-month {
+  border: 1px solid var(--border);
+  padding: 0.4rem;
+  display: grid;
+  gap: 0.25rem;
+}
+
+.admin-history-calendar-header-row {
+  display: flex;
+  justify-content: center;
+}
+
+.admin-history-calendar-grid {
+  display: grid;
+  grid-template-columns: repeat(7, minmax(0, 1fr));
+  gap: 0.2rem;
+}
+
+.admin-history-calendar-weekday {
+  text-align: center;
+  font-size: 0.72rem;
+  text-transform: uppercase;
+  color: var(--muted);
+}
+
+.admin-history-calendar-empty {
+  min-height: 2rem;
+}
+
+.admin-history-calendar-day {
+  min-height: 2rem;
+  border: 1px solid var(--border);
+  background: var(--bg);
+  color: var(--fg);
+}
+
+.admin-history-calendar-day:hover {
+  border-color: var(--accent);
+}
+
+.admin-history-calendar-day.is-in-range {
+  background: color-mix(in srgb, var(--accent) 18%, var(--bg));
+  border-color: color-mix(in srgb, var(--accent) 42%, var(--border));
+}
+
+.admin-history-calendar-day.is-selected {
+  background: var(--accent);
+  color: var(--accent-contrast);
+  border-color: var(--accent);
+}
+
+.admin-history-picker-nav,
+.admin-history-picker-actions {
+  display: flex;
+  justify-content: space-between;
+  gap: 0.4rem;
+}
+
+.admin-history-picker-nav .btn,
+.admin-history-picker-actions .btn {
+  flex: 1 1 auto;
+}
+
+@media (max-width: 47.99rem) {
+  .admin-history-picker-months--double {
+    grid-template-columns: 1fr;
+  }
+
 }
 
 

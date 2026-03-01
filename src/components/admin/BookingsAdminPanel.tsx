@@ -2,6 +2,7 @@ import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { formatInTimeZone, fromZonedTime, toZonedTime } from 'date-fns-tz';
 import TodayTimeline from './TodayTimeline';
 import AdminErrorBoundary from './AdminErrorBoundary';
+import HistoryDateRangePicker from './HistoryDateRangePicker';
 
 type Booking = {
   id: string;
@@ -230,7 +231,7 @@ export default function BookingsAdminPanel({ isActive, mode, onBackToDashboard }
   const [selectedDate, setSelectedDate] = useState(() => getTodayLondonDate());
   const [historyBarberId, setHistoryBarberId] = useState<string>('all');
   const [historyDateRange, setHistoryDateRange] = useState<HistoryDateRange | null>(null);
-  const [isHistoryDatePickerOpen, setIsHistoryDatePickerOpen] = useState(false);
+
 
   const [historyCursor, setHistoryCursor] = useState<string | null>(null);
   const [historyHasMore, setHistoryHasMore] = useState(false);
@@ -274,20 +275,6 @@ export default function BookingsAdminPanel({ isActive, mode, onBackToDashboard }
     const searchInputRef = useRef<HTMLInputElement | null>(null);
   const timelineScrollRestoreRef = useRef<{ left: number; top: number } | null>(null);
   const timelineScrollRafRef = useRef<number | null>(null);
-
-  const historyFromInput = useMemo(
-    () => (historyDateRange?.from ? formatInTimeZone(historyDateRange.from, ADMIN_TIMEZONE, 'yyyy-MM-dd') : ''),
-    [historyDateRange]
-  );
-  const historyToInput = useMemo(
-    () => (historyDateRange?.to ? formatInTimeZone(historyDateRange.to, ADMIN_TIMEZONE, 'yyyy-MM-dd') : ''),
-    [historyDateRange]
-  );
-  const historyDateRangeLabel = useMemo(() => {
-    if (!historyDateRange?.from || !historyDateRange?.to) return '';
-    return `${formatInTimeZone(historyDateRange.from, ADMIN_TIMEZONE, 'dd MMM')} - ${formatInTimeZone(historyDateRange.to, ADMIN_TIMEZONE, 'dd MMM')}`;
-  }, [historyDateRange]);
-
 
   const captureTimelineScroll = useCallback(() => {
     const container = timelineScrollRef.current;
@@ -793,38 +780,14 @@ export default function BookingsAdminPanel({ isActive, mode, onBackToDashboard }
                   {barbers.map((barber) => <option key={barber.id} value={barber.id}>{barber.name}</option>)}
                 </select>
               </div>
-                            <div className="admin-history-date-filter-wrap">
-                <button
-                  type="button"
-                  className={`admin-history-date-trigger ${historyDateRange ? 'admin-history-date-trigger--active' : ''}`}
-                  aria-label={historyDateRangeLabel ? `Selected date range: ${historyDateRangeLabel}` : 'Open date range picker'}
-                  onClick={() => setIsHistoryDatePickerOpen((current) => !current)}
-                >
-                  <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">
-                    <path d="M7 2a1 1 0 0 1 1 1v1h8V3a1 1 0 1 1 2 0v1h1a3 3 0 0 1 3 3v11a4 4 0 0 1-4 4H6a4 4 0 0 1-4-4V7a3 3 0 0 1 3-3h1V3a1 1 0 0 1 1-1Zm13 8H4v8a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-8ZM5 6a1 1 0 0 0-1 1v1h16V7a1 1 0 0 0-1-1H5Z" />
-                  </svg>
-                  {historyDateRangeLabel ? <span>{historyDateRangeLabel}</span> : null}
-                </button>
-                {historyDateRange ? (
-                  <button
-                    type="button"
-                    className="admin-history-date-clear"
-                    onClick={() => setHistoryDateRange(null)}
-                    aria-label="Clear date range"
-                  >
-                    ×
-                  </button>
-                ) : null}
-                {isHistoryDatePickerOpen ? (
-                  <div className="admin-history-date-picker" role="dialog" aria-label="Choose history date range">
-                    <div className="admin-sales-custom-dates">
-                      <label htmlFor="history-from">From<input id="history-from" type="date" value={historyFromInput} onChange={(event) => setHistoryDateRange((current) => ({ from: event.target.value ? fromZonedTime(`${event.target.value}T00:00:00.000`, ADMIN_TIMEZONE) : current?.from, to: current?.to }))} /></label>
-                      <label htmlFor="history-to">To<input id="history-to" type="date" value={historyToInput} onChange={(event) => setHistoryDateRange((current) => ({ from: current?.from, to: event.target.value ? fromZonedTime(`${event.target.value}T00:00:00.000`, ADMIN_TIMEZONE) : current?.to }))} /></label>
-                    </div>
-                    <button type="button" className="btn btn--ghost" onClick={() => setHistoryDateRange(null)}>Clear dates</button>
-                  </div>
-                ) : null}
-              </div>
+              <HistoryDateRangePicker
+                dateRange={historyDateRange}
+                isMobileViewport={isMobileViewport}
+                timezone={ADMIN_TIMEZONE}
+                onChangeRange={setHistoryDateRange}
+                onClear={() => setHistoryDateRange(null)}
+              />
+
             </div>
           </div>
         </section>
