@@ -5,6 +5,7 @@ import { mkdir, writeFile } from 'node:fs/promises';
 import path from 'node:path';
 import type { APIRoute } from 'astro';
 import { z } from 'zod';
+import { Prisma } from '@prisma/client';
 import { requireAdmin } from '../../../lib/admin/auth';
 import { ensureBarberHasAvailabilityRules } from '../../../lib/admin/defaultAvailability';
 import { prisma } from '../../../lib/db/client';
@@ -57,11 +58,28 @@ export const GET: APIRoute = async (ctx) => {
   const unauthorized = requireAdmin(ctx);
   if (unauthorized) return unauthorized;
 
-  const barbers = await prisma.barber.findMany({
-    orderBy: [{ sortOrder: 'asc' }, { createdAt: 'asc' }],
-    select: { id: true, name: true, email: true, avatarUrl: true, active: true, sortOrder: true, createdAt: true }
+  let barbers: Array<{ id: string; name: string; email: string | null; avatarUrl: string | null; active: boolean; sortOrder: number; createdAt: Date }>;
+  try {
+    barbers = await prisma.barber.findMany({
+      orderBy: [{ sortOrder: 'asc' }, { name: 'asc' }, { createdAt: 'asc' }],
+      select: { id: true, name: true, email: true, avatarUrl: true, active: true, sortOrder: true, createdAt: true }
+    });
+  } catch (error) {
+    const isMissingSortOrderColumn = error instanceof Prisma.PrismaClientKnownRequestError
+      && error.code === 'P2022'
+      && String(error.meta?.column ?? '').includes('Barber.sortOrder');
 
-  });
+    if (!isMissingSortOrderColumn) {
+      throw error;
+    }
+
+    const fallbackBarbers = await prisma.barber.findMany({
+      orderBy: [{ name: 'asc' }, { createdAt: 'asc' }],
+      select: { id: true, name: true, email: true, avatarUrl: true, active: true, createdAt: true }
+    });
+
+    barbers = fallbackBarbers.map((barber, index) => ({ ...barber, sortOrder: index }));
+  }
 
   return new Response(JSON.stringify({
     barbers: barbers.map((barber) => ({
