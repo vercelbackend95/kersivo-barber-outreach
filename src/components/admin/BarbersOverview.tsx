@@ -70,7 +70,12 @@ export default function BarbersOverview({
 
   formatBlockRange,
 }: BarbersOverviewProps) {
+      const [isMounted, setIsMounted] = React.useState(false);
   const availableServices = services.length > 0 ? services : DEFAULT_SERVICE_OPTIONS;
+  React.useEffect(() => {
+    setIsMounted(true);
+  }, []);
+
 
   React.useEffect(() => {
     if (!isAddBarberSheetOpen) return undefined;
@@ -85,61 +90,62 @@ export default function BarbersOverview({
     return () => window.removeEventListener('keydown', onKeyDown);
   }, [isAddBarberSheetOpen, onCloseAddBarberSheet]);
 
-  const addBarberSheet = isAddBarberSheetOpen ? (
+  const addBarberSheet = (
     <div className="admin-barber-sheet-layer" role="dialog" aria-modal="true" aria-label="Add barber">
       <div className="admin-barber-sheet-backdrop" role="presentation" onClick={onCloseAddBarberSheet} />
-      <form
-        className="admin-barber-sheet"
-        onSubmit={onSubmitAddBarber}
-        onClick={(event) => event.stopPropagation()}
-      >
-        <div className="admin-barber-sheet-head">
-          <h3>Add barber</h3>
-          <button type="button" className="btn btn--ghost" onClick={onCloseAddBarberSheet} aria-label="Close add barber form">✕</button>
-        </div>
+            {isAddBarberSheetOpen ? (
+        <form
+          className="admin-barber-sheet"
+          onSubmit={onSubmitAddBarber}
+          onClick={(event) => event.stopPropagation()}
+        >
+          <div className="admin-barber-sheet-head">
+            <h3>Add barber</h3>
+            <button type="button" className="btn btn--ghost" onClick={onCloseAddBarberSheet} aria-label="Close add barber form">✕</button>
+          </div>
 
-        <div className="admin-barber-sheet-content">
-          <label htmlFor="barber-name">Barber name</label>
-          <input id="barber-name" value={barberNameDraft} onChange={(event) => onBarberNameChange(event.target.value)} placeholder="e.g. Marco" required />
+          <div className="admin-barber-sheet-content">
+            <label htmlFor="barber-name">Barber name</label>
+            <input id="barber-name" value={barberNameDraft} onChange={(event) => onBarberNameChange(event.target.value)} placeholder="e.g. Marco" required />
 
-          <label htmlFor="barber-avatar">Avatar (optional)</label>
-          <input id="barber-avatar" type="file" accept="image/jpeg,image/png,image/webp" onChange={(event) => onBarberAvatarChange(event.target.files?.[0] ?? null)} />
-          {barberAvatarPreviewUrl ? <img src={barberAvatarPreviewUrl} alt="Selected avatar preview" className="admin-avatar-preview" /> : null}
+            <label htmlFor="barber-avatar">Avatar (optional)</label>
+            <input id="barber-avatar" type="file" accept="image/jpeg,image/png,image/webp" onChange={(event) => onBarberAvatarChange(event.target.files?.[0] ?? null)} />
+            {barberAvatarPreviewUrl ? <img src={barberAvatarPreviewUrl} alt="Selected avatar preview" className="admin-avatar-preview" /> : null}
 
-          <fieldset className="admin-service-select-group">
-            <legend>Services</legend>
-            <div className="admin-services-grid">
-              {availableServices.map((service) => {
-                const checked = selectedServiceIds.includes(service.id);
-                return (
-                  <label key={service.id} className="admin-service-checkbox">
-                    <input
-                      type="checkbox"
-                      checked={checked}
-                      onChange={(event) => {
-                        if (event.target.checked) {
-                          onSelectedServiceIdsChange([...selectedServiceIds, service.id]);
-                          return;
-                        }
-                        onSelectedServiceIdsChange(selectedServiceIds.filter((serviceId) => serviceId !== service.id));
-                      }}
-                    />
-                    <span>{service.name}</span>
-                  </label>
-                );
-              })}
-            </div>
-          </fieldset>
-        </div>
+            <fieldset className="admin-service-select-group">
+              <legend>Services</legend>
+              <div className="admin-services-grid">
+                {availableServices.map((service) => {
+                  const checked = selectedServiceIds.includes(service.id);
+                  return (
+                    <label key={service.id} className="admin-service-checkbox">
+                      <input
+                        type="checkbox"
+                        checked={checked}
+                        onChange={(event) => {
+                          if (event.target.checked) {
+                            onSelectedServiceIdsChange([...selectedServiceIds, service.id]);
+                            return;
+                          }
+                          onSelectedServiceIdsChange(selectedServiceIds.filter((serviceId) => serviceId !== service.id));
+                        }}
+                      />
+                      <span>{service.name}</span>
+                    </label>
+                  );
+                })}
+              </div>
+            </fieldset>
+          </div>
 
-        <div className="admin-barber-sheet-footer">
-          <button type="submit" className="btn btn--primary" disabled={barberSaving}>{barberSaving ? 'Saving...' : 'Save barber'}</button>
-        </div>
-      </form>
+          <div className="admin-barber-sheet-footer">
+            <button type="submit" className="btn btn--primary" disabled={barberSaving}>{barberSaving ? 'Saving...' : 'Save barber'}</button>
+          </div>
+        </form>
+      ) : null}
+
     </div>
-  ) : null;
-
-
+  );
   return (
     <section className="admin-quick-blocks">
       <h2>Barbers</h2>
@@ -189,7 +195,10 @@ export default function BarbersOverview({
           </button>
         </li>
       </ul>
-      {typeof document !== 'undefined' ? createPortal(addBarberSheet, document.body) : addBarberSheet}
+      {isAddBarberSheetOpen
+        ? (isMounted ? createPortal(addBarberSheet, document.body) : addBarberSheet)
+        : null}
+
 
       {globalBlocks.length > 0 ? (
         <>
