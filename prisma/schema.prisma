@@ -78,6 +78,7 @@ model Barber {
   id         String             @id @default(cuid())
   name       String
   email      String?
+  avatarUrl  String?
   active     Boolean            @default(true)
   createdAt  DateTime           @default(now())
   updatedAt  DateTime           @updatedAt

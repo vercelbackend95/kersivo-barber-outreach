@@ -23,6 +23,9 @@ type Booking = {
 type Barber = {
   id: string;
   name: string;
+    avatarUrl?: string | null;
+  isActive?: boolean;
+
 };
 
 type TimeBlock = {
@@ -287,6 +290,11 @@ function getInitials(name: string) {
     .map((segment) => segment[0]?.toUpperCase() ?? '')
     .join('') || '?';
 }
+function normalizeBarberStatus(barber: Barber) {
+  if (typeof barber.isActive === 'boolean') return barber.isActive;
+  return true;
+}
+
 
 function hashValue(value: string) {
   let hash = 0;
@@ -347,6 +355,13 @@ export default function BookingsAdminPanel({ isActive, mode, onBackToDashboard }
   const [isCheckingSession, setIsCheckingSession] = useState(true);
   const [bookings, setBookings] = useState<Booking[]>([]);
   const [barbers, setBarbers] = useState<Barber[]>([]);
+    const [showInactiveBarbers, setShowInactiveBarbers] = useState(false);
+  const [barberNameDraft, setBarberNameDraft] = useState('');
+  const [barberAvatarFile, setBarberAvatarFile] = useState<File | null>(null);
+  const [barberSaveMessage, setBarberSaveMessage] = useState('');
+  const [barberSaveError, setBarberSaveError] = useState('');
+  const [barberSaving, setBarberSaving] = useState(false);
+
   const [timeBlocks, setTimeBlocks] = useState<TimeBlock[]>([]);
   const [error, setError] = useState('');
   const [updatedBookingIds, setUpdatedBookingIds] = useState<string[]>([]);
@@ -679,6 +694,8 @@ export default function BookingsAdminPanel({ isActive, mode, onBackToDashboard }
   }, [bookings, historyBarberId, mode]);
 
   const allBarbersSorted = useMemo(() => [...barbers].sort((a, b) => a.name.localeCompare(b.name, 'en')), [barbers]);
+  const activeBarbers = useMemo(() => allBarbersSorted.filter((barber) => normalizeBarberStatus(barber)), [allBarbersSorted]);
+  const visibleBarbersForManagement = useMemo(() => showInactiveBarbers ? allBarbersSorted : activeBarbers, [activeBarbers, allBarbersSorted, showInactiveBarbers]);
 
   const visibleRecentBarberIds = useMemo(() => {
     if (mode !== 'history') return [] as string[];
@@ -698,10 +715,17 @@ export default function BookingsAdminPanel({ isActive, mode, onBackToDashboard }
   }, [bookings, isMobileViewport, mode]);
   const recentBarbers = useMemo(() => {
     const byId = new Map(barbers.map((barber) => [barber.id, barber]));
+        const fallbackById = new Map(
+      bookings.map((booking) => [booking.barberId, { id: booking.barberId, name: booking.barber?.name ?? 'Barber', isActive: false } as Barber])
+    );
+
+
     return visibleRecentBarberIds
-      .map((barberId) => byId.get(barberId))
-      .filter((barber): barber is Barber => Boolean(barber));
-  }, [barbers, visibleRecentBarberIds]);
+      .map((barberId) => byId.get(barberId) ?? fallbackById.get(barberId))
+      .filter((barber): barber is Barber => Boolean(barber))
+      .sort((a, b) => Number(normalizeBarberStatus(b)) - Number(normalizeBarberStatus(a)));
+  }, [barbers, bookings, visibleRecentBarberIds]);
+
 
 
 
@@ -871,6 +895,68 @@ export default function BookingsAdminPanel({ isActive, mode, onBackToDashboard }
     await Promise.all([fetchBookings(), fetchTimeBlocks()]);
 
   }
+  async function saveBarber(event: React.FormEvent) {
+    event.preventDefault();
+    setBarberSaveMessage('');
+    setBarberSaveError('');
+
+    const trimmedName = barberNameDraft.trim();
+    if (!trimmedName) {
+      setBarberSaveError('Barber name is required.');
+      return;
+    }
+
+    if (barberAvatarFile && barberAvatarFile.size > 5 * 1024 * 1024) {
+      setBarberSaveError('Avatar is too large. Maximum size is 5MB.');
+      return;
+    }
+
+    setBarberSaving(true);
+    const formData = new FormData();
+    formData.set('name', trimmedName);
+    formData.set('isActive', 'true');
+    if (barberAvatarFile) formData.set('avatar', barberAvatarFile);
+
+    const response = await fetch('/api/admin/barbers', {
+      method: 'POST',
+      credentials: 'same-origin',
+      body: formData
+    });
+    const payload = await response.json().catch(() => ({ error: 'Could not save barber.' }));
+
+    if (!response.ok) {
+      setBarberSaveError(payload.error || 'Could not save barber.');
+      setBarberSaving(false);
+      return;
+    }
+
+    setBarberNameDraft('');
+    setBarberAvatarFile(null);
+    setBarberSaveMessage('Barber saved.');
+    setBarberSaving(false);
+    await fetchBarbers();
+  }
+
+  async function updateBarberStatus(barberId: string, isActive: boolean) {
+    setBarberSaveMessage('');
+    setBarberSaveError('');
+    const response = await fetch('/api/admin/barbers', {
+      method: 'POST',
+      credentials: 'same-origin',
+      headers: { 'content-type': 'application/json' },
+      body: JSON.stringify({ id: barberId, isActive })
+    });
+
+    if (!response.ok) {
+      setBarberSaveError(isActive ? 'Could not reactivate barber.' : 'Could not deactivate barber.');
+      return;
+    }
+
+    setBarberSaveMessage(isActive ? 'Barber reactivated.' : 'Barber deactivated.');
+    await fetchBarbers();
+  }
+
+
 
   if (!isActive) return null;
   if (isCheckingSession) return <section className="surface booking-shell"><h1>Admin</h1><p className="muted">Checking session...</p></section>;
@@ -893,8 +979,48 @@ export default function BookingsAdminPanel({ isActive, mode, onBackToDashboard }
                 <h2>Barbers</h2>
                 {onBackToDashboard ? <button type="button" className="btn btn--ghost" onClick={onBackToDashboard}>Back to Dashboard</button> : null}
               </div>
+                            <p className="muted">Manage active barbers and their avatars. Deactivated barbers stay linked to booking history.</p>
+              <form className="admin-barber-form" onSubmit={(event) => void saveBarber(event)}>
+                <label htmlFor="barber-name">Barber name</label>
+                <input id="barber-name" value={barberNameDraft} onChange={(event) => setBarberNameDraft(event.target.value)} placeholder="e.g. Marco" required />
+                <label htmlFor="barber-avatar">Avatar (optional)</label>
+                <input id="barber-avatar" type="file" accept="image/jpeg,image/png,image/webp" onChange={(event) => setBarberAvatarFile(event.target.files?.[0] ?? null)} />
+                <button type="submit" className="btn btn--primary" disabled={barberSaving}>Save barber</button>
+              </form>
+              <div className="admin-barber-toggle">
+                <label>
+                  <input type="checkbox" checked={showInactiveBarbers} onChange={(event) => setShowInactiveBarbers(event.target.checked)} />
+                  Show inactive
+                </label>
+              </div>
+              {barberSaveMessage && <p className="admin-inline-success">{barberSaveMessage}</p>}
+              {barberSaveError && <p className="admin-inline-error">{barberSaveError}</p>}
+              <ul className="admin-barber-list">
+                {visibleBarbersForManagement.map((barber) => {
+                  const barberIsActive = normalizeBarberStatus(barber);
+                  return (
+                    <li key={barber.id} className={`admin-barber-list-item ${barberIsActive ? '' : 'is-inactive'}`}>
+                      <div className="admin-barber-avatar">
+                        {barber.avatarUrl ? <img src={barber.avatarUrl} alt={barber.name} loading="lazy" /> : <span>{getInitials(barber.name)}</span>}
+                      </div>
+                      <div>
+                        <p className="admin-barber-name">{barber.name}</p>
+                        <p className="muted">{barberIsActive ? 'Active' : 'Inactive'}</p>
+                      </div>
+                      <div className="admin-barber-actions">
+                        {barberIsActive ? (
+                          <button type="button" className="btn btn--ghost" onClick={() => void updateBarberStatus(barber.id, false)}>Remove</button>
+                        ) : (
+                          <button type="button" className="btn btn--secondary" onClick={() => void updateBarberStatus(barber.id, true)}>Reactivate</button>
+                        )}
+                      </div>
+                    </li>
+                  );
+                })}
+              </ul>
+
               <p className="muted">These blocks affect booking availability for today.</p>
-              <div className="admin-quick-scope"><label htmlFor="block-scope">Applies to</label><select id="block-scope" value={blockScopeBarberId} onChange={(event) => setBlockScopeBarberId(event.target.value)}><option value="all">All barbers</option>{barbers.map((barber) => <option key={barber.id} value={barber.id}>{barber.name}</option>)}</select></div>
+              <div className="admin-quick-scope"><label htmlFor="block-scope">Applies to</label><select id="block-scope" value={blockScopeBarberId} onChange={(event) => setBlockScopeBarberId(event.target.value)}><option value="all">All barbers</option>{activeBarbers.map((barber) => <option key={barber.id} value={barber.id}>{barber.name}</option>)}</select></div>
               <div className="admin-quick-actions"><button type="button" className="btn btn--secondary" onClick={() => void handleQuickBlock30()}>Block 30 min</button><button type="button" className="btn btn--secondary" onClick={() => void handleQuickLunch()}>Lunch</button><button type="button" className="btn btn--secondary" onClick={() => setShowHolidayModal(true)}>Holiday</button></div>
               {blockSuccessMessage && <p className="admin-inline-success">{blockSuccessMessage}</p>}
               {blockErrorMessage && <p className="admin-inline-error">{blockErrorMessage}</p>}

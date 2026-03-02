@@ -2653,3 +2653,61 @@
     min-height: 2.75rem;
   }
 }
+
+.admin-barber-form {
+  display: grid;
+  gap: 8px;
+  margin: 12px 0;
+}
+
+.admin-barber-toggle {
+  margin-bottom: 8px;
+}
+
+.admin-barber-list {
+  display: grid;
+  gap: 10px;
+  padding: 0;
+  margin: 0 0 14px;
+  list-style: none;
+}
+
+.admin-barber-list-item {
+  display: grid;
+  grid-template-columns: 44px 1fr auto;
+  align-items: center;
+  gap: 10px;
+  border: 1px solid var(--border);
+  padding: 10px;
+  background: var(--surface);
+}
+
+.admin-barber-list-item.is-inactive {
+  opacity: 0.72;
+}
+
+.admin-barber-avatar {
+  width: 44px;
+  height: 44px;
+  border: 1px solid var(--border);
+  display: grid;
+  place-items: center;
+  font-weight: 600;
+  background: var(--bg);
+  overflow: hidden;
+}
+
+.admin-barber-avatar img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.admin-barber-name {
+  margin: 0;
+}
+
+.admin-barber-actions {
+  display: flex;
+  justify-content: flex-end;
+}
