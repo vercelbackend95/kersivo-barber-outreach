@@ -2,6 +2,7 @@ import type { APIRoute } from 'astro';
 import { fromZonedTime, formatInTimeZone } from 'date-fns-tz';
 import { requireAdmin } from '../../../lib/admin/auth';
 import { prisma } from '../../../lib/db/client';
+import { BookingStatus } from '@prisma/client';
 
 const ADMIN_TIMEZONE = 'Europe/London';
 
@@ -60,6 +61,22 @@ export const GET: APIRoute = async (ctx) => {
 
     return new Response(JSON.stringify({ bookings: page, hasMore, cursor: nextCursor }));
   }
+  if (view === 'stats') {
+    const barberId = ctx.url.searchParams.get('barberId');
+    if (!barberId) {
+      return new Response(JSON.stringify({ error: 'Missing barberId.' }), { status: 400 });
+    }
+
+    const totalBookingsServed = await prisma.booking.count({
+      where: {
+        barberId,
+        status: { in: [BookingStatus.CONFIRMED, BookingStatus.EXPIRED, BookingStatus.RESCHEDULED] }
+      }
+    });
+
+    return new Response(JSON.stringify({ totalBookingsServed }));
+  }
+
 
 
   const q = ctx.url.searchParams.get('q');

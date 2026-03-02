@@ -4,6 +4,9 @@ import TodayTimeline from './TodayTimeline';
 import AdminErrorBoundary from './AdminErrorBoundary';
 import HistoryDateRangePicker from './HistoryDateRangePicker';
 import { getBookingStatusTone, getStatusTextColorClass } from './bookingStatus';
+import BarbersOverview from './BarbersOverview';
+import BarberProfile from './BarberProfile';
+import type { Barber, ServiceOption, TimeBlock, WorkingHourRow } from './barbersTypes';
 
 type Booking = {
   id: string;
@@ -18,39 +21,6 @@ type Booking = {
   rescheduledAt?: string | null;
   barber: { name: string };
   service: { name: string };
-};
-
-type Barber = {
-  id: string;
-  name: string;
-  avatarUrl?: string | null;
-  isActive?: boolean;
-  active?: boolean;
-  sortOrder?: number;
-    serviceIds?: string[];
-};
-
-type ServiceOption = {
-  id: string;
-  name: string;
-  active?: boolean;
-};
-
-type WorkingHourRow = {
-  dayOfWeek: number;
-  active: boolean;
-  startTime: string;
-  endTime: string;
-
-};
-
-type TimeBlock = {
-  id: string;
-  title: string;
-  barberId?: string | null;
-  startAt: string;
-  endAt: string;
-  barber?: { id: string; name: string } | null;
 };
 
 
@@ -381,7 +351,7 @@ export default function BookingsAdminPanel({ isActive, mode, onBackToDashboard }
   const [barberSaving, setBarberSaving] = useState(false);
   const [barberReordering, setBarberReordering] = useState(false);
   const [barberAvatarPreviewUrl, setBarberAvatarPreviewUrl] = useState<string | null>(null);
-  const [selectedBarberId, setSelectedBarberId] = useState<string>('');
+  const [selectedBarberId, setSelectedBarberId] = useState<string | null>(null);
   const [services, setServices] = useState<ServiceOption[]>([]);
   const [workingHours, setWorkingHours] = useState<WorkingHourRow[]>([]);
   const [workingHoursLoading, setWorkingHoursLoading] = useState(false);
@@ -414,6 +384,11 @@ export default function BookingsAdminPanel({ isActive, mode, onBackToDashboard }
   const [cancelErrorMessage, setCancelErrorMessage] = useState('');
   const [cancelLoadingBookingId, setCancelLoadingBookingId] = useState<string | null>(null);
   const [blockScopeBarberId, setBlockScopeBarberId] = useState<string>('all');
+    const [profileBlockTitle, setProfileBlockTitle] = useState('Lunch');
+  const [profileBlockStartInput, setProfileBlockStartInput] = useState(() => formatLocalInputValue(roundUpLondon(new Date(), SLOT_STEP_MINUTES)));
+  const [profileBlockEndInput, setProfileBlockEndInput] = useState(() => formatLocalInputValue(new Date(roundUpLondon(new Date(), SLOT_STEP_MINUTES).getTime() + 30 * 60000)));
+  const [selectedBarberStatsCount, setSelectedBarberStatsCount] = useState(0);
+
   const [blockSuccessMessage, setBlockSuccessMessage] = useState('');
   const [blockErrorMessage, setBlockErrorMessage] = useState('');
   const [showHolidayModal, setShowHolidayModal] = useState(false);
@@ -724,6 +699,10 @@ export default function BookingsAdminPanel({ isActive, mode, onBackToDashboard }
   const visibleBarbersForManagement = useMemo(() => showInactiveBarbers ? allBarbersSorted : activeBarbers, [activeBarbers, allBarbersSorted, showInactiveBarbers]);
   const selectedBarber = useMemo(() => allBarbersSorted.find((barber) => barber.id === selectedBarberId) ?? null, [allBarbersSorted, selectedBarberId]);
   const enabledServiceIds = useMemo(() => new Set(selectedBarber?.serviceIds ?? []), [selectedBarber]);
+  const selectedBarberBlocks = useMemo(() => timeBlocks.filter((block) => block.barberId === selectedBarberId), [selectedBarberId, timeBlocks]);
+  const globalBlocks = useMemo(() => timeBlocks.filter((block) => !block.barberId), [timeBlocks]);
+
+
 
   const visibleRecentBarberIds = useMemo(() => {
     if (mode !== 'history') return [] as string[];
@@ -860,10 +839,7 @@ export default function BookingsAdminPanel({ isActive, mode, onBackToDashboard }
     return () => URL.revokeObjectURL(objectUrl);
   }, [barberAvatarFile]);
 
-  useEffect(() => {
-    if (selectedBarberId && allBarbersSorted.some((barber) => barber.id === selectedBarberId)) return;
-    setSelectedBarberId(activeBarbers[0]?.id ?? allBarbersSorted[0]?.id ?? '');
-  }, [activeBarbers, allBarbersSorted, selectedBarberId]);
+
 
   const fetchServices = useCallback(async () => {
     const response = await fetch('/api/admin/services', { credentials: 'same-origin' });
@@ -888,10 +864,34 @@ export default function BookingsAdminPanel({ isActive, mode, onBackToDashboard }
     void fetchServices();
   }, [fetchServices, isActive, loggedIn, mode]);
 
+  const fetchSelectedBarberStats = useCallback(async (barberId: string) => {
+    if (!barberId) {
+      setSelectedBarberStatsCount(0);
+      return;
+    }
+    const params = new URLSearchParams({ barberId, view: 'stats' });
+    const response = await fetch(`/api/admin/bookings?${params.toString()}`, { credentials: 'same-origin' });
+    if (!response.ok) {
+      setSelectedBarberStatsCount(0);
+      return;
+    }
+    const payload = await response.json().catch(() => ({ totalBookingsServed: 0 }));
+    setSelectedBarberStatsCount(Number(payload.totalBookingsServed ?? 0));
+  }, []);
+
+
   useEffect(() => {
     if (!loggedIn || !isActive || mode !== 'blocks' || !selectedBarberId) return;
     void fetchWorkingHours(selectedBarberId);
   }, [fetchWorkingHours, isActive, loggedIn, mode, selectedBarberId]);
+  useEffect(() => {
+    if (!loggedIn || !isActive || mode !== 'blocks' || !selectedBarberId) {
+      setSelectedBarberStatsCount(0);
+      return;
+    }
+    void fetchSelectedBarberStats(selectedBarberId);
+  }, [fetchSelectedBarberStats, isActive, loggedIn, mode, selectedBarberId]);
+
 
   function updateWorkingHour(dayOfWeek: number, patch: Partial<WorkingHourRow>) {
     setWorkingHours((current) => current.map((row) => row.dayOfWeek === dayOfWeek ? { ...row, ...patch } : row));
@@ -982,7 +982,7 @@ export default function BookingsAdminPanel({ isActive, mode, onBackToDashboard }
       method: 'POST',
       credentials: 'same-origin',
       headers: { 'content-type': 'application/json' },
-      body: JSON.stringify({ title, startAt: startAt.toISOString(), endAt: endAt.toISOString(), barberId: blockScopeBarberId === 'all' ? null : blockScopeBarberId })
+      body: JSON.stringify({ title, startAt: startAt.toISOString(), endAt: endAt.toISOString(), barberId: selectedBarberId ?? (blockScopeBarberId === 'all' ? null : blockScopeBarberId) })
     });
     if (!response.ok) {
       setBlockErrorMessage('Could not create time block.');
@@ -1149,101 +1149,60 @@ export default function BookingsAdminPanel({ isActive, mode, onBackToDashboard }
         <>
 
           {mode === 'blocks' ? (
-            <section className="admin-quick-blocks">
-              <div className="admin-quick-blocks-head">
-                <h2>Barbers</h2>
-                {onBackToDashboard ? <button type="button" className="btn btn--ghost" onClick={onBackToDashboard}>Back to Dashboard</button> : null}
-              </div>
-                            <p className="muted">Manage active barbers and their avatars. Deactivated barbers stay linked to booking history.</p>
-              <form className="admin-barber-form" onSubmit={(event) => void saveBarber(event)}>
-                                <h3>Add barber</h3>
-                <label htmlFor="barber-name">Barber name</label>
-                <input id="barber-name" value={barberNameDraft} onChange={(event) => setBarberNameDraft(event.target.value)} placeholder="e.g. Marco" required />
-                <label htmlFor="barber-avatar">Avatar (optional)</label>
-                <input id="barber-avatar" type="file" accept="image/jpeg,image/png,image/webp" onChange={(event) => setBarberAvatarFile(event.target.files?.[0] ?? null)} />
-                                {barberAvatarPreviewUrl && <img src={barberAvatarPreviewUrl} alt="Selected avatar preview" className="admin-avatar-preview" />}
-                <button type="submit" className="btn btn--primary" disabled={barberSaving}>Save barber</button>
-              </form>
-              <div className="admin-barber-toggle">
-                <label>
-                  <input type="checkbox" checked={showInactiveBarbers} onChange={(event) => setShowInactiveBarbers(event.target.checked)} />
-                  Show inactive
-                </label>
-              </div>
-              {barberSaveMessage && <p className="admin-inline-success">{barberSaveMessage}</p>}
-              {barberSaveError && <p className="admin-inline-error">{barberSaveError}</p>}
-                            <h3>Barbers list</h3>
-              <ul className="admin-barber-list">
-                {visibleBarbersForManagement.map((barber, index) => {
-                  const barberIsActive = normalizeBarberStatus(barber);
-                  const isFirstItem = index === 0;
-                  const isLastItem = index === visibleBarbersForManagement.length - 1;
-
-                  return (
-                    <li key={barber.id} className={`admin-barber-list-item ${barberIsActive ? '' : 'is-inactive'} ${selectedBarberId === barber.id ? 'is-selected' : ''}`} onClick={() => setSelectedBarberId(barber.id)}>
-                      <div className="admin-barber-avatar">
-                        {barber.avatarUrl ? <img src={barber.avatarUrl} alt={barber.name} loading="lazy" /> : <span>{getInitials(barber.name)}</span>}
-                      </div>
-                      <div>
-                        <p className="admin-barber-name">{barber.name}</p>
-                        <p className="muted">{barberIsActive ? 'Active' : 'Inactive'} • Sort {barber.sortOrder ?? index}</p>
-                      </div>
-                      <div className="admin-barber-actions">
-                                                <div className="admin-reorder-controls" role="group" aria-label={`Reorder ${barber.name}`}>
-                          <button
-                            type="button"
-                            className="admin-reorder-btn"
-                            onClick={() => void moveBarber(index, 'up')}
-                            disabled={isFirstItem || barberReordering}
-                            aria-label={`Move ${barber.name} up`}
-                          >
-                            ↑
-                          </button>
-                          <button
-                            type="button"
-                            className="admin-reorder-btn"
-                            onClick={() => void moveBarber(index, 'down')}
-                            disabled={isLastItem || barberReordering}
-                            aria-label={`Move ${barber.name} down`}
-                          >
-                            ↓
-                          </button>
-                        </div>
-
-                        {barberIsActive ? (
-                          <button type="button" className="btn btn--ghost" onClick={() => void updateBarberStatus(barber.id, false)}>Remove</button>
-                        ) : (
-                          <button type="button" className="btn btn--secondary" onClick={() => void updateBarberStatus(barber.id, true)}>Reactivate</button>
-                        )}
-                      </div>
-                    </li>
-                  );
-                })}
-              </ul>
-              <section className="admin-settings-panel">
-                <h3>Working hours</h3>
-                <p className="muted">Editing: {selectedBarber?.name ?? 'No barber selected'}</p>
-                {workingHoursLoading ? <p className="muted">Loading working hours...</p> : <div className="admin-working-hours-grid">{workingHours.map((row) => <div key={row.dayOfWeek} className="admin-working-hours-row"><strong>{WEEK_DAYS[row.dayOfWeek] ?? row.dayOfWeek}</strong><label><input type="checkbox" checked={row.active} onChange={(event) => updateWorkingHour(row.dayOfWeek, { active: event.target.checked })} /> Open</label><input type="time" value={row.startTime} onChange={(event) => updateWorkingHour(row.dayOfWeek, { startTime: event.target.value })} disabled={!row.active} /><input type="time" value={row.endTime} onChange={(event) => updateWorkingHour(row.dayOfWeek, { endTime: event.target.value })} disabled={!row.active} /></div>)}</div>}
-                <button type="button" className="btn btn--primary" onClick={() => void saveWorkingHours()} disabled={!selectedBarberId || workingHoursSaving}>Save working hours</button>
-              </section>
-
-              <section className="admin-settings-panel">
-                <h3>Services</h3>
-                <p className="muted">Select services available for {selectedBarber?.name ?? 'selected barber'}.</p>
-                <div className="admin-services-actions"><button type="button" className="btn btn--secondary" onClick={() => void toggleAllServicesForBarber(true)} disabled={!selectedBarberId || servicesSaving}>All services</button><button type="button" className="btn btn--ghost" onClick={() => void toggleAllServicesForBarber(false)} disabled={!selectedBarberId || servicesSaving}>Clear all</button></div>
-                <div className="admin-services-grid">{services.map((service) => <label key={service.id} className="admin-service-checkbox"><input type="checkbox" checked={enabledServiceIds.has(service.id)} onChange={(event) => void toggleServiceForBarber(service.id, event.target.checked)} disabled={!selectedBarberId || servicesSaving} />{service.name}</label>)}</div>
-              </section>
-
-
-              <p className="muted">These blocks affect booking availability for today.</p>
-              <div className="admin-quick-scope"><label htmlFor="block-scope">Applies to</label><select id="block-scope" value={blockScopeBarberId} onChange={(event) => setBlockScopeBarberId(event.target.value)}><option value="all">All barbers</option>{activeBarbers.map((barber) => <option key={barber.id} value={barber.id}>{barber.name}</option>)}</select></div>
-              <div className="admin-quick-actions"><button type="button" className="btn btn--secondary" onClick={() => void handleQuickBlock30()}>Block 30 min</button><button type="button" className="btn btn--secondary" onClick={() => void handleQuickLunch()}>Lunch</button><button type="button" className="btn btn--secondary" onClick={() => setShowHolidayModal(true)}>Holiday</button></div>
-              {blockSuccessMessage && <p className="admin-inline-success">{blockSuccessMessage}</p>}
-              {blockErrorMessage && <p className="admin-inline-error">{blockErrorMessage}</p>}
-
-              <h3>Today's blocks</h3>
-              <ul className="admin-blocks-list">{timeBlocks.length === 0 ? <li className="muted">No blocks yet.</li> : timeBlocks.map((block) => <li key={block.id}><div><strong>{block.title}</strong><p className="muted">{block.barber?.name ?? 'All barbers'} · {formatBlockRange(block.startAt, block.endAt)}</p></div><button type="button" className="btn btn--ghost" onClick={() => void deleteTimeBlock(block.id)}>Remove</button></li>)}</ul>
-            </section>
+            selectedBarber ? (
+              <BarberProfile
+                barber={selectedBarber}
+                weekDays={WEEK_DAYS}
+                isActive={normalizeBarberStatus(selectedBarber)}
+                totalBookingsServed={selectedBarberStatsCount}
+                services={services}
+                enabledServiceIds={enabledServiceIds}
+                servicesSaving={servicesSaving}
+                workingHours={workingHours}
+                workingHoursLoading={workingHoursLoading}
+                workingHoursSaving={workingHoursSaving}
+                blocks={selectedBarberBlocks}
+                blockTitle={profileBlockTitle}
+                blockStartAt={profileBlockStartInput}
+                blockEndAt={profileBlockEndInput}
+                blockSuccessMessage={blockSuccessMessage}
+                blockErrorMessage={blockErrorMessage}
+                getInitials={getInitials}
+                onBack={() => setSelectedBarberId(null)}
+                onToggleActive={() => void updateBarberStatus(selectedBarber.id, !normalizeBarberStatus(selectedBarber))}
+                onToggleAllServices={(enabled) => void toggleAllServicesForBarber(enabled)}
+                onToggleService={(serviceId, enabled) => void toggleServiceForBarber(serviceId, enabled)}
+                onChangeWorkingHour={(dayOfWeek, field, value) => updateWorkingHour(dayOfWeek, { [field]: value })}
+                onSaveWorkingHours={() => void saveWorkingHours()}
+                onChangeBlockTitle={setProfileBlockTitle}
+                onChangeBlockStartAt={setProfileBlockStartInput}
+                onChangeBlockEndAt={setProfileBlockEndInput}
+                onCreateBlock={() => void createProfileBlock()}
+                onDeleteBlock={(blockId) => void deleteTimeBlock(blockId)}
+                formatBlockRange={formatBlockRange}
+              />
+            ) : (
+              <BarbersOverview
+                barbers={visibleBarbersForManagement}
+                showInactive={showInactiveBarbers}
+                barberNameDraft={barberNameDraft}
+                barberAvatarPreviewUrl={barberAvatarPreviewUrl}
+                barberSaving={barberSaving}
+                barberReordering={barberReordering}
+                barberSaveMessage={barberSaveMessage}
+                barberSaveError={barberSaveError}
+                globalBlocks={globalBlocks}
+                getInitials={getInitials}
+                onBarberNameChange={setBarberNameDraft}
+                onBarberAvatarChange={setBarberAvatarFile}
+                onSubmitAddBarber={(event) => void saveBarber(event)}
+                onShowInactiveChange={setShowInactiveBarbers}
+                onOpenBarber={setSelectedBarberId}
+                onMoveBarber={(index, direction) => void moveBarber(index, direction)}
+                onToggleBarberActive={(barberId, nextActive) => void updateBarberStatus(barberId, nextActive)}
+                formatBlockRange={formatBlockRange}
+              />
+            )
           ) : (
       <>
 
