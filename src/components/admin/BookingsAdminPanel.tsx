@@ -890,7 +890,7 @@ export default function BookingsAdminPanel({ isActive, mode, onBackToDashboard }
           {mode === 'blocks' ? (
             <section className="admin-quick-blocks">
               <div className="admin-quick-blocks-head">
-                <h2>Quick blocks</h2>
+                <h2>Barbers</h2>
                 {onBackToDashboard ? <button type="button" className="btn btn--ghost" onClick={onBackToDashboard}>Back to Dashboard</button> : null}
               </div>
               <p className="muted">These blocks affect booking availability for today.</p>

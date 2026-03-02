@@ -15,7 +15,7 @@ type SectionItem = {
 
 const menuItems: SectionItem[] = [
   { section: 'bookings_dashboard', label: 'Dashboard' },
-  { section: 'bookings_blocks', label: 'Quick Blocks' },
+  { section: 'bookings_blocks', label: 'Barbers' },
   { section: 'bookings_reports', label: 'Reports' },
   { section: 'bookings_history', label: 'History' },
   { section: 'shop_products', label: 'Products' },
