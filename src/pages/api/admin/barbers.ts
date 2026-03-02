@@ -6,6 +6,7 @@ import path from 'node:path';
 import type { APIRoute } from 'astro';
 import { z } from 'zod';
 import { requireAdmin } from '../../../lib/admin/auth';
+import { ensureBarberHasAvailabilityRules } from '../../../lib/admin/defaultAvailability';
 import { prisma } from '../../../lib/db/client';
 
 const MAX_AVATAR_SIZE_BYTES = 5 * 1024 * 1024;
@@ -106,6 +107,10 @@ export const POST: APIRoute = async (ctx) => {
     const barber = id
       ? await prisma.barber.update({ where: { id }, data: payload })
       : await prisma.barber.create({ data: payload });
+    if (barber.active) {
+      await ensureBarberHasAvailabilityRules(barber.id);
+    }
+
 
     return new Response(JSON.stringify({ barber: { ...barber, isActive: barber.active } }));
   }
@@ -127,6 +132,10 @@ export const POST: APIRoute = async (ctx) => {
   const barber = id
     ? await prisma.barber.update({ where: { id }, data })
     : await prisma.barber.create({ data: { name: name ?? 'Barber', email: email || null, avatarUrl: avatarUrl || null, active: typeof isActive === 'boolean' ? isActive : true } });
+  if (barber.active) {
+    await ensureBarberHasAvailabilityRules(barber.id);
+  }
+
 
   return new Response(JSON.stringify({ barber: { ...barber, isActive: barber.active } }));
 
