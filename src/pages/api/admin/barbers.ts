@@ -15,6 +15,7 @@ const jsonSchema = z.object({
   id: z.string().optional(),
   name: z.string().trim().min(1, 'Name is required.').optional(),
   email: z.string().email().optional().or(z.literal('')),
+    avatarUrl: z.string().trim().url().optional().or(z.literal('')),
   active: z.boolean().optional(),
   isActive: z.boolean().optional()
 });
@@ -114,17 +115,18 @@ export const POST: APIRoute = async (ctx) => {
     return new Response(JSON.stringify({ error: parsed.error.flatten() }), { status: 400 });
   }
 
-  const { id, email, name, active, isActive } = parsed.data;
+  const { id, email, name, avatarUrl, active, isActive } = parsed.data;
   const data = {
     ...(name ? { name } : {}),
     ...(typeof active === 'boolean' ? { active } : {}),
     ...(typeof isActive === 'boolean' ? { active: isActive } : {}),
+        ...(typeof avatarUrl === 'string' ? { avatarUrl: avatarUrl || null } : {}),
     email: email || null
   };
 
   const barber = id
     ? await prisma.barber.update({ where: { id }, data })
-    : await prisma.barber.create({ data: { name: name ?? 'Barber', email: email || null, active: typeof isActive === 'boolean' ? isActive : true } });
+    : await prisma.barber.create({ data: { name: name ?? 'Barber', email: email || null, avatarUrl: avatarUrl || null, active: typeof isActive === 'boolean' ? isActive : true } });
 
   return new Response(JSON.stringify({ barber: { ...barber, isActive: barber.active } }));
 
