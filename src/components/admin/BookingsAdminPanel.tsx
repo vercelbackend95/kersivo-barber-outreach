@@ -123,59 +123,43 @@ function getStatusA11yLabel(statusLabel: string) {
   if (statusLabel === 'CONFIRMED · RESCHEDULED') return 'Confirmed and rescheduled';
   return statusLabel.replace(/_/g, ' ').toLowerCase().replace(/(^|\s)\S/g, (char) => char.toUpperCase());
 }
+type StatusIconProps = {
+  className?: string;
+  'aria-label'?: string;
+  title?: string;
+};
+function CheckCircleIcon({ className, ...a11yProps }: StatusIconProps) {
+  return <svg viewBox="0 0 24 24" className={className} fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" {...a11yProps}><circle cx="12" cy="12" r="9" /><path d="m9 12 2 2 4-4" /></svg>;
+}
 
-function getStatusIcon(statusLabel: string) {
-  if (statusLabel === 'CONFIRMED') {
-    return (
-      <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-        <circle cx="12" cy="12" r="9" />
-        <path d="m9 12 2 2 4-4" />
-      </svg>
-    );
-  }
-  if (statusLabel === 'EXPIRED') {
-    return (
-      <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-        <circle cx="12" cy="12" r="9" />
-        <path d="M12 7v5l3 2" />
-      </svg>
-    );
-  }
-  if (statusLabel === 'CANCELLED_BY_CLIENT') {
-    return (
-      <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-        <circle cx="12" cy="8" r="3" />
-        <path d="M5 20a7 7 0 0 1 14 0" />
-        <path d="m5 5 14 14" />
-      </svg>
-    );
-  }
-  if (statusLabel === 'CANCELLED_BY_SHOP') {
-    return (
-      <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-        <circle cx="12" cy="12" r="9" />
-        <path d="M7 7l10 10" />
-      </svg>
-    );
-  }
-  if (statusLabel === 'CONFIRMED · RESCHEDULED') {
-    return (
-      <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-        <path d="M20 7h-6l2-2" />
-        <path d="M4 17h6l-2 2" />
-        <path d="M20 7a8 8 0 0 0-14-3" />
-        <path d="M4 17a8 8 0 0 0 14 3" />
-      </svg>
-    );
-  }
+function ClockIcon({ className, ...a11yProps }: StatusIconProps) {
+  return <svg viewBox="0 0 24 24" className={className} fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" {...a11yProps}><circle cx="12" cy="12" r="9" /><path d="M12 7v5l3 2" /></svg>;
+}
 
-  return (
-    <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-      <circle cx="12" cy="12" r="9" />
-      <path d="M12 8v4" />
-      <circle cx="12" cy="16" r="1" fill="currentColor" stroke="none" />
-    </svg>
-  );
+function UserXIcon({ className, ...a11yProps }: StatusIconProps) {
+  return <svg viewBox="0 0 24 24" className={className} fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" {...a11yProps}><circle cx="12" cy="8" r="3" /><path d="M5 20a7 7 0 0 1 14 0" /><path d="m5 5 14 14" /></svg>;
+}
+
+function BanIcon({ className, ...a11yProps }: StatusIconProps) {
+  return <svg viewBox="0 0 24 24" className={className} fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" {...a11yProps}><circle cx="12" cy="12" r="9" /><path d="M7 7l10 10" /></svg>;
+}
+
+function Repeat2Icon({ className, ...a11yProps }: StatusIconProps) {
+  return <svg viewBox="0 0 24 24" className={className} fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" {...a11yProps}><path d="M20 7h-6l2-2" /><path d="M4 17h6l-2 2" /><path d="M20 7a8 8 0 0 0-14-3" /><path d="M4 17a8 8 0 0 0 14 3" /></svg>;
+}
+
+function AlertCircleIcon({ className, ...a11yProps }: StatusIconProps) {
+  return <svg viewBox="0 0 24 24" className={className} fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" {...a11yProps}><circle cx="12" cy="12" r="9" /><path d="M12 8v4" /><circle cx="12" cy="16" r="1" fill="currentColor" stroke="none" /></svg>;
+}
+
+function getStatusIconMeta(statusLabel: string): { Icon: (props: StatusIconProps) => JSX.Element; className: string; label: string } {
+  if (statusLabel === 'CONFIRMED') return { Icon: CheckCircleIcon, className: 'text-emerald-400', label: getStatusA11yLabel(statusLabel) };
+  if (statusLabel === 'EXPIRED') return { Icon: ClockIcon, className: 'text-amber-400', label: getStatusA11yLabel(statusLabel) };
+  if (statusLabel === 'CANCELLED_BY_CLIENT') return { Icon: UserXIcon, className: 'text-rose-400', label: getStatusA11yLabel(statusLabel) };
+  if (statusLabel === 'CANCELLED_BY_SHOP') return { Icon: BanIcon, className: 'text-rose-400', label: getStatusA11yLabel(statusLabel) };
+  if (statusLabel === 'CONFIRMED · RESCHEDULED') return { Icon: Repeat2Icon, className: 'text-sky-400', label: getStatusA11yLabel(statusLabel) };
+  return { Icon: AlertCircleIcon, className: 'text-amber-400', label: getStatusA11yLabel(statusLabel) };
+
 }
 
 function parseBookingStartAt(startAt: string) {
@@ -1101,19 +1085,22 @@ export default function BookingsAdminPanel({ isActive, mode, onBackToDashboard }
       ) : (
         <div className="listTableWrap">
           <table className="admin-table">
-            <thead><tr><th>Client</th><th className="hidden md:table-cell">Email</th><th>Service</th><th>Barber</th><th>Status</th><th>Start</th><th>Actions</th></tr></thead>
+            <thead><tr><th>Client</th><th className="hidden md:table-cell">Email</th><th>Service</th><th>Barber</th><th>Status</th><th>Start</th>{mode !== 'history' ? <th>Actions</th> : null}</tr></thead>
             <tbody>
               {visibleBookings.map((booking) => {
                 const bookingStatusLabel = getBookingStatusLabel(booking);
-                const bookingStatusA11yLabel = getStatusA11yLabel(bookingStatusLabel);
+                const statusIconMeta = getStatusIconMeta(bookingStatusLabel);
+                const StatusIcon = statusIconMeta.Icon;
+
 
                 return (
                   <tr className={updatedBookingIds.includes(booking.id) ? 'admin-row--updated' : ''} key={booking.id}>
                     <td><button type="button" className="admin-link-button" onClick={() => void openClientProfile(booking.clientId)}>{highlightMatch(booking.fullName)}</button></td>
                     <td className="admin-table-col-email hidden md:table-cell"><button type="button" className="admin-link-button" onClick={() => void openClientProfile(booking.clientId)}>{highlightMatch(booking.email)}</button></td>
 
-                    <td className="admin-table-col-service">{booking.service?.name}</td><td>{booking.barber?.name}</td><td><span className="hidden md:inline">{bookingStatusLabel}</span><span className="inline-flex md:hidden items-center justify-center" aria-label={bookingStatusA11yLabel} title={bookingStatusA11yLabel}>{getStatusIcon(bookingStatusLabel)}</span></td><td className="admin-table-col-start"><span className="hidden md:inline">{formatStartDateTime(booking.startAt)}</span><span className="md:hidden">{formatStartTimeMobile(booking.startAt)}</span></td>
-                    <td className="admin-table-col-actions">{canBeCancelledByShop(booking) ? <button type="button" className="btn btn--secondary admin-cancel-btn" onClick={() => void cancelBookingByShop(booking)} disabled={cancelLoadingBookingId === booking.id}>{cancelLoadingBookingId === booking.id ? 'Cancelling...' : 'Cancel'}</button> : null}</td>
+                    <td className="admin-table-col-service">{booking.service?.name}</td><td>{booking.barber?.name}</td><td className={mode === 'history' ? 'text-center' : ''}>{mode === 'history' ? <span className="inline-flex items-center justify-center"><StatusIcon className={`h-4 w-4 ${statusIconMeta.className}`} aria-label={statusIconMeta.label} title={statusIconMeta.label} /></span> : <><span className="hidden md:inline">{bookingStatusLabel}</span><span className="inline-flex md:hidden items-center justify-center"><StatusIcon className={`h-4 w-4 ${statusIconMeta.className}`} aria-label={statusIconMeta.label} title={statusIconMeta.label} /></span></>}</td><td className="admin-table-col-start"><span className="hidden md:inline">{formatStartDateTime(booking.startAt)}</span><span className="md:hidden">{formatStartTimeMobile(booking.startAt)}</span></td>
+                    {mode !== 'history' ? <td className="admin-table-col-actions">{canBeCancelledByShop(booking) ? <button type="button" className="btn btn--secondary admin-cancel-btn" onClick={() => void cancelBookingByShop(booking)} disabled={cancelLoadingBookingId === booking.id}>{cancelLoadingBookingId === booking.id ? 'Cancelling...' : 'Cancel'}</button> : null}</td> : null}
+
                   </tr>
                 );
               })}
