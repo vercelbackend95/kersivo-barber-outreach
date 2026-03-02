@@ -6,13 +6,19 @@ import '../../styles/global.css';
 import '../../styles/components/buttons.css';
 import '../../styles/components/booking.css';
 
-const [services, barbers, barberServiceLinks] = await Promise.all([
+const [services, barbers] = await Promise.all([
   prisma.service.findMany({ where: { active: true }, orderBy: { createdAt: 'asc' } }),
   prisma.barber.findMany({
     where: { active: true },
-    orderBy: [{ sortOrder: 'asc' }, { createdAt: 'asc' }]
-  }),
-  prisma.barberService.findMany({ select: { barberId: true, serviceId: true } })
+    orderBy: [{ sortOrder: 'asc' }, { createdAt: 'asc' }],
+    include: {
+      barberServices: {
+        select: {
+          serviceId: true
+        }
+      }
+    }
+  })
 ]);
 ---
 <html lang="en">
@@ -24,7 +30,7 @@ const [services, barbers, barberServiceLinks] = await Promise.all([
         barbers={barbers.map((barber) => ({
           id: barber.id,
           name: barber.name,
-          serviceIds: barberServiceLinks.filter((link) => link.barberId === barber.id).map((link) => link.serviceId)
+          serviceIds: barber.barberServices.map((link) => link.serviceId)
         }))}
       />
     </main>
