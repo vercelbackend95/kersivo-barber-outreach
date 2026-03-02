@@ -1107,6 +1107,7 @@ export default function BookingsAdminPanel({ isActive, mode, onBackToDashboard }
               {visibleBookings.map((booking) => {
                 const bookingStatusLabel = getBookingStatusLabel(booking);
                 const statusIconMeta = getStatusIconMeta(booking, bookingStatusLabel);
+                                const StatusIcon = statusIconMeta.Icon;
                 const fullEmail = booking.email;
 
 
