@@ -81,6 +81,8 @@ const POLL_INTERVAL_MS = 15000;
 const LAST_UPDATED_REFRESH_MS = 1000;
 const UPDATED_ROW_HIGHLIGHT_MS = 2000;
 const MOBILE_BREAKPOINT_PX = 768;
+const MOBILE_RECENT_BARBERS_COUNT = 5;
+const DESKTOP_RECENT_BARBERS_COUNT = 11;
 
 function getTodayLondonDate() {
   return formatInTimeZone(new Date(), ADMIN_TIMEZONE, 'yyyy-MM-dd');
@@ -570,7 +572,7 @@ export default function BookingsAdminPanel({ isActive, mode, onBackToDashboard }
 
   const allBarbersSorted = useMemo(() => [...barbers].sort((a, b) => a.name.localeCompare(b.name, 'en')), [barbers]);
 
-  const recentHistoryBarberIds = useMemo(() => {
+  const visibleRecentBarberIds = useMemo(() => {
     if (mode !== 'history') return [] as string[];
     const latestByBarber = new Map<string, number>();
 
@@ -582,16 +584,16 @@ export default function BookingsAdminPanel({ isActive, mode, onBackToDashboard }
 
     return [...latestByBarber.entries()]
       .sort((a, b) => b[1] - a[1])
-      .slice(0, 5)
+      .slice(0, isMobileViewport ? MOBILE_RECENT_BARBERS_COUNT : DESKTOP_RECENT_BARBERS_COUNT)
       .map(([barberId]) => barberId);
 
-  }, [bookings, mode]);
+  }, [bookings, isMobileViewport, mode]);
   const recentBarbers = useMemo(() => {
     const byId = new Map(barbers.map((barber) => [barber.id, barber]));
-    return recentHistoryBarberIds
+    return visibleRecentBarberIds
       .map((barberId) => byId.get(barberId))
       .filter((barber): barber is Barber => Boolean(barber));
-  }, [barbers, recentHistoryBarberIds]);
+  }, [barbers, visibleRecentBarberIds]);
 
 
 
@@ -844,46 +846,55 @@ export default function BookingsAdminPanel({ isActive, mode, onBackToDashboard }
           <div className="admin-history-row">
             <label>Recent barbers</label>
             <div className="admin-history-barber-controls">
-              <div className="admin-history-recent-barbers" role="group" aria-label="Recent barbers">
-                <button
-                  type="button"
-                  className={`admin-history-avatar admin-history-avatar--all ${historyBarberId === 'all' ? 'is-active' : ''}`}
-                  onClick={() => setHistoryBarberId('all')}
-                  aria-pressed={historyBarberId === 'all'}
-                >
-                  ALL
-                </button>
-                {recentBarbers.map((barber) => {
-                  const hashIndex = hashValue(`${barber.id}:${barber.name}`) % 6;
-                  const initials = getInitials(barber.name);
-                  const isActive = historyBarberId === barber.id;
+              <div className="admin-history-recent-scroll">
+                <div className="admin-history-recent-barbers" role="group" aria-label="Recent barbers">
 
-                  return (
-                    <button
-                      key={barber.id}
-                      type="button"
-                      className={`admin-history-avatar admin-history-avatar--tone-${hashIndex} ${isActive ? 'is-active' : ''}`}
-                      onClick={() => setHistoryBarberId(barber.id)}
-                      aria-pressed={isActive}
-                      aria-label={`Filter by ${barber.name}`}
-                      title={barber.name}
-                    >
-                      <span>{initials}</span>
-                    </button>
-                  );
-                })}
-
-                <div className="admin-history-more" ref={historyMoreRef}>
                   <button
                     type="button"
-                    className="admin-history-more-trigger"
-                    onClick={() => setIsHistoryMoreOpen((current) => !current)}
-                    aria-haspopup="menu"
-                    aria-expanded={isHistoryMoreOpen}
-                    aria-label="Show all barbers"
+                    className={`admin-history-avatar admin-history-avatar--all ${historyBarberId === 'all' ? 'is-active' : ''}`}
+                    onClick={() => setHistoryBarberId('all')}
+                    aria-pressed={historyBarberId === 'all'}
+
                   >
-                    …
+                                        ALL
                   </button>
+                                    {recentBarbers.map((barber) => {
+                    const hashIndex = hashValue(`${barber.id}:${barber.name}`) % 6;
+                    const initials = getInitials(barber.name);
+                    const isActive = historyBarberId === barber.id;
+
+                    return (
+                      <button
+                        key={barber.id}
+                        type="button"
+                        className={`admin-history-avatar admin-history-avatar--tone-${hashIndex} ${isActive ? 'is-active' : ''}`}
+                        onClick={() => setHistoryBarberId(barber.id)}
+                        aria-pressed={isActive}
+                        aria-label={`Filter by ${barber.name}`}
+                        title={barber.name}
+                      >
+                        <span>{initials}</span>
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
+
+              <div className="admin-history-control-actions">
+                <div className="admin-history-more" ref={historyMoreRef}>
+                    <button
+                      type="button"
+                      className={`admin-history-icon-button ${isHistoryMoreOpen ? 'is-active' : ''}`}
+                      onClick={() => setIsHistoryMoreOpen((current) => !current)}
+                      aria-haspopup="menu"
+                      aria-expanded={isHistoryMoreOpen}
+                      aria-label="Show all barbers"
+                    >
+                      <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+                        <path d="M4 6.5A1.5 1.5 0 0 1 5.5 5h13A1.5 1.5 0 0 1 20 6.5v1A1.5 1.5 0 0 1 18.5 9h-13A1.5 1.5 0 0 1 4 7.5v-1Zm0 5A1.5 1.5 0 0 1 5.5 10h13a1.5 1.5 0 0 1 1.5 1.5v1a1.5 1.5 0 0 1-1.5 1.5h-13A1.5 1.5 0 0 1 4 12.5v-1Zm1.5 3.5A1.5 1.5 0 0 0 4 16.5v1A1.5 1.5 0 0 0 5.5 19h13a1.5 1.5 0 0 0 1.5-1.5v-1a1.5 1.5 0 0 0-1.5-1.5h-13Z" fill="currentColor" />
+                      </svg>
+                    </button>
+
                   {isHistoryMoreOpen ? (
                     <div className="admin-history-more-menu" role="menu" aria-label="All barbers">
                       <button
@@ -916,16 +927,15 @@ export default function BookingsAdminPanel({ isActive, mode, onBackToDashboard }
                     </div>
                   ) : null}
                 </div>
+                <HistoryDateRangePicker
+                  dateRange={historyDateRange}
+                  isMobileViewport={isMobileViewport}
+                  timezone={ADMIN_TIMEZONE}
+                  onChangeRange={setHistoryDateRange}
+                  onClear={() => setHistoryDateRange(null)}
+                />
 
               </div>
-              <HistoryDateRangePicker
-                dateRange={historyDateRange}
-                isMobileViewport={isMobileViewport}
-                timezone={ADMIN_TIMEZONE}
-                onChangeRange={setHistoryDateRange}
-                onClear={() => setHistoryDateRange(null)}
-              />
-
             </div>
           </div>
         </section>
