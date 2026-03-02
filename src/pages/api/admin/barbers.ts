@@ -128,12 +128,23 @@ export const POST: APIRoute = async (ctx) => {
       ? await prisma.barber.update({ where: { id }, data: payload })
       : await prisma.$transaction(async (tx) => {
           const maxSort = await tx.barber.aggregate({ _max: { sortOrder: true } });
-          return tx.barber.create({ data: { ...payload, sortOrder: (maxSort._max.sortOrder ?? -1) + 1 } });
+          const createdBarber = await tx.barber.create({ data: { ...payload, sortOrder: (maxSort._max.sortOrder ?? -1) + 1 } });
+          const services = await tx.service.findMany({ where: { active: true }, select: { id: true } });
+
+          if (services.length > 0) {
+            await tx.barberService.createMany({
+              data: services.map((service) => ({ barberId: createdBarber.id, serviceId: service.id })),
+              skipDuplicates: true
+            });
+          }
+
+          return createdBarber;
+
         });
 
     if (barber.active) {
       await ensureBarberHasAvailabilityRules(barber.id);
-            await ensureBarberHasAllServices(barber.id);
+      await ensureBarberHasAllServices(barber.id);
     }
 
 
@@ -158,7 +169,7 @@ export const POST: APIRoute = async (ctx) => {
     ? await prisma.barber.update({ where: { id }, data })
     : await prisma.$transaction(async (tx) => {
         const maxSort = await tx.barber.aggregate({ _max: { sortOrder: true } });
-        return tx.barber.create({
+        const createdBarber = await tx.barber.create({
           data: {
             name: name ?? 'Barber',
             email: email || null,
@@ -167,11 +178,22 @@ export const POST: APIRoute = async (ctx) => {
             sortOrder: (maxSort._max.sortOrder ?? -1) + 1
           }
         });
+                const services = await tx.service.findMany({ where: { active: true }, select: { id: true } });
+
+        if (services.length > 0) {
+          await tx.barberService.createMany({
+            data: services.map((service) => ({ barberId: createdBarber.id, serviceId: service.id })),
+            skipDuplicates: true
+          });
+        }
+
+        return createdBarber;
+
       });
 
   if (barber.active) {
     await ensureBarberHasAvailabilityRules(barber.id);
-        await ensureBarberHasAllServices(barber.id);
+    await ensureBarberHasAllServices(barber.id);
   }
 
 
