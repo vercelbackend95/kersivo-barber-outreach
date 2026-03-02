@@ -65,7 +65,6 @@ export const GET: APIRoute = async (ctx) => {
     active: boolean;
     sortOrder: number;
     createdAt: Date;
-    barberServices: { serviceId: string }[];
   };
 
   let barbers: BarberListItem[];
@@ -76,7 +75,7 @@ export const GET: APIRoute = async (ctx) => {
   try {
     barbers = await prisma.barber.findMany({
       orderBy: [{ sortOrder: 'asc' }, { name: 'asc' }, { createdAt: 'asc' }],
-      select: { id: true, name: true, email: true, avatarUrl: true, active: true, sortOrder: true, createdAt: true, barberServices: { select: { serviceId: true } } }
+      select: { id: true, name: true, email: true, avatarUrl: true, active: true, sortOrder: true, createdAt: true }
     });
   } catch (error) {
         const isMissingSortOrderColumn = error instanceof Error
@@ -92,16 +91,28 @@ export const GET: APIRoute = async (ctx) => {
 
     const fallbackBarbers = await prisma.barber.findMany({
       orderBy: [{ name: 'asc' }, { createdAt: 'asc' }],
-      select: { id: true, name: true, email: true, avatarUrl: true, active: true, createdAt: true, barberServices: { select: { serviceId: true } } }
+      select: { id: true, name: true, email: true, avatarUrl: true, active: true, createdAt: true }
     });
 
     barbers = fallbackBarbers.map((barber, index) => ({ ...barber, sortOrder: index }));
   }
+  const links = await prisma.barberService.findMany({ select: { barberId: true, serviceId: true } });
+  const serviceIdsByBarber = new Map<string, string[]>();
+
+  for (const link of links) {
+    const existing = serviceIdsByBarber.get(link.barberId);
+    if (existing) {
+      existing.push(link.serviceId);
+    } else {
+      serviceIdsByBarber.set(link.barberId, [link.serviceId]);
+    }
+  }
+
 
   return new Response(JSON.stringify({
     barbers: barbers.map((barber) => ({
       ...barber,
-            serviceIds: barber.barberServices.map((item) => item.serviceId),
+      serviceIds: serviceIdsByBarber.get(barber.id) ?? [],
       isActive: barber.active
     }))
   }));
