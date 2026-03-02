@@ -2765,23 +2765,15 @@
   z-index: 140;
   display: grid;
   align-items: end;
-}
-.admin-barber-sheet-backdrop {
-  position: absolute;
-  inset: 0;
-  background: rgb(0 0 0 / 0.56);
-
-
+  padding-top: env(safe-area-inset-top);
+  overscroll-behavior: contain;
 }
 
 .admin-barber-sheet {
   position: relative;
-  left: 0;
-  right: 0;
-  bottom: 0;
   width: 100%;
   max-width: 100vw;
-  height: min(85dvh, 720px);
+  max-height: min(88dvh, 720px);
   background: var(--surface);
   border: 1px solid var(--border);
   border-bottom: 0;
@@ -2839,13 +2831,13 @@
   .admin-barber-sheet-layer {
     align-items: center;
     justify-items: center;
-
+    padding: 1rem;
   }
 
   .admin-barber-sheet {
     width: min(100%, 560px);
     max-width: calc(100vw - 2rem);
-    height: min(90dvh, 760px);
+    max-height: min(90dvh, 760px);
     border-bottom: 1px solid var(--border);
   }
 
