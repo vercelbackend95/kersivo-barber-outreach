@@ -26,6 +26,7 @@ type Barber = {
   avatarUrl?: string | null;
   isActive?: boolean;
   active?: boolean;
+  sortOrder?: number;
 };
 
 type TimeBlock = {
@@ -356,12 +357,13 @@ export default function BookingsAdminPanel({ isActive, mode, onBackToDashboard }
   const [isCheckingSession, setIsCheckingSession] = useState(true);
   const [bookings, setBookings] = useState<Booking[]>([]);
   const [barbers, setBarbers] = useState<Barber[]>([]);
-    const [showInactiveBarbers, setShowInactiveBarbers] = useState(false);
+  const [showInactiveBarbers, setShowInactiveBarbers] = useState(false);
   const [barberNameDraft, setBarberNameDraft] = useState('');
   const [barberAvatarFile, setBarberAvatarFile] = useState<File | null>(null);
   const [barberSaveMessage, setBarberSaveMessage] = useState('');
   const [barberSaveError, setBarberSaveError] = useState('');
   const [barberSaving, setBarberSaving] = useState(false);
+  const [barberReordering, setBarberReordering] = useState(false);
 
   const [timeBlocks, setTimeBlocks] = useState<TimeBlock[]>([]);
   const [error, setError] = useState('');
@@ -369,7 +371,7 @@ export default function BookingsAdminPanel({ isActive, mode, onBackToDashboard }
   const [lastUpdatedAt, setLastUpdatedAt] = useState<number | null>(null);
   const [nowMs, setNowMs] = useState(() => Date.now());
   const [clientSearchQuery, setClientSearchQuery] = useState('');
-    const [debouncedSearchQuery, setDebouncedSearchQuery] = useState('');
+  const [debouncedSearchQuery, setDebouncedSearchQuery] = useState('');
   const [isSearchDebouncing, setIsSearchDebouncing] = useState(false);
 
   const [activeView, setActiveView] = useState<AdminBookingView>('timeline');
@@ -694,7 +696,7 @@ export default function BookingsAdminPanel({ isActive, mode, onBackToDashboard }
       .sort((a, b) => new Date(b.startAt).getTime() - new Date(a.startAt).getTime());
   }, [bookings, historyBarberId, mode]);
 
-  const allBarbersSorted = useMemo(() => [...barbers].sort((a, b) => a.name.localeCompare(b.name, 'en')), [barbers]);
+  const allBarbersSorted = useMemo(() => [...barbers].sort((a, b) => (a.sortOrder ?? Number.MAX_SAFE_INTEGER) - (b.sortOrder ?? Number.MAX_SAFE_INTEGER) || a.name.localeCompare(b.name, 'en')), [barbers]);
   const activeBarbers = useMemo(() => allBarbersSorted.filter((barber) => normalizeBarberStatus(barber)), [allBarbersSorted]);
   const visibleBarbersForManagement = useMemo(() => showInactiveBarbers ? allBarbersSorted : activeBarbers, [activeBarbers, allBarbersSorted, showInactiveBarbers]);
 
@@ -956,6 +958,47 @@ export default function BookingsAdminPanel({ isActive, mode, onBackToDashboard }
     setBarberSaveMessage(isActive ? 'Barber reactivated.' : 'Barber deactivated.');
     await fetchBarbers();
   }
+  async function saveBarberOrder(orderedIds: string[]) {
+    setBarberReordering(true);
+    setBarberSaveMessage('');
+    setBarberSaveError('');
+
+    try {
+      const response = await fetch('/api/admin/barbers/reorder', {
+        method: 'POST',
+        credentials: 'same-origin',
+        headers: { 'content-type': 'application/json' },
+        body: JSON.stringify({ orderedIds, includeInactive: showInactiveBarbers })
+      });
+      const payload = await response.json().catch(() => ({}));
+      if (!response.ok) {
+        setBarberSaveError((payload as { error?: string }).error ?? 'Could not reorder barbers.');
+        await fetchBarbers();
+        return;
+      }
+
+      if (Array.isArray((payload as { barbers?: Barber[] }).barbers)) {
+        setBarbers((payload as { barbers: Barber[] }).barbers);
+      }
+      setBarberSaveMessage('Barber order saved.');
+    } catch (orderError) {
+      setBarberSaveError(orderError instanceof Error ? orderError.message : 'Could not reorder barbers.');
+      await fetchBarbers();
+    } finally {
+      setBarberReordering(false);
+    }
+  }
+
+  async function moveBarber(index: number, direction: 'up' | 'down') {
+    const maxIndex = visibleBarbersForManagement.length - 1;
+    const nextIndex = direction === 'up' ? index - 1 : index + 1;
+    if (index < 0 || index > maxIndex || nextIndex < 0 || nextIndex > maxIndex) return;
+
+    const orderedIds = visibleBarbersForManagement.map((barber) => barber.id);
+    const [moved] = orderedIds.splice(index, 1);
+    orderedIds.splice(nextIndex, 0, moved);
+    await saveBarberOrder(orderedIds);
+  }
 
 
 
@@ -997,8 +1040,11 @@ export default function BookingsAdminPanel({ isActive, mode, onBackToDashboard }
               {barberSaveMessage && <p className="admin-inline-success">{barberSaveMessage}</p>}
               {barberSaveError && <p className="admin-inline-error">{barberSaveError}</p>}
               <ul className="admin-barber-list">
-                {visibleBarbersForManagement.map((barber) => {
+                {visibleBarbersForManagement.map((barber, index) => {
                   const barberIsActive = normalizeBarberStatus(barber);
+                  const isFirstItem = index === 0;
+                  const isLastItem = index === visibleBarbersForManagement.length - 1;
+
                   return (
                     <li key={barber.id} className={`admin-barber-list-item ${barberIsActive ? '' : 'is-inactive'}`}>
                       <div className="admin-barber-avatar">
@@ -1006,9 +1052,30 @@ export default function BookingsAdminPanel({ isActive, mode, onBackToDashboard }
                       </div>
                       <div>
                         <p className="admin-barber-name">{barber.name}</p>
-                        <p className="muted">{barberIsActive ? 'Active' : 'Inactive'}</p>
+                        <p className="muted">{barberIsActive ? 'Active' : 'Inactive'} • Sort {barber.sortOrder ?? index}</p>
                       </div>
                       <div className="admin-barber-actions">
+                                                <div className="admin-reorder-controls" role="group" aria-label={`Reorder ${barber.name}`}>
+                          <button
+                            type="button"
+                            className="admin-reorder-btn"
+                            onClick={() => void moveBarber(index, 'up')}
+                            disabled={isFirstItem || barberReordering}
+                            aria-label={`Move ${barber.name} up`}
+                          >
+                            ↑
+                          </button>
+                          <button
+                            type="button"
+                            className="admin-reorder-btn"
+                            onClick={() => void moveBarber(index, 'down')}
+                            disabled={isLastItem || barberReordering}
+                            aria-label={`Move ${barber.name} down`}
+                          >
+                            ↓
+                          </button>
+                        </div>
+
                         {barberIsActive ? (
                           <button type="button" className="btn btn--ghost" onClick={() => void updateBarberStatus(barber.id, false)}>Remove</button>
                         ) : (

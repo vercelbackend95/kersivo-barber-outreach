@@ -80,12 +80,14 @@ model Barber {
   email      String?
   avatarUrl  String?
   active     Boolean            @default(true)
+  sortOrder  Int                @default(0)
   createdAt  DateTime           @default(now())
   updatedAt  DateTime           @updatedAt
   bookings   Booking[]
   rules      AvailabilityRule[]
   timeOff    BarberTimeOff[]
   timeBlocks TimeBlock[]
+  @@index([active, sortOrder])
 }
 
 model AvailabilityRule {

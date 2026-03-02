@@ -58,8 +58,9 @@ export const GET: APIRoute = async (ctx) => {
   if (unauthorized) return unauthorized;
 
   const barbers = await prisma.barber.findMany({
-    orderBy: { createdAt: 'asc' },
-    select: { id: true, name: true, email: true, avatarUrl: true, active: true, createdAt: true }
+    orderBy: [{ sortOrder: 'asc' }, { createdAt: 'asc' }],
+    select: { id: true, name: true, email: true, avatarUrl: true, active: true, sortOrder: true, createdAt: true }
+
   });
 
   return new Response(JSON.stringify({
@@ -106,7 +107,11 @@ export const POST: APIRoute = async (ctx) => {
 
     const barber = id
       ? await prisma.barber.update({ where: { id }, data: payload })
-      : await prisma.barber.create({ data: payload });
+      : await prisma.$transaction(async (tx) => {
+          const maxSort = await tx.barber.aggregate({ _max: { sortOrder: true } });
+          return tx.barber.create({ data: { ...payload, sortOrder: (maxSort._max.sortOrder ?? -1) + 1 } });
+        });
+
     if (barber.active) {
       await ensureBarberHasAvailabilityRules(barber.id);
     }
@@ -131,7 +136,19 @@ export const POST: APIRoute = async (ctx) => {
 
   const barber = id
     ? await prisma.barber.update({ where: { id }, data })
-    : await prisma.barber.create({ data: { name: name ?? 'Barber', email: email || null, avatarUrl: avatarUrl || null, active: typeof isActive === 'boolean' ? isActive : true } });
+    : await prisma.$transaction(async (tx) => {
+        const maxSort = await tx.barber.aggregate({ _max: { sortOrder: true } });
+        return tx.barber.create({
+          data: {
+            name: name ?? 'Barber',
+            email: email || null,
+            avatarUrl: avatarUrl || null,
+            active: typeof isActive === 'boolean' ? isActive : true,
+            sortOrder: (maxSort._max.sortOrder ?? -1) + 1
+          }
+        });
+      });
+
   if (barber.active) {
     await ensureBarberHasAvailabilityRules(barber.id);
   }
