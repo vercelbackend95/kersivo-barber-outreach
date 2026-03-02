@@ -1200,6 +1200,14 @@
 .admin-email-desktop {
   display: inline;
 }
+.admin-service-desktop {
+  display: inline;
+}
+
+.admin-service-mobile {
+  display: none;
+}
+
 
 .admin-email-mobile {
   display: none;
@@ -1244,6 +1252,7 @@
   .admin-status-label-desktop,
   .admin-start-desktop,
   .admin-email-desktop,
+    .admin-service-desktop,
   .admin-status-heading-desktop {
 
 
@@ -1257,6 +1266,7 @@
   }
   
   .admin-email-mobile,
+    .admin-service-mobile,
   .admin-status-heading-mobile {
 
     display: inline;

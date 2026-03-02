@@ -85,6 +85,21 @@ const MOBILE_BREAKPOINT_PX = 768;
 const MOBILE_RECENT_BARBERS_COUNT = 5;
 const DESKTOP_RECENT_BARBERS_COUNT = 11;
 
+const MOBILE_HISTORY_SERVICE_SHORTCUTS: Record<string, string> = {
+  haircut: 'H',
+  'haircut + beard': 'H+B',
+  'haircut & beard': 'H+B',
+  'beard trim': 'BT',
+  'skin fade': 'SF'
+};
+
+function getMobileHistoryServiceLabel(serviceName?: string | null) {
+  const normalizedServiceName = (serviceName ?? '').trim().replace(/\s+/g, ' ').toLowerCase();
+  if (!normalizedServiceName) return '—';
+  return MOBILE_HISTORY_SERVICE_SHORTCUTS[normalizedServiceName] ?? serviceName ?? '—';
+}
+
+
 function getTodayLondonDate() {
   return formatInTimeZone(new Date(), ADMIN_TIMEZONE, 'yyyy-MM-dd');
 }
@@ -1118,7 +1133,7 @@ export default function BookingsAdminPanel({ isActive, mode, onBackToDashboard }
                     <td><button type="button" className="admin-link-button" onClick={() => void openClientProfile(booking.clientId)}>{highlightMatch(booking.fullName)}</button></td>
                     <td className={`admin-table-col-email ${mode === 'history' ? '' : 'hidden md:table-cell'}`}><button type="button" className="admin-link-button" onClick={() => void openClientProfile(booking.clientId)}><span className="admin-email-mobile" title={fullEmail} aria-label={fullEmail}>{short}</span><span className="admin-email-desktop">{fullEmail}</span></button></td>
 
-                    <td className="admin-table-col-service">{booking.service?.name}</td><td>{booking.barber?.name}</td><td className={mode === 'history' ? 'admin-table-col-status admin-table-col-status--history' : 'admin-table-col-status'}>{mode === 'history' ? <span className="admin-status-icon-wrap"><StatusIcon className={`admin-status-icon ${statusIconMeta.className}`} aria-label={statusIconMeta.label} title={statusIconMeta.label} /></span> : <><span className="admin-status-label-desktop">{bookingStatusLabel}</span><span className="admin-status-icon-wrap admin-status-icon-wrap--mobile"><StatusIcon className={`admin-status-icon ${statusIconMeta.className}`} aria-label={statusIconMeta.label} title={statusIconMeta.label} /></span></>}</td><td className="admin-table-col-start"><span className="admin-start-desktop">{formatStartDateTime(booking.startAt)}</span><span className="admin-start-mobile">{formatStartTimeMobile(booking.startAt)}</span></td>
+                    <td className="admin-table-col-service"><span className="admin-service-desktop">{booking.service?.name}</span><span className="admin-service-mobile">{mode === 'history' ? getMobileHistoryServiceLabel(booking.service?.name) : booking.service?.name}</span></td><td>{booking.barber?.name}</td><td className={mode === 'history' ? 'admin-table-col-status admin-table-col-status--history' : 'admin-table-col-status'}>{mode === 'history' ? <span className="admin-status-icon-wrap"><StatusIcon className={`admin-status-icon ${statusIconMeta.className}`} aria-label={statusIconMeta.label} title={statusIconMeta.label} /></span> : <><span className="admin-status-label-desktop">{bookingStatusLabel}</span><span className="admin-status-icon-wrap admin-status-icon-wrap--mobile"><StatusIcon className={`admin-status-icon ${statusIconMeta.className}`} aria-label={statusIconMeta.label} title={statusIconMeta.label} /></span></>}</td><td className="admin-table-col-start"><span className="admin-start-desktop">{formatStartDateTime(booking.startAt)}</span><span className="admin-start-mobile">{formatStartTimeMobile(booking.startAt)}</span></td>
                     {mode !== 'history' ? <td className="admin-table-col-actions">{canBeCancelledByShop(booking) ? <button type="button" className="btn btn--secondary admin-cancel-btn" onClick={() => void cancelBookingByShop(booking)} disabled={cancelLoadingBookingId === booking.id}>{cancelLoadingBookingId === booking.id ? 'Cancelling...' : 'Cancel'}</button> : null}</td> : null}
 
                   </tr>
