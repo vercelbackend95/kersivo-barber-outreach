@@ -2,6 +2,7 @@ import React, { memo, useEffect, useMemo, useRef } from 'react';
 import { formatInTimeZone } from 'date-fns-tz';
 import { getServiceCode } from '../../lib/booking/serviceCode';
 import { minutesInLondonDay } from '../../lib/booking/time';
+import { getBookingStatusTone } from './bookingStatus';
 type TimelineBarber = {
   id: string;
   name: string;
@@ -110,16 +111,6 @@ function getInitials(fullName: string) {
   if (parts.length === 1) return parts[0].slice(0, 2).toUpperCase();
 
   return `${parts[0][0] ?? ''}${parts[parts.length - 1][0] ?? ''}`.toUpperCase();
-}
-
-
-function getBookingTimelineStatus(booking: TimelineBooking) {
-  if (booking.status.startsWith('CANCELLED')) return 'cancelled';
-  if (booking.status === 'PENDING_CONFIRMATION') return 'pending';
-  const hasRescheduledFlag = Boolean(booking.rescheduledAt) || booking.status.includes('RESCHEDULED');
-  if (hasRescheduledFlag) return 'rescheduled';
-  if (booking.status === 'CONFIRMED') return 'confirmed';
-  return 'pending';
 }
 
 
@@ -330,7 +321,7 @@ function TodayTimeline({ barbers, bookings, timeBlocks, selectedDate, isSearchAc
                 <button
                   type="button"
                   key={item.id}
-                  className={`admin-timeline-card admin-timeline-card--booking admin-timeline-card--${getBookingTimelineStatus(item.booking)} ${isSearchActive ? 'admin-timeline-card--search-match' : ''}`}
+                  className={`admin-timeline-card admin-timeline-card--booking admin-timeline-card--${getBookingStatusTone(item.booking)} ${isSearchActive ? 'admin-timeline-card--search-match' : ''}`}
                   style={{ left: `${item.leftPct}%`, width: `${item.widthPct}%`, top: `${item.topPx}px`, height: `${item.heightPx}px` }}
                   onClick={() => onBookingClick(item.booking)}
                                     title={`${item.startLabel} · ${item.booking.service?.name ?? 'Service'} · ${item.booking.fullName}`}

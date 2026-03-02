@@ -3,6 +3,7 @@ import { formatInTimeZone, fromZonedTime, toZonedTime } from 'date-fns-tz';
 import TodayTimeline from './TodayTimeline';
 import AdminErrorBoundary from './AdminErrorBoundary';
 import HistoryDateRangePicker from './HistoryDateRangePicker';
+import { getBookingStatusTone, getStatusTextColorClass } from './bookingStatus';
 
 type Booking = {
   id: string;
@@ -152,13 +153,14 @@ function AlertCircleIcon({ className, ...a11yProps }: StatusIconProps) {
   return <svg viewBox="0 0 24 24" className={className} fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" {...a11yProps}><circle cx="12" cy="12" r="9" /><path d="M12 8v4" /><circle cx="12" cy="16" r="1" fill="currentColor" stroke="none" /></svg>;
 }
 
-function getStatusIconMeta(statusLabel: string): { Icon: (props: StatusIconProps) => JSX.Element; className: string; label: string } {
-  if (statusLabel === 'CONFIRMED') return { Icon: CheckCircleIcon, className: 'text-emerald-400', label: getStatusA11yLabel(statusLabel) };
-  if (statusLabel === 'EXPIRED') return { Icon: ClockIcon, className: 'text-amber-400', label: getStatusA11yLabel(statusLabel) };
-  if (statusLabel === 'CANCELLED_BY_CLIENT') return { Icon: UserXIcon, className: 'text-rose-400', label: getStatusA11yLabel(statusLabel) };
-  if (statusLabel === 'CANCELLED_BY_SHOP') return { Icon: BanIcon, className: 'text-rose-400', label: getStatusA11yLabel(statusLabel) };
-  if (statusLabel === 'CONFIRMED · RESCHEDULED') return { Icon: Repeat2Icon, className: 'text-sky-400', label: getStatusA11yLabel(statusLabel) };
-  return { Icon: AlertCircleIcon, className: 'text-amber-400', label: getStatusA11yLabel(statusLabel) };
+function getStatusIconMeta(booking: Booking, statusLabel: string): { Icon: (props: StatusIconProps) => JSX.Element; className: string; label: string } {
+  if (statusLabel === 'CONFIRMED') return { Icon: CheckCircleIcon, className: getStatusTextColorClass(getBookingStatusTone(booking)), label: getStatusA11yLabel(statusLabel) };
+  if (statusLabel === 'EXPIRED') return { Icon: ClockIcon, className: getStatusTextColorClass(getBookingStatusTone(booking)), label: getStatusA11yLabel(statusLabel) };
+  if (statusLabel === 'CANCELLED_BY_CLIENT') return { Icon: UserXIcon, className: getStatusTextColorClass(getBookingStatusTone(booking)), label: getStatusA11yLabel(statusLabel) };
+  if (statusLabel === 'CANCELLED_BY_SHOP') return { Icon: BanIcon, className: getStatusTextColorClass(getBookingStatusTone(booking)), label: getStatusA11yLabel(statusLabel) };
+  if (statusLabel === 'CONFIRMED · RESCHEDULED') return { Icon: Repeat2Icon, className: getStatusTextColorClass(getBookingStatusTone(booking)), label: getStatusA11yLabel(statusLabel) };
+  return { Icon: AlertCircleIcon, className: getStatusTextColorClass(getBookingStatusTone(booking)), label: getStatusA11yLabel(statusLabel) };
+
 
 }
 
@@ -177,8 +179,16 @@ function parseBookingStartAt(startAt: string) {
 
 function formatStartDateTime(startAt: string) {
   const parsedDate = parseBookingStartAt(startAt);
-  if (!parsedDate) return startAt;
-  return parsedDate.toLocaleString('en-GB', { timeZone: ADMIN_TIMEZONE });
+  if (parsedDate) return formatInTimeZone(parsedDate, ADMIN_TIMEZONE, 'dd/MM/yyyy, HH:mm');
+
+  if (startAt.includes(',')) {
+    const [datePart, timePart = ''] = startAt.split(',');
+    const normalizedTime = timePart.trim().match(/(\d{2}:\d{2})/)?.[1];
+    if (datePart.trim() && normalizedTime) return `${datePart.trim()}, ${normalizedTime}`;
+  }
+
+  return startAt;
+
 }
 
 function formatStartTimeMobile(startAt: string) {
@@ -1089,7 +1099,7 @@ export default function BookingsAdminPanel({ isActive, mode, onBackToDashboard }
             <tbody>
               {visibleBookings.map((booking) => {
                 const bookingStatusLabel = getBookingStatusLabel(booking);
-                const statusIconMeta = getStatusIconMeta(bookingStatusLabel);
+                const statusIconMeta = getStatusIconMeta(booking, bookingStatusLabel);
                 const StatusIcon = statusIconMeta.Icon;
 
 
