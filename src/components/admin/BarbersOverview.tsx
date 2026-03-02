@@ -70,12 +70,7 @@ export default function BarbersOverview({
 
   formatBlockRange,
 }: BarbersOverviewProps) {
-      const [isMounted, setIsMounted] = React.useState(false);
   const availableServices = services.length > 0 ? services : DEFAULT_SERVICE_OPTIONS;
-  React.useEffect(() => {
-    setIsMounted(true);
-  }, []);
-
 
   React.useEffect(() => {
     if (!isAddBarberSheetOpen) return undefined;
@@ -196,7 +191,7 @@ export default function BarbersOverview({
         </li>
       </ul>
       {isAddBarberSheetOpen
-        ? (isMounted ? createPortal(addBarberSheet, document.body) : addBarberSheet)
+        ? createPortal(addBarberSheet, document.body)
         : null}
 
 
