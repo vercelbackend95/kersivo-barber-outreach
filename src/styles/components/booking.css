@@ -1249,10 +1249,41 @@
 }
 
 @media (max-width: 768px) {
+    .admin-bookings-table {
+    width: max-content;
+    min-width: 0;
+    table-layout: auto;
+  }
+
+  .admin-bookings-table th,
+  .admin-bookings-table td {
+    padding: 0.45rem 0.35rem;
+    white-space: nowrap;
+  }
+
+  .admin-bookings-table th:first-child,
+  .admin-bookings-table td:first-child {
+    padding-left: 0.5rem;
+  }
+
+  .admin-bookings-table th:last-child,
+  .admin-bookings-table td:last-child {
+    padding-right: 0.5rem;
+  }
+
+  .admin-bookings-table th:nth-child(2),
+  .admin-bookings-table td:nth-child(2),
+  .admin-table-col-service,
+  .admin-table-col-status,
+  .admin-table-col-start {
+    width: 1%;
+  }
+
+
   .admin-status-label-desktop,
   .admin-start-desktop,
   .admin-email-desktop,
-    .admin-service-desktop,
+  .admin-service-desktop,
   .admin-status-heading-desktop {
 
 
@@ -1266,7 +1297,7 @@
   }
   
   .admin-email-mobile,
-    .admin-service-mobile,
+  .admin-service-mobile,
   .admin-status-heading-mobile {
 
     display: inline;
