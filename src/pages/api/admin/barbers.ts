@@ -58,13 +58,70 @@ export const GET: APIRoute = async (ctx) => {
   const unauthorized = requireAdmin(ctx);
   if (unauthorized) return unauthorized;
 
-  let barbers: Array<{ id: string; name: string; email: string | null; avatarUrl: string | null; active: boolean; sortOrder: number; createdAt: Date; barberServices: { serviceId: string }[] }>;
+  type BarberListItem = {
+    id: string;
+    name: string;
+    email: string | null;
+    avatarUrl: string | null;
+    active: boolean;
+    sortOrder: number;
+    createdAt: Date;
+    barberServices: { serviceId: string }[];
+  };
+
+  let barbers: BarberListItem[];
+
+  const loadBarbersWithoutRelationSelect = async () => {
+    const baseBarbers = await prisma.barber.findMany({
+      orderBy: [{ sortOrder: 'asc' }, { name: 'asc' }, { createdAt: 'asc' }],
+      select: { id: true, name: true, email: true, avatarUrl: true, active: true, sortOrder: true, createdAt: true }
+    });
+
+    const barberIds = baseBarbers.map((barber) => barber.id);
+    const relationRows = barberIds.length > 0
+      ? await prisma.barberService.findMany({
+          where: { barberId: { in: barberIds } },
+          select: { barberId: true, serviceId: true }
+        })
+      : [];
+
+    const serviceIdByBarber = new Map<string, { serviceId: string }[]>();
+
+    for (const row of relationRows) {
+      const existing = serviceIdByBarber.get(row.barberId) ?? [];
+      existing.push({ serviceId: row.serviceId });
+      serviceIdByBarber.set(row.barberId, existing);
+    }
+
+    return baseBarbers.map((barber) => ({
+      ...barber,
+      barberServices: serviceIdByBarber.get(barber.id) ?? []
+    }));
+  };
+
+
   try {
     barbers = await prisma.barber.findMany({
       orderBy: [{ sortOrder: 'asc' }, { name: 'asc' }, { createdAt: 'asc' }],
       select: { id: true, name: true, email: true, avatarUrl: true, active: true, sortOrder: true, createdAt: true, barberServices: { select: { serviceId: true } } }
     });
   } catch (error) {
+        const isRelationSelectValidationError = error instanceof Prisma.PrismaClientValidationError
+      && String(error.message).includes('barberServices');
+
+    if (isRelationSelectValidationError) {
+      barbers = await loadBarbersWithoutRelationSelect();
+
+      return new Response(JSON.stringify({
+        barbers: barbers.map((barber) => ({
+          ...barber,
+          serviceIds: barber.barberServices.map((item) => item.serviceId),
+          isActive: barber.active
+        }))
+      }));
+    }
+
+
     const isMissingSortOrderColumn = error instanceof Prisma.PrismaClientKnownRequestError
       && error.code === 'P2022'
       && String(error.meta?.column ?? '').includes('Barber.sortOrder');
