@@ -2732,7 +2732,6 @@
   border-top: 1px solid var(--border);
 }
 
-.admin-working-hours-copy,
 .admin-services-actions {
   display: flex;
   gap: 0.5rem;

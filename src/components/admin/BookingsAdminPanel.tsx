@@ -386,7 +386,6 @@ export default function BookingsAdminPanel({ isActive, mode, onBackToDashboard }
   const [workingHours, setWorkingHours] = useState<WorkingHourRow[]>([]);
   const [workingHoursLoading, setWorkingHoursLoading] = useState(false);
   const [workingHoursSaving, setWorkingHoursSaving] = useState(false);
-  const [workingHoursTemplateId, setWorkingHoursTemplateId] = useState<string>('');
   const [servicesSaving, setServicesSaving] = useState(false);
 
   const [timeBlocks, setTimeBlocks] = useState<TimeBlock[]>([]);
@@ -724,7 +723,6 @@ export default function BookingsAdminPanel({ isActive, mode, onBackToDashboard }
   const activeBarbers = useMemo(() => allBarbersSorted.filter((barber) => normalizeBarberStatus(barber)), [allBarbersSorted]);
   const visibleBarbersForManagement = useMemo(() => showInactiveBarbers ? allBarbersSorted : activeBarbers, [activeBarbers, allBarbersSorted, showInactiveBarbers]);
   const selectedBarber = useMemo(() => allBarbersSorted.find((barber) => barber.id === selectedBarberId) ?? null, [allBarbersSorted, selectedBarberId]);
-  const activeTemplateBarbers = useMemo(() => activeBarbers.filter((barber) => barber.id !== selectedBarberId), [activeBarbers, selectedBarberId]);
   const enabledServiceIds = useMemo(() => new Set(selectedBarber?.serviceIds ?? []), [selectedBarber]);
 
   const visibleRecentBarberIds = useMemo(() => {
@@ -920,24 +918,6 @@ export default function BookingsAdminPanel({ isActive, mode, onBackToDashboard }
     setWorkingHoursSaving(false);
   }
 
-  async function copyWorkingHours() {
-    if (!selectedBarberId || !workingHoursTemplateId) return;
-    setBarberSaveMessage('');
-    setBarberSaveError('');
-    const response = await fetch(`/api/admin/barbers/${selectedBarberId}/rules-copy`, {
-      method: 'POST',
-      credentials: 'same-origin',
-      headers: { 'content-type': 'application/json' },
-      body: JSON.stringify({ sourceBarberId: workingHoursTemplateId })
-    });
-    const payload = await response.json().catch(() => ({} as { error?: string }));
-    if (!response.ok) {
-      setBarberSaveError(payload.error ?? 'Could not copy working hours.');
-      return;
-    }
-    setBarberSaveMessage('Working hours copied.');
-    await fetchWorkingHours(selectedBarberId);
-  }
 
   async function saveServiceIds(serviceIds: string[]) {
     if (!selectedBarberId) return;
@@ -1243,7 +1223,6 @@ export default function BookingsAdminPanel({ isActive, mode, onBackToDashboard }
               <section className="admin-settings-panel">
                 <h3>Working hours</h3>
                 <p className="muted">Editing: {selectedBarber?.name ?? 'No barber selected'}</p>
-                <div className="admin-working-hours-copy"><label htmlFor="copy-working-hours">Copy from</label><select id="copy-working-hours" value={workingHoursTemplateId} onChange={(event) => setWorkingHoursTemplateId(event.target.value)}><option value="">Choose barber</option>{activeTemplateBarbers.map((barber) => <option key={barber.id} value={barber.id}>{barber.name}</option>)}</select><button type="button" className="btn btn--secondary" onClick={() => void copyWorkingHours()} disabled={!workingHoursTemplateId || !selectedBarberId}>Copy schedule</button></div>
                 {workingHoursLoading ? <p className="muted">Loading working hours...</p> : <div className="admin-working-hours-grid">{workingHours.map((row) => <div key={row.dayOfWeek} className="admin-working-hours-row"><strong>{WEEK_DAYS[row.dayOfWeek] ?? row.dayOfWeek}</strong><label><input type="checkbox" checked={row.active} onChange={(event) => updateWorkingHour(row.dayOfWeek, { active: event.target.checked })} /> Open</label><input type="time" value={row.startTime} onChange={(event) => updateWorkingHour(row.dayOfWeek, { startTime: event.target.value })} disabled={!row.active} /><input type="time" value={row.endTime} onChange={(event) => updateWorkingHour(row.dayOfWeek, { endTime: event.target.value })} disabled={!row.active} /></div>)}</div>}
                 <button type="button" className="btn btn--primary" onClick={() => void saveWorkingHours()} disabled={!selectedBarberId || workingHoursSaving}>Save working hours</button>
               </section>
