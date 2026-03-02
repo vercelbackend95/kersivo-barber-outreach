@@ -75,6 +75,49 @@ const MOBILE_RECENT_BARBERS_COUNT = 5;
 const DESKTOP_RECENT_BARBERS_COUNT = 11;
 const WEEK_DAYS = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
 
+const DEFAULT_ADD_BARBER_SERVICES: ServiceOption[] = [
+  { id: 'svc-haircut', name: 'Haircut' },
+  { id: 'svc-skin-fade', name: 'Skin Fade' },
+  { id: 'svc-beard-trim', name: 'Beard Trim' },
+  { id: 'svc-haircut-beard', name: 'Haircut + Beard' }
+];
+
+function useBodyScrollLock(isLocked: boolean): void {
+  useEffect(() => {
+    if (!isLocked || typeof window === 'undefined') return undefined;
+
+    const scrollY = window.scrollY;
+    const { body } = document;
+    const previousStyles = {
+      position: body.style.position,
+      top: body.style.top,
+      left: body.style.left,
+      right: body.style.right,
+      width: body.style.width,
+      overflow: body.style.overflow
+    };
+
+    body.style.position = 'fixed';
+    body.style.top = `-${scrollY}px`;
+    body.style.left = '0';
+    body.style.right = '0';
+    body.style.width = '100%';
+    body.style.overflow = 'hidden';
+
+    return () => {
+      const restoredScrollY = Number.parseInt(body.style.top || '0', 10) * -1;
+      body.style.position = previousStyles.position;
+      body.style.top = previousStyles.top;
+      body.style.left = previousStyles.left;
+      body.style.right = previousStyles.right;
+      body.style.width = previousStyles.width;
+      body.style.overflow = previousStyles.overflow;
+      window.scrollTo(0, Number.isFinite(restoredScrollY) ? restoredScrollY : scrollY);
+    };
+  }, [isLocked]);
+}
+
+
 const MOBILE_HISTORY_SERVICE_SHORTCUTS: Record<string, string> = {
   haircut: 'H',
   'haircut + beard': 'H+B',
@@ -351,6 +394,9 @@ export default function BookingsAdminPanel({ isActive, mode, onBackToDashboard }
   const [barberSaving, setBarberSaving] = useState(false);
   const [barberReordering, setBarberReordering] = useState(false);
   const [barberAvatarPreviewUrl, setBarberAvatarPreviewUrl] = useState<string | null>(null);
+    const [isAddBarberSheetOpen, setIsAddBarberSheetOpen] = useState(false);
+  const [addBarberSelectedServiceIds, setAddBarberSelectedServiceIds] = useState<string[]>([]);
+
   const [selectedBarberId, setSelectedBarberId] = useState<string | null>(null);
   const [services, setServices] = useState<ServiceOption[]>([]);
   const [workingHours, setWorkingHours] = useState<WorkingHourRow[]>([]);
@@ -704,6 +750,10 @@ export default function BookingsAdminPanel({ isActive, mode, onBackToDashboard }
 
 
 
+  const addBarberServiceOptions = useMemo(() => (services.length > 0 ? services : DEFAULT_ADD_BARBER_SERVICES), [services]);
+
+
+
   const visibleRecentBarberIds = useMemo(() => {
     if (mode !== 'history') return [] as string[];
     const latestByBarber = new Map<string, number>();
@@ -761,7 +811,7 @@ export default function BookingsAdminPanel({ isActive, mode, onBackToDashboard }
   }, [normalizedClientSearchQuery]);
 
   const isMobileDashboard = mode === 'dashboard' && isMobileViewport;
-    const isMobileAdminPanel = isMobileViewport;
+  useBodyScrollLock(isAddBarberSheetOpen);
   const isTimelineView = mode === 'dashboard' && activeView === 'timeline';
   const selectedDateLabel = useMemo(() => formatTimelineDateLabel(selectedDate), [selectedDate]);
 
@@ -838,6 +888,13 @@ export default function BookingsAdminPanel({ isActive, mode, onBackToDashboard }
     setBarberAvatarPreviewUrl(objectUrl);
     return () => URL.revokeObjectURL(objectUrl);
   }, [barberAvatarFile]);
+  useEffect(() => {
+    if (addBarberServiceOptions.length === 0) return;
+    setAddBarberSelectedServiceIds((current) => {
+      if (current.length > 0) return current;
+      return addBarberServiceOptions.map((service) => service.id);
+    });
+  }, [addBarberServiceOptions]);
 
 
 
@@ -1039,6 +1096,12 @@ export default function BookingsAdminPanel({ isActive, mode, onBackToDashboard }
       setBarberSaveError('Barber name is required.');
       return;
     }
+    const uniqueServiceIds = Array.from(new Set(addBarberSelectedServiceIds));
+    if (uniqueServiceIds.length === 0) {
+      setBarberSaveError('Select at least one service.');
+      return;
+    }
+
 
     if (barberAvatarFile && barberAvatarFile.size > 5 * 1024 * 1024) {
       setBarberSaveError('Avatar is too large. Maximum size is 5MB.');
@@ -1049,6 +1112,7 @@ export default function BookingsAdminPanel({ isActive, mode, onBackToDashboard }
     const formData = new FormData();
     formData.set('name', trimmedName);
     formData.set('isActive', 'true');
+        formData.set('serviceIds', JSON.stringify(uniqueServiceIds));
     if (barberAvatarFile) formData.set('avatar', barberAvatarFile);
 
     const response = await fetch('/api/admin/barbers', {
@@ -1065,9 +1129,12 @@ export default function BookingsAdminPanel({ isActive, mode, onBackToDashboard }
     }
 
     setBarberNameDraft('');
+        setBarberAvatarFile(null);
     setBarberAvatarPreviewUrl(null);
+        setAddBarberSelectedServiceIds(addBarberServiceOptions.map((service) => service.id));
     setBarberSaveMessage('Barber saved.');
     setBarberSaving(false);
+        setIsAddBarberSheetOpen(false);
     await fetchBarbers();
   }
 
@@ -1184,22 +1251,35 @@ export default function BookingsAdminPanel({ isActive, mode, onBackToDashboard }
             ) : (
               <BarbersOverview
                 barbers={visibleBarbersForManagement}
+                                services={addBarberServiceOptions}
                 showInactive={showInactiveBarbers}
                 barberNameDraft={barberNameDraft}
                 barberAvatarPreviewUrl={barberAvatarPreviewUrl}
+                                selectedServiceIds={addBarberSelectedServiceIds}
                 barberSaving={barberSaving}
                 barberReordering={barberReordering}
                 barberSaveMessage={barberSaveMessage}
                 barberSaveError={barberSaveError}
+                                isAddBarberSheetOpen={isAddBarberSheetOpen}
                 globalBlocks={globalBlocks}
                 getInitials={getInitials}
                 onBarberNameChange={setBarberNameDraft}
                 onBarberAvatarChange={setBarberAvatarFile}
+                                onSelectedServiceIdsChange={setAddBarberSelectedServiceIds}
                 onSubmitAddBarber={(event) => void saveBarber(event)}
                 onShowInactiveChange={setShowInactiveBarbers}
                 onOpenBarber={setSelectedBarberId}
                 onMoveBarber={(index, direction) => void moveBarber(index, direction)}
                 onToggleBarberActive={(barberId, nextActive) => void updateBarberStatus(barberId, nextActive)}
+                                onOpenAddBarberSheet={() => {
+                  setBarberSaveError('');
+                  setBarberSaveMessage('');
+                  setIsAddBarberSheetOpen(true);
+                }}
+                onCloseAddBarberSheet={() => {
+                  setIsAddBarberSheetOpen(false);
+                }}
+
                 formatBlockRange={formatBlockRange}
               />
             )

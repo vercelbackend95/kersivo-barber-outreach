@@ -6,11 +6,20 @@ import path from 'node:path';
 import type { APIRoute } from 'astro';
 import { z } from 'zod';
 import { requireAdmin } from '../../../lib/admin/auth';
-import { ensureBarberHasAllServices, ensureBarberHasAvailabilityRules } from '../../../lib/admin/defaultAvailability';
+import { ensureBarberHasAvailabilityRules } from '../../../lib/admin/defaultAvailability';
 import { prisma } from '../../../lib/db/client';
+import type { Prisma } from '@prisma/client';
 
 const MAX_AVATAR_SIZE_BYTES = 5 * 1024 * 1024;
 const ALLOWED_AVATAR_TYPES = new Set(['image/jpeg', 'image/png', 'image/webp']);
+
+const DEFAULT_SERVICE_DEFINITIONS = [
+  { id: 'svc-haircut', name: 'Haircut', durationMinutes: 30 },
+  { id: 'svc-skin-fade', name: 'Skin Fade', durationMinutes: 45 },
+  { id: 'svc-beard-trim', name: 'Beard Trim', durationMinutes: 20 },
+  { id: 'svc-haircut-beard', name: 'Haircut + Beard', durationMinutes: 50 }
+] as const;
+
 
 const jsonSchema = z.object({
   id: z.string().optional(),
@@ -18,7 +27,9 @@ const jsonSchema = z.object({
   email: z.string().email().optional().or(z.literal('')),
   avatarUrl: z.string().trim().url().optional().or(z.literal('')),
   active: z.boolean().optional(),
-  isActive: z.boolean().optional()
+  isActive: z.boolean().optional(),
+  serviceIds: z.array(z.string()).optional()
+
 });
 
 function getExtensionForType(contentType: string) {
@@ -27,6 +38,47 @@ function getExtensionForType(contentType: string) {
   if (contentType === 'image/webp') return 'webp';
   return null;
 }
+function parseServiceIds(rawValue: FormDataEntryValue | null): string[] {
+  if (!rawValue) return [];
+  const rawText = String(rawValue).trim();
+  if (!rawText) return [];
+
+  try {
+    const parsed = JSON.parse(rawText);
+    if (Array.isArray(parsed)) {
+      return parsed.map((value) => String(value).trim()).filter(Boolean);
+    }
+  } catch {
+    return rawText.split(',').map((value) => value.trim()).filter(Boolean);
+  }
+
+  return [];
+}
+
+async function ensureSelectedServices(tx: Prisma.TransactionClient, selectedServiceIds: string[]) {
+  const requestedIds = selectedServiceIds.length > 0 ? selectedServiceIds : DEFAULT_SERVICE_DEFINITIONS.map((service) => service.id);
+  const uniqueRequestedIds = Array.from(new Set(requestedIds));
+
+  const existingServices = await tx.service.findMany({ where: { id: { in: uniqueRequestedIds } }, select: { id: true } });
+  const existingIds = new Set(existingServices.map((service) => service.id));
+
+  for (const definition of DEFAULT_SERVICE_DEFINITIONS) {
+    if (!uniqueRequestedIds.includes(definition.id) || existingIds.has(definition.id)) continue;
+    await tx.service.create({
+      data: {
+        id: definition.id,
+        name: definition.name,
+        durationMinutes: definition.durationMinutes,
+        bufferMinutes: 0,
+        active: true
+      }
+    });
+    existingIds.add(definition.id);
+  }
+
+  return uniqueRequestedIds.filter((serviceId) => existingIds.has(serviceId));
+}
+
 
 async function storeAvatar(file: File) {
   if (!ALLOWED_AVATAR_TYPES.has(file.type)) {
@@ -78,7 +130,7 @@ export const GET: APIRoute = async (ctx) => {
       select: { id: true, name: true, email: true, avatarUrl: true, active: true, sortOrder: true, createdAt: true }
     });
   } catch (error) {
-        const isMissingSortOrderColumn = error instanceof Error
+    const isMissingSortOrderColumn = error instanceof Error
       && 'code' in error
       && (error as { code?: string }).code === 'P2022'
       && 'meta' in error
@@ -131,11 +183,16 @@ export const POST: APIRoute = async (ctx) => {
     const name = String(form.get('name') ?? '').trim();
     const isActiveRaw = String(form.get('isActive') ?? 'true').trim().toLowerCase();
     const isActive = isActiveRaw !== 'false';
+        const selectedServiceIds = parseServiceIds(form.get('serviceIds'));
     const avatar = form.get('avatar');
 
     if (!name) {
       return new Response(JSON.stringify({ error: 'Name is required.' }), { status: 400 });
     }
+    if (selectedServiceIds.length === 0) {
+      return new Response(JSON.stringify({ error: 'Select at least one service.' }), { status: 400 });
+    }
+
 
     let avatarUrl: string | undefined;
     if (avatar instanceof File && avatar.size > 0) {
@@ -153,15 +210,27 @@ export const POST: APIRoute = async (ctx) => {
     };
 
     const barber = id
-      ? await prisma.barber.update({ where: { id }, data: payload })
+      ? await prisma.$transaction(async (tx) => {
+          const updatedBarber = await tx.barber.update({ where: { id }, data: payload });
+          const validServiceIds = await ensureSelectedServices(tx, selectedServiceIds);
+          await tx.barberService.deleteMany({ where: { barberId: updatedBarber.id } });
+          if (validServiceIds.length > 0) {
+            await tx.barberService.createMany({
+              data: validServiceIds.map((serviceId) => ({ barberId: updatedBarber.id, serviceId })),
+              skipDuplicates: true
+            });
+          }
+          return updatedBarber;
+        })
+
       : await prisma.$transaction(async (tx) => {
           const maxSort = await tx.barber.aggregate({ _max: { sortOrder: true } });
           const createdBarber = await tx.barber.create({ data: { ...payload, sortOrder: (maxSort._max.sortOrder ?? -1) + 1 } });
-          const services = await tx.service.findMany({ where: { active: true }, select: { id: true } });
+          const validServiceIds = await ensureSelectedServices(tx, selectedServiceIds);
+          if (validServiceIds.length > 0) {
 
-          if (services.length > 0) {
             await tx.barberService.createMany({
-              data: services.map((service) => ({ barberId: createdBarber.id, serviceId: service.id })),
+              data: validServiceIds.map((serviceId) => ({ barberId: createdBarber.id, serviceId })),
               skipDuplicates: true
             });
           }
@@ -172,7 +241,6 @@ export const POST: APIRoute = async (ctx) => {
 
     if (barber.active) {
       await ensureBarberHasAvailabilityRules(barber.id);
-      await ensureBarberHasAllServices(barber.id);
     }
 
 
@@ -184,7 +252,7 @@ export const POST: APIRoute = async (ctx) => {
     return new Response(JSON.stringify({ error: parsed.error.flatten() }), { status: 400 });
   }
 
-  const { id, email, name, avatarUrl, active, isActive } = parsed.data;
+  const { id, email, name, avatarUrl, active, isActive, serviceIds = [] } = parsed.data;
   const data = {
     ...(name ? { name } : {}),
     ...(typeof active === 'boolean' ? { active } : {}),
@@ -194,7 +262,19 @@ export const POST: APIRoute = async (ctx) => {
   };
 
   const barber = id
-    ? await prisma.barber.update({ where: { id }, data })
+    ? await prisma.$transaction(async (tx) => {
+        const updatedBarber = await tx.barber.update({ where: { id }, data });
+        if (serviceIds.length > 0) {
+          const validServiceIds = await ensureSelectedServices(tx, serviceIds);
+          await tx.barberService.deleteMany({ where: { barberId: updatedBarber.id } });
+          await tx.barberService.createMany({
+            data: validServiceIds.map((serviceId) => ({ barberId: updatedBarber.id, serviceId })),
+            skipDuplicates: true
+          });
+        }
+        return updatedBarber;
+      })
+
     : await prisma.$transaction(async (tx) => {
         const maxSort = await tx.barber.aggregate({ _max: { sortOrder: true } });
         const createdBarber = await tx.barber.create({
@@ -206,11 +286,11 @@ export const POST: APIRoute = async (ctx) => {
             sortOrder: (maxSort._max.sortOrder ?? -1) + 1
           }
         });
-                const services = await tx.service.findMany({ where: { active: true }, select: { id: true } });
+        const validServiceIds = await ensureSelectedServices(tx, serviceIds);
+        if (validServiceIds.length > 0) {
 
-        if (services.length > 0) {
           await tx.barberService.createMany({
-            data: services.map((service) => ({ barberId: createdBarber.id, serviceId: service.id })),
+            data: validServiceIds.map((serviceId) => ({ barberId: createdBarber.id, serviceId })),
             skipDuplicates: true
           });
         }
@@ -221,7 +301,7 @@ export const POST: APIRoute = async (ctx) => {
 
   if (barber.active) {
     await ensureBarberHasAvailabilityRules(barber.id);
-    await ensureBarberHasAllServices(barber.id);
+
   }
 
 
