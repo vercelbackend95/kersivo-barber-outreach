@@ -1,12 +1,12 @@
 import { prisma } from '../db/client';
 
 const DEFAULT_RULES = [
+{ dayOfWeek: 0, startMinutes: 10 * 60, endMinutes: 18 * 60 },
   { dayOfWeek: 1, startMinutes: 10 * 60, endMinutes: 18 * 60 },
   { dayOfWeek: 2, startMinutes: 10 * 60, endMinutes: 18 * 60 },
   { dayOfWeek: 3, startMinutes: 10 * 60, endMinutes: 18 * 60 },
   { dayOfWeek: 4, startMinutes: 10 * 60, endMinutes: 18 * 60 },
-  { dayOfWeek: 5, startMinutes: 10 * 60, endMinutes: 18 * 60 },
-  { dayOfWeek: 6, startMinutes: 10 * 60, endMinutes: 16 * 60 }
+  { dayOfWeek: 5, startMinutes: 10 * 60, endMinutes: 16 * 60 }
 ] as const;
 
 export async function ensureBarberHasAvailabilityRules(barberId: string) {

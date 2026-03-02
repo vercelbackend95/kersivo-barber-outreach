@@ -17,12 +17,14 @@ describe('normalizeToIsoDate', () => {
 });
 
 describe('londonDayOfWeekFromIsoDate', () => {
-  it('maps weekdays as Monday=1..Saturday=6', () => {
-    expect(londonDayOfWeekFromIsoDate('2026-02-24')).toBe(2);
-    expect(londonDayOfWeekFromIsoDate('2026-02-28')).toBe(6);
+  it('maps weekdays as Monday=0..Saturday=5', () => {
+    expect(londonDayOfWeekFromIsoDate('2026-02-24')).toBe(1);
+    expect(londonDayOfWeekFromIsoDate('2026-02-28')).toBe(5);
+
   });
 
-  it('maps Sunday as 0', () => {
-    expect(londonDayOfWeekFromIsoDate('2026-03-01')).toBe(0);
+  it('maps Sunday as 6', () => {
+    expect(londonDayOfWeekFromIsoDate('2026-03-01')).toBe(6);
+
   });
 });

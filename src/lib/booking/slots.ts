@@ -15,7 +15,7 @@ type SlotInput = {
 
 export function generateSlots(input: SlotInput): string[] {
   const weekday = londonDayOfWeekFromIsoDate(input.date);
-  if (weekday == null || weekday === 0) return [];
+  if (weekday == null) return [];
 
   const rule = input.rules.find((entry) => entry.dayOfWeek === weekday && entry.active);
   if (!rule) return [];

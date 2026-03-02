@@ -52,13 +52,14 @@ export function londonDayOfWeekFromIsoDate(isoDate: string): number | null {
   }).format(middayUtc);
 
   const dayMap: Record<string, number> = {
-    Sun: 0,
-    Mon: 1,
-    Tue: 2,
-    Wed: 3,
-    Thu: 4,
-    Fri: 5,
-    Sat: 6
+    // Canonical weekday mapping across UI/API/DB: Mon=0, Tue=1, Wed=2, Thu=3, Fri=4, Sat=5, Sun=6.
+    Mon: 0,
+    Tue: 1,
+    Wed: 2,
+    Thu: 3,
+    Fri: 4,
+    Sat: 5,
+    Sun: 6
   };
 
   return dayMap[weekday] ?? null;
