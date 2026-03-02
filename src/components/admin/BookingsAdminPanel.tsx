@@ -1102,7 +1102,7 @@ export default function BookingsAdminPanel({ isActive, mode, onBackToDashboard }
       ) : (
         <div className="listTableWrap">
           <table className="admin-table">
-            <thead><tr><th>Client</th><th className={mode === 'history' ? '' : 'hidden md:table-cell'}>Email</th><th>Service</th><th>Barber</th><th>Status</th><th>Start</th>{mode !== 'history' ? <th>Actions</th> : null}</tr></thead>
+            <thead><tr><th>Client</th><th className={mode === 'history' ? '' : 'hidden md:table-cell'}>Email</th><th>Service</th><th>Barber</th><th><span className="admin-status-heading-desktop">Status</span><span className="admin-status-heading-mobile">St.</span></th><th>Start</th>{mode !== 'history' ? <th>Actions</th> : null}</tr></thead>
             <tbody>
               {visibleBookings.map((booking) => {
                 const bookingStatusLabel = getBookingStatusLabel(booking);

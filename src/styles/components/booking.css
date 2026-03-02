@@ -1204,6 +1204,14 @@
 .admin-email-mobile {
   display: none;
 }
+.admin-status-heading-desktop {
+  display: inline;
+}
+
+.admin-status-heading-mobile {
+  display: none;
+}
+
 
 
 .admin-status-label-desktop,
@@ -1235,7 +1243,9 @@
 @media (max-width: 768px) {
   .admin-status-label-desktop,
   .admin-start-desktop,
-  .admin-email-desktop {
+  .admin-email-desktop,
+  .admin-status-heading-desktop {
+
 
     display: none;
   }
@@ -1246,7 +1256,9 @@
     align-items: center;
   }
   
-  .admin-email-mobile {
+  .admin-email-mobile,
+  .admin-status-heading-mobile {
+
     display: inline;
   }
 
