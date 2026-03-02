@@ -8,11 +8,12 @@
     "preview": "astro preview",
     "astro": "astro",
     "prisma": "prisma",
-    "prisma:generate": "prisma generate",
-    "postinstall": "prisma generate",
+    "prisma:generate": "prisma generate --schema prisma/schema.prisma",
+    "postinstall": "prisma generate --schema prisma/schema.prisma",
     "seed": "prisma db seed",
     "test": "vitest run",
-    "vercel:dev": "vercel dev"
+    "vercel:dev": "vercel dev",
+    "prisma:migrate:dev": "prisma migrate dev --schema prisma/schema.prisma"
   },
   "dependencies": {
     "@astrojs/react": "^4.4.2",
