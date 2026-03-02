@@ -198,6 +198,12 @@ function formatStartTimeMobile(startAt: string) {
   return formatInTimeZone(parsedDate, ADMIN_TIMEZONE, 'HH:mm');
 }
 
+function shortEmail(email: string) {
+  const clean = (email || '').trim();
+  if (clean.length <= 3) return `${clean}...`;
+  return `${clean.slice(0, 3)}...`;
+}
+
 
 function getUpcomingBookings(bookings: Booking[]) {
   const nowMs = Date.now();
@@ -1096,18 +1102,18 @@ export default function BookingsAdminPanel({ isActive, mode, onBackToDashboard }
       ) : (
         <div className="listTableWrap">
           <table className="admin-table">
-            <thead><tr><th>Client</th><th className="hidden md:table-cell">Email</th><th>Service</th><th>Barber</th><th>Status</th><th>Start</th>{mode !== 'history' ? <th>Actions</th> : null}</tr></thead>
+            <thead><tr><th>Client</th><th className={mode === 'history' ? '' : 'hidden md:table-cell'}>Email</th><th>Service</th><th>Barber</th><th>Status</th><th>Start</th>{mode !== 'history' ? <th>Actions</th> : null}</tr></thead>
             <tbody>
               {visibleBookings.map((booking) => {
                 const bookingStatusLabel = getBookingStatusLabel(booking);
                 const statusIconMeta = getStatusIconMeta(booking, bookingStatusLabel);
-                const StatusIcon = statusIconMeta.Icon;
+                const fullEmail = booking.email;
 
 
                 return (
                   <tr className={updatedBookingIds.includes(booking.id) ? 'admin-row--updated' : ''} key={booking.id}>
                     <td><button type="button" className="admin-link-button" onClick={() => void openClientProfile(booking.clientId)}>{highlightMatch(booking.fullName)}</button></td>
-                    <td className="admin-table-col-email hidden md:table-cell"><button type="button" className="admin-link-button" onClick={() => void openClientProfile(booking.clientId)}>{highlightMatch(booking.email)}</button></td>
+                    <td className={`admin-table-col-email ${mode === 'history' ? '' : 'hidden md:table-cell'}`}><button type="button" className="admin-link-button" onClick={() => void openClientProfile(booking.clientId)}><span className="hidden md:inline">{highlightMatch(fullEmail)}</span><span className="md:hidden" title={fullEmail} aria-label={fullEmail}>{shortEmail(fullEmail)}</span></button></td>
 
                     <td className="admin-table-col-service">{booking.service?.name}</td><td>{booking.barber?.name}</td><td className={mode === 'history' ? 'admin-table-col-status admin-table-col-status--history' : 'admin-table-col-status'}>{mode === 'history' ? <span className="admin-status-icon-wrap"><StatusIcon className={`admin-status-icon ${statusIconMeta.className}`} aria-label={statusIconMeta.label} title={statusIconMeta.label} /></span> : <><span className="admin-status-label-desktop">{bookingStatusLabel}</span><span className="admin-status-icon-wrap admin-status-icon-wrap--mobile"><StatusIcon className={`admin-status-icon ${statusIconMeta.className}`} aria-label={statusIconMeta.label} title={statusIconMeta.label} /></span></>}</td><td className="admin-table-col-start"><span className="admin-start-desktop">{formatStartDateTime(booking.startAt)}</span><span className="admin-start-mobile">{formatStartTimeMobile(booking.startAt)}</span></td>
                     {mode !== 'history' ? <td className="admin-table-col-actions">{canBeCancelledByShop(booking) ? <button type="button" className="btn btn--secondary admin-cancel-btn" onClick={() => void cancelBookingByShop(booking)} disabled={cancelLoadingBookingId === booking.id}>{cancelLoadingBookingId === booking.id ? 'Cancelling...' : 'Cancel'}</button> : null}</td> : null}
