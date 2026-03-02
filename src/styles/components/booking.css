@@ -2759,17 +2759,23 @@
   line-height: 1;
 }
 
-.admin-barber-sheet-backdrop {
+.admin-barber-sheet-layer {
   position: fixed;
   inset: 0;
+  z-index: 140;
+  display: grid;
+  align-items: end;
+}
+.admin-barber-sheet-backdrop {
+  position: absolute;
+  inset: 0;
   background: rgb(0 0 0 / 0.56);
-  z-index: 110;
-  pointer-events: auto;
+
 
 }
 
 .admin-barber-sheet {
-  position: fixed;
+  position: relative;
   left: 0;
   right: 0;
   bottom: 0;
@@ -2781,8 +2787,6 @@
   border-bottom: 0;
   display: flex;
   flex-direction: column;
-
-  z-index: 120;
   pointer-events: auto;
   touch-action: manipulation;
 }
@@ -2832,21 +2836,17 @@
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 
-  .admin-barber-sheet-backdrop {
-    z-index: 120;
+  .admin-barber-sheet-layer {
+    align-items: center;
+    justify-items: center;
+
   }
 
   .admin-barber-sheet {
-        left: 50%;
-    right: auto;
-    bottom: 50%;
-    transform: translate(-50%, 50%);
     width: min(100%, 560px);
     max-width: calc(100vw - 2rem);
     height: min(90dvh, 760px);
-
     border-bottom: 1px solid var(--border);
-        z-index: 130;
   }
 
   .admin-barber-sheet-footer .btn {

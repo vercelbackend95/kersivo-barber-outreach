@@ -1,4 +1,5 @@
 import React from 'react';
+import { createPortal } from 'react-dom';
 import type { Barber, ServiceOption, TimeBlock } from './barbersTypes';
 
 type BarbersOverviewProps = {
@@ -23,7 +24,7 @@ type BarbersOverviewProps = {
   onOpenBarber: (barberId: string) => void;
   onMoveBarber: (index: number, direction: 'up' | 'down') => void;
   onToggleBarberActive: (barberId: string, nextActive: boolean) => void;
-onOpenAddBarberSheet: () => void;
+  onOpenAddBarberSheet: () => void;
   onCloseAddBarberSheet: () => void;
 
   formatBlockRange: (startAt: string, endAt: string) => string;
@@ -71,6 +72,72 @@ export default function BarbersOverview({
 }: BarbersOverviewProps) {
   const availableServices = services.length > 0 ? services : DEFAULT_SERVICE_OPTIONS;
 
+  React.useEffect(() => {
+    if (!isAddBarberSheetOpen) return undefined;
+
+    const onKeyDown = (event: KeyboardEvent) => {
+      if (event.key === 'Escape') {
+        onCloseAddBarberSheet();
+      }
+    };
+
+    window.addEventListener('keydown', onKeyDown);
+    return () => window.removeEventListener('keydown', onKeyDown);
+  }, [isAddBarberSheetOpen, onCloseAddBarberSheet]);
+
+  const addBarberSheet = isAddBarberSheetOpen ? (
+    <div className="admin-barber-sheet-layer" role="dialog" aria-modal="true" aria-label="Add barber">
+      <div className="admin-barber-sheet-backdrop" role="presentation" onClick={onCloseAddBarberSheet} />
+      <form
+        className="admin-barber-sheet"
+        onSubmit={onSubmitAddBarber}
+        onClick={(event) => event.stopPropagation()}
+      >
+        <div className="admin-barber-sheet-head">
+          <h3>Add barber</h3>
+          <button type="button" className="btn btn--ghost" onClick={onCloseAddBarberSheet} aria-label="Close add barber form">✕</button>
+        </div>
+
+        <div className="admin-barber-sheet-content">
+          <label htmlFor="barber-name">Barber name</label>
+          <input id="barber-name" value={barberNameDraft} onChange={(event) => onBarberNameChange(event.target.value)} placeholder="e.g. Marco" required />
+
+          <label htmlFor="barber-avatar">Avatar (optional)</label>
+          <input id="barber-avatar" type="file" accept="image/jpeg,image/png,image/webp" onChange={(event) => onBarberAvatarChange(event.target.files?.[0] ?? null)} />
+          {barberAvatarPreviewUrl ? <img src={barberAvatarPreviewUrl} alt="Selected avatar preview" className="admin-avatar-preview" /> : null}
+
+          <fieldset className="admin-service-select-group">
+            <legend>Services</legend>
+            <div className="admin-services-grid">
+              {availableServices.map((service) => {
+                const checked = selectedServiceIds.includes(service.id);
+                return (
+                  <label key={service.id} className="admin-service-checkbox">
+                    <input
+                      type="checkbox"
+                      checked={checked}
+                      onChange={(event) => {
+                        if (event.target.checked) {
+                          onSelectedServiceIdsChange([...selectedServiceIds, service.id]);
+                          return;
+                        }
+                        onSelectedServiceIdsChange(selectedServiceIds.filter((serviceId) => serviceId !== service.id));
+                      }}
+                    />
+                    <span>{service.name}</span>
+                  </label>
+                );
+              })}
+            </div>
+          </fieldset>
+        </div>
+
+        <div className="admin-barber-sheet-footer">
+          <button type="submit" className="btn btn--primary" disabled={barberSaving}>{barberSaving ? 'Saving...' : 'Save barber'}</button>
+        </div>
+      </form>
+    </div>
+  ) : null;
 
 
   return (
@@ -122,64 +189,7 @@ export default function BarbersOverview({
           </button>
         </li>
       </ul>
-      {isAddBarberSheetOpen ? (
-        <>
-          <div
-            className="admin-barber-sheet-backdrop"
-            role="presentation"
-            onClick={(event) => {
-              if (event.target === event.currentTarget) {
-                onCloseAddBarberSheet();
-              }
-            }}
-          />
-          <form className="admin-barber-sheet" onSubmit={onSubmitAddBarber}>
-            <div className="admin-barber-sheet-head">
-              <h3>Add barber</h3>
-              <button type="button" className="btn btn--ghost" onClick={onCloseAddBarberSheet} aria-label="Close add barber form">✕</button>
-            </div>
-
-            <div className="admin-barber-sheet-content">
-              <label htmlFor="barber-name">Barber name</label>
-              <input id="barber-name" value={barberNameDraft} onChange={(event) => onBarberNameChange(event.target.value)} placeholder="e.g. Marco" required />
-
-              <label htmlFor="barber-avatar">Avatar (optional)</label>
-              <input id="barber-avatar" type="file" accept="image/jpeg,image/png,image/webp" onChange={(event) => onBarberAvatarChange(event.target.files?.[0] ?? null)} />
-              {barberAvatarPreviewUrl ? <img src={barberAvatarPreviewUrl} alt="Selected avatar preview" className="admin-avatar-preview" /> : null}
-
-              <fieldset className="admin-service-select-group">
-                <legend>Services</legend>
-                <div className="admin-services-grid">
-                  {availableServices.map((service) => {
-                    const checked = selectedServiceIds.includes(service.id);
-                    return (
-                      <label key={service.id} className="admin-service-checkbox">
-                        <input
-                          type="checkbox"
-                          checked={checked}
-                          onChange={(event) => {
-                            if (event.target.checked) {
-                              onSelectedServiceIdsChange([...selectedServiceIds, service.id]);
-                              return;
-                            }
-                            onSelectedServiceIdsChange(selectedServiceIds.filter((serviceId) => serviceId !== service.id));
-                          }}
-                        />
-                        <span>{service.name}</span>
-                      </label>
-                    );
-                  })}
-                </div>
-              </fieldset>
-            </div>
-
-            <div className="admin-barber-sheet-footer">
-              <button type="submit" className="btn btn--primary" disabled={barberSaving}>{barberSaving ? 'Saving...' : 'Save barber'}</button>
-            </div>
-          </form>
-                  </>
-      ) : null}
-
+      {typeof document !== 'undefined' ? createPortal(addBarberSheet, document.body) : addBarberSheet}
 
       {globalBlocks.length > 0 ? (
         <>
