@@ -1,4 +1,4 @@
-import React, { useEffect } from 'react';
+import React from 'react';
 import type { Barber, ServiceOption, TimeBlock } from './barbersTypes';
 
 type BarbersOverviewProps = {
@@ -71,31 +71,6 @@ export default function BarbersOverview({
 }: BarbersOverviewProps) {
   const availableServices = services.length > 0 ? services : DEFAULT_SERVICE_OPTIONS;
 
-  useEffect(() => {
-    if (!isAddBarberSheetOpen) {
-      return;
-    }
-
-    const scrollY = window.scrollY;
-    const { style } = document.body;
-    const previousPosition = style.position;
-    const previousTop = style.top;
-    const previousWidth = style.width;
-    const previousOverflow = style.overflow;
-
-    style.position = 'fixed';
-    style.top = `-${scrollY}px`;
-    style.width = '100%';
-    style.overflow = 'hidden';
-
-    return () => {
-      style.position = previousPosition;
-      style.top = previousTop;
-      style.width = previousWidth;
-      style.overflow = previousOverflow;
-      window.scrollTo(0, scrollY);
-    };
-  }, [isAddBarberSheetOpen]);
 
 
   return (
