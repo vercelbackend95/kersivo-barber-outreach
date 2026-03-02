@@ -15,8 +15,9 @@ export function getBookingStatusTone(input: BookingStatusInput): BookingStatusTo
 }
 
 export function getStatusTextColorClass(tone: BookingStatusTone): string {
-  if (tone === 'confirmed') return 'text-[var(--status-confirmed)]';
-  if (tone === 'cancelled') return 'text-[var(--status-cancelled)]';
-  if (tone === 'rescheduled') return 'text-[var(--status-rescheduled)]';
-  return 'text-[var(--status-pending)]';
+  if (tone === 'confirmed') return 'admin-status-text--confirmed';
+  if (tone === 'cancelled') return 'admin-status-text--cancelled';
+  if (tone === 'rescheduled') return 'admin-status-text--rescheduled';
+  return 'admin-status-text--pending';
+
 }

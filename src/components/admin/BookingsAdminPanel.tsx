@@ -182,12 +182,13 @@ function formatStartDateTime(startAt: string) {
   if (parsedDate) return formatInTimeZone(parsedDate, ADMIN_TIMEZONE, 'dd/MM/yyyy, HH:mm');
 
   if (startAt.includes(',')) {
-    const [datePart, timePart = ''] = startAt.split(',');
-    const normalizedTime = timePart.trim().match(/(\d{2}:\d{2})/)?.[1];
-    if (datePart.trim() && normalizedTime) return `${datePart.trim()}, ${normalizedTime}`;
+    const [datePart, timePartRaw = ''] = startAt.split(',');
+    const hhmm = timePartRaw.trim().slice(0, 5);
+    if (datePart.trim() && /^\d{2}:\d{2}$/.test(hhmm)) return `${datePart.trim()}, ${hhmm}`;
+
   }
 
-  return startAt;
+  return String(startAt);
 
 }
 
@@ -1108,7 +1109,7 @@ export default function BookingsAdminPanel({ isActive, mode, onBackToDashboard }
                     <td><button type="button" className="admin-link-button" onClick={() => void openClientProfile(booking.clientId)}>{highlightMatch(booking.fullName)}</button></td>
                     <td className="admin-table-col-email hidden md:table-cell"><button type="button" className="admin-link-button" onClick={() => void openClientProfile(booking.clientId)}>{highlightMatch(booking.email)}</button></td>
 
-                    <td className="admin-table-col-service">{booking.service?.name}</td><td>{booking.barber?.name}</td><td className={mode === 'history' ? 'text-center' : ''}>{mode === 'history' ? <span className="inline-flex items-center justify-center"><StatusIcon className={`h-4 w-4 ${statusIconMeta.className}`} aria-label={statusIconMeta.label} title={statusIconMeta.label} /></span> : <><span className="hidden md:inline">{bookingStatusLabel}</span><span className="inline-flex md:hidden items-center justify-center"><StatusIcon className={`h-4 w-4 ${statusIconMeta.className}`} aria-label={statusIconMeta.label} title={statusIconMeta.label} /></span></>}</td><td className="admin-table-col-start"><span className="hidden md:inline">{formatStartDateTime(booking.startAt)}</span><span className="md:hidden">{formatStartTimeMobile(booking.startAt)}</span></td>
+                    <td className="admin-table-col-service">{booking.service?.name}</td><td>{booking.barber?.name}</td><td className={mode === 'history' ? 'admin-table-col-status admin-table-col-status--history' : 'admin-table-col-status'}>{mode === 'history' ? <span className="admin-status-icon-wrap"><StatusIcon className={`admin-status-icon ${statusIconMeta.className}`} aria-label={statusIconMeta.label} title={statusIconMeta.label} /></span> : <><span className="admin-status-label-desktop">{bookingStatusLabel}</span><span className="admin-status-icon-wrap admin-status-icon-wrap--mobile"><StatusIcon className={`admin-status-icon ${statusIconMeta.className}`} aria-label={statusIconMeta.label} title={statusIconMeta.label} /></span></>}</td><td className="admin-table-col-start"><span className="admin-start-desktop">{formatStartDateTime(booking.startAt)}</span><span className="admin-start-mobile">{formatStartTimeMobile(booking.startAt)}</span></td>
                     {mode !== 'history' ? <td className="admin-table-col-actions">{canBeCancelledByShop(booking) ? <button type="button" className="btn btn--secondary admin-cancel-btn" onClick={() => void cancelBookingByShop(booking)} disabled={cancelLoadingBookingId === booking.id}>{cancelLoadingBookingId === booking.id ? 'Cancelling...' : 'Cancel'}</button> : null}</td> : null}
 
                   </tr>

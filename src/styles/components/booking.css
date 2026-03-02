@@ -1183,6 +1183,60 @@
     width: 1%;
     white-space: nowrap;
   }
+.admin-table-col-status--history {
+  text-align: center;
+}
+
+.admin-status-icon-wrap {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.admin-status-icon {
+  width: 1rem;
+  height: 1rem;
+}
+
+.admin-status-label-desktop,
+.admin-start-desktop {
+  display: inline;
+}
+
+.admin-status-icon-wrap--mobile,
+.admin-start-mobile {
+  display: none;
+}
+
+.admin-status-text--confirmed {
+  color: var(--status-confirmed) !important;
+}
+
+.admin-status-text--pending {
+  color: var(--status-pending) !important;
+}
+
+.admin-status-text--cancelled {
+  color: var(--status-cancelled) !important;
+}
+
+.admin-status-text--rescheduled {
+  color: var(--status-rescheduled) !important;
+}
+
+@media (max-width: 768px) {
+  .admin-status-label-desktop,
+  .admin-start-desktop {
+    display: none;
+  }
+
+  .admin-status-icon-wrap--mobile,
+  .admin-start-mobile {
+    display: inline-flex;
+    align-items: center;
+  }
+}
+
 
 
 .admin-products-panel {
