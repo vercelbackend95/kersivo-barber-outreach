@@ -5,7 +5,6 @@ import { mkdir, writeFile } from 'node:fs/promises';
 import path from 'node:path';
 import type { APIRoute } from 'astro';
 import { z } from 'zod';
-import { Prisma } from '@prisma/client';
 import { requireAdmin } from '../../../lib/admin/auth';
 import { ensureBarberHasAllServices, ensureBarberHasAvailabilityRules } from '../../../lib/admin/defaultAvailability';
 import { prisma } from '../../../lib/db/client';
@@ -71,33 +70,7 @@ export const GET: APIRoute = async (ctx) => {
 
   let barbers: BarberListItem[];
 
-  const loadBarbersWithoutRelationSelect = async () => {
-    const baseBarbers = await prisma.barber.findMany({
-      orderBy: [{ sortOrder: 'asc' }, { name: 'asc' }, { createdAt: 'asc' }],
-      select: { id: true, name: true, email: true, avatarUrl: true, active: true, sortOrder: true, createdAt: true }
-    });
 
-    const barberIds = baseBarbers.map((barber) => barber.id);
-    const relationRows = barberIds.length > 0
-      ? await prisma.barberService.findMany({
-          where: { barberId: { in: barberIds } },
-          select: { barberId: true, serviceId: true }
-        })
-      : [];
-
-    const serviceIdByBarber = new Map<string, { serviceId: string }[]>();
-
-    for (const row of relationRows) {
-      const existing = serviceIdByBarber.get(row.barberId) ?? [];
-      existing.push({ serviceId: row.serviceId });
-      serviceIdByBarber.set(row.barberId, existing);
-    }
-
-    return baseBarbers.map((barber) => ({
-      ...barber,
-      barberServices: serviceIdByBarber.get(barber.id) ?? []
-    }));
-  };
 
 
   try {
@@ -106,25 +79,12 @@ export const GET: APIRoute = async (ctx) => {
       select: { id: true, name: true, email: true, avatarUrl: true, active: true, sortOrder: true, createdAt: true, barberServices: { select: { serviceId: true } } }
     });
   } catch (error) {
-        const isRelationSelectValidationError = error instanceof Prisma.PrismaClientValidationError
-      && String(error.message).includes('barberServices');
+        const isMissingSortOrderColumn = error instanceof Error
+      && 'code' in error
+      && (error as { code?: string }).code === 'P2022'
+      && 'meta' in error
+      && String((error as { meta?: { column?: string } }).meta?.column ?? '').includes('Barber.sortOrder');
 
-    if (isRelationSelectValidationError) {
-      barbers = await loadBarbersWithoutRelationSelect();
-
-      return new Response(JSON.stringify({
-        barbers: barbers.map((barber) => ({
-          ...barber,
-          serviceIds: barber.barberServices.map((item) => item.serviceId),
-          isActive: barber.active
-        }))
-      }));
-    }
-
-
-    const isMissingSortOrderColumn = error instanceof Prisma.PrismaClientKnownRequestError
-      && error.code === 'P2022'
-      && String(error.meta?.column ?? '').includes('Barber.sortOrder');
 
     if (!isMissingSortOrderColumn) {
       throw error;
