@@ -110,6 +110,99 @@ function formatRelativeTime(startAt: string, endAt: string) {
 function formatStartTime(startAt: string) {
 return new Date(startAt).toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit', timeZone: ADMIN_TIMEZONE });
 }
+function getBookingStatusLabel(booking: Booking) {
+  if (booking.status === 'CONFIRMED' && booking.rescheduledAt) return 'CONFIRMED · RESCHEDULED';
+  return booking.status;
+}
+
+function getStatusA11yLabel(statusLabel: string) {
+  if (statusLabel === 'CONFIRMED') return 'Confirmed';
+  if (statusLabel === 'EXPIRED') return 'Expired';
+  if (statusLabel === 'CANCELLED_BY_CLIENT') return 'Cancelled by client';
+  if (statusLabel === 'CANCELLED_BY_SHOP') return 'Cancelled by shop';
+  if (statusLabel === 'CONFIRMED · RESCHEDULED') return 'Confirmed and rescheduled';
+  return statusLabel.replace(/_/g, ' ').toLowerCase().replace(/(^|\s)\S/g, (char) => char.toUpperCase());
+}
+
+function getStatusIcon(statusLabel: string) {
+  if (statusLabel === 'CONFIRMED') {
+    return (
+      <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+        <circle cx="12" cy="12" r="9" />
+        <path d="m9 12 2 2 4-4" />
+      </svg>
+    );
+  }
+  if (statusLabel === 'EXPIRED') {
+    return (
+      <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+        <circle cx="12" cy="12" r="9" />
+        <path d="M12 7v5l3 2" />
+      </svg>
+    );
+  }
+  if (statusLabel === 'CANCELLED_BY_CLIENT') {
+    return (
+      <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+        <circle cx="12" cy="8" r="3" />
+        <path d="M5 20a7 7 0 0 1 14 0" />
+        <path d="m5 5 14 14" />
+      </svg>
+    );
+  }
+  if (statusLabel === 'CANCELLED_BY_SHOP') {
+    return (
+      <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+        <circle cx="12" cy="12" r="9" />
+        <path d="M7 7l10 10" />
+      </svg>
+    );
+  }
+  if (statusLabel === 'CONFIRMED · RESCHEDULED') {
+    return (
+      <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+        <path d="M20 7h-6l2-2" />
+        <path d="M4 17h6l-2 2" />
+        <path d="M20 7a8 8 0 0 0-14-3" />
+        <path d="M4 17a8 8 0 0 0 14 3" />
+      </svg>
+    );
+  }
+
+  return (
+    <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+      <circle cx="12" cy="12" r="9" />
+      <path d="M12 8v4" />
+      <circle cx="12" cy="16" r="1" fill="currentColor" stroke="none" />
+    </svg>
+  );
+}
+
+function parseBookingStartAt(startAt: string) {
+  const parsedDate = new Date(startAt);
+  if (!Number.isNaN(parsedDate.getTime())) return parsedDate;
+
+  const localizedMatch = startAt.match(/^(\d{2})\/(\d{2})\/(\d{4}),\s?(\d{2}):(\d{2})(?::(\d{2}))?$/);
+  if (localizedMatch) {
+    const [, day, month, year, hour, minute, second = '00'] = localizedMatch;
+    return fromZonedTime(`${year}-${month}-${day}T${hour}:${minute}:${second}`, ADMIN_TIMEZONE);
+  }
+
+  return null;
+}
+
+function formatStartDateTime(startAt: string) {
+  const parsedDate = parseBookingStartAt(startAt);
+  if (!parsedDate) return startAt;
+  return parsedDate.toLocaleString('en-GB', { timeZone: ADMIN_TIMEZONE });
+}
+
+function formatStartTimeMobile(startAt: string) {
+  const parsedDate = parseBookingStartAt(startAt);
+  if (!parsedDate) return '—';
+  return formatInTimeZone(parsedDate, ADMIN_TIMEZONE, 'HH:mm');
+}
+
 
 function getUpcomingBookings(bookings: Booking[]) {
   const nowMs = Date.now();
@@ -1008,17 +1101,23 @@ export default function BookingsAdminPanel({ isActive, mode, onBackToDashboard }
       ) : (
         <div className="listTableWrap">
           <table className="admin-table">
-            <thead><tr><th>Client</th><th>Email</th><th>Service</th><th>Barber</th><th>Status</th><th>Start</th><th>Actions</th></tr></thead>
+            <thead><tr><th>Client</th><th className="hidden md:table-cell">Email</th><th>Service</th><th>Barber</th><th>Status</th><th>Start</th><th>Actions</th></tr></thead>
             <tbody>
-              {visibleBookings.map((booking) => (
-                <tr className={updatedBookingIds.includes(booking.id) ? 'admin-row--updated' : ''} key={booking.id}>
-                  <td><button type="button" className="admin-link-button" onClick={() => void openClientProfile(booking.clientId)}>{highlightMatch(booking.fullName)}</button></td>
-                  <td className="admin-table-col-email"><button type="button" className="admin-link-button" onClick={() => void openClientProfile(booking.clientId)}>{highlightMatch(booking.email)}</button></td>
+              {visibleBookings.map((booking) => {
+                const bookingStatusLabel = getBookingStatusLabel(booking);
+                const bookingStatusA11yLabel = getStatusA11yLabel(bookingStatusLabel);
 
-                  <td className="admin-table-col-service">{booking.service?.name}</td><td>{booking.barber?.name}</td><td>{booking.status === 'CONFIRMED' && booking.rescheduledAt ? 'CONFIRMED · RESCHEDULED' : booking.status}</td><td className="admin-table-col-start">{new Date(booking.startAt).toLocaleString('en-GB', { timeZone: ADMIN_TIMEZONE })}</td>
-                  <td className="admin-table-col-actions">{canBeCancelledByShop(booking) ? <button type="button" className="btn btn--secondary admin-cancel-btn" onClick={() => void cancelBookingByShop(booking)} disabled={cancelLoadingBookingId === booking.id}>{cancelLoadingBookingId === booking.id ? 'Cancelling...' : 'Cancel'}</button> : null}</td>
-                </tr>
-              ))}
+                return (
+                  <tr className={updatedBookingIds.includes(booking.id) ? 'admin-row--updated' : ''} key={booking.id}>
+                    <td><button type="button" className="admin-link-button" onClick={() => void openClientProfile(booking.clientId)}>{highlightMatch(booking.fullName)}</button></td>
+                    <td className="admin-table-col-email hidden md:table-cell"><button type="button" className="admin-link-button" onClick={() => void openClientProfile(booking.clientId)}>{highlightMatch(booking.email)}</button></td>
+
+                    <td className="admin-table-col-service">{booking.service?.name}</td><td>{booking.barber?.name}</td><td><span className="hidden md:inline">{bookingStatusLabel}</span><span className="inline-flex md:hidden items-center justify-center" aria-label={bookingStatusA11yLabel} title={bookingStatusA11yLabel}>{getStatusIcon(bookingStatusLabel)}</span></td><td className="admin-table-col-start"><span className="hidden md:inline">{formatStartDateTime(booking.startAt)}</span><span className="md:hidden">{formatStartTimeMobile(booking.startAt)}</span></td>
+                    <td className="admin-table-col-actions">{canBeCancelledByShop(booking) ? <button type="button" className="btn btn--secondary admin-cancel-btn" onClick={() => void cancelBookingByShop(booking)} disabled={cancelLoadingBookingId === booking.id}>{cancelLoadingBookingId === booking.id ? 'Cancelling...' : 'Cancel'}</button> : null}</td>
+                  </tr>
+                );
+              })}
+
             </tbody>
           </table>
         </div>
