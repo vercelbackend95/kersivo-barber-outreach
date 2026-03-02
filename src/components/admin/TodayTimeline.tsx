@@ -115,20 +115,11 @@ function getInitials(fullName: string) {
 
 
 function buildLanes(barbers: TimelineBarber[], bookings: TimelineBooking[], timeBlocks: TimelineTimeBlock[]): LaneModel[] {
-  const allBarbersById = new Map(barbers.map((barber) => [barber.id, barber]));
-  const fallbackBarbers = new Map<string, TimelineBarber>();
+  const activeBarberIds = new Set(barbers.map((barber) => barber.id));
 
-  for (const booking of bookings) {
-    const barberId = booking.barberId;
-    if (!barberId || allBarbersById.has(barberId) || fallbackBarbers.has(barberId)) continue;
-    fallbackBarbers.set(barberId, { id: barberId, name: booking.barber?.name ?? 'Barber' });
-  }
-
-  const mergedBarbers = [...barbers, ...fallbackBarbers.values()];
-
-  return mergedBarbers.map((barber) => {
+  return barbers.map((barber) => {
     const laneBookings = bookings
-      .filter((booking) => booking.barberId === barber.id)
+      .filter((booking) => booking.barberId === barber.id && activeBarberIds.has(booking.barberId))
       .sort((a, b) => new Date(a.startAt).getTime() - new Date(b.startAt).getTime());
 
     const laneBlocks = timeBlocks

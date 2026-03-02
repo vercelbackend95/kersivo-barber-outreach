@@ -23,9 +23,9 @@ type Booking = {
 type Barber = {
   id: string;
   name: string;
-    avatarUrl?: string | null;
+  avatarUrl?: string | null;
   isActive?: boolean;
-
+  active?: boolean;
 };
 
 type TimeBlock = {
@@ -292,6 +292,7 @@ function getInitials(name: string) {
 }
 function normalizeBarberStatus(barber: Barber) {
   if (typeof barber.isActive === 'boolean') return barber.isActive;
+    if (typeof barber.active === 'boolean') return barber.active;
   return true;
 }
 
@@ -1213,7 +1214,7 @@ export default function BookingsAdminPanel({ isActive, mode, onBackToDashboard }
       {mode !== 'history' && activeView === 'timeline' ? (
         <AdminErrorBoundary>
           <TodayTimeline
-            barbers={barbers}
+            barbers={activeBarbers}
             bookings={visibleBookings}
             timeBlocks={timeBlocks}
             selectedDate={selectedDate}
