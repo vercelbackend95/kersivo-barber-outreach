@@ -72,6 +72,7 @@ model Service {
   createdAt       DateTime @default(now())
   updatedAt       DateTime @updatedAt
   bookings        Booking[]
+  barberServices  BarberService[]
 }
 
 model Barber {
@@ -87,8 +88,21 @@ model Barber {
   rules      AvailabilityRule[]
   timeOff    BarberTimeOff[]
   timeBlocks TimeBlock[]
+  barberServices BarberService[]
   @@index([active, sortOrder])
 }
+model BarberService {
+  barberId  String
+  serviceId String
+  createdAt DateTime @default(now())
+
+  barber  Barber  @relation(fields: [barberId], references: [id], onDelete: Cascade)
+  service Service @relation(fields: [serviceId], references: [id], onDelete: Cascade)
+
+  @@id([barberId, serviceId])
+  @@index([serviceId])
+}
+
 
 model AvailabilityRule {
   id            String   @id @default(cuid())

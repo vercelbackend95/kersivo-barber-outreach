@@ -138,9 +138,13 @@ export async function createPendingBooking(input: {
   await expirePendingBookings();
   const settings = await prisma.shopSettings.findFirstOrThrow();
   const service = await prisma.service.findUniqueOrThrow({ where: { id: input.serviceId } });
-    const barber = await prisma.barber.findUnique({ where: { id: input.barberId }, select: { id: true, active: true } });
-  if (!barber || !barber.active) throw new Error('Selected barber is unavailable for new bookings.');
+    const barber = await prisma.barber.findUnique({
+    where: { id: input.barberId },
+    select: { id: true, active: true, barberServices: { where: { serviceId: input.serviceId }, select: { serviceId: true } } }
+  });
 
+  if (!barber || !barber.active) throw new Error('Selected barber is unavailable for new bookings.');
+  if (barber.barberServices.length === 0) throw new Error('Selected barber does not provide this service.');
   const [h, m] = input.time.split(':').map(Number);
   const startAt = toUtcFromLondon(input.date, h * 60 + m);
   const endAt = addMinutes(startAt, service.durationMinutes + (service.bufferMinutes || settings.defaultBufferMinutes));
@@ -315,9 +319,13 @@ export async function rescheduleByToken(input: { token: string; serviceId: strin
 
   const settings = await prisma.shopSettings.findFirstOrThrow();
   const service = await prisma.service.findUniqueOrThrow({ where: { id: input.serviceId } });
-    const barber = await prisma.barber.findUnique({ where: { id: input.barberId }, select: { id: true, active: true } });
-  if (!barber || !barber.active) throw new Error('Selected barber is unavailable for new bookings.');
+    const barber = await prisma.barber.findUnique({
+    where: { id: input.barberId },
+    select: { id: true, active: true, barberServices: { where: { serviceId: input.serviceId }, select: { serviceId: true } } }
+  });
 
+  if (!barber || !barber.active) throw new Error('Selected barber is unavailable for new bookings.');
+  if (barber.barberServices.length === 0) throw new Error('Selected barber does not provide this service.');
   const [h, m] = input.time.split(':').map(Number);
   const startAt = toUtcFromLondon(input.date, h * 60 + m);
   const endAt = addMinutes(startAt, service.durationMinutes + (service.bufferMinutes || settings.defaultBufferMinutes));

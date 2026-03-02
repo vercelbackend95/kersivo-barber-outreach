@@ -27,6 +27,21 @@ type Barber = {
   isActive?: boolean;
   active?: boolean;
   sortOrder?: number;
+    serviceIds?: string[];
+};
+
+type ServiceOption = {
+  id: string;
+  name: string;
+  active?: boolean;
+};
+
+type WorkingHourRow = {
+  dayOfWeek: number;
+  active: boolean;
+  startTime: string;
+  endTime: string;
+
 };
 
 type TimeBlock = {
@@ -88,6 +103,7 @@ const UPDATED_ROW_HIGHLIGHT_MS = 2000;
 const MOBILE_BREAKPOINT_PX = 768;
 const MOBILE_RECENT_BARBERS_COUNT = 5;
 const DESKTOP_RECENT_BARBERS_COUNT = 11;
+const WEEK_DAYS = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
 
 const MOBILE_HISTORY_SERVICE_SHORTCUTS: Record<string, string> = {
   haircut: 'H',
@@ -364,6 +380,14 @@ export default function BookingsAdminPanel({ isActive, mode, onBackToDashboard }
   const [barberSaveError, setBarberSaveError] = useState('');
   const [barberSaving, setBarberSaving] = useState(false);
   const [barberReordering, setBarberReordering] = useState(false);
+  const [barberAvatarPreviewUrl, setBarberAvatarPreviewUrl] = useState<string | null>(null);
+  const [selectedBarberId, setSelectedBarberId] = useState<string>('');
+  const [services, setServices] = useState<ServiceOption[]>([]);
+  const [workingHours, setWorkingHours] = useState<WorkingHourRow[]>([]);
+  const [workingHoursLoading, setWorkingHoursLoading] = useState(false);
+  const [workingHoursSaving, setWorkingHoursSaving] = useState(false);
+  const [workingHoursTemplateId, setWorkingHoursTemplateId] = useState<string>('');
+  const [servicesSaving, setServicesSaving] = useState(false);
 
   const [timeBlocks, setTimeBlocks] = useState<TimeBlock[]>([]);
   const [error, setError] = useState('');
@@ -699,6 +723,9 @@ export default function BookingsAdminPanel({ isActive, mode, onBackToDashboard }
   const allBarbersSorted = useMemo(() => [...barbers].sort((a, b) => (a.sortOrder ?? Number.MAX_SAFE_INTEGER) - (b.sortOrder ?? Number.MAX_SAFE_INTEGER) || a.name.localeCompare(b.name, 'en')), [barbers]);
   const activeBarbers = useMemo(() => allBarbersSorted.filter((barber) => normalizeBarberStatus(barber)), [allBarbersSorted]);
   const visibleBarbersForManagement = useMemo(() => showInactiveBarbers ? allBarbersSorted : activeBarbers, [activeBarbers, allBarbersSorted, showInactiveBarbers]);
+  const selectedBarber = useMemo(() => allBarbersSorted.find((barber) => barber.id === selectedBarberId) ?? null, [allBarbersSorted, selectedBarberId]);
+  const activeTemplateBarbers = useMemo(() => activeBarbers.filter((barber) => barber.id !== selectedBarberId), [activeBarbers, selectedBarberId]);
+  const enabledServiceIds = useMemo(() => new Set(selectedBarber?.serviceIds ?? []), [selectedBarber]);
 
   const visibleRecentBarberIds = useMemo(() => {
     if (mode !== 'history') return [] as string[];
@@ -824,6 +851,130 @@ export default function BookingsAdminPanel({ isActive, mode, onBackToDashboard }
   }
 
 
+  useEffect(() => {
+    if (!barberAvatarFile) {
+      setBarberAvatarPreviewUrl(null);
+      return;
+    }
+
+    const objectUrl = URL.createObjectURL(barberAvatarFile);
+    setBarberAvatarPreviewUrl(objectUrl);
+    return () => URL.revokeObjectURL(objectUrl);
+  }, [barberAvatarFile]);
+
+  useEffect(() => {
+    if (selectedBarberId && allBarbersSorted.some((barber) => barber.id === selectedBarberId)) return;
+    setSelectedBarberId(activeBarbers[0]?.id ?? allBarbersSorted[0]?.id ?? '');
+  }, [activeBarbers, allBarbersSorted, selectedBarberId]);
+
+  const fetchServices = useCallback(async () => {
+    const response = await fetch('/api/admin/services', { credentials: 'same-origin' });
+    if (!response.ok) return;
+    const data = (await response.json()) as { services?: ServiceOption[] };
+    setServices((data.services ?? []).filter((service) => service.active !== false));
+  }, []);
+
+  const fetchWorkingHours = useCallback(async (barberId: string) => {
+    if (!barberId) return;
+    setWorkingHoursLoading(true);
+    const response = await fetch(`/api/admin/barbers/${barberId}/rules`, { credentials: 'same-origin' });
+    const payload = await response.json().catch(() => ({} as { rules?: WorkingHourRow[] }));
+    if (response.ok) {
+      setWorkingHours(payload.rules ?? []);
+    }
+    setWorkingHoursLoading(false);
+  }, []);
+
+  useEffect(() => {
+    if (!loggedIn || !isActive || mode !== 'blocks') return;
+    void fetchServices();
+  }, [fetchServices, isActive, loggedIn, mode]);
+
+  useEffect(() => {
+    if (!loggedIn || !isActive || mode !== 'blocks' || !selectedBarberId) return;
+    void fetchWorkingHours(selectedBarberId);
+  }, [fetchWorkingHours, isActive, loggedIn, mode, selectedBarberId]);
+
+  function updateWorkingHour(dayOfWeek: number, patch: Partial<WorkingHourRow>) {
+    setWorkingHours((current) => current.map((row) => row.dayOfWeek === dayOfWeek ? { ...row, ...patch } : row));
+  }
+
+  async function saveWorkingHours() {
+    if (!selectedBarberId) return;
+    setWorkingHoursSaving(true);
+    setBarberSaveMessage('');
+    setBarberSaveError('');
+    const response = await fetch(`/api/admin/barbers/${selectedBarberId}/rules`, {
+      method: 'PUT',
+      credentials: 'same-origin',
+      headers: { 'content-type': 'application/json' },
+      body: JSON.stringify({ rules: workingHours })
+    });
+    const payload = await response.json().catch(() => ({} as { error?: string }));
+    if (!response.ok) {
+      setBarberSaveError(payload.error ?? 'Could not save working hours.');
+      setWorkingHoursSaving(false);
+      return;
+    }
+    setBarberSaveMessage('Working hours saved.');
+    setWorkingHoursSaving(false);
+  }
+
+  async function copyWorkingHours() {
+    if (!selectedBarberId || !workingHoursTemplateId) return;
+    setBarberSaveMessage('');
+    setBarberSaveError('');
+    const response = await fetch(`/api/admin/barbers/${selectedBarberId}/rules-copy`, {
+      method: 'POST',
+      credentials: 'same-origin',
+      headers: { 'content-type': 'application/json' },
+      body: JSON.stringify({ sourceBarberId: workingHoursTemplateId })
+    });
+    const payload = await response.json().catch(() => ({} as { error?: string }));
+    if (!response.ok) {
+      setBarberSaveError(payload.error ?? 'Could not copy working hours.');
+      return;
+    }
+    setBarberSaveMessage('Working hours copied.');
+    await fetchWorkingHours(selectedBarberId);
+  }
+
+  async function saveServiceIds(serviceIds: string[]) {
+    if (!selectedBarberId) return;
+    setServicesSaving(true);
+    setBarberSaveMessage('');
+    setBarberSaveError('');
+    const response = await fetch(`/api/admin/barbers/${selectedBarberId}/services`, {
+      method: 'PUT',
+      credentials: 'same-origin',
+      headers: { 'content-type': 'application/json' },
+      body: JSON.stringify({ serviceIds })
+    });
+    const payload = await response.json().catch(() => ({} as { error?: string; serviceIds?: string[] }));
+    if (!response.ok) {
+      setBarberSaveError(payload.error ?? 'Could not save barber services.');
+      setServicesSaving(false);
+      return;
+    }
+
+    const nextServiceIds = payload.serviceIds ?? serviceIds;
+    setBarbers((current) => current.map((barber) => barber.id === selectedBarberId ? { ...barber, serviceIds: nextServiceIds } : barber));
+    setBarberSaveMessage('Services updated.');
+    setServicesSaving(false);
+  }
+
+  async function toggleServiceForBarber(serviceId: string, enabled: boolean) {
+    const current = new Set(selectedBarber?.serviceIds ?? []);
+    if (enabled) current.add(serviceId);
+    else current.delete(serviceId);
+    await saveServiceIds(Array.from(current));
+  }
+
+  async function toggleAllServicesForBarber(enabled: boolean) {
+    await saveServiceIds(enabled ? services.map((service) => service.id) : []);
+  }
+
+
   async function login() { const res = await fetch('/api/admin/login', { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ secret }) }); setLoggedIn(res.ok); if (!res.ok) setError('Invalid secret'); }
 
 
@@ -934,7 +1085,7 @@ export default function BookingsAdminPanel({ isActive, mode, onBackToDashboard }
     }
 
     setBarberNameDraft('');
-    setBarberAvatarFile(null);
+    setBarberAvatarPreviewUrl(null);
     setBarberSaveMessage('Barber saved.');
     setBarberSaving(false);
     await fetchBarbers();
@@ -1025,10 +1176,12 @@ export default function BookingsAdminPanel({ isActive, mode, onBackToDashboard }
               </div>
                             <p className="muted">Manage active barbers and their avatars. Deactivated barbers stay linked to booking history.</p>
               <form className="admin-barber-form" onSubmit={(event) => void saveBarber(event)}>
+                                <h3>Add barber</h3>
                 <label htmlFor="barber-name">Barber name</label>
                 <input id="barber-name" value={barberNameDraft} onChange={(event) => setBarberNameDraft(event.target.value)} placeholder="e.g. Marco" required />
                 <label htmlFor="barber-avatar">Avatar (optional)</label>
                 <input id="barber-avatar" type="file" accept="image/jpeg,image/png,image/webp" onChange={(event) => setBarberAvatarFile(event.target.files?.[0] ?? null)} />
+                                {barberAvatarPreviewUrl && <img src={barberAvatarPreviewUrl} alt="Selected avatar preview" className="admin-avatar-preview" />}
                 <button type="submit" className="btn btn--primary" disabled={barberSaving}>Save barber</button>
               </form>
               <div className="admin-barber-toggle">
@@ -1039,6 +1192,7 @@ export default function BookingsAdminPanel({ isActive, mode, onBackToDashboard }
               </div>
               {barberSaveMessage && <p className="admin-inline-success">{barberSaveMessage}</p>}
               {barberSaveError && <p className="admin-inline-error">{barberSaveError}</p>}
+                            <h3>Barbers list</h3>
               <ul className="admin-barber-list">
                 {visibleBarbersForManagement.map((barber, index) => {
                   const barberIsActive = normalizeBarberStatus(barber);
@@ -1046,7 +1200,7 @@ export default function BookingsAdminPanel({ isActive, mode, onBackToDashboard }
                   const isLastItem = index === visibleBarbersForManagement.length - 1;
 
                   return (
-                    <li key={barber.id} className={`admin-barber-list-item ${barberIsActive ? '' : 'is-inactive'}`}>
+                    <li key={barber.id} className={`admin-barber-list-item ${barberIsActive ? '' : 'is-inactive'} ${selectedBarberId === barber.id ? 'is-selected' : ''}`} onClick={() => setSelectedBarberId(barber.id)}>
                       <div className="admin-barber-avatar">
                         {barber.avatarUrl ? <img src={barber.avatarUrl} alt={barber.name} loading="lazy" /> : <span>{getInitials(barber.name)}</span>}
                       </div>
@@ -1086,6 +1240,21 @@ export default function BookingsAdminPanel({ isActive, mode, onBackToDashboard }
                   );
                 })}
               </ul>
+              <section className="admin-settings-panel">
+                <h3>Working hours</h3>
+                <p className="muted">Editing: {selectedBarber?.name ?? 'No barber selected'}</p>
+                <div className="admin-working-hours-copy"><label htmlFor="copy-working-hours">Copy from</label><select id="copy-working-hours" value={workingHoursTemplateId} onChange={(event) => setWorkingHoursTemplateId(event.target.value)}><option value="">Choose barber</option>{activeTemplateBarbers.map((barber) => <option key={barber.id} value={barber.id}>{barber.name}</option>)}</select><button type="button" className="btn btn--secondary" onClick={() => void copyWorkingHours()} disabled={!workingHoursTemplateId || !selectedBarberId}>Copy schedule</button></div>
+                {workingHoursLoading ? <p className="muted">Loading working hours...</p> : <div className="admin-working-hours-grid">{workingHours.map((row) => <div key={row.dayOfWeek} className="admin-working-hours-row"><strong>{WEEK_DAYS[row.dayOfWeek] ?? row.dayOfWeek}</strong><label><input type="checkbox" checked={row.active} onChange={(event) => updateWorkingHour(row.dayOfWeek, { active: event.target.checked })} /> Open</label><input type="time" value={row.startTime} onChange={(event) => updateWorkingHour(row.dayOfWeek, { startTime: event.target.value })} disabled={!row.active} /><input type="time" value={row.endTime} onChange={(event) => updateWorkingHour(row.dayOfWeek, { endTime: event.target.value })} disabled={!row.active} /></div>)}</div>}
+                <button type="button" className="btn btn--primary" onClick={() => void saveWorkingHours()} disabled={!selectedBarberId || workingHoursSaving}>Save working hours</button>
+              </section>
+
+              <section className="admin-settings-panel">
+                <h3>Services</h3>
+                <p className="muted">Select services available for {selectedBarber?.name ?? 'selected barber'}.</p>
+                <div className="admin-services-actions"><button type="button" className="btn btn--secondary" onClick={() => void toggleAllServicesForBarber(true)} disabled={!selectedBarberId || servicesSaving}>All services</button><button type="button" className="btn btn--ghost" onClick={() => void toggleAllServicesForBarber(false)} disabled={!selectedBarberId || servicesSaving}>Clear all</button></div>
+                <div className="admin-services-grid">{services.map((service) => <label key={service.id} className="admin-service-checkbox"><input type="checkbox" checked={enabledServiceIds.has(service.id)} onChange={(event) => void toggleServiceForBarber(service.id, event.target.checked)} disabled={!selectedBarberId || servicesSaving} />{service.name}</label>)}</div>
+              </section>
+
 
               <p className="muted">These blocks affect booking availability for today.</p>
               <div className="admin-quick-scope"><label htmlFor="block-scope">Applies to</label><select id="block-scope" value={blockScopeBarberId} onChange={(event) => setBlockScopeBarberId(event.target.value)}><option value="all">All barbers</option>{activeBarbers.map((barber) => <option key={barber.id} value={barber.id}>{barber.name}</option>)}</select></div>

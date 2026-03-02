@@ -8,13 +8,25 @@ import '../../styles/components/booking.css';
 
 const [services, barbers] = await Promise.all([
   prisma.service.findMany({ where: { active: true }, orderBy: { createdAt: 'asc' } }),
-  prisma.barber.findMany({ where: { active: true }, orderBy: [{ sortOrder: 'asc' }, { createdAt: 'asc' }] })
+  prisma.barber.findMany({
+    where: { active: true },
+    orderBy: [{ sortOrder: 'asc' }, { createdAt: 'asc' }],
+    include: { barberServices: { select: { serviceId: true } } }
+  })
 ]);
 ---
 <html lang="en">
   <body>
     <main class="container page-wrap">
-      <BookingFlow client:load services={services} barbers={barbers} />
+      <BookingFlow
+        client:load
+        services={services}
+        barbers={barbers.map((barber) => ({
+          id: barber.id,
+          name: barber.name,
+          serviceIds: barber.barberServices.map((item) => item.serviceId)
+        }))}
+      />
     </main>
   </body>
 </html>

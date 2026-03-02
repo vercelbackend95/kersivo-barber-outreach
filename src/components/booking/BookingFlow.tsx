@@ -2,7 +2,7 @@
 import React, { useEffect, useMemo, useState } from 'react';
 
 type Service = { id: string; name: string; durationMinutes: number; fromPriceText?: string | null };
-type Barber = { id: string; name: string };
+type Barber = { id: string; name: string; serviceIds?: string[] };
 
 
 type BookingPayload = {
@@ -54,7 +54,7 @@ function normalizeToIsoDate(input: string): string | null {
 
 export default function BookingFlow({ services, barbers, mode = 'create', token = '' }: Props) {
   const [serviceId, setServiceId] = useState(services[0]?.id ?? '');
-  const [barberId, setBarberId] = useState(barbers[0]?.id ?? '');
+  const [barberId, setBarberId] = useState('');
   const [date, setDate] = useState(new Date().toISOString().slice(0, 10));
   const [slots, setSlots] = useState<string[]>([]);
   const [time, setTime] = useState('');
@@ -62,6 +62,22 @@ export default function BookingFlow({ services, barbers, mode = 'create', token 
   const [email, setEmail] = useState('');
   const [phone, setPhone] = useState('');
   const [message, setMessage] = useState('');
+  const availableBarbers = useMemo(() => {
+    if (!serviceId) return [];
+    return barbers.filter((barber) => {
+      if (!barber.serviceIds || barber.serviceIds.length === 0) return true;
+      return barber.serviceIds.includes(serviceId);
+    });
+  }, [barbers, serviceId]);
+
+  useEffect(() => {
+    if (!availableBarbers.some((barber) => barber.id === barberId)) {
+      setBarberId(availableBarbers[0]?.id ?? '');
+      setTime('');
+      setSlots([]);
+    }
+  }, [availableBarbers, barberId]);
+
 
   useEffect(() => {
     if (!serviceId || !barberId || !date) return;
@@ -180,9 +196,9 @@ export default function BookingFlow({ services, barbers, mode = 'create', token 
 
       <label>Barber</label>
       <select value={barberId} onChange={(e) => setBarberId(e.target.value)}>
-        {barbers.map((barber) => <option key={barber.id} value={barber.id}>{barber.name}</option>)}
+        {availableBarbers.map((barber) => <option key={barber.id} value={barber.id}>{barber.name}</option>)}
       </select>
-
+      {availableBarbers.length === 0 && <p className="muted">No active barbers offer this service right now.</p>}
       <label>Date</label>
       <input type="date" value={date} onChange={(e) => setDate(e.target.value)} />
 
@@ -212,7 +228,7 @@ export default function BookingFlow({ services, barbers, mode = 'create', token 
         </>
       )}
 
-      <button type="button" className="btn btn--primary" disabled={!time || (mode === 'create' && (!fullName || !email))} onClick={submit}>{mode === 'reschedule' ? 'Reschedule booking' : 'Create booking'}</button>
+      <button type="button" className="btn btn--primary" disabled={!time || !barberId || (mode === 'create' && (!fullName || !email))} onClick={submit}>{mode === 'reschedule' ? 'Reschedule booking' : 'Create booking'}</button>
       {message && <p>{message}</p>}
     </section>
   );

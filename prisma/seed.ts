@@ -49,6 +49,16 @@ async function main() {
     });
   }
 
+  await prisma.barberService.deleteMany({ where: { barberId: { in: barbers.map((barber) => barber.id) } } });
+  for (const barber of barbers) {
+    await prisma.barberService.createMany({
+      data: services.map((service) => ({ barberId: barber.id, serviceId: service.id })),
+      skipDuplicates: true
+    });
+  }
+
+
+
   for (const barber of barbers) {
     await prisma.availabilityRule.deleteMany({ where: { barberId: barber.id } });
     for (let day = 1; day <= 6; day += 1) {

@@ -7,7 +7,7 @@ import type { APIRoute } from 'astro';
 import { z } from 'zod';
 import { Prisma } from '@prisma/client';
 import { requireAdmin } from '../../../lib/admin/auth';
-import { ensureBarberHasAvailabilityRules } from '../../../lib/admin/defaultAvailability';
+import { ensureBarberHasAllServices, ensureBarberHasAvailabilityRules } from '../../../lib/admin/defaultAvailability';
 import { prisma } from '../../../lib/db/client';
 
 const MAX_AVATAR_SIZE_BYTES = 5 * 1024 * 1024;
@@ -17,7 +17,7 @@ const jsonSchema = z.object({
   id: z.string().optional(),
   name: z.string().trim().min(1, 'Name is required.').optional(),
   email: z.string().email().optional().or(z.literal('')),
-    avatarUrl: z.string().trim().url().optional().or(z.literal('')),
+  avatarUrl: z.string().trim().url().optional().or(z.literal('')),
   active: z.boolean().optional(),
   isActive: z.boolean().optional()
 });
@@ -58,11 +58,11 @@ export const GET: APIRoute = async (ctx) => {
   const unauthorized = requireAdmin(ctx);
   if (unauthorized) return unauthorized;
 
-  let barbers: Array<{ id: string; name: string; email: string | null; avatarUrl: string | null; active: boolean; sortOrder: number; createdAt: Date }>;
+  let barbers: Array<{ id: string; name: string; email: string | null; avatarUrl: string | null; active: boolean; sortOrder: number; createdAt: Date; barberServices: { serviceId: string }[] }>;
   try {
     barbers = await prisma.barber.findMany({
       orderBy: [{ sortOrder: 'asc' }, { name: 'asc' }, { createdAt: 'asc' }],
-      select: { id: true, name: true, email: true, avatarUrl: true, active: true, sortOrder: true, createdAt: true }
+      select: { id: true, name: true, email: true, avatarUrl: true, active: true, sortOrder: true, createdAt: true, barberServices: { select: { serviceId: true } } }
     });
   } catch (error) {
     const isMissingSortOrderColumn = error instanceof Prisma.PrismaClientKnownRequestError
@@ -75,7 +75,7 @@ export const GET: APIRoute = async (ctx) => {
 
     const fallbackBarbers = await prisma.barber.findMany({
       orderBy: [{ name: 'asc' }, { createdAt: 'asc' }],
-      select: { id: true, name: true, email: true, avatarUrl: true, active: true, createdAt: true }
+      select: { id: true, name: true, email: true, avatarUrl: true, active: true, createdAt: true, barberServices: { select: { serviceId: true } } }
     });
 
     barbers = fallbackBarbers.map((barber, index) => ({ ...barber, sortOrder: index }));
@@ -84,6 +84,7 @@ export const GET: APIRoute = async (ctx) => {
   return new Response(JSON.stringify({
     barbers: barbers.map((barber) => ({
       ...barber,
+            serviceIds: barber.barberServices.map((item) => item.serviceId),
       isActive: barber.active
     }))
   }));
@@ -132,6 +133,7 @@ export const POST: APIRoute = async (ctx) => {
 
     if (barber.active) {
       await ensureBarberHasAvailabilityRules(barber.id);
+            await ensureBarberHasAllServices(barber.id);
     }
 
 
@@ -148,7 +150,7 @@ export const POST: APIRoute = async (ctx) => {
     ...(name ? { name } : {}),
     ...(typeof active === 'boolean' ? { active } : {}),
     ...(typeof isActive === 'boolean' ? { active: isActive } : {}),
-        ...(typeof avatarUrl === 'string' ? { avatarUrl: avatarUrl || null } : {}),
+    ...(typeof avatarUrl === 'string' ? { avatarUrl: avatarUrl || null } : {}),
     email: email || null
   };
 
@@ -169,6 +171,7 @@ export const POST: APIRoute = async (ctx) => {
 
   if (barber.active) {
     await ensureBarberHasAvailabilityRules(barber.id);
+        await ensureBarberHasAllServices(barber.id);
   }
 
 

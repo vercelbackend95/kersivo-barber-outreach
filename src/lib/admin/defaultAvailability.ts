@@ -21,7 +21,7 @@ export async function ensureBarberHasAvailabilityRules(barberId: string) {
       active: true,
       rules: { some: { active: true } }
     },
-    orderBy: { createdAt: 'asc' },
+    orderBy: [{ sortOrder: 'asc' }, { createdAt: 'asc' }],
     select: {
       rules: {
         where: { active: true },
@@ -52,5 +52,25 @@ export async function ensureBarberHasAvailabilityRules(barberId: string) {
       breakEndMin: rule.breakEndMin,
       active: rule.active
     }))
+  });
+}
+
+export async function ensureBarberHasAllServices(barberId: string) {
+  const existingCount = await prisma.barberService.count({ where: { barberId } });
+  if (existingCount > 0) {
+    return;
+  }
+
+  const services = await prisma.service.findMany({ where: { active: true }, select: { id: true } });
+  if (services.length === 0) {
+    return;
+  }
+
+  await prisma.barberService.createMany({
+    data: services.map((service) => ({
+      barberId,
+      serviceId: service.id
+    })),
+    skipDuplicates: true
   });
 }
