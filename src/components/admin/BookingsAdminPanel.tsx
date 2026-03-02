@@ -671,7 +671,6 @@ export default function BookingsAdminPanel({ isActive, mode, onBackToDashboard }
   const upcomingBookings = useMemo(() => getUpcomingBookings(todayBookings), [todayBookings]);
 
   const nextBooking = upcomingBookings[0] ?? null;
-  const currentBookingView = mode === 'history' ? 'history' : activeView;
   const filteredBookings = useMemo(() => {
     if (mode !== 'history') return bookings;
     return [...bookings]
@@ -731,6 +730,7 @@ export default function BookingsAdminPanel({ isActive, mode, onBackToDashboard }
   }, [normalizedClientSearchQuery]);
 
   const isMobileDashboard = mode === 'dashboard' && isMobileViewport;
+    const isMobileAdminPanel = isMobileViewport;
   const isTimelineView = mode === 'dashboard' && activeView === 'timeline';
   const selectedDateLabel = useMemo(() => formatTimelineDateLabel(selectedDate), [selectedDate]);
 
@@ -880,7 +880,7 @@ export default function BookingsAdminPanel({ isActive, mode, onBackToDashboard }
   return (
     <section className="surface booking-shell">
       <h1>Admin Dashboard</h1>
-      <div className={`admin-next-block ${isMobileDashboard ? 'admin-next-block--mobile-sticky' : ''}`}><p className="admin-next-primary">{currentBookingView === 'history' ? `History: ${bookings.length} bookings` : `Today: ${todayBookings.length} bookings`}</p>{nextBooking && mode !== 'history' && <p className="admin-next-secondary">Next: {nextBooking.barber?.name} — {nextBooking.service?.name} — {formatStartTime(nextBooking.startAt)} ({formatRelativeTime(nextBooking.startAt, nextBooking.endAt)})</p>}<p className="muted admin-next-updated">Updated: {formatLastUpdated(lastUpdatedAt, nowMs)}</p></div>
+      <div className={`admin-next-block ${isMobileAdminPanel ? 'admin-next-block--mobile-sticky' : ''}`}><p className="admin-next-primary">Today: {todayBookings.length} bookings</p>{nextBooking && <p className="admin-next-secondary">Next: {nextBooking.barber?.name} — {nextBooking.service?.name} — {formatStartTime(nextBooking.startAt)} ({formatRelativeTime(nextBooking.startAt, nextBooking.endAt)})</p>}<p className="muted admin-next-updated">Updated: {formatLastUpdated(lastUpdatedAt, nowMs)}</p></div>
 
       {cancelSuccessMessage && <p className="admin-inline-success">{cancelSuccessMessage}</p>}
       {cancelErrorMessage && <p className="admin-inline-error">{cancelErrorMessage}</p>}
