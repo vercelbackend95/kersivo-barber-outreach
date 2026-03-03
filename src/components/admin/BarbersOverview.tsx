@@ -163,10 +163,25 @@ export default function BarbersOverview({
 
             <div className="admin-barber-sheet-content">
               <label htmlFor="barber-name">Barber name</label>
-              <input id="barber-name" value={barberNameDraft} onChange={(event) => onBarberNameChange(event.target.value)} placeholder="e.g. Marco" required />
+              <input
+                id="barber-name"
+                value={barberNameDraft}
+                onChange={(event) => onBarberNameChange(event.target.value)}
+                onKeyDown={(event) => {
+                  if (event.key === 'Enter') {
+                    event.preventDefault();
+                  }
+                }}
+                placeholder="e.g. Marco"
+                required
+              />
+
 
               <label htmlFor="barber-avatar">Avatar (optional)</label>
-              <input id="barber-avatar" type="file" accept="image/jpeg,image/png,image/webp" onChange={(event) => onBarberAvatarChange(event.target.files?.[0] ?? null)} />
+              <div className="admin-barber-file-input-wrap">
+                <input id="barber-avatar" type="file" accept="image/jpeg,image/png,image/webp" onChange={(event) => onBarberAvatarChange(event.target.files?.[0] ?? null)} />
+              </div>
+
               {barberAvatarPreviewUrl ? <img src={barberAvatarPreviewUrl} alt="Selected avatar preview" className="admin-avatar-preview" /> : null}
 
               <fieldset className="admin-service-select-group">

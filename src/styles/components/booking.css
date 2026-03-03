@@ -2814,25 +2814,48 @@
   justify-content: space-between;
   align-items: center;
   gap: 0.5rem;
-  padding: 0.85rem;
+  padding: 1rem;
   border-bottom: 1px solid var(--border);
 }
 
 .admin-barber-sheet-content {
   display: grid;
-    flex: 1 1 auto;
+  flex: 1 1 auto;
   min-height: 0;
-
+  width: 100%;
+  max-width: 100%;
+  box-sizing: border-box;
   gap: 0.6rem;
-  padding: 0.85rem;
+  padding: 1rem;
   overflow-y: auto;
+  overflow-x: hidden;
   -webkit-overflow-scrolling: touch;
 }
+.admin-barber-sheet-content label,
+.admin-barber-sheet-content input,
+.admin-barber-sheet-content fieldset,
+.admin-barber-sheet-content .admin-barber-file-input-wrap {
+  width: 100%;
+  max-width: 100%;
+  box-sizing: border-box;
+}
+
+.admin-barber-file-input-wrap {
+  overflow: hidden;
+}
+
+.admin-barber-file-input-wrap input[type="file"] {
+  display: block;
+  width: 100%;
+  max-width: 100%;
+  box-sizing: border-box;
+}
+
 
 .admin-barber-sheet-footer {
-    flex: 0 0 auto;
-  padding: 0.85rem;
-  padding-bottom: calc(0.85rem + env(safe-area-inset-bottom));
+  flex: 0 0 auto;
+  padding: 1rem;
+  padding-bottom: calc(1rem + env(safe-area-inset-bottom));
   border-top: 1px solid var(--border);
   background: var(--surface);
 }
