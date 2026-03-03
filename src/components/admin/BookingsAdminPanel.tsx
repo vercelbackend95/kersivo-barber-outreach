@@ -911,7 +911,9 @@ export default function BookingsAdminPanel({ isActive, mode, onBackToDashboard }
     const response = await fetch(`/api/admin/barbers/${barberId}/rules`, { credentials: 'same-origin' });
     const payload = await response.json().catch(() => ({} as { rules?: WorkingHourRow[] }));
     if (response.ok) {
-      setWorkingHours(payload.rules ?? []);
+      const rules = payload.rules ?? [];
+      setWorkingHours(rules.sort((a, b) => a.dayOfWeek - b.dayOfWeek));
+
     }
     setWorkingHoursLoading(false);
   }, []);
@@ -954,8 +956,9 @@ export default function BookingsAdminPanel({ isActive, mode, onBackToDashboard }
     setWorkingHours((current) => current.map((row) => row.dayOfWeek === dayOfWeek ? { ...row, ...patch } : row));
   }
 
-  async function saveWorkingHours() {
+  async function saveWorkingHours(nextRules?: WorkingHourRow[]) {
     if (!selectedBarberId) return;
+    const rulesToSave = (nextRules ?? workingHours).slice().sort((a, b) => a.dayOfWeek - b.dayOfWeek);
     setWorkingHoursSaving(true);
     setBarberSaveMessage('');
     setBarberSaveError('');
@@ -963,14 +966,18 @@ export default function BookingsAdminPanel({ isActive, mode, onBackToDashboard }
       method: 'PUT',
       credentials: 'same-origin',
       headers: { 'content-type': 'application/json' },
-      body: JSON.stringify({ rules: workingHours })
+      body: JSON.stringify({ rules: rulesToSave })
     });
-    const payload = await response.json().catch(() => ({} as { error?: string }));
+    const payload = await response.json().catch(() => ({} as { error?: string; rules?: WorkingHourRow[] }));
     if (!response.ok) {
       setBarberSaveError(payload.error ?? 'Could not save working hours.');
       setWorkingHoursSaving(false);
       return;
     }
+        if (payload.rules) {
+      setWorkingHours(payload.rules.sort((a, b) => a.dayOfWeek - b.dayOfWeek));
+    }
+
     setBarberSaveMessage('Working hours saved.');
     setWorkingHoursSaving(false);
   }
@@ -1234,7 +1241,9 @@ export default function BookingsAdminPanel({ isActive, mode, onBackToDashboard }
                 onToggleActive={() => void updateBarberStatus(selectedBarber.id, !normalizeBarberStatus(selectedBarber))}
                 onToggleService={(serviceId, enabled) => void toggleServiceForBarber(serviceId, enabled)}
                 onChangeWorkingHour={(dayOfWeek, field, value) => updateWorkingHour(dayOfWeek, { [field]: value })}
-                onSaveWorkingHours={() => void saveWorkingHours()}
+                barberSaveError={barberSaveError}
+                onSetWorkingHours={setWorkingHours}
+                onSaveWorkingHours={(rules) => void saveWorkingHours(rules)}
                 onChangeBlockTitle={setProfileBlockTitle}
                 onChangeBlockStartAt={setProfileBlockStartInput}
                 onChangeBlockEndAt={setProfileBlockEndInput}

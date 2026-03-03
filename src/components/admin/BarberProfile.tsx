@@ -26,7 +26,9 @@ type BarberProfileProps = {
   onToggleActive: () => void;
   onToggleService: (serviceId: string, enabled: boolean) => void;
   onChangeWorkingHour: (dayOfWeek: number, field: 'active' | 'startTime' | 'endTime', value: string | boolean) => void;
-  onSaveWorkingHours: () => void;
+  barberSaveError: string;
+  onSetWorkingHours: (rules: WorkingHourRow[]) => void;
+  onSaveWorkingHours: (rules?: WorkingHourRow[]) => void;
   onChangeBlockTitle: (value: string) => void;
   onChangeBlockStartAt: (value: string) => void;
   onChangeBlockEndAt: (value: string) => void;
@@ -57,6 +59,8 @@ export default function BarberProfile({
   onToggleActive,
   onToggleService,
   onChangeWorkingHour,
+  barberSaveError,
+  onSetWorkingHours,
   onSaveWorkingHours,
   onChangeBlockTitle,
   onChangeBlockStartAt,
@@ -132,6 +136,8 @@ export default function BarberProfile({
         loading={workingHoursLoading}
         saving={workingHoursSaving}
         onChangeHour={onChangeWorkingHour}
+        saveError={barberSaveError}
+        onSetWorkingHours={onSetWorkingHours}
         onSave={onSaveWorkingHours}
       />
 
