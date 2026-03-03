@@ -22,7 +22,6 @@ type BarbersOverviewProps = {
   onShowInactiveChange: (value: boolean) => void;
   onOpenBarber: (barberId: string) => void;
   onMoveBarber: (index: number, direction: 'up' | 'down') => void;
-  onToggleBarberActive: (barberId: string, nextActive: boolean) => void;
   onOpenAddBarberSheet: () => void;
   onCloseAddBarberSheet: () => void;
 
@@ -63,7 +62,6 @@ export default function BarbersOverview({
   onShowInactiveChange,
   onOpenBarber,
   onMoveBarber,
-  onToggleBarberActive,
   onOpenAddBarberSheet,
   onCloseAddBarberSheet,
 
@@ -127,7 +125,9 @@ export default function BarbersOverview({
                   <button type="button" className="admin-reorder-btn" onClick={() => onMoveBarber(index, 'up')} disabled={isFirstItem || barberReordering} aria-label={`Move ${barber.name} up`}>↑</button>
                   <button type="button" className="admin-reorder-btn" onClick={() => onMoveBarber(index, 'down')} disabled={isLastItem || barberReordering} aria-label={`Move ${barber.name} down`}>↓</button>
                 </div>
-                <button type="button" className="btn btn--ghost" onClick={() => onToggleBarberActive(barber.id, !barberIsActive)}>{barberIsActive ? 'Deactivate' : 'Reactivate'}</button>
+                <button type="button" className="admin-barber-settings-btn" onClick={() => onOpenBarber(barber.id)} aria-label={`Open ${barber.name} settings`}>
+                  ⚙
+                </button>
               </div>
             </li>
           );

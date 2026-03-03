@@ -1270,7 +1270,6 @@ export default function BookingsAdminPanel({ isActive, mode, onBackToDashboard }
                 onShowInactiveChange={setShowInactiveBarbers}
                 onOpenBarber={setSelectedBarberId}
                 onMoveBarber={(index, direction) => void moveBarber(index, direction)}
-                onToggleBarberActive={(barberId, nextActive) => void updateBarberStatus(barberId, nextActive)}
                                 onOpenAddBarberSheet={() => {
                   setBarberSaveError('');
                   setBarberSaveMessage('');
