@@ -67,18 +67,49 @@ export default function BarberProfile({
   onDeleteBlock,
   formatBlockRange
 }: BarberProfileProps) {
+    const selectedServicesCount = enabledServiceIds.size;
+  const totalServicesCount = services.length;
+  const workingDaysCount = workingHours.filter((hour) => hour.active).length;
+
+  const nextBlockLabel = React.useMemo(() => {
+    const now = Date.now();
+    const nextBlock = blocks
+      .map((block) => ({ ...block, startMs: new Date(block.startAt).getTime() }))
+      .filter((block) => Number.isFinite(block.startMs) && block.startMs >= now)
+      .sort((a, b) => a.startMs - b.startMs)[0];
+
+    if (!nextBlock) return 'none';
+
+    return new Intl.DateTimeFormat('en-GB', {
+      weekday: 'short',
+      hour: '2-digit',
+      minute: '2-digit',
+      hour12: false
+    }).format(new Date(nextBlock.startAt)).replace(',', '');
+  }, [blocks]);
+
+
   return (
     <section className="admin-quick-blocks">
-      <div className="admin-barber-profile-head">
-        <div className="admin-barber-avatar">
+      <div className="admin-barber-smart-header">
+        <div className="admin-barber-avatar admin-barber-avatar--large">
+
           {barber.avatarUrl ? <img src={barber.avatarUrl} alt={barber.name} loading="lazy" /> : <span>{getInitials(barber.name)}</span>}
         </div>
-        <div>
-          <h2>{barber.name}</h2>
-          <p className="muted">{isActive ? 'Active' : 'Inactive'}</p>
+
+        <div className="admin-barber-smart-header__identity">
+          <h2 className="admin-barber-smart-header__name">{barber.name}</h2>
+          <p className="admin-barber-status-line">
+            <span className={`admin-status-dot ${isActive ? 'is-active' : 'is-inactive'}`} aria-hidden="true" />
+            {isActive ? 'Active' : 'Inactive'}
+          </p>
+          <p className="muted admin-barber-meta-line">
+            Services: {selectedServicesCount}/{totalServicesCount} • Working days: {workingDaysCount}/7 • Next block: {nextBlockLabel}
+          </p>
         </div>
-        <div className="admin-barber-profile-actions">
-          <button type="button" className="btn btn--ghost" onClick={onBack}>Back to barbers list</button>
+        <div className="admin-barber-profile-actions admin-barber-profile-actions--smart">
+          <button type="button" className="btn btn--ghost" onClick={onBack}>Back to list</button>
+
           <button type="button" className="btn btn--secondary" onClick={onToggleActive}>{isActive ? 'Deactivate' : 'Reactivate'}</button>
         </div>
       </div>
