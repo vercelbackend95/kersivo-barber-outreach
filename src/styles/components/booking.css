@@ -2944,7 +2944,7 @@
 }
 
 .admin-status-dot.is-active {
-  background: var(--accent);
+  background: var(--status-confirmed);
 }
 
 .admin-status-dot.is-inactive {

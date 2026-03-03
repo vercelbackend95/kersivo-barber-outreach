@@ -6,7 +6,6 @@ type BarberServicesEditorProps = {
   services: ServiceOption[];
   enabledServiceIds: Set<string>;
   servicesSaving: boolean;
-  onToggleAll: (enabled: boolean) => void;
   onToggleService: (serviceId: string, enabled: boolean) => void;
 };
 
@@ -15,7 +14,6 @@ export default function BarberServicesEditor({
   services,
   enabledServiceIds,
   servicesSaving,
-  onToggleAll,
   onToggleService
 }: BarberServicesEditorProps) {
     const [localEnabledServiceIds, setLocalEnabledServiceIds] = React.useState<Set<string>>(new Set(enabledServiceIds));
@@ -49,26 +47,10 @@ export default function BarberServicesEditor({
     onToggleService(serviceId, !isEnabled);
   };
 
-  const handleSelectAll = () => {
-    setSelectionHint('');
-    setLocalEnabledServiceIds(new Set(services.map((service) => service.id)));
-    onToggleAll(true);
-  };
-
-  const handleClear = () => {
-    setSelectionHint('At least one service must remain enabled. Clear all is unavailable.');
-  };
-
-
   return (
     <section className="admin-settings-panel">
       <h3>Services ({enabledCount}/{totalCount})</h3>
       <p className="muted">Select services available for {barberName}.</p>
-
-      <div className="admin-services-actions admin-services-actions--secondary">
-        <button type="button" className="btn btn--ghost" onClick={handleSelectAll} disabled={servicesSaving || enabledCount === totalCount}>Select all</button>
-        <button type="button" className="btn btn--ghost" onClick={handleClear} disabled={servicesSaving || enabledCount === 0}>Clear</button>
-      </div>
 
       {selectionHint ? <p className="muted admin-services-hint">{selectionHint}</p> : null}
 

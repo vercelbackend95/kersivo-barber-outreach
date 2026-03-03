@@ -24,7 +24,6 @@ type BarberProfileProps = {
   getInitials: (name: string) => string;
   onBack: () => void;
   onToggleActive: () => void;
-  onToggleAllServices: (enabled: boolean) => void;
   onToggleService: (serviceId: string, enabled: boolean) => void;
   onChangeWorkingHour: (dayOfWeek: number, field: 'active' | 'startTime' | 'endTime', value: string | boolean) => void;
   onSaveWorkingHours: () => void;
@@ -56,7 +55,6 @@ export default function BarberProfile({
   getInitials,
   onBack,
   onToggleActive,
-  onToggleAllServices,
   onToggleService,
   onChangeWorkingHour,
   onSaveWorkingHours,
@@ -125,7 +123,6 @@ export default function BarberProfile({
         services={services}
         enabledServiceIds={enabledServiceIds}
         servicesSaving={servicesSaving}
-        onToggleAll={onToggleAllServices}
         onToggleService={onToggleService}
       />
 

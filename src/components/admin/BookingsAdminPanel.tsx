@@ -1007,11 +1007,6 @@ export default function BookingsAdminPanel({ isActive, mode, onBackToDashboard }
     await saveServiceIds(Array.from(current));
   }
 
-  async function toggleAllServicesForBarber(enabled: boolean) {
-    await saveServiceIds(enabled ? services.map((service) => service.id) : []);
-  }
-
-
   async function login() { const res = await fetch('/api/admin/login', { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ secret }) }); setLoggedIn(res.ok); if (!res.ok) setError('Invalid secret'); }
 
 
@@ -1237,7 +1232,6 @@ export default function BookingsAdminPanel({ isActive, mode, onBackToDashboard }
                 getInitials={getInitials}
                 onBack={() => setSelectedBarberId(null)}
                 onToggleActive={() => void updateBarberStatus(selectedBarber.id, !normalizeBarberStatus(selectedBarber))}
-                onToggleAllServices={(enabled) => void toggleAllServicesForBarber(enabled)}
                 onToggleService={(serviceId, enabled) => void toggleServiceForBarber(serviceId, enabled)}
                 onChangeWorkingHour={(dayOfWeek, field, value) => updateWorkingHour(dayOfWeek, { [field]: value })}
                 onSaveWorkingHours={() => void saveWorkingHours()}
