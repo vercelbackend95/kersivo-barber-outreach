@@ -45,48 +45,26 @@ export default function WorkingHoursOverview({
     <div className="working-hours-overview" role="list" aria-label="Weekly working hours">
       {workingHours.map((hour) => {
         const dayLabel = weekDays[hour.dayOfWeek] ?? `Day ${hour.dayOfWeek}`;
-        const statusText = hour.active ? 'On' : 'Off';
         const isExpanded = expandedDayIndex === hour.dayOfWeek;
         const editorDay = isExpanded ? draftDay : null;
 
 
         return (
           <React.Fragment key={hour.dayOfWeek}>
-            <article
-              className="working-hours-day-card"
+            <button
+              type="button"
+              className="working-hours-day-row"
               role="listitem"
-              tabIndex={0}
               onClick={() => onToggleDayEditor(hour.dayOfWeek)}
-              onKeyDown={(event) => {
-                if (event.key === 'Enter' || event.key === ' ') {
-                  event.preventDefault();
-                  onToggleDayEditor(hour.dayOfWeek);
-                }
-              }}
+              disabled={loading || saving}
               aria-label={`${isExpanded ? 'Collapse' : 'Edit'} ${dayLabel}`}
               aria-expanded={isExpanded}
             >
-              <div className="working-hours-day-card__meta">
-                <p className="working-hours-day-card__label">{dayLabel}</p>
-                <p className={`working-hours-day-card__status ${hour.active ? 'is-on' : 'is-off'}`}>{statusText}</p>
-              </div>
-              <p className={`working-hours-time-chip ${hour.active ? '' : 'is-off'}`}>{getTimeText(hour)}</p>
+              <span className="working-hours-day-row__label">{dayLabel}</span>
+              <span className={`working-hours-time-chip ${hour.active ? '' : 'is-off'}`}>{getTimeText(hour)}</span>
+              <span className={`working-hours-day-row__chevron ${isExpanded ? 'is-expanded' : ''}`} aria-hidden="true">⌄</span>
+            </button>
 
-              <button
-                type="button"
-                className="btn btn--ghost working-hours-edit-btn"
-                                onClick={(event) => {
-                  event.stopPropagation();
-                  onToggleDayEditor(hour.dayOfWeek);
-                }}
-                disabled={loading || saving}
-                                aria-label={`${isExpanded ? 'Collapse' : 'Edit'} ${dayLabel} shift`}
-                                >
-                                                    {isExpanded ? '−' : '✎'}
-                                </button>
-
-
-            </article>
 
             {isExpanded && editorDay ? (
               <section className="working-hours-inline-editor" aria-label={`Edit ${dayLabel} shift`}>
