@@ -1,13 +1,13 @@
 import React from 'react';
 import type { WorkingHourRow } from './barbersTypes';
 import WorkingHoursOverview from './WorkingHoursOverview';
-import WorkingHoursDayDrawer from './WorkingHoursDayDrawer';
 
 type BarberWorkingHoursEditorProps = {
   weekDays: string[];
   workingHours: WorkingHourRow[];
   loading: boolean;
   saving: boolean;
+    saveError: string;
   onSetWorkingHours: (rules: WorkingHourRow[]) => void;
   onSave: (rules?: WorkingHourRow[]) => void;
 
@@ -27,7 +27,7 @@ function isValidRange(day: WorkingHourRow | null) {
 }
 
 function getWeeklySummary(workingHours: WorkingHourRow[]) {
-  const openDays = workingHours.filter((day) => day.active).length;
+  const onShiftDays = workingHours.filter((day) => day.active).length;
   const totalMinutes = workingHours.reduce((sum, day) => {
     if (!day.active) return sum;
     const [startHour, startMinute] = day.startTime.split(':').map(Number);
@@ -43,7 +43,7 @@ function getWeeklySummary(workingHours: WorkingHourRow[]) {
   const totalHours = totalMinutes / 60;
   const displayHours = Number.isInteger(totalHours) ? `${totalHours}h/week` : `${totalHours.toFixed(1)}h/week`;
 
-  return `${openDays} open day${openDays === 1 ? '' : 's'} • ${displayHours}`;
+  return `${onShiftDays} on-shift day${onShiftDays === 1 ? '' : 's'} • ${displayHours}`;
 }
 
 export default function BarberWorkingHoursEditor({
@@ -55,7 +55,7 @@ export default function BarberWorkingHoursEditor({
   onSetWorkingHours,
   onSave
 }: BarberWorkingHoursEditorProps) {
-  const [editingDay, setEditingDay] = React.useState<number | null>(null);
+  const [expandedDayIndex, setExpandedDayIndex] = React.useState<number | null>(null);
   const [draftDay, setDraftDay] = React.useState<WorkingHourRow | null>(null);
   const [savedToastVisible, setSavedToastVisible] = React.useState(false);
   const [pendingAutoSave, setPendingAutoSave] = React.useState(false);
@@ -81,7 +81,7 @@ export default function BarberWorkingHoursEditor({
   const closeEditor = React.useCallback(() => {
     clearAutoSaveTimeout();
     setPendingAutoSave(false);
-    setEditingDay(null);
+    setExpandedDayIndex(null);
     setDraftDay(null);
     originalDayRuleRef.current = null;
     clearSavedToastTimeout();
@@ -107,21 +107,32 @@ export default function BarberWorkingHoursEditor({
       clearSavedToastTimeout();
     };
   }, [clearAutoSaveTimeout, clearSavedToastTimeout]);
+  const openEditor = React.useCallback(
+    (dayOfWeek: number) => {
+      clearAutoSaveTimeout();
+      setPendingAutoSave(false);
+      setSavedToastVisible(false);
+      clearSavedToastTimeout();
 
 
-  const openEditor = (dayOfWeek: number) => {
-        clearAutoSaveTimeout();
-    setPendingAutoSave(false);
-    setSavedToastVisible(false);
-    clearSavedToastTimeout();
+      const sourceDay = orderedHours.find((hour) => hour.dayOfWeek === dayOfWeek) ?? null;
+      setExpandedDayIndex(dayOfWeek);
+      setDraftDay(sourceDay);
+      originalDayRuleRef.current = sourceDay ? { ...sourceDay } : null;
+    },
+    [clearAutoSaveTimeout, clearSavedToastTimeout, orderedHours]
+  );
+  const toggleEditor = React.useCallback(
+    (dayOfWeek: number) => {
+      if (expandedDayIndex === dayOfWeek) {
+        closeEditor();
+        return;
+      }
+      openEditor(dayOfWeek);
+    },
+    [closeEditor, expandedDayIndex, openEditor]
+  );
 
-    const sourceDay = orderedHours.find((hour) => hour.dayOfWeek === dayOfWeek) ?? null;
-
-    setEditingDay(dayOfWeek);
-        setDraftDay(sourceDay);
-    originalDayRuleRef.current = sourceDay ? { ...sourceDay } : null;
-
-  };
 
   const scheduleAutoSave = React.useCallback(
     (nextRules: WorkingHourRow[]) => {
@@ -133,30 +144,31 @@ export default function BarberWorkingHoursEditor({
     },
     [clearAutoSaveTimeout, onSave]
   );
+  const applyDraft = React.useCallback(
+    (field: 'active' | 'startTime' | 'endTime', value: string | boolean) => {
+      if (!draftDay) return;
+      const nextDay = { ...draftDay, [field]: value } as WorkingHourRow;
+      setDraftDay(nextDay);
 
 
-  const applyDraft = (field: 'active' | 'startTime' | 'endTime', value: string | boolean) => {
-    if (!draftDay) return;
-    const nextDay = { ...draftDay, [field]: value } as WorkingHourRow;
-    setDraftDay(nextDay);
+      const nextRules = orderedHours.map((hour) => (hour.dayOfWeek === nextDay.dayOfWeek ? nextDay : hour));
+      onSetWorkingHours(nextRules);
+
+      if (isValidRange(nextDay)) {
+        scheduleAutoSave(nextRules);
+      } else {
+        clearAutoSaveTimeout();
+        setPendingAutoSave(false);
+        setSavedToastVisible(false);
+        clearSavedToastTimeout();
+      }
+    },
+    [clearAutoSaveTimeout, clearSavedToastTimeout, draftDay, onSetWorkingHours, orderedHours, scheduleAutoSave]
+  );
 
 
-    const nextRules = orderedHours.map((hour) => (hour.dayOfWeek === nextDay.dayOfWeek ? nextDay : hour));
-    onSetWorkingHours(nextRules);
 
-
-    if (isValidRange(nextDay)) {
-      scheduleAutoSave(nextRules);
-    } else {
-      clearAutoSaveTimeout();
-      setPendingAutoSave(false);
-      setSavedToastVisible(false);
-      clearSavedToastTimeout();
-    }
-  };
-
-
-  const cancelEditing = () => {
+  const cancelEditing = React.useCallback(() => {
     const original = originalDayRuleRef.current;
     if (original) {
       const restoredRules = orderedHours.map((hour) => (hour.dayOfWeek === original.dayOfWeek ? original : hour));
@@ -165,36 +177,31 @@ export default function BarberWorkingHoursEditor({
     }
 
     closeEditor();
-  };
+  }, [closeEditor, onSetWorkingHours, orderedHours]);
 
 
   return (
     <section className="admin-settings-panel">
       <div className="working-hours-header-row">
         <h3>Working hours</h3>
-        <p className="working-hours-weekly-summary" aria-live="polite">{weeklySummary}</p>
+        <p className="working-hours-weekly-summary" aria-live="polite">
+          {weeklySummary}
+        </p>
       </div>
       <p className="muted">Weekly overview with quick edits per day.</p>
 
       <WorkingHoursOverview
         weekDays={weekDays}
         workingHours={orderedHours}
-        loading={loading}
-        saving={saving}
-        onEditDay={openEditor}
-      />
-
-      <WorkingHoursDayDrawer
-        isOpen={editingDay !== null}
-        weekDays={weekDays}
-        day={draftDay}
+        expandedDayIndex={expandedDayIndex}
+        draftDay={draftDay}
         loading={loading}
         saving={saving}
         errorMessage={saveError}
-                savedToastVisible={savedToastVisible}
-        onClose={closeEditor}
-                onCancel={cancelEditing}
-        onChange={applyDraft}
+        savedToastVisible={savedToastVisible}
+        onToggleDayEditor={toggleEditor}
+        onCancelDayEdit={cancelEditing}
+        onChangeDraftDay={applyDraft}
       />
     </section>
   );

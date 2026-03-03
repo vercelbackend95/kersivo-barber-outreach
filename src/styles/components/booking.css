@@ -3115,14 +3115,11 @@
   outline-offset: 2px;
 }
 
-.working-hours-day-card__meta,
-.working-hours-day-card__actions {
+.working-hours-day-card__meta {
   display: flex;
   align-items: center;
   gap: 0.6rem;
-}
 
-.working-hours-day-card__meta {
   min-width: 0;
 }
 
@@ -3139,11 +3136,11 @@
   padding: 0.1rem 0.35rem;
 }
 
-.working-hours-day-card__status.is-open {
+.working-hours-day-card__status.is-on {
   color: var(--fg);
 }
 
-.working-hours-day-card__status.is-closed {
+.working-hours-day-card__status.is-off {
 
   color: var(--muted);
 }
@@ -3156,7 +3153,7 @@
   justify-self: start;
 }
 
-.working-hours-time-chip.is-closed {
+.working-hours-time-chip.is-off {
   color: var(--muted);
 }
 
@@ -3166,42 +3163,13 @@
   height: 2.2rem;
   padding: 0;
 }
+.working-hours-inline-editor {
+  margin-top: -0.2rem;
+  margin-bottom: 0.3rem;
+  border: 1px solid var(--border);
+  border-top: 0;
+  background: color-mix(in oklab, var(--surface), var(--bg) 12%);
 
-.working-hours-drawer-layer {
-  position: fixed;
-  inset: 0;
-  z-index: 80;
-  background: color-mix(in oklab, var(--bg), transparent 35%);
-  display: flex;
-  align-items: flex-end;
-}
-
-.working-hours-drawer {
-  width: 100%;
-  max-height: min(88dvh, 680px);
-  overflow: auto;
-  border-top: 1px solid var(--border);
-  background: var(--surface);
-  padding-bottom: calc(0.75rem + env(safe-area-inset-bottom));
-}
-
-.working-hours-drawer__header,
-.working-hours-drawer__footer {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  padding: 0.8rem;
-  border-bottom: 1px solid var(--border);
-}
-
-.working-hours-drawer__footer {
-  border-top: 1px solid var(--border);
-  border-bottom: 0;
-  gap: 0.5rem;
-  justify-content: flex-end;
-}
-
-.working-hours-drawer__body {
   padding: 0.8rem;
   display: grid;
   gap: 0.8rem;
@@ -3228,7 +3196,7 @@
 
 }
 
-.working-hours-copy-actions {
+.working-hours-range-control__inputs {
   display: grid;
   grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr);
   gap: 0.45rem;
@@ -3238,6 +3206,11 @@
 .working-hours-range-control__inputs input {
   width: 100%;
 }
+.working-hours-inline-editor__actions {
+  display: flex;
+  justify-content: flex-end;
+}
+
 
 .working-hours-saved-toast {
   margin: 0;
@@ -3249,20 +3222,6 @@
 @media (min-width: 48rem) {
   .working-hours-day-card {
     grid-template-columns: minmax(120px, 1fr) auto auto;
-  }
-
-  .working-hours-drawer-layer {
-    justify-content: flex-end;
-    align-items: stretch;
-  }
-
-  .working-hours-drawer {
-    height: 100dvh;
-    width: min(460px, 100%);
-    max-height: none;
-    border-left: 1px solid var(--border);
-    border-top: 0;
-    padding-bottom: 0.75rem;
   }
 
   .working-hours-header-row {
