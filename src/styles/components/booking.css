@@ -3076,6 +3076,22 @@
     justify-content: flex-end;
   }
 }
+.working-hours-header-row {
+  display: flex;
+  flex-direction: column;
+  gap: 0.3rem;
+}
+
+.working-hours-header-row h3 {
+  margin: 0;
+}
+
+.working-hours-weekly-summary {
+  margin: 0;
+  color: var(--muted);
+  font-size: 0.9rem;
+}
+
 
 .working-hours-overview {
   display: grid;
@@ -3118,8 +3134,18 @@
 
 .working-hours-day-card__status {
   margin: 0;
+    font-size: 0.8rem;
+  border: 1px solid var(--border);
+  padding: 0.1rem 0.35rem;
+}
+
+.working-hours-day-card__status.is-open {
+  color: var(--fg);
+}
+
+.working-hours-day-card__status.is-closed {
+
   color: var(--muted);
-  font-size: 0.85rem;
 }
 
 .working-hours-time-chip {
@@ -3134,12 +3160,6 @@
   color: var(--muted);
 }
 
-.working-hours-switch {
-  display: inline-flex;
-  align-items: center;
-  gap: 0.35rem;
-  font-size: 0.85rem;
-}
 
 .working-hours-edit-btn {
   min-width: 2.2rem;
@@ -3193,19 +3213,37 @@
   gap: 0.6rem;
 }
 
-.working-hours-time-grid {
-  display: grid;
-  gap: 0.6rem;
+.working-hours-range-control {
+  margin: 0;
+  border: 1px solid var(--border);
+  padding: 0.6rem;
+  min-width: 0;
+
 }
 
-.working-hours-time-grid label {
-  display: grid;
-  gap: 0.35rem;
+.working-hours-range-control legend {
+  padding: 0 0.2rem;
+  font-size: 0.8rem;
+  color: var(--muted);
+
 }
 
 .working-hours-copy-actions {
   display: grid;
-  gap: 0.5rem;
+  grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr);
+  gap: 0.45rem;
+  align-items: center;
+}
+
+.working-hours-range-control__inputs input {
+  width: 100%;
+}
+
+.working-hours-saved-toast {
+  margin: 0;
+  font-size: 0.8rem;
+  color: var(--accent);
+
 }
 
 @media (min-width: 48rem) {
@@ -3227,11 +3265,10 @@
     padding-bottom: 0.75rem;
   }
 
-  .working-hours-time-grid {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-  }
+  .working-hours-header-row {
+    flex-direction: row;
+    align-items: baseline;
+    justify-content: space-between;
 
-  .working-hours-copy-actions {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 }

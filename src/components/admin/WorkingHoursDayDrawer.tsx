@@ -8,11 +8,10 @@ type WorkingHoursDayDrawerProps = {
   loading: boolean;
   saving: boolean;
   errorMessage: string;
+    savedToastVisible: boolean;
   onClose: () => void;
+    onCancel: () => void;
   onChange: (field: 'active' | 'startTime' | 'endTime', value: string | boolean) => void;
-  onCopyToWeekdays: () => void;
-  onCopyToOpenDays: () => void;
-  onSave: () => void;
 };
 
 function useBodyScrollLock(isLocked: boolean) {
@@ -53,11 +52,11 @@ export default function WorkingHoursDayDrawer({
   loading,
   saving,
   errorMessage,
+    savedToastVisible,
   onClose,
-  onChange,
-  onCopyToWeekdays,
-  onCopyToOpenDays,
-  onSave
+  onCancel,
+  onChange
+
 }: WorkingHoursDayDrawerProps) {
   useBodyScrollLock(isOpen);
 
@@ -78,7 +77,6 @@ export default function WorkingHoursDayDrawer({
 
   const dayLabel = weekDays[day.dayOfWeek] ?? `Day ${day.dayOfWeek}`;
   const hasValidRange = isValidRange(day);
-  const hasError = !hasValidRange || Boolean(errorMessage);
 
   return (
     <div
@@ -95,7 +93,9 @@ export default function WorkingHoursDayDrawer({
       <section className="working-hours-drawer" onMouseDown={(event) => event.stopPropagation()}>
         <header className="working-hours-drawer__header">
           <h4>Edit {dayLabel}</h4>
-          <button type="button" className="btn btn--ghost" onClick={onClose} aria-label="Close working hours editor">✕</button>
+          <button type="button" className="btn btn--ghost" onClick={onClose} aria-label="Close working hours editor">
+            ✕
+          </button>
         </header>
 
         <div className="working-hours-drawer__body">
@@ -110,44 +110,39 @@ export default function WorkingHoursDayDrawer({
             <strong>{day.active ? 'Open' : 'Closed'}</strong>
           </label>
 
-          <div className="working-hours-time-grid">
-            <label>
-              Start
+          <fieldset className="working-hours-range-control" disabled={!day.active || loading || saving}>
+            <legend>Working range</legend>
+            <div className="working-hours-range-control__inputs">
               <input
                 type="time"
                 value={day.startTime}
                 onChange={(event) => onChange('startTime', event.target.value)}
-                disabled={!day.active || loading || saving}
+                aria-label="Start time"
               />
-            </label>
-            <label>
-              End
+              <span aria-hidden="true">—</span>
               <input
                 type="time"
                 value={day.endTime}
                 onChange={(event) => onChange('endTime', event.target.value)}
-                disabled={!day.active || loading || saving}
+                aria-label="End time"
               />
-            </label>
-          </div>
-
-          <div className="working-hours-copy-actions">
-            <button type="button" className="btn btn--secondary" onClick={onCopyToWeekdays} disabled={saving || loading}>
-              Copy this day to Weekdays
-            </button>
-            <button type="button" className="btn btn--ghost" onClick={onCopyToOpenDays} disabled={saving || loading || !day.active}>
-              Copy to All open days
-            </button>
-          </div>
+                          </div>
+          </fieldset>
 
           {!hasValidRange ? <p className="admin-inline-error">Start time must be earlier than end time.</p> : null}
           {errorMessage ? <p className="admin-inline-error">{errorMessage}</p> : null}
+                    {savedToastVisible ? (
+            <p className="working-hours-saved-toast" aria-live="polite">
+              Saved
+            </p>
+          ) : null}
+
         </div>
 
         <footer className="working-hours-drawer__footer">
-          <button type="button" className="btn btn--ghost" onClick={onClose} disabled={saving}>Cancel</button>
-          <button type="button" className="btn btn--primary" onClick={onSave} disabled={saving || hasError}>
-            {saving ? 'Saving…' : 'Save'}
+          <button type="button" className="btn btn--ghost" onClick={onCancel} disabled={saving}>
+            Cancel
+
           </button>
         </footer>
       </section>

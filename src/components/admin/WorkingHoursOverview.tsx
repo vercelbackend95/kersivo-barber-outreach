@@ -6,7 +6,7 @@ type WorkingHoursOverviewProps = {
   workingHours: WorkingHourRow[];
   loading: boolean;
   saving: boolean;
-  onToggleDay: (dayOfWeek: number, active: boolean) => void;
+
   onEditDay: (dayOfWeek: number) => void;
 };
 
@@ -20,7 +20,7 @@ export default function WorkingHoursOverview({
   workingHours,
   loading,
   saving,
-  onToggleDay,
+
   onEditDay
 }: WorkingHoursOverviewProps) {
   return (
@@ -46,7 +46,7 @@ export default function WorkingHoursOverview({
           >
             <div className="working-hours-day-card__meta">
               <p className="working-hours-day-card__label">{dayLabel}</p>
-              <p className="working-hours-day-card__status">{statusText}</p>
+              <p className={`working-hours-day-card__status ${hour.active ? 'is-open' : 'is-closed'}`}>{statusText}</p>
             </div>
 
             <p className={`working-hours-time-chip ${hour.active ? '' : 'is-closed'}`}>
