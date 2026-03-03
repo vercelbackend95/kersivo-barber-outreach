@@ -71,10 +71,6 @@ export default function BarbersOverview({
 
   React.useEffect(() => {
     if (!isAddBarberSheetOpen) return undefined;
-    const previousOverflow = document.body.style.overflow;
-    document.body.style.overflow = 'hidden';
-
-
     const onKeyDown = (event: KeyboardEvent) => {
       if (event.key === 'Escape') {
         onCloseAddBarberSheet();
@@ -83,7 +79,6 @@ export default function BarbersOverview({
 
     window.addEventListener('keydown', onKeyDown);
     return () => {
-      document.body.style.overflow = previousOverflow;
       window.removeEventListener('keydown', onKeyDown);
     };
   }, [isAddBarberSheetOpen, onCloseAddBarberSheet]);
