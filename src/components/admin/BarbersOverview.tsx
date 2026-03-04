@@ -4,7 +4,7 @@ import type { Barber, ServiceOption, TimeBlock } from './barbersTypes';
 type BarbersOverviewProps = {
   barbers: Barber[];
   services: ServiceOption[];
-  showInactive: boolean;
+  barbersFilter: 'active' | 'all';
   barberNameDraft: string;
   barberAvatarPreviewUrl: string | null;
   selectedServiceIds: string[];
@@ -19,7 +19,7 @@ type BarbersOverviewProps = {
   onBarberAvatarChange: (file: File | null) => void;
   onSelectedServiceIdsChange: (serviceIds: string[]) => void;
   onSubmitAddBarber: (event: React.FormEvent<HTMLFormElement>) => void;
-  onShowInactiveChange: (value: boolean) => void;
+  onBarbersFilterChange: (value: 'active' | 'all') => void;
   onOpenBarber: (barberId: string) => void;
   onMoveBarber: (index: number, direction: 'up' | 'down') => void;
   onOpenAddBarberSheet: () => void;
@@ -43,8 +43,8 @@ function normalizeBarberStatus(barber: Barber) {
 
 export default function BarbersOverview({
   barbers,
-    services,
-  showInactive,
+  services,
+  barbersFilter,
   barberNameDraft,
   barberAvatarPreviewUrl,
     selectedServiceIds,
@@ -59,7 +59,7 @@ export default function BarbersOverview({
   onBarberAvatarChange,
   onSelectedServiceIdsChange,
   onSubmitAddBarber,
-  onShowInactiveChange,
+  onBarbersFilterChange,
   onOpenBarber,
   onMoveBarber,
   onOpenAddBarberSheet,
@@ -88,11 +88,24 @@ export default function BarbersOverview({
       <h2>Barbers</h2>
       <p className="muted">Manage active barbers and open a barber profile for details.</p>
 
-      <div className="admin-barber-toggle">
-        <label>
-          <input type="checkbox" checked={showInactive} onChange={(event) => onShowInactiveChange(event.target.checked)} />
-          Show inactive
-        </label>
+      <div className="admin-barber-filter" role="group" aria-label="Filter barbers">
+        <button
+          type="button"
+          className={`admin-barber-filter-btn ${barbersFilter === 'active' ? 'is-active' : ''}`}
+          aria-pressed={barbersFilter === 'active'}
+          onClick={() => onBarbersFilterChange('active')}
+        >
+          Active
+        </button>
+        <button
+          type="button"
+          className={`admin-barber-filter-btn ${barbersFilter === 'all' ? 'is-active' : ''}`}
+          aria-pressed={barbersFilter === 'all'}
+          onClick={() => onBarbersFilterChange('all')}
+        >
+          All
+        </button>
+
       </div>
 
       {barberSaveMessage ? <p className="admin-inline-success">{barberSaveMessage}</p> : null}
@@ -110,9 +123,12 @@ export default function BarbersOverview({
                 <div className="admin-barber-avatar">
                   {barber.avatarUrl ? <img src={barber.avatarUrl} alt={barber.name} loading="lazy" /> : <span>{getInitials(barber.name)}</span>}
                 </div>
-                <div>
+                <div className="admin-barber-copy">
                   <p className="admin-barber-name">{barber.name}</p>
-                  <p className="muted">{barberIsActive ? 'Active' : 'Inactive'}</p>
+                  <p className="muted">
+                    {barberIsActive ? 'Active' : <span className="admin-status-badge">Inactive</span>}
+                  </p>
+
                 </div>
               </button>
               <div className="admin-barber-actions">

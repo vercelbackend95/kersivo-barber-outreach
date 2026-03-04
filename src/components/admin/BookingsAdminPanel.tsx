@@ -386,7 +386,7 @@ export default function BookingsAdminPanel({ isActive, mode, onBackToDashboard }
   const [isCheckingSession, setIsCheckingSession] = useState(true);
   const [bookings, setBookings] = useState<Booking[]>([]);
   const [barbers, setBarbers] = useState<Barber[]>([]);
-  const [showInactiveBarbers, setShowInactiveBarbers] = useState(false);
+  const [barbersFilter, setBarbersFilter] = useState<'active' | 'all'>('active');
   const [barberNameDraft, setBarberNameDraft] = useState('');
   const [barberAvatarFile, setBarberAvatarFile] = useState<File | null>(null);
   const [barberSaveMessage, setBarberSaveMessage] = useState('');
@@ -739,7 +739,7 @@ export default function BookingsAdminPanel({ isActive, mode, onBackToDashboard }
 
   const allBarbersSorted = useMemo(() => [...barbers].sort((a, b) => (a.sortOrder ?? Number.MAX_SAFE_INTEGER) - (b.sortOrder ?? Number.MAX_SAFE_INTEGER) || a.name.localeCompare(b.name, 'en')), [barbers]);
   const activeBarbers = useMemo(() => allBarbersSorted.filter((barber) => normalizeBarberStatus(barber)), [allBarbersSorted]);
-  const visibleBarbersForManagement = useMemo(() => showInactiveBarbers ? allBarbersSorted : activeBarbers, [activeBarbers, allBarbersSorted, showInactiveBarbers]);
+  const visibleBarbersForManagement = useMemo(() => barbersFilter === 'all' ? allBarbersSorted : activeBarbers, [activeBarbers, allBarbersSorted, barbersFilter]);
   const selectedBarber = useMemo(() => allBarbersSorted.find((barber) => barber.id === selectedBarberId) ?? null, [allBarbersSorted, selectedBarberId]);
   const enabledServiceIds = useMemo(() => new Set(selectedBarber?.serviceIds ?? []), [selectedBarber]);
   const selectedBarberBlocks = useMemo(() => timeBlocks.filter((block) => block.barberId === selectedBarberId), [selectedBarberId, timeBlocks]);
@@ -1196,7 +1196,7 @@ export default function BookingsAdminPanel({ isActive, mode, onBackToDashboard }
         method: 'POST',
         credentials: 'same-origin',
         headers: { 'content-type': 'application/json' },
-        body: JSON.stringify({ orderedIds, includeInactive: showInactiveBarbers })
+        body: JSON.stringify({ orderedIds, includeInactive: barbersFilter === 'all' })
       });
       const payload = await response.json().catch(() => ({}));
       if (!response.ok) {
@@ -1276,7 +1276,7 @@ export default function BookingsAdminPanel({ isActive, mode, onBackToDashboard }
               <BarbersOverview
                 barbers={visibleBarbersForManagement}
                                 services={addBarberServiceOptions}
-                showInactive={showInactiveBarbers}
+                barbersFilter={barbersFilter}
                 barberNameDraft={barberNameDraft}
                 barberAvatarPreviewUrl={barberAvatarPreviewUrl}
                                 selectedServiceIds={addBarberSelectedServiceIds}
@@ -1291,7 +1291,7 @@ export default function BookingsAdminPanel({ isActive, mode, onBackToDashboard }
                 onBarberAvatarChange={setBarberAvatarFile}
                                 onSelectedServiceIdsChange={setAddBarberSelectedServiceIds}
                 onSubmitAddBarber={(event) => void saveBarber(event)}
-                onShowInactiveChange={setShowInactiveBarbers}
+                onBarbersFilterChange={setBarbersFilter}
                 onOpenBarber={setSelectedBarberId}
                 onMoveBarber={(index, direction) => void moveBarber(index, direction)}
                                 onOpenAddBarberSheet={() => {
