@@ -2399,7 +2399,7 @@
   max-width: 100%;
   -webkit-overflow-scrolling: touch;
   overscroll-behavior-x: contain;
-  touch-action: pan-x;
+  touch-action: pan-y pinch-zoom;
 
 }
 
@@ -2790,7 +2790,7 @@
         overflow-x: auto;
     overflow-y: hidden;
 
-    touch-action: pan-x;
+    touch-action: pan-y pinch-zoom;
     margin-bottom: 0;
 
   }
