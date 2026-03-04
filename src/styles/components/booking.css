@@ -518,11 +518,18 @@
   margin: 0.2rem 0 0;
 }
 
-.admin-timeoff-create,
-.admin-timeoff-upcoming {
+.admin-timeoff-panel {
   border: 1px solid var(--border);
-  background: var(--bg);
-  padding: var(--space-xs);
+  background: var(--surface);
+  padding: var(--space-sm);
+  display: grid;
+  gap: var(--space-sm);
+}
+
+.admin-timeoff-upcoming {
+  padding-top: var(--space-sm);
+  border-top: 1px solid var(--border);
+
   display: grid;
   gap: 0.6rem;
 }
@@ -566,6 +573,11 @@
   grid-template-columns: 1fr;
   gap: 0.5rem;
 }
+.admin-timeoff-form-grid input,
+.admin-timeoff-form-grid .btn {
+  width: 100%;
+}
+
 
 .admin-timeoff-form-grid label {
   display: grid;
@@ -596,7 +608,7 @@
 
 .admin-timeoff-card {
   border: 1px solid var(--border);
-  background: var(--surface);
+  background: var(--bg);
   padding: 0.5rem 0.6rem;
   display: grid;
   grid-template-columns: auto 1fr auto;
@@ -632,6 +644,11 @@
     grid-column: 1 / -1;
     width: fit-content;
   }
+  
+  .admin-timeoff-panel {
+    padding: var(--space-sm);
+  }
+
 }
 
 .admin-reports {
