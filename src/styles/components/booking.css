@@ -518,6 +518,122 @@
   margin: 0.2rem 0 0;
 }
 
+.admin-timeoff-create,
+.admin-timeoff-upcoming {
+  border: 1px solid var(--border);
+  background: var(--bg);
+  padding: var(--space-xs);
+  display: grid;
+  gap: 0.6rem;
+}
+
+.admin-timeoff-create h4,
+.admin-timeoff-upcoming h4 {
+  margin: 0;
+}
+
+.admin-timeoff-mode-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0.5rem;
+}
+
+.admin-timeoff-mode-tile {
+  min-height: 44px;
+  border: 1px solid var(--border);
+  background: var(--surface);
+  color: var(--fg);
+  font: inherit;
+  font-weight: 600;
+  text-align: left;
+  padding: 0.65rem 0.75rem;
+  cursor: pointer;
+}
+
+.admin-timeoff-mode-tile.is-active {
+  border-color: var(--accent);
+  background: color-mix(in srgb, var(--accent) 14%, var(--surface));
+}
+
+.admin-timeoff-mode-tile:focus-visible,
+.admin-timeoff-delete:focus-visible {
+  outline: 2px solid var(--focus);
+  outline-offset: 2px;
+}
+
+.admin-timeoff-form-grid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 0.5rem;
+}
+
+.admin-timeoff-form-grid label {
+  display: grid;
+  gap: 0.35rem;
+}
+
+.admin-timeoff-readonly {
+  margin: 0;
+  border: 1px solid var(--border);
+  padding: 0.6rem 0.7rem;
+  color: var(--muted);
+  background: var(--surface);
+}
+
+.admin-timeoff-toggle {
+  display: inline-flex !important;
+  align-items: center;
+  gap: 0.45rem !important;
+}
+
+.admin-timeoff-upcoming-list {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  display: grid;
+  gap: 0.45rem;
+}
+
+.admin-timeoff-card {
+  border: 1px solid var(--border);
+  background: var(--surface);
+  padding: 0.5rem 0.6rem;
+  display: grid;
+  grid-template-columns: auto 1fr auto;
+  gap: 0.5rem;
+  align-items: center;
+}
+
+.admin-timeoff-card__type,
+.admin-timeoff-card__range {
+  margin: 0;
+}
+
+.admin-timeoff-card__type {
+  font-weight: 700;
+}
+
+.admin-timeoff-card__range {
+  color: var(--muted);
+}
+
+.admin-timeoff-delete {
+  min-width: 40px;
+  min-height: 40px;
+  padding: 0;
+}
+
+@media (min-width: 48rem) {
+  .admin-timeoff-form-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .admin-timeoff-form-grid > .btn {
+    grid-column: 1 / -1;
+    width: fit-content;
+  }
+}
+
 .admin-reports {
   border: 1px solid var(--border);
   background: var(--surface);

@@ -16,9 +16,6 @@ type BarberProfileProps = {
   workingHoursLoading: boolean;
   workingHoursSaving: boolean;
   blocks: TimeBlock[];
-  blockTitle: string;
-  blockStartAt: string;
-  blockEndAt: string;
   blockSuccessMessage: string;
   blockErrorMessage: string;
   getInitials: (name: string) => string;
@@ -29,12 +26,8 @@ type BarberProfileProps = {
   barberSaveError: string;
   onSetWorkingHours: (rules: WorkingHourRow[]) => void;
   onSaveWorkingHours: (rules?: WorkingHourRow[]) => Promise<boolean>;
-  onChangeBlockTitle: (value: string) => void;
-  onChangeBlockStartAt: (value: string) => void;
-  onChangeBlockEndAt: (value: string) => void;
-  onCreateBlock: () => void;
+  onCreateBlock: (payload: { type: 'BREAK' | 'HOLIDAY'; startAtInput: string; endAtInput: string; allDay?: boolean }) => void;
   onDeleteBlock: (blockId: string) => void;
-  formatBlockRange: (startAt: string, endAt: string) => string;
 };
 
 export default function BarberProfile({
@@ -49,9 +42,6 @@ export default function BarberProfile({
   workingHoursLoading,
   workingHoursSaving,
   blocks,
-  blockTitle,
-  blockStartAt,
-  blockEndAt,
   blockSuccessMessage,
   blockErrorMessage,
   getInitials,
@@ -62,14 +52,10 @@ export default function BarberProfile({
   barberSaveError,
   onSetWorkingHours,
   onSaveWorkingHours,
-  onChangeBlockTitle,
-  onChangeBlockStartAt,
-  onChangeBlockEndAt,
   onCreateBlock,
-  onDeleteBlock,
-  formatBlockRange
+    onDeleteBlock
 }: BarberProfileProps) {
-    const selectedServicesCount = enabledServiceIds.size;
+  const selectedServicesCount = enabledServiceIds.size;
   const totalServicesCount = services.length;
   const workingDaysCount = workingHours.filter((hour) => hour.active).length;
 
@@ -144,17 +130,10 @@ export default function BarberProfile({
       <BarberBlocksEditor
         barberName={barber.name}
         blocks={blocks}
-        blockTitle={blockTitle}
-        blockStartAt={blockStartAt}
-        blockEndAt={blockEndAt}
         successMessage={blockSuccessMessage}
         errorMessage={blockErrorMessage}
-        onChangeTitle={onChangeBlockTitle}
-        onChangeStartAt={onChangeBlockStartAt}
-        onChangeEndAt={onChangeBlockEndAt}
         onCreate={onCreateBlock}
         onDelete={onDeleteBlock}
-        formatRange={formatBlockRange}
       />
     </section>
   );

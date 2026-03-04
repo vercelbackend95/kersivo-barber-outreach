@@ -430,9 +430,6 @@ export default function BookingsAdminPanel({ isActive, mode, onBackToDashboard }
   const [cancelErrorMessage, setCancelErrorMessage] = useState('');
   const [cancelLoadingBookingId, setCancelLoadingBookingId] = useState<string | null>(null);
   const [blockScopeBarberId, setBlockScopeBarberId] = useState<string>('all');
-    const [profileBlockTitle, setProfileBlockTitle] = useState('Lunch');
-  const [profileBlockStartInput, setProfileBlockStartInput] = useState(() => formatLocalInputValue(roundUpLondon(new Date(), SLOT_STEP_MINUTES)));
-  const [profileBlockEndInput, setProfileBlockEndInput] = useState(() => formatLocalInputValue(new Date(roundUpLondon(new Date(), SLOT_STEP_MINUTES).getTime() + 30 * 60000)));
   const [selectedBarberStatsCount, setSelectedBarberStatsCount] = useState(0);
 
   const [blockSuccessMessage, setBlockSuccessMessage] = useState('');
@@ -1051,6 +1048,36 @@ export default function BookingsAdminPanel({ isActive, mode, onBackToDashboard }
     setBlockSuccessMessage('Time block created.');
     await Promise.all([fetchBookings(), fetchTimeBlocks()]);
   }
+  async function createProfileBlock(payload: {
+    type: 'BREAK' | 'HOLIDAY';
+    startAtInput: string;
+    endAtInput: string;
+    allDay?: boolean;
+  }) {
+    const startAt = payload.allDay
+      ? fromZonedTime(new Date(`${payload.startAtInput.slice(0, 10)}T00:00:00`), ADMIN_TIMEZONE)
+      : fromZonedTime(new Date(payload.startAtInput), ADMIN_TIMEZONE);
+    const endAt = payload.allDay
+      ? fromZonedTime(new Date(`${payload.endAtInput.slice(0, 10)}T23:59:00`), ADMIN_TIMEZONE)
+      : fromZonedTime(new Date(payload.endAtInput), ADMIN_TIMEZONE);
+
+    if (Number.isNaN(startAt.getTime()) || Number.isNaN(endAt.getTime())) {
+      setBlockErrorMessage('Please provide a valid date range.');
+      setBlockSuccessMessage('');
+      return;
+    }
+
+    if (endAt <= startAt) {
+      setBlockErrorMessage(payload.type === 'HOLIDAY'
+        ? 'Vacation end must be after start.'
+        : 'Break end must be after start.');
+      setBlockSuccessMessage('');
+      return;
+    }
+
+    await createTimeBlock(payload.type, startAt, endAt);
+  }
+
 
   async function handleQuickBlock30() {
     const startAt = roundUpLondon(new Date(), SLOT_STEP_MINUTES);
@@ -1232,9 +1259,6 @@ export default function BookingsAdminPanel({ isActive, mode, onBackToDashboard }
                 workingHoursLoading={workingHoursLoading}
                 workingHoursSaving={workingHoursSaving}
                 blocks={selectedBarberBlocks}
-                blockTitle={profileBlockTitle}
-                blockStartAt={profileBlockStartInput}
-                blockEndAt={profileBlockEndInput}
                 blockSuccessMessage={blockSuccessMessage}
                 blockErrorMessage={blockErrorMessage}
                 getInitials={getInitials}
@@ -1245,12 +1269,8 @@ export default function BookingsAdminPanel({ isActive, mode, onBackToDashboard }
                 barberSaveError={barberSaveError}
                 onSetWorkingHours={setWorkingHours}
                 onSaveWorkingHours={saveWorkingHours}
-                onChangeBlockTitle={setProfileBlockTitle}
-                onChangeBlockStartAt={setProfileBlockStartInput}
-                onChangeBlockEndAt={setProfileBlockEndInput}
-                onCreateBlock={() => void createProfileBlock()}
+                onCreateBlock={(payload) => void createProfileBlock(payload)}
                 onDeleteBlock={(blockId) => void deleteTimeBlock(blockId)}
-                formatBlockRange={formatBlockRange}
               />
             ) : (
               <BarbersOverview
