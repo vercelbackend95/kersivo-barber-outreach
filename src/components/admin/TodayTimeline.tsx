@@ -426,6 +426,7 @@ function TodayTimeline({ barbers, bookings, timeBlocks, selectedDate, isSearchAc
                 <button
                   type="button"
                   key={item.id}
+                                    data-booking-id={item.booking.id}
                   className={`admin-timeline-card admin-timeline-card--booking admin-timeline-card--${getBookingStatusTone(item.booking)} ${isSearchActive ? 'admin-timeline-card--search-match' : ''}`}
                   style={{ left: `${item.leftPct}%`, width: `${item.widthPct}%`, top: `${item.topPx}px`, height: `${item.heightPx}px` }}
                   onClick={() => onBookingClick(item.booking)}

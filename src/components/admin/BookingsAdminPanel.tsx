@@ -424,7 +424,7 @@ export default function BookingsAdminPanel({ isActive, mode, onBackToDashboard }
   const [clientSearchQuery, setClientSearchQuery] = useState('');
   const [debouncedSearchQuery, setDebouncedSearchQuery] = useState('');
   const [isSearchDebouncing, setIsSearchDebouncing] = useState(false);
-
+  const [activeSearchResultIndex, setActiveSearchResultIndex] = useState(-1);
   const [activeView, setActiveView] = useState<AdminBookingView>('timeline');
   const [selectedDate, setSelectedDate] = useState(() => getTodayLondonDate());
   const [historyBarberId, setHistoryBarberId] = useState<string>('all');
@@ -474,9 +474,12 @@ export default function BookingsAdminPanel({ isActive, mode, onBackToDashboard }
   const previousSignaturesRef = useRef<Map<string, string>>(new Map());
   const updatedRowsTimeoutRef = useRef<number | null>(null);
   const timelineScrollRef = useRef<HTMLDivElement | null>(null);
-    const searchInputRef = useRef<HTMLInputElement | null>(null);
+  const searchInputRef = useRef<HTMLInputElement | null>(null);
+  const searchResultsRef = useRef<HTMLDivElement | null>(null);
+
   const timelineScrollRestoreRef = useRef<{ left: number; top: number } | null>(null);
   const timelineScrollRafRef = useRef<number | null>(null);
+    const pendingTimelineScrollBookingIdRef = useRef<string | null>(null);
   const initialMountMsRef = useRef(Date.now());
   const captureTimelineScroll = useCallback(() => {
     const container = timelineScrollRef.current;
@@ -715,6 +718,7 @@ export default function BookingsAdminPanel({ isActive, mode, onBackToDashboard }
           event.preventDefault();
           setClientSearchQuery('');
           setDebouncedSearchQuery('');
+                    setActiveSearchResultIndex(-1);
         } else {
           searchInputRef.current?.blur();
         }
@@ -726,11 +730,22 @@ export default function BookingsAdminPanel({ isActive, mode, onBackToDashboard }
       event.preventDefault();
       setClientSearchQuery('');
       setDebouncedSearchQuery('');
+            setActiveSearchResultIndex(-1);
     };
 
     window.addEventListener('keydown', onGlobalKeyDown);
     return () => window.removeEventListener('keydown', onGlobalKeyDown);
   }, [clientSearchQuery]);
+  useEffect(() => {
+    setActiveSearchResultIndex(-1);
+  }, [debouncedSearchQuery]);
+
+  useEffect(() => {
+    if (activeSearchResultIndex < 0) return;
+    const container = searchResultsRef.current;
+    const activeElement = container?.querySelector(`[data-search-result-index="${activeSearchResultIndex}"]`) as HTMLElement | null;
+    activeElement?.scrollIntoView({ block: 'nearest' });
+  }, [activeSearchResultIndex]);
 
 
   const normalizedClientSearchQuery = useMemo(() => normalizeSearchValue(debouncedSearchQuery), [debouncedSearchQuery]);
@@ -824,6 +839,11 @@ export default function BookingsAdminPanel({ isActive, mode, onBackToDashboard }
       return <mark key={`${part}-${index}`} className="admin-search-highlight">{part}</mark>;
     });
   }, [normalizedClientSearchQuery]);
+  const searchDropdownBookings = useMemo(() => {
+    if (!normalizedClientSearchQuery || isSearchDebouncing) return [] as Booking[];
+    return visibleBookings.slice(0, 8);
+  }, [isSearchDebouncing, normalizedClientSearchQuery, visibleBookings]);
+
 
   const isMobileDashboard = mode === 'dashboard' && isMobileViewport;
   useBodyScrollLock(isAddBarberSheetOpen);
@@ -867,6 +887,39 @@ export default function BookingsAdminPanel({ isActive, mode, onBackToDashboard }
     setTimelineNotesDraft(booking.notes ?? '');
     setTimelineNotesMessage('');
   }, []);
+  const scrollToTimelineBooking = useCallback((bookingId: string) => {
+    const card = document.querySelector(`[data-booking-id="${bookingId}"]`) as HTMLElement | null;
+    if (!card) return false;
+    card.scrollIntoView({ behavior: 'smooth', block: 'center', inline: 'center' });
+    window.setTimeout(() => {
+      card.focus({ preventScroll: true });
+    }, 220);
+    return true;
+  }, []);
+
+  const jumpToTimelineBooking = useCallback((booking: Booking) => {
+    if (mode !== 'dashboard' || activeView !== 'timeline') {
+      pendingTimelineScrollBookingIdRef.current = booking.id;
+      setActiveView('timeline');
+    } else if (!scrollToTimelineBooking(booking.id)) {
+      pendingTimelineScrollBookingIdRef.current = booking.id;
+    }
+
+    openTimelineBooking(booking);
+    setClientSearchQuery('');
+    setDebouncedSearchQuery('');
+    setActiveSearchResultIndex(-1);
+    searchInputRef.current?.blur();
+  }, [activeView, mode, openTimelineBooking, scrollToTimelineBooking]);
+
+  useEffect(() => {
+    const pendingBookingId = pendingTimelineScrollBookingIdRef.current;
+    if (!pendingBookingId || activeView !== 'timeline') return;
+    if (scrollToTimelineBooking(pendingBookingId)) {
+      pendingTimelineScrollBookingIdRef.current = null;
+    }
+  }, [activeView, scrollToTimelineBooking, visibleBookings]);
+
 
   async function saveTimelineBookingNotes() {
     if (!selectedTimelineBooking) return;
@@ -1473,7 +1526,7 @@ export default function BookingsAdminPanel({ isActive, mode, onBackToDashboard }
         </section>
       )}
 
-      <div className={`admin-search-row ${isMobileDashboard ? 'admin-search-row--sticky' : ''}`}>
+      <div className="admin-search-row">
         <div className={`admin-search-field ${clientSearchQuery ? 'admin-search-field--has-clear' : ''} ${searchResultsLabel ? 'admin-search-field--has-feedback' : ''}`}>
           <span className="admin-search-icon" aria-hidden="true">
             <svg viewBox="0 0 24 24" focusable="false" aria-hidden="true">
@@ -1485,8 +1538,34 @@ export default function BookingsAdminPanel({ isActive, mode, onBackToDashboard }
             type="search"
             value={clientSearchQuery}
             onChange={(event) => setClientSearchQuery(event.target.value)}
+                        onKeyDown={(event) => {
+              if (searchDropdownBookings.length === 0) return;
+              if (event.key === 'ArrowDown') {
+                event.preventDefault();
+                setActiveSearchResultIndex((current) => (current + 1) % searchDropdownBookings.length);
+                return;
+              }
+              if (event.key === 'ArrowUp') {
+                event.preventDefault();
+                setActiveSearchResultIndex((current) => {
+                  if (current <= 0) return searchDropdownBookings.length - 1;
+                  return current - 1;
+                });
+                return;
+              }
+              if (event.key === 'Enter' && activeSearchResultIndex >= 0) {
+                event.preventDefault();
+                const selectedBooking = searchDropdownBookings[activeSearchResultIndex];
+                if (selectedBooking) jumpToTimelineBooking(selectedBooking);
+              }
+            }}
+
             placeholder="Search client or email…"
             aria-label="Search client or email"
+                        aria-controls="admin-booking-search-results"
+            aria-expanded={searchDropdownBookings.length > 0}
+            aria-activedescendant={activeSearchResultIndex >= 0 ? `admin-search-result-${searchDropdownBookings[activeSearchResultIndex]?.id}` : undefined}
+
           />
           {searchResultsLabel ? <span className="admin-search-feedback" aria-live="polite">{searchResultsLabel}</span> : null}
           {clientSearchQuery ? (
@@ -1496,6 +1575,7 @@ export default function BookingsAdminPanel({ isActive, mode, onBackToDashboard }
               onClick={() => {
                 setClientSearchQuery('');
                 setDebouncedSearchQuery('');
+                                setActiveSearchResultIndex(-1);
                 searchInputRef.current?.focus();
               }}
               aria-label="Clear search"
@@ -1503,6 +1583,27 @@ export default function BookingsAdminPanel({ isActive, mode, onBackToDashboard }
               ×
             </button>
           ) : null}
+                    {searchDropdownBookings.length > 0 ? (
+            <div className="admin-search-results" id="admin-booking-search-results" role="listbox" ref={searchResultsRef}>
+              {searchDropdownBookings.map((booking, index) => (
+                <button
+                  type="button"
+                  key={booking.id}
+                  id={`admin-search-result-${booking.id}`}
+                  data-search-result-index={index}
+                  role="option"
+                  aria-selected={activeSearchResultIndex === index}
+                  className={`admin-search-result-item ${activeSearchResultIndex === index ? 'is-active' : ''}`}
+                  onMouseDown={(event) => event.preventDefault()}
+                  onClick={() => jumpToTimelineBooking(booking)}
+                >
+                  <span className="admin-search-result-main">{highlightMatch(booking.fullName)}</span>
+                  <span className="admin-search-result-meta">{highlightMatch(booking.email)} · {booking.barber?.name} · {formatStartTime(booking.startAt)}</span>
+                </button>
+              ))}
+            </div>
+          ) : null}
+
         </div>
       </div>
 
