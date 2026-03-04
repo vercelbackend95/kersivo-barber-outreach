@@ -45,6 +45,7 @@
 
 .admin-next-block {
   border: 1px solid var(--border);
+    background: var(--surface);
   padding: var(--space-sm);
   display: grid;
   gap: var(--space-xs);
@@ -2776,6 +2777,9 @@
     position: sticky;
     top: 3.1rem;
     z-index: 32;
+        background: var(--surface);
+    border-color: var(--border);
+
     gap: 0.2rem;
     padding: 0.45rem 0.55rem;
     line-height: 1.3;
