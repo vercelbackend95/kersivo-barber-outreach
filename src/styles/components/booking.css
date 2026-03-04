@@ -3113,9 +3113,11 @@
   cursor: pointer;
   text-align: left;
 }
-.working-hours-day-row[aria-expanded='true'] {
-  border-color: var(--accent);
-  background: color-mix(in srgb, var(--surface) 88%, var(--accent) 12%);
+.working-hours-day-row.is-expanded {
+  border-color: color-mix(in srgb, var(--fg) 22%, var(--border));
+  background: color-mix(in srgb, var(--surface) 94%, var(--fg) 6%);
+  box-shadow: 0 0 0 1px color-mix(in srgb, var(--fg) 8%, transparent);
+
 }
 
 
@@ -3147,10 +3149,10 @@
 }
 
 .working-hours-time-chip.is-off {
-    border-color: var(--border);
-  background: color-mix(in srgb, var(--surface) 85%, var(--bg) 15%);
+  border-color: color-mix(in srgb, var(--accent) 46%, var(--border));
+  background: color-mix(in srgb, var(--accent) 12%, var(--bg));
+  color: color-mix(in srgb, var(--fg) 74%, var(--muted));
 
-  color: var(--muted);
 }
 .working-hours-day-row__chevron {
   line-height: 1;
@@ -3206,8 +3208,14 @@
 }
 
 .working-hours-switch.is-on {
-  border-color: var(--accent);
-  background: color-mix(in srgb, var(--accent) 20%, var(--bg));
+  border-color: color-mix(in srgb, var(--status-confirmed) 60%, var(--border));
+  background: color-mix(in srgb, var(--status-confirmed) 24%, var(--bg));
+}
+
+.working-hours-switch.is-off {
+  border-color: color-mix(in srgb, var(--accent) 55%, var(--border));
+  background: color-mix(in srgb, var(--accent) 18%, var(--bg));
+
 }
 
 .working-hours-switch:disabled {
@@ -3224,6 +3232,11 @@
 
 .working-hours-switch.is-on .working-hours-switch__thumb {
   transform: translateX(0.85rem);
+    background: var(--status-confirmed);
+}
+
+.working-hours-switch.is-off .working-hours-switch__thumb {
+
   background: var(--accent);
 }
 
@@ -3261,10 +3274,24 @@
 }
 
 
-.working-hours-saved-toast {
+.working-hours-off-helper {
   margin: 0;
   font-size: 0.8rem;
+  color: var(--muted);
+}
+.working-hours-save-status {
+  margin: 0;
+  font-size: 0.8rem;
+  color: var(--muted);
+}
+
+.working-hours-save-status.is-saved {
+  color: var(--status-confirmed);
+}
+
+.working-hours-save-status.is-error {
   color: var(--accent);
+
 
 }
 

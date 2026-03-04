@@ -957,7 +957,7 @@ export default function BookingsAdminPanel({ isActive, mode, onBackToDashboard }
   }
 
   async function saveWorkingHours(nextRules?: WorkingHourRow[]) {
-    if (!selectedBarberId) return;
+    if (!selectedBarberId) return false;
     const rulesToSave = (nextRules ?? workingHours).slice().sort((a, b) => a.dayOfWeek - b.dayOfWeek);
     setWorkingHoursSaving(true);
     setBarberSaveMessage('');
@@ -972,7 +972,7 @@ export default function BookingsAdminPanel({ isActive, mode, onBackToDashboard }
     if (!response.ok) {
       setBarberSaveError(payload.error ?? 'Could not save working hours.');
       setWorkingHoursSaving(false);
-      return;
+      return false;
     }
         if (payload.rules) {
       setWorkingHours(payload.rules.sort((a, b) => a.dayOfWeek - b.dayOfWeek));
@@ -980,6 +980,7 @@ export default function BookingsAdminPanel({ isActive, mode, onBackToDashboard }
 
     setBarberSaveMessage('Working hours saved.');
     setWorkingHoursSaving(false);
+        return true;
   }
 
 
@@ -1243,7 +1244,7 @@ export default function BookingsAdminPanel({ isActive, mode, onBackToDashboard }
                 onChangeWorkingHour={(dayOfWeek, field, value) => updateWorkingHour(dayOfWeek, { [field]: value })}
                 barberSaveError={barberSaveError}
                 onSetWorkingHours={setWorkingHours}
-                onSaveWorkingHours={(rules) => void saveWorkingHours(rules)}
+                onSaveWorkingHours={saveWorkingHours}
                 onChangeBlockTitle={setProfileBlockTitle}
                 onChangeBlockStartAt={setProfileBlockStartInput}
                 onChangeBlockEndAt={setProfileBlockEndInput}

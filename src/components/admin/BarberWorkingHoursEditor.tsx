@@ -7,14 +7,13 @@ type BarberWorkingHoursEditorProps = {
   workingHours: WorkingHourRow[];
   loading: boolean;
   saving: boolean;
-    saveError: string;
+  saveError: string;
   onSetWorkingHours: (rules: WorkingHourRow[]) => void;
-  onSave: (rules?: WorkingHourRow[]) => void;
-
+  onSave: (rules?: WorkingHourRow[]) => Promise<boolean>;
 };
 
 const AUTO_SAVE_DELAY_MS = 600;
-const SAVED_TOAST_TIMEOUT_MS = 1600;
+const SAVED_TOAST_TIMEOUT_MS = 1300;
 
 
 function sortByDay(workingHours: WorkingHourRow[]) {
@@ -57,10 +56,10 @@ export default function BarberWorkingHoursEditor({
 }: BarberWorkingHoursEditorProps) {
   const [expandedDayIndex, setExpandedDayIndex] = React.useState<number | null>(null);
   const [draftDay, setDraftDay] = React.useState<WorkingHourRow | null>(null);
-  const [savedToastVisible, setSavedToastVisible] = React.useState(false);
-  const [pendingAutoSave, setPendingAutoSave] = React.useState(false);
+  const [saveStatus, setSaveStatus] = React.useState<'idle' | 'saving' | 'saved' | 'error'>('idle');
   const autoSaveTimeoutRef = React.useRef<ReturnType<typeof setTimeout> | null>(null);
   const saveToastTimeoutRef = React.useRef<ReturnType<typeof setTimeout> | null>(null);
+  const saveRequestIdRef = React.useRef(0);
 
   const orderedHours = React.useMemo(() => sortByDay(workingHours), [workingHours]);
   const weeklySummary = React.useMemo(() => getWeeklySummary(orderedHours), [orderedHours]);
@@ -79,25 +78,12 @@ export default function BarberWorkingHoursEditor({
 
   const closeEditor = React.useCallback(() => {
     clearAutoSaveTimeout();
-    setPendingAutoSave(false);
     setExpandedDayIndex(null);
     setDraftDay(null);
     clearSavedToastTimeout();
-    setSavedToastVisible(false);
+    setSaveStatus('idle');
   }, [clearAutoSaveTimeout, clearSavedToastTimeout]);
 
-  React.useEffect(() => {
-    if (!pendingAutoSave || saving) return;
-    if (saveError) return;
-
-    setPendingAutoSave(false);
-    setSavedToastVisible(true);
-    clearSavedToastTimeout();
-    saveToastTimeoutRef.current = setTimeout(() => {
-      setSavedToastVisible(false);
-      saveToastTimeoutRef.current = null;
-    }, SAVED_TOAST_TIMEOUT_MS);
-  }, [clearSavedToastTimeout, pendingAutoSave, saveError, saving]);
 
   React.useEffect(() => {
     return () => {
@@ -108,10 +94,8 @@ export default function BarberWorkingHoursEditor({
   const openEditor = React.useCallback(
     (dayOfWeek: number) => {
       clearAutoSaveTimeout();
-      setPendingAutoSave(false);
-      setSavedToastVisible(false);
       clearSavedToastTimeout();
-
+      setSaveStatus('idle');
 
       const sourceDay = orderedHours.find((hour) => hour.dayOfWeek === dayOfWeek) ?? null;
       setExpandedDayIndex(dayOfWeek);
@@ -134,12 +118,27 @@ export default function BarberWorkingHoursEditor({
   const scheduleAutoSave = React.useCallback(
     (nextRules: WorkingHourRow[]) => {
       clearAutoSaveTimeout();
-      setPendingAutoSave(true);
+      const requestId = ++saveRequestIdRef.current;
       autoSaveTimeoutRef.current = setTimeout(() => {
-        onSave(nextRules);
+        setSaveStatus('saving');
+        void onSave(nextRules).then((wasSaved) => {
+          if (requestId !== saveRequestIdRef.current) return;
+          if (!wasSaved) {
+            setSaveStatus('error');
+            return;
+          }
+          setSaveStatus('saved');
+          clearSavedToastTimeout();
+          saveToastTimeoutRef.current = setTimeout(() => {
+            if (requestId !== saveRequestIdRef.current) return;
+            setSaveStatus('idle');
+            saveToastTimeoutRef.current = null;
+          }, SAVED_TOAST_TIMEOUT_MS);
+        });
+
       }, AUTO_SAVE_DELAY_MS);
     },
-    [clearAutoSaveTimeout, onSave]
+    [clearAutoSaveTimeout, clearSavedToastTimeout, onSave]
   );
   const applyDraft = React.useCallback(
     (field: 'active' | 'startTime' | 'endTime', value: string | boolean) => {
@@ -155,13 +154,16 @@ export default function BarberWorkingHoursEditor({
         scheduleAutoSave(nextRules);
       } else {
         clearAutoSaveTimeout();
-        setPendingAutoSave(false);
-        setSavedToastVisible(false);
         clearSavedToastTimeout();
+                setSaveStatus('idle');
       }
     },
     [clearAutoSaveTimeout, clearSavedToastTimeout, draftDay, onSetWorkingHours, orderedHours, scheduleAutoSave]
   );
+  React.useEffect(() => {
+    if (!saveError && saveStatus !== 'error') return;
+    setSaveStatus('error');
+  }, [saveError, saveStatus]);
 
 
   return (
@@ -182,7 +184,7 @@ export default function BarberWorkingHoursEditor({
         loading={loading}
         saving={saving}
         errorMessage={saveError}
-        savedToastVisible={savedToastVisible}
+        saveStatus={saveStatus}
         onToggleDayEditor={toggleEditor}
         onChangeDraftDay={applyDraft}
       />

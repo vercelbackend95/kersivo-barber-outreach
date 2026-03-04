@@ -28,7 +28,7 @@ type BarberProfileProps = {
   onChangeWorkingHour: (dayOfWeek: number, field: 'active' | 'startTime' | 'endTime', value: string | boolean) => void;
   barberSaveError: string;
   onSetWorkingHours: (rules: WorkingHourRow[]) => void;
-  onSaveWorkingHours: (rules?: WorkingHourRow[]) => void;
+  onSaveWorkingHours: (rules?: WorkingHourRow[]) => Promise<boolean>;
   onChangeBlockTitle: (value: string) => void;
   onChangeBlockStartAt: (value: string) => void;
   onChangeBlockEndAt: (value: string) => void;
