@@ -57,6 +57,9 @@ export default function BarberProfile({
 }: BarberProfileProps) {
     const actionsMenuRef = React.useRef<HTMLDivElement | null>(null);
   const [isActionsMenuOpen, setIsActionsMenuOpen] = React.useState(false);
+  const [isConfirmDialogOpen, setIsConfirmDialogOpen] = React.useState(false);
+  const confirmDialogRef = React.useRef<HTMLDivElement | null>(null);
+  const cancelButtonRef = React.useRef<HTMLButtonElement | null>(null);
 
   const selectedServicesCount = enabledServiceIds.size;
   const totalServicesCount = services.length;
@@ -102,6 +105,58 @@ export default function BarberProfile({
     };
   }, [isActionsMenuOpen]);
 
+  React.useEffect(() => {
+    if (!isConfirmDialogOpen) return;
+
+    const previouslyFocused = document.activeElement as HTMLElement | null;
+    const dialogNode = confirmDialogRef.current;
+
+    const focusCancel = window.setTimeout(() => {
+      cancelButtonRef.current?.focus();
+    }, 0);
+
+    const handleKeyDown = (event: KeyboardEvent) => {
+      if (event.key === 'Escape') {
+        event.preventDefault();
+        setIsConfirmDialogOpen(false);
+        return;
+      }
+
+      if (event.key !== 'Tab' || !dialogNode) return;
+
+      const focusable = Array.from(
+        dialogNode.querySelectorAll<HTMLElement>(
+          'button:not([disabled]), [href], input:not([disabled]), select:not([disabled]), textarea:not([disabled]), [tabindex]:not([tabindex="-1"])'
+        )
+      );
+
+      if (focusable.length === 0) return;
+
+      const first = focusable[0];
+      const last = focusable[focusable.length - 1];
+
+      if (!event.shiftKey && document.activeElement === last) {
+        event.preventDefault();
+        first.focus();
+      } else if (event.shiftKey && document.activeElement === first) {
+        event.preventDefault();
+        last.focus();
+      }
+    };
+
+    document.body.style.overflow = 'hidden';
+    document.addEventListener('keydown', handleKeyDown);
+
+    return () => {
+      window.clearTimeout(focusCancel);
+      document.body.style.overflow = '';
+      document.removeEventListener('keydown', handleKeyDown);
+      previouslyFocused?.focus();
+    };
+  }, [isConfirmDialogOpen]);
+
+  const actionLabel = isActive ? 'Deactivate' : 'Reactivate';
+
 
 
   return (
@@ -140,22 +195,23 @@ export default function BarberProfile({
                     role="menuitem"
                     className="admin-barber-actions-dropdown-item"
                     onClick={() => {
-                      onToggleActive();
                       setIsActionsMenuOpen(false);
+                                            setIsConfirmDialogOpen(true);
                     }}
                   >
-                    {isActive ? 'Deactivate' : 'Reactivate'}
+                    {actionLabel}
                   </button>
                 </div>
               ) : null}
             </div>
           </div>
       </div>
+              <p className="admin-barber-status-line">
+          <span className={`admin-status-dot ${isActive ? 'is-active' : 'is-inactive'}`} aria-hidden="true" />
+          {isActive ? 'Active' : 'Inactive'}
+        </p>
+
         <p className="admin-barber-status-meta-line">
-          <span className="admin-barber-status-line">
-            <span className={`admin-status-dot ${isActive ? 'is-active' : 'is-inactive'}`} aria-hidden="true" />
-            {isActive ? 'Active' : 'Inactive'}
-          </span>
           <span aria-hidden="true">•</span>
           <span>Total served: {totalBookingsServed}</span>
           <span aria-hidden="true">•</span>
@@ -166,6 +222,60 @@ export default function BarberProfile({
           <span>Next time off: {nextBlockLabel}</span>
         </p>
       </header>
+
+      {isConfirmDialogOpen ? (
+        <div className="admin-barber-confirm-layer" role="presentation">
+          <button
+            type="button"
+            className="admin-barber-confirm-backdrop"
+            aria-label="Close confirmation dialog"
+            onClick={() => setIsConfirmDialogOpen(false)}
+          />
+          <div
+            ref={confirmDialogRef}
+            className="admin-barber-confirm-dialog"
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="barber-toggle-title"
+            aria-describedby="barber-toggle-description"
+          >
+            <h3 id="barber-toggle-title" className="admin-barber-confirm-title">
+              {isActive ? 'Deactivate barber?' : 'Reactivate barber?'}
+            </h3>
+            <div id="barber-toggle-description" className="admin-barber-confirm-body">
+              {isActive ? (
+                <ul>
+                  <li>This will remove the barber from the booking dropdown.</li>
+                  <li>Existing booking history stays intact.</li>
+                  <li>You can reactivate at any time.</li>
+                </ul>
+              ) : (
+                <p>The barber will be available for new bookings again.</p>
+              )}
+            </div>
+            <div className="admin-barber-confirm-actions">
+              <button
+                ref={cancelButtonRef}
+                type="button"
+                className="btn btn--ghost"
+                onClick={() => setIsConfirmDialogOpen(false)}
+              >
+                Cancel
+              </button>
+              <button
+                type="button"
+                className="btn btn--primary"
+                onClick={() => {
+                  onToggleActive();
+                  setIsConfirmDialogOpen(false);
+                }}
+              >
+                {actionLabel}
+              </button>
+            </div>
+          </div>
+        </div>
+      ) : null}
 
 
       <BarberServicesEditor
