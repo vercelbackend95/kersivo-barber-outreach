@@ -2384,6 +2384,9 @@
 }
 
 .admin-timeline {
+    --admin-timeline-barber-column-width: 7.5rem;
+  --admin-timeline-canvas-width: 42rem;
+
   border: 1px solid var(--border);
   background: var(--surface);
   width: 100%;
@@ -2407,7 +2410,7 @@
 .admin-timeline-scale-row,
 .admin-timeline-lane-row {
   display: grid;
-  grid-template-columns: 7.5rem minmax(42rem, 1fr);
+  grid-template-columns: var(--admin-timeline-barber-column-width) minmax(var(--admin-timeline-canvas-width), 1fr);
 }
 
 .admin-timeline-barber-header,

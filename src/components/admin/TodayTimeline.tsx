@@ -69,9 +69,13 @@ type TodayTimelineProps = {
 };
 
 const ADMIN_TIMEZONE = 'Europe/London';
-const TIMELINE_START_HOUR = 10;
-const TIMELINE_END_HOUR = 18;
+const TIMELINE_START_HOUR = 8;
+const TIMELINE_END_HOUR = 24;
+const TIMELINE_SLOT_INTERVAL_MINUTES = 30;
+const TIMELINE_SLOT_WIDTH_REM = 3.15;
 const TIMELINE_TOTAL_MINUTES = (TIMELINE_END_HOUR - TIMELINE_START_HOUR) * 60;
+const TIMELINE_TOTAL_SLOTS = TIMELINE_TOTAL_MINUTES / TIMELINE_SLOT_INTERVAL_MINUTES;
+const TIMELINE_CANVAS_MIN_WIDTH_REM = TIMELINE_TOTAL_SLOTS * TIMELINE_SLOT_WIDTH_REM;
 const BOOKING_CARD_HEIGHT = 56;
 const BOOKING_STACK_GAP = 6;
 const LANE_INNER_PADDING = 8;
@@ -187,7 +191,7 @@ function getTickRows() {
   const minorTicks: number[] = [];
 
   for (let minute = 0; minute <= TIMELINE_TOTAL_MINUTES; minute += 15) {
-    const isMajor = minute % 30 === 0;
+    const isMajor = minute % TIMELINE_SLOT_INTERVAL_MINUTES === 0;
     if (isMajor) {
       const hour = TIMELINE_START_HOUR + Math.floor(minute / 60);
       const min = minute % 60;
@@ -251,6 +255,10 @@ function TodayTimeline({ barbers, bookings, timeBlocks, selectedDate, isSearchAc
 
   const lanes = useMemo(() => buildLanes(barbers, bookings, timeBlocks), [barbers, bookings, timeBlocks]);
   const ticks = useMemo(() => getTickRows(), []);
+  const timelineLayoutStyle = useMemo(
+    () => ({ '--admin-timeline-canvas-width': `${TIMELINE_CANVAS_MIN_WIDTH_REM}rem` }) as React.CSSProperties,
+    []
+  );
 
   useEffect(() => {
     const container = timelineScrollContainerRef.current;
@@ -358,7 +366,7 @@ function TodayTimeline({ barbers, bookings, timeBlocks, selectedDate, isSearchAc
   }
 
   return (
-    <section className="admin-timeline" aria-label={`Timeline for ${selectedDate}`}>
+    <section className="admin-timeline" aria-label={`Timeline for ${selectedDate}`} style={timelineLayoutStyle}>
       <div className="admin-timeline-scroll" ref={timelineScrollContainerRef}>
         <div className="admin-timeline-scale-row">
           <div className="admin-timeline-barber-header">Barber</div>
