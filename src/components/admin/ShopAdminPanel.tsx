@@ -1127,7 +1127,7 @@ export default function ShopAdminPanel({ initialTab = 'products' }: ShopAdminPan
 
   return (
     <section className="booking-shell" aria-live="polite">
-      <h2>Shop</h2>
+      <h1>SHOP</h1>
 
       <p className="admin-shop-kicker muted">{activeSectionLabel}</p>
 

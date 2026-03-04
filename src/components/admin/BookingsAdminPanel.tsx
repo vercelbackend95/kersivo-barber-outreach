@@ -373,10 +373,11 @@ function nextLunchWindow(now: Date) {
 type BookingsAdminMode = 'dashboard' | 'blocks' | 'reports' | 'history';
 
 const BOOKINGS_HEADER_KICKER: Record<BookingsAdminMode, string> = {
-  dashboard: 'Schedule & calendar',
-  blocks: 'Barbers',
-  reports: 'Reports',
-  history: 'History',
+  dashboard: 'SCHEDULE & CALENDAR',
+  blocks: 'BARBERS',
+  reports: 'REPORTS',
+  history: 'HISTORY',
+
 };
 
 
@@ -1244,8 +1245,8 @@ export default function BookingsAdminPanel({ isActive, mode, onBackToDashboard }
 
   return (
     <section className="surface booking-shell">
-            <p className="admin-shop-kicker muted">{BOOKINGS_HEADER_KICKER[mode]}</p>
       <h1>BOOKINGS</h1>
+            <p className="admin-shop-kicker muted">{BOOKINGS_HEADER_KICKER[mode]}</p>
       <div className={`admin-next-block ${isMobileViewport ? 'admin-next-block--mobile-sticky' : ''}`}><p className="admin-next-primary">Today: {todayBookings.length} bookings</p>{nextBooking && <p className="admin-next-secondary">Next: {nextBooking.barber?.name} — {nextBooking.service?.name} — {formatStartTime(nextBooking.startAt)} ({formatRelativeTime(nextBooking.startAt, nextBooking.endAt)})</p>}<p className="muted admin-next-updated">Updated: {formatLastUpdated(lastUpdatedAt, nowMs)}</p></div>
 
       {cancelSuccessMessage && <p className="admin-inline-success">{cancelSuccessMessage}</p>}
