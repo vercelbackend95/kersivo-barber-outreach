@@ -3167,6 +3167,9 @@
 
 }
 .working-hours-inline-editor {
+    width: 100%;
+  max-width: 100%;
+
   margin-top: -0.1rem;
   margin-bottom: 0.25rem;
   border: 1px solid var(--border);
@@ -3175,6 +3178,7 @@
   padding: 0.5rem 0.6rem;
   display: grid;
   gap: 0.5rem;
+    overflow-x: hidden;
 }
 
 .working-hours-inline-toggle {
@@ -3253,7 +3257,7 @@
   grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr);
   gap: 0.35rem;
   align-items: end;
-
+  min-width: 0;
 }
 
 .working-hours-time-field {
@@ -3263,13 +3267,16 @@
   color: var(--muted);
   text-transform: uppercase;
   letter-spacing: 0.04em;
-
+  min-width: 0;
 }
 
 .working-hours-time-field input {
   width: 100%;
+  max-width: 100%;
   min-height: 2.25rem;
   padding: 0.2rem 0.35rem;
+  min-width: 0;
+  box-sizing: border-box;
 
 }
 
