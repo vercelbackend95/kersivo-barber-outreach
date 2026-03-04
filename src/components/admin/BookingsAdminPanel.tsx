@@ -69,6 +69,9 @@ const ADMIN_TIMEZONE = 'Europe/London';
 const SLOT_STEP_MINUTES = 15;
 const POLL_INTERVAL_MS = 15000;
 const LAST_UPDATED_REFRESH_MS = 1000;
+const LIVE_THRESHOLD_MS = 20000;
+const CONNECTING_GRACE_MS = 2000;
+
 const UPDATED_ROW_HIGHLIGHT_MS = 2000;
 const MOBILE_BREAKPOINT_PX = 768;
 const MOBILE_RECENT_BARBERS_COUNT = 5;
@@ -262,9 +265,10 @@ function isTodayInLondon(value: string, todayLondonDate: string) {
 }
 
 
-function formatLastUpdated(lastUpdatedAt: number | null, nowMs: number) {
-  if (!lastUpdatedAt) return 'never';
-  const diffSec = Math.floor((nowMs - lastUpdatedAt) / 1000);
+function formatLastUpdated(lastSuccessAt: number | null, nowMs: number) {
+  if (!lastSuccessAt) return 'never';
+  const diffSec = Math.floor((nowMs - lastSuccessAt) / 1000);
+
   if (diffSec <= 4) return 'just now';
   if (diffSec < 60) return `${diffSec}s ago`;
   return `${Math.floor(diffSec / 60)}m ago`;
@@ -415,7 +419,7 @@ export default function BookingsAdminPanel({ isActive, mode, onBackToDashboard }
   const [timeBlocks, setTimeBlocks] = useState<TimeBlock[]>([]);
   const [error, setError] = useState('');
   const [updatedBookingIds, setUpdatedBookingIds] = useState<string[]>([]);
-  const [lastUpdatedAt, setLastUpdatedAt] = useState<number | null>(null);
+  const [lastSuccessAt, setLastSuccessAt] = useState<number | null>(null);
   const [nowMs, setNowMs] = useState(() => Date.now());
   const [clientSearchQuery, setClientSearchQuery] = useState('');
   const [debouncedSearchQuery, setDebouncedSearchQuery] = useState('');
@@ -473,7 +477,7 @@ export default function BookingsAdminPanel({ isActive, mode, onBackToDashboard }
     const searchInputRef = useRef<HTMLInputElement | null>(null);
   const timelineScrollRestoreRef = useRef<{ left: number; top: number } | null>(null);
   const timelineScrollRafRef = useRef<number | null>(null);
-
+  const initialMountMsRef = useRef(Date.now());
   const captureTimelineScroll = useCallback(() => {
     const container = timelineScrollRef.current;
     if (!container) return;
@@ -611,7 +615,7 @@ export default function BookingsAdminPanel({ isActive, mode, onBackToDashboard }
       }
 
       previousSignaturesRef.current = nextSignatures;
-      setLastUpdatedAt(Date.now());
+      setLastSuccessAt(Date.now());
 
       if (shouldUpdateBookings && changedIds.length) {
         setUpdatedBookingIds(changedIds);
@@ -734,6 +738,12 @@ export default function BookingsAdminPanel({ isActive, mode, onBackToDashboard }
 
 
   const todayLondonDate = useMemo(() => getTodayLondonDate(), [nowMs]);
+    const hasRecentConnectionAttempt = nowMs - initialMountMsRef.current > CONNECTING_GRACE_MS;
+  const isLive = lastSuccessAt ? nowMs - lastSuccessAt <= LIVE_THRESHOLD_MS : false;
+  const connectionStateLabel = !lastSuccessAt && !hasRecentConnectionAttempt ? 'CONNECTING…' : isLive ? 'LIVE' : 'OFFLINE';
+  const hasLivePulse = connectionStateLabel === 'LIVE';
+  const freshnessLabel = lastSuccessAt ? `Updated ${formatLastUpdated(lastSuccessAt, nowMs)}` : 'Waiting for successful refresh';
+
   const todayBookings = useMemo(() => bookings.filter((booking) => isTodayInLondon(booking.startAt, todayLondonDate)), [bookings, todayLondonDate]);
   const upcomingBookings = useMemo(() => getUpcomingBookings(todayBookings), [todayBookings]);
 
@@ -1247,7 +1257,7 @@ export default function BookingsAdminPanel({ isActive, mode, onBackToDashboard }
     <section className="surface booking-shell">
       <h1>BOOKINGS</h1>
             <p className="admin-shop-kicker muted">{BOOKINGS_HEADER_KICKER[mode]}</p>
-      <div className={`admin-next-block ${isMobileViewport ? 'admin-next-block--mobile-sticky' : ''}`}><p className="admin-next-primary">Today: {todayBookings.length} bookings</p>{nextBooking && <p className="admin-next-secondary">Next: {nextBooking.barber?.name} — {nextBooking.service?.name} — {formatStartTime(nextBooking.startAt)} ({formatRelativeTime(nextBooking.startAt, nextBooking.endAt)})</p>}<p className="muted admin-next-updated">Updated: {formatLastUpdated(lastUpdatedAt, nowMs)}</p></div>
+      <div className={`admin-next-block ${isMobileViewport ? 'admin-next-block--mobile-sticky' : ''}`}><div className="admin-next-header"><div className="admin-next-header-copy"><p className="admin-next-primary">Today: {todayBookings.length} bookings</p>{nextBooking && <p className="admin-next-secondary">Next: {nextBooking.barber?.name} — {nextBooking.service?.name} — {formatStartTime(nextBooking.startAt)} ({formatRelativeTime(nextBooking.startAt, nextBooking.endAt)})</p>}</div><div className={`admin-live-status admin-live-status--${connectionStateLabel === 'LIVE' ? 'live' : connectionStateLabel === 'OFFLINE' ? 'offline' : 'connecting'}`} role="status" aria-live="polite"><span className={`admin-live-status-dot ${hasLivePulse ? 'admin-live-status-dot--pulse' : ''}`} aria-hidden="true" /><span className="admin-live-status-label">{connectionStateLabel}</span></div></div><p className="muted admin-next-updated">{freshnessLabel}</p></div>
 
       {cancelSuccessMessage && <p className="admin-inline-success">{cancelSuccessMessage}</p>}
       {cancelErrorMessage && <p className="admin-inline-error">{cancelErrorMessage}</p>}
