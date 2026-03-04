@@ -2869,18 +2869,28 @@
   gap: 0.75rem;
 
   padding: 0;
- margin: 0 0 1rem;
+  margin: 0 0 1rem;
   list-style: none;
 }
+@media (min-width: 48rem) {
+  .admin-barber-grid {
+    width: 100%;
+    max-width: 64rem;
+    margin-left: auto;
+    margin-right: auto;
+  }
+}
+
 
 .admin-barber-card {
   display: grid;
-    grid-template-columns: minmax(0, 1fr) auto;
+  grid-template-columns: minmax(0, 1fr) auto;
   gap: 0.75rem;
-    align-items: center;
+  align-items: center;
+  width: 100%;
   border: 1px solid var(--border);
   background: var(--surface);
-    padding: 0.85rem;
+  padding: 0.85rem;
 }
 
 .admin-barber-card.is-inactive {
