@@ -3103,7 +3103,7 @@
 .working-hours-day-row {
   width: 100%;
   display: grid;
-  grid-template-columns: minmax(0, 1fr) auto auto;
+  grid-template-columns: minmax(0, 1fr) auto;
   align-items: center;
   gap: 0.5rem;
   border: 1px solid var(--border);
@@ -3144,8 +3144,11 @@
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
-  max-width: 9rem;
-
+  max-width: 100%;
+  width: fit-content;
+  min-width: 0;
+  grid-column: 1 / -1;
+  grid-row: 2;
 }
 
 .working-hours-time-chip.is-off {
@@ -3159,6 +3162,9 @@
   color: var(--muted);
   font-size: 1rem;
   transition: transform 0.18s ease;
+    grid-column: 2;
+  grid-row: 1;
+
 }
 
 
@@ -3167,9 +3173,8 @@
 
 }
 .working-hours-inline-editor {
-    width: 100%;
+  width: 100%;
   max-width: 100%;
-
   margin-top: -0.1rem;
   margin-bottom: 0.25rem;
   border: 1px solid var(--border);
@@ -3178,7 +3183,7 @@
   padding: 0.5rem 0.6rem;
   display: grid;
   gap: 0.5rem;
-    overflow-x: hidden;
+  overflow-x: clip;
 }
 
 .working-hours-inline-toggle {
@@ -3249,6 +3254,8 @@
   border: 1px solid var(--border);
   padding: 0.45rem;
   min-width: 0;
+  min-inline-size: 0;
+  width: 100%;
 
 }
 
@@ -3298,11 +3305,15 @@
 
 .working-hours-save-status.is-error {
   color: var(--accent);
-
-
 }
 
 @media (max-width: 36rem) {
+    .working-hours-day-row {
+    gap: 0.4rem;
+    align-items: start;
+  }
+
+
   .working-hours-range-control__inputs {
     grid-template-columns: 1fr;
     gap: 0.3rem;
@@ -3314,11 +3325,32 @@
 }
 @media (min-width: 48rem) {
   .working-hours-day-row {
+    grid-template-columns: minmax(0, 1fr) auto auto;
+    align-items: center;
+  }
+
+  .working-hours-day-row__label {
+    grid-column: 1;
+    grid-row: 1;
+
+  }
+
+  .working-hours-time-chip {
+    grid-column: 2;
+    grid-row: 1;
+    max-width: 12rem;
+      }
+
+  .working-hours-day-row__chevron {
+    grid-column: 3;
+    grid-row: 1;
+  }
+  .working-hours-day-row {
     padding: 0.58rem 0.72rem;
   }
 
   .working-hours-time-chip {
-    max-width: 12rem;
+    justify-self: end;
 
   }
 
