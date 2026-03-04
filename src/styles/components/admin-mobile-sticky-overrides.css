@@ -1,26 +1,42 @@
 @media (max-width: 47.99rem) {
+  .admin-main-content,
+  .booking-shell {
+    isolation: isolate;
+  }
+
   .admin-mobile-header {
-    z-index: 140;
+    top: 0;
+    z-index: 220;
   }
 
   .admin-next-block--mobile-sticky {
-    z-index: 130;
+    top: calc(3.1rem + env(safe-area-inset-top, 0px));
+    z-index: 210;
   }
 
   .admin-search-row--sticky {
-    z-index: 120;
+    top: calc(5.9rem + env(safe-area-inset-top, 0px));
+    z-index: 200;
   }
 
   .admin-timeline-scale-row {
-    z-index: 20;
+    z-index: 30;
   }
 
   .admin-timeline-barber-header,
   .admin-timeline-lane-label {
-    z-index: 18;
+    z-index: 28;
   }
 
   .admin-timeline-barber-header {
-    z-index: 21;
+    z-index: 31;
+  }
+
+  .admin-mobile-overlay {
+    z-index: 400;
+  }
+
+  .admin-mobile-drawer {
+    z-index: 410;
   }
 }
