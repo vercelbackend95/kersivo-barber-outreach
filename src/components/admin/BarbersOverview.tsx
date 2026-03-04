@@ -111,8 +111,10 @@ export default function BarbersOverview({
       {barberSaveMessage ? <p className="admin-inline-success">{barberSaveMessage}</p> : null}
       {barberSaveError ? <p className="admin-inline-error">{barberSaveError}</p> : null}
 
-      <ul className="admin-barber-grid" aria-label="Barbers list">
-        {barbers.map((barber, index) => {
+      <div className="admin-barber-list-wrap">
+        <ul className="admin-barber-grid" aria-label="Barbers list">
+          {barbers.map((barber, index) => {
+
           const barberIsActive = normalizeBarberStatus(barber);
           const isFirstItem = index === 0;
           const isLastItem = index === barbers.length - 1;
@@ -142,14 +144,16 @@ export default function BarbersOverview({
               </div>
             </li>
           );
-        })}
-        <li className="admin-barber-card admin-barber-card--add">
-          <button type="button" className="admin-barber-add-btn" onClick={onOpenAddBarberSheet}>
-            <span className="admin-barber-add-icon" aria-hidden="true">+</span>
-            <span>Add barber</span>
-          </button>
-        </li>
-      </ul>
+          })}
+          <li className="admin-barber-card admin-barber-card--add">
+            <button type="button" className="admin-barber-add-btn" onClick={onOpenAddBarberSheet}>
+              <span className="admin-barber-add-icon" aria-hidden="true">+</span>
+              <span>Add barber</span>
+            </button>
+          </li>
+        </ul>
+      </div>
+
       {isAddBarberSheetOpen ? (
         <div
           className="admin-barber-sheet-layer"
