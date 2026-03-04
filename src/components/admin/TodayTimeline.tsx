@@ -76,6 +76,7 @@ const TIMELINE_SLOT_WIDTH_REM = 3.15;
 const TIMELINE_TOTAL_MINUTES = (TIMELINE_END_HOUR - TIMELINE_START_HOUR) * 60;
 const TIMELINE_TOTAL_SLOTS = TIMELINE_TOTAL_MINUTES / TIMELINE_SLOT_INTERVAL_MINUTES;
 const TIMELINE_CANVAS_MIN_WIDTH_REM = TIMELINE_TOTAL_SLOTS * TIMELINE_SLOT_WIDTH_REM;
+
 const BOOKING_CARD_HEIGHT = 56;
 const BOOKING_STACK_GAP = 6;
 const LANE_INNER_PADDING = 8;
@@ -187,7 +188,7 @@ function buildLanes(barbers: TimelineBarber[], bookings: TimelineBooking[], time
 }
 
 function getTickRows() {
-  const majorTicks: Array<{ minute: number; label: string }> = [];
+  const majorTicks: Array<{ minute: number; label: string; isHalfHour: boolean }> = [];
   const minorTicks: number[] = [];
 
   for (let minute = 0; minute <= TIMELINE_TOTAL_MINUTES; minute += 15) {
@@ -197,6 +198,7 @@ function getTickRows() {
       const min = minute % 60;
       majorTicks.push({
         minute,
+        isHalfHour: min === 30,
         label: `${String(hour).padStart(2, '0')}:${String(min).padStart(2, '0')}`
       });
     } else {
@@ -259,6 +261,7 @@ function TodayTimeline({ barbers, bookings, timeBlocks, selectedDate, isSearchAc
     () => ({ '--admin-timeline-canvas-width': `${TIMELINE_CANVAS_MIN_WIDTH_REM}rem` }) as React.CSSProperties,
     []
   );
+
 
   useEffect(() => {
     const container = timelineScrollContainerRef.current;
@@ -381,7 +384,7 @@ function TodayTimeline({ barbers, bookings, timeBlocks, selectedDate, isSearchAc
             {ticks.majorTicks.map((tick) => (
               <span
                 key={`major-${tick.minute}`}
-                className="admin-timeline-tick admin-timeline-tick--major"
+                className={`admin-timeline-tick admin-timeline-tick--major ${tick.isHalfHour ? 'admin-timeline-tick--half-hour' : ''}`}
                 style={{ left: `${(tick.minute / TIMELINE_TOTAL_MINUTES) * 100}%` }}
               >
                 <em>{tick.label}</em>

@@ -2384,9 +2384,8 @@
 }
 
 .admin-timeline {
-    --admin-timeline-barber-column-width: 7.5rem;
+  --admin-timeline-barber-column-width: 7.5rem;
   --admin-timeline-canvas-width: 42rem;
-
   border: 1px solid var(--border);
   background: var(--surface);
   width: 100%;
@@ -2461,6 +2460,12 @@
   color: var(--muted);
   font-size: 0.74rem;
 }
+@media (max-width: 47.99rem) {
+  .admin-timeline-tick--half-hour em {
+    display: none;
+  }
+}
+
 
 .admin-timeline-grid-line {
   width: 1px;
