@@ -54,16 +54,23 @@ type HistoryDateRange = {
 
 
 type ReportsPayload = {
-  range: {
+  range: ReportsRange;
+  rangeBoundaries: {
+
     from: string;
     to: string;
     tz: string;
   };
-  bookingsThisWeek: number;
+  bookingsCount: number;
   cancelledRate: number;
+    recentBarbers: Array<{ id: string; name: string }>;
+  selectedBarber: { id: string; name: string } | null;
+
   mostPopularService: { name: string; count: number } | null;
   busiestBarber: { name: string; count: number } | null;
 };
+type ReportsRange = 'week' | '7d' | '30d' | '90d' | '1y';
+
 
 const ADMIN_TIMEZONE = 'Europe/London';
 const SLOT_STEP_MINUTES = 15;
@@ -77,6 +84,14 @@ const MOBILE_BREAKPOINT_PX = 768;
 const MOBILE_RECENT_BARBERS_COUNT = 5;
 const DESKTOP_RECENT_BARBERS_COUNT = 11;
 const WEEK_DAYS = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
+const REPORTS_RANGE_OPTIONS: Array<{ value: ReportsRange; label: string }> = [
+  { value: 'week', label: 'This week' },
+  { value: '7d', label: 'Last 7 days' },
+  { value: '30d', label: 'Last 30 days' },
+  { value: '90d', label: 'Last 90 days' },
+  { value: '1y', label: 'Last 1 year' }
+];
+
 
 const DEFAULT_ADD_BARBER_SERVICES: ServiceOption[] = [
   { id: 'svc-haircut', name: 'Haircut' },
@@ -438,6 +453,9 @@ export default function BookingsAdminPanel({ isActive, mode, onBackToDashboard }
   const [historyLoadingMore, setHistoryLoadingMore] = useState(false);
   const [reports, setReports] = useState<ReportsPayload | null>(null);
   const [reportsError, setReportsError] = useState('');
+    const [reportsRange, setReportsRange] = useState<ReportsRange>('week');
+  const [reportsBarberId, setReportsBarberId] = useState<string | null>(null);
+
   const [cancelSuccessMessage, setCancelSuccessMessage] = useState('');
   const [cancelErrorMessage, setCancelErrorMessage] = useState('');
   const [cancelLoadingBookingId, setCancelLoadingBookingId] = useState<string | null>(null);
@@ -547,7 +565,10 @@ export default function BookingsAdminPanel({ isActive, mode, onBackToDashboard }
     if (!loggedIn) return;
 
     setReportsError('');
-    const response = await fetch('/api/admin/reports?range=week', { credentials: 'same-origin' });
+    const params = new URLSearchParams({ range: reportsRange });
+    if (reportsBarberId) params.set('barberId', reportsBarberId);
+    const response = await fetch(`/api/admin/reports?${params.toString()}`, { credentials: 'same-origin' });
+
 
     if (response.status === 401) {
       pollingStoppedRef.current = true;
@@ -563,7 +584,11 @@ export default function BookingsAdminPanel({ isActive, mode, onBackToDashboard }
 
     const data = (await response.json()) as ReportsPayload;
     setReports(data);
-  }, [loggedIn]);
+    if (reportsBarberId && data.selectedBarber == null) {
+      setReportsBarberId(null);
+    }
+  }, [loggedIn, reportsBarberId, reportsRange]);
+
 
 
 
@@ -812,6 +837,22 @@ export default function BookingsAdminPanel({ isActive, mode, onBackToDashboard }
       .filter((barber): barber is Barber => Boolean(barber))
       .sort((a, b) => Number(normalizeBarberStatus(b)) - Number(normalizeBarberStatus(a)));
   }, [barbers, bookings, visibleRecentBarberIds]);
+
+
+  const reportRecentBarbers = useMemo(() => {
+    const byId = new Map(barbers.map((barber) => [barber.id, barber]));
+    return (reports?.recentBarbers ?? []).map((entry) => ({
+      id: entry.id,
+      name: byId.get(entry.id)?.name ?? entry.name
+    }));
+  }, [barbers, reports]);
+
+  const reportsSelectedBarberName = useMemo(() => {
+    if (!reportsBarberId) return 'All barbers';
+    const matching = reportRecentBarbers.find((barber) => barber.id === reportsBarberId);
+    if (matching) return matching.name;
+    return reports?.selectedBarber?.name ?? 'Selected barber';
+  }, [reportRecentBarbers, reports, reportsBarberId]);
 
 
 
@@ -1678,13 +1719,72 @@ export default function BookingsAdminPanel({ isActive, mode, onBackToDashboard }
       {mode === 'reports' && (
         <section className="admin-reports" aria-live="polite">
           <h2>Reports</h2>
-          <p className="muted">This week (Europe/London)</p>
+          <p className="muted">Europe/London</p>
+
+          <div className="admin-reports-range-scroll">
+            <div className="admin-reports-range-tabs" role="tablist" aria-label="Report range">
+              {REPORTS_RANGE_OPTIONS.map((option) => {
+                const isActive = reportsRange === option.value;
+                return (
+                  <button
+                    key={option.value}
+                    type="button"
+                    role="tab"
+                    aria-selected={isActive}
+                    className={`admin-reports-range-tab ${isActive ? 'is-active' : ''}`}
+                    onClick={() => setReportsRange(option.value)}
+                  >
+                    {option.label}
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+
+          <div className="admin-history-row">
+            <label>Recent barbers</label>
+            <div className="admin-history-barber-controls">
+              <div className="admin-history-recent-scroll">
+                <div className="admin-history-recent-barbers" role="group" aria-label="Recent barbers">
+                  <button
+                    type="button"
+                    className={`admin-history-avatar admin-history-avatar--all ${reportsBarberId === null ? 'is-active' : ''}`}
+                    onClick={() => setReportsBarberId(null)}
+                    aria-pressed={reportsBarberId === null}
+                  >
+                    ALL
+                  </button>
+                  {reportRecentBarbers.map((barber) => {
+                    const hashIndex = hashValue(`${barber.id}:${barber.name}`) % 6;
+                    const initials = getInitials(barber.name);
+                    const isActive = reportsBarberId === barber.id;
+
+                    return (
+                      <button
+                        key={barber.id}
+                        type="button"
+                        className={`admin-history-avatar admin-history-avatar--tone-${hashIndex} ${isActive ? 'is-active' : ''}`}
+                        onClick={() => setReportsBarberId(barber.id)}
+                        aria-pressed={isActive}
+                        aria-label={`Filter by ${barber.name}`}
+                        title={barber.name}
+                      >
+                        <span>{initials}</span>
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
+            </div>
+          </div>
+
+
           {reportsError && <p className="admin-inline-error">{reportsError}</p>}
           <div className="admin-reports-grid">
-            <article className="admin-kpi-card"><p className="admin-kpi-label">Bookings this week</p><p className="admin-kpi-value">{reports?.bookingsThisWeek ?? 0}</p></article>
+            <article className="admin-kpi-card"><p className="admin-kpi-label">Bookings</p><p className="admin-kpi-value">{reports?.bookingsCount ?? 0}</p></article>
             <article className="admin-kpi-card"><p className="admin-kpi-label">Cancelled rate</p><p className="admin-kpi-value">{`${(reports?.cancelledRate ?? 0).toFixed(1)}%`}</p></article>
             <article className="admin-kpi-card"><p className="admin-kpi-label">Most popular service</p><p className="admin-kpi-value">{reports?.mostPopularService ? `${reports.mostPopularService.name} (${reports.mostPopularService.count})` : 'No confirmed bookings'}</p></article>
-            <article className="admin-kpi-card"><p className="admin-kpi-label">Busiest barber</p><p className="admin-kpi-value">{reports?.busiestBarber ? `${reports.busiestBarber.name} (${reports.busiestBarber.count})` : 'No confirmed bookings'}</p></article>
+            <article className="admin-kpi-card"><p className="admin-kpi-label">{reportsBarberId ? 'Selected barber' : 'Busiest barber'}</p><p className="admin-kpi-value">{reportsBarberId ? reportsSelectedBarberName : reports?.busiestBarber ? `${reports.busiestBarber.name} (${reports.busiestBarber.count})` : 'No confirmed bookings'}</p></article>
           </div>
         </section>
       )}
