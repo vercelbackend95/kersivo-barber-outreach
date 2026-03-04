@@ -3023,30 +3023,116 @@
   padding-top: 0.75rem;
   border-top: 1px solid var(--border);
 }
-.admin-barber-smart-header {
-  display: grid;
-  grid-template-columns: 56px minmax(0, 1fr);
-  gap: 0.75rem;
+
+.admin-barber-profile-top {
+  margin-bottom: 1rem;
+
+}
+
+.admin-barber-profile-nav {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.6rem;
+
+}
+
+.admin-barber-profile-title-wrap {
+  min-width: 0;
+    display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  flex: 1 1 auto;
+}
+
+.admin-barber-avatar--tiny {
+  width: 32px;
+  height: 32px;
+  flex: 0 0 auto;
+
+}
+
+.admin-barber-profile-title {
+  margin: 0;
+    min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  letter-spacing: 0.03em;
+}
+
+.admin-barber-profile-nav-actions {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  flex: 0 0 auto;
+}
+
+.admin-barber-nav-icon-btn {
+  width: 44px;
+  height: 44px;
+  min-width: 44px;
+  min-height: 44px;
+  border: 1px solid var(--border);
+  background: var(--bg);
+  color: var(--fg);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font: inherit;
+  font-size: 1.2rem;
+  line-height: 1;
+}
+
+.admin-barber-nav-icon-btn:hover,
+.admin-barber-nav-icon-btn.is-open {
+  border-color: var(--accent);
+  color: var(--accent);
+}
+
+.admin-barber-nav-icon-btn:focus-visible {
+  outline: 2px solid var(--focus);
+  outline-offset: 2px;
+}
+
+.admin-barber-actions-menu {
+  position: relative;
+}
+
+.admin-barber-actions-dropdown {
+  position: absolute;
+  top: calc(100% + 0.3rem);
+  right: 0;
+  min-width: 11rem;
   border: 1px solid var(--border);
   background: var(--surface);
-  padding: 0.85rem;
+  padding: 0.25rem;
+  z-index: 20;
 }
 
-.admin-barber-avatar--large {
-  width: 56px;
-  height: 56px;
+.admin-barber-actions-dropdown-item {
+  width: 100%;
+  min-height: 44px;
+  border: 0;
+  background: transparent;
+  color: var(--fg);
+  text-align: left;
+  padding: 0.5rem 0.6rem;
+  font: inherit;
 }
 
-.admin-barber-smart-header__identity {
-  min-width: 0;
+.admin-barber-actions-dropdown-item:hover {
+  background: color-mix(in srgb, var(--accent) 12%, var(--surface));
 }
 
-.admin-barber-smart-header__name {
-  margin: 0;
+.admin-barber-actions-dropdown-item:focus-visible {
+  outline: 2px solid var(--focus);
+  outline-offset: -2px;
+
 }
 
 .admin-barber-status-line {
-  margin: 0.2rem 0;
+  margin: 0;
   display: inline-flex;
   align-items: center;
   gap: 0.45rem;
@@ -3067,15 +3153,14 @@
   background: var(--muted);
 }
 
-.admin-barber-meta-line {
-  margin: 0;
-}
-
-.admin-barber-profile-actions--smart {
-  grid-column: 1 / -1;
+.admin-barber-status-meta-line {
+  margin: 0.45rem 0 0;
   display: flex;
   flex-wrap: wrap;
-  gap: 0.5rem;
+  align-items: center;
+  gap: 0.2rem 0.45rem;
+  color: var(--muted);
+
 }
 
 
@@ -3181,17 +3266,6 @@
 
 }
 
-@media (min-width: 64rem) {
-  .admin-barber-smart-header {
-    grid-template-columns: 56px minmax(0, 1fr) auto;
-    align-items: start;
-  }
-
-  .admin-barber-profile-actions--smart {
-    grid-column: auto;
-    justify-content: flex-end;
-  }
-}
 .working-hours-header-row {
   display: flex;
   flex-direction: column;

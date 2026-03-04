@@ -55,6 +55,9 @@ export default function BarberProfile({
   onCreateBlock,
     onDeleteBlock
 }: BarberProfileProps) {
+    const actionsMenuRef = React.useRef<HTMLDivElement | null>(null);
+  const [isActionsMenuOpen, setIsActionsMenuOpen] = React.useState(false);
+
   const selectedServicesCount = enabledServiceIds.size;
   const totalServicesCount = services.length;
   const workingDaysCount = workingHours.filter((hour) => hour.active).length;
@@ -75,38 +78,95 @@ export default function BarberProfile({
       hour12: false
     }).format(new Date(nextBlock.startAt)).replace(',', '');
   }, [blocks]);
+  React.useEffect(() => {
+    if (!isActionsMenuOpen) return;
+
+    const handlePointerDown = (event: MouseEvent) => {
+      if (!actionsMenuRef.current?.contains(event.target as Node)) {
+        setIsActionsMenuOpen(false);
+      }
+    };
+
+    const handleEscape = (event: KeyboardEvent) => {
+      if (event.key === 'Escape') {
+        setIsActionsMenuOpen(false);
+      }
+    };
+
+    document.addEventListener('mousedown', handlePointerDown);
+    document.addEventListener('keydown', handleEscape);
+
+    return () => {
+      document.removeEventListener('mousedown', handlePointerDown);
+      document.removeEventListener('keydown', handleEscape);
+    };
+  }, [isActionsMenuOpen]);
+
 
 
   return (
     <section className="admin-quick-blocks">
-      <div className="admin-barber-smart-header">
-        <div className="admin-barber-avatar admin-barber-avatar--large">
+      <header className="admin-barber-profile-top" aria-label="Barber profile header">
+        <div className="admin-barber-profile-nav">
+          <div className="admin-barber-profile-title-wrap" title={barber.name}>
+            <div className="admin-barber-avatar admin-barber-avatar--tiny">
+              {barber.avatarUrl ? <img src={barber.avatarUrl} alt={barber.name} loading="lazy" /> : <span>{getInitials(barber.name)}</span>}
+            </div>
+            <h2 className="admin-barber-profile-title">{barber.name}</h2>
+          </div>
+                    <div className="admin-barber-profile-nav-actions">
+            <button type="button" className="admin-barber-nav-icon-btn" onClick={onBack} aria-label="Back to list">
+              <span aria-hidden="true">←</span>
+            </button>
 
-          {barber.avatarUrl ? <img src={barber.avatarUrl} alt={barber.name} loading="lazy" /> : <span>{getInitials(barber.name)}</span>}
-        </div>
 
-        <div className="admin-barber-smart-header__identity">
-          <h2 className="admin-barber-smart-header__name">{barber.name}</h2>
-          <p className="admin-barber-status-line">
+            <div className="admin-barber-actions-menu" ref={actionsMenuRef}>
+              <button
+                type="button"
+                className={`admin-barber-nav-icon-btn ${isActionsMenuOpen ? 'is-open' : ''}`}
+                onClick={() => setIsActionsMenuOpen((current) => !current)}
+                aria-haspopup="menu"
+                aria-expanded={isActionsMenuOpen}
+                aria-label="More actions"
+              >
+                <span aria-hidden="true">⋯</span>
+              </button>
+
+
+              {isActionsMenuOpen ? (
+                <div className="admin-barber-actions-dropdown" role="menu" aria-label="Barber actions">
+                  <button
+                    type="button"
+                    role="menuitem"
+                    className="admin-barber-actions-dropdown-item"
+                    onClick={() => {
+                      onToggleActive();
+                      setIsActionsMenuOpen(false);
+                    }}
+                  >
+                    {isActive ? 'Deactivate' : 'Reactivate'}
+                  </button>
+                </div>
+              ) : null}
+            </div>
+          </div>
+      </div>
+        <p className="admin-barber-status-meta-line">
+          <span className="admin-barber-status-line">
             <span className={`admin-status-dot ${isActive ? 'is-active' : 'is-inactive'}`} aria-hidden="true" />
             {isActive ? 'Active' : 'Inactive'}
-          </p>
-          <p className="muted admin-barber-meta-line">
-            Services: {selectedServicesCount}/{totalServicesCount} • Working days: {workingDaysCount}/7 • Next block: {nextBlockLabel}
-          </p>
-        </div>
-        <div className="admin-barber-profile-actions admin-barber-profile-actions--smart">
-          <button type="button" className="btn btn--ghost" onClick={onBack}>Back to list</button>
+          </span>
+          <span aria-hidden="true">•</span>
+          <span>Total served: {totalBookingsServed}</span>
+          <span aria-hidden="true">•</span>
+          <span>Services: {selectedServicesCount}/{totalServicesCount}</span>
+          <span aria-hidden="true">•</span>
+          <span>Working days: {workingDaysCount}/7</span>
+          <span aria-hidden="true">•</span>
+          <span>Next time off: {nextBlockLabel}</span>
+        </p>
+      </header>
 
-          <button type="button" className="btn btn--secondary" onClick={onToggleActive}>{isActive ? 'Deactivate' : 'Reactivate'}</button>
-        </div>
-      </div>
-
-      <section className="admin-settings-panel">
-        <h3>Stats</h3>
-        <p className="muted">Total bookings served</p>
-        <p className="admin-stat-value">{totalBookingsServed}</p>
-      </section>
 
       <BarberServicesEditor
         barberName={barber.name}
