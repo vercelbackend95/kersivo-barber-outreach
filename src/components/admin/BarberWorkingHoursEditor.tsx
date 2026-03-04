@@ -59,7 +59,6 @@ export default function BarberWorkingHoursEditor({
   const [draftDay, setDraftDay] = React.useState<WorkingHourRow | null>(null);
   const [savedToastVisible, setSavedToastVisible] = React.useState(false);
   const [pendingAutoSave, setPendingAutoSave] = React.useState(false);
-  const originalDayRuleRef = React.useRef<WorkingHourRow | null>(null);
   const autoSaveTimeoutRef = React.useRef<ReturnType<typeof setTimeout> | null>(null);
   const saveToastTimeoutRef = React.useRef<ReturnType<typeof setTimeout> | null>(null);
 
@@ -83,7 +82,6 @@ export default function BarberWorkingHoursEditor({
     setPendingAutoSave(false);
     setExpandedDayIndex(null);
     setDraftDay(null);
-    originalDayRuleRef.current = null;
     clearSavedToastTimeout();
     setSavedToastVisible(false);
   }, [clearAutoSaveTimeout, clearSavedToastTimeout]);
@@ -118,7 +116,6 @@ export default function BarberWorkingHoursEditor({
       const sourceDay = orderedHours.find((hour) => hour.dayOfWeek === dayOfWeek) ?? null;
       setExpandedDayIndex(dayOfWeek);
       setDraftDay(sourceDay);
-      originalDayRuleRef.current = sourceDay ? { ...sourceDay } : null;
     },
     [clearAutoSaveTimeout, clearSavedToastTimeout, orderedHours]
   );
@@ -167,19 +164,6 @@ export default function BarberWorkingHoursEditor({
   );
 
 
-
-  const cancelEditing = React.useCallback(() => {
-    const original = originalDayRuleRef.current;
-    if (original) {
-      const restoredRules = orderedHours.map((hour) => (hour.dayOfWeek === original.dayOfWeek ? original : hour));
-      onSetWorkingHours(restoredRules);
-      setDraftDay(original);
-    }
-
-    closeEditor();
-  }, [closeEditor, onSetWorkingHours, orderedHours]);
-
-
   return (
     <section className="admin-settings-panel">
       <div className="working-hours-header-row">
@@ -200,7 +184,6 @@ export default function BarberWorkingHoursEditor({
         errorMessage={saveError}
         savedToastVisible={savedToastVisible}
         onToggleDayEditor={toggleEditor}
-        onCancelDayEdit={cancelEditing}
         onChangeDraftDay={applyDraft}
       />
     </section>

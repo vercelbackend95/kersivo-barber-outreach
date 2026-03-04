@@ -7,10 +7,10 @@ type WorkingHoursOverviewProps = {
   expandedDayIndex: number | null;
   draftDay: WorkingHourRow | null;
   loading: boolean;
-  saving: boolean;  errorMessage: string;
+  saving: boolean;
+  errorMessage: string;
   savedToastVisible: boolean;
   onToggleDayEditor: (dayOfWeek: number) => void;
-  onCancelDayEdit: () => void;
   onChangeDraftDay: (field: 'active' | 'startTime' | 'endTime', value: string | boolean) => void;
 
 };
@@ -36,11 +36,12 @@ export default function WorkingHoursOverview({
     errorMessage,
   savedToastVisible,
   onToggleDayEditor,
-  onCancelDayEdit,
   onChangeDraftDay
 
 }: WorkingHoursOverviewProps) {
-      const hasValidRange = isValidRange(draftDay);
+  const hasValidRange = isValidRange(draftDay);
+
+
   return (
     <div className="working-hours-overview" role="list" aria-label="Weekly working hours">
       {workingHours.map((hour) => {
@@ -62,39 +63,51 @@ export default function WorkingHoursOverview({
             >
               <span className="working-hours-day-row__label">{dayLabel}</span>
               <span className={`working-hours-time-chip ${hour.active ? '' : 'is-off'}`}>{getTimeText(hour)}</span>
-              <span className={`working-hours-day-row__chevron ${isExpanded ? 'is-expanded' : ''}`} aria-hidden="true">⌄</span>
+              <span className={`working-hours-day-row__chevron ${isExpanded ? 'is-expanded' : ''}`} aria-hidden="true">
+                ⌄
+              </span>
             </button>
 
 
             {isExpanded && editorDay ? (
               <section className="working-hours-inline-editor" aria-label={`Edit ${dayLabel} shift`}>
-                <label className="working-hours-inline-toggle">
-                  <span>Status</span>
-                  <input
-                    type="checkbox"
-                    checked={editorDay.active}
-                    onChange={(event) => onChangeDraftDay('active', event.target.checked)}
+                <div className="working-hours-inline-toggle">
+                  <span className="working-hours-inline-toggle__label">On shift</span>
+                  <button
+                    type="button"
+                    className={`working-hours-switch ${editorDay.active ? 'is-on' : ''}`}
+                    role="switch"
+                    aria-checked={editorDay.active}
+                    aria-label={`Toggle ${dayLabel} on shift`}
+                    onClick={() => onChangeDraftDay('active', !editorDay.active)}
+
                     disabled={loading || saving}
-                  />
-                  <strong>{editorDay.active ? 'On shift' : 'Off shift'}</strong>
-                </label>
+                  >
+                    <span className="working-hours-switch__thumb" aria-hidden="true" />
+                  </button>
+                </div>
 
                 <fieldset className="working-hours-range-control" disabled={!editorDay.active || loading || saving}>
-                  <legend>Working range</legend>
                   <div className="working-hours-range-control__inputs">
-                    <input
-                      type="time"
-                      value={editorDay.startTime}
-                      onChange={(event) => onChangeDraftDay('startTime', event.target.value)}
-                      aria-label="Start time"
-                    />
+                    <label className="working-hours-time-field">
+                      <span>Start</span>
+                      <input
+                        type="time"
+                        value={editorDay.startTime}
+                        onChange={(event) => onChangeDraftDay('startTime', event.target.value)}
+                        aria-label="Start time"
+                      />
+                    </label>
                     <span aria-hidden="true">—</span>
-                    <input
-                      type="time"
-                      value={editorDay.endTime}
-                      onChange={(event) => onChangeDraftDay('endTime', event.target.value)}
-                      aria-label="End time"
-                    />
+                    <label className="working-hours-time-field">
+                      <span>End</span>
+                      <input
+                        type="time"
+                        value={editorDay.endTime}
+                        onChange={(event) => onChangeDraftDay('endTime', event.target.value)}
+                        aria-label="End time"
+                      />
+                    </label>
                   </div>
                 </fieldset>
 
@@ -106,11 +119,6 @@ export default function WorkingHoursOverview({
                   </p>
                 ) : null}
 
-                <div className="working-hours-inline-editor__actions">
-                  <button type="button" className="btn btn--ghost" onClick={onCancelDayEdit} disabled={saving}>
-                    Cancel
-                  </button>
-                </div>
               </section>
             ) : null}
           </React.Fragment>

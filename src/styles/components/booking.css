@@ -3079,7 +3079,7 @@
 .working-hours-header-row {
   display: flex;
   flex-direction: column;
-  gap: 0.3rem;
+  gap: 0.25rem;
 }
 
 .working-hours-header-row h3 {
@@ -3095,16 +3095,17 @@
 
 .working-hours-overview {
   display: grid;
-  gap: 0.35rem;
-  margin-top: 0.75rem;
+  gap: 0.3rem;
+  margin-top: 0.65rem;
+
 }
 
 .working-hours-day-row {
   width: 100%;
-  display: flex;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto auto;
   align-items: center;
-  justify-content: space-between;
-  gap: 0.55rem;
+  gap: 0.5rem;
   border: 1px solid var(--border);
   background: var(--surface);
   color: var(--fg);
@@ -3112,6 +3113,11 @@
   cursor: pointer;
   text-align: left;
 }
+.working-hours-day-row[aria-expanded='true'] {
+  border-color: var(--accent);
+  background: color-mix(in srgb, var(--surface) 88%, var(--accent) 12%);
+}
+
 
 .working-hours-day-row:focus-visible {
   outline: 2px solid var(--focus);
@@ -3121,15 +3127,18 @@
 .working-hours-day-row__label {
   margin: 0;
   font-family: 'Inter', sans-serif;
-  font-weight: 600;
+  font-weight: 700;
   min-width: 0;
 }
 
 .working-hours-time-chip {
   margin: 0;
-  border: 1px solid var(--border);
-  padding: 0.15rem 0.45rem;
+  border: 1px solid color-mix(in srgb, var(--accent) 45%, var(--border));
+  background: color-mix(in srgb, var(--accent) 10%, var(--bg));
+  color: var(--fg);
+  padding: 0.14rem 0.45rem;
   font-size: 0.8rem;
+  font-weight: 600;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -3138,6 +3147,9 @@
 }
 
 .working-hours-time-chip.is-off {
+    border-color: var(--border);
+  background: color-mix(in srgb, var(--surface) 85%, var(--bg) 15%);
+
   color: var(--muted);
 }
 .working-hours-day-row__chevron {
@@ -3154,50 +3166,98 @@
 }
 .working-hours-inline-editor {
   margin-top: -0.1rem;
-    margin-bottom: 0.3rem;
+  margin-bottom: 0.25rem;
   border: 1px solid var(--border);
   border-top: 0;
-  background: color-mix(in oklab, var(--surface), var(--bg) 12%);
-
-  padding: 0.8rem;
+  background: color-mix(in oklab, var(--surface), var(--bg) 10%);
+  padding: 0.5rem 0.6rem;
   display: grid;
-  gap: 0.8rem;
+  gap: 0.5rem;
 }
 
 .working-hours-inline-toggle {
   display: flex;
   align-items: center;
+    justify-content: space-between;
   gap: 0.6rem;
+}
+
+.working-hours-inline-toggle__label {
+  font-size: 0.85rem;
+  font-weight: 600;
+}
+
+.working-hours-switch {
+  width: 2.2rem;
+  height: 1.3rem;
+
+  border: 1px solid var(--border);
+  background: var(--bg);
+  padding: 0.1rem;
+  display: inline-flex;
+  align-items: center;
+  justify-content: flex-start;
+}
+.working-hours-switch:focus-visible {
+  outline: 2px solid var(--focus);
+  outline-offset: 2px;
+
+
+}
+
+.working-hours-switch.is-on {
+  border-color: var(--accent);
+  background: color-mix(in srgb, var(--accent) 20%, var(--bg));
+}
+
+.working-hours-switch:disabled {
+  opacity: 0.7;
+  cursor: not-allowed;
+}
+
+.working-hours-switch__thumb {
+  width: 0.95rem;
+  height: 0.95rem;
+  background: var(--muted);
+  transition: transform 0.18s ease, background-color 0.18s ease;
+}
+
+.working-hours-switch.is-on .working-hours-switch__thumb {
+  transform: translateX(0.85rem);
+  background: var(--accent);
 }
 
 .working-hours-range-control {
   margin: 0;
   border: 1px solid var(--border);
-  padding: 0.6rem;
+  padding: 0.45rem;
   min-width: 0;
-
-}
-
-.working-hours-range-control legend {
-  padding: 0 0.2rem;
-  font-size: 0.8rem;
-  color: var(--muted);
 
 }
 
 .working-hours-range-control__inputs {
   display: grid;
   grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr);
-  gap: 0.45rem;
-  align-items: center;
+  gap: 0.35rem;
+  align-items: end;
+
 }
 
-.working-hours-range-control__inputs input {
-  width: 100%;
+.working-hours-time-field {
+  display: grid;
+  gap: 0.2rem;
+  font-size: 0.72rem;
+  color: var(--muted);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+
 }
-.working-hours-inline-editor__actions {
-  display: flex;
-  justify-content: flex-end;
+
+.working-hours-time-field input {
+  width: 100%;
+  min-height: 2.25rem;
+  padding: 0.2rem 0.35rem;
+
 }
 
 
@@ -3208,9 +3268,19 @@
 
 }
 
+@media (max-width: 36rem) {
+  .working-hours-range-control__inputs {
+    grid-template-columns: 1fr;
+    gap: 0.3rem;
+  }
+
+  .working-hours-range-control__inputs > span {
+    display: none;
+  }
+}
 @media (min-width: 48rem) {
   .working-hours-day-row {
-    padding: 0.6rem 0.75rem;
+    padding: 0.58rem 0.72rem;
   }
 
   .working-hours-time-chip {
