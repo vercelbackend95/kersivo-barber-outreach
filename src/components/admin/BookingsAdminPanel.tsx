@@ -1237,7 +1237,7 @@ export default function BookingsAdminPanel({ isActive, mode, onBackToDashboard }
 
   return (
     <section className="surface booking-shell">
-      <h1>Admin Dashboard</h1>
+      <h1>BOOKINGS</h1>
       <div className={`admin-next-block ${isMobileViewport ? 'admin-next-block--mobile-sticky' : ''}`}><p className="admin-next-primary">Today: {todayBookings.length} bookings</p>{nextBooking && <p className="admin-next-secondary">Next: {nextBooking.barber?.name} — {nextBooking.service?.name} — {formatStartTime(nextBooking.startAt)} ({formatRelativeTime(nextBooking.startAt, nextBooking.endAt)})</p>}<p className="muted admin-next-updated">Updated: {formatLastUpdated(lastUpdatedAt, nowMs)}</p></div>
 
       {cancelSuccessMessage && <p className="admin-inline-success">{cancelSuccessMessage}</p>}
