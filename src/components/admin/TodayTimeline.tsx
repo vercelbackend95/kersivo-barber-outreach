@@ -246,9 +246,107 @@ const NowIndicator = memo(function NowIndicator({ selectedDate }: NowIndicatorPr
 });
 
 function TodayTimeline({ barbers, bookings, timeBlocks, selectedDate, isSearchActive = false, onBookingClick, scrollContainerRef }: TodayTimelineProps) {
+  const localScrollContainerRef = useRef<HTMLDivElement | null>(null);
+  const timelineScrollContainerRef = scrollContainerRef ?? localScrollContainerRef;
+
   const lanes = useMemo(() => buildLanes(barbers, bookings, timeBlocks), [barbers, bookings, timeBlocks]);
   const ticks = useMemo(() => getTickRows(), []);
 
+  useEffect(() => {
+    const container = timelineScrollContainerRef.current;
+    if (!container) return;
+
+    let startX = 0;
+    let startY = 0;
+    let lock: 'horizontal' | 'vertical' | null = null;
+    let isTracking = false;
+    let initialScrollLeft = 0;
+    const threshold = 8;
+
+    const resetGesture = () => {
+      lock = null;
+      isTracking = false;
+    };
+
+    const onPointerDown = (event: PointerEvent) => {
+      if (event.pointerType !== 'touch') return;
+      isTracking = true;
+      lock = null;
+      startX = event.clientX;
+      startY = event.clientY;
+      initialScrollLeft = container.scrollLeft;
+    };
+
+    const onPointerMove = (event: PointerEvent) => {
+      if (!isTracking || event.pointerType !== 'touch') return;
+
+      const dx = Math.abs(event.clientX - startX);
+      const dy = Math.abs(event.clientY - startY);
+
+      if (lock === null) {
+        if (dx > dy && dx > threshold) lock = 'horizontal';
+        else if (dy > dx && dy > threshold) lock = 'vertical';
+      }
+
+      if (lock === 'horizontal') {
+        event.preventDefault();
+        container.scrollLeft = initialScrollLeft + (startX - event.clientX);
+      }
+    };
+
+    const onTouchStart = (event: TouchEvent) => {
+      if (event.touches.length !== 1) return;
+      const touch = event.touches[0];
+      isTracking = true;
+      lock = null;
+      startX = touch.clientX;
+      startY = touch.clientY;
+      initialScrollLeft = container.scrollLeft;
+    };
+
+    const onTouchMove = (event: TouchEvent) => {
+      if (!isTracking || event.touches.length !== 1) return;
+      const touch = event.touches[0];
+      const dx = Math.abs(touch.clientX - startX);
+      const dy = Math.abs(touch.clientY - startY);
+
+      if (lock === null) {
+        if (dx > dy && dx > threshold) lock = 'horizontal';
+        else if (dy > dx && dy > threshold) lock = 'vertical';
+      }
+
+      if (lock === 'horizontal') {
+        event.preventDefault();
+        container.scrollLeft = initialScrollLeft + (startX - touch.clientX);
+      }
+    };
+
+    if (window.PointerEvent) {
+      container.addEventListener('pointerdown', onPointerDown, { passive: true });
+      container.addEventListener('pointermove', onPointerMove, { passive: false });
+      container.addEventListener('pointerup', resetGesture, { passive: true });
+      container.addEventListener('pointercancel', resetGesture, { passive: true });
+
+      return () => {
+        container.removeEventListener('pointerdown', onPointerDown);
+        container.removeEventListener('pointermove', onPointerMove);
+        container.removeEventListener('pointerup', resetGesture);
+        container.removeEventListener('pointercancel', resetGesture);
+      };
+    }
+
+    container.addEventListener('touchstart', onTouchStart, { passive: true });
+    container.addEventListener('touchmove', onTouchMove, { passive: false });
+    container.addEventListener('touchend', resetGesture, { passive: true });
+    container.addEventListener('touchcancel', resetGesture, { passive: true });
+
+    return () => {
+      container.removeEventListener('touchstart', onTouchStart);
+      container.removeEventListener('touchmove', onTouchMove);
+      container.removeEventListener('touchend', resetGesture);
+      container.removeEventListener('touchcancel', resetGesture);
+    };
+  }, [timelineScrollContainerRef]);
 
 
   if (lanes.length === 0) {
@@ -261,7 +359,7 @@ function TodayTimeline({ barbers, bookings, timeBlocks, selectedDate, isSearchAc
 
   return (
     <section className="admin-timeline" aria-label={`Timeline for ${selectedDate}`}>
-      <div className="admin-timeline-scroll" ref={scrollContainerRef}>
+      <div className="admin-timeline-scroll" ref={timelineScrollContainerRef}>
         <div className="admin-timeline-scale-row">
           <div className="admin-timeline-barber-header">Barber</div>
           <div className="admin-timeline-scale" role="presentation">
@@ -315,7 +413,7 @@ function TodayTimeline({ barbers, bookings, timeBlocks, selectedDate, isSearchAc
                   className={`admin-timeline-card admin-timeline-card--booking admin-timeline-card--${getBookingStatusTone(item.booking)} ${isSearchActive ? 'admin-timeline-card--search-match' : ''}`}
                   style={{ left: `${item.leftPct}%`, width: `${item.widthPct}%`, top: `${item.topPx}px`, height: `${item.heightPx}px` }}
                   onClick={() => onBookingClick(item.booking)}
-                                    title={`${item.startLabel} · ${item.booking.service?.name ?? 'Service'} · ${item.booking.fullName}`}
+                  title={`${item.startLabel} · ${item.booking.service?.name ?? 'Service'} · ${item.booking.fullName}`}
                 >
                   <span className="admin-timeline-card-time">{item.startLabel}</span>
                   <strong className="admin-timeline-card-service">{getServiceCode({ id: item.booking.service?.id, name: item.booking.service?.name })}</strong>
@@ -325,7 +423,7 @@ function TodayTimeline({ barbers, bookings, timeBlocks, selectedDate, isSearchAc
           </div>
         ))}
       </div>
-            <div className="admin-timeline-legend" aria-label="Timeline status legend">
+      <div className="admin-timeline-legend" aria-label="Timeline status legend">
         <span className="admin-timeline-legend-item"><i className="admin-timeline-legend-swatch admin-timeline-legend-swatch--confirmed" aria-hidden="true" />Confirmed</span>
         <span className="admin-timeline-legend-item"><i className="admin-timeline-legend-swatch admin-timeline-legend-swatch--pending" aria-hidden="true" />Pending</span>
         <span className="admin-timeline-legend-item"><i className="admin-timeline-legend-swatch admin-timeline-legend-swatch--cancelled" aria-hidden="true" />Cancelled</span>

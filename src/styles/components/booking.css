@@ -2395,11 +2395,12 @@
 .admin-timeline-scroll {
   overflow-x: auto;
   min-width: 100%;
-    overflow-y: hidden;
+  overflow-y: hidden;
   max-width: 100%;
   -webkit-overflow-scrolling: touch;
+    scroll-behavior: smooth;
   overscroll-behavior-x: contain;
-  touch-action: pan-y pinch-zoom;
+  touch-action: pan-x pinch-zoom;
 
 }
 
@@ -2785,12 +2786,11 @@
 }
   .admin-timeline-scroll {
     position: relative;
-        width: 100%;
+    width: 100%;
     max-width: 100%;
-        overflow-x: auto;
+    overflow-x: auto;
     overflow-y: hidden;
-
-    touch-action: pan-y pinch-zoom;
+    touch-action: pan-x pinch-zoom;
     margin-bottom: 0;
 
   }
