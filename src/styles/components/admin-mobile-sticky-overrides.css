@@ -1,0 +1,26 @@
+@media (max-width: 47.99rem) {
+  .admin-mobile-header {
+    z-index: 140;
+  }
+
+  .admin-next-block--mobile-sticky {
+    z-index: 130;
+  }
+
+  .admin-search-row--sticky {
+    z-index: 120;
+  }
+
+  .admin-timeline-scale-row {
+    z-index: 20;
+  }
+
+  .admin-timeline-barber-header,
+  .admin-timeline-lane-label {
+    z-index: 18;
+  }
+
+  .admin-timeline-barber-header {
+    z-index: 21;
+  }
+}
