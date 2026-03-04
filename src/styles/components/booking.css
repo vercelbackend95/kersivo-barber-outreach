@@ -2816,7 +2816,7 @@
 
   .admin-timeline-scale-row,
   .admin-timeline-lane-row {
-    grid-template-columns: 5.5rem minmax(40rem, 56rem);
+    grid-template-columns: 5.5rem minmax(var(--admin-timeline-mobile-canvas-width, 40rem), var(--admin-timeline-mobile-canvas-width, 56rem));
     width: fit-content;
     min-width: 100%;
     max-width: none;

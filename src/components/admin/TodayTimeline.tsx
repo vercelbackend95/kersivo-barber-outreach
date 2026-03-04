@@ -73,10 +73,11 @@ const TIMELINE_START_HOUR = 8;
 const TIMELINE_END_HOUR = 24;
 const TIMELINE_SLOT_INTERVAL_MINUTES = 30;
 const TIMELINE_SLOT_WIDTH_REM = 3.15;
+const MOBILE_TIMELINE_HOUR_SPACING_MULTIPLIER = 2;
 const TIMELINE_TOTAL_MINUTES = (TIMELINE_END_HOUR - TIMELINE_START_HOUR) * 60;
 const TIMELINE_TOTAL_SLOTS = TIMELINE_TOTAL_MINUTES / TIMELINE_SLOT_INTERVAL_MINUTES;
 const TIMELINE_CANVAS_MIN_WIDTH_REM = TIMELINE_TOTAL_SLOTS * TIMELINE_SLOT_WIDTH_REM;
-
+const TIMELINE_MOBILE_CANVAS_MIN_WIDTH_REM = TIMELINE_CANVAS_MIN_WIDTH_REM * MOBILE_TIMELINE_HOUR_SPACING_MULTIPLIER;
 const BOOKING_CARD_HEIGHT = 56;
 const BOOKING_STACK_GAP = 6;
 const LANE_INNER_PADDING = 8;
@@ -258,7 +259,11 @@ function TodayTimeline({ barbers, bookings, timeBlocks, selectedDate, isSearchAc
   const lanes = useMemo(() => buildLanes(barbers, bookings, timeBlocks), [barbers, bookings, timeBlocks]);
   const ticks = useMemo(() => getTickRows(), []);
   const timelineLayoutStyle = useMemo(
-    () => ({ '--admin-timeline-canvas-width': `${TIMELINE_CANVAS_MIN_WIDTH_REM}rem` }) as React.CSSProperties,
+    () => ({
+      '--admin-timeline-canvas-width': `${TIMELINE_CANVAS_MIN_WIDTH_REM}rem`,
+      '--admin-timeline-mobile-canvas-width': `${TIMELINE_MOBILE_CANVAS_MIN_WIDTH_REM}rem`
+    }) as React.CSSProperties,
+
     []
   );
 
