@@ -1567,29 +1567,77 @@
     min-height: calc(100dvh - (var(--space-sm) * 2));
   }
   
-  .admin-bookings-table {
+
+  .listTableWrap--history {
+    overflow-x: hidden;
+  }
+
+  .admin-bookings-table--history {
+
     width: 100%;
     table-layout: fixed;
   }
 
-  .admin-bookings-table .col-email {
-    width: 18ch;
+  .admin-bookings-table--history .col-client {
+    width: 10ch;
+
   }
 
-  .admin-bookings-table th:nth-child(2),
-  .admin-bookings-table td:nth-child(2) {
+  .admin-bookings-table--history .col-email {
     width: 18ch;
-    max-width: 18ch;
+
   }
 
-  .admin-table-col-email {
-    max-width: 18ch;
+  .admin-bookings-table--history .col-service {
+    width: auto;
+  }
+
+  .admin-bookings-table--history .col-barber {
+    width: 10ch;
+  }
+
+  .admin-bookings-table--history .col-status {
+    width: 56px;
+  }
+
+  .admin-bookings-table--history .col-start {
+    width: 16ch;
+  }
+
+  .admin-bookings-table--history .admin-table-col-client,
+  .admin-bookings-table--history .admin-table-col-email,
+  .admin-bookings-table--history .admin-table-col-service,
+  .admin-bookings-table--history .admin-table-col-barber,
+  .admin-bookings-table--history .admin-table-col-start {
+
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
   }
 
-  .admin-email-desktop {
+  .admin-bookings-table--history .admin-table-col-status,
+  .admin-bookings-table--history th:nth-child(5) {
+    text-align: center;
+  }
+
+  .admin-bookings-table--history .admin-table-col-client,
+  .admin-bookings-table--history th:nth-child(1),
+  .admin-bookings-table--history .admin-table-col-start,
+  .admin-bookings-table--history th:nth-child(6),
+  .admin-bookings-table--history .admin-table-col-status,
+  .admin-bookings-table--history th:nth-child(5) {
+    padding-left: 0.625rem;
+    padding-right: 0.625rem;
+  }
+
+  .admin-bookings-table--history .admin-table-col-email {
+    max-width: 18ch;
+  }
+
+  .admin-bookings-table--history .admin-table-col-client .admin-link-button,
+  .admin-bookings-table--history .admin-table-col-email .admin-link-button,
+  .admin-bookings-table--history .admin-table-col-service .admin-service-desktop {
+
     display: inline-block;
     max-width: 100%;
     white-space: nowrap;
@@ -1598,12 +1646,17 @@
     vertical-align: bottom;
   }
 
-}
-
-  .admin-table {
-    min-width: 56.25rem;
+  .admin-bookings-table--history .admin-table-col-barber {
+    max-width: 10ch;
   }
 
+
+  .admin-bookings-table--history .admin-status-icon-wrap {
+    margin: 0;
+    padding: 0;
+
+  }
+}
   .admin-table-col-email {
     max-width: 18ch;
     white-space: nowrap;
@@ -1624,9 +1677,18 @@
     max-width: 12rem;
     overflow-wrap: anywhere;
   }
+  .admin-table-col-barber {
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
 
   .admin-table-col-start {
     white-space: nowrap;
+        overflow: hidden;
+    text-overflow: ellipsis;
+
   }
 
   .admin-table-col-actions {
