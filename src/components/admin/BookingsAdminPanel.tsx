@@ -581,7 +581,6 @@ export default function BookingsAdminPanel({ isActive, mode, onBackToDashboard }
   const [reportsError, setReportsError] = useState('');
     const [reportsRange, setReportsRange] = useState<ReportsRange>('week');
   const [reportsBarberId, setReportsBarberId] = useState<string | null>(null);
-  const [insightsExpanded, setInsightsExpanded] = useState(false);
   const [chartMetric, setChartMetric] = useState<'revenue' | 'bookings' | 'cancelRate'>('revenue');
   const [openDrilldown, setOpenDrilldown] = useState<'bookings' | 'cancelled' | 'revenue' | 'service' | null>(null);
   const [drilldownSearch, setDrilldownSearch] = useState('');
@@ -1040,38 +1039,10 @@ export default function BookingsAdminPanel({ isActive, mode, onBackToDashboard }
   });
 
   const reportsCancelledCount = (reports?.breakdown.cancelledByClient ?? 0) + (reports?.breakdown.cancelledByShop ?? 0);
-    const confidence = useMemo(() => {
-    const n = reports?.bookingsCount ?? 0;
-    if (n < 10) return { label: 'LOW DATA', className: 'is-low' };
-    if (n < 30) return { label: 'OK', className: 'is-ok' };
-    return { label: 'STRONG', className: 'is-strong' };
-  }, [reports?.bookingsCount]);
+
 
   const isSmallSample = (reports?.bookingsCount ?? 0) > 0 && (reports?.bookingsCount ?? 0) < 10;
 
-  const insights = useMemo(() => {
-    if (!reports) return ['Stable period — no major spikes.'];
-    const lines: string[] = [];
-    const scoped = reportsBarberId ? ' for this barber' : '';
-    const noShowCount = reports.breakdown.noShowExpired;
-    const cancelledClientShare = reports.bookingsCount > 0 ? (reports.breakdown.cancelledByClient / reports.bookingsCount) * 100 : 0;
-    const noShowShare = reports.bookingsCount > 0 ? (noShowCount / reports.bookingsCount) * 100 : 0;
-
-    if (noShowShare > 30) lines.push(`High no-show/expired rate${scoped} (${noShowCount}/${reports.bookingsCount}). Consider confirmations.`);
-    if (cancelledClientShare > 20) lines.push(`Client cancellations are elevated${scoped}. Consider deposits or reminder texts.`);
-    if ((reports.utilizationPct ?? 0) < 20 && reports.availableMinutes > 600) lines.push(`Low utilization${scoped} (${(reports.utilizationPct ?? 0).toFixed(1)}%). Consider promos during peak gaps.`);
-    if (reports.peakHour) lines.push(`Peak hour${scoped} is ${reports.peakHour}. Ensure coverage.`);
-    if (reports.mostPopularService && reports.bookingsCount > 0 && ((reports.mostPopularService.count / reports.bookingsCount) * 100) > 50) {
-      lines.push(`${reports.mostPopularService.name} drives most bookings${scoped}. Promote add-ons.`);
-
-    }
-    if ((reports.trends.revenueDelta ?? 0) > 0 && (reports.trends.bookingsPct ?? 0) < 0) {
-      lines.push(`Fewer bookings${scoped}, higher value — consider premium slots.`);
-
-    }
-    if (!lines.length) lines.push(`Stable period${scoped} — no major spikes.`);
-    return lines.slice(0, 3);
-  }, [reports, reportsBarberId]);
 
   const chartSeries = useMemo(() => {
     if (!reports) return [] as Array<{ label: string; value: number }>;
@@ -1974,21 +1945,7 @@ export default function BookingsAdminPanel({ isActive, mode, onBackToDashboard }
             <h2>Reports</h2>
           </div>
 
-          <div className="admin-reports-confidence-row">
-            <p className="admin-kpi-note">Timezone: {ADMIN_TIMEZONE}</p>
-            <span className={`admin-confidence-badge ${confidence.className}`} title="Confidence is based on booking sample size in the selected range.">
-              {confidence.label}
-            </span>
-          </div>
-
-          <div className="admin-reports-insights-card">
-            <p className="admin-kpi-label">INSIGHTS</p>
-            <p className="admin-reports-insight">{insights[0]}</p>
-            {insightsExpanded ? insights.slice(1).map((line) => <p className="admin-reports-insight" key={line}>{line}</p>) : null}
-            {insights.length > 1 ? <button type="button" className="btn btn--ghost" onClick={() => setInsightsExpanded((prev) => !prev)}>{insightsExpanded ? 'Show less' : 'Show more'}</button> : null}
-          </div>
-
-
+          <p className="admin-kpi-note">Timezone: {ADMIN_TIMEZONE}</p>
           <div className="admin-reports-range-scroll">
             <div className="admin-reports-range-tabs" role="tablist" aria-label="Report range">
               {REPORTS_RANGE_OPTIONS.map((option) => {

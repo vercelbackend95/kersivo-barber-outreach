@@ -790,12 +790,7 @@
   display: grid;
   gap: var(--space-sm);
 }
-.admin-reports-insight {
-  margin: -0.2rem 0 0;
-  font-size: 0.82rem;
-  color: var(--muted);
-  overflow-wrap: anywhere;
-}
+
 
 .admin-kpi-note--small-sample {
   color: var(--muted);
@@ -4164,7 +4159,6 @@
 }
 
 .admin-reports-head,
-.admin-reports-confidence-row,
 .admin-kpi-row {
   display: flex;
   align-items: center;
@@ -4185,13 +4179,8 @@
   font-size: 0.72rem;
 }
 .admin-chart-switch.is-active { color: var(--fg); border-color: var(--accent); }
-.admin-confidence-badge { border: 1px solid var(--border); padding: 0.2rem 0.4rem; font-size: 0.72rem; }
-.admin-confidence-badge.is-low { color: var(--status-pending); }
-.admin-confidence-badge.is-ok { color: var(--accent); }
-.admin-confidence-badge.is-strong { color: var(--status-confirmed); }
 .admin-kpi-clickable { cursor: pointer; }
 .admin-kpi-sample-inline { color: var(--muted); margin-left: 0.4rem; font-size: 0.72rem; }
-.admin-reports-insights-card { border: 1px solid var(--border); background: var(--bg); padding: var(--space-sm); display: grid; gap: 0.35rem; }
 .admin-reports-drawer { width: min(42rem, 100% - 1rem); max-height: 85vh; overflow: auto; background: var(--surface); border: 1px solid var(--border); padding: var(--space-sm); }
 .admin-reports-drawer-list { display: grid; gap: 0.4rem; margin-top: 0.5rem; }
 .admin-revenue-chart-line.is-warning { stroke: var(--accent); }
