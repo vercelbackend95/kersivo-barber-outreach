@@ -233,6 +233,7 @@ async function computeMetrics(shopId: string, range: RangeBoundaries, selectedBa
   }
 
   let usedDemoPricing = false;
+    let revenue = 0;
   let revenueCount = 0;
   const revenueSeriesMap = new Map(getRevenueSeriesSeed(range, rangeKey).map((point) => [point.label, point.value]));
   let bookingsCount = 0;
@@ -273,13 +274,13 @@ async function computeMetrics(shopId: string, range: RangeBoundaries, selectedBa
       if (bookingValue != null) usedDemoPricing = true;
     }
 
-    if (bookingValue != null) {
-      revenue += bookingValue;
-      revenueCount += 1;
-            const bucketLabel = getRevenueBucketLabel(booking.startAt, rangeKey);
-      revenueSeriesMap.set(bucketLabel, (revenueSeriesMap.get(bucketLabel) ?? 0) + bookingValue);
+    if (bookingValue == null) bookingValue = 0;
 
-    }
+        revenue += bookingValue;
+    revenueCount += 1;
+    const bucketLabel = getRevenueBucketLabel(booking.startAt, rangeKey);
+    revenueSeriesMap.set(bucketLabel, (revenueSeriesMap.get(bucketLabel) ?? 0) + bookingValue);
+
   }
 
   const cancelledCount = breakdown.cancelledByClient + breakdown.cancelledByShop;
