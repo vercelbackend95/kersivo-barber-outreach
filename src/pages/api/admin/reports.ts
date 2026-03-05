@@ -24,6 +24,27 @@ type RevenueSeriesPoint = {
   label: string;
   value: number;
 };
+type ReportBookingRow = {
+  id: string;
+  startAt: string;
+  barberId: string;
+  barberName: string;
+  serviceName: string;
+  status: BookingStatus;
+  clientName: string | null;
+  clientEmail: string | null;
+  computedValueGbp: number | null;
+};
+
+type BarberRankingRow = {
+  barberId: string;
+  barberName: string;
+  bookings: number;
+  revenue: number;
+  cancelledRate: number;
+  utilizationPct: number | null;
+};
+
 
 
 const BOOKED_STATUSES = new Set<BookingStatus>([BookingStatus.CONFIRMED, BookingStatus.RESCHEDULED]);
@@ -176,11 +197,16 @@ async function computeMetrics(shopId: string, range: RangeBoundaries, selectedBa
     prisma.booking.findMany({
       where: whereBase,
       select: {
+                id: true,
         status: true,
         startAt: true,
         endAt: true,
         barberId: true,
         serviceId: true,
+                fullName: true,
+        email: true,
+        barber: { select: { name: true } },
+
         service: { select: { id: true, name: true, durationMinutes: true, fromPriceText: true } }
 
       }
@@ -239,6 +265,7 @@ async function computeMetrics(shopId: string, range: RangeBoundaries, selectedBa
   const revenueSeriesMap = new Map(getRevenueSeriesSeed(range, rangeKey).map((point) => [point.label, point.value]));
   let bookingsCount = 0;
   let bookedMinutes = 0;
+    const reportBookings: ReportBookingRow[] = [];
   const breakdown: Breakdown = { completed: 0, cancelledByClient: 0, cancelledByShop: 0, noShowExpired: 0 };
   const weekdayCounts = new Map<string, number>();
   const hourWindowCounts = new Map<number, number>();
@@ -264,7 +291,6 @@ async function computeMetrics(shopId: string, range: RangeBoundaries, selectedBa
       hourWindowCounts.set(bucketStart, (hourWindowCounts.get(bucketStart) ?? 0) + 1);
     }
 
-    if (!REVENUE_STATUSES.has(booking.status)) continue;
 
     const serviceId = booking.serviceId;
     const normalizedServiceId = normalizeServiceLookupKey(serviceId);
@@ -276,6 +302,20 @@ async function computeMetrics(shopId: string, range: RangeBoundaries, selectedBa
     }
 
     if (bookingValue == null) bookingValue = 0;
+    reportBookings.push({
+      id: booking.id,
+      startAt: booking.startAt.toISOString(),
+      barberId: booking.barberId,
+      barberName: booking.barber?.name ?? 'Barber',
+      serviceName: booking.service?.name ?? 'Service',
+      status: booking.status,
+      clientName: booking.fullName,
+      clientEmail: booking.email,
+      computedValueGbp: REVENUE_STATUSES.has(booking.status) ? bookingValue : null
+    });
+
+    if (!REVENUE_STATUSES.has(booking.status)) continue;
+
 
         revenue += bookingValue;
     revenueCount += 1;
@@ -433,7 +473,9 @@ async function computeMetrics(shopId: string, range: RangeBoundaries, selectedBa
     bookedMinutes,
     availableMinutes,
     utilizationPct,
-        revenueSeries: [...revenueSeriesMap.entries()].map(([label, value]) => ({ label, value })),
+    revenueSeries: [...revenueSeriesMap.entries()].map(([label, value]) => ({ label, value })),
+    reportBookings,
+
     mostPopularService: mostPopularServiceTop && mostPopularServiceEntity
       ? { name: mostPopularServiceEntity.name, count: mostPopularServiceTop._count.serviceId }
       : null,
@@ -442,6 +484,25 @@ async function computeMetrics(shopId: string, range: RangeBoundaries, selectedBa
       : null
   };
 }
+
+async function getBarberRanking(shopId: string, range: RangeBoundaries): Promise<BarberRankingRow[]> {
+  const barbers = await prisma.barber.findMany({ where: { active: true }, select: { id: true, name: true } });
+
+  const ranking = await Promise.all(barbers.map(async (barber) => {
+    const metrics = await computeMetrics(shopId, range, barber.id, '30d');
+    return {
+      barberId: barber.id,
+      barberName: barber.name,
+      bookings: metrics.bookingsCount,
+      revenue: metrics.revenue,
+      cancelledRate: metrics.cancelledRate,
+      utilizationPct: metrics.utilizationPct
+    };
+  }));
+
+  return ranking.filter((row) => row.bookings > 0 || row.revenue > 0).sort((a, b) => b.bookings - a.bookings);
+}
+
 
 
 export const GET: APIRoute = async (ctx) => {
@@ -462,15 +523,25 @@ export const GET: APIRoute = async (ctx) => {
   const selectedRange = getReportsRange(range);
   const previousRange = getPreviousRange(range, selectedRange);
 
-  const [selectedBarberEntity, recentBarbers, currentMetrics, previousMetrics] = await Promise.all([
+  const [selectedBarberEntity, recentBarbers, currentMetrics, previousMetrics, barberRanking] = await Promise.all([
     selectedBarberId
       ? prisma.barber.findUnique({ where: { id: selectedBarberId }, select: { id: true, name: true } })
       : Promise.resolve(null),
     getRecentBarbers(shop.id, selectedRange.from, selectedRange.to),
     computeMetrics(shop.id, selectedRange, selectedBarberId, range),
-    computeMetrics(shop.id, previousRange, selectedBarberId, range)
+    computeMetrics(shop.id, previousRange, selectedBarberId, range),
+    getBarberRanking(shop.id, selectedRange)
+
 
   ]);
+  const selectedBarberRankIndex = selectedBarberId
+    ? barberRanking.findIndex((row) => row.barberId === selectedBarberId)
+    : -1;
+
+  const rankingBookingsTotal = barberRanking.reduce((sum, row) => sum + row.bookings, 0);
+  const rankingRevenueTotal = barberRanking.reduce((sum, row) => sum + row.revenue, 0);
+  const selectedRankRow = selectedBarberRankIndex >= 0 ? barberRanking[selectedBarberRankIndex] : null;
+
 
 
   return new Response(JSON.stringify({
@@ -512,7 +583,15 @@ export const GET: APIRoute = async (ctx) => {
       utilizationPct: previousMetrics.utilizationPct,
       noShowExpiredCount: previousMetrics.breakdown.noShowExpired,
       noShowExpiredRate: previousMetrics.noShowExpiredRate
-    }
+    },
+    barberRanking,
+    selectedBarberRank: selectedRankRow ? {
+      rank: selectedBarberRankIndex + 1,
+      total: barberRanking.length,
+      bookingSharePct: rankingBookingsTotal > 0 ? (selectedRankRow.bookings / rankingBookingsTotal) * 100 : 0,
+      revenueSharePct: rankingRevenueTotal > 0 ? (selectedRankRow.revenue / rankingRevenueTotal) * 100 : 0
+    } : null
+
 
   }));
 };
