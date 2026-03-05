@@ -1579,7 +1579,7 @@
   }
 
   .admin-bookings-table--history .col-client {
-    width: 10ch;
+    width: 8ch;
 
   }
 
@@ -1597,7 +1597,7 @@
   }
 
   .admin-bookings-table--history .col-status {
-    width: 56px;
+    width: 80px;
   }
 
   .admin-bookings-table--history .col-start {
@@ -1618,14 +1618,16 @@
   .admin-bookings-table--history .admin-table-col-status,
   .admin-bookings-table--history th:nth-child(5) {
     text-align: center;
+        padding-left: 0.5rem;
+    padding-right: 0.5rem;
+    white-space: nowrap;
+
   }
 
   .admin-bookings-table--history .admin-table-col-client,
   .admin-bookings-table--history th:nth-child(1),
   .admin-bookings-table--history .admin-table-col-start,
-  .admin-bookings-table--history th:nth-child(6),
-  .admin-bookings-table--history .admin-table-col-status,
-  .admin-bookings-table--history th:nth-child(5) {
+  .admin-bookings-table--history th:nth-child(6) {
     padding-left: 0.625rem;
     padding-right: 0.625rem;
   }
