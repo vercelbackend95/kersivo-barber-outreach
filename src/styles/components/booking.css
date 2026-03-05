@@ -1589,7 +1589,7 @@
   }
 
   .admin-bookings-table--history .col-service {
-    width: auto;
+    width: 20ch;
   }
 
   .admin-bookings-table--history .col-barber {
@@ -1601,7 +1601,7 @@
   }
 
   .admin-bookings-table--history .col-start {
-    width: 16ch;
+    width: 21ch;
   }
 
   .admin-bookings-table--history .admin-table-col-client,
@@ -1629,6 +1629,22 @@
     padding-left: 0.625rem;
     padding-right: 0.625rem;
   }
+  .admin-bookings-table--history .admin-table-col-service,
+  .admin-bookings-table--history th:nth-child(3) {
+    padding-left: 0.5rem;
+    padding-right: 0.5rem;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  .admin-bookings-table--history .admin-table-col-start,
+  .admin-bookings-table--history th:nth-child(6) {
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: clip;
+  }
+
 
   .admin-bookings-table--history .admin-table-col-email {
     max-width: 18ch;
