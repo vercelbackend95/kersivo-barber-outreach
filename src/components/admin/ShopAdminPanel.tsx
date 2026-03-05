@@ -230,6 +230,16 @@ type SeriesPillsProps = {
   maxHintVisible: boolean;
   emptySelectionHintVisible: boolean;
 };
+type ProductStatusSwitchProps = {
+  label: string;
+  checked: boolean;
+  disabled?: boolean;
+  onLabel: string;
+  offLabel: string;
+  tone: 'active' | 'featured';
+  onChange: (nextValue: boolean) => void;
+};
+
 
 function SeriesPills({
   seriesList,
@@ -269,6 +279,41 @@ function SeriesPills({
     </div>
   );
 }
+function ProductStatusSwitch({
+  label,
+  checked,
+  disabled = false,
+  onLabel,
+  offLabel,
+  tone,
+  onChange
+}: ProductStatusSwitchProps) {
+  const statusLabel = checked ? onLabel : offLabel;
+  return (
+    <button
+      type="button"
+      className={`admin-product-switch ${checked ? 'is-on' : ''}`}
+      data-tone={tone}
+      role="switch"
+      aria-checked={checked}
+      aria-label={`${label}: ${statusLabel}`}
+      disabled={disabled}
+      onClick={() => onChange(!checked)}
+    >
+      <span className="admin-product-switch__copy">
+        <span className="admin-product-switch__label">{label}</span>
+        <span className="admin-product-switch__status">
+          <span className={`admin-product-switch__dot ${checked ? 'is-on' : ''}`} aria-hidden="true" />
+          {statusLabel}
+        </span>
+      </span>
+      <span className="admin-product-switch__track" aria-hidden="true">
+        <span className="admin-product-switch__thumb" />
+      </span>
+    </button>
+  );
+}
+
 
 function useProductSeriesSelection(allSalesSeries: SalesChartSeries[]) {
   const [enabledProductIds, setEnabledProductIds] = useState<Set<string>>(new Set());
@@ -574,7 +619,7 @@ export default function ShopAdminPanel({ initialTab = 'products' }: ShopAdminPan
   const [isMobileSalesView, setIsMobileSalesView] = useState(false);
   const [isSalesChartExpanded, setIsSalesChartExpanded] = useState(false);
   const [expandedProductSearch, setExpandedProductSearch] = useState('');
-    useBodyScrollLock(isMobileSalesView && isSalesChartExpanded);
+    useBodyScrollLock(formOpen || (isMobileSalesView && isSalesChartExpanded));
 
 
     const [productSearch, setProductSearch] = useState('');
@@ -1143,15 +1188,7 @@ export default function ShopAdminPanel({ initialTab = 'products' }: ShopAdminPan
                 placeholder="Search products"
                 aria-label="Search products"
               />
-              <div className="admin-products-toolbar-actions">
-                <button type="button" className="btn btn--primary" onClick={startCreate}>Add product</button>
-                <select value={productSortMode} onChange={(event) => setProductSortMode(event.target.value as ProductSortMode)} className="admin-products-sort">
-                  <option value="manual">Manual order</option>
-                  <option value="newest">Newest</option>
-                  <option value="price">Price</option>
-                  <option value="name">Name</option>
-                </select>
-              </div>
+
             </div>
             <div className="admin-products-toolbar-row">
               <div className="admin-products-filters" role="tablist" aria-label="Product filters">
@@ -1166,6 +1203,13 @@ export default function ShopAdminPanel({ initialTab = 'products' }: ShopAdminPan
                   </button>
                 ))}
               </div>
+                            <select value={productSortMode} onChange={(event) => setProductSortMode(event.target.value as ProductSortMode)} className="admin-products-sort" aria-label="Sort products">
+                <option value="manual">Manual order</option>
+                <option value="newest">Newest</option>
+                <option value="price">Price</option>
+                <option value="name">Name</option>
+              </select>
+
               <p className="admin-products-count muted">{filteredProducts.length} products • {featuredCount} featured</p>
             </div>
             {!canReorder && productSortMode === 'manual' ? <p className="muted">Reordering is available only in All view with no search.</p> : null}
@@ -1202,8 +1246,23 @@ export default function ShopAdminPanel({ initialTab = 'products' }: ShopAdminPan
                 </label>
 
                 <div className="admin-product-switches">
-                  <label className="admin-product-toggle"><span>Active</span><input type="checkbox" checked={form.active} onChange={(event) => setForm((prev) => ({ ...prev, active: event.target.checked, featured: event.target.checked ? prev.featured : false }))} /></label>
-                  <label className="admin-product-toggle"><span>Featured</span><input type="checkbox" checked={form.featured} onChange={(event) => setForm((prev) => ({ ...prev, featured: event.target.checked, active: event.target.checked ? true : prev.active }))} /></label>
+                  <ProductStatusSwitch
+                    label="Active"
+                    checked={form.active}
+                    onLabel="Active"
+                    offLabel="Inactive"
+                    tone="active"
+                    onChange={(nextValue) => setForm((prev) => ({ ...prev, active: nextValue, featured: nextValue ? prev.featured : false }))}
+                  />
+                  <ProductStatusSwitch
+                    label="Featured"
+                    checked={form.featured}
+                    onLabel="Featured"
+                    offLabel="Not featured"
+                    tone="featured"
+                    onChange={(nextValue) => setForm((prev) => ({ ...prev, featured: nextValue, active: nextValue ? true : prev.active }))}
+                  />
+
                 </div>
 
                 <details className="admin-product-advanced">
@@ -1215,6 +1274,22 @@ export default function ShopAdminPanel({ initialTab = 'products' }: ShopAdminPan
 
                 <div className="admin-product-sheet-footer">
                   <button type="button" className="btn btn--secondary" onClick={resetForm}>Cancel</button>
+                                    {form.id ? (
+                    <button
+                      type="button"
+                      className="btn btn--ghost"
+                      onClick={() => {
+                        const confirmed = window.confirm('Disable this product? It can be re-enabled later from the API/admin tools.');
+                        if (!confirmed || !form.id) return;
+                        void disableProduct(form.id).then(() => {
+                          resetForm();
+                        });
+                      }}
+                    >
+                      Delete
+                    </button>
+                  ) : null}
+
                   <button type="submit" className="btn btn--primary" disabled={saving || !formValid || !formDirty}>{saving ? 'Saving...' : 'Save product'}</button>
                 </div>
               </form>
@@ -1269,18 +1344,41 @@ export default function ShopAdminPanel({ initialTab = 'products' }: ShopAdminPan
                   </div>
 
                   <div className="admin-product-switches admin-product-switches--card">
-                    <label className="admin-product-toggle"><span>Active</span><input type="checkbox" checked={product.active} disabled={isSavingCard} onChange={(event) => void patchProductFlags(product.id, { active: event.target.checked })} /></label>
-                    <label className="admin-product-toggle"><span>Featured</span><input type="checkbox" checked={product.featured} disabled={isSavingCard} onChange={(event) => void patchProductFlags(product.id, { featured: event.target.checked })} /></label>
+                    <ProductStatusSwitch
+                      label="Active"
+                      checked={product.active}
+                      disabled={isSavingCard}
+                      onLabel="Active"
+                      offLabel="Inactive"
+                      tone="active"
+                      onChange={(nextValue) => void patchProductFlags(product.id, { active: nextValue })}
+                    />
+                    <ProductStatusSwitch
+                      label="Featured"
+                      checked={product.featured}
+                      disabled={isSavingCard}
+                      onLabel="Featured"
+                      offLabel="Not featured"
+                      tone="featured"
+                      onChange={(nextValue) => void patchProductFlags(product.id, { featured: nextValue })}
+                    />
+
                   </div>
 
                   <div className="admin-products-actions">
                     <button type="button" className="btn btn--ghost" onClick={() => startEdit(product)}>Edit</button>
-                    <button type="button" className="btn btn--secondary" onClick={() => void disableProduct(product.id)}>Delete</button>
+
                     <span className="admin-product-saving muted">{isSavingCard ? 'Saving…' : (productStatusById[product.id] || '')}</span>
                   </div>
                 </article>
               );
             })}
+            <article className="admin-product-card admin-product-card--add">
+              <button type="button" className="admin-product-add-btn" onClick={startCreate}>
+                <span className="admin-product-add-icon" aria-hidden="true">+</span>
+                <span>Add product</span>
+              </button>
+            </article>
 
 
           </div>
