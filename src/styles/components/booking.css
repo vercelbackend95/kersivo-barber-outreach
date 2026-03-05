@@ -1573,7 +1573,9 @@
   }
 
   .admin-table-col-email {
-    max-width: 16rem;
+    max-width: 14rem;
+    white-space: nowrap;
+
   }
 
   .admin-table-col-email .admin-link-button {
