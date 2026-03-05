@@ -1195,17 +1195,26 @@ export default function ShopAdminPanel({ initialTab = 'products' }: ShopAdminPan
 
               </div>
               <div className="admin-products-toolbar-row">
-                <div className="admin-products-filters" role="tablist" aria-label="Product filters">
-                  {(['all', 'active', 'inactive', 'featured'] as ProductFilter[]).map((filter) => (
-                    <button
-                      key={filter}
-                      type="button"
-                      className={`admin-filter-tab ${productFilter === filter ? 'admin-filter-tab--active' : ''}`}
-                      onClick={() => setProductFilter(filter)}
-                    >
-                      {filter === 'all' ? 'All' : filter === 'active' ? 'Active' : filter === 'inactive' ? 'Inactive' : 'Featured'}
-                    </button>
-                  ))}
+                <div className="admin-products-controls-row">
+                  <div className="admin-products-filters" role="tablist" aria-label="Product filters">
+                    {(['all', 'active', 'inactive', 'featured'] as ProductFilter[]).map((filter) => (
+                      <button
+                        key={filter}
+                        type="button"
+                        className={`admin-filter-tab ${productFilter === filter ? 'admin-filter-tab--active' : ''}`}
+                        onClick={() => setProductFilter(filter)}
+                      >
+                        {filter === 'all' ? 'All' : filter === 'active' ? 'Active' : filter === 'inactive' ? 'Inactive' : 'Featured'}
+                      </button>
+                    ))}
+                  </div>
+                  <select value={productSortMode} onChange={(event) => setProductSortMode(event.target.value as ProductSortMode)} className="admin-products-sort" aria-label="Sort products">
+                    <option value="manual">Manual order</option>
+                    <option value="newest">Newest</option>
+                    <option value="price">Price</option>
+                    <option value="name">Name</option>
+                  </select>
+
                 </div>
                               <select value={productSortMode} onChange={(event) => setProductSortMode(event.target.value as ProductSortMode)} className="admin-products-sort" aria-label="Sort products">
                   <option value="manual">Manual order</option>
