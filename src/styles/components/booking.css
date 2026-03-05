@@ -3284,6 +3284,22 @@
 
 }
 
+.admin-barber-today-line {
+  margin: 0;
+  color: var(--muted);
+  font-size: 0.84rem;
+  line-height: 1.3;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.admin-barber-today-line.is-off {
+  color: color-mix(in srgb, var(--muted) 88%, var(--fg) 12%);
+}
+
+
+
 .admin-barber-actions {
   display: flex;
   justify-content: flex-end;
@@ -3325,6 +3341,11 @@
   .admin-barber-identity {
     align-items: center;
   }
+    .admin-barber-next-line,
+  .admin-barber-today-line {
+    font-size: 0.8rem;
+  }
+
 }
 
 

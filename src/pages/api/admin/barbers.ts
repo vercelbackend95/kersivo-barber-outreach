@@ -7,6 +7,7 @@ import type { APIRoute } from 'astro';
 import { z } from 'zod';
 import { requireAdmin } from '../../../lib/admin/auth';
 import { ensureBarberHasAvailabilityRules } from '../../../lib/admin/defaultAvailability';
+import { getTodayInLondon, getTodayScheduleForBarber } from '../../../lib/admin/todayWorkingHours';
 import { prisma } from '../../../lib/db/client';
 import type { Prisma } from '@prisma/client';
 
@@ -149,6 +150,18 @@ export const GET: APIRoute = async (ctx) => {
     barbers = fallbackBarbers.map((barber, index) => ({ ...barber, sortOrder: index }));
   }
   const links = await prisma.barberService.findMany({ select: { barberId: true, serviceId: true } });
+    const todayInLondon = getTodayInLondon();
+  const todayRules = todayInLondon == null
+    ? []
+    : await prisma.availabilityRule.findMany({
+        where: {
+          barberId: { in: barbers.map((barber) => barber.id) },
+          dayOfWeek: todayInLondon
+        },
+        orderBy: [{ barberId: 'asc' }, { startMinutes: 'asc' }]
+      });
+
+
   const serviceIdsByBarber = new Map<string, string[]>();
 
   for (const link of links) {
@@ -159,14 +172,29 @@ export const GET: APIRoute = async (ctx) => {
       serviceIdsByBarber.set(link.barberId, [link.serviceId]);
     }
   }
+  const rulesByBarberId = new Map<string, typeof todayRules>();
+  for (const rule of todayRules) {
+    const existingRules = rulesByBarberId.get(rule.barberId);
+    if (existingRules) {
+      existingRules.push(rule);
+    } else {
+      rulesByBarberId.set(rule.barberId, [rule]);
+    }
+  }
 
 
   return new Response(JSON.stringify({
-    barbers: barbers.map((barber) => ({
-      ...barber,
-      serviceIds: serviceIdsByBarber.get(barber.id) ?? [],
-      isActive: barber.active
-    }))
+    barbers: barbers.map((barber) => {
+      const todaySchedule = getTodayScheduleForBarber(rulesByBarberId.get(barber.id));
+      return {
+        ...barber,
+        serviceIds: serviceIdsByBarber.get(barber.id) ?? [],
+        isActive: barber.active,
+        todayLabel: todaySchedule.todayLabel,
+        todayIsOnShift: todaySchedule.todayIsOnShift
+      };
+    })
+
   }));
 
 };

@@ -6,6 +6,9 @@ export type Barber = {
   active?: boolean;
   sortOrder?: number;
   serviceIds?: string[];
+    todayLabel?: string;
+  todayIsOnShift?: boolean | null;
+
 };
 
 export type ServiceOption = {

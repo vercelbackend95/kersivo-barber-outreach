@@ -111,6 +111,15 @@ function normalizeBarberStatus(barber: Barber) {
   if (typeof barber.active === 'boolean') return barber.active;
   return true;
 }
+function getTodayLine(barber: Barber) {
+  const todayLabel = barber.todayLabel?.trim() || '—';
+  if (todayLabel === 'Off') {
+    return { text: 'Today: Off', title: 'Today: Off', isOff: true };
+  }
+
+  return { text: `Today: ${todayLabel}`, title: `Today: ${todayLabel}`, isOff: false };
+}
+
 
 export default function BarbersOverview({
   barbers,
@@ -207,7 +216,9 @@ export default function BarbersOverview({
             const isFirstItem = index === 0;
             const isLastItem = index === barbers.length - 1;
             const nextBookingPreview = nextBookingsByBarberId.get(barber.id);
-                        return (
+            const todayLine = getTodayLine(barber);
+            return (
+
               <li key={barber.id} className={`admin-barber-card ${barberIsActive ? '' : 'is-inactive'}`}>
                 <button type="button" className="admin-barber-identity" onClick={() => onOpenBarber(barber.id)}>
                   <div className="admin-barber-avatar">
@@ -223,6 +234,10 @@ export default function BarbersOverview({
                     <p className="admin-barber-next-line" title={nextBookingPreview ? `Next: ${nextBookingPreview.timeLabel} (${nextBookingPreview.relativeLabel}) · ${nextBookingPreview.serviceLabel}` : 'Next: none'}>
                       {nextBookingPreview ? `Next: ${nextBookingPreview.timeLabel} (${nextBookingPreview.relativeLabel}) · ${nextBookingPreview.serviceLabel}` : bookings.length > 0 ? 'Next: none' : 'Next: —'}
                     </p>
+                                        <p className={`admin-barber-today-line ${todayLine.isOff ? 'is-off' : ''}`} title={todayLine.title}>
+                      {todayLine.text}
+                    </p>
+
                   </div>
 
                 </button>
