@@ -1,5 +1,20 @@
 import React from 'react';
 import type { Barber, ServiceOption, TimeBlock } from './barbersTypes';
+type BarberBookingPreview = {
+  barberId: string;
+  status: string;
+  startAt: string;
+  service?: {
+    name?: string | null;
+  } | null;
+};
+
+type NextBookingPreview = {
+  timeLabel: string;
+  relativeLabel: string;
+  serviceLabel: string;
+};
+
 
 type BarbersOverviewProps = {
   barbers: Barber[];
@@ -14,6 +29,7 @@ type BarbersOverviewProps = {
   barberSaveError: string;
   isAddBarberSheetOpen: boolean;
   globalBlocks: TimeBlock[];
+    bookings: BarberBookingPreview[];
   getInitials: (name: string) => string;
   onBarberNameChange: (value: string) => void;
   onBarberAvatarChange: (file: File | null) => void;
@@ -33,6 +49,61 @@ const DEFAULT_SERVICE_OPTIONS: ServiceOption[] = [
   { id: 'svc-beard-trim', name: 'Beard Trim' },
   { id: 'svc-haircut-beard', name: 'Haircut + Beard' },
 ];
+
+const SCHEDULED_BOOKING_STATUSES = ['CONFIRMED', 'PENDING', 'PENDING_CONFIRMATION', 'RESCHEDULED'] as const;
+
+function formatTimeHHMM(date: Date) {
+  return new Intl.DateTimeFormat('en-GB', {
+    hour: '2-digit',
+    minute: '2-digit',
+    hour12: false,
+  }).format(date);
+}
+
+function formatRelative(date: Date, now: Date) {
+  const diffMs = date.getTime() - now.getTime();
+  if (diffMs <= 0) return 'now';
+  const diffMinutes = Math.round(diffMs / 60000);
+
+  if (diffMinutes < 60) return `in ${Math.max(1, diffMinutes)}m`;
+
+  const diffHours = Math.round(diffMinutes / 60);
+  if (diffHours < 24) return `in ${Math.max(1, diffHours)}h`;
+
+  if (diffHours < 48) return 'tomorrow';
+
+  const diffDays = Math.round(diffHours / 24);
+  return `in ${Math.max(2, diffDays)}d`;
+}
+
+function truncateServiceLabel(serviceName: string) {
+  const trimmed = serviceName.trim();
+  if (!trimmed) return 'Service';
+  if (trimmed.length <= 24) return trimmed;
+  return `${trimmed.slice(0, 21)}...`;
+}
+
+function getNextBookingForBarber(bookings: BarberBookingPreview[], barberId: string, now: Date): NextBookingPreview | null {
+  const nowMs = now.getTime();
+  const nextBooking = bookings
+    .filter((booking) => booking.barberId === barberId)
+    .filter((booking) => {
+      if (!SCHEDULED_BOOKING_STATUSES.includes(booking.status as (typeof SCHEDULED_BOOKING_STATUSES)[number])) return false;
+      const startAtMs = new Date(booking.startAt).getTime();
+      return Number.isFinite(startAtMs) && startAtMs > nowMs;
+    })
+    .sort((a, b) => new Date(a.startAt).getTime() - new Date(b.startAt).getTime())[0];
+
+  if (!nextBooking) return null;
+
+  const startDate = new Date(nextBooking.startAt);
+
+  return {
+    timeLabel: formatTimeHHMM(startDate),
+    relativeLabel: formatRelative(startDate, now),
+    serviceLabel: truncateServiceLabel(nextBooking.service?.name ?? ''),
+  };
+}
 
 
 function normalizeBarberStatus(barber: Barber) {
@@ -54,6 +125,7 @@ export default function BarbersOverview({
   barberSaveError,
     isAddBarberSheetOpen,
   globalBlocks,
+    bookings,
   getInitials,
   onBarberNameChange,
   onBarberAvatarChange,
@@ -68,6 +140,22 @@ export default function BarbersOverview({
   formatBlockRange,
 }: BarbersOverviewProps) {
   const availableServices = services.length > 0 ? services : DEFAULT_SERVICE_OPTIONS;
+  const [nowTick, setNowTick] = React.useState(() => Date.now());
+
+  React.useEffect(() => {
+    const timer = window.setInterval(() => {
+      setNowTick(Date.now());
+    }, 60000);
+
+    return () => {
+      window.clearInterval(timer);
+    };
+  }, []);
+
+  const nextBookingsByBarberId = React.useMemo(() => {
+    const now = new Date(nowTick);
+    return new Map(barbers.map((barber) => [barber.id, getNextBookingForBarber(bookings, barber.id, now)]));
+  }, [barbers, bookings, nowTick]);
 
   React.useEffect(() => {
     if (!isAddBarberSheetOpen) return undefined;
@@ -115,35 +203,41 @@ export default function BarbersOverview({
         <ul className="admin-barber-grid" aria-label="Barbers list">
           {barbers.map((barber, index) => {
 
-          const barberIsActive = normalizeBarberStatus(barber);
-          const isFirstItem = index === 0;
-          const isLastItem = index === barbers.length - 1;
+            const barberIsActive = normalizeBarberStatus(barber);
+            const isFirstItem = index === 0;
+            const isLastItem = index === barbers.length - 1;
+            const nextBookingPreview = nextBookingsByBarberId.get(barber.id);
+                        return (
+              <li key={barber.id} className={`admin-barber-card ${barberIsActive ? '' : 'is-inactive'}`}>
+                <button type="button" className="admin-barber-identity" onClick={() => onOpenBarber(barber.id)}>
+                  <div className="admin-barber-avatar">
+                    {barber.avatarUrl ? <img src={barber.avatarUrl} alt={barber.name} loading="lazy" /> : <span>{getInitials(barber.name)}</span>}
+                  </div>
+                  <div className="admin-barber-copy">
+                    <div className="admin-barber-name-row">
+                      <p className="admin-barber-name">{barber.name}</p>
+                      <span className="admin-barber-status-indicator" role="status" aria-label={barberIsActive ? 'Active' : 'Inactive'}>
+                        <span className={`admin-status-dot ${barberIsActive ? 'is-active' : 'is-inactive'}`} aria-hidden="true" />
+                      </span>
+                    </div>
+                    <p className="admin-barber-next-line" title={nextBookingPreview ? `Next: ${nextBookingPreview.timeLabel} (${nextBookingPreview.relativeLabel}) · ${nextBookingPreview.serviceLabel}` : 'Next: none'}>
+                      {nextBookingPreview ? `Next: ${nextBookingPreview.timeLabel} (${nextBookingPreview.relativeLabel}) · ${nextBookingPreview.serviceLabel}` : bookings.length > 0 ? 'Next: none' : 'Next: —'}
+                    </p>
+                  </div>
 
-          return (
-            <li key={barber.id} className={`admin-barber-card ${barberIsActive ? '' : 'is-inactive'}`}>
-              <button type="button" className="admin-barber-identity" onClick={() => onOpenBarber(barber.id)}>
-                <div className="admin-barber-avatar">
-                  {barber.avatarUrl ? <img src={barber.avatarUrl} alt={barber.name} loading="lazy" /> : <span>{getInitials(barber.name)}</span>}
-                </div>
-                <div className="admin-barber-copy">
-                  <p className="admin-barber-name">{barber.name}</p>
-                  <p className="muted">
-                    {barberIsActive ? 'Active' : <span className="admin-status-badge">Inactive</span>}
-                  </p>
-
-                </div>
-              </button>
-              <div className="admin-barber-actions">
-                <div className="admin-reorder-controls" role="group" aria-label={`Reorder ${barber.name}`}>
-                  <button type="button" className="admin-reorder-btn" onClick={() => onMoveBarber(index, 'up')} disabled={isFirstItem || barberReordering} aria-label={`Move ${barber.name} up`}>↑</button>
-                  <button type="button" className="admin-reorder-btn" onClick={() => onMoveBarber(index, 'down')} disabled={isLastItem || barberReordering} aria-label={`Move ${barber.name} down`}>↓</button>
-                </div>
-                <button type="button" className="admin-barber-settings-btn" onClick={() => onOpenBarber(barber.id)} aria-label={`Open ${barber.name} settings`}>
-                  ⚙
                 </button>
-              </div>
-            </li>
-          );
+                                <div className="admin-barber-actions">
+                  <div className="admin-reorder-controls" role="group" aria-label={`Reorder ${barber.name}`}>
+                    <button type="button" className="admin-reorder-btn" onClick={() => onMoveBarber(index, 'up')} disabled={isFirstItem || barberReordering} aria-label={`Move ${barber.name} up`}>↑</button>
+                    <button type="button" className="admin-reorder-btn" onClick={() => onMoveBarber(index, 'down')} disabled={isLastItem || barberReordering} aria-label={`Move ${barber.name} down`}>↓</button>
+                  </div>
+                  <button type="button" className="admin-barber-settings-btn" onClick={() => onOpenBarber(barber.id)} aria-label={`Open ${barber.name} settings`}>
+                    ⚙
+                  </button>
+                </div>
+              </li>
+            );
+
           })}
           <li className="admin-barber-card admin-barber-card--add">
             <button type="button" className="admin-barber-add-btn" onClick={onOpenAddBarberSheet}>

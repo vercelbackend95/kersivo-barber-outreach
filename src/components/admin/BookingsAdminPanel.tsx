@@ -1622,6 +1622,7 @@ export default function BookingsAdminPanel({ isActive, mode, onBackToDashboard }
                 barberSaveError={barberSaveError}
                                 isAddBarberSheetOpen={isAddBarberSheetOpen}
                 globalBlocks={globalBlocks}
+                                bookings={bookings}
                 getInitials={getInitials}
                 onBarberNameChange={setBarberNameDraft}
                 onBarberAvatarChange={setBarberAvatarFile}
