@@ -788,7 +788,7 @@
   background: var(--surface);
   padding: var(--space-sm);
   display: grid;
-  gap: var(--space-xs);
+  gap: var(--space-sm);
 }
 
 .admin-reports-grid {
@@ -802,42 +802,65 @@
   background: var(--bg);
   padding: var(--space-sm);
   display: grid;
-  gap: 0.3rem;
-    min-width: 0;
+  gap: 0.4rem;
+  min-width: 0;
 }
 
-.admin-kpi-card--wide {
-  grid-column: span 1;
+.admin-kpi-card--hero {
+  order: 1;
+
+}
+
+.admin-kpi-card--bookings {
+  order: 2;
+}
+
+.admin-kpi-card--cancelled {
+  order: 3;
+}
+
+.admin-kpi-card--utilization {
+  order: 4;
+
 
 }
 
 .admin-kpi-label {
   margin: 0;
   color: var(--muted);
-  font-size: 0.9rem;
+  font-size: 0.82rem;
   text-transform: uppercase;
-  letter-spacing: 0.04em;
+  letter-spacing: 0.06em;
 }
 
 .admin-kpi-value {
   margin: 0;
-  font-size: 1.1rem;
+  font-size: 1.15rem;
   font-weight: 700;
-    overflow-wrap: anywhere;
+  overflow-wrap: anywhere;
+}
+
+.admin-kpi-value--hero {
+  font-size: clamp(1.7rem, 5.3vw, 2.6rem);
+
 }
 
 .admin-kpi-trend {
   margin: 0;
-  font-size: 0.8rem;
-  color: var(--muted);
+  font-size: 0.84rem;
 }
 
 .admin-kpi-trend--up {
-  color: var(--accent);
+  color: var(--status-confirmed);
 }
 
 .admin-kpi-trend--down {
-  color: var(--fg);
+  color: var(--accent);
+}
+
+.admin-kpi-trend--flat {
+  color: var(--muted);
+
 }
 
 .admin-kpi-note {
@@ -845,16 +868,44 @@
   font-size: 0.78rem;
   color: var(--muted);
 }
+.admin-revenue-chart {
+  width: 100%;
+  height: 84px;
+  max-height: 84px;
+  margin-top: var(--space-2xs);
+}
+
+.admin-revenue-chart svg {
+  width: 100%;
+  height: 100%;
+  display: block;
+}
+
+.admin-revenue-chart-axis {
+  stroke: var(--border);
+  stroke-width: 1;
+}
+
+.admin-revenue-chart-line {
+  fill: none;
+  stroke: var(--fg);
+  stroke-width: 2;
+}
+
+.admin-revenue-chart-area {
+  fill: color-mix(in srgb, var(--fg) 12%, transparent);
+}
+
 
 .admin-reports-breakdown {
   display: grid;
   gap: 0.35rem;
-  margin-top: 0.25rem;
+  margin-top: 0.2rem;
 }
 
 .admin-reports-breakdown-bar {
   display: flex;
-  min-height: 0.5rem;
+  min-height: 0.6rem;
   border: 1px solid var(--border);
   background: var(--surface);
 }
@@ -863,10 +914,11 @@
   display: block;
 }
 
-.admin-reports-breakdown-bar .is-completed { background: var(--accent); }
-.admin-reports-breakdown-bar .is-cancel-client { background: color-mix(in srgb, var(--accent) 65%, var(--bg)); }
-.admin-reports-breakdown-bar .is-cancel-shop { background: color-mix(in srgb, var(--accent) 45%, var(--bg)); }
-.admin-reports-breakdown-bar .is-no-show { background: color-mix(in srgb, var(--accent) 25%, var(--bg)); }
+.admin-reports-breakdown-bar .is-completed { background: var(--status-confirmed); }
+.admin-reports-breakdown-bar .is-cancel-client { background: var(--accent); }
+.admin-reports-breakdown-bar .is-cancel-shop { background: var(--status-pending); }
+.admin-reports-breakdown-bar .is-no-show { background: var(--muted); }
+
 
 .admin-breakdown-row {
   margin: 0;
@@ -877,23 +929,34 @@
 
 }
 
-@media (min-width: 48rem) {
-  .admin-reports-grid {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-  }
-  
-  .admin-kpi-card--wide {
-    grid-column: span 2;
-  }
-}
-
 @media (min-width: 72rem) {
   .admin-reports-grid {
     grid-template-columns: repeat(4, minmax(0, 1fr));
+    grid-auto-rows: minmax(8.5rem, auto);
+
+  }
+  
+  .admin-kpi-card--hero {
+    grid-column: 1 / span 2;
+    grid-row: 1 / span 2;
+
   }
 
-  .admin-kpi-card--wide {
-    grid-column: span 2;
+
+  .admin-kpi-card--bookings {
+    grid-column: 3;
+    grid-row: 1;
+
+  }
+
+  .admin-kpi-card--cancelled {
+    grid-column: 4;
+    grid-row: 1;
+
+  }
+  .admin-kpi-card--utilization {
+    grid-column: 1;
+    grid-row: 3;
   }
 
 }

@@ -19,6 +19,11 @@ type Breakdown = {
   cancelledByShop: number;
   noShowExpired: number;
 };
+type RevenueSeriesPoint = {
+  label: string;
+  value: number;
+};
+
 
 const BOOKED_STATUSES = new Set<BookingStatus>([BookingStatus.CONFIRMED, BookingStatus.RESCHEDULED]);
 const REVENUE_STATUSES = new Set<BookingStatus>([BookingStatus.CONFIRMED]);
@@ -87,6 +92,34 @@ function getRangeDayKeys(range: RangeBoundaries): string[] {
 }
 
 
+function getRevenueBucketMode(rangeKey: ReportsRange): 'day' | 'week' {
+  return rangeKey === '1y' ? 'week' : 'day';
+}
+
+function getRevenueSeriesSeed(range: RangeBoundaries, rangeKey: ReportsRange): RevenueSeriesPoint[] {
+  if (getRevenueBucketMode(rangeKey) === 'day') {
+    return getRangeDayKeys(range).map((dayKey) => ({ label: dayKey, value: 0 }));
+  }
+
+  const keys: string[] = [];
+  let cursor = fromZonedTime(`${formatInTimeZone(range.from, ADMIN_TIMEZONE, 'yyyy-MM-dd')}T00:00:00.000`, ADMIN_TIMEZONE);
+  const rangeEndDay = fromZonedTime(`${formatInTimeZone(range.to, ADMIN_TIMEZONE, 'yyyy-MM-dd')}T23:59:59.999`, ADMIN_TIMEZONE);
+
+  while (cursor <= rangeEndDay) {
+    keys.push(formatInTimeZone(cursor, ADMIN_TIMEZONE, "yyyy-'W'II"));
+    cursor = addMilliseconds(cursor, 24 * 60 * 60 * 1000);
+  }
+
+  return [...new Set(keys)].map((weekKey) => ({ label: weekKey, value: 0 }));
+}
+
+function getRevenueBucketLabel(date: Date, rangeKey: ReportsRange): string {
+  return getRevenueBucketMode(rangeKey) === 'week'
+    ? formatInTimeZone(date, ADMIN_TIMEZONE, "yyyy-'W'II")
+    : formatInTimeZone(date, ADMIN_TIMEZONE, 'yyyy-MM-dd');
+}
+
+
 async function getRecentBarbers(shopId: string, from: Date, to: Date) {
   const extractRecent = async (inRangeOnly: boolean) => {
     const bookings = await prisma.booking.findMany({
@@ -129,7 +162,7 @@ function toTrendPercent(current: number, previous: number): number | null {
 }
 
 
-async function computeMetrics(shopId: string, range: RangeBoundaries, selectedBarberId: string | null) {
+async function computeMetrics(shopId: string, range: RangeBoundaries, selectedBarberId: string | null, rangeKey: ReportsRange) {
   const whereBase = {
     client: { shopId },
     startAt: { gte: range.from, lte: range.to },
@@ -201,7 +234,7 @@ async function computeMetrics(shopId: string, range: RangeBoundaries, selectedBa
 
   let usedDemoPricing = false;
   let revenueCount = 0;
-  let revenue = 0;
+  const revenueSeriesMap = new Map(getRevenueSeriesSeed(range, rangeKey).map((point) => [point.label, point.value]));
   let bookingsCount = 0;
   let bookedMinutes = 0;
   const breakdown: Breakdown = { completed: 0, cancelledByClient: 0, cancelledByShop: 0, noShowExpired: 0 };
@@ -243,6 +276,9 @@ async function computeMetrics(shopId: string, range: RangeBoundaries, selectedBa
     if (bookingValue != null) {
       revenue += bookingValue;
       revenueCount += 1;
+            const bucketLabel = getRevenueBucketLabel(booking.startAt, rangeKey);
+      revenueSeriesMap.set(bucketLabel, (revenueSeriesMap.get(bucketLabel) ?? 0) + bookingValue);
+
     }
   }
 
@@ -335,6 +371,7 @@ async function computeMetrics(shopId: string, range: RangeBoundaries, selectedBa
     bookedMinutes,
     availableMinutes,
     utilizationPct,
+        revenueSeries: [...revenueSeriesMap.entries()].map(([label, value]) => ({ label, value })),
     mostPopularService: mostPopularServiceTop && mostPopularServiceEntity
       ? { name: mostPopularServiceEntity.name, count: mostPopularServiceTop._count.serviceId }
       : null,
@@ -368,8 +405,9 @@ export const GET: APIRoute = async (ctx) => {
       ? prisma.barber.findUnique({ where: { id: selectedBarberId }, select: { id: true, name: true } })
       : Promise.resolve(null),
     getRecentBarbers(shop.id, selectedRange.from, selectedRange.to),
-    computeMetrics(shop.id, selectedRange, selectedBarberId),
-    computeMetrics(shop.id, previousRange, selectedBarberId)
+    computeMetrics(shop.id, selectedRange, selectedBarberId, range),
+    computeMetrics(shop.id, previousRange, selectedBarberId, range)
+
   ]);
 
 
