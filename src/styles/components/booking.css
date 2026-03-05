@@ -1314,6 +1314,13 @@
   .admin-history-picker-months--double {
     grid-template-columns: 1fr;
   }
+  .admin-history-dialog-backdrop {
+    z-index: 9998;
+  }
+
+  .admin-history-date-picker {
+    z-index: 9999;
+  }
 
 }
 

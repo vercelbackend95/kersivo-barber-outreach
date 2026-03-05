@@ -1,4 +1,5 @@
 import React, { useEffect, useMemo, useRef, useState } from 'react';
+import { createPortal } from 'react-dom';
 import { formatInTimeZone, fromZonedTime } from 'date-fns-tz';
 
 type HistoryDateRange = {
@@ -118,6 +119,7 @@ function CalendarMonth({ monthStart, timezone, dateRange, onSelectDate }: Calend
 
 export default function HistoryDateRangePicker({ dateRange, isMobileViewport, timezone, onChangeRange, onClear }: HistoryDateRangePickerProps) {
   const [isOpen, setIsOpen] = useState(false);
+    const [isMounted, setIsMounted] = useState(false);
   const [visibleMonth, setVisibleMonth] = useState(() => getMonthStart(dateRange?.from ?? new Date()));
   const triggerRef = useRef<HTMLButtonElement | null>(null);
   const contentRef = useRef<HTMLDivElement | null>(null);
@@ -138,6 +140,10 @@ export default function HistoryDateRangePicker({ dateRange, isMobileViewport, ti
     if (!dateRange?.from || !dateRange?.to) return '';
     return `${formatInTimeZone(dateRange.from, timezone, 'dd MMM')} - ${formatInTimeZone(dateRange.to, timezone, 'dd MMM')}`;
   }, [dateRange, timezone]);
+  useEffect(() => {
+    setIsMounted(true);
+  }, []);
+
 
   useEffect(() => {
     if (!isOpen) return;
@@ -243,6 +249,37 @@ export default function HistoryDateRangePicker({ dateRange, isMobileViewport, ti
   };
 
   const nextMonth = new Date(visibleMonth.getFullYear(), visibleMonth.getMonth() + 1, 1);
+  const popoverContent = isOpen ? (
+    <>
+      {isMobileViewport ? <button type="button" className="admin-history-dialog-backdrop" aria-label="Close date range picker" onClick={() => setIsOpen(false)} /> : null}
+      <div
+        ref={contentRef}
+        className={`admin-history-date-picker admin-history-date-picker--${isDesktopViewport ? 'desktop' : 'mobile'}`}
+        role="dialog"
+        aria-label="Choose history date range"
+        style={isDesktopViewport ? { left: `${desktopLayout.left}px`, top: `${desktopLayout.top}px`, maxWidth: `${desktopLayout.maxWidth}px` } : undefined}
+      >
+        <div className="admin-history-picker-summary">
+          <p>{historyDateRangeLabel || 'Select a start and end date'}</p>
+        </div>
+        <div className={`admin-history-picker-months admin-history-picker-months--${isDesktopViewport && desktopLayout.monthCount === 2 ? 'double' : 'single'}`}>
+          <CalendarMonth monthStart={visibleMonth} timezone={timezone} dateRange={dateRange} onSelectDate={handleSelectDate} />
+          {isDesktopViewport && desktopLayout.monthCount === 2 ? <CalendarMonth monthStart={nextMonth} timezone={timezone} dateRange={dateRange} onSelectDate={handleSelectDate} /> : null}
+        </div>
+
+        <div className="admin-history-picker-nav">
+          <button type="button" className="btn btn--ghost" onClick={() => setVisibleMonth(new Date(visibleMonth.getFullYear(), visibleMonth.getMonth() - 1, 1))}>Previous month</button>
+          <button type="button" className="btn btn--ghost" onClick={() => setVisibleMonth(new Date(visibleMonth.getFullYear(), visibleMonth.getMonth() + 1, 1))}>Next month</button>
+        </div>
+
+        <div className="admin-history-picker-actions">
+          <button type="button" className="btn btn--ghost" onClick={handleClear}>Clear dates</button>
+          <button type="button" className="btn btn--secondary" onClick={() => setIsOpen(false)}>Close</button>
+        </div>
+      </div>
+    </>
+  ) : null;
+
 
   return (
     <div className="admin-history-date-filter-wrap">
@@ -269,37 +306,7 @@ export default function HistoryDateRangePicker({ dateRange, isMobileViewport, ti
           ×
         </button>
       ) : null}
-
-      {isOpen ? (
-        <>
-          {isMobileViewport ? <button type="button" className="admin-history-dialog-backdrop" aria-label="Close date range picker" onClick={() => setIsOpen(false)} /> : null}
-          <div
-            ref={contentRef}
-            className={`admin-history-date-picker admin-history-date-picker--${isDesktopViewport ? 'desktop' : 'mobile'}`}
-            role="dialog"
-            aria-label="Choose history date range"
-            style={isDesktopViewport ? { left: `${desktopLayout.left}px`, top: `${desktopLayout.top}px`, maxWidth: `${desktopLayout.maxWidth}px` } : undefined}
-          >
-            <div className="admin-history-picker-summary">
-              <p>{historyDateRangeLabel || 'Select a start and end date'}</p>
-            </div>
-            <div className={`admin-history-picker-months admin-history-picker-months--${isDesktopViewport && desktopLayout.monthCount === 2 ? 'double' : 'single'}`}>
-              <CalendarMonth monthStart={visibleMonth} timezone={timezone} dateRange={dateRange} onSelectDate={handleSelectDate} />
-              {isDesktopViewport && desktopLayout.monthCount === 2 ? <CalendarMonth monthStart={nextMonth} timezone={timezone} dateRange={dateRange} onSelectDate={handleSelectDate} /> : null}
-            </div>
-
-            <div className="admin-history-picker-nav">
-              <button type="button" className="btn btn--ghost" onClick={() => setVisibleMonth(new Date(visibleMonth.getFullYear(), visibleMonth.getMonth() - 1, 1))}>Previous month</button>
-              <button type="button" className="btn btn--ghost" onClick={() => setVisibleMonth(new Date(visibleMonth.getFullYear(), visibleMonth.getMonth() + 1, 1))}>Next month</button>
-            </div>
-
-            <div className="admin-history-picker-actions">
-              <button type="button" className="btn btn--ghost" onClick={handleClear}>Clear dates</button>
-              <button type="button" className="btn btn--secondary" onClick={() => setIsOpen(false)}>Close</button>
-            </div>
-          </div>
-        </>
-      ) : null}
+      {isMounted && typeof document !== 'undefined' ? createPortal(popoverContent, document.body) : popoverContent}
     </div>
   );
 }
