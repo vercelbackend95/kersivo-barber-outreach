@@ -1400,6 +1400,7 @@
   position: sticky;
   top: 0;
   z-index: 20;
+    min-height: 3.25rem;
   display: flex;
   align-items: center;
   justify-content: space-between;
@@ -1498,6 +1499,7 @@
 .admin-main-content {
   min-width: 0;
   width: 100%;
+    --admin-mobile-header-h: 0px;
 }
 
 .admin-mobile-edge {
@@ -1896,17 +1898,30 @@
 
 .admin-products-panel {
   gap: var(--space-sm);
+    min-height: 0;
 }
 
 .admin-products-toolbar-sticky {
   position: sticky;
-  top: var(--admin-products-sticky-top, 5.9rem);
-  z-index: 30;
-  margin-bottom: var(--space-xs);
+  top: var(--admin-products-sticky-top, calc(var(--space-sm) + var(--admin-mobile-header-h)));
+  z-index: 40;
+  margin-bottom: 0;
+
   padding-bottom: var(--space-xs);
-  background: color-mix(in srgb, var(--surface) 82%, transparent);
-  backdrop-filter: blur(10px);
-  border-bottom: 1px solid color-mix(in srgb, var(--border) 82%, transparent);
+  background: color-mix(in srgb, var(--surface) 60%, transparent);
+  backdrop-filter: blur(12px);
+  border-bottom: 1px solid color-mix(in srgb, var(--border) 86%, transparent);
+}
+
+.admin-products-scroll {
+  min-height: 0;
+  overflow: auto;
+  max-height: calc(100dvh - var(--admin-products-scroll-offset, 13rem));
+  padding-top: var(--space-xs);
+  padding-right: 0.125rem;
+  overscroll-behavior: contain;
+  -webkit-overflow-scrolling: touch;
+
 }
 
 .admin-products-toolbar {
@@ -2345,8 +2360,18 @@
     box-shadow: none;
     padding-inline: 0.5rem;
   }
+    .admin-page-wrap .admin-main-content {
+    --admin-mobile-header-h: 3.25rem;
+  }
+
+
   .admin-page-wrap .admin-products-toolbar-sticky {
-    --admin-products-sticky-top: 4.6rem;
+    --admin-products-sticky-top: calc(var(--space-sm) + var(--admin-mobile-header-h));
+  }
+
+  .admin-page-wrap .admin-products-scroll {
+    --admin-products-scroll-offset: 12.5rem;
+
   }
 
 
@@ -2399,7 +2424,12 @@
 
 @media (min-width: 48.0625rem) {
   .admin-products-toolbar-sticky {
-    --admin-products-sticky-top: 1rem;
+    --admin-products-sticky-top: var(--space-sm);
+
+  }
+  .admin-products-scroll {
+    --admin-products-scroll-offset: 10.5rem;
+
 
   }
 

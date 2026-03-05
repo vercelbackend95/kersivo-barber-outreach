@@ -1216,15 +1216,8 @@ export default function ShopAdminPanel({ initialTab = 'products' }: ShopAdminPan
 
                 <p className="admin-products-count muted">{filteredProducts.length} products • {featuredCount} featured</p>
               </div>
-              {!canReorder && productSortMode === 'manual' ? <p className="muted">Reordering is available only in All view with no search.</p> : null}
-
             </div>
-            {!canReorder && productSortMode === 'manual' ? <p className="muted">Reordering is available only in All view with no search.</p> : null}
           </div>
-
-
-          {error ? <p className="admin-inline-error">{error}</p> : null}
-          {success ? <p className="admin-inline-success">{success}</p> : null}
 
           {formOpen ? (
             <div className="admin-product-sheet-backdrop" onClick={resetForm}>
@@ -1304,18 +1297,23 @@ export default function ShopAdminPanel({ initialTab = 'products' }: ShopAdminPan
 
           ) : null}
 
-          <div className="admin-products-cards">
-            {filteredProducts.length === 0 ? (
-              <article className="admin-product-card"><p>No products yet.</p></article>
-                          ) : filteredProducts.map((product, index) => {
-              const isSavingCard = Boolean(productSavingById[product.id]);
-                            const isFirstItem = index === 0;
-              const isLastItem = index === filteredProducts.length - 1;
+          <div className="admin-products-scroll" role="region" aria-label="Products list">
+            {error ? <p className="admin-inline-error">{error}</p> : null}
+            {success ? <p className="admin-inline-success">{success}</p> : null}
 
-              return (
-                <article
-                  key={product.id}
-                  className="admin-product-card"
+            <div className="admin-products-cards">
+              {filteredProducts.length === 0 ? (
+                <article className="admin-product-card"><p>No products yet.</p></article>
+                            ) : filteredProducts.map((product, index) => {
+                const isSavingCard = Boolean(productSavingById[product.id]);
+                              const isFirstItem = index === 0;
+                const isLastItem = index === filteredProducts.length - 1;
+
+
+                return (
+                  <article
+                    key={product.id}
+                    className="admin-product-card"
 
                 >
                   <div className="admin-product-card-main">
@@ -1378,15 +1376,15 @@ export default function ShopAdminPanel({ initialTab = 'products' }: ShopAdminPan
                     <span className="admin-product-saving muted">{isSavingCard ? 'Saving…' : (productStatusById[product.id] || '')}</span>
                   </div>
                 </article>
-              );
-            })}
-            <article className="admin-product-card admin-product-card--add">
-              <button type="button" className="admin-product-add-btn" onClick={startCreate}>
-                <span className="admin-product-add-icon" aria-hidden="true">+</span>
-                <span>Add product</span>
-              </button>
-            </article>
-
+                );
+              })}
+              <article className="admin-product-card admin-product-card--add">
+                <button type="button" className="admin-product-add-btn" onClick={startCreate}>
+                  <span className="admin-product-add-icon" aria-hidden="true">+</span>
+                  <span>Add product</span>
+                </button>
+              </article>
+            </div>
 
           </div>
         </div>
