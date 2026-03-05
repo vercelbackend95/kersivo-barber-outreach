@@ -22,7 +22,19 @@ type CalendarMonthProps = {
 };
 
 const WEEKDAY_LABELS = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
-const VIEWPORT_PADDING_PX = 12;
+const VIEWPORT_PADDING_PX = 16;
+const DESKTOP_BREAKPOINT_QUERY = '(min-width: 48rem)';
+const DESKTOP_SIDE_OFFSET_PX = 8;
+const DESKTOP_MAX_WIDTH_VW_OFFSET_PX = 64;
+const DESKTOP_SINGLE_MONTH_MIN_WIDTH_PX = 680;
+
+type DesktopPopoverLayout = {
+  left: number;
+  top: number;
+  maxWidth: number;
+  monthCount: 1 | 2;
+};
+
 
 function getMonthStart(date: Date) {
   return new Date(date.getFullYear(), date.getMonth(), 1);
@@ -109,7 +121,18 @@ export default function HistoryDateRangePicker({ dateRange, isMobileViewport, ti
   const [visibleMonth, setVisibleMonth] = useState(() => getMonthStart(dateRange?.from ?? new Date()));
   const triggerRef = useRef<HTMLButtonElement | null>(null);
   const contentRef = useRef<HTMLDivElement | null>(null);
-  const [desktopPosition, setDesktopPosition] = useState<{ left: number; top: number }>({ left: VIEWPORT_PADDING_PX, top: 64 });
+  const [desktopLayout, setDesktopLayout] = useState<DesktopPopoverLayout>({
+    left: VIEWPORT_PADDING_PX,
+    top: 64,
+    maxWidth: 720,
+    monthCount: 2,
+  });
+
+  const isDesktopViewport = useMemo(() => {
+    if (typeof window === 'undefined') return !isMobileViewport;
+    return window.matchMedia(DESKTOP_BREAKPOINT_QUERY).matches && !isMobileViewport;
+  }, [isMobileViewport]);
+
 
   const historyDateRangeLabel = useMemo(() => {
     if (!dateRange?.from || !dateRange?.to) return '';
@@ -121,15 +144,39 @@ export default function HistoryDateRangePicker({ dateRange, isMobileViewport, ti
     const updatePosition = () => {
       const trigger = triggerRef.current;
       const content = contentRef.current;
-      if (!trigger || !content || isMobileViewport) return;
+      if (!trigger || !content || !isDesktopViewport) return;
 
       const triggerRect = trigger.getBoundingClientRect();
+            const boundaryRect = trigger.closest('.admin-history-filters')?.getBoundingClientRect();
+      const boundaryLeft = Math.max(VIEWPORT_PADDING_PX, boundaryRect?.left ?? VIEWPORT_PADDING_PX);
+      const boundaryRight = Math.min(window.innerWidth - VIEWPORT_PADDING_PX, boundaryRect?.right ?? window.innerWidth - VIEWPORT_PADDING_PX);
+      const boundaryTop = Math.max(VIEWPORT_PADDING_PX, boundaryRect?.top ?? VIEWPORT_PADDING_PX);
+      const boundaryBottom = Math.min(window.innerHeight - VIEWPORT_PADDING_PX, boundaryRect?.bottom ?? window.innerHeight - VIEWPORT_PADDING_PX);
+      const availableWidth = Math.max(0, boundaryRight - boundaryLeft);
+      const maxWidth = Math.min(720, window.innerWidth - DESKTOP_MAX_WIDTH_VW_OFFSET_PX, availableWidth);
+      const monthCount: 1 | 2 = maxWidth >= DESKTOP_SINGLE_MONTH_MIN_WIDTH_PX ? 2 : 1;
+
+      content.style.maxWidth = `${Math.max(320, maxWidth)}px`;
+
       const contentRect = content.getBoundingClientRect();
-      const idealLeft = triggerRect.right - contentRect.width;
-      const maxLeft = window.innerWidth - contentRect.width - VIEWPORT_PADDING_PX;
-      const left = Math.min(Math.max(idealLeft, VIEWPORT_PADDING_PX), Math.max(VIEWPORT_PADDING_PX, maxLeft));
-      const top = Math.max(VIEWPORT_PADDING_PX, triggerRect.bottom + 8);
-      setDesktopPosition({ left, top });
+
+      const leftPlacementLeft = triggerRect.left - contentRect.width - DESKTOP_SIDE_OFFSET_PX;
+      const bottomPlacementLeft = triggerRect.right - contentRect.width;
+      const bottomPlacementTop = triggerRect.bottom + DESKTOP_SIDE_OFFSET_PX;
+
+      const canPlaceLeft = leftPlacementLeft >= boundaryLeft;
+
+      const desiredLeft = canPlaceLeft ? leftPlacementLeft : bottomPlacementLeft;
+      const desiredTop = canPlaceLeft ? triggerRect.top : bottomPlacementTop;
+
+      const maxLeft = Math.max(boundaryLeft, boundaryRight - contentRect.width);
+      const maxTop = Math.max(boundaryTop, boundaryBottom - contentRect.height);
+
+      const left = Math.min(Math.max(desiredLeft, boundaryLeft), maxLeft);
+      const top = Math.min(Math.max(desiredTop, boundaryTop), maxTop);
+
+      setDesktopLayout({ left, top, maxWidth: Math.max(320, maxWidth), monthCount });
+
     };
 
     updatePosition();
@@ -139,7 +186,7 @@ export default function HistoryDateRangePicker({ dateRange, isMobileViewport, ti
       window.removeEventListener('resize', updatePosition);
       window.removeEventListener('scroll', updatePosition, true);
     };
-  }, [isOpen, isMobileViewport]);
+  }, [isDesktopViewport, isOpen]);
 
   useEffect(() => {
     if (!isOpen) return;
@@ -228,18 +275,17 @@ export default function HistoryDateRangePicker({ dateRange, isMobileViewport, ti
           {isMobileViewport ? <button type="button" className="admin-history-dialog-backdrop" aria-label="Close date range picker" onClick={() => setIsOpen(false)} /> : null}
           <div
             ref={contentRef}
-            className={`admin-history-date-picker admin-history-date-picker--${isMobileViewport ? 'mobile' : 'desktop'}`}
+            className={`admin-history-date-picker admin-history-date-picker--${isDesktopViewport ? 'desktop' : 'mobile'}`}
             role="dialog"
             aria-label="Choose history date range"
-            style={isMobileViewport ? undefined : { left: `${desktopPosition.left}px`, top: `${desktopPosition.top}px` }}
+            style={isDesktopViewport ? { left: `${desktopLayout.left}px`, top: `${desktopLayout.top}px`, maxWidth: `${desktopLayout.maxWidth}px` } : undefined}
           >
             <div className="admin-history-picker-summary">
               <p>{historyDateRangeLabel || 'Select a start and end date'}</p>
             </div>
-
-            <div className={`admin-history-picker-months admin-history-picker-months--${isMobileViewport ? 'single' : 'double'}`}>
+            <div className={`admin-history-picker-months admin-history-picker-months--${isDesktopViewport && desktopLayout.monthCount === 2 ? 'double' : 'single'}`}>
               <CalendarMonth monthStart={visibleMonth} timezone={timezone} dateRange={dateRange} onSelectDate={handleSelectDate} />
-              {!isMobileViewport ? <CalendarMonth monthStart={nextMonth} timezone={timezone} dateRange={dateRange} onSelectDate={handleSelectDate} /> : null}
+              {isDesktopViewport && desktopLayout.monthCount === 2 ? <CalendarMonth monthStart={nextMonth} timezone={timezone} dateRange={dateRange} onSelectDate={handleSelectDate} /> : null}
             </div>
 
             <div className="admin-history-picker-nav">

@@ -1199,11 +1199,11 @@
 .admin-history-date-picker {
   position: fixed;
   z-index: 70;
-  width: min(92vw, 22.5rem);
-  max-width: min(92vw, 22.5rem);
+  width: auto;
+  max-width: min(720px, calc(100vw - 64px));
   max-height: min(88vh, 42rem);
-  overflow: auto;
-
+  overflow-x: hidden;
+  overflow-y: auto;
   border: 1px solid var(--border);
   background: var(--surface);
   padding: var(--space-xs);
@@ -1216,6 +1216,9 @@
 }
 
 .admin-history-date-picker--mobile {
+    width: min(92vw, 22.5rem);
+  max-width: min(92vw, 22.5rem);
+
   left: 50%;
   top: 50%;
   transform: translate(-50%, -50%);
