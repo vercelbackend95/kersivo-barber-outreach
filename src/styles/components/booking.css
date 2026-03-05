@@ -1566,6 +1566,38 @@
     top: var(--space-sm);
     min-height: calc(100dvh - (var(--space-sm) * 2));
   }
+  
+  .admin-bookings-table {
+    width: 100%;
+    table-layout: fixed;
+  }
+
+  .admin-bookings-table .col-email {
+    width: 18ch;
+  }
+
+  .admin-bookings-table th:nth-child(2),
+  .admin-bookings-table td:nth-child(2) {
+    width: 18ch;
+    max-width: 18ch;
+  }
+
+  .admin-table-col-email {
+    max-width: 18ch;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  .admin-email-desktop {
+    display: inline-block;
+    max-width: 100%;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    vertical-align: bottom;
+  }
+
 }
 
   .admin-table {
@@ -1573,8 +1605,10 @@
   }
 
   .admin-table-col-email {
-    max-width: 14rem;
+    max-width: 18ch;
     white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
 
   }
 
@@ -1614,7 +1648,13 @@
   height: 1rem;
 }
 .admin-email-desktop {
-  display: inline;
+  display: inline-block;
+  max-width: 100%;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  vertical-align: bottom;
+
 }
 .admin-service-desktop {
   display: inline;
