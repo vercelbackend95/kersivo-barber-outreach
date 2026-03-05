@@ -134,7 +134,7 @@ export default function HistoryDateRangePicker({ dateRange, isMobileViewport, ti
     if (typeof window === 'undefined') return !isMobileViewport;
     return window.matchMedia(DESKTOP_BREAKPOINT_QUERY).matches && !isMobileViewport;
   }, [isMobileViewport]);
-
+  const isMobileModal = isOpen && !isDesktopViewport;
 
   const historyDateRangeLabel = useMemo(() => {
     if (!dateRange?.from || !dateRange?.to) return '';
@@ -193,6 +193,17 @@ export default function HistoryDateRangePicker({ dateRange, isMobileViewport, ti
       window.removeEventListener('scroll', updatePosition, true);
     };
   }, [isDesktopViewport, isOpen]);
+  useEffect(() => {
+    if (!isMobileModal || typeof document === 'undefined') return;
+
+    const previousOverflow = document.body.style.overflow;
+    document.body.style.overflow = 'hidden';
+
+    return () => {
+      document.body.style.overflow = previousOverflow;
+    };
+  }, [isMobileModal]);
+
 
   useEffect(() => {
     if (!isOpen) return;
@@ -259,17 +270,18 @@ export default function HistoryDateRangePicker({ dateRange, isMobileViewport, ti
         aria-label="Choose history date range"
         style={isDesktopViewport ? { left: `${desktopLayout.left}px`, top: `${desktopLayout.top}px`, maxWidth: `${desktopLayout.maxWidth}px` } : undefined}
       >
-        <div className="admin-history-picker-summary">
-          <p>{historyDateRangeLabel || 'Select a start and end date'}</p>
-        </div>
-        <div className={`admin-history-picker-months admin-history-picker-months--${isDesktopViewport && desktopLayout.monthCount === 2 ? 'double' : 'single'}`}>
-          <CalendarMonth monthStart={visibleMonth} timezone={timezone} dateRange={dateRange} onSelectDate={handleSelectDate} />
-          {isDesktopViewport && desktopLayout.monthCount === 2 ? <CalendarMonth monthStart={nextMonth} timezone={timezone} dateRange={dateRange} onSelectDate={handleSelectDate} /> : null}
-        </div>
-
-        <div className="admin-history-picker-nav">
-          <button type="button" className="btn btn--ghost" onClick={() => setVisibleMonth(new Date(visibleMonth.getFullYear(), visibleMonth.getMonth() - 1, 1))}>Previous month</button>
-          <button type="button" className="btn btn--ghost" onClick={() => setVisibleMonth(new Date(visibleMonth.getFullYear(), visibleMonth.getMonth() + 1, 1))}>Next month</button>
+        <div className="admin-history-picker-scroll-region">
+          <div className="admin-history-picker-summary">
+            <p>{historyDateRangeLabel || 'Select a start and end date'}</p>
+          </div>
+          <div className={`admin-history-picker-months admin-history-picker-months--${isDesktopViewport && desktopLayout.monthCount === 2 ? 'double' : 'single'}`}>
+            <CalendarMonth monthStart={visibleMonth} timezone={timezone} dateRange={dateRange} onSelectDate={handleSelectDate} />
+            {isDesktopViewport && desktopLayout.monthCount === 2 ? <CalendarMonth monthStart={nextMonth} timezone={timezone} dateRange={dateRange} onSelectDate={handleSelectDate} /> : null}
+          </div>
+          <div className="admin-history-picker-nav">
+            <button type="button" className="btn btn--ghost" onClick={() => setVisibleMonth(new Date(visibleMonth.getFullYear(), visibleMonth.getMonth() - 1, 1))}>Previous month</button>
+            <button type="button" className="btn btn--ghost" onClick={() => setVisibleMonth(new Date(visibleMonth.getFullYear(), visibleMonth.getMonth() + 1, 1))}>Next month</button>
+          </div>
         </div>
 
         <div className="admin-history-picker-actions">

@@ -1202,23 +1202,30 @@
   width: auto;
   max-width: min(720px, calc(100vw - 64px));
   max-height: min(88vh, 42rem);
-  overflow-x: hidden;
-  overflow-y: auto;
+  overflow: hidden;
   border: 1px solid var(--border);
   background: var(--surface);
   padding: var(--space-xs);
   display: grid;
     gap: 0.5rem;
-    }
+}
+
+.admin-history-picker-scroll-region {
+  display: grid;
+  gap: 0.5rem;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  -webkit-overflow-scrolling: touch;
+}
+
 
 .admin-history-date-picker--desktop {
   box-shadow: 0 12px 24px color-mix(in srgb, var(--bg) 75%, transparent);
 }
 
 .admin-history-date-picker--mobile {
-    width: min(92vw, 22.5rem);
+  width: min(92vw, 22.5rem);
   max-width: min(92vw, 22.5rem);
-
   left: 50%;
   top: 50%;
   transform: translate(-50%, -50%);
@@ -1304,6 +1311,15 @@
   justify-content: space-between;
   gap: 0.4rem;
 }
+.admin-history-picker-actions {
+  position: sticky;
+  bottom: 0;
+  z-index: 1;
+  padding-top: 0.4rem;
+  padding-bottom: max(0.4rem, env(safe-area-inset-bottom));
+  background: var(--surface);
+}
+
 
 .admin-history-picker-nav .btn,
 .admin-history-picker-actions .btn {
@@ -1320,6 +1336,31 @@
 
   .admin-history-date-picker {
     z-index: 9999;
+        left: 12px;
+    right: 12px;
+    top: 12px;
+    bottom: 12px;
+    transform: none;
+    width: auto;
+    max-width: none;
+    max-height: calc(100dvh - 24px);
+    padding-bottom: 0;
+  }
+
+  .admin-history-date-picker--mobile {
+    left: 12px;
+    right: 12px;
+    top: 12px;
+    bottom: 12px;
+    transform: none;
+    width: auto;
+    max-width: none;
+    max-height: calc(100dvh - 24px);
+  }
+
+  .admin-history-picker-scroll-region {
+    padding-bottom: 0.25rem;
+
   }
 
 }
