@@ -1898,14 +1898,23 @@
   gap: var(--space-sm);
 }
 
-.admin-products-toolbar {
+.admin-products-toolbar-sticky {
   position: sticky;
-  top: 5.9rem;
-  z-index: 25;
+  top: var(--admin-products-sticky-top, 5.9rem);
+  z-index: 30;
+  margin-bottom: var(--space-xs);
+  padding-bottom: var(--space-xs);
+  background: color-mix(in srgb, var(--surface) 82%, transparent);
+  backdrop-filter: blur(10px);
+  border-bottom: 1px solid color-mix(in srgb, var(--border) 82%, transparent);
+}
+
+.admin-products-toolbar {
+
   display: grid;
   gap: var(--space-xs);
   border: 1px solid var(--border);
-  background: var(--surface);
+  background: color-mix(in srgb, var(--surface) 92%, transparent);
   padding: var(--space-sm);
   box-shadow: 0 0.6rem 1.5rem color-mix(in srgb, var(--bg) 70%, transparent);
 }
@@ -2027,12 +2036,25 @@
   color: var(--fg);
 }
 
-.admin-product-switch:focus-visible {
+.admin-product-switch__control {
+  min-width: 2.8rem;
+  min-height: 2.8rem;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  color: inherit;
+}
+
+.admin-product-switch__control:focus-visible {
+
   outline: 2px solid var(--focus);
   outline-offset: 2px;
 }
 
-.admin-product-switch:disabled {
+.admin-product-switch__control:disabled {
   opacity: 0.55;
   cursor: not-allowed;
 }
@@ -2089,16 +2111,15 @@
   transition: transform 140ms ease, background 140ms ease;
 }
 
-.admin-product-switch.is-on .admin-product-switch__thumb {
+.admin-product-switch__control.is-on .admin-product-switch__thumb {
   transform: translateX(1rem);
 
 }
 
-.admin-product-switch.is-on[data-tone="active"] .admin-product-switch__thumb {
+.admin-product-switch[data-tone="active"] .admin-product-switch__control.is-on .admin-product-switch__thumb {
   background: var(--status-confirmed);
 }
-
-.admin-product-switch.is-on[data-tone="featured"] .admin-product-switch__thumb {
+.admin-product-switch[data-tone="featured"] .admin-product-switch__control.is-on .admin-product-switch__thumb {
   background: var(--status-pending);
 
 
@@ -2320,11 +2341,14 @@
   }
 
   .admin-page-wrap .admin-products-toolbar {
-    top: 4.6rem;
     border-inline: 0;
     box-shadow: none;
     padding-inline: 0.5rem;
   }
+  .admin-page-wrap .admin-products-toolbar-sticky {
+    --admin-products-sticky-top: 4.6rem;
+  }
+
 
   .admin-page-wrap .admin-products-toolbar-top {
     grid-template-columns: 1fr;
@@ -2374,8 +2398,9 @@
 
 
 @media (min-width: 48.0625rem) {
-  .admin-products-toolbar {
-    top: 1rem;
+  .admin-products-toolbar-sticky {
+    --admin-products-sticky-top: 1rem;
+
   }
 
   .admin-products-toolbar-top {

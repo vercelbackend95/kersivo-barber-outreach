@@ -290,16 +290,7 @@ function ProductStatusSwitch({
 }: ProductStatusSwitchProps) {
   const statusLabel = checked ? onLabel : offLabel;
   return (
-    <button
-      type="button"
-      className={`admin-product-switch ${checked ? 'is-on' : ''}`}
-      data-tone={tone}
-      role="switch"
-      aria-checked={checked}
-      aria-label={`${label}: ${statusLabel}`}
-      disabled={disabled}
-      onClick={() => onChange(!checked)}
-    >
+    <div className="admin-product-switch" data-tone={tone}>
       <span className="admin-product-switch__copy">
         <span className="admin-product-switch__label">{label}</span>
         <span className="admin-product-switch__status">
@@ -307,10 +298,20 @@ function ProductStatusSwitch({
           {statusLabel}
         </span>
       </span>
-      <span className="admin-product-switch__track" aria-hidden="true">
-        <span className="admin-product-switch__thumb" />
-      </span>
-    </button>
+      <button
+        type="button"
+        className={`admin-product-switch__control ${checked ? 'is-on' : ''}`}
+        role="switch"
+        aria-checked={checked}
+        aria-label={`${label}: ${statusLabel}`}
+        disabled={disabled}
+        onClick={() => onChange(!checked)}
+      >
+        <span className="admin-product-switch__track" aria-hidden="true">
+          <span className="admin-product-switch__thumb" />
+        </span>
+      </button>
+    </div>
   );
 }
 
@@ -1178,39 +1179,45 @@ export default function ShopAdminPanel({ initialTab = 'products' }: ShopAdminPan
 
       {activeTab === 'products' && (
         <div className="admin-reports admin-products-panel">
-          <div className="admin-products-toolbar">
-            <div className="admin-products-toolbar-top">
-              <input
-                value={productSearch}
-                onChange={(event) => setProductSearch(event.target.value)}
-                type="search"
-                className="admin-products-search"
-                placeholder="Search products"
-                aria-label="Search products"
-              />
+          <div className="admin-products-toolbar-sticky">
+            <div className="admin-products-toolbar">
+              <div className="admin-products-toolbar-top">
+                <input
+                  value={productSearch}
+                  onChange={(event) => setProductSearch(event.target.value)}
+                  type="search"
+                  className="admin-products-search"
+                  placeholder="Search products"
+                  aria-label="Search products"
+                />
 
-            </div>
-            <div className="admin-products-toolbar-row">
-              <div className="admin-products-filters" role="tablist" aria-label="Product filters">
-                {(['all', 'active', 'inactive', 'featured'] as ProductFilter[]).map((filter) => (
-                  <button
-                    key={filter}
-                    type="button"
-                    className={`admin-filter-tab ${productFilter === filter ? 'admin-filter-tab--active' : ''}`}
-                    onClick={() => setProductFilter(filter)}
-                  >
-                    {filter === 'all' ? 'All' : filter === 'active' ? 'Active' : filter === 'inactive' ? 'Inactive' : 'Featured'}
-                  </button>
-                ))}
+
+
               </div>
-                            <select value={productSortMode} onChange={(event) => setProductSortMode(event.target.value as ProductSortMode)} className="admin-products-sort" aria-label="Sort products">
-                <option value="manual">Manual order</option>
-                <option value="newest">Newest</option>
-                <option value="price">Price</option>
-                <option value="name">Name</option>
-              </select>
+              <div className="admin-products-toolbar-row">
+                <div className="admin-products-filters" role="tablist" aria-label="Product filters">
+                  {(['all', 'active', 'inactive', 'featured'] as ProductFilter[]).map((filter) => (
+                    <button
+                      key={filter}
+                      type="button"
+                      className={`admin-filter-tab ${productFilter === filter ? 'admin-filter-tab--active' : ''}`}
+                      onClick={() => setProductFilter(filter)}
+                    >
+                      {filter === 'all' ? 'All' : filter === 'active' ? 'Active' : filter === 'inactive' ? 'Inactive' : 'Featured'}
+                    </button>
+                  ))}
+                </div>
+                              <select value={productSortMode} onChange={(event) => setProductSortMode(event.target.value as ProductSortMode)} className="admin-products-sort" aria-label="Sort products">
+                  <option value="manual">Manual order</option>
+                  <option value="newest">Newest</option>
+                  <option value="price">Price</option>
+                  <option value="name">Name</option>
+                </select>
 
-              <p className="admin-products-count muted">{filteredProducts.length} products • {featuredCount} featured</p>
+                <p className="admin-products-count muted">{filteredProducts.length} products • {featuredCount} featured</p>
+              </div>
+              {!canReorder && productSortMode === 'manual' ? <p className="muted">Reordering is available only in All view with no search.</p> : null}
+
             </div>
             {!canReorder && productSortMode === 'manual' ? <p className="muted">Reordering is available only in All view with no search.</p> : null}
           </div>
