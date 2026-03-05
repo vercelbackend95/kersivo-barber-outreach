@@ -36,15 +36,6 @@ type ReportBookingRow = {
   computedValueGbp: number | null;
 };
 
-type BarberRankingRow = {
-  barberId: string;
-  barberName: string;
-  bookings: number;
-  revenue: number;
-  cancelledRate: number;
-  utilizationPct: number | null;
-};
-
 
 
 const BOOKED_STATUSES = new Set<BookingStatus>([BookingStatus.CONFIRMED, BookingStatus.RESCHEDULED]);
@@ -485,24 +476,6 @@ async function computeMetrics(shopId: string, range: RangeBoundaries, selectedBa
   };
 }
 
-async function getBarberRanking(shopId: string, range: RangeBoundaries): Promise<BarberRankingRow[]> {
-  const barbers = await prisma.barber.findMany({ where: { active: true }, select: { id: true, name: true } });
-
-  const ranking = await Promise.all(barbers.map(async (barber) => {
-    const metrics = await computeMetrics(shopId, range, barber.id, '30d');
-    return {
-      barberId: barber.id,
-      barberName: barber.name,
-      bookings: metrics.bookingsCount,
-      revenue: metrics.revenue,
-      cancelledRate: metrics.cancelledRate,
-      utilizationPct: metrics.utilizationPct
-    };
-  }));
-
-  return ranking.filter((row) => row.bookings > 0 || row.revenue > 0).sort((a, b) => b.bookings - a.bookings);
-}
-
 
 
 export const GET: APIRoute = async (ctx) => {
@@ -523,25 +496,16 @@ export const GET: APIRoute = async (ctx) => {
   const selectedRange = getReportsRange(range);
   const previousRange = getPreviousRange(range, selectedRange);
 
-  const [selectedBarberEntity, recentBarbers, currentMetrics, previousMetrics, barberRanking] = await Promise.all([
+   const [selectedBarberEntity, recentBarbers, currentMetrics, previousMetrics] = await Promise.all([
     selectedBarberId
       ? prisma.barber.findUnique({ where: { id: selectedBarberId }, select: { id: true, name: true } })
       : Promise.resolve(null),
     getRecentBarbers(shop.id, selectedRange.from, selectedRange.to),
     computeMetrics(shop.id, selectedRange, selectedBarberId, range),
-    computeMetrics(shop.id, previousRange, selectedBarberId, range),
-    getBarberRanking(shop.id, selectedRange)
+    computeMetrics(shop.id, previousRange, selectedBarberId, range)
 
 
   ]);
-  const selectedBarberRankIndex = selectedBarberId
-    ? barberRanking.findIndex((row) => row.barberId === selectedBarberId)
-    : -1;
-
-  const rankingBookingsTotal = barberRanking.reduce((sum, row) => sum + row.bookings, 0);
-  const rankingRevenueTotal = barberRanking.reduce((sum, row) => sum + row.revenue, 0);
-  const selectedRankRow = selectedBarberRankIndex >= 0 ? barberRanking[selectedBarberRankIndex] : null;
-
 
 
   return new Response(JSON.stringify({
@@ -583,14 +547,7 @@ export const GET: APIRoute = async (ctx) => {
       utilizationPct: previousMetrics.utilizationPct,
       noShowExpiredCount: previousMetrics.breakdown.noShowExpired,
       noShowExpiredRate: previousMetrics.noShowExpiredRate
-    },
-    barberRanking,
-    selectedBarberRank: selectedRankRow ? {
-      rank: selectedBarberRankIndex + 1,
-      total: barberRanking.length,
-      bookingSharePct: rankingBookingsTotal > 0 ? (selectedRankRow.bookings / rankingBookingsTotal) * 100 : 0,
-      revenueSharePct: rankingRevenueTotal > 0 ? (selectedRankRow.revenue / rankingRevenueTotal) * 100 : 0
-    } : null
+}
 
 
   }));

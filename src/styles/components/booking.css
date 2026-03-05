@@ -4172,7 +4172,6 @@
   gap: var(--space-xs);
   flex-wrap: wrap;
 }
-.admin-reports-actions,
 .admin-chart-switcher {
   display: flex;
   gap: 0.35rem;
@@ -4192,10 +4191,7 @@
 .admin-confidence-badge.is-strong { color: var(--status-confirmed); }
 .admin-kpi-clickable { cursor: pointer; }
 .admin-kpi-sample-inline { color: var(--muted); margin-left: 0.4rem; font-size: 0.72rem; }
-.admin-reports-insights-card,
-.admin-reports-compare { border: 1px solid var(--border); background: var(--bg); padding: var(--space-sm); display: grid; gap: 0.35rem; }
-.admin-compare-list { display: grid; gap: 0.4rem; }
-.admin-compare-row { border: 1px solid var(--border); padding: 0.5rem; display: grid; grid-template-columns: repeat(2,minmax(0,1fr)); gap: 0.3rem; }
+.admin-reports-insights-card { border: 1px solid var(--border); background: var(--bg); padding: var(--space-sm); display: grid; gap: 0.35rem; }
 .admin-reports-drawer { width: min(42rem, 100% - 1rem); max-height: 85vh; overflow: auto; background: var(--surface); border: 1px solid var(--border); padding: var(--space-sm); }
 .admin-reports-drawer-list { display: grid; gap: 0.4rem; margin-top: 0.5rem; }
 .admin-revenue-chart-line.is-warning { stroke: var(--accent); }

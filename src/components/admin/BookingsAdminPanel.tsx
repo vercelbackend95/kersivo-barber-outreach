@@ -125,21 +125,7 @@ type ReportsPayload = {
 
   mostPopularService: { name: string; count: number } | null;
   busiestBarber: { name: string; count: number } | null;
-    reportBookings: ReportBookingRow[];
-  barberRanking: Array<{
-    barberId: string;
-    barberName: string;
-    bookings: number;
-    revenue: number;
-    cancelledRate: number;
-    utilizationPct: number | null;
-  }>;
-  selectedBarberRank: {
-    rank: number;
-    total: number;
-    bookingSharePct: number;
-    revenueSharePct: number;
-  } | null;
+  reportBookings: ReportBookingRow[];
 
 };
 type ReportsRange = 'week' | '7d' | '30d' | '90d' | '1y';
@@ -597,8 +583,6 @@ export default function BookingsAdminPanel({ isActive, mode, onBackToDashboard }
   const [reportsBarberId, setReportsBarberId] = useState<string | null>(null);
   const [insightsExpanded, setInsightsExpanded] = useState(false);
   const [chartMetric, setChartMetric] = useState<'revenue' | 'bookings' | 'cancelRate'>('revenue');
-  const [rankingSort, setRankingSort] = useState<'bookings' | 'revenue' | 'cancelRate' | 'utilization'>('bookings');
-  const [expandedRankingMobileId, setExpandedRankingMobileId] = useState<string | null>(null);
   const [openDrilldown, setOpenDrilldown] = useState<'bookings' | 'cancelled' | 'revenue' | 'service' | null>(null);
   const [drilldownSearch, setDrilldownSearch] = useState('');
 
@@ -1109,13 +1093,6 @@ export default function BookingsAdminPanel({ isActive, mode, onBackToDashboard }
     });
   }, [chartMetric, reports, reportsRange]);
 
-  const rankingRows = useMemo(() => {
-    const rows = [...(reports?.barberRanking ?? [])];
-    if (rankingSort === 'bookings') return rows.sort((a, b) => b.bookings - a.bookings);
-    if (rankingSort === 'revenue') return rows.sort((a, b) => b.revenue - a.revenue);
-    if (rankingSort === 'utilization') return rows.sort((a, b) => (b.utilizationPct ?? 0) - (a.utilizationPct ?? 0));
-    return rows.sort((a, b) => a.cancelledRate - b.cancelledRate);
-  }, [rankingSort, reports?.barberRanking]);
 
   const drilldownRows = useMemo(() => {
     const rows = reports?.reportBookings ?? [];
@@ -1131,45 +1108,6 @@ export default function BookingsAdminPanel({ isActive, mode, onBackToDashboard }
     if (!q) return drilldownRows;
     return drilldownRows.filter((row) => [row.clientName, row.clientEmail, row.serviceName].join(' ').toLowerCase().includes(q));
   }, [drilldownRows, drilldownSearch]);
-
-  const copySummary = useCallback(async () => {
-    if (!reports) return;
-    const cancelWord = (reports.trends.cancelledRatePp ?? 0) <= 0 ? 'improved' : 'worsened';
-    const summary = `Reports (${REPORTS_RANGE_OPTIONS.find((option) => option.value === reportsRange)?.label ?? reportsRange}, ${reportsBarberId ? reportsSelectedBarberName : 'All barbers'}):
-Bookings: ${reports.bookingsCount} (${bookingsDelta.text})
-Revenue: ${formatCurrencyGbp(reports.revenue)} (${revenueDelta.text}${reports.usedDemoPricing ? ', estimated' : ''})
-Cancelled rate: ${reports.cancelledRate.toFixed(1)}% (${cancelWord})
-Peak: ${reports.peakDay ?? '—'} ${reports.peakHour ?? ''}
-Utilization: ${reports.utilizationPct == null ? '—' : `${reports.utilizationPct.toFixed(1)}%`} (${utilizationDelta.text})`;
-    await navigator.clipboard.writeText(summary);
-  }, [bookingsDelta.text, reports, reportsBarberId, reportsRange, reportsSelectedBarberName, revenueDelta.text, utilizationDelta.text]);
-
-  const exportCsvRows = useCallback((rows: ReportBookingRow[], fileName: string) => {
-    const header = ['date/time', 'barber', 'service', 'status', 'computedValueGBP', 'client', 'email'];
-    const body = rows.map((row) => [
-      formatInTimeZone(new Date(row.startAt), ADMIN_TIMEZONE, 'yyyy-MM-dd HH:mm'),
-      row.barberName,
-      row.serviceName,
-      row.status,
-      row.computedValueGbp == null ? '' : row.computedValueGbp.toFixed(2),
-      row.clientName ?? '',
-      row.clientEmail ?? ''
-    ]);
-    const csv = [header, ...body].map((line) => line.map((item) => `"${String(item).replaceAll('\"', '\"\"')}"`).join(',')).join('\n');
-    const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
-    const url = URL.createObjectURL(blob);
-    const link = document.createElement('a');
-    link.href = url;
-    link.download = fileName;
-    link.click();
-    URL.revokeObjectURL(url);
-  }, []);
-
-  const exportMainCsv = useCallback(() => {
-    exportCsvRows(reports?.reportBookings ?? [], `reports-${reportsRange}-${reportsBarberId ?? 'all'}.csv`);
-  }, [exportCsvRows, reports?.reportBookings, reportsBarberId, reportsRange]);
-
-
 
 
   const visibleBookings = useMemo(() => {
@@ -2034,10 +1972,6 @@ Utilization: ${reports.utilizationPct == null ? '—' : `${reports.utilizationPc
         <section className="admin-reports" aria-live="polite">
           <div className="admin-reports-head">
             <h2>Reports</h2>
-            <div className="admin-reports-actions">
-              <button type="button" className="btn btn--ghost" onClick={exportMainCsv}>Export CSV</button>
-              <button type="button" className="btn btn--ghost" onClick={() => void copySummary()}>Copy summary</button>
-            </div>
           </div>
 
           <div className="admin-reports-confidence-row">
@@ -2110,18 +2044,7 @@ Utilization: ${reports.utilizationPct == null ? '—' : `${reports.utilizationPc
             <article className="admin-kpi-card admin-kpi-clickable" onClick={() => setOpenDrilldown('service')}><p className="admin-kpi-label">Most popular service</p><p className="admin-kpi-value">{reports?.mostPopularService ? `${reports.mostPopularService.name} (${reports.mostPopularService.count})` : 'No confirmed bookings'}</p></article>
             <article className="admin-kpi-card"><p className="admin-kpi-label">{reportsBarberId ? 'Selected barber' : 'Busiest barber'}</p><p className="admin-kpi-value">{reportsBarberId ? reportsSelectedBarberName : reports?.busiestBarber ? `${reports.busiestBarber.name} (${reports.busiestBarber.count})` : 'No confirmed bookings'}</p></article>
           </div>
-          
-          {!reportsBarberId ? (
-            <section className="admin-reports-compare">
-              <div className="admin-kpi-row"><h3>Compare (ALL vs Barber)</h3><div className="admin-chart-switcher">{(['bookings', 'revenue', 'cancelRate', 'utilization'] as const).map((sort) => <button type="button" key={sort} className={`admin-chart-switch ${rankingSort === sort ? 'is-active' : ''}`} onClick={() => setRankingSort(sort)}>{sort === 'cancelRate' ? 'Cancel rate' : sort.charAt(0).toUpperCase() + sort.slice(1)}</button>)}</div></div>
-              <div className="admin-compare-list">{rankingRows.map((row) => <div className="admin-compare-row" key={row.barberId}><p><strong>{row.barberName}</strong></p><p>{row.bookings} bookings</p><p>{formatCurrencyGbp(row.revenue)}</p><p>{row.cancelledRate.toFixed(1)}%</p><button type="button" className="btn btn--ghost" onClick={() => setExpandedRankingMobileId((prev) => prev === row.barberId ? null : row.barberId)}>More</button>{expandedRankingMobileId === row.barberId ? <p className="admin-kpi-note">Utilization: {row.utilizationPct == null ? '—' : `${row.utilizationPct.toFixed(1)}%`}</p> : null}</div>)}</div>
-            </section>
-          ) : (
-            <section className="admin-reports-compare"><h3>Compare (this barber)</h3><p>Rank this period: #{reports?.selectedBarberRank?.rank ?? '—'} of {reports?.selectedBarberRank?.total ?? '—'}</p><p>Share of bookings: {(reports?.selectedBarberRank?.bookingSharePct ?? 0).toFixed(1)}%</p><p>Share of revenue: {(reports?.selectedBarberRank?.revenueSharePct ?? 0).toFixed(1)}%</p></section>
-          )}
-
-          {openDrilldown ? <div className="admin-client-modal-backdrop" role="presentation" onClick={() => setOpenDrilldown(null)}><div className="admin-reports-drawer" onClick={(event) => event.stopPropagation()} role="dialog" aria-modal="true"><div className="admin-client-modal-head"><h2>Drill-down</h2><button type="button" className="btn btn--ghost" onClick={() => setOpenDrilldown(null)}>Close</button></div><input value={drilldownSearch} onChange={(event) => setDrilldownSearch(event.target.value)} placeholder="Search client/email/service" /><button type="button" className="btn btn--secondary" onClick={() => exportCsvRows(filteredDrilldownRows, `reports-drilldown-${openDrilldown}.csv`)}>Export CSV (this view)</button><div className="admin-reports-drawer-list">{filteredDrilldownRows.map((row) => <article key={row.id} className="admin-kpi-card"><p>{formatInTimeZone(new Date(row.startAt), ADMIN_TIMEZONE, 'dd MMM HH:mm')} · {row.barberName}</p><p>{row.serviceName} · {row.status}</p><p>{row.clientName ?? 'Unknown'} · {row.clientEmail ?? 'No email'}</p>{row.computedValueGbp != null ? <p>{formatCurrencyGbp(row.computedValueGbp)}</p> : null}</article>)}</div></div></div> : null}
-
+          {openDrilldown ? <div className="admin-client-modal-backdrop" role="presentation" onClick={() => setOpenDrilldown(null)}><div className="admin-reports-drawer" onClick={(event) => event.stopPropagation()} role="dialog" aria-modal="true"><div className="admin-client-modal-head"><h2>Drill-down</h2><button type="button" className="btn btn--ghost" onClick={() => setOpenDrilldown(null)}>Close</button></div><input value={drilldownSearch} onChange={(event) => setDrilldownSearch(event.target.value)} placeholder="Search client/email/service" /><div className="admin-reports-drawer-list">{filteredDrilldownRows.map((row) => <article key={row.id} className="admin-kpi-card"><p>{formatInTimeZone(new Date(row.startAt), ADMIN_TIMEZONE, 'dd MMM HH:mm')} · {row.barberName}</p><p>{row.serviceName} · {row.status}</p><p>{row.clientName ?? 'Unknown'} · {row.clientEmail ?? 'No email'}</p>{row.computedValueGbp != null ? <p>{formatCurrencyGbp(row.computedValueGbp)}</p> : null}</article>)}</div></div></div> : null}
         </section>
       )}
 
