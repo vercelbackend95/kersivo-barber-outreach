@@ -56,6 +56,12 @@ type HistoryDateRange = {
 type ReportsPayload = {
   range: ReportsRange;
   rangeBoundaries: {
+        from: string;
+    to: string;
+    tz: string;
+  };
+  previousRangeBoundaries: {
+
 
     from: string;
     to: string;
@@ -63,7 +69,30 @@ type ReportsPayload = {
   };
   bookingsCount: number;
   cancelledRate: number;
-    recentBarbers: Array<{ id: string; name: string }>;
+  revenue: number;
+  avgBookingValue: number;
+  revenueCount: number;
+  usedDemoPricing: boolean;
+  breakdown: {
+    completed: number;
+    cancelledByClient: number;
+    cancelledByShop: number;
+    noShowExpired: number;
+  };
+  peakDay: string | null;
+  peakHour: string | null;
+  bookedMinutes: number;
+  availableMinutes: number;
+  utilizationPct: number | null;
+  trends: {
+    bookingsPct: number | null;
+    cancelledRatePp: number;
+    revenuePct: number | null;
+    revenueDelta: number;
+    utilizationPp: number | null;
+  };
+  recentBarbers: Array<{ id: string; name: string }>;
+
   selectedBarber: { id: string; name: string } | null;
 
   mostPopularService: { name: string; count: number } | null;
@@ -91,6 +120,39 @@ const REPORTS_RANGE_OPTIONS: Array<{ value: ReportsRange; label: string }> = [
   { value: '90d', label: 'Last 90 days' },
   { value: '1y', label: 'Last 1 year' }
 ];
+
+
+function formatCurrencyGbp(value: number): string {
+  const rounded = Math.abs(value) >= 100 ? Math.round(value) : Math.round(value * 100) / 100;
+  return new Intl.NumberFormat('en-GB', {
+    style: 'currency',
+    currency: 'GBP',
+    minimumFractionDigits: Math.abs(rounded) >= 100 ? 0 : 2,
+    maximumFractionDigits: Math.abs(rounded) >= 100 ? 0 : 2
+  }).format(rounded);
+}
+
+function formatDurationMinutes(totalMinutes: number): string {
+  const safe = Math.max(0, Math.round(totalMinutes));
+  const hours = Math.floor(safe / 60);
+  const minutes = safe % 60;
+  if (hours <= 0) return `${minutes}m`;
+  if (minutes <= 0) return `${hours}h`;
+  return `${hours}h ${minutes}m`;
+}
+
+function formatTrend(value: number | null, unit: 'percent' | 'pp' | 'currency'): string {
+  if (value == null || Number.isNaN(value)) return '—';
+  const sign = value > 0 ? '+' : '';
+  if (unit === 'currency') return `${sign}${formatCurrencyGbp(value)}`;
+  if (unit === 'pp') return `${sign}${value.toFixed(1)}pp`;
+  return `${sign}${value.toFixed(1)}%`;
+}
+
+function getTrendDirection(value: number | null): 'up' | 'down' | 'flat' {
+  if (value == null || Math.abs(value) < 0.05) return 'flat';
+  return value > 0 ? 'up' : 'down';
+}
 
 
 const DEFAULT_ADD_BARBER_SERVICES: ServiceOption[] = [
@@ -854,6 +916,16 @@ export default function BookingsAdminPanel({ isActive, mode, onBackToDashboard }
     return reports?.selectedBarber?.name ?? 'Selected barber';
   }, [reportRecentBarbers, reports, reportsBarberId]);
 
+  const reportsBreakdownTotal = useMemo(() => {
+    if (!reports) return 0;
+    return reports.breakdown.completed + reports.breakdown.cancelledByClient + reports.breakdown.cancelledByShop + reports.breakdown.noShowExpired;
+  }, [reports]);
+
+
+  const reportsBookedVsAvailableLabel = useMemo(() => {
+    if (!reports) return '—';
+    return `Booked ${formatDurationMinutes(reports.bookedMinutes)} / Available ${formatDurationMinutes(reports.availableMinutes)}`;
+  }, [reports]);
 
 
 
@@ -1781,8 +1853,50 @@ export default function BookingsAdminPanel({ isActive, mode, onBackToDashboard }
 
           {reportsError && <p className="admin-inline-error">{reportsError}</p>}
           <div className="admin-reports-grid">
-            <article className="admin-kpi-card"><p className="admin-kpi-label">Bookings</p><p className="admin-kpi-value">{reports?.bookingsCount ?? 0}</p></article>
-            <article className="admin-kpi-card"><p className="admin-kpi-label">Cancelled rate</p><p className="admin-kpi-value">{`${(reports?.cancelledRate ?? 0).toFixed(1)}%`}</p></article>
+            <article className="admin-kpi-card">
+              <p className="admin-kpi-label">Bookings</p>
+              <p className="admin-kpi-value">{reports?.bookingsCount ?? 0}</p>
+              <p className={`admin-kpi-trend admin-kpi-trend--${getTrendDirection(reports?.trends.bookingsPct ?? null)}`}>{getTrendDirection(reports?.trends.bookingsPct ?? null) === 'up' ? '↑' : getTrendDirection(reports?.trends.bookingsPct ?? null) === 'down' ? '↓' : '→'} {formatTrend(reports?.trends.bookingsPct ?? null, 'percent')}</p>
+            </article>
+            <article className="admin-kpi-card">
+              <p className="admin-kpi-label">Revenue</p>
+              <p className="admin-kpi-value">{formatCurrencyGbp(reports?.revenue ?? 0)}</p>
+              <p className={`admin-kpi-trend admin-kpi-trend--${getTrendDirection(reports?.trends.revenuePct ?? null)}`}>{getTrendDirection(reports?.trends.revenuePct ?? null) === 'up' ? '↑' : getTrendDirection(reports?.trends.revenuePct ?? null) === 'down' ? '↓' : '→'} {formatTrend(reports?.trends.revenueDelta ?? null, 'currency')}</p>
+              {reports?.usedDemoPricing ? <p className="admin-kpi-note">Estimated (demo prices)</p> : null}
+            </article>
+            <article className="admin-kpi-card">
+              <p className="admin-kpi-label">Avg booking value</p>
+              <p className="admin-kpi-value">{formatCurrencyGbp(reports?.avgBookingValue ?? 0)}</p>
+              <p className="admin-kpi-note">From {reports?.revenueCount ?? 0} paid-status booking(s)</p>
+            </article>
+            <article className="admin-kpi-card">
+              <p className="admin-kpi-label">Utilization</p>
+              <p className="admin-kpi-value">{reports?.utilizationPct == null ? '—' : `${reports.utilizationPct.toFixed(1)}%`}</p>
+              <p className={`admin-kpi-trend admin-kpi-trend--${getTrendDirection(reports?.trends.utilizationPp ?? null)}`}>{getTrendDirection(reports?.trends.utilizationPp ?? null) === 'up' ? '↑' : getTrendDirection(reports?.trends.utilizationPp ?? null) === 'down' ? '↓' : '→'} {formatTrend(reports?.trends.utilizationPp ?? null, 'pp')}</p>
+              <p className="admin-kpi-note">{reportsBookedVsAvailableLabel}</p>
+            </article>
+
+            <article className="admin-kpi-card admin-kpi-card--wide">
+              <p className="admin-kpi-label">Cancelled rate</p>
+              <p className="admin-kpi-value">{`${(reports?.cancelledRate ?? 0).toFixed(1)}%`}</p>
+              <p className={`admin-kpi-trend admin-kpi-trend--${getTrendDirection(-(reports?.trends.cancelledRatePp ?? 0))}`}>{(reports?.trends.cancelledRatePp ?? 0) < 0 ? '↑' : (reports?.trends.cancelledRatePp ?? 0) > 0 ? '↓' : '→'} {formatTrend(reports?.trends.cancelledRatePp ?? 0, 'pp')}</p>
+              <div className="admin-reports-breakdown" role="list" aria-label="Completion breakdown">
+                <div className="admin-reports-breakdown-bar" aria-hidden="true">
+                  <span style={{ width: `${reportsBreakdownTotal ? ((reports?.breakdown.completed ?? 0) / reportsBreakdownTotal) * 100 : 0}%` }} className="is-completed" />
+                  <span style={{ width: `${reportsBreakdownTotal ? ((reports?.breakdown.cancelledByClient ?? 0) / reportsBreakdownTotal) * 100 : 0}%` }} className="is-cancel-client" />
+                  <span style={{ width: `${reportsBreakdownTotal ? ((reports?.breakdown.cancelledByShop ?? 0) / reportsBreakdownTotal) * 100 : 0}%` }} className="is-cancel-shop" />
+                  <span style={{ width: `${reportsBreakdownTotal ? ((reports?.breakdown.noShowExpired ?? 0) / reportsBreakdownTotal) * 100 : 0}%` }} className="is-no-show" />
+                </div>
+                <p className="admin-breakdown-row"><span>Completed/confirmed</span><strong>{reports?.breakdown.completed ?? 0}</strong></p>
+                <p className="admin-breakdown-row"><span>Cancelled (client)</span><strong>{reports?.breakdown.cancelledByClient ?? 0}</strong></p>
+                <p className="admin-breakdown-row"><span>Cancelled (shop)</span><strong>{reports?.breakdown.cancelledByShop ?? 0}</strong></p>
+                <p className="admin-breakdown-row"><span>No-show/expired</span><strong>{reports?.breakdown.noShowExpired ?? 0}</strong></p>
+              </div>
+            </article>
+
+            <article className="admin-kpi-card"><p className="admin-kpi-label">Peak day</p><p className="admin-kpi-value">{reports?.peakDay ?? '—'}</p></article>
+            <article className="admin-kpi-card"><p className="admin-kpi-label">Peak hour</p><p className="admin-kpi-value">{reports?.peakHour ?? '—'}</p></article>
+
             <article className="admin-kpi-card"><p className="admin-kpi-label">Most popular service</p><p className="admin-kpi-value">{reports?.mostPopularService ? `${reports.mostPopularService.name} (${reports.mostPopularService.count})` : 'No confirmed bookings'}</p></article>
             <article className="admin-kpi-card"><p className="admin-kpi-label">{reportsBarberId ? 'Selected barber' : 'Busiest barber'}</p><p className="admin-kpi-value">{reportsBarberId ? reportsSelectedBarberName : reports?.busiestBarber ? `${reports.busiestBarber.name} (${reports.busiestBarber.count})` : 'No confirmed bookings'}</p></article>
           </div>

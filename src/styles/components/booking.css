@@ -803,6 +803,12 @@
   padding: var(--space-sm);
   display: grid;
   gap: 0.3rem;
+    min-width: 0;
+}
+
+.admin-kpi-card--wide {
+  grid-column: span 1;
+
 }
 
 .admin-kpi-label {
@@ -817,12 +823,79 @@
   margin: 0;
   font-size: 1.1rem;
   font-weight: 700;
+    overflow-wrap: anywhere;
+}
+
+.admin-kpi-trend {
+  margin: 0;
+  font-size: 0.8rem;
+  color: var(--muted);
+}
+
+.admin-kpi-trend--up {
+  color: var(--accent);
+}
+
+.admin-kpi-trend--down {
+  color: var(--fg);
+}
+
+.admin-kpi-note {
+  margin: 0;
+  font-size: 0.78rem;
+  color: var(--muted);
+}
+
+.admin-reports-breakdown {
+  display: grid;
+  gap: 0.35rem;
+  margin-top: 0.25rem;
+}
+
+.admin-reports-breakdown-bar {
+  display: flex;
+  min-height: 0.5rem;
+  border: 1px solid var(--border);
+  background: var(--surface);
+}
+
+.admin-reports-breakdown-bar > span {
+  display: block;
+}
+
+.admin-reports-breakdown-bar .is-completed { background: var(--accent); }
+.admin-reports-breakdown-bar .is-cancel-client { background: color-mix(in srgb, var(--accent) 65%, var(--bg)); }
+.admin-reports-breakdown-bar .is-cancel-shop { background: color-mix(in srgb, var(--accent) 45%, var(--bg)); }
+.admin-reports-breakdown-bar .is-no-show { background: color-mix(in srgb, var(--accent) 25%, var(--bg)); }
+
+.admin-breakdown-row {
+  margin: 0;
+  display: flex;
+  justify-content: space-between;
+  gap: 0.75rem;
+  font-size: 0.82rem;
+
 }
 
 @media (min-width: 48rem) {
   .admin-reports-grid {
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
+  
+  .admin-kpi-card--wide {
+    grid-column: span 2;
+  }
+}
+
+@media (min-width: 72rem) {
+  .admin-reports-grid {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+  }
+
+  .admin-kpi-card--wide {
+    grid-column: span 2;
+  }
+
 }
 
 

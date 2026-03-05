@@ -2,15 +2,29 @@ export const prerender = false;
 
 import type { APIRoute } from 'astro';
 import { BookingStatus } from '@prisma/client';
+import { addMilliseconds, differenceInMilliseconds, subDays, subYears } from 'date-fns';
 import { formatInTimeZone, fromZonedTime, toZonedTime } from 'date-fns-tz';
 import { requireAdmin } from '../../../lib/admin/auth';
 import { prisma } from '../../../lib/db/client';
-
+import { getDemoServicePriceGbp, normalizeServiceLookupKey, parsePriceTextToGbp } from '../../../lib/admin/reportPricing';
 const ADMIN_TIMEZONE = 'Europe/London';
 
 type ReportsRange = 'week' | '7d' | '30d' | '90d' | '1y';
 
+type RangeBoundaries = { from: Date; to: Date };
+
+type Breakdown = {
+  completed: number;
+  cancelledByClient: number;
+  cancelledByShop: number;
+  noShowExpired: number;
+};
+
+const BOOKED_STATUSES = new Set<BookingStatus>([BookingStatus.CONFIRMED, BookingStatus.RESCHEDULED]);
+const REVENUE_STATUSES = new Set<BookingStatus>([BookingStatus.CONFIRMED]);
+
 function getStartOfWeekInLondon(now: Date) {
+
 
   const londonNow = toZonedTime(now, ADMIN_TIMEZONE);
   const day = londonNow.getDay();
@@ -23,19 +37,55 @@ function getStartOfWeekInLondon(now: Date) {
   return fromZonedTime(`${mondayKey}T00:00:00.000`, ADMIN_TIMEZONE);
 }
 
-function getReportsRange(range: ReportsRange) {
+function getReportsRange(range: ReportsRange): RangeBoundaries {
   const now = new Date();
   if (range === 'week') {
     return { from: getStartOfWeekInLondon(now), to: now };
   }
 
   const daysBack = range === '7d' ? 7 : range === '30d' ? 30 : range === '90d' ? 90 : 365;
+  return { from: subDays(now, daysBack), to: now };
+}
+function getPreviousRange(range: ReportsRange, current: RangeBoundaries): RangeBoundaries {
+  if (range === 'week') {
+    const currentWeekStart = getStartOfWeekInLondon(new Date());
+    const previousWeekStart = subDays(currentWeekStart, 7);
+    return { from: previousWeekStart, to: addMilliseconds(currentWeekStart, -1) };
+  }
+
+  if (range === '1y') {
+    const previousFrom = subYears(current.from, 1);
+    return { from: previousFrom, to: addMilliseconds(current.from, -1) };
+  }
+
+  const diffMs = Math.max(0, differenceInMilliseconds(current.to, current.from));
 
   return {
-    from: new Date(now.getTime() - daysBack * 24 * 60 * 60 * 1000),
-    to: now
+    from: addMilliseconds(current.from, -(diffMs + 1)),
+    to: addMilliseconds(current.from, -1)
+
   };
 }
+function minutesOfOverlap(rangeFrom: Date, rangeTo: Date, eventFrom: Date, eventTo: Date): number {
+  const fromMs = Math.max(rangeFrom.getTime(), eventFrom.getTime());
+  const toMs = Math.min(rangeTo.getTime(), eventTo.getTime());
+  if (toMs <= fromMs) return 0;
+  return Math.round((toMs - fromMs) / 60000);
+}
+
+function getRangeDayKeys(range: RangeBoundaries): string[] {
+  const keys: string[] = [];
+  let cursor = fromZonedTime(`${formatInTimeZone(range.from, ADMIN_TIMEZONE, 'yyyy-MM-dd')}T00:00:00.000`, ADMIN_TIMEZONE);
+  const rangeEndDay = fromZonedTime(`${formatInTimeZone(range.to, ADMIN_TIMEZONE, 'yyyy-MM-dd')}T23:59:59.999`, ADMIN_TIMEZONE);
+
+  while (cursor <= rangeEndDay) {
+    keys.push(formatInTimeZone(cursor, ADMIN_TIMEZONE, 'yyyy-MM-dd'));
+    cursor = addMilliseconds(cursor, 24 * 60 * 60 * 1000);
+  }
+
+  return keys;
+}
+
 
 async function getRecentBarbers(shopId: string, from: Date, to: Date) {
   const extractRecent = async (inRangeOnly: boolean) => {
@@ -73,71 +123,192 @@ async function getRecentBarbers(shopId: string, from: Date, to: Date) {
 
 }
 
-export const GET: APIRoute = async (ctx) => {
-  const unauthorized = requireAdmin(ctx);
-  if (unauthorized) return unauthorized;
+function toTrendPercent(current: number, previous: number): number | null {
+  if (previous <= 0) return null;
+  return ((current - previous) / previous) * 100;
+}
 
-  const rangeParam = ctx.url.searchParams.get('range');
-  const range = rangeParam === 'week' || rangeParam === '7d' || rangeParam === '30d' || rangeParam === '90d' || rangeParam === '1y'
-    ? rangeParam
-    : null;
 
-  if (!range) {
-    return new Response(JSON.stringify({ error: 'Invalid range.' }), { status: 400 });
+async function computeMetrics(shopId: string, range: RangeBoundaries, selectedBarberId: string | null) {
+  const whereBase = {
+    client: { shopId },
+    startAt: { gte: range.from, lte: range.to },
 
-  }
-  const selectedBarberId = ctx.url.searchParams.get('barberId') || null;
-  const shop = await prisma.shopSettings.findFirstOrThrow({ select: { id: true } });
-  const selectedRange = getReportsRange(range);
-
-  const bookingRangeWhere = {
-    startAt: { gte: selectedRange.from, lte: selectedRange.to },
-    client: { shopId: shop.id },
     ...(selectedBarberId ? { barberId: selectedBarberId } : {})
 
   };
 
-  const [totalScheduled, cancelledCount, mostPopularServiceRaw, busiestBarberRaw, selectedBarberEntity, recentBarbers] = await Promise.all([
-    prisma.booking.count({
-      where: {
-        ...bookingRangeWhere,
-        status: { in: [BookingStatus.CONFIRMED, BookingStatus.PENDING_CONFIRMATION] }
+  const [bookings, services, busiestBarberRaw, mostPopularServiceRaw, activeBarbers, timeBlocks] = await Promise.all([
+    prisma.booking.findMany({
+      where: whereBase,
+      select: {
+        status: true,
+        startAt: true,
+        endAt: true,
+        barberId: true,
+        serviceId: true,
+        service: { select: { id: true, name: true, durationMinutes: true, fromPriceText: true } }
+
       }
     }),
-    prisma.booking.count({
-      where: {
-        ...bookingRangeWhere,
-        status: { in: [BookingStatus.CANCELLED_BY_CLIENT, BookingStatus.CANCELLED_BY_SHOP] }
-      }
-    }),
-    prisma.booking.groupBy({
-      by: ['serviceId'],
-      where: {
-        ...bookingRangeWhere,
-        status: BookingStatus.CONFIRMED
-      },
-      _count: { serviceId: true },
-      orderBy: { _count: { serviceId: 'desc' } },
-      take: 1
-    }),
+    prisma.service.findMany({ select: { id: true, name: true, fromPriceText: true } }),
     selectedBarberId
       ? Promise.resolve([] as { barberId: string; _count: { barberId: number } }[])
       : prisma.booking.groupBy({
         by: ['barberId'],
-        where: {
-          ...bookingRangeWhere,
-          status: BookingStatus.CONFIRMED
-        },
+        where: { ...whereBase, status: { in: [...BOOKED_STATUSES] } },
         _count: { barberId: true },
         orderBy: { _count: { barberId: 'desc' } },
         take: 1
       }),
-    selectedBarberId
-      ? prisma.barber.findUnique({ where: { id: selectedBarberId }, select: { id: true, name: true } })
-      : Promise.resolve(null),
-    getRecentBarbers(shop.id, selectedRange.from, selectedRange.to)
+          prisma.booking.groupBy({
+      by: ['serviceId'],
+      where: { ...whereBase, status: { in: [...BOOKED_STATUSES] } },
+      _count: { serviceId: true },
+      orderBy: { _count: { serviceId: 'desc' } },
+      take: 1
+    }),
+    prisma.barber.findMany({
+      where: selectedBarberId ? { id: selectedBarberId, active: true } : { active: true },
+      select: { id: true, name: true }
+    }),
+    prisma.timeBlock.findMany({
+      where: {
+        shopId,
+        startAt: { lte: range.to },
+        endAt: { gte: range.from },
+        ...(selectedBarberId ? { OR: [{ barberId: selectedBarberId }, { barberId: null }] } : {})
+      },
+      select: { barberId: true, startAt: true, endAt: true }
+    })
+
 
   ]);
+  const activeBarberIds = activeBarbers.map((barber) => barber.id);
+  const availability = await prisma.availabilityRule.findMany({
+    where: {
+      active: true,
+      barberId: { in: activeBarberIds.length ? activeBarberIds : ['__none__'] }
+    },
+    select: { barberId: true, dayOfWeek: true, startMinutes: true, endMinutes: true, breakStartMin: true, breakEndMin: true }
+  });
+
+  const servicePriceById = new Map<string, number>();
+  for (const service of services) {
+    const dbPrice = parsePriceTextToGbp(service.fromPriceText);
+    if (dbPrice != null) servicePriceById.set(service.id, dbPrice);
+  }
+
+  let usedDemoPricing = false;
+  let revenueCount = 0;
+  let revenue = 0;
+  let bookingsCount = 0;
+  let bookedMinutes = 0;
+  const breakdown: Breakdown = { completed: 0, cancelledByClient: 0, cancelledByShop: 0, noShowExpired: 0 };
+  const weekdayCounts = new Map<string, number>();
+  const hourWindowCounts = new Map<number, number>();
+
+  for (const booking of bookings) {
+    bookingsCount += 1;
+
+    if (booking.status === BookingStatus.CANCELLED_BY_CLIENT) breakdown.cancelledByClient += 1;
+    else if (booking.status === BookingStatus.CANCELLED_BY_SHOP || booking.status === BookingStatus.CANCELLED_BY_ADMIN) breakdown.cancelledByShop += 1;
+    else if (booking.status === BookingStatus.EXPIRED) breakdown.noShowExpired += 1;
+    else if (BOOKED_STATUSES.has(booking.status)) breakdown.completed += 1;
+
+    if (BOOKED_STATUSES.has(booking.status)) {
+      const durationFromTimes = minutesOfOverlap(range.from, range.to, booking.startAt, booking.endAt);
+      const fallbackDuration = Math.max(0, booking.service?.durationMinutes ?? 0);
+      bookedMinutes += durationFromTimes > 0 ? durationFromTimes : fallbackDuration;
+
+      const weekdayKey = formatInTimeZone(booking.startAt, ADMIN_TIMEZONE, 'EEEE');
+      weekdayCounts.set(weekdayKey, (weekdayCounts.get(weekdayKey) ?? 0) + 1);
+
+      const hour = Number.parseInt(formatInTimeZone(booking.startAt, ADMIN_TIMEZONE, 'H'), 10);
+      const bucketStart = Math.floor(hour / 2) * 2;
+      hourWindowCounts.set(bucketStart, (hourWindowCounts.get(bucketStart) ?? 0) + 1);
+    }
+
+    if (!REVENUE_STATUSES.has(booking.status)) continue;
+
+    const serviceId = booking.serviceId;
+    const normalizedServiceId = normalizeServiceLookupKey(serviceId);
+    let bookingValue = servicePriceById.get(serviceId) ?? servicePriceById.get(normalizedServiceId) ?? null;
+
+    if (bookingValue == null) {
+      bookingValue = getDemoServicePriceGbp(serviceId, booking.service?.name);
+      if (bookingValue != null) usedDemoPricing = true;
+    }
+
+    if (bookingValue != null) {
+      revenue += bookingValue;
+      revenueCount += 1;
+    }
+  }
+
+  const cancelledCount = breakdown.cancelledByClient + breakdown.cancelledByShop;
+  const cancelledRate = bookingsCount > 0 ? (cancelledCount / bookingsCount) * 100 : 0;
+
+  let peakDay: string | null = null;
+  let peakDayCount = 0;
+  for (const [key, count] of weekdayCounts.entries()) {
+    if (count > peakDayCount) {
+      peakDay = key;
+      peakDayCount = count;
+    }
+  }
+
+  let peakHour: string | null = null;
+  let peakHourCount = 0;
+  for (const [startHour, count] of hourWindowCounts.entries()) {
+    if (count > peakHourCount) {
+      peakHourCount = count;
+      peakHour = `${String(startHour).padStart(2, '0')}:00–${String((startHour + 2) % 24).padStart(2, '0')}:00`;
+    }
+  }
+
+  const dayKeys = getRangeDayKeys(range);
+  const rulesByBarber = new Map<string, typeof availability>();
+  for (const rule of availability) {
+    if (!rulesByBarber.has(rule.barberId)) rulesByBarber.set(rule.barberId, []);
+    rulesByBarber.get(rule.barberId)?.push(rule);
+  }
+
+  let availableMinutes = 0;
+  for (const barberId of activeBarberIds) {
+    const rules = rulesByBarber.get(barberId) ?? [];
+
+    for (const dayKey of dayKeys) {
+      const dayDate = fromZonedTime(`${dayKey}T00:00:00.000`, ADMIN_TIMEZONE);
+      const jsDay = Number.parseInt(formatInTimeZone(dayDate, ADMIN_TIMEZONE, 'i'), 10);
+      const schemaDay = jsDay % 7;
+
+      const dayRules = rules.filter((rule) => rule.dayOfWeek === schemaDay);
+      for (const rule of dayRules) {
+        const startAt = fromZonedTime(`${dayKey}T${String(Math.floor(rule.startMinutes / 60)).padStart(2, '0')}:${String(rule.startMinutes % 60).padStart(2, '0')}:00`, ADMIN_TIMEZONE);
+        const endAt = fromZonedTime(`${dayKey}T${String(Math.floor(rule.endMinutes / 60)).padStart(2, '0')}:${String(rule.endMinutes % 60).padStart(2, '0')}:00`, ADMIN_TIMEZONE);
+
+        let slotMinutes = minutesOfOverlap(range.from, range.to, startAt, endAt);
+
+        if (rule.breakStartMin != null && rule.breakEndMin != null && rule.breakEndMin > rule.breakStartMin) {
+          const breakStart = fromZonedTime(`${dayKey}T${String(Math.floor(rule.breakStartMin / 60)).padStart(2, '0')}:${String(rule.breakStartMin % 60).padStart(2, '0')}:00`, ADMIN_TIMEZONE);
+          const breakEnd = fromZonedTime(`${dayKey}T${String(Math.floor(rule.breakEndMin / 60)).padStart(2, '0')}:${String(rule.breakEndMin % 60).padStart(2, '0')}:00`, ADMIN_TIMEZONE);
+          slotMinutes = Math.max(0, slotMinutes - minutesOfOverlap(range.from, range.to, breakStart, breakEnd));
+        }
+
+        if (slotMinutes <= 0) continue;
+
+        const blocked = timeBlocks
+          .filter((block) => block.barberId === null || block.barberId === barberId)
+          .reduce((sum, block) => sum + minutesOfOverlap(startAt, endAt, block.startAt, block.endAt), 0);
+
+        availableMinutes += Math.max(0, slotMinutes - blocked);
+      }
+    }
+  }
+
+  const utilizationPct = availableMinutes > 0 ? Math.min(100, Math.max(0, (bookedMinutes / availableMinutes) * 100)) : null;
+
 
   const mostPopularServiceTop = mostPopularServiceRaw[0];
   const busiestBarberTop = busiestBarberRaw[0];
@@ -151,8 +322,56 @@ export const GET: APIRoute = async (ctx) => {
       : Promise.resolve(null)
   ]);
 
-  const denominator = totalScheduled + cancelledCount;
-  const cancelledRate = denominator > 0 ? (cancelledCount / denominator) * 100 : 0;
+  return {
+    bookingsCount,
+    revenue,
+    revenueCount,
+    avgBookingValue: revenueCount > 0 ? revenue / revenueCount : 0,
+    usedDemoPricing,
+    cancelledRate,
+    breakdown,
+    peakDay,
+    peakHour,
+    bookedMinutes,
+    availableMinutes,
+    utilizationPct,
+    mostPopularService: mostPopularServiceTop && mostPopularServiceEntity
+      ? { name: mostPopularServiceEntity.name, count: mostPopularServiceTop._count.serviceId }
+      : null,
+    busiestBarber: busiestBarberTop && busiestBarberEntity
+      ? { name: busiestBarberEntity.name, count: busiestBarberTop._count.barberId }
+      : null
+  };
+}
+
+
+export const GET: APIRoute = async (ctx) => {
+  const unauthorized = requireAdmin(ctx);
+  if (unauthorized) return unauthorized;
+
+  const rangeParam = ctx.url.searchParams.get('range');
+  const range = rangeParam === 'week' || rangeParam === '7d' || rangeParam === '30d' || rangeParam === '90d' || rangeParam === '1y'
+    ? rangeParam
+    : null;
+
+  if (!range) {
+    return new Response(JSON.stringify({ error: 'Invalid range.' }), { status: 400 });
+  }
+
+  const selectedBarberId = ctx.url.searchParams.get('barberId') || null;
+  const shop = await prisma.shopSettings.findFirstOrThrow({ select: { id: true } });
+  const selectedRange = getReportsRange(range);
+  const previousRange = getPreviousRange(range, selectedRange);
+
+  const [selectedBarberEntity, recentBarbers, currentMetrics, previousMetrics] = await Promise.all([
+    selectedBarberId
+      ? prisma.barber.findUnique({ where: { id: selectedBarberId }, select: { id: true, name: true } })
+      : Promise.resolve(null),
+    getRecentBarbers(shop.id, selectedRange.from, selectedRange.to),
+    computeMetrics(shop.id, selectedRange, selectedBarberId),
+    computeMetrics(shop.id, previousRange, selectedBarberId)
+  ]);
+
 
   return new Response(JSON.stringify({
     range,
@@ -162,16 +381,25 @@ export const GET: APIRoute = async (ctx) => {
 
       tz: ADMIN_TIMEZONE
     },
-    bookingsCount: totalScheduled,
-    cancelledRate,
-        recentBarbers,
+    previousRangeBoundaries: {
+      from: previousRange.from.toISOString(),
+      to: previousRange.to.toISOString(),
+      tz: ADMIN_TIMEZONE
+    },
+    recentBarbers,
+
     selectedBarber: selectedBarberEntity,
 
-    mostPopularService: mostPopularServiceTop && mostPopularServiceEntity
-      ? { name: mostPopularServiceEntity.name, count: mostPopularServiceTop._count.serviceId }
-      : null,
-    busiestBarber: busiestBarberTop && busiestBarberEntity
-      ? { name: busiestBarberEntity.name, count: busiestBarberTop._count.barberId }
-      : null
+    ...currentMetrics,
+    trends: {
+      bookingsPct: toTrendPercent(currentMetrics.bookingsCount, previousMetrics.bookingsCount),
+      cancelledRatePp: currentMetrics.cancelledRate - previousMetrics.cancelledRate,
+      revenuePct: toTrendPercent(currentMetrics.revenue, previousMetrics.revenue),
+      revenueDelta: currentMetrics.revenue - previousMetrics.revenue,
+      utilizationPp: currentMetrics.utilizationPct == null || previousMetrics.utilizationPct == null
+        ? null
+        : currentMetrics.utilizationPct - previousMetrics.utilizationPct
+    }
+
   }));
 };
