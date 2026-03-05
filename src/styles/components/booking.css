@@ -790,6 +790,17 @@
   display: grid;
   gap: var(--space-sm);
 }
+.admin-reports-insight {
+  margin: -0.2rem 0 0;
+  font-size: 0.82rem;
+  color: var(--muted);
+  overflow-wrap: anywhere;
+}
+
+.admin-kpi-note--small-sample {
+  color: var(--muted);
+}
+
 
 .admin-reports-grid {
   display: grid;
@@ -873,6 +884,7 @@
   height: 84px;
   max-height: 84px;
   margin-top: var(--space-2xs);
+    overflow: hidden;
 }
 
 .admin-revenue-chart svg {
@@ -893,7 +905,13 @@
 }
 
 .admin-revenue-chart-area {
-  fill: color-mix(in srgb, var(--fg) 12%, transparent);
+  fill: color-mix(in srgb, var(--fg) 7%, transparent);
+}
+
+.admin-revenue-chart-empty {
+  fill: var(--muted);
+  font-size: 10px;
+
 }
 
 
@@ -4136,5 +4154,11 @@
 
   .admin-reports-range-tabs {
     width: 100%;
+  }
+}
+
+@media (max-width: 47.99rem) {
+  .admin-kpi-note--small-sample {
+    display: none;
   }
 }

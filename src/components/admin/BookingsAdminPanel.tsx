@@ -69,6 +69,7 @@ type ReportsPayload = {
   };
   bookingsCount: number;
   cancelledRate: number;
+    noShowExpiredRate: number;
   revenue: number;
   avgBookingValue: number;
   revenueCount: number;
@@ -90,11 +91,24 @@ type ReportsPayload = {
     cancelledRatePp: number;
     revenuePct: number | null;
     revenueDelta: number;
+        avgBookingValueDelta: number;
+    noShowExpiredCountDelta: number;
+    noShowExpiredRatePp: number;
+
     utilizationPp: number | null;
   };
   recentBarbers: Array<{ id: string; name: string }>;
 
   selectedBarber: { id: string; name: string } | null;
+  previousMetrics: {
+    bookingsCount: number;
+    cancelledRate: number;
+    revenue: number;
+    avgBookingValue: number;
+    utilizationPct: number | null;
+    noShowExpiredCount: number;
+    noShowExpiredRate: number;
+  };
 
   mostPopularService: { name: string; count: number } | null;
   busiestBarber: { name: string; count: number } | null;
@@ -151,22 +165,28 @@ function RevenueSparkline({ series }: { series: Array<{ label: string; value: nu
   const maxValue = Math.max(0, ...values);
   const minValue = 0;
   const effectiveRange = Math.max(1, maxValue - minValue);
-
+  const isEmptyRevenue = values.every((value) => value <= 0);
   const points = safeSeries.map((item, index) => {
     const x = padding + (index * (chartWidth - padding * 2)) / Math.max(1, safeSeries.length - 1);
     const y = chartHeight - padding - ((item.value - minValue) / effectiveRange) * (chartHeight - padding * 2);
     return `${x},${y}`;
   }).join(' ');
 
+  const baselineY = chartHeight - padding;
+  const areaPoints = `${padding},${baselineY} ${points} ${chartWidth - padding},${baselineY}`;
 
-  const areaPoints = `${padding},${chartHeight - padding} ${points} ${chartWidth - padding},${chartHeight - padding}`;
 
   return (
     <div className="admin-revenue-chart" role="img" aria-label="Revenue trend over selected period">
       <svg viewBox={`0 0 ${chartWidth} ${chartHeight}`} preserveAspectRatio="none" aria-hidden="true">
-        <line x1={padding} y1={chartHeight - padding} x2={chartWidth - padding} y2={chartHeight - padding} className="admin-revenue-chart-axis" />
-        <polygon points={areaPoints} className="admin-revenue-chart-area" />
-        <polyline points={points} className="admin-revenue-chart-line" />
+        <line x1={padding} y1={baselineY} x2={chartWidth - padding} y2={baselineY} className="admin-revenue-chart-axis" />
+        {isEmptyRevenue ? <text x="50%" y="50%" textAnchor="middle" dominantBaseline="middle" className="admin-revenue-chart-empty">No revenue yet</text> : (
+          <>
+            <polygon points={areaPoints} className="admin-revenue-chart-area" />
+            <polyline points={points} className="admin-revenue-chart-line" />
+          </>
+        )}
+
       </svg>
     </div>
   );
@@ -947,11 +967,61 @@ export default function BookingsAdminPanel({ isActive, mode, onBackToDashboard }
     return `Booked ${formatDurationMinutes(reports.bookedMinutes)} / Available ${formatDurationMinutes(reports.availableMinutes)}`;
   }, [reports]);
 
-  const bookingsDelta = formatDelta({ value: reports?.trends.bookingsPct ?? null, type: 'percent' });
-  const revenueDelta = formatDelta({ value: reports?.trends.revenueDelta ?? null, type: 'currency' });
-  const utilizationDelta = formatDelta({ value: reports?.trends.utilizationPp ?? null, type: 'pp' });
-  const cancelledDelta = formatDelta({ value: reports?.trends.cancelledRatePp == null ? null : -reports.trends.cancelledRatePp, type: 'pp' });
+  const bookingsDelta = formatDelta({
+    value: reports?.trends.bookingsPct ?? null,
+    type: 'percent',
+    tone: 'higher_better',
+    currentValue: reports?.bookingsCount,
+    previousValue: reports?.previousMetrics.bookingsCount
+  });
+  const revenueDelta = formatDelta({
+    value: reports?.trends.revenueDelta ?? null,
+    type: 'currency',
+    tone: 'higher_better',
+    currentValue: reports?.revenue,
+    previousValue: reports?.previousMetrics.revenue
+  });
+  const utilizationDelta = formatDelta({
+    value: reports?.trends.utilizationPp ?? null,
+    type: 'pp',
+    tone: 'higher_better',
+    currentValue: reports?.utilizationPct,
+    previousValue: reports?.previousMetrics.utilizationPct
+  });
+  const cancelledDelta = formatDelta({
+    value: reports?.trends.cancelledRatePp ?? null,
+    type: 'pp',
+    tone: 'lower_better',
+    currentValue: reports?.cancelledRate,
+    previousValue: reports?.previousMetrics.cancelledRate
+  });
+  const avgBookingValueDelta = formatDelta({
+    value: reports?.trends.avgBookingValueDelta ?? null,
+    type: 'currency',
+    tone: 'higher_better',
+    currentValue: reports?.avgBookingValue,
+    previousValue: reports?.previousMetrics.avgBookingValue
+  });
+  const noShowExpiredDelta = formatDelta({
+    value: reports?.trends.noShowExpiredRatePp ?? null,
+    type: 'pp',
+    tone: 'lower_better',
+    currentValue: reports?.noShowExpiredRate,
+    previousValue: reports?.previousMetrics.noShowExpiredRate
+  });
+
   const reportsCancelledCount = (reports?.breakdown.cancelledByClient ?? 0) + (reports?.breakdown.cancelledByShop ?? 0);
+  const isSmallSample = (reports?.bookingsCount ?? 0) > 0 && (reports?.bookingsCount ?? 0) < 10;
+  const insightText = useMemo(() => {
+    if (!reports) return 'Insight: Stable week — no major spikes.';
+    if (reports.cancelledRate >= 20 || reports.noShowExpiredRate >= 10) {
+      return 'Insight: High no-show/expired rate — consider confirmations.';
+    }
+    if (reports.peakDay && reports.peakHour) {
+      return `Insight: Peak time is ${reports.peakDay} ${reports.peakHour}.`;
+    }
+    return 'Insight: Stable week — no major spikes.';
+  }, [reports]);
 
 
   const visibleBookings = useMemo(() => {
@@ -1815,7 +1885,7 @@ export default function BookingsAdminPanel({ isActive, mode, onBackToDashboard }
       {mode === 'reports' && (
         <section className="admin-reports" aria-live="polite">
           <h2>Reports</h2>
-          <p className="muted">Europe/London</p>
+          <p className="admin-reports-insight">{insightText}</p>
 
           <div className="admin-reports-range-scroll">
             <div className="admin-reports-range-tabs" role="tablist" aria-label="Report range">
@@ -1881,6 +1951,7 @@ export default function BookingsAdminPanel({ isActive, mode, onBackToDashboard }
               <p className="admin-kpi-label">Revenue</p>
               <p className="admin-kpi-value admin-kpi-value--hero">{formatCurrencyGbp(reports?.revenue ?? 0)}</p>
               <p className={`admin-kpi-trend ${revenueDelta.className}`}>{revenueDelta.direction === 'up' ? '↑ ' : revenueDelta.direction === 'down' ? '↓ ' : ''}{revenueDelta.text}</p>
+                            {isSmallSample ? <p className="admin-kpi-note admin-kpi-note--small-sample">Small sample</p> : null}
               {reports?.usedDemoPricing ? <p className="admin-kpi-note">Estimated (demo prices)</p> : null}
               <RevenueSparkline series={reports?.revenueSeries ?? []} />
             </article>
@@ -1889,7 +1960,7 @@ export default function BookingsAdminPanel({ isActive, mode, onBackToDashboard }
               <p className="admin-kpi-label">Bookings</p>
               <p className="admin-kpi-value">{reports?.bookingsCount ?? 0}</p>
               <p className={`admin-kpi-trend ${bookingsDelta.className}`}>{bookingsDelta.direction === 'up' ? '↑ ' : bookingsDelta.direction === 'down' ? '↓ ' : ''}{bookingsDelta.text}</p>
-
+              {isSmallSample ? <p className="admin-kpi-note admin-kpi-note--small-sample">Small sample</p> : null}
             </article>
 
             <article className="admin-kpi-card admin-kpi-card--cancelled">
@@ -1912,7 +1983,10 @@ export default function BookingsAdminPanel({ isActive, mode, onBackToDashboard }
               </div>
             </article>
             <article className="admin-kpi-card admin-kpi-card--utilization"><p className="admin-kpi-label">Utilization</p><p className="admin-kpi-value">{reports?.utilizationPct == null ? '—' : `${reports.utilizationPct.toFixed(1)}%`}</p><p className={`admin-kpi-trend ${utilizationDelta.className}`}>{utilizationDelta.direction === 'up' ? '↑ ' : utilizationDelta.direction === 'down' ? '↓ ' : ''}{utilizationDelta.text}</p><p className="admin-kpi-note">{reportsBookedVsAvailableLabel}</p><p className="admin-kpi-note">{reports?.availableMinutes ? 'Based on working hours' : 'No working hours in range'}</p></article>
-            <article className="admin-kpi-card"><p className="admin-kpi-label">Avg booking value</p><p className="admin-kpi-value">{formatCurrencyGbp(reports?.avgBookingValue ?? 0)}</p><p className="admin-kpi-note">From {reports?.revenueCount ?? 0} paid-status booking(s)</p></article>
+            <article className="admin-kpi-card"><p className="admin-kpi-label">Avg booking value</p><p className="admin-kpi-value">{formatCurrencyGbp(reports?.avgBookingValue ?? 0)}</p><p className={`admin-kpi-trend ${avgBookingValueDelta.className}`}>{avgBookingValueDelta.direction === 'up' ? '↑ ' : avgBookingValueDelta.direction === 'down' ? '↓ ' : ''}{avgBookingValueDelta.text}</p><p className="admin-kpi-note">From {reports?.revenueCount ?? 0} paid-status booking(s)</p></article>
+
+            <article className="admin-kpi-card"><p className="admin-kpi-label">No-show/expired rate</p><p className="admin-kpi-value">{`${(reports?.noShowExpiredRate ?? 0).toFixed(1)}%`}</p><p className={`admin-kpi-trend ${noShowExpiredDelta.className}`}>{noShowExpiredDelta.direction === 'up' ? '↑ ' : noShowExpiredDelta.direction === 'down' ? '↓ ' : ''}{noShowExpiredDelta.text}</p><p className="admin-kpi-note">{reports?.breakdown.noShowExpired ?? 0} booking(s)</p></article>
+
 
             <article className="admin-kpi-card"><p className="admin-kpi-label">Peak day</p><p className="admin-kpi-value">{reports?.peakDay ?? '—'}</p></article>
             <article className="admin-kpi-card"><p className="admin-kpi-label">Peak hour</p><p className="admin-kpi-value">{reports?.peakHour ?? '—'}</p></article>

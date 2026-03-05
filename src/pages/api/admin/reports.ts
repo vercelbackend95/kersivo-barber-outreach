@@ -19,6 +19,7 @@ type Breakdown = {
   cancelledByShop: number;
   noShowExpired: number;
 };
+type TimeInterval = { start: Date; end: Date };
 type RevenueSeriesPoint = {
   label: string;
   value: number;
@@ -285,7 +286,7 @@ async function computeMetrics(shopId: string, range: RangeBoundaries, selectedBa
 
   const cancelledCount = breakdown.cancelledByClient + breakdown.cancelledByShop;
   const cancelledRate = bookingsCount > 0 ? (cancelledCount / bookingsCount) * 100 : 0;
-
+  const noShowExpiredRate = bookingsCount > 0 ? (breakdown.noShowExpired / bookingsCount) * 100 : 0;
   let peakDay: string | null = null;
   let peakDayCount = 0;
   for (const [key, count] of weekdayCounts.entries()) {
@@ -310,6 +311,26 @@ async function computeMetrics(shopId: string, range: RangeBoundaries, selectedBa
     if (!rulesByBarber.has(rule.barberId)) rulesByBarber.set(rule.barberId, []);
     rulesByBarber.get(rule.barberId)?.push(rule);
   }
+  const mergeIntervals = (intervals: TimeInterval[]): TimeInterval[] => {
+    if (intervals.length <= 1) return intervals;
+    const sorted = [...intervals].sort((a, b) => a.start.getTime() - b.start.getTime());
+    const merged: TimeInterval[] = [sorted[0]];
+
+    for (let i = 1; i < sorted.length; i += 1) {
+      const current = sorted[i];
+      const tail = merged[merged.length - 1];
+      if (current.start.getTime() <= tail.end.getTime()) {
+        if (current.end.getTime() > tail.end.getTime()) {
+          tail.end = current.end;
+        }
+      } else {
+        merged.push({ ...current });
+      }
+    }
+
+    return merged;
+  };
+
 
   let availableMinutes = 0;
   for (const barberId of activeBarberIds) {
@@ -321,25 +342,64 @@ async function computeMetrics(shopId: string, range: RangeBoundaries, selectedBa
       const schemaDay = jsDay % 7;
 
       const dayRules = rules.filter((rule) => rule.dayOfWeek === schemaDay);
+            const workingIntervals: TimeInterval[] = [];
       for (const rule of dayRules) {
         const startAt = fromZonedTime(`${dayKey}T${String(Math.floor(rule.startMinutes / 60)).padStart(2, '0')}:${String(rule.startMinutes % 60).padStart(2, '0')}:00`, ADMIN_TIMEZONE);
         const endAt = fromZonedTime(`${dayKey}T${String(Math.floor(rule.endMinutes / 60)).padStart(2, '0')}:${String(rule.endMinutes % 60).padStart(2, '0')}:00`, ADMIN_TIMEZONE);
 
-        let slotMinutes = minutesOfOverlap(range.from, range.to, startAt, endAt);
+        let effectiveStart = startAt;
+        let effectiveEnd = endAt;
+
 
         if (rule.breakStartMin != null && rule.breakEndMin != null && rule.breakEndMin > rule.breakStartMin) {
           const breakStart = fromZonedTime(`${dayKey}T${String(Math.floor(rule.breakStartMin / 60)).padStart(2, '0')}:${String(rule.breakStartMin % 60).padStart(2, '0')}:00`, ADMIN_TIMEZONE);
           const breakEnd = fromZonedTime(`${dayKey}T${String(Math.floor(rule.breakEndMin / 60)).padStart(2, '0')}:${String(rule.breakEndMin % 60).padStart(2, '0')}:00`, ADMIN_TIMEZONE);
-          slotMinutes = Math.max(0, slotMinutes - minutesOfOverlap(range.from, range.to, breakStart, breakEnd));
+          if (breakStart > effectiveStart) {
+            workingIntervals.push({ start: effectiveStart, end: breakStart < effectiveEnd ? breakStart : effectiveEnd });
+          }
+          if (breakEnd < effectiveEnd) {
+            effectiveStart = breakEnd > effectiveStart ? breakEnd : effectiveStart;
+          } else {
+            effectiveStart = effectiveEnd;
+          }
+
+        }
+        if (effectiveEnd > effectiveStart) {
+          workingIntervals.push({ start: effectiveStart, end: effectiveEnd });
+        }
+      }
+
+
+      const mergedWorkingIntervals = mergeIntervals(
+        workingIntervals
+          .map((interval) => ({
+            start: interval.start < range.from ? range.from : interval.start,
+            end: interval.end > range.to ? range.to : interval.end
+          }))
+          .filter((interval) => interval.end > interval.start)
+      );
+
+      const relevantBlocks = timeBlocks
+        .filter((block) => block.barberId === null || block.barberId === barberId)
+        .map((block) => ({
+          start: block.startAt < range.from ? range.from : block.startAt,
+          end: block.endAt > range.to ? range.to : block.endAt
+        }))
+        .filter((block) => block.end > block.start);
+
+      const mergedBlockedIntervals = mergeIntervals(relevantBlocks);
+
+      for (const workingInterval of mergedWorkingIntervals) {
+        const baseMinutes = minutesOfOverlap(range.from, range.to, workingInterval.start, workingInterval.end);
+        if (baseMinutes <= 0) continue;
+
+        let blockedMinutes = 0;
+        for (const blockInterval of mergedBlockedIntervals) {
+          blockedMinutes += minutesOfOverlap(workingInterval.start, workingInterval.end, blockInterval.start, blockInterval.end);
         }
 
-        if (slotMinutes <= 0) continue;
 
-        const blocked = timeBlocks
-          .filter((block) => block.barberId === null || block.barberId === barberId)
-          .reduce((sum, block) => sum + minutesOfOverlap(startAt, endAt, block.startAt, block.endAt), 0);
-
-        availableMinutes += Math.max(0, slotMinutes - blocked);
+        availableMinutes += Math.max(0, baseMinutes - blockedMinutes);
       }
     }
   }
@@ -366,6 +426,7 @@ async function computeMetrics(shopId: string, range: RangeBoundaries, selectedBa
     avgBookingValue: revenueCount > 0 ? revenue / revenueCount : 0,
     usedDemoPricing,
     cancelledRate,
+        noShowExpiredRate,
     breakdown,
     peakDay,
     peakHour,
@@ -435,9 +496,22 @@ export const GET: APIRoute = async (ctx) => {
       cancelledRatePp: currentMetrics.cancelledRate - previousMetrics.cancelledRate,
       revenuePct: toTrendPercent(currentMetrics.revenue, previousMetrics.revenue),
       revenueDelta: currentMetrics.revenue - previousMetrics.revenue,
+            avgBookingValueDelta: currentMetrics.avgBookingValue - previousMetrics.avgBookingValue,
+      noShowExpiredCountDelta: currentMetrics.breakdown.noShowExpired - previousMetrics.breakdown.noShowExpired,
+      noShowExpiredRatePp: currentMetrics.noShowExpiredRate - previousMetrics.noShowExpiredRate,
+
       utilizationPp: currentMetrics.utilizationPct == null || previousMetrics.utilizationPct == null
         ? null
         : currentMetrics.utilizationPct - previousMetrics.utilizationPct
+            },
+    previousMetrics: {
+      bookingsCount: previousMetrics.bookingsCount,
+      cancelledRate: previousMetrics.cancelledRate,
+      revenue: previousMetrics.revenue,
+      avgBookingValue: previousMetrics.avgBookingValue,
+      utilizationPct: previousMetrics.utilizationPct,
+      noShowExpiredCount: previousMetrics.breakdown.noShowExpired,
+      noShowExpiredRate: previousMetrics.noShowExpiredRate
     }
 
   }));
