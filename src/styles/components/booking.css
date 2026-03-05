@@ -2366,11 +2366,21 @@
 
 
   .admin-page-wrap .admin-products-toolbar-sticky {
-    --admin-products-sticky-top: calc(var(--space-sm) + var(--admin-mobile-header-h));
+    position: static;
+    top: auto;
+    z-index: auto;
+    padding-bottom: 0;
+    background: transparent;
+    backdrop-filter: none;
+    border-bottom: 0;
+
   }
 
   .admin-page-wrap .admin-products-scroll {
-    --admin-products-scroll-offset: 12.5rem;
+    max-height: none;
+    overflow: visible;
+    padding-top: 0;
+
 
   }
 
