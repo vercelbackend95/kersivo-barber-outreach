@@ -245,6 +245,16 @@ type ProductStatusSwitchProps = {
   onChange: (nextValue: boolean) => void;
 };
 
+type EditFooterActionsProps = {
+  canDelete: boolean;
+  disableDelete: boolean;
+  saving: boolean;
+  canSave: boolean;
+  savedNotice: string | null;
+  onCancel: () => void;
+  onDelete: () => void;
+};
+
 
 function SeriesPills({
   seriesList,
@@ -319,6 +329,34 @@ function ProductStatusSwitch({
     </div>
   );
 }
+function EditFooterActions({
+  canDelete,
+  disableDelete,
+  saving,
+  canSave,
+  savedNotice,
+  onCancel,
+  onDelete
+}: EditFooterActionsProps) {
+  return (
+    <div className="admin-product-sheet-footer" aria-live="polite">
+      <button type="submit" className="btn btn--primary" disabled={saving || !canSave}>{saving ? 'Saving...' : 'Save product'}</button>
+      <button type="button" className="btn btn--secondary" onClick={onCancel}>Cancel</button>
+      {canDelete ? (
+        <button
+          type="button"
+          className="btn btn--destructive"
+          onClick={onDelete}
+          disabled={disableDelete}
+        >
+          Delete
+        </button>
+      ) : null}
+      {savedNotice ? <p className="admin-product-sheet-feedback">{savedNotice}</p> : null}
+    </div>
+  );
+}
+
 
 
 function useProductSeriesSelection(allSalesSeries: SalesChartSeries[]) {
@@ -635,6 +673,8 @@ export default function ShopAdminPanel({ initialTab = 'products' }: ShopAdminPan
   const [productSavingById, setProductSavingById] = useState<Record<string, boolean>>({});
   const [productStatusById, setProductStatusById] = useState<Record<string, string>>({});
   const [formInitial, setFormInitial] = useState<ProductFormState>(EMPTY_FORM);
+  const [footerFeedback, setFooterFeedback] = useState<string | null>(null);
+  const [deleteConfirmOpen, setDeleteConfirmOpen] = useState(false);
 
   const sortedProducts = useMemo(
     () => [...products].sort((a, b) => a.sortOrder - b.sortOrder || Date.parse(b.updatedAt) - Date.parse(a.updatedAt)),
@@ -716,6 +756,14 @@ export default function ShopAdminPanel({ initialTab = 'products' }: ShopAdminPan
     window.addEventListener('keydown', onKeyDown);
     return () => window.removeEventListener('keydown', onKeyDown);
   }, [formOpen]);
+  
+  useEffect(() => {
+    if (!footerFeedback) return;
+    const timeoutId = window.setTimeout(() => setFooterFeedback(null), 1200);
+    return () => window.clearTimeout(timeoutId);
+  }, [footerFeedback]);
+
+
     const activeSectionLabel = useMemo(() => {
     if (activeTab === 'orders') return 'Orders';
     if (activeTab === 'sales') return 'Sales';
@@ -930,6 +978,9 @@ export default function ShopAdminPanel({ initialTab = 'products' }: ShopAdminPan
   function resetForm() {
     setForm(EMPTY_FORM);
         setFormInitial(EMPTY_FORM);
+            setFooterFeedback(null);
+    setDeleteConfirmOpen(false);
+
     setFormOpen(false);
   }
 
@@ -944,6 +995,7 @@ export default function ShopAdminPanel({ initialTab = 'products' }: ShopAdminPan
     setFormOpen(true);
     setError(null);
     setSuccess(null);
+        setFooterFeedback(null);
   }
 
   function startEdit(product: Product) {
@@ -967,6 +1019,7 @@ export default function ShopAdminPanel({ initialTab = 'products' }: ShopAdminPan
     setFormOpen(true);
     setError(null);
     setSuccess(null);
+        setFooterFeedback(null);
   }
 
   async function saveProduct(event: React.FormEvent<HTMLFormElement>) {
@@ -1010,7 +1063,9 @@ export default function ShopAdminPanel({ initialTab = 'products' }: ShopAdminPan
 
       await fetchProducts();
       setSuccess(form.id ? 'Product updated.' : 'Product created.');
-      resetForm();
+      setFooterFeedback('Saved');
+      setFormInitial(form);
+
     } catch (saveError) {
       setError(saveError instanceof Error ? saveError.message : 'Unable to save product.');
     } finally {
@@ -1079,11 +1134,13 @@ export default function ShopAdminPanel({ initialTab = 'products' }: ShopAdminPan
         body: JSON.stringify({ id: productId })
       });
       const payload = await response.json();
-      if (!response.ok) throw new Error(payload.error || 'Unable to disable product.');
+      if (!response.ok) throw new Error(payload.error || 'Unable to delete product.');
       await fetchProducts();
-      setSuccess('Product disabled.');
+      setSuccess('Product deleted.');
+      resetForm();
+
     } catch (deleteError) {
-      setError(deleteError instanceof Error ? deleteError.message : 'Unable to disable product.');
+      setError(deleteError instanceof Error ? deleteError.message : 'Unable to delete product.');
     }
   }
   
@@ -1323,28 +1380,46 @@ export default function ShopAdminPanel({ initialTab = 'products' }: ShopAdminPan
                   ) : null}
 
                 </div>
+                <EditFooterActions
+                  canDelete={Boolean(form.id)}
+                  disableDelete={saving}
+                  saving={saving}
+                  canSave={formValid && formDirty}
+                  savedNotice={footerFeedback}
+                  onCancel={resetForm}
+                  onDelete={() => setDeleteConfirmOpen(true)}
+                />
 
-                <div className="admin-product-sheet-footer">
-                  <button type="button" className="btn btn--secondary" onClick={resetForm}>Cancel</button>
-                                    {form.id ? (
-                    <button
-                      type="button"
-                      className="btn btn--ghost"
-                      onClick={() => {
-                        const confirmed = window.confirm('Disable this product? It can be re-enabled later from the API/admin tools.');
-                        if (!confirmed || !form.id) return;
-                        void disableProduct(form.id).then(() => {
-                          resetForm();
-                        });
-                      }}
-                    >
-                      Delete
-                    </button>
-                  ) : null}
-
-                  <button type="submit" className="btn btn--primary" disabled={saving || !formValid || !formDirty}>{saving ? 'Saving...' : 'Save product'}</button>
-                </div>
               </form>
+                            {deleteConfirmOpen && form.id ? (
+                <div className="admin-product-delete-confirm-layer" role="presentation">
+                  <button
+                    type="button"
+                    className="admin-product-delete-confirm-backdrop"
+                    onClick={() => setDeleteConfirmOpen(false)}
+                    aria-label="Close delete confirmation"
+                  />
+                  <div className="admin-product-delete-confirm-dialog" role="dialog" aria-modal="true" aria-labelledby="delete-product-title">
+                    <h4 id="delete-product-title" className="admin-product-delete-confirm-title">Delete product?</h4>
+                    <p className="admin-product-delete-confirm-body">This will permanently remove the product from the shop.</p>
+                    <div className="admin-product-delete-confirm-actions">
+                      <button type="button" className="btn btn--secondary" onClick={() => setDeleteConfirmOpen(false)} disabled={saving}>Cancel</button>
+                      <button
+                        type="button"
+                        className="btn btn--destructive"
+                        onClick={() => {
+                          if (!form.id) return;
+                          void disableProduct(form.id);
+                        }}
+                        disabled={saving}
+                      >
+                        Delete
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              ) : null}
+
             </div>
 
           ), document.body) : null}

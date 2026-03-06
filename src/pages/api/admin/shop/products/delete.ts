@@ -24,14 +24,18 @@ export const POST: APIRoute = async (ctx) => {
       return new Response(JSON.stringify({ error: 'Product not found.' }), { status: 404 });
     }
 
-    const product = await prisma.product.update({
-      where: { id: parsed.data.id },
-      data: { active: false }
+    await prisma.product.delete({
+      where: { id: parsed.data.id }
+
     });
 
-    return new Response(JSON.stringify({ product }), { status: 200 });
+    return new Response(JSON.stringify({ ok: true }), { status: 200 });
   } catch (error) {
-    console.error('Failed to disable product', error);
-    return new Response(JSON.stringify({ error: 'Unable to disable product.' }), { status: 500 });
+    console.error('Failed to delete product', error);
+    if (typeof error === 'object' && error && 'code' in error && (error as { code?: string }).code === 'P2003') {
+      return new Response(JSON.stringify({ error: 'Product cannot be deleted because it is linked to past orders.' }), { status: 409 });
+    }
+    return new Response(JSON.stringify({ error: 'Unable to delete product.' }), { status: 500 });
+
   }
 };

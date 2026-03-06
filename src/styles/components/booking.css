@@ -2358,6 +2358,7 @@
   background: var(--surface);
   border: 1px solid var(--border);
   padding: var(--space-sm);
+    padding-bottom: calc(var(--space-sm) + 13.25rem);
   display: grid;
   gap: var(--space-xs);
 }
@@ -2427,10 +2428,103 @@
   position: sticky;
   bottom: calc(var(--space-sm) * -1);
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(8.5rem, 1fr));
-  gap: var(--space-xs);
+  grid-template-columns: minmax(0, 1fr);
+  gap: 0.7rem;
+  background: color-mix(in srgb, var(--surface) 92%, transparent);
+  border-top: 1px solid var(--border);
+  box-shadow: 0 -8px 24px color-mix(in srgb, var(--bg) 45%, transparent);
+  backdrop-filter: blur(8px);
+  padding-top: 0.75rem;
+  padding-bottom: max(0.1rem, env(safe-area-inset-bottom));
+}
+
+.admin-product-sheet-footer .btn {
+  width: 100%;
+  min-height: 3.1rem;
+}
+
+.admin-product-sheet-feedback {
+  margin: 0;
+  font-size: 0.78rem;
+  color: var(--muted);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.admin-product-delete-confirm-layer {
+  position: fixed;
+  inset: 0;
+  z-index: 310;
+  display: grid;
+  place-items: center;
+  padding: var(--space-sm);
+}
+
+.admin-product-delete-confirm-backdrop {
+  position: absolute;
+  inset: 0;
+  border: 0;
+  background: color-mix(in srgb, var(--bg) 78%, transparent);
+}
+
+.admin-product-delete-confirm-dialog {
+  position: relative;
+  z-index: 1;
+  width: min(100%, 28rem);
+  border: 1px solid var(--border);
+
   background: var(--surface);
-  padding-top: var(--space-xs);
+  padding: 1rem;
+  display: grid;
+  gap: 0.85rem;
+}
+
+.admin-product-delete-confirm-title,
+.admin-product-delete-confirm-body {
+  margin: 0;
+}
+
+.admin-product-delete-confirm-actions {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: 0.5rem;
+}
+
+.admin-product-delete-confirm-actions .btn {
+  width: 100%;
+}
+
+@media (min-width: 48rem) {
+  .admin-product-sheet {
+    padding-bottom: calc(var(--space-sm) + 5.2rem);
+  }
+
+  .admin-product-sheet-footer {
+    grid-template-columns: minmax(9rem, 1fr) minmax(9rem, 1fr) minmax(10rem, 1fr);
+    align-items: center;
+  }
+
+  .admin-product-sheet-footer .btn--primary {
+    order: 3;
+  }
+
+  .admin-product-sheet-footer .btn--secondary {
+    order: 2;
+  }
+
+  .admin-product-sheet-footer .btn--destructive {
+    order: 1;
+  }
+
+  .admin-product-sheet-feedback {
+    grid-column: 1 / -1;
+    text-align: right;
+  }
+
+  .admin-product-delete-confirm-actions {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
 }
 
 @media (max-width: 40rem) {

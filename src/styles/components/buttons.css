@@ -65,3 +65,16 @@
   background: color-mix(in srgb, var(--surface) 78%, transparent);
   border-color: var(--border);
 }
+
+
+.btn--destructive {
+  background: transparent;
+  border-color: var(--accent);
+  color: var(--accent);
+}
+
+.btn--destructive:hover:not(:disabled):not([aria-disabled="true"]) {
+  background: color-mix(in srgb, var(--accent) 16%, transparent);
+  border-color: var(--accent-hover);
+  color: var(--accent-hover);
+}
