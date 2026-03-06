@@ -101,6 +101,15 @@ type SalesChartErrorBoundaryProps = {
 type SalesChartErrorBoundaryState = {
   hasError: boolean;
 };
+
+type ShopPanelErrorBoundaryProps = {
+  children: React.ReactNode;
+};
+
+type ShopPanelErrorBoundaryState = {
+  hasError: boolean;
+};
+
 const MAX_SELECTED_PRODUCTS = 5;
 const SALES_SELECTION_LIMIT_MESSAGE = 'Max 5 products can be compared.';
 
@@ -215,6 +224,38 @@ class SalesChartErrorBoundary extends React.Component<SalesChartErrorBoundaryPro
     return this.props.children;
   }
 }
+
+class ShopPanelErrorBoundary extends React.Component<ShopPanelErrorBoundaryProps, ShopPanelErrorBoundaryState> {
+  state: ShopPanelErrorBoundaryState = { hasError: false };
+
+  static getDerivedStateFromError(): ShopPanelErrorBoundaryState {
+    return { hasError: true };
+  }
+
+  componentDidCatch(error: Error) {
+    console.error('Shop panel rendering error:', error);
+  }
+
+  handleReload = () => {
+    if (typeof window !== 'undefined') {
+      window.location.reload();
+    }
+  };
+
+  render() {
+    if (this.state.hasError) {
+      return (
+        <div className="admin-inline-error" role="alert">
+          <p>Shop failed to render.</p>
+          <button type="button" className="btn btn--secondary" onClick={this.handleReload}>Reload</button>
+        </div>
+      );
+    }
+
+    return this.props.children;
+  }
+}
+
 
 
 type MiniLineChartProps = {
@@ -875,7 +916,7 @@ export default function ShopAdminPanel({ initialTab = 'products' }: ShopAdminPan
     }
   }
   async function fetchOrders() {
-  async function fetchOrders() {
+    setOrdersLoading(true);
     setError(null);
     setOrdersUnauthorized(false);
     try {
@@ -1255,7 +1296,9 @@ export default function ShopAdminPanel({ initialTab = 'products' }: ShopAdminPan
 
 
   return (
-    <section className="booking-shell" aria-live="polite">
+    <ShopPanelErrorBoundary>
+      <section className="booking-shell" aria-live="polite">
+
       <h1>SHOP</h1>
 
       <p className="admin-shop-kicker muted">{activeSectionLabel}</p>
@@ -1695,9 +1738,8 @@ export default function ShopAdminPanel({ initialTab = 'products' }: ShopAdminPan
         </div>
       )}
 
+      </section>
+    </ShopPanelErrorBoundary>
 
-    </section>
   );
-}
-
 }
