@@ -2470,6 +2470,10 @@
   .admin-page-wrap .admin-product-switches {
     grid-template-columns: 1fr;
   }
+  .admin-page-wrap .admin-product-switches--card {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
 
 
   .admin-page-wrap .admin-products-filters {
