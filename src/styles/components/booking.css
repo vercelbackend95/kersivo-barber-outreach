@@ -4065,38 +4065,9 @@
   display: flex;
   justify-content: flex-end;
   justify-self: end;
-  align-items: center;
+  align-items: stretch;
   gap: 0.5rem;
 
-}
-.admin-barber-settings-btn {
-  min-width: 2.8rem;
-  min-height: 2.8rem;
-  border: 1px solid var(--border);
-  background: var(--bg);
-  color: var(--fg);
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 1.15rem;
-  line-height: 1;
-  transition: background 120ms ease, color 120ms ease, border-color 120ms ease;
-}
-
-.admin-barber-settings-icon {
-  width: 1.15rem;
-  height: 1.15rem;
-}
-
-
-.admin-barber-settings-btn:hover {
-  border-color: var(--accent);
-  color: var(--accent);
-}
-
-.admin-barber-settings-btn:focus-visible {
-  outline: 2px solid var(--focus);
-  outline-offset: 2px;
 }
 
 @media (max-width: 47.99rem) {

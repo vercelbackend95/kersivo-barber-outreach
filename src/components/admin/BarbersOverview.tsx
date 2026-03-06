@@ -244,12 +244,15 @@ export default function BarbersOverview({
                 </button>
                                 <div className="admin-barber-actions">
                   <div className="admin-reorder-controls" role="group" aria-label={`Reorder ${barber.name}`}>
-                    <button type="button" className="admin-reorder-btn" onClick={() => onMoveBarber(index, 'up')} disabled={isFirstItem || barberReordering} aria-label={`Move ${barber.name} up`}>↑</button>
-                    <button type="button" className="admin-reorder-btn" onClick={() => onMoveBarber(index, 'down')} disabled={isLastItem || barberReordering} aria-label={`Move ${barber.name} down`}>↓</button>
+                    <div className="admin-reorder-arrow-stack">
+                      <button type="button" className="admin-reorder-btn" onClick={() => onMoveBarber(index, 'up')} disabled={isFirstItem || barberReordering} aria-label={`Move ${barber.name} up`}>▲</button>
+                      <button type="button" className="admin-reorder-btn" onClick={() => onMoveBarber(index, 'down')} disabled={isLastItem || barberReordering} aria-label={`Move ${barber.name} down`}>▼</button>
+                    </div>
+                    <button type="button" className="admin-reorder-btn admin-reorder-btn--settings" onClick={() => onOpenBarber(barber.id)} aria-label={`Open ${barber.name} settings`}>
+                      <SettingsGearIcon className="admin-control-icon" />
+                    </button>
                   </div>
-                  <button type="button" className="admin-barber-settings-btn" onClick={() => onOpenBarber(barber.id)} aria-label={`Open ${barber.name} settings`}>
-                    <SettingsGearIcon className="admin-barber-settings-icon" />
-                  </button>
+
                 </div>
               </li>
             );
