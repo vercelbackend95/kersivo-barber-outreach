@@ -2289,7 +2289,7 @@
   position: fixed;
   inset: 0;
   background: color-mix(in srgb, var(--bg) 65%, transparent);
-  z-index: 80;
+  z-index: 300;
   display: flex;
   justify-content: center;
   align-items: flex-end;
