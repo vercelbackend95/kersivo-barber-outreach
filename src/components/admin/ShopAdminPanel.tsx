@@ -1216,12 +1216,7 @@ export default function ShopAdminPanel({ initialTab = 'products' }: ShopAdminPan
                   </select>
 
                 </div>
-                              <select value={productSortMode} onChange={(event) => setProductSortMode(event.target.value as ProductSortMode)} className="admin-products-sort" aria-label="Sort products">
-                  <option value="manual">Manual order</option>
-                  <option value="newest">Newest</option>
-                  <option value="price">Price</option>
-                  <option value="name">Name</option>
-                </select>
+
 
                 <p className="admin-products-count muted">{filteredProducts.length} products • {featuredCount} featured</p>
               </div>
