@@ -1330,31 +1330,34 @@ export default function ShopAdminPanel({ initialTab = 'products' }: ShopAdminPan
                     </div>
 
                     <div className="admin-reorder-controls" role="group" aria-label={`${product.name} controls`}>
+                                          <div className="admin-reorder-arrow-stack">
+                        <button
+                          type="button"
+                          className="admin-reorder-btn"
+                          aria-label={`Move ${product.name} up`}
+                          disabled={productSortMode !== 'manual' || !canReorder || isFirstItem}
+                          onClick={() => moveItemUp(index)}
+                        >
+                          ▲
+                        </button>
+                        <button
+                          type="button"
+                          className="admin-reorder-btn"
+                          aria-label={`Move ${product.name} down`}
+                          disabled={productSortMode !== 'manual' || !canReorder || isLastItem}
+                          onClick={() => moveItemDown(index)}
+                        >
+                          ▼
+                        </button>
+                      </div>
+
                       <button
                         type="button"
-                        className="admin-reorder-btn"
-                        aria-label={`Move ${product.name} up`}
-                        disabled={productSortMode !== 'manual' || !canReorder || isFirstItem}
-                        onClick={() => moveItemUp(index)}
-                      >
-                        ▲
-                      </button>
-                      <button
-                        type="button"
-                        className="admin-reorder-btn"
-                        aria-label={`Move ${product.name} down`}
-                        disabled={productSortMode !== 'manual' || !canReorder || isLastItem}
-                        onClick={() => moveItemDown(index)}
-                      >
-                        ▼
-                      </button>
-                      <button
-                        type="button"
-                        className="admin-reorder-btn"
+                        className="admin-reorder-btn admin-reorder-btn--settings"
                         aria-label={`Edit ${product.name}`}
                         onClick={() => startEdit(product)}
                       >
-<SettingsGearIcon className="admin-control-icon" />
+                        <SettingsGearIcon className="admin-control-icon" />
                       </button>
                     </div>
 

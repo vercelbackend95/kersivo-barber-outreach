@@ -2169,9 +2169,17 @@
 }
 
 .admin-reorder-controls {
-  display: grid;
+   display: flex;
+  align-items: stretch;
+  justify-content: flex-end;
   gap: 0.35rem;
-    justify-items: end;
+}
+
+.admin-reorder-arrow-stack {
+
+  display: grid;
+    grid-template-rows: 1fr 1fr;
+  gap: 0.35rem;
 }
 
 .admin-reorder-btn {
@@ -2206,6 +2214,10 @@
   width: 1rem;
   height: 1rem;
 }
+.admin-reorder-btn--settings {
+  height: auto;
+}
+
 
 
 .admin-reorder-btn:hover:not(:disabled) {
@@ -3493,10 +3505,14 @@
 }
 
 @media (max-width: 47.99rem) {
-  .admin-reorder-btn {
+  .admin-reorder-arrow-stack .admin-reorder-btn {
     width: 2rem;
     height: 2rem;
   }
+ .admin-reorder-btn--settings {
+    width: 2rem;
+  }
+
 
   .admin-product-card-main {
     grid-template-columns: 4rem minmax(0, 1fr) auto;
