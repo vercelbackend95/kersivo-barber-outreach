@@ -1543,8 +1543,7 @@ export default function ShopAdminPanel({ initialTab = 'products' }: ShopAdminPan
           ) : null}
 
           <OrdersDataTable22
-            orders={orders}
-                        orders={ordersSafe}
+                      orders={ordersSafe}
             expandedOrderId={expandedOrderId}
             onToggleExpand={toggleOrderExpand}
             orderDetailsById={orderDetailsById}
