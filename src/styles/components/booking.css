@@ -2215,9 +2215,9 @@
   height: 1rem;
 }
 .admin-reorder-btn--settings {
-  height: auto;
-    width: auto;
-  aspect-ratio: 1 / 1;
+  width: 5rem;
+  height: 5rem;
+
 
 }
 
@@ -3513,7 +3513,9 @@
     height: 2rem;
   }
  .admin-reorder-btn--settings {
-    width: auto;
+    width: 5rem;
+    height: 5rem;
+
   }
 
 
