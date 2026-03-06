@@ -171,6 +171,17 @@ function formatDurationMinutes(totalMinutes: number): string {
   if (minutes <= 0) return `${hours}h`;
   return `${hours}h ${minutes}m`;
 }
+function getInitials(name: string): string {
+  const normalized = name.trim();
+  if (!normalized) return '?';
+
+  const parts = normalized.split(/\s+/).filter(Boolean);
+  if (parts.length === 0) return '?';
+  if (parts.length === 1) return parts[0].slice(0, 2).toUpperCase();
+
+  return `${parts[0][0] ?? ''}${parts[parts.length - 1][0] ?? ''}`.toUpperCase();
+}
+
 
 function RevenueSparkline({
   series,
