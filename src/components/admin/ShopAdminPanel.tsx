@@ -151,6 +151,9 @@ const EMPTY_FORM: ProductFormState = {
   featured: false,
   sortOrder: 0
 };
+const SORT_ORDER_MIN = 0;
+const SORT_ORDER_MAX = 9999;
+
 const PRODUCT_SLOT_COLORS = ['#E6EAF0', '#7DD3FC', '#5EEAD4', '#FBBF24', '#C4B5FD'];
 const OVERALL_COLOR = '#E11D2E';
 
@@ -688,6 +691,7 @@ export default function ShopAdminPanel({ initialTab = 'products' }: ShopAdminPan
 
   const featuredCount = useMemo(() => products.filter((product) => product.featured).length, [products]);
   const canReorder = productSortMode === 'manual' && productFilter === 'all' && productSearch.trim().length === 0;
+    const defaultSortOrder = useMemo(() => Math.min(SORT_ORDER_MAX, Math.max(SORT_ORDER_MIN, products.length)), [products.length]);
   const formDirty = useMemo(() => JSON.stringify(form) !== JSON.stringify(formInitial), [form, formInitial]);
   const formPricePence = useMemo(() => penceFromGbp(form.priceGbp), [form.priceGbp]);
   const formValid = useMemo(() => form.name.trim().length > 0 && formPricePence > 0, [form.name, formPricePence]);
@@ -930,14 +934,23 @@ export default function ShopAdminPanel({ initialTab = 'products' }: ShopAdminPan
   }
 
   function startCreate() {
-    setForm(EMPTY_FORM);
-        setFormInitial(EMPTY_FORM);
+    const nextForm = {
+      ...EMPTY_FORM,
+      sortOrder: productSortMode === 'manual' ? defaultSortOrder : EMPTY_FORM.sortOrder
+    };
+    setForm(nextForm);
+        setFormInitial(nextForm);
+
     setFormOpen(true);
     setError(null);
     setSuccess(null);
   }
 
   function startEdit(product: Product) {
+        const normalizedSortOrder = Number.isFinite(product.sortOrder)
+      ? Math.min(SORT_ORDER_MAX, Math.max(SORT_ORDER_MIN, product.sortOrder))
+      : defaultSortOrder;
+
     const nextForm = {
       id: product.id,
       name: product.name,
@@ -946,7 +959,7 @@ export default function ShopAdminPanel({ initialTab = 'products' }: ShopAdminPan
       imageUrl: product.imageUrl || '',
       active: product.active,
       featured: product.featured,
-      sortOrder: product.sortOrder
+      sortOrder: normalizedSortOrder
           };
     setForm(nextForm);
     setFormInitial(nextForm);
@@ -989,7 +1002,7 @@ export default function ShopAdminPanel({ initialTab = 'products' }: ShopAdminPan
           active: form.featured ? true : form.active,
           featured: form.active ? form.featured : false,
 
-          sortOrder: form.sortOrder
+          sortOrder: Math.min(SORT_ORDER_MAX, Math.max(SORT_ORDER_MIN, form.sortOrder))
         })
       });
       const payload = await response.json();
@@ -1268,15 +1281,48 @@ export default function ShopAdminPanel({ initialTab = 'products' }: ShopAdminPan
                     tone="featured"
                     onChange={(nextValue) => setForm((prev) => ({ ...prev, featured: nextValue, active: nextValue ? true : prev.active }))}
                   />
+                  {productSortMode === 'manual' ? (
+                    <div className="admin-product-sort-inline">
+                      <label className="admin-product-sort-inline__label" htmlFor="product-sort-order-input">Sort</label>
+                      <div className="admin-product-sort-inline__control" role="group" aria-label="Sort order controls">
+                        <button
+                          type="button"
+                          className="admin-product-sort-inline__stepper"
+                          onClick={() => setForm((prev) => ({ ...prev, sortOrder: Math.max(SORT_ORDER_MIN, prev.sortOrder - 1) }))}
+                          aria-label="Decrease sort order"
+                        >
+                          −
+                        </button>
+                        <input
+                          id="product-sort-order-input"
+                          type="number"
+                          inputMode="numeric"
+                          min={SORT_ORDER_MIN}
+                          max={SORT_ORDER_MAX}
+                          value={form.sortOrder}
+                          onChange={(event) => {
+                            const parsed = Number.parseInt(event.target.value, 10);
+                            const safeValue = Number.isFinite(parsed)
+                              ? Math.min(SORT_ORDER_MAX, Math.max(SORT_ORDER_MIN, parsed))
+                              : SORT_ORDER_MIN;
+                            setForm((prev) => ({ ...prev, sortOrder: safeValue }));
+                          }}
+                          className="admin-product-sort-inline__input"
+                          aria-label="Sort order"
+                        />
+                        <button
+                          type="button"
+                          className="admin-product-sort-inline__stepper"
+                          onClick={() => setForm((prev) => ({ ...prev, sortOrder: Math.min(SORT_ORDER_MAX, prev.sortOrder + 1) }))}
+                          aria-label="Increase sort order"
+                        >
+                          +
+                        </button>
+                      </div>
+                    </div>
+                  ) : null}
 
                 </div>
-
-                <details className="admin-product-advanced">
-                  <summary>Advanced</summary>
-                  <label className="admin-product-field">Sort order
-                    <input type="number" value={form.sortOrder} onChange={(event) => setForm((prev) => ({ ...prev, sortOrder: Number.parseInt(event.target.value, 10) || 0 }))} />
-                  </label>
-                </details>
 
                 <div className="admin-product-sheet-footer">
                   <button type="button" className="btn btn--secondary" onClick={resetForm}>Cancel</button>

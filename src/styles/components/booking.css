@@ -2168,6 +2168,62 @@
 
 
 }
+.admin-product-sort-inline {
+  border: 1px solid var(--border);
+  min-height: 2.35rem;
+  padding: 0.35rem 0.45rem;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem;
+  background: var(--bg);
+  color: var(--fg);
+}
+
+.admin-product-sort-inline__label {
+  font-size: 0.82rem;
+  line-height: 1.1;
+  font-weight: 600;
+}
+
+.admin-product-sort-inline__control {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.2rem;
+}
+
+.admin-product-sort-inline__stepper {
+  width: 1.9rem;
+  min-height: 1.9rem;
+  border: 1px solid var(--border);
+  background: var(--surface);
+  color: var(--fg);
+  font-weight: 700;
+  line-height: 1;
+}
+
+.admin-product-sort-inline__stepper:hover {
+  border-color: var(--accent);
+  color: var(--accent);
+}
+
+.admin-product-sort-inline__stepper:focus-visible,
+.admin-product-sort-inline__input:focus-visible {
+  outline: 2px solid var(--focus);
+  outline-offset: 2px;
+}
+
+.admin-product-sort-inline__input {
+  width: 4.25rem;
+  min-height: 1.9rem;
+  border: 1px solid var(--border);
+  background: var(--surface);
+  color: var(--fg);
+  text-align: center;
+  padding: 0.2rem 0.25rem;
+}
+
+
 
 .admin-reorder-controls {
    display: flex;
@@ -2377,9 +2433,6 @@
   padding-top: var(--space-xs);
 }
 
-.admin-product-advanced summary {
-  cursor: pointer;
-}
 @media (max-width: 40rem) {
   .admin-page-wrap {
     width: 100%;
