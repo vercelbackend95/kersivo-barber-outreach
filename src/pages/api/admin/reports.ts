@@ -143,19 +143,19 @@ async function getRecentBarbers(shopId: string, from: Date, to: Date) {
       select: {
         barberId: true,
         startAt: true,
-        barber: { select: { name: true } }
+        barber: { select: { name: true, avatarUrl: true } }
       },
       orderBy: { startAt: 'desc' },
       take: 250
     });
 
     const seen = new Set<string>();
-    const recent = [] as { id: string; name: string }[];
+    const recent = [] as { id: string; name: string; avatarUrl: string | null }[];
 
     for (const booking of bookings) {
       if (seen.has(booking.barberId)) continue;
       seen.add(booking.barberId);
-      recent.push({ id: booking.barberId, name: booking.barber?.name ?? 'Barber' });
+      recent.push({ id: booking.barberId, name: booking.barber?.name ?? 'Barber', avatarUrl: booking.barber?.avatarUrl ?? null });
       if (recent.length >= 5) break;
     }
 
@@ -196,7 +196,7 @@ async function computeMetrics(shopId: string, range: RangeBoundaries, selectedBa
         serviceId: true,
                 fullName: true,
         email: true,
-        barber: { select: { name: true } },
+        barber: { select: { name: true, avatarUrl: true } },
 
         service: { select: { id: true, name: true, durationMinutes: true, fromPriceText: true } }
 
@@ -498,7 +498,7 @@ export const GET: APIRoute = async (ctx) => {
 
    const [selectedBarberEntity, recentBarbers, currentMetrics, previousMetrics] = await Promise.all([
     selectedBarberId
-      ? prisma.barber.findUnique({ where: { id: selectedBarberId }, select: { id: true, name: true } })
+      ? prisma.barber.findUnique({ where: { id: selectedBarberId }, select: { id: true, name: true, avatarUrl: true } })
       : Promise.resolve(null),
     getRecentBarbers(shop.id, selectedRange.from, selectedRange.to),
     computeMetrics(shop.id, selectedRange, selectedBarberId, range),

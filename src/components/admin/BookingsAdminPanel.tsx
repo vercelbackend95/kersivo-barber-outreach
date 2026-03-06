@@ -6,6 +6,7 @@ import HistoryDateRangePicker from './HistoryDateRangePicker';
 import { getBookingStatusTone, getStatusTextColorClass } from './bookingStatus';
 import BarbersOverview from './BarbersOverview';
 import BarberProfile from './BarberProfile';
+import BarberChip from './BarberChip';
 import type { Barber, ServiceOption, TimeBlock, WorkingHourRow } from './barbersTypes';
 import { formatDelta } from './reportsFormatting';
 type Booking = {
@@ -110,9 +111,9 @@ type ReportsPayload = {
 
     utilizationPp: number | null;
   };
-  recentBarbers: Array<{ id: string; name: string }>;
+  recentBarbers: Array<{ id: string; name: string; avatarUrl: string | null }>;
 
-  selectedBarber: { id: string; name: string } | null;
+  selectedBarber: { id: string; name: string; avatarUrl: string | null } | null;
   previousMetrics: {
     bookingsCount: number;
     cancelledRate: number;
@@ -461,14 +462,6 @@ function getBookingSearchScore(booking: Booking, normalizedQuery: string) {
 }
 function escapeRegExp(value: string) {
   return value.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
-}
-function getInitials(name: string) {
-  return name
-    .split(/\s+/)
-    .filter(Boolean)
-    .slice(0, 2)
-    .map((segment) => segment[0]?.toUpperCase() ?? '')
-    .join('') || '?';
 }
 function normalizeBarberStatus(barber: Barber) {
   if (typeof barber.isActive === 'boolean') return barber.isActive;
@@ -962,7 +955,7 @@ export default function BookingsAdminPanel({ isActive, mode, onBackToDashboard }
   const recentBarbers = useMemo(() => {
     const byId = new Map(barbers.map((barber) => [barber.id, barber]));
         const fallbackById = new Map(
-      bookings.map((booking) => [booking.barberId, { id: booking.barberId, name: booking.barber?.name ?? 'Barber', isActive: false } as Barber])
+      bookings.map((booking) => [booking.barberId, { id: booking.barberId, name: booking.barber?.name ?? 'Barber', avatarUrl: null, isActive: false } as Barber])
     );
 
 
@@ -977,7 +970,9 @@ export default function BookingsAdminPanel({ isActive, mode, onBackToDashboard }
     const byId = new Map(barbers.map((barber) => [barber.id, barber]));
     return (reports?.recentBarbers ?? []).map((entry) => ({
       id: entry.id,
-      name: byId.get(entry.id)?.name ?? entry.name
+      name: byId.get(entry.id)?.name ?? entry.name,
+      avatarUrl: byId.get(entry.id)?.avatarUrl ?? entry.avatarUrl ?? null
+
     }));
   }, [barbers, reports]);
 
@@ -1715,21 +1710,19 @@ export default function BookingsAdminPanel({ isActive, mode, onBackToDashboard }
                   </button>
                                     {recentBarbers.map((barber) => {
                     const hashIndex = hashValue(`${barber.id}:${barber.name}`) % 6;
-                    const initials = getInitials(barber.name);
                     const isActive = historyBarberId === barber.id;
 
                     return (
-                      <button
+                      <BarberChip
                         key={barber.id}
-                        type="button"
-                        className={`admin-history-avatar admin-history-avatar--tone-${hashIndex} ${isActive ? 'is-active' : ''}`}
+                                                barber={barber}
+                        toneIndex={hashIndex}
+                        isSelected={isActive}
+
                         onClick={() => setHistoryBarberId(barber.id)}
-                        aria-pressed={isActive}
-                        aria-label={`Filter by ${barber.name}`}
-                        title={barber.name}
-                      >
-                        <span>{initials}</span>
-                      </button>
+                        ariaLabel={`Filter by ${barber.name}`}
+                      />
+
                     );
                   })}
                 </div>
@@ -1979,10 +1972,9 @@ export default function BookingsAdminPanel({ isActive, mode, onBackToDashboard }
               <button type="button" className={`admin-history-avatar admin-history-avatar--all ${reportsBarberId === null ? 'is-active' : ''}`} onClick={() => setReportsBarberId(null)} aria-pressed={reportsBarberId === null}>ALL</button>
               {reportRecentBarbers.map((barber) => {
                 const hashIndex = hashValue(`${barber.id}:${barber.name}`) % 6;
-                const initials = getInitials(barber.name);
                 const isActive = reportsBarberId === barber.id;
-                return <button key={barber.id} type="button" className={`admin-history-avatar admin-history-avatar--tone-${hashIndex} ${isActive ? 'is-active' : ''}`} onClick={() => setReportsBarberId(barber.id)} aria-pressed={isActive} aria-label={`Filter by ${barber.name}`} title={barber.name}><span>{initials}</span></button>;
-              })}
+                return <BarberChip key={barber.id} barber={barber} toneIndex={hashIndex} isSelected={isActive} onClick={() => setReportsBarberId(barber.id)} ariaLabel={`Filter by ${barber.name}`} />;
+             })}
             </div></div></div>
 
           </div>
