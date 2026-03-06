@@ -1,4 +1,5 @@
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { createPortal } from 'react-dom';
 import OrdersDataTable22 from './OrdersDataTable22';
 import { SettingsGearIcon } from './SettingsGearIcon';
 type ShopTab = 'products' | 'orders' | 'sales';
@@ -1224,7 +1225,7 @@ export default function ShopAdminPanel({ initialTab = 'products' }: ShopAdminPan
             </div>
           </div>
 
-          {formOpen ? (
+          {formOpen ? createPortal((
             <div className="admin-product-sheet-backdrop" onClick={resetForm}>
               <form className="admin-product-sheet" onSubmit={saveProduct} onClick={(event) => event.stopPropagation()}>
                 <div className="admin-product-sheet-head">
@@ -1300,7 +1301,7 @@ export default function ShopAdminPanel({ initialTab = 'products' }: ShopAdminPan
               </form>
             </div>
 
-          ) : null}
+          ), document.body) : null}
 
           <div className="admin-products-scroll" role="region" aria-label="Products list">
             {error ? <p className="admin-inline-error">{error}</p> : null}
