@@ -2007,15 +2007,16 @@
 
 .admin-product-card-main {
   display: grid;
-  grid-template-columns: 4.5rem minmax(0, 1fr) auto;
+  grid-template-columns: 5rem minmax(0, 1fr) auto;
   gap: var(--space-xs);
   align-items: start;
 
 }
 
 .admin-product-thumb {
-  width: 4.5rem;
-  height: 4.5rem;
+  width: 5rem;
+  height: 5rem;
+
   border: 1px solid var(--border);
   background: var(--bg);
   display: flex;
@@ -3525,12 +3526,13 @@
 
 
   .admin-product-card-main {
-    grid-template-columns: 4rem minmax(0, 1fr) auto;
+    grid-template-columns: 5rem minmax(0, 1fr) auto;
   }
 
   .admin-product-thumb {
-    width: 4rem;
-    height: 4rem;
+    width: 5rem;
+    height: 5rem;
+
 
   }
 }
