@@ -1700,3 +1700,5 @@ export default function ShopAdminPanel({ initialTab = 'products' }: ShopAdminPan
     </section>
   );
 }
+
+}

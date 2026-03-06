@@ -63,10 +63,7 @@ export default function OrdersDataTable22({
 }: OrdersDataTable22Props) {
   return (
     <section className="admin-orders-table22" aria-label="Orders table">
-      <header className="admin-orders-table22__header">
-        <h3>Shop orders</h3>
-        <p>Track live payment and collection status for each order.</p>
-      </header>
+
 
       <div className="admin-orders-table22__table-wrap">
         <table className="admin-table admin-orders-table22__table">
