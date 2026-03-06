@@ -20,6 +20,9 @@ type Product = {
 };
 type OrderListItem = {
   id: string;
+    orderNumber?: string | null;
+  customerName?: string | null;
+
   customerEmail: string;
   status: 'PAID' | 'COLLECTED';
   totalPence: number;
@@ -31,6 +34,9 @@ type OrderListItem = {
 
 type OrderDetail = {
   id: string;
+    orderNumber?: string | null;
+  customerName?: string | null;
+
   customerEmail: string;
   status: 'PAID' | 'COLLECTED';
   totalPence: number;
@@ -173,6 +179,31 @@ const DEFAULT_PRODUCT_SERIES_COLOR = 'var(--border)';
 function formatPrice(pricePence: number): string {
   return new Intl.NumberFormat('en-GB', { style: 'currency', currency: 'GBP' }).format(pricePence / 100);
 }
+function normalize(value: string): string {
+  return value.toLowerCase().trim().replace(/\s+/g, ' ');
+}
+
+function matchesOrder(order: OrderListItem, query: string): boolean {
+  const normalizedQuery = normalize(query);
+  if (!normalizedQuery) return true;
+
+  const totalGbp = order.totalPence / 100;
+  const searchableFields = [
+    order.customerName ?? '',
+    order.customerEmail,
+    order.id,
+    order.orderNumber ?? '',
+    order.status,
+    String(order.totalPence),
+    String(totalGbp),
+    totalGbp.toFixed(2),
+    `£${totalGbp}`,
+    `£${totalGbp.toFixed(2)}`
+  ];
+
+  return searchableFields.some((field) => normalize(field).includes(normalizedQuery));
+}
+
 
 function penceFromGbp(value: string): number {
   const normalized = value.replace(/,/g, '.').trim();
@@ -687,7 +718,10 @@ export default function ShopAdminPanel({ initialTab = 'products' }: ShopAdminPan
   const [success, setSuccess] = useState<string | null>(null);
 
   const [orders, setOrders] = useState<OrderListItem[]>([]);
-    const [ordersLoading, setOrdersLoading] = useState(false);
+  const [ordersLoading, setOrdersLoading] = useState(false);
+  const [ordersSearchQuery, setOrdersSearchQuery] = useState('');
+  const [debouncedOrdersSearchQuery, setDebouncedOrdersSearchQuery] = useState('');
+
   const [expandedOrderId, setExpandedOrderId] = useState<string | null>(null);
   const [orderDetailsById, setOrderDetailsById] = useState<Record<string, OrderDetail>>({});
   const [orderDetailsLoadingId, setOrderDetailsLoadingId] = useState<string | null>(null);
@@ -882,7 +916,13 @@ export default function ShopAdminPanel({ initialTab = 'products' }: ShopAdminPan
 
   const chartSeries = useMemo(() => allSalesSeries.filter((series) => activeSeriesKeys.includes(series.key)), [activeSeriesKeys, allSalesSeries]);
   const legendSeries = useMemo(() => seriesPills.filter((series) => activeSeriesKeys.includes(series.key)), [activeSeriesKeys, seriesPills]);
-    const ordersSafe = orders ?? [];
+  const ordersSafe = orders ?? [];
+  const filteredOrders = useMemo(() => {
+    const normalizedQuery = normalize(debouncedOrdersSearchQuery);
+    if (!normalizedQuery) return ordersSafe;
+    return ordersSafe.filter((order) => matchesOrder(order, normalizedQuery));
+  }, [debouncedOrdersSearchQuery, ordersSafe]);
+
   const filteredExpandableProducts = useMemo(() => {
     const normalizedQuery = expandedProductSearch.trim().toLowerCase();
     return seriesPills.filter((series) => {
@@ -891,6 +931,16 @@ export default function ShopAdminPanel({ initialTab = 'products' }: ShopAdminPan
       return series.label.toLowerCase().includes(normalizedQuery);
     });
   }, [activeSeriesKeys, expandedProductSearch, seriesPills]);
+  useEffect(() => {
+    const timeoutId = window.setTimeout(() => {
+      setDebouncedOrdersSearchQuery(ordersSearchQuery);
+    }, 300);
+
+    return () => {
+      window.clearTimeout(timeoutId);
+    };
+  }, [ordersSearchQuery]);
+
 
   const handleAddSeriesSelection = (seriesKey: string) => {
     addSeriesSelection(seriesKey);
@@ -1575,6 +1625,45 @@ export default function ShopAdminPanel({ initialTab = 'products' }: ShopAdminPan
         <div className="admin-orders-panel">
           {error ? <p className="admin-inline-error">{error}</p> : null}
           {success ? <p className="admin-inline-success">{success}</p> : null}
+          <div className="admin-search-row">
+            <div className={`admin-search-field ${ordersSearchQuery ? 'admin-search-field--has-clear' : ''}`}>
+            <span className="admin-search-icon" aria-hidden="true">
+              <svg viewBox="0 0 20 20" focusable="false" aria-hidden="true">
+                <path d="M8.5 3a5.5 5.5 0 0 1 4.4 8.8l3.65 3.65a1 1 0 0 1-1.42 1.42l-3.65-3.65A5.5 5.5 0 1 1 8.5 3Zm0 2a3.5 3.5 0 1 0 0 7 3.5 3.5 0 0 0 0-7Z" fill="currentColor" />
+              </svg>
+            </span>
+            <input
+              type="search"
+              value={ordersSearchQuery}
+              onChange={(event) => setOrdersSearchQuery(event.target.value)}
+              onKeyDown={(event) => {
+                if (event.key !== 'Escape') return;
+                event.preventDefault();
+                setOrdersSearchQuery('');
+                setDebouncedOrdersSearchQuery('');
+              }}
+              placeholder={ordersLoading ? 'Loading…' : 'Search orders...'}
+              aria-label="Search orders"
+              disabled={ordersLoading}
+            />
+            {ordersSearchQuery ? (
+              <button
+                type="button"
+                className="admin-search-clear"
+                onClick={() => {
+                  setOrdersSearchQuery('');
+                  setDebouncedOrdersSearchQuery('');
+                }}
+                aria-label="Clear order search"
+              >
+                ×
+              </button>
+            ) : null}
+            </div>
+          </div>
+
+          {!ordersLoading ? <p className="muted">Showing {filteredOrders.length} of {ordersSafe.length}</p> : null}
+
 
           {ordersUnauthorized ? (
 
@@ -1586,13 +1675,14 @@ export default function ShopAdminPanel({ initialTab = 'products' }: ShopAdminPan
           ) : null}
 
           <OrdersDataTable22
-                      orders={ordersSafe}
+            orders={filteredOrders}
             expandedOrderId={expandedOrderId}
             onToggleExpand={toggleOrderExpand}
             orderDetailsById={orderDetailsById}
             orderDetailsLoadingId={orderDetailsLoadingId}
             onMarkCollected={(orderId) => void markCollected(orderId)}
             ordersUnauthorized={ordersUnauthorized}
+                        emptyMessage={debouncedOrdersSearchQuery ? 'No orders match your search.' : 'No orders yet.'}
           />
 
         </div>

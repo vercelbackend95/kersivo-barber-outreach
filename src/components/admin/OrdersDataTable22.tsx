@@ -2,6 +2,9 @@ import React from 'react';
 
 type OrderListItem = {
   id: string;
+    orderNumber?: string | null;
+  customerName?: string | null;
+
   customerEmail: string;
   status: 'PAID' | 'COLLECTED';
   totalPence: number;
@@ -13,6 +16,9 @@ type OrderListItem = {
 
 type OrderDetail = {
   id: string;
+    orderNumber?: string | null;
+  customerName?: string | null;
+
   customerEmail: string;
   status: 'PAID' | 'COLLECTED';
   totalPence: number;
@@ -37,6 +43,7 @@ type OrdersDataTable22Props = {
   orderDetailsLoadingId: string | null;
   onMarkCollected: (orderId: string) => void;
   ordersUnauthorized: boolean;
+    emptyMessage?: string;
 };
 
 function formatPrice(pricePence: number): string {
@@ -59,7 +66,8 @@ export default function OrdersDataTable22({
   orderDetailsById,
   orderDetailsLoadingId,
   onMarkCollected,
-  ordersUnauthorized
+ ordersUnauthorized,
+  emptyMessage = 'No orders yet.'
 }: OrdersDataTable22Props) {
   return (
     <section className="admin-orders-table22" aria-label="Orders table">
@@ -81,7 +89,7 @@ export default function OrdersDataTable22({
           <tbody>
             {!ordersUnauthorized && orders.length === 0 ? (
               <tr>
-                <td colSpan={7}>No orders yet.</td>
+                <td colSpan={7}>{emptyMessage}</td>
               </tr>
             ) : (
               orders.map((order) => {
