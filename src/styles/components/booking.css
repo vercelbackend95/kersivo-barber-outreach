@@ -2712,20 +2712,11 @@
 }
 .admin-orders-table22 {
   border: 1px solid var(--border);
+    border-radius: var(--radius-sm);
   background: var(--surface);
   padding: var(--space-sm);
   display: grid;
   gap: var(--space-sm);
-}
-
-.admin-orders-table22__header {
-  display: grid;
-  gap: 0.25rem;
-}
-
-.admin-orders-table22__header h3,
-.admin-orders-table22__header p {
-  margin: 0;
 }
 
 .admin-orders-table22__table-wrap {
@@ -2737,6 +2728,13 @@
 .admin-orders-table22__table {
   min-width: 46rem;
 }
+.admin-orders-table22__table thead th {
+  position: sticky;
+  top: 0;
+  background: var(--surface);
+  z-index: 1;
+}
+
 
 .admin-orders-table22__row--expanded {
   background: var(--bg);

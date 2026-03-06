@@ -646,7 +646,6 @@ export default function ShopAdminPanel({ initialTab = 'products' }: ShopAdminPan
   const [success, setSuccess] = useState<string | null>(null);
 
   const [orders, setOrders] = useState<OrderListItem[]>([]);
-  const [ordersLoading, setOrdersLoading] = useState(false);
   const [expandedOrderId, setExpandedOrderId] = useState<string | null>(null);
   const [orderDetailsById, setOrderDetailsById] = useState<Record<string, OrderDetail>>({});
   const [orderDetailsLoadingId, setOrderDetailsLoadingId] = useState<string | null>(null);
@@ -874,7 +873,7 @@ export default function ShopAdminPanel({ initialTab = 'products' }: ShopAdminPan
     }
   }
   async function fetchOrders() {
-    setOrdersLoading(true);
+
     setError(null);
     setOrdersUnauthorized(false);
     try {
@@ -893,8 +892,7 @@ export default function ShopAdminPanel({ initialTab = 'products' }: ShopAdminPan
       setOrders(payload.orders as OrderListItem[]);
     } catch (fetchError) {
       setError(fetchError instanceof Error ? fetchError.message : 'Could not fetch orders.');
-    } finally {
-      setOrdersLoading(false);
+
     }
   }
 
@@ -1527,7 +1525,7 @@ export default function ShopAdminPanel({ initialTab = 'products' }: ShopAdminPan
       )}
 
       {activeTab === 'orders' && (
-        <div className="admin-reports admin-orders-panel">
+        <div className="admin-orders-panel">
           {error ? <p className="admin-inline-error">{error}</p> : null}
           {success ? <p className="admin-inline-success">{success}</p> : null}
           <div className="admin-products-actions">
