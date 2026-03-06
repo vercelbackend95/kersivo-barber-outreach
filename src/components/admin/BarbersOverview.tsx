@@ -316,22 +316,29 @@ export default function BarbersOverview({
                 <legend>Services</legend>
                 <div className="admin-services-grid">
                   {availableServices.map((service) => {
-                    const checked = selectedServiceIds.includes(service.id);
+                    const selected = selectedServiceIds.includes(service.id);
                     return (
-                      <label key={service.id} className="admin-service-checkbox">
-                        <input
-                          type="checkbox"
-                          checked={checked}
-                          onChange={(event) => {
-                            if (event.target.checked) {
-                              onSelectedServiceIdsChange([...selectedServiceIds, service.id]);
-                              return;
-                            }
+                      <button
+                        key={service.id}
+                        type="button"
+                        className={`admin-service-toggle${selected ? ' is-selected' : ''}`}
+                        aria-pressed={selected}
+                        onClick={() => {
+                          if (selected) {
+
                             onSelectedServiceIdsChange(selectedServiceIds.filter((serviceId) => serviceId !== service.id));
-                          }}
-                        />
+                            return;
+                          }
+                          onSelectedServiceIdsChange([...selectedServiceIds, service.id]);
+                        }}
+                      >
+                        <span className="admin-service-toggle-check" aria-hidden="true">
+                          <svg viewBox="0 0 12 12" fill="none" xmlns="http://www.w3.org/2000/svg">
+                            <path d="M2.2 6.3 4.8 8.9 9.8 3.9" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+                          </svg>
+                        </span>
                         <span>{service.name}</span>
-                      </label>
+                                              </button>
                     );
                   })}
                 </div>
