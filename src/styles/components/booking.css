@@ -2187,6 +2187,21 @@
   font-weight: 700;
   transition: background 120ms ease, color 120ms ease, border-color 120ms ease, opacity 120ms ease;
 }
+
+.admin-settings-gear-icon {
+  display: inline-block;
+  background-color: currentColor;
+  mask-image: url('/settings-gear-part-2-svgrepo-com.svg');
+  mask-repeat: no-repeat;
+  mask-position: center;
+  mask-size: contain;
+  -webkit-mask-image: url('/settings-gear-part-2-svgrepo-com.svg');
+  -webkit-mask-repeat: no-repeat;
+  -webkit-mask-position: center;
+  -webkit-mask-size: contain;
+}
+
+
 .admin-control-icon {
   width: 1rem;
   height: 1rem;
@@ -3720,6 +3735,12 @@
   line-height: 1;
   transition: background 120ms ease, color 120ms ease, border-color 120ms ease;
 }
+
+.admin-barber-settings-icon {
+  width: 1.15rem;
+  height: 1.15rem;
+}
+
 
 .admin-barber-settings-btn:hover {
   border-color: var(--accent);

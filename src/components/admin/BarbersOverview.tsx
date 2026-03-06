@@ -1,5 +1,6 @@
 import React from 'react';
 import type { Barber, ServiceOption, TimeBlock } from './barbersTypes';
+import { SettingsGearIcon } from './SettingsGearIcon';
 type BarberBookingPreview = {
   barberId: string;
   status: string;
@@ -247,7 +248,7 @@ export default function BarbersOverview({
                     <button type="button" className="admin-reorder-btn" onClick={() => onMoveBarber(index, 'down')} disabled={isLastItem || barberReordering} aria-label={`Move ${barber.name} down`}>↓</button>
                   </div>
                   <button type="button" className="admin-barber-settings-btn" onClick={() => onOpenBarber(barber.id)} aria-label={`Open ${barber.name} settings`}>
-                    ⚙
+                    <SettingsGearIcon className="admin-barber-settings-icon" />
                   </button>
                 </div>
               </li>

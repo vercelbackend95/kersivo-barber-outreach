@@ -1,5 +1,6 @@
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import OrdersDataTable22 from './OrdersDataTable22';
+import { SettingsGearIcon } from './SettingsGearIcon';
 type ShopTab = 'products' | 'orders' | 'sales';
 type SalesRangePreset = '7' | '30' | '90' | 'custom';
 
@@ -1353,9 +1354,7 @@ export default function ShopAdminPanel({ initialTab = 'products' }: ShopAdminPan
                         aria-label={`Edit ${product.name}`}
                         onClick={() => startEdit(product)}
                       >
-                        <svg viewBox="0 0 24 24" className="admin-control-icon" aria-hidden="true" focusable="false">
-                          <path d="M12 8.25a3.75 3.75 0 1 0 0 7.5 3.75 3.75 0 0 0 0-7.5Zm9.25 3.75-.95-.31a8.71 8.71 0 0 0-.49-1.18l.48-.88a1 1 0 0 0-.16-1.2l-1.74-1.74a1 1 0 0 0-1.2-.16l-.88.48c-.38-.2-.77-.36-1.18-.49l-.31-.95a1 1 0 0 0-.95-.69h-2.46a1 1 0 0 0-.95.69l-.31.95c-.41.13-.8.29-1.18.49l-.88-.48a1 1 0 0 0-1.2.16L3.87 8.43a1 1 0 0 0-.16 1.2l.48.88c-.2.38-.36.77-.49 1.18l-.95.31a1 1 0 0 0-.69.95v2.46a1 1 0 0 0 .69.95l.95.31c.13.41.29.8.49 1.18l-.48.88a1 1 0 0 0 .16 1.2l1.74 1.74a1 1 0 0 0 1.2.16l.88-.48c.38.2.77.36 1.18.49l.31.95a1 1 0 0 0 .95.69h2.46a1 1 0 0 0 .95-.69l.31-.95c.41-.13.8-.29 1.18-.49l.88.48a1 1 0 0 0 1.2-.16l1.74-1.74a1 1 0 0 0 .16-1.2l-.48-.88c.2-.38.36-.77.49-1.18l.95-.31a1 1 0 0 0 .69-.95v-2.46a1 1 0 0 0-.69-.95Z" fill="currentColor" />
-                        </svg>
+<SettingsGearIcon className="admin-control-icon" />
                       </button>
                     </div>
 
