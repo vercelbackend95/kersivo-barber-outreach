@@ -736,6 +736,7 @@ export default function ShopAdminPanel({ initialTab = 'products' }: ShopAdminPan
   const [salesError, setSalesError] = useState<string | null>(null);
   const [salesData, setSalesData] = useState<SalesResponse | null>(null);
   const [isMobileSalesView, setIsMobileSalesView] = useState(false);
+    const [isMobileOrdersView, setIsMobileOrdersView] = useState(false);
   const [isSalesChartExpanded, setIsSalesChartExpanded] = useState(false);
   const [expandedProductSearch, setExpandedProductSearch] = useState('');
     useBodyScrollLock(formOpen || (isMobileSalesView && isSalesChartExpanded));
@@ -764,6 +765,19 @@ export default function ShopAdminPanel({ initialTab = 'products' }: ShopAdminPan
     const handleChange = () => {
       setIsMobileSalesView(mediaQuery.matches);
       if (!mediaQuery.matches) setIsSalesChartExpanded(false);
+    };
+    handleChange();
+    mediaQuery.addEventListener('change', handleChange);
+    return () => {
+      mediaQuery.removeEventListener('change', handleChange);
+    };
+  }, []);
+
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+    const mediaQuery = window.matchMedia('(max-width: 56.24rem)');
+    const handleChange = () => {
+      setIsMobileOrdersView(mediaQuery.matches);
     };
     handleChange();
     mediaQuery.addEventListener('change', handleChange);
@@ -1676,6 +1690,7 @@ export default function ShopAdminPanel({ initialTab = 'products' }: ShopAdminPan
 
           <OrdersDataTable22
             orders={filteredOrders}
+                        isMobileView={isMobileOrdersView}
             expandedOrderId={expandedOrderId}
             onToggleExpand={toggleOrderExpand}
             orderDetailsById={orderDetailsById}
