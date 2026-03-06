@@ -2173,23 +2173,55 @@
   min-height: 2.35rem;
   padding: 0.35rem 0.45rem;
   display: flex;
+    flex-wrap: wrap;
   align-items: center;
   justify-content: space-between;
-  gap: 0.5rem;
+  gap: 0.45rem;
   background: var(--bg);
   color: var(--fg);
 }
+.admin-product-sort-inline__copy {
+  min-width: 0;
+  display: grid;
+  gap: 0.12rem;
+}
+
 
 .admin-product-sort-inline__label {
   font-size: 0.82rem;
   line-height: 1.1;
   font-weight: 600;
+    margin: 0;
+}
+
+.admin-product-sort-inline__helper {
+  margin: 0;
+  font-size: 0.71rem;
+  line-height: 1.2;
+
 }
 
 .admin-product-sort-inline__control {
   display: inline-flex;
   align-items: center;
-  gap: 0.2rem;
+  margin-left: auto;
+  gap: 0.35rem;
+}
+
+.admin-product-sort-inline__rank {
+  min-width: 2.9rem;
+  min-height: 1.9rem;
+  padding: 0.15rem 0.42rem;
+  border: 1px solid var(--border);
+  background: var(--surface);
+  color: var(--fg);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 700;
+  font-size: 0.86rem;
+  letter-spacing: 0.01em;
+
 }
 
 .admin-product-sort-inline__stepper {
@@ -2208,19 +2240,9 @@
 }
 
 .admin-product-sort-inline__stepper:focus-visible,
-.admin-product-sort-inline__input:focus-visible {
+.admin-product-sort-inline__rank:focus-visible {
   outline: 2px solid var(--focus);
   outline-offset: 2px;
-}
-
-.admin-product-sort-inline__input {
-  width: 4.25rem;
-  min-height: 1.9rem;
-  border: 1px solid var(--border);
-  background: var(--surface);
-  color: var(--fg);
-  text-align: center;
-  padding: 0.2rem 0.25rem;
 }
 
 
@@ -3654,6 +3676,16 @@
 }
 
 @media (max-width: 47.99rem) {
+    .admin-product-sort-inline {
+    align-items: flex-start;
+  }
+
+  .admin-product-sort-inline__control {
+    width: 100%;
+    justify-content: flex-end;
+  }
+
+
   .admin-reorder-arrow-stack .admin-reorder-btn {
     width: 2rem;
     height: 2rem;

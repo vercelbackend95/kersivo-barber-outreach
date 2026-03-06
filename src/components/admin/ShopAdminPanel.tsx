@@ -731,7 +731,16 @@ export default function ShopAdminPanel({ initialTab = 'products' }: ShopAdminPan
 
   const featuredCount = useMemo(() => products.filter((product) => product.featured).length, [products]);
   const canReorder = productSortMode === 'manual' && productFilter === 'all' && productSearch.trim().length === 0;
-    const defaultSortOrder = useMemo(() => Math.min(SORT_ORDER_MAX, Math.max(SORT_ORDER_MIN, products.length)), [products.length]);
+  const defaultSortOrder = useMemo(() => Math.min(SORT_ORDER_MAX, Math.max(SORT_ORDER_MIN, products.length)), [products.length]);
+  const maxFormSortOrder = useMemo(() => {
+    const highestTakenPosition = Math.max(SORT_ORDER_MIN, products.length - 1);
+    if (form.id) return highestTakenPosition;
+    return Math.min(SORT_ORDER_MAX, highestTakenPosition + 1);
+  }, [form.id, products.length]);
+  const displayListPosition = useMemo(() => Math.max(1, form.sortOrder + 1), [form.sortOrder]);
+  const isFormAtTop = form.sortOrder <= SORT_ORDER_MIN;
+  const isFormAtBottom = form.sortOrder >= maxFormSortOrder;
+
   const formDirty = useMemo(() => JSON.stringify(form) !== JSON.stringify(formInitial), [form, formInitial]);
   const formPricePence = useMemo(() => penceFromGbp(form.priceGbp), [form.priceGbp]);
   const formValid = useMemo(() => form.name.trim().length > 0 && formPricePence > 0, [form.name, formPricePence]);
@@ -1340,40 +1349,31 @@ export default function ShopAdminPanel({ initialTab = 'products' }: ShopAdminPan
                   />
                   {productSortMode === 'manual' ? (
                     <div className="admin-product-sort-inline">
-                      <label className="admin-product-sort-inline__label" htmlFor="product-sort-order-input">Sort</label>
-                      <div className="admin-product-sort-inline__control" role="group" aria-label="Sort order controls">
+                      <div className="admin-product-sort-inline__copy">
+                        <p className="admin-product-sort-inline__label">List position</p>
+                        <p className="admin-product-sort-inline__helper muted">1 = first on the list</p>
+                      </div>
+                      <div className="admin-product-sort-inline__control" role="group" aria-label="List position controls">
+                        <span className="admin-product-sort-inline__rank" aria-live="polite">#{displayListPosition}</span>
                         <button
                           type="button"
                           className="admin-product-sort-inline__stepper"
                           onClick={() => setForm((prev) => ({ ...prev, sortOrder: Math.max(SORT_ORDER_MIN, prev.sortOrder - 1) }))}
-                          aria-label="Decrease sort order"
+                          aria-label="Move up"
+                          disabled={isFormAtTop}
+
                         >
-                          −
+                          ↑
                         </button>
-                        <input
-                          id="product-sort-order-input"
-                          type="number"
-                          inputMode="numeric"
-                          min={SORT_ORDER_MIN}
-                          max={SORT_ORDER_MAX}
-                          value={form.sortOrder}
-                          onChange={(event) => {
-                            const parsed = Number.parseInt(event.target.value, 10);
-                            const safeValue = Number.isFinite(parsed)
-                              ? Math.min(SORT_ORDER_MAX, Math.max(SORT_ORDER_MIN, parsed))
-                              : SORT_ORDER_MIN;
-                            setForm((prev) => ({ ...prev, sortOrder: safeValue }));
-                          }}
-                          className="admin-product-sort-inline__input"
-                          aria-label="Sort order"
-                        />
                         <button
                           type="button"
                           className="admin-product-sort-inline__stepper"
-                          onClick={() => setForm((prev) => ({ ...prev, sortOrder: Math.min(SORT_ORDER_MAX, prev.sortOrder + 1) }))}
-                          aria-label="Increase sort order"
+                          onClick={() => setForm((prev) => ({ ...prev, sortOrder: Math.min(maxFormSortOrder, prev.sortOrder + 1) }))}
+                          aria-label="Move down"
+                          disabled={isFormAtBottom}
+
                         >
-                          +
+                          ↓
                         </button>
                       </div>
                     </div>
@@ -1448,7 +1448,7 @@ export default function ShopAdminPanel({ initialTab = 'products' }: ShopAdminPan
                     <div>
                       <h4>{product.name}</h4>
                       <p className="admin-product-price">{formatPrice(product.pricePence)}</p>
-                      <p className="admin-product-meta muted">Updated {new Date(product.updatedAt).toLocaleString('en-GB')} • Sort {product.sortOrder}</p>
+                      <p className="admin-product-meta muted">Updated {new Date(product.updatedAt).toLocaleString('en-GB')} • List position #{product.sortOrder + 1}</p>
                     </div>
 
                     <div className="admin-reorder-controls" role="group" aria-label={`${product.name} controls`}>
