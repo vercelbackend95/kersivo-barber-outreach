@@ -7,46 +7,6 @@ import {
   getAdminSessionCookieOptions,
   getSessionSecret
 } from '../../../lib/admin/session';
-type FailedLoginAttempt = {
-  count: number;
-  expiresAt: number;
-};
-
-const MAX_FAILED_ATTEMPTS = 5;
-const FAILED_ATTEMPT_WINDOW_MS = 10 * 60 * 1000;
-const failedAttemptsByIp = new Map<string, FailedLoginAttempt>();
-
-function getClientIp(request: Request) {
-  const forwardedFor = request.headers.get('x-forwarded-for') ?? '';
-  const firstForwardedIp = forwardedFor.split(',')[0]?.trim();
-  if (firstForwardedIp) return firstForwardedIp;
-  return request.headers.get('x-real-ip') ?? 'unknown';
-}
-
-function hasExceededFailedAttempts(ip: string) {
-  const attempt = failedAttemptsByIp.get(ip);
-  if (!attempt) return false;
-  if (Date.now() > attempt.expiresAt) {
-    failedAttemptsByIp.delete(ip);
-    return false;
-  }
-  return attempt.count >= MAX_FAILED_ATTEMPTS;
-}
-
-function registerFailedAttempt(ip: string) {
-  const now = Date.now();
-  const current = failedAttemptsByIp.get(ip);
-  if (!current || now > current.expiresAt) {
-    failedAttemptsByIp.set(ip, { count: 1, expiresAt: now + FAILED_ATTEMPT_WINDOW_MS });
-    return;
-  }
-
-  failedAttemptsByIp.set(ip, {
-    count: current.count + 1,
-    expiresAt: current.expiresAt
-  });
-}
-
 
 type FailedLoginAttempt = {
   count: number;
@@ -124,15 +84,6 @@ export const POST: APIRoute = async ({ request, cookies, clientAddress }) => {
     });
   }
 
-
-
-  if (hasExceededFailedAttempts(ip)) {
-    return new Response(JSON.stringify({ error: 'Too many login attempts. Try again later.' }), {
-      status: 429
-    });
-  }
-
-
   const adminSecret = import.meta.env.ADMIN_SECRET ?? process.env.ADMIN_SECRET;
   const sessionSecret = getSessionSecret();
   let data: { secret?: unknown } | null = null;
@@ -145,7 +96,7 @@ export const POST: APIRoute = async ({ request, cookies, clientAddress }) => {
   const submittedSecret = typeof data?.secret === 'string' ? data.secret : '';
 
   if (!adminSecret || !sessionSecret || submittedSecret !== adminSecret) {
-    registerFailedAttempt(ip);
+    registerFailedAttempt(ip, now);
 
     return new Response(JSON.stringify({ error: 'Invalid secret' }), { status: 401 });
   }
