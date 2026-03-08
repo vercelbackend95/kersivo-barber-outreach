@@ -22,6 +22,7 @@ Astro + React (TypeScript) booking + shop system for barbershops.
    - `STRIPE_SECRET_KEY`: Stripe test secret key used for checkout session creation.
    - `STRIPE_WEBHOOK_SECRET`: Stripe webhook signing secret used to verify `/api/shop/webhook`.
    - `ADMIN_SECRET`: admin panel login secret.
+      - `BLOB_READ_WRITE_TOKEN` (preferred) or `VERCEL_BLOB_READ_WRITE_TOKEN`: Vercel Blob token used for barber avatar + product image uploads.
    - If `RESEND_API_KEY` is missing, the app falls back to console logs for outgoing email contents.
 
 
@@ -77,3 +78,10 @@ Astro + React (TypeScript) booking + shop system for barbershops.
 ## SSR build on Vercel
 SSR build requires adapter; use Vercel adapter + output: server.
 
+## Vercel Blob setup
+1. In Vercel Dashboard, open your project.
+2. Go to **Storage** → **Blob** and create/link a Blob store.
+3. Go to **Settings** → **Environment Variables**.
+4. Add `BLOB_READ_WRITE_TOKEN` (recommended name) with the read-write token value from Blob.
+   - The app also accepts `VERCEL_BLOB_READ_WRITE_TOKEN` for compatibility.
+5. Redeploy the project so serverless functions can read the token.

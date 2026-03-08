@@ -1,14 +1,12 @@
 export const prerender = false;
 
-import { randomUUID } from 'node:crypto';
-import { mkdir, writeFile } from 'node:fs/promises';
-import path from 'node:path';
 import type { APIRoute } from 'astro';
 import { z } from 'zod';
 import { requireAdmin } from '../../../lib/admin/auth';
 import { ensureBarberHasAvailabilityRules } from '../../../lib/admin/defaultAvailability';
 import { getTodayInLondon, getTodayScheduleForBarber } from '../../../lib/admin/todayWorkingHours';
 import { prisma } from '../../../lib/db/client';
+import { makeBlobPath, uploadPublicImageToBlob } from '../../../lib/storage/vercelBlob';
 import type { Prisma } from '@prisma/client';
 
 const MAX_AVATAR_SIZE_BYTES = 5 * 1024 * 1024;
@@ -81,7 +79,7 @@ async function ensureSelectedServices(tx: Prisma.TransactionClient, selectedServ
 }
 
 
-async function storeAvatar(file: File) {
+async function storeAvatar(file: File, barberId?: string) {
   if (!ALLOWED_AVATAR_TYPES.has(file.type)) {
     throw new Error('Avatar must be a JPG, PNG, or WEBP image.');
   }
@@ -94,15 +92,9 @@ async function storeAvatar(file: File) {
     throw new Error('Unsupported avatar format.');
   }
 
-  const uploadsDir = path.join(process.cwd(), 'public', 'uploads', 'barbers');
-  await mkdir(uploadsDir, { recursive: true });
+  const pathname = makeBlobPath('barbers', file, barberId);
+  return uploadPublicImageToBlob(file, pathname);
 
-  const fileName = `${Date.now()}-${randomUUID()}.${extension}`;
-  const filePath = path.join(uploadsDir, fileName);
-  const arrayBuffer = await file.arrayBuffer();
-  await writeFile(filePath, Buffer.from(arrayBuffer));
-
-  return `/uploads/barbers/${fileName}`;
 }
 
 
@@ -225,7 +217,7 @@ export const POST: APIRoute = async (ctx) => {
     let avatarUrl: string | undefined;
     if (avatar instanceof File && avatar.size > 0) {
       try {
-        avatarUrl = await storeAvatar(avatar);
+        avatarUrl = await storeAvatar(avatar, id);
       } catch (error) {
         return new Response(JSON.stringify({ error: error instanceof Error ? error.message : 'Could not upload avatar.' }), { status: 400 });
       }
