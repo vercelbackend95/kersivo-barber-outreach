@@ -23,7 +23,7 @@ try {
       barberName: booking.barber.name,
       startAt: booking.startAt
     };
-    }
+    
   }
 } catch (error) {
   if (error instanceof BookingActionError && error.message === 'This booking is already confirmed.') {
@@ -38,6 +38,8 @@ try {
 
 
   tone = 'warning';
+  } finally {
+  // No cleanup required for this page.
 }
 ---
 <html lang="en">
