@@ -1,14 +1,89 @@
 ---
+import { BookingStatus } from '@prisma/client';
+import { prisma } from '../../lib/db/client';
+import { generateToken, hashToken } from '../../lib/booking/tokens';
 import '../../styles/tokens.css';
 import '../../styles/global.css';
 import '../../styles/components/booking.css';
 const token = Astro.url.searchParams.get('token') ?? '';
-let response;
-let booking;
-if (token) {
-  const apiResponse = await fetch(new URL('/api/bookings/confirm', Astro.url), { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ token }) });
-  response = await apiResponse.json();
-  booking = response.booking;
+let heading = 'Booking confirmation';
+let message = 'Invalid or expired confirmation link.';
+let tone: 'success' | 'warning' = 'warning';
+let bookingSummary: { serviceName: string; barberName: string; startAt: Date } | null = null;
+
+try {
+  if (!token) {
+    message = 'Missing confirmation token.';
+  } else {
+    console.log('[book/confirm] Attempting confirmation.', { hasToken: true });
+    const hashedToken = hashToken(token);
+    const booking = await prisma.booking.findFirst({
+      where: { confirmTokenHash: hashedToken },
+      include: {
+        service: { select: { name: true } },
+        barber: { select: { name: true } }
+      }
+    });
+
+    if (!booking) {
+      message = 'Invalid or expired confirmation link.';
+    } else if (booking.status !== BookingStatus.PENDING_CONFIRMATION) {
+      message = 'This booking has already been confirmed.';
+      bookingSummary = {
+        serviceName: booking.service.name,
+        barberName: booking.barber.name,
+        startAt: booking.startAt
+      };
+    } else if (!booking.confirmTokenExpiresAt || booking.confirmTokenExpiresAt < new Date()) {
+      message = 'Invalid or expired confirmation link.';
+    } else {
+      const manageToken = generateToken();
+      const updatedBooking = await prisma.booking.update({
+        where: { id: booking.id },
+        data: {
+          status: BookingStatus.CONFIRMED,
+          confirmTokenHash: null,
+          confirmTokenExpiresAt: null,
+          manageTokenHash: hashToken(manageToken)
+        },
+        include: {
+          service: { select: { name: true } },
+          barber: { select: { name: true } }
+        }
+      });
+
+      heading = 'Booking confirmed';
+      message = 'Your booking is now confirmed.';
+      tone = 'success';
+      bookingSummary = {
+        serviceName: updatedBooking.service.name,
+        barberName: updatedBooking.barber.name,
+        startAt: updatedBooking.startAt
+      };
+      console.log('[book/confirm] Booking confirmed.', { bookingId: updatedBooking.id });
+    }
+  }
+} catch (error) {
+  console.error('[book/confirm] Unexpected confirmation error.', error);
+  heading = 'Booking confirmation';
+  message = 'We could not confirm this booking right now. Please contact the barber shop.';
+  tone = 'warning';
 }
 ---
-<html lang="en"><body><main class="container page-wrap"><section class="surface booking-shell"><h1>Booking confirmation</h1>{booking ? <><p>Your booking is now confirmed.</p><p>{booking.service.name} with {booking.barber.name}</p><p>{new Date(booking.startAt).toLocaleString('en-GB', { timeZone: 'Europe/London' })}</p></> : <p>{response?.error ?? 'Missing token.'}</p>}</section></main></body></html>
+<html lang="en">
+  <body>
+    <main class="container page-wrap">
+      <section class="surface booking-shell">
+        <h1>{heading}</h1>
+        <p class={tone === 'success' ? 'admin-inline-success' : 'admin-inline-error'}>{message}</p>
+        {bookingSummary ? (
+          <>
+            <p>{bookingSummary.serviceName} with {bookingSummary.barberName}</p>
+            <p>{new Date(bookingSummary.startAt).toLocaleString('en-GB', { timeZone: 'Europe/London' })}</p>
+          </>
+        ) : null}
+        <a class="btn btn--secondary" href="/book">Back to booking</a>
+      </section>
+    </main>
+  </body>
+</html>

@@ -16,6 +16,7 @@ export function isAdminAuthorized(context: APIContext): boolean {
 
 export function requireAdmin(context: APIContext): Response | null {
   if (!isAdminAuthorized(context)) {
+        console.error('[admin/auth] Unauthorized admin API request.', { path: new URL(context.request.url).pathname });
     return new Response(JSON.stringify({ error: 'Unauthorized' }), { status: 401 });
   }
   return null;

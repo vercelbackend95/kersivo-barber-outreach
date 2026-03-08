@@ -5241,3 +5241,16 @@
   .admin-kpi-sample-inline { display: none; }
   .admin-reports-drawer { width: 100%; margin-top: auto; max-height: 80vh; border-bottom: 0; }
 }
+
+.admin-auth-shell {
+  max-width: 30rem;
+  margin-inline: auto;
+  display: grid;
+  gap: var(--space-sm);
+}
+
+.admin-auth-actions {
+  display: flex;
+  gap: var(--space-xs);
+  justify-content: flex-start;
+}

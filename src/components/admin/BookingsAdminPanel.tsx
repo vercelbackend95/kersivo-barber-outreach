@@ -543,7 +543,6 @@ type BookingsAdminPanelProps = {
 };
 
 export default function BookingsAdminPanel({ isActive, mode, onBackToDashboard }: BookingsAdminPanelProps) {
-  const [secret, setSecret] = useState('');
   const [loggedIn, setLoggedIn] = useState(false);
   const [isCheckingSession, setIsCheckingSession] = useState(true);
   const [bookings, setBookings] = useState<Booking[]>([]);
@@ -1358,7 +1357,6 @@ export default function BookingsAdminPanel({ isActive, mode, onBackToDashboard }
     await saveServiceIds(Array.from(current));
   }
 
-  async function login() { const res = await fetch('/api/admin/login', { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ secret }) }); setLoggedIn(res.ok); if (!res.ok) setError('Invalid secret'); }
 
 
 
@@ -1578,8 +1576,7 @@ export default function BookingsAdminPanel({ isActive, mode, onBackToDashboard }
 
   if (!isActive) return null;
   if (isCheckingSession) return <section className="surface booking-shell"><h1>Admin</h1><p className="muted">Checking session...</p></section>;
-  if (!loggedIn) return <section className="surface booking-shell"><h1>Admin</h1><label>Admin secret</label><input type="password" value={secret} onChange={(e) => setSecret(e.target.value)} /><button className="btn btn--primary" onClick={login}>Login</button>{error && <p>{error}</p>}</section>;
-
+  if (!loggedIn) return <section className="surface booking-shell"><h1>ADMIN</h1><p className="muted">Unauthorized. Verify your admin secret and reload this page.</p>{error && <p>{error}</p>}</section>;
 
   return (
     <section className="surface booking-shell">

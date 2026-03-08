@@ -23,7 +23,7 @@ const menuItems: SectionItem[] = [
   { section: 'shop_sales', label: 'Sales' },
 ];
 
-export default function AdminLayout({ activeSection, onChangeSection, children }: AdminLayoutProps) {
+export default function AdminLayout({ activeSection, onChangeSection, onClearAdminAccess, children }: AdminLayoutProps) {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const mobileDrawerRef = useRef<HTMLDivElement | null>(null);
   const mobileOpenButtonRef = useRef<HTMLButtonElement | null>(null);
@@ -108,6 +108,9 @@ export default function AdminLayout({ activeSection, onChangeSection, children }
         {menu}
                 <div className="admin-sidebar-logout-wrap">
           <div className="admin-sidebar-divider" aria-hidden="true" />
+                    <button type="button" className="btn btn--secondary admin-sidebar-logout" onClick={onClearAdminAccess}>
+            Clear admin access
+          </button>
           <button type="button" className="btn btn--secondary admin-sidebar-logout" onClick={() => void handleLogout()}>
             Logout
           </button>
@@ -156,6 +159,9 @@ export default function AdminLayout({ activeSection, onChangeSection, children }
           </button>
         </div>
         {menu}
+                <button type="button" className="btn btn--secondary admin-mobile-logout" onClick={onClearAdminAccess}>
+          Clear admin access
+        </button>
         <button type="button" className="btn btn--secondary admin-mobile-logout" onClick={() => void handleLogout()}>
           Logout
         </button>
