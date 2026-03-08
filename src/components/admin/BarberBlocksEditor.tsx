@@ -64,7 +64,7 @@ function formatUpcomingRange(block: TimeBlock) {
       minute: '2-digit',
       hour12: false
     }).format(end);
-    return `${day}, ${startTime}–${endTime}`;
+    return `${day} • ${startTime}–${endTime}`;
   }
 
   if (isAllDay) {
@@ -103,7 +103,7 @@ function formatUpcomingRange(block: TimeBlock) {
 function getTypeLabel(block: TimeBlock) {
   return block.title === 'HOLIDAY' || block.title.toLowerCase().includes('holiday') || block.title.toLowerCase().includes('vacation')
     ? 'Vacation'
-    : 'Break';
+    : 'Break 15m';
 }
 
 
@@ -114,7 +114,7 @@ export default function BarberBlocksEditor({
   onCreate,
   onDelete
 }: BarberBlocksEditorProps) {
-    const [activeCreateMode, setActiveCreateMode] = React.useState<'break' | 'vacation'>('break');
+  const [activeCreateMode, setActiveCreateMode] = React.useState<'break' | 'vacation'>('break');
   const [breakStartInput, setBreakStartInput] = React.useState(() => toLocalInputValue(roundUpToQuarter(new Date())));
 
   const [vacationStartDate, setVacationStartDate] = React.useState(() => toDateInputValue(new Date()));
@@ -122,11 +122,25 @@ export default function BarberBlocksEditor({
   const [vacationAllDay, setVacationAllDay] = React.useState(true);
   const [vacationStartTime, setVacationStartTime] = React.useState('09:00');
   const [vacationEndTime, setVacationEndTime] = React.useState('17:00');
-
+  const [localStatus, setLocalStatus] = React.useState('');
   const breakEndInput = React.useMemo(() => {
     const start = fromZonedTime(new Date(breakStartInput), ADMIN_TIMEZONE);
     return toLocalInputValue(new Date(start.getTime() + 15 * 60_000));
   }, [breakStartInput]);
+  const breakHasRangeError = React.useMemo(() => {
+    const startMs = new Date(breakStartInput).getTime();
+    const endMs = new Date(breakEndInput).getTime();
+    return Number.isFinite(startMs) && Number.isFinite(endMs) && endMs <= startMs;
+  }, [breakEndInput, breakStartInput]);
+
+  const vacationHasRangeError = React.useMemo(() => {
+    const startValue = vacationAllDay ? vacationStartDate : `${vacationStartDate}T${vacationStartTime}`;
+    const endValue = vacationAllDay ? vacationEndDate : `${vacationEndDate}T${vacationEndTime}`;
+    const startMs = new Date(startValue).getTime();
+    const endMs = new Date(endValue).getTime();
+    return Number.isFinite(startMs) && Number.isFinite(endMs) && endMs < startMs;
+  }, [vacationAllDay, vacationEndDate, vacationEndTime, vacationStartDate, vacationStartTime]);
+
 
   const sortedUpcoming = React.useMemo(() => {
     const now = Date.now();
@@ -135,8 +149,16 @@ export default function BarberBlocksEditor({
       .filter((block) => Number.isFinite(block.startMs) && block.startMs >= now)
       .sort((a, b) => a.startMs - b.startMs);
   }, [blocks]);
+  React.useEffect(() => {
+    if (!successMessage) return;
+    setLocalStatus(successMessage || 'Added');
+    const timer = window.setTimeout(() => setLocalStatus(''), 2500);
+    return () => window.clearTimeout(timer);
+  }, [successMessage]);
+
 
   function handleCreateBreak() {
+        if (breakHasRangeError) return;
     onCreate({
       type: 'BREAK',
       startAtInput: breakStartInput,
@@ -146,6 +168,7 @@ export default function BarberBlocksEditor({
   }
 
   function handleCreateVacation() {
+        if (vacationHasRangeError) return;
     onCreate({
       type: 'HOLIDAY',
       startAtInput: vacationAllDay ? vacationStartDate : `${vacationStartDate}T${vacationStartTime}`,
@@ -160,101 +183,161 @@ export default function BarberBlocksEditor({
       <h3>TIME OFF</h3>
       <p className="muted">Manage unavailable time for this barber.</p>
 
-      <div className="admin-timeoff-panel">
-        <div className="admin-timeoff-create">
-          <div className="admin-timeoff-mode-grid" role="tablist" aria-label="Time off type">
+      <div className="admin-timeoff-card">
+        <header className="admin-timeoff-header-row">
+          <h4>Create time off</h4>
+          <p className="admin-timeoff-helper">Breaks are always 15 minutes. Vacation can be all-day or timed.</p>
+        </header>
+
+        <div className="admin-timeoff-create-area">
+          <div className="admin-timeoff-mode-grid" role="radiogroup" aria-label="Time off type">
+
             <button
               type="button"
+                            role="radio"
+              aria-checked={activeCreateMode === 'break'}
+              aria-pressed={activeCreateMode === 'break'}
+
               className={`admin-timeoff-mode-tile ${activeCreateMode === 'break' ? 'is-active' : ''}`}
               onClick={() => setActiveCreateMode('break')}
             >
-              Break (15 min)
+              <span className="admin-timeoff-mode-title">Break</span>
+              <span className="admin-timeoff-mode-meta">15 minutes</span>
+
             </button>
             <button
               type="button"
+                            role="radio"
+              aria-checked={activeCreateMode === 'vacation'}
+              aria-pressed={activeCreateMode === 'vacation'}
+
               className={`admin-timeoff-mode-tile ${activeCreateMode === 'vacation' ? 'is-active' : ''}`}
               onClick={() => setActiveCreateMode('vacation')}
             >
-              Vacation
+              <span className="admin-timeoff-mode-title">Vacation</span>
+              <span className="admin-timeoff-mode-meta">Single or multi-day</span>
+
             </button>
-          </div>          {activeCreateMode === 'break' ? (
-            <div className="admin-timeoff-form-grid">
-              <label>
-                Start
-                <input
-                  type="datetime-local"
-                  value={breakStartInput}
-                  onChange={(event) => setBreakStartInput(event.target.value)}
-                />
-              </label>
-              <p className="admin-timeoff-readonly" aria-live="polite">End: {breakEndInput.replace('T', ' ')}</p>
-              <button type="button" className="btn btn--secondary" onClick={handleCreateBreak}>Add break</button>
+
+          </div>
+
+          {activeCreateMode === 'break' ? (
+            <div className="admin-timeoff-form-wrap">
+              <div className="admin-timeoff-fields-grid">
+                <label>
+                  <span className="admin-timeoff-label">Start</span>
+                  <input
+                    type="datetime-local"
+                    value={breakStartInput}
+                    onChange={(event) => setBreakStartInput(event.target.value)}
+                    className={breakHasRangeError ? 'has-error' : ''}
+                  />
+                </label>
+                <label>
+                  <span className="admin-timeoff-label">End</span>
+                  <input type="datetime-local" value={breakEndInput} readOnly tabIndex={-1} aria-readonly="true" />
+                </label>
+              </div>
+              {breakHasRangeError ? <p className="admin-inline-error">End time must be after start time.</p> : null}
+              <div className="admin-timeoff-cta-row">
+                <button type="button" className="btn btn--secondary" onClick={handleCreateBreak} disabled={breakHasRangeError}>
+                  Add Break
+                </button>
+              </div>
+
             </div>
           ) : (
-            <div className="admin-timeoff-form-grid">
-              <label>
-                Start date
-                <input
-                  type="date"
-                  value={vacationStartDate}
-                  onChange={(event) => setVacationStartDate(event.target.value)}
-                />
-              </label>
-              <label>
-                End date
-                <input
-                  type="date"
-                  value={vacationEndDate}
-                  onChange={(event) => setVacationEndDate(event.target.value)}
-                />
-              </label>
-              <label className="admin-timeoff-toggle">
-                <input
-                  type="checkbox"
-                  checked={vacationAllDay}
-                  onChange={(event) => setVacationAllDay(event.target.checked)}
-                />
-                All-day
-              </label>
+            <div className="admin-timeoff-form-wrap">
+              <div className="admin-timeoff-fields-grid">
+                <label>
+                  <span className="admin-timeoff-label">Start date</span>
+                  <input
+                    type="date"
+                    value={vacationStartDate}
+                    onChange={(event) => setVacationStartDate(event.target.value)}
+                    className={vacationHasRangeError ? 'has-error' : ''}
+                  />
+                </label>
+                <label>
+                  <span className="admin-timeoff-label">End date</span>
+                  <input
+                    type="date"
+                    value={vacationEndDate}
+                    onChange={(event) => setVacationEndDate(event.target.value)}
+                    className={vacationHasRangeError ? 'has-error' : ''}
+                  />
+                </label>
+              </div>
+
+              <div className="admin-timeoff-all-day-row">
+                <span className="admin-timeoff-label">All day</span>
+                <button
+                  type="button"
+                  className={`admin-timeoff-switch ${vacationAllDay ? 'is-on' : ''}`}
+                  onClick={() => setVacationAllDay((current) => !current)}
+                  role="switch"
+                  aria-checked={vacationAllDay}
+                  aria-label="Toggle all day"
+                >
+                  <span className="admin-timeoff-switch-thumb" aria-hidden="true" />
+                </button>
+              </div>
+
+
               {!vacationAllDay ? (
-                <>
+                <div className="admin-timeoff-fields-grid">
                   <label>
-                    Start time
+                    <span className="admin-timeoff-label">Start time</span>
                     <input
                       type="time"
                       value={vacationStartTime}
                       onChange={(event) => setVacationStartTime(event.target.value)}
+                                            className={vacationHasRangeError ? 'has-error' : ''}
                     />
                   </label>
                   <label>
-                    End time
+                    <span className="admin-timeoff-label">End time</span>
                     <input
                       type="time"
                       value={vacationEndTime}
                       onChange={(event) => setVacationEndTime(event.target.value)}
+                                            className={vacationHasRangeError ? 'has-error' : ''}
                     />
                   </label>
-                </>
+                              </div>
               ) : null}
-              <button type="button" className="btn btn--secondary" onClick={handleCreateVacation}>Add vacation</button>
+
+              {vacationHasRangeError ? <p className="admin-inline-error">End must be after start.</p> : null}
+              <div className="admin-timeoff-cta-row">
+                <button type="button" className="btn btn--secondary" onClick={handleCreateVacation} disabled={vacationHasRangeError}>
+                  Add Vacation
+                </button>
+              </div>
+
             </div>
           )}
-          {successMessage ? <p className="admin-inline-success">{successMessage}</p> : null}
+          {localStatus ? <p className="admin-inline-success" role="status">{localStatus}</p> : null}
           {errorMessage ? <p className="admin-inline-error">{errorMessage}</p> : null}
         </div>
-
+        <hr className="admin-timeoff-divider" />
         <div className="admin-timeoff-upcoming">
           <h4>Upcoming</h4>
           {sortedUpcoming.length === 0 ? <p className="muted">No time off yet.</p> : (
             <ul className="admin-timeoff-upcoming-list">
               {sortedUpcoming.map((block) => (
-                <li key={block.id} className="admin-timeoff-card">
-                  <p className="admin-timeoff-card__type">{getTypeLabel(block)}</p>
-                  <p className="admin-timeoff-card__range">{formatUpcomingRange(block)}</p>
+                <li key={block.id} className="admin-timeoff-upcoming-card">
+                  <p className="admin-timeoff-upcoming-type">{getTypeLabel(block)}</p>
+                  <p className="admin-timeoff-upcoming-range">{formatUpcomingRange(block)}</p>
+
                   <button
                     type="button"
                     className="btn btn--ghost admin-timeoff-delete"
-                    onClick={() => onDelete(block.id)}
+                    onClick={() => {
+                      const confirmed = window.confirm(`Delete this ${getTypeLabel(block)} time off entry?`);
+                      if (!confirmed) return;
+                      onDelete(block.id);
+                    }}
+
                     aria-label={`Delete ${getTypeLabel(block)} time off`}
                   >
                     🗑
