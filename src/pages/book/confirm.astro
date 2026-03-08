@@ -1,7 +1,5 @@
 ---
-import { BookingStatus } from '@prisma/client';
-import { prisma } from '../../lib/db/client';
-import { generateToken, hashToken } from '../../lib/booking/tokens';
+import { BookingActionError, confirmBookingByToken } from '../../lib/booking/service';
 import '../../styles/tokens.css';
 import '../../styles/global.css';
 import '../../styles/components/booking.css';
@@ -15,58 +13,30 @@ try {
   if (!token) {
     message = 'Missing confirmation token.';
   } else {
-    console.log('[book/confirm] Attempting confirmation.', { hasToken: true });
-    const hashedToken = hashToken(token);
-    const booking = await prisma.booking.findFirst({
-      where: { confirmTokenHash: hashedToken },
-      include: {
-        service: { select: { name: true } },
-        barber: { select: { name: true } }
-      }
-    });
+    const booking = await confirmBookingByToken(token);
 
-    if (!booking) {
-      message = 'Invalid or expired confirmation link.';
-    } else if (booking.status !== BookingStatus.PENDING_CONFIRMATION) {
-      message = 'This booking has already been confirmed.';
-      bookingSummary = {
-        serviceName: booking.service.name,
-        barberName: booking.barber.name,
-        startAt: booking.startAt
-      };
-    } else if (!booking.confirmTokenExpiresAt || booking.confirmTokenExpiresAt < new Date()) {
-      message = 'Invalid or expired confirmation link.';
-    } else {
-      const manageToken = generateToken();
-      const updatedBooking = await prisma.booking.update({
-        where: { id: booking.id },
-        data: {
-          status: BookingStatus.CONFIRMED,
-          confirmTokenHash: null,
-          confirmTokenExpiresAt: null,
-          manageTokenHash: hashToken(manageToken)
-        },
-        include: {
-          service: { select: { name: true } },
-          barber: { select: { name: true } }
-        }
-      });
-
-      heading = 'Booking confirmed';
-      message = 'Your booking is now confirmed.';
-      tone = 'success';
-      bookingSummary = {
-        serviceName: updatedBooking.service.name,
-        barberName: updatedBooking.barber.name,
-        startAt: updatedBooking.startAt
-      };
-      console.log('[book/confirm] Booking confirmed.', { bookingId: updatedBooking.id });
+    heading = 'Booking confirmed';
+    message = 'Your booking is now confirmed.';
+    tone = 'success';
+    bookingSummary = {
+      serviceName: booking.service.name,
+      barberName: booking.barber.name,
+      startAt: booking.startAt
+    };
     }
   }
 } catch (error) {
-  console.error('[book/confirm] Unexpected confirmation error.', error);
-  heading = 'Booking confirmation';
-  message = 'We could not confirm this booking right now. Please contact the barber shop.';
+  if (error instanceof BookingActionError && error.message === 'This booking is already confirmed.') {
+    heading = 'Booking already confirmed';
+    message = 'This booking has already been confirmed.';
+  } else if (error instanceof BookingActionError) {
+    message = error.message;
+  } else {
+    console.error('[book/confirm] Unexpected confirmation error.', error);
+    message = 'We could not confirm this booking right now. Please contact the barber shop.';
+  }
+
+
   tone = 'warning';
 }
 ---

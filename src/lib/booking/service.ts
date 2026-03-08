@@ -3,9 +3,17 @@ import { prisma } from '../db/client';
 import { canCancelOrReschedule, pendingExpiryDate } from './policies';
 import { generateToken, hashToken } from './tokens';
 import { addMinutes, toUtcFromLondon } from './time';
-import { sendBookingConfirmationEmail, sendManageBookingEmail, sendRescheduledBookingEmail, sendShopCancelledBookingEmail } from '../email/sender';
+import { EmailDeliveryError, sendBookingConfirmationEmail, sendManageBookingEmail, sendRescheduledBookingEmail, sendShopCancelledBookingEmail } from '../email/sender';
 const CANCELLED_BOOKING_MESSAGE = 'This booking is already cancelled. Please create a new booking.';
 const MANAGE_LINKS_NOT_READY_MESSAGE = 'Please confirm your booking first. Manage links become active after confirmation.';
+function resolvePublicSiteUrl(): string {
+  const configured = (import.meta.env.PUBLIC_SITE_URL ?? process.env.PUBLIC_SITE_URL ?? '').trim();
+  if (configured) return configured.replace(/\/$/, '');
+
+  return 'https://barberdemo.kersivo.co.uk';
+}
+
+
 
 export class BookingActionError extends Error {
   statusCode: number;
@@ -190,7 +198,7 @@ export async function createPendingBooking(input: {
     });
   }, { isolationLevel: Prisma.TransactionIsolationLevel.Serializable });
 
-  const baseUrl = import.meta.env.PUBLIC_SITE_URL ?? process.env.PUBLIC_SITE_URL ?? 'http://localhost:4321';
+  const baseUrl = resolvePublicSiteUrl();
   await sendBookingConfirmationEmail({
     to: booking.email,
     fullName: booking.fullName,
@@ -210,7 +218,7 @@ export async function confirmBookingByToken(token: string) {
   if (booking.status !== BookingStatus.PENDING_CONFIRMATION) throw new BookingActionError('This booking is already confirmed.', 409);
   if (!booking.confirmTokenExpiresAt || booking.confirmTokenExpiresAt < new Date()) throw new BookingActionError('Token expired.');
 
-  const manageToken = generateToken();
+  const generatedManageToken = generateToken();
 
   const { confirmedBooking, settings } = await prisma.$transaction(async (tx) => {
       const client = await upsertClientForBooking(tx, {
@@ -226,7 +234,8 @@ export async function confirmBookingByToken(token: string) {
         status: BookingStatus.CONFIRMED,
         confirmTokenHash: null,
         confirmTokenExpiresAt: null,
-        manageTokenHash: hashToken(manageToken)
+        manageTokenHash: hashToken(generatedManageToken),
+        manageTokenExpiresAt: null
       },
       include: { barber: true, service: true }
     });
@@ -236,17 +245,46 @@ export async function confirmBookingByToken(token: string) {
     return { confirmedBooking: updatedBooking, settings: shopSettings };
   });
 
-  const baseUrl = import.meta.env.PUBLIC_SITE_URL ?? process.env.PUBLIC_SITE_URL ?? 'http://localhost:4321';
-  await sendManageBookingEmail({
-    to: confirmedBooking.email,
-    fullName: confirmedBooking.fullName,
-    cancelUrl: `${baseUrl}/book/cancel?token=${manageToken}`,
-    rescheduleUrl: `${baseUrl}/book/reschedule?token=${manageToken}`,
-    shopName: settings.name,
-    serviceName: confirmedBooking.service.name,
-    barberName: confirmedBooking.barber.name,
-    startAt: confirmedBooking.startAt
+  const manageToken = confirmedBooking.manageTokenHash ? generatedManageToken : generateToken();
+
+  if (!confirmedBooking.manageTokenHash) {
+    await prisma.booking.update({
+      where: { id: confirmedBooking.id },
+      data: { manageTokenHash: hashToken(manageToken), manageTokenExpiresAt: null }
+    });
+  }
+
+  const baseUrl = resolvePublicSiteUrl();
+  console.info('[booking/confirm] Starting manage-booking email delivery.', {
+    bookingId: confirmedBooking.id,
+    to: confirmedBooking.email
   });
+  try {
+    const { messageId } = await sendManageBookingEmail({
+      to: confirmedBooking.email,
+      fullName: confirmedBooking.fullName,
+      cancelUrl: `${baseUrl}/book/cancel?token=${manageToken}`,
+      rescheduleUrl: `${baseUrl}/book/reschedule?token=${manageToken}`,
+      shopName: settings.name,
+      serviceName: confirmedBooking.service.name,
+      barberName: confirmedBooking.barber.name,
+      startAt: confirmedBooking.startAt
+    });
+
+    console.info('[booking/confirm] Manage-booking email sent.', {
+      bookingId: confirmedBooking.id,
+      to: confirmedBooking.email,
+      messageId
+    });
+  } catch (error) {
+    console.error('[booking/confirm] Failed to send manage-booking email.', {
+      bookingId: confirmedBooking.id,
+      to: confirmedBooking.email,
+      error,
+      resendResponse: error instanceof EmailDeliveryError ? error.response : null
+    });
+  }
+
 
   return confirmedBooking;
 }
@@ -365,7 +403,7 @@ export async function rescheduleByToken(input: { token: string; serviceId: strin
     });
   }, { isolationLevel: Prisma.TransactionIsolationLevel.Serializable });
   
-  const baseUrl = import.meta.env.PUBLIC_SITE_URL ?? process.env.PUBLIC_SITE_URL ?? 'http://localhost:4321';
+  const baseUrl = resolvePublicSiteUrl();
   const settingsForEmail = await prisma.shopSettings.findFirstOrThrow();
   await sendRescheduledBookingEmail({
     to: updatedBooking.email,

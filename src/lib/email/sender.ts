@@ -11,6 +11,16 @@ type BookingEmailBaseInput = {
   barberName: string;
   startAt: Date;
 };
+export class EmailDeliveryError extends Error {
+  response: unknown;
+
+  constructor(message: string, response: unknown, options?: { cause?: unknown }) {
+    super(message, options);
+    this.name = 'EmailDeliveryError';
+    this.response = response;
+  }
+}
+
 
 function renderBookingSummary(input: BookingEmailBaseInput): string {
   const londonDateTime = formatInTimeZone(input.startAt, 'Europe/London', "EEEE d MMMM yyyy 'at' HH:mm");
@@ -26,28 +36,43 @@ async function sendEmail(input: {
   html: string;
   devLogLabel: string;
   devPayload: Record<string, string>;
-}) {
+}): Promise<{ messageId: string | null }> {
 
   if (!RESEND_API_KEY) {
     console.log(input.devLogLabel, input.devPayload);
-    return;
+    return { messageId: null };
   }
 
   try {
     const { Resend } = await import('resend');
     const resend = new Resend(RESEND_API_KEY);
 
-    await resend.emails.send({
+    const response = await resend.emails.send({
       from: FROM_EMAIL,
       to: input.to,
       subject: input.subject,
       html: input.html
     });
 
-    console.info('[EMAIL] Sent', { to: input.to, subject: input.subject });
+    const responseWithData = response as { data?: { id?: string | null }; error?: unknown };
+    const messageId = responseWithData?.data?.id ?? null;
+
+    if (responseWithData?.error) {
+      throw new EmailDeliveryError('Resend returned an error response.', responseWithData.error);
+    }
+
+    console.info('[EMAIL] Sent', { to: input.to, subject: input.subject, messageId });
+    return { messageId };
+
   } catch (error) {
+        if (error instanceof EmailDeliveryError) {
+      console.error('[EMAIL] Failed to send', { to: input.to, subject: input.subject, error, resendResponse: error.response });
+      throw error;
+    }
+
+
     console.error('[EMAIL] Failed to send', { to: input.to, subject: input.subject, error });
-    throw error;
+    throw new EmailDeliveryError('Failed to send email through Resend.', null, { cause: error });
   }
 }
 
@@ -78,16 +103,15 @@ export async function sendBookingConfirmationEmail(input: BookingEmailBaseInput 
 export async function sendManageBookingEmail(input: BookingEmailBaseInput & { cancelUrl: string; rescheduleUrl: string }) {
   const summaryHtml = renderBookingSummary(input);
   const html = `<p>Hi ${input.fullName},</p>
-  <p>Your booking is confirmed. You can manage it using these links:</p>
-  <ul>
-    <li><a href="${input.rescheduleUrl}">Reschedule booking</a></li>
-    <li><a href="${input.cancelUrl}">Cancel booking</a></li>
-  </ul>
-  ${summaryHtml}`;
+  <p>Your booking is confirmed. Use one of the options below to manage it:</p>
+  ${summaryHtml}
+  <p><strong><a href="${input.rescheduleUrl}">Reschedule booking</a></strong></p>
+  <p><strong><a href="${input.cancelUrl}">Cancel booking</a></strong></p>`;
 
-  await sendEmail({
+
+  return sendEmail({
     to: input.to,
-    subject: 'Manage your booking',
+    subject: 'Manage your booking – reschedule or cancel',
     html,
     devLogLabel: '[DEV EMAIL] Manage booking links',
     devPayload: {
