@@ -34,7 +34,7 @@ export default function AdminLayout({ activeSection, onChangeSection, onClearAdm
   };
 
   const handleLogout = async () => {
-    await fetch('/api/admin/logout', { method: 'POST', credentials: 'same-origin' });
+    await fetch('/api/admin/logout', { method: 'POST', credentials: 'include' });
     window.location.assign('/admin');
   };
 

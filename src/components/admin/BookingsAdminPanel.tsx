@@ -670,7 +670,7 @@ export default function BookingsAdminPanel({ isActive, mode, onBackToDashboard }
         ? `/api/admin/timeblocks?date=${encodeURIComponent(selectedDate)}`
 
         : '/api/admin/timeblocks?range=today';
-      const response = await fetch(endpoint, { credentials: 'same-origin' });
+      const response = await fetch(endpoint, { credentials: 'include' });
       if (!response.ok) return;
 
       const data = (await response.json()) as { timeBlocks?: TimeBlock[] };
@@ -692,7 +692,7 @@ export default function BookingsAdminPanel({ isActive, mode, onBackToDashboard }
  }, [activeView, captureTimelineScroll, mode, restoreTimelineScroll, selectedDate, timeBlocks]);
 
   const fetchBarbers = useCallback(async () => {
-    const response = await fetch('/api/admin/barbers', { credentials: 'same-origin' });
+    const response = await fetch('/api/admin/barbers', { credentials: 'include' });
     if (response.ok) {
       const data = (await response.json()) as { barbers?: Barber[] };
       setBarbers(data.barbers ?? []);
@@ -704,7 +704,7 @@ export default function BookingsAdminPanel({ isActive, mode, onBackToDashboard }
     setReportsError('');
     const params = new URLSearchParams({ range: reportsRange });
     if (reportsBarberId) params.set('barberId', reportsBarberId);
-    const response = await fetch(`/api/admin/reports?${params.toString()}`, { credentials: 'same-origin' });
+    const response = await fetch(`/api/admin/reports?${params.toString()}`, { credentials: 'include' });
 
 
     if (response.status === 401) {
@@ -751,7 +751,7 @@ export default function BookingsAdminPanel({ isActive, mode, onBackToDashboard }
         return `/api/admin/bookings?date=${encodeURIComponent(selectedDate)}&mode=day`;
       })();
 
-      const response = await fetch(endpoint, { credentials: 'same-origin' });
+      const response = await fetch(endpoint, { credentials: 'include' });
 
       if (response.status === 401) {
         pollingStoppedRef.current = true;
@@ -805,7 +805,7 @@ export default function BookingsAdminPanel({ isActive, mode, onBackToDashboard }
   }, [fetchBookings, historyHasMore, historyLoadingMore, mode]);
 
 
-  useEffect(() => { void (async () => { try { const response = await fetch('/api/admin/session', { credentials: 'same-origin' }); setLoggedIn(response.ok); } finally { setIsCheckingSession(false); } })(); }, []);
+  useEffect(() => { void (async () => { try { const response = await fetch('/api/admin/session', { credentials: 'include' }); setLoggedIn(response.ok); } finally { setIsCheckingSession(false); } })(); }, []);
   useEffect(() => { if (!loggedIn || !isActive) return; if (mode !== 'history') void fetchBookings(); void fetchBarbers(); void fetchTimeBlocks(); void fetchReports(); const id = window.setInterval(() => { if (mode !== 'history') void fetchBookings(); void fetchTimeBlocks(); void fetchReports(); }, POLL_INTERVAL_MS); return () => window.clearInterval(id); }, [activeView, fetchBookings, fetchBarbers, fetchReports, fetchTimeBlocks, isActive, loggedIn, mode]);
   useEffect(() => { if (!loggedIn || !isActive) return; const id = window.setInterval(() => setNowMs(Date.now()), LAST_UPDATED_REFRESH_MS); return () => window.clearInterval(id); }, [isActive, loggedIn]);
   useEffect(() => {
@@ -1131,7 +1131,7 @@ export default function BookingsAdminPanel({ isActive, mode, onBackToDashboard }
     setSelectedClientId(clientId);
     setIsClientLoading(true);
     setClientError('');
-    const response = await fetch(`/api/admin/clients/${clientId}`, { credentials: 'same-origin' });
+    const response = await fetch(`/api/admin/clients/${clientId}`, { credentials: 'include' });
     if (!response.ok) {
       setClientError('Could not load client profile.');
       setIsClientLoading(false);
@@ -1148,7 +1148,7 @@ export default function BookingsAdminPanel({ isActive, mode, onBackToDashboard }
     if (!selectedClientId) return;
     setNotesSaving(true);
     const response = await fetch(`/api/admin/clients/${selectedClientId}/notes`, {
-      method: 'POST', credentials: 'same-origin', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ notes: notesDraft })
+      method: 'POST', credentials: 'include', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ notes: notesDraft })
     });
     if (response.ok && clientProfile) {
       setClientProfile({ ...clientProfile, client: { ...clientProfile.client, notes: notesDraft } });
@@ -1202,7 +1202,7 @@ export default function BookingsAdminPanel({ isActive, mode, onBackToDashboard }
 
     const response = await fetch(`/api/admin/bookings/${selectedTimelineBooking.id}/notes`, {
       method: 'PATCH',
-      credentials: 'same-origin',
+      credentials: 'include',
       headers: { 'content-type': 'application/json' },
       body: JSON.stringify({ notes: timelineNotesDraft })
     });
@@ -1241,7 +1241,7 @@ export default function BookingsAdminPanel({ isActive, mode, onBackToDashboard }
 
 
   const fetchServices = useCallback(async () => {
-    const response = await fetch('/api/admin/services', { credentials: 'same-origin' });
+    const response = await fetch('/api/admin/services', { credentials: 'include' });
     if (!response.ok) return;
     const data = (await response.json()) as { services?: ServiceOption[] };
     setServices((data.services ?? []).filter((service) => service.active !== false));
@@ -1250,7 +1250,7 @@ export default function BookingsAdminPanel({ isActive, mode, onBackToDashboard }
   const fetchWorkingHours = useCallback(async (barberId: string) => {
     if (!barberId) return;
     setWorkingHoursLoading(true);
-    const response = await fetch(`/api/admin/barbers/${barberId}/rules`, { credentials: 'same-origin' });
+    const response = await fetch(`/api/admin/barbers/${barberId}/rules`, { credentials: 'include' });
     const payload = await response.json().catch(() => ({} as { rules?: WorkingHourRow[] }));
     if (response.ok) {
       const rules = payload.rules ?? [];
@@ -1271,7 +1271,7 @@ export default function BookingsAdminPanel({ isActive, mode, onBackToDashboard }
       return;
     }
     const params = new URLSearchParams({ barberId, view: 'stats' });
-    const response = await fetch(`/api/admin/bookings?${params.toString()}`, { credentials: 'same-origin' });
+    const response = await fetch(`/api/admin/bookings?${params.toString()}`, { credentials: 'include' });
     if (!response.ok) {
       setSelectedBarberStatsCount(0);
       return;
@@ -1306,7 +1306,7 @@ export default function BookingsAdminPanel({ isActive, mode, onBackToDashboard }
     setBarberSaveError('');
     const response = await fetch(`/api/admin/barbers/${selectedBarberId}/rules`, {
       method: 'PUT',
-      credentials: 'same-origin',
+      credentials: 'include',
       headers: { 'content-type': 'application/json' },
       body: JSON.stringify({ rules: rulesToSave })
     });
@@ -1333,7 +1333,7 @@ export default function BookingsAdminPanel({ isActive, mode, onBackToDashboard }
     setBarberSaveError('');
     const response = await fetch(`/api/admin/barbers/${selectedBarberId}/services`, {
       method: 'PUT',
-      credentials: 'same-origin',
+      credentials: 'include',
       headers: { 'content-type': 'application/json' },
       body: JSON.stringify({ serviceIds })
     });
@@ -1381,7 +1381,7 @@ export default function BookingsAdminPanel({ isActive, mode, onBackToDashboard }
     setBlockSuccessMessage('');
     const response = await fetch('/api/admin/timeblocks/create', {
       method: 'POST',
-      credentials: 'same-origin',
+      credentials: 'include',
       headers: { 'content-type': 'application/json' },
       body: JSON.stringify({ title, startAt: startAt.toISOString(), endAt: endAt.toISOString(), barberId: selectedBarberId ?? (blockScopeBarberId === 'all' ? null : blockScopeBarberId) })
     });
@@ -1450,7 +1450,7 @@ export default function BookingsAdminPanel({ isActive, mode, onBackToDashboard }
     setBlockErrorMessage('');
     setBlockSuccessMessage('');
     const response = await fetch('/api/admin/timeblocks/delete', {
-      method: 'POST', credentials: 'same-origin', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ id })
+      method: 'POST', credentials: 'include', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ id })
     });
     if (!response.ok) {
       setBlockErrorMessage('Could not remove time block.');
@@ -1491,7 +1491,7 @@ export default function BookingsAdminPanel({ isActive, mode, onBackToDashboard }
 
     const response = await fetch('/api/admin/barbers', {
       method: 'POST',
-      credentials: 'same-origin',
+      credentials: 'include',
       body: formData
     });
     const payload = await response.json().catch(() => ({ error: 'Could not save barber.' }));
@@ -1517,7 +1517,7 @@ export default function BookingsAdminPanel({ isActive, mode, onBackToDashboard }
     setBarberSaveError('');
     const response = await fetch('/api/admin/barbers', {
       method: 'POST',
-      credentials: 'same-origin',
+      credentials: 'include',
       headers: { 'content-type': 'application/json' },
       body: JSON.stringify({ id: barberId, isActive })
     });
@@ -1538,7 +1538,7 @@ export default function BookingsAdminPanel({ isActive, mode, onBackToDashboard }
     try {
       const response = await fetch('/api/admin/barbers/reorder', {
         method: 'POST',
-        credentials: 'same-origin',
+        credentials: 'include',
         headers: { 'content-type': 'application/json' },
         body: JSON.stringify({ orderedIds, includeInactive: barbersFilter === 'all' })
       });
