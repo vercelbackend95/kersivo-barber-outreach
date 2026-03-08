@@ -20,30 +20,39 @@ export const POST: APIRoute = async (ctx) => {
 
   const contentType = ctx.request.headers.get('content-type') ?? '';
   if (!contentType.includes('multipart/form-data')) {
-    return jsonResponse({ error: 'Expected multipart/form-data.' }, 400);
+    return jsonResponse({ error: 'Expected multipart/form-data.', message: 'Expected multipart/form-data.' }, 400);
   }
 
   const form = await ctx.request.formData();
   const file = form.get('file');
 
   if (!(file instanceof File) || file.size === 0) {
-    return jsonResponse({ error: 'Image file is required.' }, 400);
+    return jsonResponse({ error: 'Image file is required.', message: 'Image file is required.' }, 400);
   }
 
   if (!file.type.startsWith('image/') || !ALLOWED_IMAGE_TYPES.has(file.type)) {
-    return jsonResponse({ error: 'Only JPG, PNG, WEBP, or GIF images are supported.' }, 400);
+    return jsonResponse({ error: 'Only JPG, PNG, WEBP, or GIF images are supported.', message: 'Only JPG, PNG, WEBP, or GIF images are supported.' }, 400);
   }
 
   if (file.size > MAX_IMAGE_SIZE_BYTES) {
-    return jsonResponse({ error: 'Image is too large. Maximum size is 5MB.' }, 400);
+    return jsonResponse({ error: 'Image is too large. Maximum size is 5MB.', message: 'Image is too large. Maximum size is 5MB.' }, 400);
   }
 
   try {
     const pathname = makeBlobPath('products', file);
-    const url = await uploadPublicImageToBlob(file, pathname);
+    const imageUrl = await uploadPublicImageToBlob(file, pathname);
 
-    return jsonResponse({ url }, 200);
+    return jsonResponse({ imageUrl }, 200);
   } catch (error) {
-    return jsonResponse({ error: error instanceof Error ? error.message : 'Could not upload image.' }, 400);
+    console.error('Product image upload failed', {
+      message: error instanceof Error ? error.message : 'Unknown upload error',
+      fileName: file.name,
+      fileType: file.type,
+      fileSize: file.size
+    });
+
+    const message = error instanceof Error ? error.message : 'Could not upload image.';
+    return jsonResponse({ error: message, message }, 400);
+
   }
 };

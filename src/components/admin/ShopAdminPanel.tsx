@@ -171,8 +171,7 @@ const SORT_ORDER_MAX = 9999;
 const PRODUCT_IMAGE_MAX_SIZE_BYTES = 5 * 1024 * 1024;
 const PRODUCT_IMAGE_ALLOWED_MIME_PREFIX = 'image/';
 
-type ProductImageUploadStatus = 'idle' | 'uploading' | 'uploaded' | 'failed';
-
+type ProductImageUploadStatus = 'idle' | 'uploading' | 'processing' | 'uploaded' | 'failed';
 const PRODUCT_SLOT_COLORS = ['#E6EAF0', '#7DD3FC', '#5EEAD4', '#FBBF24', '#C4B5FD'];
 const OVERALL_COLOR = '#E11D2E';
 
@@ -760,6 +759,7 @@ export default function ShopAdminPanel({ initialTab = 'products' }: ShopAdminPan
   const [imageUploadProgress, setImageUploadProgress] = useState(0);
   const [localImagePreviewUrl, setLocalImagePreviewUrl] = useState<string | null>(null);
   const [selectedImageFile, setSelectedImageFile] = useState<File | null>(null);
+    const [hasPendingFileUpload, setHasPendingFileUpload] = useState(false);
   const [debouncedImageUrlPreview, setDebouncedImageUrlPreview] = useState('');
   const imageUploadRequestRef = useRef<XMLHttpRequest | null>(null);
   const fileInputRef = useRef<HTMLInputElement | null>(null);
@@ -1127,7 +1127,7 @@ export default function ShopAdminPanel({ initialTab = 'products' }: ShopAdminPan
 
 
   function resetForm() {
-        if (imageUploadRequestRef.current) {
+    if (imageUploadRequestRef.current) {
       imageUploadRequestRef.current.abort();
       imageUploadRequestRef.current = null;
     }
@@ -1136,21 +1136,15 @@ export default function ShopAdminPanel({ initialTab = 'products' }: ShopAdminPan
       return null;
     });
     setSelectedImageFile(null);
+        setHasPendingFileUpload(false);
     setImageUploadStatus('idle');
     setImageUploadError(null);
     setImageUploadProgress(0);
 
     setForm(EMPTY_FORM);
-        setFormInitial(EMPTY_FORM);
-            setFooterFeedback(null);
-                setImageUploadStatus('idle');
-    setImageUploadError(null);
-    setImageUploadProgress(0);
-    setSelectedImageFile(null);
-    setLocalImagePreviewUrl((previous) => {
-      if (previous) URL.revokeObjectURL(previous);
-      return null;
-    });
+    setFormInitial(EMPTY_FORM);
+    setFooterFeedback(null);
+
 
     setDeleteConfirmOpen(false);
 
@@ -1163,16 +1157,21 @@ export default function ShopAdminPanel({ initialTab = 'products' }: ShopAdminPan
       sortOrder: productSortMode === 'manual' ? defaultSortOrder : EMPTY_FORM.sortOrder
     };
     setForm(nextForm);
-        setFormInitial(nextForm);
-
+    setFormInitial(nextForm);
     setFormOpen(true);
     setError(null);
     setSuccess(null);
-        setFooterFeedback(null);
+    setFooterFeedback(null);
+    setImageUploadStatus('idle');
+    setImageUploadError(null);
+    setImageUploadProgress(0);
+    setSelectedImageFile(null);
+    setHasPendingFileUpload(false);
+
   }
 
   function startEdit(product: Product) {
-        const normalizedSortOrder = Number.isFinite(product.sortOrder)
+    const normalizedSortOrder = Number.isFinite(product.sortOrder)
       ? Math.min(SORT_ORDER_MAX, Math.max(SORT_ORDER_MIN, product.sortOrder))
       : defaultSortOrder;
 
@@ -1185,18 +1184,20 @@ export default function ShopAdminPanel({ initialTab = 'products' }: ShopAdminPan
       active: product.active,
       featured: product.featured,
       sortOrder: normalizedSortOrder
-          };
+    };
     setForm(nextForm);
     setFormInitial(nextForm);
 
     setFormOpen(true);
     setError(null);
     setSuccess(null);
-        setFooterFeedback(null);
-            setImageUploadStatus('idle');
+    setFooterFeedback(null);
+    setImageUploadStatus('idle');
+
     setImageUploadError(null);
     setImageUploadProgress(0);
     setSelectedImageFile(null);
+        setHasPendingFileUpload(false);
     setLocalImagePreviewUrl((previous) => {
       if (previous) URL.revokeObjectURL(previous);
       return null;
@@ -1215,7 +1216,7 @@ export default function ShopAdminPanel({ initialTab = 'products' }: ShopAdminPan
 
       request.upload.onprogress = (event) => {
         if (!event.lengthComputable) return;
-        const nextProgress = Math.min(100, Math.max(1, Math.round((event.loaded / event.total) * 100)));
+        const nextProgress = Math.min(99, Math.max(1, Math.round((event.loaded / event.total) * 100)));
         setImageUploadProgress(nextProgress);
       };
 
@@ -1224,6 +1225,7 @@ export default function ShopAdminPanel({ initialTab = 'products' }: ShopAdminPan
       };
 
       request.onload = () => {
+                setImageUploadStatus('processing');
         if (request.status < 200 || request.status >= 300) {
           try {
             const parsed = JSON.parse(request.responseText) as { error?: string };
@@ -1235,12 +1237,13 @@ export default function ShopAdminPanel({ initialTab = 'products' }: ShopAdminPan
         }
 
         try {
-          const parsed = JSON.parse(request.responseText) as { url?: string };
-          if (!parsed.url) {
+          const parsed = JSON.parse(request.responseText) as { imageUrl?: string };
+          if (!parsed.imageUrl) {
+
             reject(new Error('Upload failed. Invalid response.'));
             return;
           }
-          resolve(parsed.url);
+          resolve(parsed.imageUrl);
         } catch {
           reject(new Error('Upload failed. Invalid response.'));
         }
@@ -1263,6 +1266,7 @@ export default function ShopAdminPanel({ initialTab = 'products' }: ShopAdminPan
     }
 
     setSelectedImageFile(file);
+        setHasPendingFileUpload(true);
     setImageUploadError(null);
     setImageUploadStatus('uploading');
     setImageUploadProgress(0);
@@ -1277,6 +1281,7 @@ export default function ShopAdminPanel({ initialTab = 'products' }: ShopAdminPan
       setImageUploadStatus('uploaded');
       setImageUploadProgress(100);
       setImageUploadError(null);
+            setHasPendingFileUpload(false);
       setSelectedImageFile(null);
       setLocalImagePreviewUrl((previous) => {
         if (previous) URL.revokeObjectURL(previous);
@@ -1284,6 +1289,7 @@ export default function ShopAdminPanel({ initialTab = 'products' }: ShopAdminPan
       });
     } catch (uploadError) {
       setImageUploadStatus('failed');
+            setHasPendingFileUpload(true);
       setImageUploadError(uploadError instanceof Error ? uploadError.message : 'Upload failed. Please try again.');
     } finally {
       imageUploadRequestRef.current = null;
@@ -1319,6 +1325,11 @@ export default function ShopAdminPanel({ initialTab = 'products' }: ShopAdminPan
       setError('Price must be greater than £0.00.');
       return;
     }
+    if (hasPendingFileUpload && !form.imageUrl.trim()) {
+      setError('Finish uploading product image or provide Image URL fallback before saving.');
+      return;
+    }
+
 
     setSaving(true);
     try {
@@ -1604,7 +1615,7 @@ export default function ShopAdminPanel({ initialTab = 'products' }: ShopAdminPan
                         type="button"
                         className="btn btn--secondary admin-product-image-upload-btn"
                         onClick={() => fileInputRef.current?.click()}
-                        disabled={imageUploadStatus === 'uploading'}
+                        disabled={imageUploadStatus === 'uploading' || imageUploadStatus === 'processing'}
                       >
                         <span aria-hidden="true">⇪</span>
                         <span>Upload</span>
@@ -1614,7 +1625,16 @@ export default function ShopAdminPanel({ initialTab = 'products' }: ShopAdminPan
                       <input
                         type="url"
                         value={form.imageUrl}
-                        onChange={(event) => setForm((prev) => ({ ...prev, imageUrl: event.target.value }))}
+                        onChange={(event) => {
+                          const nextValue = event.target.value;
+                          setForm((prev) => ({ ...prev, imageUrl: nextValue }));
+                          if (nextValue.trim()) {
+                            setHasPendingFileUpload(false);
+                            setImageUploadStatus('idle');
+                            setImageUploadError(null);
+                          }
+                        }}
+
                         placeholder="https://..."
                       />
                     </label>
@@ -1626,7 +1646,9 @@ export default function ShopAdminPanel({ initialTab = 'products' }: ShopAdminPan
                 </div>
                 <div className="admin-product-image-status" aria-live="polite">
                   {imageUploadStatus === 'uploading' ? <span>Uploading… {imageUploadProgress}%</span> : null}
-                  {imageUploadStatus === 'uploaded' ? <span>Uploaded</span> : null}
+                  {imageUploadStatus === 'processing' ? <span>Processing…</span> : null}
+                  {imageUploadStatus === 'uploaded' ? <span>Done</span> : null}
+
                   {imageUploadStatus === 'failed' ? <span>Upload failed</span> : null}
                   {imageUploadError ? <span className="admin-product-image-status__error">{imageUploadError}</span> : null}
                   {imageUploadStatus === 'failed' && selectedImageFile ? (
