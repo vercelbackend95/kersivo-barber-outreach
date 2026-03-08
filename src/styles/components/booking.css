@@ -751,12 +751,23 @@
 }
 
 .admin-timeoff-fields-grid input {
-
   width: 100%;
-    min-width: 0;
+  max-width: 100%;
+  min-width: 0;
+  min-inline-size: 0;
   font-size: 16px;
-
+  display: block;
 }
+
+.admin-timeoff-fields-grid input[type='date'],
+.admin-timeoff-fields-grid input[type='time'],
+.admin-timeoff-fields-grid input[type='datetime-local'] {
+  -webkit-appearance: none;
+  appearance: none;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
 .admin-timeoff-fields-grid input.has-error {
   border-color: var(--accent);
 }
