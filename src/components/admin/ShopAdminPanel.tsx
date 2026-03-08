@@ -177,6 +177,17 @@ const OVERALL_COLOR = '#E11D2E';
 
 const DEFAULT_PRODUCT_SERIES_COLOR = 'var(--border)';
 
+const IS_DEV = import.meta.env.DEV;
+
+function debugUploadLog(message: string, details?: Record<string, unknown>) {
+  if (!IS_DEV) return;
+  if (details) {
+    console.info(`[product-upload] ${message}`, details);
+    return;
+  }
+  console.info(`[product-upload] ${message}`);
+}
+
 
 
 function formatPrice(pricePence: number): string {
@@ -761,7 +772,7 @@ export default function ShopAdminPanel({ initialTab = 'products' }: ShopAdminPan
   const [selectedImageFile, setSelectedImageFile] = useState<File | null>(null);
     const [hasPendingFileUpload, setHasPendingFileUpload] = useState(false);
   const [debouncedImageUrlPreview, setDebouncedImageUrlPreview] = useState('');
-  const imageUploadRequestRef = useRef<XMLHttpRequest | null>(null);
+  const imageUploadAbortControllerRef = useRef<AbortController | null>(null);
   const fileInputRef = useRef<HTMLInputElement | null>(null);
 
   const sortedProducts = useMemo(
@@ -885,10 +896,6 @@ export default function ShopAdminPanel({ initialTab = 'products' }: ShopAdminPan
 
   useEffect(() => {
     return () => {
-      if (imageUploadRequestRef.current) {
-        imageUploadRequestRef.current.abort();
-        imageUploadRequestRef.current = null;
-      }
       if (localImagePreviewUrl) {
         URL.revokeObjectURL(localImagePreviewUrl);
       }
@@ -1126,10 +1133,19 @@ export default function ShopAdminPanel({ initialTab = 'products' }: ShopAdminPan
   }, [activeTab, expandedOrderId]);
 
 
-  function resetForm() {
-    if (imageUploadRequestRef.current) {
-      imageUploadRequestRef.current.abort();
-      imageUploadRequestRef.current = null;
+  function resetForm(force = false) {
+    const uploadInFlight = imageUploadStatus === 'uploading' || imageUploadStatus === 'processing';
+    if (uploadInFlight && !force) {
+      const shouldCancel = window.confirm('Image upload is still in progress. Cancel upload and close?');
+      if (!shouldCancel) {
+        return;
+      }
+    }
+
+    if (uploadInFlight && imageUploadAbortControllerRef.current) {
+      imageUploadAbortControllerRef.current.abort();
+      imageUploadAbortControllerRef.current = null;
+
     }
     setLocalImagePreviewUrl((previous) => {
       if (previous) URL.revokeObjectURL(previous);
@@ -1205,52 +1221,48 @@ export default function ShopAdminPanel({ initialTab = 'products' }: ShopAdminPan
   }
 
   async function uploadProductImage(file: File) {
-    return new Promise<string>((resolve, reject) => {
-      const body = new FormData();
-      body.set('file', file);
+    const body = new FormData();
+    body.set('file', file);
 
-      const request = new XMLHttpRequest();
-      imageUploadRequestRef.current = request;
-      request.open('POST', '/api/admin/products/upload-image');
-      request.withCredentials = true;
+    const controller = new AbortController();
+    imageUploadAbortControllerRef.current = controller;
 
-      request.upload.onprogress = (event) => {
-        if (!event.lengthComputable) return;
-        const nextProgress = Math.min(99, Math.max(1, Math.round((event.loaded / event.total) * 100)));
-        setImageUploadProgress(nextProgress);
-      };
+    const fallbackProgressTimeoutId = window.setTimeout(() => {
+      setImageUploadProgress((previous) => (previous === 0 ? 15 : previous));
+    }, 250);
 
-      request.onerror = () => {
-        reject(new Error('Upload failed. Please try again.'));
-      };
+    try {
+      const response = await fetch('/api/admin/products/upload-image', {
+        method: 'POST',
+        credentials: 'include',
+        body,
+        signal: controller.signal
+      });
 
-      request.onload = () => {
-                setImageUploadStatus('processing');
-        if (request.status < 200 || request.status >= 300) {
-          try {
-            const parsed = JSON.parse(request.responseText) as { error?: string };
-            reject(new Error(parsed.error || 'Upload failed.'));
-          } catch {
-            reject(new Error('Upload failed.'));
-          }
-          return;
-        }
+      window.clearTimeout(fallbackProgressTimeoutId);
+      setImageUploadStatus('processing');
+      setImageUploadProgress(90);
 
-        try {
-          const parsed = JSON.parse(request.responseText) as { imageUrl?: string };
-          if (!parsed.imageUrl) {
+      const payload = (await response.json().catch(() => ({}))) as { url?: string; error?: string };
+      if (!response.ok) {
+        throw new Error(payload.error || 'Upload failed.');
+      }
 
-            reject(new Error('Upload failed. Invalid response.'));
-            return;
-          }
-          resolve(parsed.imageUrl);
-        } catch {
-          reject(new Error('Upload failed. Invalid response.'));
-        }
-      };
+      if (!payload.url) {
+        throw new Error('Upload failed. Invalid response.');
+      }
 
-      request.send(body);
-    });
+      return payload.url;
+    } catch (error) {
+      window.clearTimeout(fallbackProgressTimeoutId);
+      if (error instanceof DOMException && error.name === 'AbortError') {
+        throw new Error('Upload was cancelled.');
+      }
+      throw error;
+    } finally {
+      imageUploadAbortControllerRef.current = null;
+    }
+
   }
 
   async function handleImageUpload(file: File) {
@@ -1264,10 +1276,11 @@ export default function ShopAdminPanel({ initialTab = 'products' }: ShopAdminPan
       setImageUploadError('Image is too large. Maximum size is 5MB.');
       return;
     }
-
+    debugUploadLog('upload started', { name: file.name, size: file.size, type: file.type });
     setSelectedImageFile(file);
-        setHasPendingFileUpload(true);
+    setHasPendingFileUpload(true);
     setImageUploadError(null);
+        setForm((previous) => ({ ...previous, imageUrl: '' }));
     setImageUploadStatus('uploading');
     setImageUploadProgress(0);
     setLocalImagePreviewUrl((previous) => {
@@ -1277,6 +1290,7 @@ export default function ShopAdminPanel({ initialTab = 'products' }: ShopAdminPan
 
     try {
       const uploadedUrl = await uploadProductImage(file);
+            debugUploadLog('upload done', { url: uploadedUrl });
       setForm((previous) => ({ ...previous, imageUrl: uploadedUrl }));
       setImageUploadStatus('uploaded');
       setImageUploadProgress(100);
@@ -1289,10 +1303,9 @@ export default function ShopAdminPanel({ initialTab = 'products' }: ShopAdminPan
       });
     } catch (uploadError) {
       setImageUploadStatus('failed');
-            setHasPendingFileUpload(true);
+      setHasPendingFileUpload(true);
       setImageUploadError(uploadError instanceof Error ? uploadError.message : 'Upload failed. Please try again.');
-    } finally {
-      imageUploadRequestRef.current = null;
+      debugUploadLog('upload failed', { message: uploadError instanceof Error ? uploadError.message : 'Unknown error' });
     }
   }
 
@@ -1325,12 +1338,19 @@ export default function ShopAdminPanel({ initialTab = 'products' }: ShopAdminPan
       setError('Price must be greater than £0.00.');
       return;
     }
+        if (imageUploadStatus === 'uploading' || imageUploadStatus === 'processing') {
+      debugUploadLog('save blocked while upload in-flight');
+      setError('Please wait until image upload finishes before saving.');
+      return;
+    }
+
     if (hasPendingFileUpload && !form.imageUrl.trim()) {
+            debugUploadLog('save blocked until upload done', { hasPendingFileUpload: true });
       setError('Finish uploading product image or provide Image URL fallback before saving.');
       return;
     }
 
-
+    debugUploadLog('save attempt', { hasImageUrl: Boolean(form.imageUrl.trim()) });
     setSaving(true);
     try {
       const endpoint = form.id ? '/api/admin/shop/products/update' : '/api/admin/shop/products/create';
@@ -1590,11 +1610,11 @@ export default function ShopAdminPanel({ initialTab = 'products' }: ShopAdminPan
           </div>
 
           {formOpen ? createPortal((
-            <div className="admin-product-sheet-backdrop" onClick={resetForm}>
+            <div className="admin-product-sheet-backdrop" onClick={() => resetForm()}>
               <form className="admin-product-sheet" onSubmit={saveProduct} onClick={(event) => event.stopPropagation()}>
                 <div className="admin-product-sheet-head">
                   <h3>{form.id ? 'Edit product' : 'Add product'}</h3>
-                  <button type="button" className="btn btn--ghost" onClick={resetForm}>Close</button>
+                  <button type="button" className="btn btn--ghost" onClick={() => resetForm()}>Close</button>
                 </div>
                 <p className="admin-product-unsaved muted">{formDirty ? 'Unsaved changes' : 'All changes saved'}</p>
                 <div className="admin-product-image-section">
@@ -1630,6 +1650,7 @@ export default function ShopAdminPanel({ initialTab = 'products' }: ShopAdminPan
                           setForm((prev) => ({ ...prev, imageUrl: nextValue }));
                           if (nextValue.trim()) {
                             setHasPendingFileUpload(false);
+                                                        setSelectedImageFile(null);
                             setImageUploadStatus('idle');
                             setImageUploadError(null);
                           }
@@ -1645,7 +1666,7 @@ export default function ShopAdminPanel({ initialTab = 'products' }: ShopAdminPan
                   {effectiveImagePreviewUrl ? <img src={effectiveImagePreviewUrl} alt="Preview" draggable={false} /> : <span>No image preview</span>}
                 </div>
                 <div className="admin-product-image-status" aria-live="polite">
-                  {imageUploadStatus === 'uploading' ? <span>Uploading… {imageUploadProgress}%</span> : null}
+                  {imageUploadStatus === 'uploading' ? <span>Uploading… {Math.max(1, Math.min(99, imageUploadProgress))}%</span> : null}
                   {imageUploadStatus === 'processing' ? <span>Processing…</span> : null}
                   {imageUploadStatus === 'uploaded' ? <span>Done</span> : null}
 
@@ -1723,7 +1744,7 @@ export default function ShopAdminPanel({ initialTab = 'products' }: ShopAdminPan
                   canDelete={Boolean(form.id)}
                   disableDelete={saving}
                   saving={saving}
-                  canSave={formValid && formDirty}
+                  canSave={formValid && formDirty && imageUploadStatus !== 'uploading' && imageUploadStatus !== 'processing' && !hasPendingFileUpload}
                   savedNotice={footerFeedback}
                   onCancel={resetForm}
                   onDelete={() => setDeleteConfirmOpen(true)}
