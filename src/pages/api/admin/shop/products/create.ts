@@ -10,7 +10,7 @@ const createSchema = z.object({
   name: z.string().trim().min(1, 'Name is required.'),
   description: z.string().trim().max(500).optional().or(z.literal('')),
   pricePence: z.number().int().positive('Price must be greater than zero.'),
-  imageUrl: z.string().url('Image URL must be a valid URL.').optional().or(z.literal('')),
+  imageUrl: z.string().trim().refine((value) => value.length === 0 || value.startsWith('/') || /^https?:\/\//i.test(value), 'Image URL must be a valid URL or path.').optional().or(z.literal('')),
   active: z.boolean().default(true),
   featured: z.boolean().default(false),
   sortOrder: z.number().int().default(0)

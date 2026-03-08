@@ -168,6 +168,10 @@ const EMPTY_FORM: ProductFormState = {
 };
 const SORT_ORDER_MIN = 0;
 const SORT_ORDER_MAX = 9999;
+const PRODUCT_IMAGE_MAX_SIZE_BYTES = 5 * 1024 * 1024;
+const PRODUCT_IMAGE_ALLOWED_MIME_PREFIX = 'image/';
+
+type ProductImageUploadStatus = 'idle' | 'uploading' | 'uploaded' | 'failed';
 
 const PRODUCT_SLOT_COLORS = ['#E6EAF0', '#7DD3FC', '#5EEAD4', '#FBBF24', '#C4B5FD'];
 const OVERALL_COLOR = '#E11D2E';
@@ -751,6 +755,14 @@ export default function ShopAdminPanel({ initialTab = 'products' }: ShopAdminPan
   const [formInitial, setFormInitial] = useState<ProductFormState>(EMPTY_FORM);
   const [footerFeedback, setFooterFeedback] = useState<string | null>(null);
   const [deleteConfirmOpen, setDeleteConfirmOpen] = useState(false);
+  const [imageUploadStatus, setImageUploadStatus] = useState<ProductImageUploadStatus>('idle');
+  const [imageUploadError, setImageUploadError] = useState<string | null>(null);
+  const [imageUploadProgress, setImageUploadProgress] = useState(0);
+  const [localImagePreviewUrl, setLocalImagePreviewUrl] = useState<string | null>(null);
+  const [selectedImageFile, setSelectedImageFile] = useState<File | null>(null);
+  const [debouncedImageUrlPreview, setDebouncedImageUrlPreview] = useState('');
+  const imageUploadRequestRef = useRef<XMLHttpRequest | null>(null);
+  const fileInputRef = useRef<HTMLInputElement | null>(null);
 
   const sortedProducts = useMemo(
     () => [...products].sort((a, b) => a.sortOrder - b.sortOrder || Date.parse(b.updatedAt) - Date.parse(a.updatedAt)),
@@ -833,6 +845,10 @@ export default function ShopAdminPanel({ initialTab = 'products' }: ShopAdminPan
   const formDirty = useMemo(() => JSON.stringify(form) !== JSON.stringify(formInitial), [form, formInitial]);
   const formPricePence = useMemo(() => penceFromGbp(form.priceGbp), [form.priceGbp]);
   const formValid = useMemo(() => form.name.trim().length > 0 && formPricePence > 0, [form.name, formPricePence]);
+  const effectiveImagePreviewUrl = useMemo(() => {
+    if (localImagePreviewUrl) return localImagePreviewUrl;
+    return debouncedImageUrlPreview;
+  }, [debouncedImageUrlPreview, localImagePreviewUrl]);
 
 
 
@@ -860,6 +876,25 @@ export default function ShopAdminPanel({ initialTab = 'products' }: ShopAdminPan
     const timeoutId = window.setTimeout(() => setFooterFeedback(null), 1200);
     return () => window.clearTimeout(timeoutId);
   }, [footerFeedback]);
+  useEffect(() => {
+    const timeoutId = window.setTimeout(() => {
+      setDebouncedImageUrlPreview(form.imageUrl.trim());
+    }, 250);
+    return () => window.clearTimeout(timeoutId);
+  }, [form.imageUrl]);
+
+  useEffect(() => {
+    return () => {
+      if (imageUploadRequestRef.current) {
+        imageUploadRequestRef.current.abort();
+        imageUploadRequestRef.current = null;
+      }
+      if (localImagePreviewUrl) {
+        URL.revokeObjectURL(localImagePreviewUrl);
+      }
+    };
+  }, [localImagePreviewUrl]);
+
 
 
     const activeSectionLabel = useMemo(() => {
@@ -1092,9 +1127,31 @@ export default function ShopAdminPanel({ initialTab = 'products' }: ShopAdminPan
 
 
   function resetForm() {
+        if (imageUploadRequestRef.current) {
+      imageUploadRequestRef.current.abort();
+      imageUploadRequestRef.current = null;
+    }
+    setLocalImagePreviewUrl((previous) => {
+      if (previous) URL.revokeObjectURL(previous);
+      return null;
+    });
+    setSelectedImageFile(null);
+    setImageUploadStatus('idle');
+    setImageUploadError(null);
+    setImageUploadProgress(0);
+
     setForm(EMPTY_FORM);
         setFormInitial(EMPTY_FORM);
             setFooterFeedback(null);
+                setImageUploadStatus('idle');
+    setImageUploadError(null);
+    setImageUploadProgress(0);
+    setSelectedImageFile(null);
+    setLocalImagePreviewUrl((previous) => {
+      if (previous) URL.revokeObjectURL(previous);
+      return null;
+    });
+
     setDeleteConfirmOpen(false);
 
     setFormOpen(false);
@@ -1136,6 +1193,114 @@ export default function ShopAdminPanel({ initialTab = 'products' }: ShopAdminPan
     setError(null);
     setSuccess(null);
         setFooterFeedback(null);
+            setImageUploadStatus('idle');
+    setImageUploadError(null);
+    setImageUploadProgress(0);
+    setSelectedImageFile(null);
+    setLocalImagePreviewUrl((previous) => {
+      if (previous) URL.revokeObjectURL(previous);
+      return null;
+    });
+  }
+
+  async function uploadProductImage(file: File) {
+    return new Promise<string>((resolve, reject) => {
+      const body = new FormData();
+      body.set('file', file);
+
+      const request = new XMLHttpRequest();
+      imageUploadRequestRef.current = request;
+      request.open('POST', '/api/admin/products/upload-image');
+      request.withCredentials = true;
+
+      request.upload.onprogress = (event) => {
+        if (!event.lengthComputable) return;
+        const nextProgress = Math.min(100, Math.max(1, Math.round((event.loaded / event.total) * 100)));
+        setImageUploadProgress(nextProgress);
+      };
+
+      request.onerror = () => {
+        reject(new Error('Upload failed. Please try again.'));
+      };
+
+      request.onload = () => {
+        if (request.status < 200 || request.status >= 300) {
+          try {
+            const parsed = JSON.parse(request.responseText) as { error?: string };
+            reject(new Error(parsed.error || 'Upload failed.'));
+          } catch {
+            reject(new Error('Upload failed.'));
+          }
+          return;
+        }
+
+        try {
+          const parsed = JSON.parse(request.responseText) as { url?: string };
+          if (!parsed.url) {
+            reject(new Error('Upload failed. Invalid response.'));
+            return;
+          }
+          resolve(parsed.url);
+        } catch {
+          reject(new Error('Upload failed. Invalid response.'));
+        }
+      };
+
+      request.send(body);
+    });
+  }
+
+  async function handleImageUpload(file: File) {
+    if (!file.type.startsWith(PRODUCT_IMAGE_ALLOWED_MIME_PREFIX)) {
+      setImageUploadStatus('failed');
+      setImageUploadError('Please choose an image file.');
+      return;
+    }
+    if (file.size > PRODUCT_IMAGE_MAX_SIZE_BYTES) {
+      setImageUploadStatus('failed');
+      setImageUploadError('Image is too large. Maximum size is 5MB.');
+      return;
+    }
+
+    setSelectedImageFile(file);
+    setImageUploadError(null);
+    setImageUploadStatus('uploading');
+    setImageUploadProgress(0);
+    setLocalImagePreviewUrl((previous) => {
+      if (previous) URL.revokeObjectURL(previous);
+      return URL.createObjectURL(file);
+    });
+
+    try {
+      const uploadedUrl = await uploadProductImage(file);
+      setForm((previous) => ({ ...previous, imageUrl: uploadedUrl }));
+      setImageUploadStatus('uploaded');
+      setImageUploadProgress(100);
+      setImageUploadError(null);
+      setSelectedImageFile(null);
+      setLocalImagePreviewUrl((previous) => {
+        if (previous) URL.revokeObjectURL(previous);
+        return null;
+      });
+    } catch (uploadError) {
+      setImageUploadStatus('failed');
+      setImageUploadError(uploadError instanceof Error ? uploadError.message : 'Upload failed. Please try again.');
+    } finally {
+      imageUploadRequestRef.current = null;
+    }
+  }
+
+  async function onImageFileInputChange(event: React.ChangeEvent<HTMLInputElement>) {
+    const file = event.target.files?.[0] ?? null;
+    event.target.value = '';
+    if (!file) return;
+    await handleImageUpload(file);
+  }
+
+  async function retryImageUpload() {
+    if (!selectedImageFile) return;
+    await handleImageUpload(selectedImageFile);
+
   }
 
   async function saveProduct(event: React.FormEvent<HTMLFormElement>) {
@@ -1421,12 +1586,55 @@ export default function ShopAdminPanel({ initialTab = 'products' }: ShopAdminPan
                   <button type="button" className="btn btn--ghost" onClick={resetForm}>Close</button>
                 </div>
                 <p className="admin-product-unsaved muted">{formDirty ? 'Unsaved changes' : 'All changes saved'}</p>
+                <div className="admin-product-image-section">
+                  <p className="admin-product-image-section__title">Image</p>
+                  <div className="admin-product-image-controls">
+                    <div className="admin-product-image-upload-wrap">
+                      <input
+                        ref={fileInputRef}
+                        type="file"
+                        accept="image/*"
+                        capture="environment"
+                        onChange={onImageFileInputChange}
+                        className="admin-product-image-file-input"
+                        tabIndex={-1}
+                        aria-hidden="true"
+                      />
+                      <button
+                        type="button"
+                        className="btn btn--secondary admin-product-image-upload-btn"
+                        onClick={() => fileInputRef.current?.click()}
+                        disabled={imageUploadStatus === 'uploading'}
+                      >
+                        <span aria-hidden="true">⇪</span>
+                        <span>Upload</span>
+                      </button>
+                    </div>
+                    <label className="admin-product-field admin-product-image-url-field">Image URL (fallback)
+                      <input
+                        type="url"
+                        value={form.imageUrl}
+                        onChange={(event) => setForm((prev) => ({ ...prev, imageUrl: event.target.value }))}
+                        placeholder="https://..."
+                      />
+                    </label>
+                  </div>
+                </div>
 
-                <label className="admin-product-field">Image URL
-                  <input type="url" value={form.imageUrl} onChange={(event) => setForm((prev) => ({ ...prev, imageUrl: event.target.value }))} placeholder="https://..." />
-                </label>
                 <div className="admin-product-image-preview" aria-hidden="true">
-                  {form.imageUrl.trim() ? <img src={form.imageUrl} alt="Preview" draggable={false} /> : <span>No image preview</span>}
+                  {effectiveImagePreviewUrl ? <img src={effectiveImagePreviewUrl} alt="Preview" draggable={false} /> : <span>No image preview</span>}
+                </div>
+                <div className="admin-product-image-status" aria-live="polite">
+                  {imageUploadStatus === 'uploading' ? <span>Uploading… {imageUploadProgress}%</span> : null}
+                  {imageUploadStatus === 'uploaded' ? <span>Uploaded</span> : null}
+                  {imageUploadStatus === 'failed' ? <span>Upload failed</span> : null}
+                  {imageUploadError ? <span className="admin-product-image-status__error">{imageUploadError}</span> : null}
+                  {imageUploadStatus === 'failed' && selectedImageFile ? (
+                    <button type="button" className="btn btn--ghost admin-product-image-retry" onClick={() => { void retryImageUpload(); }}>
+                      Retry upload
+                    </button>
+                  ) : null}
+
                 </div>
 
                 <label className="admin-product-field">Name
