@@ -14,51 +14,49 @@ interface HeroImage {
 }
 
 interface Props {
-
+  eyebrow?: string;
   heading?: string;
   description?: string;
   buttonPrimary?: HeroButton;
-  buttonSecondary?: HeroButton;
+  buttonSecondary?: HeroButton | null;
   features?: HeroFeature[];
   images?: HeroImage[];
 }
 
 const {
-  heading = 'BUILD FASTER WITH SHADCNBLOCKS',
-  description = 'Components and blocks built with shadcn/ui, Tailwind CSS and React for modern product teams.',
+  eyebrow = 'Connected operations',
+  heading = 'One Website System for Modern Barbershops',
+  description =
+    'Bookings, barber schedules, client enquiries and pickup orders all stay connected in one clean website system.',
   buttonPrimary = {
-    text: 'Get started',
+    text: 'See how it works',
     href: '#',
   },
-  buttonSecondary = {
-    text: 'Learn more',
-    href: '#',
-  },
+    buttonSecondary = null,
   features = [
     {
-     title: 'Tailored workflows',
-      description: 'Track progress across custom issue flows for your team.',
+      title: 'Online bookings',
+      description: 'Clients book in minutes without back-and-forth messages.',
 
     },
     {
-      title: 'Cross-team projects',
-      description: 'Collaborate across teams and departments.',
+      title: 'Barber schedules',
+      description: 'Keep availability, services and daily calendars clear.',
 
     },
     {
-      title: 'Milestones',
-      description: 'Break projects down into concrete phases.',
-
+      title: 'Client enquiries',
+      description: 'Capture haircut, beard and service questions in one place.',
     },
     {
-      title: 'Progress insights',
-      description: 'Track scope, velocity, and progress over time.',
+      title: 'Shop & pickup',
+      description: 'Sell products online and prepare smooth in-shop collection.',
     },
   ],
   images = [
     {
       src: 'https://deifkwefumgah.cloudfront.net/shadcnblocks/block/dashboard/kanban-ui-dashboard-mainline.png',
-      alt: 'Product dashboard preview',
+      alt: 'Barbershop website dashboard overview',
 
     },
   ],
@@ -68,6 +66,7 @@ const {
 <section class="hero261" aria-labelledby="hero261-title">
   <div class="container hero261__layout">
     <div class="hero261__content">
+            {eyebrow && <p class="hero261__eyebrow">{eyebrow}</p>}
       <h2 id="hero261-title" class="hero261__heading">{heading}</h2>
 
       {description && <p class="hero261__description">{description}</p>}
@@ -85,7 +84,7 @@ const {
         )}
       </div>
     </div>
-    <div class="hero261__features" aria-label="Feature highlights">
+    <div class="hero261__features" aria-label="Connected operations highlights">
       {features.map((feature, index) => (
         <article class="hero261__feature" key={`${feature.title}-${index}`}>
           <span class="hero261__feature-icon" aria-hidden="true"></span>

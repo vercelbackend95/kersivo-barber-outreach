@@ -1,17 +1,28 @@
 .hero261 {
-  padding-block: clamp(3rem, 8vw, 7rem);
+  padding-block: clamp(3.25rem, 9vw, 7rem);
 
   background: var(--bg);
     overflow: hidden;
 }
 .hero261__layout {
   display: grid;
-  gap: 2rem;
+  gap: 1.75rem;
 }
 
 .hero261__content {
   display: grid;
-  gap: 1rem;
+  gap: 0.95rem;
+  align-content: start;
+}
+
+.hero261__eyebrow {
+  margin: 0;
+  color: var(--accent);
+  font-size: 0.8rem;
+  font-weight: 600;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+
 }
 
 .hero261__heading {
@@ -19,23 +30,27 @@
   max-width: 16ch;
   text-transform: uppercase;
   letter-spacing: 0.03em;
+  line-height: 0.98;
+  text-wrap: balance;
 
 }
 
 .hero261__description {
   margin: 0;
-  max-width: 38ch;
+  max-width: 42ch;
   color: var(--muted);
-  font-size: clamp(1rem, 4vw, 1.35rem);
-  line-height: 1.5;
+  font-size: clamp(1rem, 3.2vw, 1.2rem);
+  line-height: 1.6;
+
 
 }
 
 .hero261__actions {
   display: flex;
   flex-wrap: wrap;
+    align-items: center;
   gap: 0.75rem;
-
+  margin-top: 0.35rem;
 }
 
 .hero261__secondary {
@@ -45,24 +60,26 @@
 
 .hero261__features {
   display: grid;
-  gap: 0.9rem;
-    border-inline-start: 1px dashed color-mix(in srgb, var(--border) 72%, var(--fg) 28%);
-  padding-inline-start: 1rem;
+  gap: 1rem;
+  border-inline-start: 1px dashed color-mix(in srgb, var(--border) 72%, var(--fg) 28%);
+  padding-inline-start: 0.95rem;
+  align-content: start;
+
 
 }
 .hero261__feature {
   display: flex;
   align-items: flex-start;
-  gap: 0.65rem;
+  gap: 0.7rem;
 
 }
 .hero261__feature-icon {
   width: 0.45rem;
   height: 0.45rem;
-  margin-top: 0.45rem;
+  margin-top: 0.48rem;
 
   background: var(--accent);
-    flex: 0 0 0.45rem;
+  flex: 0 0 0.45rem;
 }
 
 
@@ -70,29 +87,33 @@
   margin: 0;
   font-family: var(--font-body);
   font-size: 1rem;
+    font-weight: 600;
   letter-spacing: 0;
   text-transform: none;
-
+  color: var(--fg);
 }
 
 
 .hero261__feature-description {
-  margin: 0.2rem 0 0;
+  margin: 0.24rem 0 0;
 
 
   color: var(--muted);
-  font-size: 0.92rem;
-  line-height: 1.5;
+  font-size: 0.95rem;
+  line-height: 1.55;
+  max-width: 40ch;
+
 
 
 }
 .hero261__preview-wrap {
   position: relative;
-  margin-top: 2.5rem;
+  margin-top: 2rem;
   margin-inline: auto;
   width: min(100%, 1100px);
-  min-height: 340px;
-  padding-top: 2rem;
+  min-height: 280px;
+  padding-top: 1.5rem;
+
 
 }
 
@@ -100,7 +121,7 @@
   position: absolute;
   inset: 0 auto auto 50%;
   width: 100vw;
-  height: 16rem;
+  height: 14rem;
   transform: translateX(-50%);
   opacity: 0.1;
   color: var(--accent);
@@ -108,13 +129,13 @@
     repeating-linear-gradient(90deg, transparent, transparent 4px, currentColor 4px, currentColor 8px),
     repeating-linear-gradient(0deg, transparent, transparent 4px, currentColor 4px, currentColor 8px);
   background-size: 24px 1px, 1px 24px;
-  mask-image: radial-gradient(ellipse 50% 55% at 50% 50%, black, transparent);
+  mask-image: radial-gradient(ellipse 55% 55% at 50% 50%, black, transparent);
 
 }
 .hero261__preview-image {
   position: relative;
   width: 100%;
-  min-height: 340px;
+  min-height: 280px;
   object-fit: cover;
   object-position: top left;
   border: 1px solid var(--border);
@@ -123,28 +144,54 @@
 
 }
 
+@media (min-width: 48rem) {
+  .hero261__layout {
+    gap: 2.5rem;
+  }
 
+  .hero261__features {
+    gap: 1.05rem;
+    padding-inline-start: 1.1rem;
+  }
+
+  .hero261__preview-wrap {
+    margin-top: 2.75rem;
+    padding-top: 2rem;
+  }
+}
 @media (min-width: 72rem) {
 
 
   .hero261__layout {
-    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+    grid-template-columns: minmax(0, 1.02fr) minmax(0, 0.98fr);
     gap: 3rem;
+    align-items: start;
+  }
+  .hero261__content {
+    gap: 1.05rem;
+  }
+  .hero261__actions {
+    margin-top: 0.45rem;
 
-    align-items: center;
 
 
   }
 
   .hero261__features {
     padding-inline-start: 1.25rem;
-
+    margin-top: 0.35rem;
   }
 
 
   .hero261__preview-wrap {
-    margin-top: 4rem;
-    padding-top: 3rem;
+    margin-top: 3.5rem;
+    min-height: 340px;
+    padding-top: 2.5rem;
+  }
+
+  .hero261__preview-image {
+    min-height: 340px;
+
 
 
 
