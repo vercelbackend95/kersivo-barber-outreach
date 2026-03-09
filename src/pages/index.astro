@@ -200,19 +200,28 @@ import '../styles/components/footer50.css';
   if (chooser && openTrigger) {
     const closeTriggers = chooser.querySelectorAll('[data-system-chooser-close]');
     const focusTarget = chooser.querySelector('.system-chooser__close');
+    let isChooserOpen = false;
 
+    const setChooserOpen = (nextOpen) => {
+      isChooserOpen = nextOpen;
+      chooser.hidden = !nextOpen;
+      chooser.setAttribute('aria-hidden', String(!nextOpen));
+      document.body.classList.toggle('body--modal-open', nextOpen);
+
+      if (nextOpen) {
+        focusTarget?.focus();
+      } else {
+        openTrigger.focus();
+      }
+    };
     const openChooser = () => {
-      chooser.hidden = false;
-      document.body.classList.add('body--modal-open');
-      focusTarget?.focus();
+      setChooserOpen(true);
     };
 
     const closeChooser = () => {
-      chooser.hidden = true;
-      document.body.classList.remove('body--modal-open');
-      openTrigger.focus();
+      setChooserOpen(false);
     };
-
+    setChooserOpen(false);
     openTrigger.addEventListener('click', openChooser);
     closeTriggers.forEach((trigger) => trigger.addEventListener('click', closeChooser));
 
@@ -223,7 +232,7 @@ import '../styles/components/footer50.css';
     });
 
     document.addEventListener('keydown', (event) => {
-      if (event.key === 'Escape' && !chooser.hidden) {
+      if (event.key === 'Escape' && isChooserOpen) {
         closeChooser();
       }
     });
