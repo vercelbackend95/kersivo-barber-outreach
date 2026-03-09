@@ -19,6 +19,18 @@ const CATEGORY_LABELS: Record<string, string> = {
   TOOLS: 'Tools',
   GIFT_SETS: 'Sets'
 };
+const createExcerpt = (description: string | null) => {
+  if (!description) {
+    return null;
+  }
+
+  const cleanedDescription = description.replace(/\s+/g, ' ').trim();
+  if (cleanedDescription.length <= 108) {
+    return cleanedDescription;
+  }
+
+  return `${cleanedDescription.slice(0, 105).trimEnd()}…`;
+};
 
 ---
 
@@ -51,26 +63,39 @@ const CATEGORY_LABELS: Record<string, string> = {
         </article>
       ) : products.map((product) => (
         <article class="shop-card" key={product.id} data-category={product.category}>
-          {product.imageUrl ? <img src={product.imageUrl} alt={product.name} class="shop-image" loading="lazy" /> : null}
+          <div class="shop-media">
+            {product.featured ? <p class="shop-badge">Barber Pick</p> : null}
+            {product.imageUrl ? <img src={product.imageUrl} alt={product.name} class="shop-image" loading="lazy" /> : null}
+          </div>
+
           <div class="shop-card-body">
-            <div class="shop-card-head">
-              <h2>{product.name}</h2>
+            <div class="shop-card-meta-row">
+              <p class="shop-category">{CATEGORY_LABELS[product.category] ?? 'Styling'}</p>
+
               <p class="shop-price">{formatGbp(product.pricePence)}</p>
+            </div>
+
+            <h2>{product.name}</h2>
+
+            {createExcerpt(product.description) ? (
+              <p class="shop-excerpt">{createExcerpt(product.description)}</p>
+            ) : null}
+            <div class="shop-card-actions">
+              <button
+                type="button"
+                class="btn btn--primary"
+                data-add-to-cart
+                data-product-id={product.id}
+                data-product-name={product.name}
+                data-product-price-pence={String(product.pricePence)}
+                data-product-image-url={product.imageUrl ?? ''}
+              >
+                Add to cart
+              </button>
+              <p class="shop-micro-note">Ready for pickup</p>
 
             </div>
-                        <p class="shop-category muted">{CATEGORY_LABELS[product.category] ?? 'Styling'}</p>
-            {product.description ? <p class="muted">{product.description}</p> : null}
-            <button
-              type="button"
-              class="btn btn--primary"
-              data-add-to-cart
-              data-product-id={product.id}
-              data-product-name={product.name}
-              data-product-price-pence={String(product.pricePence)}
-              data-product-image-url={product.imageUrl ?? ''}
-            >
-              Add to cart
-            </button>
+
           </div>
         </article>
       ))}
