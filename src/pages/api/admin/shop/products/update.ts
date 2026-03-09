@@ -6,10 +6,11 @@ import { requireAdmin } from '../../../../../lib/admin/auth';
 import { prisma } from '../../../../../lib/db/client';
 import { resolveShopId } from '../../../../../lib/db/shopScope';
 import { makeBlobPath, uploadPublicImageToBlob } from '../../../../../lib/storage/vercelBlob';
+const PRODUCT_DESCRIPTION_MAX_LENGTH = 2000;
 const updateSchema = z.object({
   id: z.string().min(1),
   name: z.string().trim().min(1, 'Name is required.'),
-  description: z.string().trim().max(500).optional().or(z.literal('')),
+  description: z.string().trim().max(PRODUCT_DESCRIPTION_MAX_LENGTH, `Description must be at most ${PRODUCT_DESCRIPTION_MAX_LENGTH} characters.`).optional().or(z.literal('')),
   pricePence: z.number().int().positive('Price must be greater than zero.'),
   imageUrl: z.string().trim().url('Image URL must be a valid URL.').optional().or(z.literal('')),
   active: z.boolean().default(true),
