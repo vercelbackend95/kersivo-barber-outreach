@@ -1,5 +1,5 @@
 ---
-interface FlowStep {
+interface SystemModule {
   title: string;
   description: string;
 
@@ -10,39 +10,44 @@ interface Props {
   heading?: string;
   subHeading?: string;
   outcomes?: string[];
-  steps?: FlowStep[];
+  modules?: SystemModule[];
 }
 
 const {
   eyebrow = 'Connected operations',
-  heading = 'How your barbershop website keeps the day running smoothly',
+  heading = 'One website system that keeps your barbershop in sync',
   subHeading =
-    'Every key action is linked in one clear flow, so clients, barbers and front desk staff stay aligned from first booking to final confirmation.',
+    'Booking, schedule, enquiries and shop orders stay connected in one operational hub, so your team works faster with less friction.',
   outcomes = [
-    'Fewer back-and-forth messages',
-    'Cleaner daily scheduling',
-    'Pickup-ready retail built in',
+    'Bookings, enquiries and orders in one place',
+    'Clear visibility for barbers and front desk',
+    'Less manual follow-up across the day',
+
   ],
-  steps = [
+  modules = [
     {
       title: 'Online Booking',
-      description: 'Clients choose a service and lock in a slot in under a minute.',
+      description: 'Clients lock a slot quickly with service details already attached.',
+      tone: 'booking',
+
     },
     {
       title: 'Team Schedule',
-      description: "Each barber's calendar stays clear, updated and easy to manage.",
-    },
-    {
-      title: 'Client Enquiry',
-      description: 'Questions arrive in one place so your team can respond quickly.',
+      description: 'Live calendar visibility keeps every barber aligned through the day.',
+      tone: 'schedule',
+
     },
     {
       title: 'Shop Pickup',
-      description: 'Product orders are placed online and prepared for smooth collection.',
+      description: 'Orders are prepared on time with pickup status tracked automatically.',
+      tone: 'shop',
+
     },
     {
-      title: 'Order Confirmation',
-      description: 'Automatic confirmations keep clients informed and reduce no-shows.',
+      title: 'Easy Admin',
+      description: 'Confirmations and enquiries are handled from one clean control layer.',
+      tone: 'admin',
+
     },
   ],
 } = Astro.props as Props;
@@ -61,16 +66,41 @@ const {
       </ul>
         </header>
 
-    <ol class="integrations3a__flow" aria-label="How the website system works together">
-      {steps.map((step, index) => (
-        <li class="integrations3a__step" key={`${step.title}-${index}`}>
-          <article class="integrations3a__card">
-            <p class="integrations3a__number" aria-hidden="true">{String(index + 1).padStart(2, '0')}</p>
-            <h3 class="integrations3a__name">{step.title}</h3>
-            <p class="integrations3a__description">{step.description}</p>
-          </article>
-        </li>
-      ))}
-    </ol>
+    <div class="integrations3a__system" aria-label="Connected website system preview">
+      <article class="integrations3a__core" aria-label="Website system overview panel">
+        <p class="integrations3a__core-kicker">Website system</p>
+        <h3 class="integrations3a__core-title">Daily operations overview</h3>
+        <div class="integrations3a__core-grid" aria-hidden="true">
+          <div class="integrations3a__core-metric">
+            <span class="integrations3a__metric-label">Bookings</span>
+            <strong class="integrations3a__metric-value">18 Today</strong>
+          </div>
+          <div class="integrations3a__core-metric">
+            <span class="integrations3a__metric-label">Pending Enquiries</span>
+            <strong class="integrations3a__metric-value">4 Active</strong>
+          </div>
+          <div class="integrations3a__core-metric">
+            <span class="integrations3a__metric-label">Pickup Orders</span>
+            <strong class="integrations3a__metric-value">6 Ready</strong>
+          </div>
+          <div class="integrations3a__core-metric">
+            <span class="integrations3a__metric-label">Team Availability</span>
+            <strong class="integrations3a__metric-value">On Track</strong>
+          </div>
+        </div>
+      </article>
+
+      <ul class="integrations3a__modules" aria-label="Connected system modules">
+        {modules.map((module, index) => (
+          <li class="integrations3a__module-item" key={`${module.title}-${index}`}>
+            <article class={`integrations3a__module integrations3a__module--${module.tone ?? 'booking'}`}>
+              <h3 class="integrations3a__module-title">{module.title}</h3>
+              <p class="integrations3a__module-description">{module.description}</p>
+            </article>
+          </li>
+        ))}
+      </ul>
+    </div>
+
   </div>
 </section>

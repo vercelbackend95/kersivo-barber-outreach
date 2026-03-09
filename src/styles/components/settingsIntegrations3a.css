@@ -27,7 +27,7 @@
   margin: 0;
 
   color: var(--muted);
-    max-width: 58ch;
+  max-width: 58ch;
 }
 
 .integrations3a__outcomes {
@@ -57,104 +57,191 @@
 
 }
 
-.integrations3a__flow {
+.integrations3a__system {
+
+  display: grid;
+  gap: 0.85rem;
+  padding: clamp(0.85rem, 2.8vw, 1.25rem);
+  border: 1px solid color-mix(in srgb, var(--border) 88%, var(--accent) 12%);
+  border-radius: 6px;
+  background: linear-gradient(
+    150deg,
+    color-mix(in srgb, var(--surface) 92%, var(--accent) 8%) 0%,
+    color-mix(in srgb, var(--surface) 96%, var(--fg) 4%) 55%,
+    color-mix(in srgb, var(--surface) 92%, var(--accent) 8%) 100%
+  );
+}
+
+.integrations3a__core {
+  display: grid;
+  gap: 0.9rem;
+  padding: clamp(1rem, 2.8vw, 1.3rem);
+  border: 1px solid color-mix(in srgb, var(--border) 80%, var(--accent) 20%);
+  border-radius: 4px;
+  background: color-mix(in srgb, var(--surface) 90%, var(--fg) 10%);
+  box-shadow: 0 18px 34px color-mix(in srgb, var(--bg) 72%, transparent 28%);
+
+}
+
+.integrations3a__core-kicker {
+  margin: 0;
+  font-size: 0.7rem;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--accent);
+
+}
+.integrations3a__core-title {
+  margin: 0;
+  font-size: clamp(1.15rem, 4vw, 1.45rem);
+  line-height: 1.15;
+
+
+}
+
+.integrations3a__core-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0.55rem;
+}
+
+.integrations3a__core-metric {
+  display: grid;
+  gap: 0.32rem;
+  min-width: 0;
+  padding: 0.65rem;
+  border: 1px solid color-mix(in srgb, var(--border) 88%, var(--accent) 12%);
+
+  border-radius: 4px;
+  background: color-mix(in srgb, var(--bg) 65%, var(--surface) 35%);
+}
+.integrations3a__metric-label {
+  font-size: 0.7rem;
+  line-height: 1.2;
+  color: var(--muted);
+
+
+
+}
+
+.integrations3a__metric-value {
+  font-size: 0.85rem;
+  line-height: 1.2;
+  color: var(--fg);
+}
+.integrations3a__modules {
   list-style: none;
+
+
   margin: 0;
   padding: 0;
-
   display: grid;
-  gap: var(--space-sm);
+  gap: 0.75rem;
 }
-
-.integrations3a__step {
+.integrations3a__module-item {
   margin: 0;
+
+
+}
+
+.integrations3a__module {
   position: relative;
-}
-.integrations3a__step:not(:last-child)::after {
-  content: '';
-  position: absolute;
-  left: 1rem;
-  top: calc(100% + 0.25rem);
-  width: 1px;
-  height: calc(var(--space-sm) - 0.5rem);
-  background: color-mix(in srgb, var(--border) 70%, var(--accent) 30%);
-
-}
-
-.integrations3a__card {
   display: grid;
-  grid-template-columns: auto 1fr;
-  grid-template-areas:
-    'number title'
-    'number description';
-  column-gap: 0.95rem;
-  row-gap: 0.45rem;
-  padding: clamp(0.95rem, 3.4vw, 1.25rem);
-
+  gap: 0.4rem;
+  padding: 0.8rem 0.9rem;
   border: 1px solid var(--border);
   border-radius: 4px;
   background: color-mix(in srgb, var(--surface) 94%, var(--fg) 6%);
-
-
 }
-
-.integrations3a__number {
-  grid-area: number;
-  align-self: start;
-
-  margin: 0;
-  min-width: 2rem;
-  color: var(--accent);
-    font-size: 0.78rem;
-  letter-spacing: 0.12em;
-  font-weight: 700;
-
+.integrations3a__module::before {
+  content: '';
+  position: absolute;
+  inset-inline-start: 0;
+  inset-block: 0;
+  width: 3px;
+  background: var(--accent);
 }
 
 
-
-.integrations3a__name {
-    grid-area: title;
+.integrations3a__module-title {
   margin: 0;
-  font-size: clamp(1.05rem, 2.8vw, 1.2rem);
+  font-size: 0.95rem;
   line-height: 1.2;
 
 
 }
 
-.integrations3a__description {
-  grid-area: description;
+.integrations3a__module-description {
   margin: 0;
 
   color: var(--muted);
-  font-size: 0.95rem;
-  line-height: 1.5;
+  font-size: 0.84rem;
+  line-height: 1.45;
+
+}
+
+.integrations3a__module--booking::before {
+  background: var(--accent);
+}
+
+.integrations3a__module--schedule::before {
+  background: color-mix(in srgb, var(--accent) 75%, var(--fg) 25%);
 }
 
 
+.integrations3a__module--shop::before {
+  background: color-mix(in srgb, var(--accent) 65%, var(--surface) 35%);
+}
 
+.integrations3a__module--admin::before {
+  background: color-mix(in srgb, var(--accent) 55%, var(--border) 45%);
+}
+
+@media (min-width: 52rem) {
+  .integrations3a__modules {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
 @media (min-width: 72rem) {
 
 
   .integrations3a__container {
-    grid-template-columns: minmax(0, 0.95fr) minmax(0, 1.05fr);
+    grid-template-columns: minmax(0, 0.92fr) minmax(0, 1.08fr);
     align-items: start;
-    gap: clamp(2rem, 4vw, 3.25rem);
+    gap: clamp(1.5rem, 2.8vw, 2.4rem);
   }
 
-  .integrations3a__flow {
-    gap: var(--space-md);
-  }
-
-  .integrations3a__step:not(:last-child)::after {
-    left: 1.05rem;
-    top: calc(100% + 0.4rem);
-    height: calc(var(--space-md) - 0.65rem);
+  .integrations3a__intro {
+    padding-top: 0.6rem;
 
   }
 
-  .integrations3a__card {
-    padding: clamp(1rem, 1.6vw, 1.35rem);
+  .integrations3a__system {
+    grid-template-columns: minmax(0, 1.2fr) minmax(0, 0.95fr);
+    grid-template-areas:
+      'core modules';
+    gap: 1rem;
+    align-items: center;
+    padding: clamp(1rem, 1.7vw, 1.4rem);
+
+
+  }
+
+  .integrations3a__core {
+    grid-area: core;
+    min-height: 100%;
+  }
+  .integrations3a__modules {
+    grid-area: modules;
+    grid-template-columns: minmax(0, 1fr);
+    gap: 0.8rem;
+  }
+
+  .integrations3a__module-item:nth-child(2),
+  .integrations3a__module-item:nth-child(4) {
+    transform: translateX(0.4rem);
+
 
 
   }
