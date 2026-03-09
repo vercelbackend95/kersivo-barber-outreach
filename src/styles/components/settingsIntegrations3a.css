@@ -5,17 +5,16 @@
 
 .integrations3a__container {
   display: grid;
-  gap: var(--space-lg);
+  gap: clamp(1.5rem, 4vw, 2.75rem);
 }
 
-.integrations3a__header {
+.integrations3a__intro {
   display: grid;
-  gap: var(--space-xs);
-  max-width: 62ch;
+  gap: var(--space-sm);
 }
 
 .integrations3a__eyebrow {
-    margin: 0;
+  margin: 0;
   font-size: 0.75rem;
   font-weight: 700;
   letter-spacing: 0.12em;
@@ -24,117 +23,139 @@
 
 }
 
-.integrations3a__lead,
-.integrations3a__microcopy {
+.integrations3a__lead {
   margin: 0;
 
   color: var(--muted);
+    max-width: 58ch;
 }
 
-.integrations3a__microcopy {
-  font-size: 0.9rem;
+.integrations3a__outcomes {
+  list-style: none;
+  display: grid;
+  gap: 0.55rem;
+  margin: 0;
+  padding: 0;
 
 }
 
-.integrations3a__system {
+.integrations3a__outcome {
+  margin: 0;
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  color: var(--fg);
+  line-height: 1.45;
+}
+.integrations3a__outcome::before {
+  content: '';
+  width: 0.4rem;
+  height: 0.4rem;
+  flex: 0 0 0.4rem;
+  background: var(--accent);
+
+
+}
+
+.integrations3a__flow {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+
   display: grid;
   gap: var(--space-sm);
+}
+
+.integrations3a__step {
+  margin: 0;
+  position: relative;
+}
+.integrations3a__step:not(:last-child)::after {
+  content: '';
+  position: absolute;
+  left: 1rem;
+  top: calc(100% + 0.25rem);
+  width: 1px;
+  height: calc(var(--space-sm) - 0.5rem);
+  background: color-mix(in srgb, var(--border) 70%, var(--accent) 30%);
 
 }
 
 .integrations3a__card {
   display: grid;
-  gap: 0.55rem;
-  height: 100%;
-  margin: 0;
-  padding: var(--space-md);
+  grid-template-columns: auto 1fr;
+  grid-template-areas:
+    'number title'
+    'number description';
+  column-gap: 0.95rem;
+  row-gap: 0.45rem;
+  padding: clamp(0.95rem, 3.4vw, 1.25rem);
+
   border: 1px solid var(--border);
-    border-radius: 6px;
-  background: color-mix(in srgb, var(--surface) 92%, var(--fg) 8%);
-}
-.integrations3a__card--featured {
-  position: relative;
-  padding: clamp(1.25rem, 4vw, 1.7rem);
-  gap: var(--space-xs);
-  background: linear-gradient(
-    135deg,
-    color-mix(in srgb, var(--surface) 84%, var(--fg) 16%) 0%,
-    color-mix(in srgb, var(--surface) 94%, var(--accent) 6%) 100%
-  );
+  border-radius: 4px;
+  background: color-mix(in srgb, var(--surface) 94%, var(--fg) 6%);
+
 
 }
 
-.integrations3a__kicker {
+.integrations3a__number {
+  grid-area: number;
+  align-self: start;
+
   margin: 0;
-  font-size: 0.74rem;
-  letter-spacing: 0.1em;
-  text-transform: uppercase;
+  min-width: 2rem;
   color: var(--accent);
+    font-size: 0.78rem;
+  letter-spacing: 0.12em;
+  font-weight: 700;
+
 }
 
 
 
 .integrations3a__name {
+    grid-area: title;
   margin: 0;
-  font-size: clamp(1.15rem, 3.5vw, 1.6rem);
+  font-size: clamp(1.05rem, 2.8vw, 1.2rem);
+  line-height: 1.2;
+
 
 }
 
 .integrations3a__description {
-    margin: 0;
+  grid-area: description;
+  margin: 0;
+
   color: var(--muted);
   font-size: 0.95rem;
-  line-height: 1.55;
-
-}
-
-.integrations3a__supporting {
-  list-style: none;
-  margin: 0;
-  padding: 0;
-  display: grid;
-  gap: var(--space-sm);
+  line-height: 1.5;
 }
 
 
-.integrations3a__item {
-  margin: 0;
-}
-@media (min-width: 48rem) {
-  .integrations3a__supporting {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
 
-
-  }
-}
 @media (min-width: 72rem) {
 
 
   .integrations3a__container {
-        grid-template-columns: minmax(0, 1fr) minmax(0, 1.15fr);
+    grid-template-columns: minmax(0, 0.95fr) minmax(0, 1.05fr);
     align-items: start;
-
-    gap: var(--space-xl);
+    gap: clamp(2rem, 4vw, 3.25rem);
   }
 
-  .integrations3a__system {
-    grid-template-columns: minmax(0, 0.9fr) minmax(0, 1fr);
+  .integrations3a__flow {
     gap: var(--space-md);
-    position: relative;
   }
 
-  .integrations3a__card--featured::after {
-    content: '';
-    position: absolute;
-    top: 50%;
-    right: calc(-1 * var(--space-md));
-    width: var(--space-md);
-    height: 1px;
-    background: color-mix(in srgb, var(--border) 65%, var(--accent) 35%);
+  .integrations3a__step:not(:last-child)::after {
+    left: 1.05rem;
+    top: calc(100% + 0.4rem);
+    height: calc(var(--space-md) - 0.65rem);
+
   }
 
-  .integrations3a__supporting {
-    gap: var(--space-md);
+  .integrations3a__card {
+    padding: clamp(1rem, 1.6vw, 1.35rem);
+
 
   }
 }
