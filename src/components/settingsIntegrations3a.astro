@@ -2,54 +2,49 @@
 interface SystemModule {
   title: string;
   description: string;
-  label?: string;
+
 }
 
 interface Props {
-    eyebrow?: string;
+  eyebrow?: string;
   heading?: string;
   subHeading?: string;
   modules?: SystemModule[];
 }
 
 const {
-  eyebrow = 'System proof',
-  heading = 'Built for barber operations, not just looks',
+  eyebrow = 'Connected operations',
+  heading = 'One website system that keeps your barbershop moving',
   subHeading =
-    'Kersivo combines booking, team schedules, shop and admin into one practical website system your barbershop can run daily.',
-  modules = [
+    'From online bookings to pickup-ready product orders, every key touchpoint works together so your team stays focused behind the chair.',
+    modules = [
     {
-      title: 'Bookings',
-      description: 'Let clients reserve appointments online in seconds without back-and-forth messages.',
-      label: 'Client flow',
+      title: 'Online Bookings',
+      description: 'Clients lock in appointments fast, without DMs or back-and-forth calls.',
     },
     {
-      title: 'Team Schedule',
-      description: 'Show each barber\'s services, shifts and availability in one clean view.',
-      label: 'Staff control',
+      title: 'Barber Schedules',
+      description: 'Keep each barber\'s availability and service slots clear for the full week.',
     },
     {
       title: 'Shop & Pickup',
-      description: 'Sell retail products on your site and prepare orders for in-shop collection.',
-      label: 'Extra revenue',
+      description: 'Sell products on-site and prepare clean pickup orders at the front desk.',
     },
     {
-      title: 'Enquiries',
-      description: 'Capture haircut, beard and partnership questions through clear contact paths.',
-      label: 'Lead capture',
+      title: 'Client Enquiries',
+      description: 'Collect haircut, beard and service questions in one reliable inbox.',
     },
     {
-      title: 'Admin Dashboard',
-      description: 'Update products, services and key website content without touching code.',
-      label: 'Owner friendly',
+      title: 'Easy Admin',
+      description: 'Update services, hours and offers in minutes without technical hassle.',
     },
     {
-      title: 'Email Confirmations',
-      description: 'Automatically send booking and order confirmations so clients always know what\'s next.',
-      label: 'Auto updates',
+      title: 'Order Confirmations',
+      description: 'Automatically confirm bookings and purchases so clients always know what\'s next.',
     },
   ],
 } = Astro.props as Props;
+const [featuredModule, ...supportingModules] = modules;
 ---
 
 <section class="integrations3a" aria-labelledby="integrations3a-title">
@@ -58,20 +53,28 @@ const {
       <p class="integrations3a__eyebrow">{eyebrow}</p>
       <h2 id="integrations3a-title">{heading}</h2>
       <p class="integrations3a__lead">{subHeading}</p>
+            <p class="integrations3a__microcopy">One connected flow for bookings, team availability, enquiries and retail.</p>
     </header>
+    <div class="integrations3a__system" aria-label="Barbershop system modules">
+      {featuredModule ? (
+        <article class="integrations3a__card integrations3a__card--featured">
+          <p class="integrations3a__kicker">Core module</p>
+          <h3 class="integrations3a__name">{featuredModule.title}</h3>
+          <p class="integrations3a__description">{featuredModule.description}</p>
+        </article>
+      ) : null}
 
-    <ul class="integrations3a__grid">
-      {
-        modules.map((module, index) => (
+      <ul class="integrations3a__supporting">
+        {supportingModules.map((module, index) => (
           <li class="integrations3a__item" key={`${module.title}-${index}`}>
             <article class="integrations3a__card">
-              {module.label ? <p class="integrations3a__label">{module.label}</p> : null}
+
               <h3 class="integrations3a__name">{module.title}</h3>
               <p class="integrations3a__description">{module.description}</p>
             </article>
           </li>
-        ))
-      }
-    </ul>
+        ))}
+      </ul>
+    </div>
   </div>
 </section>
