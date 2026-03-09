@@ -26,6 +26,15 @@ enum OrderStatus {
   PAID
   COLLECTED
 }
+enum ProductCategory {
+  POMADES_AND_CLAYS
+  BEARD_CARE
+  HAIR_WASH
+  STYLING
+  TOOLS
+  GIFT_SETS
+}
+
 
 model ShopSettings {
   id                          String   @id @default(cuid())
@@ -204,6 +213,7 @@ model Product {
   imageUrl    String?
   active      Boolean  @default(true)
   featured    Boolean  @default(false)
+    category    ProductCategory @default(STYLING)
   sortOrder   Int      @default(0)
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt

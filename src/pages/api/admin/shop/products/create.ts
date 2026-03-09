@@ -7,6 +7,7 @@ import { prisma } from '../../../../../lib/db/client';
 import { resolveShopId } from '../../../../../lib/db/shopScope';
 import { makeBlobPath, uploadPublicImageToBlob } from '../../../../../lib/storage/vercelBlob';
 const PRODUCT_DESCRIPTION_MAX_LENGTH = 2000;
+const PRODUCT_CATEGORY_VALUES = ['POMADES_AND_CLAYS', 'BEARD_CARE', 'HAIR_WASH', 'STYLING', 'TOOLS', 'GIFT_SETS'] as const;
 const createSchema = z.object({
   name: z.string().trim().min(1, 'Name is required.'),
   description: z.string().trim().max(PRODUCT_DESCRIPTION_MAX_LENGTH, `Description must be at most ${PRODUCT_DESCRIPTION_MAX_LENGTH} characters.`).optional().or(z.literal('')),
@@ -14,6 +15,7 @@ const createSchema = z.object({
   imageUrl: z.string().trim().url('Image URL must be a valid URL.').optional().or(z.literal('')),
   active: z.boolean().default(true),
   featured: z.boolean().default(false),
+    category: z.enum(PRODUCT_CATEGORY_VALUES).default('STYLING'),
   sortOrder: z.number().int().default(0)
 });
 
@@ -25,6 +27,7 @@ const multipartCreateSchema = z.object({
 
   active: z.boolean().default(true),
   featured: z.boolean().default(false),
+    category: z.enum(PRODUCT_CATEGORY_VALUES).default('STYLING'),
   sortOrder: z.number().int().default(0)
 });
 
@@ -46,6 +49,7 @@ export const POST: APIRoute = async (ctx) => {
         imageUrl: String(formData.get('imageUrl') ?? ''),
         active: String(formData.get('active') ?? 'true').toLowerCase() !== 'false',
         featured: String(formData.get('featured') ?? 'false').toLowerCase() === 'true',
+                category: String(formData.get('category') ?? 'STYLING'),
         sortOrder: Number(formData.get('sortOrder') ?? 0)
       });
 
@@ -68,6 +72,7 @@ export const POST: APIRoute = async (ctx) => {
           imageUrl,
           active: parsed.data.active,
           featured: parsed.data.featured,
+                    category: parsed.data.category,
           sortOrder: parsed.data.sortOrder
         }
       });
@@ -90,6 +95,7 @@ export const POST: APIRoute = async (ctx) => {
         imageUrl: parsed.data.imageUrl || null,
         active: parsed.data.active,
         featured: parsed.data.featured,
+                category: parsed.data.category,
         sortOrder: parsed.data.sortOrder
       }
     });

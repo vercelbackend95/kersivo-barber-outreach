@@ -11,6 +11,14 @@ const products = await prisma.product.findMany({
   orderBy: [{ featured: 'desc' }, { sortOrder: 'asc' }, { updatedAt: 'desc' }]
 });
 
+const CATEGORY_LABELS: Record<string, string> = {
+  POMADES_AND_CLAYS: 'Pomades',
+  BEARD_CARE: 'Beard',
+  HAIR_WASH: 'Wash',
+  STYLING: 'Styling',
+  TOOLS: 'Tools',
+  GIFT_SETS: 'Sets'
+};
 
 ---
 
@@ -22,14 +30,27 @@ const products = await prisma.product.findMany({
       <p class="muted">Add products to cart and confirm pickup orders in GBP.</p>
     </header>
 
-    <section class="shop-grid" aria-label="Products">
+    {products.length > 0 ? (
+      <nav class="shop-filters" aria-label="Product categories">
+        <button type="button" class="shop-filter is-active" data-filter="all" aria-pressed="true">All</button>
+        <button type="button" class="shop-filter" data-filter="POMADES_AND_CLAYS" aria-pressed="false">Pomades</button>
+        <button type="button" class="shop-filter" data-filter="BEARD_CARE" aria-pressed="false">Beard</button>
+        <button type="button" class="shop-filter" data-filter="HAIR_WASH" aria-pressed="false">Wash</button>
+        <button type="button" class="shop-filter" data-filter="STYLING" aria-pressed="false">Styling</button>
+        <button type="button" class="shop-filter" data-filter="TOOLS" aria-pressed="false">Tools</button>
+        <button type="button" class="shop-filter" data-filter="GIFT_SETS" aria-pressed="false">Sets</button>
+      </nav>
+    ) : null}
+
+    <section class="shop-grid" aria-label="Products" data-shop-grid>
+
       {products.length === 0 ? (
         <article class="shop-card">
           <h2>No products yet</h2>
           <p class="muted">Products added in Admin → Shop will appear here.</p>
         </article>
       ) : products.map((product) => (
-        <article class="shop-card" key={product.id}>
+        <article class="shop-card" key={product.id} data-category={product.category}>
           {product.imageUrl ? <img src={product.imageUrl} alt={product.name} class="shop-image" loading="lazy" /> : null}
           <div class="shop-card-body">
             <div class="shop-card-head">
@@ -37,6 +58,7 @@ const products = await prisma.product.findMany({
               <p class="shop-price">{formatGbp(product.pricePence)}</p>
 
             </div>
+                        <p class="shop-category muted">{CATEGORY_LABELS[product.category] ?? 'Styling'}</p>
             {product.description ? <p class="muted">{product.description}</p> : null}
             <button
               type="button"
@@ -56,3 +78,26 @@ const products = await prisma.product.findMany({
   </main>
 </MainLayout>
 
+
+<script>
+  const filters = Array.from(document.querySelectorAll('.shop-filter'));
+  const cards = Array.from(document.querySelectorAll('.shop-card[data-category]'));
+
+  filters.forEach((button) => {
+    button.addEventListener('click', () => {
+      const nextFilter = button.getAttribute('data-filter') ?? 'all';
+
+      filters.forEach((filterButton) => {
+        const isActive = filterButton === button;
+        filterButton.classList.toggle('is-active', isActive);
+        filterButton.setAttribute('aria-pressed', isActive ? 'true' : 'false');
+      });
+
+      cards.forEach((card) => {
+        const category = card.getAttribute('data-category');
+        const isVisible = nextFilter === 'all' || category === nextFilter;
+        card.toggleAttribute('hidden', !isVisible);
+      });
+    });
+  });
+</script>

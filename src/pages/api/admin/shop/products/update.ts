@@ -7,6 +7,7 @@ import { prisma } from '../../../../../lib/db/client';
 import { resolveShopId } from '../../../../../lib/db/shopScope';
 import { makeBlobPath, uploadPublicImageToBlob } from '../../../../../lib/storage/vercelBlob';
 const PRODUCT_DESCRIPTION_MAX_LENGTH = 2000;
+const PRODUCT_CATEGORY_VALUES = ['POMADES_AND_CLAYS', 'BEARD_CARE', 'HAIR_WASH', 'STYLING', 'TOOLS', 'GIFT_SETS'] as const;
 const updateSchema = z.object({
   id: z.string().min(1),
   name: z.string().trim().min(1, 'Name is required.'),
@@ -15,6 +16,7 @@ const updateSchema = z.object({
   imageUrl: z.string().trim().url('Image URL must be a valid URL.').optional().or(z.literal('')),
   active: z.boolean().default(true),
   featured: z.boolean().default(false),
+    category: z.enum(PRODUCT_CATEGORY_VALUES).default('STYLING'),
   sortOrder: z.number().int().default(0)
 });
 
@@ -36,6 +38,7 @@ async function handleUpdate(ctx: Parameters<APIRoute>[0]) {
         imageUrl: String(formData.get('imageUrl') ?? ''),
         active: String(formData.get('active') ?? 'true').toLowerCase() !== 'false',
         featured: String(formData.get('featured') ?? 'false').toLowerCase() === 'true',
+                category: String(formData.get('category') ?? 'STYLING'),
         sortOrder: Number(formData.get('sortOrder') ?? 0)
       });
 
@@ -63,6 +66,7 @@ async function handleUpdate(ctx: Parameters<APIRoute>[0]) {
           imageUrl,
           active: parsed.data.active,
           featured: parsed.data.featured,
+                    category: parsed.data.category,
           sortOrder: parsed.data.sortOrder
         }
       });
@@ -90,6 +94,7 @@ async function handleUpdate(ctx: Parameters<APIRoute>[0]) {
         imageUrl: parsed.data.imageUrl || null,
         active: parsed.data.active,
         featured: parsed.data.featured,
+                category: parsed.data.category,
         sortOrder: parsed.data.sortOrder
       }
     });

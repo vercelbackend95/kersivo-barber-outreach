@@ -6,6 +6,17 @@ type ShopTab = 'products' | 'orders' | 'sales';
 type SalesRangePreset = '7' | '30' | '90' | 'custom';
 
 type SalesMetric = 'revenue' | 'units';
+type ProductCategory = 'POMADES_AND_CLAYS' | 'BEARD_CARE' | 'HAIR_WASH' | 'STYLING' | 'TOOLS' | 'GIFT_SETS';
+
+const PRODUCT_CATEGORY_OPTIONS: Array<{ value: ProductCategory; label: string }> = [
+  { value: 'POMADES_AND_CLAYS', label: 'Pomades & Clays' },
+  { value: 'BEARD_CARE', label: 'Beard Care' },
+  { value: 'HAIR_WASH', label: 'Hair Wash' },
+  { value: 'STYLING', label: 'Styling' },
+  { value: 'TOOLS', label: 'Tools' },
+  { value: 'GIFT_SETS', label: 'Gift Sets' }
+];
+
 
 type Product = {
   id: string;
@@ -15,6 +26,7 @@ type Product = {
   imageUrl: string | null;
   active: boolean;
   featured: boolean;
+  category: ProductCategory;
   sortOrder: number;
   updatedAt: string;
 };
@@ -80,6 +92,7 @@ type ProductFormState = {
   imageUrl: string;
   active: boolean;
   featured: boolean;
+    category: ProductCategory;
   sortOrder: number;
 };
 type ProductFilter = 'all' | 'active' | 'inactive' | 'featured';
@@ -164,6 +177,7 @@ const EMPTY_FORM: ProductFormState = {
   imageUrl: '',
   active: true,
   featured: false,
+    category: 'STYLING',
   sortOrder: 0
 };
 const SORT_ORDER_MIN = 0;
@@ -1200,6 +1214,7 @@ export default function ShopAdminPanel({ initialTab = 'products' }: ShopAdminPan
       imageUrl: product.imageUrl || '',
       active: product.active,
       featured: product.featured,
+            category: product.category,
       sortOrder: normalizedSortOrder
     };
     setForm(nextForm);
@@ -1367,7 +1382,7 @@ export default function ShopAdminPanel({ initialTab = 'products' }: ShopAdminPan
           imageUrl: form.imageUrl.trim(),
           active: form.featured ? true : form.active,
           featured: form.active ? form.featured : false,
-
+          category: form.category,
           sortOrder: Math.min(SORT_ORDER_MAX, Math.max(SORT_ORDER_MIN, form.sortOrder))
         })
       });
@@ -1737,6 +1752,13 @@ export default function ShopAdminPanel({ initialTab = 'products' }: ShopAdminPan
                 <label className="admin-product-field">Description
                   <textarea value={form.description} onChange={(event) => setForm((prev) => ({ ...prev, description: event.target.value }))} rows={4} />
                 </label>
+                <label className="admin-product-field">Category
+                  <select value={form.category} onChange={(event) => setForm((prev) => ({ ...prev, category: event.target.value as ProductCategory }))}>
+                    {PRODUCT_CATEGORY_OPTIONS.map((option) => (
+                      <option key={option.value} value={option.value}>{option.label}</option>
+                    ))}
+                  </select>
+                </label>
 
                 <div className="admin-product-switches">
                   <ProductStatusSwitch
@@ -1856,7 +1878,7 @@ export default function ShopAdminPanel({ initialTab = 'products' }: ShopAdminPan
                     <div>
                       <h4>{product.name}</h4>
                       <p className="admin-product-price">{formatPrice(product.pricePence)}</p>
-                      <p className="admin-product-meta muted">Updated {new Date(product.updatedAt).toLocaleString('en-GB')} • List position #{product.sortOrder + 1}</p>
+                      <p className="admin-product-meta muted">{PRODUCT_CATEGORY_OPTIONS.find((option) => option.value === product.category)?.label ?? 'Styling'} • Updated {new Date(product.updatedAt).toLocaleString('en-GB')} • List position #{product.sortOrder + 1}</p>
                     </div>
 
                     <div className="admin-reorder-controls" role="group" aria-label={`${product.name} controls`}>
