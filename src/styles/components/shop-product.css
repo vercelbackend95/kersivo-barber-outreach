@@ -1,0 +1,227 @@
+.product-page {
+  padding-block: var(--space-xl);
+  display: grid;
+  gap: var(--space-lg);
+}
+
+.product-back-link {
+  color: var(--muted);
+  font-size: 0.82rem;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  width: fit-content;
+}
+
+.product-hero {
+  display: grid;
+  gap: var(--space-md);
+}
+
+.product-media {
+  border: 1px solid var(--border);
+  background: var(--surface);
+}
+
+.product-image,
+.product-image-placeholder {
+  width: 100%;
+  aspect-ratio: 4 / 3;
+  object-fit: cover;
+}
+
+.product-image-placeholder {
+  display: grid;
+  place-items: center;
+  color: var(--muted);
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  font-size: 0.82rem;
+}
+
+.product-content {
+  display: grid;
+  gap: var(--space-sm);
+  align-content: start;
+}
+
+.product-overline {
+  margin: 0;
+  font-size: 0.74rem;
+  text-transform: uppercase;
+  letter-spacing: 0.12em;
+  color: var(--muted);
+}
+
+.product-content h1 {
+  margin: 0;
+  font-size: clamp(2.2rem, 10vw, 3.6rem);
+  letter-spacing: 0.05em;
+}
+
+.product-price {
+  margin: 0;
+  font-size: 1.2rem;
+  font-weight: 700;
+}
+
+.product-intro {
+  margin: 0;
+  color: var(--muted);
+  font-size: 1rem;
+  line-height: 1.6;
+  max-width: 58ch;
+}
+
+.product-highlights {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.45rem;
+}
+
+.product-highlights li {
+  margin: 0;
+  border: 1px solid var(--border);
+  background: color-mix(in srgb, var(--surface) 86%, var(--bg));
+  padding: 0.34rem 0.58rem;
+  font-size: 0.73rem;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+}
+
+.product-actions {
+  display: grid;
+  gap: 0.55rem;
+}
+
+.product-actions .btn {
+  width: 100%;
+}
+
+.pickup-box {
+  border: 1px solid var(--border);
+  background: linear-gradient(145deg, color-mix(in srgb, var(--surface) 92%, var(--bg)), var(--surface));
+  padding: var(--space-sm);
+  display: grid;
+  gap: 0.35rem;
+}
+
+.pickup-box-title {
+  margin: 0;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  font-size: 0.75rem;
+  color: var(--fg);
+}
+
+.pickup-box p {
+  margin: 0;
+  color: var(--muted);
+  font-size: 0.9rem;
+  line-height: 1.5;
+}
+
+.product-detail-section,
+.related-products {
+  border: 1px solid var(--border);
+  background: var(--surface);
+  padding: var(--space-md);
+  display: grid;
+  gap: var(--space-sm);
+}
+
+.product-detail-section h2,
+.related-products h2 {
+  margin: 0;
+  font-size: clamp(1.7rem, 5vw, 2.4rem);
+}
+
+.product-detail-section p,
+.related-products-header p {
+  margin: 0;
+  color: var(--muted);
+  line-height: 1.65;
+}
+
+.related-products-grid {
+  display: grid;
+  gap: var(--space-sm);
+}
+
+.related-card {
+  border: 1px solid var(--border);
+  background: color-mix(in srgb, var(--surface) 88%, var(--bg));
+}
+
+.related-card-media-link {
+  display: block;
+  border-bottom: 1px solid var(--border);
+}
+
+.related-card-image {
+  width: 100%;
+  aspect-ratio: 4 / 3;
+  object-fit: cover;
+}
+
+.related-card-image--placeholder {
+  display: grid;
+  place-items: center;
+  color: var(--muted);
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  font-size: 0.76rem;
+}
+
+.related-card-body {
+  padding: var(--space-sm);
+  display: grid;
+  gap: 0.42rem;
+}
+
+.related-card-category {
+  margin: 0;
+  color: var(--muted);
+  font-size: 0.68rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.related-card h3 {
+  margin: 0;
+  font-size: 1.55rem;
+}
+
+.related-card h3 a {
+  color: var(--fg);
+  text-decoration: none;
+}
+
+.related-card-price {
+  margin: 0;
+  font-weight: 700;
+}
+
+@media (min-width: 48rem) {
+  .product-hero {
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+    gap: var(--space-lg);
+    align-items: start;
+  }
+
+  .product-image,
+  .product-image-placeholder {
+    min-height: 100%;
+    aspect-ratio: 1 / 1;
+  }
+
+  .product-actions {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .related-products-grid {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+}

@@ -1,0 +1,213 @@
+---
+import MainLayout from '@/layouts/MainLayout.astro';
+import { prisma } from '@/lib/db/client';
+import { resolveShopId } from '@/lib/db/shopScope';
+import { formatGbp } from '@/lib/shop/money';
+
+const { id } = Astro.params;
+const shopId = await resolveShopId();
+
+const CATEGORY_LABELS: Record<string, string> = {
+  POMADES_AND_CLAYS: 'Pomades',
+  BEARD_CARE: 'Beard care',
+  HAIR_WASH: 'Hair wash',
+  STYLING: 'Styling',
+  TOOLS: 'Tools',
+  GIFT_SETS: 'Gift sets'
+};
+
+const product = id
+  ? await prisma.product.findFirst({
+      where: {
+        id,
+        shopId,
+        active: true
+      }
+    })
+  : null;
+
+if (!product) {
+  return Astro.redirect('/shop');
+}
+
+const relatedProducts = await prisma.product.findMany({
+  where: {
+    shopId,
+    active: true,
+    id: { not: product.id },
+    category: product.category
+  },
+  orderBy: [{ featured: 'desc' }, { sortOrder: 'asc' }, { updatedAt: 'desc' }],
+  take: 3
+});
+
+if (relatedProducts.length < 2) {
+  const fallbackProducts = await prisma.product.findMany({
+    where: {
+      shopId,
+      active: true,
+      id: {
+        notIn: [product.id, ...relatedProducts.map((item) => item.id)]
+      }
+    },
+    orderBy: [{ featured: 'desc' }, { sortOrder: 'asc' }, { updatedAt: 'desc' }],
+    take: 3 - relatedProducts.length
+  });
+
+  relatedProducts.push(...fallbackProducts);
+}
+
+const splitDescription = (rawDescription: string | null) => {
+  const cleaned = rawDescription?.replace(/\s+/g, ' ').trim() ?? '';
+  if (!cleaned) {
+    return {
+      intro: 'Barber-curated product selected for reliable daily performance and clean in-shop pickup.',
+      details: ''
+    };
+  }
+
+  if (cleaned.length <= 150) {
+    return {
+      intro: cleaned,
+      details: ''
+    };
+  }
+
+  const firstSentence = cleaned.match(/^.*?[.!?](\s|$)/)?.[0]?.trim();
+  if (firstSentence && firstSentence.length >= 70 && firstSentence.length <= 190) {
+    return {
+      intro: firstSentence,
+      details: cleaned.slice(firstSentence.length).trim()
+    };
+  }
+
+  const cutoff = cleaned.lastIndexOf(' ', 150);
+  const splitPoint = cutoff > 90 ? cutoff : 150;
+
+  return {
+    intro: `${cleaned.slice(0, splitPoint).trim()}…`,
+    details: cleaned
+  };
+};
+
+const DESCRIPTION_HIGHLIGHTS = [
+  { label: 'Strong hold', keywords: ['strong hold', 'firm hold', 'high hold'] },
+  { label: 'Matte finish', keywords: ['matte', 'natural finish'] },
+  { label: 'Beard care', keywords: ['beard', 'facial hair'] },
+  { label: 'Daily use', keywords: ['daily', 'everyday'] },
+  { label: 'Water-based', keywords: ['water-based', 'water based'] }
+];
+
+const createHighlights = (description: string | null, category: string) => {
+  const text = (description ?? '').toLowerCase();
+  const highlights = new Set<string>();
+
+  for (const entry of DESCRIPTION_HIGHLIGHTS) {
+    if (entry.keywords.some((keyword) => text.includes(keyword))) {
+      highlights.add(entry.label);
+    }
+  }
+
+  if (category === 'BEARD_CARE') {
+    highlights.add('Beard care');
+  }
+
+  if (category === 'POMADES_AND_CLAYS' || category === 'STYLING') {
+    highlights.add('Daily styling');
+  }
+
+  highlights.add('Ready for pickup');
+
+  return Array.from(highlights).slice(0, 4);
+};
+
+const { intro, details } = splitDescription(product.description);
+const highlights = createHighlights(product.description, product.category);
+---
+
+<MainLayout title={`${product.name} | Kersivo Shop`}>
+  <main class="container product-page">
+    <a href="/shop" class="product-back-link">← Back to shop</a>
+
+    <section class="product-hero" aria-label="Product details">
+      <div class="product-media">
+        {product.imageUrl ? <img src={product.imageUrl} alt={product.name} class="product-image" loading="eager" /> : <div class="product-image-placeholder">No image available</div>}
+      </div>
+
+      <div class="product-content">
+        <p class="product-overline">{CATEGORY_LABELS[product.category] ?? 'Styling'} · Kersivo retail</p>
+        <h1>{product.name}</h1>
+        <p class="product-price">{formatGbp(product.pricePence)}</p>
+        <p class="product-intro">{intro}</p>
+
+        {highlights.length > 0 ? (
+          <ul class="product-highlights" aria-label="Product highlights">
+            {highlights.map((item) => <li>{item}</li>)}
+          </ul>
+        ) : null}
+
+        <div class="product-actions">
+          <button
+            type="button"
+            class="btn btn--primary"
+            data-add-to-cart
+            data-product-id={product.id}
+            data-product-name={product.name}
+            data-product-price-pence={String(product.pricePence)}
+            data-product-image-url={product.imageUrl ?? ''}
+          >
+            Add to cart
+          </button>
+          <a href="/shop" class="btn btn--secondary">Continue shopping</a>
+        </div>
+
+        <aside class="pickup-box" aria-label="Pickup information">
+          <p class="pickup-box-title">Ready for pickup</p>
+          <p>Order online in seconds and collect in the shop when it suits your day.</p>
+        </aside>
+      </div>
+    </section>
+
+    {details ? (
+      <section class="product-detail-section" aria-label="Product information">
+        <h2>Details</h2>
+        <p>{details}</p>
+      </section>
+    ) : null}
+
+    {relatedProducts.length > 0 ? (
+      <section class="related-products" aria-label="Related products">
+        <header class="related-products-header">
+          <h2>You may also like</h2>
+          <p>More barber-approved essentials from the same curated range.</p>
+        </header>
+
+        <div class="related-products-grid">
+          {relatedProducts.map((item) => (
+            <article class="related-card">
+              <a href={`/shop/${item.id}`} class="related-card-media-link" aria-label={`View ${item.name}`}>
+                {item.imageUrl ? <img src={item.imageUrl} alt={item.name} class="related-card-image" loading="lazy" /> : <div class="related-card-image related-card-image--placeholder">No image</div>}
+              </a>
+              <div class="related-card-body">
+                <p class="related-card-category">{CATEGORY_LABELS[item.category] ?? 'Styling'}</p>
+                <h3><a href={`/shop/${item.id}`}>{item.name}</a></h3>
+                <p class="related-card-price">{formatGbp(item.pricePence)}</p>
+                <button
+                  type="button"
+                  class="btn btn--secondary"
+                  data-add-to-cart
+                  data-product-id={item.id}
+                  data-product-name={item.name}
+                  data-product-price-pence={String(item.pricePence)}
+                  data-product-image-url={item.imageUrl ?? ''}
+                >
+                  Add to cart
+                </button>
+              </div>
+            </article>
+          ))}
+        </div>
+      </section>
+    ) : null}
+  </main>
+</MainLayout>

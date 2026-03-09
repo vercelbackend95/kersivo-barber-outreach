@@ -74,7 +74,10 @@ const createExcerpt = (description: string | null) => {
         <article class="shop-card" key={product.id} data-category={product.category}>
           <div class="shop-media">
             {product.featured ? <p class="shop-badge">Barber Pick</p> : null}
-            {product.imageUrl ? <img src={product.imageUrl} alt={product.name} class="shop-image" loading="lazy" /> : null}
+            <a href={`/shop/${product.id}`} class="shop-media-link" aria-label={`View ${product.name}`}>
+              {product.imageUrl ? <img src={product.imageUrl} alt={product.name} class="shop-image" loading="lazy" /> : null}
+            </a>
+
           </div>
 
           <div class="shop-card-body">
@@ -84,12 +87,13 @@ const createExcerpt = (description: string | null) => {
               <p class="shop-price">{formatGbp(product.pricePence)}</p>
             </div>
 
-            <h2>{product.name}</h2>
+            <h2><a href={`/shop/${product.id}`}>{product.name}</a></h2>
 
             {createExcerpt(product.description) ? (
               <p class="shop-excerpt">{createExcerpt(product.description)}</p>
             ) : null}
             <div class="shop-card-actions">
+                            <a href={`/shop/${product.id}`} class="btn btn--secondary">View details</a>
               <button
                 type="button"
                 class="btn btn--primary"

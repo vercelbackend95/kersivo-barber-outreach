@@ -124,6 +124,12 @@
   position: relative;
   border-bottom: 1px solid var(--border);
   overflow: hidden;
+}
+
+.shop-media-link {
+  display: block;
+  color: inherit;
+  text-decoration: none;
 
 }
 
@@ -184,6 +190,15 @@
   line-height: 1.2;
 
 }
+.shop-card h2 a {
+  color: inherit;
+  text-decoration: none;
+}
+
+.shop-card h2 a:hover {
+  color: var(--accent-hover);
+}
+
 
 .shop-price {
   margin: 0;
