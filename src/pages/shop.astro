@@ -36,23 +36,32 @@ const createExcerpt = (description: string | null) => {
 
 <MainLayout title="Shop | Kersivo Barber Outreach">
   <main class="container shop-page">
-    <header class="shop-header">
-      <p class="shop-eyebrow">Demo shop</p>
-      <h1>Products</h1>
-      <p class="muted">Add products to cart and confirm pickup orders in GBP.</p>
-    </header>
+    <section class="shop-top" aria-label="Shop introduction">
+      <header class="shop-header">
+        <p class="shop-eyebrow">Curated grooming store</p>
+        <h1>Barber retail essentials</h1>
+        <p class="shop-intro">A refined edit of hair, beard, and styling products. Order online in seconds and collect at the shop when it suits you.</p>
+      </header>
 
-    {products.length > 0 ? (
-      <nav class="shop-filters" aria-label="Product categories">
-        <button type="button" class="shop-filter is-active" data-filter="all" aria-pressed="true">All</button>
-        <button type="button" class="shop-filter" data-filter="POMADES_AND_CLAYS" aria-pressed="false">Pomades</button>
-        <button type="button" class="shop-filter" data-filter="BEARD_CARE" aria-pressed="false">Beard</button>
-        <button type="button" class="shop-filter" data-filter="HAIR_WASH" aria-pressed="false">Wash</button>
-        <button type="button" class="shop-filter" data-filter="STYLING" aria-pressed="false">Styling</button>
-        <button type="button" class="shop-filter" data-filter="TOOLS" aria-pressed="false">Tools</button>
-        <button type="button" class="shop-filter" data-filter="GIFT_SETS" aria-pressed="false">Sets</button>
-      </nav>
-    ) : null}
+      <ul class="shop-usps" aria-label="Store highlights">
+        <li>Ready for pickup</li>
+        <li>Curated for barbers</li>
+        <li>Synced with admin</li>
+      </ul>
+
+      {products.length > 0 ? (
+        <nav class="shop-filters" aria-label="Product categories">
+          <button type="button" class="shop-filter is-active" data-filter="all" aria-pressed="true">All</button>
+          <button type="button" class="shop-filter" data-filter="POMADES_AND_CLAYS" aria-pressed="false">Pomades</button>
+          <button type="button" class="shop-filter" data-filter="BEARD_CARE" aria-pressed="false">Beard</button>
+          <button type="button" class="shop-filter" data-filter="HAIR_WASH" aria-pressed="false">Wash</button>
+          <button type="button" class="shop-filter" data-filter="STYLING" aria-pressed="false">Styling</button>
+          <button type="button" class="shop-filter" data-filter="TOOLS" aria-pressed="false">Tools</button>
+          <button type="button" class="shop-filter" data-filter="GIFT_SETS" aria-pressed="false">Sets</button>
+        </nav>
+      ) : null}
+    </section>
+
 
     <section class="shop-grid" aria-label="Products" data-shop-grid>
 
