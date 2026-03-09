@@ -8,10 +8,6 @@ interface HeroFeature {
   title: string;
   description: string;
 }
-interface HeroImage {
-  src: string;
-  alt: string;
-}
 
 interface Props {
   eyebrow?: string;
@@ -20,7 +16,6 @@ interface Props {
   buttonPrimary?: HeroButton;
   buttonSecondary?: HeroButton | null;
   features?: HeroFeature[];
-  images?: HeroImage[];
 }
 
 const {
@@ -32,7 +27,7 @@ const {
     text: 'See how it works',
     href: '#',
   },
-    buttonSecondary = null,
+  buttonSecondary = null,
   features = [
     {
       title: 'Online bookings',
@@ -53,20 +48,13 @@ const {
       description: 'Sell products online and prepare smooth in-shop collection.',
     },
   ],
-  images = [
-    {
-      src: 'https://deifkwefumgah.cloudfront.net/shadcnblocks/block/dashboard/kanban-ui-dashboard-mainline.png',
-      alt: 'Barbershop website dashboard overview',
-
-    },
-  ],
 } = Astro.props as Props;
 ---
 
 <section class="hero261" aria-labelledby="hero261-title">
   <div class="container hero261__layout">
     <div class="hero261__content">
-            {eyebrow && <p class="hero261__eyebrow">{eyebrow}</p>}
+      {eyebrow && <p class="hero261__eyebrow">{eyebrow}</p>}
       <h2 id="hero261-title" class="hero261__heading">{heading}</h2>
 
       {description && <p class="hero261__description">{description}</p>}
@@ -97,8 +85,5 @@ const {
     </div>
   </div>
 
-  <div class="hero261__preview-wrap">
-    <div class="hero261__preview-grid" aria-hidden="true"></div>
-    <img src={images[0].src} alt={images[0].alt} class="hero261__preview-image" loading="lazy" />
-  </div>
+
 </section>
