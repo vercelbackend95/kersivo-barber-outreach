@@ -42,7 +42,10 @@ import '../styles/components/footer50.css';
 
           </p>
           <div class="hero103__actions">
-            <a class="btn btn--primary" href="#">See the system</a>
+            <button class="btn btn--primary" type="button" data-system-chooser-open>
+              See the system
+            </button>
+
             <a class="btn btn--secondary" href="#">Book a demo</a>
 
           </div>
@@ -105,6 +108,55 @@ import '../styles/components/footer50.css';
         </div>
       </div>
     </section>
+    
+    <div class="system-chooser" data-system-chooser hidden>
+      <div class="system-chooser__backdrop" data-system-chooser-close aria-hidden="true"></div>
+      <section
+        class="system-chooser__dialog"
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="system-chooser-title"
+        aria-describedby="system-chooser-description"
+      >
+        <div class="system-chooser__header">
+          <div>
+            <p class="system-chooser__eyebrow">Guided demo entry</p>
+            <h2 id="system-chooser-title">Explore the barber system</h2>
+            <p id="system-chooser-description">Choose which part of the demo you want to open.</p>
+          </div>
+          <button
+            class="system-chooser__close"
+            type="button"
+            data-system-chooser-close
+            aria-label="Close system chooser"
+          >
+            ×
+          </button>
+        </div>
+
+        <div class="system-chooser__grid">
+          <a class="system-chooser__tile" href="/book">
+            <span class="system-chooser__tile-icon" aria-hidden="true">01</span>
+            <h3>Client Booking Flow</h3>
+            <p>See how clients choose services and lock in appointments.</p>
+          </a>
+
+          <a class="system-chooser__tile" href="/admin?section=bookings_dashboard">
+            <span class="system-chooser__tile-icon" aria-hidden="true">02</span>
+            <h3>Booking Management</h3>
+            <p>View the admin side of schedules, bookings and daily availability.</p>
+          </a>
+
+          <a class="system-chooser__tile" href="/admin?section=shop_products">
+            <span class="system-chooser__tile-icon" aria-hidden="true">03</span>
+            <h3>Shop &amp; Pickup</h3>
+            <p>Open the retail product area and pickup-ready shop management.</p>
+          </a>
+        </div>
+      </section>
+    </div>
+
+
     <Stats10 />
     <Compare3 />
     <Feature43 />
@@ -141,3 +193,39 @@ import '../styles/components/footer50.css';
   </main>
 </MainLayout>
 
+<script>
+  const chooser = document.querySelector('[data-system-chooser]');
+  const openTrigger = document.querySelector('[data-system-chooser-open]');
+
+  if (chooser && openTrigger) {
+    const closeTriggers = chooser.querySelectorAll('[data-system-chooser-close]');
+    const focusTarget = chooser.querySelector('.system-chooser__close');
+
+    const openChooser = () => {
+      chooser.hidden = false;
+      document.body.classList.add('body--modal-open');
+      focusTarget?.focus();
+    };
+
+    const closeChooser = () => {
+      chooser.hidden = true;
+      document.body.classList.remove('body--modal-open');
+      openTrigger.focus();
+    };
+
+    openTrigger.addEventListener('click', openChooser);
+    closeTriggers.forEach((trigger) => trigger.addEventListener('click', closeChooser));
+
+    chooser.addEventListener('click', (event) => {
+      if (event.target instanceof HTMLElement && event.target.closest('.system-chooser__tile')) {
+        closeChooser();
+      }
+    });
+
+    document.addEventListener('keydown', (event) => {
+      if (event.key === 'Escape' && !chooser.hidden) {
+        closeChooser();
+      }
+    });
+  }
+</script>
