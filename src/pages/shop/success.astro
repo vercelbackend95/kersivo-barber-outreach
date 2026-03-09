@@ -7,16 +7,22 @@ import '../../styles/components/shop.css';
 const sessionId = Astro.url.searchParams.get('session_id');
 ---
 <html lang="en">
-  <head><meta charset="utf-8" /><meta name="viewport" content="width=device-width" /><title>Payment successful</title></head>
+  <head><meta charset="utf-8" /><meta name="viewport" content="width=device-width" /><title>Pickup confirmed</title></head>
   <body>
     <main class="container shop-page">
       <section class="shop-card shop-success-card">
         <div class="shop-card-body">
-          <h1>Payment successful. Pick up in store.</h1>
-          <p class="muted">Your payment is confirmed in Stripe test mode.</p>
-          {sessionId ? <p class="muted">Session ID: {sessionId}</p> : null}
+          <h1>Pickup order received.</h1>
+          <p class="muted">Thank you — your payment is confirmed and your products are now being prepared for collection.</p>
+          <ul class="shop-success-next" aria-label="What happens next">
+            <li>We are preparing your order now.</li>
+            <li>Collect in shop when it suits you during opening hours.</li>
+            <li>No shipping needed for this order.</li>
+          </ul>
+          {sessionId ? <p class="muted">Reference: {sessionId}</p> : null}
+
           <div class="shop-order-summary" data-order-summary hidden>
-            <h2>Order summary</h2>
+            <h2>Pickup order summary</h2>
             <p class="muted" data-order-summary-total></p>
             <ul data-order-summary-items></ul>
           </div>

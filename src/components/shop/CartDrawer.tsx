@@ -100,13 +100,13 @@ export default function CartDrawer() {
     setCheckoutError(null);
 
     if (items.length === 0) {
-      setCheckoutError('Your cart is empty.');
+      setCheckoutError('Your cart is empty. Add products before confirming pickup.');
       return;
     }
 
     const safeEmail = email.trim().toLowerCase();
     if (!EMAIL_REGEX.test(safeEmail)) {
-      setCheckoutError('Please enter a valid email for receipt.');
+      setCheckoutError('Please enter a valid email so we can send your pickup receipt.');
       return;
     }
 
@@ -140,34 +140,43 @@ export default function CartDrawer() {
   return (
     <>
       <aside className={`cart-drawer ${open ? 'cart-drawer--open' : ''}`} aria-hidden={open ? 'false' : 'true'}>
-        <button type="button" className="btn btn--ghost cart-drawer__close" onClick={closeCart}>
-          Close
-        </button>
+        <div className="cart-drawer__header">
+          <p className="cart-drawer__eyebrow">Collect in shop</p>
+          <h2>Your cart</h2>
+          <p className="muted cart-drawer__intro">Order online now and collect when it suits you. No shipping needed.</p>
+          <button type="button" className="btn btn--ghost cart-drawer__close" onClick={closeCart}>
+            Close
+          </button>
+        </div>
 
-        <h2>Cart</h2>
-
-        <div className="cart-items">
+        <div className="cart-items" aria-live="polite">
           {items.length === 0 ? (
-            <p className="muted">Your cart is empty.</p>
+            <div className="cart-empty-state">
+              <p className="cart-empty-state__title">Your cart is empty</p>
+              <p className="muted">Add products to build your pickup order.</p>
+            </div>
           ) : (
             items.map((item) => (
               <article className="cart-row" key={item.productId}>
                 <div className="cart-row__content">
-                  {item.imageUrl ? <img src={item.imageUrl} alt={item.name} className="cart-row__image" loading="lazy" /> : null}
+                  {item.imageUrl ? <img src={item.imageUrl} alt={item.name} className="cart-row__image" loading="lazy" /> : <div className="cart-row__image cart-row__image--placeholder" aria-hidden="true" />}
                   <div>
                     <p className="cart-item-name">{item.name}</p>
                     <p className="muted">{formatGbp(item.pricePence)} each</p>
+                                        <p className="cart-item-total">Line total: {formatGbp(item.pricePence * item.quantity)}</p>
                   </div>
                 </div>
 
                 <div className="cart-row-actions">
-                  <button type="button" className="btn btn--ghost" onClick={() => setQuantity(item.productId, item.quantity - 1)}>
-                    -
-                  </button>
-                  <span>{item.quantity}</span>
-                  <button type="button" className="btn btn--ghost" onClick={() => setQuantity(item.productId, item.quantity + 1)}>
-                    +
-                  </button>
+                  <div className="cart-quantity" role="group" aria-label={`Quantity for ${item.name}`}>
+                    <button type="button" className="btn btn--ghost" onClick={() => setQuantity(item.productId, item.quantity - 1)} aria-label={`Decrease quantity of ${item.name}`}>
+                      −
+                    </button>
+                    <span>{item.quantity}</span>
+                    <button type="button" className="btn btn--ghost" onClick={() => setQuantity(item.productId, item.quantity + 1)} aria-label={`Increase quantity of ${item.name}`}>
+                      +
+                    </button>
+                  </div>
                   <button type="button" className="btn btn--secondary" onClick={() => removeItem(item.productId)}>
                     Remove
                   </button>
@@ -177,27 +186,36 @@ export default function CartDrawer() {
           )}
         </div>
 
-        <label className="cart-email-label" htmlFor="shop-cart-email">
-          Email for receipt
-        </label>
-        <input
-          id="shop-cart-email"
-          type="email"
-          autoComplete="email"
-          placeholder="you@example.com"
-          className="cart-email-input"
-          value={email}
-          onChange={(event) => setEmail(event.target.value)}
+        <section className="cart-summary" aria-label="Pickup summary">
+          <div className="cart-summary__totals">
+            <p>Subtotal</p>
+            <p><strong>{formatGbp(subtotalPence)}</strong></p>
+          </div>
+          <ul className="cart-summary__pickup-points">
+            <li>Ready for pickup at Kersivo.</li>
+            <li>Collect in shop during opening hours.</li>
+            <li>We will send your confirmation to email.</li>
+          </ul>
 
-        />
-        {checkoutError ? <p className="cart-checkout-error">{checkoutError}</p> : null}
+          <label className="cart-email-label" htmlFor="shop-cart-email">
+            Email for pickup confirmation
+          </label>
+          <input
+            id="shop-cart-email"
+            type="email"
+            autoComplete="email"
+            placeholder="you@example.com"
+            className="cart-email-input"
+            value={email}
+            onChange={(event) => setEmail(event.target.value)}
+          />
+          {checkoutError ? <p className="cart-checkout-error">{checkoutError}</p> : null}
 
-        <p className="cart-subtotal">
-          Subtotal: <strong>{formatGbp(subtotalPence)}</strong>
-        </p>
-        <button type="button" className="btn btn--primary cart-buy-button" onClick={() => void onBuyPickup()} disabled={checkoutLoading}>
-          {checkoutLoading ? 'Creating checkout...' : 'BUY (PICKUP)'}
-        </button>
+          <button type="button" className="btn btn--primary cart-buy-button" onClick={() => void onBuyPickup()} disabled={checkoutLoading}>
+            {checkoutLoading ? 'Creating secure checkout...' : 'Confirm pickup order'}
+          </button>
+          <p className="muted cart-checkout-note">Secure Stripe checkout. Pickup only — no delivery step.</p>
+        </section>
       </aside>
 
       {open ? <button type="button" className="cart-drawer__backdrop" aria-label="Close cart drawer" onClick={closeCart} /> : null}
