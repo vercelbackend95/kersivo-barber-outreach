@@ -1,246 +1,151 @@
-.integrations3a {
-  padding-block: clamp(3rem, 8vw, 6rem);
+.hero261 {
+  padding-block: clamp(3rem, 8vw, 7rem);
+
   background: var(--bg);
+    overflow: hidden;
 }
-
-.integrations3a__container {
+.hero261__layout {
   display: grid;
-  gap: clamp(1.5rem, 4vw, 2.75rem);
+  gap: 2rem;
 }
 
-.integrations3a__intro {
+.hero261__content {
   display: grid;
-  gap: var(--space-sm);
+  gap: 1rem;
 }
 
-.integrations3a__eyebrow {
+.hero261__heading {
   margin: 0;
-  font-size: 0.75rem;
-  font-weight: 700;
-  letter-spacing: 0.12em;
+  max-width: 16ch;
   text-transform: uppercase;
-  color: var(--accent);
+  letter-spacing: 0.03em;
 
 }
 
-.integrations3a__lead {
+.hero261__description {
   margin: 0;
-
+  max-width: 38ch;
   color: var(--muted);
-  max-width: 58ch;
-}
-
-.integrations3a__outcomes {
-  list-style: none;
-  display: grid;
-  gap: 0.55rem;
-  margin: 0;
-  padding: 0;
+  font-size: clamp(1rem, 4vw, 1.35rem);
+  line-height: 1.5;
 
 }
 
-.integrations3a__outcome {
-  margin: 0;
+.hero261__actions {
   display: flex;
-  align-items: center;
-  gap: 0.6rem;
-  color: var(--fg);
-  line-height: 1.45;
-}
-.integrations3a__outcome::before {
-  content: '';
-  width: 0.4rem;
-  height: 0.4rem;
-  flex: 0 0 0.4rem;
-  background: var(--accent);
-
+  flex-wrap: wrap;
+  gap: 0.75rem;
 
 }
 
-.integrations3a__system {
+.hero261__secondary {
+  gap: 0.45rem;
 
-  display: grid;
-  gap: 0.85rem;
-  padding: clamp(0.85rem, 2.8vw, 1.25rem);
-  border: 1px solid color-mix(in srgb, var(--border) 88%, var(--accent) 12%);
-  border-radius: 6px;
-  background: linear-gradient(
-    150deg,
-    color-mix(in srgb, var(--surface) 92%, var(--accent) 8%) 0%,
-    color-mix(in srgb, var(--surface) 96%, var(--fg) 4%) 55%,
-    color-mix(in srgb, var(--surface) 92%, var(--accent) 8%) 100%
-  );
 }
 
-.integrations3a__core {
+.hero261__features {
   display: grid;
   gap: 0.9rem;
-  padding: clamp(1rem, 2.8vw, 1.3rem);
-  border: 1px solid color-mix(in srgb, var(--border) 80%, var(--accent) 20%);
-  border-radius: 4px;
-  background: color-mix(in srgb, var(--surface) 90%, var(--fg) 10%);
-  box-shadow: 0 18px 34px color-mix(in srgb, var(--bg) 72%, transparent 28%);
+    border-inline-start: 1px dashed color-mix(in srgb, var(--border) 72%, var(--fg) 28%);
+  padding-inline-start: 1rem;
 
 }
+.hero261__feature {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.65rem;
 
-.integrations3a__core-kicker {
+}
+.hero261__feature-icon {
+  width: 0.45rem;
+  height: 0.45rem;
+  margin-top: 0.45rem;
+
+  background: var(--accent);
+    flex: 0 0 0.45rem;
+}
+
+
+.hero261__feature-title {
   margin: 0;
-  font-size: 0.7rem;
-  font-weight: 700;
-  letter-spacing: 0.12em;
-  text-transform: uppercase;
-  color: var(--accent);
-
-}
-.integrations3a__core-title {
-  margin: 0;
-  font-size: clamp(1.15rem, 4vw, 1.45rem);
-  line-height: 1.15;
-
+  font-family: var(--font-body);
+  font-size: 1rem;
+  letter-spacing: 0;
+  text-transform: none;
 
 }
 
-.integrations3a__core-grid {
-  display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 0.55rem;
-}
 
-.integrations3a__core-metric {
-  display: grid;
-  gap: 0.32rem;
-  min-width: 0;
-  padding: 0.65rem;
-  border: 1px solid color-mix(in srgb, var(--border) 88%, var(--accent) 12%);
+.hero261__feature-description {
+  margin: 0.2rem 0 0;
 
-  border-radius: 4px;
-  background: color-mix(in srgb, var(--bg) 65%, var(--surface) 35%);
-}
-.integrations3a__metric-label {
-  font-size: 0.7rem;
-  line-height: 1.2;
+
   color: var(--muted);
-
-
-
-}
-
-.integrations3a__metric-value {
-  font-size: 0.85rem;
-  line-height: 1.2;
-  color: var(--fg);
-}
-.integrations3a__modules {
-  list-style: none;
-
-
-  margin: 0;
-  padding: 0;
-  display: grid;
-  gap: 0.75rem;
-}
-.integrations3a__module-item {
-  margin: 0;
+  font-size: 0.92rem;
+  line-height: 1.5;
 
 
 }
-
-.integrations3a__module {
+.hero261__preview-wrap {
   position: relative;
-  display: grid;
-  gap: 0.4rem;
-  padding: 0.8rem 0.9rem;
-  border: 1px solid var(--border);
-  border-radius: 4px;
-  background: color-mix(in srgb, var(--surface) 94%, var(--fg) 6%);
+  margin-top: 2.5rem;
+  margin-inline: auto;
+  width: min(100%, 1100px);
+  min-height: 340px;
+  padding-top: 2rem;
+
 }
-.integrations3a__module::before {
-  content: '';
+
+.hero261__preview-grid {
   position: absolute;
-  inset-inline-start: 0;
-  inset-block: 0;
-  width: 3px;
-  background: var(--accent);
+  inset: 0 auto auto 50%;
+  width: 100vw;
+  height: 16rem;
+  transform: translateX(-50%);
+  opacity: 0.1;
+  color: var(--accent);
+  background-image:
+    repeating-linear-gradient(90deg, transparent, transparent 4px, currentColor 4px, currentColor 8px),
+    repeating-linear-gradient(0deg, transparent, transparent 4px, currentColor 4px, currentColor 8px);
+  background-size: 24px 1px, 1px 24px;
+  mask-image: radial-gradient(ellipse 50% 55% at 50% 50%, black, transparent);
+
+}
+.hero261__preview-image {
+  position: relative;
+  width: 100%;
+  min-height: 340px;
+  object-fit: cover;
+  object-position: top left;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  box-shadow: 0 18px 40px color-mix(in srgb, var(--bg) 70%, transparent 30%);
+
 }
 
 
-.integrations3a__module-title {
-  margin: 0;
-  font-size: 0.95rem;
-  line-height: 1.2;
-
-
-}
-
-.integrations3a__module-description {
-  margin: 0;
-
-  color: var(--muted);
-  font-size: 0.84rem;
-  line-height: 1.45;
-
-}
-
-.integrations3a__module--booking::before {
-  background: var(--accent);
-}
-
-.integrations3a__module--schedule::before {
-  background: color-mix(in srgb, var(--accent) 75%, var(--fg) 25%);
-}
-
-
-.integrations3a__module--shop::before {
-  background: color-mix(in srgb, var(--accent) 65%, var(--surface) 35%);
-}
-
-.integrations3a__module--admin::before {
-  background: color-mix(in srgb, var(--accent) 55%, var(--border) 45%);
-}
-
-@media (min-width: 52rem) {
-  .integrations3a__modules {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-  }
-}
 @media (min-width: 72rem) {
 
 
-  .integrations3a__container {
-    grid-template-columns: minmax(0, 0.92fr) minmax(0, 1.08fr);
-    align-items: start;
-    gap: clamp(1.5rem, 2.8vw, 2.4rem);
-  }
+  .hero261__layout {
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+    gap: 3rem;
 
-  .integrations3a__intro {
-    padding-top: 0.6rem;
-
-  }
-
-  .integrations3a__system {
-    grid-template-columns: minmax(0, 1.2fr) minmax(0, 0.95fr);
-    grid-template-areas:
-      'core modules';
-    gap: 1rem;
     align-items: center;
-    padding: clamp(1rem, 1.7vw, 1.4rem);
 
 
   }
 
-  .integrations3a__core {
-    grid-area: core;
-    min-height: 100%;
-  }
-  .integrations3a__modules {
-    grid-area: modules;
-    grid-template-columns: minmax(0, 1fr);
-    gap: 0.8rem;
+  .hero261__features {
+    padding-inline-start: 1.25rem;
+
   }
 
-  .integrations3a__module-item:nth-child(2),
-  .integrations3a__module-item:nth-child(4) {
-    transform: translateX(0.4rem);
+
+  .hero261__preview-wrap {
+    margin-top: 4rem;
+    padding-top: 3rem;
+
 
 
 

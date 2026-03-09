@@ -1,106 +1,105 @@
 ---
-interface SystemModule {
+interface HeroButton {
+  text: string;
+  href: string;
+}
+
+interface HeroFeature {
   title: string;
   description: string;
-
+}
+interface HeroImage {
+  src: string;
+  alt: string;
 }
 
 interface Props {
-  eyebrow?: string;
+
   heading?: string;
-  subHeading?: string;
-  outcomes?: string[];
-  modules?: SystemModule[];
+  description?: string;
+  buttonPrimary?: HeroButton;
+  buttonSecondary?: HeroButton;
+  features?: HeroFeature[];
+  images?: HeroImage[];
 }
 
 const {
-  eyebrow = 'Connected operations',
-  heading = 'One website system that keeps your barbershop in sync',
-  subHeading =
-    'Booking, schedule, enquiries and shop orders stay connected in one operational hub, so your team works faster with less friction.',
-  outcomes = [
-    'Bookings, enquiries and orders in one place',
-    'Clear visibility for barbers and front desk',
-    'Less manual follow-up across the day',
+  heading = 'BUILD FASTER WITH SHADCNBLOCKS',
+  description = 'Components and blocks built with shadcn/ui, Tailwind CSS and React for modern product teams.',
+  buttonPrimary = {
+    text: 'Get started',
+    href: '#',
+  },
+  buttonSecondary = {
+    text: 'Learn more',
+    href: '#',
+  },
+  features = [
+    {
+     title: 'Tailored workflows',
+      description: 'Track progress across custom issue flows for your team.',
 
+    },
+    {
+      title: 'Cross-team projects',
+      description: 'Collaborate across teams and departments.',
+
+    },
+    {
+      title: 'Milestones',
+      description: 'Break projects down into concrete phases.',
+
+    },
+    {
+      title: 'Progress insights',
+      description: 'Track scope, velocity, and progress over time.',
+    },
   ],
-  modules = [
+  images = [
     {
-      title: 'Online Booking',
-      description: 'Clients lock a slot quickly with service details already attached.',
-      tone: 'booking',
-
-    },
-    {
-      title: 'Team Schedule',
-      description: 'Live calendar visibility keeps every barber aligned through the day.',
-      tone: 'schedule',
-
-    },
-    {
-      title: 'Shop Pickup',
-      description: 'Orders are prepared on time with pickup status tracked automatically.',
-      tone: 'shop',
-
-    },
-    {
-      title: 'Easy Admin',
-      description: 'Confirmations and enquiries are handled from one clean control layer.',
-      tone: 'admin',
+      src: 'https://deifkwefumgah.cloudfront.net/shadcnblocks/block/dashboard/kanban-ui-dashboard-mainline.png',
+      alt: 'Product dashboard preview',
 
     },
   ],
 } = Astro.props as Props;
 ---
 
-<section class="integrations3a" aria-labelledby="integrations3a-title">
-  <div class="container integrations3a__container">
-    <header class="integrations3a__intro">
-      <p class="integrations3a__eyebrow">{eyebrow}</p>
-      <h2 id="integrations3a-title">{heading}</h2>
-      <p class="integrations3a__lead">{subHeading}</p>
-      <ul class="integrations3a__outcomes" aria-label="Operational outcomes">
-        {outcomes.map((outcome, index) => (
-          <li class="integrations3a__outcome" key={`${outcome}-${index}`}>{outcome}</li>
-        ))}
-      </ul>
-        </header>
+<section class="hero261" aria-labelledby="hero261-title">
+  <div class="container hero261__layout">
+    <div class="hero261__content">
+      <h2 id="hero261-title" class="hero261__heading">{heading}</h2>
 
-    <div class="integrations3a__system" aria-label="Connected website system preview">
-      <article class="integrations3a__core" aria-label="Website system overview panel">
-        <p class="integrations3a__core-kicker">Website system</p>
-        <h3 class="integrations3a__core-title">Daily operations overview</h3>
-        <div class="integrations3a__core-grid" aria-hidden="true">
-          <div class="integrations3a__core-metric">
-            <span class="integrations3a__metric-label">Bookings</span>
-            <strong class="integrations3a__metric-value">18 Today</strong>
-          </div>
-          <div class="integrations3a__core-metric">
-            <span class="integrations3a__metric-label">Pending Enquiries</span>
-            <strong class="integrations3a__metric-value">4 Active</strong>
-          </div>
-          <div class="integrations3a__core-metric">
-            <span class="integrations3a__metric-label">Pickup Orders</span>
-            <strong class="integrations3a__metric-value">6 Ready</strong>
-          </div>
-          <div class="integrations3a__core-metric">
-            <span class="integrations3a__metric-label">Team Availability</span>
-            <strong class="integrations3a__metric-value">On Track</strong>
-          </div>
-        </div>
-      </article>
-
-      <ul class="integrations3a__modules" aria-label="Connected system modules">
-        {modules.map((module, index) => (
-          <li class="integrations3a__module-item" key={`${module.title}-${index}`}>
-            <article class={`integrations3a__module integrations3a__module--${module.tone ?? 'booking'}`}>
-              <h3 class="integrations3a__module-title">{module.title}</h3>
-              <p class="integrations3a__module-description">{module.description}</p>
-            </article>
-          </li>
-        ))}
-      </ul>
+      {description && <p class="hero261__description">{description}</p>}
+      <div class="hero261__actions">
+        {buttonPrimary && (
+          <a class="btn btn--primary" href={buttonPrimary.href}>
+            {buttonPrimary.text}
+          </a>
+        )}
+        {buttonSecondary && (
+          <a class="btn btn--ghost hero261__secondary" href={buttonSecondary.href}>
+            {buttonSecondary.text}
+            <span aria-hidden="true">→</span>
+          </a>
+        )}
+      </div>
     </div>
+    <div class="hero261__features" aria-label="Feature highlights">
+      {features.map((feature, index) => (
+        <article class="hero261__feature" key={`${feature.title}-${index}`}>
+          <span class="hero261__feature-icon" aria-hidden="true"></span>
+          <div>
+            <h3 class="hero261__feature-title">{feature.title}</h3>
+            <p class="hero261__feature-description">{feature.description}</p>
+          </div>
+        </article>
+      ))}
+    </div>
+  </div>
 
+  <div class="hero261__preview-wrap">
+    <div class="hero261__preview-grid" aria-hidden="true"></div>
+    <img src={images[0].src} alt={images[0].alt} class="hero261__preview-image" loading="lazy" />
   </div>
 </section>
