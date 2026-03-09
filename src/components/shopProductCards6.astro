@@ -10,61 +10,108 @@ const products = await prisma.product.findMany({
   take: 3
 });
 
+const CATEGORY_LABELS: Record<string, string> = {
+  POMADES_AND_CLAYS: 'Pomades',
+  BEARD_CARE: 'Beard',
+  HAIR_WASH: 'Wash',
+  STYLING: 'Styling',
+  TOOLS: 'Tools',
+  GIFT_SETS: 'Sets'
+};
+
+const createExcerpt = (description: string | null) => {
+  if (!description) {
+    return null;
+  }
+
+  const cleanedDescription = description.replace(/\s+/g, ' ').trim();
+  if (cleanedDescription.length <= 86) {
+    return cleanedDescription;
+  }
+
+  return `${cleanedDescription.slice(0, 83).trimEnd()}…`;
+};
+
 ---
 
 <section class="shop6" aria-labelledby="shop6-title">
   <div class="container shop6__container">
-    <div class="shop6__header">
-      <p class="shop6__eyebrow">Shop</p>
-      <h2 id="shop6-title">Barber Products Ready for Pickup</h2>
-      <p>These featured products are synced with Admin → Shop → Products.</p>
+    <div class="shop6__content-column">
+      <p class="shop6__eyebrow">Retail built in</p>
+      <h2 id="shop6-title">Curated barber essentials, ready for pickup</h2>
+      <p class="shop6__lead">
+        Showcase premium hair, beard and styling products directly on your site. Customers can browse, add to cart,
+        and collect in-shop with a smooth retail flow.
+      </p>
+
+      <ul class="shop6__usps" aria-label="Retail highlights">
+        <li>Ready for pickup</li>
+        <li>Curated for barbers</li>
+        <li>Managed in admin</li>
+        <li>Built into your website</li>
+      </ul>
+
+      <div class="shop6__ctas">
+        <a class="btn btn--primary" href="/shop">Explore the shop</a>
+        <a class="btn btn--ghost" href="/shop">View all products</a>
+      </div>
 
     </div>
 
-    <ul class="shop6__grid">
+    <ul class="shop6__grid" aria-label="Featured products">
       {products.length === 0 ? (
         <li class="shop6__item">
-          <article class="shop6__card">
-            <div class="shop6__content">
-              <h3>No products yet</h3>
-              <p class="muted">Add products in Admin to publish them on the landing page and /shop.</p>
+          <article class="shop6__card shop6__card--empty">
+            <div class="shop6__card-body">
+              <p class="shop6__category">Shop preview</p>
+              <h3>Add products to launch this retail section</h3>
+              <p class="shop6__excerpt">Publish products in admin and they will instantly appear on the homepage and shop.</p>
+              <a class="btn btn--secondary" href="/shop">Open shop page</a>
+
             </div>
           </article>
         </li>
-      ) : products.map((product, index) => (
+      ) : products.map((product) => (
+        <li class="shop6__item" key={product.id}>
 
-        <li class="shop6__item" key={`${product.name}-${index}`}>
           <article class="shop6__card">
-            {product.imageUrl ? (
-              <img src={product.imageUrl} alt={product.name} loading="lazy" class="shop6__image" />
-            ) : (
-              <div class="shop6__image shop6__image--placeholder" aria-hidden="true"></div>
-            )}
+            <a href={`/shop/${product.id}`} class="shop6__media" aria-label={`View ${product.name}`}>
+              {product.imageUrl ? (
+                <img src={product.imageUrl} alt={product.name} loading="lazy" class="shop6__image" />
+              ) : (
+                <div class="shop6__image shop6__image--placeholder" aria-hidden="true"></div>
+              )}
+            </a>
 
 
-            <div class="shop6__content">
-              <p class="shop6__collection">Featured item</p>
-              <h3>{product.name}</h3>
 
-              <div class="shop6__footer">
-               <p class="shop6__price">{formatGbp(product.pricePence)}</p>
+            <div class="shop6__card-body">
+              <div class="shop6__meta-row">
+                <p class="shop6__category">{CATEGORY_LABELS[product.category] ?? 'Styling'}</p>
+                <p class="shop6__price">{formatGbp(product.pricePence)}</p>
+              </div>
 
-                <div class="shop6__actions">
-                  <button
-                    class="btn btn--primary"
-                    type="button"
-                    data-add-to-cart
-                    data-product-id={product.id}
-                    data-product-name={product.name}
-                    data-product-price-pence={String(product.pricePence)}
-                    data-product-image-url={product.imageUrl ?? ''}
-                  >
-                    Add to cart
-                  </button>
 
-                  <a class="btn btn--ghost" href="/shop">View in shop</a>
+              <h3><a href={`/shop/${product.id}`}>{product.name}</a></h3>
 
-                </div>
+              {createExcerpt(product.description) ? (
+                <p class="shop6__excerpt">{createExcerpt(product.description)}</p>
+              ) : null}
+
+              <div class="shop6__card-actions">
+                <button
+                  class="btn btn--primary"
+                  type="button"
+                  data-add-to-cart
+                  data-product-id={product.id}
+                  data-product-name={product.name}
+                  data-product-price-pence={String(product.pricePence)}
+                  data-product-image-url={product.imageUrl ?? ''}
+                >
+                  Add to cart
+                </button>
+                <a class="btn btn--secondary" href={`/shop/${product.id}`}>View details</a>
+
               </div>
             </div>
           </article>
