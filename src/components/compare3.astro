@@ -99,22 +99,26 @@ const comparisonRows = [
     <div class="compare3-block__mobile" aria-label="Mobile comparison">
       {
         comparisonRows.map((row) => (
-          <article class="compare3-block__mobile-item">
-            <h3 class="compare3-block__mobile-title">
-              <span aria-hidden="true">{row.icon}</span>
-              {row.title}
-            </h3>
+          <details class="compare3-block__accordion-item">
+            <summary class="compare3-block__accordion-summary">
+              <span class="compare3-block__accordion-heading">
+                <span class="compare3-block__accordion-icon" aria-hidden="true">{row.icon}</span>
+                <span>{row.title}</span>
+              </span>
+              <span class="compare3-block__accordion-indicator" aria-hidden="true"></span>
+            </summary>
+            <div class="compare3-block__accordion-panel">
+              <div class="compare3-block__accordion-content compare3-block__accordion-content--highlight">
+                <p class="compare3-block__mobile-label">Kersivo</p>
+                <p class="compare3-block__mobile-copy">{row.kersivo}</p>
+              </div>
+              <div class="compare3-block__accordion-content">
+                <p class="compare3-block__mobile-label">Typical alternatives</p>
+                <p class="compare3-block__mobile-copy">{row.alternatives}</p>
+              </div>
 
-            <div class="compare3-block__mobile-card compare3-block__mobile-card--highlight">
-              <p class="compare3-block__mobile-label">Kersivo</p>
-              <p class="compare3-block__mobile-copy">{row.kersivo}</p>
             </div>
-
-            <div class="compare3-block__mobile-card">
-              <p class="compare3-block__mobile-label">Typical alternatives</p>
-              <p class="compare3-block__mobile-copy">{row.alternatives}</p>
-            </div>
-          </article>
+          </details>
         ))
       }
 
