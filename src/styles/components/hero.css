@@ -190,13 +190,40 @@
 }
 
 @media (max-width: 35rem) {
+    .hero103__section {
+    padding-top: clamp(1.75rem, 8vw, 2.25rem);
+    padding-bottom: clamp(1.5rem, 7vw, 2rem);
+    gap: var(--space-md);
+  }
+
+  .hero103__content {
+    gap: var(--space-sm);
+  }
+
+  .hero103__lead {
+    font-size: 0.98rem;
+    line-height: 1.55;
+  }
+
+
   .hero103__actions {
     display: grid;
     grid-template-columns: 1fr;
+        gap: 0.55rem;
+    margin-top: 0;
+
   }
 
   .hero103__actions .btn {
     width: 100%;
+        min-height: 2.5rem;
+    padding: 0.52rem 0.95rem;
+    font-size: 0.88rem;
+  }
+
+  .hero103__media {
+    min-height: clamp(17rem, 66vw, 21rem);
+
   }
 
   .hero103__panel-value {
