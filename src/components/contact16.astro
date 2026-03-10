@@ -6,27 +6,24 @@ interface Contact16Props {
 const { className = "" } = Astro.props as Contact16Props;
 ---
 
-<section class={`contact16 ${className}`.trim()} aria-labelledby="contact16-title">
+<section id="book-demo" class={`contact16 ${className}`.trim()} aria-labelledby="contact16-title">
   <div class="container">
     <h2 id="contact16-title" class="contact16__title">
-      Get in Touch
+      Book a demo
       <sup>*</sup>
     </h2>
 
     <div class="contact16__layout">
       <div class="contact16__info">
         <p class="contact16__description">
-          Tell us about your barbershop goals and we will prepare a focused outreach plan built for
-          your local market.
-        </p>
+          Tell us what your barbershop needs and we’ll get back to you with the right website,
+          booking and retail setup.
 
-        <div class="contact16__links" aria-label="Contact links">
-          <a href="tel:+1020020023">Phone: +102 002 0023</a>
-          <a href="mailto:hello@company.com">Email: hello@company.com</a>
-        </div>
+        </p>
       </div>
 
       <form class="contact16__form" action="#" method="post">
+                <input type="hidden" name="intent" value="" data-demo-intent />
         <label>
           <span class="sr-only">Name</span>
           <input type="text" name="name" placeholder="Name*" required />
@@ -37,16 +34,19 @@ const { className = "" } = Astro.props as Contact16Props;
         </label>
         <label>
           <span class="sr-only">Message</span>
-          <input
-            type="text"
+          <textarea
             name="message"
-            placeholder="Message (Tell us about your project)"
+            placeholder="Tell us what your barbershop needs"
+            rows="4"
+
             required
-          />
+            data-demo-message
+          ></textarea>
+
         </label>
 
         <button type="submit" class="btn btn--ghost contact16__submit">
-          ↳ Get in Touch
+          ↳ Book a demo
         </button>
       </form>
     </div>

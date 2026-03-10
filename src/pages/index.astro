@@ -51,7 +51,7 @@ const DEMO_ADMIN_PASSWORD = import.meta.env.PUBLIC_DEMO_ADMIN_PASSWORD
               See the system
             </button>
 
-            <a class="btn btn--secondary" href="#">Book a demo</a>
+            <a class="btn btn--secondary" href="#book-demo" data-demo-cta>Book a demo</a>
 
           </div>
         </div>
@@ -226,6 +226,47 @@ const DEMO_ADMIN_PASSWORD = import.meta.env.PUBLIC_DEMO_ADMIN_PASSWORD
 </MainLayout>
 
 <script>
+  
+  const demoCta = document.querySelector('[data-demo-cta]');
+  const demoSection = document.querySelector('#book-demo');
+  const DEMO_MESSAGE = "Hi, I’m interested in a barber website demo with bookings, admin and shop features.";
+
+  if (demoCta instanceof HTMLAnchorElement) {
+    demoCta.addEventListener('click', () => {
+      window.sessionStorage.setItem('kersivo-demo-intent', 'demo');
+      window.sessionStorage.setItem('kersivo-demo-message', DEMO_MESSAGE);
+
+      if (demoSection instanceof HTMLElement) {
+        window.requestAnimationFrame(() => {
+          demoSection.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        });
+      }
+    });
+  }
+
+  const demoForm = document.querySelector('.contact16__form');
+
+  if (demoForm instanceof HTMLFormElement) {
+    const messageField = demoForm.querySelector('[data-demo-message]');
+    const intentField = demoForm.querySelector('[data-demo-intent]');
+    const demoIntent = window.sessionStorage.getItem('kersivo-demo-intent') === 'demo';
+    const prefilledMessage = window.sessionStorage.getItem('kersivo-demo-message') || DEMO_MESSAGE;
+
+    if (demoIntent) {
+      if (messageField instanceof HTMLTextAreaElement && !messageField.value.trim()) {
+        messageField.value = prefilledMessage;
+      }
+
+      if (intentField instanceof HTMLInputElement) {
+        intentField.value = 'demo';
+      }
+
+      window.sessionStorage.removeItem('kersivo-demo-intent');
+      window.sessionStorage.removeItem('kersivo-demo-message');
+    }
+  }
+
+
   const chooser = document.querySelector('[data-system-chooser]');
   const openTrigger = document.querySelector('[data-system-chooser-open]');
 
