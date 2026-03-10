@@ -195,9 +195,13 @@
     padding-bottom: clamp(1.5rem, 7vw, 2rem);
     gap: var(--space-md);
   }
+  .hero103__layout {
+    gap: clamp(1.35rem, 6vw, 1.8rem);
+  }
+
 
   .hero103__content {
-    gap: var(--space-sm);
+    gap: var(--space-xs);
   }
 
   .hero103__lead {
@@ -209,16 +213,24 @@
   .hero103__actions {
     display: grid;
     grid-template-columns: 1fr;
-        gap: 0.55rem;
-    margin-top: 0;
+    gap: 0.45rem;
+    margin-top: 0.1rem;
+
 
   }
 
   .hero103__actions .btn {
     width: 100%;
-        min-height: 2.5rem;
-    padding: 0.52rem 0.95rem;
-    font-size: 0.88rem;
+    min-height: 2.7rem;
+    padding: 0.5rem 0.9rem;
+    font-size: 0.84rem;
+    letter-spacing: 0.03em;
+  }
+
+  .hero103__actions .btn--secondary {
+    background: color-mix(in srgb, var(--surface) 88%, transparent);
+    color: color-mix(in srgb, var(--fg) 92%, var(--muted));
+
   }
 
   .hero103__media {
