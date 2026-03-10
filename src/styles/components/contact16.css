@@ -1,37 +1,52 @@
 .contact16 {
   background: var(--bg);
-  padding-block: clamp(3rem, 9vw, 6rem);
-    scroll-margin-top: clamp(5rem, 10vw, 7rem);
+  padding-block: clamp(2.75rem, 10vw, 6rem);
+  scroll-margin-top: clamp(5rem, 10vw, 7rem);
+
 }
 
 .contact16__title {
-  font-size: clamp(2.2rem, 8vw, 5rem);
+  font-size: clamp(2.1rem, 9vw, 5rem);
+  margin-bottom: 0;
+
 }
 
 .contact16__layout {
-  margin-top: clamp(2rem, 8vw, 5rem);
+margin-top: clamp(1.5rem, 5vw, 3.5rem);
   display: grid;
-  gap: var(--space-xl);
+  gap: clamp(1.5rem, 5vw, 3rem);
 }
 
 .contact16__info {
   display: grid;
-  gap: var(--space-lg);
+  gap: var(--space-sm);
 }
 
 .contact16__description {
   color: color-mix(in srgb, var(--muted) 80%, var(--fg) 20%);
-  max-width: 42ch;
+  max-width: 40ch;
+  margin: 0;
+  line-height: 1.6;
+
 }
 
 
 .contact16__form {
   display: grid;
-  gap: var(--space-xs);
+  gap: clamp(0.875rem, 2.5vw, 1.125rem);
 }
 
 .contact16__form label {
-  display: block;
+  display: grid;
+  gap: 0.45rem;
+}
+
+.contact16__field-label {
+  font-size: 0.8rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: color-mix(in srgb, var(--muted) 72%, var(--fg) 28%);
+
 }
 
 .contact16__form input,
@@ -41,15 +56,17 @@
   background: transparent;
   border: 0;
   border-bottom: 1px solid color-mix(in srgb, var(--fg) 20%, transparent);
-  padding: 1rem 0;
+  padding: 0.95rem 0;
   border-radius: 0;
   color: var(--fg);
 }
 
 .contact16__form textarea {
   resize: vertical;
-  min-height: 7.25rem;
-  line-height: 1.45;
+  min-height: 7.5rem;
+  line-height: 1.5;
+  margin-top: 0.1rem;
+
 }
 
 .contact16__form input::placeholder,
@@ -66,14 +83,24 @@
 }
 
 .contact16__submit {
-  margin-top: var(--space-lg);
+  margin-top: clamp(0.65rem, 2vw, 1rem);
   justify-self: start;
+    min-height: 2.75rem;
 }
 
 @media (min-width: 64rem) {
   .contact16__layout {
     grid-template-columns: minmax(0, 24rem) minmax(0, 1fr);
     align-items: start;
-    gap: 4rem;
+    gap: clamp(2.75rem, 5vw, 4.25rem);
+  }
+
+  .contact16__form {
+    gap: 1rem;
+  }
+
+  .contact16__submit {
+    margin-top: 1rem;
+
   }
 }

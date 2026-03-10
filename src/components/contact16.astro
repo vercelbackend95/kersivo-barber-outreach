@@ -20,7 +20,7 @@ const { className = "" } = Astro.props as Contact16Props;
       </div>
 
       <form class="contact16__form" action="#" method="post">
-                <input type="hidden" name="intent" value="" data-demo-intent />
+        <input type="hidden" name="intent" value="" data-demo-intent />
         <label>
           <span class="sr-only">Name</span>
           <input type="text" name="name" placeholder="Name*" required />
@@ -30,7 +30,7 @@ const { className = "" } = Astro.props as Contact16Props;
           <input type="email" name="email" placeholder="Email*" required />
         </label>
         <label>
-          <span class="sr-only">Message</span>
+          <span class="contact16__field-label">Tell us about your shop</span>
           <textarea
             name="message"
             placeholder="Tell us what your barbershop needs"
