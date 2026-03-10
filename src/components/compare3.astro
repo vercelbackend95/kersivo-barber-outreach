@@ -1,82 +1,65 @@
----
-const comparisonRows = [
-  {
-    topic: 'Bookings',
-    kersivo: 'Booking flow built into the website experience.',
-    alternative: 'Separate tools or generic booking pages.',
-
-  },
-  {
-   topic: 'Shop & pickup',
-    kersivo: 'Retail and pickup managed in the same system.',
-    alternative: 'No store at all or disconnected ecommerce add-ons.',
-
-  },
-  {
-    topic: 'Barber schedules',
-    kersivo: 'Clear service and team availability in one place.',
-    alternative: 'Manual updates or platform limitations.',
-
-  },
-  {
-    topic: 'Admin updates',
-    kersivo: 'Update content, products and key details without chaos.',
-    alternative: 'Scattered edits across tools or slow agency changes.',
-
-  },
-  {
-    topic: 'Brand feel',
-    kersivo: 'Premium barber-first experience across the whole site.',
-    alternative: 'Template feel or platform-driven layout limits.',
-
-  },
-];
----
-
-<section class="compare3" aria-label="Why barbers choose Kersivo">
-  <div class="container compare3__container">
-    <header class="compare3__header">
-
-      <p class="compare3__eyebrow">Comparison</p>
-      <h2>Why barbers choose Kersivo</h2>
-      <p class="compare3__lead">
-        A premium website, bookings, admin and retail flow — all working together in one place.
+<section class="compare3-block" aria-label="Comparison">
+  <div class="container">
+    <div class="compare3-block__header">
+      <span class="compare3-block__badge">Comparison</span>
+      <h2>See how Acme stacks up against the competition</h2>
+      <p>
+        Discover why our customers choose Acme over other document
+        management solutions
       </p>
-        </header>
-
-    <div class="compare3__column-intros" role="group" aria-label="Kersivo compared with alternatives">
-      <article class="compare3__intro-card compare3__intro-card--kersivo">
-        <h3>Kersivo</h3>
-        <p>Built for barbers who want a premium website, online bookings and retail in one place.</p>
-      </article>
-
-
-      <article class="compare3__intro-card">
-        <h3>Typical alternatives</h3>
-        <p>Often split across generic templates, booking tools and disconnected admin flows.</p>
-      </article>
     </div>
+   <div class="compare3-block__table-wrap">
+      <div class="compare3-block__grid" role="table" aria-label="Comparison table">
+        <div class="compare3-block__cell compare3-block__cell--head-empty"></div>
 
+        <div class="compare3-block__cell compare3-block__brand compare3-block__brand--highlight" role="columnheader">
+          <img
+            src="https://deifkwefumgah.cloudfront.net/shadcnblocks/block/block-1.svg"
+            alt="Acme logo"
+            class="compare3-block__logo"
+            loading="lazy"
+            decoding="async"
+          />
+          <p class="compare3-block__brand-title">Acme</p>
+          <p class="compare3-block__brand-copy">Built with customer needs in mind</p>
+        </div>
+        <div class="compare3-block__cell compare3-block__brand" role="columnheader">
+          <img
+            src="https://deifkwefumgah.cloudfront.net/shadcnblocks/block/block-2.svg"
+            alt="Biz logo"
+            class="compare3-block__logo"
+            loading="lazy"
+            decoding="async"
+          />
+          <p class="compare3-block__brand-title">Biz</p>
+          <p class="compare3-block__brand-copy">A popular alternative solution</p>
+        </div>
+        <div class="compare3-block__cell compare3-block__feature"><span>👥</span><strong>Team Overview</strong></div>
+        <div class="compare3-block__cell compare3-block__value compare3-block__value--highlight"><span class="compare3-block__status compare3-block__status--ok">✓</span><span>Comprehensive dashboard</span></div>
+        <div class="compare3-block__cell compare3-block__value"><span class="compare3-block__status compare3-block__status--bad">−</span><span>Basic overview only</span></div>
 
-    <div class="compare3__rows" role="list" aria-label="Kersivo vs typical alternatives">
-      {
-        comparisonRows.map((row) => (
-          <article class="compare3__row" role="listitem">
-            <h3 class="compare3__topic">{row.topic}</h3>
-            <div class="compare3__value compare3__value--kersivo">
-              <p class="compare3__value-label">Kersivo</p>
-              <p>{row.kersivo}</p>
-            </div>
-            <div class="compare3__value">
-              <p class="compare3__value-label">Typical alternatives</p>
-              <p>{row.alternative}</p>
-            </div>
-          </article>
-        ))
-      }
-    </div>
-    <div class="compare3__cta-wrap">
-      <a class="btn btn--primary compare3__cta" href="#book-demo" data-demo-cta>Book a demo</a>
+        <div class="compare3-block__cell compare3-block__feature"><span>🏷️</span><strong>Custom Branding</strong></div>
+        <div class="compare3-block__cell compare3-block__value compare3-block__value--highlight"><span class="compare3-block__status compare3-block__status--ok">✓</span><span>Full customization</span></div>
+        <div class="compare3-block__cell compare3-block__value"><span class="compare3-block__status compare3-block__status--ok">✓</span><span>Limited options</span></div>
+        <div class="compare3-block__cell compare3-block__feature"><span>💻</span><strong>API Access</strong></div>
+        <div class="compare3-block__cell compare3-block__value compare3-block__value--highlight"><span class="compare3-block__status compare3-block__status--ok">✓</span><span>Robust API</span></div>
+        <div class="compare3-block__cell compare3-block__value"><span class="compare3-block__status compare3-block__status--bad">−</span><span>No API available</span></div>
+
+        <div class="compare3-block__cell compare3-block__feature"><span>📈</span><strong>Advanced Analytics</strong><em>Soon</em></div>
+        <div class="compare3-block__cell compare3-block__value compare3-block__value--highlight"><span class="compare3-block__status compare3-block__status--bad">−</span><span>Coming Q3 2025</span></div>
+        <div class="compare3-block__cell compare3-block__value"><span class="compare3-block__status compare3-block__status--ok">✓</span><span>Basic reporting</span></div>
+
+        <div class="compare3-block__cell compare3-block__feature"><span>🎧</span><strong>Customer Support</strong></div>
+        <div class="compare3-block__cell compare3-block__value compare3-block__value--highlight"><span class="compare3-block__status compare3-block__status--ok">✓</span><span>24/7 dedicated team</span></div>
+        <div class="compare3-block__cell compare3-block__value"><span class="compare3-block__status compare3-block__status--bad">−</span><span>Email support only</span></div>
+
+        <div class="compare3-block__cell compare3-block__cell--foot-empty"></div>
+        <div class="compare3-block__cell compare3-block__cta-wrap compare3-block__value--highlight">
+          <a class="compare3-block__cta" href="#book-demo" data-demo-cta>Try Acme today</a>
+        </div>
+        <div class="compare3-block__cell compare3-block__cell--foot-empty"></div>
+      </div>
+
 
     </div>
   </div>
