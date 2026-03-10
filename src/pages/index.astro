@@ -230,14 +230,36 @@ const DEMO_ADMIN_PASSWORD = import.meta.env.PUBLIC_DEMO_ADMIN_PASSWORD
 
 <script>
   
-  const demoCta = document.querySelector('[data-demo-cta]');
+  const demoCtas = document.querySelectorAll('[data-demo-cta]');
   const demoSection = document.querySelector('#book-demo');
+    const demoForm = document.querySelector('.contact16__form');
   const DEMO_MESSAGE = "Hi, I’m interested in a barber website demo with bookings, admin and shop features.";
 
-  if (demoCta instanceof HTMLAnchorElement) {
+  const applyDemoPrefill = () => {
+    if (!(demoForm instanceof HTMLFormElement)) return;
+
+    const messageField = demoForm.querySelector('[data-demo-message]');
+    const intentField = demoForm.querySelector('[data-demo-intent]');
+
+    if (intentField instanceof HTMLInputElement) {
+      intentField.value = 'demo';
+    }
+
+    if (!(messageField instanceof HTMLTextAreaElement)) return;
+
+    const currentValue = messageField.value.trim();
+
+    if (!currentValue || currentValue === DEMO_MESSAGE) {
+      messageField.value = DEMO_MESSAGE;
+    }
+  };
+
+  demoCtas.forEach((demoCta) => {
+    if (!(demoCta instanceof HTMLAnchorElement || demoCta instanceof HTMLButtonElement)) return;
+
+
     demoCta.addEventListener('click', () => {
-      window.sessionStorage.setItem('kersivo-demo-intent', 'demo');
-      window.sessionStorage.setItem('kersivo-demo-message', DEMO_MESSAGE);
+      applyDemoPrefill();
 
       if (demoSection instanceof HTMLElement) {
         window.requestAnimationFrame(() => {
@@ -245,29 +267,7 @@ const DEMO_ADMIN_PASSWORD = import.meta.env.PUBLIC_DEMO_ADMIN_PASSWORD
         });
       }
     });
-  }
-
-  const demoForm = document.querySelector('.contact16__form');
-
-  if (demoForm instanceof HTMLFormElement) {
-    const messageField = demoForm.querySelector('[data-demo-message]');
-    const intentField = demoForm.querySelector('[data-demo-intent]');
-    const demoIntent = window.sessionStorage.getItem('kersivo-demo-intent') === 'demo';
-    const prefilledMessage = window.sessionStorage.getItem('kersivo-demo-message') || DEMO_MESSAGE;
-
-    if (demoIntent) {
-      if (messageField instanceof HTMLTextAreaElement && !messageField.value.trim()) {
-        messageField.value = prefilledMessage;
-      }
-
-      if (intentField instanceof HTMLInputElement) {
-        intentField.value = 'demo';
-      }
-
-      window.sessionStorage.removeItem('kersivo-demo-intent');
-      window.sessionStorage.removeItem('kersivo-demo-message');
-    }
-  }
+});
 
 
   const chooser = document.querySelector('[data-system-chooser]');

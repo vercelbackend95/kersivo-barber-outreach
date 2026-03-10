@@ -1,15 +1,11 @@
 .contact16 {
   background: var(--bg);
   padding-block: clamp(3rem, 9vw, 6rem);
+    scroll-margin-top: clamp(5rem, 10vw, 7rem);
 }
 
 .contact16__title {
   font-size: clamp(2.2rem, 8vw, 5rem);
-}
-
-.contact16__title sup {
-  font-size: 0.5em;
-  top: -0.2em;
 }
 
 .contact16__layout {
