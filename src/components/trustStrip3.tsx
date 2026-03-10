@@ -61,7 +61,7 @@ const TrustStrip3 = ({
   className,
 }: TrustStrip3Props) => {
   return (
-    <section className={cn('border-y py-6', className)}>
+    <section className={cn('trust-strip3 border-y py-6', className)}>
       <div className="container">
         <div className="flex flex-col items-center gap-6 md:flex-row md:justify-between">
           {/* Certifications */}
