@@ -1,17 +1,31 @@
 
 
 import { cn } from '@/lib/utils';
-
-interface TrustStrip3Props {
-  valuePoints?: string[];
-  className?: string;
+interface ValuePoint {
+  desktop: string;
+  mobile?: string;
 }
 
-const DEFAULT_VALUE_POINTS = [
-  'Online bookings built in',
-  'Barber schedules in one place',
-  'Shop & pickup ready',
-  'Easy admin updates',
+
+interface TrustStrip3Props {
+  valuePoints?: ValuePoint[];
+  className?: string;
+}
+const DEFAULT_VALUE_POINTS: ValuePoint[] = [
+  {
+    desktop: 'Online bookings built in',
+    mobile: 'Bookings built in',
+  },
+  {
+    desktop: 'Barber schedules in one place',
+    mobile: 'Schedules in one place',
+  },
+  {
+    desktop: 'Shop & pickup ready',
+  },
+  {
+    desktop: 'Easy admin updates',
+  },
 
 ];
 
@@ -21,8 +35,9 @@ const TrustStrip3 = ({ valuePoints = DEFAULT_VALUE_POINTS, className }: TrustStr
       <div className="container">
         <ul className="trust-strip3__list" role="list">
           {valuePoints.map((point) => (
-            <li key={point} className="trust-strip3__item">
-              <span>{point}</span>
+            <li key={point.desktop} className="trust-strip3__item">
+              <span className="trust-strip3__label trust-strip3__label--desktop">{point.desktop}</span>
+              <span className="trust-strip3__label trust-strip3__label--mobile">{point.mobile ?? point.desktop}</span>
             </li>
           ))}
         </ul>
