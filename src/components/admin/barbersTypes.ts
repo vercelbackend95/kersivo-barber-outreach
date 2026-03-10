@@ -3,6 +3,7 @@ export type Barber = {
   name: string;
   avatarUrl?: string | null;
   isActive?: boolean;
+    isActive?: boolean;
   active?: boolean;
   sortOrder?: number;
   serviceIds?: string[];
@@ -14,6 +15,7 @@ export type Barber = {
 export type ServiceOption = {
   id: string;
   name: string;
+    isActive?: boolean;
   active?: boolean;
 };
 

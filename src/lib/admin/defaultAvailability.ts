@@ -24,7 +24,7 @@ export async function ensureBarberHasAvailabilityRules(barberId: string) {
     orderBy: [{ sortOrder: 'asc' }, { createdAt: 'asc' }],
     select: {
       rules: {
-        where: { active: true },
+        where: { isActive: true },
         orderBy: [{ dayOfWeek: 'asc' }, { startMinutes: 'asc' }],
         select: {
           dayOfWeek: true,
@@ -61,7 +61,7 @@ export async function ensureBarberHasAllServices(barberId: string) {
     return;
   }
 
-  const services = await prisma.service.findMany({ where: { active: true }, select: { id: true } });
+  const services = await prisma.service.findMany({ where: { isActive: true }, select: { id: true } });
   if (services.length === 0) {
     return;
   }

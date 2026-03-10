@@ -1,12 +1,11 @@
 export const prerender = false;
 
 import type { APIRoute } from 'astro';
-import { BookingStatus } from '@prisma/client';
+import { BookingStatus, OrderStatus } from '@prisma/client';
 import { addMilliseconds, differenceInMilliseconds, subDays, subYears } from 'date-fns';
 import { formatInTimeZone, fromZonedTime, toZonedTime } from 'date-fns-tz';
 import { requireAdmin } from '../../../lib/admin/auth';
 import { prisma } from '../../../lib/db/client';
-import { getDemoServicePriceGbp, normalizeServiceLookupKey, parsePriceTextToGbp } from '../../../lib/admin/reportPricing';
 const ADMIN_TIMEZONE = 'Europe/London';
 
 type ReportsRange = 'week' | '7d' | '30d' | '90d' | '1y';
@@ -39,8 +38,9 @@ type ReportBookingRow = {
 
 
 const BOOKED_STATUSES = new Set<BookingStatus>([BookingStatus.CONFIRMED, BookingStatus.RESCHEDULED]);
+// Revenue business rules: only confirmed bookings and paid/collected shop orders count as revenue.
 const REVENUE_STATUSES = new Set<BookingStatus>([BookingStatus.CONFIRMED]);
-
+const ORDER_REVENUE_STATUSES = new Set<OrderStatus>([OrderStatus.PAID, OrderStatus.COLLECTED]);
 function getStartOfWeekInLondon(now: Date) {
 
 
@@ -184,7 +184,7 @@ async function computeMetrics(shopId: string, range: RangeBoundaries, selectedBa
 
   };
 
-  const [bookings, services, busiestBarberRaw, mostPopularServiceRaw, activeBarbers, timeBlocks] = await Promise.all([
+  const [bookings, orders, busiestBarberRaw, mostPopularServiceRaw, activeBarbers, timeBlocks] = await Promise.all([
     prisma.booking.findMany({
       where: whereBase,
       select: {
@@ -196,13 +196,24 @@ async function computeMetrics(shopId: string, range: RangeBoundaries, selectedBa
         serviceId: true,
                 fullName: true,
         email: true,
+                serviceNameAtBooking: true,
+        servicePricePenceAtBooking: true,
+        serviceDurationMinutesAtBooking: true,
+        totalPricePence: true,
+
         barber: { select: { name: true, avatarUrl: true } },
-
-        service: { select: { id: true, name: true, durationMinutes: true, fromPriceText: true } }
-
+        service: { select: { id: true, name: true, durationMinutes: true, pricePence: true } }
       }
     }),
-    prisma.service.findMany({ select: { id: true, name: true, fromPriceText: true } }),
+    prisma.order.findMany({
+      where: {
+        shopId,
+        createdAt: { gte: range.from, lte: range.to },
+        status: { in: [...ORDER_REVENUE_STATUSES] }
+      },
+      select: { createdAt: true, totalPence: true }
+    }),
+
     selectedBarberId
       ? Promise.resolve([] as { barberId: string; _count: { barberId: number } }[])
       : prisma.booking.groupBy({
@@ -244,14 +255,7 @@ async function computeMetrics(shopId: string, range: RangeBoundaries, selectedBa
     select: { barberId: true, dayOfWeek: true, startMinutes: true, endMinutes: true, breakStartMin: true, breakEndMin: true }
   });
 
-  const servicePriceById = new Map<string, number>();
-  for (const service of services) {
-    const dbPrice = parsePriceTextToGbp(service.fromPriceText);
-    if (dbPrice != null) servicePriceById.set(service.id, dbPrice);
-  }
-
-  let usedDemoPricing = false;
-    let revenue = 0;
+  let revenue = 0;
   let revenueCount = 0;
   const revenueSeriesMap = new Map(getRevenueSeriesSeed(range, rangeKey).map((point) => [point.label, point.value]));
   let bookingsCount = 0;
@@ -271,7 +275,7 @@ async function computeMetrics(shopId: string, range: RangeBoundaries, selectedBa
 
     if (BOOKED_STATUSES.has(booking.status)) {
       const durationFromTimes = minutesOfOverlap(range.from, range.to, booking.startAt, booking.endAt);
-      const fallbackDuration = Math.max(0, booking.service?.durationMinutes ?? 0);
+      const fallbackDuration = Math.max(0, booking.serviceDurationMinutesAtBooking ?? booking.service?.durationMinutes ?? 0);
       bookedMinutes += durationFromTimes > 0 ? durationFromTimes : fallbackDuration;
 
       const weekdayKey = formatInTimeZone(booking.startAt, ADMIN_TIMEZONE, 'EEEE');
@@ -281,24 +285,15 @@ async function computeMetrics(shopId: string, range: RangeBoundaries, selectedBa
       const bucketStart = Math.floor(hour / 2) * 2;
       hourWindowCounts.set(bucketStart, (hourWindowCounts.get(bucketStart) ?? 0) + 1);
     }
+    const bookingValuePence = booking.totalPricePence ?? booking.servicePricePenceAtBooking ?? booking.service?.pricePence ?? 0;
+    const bookingValue = bookingValuePence / 100;
 
-
-    const serviceId = booking.serviceId;
-    const normalizedServiceId = normalizeServiceLookupKey(serviceId);
-    let bookingValue = servicePriceById.get(serviceId) ?? servicePriceById.get(normalizedServiceId) ?? null;
-
-    if (bookingValue == null) {
-      bookingValue = getDemoServicePriceGbp(serviceId, booking.service?.name);
-      if (bookingValue != null) usedDemoPricing = true;
-    }
-
-    if (bookingValue == null) bookingValue = 0;
     reportBookings.push({
       id: booking.id,
       startAt: booking.startAt.toISOString(),
       barberId: booking.barberId,
       barberName: booking.barber?.name ?? 'Barber',
-      serviceName: booking.service?.name ?? 'Service',
+      serviceName: booking.serviceNameAtBooking ?? booking.service?.name ?? 'Service',
       status: booking.status,
       clientName: booking.fullName,
       clientEmail: booking.email,
@@ -314,6 +309,12 @@ async function computeMetrics(shopId: string, range: RangeBoundaries, selectedBa
     revenueSeriesMap.set(bucketLabel, (revenueSeriesMap.get(bucketLabel) ?? 0) + bookingValue);
 
   }
+ for (const order of orders) {
+    revenue += order.totalPence / 100;
+    const bucketLabel = getRevenueBucketLabel(order.createdAt, rangeKey);
+    revenueSeriesMap.set(bucketLabel, (revenueSeriesMap.get(bucketLabel) ?? 0) + (order.totalPence / 100));
+  }
+
 
   const cancelledCount = breakdown.cancelledByClient + breakdown.cancelledByShop;
   const cancelledRate = bookingsCount > 0 ? (cancelledCount / bookingsCount) * 100 : 0;
@@ -455,7 +456,7 @@ async function computeMetrics(shopId: string, range: RangeBoundaries, selectedBa
     revenue,
     revenueCount,
     avgBookingValue: revenueCount > 0 ? revenue / revenueCount : 0,
-    usedDemoPricing,
+    usedDemoPricing: false,
     cancelledRate,
         noShowExpiredRate,
     breakdown,

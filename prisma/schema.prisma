@@ -72,16 +72,20 @@ model Client {
 }
 
 model Service {
-  id              String   @id
+  id              String   @id @default(cuid())
   name            String
+    description     String?
+  pricePence      Int
   durationMinutes Int
   bufferMinutes   Int      @default(0)
-  fromPriceText   String?
-  active          Boolean  @default(true)
+  displayOrder    Int      @default(0)
+  category        String?
+  isActive        Boolean  @default(true) @map("active")
   createdAt       DateTime @default(now())
   updatedAt       DateTime @updatedAt
   bookings        Booking[]
   barberServices  BarberService[]
+    @@index([isActive, displayOrder])
 }
 
 model Barber {
@@ -189,6 +193,12 @@ model Booking {
   paymentStatus           PaymentStatus?
   stripeCheckoutSessionId String?
   paidAt                  DateTime?
+
+  serviceNameAtBooking            String?
+  servicePricePenceAtBooking      Int?
+  serviceDurationMinutesAtBooking Int?
+  totalPricePence                 Int?
+
 
   createdAt               DateTime      @default(now())
   updatedAt               DateTime      @updatedAt

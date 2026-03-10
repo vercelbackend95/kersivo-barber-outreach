@@ -1,0 +1,41 @@
+.admin-service-form-grid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 12px;
+}
+
+.admin-service-actions,
+.admin-service-card-actions {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.admin-services-list {
+  margin-top: 16px;
+  display: grid;
+  gap: 12px;
+}
+
+.admin-service-card {
+  border: 1px solid var(--border);
+  background: var(--surface);
+  padding: 12px;
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  align-items: flex-start;
+}
+
+.admin-service-checkbox {
+  display: inline-flex;
+  gap: 8px;
+  align-items: center;
+  margin: 8px 0;
+}
+
+@media (min-width: 720px) {
+  .admin-service-form-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}

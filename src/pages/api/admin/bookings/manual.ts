@@ -32,6 +32,7 @@ export const POST: APIRoute = async (ctx) => {
 
   const settings = await prisma.shopSettings.findFirstOrThrow();
   const service = await prisma.service.findUniqueOrThrow({ where: { id: parsed.data.serviceId } });
+    if (!service.isActive) return new Response(JSON.stringify({ error: 'Selected service is inactive.' }), { status: 400 });
   const [h, m] = parsed.data.time.split(':').map(Number);
   const startAt = toUtcFromLondon(parsed.data.date, h * 60 + m);
   const endAt = addMinutes(startAt, service.durationMinutes + (service.bufferMinutes || settings.defaultBufferMinutes));
@@ -53,6 +54,11 @@ export const POST: APIRoute = async (ctx) => {
         phone: parsed.data.phone || null,
         startAt,
         endAt,
+                serviceNameAtBooking: service.name,
+        servicePricePenceAtBooking: service.pricePence,
+        serviceDurationMinutesAtBooking: service.durationMinutes,
+        totalPricePence: service.pricePence,
+
         status: BookingStatus.CONFIRMED,
         manageTokenHash: `manual-${Date.now()}`
       },

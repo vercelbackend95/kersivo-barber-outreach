@@ -74,6 +74,10 @@ export const GET: APIRoute = async ({ request }) => {
 
 
   ]);
+  if (!service.isActive) {
+    return new Response(JSON.stringify({ slots: [] }));
+  }
+
 
   const slots = generateSlots({ date, service, rules, confirmedBookings: bookings, timeOff, timeBlocks, settings });
 

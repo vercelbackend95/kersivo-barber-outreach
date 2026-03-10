@@ -7,7 +7,7 @@ import '../../styles/components/buttons.css';
 import '../../styles/components/booking.css';
 
 const [services, barbers] = await Promise.all([
-  prisma.service.findMany({ where: { active: true }, orderBy: { createdAt: 'asc' } }),
+  prisma.service.findMany({ where: { isActive: true }, orderBy: [{ displayOrder: 'asc' }, { createdAt: 'asc' }] }),
   prisma.barber.findMany({
     where: { active: true },
     orderBy: [{ sortOrder: 'asc' }, { createdAt: 'asc' }],

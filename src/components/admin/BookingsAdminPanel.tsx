@@ -1244,7 +1244,7 @@ export default function BookingsAdminPanel({ isActive, mode, onBackToDashboard }
     const response = await fetch('/api/admin/services', { credentials: 'include' });
     if (!response.ok) return;
     const data = (await response.json()) as { services?: ServiceOption[] };
-    setServices((data.services ?? []).filter((service) => service.active !== false));
+    setServices((data.services ?? []).filter((service) => service.isActive !== false));
   }, []);
 
   const fetchWorkingHours = useCallback(async (barberId: string) => {

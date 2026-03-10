@@ -35,10 +35,11 @@ async function main() {
   })));
 
   const services = [
-    { id: 'svc-haircut', name: 'Haircut', durationMinutes: 30 },
-    { id: 'svc-skin-fade', name: 'Skin Fade', durationMinutes: 45 },
-    { id: 'svc-beard-trim', name: 'Beard Trim', durationMinutes: 20 },
-    { id: 'svc-haircut-beard', name: 'Haircut + Beard', durationMinutes: 50 }
+    { id: 'svc-haircut', name: 'Haircut', durationMinutes: 30, pricePence: 2800, displayOrder: 1, category: 'Hair' },
+    { id: 'svc-skin-fade', name: 'Skin Fade', durationMinutes: 45, pricePence: 3400, displayOrder: 2, category: 'Hair' },
+    { id: 'svc-beard-trim', name: 'Beard Trim', durationMinutes: 20, pricePence: 1800, displayOrder: 3, category: 'Beard' },
+    { id: 'svc-haircut-beard', name: 'Haircut + Beard', durationMinutes: 50, pricePence: 4200, displayOrder: 4, category: 'Packages' }
+
   ];
 
   for (const service of services) {

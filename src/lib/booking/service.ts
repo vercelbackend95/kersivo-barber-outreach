@@ -146,6 +146,7 @@ export async function createPendingBooking(input: {
   await expirePendingBookings();
   const settings = await prisma.shopSettings.findFirstOrThrow();
   const service = await prisma.service.findUniqueOrThrow({ where: { id: input.serviceId } });
+    if (!service.isActive) throw new Error('Selected service is unavailable for new bookings.');
   const [barber, barberService] = await Promise.all([
     prisma.barber.findUnique({
       where: { id: input.barberId },
@@ -178,6 +179,11 @@ export async function createPendingBooking(input: {
     return tx.booking.create({
       data: {
         service: { connect: { id: input.serviceId } },
+                serviceNameAtBooking: service.name,
+        servicePricePenceAtBooking: service.pricePence,
+        serviceDurationMinutesAtBooking: service.durationMinutes,
+        totalPricePence: service.pricePence,
+
         barber: { connect: { id: input.barberId } },
         client: { connect: { id: client.id } },
 
@@ -204,7 +210,7 @@ export async function createPendingBooking(input: {
     fullName: booking.fullName,
     confirmUrl: `${baseUrl}/book/confirm?token=${confirmToken}`,
     shopName: settings.name,
-    serviceName: booking.service.name,
+    serviceName: booking.serviceNameAtBooking ?? booking.service.name,
     barberName: booking.barber.name,
     startAt: booking.startAt
   });
@@ -266,7 +272,7 @@ export async function confirmBookingByToken(token: string) {
       cancelUrl: `${baseUrl}/book/cancel?token=${manageToken}`,
       rescheduleUrl: `${baseUrl}/book/reschedule?token=${manageToken}`,
       shopName: settings.name,
-      serviceName: confirmedBooking.service.name,
+      serviceName: confirmedBooking.serviceNameAtBooking ?? confirmedBooking.service.name,
       barberName: confirmedBooking.barber.name,
       startAt: confirmedBooking.startAt
     });
@@ -325,7 +331,7 @@ export async function cancelByShop(input: { bookingId: string; reason?: string }
       to: updatedBooking.email,
       fullName: updatedBooking.fullName,
       shopName: settings.name,
-      serviceName: updatedBooking.service.name,
+      serviceName: updatedBooking.serviceNameAtBooking ?? updatedBooking.service.name,
       barberName: updatedBooking.barber.name,
       startAt: updatedBooking.startAt,
       reason: input.reason
@@ -363,6 +369,7 @@ export async function rescheduleByToken(input: { token: string; serviceId: strin
 
   const settings = await prisma.shopSettings.findFirstOrThrow();
   const service = await prisma.service.findUniqueOrThrow({ where: { id: input.serviceId } });
+    if (!service.isActive) throw new Error('Selected service is unavailable for booking changes.');
   const [barber, barberService] = await Promise.all([
     prisma.barber.findUnique({
       where: { id: input.barberId },
@@ -390,6 +397,11 @@ export async function rescheduleByToken(input: { token: string; serviceId: strin
 
       data: {
         service: { connect: { id: input.serviceId } },
+                serviceNameAtBooking: service.name,
+        servicePricePenceAtBooking: service.pricePence,
+        serviceDurationMinutesAtBooking: service.durationMinutes,
+        totalPricePence: service.pricePence,
+
         barber: { connect: { id: input.barberId } },
         startAt,
         endAt,
@@ -411,7 +423,7 @@ export async function rescheduleByToken(input: { token: string; serviceId: strin
     cancelUrl: `${baseUrl}/book/cancel?token=${input.token}`,
     rescheduleUrl: `${baseUrl}/book/reschedule?token=${input.token}`,
     shopName: settingsForEmail.name,
-    serviceName: updatedBooking.service.name,
+    serviceName: updatedBooking.serviceNameAtBooking ?? updatedBooking.service.name,
     barberName: updatedBooking.barber.name,
     startAt: updatedBooking.startAt,
     previousStartAt: updatedBooking.originalStartAt,

@@ -5,6 +5,7 @@ type AdminLayoutProps = {
   activeSection: AdminSection;
   onChangeSection: (section: AdminSection) => void;
   children: React.ReactNode;
+    onClearAdminAccess: () => void;
 };
 
 type SectionItem = {
@@ -18,6 +19,7 @@ const menuItems: SectionItem[] = [
   { section: 'bookings_blocks', label: 'Barbers' },
   { section: 'bookings_reports', label: 'Reports' },
   { section: 'bookings_history', label: 'History' },
+    { section: 'services', label: 'Services' },
   { section: 'shop_products', label: 'Products' },
   { section: 'shop_orders', label: 'Orders' },
   { section: 'shop_sales', label: 'Sales' },

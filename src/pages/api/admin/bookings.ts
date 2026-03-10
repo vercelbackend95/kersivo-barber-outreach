@@ -21,6 +21,12 @@ function getTodayRangeInLondon() {
 }
 
 
+function withHistoricalServiceName<T extends { serviceNameAtBooking?: string | null; service?: { name?: string | null } | null }>(booking: T): T {
+  if (!booking.serviceNameAtBooking || !booking.service) return booking;
+  return { ...booking, service: { ...booking.service, name: booking.serviceNameAtBooking } };
+}
+
+
 export const GET: APIRoute = async (ctx) => {
   const unauthorized = requireAdmin(ctx); if (unauthorized) return unauthorized;
   const view = ctx.url.searchParams.get('view');
@@ -59,7 +65,7 @@ export const GET: APIRoute = async (ctx) => {
       ? `${page[page.length - 1]?.startAt.toISOString() ?? ''}|${page[page.length - 1]?.id ?? ''}`
       : null;
 
-    return new Response(JSON.stringify({ bookings: page, hasMore, cursor: nextCursor }));
+    return new Response(JSON.stringify({ bookings: page.map(withHistoricalServiceName), hasMore, cursor: nextCursor }));
   }
   if (view === 'stats') {
     const barberId = ctx.url.searchParams.get('barberId');
@@ -101,5 +107,5 @@ export const GET: APIRoute = async (ctx) => {
     orderBy: { startAt: 'asc' }
   });
 
-  return new Response(JSON.stringify({ bookings }));
+  return new Response(JSON.stringify({ bookings: bookings.map(withHistoricalServiceName) }));
 };

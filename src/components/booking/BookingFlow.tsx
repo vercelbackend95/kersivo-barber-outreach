@@ -1,7 +1,7 @@
 // src/components/booking/BookingFlow.tsx
 import React, { useEffect, useMemo, useState } from 'react';
 
-type Service = { id: string; name: string; durationMinutes: number; fromPriceText?: string | null };
+type Service = { id: string; name: string; durationMinutes: number; pricePence: number };
 type Barber = { id: string; name: string; serviceIds?: string[] };
 
 
@@ -191,7 +191,7 @@ export default function BookingFlow({ services, barbers, mode = 'create', token 
 
       <label>Service</label>
       <select value={serviceId} onChange={(e) => setServiceId(e.target.value)}>
-        {services.map((service) => <option key={service.id} value={service.id}>{service.name} ({service.durationMinutes} min)</option>)}
+        {services.map((service) => <option key={service.id} value={service.id}>{service.name} ({service.durationMinutes} min · £{(service.pricePence / 100).toFixed(2)})</option>)}
       </select>
 
       <label>Barber</label>

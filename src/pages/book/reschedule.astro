@@ -10,8 +10,12 @@ import { getRescheduleTokenStatus } from '../../lib/booking/service';
 const token = Astro.url.searchParams.get('token') ?? '';
 const tokenStatus = token ? await getRescheduleTokenStatus(token) : { valid: false as const, message: 'Missing token.' };
 const [services, barbers] = await Promise.all([
-  prisma.service.findMany({ where: { active: true }, orderBy: { createdAt: 'asc' } }),
-  prisma.barber.findMany({ where: { active: true }, orderBy: [{ sortOrder: 'asc' }, { createdAt: 'asc' }] })
+  prisma.service.findMany({ where: { isActive: true }, orderBy: [{ displayOrder: 'asc' }, { createdAt: 'asc' }] }),
+  prisma.barber.findMany({
+    where: { active: true },
+    orderBy: [{ sortOrder: 'asc' }, { createdAt: 'asc' }],
+    include: { barberServices: { select: { serviceId: true } } }
+  })
 ]);
 ---
 <html lang="en">
@@ -23,7 +27,17 @@ const [services, barbers] = await Promise.all([
           tokenStatus.valid ? (
             <>
             <p class="muted">Pick a new slot to update your confirmed booking.</p>
-              <BookingFlow client:load mode="reschedule" token={token} services={services} barbers={barbers} />
+              <BookingFlow
+                client:load
+                mode="reschedule"
+                token={token}
+                services={services}
+                barbers={barbers.map((barber) => ({
+                  id: barber.id,
+                  name: barber.name,
+                  serviceIds: barber.barberServices.map((link) => link.serviceId)
+                }))}
+              />
             </>
           ) : (
             <p>{tokenStatus.message}</p>

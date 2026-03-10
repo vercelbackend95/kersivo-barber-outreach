@@ -2,12 +2,14 @@ import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import AdminLayout from './AdminLayout';
 import BookingsAdminPanel from './BookingsAdminPanel';
 import ShopAdminPanel from './ShopAdminPanel';
+import ServicesAdminPanel from './ServicesAdminPanel';
 import { clearAdminSecret, getStoredAdminSecret, installAdminFetchInterceptor, saveAdminSecret } from './adminAuth';
 export type AdminSection =
   | 'bookings_dashboard'
   | 'bookings_blocks'
   | 'bookings_reports'
   | 'bookings_history'
+    | 'services'
   | 'shop_products'
   | 'shop_orders'
   | 'shop_sales';
@@ -20,6 +22,7 @@ function getSectionFromUrl(): AdminSection {
   if (section === 'bookings_blocks') return 'bookings_blocks';
   if (section === 'bookings_reports') return 'bookings_reports';
   if (section === 'bookings_history') return 'bookings_history';
+    if (section === 'services') return 'services';
   if (section === 'shop_orders') return 'shop_orders';
   if (section === 'shop_sales') return 'shop_sales';
   if (section === 'shop_products') return 'shop_products';
@@ -120,6 +123,11 @@ export default function AdminPanel() {
         }
         onBackToDashboard={() => handleSectionChange('bookings_dashboard')}
       />
+      
+      {activeSection === 'services' ? (
+        <ServicesAdminPanel />
+      ) : null}
+
       {activeSection === 'shop_products' || activeSection === 'shop_orders' || activeSection === 'shop_sales' ? (
         <ShopAdminPanel initialTab={shopTab} />
       ) : null}
