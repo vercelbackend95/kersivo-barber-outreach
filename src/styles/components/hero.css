@@ -231,6 +231,10 @@
   align-items: end;
   padding: var(--space-sm);
 }
+.system-chooser[hidden] {
+  display: none;
+}
+
 
 .system-chooser__backdrop {
   position: absolute;
