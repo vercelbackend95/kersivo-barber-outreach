@@ -3,9 +3,9 @@
   "type": "module",
   "version": "0.0.1",
   "scripts": {
-    "dev": "astro dev",
-    "build": "astro build",
-    "preview": "astro preview",
+    "dev": "npm run prisma:generate && astro dev",
+    "build": "npm run prisma:generate && astro build",
+    "preview": "npm run prisma:generate && astro preview",
     "astro": "astro",
     "prisma": "prisma",
     "prisma:generate": "prisma generate --schema prisma/schema.prisma",
