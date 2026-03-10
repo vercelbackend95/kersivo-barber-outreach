@@ -330,17 +330,14 @@
 
 .system-chooser__tile-badge {
   width: fit-content;
-  padding: 0.2rem 0.44rem;
-  border: 1px solid color-mix(in srgb, var(--accent) 44%, var(--border));
-  color: color-mix(in srgb, var(--accent) 86%, var(--fg));
-  font-size: 0.66rem;
-
+  padding: 0.14rem 0.4rem;
+  border: 1px solid color-mix(in srgb, var(--accent) 34%, var(--border));
+  color: color-mix(in srgb, var(--accent) 78%, var(--fg));
+  font-size: clamp(0.6rem, 1.8vw, 0.64rem);
   font-weight: 600;
-
-  letter-spacing: 0.08em;
-    text-transform: uppercase;
+  letter-spacing: 0.07em;
+  text-transform: uppercase;
   line-height: 1;
-
 }
 
 .system-chooser__tile h3 {
