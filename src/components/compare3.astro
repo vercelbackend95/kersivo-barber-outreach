@@ -1,116 +1,83 @@
 ---
 const comparisonRows = [
   {
-    feature: "Lead Qualification",
-    icon: "👥",
-    kersivo: "Barber-focused lead scoring and intent filtering",
-    competitor: "Generic contact forms with no fit scoring",
-    kersivoPositive: true,
-    competitorPositive: false,
+    topic: 'Bookings',
+    kersivo: 'Booking flow built into the website experience.',
+    alternative: 'Separate tools or generic booking pages.',
+
   },
   {
-    feature: "Brand Customization",
-    icon: "🏷️",
-    kersivo: "Full white-label scripts and outreach voice",
-    competitor: "Basic template edits only",
-    kersivoPositive: true,
-    competitorPositive: true,
+   topic: 'Shop & pickup',
+    kersivo: 'Retail and pickup managed in the same system.',
+    alternative: 'No store at all or disconnected ecommerce add-ons.',
+
   },
   {
-    feature: "Automation & Integrations",
-    icon: "⚙️",
-    kersivo: "CRM-ready workflows and clear API handoff",
-    competitor: "Limited or manual integrations",
-    kersivoPositive: true,
-    competitorPositive: false,
+    topic: 'Barber schedules',
+    kersivo: 'Clear service and team availability in one place.',
+    alternative: 'Manual updates or platform limitations.',
+
   },
   {
-    feature: "Performance Reporting",
-    icon: "📈",
-    kersivo: "Revenue-focused reporting built for owners",
-    competitor: "Clicks and vanity metrics",
-    kersivoPositive: true,
-    competitorPositive: false,
-    badge: "New",
+    topic: 'Admin updates',
+    kersivo: 'Update content, products and key details without chaos.',
+    alternative: 'Scattered edits across tools or slow agency changes.',
+
   },
   {
-    feature: "Support",
-    icon: "🎧",
-    kersivo: "Dedicated support with strategic check-ins",
-    competitor: "Ticket-based support only",
-    kersivoPositive: true,
-    competitorPositive: false,
+    topic: 'Brand feel',
+    kersivo: 'Premium barber-first experience across the whole site.',
+    alternative: 'Template feel or platform-driven layout limits.',
+
   },
 ];
 ---
 
-<section class="compare3" aria-label="Comparison section">
-  <div class="container">
-    <div class="compare3__header">
+<section class="compare3" aria-label="Why barbers choose Kersivo">
+  <div class="container compare3__container">
+    <header class="compare3__header">
+
       <p class="compare3__eyebrow">Comparison</p>
-      <h2>See How Kersivo Compares</h2>
+      <h2>Why barbers choose Kersivo</h2>
       <p class="compare3__lead">
-        Discover why barbershop owners choose Kersivo over generic outreach services.
+        A premium website, bookings, admin and retail flow — all working together in one place.
       </p>
+        </header>
+
+    <div class="compare3__column-intros" role="group" aria-label="Kersivo compared with alternatives">
+      <article class="compare3__intro-card compare3__intro-card--kersivo">
+        <h3>Kersivo</h3>
+        <p>Built for barbers who want a premium website, online bookings and retail in one place.</p>
+      </article>
+
+
+      <article class="compare3__intro-card">
+        <h3>Typical alternatives</h3>
+        <p>Often split across generic templates, booking tools and disconnected admin flows.</p>
+      </article>
     </div>
 
-    <div class="compare3__table-wrap">
-      <div class="compare3__table" role="table" aria-label="Kersivo vs alternatives">
-        <div class="compare3__cell compare3__cell--head"></div>
-        <div class="compare3__cell compare3__cell--brand compare3__cell--highlight" role="columnheader">
-          <img
-            src="https://deifkwefumgah.cloudfront.net/shadcnblocks/block/block-1.svg"
-            alt="Kersivo logo"
-            class="compare3__logo"
-            loading="lazy"
-          />
-          <p class="compare3__brand-name">Kersivo</p>
-          <p class="compare3__brand-copy">Built for barber outreach and booked appointments</p>
-        </div>
-        <div class="compare3__cell compare3__cell--brand" role="columnheader">
-          <img
-            src="https://deifkwefumgah.cloudfront.net/shadcnblocks/block/block-2.svg"
-            alt="Other agencies logo"
-            class="compare3__logo"
-            loading="lazy"
-          />
-          <p class="compare3__brand-name">Typical Agencies</p>
-          <p class="compare3__brand-copy">Broad marketing support for many niches</p>
-        </div>
 
-        {
-          comparisonRows.map((row) => (
-            <>
-              <div class="compare3__cell compare3__cell--feature" role="rowheader">
-                <span class="compare3__feature-icon" aria-hidden="true">{row.icon}</span>
-                <span>{row.feature}</span>
-                {row.badge && <span class="compare3__badge">{row.badge}</span>}
-              </div>
-              <div class="compare3__cell compare3__cell--highlight compare3__cell--value" role="cell">
-                <span class={`compare3__status ${row.kersivoPositive ? "is-positive" : "is-negative"}`} aria-hidden="true">
-                  {row.kersivoPositive ? "✓" : "—"}
-                </span>
-                <span>{row.kersivo}</span>
-              </div>
-              <div class="compare3__cell compare3__cell--value" role="cell">
-                <span
-                  class={`compare3__status ${row.competitorPositive ? "is-positive" : "is-negative"}`}
-                  aria-hidden="true"
-                >
-                  {row.competitorPositive ? "✓" : "—"}
-                </span>
-                <span>{row.competitor}</span>
-              </div>
-            </>
-          ))
-        }
+    <div class="compare3__rows" role="list" aria-label="Kersivo vs typical alternatives">
+      {
+        comparisonRows.map((row) => (
+          <article class="compare3__row" role="listitem">
+            <h3 class="compare3__topic">{row.topic}</h3>
+            <div class="compare3__value compare3__value--kersivo">
+              <p class="compare3__value-label">Kersivo</p>
+              <p>{row.kersivo}</p>
+            </div>
+            <div class="compare3__value">
+              <p class="compare3__value-label">Typical alternatives</p>
+              <p>{row.alternative}</p>
+            </div>
+          </article>
+        ))
+      }
+    </div>
+    <div class="compare3__cta-wrap">
+      <a class="btn btn--primary compare3__cta" href="#book-demo" data-demo-cta>Book a demo</a>
 
-        <div class="compare3__cell"></div>
-        <div class="compare3__cell compare3__cell--highlight compare3__cell--cta">
-          <a class="btn btn--primary compare3__button" href="#">Book a Strategy Call</a>
-        </div>
-        <div class="compare3__cell"></div>
-      </div>
     </div>
   </div>
 </section>

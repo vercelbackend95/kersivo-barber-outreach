@@ -1,148 +1,160 @@
 .compare3 {
   padding-block: clamp(3.5rem, 7vw, 6rem);
 }
+.compare3__container {
+  display: grid;
+  gap: clamp(1.5rem, 3vw, 2.5rem);
+}
+
 
 .compare3__header {
   display: grid;
-  justify-items: center;
-  gap: 0.9rem;
-  text-align: center;
+  gap: 0.75rem;
 }
 
 .compare3__eyebrow {
+    width: fit-content;
   border: 1px solid var(--border);
   background: color-mix(in srgb, var(--surface) 78%, var(--bg));
   padding: 0.35rem 0.75rem;
   border-radius: var(--radius-sm);
   text-transform: uppercase;
   letter-spacing: 0.08em;
-  font-size: 0.76rem;
+  font-size: 0.75rem;
   color: var(--muted);
 }
 
 .compare3__lead {
   color: var(--muted);
-  max-width: 60ch;
+  max-width: 62ch;
 }
 
-.compare3__table-wrap {
-  margin-top: clamp(2rem, 4vw, 3rem);
-  overflow-x: auto;
-  padding-inline: 0.25rem;
-}
-
-.compare3__table {
-  min-width: 56rem;
+.compare3__column-intros {
   display: grid;
-  grid-template-columns: minmax(14rem, 1fr) minmax(18rem, 1fr) minmax(18rem, 1fr);
-  border: 1px solid var(--border);
-  background: var(--surface);
+  gap: 0.75rem;
+
 }
 
-.compare3__cell {
-  border-right: 1px solid var(--border);
-  border-bottom: 1px solid var(--border);
-  padding: 1rem;
-}
+.compare3__intro-card h3 {
+  font-size: clamp(1.5rem, 4vw, 2rem);
 
-.compare3__cell:nth-child(3n) {
-  border-right: none;
-}
-
-.compare3__cell--head {
-  background: var(--surface);
-}
-
-.compare3__cell--brand {
   display: grid;
-  justify-items: center;
   gap: 0.5rem;
-  text-align: center;
+
 }
 
-.compare3__cell--highlight {
-  background: color-mix(in srgb, var(--surface) 65%, var(--bg));
+.compare3__intro-card h3 {
+  font-size: clamp(1.5rem, 4vw, 2rem);
+
 }
 
-.compare3__logo {
-  width: 2rem;
-  height: 2rem;
-}
-
-.compare3__brand-name {
-  font-family: var(--font-heading);
-  text-transform: uppercase;
-  letter-spacing: var(--tracking-heading);
-  font-size: 1.45rem;
-  line-height: 1;
-}
-
-.compare3__brand-copy {
+.compare3__intro-card p {
   color: var(--muted);
-  font-size: 0.875rem;
-  max-width: 26ch;
+
 }
 
-.compare3__cell--feature,
-.compare3__cell--value {
-  display: flex;
-  align-items: center;
-  gap: 0.6rem;
+.compare3__intro-card--kersivo {
+  background: color-mix(in srgb, var(--surface) 70%, var(--bg));
+
 }
 
-.compare3__cell--feature {
-  font-weight: 600;
+.compare3__rows {
+  display: grid;
+  gap: 0.75rem;
 }
 
-.compare3__feature-icon {
-  font-size: 1rem;
-}
-
-.compare3__badge {
-  margin-left: auto;
+.compare3__row {
   border: 1px solid var(--border);
-  color: var(--muted);
-  padding: 0.14rem 0.45rem;
-  font-size: 0.65rem;
+  border-radius: var(--radius-md);
+  background: var(--surface);
+  padding: 1rem;
+  display: grid;
+  gap: 0.85rem;
+
+}
+
+.compare3__topic {
+  font-size: clamp(1.35rem, 4.5vw, 1.8rem);
+
+}
+
+.compare3__value {
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  padding: 0.75rem;
+  display: grid;
+  gap: 0.4rem;
+
+}
+
+.compare3__value--kersivo {
+  background: color-mix(in srgb, var(--surface) 65%, var(--bg));
+
+}
+
+.compare3__value-label {
+  font-size: 0.72rem;
   text-transform: uppercase;
   letter-spacing: 0.08em;
-  border-radius: var(--radius-xs);
-}
-
-.compare3__status {
-  display: inline-flex;
-  width: 1.2rem;
-  height: 1.2rem;
-  align-items: center;
-  justify-content: center;
-  border: 1px solid var(--border);
-  font-size: 0.8rem;
-  line-height: 1;
-}
-
-.compare3__status.is-positive {
-  color: var(--accent);
-}
-
-.compare3__status.is-negative {
   color: var(--muted);
+
 }
 
-.compare3__cell--cta {
-  display: flex;
-  justify-content: center;
+.compare3__value p:last-child {
+  color: var(--fg);
+  max-width: none;
+
 }
 
-.compare3__button {
+.compare3__cta-wrap {
+  padding-top: 0.5rem;
+
+}
+
+.compare3__cta {
   width: 100%;
+
 }
 
-.compare3__table > :nth-last-child(-n + 3) {
-  border-bottom: none;
-}
+@media (min-width: 52rem) {
+  .compare3__header {
+    text-align: center;
+    justify-items: center;
+  }
 
-@media (max-width: 62rem) {
-  .compare3__table {
-    min-width: 49rem;
+
+  .compare3__column-intros {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 1rem;
+  }
+
+
+  .compare3__rows {
+    gap: 1rem;
+  }
+
+  .compare3__row {
+    grid-template-columns: minmax(11rem, 0.7fr) minmax(0, 1fr) minmax(0, 1fr);
+    align-items: stretch;
+    gap: 1rem;
+    padding: 1.1rem;
+  }
+
+  .compare3__topic {
+    align-self: center;
+  }
+  .compare3__value {
+    padding: 0.9rem;
+  }
+
+  .compare3__cta-wrap {
+    display: flex;
+    justify-content: center;
+  }
+
+  .compare3__cta {
+    width: auto;
+    min-width: 13rem;
+
   }
 }
