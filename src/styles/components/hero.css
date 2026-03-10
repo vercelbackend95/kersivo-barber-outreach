@@ -248,7 +248,7 @@
   width: min(100%, 68rem);
   margin-inline: auto;
   border: 1px solid var(--border);
-  border-radius: var(--radius-lg);
+  border-radius: min(var(--radius-lg), 0.375rem);
   background: color-mix(in srgb, var(--surface) 95%, transparent);
   box-shadow: 0 0 0 1px color-mix(in srgb, var(--fg) 7%, transparent), 0 1.25rem 3rem color-mix(in srgb, var(--bg) 70%, transparent);
   padding: var(--space-md);
@@ -287,7 +287,7 @@
 
 .system-chooser__close {
   border: 1px solid var(--border);
-  border-radius: var(--radius-md);
+  border-radius: min(var(--radius-md), 0.375rem);
   background: color-mix(in srgb, var(--bg) 70%, transparent);
   color: var(--fg);
   min-width: 2.25rem;
@@ -316,7 +316,7 @@
 
 .system-chooser__tile {
   border: 1px solid var(--border);
-  border-radius: var(--radius-md);
+  border-radius: min(var(--radius-md), 0.375rem);
   text-decoration: none;
   color: inherit;
   background: color-mix(in srgb, var(--bg) 60%, transparent);
@@ -325,18 +325,22 @@
   gap: var(--space-xs);
   min-height: 9.25rem;
   transition: border-color 160ms ease, transform 160ms ease, background-color 160ms ease;
+    cursor: pointer;
 }
 
-.system-chooser__tile-icon {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  width: 2.1rem;
-  height: 2.1rem;
+.system-chooser__tile-badge {
+  width: fit-content;
+  padding: 0.22rem 0.52rem;
+
   border: 1px solid color-mix(in srgb, var(--accent) 60%, var(--border));
   color: var(--accent);
-  font-size: 0.75rem;
+  font-size: 0.72rem;
+  font-weight: 600;
+
   letter-spacing: 0.08em;
+    text-transform: uppercase;
+  line-height: 1;
+
 }
 
 .system-chooser__tile h3 {
@@ -350,6 +354,59 @@
   color: var(--muted);
   line-height: 1.45;
 }
+.system-chooser__auth-note {
+  margin-top: auto;
+  border-top: 1px solid color-mix(in srgb, var(--border) 82%, transparent);
+  padding-top: var(--space-xs);
+  display: grid;
+  gap: 0.2rem;
+}
+
+.system-chooser__auth-note p {
+  margin: 0;
+  font-size: 0.78rem;
+  line-height: 1.35;
+}
+
+.system-chooser__auth-note p:first-child {
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: color-mix(in srgb, var(--muted) 86%, var(--fg));
+}
+
+.system-chooser__auth-note strong {
+  color: var(--fg);
+  font-weight: 600;
+}
+
+.system-chooser__copy-password {
+  justify-self: start;
+  border: 1px solid transparent;
+  border-radius: 0.25rem;
+  background: transparent;
+  color: var(--accent);
+  padding: 0.2rem 0.35rem;
+  margin-top: 0.2rem;
+  font-size: 0.76rem;
+  line-height: 1;
+  cursor: copy;
+}
+
+.system-chooser__copy-password:hover {
+  border-color: color-mix(in srgb, var(--accent) 55%, transparent);
+  color: var(--accent-hover);
+}
+
+.system-chooser__copy-password:focus-visible {
+  outline: 2px solid var(--focus);
+  outline-offset: 2px;
+}
+
+.system-chooser__copy-password:disabled {
+  cursor: default;
+  opacity: 0.85;
+}
+
 
 .system-chooser__tile:hover,
 .system-chooser__tile:focus-visible {
@@ -374,6 +431,6 @@
   }
 
   .system-chooser__tile {
-    min-height: 12rem;
+    min-height: 14.25rem;
   }
 }
