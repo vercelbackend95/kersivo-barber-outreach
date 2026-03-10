@@ -73,7 +73,7 @@ const processSteps = [
               <h3>{step.title}</h3>
               <p>{step.description}</p>
             </div>
-                      </li>
+          </li>
         ))}
       </ul>
     </div>
@@ -81,11 +81,15 @@ const processSteps = [
 </section>
 
 <script>
-  const section = document.querySelector('[data-process2]');
+  const sections = Array.from(document.querySelectorAll('[data-process2]'));
 
-  if (section) {
+  sections.forEach((section) => {
     const items = Array.from(section.querySelectorAll('[data-process-item]'));
     const images = Array.from(section.querySelectorAll('[data-process-image]'));
+    if (items.length === 0 || images.length === 0) {
+      return;
+    }
+
 
     const setActive = (index) => {
       images.forEach((image, imageIndex) => {
@@ -96,9 +100,13 @@ const processSteps = [
     const observer = new IntersectionObserver(
       (entries) => {
         entries.forEach((entry) => {
-          if (entry.isIntersecting) {
-            const target = entry.target;
-            const index = Number(target.getAttribute('data-process-item'));
+          if (!entry.isIntersecting) {
+            return;
+          }
+
+          const index = Number(entry.target.getAttribute('data-process-item'));
+
+          if (!Number.isNaN(index)) {
             setActive(index);
           }
         });
@@ -111,5 +119,5 @@ const processSteps = [
     );
 
     items.forEach((item) => observer.observe(item));
-  }
+  });
 </script>
