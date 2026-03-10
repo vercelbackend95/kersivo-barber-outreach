@@ -17,7 +17,9 @@ export default defineConfig({
   vite: {
     resolve: {
       alias: {
-        '@': fileURLToPath(new URL('./src', import.meta.url))
+        '@': fileURLToPath(new URL('./src', import.meta.url)),
+        'lucide-react': fileURLToPath(new URL('./src/components/lucide-react.tsx', import.meta.url))
+
       }
           },
     build: {
