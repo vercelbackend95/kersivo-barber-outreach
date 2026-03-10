@@ -19,123 +19,105 @@ const CATEGORY_LABELS: Record<string, string> = {
   TOOLS: 'Tools',
   GIFT_SETS: 'Sets'
 };
-const createExcerpt = (description: string | null) => {
-  if (!description) {
-    return null;
+const featuredPromotions = [
+  {
+    kicker: 'Elevate your routine',
+    title: 'Premium grooming products selected by barbers.',
+    ctaLabel: 'Shop all products',
+    ctaLink: '/shop'
+  },
+  {
+    kicker: 'Details that set you apart',
+    title: 'From texture to beard care, every finish in one place.',
+    ctaLabel: 'Explore essentials',
+    ctaLink: '/shop'
   }
+];
 
-  const cleanedDescription = description.replace(/\s+/g, ' ').trim();
-  if (cleanedDescription.length <= 108) {
-    return cleanedDescription;
-  }
+const productGroups: typeof products[] = [];
+for (let index = 0; index < products.length; index += 8) {
+  productGroups.push(products.slice(index, index + 8));
+}
 
-  return `${cleanedDescription.slice(0, 105).trimEnd()}…`;
-};
+const productRows = productGroups.length > 0
+  ? productGroups.map((group, index) => ({
+      products: group,
+      promotion: featuredPromotions[index % featuredPromotions.length],
+      reverse: index % 2 === 1
+    }))
+  : [];
+
 
 ---
 
 <MainLayout title="Shop | Kersivo Barber Outreach">
-  <main class="container shop-page">
-    <section class="shop-top" aria-label="Shop introduction">
-      <header class="shop-header">
-        <p class="shop-eyebrow">Curated grooming store</p>
-        <h1>Barber retail essentials</h1>
-        <p class="shop-intro">A refined edit of hair, beard, and styling products. Order online in seconds and collect at the shop when it suits you.</p>
-      </header>
+    <main class="container shop-page" aria-labelledby="shop-page-title">
+    <header class="shop-header-block">
+      <p class="shop-eyebrow">Curated grooming store</p>
+      <h1 id="shop-page-title">Barber retail essentials</h1>
+      <p class="shop-intro">A clean product layout inspired by editorial storefronts. Browse quickly, add to cart in one click, and collect in the shop.</p>
+    </header>
 
-      <ul class="shop-usps" aria-label="Store highlights">
-        <li>Ready for pickup</li>
-        <li>Curated for barbers</li>
-        <li>Synced with admin</li>
-      </ul>
+    {productRows.length === 0 ? (
+      <section class="shop-row" aria-label="Shop preview">
+        <article class="shop-promo-card">
+          <p class="shop-promo-kicker">Retail built in</p>
+          <h2>Add products to launch your storefront</h2>
+          <p>Publish products in admin and they will appear here instantly.</p>
+          <a class="btn btn--primary" href="/shop">Open shop page</a>
 
-      {products.length > 0 ? (
-        <nav class="shop-filters" aria-label="Product categories">
-          <button type="button" class="shop-filter is-active" data-filter="all" aria-pressed="true">All</button>
-          <button type="button" class="shop-filter" data-filter="POMADES_AND_CLAYS" aria-pressed="false">Pomades</button>
-          <button type="button" class="shop-filter" data-filter="BEARD_CARE" aria-pressed="false">Beard</button>
-          <button type="button" class="shop-filter" data-filter="HAIR_WASH" aria-pressed="false">Wash</button>
-          <button type="button" class="shop-filter" data-filter="STYLING" aria-pressed="false">Styling</button>
-          <button type="button" class="shop-filter" data-filter="TOOLS" aria-pressed="false">Tools</button>
-          <button type="button" class="shop-filter" data-filter="GIFT_SETS" aria-pressed="false">Sets</button>
-        </nav>
-      ) : null}
-    </section>
-
-
-    <section class="shop-grid" aria-label="Products" data-shop-grid>
-
-      {products.length === 0 ? (
-        <article class="shop-card">
-          <h2>No products yet</h2>
-          <p class="muted">Products added in Admin → Shop will appear here.</p>
         </article>
-      ) : products.map((product) => (
-        <article class="shop-card" key={product.id} data-category={product.category}>
-          <div class="shop-media">
-            {product.featured ? <p class="shop-badge">Barber Pick</p> : null}
-            <a href={`/shop/${product.id}`} class="shop-media-link" aria-label={`View ${product.name}`}>
-              {product.imageUrl ? <img src={product.imageUrl} alt={product.name} class="shop-image" loading="lazy" /> : null}
-            </a>
+      </section>
+    ) : (
+      <section class="shop-layout" aria-label="Products">
+        {productRows.map((row) => (
+          <div class:list={["shop-row", row.reverse && "shop-row--reverse"]}>
+            <article class="shop-promo-card">
+              <p class="shop-promo-kicker">{row.promotion.kicker}</p>
+              <h2>{row.promotion.title}</h2>
+              <a class="btn btn--primary" href={row.promotion.ctaLink}>{row.promotion.ctaLabel}</a>
+            </article>
+
+            <ul class="shop-grid" aria-label="Products">
+              {row.products.map((product) => (
+                <li>
+                  <article class="shop-card" data-category={product.category}>
+                    <a href={`/shop/${product.id}`} class="shop-media-link" aria-label={`View ${product.name}`}>
+                      <div class="shop-media">
+                        {product.featured ? <p class="shop-badge">Featured</p> : null}
+                        {product.imageUrl ? <img src={product.imageUrl} alt={product.name} class="shop-image" loading="lazy" /> : <div class="shop-image shop-image--placeholder" aria-hidden="true"></div>}
+                      </div>
+                    </a>
+
+                    <div class="shop-card-body">
+                      <p class="shop-category">{CATEGORY_LABELS[product.category] ?? 'Styling'}</p>
+                      <h3><a href={`/shop/${product.id}`}>{product.name}</a></h3>
+                      <p class="shop-price">{formatGbp(product.pricePence)}</p>
+
+                      <div class="shop-card-actions">
+                        <button
+                          type="button"
+                          class="btn btn--primary"
+                          data-add-to-cart
+                          data-product-id={product.id}
+                          data-product-name={product.name}
+                          data-product-price-pence={String(product.pricePence)}
+                          data-product-image-url={product.imageUrl ?? ''}
+                        >
+                          Add to cart
+                        </button>
+                        <a href={`/shop/${product.id}`} class="btn btn--secondary">Quick view</a>
+                      </div>
+                    </div>
+                  </article>
+                </li>
+              ))}
+            </ul>
 
           </div>
+                  ))}
+      </section>
+    )}
 
-          <div class="shop-card-body">
-            <div class="shop-card-meta-row">
-              <p class="shop-category">{CATEGORY_LABELS[product.category] ?? 'Styling'}</p>
-
-              <p class="shop-price">{formatGbp(product.pricePence)}</p>
-            </div>
-
-            <h2><a href={`/shop/${product.id}`}>{product.name}</a></h2>
-
-            {createExcerpt(product.description) ? (
-              <p class="shop-excerpt">{createExcerpt(product.description)}</p>
-            ) : null}
-            <div class="shop-card-actions">
-                            <a href={`/shop/${product.id}`} class="btn btn--secondary">View details</a>
-              <button
-                type="button"
-                class="btn btn--primary"
-                data-add-to-cart
-                data-product-id={product.id}
-                data-product-name={product.name}
-                data-product-price-pence={String(product.pricePence)}
-                data-product-image-url={product.imageUrl ?? ''}
-              >
-                Add to cart
-              </button>
-              <p class="shop-micro-note">Ready for pickup</p>
-
-            </div>
-
-          </div>
-        </article>
-      ))}
-    </section>
   </main>
 </MainLayout>
-
-
-<script>
-  const filters = Array.from(document.querySelectorAll('.shop-filter'));
-  const cards = Array.from(document.querySelectorAll('.shop-card[data-category]'));
-
-  filters.forEach((button) => {
-    button.addEventListener('click', () => {
-      const nextFilter = button.getAttribute('data-filter') ?? 'all';
-
-      filters.forEach((filterButton) => {
-        const isActive = filterButton === button;
-        filterButton.classList.toggle('is-active', isActive);
-        filterButton.setAttribute('aria-pressed', isActive ? 'true' : 'false');
-      });
-
-      cards.forEach((card) => {
-        const category = card.getAttribute('data-category');
-        const isVisible = nextFilter === 'all' || category === nextFilter;
-        card.toggleAttribute('hidden', !isVisible);
-      });
-    });
-  });
-</script>
