@@ -122,6 +122,11 @@
   display: grid;
   gap: 0.55rem;
   padding: 0 0.9rem 0.85rem;
+    overflow: hidden;
+  box-sizing: border-box;
+  transition: height 220ms cubic-bezier(0.22, 1, 0.36, 1), opacity 160ms ease;
+  will-change: height, opacity;
+
 }
 
 .compare3-block__accordion-content {
@@ -366,4 +371,12 @@
     font-size: 0.95rem;
   }
 
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .compare3-block__accordion-panel,
+  .compare3-block__accordion-indicator::before,
+  .compare3-block__accordion-indicator::after {
+    transition-duration: 1ms;
+  }
 }
