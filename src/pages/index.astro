@@ -327,6 +327,53 @@ const DEMO_ADMIN_PASSWORD = import.meta.env.PUBLIC_DEMO_ADMIN_PASSWORD
     });
 
     const copyPasswordButtons = chooser.querySelectorAll('[data-copy-password]');
+        const copyWithClipboardApi = async (value) => {
+      if (!navigator.clipboard || typeof navigator.clipboard.writeText !== 'function') {
+        return false;
+      }
+
+      await navigator.clipboard.writeText(value);
+      return true;
+    };
+
+    const copyWithExecCommandFallback = (value) => {
+      const tempTextarea = document.createElement('textarea');
+      tempTextarea.value = value;
+      tempTextarea.setAttribute('readonly', 'true');
+      tempTextarea.setAttribute('aria-hidden', 'true');
+      tempTextarea.style.position = 'fixed';
+      tempTextarea.style.top = '-9999px';
+      tempTextarea.style.left = '-9999px';
+      tempTextarea.style.opacity = '0';
+
+      document.body.append(tempTextarea);
+      tempTextarea.focus();
+      tempTextarea.select();
+      tempTextarea.setSelectionRange(0, tempTextarea.value.length);
+
+      let copied = false;
+      try {
+        copied = document.execCommand('copy');
+      } catch {
+        copied = false;
+      }
+
+      tempTextarea.remove();
+      return copied;
+    };
+
+    const copyPasswordText = async (value) => {
+      try {
+        const copiedWithClipboard = await copyWithClipboardApi(value);
+        if (copiedWithClipboard) return true;
+      } catch {
+        // continue to fallback for mobile browsers with restricted Clipboard API support
+      }
+
+      return copyWithExecCommandFallback(value);
+    };
+
+
     copyPasswordButtons.forEach((button) => {
       button.addEventListener('click', async (event) => {
         event.stopPropagation();
@@ -340,21 +387,21 @@ const DEMO_ADMIN_PASSWORD = import.meta.env.PUBLIC_DEMO_ADMIN_PASSWORD
         if (!password || !(label instanceof HTMLElement)) return;
 
         const originalText = 'Copy password';
-
-        try {
-          await navigator.clipboard.writeText(password);
+        const copied = await copyPasswordText(password);
+        if (copied) {
           label.textContent = 'Copied';
           buttonElement.disabled = true;
           window.setTimeout(() => {
             label.textContent = originalText;
             buttonElement.disabled = false;
           }, 1200);
-        } catch {
-          label.textContent = 'Copy failed';
-          window.setTimeout(() => {
-            label.textContent = originalText;
-          }, 1200);
+          return;
         }
+        
+        label.textContent = 'Copy failed';
+        window.setTimeout(() => {
+          label.textContent = originalText;
+        }, 1200);
       });
 
     });
