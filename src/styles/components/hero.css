@@ -323,18 +323,18 @@
   padding: var(--space-md);
   display: grid;
   gap: var(--space-xs);
-  min-height: 9.25rem;
+  min-height: 9.8rem;
   transition: border-color 160ms ease, transform 160ms ease, background-color 160ms ease;
     cursor: pointer;
 }
 
 .system-chooser__tile-badge {
   width: fit-content;
-  padding: 0.22rem 0.52rem;
+  padding: 0.2rem 0.44rem;
+  border: 1px solid color-mix(in srgb, var(--accent) 44%, var(--border));
+  color: color-mix(in srgb, var(--accent) 86%, var(--fg));
+  font-size: 0.66rem;
 
-  border: 1px solid color-mix(in srgb, var(--accent) 60%, var(--border));
-  color: var(--accent);
-  font-size: 0.72rem;
   font-weight: 600;
 
   letter-spacing: 0.08em;
@@ -345,7 +345,7 @@
 
 .system-chooser__tile h3 {
   margin: 0;
-  font-size: clamp(1.25rem, 4.5vw, 1.55rem);
+  font-size: clamp(1.2rem, 4.2vw, 1.5rem);
   line-height: 1;
 }
 
@@ -354,6 +354,19 @@
   color: var(--muted);
   line-height: 1.45;
 }
+
+.system-chooser__tile-meta {
+  margin-top: auto;
+  border-top: 1px solid color-mix(in srgb, var(--border) 82%, transparent);
+  padding-top: var(--space-xs);
+  font-size: 0.78rem;
+  line-height: 1.35;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: color-mix(in srgb, var(--muted) 86%, var(--fg));
+}
+
+
 .system-chooser__auth-note {
   margin-top: auto;
   border-top: 1px solid color-mix(in srgb, var(--border) 82%, transparent);
@@ -381,20 +394,22 @@
 
 .system-chooser__copy-password {
   justify-self: start;
-  border: 1px solid transparent;
+  border: 1px solid color-mix(in srgb, var(--border) 88%, transparent);
   border-radius: 0.25rem;
-  background: transparent;
-  color: var(--accent);
-  padding: 0.2rem 0.35rem;
-  margin-top: 0.2rem;
-  font-size: 0.76rem;
+  background: color-mix(in srgb, var(--bg) 68%, transparent);
+  color: color-mix(in srgb, var(--accent) 84%, var(--fg));
+  padding: 0.2rem 0.38rem;
+  margin-top: 0.22rem;
+  font-size: 0.74rem;
+
   line-height: 1;
   cursor: copy;
 }
 
 .system-chooser__copy-password:hover {
-  border-color: color-mix(in srgb, var(--accent) 55%, transparent);
+  border-color: color-mix(in srgb, var(--accent) 45%, var(--border));
   color: var(--accent-hover);
+    background: color-mix(in srgb, var(--surface) 84%, var(--accent) 16%);
 }
 
 .system-chooser__copy-password:focus-visible {
@@ -431,6 +446,6 @@
   }
 
   .system-chooser__tile {
-    min-height: 14.25rem;
+    min-height: 15rem;
   }
 }
