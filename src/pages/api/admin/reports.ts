@@ -1,7 +1,7 @@
 export const prerender = false;
 
 import type { APIRoute } from 'astro';
-import { BookingStatus, OrderStatus } from '@prisma/client';
+import { BookingStatus, OrderStatus, Prisma } from '@prisma/client';
 import { addMilliseconds, differenceInMilliseconds, subDays, subYears } from 'date-fns';
 import { formatInTimeZone, fromZonedTime, toZonedTime } from 'date-fns-tz';
 import { requireAdmin } from '../../../lib/admin/auth';
@@ -41,6 +41,28 @@ const BOOKED_STATUSES = new Set<BookingStatus>([BookingStatus.CONFIRMED, Booking
 // Revenue business rules: only confirmed bookings and paid/collected shop orders count as revenue.
 const REVENUE_STATUSES = new Set<BookingStatus>([BookingStatus.CONFIRMED]);
 const ORDER_REVENUE_STATUSES = new Set<OrderStatus>([OrderStatus.PAID, OrderStatus.COLLECTED]);
+
+const LEGACY_BOOKING_SELECT = {
+  id: true,
+  status: true,
+  startAt: true,
+  endAt: true,
+  barberId: true,
+  serviceId: true,
+  fullName: true,
+  email: true,
+  barber: { select: { name: true, avatarUrl: true } },
+  service: { select: { id: true, name: true, durationMinutes: true, pricePence: true } }
+} satisfies Prisma.BookingSelect;
+
+function isMissingHistoricalColumnError(error: unknown) {
+  return error instanceof Prisma.PrismaClientKnownRequestError
+    && error.code === 'P2022'
+    && String(error.meta?.column ?? '').includes('Booking.serviceNameAtBooking');
+}
+
+
+
 function getStartOfWeekInLondon(now: Date) {
 
 
@@ -188,22 +210,20 @@ async function computeMetrics(shopId: string, range: RangeBoundaries, selectedBa
     prisma.booking.findMany({
       where: whereBase,
       select: {
-                id: true,
-        status: true,
-        startAt: true,
-        endAt: true,
-        barberId: true,
-        serviceId: true,
-                fullName: true,
-        email: true,
-                serviceNameAtBooking: true,
+        ...LEGACY_BOOKING_SELECT,
+        serviceNameAtBooking: true,
+
         servicePricePenceAtBooking: true,
         serviceDurationMinutesAtBooking: true,
-        totalPricePence: true,
-
-        barber: { select: { name: true, avatarUrl: true } },
-        service: { select: { id: true, name: true, durationMinutes: true, pricePence: true } }
+        totalPricePence: true
       }
+          }).catch((error) => {
+      if (!isMissingHistoricalColumnError(error)) throw error;
+      return prisma.booking.findMany({
+        where: whereBase,
+        select: LEGACY_BOOKING_SELECT
+      });
+
     }),
     prisma.order.findMany({
       where: {

@@ -2,7 +2,7 @@ import type { APIRoute } from 'astro';
 import { fromZonedTime, formatInTimeZone } from 'date-fns-tz';
 import { requireAdmin } from '../../../lib/admin/auth';
 import { prisma } from '../../../lib/db/client';
-import { BookingStatus } from '@prisma/client';
+import { BookingStatus, Prisma } from '@prisma/client';
 
 const ADMIN_TIMEZONE = 'Europe/London';
 
@@ -25,6 +25,57 @@ function withHistoricalServiceName<T extends { serviceNameAtBooking?: string | n
   if (!booking.serviceNameAtBooking || !booking.service) return booking;
   return { ...booking, service: { ...booking.service, name: booking.serviceNameAtBooking } };
 }
+const LEGACY_BOOKING_SELECT = {
+  id: true,
+  serviceId: true,
+  barberId: true,
+  fullName: true,
+  email: true,
+  phone: true,
+  clientId: true,
+  startAt: true,
+  endAt: true,
+  originalStartAt: true,
+  originalEndAt: true,
+  rescheduledAt: true,
+  status: true,
+  notes: true,
+  parentBookingId: true,
+  newBookingId: true,
+  confirmTokenHash: true,
+  confirmTokenExpiresAt: true,
+  manageTokenHash: true,
+  manageTokenExpiresAt: true,
+  paymentRequired: true,
+  depositAmountPence: true,
+  paymentStatus: true,
+  stripeCheckoutSessionId: true,
+  paidAt: true,
+  createdAt: true,
+  updatedAt: true,
+  barber: true,
+  service: true
+} satisfies Prisma.BookingSelect;
+
+function isMissingHistoricalColumnError(error: unknown) {
+  return error instanceof Prisma.PrismaClientKnownRequestError
+    && error.code === 'P2022'
+    && String(error.meta?.column ?? '').includes('Booking.serviceNameAtBooking');
+}
+
+async function findBookingsWithFallback(args: Prisma.BookingFindManyArgs) {
+  try {
+    return await prisma.booking.findMany(args);
+  } catch (error) {
+    if (!isMissingHistoricalColumnError(error)) throw error;
+    const { include, ...rest } = args;
+    return prisma.booking.findMany({
+      ...rest,
+      select: LEGACY_BOOKING_SELECT
+    });
+  }
+}
+
 
 
 export const GET: APIRoute = async (ctx) => {
@@ -43,7 +94,7 @@ export const GET: APIRoute = async (ctx) => {
 
       : undefined;
 
-    const bookings = await prisma.booking.findMany({
+    const bookings = await findBookingsWithFallback({
       where: {
         barberId: barberId && barberId !== 'all' ? barberId : undefined,
         startAt: startAtFilter,
@@ -97,7 +148,7 @@ export const GET: APIRoute = async (ctx) => {
 
       : undefined;
 
-  const bookings = await prisma.booking.findMany({
+  const bookings = await findBookingsWithFallback({
     where: {
       status: status || undefined,
       OR: q ? [{ fullName: { contains: q, mode: 'insensitive' } }, { email: { contains: q, mode: 'insensitive' } }] : undefined,
