@@ -15,6 +15,7 @@ const createSchema = z.object({
   category: z.string().trim().max(80).optional().nullable(),
   isActive: z.boolean().default(true)
 });
+export const GET: APIRoute = async (ctx) => {
   const unauthorized = requireAdmin(ctx);
   if (unauthorized) return unauthorized;
 
