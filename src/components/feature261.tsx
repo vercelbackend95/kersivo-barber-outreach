@@ -1,4 +1,10 @@
-import { cn } from '@/lib/utils';
+import { Clock, Zap } from "lucide-react";
+
+import { cn } from "@/lib/utils";
+
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent } from "@/components/ui/card";
 
 interface Feature261Props {
   className?: string;
@@ -6,184 +12,143 @@ interface Feature261Props {
 
 const Feature261 = ({ className }: Feature261Props) => {
   return (
-    <section className={cn('feature261', className)} aria-labelledby="feature261-title">
+    <section className={cn("feature261 py-32", className)}>
       <div className="container">
-                <header className="feature261__header">
-          <h2 id="feature261-title">Everything your barbershop needs in one system</h2>
-          <p>
-            From bookings and schedules to retail, contact requests and easy updates — every key
-            part of the shop runs through one clean website system.
-          </p>
-        </header>
-
-
-        <div className="feature261__grid">
-          <article className="feature261__card feature261__card--booking-flow">
-            <div className="feature261__content">
-              <h3>Client booking flow</h3>
-              <p>
-                Let clients choose a service, pick a slot and move through a cleaner booking
-                experience without back-and-forth messages.
-              </p>
-            </div>
-            <div className="feature261__screen" aria-hidden="true">
-              <div className="feature261__screen-head">
-                <span>book.kersivo</span>
-                <i />
-              </div>
-              <div className="feature261__screen-body">
-                <div className="feature261__screen-chip">Skin Fade + Beard Trim</div>
-                <div className="feature261__screen-grid">
-                  <span>10:30</span>
-                  <span>11:00</span>
-                  <span>11:30</span>
-                  <span className="is-active">12:00</span>
-                  <span>12:30</span>
-                  <span>13:00</span>
-                </div>
-                <button type="button">Continue booking</button>
-              </div>
-            </div>
-          </article>
-
-          <article className="feature261__card feature261__card--bookings-dashboard">
-            <div className="feature261__content">
-              <h3>Bookings dashboard</h3>
-              <p>
-                Keep appointments, daily availability and the team’s flow visible from one clear
-                admin layer.
-              </p>
-            </div>
-            <div className="feature261__screen" aria-hidden="true">
-              <div className="feature261__screen-head">
-                <span>admin / bookings</span>
-                <i />
-              </div>
-              <ul className="feature261__timeline">
-                <li>
-                  <b>09:30</b>
-                  <span>Jordan · Classic Cut</span>
-                  <em>Confirmed</em>
-                </li>
-                <li>
-                  <b>10:15</b>
-                  <span>Marcus · Skin Fade + Beard</span>
-                  <em>Confirmed</em>
-                </li>
-                <li>
-                  <b>11:00</b>
-                  <span>Levi · Premium Grooming</span>
-                  <em>Pending</em>
-                </li>
-                <li>
-                  <b>12:30</b>
-                  <span>Jordan · Student Cut</span>
-                  <em>Confirmed</em>
-                </li>
-                <li>
-                  <b>13:15</b>
-                  <span>Marcus · Beard Sculpt</span>
-                  <em>Rescheduled</em>
-                </li>
-              </ul>
-            </div>
-          </article>
-
-          <article className="feature261__card feature261__card--contact">
-            <div className="feature261__content">
-              <h3>Contact requests</h3>
-              <p>Receive service enquiries by email through one clear contact flow.</p>
-            </div>
-            <div className="feature261__mini" aria-hidden="true">
-              <span>subject</span>
-              <strong>Service request: wedding package</strong>
-            </div>
-          </article>
-
-          <article className="feature261__card feature261__card--easy-admin">
-            <div className="feature261__content">
-              <h3>Easy admin</h3>
-              <p>Update services, products and key content without touching code.</p>
-            </div>
-            <div className="feature261__list" aria-hidden="true">
-              <span>Services</span>
-              <span>Products</span>
-              <span>Homepage copy</span>
-            </div>
-          </article>
-
-          <article className="feature261__card feature261__card--shop-pickup">
-            <div className="feature261__content">
-              <h3>Shop &amp; pickup</h3>
-              <p>
-                Sell products online and prepare pickup-ready orders inside the same connected
-                system.
-              </p>
-            </div>
-            <div className="feature261__screen" aria-hidden="true">
-              <div className="feature261__screen-head">
-                <span>admin / shop orders</span>
-                <i />
-              </div>
-              <div className="feature261__orders">
-                <div>
-                  <strong>#249</strong>
-                  <span>Matte Pomade + Styling Comb</span>
-                  <em>Ready for pickup</em>
-                </div>
-                <div>
-                  <strong>#251</strong>
-                  <span>Sea Salt Spray</span>
-                  <em>Packing</em>
-                </div>
-                <div>
-                  <strong>#252</strong>
-                  <span>Beard Oil + Brush</span>
-                  <em>Paid</em>
-                </div>
-              </div>
-            </div>
-          </article>
-
-          <article className="feature261__card feature261__card--schedules">
-            <div className="feature261__content">
-              <h3>Barber schedules</h3>
-              <p>Keep service availability and team flow clear across the week.</p>
-            </div>
-            <div className="feature261__schedule" aria-hidden="true">
-              <span>Mon</span>
-              <span>Tue</span>
-              <span>Wed</span>
-              <span>Thu</span>
-              <span>Fri</span>
-            </div>
-          </article>
-
-          <article className="feature261__card feature261__card--premium-site">
-            <div className="feature261__content">
-              <h3>Premium website experience</h3>
-              <p>
-                Give your barbershop a cleaner, stronger online presence built around your brand.
-              </p>
-            </div>
-            <div className="feature261__site-preview" aria-hidden="true">
-              <p>KERSIVO BARBER</p>
-              <small>Book • Shop • Contact</small>
-            </div>
-          </article>
-
-          <article className="feature261__card feature261__card--retail">
-            <div className="feature261__content">
-              <h3>Retail built in</h3>
-              <p>Curated products and pickup-ready retail live inside the same website system.</p>
-            </div>
+        <div className="grid grid-cols-1 gap-4 md:grid-cols-6 lg:grid-cols-12">
+          <div className="relative h-60 overflow-hidden rounded-3xl md:col-span-2 md:row-span-2 md:h-[400px] lg:col-span-4 lg:h-full">
             <img
-              src="/uploads/products/6c82fe46-5695-424e-abbf-868296192165.png"
-              alt="Retail product presentation"
-              className="feature261__retail-image"
+              src="https://deifkwefumgah.cloudfront.net/shadcnblocks/block/photos/Minimalist Concrete Wall with Shadows.jpeg"
+              alt="shadcn UI components showcase"
+              className="absolute inset-0 h-full w-full object-cover"
             />
-\
-          </article>
+            <div className="absolute inset-0" />
+            <div className="absolute bottom-6 left-6 z-10 text-white">
+              <p className="text-lg font-medium">
+                Experience Design Excellence.
+              </p>
+            </div>
+            <div className="absolute top-6 right-6 z-10">
+              <div className="flex h-10 w-10 items-center justify-center rounded-full bg-white/20">
+                <Zap className="h-5 w-5 text-white" />
+              </div>
+            </div>
+          </div>
+
+          <div className="relative h-60 overflow-hidden rounded-3xl border md:col-span-2 md:row-span-2 md:h-[400px] lg:col-span-4 lg:h-full">
+            <img
+              src="https://deifkwefumgah.cloudfront.net/shadcnblocks/block/placeholder-1.svg"
+              alt="shadcn UI component library"
+              className="absolute inset-0 h-full w-full object-cover"
+            />
+            <div className="absolute right-6 bottom-6 left-6 z-10">
+              <h2 className="text-sm leading-tight font-medium md:text-base lg:text-xl">
+                Build your interface with stunning components and modern design.
+              </h2>
+            </div>
+          </div>
+
+          <Card className="col-span-1 rounded-3xl md:col-span-2 md:row-span-1 md:h-[192px] lg:col-span-2">
+            <CardContent className="flex h-full flex-col justify-center p-4 md:p-6">
+              <div className="mb-2 text-4xl font-bold md:text-4xl lg:text-6xl">
+                95
+                <span className="align-top text-2xl md:text-xl lg:text-3xl">
+                  %
+                </span>
+              </div>
+              <p className="text-sm leading-tight md:text-sm">
+                Developers choose us
+                <br />
+                for our exceptional quality
+              </p>
+            </CardContent>
+          </Card>
+
+          <div className="relative col-span-1 h-60 overflow-hidden rounded-3xl border md:col-span-2 md:row-span-1 md:h-[192px] lg:col-span-2">
+            <img
+              src="https://deifkwefumgah.cloudfront.net/shadcnblocks/block/placeholder-2.svg"
+              alt="shadcn UI components"
+              className="absolute inset-0 h-full w-full object-cover"
+            />
+          </div>
+
+          <Card className="col-span-1 rounded-3xl bg-muted md:col-span-4 md:row-span-1 md:h-[300px] lg:col-span-4">
+            <CardContent className="h-full p-4 md:p-5">
+              <div className="flex h-full flex-col justify-end">
+                <div className="space-y-2">
+                  <div className="text-4xl font-normal md:text-5xl lg:text-6xl">
+                    $299
+                  </div>
+                  <div className="text-muted-foreground">
+                    Premium Component Library
+                  </div>
+                  <Button>Buy Now</Button>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+
+          <Card className="col-span-1 rounded-3xl md:col-span-2 md:row-span-1 md:h-[300px] lg:col-span-3">
+            <CardContent className="flex h-full flex-col justify-center p-4 md:p-5">
+              <div className="mb-3">
+                <span className="text-4xl font-bold md:text-3xl lg:text-6xl">
+                  300
+                </span>
+                <span className="align-top text-2xl font-bold md:text-xl lg:text-3xl">
+                  +
+                </span>
+              </div>
+              <p className="mb-4 text-sm md:text-sm">Delighted developers</p>
+              <div className="flex -space-x-2">
+                {[1, 2, 3, 4, 5].map((i) => (
+                  <Avatar
+                    key={i}
+                    className="h-8 w-8 border-2 border-border md:h-8 md:w-8 lg:h-10 lg:w-10"
+                  >
+                    <AvatarImage
+                      src={`https://deifkwefumgah.cloudfront.net/shadcnblocks/block/avatar-${i + 1}.webp`}
+                    />
+                    <AvatarFallback>DEV{i}</AvatarFallback>
+                  </Avatar>
+                ))}
+              </div>
+            </CardContent>
+          </Card>
+
+          <Card className="relative col-span-1 h-60 overflow-hidden rounded-3xl md:col-span-3 md:row-span-1 md:h-[300px] lg:col-span-5">
+            <img
+              src="https://deifkwefumgah.cloudfront.net/shadcnblocks/block/placeholder-3.svg"
+              alt="shadcn UI components"
+              className="absolute inset-0 h-full w-full object-cover"
+            />
+          </Card>
+
+          <Card className="relative col-span-1 h-60 overflow-hidden rounded-3xl md:col-span-3 md:row-span-1 md:h-[300px] lg:col-span-4">
+            <img
+              src="https://deifkwefumgah.cloudfront.net/shadcnblocks/block/photos/Geometric Staircase and Concrete Wall.jpeg"
+              alt="shadcn UI development"
+              className="absolute inset-0 h-full w-full object-cover"
+            />
+            <div className="absolute inset-0 bg-gradient-to-r from-black/60 via-black/30 to-transparent" />
+            <div className="absolute inset-0 z-10 flex items-center justify-start p-4 md:p-6">
+              <div className="text-white">
+                <div className="mb-2 flex items-center gap-2 md:gap-3">
+                  <div className="flex h-6 w-6 items-center justify-center rounded-full bg-white/20 md:h-7 md:w-7">
+                    <Clock className="h-3 w-3 md:h-4 md:w-4" />
+                  </div>
+                  <span className="text-base font-semibold md:text-lg">
+                    Rapid Development
+                  </span>
+                </div>
+                <p className="text-sm opacity-90 md:text-sm">
+                  Build your interface faster
+                  <br />
+                  <span className="text-sm font-semibold md:text-sm">
+                    with ready-to-use components
+                  </span>
+                </p>
+              </div>
+            </div>
+          </Card>
         </div>
       </div>
     </section>
