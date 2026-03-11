@@ -1,4 +1,4 @@
-import { Clock, Zap } from "lucide-react";
+import { Clock, Zap } from "@/components/lucide-react";
 
 import { cn } from "@/lib/utils";
 
