@@ -162,12 +162,55 @@
   color: color-mix(in srgb, var(--fg) 50%, transparent);
 }
 
-.process2 .text-orange-500 {
-  color: var(--accent);
-}
-
 .process2 .lg\:pl-22 {
   padding-left: 0;
+}
+
+.process2 .process2-image-reveal {
+  animation: process2-image-reveal 0.55s cubic-bezier(0.22, 1, 0.36, 1);
+  will-change: clip-path;
+}
+
+.process2 .process2-contact-button {
+  border: 0;
+  border-radius: 0;
+  background: transparent;
+  padding: 0;
+  min-height: auto;
+  color: var(--fg);
+  font-size: 1.75rem;
+  line-height: 1;
+  letter-spacing: 0;
+  font-weight: 500;
+}
+
+.process2 .process2-contact-button:hover {
+  color: var(--accent-hover);
+}
+
+.process2 .process2-contact-button:focus-visible {
+  outline: 3px solid var(--focus);
+  outline-offset: 4px;
+}
+
+.process2 .process2-contact-icon {
+
+  color: var(--accent);
+    width: 1.1rem;
+  height: 1.1rem;
+  flex-shrink: 0;
+
+}
+
+@keyframes process2-image-reveal {
+  from {
+    clip-path: inset(100% 100% 0 0);
+  }
+
+  to {
+    clip-path: inset(0 0 0 0);
+  }
+
 }
 
 @media (min-width: 1024px) {

@@ -1,6 +1,6 @@
 "use client";
 
-import { motion, useInView } from "@/lib/framer-motion";
+import { useInView } from "@/lib/framer-motion";
 import { CornerDownRight } from "@/components/lucide-react";
 import React, { useEffect, useRef, useState } from "react";
 
@@ -86,29 +86,18 @@ const Process2 = ({ className }: Process2Props) => {
                   />
                 </div>
               )}
-              <motion.div
-                initial={{ clipPath: "inset(100% 100% 0% 0%)" }}
-                animate={{ clipPath: "inset(0% 0% 0% 0%)" }}
-                key={active}
-                transition={{
-                  type: "spring",
-                  stiffness: 150,
-                  damping: 20,
-                }}
-                className="h-full w-full"
-              >
+              <div key={active} className="process2-image-reveal h-full w-full">
                 <img
                   src={process[active].image}
                   className="h-full w-full object-cover"
                   alt=""
                 />
-              </motion.div>
+              </div>
             </div>
             <Button
-              variant="ghost"
-              className="flex items-center justify-start gap-2"
+              className="process2-contact-button flex items-center justify-start gap-2"
             >
-              <CornerDownRight className="text-orange-500" />
+              <CornerDownRight className="process2-contact-icon" />
               Get in touch
             </Button>
           </div>
