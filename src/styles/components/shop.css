@@ -116,6 +116,10 @@
   min-width: 0;
   display: flex;
 }
+.shop-grid > li[hidden] {
+  display: none;
+}
+
 
 .shop-grid-promo-slot {
   grid-column: span 1;
