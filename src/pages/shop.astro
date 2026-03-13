@@ -41,26 +41,26 @@ const featuredPromotion = {
 ---
 
 <MainLayout title="Shop | Kersivo Barber Outreach">
-  <main class="container shop-page" aria-labelledby="shop-page-title">
+  <main class="container shop-page" aria-labelledby="shop-page-title" data-active-category={selectedCategory}>
     <header class="shop-header-block">
       <p class="shop-eyebrow">Curated grooming store</p>
       <h1 id="shop-page-title">Barber retail essentials</h1>
       <p class="shop-intro">A clean product layout inspired by editorial storefronts. Browse quickly, add to cart in one click, and collect in the shop.</p>
+
       <div class="shop-category-filters" role="group" aria-label="Filter by category">
         {categoryFilters.map((filter) => {
           const isActive = filter.value === selectedCategory;
-          const href = filter.value === 'ALL' ? '/shop' : `/shop?category=${encodeURIComponent(filter.value)}`;
 
           return (
-            <a
-              href={href}
+            <button
+              type="button"
               class:list={["shop-category-filter", isActive && 'is-active']}
               data-category-filter={filter.value}
               aria-pressed={isActive ? 'true' : 'false'}
             >
               <span>{filter.label}</span>
               <span class="shop-category-filter__count" aria-hidden="true">{filter.count}</span>
-            </a>
+            </button>
           );
         })}
       </div>
@@ -142,7 +142,18 @@ const featuredPromotion = {
       return validCategories.has(categoryParam) ? categoryParam : 'ALL';
     };
 
-    let currentCategory = getCategoryFromUrl();
+    const getInitialCategory = () => {
+      const initialFromUrl = getCategoryFromUrl();
+      const initialFromMarkup = root.getAttribute('data-active-category') || 'ALL';
+
+      if (validCategories.has(initialFromUrl)) {
+        return initialFromUrl;
+      }
+
+      return validCategories.has(initialFromMarkup) ? initialFromMarkup : 'ALL';
+    };
+
+    let currentCategory = getInitialCategory();
 
     const applyCategoryFilter = (category) => {
       const resolvedCategory = validCategories.has(category) ? category : 'ALL';
@@ -153,8 +164,7 @@ const featuredPromotion = {
       }
 
       if (promoSlot) {
-        const hasVisibleProducts = productItems.some((item) => !item.hidden);
-        promoSlot.hidden = !hasVisibleProducts;
+        promoSlot.hidden = !productItems.some((item) => !item.hidden);
       }
 
       for (const button of filterButtons) {
@@ -164,6 +174,7 @@ const featuredPromotion = {
       }
 
       currentCategory = resolvedCategory;
+      root.setAttribute('data-active-category', resolvedCategory);
     };
 
     const syncUrlWithCategory = (category) => {
@@ -179,9 +190,7 @@ const featuredPromotion = {
     };
 
     for (const button of filterButtons) {
-      button.addEventListener('click', (event) => {
-        event.preventDefault();
-
+      button.addEventListener('click', () => {
         const category = button.getAttribute('data-category-filter') || 'ALL';
 
         if (category === currentCategory) {
