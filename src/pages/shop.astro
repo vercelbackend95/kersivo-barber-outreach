@@ -81,7 +81,7 @@ const featuredPromotion = {
           </li>
 
           {products.map((product) => (
-            <li data-product-item>
+            <li data-product-item data-product-category={product.category}>
               <article class="shop-card" data-category={product.category}>
                 <a href={`/shop/${product.id}`} class="shop-media-link" aria-label={`View ${product.name}`}>
                   <div class="shop-media">
@@ -125,20 +125,21 @@ const featuredPromotion = {
   const root = document.querySelector('.shop-page');
   if (root) {
     const filterButtons = Array.from(root.querySelectorAll('[data-category-filter]'));
-    const productCards = Array.from(root.querySelectorAll('.shop-card[data-category]'));
-   const productGrid = root.querySelector('.shop-grid');
+    const productItems = Array.from(root.querySelectorAll('[data-product-item]'));
+    const productGrid = root.querySelector('.shop-grid');
     const promoSlot = root.querySelector('.shop-grid-promo-slot');
+    const validCategories = new Set(filterButtons.map((button) => button.getAttribute('data-category-filter') || 'ALL'));
+    const searchParams = new URLSearchParams(window.location.search);
+    const initialCategoryParam = searchParams.get('category') || 'ALL';
+    const initialCategory = validCategories.has(initialCategoryParam) ? initialCategoryParam : 'ALL';
 
 
     const applyCategoryFilter = (category) => {
-      for (const card of productCards) {
-        const cardCategory = card.getAttribute('data-category') || 'STYLING';
-        const shouldShow = category === 'ALL' || cardCategory === category;
-        const listItem = card.closest('[data-product-item]');
-        if (listItem) {
-          listItem.hidden = !shouldShow;
-        }
+      for (const item of productItems) {
+        const productCategory = item.getAttribute('data-product-category') || 'STYLING';
+        item.hidden = !(category === 'ALL' || productCategory === category);
       }
+
       if (productGrid && promoSlot) {
         const hasVisibleProducts = Array.from(productGrid.querySelectorAll('[data-product-item]')).some((item) => !item.hidden);
         promoSlot.hidden = !hasVisibleProducts;
@@ -156,7 +157,16 @@ const featuredPromotion = {
       button.addEventListener('click', () => {
         const category = button.getAttribute('data-category-filter') || 'ALL';
         applyCategoryFilter(category);
+        const nextUrl = new URL(window.location.href);
+        if (category === 'ALL') {
+          nextUrl.searchParams.delete('category');
+        } else {
+          nextUrl.searchParams.set('category', category);
+        }
+        window.history.replaceState({}, '', nextUrl);
       });
     }
+
+    applyCategoryFilter(initialCategory);
   }
 </script>
