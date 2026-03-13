@@ -4,7 +4,6 @@ import { prisma } from '../lib/db/client';
 import { resolveShopId } from '../lib/db/shopScope';
 import { formatGbp } from '../lib/shop/money';
 
-
 const shopId = await resolveShopId();
 const products = await prisma.product.findMany({
   where: { shopId, active: true },
@@ -19,6 +18,7 @@ const CATEGORY_LABELS: Record<string, string> = {
   TOOLS: 'Tools',
   GIFT_SETS: 'Sets'
 };
+
 const categoryFilters = [
   { value: 'ALL', label: 'All products', count: products.length },
   ...Object.entries(CATEGORY_LABELS).map(([value, label]) => ({
@@ -27,13 +27,10 @@ const categoryFilters = [
     count: products.filter((product) => product.category === value).length
   }))
 ].filter((filter, index, allFilters) => filter.value === 'ALL' || allFilters[index]?.count > 0);
+
 const categoryValues = new Set(categoryFilters.map((filter) => filter.value));
 const selectedCategoryParam = Astro.url.searchParams.get('category') || 'ALL';
 const selectedCategory = categoryValues.has(selectedCategoryParam) ? selectedCategoryParam : 'ALL';
-const visibleProducts = selectedCategory === 'ALL'
-  ? products
-  : products.filter((product) => product.category === selectedCategory);
-
 
 const featuredPromotion = {
   kicker: 'Elevate your routine',
@@ -41,17 +38,15 @@ const featuredPromotion = {
   ctaLabel: 'Shop all products',
   ctaLink: '/shop'
 };
-
-
 ---
 
 <MainLayout title="Shop | Kersivo Barber Outreach">
-    <main class="container shop-page" aria-labelledby="shop-page-title">
+  <main class="container shop-page" aria-labelledby="shop-page-title">
     <header class="shop-header-block">
       <p class="shop-eyebrow">Curated grooming store</p>
       <h1 id="shop-page-title">Barber retail essentials</h1>
       <p class="shop-intro">A clean product layout inspired by editorial storefronts. Browse quickly, add to cart in one click, and collect in the shop.</p>
-            <div class="shop-category-filters" role="group" aria-label="Filter by category">
+      <div class="shop-category-filters" role="group" aria-label="Filter by category">
         {categoryFilters.map((filter) => {
           const isActive = filter.value === selectedCategory;
           const href = filter.value === 'ALL' ? '/shop' : `/shop?category=${encodeURIComponent(filter.value)}`;
@@ -63,39 +58,38 @@ const featuredPromotion = {
               data-category-filter={filter.value}
               aria-pressed={isActive ? 'true' : 'false'}
             >
-
-            <span>{filter.label}</span>
-            <span class="shop-category-filter__count" aria-hidden="true">{filter.count}</span>
+              <span>{filter.label}</span>
+              <span class="shop-category-filter__count" aria-hidden="true">{filter.count}</span>
             </a>
           );
         })}
-
       </div>
     </header>
+
     <section class="shop-layout" aria-label="Products">
       {products.length === 0 ? (
         <article class="shop-promo-card shop-promo-card--empty">
-
           <p class="shop-promo-kicker">Retail built in</p>
           <h2>Add products to launch your storefront</h2>
           <p>Publish products in admin and they will appear here instantly.</p>
           <a class="btn btn--primary" href="/shop">Open shop page</a>
-
         </article>
       ) : (
         <ul class="shop-grid" aria-label="Products">
           <li class="shop-grid-promo-slot">
-
             <article class="shop-promo-card">
               <p class="shop-promo-kicker">{featuredPromotion.kicker}</p>
               <h2>{featuredPromotion.title}</h2>
               <a class="btn btn--primary" href={featuredPromotion.ctaLink}>{featuredPromotion.ctaLabel}</a>
-
             </article>
           </li>
 
-          {visibleProducts.map((product) => (
-            <li data-product-item data-product-category={product.category}>
+          {products.map((product) => (
+            <li
+              data-product-item
+              data-product-category={product.category}
+              hidden={selectedCategory !== 'ALL' && product.category !== selectedCategory}
+            >
               <article class="shop-card" data-category={product.category}>
                 <a href={`/shop/${product.id}`} class="shop-media-link" aria-label={`View ${product.name}`}>
                   <div class="shop-media">
@@ -130,41 +124,58 @@ const featuredPromotion = {
         </ul>
       )}
     </section>
-
-
   </main>
 </MainLayout>
 
 <script>
   const root = document.querySelector('.shop-page');
+
   if (root) {
     const filterButtons = Array.from(root.querySelectorAll('[data-category-filter]'));
     const productItems = Array.from(root.querySelectorAll('[data-product-item]'));
-    const productGrid = root.querySelector('.shop-grid');
     const promoSlot = root.querySelector('.shop-grid-promo-slot');
     const validCategories = new Set(filterButtons.map((button) => button.getAttribute('data-category-filter') || 'ALL'));
-    const searchParams = new URLSearchParams(window.location.search);
-    const initialCategoryParam = searchParams.get('category') || 'ALL';
-    const initialCategory = validCategories.has(initialCategoryParam) ? initialCategoryParam : 'ALL';
 
+    const getCategoryFromUrl = () => {
+      const searchParams = new URLSearchParams(window.location.search);
+      const categoryParam = searchParams.get('category') || 'ALL';
+      return validCategories.has(categoryParam) ? categoryParam : 'ALL';
+    };
+
+    let currentCategory = getCategoryFromUrl();
 
     const applyCategoryFilter = (category) => {
+      const resolvedCategory = validCategories.has(category) ? category : 'ALL';
+
       for (const item of productItems) {
         const productCategory = item.getAttribute('data-product-category') || 'STYLING';
-        item.hidden = !(category === 'ALL' || productCategory === category);
+        item.hidden = !(resolvedCategory === 'ALL' || productCategory === resolvedCategory);
       }
 
-      if (productGrid && promoSlot) {
-        const hasVisibleProducts = Array.from(productGrid.querySelectorAll('[data-product-item]')).some((item) => !item.hidden);
+      if (promoSlot) {
+        const hasVisibleProducts = productItems.some((item) => !item.hidden);
         promoSlot.hidden = !hasVisibleProducts;
-
       }
 
       for (const button of filterButtons) {
-        const isActive = button.getAttribute('data-category-filter') === category;
+        const isActive = button.getAttribute('data-category-filter') === resolvedCategory;
         button.classList.toggle('is-active', isActive);
         button.setAttribute('aria-pressed', String(isActive));
       }
+
+      currentCategory = resolvedCategory;
+    };
+
+    const syncUrlWithCategory = (category) => {
+      const nextUrl = new URL(window.location.href);
+
+      if (category === 'ALL') {
+        nextUrl.searchParams.delete('category');
+      } else {
+        nextUrl.searchParams.set('category', category);
+      }
+
+      window.history.pushState({ category }, '', nextUrl);
     };
 
     for (const button of filterButtons) {
@@ -172,17 +183,20 @@ const featuredPromotion = {
         event.preventDefault();
 
         const category = button.getAttribute('data-category-filter') || 'ALL';
-        applyCategoryFilter(category);
-        const nextUrl = new URL(window.location.href);
-        if (category === 'ALL') {
-          nextUrl.searchParams.delete('category');
-        } else {
-          nextUrl.searchParams.set('category', category);
+
+        if (category === currentCategory) {
+          return;
         }
-        window.history.replaceState({}, '', nextUrl);
+
+        applyCategoryFilter(category);
+        syncUrlWithCategory(category);
       });
     }
 
-    applyCategoryFilter(initialCategory);
+    window.addEventListener('popstate', () => {
+      applyCategoryFilter(getCategoryFromUrl());
+    });
+
+    applyCategoryFilter(currentCategory);
   }
 </script>
