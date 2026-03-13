@@ -56,30 +56,40 @@
   display: grid;
   grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
   background: color-mix(in srgb, var(--bg) 94%, var(--surface));
-  border-top: 1px solid color-mix(in srgb, var(--border) 82%, transparent);
+  border-top: 1px solid color-mix(in srgb, var(--border) 72%, transparent);
+  border-radius: var(--radius-lg);
+  overflow: hidden;
+
 }
 
 .compare3-block__mobile-cell {
   min-width: 0;
-  border-bottom: 1px solid color-mix(in srgb, var(--border) 84%, transparent);
+  border-bottom: 1px solid color-mix(in srgb, var(--border) 74%, transparent);
   padding: 0.92rem 0.9rem;
 }
 
 .compare3-block__mobile-cell:nth-child(odd) {
-  border-right: 1px solid color-mix(in srgb, var(--border) 84%, transparent);
+  border-right: 1px solid color-mix(in srgb, var(--border) 74%, transparent);
 
 }
+.compare3-block__mobile-cell:not(.compare3-block__mobile-value--highlight) {
+  background:
+    radial-gradient(circle at 20% 18%, color-mix(in srgb, var(--surface) 54%, transparent) 0%, transparent 62%),
+    linear-gradient(140deg, color-mix(in srgb, var(--surface) 36%, transparent) 0%, transparent 58%);
+}
+
 
 .compare3-block__mobile-brand {
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: flex-start;
-  gap: 0.3rem;
+  gap: 0.24rem;
   text-align: center;
-  min-height: 7.3rem;
-  padding-top: 0.96rem;
-  padding-bottom: 0.82rem;
+  min-height: 6.95rem;
+  padding-top: 0.78rem;
+  padding-bottom: 0.72rem;
+
 }
 
 .compare3-block__mobile-brand--highlight {
@@ -90,14 +100,15 @@
   width: 1.1rem;
   height: 1.1rem;
   opacity: 0.62;
-  margin-bottom: 0.16rem;
+  margin-bottom: 0.08rem;
 }
 
 
 .compare3-block__mobile-brand .compare3-block__brand-title {
   font-size: 1.08rem;
-  line-height: 0.96;
-  letter-spacing: 0.05em;
+  line-height: 0.92;
+  letter-spacing: 0.045em;
+
   text-transform: uppercase;
   font-family: 'Bebas Neue', Inter, system-ui, sans-serif;
 
@@ -106,7 +117,7 @@
 .compare3-block__mobile-brand .compare3-block__brand-copy {
   max-width: 15ch;
   font-size: 0.7rem;
-  line-height: 1.4;
+  line-height: 1.32;
   letter-spacing: 0.015em;
   color: color-mix(in srgb, var(--muted) 88%, var(--fg));
 }
@@ -115,14 +126,15 @@
   display: flex;
   align-items: flex-start;
   justify-content: flex-start;
-  gap: 0.5rem;
+  gap: 0.44rem;
   color: color-mix(in srgb, var(--muted) 87%, var(--fg));
   font-size: 0.74rem;
-  line-height: 1.52;
+  line-height: 1.48;
   letter-spacing: 0.005em;
   text-align: left;
-  padding-top: 0.9rem;
-  padding-bottom: 0.9rem;
+  padding-top: 0.84rem;
+  padding-bottom: 0.84rem;
+
 }
 
 .compare3-block__mobile-value--highlight {
@@ -136,18 +148,20 @@
 
 .compare3-block__mobile-cta-cell {
   display: flex;
-  align-items: flex-start;
-  justify-content: flex-start;
+  align-items: center;
+  justify-content: center;
   border-bottom: 0;
-  padding-top: 1.22rem;
-  padding-bottom: 1.42rem;
-  padding-left: 1.38rem;
+  padding-top: 1rem;
+  padding-bottom: 1.22rem;
+  padding-inline: 0.9rem;
+
 
 }
 .compare3-block__mobile-cta-spacer {
   border-bottom: 0;
-  padding-top: 1.22rem;
-  padding-bottom: 1.42rem;
+  padding-top: 1rem;
+  padding-bottom: 1.22rem;
+
 
 }
 
@@ -191,6 +205,10 @@
   padding-top: 1.55rem;
 }
 .compare3-block__brand:not(.compare3-block__brand--highlight) {
+    background:
+    radial-gradient(circle at 20% 18%, color-mix(in srgb, var(--surface) 54%, transparent) 0%, transparent 62%),
+    linear-gradient(140deg, color-mix(in srgb, var(--surface) 36%, transparent) 0%, transparent 58%);
+
   padding-top: 1.6rem;
 }
 .compare3-block__logo {
@@ -249,6 +267,12 @@
   color: var(--muted);
   text-align: center;
 }
+.compare3-block__value:not(.compare3-block__value--highlight) {
+  background:
+    radial-gradient(circle at 20% 18%, color-mix(in srgb, var(--surface) 54%, transparent) 0%, transparent 62%),
+    linear-gradient(140deg, color-mix(in srgb, var(--surface) 36%, transparent) 0%, transparent 58%);
+}
+
 .compare3-block__value--highlight {
   background: var(--surface);
 
@@ -260,7 +284,7 @@
   font-weight: 600;
   line-height: 1;
   flex: none;
-  margin-top: 0.22rem;
+  margin-top: 0.18rem;
 }
 
 .compare3-block__status--ok {
@@ -297,15 +321,17 @@
 }
 .compare3-block__mobile-cta-cell .compare3-block__cta {
   width: fit-content;
-  min-height: 2rem;
-  padding: 0.36rem 0.68rem;
-  font-size: 0.72rem;
+  min-height: 1.86rem;
+  padding: 0.3rem 0.62rem;
+  font-size: 0.68rem;
+
   line-height: 1.1;
-  letter-spacing: 0.035em;
+  letter-spacing: 0.04em;
   text-transform: uppercase;
-  font-weight: 550;
-  background: color-mix(in srgb, var(--accent) 72%, var(--bg));
-  border-color: color-mix(in srgb, var(--accent) 66%, var(--bg));
+  font-weight: 520;
+  background: color-mix(in srgb, var(--accent) 66%, var(--bg));
+  border-color: color-mix(in srgb, var(--accent) 60%, var(--bg));
+
 }
 
 .compare3-block__cta:hover {
@@ -324,8 +350,9 @@
 }
 
 .compare3-block__mobile-cta-cell .compare3-block__cta:hover {
-  background: color-mix(in srgb, var(--accent-hover) 75%, var(--bg));
-  border-color: color-mix(in srgb, var(--accent-hover) 70%, var(--bg));
+  background: color-mix(in srgb, var(--accent-hover) 70%, var(--bg));
+  border-color: color-mix(in srgb, var(--accent-hover) 64%, var(--bg));
+
 
 }
 
