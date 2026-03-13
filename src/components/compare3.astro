@@ -96,31 +96,35 @@ const comparisonRows = [
       </div>
     </div>
 
-    <div class="compare3-block__mobile" aria-label="Mobile comparison" data-compare-accordion>
-      {
-        comparisonRows.map((row) => (
-          <details class="compare3-block__accordion-item" data-accordion-item>
-            <summary class="compare3-block__accordion-summary">
-              <span class="compare3-block__accordion-heading">
-                <span class="compare3-block__accordion-icon" aria-hidden="true">{row.icon}</span>
-                <span>{row.title}</span>
-              </span>
-              <span class="compare3-block__accordion-indicator" aria-hidden="true"></span>
-            </summary>
-            <div class="compare3-block__accordion-panel" data-accordion-panel>
-              <div class="compare3-block__accordion-content compare3-block__accordion-content--highlight">
-                <p class="compare3-block__mobile-label">Kersivo</p>
-                <p class="compare3-block__mobile-copy">{row.kersivo}</p>
+    <div class="compare3-block__mobile" aria-label="Mobile comparison">
+      <div class="compare3-block__mobile-grid" role="table" aria-label="Comparison table mobile">
+        <div class="compare3-block__mobile-cell compare3-block__mobile-brand compare3-block__mobile-brand--highlight" role="columnheader">
+          <p class="compare3-block__brand-title">Kersivo</p>
+          <p class="compare3-block__brand-copy">Premium barber website system</p>
+        </div>
+        <div class="compare3-block__mobile-cell compare3-block__mobile-brand" role="columnheader">
+          <p class="compare3-block__brand-title">Typical alternatives</p>
+          <p class="compare3-block__brand-copy">Templates, platforms or disconnected tools</p>
+        </div>
+        {
+          comparisonRows.map((row) => (
+            <>
+              <div class="compare3-block__mobile-cell compare3-block__mobile-value compare3-block__mobile-value--highlight">
+                <span class="compare3-block__status compare3-block__status--ok">✓</span>
+                <span>{row.kersivo}</span>
+
               </div>
-              <div class="compare3-block__accordion-content">
-                <p class="compare3-block__mobile-label">Typical alternatives</p>
-                <p class="compare3-block__mobile-copy">{row.alternatives}</p>
+              <div class="compare3-block__mobile-cell compare3-block__mobile-value">
+                <span class="compare3-block__status compare3-block__status--bad">−</span>
+                <span>{row.alternatives}</span>
+
               </div>
 
-            </div>
-          </details>
-        ))
-      }
+            </>
+          ))
+        }
+      </div>
+
 
       <div class="compare3-block__mobile-cta-wrap">
         <a class="compare3-block__cta" href="#book-demo" data-demo-cta>Book a demo</a>
@@ -130,102 +134,3 @@ const comparisonRows = [
     </div>
   </div>
 </section>
-
-<script>
-  (() => {
-    const root = document.querySelector('[data-compare-accordion]');
-
-    if (!root) {
-      return;
-    }
-
-    const items = Array.from(root.querySelectorAll('[data-accordion-item]'));
-
-    const animateOpen = (item, panel) => {
-      panel.style.height = '0px';
-      panel.style.opacity = '0';
-      item.open = true;
-
-      requestAnimationFrame(() => {
-        const nextHeight = panel.scrollHeight;
-        panel.style.height = `${nextHeight}px`;
-        panel.style.opacity = '1';
-      });
-
-      const handleOpenEnd = (event) => {
-        if (event.propertyName !== 'height') {
-          return;
-        }
-
-        panel.style.height = 'auto';
-        panel.removeEventListener('transitionend', handleOpenEnd);
-      };
-
-      panel.addEventListener('transitionend', handleOpenEnd);
-    };
-
-    const animateClose = (item, panel) => {
-      const currentHeight = panel.scrollHeight;
-      panel.style.height = `${currentHeight}px`;
-      panel.style.opacity = '1';
-
-      requestAnimationFrame(() => {
-        panel.style.height = '0px';
-        panel.style.opacity = '0';
-      });
-
-      const handleCloseEnd = (event) => {
-        if (event.propertyName !== 'height') {
-          return;
-        }
-
-        item.open = false;
-        panel.style.height = '';
-        panel.style.opacity = '';
-        panel.removeEventListener('transitionend', handleCloseEnd);
-      };
-
-      panel.addEventListener('transitionend', handleCloseEnd);
-    };
-
-    items.forEach((item) => {
-      const summary = item.querySelector('summary');
-      const panel = item.querySelector('[data-accordion-panel]');
-
-      if (!summary || !panel) {
-        return;
-      }
-
-      if (!item.open) {
-        panel.style.height = '0px';
-        panel.style.opacity = '0';
-      }
-
-      summary.addEventListener('click', (event) => {
-        event.preventDefault();
-
-        const isOpen = item.open;
-
-        items.forEach((otherItem) => {
-          if (otherItem === item || !otherItem.open) {
-            return;
-          }
-
-          const otherPanel = otherItem.querySelector('[data-accordion-panel]');
-          if (!otherPanel) {
-            return;
-          }
-
-          animateClose(otherItem, otherPanel);
-        });
-
-        if (isOpen) {
-          animateClose(item, panel);
-          return;
-        }
-
-        animateOpen(item, panel);
-      });
-    });
-  })();
-</script>
