@@ -27,6 +27,13 @@ const categoryFilters = [
     count: products.filter((product) => product.category === value).length
   }))
 ].filter((filter, index, allFilters) => filter.value === 'ALL' || allFilters[index]?.count > 0);
+const categoryValues = new Set(categoryFilters.map((filter) => filter.value));
+const selectedCategoryParam = Astro.url.searchParams.get('category') || 'ALL';
+const selectedCategory = categoryValues.has(selectedCategoryParam) ? selectedCategoryParam : 'ALL';
+const visibleProducts = selectedCategory === 'ALL'
+  ? products
+  : products.filter((product) => product.category === selectedCategory);
+
 
 const featuredPromotion = {
   kicker: 'Elevate your routine',
@@ -45,17 +52,24 @@ const featuredPromotion = {
       <h1 id="shop-page-title">Barber retail essentials</h1>
       <p class="shop-intro">A clean product layout inspired by editorial storefronts. Browse quickly, add to cart in one click, and collect in the shop.</p>
             <div class="shop-category-filters" role="group" aria-label="Filter by category">
-        {categoryFilters.map((filter) => (
-          <button
-            type="button"
-            class:list={["shop-category-filter", filter.value === 'ALL' && 'is-active']}
-            data-category-filter={filter.value}
-            aria-pressed={filter.value === 'ALL' ? 'true' : 'false'}
-          >
+        {categoryFilters.map((filter) => {
+          const isActive = filter.value === selectedCategory;
+          const href = filter.value === 'ALL' ? '/shop' : `/shop?category=${encodeURIComponent(filter.value)}`;
+
+          return (
+            <a
+              href={href}
+              class:list={["shop-category-filter", isActive && 'is-active']}
+              data-category-filter={filter.value}
+              aria-pressed={isActive ? 'true' : 'false'}
+            >
+
             <span>{filter.label}</span>
             <span class="shop-category-filter__count" aria-hidden="true">{filter.count}</span>
-          </button>
-        ))}
+            </a>
+          );
+        })}
+
       </div>
     </header>
     <section class="shop-layout" aria-label="Products">
@@ -80,7 +94,7 @@ const featuredPromotion = {
             </article>
           </li>
 
-          {products.map((product) => (
+          {visibleProducts.map((product) => (
             <li data-product-item data-product-category={product.category}>
               <article class="shop-card" data-category={product.category}>
                 <a href={`/shop/${product.id}`} class="shop-media-link" aria-label={`View ${product.name}`}>
@@ -154,7 +168,9 @@ const featuredPromotion = {
     };
 
     for (const button of filterButtons) {
-      button.addEventListener('click', () => {
+      button.addEventListener('click', (event) => {
+        event.preventDefault();
+
         const category = button.getAttribute('data-category-filter') || 'ALL';
         applyCategoryFilter(category);
         const nextUrl = new URL(window.location.href);
