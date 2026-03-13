@@ -1,11 +1,11 @@
 .compare3-block {
-  padding-block: 8rem;
+  padding-block: 6rem;
   font-family: Inter, system-ui, -apple-system, Segoe UI, Roboto, sans-serif;
 
 }
 .compare3-block .container {
   display: grid;
-  gap: 3.5rem;
+  gap: 2.75rem;
 }
 
 
@@ -19,12 +19,13 @@
 .compare3-block__header h2 {
   margin: 0;
   max-width: 42rem;
-  font-family: Inter, system-ui, sans-serif;
-  font-size: clamp(2rem, 5vw, 3rem);
-  letter-spacing: 0;
-  line-height: 1.1;
-  text-transform: none;
-  font-weight: 600;
+  font-family: 'Bebas Neue', Inter, system-ui, sans-serif;
+  font-size: clamp(2rem, 8vw, 3rem);
+  letter-spacing: 0.04em;
+  line-height: 1;
+  text-transform: uppercase;
+  font-weight: 400;
+
 }
 
 .compare3-block__header p {
@@ -47,29 +48,25 @@
 
 .compare3-block__mobile {
   display: grid;
-  gap: 1rem;
-  margin-top: 0.35rem;
-
-
+  gap: 0.9rem;
 }
 
 .compare3-block__mobile-grid {
   display: grid;
   grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  border: 1px solid color-mix(in srgb, var(--border) 72%, transparent);
+  background: color-mix(in srgb, var(--bg) 94%, var(--surface));
 
-  position: relative;
-  border-radius: 0.375rem;
-  background: color-mix(in srgb, var(--surface) 8%, var(--bg));
 }
 
 .compare3-block__mobile-cell {
-  border-bottom: 1px solid color-mix(in srgb, var(--border) 65%, transparent);
+
   min-width: 0;
-  position: relative;
+  border-bottom: 1px solid color-mix(in srgb, var(--border) 72%, transparent);
 }
 
 .compare3-block__mobile-cell:nth-child(odd) {
-  border-right: 1px solid color-mix(in srgb, var(--border) 70%, transparent);
+  border-right: 1px solid color-mix(in srgb, var(--border) 72%, transparent);
 
 }
 
@@ -77,53 +74,49 @@
   display: grid;
   justify-items: start;
   align-content: center;
-  gap: 0.3rem;
+  gap: 0.45rem;
   text-align: left;
-  padding: 1.1rem 0.95rem 1rem;
+  min-height: 9.5rem;
+  padding: 1rem 0.95rem;
+
 
 }
 
 .compare3-block__mobile-brand--highlight {
-  background: linear-gradient(
-    180deg,
-    color-mix(in srgb, var(--surface) 72%, transparent) 0%,
-    color-mix(in srgb, var(--surface) 45%, transparent) 100%
-  );
-  box-shadow: inset -1px 0 0 color-mix(in srgb, var(--border) 28%, transparent);
-
+  background: color-mix(in srgb, var(--surface) 55%, transparent);
 }
 .compare3-block__mobile-brand .compare3-block__brand-title {
-  font-size: 1rem;
-  line-height: 1.1;
-  letter-spacing: 0.02em;
+  font-size: 1.9rem;
+  line-height: 0.95;
+  letter-spacing: 0.03em;
+  text-transform: uppercase;
+  font-family: 'Bebas Neue', Inter, system-ui, sans-serif;
+
 }
 
 .compare3-block__mobile-brand .compare3-block__brand-copy {
-  font-size: 0.75rem;
-  line-height: 1.35;
-  max-width: 18ch;
-
+  max-width: 17ch;
+  font-size: 0.95rem;
+  line-height: 1.4;
 
 }
 
 .compare3-block__mobile-value {
   display: flex;
   align-items: flex-start;
-  gap: 0.55rem;
+  gap: 0.5rem;
   text-align: left;
-
-  color: var(--muted);
-  font-size: 0.84rem;
-  line-height: 1.5;
-  padding: 1rem 0.95rem;
+  color: color-mix(in srgb, var(--fg) 85%, var(--muted));
+  font-size: 0.96rem;
+  line-height: 1.45;
+  padding: 0.95rem;
 
   text-wrap: pretty;
 
 }
 
 .compare3-block__mobile-value--highlight {
-  background: color-mix(in srgb, var(--surface) 48%, transparent);
-  color: color-mix(in srgb, var(--fg) 84%, var(--muted));
+  background: color-mix(in srgb, var(--surface) 34%, transparent);
 
 }
 .compare3-block__mobile-value > span:last-child {
@@ -138,9 +131,6 @@
 }
 
 .compare3-block__mobile-cta-wrap {
-  padding-top: 0.35rem;
-  padding-bottom: 0.2rem;
-  padding-inline: 0.4rem;
   display: grid;
   justify-items: stretch;
 
@@ -148,14 +138,6 @@
 .compare3-block__mobile-cta-wrap .compare3-block__cta {
   width: 100%;
   max-width: none;
-  border-color: color-mix(in srgb, var(--accent) 90%, var(--border));
-  background: linear-gradient(
-    180deg,
-    var(--accent) 0%,
-    color-mix(in srgb, var(--accent) 84%, var(--bg)) 100%
-  );
-  box-shadow: 0 -1px 0 color-mix(in srgb, var(--border) 22%, transparent),
-    0 0 0 1px color-mix(in srgb, var(--accent) 30%, transparent);
 }
 
 
@@ -194,8 +176,6 @@
 
 .compare3-block__brand--highlight {
   background: var(--surface);
-  border-top-left-radius: 0.375rem;
-  border-top-right-radius: 0.375rem;
   min-height: 10.75rem;
   padding-top: 1.55rem;
 }
@@ -211,16 +191,21 @@
 
 .compare3-block__brand-title {
   margin: 0;
-  font-weight: 600;
-  font-size: 1.125rem;
+  font-weight: 400;
+  font-size: 1.9rem;
+  line-height: 0.95;
+  letter-spacing: 0.03em;
+  text-transform: uppercase;
+  font-family: 'Bebas Neue', Inter, system-ui, sans-serif;
 
 
 }
 .compare3-block__brand-copy {
   margin: 0;
   color: var(--muted);
-  font-size: 0.85rem;
-  line-height: 1.4;
+  font-size: 0.95rem;
+  line-height: 1.35;
+
   max-width: 18ch;
 
 
@@ -249,8 +234,7 @@
 
 .compare3-block__value {
   flex-direction: column;
-  font-size: 0.75rem;
-
+  font-size: 0.78rem;
   color: var(--muted);
   text-align: center;
 }
@@ -262,11 +246,10 @@
 .compare3-block__status {
   width: 1.15rem;
   height: 1.15rem;
-
-  border-radius: 999px;
+  border-radius: 0.25rem;
   display: grid;
   place-items: center;
-  font-size: 0.82rem;
+  font-size: 0.88rem;
   font-weight: 700;
     flex: none;
   margin-top: 0.15rem;
@@ -275,21 +258,14 @@
 
 .compare3-block__status--ok {
   color: var(--accent);
-  background: color-mix(in srgb, var(--accent) 16%, transparent);
-  box-shadow: 0 0 0 1px color-mix(in srgb, var(--accent) 24%, transparent);
-
 }
 
 .compare3-block__status--bad {
-  color: color-mix(in srgb, var(--muted) 90%, var(--border));
-  background: color-mix(in srgb, var(--surface) 40%, transparent);
-
+  color: color-mix(in srgb, var(--fg) 82%, var(--muted));
 }
 .compare3-block__cta-wrap {
     grid-column: 2;
   border-bottom: 0;
-  border-bottom-left-radius: 0.375rem;
-  border-bottom-right-radius: 0.375rem;
   padding-top: 0.85rem;
   padding-bottom: 1rem;
 
@@ -308,8 +284,9 @@
 
   text-decoration: none;
   font-weight: 600;
-  font-size: 0.88rem;
-    transition: background-color 160ms ease, border-color 160ms ease, color 160ms ease, opacity 160ms ease;
+  font-size: 0.95rem;
+  transition: background-color 160ms ease, border-color 160ms ease, color 160ms ease, opacity 160ms ease;
+
 }
 .compare3-block__cta:hover {
   background: var(--accent-hover);
@@ -329,9 +306,30 @@
 .compare3-block__cell--foot-empty {
   background: transparent;
 }
+@media (max-width: 22rem) {
+  .compare3-block__mobile-brand {
+    min-height: 10.5rem;
+    padding-inline: 0.7rem;
+  }
+
+  .compare3-block__mobile-value {
+    font-size: 0.9rem;
+    padding-inline: 0.7rem;
+  }
+}
+
 
 @media (min-width: 48rem) {
-    .compare3-block__desktop {
+  .compare3-block {
+    padding-block: 8rem;
+  }
+
+  .compare3-block .container {
+    gap: 3.5rem;
+  }
+
+  .compare3-block__desktop {
+
     display: block;
   }
 
@@ -341,10 +339,8 @@
   .compare3-block__status {
     width: 1.25rem;
     height: 1.25rem;
-    font-size: 0.9rem;
+    font-size: 0.95rem;
     margin-top: 0;
-    background: transparent;
-    box-shadow: none;
   }
 
 
