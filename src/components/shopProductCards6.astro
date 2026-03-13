@@ -58,23 +58,25 @@ const CATEGORY_LABELS: Record<string, string> = {
         </li>
       ) : products.map((product) => (
         <li class="shop6__item" key={product.id}>
-          <article class="shop6__card">
-            <a href={`/shop/${product.id}`} class="shop6__media" aria-label={`View ${product.name}`}>
-              {product.imageUrl ? (
-                <img src={product.imageUrl} alt={product.name} loading="lazy" class="shop6__image" />
-              ) : (
-                <div class="shop6__image shop6__image--placeholder" aria-hidden="true"></div>
-              )}
+          <article class="shop-card" data-category={product.category}>
+            <a href={`/shop/${product.id}`} class="shop-media-link" aria-label={`View ${product.name}`}>
+              <div class="shop-media">
+                {product.imageUrl ? (
+                  <img src={product.imageUrl} alt={product.name} loading="lazy" class="shop-image" />
+                ) : (
+                  <div class="shop-image shop-image--placeholder" aria-hidden="true"></div>
+                )}
+              </div>
             </a>
 
-            <div class="shop6__card-body">
-              <p class="shop6__category">{CATEGORY_LABELS[product.category] ?? 'Styling'}</p>
+            <div class="shop-card-body">
+              <p class="shop-category">{CATEGORY_LABELS[product.category] ?? 'Styling'}</p>
               <h3><a href={`/shop/${product.id}`}>{product.name}</a></h3>
-              <p class="shop6__price">{formatGbp(product.pricePence)}</p>
+              <p class="shop-price">{formatGbp(product.pricePence)}</p>
 
-              <div class="shop6__card-actions">
+              <div class="shop-card-actions">
                 <button
-                  class="btn btn--secondary"
+                  class="btn btn--primary"
                   type="button"
                   data-add-to-cart
                   data-product-id={product.id}
@@ -84,7 +86,7 @@ const CATEGORY_LABELS: Record<string, string> = {
                 >
                   Add to cart
                 </button>
-                <a class="btn btn--ghost" href={`/shop/${product.id}`}>View details</a>
+                <a class="btn btn--secondary" href={`/shop/${product.id}`}>Quick view</a>
               </div>
             </div>
           </article>
