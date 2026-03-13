@@ -145,40 +145,38 @@ const productRows = productGroups.length > 0
 
 <script>
   const root = document.querySelector('.shop-page');
-  if (!root) {
-    return;
-  }
+  if (root) {
+    const filterButtons = Array.from(root.querySelectorAll('[data-category-filter]'));
+    const productCards = Array.from(root.querySelectorAll('.shop-card[data-category]'));
+    const productRows = Array.from(root.querySelectorAll('.shop-row'));
 
-  const filterButtons = Array.from(root.querySelectorAll('[data-category-filter]'));
-  const productCards = Array.from(root.querySelectorAll('.shop-card[data-category]'));
-  const productRows = Array.from(root.querySelectorAll('.shop-row'));
-
-  const applyCategoryFilter = (category) => {
-    for (const card of productCards) {
-      const cardCategory = card.getAttribute('data-category') || 'STYLING';
-      const shouldShow = category === 'ALL' || cardCategory === category;
-      const listItem = card.closest('li');
-      if (listItem) {
-        listItem.hidden = !shouldShow;
+    const applyCategoryFilter = (category) => {
+      for (const card of productCards) {
+        const cardCategory = card.getAttribute('data-category') || 'STYLING';
+        const shouldShow = category === 'ALL' || cardCategory === category;
+        const listItem = card.closest('li');
+        if (listItem) {
+          listItem.hidden = !shouldShow;
+        }
       }
-    }
 
-    for (const row of productRows) {
-      const hasVisibleProducts = Array.from(row.querySelectorAll('.shop-grid li')).some((item) => !item.hidden);
-      row.toggleAttribute('hidden', !hasVisibleProducts);
-    }
+      for (const row of productRows) {
+        const hasVisibleProducts = Array.from(row.querySelectorAll('.shop-grid li')).some((item) => !item.hidden);
+        row.toggleAttribute('hidden', !hasVisibleProducts);
+      }
+
+      for (const button of filterButtons) {
+        const isActive = button.getAttribute('data-category-filter') === category;
+        button.classList.toggle('is-active', isActive);
+        button.setAttribute('aria-pressed', String(isActive));
+      }
+    };
 
     for (const button of filterButtons) {
-      const isActive = button.getAttribute('data-category-filter') === category;
-      button.classList.toggle('is-active', isActive);
-      button.setAttribute('aria-pressed', String(isActive));
+      button.addEventListener('click', () => {
+        const category = button.getAttribute('data-category-filter') || 'ALL';
+        applyCategoryFilter(category);
+      });
     }
-  };
-
-  for (const button of filterButtons) {
-    button.addEventListener('click', () => {
-      const category = button.getAttribute('data-category-filter') || 'ALL';
-      applyCategoryFilter(category);
-    });
   }
 </script>
