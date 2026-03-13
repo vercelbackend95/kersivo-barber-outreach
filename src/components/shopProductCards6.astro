@@ -6,7 +6,7 @@ import { formatGbp } from '../lib/shop/money';
 const shopId = await resolveShopId();
 const products = await prisma.product.findMany({
   where: { shopId, active: true },
-  orderBy: [{ featured: 'desc' }, { sortOrder: 'asc' }, { updatedAt: 'desc' }],
+  orderBy: [{ sortOrder: 'asc' }, { featured: 'desc' }, { updatedAt: 'desc' }],
   take: 3
 });
 

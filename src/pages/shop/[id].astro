@@ -37,7 +37,7 @@ const relatedProducts = await prisma.product.findMany({
     id: { not: product.id },
     category: product.category
   },
-  orderBy: [{ featured: 'desc' }, { sortOrder: 'asc' }, { updatedAt: 'desc' }],
+  orderBy: [{ sortOrder: 'asc' }, { featured: 'desc' }, { updatedAt: 'desc' }],
   take: 3
 });
 
@@ -50,7 +50,7 @@ if (relatedProducts.length < 2) {
         notIn: [product.id, ...relatedProducts.map((item) => item.id)]
       }
     },
-    orderBy: [{ featured: 'desc' }, { sortOrder: 'asc' }, { updatedAt: 'desc' }],
+    orderBy: [{ sortOrder: 'asc' }, { featured: 'desc' }, { updatedAt: 'desc' }],
     take: 3 - relatedProducts.length
   });
 
