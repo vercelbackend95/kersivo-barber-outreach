@@ -27,33 +27,13 @@ const categoryFilters = [
     count: products.filter((product) => product.category === value).length
   }))
 ].filter((filter, index, allFilters) => filter.value === 'ALL' || allFilters[index]?.count > 0);
-const featuredPromotions = [
-  {
-    kicker: 'Elevate your routine',
-    title: 'Premium grooming products selected by barbers.',
-    ctaLabel: 'Shop all products',
-    ctaLink: '/shop'
-  },
-  {
-    kicker: 'Details that set you apart',
-    title: 'From texture to beard care, every finish in one place.',
-    ctaLabel: 'Explore essentials',
-    ctaLink: '/shop'
-  }
-];
 
-const productGroups: typeof products[] = [];
-for (let index = 0; index < products.length; index += 8) {
-  productGroups.push(products.slice(index, index + 8));
-}
-
-const productRows = productGroups.length > 0
-  ? productGroups.map((group, index) => ({
-      products: group,
-      promotion: featuredPromotions[index % featuredPromotions.length],
-      reverse: index % 2 === 1
-    }))
-  : [];
+const featuredPromotion = {
+  kicker: 'Elevate your routine',
+  title: 'Premium grooming products selected by barbers.',
+  ctaLabel: 'Shop all products',
+  ctaLink: '/shop'
+};
 
 
 ---
@@ -78,67 +58,65 @@ const productRows = productGroups.length > 0
         ))}
       </div>
     </header>
+    <section class="shop-layout" aria-label="Products">
+      {products.length === 0 ? (
+        <article class="shop-promo-card shop-promo-card--empty">
 
-    {productRows.length === 0 ? (
-      <section class="shop-row" aria-label="Shop preview">
-        <article class="shop-promo-card">
           <p class="shop-promo-kicker">Retail built in</p>
           <h2>Add products to launch your storefront</h2>
           <p>Publish products in admin and they will appear here instantly.</p>
           <a class="btn btn--primary" href="/shop">Open shop page</a>
 
         </article>
-      </section>
-    ) : (
-      <section class="shop-layout" aria-label="Products">
-        {productRows.map((row) => (
-          <div class:list={["shop-row", row.reverse && "shop-row--reverse"]}>
+      ) : (
+        <ul class="shop-grid" aria-label="Products">
+          <li class="shop-grid-promo-slot">
+
             <article class="shop-promo-card">
-              <p class="shop-promo-kicker">{row.promotion.kicker}</p>
-              <h2>{row.promotion.title}</h2>
-              <a class="btn btn--primary" href={row.promotion.ctaLink}>{row.promotion.ctaLabel}</a>
+              <p class="shop-promo-kicker">{featuredPromotion.kicker}</p>
+              <h2>{featuredPromotion.title}</h2>
+              <a class="btn btn--primary" href={featuredPromotion.ctaLink}>{featuredPromotion.ctaLabel}</a>
+
             </article>
+          </li>
 
-            <ul class="shop-grid" aria-label="Products">
-              {row.products.map((product) => (
-                <li>
-                  <article class="shop-card" data-category={product.category}>
-                    <a href={`/shop/${product.id}`} class="shop-media-link" aria-label={`View ${product.name}`}>
-                      <div class="shop-media">
-                        {product.featured ? <p class="shop-badge">Featured</p> : null}
-                        {product.imageUrl ? <img src={product.imageUrl} alt={product.name} class="shop-image" loading="lazy" /> : <div class="shop-image shop-image--placeholder" aria-hidden="true"></div>}
-                      </div>
-                    </a>
+          {products.map((product) => (
+            <li data-product-item>
+              <article class="shop-card" data-category={product.category}>
+                <a href={`/shop/${product.id}`} class="shop-media-link" aria-label={`View ${product.name}`}>
+                  <div class="shop-media">
+                    {product.featured ? <p class="shop-badge">Featured</p> : null}
+                    {product.imageUrl ? <img src={product.imageUrl} alt={product.name} class="shop-image" loading="lazy" /> : <div class="shop-image shop-image--placeholder" aria-hidden="true"></div>}
+                  </div>
+                </a>
 
-                    <div class="shop-card-body">
-                      <p class="shop-category">{CATEGORY_LABELS[product.category] ?? 'Styling'}</p>
-                      <h3><a href={`/shop/${product.id}`}>{product.name}</a></h3>
-                      <p class="shop-price">{formatGbp(product.pricePence)}</p>
+                <div class="shop-card-body">
+                  <p class="shop-category">{CATEGORY_LABELS[product.category] ?? 'Styling'}</p>
+                  <h3><a href={`/shop/${product.id}`}>{product.name}</a></h3>
+                  <p class="shop-price">{formatGbp(product.pricePence)}</p>
 
-                      <div class="shop-card-actions">
-                        <button
-                          type="button"
-                          class="btn btn--primary"
-                          data-add-to-cart
-                          data-product-id={product.id}
-                          data-product-name={product.name}
-                          data-product-price-pence={String(product.pricePence)}
-                          data-product-image-url={product.imageUrl ?? ''}
-                        >
-                          Add to cart
-                        </button>
-                        <a href={`/shop/${product.id}`} class="btn btn--secondary">Quick view</a>
-                      </div>
-                    </div>
-                  </article>
-                </li>
-              ))}
-            </ul>
+                  <div class="shop-card-actions">
+                    <button
+                      type="button"
+                      class="btn btn--primary"
+                      data-add-to-cart
+                      data-product-id={product.id}
+                      data-product-name={product.name}
+                      data-product-price-pence={String(product.pricePence)}
+                      data-product-image-url={product.imageUrl ?? ''}
+                    >
+                      Add to cart
+                    </button>
+                    <a href={`/shop/${product.id}`} class="btn btn--secondary">Quick view</a>
+                  </div>
+                </div>
+              </article>
+            </li>
+          ))}
+        </ul>
+      )}
+    </section>
 
-          </div>
-                  ))}
-      </section>
-    )}
 
   </main>
 </MainLayout>
@@ -148,21 +126,23 @@ const productRows = productGroups.length > 0
   if (root) {
     const filterButtons = Array.from(root.querySelectorAll('[data-category-filter]'));
     const productCards = Array.from(root.querySelectorAll('.shop-card[data-category]'));
-    const productRows = Array.from(root.querySelectorAll('.shop-row'));
+   const productGrid = root.querySelector('.shop-grid');
+    const promoSlot = root.querySelector('.shop-grid-promo-slot');
+
 
     const applyCategoryFilter = (category) => {
       for (const card of productCards) {
         const cardCategory = card.getAttribute('data-category') || 'STYLING';
         const shouldShow = category === 'ALL' || cardCategory === category;
-        const listItem = card.closest('li');
+        const listItem = card.closest('[data-product-item]');
         if (listItem) {
           listItem.hidden = !shouldShow;
         }
       }
+      if (productGrid && promoSlot) {
+        const hasVisibleProducts = Array.from(productGrid.querySelectorAll('[data-product-item]')).some((item) => !item.hidden);
+        promoSlot.hidden = !hasVisibleProducts;
 
-      for (const row of productRows) {
-        const hasVisibleProducts = Array.from(row.querySelectorAll('.shop-grid li')).some((item) => !item.hidden);
-        row.toggleAttribute('hidden', !hasVisibleProducts);
       }
 
       for (const button of filterButtons) {
