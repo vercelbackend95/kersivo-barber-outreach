@@ -19,6 +19,14 @@ const CATEGORY_LABELS: Record<string, string> = {
   TOOLS: 'Tools',
   GIFT_SETS: 'Sets'
 };
+const categoryFilters = [
+  { value: 'ALL', label: 'All products', count: products.length },
+  ...Object.entries(CATEGORY_LABELS).map(([value, label]) => ({
+    value,
+    label,
+    count: products.filter((product) => product.category === value).length
+  }))
+].filter((filter, index, allFilters) => filter.value === 'ALL' || allFilters[index]?.count > 0);
 const featuredPromotions = [
   {
     kicker: 'Elevate your routine',
@@ -56,6 +64,19 @@ const productRows = productGroups.length > 0
       <p class="shop-eyebrow">Curated grooming store</p>
       <h1 id="shop-page-title">Barber retail essentials</h1>
       <p class="shop-intro">A clean product layout inspired by editorial storefronts. Browse quickly, add to cart in one click, and collect in the shop.</p>
+            <div class="shop-category-filters" role="group" aria-label="Filter by category">
+        {categoryFilters.map((filter) => (
+          <button
+            type="button"
+            class:list={["shop-category-filter", filter.value === 'ALL' && 'is-active']}
+            data-category-filter={filter.value}
+            aria-pressed={filter.value === 'ALL' ? 'true' : 'false'}
+          >
+            <span>{filter.label}</span>
+            <span class="shop-category-filter__count" aria-hidden="true">{filter.count}</span>
+          </button>
+        ))}
+      </div>
     </header>
 
     {productRows.length === 0 ? (
@@ -121,3 +142,43 @@ const productRows = productGroups.length > 0
 
   </main>
 </MainLayout>
+
+<script>
+  const root = document.querySelector('.shop-page');
+  if (!root) {
+    return;
+  }
+
+  const filterButtons = Array.from(root.querySelectorAll('[data-category-filter]'));
+  const productCards = Array.from(root.querySelectorAll('.shop-card[data-category]'));
+  const productRows = Array.from(root.querySelectorAll('.shop-row'));
+
+  const applyCategoryFilter = (category) => {
+    for (const card of productCards) {
+      const cardCategory = card.getAttribute('data-category') || 'STYLING';
+      const shouldShow = category === 'ALL' || cardCategory === category;
+      const listItem = card.closest('li');
+      if (listItem) {
+        listItem.hidden = !shouldShow;
+      }
+    }
+
+    for (const row of productRows) {
+      const hasVisibleProducts = Array.from(row.querySelectorAll('.shop-grid li')).some((item) => !item.hidden);
+      row.toggleAttribute('hidden', !hasVisibleProducts);
+    }
+
+    for (const button of filterButtons) {
+      const isActive = button.getAttribute('data-category-filter') === category;
+      button.classList.toggle('is-active', isActive);
+      button.setAttribute('aria-pressed', String(isActive));
+    }
+  };
+
+  for (const button of filterButtons) {
+    button.addEventListener('click', () => {
+      const category = button.getAttribute('data-category-filter') || 'ALL';
+      applyCategoryFilter(category);
+    });
+  }
+</script>
