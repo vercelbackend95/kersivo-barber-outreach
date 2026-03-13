@@ -19,19 +19,6 @@ const CATEGORY_LABELS: Record<string, string> = {
   GIFT_SETS: 'Sets'
 };
 
-const createExcerpt = (description: string | null) => {
-  if (!description) {
-    return null;
-  }
-
-  const cleanedDescription = description.replace(/\s+/g, ' ').trim();
-  if (cleanedDescription.length <= 86) {
-    return cleanedDescription;
-  }
-
-  return `${cleanedDescription.slice(0, 83).trimEnd()}…`;
-};
-
 ---
 
 <section class="shop6" aria-labelledby="shop6-title">
@@ -55,7 +42,6 @@ const createExcerpt = (description: string | null) => {
         <a class="btn btn--primary" href="/shop">Explore the shop</a>
         <a class="btn btn--ghost" href="/shop">View all products</a>
       </div>
-
     </div>
 
     <ul class="shop6__grid" aria-label="Featured products">
@@ -65,15 +51,13 @@ const createExcerpt = (description: string | null) => {
             <div class="shop6__card-body">
               <p class="shop6__category">Shop preview</p>
               <h3>Add products to launch this retail section</h3>
-              <p class="shop6__excerpt">Publish products in admin and they will instantly appear on the homepage and shop.</p>
+              <p class="shop6__price">Ready when your catalog is live</p>
               <a class="btn btn--secondary" href="/shop">Open shop page</a>
-
             </div>
           </article>
         </li>
       ) : products.map((product) => (
         <li class="shop6__item" key={product.id}>
-
           <article class="shop6__card">
             <a href={`/shop/${product.id}`} class="shop6__media" aria-label={`View ${product.name}`}>
               {product.imageUrl ? (
@@ -83,20 +67,10 @@ const createExcerpt = (description: string | null) => {
               )}
             </a>
 
-
-
             <div class="shop6__card-body">
-              <div class="shop6__meta-row">
-                <p class="shop6__category">{CATEGORY_LABELS[product.category] ?? 'Styling'}</p>
-                <p class="shop6__price">{formatGbp(product.pricePence)}</p>
-              </div>
-
-
+              <p class="shop6__category">{CATEGORY_LABELS[product.category] ?? 'Styling'}</p>
               <h3><a href={`/shop/${product.id}`}>{product.name}</a></h3>
-
-              {createExcerpt(product.description) ? (
-                <p class="shop6__excerpt">{createExcerpt(product.description)}</p>
-              ) : null}
+              <p class="shop6__price">{formatGbp(product.pricePence)}</p>
 
               <div class="shop6__card-actions">
                 <button
@@ -111,7 +85,6 @@ const createExcerpt = (description: string | null) => {
                   Add to cart
                 </button>
                 <a class="btn btn--ghost" href={`/shop/${product.id}`}>View details</a>
-
               </div>
             </div>
           </article>
