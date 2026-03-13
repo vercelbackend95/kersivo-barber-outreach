@@ -136,15 +136,18 @@
 
 .compare3-block__mobile-cta-cell {
   display: flex;
-  align-items: center;
+  align-items: flex-start;
   justify-content: flex-start;
   border-bottom: 0;
-  padding-top: 1rem;
-  padding-bottom: 1.08rem;
-  padding-left: 0.9rem;
+  padding-top: 1.22rem;
+  padding-bottom: 1.42rem;
+  padding-left: 1.38rem;
+
 }
 .compare3-block__mobile-cta-spacer {
   border-bottom: 0;
+  padding-top: 1.22rem;
+  padding-bottom: 1.42rem;
 
 }
 
@@ -293,15 +296,16 @@
 
 }
 .compare3-block__mobile-cta-cell .compare3-block__cta {
-  width: auto;
-  min-height: 2.16rem;
-  padding: 0.42rem 0.76rem;
-  font-size: 0.75rem;
-  letter-spacing: 0.02em;
+  width: fit-content;
+  min-height: 2rem;
+  padding: 0.36rem 0.68rem;
+  font-size: 0.72rem;
+  line-height: 1.1;
+  letter-spacing: 0.035em;
   text-transform: uppercase;
-  background: color-mix(in srgb, var(--accent) 84%, var(--bg));
-  border-color: color-mix(in srgb, var(--accent) 82%, var(--bg));
-
+  font-weight: 550;
+  background: color-mix(in srgb, var(--accent) 72%, var(--bg));
+  border-color: color-mix(in srgb, var(--accent) 66%, var(--bg));
 }
 
 .compare3-block__cta:hover {
@@ -320,8 +324,9 @@
 }
 
 .compare3-block__mobile-cta-cell .compare3-block__cta:hover {
-  background: color-mix(in srgb, var(--accent-hover) 86%, var(--bg));
-  border-color: color-mix(in srgb, var(--accent-hover) 86%, var(--bg));
+  background: color-mix(in srgb, var(--accent-hover) 75%, var(--bg));
+  border-color: color-mix(in srgb, var(--accent-hover) 70%, var(--bg));
+
 }
 
 .compare3-block__cell--head-empty,
