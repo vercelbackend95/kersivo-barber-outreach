@@ -1,6 +1,6 @@
 .hero108 {
   padding-block: clamp(3rem, 9vw, 6rem);
-  background: var(--bg);
+  background: transparent;
 }
 
 .hero108__layout {
@@ -27,8 +27,6 @@
 
 .hero108__highlight {
   color: var(--accent);
-  border-bottom: 2px solid var(--accent);
-  padding-bottom: 0.05em;
 }
 
 .hero108__description {
