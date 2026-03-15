@@ -9,8 +9,8 @@ interface RateCard1Props {
 
 const CARE_PLAN_BULLETS = [
   "Hosting included",
-  "Security, updates and maintenance",
-  "Full admin system access",
+  "Ongoing maintenance",
+  "Full admin access",
 ];
 
 const CARE_FEATURES = [
@@ -30,7 +30,7 @@ const CARE_FEATURES = [
       "We keep core parts of the site maintained so everything continues to run smoothly.",
   },
   {
-    title: "1 hour of dev support each month",
+    title: "Monthly dev support",
     description:
       "Small edits, updates or improvements can be handled without starting from scratch every time.",
   },
@@ -48,25 +48,23 @@ const RateCard1 = ({ className }: RateCard1Props) => {
         <aside className="rate-card1__sidebar">
           <div className="rate-card1__heading-wrap">
             <p className="rate-card1__eyebrow">ONGOING CARE</p>
-            <h2 className="rate-card1__heading">
-              Keep your website running smoothly
-              <br />
-              after launch
-            </h2>
+            <h2 className="rate-card1__heading">Keep your site running smoothly</h2>
             <Illustration className="rate-card1__mark rate-card1__mark--top" />
             <Illustration className="rate-card1__mark rate-card1__mark--bottom" />
           </div>
 
           <div className="rate-card1__price-block">
             <p className="rate-card1__price">
-              £40 <span>/month</span>
+              £40 <span>/ month</span>
             </p>
             <ul className="rate-card1__conditions" aria-label="Monthly care plan includes">
               {CARE_PLAN_BULLETS.map((condition) => (
                 <li key={condition}>{condition}</li>
               ))}
             </ul>
-            <p className="rate-card1__note">Every website runs on one simple monthly care plan after launch.</p>
+            <p className="rate-card1__note">
+              After launch, every website stays supported on one simple monthly care plan.
+            </p>
           </div>
         </aside>
 
