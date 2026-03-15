@@ -1,4 +1,4 @@
-import { ArrowRight, Check } from "lucide-react";
+import { ArrowRight, Check } from "@/components/lucide-react";
 
 import { Separator } from "@/components/ui/separator";
 import { cn } from "@/lib/utils";
