@@ -16,66 +16,58 @@ const Pricing36 = ({ className }: Pricing36Props) => {
             <div className="flex h-full flex-col rounded-4xl bg-gradient-to-r from-blue-500 to-purple-500 p-px">
               <div className="h-full rounded-[31px] bg-background p-8">
                 <div className="flex items-center justify-between">
-                  <p className="text-xl font-semibold">Starter Plan</p>
+                  <p className="text-xl font-semibold">Base</p>
                 </div>
                 <div className="mt-6 flex flex-col gap-2">
                   <p className="text-6xl font-bold">
-                    $19
+                    £695
                     <span className="text-base font-semibold text-muted-foreground">
-                      /month
+                      / one-time
                     </span>
                   </p>
                   <p className="text-sm text-muted-foreground">
-                    Complete Solution For Your Team Productivity
+                    A strong starting point for barbers who need a professional
+                    website that looks sharp, works smoothly and covers the
+                    essentials.
                   </p>
                 </div>
                 <Separator className="my-6" />
                 <ul className="space-y-6">
                   <li className="flex gap-2">
                     <Check className="mt-1 size-4 shrink-0 text-green-500" />
-                    <div>
-                      <p className="font-medium">Team collaboration tools</p>
-                      <p className="text-sm text-muted-foreground">
-                        Enable seamless collaboration with shared workspaces
-                      </p>
-                    </div>
+                    <p className="font-medium">Custom barber website</p>
                   </li>
                   <li className="flex gap-2">
                     <Check className="mt-1 size-4 shrink-0 text-green-500" />
-                    <div>
-                      <p className="font-medium">Advanced project tracking</p>
-                      <p className="text-sm text-muted-foreground">
-                        Monitor project progress with detailed analytics and
-                        reports
-                      </p>
-                    </div>
+                    <p className="font-medium">Booking or contact integration</p>
                   </li>
                   <li className="flex gap-2">
                     <Check className="mt-1 size-4 shrink-0 text-green-500" />
-                    <div>
-                      <p className="font-medium">Automated task management</p>
-                      <p className="text-sm text-muted-foreground">
-                        Streamline workflows with intelligent task automation
-                      </p>
-                    </div>
+                    <p className="font-medium">
+                      Services, gallery and reviews sections
+                    </p>
                   </li>
                   <li className="flex gap-2">
                     <Check className="mt-1 size-4 shrink-0 text-green-500" />
-                    <div>
-                      <p className="font-medium">Priority customer support</p>
-                      <p className="text-sm text-muted-foreground">
-                        Get expert assistance with priority support channels and
-                        quick response times.
-                      </p>
-                    </div>
+                    <p className="font-medium">
+                      Contact details, map and opening hours
+                    </p>
+                  </li>
+                  <li className="flex gap-2">
+                    <Check className="mt-1 size-4 shrink-0 text-green-500" />
+                    <p className="font-medium">Full admin access</p>
+                  </li>
+                  <li className="flex gap-2">
+                    <Check className="mt-1 size-4 shrink-0 text-green-500" />
+                    <p className="font-medium">Shop setup for up to 20 products</p>
                   </li>
                 </ul>
               </div>
               <a
-                href="#"
+                href="#book-demo"
                 className="group flex items-center justify-center gap-1.5 py-3 text-center font-medium text-background"
               >
-                Subscribe
+                Choose Base
                 <ArrowRight className="size-5 transition-transform group-hover:translate-x-1" />
               </a>
             </div>
@@ -83,66 +75,62 @@ const Pricing36 = ({ className }: Pricing36Props) => {
           <div className="flex flex-col gap-4">
             <div className="flex h-full flex-col rounded-4xl bg-primary p-px">
               <div className="h-full rounded-[31px] bg-background p-8">
-                <p className="text-xl font-semibold">Enterprise Plan</p>
+                <div className="flex items-center justify-between gap-2">
+                  <p className="text-xl font-semibold">Premium</p>
+                  <p className="text-sm font-semibold text-primary">Recommended</p>
+                </div>
                 <div className="mt-6 flex flex-col gap-2">
                   <p className="text-6xl font-bold">
-                    $49
+                    £995
                     <span className="text-base font-semibold text-muted-foreground">
-                      /month
+                      / one-time
                     </span>
                   </p>
                   <p className="text-sm text-muted-foreground">
-                    Complete solution for your Enterprise Workflows
+                    For barbershops that want a stronger online presence, a
+                    more advanced sales setup and a more premium overall
+                    presentation.
                   </p>
                 </div>
                 <Separator className="my-6" />
                 <ul className="space-y-6">
                   <li className="flex gap-2">
                     <Check className="mt-1 size-4 shrink-0 text-green-500" />
-                    <div>
-                      <p className="font-medium">Unlimited team members</p>
-                      <p className="text-sm text-muted-foreground">
-                        Scale without limits with unlimited user access and
-                        collaboration tools.
-                      </p>
-                    </div>
+                    <p className="font-medium">Everything in Base</p>
                   </li>
                   <li className="flex gap-2">
                     <Check className="mt-1 size-4 shrink-0 text-green-500" />
-                    <div>
-                      <p className="font-medium">
-                        Advanced analytics dashboard
-                      </p>
-                      <p className="text-sm text-muted-foreground">
-                        Get deep insights with comprehensive reporting tools
-                      </p>
-                    </div>
+                    <p className="font-medium">
+                      More tailored premium presentation
+                    </p>
                   </li>
                   <li className="flex gap-2">
                     <Check className="mt-1 size-4 shrink-0 text-green-500" />
-                    <div>
-                      <p className="font-medium">Custom workflow automation</p>
-                      <p className="text-sm text-muted-foreground">
-                        Create tailored workflows to optimize team efficiency
-                      </p>
-                    </div>
+                    <p className="font-medium">Stronger homepage sales flow</p>
                   </li>
                   <li className="flex gap-2">
                     <Check className="mt-1 size-4 shrink-0 text-green-500" />
-                    <div>
-                      <p className="font-medium">Dedicated success manager</p>
-                      <p className="text-sm text-muted-foreground">
-                        Receive personalized guidance from dedicated specialists
-                      </p>
-                    </div>
+                    <p className="font-medium">Shop setup for up to 50 products</p>
+                  </li>
+                  <li className="flex gap-2">
+                    <Check className="mt-1 size-4 shrink-0 text-green-500" />
+                    <p className="font-medium">Featured product setup</p>
+                  </li>
+                  <li className="flex gap-2">
+                    <Check className="mt-1 size-4 shrink-0 text-green-500" />
+                    <p className="font-medium">Priority launch</p>
+                  </li>
+                  <li className="flex gap-2">
+                    <Check className="mt-1 size-4 shrink-0 text-green-500" />
+                    <p className="font-medium">Launch campaign support included</p>
                   </li>
                 </ul>
               </div>
               <a
-                href="#"
+                href="#book-demo"
                 className="group flex items-center justify-center gap-1.5 py-3 text-center font-medium text-background"
               >
-                Contact Us
+                Choose Premium
                 <ArrowRight className="size-5 transition-transform group-hover:translate-x-1" />
               </a>
             </div>
