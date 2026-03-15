@@ -1,8 +1,8 @@
 .hero261 {
   padding-block: clamp(3.25rem, 9vw, 7rem);
+  background: transparent;
+  overflow: hidden;
 
-  background: var(--bg);
-    overflow: hidden;
 }
 .hero261__layout {
   display: grid;
