@@ -1,162 +1,160 @@
 .compare3-block {
-  padding-block: 6rem;
-  font-family: Inter, system-ui, -apple-system, Segoe UI, Roboto, sans-serif;
-
+  position: relative;
+  padding-block: 4.5rem;
+  overflow: clip;
 }
 .compare3-block .container {
+  position: relative;
+  z-index: 1;
   display: grid;
-  gap: 2.75rem;
+  gap: 2rem;
 }
-
-
 .compare3-block__header {
-  display: grid;
-    justify-items: center;
-  gap: 0.88rem;
-    text-align: center;
-}
+  max-width: 52ch;
+  margin-inline: auto;
+  text-align: center;
 
+
+}
 .compare3-block__header h2 {
   margin: 0;
-  max-width: 42rem;
-  font-family: 'Bebas Neue', Inter, system-ui, sans-serif;
-  font-size: clamp(2.1rem, 8.3vw, 3rem);
-  letter-spacing: 0.04em;
-  line-height: 0.98;
+  margin-top: 0.65rem;
   text-transform: uppercase;
+  letter-spacing: 0.03em;
+  font-family: 'Bebas Neue', Inter, system-ui, sans-serif;
+  font-size: clamp(2.15rem, 7.7vw, 4.4rem);
+  line-height: 0.97;
   font-weight: 400;
 
-}
 
+}
 .compare3-block__header p {
   margin: 0;
-  max-width: 42rem;
+  margin-top: 0.9rem;
   color: var(--muted);
-  font-size: 0.94rem;
-  line-height: 1.5;
-
+  font-size: 0.98rem;
+  line-height: 1.65;
+  letter-spacing: 0.005em;
 }
 .compare3-block__badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
   border: 1px solid var(--border);
-  border-radius: 0.375rem;
-  padding: 0.4rem 0.78rem;
-
-  font-size: 0.75rem;
-  line-height: 1;
+  border-radius: 0.3rem;
+  padding: 0.26rem 0.62rem;
+  font-size: 0.69rem;
+  text-transform: uppercase;
+  letter-spacing: 0.09em;
 }
 .compare3-block__desktop {
   display: none;
 }
-
 .compare3-block__mobile {
   display: block;
 }
-
 .compare3-block__mobile-grid {
   display: grid;
-  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
-  background: color-mix(in srgb, var(--bg) 94%, var(--surface));
-  border-top: 1px solid color-mix(in srgb, var(--border) 72%, transparent);
-  border-radius: var(--radius-lg);
-  overflow: hidden;
+  grid-template-columns: 1fr 1fr;
+
+  border-top: 1px solid var(--border);
+  border-bottom: 1px solid var(--border);
+  font-size: 0.69rem;
+
 
 }
-
 .compare3-block__mobile-cell {
-  min-width: 0;
-  border-bottom: 1px solid color-mix(in srgb, var(--border) 74%, transparent);
-  padding: 0.92rem 0.9rem;
-}
+  border-bottom: 1px solid var(--border);
+  padding: 0.8rem 0.84rem;
+  min-height: 3.3rem;
 
+}
 .compare3-block__mobile-cell:nth-child(odd) {
-  border-right: 1px solid color-mix(in srgb, var(--border) 74%, transparent);
-
+  border-right: 1px solid var(--border);
 }
+
 .compare3-block__mobile-cell:not(.compare3-block__mobile-value--highlight) {
   background:
     radial-gradient(circle at 20% 18%, color-mix(in srgb, var(--surface) 54%, transparent) 0%, transparent 62%),
     linear-gradient(140deg, color-mix(in srgb, var(--surface) 36%, transparent) 0%, transparent 58%);
+
+
 }
-
-
 .compare3-block__mobile-brand {
   display: flex;
   flex-direction: column;
+  justify-content: center;
   align-items: center;
-  justify-content: flex-start;
   gap: 0.24rem;
   text-align: center;
-  min-height: 6.95rem;
-  padding-top: 0.78rem;
-  padding-bottom: 0.72rem;
+  min-height: 8.2rem;
+  padding-top: 1.05rem;
+  padding-bottom: 1.1rem;
+  padding-inline: 0.8rem;
 
 }
-
 .compare3-block__mobile-brand--highlight {
   background: var(--surface);
 }
 
 .compare3-block__mobile-brand .compare3-block__logo {
-  width: 1.1rem;
-  height: 1.1rem;
-  opacity: 0.62;
-  margin-bottom: 0.08rem;
-}
+  width: 1.25rem;
+  height: 1.25rem;
+ margin-bottom: 0.04rem;
 
+
+}
 
 .compare3-block__mobile-brand .compare3-block__brand-title {
+  margin: 0;
   font-size: 1.08rem;
-  line-height: 0.92;
-  letter-spacing: 0.045em;
-
+  line-height: 0.95;
+  letter-spacing: 0.03em;
   text-transform: uppercase;
-  font-family: 'Bebas Neue', Inter, system-ui, sans-serif;
-
 }
-
 .compare3-block__mobile-brand .compare3-block__brand-copy {
-  max-width: 15ch;
-  font-size: 0.7rem;
-  line-height: 1.32;
-  letter-spacing: 0.015em;
-  color: color-mix(in srgb, var(--muted) 88%, var(--fg));
+  margin: 0;
+  margin-top: 0.14rem;
+  color: var(--muted);
+  font-size: 0.65rem;
+  line-height: 1.38;
+  max-width: 13.5ch;
 }
-
 .compare3-block__mobile-value {
   display: flex;
-  align-items: flex-start;
-  justify-content: flex-start;
-  gap: 0.44rem;
-  color: color-mix(in srgb, var(--muted) 87%, var(--fg));
-  font-size: 0.74rem;
-  line-height: 1.48;
-  letter-spacing: 0.005em;
-  text-align: left;
-  padding-top: 0.84rem;
-  padding-bottom: 0.84rem;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  gap: 0.16rem;
+  text-align: center;
+  color: var(--muted);
+  font-size: 0.67rem;
+  line-height: 1.33;
+  min-height: 5.2rem;
+  padding-top: 0.62rem;
+  padding-bottom: 0.62rem;
 
 }
-
 .compare3-block__mobile-value--highlight {
   background: var(--surface);
+}
 
-}
 .compare3-block__mobile-value > span:last-child {
-  flex: 1;
-  max-width: 18.5ch;
+  max-width: 24ch;
 }
+
 
 .compare3-block__mobile-cta-cell {
-  display: flex;
-  align-items: center;
   justify-content: center;
+  align-items: center;
+  display: flex;
   border-bottom: 0;
   padding-top: 1rem;
-  padding-bottom: 1.22rem;
-  padding-inline: 0.9rem;
+  padding-bottom: 1rem;
 
 
 }
+
 .compare3-block__mobile-cta-spacer {
   border-bottom: 0;
   padding-top: 1rem;
@@ -179,7 +177,7 @@
   min-width: 38rem;
 
   display: grid;
-  grid-template-columns: 1.1fr 1fr 0.95fr;
+  grid-template-columns: 1fr 0.95fr;
 
 }
 
@@ -239,7 +237,6 @@
 
 
 }
-.compare3-block__feature,
 .compare3-block__value,
 .compare3-block__cta-wrap {
   display: flex;
@@ -250,16 +247,6 @@
 
 }
 
-.compare3-block__feature {
-  justify-content: flex-start;
-
-
-}
-.compare3-block__feature strong {
-  font-size: 1rem;
-
-
-}
 
 .compare3-block__value {
   flex-direction: column;
@@ -267,6 +254,14 @@
   color: var(--muted);
   text-align: center;
 }
+
+.compare3-block__row-title {
+  font-size: 0.83rem;
+  font-weight: 600;
+  color: var(--fg);
+  letter-spacing: 0.01em;
+}
+
 .compare3-block__value:not(.compare3-block__value--highlight) {
   background:
     radial-gradient(circle at 20% 18%, color-mix(in srgb, var(--surface) 54%, transparent) 0%, transparent 62%),
@@ -295,7 +290,7 @@
   color: color-mix(in srgb, var(--fg) 82%, var(--muted));
 }
 .compare3-block__cta-wrap {
-    grid-column: 2;
+    grid-column: 1;
   border-bottom: 0;
   padding-top: 0.85rem;
   padding-bottom: 1rem;
@@ -356,10 +351,6 @@
 
 }
 
-.compare3-block__cell--head-empty,
-.compare3-block__cell--foot-empty {
-  background: transparent;
-}
 @media (max-width: 22rem) {
   .compare3-block__mobile-brand {
     min-height: 7.45rem;

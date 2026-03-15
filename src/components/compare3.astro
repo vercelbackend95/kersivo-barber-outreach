@@ -46,7 +46,6 @@ const comparisonRows = [
     <div class="compare3-block__desktop" aria-hidden="false">
       <div class="compare3-block__table-wrap">
         <div class="compare3-block__grid" role="table" aria-label="Comparison table">
-          <div class="compare3-block__cell compare3-block__cell--head-empty"></div>
           <div class="compare3-block__cell compare3-block__brand compare3-block__brand--highlight" role="columnheader">
             <img
               src="https://deifkwefumgah.cloudfront.net/shadcnblocks/block/block-1.svg"
@@ -72,15 +71,13 @@ const comparisonRows = [
           {
             comparisonRows.map((row) => (
               <>
-                <div class="compare3-block__cell compare3-block__feature">
-                  <span>{row.icon}</span>
-                  <strong>{row.title}</strong>
-                </div>
                 <div class="compare3-block__cell compare3-block__value compare3-block__value--highlight">
+                  <span class="compare3-block__row-title">{row.icon} {row.title}</span>
                   <span class="compare3-block__status compare3-block__status--ok">✓</span>
                   <span>{row.kersivo}</span>
                 </div>
                 <div class="compare3-block__cell compare3-block__value">
+                  <span class="compare3-block__row-title">{row.icon} {row.title}</span>
                   <span class="compare3-block__status compare3-block__status--bad">−</span>
                   <span>{row.alternatives}</span>
                 </div>
