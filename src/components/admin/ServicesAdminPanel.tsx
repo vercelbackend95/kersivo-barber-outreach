@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useRef, useState } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import { SettingsGearIcon } from './SettingsGearIcon';
 
 type ServiceBarberRow = {
@@ -69,9 +69,7 @@ export default function ServicesAdminPanel() {
   const [message, setMessage] = useState<string>('');
   const [error, setError] = useState<string>('');
   const [isServiceSheetOpen, setIsServiceSheetOpen] = useState(false);
-  const [openSettingsServiceId, setOpenSettingsServiceId] = useState<string | null>(null);
   const [activeServiceForPanelId, setActiveServiceForPanelId] = useState<string | null>(null);
-  const settingsMenusRef = useRef<Record<string, HTMLDivElement | null>>({});
 
   const editingService = useMemo(() => services.find((s) => s.id === editingId) ?? null, [editingId, services]);
   const activeServiceForPanel = useMemo(
@@ -105,31 +103,6 @@ export default function ServicesAdminPanel() {
       window.removeEventListener('keydown', onKeyDown);
     };
   }, [isServiceSheetOpen]);
-
-  useEffect(() => {
-    if (!openSettingsServiceId) return undefined;
-
-    const onMouseDown = (event: MouseEvent) => {
-      const menuElement = settingsMenusRef.current[openSettingsServiceId];
-      if (!menuElement?.contains(event.target as Node)) {
-        setOpenSettingsServiceId(null);
-      }
-    };
-
-    const onKeyDown = (event: KeyboardEvent) => {
-      if (event.key === 'Escape') {
-        setOpenSettingsServiceId(null);
-      }
-    };
-
-    document.addEventListener('mousedown', onMouseDown);
-    document.addEventListener('keydown', onKeyDown);
-
-    return () => {
-      document.removeEventListener('mousedown', onMouseDown);
-      document.removeEventListener('keydown', onKeyDown);
-    };
-  }, [openSettingsServiceId]);
 
   useEffect(() => {
     if (!activeServiceForPanel) return undefined;
@@ -233,7 +206,6 @@ export default function ServicesAdminPanel() {
       setMessage(service.isActive ? 'Service deactivated.' : 'Service activated.');
       setError('');
       setActiveServiceForPanelId(null);
-      setOpenSettingsServiceId(null);
       await fetchServices();
       return;
     }
@@ -274,64 +246,17 @@ export default function ServicesAdminPanel() {
                 </button>
 
                 <div className="admin-barber-actions admin-service-card-actions">
-                  <div
-                    className="admin-barber-actions-menu"
-                    ref={(node) => {
-                      settingsMenusRef.current[service.id] = node;
-                    }}
+                  <button
+                    type="button"
+                    className="admin-reorder-btn admin-reorder-btn--settings"
+                    onClick={() => setActiveServiceForPanelId(service.id)}
+                    aria-label={`Open ${service.name} settings panel`}
                   >
-                    <button
-                      type="button"
-                      className={`admin-reorder-btn admin-reorder-btn--settings ${openSettingsServiceId === service.id ? 'is-open' : ''}`}
-                      onClick={() => setOpenSettingsServiceId((current) => (current === service.id ? null : service.id))}
-                      aria-label={`Open ${service.name} settings`}
-                      aria-expanded={openSettingsServiceId === service.id}
-                      aria-haspopup="menu"
-                    >
-                      <SettingsGearIcon className="admin-control-icon" />
-                    </button>
-
-                    {openSettingsServiceId === service.id ? (
-                      <div className="admin-barber-actions-dropdown admin-service-actions-dropdown" role="menu" aria-label={`${service.name} actions`}>
-                        <button
-                          type="button"
-                          role="menuitem"
-                          className="admin-barber-actions-dropdown-item"
-                          onClick={() => {
-                            setOpenSettingsServiceId(null);
-                            setActiveServiceForPanelId(service.id);
-                          }}
-                        >
-                          Open service panel
-                        </button>
-                        <button
-                          type="button"
-                          role="menuitem"
-                          className="admin-barber-actions-dropdown-item"
-                          onClick={() => {
-                            setOpenSettingsServiceId(null);
-                            void toggleActive(service);
-                          }}
-                        >
-                          {service.isActive ? 'Deactivate' : 'Activate'}
-                        </button>
-                        <button
-                          type="button"
-                          role="menuitem"
-                          className="admin-barber-actions-dropdown-item"
-                          onClick={() => {
-                            setOpenSettingsServiceId(null);
-                            startEdit(service);
-                          }}
-                        >
-                          Edit service
-                        </button>
-                        <p className="admin-service-actions-meta" aria-live="polite">
-                          Barbers assigned: {assignedBarbers.length}
-                        </p>
-                      </div>
-                    ) : null}
-                  </div>
+                    <SettingsGearIcon className="admin-control-icon" />
+                  </button>
+                  <p className="admin-service-actions-meta" aria-live="polite">
+                    Barbers assigned: {assignedBarbers.length}
+                  </p>
                 </div>
               </li>
             );
@@ -362,7 +287,7 @@ export default function ServicesAdminPanel() {
         >
           <section className="admin-barber-sheet admin-service-sheet" onMouseDown={(event) => event.stopPropagation()}>
             <div className="admin-barber-sheet-head">
-              <h3>{activeServiceForPanel.name} settings</h3>
+              <h3>{activeServiceForPanel.name} panel</h3>
               <button
                 type="button"
                 className="btn btn--ghost"
@@ -382,7 +307,7 @@ export default function ServicesAdminPanel() {
               {activeServiceForPanel.category ? <p className="admin-barber-today-line">Category: {activeServiceForPanel.category}</p> : null}
 
               <div className="admin-service-assigned-barbers">
-                <h4>Barbers assigned to this service</h4>
+                <h4>Barbers assigned to this service.</h4>
                 {activeServiceForPanel.barberServices && activeServiceForPanel.barberServices.length > 0 ? (
                   <ul>
                     {activeServiceForPanel.barberServices.map((relation) => (
@@ -400,7 +325,7 @@ export default function ServicesAdminPanel() {
 
             <div className="admin-barber-sheet-footer admin-service-sheet-foot">
               <button type="button" className="btn btn--primary" onClick={() => void toggleActive(activeServiceForPanel)}>
-                {activeServiceForPanel.isActive ? 'Deactivate service' : 'Activate service'}
+                {activeServiceForPanel.isActive ? 'Deactivate' : 'Activate'}
               </button>
               <button
                 type="button"
@@ -410,7 +335,7 @@ export default function ServicesAdminPanel() {
                   startEdit(activeServiceForPanel);
                 }}
               >
-                Edit details
+                Edit service
               </button>
             </div>
           </section>
