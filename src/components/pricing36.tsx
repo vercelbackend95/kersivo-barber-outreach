@@ -9,7 +9,7 @@ interface Pricing36Props {
 
 const Pricing36 = ({ className }: Pricing36Props) => {
   return (
-    <section className={cn("pricing36 py-32", className)}>
+    <section className={cn("py-32", className)}>
       <div className="container">
         <div className="mx-auto grid max-w-4xl gap-6 md:grid-cols-2">
           <div className="flex flex-col gap-4">
