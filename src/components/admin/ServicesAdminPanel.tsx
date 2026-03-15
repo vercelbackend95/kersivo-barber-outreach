@@ -1,4 +1,11 @@
-import React, { useEffect, useMemo, useState } from 'react';
+import React, { useEffect, useMemo, useRef, useState } from 'react';
+import { SettingsGearIcon } from './SettingsGearIcon';
+
+type ServiceBarberRow = {
+  id: string;
+  name: string;
+  active: boolean;
+};
 
 type ServiceRow = {
   id: string;
@@ -10,6 +17,9 @@ type ServiceRow = {
   displayOrder: number;
   category?: string | null;
   isActive: boolean;
+  barberServices?: Array<{
+    barber: ServiceBarberRow;
+  }>;
 };
 
 type ServiceForm = {
@@ -31,7 +41,7 @@ const EMPTY_FORM: ServiceForm = {
   durationMinutes: '30',
   bufferMinutes: '0',
   displayOrder: '0',
-  isActive: true,
+  isActive: true
 };
 
 function formatPrice(pence: number) {
@@ -59,8 +69,15 @@ export default function ServicesAdminPanel() {
   const [message, setMessage] = useState<string>('');
   const [error, setError] = useState<string>('');
   const [isServiceSheetOpen, setIsServiceSheetOpen] = useState(false);
+  const [openSettingsServiceId, setOpenSettingsServiceId] = useState<string | null>(null);
+  const [activeServiceForPanelId, setActiveServiceForPanelId] = useState<string | null>(null);
+  const settingsMenusRef = useRef<Record<string, HTMLDivElement | null>>({});
 
   const editingService = useMemo(() => services.find((s) => s.id === editingId) ?? null, [editingId, services]);
+  const activeServiceForPanel = useMemo(
+    () => services.find((service) => service.id === activeServiceForPanelId) ?? null,
+    [activeServiceForPanelId, services]
+  );
 
   async function fetchServices() {
     setLoading(true);
@@ -89,6 +106,46 @@ export default function ServicesAdminPanel() {
     };
   }, [isServiceSheetOpen]);
 
+  useEffect(() => {
+    if (!openSettingsServiceId) return undefined;
+
+    const onMouseDown = (event: MouseEvent) => {
+      const menuElement = settingsMenusRef.current[openSettingsServiceId];
+      if (!menuElement?.contains(event.target as Node)) {
+        setOpenSettingsServiceId(null);
+      }
+    };
+
+    const onKeyDown = (event: KeyboardEvent) => {
+      if (event.key === 'Escape') {
+        setOpenSettingsServiceId(null);
+      }
+    };
+
+    document.addEventListener('mousedown', onMouseDown);
+    document.addEventListener('keydown', onKeyDown);
+
+    return () => {
+      document.removeEventListener('mousedown', onMouseDown);
+      document.removeEventListener('keydown', onKeyDown);
+    };
+  }, [openSettingsServiceId]);
+
+  useEffect(() => {
+    if (!activeServiceForPanel) return undefined;
+
+    const onKeyDown = (event: KeyboardEvent) => {
+      if (event.key === 'Escape') {
+        setActiveServiceForPanelId(null);
+      }
+    };
+
+    document.addEventListener('keydown', onKeyDown);
+    return () => {
+      document.removeEventListener('keydown', onKeyDown);
+    };
+  }, [activeServiceForPanel]);
+
   function openCreateServiceSheet() {
     setEditingId(null);
     setForm(EMPTY_FORM);
@@ -107,7 +164,7 @@ export default function ServicesAdminPanel() {
       durationMinutes: String(service.durationMinutes),
       bufferMinutes: String(service.bufferMinutes),
       displayOrder: String(service.displayOrder),
-      isActive: service.isActive,
+      isActive: service.isActive
     });
     setMessage('');
     setError('');
@@ -138,7 +195,7 @@ export default function ServicesAdminPanel() {
       durationMinutes: Number(form.durationMinutes),
       bufferMinutes: Number(form.bufferMinutes),
       displayOrder: Number(form.displayOrder),
-      isActive: form.isActive,
+      isActive: form.isActive
     };
 
     const endpoint = editingId ? `/api/admin/services/${editingId}` : '/api/admin/services';
@@ -148,7 +205,7 @@ export default function ServicesAdminPanel() {
       method,
       credentials: 'include',
       headers: { 'content-type': 'application/json' },
-      body: JSON.stringify(payload),
+      body: JSON.stringify(payload)
     });
 
     if (!res.ok) {
@@ -169,12 +226,14 @@ export default function ServicesAdminPanel() {
       method: 'PATCH',
       credentials: 'include',
       headers: { 'content-type': 'application/json' },
-      body: JSON.stringify({ isActive: !service.isActive }),
+      body: JSON.stringify({ isActive: !service.isActive })
     });
 
     if (res.ok) {
       setMessage(service.isActive ? 'Service deactivated.' : 'Service activated.');
       setError('');
+      setActiveServiceForPanelId(null);
+      setOpenSettingsServiceId(null);
       await fetchServices();
       return;
     }
@@ -187,12 +246,6 @@ export default function ServicesAdminPanel() {
       <h1>SERVICES</h1>
       <p className="muted">Manage service catalog and pricing for all new bookings.</p>
 
-      <div className="admin-services-head-row">
-        <button type="button" className="btn btn--primary" onClick={openCreateServiceSheet}>
-          Add service
-        </button>
-      </div>
-
       {message ? <p className="admin-inline-success">{message}</p> : null}
       {error ? <p className="admin-inline-error">{error}</p> : null}
 
@@ -201,41 +254,168 @@ export default function ServicesAdminPanel() {
 
       <div className="admin-barber-list-wrap">
         <ul className="admin-barber-grid admin-services-grid" aria-label="Services list">
-          {services.map((service) => (
-            <li key={service.id} className={`admin-barber-card admin-service-list-card ${service.isActive ? '' : 'is-inactive'}`}>
-              <button type="button" className="admin-barber-identity admin-service-identity" onClick={() => startEdit(service)}>
-                <div className="admin-service-copy">
-                  <div className="admin-barber-name-row">
-                    <p className="admin-barber-name">{service.name}</p>
-                    <span className="admin-barber-status-indicator" role="status" aria-label={service.isActive ? 'Active' : 'Inactive'}>
-                      <span className={`admin-status-dot ${service.isActive ? 'is-active' : 'is-inactive'}`} aria-hidden="true" />
-                    </span>
-                  </div>
-                  <p className="admin-barber-next-line">{getServiceMeta(service)}</p>
-                  {service.category ? <p className="admin-barber-today-line">Category: {service.category}</p> : null}
-                  {service.description ? <p className="admin-barber-today-line">{service.description}</p> : null}
-                </div>
-              </button>
+          {services.map((service) => {
+            const assignedBarbers = (service.barberServices ?? []).map((relation) => relation.barber);
 
-              <div className="admin-barber-actions admin-service-card-actions">
-                <button type="button" className="btn btn--secondary" onClick={() => startEdit(service)}>
-                  Edit
+            return (
+              <li key={service.id} className={`admin-barber-card admin-service-list-card ${service.isActive ? '' : 'is-inactive'}`}>
+                <button type="button" className="admin-barber-identity admin-service-identity" onClick={() => startEdit(service)}>
+                  <div className="admin-service-copy">
+                    <div className="admin-barber-name-row">
+                      <p className="admin-barber-name">{service.name}</p>
+                      <span className="admin-barber-status-indicator" role="status" aria-label={service.isActive ? 'Active' : 'Inactive'}>
+                        <span className={`admin-status-dot ${service.isActive ? 'is-active' : 'is-inactive'}`} aria-hidden="true" />
+                      </span>
+                    </div>
+                    <p className="admin-barber-next-line">{getServiceMeta(service)}</p>
+                    {service.category ? <p className="admin-barber-today-line">Category: {service.category}</p> : null}
+                    {service.description ? <p className="admin-barber-today-line">{service.description}</p> : null}
+                  </div>
                 </button>
-                <button type="button" className="btn btn--ghost" onClick={() => void toggleActive(service)}>
-                  {service.isActive ? 'Deactivate' : 'Activate'}
-                </button>
-              </div>
-            </li>
-          ))}
+
+                <div className="admin-barber-actions admin-service-card-actions">
+                  <div
+                    className="admin-barber-actions-menu"
+                    ref={(node) => {
+                      settingsMenusRef.current[service.id] = node;
+                    }}
+                  >
+                    <button
+                      type="button"
+                      className={`admin-reorder-btn admin-reorder-btn--settings ${openSettingsServiceId === service.id ? 'is-open' : ''}`}
+                      onClick={() => setOpenSettingsServiceId((current) => (current === service.id ? null : service.id))}
+                      aria-label={`Open ${service.name} settings`}
+                      aria-expanded={openSettingsServiceId === service.id}
+                      aria-haspopup="menu"
+                    >
+                      <SettingsGearIcon className="admin-control-icon" />
+                    </button>
+
+                    {openSettingsServiceId === service.id ? (
+                      <div className="admin-barber-actions-dropdown admin-service-actions-dropdown" role="menu" aria-label={`${service.name} actions`}>
+                        <button
+                          type="button"
+                          role="menuitem"
+                          className="admin-barber-actions-dropdown-item"
+                          onClick={() => {
+                            setOpenSettingsServiceId(null);
+                            setActiveServiceForPanelId(service.id);
+                          }}
+                        >
+                          Open service panel
+                        </button>
+                        <button
+                          type="button"
+                          role="menuitem"
+                          className="admin-barber-actions-dropdown-item"
+                          onClick={() => {
+                            setOpenSettingsServiceId(null);
+                            void toggleActive(service);
+                          }}
+                        >
+                          {service.isActive ? 'Deactivate' : 'Activate'}
+                        </button>
+                        <button
+                          type="button"
+                          role="menuitem"
+                          className="admin-barber-actions-dropdown-item"
+                          onClick={() => {
+                            setOpenSettingsServiceId(null);
+                            startEdit(service);
+                          }}
+                        >
+                          Edit service
+                        </button>
+                        <p className="admin-service-actions-meta" aria-live="polite">
+                          Barbers assigned: {assignedBarbers.length}
+                        </p>
+                      </div>
+                    ) : null}
+                  </div>
+                </div>
+              </li>
+            );
+          })}
 
           <li className="admin-barber-card admin-barber-card--add admin-service-card--add">
             <button type="button" className="admin-barber-add-btn" onClick={openCreateServiceSheet}>
-              <span className="admin-barber-add-icon" aria-hidden="true">+</span>
+              <span className="admin-barber-add-icon" aria-hidden="true">
+                +
+              </span>
               <span>Add service</span>
             </button>
           </li>
         </ul>
       </div>
+
+      {activeServiceForPanel ? (
+        <div
+          className="admin-barber-sheet-layer"
+          role="dialog"
+          aria-modal="true"
+          aria-label={`${activeServiceForPanel.name} settings`}
+          onMouseDown={(event) => {
+            if (event.target === event.currentTarget) {
+              setActiveServiceForPanelId(null);
+            }
+          }}
+        >
+          <section className="admin-barber-sheet admin-service-sheet" onMouseDown={(event) => event.stopPropagation()}>
+            <div className="admin-barber-sheet-head">
+              <h3>{activeServiceForPanel.name} settings</h3>
+              <button
+                type="button"
+                className="btn btn--ghost"
+                onClick={() => setActiveServiceForPanelId(null)}
+                aria-label="Close service settings"
+              >
+                ✕
+              </button>
+            </div>
+
+            <div className="admin-barber-sheet-content admin-service-sheet-content">
+              <p className="admin-barber-status-line">
+                <span className={`admin-status-dot ${activeServiceForPanel.isActive ? 'is-active' : 'is-inactive'}`} aria-hidden="true" />
+                {activeServiceForPanel.isActive ? 'Active' : 'Inactive'}
+              </p>
+              <p className="admin-barber-next-line">{getServiceMeta(activeServiceForPanel)}</p>
+              {activeServiceForPanel.category ? <p className="admin-barber-today-line">Category: {activeServiceForPanel.category}</p> : null}
+
+              <div className="admin-service-assigned-barbers">
+                <h4>Barbers assigned to this service</h4>
+                {activeServiceForPanel.barberServices && activeServiceForPanel.barberServices.length > 0 ? (
+                  <ul>
+                    {activeServiceForPanel.barberServices.map((relation) => (
+                      <li key={relation.barber.id}>
+                        <span>{relation.barber.name}</span>
+                        <span className={`admin-status-dot ${relation.barber.active ? 'is-active' : 'is-inactive'}`} aria-hidden="true" />
+                      </li>
+                    ))}
+                  </ul>
+                ) : (
+                  <p className="muted">No barbers assigned yet.</p>
+                )}
+              </div>
+            </div>
+
+            <div className="admin-barber-sheet-footer admin-service-sheet-foot">
+              <button type="button" className="btn btn--primary" onClick={() => void toggleActive(activeServiceForPanel)}>
+                {activeServiceForPanel.isActive ? 'Deactivate service' : 'Activate service'}
+              </button>
+              <button
+                type="button"
+                className="btn btn--secondary"
+                onClick={() => {
+                  setActiveServiceForPanelId(null);
+                  startEdit(activeServiceForPanel);
+                }}
+              >
+                Edit details
+              </button>
+            </div>
+          </section>
+        </div>
+      ) : null}
 
       {isServiceSheetOpen ? (
         <div
@@ -249,14 +429,15 @@ export default function ServicesAdminPanel() {
             }
           }}
         >
-          <form
-            className="admin-barber-sheet admin-service-sheet"
-            onSubmit={submitForm}
-            onMouseDown={(event) => event.stopPropagation()}
-          >
+          <form className="admin-barber-sheet admin-service-sheet" onSubmit={submitForm} onMouseDown={(event) => event.stopPropagation()}>
             <div className="admin-barber-sheet-head">
               <h3>{editingId ? 'Edit service' : 'Add service'}</h3>
-              <button type="button" className="btn btn--ghost" onClick={() => setIsServiceSheetOpen(false)} aria-label="Close service form">
+              <button
+                type="button"
+                className="btn btn--ghost"
+                onClick={() => setIsServiceSheetOpen(false)}
+                aria-label="Close service form"
+              >
                 ✕
               </button>
             </div>

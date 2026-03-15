@@ -20,7 +20,25 @@ export const GET: APIRoute = async (ctx) => {
   if (unauthorized) return unauthorized;
 
   const services = await prisma.service.findMany({
-    orderBy: [{ displayOrder: 'asc' }, { createdAt: 'asc' }]
+    orderBy: [{ displayOrder: 'asc' }, { createdAt: 'asc' }],
+    include: {
+      barberServices: {
+        orderBy: {
+          barber: {
+            sortOrder: 'asc'
+          }
+        },
+        select: {
+          barber: {
+            select: {
+              id: true,
+              name: true,
+              active: true
+            }
+          }
+        }
+      }
+    }
   });
 
 
