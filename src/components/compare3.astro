@@ -28,7 +28,6 @@ const comparisonRows = [
 ];
 ---
 
-
 <section class="compare3-block" aria-label="Comparison">
   <div class="container">
     <div class="compare3-block__header">
@@ -38,104 +37,50 @@ const comparisonRows = [
         A premium website, bookings, admin and retail flow — all working together in one place.
       </p>
     </div>
-    <div class="compare3-block__desktop" aria-hidden="false">
-      <div class="compare3-block__table-wrap">
-        <div class="compare3-block__grid" role="table" aria-label="Comparison table">
-          <div class="compare3-block__cell compare3-block__brand compare3-block__brand--highlight" role="columnheader">
-            <img
-              src="https://deifkwefumgah.cloudfront.net/shadcnblocks/block/block-1.svg"
-              alt="Kersivo logo"
-              class="compare3-block__logo"
-              loading="lazy"
-              decoding="async"
-            />
-            <p class="compare3-block__brand-title">Kersivo</p>
-            <p class="compare3-block__brand-copy">Premium barber website system</p>
-          </div>
-          <div class="compare3-block__cell compare3-block__brand" role="columnheader">
-            <img
-              src="https://deifkwefumgah.cloudfront.net/shadcnblocks/block/block-2.svg"
-              alt="Typical alternatives"
-              class="compare3-block__logo"
-              loading="lazy"
-              decoding="async"
-            />
-            <p class="compare3-block__brand-title">Typical alternatives</p>
-            <p class="compare3-block__brand-copy">Templates, platforms or disconnected tools</p>
-          </div>
-          {
-            comparisonRows.map((row) => (
-              <>
-                <div class="compare3-block__cell compare3-block__value compare3-block__value--highlight">
-                  <span class="compare3-block__row-title">{row.title}</span>
-                  <span class="compare3-block__status compare3-block__status--ok">✓</span>
-                  <span>{row.kersivo}</span>
-                </div>
-                <div class="compare3-block__cell compare3-block__value">
-                  <span class="compare3-block__row-title">{row.title}</span>
-                  <span class="compare3-block__status compare3-block__status--bad">−</span>
-                  <span>{row.alternatives}</span>
-                </div>
-              </>
-            ))
-          }
-          <div class="compare3-block__cell compare3-block__cta-wrap compare3-block__value--highlight">
-            <a class="compare3-block__cta" href="#book-demo" data-demo-cta>Book a demo</a>
-          </div>
 
-        </div>
-
-      </div>
-    </div>
-
-    <div class="compare3-block__mobile" aria-label="Mobile comparison">
-      <div class="compare3-block__mobile-grid" role="table" aria-label="Comparison table mobile">
-        <div class="compare3-block__mobile-cell compare3-block__mobile-brand compare3-block__mobile-brand--highlight" role="columnheader">
-                    <img
+    <div class="compare3-block__table-wrap">
+      <div class="compare3-block__grid" role="table" aria-label="Comparison table">
+        <div class="compare3-block__cell compare3-block__brand compare3-block__brand--highlight" role="columnheader">
+          <img
             src="https://deifkwefumgah.cloudfront.net/shadcnblocks/block/block-1.svg"
             alt="Kersivo logo"
             class="compare3-block__logo"
             loading="lazy"
             decoding="async"
           />
-
           <p class="compare3-block__brand-title">Kersivo</p>
           <p class="compare3-block__brand-copy">Premium barber website system</p>
         </div>
-        <div class="compare3-block__mobile-cell compare3-block__mobile-brand" role="columnheader">
-                    <img
+        <div class="compare3-block__cell compare3-block__brand" role="columnheader">
+          <img
             src="https://deifkwefumgah.cloudfront.net/shadcnblocks/block/block-2.svg"
             alt="Typical alternatives"
             class="compare3-block__logo"
             loading="lazy"
             decoding="async"
           />
-
           <p class="compare3-block__brand-title">Typical alternatives</p>
           <p class="compare3-block__brand-copy">Templates, platforms or disconnected tools</p>
         </div>
         {
           comparisonRows.map((row) => (
             <>
-              <div class="compare3-block__mobile-cell compare3-block__mobile-value compare3-block__mobile-value--highlight">
+              <div class="compare3-block__cell compare3-block__value compare3-block__value--highlight">
+                <span class="compare3-block__row-title">{row.title}</span>
                 <span class="compare3-block__status compare3-block__status--ok">✓</span>
                 <span>{row.kersivo}</span>
-
               </div>
-              <div class="compare3-block__mobile-cell compare3-block__mobile-value">
+              <div class="compare3-block__cell compare3-block__value">
+                <span class="compare3-block__row-title">{row.title}</span>
                 <span class="compare3-block__status compare3-block__status--bad">−</span>
                 <span>{row.alternatives}</span>
-
               </div>
-
             </>
           ))
         }
-                <div class="compare3-block__mobile-cell compare3-block__mobile-cta-cell compare3-block__mobile-value--highlight">
+        <div class="compare3-block__cell compare3-block__cta-wrap compare3-block__value--highlight">
           <a class="compare3-block__cta" href="#book-demo" data-demo-cta>Book a demo</a>
         </div>
-        <div class="compare3-block__mobile-cell compare3-block__mobile-cta-spacer" aria-hidden="true"></div>
-
       </div>
     </div>
   </div>
