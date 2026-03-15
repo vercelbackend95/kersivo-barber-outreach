@@ -31,7 +31,7 @@ const EMPTY_FORM: ServiceForm = {
   durationMinutes: '30',
   bufferMinutes: '0',
   displayOrder: '0',
-  isActive: true
+  isActive: true,
 };
 
 function formatPrice(pence: number) {
@@ -44,6 +44,13 @@ function toPence(input: string): number {
   return Math.round(n * 100);
 }
 
+function getServiceMeta(service: ServiceRow) {
+  const chunks = [`${formatPrice(service.pricePence)}`, `${service.durationMinutes} min`];
+  if (service.bufferMinutes > 0) chunks.push(`Buffer ${service.bufferMinutes} min`);
+  chunks.push(`Order ${service.displayOrder}`);
+  return chunks.join(' · ');
+}
+
 export default function ServicesAdminPanel() {
   const [services, setServices] = useState<ServiceRow[]>([]);
   const [loading, setLoading] = useState(true);
@@ -51,6 +58,7 @@ export default function ServicesAdminPanel() {
   const [form, setForm] = useState<ServiceForm>(EMPTY_FORM);
   const [message, setMessage] = useState<string>('');
   const [error, setError] = useState<string>('');
+  const [isServiceSheetOpen, setIsServiceSheetOpen] = useState(false);
 
   const editingService = useMemo(() => services.find((s) => s.id === editingId) ?? null, [editingId, services]);
 
@@ -66,6 +74,29 @@ export default function ServicesAdminPanel() {
     void fetchServices();
   }, []);
 
+  useEffect(() => {
+    if (!isServiceSheetOpen) return undefined;
+
+    const onKeyDown = (event: KeyboardEvent) => {
+      if (event.key === 'Escape') {
+        setIsServiceSheetOpen(false);
+      }
+    };
+
+    window.addEventListener('keydown', onKeyDown);
+    return () => {
+      window.removeEventListener('keydown', onKeyDown);
+    };
+  }, [isServiceSheetOpen]);
+
+  function openCreateServiceSheet() {
+    setEditingId(null);
+    setForm(EMPTY_FORM);
+    setError('');
+    setMessage('');
+    setIsServiceSheetOpen(true);
+  }
+
   function startEdit(service: ServiceRow) {
     setEditingId(service.id);
     setForm({
@@ -76,10 +107,11 @@ export default function ServicesAdminPanel() {
       durationMinutes: String(service.durationMinutes),
       bufferMinutes: String(service.bufferMinutes),
       displayOrder: String(service.displayOrder),
-      isActive: service.isActive
+      isActive: service.isActive,
     });
     setMessage('');
     setError('');
+    setIsServiceSheetOpen(true);
   }
 
   async function submitForm(event: React.FormEvent) {
@@ -106,7 +138,7 @@ export default function ServicesAdminPanel() {
       durationMinutes: Number(form.durationMinutes),
       bufferMinutes: Number(form.bufferMinutes),
       displayOrder: Number(form.displayOrder),
-      isActive: form.isActive
+      isActive: form.isActive,
     };
 
     const endpoint = editingId ? `/api/admin/services/${editingId}` : '/api/admin/services';
@@ -116,7 +148,7 @@ export default function ServicesAdminPanel() {
       method,
       credentials: 'include',
       headers: { 'content-type': 'application/json' },
-      body: JSON.stringify(payload)
+      body: JSON.stringify(payload),
     });
 
     if (!res.ok) {
@@ -128,6 +160,7 @@ export default function ServicesAdminPanel() {
     setMessage(editingId ? 'Service updated.' : 'Service created.');
     setEditingId(null);
     setForm(EMPTY_FORM);
+    setIsServiceSheetOpen(false);
     await fetchServices();
   }
 
@@ -136,7 +169,7 @@ export default function ServicesAdminPanel() {
       method: 'PATCH',
       credentials: 'include',
       headers: { 'content-type': 'application/json' },
-      body: JSON.stringify({ isActive: !service.isActive })
+      body: JSON.stringify({ isActive: !service.isActive }),
     });
 
     if (res.ok) {
@@ -150,75 +183,181 @@ export default function ServicesAdminPanel() {
   }
 
   return (
-    <section className="surface booking-shell">
+    <section className="surface booking-shell admin-services-shell">
       <h1>SERVICES</h1>
       <p className="muted">Manage service catalog and pricing for all new bookings.</p>
 
-      <form onSubmit={submitForm} className="admin-service-form">
-        <label>Service name</label>
-        <input value={form.name} onChange={(e) => setForm((c) => ({ ...c, name: e.target.value }))} required />
+      <div className="admin-services-head-row">
+        <button type="button" className="btn btn--primary" onClick={openCreateServiceSheet}>
+          Add service
+        </button>
+      </div>
 
-        <label>Description (optional)</label>
-        <input value={form.description} onChange={(e) => setForm((c) => ({ ...c, description: e.target.value }))} />
-
-        <label>Category (optional)</label>
-        <input value={form.category} onChange={(e) => setForm((c) => ({ ...c, category: e.target.value }))} />
-
-        <div className="admin-service-form-grid">
-          <div>
-            <label>Price (GBP)</label>
-            <input value={form.priceGbp} onChange={(e) => setForm((c) => ({ ...c, priceGbp: e.target.value }))} required />
-          </div>
-          <div>
-            <label>Duration (minutes)</label>
-            <input type="number" min={5} value={form.durationMinutes} onChange={(e) => setForm((c) => ({ ...c, durationMinutes: e.target.value }))} required />
-          </div>
-          <div>
-            <label>Buffer (minutes)</label>
-            <input type="number" min={0} value={form.bufferMinutes} onChange={(e) => setForm((c) => ({ ...c, bufferMinutes: e.target.value }))} />
-          </div>
-          <div>
-            <label>Display order</label>
-            <input type="number" min={0} value={form.displayOrder} onChange={(e) => setForm((c) => ({ ...c, displayOrder: e.target.value }))} />
-          </div>
-        </div>
-
-        <label className="admin-service-checkbox">
-          <input type="checkbox" checked={form.isActive} onChange={(e) => setForm((c) => ({ ...c, isActive: e.target.checked }))} />
-          <span>Active</span>
-        </label>
-
-        <div className="admin-service-actions">
-          <button type="submit" className="btn btn--primary">{editingId ? 'Update service' : 'Create service'}</button>
-          {editingId ? (
-            <button type="button" className="btn btn--secondary" onClick={() => { setEditingId(null); setForm(EMPTY_FORM); }}>
-              Cancel edit
-            </button>
-          ) : null}
-        </div>
-      </form>
-
-      {message ? <p>{message}</p> : null}
-      {error ? <p className="admin-error-text">{error}</p> : null}
+      {message ? <p className="admin-inline-success">{message}</p> : null}
+      {error ? <p className="admin-inline-error">{error}</p> : null}
 
       {loading ? <p className="muted">Loading services…</p> : null}
-      {!loading && services.length === 0 ? <p className="muted">No services yet. Create your first service.</p> : null}
+      {!loading && services.length === 0 ? <p className="muted">No services yet. Add your first service.</p> : null}
 
-      <div className="admin-services-list">
-        {services.map((service) => (
-          <article key={service.id} className="admin-service-card">
-            <div>
-              <p><strong>{service.name}</strong> {service.isActive ? '' : '(Inactive)'}</p>
-              <p className="muted">{formatPrice(service.pricePence)} · {service.durationMinutes} min · Order {service.displayOrder}</p>
-              {service.description ? <p className="muted">{service.description}</p> : null}
-            </div>
-            <div className="admin-service-card-actions">
-              <button type="button" className="btn btn--secondary" onClick={() => startEdit(service)}>Edit</button>
-              <button type="button" className="btn btn--ghost" onClick={() => void toggleActive(service)}>{service.isActive ? 'Deactivate' : 'Activate'}</button>
-            </div>
-          </article>
-        ))}
+      <div className="admin-barber-list-wrap">
+        <ul className="admin-barber-grid admin-services-grid" aria-label="Services list">
+          {services.map((service) => (
+            <li key={service.id} className={`admin-barber-card admin-service-list-card ${service.isActive ? '' : 'is-inactive'}`}>
+              <button type="button" className="admin-barber-identity admin-service-identity" onClick={() => startEdit(service)}>
+                <div className="admin-service-copy">
+                  <div className="admin-barber-name-row">
+                    <p className="admin-barber-name">{service.name}</p>
+                    <span className="admin-barber-status-indicator" role="status" aria-label={service.isActive ? 'Active' : 'Inactive'}>
+                      <span className={`admin-status-dot ${service.isActive ? 'is-active' : 'is-inactive'}`} aria-hidden="true" />
+                    </span>
+                  </div>
+                  <p className="admin-barber-next-line">{getServiceMeta(service)}</p>
+                  {service.category ? <p className="admin-barber-today-line">Category: {service.category}</p> : null}
+                  {service.description ? <p className="admin-barber-today-line">{service.description}</p> : null}
+                </div>
+              </button>
+
+              <div className="admin-barber-actions admin-service-card-actions">
+                <button type="button" className="btn btn--secondary" onClick={() => startEdit(service)}>
+                  Edit
+                </button>
+                <button type="button" className="btn btn--ghost" onClick={() => void toggleActive(service)}>
+                  {service.isActive ? 'Deactivate' : 'Activate'}
+                </button>
+              </div>
+            </li>
+          ))}
+
+          <li className="admin-barber-card admin-barber-card--add admin-service-card--add">
+            <button type="button" className="admin-barber-add-btn" onClick={openCreateServiceSheet}>
+              <span className="admin-barber-add-icon" aria-hidden="true">+</span>
+              <span>Add service</span>
+            </button>
+          </li>
+        </ul>
       </div>
+
+      {isServiceSheetOpen ? (
+        <div
+          className="admin-barber-sheet-layer"
+          role="dialog"
+          aria-modal="true"
+          aria-label={editingId ? 'Edit service' : 'Add service'}
+          onMouseDown={(event) => {
+            if (event.target === event.currentTarget) {
+              setIsServiceSheetOpen(false);
+            }
+          }}
+        >
+          <form
+            className="admin-barber-sheet admin-service-sheet"
+            onSubmit={submitForm}
+            onMouseDown={(event) => event.stopPropagation()}
+          >
+            <div className="admin-barber-sheet-head">
+              <h3>{editingId ? 'Edit service' : 'Add service'}</h3>
+              <button type="button" className="btn btn--ghost" onClick={() => setIsServiceSheetOpen(false)} aria-label="Close service form">
+                ✕
+              </button>
+            </div>
+
+            <div className="admin-barber-sheet-content admin-service-sheet-content">
+              <label htmlFor="service-name">Service name</label>
+              <input
+                id="service-name"
+                value={form.name}
+                onChange={(e) => setForm((c) => ({ ...c, name: e.target.value }))}
+                placeholder="e.g. Haircut"
+                required
+              />
+
+              <label htmlFor="service-description">Description (optional)</label>
+              <input
+                id="service-description"
+                value={form.description}
+                onChange={(e) => setForm((c) => ({ ...c, description: e.target.value }))}
+              />
+
+              <label htmlFor="service-category">Category (optional)</label>
+              <input
+                id="service-category"
+                value={form.category}
+                onChange={(e) => setForm((c) => ({ ...c, category: e.target.value }))}
+              />
+
+              <div className="admin-service-form-grid">
+                <div>
+                  <label htmlFor="service-price">Price (GBP)</label>
+                  <input
+                    id="service-price"
+                    value={form.priceGbp}
+                    onChange={(e) => setForm((c) => ({ ...c, priceGbp: e.target.value }))}
+                    required
+                  />
+                </div>
+                <div>
+                  <label htmlFor="service-duration">Duration (minutes)</label>
+                  <input
+                    id="service-duration"
+                    type="number"
+                    min={5}
+                    value={form.durationMinutes}
+                    onChange={(e) => setForm((c) => ({ ...c, durationMinutes: e.target.value }))}
+                    required
+                  />
+                </div>
+                <div>
+                  <label htmlFor="service-buffer">Buffer (minutes)</label>
+                  <input
+                    id="service-buffer"
+                    type="number"
+                    min={0}
+                    value={form.bufferMinutes}
+                    onChange={(e) => setForm((c) => ({ ...c, bufferMinutes: e.target.value }))}
+                  />
+                </div>
+                <div>
+                  <label htmlFor="service-order">Display order</label>
+                  <input
+                    id="service-order"
+                    type="number"
+                    min={0}
+                    value={form.displayOrder}
+                    onChange={(e) => setForm((c) => ({ ...c, displayOrder: e.target.value }))}
+                  />
+                </div>
+              </div>
+
+              <label className="admin-service-checkbox" htmlFor="service-active">
+                <input
+                  id="service-active"
+                  type="checkbox"
+                  checked={form.isActive}
+                  onChange={(e) => setForm((c) => ({ ...c, isActive: e.target.checked }))}
+                />
+                <span>Active</span>
+              </label>
+            </div>
+
+            <div className="admin-barber-sheet-footer admin-service-sheet-foot">
+              <button type="submit" className="btn btn--primary">
+                {editingId ? 'Update service' : 'Create service'}
+              </button>
+              <button
+                type="button"
+                className="btn btn--secondary"
+                onClick={() => {
+                  setEditingId(null);
+                  setForm(EMPTY_FORM);
+                  setIsServiceSheetOpen(false);
+                }}
+              >
+                Cancel
+              </button>
+            </div>
+          </form>
+        </div>
+      ) : null}
 
       {editingService ? <p className="muted">Editing: {editingService.name}</p> : null}
     </section>

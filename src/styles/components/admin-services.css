@@ -1,40 +1,72 @@
+.admin-services-shell {
+  width: 100%;
+}
+
+.admin-services-head-row {
+  display: flex;
+  justify-content: flex-start;
+  margin-top: 1rem;
+  margin-bottom: 0.75rem;
+}
+
+.admin-services-grid {
+  margin-top: 0.75rem;
+}
+
+.admin-service-list-card {
+  align-items: center;
+}
+
+.admin-service-identity {
+  grid-template-columns: 1fr;
+  align-items: center;
+}
+
+.admin-service-copy {
+  min-width: 0;
+  display: grid;
+  gap: 0.32rem;
+}
+
+.admin-service-card-actions {
+  flex-wrap: wrap;
+  justify-content: flex-end;
+}
+
+.admin-service-card--add {
+  min-height: 8.5rem;
+}
+
+.admin-service-sheet {
+  max-height: min(90dvh, 760px);
+}
+
+.admin-service-sheet-content {
+  gap: 0.72rem;
+}
+
 .admin-service-form-grid {
   display: grid;
   grid-template-columns: 1fr;
-  gap: 12px;
-}
-
-.admin-service-actions,
-.admin-service-card-actions {
-  display: flex;
-  gap: 8px;
-  flex-wrap: wrap;
-}
-
-.admin-services-list {
-  margin-top: 16px;
-  display: grid;
-  gap: 12px;
-}
-
-.admin-service-card {
-  border: 1px solid var(--border);
-  background: var(--surface);
-  padding: 12px;
-  display: flex;
-  justify-content: space-between;
-  gap: 12px;
-  align-items: flex-start;
+  gap: 0.72rem;
 }
 
 .admin-service-checkbox {
   display: inline-flex;
-  gap: 8px;
   align-items: center;
-  margin: 8px 0;
+  gap: 0.5rem;
+  margin-top: 0.25rem;
 }
 
-@media (min-width: 720px) {
+.admin-service-sheet-foot {
+  border-top: 1px solid var(--border);
+  padding: 1rem;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.6rem;
+}
+
+@media (min-width: 48rem) {
   .admin-service-form-grid {
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
