@@ -61,6 +61,10 @@ const Pricing36 = ({ className }: Pricing36Props) => {
                     <Check className="mt-1 size-4 shrink-0 text-green-500" />
                     <p className="font-medium">Shop setup for up to 20 products</p>
                   </li>
+                  <li className="flex gap-2">
+                    <Check className="mt-1 size-4 shrink-0 text-green-500" />
+                    <p className="font-medium">Mobile-first responsive build</p>
+                  </li>
                 </ul>
               </div>
               <a
@@ -77,7 +81,9 @@ const Pricing36 = ({ className }: Pricing36Props) => {
               <div className="h-full rounded-[31px] bg-background p-8">
                 <div className="flex items-center justify-between gap-2">
                   <p className="text-xl font-semibold">Premium</p>
-                  <p className="text-sm font-semibold text-primary">Recommended</p>
+                  <p className="recommended-badge text-sm font-semibold text-primary">
+                    Recommended
+                  </p>
                 </div>
                 <div className="mt-6 flex flex-col gap-2">
                   <p className="text-6xl font-bold">
@@ -88,8 +94,7 @@ const Pricing36 = ({ className }: Pricing36Props) => {
                   </p>
                   <p className="text-sm text-muted-foreground">
                     For barbershops that want a stronger online presence, a
-                    more advanced sales setup and a more premium overall
-                    presentation.
+                    sharper sales setup and a more premium customer experience.
                   </p>
                 </div>
                 <Separator className="my-6" />
@@ -122,7 +127,7 @@ const Pricing36 = ({ className }: Pricing36Props) => {
                   </li>
                   <li className="flex gap-2">
                     <Check className="mt-1 size-4 shrink-0 text-green-500" />
-                    <p className="font-medium">Launch campaign support included</p>
+                    <p className="font-medium">Launch promotion support included</p>
                   </li>
                 </ul>
               </div>
