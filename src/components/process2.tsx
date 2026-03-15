@@ -28,35 +28,35 @@ const Process2 = ({ className }: Process2Props) => {
   const process = [
     {
       step: "01",
-      title: "Discover & Research",
+      title: "Intro",
       image:
         "https://deifkwefumgah.cloudfront.net/shadcnblocks/block/guri4/img11.png",
       description:
-        "We begin by understanding your business goals, target audience, and current challenges. This phase involves research, analysis, and strategic planning to identify opportunities.",
+        "We start with a short conversation to understand your barbershop, services, style and what you want the website to do for you.",
     },
     {
       step: "02",
-      title: "Strategy & Planning",
+      title: "Content & Setup",
       image:
         "https://deifkwefumgah.cloudfront.net/shadcnblocks/block/guri4/img12.png",
       description:
-        "Based on our findings, we develop a comprehensive strategy that aligns with your objectives. This includes defining the approach, timeline, and key milestones for success.",
+        "You send over the key details — like your logo, photos, services, pricing, opening hours and products — and we shape the site structure from there.",
     },
     {
       step: "03",
-      title: "Execute & Develop",
+      title: "Build & Review",
       image:
         "https://deifkwefumgah.cloudfront.net/shadcnblocks/block/guri4/img10.png",
       description:
-        "We bring the strategy to life through careful implementation and development. Our team works collaboratively to ensure every detail meets your requirements and standards.",
+        "We build the website, booking system, shop and admin setup, then send it over for review so you can request a few final changes before launch.",
     },
     {
       step: "04",
-      title: "Optimize & Improve",
+      title: "Launch & Ongoing Care",
       image:
         "https://deifkwefumgah.cloudfront.net/shadcnblocks/block/guri4/img9.png",
       description:
-        "We continuously monitor performance and gather feedback to refine and improve the solution. This iterative process ensures long-term success and growth.",
+        "Once approved, we launch the site and keep it supported with hosting, maintenance, updates and ongoing admin access through the monthly care plan.",
     },
   ];
 
@@ -72,9 +72,8 @@ const Process2 = ({ className }: Process2Props) => {
               Our Process
             </h1>
             <p className="text-base text-foreground/50">
-              Lorem ipsum dolor, sit amet consectetur adipisicing elit. Maxime
-              amet dolorem eum est voluptatem id repellendus ut laborum
-              laboriosam debitis.
+              A simple, focused process that takes your barbershop from idea to
+              launch — without dragging things out.
             </p>
             <div className="relative h-90 overflow-hidden border">
               {previousActive !== undefined && (
