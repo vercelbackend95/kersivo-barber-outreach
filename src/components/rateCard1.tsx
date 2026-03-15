@@ -7,42 +7,37 @@ interface RateCard1Props {
   className?: string;
 }
 
-const BOOKING_CONDITIONS = [
-  "Minimal booking period — 2 months",
-  "Schedule a call if you need more clarification",
-  "Pause or cancel whenever you wish",
+const CARE_PLAN_BULLETS = [
+  "Hosting included",
+  "Security, updates and maintenance",
+  "Full admin system access",
 ];
 
-const PROCESS_STEPS = [
+const CARE_FEATURES = [
   {
-    step: "01",
-    title: "First Revision — 42 Hours",
+    title: "Hosting included",
     description:
-      "Initial pricing analysis and market research completed within 42 hours. We deliver focused recommendations based on competitor activity and your shop positioning.",
+      "Your website stays live, connected and reliably available with hosting handled for you.",
   },
   {
-    step: "02",
-    title: "Strategy Refinement — 72 Hours",
+    title: "Security monitoring",
     description:
-      "Detailed pricing model setup with clear service tiers and value communication. Every scenario is aligned to margin goals and booking demand.",
+      "Ongoing monitoring helps keep your site secure, stable and protected.",
   },
   {
-    step: "03",
-    title: "Implementation Plan — 5 Days",
+    title: "Maintenance and updates",
     description:
-      "Complete rollout roadmap with timeline and responsibilities. You get a practical launch sequence for updating pricing across channels.",
+      "We keep core parts of the site maintained so everything continues to run smoothly.",
   },
   {
-    step: "04",
-    title: "Testing & Optimization — 1 Week",
+    title: "1 hour of dev support each month",
     description:
-      "A/B testing setup and performance tracking for conversion and retention. We monitor key metrics and adjust pricing based on data.",
+      "Small edits, updates or improvements can be handled without starting from scratch every time.",
   },
   {
-    step: "05",
-    title: "Final Review — 10 Days",
+    title: "Full admin access",
     description:
-      "Comprehensive pricing audit with final recommendations and handoff materials so your team can manage pricing confidently.",
+      "You keep access to your admin system so you can manage bookings, content and products with ease.",
   },
 ];
 
@@ -52,10 +47,11 @@ const RateCard1 = ({ className }: RateCard1Props) => {
       <div className="container rate-card1__layout">
         <aside className="rate-card1__sidebar">
           <div className="rate-card1__heading-wrap">
+            <p className="rate-card1__eyebrow">ONGOING CARE</p>
             <h2 className="rate-card1__heading">
-              Simple
+              Keep your website running smoothly
               <br />
-              Pricing
+              after launch
             </h2>
             <Illustration className="rate-card1__mark rate-card1__mark--top" />
             <Illustration className="rate-card1__mark rate-card1__mark--bottom" />
@@ -63,24 +59,24 @@ const RateCard1 = ({ className }: RateCard1Props) => {
 
           <div className="rate-card1__price-block">
             <p className="rate-card1__price">
-              $3,499 <span>/month</span>
+              £40 <span>/month</span>
             </p>
-            <ul className="rate-card1__conditions" aria-label="Booking conditions">
-              {BOOKING_CONDITIONS.map((condition) => (
+            <ul className="rate-card1__conditions" aria-label="Monthly care plan includes">
+              {CARE_PLAN_BULLETS.map((condition) => (
                 <li key={condition}>{condition}</li>
               ))}
             </ul>
+            <p className="rate-card1__note">Every website runs on one simple monthly care plan after launch.</p>
           </div>
         </aside>
 
-        <ol className="rate-card1__steps" aria-label="Pricing delivery timeline">
-          {PROCESS_STEPS.map((step) => (
-            <li key={step.step} className="rate-card1__step-item">
+        <ol className="rate-card1__steps" aria-label="Ongoing care plan features">
+          {CARE_FEATURES.map((step) => (
+            <li key={step.title} className="rate-card1__step-item">
               <div className="rate-card1__step-icon" aria-hidden="true">
                 <Ticket className="rate-card1__ticket" />
               </div>
               <div>
-                <p className="rate-card1__step-number">Step {step.step}</p>
                 <h3>{step.title}</h3>
                 <p>{step.description}</p>
               </div>
