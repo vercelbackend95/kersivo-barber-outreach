@@ -73,7 +73,7 @@
 }
 
 .pricing36 .bg-background {
-  background: color-mix(in srgb, var(--fg) 96%, var(--bg));
+  background: var(--fg);
   color: var(--bg);
 }
 
