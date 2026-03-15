@@ -60,6 +60,21 @@ const ArrowRight = ({ ...props }: IconProps) => (
     <path d="m12 5 7 7-7 7" />
   </svg>
 );
+const Ticket = ({ ...props }: IconProps) => (
+  <svg
+    viewBox="0 0 24 24"
+    fill="none"
+    stroke="currentColor"
+    strokeWidth="2"
+    strokeLinecap="round"
+    strokeLinejoin="round"
+    {...props}
+  >
+    <path d="M2 9a3 3 0 0 1 0 6v3a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2v-3a3 3 0 0 1 0-6V6a2 2 0 0 0-2-2H4a2 2 0 0 0-2 2z" />
+    <path d="M13 5v14" />
+  </svg>
+);
+
 
 const Check = ({ ...props }: IconProps) => (
   <svg
@@ -75,4 +90,4 @@ const Check = ({ ...props }: IconProps) => (
   </svg>
 );
 
-export { ArrowRight, Check, Clock, CornerDownRight, Zap };
+export { ArrowRight, Check, Clock, CornerDownRight, Ticket, Zap };

@@ -1,0 +1,171 @@
+.rate-card1 {
+  padding: 5rem 0;
+}
+
+.rate-card1 .container {
+  width: min(100% - 2rem, 72rem);
+  margin-inline: auto;
+}
+
+.rate-card1__layout {
+  display: grid;
+  gap: 2rem;
+}
+
+.rate-card1__sidebar {
+  display: grid;
+  gap: 2rem;
+}
+
+.rate-card1__heading-wrap {
+  position: relative;
+  width: fit-content;
+}
+
+.rate-card1__heading {
+  margin: 0;
+  font-family: "Bebas Neue", sans-serif;
+  letter-spacing: 0.04em;
+  line-height: 0.95;
+  text-transform: uppercase;
+  font-size: clamp(2.5rem, 10vw, 4rem);
+  color: color-mix(in srgb, var(--fg) 22%, transparent);
+}
+
+.rate-card1__mark {
+  position: absolute;
+  color: var(--accent);
+}
+
+.rate-card1__mark--top {
+  top: 0;
+  right: -0.9rem;
+}
+
+.rate-card1__mark--bottom {
+  bottom: -0.35rem;
+  left: -0.9rem;
+  transform: rotate(180deg);
+}
+
+.rate-card1__price-block {
+  display: grid;
+  gap: 1rem;
+}
+
+.rate-card1__price {
+  margin: 0;
+  font-family: "Bebas Neue", sans-serif;
+  letter-spacing: 0.03em;
+  font-size: clamp(2.5rem, 9vw, 4.75rem);
+  color: var(--fg);
+  line-height: 1;
+}
+
+.rate-card1__price span {
+  font-family: Inter, sans-serif;
+  letter-spacing: normal;
+  font-size: clamp(1rem, 2.6vw, 1.15rem);
+  color: var(--muted);
+}
+
+.rate-card1__conditions {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  gap: 0.75rem;
+}
+
+.rate-card1__conditions li {
+  position: relative;
+  padding-left: 1.05rem;
+  font-size: 1rem;
+  color: var(--muted);
+  line-height: 1.5;
+}
+
+.rate-card1__conditions li::before {
+  content: "";
+  position: absolute;
+  left: 0;
+  top: 0.55rem;
+  width: 0.42rem;
+  height: 0.42rem;
+  background: var(--accent);
+}
+
+.rate-card1__steps {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+}
+
+.rate-card1__step-item {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  gap: 1rem;
+  border-bottom: 1px solid var(--border);
+  padding: 1.25rem 0;
+}
+
+.rate-card1__step-icon {
+  width: 2rem;
+  height: 2rem;
+  border: 1px solid var(--accent);
+  border-radius: 4px;
+  display: grid;
+  place-items: center;
+  flex-shrink: 0;
+}
+
+.rate-card1__ticket {
+  width: 1rem;
+  height: 1rem;
+  color: var(--accent);
+}
+
+.rate-card1__step-number {
+  margin: 0 0 0.25rem;
+  color: var(--muted);
+  font-size: 0.8rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.rate-card1__step-item h3 {
+  margin: 0 0 0.45rem;
+  font-family: "Bebas Neue", sans-serif;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+  font-size: clamp(1.3rem, 4vw, 1.8rem);
+  line-height: 1.1;
+  color: var(--fg);
+}
+
+.rate-card1__step-item p {
+  margin: 0;
+}
+
+.rate-card1__step-item > div:last-child > p:last-child {
+  color: var(--muted);
+  line-height: 1.55;
+}
+
+@media (min-width: 1024px) {
+  .rate-card1__layout {
+    grid-template-columns: minmax(0, 2fr) minmax(0, 3fr);
+    gap: 3.5rem;
+    align-items: start;
+  }
+
+  .rate-card1__sidebar {
+    position: sticky;
+    top: 5rem;
+  }
+
+  .rate-card1 {
+    padding: 7rem 0;
+  }
+}
