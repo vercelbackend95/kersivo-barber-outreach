@@ -52,11 +52,11 @@
 }
 
 .pricing36 .rounded-4xl {
-  border-radius: 2rem;
+  border-radius: 6px;
 }
 
 .pricing36 .rounded-\[31px\] {
-  border-radius: 31px;
+  border-radius: 4px;
 }
 
 .pricing36 .bg-gradient-to-r {
@@ -73,8 +73,8 @@
 }
 
 .pricing36 .bg-background {
-  background: color-mix(in srgb, var(--fg) 96%, var(--bg));
-  color: var(--bg);
+  background: var(--surface);
+  color: var(--fg);
 }
 
 .pricing36 .bg-background p,
@@ -82,11 +82,11 @@
 .pricing36 .bg-background .text-xl,
 .pricing36 .bg-background .text-6xl,
 .pricing36 .bg-background .font-medium {
-  color: var(--bg);
+  color: var(--fg);
 }
 
 .pricing36 .bg-background .text-muted-foreground {
-  color: color-mix(in srgb, var(--bg) 62%, var(--fg));
+  color: var(--muted);
 }
 
 .pricing36 .p-px {
