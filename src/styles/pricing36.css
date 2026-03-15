@@ -60,7 +60,7 @@
 }
 
 .pricing36 .bg-gradient-to-r {
-  background-image: linear-gradient(to right, var(--accent-hover), var(--focus));
+  background-image: linear-gradient(to right, var(--pricing-base-start), var(--pricing-base-end));
 }
 
 .pricing36 .from-blue-500,

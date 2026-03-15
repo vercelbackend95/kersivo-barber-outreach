@@ -9,6 +9,10 @@
   --accent-hover: #ff2e45;
   --focus: #ff4d5f;
   
+  /* Pricing (Base card) accent controls */
+  --pricing-base-start: #11151b;
+  --pricing-base-end: #11151b;
+
   --status-confirmed: #22c55e;
   --status-pending: #eab308;
   --status-rescheduled: #a855f7;
