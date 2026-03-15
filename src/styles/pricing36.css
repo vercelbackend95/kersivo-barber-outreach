@@ -60,7 +60,7 @@
 }
 
 .pricing36 .bg-gradient-to-r {
-  background-image: linear-gradient(to right, #3b82f6, #a855f7);
+  background-image: linear-gradient(to right, var(--accent-hover), var(--focus));
 }
 
 .pricing36 .from-blue-500,
@@ -69,11 +69,24 @@
 }
 
 .pricing36 .bg-primary {
-  background: #171923;
+  background: var(--surface);
 }
 
 .pricing36 .bg-background {
-  background: #f8fafc;
+  background: color-mix(in srgb, var(--fg) 96%, var(--bg));
+  color: var(--bg);
+}
+
+.pricing36 .bg-background p,
+.pricing36 .bg-background li,
+.pricing36 .bg-background .text-xl,
+.pricing36 .bg-background .text-6xl,
+.pricing36 .bg-background .font-medium {
+  color: var(--bg);
+}
+
+.pricing36 .bg-background .text-muted-foreground {
+  color: color-mix(in srgb, var(--bg) 62%, var(--fg));
 }
 
 .pricing36 .p-px {
@@ -149,16 +162,16 @@
 }
 
 .pricing36 .text-muted-foreground {
-  color: #64748b;
+  color: var(--muted);
 }
 
 .pricing36 .text-green-500 {
-  color: #22c55e;
+  color: var(--status-confirmed);
 }
 
 .pricing36 .text-background,
 .pricing36 .text-background:hover {
-  color: #f8fafc;
+  color: var(--fg);
 }
 
 .pricing36 .shrink-0 {
@@ -198,7 +211,7 @@
 }
 
 .pricing36 .separator {
-  background: #e2e8f0;
+  background: color-mix(in srgb, var(--bg) 14%, var(--fg));
 }
 
 .pricing36 .separator--horizontal {
