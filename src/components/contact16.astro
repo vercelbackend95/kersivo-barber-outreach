@@ -6,7 +6,9 @@ interface Contact16Props {
 const { className = "" } = Astro.props as Contact16Props;
 ---
 
-<section id="book-demo" class={`contact16 ${className}`.trim()} aria-labelledby="contact16-title">
+<section id="contact" class={`contact16 ${className}`.trim()} aria-labelledby="contact16-title">
+  <span id="book-demo" aria-hidden="true"></span>
+
   <div class="container">
     <h2 id="contact16-title" class="contact16__title">Book a demo</h2>
 

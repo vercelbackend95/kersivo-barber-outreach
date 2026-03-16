@@ -2,17 +2,19 @@
 import NavbarCartButton from '@/components/shop/NavbarCartButton.astro';
 
 const navLogo = {
-  url: '#',
+  url: '#home',
   src: 'https://deifkwefumgah.cloudfront.net/shadcnblocks/block/logos/shadcnblockscom-icon.svg',
   alt: 'Kersivo logo',
   title: 'Kersivo'
 };
 
 const navItems = [
-  { name: 'Home', link: '#' },
-  { name: 'Services', link: '#' },
-  { name: 'Pricing', link: '#' },
-  { name: 'Contact', link: '#' }
+  { name: 'Home', link: '#home' },
+  { name: 'System', link: '#system' },
+  { name: 'Pricing', link: '#pricing' },
+  { name: 'FAQ', link: '#faq' },
+  { name: 'Contact', link: '#contact' }
+
 ];
 ---
 
@@ -43,7 +45,6 @@ const navItems = [
 
     <div class="navbar17__actions">
       <NavbarCartButton class="navbar17__cart-btn" />
-      <a href="#" class="btn btn--secondary">Sign Up</a>
     </div>
 
     <NavbarCartButton class="navbar17__cart-btn navbar17__cart-btn--top-mobile" />
@@ -70,9 +71,6 @@ const navItems = [
       ))}
       <li class="navbar17__mobile-cart-wrap">
         <NavbarCartButton class="navbar17__cart-btn navbar17__cart-btn--mobile" />
-      </li>
-      <li class="navbar17__mobile-cta-wrap">
-        <a href="#" class="btn btn--secondary navbar17__mobile-cta">Sign Up</a>
       </li>
     </ul>
   </nav>
