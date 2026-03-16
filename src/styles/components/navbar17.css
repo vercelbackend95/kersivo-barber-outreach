@@ -230,49 +230,66 @@
 }
 
 .navbar17__mobile {
-  border-top: 1px solid var(--border);
-  background: color-mix(in srgb, var(--surface) 96%, transparent);
+  border-top: 1px solid color-mix(in srgb, var(--border) 70%, transparent);
+  background: linear-gradient(180deg, color-mix(in srgb, var(--surface) 94%, transparent), color-mix(in srgb, var(--bg) 88%, var(--surface)));
+
 }
 
 .navbar17__mobile ul {
   margin: 0;
-  padding: 0.75rem 1rem 1rem;
+  padding: 0.9rem 1rem 1.2rem;
   list-style: none;
+    display: grid;
+  gap: 0.18rem;
+
 }
 
 .navbar17__mobile-link {
+    position: relative;
   display: block;
-  border-left: 3px solid transparent;
-  padding: 0.7rem 0.85rem;
+  padding: 0.88rem 0.85rem 0.88rem 1.05rem;
   color: var(--muted);
   text-transform: uppercase;
-  letter-spacing: 0.06em;
-  font-size: 0.8rem;
+  letter-spacing: 0.08em;
+  font-size: 0.84rem;
+
   font-weight: 600;
   text-decoration: none;
+    border-left: 1px solid color-mix(in srgb, var(--border) 65%, transparent);
+  transition: color 180ms ease, border-color 180ms ease, background-color 180ms ease;
+
+}
+.navbar17__mobile-link::after {
+  content: '';
+  position: absolute;
+  left: 0;
+  top: 0.68rem;
+  bottom: 0.68rem;
+  width: 2px;
+  background: color-mix(in srgb, var(--accent) 82%, transparent);
+  opacity: 0;
+  transition: opacity 180ms ease;
+
 }
 
-.navbar17__mobile-link:hover,
-.navbar17__mobile-link.is-active {
-  border-left-color: var(--accent);
+.navbar17__mobile-link:hover {
   color: var(--fg);
-}
-.navbar17__mobile-cart-wrap {
-  padding: 0.65rem 0.25rem 0 0.25rem;
-}
+  border-left-color: color-mix(in srgb, var(--border) 30%, var(--accent));
 
-.navbar17__cart-btn--mobile {
-  width: 100%;
-  justify-content: center;
 }
 
 
-.navbar17__mobile-cta-wrap {
-  padding: 0.6rem 0.25rem 0 0.25rem;
+.navbar17__mobile-link.is-active {
+  color: var(--fg);
+  background: color-mix(in srgb, var(--surface) 70%, var(--accent) 30%);
+  border-left-color: color-mix(in srgb, var(--accent) 55%, var(--border));
+
 }
 
-.navbar17__mobile-cta {
-  width: 100%;
+.navbar17__mobile-link:hover::after,
+.navbar17__mobile-link.is-active::after {
+  opacity: 1;
+
 }
 
 .sr-only {
