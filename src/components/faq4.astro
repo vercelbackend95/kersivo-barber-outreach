@@ -15,42 +15,62 @@ interface Props {
 }
 
 const {
-  heading = "Common Questions & Answers",
-  subHeading = "Find out all the essential details about our platform and how it can serve your needs.",
+  heading = "Questions Barbers Usually Ask Before Launch",
+  subHeading = "Clear answers on what is included, how setup works, and how monthly care supports your shop after launch.",
   supportHeading = "Still have questions?",
-  supportText = "We're here to provide clarity and assist with any queries you may have.",
+  supportText = "If you want to talk through your shop's setup first, we can walk you through the best option.",
   supportLinkLabel = "Contact Support",
   supportLinkHref = "#",
   faqs = [
     {
-      question: "What is a FAQ and why is it important?",
+      question: "What’s included in the website system?",
       answer:
-        "FAQ stands for Frequently Asked Questions. It provides answers to common questions about a product or service. A clear FAQ helps visitors get instant information without contacting support.",
+        "Every website includes a custom barber website, built-in booking flow, shop setup, admin system access, mobile-first design, contact details, map and opening hours. Base and Premium differ in scope, polish and product capacity, but both are built around the same core system.",
     },
     {
-      question: "Why should I use a FAQ on my website or app?",
+      question: "What’s the difference between Base and Premium?",
       answer:
-        "A FAQ gives users quick help 24/7. It improves the customer experience and reduces repetitive support questions so your team can focus on higher-impact conversations.",
+        "Base is a strong starting point for shops that want a professional website with the full core system in place. Premium adds a more tailored presentation, a stronger homepage sales flow, more product capacity, featured product setup, priority launch and launch promotion support.",
     },
     {
-      question: "How do I effectively create a FAQ section?",
+      question: "Is booking included in every package?",
       answer:
-        "Start by collecting the most frequent questions from prospects and clients. Then write concise, practical answers in plain language and update them as your offer evolves.",
+        "Yes. Booking is part of the website system in both Base and Premium. If a shop strongly prefers an existing external booking tool, that can be discussed, but the system is built to work best with the integrated setup.",
     },
     {
-      question: "What are the benefits of having a well-maintained FAQ section?",
+      question: "Can I sell products through the site?",
       answer:
-        "It improves trust, shortens decision time, and lowers support load. A maintained FAQ keeps information accurate and helps users solve issues faster.",
+        "Yes. The system includes a built-in shop with pickup flow. Base includes setup for up to 20 products, while Premium includes setup for up to 50 products. If you choose not to use the shop, the package price does not change.",
     },
     {
-      question: "How should I organize my FAQ for optimal usability?",
+      question: "What does the £40/month care plan include?",
       answer:
-        "Group questions into clear categories and order them by priority. Keep each entry scannable with a short question title and a direct answer.",
+        "The monthly care plan keeps the full management side of the system running smoothly. It includes hosting, maintenance, security, updates, full admin access, shop management, booking management and 1 hour of small support updates each month.",
     },
     {
-      question: "How often should I update my FAQ, and why is it necessary?",
+      question: "Can I use the website without the monthly care plan?",
       answer:
-        "Review your FAQ regularly—especially after changing pricing, onboarding, integrations, or workflows. Current content prevents confusion and keeps conversion friction low.",
+        "Yes, but with limits. Your website can stay live, your contact form still works, and customers can still submit bookings. However, the full admin and management side of the system is tied to the care plan. That includes things like managing bookings, editing services, updating shop products, changing opening hours and handling the wider day-to-day system from the admin side.",
+    },
+    {
+      question: "How does payment work?",
+      answer:
+        "Projects are paid in two stages: 50% deposit to begin, and 50% before launch. Before the final payment, you’ll be able to review the site and request a small number of final adjustments if needed.",
+    },
+    {
+      question: "How long does a project usually take?",
+      answer:
+        "Most projects are completed in around 2 weeks, depending on the package, the materials provided and final revisions. Premium projects are given priority.",
+    },
+    {
+      question: "What do you need from me before you start?",
+      answer:
+        "The essentials are usually your logo, photos, service list, opening hours, contact details and product information if you want to use the shop. If you already have written content, that helps — but copy can also be created for you as part of the setup.",
+    },
+    {
+      question: "Do I need technical skills to use the system?",
+      answer:
+        "No. If you’re on the monthly care plan, the system is designed to be easy to manage through the admin side without technical knowledge. If you need larger changes beyond normal ongoing updates, those can be quoted separately.",
     },
   ],
 } = Astro.props as Props;
