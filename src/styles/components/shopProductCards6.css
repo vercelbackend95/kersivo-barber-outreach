@@ -187,13 +187,15 @@
 
   .shop6__grid {
     --shop6-mobile-gap: 0.65rem;
+    --shop6-mobile-columns: 2.15;
     display: grid;
     grid-auto-flow: column;
-    grid-auto-columns: calc((100% - (2 * var(--shop6-mobile-gap))) / 2.5);
+    grid-auto-columns: calc((100% - (2 * var(--shop6-mobile-gap))) / var(--shop6-mobile-columns));
     gap: var(--shop6-mobile-gap);
     overflow-x: auto;
     overscroll-behavior-x: contain;
     scroll-snap-type: x mandatory;
+    scroll-padding-inline: 0.2rem;
     scrollbar-width: thin;
     scrollbar-color: color-mix(in srgb, var(--border) 90%, transparent) transparent;
     padding-inline: 0.2rem 1rem;
@@ -201,7 +203,7 @@
   }
 
   .shop6__item {
-    scroll-snap-align: center;
+    scroll-snap-align: start;
     scroll-snap-stop: always;
   }
 
@@ -245,7 +247,8 @@
 @media (max-width: 28rem) {
   .shop6__grid {
     --shop6-mobile-gap: 0.55rem;
-    grid-auto-columns: calc((100% - (2 * var(--shop6-mobile-gap))) / 2.5);
+    --shop6-mobile-columns: 2.15;
+    grid-auto-columns: calc((100% - (2 * var(--shop6-mobile-gap))) / var(--shop6-mobile-columns));
     gap: var(--shop6-mobile-gap);
     padding-inline: 0.1rem 0.8rem;
   }
