@@ -356,12 +356,23 @@
   }
 
   .shop6__grid {
-    display: grid;
-    grid-template-columns: repeat(3, minmax(0, 1fr));
-    overflow: visible;
-    padding: 0;
+    --shop6-desktop-gap: 0.62rem;
+    --shop6-desktop-visible-cards: 3.3;
+    display: flex;
+    gap: var(--shop6-desktop-gap);
+    overflow-x: auto;
+    overscroll-behavior-x: contain;
+    scroll-snap-type: x mandatory;
+    scrollbar-width: none;
+    -ms-overflow-style: none;
+    padding: 0 0 0.45rem;
+
     margin: 0;
   }
+  .shop6__grid::-webkit-scrollbar {
+    display: none;
+  }
+
 
   .shop6__grid .shop-media {
     aspect-ratio: 1 / 1;
@@ -376,7 +387,10 @@
   }
 
   .shop6__item {
-    flex: initial;
+    flex: 0 0 calc((100% - (var(--shop6-desktop-gap) * (var(--shop6-desktop-visible-cards) - 1))) / var(--shop6-desktop-visible-cards));
+    scroll-snap-align: start;
+    scroll-snap-stop: always;
+
   }
 }
 
@@ -411,7 +425,7 @@
   }
 
   .shop6__grid {
-    gap: 0.62rem;
+    --shop6-desktop-gap: 0.62rem;
   }
 
   .shop6__image {
