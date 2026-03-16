@@ -416,60 +416,6 @@
 }
 
 
-.system-chooser__auth-note {
-  margin-top: auto;
-  border-top: 1px solid color-mix(in srgb, var(--border) 82%, transparent);
-  padding-top: var(--space-xs);
-  display: grid;
-  gap: 0.2rem;
-}
-
-.system-chooser__auth-note p {
-  margin: 0;
-  font-size: 0.78rem;
-  line-height: 1.35;
-}
-
-.system-chooser__auth-note p:first-child {
-  text-transform: uppercase;
-  letter-spacing: 0.05em;
-  color: color-mix(in srgb, var(--muted) 86%, var(--fg));
-}
-
-.system-chooser__auth-note strong {
-  color: var(--fg);
-  font-weight: 600;
-}
-
-.system-chooser__copy-password {
-  justify-self: start;
-  border: 1px solid color-mix(in srgb, var(--border) 88%, transparent);
-  border-radius: 0.25rem;
-  background: color-mix(in srgb, var(--bg) 68%, transparent);
-  color: color-mix(in srgb, var(--accent) 84%, var(--fg));
-  padding: 0.2rem 0.38rem;
-  margin-top: 0.22rem;
-  font-size: 0.74rem;
-
-  line-height: 1;
-  cursor: copy;
-}
-
-.system-chooser__copy-password:hover {
-  border-color: color-mix(in srgb, var(--accent) 45%, var(--border));
-  color: var(--accent-hover);
-    background: color-mix(in srgb, var(--surface) 84%, var(--accent) 16%);
-}
-
-.system-chooser__copy-password:focus-visible {
-  outline: 2px solid var(--focus);
-  outline-offset: 2px;
-}
-
-.system-chooser__copy-password:disabled {
-  cursor: default;
-  opacity: 0.85;
-}
 
 
 .system-chooser__tile:hover,

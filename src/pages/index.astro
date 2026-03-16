@@ -156,19 +156,7 @@ const DEMO_ADMIN_PASSWORD = import.meta.env.PUBLIC_DEMO_ADMIN_PASSWORD
           <article class="system-chooser__tile system-chooser__tile--admin" role="link" tabindex="0" data-tile-href="/admin?section=bookings_dashboard">
             <span class="system-chooser__tile-badge" aria-hidden="true">Admin view</span>
             <h3>Bookings Dashboard</h3>
-            <p>View schedules, bookings and daily availability in the admin.</p>
-            <div class="system-chooser__auth-note">
-              <p>Protected demo area</p>
-              <p>Password: <strong>{DEMO_ADMIN_PASSWORD}</strong></p>
-              <button
-                class="system-chooser__copy-password"
-                type="button"
-                data-copy-password
-                data-password={DEMO_ADMIN_PASSWORD}
-              >
-                <span data-copy-label>Copy password</span>
-              </button>
-            </div>
+            <p>Preview schedules, bookings and day-to-day admin in the guided demo view.</p>
           </article>
 
 
@@ -176,19 +164,7 @@ const DEMO_ADMIN_PASSWORD = import.meta.env.PUBLIC_DEMO_ADMIN_PASSWORD
             <span class="system-chooser__tile-badge" aria-hidden="true">Retail admin</span>
 
             <h3>Shop &amp; Pickup</h3>
-            <p>Open the retail area and manage pickup-ready products.</p>
-            <div class="system-chooser__auth-note">
-              <p>Protected demo area</p>
-              <p>Password: <strong>{DEMO_ADMIN_PASSWORD}</strong></p>
-              <button
-                class="system-chooser__copy-password"
-                type="button"
-                data-copy-password
-                data-password={DEMO_ADMIN_PASSWORD}
-              >
-                <span data-copy-label>Copy password</span>
-              </button>
-            </div>
+            <p>Open the retail demo to explore pickup-ready products and admin tools.</p>
           </article>
 
         </div>
@@ -234,7 +210,10 @@ const DEMO_ADMIN_PASSWORD = import.meta.env.PUBLIC_DEMO_ADMIN_PASSWORD
 </MainLayout>
 
 <script>
-  
+    const DEMO_ADMIN_SECRET = {JSON.stringify(DEMO_ADMIN_PASSWORD)};
+  const ADMIN_SECRET_STORAGE_KEY = 'kersivo.admin.secret';
+
+
   const demoCtas = document.querySelectorAll('[data-demo-cta]');
   const demoSection = document.querySelector('#book-demo');
     const demoForm = document.querySelector('.contact16__form');
@@ -311,6 +290,12 @@ const DEMO_ADMIN_PASSWORD = import.meta.env.PUBLIC_DEMO_ADMIN_PASSWORD
       if (!(tile instanceof HTMLElement)) return;
       const href = tile.dataset.tileHref;
       if (!href) return;
+      
+      if (href.startsWith('/admin') && DEMO_ADMIN_SECRET) {
+        window.localStorage.setItem(ADMIN_SECRET_STORAGE_KEY, DEMO_ADMIN_SECRET);
+      }
+
+
       closeChooser();
       window.location.href = href;
     };
@@ -319,7 +304,6 @@ const DEMO_ADMIN_PASSWORD = import.meta.env.PUBLIC_DEMO_ADMIN_PASSWORD
     chooser.addEventListener('click', (event) => {
      const target = event.target;
       if (!(target instanceof HTMLElement)) return;
-      if (target.closest('[data-copy-password]')) return;
       navigateToTile(target);
     });
 
@@ -329,86 +313,6 @@ const DEMO_ADMIN_PASSWORD = import.meta.env.PUBLIC_DEMO_ADMIN_PASSWORD
       if (event.key !== 'Enter' && event.key !== ' ') return;
       event.preventDefault();
       navigateToTile(event.target);
-    });
-
-    const copyPasswordButtons = chooser.querySelectorAll('[data-copy-password]');
-        const copyWithClipboardApi = async (value) => {
-      if (!navigator.clipboard || typeof navigator.clipboard.writeText !== 'function') {
-        return false;
-      }
-
-      await navigator.clipboard.writeText(value);
-      return true;
-    };
-
-    const copyWithExecCommandFallback = (value) => {
-      const tempTextarea = document.createElement('textarea');
-      tempTextarea.value = value;
-      tempTextarea.setAttribute('readonly', 'true');
-      tempTextarea.setAttribute('aria-hidden', 'true');
-      tempTextarea.style.position = 'fixed';
-      tempTextarea.style.top = '-9999px';
-      tempTextarea.style.left = '-9999px';
-      tempTextarea.style.opacity = '0';
-
-      document.body.append(tempTextarea);
-      tempTextarea.focus();
-      tempTextarea.select();
-      tempTextarea.setSelectionRange(0, tempTextarea.value.length);
-
-      let copied = false;
-      try {
-        copied = document.execCommand('copy');
-      } catch {
-        copied = false;
-      }
-
-      tempTextarea.remove();
-      return copied;
-    };
-
-    const copyPasswordText = async (value) => {
-      try {
-        const copiedWithClipboard = await copyWithClipboardApi(value);
-        if (copiedWithClipboard) return true;
-      } catch {
-        // continue to fallback for mobile browsers with restricted Clipboard API support
-      }
-
-      return copyWithExecCommandFallback(value);
-    };
-
-
-    copyPasswordButtons.forEach((button) => {
-      button.addEventListener('click', async (event) => {
-        event.stopPropagation();
-        event.preventDefault();
-
-        const buttonElement = event.currentTarget;
-        if (!(buttonElement instanceof HTMLButtonElement)) return;
-
-        const password = buttonElement.dataset.password ?? '';
-        const label = buttonElement.querySelector('[data-copy-label]');
-        if (!password || !(label instanceof HTMLElement)) return;
-
-        const originalText = 'Copy password';
-        const copied = await copyPasswordText(password);
-        if (copied) {
-          label.textContent = 'Copied';
-          buttonElement.disabled = true;
-          window.setTimeout(() => {
-            label.textContent = originalText;
-            buttonElement.disabled = false;
-          }, 1200);
-          return;
-        }
-        
-        label.textContent = 'Copy failed';
-        window.setTimeout(() => {
-          label.textContent = originalText;
-        }, 1200);
-      });
-
     });
 
     document.addEventListener('keydown', (event) => {
