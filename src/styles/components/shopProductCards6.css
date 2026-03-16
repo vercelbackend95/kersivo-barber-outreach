@@ -195,10 +195,10 @@
     overflow-x: auto;
     overscroll-behavior-x: contain;
     scroll-snap-type: x mandatory;
-    scroll-padding-inline: 0.2rem;
+    scroll-padding-inline: 0;
     scrollbar-width: thin;
     scrollbar-color: color-mix(in srgb, var(--border) 90%, transparent) transparent;
-    padding-inline: 0.2rem 1rem;
+    padding-inline: 0 1rem;
     padding-block-end: 0.45rem;
   }
 
@@ -250,7 +250,7 @@
     --shop6-mobile-columns: 2.15;
     grid-auto-columns: calc((100% - (2 * var(--shop6-mobile-gap))) / var(--shop6-mobile-columns));
     gap: var(--shop6-mobile-gap);
-    padding-inline: 0.1rem 0.8rem;
+    padding-inline: 0 0.8rem;
   }
 }
 
