@@ -117,7 +117,7 @@ const CATEGORY_LABELS: Record<string, string> = {
 <script>
   const desktopQuery = window.matchMedia('(min-width: 48rem)');
   const roots = document.querySelectorAll('[data-shop6-carousel-root]');
-
+  const SCROLL_TOLERANCE = 2;
   roots.forEach((root) => {
     const carousel = root.querySelector('[data-shop6-carousel]');
     const prevButton = root.querySelector('[data-shop6-prev]');
@@ -125,27 +125,41 @@ const CATEGORY_LABELS: Record<string, string> = {
     const firstItem = carousel?.querySelector('.shop6__item');
 
     if (!(carousel instanceof HTMLElement) || !(firstItem instanceof HTMLElement)) return;
-
+    const getMaxScroll = () => Math.max(0, carousel.scrollWidth - carousel.clientWidth);
     const cardStep = () => {
       const itemWidth = firstItem.getBoundingClientRect().width;
       const carouselStyles = window.getComputedStyle(carousel);
       const gap = Number.parseFloat(carouselStyles.columnGap || carouselStyles.gap || '0') || 0;
       return itemWidth + gap;
     };
+    const cardsPerPage = () => {
+      const step = cardStep();
+      if (step <= 0) return 1;
+      return Math.max(1, Math.floor((carousel.clientWidth + SCROLL_TOLERANCE) / step));
+    };
+
 
     const updateControls = () => {
       if (!(prevButton instanceof HTMLButtonElement) || !(nextButton instanceof HTMLButtonElement)) return;
 
-      const maxScroll = Math.max(0, carousel.scrollWidth - carousel.clientWidth);
-      const currentScroll = Math.round(carousel.scrollLeft);
+      const maxScroll = getMaxScroll();
+      const currentScroll = carousel.scrollLeft;
+      const canScroll = desktopQuery.matches && maxScroll > SCROLL_TOLERANCE;
 
-      prevButton.disabled = currentScroll <= 0;
-      nextButton.disabled = currentScroll >= Math.round(maxScroll);
+      prevButton.disabled = !canScroll || currentScroll <= SCROLL_TOLERANCE;
+      nextButton.disabled = !canScroll || currentScroll >= maxScroll - SCROLL_TOLERANCE;
+      root.classList.toggle('shop6__carousel--no-scroll', !canScroll);
     };
 
     const scrollCards = (direction) => {
-      const amount = cardStep() * direction;
-      carousel.scrollBy({ left: amount, behavior: 'smooth' });
+      if (!desktopQuery.matches) return;
+
+      const maxScroll = getMaxScroll();
+      if (maxScroll <= SCROLL_TOLERANCE) return;
+
+      const pageStep = cardStep() * cardsPerPage();
+      const target = Math.max(0, Math.min(maxScroll, carousel.scrollLeft + pageStep * direction));
+      carousel.scrollTo({ left: target, behavior: 'smooth' });
     };
 
     prevButton?.addEventListener('click', () => scrollCards(-1));

@@ -243,6 +243,7 @@
 }
 
 .shop6__control {
+    cursor: pointer;
   border: 1px solid var(--border);
   background: var(--surface);
   color: var(--fg);
@@ -275,6 +276,10 @@
   border-color: var(--border);
   color: var(--muted);
 }
+.shop6__carousel--no-scroll .shop6__controls {
+  display: none;
+}
+
 
 
 @media (max-width: 47.99rem) {
