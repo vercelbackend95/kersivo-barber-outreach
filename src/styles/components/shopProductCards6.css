@@ -63,12 +63,20 @@
 }
 
 .shop6__grid {
+    --shop6-desktop-gap: 0.5rem;
+  --shop6-desktop-padding: 0;
+  --shop6-desktop-visible-cards: 3.3;
+
   list-style: none;
   margin: 0;
   padding: 0;
-  display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 0.5rem;
+  display: flex;
+  gap: var(--shop6-desktop-gap);
+  overflow-x: auto;
+  overscroll-behavior-x: contain;
+  scrollbar-width: thin;
+  padding-bottom: 0.45rem;
+
 }
 
 .shop6__grid .shop-media {
@@ -112,6 +120,7 @@
 .shop6__item {
   min-width: 0;
   display: flex;
+    flex: 0 0 calc((100% - (2 * var(--shop6-desktop-padding)) - (var(--shop6-desktop-gap) * (var(--shop6-desktop-visible-cards) - 1))) / var(--shop6-desktop-visible-cards));
 }
 
 .shop6__item:first-child:last-child {
@@ -225,24 +234,25 @@
 }
 
 @media (max-width: 47.99rem) {
-  .shop6__item--mobile-extra {
-    display: flex;
-  }
+
+  
 
   .shop6__grid {
-    --shop6-mobile-gap: 0.65rem;
-    --shop6-mobile-padding: 0.9rem;
-    --shop6-visible-cards: 2.15;
-    display: flex;
-    gap: var(--shop6-mobile-gap);
-    overflow-x: auto;
-    overscroll-behavior-x: contain;
+    --shop6-desktop-gap: 0.65rem;
+    --shop6-desktop-padding: 0.9rem;
+    --shop6-desktop-visible-cards: 2.15;
+
     scroll-snap-type: x mandatory;
-    scroll-padding-inline: var(--shop6-mobile-padding);
+    scroll-padding-inline: var(--shop6-desktop-padding);
     scrollbar-width: none;
     -ms-overflow-style: none;
-    padding: 0 var(--shop6-mobile-padding) 0.45rem;
-    margin-inline: calc(var(--shop6-mobile-padding) * -1);
+    padding: 0 var(--shop6-desktop-padding) 0.45rem;
+    margin-inline: calc(var(--shop6-desktop-padding) * -1);
+  }
+
+  .shop6__item--mobile-extra {
+    display: flex;
+
   }
 
   .shop6__grid::-webkit-scrollbar {
@@ -250,7 +260,7 @@
   }
 
   .shop6__item {
-    flex: 0 0 calc((100% - (2 * var(--shop6-mobile-padding)) - (var(--shop6-mobile-gap) * (var(--shop6-visible-cards) - 1))) / var(--shop6-visible-cards));
+    flex: 0 0 calc((100% - (2 * var(--shop6-desktop-padding)) - (var(--shop6-desktop-gap) * (var(--shop6-desktop-visible-cards) - 1))) / var(--shop6-desktop-visible-cards));
     scroll-snap-align: start;
     scroll-snap-stop: always;
   }
@@ -313,9 +323,10 @@
 
 @media (max-width: 28rem) {
   .shop6__grid {
-    --shop6-mobile-gap: 0.55rem;
-    --shop6-mobile-padding: 0.8rem;
-    --shop6-visible-cards: 2.1;
+    --shop6-desktop-gap: 0.55rem;
+    --shop6-desktop-padding: 0.8rem;
+    --shop6-desktop-visible-cards: 2.1;
+
   }
 }
 

@@ -42,7 +42,7 @@ const CATEGORY_LABELS: Record<string, string> = {
       </div>
     </div>
 
-    <ul class="shop6__grid" aria-label="Featured products">
+    <ul class="shop6__grid" aria-label="Featured products" data-shop6-carousel>
       {products.length === 0 ? (
         <li class="shop6__item">
           <article class="shop6__card shop6__card--empty">
@@ -93,3 +93,25 @@ const CATEGORY_LABELS: Record<string, string> = {
     </ul>
   </div>
 </section>
+
+<script>
+  const desktopQuery = window.matchMedia('(min-width: 48rem)');
+  const carousel = document.querySelector('[data-shop6-carousel]');
+
+  if (carousel) {
+    carousel.addEventListener(
+      'wheel',
+      (event) => {
+        if (!desktopQuery.matches) return;
+        if (Math.abs(event.deltaY) <= Math.abs(event.deltaX)) return;
+
+        event.preventDefault();
+        carousel.scrollBy({
+          left: event.deltaY,
+          behavior: 'auto'
+        });
+      },
+      { passive: false }
+    );
+  }
+</script>
