@@ -9,6 +9,7 @@ interface Footer50Props {
   description?: string;
   ctaText?: string;
   ctaHref?: string;
+    ctaIsDemo?: boolean;
   navigation?: NavItem[];
   social?: NavItem[];
   legal?: NavItem[];
@@ -21,6 +22,7 @@ const {
   description = "The fit-for-purpose tool for planning and building modern software products.",
   ctaText = "Get started",
   ctaHref = "#",
+    ctaIsDemo = false,
   navigation = [
     { name: "Product", href: "#" },
     { name: "About Us", href: "/about" },
@@ -43,7 +45,7 @@ const {
     <h2>{heading}</h2>
     <p>{description}</p>
     <div>
-      <a class="btn btn--primary footer50__cta" href={ctaHref}>{ctaText}</a>
+      <a class="btn btn--primary footer50__cta" href={ctaHref} data-demo-cta={ctaIsDemo ? true : undefined}>{ctaText}</a>
     </div>
   </div>
 
