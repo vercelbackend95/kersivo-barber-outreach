@@ -39,7 +39,7 @@ const Pricing36 = ({ className }: Pricing36Props) => {
                   </li>
                   <li className="flex gap-2">
                     <Check className="mt-1 size-4 shrink-0 text-green-500" />
-                    <p className="font-medium">Booking or contact integration</p>
+                    <p className="font-medium">Built-in booking system</p>
                   </li>
                   <li className="flex gap-2">
                     <Check className="mt-1 size-4 shrink-0 text-green-500" />
