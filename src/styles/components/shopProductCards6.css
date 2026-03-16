@@ -175,9 +175,67 @@
   min-height: 100%;
 }
 
+
+@media (max-width: 47.99rem) {
+  .shop6__grid {
+    display: grid;
+    grid-auto-flow: column;
+    grid-auto-columns: calc((100% - 0.8rem) / 2.5);
+    gap: 0.5rem;
+    overflow-x: auto;
+    overscroll-behavior-x: contain;
+    scroll-snap-type: x mandatory;
+    scrollbar-width: thin;
+    scrollbar-color: color-mix(in srgb, var(--border) 90%, transparent) transparent;
+    padding-inline: 0;
+    padding-block-end: 0.35rem;
+  }
+
+  .shop6__item {
+    scroll-snap-align: start;
+    scroll-snap-stop: always;
+  }
+
+  .shop6__grid .shop-card {
+    min-height: 100%;
+  }
+
+  .shop6__grid .shop-image {
+    aspect-ratio: 4 / 3;
+  }
+
+  .shop6__grid .shop-card-body {
+    padding: 0.45rem;
+    gap: 0.28rem;
+  }
+
+  .shop6__grid .shop-card h3 {
+    min-height: 0;
+    font-size: 0.72rem;
+  }
+
+  .shop6__grid .shop-price {
+    font-size: 0.74rem;
+  }
+
+  .shop6__grid .shop-card-actions {
+    margin-top: 0.1rem;
+  }
+
+  .shop6__grid .shop-card-actions .btn {
+    min-height: 1.9rem;
+    padding: 0.34rem 0.44rem;
+    font-size: 0.58rem;
+  }
+
+  .shop6__grid .shop6__quick-view {
+    display: none;
+  }
+}
+
 @media (max-width: 28rem) {
   .shop6__grid {
-    grid-template-columns: 1fr;
+    grid-auto-columns: calc((100% - 0.7rem) / 2.35);
   }
 }
 
