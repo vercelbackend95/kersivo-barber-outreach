@@ -75,9 +75,9 @@
   position: relative;
   display: grid;
   place-items: center;
-  aspect-ratio: 4 / 3;
+  aspect-ratio: 1 / 1;
   overflow: hidden;
-  padding: clamp(0.52rem, 2vw, 0.78rem);
+  padding: clamp(0.35rem, 1.6vw, 0.62rem);
   border-bottom: 1px solid color-mix(in srgb, var(--border) 90%, var(--surface));
   background: linear-gradient(
     180deg,
@@ -89,8 +89,9 @@
 .shop6__grid .shop-image {
   width: 100%;
   height: 100%;
-  max-width: 86%;
-  max-height: 86%;
+  max-width: 96%;
+  max-height: 96%;
+
   object-fit: contain;
   object-position: center;
   aspect-ratio: auto;
@@ -259,12 +260,15 @@
   }
 
   .shop6__grid .shop-media {
-    padding: 0.62rem;
+    aspect-ratio: 1 / 1;
+    padding: 0.4rem;
+
   }
 
   .shop6__grid .shop-image {
-    max-width: 84%;
-    max-height: 84%;
+    max-width: 98%;
+    max-height: 98%;
+
   }
 
   .shop6__grid .shop-card-body {
@@ -360,12 +364,15 @@
   }
 
   .shop6__grid .shop-media {
-    padding: 0.58rem;
+    aspect-ratio: 1 / 1;
+    padding: 0.48rem;
+
   }
 
   .shop6__grid .shop-image {
-    max-width: 88%;
-    max-height: 88%;
+    max-width: 95%;
+    max-height: 95%;
+
   }
 
   .shop6__item {

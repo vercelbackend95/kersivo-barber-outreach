@@ -197,7 +197,19 @@
 
 .shop-media {
   position: relative;
+    display: grid;
+  place-items: center;
+  aspect-ratio: 1 / 1;
+
   overflow: hidden;
+    padding: clamp(0.35rem, 1.6vw, 0.62rem);
+  border-bottom: 1px solid color-mix(in srgb, var(--border) 90%, var(--surface));
+  background: linear-gradient(
+    180deg,
+    color-mix(in srgb, var(--surface) 94%, var(--bg)),
+    color-mix(in srgb, var(--surface) 90%, var(--bg))
+  );
+
 }
 
 .shop-media-link {
@@ -209,10 +221,15 @@
 
 .shop-image {
   width: 100%;
-  aspect-ratio: 0.88;
-  object-fit: cover;
+  height: 100%;
+  max-width: 96%;
+  max-height: 96%;
+  object-fit: contain;
+  object-position: center;
+  aspect-ratio: auto;
+
   transition: transform 220ms ease;
-  background: color-mix(in srgb, var(--bg) 80%, var(--surface));
+  background: transparent;
 }
 
 .shop-image--placeholder {
@@ -312,8 +329,14 @@
 
   }
 
+  .shop-media {
+    aspect-ratio: 1 / 1;
+    padding: 0.46rem;
+  }
   .shop-image {
-    aspect-ratio: 0.94;
+    max-width: 95%;
+    max-height: 95%;
+
 
   }
 
@@ -413,9 +436,16 @@
   .shop-grid {
     gap: 0.62rem;
   }
+  .shop-media {
+    aspect-ratio: 1 / 1;
+    padding: 0.52rem;
+  }
+
 
   .shop-image {
-    aspect-ratio: 1;
+    max-width: 94%;
+    max-height: 94%;
+
   }
 
   .shop-card-body {
