@@ -1,7 +1,7 @@
 ---
 interface CtaButton {
   text: string;
-  url: string;
+  url?: string;
 }
 
 interface Props {
@@ -42,9 +42,9 @@ const {
       <div class="cta10__actions">
         {
           buttons.secondary && (
-            <a href={buttons.secondary.url} class="btn btn--secondary" data-system-chooser-open>
+            <button type="button" class="btn btn--secondary" data-system-chooser-open>
               {buttons.secondary.text}
-            </a>
+            </button>
           )
         }
         {
