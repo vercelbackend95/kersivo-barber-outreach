@@ -41,64 +41,108 @@ const CATEGORY_LABELS: Record<string, string> = {
         <a class="btn btn--primary" href="/shop">Explore the shop</a>
       </div>
     </div>
+    <div class="shop6__carousel" data-shop6-carousel-root>
+      <ul class="shop6__grid" aria-label="Featured products" data-shop6-carousel>
+        {products.length === 0 ? (
+          <li class="shop6__item">
+            <article class="shop6__card shop6__card--empty">
+              <div class="shop6__card-body">
+                <p class="shop6__category">Shop preview</p>
+                <h3>Add products to launch this retail section</h3>
+                <p class="shop6__price">Ready when your catalog is live</p>
+                <a class="btn btn--secondary" href="/shop">Open shop page</a>
 
-    <ul class="shop6__grid" aria-label="Featured products" data-shop6-carousel>
-      {products.length === 0 ? (
-        <li class="shop6__item">
-          <article class="shop6__card shop6__card--empty">
-            <div class="shop6__card-body">
-              <p class="shop6__category">Shop preview</p>
-              <h3>Add products to launch this retail section</h3>
-              <p class="shop6__price">Ready when your catalog is live</p>
-              <a class="btn btn--secondary" href="/shop">Open shop page</a>
-            </div>
-          </article>
-        </li>
-      ) : products.map((product, index) => (
-        <li class:list={["shop6__item", index >= 3 && 'shop6__item--mobile-extra']} key={product.id}>
-          <article class="shop-card" data-category={product.category}>
-            <a href={`/shop/${product.id}`} class="shop-media-link" aria-label={`View ${product.name}`}>
-              <div class="shop-media">
-                {product.imageUrl ? (
-                  <img src={product.imageUrl} alt={product.name} loading="lazy" class="shop-image" />
-                ) : (
-                  <div class="shop-image shop-image--placeholder" aria-hidden="true"></div>
-                )}
               </div>
-            </a>
+                          </article>
+          </li>
+        ) : products.map((product, index) => (
+          <li class:list={["shop6__item", index >= 3 && 'shop6__item--mobile-extra']} key={product.id}>
+            <article class="shop-card" data-category={product.category}>
+              <a href={`/shop/${product.id}`} class="shop-media-link" aria-label={`View ${product.name}`}>
+                <div class="shop-media">
+                  {product.imageUrl ? (
+                    <img src={product.imageUrl} alt={product.name} loading="lazy" class="shop-image" />
+                  ) : (
+                    <div class="shop-image shop-image--placeholder" aria-hidden="true"></div>
+                  )}
+                </div>
+              </a>
 
-            <div class="shop-card-body">
-              <p class="shop-category">{CATEGORY_LABELS[product.category] ?? 'Styling'}</p>
-              <h3><a href={`/shop/${product.id}`}>{product.name}</a></h3>
-              <p class="shop-price">{formatGbp(product.pricePence)}</p>
+              <div class="shop-card-body">
+                <p class="shop-category">{CATEGORY_LABELS[product.category] ?? 'Styling'}</p>
+                <h3><a href={`/shop/${product.id}`}>{product.name}</a></h3>
+                <p class="shop-price">{formatGbp(product.pricePence)}</p>
 
-              <div class="shop-card-actions">
-                <button
-                  class="btn btn--primary"
-                  type="button"
-                  data-add-to-cart
-                  data-product-id={product.id}
-                  data-product-name={product.name}
-                  data-product-price-pence={String(product.pricePence)}
-                  data-product-image-url={product.imageUrl ?? ''}
-                >
-                  Add to cart
-                </button>
-                <a class="btn btn--secondary shop6__quick-view" href={`/shop/${product.id}`}>Quick view</a>
+                <div class="shop-card-actions">
+                  <button
+                    class="btn btn--primary"
+                    type="button"
+                    data-add-to-cart
+                    data-product-id={product.id}
+                    data-product-name={product.name}
+                    data-product-price-pence={String(product.pricePence)}
+                    data-product-image-url={product.imageUrl ?? ''}
+                  >
+                    Add to cart
+                  </button>
+                  <a class="btn btn--secondary shop6__quick-view" href={`/shop/${product.id}`}>Quick view</a>
+                </div>
+
               </div>
-            </div>
-          </article>
-        </li>
-      ))}
-    </ul>
+
+            </article>
+          </li>
+        ))}
+      </ul>
+
+      {products.length > 0 && (
+        <div class="shop6__controls" aria-label="Carousel controls">
+          <button class="shop6__control" type="button" data-shop6-prev aria-label="Previous products">Prev</button>
+          <button class="shop6__control" type="button" data-shop6-next aria-label="Next products">Next</button>
+        </div>
+      )}
+    </div>
+
   </div>
 </section>
 
 <script>
   const desktopQuery = window.matchMedia('(min-width: 48rem)');
-  const carousel = document.querySelector('[data-shop6-carousel]');
+  const roots = document.querySelectorAll('[data-shop6-carousel-root]');
 
-  if (carousel) {
+  roots.forEach((root) => {
+    const carousel = root.querySelector('[data-shop6-carousel]');
+    const prevButton = root.querySelector('[data-shop6-prev]');
+    const nextButton = root.querySelector('[data-shop6-next]');
+    const firstItem = carousel?.querySelector('.shop6__item');
+
+    if (!(carousel instanceof HTMLElement) || !(firstItem instanceof HTMLElement)) return;
+
+    const cardStep = () => {
+      const itemWidth = firstItem.getBoundingClientRect().width;
+      const carouselStyles = window.getComputedStyle(carousel);
+      const gap = Number.parseFloat(carouselStyles.columnGap || carouselStyles.gap || '0') || 0;
+      return itemWidth + gap;
+    };
+
+    const updateControls = () => {
+      if (!(prevButton instanceof HTMLButtonElement) || !(nextButton instanceof HTMLButtonElement)) return;
+
+      const maxScroll = Math.max(0, carousel.scrollWidth - carousel.clientWidth);
+      const currentScroll = Math.round(carousel.scrollLeft);
+
+      prevButton.disabled = currentScroll <= 0;
+      nextButton.disabled = currentScroll >= Math.round(maxScroll);
+    };
+
+    const scrollCards = (direction) => {
+      const amount = cardStep() * direction;
+      carousel.scrollBy({ left: amount, behavior: 'smooth' });
+    };
+
+    prevButton?.addEventListener('click', () => scrollCards(-1));
+    nextButton?.addEventListener('click', () => scrollCards(1));
+
     carousel.addEventListener(
       'wheel',
       (event) => {
@@ -113,5 +157,10 @@ const CATEGORY_LABELS: Record<string, string> = {
       },
       { passive: false }
     );
-  }
+    carousel.addEventListener('scroll', updateControls, { passive: true });
+    window.addEventListener('resize', updateControls);
+    desktopQuery.addEventListener('change', updateControls);
+    updateControls();
+  });
+
 </script>

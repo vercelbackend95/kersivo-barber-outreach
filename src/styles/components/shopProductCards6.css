@@ -61,6 +61,12 @@
   flex-wrap: wrap;
   gap: 0.6rem;
 }
+.shop6__carousel {
+  min-width: 0;
+  display: grid;
+  gap: 0.56rem;
+}
+
 
 .shop6__grid {
     --shop6-desktop-gap: 0.5rem;
@@ -232,6 +238,44 @@
 .shop6__card--empty {
   min-height: 100%;
 }
+.shop6__controls {
+  display: none;
+}
+
+.shop6__control {
+  border: 1px solid var(--border);
+  background: var(--surface);
+  color: var(--fg);
+  min-height: 2rem;
+  padding: 0.32rem 0.72rem;
+  font-family: var(--font-body);
+  font-size: 0.72rem;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  transition: background-color 160ms ease, border-color 160ms ease, color 160ms ease;
+}
+
+.shop6__control:hover {
+  border-color: var(--accent);
+  color: var(--accent);
+}
+
+.shop6__control:active {
+  background: color-mix(in srgb, var(--accent) 16%, var(--surface));
+}
+
+.shop6__control:focus-visible {
+  outline: 2px solid var(--focus);
+  outline-offset: 2px;
+}
+
+.shop6__control:disabled {
+  opacity: 0.44;
+  cursor: not-allowed;
+  border-color: var(--border);
+  color: var(--muted);
+}
+
 
 @media (max-width: 47.99rem) {
 
@@ -403,6 +447,13 @@
     scroll-snap-stop: always;
 
   }
+  
+  .shop6__controls {
+    display: flex;
+    justify-content: flex-end;
+    gap: 0.4rem;
+  }
+
 }
 
 @media (min-width: 56rem) {
