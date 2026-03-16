@@ -186,10 +186,11 @@
   }
 
   .shop6__grid {
+    --shop6-mobile-gap: 0.65rem;
     display: grid;
     grid-auto-flow: column;
-    grid-auto-columns: calc(100% - 3.25rem);
-    gap: 0.65rem;
+    grid-auto-columns: calc((100% - (2 * var(--shop6-mobile-gap))) / 2.5);
+    gap: var(--shop6-mobile-gap);
     overflow-x: auto;
     overscroll-behavior-x: contain;
     scroll-snap-type: x mandatory;
@@ -243,8 +244,9 @@
 
 @media (max-width: 28rem) {
   .shop6__grid {
-    grid-auto-columns: calc(100% - 2.25rem);
-    gap: 0.55rem;
+    --shop6-mobile-gap: 0.55rem;
+    grid-auto-columns: calc((100% - (2 * var(--shop6-mobile-gap))) / 2.5);
+    gap: var(--shop6-mobile-gap);
     padding-inline: 0.1rem 0.8rem;
   }
 }
