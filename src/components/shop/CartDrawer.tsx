@@ -141,7 +141,10 @@ export default function CartDrawer() {
     <>
       <aside className={`cart-drawer ${open ? 'cart-drawer--open' : ''}`} aria-hidden={open ? 'false' : 'true'}>
         <div className="cart-drawer__header">
-          <p className="cart-drawer__eyebrow">Collect in shop</p>
+          <div className="cart-drawer__header-top">
+          <p className="muted cart-drawer__intro">Order online and collect in shop when it suits you.</p>
+          </div>
+
           <h2>Your cart</h2>
           <p className="muted cart-drawer__intro">Order online now and collect when it suits you. No shipping needed.</p>
           <button type="button" className="btn btn--ghost cart-drawer__close" onClick={closeCart}>
@@ -160,10 +163,11 @@ export default function CartDrawer() {
               <article className="cart-row" key={item.productId}>
                 <div className="cart-row__content">
                   {item.imageUrl ? <img src={item.imageUrl} alt={item.name} className="cart-row__image" loading="lazy" /> : <div className="cart-row__image cart-row__image--placeholder" aria-hidden="true" />}
-                  <div>
+                  <div className="cart-row__details">
                     <p className="cart-item-name">{item.name}</p>
-                    <p className="muted">{formatGbp(item.pricePence)} each</p>
-                                        <p className="cart-item-total">Line total: {formatGbp(item.pricePence * item.quantity)}</p>
+                   <p className="cart-item-price">{formatGbp(item.pricePence)} each</p>
+                    <p className="cart-item-total">Line total: {formatGbp(item.pricePence * item.quantity)}</p>
+
                   </div>
                 </div>
 
@@ -177,7 +181,7 @@ export default function CartDrawer() {
                       +
                     </button>
                   </div>
-                  <button type="button" className="btn btn--secondary" onClick={() => removeItem(item.productId)}>
+                  <button type="button" className="btn btn--ghost cart-row__remove" onClick={() => removeItem(item.productId)}>
                     Remove
                   </button>
                 </div>
