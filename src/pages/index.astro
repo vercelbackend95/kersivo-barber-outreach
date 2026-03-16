@@ -208,9 +208,7 @@ const DEMO_ADMIN_PASSWORD = import.meta.env.PUBLIC_DEMO_ADMIN_PASSWORD
     />
   </main>
 </MainLayout>
-
-<script>
-    const DEMO_ADMIN_SECRET = {JSON.stringify(DEMO_ADMIN_PASSWORD)};
+<script define:vars={{ DEMO_ADMIN_SECRET: DEMO_ADMIN_PASSWORD }}>
   const ADMIN_SECRET_STORAGE_KEY = 'kersivo.admin.secret';
 
 
