@@ -9,6 +9,13 @@ const products = await prisma.product.findMany({
   orderBy: [{ sortOrder: 'asc' }, { featured: 'desc' }, { updatedAt: 'desc' }],
   take: 10
 });
+const MIN_CAROUSEL_ITEMS = 10;
+
+const carouselProducts =
+  products.length > 0 && products.length < MIN_CAROUSEL_ITEMS
+    ? Array.from({ length: MIN_CAROUSEL_ITEMS }, (_, index) => products[index % products.length])
+    : products;
+
 
 const CATEGORY_LABELS: Record<string, string> = {
   POMADES_AND_CLAYS: 'Pomades',
@@ -43,7 +50,7 @@ const CATEGORY_LABELS: Record<string, string> = {
     </div>
     <div class="shop6__carousel" data-shop6-carousel-root>
       <ul class="shop6__grid" aria-label="Featured products" data-shop6-carousel>
-        {products.length === 0 ? (
+        {carouselProducts.length === 0 ? (
           <li class="shop6__item">
             <article class="shop6__card shop6__card--empty">
               <div class="shop6__card-body">
@@ -55,8 +62,9 @@ const CATEGORY_LABELS: Record<string, string> = {
               </div>
                           </article>
           </li>
-        ) : products.map((product, index) => (
-          <li class:list={["shop6__item", index >= 3 && 'shop6__item--mobile-extra']} key={product.id}>
+        ) : carouselProducts.map((product, index) => (
+          <li class:list={["shop6__item", index >= 3 && 'shop6__item--mobile-extra']} key={`${product.id}-${index}`}>
+
             <article class="shop-card" data-category={product.category}>
               <a href={`/shop/${product.id}`} class="shop-media-link" aria-label={`View ${product.name}`}>
                 <div class="shop-media">
@@ -95,7 +103,7 @@ const CATEGORY_LABELS: Record<string, string> = {
         ))}
       </ul>
 
-      {products.length > 0 && (
+      {carouselProducts.length > 0 && (
         <div class="shop6__controls" aria-label="Carousel controls">
           <button class="shop6__control" type="button" data-shop6-prev aria-label="Previous products">Prev</button>
           <button class="shop6__control" type="button" data-shop6-next aria-label="Next products">Next</button>
