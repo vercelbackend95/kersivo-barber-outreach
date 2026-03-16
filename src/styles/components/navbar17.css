@@ -2,31 +2,43 @@
   position: sticky;
   top: 0;
   z-index: 30;
-  border-bottom: 1px solid var(--border);
-  background: color-mix(in srgb, var(--bg) 88%, transparent);
-  backdrop-filter: blur(8px);
+  border-bottom: 1px solid color-mix(in srgb, var(--border) 85%, transparent);
+  background: color-mix(in srgb, var(--bg) 92%, var(--surface));
+
 }
 
 .navbar17__wrap {
   display: grid;
   grid-template-columns: auto 1fr auto auto;
   align-items: center;
-  gap: var(--space-md);
-  min-height: 4.5rem;
+  gap: clamp(0.65rem, 1vw, 1.2rem);
+  min-height: 5.15rem;
+  padding-block: 0.3rem;
+
 }
 
 .navbar17__brand {
   display: inline-flex;
   align-items: center;
-  gap: var(--space-xs);
+  gap: 0.72rem;
   color: var(--fg);
   text-decoration: none;
+    padding-right: clamp(0.5rem, 1vw, 1rem);
+}
+
+.navbar17__brand img {
+  width: 2.55rem;
+  height: 2.55rem;
+  border: 1px solid color-mix(in srgb, var(--accent) 30%, var(--border));
+  background: color-mix(in srgb, var(--surface) 88%, var(--bg));
+
 }
 
 .navbar17__brand span {
   font-family: var(--font-heading);
-  font-size: 1.6rem;
-  letter-spacing: 0.06em;
+  font-size: clamp(1.5rem, 1.8vw, 1.88rem);
+  letter-spacing: 0.08em;
+
   text-transform: uppercase;
   line-height: 1;
 }
@@ -39,12 +51,10 @@
   position: relative;
   display: flex;
   align-items: center;
-  gap: var(--space-sm);
+  gap: clamp(0.3rem, 0.65vw, 0.55rem);
   margin: 0;
-  padding: 0.35rem;
+  padding: 0;
   list-style: none;
-  border: 1px solid var(--border);
-  background: color-mix(in srgb, var(--surface) 80%, transparent);
 }
 
 .navbar17__link {
@@ -53,25 +63,47 @@
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  min-height: 2.5rem;
-  padding-inline: 0.95rem;
+  min-height: 2.7rem;
+  padding-inline: clamp(0.72rem, 1vw, 1rem);
+
   color: var(--muted);
   text-transform: uppercase;
-  letter-spacing: 0.06em;
-  font-size: 0.78rem;
+  letter-spacing: 0.08em;
+  font-size: 0.79rem;
+
   font-weight: 600;
   text-decoration: none;
+    transition: color 180ms ease;
+}
+
+.navbar17__link::after {
+  content: '';
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0.5rem;
+  height: 1px;
+  background: color-mix(in srgb, var(--accent) 40%, transparent);
+  transform: scaleX(0);
+  transform-origin: center;
+  transition: transform 180ms ease;
+
 }
 
 .navbar17__link:hover,
 .navbar17__link.is-active {
   color: var(--fg);
 }
+.navbar17__link:hover::after,
+.navbar17__link.is-active::after {
+  transform: scaleX(1);
+}
+
 
 .navbar17__indicator {
   position: absolute;
   left: 0;
-  bottom: 0;
+  bottom: 0.45rem;
   width: 0;
   height: 2px;
   background: var(--accent);
@@ -82,23 +114,33 @@
 .navbar17__actions {
   display: flex;
   align-items: center;
-    gap: var(--space-xs);
+  padding-left: clamp(0.45rem, 0.8vw, 0.85rem);
+  border-left: 1px solid color-mix(in srgb, var(--border) 82%, transparent);
+
 }
 
 .navbar17__cart-btn {
   display: inline-flex;
   align-items: center;
-  gap: 0.45rem;
-  padding: 0.5rem 0.7rem;
-  border: 1px solid var(--border);
-  background: var(--surface);
+  gap: 0.55rem;
+  min-height: 2.72rem;
+  padding: 0.5rem 0.86rem;
+  border: 1px solid color-mix(in srgb, var(--border) 78%, var(--accent) 22%);
+  background: color-mix(in srgb, var(--surface) 86%, var(--bg));
+
   color: var(--fg);
   font-weight: 600;
-  letter-spacing: 0.02em;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  font-size: 0.74rem;
+  transition: border-color 180ms ease, background-color 180ms ease, color 180ms ease;
+
 }
 
 .navbar17__cart-btn:hover {
-  background: color-mix(in srgb, var(--surface) 72%, var(--accent));
+  border-color: color-mix(in srgb, var(--accent) 50%, var(--border));
+  background: color-mix(in srgb, var(--surface) 66%, var(--accent));
+
 }
 
 .navbar17__cart-btn:focus-visible {
@@ -107,19 +149,21 @@
 }
 
 .navbar17__cart-badge {
-  min-width: 1.3rem;
-  height: 1.3rem;
+  min-width: 1.35rem;
+  height: 1.35rem;
+
   display: inline-grid;
   place-items: center;
   padding: 0 0.2rem;
-  border: 1px solid var(--border);
+  border: 1px solid color-mix(in srgb, var(--accent) 55%, var(--border));
   background: var(--accent);
   color: var(--accent-contrast);
-  font-size: 0.75rem;
+  font-size: 0.72rem;
   line-height: 1;
 }
 
 .navbar17__cart-badge.is-empty {
+    border-color: var(--border);
   background: var(--surface);
   color: var(--muted);
 
@@ -246,6 +290,7 @@
 @media (max-width: 63.99rem) {
   .navbar17__wrap {
     grid-template-columns: auto 1fr auto;
+        min-height: 4.5rem;
   }
 
   .navbar17__desktop,
