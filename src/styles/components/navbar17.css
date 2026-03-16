@@ -255,42 +255,25 @@
 
   font-weight: 600;
   text-decoration: none;
-  border-left: 1px solid color-mix(in srgb, var(--border) 65%, transparent);
-  transition: color 180ms ease, border-color 180ms ease;
-
-
-}
-.navbar17__mobile-link::after {
-  content: '';
-  position: absolute;
-  left: 1.05rem;
-  right: 0.85rem;
-  bottom: 0.62rem;
-  height: 1px;
-  background: color-mix(in srgb, var(--accent) 88%, transparent);
-  transform: scaleX(0);
-  transform-origin: left center;
-  transition: transform 180ms ease;
+    border-left: 2px solid transparent;
+  transition: color 180ms ease, border-color 180ms ease, background-color 180ms ease;
 
 
 }
 
 .navbar17__mobile-link:hover {
   color: var(--fg);
-  border-left-color: color-mix(in srgb, var(--border) 30%, var(--accent));
+  border-left-color: color-mix(in srgb, var(--accent) 45%, var(--border));
 
 }
 
 
 .navbar17__mobile-link.is-active {
   color: var(--fg);
-  border-left-color: color-mix(in srgb, var(--accent) 55%, var(--border));
 
-}
+  border-left-color: color-mix(in srgb, var(--accent) 80%, var(--border));
+  background: linear-gradient(90deg, color-mix(in srgb, var(--accent) 14%, transparent), transparent 58%);
 
-.navbar17__mobile-link:hover::after,
-.navbar17__mobile-link.is-active::after {
-  transform: scaleX(1);
 
 }
 
