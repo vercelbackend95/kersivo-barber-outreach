@@ -12,10 +12,15 @@
   font-weight: 600;
   letter-spacing: 0.02em;
   text-transform: uppercase;
+    text-decoration: none;
   cursor: pointer;
   transition: background-color 160ms ease, border-color 160ms ease, color 160ms ease,
     transform 120ms ease;
 }
+a.btn:hover {
+  text-decoration: none;
+}
+
 
 .btn:focus-visible {
   outline: 3px solid var(--focus);
@@ -42,6 +47,7 @@
 .btn--primary:hover:not(:disabled):not([aria-disabled="true"]) {
   background: var(--accent-hover);
   border-color: var(--accent-hover);
+    color: var(--accent-contrast);
 }
 
 .btn--secondary {
