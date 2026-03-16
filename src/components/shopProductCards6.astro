@@ -7,7 +7,7 @@ const shopId = await resolveShopId();
 const products = await prisma.product.findMany({
   where: { shopId, active: true },
   orderBy: [{ sortOrder: 'asc' }, { featured: 'desc' }, { updatedAt: 'desc' }],
-  take: 3
+  take: 10
 });
 
 const CATEGORY_LABELS: Record<string, string> = {
@@ -56,8 +56,8 @@ const CATEGORY_LABELS: Record<string, string> = {
             </div>
           </article>
         </li>
-      ) : products.map((product) => (
-        <li class="shop6__item" key={product.id}>
+      ) : products.map((product, index) => (
+        <li class:list={["shop6__item", index >= 3 && 'shop6__item--mobile-extra']} key={product.id}>
           <article class="shop-card" data-category={product.category}>
             <a href={`/shop/${product.id}`} class="shop-media-link" aria-label={`View ${product.name}`}>
               <div class="shop-media">
