@@ -253,13 +253,13 @@ const DEMO_ADMIN_PASSWORD = import.meta.env.PUBLIC_DEMO_ADMIN_PASSWORD
 
 
   const chooser = document.querySelector('[data-system-chooser]');
-  const openTrigger = document.querySelector('[data-system-chooser-open]');
+  const openTriggers = document.querySelectorAll('[data-system-chooser-open]');
 
-  if (chooser && openTrigger) {
+  if (chooser && openTriggers.length > 0) {
     const closeTriggers = chooser.querySelectorAll('[data-system-chooser-close]');
     const focusTarget = chooser.querySelector('.system-chooser__close');
     let isChooserOpen = false;
-
+    let lastOpenTrigger = null;
     const setChooserOpen = (nextOpen) => {
       isChooserOpen = nextOpen;
       chooser.hidden = !nextOpen;
@@ -269,7 +269,7 @@ const DEMO_ADMIN_PASSWORD = import.meta.env.PUBLIC_DEMO_ADMIN_PASSWORD
       if (nextOpen) {
         focusTarget?.focus();
       } else {
-        openTrigger.focus();
+        lastOpenTrigger?.focus();
       }
     };
     const openChooser = () => {
@@ -280,7 +280,14 @@ const DEMO_ADMIN_PASSWORD = import.meta.env.PUBLIC_DEMO_ADMIN_PASSWORD
       setChooserOpen(false);
     };
     setChooserOpen(false);
-    openTrigger.addEventListener('click', openChooser);
+    openTriggers.forEach((trigger) => {
+      if (!(trigger instanceof HTMLElement)) return;
+
+      trigger.addEventListener('click', () => {
+        lastOpenTrigger = trigger;
+        openChooser();
+      });
+    });
     closeTriggers.forEach((trigger) => trigger.addEventListener('click', closeChooser));
     const navigateToTile = (target) => {
       if (!(target instanceof HTMLElement)) return;
