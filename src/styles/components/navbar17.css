@@ -247,7 +247,7 @@
 .navbar17__mobile-link {
     position: relative;
   display: block;
-  padding: 0.88rem 0.85rem 0.88rem 1.05rem;
+  padding: 0.88rem 0.85rem 0.88rem 1.02rem;
   color: var(--muted);
   text-transform: uppercase;
   letter-spacing: 0.08em;
@@ -272,9 +272,7 @@
   color: var(--fg);
 
   border-left-color: color-mix(in srgb, var(--accent) 80%, var(--border));
-  background: linear-gradient(90deg, color-mix(in srgb, var(--accent) 14%, transparent), transparent 58%);
-
-
+  background: transparent;
 }
 
 .sr-only {
