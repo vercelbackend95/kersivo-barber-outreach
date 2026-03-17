@@ -1576,7 +1576,7 @@
   text-transform: uppercase;
     letter-spacing: 0.12em;
   font-size: 1.15rem;
-
+  padding-inline: 0.6rem;
 }
 
 .admin-sidebar-nav {
@@ -1587,7 +1587,7 @@
 
 .admin-sidebar-group {
   display: grid;
-  gap: 0.26rem;
+  gap: 0.22rem;
 }
 
 .admin-sidebar-group-title {
@@ -1596,7 +1596,7 @@
   font-size: 0.66rem;
   letter-spacing: 0.18em;
   font-weight: 600;
-  padding: 0 0.3rem;
+  padding: 0 0.6rem;
   margin-bottom: 0.24rem;
 
 
@@ -1624,15 +1624,21 @@
 
 .admin-sidebar-logout,
 .admin-mobile-logout {
-
   width: 100%;
   justify-content: flex-start;
-  border-color: color-mix(in srgb, var(--border) 75%, var(--bg));
-  background: color-mix(in srgb, var(--surface) 68%, var(--bg));
-  color: color-mix(in srgb, var(--fg) 80%, var(--muted));
-  padding-block: 0.55rem;
-  min-height: 2.25rem;
+  border-color: color-mix(in srgb, var(--border) 82%, var(--bg));
+  background: color-mix(in srgb, var(--surface) 60%, var(--bg));
+  color: color-mix(in srgb, var(--fg) 74%, var(--muted));
+  padding: 0.48rem 0.62rem;
+  min-height: 2.1rem;
+  font-size: 0.9rem;
+}
 
+.admin-sidebar-logout:hover,
+.admin-mobile-logout:hover {
+  color: color-mix(in srgb, var(--fg) 88%, var(--muted));
+  border-color: color-mix(in srgb, var(--border) 60%, var(--accent));
+  background: color-mix(in srgb, var(--surface) 72%, var(--bg));
 }
 
 
@@ -1651,10 +1657,8 @@
   border-left: 2px solid transparent;
   background: color-mix(in srgb, var(--bg) 78%, var(--surface));
   color: color-mix(in srgb, var(--fg) 83%, var(--muted));
-  padding: 0.48rem 0.66rem;
-  min-height: 2.2rem;
-
-
+  padding: 0.44rem 0.6rem;
+  min-height: 2.1rem;
   text-align: left;
   font: inherit;
   cursor: pointer;
@@ -1677,13 +1681,11 @@
 }
 
 .admin-sidebar-link--active {
-  border-color: color-mix(in srgb, var(--accent) 48%, var(--border));
+  border-color: color-mix(in srgb, var(--accent) 34%, var(--border));
   border-left-color: var(--accent);
-  background: linear-gradient(90deg, color-mix(in srgb, var(--accent) 12%, var(--surface)) 0%, color-mix(in srgb, var(--surface) 87%, var(--bg)) 100%);
+  background: linear-gradient(90deg, color-mix(in srgb, var(--accent) 8%, var(--surface)) 0%, color-mix(in srgb, var(--surface) 90%, var(--bg)) 100%);
   color: color-mix(in srgb, var(--fg) 95%, white);
-  font-weight: 600;
-
-
+  font-weight: 560;
 }
 
 .admin-main-content {
@@ -1780,6 +1782,10 @@
   justify-content: space-between;
   gap: var(--space-xs);
 }
+.admin-mobile-drawer-head .admin-mobile-title {
+  padding-inline: 0.6rem;
+}
+
 
 
 
@@ -1797,14 +1803,16 @@
   }
 
   .admin-sidebar-link {
-    min-height: 2.4rem;
-    padding: 0.56rem 0.68rem;
+    min-height: 2.3rem;
+    padding: 0.54rem 0.6rem;
+
     font-size: 0.95rem;
   }
 
   .admin-mobile-logout {
-    min-height: 2.4rem;
-    padding-block: 0.58rem;
+    min-height: 2.3rem;
+    padding: 0.54rem 0.6rem;
+
 
 
   }
