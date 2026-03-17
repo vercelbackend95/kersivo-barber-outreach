@@ -139,7 +139,14 @@
 
 @media (max-width: 47.99rem) {
   .admin-service-sheet-layer {
-    --admin-mobile-sheet-top-offset: calc(env(safe-area-inset-top, 0px) + var(--admin-mobile-header-h, 0px) + 1.25rem);
+    --admin-mobile-sheet-top-offset: calc(env(safe-area-inset-top, 0px) + var(--admin-mobile-header-h, 0px) + 3.25rem);
+  }
+}
+
+@media (max-width: 33.99rem) {
+  .admin-service-sheet-layer {
+    --admin-mobile-sheet-top-offset: calc(env(safe-area-inset-top, 0px) + var(--admin-mobile-header-h, 0px) + 3.75rem);
+
   }
 }
 
