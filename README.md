@@ -54,6 +54,14 @@ Astro + React (TypeScript) booking + shop system for barbershops.
 - Shop cancelled: `/shop/cancelled`
 - Admin panel: `/admin`
 
+## Booking status logic (including `EXPIRED`)
+- New booking starts as `PENDING_CONFIRMATION`.
+- System sets `confirmTokenExpiresAt = now + pendingConfirmationMins` (from `ShopSettings`).
+- If booking is still `PENDING_CONFIRMATION` after that timestamp, it is moved to `EXPIRED` by `expirePendingBookings()`.
+- `expirePendingBookings()` is executed on key booking flows (availability checks, creating booking, confirming booking), so expiration is enforced even without a background cron.
+- Practical meaning of `EXPIRED`: customer did **not** confirm booking in time, so slot is released and booking can no longer be confirmed/rescheduled (new booking is required).
+
+
 ## Shop flow (GBP, pickup only)
 - Cart is client-side (`localStorage`) and supports quantity +/- and remove.
 - Checkout endpoint: `POST /api/shop/checkout` with payload:
