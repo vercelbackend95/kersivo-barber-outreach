@@ -2485,8 +2485,9 @@
 .admin-reorder-btn--barber-settings {
   width: 2.1rem;
   height: 4rem;
-  border: 1px solid color-mix(in srgb, var(--border) 48%, transparent);
-  background: color-mix(in srgb, var(--surface) 64%, var(--bg) 36%);
+  border: 1px solid transparent;
+  background: transparent;
+
   color: color-mix(in srgb, var(--fg) 70%, var(--muted) 30%);
 
 
@@ -4446,8 +4447,9 @@
   .admin-barber-add-btn,
   .admin-barber-add-btn--barbers {
     min-height: 84px;
-    place-items: center start;
-    padding-inline: 0.8rem;
+    place-items: center;
+    padding-inline: 0.9rem;
+
   }
 
   .admin-barber-add-cluster {
