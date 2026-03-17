@@ -464,7 +464,7 @@ export default function ServicesAdminPanel() {
                     checked={form.isActive}
                     onChange={(e) => setForm((c) => ({ ...c, isActive: e.target.checked }))}
                   />
-                  <span>Active</span>
+                  <span className="admin-service-checkbox-label">Active</span>
                 </label>
               </div>
             </div>
