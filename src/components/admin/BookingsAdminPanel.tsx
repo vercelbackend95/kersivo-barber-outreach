@@ -367,6 +367,14 @@ function getStatusIconMeta(booking: Booking, statusLabel: string): { Icon: (prop
 
 
 }
+const STATUS_LEGEND_ITEMS: Array<{ key: string; label: string; Icon: (props: StatusIconProps) => JSX.Element; className: string }> = [
+  { key: 'confirmed', label: 'Confirmed', Icon: CheckCircleIcon, className: 'admin-status-text--confirmed' },
+  { key: 'rescheduled', label: 'Rescheduled', Icon: Repeat2Icon, className: 'admin-status-text--rescheduled' },
+  { key: 'expired', label: 'Expired', Icon: ClockIcon, className: 'admin-status-text--pending' },
+  { key: 'cancelled-by-client', label: 'Cancelled by client', Icon: UserXIcon, className: 'admin-status-text--cancelled' },
+  { key: 'cancelled-by-shop', label: 'Cancelled by shop', Icon: BanIcon, className: 'admin-status-text--cancelled' }
+];
+
 
 function parseBookingStartAt(startAt: string) {
   const parsedDate = new Date(startAt);
@@ -1932,6 +1940,21 @@ export default function BookingsAdminPanel({ isActive, mode, onBackToDashboard }
         </div>
 
       ) : (
+                <>
+        <section className="admin-status-legend" aria-label="Status icons legend">
+          <p className="admin-status-legend__title">Status icons</p>
+          <div className="admin-status-legend__items">
+            {STATUS_LEGEND_ITEMS.map(({ key, label, Icon, className }) => (
+              <span key={key} className="admin-status-legend__item">
+                <span className="admin-status-legend__icon-wrap" aria-hidden="true">
+                  <Icon className={`admin-status-icon ${className}`} />
+                </span>
+                <span>{label}</span>
+              </span>
+            ))}
+          </div>
+        </section>
+
         <div className={`listTableWrap ${mode === 'history' ? 'listTableWrap--history' : ''}`}>
           <table className={`admin-table admin-bookings-table ${mode === 'history' ? 'admin-bookings-table--history' : ''}`}>
             <colgroup>
@@ -1970,6 +1993,7 @@ export default function BookingsAdminPanel({ isActive, mode, onBackToDashboard }
             </tbody>
           </table>
         </div>
+                </>
       )}
       {mode === 'history' && historyHasMore && <button type="button" className="btn btn--secondary" onClick={() => void loadMoreHistory()} disabled={historyLoadingMore}>{historyLoadingMore ? 'Loading...' : 'Load more'}</button>}
     </>
