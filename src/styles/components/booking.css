@@ -1,3 +1,67 @@
+
+.booking-confirmation {
+  display: grid;
+  gap: var(--space-xs);
+  border: 1px solid color-mix(in srgb, var(--accent) 44%, var(--border));
+  border-left: 4px solid var(--accent);
+  background: color-mix(in srgb, var(--surface) 88%, var(--bg));
+  padding: var(--space-md);
+  border-radius: var(--radius-sm);
+}
+
+.booking-confirmation__eyebrow {
+  margin: 0;
+  font-family: var(--font-sans);
+  font-size: 0.72rem;
+  letter-spacing: 0.14em;
+  color: color-mix(in srgb, var(--accent) 82%, var(--fg));
+  text-transform: uppercase;
+}
+
+.booking-confirmation__heading {
+  margin: 0;
+  color: var(--fg);
+}
+
+.booking-confirmation__body {
+  margin: 0;
+  color: var(--muted);
+  max-width: 70ch;
+}
+
+.booking-confirmation__summary {
+  margin: var(--space-xs) 0 0;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  background: color-mix(in srgb, var(--bg) 60%, transparent);
+  padding: var(--space-xs);
+  display: grid;
+  gap: 0.5rem;
+}
+
+.booking-confirmation__summary-row {
+  display: grid;
+  grid-template-columns: minmax(4.8rem, auto) minmax(0, 1fr);
+  gap: 0.65rem;
+  align-items: baseline;
+}
+
+.booking-confirmation__summary-row dt {
+  margin: 0;
+  font-size: 0.72rem;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--muted);
+}
+
+.booking-confirmation__summary-row dd {
+  margin: 0;
+  color: var(--fg);
+  font-weight: 600;
+  word-break: break-word;
+}
+
+
 .page-wrap {
   padding-block: var(--space-xl);
 }

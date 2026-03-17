@@ -1,6 +1,6 @@
 // src/components/booking/BookingFlow.tsx
 import React, { useEffect, useMemo, useState } from 'react';
-
+import BookingConfirmationPanel, { type BookingSummary } from './BookingConfirmationPanel';
 type Service = { id: string; name: string; durationMinutes: number; pricePence: number };
 type Barber = { id: string; name: string; serviceIds?: string[] };
 
@@ -51,6 +51,20 @@ function normalizeToIsoDate(input: string): string | null {
   return `${dmyMatch[3]}-${dmyMatch[2]}-${dmyMatch[1]}`;
 }
 
+function formatDateForSummary(isoDate: string): string {
+  const parsed = new Date(`${isoDate}T00:00:00`);
+  if (Number.isNaN(parsed.getTime())) {
+    return isoDate;
+  }
+
+  return parsed.toLocaleDateString('en-GB', {
+    timeZone: 'Europe/London',
+    weekday: 'short',
+    day: '2-digit',
+    month: 'short',
+    year: 'numeric'
+  });
+}
 
 export default function BookingFlow({ services, barbers, mode = 'create', token = '' }: Props) {
   const [serviceId, setServiceId] = useState(services[0]?.id ?? '');
@@ -62,7 +76,7 @@ export default function BookingFlow({ services, barbers, mode = 'create', token 
   const [email, setEmail] = useState('');
   const [phone, setPhone] = useState('');
   const [message, setMessage] = useState('');
-    const [isSuccess, setIsSuccess] = useState(false);
+  const [confirmation, setConfirmation] = useState<{ type: 'booked' | 'rescheduled'; summary: BookingSummary } | null>(null);
   const availableBarbers = useMemo(() => {
     if (!serviceId) return [];
     return barbers.filter((barber) => {
@@ -105,7 +119,7 @@ export default function BookingFlow({ services, barbers, mode = 'create', token 
   async function submit() {
     setMessage('');
 
-    setIsSuccess(false);
+    setConfirmation(null);
     if (!serviceId || !barberId) {
       setMessage('Please choose a service and barber.');
       return;
@@ -136,15 +150,21 @@ export default function BookingFlow({ services, barbers, mode = 'create', token 
         body: JSON.stringify(payload)
       });
 
-      const data = await res.json().catch(() => ({} as { error?: string; booking?: { startAt?: string } }));
+      const data = await res.json().catch(() => ({} as { error?: string }));
       if (!res.ok) {
         setMessage(data.error || 'Unable to reschedule booking.');
         return;
       }
 
-      const startAt = data.booking?.startAt ? new Date(data.booking.startAt).toLocaleString('en-GB', { timeZone: 'Europe/London' }) : `${isoDate} ${time}`;
-      setIsSuccess(true);
-      setMessage(`Booking rescheduled. New time: ${startAt}. A confirmation email has been sent with updated details.`);
+      setConfirmation({
+        type: 'rescheduled',
+        summary: {
+          service: selectedService?.name,
+          barber: selectedBarber?.name,
+          date: formatDateForSummary(isoDate),
+          time
+        }
+      });
 
       return;
     }
@@ -179,9 +199,15 @@ export default function BookingFlow({ services, barbers, mode = 'create', token 
       setMessage(data.error || 'Unable to create booking.');
       return;
     }
-
-    setIsSuccess(true);
-    setMessage('Booking confirmed. Your appointment has been booked successfully. A confirmation email has been sent with reschedule and cancel links.');
+    setConfirmation({
+      type: 'booked',
+      summary: {
+        service: selectedService?.name,
+        barber: selectedBarber?.name,
+        date: formatDateForSummary(isoDate),
+        time
+      }
+    });
 
   }
 
@@ -190,7 +216,9 @@ export default function BookingFlow({ services, barbers, mode = 'create', token 
       <h1>{mode === 'reschedule' ? 'Reschedule your booking' : 'Book now'}</h1>
       <p className="muted">Timezone: Europe/London • {mode === 'reschedule' ? 'Choose a new slot to update your appointment.' : 'Your booking is confirmed instantly after submission.'}</p>
 
-      {message && <p className={isSuccess ? 'admin-inline-success' : 'admin-inline-error'}>{message}</p>}
+      {confirmation ? <BookingConfirmationPanel variant={confirmation.type} summary={confirmation.summary} /> : null}
+      {message && <p className="admin-inline-error">{message}</p>}
+
 
       <div className="booking-flow__grid">
         <div className="booking-flow__field">
