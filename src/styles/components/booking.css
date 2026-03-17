@@ -2897,6 +2897,7 @@
     max-width: 100%;
     margin-inline: 0;
     padding-inline: 0;
+        padding-block: 0;
   }
 
   .admin-page-wrap .admin-main-content {
