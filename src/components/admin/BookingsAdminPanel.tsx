@@ -589,6 +589,7 @@ export default function BookingsAdminPanel({ isActive, mode, onBackToDashboard }
   const [reportsError, setReportsError] = useState('');
     const [reportsRange, setReportsRange] = useState<ReportsRange>('week');
   const [reportsBarberId, setReportsBarberId] = useState<string | null>(null);
+    const [isReportsMoreOpen, setIsReportsMoreOpen] = useState(false);
   const [chartMetric, setChartMetric] = useState<'revenue' | 'bookings' | 'cancelRate'>('revenue');
   const [openDrilldown, setOpenDrilldown] = useState<'bookings' | 'cancelled' | 'revenue' | 'service' | null>(null);
   const [drilldownSearch, setDrilldownSearch] = useState('');
@@ -631,7 +632,7 @@ export default function BookingsAdminPanel({ isActive, mode, onBackToDashboard }
   const timelineScrollRef = useRef<HTMLDivElement | null>(null);
   const searchInputRef = useRef<HTMLInputElement | null>(null);
   const searchResultsRef = useRef<HTMLDivElement | null>(null);
-
+  const reportsMoreRef = useRef<HTMLDivElement | null>(null);
   const timelineScrollRestoreRef = useRef<{ left: number; top: number } | null>(null);
   const timelineScrollRafRef = useRef<number | null>(null);
     const pendingTimelineScrollBookingIdRef = useRef<string | null>(null);
@@ -834,6 +835,27 @@ export default function BookingsAdminPanel({ isActive, mode, onBackToDashboard }
       window.removeEventListener('keydown', handleEscape);
     };
   }, [isHistoryMoreOpen]);
+  useEffect(() => {
+    if (!isReportsMoreOpen) return;
+
+    const handleOutsideClick = (event: MouseEvent) => {
+      const target = event.target as Node;
+      if (reportsMoreRef.current?.contains(target)) return;
+      setIsReportsMoreOpen(false);
+    };
+
+    const handleEscape = (event: KeyboardEvent) => {
+      if (event.key === 'Escape') setIsReportsMoreOpen(false);
+    };
+
+    document.addEventListener('mousedown', handleOutsideClick);
+    window.addEventListener('keydown', handleEscape);
+    return () => {
+      document.removeEventListener('mousedown', handleOutsideClick);
+      window.removeEventListener('keydown', handleEscape);
+    };
+  }, [isReportsMoreOpen]);
+
 
     useEffect(() => () => {
     if (timelineScrollRafRef.current) {
@@ -1976,14 +1998,68 @@ export default function BookingsAdminPanel({ isActive, mode, onBackToDashboard }
 
           <div className="admin-history-row">
             <label>Recent barbers</label>
-            <div className="admin-history-barber-controls"><div className="admin-history-recent-scroll"><div className="admin-history-recent-barbers" role="group" aria-label="Recent barbers">
-              <button type="button" className={`admin-history-avatar admin-history-avatar--all ${reportsBarberId === null ? 'is-active' : ''}`} onClick={() => setReportsBarberId(null)} aria-pressed={reportsBarberId === null}>ALL</button>
-              {reportRecentBarbers.map((barber) => {
-                const hashIndex = hashValue(`${barber.id}:${barber.name}`) % 6;
-                const isActive = reportsBarberId === barber.id;
-                return <BarberChip key={barber.id} barber={barber} toneIndex={hashIndex} isSelected={isActive} onClick={() => setReportsBarberId(barber.id)} ariaLabel={`Filter by ${barber.name}`} />;
-             })}
-            </div></div></div>
+            <div className="admin-history-barber-controls">
+              <div className="admin-history-recent-scroll">
+                <div className="admin-history-recent-barbers" role="group" aria-label="Recent barbers">
+                  <button type="button" className={`admin-history-avatar admin-history-avatar--all ${reportsBarberId === null ? 'is-active' : ''}`} onClick={() => setReportsBarberId(null)} aria-pressed={reportsBarberId === null}>ALL</button>
+                  {reportRecentBarbers.map((barber) => {
+                    const hashIndex = hashValue(`${barber.id}:${barber.name}`) % 6;
+                    const isActive = reportsBarberId === barber.id;
+                    return <BarberChip key={barber.id} barber={barber} toneIndex={hashIndex} isSelected={isActive} onClick={() => setReportsBarberId(barber.id)} ariaLabel={`Filter by ${barber.name}`} />;
+                  })}
+                </div>
+              </div>
+
+              <div className="admin-history-control-actions">
+                <div className="admin-history-more" ref={reportsMoreRef}>
+                  <button
+                    type="button"
+                    className={`admin-history-icon-button ${isReportsMoreOpen ? 'is-active' : ''}`}
+                    onClick={() => setIsReportsMoreOpen((current) => !current)}
+                    aria-haspopup="menu"
+                    aria-expanded={isReportsMoreOpen}
+                    aria-label="Show all barbers"
+                  >
+                    <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+                      <path d="M4 6.5A1.5 1.5 0 0 1 5.5 5h13A1.5 1.5 0 0 1 20 6.5v1A1.5 1.5 0 0 1 18.5 9h-13A1.5 1.5 0 0 1 4 7.5v-1Zm0 5A1.5 1.5 0 0 1 5.5 10h13a1.5 1.5 0 0 1 1.5 1.5v1a1.5 1.5 0 0 1-1.5 1.5h-13A1.5 1.5 0 0 1 4 12.5v-1Zm1.5 3.5A1.5 1.5 0 0 0 4 16.5v1A1.5 1.5 0 0 0 5.5 19h13a1.5 1.5 0 0 0 1.5-1.5v-1a1.5 1.5 0 0 0-1.5-1.5h-13Z" fill="currentColor" />
+                    </svg>
+                  </button>
+
+                  {isReportsMoreOpen ? (
+                    <div className="admin-history-more-menu" role="menu" aria-label="All barbers">
+                      <button
+                        type="button"
+                        role="menuitemradio"
+                        aria-checked={reportsBarberId === null}
+                        className={`admin-history-more-item ${reportsBarberId === null ? 'is-active' : ''}`}
+                        onClick={() => {
+                          setReportsBarberId(null);
+                          setIsReportsMoreOpen(false);
+                        }}
+                      >
+                        All barbers
+                      </button>
+                      {allBarbersSorted.map((barber) => (
+                        <button
+                          key={barber.id}
+                          type="button"
+                          role="menuitemradio"
+                          aria-checked={reportsBarberId === barber.id}
+                          className={`admin-history-more-item ${reportsBarberId === barber.id ? 'is-active' : ''}`}
+                          onClick={() => {
+                            setReportsBarberId(barber.id);
+                            setIsReportsMoreOpen(false);
+                          }}
+                        >
+                          {barber.name}
+                        </button>
+                      ))}
+                    </div>
+                  ) : null}
+                </div>
+              </div>
+            </div>
+
 
           </div>
 
