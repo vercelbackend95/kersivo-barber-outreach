@@ -178,7 +178,7 @@ model Booking {
   originalStartAt         DateTime?
   originalEndAt           DateTime?
   rescheduledAt           DateTime?
-  status                  BookingStatus @default(PENDING_CONFIRMATION)
+  status                  BookingStatus @default(CONFIRMED)
   notes                   String?
   parentBookingId         String?
   newBookingId            String?

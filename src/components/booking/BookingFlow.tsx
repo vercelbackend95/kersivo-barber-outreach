@@ -62,6 +62,7 @@ export default function BookingFlow({ services, barbers, mode = 'create', token 
   const [email, setEmail] = useState('');
   const [phone, setPhone] = useState('');
   const [message, setMessage] = useState('');
+    const [isSuccess, setIsSuccess] = useState(false);
   const availableBarbers = useMemo(() => {
     if (!serviceId) return [];
     return barbers.filter((barber) => {
@@ -69,6 +70,9 @@ export default function BookingFlow({ services, barbers, mode = 'create', token 
       return barber.serviceIds.includes(serviceId);
     });
   }, [barbers, serviceId]);
+  const selectedService = useMemo(() => services.find((s) => s.id === serviceId), [serviceId, services]);
+  const selectedBarber = useMemo(() => availableBarbers.find((b) => b.id === barberId), [availableBarbers, barberId]);
+
 
   useEffect(() => {
     if (!availableBarbers.some((barber) => barber.id === barberId)) {
@@ -97,12 +101,11 @@ export default function BookingFlow({ services, barbers, mode = 'create', token 
       });
   }, [serviceId, barberId, date]);
 
-  const selectedService = useMemo(() => services.find((s) => s.id === serviceId), [serviceId, services]);
 
   async function submit() {
     setMessage('');
 
-
+    setIsSuccess(false);
     if (!serviceId || !barberId) {
       setMessage('Please choose a service and barber.');
       return;
@@ -121,23 +124,15 @@ export default function BookingFlow({ services, barbers, mode = 'create', token 
 
     if (mode === 'reschedule') {
       if (!token) {
-        setMessage('Missing reschedule token. Please use the manage link from your email.');
+        setMessage('Missing reschedule token. Please use the secure booking link from your email.');
         return;
       }
 
-      const payload: BookingReschedulePayload = {
-        token,
-        serviceId,
-        barberId,
-        date: isoDate,
-        time
-      };
+      const payload: BookingReschedulePayload = { token, serviceId, barberId, date: isoDate, time };
 
       const res = await fetch('/api/bookings/reschedule', {
         method: 'POST',
-        headers: {
-          'content-type': 'application/json'
-        },
+        headers: { 'content-type': 'application/json' },
         body: JSON.stringify(payload)
       });
 
@@ -148,7 +143,9 @@ export default function BookingFlow({ services, barbers, mode = 'create', token 
       }
 
       const startAt = data.booking?.startAt ? new Date(data.booking.startAt).toLocaleString('en-GB', { timeZone: 'Europe/London' }) : `${isoDate} ${time}`;
-      setMessage(`Booking rescheduled successfully. New time: ${startAt}.`);
+      setIsSuccess(true);
+      setMessage(`Booking rescheduled. New time: ${startAt}. A confirmation email has been sent with updated details.`);
+
       return;
     }
 
@@ -173,34 +170,50 @@ export default function BookingFlow({ services, barbers, mode = 'create', token 
 
     const res = await fetch('/api/bookings/create', {
       method: 'POST',
-      headers: {
-        'content-type': 'application/json'
-      },
+      headers: { 'content-type': 'application/json' },
       body: JSON.stringify(payload)
     });
 
     const data = await res.json().catch(() => ({} as { error?: string }));
-    setMessage(res.ok ? 'Booking created. Check email for confirmation magic link.' : data.error || 'Unable to create booking.');
+    if (!res.ok) {
+      setMessage(data.error || 'Unable to create booking.');
+      return;
+    }
+
+    setIsSuccess(true);
+    setMessage('Booking confirmed. Your appointment has been booked successfully. A confirmation email has been sent with reschedule and cancel links.');
+
   }
 
   return (
-    <section className="surface booking-shell">
+       <section className="surface booking-shell booking-flow" aria-live="polite">
+      <h1>{mode === 'reschedule' ? 'Reschedule your booking' : 'Book now'}</h1>
+      <p className="muted">Timezone: Europe/London • {mode === 'reschedule' ? 'Choose a new slot to update your appointment.' : 'Your booking is confirmed instantly after submission.'}</p>
 
-      <h1>{mode === 'reschedule' ? 'Reschedule Booking' : 'Book Now'}</h1>
-      <p className="muted">Timezone: Europe/London • {mode === 'reschedule' ? 'Choose a new slot and submit once.' : 'Confirmation required by email.'}</p>
+      {message && <p className={isSuccess ? 'admin-inline-success' : 'admin-inline-error'}>{message}</p>}
 
-      <label>Service</label>
-      <select value={serviceId} onChange={(e) => setServiceId(e.target.value)}>
-        {services.map((service) => <option key={service.id} value={service.id}>{service.name} ({service.durationMinutes} min · £{(service.pricePence / 100).toFixed(2)})</option>)}
-      </select>
+      <div className="booking-flow__grid">
+        <div className="booking-flow__field">
+          <label>Service</label>
+          <select value={serviceId} onChange={(e) => setServiceId(e.target.value)}>
+            {services.map((service) => <option key={service.id} value={service.id}>{service.name} ({service.durationMinutes} min · £{(service.pricePence / 100).toFixed(2)})</option>)}
+          </select>
+        </div>
 
-      <label>Barber</label>
-      <select value={barberId} onChange={(e) => setBarberId(e.target.value)}>
-        {availableBarbers.map((barber) => <option key={barber.id} value={barber.id}>{barber.name}</option>)}
-      </select>
-      {availableBarbers.length === 0 && <p className="muted">No active barbers offer this service right now.</p>}
-      <label>Date</label>
-      <input type="date" value={date} onChange={(e) => setDate(e.target.value)} />
+        <div className="booking-flow__field">
+          <label>Barber</label>
+          <select value={barberId} onChange={(e) => setBarberId(e.target.value)}>
+            {availableBarbers.map((barber) => <option key={barber.id} value={barber.id}>{barber.name}</option>)}
+          </select>
+          {availableBarbers.length === 0 && <p className="muted">No active barbers offer this service right now.</p>}
+        </div>
+
+        <div className="booking-flow__field">
+          <label>Date</label>
+          <input type="date" value={date} onChange={(e) => setDate(e.target.value)} />
+        </div>
+      </div>
+
 
       <label>Available times {selectedService ? `for ${selectedService.name}` : ''}</label>
       <div className="slot-grid">
@@ -218,18 +231,28 @@ export default function BookingFlow({ services, barbers, mode = 'create', token 
       </div>
 
       {mode === 'create' && (
-        <>
-          <label>Full name</label>
-          <input value={fullName} onChange={(e) => setFullName(e.target.value)} />
-          <label>Email</label>
-          <input type="email" value={email} onChange={(e) => setEmail(e.target.value)} />
-          <label>Phone (optional)</label>
-          <input value={phone} onChange={(e) => setPhone(e.target.value)} />
-        </>
-      )}
+        <div className="booking-flow__grid">
+          <div className="booking-flow__field">
+            <label>Full name</label>
+            <input value={fullName} onChange={(e) => setFullName(e.target.value)} />
+          </div>
+          <div className="booking-flow__field">
+            <label>Email</label>
+            <input type="email" value={email} onChange={(e) => setEmail(e.target.value)} />
+          </div>
+          <div className="booking-flow__field">
+            <label>Phone (optional)</label>
+            <input value={phone} onChange={(e) => setPhone(e.target.value)} />
+          </div>
+        </div>
 
-      <button type="button" className="btn btn--primary" disabled={!time || !barberId || (mode === 'create' && (!fullName || !email))} onClick={submit}>{mode === 'reschedule' ? 'Reschedule booking' : 'Create booking'}</button>
-      {message && <p>{message}</p>}
+      )}
+      <div className="booking-flow__summary muted">
+        {selectedService?.name ?? 'Service'} • {selectedBarber?.name ?? 'Barber'} • {date} {time || ''}
+      </div>
+
+      <button type="button" className="btn btn--primary" disabled={!time || !barberId || (mode === 'create' && (!fullName || !email))} onClick={submit}>{mode === 'reschedule' ? 'Reschedule booking' : 'Confirm booking'}</button>
+
     </section>
   );
 }

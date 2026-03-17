@@ -2,12 +2,21 @@
 import '../../styles/tokens.css';
 import '../../styles/global.css';
 import '../../styles/components/booking.css';
-
+import '../../styles/components/buttons.css';
 const token = Astro.url.searchParams.get('token') ?? '';
-let message = 'Missing cancellation link. Please use the link from your booking email.';
-let isError = true;
+const confirm = Astro.url.searchParams.get('confirm') === '1';
+let heading = 'Cancel booking';
+let message = 'Confirm cancellation to cancel your appointment.';
+let showConfirmAction = Boolean(token) && !confirm;
+let isError = false;
 
-if (token) {
+if (!token) {
+  heading = 'Cancel booking';
+  message = 'Missing cancellation link. Please use the link from your booking confirmation email.';
+  isError = true;
+  showConfirmAction = false;
+} else if (confirm) {
+
   try {
     const apiResponse = await fetch(new URL('/api/bookings/cancel', Astro.url), {
       method: 'POST',
@@ -18,13 +27,19 @@ if (token) {
     const payload = await apiResponse.json();
 
     if (apiResponse.ok) {
-      message = payload?.message ?? 'Your booking has been cancelled successfully.';
-      isError = false;
+      heading = 'Booking cancelled';
+      message = payload?.message ?? 'Your appointment has been cancelled successfully.';
+      showConfirmAction = false;
     } else {
+            heading = 'Cancel booking';
       message = payload?.error ?? 'We could not cancel this booking. Please contact the shop for help.';
+            isError = true;
+      showConfirmAction = false;
     }
   } catch {
     message = 'We could not cancel this booking right now. Please try again shortly.';
+        isError = true;
+    showConfirmAction = false;
   }
 }
 ---
@@ -32,8 +47,19 @@ if (token) {
   <body>
     <main class="container page-wrap">
       <section class="surface booking-shell">
-        <h1>Cancel booking</h1>
-        <p>{message}</p>
+        <h1>{heading}</h1>
+        <p class={isError ? 'admin-inline-error' : ''}>{message}</p>
+
+        {showConfirmAction ? (
+          <div class="booking-flow__grid">
+            <a class="btn btn--destructive" href={`/book/cancel?token=${encodeURIComponent(token)}&confirm=1`}>Confirm cancellation</a>
+            <a class="btn btn--secondary" href="/book">Keep booking</a>
+          </div>
+        ) : (
+          <a class="btn btn--secondary" href="/book">Back to booking</a>
+        )}
+
+
         {isError && <p class="muted">If this keeps happening, please contact the barbershop directly.</p>}
       </section>
     </main>

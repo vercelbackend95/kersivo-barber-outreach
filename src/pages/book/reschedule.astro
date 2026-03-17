@@ -8,7 +8,7 @@ import { prisma } from '../../lib/db/client';
 import { getRescheduleTokenStatus } from '../../lib/booking/service';
 
 const token = Astro.url.searchParams.get('token') ?? '';
-const tokenStatus = token ? await getRescheduleTokenStatus(token) : { valid: false as const, message: 'Missing token.' };
+const tokenStatus = token ? await getRescheduleTokenStatus(token) : { valid: false as const, message: 'Missing secure manage-booking token.' };
 const [services, barbers] = await Promise.all([
   prisma.service.findMany({ where: { isActive: true }, orderBy: [{ displayOrder: 'asc' }, { createdAt: 'asc' }] }),
   prisma.barber.findMany({
@@ -21,29 +21,27 @@ const [services, barbers] = await Promise.all([
 <html lang="en">
   <body>
     <main class="container page-wrap">
-      <section class="surface booking-shell">
-        <h1>Reschedule booking</h1>
-        {
-          tokenStatus.valid ? (
-            <>
-            <p class="muted">Pick a new slot to update your confirmed booking.</p>
-              <BookingFlow
-                client:load
-                mode="reschedule"
-                token={token}
-                services={services}
-                barbers={barbers.map((barber) => ({
-                  id: barber.id,
-                  name: barber.name,
-                  serviceIds: barber.barberServices.map((link) => link.serviceId)
-                }))}
-              />
-            </>
-          ) : (
-            <p>{tokenStatus.message}</p>
-          )
-        }
-      </section>
+            {
+        tokenStatus.valid ? (
+          <BookingFlow
+            client:load
+            mode="reschedule"
+            token={token}
+            services={services}
+            barbers={barbers.map((barber) => ({
+              id: barber.id,
+              name: barber.name,
+              serviceIds: barber.barberServices.map((link) => link.serviceId)
+            }))}
+          />
+        ) : (
+          <section class="surface booking-shell">
+            <h1>Reschedule your booking</h1>
+            <p class="admin-inline-error">{tokenStatus.message}</p>
+            <a class="btn btn--secondary" href="/book">Back to booking</a>
+          </section>
+        )
+      }
     </main>
   </body>
 </html>

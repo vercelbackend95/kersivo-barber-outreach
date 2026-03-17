@@ -2,7 +2,7 @@ export const prerender = false;
 
 import type { APIRoute } from 'astro';
 import { bookingCreateSchema } from '../../../lib/booking/schemas';
-import { createPendingBooking } from '../../../lib/booking/service';
+import { createInstantBooking } from '../../../lib/booking/service';
 import { checkBookingRateLimit } from '../../../lib/rate-limit/bookingRateLimit';
 import { prisma } from '../../../lib/db/client';
 
@@ -53,7 +53,7 @@ export const POST: APIRoute = async ({ request }) => {
   }
 
   try {
-    const booking = await createPendingBooking(parsed.data);
+    const booking = await createInstantBooking(parsed.data);
     return new Response(JSON.stringify({ bookingId: booking.id, status: booking.status }));
   } catch (error) {
     return new Response(JSON.stringify({ error: error instanceof Error ? error.message : 'Booking failed.' }), { status: 400 });

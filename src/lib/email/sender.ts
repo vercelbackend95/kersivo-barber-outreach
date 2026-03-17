@@ -76,34 +76,13 @@ async function sendEmail(input: {
   }
 }
 
-export async function sendBookingConfirmationEmail(input: BookingEmailBaseInput & { confirmUrl: string }) {
+export async function sendInstantBookingConfirmationEmail(input: BookingEmailBaseInput & { cancelUrl: string; rescheduleUrl: string }) {
   const summaryHtml = renderBookingSummary(input);
   const html = `<p>Hi ${input.fullName},</p>
-  <p>Please confirm your booking by clicking the link below:</p>
-  <p><a href="${input.confirmUrl}">Confirm booking</a></p>
-  ${summaryHtml}`;
+  <h2>Your booking is confirmed</h2>
+  <p>Your appointment has been booked successfully.</p>
+  <p>Need to make a change? You can reschedule or cancel your booking using the links below.</p>
 
-  await sendEmail({
-    to: input.to,
-    subject: 'Confirm your booking',
-    html,
-    devLogLabel: '[DEV EMAIL] Confirm booking link',
-    devPayload: {
-      to: input.to,
-      fullName: input.fullName,
-      confirmUrl: input.confirmUrl,
-      shopName: input.shopName,
-      serviceName: input.serviceName,
-      barberName: input.barberName,
-      startAt: input.startAt.toISOString()
-    }
-  });
-}
-
-export async function sendManageBookingEmail(input: BookingEmailBaseInput & { cancelUrl: string; rescheduleUrl: string }) {
-  const summaryHtml = renderBookingSummary(input);
-  const html = `<p>Hi ${input.fullName},</p>
-  <p>Your booking is confirmed. Use one of the options below to manage it:</p>
   ${summaryHtml}
   <p><strong><a href="${input.rescheduleUrl}">Reschedule booking</a></strong></p>
   <p><strong><a href="${input.cancelUrl}">Cancel booking</a></strong></p>`;
@@ -111,9 +90,9 @@ export async function sendManageBookingEmail(input: BookingEmailBaseInput & { ca
 
   return sendEmail({
     to: input.to,
-    subject: 'Manage your booking – reschedule or cancel',
+    subject: 'Your booking is confirmed',
     html,
-    devLogLabel: '[DEV EMAIL] Manage booking links',
+    devLogLabel: '[DEV EMAIL] Instant booking confirmation',
     devPayload: {
       to: input.to,
       fullName: input.fullName,

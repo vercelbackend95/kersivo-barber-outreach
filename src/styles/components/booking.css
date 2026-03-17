@@ -24,6 +24,36 @@
   flex-wrap: wrap;
   gap: var(--space-xs);
 }
+.booking-flow__grid {
+  display: grid;
+  gap: var(--space-sm);
+  grid-template-columns: 1fr;
+}
+
+.booking-flow__field {
+  display: grid;
+  gap: var(--space-2xs);
+}
+
+.booking-flow__summary {
+  border: 1px solid var(--border);
+  padding: var(--space-sm);
+  border-radius: var(--radius-sm);
+  background: color-mix(in srgb, var(--surface) 82%, transparent);
+}
+
+@media (min-width: 680px) {
+  .booking-flow__grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (min-width: 980px) {
+  .booking-flow__grid {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+}
+
 
 .admin-table {
   width: 100%;

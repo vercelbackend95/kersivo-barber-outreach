@@ -4,7 +4,6 @@ import { BookingStatus } from '@prisma/client';
 import { prisma } from '../../lib/db/client';
 import { getTimeBlockDelegate } from '../../lib/db/timeBlocks';
 import { generateSlots } from '../../lib/booking/slots';
-import { expirePendingBookings } from '../../lib/booking/service';
 import { addMinutes, londonDayOfWeekFromIsoDate, normalizeToIsoDate, toUtcFromLondon } from '../../lib/booking/time';
 
 export const prerender = false;
@@ -48,7 +47,7 @@ export const GET: APIRoute = async ({ request }) => {
   const dayEndUtc = addMinutes(dayStartUtc, 24 * 60);
 
 
-  await expirePendingBookings();
+
   const settings = await prisma.shopSettings.findFirstOrThrow();
     const timeBlockDelegate = getTimeBlockDelegate();
 
@@ -58,7 +57,7 @@ export const GET: APIRoute = async ({ request }) => {
 
     prisma.service.findUniqueOrThrow({ where: { id: serviceId } }),
     prisma.availabilityRule.findMany({ where: { barberId, active: true, dayOfWeek } }),
-    prisma.booking.findMany({ where: { barberId, status: { in: [BookingStatus.CONFIRMED, BookingStatus.PENDING_CONFIRMATION] } }, select: { startAt: true, endAt: true } }),
+    prisma.booking.findMany({ where: { barberId, status: { in: [BookingStatus.CONFIRMED] } }, select: { startAt: true, endAt: true } }),
     prisma.barberTimeOff.findMany({ where: { barberId }, select: { startsAt: true, endsAt: true } }),
     timeBlockDelegate
       ? timeBlockDelegate.findMany({
