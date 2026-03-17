@@ -259,9 +259,11 @@ export default function BarbersOverview({
 
           })}
           <li className="admin-barber-card admin-barber-card--add">
-            <button type="button" className="admin-barber-add-btn" onClick={onOpenAddBarberSheet}>
-              <span className="admin-barber-add-icon" aria-hidden="true">+</span>
-              <span>Add barber</span>
+            <button type="button" className="admin-barber-add-btn admin-barber-add-btn--barbers" onClick={onOpenAddBarberSheet}>
+              <span className="admin-barber-add-cluster">
+                <span className="admin-barber-add-icon" aria-hidden="true">+</span>
+                <span className="admin-barber-add-label">Add barber</span>
+              </span>
             </button>
           </li>
         </ul>
