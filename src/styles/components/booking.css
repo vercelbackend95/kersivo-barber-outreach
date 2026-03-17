@@ -1752,13 +1752,17 @@
   gap: 0.72rem;
   position: fixed;
   top: 0;
+    bottom: 0;
   right: 0;
-  height: 100dvh;
+  min-height: 100vh;
+  min-height: 100svh;
+  min-height: 100dvh;
+
   width: min(84vw, 20rem);
   background: linear-gradient(180deg, color-mix(in srgb, var(--surface) 94%, var(--bg)) 0%, var(--surface) 100%);
 
   border-left: 1px solid var(--border);
-  padding: 0.75rem;
+  padding: 0.75rem 0.75rem calc(0.75rem + env(safe-area-inset-bottom, 0px));
   transform: translateX(100%);
   transition: transform 220ms ease;
   z-index: 60;
@@ -1818,6 +1822,18 @@
     grid-template-columns: minmax(12rem, 14rem) minmax(0, 1fr);
     align-items: start;
   }
+  .admin-sidebar-title {
+    font-size: 1.34rem;
+    letter-spacing: 0.14em;
+  }
+
+  .admin-sidebar-group-title {
+    font-size: 0.72rem;
+    letter-spacing: 0.2em;
+    font-weight: 700;
+    margin-bottom: 0.3rem;
+  }
+
 
   .admin-sidebar {
     display: flex;
