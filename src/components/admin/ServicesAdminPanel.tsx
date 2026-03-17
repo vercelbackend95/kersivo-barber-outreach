@@ -53,12 +53,11 @@ function toPence(input: string): number {
   if (!Number.isFinite(n)) return -1;
   return Math.round(n * 100);
 }
-
-function getServiceMeta(service: ServiceRow) {
+function getServiceMetaChunks(service: ServiceRow) {
   const chunks = [`${formatPrice(service.pricePence)}`, `${service.durationMinutes} min`];
   if (service.bufferMinutes > 0) chunks.push(`Buffer ${service.bufferMinutes} min`);
   chunks.push(`Order ${service.displayOrder}`);
-  return chunks.join(' · ');
+  return chunks;
 }
 
 export default function ServicesAdminPanel() {
@@ -228,7 +227,7 @@ export default function ServicesAdminPanel() {
         <ul className="admin-barber-grid admin-services-grid" aria-label="Services list">
           {services.map((service) => {
             const assignedBarbers = (service.barberServices ?? []).map((relation) => relation.barber);
-
+            const serviceMetaChunks = getServiceMetaChunks(service);
             return (
               <li key={service.id} className={`admin-barber-card admin-service-list-card ${service.isActive ? '' : 'is-inactive'}`}>
                 <button type="button" className="admin-barber-identity admin-service-identity" onClick={() => startEdit(service)}>
@@ -239,13 +238,24 @@ export default function ServicesAdminPanel() {
                         <span className={`admin-status-dot ${service.isActive ? 'is-active' : 'is-inactive'}`} aria-hidden="true" />
                       </span>
                     </div>
-                    <p className="admin-barber-next-line">{getServiceMeta(service)}</p>
+                    <p className="admin-barber-next-line admin-service-meta-row">
+                      {serviceMetaChunks.map((chunk, index) => (
+                        <React.Fragment key={`${service.id}-meta-${chunk}`}>
+                          {index > 0 ? <span className="admin-service-meta-separator" aria-hidden="true">•</span> : null}
+                          <span className="admin-service-meta-chip">{chunk}</span>
+                        </React.Fragment>
+                      ))}
+                    </p>
                     {service.category ? <p className="admin-barber-today-line">Category: {service.category}</p> : null}
                     {service.description ? <p className="admin-barber-today-line">{service.description}</p> : null}
                   </div>
                 </button>
 
                 <div className="admin-barber-actions admin-service-card-actions">
+                                    <p className="admin-service-actions-meta" aria-live="polite">
+                    <span className="admin-service-actions-meta-label">Barbers assigned</span>
+                    <span className="admin-service-actions-meta-value">{assignedBarbers.length}</span>
+                  </p>
                   <button
                     type="button"
                     className="admin-reorder-btn admin-reorder-btn--settings"
@@ -254,9 +264,6 @@ export default function ServicesAdminPanel() {
                   >
                     <SettingsGearIcon className="admin-control-icon" />
                   </button>
-                  <p className="admin-service-actions-meta" aria-live="polite">
-                    Barbers assigned: {assignedBarbers.length}
-                  </p>
                 </div>
               </li>
             );
@@ -264,10 +271,12 @@ export default function ServicesAdminPanel() {
 
           <li className="admin-barber-card admin-barber-card--add admin-service-card--add">
             <button type="button" className="admin-barber-add-btn" onClick={openCreateServiceSheet}>
-              <span className="admin-barber-add-icon" aria-hidden="true">
-                +
+              <span className="admin-barber-add-cluster">
+                <span className="admin-barber-add-icon" aria-hidden="true">
+                  +
+                </span>
+                <span className="admin-barber-add-label">Add service</span>
               </span>
-              <span>Add service</span>
             </button>
           </li>
         </ul>
@@ -303,7 +312,7 @@ export default function ServicesAdminPanel() {
                 <span className={`admin-status-dot ${activeServiceForPanel.isActive ? 'is-active' : 'is-inactive'}`} aria-hidden="true" />
                 {activeServiceForPanel.isActive ? 'Active' : 'Inactive'}
               </p>
-              <p className="admin-barber-next-line">{getServiceMeta(activeServiceForPanel)}</p>
+              <p className="admin-barber-next-line">{getServiceMetaChunks(activeServiceForPanel).join(' · ')}</p>
               {activeServiceForPanel.category ? <p className="admin-barber-today-line">Category: {activeServiceForPanel.category}</p> : null}
 
               <div className="admin-service-assigned-barbers">

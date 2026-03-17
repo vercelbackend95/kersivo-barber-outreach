@@ -20,30 +20,106 @@
 .admin-service-copy {
   min-width: 0;
   display: grid;
-  gap: 0.32rem;
+  gap: 0.36rem;
+}
+
+.admin-service-meta-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.35rem;
+}
+
+.admin-service-meta-chip {
+  color: color-mix(in srgb, var(--muted) 88%, var(--fg) 12%);
+  font-size: 0.78rem;
+  letter-spacing: 0.02em;
+}
+
+.admin-service-meta-separator {
+  color: color-mix(in srgb, var(--muted) 78%, var(--border) 22%);
+  font-size: 0.68rem;
+  line-height: 1;
+
 }
 
 .admin-service-card-actions {
   width: 100%;
-  display: grid;
-  grid-template-columns: auto 1fr;
+  display: flex;
+  justify-content: flex-end;
+
   align-items: center;
-  gap: 0.55rem;
+  gap: 0.6rem;
 }
 
 .admin-service-card-actions .admin-reorder-btn--settings {
-  width: 3.25rem;
-  height: 3.25rem;
+  width: 2.25rem;
+  height: 2.25rem;
+  border-color: transparent;
+  background: transparent;
+  color: color-mix(in srgb, var(--fg) 72%, var(--muted) 28%);
 }
 
-.admin-service-card-actions .admin-reorder-btn--settings:hover:not(:disabled),
+.admin-service-card-actions .admin-reorder-btn--settings:hover:not(:disabled) {
+  border-color: color-mix(in srgb, var(--accent) 24%, transparent);
+  background: color-mix(in srgb, var(--accent) 10%, transparent);
+  color: color-mix(in srgb, var(--accent) 78%, var(--fg) 22%);
+
+}
+
 .admin-service-card-actions .admin-reorder-btn--settings:focus-visible {
-  border-color: var(--accent);
-  color: var(--accent);
+  border-color: transparent;
+  color: color-mix(in srgb, var(--accent) 78%, var(--fg) 22%);
+}
+
+.admin-service-actions-meta {
+  margin: 0;
+  display: inline-flex;
+  align-items: baseline;
+  gap: 0.36rem;
+  color: var(--muted);
+  font-size: 0.72rem;
+  line-height: 1.2;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  white-space: nowrap;
+}
+
+.admin-service-actions-meta-label {
+  color: color-mix(in srgb, var(--muted) 80%, var(--fg) 20%);
+}
+
+.admin-service-actions-meta-value {
+  color: var(--fg);
+  font-size: 0.9rem;
+  font-weight: 700;
+  letter-spacing: 0.01em;
+
 }
 
 .admin-service-card--add {
-  min-height: 8.5rem;
+  min-height: 7.35rem;
+}
+
+.admin-service-card--add .admin-barber-add-btn {
+  min-height: 7.35rem;
+  align-content: center;
+}
+
+.admin-service-card--add .admin-barber-add-cluster {
+  gap: 0.52rem;
+}
+
+.admin-service-card--add .admin-barber-add-label {
+  font-size: 0.96rem;
+  letter-spacing: 0.01em;
+}
+
+.admin-service-card--add .admin-barber-add-icon {
+  width: 1.32rem;
+  height: 1.32rem;
+  font-size: 0.88rem;
+
 }
 
 .admin-service-sheet {
@@ -78,13 +154,6 @@
 
 .admin-service-sheet-foot .btn {
   width: 100%;
-}
-
-.admin-service-actions-meta {
-  margin: 0;
-  color: var(--muted);
-  font-size: 0.82rem;
-  line-height: 1.35;
 }
 
 .admin-service-assigned-barbers {
@@ -124,17 +193,36 @@
     align-items: center;
     gap: 1rem;
   }
+  .admin-service-meta-chip {
+    font-size: 0.8rem;
+  }
+
 
   .admin-service-card-actions {
     width: auto;
-    display: inline-flex;
-    justify-content: flex-end;
-    gap: 0.8rem;
+    gap: 0.75rem;
   }
 
   .admin-service-card-actions .admin-reorder-btn--settings {
-    width: 4.5rem;
-    height: 4.5rem;
+    width: 2.4rem;
+    height: 2.4rem;
+  }
+
+  .admin-service-actions-meta {
+    font-size: 0.74rem;
+  }
+
+  .admin-service-actions-meta-value {
+    font-size: 0.96rem;
+  }
+
+  .admin-service-card--add {
+    min-height: 7.6rem;
+  }
+
+  .admin-service-card--add .admin-barber-add-btn {
+    min-height: 7.6rem;
+
   }
 
   .admin-service-form-grid {
