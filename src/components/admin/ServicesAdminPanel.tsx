@@ -215,7 +215,7 @@ export default function ServicesAdminPanel() {
   return (
     <section className="surface booking-shell admin-services-shell">
       <h1>SERVICES</h1>
-      <p className="muted">Manage service catalog and pricing for all new bookings.</p>
+      <p className="muted admin-services-intro">Manage service catalog and pricing for all new bookings.</p>
 
       {message ? <p className="admin-inline-success">{message}</p> : null}
       {error ? <p className="admin-inline-error">{error}</p> : null}
@@ -252,8 +252,8 @@ export default function ServicesAdminPanel() {
                 </button>
 
                 <div className="admin-barber-actions admin-service-card-actions">
-                                    <p className="admin-service-actions-meta" aria-live="polite">
-                    <span className="admin-service-actions-meta-label">Barbers assigned</span>
+                  <p className="admin-service-actions-meta" aria-live="polite">
+                    <span className="admin-service-actions-meta-label">Assigned</span>
                     <span className="admin-service-actions-meta-value">{assignedBarbers.length}</span>
                   </p>
                   <button

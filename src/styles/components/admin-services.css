@@ -1,6 +1,10 @@
 .admin-services-shell {
   width: 100%;
 }
+.admin-services-intro {
+  margin-top: 0.15rem;
+}
+
 
 .admin-services-grid {
   margin-top: 0.75rem;
@@ -27,18 +31,23 @@
   display: flex;
   flex-wrap: wrap;
   align-items: center;
-  gap: 0.35rem;
+  gap: 0.28rem;
+  margin-top: 0.05rem;
+
 }
 
 .admin-service-meta-chip {
-  color: color-mix(in srgb, var(--muted) 88%, var(--fg) 12%);
-  font-size: 0.78rem;
-  letter-spacing: 0.02em;
+  color: color-mix(in srgb, var(--muted) 90%, var(--fg) 10%);
+  font-size: 0.74rem;
+  letter-spacing: 0.015em;
+  line-height: 1.25;
+
 }
 
 .admin-service-meta-separator {
-  color: color-mix(in srgb, var(--muted) 78%, var(--border) 22%);
-  font-size: 0.68rem;
+  color: color-mix(in srgb, var(--muted) 74%, var(--border) 26%);
+  font-size: 0.64rem;
+
   line-height: 1;
 
 }
@@ -76,22 +85,23 @@
   margin: 0;
   display: inline-flex;
   align-items: baseline;
-  gap: 0.36rem;
+  gap: 0.3rem;
   color: var(--muted);
   font-size: 0.72rem;
   line-height: 1.2;
-  letter-spacing: 0.04em;
-  text-transform: uppercase;
+  letter-spacing: 0.02em;
+  text-transform: none;
+
   white-space: nowrap;
 }
 
 .admin-service-actions-meta-label {
-  color: color-mix(in srgb, var(--muted) 80%, var(--fg) 20%);
+  color: color-mix(in srgb, var(--muted) 86%, var(--fg) 14%);
 }
 
 .admin-service-actions-meta-value {
   color: var(--fg);
-  font-size: 0.9rem;
+  font-size: 0.92rem;
   font-weight: 700;
   letter-spacing: 0.01em;
 
@@ -187,15 +197,33 @@
   border: 1px solid var(--border);
   background: color-mix(in srgb, var(--bg) 70%, transparent);
 }
+@media (max-width: 47.99rem) {
+  .admin-services-shell > h1,
+  .admin-services-shell > .admin-services-intro {
+    padding-inline: 0.5rem;
+  }
+}
+
 
 @media (min-width: 48rem) {
   .admin-service-list-card {
     align-items: center;
     gap: 1rem;
   }
+    .admin-service-meta-row {
+    gap: 0.35rem;
+    margin-top: 0;
+  }
+
+
   .admin-service-meta-chip {
     font-size: 0.8rem;
+        letter-spacing: 0.02em;
   }
+  .admin-service-meta-separator {
+    font-size: 0.68rem;
+  }
+
 
 
   .admin-service-card-actions {
@@ -209,7 +237,9 @@
   }
 
   .admin-service-actions-meta {
+        gap: 0.36rem;
     font-size: 0.74rem;
+        letter-spacing: 0.03em;
   }
 
   .admin-service-actions-meta-value {
