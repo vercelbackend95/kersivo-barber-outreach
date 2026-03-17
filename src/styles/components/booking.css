@@ -1712,7 +1712,7 @@
   text-transform: uppercase;
     letter-spacing: 0.12em;
   font-size: 1.15rem;
-  padding-inline: 0.6rem;
+  padding-inline: 0.2rem;
 }
 
 .admin-sidebar-nav {
@@ -1732,7 +1732,7 @@
   font-size: 0.66rem;
   letter-spacing: 0.18em;
   font-weight: 600;
-  padding: 0 0.6rem;
+  padding: 0 0.2rem;
   margin-bottom: 0.24rem;
 
 
