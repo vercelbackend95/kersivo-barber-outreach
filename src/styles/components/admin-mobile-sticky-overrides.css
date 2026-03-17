@@ -37,6 +37,23 @@
   }
 
   .admin-mobile-drawer {
+        top: 0;
+    right: 0;
+    bottom: 0;
+
     z-index: 410;
+        height: 100svh;
+    min-height: 100svh;
+    max-height: 100svh;
+    padding-bottom: calc(0.75rem + env(safe-area-inset-bottom, 0px));
+  }
+
+  @supports (height: 100dvh) {
+    .admin-mobile-drawer {
+      height: 100dvh;
+      min-height: 100dvh;
+      max-height: 100dvh;
+    }
+
   }
 }
