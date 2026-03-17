@@ -284,7 +284,7 @@ export default function ServicesAdminPanel() {
 
       {activeServiceForPanel ? (
         <div
-          className="admin-barber-sheet-layer"
+          className="admin-barber-sheet-layer admin-service-sheet-layer"
           role="dialog"
           aria-modal="true"
           aria-label={`${activeServiceForPanel.name} settings`}
@@ -353,7 +353,7 @@ export default function ServicesAdminPanel() {
 
       {isServiceSheetOpen ? (
         <div
-          className="admin-barber-sheet-layer"
+          className="admin-barber-sheet-layer admin-service-sheet-layer"
           role="dialog"
           aria-modal="true"
           aria-label={editingId ? 'Edit service' : 'Add service'}

@@ -1881,11 +1881,12 @@ export default function ShopAdminPanel({ initialTab = 'products' }: ShopAdminPan
                       <p className="admin-product-meta muted">{PRODUCT_CATEGORY_OPTIONS.find((option) => option.value === product.category)?.label ?? 'Styling'} • Updated {new Date(product.updatedAt).toLocaleString('en-GB')} • List position #{product.sortOrder + 1}</p>
                     </div>
 
-                    <div className="admin-reorder-controls" role="group" aria-label={`${product.name} controls`}>
-                                          <div className="admin-reorder-arrow-stack">
+                    <div className="admin-reorder-controls admin-reorder-controls--barber" role="group" aria-label={`${product.name} controls`}>
+                                          <div className="admin-reorder-arrow-stack admin-reorder-arrow-stack--barber">
+
                         <button
                           type="button"
-                          className="admin-reorder-btn"
+                          className="admin-reorder-btn admin-reorder-btn--barber"
                           aria-label={`Move ${product.name} up`}
                           disabled={productSortMode !== 'manual' || !canReorder || isFirstItem}
                           onClick={() => moveItemUp(index)}
@@ -1894,7 +1895,7 @@ export default function ShopAdminPanel({ initialTab = 'products' }: ShopAdminPan
                         </button>
                         <button
                           type="button"
-                          className="admin-reorder-btn"
+                          className="admin-reorder-btn admin-reorder-btn--barber"
                           aria-label={`Move ${product.name} down`}
                           disabled={productSortMode !== 'manual' || !canReorder || isLastItem}
                           onClick={() => moveItemDown(index)}
@@ -1905,7 +1906,7 @@ export default function ShopAdminPanel({ initialTab = 'products' }: ShopAdminPan
 
                       <button
                         type="button"
-                        className="admin-reorder-btn admin-reorder-btn--settings"
+                        className="admin-reorder-btn admin-reorder-btn--settings admin-reorder-btn--barber admin-reorder-btn--barber-settings"
                         aria-label={`Edit ${product.name}`}
                         onClick={() => startEdit(product)}
                       >

@@ -136,6 +136,13 @@
   width: min(100%, 42rem);
   max-height: min(calc(100dvh - var(--admin-mobile-sheet-top-offset, 0px)), 760px);
 }
+
+@media (max-width: 47.99rem) {
+  .admin-service-sheet-layer {
+    --admin-mobile-sheet-top-offset: calc(env(safe-area-inset-top, 0px) + var(--admin-mobile-header-h, 0px) + 1.25rem);
+  }
+}
+
 .admin-service-sheet-head {
   padding: 0.95rem 1rem;
   align-items: flex-start;
