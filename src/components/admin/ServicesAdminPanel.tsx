@@ -364,11 +364,14 @@ export default function ServicesAdminPanel() {
           }}
         >
           <form className="admin-barber-sheet admin-service-sheet" onSubmit={submitForm} onMouseDown={(event) => event.stopPropagation()}>
-            <div className="admin-barber-sheet-head">
-              <h3>{editingId ? 'Edit service' : 'Add service'}</h3>
+            <div className="admin-barber-sheet-head admin-service-sheet-head">
+              <div className="admin-service-sheet-head-copy">
+                <p className="admin-service-sheet-kicker">Service editor</p>
+                <h3>{editingId ? 'EDIT SERVICE' : 'ADD SERVICE'}</h3>
+              </div>
               <button
                 type="button"
-                className="btn btn--ghost"
+                className="btn btn--ghost admin-service-sheet-close"
                 onClick={() => setIsServiceSheetOpen(false)}
                 aria-label="Close service form"
               >
@@ -377,28 +380,34 @@ export default function ServicesAdminPanel() {
             </div>
 
             <div className="admin-barber-sheet-content admin-service-sheet-content">
-              <label htmlFor="service-name">Service name</label>
-              <input
-                id="service-name"
-                value={form.name}
-                onChange={(e) => setForm((c) => ({ ...c, name: e.target.value }))}
-                placeholder="e.g. Haircut"
-                required
-              />
+              <div className="admin-service-field-stack">
+                <label htmlFor="service-name">Service name</label>
+                <input
+                  id="service-name"
+                  value={form.name}
+                  onChange={(e) => setForm((c) => ({ ...c, name: e.target.value }))}
+                  placeholder="e.g. Haircut"
+                  required
+                />
+              </div>
 
-              <label htmlFor="service-description">Description (optional)</label>
-              <input
-                id="service-description"
-                value={form.description}
-                onChange={(e) => setForm((c) => ({ ...c, description: e.target.value }))}
-              />
+              <div className="admin-service-field-stack">
+                <label htmlFor="service-description">Description (optional)</label>
+                <input
+                  id="service-description"
+                  value={form.description}
+                  onChange={(e) => setForm((c) => ({ ...c, description: e.target.value }))}
+                />
+              </div>
 
-              <label htmlFor="service-category">Category (optional)</label>
-              <input
-                id="service-category"
-                value={form.category}
-                onChange={(e) => setForm((c) => ({ ...c, category: e.target.value }))}
-              />
+              <div className="admin-service-field-stack">
+                <label htmlFor="service-category">Category (optional)</label>
+                <input
+                  id="service-category"
+                  value={form.category}
+                  onChange={(e) => setForm((c) => ({ ...c, category: e.target.value }))}
+                />
+              </div>
 
               <div className="admin-service-form-grid">
                 <div>
@@ -443,15 +452,21 @@ export default function ServicesAdminPanel() {
                 </div>
               </div>
 
-              <label className="admin-service-checkbox" htmlFor="service-active">
-                <input
-                  id="service-active"
-                  type="checkbox"
-                  checked={form.isActive}
-                  onChange={(e) => setForm((c) => ({ ...c, isActive: e.target.checked }))}
-                />
-                <span>Active</span>
-              </label>
+              <div className="admin-service-active-row">
+                <div className="admin-service-active-copy">
+                  <p className="admin-service-active-title">Service visibility</p>
+                  <p className="admin-service-active-hint">Show this service in bookings and admin lists.</p>
+                </div>
+                <label className="admin-service-checkbox" htmlFor="service-active">
+                  <input
+                    id="service-active"
+                    type="checkbox"
+                    checked={form.isActive}
+                    onChange={(e) => setForm((c) => ({ ...c, isActive: e.target.checked }))}
+                  />
+                  <span>Active</span>
+                </label>
+              </div>
             </div>
 
             <div className="admin-barber-sheet-footer admin-service-sheet-foot">
