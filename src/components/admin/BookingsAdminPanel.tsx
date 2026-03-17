@@ -337,10 +337,6 @@ function CheckCircleIcon({ className, ...a11yProps }: StatusIconProps) {
   return <svg viewBox="0 0 24 24" className={className} fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" {...a11yProps}><circle cx="12" cy="12" r="9" /><path d="m9 12 2 2 4-4" /></svg>;
 }
 
-function ClockIcon({ className, ...a11yProps }: StatusIconProps) {
-  return <svg viewBox="0 0 24 24" className={className} fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" {...a11yProps}><circle cx="12" cy="12" r="9" /><path d="M12 7v5l3 2" /></svg>;
-}
-
 function UserXIcon({ className, ...a11yProps }: StatusIconProps) {
   return <svg viewBox="0 0 24 24" className={className} fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" {...a11yProps}><circle cx="12" cy="8" r="3" /><path d="M5 20a7 7 0 0 1 14 0" /><path d="m5 5 14 14" /></svg>;
 }
@@ -359,7 +355,6 @@ function AlertCircleIcon({ className, ...a11yProps }: StatusIconProps) {
 
 function getStatusIconMeta(booking: Booking, statusLabel: string): { Icon: (props: StatusIconProps) => JSX.Element; className: string; label: string } {
   if (statusLabel === 'CONFIRMED') return { Icon: CheckCircleIcon, className: getStatusTextColorClass(getBookingStatusTone(booking)), label: getStatusA11yLabel(statusLabel) };
-  if (statusLabel === 'EXPIRED') return { Icon: ClockIcon, className: getStatusTextColorClass(getBookingStatusTone(booking)), label: getStatusA11yLabel(statusLabel) };
   if (statusLabel === 'CANCELLED_BY_CLIENT') return { Icon: UserXIcon, className: getStatusTextColorClass(getBookingStatusTone(booking)), label: getStatusA11yLabel(statusLabel) };
   if (statusLabel === 'CANCELLED_BY_SHOP') return { Icon: BanIcon, className: getStatusTextColorClass(getBookingStatusTone(booking)), label: getStatusA11yLabel(statusLabel) };
   if (statusLabel === 'CONFIRMED · RESCHEDULED') return { Icon: Repeat2Icon, className: getStatusTextColorClass(getBookingStatusTone(booking)), label: getStatusA11yLabel(statusLabel) };
@@ -370,7 +365,6 @@ function getStatusIconMeta(booking: Booking, statusLabel: string): { Icon: (prop
 const STATUS_LEGEND_ITEMS: Array<{ key: string; label: string; Icon: (props: StatusIconProps) => JSX.Element; className: string }> = [
   { key: 'confirmed', label: 'Confirmed', Icon: CheckCircleIcon, className: 'admin-status-text--confirmed' },
   { key: 'rescheduled', label: 'Rescheduled', Icon: Repeat2Icon, className: 'admin-status-text--rescheduled' },
-  { key: 'expired', label: 'Expired', Icon: ClockIcon, className: 'admin-status-text--pending' },
   { key: 'cancelled-by-client', label: 'Cancelled by client', Icon: UserXIcon, className: 'admin-status-text--cancelled' },
   { key: 'cancelled-by-shop', label: 'Cancelled by shop', Icon: BanIcon, className: 'admin-status-text--cancelled' }
 ];
@@ -815,7 +809,7 @@ export default function BookingsAdminPanel({ isActive, mode, onBackToDashboard }
 
 
   useEffect(() => { void (async () => { try { const response = await fetch('/api/admin/session', { credentials: 'include' }); setLoggedIn(response.ok); } finally { setIsCheckingSession(false); } })(); }, []);
-  useEffect(() => { if (!loggedIn || !isActive) return; if (mode !== 'history') void fetchBookings(); void fetchBarbers(); void fetchTimeBlocks(); void fetchReports(); const id = window.setInterval(() => { if (mode !== 'history') void fetchBookings(); void fetchTimeBlocks(); void fetchReports(); }, POLL_INTERVAL_MS); return () => window.clearInterval(id); }, [activeView, fetchBookings, fetchBarbers, fetchReports, fetchTimeBlocks, isActive, loggedIn, mode]);
+  useEffect(() => { if (!loggedIn || !isActive) return; void fetchBookings(); void fetchBarbers(); void fetchTimeBlocks(); void fetchReports(); const id = window.setInterval(() => { void fetchBookings(); void fetchTimeBlocks(); void fetchReports(); }, POLL_INTERVAL_MS); return () => window.clearInterval(id); }, [activeView, fetchBookings, fetchBarbers, fetchReports, fetchTimeBlocks, isActive, loggedIn, mode]);
   useEffect(() => { if (!loggedIn || !isActive) return; const id = window.setInterval(() => setNowMs(Date.now()), LAST_UPDATED_REFRESH_MS); return () => window.clearInterval(id); }, [isActive, loggedIn]);
   useEffect(() => {
     if (!loggedIn || !isActive || mode !== 'history') return;
