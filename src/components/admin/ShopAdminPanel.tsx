@@ -740,7 +740,6 @@ export default function ShopAdminPanel({ initialTab = 'products' }: ShopAdminPan
   const [products, setProducts] = useState<Product[]>([]);
   const [loading, setLoading] = useState(false);
   const [saving, setSaving] = useState(false);
-    const [resettingShopData, setResettingShopData] = useState(false);
   const [formOpen, setFormOpen] = useState(false);
   const [form, setForm] = useState<ProductFormState>(EMPTY_FORM);
   const [error, setError] = useState<string | null>(null);
@@ -1549,42 +1548,7 @@ export default function ShopAdminPanel({ initialTab = 'products' }: ShopAdminPan
       setError(collectError instanceof Error ? collectError.message : 'Unable to mark order as collected.');
     }
   }
-    async function resetShopData() {
-    if (resettingShopData) return;
 
-    const confirmed = window.confirm('This will permanently delete all shop products and all shop orders/sales history. Continue?');
-    if (!confirmed) return;
-
-    setError(null);
-    setSuccess(null);
-    setSalesError(null);
-    setResettingShopData(true);
-
-    try {
-      const response = await fetch('/api/admin/shop/reset', {
-        method: 'POST',
-        credentials: 'include'
-      });
-      const payload = await response.json();
-      if (!response.ok) throw new Error(payload.error || 'Unable to clear shop data.');
-
-      setProducts([]);
-      setOrders([]);
-      setOrderDetailsById({});
-      setExpandedOrderId(null);
-      setSalesData(null);
-      resetForm();
-
-      await Promise.all([fetchProducts(), fetchOrders(), fetchSales()]);
-      setSuccess('Shop products, orders, and sales data have been cleared.');
-    } catch (resetError) {
-      const message = resetError instanceof Error ? resetError.message : 'Unable to clear shop data.';
-      setError(message);
-      setSalesError(message);
-    } finally {
-      setResettingShopData(false);
-    }
-  }
 
   function toggleOrderExpand(orderId: string) {
     if (expandedOrderId === orderId) {
@@ -1658,16 +1622,7 @@ export default function ShopAdminPanel({ initialTab = 'products' }: ShopAdminPan
 
 
                 <p className="admin-products-count muted">{filteredProducts.length} products • {featuredCount} featured</p>
-                              <button
-                  type="button"
-                  className="btn btn--destructive"
-                  onClick={() => {
-                    void resetShopData();
-                  }}
-                  disabled={resettingShopData}
-                >
-                  {resettingShopData ? 'Clearing...' : 'Clear shop data'}
-                </button>
+
               </div>
             </div>
           </div>
