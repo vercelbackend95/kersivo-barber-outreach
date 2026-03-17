@@ -457,14 +457,18 @@ export default function ServicesAdminPanel() {
                   <p className="admin-service-active-title">Service visibility</p>
                   <p className="admin-service-active-hint">Show this service in bookings and admin lists.</p>
                 </div>
-                <label className="admin-service-checkbox" htmlFor="service-active">
+                <label className="admin-service-switch-wrap" htmlFor="service-active">
                   <input
                     id="service-active"
                     type="checkbox"
+                                        className="admin-service-switch-input"
                     checked={form.isActive}
                     onChange={(e) => setForm((c) => ({ ...c, isActive: e.target.checked }))}
                   />
-                  <span className="admin-service-checkbox-label">Active</span>
+                  <span className="admin-service-switch-track" aria-hidden="true">
+                    <span className="admin-service-switch-thumb" />
+                  </span>
+                  <span className="admin-service-switch-label">Active</span>
                 </label>
               </div>
             </div>
