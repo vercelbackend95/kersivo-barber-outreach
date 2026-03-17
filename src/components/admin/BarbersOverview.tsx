@@ -243,12 +243,12 @@ export default function BarbersOverview({
 
                 </button>
                                 <div className="admin-barber-actions">
-                  <div className="admin-reorder-controls" role="group" aria-label={`Reorder ${barber.name}`}>
-                    <div className="admin-reorder-arrow-stack">
-                      <button type="button" className="admin-reorder-btn" onClick={() => onMoveBarber(index, 'up')} disabled={isFirstItem || barberReordering} aria-label={`Move ${barber.name} up`}>▲</button>
-                      <button type="button" className="admin-reorder-btn" onClick={() => onMoveBarber(index, 'down')} disabled={isLastItem || barberReordering} aria-label={`Move ${barber.name} down`}>▼</button>
+                  <div className="admin-reorder-controls admin-reorder-controls--barber" role="group" aria-label={`Reorder ${barber.name}`}>
+                    <div className="admin-reorder-arrow-stack admin-reorder-arrow-stack--barber">
+                      <button type="button" className="admin-reorder-btn admin-reorder-btn--barber" onClick={() => onMoveBarber(index, 'up')} disabled={isFirstItem || barberReordering} aria-label={`Move ${barber.name} up`}>▲</button>
+                      <button type="button" className="admin-reorder-btn admin-reorder-btn--barber" onClick={() => onMoveBarber(index, 'down')} disabled={isLastItem || barberReordering} aria-label={`Move ${barber.name} down`}>▼</button>
                     </div>
-                    <button type="button" className="admin-reorder-btn admin-reorder-btn--settings" onClick={() => onOpenBarber(barber.id)} aria-label={`Open ${barber.name} settings`}>
+                    <button type="button" className="admin-reorder-btn admin-reorder-btn--settings admin-reorder-btn--barber admin-reorder-btn--barber-settings" onClick={() => onOpenBarber(barber.id)} aria-label={`Open ${barber.name} settings`}>
                       <SettingsGearIcon className="admin-control-icon" />
                     </button>
                   </div>

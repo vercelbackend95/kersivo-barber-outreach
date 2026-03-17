@@ -2425,6 +2425,30 @@
   font-weight: 700;
   transition: background 120ms ease, color 120ms ease, border-color 120ms ease, opacity 120ms ease;
 }
+.admin-reorder-controls--barber {
+  align-items: center;
+  gap: 0.4rem;
+}
+
+.admin-reorder-arrow-stack--barber {
+  gap: 0;
+  border: 1px solid color-mix(in srgb, var(--border) 88%, transparent);
+  background: color-mix(in srgb, var(--surface) 80%, var(--bg) 20%);
+  overflow: hidden;
+}
+
+.admin-reorder-btn--barber {
+  width: 2rem;
+  height: 2rem;
+  background: transparent;
+  border: 0;
+  color: color-mix(in srgb, var(--fg) 82%, var(--muted) 18%);
+}
+
+.admin-reorder-btn--barber + .admin-reorder-btn--barber {
+  border-top: 1px solid color-mix(in srgb, var(--border) 78%, transparent);
+}
+
 
 .admin-settings-gear-icon {
   display: inline-block;
@@ -2441,14 +2465,22 @@
 
 
 .admin-control-icon {
-  width: 1.5rem;
-  height: 1.5rem;
+  width: 1.2rem;
+  height: 1.2rem;
+
 
 }
 .admin-reorder-btn--settings {
   width: 5rem;
   height: 5rem;
 
+}
+.admin-reorder-btn--barber-settings {
+  width: 2rem;
+  height: 4rem;
+  border: 1px solid color-mix(in srgb, var(--border) 88%, transparent);
+  background: color-mix(in srgb, var(--surface) 74%, var(--bg) 26%);
+  color: color-mix(in srgb, var(--fg) 86%, var(--muted) 14%);
 
 }
 
@@ -2458,6 +2490,16 @@
   border-color: var(--accent);
   color: var(--accent);
 }
+.admin-reorder-btn--barber:hover:not(:disabled) {
+  color: var(--accent);
+  background: color-mix(in srgb, var(--accent) 10%, transparent);
+}
+
+.admin-reorder-btn--barber-settings:hover:not(:disabled) {
+  border-color: color-mix(in srgb, var(--accent) 50%, var(--border) 50%);
+  background: color-mix(in srgb, var(--accent) 12%, var(--surface) 88%);
+}
+
 
 .admin-reorder-btn:focus-visible {
   outline: 2px solid var(--focus);
@@ -4037,9 +4079,18 @@
     width: 2rem;
     height: 2rem;
   }
- .admin-reorder-btn--settings {
+  .admin-reorder-btn--settings {
     width: 5rem;
     height: 5rem;
+  }
+  .admin-reorder-arrow-stack--barber .admin-reorder-btn--barber {
+    width: 1.95rem;
+    height: 1.95rem;
+  }
+
+  .admin-reorder-btn--barber-settings {
+    width: 1.95rem;
+    height: 3.9rem;
 
   }
 
@@ -4265,8 +4316,8 @@
   display: flex;
   justify-content: flex-end;
   justify-self: end;
-  align-items: stretch;
-  gap: 0.5rem;
+  align-items: center;
+  gap: 0.25rem;
 
 }
 
@@ -4274,12 +4325,21 @@
   .admin-barber-card {
     grid-template-columns: minmax(0, 1fr) auto;
     align-items: center;
+        gap: 0.6rem;
+    padding: 0.75rem;
+
   }
 
   .admin-barber-identity {
     align-items: center;
   }
-    .admin-barber-next-line,
+
+  .admin-barber-actions {
+    align-self: center;
+  }
+
+  .admin-barber-next-line,
+
   .admin-barber-today-line {
     font-size: 0.8rem;
   }
