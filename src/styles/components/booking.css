@@ -2427,19 +2427,22 @@
 }
 .admin-reorder-controls--barber {
   align-items: center;
-  gap: 0.4rem;
+  gap: 0.55rem;
 }
 
 .admin-reorder-arrow-stack--barber {
   gap: 0;
-  border: 1px solid color-mix(in srgb, var(--border) 88%, transparent);
-  background: color-mix(in srgb, var(--surface) 80%, var(--bg) 20%);
+  border: 1px solid color-mix(in srgb, var(--border) 72%, transparent);
+  background: color-mix(in srgb, var(--surface) 72%, var(--bg) 28%);
+  box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--surface) 60%, transparent);
+
   overflow: hidden;
 }
 
 .admin-reorder-btn--barber {
-  width: 2rem;
-  height: 2rem;
+  width: 2.1rem;
+  height: 2.1rem;
+
   background: transparent;
   border: 0;
   color: color-mix(in srgb, var(--fg) 82%, var(--muted) 18%);
@@ -2476,11 +2479,12 @@
 
 }
 .admin-reorder-btn--barber-settings {
-  width: 2rem;
-  height: 4rem;
-  border: 1px solid color-mix(in srgb, var(--border) 88%, transparent);
-  background: color-mix(in srgb, var(--surface) 74%, var(--bg) 26%);
-  color: color-mix(in srgb, var(--fg) 86%, var(--muted) 14%);
+  width: 2.2rem;
+  height: 4.2rem;
+  border: 1px solid transparent;
+  background: transparent;
+  color: color-mix(in srgb, var(--fg) 74%, var(--muted) 26%);
+
 
 }
 
@@ -2496,8 +2500,10 @@
 }
 
 .admin-reorder-btn--barber-settings:hover:not(:disabled) {
-  border-color: color-mix(in srgb, var(--accent) 50%, var(--border) 50%);
-  background: color-mix(in srgb, var(--accent) 12%, var(--surface) 88%);
+  border-color: color-mix(in srgb, var(--accent) 35%, transparent);
+  background: color-mix(in srgb, var(--accent) 8%, transparent);
+  color: color-mix(in srgb, var(--fg) 90%, var(--accent) 10%);
+
 }
 
 
@@ -4084,13 +4090,15 @@
     height: 5rem;
   }
   .admin-reorder-arrow-stack--barber .admin-reorder-btn--barber {
-    width: 1.95rem;
-    height: 1.95rem;
+    width: 2.2rem;
+    height: 2.2rem;
+
   }
 
   .admin-reorder-btn--barber-settings {
-    width: 1.95rem;
-    height: 3.9rem;
+    width: 2.35rem;
+    height: 4.4rem;
+
 
   }
 
@@ -4356,7 +4364,10 @@
 }
 
 .admin-barber-card--add {
-  border-style: dashed;
+  border-style: solid;
+  border-color: color-mix(in srgb, var(--border) 82%, transparent);
+  background: color-mix(in srgb, var(--surface) 70%, var(--bg) 30%);
+
 }
 
 .admin-barber-add-btn {
@@ -4365,22 +4376,50 @@
   border: 0;
   background: transparent;
   color: var(--fg);
-  display: grid;
-  place-items: center;
-  gap: 0.5rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.7rem;
+
   font-weight: 600;
+    letter-spacing: 0.01em;
   cursor: pointer;
+    padding: 0.95rem;
 }
 
 .admin-barber-add-icon {
-  width: 2rem;
-  height: 2rem;
-  border: 1px solid var(--border);
+  width: 1.8rem;
+  height: 1.8rem;
+  border: 1px solid color-mix(in srgb, var(--border) 75%, transparent);
+  background: color-mix(in srgb, var(--surface) 68%, var(--bg) 32%);
+
   display: grid;
   place-items: center;
-  font-size: 1.35rem;
+  font-size: 1.1rem;
   line-height: 1;
 }
+.admin-barber-add-btn:hover {
+  background: color-mix(in srgb, var(--accent) 6%, transparent);
+}
+
+.admin-barber-add-btn:hover .admin-barber-add-icon {
+  border-color: color-mix(in srgb, var(--accent) 46%, var(--border) 54%);
+  color: var(--accent);
+}
+
+.admin-barber-add-btn:focus-visible {
+  outline: 2px solid var(--focus);
+  outline-offset: 2px;
+}
+
+@media (max-width: 47.99rem) {
+  .admin-barber-add-btn {
+    min-height: 102px;
+    justify-content: flex-start;
+    padding-inline: 0.85rem;
+  }
+}
+
 
 .admin-barber-sheet-layer {
   position: fixed;
