@@ -3,7 +3,7 @@ import AdminLayout from './AdminLayout';
 import BookingsAdminPanel from './BookingsAdminPanel';
 import ShopAdminPanel from './ShopAdminPanel';
 import ServicesAdminPanel from './ServicesAdminPanel';
-import { clearAdminSecret, getStoredAdminSecret, installAdminFetchInterceptor, saveAdminSecret } from './adminAuth';
+import { getStoredAdminSecret, installAdminFetchInterceptor, saveAdminSecret } from './adminAuth';
 export type AdminSection =
   | 'bookings_dashboard'
   | 'bookings_blocks'
@@ -68,12 +68,7 @@ export default function AdminPanel() {
     setAdminSecretDraft('');
     window.location.reload();
   }, [adminSecretDraft]);
-  const handleClearAdminAccess = useCallback(() => {
-    clearAdminSecret();
-    setHasAdminSecret(false);
-    window.location.reload();
 
-  }, []);
   const shopTab = useMemo(() => {
     if (activeSection === 'shop_orders') return 'orders';
     if (activeSection === 'shop_sales') return 'sales';
@@ -109,7 +104,7 @@ export default function AdminPanel() {
   }
 
   return (
-    <AdminLayout activeSection={activeSection} onChangeSection={handleSectionChange} onClearAdminAccess={handleClearAdminAccess}>
+    <AdminLayout activeSection={activeSection} onChangeSection={handleSectionChange}>
       <BookingsAdminPanel
         isActive={isBookingsSection}
         mode={

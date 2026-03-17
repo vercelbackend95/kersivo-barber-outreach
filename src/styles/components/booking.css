@@ -1555,7 +1555,7 @@
   align-items: center;
   justify-content: space-between;
   border: 1px solid var(--border);
-  background: var(--surface);
+  background: color-mix(in srgb, var(--surface) 92%, var(--bg));
   padding: 0.6rem 0.75rem;
   margin-bottom: var(--space-sm);
 
@@ -1564,51 +1564,56 @@
 
 .admin-sidebar {
   border: 1px solid var(--border);
-  background: var(--surface);
-  padding: var(--space-sm);
+  background: linear-gradient(180deg, color-mix(in srgb, var(--surface) 94%, var(--bg)) 0%, var(--surface) 100%);
   display: none;
-  gap: var(--space-sm);
+  gap: 1rem;
 }
 
 .admin-sidebar-title {
   margin: 0;
-  letter-spacing: 0.04em;
   text-transform: uppercase;
+    letter-spacing: 0.12em;
+  font-size: 1.15rem;
+
 }
 
 .admin-sidebar-nav {
   display: grid;
-  gap: var(--space-xs);
+  gap: 1rem;
   flex: 1;
 }
 
 .admin-sidebar-group {
   display: grid;
-  gap: var(--space-xs);
+  gap: 0.35rem;
 }
 
 .admin-sidebar-group-title {
   margin: 0;
   color: var(--muted);
-  font-size: 0.8rem;
-  letter-spacing: 0.08em;
+  font-size: 0.72rem;
+  letter-spacing: 0.14em;
+
   text-transform: uppercase;
 }
 
 .admin-sidebar-divider {
   height: 1px;
-  background: var(--border);
+  background: color-mix(in srgb, var(--border) 80%, transparent);
 }
 
 .admin-sidebar-logout-wrap {
   margin-top: auto;
   display: grid;
   gap: var(--space-xs);
-  padding-top: var(--space-xs);
+  padding-top: 0.35rem;
 }
 
-.admin-sidebar-logout {
+.admin-sidebar-logout,
+.admin-mobile-logout {
+
   width: 100%;
+    justify-content: flex-start;
 }
 
 
@@ -1622,17 +1627,24 @@
 
 
 .admin-sidebar-link {
-  border: 1px solid var(--border);
-  background: var(--bg);
-  color: var(--fg);
-  padding: 0.6rem 0.7rem;
+  position: relative;
+  border: 1px solid transparent;
+  border-left: 2px solid transparent;
+  background: color-mix(in srgb, var(--bg) 72%, var(--surface));
+  color: color-mix(in srgb, var(--fg) 86%, var(--muted));
+  padding: 0.58rem 0.72rem;
+
   text-align: left;
   font: inherit;
   cursor: pointer;
+    transition: border-color 160ms ease, background-color 160ms ease, color 160ms ease;
 }
 
 .admin-sidebar-link:hover {
-  border-color: var(--status-cancelled);
+  border-color: color-mix(in srgb, var(--border) 60%, var(--accent));
+  color: var(--fg);
+  background: color-mix(in srgb, var(--surface) 76%, var(--bg));
+
 }
 
 .admin-sidebar-link:focus-visible {
@@ -1641,9 +1653,11 @@
 }
 
 .admin-sidebar-link--active {
-  background: var(--accent);
-  border-color: var(--accent);
-  color: var(--accent-contrast);
+  border-color: color-mix(in srgb, var(--accent) 35%, var(--border));
+  border-left-color: var(--accent);
+  background: color-mix(in srgb, var(--surface) 78%, var(--accent) 22%);
+  color: var(--fg);
+
 }
 
 .admin-main-content {
@@ -1661,7 +1675,7 @@
 .admin-mobile-title {
   margin: 0;
   text-transform: uppercase;
-  letter-spacing: 0.08em;
+  letter-spacing: 0.12em;
 }
 
 .admin-mobile-menu-button,
@@ -1714,10 +1728,11 @@
   top: 0;
   right: 0;
   height: 100dvh;
-  width: min(80vw, 20rem);
-  background: var(--surface);
+  width: min(86vw, 21rem);
+  background: linear-gradient(180deg, color-mix(in srgb, var(--surface) 94%, var(--bg)) 0%, var(--surface) 100%);
+
   border-left: 1px solid var(--border);
-  padding: var(--space-sm);
+  padding: 0.8rem;
   transform: translateX(100%);
   transition: transform 220ms ease;
   z-index: 60;
@@ -1737,15 +1752,13 @@
 }
 
 
-.admin-mobile-logout {
-  width: 100%;
-}
 
 
 @media (max-width: 768px) {
 
-  .admin-mobile-logout {
-    width: 100%;
+  .admin-sidebar-nav {
+    gap: 0.9rem;
+
   }
 }
 

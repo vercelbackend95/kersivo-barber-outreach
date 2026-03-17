@@ -5,27 +5,41 @@ type AdminLayoutProps = {
   activeSection: AdminSection;
   onChangeSection: (section: AdminSection) => void;
   children: React.ReactNode;
-    onClearAdminAccess: () => void;
 };
 
 type SectionItem = {
   section: AdminSection;
   label: string;
 };
+type SectionGroup = {
+  title: string;
+  items: SectionItem[];
+};
 
 
-const menuItems: SectionItem[] = [
-  { section: 'bookings_dashboard', label: 'Bookings' },
-  { section: 'bookings_blocks', label: 'Barbers' },
-  { section: 'bookings_reports', label: 'Reports' },
-  { section: 'bookings_history', label: 'History' },
-    { section: 'services', label: 'Services' },
-  { section: 'shop_products', label: 'Products' },
-  { section: 'shop_orders', label: 'Orders' },
-  { section: 'shop_sales', label: 'Sales' },
+const menuGroups: SectionGroup[] = [
+  {
+    title: 'Booking system',
+    items: [
+      { section: 'bookings_dashboard', label: 'Bookings' },
+      { section: 'bookings_blocks', label: 'Barbers' },
+      { section: 'bookings_reports', label: 'Reports' },
+      { section: 'bookings_history', label: 'History' },
+      { section: 'services', label: 'Services' },
+    ],
+  },
+  {
+    title: 'Shop / Retail',
+    items: [
+      { section: 'shop_products', label: 'Products' },
+      { section: 'shop_orders', label: 'Orders' },
+      { section: 'shop_sales', label: 'Sales' },
+    ],
+  },
+
 ];
 
-export default function AdminLayout({ activeSection, onChangeSection, onClearAdminAccess, children }: AdminLayoutProps) {
+export default function AdminLayout({ activeSection, onChangeSection, children }: AdminLayoutProps) {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const mobileDrawerRef = useRef<HTMLDivElement | null>(null);
   const mobileOpenButtonRef = useRef<HTMLButtonElement | null>(null);
@@ -42,15 +56,20 @@ export default function AdminLayout({ activeSection, onChangeSection, onClearAdm
 
   const menu = useMemo(() => (
     <nav className="admin-sidebar-nav" aria-label="Admin navigation">
-      {menuItems.map((item) => (
-        <button
-          key={item.section}
-          type="button"
-          className={`admin-sidebar-link ${activeSection === item.section ? 'admin-sidebar-link--active' : ''}`}
-          onClick={() => onSelectSection(item.section)}
-        >
-          {item.label}
-        </button>
+      {menuGroups.map((group) => (
+        <div className="admin-sidebar-group" key={group.title}>
+          <p className="admin-sidebar-group-title">{group.title}</p>
+          {group.items.map((item) => (
+            <button
+              key={item.section}
+              type="button"
+              className={`admin-sidebar-link ${activeSection === item.section ? 'admin-sidebar-link--active' : ''}`}
+              onClick={() => onSelectSection(item.section)}
+            >
+              {item.label}
+            </button>
+          ))}
+        </div>
       ))}
     </nav>
   ), [activeSection]);
@@ -108,11 +127,9 @@ export default function AdminLayout({ activeSection, onChangeSection, onClearAdm
       <aside className="admin-sidebar" aria-label="Admin sections">
         <h1 className="admin-sidebar-title">ADMIN</h1>
         {menu}
-                <div className="admin-sidebar-logout-wrap">
+        <div className="admin-sidebar-logout-wrap">
           <div className="admin-sidebar-divider" aria-hidden="true" />
-                    <button type="button" className="btn btn--secondary admin-sidebar-logout" onClick={onClearAdminAccess}>
-            Clear admin access
-          </button>
+
           <button type="button" className="btn btn--secondary admin-sidebar-logout" onClick={() => void handleLogout()}>
             Logout
           </button>
@@ -161,9 +178,7 @@ export default function AdminLayout({ activeSection, onChangeSection, onClearAdm
           </button>
         </div>
         {menu}
-                <button type="button" className="btn btn--secondary admin-mobile-logout" onClick={onClearAdminAccess}>
-          Clear admin access
-        </button>
+        <div className="admin-sidebar-divider" aria-hidden="true" />
         <button type="button" className="btn btn--secondary admin-mobile-logout" onClick={() => void handleLogout()}>
           Logout
         </button>
