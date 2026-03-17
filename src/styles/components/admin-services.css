@@ -134,7 +134,7 @@
 
 .admin-service-sheet {
   width: min(100%, 42rem);
-  max-height: min(92dvh, 760px);
+  max-height: min(calc(100dvh - var(--admin-mobile-sheet-top-offset, 0px)), 760px);
 }
 .admin-service-sheet-head {
   padding: 0.95rem 1rem;
@@ -361,6 +361,11 @@
 
 
 @media (min-width: 48rem) {
+    .admin-service-sheet {
+    max-height: min(90dvh, 760px);
+  }
+
+
   .admin-service-list-card {
     align-items: center;
     gap: 1rem;
@@ -444,9 +449,6 @@
 
 
 @media (max-width: 33.99rem) {
-  .admin-service-sheet {
-    max-height: 92dvh;
-  }
 
   .admin-service-sheet-head {
     padding: 0.85rem 0.85rem;
