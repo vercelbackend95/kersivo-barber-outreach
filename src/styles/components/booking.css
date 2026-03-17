@@ -4477,12 +4477,13 @@
 
 
 .admin-barber-sheet-layer {
+    --admin-mobile-sheet-top-offset: calc(env(safe-area-inset-top, 0px) + var(--admin-mobile-header-h, 0px) + 0.5rem);
   position: fixed;
   inset: 0;
   z-index: 140;
   display: grid;
   align-items: end;
-  padding-top: env(safe-area-inset-top);
+  padding-top: var(--admin-mobile-sheet-top-offset);
   overscroll-behavior: contain;
 }
 
@@ -4490,7 +4491,7 @@
   position: relative;
   width: 100%;
   max-width: 100vw;
-  max-height: min(88dvh, 720px);
+  max-height: min(calc(100dvh - var(--admin-mobile-sheet-top-offset)), 720px);
   background: var(--surface);
   border: 1px solid var(--border);
   border-bottom: 0;
