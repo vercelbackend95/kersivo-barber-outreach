@@ -82,6 +82,9 @@ const BOOKING_CARD_HEIGHT = 56;
 const BOOKING_STACK_GAP = 6;
 const LANE_INNER_PADDING = 8;
 const NOW_INDICATOR_REFRESH_MS = 15000;
+const INITIAL_NOW_SCROLL_OFFSET_RATIO = 0.38;
+const INITIAL_NOW_SCROLL_RETRY_COUNT = 6;
+
 let hasLoggedInvalidTimelineDate = false;
 
 function getMinuteOfDay(input: Date | string): number {
@@ -232,6 +235,21 @@ function updateNowIndicatorPosition(indicator: HTMLSpanElement, selectedDate: st
 
   indicator.style.left = `${(currentLondonMinute / TIMELINE_TOTAL_MINUTES) * 100}%`;
 }
+function getCurrentLondonTimelineMinute() {
+  const now = new Date();
+  const hour = Number(formatInTimeZone(now, ADMIN_TIMEZONE, 'HH'));
+  const minute = Number(formatInTimeZone(now, ADMIN_TIMEZONE, 'mm'));
+
+  return hour * 60 + minute - TIMELINE_START_HOUR * 60;
+}
+
+function clampScrollLeft(value: number, container: HTMLDivElement) {
+  const maxScrollLeft = Math.max(0, container.scrollWidth - container.clientWidth);
+  if (maxScrollLeft <= 0) return 0;
+  if (!Number.isFinite(value)) return 0;
+  return Math.max(0, Math.min(value, maxScrollLeft));
+}
+
 
 const NowIndicator = memo(function NowIndicator({ selectedDate }: NowIndicatorProps) {
   const indicatorRef = useRef<HTMLSpanElement | null>(null);
@@ -255,7 +273,7 @@ const NowIndicator = memo(function NowIndicator({ selectedDate }: NowIndicatorPr
 function TodayTimeline({ barbers, bookings, timeBlocks, selectedDate, isSearchActive = false, onBookingClick, scrollContainerRef }: TodayTimelineProps) {
   const localScrollContainerRef = useRef<HTMLDivElement | null>(null);
   const timelineScrollContainerRef = scrollContainerRef ?? localScrollContainerRef;
-
+  const autoPositionedDateRef = useRef<string | null>(null);
   const lanes = useMemo(() => buildLanes(barbers, bookings, timeBlocks), [barbers, bookings, timeBlocks]);
   const ticks = useMemo(() => getTickRows(), []);
   const timelineLayoutStyle = useMemo(
@@ -266,6 +284,64 @@ function TodayTimeline({ barbers, bookings, timeBlocks, selectedDate, isSearchAc
 
     []
   );
+  useEffect(() => {
+    if (autoPositionedDateRef.current === selectedDate) return;
+
+    const todayLondon = formatInTimeZone(new Date(), ADMIN_TIMEZONE, 'yyyy-MM-dd');
+    if (selectedDate !== todayLondon) {
+      autoPositionedDateRef.current = selectedDate;
+      return;
+    }
+
+    let cancelled = false;
+    let rafId = 0;
+    let timeoutId = 0;
+
+    const positionToNow = (attempt: number) => {
+      if (cancelled) return;
+
+      const container = timelineScrollContainerRef.current;
+      if (!container) {
+        if (attempt < INITIAL_NOW_SCROLL_RETRY_COUNT) {
+          timeoutId = window.setTimeout(() => {
+            rafId = window.requestAnimationFrame(() => positionToNow(attempt + 1));
+          }, 32);
+        }
+        return;
+      }
+
+      const hasOverflow = container.scrollWidth > container.clientWidth + 1;
+      if (!hasOverflow) {
+        if (attempt < INITIAL_NOW_SCROLL_RETRY_COUNT) {
+          timeoutId = window.setTimeout(() => {
+            rafId = window.requestAnimationFrame(() => positionToNow(attempt + 1));
+          }, 32);
+        }
+        return;
+      }
+
+      const nowMinute = getCurrentLondonTimelineMinute();
+      if (nowMinute < 0 || nowMinute > TIMELINE_TOTAL_MINUTES) {
+        autoPositionedDateRef.current = selectedDate;
+        return;
+      }
+
+      const nowRatio = nowMinute / TIMELINE_TOTAL_MINUTES;
+      const nowPixel = nowRatio * container.scrollWidth;
+      const targetLeft = nowPixel - container.clientWidth * INITIAL_NOW_SCROLL_OFFSET_RATIO;
+      container.scrollLeft = clampScrollLeft(targetLeft, container);
+      autoPositionedDateRef.current = selectedDate;
+    };
+
+    rafId = window.requestAnimationFrame(() => positionToNow(0));
+
+    return () => {
+      cancelled = true;
+      window.cancelAnimationFrame(rafId);
+      window.clearTimeout(timeoutId);
+    };
+  }, [selectedDate, timelineScrollContainerRef]);
+
 
 
   useEffect(() => {
