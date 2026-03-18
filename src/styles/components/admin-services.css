@@ -478,3 +478,29 @@
     gap: 0.5rem;
   }
 }
+
+.admin-service-panel-head {
+  align-items: center;
+}
+
+.admin-service-panel-head h2 {
+  margin: 0;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  font-size: clamp(1.05rem, 2.8vw, 1.2rem);
+}
+
+.admin-service-panel-close {
+  align-self: center;
+}
+
+
+.admin-service-assigned-barbers li.is-unassigned .admin-status-dot {
+  background: color-mix(in srgb, var(--muted) 78%, var(--surface) 22%);
+}
+
+@media (max-width: 47.99rem) {
+  .admin-service-panel-head {
+    padding: 1rem;
+  }
+}

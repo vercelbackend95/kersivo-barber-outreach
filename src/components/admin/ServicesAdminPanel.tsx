@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import { SettingsGearIcon } from './SettingsGearIcon';
 
 type ServiceBarberRow = {
@@ -6,6 +6,21 @@ type ServiceBarberRow = {
   name: string;
   active: boolean;
 };
+
+type BarberListRow = {
+  id: string;
+  name: string;
+  active: boolean;
+  isActive?: boolean;
+  serviceIds?: string[];
+};
+
+type ServicePanelBarberRow = {
+  id: string;
+  name: string;
+  isAssigned: boolean;
+};
+
 
 type ServiceRow = {
   id: string;
@@ -63,6 +78,7 @@ function getServiceMetaChunks(service: ServiceRow) {
 export default function ServicesAdminPanel() {
   const [services, setServices] = useState<ServiceRow[]>([]);
   const [loading, setLoading] = useState(true);
+    const [barbers, setBarbers] = useState<BarberListRow[]>([]);
   const [editingId, setEditingId] = useState<string | null>(null);
   const [form, setForm] = useState<ServiceForm>(EMPTY_FORM);
   const [message, setMessage] = useState<string>('');
@@ -76,17 +92,29 @@ export default function ServicesAdminPanel() {
     [activeServiceForPanelId, services]
   );
 
-  async function fetchServices() {
+  const fetchServices = useCallback(async () => {
     setLoading(true);
-    const res = await fetch('/api/admin/services', { credentials: 'include' });
-    const data = await res.json().catch(() => ({}));
-    setServices(data.services ?? []);
-    setLoading(false);
-  }
+
+    try {
+      const [servicesRes, barbersRes] = await Promise.all([
+        fetch('/api/admin/services', { credentials: 'include' }),
+        fetch('/api/admin/barbers', { credentials: 'include' })
+      ]);
+
+      const servicesData = await servicesRes.json().catch(() => ({} as { services?: ServiceRow[] }));
+      const barbersData = await barbersRes.json().catch(() => ({} as { barbers?: BarberListRow[] }));
+
+      setServices(servicesData.services ?? []);
+      setBarbers(barbersData.barbers ?? []);
+    } finally {
+      setLoading(false);
+    }
+  }, []);
+
 
   useEffect(() => {
     void fetchServices();
-  }, []);
+  }, [fetchServices]);
 
   useEffect(() => {
     if (!isServiceSheetOpen) return undefined;
@@ -117,6 +145,33 @@ export default function ServicesAdminPanel() {
       document.removeEventListener('keydown', onKeyDown);
     };
   }, [activeServiceForPanel]);
+
+  const barbersForActiveServicePanel = useMemo<ServicePanelBarberRow[]>(() => {
+    if (!activeServiceForPanel) return [];
+
+    const assignedBarberIds = new Set((activeServiceForPanel.barberServices ?? []).map((relation) => relation.barber.id));
+    const sourceBarbers = barbers.length > 0
+      ? barbers.map((barber) => ({ id: barber.id, name: barber.name }))
+      : (activeServiceForPanel.barberServices ?? []).map((relation) => ({
+          id: relation.barber.id,
+          name: relation.barber.name
+        }));
+
+    return sourceBarbers
+      .map((barber) => ({
+        id: barber.id,
+        name: barber.name,
+        isAssigned: assignedBarberIds.has(barber.id)
+      }))
+      .sort((left, right) => {
+        if (left.isAssigned !== right.isAssigned) {
+          return left.isAssigned ? -1 : 1;
+        }
+
+        return left.name.localeCompare(right.name, 'en', { sensitivity: 'base' });
+      });
+  }, [activeServiceForPanel, barbers]);
+
 
   function openCreateServiceSheet() {
     setEditingId(null);
@@ -295,11 +350,11 @@ export default function ServicesAdminPanel() {
           }}
         >
           <section className="admin-barber-sheet admin-service-sheet" onMouseDown={(event) => event.stopPropagation()}>
-            <div className="admin-barber-sheet-head">
-              <h3>{activeServiceForPanel.name} panel</h3>
+            <div className="admin-barber-sheet-head admin-service-panel-head admin-client-modal-head">
+              <h2>{activeServiceForPanel.name} panel</h2>
               <button
                 type="button"
-                className="btn btn--ghost"
+                className="btn btn--ghost admin-client-modal-close admin-service-panel-close"
                 onClick={() => setActiveServiceForPanelId(null)}
                 aria-label="Close service settings"
               >
@@ -317,17 +372,20 @@ export default function ServicesAdminPanel() {
 
               <div className="admin-service-assigned-barbers">
                 <h4>Barbers assigned to this service.</h4>
-                {activeServiceForPanel.barberServices && activeServiceForPanel.barberServices.length > 0 ? (
+                {barbersForActiveServicePanel.length > 0 ? (
                   <ul>
-                    {activeServiceForPanel.barberServices.map((relation) => (
-                      <li key={relation.barber.id}>
-                        <span>{relation.barber.name}</span>
-                        <span className={`admin-status-dot ${relation.barber.active ? 'is-active' : 'is-inactive'}`} aria-hidden="true" />
+                    {barbersForActiveServicePanel.map((barber) => (
+                      <li key={barber.id} className={barber.isAssigned ? 'is-assigned' : 'is-unassigned'}>
+                        <span>{barber.name}</span>
+                        <span
+                          className={`admin-status-dot ${barber.isAssigned ? 'is-active' : 'is-inactive'}`}
+                          aria-hidden="true"
+                        />
                       </li>
                     ))}
                   </ul>
                 ) : (
-                  <p className="muted">No barbers assigned yet.</p>
+                  <p className="muted">No barbers available yet.</p>
                 )}
               </div>
             </div>
