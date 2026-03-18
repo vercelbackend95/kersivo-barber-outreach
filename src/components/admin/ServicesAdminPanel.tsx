@@ -233,6 +233,13 @@ export default function ServicesAdminPanel() {
     () => services.find((service) => service.id === activeServiceForPanelId) ?? null,
     [activeServiceForPanelId, services]
   );
+  const resetServiceFormState = useCallback(() => {
+    setEditingId(null);
+    setForm(EMPTY_FORM);
+    setSelectedBarberIds([]);
+    setIsSaving(false);
+    setIsServiceSheetOpen(false);
+  }, []);
 
   const fetchServices = useCallback(async () => {
     setLoading(true);
@@ -341,14 +348,6 @@ export default function ServicesAdminPanel() {
     setError('');
     setIsServiceSheetOpen(true);
   }
-  const resetServiceFormState = useCallback(() => {
-    setEditingId(null);
-    setForm(EMPTY_FORM);
-    setSelectedBarberIds([]);
-    setIsSaving(false);
-    setIsServiceSheetOpen(false);
-  }, []);
-
 
   async function submitForm(event: React.FormEvent) {
     event.preventDefault();
