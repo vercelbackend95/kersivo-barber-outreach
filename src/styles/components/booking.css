@@ -797,18 +797,23 @@
 
 .admin-quick-actions {
   display: grid;
-  grid-template-columns: 1fr;
+  grid-template-columns: minmax(0, 1fr);
   gap: 0.85rem;
 }
 .admin-booking-quick-actions-modal {
+    position: relative;
   width: min(68rem, 100%);
+    max-width: 100%;
+  max-height: min(100dvh, 90rem);
+  padding: clamp(0.9rem, 2.8vw, 1.5rem);
+
   gap: clamp(0.9rem, 1.8vw, 1.25rem);
   background: linear-gradient(180deg, color-mix(in srgb, var(--surface) 94%, var(--bg) 6%), var(--surface));
 }
 
 .admin-booking-quick-actions-head {
   align-items: flex-start;
-  padding-bottom: 0.35rem;
+  padding: 0 3.2rem 0.35rem 0;
   border-bottom: 1px solid color-mix(in srgb, var(--border) 82%, transparent);
 }
 
@@ -856,6 +861,7 @@
 .admin-booking-quick-section {
   display: grid;
  gap: 1rem;
+   min-width: 0;
   padding: clamp(0.95rem, 1.8vw, 1.2rem);
 
   border: 1px solid color-mix(in srgb, var(--border) 88%, transparent);
@@ -1047,7 +1053,65 @@
   display: flex;
   justify-content: stretch;
 }
+.admin-booking-quick-actions-modal .admin-client-modal-close {
+  position: absolute;
+  top: 0;
+  right: 0;
+  width: 2.5rem;
+  min-width: 2.5rem;
+  min-height: 2.5rem;
+}
 
+
+@media (max-width: 39.99rem) {
+  .admin-client-modal-backdrop {
+    place-items: stretch;
+    padding: 0;
+
+  }
+
+  .admin-booking-quick-actions-modal {
+    width: 100%;
+    min-height: 100dvh;
+    max-height: 100dvh;
+    border: 0;
+
+  }
+
+
+  .admin-booking-quick-actions-head {
+    padding-right: 2.85rem;
+
+  }
+
+  .admin-booking-quick-actions-head h2 {
+    font-size: clamp(1.8rem, 10vw, 2.6rem);
+  }
+  .admin-booking-summary-item {
+    padding: 0.75rem;
+
+
+  }
+
+  .admin-booking-action-card {
+    padding: 0.9rem;
+  }
+  .admin-booking-notes-actions .btn {
+    width: 100%;
+
+
+  }
+
+
+  .admin-booking-action-card__head {
+    flex-direction: column;
+  }
+
+  .admin-booking-action-card__badge {
+    align-self: flex-start;
+
+  }
+}
 
 @media (min-width: 40rem) {
     .admin-booking-summary-grid {
@@ -1059,29 +1123,13 @@
   }
 
 
-  .admin-quick-actions {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-  }
-
   .admin-booking-notes-status {
     grid-template-columns: minmax(0, 1fr) auto;
     align-items: center;
-
   }
 
   .admin-booking-notes-status-clear {
     width: auto;
-
-  }
-}
-@media (max-width: 39.99rem) {
-  .admin-booking-action-card__head {
-    flex-direction: column;
-  }
-
-  .admin-booking-action-card__badge {
-    align-self: flex-start;
-
 
   }
 }
