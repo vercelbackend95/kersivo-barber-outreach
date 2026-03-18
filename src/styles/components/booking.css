@@ -740,6 +740,15 @@
   gap: var(--space-xs);
   align-items: center;
 }
+.admin-client-modal-close {
+  min-width: 2.2rem;
+  min-height: 2.2rem;
+  padding: 0;
+  display: grid;
+  place-items: center;
+  border-color: color-mix(in srgb, var(--border) 78%, transparent);
+}
+
 
 .admin-client-stats {
   display: grid;
@@ -4181,22 +4190,20 @@
 
   .admin-client-modal-backdrop {
     place-items: start center;
-    padding: calc(env(safe-area-inset-top, 0px) + 1.5rem) var(--space-sm) calc(env(safe-area-inset-bottom, 0px) + 1rem);
+    padding: calc(env(safe-area-inset-top, 0px) + 4.5rem) var(--space-sm) calc(env(safe-area-inset-bottom, 0px) + 1rem);
   }
 
   .admin-client-modal {
     width: min(42rem, 100%);
     max-width: 100%;
-    max-height: calc(100dvh - env(safe-area-inset-top, 0px) - env(safe-area-inset-bottom, 0px) - 2.5rem);
+    max-height: calc(100dvh - env(safe-area-inset-top, 0px) - env(safe-area-inset-bottom, 0px) - 5.5rem);
     align-self: start;
   }
 
   .admin-client-modal-head {
-    position: sticky;
-    top: calc(var(--space-sm) * -1 - 0.25rem);
-    z-index: 1;
+    position: static;
     background: var(--surface);
-        padding-top: 0.5rem;
+    padding-top: 0;
     padding-bottom: 0.35rem;
   }
 
