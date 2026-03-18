@@ -422,14 +422,12 @@ export default function ServicesAdminPanel() {
           }}
         >
           <form className="admin-barber-sheet admin-service-sheet" onSubmit={submitForm} onMouseDown={(event) => event.stopPropagation()}>
-            <div className="admin-barber-sheet-head admin-service-sheet-head">
-              <div className="admin-service-sheet-head-copy">
-                <p className="admin-service-sheet-kicker">Service editor</p>
-                <h3>{editingId ? 'EDIT SERVICE' : 'ADD SERVICE'}</h3>
-              </div>
+            <div className="admin-barber-sheet-head admin-service-sheet-head admin-service-panel-head admin-client-modal-head">
+              <h2>{editingId ? 'EDIT SERVICE' : 'ADD SERVICE'}</h2>
+
               <button
                 type="button"
-                className="btn btn--ghost admin-service-sheet-close"
+                className="btn btn--ghost admin-client-modal-close admin-service-panel-close"
                 onClick={() => setIsServiceSheetOpen(false)}
                 aria-label="Close service form"
               >
