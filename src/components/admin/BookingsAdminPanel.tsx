@@ -2144,11 +2144,30 @@ export default function BookingsAdminPanel({ isActive, mode, onBackToDashboard }
 
       {selectedTimelineBooking && (
         <div className="admin-client-modal-backdrop" role="presentation" onClick={() => setSelectedTimelineBooking(null)}>
-          <div className="admin-client-modal" role="dialog" aria-modal="true" aria-label="Booking quick actions" onClick={(event) => event.stopPropagation()}>
-            <div className="admin-client-modal-head"><h2>Booking quick actions</h2><button type="button" className="btn btn--ghost" onClick={() => setSelectedTimelineBooking(null)}>Close</button></div>
-            <p><strong>{selectedTimelineBooking.fullName}</strong><br />{selectedTimelineBooking.email}</p>
-            <p>{selectedTimelineBooking.service?.name} · {selectedTimelineBooking.barber?.name}</p>
-            <p>{new Date(selectedTimelineBooking.startAt).toLocaleString('en-GB', { timeZone: ADMIN_TIMEZONE })} → {new Date(selectedTimelineBooking.endAt).toLocaleTimeString('en-GB', { timeZone: ADMIN_TIMEZONE, hour: '2-digit', minute: '2-digit' })}</p>
+          <div
+            className="admin-client-modal admin-booking-quick-actions-modal"
+            role="dialog"
+            aria-modal="true"
+            aria-label="Booking quick actions"
+            onClick={(event) => event.stopPropagation()}
+          >
+            <div className="admin-client-modal-head admin-booking-quick-actions-head">
+              <h2>Booking quick actions</h2>
+              <button
+                type="button"
+                className="btn btn--ghost admin-client-modal-close"
+                onClick={() => setSelectedTimelineBooking(null)}
+                aria-label="Close booking quick actions"
+              >
+                ✕
+              </button>
+            </div>
+            <div className="admin-booking-quick-actions-summary">
+              <p><strong>{selectedTimelineBooking.fullName}</strong><br />{selectedTimelineBooking.email}</p>
+              <p>{selectedTimelineBooking.service?.name} · {selectedTimelineBooking.barber?.name}</p>
+              <p>{new Date(selectedTimelineBooking.startAt).toLocaleString('en-GB', { timeZone: ADMIN_TIMEZONE })} → {new Date(selectedTimelineBooking.endAt).toLocaleTimeString('en-GB', { timeZone: ADMIN_TIMEZONE, hour: '2-digit', minute: '2-digit' })}</p>
+            </div>
+
             <div className="admin-quick-actions">
               <button type="button" className="btn btn--secondary" onClick={() => void cancelBookingByShop(selectedTimelineBooking)} disabled={!canBeCancelledByShop(selectedTimelineBooking) || cancelLoadingBookingId === selectedTimelineBooking.id}>{cancelLoadingBookingId === selectedTimelineBooking.id ? 'Cancelling...' : 'Cancel'}</button>
               <button type="button" className="btn btn--ghost" disabled title="Coming next">Reschedule</button>

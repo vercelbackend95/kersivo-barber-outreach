@@ -797,9 +797,44 @@
 
 .admin-quick-actions {
   display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
+  grid-template-columns: 1fr;
   gap: var(--space-xs);
 }
+.admin-booking-quick-actions-modal {
+  gap: var(--space-sm);
+}
+
+.admin-booking-quick-actions-head {
+  align-items: flex-start;
+}
+
+.admin-booking-quick-actions-head h2 {
+  flex: 1 1 auto;
+  min-width: 0;
+}
+
+.admin-booking-quick-actions-summary {
+  display: grid;
+  gap: 0.75rem;
+}
+
+.admin-booking-quick-actions-summary p {
+  margin: 0;
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+
+.admin-booking-quick-actions-modal textarea,
+.admin-booking-quick-actions-modal .btn {
+  width: 100%;
+}
+
+@media (min-width: 40rem) {
+  .admin-quick-actions {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+}
+
 
 .admin-blocks-list {
   margin: 0;
