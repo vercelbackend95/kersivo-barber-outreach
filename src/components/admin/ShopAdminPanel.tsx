@@ -1682,7 +1682,7 @@ export default function ShopAdminPanel({ initialTab = 'products' }: ShopAdminPan
                         disabled={imageUploadStatus === 'uploading' || imageUploadStatus === 'processing'}
                       >
                         <span aria-hidden="true">⇪</span>
-                        <span>Upload from gallery / files</span>
+                        <span>Upload photo</span>
                       </button>
                     </div>
                                         <p id="admin-product-image-upload-help" className="admin-product-image-upload-help muted">Select an image from the phone gallery or device files. Camera capture is disabled.</p>
