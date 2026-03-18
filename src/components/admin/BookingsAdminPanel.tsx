@@ -1144,7 +1144,9 @@ export default function BookingsAdminPanel({ isActive, mode, onBackToDashboard }
 
 
   const isMobileDashboard = mode === 'dashboard' && isMobileViewport;
-  useBodyScrollLock(isAddBarberSheetOpen || (openDrilldown !== null && isMobileViewport));
+  const isAnyOverlayOpen = isAddBarberSheetOpen || openDrilldown !== null || showHolidayModal || selectedTimelineBooking !== null || selectedClientId !== null;
+  useBodyScrollLock(isMobileViewport && isAnyOverlayOpen);
+
   const isTimelineView = mode === 'dashboard' && activeView === 'timeline';
   const selectedDateLabel = useMemo(() => formatTimelineDateLabel(selectedDate), [selectedDate]);
 
