@@ -175,6 +175,8 @@ const SORT_ORDER_MIN = 0;
 const SORT_ORDER_MAX = 9999;
 const PRODUCT_IMAGE_MAX_SIZE_BYTES = 5 * 1024 * 1024;
 const PRODUCT_IMAGE_ALLOWED_MIME_PREFIX = 'image/';
+const PRODUCT_IMAGE_ACCEPT = '.jpg,.jpeg,.png,.webp,.gif';
+const MOBILE_PRODUCT_EDITOR_MEDIA_QUERY = '(max-width: 47.99rem)';
 
 type ProductImageUploadStatus = 'idle' | 'uploading' | 'processing' | 'uploaded' | 'failed';
 const PRODUCT_SLOT_COLORS = ['#E6EAF0', '#7DD3FC', '#5EEAD4', '#FBBF24', '#C4B5FD'];
@@ -755,7 +757,9 @@ export default function ShopAdminPanel({ initialTab = 'products' }: ShopAdminPan
   const [salesError, setSalesError] = useState<string | null>(null);
   const [salesData, setSalesData] = useState<SalesResponse | null>(null);
   const [isMobileSalesView, setIsMobileSalesView] = useState(false);
-    const [isMobileOrdersView, setIsMobileOrdersView] = useState(false);
+  const [isMobileOrdersView, setIsMobileOrdersView] = useState(false);
+  const [isMobileProductEditor, setIsMobileProductEditor] = useState(false);
+
   const [isSalesChartExpanded, setIsSalesChartExpanded] = useState(false);
   const [expandedProductSearch, setExpandedProductSearch] = useState('');
     useBodyScrollLock(formOpen || (isMobileSalesView && isSalesChartExpanded));
@@ -789,10 +793,15 @@ export default function ShopAdminPanel({ initialTab = 'products' }: ShopAdminPan
   const productMap = useMemo(() => new Map(products.map((product) => [product.id, product])), [products]);
   useEffect(() => {
     if (typeof window === 'undefined') return;
-    const mediaQuery = window.matchMedia('(max-width: 47.99rem)');
+    const mediaQuery = window.matchMedia(MOBILE_PRODUCT_EDITOR_MEDIA_QUERY);
     const handleChange = () => {
       setIsMobileSalesView(mediaQuery.matches);
-      if (!mediaQuery.matches) setIsSalesChartExpanded(false);
+      setIsMobileProductEditor(mediaQuery.matches);
+      if (!mediaQuery.matches) {
+        setIsSalesChartExpanded(false);
+        resetForm(true);
+      }
+
     };
     handleChange();
     mediaQuery.addEventListener('change', handleChange);
@@ -1173,6 +1182,11 @@ export default function ShopAdminPanel({ initialTab = 'products' }: ShopAdminPan
   }
 
   function startCreate() {
+        if (!isMobileProductEditor) {
+      setError('Add product is available on mobile only.');
+      return;
+    }
+
     const nextForm = {
       ...EMPTY_FORM,
       sortOrder: productSortMode === 'manual' ? defaultSortOrder : EMPTY_FORM.sortOrder
@@ -1192,6 +1206,11 @@ export default function ShopAdminPanel({ initialTab = 'products' }: ShopAdminPan
   }
 
   function startEdit(product: Product) {
+        if (!isMobileProductEditor) {
+      setError('Edit product is available on mobile only.');
+      return;
+    }
+
     const normalizedSortOrder = Number.isFinite(product.sortOrder)
       ? Math.min(SORT_ORDER_MAX, Math.max(SORT_ORDER_MIN, product.sortOrder))
       : defaultSortOrder;
@@ -1618,7 +1637,7 @@ export default function ShopAdminPanel({ initialTab = 'products' }: ShopAdminPan
             </div>
           </div>
 
-          {formOpen ? createPortal((
+          {formOpen && isMobileProductEditor ? createPortal((
             <div className="admin-product-sheet-backdrop" onClick={() => resetForm()}>
               <form
                 className="admin-product-sheet"
@@ -1649,12 +1668,12 @@ export default function ShopAdminPanel({ initialTab = 'products' }: ShopAdminPan
                       <input
                         ref={fileInputRef}
                         type="file"
-                        accept="image/*"
-                        capture="environment"
+                        accept={PRODUCT_IMAGE_ACCEPT}
                         onChange={onImageFileInputChange}
                         className="admin-product-image-file-input"
                         tabIndex={-1}
                         aria-hidden="true"
+                                                aria-describedby="admin-product-image-upload-help"
                       />
                       <button
                         type="button"
@@ -1663,9 +1682,10 @@ export default function ShopAdminPanel({ initialTab = 'products' }: ShopAdminPan
                         disabled={imageUploadStatus === 'uploading' || imageUploadStatus === 'processing'}
                       >
                         <span aria-hidden="true">⇪</span>
-                        <span>Upload</span>
+                        <span>Upload from gallery / files</span>
                       </button>
                     </div>
+                                        <p id="admin-product-image-upload-help" className="admin-product-image-upload-help muted">Select an image from the phone gallery or device files. Camera capture is disabled.</p>
                     <label className="admin-product-field admin-product-image-url-field">Image URL (fallback)
                       <input
                         type="url"
@@ -1819,6 +1839,12 @@ export default function ShopAdminPanel({ initialTab = 'products' }: ShopAdminPan
           <div className="admin-products-scroll" role="region" aria-label="Products list">
             {error ? <p className="admin-inline-error">{error}</p> : null}
             {success ? <p className="admin-inline-success">{success}</p> : null}
+            {!isMobileProductEditor ? (
+              <div className="admin-products-mobile-only-note" role="note">
+                <p className="admin-products-mobile-only-note__eyebrow">Mobile only</p>
+                <p className="admin-products-mobile-only-note__body">Use a phone viewport to add products, edit products, and upload product images.</p>
+              </div>
+            ) : null}
 
             <div className="admin-products-cards">
               {filteredProducts.length === 0 ? (
@@ -1866,14 +1892,17 @@ export default function ShopAdminPanel({ initialTab = 'products' }: ShopAdminPan
                         </button>
                       </div>
 
-                      <button
-                        type="button"
-                        className="admin-reorder-btn admin-reorder-btn--settings admin-reorder-btn--barber admin-reorder-btn--barber-settings"
-                        aria-label={`Edit ${product.name}`}
-                        onClick={() => startEdit(product)}
-                      >
-                        <SettingsGearIcon className="admin-control-icon" />
-                      </button>
+                      {isMobileProductEditor ? (
+                        <button
+                          type="button"
+                          className="admin-reorder-btn admin-reorder-btn--settings admin-reorder-btn--barber admin-reorder-btn--barber-settings"
+                          aria-label={`Edit ${product.name}`}
+                          onClick={() => startEdit(product)}
+                        >
+                          <SettingsGearIcon className="admin-control-icon" />
+                        </button>
+                      ) : null}
+
                     </div>
 
                   </div>
@@ -1907,12 +1936,15 @@ export default function ShopAdminPanel({ initialTab = 'products' }: ShopAdminPan
                 </article>
                 );
               })}
-              <article className="admin-product-card admin-product-card--add">
-                <button type="button" className="admin-product-add-btn" onClick={startCreate}>
-                  <span className="admin-product-add-icon" aria-hidden="true">+</span>
-                  <span>Add product</span>
-                </button>
-              </article>
+              {isMobileProductEditor ? (
+                <article className="admin-product-card admin-product-card--add">
+                  <button type="button" className="admin-product-add-btn" onClick={startCreate}>
+                    <span className="admin-product-add-icon" aria-hidden="true">+</span>
+                    <span>Add product</span>
+                  </button>
+                </article>
+              ) : null}
+
             </div>
 
           </div>

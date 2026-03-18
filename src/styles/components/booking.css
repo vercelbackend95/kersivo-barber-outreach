@@ -2977,6 +2977,36 @@
   gap: 0.4rem;
     touch-action: manipulation;
 }
+.admin-product-image-upload-help {
+  margin: 0;
+  font-size: 0.76rem;
+  line-height: 1.45;
+}
+
+.admin-products-mobile-only-note {
+  display: grid;
+  gap: 0.3rem;
+  border: 1px solid var(--border);
+  background: color-mix(in srgb, var(--surface) 88%, var(--bg));
+  padding: 0.85rem;
+}
+
+.admin-products-mobile-only-note__eyebrow,
+.admin-products-mobile-only-note__body {
+  margin: 0;
+}
+
+.admin-products-mobile-only-note__eyebrow {
+  font-size: 0.72rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--muted);
+}
+
+.admin-products-mobile-only-note__body {
+  color: var(--fg);
+}
+
 
 .admin-product-image-url-field {
   min-width: 0;
