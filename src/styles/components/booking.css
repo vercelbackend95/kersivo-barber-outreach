@@ -798,40 +798,236 @@
 .admin-quick-actions {
   display: grid;
   grid-template-columns: 1fr;
-  gap: var(--space-xs);
+  gap: 0.75rem;
 }
 .admin-booking-quick-actions-modal {
-  gap: var(--space-sm);
+  width: min(68rem, 100%);
+  gap: clamp(0.9rem, 1.8vw, 1.25rem);
+  background:
+    linear-gradient(180deg, color-mix(in srgb, var(--surface) 94%, var(--bg) 6%), var(--surface));
+
 }
 
 .admin-booking-quick-actions-head {
   align-items: flex-start;
+    padding-bottom: 0.2rem;
+  border-bottom: 1px solid color-mix(in srgb, var(--border) 82%, transparent);
+}
+
+.admin-booking-quick-actions-head-copy {
+  min-width: 0;
+  display: grid;
+  gap: 0.35rem;
+}
+
+.admin-booking-quick-actions-eyebrow,
+.admin-booking-quick-section-kicker {
+  margin: 0;
+  font-family: var(--font-display);
+  font-size: 0.84rem;
+  line-height: 1;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--muted);
+}
+
+.admin-booking-quick-actions-subtitle {
+  margin: 0;
+  max-width: 42rem;
+  color: var(--muted);
+  font-size: 0.92rem;
+
 }
 
 .admin-booking-quick-actions-head h2 {
   flex: 1 1 auto;
   min-width: 0;
+    margin: 0;
+  font-family: var(--font-display);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  font-size: clamp(1.5rem, 3vw, 2rem);
+  line-height: 0.95;
+
 }
 
-.admin-booking-quick-actions-summary {
+.admin-booking-quick-actions-layout {
+  display: grid;
+  gap: clamp(0.9rem, 1.8vw, 1.15rem);
+}
+
+.admin-booking-quick-section {
+  display: grid;
+  gap: 0.85rem;
+  padding: clamp(0.85rem, 1.6vw, 1.1rem);
+  border: 1px solid color-mix(in srgb, var(--border) 88%, transparent);
+  background: color-mix(in srgb, var(--surface) 86%, var(--bg) 14%);
+  box-shadow: inset 0 1px 0 color-mix(in srgb, var(--fg) 4%, transparent);
+}
+
+.admin-booking-quick-section--summary {
+  background: linear-gradient(180deg, color-mix(in srgb, var(--surface) 92%, var(--bg) 8%), color-mix(in srgb, var(--surface) 84%, var(--bg) 16%));
+
+}
+
+.admin-booking-quick-section-head {
+  display: grid;
+  gap: 0.24rem;
+}
+
+.admin-booking-quick-section-head h3 {
+
+  margin: 0;
+  font-family: var(--font-display);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  font-size: 1.08rem;
+  line-height: 1;
+}
+
+.admin-booking-summary-card {
+  display: grid;
+  gap: 1rem;
+}
+
+.admin-booking-summary-identity {
+  display: grid;
+  gap: 0.22rem;
+  padding-bottom: 0.9rem;
+  border-bottom: 1px solid color-mix(in srgb, var(--border) 80%, transparent);
+}
+
+.admin-booking-summary-name,
+.admin-booking-summary-email,
+.admin-booking-summary-item dt,
+.admin-booking-summary-item dd,
+.admin-booking-quick-action__label,
+.admin-booking-quick-action__meta,
+.admin-booking-notes-card label {
+  margin: 0;
+}
+
+.admin-booking-summary-name {
+  font-size: clamp(1.05rem, 2vw, 1.35rem);
+  font-weight: 700;
+  color: var(--fg);
+}
+
+.admin-booking-summary-email {
+  color: var(--muted);
+  font-size: 0.95rem;
+}
+
+.admin-booking-summary-grid {
+  margin: 0;
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 0.75rem;
+}
+
+.admin-booking-summary-item {
+  display: grid;
+  gap: 0.28rem;
+  padding: 0.75rem;
+  border: 1px solid color-mix(in srgb, var(--border) 88%, transparent);
+  background: color-mix(in srgb, var(--bg) 52%, var(--surface) 48%);
+}
+
+.admin-booking-summary-item dt {
+  color: var(--muted);
+  font-size: 0.78rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.admin-booking-summary-item dd {
+  color: var(--fg);
+  font-size: 0.97rem;
+  line-height: 1.45;
+}
+
+.admin-booking-quick-action {
+  width: 100%;
+  min-height: 5.4rem;
+  padding: 0.95rem;
+  display: grid;
+  align-content: start;
+  justify-items: start;
+  gap: 0.32rem;
+  text-align: left;
+}
+
+.admin-booking-quick-action__label {
+  font-weight: 700;
+  font-size: 0.98rem;
+  color: inherit;
+}
+
+.admin-booking-quick-action__meta {
+  color: var(--muted);
+  font-size: 0.82rem;
+  line-height: 1.35;
+}
+
+.admin-booking-quick-action--danger:not(:disabled) {
+  border-color: color-mix(in srgb, var(--accent) 52%, var(--border));
+  background: color-mix(in srgb, var(--accent) 10%, var(--surface) 90%);
+}
+
+.admin-booking-notes-card {
   display: grid;
   gap: 0.75rem;
 }
 
-.admin-booking-quick-actions-summary p {
-  margin: 0;
-  min-width: 0;
-  overflow-wrap: anywhere;
+.admin-booking-notes-card label {
+  color: var(--fg);
+  font-weight: 600;
+
 }
 
 .admin-booking-quick-actions-modal textarea,
 .admin-booking-quick-actions-modal .btn {
   width: 100%;
 }
+.admin-booking-quick-actions-modal textarea {
+  min-height: 8.5rem;
+  resize: vertical;
+}
+
+.admin-booking-notes-actions {
+  display: flex;
+  justify-content: stretch;
+}
+
 
 @media (min-width: 40rem) {
+    .admin-booking-summary-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .admin-booking-summary-item--wide {
+    grid-column: 1 / -1;
+  }
+
+
   .admin-quick-actions {
-    grid-template-columns: repeat(3, minmax(0, 1fr));
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (min-width: 62rem) {
+  .admin-booking-quick-actions-layout {
+    grid-template-columns: minmax(0, 0.95fr) minmax(0, 1.05fr);
+    align-items: start;
+  }
+
+  .admin-quick-actions {
+    grid-template-columns: 1fr;
+  }
+
+  .admin-booking-notes-card {
+    min-height: 100%;
+
   }
 }
 

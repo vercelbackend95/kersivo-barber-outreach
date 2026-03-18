@@ -2152,7 +2152,12 @@ export default function BookingsAdminPanel({ isActive, mode, onBackToDashboard }
             onClick={(event) => event.stopPropagation()}
           >
             <div className="admin-client-modal-head admin-booking-quick-actions-head">
-              <h2>Booking quick actions</h2>
+              <div className="admin-booking-quick-actions-head-copy">
+                <p className="admin-booking-quick-actions-eyebrow">Booking quick actions</p>
+                <h2>Booking quick actions</h2>
+                <p className="admin-booking-quick-actions-subtitle">Review the appointment, use quick actions, and update internal notes.</p>
+              </div>
+
               <button
                 type="button"
                 className="btn btn--ghost admin-client-modal-close"
@@ -2162,21 +2167,71 @@ export default function BookingsAdminPanel({ isActive, mode, onBackToDashboard }
                 ✕
               </button>
             </div>
-            <div className="admin-booking-quick-actions-summary">
-              <p><strong>{selectedTimelineBooking.fullName}</strong><br />{selectedTimelineBooking.email}</p>
-              <p>{selectedTimelineBooking.service?.name} · {selectedTimelineBooking.barber?.name}</p>
-              <p>{new Date(selectedTimelineBooking.startAt).toLocaleString('en-GB', { timeZone: ADMIN_TIMEZONE })} → {new Date(selectedTimelineBooking.endAt).toLocaleTimeString('en-GB', { timeZone: ADMIN_TIMEZONE, hour: '2-digit', minute: '2-digit' })}</p>
-            </div>
+            <section className="admin-booking-quick-section admin-booking-quick-section--summary" aria-labelledby="booking-summary-heading">
+              <div className="admin-booking-quick-section-head">
+                <p className="admin-booking-quick-section-kicker">Booking summary</p>
+                <h3 id="booking-summary-heading">Appointment overview</h3>
+              </div>
+              <div className="admin-booking-summary-card">
+                <div className="admin-booking-summary-identity">
+                  <p className="admin-booking-summary-name">{selectedTimelineBooking.fullName}</p>
+                  <p className="admin-booking-summary-email">{selectedTimelineBooking.email}</p>
+                </div>
+                <dl className="admin-booking-summary-grid">
+                  <div className="admin-booking-summary-item">
+                    <dt>Service</dt>
+                    <dd>{selectedTimelineBooking.service?.name || '—'}</dd>
+                  </div>
+                  <div className="admin-booking-summary-item">
+                    <dt>Barber</dt>
+                    <dd>{selectedTimelineBooking.barber?.name || '—'}</dd>
+                  </div>
+                  <div className="admin-booking-summary-item admin-booking-summary-item--wide">
+                    <dt>Date &amp; time</dt>
+                    <dd>{new Date(selectedTimelineBooking.startAt).toLocaleString('en-GB', { timeZone: ADMIN_TIMEZONE })} → {new Date(selectedTimelineBooking.endAt).toLocaleTimeString('en-GB', { timeZone: ADMIN_TIMEZONE, hour: '2-digit', minute: '2-digit' })}</dd>
+                  </div>
+                </dl>
+              </div>
+            </section>
 
-            <div className="admin-quick-actions">
-              <button type="button" className="btn btn--secondary" onClick={() => void cancelBookingByShop(selectedTimelineBooking)} disabled={!canBeCancelledByShop(selectedTimelineBooking) || cancelLoadingBookingId === selectedTimelineBooking.id}>{cancelLoadingBookingId === selectedTimelineBooking.id ? 'Cancelling...' : 'Cancel'}</button>
-              <button type="button" className="btn btn--ghost" disabled title="Coming next">Reschedule</button>
-              <button type="button" className="btn btn--ghost" onClick={() => setTimelineNotesMessage('')}>Notes</button>
+            <div className="admin-booking-quick-actions-layout">
+              <section className="admin-booking-quick-section admin-booking-quick-section--actions" aria-labelledby="booking-actions-heading">
+                <div className="admin-booking-quick-section-head">
+                  <p className="admin-booking-quick-section-kicker">Quick actions</p>
+                  <h3 id="booking-actions-heading">Manage this booking</h3>
+                </div>
+                <div className="admin-quick-actions">
+                  <button type="button" className="btn btn--secondary admin-booking-quick-action admin-booking-quick-action--danger" onClick={() => void cancelBookingByShop(selectedTimelineBooking)} disabled={!canBeCancelledByShop(selectedTimelineBooking) || cancelLoadingBookingId === selectedTimelineBooking.id}>
+                    <span className="admin-booking-quick-action__label">{cancelLoadingBookingId === selectedTimelineBooking.id ? 'Cancelling...' : 'Cancel'}</span>
+                    <span className="admin-booking-quick-action__meta">Cancel this appointment from the admin side.</span>
+                  </button>
+                  <button type="button" className="btn btn--ghost admin-booking-quick-action" disabled title="Coming next">
+                    <span className="admin-booking-quick-action__label">Reschedule</span>
+                    <span className="admin-booking-quick-action__meta">Coming next</span>
+                  </button>
+                  <button type="button" className="btn btn--ghost admin-booking-quick-action" onClick={() => setTimelineNotesMessage('')}>
+                    <span className="admin-booking-quick-action__label">Notes</span>
+                    <span className="admin-booking-quick-action__meta">Clear the current notes status message.</span>
+                  </button>
+                </div>
+              </section>
+
+              <section className="admin-booking-quick-section admin-booking-quick-section--notes" aria-labelledby="booking-notes-heading">
+                <div className="admin-booking-quick-section-head">
+                  <p className="admin-booking-quick-section-kicker">Notes</p>
+                  <h3 id="booking-notes-heading">Internal booking notes</h3>
+                </div>
+                <div className="admin-booking-notes-card">
+                  <label htmlFor="booking-notes">Notes</label>
+                  <textarea id="booking-notes" rows={5} value={timelineNotesDraft} onChange={(event) => setTimelineNotesDraft(event.target.value)} />
+                  {timelineNotesMessage ? <p className={timelineNotesMessage === 'Notes saved.' ? 'admin-inline-success' : 'admin-inline-error'}>{timelineNotesMessage}</p> : null}
+                  <div className="admin-booking-notes-actions">
+                    <button type="button" className="btn btn--primary" onClick={() => void saveTimelineBookingNotes()} disabled={timelineNotesSaving}>{timelineNotesSaving ? 'Saving...' : 'Save notes'}</button>
+                  </div>
+                </div>
+              </section>
+
             </div>
-            <label htmlFor="booking-notes">Notes</label>
-            <textarea id="booking-notes" rows={4} value={timelineNotesDraft} onChange={(event) => setTimelineNotesDraft(event.target.value)} />
-            {timelineNotesMessage ? <p className={timelineNotesMessage === 'Notes saved.' ? 'admin-inline-success' : 'admin-inline-error'}>{timelineNotesMessage}</p> : null}
-            <button type="button" className="btn btn--primary" onClick={() => void saveTimelineBookingNotes()} disabled={timelineNotesSaving}>{timelineNotesSaving ? 'Saving...' : 'Save notes'}</button>
           </div>
         </div>
       )}
