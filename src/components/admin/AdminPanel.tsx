@@ -13,6 +13,19 @@ export type AdminSection =
   | 'shop_products'
   | 'shop_orders'
   | 'shop_sales';
+function clearTransientAdminViewportState() {
+  if (typeof document === 'undefined') return;
+
+  const { body, documentElement } = document;
+  body.style.overflow = '';
+  body.style.overscrollBehavior = '';
+  body.style.position = '';
+  body.style.top = '';
+  body.style.left = '';
+  body.style.right = '';
+  body.style.width = '';
+  documentElement.style.overflow = '';
+}
 
 
 function getSectionFromUrl(): AdminSection {
@@ -80,6 +93,10 @@ export default function AdminPanel() {
     || activeSection === 'bookings_blocks'
     || activeSection === 'bookings_reports'
     || activeSection === 'bookings_history';
+  useEffect(() => {
+    clearTransientAdminViewportState();
+  }, [activeSection]);
+
 
   if (!hasAdminSecret) {
     return (
@@ -106,6 +123,7 @@ export default function AdminPanel() {
   return (
     <AdminLayout activeSection={activeSection} onChangeSection={handleSectionChange}>
       <BookingsAdminPanel
+              key={isBookingsSection ? activeSection : 'bookings-hidden'}
         isActive={isBookingsSection}
         mode={
           activeSection === 'bookings_blocks'
@@ -120,11 +138,11 @@ export default function AdminPanel() {
       />
       
       {activeSection === 'services' ? (
-        <ServicesAdminPanel />
+        <ServicesAdminPanel key="services" />
       ) : null}
 
       {activeSection === 'shop_products' || activeSection === 'shop_orders' || activeSection === 'shop_sales' ? (
-        <ShopAdminPanel initialTab={shopTab} />
+        <ShopAdminPanel key={activeSection} initialTab={shopTab} />
       ) : null}
 
     </AdminLayout>
