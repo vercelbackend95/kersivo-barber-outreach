@@ -630,6 +630,7 @@ export default function BookingsAdminPanel({ isActive, mode, onBackToDashboard }
   const timeBlocksRequestIdRef = useRef(0);
 
   const previousSignaturesRef = useRef<Map<string, string>>(new Map());
+    const lastBookingsQueryKeyRef = useRef<string | null>(null);
   const updatedRowsTimeoutRef = useRef<number | null>(null);
   const timelineScrollRef = useRef<HTMLDivElement | null>(null);
   const searchInputRef = useRef<HTMLInputElement | null>(null);
@@ -737,7 +738,11 @@ export default function BookingsAdminPanel({ isActive, mode, onBackToDashboard }
     if (mode === 'history' && !appendHistory) setHistoryCursor(null);
 
     inFlightRef.current = true;
-        const requestId = ++bookingsRequestIdRef.current;
+    const requestId = ++bookingsRequestIdRef.current;
+    const requestQueryKey = mode === 'history'
+      ? ['history', historyDateRange?.from ? formatInTimeZone(historyDateRange.from, ADMIN_TIMEZONE, 'yyyy-MM-dd') : '', historyDateRange?.to ? formatInTimeZone(historyDateRange.to, ADMIN_TIMEZONE, 'yyyy-MM-dd') : ''].join(':')
+      : ['dashboard', selectedDate].join(':');
+
 
     try {
       const endpoint = (() => {
@@ -769,7 +774,12 @@ export default function BookingsAdminPanel({ isActive, mode, onBackToDashboard }
       const incomingBookings = data.bookings ?? [];
       const mergedBookings = appendHistory ? [...bookings, ...incomingBookings] : incomingBookings;
       const nextSignatures = new Map(mergedBookings.map((b) => [b.id, bookingRefreshSignature(b)]));
-      const changedIds = mergedBookings.filter((b) => previousSignaturesRef.current.get(b.id) !== nextSignatures.get(b.id)).map((b) => b.id);
+      const previousQueryKey = lastBookingsQueryKeyRef.current;
+      const canHighlightUpdatedRows = !appendHistory && previousSignaturesRef.current.size > 0 && previousQueryKey === requestQueryKey;
+      const changedIds = canHighlightUpdatedRows
+        ? mergedBookings.filter((b) => previousSignaturesRef.current.get(b.id) !== nextSignatures.get(b.id)).map((b) => b.id)
+        : [];
+
       const shouldUpdateBookings = appendHistory || hasCollectionChanged(bookings, mergedBookings, bookingRefreshSignature);
       if (shouldUpdateBookings) {
         if (activeView === 'timeline') captureTimelineScroll();
@@ -783,6 +793,7 @@ export default function BookingsAdminPanel({ isActive, mode, onBackToDashboard }
       }
 
       previousSignaturesRef.current = nextSignatures;
+            lastBookingsQueryKeyRef.current = requestQueryKey;
       setLastSuccessAt(Date.now());
 
       if (shouldUpdateBookings && changedIds.length) {
