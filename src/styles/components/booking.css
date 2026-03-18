@@ -4181,21 +4181,22 @@
 
   .admin-client-modal-backdrop {
     place-items: start center;
-    padding: calc(env(safe-area-inset-top, 0px) + 0.75rem) var(--space-sm) calc(env(safe-area-inset-bottom, 0px) + 0.75rem);
+    padding: calc(env(safe-area-inset-top, 0px) + 1.5rem) var(--space-sm) calc(env(safe-area-inset-bottom, 0px) + 1rem);
   }
 
   .admin-client-modal {
     width: min(42rem, 100%);
     max-width: 100%;
-    max-height: calc(100dvh - env(safe-area-inset-top, 0px) - env(safe-area-inset-bottom, 0px) - 1.5rem);
+    max-height: calc(100dvh - env(safe-area-inset-top, 0px) - env(safe-area-inset-bottom, 0px) - 2.5rem);
     align-self: start;
   }
 
   .admin-client-modal-head {
     position: sticky;
-    top: 0;
+    top: calc(var(--space-sm) * -1 - 0.25rem);
     z-index: 1;
     background: var(--surface);
+        padding-top: 0.5rem;
     padding-bottom: 0.35rem;
   }
 
