@@ -3,9 +3,9 @@ export const prerender = false;
 import type { APIRoute } from 'astro';
 import { z } from 'zod';
 import { requireAdmin } from '../../../../../lib/admin/auth';
-import { prisma } from '../../../../../lib/db/client';
+import { runSerializableTransaction } from '../../../../../lib/db/serializableTransaction';
 import { resolveShopId } from '../../../../../lib/db/shopScope';
-
+import { normalizeProductOrderAfterDeletion } from '../../../../../lib/products/sortOrder';
 const deleteSchema = z.object({ id: z.string().min(1) });
 
 export const POST: APIRoute = async (ctx) => {
@@ -19,19 +19,35 @@ export const POST: APIRoute = async (ctx) => {
 
   try {
     const shopId = await resolveShopId();
-    const existing = await prisma.product.findFirst({ where: { id: parsed.data.id, shopId }, select: { id: true } });
-    if (!existing) {
-      return new Response(JSON.stringify({ error: 'Product not found.' }), { status: 404 });
-    }
+    const deleted = await runSerializableTransaction(async (tx) => {
+      const existing = await tx.product.findFirst({
+        where: { id: parsed.data.id, shopId },
+        select: { id: true }
+      });
 
-    await prisma.product.delete({
-      where: { id: parsed.data.id }
+      if (!existing) {
+        throw new Error('Product not found.');
+      }
+
+      const removedProduct = await tx.product.delete({
+        where: { id: parsed.data.id }
+      });
+
+      await normalizeProductOrderAfterDeletion(tx, shopId);
+      return removedProduct;
+
 
     });
 
-    return new Response(JSON.stringify({ ok: true }), { status: 200 });
+    return new Response(JSON.stringify({ ok: true, product: deleted }), { status: 200 });
   } catch (error) {
     console.error('Failed to delete product', error);
+    
+    if (error instanceof Error && error.message === 'Product not found.') {
+      return new Response(JSON.stringify({ error: error.message }), { status: 404 });
+    }
+
+
     if (typeof error === 'object' && error && 'code' in error && (error as { code?: string }).code === 'P2003') {
       return new Response(JSON.stringify({ error: 'Product cannot be deleted because it is linked to past orders.' }), { status: 409 });
     }

@@ -233,6 +233,7 @@ model Product {
 
   @@index([shopId, active])
   @@index([shopId, sortOrder])
+    @@unique([shopId, sortOrder])
 }
 model Order {
   id              String      @id @default(cuid())

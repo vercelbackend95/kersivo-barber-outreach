@@ -3,9 +3,9 @@ export const prerender = false;
 import type { APIRoute } from 'astro';
 import { z } from 'zod';
 import { requireAdmin } from '../../../../../lib/admin/auth';
-import { prisma } from '../../../../../lib/db/client';
+import { runSerializableTransaction } from '../../../../../lib/db/serializableTransaction';
 import { resolveShopId } from '../../../../../lib/db/shopScope';
-
+import { persistProductOrder } from '../../../../../lib/products/sortOrder';
 const reorderSchema = z.object({
   orderedIds: z.array(z.string().min(1)).min(1)
 });
@@ -21,25 +21,25 @@ export const POST: APIRoute = async (ctx) => {
 
   try {
     const shopId = await resolveShopId();
-    const existing = await prisma.product.findMany({ where: { shopId }, select: { id: true } });
-    const existingIds = new Set(existing.map((product) => product.id));
+    const products = await runSerializableTransaction(async (tx) => {
+      await persistProductOrder(tx, shopId, parsed.data.orderedIds);
 
-    if (parsed.data.orderedIds.some((id) => !existingIds.has(id))) {
-      return new Response(JSON.stringify({ error: 'Invalid product ids.' }), { status: 400 });
-    }
+      return tx.product.findMany({
+        where: { shopId },
+        orderBy: [{ sortOrder: 'asc' }, { updatedAt: 'desc' }]
+      });
 
-    await prisma.$transaction(
-      parsed.data.orderedIds.map((id, index) => prisma.product.update({ where: { id }, data: { sortOrder: index } }))
-    );
-
-    const products = await prisma.product.findMany({
-      where: { shopId },
-      orderBy: [{ sortOrder: 'asc' }, { updatedAt: 'desc' }]
     });
 
     return new Response(JSON.stringify({ ok: true, products }), { status: 200 });
   } catch (error) {
     console.error('Failed to reorder products', error);
+    
+    if (error instanceof Error && error.message.includes('payload')) {
+      return new Response(JSON.stringify({ error: 'Invalid product ids.' }), { status: 400 });
+    }
+
+
     return new Response(JSON.stringify({ error: 'Unable to reorder products.' }), { status: 500 });
   }
 };
