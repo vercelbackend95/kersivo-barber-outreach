@@ -138,32 +138,23 @@ function useBodyScrollLock(isLocked: boolean): void {
     if (!isLocked || typeof window === 'undefined') return undefined;
 
     const scrollY = window.scrollY;
-    const { body } = document;
+    const { body, documentElement } = document;
     const previousStyles = {
-      position: body.style.position,
-      top: body.style.top,
-      left: body.style.left,
-      right: body.style.right,
-      width: body.style.width,
-      overflow: body.style.overflow
+      htmlOverflow: documentElement.style.overflow,
+      bodyOverflow: body.style.overflow,
+      overscrollBehavior: body.style.overscrollBehavior
     };
 
-    body.style.position = 'fixed';
-    body.style.top = `-${scrollY}px`;
-    body.style.left = '0';
-    body.style.right = '0';
-    body.style.width = '100%';
+    documentElement.style.overflow = 'hidden';
     body.style.overflow = 'hidden';
+        body.style.overscrollBehavior = 'contain';
 
     return () => {
-      const restoredScrollY = Number.parseInt(body.style.top || '0', 10) * -1;
-      body.style.position = previousStyles.position;
-      body.style.top = previousStyles.top;
-      body.style.left = previousStyles.left;
-      body.style.right = previousStyles.right;
-      body.style.width = previousStyles.width;
-      body.style.overflow = previousStyles.overflow;
-      window.scrollTo(0, Number.isFinite(restoredScrollY) ? restoredScrollY : scrollY);
+      documentElement.style.overflow = previousStyles.htmlOverflow;
+      body.style.overflow = previousStyles.bodyOverflow;
+      body.style.overscrollBehavior = previousStyles.overscrollBehavior;
+      window.scrollTo({ top: scrollY, left: 0, behavior: 'auto' });
+
     };
   }, [isLocked]);
 }
@@ -1629,10 +1620,26 @@ export default function ShopAdminPanel({ initialTab = 'products' }: ShopAdminPan
 
           {formOpen ? createPortal((
             <div className="admin-product-sheet-backdrop" onClick={() => resetForm()}>
-              <form className="admin-product-sheet" onSubmit={saveProduct} onClick={(event) => event.stopPropagation()}>
+              <form
+                className="admin-product-sheet"
+                onSubmit={saveProduct}
+                onClick={(event) => event.stopPropagation()}
+                role="dialog"
+                aria-modal="true"
+                aria-labelledby="admin-product-sheet-title"
+              >
+
                 <div className="admin-product-sheet-head">
-                  <h3>{form.id ? 'Edit product' : 'Add product'}</h3>
-                  <button type="button" className="btn btn--ghost" onClick={() => resetForm()}>Close</button>
+                  <h3 id="admin-product-sheet-title">{form.id ? 'Edit product' : 'Add product'}</h3>
+                  <button
+                    type="button"
+                    className="admin-product-sheet-close"
+                    onClick={() => resetForm()}
+                    aria-label="Close product form"
+                  >
+                    ✕
+                  </button>
+
                 </div>
                 <p className="admin-product-unsaved muted">{formDirty ? 'Unsaved changes' : 'All changes saved'}</p>
                 <div className="admin-product-image-section">
