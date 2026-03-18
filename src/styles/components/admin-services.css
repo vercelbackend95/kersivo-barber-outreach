@@ -308,6 +308,226 @@
   color: color-mix(in srgb, var(--fg) 94%, var(--accent));
 }
 
+.admin-service-assignment-section {
+  display: grid;
+  gap: 0.8rem;
+  padding: 0.85rem;
+  border: 1px solid var(--border);
+  background: color-mix(in srgb, var(--surface) 84%, var(--bg));
+}
+
+.admin-service-assignment-header {
+  display: grid;
+  gap: 0.65rem;
+}
+
+.admin-service-assignment-copy {
+  display: grid;
+  gap: 0.22rem;
+}
+
+.admin-service-assignment-eyebrow,
+.admin-service-assignment-copy h3,
+.admin-service-assignment-count,
+.admin-service-assignment-tool {
+  margin: 0;
+}
+
+.admin-service-assignment-eyebrow {
+  color: color-mix(in srgb, var(--muted) 86%, var(--fg) 14%);
+  font-size: 0.76rem;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.admin-service-assignment-copy h3 {
+  font-size: 0.95rem;
+  line-height: 1.35;
+  color: var(--fg);
+}
+
+.admin-service-assignment-tools {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.45rem 0.7rem;
+}
+
+.admin-service-assignment-count {
+  color: color-mix(in srgb, var(--fg) 88%, var(--muted) 12%);
+  font-size: 0.76rem;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+}
+
+.admin-service-assignment-tool {
+  border: 0;
+  padding: 0;
+  background: transparent;
+  color: color-mix(in srgb, var(--muted) 82%, var(--fg) 18%);
+  font: inherit;
+  font-size: 0.82rem;
+  letter-spacing: 0.02em;
+  cursor: pointer;
+  transition: color 0.18s ease;
+}
+
+.admin-service-assignment-tool:hover:not(:disabled),
+.admin-service-assignment-tool:focus-visible {
+  color: var(--accent);
+}
+
+.admin-service-assignment-tool:focus-visible {
+  outline: 2px solid var(--focus);
+  outline-offset: 2px;
+}
+
+.admin-service-assignment-tool:disabled {
+  color: color-mix(in srgb, var(--muted) 58%, var(--border) 42%);
+  cursor: not-allowed;
+}
+
+.admin-service-assignment-feedback,
+.admin-service-assignment-empty p,
+.admin-service-assignment-empty span {
+  margin: 0;
+}
+
+.admin-service-assignment-empty {
+  display: grid;
+  gap: 0.28rem;
+  padding: 0.9rem;
+  border: 1px dashed color-mix(in srgb, var(--border) 78%, var(--muted) 22%);
+  background: color-mix(in srgb, var(--bg) 72%, transparent);
+}
+
+.admin-service-assignment-empty p {
+  color: var(--fg);
+  font-size: 0.92rem;
+}
+
+.admin-service-assignment-empty span {
+  color: var(--muted);
+  font-size: 0.82rem;
+  line-height: 1.45;
+}
+
+.admin-service-assignment-list {
+  display: grid;
+  gap: 0.55rem;
+}
+
+.admin-service-assignment-row {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  padding: 0.75rem 0.85rem;
+  border: 1px solid color-mix(in srgb, var(--border) 88%, var(--bg) 12%);
+  background: color-mix(in srgb, var(--bg) 62%, var(--surface) 38%);
+  color: var(--fg);
+  text-align: left;
+  cursor: pointer;
+  transition: border-color 0.18s ease, background-color 0.18s ease, color 0.18s ease, transform 0.18s ease;
+}
+
+.admin-service-assignment-row:hover {
+  border-color: color-mix(in srgb, var(--accent) 22%, var(--border) 78%);
+  background: color-mix(in srgb, var(--surface) 88%, var(--bg));
+}
+
+.admin-service-assignment-row:focus-visible {
+  outline: 2px solid var(--focus);
+  outline-offset: 2px;
+}
+
+.admin-service-assignment-row:active {
+  transform: translateY(1px);
+}
+
+.admin-service-assignment-row.is-selected {
+  border-color: color-mix(in srgb, var(--accent) 42%, var(--border) 58%);
+  background: color-mix(in srgb, var(--accent) 10%, var(--surface) 90%);
+}
+
+.admin-service-assignment-row-main {
+  min-width: 0;
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  flex: 1;
+}
+
+.admin-service-assignment-avatar {
+  width: 2.85rem;
+  height: 2.85rem;
+  flex-shrink: 0;
+  border-color: color-mix(in srgb, var(--border) 82%, var(--fg) 18%);
+  background: color-mix(in srgb, var(--surface) 78%, var(--bg) 22%);
+}
+
+.admin-service-assignment-text {
+  min-width: 0;
+  display: grid;
+  gap: 0.24rem;
+}
+
+.admin-service-assignment-name-row {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  min-width: 0;
+}
+
+.admin-service-assignment-name {
+  min-width: 0;
+  font-size: 0.95rem;
+  font-weight: 600;
+  line-height: 1.2;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.admin-service-assignment-status {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.admin-service-assignment-subline {
+  color: color-mix(in srgb, var(--muted) 88%, var(--fg) 12%);
+  font-size: 0.8rem;
+  line-height: 1.35;
+}
+
+.admin-service-assignment-indicator {
+  width: 1.35rem;
+  height: 1.35rem;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid color-mix(in srgb, var(--border) 88%, var(--bg) 12%);
+  background: color-mix(in srgb, var(--surface) 84%, var(--bg) 16%);
+  color: transparent;
+  flex-shrink: 0;
+  transition: border-color 0.18s ease, background-color 0.18s ease, color 0.18s ease;
+}
+
+.admin-service-assignment-indicator.is-selected {
+  border-color: color-mix(in srgb, var(--accent) 64%, var(--border) 36%);
+  background: color-mix(in srgb, var(--accent) 88%, var(--surface) 12%);
+  color: var(--accent-contrast);
+}
+
+.admin-service-assignment-indicator-mark {
+  font-size: 0.82rem;
+  line-height: 1;
+}
+
+
 
 .admin-service-assigned-barbers {
   border: 1px solid var(--border);
@@ -349,6 +569,16 @@
 
 
 @media (min-width: 48rem) {
+    .admin-service-assignment-header {
+    grid-template-columns: minmax(0, 1fr) auto;
+    align-items: end;
+  }
+
+  .admin-service-assignment-tools {
+    justify-content: flex-end;
+  }
+
+
     .admin-service-sheet {
     max-height: min(90dvh, 760px);
   }
@@ -429,6 +659,28 @@
 }
 
 @media (max-width: 33.99rem) {
+    .admin-service-assignment-section {
+    padding: 0.78rem;
+  }
+
+  .admin-service-assignment-row {
+    padding: 0.72rem 0.74rem;
+  }
+
+  .admin-service-assignment-avatar {
+    width: 2.65rem;
+    height: 2.65rem;
+  }
+
+  .admin-service-assignment-name {
+    font-size: 0.92rem;
+  }
+
+  .admin-service-assignment-subline {
+    font-size: 0.78rem;
+  }
+
+
   .admin-service-switch-wrap {
     align-self: flex-start;
     padding-inline: 0;

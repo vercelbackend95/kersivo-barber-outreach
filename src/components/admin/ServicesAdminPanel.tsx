@@ -12,7 +12,11 @@ type BarberListRow = {
   name: string;
   active: boolean;
   isActive?: boolean;
+    avatarUrl?: string | null;
+  email?: string | null;
+
   serviceIds?: string[];
+    todayIsOnShift?: boolean;
 };
 
 type ServicePanelBarberRow = {
@@ -47,6 +51,13 @@ type ServiceForm = {
   displayOrder: string;
   isActive: boolean;
 };
+type BarberAssignmentSectionProps = {
+  barbers: BarberListRow[];
+  selectedBarberIds: string[];
+  isLoading: boolean;
+  onChange: (barberIds: string[]) => void;
+};
+
 
 const EMPTY_FORM: ServiceForm = {
   name: '',
@@ -74,15 +85,146 @@ function getServiceMetaChunks(service: ServiceRow) {
   chunks.push(`Order ${service.displayOrder}`);
   return chunks;
 }
+function getInitials(name: string) {
+  const parts = name
+    .trim()
+    .split(/\s+/)
+    .filter(Boolean)
+    .slice(0, 2);
+
+  if (parts.length === 0) return 'B';
+  return parts.map((part) => part.charAt(0).toUpperCase()).join('');
+}
+
+function BarberAssignmentSection({ barbers, selectedBarberIds, isLoading, onChange }: BarberAssignmentSectionProps) {
+  const selectedBarberIdSet = useMemo(() => new Set(selectedBarberIds), [selectedBarberIds]);
+
+  const sortedBarbers = useMemo(
+    () =>
+      [...barbers].sort((left, right) => {
+        const leftIsActive = left.isActive ?? left.active;
+        const rightIsActive = right.isActive ?? right.active;
+
+        if (leftIsActive !== rightIsActive) {
+          return leftIsActive ? -1 : 1;
+        }
+
+        return left.name.localeCompare(right.name, 'en', { sensitivity: 'base' });
+      }),
+    [barbers]
+  );
+
+  const availableBarberIds = useMemo(() => sortedBarbers.map((barber) => barber.id), [sortedBarbers]);
+  const activeSelectionCount = selectedBarberIds.filter((id) => availableBarberIds.includes(id)).length;
+
+  function toggleBarber(barberId: string) {
+    if (selectedBarberIdSet.has(barberId)) {
+      onChange(selectedBarberIds.filter((id) => id !== barberId));
+      return;
+    }
+
+    onChange([...selectedBarberIds, barberId]);
+  }
+
+  function selectAll() {
+    onChange(availableBarberIds);
+  }
+
+  function clearSelection() {
+    onChange([]);
+  }
+
+  return (
+    <section className="admin-service-assignment-section" aria-labelledby="service-barber-assignment-title">
+      <div className="admin-service-assignment-header">
+        <div className="admin-service-assignment-copy">
+          <p className="admin-service-assignment-eyebrow">BARBERS FOR THIS SERVICE</p>
+          <h3 id="service-barber-assignment-title">Choose which barbers can offer this service.</h3>
+        </div>
+
+        <div className="admin-service-assignment-tools" aria-label="Barber selection tools">
+          <span className="admin-service-assignment-count">{activeSelectionCount} selected</span>
+          <button
+            type="button"
+            className="admin-service-assignment-tool"
+            onClick={selectAll}
+            disabled={availableBarberIds.length === 0 || activeSelectionCount === availableBarberIds.length}
+          >
+            Select all
+          </button>
+          <button
+            type="button"
+            className="admin-service-assignment-tool"
+            onClick={clearSelection}
+            disabled={activeSelectionCount === 0}
+          >
+            Clear
+          </button>
+        </div>
+      </div>
+
+      {isLoading ? <p className="muted admin-service-assignment-feedback">Loading barbers…</p> : null}
+
+      {!isLoading && sortedBarbers.length === 0 ? (
+        <div className="admin-service-assignment-empty" role="status">
+          <p>No barbers available yet.</p>
+          <span>Add barbers in the Barbers section first, then assign them to this service here.</span>
+        </div>
+      ) : null}
+
+      {!isLoading && sortedBarbers.length > 0 ? (
+        <div className="admin-service-assignment-list" role="list" aria-label="Available barbers for this service">
+          {sortedBarbers.map((barber) => {
+            const barberIsActive = barber.isActive ?? barber.active;
+            const isSelected = selectedBarberIdSet.has(barber.id);
+            return (
+              <button
+                key={barber.id}
+                type="button"
+                className={`admin-service-assignment-row ${isSelected ? 'is-selected' : ''}`}
+                aria-pressed={isSelected}
+                onClick={() => toggleBarber(barber.id)}
+              >
+                <span className="admin-service-assignment-row-main">
+                  <span className="admin-barber-avatar admin-service-assignment-avatar" aria-hidden="true">
+                    {barber.avatarUrl ? <img src={barber.avatarUrl} alt="" loading="lazy" /> : <span>{getInitials(barber.name)}</span>}
+                  </span>
+                  <span className="admin-service-assignment-text">
+                    <span className="admin-service-assignment-name-row">
+                      <span className="admin-service-assignment-name">{barber.name}</span>
+                      <span className="admin-service-assignment-status" aria-label={barberIsActive ? 'Active barber' : 'Inactive barber'}>
+                        <span className={`admin-status-dot ${barberIsActive ? 'is-active' : 'is-inactive'}`} aria-hidden="true" />
+                      </span>
+                    </span>
+                    <span className="admin-service-assignment-subline">
+                      {barberIsActive ? 'Available for bookings' : 'Hidden from live bookings'}
+                    </span>
+                  </span>
+                </span>
+
+                <span className={`admin-service-assignment-indicator ${isSelected ? 'is-selected' : ''}`} aria-hidden="true">
+                  <span className="admin-service-assignment-indicator-mark">✓</span>
+                </span>
+              </button>
+            );
+          })}
+        </div>
+      ) : null}
+    </section>
+  );
+}
+
 
 export default function ServicesAdminPanel() {
   const [services, setServices] = useState<ServiceRow[]>([]);
   const [loading, setLoading] = useState(true);
-    const [barbers, setBarbers] = useState<BarberListRow[]>([]);
+  const [barbers, setBarbers] = useState<BarberListRow[]>([]);
   const [editingId, setEditingId] = useState<string | null>(null);
   const [form, setForm] = useState<ServiceForm>(EMPTY_FORM);
+    const [selectedBarberIds, setSelectedBarberIds] = useState<string[]>([]);
   const [message, setMessage] = useState<string>('');
   const [error, setError] = useState<string>('');
+    const [isSaving, setIsSaving] = useState(false);
   const [isServiceSheetOpen, setIsServiceSheetOpen] = useState(false);
   const [activeServiceForPanelId, setActiveServiceForPanelId] = useState<string | null>(null);
 
@@ -121,7 +263,7 @@ export default function ServicesAdminPanel() {
 
     const onKeyDown = (event: KeyboardEvent) => {
       if (event.key === 'Escape') {
-        setIsServiceSheetOpen(false);
+        resetServiceFormState();
       }
     };
 
@@ -129,7 +271,7 @@ export default function ServicesAdminPanel() {
     return () => {
       window.removeEventListener('keydown', onKeyDown);
     };
-  }, [isServiceSheetOpen]);
+  }, [isServiceSheetOpen, resetServiceFormState]);
 
   useEffect(() => {
     if (!activeServiceForPanel) return undefined;
@@ -176,6 +318,7 @@ export default function ServicesAdminPanel() {
   function openCreateServiceSheet() {
     setEditingId(null);
     setForm(EMPTY_FORM);
+        setSelectedBarberIds([]);
     setError('');
     setMessage('');
     setIsServiceSheetOpen(true);
@@ -193,10 +336,19 @@ export default function ServicesAdminPanel() {
       displayOrder: String(service.displayOrder),
       isActive: service.isActive
     });
+        setSelectedBarberIds((service.barberServices ?? []).map((relation) => relation.barber.id));
     setMessage('');
     setError('');
     setIsServiceSheetOpen(true);
   }
+  const resetServiceFormState = useCallback(() => {
+    setEditingId(null);
+    setForm(EMPTY_FORM);
+    setSelectedBarberIds([]);
+    setIsSaving(false);
+    setIsServiceSheetOpen(false);
+  }, []);
+
 
   async function submitForm(event: React.FormEvent) {
     event.preventDefault();
@@ -222,30 +374,36 @@ export default function ServicesAdminPanel() {
       durationMinutes: Number(form.durationMinutes),
       bufferMinutes: Number(form.bufferMinutes),
       displayOrder: Number(form.displayOrder),
-      isActive: form.isActive
+      isActive: form.isActive,
+      barberIds: selectedBarberIds
+
     };
 
     const endpoint = editingId ? `/api/admin/services/${editingId}` : '/api/admin/services';
     const method = editingId ? 'PATCH' : 'POST';
 
-    const res = await fetch(endpoint, {
-      method,
-      credentials: 'include',
-      headers: { 'content-type': 'application/json' },
-      body: JSON.stringify(payload)
-    });
+    setIsSaving(true);
 
-    if (!res.ok) {
-      const data = await res.json().catch(() => ({} as { error?: string }));
-      setError(data.error ?? 'Unable to save service.');
-      return;
+    try {
+      const res = await fetch(endpoint, {
+        method,
+        credentials: 'include',
+        headers: { 'content-type': 'application/json' },
+        body: JSON.stringify(payload)
+      });
+      if (!res.ok) {
+        const data = await res.json().catch(() => ({} as { error?: string }));
+        setError(data.error ?? 'Unable to save service.');
+        return;
+      }
+
+      setMessage(editingId ? 'Service updated.' : 'Service created.');
+      resetServiceFormState();
+      await fetchServices();
+    } finally {
+      setIsSaving(false);
     }
 
-    setMessage(editingId ? 'Service updated.' : 'Service created.');
-    setEditingId(null);
-    setForm(EMPTY_FORM);
-    setIsServiceSheetOpen(false);
-    await fetchServices();
   }
 
   async function toggleActive(service: ServiceRow) {
@@ -417,7 +575,7 @@ export default function ServicesAdminPanel() {
           aria-label={editingId ? 'Edit service' : 'Add service'}
           onMouseDown={(event) => {
             if (event.target === event.currentTarget) {
-              setIsServiceSheetOpen(false);
+              resetServiceFormState();
             }
           }}
         >
@@ -428,7 +586,7 @@ export default function ServicesAdminPanel() {
               <button
                 type="button"
                 className="btn btn--ghost admin-client-modal-close admin-service-panel-close"
-                onClick={() => setIsServiceSheetOpen(false)}
+                onClick={resetServiceFormState}
                 aria-label="Close service form"
               >
                 ✕
@@ -527,20 +685,27 @@ export default function ServicesAdminPanel() {
                   <span className="admin-service-switch-label">Active</span>
                 </label>
               </div>
+              
+              <BarberAssignmentSection
+                barbers={barbers}
+                selectedBarberIds={selectedBarberIds}
+                isLoading={loading}
+                onChange={setSelectedBarberIds}
+              />
+
             </div>
 
             <div className="admin-barber-sheet-footer admin-service-sheet-foot">
-              <button type="submit" className="btn btn--primary">
-                {editingId ? 'Update service' : 'Create service'}
+              <button type="submit" className="btn btn--primary" disabled={isSaving}>
+                {isSaving ? (editingId ? 'Updating…' : 'Creating…') : (editingId ? 'Update service' : 'Create service')}
+
               </button>
               <button
                 type="button"
                 className="btn btn--secondary"
-                onClick={() => {
-                  setEditingId(null);
-                  setForm(EMPTY_FORM);
-                  setIsServiceSheetOpen(false);
-                }}
+                onClick={resetServiceFormState}
+                disabled={isSaving}
+
               >
                 Cancel
               </button>

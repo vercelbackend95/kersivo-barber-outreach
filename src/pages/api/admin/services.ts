@@ -13,7 +13,9 @@ const createSchema = z.object({
   bufferMinutes: z.number().int().min(0).max(120).default(0),
   displayOrder: z.number().int().min(0).default(0),
   category: z.string().trim().max(80).optional().nullable(),
-  isActive: z.boolean().default(true)
+  isActive: z.boolean().default(true),
+  barberIds: z.array(z.string().trim().min(1)).optional().default([])
+
 });
 export const GET: APIRoute = async (ctx) => {
   const unauthorized = requireAdmin(ctx);
@@ -55,17 +57,52 @@ export const POST: APIRoute = async (ctx) => {
   }
 
   const payload = parsed.data;
-  const service = await prisma.service.create({
-    data: {
-      name: payload.name,
-      description: payload.description?.trim() || null,
-      pricePence: payload.pricePence,
-      durationMinutes: payload.durationMinutes,
-      bufferMinutes: payload.bufferMinutes,
-      displayOrder: payload.displayOrder,
-      category: payload.category?.trim() || null,
-      isActive: payload.isActive
-    }
+  const uniqueBarberIds = Array.from(new Set(payload.barberIds));
+  const service = await prisma.$transaction(async (tx) => {
+    const validBarbers = uniqueBarberIds.length > 0
+      ? await tx.barber.findMany({ where: { id: { in: uniqueBarberIds } }, select: { id: true } })
+      : [];
+    const validBarberIds = validBarbers.map((barber) => barber.id);
+
+    return tx.service.create({
+      data: {
+        name: payload.name,
+        description: payload.description?.trim() || null,
+        pricePence: payload.pricePence,
+        durationMinutes: payload.durationMinutes,
+        bufferMinutes: payload.bufferMinutes,
+        displayOrder: payload.displayOrder,
+        category: payload.category?.trim() || null,
+        isActive: payload.isActive,
+        barberServices: validBarberIds.length > 0
+          ? {
+              createMany: {
+                data: validBarberIds.map((barberId) => ({ barberId })),
+                skipDuplicates: true
+              }
+            }
+          : undefined
+      },
+      include: {
+        barberServices: {
+          orderBy: {
+            barber: {
+              sortOrder: 'asc'
+            }
+          },
+          select: {
+            barber: {
+              select: {
+                id: true,
+                name: true,
+                active: true
+              }
+            }
+          }
+        }
+      }
+    });
+
   });
 
   return new Response(JSON.stringify({ service }), { status: 201 });

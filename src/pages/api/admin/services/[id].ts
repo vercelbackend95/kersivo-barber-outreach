@@ -13,7 +13,9 @@ const updateSchema = z.object({
   bufferMinutes: z.number().int().min(0).max(120).optional(),
   displayOrder: z.number().int().min(0).optional(),
   category: z.string().trim().max(80).optional().nullable(),
-  isActive: z.boolean().optional()
+  isActive: z.boolean().optional(),
+  barberIds: z.array(z.string().trim().min(1)).optional()
+
 });
 
 export const PATCH: APIRoute = async (ctx) => {
@@ -27,18 +29,56 @@ export const PATCH: APIRoute = async (ctx) => {
   if (!parsed.success) return new Response(JSON.stringify({ error: parsed.error.flatten() }), { status: 400 });
 
   const data = parsed.data;
-  const service = await prisma.service.update({
-    where: { id },
-    data: {
-      ...(data.name !== undefined ? { name: data.name } : {}),
-      ...(data.description !== undefined ? { description: data.description?.trim() || null } : {}),
-      ...(data.pricePence !== undefined ? { pricePence: data.pricePence } : {}),
-      ...(data.durationMinutes !== undefined ? { durationMinutes: data.durationMinutes } : {}),
-      ...(data.bufferMinutes !== undefined ? { bufferMinutes: data.bufferMinutes } : {}),
-      ...(data.displayOrder !== undefined ? { displayOrder: data.displayOrder } : {}),
-      ...(data.category !== undefined ? { category: data.category?.trim() || null } : {}),
-      ...(data.isActive !== undefined ? { isActive: data.isActive } : {})
+  const uniqueBarberIds = data.barberIds ? Array.from(new Set(data.barberIds)) : null;
+
+  const service = await prisma.$transaction(async (tx) => {
+    const validBarberIds = uniqueBarberIds && uniqueBarberIds.length > 0
+      ? (await tx.barber.findMany({ where: { id: { in: uniqueBarberIds } }, select: { id: true } })).map((barber) => barber.id)
+      : [];
+
+    if (uniqueBarberIds !== null) {
+      await tx.barberService.deleteMany({ where: { serviceId: id } });
+      if (validBarberIds.length > 0) {
+        await tx.barberService.createMany({
+          data: validBarberIds.map((barberId) => ({ barberId, serviceId: id })),
+          skipDuplicates: true
+        });
+      }
+
     }
+    
+    return tx.service.update({
+      where: { id },
+      data: {
+        ...(data.name !== undefined ? { name: data.name } : {}),
+        ...(data.description !== undefined ? { description: data.description?.trim() || null } : {}),
+        ...(data.pricePence !== undefined ? { pricePence: data.pricePence } : {}),
+        ...(data.durationMinutes !== undefined ? { durationMinutes: data.durationMinutes } : {}),
+        ...(data.bufferMinutes !== undefined ? { bufferMinutes: data.bufferMinutes } : {}),
+        ...(data.displayOrder !== undefined ? { displayOrder: data.displayOrder } : {}),
+        ...(data.category !== undefined ? { category: data.category?.trim() || null } : {}),
+        ...(data.isActive !== undefined ? { isActive: data.isActive } : {})
+      },
+      include: {
+        barberServices: {
+          orderBy: {
+            barber: {
+              sortOrder: 'asc'
+            }
+          },
+          select: {
+            barber: {
+              select: {
+                id: true,
+                name: true,
+                active: true
+              }
+            }
+          }
+        }
+      }
+    });
+
   });
 
   return new Response(JSON.stringify({ service }));
