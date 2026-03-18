@@ -1955,7 +1955,7 @@
   gap: var(--space-xs);
 }
 .admin-mobile-drawer-head .admin-mobile-title {
-  padding-inline: 0.6rem;
+  padding-inline: 0.35rem 0;
 }
 
 
