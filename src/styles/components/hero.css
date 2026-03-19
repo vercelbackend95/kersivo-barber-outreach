@@ -45,54 +45,84 @@
 
 .hero103__media {
   position: relative;
-  width: min(100%, 23rem);
+  width: min(100%, 24rem);
   margin-inline: auto;
 }
-.hero103__product-shot {
-  display: grid;
-    gap: 0.7rem;
+.hero103__media::before {
+  content: '';
+  position: absolute;
+  inset: 12% 8% 16%;
+  background:
+    radial-gradient(circle at top, color-mix(in srgb, var(--accent) 22%, transparent), transparent 52%),
+    radial-gradient(circle at bottom right, color-mix(in srgb, var(--fg) 8%, transparent), transparent 44%);
+  filter: blur(28px);
+  opacity: 0.9;
+  pointer-events: none;
+
+}
+
+.hero103__collage {
+  position: relative;
+  min-height: 28rem;
+  padding: 1rem 0.4rem 0.8rem;
+}
+
+
+.hero103__card {
+  position: absolute;
+  margin: 0;
+  overflow: hidden;
+  border: 1px solid color-mix(in srgb, var(--border) 90%, var(--fg));
+
+  border-radius: var(--radius-lg);
+  background: color-mix(in srgb, var(--surface) 96%, var(--bg));
+  box-shadow:
+    0 0 0 1px color-mix(in srgb, var(--fg) 6%, transparent),
+    0 1.1rem 2.6rem color-mix(in srgb, var(--bg) 74%, transparent);
+
+}
+.hero103__card--anchor {
+  inset: 2.25rem 0 5rem 1.1rem;
+  z-index: 1;
+}
+
+.hero103__card--shop {
+  top: 0;
+  right: 0.1rem;
+  width: 52%;
+  z-index: 3;
+  transform: rotate(2.5deg);
+
+}
+
+.hero103__card--booking-flow {
+  bottom: 1.25rem;
+  left: 0;
+  width: 35%;
+  z-index: 4;
+  transform: rotate(-5deg);
+}
+
+.hero103__card--orders {
+  right: 0;
+  bottom: 0;
+  width: 46%;
+  z-index: 5;
+  transform: rotate(4.25deg);
+
+}
+.hero103__card--admin-products {
+  left: 6%;
+  top: 5.25rem;
+  width: 36%;
+  z-index: 2;
+  transform: rotate(-3.75deg);
 }
 
 .hero103__product-image {
   width: 100%;
   height: auto;
-    aspect-ratio: 3 / 5;
-  object-fit: cover;
-  object-position: top center;
-
-  border: 1px solid color-mix(in srgb, var(--border) 88%, var(--fg));
-  border-radius: var(--radius-lg);
-  background: color-mix(in srgb, var(--surface) 94%, var(--bg));
-  box-shadow:
-    0 0 0 1px color-mix(in srgb, var(--fg) 6%, transparent),
-    0 1.5rem 3rem color-mix(in srgb, var(--bg) 72%, transparent);
-
-}
-
-.hero103__product-caption {
-  display: inline-flex;
-  align-items: center;
-  gap: 0.45rem;
-  padding: 0.55rem 0.7rem;
-
-  border: 1px solid var(--border);
-  border-radius: var(--radius-md);
-  background: color-mix(in srgb, var(--surface) 88%, transparent);
-
-  color: var(--muted);
-  font-size: 0.76rem;
-  letter-spacing: 0.08em;
-
-  text-transform: uppercase;
-    width: fit-content;
-}
-
-.hero103__product-caption::before {
-  content: '';
-  width: 0.55rem;
-  height: 0.55rem;
-
-  background: var(--accent);
+  display: block;
 }
 
 
@@ -152,28 +182,28 @@
   }
 
   .hero103__media {
-    width: min(100%, 20rem);
-  }
-  .hero103__product-caption {
-    width: 100%;
-    justify-content: center;
-    text-align: center;
+    width: min(100%, 21rem);
 
 
   }
+  .hero103__collage {
+    min-height: 24rem;
+    padding-top: 0.9rem;
 
-  .hero103__panel-value {
-    font-size: 0.74rem;
-  }
-
-  .hero103__panel small {
-    font-size: 0.65rem;
   }
 }
 
 @media (min-width: 48rem) {
   .hero103__media {
-    width: min(100%, 26rem);
+    width: min(100%, 31rem);
+  }
+  .hero103__collage {
+    min-height: 33rem;
+    padding-top: 1.35rem;
+  }
+
+  .hero103__card--anchor {
+    inset: 2.25rem 0.4rem 4.75rem 1.8rem;
   }
 
 }
@@ -184,9 +214,35 @@
   }
 
   .hero103__media {
-        width: min(100%, 28rem);
+    width: min(100%, 36rem);
     justify-self: end;
   }
+  
+  .hero103__collage {
+    min-height: 36rem;
+    padding-top: 1.4rem;
+  }
+
+  .hero103__card--anchor {
+    inset: 2.45rem 0.55rem 4.9rem 2.2rem;
+  }
+
+  .hero103__card--shop {
+    width: 54%;
+  }
+
+  .hero103__card--booking-flow {
+    width: 32%;
+  }
+
+  .hero103__card--orders {
+    width: 44%;
+  }
+
+  .hero103__card--admin-products {
+    width: 34%;
+  }
+
 }
 
 .body--modal-open {
