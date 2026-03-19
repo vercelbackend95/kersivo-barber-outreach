@@ -117,12 +117,13 @@
 
 .hero103__phone {
   --hero103-phone-frame-ratio: 567 / 1000;
-  --hero103-screen-top: 2.65%;
-  --hero103-screen-right: 5.2%;
-  --hero103-screen-bottom: 2.65%;
-  --hero103-screen-left: 5.2%;
-  --hero103-screen-radius: clamp(2rem, 7vw, 3rem);
+  --hero103-screen-top: 3.05%;
+  --hero103-screen-right: 7.15%;
+  --hero103-screen-bottom: 3.2%;
+  --hero103-screen-left: 7.15%;
 
+  --hero103-screen-radius: clamp(2rem, 7vw, 3rem);
+  --hero103-screen-inner-bezel: clamp(0.12rem, 0.35vw, 0.2rem);
 
 
   position: relative;
@@ -175,7 +176,20 @@
   overflow: hidden;
   border-radius: var(--hero103-screen-radius);
   background: var(--bg);
-    box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--border) 55%, transparent);
+  box-shadow:
+    inset 0 0 0 var(--hero103-screen-inner-bezel) color-mix(in srgb, white 8%, var(--border)),
+    inset 0 0 0 calc(var(--hero103-screen-inner-bezel) * 7) color-mix(in srgb, black 18%, transparent);
+}
+
+.hero103__phone-content::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  box-shadow: inset 0 0 0 1px color-mix(in srgb, white 4%, transparent);
+  pointer-events: none;
+  z-index: 2;
+
 }
 
 .hero103__phone-content::after {
@@ -191,7 +205,7 @@
   );
 
   pointer-events: none;
-  z-index: 2;
+  z-index: 3;
 
 }
 
@@ -202,7 +216,7 @@
 
 
   object-fit: cover;
-  object-position: top center;
+  object-position: center top;
   background: var(--surface);
   image-rendering: -webkit-optimize-contrast;
 
@@ -268,6 +282,11 @@
   }
 
   .hero103__phone {
+        --hero103-screen-top: 3.1%;
+    --hero103-screen-right: 7.05%;
+    --hero103-screen-bottom: 3.3%;
+    --hero103-screen-left: 7.05%;
+
     width: min(100%, clamp(22rem, 34vw, 31rem));
   }
 
