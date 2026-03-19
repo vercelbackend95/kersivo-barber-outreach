@@ -1,10 +1,10 @@
 .hero103 {
-  min-height: 100dvh;
   background: var(--bg);
 }
 
 .hero103__section {
-  padding-block: 2rem 0;
+  padding-block: clamp(1.5rem, 5vw, 3rem) clamp(3.5rem, 8vw, 5.5rem);
+  overflow: clip;
 }
 
 .hero103__border {
@@ -12,11 +12,10 @@
 }
 
 .hero103__layout {
-  display: flex;
-  flex-direction: column;
+  display: grid;
+  gap: clamp(1.5rem, 4vw, 3.5rem);
   align-items: center;
-  justify-content: center;
-  gap: 1rem;
+  justify-items: center;
   text-align: center;
 }
 
@@ -108,33 +107,31 @@
 .hero103__media {
   position: relative;
   width: 100%;
-  max-width: 28rem;
-  height: 31.25rem;
-  overflow: visible;
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+  padding-top: 0.5rem;
 }
 
 .hero103__phone {
-    --hero103-screen-top: 1.18rem;
-  --hero103-screen-right: 1.2rem;
-  --hero103-screen-bottom: 1.16rem;
-  --hero103-screen-left: 1.2rem;
-  --hero103-screen-radius: 3.5rem;
-  --hero103-screen-scale: 1.03;
-  --hero103-screen-shift-y: -0.1rem;
+  --hero103-screen-top: 1.06rem;
+  --hero103-screen-right: 1.06rem;
+  --hero103-screen-bottom: 1.08rem;
+  --hero103-screen-left: 1.06rem;
+  --hero103-screen-radius: 3.2rem;
+  --hero103-screen-focus-y: 3.5%;
 
   position: relative;
-  width: min(100%, 25rem);
-  height: 100%;
-  margin: 1.5rem auto 0;
+  width: min(100%, 18.75rem);
+  aspect-ratio: 450 / 920;
+  margin: 0 auto;
   isolation: isolate;
-  border-radius: 4.5rem;
   overflow: hidden;
+  border-radius: 4.5rem;
   background: color-mix(in srgb, var(--surface) 92%, var(--bg));
   box-shadow:
-    0 1.5rem 4rem color-mix(in srgb, var(--bg) 48%, transparent),
+    0 1.25rem 3.5rem color-mix(in srgb, var(--bg) 52%, transparent),
     0 0 0 1px color-mix(in srgb, var(--border) 60%, transparent);
-
-
   transform-origin: bottom center;
   animation: hero103-float 0.8s cubic-bezier(0, 0.71, 0.2, 1.01) both;
 }
@@ -142,15 +139,14 @@
 .hero103__phone::before {
   content: '';
   position: absolute;
-  inset: auto 12% 0;
-  height: 18%;
-  background: color-mix(in srgb, var(--accent) 24%, transparent);
-  filter: blur(2.5rem);
-  opacity: 0.9;
+  inset: auto 16% 0;
+  height: 14%;
+  background: color-mix(in srgb, var(--accent) 20%, transparent);
+  filter: blur(2.2rem);
+  opacity: 0.75;
   z-index: 0;
   pointer-events: none;
 }
-
 
 .hero103__phone-frame {
   position: absolute;
@@ -158,10 +154,11 @@
   z-index: 3;
   width: 100%;
   height: 100%;
-  object-fit: cover;
+  object-fit: contain;
   pointer-events: none;
-    filter: drop-shadow(0 1rem 2rem color-mix(in srgb, var(--bg) 30%, transparent));
+  filter: drop-shadow(0 1rem 2rem color-mix(in srgb, var(--bg) 32%, transparent));
 }
+
 .hero103__phone-content {
   position: absolute;
   inset: var(--hero103-screen-top) var(--hero103-screen-right) var(--hero103-screen-bottom) var(--hero103-screen-left);
@@ -169,31 +166,32 @@
   overflow: hidden;
   border-radius: var(--hero103-screen-radius);
   background: var(--bg);
-    box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--border) 55%, transparent);
+  box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--border) 55%, transparent);
 }
 
 .hero103__phone-content::after {
   content: '';
   position: absolute;
   inset: 0;
-  background: linear-gradient(180deg, color-mix(in srgb, white 14%, transparent), transparent 18%, transparent 82%, color-mix(in srgb, var(--bg) 12%, transparent));
+  background: linear-gradient(
+    180deg,
+    color-mix(in srgb, white 10%, transparent),
+    transparent 16%,
+    transparent 84%,
+    color-mix(in srgb, var(--bg) 10%, transparent)
+  );
   pointer-events: none;
   z-index: 2;
-
 }
 
 .hero103__phone-screen {
   width: 100%;
   height: 100%;
   display: block;
-
-
   object-fit: cover;
-  object-position: center top;
+  object-position: 50% var(--hero103-screen-focus-y);
   background: var(--surface);
-  transform: translateY(var(--hero103-screen-shift-y)) scale(var(--hero103-screen-scale));
-  transform-origin: top center;
-
+  image-rendering: -webkit-optimize-contrast;
 }
 
 @keyframes hero103-spin {
@@ -209,7 +207,7 @@
 @keyframes hero103-float {
   from {
     opacity: 0;
-    transform: translateY(12.5rem) scale(0.8);
+    transform: translateY(5rem) scale(0.94);
   }
 
   to {
@@ -220,7 +218,7 @@
 
 @media (min-width: 48rem) {
   .hero103__section {
-    padding-top: 3rem;
+    padding-block: clamp(2rem, 5vw, 3.5rem) clamp(4rem, 8vw, 6rem);
   }
 
   .hero103__badge {
@@ -250,25 +248,68 @@
     width: auto;
   }
 
+  .hero103__phone {
+    --hero103-screen-top: 1.18rem;
+    --hero103-screen-right: 1.16rem;
+    --hero103-screen-bottom: 1.18rem;
+    --hero103-screen-left: 1.16rem;
+    --hero103-screen-radius: 3.45rem;
+    --hero103-screen-focus-y: 3%;
+
+    width: min(100%, 21.5rem);
+  }
+}
+
+@media (min-width: 64rem) {
+  .hero103 {
+    min-height: 100dvh;
+    display: flex;
+    align-items: stretch;
+  }
+
+  .hero103__section {
+    display: flex;
+    width: 100%;
+  }
+
+  .hero103__border {
+    display: flex;
+    width: 100%;
+  }
+
+  .hero103__layout {
+    grid-template-columns: minmax(0, 1.05fr) minmax(18rem, 24rem);
+    justify-items: stretch;
+    text-align: left;
+    padding-block: 1rem 2rem;
+  }
+
+  .hero103__badges,
+  .hero103__actions-shell {
+    justify-content: flex-start;
+  }
+
+  .hero103__headline-wrap,
+  .hero103__lead {
+    justify-self: start;
+  }
+
   .hero103__media {
-    max-width: none;
-    height: 38rem;
+    justify-content: flex-end;
+    padding-top: 0;
+    padding-bottom: 0.5rem;
   }
 
   .hero103__phone {
-        --hero103-screen-top: 1.34rem;
-    --hero103-screen-right: 1.38rem;
-    --hero103-screen-bottom: 1.34rem;
-    --hero103-screen-left: 1.38rem;
-    --hero103-screen-radius: 3.9rem;
-    --hero103-screen-scale: 1.025;
-    --hero103-screen-shift-y: -0.08rem;
-
-    width: 28.125rem;
-    height: 57.5rem;
-    margin-top: 3rem;
+    width: min(100%, 23.5rem);
   }
+}
 
+@media (prefers-reduced-motion: reduce) {
+  .hero103__badge-icon--spin,
+  .hero103__phone {
+    animation: none;
+  }
 }
 
 .body--modal-open {
