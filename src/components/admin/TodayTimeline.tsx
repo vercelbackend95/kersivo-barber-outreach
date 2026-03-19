@@ -1,4 +1,4 @@
-import React, { memo, useEffect, useMemo, useRef } from 'react';
+import React, { memo, useEffect, useMemo, useRef, useState } from 'react';
 import { formatInTimeZone } from 'date-fns-tz';
 import { minutesInLondonDay } from '../../lib/booking/time';
 import { getBookingStatusTone } from './bookingStatus';
@@ -247,6 +247,175 @@ function clampScrollLeft(value: number, container: HTMLDivElement) {
   if (maxScrollLeft <= 0) return 0;
   if (!Number.isFinite(value)) return 0;
   return Math.max(0, Math.min(value, maxScrollLeft));
+}
+
+const DESKTOP_TIMELINE_MEDIA_QUERY = '(min-width: 769px)';
+const TIMELINE_TEXT_FIT_EPSILON = 0.1;
+let timelineTextMeasureCanvas: HTMLCanvasElement | null = null;
+
+function measureTextWidth(text: string, fontSizePx: number, fontWeight: string, fontFamily: string, letterSpacingPx: number) {
+  if (typeof document === 'undefined') return text.length * fontSizePx * 0.6;
+
+  const canvas = timelineTextMeasureCanvas ??= document.createElement('canvas');
+  const context = canvas.getContext('2d');
+  if (!context) return text.length * fontSizePx * 0.6;
+
+  context.font = `${fontWeight} ${fontSizePx}px ${fontFamily}`;
+  const baseWidth = context.measureText(text).width;
+  const trackingWidth = Math.max(0, text.length - 1) * letterSpacingPx;
+  return baseWidth + trackingWidth;
+}
+
+function getFittedFontSize({
+  text,
+  widthPx,
+  maxFontSizePx,
+  minFontSizePx,
+  fontWeight,
+  fontFamily,
+  letterSpacingPx
+}: {
+  text: string;
+  widthPx: number;
+  maxFontSizePx: number;
+  minFontSizePx: number;
+  fontWeight: string;
+  fontFamily: string;
+  letterSpacingPx: number;
+}) {
+  if (!text.trim()) return maxFontSizePx;
+  if (widthPx <= 0) return minFontSizePx;
+
+  let low = minFontSizePx;
+  let high = maxFontSizePx;
+  let best = minFontSizePx;
+
+  while (high - low > TIMELINE_TEXT_FIT_EPSILON) {
+    const mid = (low + high) / 2;
+    const measuredWidth = measureTextWidth(text, mid, fontWeight, fontFamily, letterSpacingPx);
+
+    if (measuredWidth <= widthPx) {
+      best = mid;
+      low = mid;
+    } else {
+      high = mid;
+    }
+  }
+
+  return Math.max(minFontSizePx, Math.min(maxFontSizePx, best));
+}
+
+function TimelineBookingCard({
+  item,
+  isSearchActive,
+  onBookingClick
+}: {
+  item: PositionedBooking;
+  isSearchActive: boolean;
+  onBookingClick: (booking: TimelineBooking) => void;
+}) {
+  const cardRef = useRef<HTMLButtonElement | null>(null);
+  const [fontSizes, setFontSizes] = useState<{ time: number; service: number } | null>(null);
+
+  useEffect(() => {
+    const card = cardRef.current;
+    if (!card || typeof window === 'undefined') return;
+
+    let frameId = 0;
+    let observer: ResizeObserver | null = null;
+
+    const updateTextFit = () => {
+      const isDesktopViewport = window.matchMedia(DESKTOP_TIMELINE_MEDIA_QUERY).matches;
+      if (!isDesktopViewport) {
+        setFontSizes((current) => (current === null ? current : null));
+        return;
+      }
+
+      const computedStyle = window.getComputedStyle(card);
+      const paddingLeft = Number.parseFloat(computedStyle.paddingLeft) || 0;
+      const paddingRight = Number.parseFloat(computedStyle.paddingRight) || 0;
+      const availableWidth = Math.max(0, card.clientWidth - paddingLeft - paddingRight);
+
+      const timeSize = getFittedFontSize({
+        text: `${item.startLabel}-${item.endLabel}`,
+        widthPx: availableWidth,
+        maxFontSizePx: 14,
+        minFontSizePx: 5,
+        fontWeight: '700',
+        fontFamily: 'Inter, sans-serif',
+        letterSpacingPx: -0.2
+      });
+
+      const serviceSize = getFittedFontSize({
+        text: item.booking.service?.name ?? 'Service',
+        widthPx: availableWidth,
+        maxFontSizePx: 12,
+        minFontSizePx: 5,
+        fontWeight: '700',
+        fontFamily: 'Inter, sans-serif',
+        letterSpacingPx: -0.08
+      });
+
+      setFontSizes((current) => {
+        if (current && Math.abs(current.time - timeSize) < 0.2 && Math.abs(current.service - serviceSize) < 0.2) {
+          return current;
+        }
+
+        return { time: timeSize, service: serviceSize };
+      });
+    };
+
+    const scheduleUpdate = () => {
+      window.cancelAnimationFrame(frameId);
+      frameId = window.requestAnimationFrame(updateTextFit);
+    };
+
+    const mediaQuery = window.matchMedia(DESKTOP_TIMELINE_MEDIA_QUERY);
+    const fontReady = document.fonts?.ready;
+
+    scheduleUpdate();
+    if (fontReady) void fontReady.then(scheduleUpdate);
+
+    observer = new ResizeObserver(() => {
+      scheduleUpdate();
+    });
+    observer.observe(card);
+
+    const handleViewportChange = () => scheduleUpdate();
+    mediaQuery.addEventListener('change', handleViewportChange);
+    window.addEventListener('resize', handleViewportChange);
+
+    return () => {
+      window.cancelAnimationFrame(frameId);
+      observer?.disconnect();
+      mediaQuery.removeEventListener('change', handleViewportChange);
+      window.removeEventListener('resize', handleViewportChange);
+    };
+  }, [item.booking.service?.name, item.endLabel, item.startLabel]);
+
+  return (
+    <button
+      ref={cardRef}
+      type="button"
+      data-booking-id={item.booking.id}
+      className={`admin-timeline-card admin-timeline-card--booking admin-timeline-card--${getBookingStatusTone(item.booking)} ${isSearchActive ? 'admin-timeline-card--search-match' : ''}`}
+      style={{
+        left: `${item.leftPct}%`,
+        width: `${item.widthPct}%`,
+        top: `${item.topPx}px`,
+        height: `${item.heightPx}px`,
+        ...(fontSizes ? ({
+          '--timeline-card-time-font-size': `${fontSizes.time}px`,
+          '--timeline-card-service-font-size': `${fontSizes.service}px`
+        } as React.CSSProperties) : null)
+      }}
+      onClick={() => onBookingClick(item.booking)}
+      title={`${item.startLabel}-${item.endLabel} · ${item.booking.service?.name ?? 'Service'} · ${item.booking.fullName}`}
+    >
+      <span className="admin-timeline-card-time">{`${item.startLabel}-${item.endLabel}`}</span>
+      <strong className="admin-timeline-card-service">{item.booking.service?.name ?? 'Service'}</strong>
+    </button>
+  );
 }
 
 
@@ -498,18 +667,13 @@ function TodayTimeline({ barbers, bookings, timeBlocks, selectedDate, isSearchAc
               ))}
 
               {lane.bookings.map((item) => (
-                <button
-                  type="button"
+                <TimelineBookingCard
                   key={item.id}
-                                    data-booking-id={item.booking.id}
-                  className={`admin-timeline-card admin-timeline-card--booking admin-timeline-card--${getBookingStatusTone(item.booking)} ${isSearchActive ? 'admin-timeline-card--search-match' : ''}`}
-                  style={{ left: `${item.leftPct}%`, width: `${item.widthPct}%`, top: `${item.topPx}px`, height: `${item.heightPx}px` }}
-                  onClick={() => onBookingClick(item.booking)}
-                  title={`${item.startLabel}-${item.endLabel} · ${item.booking.service?.name ?? 'Service'} · ${item.booking.fullName}`}
-                >
-                  <span className="admin-timeline-card-time">{`${item.startLabel}-${item.endLabel}`}</span>
-                  <strong className="admin-timeline-card-service">{item.booking.service?.name ?? 'Service'}</strong>
-                </button>
+                  item={item}
+                  isSearchActive={isSearchActive}
+                  onBookingClick={onBookingClick}
+                />
+
               ))}
             </div>
           </div>

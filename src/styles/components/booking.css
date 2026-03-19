@@ -4354,6 +4354,9 @@
 }
 
 .admin-timeline-card--booking {
+    --timeline-card-time-font-size: 0.82rem;
+  --timeline-card-service-font-size: 0.72rem;
+
   background: color-mix(in srgb, var(--accent) 10%, var(--surface));
   border-left: 3px solid var(--border);
   color: var(--fg);
@@ -4363,7 +4366,10 @@
   display: flex;
   flex-direction: column;
   justify-content: center;
-  gap: 0.05rem;
+  gap: 0.08rem;
+  container-type: inline-size;
+  container-name: timeline-booking-card;
+
 
 }
 
@@ -4442,14 +4448,17 @@
 
   white-space: nowrap;
   overflow: hidden;
-  text-overflow: ellipsis;
+  text-overflow: clip;
 }
 
 .admin-timeline-card-time {
-    color: var(--fg);
-  font-size: 0.9rem;
+  color: var(--fg);
+  font-size: var(--timeline-card-time-font-size);
+
   font-weight: 700;
-  line-height: 1.1;
+  line-height: 1;
+  letter-spacing: -0.03em;
+
 }
 
 .admin-timeline-card-meta {
@@ -4475,7 +4484,14 @@
 
 }
 
-.admin-timeline-card-service,
+.admin-timeline-card-service {
+  font-size: var(--timeline-card-service-font-size);
+  font-weight: 700;
+  line-height: 1;
+  letter-spacing: -0.015em;
+}
+
+
 .admin-timeline-card-client,
 .admin-timeline-card-separator {
   flex-shrink: 1;
@@ -4490,8 +4506,6 @@
     padding: 0.25rem 0.3rem;
     justify-content: center;
     gap: 0.14rem;
-    container-type: inline-size;
-    container-name: timeline-booking-card;
   }
   .admin-timeline-card-time,
   .admin-timeline-card-service {
