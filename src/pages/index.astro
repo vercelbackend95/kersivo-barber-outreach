@@ -40,52 +40,94 @@ const DEMO_ADMIN_PASSWORD = import.meta.env.PUBLIC_DEMO_ADMIN_PASSWORD
 <MainLayout title="Kersivo Barber Outreach">
   <main class="hero103">
     <section id="home" class="hero103__section">
-      <div class="container hero103__layout">
-        <div class="hero103__content">
-          <p class="hero103__eyebrow">Barber website system</p>
-          <h1>A Barber Website That Books, Sells and Keeps the Shop Running</h1>
+      <div class="hero103__border">
+        <div class="container hero103__layout">
+          <div class="hero103__badges" aria-label="Hero benefits">
+            <div class="hero103__badge">
+              <svg viewBox="0 0 24 24" aria-hidden="true" class="hero103__badge-icon">
+                <rect x="9" y="9" width="10" height="10" rx="0"></rect>
+                <rect x="5" y="5" width="10" height="10" rx="0"></rect>
+              </svg>
+              <span>Copy paste blocks</span>
+            </div>
+            <div class="hero103__badge">
+              <svg viewBox="0 0 24 24" aria-hidden="true" class="hero103__badge-icon">
+                <path d="M12 3 5 6v5c0 4.97 2.98 9.62 7 11 4.02-1.38 7-6.03 7-11V6l-7-3Z"></path>
+                <path d="m9.5 12 1.75 1.75 3.75-4.25"></path>
+              </svg>
+              <span>Built by Experts</span>
+            </div>
+            <div class="hero103__badge">
+              <svg viewBox="0 0 24 24" aria-hidden="true" class="hero103__badge-icon hero103__badge-icon--spin">
+                <circle cx="12" cy="12" r="9"></circle>
+                <path d="M3 12h18"></path>
+                <path d="M12 3a15.3 15.3 0 0 1 0 18"></path>
+                <path d="M12 3a15.3 15.3 0 0 0 0 18"></path>
+              </svg>
+              <span>Works Everywhere</span>
+            </div>
+          </div>
+
+
+          <div class="hero103__headline-wrap">
+            <h1 class="hero103__title">New Shadcn Blocks</h1>
+            <svg
+              class="hero103__asterisk"
+              viewBox="0 0 45 45"
+              fill="none"
+              xmlns="http://www.w3.org/2000/svg"
+              aria-hidden="true"
+            >
+              <path
+                d="M16.6294 44.8574L18.9282 29.0791L6.44141 38.9536L0.380859 28.5044L14.6963 22.3916L0.380859 16.6968L6.44141 6.24756L18.876 15.5996L16.6294 0.34375H28.7505L26.9219 15.2861L38.9385 6.24756L44.999 16.6968L30.6313 22.3916L44.999 28.5044L38.9385 38.9536L26.8696 29.4448L28.7505 44.8574H16.6294Z"
+                fill="var(--accent)"
+              ></path>
+            </svg>
+          </div>
 
           <p class="hero103__lead">
-            Give clients a clean way to book, browse products and contact your shop — while you
-            manage schedules, updates and pickup orders in one place.
+            Lorem ipsum dolor sit, amet consectetur adipisicing elit. Ipsum animi, ipsam provident optio delectus neque aliquid cumque. Beatae, odio!
 
           </p>
-          <div class="hero103__actions">
-            <button class="btn btn--primary" type="button" data-system-chooser-open>
-              See the system
-            </button>
+          <div class="hero103__actions-shell">
+            <div class="hero103__actions">
+              <button class="btn btn--primary" type="button" data-system-chooser-open>
+                See the system
+              </button>
+              <a class="btn btn--secondary" href="#book-demo" data-demo-cta>Book a demo</a>
+            </div>
 
-            <a class="btn btn--secondary" href="#book-demo" data-demo-cta>Book a demo</a>
 
           </div>
-        </div>
-        <div class="hero103__media" aria-label="Real Kersivo product stack showing bookings, shop products, and admin orders screens">
-          <div class="hero103__collage" aria-hidden="true">
-            <figure class="hero103__card hero103__card--main">
-              <img
-                class="hero103__product-image"
-                src="/hero-assets/kersivo-admin-bookings-timeline-mobile.svg"
-                alt=""
-                loading="eager"
-              />
-            </figure>
+          <div class="hero103__media" aria-label="Phone mockup showing the hero227 template preview">
+            <div class="hero103__phone">
 
-            <figure class="hero103__card hero103__card--sell">
               <img
-                class="hero103__product-image"
-                src="/images/hero/shop-products.svg"
-                alt=""
+                class="hero103__phone-frame"
+                alt="Gold phone frame"
+                src="https://deifkwefumgah.cloudfront.net/shadcnblocks/block/mockups/phone-5.png"
+
                 loading="eager"
               />
-            </figure>
-            <figure class="hero103__card hero103__card--ops">
-              <img
-                class="hero103__product-image"
-                src="/images/hero/shop-orders.svg"
-                alt=""
-                loading="eager"
-              />
-            </figure>
+              <div class="hero103__phone-content">
+                <div class="hero103__phone-top">
+                  <h2 class="hero103__phone-day">
+                    Mon
+                    <span class="hero103__phone-dot" aria-hidden="true"></span>
+                  </h2>
+                  <div class="hero103__phone-date">
+                    <p>Feburary 9</p>
+                    <p>2025</p>
+                  </div>
+                </div>
+                <img
+                  class="hero103__phone-logo"
+                  alt="Shadcnblocks logo"
+                  src="https://deifkwefumgah.cloudfront.net/shadcnblocks/block/block-white-1.svg"
+                  loading="eager"
+                />
+              </div>
+            </div>
 
 
           </div>
