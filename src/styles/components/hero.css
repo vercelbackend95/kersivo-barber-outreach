@@ -110,7 +110,7 @@
   width: 100%;
   max-width: 28rem;
   height: 31.25rem;
-  overflow: hidden;
+  overflow: visible;
 }
 
 .hero103__phone {
@@ -119,28 +119,48 @@
   --hero103-screen-bottom: 1.16rem;
   --hero103-screen-left: 1.2rem;
   --hero103-screen-radius: 3.5rem;
+  --hero103-screen-scale: 1.03;
+  --hero103-screen-shift-y: -0.1rem;
 
   position: relative;
   width: min(100%, 25rem);
   height: 100%;
   margin: 1.5rem auto 0;
-
+  isolation: isolate;
   border-radius: 4.5rem;
   overflow: hidden;
-  background: var(--bg);
+  background: color-mix(in srgb, var(--surface) 92%, var(--bg));
+  box-shadow:
+    0 1.5rem 4rem color-mix(in srgb, var(--bg) 48%, transparent),
+    0 0 0 1px color-mix(in srgb, var(--border) 60%, transparent);
+
 
   transform-origin: bottom center;
   animation: hero103-float 0.8s cubic-bezier(0, 0.71, 0.2, 1.01) both;
 }
 
+.hero103__phone::before {
+  content: '';
+  position: absolute;
+  inset: auto 12% 0;
+  height: 18%;
+  background: color-mix(in srgb, var(--accent) 24%, transparent);
+  filter: blur(2.5rem);
+  opacity: 0.9;
+  z-index: 0;
+  pointer-events: none;
+}
+
+
 .hero103__phone-frame {
   position: absolute;
   inset: 0;
-  z-index: 2;
+  z-index: 3;
   width: 100%;
   height: 100%;
   object-fit: cover;
   pointer-events: none;
+    filter: drop-shadow(0 1rem 2rem color-mix(in srgb, var(--bg) 30%, transparent));
 }
 .hero103__phone-content {
   position: absolute;
@@ -149,6 +169,17 @@
   overflow: hidden;
   border-radius: var(--hero103-screen-radius);
   background: var(--bg);
+    box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--border) 55%, transparent);
+}
+
+.hero103__phone-content::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(180deg, color-mix(in srgb, white 14%, transparent), transparent 18%, transparent 82%, color-mix(in srgb, var(--bg) 12%, transparent));
+  pointer-events: none;
+  z-index: 2;
+
 }
 
 .hero103__phone-screen {
@@ -160,7 +191,7 @@
   object-fit: cover;
   object-position: center top;
   background: var(--surface);
-  transform: scale(1.01);
+  transform: translateY(var(--hero103-screen-shift-y)) scale(var(--hero103-screen-scale));
   transform-origin: top center;
 
 }
@@ -230,6 +261,8 @@
     --hero103-screen-bottom: 1.34rem;
     --hero103-screen-left: 1.38rem;
     --hero103-screen-radius: 3.9rem;
+    --hero103-screen-scale: 1.025;
+    --hero103-screen-shift-y: -0.08rem;
 
     width: 28.125rem;
     height: 57.5rem;
