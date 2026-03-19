@@ -114,15 +114,21 @@
 }
 
 .hero103__phone {
+    --hero103-screen-top: 1.18rem;
+  --hero103-screen-right: 1.2rem;
+  --hero103-screen-bottom: 1.16rem;
+  --hero103-screen-left: 1.2rem;
+  --hero103-screen-radius: 3.5rem;
+
   position: relative;
   width: min(100%, 25rem);
   height: 100%;
   margin: 1.5rem auto 0;
-  display: flex;
-  align-items: center;
-  justify-content: center;
+
   border-radius: 4.5rem;
-  background: var(--fg);
+  overflow: hidden;
+  background: var(--bg);
+
   transform-origin: bottom center;
   animation: hero103-float 0.8s cubic-bezier(0, 0.71, 0.2, 1.01) both;
 }
@@ -134,19 +140,28 @@
   width: 100%;
   height: 100%;
   object-fit: cover;
-  transform: scale(1.05);
   pointer-events: none;
+}
+.hero103__phone-content {
+  position: absolute;
+  inset: var(--hero103-screen-top) var(--hero103-screen-right) var(--hero103-screen-bottom) var(--hero103-screen-left);
+  z-index: 1;
+  overflow: hidden;
+  border-radius: var(--hero103-screen-radius);
+  background: var(--bg);
 }
 
 .hero103__phone-screen {
-  width: calc(100% - 2.5rem);
-  height: calc(100% - 1.75rem);
-  margin: 0.875rem auto;
-  border-radius: 3.5rem;
+  width: 100%;
+  height: 100%;
+  display: block;
+
 
   object-fit: cover;
-    object-position: top center;
+  object-position: center top;
   background: var(--surface);
+  transform: scale(1.01);
+  transform-origin: top center;
 
 }
 
@@ -210,6 +225,12 @@
   }
 
   .hero103__phone {
+        --hero103-screen-top: 1.34rem;
+    --hero103-screen-right: 1.38rem;
+    --hero103-screen-bottom: 1.34rem;
+    --hero103-screen-left: 1.38rem;
+    --hero103-screen-radius: 3.9rem;
+
     width: 28.125rem;
     height: 57.5rem;
     margin-top: 3rem;
