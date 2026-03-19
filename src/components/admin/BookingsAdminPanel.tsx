@@ -2215,22 +2215,6 @@ export default function BookingsAdminPanel({ isActive, mode, onBackToDashboard }
                   </div>
                 </article>
 
-
-                <article className="admin-booking-action-card admin-booking-action-card--disabled" aria-disabled="true">
-                  <div className="admin-booking-action-card__head">
-                    <div>
-                      <p className="admin-booking-action-card__title">Reschedule booking</p>
-                      <p className="admin-booking-action-card__description">Move this appointment to a different time.</p>
-                    </div>
-                    <span className="admin-booking-action-card__badge admin-booking-action-card__badge--muted">Coming soon</span>
-
-                  </div>
-                  <div className="admin-booking-action-card__footer">
-                    <button type="button" className="btn btn--ghost admin-booking-action-card__button" disabled title="Coming soon">
-                      Reschedule booking
-                    </button>
-                  </div>
-                </article>
               </div>
             </section>
             <section className="admin-booking-quick-section admin-booking-quick-section--notes" aria-labelledby="booking-notes-heading">
