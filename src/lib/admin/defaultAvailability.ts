@@ -24,7 +24,7 @@ export async function ensureBarberHasAvailabilityRules(barberId: string) {
     orderBy: [{ sortOrder: 'asc' }, { createdAt: 'asc' }],
     select: {
       rules: {
-        where: { isActive: true },
+        where: { active: true },
         orderBy: [{ dayOfWeek: 'asc' }, { startMinutes: 'asc' }],
         select: {
           dayOfWeek: true,
