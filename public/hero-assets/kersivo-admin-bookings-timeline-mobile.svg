@@ -6624,7 +6624,7 @@ a.btn:hover {
               <div class="admin-next-block admin-next-block--mobile-sticky">
                 <div class="admin-next-header">
                   <div class="admin-next-header-copy">
-                    <p class="admin-next-primary">Today: 35 bookings</p>
+                    <p class="admin-next-primary">Today: 29 bookings</p>
                     <p class="admin-next-secondary">Next: Mason — Haircut + Beard — 13:15 (in 15 min)</p>
                   </div>
                   <div class="admin-live-status admin-live-status--live" role="status" aria-live="polite">
