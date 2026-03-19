@@ -32,6 +32,21 @@
     z-index: 31;
   }
 
+  .admin-timeline-card--booking {
+    --timeline-card-time-font-size: 0.84rem;
+    --timeline-card-service-font-size: 0.8rem;
+  }
+
+  .admin-timeline-card-time {
+    font-size: clamp(0.48rem, 10.25cqw, 0.84rem);
+  }
+
+  .admin-timeline-card-service {
+    font-size: clamp(0.5rem, 9.1cqw, 0.8rem);
+    line-height: 1.02;
+  }
+
+
   .admin-mobile-overlay {
     z-index: 400;
   }
