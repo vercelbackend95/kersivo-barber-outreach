@@ -1,0 +1,111 @@
+.admin-hero-capture {
+  min-height: 100vh;
+  padding: clamp(1rem, 3vw, 2rem);
+  background:
+    radial-gradient(circle at top, color-mix(in srgb, var(--accent) 12%, transparent), transparent 58%),
+    var(--bg);
+}
+
+.admin-hero-capture-stage {
+  display: grid;
+  place-items: center;
+}
+
+.admin-hero-capture-device {
+  width: min(100%, 29rem);
+  border: 1px solid color-mix(in srgb, var(--border) 86%, var(--fg));
+  border-radius: 6px;
+  background: color-mix(in srgb, var(--surface) 92%, var(--bg));
+  box-shadow:
+    0 0 0 1px color-mix(in srgb, var(--fg) 6%, transparent),
+    0 2rem 4rem color-mix(in srgb, var(--bg) 68%, transparent);
+  overflow: hidden;
+}
+
+.admin-hero-capture .container {
+  width: 100%;
+}
+
+.admin-hero-capture-page-wrap {
+  padding-block: 0;
+}
+
+.admin-hero-capture .admin-shell {
+  min-height: auto;
+}
+
+.admin-hero-capture .admin-main-content {
+  padding-inline: 0;
+}
+
+.admin-hero-capture .admin-mobile-header {
+  position: sticky;
+  top: 0;
+  z-index: 20;
+}
+
+.admin-hero-capture .booking-shell {
+  border: 0;
+  background: transparent;
+  box-shadow: none;
+}
+
+.admin-hero-capture .booking-shell > h1,
+.admin-hero-capture .booking-shell > .admin-shop-kicker,
+.admin-hero-capture .booking-shell > .admin-next-block,
+.admin-hero-capture .booking-shell > .admin-view-tabs,
+.admin-hero-capture .booking-shell > .admin-search-row,
+.admin-hero-capture .booking-shell > .admin-timeline {
+  margin-inline: 0.5rem;
+}
+
+.admin-hero-capture .admin-next-block,
+.admin-hero-capture .admin-view-tabs,
+.admin-hero-capture .admin-search-row,
+.admin-hero-capture .admin-timeline {
+  border-radius: 4px;
+}
+
+.admin-hero-capture .admin-timeline {
+  overflow: hidden;
+}
+
+.admin-hero-capture .admin-timeline-scroll {
+  overflow: hidden;
+  scrollbar-width: none;
+}
+
+.admin-hero-capture .admin-timeline-scroll::-webkit-scrollbar {
+  display: none;
+}
+
+.admin-hero-capture .admin-timeline-scroll > * {
+  transform: translateX(var(--admin-hero-scroll-offset, 0));
+}
+
+.admin-hero-capture .admin-timeline-legend {
+  padding-inline: 0.75rem;
+  padding-bottom: 0.8rem;
+}
+
+.admin-hero-capture .admin-timeline-card--booking {
+  cursor: default;
+}
+
+.admin-hero-capture .admin-mobile-menu-button,
+.admin-hero-capture .admin-filter-tab-main,
+.admin-hero-capture .admin-timeline-card--booking {
+  pointer-events: none;
+}
+
+.admin-hero-capture--asset {
+  min-height: auto;
+  padding: 0;
+  background: var(--bg);
+}
+
+.admin-hero-capture--asset .admin-hero-capture-device {
+  width: 100%;
+  border-radius: 0;
+  box-shadow: none;
+}
