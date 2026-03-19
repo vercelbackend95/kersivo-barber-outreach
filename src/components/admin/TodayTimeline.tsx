@@ -1,6 +1,5 @@
 import React, { memo, useEffect, useMemo, useRef } from 'react';
 import { formatInTimeZone } from 'date-fns-tz';
-import { getServiceCode } from '../../lib/booking/serviceCode';
 import { minutesInLondonDay } from '../../lib/booking/time';
 import { getBookingStatusTone } from './bookingStatus';
 type TimelineBarber = {
@@ -506,10 +505,10 @@ function TodayTimeline({ barbers, bookings, timeBlocks, selectedDate, isSearchAc
                   className={`admin-timeline-card admin-timeline-card--booking admin-timeline-card--${getBookingStatusTone(item.booking)} ${isSearchActive ? 'admin-timeline-card--search-match' : ''}`}
                   style={{ left: `${item.leftPct}%`, width: `${item.widthPct}%`, top: `${item.topPx}px`, height: `${item.heightPx}px` }}
                   onClick={() => onBookingClick(item.booking)}
-                  title={`${item.startLabel} · ${item.booking.service?.name ?? 'Service'} · ${item.booking.fullName}`}
+                  title={`${item.startLabel}-${item.endLabel} · ${item.booking.service?.name ?? 'Service'} · ${item.booking.fullName}`}
                 >
-                  <span className="admin-timeline-card-time">{item.startLabel}</span>
-                  <strong className="admin-timeline-card-service">{getServiceCode({ id: item.booking.service?.id, name: item.booking.service?.name })}</strong>
+                  <span className="admin-timeline-card-time">{`${item.startLabel}-${item.endLabel}`}</span>
+                  <strong className="admin-timeline-card-service">{item.booking.service?.name ?? 'Service'}</strong>
                 </button>
               ))}
             </div>

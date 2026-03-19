@@ -4487,22 +4487,44 @@
 @media (max-width: 640px) {
   .admin-timeline-card--booking {
     min-width: 0;
-    padding: 0.25rem 0.35rem;
+    padding: 0.25rem 0.3rem;
     justify-content: center;
-    gap: 0.1rem;
+    gap: 0.14rem;
+    container-type: inline-size;
+    container-name: timeline-booking-card;
+  }
+  .admin-timeline-card-time,
+  .admin-timeline-card-service {
+    max-width: 100%;
+    min-width: 0;
+    overflow: hidden;
+
 
   }
 
   .admin-timeline-card-time {
-    font-size: 0.8rem;
-    line-height: 1.05;
+    font-size: clamp(0.42rem, 9.5cqw, 0.78rem);
+    line-height: 1;
+    letter-spacing: -0.03em;
+    white-space: nowrap;
+    text-overflow: clip;
+
   }
 
   .admin-timeline-card-service {
-    display: block;
-    font-size: 0.72rem;
-    line-height: 1.05;
+    display: -webkit-box;
+    -webkit-box-orient: vertical;
+    -webkit-line-clamp: 2;
+    line-clamp: 2;
+    white-space: normal;
+    overflow-wrap: anywhere;
+    text-wrap: balance;
+    font-size: clamp(0.42rem, 8.25cqw, 0.72rem);
+    line-height: 1;
+
     font-weight: 700;
+    letter-spacing: -0.015em;
+    text-overflow: clip;
 
   }
 
