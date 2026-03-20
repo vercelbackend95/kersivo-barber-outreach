@@ -55,6 +55,9 @@ const product = id
 if (!product) {
   return Astro.redirect('/shop');
 }
+const MOBILE_RELATED_PRODUCT_COUNT = 10;
+const DESKTOP_RELATED_PRODUCT_COUNT = 3;
+
 
 const relatedProducts = await prisma.product.findMany({
   where: {
@@ -64,10 +67,10 @@ const relatedProducts = await prisma.product.findMany({
     category: product.category
   },
   orderBy: [{ sortOrder: 'asc' }, { featured: 'desc' }, { updatedAt: 'desc' }],
-  take: 3
+  take: MOBILE_RELATED_PRODUCT_COUNT
 });
 
-if (relatedProducts.length < 2) {
+if (relatedProducts.length < MOBILE_RELATED_PRODUCT_COUNT) {
   const fallbackProducts = await prisma.product.findMany({
     where: {
       shopId,
@@ -77,11 +80,16 @@ if (relatedProducts.length < 2) {
       }
     },
     orderBy: [{ sortOrder: 'asc' }, { featured: 'desc' }, { updatedAt: 'desc' }],
-    take: 3 - relatedProducts.length
+    take: MOBILE_RELATED_PRODUCT_COUNT - relatedProducts.length
   });
 
   relatedProducts.push(...fallbackProducts);
 }
+const relatedProductsForCarousel =
+  relatedProducts.length > 0 && relatedProducts.length < MOBILE_RELATED_PRODUCT_COUNT
+    ? Array.from({ length: MOBILE_RELATED_PRODUCT_COUNT }, (_, index) => relatedProducts[index % relatedProducts.length])
+    : relatedProducts;
+
 
 const splitDescription = (rawDescription: string | null) => {
   const cleaned = rawDescription?.replace(/\s+/g, ' ').trim() ?? '';
@@ -201,7 +209,7 @@ const highlights = createHighlights(product.description, product.category);
       </section>
     ) : null}
 
-    {relatedProducts.length > 0 ? (
+    {relatedProductsForCarousel.length > 0 ? (
       <section class="related-products" aria-label="Related products">
         <header class="related-products-header">
           <h2>You may also like</h2>
@@ -210,8 +218,8 @@ const highlights = createHighlights(product.description, product.category);
 
         <div class="related-products-carousel" data-related-carousel-root>
           <div class="related-products-grid" data-related-carousel>
-            {relatedProducts.map((item) => (
-              <article class="related-card">
+            {relatedProductsForCarousel.map((item, index) => (
+              <article class:list={["related-card", index >= DESKTOP_RELATED_PRODUCT_COUNT && 'related-card--mobile-only']}>
                 <a href={`/shop/${item.id}`} class="related-card-media-link" aria-label={`View ${item.name}`}>
                   {item.imageUrl ? <img src={item.imageUrl} alt={item.name} class="related-card-image" loading="lazy" /> : <div class="related-card-image related-card-image--placeholder">No image</div>}
                 </a>

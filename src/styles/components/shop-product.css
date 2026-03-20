@@ -224,6 +224,11 @@
   .related-products-grid {
     grid-template-columns: repeat(3, minmax(0, 1fr));
   }
+  
+  .related-card--mobile-only {
+    display: none;
+  }
+
 }
 
 
