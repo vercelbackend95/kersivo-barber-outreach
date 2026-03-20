@@ -135,12 +135,6 @@
   isolation: isolate;
   overflow: hidden;
   border-radius: clamp(2.6rem, 9vw, 4.5rem);
-  background: color-mix(in srgb, var(--surface) 92%, var(--bg));
-  box-shadow:
-    0 1.25rem 3.5rem color-mix(in srgb, var(--bg) 52%, transparent),
-    0 0 0 1px color-mix(in srgb, var(--border) 60%, transparent);
-
-
   transform-origin: bottom center;
   animation: hero103-float 0.8s cubic-bezier(0, 0.71, 0.2, 1.01) both;
 }
@@ -179,9 +173,7 @@
   overflow: hidden;
   border-radius: var(--hero103-screen-radius);
   background: var(--bg);
-  box-shadow:
-    inset 0 0 0 var(--hero103-screen-inner-bezel) color-mix(in srgb, white 8%, var(--border)),
-    inset 0 0 0 calc(var(--hero103-screen-inner-bezel) * 7) color-mix(in srgb, black 18%, transparent);
+
 }
 
 .hero103__phone-content::before {
@@ -213,8 +205,8 @@
 }
 
 .hero103__phone-screen {
-  width: 100%;
-  height: 100%;
+  width: 90%;
+  height: 90%;
   display: block;
   object-fit: contain;
   object-position: center center;
