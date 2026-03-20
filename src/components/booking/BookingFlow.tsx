@@ -356,7 +356,7 @@ export default function BookingFlow({ services, barbers, mode = 'create', token 
               </div>
               <div className="booking-flow__grid booking-flow__grid--details">
                 <label className="booking-flow__field">
-                  <span>Full name</span>
+                  <span>Name</span>
                   <input value={fullName} onChange={(e) => setFullName(e.target.value)} autoComplete="name" />
                 </label>
                 <label className="booking-flow__field">
