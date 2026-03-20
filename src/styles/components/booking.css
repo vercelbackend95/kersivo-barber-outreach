@@ -103,8 +103,7 @@
   gap: var(--space-sm);
 }
 
-.booking-flow__eyebrow,
-.booking-summary-card__eyebrow {
+.booking-flow__eyebrow {
   margin: 0;
   font-size: 0.76rem;
   letter-spacing: 0.16em;
@@ -119,8 +118,7 @@
 }
 
 .booking-flow__hero-copy h1,
-.booking-step__head h2,
-.booking-summary-card__head h2 {
+.booking-step__head h2 {
   margin: 0;
   font-family: var(--font-display);
   text-transform: uppercase;
@@ -130,31 +128,10 @@
 
 .booking-flow__hero-copy p,
 .booking-step__head p,
-.booking-summary-card__status,
 .booking-slots-section__head .muted,
-.booking-date-panel__label,
 .booking-choice-card__meta,
 .booking-slot__meta {
   margin: 0;
-}
-
-.booking-flow__trust-row {
-  display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: var(--space-xs);
-}
-
-.booking-flow__trust-row span {
-  border: 1px solid color-mix(in srgb, var(--border) 78%, var(--accent));
-  background: color-mix(in srgb, var(--surface) 82%, var(--bg));
-  color: var(--muted);
-  min-height: 2.75rem;
-  padding: 0.7rem 0.8rem;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  text-align: center;
-  font-size: 0.83rem;
 }
 
 .booking-flow__layout {
@@ -162,15 +139,12 @@
   gap: var(--space-lg);
 }
 
-.booking-flow__main,
-.booking-flow__aside {
+.booking-flow__main {
   display: grid;
   gap: var(--space-md);
 }
 
-.booking-step,
-.booking-summary-card {
-
+.booking-step {
   display: grid;
     gap: var(--space-md);
   border: 1px solid var(--border);
@@ -241,8 +215,6 @@
 .booking-choice-card__meta,
 .booking-choice-card__price,
 .booking-slot__meta,
-.booking-date-panel__label,
-.booking-summary-card__row dt,
 .booking-action-bar__label {
   font-size: 0.78rem;
   letter-spacing: 0.08em;
@@ -284,20 +256,6 @@
   gap: var(--space-sm);
 }
 
-.booking-date-panel__summary {
-  display: grid;
-  gap: 0.35rem;
-  border: 1px solid color-mix(in srgb, var(--border) 82%, var(--accent));
-  background: color-mix(in srgb, var(--bg) 40%, var(--surface));
-  min-height: 4.25rem;
-  padding: var(--space-sm);
-}
-
-.booking-date-panel__summary strong {
-  color: var(--fg);
-  font-size: 1rem;
-
-}
 
 .booking-flow__field {
   display: grid;
@@ -361,53 +319,6 @@
   background: color-mix(in srgb, var(--bg) 55%, var(--surface));
 }
 
-.booking-summary-card__head,
-.booking-summary-card__list {
-  display: grid;
-  gap: var(--space-sm);
-}
-
-.booking-summary-card__row {
-  display: grid;
-  gap: 0.25rem;
-  padding-bottom: var(--space-sm);
-  border-bottom: 1px solid color-mix(in srgb, var(--border) 88%, var(--accent));
-}
-
-.booking-summary-card__row:last-child {
-  padding-bottom: 0;
-  border-bottom: 0;
-}
-
-.booking-summary-card__row dd {
-  margin: 0;
-  color: var(--fg);
-  font-weight: 600;
-}
-
-.booking-summary-card__status {
-  display: grid;
-  grid-template-columns: auto minmax(0, 1fr);
-  gap: var(--space-xs);
-  align-items: start;
-  padding: var(--space-sm);
-  border: 1px solid color-mix(in srgb, var(--border) 82%, var(--accent));
-  background: color-mix(in srgb, var(--bg) 48%, var(--surface));
-  color: var(--muted);
-}
-
-.booking-summary-card__status-dot {
-  width: 0.85rem;
-  height: 0.85rem;
-  margin-top: 0.2rem;
-  border: 1px solid color-mix(in srgb, var(--border) 70%, var(--accent));
-  background: var(--border);
-}
-
-.booking-summary-card__status-dot.is-complete {
-  background: var(--accent);
-  border-color: var(--accent);
-}
 
 .booking-action-bar {
   position: sticky;
@@ -450,11 +361,6 @@
 
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
-    .booking-date-panel {
-    grid-template-columns: minmax(0, 1.1fr) minmax(16rem, 0.9fr);
-    align-items: end;
-  }
-
   .slot-grid {
     grid-template-columns: repeat(3, minmax(0, 1fr));
   }
@@ -462,15 +368,6 @@
 }
 
 @media (min-width: 980px) {
-  .booking-flow__layout {
-    grid-template-columns: minmax(0, 1.5fr) minmax(18rem, 0.8fr);
-    align-items: start;
-  }
-
-  .booking-flow__aside {
-    position: sticky;
-    top: var(--space-lg);
-  }
 
   .booking-choice-grid--services {
     grid-template-columns: repeat(2, minmax(0, 1fr));

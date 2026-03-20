@@ -65,17 +65,7 @@ function formatDateForSummary(isoDate: string): string {
     year: 'numeric'
   });
 }
-function formatDateForCard(isoDate: string): string {
-  const parsed = new Date(`${isoDate}T00:00:00`);
-  if (Number.isNaN(parsed.getTime())) return 'Select a date';
 
-  return parsed.toLocaleDateString('en-GB', {
-    timeZone: 'Europe/London',
-    weekday: 'long',
-    day: '2-digit',
-    month: 'long'
-  });
-}
 
 function formatPrice(pricePence: number): string {
   return `£${(pricePence / 100).toFixed(2)}`;
@@ -103,10 +93,7 @@ export default function BookingFlow({ services, barbers, mode = 'create', token 
   const selectedService = useMemo(() => services.find((service) => service.id === serviceId), [serviceId, services]);
   const selectedBarber = useMemo(() => availableBarbers.find((barber) => barber.id === barberId), [availableBarbers, barberId]);
   const isoDate = useMemo(() => normalizeToIsoDate(date), [date]);
-  const formattedSummaryDate = useMemo(() => (isoDate ? formatDateForSummary(isoDate) : 'Choose a date'), [isoDate]);
-  const dateDisplay = useMemo(() => (isoDate ? formatDateForCard(isoDate) : 'Select a date'), [isoDate]);
   const isCreateMode = mode === 'create';
-  const isReadyForContact = Boolean(serviceId && barberId && isoDate && time);
   const isSubmitDisabled = !time || !barberId || (isCreateMode && (!fullName.trim() || !email.trim()));
 
 
@@ -247,10 +234,7 @@ export default function BookingFlow({ services, barbers, mode = 'create', token 
               : 'Choose a new service, barber, date and time. Your booking updates instantly after submission.'}
           </p>
         </div>
-        <div className="booking-flow__trust-row" aria-label="Booking information">
-          <span>Instant confirmation</span>
-          <span>Europe/London</span>
-        </div>
+
       </div>
 
       {confirmation ? <BookingConfirmationPanel variant={confirmation.type} summary={confirmation.summary} /> : null}
@@ -332,10 +316,6 @@ export default function BookingFlow({ services, barbers, mode = 'create', token 
                 <span>Date</span>
                 <input id="booking-date" type="date" value={date} onChange={(e) => setDate(e.target.value)} />
               </label>
-              <div className="booking-date-panel__summary" aria-live="polite">
-                <span className="booking-date-panel__label">Selected day</span>
-                <strong>{dateDisplay}</strong>
-              </div>
             </div>
 
             <div className="booking-slots-section">
@@ -392,52 +372,6 @@ export default function BookingFlow({ services, barbers, mode = 'create', token 
           )}
 
         </div>
-        <aside className="booking-flow__aside">
-          <section className="booking-summary-card" aria-labelledby="booking-summary-title">
-            <div className="booking-summary-card__head">
-              <p className="booking-summary-card__eyebrow">Summary</p>
-              <h2 id="booking-summary-title">Review your booking</h2>
-            </div>
-
-            <dl className="booking-summary-card__list">
-              <div className="booking-summary-card__row">
-                <dt>Service</dt>
-                <dd>{selectedService?.name ?? 'Choose a service'}</dd>
-              </div>
-              <div className="booking-summary-card__row">
-                <dt>Barber</dt>
-                <dd>{selectedBarber?.name ?? 'Choose a barber'}</dd>
-              </div>
-              <div className="booking-summary-card__row">
-                <dt>Date</dt>
-                <dd>{formattedSummaryDate}</dd>
-              </div>
-              <div className="booking-summary-card__row">
-                <dt>Time</dt>
-                <dd>{time || 'Choose a time slot'}</dd>
-              </div>
-              {isCreateMode && (
-                <div className="booking-summary-card__row">
-                  <dt>Contact</dt>
-                  <dd>{fullName.trim() || email.trim() ? `${fullName.trim() || 'Name pending'} · ${email.trim() || 'Email pending'}` : 'Add your details'}</dd>
-                </div>
-              )}
-            </dl>
-
-            <div className="booking-summary-card__status">
-              <span className={`booking-summary-card__status-dot${isReadyForContact || !isCreateMode ? ' is-complete' : ''}`} aria-hidden="true"></span>
-              <span>
-                {isCreateMode
-                  ? isReadyForContact
-                    ? 'Appointment selected. Add your details and confirm.'
-                    : 'Choose service, barber, date and time to continue.'
-                  : time
-                    ? 'New appointment selected. Review and confirm.'
-                    : 'Choose a new service, barber, date and time.'}
-              </span>
-            </div>
-          </section>
-        </aside>
 
       </div>
       <div className="booking-action-bar">
