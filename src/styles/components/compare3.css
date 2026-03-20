@@ -56,6 +56,9 @@
   grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
   border-top: 1px solid var(--border);
   border-bottom: 1px solid var(--border);
+    border-radius: 0.375rem;
+  overflow: hidden;
+
 }
 
 .compare3-block__cell {
