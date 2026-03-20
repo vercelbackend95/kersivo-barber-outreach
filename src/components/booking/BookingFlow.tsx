@@ -257,6 +257,7 @@ export default function BookingFlow({ services, barbers, mode = 'create', token 
                   <h2 id="booking-step-service">Choose a service</h2>
                   <p className="muted">Pick the appointment that fits what you need.</p>
                 </div>
+                              </div>
               <div className="booking-choice-grid booking-choice-grid--services" role="radiogroup" aria-label="Services">
                 {services.map((service) => {
                   const isSelected = service.id === serviceId;
@@ -391,9 +392,17 @@ export default function BookingFlow({ services, barbers, mode = 'create', token 
         <div className="booking-action-bar">
           <div className="booking-action-bar__summary">
             <span className="booking-action-bar__label">Ready to confirm</span>
-            <strong>{selectedService?.name ?? 'Select service'}{time ? ` · ${time}` : ''}</strong>
+            <strong>
+              {selectedService?.name ?? 'Select service'}
+              {time ? ` · ${time}` : ''}
+            </strong>
           </div>
-          <button type="button" className="btn btn--primary booking-action-bar__button" disabled={isSubmitDisabled} onClick={submit}>
+          <button
+            type="button"
+            className="btn btn--primary booking-action-bar__button"
+            disabled={isSubmitDisabled}
+            onClick={submit}
+          >
             {mode === 'reschedule' ? 'Reschedule booking' : 'Confirm booking'}
           </button>
 
