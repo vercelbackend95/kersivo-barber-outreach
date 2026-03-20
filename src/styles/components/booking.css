@@ -84,14 +84,13 @@
 .booking-shell select,
 .booking-shell textarea {
   width: 100%;
-  min-height: 3.9rem;
-
+  min-height: 4.15rem;
   border: 1px solid var(--border);
   background: var(--bg);
   color: var(--fg);
   border-radius: var(--radius-sm);
   padding: 1rem 1rem;
-  font-size: 1rem;
+  font-size: 1.08rem;
 
 }
 
@@ -117,9 +116,9 @@
 
 .booking-flow__eyebrow {
   margin: 0;
-  font-size: 0.88rem;
+  font-size: 1rem;
   font-weight: 700;
-  letter-spacing: 0.18em;
+  letter-spacing: 0.2em;
 
   text-transform: uppercase;
   color: color-mix(in srgb, var(--accent) 78%, var(--fg));
@@ -140,11 +139,11 @@
   line-height: 0.95;
 }
 .booking-flow__hero-copy h1 {
-  font-size: clamp(3.1rem, 14vw, 5rem);
+  font-size: clamp(3.6rem, 16vw, 5rem);
 }
 
 .booking-step__head h2 {
-  font-size: clamp(2rem, 8.2vw, 3.4rem);
+  font-size: clamp(2.4rem, 10vw, 3.4rem);
 }
 
 
@@ -156,7 +155,7 @@
   margin: 0;
 }
 .booking-flow__hero-copy p {
-  font-size: 1.05rem;
+  font-size: 1.16rem;
   line-height: 1.8;
   max-width: 42rem;
 }
@@ -191,7 +190,7 @@
 }
 
 .booking-step__head p {
-  font-size: 1rem;
+  font-size: 1.12rem;
   line-height: 1.7;
 
 }
@@ -200,15 +199,14 @@
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  min-width: 2.9rem;
-  min-height: 2.9rem;
-
+  min-width: 3.2rem;
+  min-height: 3.2rem;
 
   border: 1px solid color-mix(in srgb, var(--accent) 44%, var(--border));
   background: color-mix(in srgb, var(--accent) 12%, var(--surface));
   color: var(--accent);
   font-family: var(--font-heading);
-  font-size: 1.45rem;
+  font-size: 1.7rem;
   letter-spacing: 0.08em;
 
 }
@@ -252,13 +250,15 @@
 }
 
 .booking-choice-card__title {
-  font-size: 1.1rem;
-  line-height: 1.45;
+  font-size: 1.28rem;
+  line-height: 1.4;
+
 }
 
 .booking-slot__label {
-  font-size: 1.08rem;
-  line-height: 1.35;
+  font-size: 1.22rem;
+  line-height: 1.3;
+
 }
 
 
@@ -266,7 +266,7 @@
 .booking-choice-card__price,
 .booking-slot__meta,
 .booking-action-bar__label {
-  font-size: 0.82rem;
+  font-size: 0.92rem;
   letter-spacing: 0.08em;
   text-transform: uppercase;
   color: var(--muted);
@@ -278,7 +278,7 @@
 
 
 .booking-choice-card__price {
-    font-size: 0.92rem;
+  font-size: 1rem;
   color: color-mix(in srgb, var(--accent) 74%, var(--fg));
 }
 
@@ -289,9 +289,8 @@
 }
 
 .booking-choice-card__avatar {
-  width: 3rem;
-  height: 3rem;
-
+  width: 3.35rem;
+  height: 3.35rem;
 
   display: inline-flex;
   align-items: center;
@@ -300,7 +299,7 @@
   background: color-mix(in srgb, var(--accent) 16%, var(--bg));
   color: var(--accent);
   font-family: var(--font-heading);
-  font-size: 1.5rem;
+  font-size: 1.7rem;
 
   text-transform: uppercase;
 }
@@ -318,11 +317,11 @@
 
 .booking-flow__field {
   display: grid;
-  gap: 0.45rem;
+  gap: 0.55rem;
 }
 .booking-flow__field > span,
 .booking-slots-section__head label {
-  font-size: 0.88rem;
+  font-size: 1.02rem;
   font-weight: 700;
   letter-spacing: 0.1em;
   text-transform: uppercase;
@@ -346,25 +345,25 @@
 }
 
 .booking-slots-section__head .muted {
-  font-size: 0.98rem;
+  font-size: 1.08rem;
   line-height: 1.65;
 
 }
 
 .slot-grid {
   display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
+  grid-template-columns: repeat(3, minmax(0, 1fr));
   gap: 0.85rem;
 }
 
 .booking-slot {
-  min-height: 4.4rem;
+  min-height: 4.9rem;
   border: 1px solid color-mix(in srgb, var(--border) 84%, var(--accent));
   background: color-mix(in srgb, var(--bg) 56%, var(--surface));
   color: var(--fg);
-  padding: 0.95rem 0.9rem;
+  padding: 1rem 0.7rem;
   display: grid;
-  gap: 0.28rem;
+  gap: 0.3rem;
   text-align: left;
     align-content: center;
 }
@@ -381,8 +380,7 @@
   grid-column: 1 / -1;
   padding: 1rem;
   border: 1px dashed var(--border);
-  background: color-mix(in srgb, var(--bg) 55%, var(--surface));
-    font-size: 0.98rem;
+  font-size: 1.05rem;
 }
 
 
@@ -411,23 +409,34 @@
 
 .booking-action-bar__summary strong {
   color: var(--fg);
-    font-size: 1.18rem;
+  font-size: 1.3rem;
   line-height: 1.4;
 }
 
 .booking-action-bar__label {
-  font-size: 0.86rem;
+  font-size: 0.94rem;
 
 }
 
 .booking-action-bar__button {
-  min-height: 4rem;
-  font-size: 1rem;
+  min-height: 4.25rem;
+  font-size: 1.08rem;
+
 
 }
 @media (max-width: 479px) {
-  .slot-grid {
+  .booking-step__head {
+    gap: 0.75rem;
+  }
+
+  .booking-choice-card--barber {
+
     grid-template-columns: 1fr;
+        row-gap: 0.75rem;
+  }
+  .booking-choice-card--barber .booking-choice-card__title,
+  .booking-choice-card--barber .booking-choice-card__meta {
+    grid-column: 1;
   }
 
 }
@@ -442,15 +451,10 @@
   }
 
   .booking-choice-grid--services,
-  .booking-choice-grid--barbers,
-  .booking-flow__grid--details {
+  .booking-choice-grid--barbers {
 
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
-  .slot-grid {
-    grid-template-columns: repeat(3, minmax(0, 1fr));
-  }
-
 }
 
 @media (min-width: 900px) {
