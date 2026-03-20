@@ -1,5 +1,7 @@
 ---
 import MainLayout from '@/layouts/MainLayout.astro';
+import Footer50 from '../components/footer50.astro';
+import '../styles/components/footer50.css';
 import { prisma } from '../lib/db/client';
 import { resolveShopId } from '../lib/db/shopScope';
 import { formatGbp } from '../lib/shop/money';
@@ -18,6 +20,30 @@ const CATEGORY_LABELS: Record<string, string> = {
   TOOLS: 'Tools',
   GIFT_SETS: 'Sets'
 };
+const FOOTER_PROPS = {
+  heading: 'Ready to launch a better website system for your barbershop?',
+  description: 'Book a demo and we’ll help you choose the right setup for your website, booking flow, shop and admin tools.',
+  ctaText: 'BOOK A DEMO',
+  ctaHref: '/#book-demo',
+  ctaIsDemo: false,
+  brandName: 'Kersivo',
+  navigation: [
+    { name: 'Services', href: '/#services' },
+    { name: 'Case Studies', href: '/#case-studies' },
+    { name: 'Pricing', href: '/#pricing' },
+    { name: 'FAQ', href: '/#faq' },
+    { name: 'Contact', href: '/#contact' }
+  ],
+  social: [
+    { name: 'Instagram', href: '#' },
+    { name: 'Facebook', href: '#' }
+  ],
+  legal: [
+    { name: 'Privacy Policy', href: '#' },
+    { name: 'Terms', href: '#' }
+  ]
+};
+
 
 const categoryFilters = [
   { value: 'ALL', label: 'All products', count: products.length },
@@ -111,6 +137,7 @@ const selectedCategory = categoryValues.has(selectedCategoryParam) ? selectedCat
       )}
     </section>
   </main>
+    <Footer50 {...FOOTER_PROPS} />
 </MainLayout>
 
 <script>

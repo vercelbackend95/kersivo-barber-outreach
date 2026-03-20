@@ -1,5 +1,7 @@
 ---
 import MainLayout from '@/layouts/MainLayout.astro';
+import Footer50 from '@/components/footer50.astro';
+import '@/styles/components/footer50.css';
 import { prisma } from '@/lib/db/client';
 import { resolveShopId } from '@/lib/db/shopScope';
 import { formatGbp } from '@/lib/shop/money';
@@ -15,6 +17,30 @@ const CATEGORY_LABELS: Record<string, string> = {
   TOOLS: 'Tools',
   GIFT_SETS: 'Gift sets'
 };
+const FOOTER_PROPS = {
+  heading: 'Ready to launch a better website system for your barbershop?',
+  description: 'Book a demo and we’ll help you choose the right setup for your website, booking flow, shop and admin tools.',
+  ctaText: 'BOOK A DEMO',
+  ctaHref: '/#book-demo',
+  ctaIsDemo: false,
+  brandName: 'Kersivo',
+  navigation: [
+    { name: 'Services', href: '/#services' },
+    { name: 'Case Studies', href: '/#case-studies' },
+    { name: 'Pricing', href: '/#pricing' },
+    { name: 'FAQ', href: '/#faq' },
+    { name: 'Contact', href: '/#contact' }
+  ],
+  social: [
+    { name: 'Instagram', href: '#' },
+    { name: 'Facebook', href: '#' }
+  ],
+  legal: [
+    { name: 'Privacy Policy', href: '#' },
+    { name: 'Terms', href: '#' }
+  ]
+};
+
 
 const product = id
   ? await prisma.product.findFirst({
@@ -182,32 +208,36 @@ const highlights = createHighlights(product.description, product.category);
           <p>More barber-approved essentials from the same curated range.</p>
         </header>
 
-        <div class="related-products-grid">
-          {relatedProducts.map((item) => (
-            <article class="related-card">
-              <a href={`/shop/${item.id}`} class="related-card-media-link" aria-label={`View ${item.name}`}>
-                {item.imageUrl ? <img src={item.imageUrl} alt={item.name} class="related-card-image" loading="lazy" /> : <div class="related-card-image related-card-image--placeholder">No image</div>}
-              </a>
-              <div class="related-card-body">
-                <p class="related-card-category">{CATEGORY_LABELS[item.category] ?? 'Styling'}</p>
-                <h3><a href={`/shop/${item.id}`}>{item.name}</a></h3>
-                <p class="related-card-price">{formatGbp(item.pricePence)}</p>
-                <button
-                  type="button"
-                  class="btn btn--secondary"
-                  data-add-to-cart
-                  data-product-id={item.id}
-                  data-product-name={item.name}
-                  data-product-price-pence={String(item.pricePence)}
-                  data-product-image-url={item.imageUrl ?? ''}
-                >
-                  Add to cart
-                </button>
-              </div>
-            </article>
-          ))}
+        <div class="related-products-carousel" data-related-carousel-root>
+          <div class="related-products-grid" data-related-carousel>
+            {relatedProducts.map((item) => (
+              <article class="related-card">
+                <a href={`/shop/${item.id}`} class="related-card-media-link" aria-label={`View ${item.name}`}>
+                  {item.imageUrl ? <img src={item.imageUrl} alt={item.name} class="related-card-image" loading="lazy" /> : <div class="related-card-image related-card-image--placeholder">No image</div>}
+                </a>
+                <div class="related-card-body">
+                  <p class="related-card-category">{CATEGORY_LABELS[item.category] ?? 'Styling'}</p>
+                  <h3><a href={`/shop/${item.id}`}>{item.name}</a></h3>
+                  <p class="related-card-price">{formatGbp(item.pricePence)}</p>
+                  <button
+                    type="button"
+                    class="btn btn--secondary"
+                    data-add-to-cart
+                    data-product-id={item.id}
+                    data-product-name={item.name}
+                    data-product-price-pence={String(item.pricePence)}
+                    data-product-image-url={item.imageUrl ?? ''}
+                  >
+                    Add to cart
+                  </button>
+                </div>
+              </article>
+            ))}
+          </div>
         </div>
       </section>
     ) : null}
   </main>
+
+  <Footer50 {...FOOTER_PROPS} />
 </MainLayout>
