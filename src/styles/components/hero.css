@@ -112,22 +112,22 @@
   align-items: flex-end;
   justify-content: center;
   padding-top: 0.5rem;
-
+  padding-inline: clamp(0.5rem, 3vw, 1.5rem);
 }
 
 .hero103__phone {
   --hero103-phone-frame-ratio: 567 / 1000;
   --hero103-screen-top: 3.05%;
-  --hero103-screen-right: 7.15%;
+  --hero103-screen-right: 6.65%;
   --hero103-screen-bottom: 3.2%;
-  --hero103-screen-left: 7.15%;
+  --hero103-screen-left: 6.65%;
 
   --hero103-screen-radius: clamp(2rem, 7vw, 3rem);
   --hero103-screen-inner-bezel: clamp(0.12rem, 0.35vw, 0.2rem);
 
 
   position: relative;
-  width: min(100%, 22.5rem);
+  width: min(100%, 24.75rem);
   aspect-ratio: var(--hero103-phone-frame-ratio);
 
   margin: 0 auto;
@@ -282,12 +282,13 @@
   }
 
   .hero103__phone {
-        --hero103-screen-top: 3.1%;
-    --hero103-screen-right: 7.05%;
-    --hero103-screen-bottom: 3.3%;
-    --hero103-screen-left: 7.05%;
+    --hero103-screen-top: 3.1%;
+    --hero103-screen-right: 6.55%;
 
-    width: min(100%, clamp(22rem, 34vw, 31rem));
+    --hero103-screen-bottom: 3.3%;
+    --hero103-screen-left: 6.55%;
+
+    width: min(100%, clamp(24rem, 38vw, 35rem));
   }
 
 }
