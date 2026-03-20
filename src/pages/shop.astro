@@ -32,12 +32,6 @@ const categoryValues = new Set(categoryFilters.map((filter) => filter.value));
 const selectedCategoryParam = Astro.url.searchParams.get('category') || 'ALL';
 const selectedCategory = categoryValues.has(selectedCategoryParam) ? selectedCategoryParam : 'ALL';
 
-const featuredPromotion = {
-  kicker: 'Elevate your routine',
-  title: 'Premium grooming products selected by barbers.',
-  ctaLabel: 'Shop all products',
-  ctaLink: '/shop'
-};
 ---
 
 <MainLayout title="Shop | Kersivo Barber Outreach">
@@ -76,14 +70,6 @@ const featuredPromotion = {
         </article>
       ) : (
         <ul class="shop-grid" aria-label="Products">
-          <li class="shop-grid-promo-slot">
-            <article class="shop-promo-card">
-              <p class="shop-promo-kicker">{featuredPromotion.kicker}</p>
-              <h2>{featuredPromotion.title}</h2>
-              <a class="btn btn--primary" href={featuredPromotion.ctaLink}>{featuredPromotion.ctaLabel}</a>
-            </article>
-          </li>
-
           {products.map((product) => (
             <li
               data-product-item
@@ -133,7 +119,6 @@ const featuredPromotion = {
   if (root) {
     const filterButtons = Array.from(root.querySelectorAll('[data-category-filter]'));
     const productItems = Array.from(root.querySelectorAll('[data-product-item]'));
-    const promoSlot = root.querySelector('.shop-grid-promo-slot');
     const validCategories = new Set(filterButtons.map((button) => button.getAttribute('data-category-filter') || 'ALL'));
 
     const getCategoryFromUrl = () => {
@@ -163,9 +148,6 @@ const featuredPromotion = {
         item.hidden = !(resolvedCategory === 'ALL' || productCategory === resolvedCategory);
       }
 
-      if (promoSlot) {
-        promoSlot.hidden = !productItems.some((item) => !item.hidden);
-      }
 
       for (const button of filterButtons) {
         const isActive = button.getAttribute('data-category-filter') === resolvedCategory;

@@ -2,18 +2,18 @@
 import NavbarCartButton from '@/components/shop/NavbarCartButton.astro';
 
 const navLogo = {
-  url: '#home',
+  url: '/#home',
   src: 'https://deifkwefumgah.cloudfront.net/shadcnblocks/block/logos/shadcnblockscom-icon.svg',
   alt: 'Kersivo logo',
   title: 'Kersivo'
 };
 
 const navItems = [
-  { name: 'Home', link: '#home' },
-  { name: 'System', link: '#system' },
-  { name: 'Pricing', link: '#pricing' },
-  { name: 'FAQ', link: '#faq' },
-  { name: 'Contact', link: '#contact' }
+  { name: 'Home', link: '/#home', sectionId: 'home' },
+  { name: 'System', link: '/#system', sectionId: 'system' },
+  { name: 'Pricing', link: '/#pricing', sectionId: 'pricing' },
+  { name: 'FAQ', link: '/#faq', sectionId: 'faq' },
+  { name: 'Contact', link: '/#contact', sectionId: 'contact' }
 
 ];
 ---
@@ -27,13 +27,14 @@ const navItems = [
 
     <nav class="navbar17__desktop" aria-label="Primary">
       <ul class="navbar17__list" data-nav-list>
-        {navItems.map((item, index) => (
+        {navItems.map((item) => (
           <li>
             <a
               href={item.link}
-              class={`navbar17__link ${index === 0 ? 'is-active' : ''}`}
+              class="navbar17__link"
               data-nav-item
               data-nav-name={item.name}
+                            data-nav-section={item.sectionId}
             >
               {item.name}
             </a>
@@ -57,13 +58,14 @@ const navItems = [
 
   <nav id="mobile-menu" class="navbar17__mobile" aria-label="Mobile primary" data-mobile-nav hidden>
     <ul>
-      {navItems.map((item, index) => (
+      {navItems.map((item) => (
         <li>
           <a
             href={item.link}
-            class={`navbar17__mobile-link ${index === 0 ? 'is-active' : ''}`}
+            class="navbar17__mobile-link"
             data-mobile-item
             data-nav-name={item.name}
+                        data-nav-section={item.sectionId}
           >
             {item.name}
           </a>
@@ -83,14 +85,17 @@ const navItems = [
     const navList = navbar.querySelector('[data-nav-list]');
     const toggle = navbar.querySelector('[data-nav-toggle]');
     const mobileNav = navbar.querySelector('[data-mobile-nav]');
-
-    const setActive = (name) => {
+    const homePathname = '/';
+    const setActive = (sectionId) => {
       links.forEach((link) => {
-        link.classList.toggle('is-active', link.dataset.navName === name);
+        const isActive = link.getAttribute('data-nav-section') === sectionId;
+        link.classList.toggle('is-active', isActive);
+
       });
 
       mobileLinks.forEach((link) => {
-        link.classList.toggle('is-active', link.dataset.navName === name);
+        const isActive = link.getAttribute('data-nav-section') === sectionId;
+        link.classList.toggle('is-active', isActive);
       });
       const activeDesktop = links.find((link) => link.classList.contains('is-active'));
 
@@ -100,18 +105,41 @@ const navItems = [
 
         indicator.style.width = `${activeRect.width}px`;
         indicator.style.transform = `translateX(${activeRect.left - listRect.left}px)`;
+                indicator.style.opacity = '1';
+        return;
+      }
+
+      if (indicator instanceof HTMLElement) {
+        indicator.style.width = '0px';
+        indicator.style.opacity = '0';
       }
     };
+    const getSectionFromLocation = () => {
+      const { pathname, hash } = window.location;
+      const normalizedPathname = pathname.replace(/\/$/, '') || '/';
+
+      if (normalizedPathname !== homePathname) {
+        return '';
+      }
+
+      const sectionId = hash.replace('#', '');
+      return sectionId || 'home';
+    };
+
+    const syncActiveFromLocation = () => {
+      setActive(getSectionFromLocation());
+    };
+
 
     links.forEach((link) => {
       link.addEventListener('click', () => {
-        setActive(link.dataset.navName || '');
+        setActive(link.getAttribute('data-nav-section') || '');
       });
     });
 
     mobileLinks.forEach((link) => {
       link.addEventListener('click', () => {
-        setActive(link.dataset.navName || '');
+        setActive(link.getAttribute('data-nav-section') || '');
         if (toggle instanceof HTMLButtonElement && mobileNav instanceof HTMLElement) {
           toggle.setAttribute('aria-expanded', 'false');
           mobileNav.hidden = true;
@@ -127,13 +155,8 @@ const navItems = [
       });
     }
 
-    window.addEventListener('resize', () => {
-      const activeDesktop = links.find((link) => link.classList.contains('is-active'));
-      if (activeDesktop) {
-        setActive(activeDesktop.dataset.navName || '');
-      }
-    });
-
-    setActive(links[0]?.dataset.navName || '');
+    window.addEventListener('hashchange', syncActiveFromLocation);
+    window.addEventListener('resize', syncActiveFromLocation);
+    syncActiveFromLocation();
   }
 </script>
