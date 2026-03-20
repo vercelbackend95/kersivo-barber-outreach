@@ -224,16 +224,7 @@ export default function BookingFlow({ services, barbers, mode = 'create', token 
 
   return (
     <section className="surface booking-shell booking-flow" aria-live="polite">
-      <div className="booking-desktop-lockout" role="note" aria-label="Mobile only booking notice">
-        <p className="booking-desktop-lockout__eyebrow">Mobile only</p>
-        <h1>{isCreateMode ? 'Book now on mobile' : 'Reschedule on mobile'}</h1>
-        <p className="muted">
-          This booking flow is intentionally available on phones only. Open this page on a mobile device to continue.
-        </p>
-
-
-      </div>
-      <div className="booking-mobile-content">
+      <div className="booking-form-content">
         <div className="booking-flow__hero">
           <p className="booking-flow__eyebrow">Instant booking</p>
           <div className="booking-flow__hero-copy">
@@ -271,8 +262,7 @@ export default function BookingFlow({ services, barbers, mode = 'create', token 
                       onClick={() => setServiceId(service.id)}
                     >
                       <span className="booking-choice-card__title">{service.name}</span>
-                      <span className="booking-choice-card__meta">{service.durationMinutes} min</span>
-                      <span className="booking-choice-card__price">{formatPrice(service.pricePence)}</span>
+                      <span className="booking-choice-card__price">{service.durationMinutes} min · {formatPrice(service.pricePence)}</span>
                     </button>
                   );
                 })}
@@ -305,8 +295,6 @@ export default function BookingFlow({ services, barbers, mode = 'create', token 
                     >
                       <span className="booking-choice-card__avatar" aria-hidden="true">{barber.name.slice(0, 1)}</span>
                       <span className="booking-choice-card__title">{barber.name}</span>
-                      <span className="booking-choice-card__meta">Available for {selectedService?.name ?? 'selected service'}</span>
-
                     </button>
                   );
                 })}

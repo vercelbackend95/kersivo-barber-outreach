@@ -91,29 +91,7 @@
   display: grid;
   gap: var(--booking-space-3);
 }
-
-.booking-desktop-lockout {
-  display: none;
-  border: 1px solid color-mix(in srgb, var(--accent) 44%, var(--border));
-  background: linear-gradient(180deg, color-mix(in srgb, var(--surface) 94%, var(--bg)), color-mix(in srgb, var(--surface) 72%, var(--bg)));
-  padding: clamp(1.5rem, 3vw, 2rem);
-  gap: 1rem;
-}
-
-.booking-desktop-lockout__eyebrow {
-  margin: 0;
-  font-size: 0.95rem;
-  font-weight: 700;
-  letter-spacing: 0.18em;
-  text-transform: uppercase;
-  color: color-mix(in srgb, var(--accent) 82%, var(--fg));
-}
-
-.booking-desktop-lockout p {
-  max-width: 48rem;
-}
-
-.booking-mobile-content {
+.booking-form-content {
 
   display: grid;
   gap: var(--booking-space-3);
@@ -190,7 +168,6 @@
 .booking-flow__hero-copy p,
 .booking-step__head p,
 .booking-slots-section__head .muted,
-.booking-choice-card__meta,
 .booking-slot__meta {
   margin: 0;
 }
@@ -305,7 +282,7 @@
 }
 
 
-.booking-choice-card__meta,
+
 .booking-choice-card__price,
 .booking-slot__meta,
 .booking-action-bar__label {
@@ -314,7 +291,7 @@
   text-transform: uppercase;
   color: var(--muted);
 }
-.booking-choice-card__meta,
+
 .booking-slot__meta {
   line-height: 1.35;
 }
@@ -347,8 +324,7 @@
   text-transform: uppercase;
 }
 
-.booking-choice-card--barber .booking-choice-card__title,
-.booking-choice-card--barber .booking-choice-card__meta {
+.booking-choice-card--barber .booking-choice-card__title {
   grid-column: 2;
 }
 
@@ -480,21 +456,45 @@
     grid-template-columns: 1fr;
         row-gap: 0.75rem;
   }
-  .booking-choice-card--barber .booking-choice-card__title,
-  .booking-choice-card--barber .booking-choice-card__meta {
+  .booking-choice-card--barber .booking-choice-card__title {
     grid-column: 1;
   }
 
 }
 
 @media (min-width: 640px) {
-   .booking-mobile-content {
-    display: none;
+  .booking-choice-grid--services {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+  .booking-choice-grid--barbers,
+  .booking-flow__grid--details {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+
 
   }
 
-  .booking-desktop-lockout {
-    display: grid;
+  .slot-grid {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+}
+
+@media (min-width: 960px) {
+  .booking-shell {
+    padding: clamp(1.5rem, 3vw, 2.4rem);
+  }
+
+  .booking-flow__hero-copy p {
+    max-width: 42rem;
+  }
+
+  .booking-choice-grid--services,
+  .booking-choice-grid--barbers,
+  .booking-flow__grid--details {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+
+  .slot-grid {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
 
   }
 }
