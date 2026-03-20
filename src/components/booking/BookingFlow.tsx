@@ -1,4 +1,4 @@
-// src/components/booking/BookingFlow.tsx
+
 import React, { useEffect, useMemo, useState } from 'react';
 import BookingConfirmationPanel, { type BookingSummary } from './BookingConfirmationPanel';
 type Service = { id: string; name: string; durationMinutes: number; pricePence: number };
@@ -257,12 +257,17 @@ export default function BookingFlow({ services, barbers, mode = 'create', token 
                     <button
                       type="button"
                       key={service.id}
-                      className={`booking-choice-card${isSelected ? ' is-selected' : ''}`}
+                      className={`booking-choice-card booking-choice-card--service${isSelected ? ' is-selected' : ''}`}
                       aria-pressed={isSelected}
                       onClick={() => setServiceId(service.id)}
                     >
                       <span className="booking-choice-card__title">{service.name}</span>
-                      <span className="booking-choice-card__price">{service.durationMinutes} min · {formatPrice(service.pricePence)}</span>
+                                            <span className="booking-choice-card__meta">
+                        <span className="booking-choice-card__stat">{service.durationMinutes} min</span>
+                        <span className="booking-choice-card__dot" aria-hidden="true">•</span>
+                        <span className="booking-choice-card__price">{formatPrice(service.pricePence)}</span>
+                      </span>
+
                     </button>
                   );
                 })}
@@ -294,7 +299,11 @@ export default function BookingFlow({ services, barbers, mode = 'create', token 
                       onClick={() => setBarberId(barber.id)}
                     >
                       <span className="booking-choice-card__avatar" aria-hidden="true">{barber.name.slice(0, 1)}</span>
-                      <span className="booking-choice-card__title">{barber.name}</span>
+                      <span className="booking-choice-card__content">
+                        <span className="booking-choice-card__title">{barber.name}</span>
+                        <span className="booking-choice-card__helper">Available for this service</span>
+                      </span>
+
                     </button>
                   );
                 })}
