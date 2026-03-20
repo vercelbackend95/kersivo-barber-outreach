@@ -240,10 +240,12 @@
 
 .booking-choice-grid--services,
 .booking-choice-grid--barbers,
-.booking-flow__grid--details,
 .slot-grid {
   grid-template-columns: repeat(3, minmax(0, 1fr));
 
+}
+.booking-flow__grid--details {
+  grid-template-columns: minmax(0, 1fr);
 }
 
 .booking-choice-card {
