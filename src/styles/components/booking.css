@@ -245,7 +245,7 @@
 
 }
 .booking-flow__grid--details {
-  grid-template-columns: minmax(0, 1fr);
+  grid-template-columns: repeat(3, minmax(0, 1fr));
 }
 
 .booking-choice-card {
@@ -291,7 +291,7 @@
 }
 
 .booking-slot__label {
-  font-size: clamp(1.45rem, 3.9vw, 2rem);
+  font-size: clamp(1.05rem, 3.2vw, 1.4rem);
   line-height: 1.15;
 
 
@@ -392,6 +392,17 @@
   display: grid;
   gap: 0.85rem;
 }
+.booking-flow__grid--details .booking-flow__field > span {
+  font-size: clamp(0.9rem, 2.45vw, 1.05rem);
+  line-height: 1.2;
+}
+
+.booking-flow__grid--details input {
+  min-height: 4.5rem;
+  padding-inline: 0.7rem;
+  font-size: clamp(0.95rem, 2.7vw, 1.05rem);
+}
+
 
 .booking-slots-section {
   display: grid;
@@ -416,13 +427,13 @@
 }
 
 .booking-slot {
-  min-height: 5.5rem;
+  min-height: 5rem;
   min-width: 0;
   border: 1px solid color-mix(in srgb, var(--border) 84%, var(--accent));
 
   background: color-mix(in srgb, var(--bg) 56%, var(--surface));
   color: var(--fg);
-  padding: 0.8rem 0.4rem;
+  padding: 0.75rem 0.3rem;
   display: grid;
   gap: 0.2rem;
   text-align: center;
@@ -510,6 +521,20 @@
   .booking-slots-section__head label {
     font-size: 0.95rem;
   }
+ .booking-flow__grid--details {
+    gap: 0.65rem;
+  }
+
+  .booking-flow__grid--details .booking-flow__field > span {
+    font-size: 0.78rem;
+  }
+
+  .booking-flow__grid--details input {
+    min-height: 3.75rem;
+    padding-inline: 0.55rem;
+    font-size: 0.9rem;
+  }
+
 
   .booking-choice-card__avatar {
     width: 2.7rem;
@@ -540,8 +565,7 @@
   .booking-choice-grid--services {
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
-  .booking-choice-grid--barbers,
-  .booking-flow__grid--details {
+  .booking-choice-grid--barbers {
     grid-template-columns: repeat(2, minmax(0, 1fr));
 
   }

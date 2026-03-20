@@ -231,7 +231,7 @@ export default function BookingFlow({ services, barbers, mode = 'create', token 
             <h1>{isCreateMode ? 'Book now' : 'Reschedule your booking'}</h1>
             <p className="muted">
               {isCreateMode
-                ? 'Choose your service, barber, date and time in a mobile-first flow. Confirmation is sent instantly after submission.'
+                ? 'Pick your service, barber and slot. Instant confirmation.'
                 : 'Choose a new service, barber, date and time in a mobile-first flow. Your booking updates instantly after submission.'}
             </p>
           </div>
