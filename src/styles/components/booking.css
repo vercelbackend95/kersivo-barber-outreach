@@ -245,10 +245,25 @@
 }
 
 .booking-choice-card--barber {
-  grid-template-columns: auto minmax(0, 1fr);
-  column-gap: 0.75rem;
-  align-items: center;
-  min-height: auto;
+  min-height: 7rem;
+  grid-template-columns: minmax(0, 1fr);
+  grid-template-rows: auto auto;
+  justify-items: center;
+  align-content: center;
+  gap: 0.6rem;
+  padding: 0.8rem 0.7rem 0.75rem;
+  text-align: center;
+  overflow: clip;
+}
+
+.booking-choice-card--barber::after {
+  content: '';
+  position: absolute;
+  inset: auto 0 0 0;
+  height: 2px;
+  background: transparent;
+  transition: background-color 140ms ease;
+
 }
 
 .booking-choice-card:hover,
@@ -263,6 +278,15 @@
   box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--accent) 44%, transparent), 0 0 0 1px color-mix(in srgb, var(--accent) 22%, transparent);
 
 }
+.booking-choice-card--barber.is-selected {
+  background: linear-gradient(180deg, color-mix(in srgb, var(--accent) 18%, var(--surface)), color-mix(in srgb, var(--accent) 10%, var(--surface)));
+  box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--accent) 54%, transparent), 0 0 0 1px color-mix(in srgb, var(--accent) 26%, transparent);
+}
+
+.booking-choice-card--barber.is-selected::after {
+  background: var(--accent);
+}
+
 
 .booking-choice-card__title,
 .booking-slot__label {
@@ -284,6 +308,9 @@
   display: grid;
   gap: 0.25rem;
   min-width: 0;
+}
+.booking-choice-card__content {
+  width: 100%;
 }
 
 .booking-choice-card__meta {
@@ -376,24 +403,46 @@
 }
 
 .booking-choice-card__avatar {
- width: 3rem;
-  height: 3rem;
+  width: clamp(2.65rem, 7vw, 3.25rem);
+  height: clamp(2.65rem, 7vw, 3.25rem);
 
   display: inline-flex;
   align-items: center;
   justify-content: center;
-    overflow: hidden;
-  border: 1px solid color-mix(in srgb, var(--accent) 34%, var(--border));
-  background: color-mix(in srgb, var(--accent) 16%, var(--bg));
-  color: var(--accent);
-  font-family: var(--font-heading);
-  font-size: clamp(1.4rem, 4vw, 1.9rem);
+  overflow: hidden;
+  border: 1px solid color-mix(in srgb, var(--accent) 30%, var(--border));
+  background: linear-gradient(180deg, color-mix(in srgb, var(--surface) 74%, var(--bg)), color-mix(in srgb, var(--accent) 12%, var(--bg)));
+  color: color-mix(in srgb, var(--accent) 84%, var(--fg));
+}
+
+.booking-choice-card--barber.is-selected .booking-choice-card__avatar {
+  border-color: color-mix(in srgb, var(--accent) 72%, var(--border));
+  background: linear-gradient(180deg, color-mix(in srgb, var(--accent) 18%, var(--surface)), color-mix(in srgb, var(--accent) 12%, var(--bg)));
+
 }
 
 .booking-choice-card__avatar img {
   width: 100%;
   height: 100%;
   object-fit: cover;
+}
+
+.booking-choice-card__avatar-fallback {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  height: 100%;
+  font-family: var(--font-heading);
+  font-size: clamp(1rem, 3vw, 1.3rem);
+  letter-spacing: 0.08em;
+  line-height: 1;
+}
+
+.booking-choice-card--barber .booking-choice-card__title {
+  font-size: clamp(0.88rem, 2.45vw, 1rem);
+  line-height: 1.12;
+  text-align: center;
 }
 
 

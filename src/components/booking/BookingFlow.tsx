@@ -87,6 +87,19 @@ function formatPrice(pricePence: number): string {
   return `£${(pricePence / 100).toFixed(2)}`;
 }
 
+function getBarberInitials(name: string): string {
+  const parts = name
+    .trim()
+    .split(/\s+/)
+    .filter(Boolean);
+
+  if (parts.length === 0) return '?';
+
+  return parts
+    .slice(0, 2)
+    .map((part) => part.charAt(0).toUpperCase())
+    .join('');
+}
 
 export default function BookingFlow({ services, barbers, mode = 'create', token = '' }: Props) {
   const [serviceId, setServiceId] = useState(services[0]?.id ?? '');
@@ -98,6 +111,7 @@ export default function BookingFlow({ services, barbers, mode = 'create', token 
   const [email, setEmail] = useState('');
   const [phone, setPhone] = useState('');
   const [message, setMessage] = useState('');
+    const [brokenAvatarIds, setBrokenAvatarIds] = useState<Record<string, boolean>>({});
   const [confirmation, setConfirmation] = useState<{ type: 'booked' | 'rescheduled'; summary: BookingSummary } | null>(null);
   const availableBarbers = useMemo(() => {
     if (!serviceId) return [];
@@ -313,6 +327,8 @@ export default function BookingFlow({ services, barbers, mode = 'create', token 
               <div className="booking-choice-grid booking-choice-grid--barbers" role="radiogroup" aria-label="Barbers">
                 {availableBarbers.map((barber) => {
                   const isSelected = barber.id === barberId;
+                const hasAvatar = Boolean(barber.avatarUrl) && !brokenAvatarIds[barber.id];
+                  const initials = getBarberInitials(barber.name);
 
 
                   return (
@@ -324,19 +340,24 @@ export default function BookingFlow({ services, barbers, mode = 'create', token 
                       aria-pressed={isSelected}
                       onClick={() => setBarberId(barber.id)}
                     >
-                      <span className="booking-choice-card__avatar" aria-hidden="true">
-                        {barber.avatarUrl ? (
-                          <img src={barber.avatarUrl} alt="" loading="lazy" decoding="async" />
+                      <span className="booking-choice-card__avatar" aria-hidden="true" data-has-image={hasAvatar ? 'true' : 'false'}>
+                        {hasAvatar ? (
+                          <img
+                            src={barber.avatarUrl ?? undefined}
+                            alt=""
+                            loading="lazy"
+                            decoding="async"
+                            onError={() => setBrokenAvatarIds((current) => ({ ...current, [barber.id]: true }))}
+                          />
+
                         ) : (
-                          barber.name.slice(0, 1)
+                          <span className="booking-choice-card__avatar-fallback">{initials}</span>
                         )}
 
                       </span>
 
                       <span className="booking-choice-card__content">
-                        <span className="booking-choice-card__eyebrow">Barber</span>
                         <span className="booking-choice-card__title">{barber.name}</span>
-                        <span className="booking-choice-card__helper">Available for this service</span>
                       </span>
 
                     </button>
