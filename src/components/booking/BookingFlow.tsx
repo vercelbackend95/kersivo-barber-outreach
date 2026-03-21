@@ -282,15 +282,22 @@ export default function BookingFlow({ services, barbers, mode = 'create', token 
                       aria-pressed={isSelected}
                       onClick={() => setServiceId(service.id)}
                     >
-                      <span className="booking-choice-card__eyebrow">Appointment</span>
-                      <span className="booking-choice-card__title">{service.name}</span>
-                                            <span className="booking-choice-card__meta">
-                        <span className="booking-choice-card__stat">{service.durationMinutes} min</span>
-                        <span className="booking-choice-card__dot" aria-hidden="true">
-                          •
-                        </span>
+                      <span className="booking-choice-card__topline">
+                        <span className="booking-choice-card__eyebrow">Service</span>
+                        <span className="booking-choice-card__status">{isSelected ? 'Selected' : 'Select'}</span>
+                      </span>
 
-                        <span className="booking-choice-card__price">{formatPrice(service.pricePence)}</span>
+                      <span className="booking-choice-card__title">{service.name}</span>
+                      <span className="booking-choice-card__meta booking-choice-card__meta--service">
+                        <span className="booking-choice-card__meta-item">
+                          <span className="booking-choice-card__meta-label">Duration</span>
+                          <span className="booking-choice-card__stat">{service.durationMinutes} min</span>
+                        </span>
+                        <span className="booking-choice-card__meta-item booking-choice-card__meta-item--price">
+                          <span className="booking-choice-card__meta-label">Price</span>
+                          <span className="booking-choice-card__price">{formatPrice(service.pricePence)}</span>
+
+                        </span>
                       </span>
 
                     </button>

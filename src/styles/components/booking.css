@@ -211,6 +211,7 @@
 }
 
 .booking-choice-card {
+    position: relative;
   width: 100%;
   min-width: 0;
   min-height: 8.8rem;
@@ -228,6 +229,10 @@
 }
 .booking-choice-card--service {
   min-height: 10.5rem;
+    grid-template-rows: auto minmax(0, 1fr) auto;
+  gap: 0.8rem;
+  overflow: clip;
+
 }
 
 .booking-choice-card--barber {
@@ -249,6 +254,45 @@
   box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--accent) 44%, transparent), 0 0 0 1px color-mix(in srgb, var(--accent) 22%, transparent);
 
 }
+
+.booking-choice-card--service::before {
+  content: '';
+  position: absolute;
+  inset: 0 auto 0 0;
+  width: 0.22rem;
+  background: color-mix(in srgb, var(--accent) 20%, transparent);
+  transition: background 140ms ease;
+}
+
+.booking-choice-card--service::after {
+  content: '';
+  position: absolute;
+  inset: 0.3rem;
+  border: 1px solid transparent;
+  pointer-events: none;
+  transition: border-color 140ms ease;
+}
+
+.booking-choice-card--service:hover::before {
+  background: color-mix(in srgb, var(--accent) 42%, transparent);
+}
+
+.booking-choice-card--service.is-selected::before {
+  background: var(--accent);
+}
+
+.booking-choice-card--service.is-selected::after {
+  border-color: color-mix(in srgb, var(--accent) 36%, transparent);
+}
+
+.booking-choice-card__topline {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem;
+  min-width: 0;
+}
+
 
 .booking-choice-card__title,
 .booking-slot__label {
@@ -279,11 +323,33 @@
   gap: 0.25rem 0.45rem;
 
 }
+.booking-choice-card__meta--service {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0.6rem;
+  padding-top: 0.75rem;
+  border-top: 1px solid color-mix(in srgb, var(--border) 78%, var(--accent));
+}
+
+.booking-choice-card__meta-item {
+  display: grid;
+  gap: 0.22rem;
+  min-width: 0;
+}
+
+.booking-choice-card__meta-item--price {
+  justify-items: end;
+  text-align: right;
+}
+
 
 .booking-choice-card__stat,
 
 
 .booking-choice-card__price,
+.booking-choice-card__status,
+.booking-choice-card__meta-label,
+
 .booking-choice-card__helper,
 .booking-slot__meta,
 .booking-flow__field > span,
@@ -297,6 +363,9 @@
 }
 
 .booking-choice-card__stat,
+.booking-choice-card__status,
+.booking-choice-card__meta-label,
+
 .booking-choice-card__helper,
 .booking-slot__meta,
 .booking-confirmation__summary-row dt {
@@ -305,10 +374,31 @@
 
 
 }
+.booking-choice-card__status {
+  padding: 0.12rem 0.32rem;
+  border: 1px solid color-mix(in srgb, var(--border) 78%, var(--accent));
+  background: color-mix(in srgb, var(--surface) 88%, var(--bg));
+  letter-spacing: 0.12em;
+  white-space: nowrap;
+}
+
+.booking-choice-card.is-selected .booking-choice-card__status {
+  color: var(--accent-contrast);
+  border-color: var(--accent);
+  background: var(--accent);
+}
+
 
 
 .booking-choice-card__price {
   color: color-mix(in srgb, var(--accent) 78%, var(--fg));
+    font-size: clamp(0.84rem, 2.8vw, 1rem);
+  letter-spacing: 0.08em;
+}
+
+.booking-choice-card__meta-label {
+  opacity: 0.8;
+
 }
 .booking-choice-card__dot {
   color: color-mix(in srgb, var(--accent) 60%, var(--muted));

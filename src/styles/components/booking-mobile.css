@@ -92,8 +92,9 @@
   .booking-choice-card--service,
   .booking-choice-card--barber {
     min-height: 8.75rem;
-    padding: 0.7rem 0.55rem;
-    gap: 0.45rem;
+    padding: 0.72rem 0.58rem;
+    gap: 0.5rem;
+
     align-content: start;
     justify-items: start;
 
@@ -116,26 +117,47 @@
   .booking-choice-card__dot {
     display: none;
   }
+  .booking-choice-card__topline {
+    width: 100%;
+    gap: 0.35rem;
+    align-items: start;
+  }
+
 
   .booking-choice-card--service .booking-choice-card__eyebrow,
-  .booking-choice-card--barber .booking-choice-card__eyebrow {
+  .booking-choice-card--barber .booking-choice-card__eyebrow,
+  .booking-choice-card--service .booking-choice-card__status,
+  .booking-choice-card--service .booking-choice-card__meta-label {
+
     font-size: 0.66rem;
     letter-spacing: 0.12em;
   }
 
   .booking-choice-card--service .booking-choice-card__title,
   .booking-choice-card--barber .booking-choice-card__title {
-    font-size: 0.92rem;
-    line-height: 1.05;
+    font-size: 0.98rem;
+    line-height: 1;
+
     text-wrap: pretty;
     word-break: break-word;
   }
 
   .booking-choice-card--service .booking-choice-card__meta {
     margin-top: auto;
-    flex-direction: column;
-    align-items: flex-start;
-    gap: 0.15rem;
+    width: 100%;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 0.45rem;
+    padding-top: 0.6rem;
+  }
+
+  .booking-choice-card--service .booking-choice-card__meta-item {
+    gap: 0.12rem;
+  }
+
+  .booking-choice-card--service .booking-choice-card__meta-item--price {
+    justify-items: start;
+    text-align: left;
+
   }
 
   .booking-choice-card--service .booking-choice-card__stat,
@@ -143,6 +165,10 @@
     font-size: 0.68rem;
     letter-spacing: 0.08em;
   }
+  .booking-choice-card--service .booking-choice-card__status {
+    padding: 0.08rem 0.22rem;
+  }
+
 
   .booking-choice-card--barber .booking-choice-card__content {
     gap: 0.2rem;
