@@ -69,23 +69,38 @@
 
   .booking-choice-grid--services,
   .booking-choice-grid--barbers,
-  .booking-flow__grid--details,
+
   .slot-grid {
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 0.55rem;
+  }
+
+  .booking-flow__grid--details {
+
     grid-template-columns: minmax(0, 1fr);
     gap: 0.75rem;
   }
 
-  .booking-choice-card,
+  .booking-choice-card {
+    min-height: 7.8rem;
+    padding: 0.8rem;
+  }
+
+
   .booking-choice-card--service,
   .booking-choice-card--barber {
-    min-height: auto;
-    padding: 0.9rem;
+    min-height: 8.75rem;
+    padding: 0.7rem 0.55rem;
+    gap: 0.45rem;
+    align-content: start;
+    justify-items: start;
+
   }
 
   .booking-choice-card--barber {
-    grid-template-columns: auto minmax(0, 1fr);
-    column-gap: 0.75rem;
-    align-items: center;
+    grid-template-columns: minmax(0, 1fr);
+    column-gap: 0;
+
   }
 
   .booking-choice-card__content,
@@ -97,12 +112,70 @@
   }
 
   .booking-choice-card__dot {
-    display: inline;
+    display: none;
+  }
+
+  .booking-choice-card--service .booking-choice-card__eyebrow,
+  .booking-choice-card--barber .booking-choice-card__eyebrow {
+    font-size: 0.66rem;
+    letter-spacing: 0.12em;
+  }
+
+  .booking-choice-card--service .booking-choice-card__title,
+  .booking-choice-card--barber .booking-choice-card__title {
+    font-size: 0.92rem;
+    line-height: 1.05;
+    text-wrap: pretty;
+    word-break: break-word;
+  }
+
+  .booking-choice-card--service .booking-choice-card__meta {
+    margin-top: auto;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 0.15rem;
+  }
+
+  .booking-choice-card--service .booking-choice-card__stat,
+  .booking-choice-card--service .booking-choice-card__price {
+    font-size: 0.68rem;
+    letter-spacing: 0.08em;
+  }
+
+  .booking-choice-card--barber .booking-choice-card__content {
+    gap: 0.2rem;
+  }
+
+  .booking-choice-card--barber .booking-choice-card__helper {
+    display: none;
+  }
+
+  .booking-choice-card--barber .booking-choice-card__avatar {
+    width: 2.35rem;
+    height: 2.35rem;
+    font-size: 1.15rem;
+  }
+
+  .booking-choice-card__title {
+    font-size: 1.05rem;
+
   }
 
   .booking-slot {
-    min-height: 4rem;
-    padding-inline: 0.75rem;
+    min-height: 4.9rem;
+    padding: 0.65rem 0.35rem;
+    gap: 0.3rem;
+  }
+
+  .booking-slot__label {
+    font-size: 0.9rem;
+    line-height: 1.05;
+  }
+
+  .booking-slot__meta {
+    font-size: 0.62rem;
+    letter-spacing: 0.12em;
+
   }
 
   .booking-flow__grid--details input,
@@ -121,11 +194,5 @@
     padding-inline: 1rem;
     padding-bottom: calc(1rem + env(safe-area-inset-bottom));
     box-shadow: 0 -14px 32px color-mix(in srgb, var(--bg) 78%, transparent);
-  }
-}
-
-@media (min-width: 390px) and (max-width: 767px) {
-  .slot-grid {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 }
