@@ -231,6 +231,7 @@
   min-height: 10.5rem;
     grid-template-rows: auto minmax(0, 1fr) auto;
   gap: 0.8rem;
+    align-content: start;
   overflow: clip;
 
 }
@@ -284,15 +285,6 @@
 .booking-choice-card--service.is-selected::after {
   border-color: color-mix(in srgb, var(--accent) 36%, transparent);
 }
-
-.booking-choice-card__topline {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 0.5rem;
-  min-width: 0;
-}
-
 
 .booking-choice-card__title,
 .booking-slot__label {

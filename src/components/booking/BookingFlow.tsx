@@ -282,10 +282,7 @@ export default function BookingFlow({ services, barbers, mode = 'create', token 
                       aria-pressed={isSelected}
                       onClick={() => setServiceId(service.id)}
                     >
-                      <span className="booking-choice-card__topline">
-                        <span className="booking-choice-card__eyebrow">Service</span>
-                        <span className="booking-choice-card__status">{isSelected ? 'Selected' : 'Select'}</span>
-                      </span>
+                      <span className="booking-choice-card__eyebrow">Service</span>
 
                       <span className="booking-choice-card__title">{service.name}</span>
                       <span className="booking-choice-card__meta booking-choice-card__meta--service">
