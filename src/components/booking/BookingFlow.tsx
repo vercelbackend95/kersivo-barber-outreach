@@ -44,7 +44,12 @@ function normalizeToIsoDate(input: string): string | null {
   const year = Number(dmyMatch[3]);
   const validated = new Date(Date.UTC(year, month - 1, day));
 
-  if (validated.getUTCFullYear() !== year || validated.getUTCMonth() !== month - 1 || validated.getUTCDate() !== day) {
+  if (
+    validated.getUTCFullYear() !== year ||
+    validated.getUTCMonth() !== month - 1 ||
+    validated.getUTCDate() !== day
+  ) {
+
     return null;
   }
 
@@ -93,9 +98,16 @@ export default function BookingFlow({ services, barbers, mode = 'create', token 
   const selectedService = useMemo(() => services.find((service) => service.id === serviceId), [serviceId, services]);
   const selectedBarber = useMemo(() => availableBarbers.find((barber) => barber.id === barberId), [availableBarbers, barberId]);
   const isoDate = useMemo(() => normalizeToIsoDate(date), [date]);
+    const formattedDate = useMemo(() => (isoDate ? formatDateForSummary(isoDate) : 'Select a valid date'), [isoDate]);
   const isCreateMode = mode === 'create';
   const isSubmitDisabled = !time || !barberId || (isCreateMode && (!fullName.trim() || !email.trim()));
 
+  const reviewItems = [
+    { label: 'Service', value: selectedService?.name ?? 'Choose a service' },
+    { label: 'Barber', value: selectedBarber?.name ?? 'Choose a barber' },
+    { label: 'Date', value: formattedDate },
+    { label: 'Time', value: time || 'Choose a time slot' }
+  ];
 
   useEffect(() => {
     if (!availableBarbers.some((barber) => barber.id === barberId)) {
@@ -226,15 +238,31 @@ export default function BookingFlow({ services, barbers, mode = 'create', token 
     <section className="surface booking-shell booking-flow" aria-live="polite">
       <div className="booking-form-content">
         <div className="booking-flow__hero">
-          <p className="booking-flow__eyebrow">Instant booking</p>
           <div className="booking-flow__hero-copy">
+                      <p className="booking-flow__eyebrow">Instant booking</p>
             <h1>{isCreateMode ? 'Book now' : 'Reschedule your booking'}</h1>
             <p className="muted">
               {isCreateMode
-                ? 'Pick your service, barber and slot. Instant confirmation.'
-                : 'Choose a new service, barber, date and time in a mobile-first flow. Your booking updates instantly after submission.'}
+                ? 'Choose your service, barber and time in a clean mobile-first flow built for fast confirmation.'
+                : 'Pick a new service, barber, date and time in a cleaner mobile-first flow. Your appointment updates instantly after submission.'}
+
             </p>
           </div>
+                    <div className="booking-flow__hero-highlights" aria-label="Booking highlights">
+            <div className="booking-flow__hero-stat">
+              <span className="booking-flow__hero-stat-label">Service</span>
+              <strong>{selectedService?.name ?? 'Select below'}</strong>
+            </div>
+            <div className="booking-flow__hero-stat">
+              <span className="booking-flow__hero-stat-label">Duration</span>
+              <strong>{selectedService ? `${selectedService.durationMinutes} min` : '—'}</strong>
+            </div>
+            <div className="booking-flow__hero-stat">
+              <span className="booking-flow__hero-stat-label">Price</span>
+              <strong>{selectedService ? formatPrice(selectedService.pricePence) : '—'}</strong>
+            </div>
+          </div>
+
         </div>
 
         {confirmation ? <BookingConfirmationPanel variant={confirmation.type} summary={confirmation.summary} /> : null}
@@ -261,10 +289,14 @@ export default function BookingFlow({ services, barbers, mode = 'create', token 
                       aria-pressed={isSelected}
                       onClick={() => setServiceId(service.id)}
                     >
+                                          <span className="booking-choice-card__eyebrow">Appointment</span>
                       <span className="booking-choice-card__title">{service.name}</span>
                                             <span className="booking-choice-card__meta">
                         <span className="booking-choice-card__stat">{service.durationMinutes} min</span>
-                        <span className="booking-choice-card__dot" aria-hidden="true">•</span>
+                        <span className="booking-choice-card__dot" aria-hidden="true">
+                          •
+                        </span>
+
                         <span className="booking-choice-card__price">{formatPrice(service.pricePence)}</span>
                       </span>
 
@@ -298,8 +330,12 @@ export default function BookingFlow({ services, barbers, mode = 'create', token 
                       aria-pressed={isSelected}
                       onClick={() => setBarberId(barber.id)}
                     >
-                      <span className="booking-choice-card__avatar" aria-hidden="true">{barber.name.slice(0, 1)}</span>
+                      <span className="booking-choice-card__avatar" aria-hidden="true">
+                        {barber.name.slice(0, 1)}
+                      </span>
+
                       <span className="booking-choice-card__content">
+                                              <span className="booking-choice-card__eyebrow">Barber</span>
                         <span className="booking-choice-card__title">{barber.name}</span>
                         <span className="booking-choice-card__helper">Available for this service</span>
                       </span>
@@ -333,7 +369,10 @@ export default function BookingFlow({ services, barbers, mode = 'create', token 
               <div className="booking-slots-section">
                 <div className="booking-slots-section__head">
                   <label id="booking-time-slots">Available times {selectedService ? `for ${selectedService.name}` : ''}</label>
-                  <span className="muted">Tap a slot to continue</span>
+                  <span className="muted">
+                    {slots.length > 0 ? 'Select the slot that works best for your schedule.' : 'Choose a barber and date to load availability.'}
+                  </span>
+
                 </div>
                 <div className="slot-grid" role="radiogroup" aria-labelledby="booking-time-slots">
                   {slots.map((slot) => {
@@ -383,25 +422,54 @@ export default function BookingFlow({ services, barbers, mode = 'create', token 
               </section>
             )}
           </div>
+          <aside className="booking-review" aria-labelledby="booking-review-title">
+            <div className="booking-review__panel">
+              <div className="booking-review__header">
+                <p className="booking-review__eyebrow">Appointment review</p>
+                <h2 id="booking-review-title">Your booking</h2>
+                <p className="muted">A clean summary stays visible while the user finishes the form.</p>
+              </div>
 
+              <dl className="booking-review__list">
+                {reviewItems.map((item) => (
+                  <div className="booking-review__row" key={item.label}>
+                    <dt>{item.label}</dt>
+                    <dd>{item.value}</dd>
+                  </div>
+                ))}
+              </dl>
 
-        </div>
-        <div className="booking-action-bar">
-          <div className="booking-action-bar__summary">
-            <span className="booking-action-bar__label">Ready to confirm</span>
-            <strong>
-              {selectedService?.name ?? 'Select service'}
-              {time ? ` · ${time}` : ''}
-            </strong>
-          </div>
-          <button
-            type="button"
-            className="btn btn--primary booking-action-bar__button"
-            disabled={isSubmitDisabled}
-            onClick={submit}
-          >
-            {mode === 'reschedule' ? 'Reschedule booking' : 'Confirm booking'}
-          </button>
+              <div className="booking-review__service-meta">
+                <div>
+                  <span className="booking-review__meta-label">Duration</span>
+                  <strong>{selectedService ? `${selectedService.durationMinutes} min` : '—'}</strong>
+                </div>
+                <div>
+                  <span className="booking-review__meta-label">Price</span>
+                  <strong>{selectedService ? formatPrice(selectedService.pricePence) : '—'}</strong>
+                </div>
+              </div>
+
+              <div className="booking-action-bar">
+                <div className="booking-action-bar__summary">
+                  <span className="booking-action-bar__label">Ready to confirm</span>
+                  <strong>
+                    {selectedService?.name ?? 'Select service'}
+                    {time ? ` · ${time}` : ''}
+                  </strong>
+                </div>
+                <button
+                  type="button"
+                  className="btn btn--primary booking-action-bar__button"
+                  disabled={isSubmitDisabled}
+                  onClick={submit}
+                >
+                  {mode === 'reschedule' ? 'Reschedule booking' : 'Confirm booking'}
+                </button>
+              </div>
+            </div>
+          </aside>
+
 
         </div>
       </div>
