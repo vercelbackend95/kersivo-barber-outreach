@@ -266,7 +266,7 @@ export default function BookingFlow({ services, barbers, mode = 'create', token 
             <section className="booking-step" aria-labelledby="booking-step-service">
               <div className="booking-step__head">
                 <span className="booking-step__index">01</span>
-                <div>
+                <div className="booking-step__title">
                   <h2 id="booking-step-service">Choose a service</h2>
                 </div>
                               </div>
@@ -305,7 +305,7 @@ export default function BookingFlow({ services, barbers, mode = 'create', token 
             <section className="booking-step" aria-labelledby="booking-step-barber">
               <div className="booking-step__head">
                 <span className="booking-step__index">02</span>
-                <div>
+                <div className="booking-step__title">
                   <h2 id="booking-step-barber">Choose a barber</h2>
 
                 </div>
@@ -347,7 +347,7 @@ export default function BookingFlow({ services, barbers, mode = 'create', token 
             <section className="booking-step" aria-labelledby="booking-step-date-time">
               <div className="booking-step__head">
                 <span className="booking-step__index">03</span>
-                <div>
+                <div className="booking-step__title">
                   <h2 id="booking-step-date-time">Choose date and time</h2>
 
                 </div>
@@ -410,7 +410,7 @@ export default function BookingFlow({ services, barbers, mode = 'create', token 
               <section className="booking-step" aria-labelledby="booking-step-details">
                 <div className="booking-step__head">
                   <span className="booking-step__index">04</span>
-                  <div>
+                  <div className="booking-step__title">
                     <h2 id="booking-step-details">Your details</h2>
                   </div>
                 </div>
