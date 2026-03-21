@@ -354,7 +354,14 @@
 }
 
 .booking-date-tab {
+    width: 100%;
+  min-width: 0;
+
   min-height: 3.5rem;
+    display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: stretch;
+
 }
 
 .booking-date-tab:hover {
@@ -368,10 +375,16 @@
 
 .booking-date-tab__main {
   text-transform: uppercase;
+    display: flex;
+  align-items: center;
+  min-width: 0;
+
 }
 
 .booking-date-tab__calendar {
-  width: 3rem;
+  width: clamp(3.25rem, 14vw, 4rem);
+  min-width: clamp(3.25rem, 14vw, 4rem);
+
   flex-shrink: 0;
 }
 
@@ -1158,8 +1171,11 @@
 
 .admin-filter-tab--split {
   padding: 0;
+  width: 100%;
+  min-width: 0;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
 
-  display: flex;
   align-items: stretch;
   overflow: hidden;
 
@@ -1167,19 +1183,24 @@
 
 .admin-filter-tab-main {
   flex: 1;
+    display: flex;
+  align-items: center;
+
   min-width: 0;
   border: 0;
   background: transparent;
   color: inherit;
   font: inherit;
   text-align: left;
-  padding: 0.6rem 0.7rem;
+  line-height: 1.15;
   cursor: pointer;
 }
 
 .admin-filter-tab-calendar {
   position: relative;
-  width: 2rem;
+  width: clamp(2.75rem, 12vw, 3.5rem);
+  min-width: clamp(2.75rem, 12vw, 3.5rem);
+
   border: 0;
   border-left: 1px solid var(--border);
   background: transparent;
@@ -1201,6 +1222,9 @@
 }
 
 .admin-filter-tab-calendar-input {
+    -webkit-appearance: none;
+  appearance: none;
+
   position: absolute;
   inset: 0;
   width: 100%;
@@ -1210,8 +1234,9 @@
   z-index: 2;
   border: 0;
   margin: 0;
+    font-size: 16px;
   cursor: pointer;
-
+  touch-action: manipulation;
 }
 
 .admin-filter-tab--active .admin-filter-tab-calendar {
@@ -5199,19 +5224,23 @@
   }
 
   .admin-filter-tab {
-    font-size: 0.8rem;
+    font-size: clamp(0.86rem, 2.7vw, 0.95rem);
     line-height: 1.2;
   }
 
   .admin-filter-tab-main {
-    padding: 0.5rem 0.45rem;
+    padding: 0.65rem 0.7rem;
     text-align: left;
     white-space: normal;
-    word-break: break-word;
+    word-break: normal;
+    overflow-wrap: anywhere;
+
   }
 
   .admin-filter-tab-calendar {
-    width: 1.9rem;
+    width: clamp(3rem, 16vw, 3.5rem);
+    min-width: clamp(3rem, 16vw, 3.5rem);
+
   }
 
 
