@@ -498,6 +498,10 @@
     max-width: 18ch;
 
   }
+  .booking-choice-grid--services {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 0.55rem;
+  }
 
 
   .booking-choice-card {
@@ -507,7 +511,37 @@
   }
 
   .booking-choice-card--service {
-    min-height: 9.2rem;
+    min-height: 8.75rem;
+    padding: 0.7rem 0.55rem;
+    gap: 0.45rem;
+    align-content: start;
+    justify-items: start;
+  }
+
+  .booking-choice-card--service .booking-choice-card__eyebrow {
+    font-size: 0.66rem;
+    letter-spacing: 0.12em;
+  }
+
+  .booking-choice-card--service .booking-choice-card__title {
+    font-size: 0.92rem;
+    line-height: 1.05;
+    text-wrap: pretty;
+    word-break: break-word;
+  }
+
+  .booking-choice-card--service .booking-choice-card__meta {
+    margin-top: auto;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 0.15rem;
+  }
+
+  .booking-choice-card--service .booking-choice-card__stat,
+  .booking-choice-card--service .booking-choice-card__price {
+    font-size: 0.68rem;
+    letter-spacing: 0.08em;
+
   }
 
   .booking-choice-card__title {
@@ -543,7 +577,6 @@
   }
 }
 @media (min-width: 640px) {
-  .booking-choice-grid--services,
   .booking-choice-grid--barbers,
   .booking-flow__grid--details,
   .slot-grid {
