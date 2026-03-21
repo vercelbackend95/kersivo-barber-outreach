@@ -64,6 +64,24 @@ function formatDateForSummary(isoDate: string): string {
     year: 'numeric'
   });
 }
+function formatDateForBookingTab(isoDate: string): string {
+  const normalizedDate = normalizeToIsoDate(isoDate);
+  if (!normalizedDate) {
+    return 'Select date';
+  }
+
+  const parsed = new Date(`${normalizedDate}T00:00:00`);
+  if (Number.isNaN(parsed.getTime())) {
+    return 'Select date';
+  }
+
+  return parsed.toLocaleDateString('en-GB', {
+    timeZone: 'Europe/London',
+    weekday: 'short',
+    day: '2-digit',
+    month: 'short'
+  });
+}
 
 
 function formatPrice(pricePence: number): string {
@@ -94,7 +112,7 @@ export default function BookingFlow({ services, barbers, mode = 'create', token 
 
   const isCreateMode = mode === 'create';
   const isSubmitDisabled = !time || !barberId || (isCreateMode && (!fullName.trim() || !email.trim()));
-
+  const bookingDateLabel = formatDateForBookingTab(date);
 
   useEffect(() => {
     if (!availableBarbers.some((barber) => barber.id === barberId)) {
@@ -334,11 +352,26 @@ export default function BookingFlow({ services, barbers, mode = 'create', token 
               </div>
 
               <div className="booking-date-panel">
-                <label className="booking-flow__field" htmlFor="booking-date">
+                <div className="booking-flow__field booking-flow__field--date">
                   <span>Date</span>
-                  <input id="booking-date" type="date" value={date} onChange={(e) => setDate(e.target.value)} />
+                  <label className="admin-filter-tab admin-filter-tab--split admin-filter-tab--active booking-date-tab" htmlFor="booking-date">
+                    <span className="admin-filter-tab-main booking-date-tab__main">{bookingDateLabel}</span>
+                    <span className="admin-filter-tab-calendar booking-date-tab__calendar" aria-hidden="true">
+                      <input
+                        id="booking-date"
+                        type="date"
+                        className="admin-filter-tab-calendar-input booking-date-tab__input"
+                        value={date}
+                        onChange={(e) => setDate(e.target.value)}
+                        aria-label="Select booking date"
+                      />
+                      <svg viewBox="0 0 24 24" focusable="false">
+                        <path d="M7 2a1 1 0 0 1 1 1v1h8V3a1 1 0 1 1 2 0v1h1a3 3 0 0 1 3 3v11a4 4 0 0 1-4 4H6a4 4 0 0 1-4-4V7a3 3 0 0 1 3-3h1V3a1 1 0 0 1 1-1Zm13 8H4v8a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-8ZM5 6a1 1 0 0 0-1 1v1h16V7a1 1 0 0 0-1-1H5Z" />
+                      </svg>
+                    </span>
+                  </label>
+                </div>
 
-                </label>
               </div>
               
               <div className="booking-slots-section">

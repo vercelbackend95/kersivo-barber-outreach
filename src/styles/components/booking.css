@@ -349,6 +349,36 @@
     min-height: 4rem;
 
 }
+.booking-flow__field--date {
+  gap: 0.45rem;
+}
+
+.booking-date-tab {
+  min-height: 3.5rem;
+}
+
+.booking-date-tab:hover {
+  filter: brightness(1.04);
+}
+
+.booking-date-tab:focus-within {
+  outline: 2px solid var(--focus);
+  outline-offset: 2px;
+}
+
+.booking-date-tab__main {
+  text-transform: uppercase;
+}
+
+.booking-date-tab__calendar {
+  width: 3rem;
+  flex-shrink: 0;
+}
+
+.booking-date-tab__input:focus-visible {
+  outline: none;
+}
+
 
 .slot-grid {
   display: grid;
