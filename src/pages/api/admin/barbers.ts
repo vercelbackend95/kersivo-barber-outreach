@@ -1,12 +1,13 @@
 export const prerender = false;
 
+import { Buffer } from 'node:buffer';
 import type { APIRoute } from 'astro';
 import { z } from 'zod';
 import { requireAdmin } from '../../../lib/admin/auth';
 import { ensureBarberHasAvailabilityRules } from '../../../lib/admin/defaultAvailability';
 import { getTodayInLondon, getTodayScheduleForBarber } from '../../../lib/admin/todayWorkingHours';
 import { prisma } from '../../../lib/db/client';
-import { makeBlobPath, uploadPublicImageToBlob } from '../../../lib/storage/vercelBlob';
+import { getBlobReadWriteToken, makeBlobPath, uploadPublicImageToBlob } from '../../../lib/storage/vercelBlob';
 import type { Prisma } from '@prisma/client';
 
 const MAX_AVATAR_SIZE_BYTES = 5 * 1024 * 1024;
@@ -77,6 +78,11 @@ async function ensureSelectedServices(tx: Prisma.TransactionClient, selectedServ
 
   return uniqueRequestedIds.filter((serviceId) => existingIds.has(serviceId));
 }
+async function fileToDataUrl(file: File) {
+  const bytes = Buffer.from(await file.arrayBuffer());
+  return `data:${file.type};base64,${bytes.toString('base64')}`;
+}
+
 
 
 async function storeAvatar(file: File, barberId?: string) {
@@ -91,6 +97,10 @@ async function storeAvatar(file: File, barberId?: string) {
   if (!extension) {
     throw new Error('Unsupported avatar format.');
   }
+  if (!getBlobReadWriteToken()) {
+    return fileToDataUrl(file);
+  }
+
 
   const pathname = makeBlobPath('barbers', file, barberId);
   return uploadPublicImageToBlob(file, pathname);

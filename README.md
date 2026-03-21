@@ -23,6 +23,7 @@ Astro + React (TypeScript) booking + shop system for barbershops.
    - `STRIPE_WEBHOOK_SECRET`: Stripe webhook signing secret used to verify `/api/shop/webhook`.
    - `ADMIN_SECRET`: admin panel login secret.
       - `BLOB_READ_WRITE_TOKEN` (preferred) or `VERCEL_BLOB_READ_WRITE_TOKEN`: Vercel Blob token used for barber avatar + product image uploads.
+            - If Blob storage is not configured, barber avatars still save as inline `data:` URLs, but product uploads still require Blob.
    - If `RESEND_API_KEY` is missing, the app falls back to console logs for outgoing email contents.
 
 
