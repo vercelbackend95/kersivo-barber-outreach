@@ -250,7 +250,6 @@ export default function BookingFlow({ services, barbers, mode = 'create', token 
                 <span className="booking-step__index">01</span>
                 <div>
                   <h2 id="booking-step-service">Choose a service</h2>
-                  <p className="muted">Pick the appointment that fits what you need.</p>
                 </div>
                               </div>
               <div className="booking-choice-grid booking-choice-grid--services" role="radiogroup" aria-label="Services">
@@ -288,7 +287,7 @@ export default function BookingFlow({ services, barbers, mode = 'create', token 
                 <span className="booking-step__index">02</span>
                 <div>
                   <h2 id="booking-step-barber">Choose a barber</h2>
-                  <p className="muted">Only barbers who offer the selected service are shown.</p>
+
                 </div>
 
               </div>
@@ -330,7 +329,6 @@ export default function BookingFlow({ services, barbers, mode = 'create', token 
                 <span className="booking-step__index">03</span>
                 <div>
                   <h2 id="booking-step-date-time">Choose date and time</h2>
-                  <p className="muted">Pick a day first, then tap the slot that works best.</p>
 
                 </div>
               </div>
@@ -379,7 +377,6 @@ export default function BookingFlow({ services, barbers, mode = 'create', token 
                   <span className="booking-step__index">04</span>
                   <div>
                     <h2 id="booking-step-details">Your details</h2>
-                    <p className="muted">Add contact details after choosing your appointment.</p>
                   </div>
                 </div>
                 <div className="booking-flow__grid booking-flow__grid--details">
