@@ -229,7 +229,7 @@
 }
 .booking-choice-card--service {
   min-height: 10.5rem;
-    grid-template-rows: auto minmax(0, 1fr) auto;
+    grid-template-rows: minmax(0, 1fr) auto;
   gap: 0.8rem;
     align-content: start;
   overflow: clip;
@@ -254,36 +254,6 @@
   background: color-mix(in srgb, var(--accent) 14%, var(--surface));
   box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--accent) 44%, transparent), 0 0 0 1px color-mix(in srgb, var(--accent) 22%, transparent);
 
-}
-
-.booking-choice-card--service::before {
-  content: '';
-  position: absolute;
-  inset: 0 auto 0 0;
-  width: 0.22rem;
-  background: color-mix(in srgb, var(--accent) 20%, transparent);
-  transition: background 140ms ease;
-}
-
-.booking-choice-card--service::after {
-  content: '';
-  position: absolute;
-  inset: 0.3rem;
-  border: 1px solid transparent;
-  pointer-events: none;
-  transition: border-color 140ms ease;
-}
-
-.booking-choice-card--service:hover::before {
-  background: color-mix(in srgb, var(--accent) 42%, transparent);
-}
-
-.booking-choice-card--service.is-selected::before {
-  background: var(--accent);
-}
-
-.booking-choice-card--service.is-selected::after {
-  border-color: color-mix(in srgb, var(--accent) 36%, transparent);
 }
 
 .booking-choice-card__title,
