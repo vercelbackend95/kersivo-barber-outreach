@@ -59,12 +59,14 @@
   }
 
   .booking-step__head {
-    grid-template-columns: minmax(0, 1fr);
+    grid-template-columns: auto minmax(0, 1fr);
     gap: 0.75rem;
+        align-items: start;
   }
 
   .booking-step__index {
     width: fit-content;
+        align-self: start;
   }
 
   .booking-choice-grid--services,
