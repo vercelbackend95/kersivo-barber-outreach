@@ -499,7 +499,8 @@
 
   }
   .booking-choice-grid--services,
-  .booking-choice-grid--barbers {
+  .booking-choice-grid--barbers,
+  .slot-grid {
 
     grid-template-columns: repeat(3, minmax(0, 1fr));
     gap: 0.55rem;
@@ -585,11 +586,27 @@
   .booking-shell input,
   .booking-shell select,
   .booking-shell textarea,
-  .booking-slot,
   .booking-action-bar__button {
     min-height: 3.45rem;
 
   }
+  
+  .booking-slot {
+    min-height: 4.9rem;
+    padding: 0.65rem 0.35rem;
+    gap: 0.3rem;
+  }
+
+  .booking-slot__label {
+    font-size: 0.9rem;
+    line-height: 1.05;
+  }
+
+  .booking-slot__meta {
+    font-size: 0.62rem;
+    letter-spacing: 0.12em;
+  }
+
   .booking-action-bar {
     position: sticky;
     bottom: 0;
@@ -604,8 +621,7 @@
 }
 @media (min-width: 640px) {
   .booking-choice-grid--barbers,
-  .booking-flow__grid--details,
-  .slot-grid {
+  .booking-flow__grid--details {
     grid-template-columns: repeat(2, minmax(0, 1fr));
 
   }
