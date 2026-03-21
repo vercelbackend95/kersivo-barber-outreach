@@ -35,6 +35,7 @@ const [services, barbers] = await Promise.all([
         barbers={barbers.map((barber) => ({
           id: barber.id,
           name: barber.name,
+                    avatarUrl: barber.avatarUrl,
           serviceIds: barber.barberServices.map((link) => link.serviceId)
         }))}
       />

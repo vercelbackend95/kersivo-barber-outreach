@@ -2,8 +2,7 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import BookingConfirmationPanel, { type BookingSummary } from './BookingConfirmationPanel';
 type Service = { id: string; name: string; durationMinutes: number; pricePence: number };
-type Barber = { id: string; name: string; serviceIds?: string[] };
-
+type Barber = { id: string; name: string; avatarUrl?: string | null; serviceIds?: string[] };
 
 type BookingPayload = {
   serviceId: string;
@@ -326,7 +325,12 @@ export default function BookingFlow({ services, barbers, mode = 'create', token 
                       onClick={() => setBarberId(barber.id)}
                     >
                       <span className="booking-choice-card__avatar" aria-hidden="true">
-                        {barber.name.slice(0, 1)}
+                        {barber.avatarUrl ? (
+                          <img src={barber.avatarUrl} alt="" loading="lazy" decoding="async" />
+                        ) : (
+                          barber.name.slice(0, 1)
+                        )}
+
                       </span>
 
                       <span className="booking-choice-card__content">
