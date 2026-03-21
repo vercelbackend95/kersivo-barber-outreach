@@ -80,24 +80,15 @@
   background: linear-gradient(180deg, color-mix(in srgb, var(--surface) 96%, var(--bg)), color-mix(in srgb, var(--surface) 82%, var(--bg)));
 
 }
-
-.booking-flow__hero-copy,
-.booking-flow__hero-highlights {
-  padding: var(--booking-space-2);
-}
-
 .booking-flow__hero-copy {
-
+  padding: var(--booking-space-2);
   display: grid;
   gap: 0.95rem;
 }
 
 .booking-flow__eyebrow,
-.booking-review__eyebrow,
 .booking-confirmation__eyebrow,
 .booking-choice-card__eyebrow,
-.booking-flow__hero-stat-label,
-.booking-review__meta-label,
 .booking-action-bar__label {
 
   margin: 0;
@@ -109,11 +100,8 @@
 }
 
 .booking-flow__eyebrow,
-.booking-review__eyebrow,
 .booking-confirmation__eyebrow,
 .booking-choice-card__eyebrow,
-.booking-flow__hero-stat-label,
-.booking-review__meta-label,
 .booking-action-bar__label {
   color: color-mix(in srgb, var(--accent) 78%, var(--fg));
 
@@ -121,7 +109,6 @@
 
 .booking-flow__hero-copy h1,
 .booking-step__head h2,
-.booking-review__header h2,
 .booking-confirmation__heading {
 
   margin: 0;
@@ -135,7 +122,6 @@
 }
 
 .booking-step__head h2,
-.booking-review__header h2,
 .booking-confirmation__heading {
 
   font-size: var(--booking-text-xl);
@@ -144,7 +130,6 @@
 
 .booking-flow__hero-copy p,
 .booking-step__head p,
-.booking-review__header p,
 .booking-slot__meta,
 .booking-confirmation__body,
 .booking-slots-section__head .muted {
@@ -155,27 +140,6 @@
   font-size: var(--booking-text-base);
   line-height: 1.65;
   max-width: 24ch;
-}
-
-.booking-flow__hero-highlights {
-  display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
-  gap: 1px;
-  background: var(--border);
-
-}
-
-.booking-flow__hero-stat {
-  display: grid;
-  gap: 0.35rem;
-  padding: 1rem;
-  background: color-mix(in srgb, var(--surface) 92%, var(--bg));
-}
-
-.booking-flow__hero-stat strong {
-  font-size: var(--booking-text-base);
-  line-height: 1.2;
-  color: var(--fg);
 }
 
 .booking-flow__layout {
@@ -189,7 +153,6 @@
 }
 
 .booking-step,
-.booking-review__panel,
 .booking-confirmation {
 
   display: grid;
@@ -208,7 +171,6 @@
 }
 
 .booking-step__head p,
-.booking-review__header p,
 .booking-confirmation__body,
 .booking-slots-section__head .muted {
   font-size: var(--booking-text-sm);
@@ -235,7 +197,6 @@
 
 .booking-choice-grid,
 .booking-flow__grid,
-.booking-review__list,
 .booking-date-panel,
 .booking-slots-section {
 
@@ -245,9 +206,7 @@
 .booking-choice-grid--services,
 .booking-choice-grid--barbers,
 .booking-flow__grid--details,
-.slot-grid,
-.booking-flow__hero-highlights {
-
+.slot-grid {
   grid-template-columns: minmax(0, 1fr);
 }
 
@@ -329,7 +288,6 @@
 .booking-slot__meta,
 .booking-flow__field > span,
 .booking-slots-section__head label,
-.booking-review__row dt,
 .booking-confirmation__summary-row dt {
   font-size: var(--booking-text-xs);
   letter-spacing: 0.1em;
@@ -341,7 +299,6 @@
 .booking-choice-card__stat,
 .booking-choice-card__helper,
 .booking-slot__meta,
-.booking-review__row dt,
 .booking-confirmation__summary-row dt {
 
   color: var(--muted);
@@ -430,27 +387,6 @@
     background: color-mix(in srgb, var(--surface) 84%, var(--bg));
   font-size: var(--booking-text-sm);
 }
-
-.booking-review {
-  display: grid;
-}
-
-.booking-review__panel {
-  gap: 1.25rem;
-}
-
-.booking-review__header {
-  display: grid;
-  gap: 0.5rem;
-}
-
-.booking-review__list {
-  gap: 0;
-  border: 1px solid var(--border);
-  background: color-mix(in srgb, var(--bg) 56%, var(--surface));
-}
-
-.booking-review__row,
 .booking-confirmation__summary-row {
   display: grid;
   grid-template-columns: minmax(0, 1fr);
@@ -459,12 +395,10 @@
   border-bottom: 1px solid var(--border);
 }
 
-.booking-review__row:last-child,
 .booking-confirmation__summary-row:last-child {
   border-bottom: 0;
 }
 
-.booking-review__row dd,
 .booking-confirmation__summary-row dd {
   margin: 0;
   color: var(--fg);
@@ -473,27 +407,6 @@
     font-weight: 600;
   line-height: 1.35;
   word-break: break-word;
-}
-
-.booking-review__service-meta {
-  display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 1px;
-  background: var(--border);
-}
-
-.booking-review__service-meta > div {
-  display: grid;
-  gap: 0.35rem;
-  padding: 0.95rem 1rem;
-  background: color-mix(in srgb, var(--surface) 88%, var(--bg));
-
-}
-
-.booking-review__service-meta strong {
-  font-size: var(--booking-text-lg);
-  line-height: 1.15;
-  color: var(--fg);
 }
 
 .booking-action-bar {
@@ -564,7 +477,6 @@
   }
 
   .booking-step,
-  .booking-review__panel,
   .booking-confirmation {
     border-inline: 0;
     padding-inline: 1rem;
@@ -577,9 +489,7 @@
 
   }
 
-
-  .booking-flow__hero-copy,
-  .booking-flow__hero-highlights {
+  .booking-flow__hero-copy {
     padding-inline: 1rem;
 
   }
@@ -640,7 +550,6 @@
     grid-template-columns: repeat(2, minmax(0, 1fr));
 
   }
-  .booking-review__row,
   .booking-confirmation__summary-row {
     grid-template-columns: minmax(7rem, auto) minmax(0, 1fr);
     align-items: baseline;
@@ -666,8 +575,7 @@
 
   }
   .booking-choice-grid--barbers,
-  .booking-flow__grid--details,
-  .booking-flow__hero-highlights {
+  .booking-flow__grid--details {
     grid-template-columns: repeat(2, minmax(0, 1fr));
 
 
@@ -675,22 +583,7 @@
 }
 
 @media (min-width: 1080px) {
-  .booking-flow__layout {
-    grid-template-columns: minmax(0, 1.5fr) minmax(21rem, 0.8fr);
-    align-items: start;
 
-  }
-  .booking-review {
-    position: sticky;
-    top: 1.5rem;
-  }
-
-
-
-  .booking-review__panel {
-    gap: 1rem;
-
-  }
 
   .booking-action-bar {
     position: static;
@@ -713,13 +606,6 @@
     grid-template-columns: repeat(2, minmax(0, 1fr));
 
 
-  }
-  .booking-flow__hero {
-    grid-template-columns: minmax(0, 1.4fr) minmax(18rem, 0.9fr);
-  }
-
-  .booking-flow__hero-highlights {
-    grid-template-columns: minmax(0, 1fr);
   }
 }
 

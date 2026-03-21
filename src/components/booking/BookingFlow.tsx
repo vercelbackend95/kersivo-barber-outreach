@@ -43,13 +43,7 @@ function normalizeToIsoDate(input: string): string | null {
   const month = Number(dmyMatch[2]);
   const year = Number(dmyMatch[3]);
   const validated = new Date(Date.UTC(year, month - 1, day));
-
-  if (
-    validated.getUTCFullYear() !== year ||
-    validated.getUTCMonth() !== month - 1 ||
-    validated.getUTCDate() !== day
-  ) {
-
+  if (validated.getUTCFullYear() !== year || validated.getUTCMonth() !== month - 1 || validated.getUTCDate() !== day) {
     return null;
   }
 
@@ -97,17 +91,10 @@ export default function BookingFlow({ services, barbers, mode = 'create', token 
   }, [barbers, serviceId]);
   const selectedService = useMemo(() => services.find((service) => service.id === serviceId), [serviceId, services]);
   const selectedBarber = useMemo(() => availableBarbers.find((barber) => barber.id === barberId), [availableBarbers, barberId]);
-  const isoDate = useMemo(() => normalizeToIsoDate(date), [date]);
-    const formattedDate = useMemo(() => (isoDate ? formatDateForSummary(isoDate) : 'Select a valid date'), [isoDate]);
+
   const isCreateMode = mode === 'create';
   const isSubmitDisabled = !time || !barberId || (isCreateMode && (!fullName.trim() || !email.trim()));
 
-  const reviewItems = [
-    { label: 'Service', value: selectedService?.name ?? 'Choose a service' },
-    { label: 'Barber', value: selectedBarber?.name ?? 'Choose a barber' },
-    { label: 'Date', value: formattedDate },
-    { label: 'Time', value: time || 'Choose a time slot' }
-  ];
 
   useEffect(() => {
     if (!availableBarbers.some((barber) => barber.id === barberId)) {
@@ -239,7 +226,7 @@ export default function BookingFlow({ services, barbers, mode = 'create', token 
       <div className="booking-form-content">
         <div className="booking-flow__hero">
           <div className="booking-flow__hero-copy">
-                      <p className="booking-flow__eyebrow">Instant booking</p>
+            <p className="booking-flow__eyebrow">Instant booking</p>
             <h1>{isCreateMode ? 'Book now' : 'Reschedule your booking'}</h1>
             <p className="muted">
               {isCreateMode
@@ -248,25 +235,14 @@ export default function BookingFlow({ services, barbers, mode = 'create', token 
 
             </p>
           </div>
-                    <div className="booking-flow__hero-highlights" aria-label="Booking highlights">
-            <div className="booking-flow__hero-stat">
-              <span className="booking-flow__hero-stat-label">Service</span>
-              <strong>{selectedService?.name ?? 'Select below'}</strong>
-            </div>
-            <div className="booking-flow__hero-stat">
-              <span className="booking-flow__hero-stat-label">Duration</span>
-              <strong>{selectedService ? `${selectedService.durationMinutes} min` : '—'}</strong>
-            </div>
-            <div className="booking-flow__hero-stat">
-              <span className="booking-flow__hero-stat-label">Price</span>
-              <strong>{selectedService ? formatPrice(selectedService.pricePence) : '—'}</strong>
-            </div>
-          </div>
+
 
         </div>
 
         {confirmation ? <BookingConfirmationPanel variant={confirmation.type} summary={confirmation.summary} /> : null}
-        {message && <p className="admin-inline-error">{message}</p>}
+        {message ? <p className="admin-inline-error">{message}</p> : null}
+
+
         <div className="booking-flow__layout">
           <div className="booking-flow__main">
             <section className="booking-step" aria-labelledby="booking-step-service">
@@ -289,7 +265,7 @@ export default function BookingFlow({ services, barbers, mode = 'create', token 
                       aria-pressed={isSelected}
                       onClick={() => setServiceId(service.id)}
                     >
-                                          <span className="booking-choice-card__eyebrow">Appointment</span>
+                      <span className="booking-choice-card__eyebrow">Appointment</span>
                       <span className="booking-choice-card__title">{service.name}</span>
                                             <span className="booking-choice-card__meta">
                         <span className="booking-choice-card__stat">{service.durationMinutes} min</span>
@@ -335,7 +311,7 @@ export default function BookingFlow({ services, barbers, mode = 'create', token 
                       </span>
 
                       <span className="booking-choice-card__content">
-                                              <span className="booking-choice-card__eyebrow">Barber</span>
+                        <span className="booking-choice-card__eyebrow">Barber</span>
                         <span className="booking-choice-card__title">{barber.name}</span>
                         <span className="booking-choice-card__helper">Available for this service</span>
                       </span>
@@ -344,8 +320,9 @@ export default function BookingFlow({ services, barbers, mode = 'create', token 
                   );
                 })}
               </div>
-              {availableBarbers.length === 0 && <p className="muted">No active barbers offer this service right now.</p>}
+              {availableBarbers.length === 0 ? <p className="muted">No active barbers offer this service right now.</p> : null}
             </section>
+
 
 
             <section className="booking-step" aria-labelledby="booking-step-date-time">
@@ -391,12 +368,12 @@ export default function BookingFlow({ services, barbers, mode = 'create', token 
                       </button>
                     );
                   })}
-                  {slots.length === 0 && <p className="muted booking-slots-section__empty">No slots available for this date.</p>}
+                  {slots.length === 0 ? <p className="muted booking-slots-section__empty">No slots available for this date.</p> : null}
                 </div>
               </div>
 
             </section>
-            {isCreateMode && (
+            {isCreateMode ? (
               <section className="booking-step" aria-labelledby="booking-step-details">
                 <div className="booking-step__head">
                   <span className="booking-step__index">04</span>
@@ -420,55 +397,29 @@ export default function BookingFlow({ services, barbers, mode = 'create', token 
                   </label>
                 </div>
               </section>
-            )}
-          </div>
-          <aside className="booking-review" aria-labelledby="booking-review-title">
-            <div className="booking-review__panel">
-              <div className="booking-review__header">
-                <p className="booking-review__eyebrow">Appointment review</p>
-                <h2 id="booking-review-title">Your booking</h2>
-                <p className="muted">A clean summary stays visible while the user finishes the form.</p>
-              </div>
+                          ) : null}
 
-              <dl className="booking-review__list">
-                {reviewItems.map((item) => (
-                  <div className="booking-review__row" key={item.label}>
-                    <dt>{item.label}</dt>
-                    <dd>{item.value}</dd>
-                  </div>
-                ))}
-              </dl>
+            <div className="booking-action-bar">
+              <div className="booking-action-bar__summary">
+                <span className="booking-action-bar__label">Ready to confirm</span>
+                <strong>
+                  {selectedService?.name ?? 'Select service'}
+                  {selectedBarber ? ` · ${selectedBarber.name}` : ''}
+                  {time ? ` · ${time}` : ''}
+                </strong>
 
-              <div className="booking-review__service-meta">
-                <div>
-                  <span className="booking-review__meta-label">Duration</span>
-                  <strong>{selectedService ? `${selectedService.durationMinutes} min` : '—'}</strong>
-                </div>
-                <div>
-                  <span className="booking-review__meta-label">Price</span>
-                  <strong>{selectedService ? formatPrice(selectedService.pricePence) : '—'}</strong>
-                </div>
               </div>
+                            <button
+                type="button"
+                className="btn btn--primary booking-action-bar__button"
+                disabled={isSubmitDisabled}
+                onClick={submit}
+              >
+                {mode === 'reschedule' ? 'Reschedule booking' : 'Confirm booking'}
+              </button>
 
-              <div className="booking-action-bar">
-                <div className="booking-action-bar__summary">
-                  <span className="booking-action-bar__label">Ready to confirm</span>
-                  <strong>
-                    {selectedService?.name ?? 'Select service'}
-                    {time ? ` · ${time}` : ''}
-                  </strong>
-                </div>
-                <button
-                  type="button"
-                  className="btn btn--primary booking-action-bar__button"
-                  disabled={isSubmitDisabled}
-                  onClick={submit}
-                >
-                  {mode === 'reschedule' ? 'Reschedule booking' : 'Confirm booking'}
-                </button>
-              </div>
             </div>
-          </aside>
+          </div>
 
 
         </div>
