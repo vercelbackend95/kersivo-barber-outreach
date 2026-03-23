@@ -13,6 +13,7 @@ interface Feature261Props {
 const Feature261 = ({ className }: Feature261Props) => {
   const timelineImagePosition = "center 0%";
   const bookingImagePosition = "center 0%";
+    const barbersImagePosition = "center 0%";
   const shopImagePosition = "center 0%";
   const servicesImagePosition = "center 0%";
   return (
@@ -77,19 +78,24 @@ const Feature261 = ({ className }: Feature261Props) => {
               className="absolute inset-0 h-full w-full object-cover"
             />
           </div>
-
-          <Card className="col-span-1 rounded-3xl bg-muted md:col-span-4 md:row-span-1 md:h-[300px] lg:col-span-4">
-            <CardContent className="h-full p-4 md:p-5">
-              <div className="flex h-full flex-col justify-end">
-                <div className="space-y-2">
-                  <div className="text-4xl font-normal md:text-5xl lg:text-6xl">
-                    $299
-                  </div>
-                  <div className="text-muted-foreground">
-                    Premium Component Library
-                  </div>
-                  <Button>Buy Now</Button>
+          <Card className="relative col-span-1 h-60 overflow-hidden rounded-3xl bg-muted md:col-span-4 md:row-span-1 md:h-[300px] lg:col-span-4">
+            <img
+              src="/hero-assets/screens/barbers.jpg"
+              alt="Barbers team at work"
+              className="absolute inset-0 h-full w-full object-cover"
+              style={{ objectPosition: barbersImagePosition }}
+            />
+            <div className="absolute inset-0 bg-gradient-to-r from-black/60 via-black/30 to-transparent" />
+            <CardContent className="relative z-10 flex h-full flex-col justify-end p-4 md:p-5">
+              <div className="space-y-2 text-white">
+                <div className="text-4xl font-normal md:text-5xl lg:text-6xl">
+                  Meet Our Barbers
                 </div>
+                <div>
+                  Skilled professionals delivering sharp cuts, beard trims, and a premium barbershop experience.
+
+                </div>
+                                <Button>Meet the Team</Button>
               </div>
             </CardContent>
           </Card>
