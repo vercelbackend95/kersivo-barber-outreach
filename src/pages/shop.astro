@@ -3,14 +3,24 @@ import MainLayout from '@/layouts/MainLayout.astro';
 import Footer50 from '../components/footer50.astro';
 import '../styles/components/footer50.css';
 import { prisma } from '../lib/db/client';
+import { PUBLIC_SHOP_UNAVAILABLE_MESSAGE, withPrismaQuotaFallback } from '../lib/db/resilience';
 import { resolveShopId } from '../lib/db/shopScope';
 import { formatGbp } from '../lib/shop/money';
 
-const shopId = await resolveShopId();
-const products = await prisma.product.findMany({
-  where: { shopId, active: true },
-  orderBy: [{ sortOrder: 'asc' }, { featured: 'desc' }, { updatedAt: 'desc' }]
-});
+const shopData = await withPrismaQuotaFallback(
+  'shop.astro',
+  async () => {
+    const shopId = await resolveShopId();
+    const products = await prisma.product.findMany({
+      where: { shopId, active: true },
+      orderBy: [{ sortOrder: 'asc' }, { featured: 'desc' }, { updatedAt: 'desc' }]
+    });
+
+    return { products, shopUnavailable: false };
+  },
+  { products: [], shopUnavailable: true }
+);
+const { products, shopUnavailable } = shopData;
 
 const CATEGORY_LABELS: Record<string, string> = {
   POMADES_AND_CLAYS: 'Pomades',
@@ -90,8 +100,9 @@ const selectedCategory = categoryValues.has(selectedCategoryParam) ? selectedCat
       {products.length === 0 ? (
         <article class="shop-promo-card shop-promo-card--empty">
           <p class="shop-promo-kicker">Retail built in</p>
-          <h2>Add products to launch your storefront</h2>
-          <p>Publish products in admin and they will appear here instantly.</p>
+          <h2>{shopUnavailable ? 'Shop temporarily unavailable' : 'Add products to launch your storefront'}</h2>
+          <p>{shopUnavailable ? PUBLIC_SHOP_UNAVAILABLE_MESSAGE : 'Publish products in admin and they will appear here instantly.'}</p>
+
           <a class="btn btn--primary" href="/shop">Open shop page</a>
         </article>
       ) : (

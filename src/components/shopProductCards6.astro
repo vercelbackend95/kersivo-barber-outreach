@@ -1,14 +1,23 @@
 ---
 import { prisma } from '../lib/db/client';
+import { withPrismaQuotaFallback } from '../lib/db/resilience';
 import { resolveShopId } from '../lib/db/shopScope';
 import { formatGbp } from '../lib/shop/money';
 
-const shopId = await resolveShopId();
-const products = await prisma.product.findMany({
-  where: { shopId, active: true },
-  orderBy: [{ sortOrder: 'asc' }, { featured: 'desc' }, { updatedAt: 'desc' }],
-  take: 10
-});
+const { products } = await withPrismaQuotaFallback(
+  'components/shopProductCards6.astro',
+  async () => {
+    const shopId = await resolveShopId();
+    const products = await prisma.product.findMany({
+      where: { shopId, active: true },
+      orderBy: [{ sortOrder: 'asc' }, { featured: 'desc' }, { updatedAt: 'desc' }],
+      take: 10
+    });
+
+    return { products };
+  },
+  { products: [] }
+);
 const MIN_CAROUSEL_ITEMS = 10;
 
 const carouselProducts =

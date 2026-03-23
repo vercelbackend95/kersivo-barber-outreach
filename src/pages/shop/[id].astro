@@ -3,11 +3,62 @@ import MainLayout from '@/layouts/MainLayout.astro';
 import Footer50 from '@/components/footer50.astro';
 import '@/styles/components/footer50.css';
 import { prisma } from '@/lib/db/client';
+import { withPrismaQuotaFallback } from '@/lib/db/resilience';
 import { resolveShopId } from '@/lib/db/shopScope';
 import { formatGbp } from '@/lib/shop/money';
 
 const { id } = Astro.params;
-const shopId = await resolveShopId();
+const MOBILE_RELATED_PRODUCT_COUNT = 10;
+const DESKTOP_RELATED_PRODUCT_COUNT = 3;
+const productPageData = await withPrismaQuotaFallback(
+  'shop/[id].astro',
+  async () => {
+    const shopId = await resolveShopId();
+    const product = id
+      ? await prisma.product.findFirst({
+          where: {
+            id,
+            shopId,
+            active: true
+          }
+        })
+      : null;
+
+    if (!product) {
+      return { product: null, relatedProducts: [] };
+    }
+
+    const relatedProducts = await prisma.product.findMany({
+      where: {
+        shopId,
+        active: true,
+        id: { not: product.id },
+        category: product.category
+      },
+      orderBy: [{ sortOrder: 'asc' }, { featured: 'desc' }, { updatedAt: 'desc' }],
+      take: MOBILE_RELATED_PRODUCT_COUNT
+    });
+
+    if (relatedProducts.length < MOBILE_RELATED_PRODUCT_COUNT) {
+      const fallbackProducts = await prisma.product.findMany({
+        where: {
+          shopId,
+          active: true,
+          id: {
+            notIn: [product.id, ...relatedProducts.map((item) => item.id)]
+          }
+        },
+        orderBy: [{ sortOrder: 'asc' }, { featured: 'desc' }, { updatedAt: 'desc' }],
+        take: MOBILE_RELATED_PRODUCT_COUNT - relatedProducts.length
+      });
+
+      relatedProducts.push(...fallbackProducts);
+    }
+
+    return { product, relatedProducts };
+  },
+  { product: null, relatedProducts: [] }
+);
 
 const CATEGORY_LABELS: Record<string, string> = {
   POMADES_AND_CLAYS: 'Pomades',
@@ -42,48 +93,11 @@ const FOOTER_PROPS = {
 };
 
 
-const product = id
-  ? await prisma.product.findFirst({
-      where: {
-        id,
-        shopId,
-        active: true
-      }
-    })
-  : null;
+const { product, relatedProducts } = productPageData;
 
 if (!product) {
   return Astro.redirect('/shop');
-}
-const MOBILE_RELATED_PRODUCT_COUNT = 10;
-const DESKTOP_RELATED_PRODUCT_COUNT = 3;
 
-
-const relatedProducts = await prisma.product.findMany({
-  where: {
-    shopId,
-    active: true,
-    id: { not: product.id },
-    category: product.category
-  },
-  orderBy: [{ sortOrder: 'asc' }, { featured: 'desc' }, { updatedAt: 'desc' }],
-  take: MOBILE_RELATED_PRODUCT_COUNT
-});
-
-if (relatedProducts.length < MOBILE_RELATED_PRODUCT_COUNT) {
-  const fallbackProducts = await prisma.product.findMany({
-    where: {
-      shopId,
-      active: true,
-      id: {
-        notIn: [product.id, ...relatedProducts.map((item) => item.id)]
-      }
-    },
-    orderBy: [{ sortOrder: 'asc' }, { featured: 'desc' }, { updatedAt: 'desc' }],
-    take: MOBILE_RELATED_PRODUCT_COUNT - relatedProducts.length
-  });
-
-  relatedProducts.push(...fallbackProducts);
 }
 const relatedProductsForCarousel =
   relatedProducts.length > 0 && relatedProducts.length < MOBILE_RELATED_PRODUCT_COUNT

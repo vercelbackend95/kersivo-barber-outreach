@@ -2,6 +2,7 @@ export const prerender = false;
 
 import type { APIRoute } from 'astro';
 import { prisma } from '../../../lib/db/client';
+import { PUBLIC_SHOP_UNAVAILABLE_MESSAGE, isPrismaQuotaExceededError } from '../../../lib/db/resilience';
 import { resolveShopId } from '../../../lib/db/shopScope';
 import { createCheckoutSession } from '../../../lib/shop/stripe';
 
@@ -111,6 +112,11 @@ export const POST: APIRoute = async ({ request }) => {
     return new Response(JSON.stringify({ url: session.url }), { status: 200 });
   } catch (error) {
     console.error('Checkout session creation failed', error);
+        if (isPrismaQuotaExceededError(error)) {
+      return new Response(JSON.stringify({ error: PUBLIC_SHOP_UNAVAILABLE_MESSAGE }), { status: 503 });
+    }
+
+
     return new Response(JSON.stringify({ error: 'Unable to create checkout session.' }), { status: 500 });
 
   }

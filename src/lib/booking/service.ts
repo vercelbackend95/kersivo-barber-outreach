@@ -1,13 +1,17 @@
 import { BookingStatus, Prisma, type Service, type ShopSettings } from '@prisma/client';
 import { prisma } from '../db/client';
+import { PUBLIC_BOOKING_UNAVAILABLE_MESSAGE, isPrismaQuotaExceededError } from '../db/resilience';
 import { getTimeBlockDelegate } from '../db/timeBlocks';
-import { canCancelOrReschedule } from './policies';
-import { generateToken, hashToken } from './tokens';
-import { addMinutes, londonDayOfWeekFromIsoDate, toUtcFromLondon } from './time';
 import { sendInstantBookingConfirmationEmail, sendRescheduledBookingEmail, sendShopCancelledBookingEmail } from '../email/sender';
-import { generateSlots } from './slots';
+
 import { ANY_BARBER_ID } from './constants';
+import { canCancelOrReschedule } from './policies';
+import { generateSlots } from './slots';
+import { addMinutes, londonDayOfWeekFromIsoDate, toUtcFromLondon } from './time';
+import { generateToken, hashToken } from './tokens';
 const CANCELLED_BOOKING_MESSAGE = 'This booking is already cancelled. Please create a new booking.';
+const BOOKING_DATABASE_UNAVAILABLE_STATUS = 503;
+
 
 
 function resolvePublicSiteUrl(): string {
@@ -32,17 +36,30 @@ export class BookingActionError extends Error {
 function isCancelledStatus(status: BookingStatus): boolean {
   return status === BookingStatus.CANCELLED_BY_CLIENT || status === BookingStatus.CANCELLED_BY_ADMIN || String(status) === 'CANCELLED_BY_SHOP';
 }
-
-async function resolveManageTokenBooking(token: string) {
-  const hashed = hashToken(token);
-  const booking = await prisma.booking.findFirst({ where: { manageTokenHash: hashed }, include: { barber: true, service: true } });
-  if (!booking) throw new BookingActionError('Invalid token.');
-
-  if (isCancelledStatus(booking.status)) {
-    throw new BookingActionError(CANCELLED_BOOKING_MESSAGE, 409);
+function rethrowBookingQuotaError(error: unknown): never {
+  if (isPrismaQuotaExceededError(error)) {
+    throw new BookingActionError(PUBLIC_BOOKING_UNAVAILABLE_MESSAGE, BOOKING_DATABASE_UNAVAILABLE_STATUS);
   }
 
-  return booking;
+  throw error;
+}
+
+
+async function resolveManageTokenBooking(token: string) {
+  try {
+    const hashed = hashToken(token);
+    const booking = await prisma.booking.findFirst({ where: { manageTokenHash: hashed }, include: { barber: true, service: true } });
+    if (!booking) throw new BookingActionError('Invalid token.');
+
+    if (isCancelledStatus(booking.status)) {
+      throw new BookingActionError(CANCELLED_BOOKING_MESSAGE, 409);
+    }
+
+    return booking;
+  } catch (error) {
+    rethrowBookingQuotaError(error);
+  }
+
 }
 
 export async function getRescheduleTokenStatus(token: string): Promise<{ valid: true } | { valid: false; message: string }> {
@@ -53,6 +70,10 @@ export async function getRescheduleTokenStatus(token: string): Promise<{ valid: 
     if (error instanceof BookingActionError) {
       return { valid: false, message: error.message };
     }
+    if (isPrismaQuotaExceededError(error)) {
+      return { valid: false, message: PUBLIC_BOOKING_UNAVAILABLE_MESSAGE };
+    }
+
 
     return { valid: false, message: 'Unable to validate booking token.' };
   }
@@ -161,39 +182,44 @@ async function getAvailableSlotsForBarber(input: {
 }
 
 export async function getAvailabilitySlots(input: { serviceId: string; barberId: string; date: string; ignoreBookingId?: string }) {
-  const settings = await prisma.shopSettings.findFirstOrThrow();
-  const service = await prisma.service.findUniqueOrThrow({ where: { id: input.serviceId } });
+  try {
+    const settings = await prisma.shopSettings.findFirstOrThrow();
+    const service = await prisma.service.findUniqueOrThrow({ where: { id: input.serviceId } });
+    if (!service.isActive) {
+      return { slots: [], service, settings };
+    }
+    if (input.barberId === ANY_BARBER_ID) {
+      const eligibleBarbers = await listEligibleBarbersForService(input.serviceId);
+      const slotGroups = await Promise.all(
+        eligibleBarbers.map(async (barber) =>
+          getAvailableSlotsForBarber({
+            barberId: barber.id,
+            date: input.date,
+            service,
+            settings,
+            ignoreBookingId: input.ignoreBookingId
+          })
+        )
+      );
 
-  if (!service.isActive) {
-    return { slots: [], service, settings };
+      const slots = Array.from(new Set(slotGroups.flat())).sort((left, right) => left.localeCompare(right));
+      return { slots, service, settings };
+    }
 
-  }
-  if (input.barberId === ANY_BARBER_ID) {
-    const eligibleBarbers = await listEligibleBarbersForService(input.serviceId);
-    const slotGroups = await Promise.all(
-      eligibleBarbers.map(async (barber) =>
-        getAvailableSlotsForBarber({
-          barberId: barber.id,
-          date: input.date,
-          service,
-          settings,
-          ignoreBookingId: input.ignoreBookingId
-        })
-      )
-    );
+    const slots = await getAvailableSlotsForBarber({
+      barberId: input.barberId,
+      date: input.date,
+      service,
+      settings,
+      ignoreBookingId: input.ignoreBookingId
+    });
 
-    const slots = Array.from(new Set(slotGroups.flat())).sort((left, right) => left.localeCompare(right));
     return { slots, service, settings };
-  }
-  const slots = await getAvailableSlotsForBarber({
-    barberId: input.barberId,
-    date: input.date,
-    service,
-    settings,
-    ignoreBookingId: input.ignoreBookingId
-  });
+      } catch (error) {
+    rethrowBookingQuotaError(error);
 
-  return { slots, service, settings };
+  }
+
 }
 
 async function ensureRequestedSlotSelectable(input: {
@@ -311,78 +337,81 @@ export async function createInstantBooking(input: {
   phone?: string;
 
 }) {
-  const settings = await prisma.shopSettings.findFirstOrThrow();
-  const service = await prisma.service.findUniqueOrThrow({ where: { id: input.serviceId } });
-  if (!service.isActive) throw new Error('Selected service is unavailable for new bookings.');
+  try {
+    const settings = await prisma.shopSettings.findFirstOrThrow();
+    const service = await prisma.service.findUniqueOrThrow({ where: { id: input.serviceId } });
+    if (!service.isActive) throw new Error('Selected service is unavailable for new bookings.');
 
-  const resolvedBarber = await resolveRequestedBarber({
-    barberId: input.barberId,
-        serviceId: input.serviceId,
-    date: input.date,
-    time: input.time,
-    service,
-    settings
-  });
+    const resolvedBarber = await resolveRequestedBarber({
+      barberId: input.barberId,
+      serviceId: input.serviceId,
+      date: input.date,
+      time: input.time,
+      service,
+      settings
+    });
 
 
-  const [h, m] = input.time.split(':').map(Number);
-  const startAt = toUtcFromLondon(input.date, h * 60 + m);
-  const endAt = addMinutes(startAt, service.durationMinutes + (service.bufferMinutes || settings.defaultBufferMinutes));
-  const manageToken = generateToken();
+    const [h, m] = input.time.split(':').map(Number);
+    const startAt = toUtcFromLondon(input.date, h * 60 + m);
+    const endAt = addMinutes(startAt, service.durationMinutes + (service.bufferMinutes || settings.defaultBufferMinutes));
+    const manageToken = generateToken();
 
-  const booking = await prisma.$transaction(
-    async (tx) => {
-      await ensureSlotAvailable(tx, { barberId: resolvedBarber.id, startAt, endAt });
 
-      const client = await upsertClientForBooking(tx, {
-        email: input.email,
-                fullName: input.fullName,
-        phone: input.phone || null
-      });
+    const booking = await prisma.$transaction(
+      async (tx) => {
+        await ensureSlotAvailable(tx, { barberId: resolvedBarber.id, startAt, endAt });
 
-      return tx.booking.create({
-        data: {
-          service: { connect: { id: input.serviceId } },
-          serviceNameAtBooking: service.name,
-          servicePricePenceAtBooking: service.pricePence,
-          serviceDurationMinutesAtBooking: service.durationMinutes,
-          totalPricePence: service.pricePence,
-          barber: { connect: { id: resolvedBarber.id } },
-          client: { connect: { id: client.id } },
-          fullName: input.fullName,
+        const client = await upsertClientForBooking(tx, {
           email: input.email,
-          phone: input.phone || null,
-          startAt,
-          endAt,
-          status: BookingStatus.CONFIRMED,
-          confirmTokenHash: null,
-          confirmTokenExpiresAt: null,
-          manageTokenHash: hashToken(manageToken),
-          manageTokenExpiresAt: null,
-          paymentRequired: false,
-          paymentStatus: null
-        },
-        include: { service: true, barber: true }
-      });
-    },
-    { isolationLevel: Prisma.TransactionIsolationLevel.Serializable }
-  );
+                    fullName: input.fullName,
+          phone: input.phone || null
+        });
 
+        return tx.booking.create({
+          data: {
+            service: { connect: { id: input.serviceId } },
+            serviceNameAtBooking: service.name,
+            servicePricePenceAtBooking: service.pricePence,
+            serviceDurationMinutesAtBooking: service.durationMinutes,
+            totalPricePence: service.pricePence,
+            barber: { connect: { id: resolvedBarber.id } },
+            client: { connect: { id: client.id } },
+            fullName: input.fullName,
+            email: input.email,
+            phone: input.phone || null,
+            startAt,
+            endAt,
+            status: BookingStatus.CONFIRMED,
+            confirmTokenHash: null,
+            confirmTokenExpiresAt: null,
+            manageTokenHash: hashToken(manageToken),
+            manageTokenExpiresAt: null,
+            paymentRequired: false,
+            paymentStatus: null
+          },
+          include: { service: true, barber: true }
+        });
+      },
+      { isolationLevel: Prisma.TransactionIsolationLevel.Serializable }
+    );
+    const baseUrl = resolvePublicSiteUrl();
+    await sendInstantBookingConfirmationEmail({
+      to: booking.email,
+      fullName: booking.fullName,
+      cancelUrl: `${baseUrl}/book/cancel?token=${manageToken}`,
+      rescheduleUrl: `${baseUrl}/book/reschedule?token=${manageToken}`,
+      shopName: settings.name,
+      serviceName: booking.serviceNameAtBooking ?? booking.service.name,
+      barberName: booking.barber.name,
+      startAt: booking.startAt
+    });
 
-  const baseUrl = resolvePublicSiteUrl();
-  await sendInstantBookingConfirmationEmail({
-    to: booking.email,
-    fullName: booking.fullName,
-    cancelUrl: `${baseUrl}/book/cancel?token=${manageToken}`,
-    rescheduleUrl: `${baseUrl}/book/reschedule?token=${manageToken}`,
+    return booking;
+  } catch (error) {
+    rethrowBookingQuotaError(error);
+  }
 
-    shopName: settings.name,
-    serviceName: booking.serviceNameAtBooking ?? booking.service.name,
-    barberName: booking.barber.name,
-    startAt: booking.startAt
-  });
-
-  return booking;
 }
 
 export async function confirmBookingByToken(token: string) {
@@ -392,11 +421,18 @@ export async function confirmBookingByToken(token: string) {
 }
 
 export async function cancelByManageToken(token: string) {
-  const booking = await resolveManageTokenBooking(token);
+  try {
+    const booking = await resolveManageTokenBooking(token);
+    const settings = await prisma.shopSettings.findFirstOrThrow();
+    if (!canCancelOrReschedule(booking.startAt, settings.cancellationWindowHours)) {
+      throw new BookingActionError('Cancellation window has passed.', 409);
+    }
 
-  const settings = await prisma.shopSettings.findFirstOrThrow();
-  if (!canCancelOrReschedule(booking.startAt, settings.cancellationWindowHours)) throw new BookingActionError('Cancellation window has passed.', 409);
-  return prisma.booking.update({ where: { id: booking.id }, data: { status: BookingStatus.CANCELLED_BY_CLIENT } });
+    return prisma.booking.update({ where: { id: booking.id }, data: { status: BookingStatus.CANCELLED_BY_CLIENT } });
+  } catch (error) {
+    rethrowBookingQuotaError(error);
+  }
+
 }
 
 export async function cancelByShop(input: { bookingId: string; reason?: string }) {
@@ -449,75 +485,53 @@ export async function cancelByShop(input: { bookingId: string; reason?: string }
 
 
 export async function rescheduleByToken(input: { token: string; serviceId: string; barberId: string; date: string; time: string }) {
-  const existing = await resolveManageTokenBooking(input.token);
+  try {
+    const [h, m] = input.time.split(':').map(Number);
+    const startAt = toUtcFromLondon(input.date, h * 60 + m);
+    const endAt = addMinutes(startAt, service.durationMinutes + (service.bufferMinutes || settings.defaultBufferMinutes));
+    const updatedBooking = await prisma.$transaction(
+      async (tx) => {
+        await ensureSlotAvailable(tx, { barberId: resolvedBarber.id, startAt, endAt, ignoreBookingId: existing.id });
 
-  if (isCancelledStatus(existing.status)) {
-    throw new BookingActionError(CANCELLED_BOOKING_MESSAGE, 409);
+        return tx.booking.update({
+          where: { id: existing.id },
+          data: {
+            service: { connect: { id: input.serviceId } },
+            serviceNameAtBooking: service.name,
+            servicePricePenceAtBooking: service.pricePence,
+            serviceDurationMinutesAtBooking: service.durationMinutes,
+            totalPricePence: service.pricePence,
+            barber: { connect: { id: resolvedBarber.id } },
+            startAt,
+            endAt,
+            rescheduledAt: new Date(),
+            originalStartAt: existing.originalStartAt ?? existing.startAt,
+            originalEndAt: existing.originalEndAt ?? existing.endAt,
+            status: BookingStatus.CONFIRMED
+          },
+          include: { service: true, barber: true }
+        });
+      },
+      { isolationLevel: Prisma.TransactionIsolationLevel.Serializable }
+    );
+    const baseUrl = resolvePublicSiteUrl();
+    const settingsForEmail = await prisma.shopSettings.findFirstOrThrow();
+    await sendRescheduledBookingEmail({
+      to: updatedBooking.email,
+      fullName: updatedBooking.fullName,
+      cancelUrl: `${baseUrl}/book/cancel?token=${input.token}`,
+      rescheduleUrl: `${baseUrl}/book/reschedule?token=${input.token}`,
+      shopName: settingsForEmail.name,
+      serviceName: updatedBooking.serviceNameAtBooking ?? updatedBooking.service.name,
+      barberName: updatedBooking.barber.name,
+      startAt: updatedBooking.startAt,
+      previousStartAt: updatedBooking.originalStartAt,
+      previousEndAt: updatedBooking.originalEndAt
+    });
+
+    return updatedBooking;
+  } catch (error) {
+    rethrowBookingQuotaError(error);
   }
-
-  if (existing.status !== BookingStatus.CONFIRMED) {
-    throw new BookingActionError('Only confirmed bookings can be rescheduled.', 409);
-  }
-
-  const settings = await prisma.shopSettings.findFirstOrThrow();
-  const service = await prisma.service.findUniqueOrThrow({ where: { id: input.serviceId } });
-  if (!service.isActive) throw new Error('Selected service is unavailable for booking changes.');
-
-
-  const resolvedBarber = await resolveRequestedBarber({
-    barberId: input.barberId,
-        serviceId: input.serviceId,
-    date: input.date,
-    time: input.time,
-    service,
-    settings,
-    ignoreBookingId: existing.id
-  });
-
-
-  const [h, m] = input.time.split(':').map(Number);
-  const startAt = toUtcFromLondon(input.date, h * 60 + m);
-  const endAt = addMinutes(startAt, service.durationMinutes + (service.bufferMinutes || settings.defaultBufferMinutes));
-  const updatedBooking = await prisma.$transaction(
-    async (tx) => {
-      await ensureSlotAvailable(tx, { barberId: resolvedBarber.id, startAt, endAt, ignoreBookingId: existing.id });
-
-      return tx.booking.update({
-        where: { id: existing.id },
-        data: {
-          service: { connect: { id: input.serviceId } },
-          serviceNameAtBooking: service.name,
-          servicePricePenceAtBooking: service.pricePence,
-          serviceDurationMinutesAtBooking: service.durationMinutes,
-          totalPricePence: service.pricePence,
-          barber: { connect: { id: resolvedBarber.id } },
-          startAt,
-          endAt,
-          rescheduledAt: new Date(),
-          originalStartAt: existing.originalStartAt ?? existing.startAt,
-          originalEndAt: existing.originalEndAt ?? existing.endAt,
-          status: BookingStatus.CONFIRMED
-        },
-        include: { service: true, barber: true }
-      });
-    },
-    { isolationLevel: Prisma.TransactionIsolationLevel.Serializable }
-  );
-  const baseUrl = resolvePublicSiteUrl();
-  const settingsForEmail = await prisma.shopSettings.findFirstOrThrow();
-  await sendRescheduledBookingEmail({
-    to: updatedBooking.email,
-    fullName: updatedBooking.fullName,
-    cancelUrl: `${baseUrl}/book/cancel?token=${input.token}`,
-    rescheduleUrl: `${baseUrl}/book/reschedule?token=${input.token}`,
-    shopName: settingsForEmail.name,
-    serviceName: updatedBooking.serviceNameAtBooking ?? updatedBooking.service.name,
-    barberName: updatedBooking.barber.name,
-    startAt: updatedBooking.startAt,
-    previousStartAt: updatedBooking.originalStartAt,
-    previousEndAt: updatedBooking.originalEndAt
-  });
-
-  return updatedBooking;
 
 }

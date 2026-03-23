@@ -1,5 +1,6 @@
 // src/pages/api/availability.ts
 import type { APIRoute } from 'astro';
+import { BookingActionError } from '../../lib/booking/service';
 import { normalizeToIsoDate } from '../../lib/booking/time';
 import { getAvailabilitySlots } from '../../lib/booking/service';
 
@@ -53,7 +54,9 @@ export const GET: APIRoute = async ({ request }) => {
 
     return new Response(JSON.stringify({ slots }));
   } catch (error) {
-    return new Response(JSON.stringify({ error: error instanceof Error ? error.message : 'Unable to load availability.' }), { status: 400 });
+    const status = error instanceof BookingActionError ? error.statusCode : 400;
+    return new Response(JSON.stringify({ error: error instanceof Error ? error.message : 'Unable to load availability.' }), { status });
+
   }
 
 };
