@@ -13,7 +13,7 @@ interface Feature261Props {
 const Feature261 = ({ className }: Feature261Props) => {
   const timelineImagePosition = "center 0%";
   const bookingImagePosition = "center 0%";
-
+  const shopImagePosition = "center 0%";
 
   return (
     <section className={cn("feature261 py-32", className)}>
@@ -126,6 +126,7 @@ const Feature261 = ({ className }: Feature261Props) => {
               src="/hero-assets/screens/shop.jpg"
               alt="Barbershop interior"
               className="absolute inset-0 h-full w-full object-cover"
+                            style={{ objectPosition: shopImagePosition }}
             />
           </Card>
 
