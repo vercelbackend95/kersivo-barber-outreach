@@ -9,7 +9,7 @@ interface Feature261Props {
 }
 const TIMELINE_FOOTER_HEIGHT = "4.5rem";
 const Feature261 = ({ className }: Feature261Props) => {
-  const timelineImagePosition = "center 72%";
+  const timelineImagePosition = "center 0%";
   const bookingImagePosition = "center 0%";
     const barbersImagePosition = "center 0%";
   const shopImagePosition = "center 0%";
