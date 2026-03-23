@@ -180,8 +180,9 @@
   }
 
   .booking-choice-card--service .booking-choice-card__meta-item--price {
-    justify-items: start;
-    text-align: left;
+    justify-items: center;
+    text-align: center;
+
 
   }
 
