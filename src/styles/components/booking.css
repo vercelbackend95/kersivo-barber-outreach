@@ -33,6 +33,109 @@
   width: min(100% - 2rem, 86rem);
 
 }
+@media (min-width: 1080px) {
+  .booking-page-wrap {
+    width: min(100% - 3rem, 68.75rem);
+  }
+
+  .booking-shell {
+    --booking-text-xs: clamp(0.76rem, 0.18vw + 0.72rem, 0.84rem);
+    --booking-text-sm: clamp(0.9rem, 0.24vw + 0.84rem, 0.98rem);
+    --booking-text-base: clamp(0.98rem, 0.28vw + 0.9rem, 1.04rem);
+    --booking-text-lg: clamp(1.08rem, 0.42vw + 0.96rem, 1.22rem);
+    --booking-text-xl: clamp(1.65rem, 0.9vw + 1.3rem, 2.2rem);
+    --booking-text-hero: clamp(3.25rem, 1.7vw + 2.3rem, 4.45rem);
+    --booking-space-1: clamp(0.75rem, 0.18vw + 0.68rem, 0.88rem);
+    --booking-space-2: clamp(0.95rem, 0.4vw + 0.8rem, 1.2rem);
+    --booking-space-3: clamp(1.2rem, 0.75vw + 0.92rem, 1.7rem);
+  }
+
+  .booking-flow__hero-copy {
+    gap: 0.8rem;
+  }
+
+  .booking-flow__hero-copy p {
+    max-width: 46ch;
+  }
+
+  .booking-step,
+  .booking-confirmation {
+    padding: clamp(1rem, 0.8vw + 0.7rem, 1.35rem);
+  }
+
+  .booking-step__head {
+    gap: clamp(0.75rem, 0.45vw + 0.6rem, 1rem);
+  }
+
+  .booking-step__head p,
+  .booking-confirmation__body,
+  .booking-slots-section__head .muted {
+    max-width: 50ch;
+  }
+
+  .booking-choice-card {
+    min-height: 8.1rem;
+    padding: 0.9rem;
+  }
+
+  .booking-choice-card--service {
+    min-height: 9.6rem;
+    gap: 0.7rem;
+  }
+
+  .booking-choice-card--barber {
+    min-height: 7.25rem;
+    gap: 0.7rem;
+    padding: 0.9rem 0.75rem 0.8rem;
+  }
+
+  .booking-choice-card__title {
+    font-size: clamp(1.05rem, 0.45vw + 0.9rem, 1.28rem);
+  }
+
+  .booking-choice-card--barber .booking-choice-card__title {
+    font-size: clamp(0.96rem, 0.22vw + 0.9rem, 1.06rem);
+  }
+
+  .booking-choice-card__avatar {
+    width: clamp(3rem, 0.7vw + 2.6rem, 3.5rem);
+    height: clamp(3rem, 0.7vw + 2.6rem, 3.5rem);
+  }
+
+  .booking-choice-card__meta--service {
+    gap: 0.5rem;
+    padding-top: 0.65rem;
+  }
+
+  .booking-flow__grid--details input {
+    min-height: 3.7rem;
+  }
+
+  .booking-shell input,
+  .booking-shell select,
+  .booking-shell textarea,
+  .booking-date-tab {
+    min-height: 3.35rem;
+  }
+
+  .booking-slot {
+    min-height: 3.9rem;
+    padding: 0.7rem 0.45rem;
+  }
+
+  .booking-slot__label {
+    font-size: clamp(0.92rem, 0.3vw + 0.84rem, 1.02rem);
+  }
+
+  .booking-action-bar {
+    padding: 0.9rem;
+  }
+
+  .booking-action-bar__button {
+    min-height: 3.5rem;
+  }
+}
+
 
 
 .page-wrap {
