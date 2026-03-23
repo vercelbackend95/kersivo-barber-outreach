@@ -1,3 +1,4 @@
+import type { ReactNode } from "react";
 import { Zap } from "@/components/lucide-react";
 import { cn } from "@/lib/utils";
 
@@ -7,8 +8,91 @@ import { Card, CardContent } from "@/components/ui/card";
 interface Feature261Props {
   className?: string;
 }
+
+interface TextFeatureCardProps {
+  eyebrow: string;
+  title: string;
+  description: string;
+  backgroundWord: string;
+  meta: [string, string, string];
+  icon: ReactNode;
+  className?: string;
+}
+
+
 const TIMELINE_FOOTER_HEIGHT = "5.5rem";
 const FEATURE_CARD_FOOTER_HEIGHT = "5.5rem";
+
+const SetupIcon = () => (
+  <svg viewBox="0 0 24 24" aria-hidden="true" className="feature261-text-card__icon-svg">
+    <path d="M4 7.5h16" />
+    <path d="M7.5 4v7" />
+    <path d="M6 14h12" />
+    <path d="M8.5 14v6" />
+    <path d="M15.5 10v10" />
+  </svg>
+);
+
+const ProductsIcon = () => (
+  <svg viewBox="0 0 24 24" aria-hidden="true" className="feature261-text-card__icon-svg">
+    <path d="M6 8.5h12l-1 11.5H7L6 8.5Z" />
+    <path d="M9 8.5V7a3 3 0 0 1 6 0v1.5" />
+    <path d="M9.5 13h5" />
+    <path d="M12 10.5v5" />
+  </svg>
+);
+
+const AdminIcon = () => (
+  <svg viewBox="0 0 24 24" aria-hidden="true" className="feature261-text-card__icon-svg">
+    <path d="M4 6h16" />
+    <path d="M4 12h10" />
+    <path d="M4 18h16" />
+    <path d="M17 10l3 3-3 3" />
+  </svg>
+);
+
+const TextFeatureCard = ({
+  eyebrow,
+  title,
+  description,
+  backgroundWord,
+  meta,
+  icon,
+  className,
+}: TextFeatureCardProps) => {
+  return (
+    <Card className={cn("feature261-text-card rounded-3xl", className)}>
+      <CardContent className="feature261-text-card__content">
+        <div className="feature261-text-card__frame" aria-hidden="true" />
+        <div className="feature261-text-card__topbar" aria-hidden="true" />
+        <div className="feature261-text-card__corner" aria-hidden="true" />
+        <span className="feature261-text-card__background-word" aria-hidden="true">
+          {backgroundWord}
+        </span>
+
+        <div className="feature261-text-card__header">
+          <span className="feature261-text-card__eyebrow">{eyebrow}</span>
+          <span className="feature261-text-card__icon">{icon}</span>
+        </div>
+
+        <div className="feature261-text-card__body">
+          <h3 className="feature261-text-card__title">{title}</h3>
+          <p className="feature261-text-card__description">{description}</p>
+        </div>
+
+        <div className="feature261-text-card__meta" aria-label={`${title} highlights`}>
+          {meta.map((item) => (
+            <span key={item} className="feature261-text-card__tag">
+              {item}
+            </span>
+          ))}
+        </div>
+      </CardContent>
+    </Card>
+  );
+};
+
+
 const Feature261 = ({ className }: Feature261Props) => {
   const timelineImagePosition = "center 0%";
   const bookingImagePosition = "center 0%";
@@ -67,30 +151,25 @@ const Feature261 = ({ className }: Feature261Props) => {
               </div>
             </div>
           </div>
+          <TextFeatureCard
+            eyebrow="Custom setup"
+            title="Your rules"
+            description="Add your own barbers, services and pricing."
+            backgroundWord="Setup"
+            meta={["Barbers", "Services", "Pricing"]}
+            icon={<SetupIcon />}
+            className="col-span-1 md:col-span-2 md:row-span-1 md:h-[192px] lg:col-span-2"
+          />
 
-          <Card className="col-span-1 rounded-3xl md:col-span-2 md:row-span-1 md:h-[192px] lg:col-span-2">
-            <CardContent className="flex h-full flex-col justify-center p-4 md:p-6">
-
-              <p className="text-sm leading-tight md:text-sm">
-                Your setup, your rules
-                <br />
-                Add your own barbers, services and pricing.
-              </p>
-            </CardContent>
-          </Card>
-
-          <Card className="relative col-span-1 rounded-3xl border md:col-span-2 md:row-span-1 md:h-[192px] lg:col-span-2">
-            <CardContent className="flex h-full flex-col justify-center p-4 md:p-6">
-              <p className="mb-2 text-lg font-semibold leading-tight md:text-lg">
-                Add your own products
-              </p>
-              <p className="text-sm leading-tight md:text-sm">
-                Build a shop that fits your barbershop.
-
-              </p>
-            </CardContent>
-          </Card>
-
+          <TextFeatureCard
+            eyebrow="Retail control"
+            title="Add products"
+            description="Build a shop that fits your barbershop."
+            backgroundWord="Store"
+            meta={["Stock", "Shop", "Checkout"]}
+            icon={<ProductsIcon />}
+            className="col-span-1 md:col-span-2 md:row-span-1 md:h-[192px] lg:col-span-2"
+          />
 
           <Card className="feature261-footer-card feature261-mobile-tall-card relative col-span-1 h-60 overflow-hidden rounded-3xl bg-muted md:col-span-4 md:row-span-1 md:h-[300px] lg:col-span-4">
             <img
@@ -115,16 +194,16 @@ const Feature261 = ({ className }: Feature261Props) => {
               </div>
                           </div>
           </Card>
+          <TextFeatureCard
+            eyebrow="Daily ops"
+            title="Less admin"
+            description="Bookings, shop and day-to-day control in one place."
+            backgroundWord="Control"
+            meta={["Bookings", "Store", "Daily flow"]}
+            icon={<AdminIcon />}
+            className="col-span-1 md:col-span-2 md:row-span-1 md:h-[300px] lg:col-span-3"
+          />
 
-          <Card className="col-span-1 rounded-3xl md:col-span-2 md:row-span-1 md:h-[300px] lg:col-span-3">
-            <CardContent className="flex h-full flex-col justify-center p-4 md:p-5">
-
-              <p className="mb-2 text-sm md:text-sm">One app, less admin</p>
-              <p className="text-sm leading-tight md:text-sm">
-                Bookings, shop and day-to-day control in one place.
-              </p>
-            </CardContent>
-          </Card>
 
           <Card className="feature261-footer-card feature261-mobile-tall-card relative col-span-1 h-60 overflow-hidden rounded-3xl md:col-span-3 md:row-span-1 md:h-[300px] lg:col-span-5">
             <img
