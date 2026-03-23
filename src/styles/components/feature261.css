@@ -24,6 +24,15 @@
 .feature261 .inset-0 {
   inset: 0;
 }
+.feature261 .inset-x-0 {
+  left: 0;
+  right: 0;
+}
+
+.feature261 .top-0 {
+  top: 0;
+}
+
 
 .feature261 .top-6 {
   top: 1.5rem;
@@ -113,6 +122,14 @@
 .feature261 .p-4 {
   padding: 1rem;
 }
+.feature261 .px-6 {
+  padding-inline: 1.5rem;
+}
+
+.feature261 .py-4 {
+  padding-block: 1rem;
+}
+
 
 .feature261 .mb-2 {
   margin-bottom: 0.5rem;
@@ -405,4 +422,12 @@
   .feature261 .lg\:text-6xl {
     font-size: 3.75rem;
   }
+}
+.feature261 .feature261-primary-card {
+  background: var(--bg);
+}
+
+.feature261 .feature261-primary-card__footer {
+  background: var(--bg);
+  border-top: 1px solid var(--border);
 }

@@ -7,9 +7,9 @@ import { Card, CardContent } from "@/components/ui/card";
 interface Feature261Props {
   className?: string;
 }
-
+const TIMELINE_FOOTER_HEIGHT = "4.5rem";
 const Feature261 = ({ className }: Feature261Props) => {
-  const timelineImagePosition = "center 0%";
+  const timelineImagePosition = "center 72%";
   const bookingImagePosition = "center 0%";
     const barbersImagePosition = "center 0%";
   const shopImagePosition = "center 0%";
@@ -18,15 +18,19 @@ const Feature261 = ({ className }: Feature261Props) => {
     <section className={cn("feature261 py-32", className)}>
       <div className="container">
         <div className="grid grid-cols-1 gap-4 md:grid-cols-6 lg:grid-cols-12">
-          <div className="relative h-60 overflow-hidden rounded-3xl md:col-span-2 md:row-span-2 md:h-[400px] lg:col-span-4 lg:h-full">
+          <div className="feature261-primary-card relative h-60 overflow-hidden rounded-3xl md:col-span-2 md:row-span-2 md:h-[400px] lg:col-span-4 lg:h-full">
             <img
               src="/hero-assets/screens/timeline.png"
               alt="Barber bookings timeline"
+              className="absolute inset-x-0 top-0 w-full object-cover"
+              style={{
+                bottom: TIMELINE_FOOTER_HEIGHT,
+                height: `calc(100% - ${TIMELINE_FOOTER_HEIGHT})`,
+                objectPosition: timelineImagePosition,
+              }}
 
-              className="absolute inset-0 h-full w-full object-cover"
-                            style={{ objectPosition: timelineImagePosition }}
             />
-            <div className="absolute inset-x-0 bottom-0 z-10 bg-black px-6 py-4 text-white">
+            <div className="feature261-primary-card__footer absolute inset-x-0 bottom-0 z-10 px-6 py-4 text-white">
               <p className="text-lg font-medium">Experience Design Excellence.</p>
             </div>
             <div className="absolute right-6 top-6 z-10">
