@@ -27,7 +27,7 @@ export const POST: APIRoute = async ({ request }) => {
 
     if (!limit.ok) {
       return new Response(JSON.stringify({ error: 'Too many attempts. Try later.', retryAfter: limit.retryAfterSeconds }), {
-        status: 429,
+        status: 429
       });
     }
 
@@ -54,7 +54,18 @@ export const POST: APIRoute = async ({ request }) => {
 
   try {
     const booking = await createInstantBooking(parsed.data);
-    return new Response(JSON.stringify({ bookingId: booking.id, status: booking.status }));
+    return new Response(
+      JSON.stringify({
+        booking: {
+          id: booking.id,
+          status: booking.status,
+          serviceName: booking.serviceNameAtBooking ?? booking.service.name,
+          barberName: booking.barber.name,
+          startAt: booking.startAt
+        }
+      })
+    );
+
   } catch (error) {
     return new Response(JSON.stringify({ error: error instanceof Error ? error.message : 'Booking failed.' }), { status: 400 });
   }

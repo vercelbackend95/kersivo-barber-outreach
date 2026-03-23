@@ -13,7 +13,18 @@ export const POST: APIRoute = async ({ request }) => {
   try {
     const booking = await rescheduleByToken(parsed.data);
     console.info('[BOOKING] Reschedule succeeded', { bookingId: booking.id, email: booking.email });
-    return new Response(JSON.stringify({ booking }));
+    return new Response(
+      JSON.stringify({
+        booking: {
+          id: booking.id,
+          status: booking.status,
+          serviceName: booking.serviceNameAtBooking ?? booking.service.name,
+          barberName: booking.barber.name,
+          startAt: booking.startAt
+        }
+      })
+    );
+
   } catch (error) {
     console.error('[BOOKING] Reschedule failed', { error, token: parsed.data.token });
     const status = error instanceof BookingActionError ? error.statusCode : 400;

@@ -691,6 +691,13 @@
   color: var(--fg);
   font-size: var(--booking-text-lg);
   line-height: 1.2;
+}
+.booking-action-bar__meta {
+  color: var(--muted);
+  font-size: var(--booking-text-sm);
+  line-height: 1.5;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
 
 }
 

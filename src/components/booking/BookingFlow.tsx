@@ -21,6 +21,16 @@ type BookingCreatePayload = BookingPayload & {
 type BookingReschedulePayload = BookingPayload & {
   token: string;
 };
+type BookingApiResponse = {
+  booking?: {
+    barberName?: string;
+    serviceName?: string;
+    startAt?: string;
+    status?: string;
+  };
+  error?: string;
+};
+
 
 type Props = {
   services: Service[];
@@ -129,20 +139,29 @@ export default function BookingFlow({ services, barbers, mode = 'create', token 
       return barber.serviceIds.includes(serviceId);
     });
   }, [barbers, serviceId]);
+  
+  const barberOptions = useMemo(() => {
+    if (availableBarbers.length === 0) return [];
+    return [{ id: ANY_BARBER_ID, name: ANY_BARBER_NAME, avatarUrl: null }, ...availableBarbers];
+  }, [availableBarbers]);
+
+
   const selectedService = useMemo(() => services.find((service) => service.id === serviceId), [serviceId, services]);
   const selectedBarber = useMemo(() => availableBarbers.find((barber) => barber.id === barberId), [availableBarbers, barberId]);
-
+  const selectedBarberLabel = barberId === ANY_BARBER_ID ? ANY_BARBER_NAME : selectedBarber?.name;
   const isCreateMode = mode === 'create';
   const isSubmitDisabled = !time || !barberId || (isCreateMode && (!fullName.trim() || !email.trim()));
   const bookingDateLabel = formatDateForBookingTab(date);
+    const bookingDateSummary = normalizeToIsoDate(date) ? formatDateForSummary(date) : 'Select date';
   const minBookingDate = getCurrentLondonIsoDate();
   useEffect(() => {
-    if (!availableBarbers.some((barber) => barber.id === barberId)) {
-      setBarberId(availableBarbers[0]?.id ?? '');
+    if (!barberOptions.some((barber) => barber.id === barberId)) {
+      setBarberId(barberOptions[0]?.id ?? '');
+
       setTime('');
       setSlots([]);
     }
-  }, [availableBarbers, barberId]);
+  }, [barberOptions, barberId]);
 
 
   useEffect(() => {
@@ -161,6 +180,11 @@ export default function BookingFlow({ services, barbers, mode = 'create', token 
       .then((data) => {
         setSlots(data.slots ?? []);
         setTime('');
+              })
+      .catch(() => {
+        setSlots([]);
+        setTime('');
+
       });
   }, [serviceId, barberId, date]);
 
@@ -205,7 +229,7 @@ export default function BookingFlow({ services, barbers, mode = 'create', token 
         body: JSON.stringify(payload)
       });
 
-      const data = await res.json().catch(() => ({} as { error?: string }));
+      const data = (await res.json().catch(() => ({}))) as BookingApiResponse;
       if (!res.ok) {
         setMessage(data.error || 'Unable to reschedule booking.');
         return;
@@ -214,8 +238,9 @@ export default function BookingFlow({ services, barbers, mode = 'create', token 
       setConfirmation({
         type: 'rescheduled',
         summary: {
-          service: selectedService?.name,
-          barber: selectedBarber?.name,
+          service: data.booking?.serviceName ?? selectedService?.name,
+          barber: data.booking?.barberName ?? selectedBarberLabel,
+
           date: formatDateForSummary(normalizedDate),
           time
         }
@@ -249,7 +274,7 @@ export default function BookingFlow({ services, barbers, mode = 'create', token 
       body: JSON.stringify(payload)
     });
 
-    const data = await res.json().catch(() => ({} as { error?: string }));
+    const data = (await res.json().catch(() => ({}))) as BookingApiResponse;
     if (!res.ok) {
       setMessage(data.error || 'Unable to create booking.');
       return;
@@ -257,8 +282,9 @@ export default function BookingFlow({ services, barbers, mode = 'create', token 
     setConfirmation({
       type: 'booked',
       summary: {
-        service: selectedService?.name,
-        barber: selectedBarber?.name,
+        service: data.booking?.serviceName ?? selectedService?.name,
+        barber: data.booking?.barberName ?? selectedBarberLabel,
+
         date: formatDateForSummary(normalizedDate),
         time
       }
@@ -339,10 +365,13 @@ export default function BookingFlow({ services, barbers, mode = 'create', token 
 
               </div>
               <div className="booking-choice-grid booking-choice-grid--barbers" role="radiogroup" aria-label="Barbers">
-                {availableBarbers.map((barber) => {
+                {barberOptions.map((barber) => {
                   const isSelected = barber.id === barberId;
-                const hasAvatar = Boolean(barber.avatarUrl) && !brokenAvatarIds[barber.id];
-                  const initials = getBarberInitials(barber.name);
+
+                  const isAnyBarber = barber.id === ANY_BARBER_ID;
+                  const hasAvatar = !isAnyBarber && Boolean(barber.avatarUrl) && !brokenAvatarIds[barber.id];
+                  const initials = isAnyBarber ? 'ANY' : getBarberInitials(barber.name);
+
 
 
                   return (
@@ -372,6 +401,7 @@ export default function BookingFlow({ services, barbers, mode = 'create', token 
 
                       <span className="booking-choice-card__content">
                         <span className="booking-choice-card__title">{barber.name}</span>
+                                                {isAnyBarber ? <span className="booking-choice-card__helper">Fastest matching barber</span> : null}
                       </span>
 
                     </button>
@@ -473,12 +503,13 @@ export default function BookingFlow({ services, barbers, mode = 'create', token 
             <div className="booking-action-bar">
               <div className="booking-action-bar__summary">
                 <span className="booking-action-bar__label">Ready to confirm</span>
-                <strong>
-                  {selectedService?.name ?? 'Select service'}
-                  {selectedBarber ? ` · ${selectedBarber.name}` : ''}
-                  {time ? ` · ${time}` : ''}
-                </strong>
+                <strong>{selectedService?.name ?? 'Select service'}</strong>
+                <span className="booking-action-bar__meta">
+                  {selectedBarberLabel ?? 'Select barber'}
+                  {bookingDateSummary ? ` · ${bookingDateSummary}` : ''}
 
+                  {time ? ` · ${time}` : ''}
+                </span>
               </div>
                             <button
                 type="button"

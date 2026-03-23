@@ -1,10 +1,8 @@
 // src/pages/api/availability.ts
 import type { APIRoute } from 'astro';
-import { BookingStatus } from '@prisma/client';
-import { prisma } from '../../lib/db/client';
-import { getTimeBlockDelegate } from '../../lib/db/timeBlocks';
-import { generateSlots } from '../../lib/booking/slots';
-import { addMinutes, londonDayOfWeekFromIsoDate, normalizeToIsoDate, toUtcFromLondon } from '../../lib/booking/time';
+import { normalizeToIsoDate } from '../../lib/booking/time';
+import { ANY_BARBER_ID, getAvailabilitySlots } from '../../lib/booking/service';
+
 
 export const prerender = false;
 
@@ -30,10 +28,6 @@ export const GET: APIRoute = async ({ request }) => {
     return new Response(JSON.stringify({ error: 'Invalid date format. Use YYYY-MM-DD or DD/MM/YYYY.' }), { status: 400 });
   }
 
-  const dayOfWeek = londonDayOfWeekFromIsoDate(date);
-  if (dayOfWeek == null) {
-    return new Response(JSON.stringify({ error: 'Invalid date value.' }), { status: 400 });
-  }
 
   if (import.meta.env.DEV) {
     console.info('[availability][dev] incoming params', {
@@ -43,51 +37,24 @@ export const GET: APIRoute = async ({ request }) => {
       rawDate
     });
   }
-  const dayStartUtc = toUtcFromLondon(date, 0);
-  const dayEndUtc = addMinutes(dayStartUtc, 24 * 60);
+  try {
+    const { slots } = await getAvailabilitySlots({
+      serviceId,
+      barberId: barberId || ANY_BARBER_ID,
+      date
 
-
-
-  const settings = await prisma.shopSettings.findFirstOrThrow();
-    const timeBlockDelegate = getTimeBlockDelegate();
-
-
-
-  const [service, rules, bookings, timeOff, timeBlocks] = await Promise.all([
-
-    prisma.service.findUniqueOrThrow({ where: { id: serviceId } }),
-    prisma.availabilityRule.findMany({ where: { barberId, active: true, dayOfWeek } }),
-    prisma.booking.findMany({ where: { barberId, status: { in: [BookingStatus.CONFIRMED] } }, select: { startAt: true, endAt: true } }),
-    prisma.barberTimeOff.findMany({ where: { barberId }, select: { startsAt: true, endsAt: true } }),
-    timeBlockDelegate
-      ? timeBlockDelegate.findMany({
-          where: {
-            shopId: settings.id,
-            OR: [{ barberId }, { barberId: null }],
-            startAt: { lt: dayEndUtc },
-            endAt: { gt: dayStartUtc }
-          },
-          select: { startAt: true, endAt: true }
-        })
-      : Promise.resolve([])
-
-
-  ]);
-  if (!service.isActive) {
-    return new Response(JSON.stringify({ slots: [] }));
-  }
-
-
-  const slots = generateSlots({ date, service, rules, confirmedBookings: bookings, timeOff, timeBlocks, settings });
-
-  if (import.meta.env.DEV) {
-    console.info('[availability][dev] resolved', {
-      normalizedDate: date,
-      dayOfWeek,
-      rulesFound: rules.length,
-      slotsReturned: slots.length
     });
+      if (import.meta.env.DEV) {
+      console.info('[availability][dev] resolved', {
+        normalizedDate: date,
+        requestedBarberId: barberId,
+        slotsReturned: slots.length
+      });
+    }
+
+    return new Response(JSON.stringify({ slots }));
+  } catch (error) {
+    return new Response(JSON.stringify({ error: error instanceof Error ? error.message : 'Unable to load availability.' }), { status: 400 });
   }
 
-  return new Response(JSON.stringify({ slots }));
 };
