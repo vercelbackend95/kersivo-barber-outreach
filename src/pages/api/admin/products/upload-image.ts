@@ -2,7 +2,7 @@ export const prerender = false;
 
 import type { APIRoute } from 'astro';
 import { requireAdmin } from '../../../../lib/admin/auth';
-import { getBlobReadWriteToken, uploadPublicImageToBlob } from '../../../../lib/storage/vercelBlob';
+import { getBlobReadWriteToken, makeBlobPath, uploadPublicImageToBlob } from '../../../../lib/storage/vercelBlob';
 
 const MAX_IMAGE_SIZE_BYTES = 5 * 1024 * 1024;
 
@@ -13,25 +13,17 @@ function jsonResponse(body: Record<string, unknown>, status = 200) {
     headers: { 'Content-Type': 'application/json' }
   });
 }
-function extensionFromFile(file: File) {
-  const fileName = file.name ?? '';
-  const fromName = fileName.includes('.') ? fileName.split('.').pop()?.toLowerCase() : '';
 
-  if (fromName) {
-    return fromName;
-  }
-
-  if (file.type === 'image/jpeg') return 'jpg';
-  if (file.type === 'image/png') return 'png';
-  if (file.type === 'image/webp') return 'webp';
-  if (file.type === 'image/gif') return 'gif';
-  if (file.type === 'image/svg+xml') return 'svg';
-  return 'bin';
-
-}
 export const POST: APIRoute = async (ctx) => {
+  const unauthorized = requireAdmin(ctx);
+  if (unauthorized) return unauthorized;
+
   if (!getBlobReadWriteToken()) {
-    return jsonResponse({ error: 'Missing BLOB_READ_WRITE_TOKEN in runtime.' }, 500);
+    return jsonResponse(
+      { error: 'Blob storage is not configured. Set BLOB_READ_WRITE_TOKEN or VERCEL_BLOB_READ_WRITE_TOKEN.' },
+      500
+    );
+
 
   }
 
@@ -64,8 +56,7 @@ export const POST: APIRoute = async (ctx) => {
       return jsonResponse({ error: 'Image is too large. Maximum size is 5MB.' }, 413);
     }
 
-    const ext = extensionFromFile(filePart);
-    const pathname = `products/${Date.now()}-${crypto.randomUUID()}.${ext}`;
+    const pathname = makeBlobPath('products', filePart);
     const url = await uploadPublicImageToBlob(filePart, pathname);
 
     return jsonResponse({ url }, 200);
