@@ -235,34 +235,24 @@ export default function BookingFlow({ services, barbers, mode = 'create', token 
 
   const isReadyToSubmit = missingItems.length === 0;
   const isSubmitDisabled = isSubmitting || !isReadyToSubmit;
-    const actionSteps = useMemo(
-    () =>
-      [
-        { id: 'service', label: 'Choose a service', complete: Boolean(serviceId) },
-        { id: 'barber', label: 'Choose a barber', complete: Boolean(barberId) },
-        { id: 'date-time', label: 'Choose date and time', complete: hasSelectedDate && Boolean(time) },
-        ...(isCreateMode ? [{ id: 'details', label: 'Add your details', complete: hasSelectedContactDetails }] : [])
-      ] as Array<{ id: string; label: string; complete: boolean }>,
-    [barberId, hasSelectedContactDetails, hasSelectedDate, isCreateMode, serviceId, time]
-  );
-  const remainingStepCount = actionSteps.filter((step) => !step.complete).length;
-
-  const compactStatusLabel = isSubmitting
-    ? 'Submitting booking'
-    : isReadyToSubmit
-      ? 'Ready to confirm'
-      : `${remainingStepCount} step${remainingStepCount === 1 ? '' : 's'} left`;
-  const compactStatusTitle = isReadyToSubmit
-    ? (isCreateMode ? 'Final confirmation' : 'Confirm reschedule')
-    : 'Complete each booking step';
+  const compactBookingSummary = [
+    selectedService?.name ?? 'Choose a service',
+    selectedBarberLabel ?? 'Choose a barber',
+    normalizedDate
+      ? new Date(`${normalizedDate}T00:00:00`).toLocaleDateString('en-GB', {
+          timeZone: bookingTimezone,
+          day: 'numeric',
+          month: 'long'
+        })
+      : 'Choose a date',
+    time || 'Choose a time'
+  ].join(' • ');
 
   const compactStatusMeta = isSubmitting
     ? (mode === 'reschedule'
       ? 'Updating your appointment and locking the new slot now.'
       : 'Securing your appointment and sending confirmation details now.')
-    : isReadyToSubmit
-      ? (normalizedDate && time ? `${bookingDateSummary} · ${time}` : 'Final details checked')
-      : missingItems[0] ?? 'Complete the remaining details';
+    : missingItems[0] ?? (isCreateMode ? 'Ready to confirm booking.' : 'Ready to confirm reschedule.');
   const slotsHelperText = !serviceId
     ? 'Choose a service first to see matching availability.'
     : !barberId
@@ -705,22 +695,8 @@ export default function BookingFlow({ services, barbers, mode = 'create', token 
             <div className={`booking-action-bar${isSubmitting ? ' is-submitting' : ''}`} aria-live="polite">
 
               <div className="booking-action-bar__summary">
-                <span className="booking-action-bar__label">{compactStatusLabel}</span>
-                <strong>{compactStatusTitle}</strong>
+                <strong>{compactBookingSummary}</strong>
                 <span className="booking-action-bar__meta">{compactStatusMeta}</span>
-                <ol className="booking-action-bar__steps" aria-label="Booking progress">
-                  {actionSteps.map((step, index) => (
-                    <li
-                      key={step.id}
-                      className={`booking-action-bar__step${step.complete ? ' is-complete' : ''}`}
-                    >
-                      <span className="booking-action-bar__step-index" aria-hidden="true">
-                        {String(index + 1).padStart(2, '0')}
-                      </span>
-                      <span className="booking-action-bar__step-label">{step.label}</span>
-                    </li>
-                  ))}
-                </ol>
 
               </div>
                             <button
