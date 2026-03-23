@@ -204,6 +204,7 @@ async function ensureRequestedSlotSelectable(input: {
   service: Service;
   settings: ShopSettings;
   ignoreBookingId?: string;
+  }) {
   const availableSlots = await getAvailableSlotsForBarber(input);
 
   if (!availableSlots.includes(input.time)) {
@@ -220,8 +221,6 @@ async function ensureSlotAvailable(
     ignoreBookingId?: string;
   }
 ) {
-
-}) {
   const overlapping = await tx.booking.findFirst({
     where: {
       barberId: input.barberId,
