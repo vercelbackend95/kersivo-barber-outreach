@@ -799,7 +799,6 @@ export default function ShopAdminPanel({ initialTab = 'products' }: ShopAdminPan
   const [deleteConfirmOpen, setDeleteConfirmOpen] = useState(false);
   const [imageUploadStatus, setImageUploadStatus] = useState<ProductImageUploadStatus>('idle');
   const [imageUploadError, setImageUploadError] = useState<string | null>(null);
-    const [imageUploadNotice, setImageUploadNotice] = useState<string | null>(null);
   const [imageUploadProgress, setImageUploadProgress] = useState(0);
   const [localImagePreviewUrl, setLocalImagePreviewUrl] = useState<string | null>(null);
   const [selectedImageFile, setSelectedImageFile] = useState<File | null>(null);
@@ -1193,7 +1192,6 @@ export default function ShopAdminPanel({ initialTab = 'products' }: ShopAdminPan
         setHasPendingFileUpload(false);
     setImageUploadStatus('idle');
     setImageUploadError(null);
-        setImageUploadNotice(null);
     setImageUploadProgress(0);
 
     setForm(EMPTY_FORM);
@@ -1261,7 +1259,6 @@ export default function ShopAdminPanel({ initialTab = 'products' }: ShopAdminPan
     setImageUploadStatus('idle');
 
     setImageUploadError(null);
-        setImageUploadNotice(null);
     setImageUploadProgress(0);
     setSelectedImageFile(null);
         setHasPendingFileUpload(false);
@@ -1336,7 +1333,6 @@ export default function ShopAdminPanel({ initialTab = 'products' }: ShopAdminPan
     setSelectedImageFile(file);
     setHasPendingFileUpload(true);
     setImageUploadError(null);
-        setImageUploadNotice(null);
         setForm((previous) => ({ ...previous, imageUrl: '' }));
     setImageUploadStatus('uploading');
     setImageUploadProgress(0);
@@ -1366,7 +1362,6 @@ export default function ShopAdminPanel({ initialTab = 'products' }: ShopAdminPan
           setImageUploadStatus('uploaded');
           setImageUploadProgress(100);
           setImageUploadError(null);
-          setImageUploadNotice('Blob storage is not configured, so the image was embedded directly and will still save correctly.');
           setHasPendingFileUpload(false);
           setSelectedImageFile(null);
           setLocalImagePreviewUrl((previous) => {
@@ -1379,7 +1374,7 @@ export default function ShopAdminPanel({ initialTab = 'products' }: ShopAdminPan
           setImageUploadStatus('failed');
           setHasPendingFileUpload(true);
           setImageUploadError(inlineFallbackError instanceof Error ? inlineFallbackError.message : 'Upload failed. Please try again.');
-          setImageUploadNotice(null);
+
           debugUploadLog('inline upload fallback failed', {
             message: inlineFallbackError instanceof Error ? inlineFallbackError.message : 'Unknown error'
           });
@@ -1390,7 +1385,6 @@ export default function ShopAdminPanel({ initialTab = 'products' }: ShopAdminPan
       setImageUploadStatus('failed');
       setHasPendingFileUpload(true);
       setImageUploadError(uploadError instanceof Error ? uploadError.message : 'Upload failed. Please try again.');
-            setImageUploadNotice(null);
       debugUploadLog('upload failed', { message: uploadError instanceof Error ? uploadError.message : 'Unknown error' });
     }
   }
@@ -1759,7 +1753,6 @@ export default function ShopAdminPanel({ initialTab = 'products' }: ShopAdminPan
                                                         setSelectedImageFile(null);
                             setImageUploadStatus('idle');
                             setImageUploadError(null);
-                                                        setImageUploadNotice(null);
                           }
                         }}
 
@@ -1779,7 +1772,6 @@ export default function ShopAdminPanel({ initialTab = 'products' }: ShopAdminPan
 
                   {imageUploadStatus === 'failed' ? <span>Upload failed</span> : null}
                   {imageUploadError ? <span className="admin-product-image-status__error">{imageUploadError}</span> : null}
-                                   {imageUploadNotice ? <span>{imageUploadNotice}</span> : null}
                   {imageUploadStatus === 'failed' && selectedImageFile ? (
                     <button type="button" className="btn btn--ghost admin-product-image-retry" onClick={() => { void retryImageUpload(); }}>
                       Retry upload
