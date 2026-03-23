@@ -132,8 +132,8 @@ const Feature261 = ({ className }: Feature261Props) => {
 
           <Card className="relative col-span-1 h-60 overflow-hidden rounded-3xl md:col-span-3 md:row-span-1 md:h-[300px] lg:col-span-4">
             <img
-              src="https://deifkwefumgah.cloudfront.net/shadcnblocks/block/photos/Geometric Staircase and Concrete Wall.jpeg"
-              alt="shadcn UI development"
+              src="/hero-assets/screens/services.jpg"
+              alt="Barbershop services overview"
               className="absolute inset-0 h-full w-full object-cover"
             />
             <div className="absolute inset-0 bg-gradient-to-r from-black/60 via-black/30 to-transparent" />
