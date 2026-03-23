@@ -6,6 +6,9 @@ import type { Barber, ServiceOption, TimeBlock, WorkingHourRow } from './barbers
 
 type BarberProfileProps = {
   barber: Barber;
+    barberAvatarPreviewUrl: string | null;
+  barberSaving: boolean;
+
   weekDays: string[];
   isActive: boolean;
   totalBookingsServed: number;
@@ -20,6 +23,9 @@ type BarberProfileProps = {
   blockErrorMessage: string;
   getInitials: (name: string) => string;
   onBack: () => void;
+    onBarberAvatarChange: (file: File | null) => void;
+  onSaveAvatar: () => void;
+
   onToggleActive: () => void;
   onToggleService: (serviceId: string, enabled: boolean) => void;
   onChangeWorkingHour: (dayOfWeek: number, field: 'active' | 'startTime' | 'endTime', value: string | boolean) => void;
@@ -32,6 +38,9 @@ type BarberProfileProps = {
 
 export default function BarberProfile({
   barber,
+    barberAvatarPreviewUrl,
+  barberSaving,
+
   weekDays,
   isActive,
   totalBookingsServed,
@@ -46,6 +55,9 @@ export default function BarberProfile({
   blockErrorMessage,
   getInitials,
   onBack,
+    onBarberAvatarChange,
+  onSaveAvatar,
+
   onToggleActive,
   onToggleService,
   onChangeWorkingHour,
@@ -156,6 +168,8 @@ export default function BarberProfile({
   }, [isConfirmDialogOpen]);
 
   const actionLabel = isActive ? 'Deactivate' : 'Reactivate';
+  const hasAvatarPreview = Boolean(barberAvatarPreviewUrl);
+  const displayedAvatarUrl = barberAvatarPreviewUrl ?? barber.avatarUrl ?? null;
 
 
 
@@ -165,7 +179,12 @@ export default function BarberProfile({
         <div className="admin-barber-profile-nav">
           <div className="admin-barber-profile-title-wrap" title={barber.name}>
             <div className="admin-barber-avatar admin-barber-avatar--tiny">
-              {barber.avatarUrl ? <img src={barber.avatarUrl} alt={barber.name} loading="lazy" /> : <span>{getInitials(barber.name)}</span>}
+              {displayedAvatarUrl ? (
+                <img src={displayedAvatarUrl} alt={barber.name} loading="lazy" />
+              ) : (
+                <span>{getInitials(barber.name)}</span>
+              )}
+
             </div>
             <h2 className="admin-barber-profile-title">{barber.name}</h2>
           </div>
@@ -210,6 +229,29 @@ export default function BarberProfile({
           <span className={`admin-status-dot ${isActive ? 'is-active' : 'is-inactive'}`} aria-hidden="true" />
           {isActive ? 'Active' : 'Inactive'}
         </p>
+        <div className="admin-barber-avatar-editor">
+          <label className="btn btn--secondary admin-barber-avatar-upload" htmlFor="admin-barber-avatar-input">
+            {displayedAvatarUrl ? 'Change avatar' : 'Upload avatar'}
+          </label>
+          <input
+            id="admin-barber-avatar-input"
+            type="file"
+            accept="image/jpeg,image/png,image/webp"
+            className="admin-barber-avatar-input"
+            onChange={(event) => onBarberAvatarChange(event.target.files?.[0] ?? null)}
+          />
+          {hasAvatarPreview ? (
+            <button
+              type="button"
+              className="btn btn--primary"
+              onClick={onSaveAvatar}
+              disabled={barberSaving}
+            >
+              {barberSaving ? 'Saving...' : 'Save avatar'}
+            </button>
+          ) : null}
+        </div>
+
 
         <p className="admin-barber-status-meta-line">
           <span aria-hidden="true">•</span>

@@ -14,7 +14,7 @@ const Feature261 = ({ className }: Feature261Props) => {
   const timelineImagePosition = "center 0%";
   const bookingImagePosition = "center 0%";
   const shopImagePosition = "center 0%";
-
+  const servicesImagePosition = "center 0%";
   return (
     <section className={cn("feature261 py-32", className)}>
       <div className="container">
@@ -135,6 +135,7 @@ const Feature261 = ({ className }: Feature261Props) => {
               src="/hero-assets/screens/services.jpg"
               alt="Barbershop services overview"
               className="absolute inset-0 h-full w-full object-cover"
+                            style={{ objectPosition: servicesImagePosition }}
             />
             <div className="absolute inset-0 bg-gradient-to-r from-black/60 via-black/30 to-transparent" />
             <div className="absolute inset-0 z-10 flex items-center justify-start p-4 md:p-6">

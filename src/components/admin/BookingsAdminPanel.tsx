@@ -557,6 +557,9 @@ export default function BookingsAdminPanel({ isActive, mode, onBackToDashboard }
   const [barberSaving, setBarberSaving] = useState(false);
   const [barberReordering, setBarberReordering] = useState(false);
   const [barberAvatarPreviewUrl, setBarberAvatarPreviewUrl] = useState<string | null>(null);
+    const [editingBarberAvatarFile, setEditingBarberAvatarFile] = useState<File | null>(null);
+  const [editingBarberAvatarPreviewUrl, setEditingBarberAvatarPreviewUrl] = useState<string | null>(null);
+
     const [isAddBarberSheetOpen, setIsAddBarberSheetOpen] = useState(false);
   const [addBarberSelectedServiceIds, setAddBarberSelectedServiceIds] = useState<string[]>([]);
 
@@ -1267,6 +1270,22 @@ export default function BookingsAdminPanel({ isActive, mode, onBackToDashboard }
     setBarberAvatarPreviewUrl(objectUrl);
     return () => URL.revokeObjectURL(objectUrl);
   }, [barberAvatarFile]);
+    useEffect(() => {
+    if (!editingBarberAvatarFile) {
+      setEditingBarberAvatarPreviewUrl(null);
+      return;
+    }
+
+    const objectUrl = URL.createObjectURL(editingBarberAvatarFile);
+    setEditingBarberAvatarPreviewUrl(objectUrl);
+    return () => URL.revokeObjectURL(objectUrl);
+  }, [editingBarberAvatarFile]);
+
+  useEffect(() => {
+    setEditingBarberAvatarFile(null);
+    setEditingBarberAvatarPreviewUrl(null);
+  }, [selectedBarberId]);
+
   useEffect(() => {
     if (addBarberServiceOptions.length === 0) return;
     setAddBarberSelectedServiceIds((current) => {
@@ -1548,6 +1567,51 @@ export default function BookingsAdminPanel({ isActive, mode, onBackToDashboard }
         setIsAddBarberSheetOpen(false);
     await fetchBarbers();
   }
+  async function saveSelectedBarberAvatar() {
+    if (!selectedBarberId || !selectedBarber || !editingBarberAvatarFile) return;
+
+    setBarberSaveMessage('');
+    setBarberSaveError('');
+
+    if (editingBarberAvatarFile.size > 5 * 1024 * 1024) {
+      setBarberSaveError('Avatar is too large. Maximum size is 5MB.');
+      return;
+    }
+
+    const serviceIds = Array.from(new Set(selectedBarber.serviceIds ?? []));
+    if (serviceIds.length === 0) {
+      setBarberSaveError('Select at least one service before saving the avatar.');
+      return;
+    }
+
+    setBarberSaving(true);
+    const formData = new FormData();
+    formData.set('id', selectedBarberId);
+    formData.set('name', selectedBarber.name);
+    formData.set('isActive', String(normalizeBarberStatus(selectedBarber)));
+    formData.set('serviceIds', JSON.stringify(serviceIds));
+    formData.set('avatar', editingBarberAvatarFile);
+
+    const response = await fetch('/api/admin/barbers', {
+      method: 'POST',
+      credentials: 'include',
+      body: formData
+    });
+    const payload = await response.json().catch(() => ({ error: 'Could not save avatar.' }));
+
+    if (!response.ok) {
+      setBarberSaveError(payload.error || 'Could not save avatar.');
+      setBarberSaving(false);
+      return;
+    }
+
+    setEditingBarberAvatarFile(null);
+    setEditingBarberAvatarPreviewUrl(null);
+    setBarberSaveMessage('Avatar updated.');
+    setBarberSaving(false);
+    await fetchBarbers();
+  }
+
 
   async function updateBarberStatus(barberId: string, isActive: boolean) {
     setBarberSaveMessage('');
@@ -1630,6 +1694,9 @@ export default function BookingsAdminPanel({ isActive, mode, onBackToDashboard }
             selectedBarber ? (
               <BarberProfile
                 barber={selectedBarber}
+                                barberAvatarPreviewUrl={editingBarberAvatarPreviewUrl}
+                barberSaving={barberSaving}
+
                 weekDays={WEEK_DAYS}
                 isActive={normalizeBarberStatus(selectedBarber)}
                 totalBookingsServed={selectedBarberStatsCount}
@@ -1644,6 +1711,9 @@ export default function BookingsAdminPanel({ isActive, mode, onBackToDashboard }
                 blockErrorMessage={blockErrorMessage}
                 getInitials={getInitials}
                 onBack={() => setSelectedBarberId(null)}
+                                onBarberAvatarChange={setEditingBarberAvatarFile}
+                onSaveAvatar={() => void saveSelectedBarberAvatar()}
+
                 onToggleActive={() => void updateBarberStatus(selectedBarber.id, !normalizeBarberStatus(selectedBarber))}
                 onToggleService={(serviceId, enabled) => void toggleServiceForBarber(serviceId, enabled)}
                 onChangeWorkingHour={(dayOfWeek, field, value) => updateWorkingHour(dayOfWeek, { [field]: value })}
