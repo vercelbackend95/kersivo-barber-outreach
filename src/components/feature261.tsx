@@ -17,8 +17,9 @@ const Feature261 = ({ className }: Feature261Props) => {
         <div className="grid grid-cols-1 gap-4 md:grid-cols-6 lg:grid-cols-12">
           <div className="relative h-60 overflow-hidden rounded-3xl md:col-span-2 md:row-span-2 md:h-[400px] lg:col-span-4 lg:h-full">
             <img
-              src="https://deifkwefumgah.cloudfront.net/shadcnblocks/block/photos/Minimalist Concrete Wall with Shadows.jpeg"
-              alt="shadcn UI components showcase"
+              src="/hero-assets/screens/timeline.webp"
+              alt="Barber bookings timeline"
+
               className="absolute inset-0 h-full w-full object-cover"
             />
             <div className="absolute inset-0" />
