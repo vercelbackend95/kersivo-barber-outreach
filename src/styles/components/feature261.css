@@ -65,6 +65,11 @@
 .feature261 .h-full {
   height: 100%;
 }
+.feature261 .feature261-mobile-tall-card {
+  height: 22.5rem;
+}
+
+
 
 .feature261 .w-full {
   width: 100%;
