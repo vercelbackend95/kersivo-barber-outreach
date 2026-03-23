@@ -11,6 +11,7 @@ interface Feature261Props {
 }
 
 const Feature261 = ({ className }: Feature261Props) => {
+    const timelineImagePosition = "center 12%";
   return (
     <section className={cn("feature261 py-32", className)}>
       <div className="container">
@@ -21,6 +22,7 @@ const Feature261 = ({ className }: Feature261Props) => {
               alt="Barber bookings timeline"
 
               className="absolute inset-0 h-full w-full object-cover"
+                            style={{ objectPosition: timelineImagePosition }}
             />
             <div className="absolute inset-0" />
             <div className="absolute bottom-6 left-6 z-10 text-white">
