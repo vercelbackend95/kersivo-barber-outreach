@@ -1,5 +1,5 @@
 
-import React, { useEffect, useMemo, useState } from 'react';
+import React, { useEffect, useMemo, useRef, useState } from 'react';
 import BookingConfirmationPanel, { type BookingSummary } from './BookingConfirmationPanel';
 import BookingReviewPanel from './BookingReviewPanel';
 import { ANY_BARBER_ID, ANY_BARBER_NAME } from '../../lib/booking/constants';
@@ -185,7 +185,7 @@ export default function BookingFlow({ services, barbers, mode = 'create', token 
   const [message, setMessage] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [brokenAvatarIds, setBrokenAvatarIds] = useState<Record<string, boolean>>({});
-
+  const confirmationRef = useRef<HTMLElement | null>(null);
   const [confirmation, setConfirmation] = useState<{ type: 'booked' | 'rescheduled'; summary: BookingSummary } | null>(null);
     const isCreateMode = mode === 'create';
   const normalizedFullName = fullName.trim();
@@ -233,10 +233,19 @@ export default function BookingFlow({ services, barbers, mode = 'create', token 
 
   const isReadyToSubmit = missingItems.length === 0;
   const isSubmitDisabled = isSubmitting || !isReadyToSubmit;
-  const compactStatusLabel = isReadyToSubmit ? 'Ready to confirm' : `${missingItems.length} item${missingItems.length === 1 ? '' : 's'} left`;
-  const compactStatusMeta = isReadyToSubmit
-    ? (normalizedDate && time ? `${bookingDateSummary} · ${time}` : 'Final details checked')
-    : missingItems[0] ?? 'Complete the remaining details';
+  const compactStatusLabel = isSubmitting
+    ? 'Submitting booking'
+    : isReadyToSubmit
+      ? 'Ready to confirm'
+      : `${missingItems.length} item${missingItems.length === 1 ? '' : 's'} left`;
+  const compactStatusMeta = isSubmitting
+    ? (mode === 'reschedule'
+      ? 'Updating your appointment and locking the new slot now.'
+      : 'Securing your appointment and sending confirmation details now.')
+    : isReadyToSubmit
+      ? (normalizedDate && time ? `${bookingDateSummary} · ${time}` : 'Final details checked')
+      : missingItems[0] ?? 'Complete the remaining details';
+
 
   const appointmentRows = useMemo(
     () => [
@@ -259,6 +268,13 @@ export default function BookingFlow({ services, barbers, mode = 'create', token 
     ],
     [normalizedEmail, normalizedFullName, normalizedPhone]
   );
+
+  useEffect(() => {
+    if (!confirmation) return;
+
+    confirmationRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  }, [confirmation]);
+
 
   const trustItems = useMemo(() => {
     const items = [
@@ -446,8 +462,14 @@ export default function BookingFlow({ services, barbers, mode = 'create', token 
 
 
         </div>
+        {confirmation ? (
+          <BookingConfirmationPanel
+            ref={confirmationRef}
+            variant={confirmation.type}
+            summary={confirmation.summary}
+          />
+        ) : null}
 
-        {confirmation ? <BookingConfirmationPanel variant={confirmation.type} summary={confirmation.summary} /> : null}
         {message ? <p className="admin-inline-error">{message}</p> : null}
 
 
@@ -646,8 +668,8 @@ export default function BookingFlow({ services, barbers, mode = 'create', token 
               trustItems={trustItems}
             />
 
+            <div className={`booking-action-bar${isSubmitting ? ' is-submitting' : ''}`} aria-live="polite">
 
-            <div className="booking-action-bar">
               <div className="booking-action-bar__summary">
                 <span className="booking-action-bar__label">{compactStatusLabel}</span>
                 <strong>{isCreateMode ? 'Final confirmation' : 'Confirm reschedule'}</strong>
@@ -658,10 +680,20 @@ export default function BookingFlow({ services, barbers, mode = 'create', token 
                 type="button"
                 className="btn btn--primary booking-action-bar__button"
                 disabled={isSubmitDisabled}
+                                aria-disabled={isSubmitDisabled}
+                aria-busy={isSubmitting}
                 onClick={() => void submit()}
               >
-                {isSubmitting ? (mode === 'reschedule' ? 'Rescheduling...' : 'Booking...') : mode === 'reschedule' ? 'Reschedule booking' : 'Confirm booking'}
+                {isSubmitting ? <span className="booking-action-bar__spinner" aria-hidden="true" /> : null}
+                <span>{isSubmitting ? (mode === 'reschedule' ? 'Rescheduling…' : 'Confirming…') : mode === 'reschedule' ? 'Reschedule booking' : 'Confirm booking'}</span>
               </button>
+              {isSubmitting ? (
+                <p className="booking-action-bar__loading-note" role="status">
+                  {mode === 'reschedule'
+                    ? 'Please wait while we update your booking.'
+                    : 'Please wait while we secure your booking.'}
+                </p>
+              ) : null}
 
             </div>
           </div>
