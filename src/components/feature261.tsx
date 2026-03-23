@@ -1,7 +1,7 @@
 import { Zap } from "@/components/lucide-react";
 import { cn } from "@/lib/utils";
 
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+
 import { Card, CardContent } from "@/components/ui/card";
 
 interface Feature261Props {
@@ -75,20 +75,26 @@ const Feature261 = ({ className }: Feature261Props) => {
                 <span className="align-top text-2xl md:text-xl lg:text-3xl">%</span>
               </div>
               <p className="text-sm leading-tight md:text-sm">
-                Developers choose us
+                Your setup, your rules
                 <br />
-                for our exceptional quality
+                Add your own barbers, services and pricing.
               </p>
             </CardContent>
           </Card>
 
-          <div className="relative col-span-1 h-60 overflow-hidden rounded-3xl border md:col-span-2 md:row-span-1 md:h-[192px] lg:col-span-2">
-            <img
-              src="https://deifkwefumgah.cloudfront.net/shadcnblocks/block/placeholder-2.svg"
-              alt="shadcn UI components"
-              className="absolute inset-0 h-full w-full object-cover"
-            />
-          </div>
+          <Card className="relative col-span-1 rounded-3xl border md:col-span-2 md:row-span-1 md:h-[192px] lg:col-span-2">
+            <CardContent className="flex h-full flex-col justify-center p-4 md:p-6">
+              <p className="mb-2 text-lg font-semibold leading-tight md:text-lg">
+                Add your own products
+              </p>
+              <p className="text-sm leading-tight md:text-sm">
+                Build a shop that fits your barbershop.
+
+              </p>
+            </CardContent>
+          </Card>
+
+
           <Card className="feature261-footer-card feature261-mobile-tall-card relative col-span-1 h-60 overflow-hidden rounded-3xl bg-muted md:col-span-4 md:row-span-1 md:h-[300px] lg:col-span-4">
             <img
               src="/hero-assets/screens/barbers.jpg"
@@ -119,20 +125,10 @@ const Feature261 = ({ className }: Feature261Props) => {
                 <span className="text-4xl font-bold md:text-3xl lg:text-6xl">300</span>
                 <span className="align-top text-2xl font-bold md:text-xl lg:text-3xl">+</span>
               </div>
-              <p className="mb-4 text-sm md:text-sm">Delighted developers</p>
-              <div className="flex -space-x-2">
-                {[1, 2, 3, 4, 5].map((i) => (
-                  <Avatar
-                    key={i}
-                    className="h-8 w-8 border-2 border-border md:h-8 md:w-8 lg:h-10 lg:w-10"
-                  >
-                    <AvatarImage
-                      src={`https://deifkwefumgah.cloudfront.net/shadcnblocks/block/avatar-${i + 1}.webp`}
-                    />
-                    <AvatarFallback>DEV{i}</AvatarFallback>
-                  </Avatar>
-                ))}
-              </div>
+              <p className="mb-2 text-sm md:text-sm">One app, less admin</p>
+              <p className="text-sm leading-tight md:text-sm">
+                Bookings, shop and day-to-day control in one place.
+              </p>
             </CardContent>
           </Card>
 
@@ -148,7 +144,7 @@ const Feature261 = ({ className }: Feature261Props) => {
               }}
 
             />
-                        <div className="feature261-primary-card__image-overlay absolute inset-x-0 top-0" />
+            <div className="feature261-primary-card__image-overlay absolute inset-x-0 top-0" />
             <div className="feature261-primary-card__footer absolute inset-x-0 bottom-0 z-10 text-white">
               <div className="feature261-primary-card__footer-inner">
                 <span className="feature261-primary-card__eyebrow">Barbershop atmosphere</span>
