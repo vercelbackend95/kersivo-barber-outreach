@@ -82,6 +82,15 @@ function formatDateForBookingTab(isoDate: string): string {
   });
 }
 
+function getCurrentLondonIsoDate(now: Date = new Date()): string {
+  return new Intl.DateTimeFormat('en-CA', {
+    timeZone: 'Europe/London',
+    year: 'numeric',
+    month: '2-digit',
+    day: '2-digit'
+  }).format(now);
+}
+
 
 function formatPrice(pricePence: number): string {
   return `£${(pricePence / 100).toFixed(2)}`;
@@ -104,7 +113,7 @@ function getBarberInitials(name: string): string {
 export default function BookingFlow({ services, barbers, mode = 'create', token = '' }: Props) {
   const [serviceId, setServiceId] = useState(services[0]?.id ?? '');
   const [barberId, setBarberId] = useState('');
-  const [date, setDate] = useState(new Date().toISOString().slice(0, 10));
+  const [date, setDate] = useState(() => getCurrentLondonIsoDate());
   const [slots, setSlots] = useState<string[]>([]);
   const [time, setTime] = useState('');
   const [fullName, setFullName] = useState('');
@@ -126,7 +135,7 @@ export default function BookingFlow({ services, barbers, mode = 'create', token 
   const isCreateMode = mode === 'create';
   const isSubmitDisabled = !time || !barberId || (isCreateMode && (!fullName.trim() || !email.trim()));
   const bookingDateLabel = formatDateForBookingTab(date);
-
+  const minBookingDate = getCurrentLondonIsoDate();
   useEffect(() => {
     if (!availableBarbers.some((barber) => barber.id === barberId)) {
       setBarberId(availableBarbers[0]?.id ?? '');
@@ -176,6 +185,11 @@ export default function BookingFlow({ services, barbers, mode = 'create', token 
       setMessage('Please select an available time.');
       return;
     }
+    if (!slots.includes(time)) {
+      setMessage('Please select a valid available time.');
+      return;
+    }
+
 
     if (mode === 'reschedule') {
       if (!token) {
@@ -388,6 +402,7 @@ export default function BookingFlow({ services, barbers, mode = 'create', token 
                         type="date"
                         className="admin-filter-tab-calendar-input booking-date-tab__input"
                         value={date}
+                                                min={minBookingDate}
                         onChange={(e) => setDate(e.target.value)}
                         aria-label="Select booking date"
                       />

@@ -1,9 +1,11 @@
-import { BookingStatus, Prisma } from '@prisma/client';
+import { BookingStatus, Prisma, type Service, type ShopSettings } from '@prisma/client';
 import { prisma } from '../db/client';
+import { getTimeBlockDelegate } from '../db/timeBlocks';
 import { canCancelOrReschedule } from './policies';
 import { generateToken, hashToken } from './tokens';
-import { addMinutes, toUtcFromLondon } from './time';
+import { addMinutes, londonDayOfWeekFromIsoDate, toUtcFromLondon } from './time';
 import { sendInstantBookingConfirmationEmail, sendRescheduledBookingEmail, sendShopCancelledBookingEmail } from '../email/sender';
+import { generateSlots } from './slots';
 const CANCELLED_BOOKING_MESSAGE = 'This booking is already cancelled. Please create a new booking.';
 function resolvePublicSiteUrl(): string {
   const configured = (import.meta.env.PUBLIC_SITE_URL ?? process.env.PUBLIC_SITE_URL ?? '').trim();
@@ -91,6 +93,60 @@ async function upsertClientForBooking(
     }
   });
 }
+async function ensureRequestedSlotSelectable(input: {
+  barberId: string;
+  date: string;
+  time: string;
+  service: Service;
+  settings: ShopSettings;
+  ignoreBookingId?: string;
+}) {
+  const dayOfWeek = londonDayOfWeekFromIsoDate(input.date);
+  if (dayOfWeek == null) throw new Error('Invalid booking date.');
+
+  const dayStartUtc = toUtcFromLondon(input.date, 0);
+  const dayEndUtc = addMinutes(dayStartUtc, 24 * 60);
+  const timeBlockDelegate = getTimeBlockDelegate();
+
+  const [rules, bookings, timeOff, timeBlocks] = await Promise.all([
+    prisma.availabilityRule.findMany({ where: { barberId: input.barberId, active: true, dayOfWeek } }),
+    prisma.booking.findMany({
+      where: {
+        barberId: input.barberId,
+        id: input.ignoreBookingId ? { not: input.ignoreBookingId } : undefined,
+        status: { in: [BookingStatus.CONFIRMED] }
+      },
+      select: { startAt: true, endAt: true }
+    }),
+    prisma.barberTimeOff.findMany({ where: { barberId: input.barberId }, select: { startsAt: true, endsAt: true } }),
+    timeBlockDelegate
+      ? timeBlockDelegate.findMany({
+          where: {
+            shopId: input.settings.id,
+            OR: [{ barberId: input.barberId }, { barberId: null }],
+            startAt: { lt: dayEndUtc },
+            endAt: { gt: dayStartUtc }
+          },
+          select: { startAt: true, endAt: true }
+        })
+      : Promise.resolve([])
+  ]);
+
+  const availableSlots = generateSlots({
+    date: input.date,
+    service: input.service,
+    rules,
+    confirmedBookings: bookings,
+    timeOff,
+    timeBlocks,
+    settings: input.settings
+  });
+
+  if (!availableSlots.includes(input.time)) {
+    throw new Error('Selected time is no longer available.');
+  }
+}
+
 
 
 async function ensureSlotAvailable(tx: Prisma.TransactionClient, input: {
@@ -135,6 +191,15 @@ export async function createInstantBooking(input: {
 
   if (!barber || !barber.active) throw new Error('Selected barber is unavailable for new bookings.');
   if (!barberService) throw new Error('Selected barber does not provide this service.');
+    await ensureRequestedSlotSelectable({
+    barberId: input.barberId,
+    date: input.date,
+    time: input.time,
+    service,
+    settings
+  });
+
+
   const [h, m] = input.time.split(':').map(Number);
   const startAt = toUtcFromLondon(input.date, h * 60 + m);
   const endAt = addMinutes(startAt, service.durationMinutes + (service.bufferMinutes || settings.defaultBufferMinutes));
@@ -286,6 +351,16 @@ export async function rescheduleByToken(input: { token: string; serviceId: strin
 
   if (!barber || !barber.active) throw new Error('Selected barber is unavailable for new bookings.');
   if (!barberService) throw new Error('Selected barber does not provide this service.');
+    await ensureRequestedSlotSelectable({
+    barberId: input.barberId,
+    date: input.date,
+    time: input.time,
+    service,
+    settings,
+    ignoreBookingId: existing.id
+  });
+
+
   const [h, m] = input.time.split(':').map(Number);
   const startAt = toUtcFromLondon(input.date, h * 60 + m);
   const endAt = addMinutes(startAt, service.durationMinutes + (service.bufferMinutes || settings.defaultBufferMinutes));

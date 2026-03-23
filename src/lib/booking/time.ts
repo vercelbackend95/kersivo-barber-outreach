@@ -3,7 +3,7 @@ const LONDON_TZ = 'Europe/London';
 
 const ISO_DATE_PATTERN = /^(\d{4})-(\d{2})-(\d{2})$/;
 const DMY_DATE_PATTERN = /^(\d{2})\/(\d{2})\/(\d{4})$/;
-
+export const BOOKING_MINIMUM_LEAD_TIME_MINUTES = 30;
 function isValidDateParts(year: number, month: number, day: number): boolean {
   if (!Number.isInteger(year) || !Number.isInteger(month) || !Number.isInteger(day)) return false;
   if (month < 1 || month > 12 || day < 1 || day > 31) return false;
@@ -106,6 +106,35 @@ export function londonDateKey(dateUtc: Date): string {
 
 export function addMinutes(date: Date, minutes: number): Date {
   return new Date(date.getTime() + minutes * 60000);
+}
+export function roundMinutesUpToInterval(minutes: number, intervalMinutes: number): number {
+  if (intervalMinutes <= 0) return minutes;
+  return Math.ceil(minutes / intervalMinutes) * intervalMinutes;
+}
+
+export function getEarliestBookableSlotMinute(input: {
+  date: string;
+  slotIntervalMinutes: number;
+  now?: Date;
+  minimumLeadTimeMinutes?: number;
+}): number | null {
+  const now = input.now ?? new Date();
+  const today = londonDateKey(now);
+
+  if (input.date < today) return null;
+  if (input.date > today) return 0;
+
+  const leadTimeMinutes = input.minimumLeadTimeMinutes ?? BOOKING_MINIMUM_LEAD_TIME_MINUTES;
+  const earliestBookableMoment = addMinutes(now, leadTimeMinutes);
+
+  if (londonDateKey(earliestBookableMoment) !== input.date) {
+    return 24 * 60;
+  }
+
+  return roundMinutesUpToInterval(
+    minutesInLondonDay(earliestBookableMoment),
+    input.slotIntervalMinutes
+  );
 }
 
 export function formatLondonTime(dateUtc: Date): string {

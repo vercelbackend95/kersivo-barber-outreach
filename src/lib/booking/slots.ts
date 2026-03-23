@@ -1,7 +1,7 @@
 // src/lib/booking/slots.ts
 import type { AvailabilityRule, BarberTimeOff, Booking, Service, ShopSettings, TimeBlock } from '@prisma/client';
 import { hasAnyOverlap } from './overlap';
-import { addMinutes, londonDateKey, londonDayOfWeekFromIsoDate, minutesInLondonDay, toUtcFromLondon } from './time';
+import { addMinutes, getEarliestBookableSlotMinute, londonDateKey, londonDayOfWeekFromIsoDate, minutesInLondonDay, toUtcFromLondon } from './time';
 
 type SlotInput = {
   date: string;
@@ -19,12 +19,22 @@ export function generateSlots(input: SlotInput): string[] {
 
   const rule = input.rules.find((entry) => entry.dayOfWeek === weekday && entry.active);
   if (!rule) return [];
+  const earliestBookableMinute = getEarliestBookableSlotMinute({
+    date: input.date,
+    slotIntervalMinutes: input.settings.slotIntervalMinutes
+  });
+
+  if (earliestBookableMinute == null || earliestBookableMinute >= 24 * 60) {
+    return [];
+  }
+
 
   const buffer = input.service.bufferMinutes || input.settings.defaultBufferMinutes;
   const totalDuration = input.service.durationMinutes + buffer;
   const out: string[] = [];
 
   for (let minute = rule.startMinutes; minute + totalDuration <= rule.endMinutes; minute += input.settings.slotIntervalMinutes) {
+       if (minute < earliestBookableMinute) continue;
     if (rule.breakStartMin != null && rule.breakEndMin != null) {
       const inBreak = minute < rule.breakEndMin && minute + totalDuration > rule.breakStartMin;
       if (inBreak) continue;
