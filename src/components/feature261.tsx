@@ -18,7 +18,7 @@ const Feature261 = ({ className }: Feature261Props) => {
         <div className="grid grid-cols-1 gap-4 md:grid-cols-6 lg:grid-cols-12">
           <div className="relative h-60 overflow-hidden rounded-3xl md:col-span-2 md:row-span-2 md:h-[400px] lg:col-span-4 lg:h-full">
             <img
-              src="/hero-assets/screens/timeline.webp"
+              src="/hero-assets/screens/timeline.png"
               alt="Barber bookings timeline"
 
               className="absolute inset-0 h-full w-full object-cover"
@@ -39,8 +39,8 @@ const Feature261 = ({ className }: Feature261Props) => {
 
           <div className="relative h-60 overflow-hidden rounded-3xl border md:col-span-2 md:row-span-2 md:h-[400px] lg:col-span-4 lg:h-full">
             <img
-              src="https://deifkwefumgah.cloudfront.net/shadcnblocks/block/placeholder-1.svg"
-              alt="shadcn UI component library"
+              src="/hero-assets/screens/booking.jpg"
+              alt="Booking flow screen"
               className="absolute inset-0 h-full w-full object-cover"
             />
             <div className="absolute right-6 bottom-6 left-6 z-10">
