@@ -644,8 +644,6 @@ export default function BookingFlow({ services, barbers, mode = 'create', token 
               contactRows={contactRows}
               contactHelper={isCreateMode ? 'Confirmation will be sent to the provided email address.' : undefined}
               trustItems={trustItems}
-              missingItems={missingItems}
-              isReady={isReadyToSubmit}
             />
 
 

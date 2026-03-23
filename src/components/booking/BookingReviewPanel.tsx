@@ -16,8 +16,6 @@ type Props = {
   contactRows?: ReviewRow[];
   contactHelper?: string;
   trustItems: TrustItem[];
-  missingItems: string[];
-  isReady: boolean;
 };
 
 function ReviewList({ rows, ariaLabel }: { rows: ReviewRow[]; ariaLabel: string }) {
@@ -38,9 +36,7 @@ export default function BookingReviewPanel({
   appointmentRows,
   contactRows = [],
   contactHelper,
-  trustItems,
-  missingItems,
-  isReady
+    trustItems
 }: Props) {
   return (
     <section className="booking-review-panel" aria-labelledby="booking-review-panel-title">
@@ -50,27 +46,6 @@ export default function BookingReviewPanel({
         <p className="booking-review-panel__intro muted">
           Check the appointment details, confirm where updates will be sent, and review the booking policies before the final step.
         </p>
-      </div>
-
-      <div className="booking-review-panel__status" role="status" aria-live="polite">
-        <div className="booking-review-panel__status-head">
-          <span className={`booking-review-panel__status-badge${isReady ? ' is-ready' : ' is-pending'}`}>
-            {isReady ? 'Ready to confirm' : 'Almost there'}
-          </span>
-          <p className="booking-review-panel__status-title">
-            {isReady ? 'Everything needed for confirmation is in place.' : 'Complete the remaining items before you confirm.'}
-          </p>
-        </div>
-
-        {missingItems.length > 0 ? (
-          <ul className="booking-review-panel__missing-list" aria-label="Items still required before confirmation">
-            {missingItems.map((item) => (
-              <li key={item}>{item}</li>
-            ))}
-          </ul>
-        ) : (
-          <p className="booking-review-panel__status-copy">Your appointment summary is complete and ready for the final confirmation.</p>
-        )}
       </div>
 
       <div className="booking-review-panel__grid">

@@ -2,12 +2,16 @@
   display: grid;
   gap: 1rem;
   border: 1px solid var(--border);
-  background: linear-gradient(180deg, color-mix(in srgb, var(--surface) 94%, var(--bg)), color-mix(in srgb, var(--surface) 82%, var(--bg)));
+  background: linear-gradient(
+    180deg,
+    color-mix(in srgb, var(--surface) 94%, var(--bg)),
+    color-mix(in srgb, var(--surface) 82%, var(--bg))
+  );
+
   padding: clamp(1rem, 4vw, 1.5rem);
 }
 
 .booking-review-panel__header,
-.booking-review-panel__status,
 .booking-review-panel__grid,
 .booking-review-panel__card,
 .booking-review-panel__card-head,
@@ -19,8 +23,7 @@
 }
 
 .booking-review-panel__header,
-.booking-review-panel__card-head,
-.booking-review-panel__status {
+.booking-review-panel__card-head {
   gap: 0.5rem;
 }
 
@@ -31,8 +34,7 @@
 .booking-review-panel__eyebrow,
 .booking-review-panel__card-kicker,
 .booking-review-panel__row dt,
-.booking-review-panel__trust-label,
-.booking-review-panel__status-badge {
+.booking-review-panel__trust-label {
   margin: 0;
   font-size: var(--booking-text-xs);
   font-weight: 700;
@@ -41,12 +43,10 @@
 }
 
 .booking-review-panel__eyebrow,
-.booking-review-panel__card-kicker,
-.booking-review-panel__status-badge.is-ready {
+.booking-review-panel__card-kicker {
   color: color-mix(in srgb, var(--accent) 78%, var(--fg));
 }
 
-.booking-review-panel__status-badge.is-pending,
 .booking-review-panel__row dt,
 .booking-review-panel__trust-label {
   color: var(--muted);
@@ -70,8 +70,6 @@
 }
 
 .booking-review-panel__intro,
-.booking-review-panel__status-title,
-.booking-review-panel__status-copy,
 .booking-review-panel__helper,
 .booking-review-panel__trust-value {
   margin: 0;
@@ -79,50 +77,25 @@
   line-height: 1.6;
 }
 
-.booking-review-panel__status {
-  padding: 0.9rem 1rem;
-  border: 1px solid color-mix(in srgb, var(--border) 72%, var(--accent));
-  background: color-mix(in srgb, var(--bg) 68%, var(--surface));
-}
-
-.booking-review-panel__status-title {
-  color: var(--fg);
-  font-weight: 600;
-}
-
-.booking-review-panel__missing-list,
 .booking-review-panel__trust-list {
   margin: 0;
   padding: 0;
   list-style: none;
 }
 
-.booking-review-panel__missing-list {
-  display: grid;
-  gap: 0.45rem;
-}
-
-.booking-review-panel__missing-list li,
 .booking-review-panel__trust-item {
   position: relative;
   padding-left: 1rem;
 }
 
-.booking-review-panel__missing-list li::before,
 .booking-review-panel__trust-item::before {
-  content: '';
+  content: "";
   position: absolute;
   left: 0;
   top: 0.55rem;
   width: 0.35rem;
   height: 0.35rem;
   background: var(--accent);
-}
-
-.booking-review-panel__missing-list li {
-  color: var(--fg);
-  font-size: var(--booking-text-sm);
-  line-height: 1.5;
 }
 
 .booking-review-panel__card {
