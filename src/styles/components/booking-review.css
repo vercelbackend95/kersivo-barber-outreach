@@ -1,0 +1,204 @@
+.booking-review-panel {
+  display: grid;
+  gap: 1rem;
+  border: 1px solid var(--border);
+  background: linear-gradient(180deg, color-mix(in srgb, var(--surface) 94%, var(--bg)), color-mix(in srgb, var(--surface) 82%, var(--bg)));
+  padding: clamp(1rem, 4vw, 1.5rem);
+}
+
+.booking-review-panel__header,
+.booking-review-panel__status,
+.booking-review-panel__grid,
+.booking-review-panel__card,
+.booking-review-panel__card-head,
+.booking-review-panel__list,
+.booking-review-panel__row,
+.booking-review-panel__trust-list,
+.booking-review-panel__trust-item {
+  display: grid;
+}
+
+.booking-review-panel__header,
+.booking-review-panel__card-head,
+.booking-review-panel__status {
+  gap: 0.5rem;
+}
+
+.booking-review-panel__grid {
+  gap: 0.85rem;
+}
+
+.booking-review-panel__eyebrow,
+.booking-review-panel__card-kicker,
+.booking-review-panel__row dt,
+.booking-review-panel__trust-label,
+.booking-review-panel__status-badge {
+  margin: 0;
+  font-size: var(--booking-text-xs);
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
+
+.booking-review-panel__eyebrow,
+.booking-review-panel__card-kicker,
+.booking-review-panel__status-badge.is-ready {
+  color: color-mix(in srgb, var(--accent) 78%, var(--fg));
+}
+
+.booking-review-panel__status-badge.is-pending,
+.booking-review-panel__row dt,
+.booking-review-panel__trust-label {
+  color: var(--muted);
+}
+
+.booking-review-panel__header h2,
+.booking-review-panel__card-head h3 {
+  margin: 0;
+  font-family: var(--font-heading);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  line-height: 0.95;
+}
+
+.booking-review-panel__header h2 {
+  font-size: var(--booking-text-xl);
+}
+
+.booking-review-panel__card-head h3 {
+  font-size: clamp(1.3rem, 6vw, 1.8rem);
+}
+
+.booking-review-panel__intro,
+.booking-review-panel__status-title,
+.booking-review-panel__status-copy,
+.booking-review-panel__helper,
+.booking-review-panel__trust-value {
+  margin: 0;
+  font-size: var(--booking-text-sm);
+  line-height: 1.6;
+}
+
+.booking-review-panel__status {
+  padding: 0.9rem 1rem;
+  border: 1px solid color-mix(in srgb, var(--border) 72%, var(--accent));
+  background: color-mix(in srgb, var(--bg) 68%, var(--surface));
+}
+
+.booking-review-panel__status-title {
+  color: var(--fg);
+  font-weight: 600;
+}
+
+.booking-review-panel__missing-list,
+.booking-review-panel__trust-list {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.booking-review-panel__missing-list {
+  display: grid;
+  gap: 0.45rem;
+}
+
+.booking-review-panel__missing-list li,
+.booking-review-panel__trust-item {
+  position: relative;
+  padding-left: 1rem;
+}
+
+.booking-review-panel__missing-list li::before,
+.booking-review-panel__trust-item::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  top: 0.55rem;
+  width: 0.35rem;
+  height: 0.35rem;
+  background: var(--accent);
+}
+
+.booking-review-panel__missing-list li {
+  color: var(--fg);
+  font-size: var(--booking-text-sm);
+  line-height: 1.5;
+}
+
+.booking-review-panel__card {
+  gap: 0.85rem;
+  padding: 0.95rem;
+  border: 1px solid color-mix(in srgb, var(--border) 82%, var(--accent));
+  background: color-mix(in srgb, var(--bg) 58%, var(--surface));
+}
+
+.booking-review-panel__list {
+  gap: 0;
+  border-top: 1px solid var(--border);
+}
+
+.booking-review-panel__row {
+  grid-template-columns: minmax(0, 1fr);
+  gap: 0.3rem;
+  padding: 0.8rem 0;
+  border-bottom: 1px solid var(--border);
+}
+
+.booking-review-panel__row dd {
+  margin: 0;
+  color: var(--fg);
+  font-size: var(--booking-text-base);
+  font-weight: 600;
+  line-height: 1.35;
+  overflow-wrap: anywhere;
+}
+
+.booking-review-panel__helper {
+  color: var(--muted);
+}
+
+.booking-review-panel__trust-list {
+  gap: 0.75rem;
+}
+
+.booking-review-panel__trust-item {
+  gap: 0.2rem;
+}
+
+.booking-review-panel__trust-value {
+  color: var(--fg);
+}
+
+@media (max-width: 767px) {
+  .booking-review-panel {
+    border-inline: 0;
+    padding-inline: 1rem;
+  }
+}
+
+@media (min-width: 768px) {
+  .booking-review-panel__grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    align-items: start;
+  }
+
+  .booking-review-panel__card:last-child {
+    grid-column: 1 / -1;
+  }
+
+  .booking-review-panel__row {
+    grid-template-columns: minmax(7.5rem, auto) minmax(0, 1fr);
+    align-items: baseline;
+    gap: 0.85rem;
+  }
+}
+
+@media (min-width: 1080px) {
+  .booking-review-panel__grid {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+
+  .booking-review-panel__card:last-child {
+    grid-column: auto;
+  }
+}

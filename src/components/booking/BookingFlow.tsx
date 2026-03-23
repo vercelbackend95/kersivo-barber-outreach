@@ -1,8 +1,27 @@
 
 import React, { useEffect, useMemo, useState } from 'react';
 import BookingConfirmationPanel, { type BookingSummary } from './BookingConfirmationPanel';
-type Service = { id: string; name: string; durationMinutes: number; pricePence: number };
-type Barber = { id: string; name: string; avatarUrl?: string | null; serviceIds?: string[] };
+import BookingReviewPanel from './BookingReviewPanel';
+
+type Service = {
+  id: string;
+  name: string;
+  durationMinutes: number;
+  pricePence: number;
+};
+
+type Barber = {
+  id: string;
+  name: string;
+  avatarUrl?: string | null;
+  serviceIds?: string[];
+};
+
+type ShopReviewDetails = {
+  timezone: string;
+  cancellationWindowHours?: number | null;
+  rescheduleWindowHours?: number | null;
+};
 
 type BookingPayload = {
   serviceId: string;
@@ -37,7 +56,12 @@ type Props = {
   barbers: Barber[];
   mode?: 'create' | 'reschedule';
   token?: string;
+    shopDetails?: ShopReviewDetails;
 };
+const ANY_BARBER_ID = 'any';
+const ANY_BARBER_NAME = 'Any barber';
+const DEFAULT_BOOKING_TIMEZONE = 'Europe/London';
+
 
 function normalizeToIsoDate(input: string): string | null {
   const trimmed = input.trim();
@@ -58,22 +82,25 @@ function normalizeToIsoDate(input: string): string | null {
 
   return `${dmyMatch[3]}-${dmyMatch[2]}-${dmyMatch[1]}`;
 }
+function formatDateForSummary(isoDate: string, timezone: string): string {
+  const normalizedDate = normalizeToIsoDate(isoDate);
+  if (!normalizedDate) return 'Select date';
 
-function formatDateForSummary(isoDate: string): string {
-  const parsed = new Date(`${isoDate}T00:00:00`);
+  const parsed = new Date(`${normalizedDate}T00:00:00`);
+
   if (Number.isNaN(parsed.getTime())) {
-    return isoDate;
+    return normalizedDate;
   }
 
   return parsed.toLocaleDateString('en-GB', {
-    timeZone: 'Europe/London',
+    timeZone: timezone,
     weekday: 'short',
     day: '2-digit',
     month: 'short',
     year: 'numeric'
   });
 }
-function formatDateForBookingTab(isoDate: string): string {
+function formatDateForBookingTab(isoDate: string, timezone: string): string {
   const normalizedDate = normalizeToIsoDate(isoDate);
   if (!normalizedDate) {
     return 'Select date';
@@ -85,16 +112,16 @@ function formatDateForBookingTab(isoDate: string): string {
   }
 
   return parsed.toLocaleDateString('en-GB', {
-    timeZone: 'Europe/London',
+    timeZone: timezone,
     weekday: 'short',
     day: '2-digit',
     month: 'short'
   });
 }
 
-function getCurrentLondonIsoDate(now: Date = new Date()): string {
+function getCurrentIsoDateInTimezone(timezone: string, now: Date = new Date()): string {
   return new Intl.DateTimeFormat('en-CA', {
-    timeZone: 'Europe/London',
+    timeZone: timezone,
     year: 'numeric',
     month: '2-digit',
     day: '2-digit'
@@ -120,18 +147,53 @@ function getBarberInitials(name: string): string {
     .join('');
 }
 
-export default function BookingFlow({ services, barbers, mode = 'create', token = '' }: Props) {
+function formatTimezoneLabel(timezone: string): string {
+  return timezone.replace(/_/g, ' ');
+}
+
+function formatWindow(hours?: number | null): string | null {
+  if (typeof hours !== 'number' || Number.isNaN(hours)) return null;
+  if (hours === 1) return 'Up to 1 hour before your appointment';
+  return `Up to ${hours} hours before your appointment`;
+}
+
+function calculateEndTime(startTime: string, durationMinutes: number): string | null {
+  const [hoursText, minutesText] = startTime.split(':');
+  const hours = Number(hoursText);
+  const minutes = Number(minutesText);
+
+  if (!Number.isInteger(hours) || !Number.isInteger(minutes)) {
+    return null;
+  }
+
+  const totalMinutes = hours * 60 + minutes + durationMinutes;
+  const nextHours = Math.floor(totalMinutes / 60) % 24;
+  const nextMinutes = totalMinutes % 60;
+
+  return `${String(nextHours).padStart(2, '0')}:${String(nextMinutes).padStart(2, '0')}`;
+}
+
+export default function BookingFlow({ services, barbers, mode = 'create', token = '', shopDetails }: Props) {
+  const bookingTimezone = shopDetails?.timezone || DEFAULT_BOOKING_TIMEZONE;
+
   const [serviceId, setServiceId] = useState(services[0]?.id ?? '');
   const [barberId, setBarberId] = useState('');
-  const [date, setDate] = useState(() => getCurrentLondonIsoDate());
+  const [date, setDate] = useState(() => getCurrentIsoDateInTimezone(bookingTimezone));
   const [slots, setSlots] = useState<string[]>([]);
   const [time, setTime] = useState('');
   const [fullName, setFullName] = useState('');
   const [email, setEmail] = useState('');
   const [phone, setPhone] = useState('');
   const [message, setMessage] = useState('');
-    const [brokenAvatarIds, setBrokenAvatarIds] = useState<Record<string, boolean>>({});
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [brokenAvatarIds, setBrokenAvatarIds] = useState<Record<string, boolean>>({});
+
   const [confirmation, setConfirmation] = useState<{ type: 'booked' | 'rescheduled'; summary: BookingSummary } | null>(null);
+    const isCreateMode = mode === 'create';
+  const normalizedFullName = fullName.trim();
+  const normalizedEmail = email.trim();
+  const normalizedPhone = phone.trim();
+
   const availableBarbers = useMemo(() => {
     if (!serviceId) return [];
     return barbers.filter((barber) => {
@@ -149,11 +211,78 @@ export default function BookingFlow({ services, barbers, mode = 'create', token 
   const selectedService = useMemo(() => services.find((service) => service.id === serviceId), [serviceId, services]);
   const selectedBarber = useMemo(() => availableBarbers.find((barber) => barber.id === barberId), [availableBarbers, barberId]);
   const selectedBarberLabel = barberId === ANY_BARBER_ID ? ANY_BARBER_NAME : selectedBarber?.name;
-  const isCreateMode = mode === 'create';
-  const isSubmitDisabled = !time || !barberId || (isCreateMode && (!fullName.trim() || !email.trim()));
-  const bookingDateLabel = formatDateForBookingTab(date);
-    const bookingDateSummary = normalizeToIsoDate(date) ? formatDateForSummary(date) : 'Select date';
-  const minBookingDate = getCurrentLondonIsoDate();
+  const normalizedDate = normalizeToIsoDate(date);
+  const bookingDateLabel = formatDateForBookingTab(date, bookingTimezone);
+  const bookingDateSummary = normalizedDate ? formatDateForSummary(normalizedDate, bookingTimezone) : 'Select date';
+  const minBookingDate = getCurrentIsoDateInTimezone(bookingTimezone);
+  const estimatedEndTime = selectedService && time ? calculateEndTime(time, selectedService.durationMinutes) : null;
+
+  const missingItems = useMemo(() => {
+    const items: string[] = [];
+
+    if (!serviceId) items.push('Select a service');
+    if (!barberId) items.push('Choose a barber');
+    if (!normalizedDate) items.push('Select a date');
+    if (!time) items.push('Select a time');
+
+    if (isCreateMode) {
+      if (!normalizedFullName) items.push('Add your full name');
+      if (!normalizedEmail) items.push('Add your email');
+    }
+
+    return items;
+  }, [barberId, isCreateMode, normalizedDate, normalizedEmail, normalizedFullName, serviceId, time]);
+
+  const isReadyToSubmit = missingItems.length === 0;
+  const isSubmitDisabled = isSubmitting || !isReadyToSubmit;
+  const compactStatusLabel = isReadyToSubmit ? 'Ready to confirm' : `${missingItems.length} item${missingItems.length === 1 ? '' : 's'} left`;
+  const compactStatusMeta = isReadyToSubmit
+    ? (normalizedDate && time ? `${bookingDateSummary} · ${time}` : 'Final details checked')
+    : missingItems[0] ?? 'Complete the remaining details';
+
+  const appointmentRows = useMemo(
+    () => [
+      { label: 'Service', value: selectedService?.name ?? 'Select a service' },
+      { label: 'Barber', value: selectedBarberLabel ?? 'Choose a barber' },
+      { label: 'Date', value: normalizedDate ? bookingDateSummary : 'Select a date' },
+      { label: 'Time', value: time || 'Select a time' },
+      { label: 'Duration', value: selectedService ? `${selectedService.durationMinutes} min` : 'Select a service' },
+      { label: 'Price', value: selectedService ? formatPrice(selectedService.pricePence) : 'Select a service' },
+      { label: 'Estimated end time', value: estimatedEndTime ?? 'Select a time' }
+    ],
+    [bookingDateSummary, estimatedEndTime, normalizedDate, selectedBarberLabel, selectedService, time]
+  );
+
+  const contactRows = useMemo(
+    () => [
+      { label: 'Name', value: normalizedFullName || 'Add your full name' },
+      { label: 'Email', value: normalizedEmail || 'Add your email' },
+      { label: 'Phone', value: normalizedPhone || 'Not provided' }
+    ],
+    [normalizedEmail, normalizedFullName, normalizedPhone]
+  );
+
+  const trustItems = useMemo(() => {
+    const items = [
+      { label: 'Instant confirmation by email' },
+      { label: 'Reschedule and cancel links included after booking' },
+      { label: 'All times shown in local shop time', value: formatTimezoneLabel(bookingTimezone) }
+    ];
+
+    const cancellationWindow = formatWindow(shopDetails?.cancellationWindowHours);
+    if (cancellationWindow) {
+      items.push({ label: 'Cancellation window', value: cancellationWindow });
+    }
+
+    const rescheduleWindow = formatWindow(shopDetails?.rescheduleWindowHours);
+    if (rescheduleWindow) {
+      items.push({ label: 'Reschedule window', value: rescheduleWindow });
+    }
+
+    return items;
+  }, [bookingTimezone, shopDetails?.cancellationWindowHours, shopDetails?.rescheduleWindowHours]);
+
+
   useEffect(() => {
     if (!barberOptions.some((barber) => barber.id === barberId)) {
       setBarberId(barberOptions[0]?.id ?? '');
@@ -167,15 +296,15 @@ export default function BookingFlow({ services, barbers, mode = 'create', token 
   useEffect(() => {
     if (!serviceId || !barberId || !date) return;
 
-    const normalizedDate = normalizeToIsoDate(date);
-    if (!normalizedDate) {
+    const nextDate = normalizeToIsoDate(date);
+    if (!nextDate) {
 
       setSlots([]);
       setTime('');
       return;
     }
 
-    fetch(`/api/availability?serviceId=${serviceId}&barberId=${barberId}&date=${normalizedDate}`)
+    fetch(`/api/availability?serviceId=${serviceId}&barberId=${barberId}&date=${nextDate}`)
       .then((res) => res.json())
       .then((data) => {
         setSlots(data.slots ?? []);
@@ -190,15 +319,14 @@ export default function BookingFlow({ services, barbers, mode = 'create', token 
 
 
   async function submit() {
+    if (isSubmitting) return;
     setMessage('');
-
     setConfirmation(null);
     if (!serviceId || !barberId) {
       setMessage('Please choose a service and barber.');
       return;
     }
 
-    const normalizedDate = normalizeToIsoDate(date);
     if (!normalizedDate) {
 
       setMessage('Please choose a valid date.');
@@ -213,17 +341,67 @@ export default function BookingFlow({ services, barbers, mode = 'create', token 
       setMessage('Please select a valid available time.');
       return;
     }
+    setIsSubmitting(true);
+
+    try {
+      if (mode === 'reschedule') {
+        if (!token) {
+          setMessage('Missing reschedule token. Please use the secure booking link from your email.');
+          return;
+        }
+
+        const payload: BookingReschedulePayload = {
+          token,
+          serviceId,
+          barberId,
+          date: normalizedDate,
+          time
+        };
+
+        const res = await fetch('/api/bookings/reschedule', {
+          method: 'POST',
+          headers: { 'content-type': 'application/json' },
+          body: JSON.stringify(payload)
+        });
+
+        const data = (await res.json().catch(() => ({}))) as BookingApiResponse;
+        if (!res.ok) {
+          setMessage(data.error || 'Unable to reschedule booking.');
+          return;
+        }
+
+        setConfirmation({
+          type: 'rescheduled',
+          summary: {
+            service: data.booking?.serviceName ?? selectedService?.name,
+            barber: data.booking?.barberName ?? selectedBarberLabel,
+            date: formatDateForSummary(normalizedDate, bookingTimezone),
+            time
+          }
+        });
 
 
-    if (mode === 'reschedule') {
-      if (!token) {
-        setMessage('Missing reschedule token. Please use the secure booking link from your email.');
         return;
       }
 
-      const payload: BookingReschedulePayload = { token, serviceId, barberId, date: normalizedDate, time };
+      if (!normalizedFullName || !normalizedEmail) {
+        setMessage('Please provide your full name and email.');
+        return;
+      }
 
-      const res = await fetch('/api/bookings/reschedule', {
+
+      const payload: BookingCreatePayload = {
+        serviceId,
+        barberId,
+        date: normalizedDate,
+        time,
+        fullName: normalizedFullName,
+        email: normalizedEmail,
+        ...(normalizedPhone ? { phone: normalizedPhone } : {})
+      };
+
+      const res = await fetch('/api/bookings/create', {
+
         method: 'POST',
         headers: { 'content-type': 'application/json' },
         body: JSON.stringify(payload)
@@ -231,64 +409,25 @@ export default function BookingFlow({ services, barbers, mode = 'create', token 
 
       const data = (await res.json().catch(() => ({}))) as BookingApiResponse;
       if (!res.ok) {
-        setMessage(data.error || 'Unable to reschedule booking.');
+        setMessage(data.error || 'Unable to create booking.');
         return;
       }
 
       setConfirmation({
-        type: 'rescheduled',
+        type: 'booked',
         summary: {
           service: data.booking?.serviceName ?? selectedService?.name,
           barber: data.booking?.barberName ?? selectedBarberLabel,
 
-          date: formatDateForSummary(normalizedDate),
+          date: formatDateForSummary(normalizedDate, bookingTimezone),
           time
         }
       });
 
-      return;
+    } finally {
+      setIsSubmitting(false);
+
     }
-
-    const normalizedFullName = fullName.trim();
-    const normalizedEmail = email.trim();
-    const normalizedPhone = phone.trim();
-
-    if (!normalizedFullName || !normalizedEmail) {
-      setMessage('Please provide your full name and email.');
-      return;
-    }
-
-    const payload: BookingCreatePayload = {
-      serviceId,
-      barberId,
-      date: normalizedDate,
-      time,
-      fullName: normalizedFullName,
-      email: normalizedEmail,
-      ...(normalizedPhone ? { phone: normalizedPhone } : {})
-    };
-
-    const res = await fetch('/api/bookings/create', {
-      method: 'POST',
-      headers: { 'content-type': 'application/json' },
-      body: JSON.stringify(payload)
-    });
-
-    const data = (await res.json().catch(() => ({}))) as BookingApiResponse;
-    if (!res.ok) {
-      setMessage(data.error || 'Unable to create booking.');
-      return;
-    }
-    setConfirmation({
-      type: 'booked',
-      summary: {
-        service: data.booking?.serviceName ?? selectedService?.name,
-        barber: data.booking?.barberName ?? selectedBarberLabel,
-
-        date: formatDateForSummary(normalizedDate),
-        time
-      }
-    });
 
   }
 
@@ -432,8 +571,9 @@ export default function BookingFlow({ services, barbers, mode = 'create', token 
                         type="date"
                         className="admin-filter-tab-calendar-input booking-date-tab__input"
                         value={date}
-                                                min={minBookingDate}
-                        onChange={(e) => setDate(e.target.value)}
+                        min={minBookingDate}
+                        onChange={(event) => setDate(event.target.value)}
+
                         aria-label="Select booking date"
                       />
                       <svg viewBox="0 0 24 24" focusable="false">
@@ -486,38 +626,45 @@ export default function BookingFlow({ services, barbers, mode = 'create', token 
                 <div className="booking-flow__grid booking-flow__grid--details">
                   <label className="booking-flow__field">
                     <span>Name</span>
-                    <input value={fullName} onChange={(e) => setFullName(e.target.value)} autoComplete="name" />
+                    <input value={fullName} onChange={(event) => setFullName(event.target.value)} autoComplete="name" />
                   </label>
                   <label className="booking-flow__field">
                     <span>Email</span>
-                    <input type="email" value={email} onChange={(e) => setEmail(e.target.value)} autoComplete="email" />
+                    <input type="email" value={email} onChange={(event) => setEmail(event.target.value)} autoComplete="email" />
                   </label>
                   <label className="booking-flow__field">
                     <span>Phone (optional)</span>
-                    <input value={phone} onChange={(e) => setPhone(e.target.value)} autoComplete="tel" />
+                    <input value={phone} onChange={(event) => setPhone(event.target.value)} autoComplete="tel" />
                   </label>
                 </div>
               </section>
-                          ) : null}
+            ) : null}
+
+            <BookingReviewPanel
+              mode={mode}
+              appointmentRows={appointmentRows}
+              contactRows={contactRows}
+              contactHelper={isCreateMode ? 'Confirmation will be sent to the provided email address.' : undefined}
+              trustItems={trustItems}
+              missingItems={missingItems}
+              isReady={isReadyToSubmit}
+            />
+
 
             <div className="booking-action-bar">
               <div className="booking-action-bar__summary">
-                <span className="booking-action-bar__label">Ready to confirm</span>
-                <strong>{selectedService?.name ?? 'Select service'}</strong>
-                <span className="booking-action-bar__meta">
-                  {selectedBarberLabel ?? 'Select barber'}
-                  {bookingDateSummary ? ` · ${bookingDateSummary}` : ''}
+                <span className="booking-action-bar__label">{compactStatusLabel}</span>
+                <strong>{isCreateMode ? 'Final confirmation' : 'Confirm reschedule'}</strong>
+                <span className="booking-action-bar__meta">{compactStatusMeta}</span>
 
-                  {time ? ` · ${time}` : ''}
-                </span>
               </div>
                             <button
                 type="button"
                 className="btn btn--primary booking-action-bar__button"
                 disabled={isSubmitDisabled}
-                onClick={submit}
+                onClick={() => void submit()}
               >
-                {mode === 'reschedule' ? 'Reschedule booking' : 'Confirm booking'}
+                {isSubmitting ? (mode === 'reschedule' ? 'Rescheduling...' : 'Booking...') : mode === 'reschedule' ? 'Reschedule booking' : 'Confirm booking'}
               </button>
 
             </div>

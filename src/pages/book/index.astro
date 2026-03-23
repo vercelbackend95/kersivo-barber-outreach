@@ -6,7 +6,9 @@ import '../../styles/global.css';
 import '../../styles/components/buttons.css';
 import '../../styles/components/booking.css';
 import '../../styles/components/booking-mobile.css';
-const [services, barbers] = await Promise.all([
+import '../../styles/components/booking-review.css';
+
+const [services, barbers, shopSettings] = await Promise.all([
   prisma.service.findMany({ where: { isActive: true }, orderBy: [{ displayOrder: 'asc' }, { createdAt: 'asc' }] }),
   prisma.barber.findMany({
     where: { active: true },
@@ -17,6 +19,13 @@ const [services, barbers] = await Promise.all([
           serviceId: true
         }
       }
+    }
+      }),
+  prisma.shopSettings.findFirst({
+    select: {
+      timezone: true,
+      cancellationWindowHours: true,
+      rescheduleWindowHours: true
     }
   })
 ]);
@@ -38,6 +47,15 @@ const [services, barbers] = await Promise.all([
                     avatarUrl: barber.avatarUrl,
           serviceIds: barber.barberServices.map((link) => link.serviceId)
         }))}
+                shopDetails={
+          shopSettings
+            ? {
+                timezone: shopSettings.timezone,
+                cancellationWindowHours: shopSettings.cancellationWindowHours,
+                rescheduleWindowHours: shopSettings.rescheduleWindowHours
+              }
+            : undefined
+        }
       />
     </main>
   </body>
