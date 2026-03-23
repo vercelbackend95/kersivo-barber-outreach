@@ -11,7 +11,7 @@ interface Feature261Props {
 }
 
 const Feature261 = ({ className }: Feature261Props) => {
-    const timelineImagePosition = "center 12%";
+    const timelineImagePosition = "center 0%";
   return (
     <section className={cn("feature261 py-32", className)}>
       <div className="container">
