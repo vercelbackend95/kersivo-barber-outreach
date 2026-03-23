@@ -1,5 +1,4 @@
-import { Clock, Zap } from "@/components/lucide-react";
-
+import { Zap } from "@/components/lucide-react";
 import { cn } from "@/lib/utils";
 
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
@@ -27,13 +26,10 @@ const Feature261 = ({ className }: Feature261Props) => {
               className="absolute inset-0 h-full w-full object-cover"
                             style={{ objectPosition: timelineImagePosition }}
             />
-            <div className="absolute inset-0" />
-            <div className="absolute bottom-6 left-6 z-10 text-white">
-              <p className="text-lg font-medium">
-                Experience Design Excellence.
-              </p>
+            <div className="absolute inset-x-0 bottom-0 z-10 bg-black px-6 py-4 text-white">
+              <p className="text-lg font-medium">Experience Design Excellence.</p>
             </div>
-            <div className="absolute top-6 right-6 z-10">
+            <div className="absolute right-6 top-6 z-10">
               <div className="flex h-10 w-10 items-center justify-center rounded-full bg-white/20">
                 <Zap className="h-5 w-5 text-white" />
               </div>
@@ -47,7 +43,7 @@ const Feature261 = ({ className }: Feature261Props) => {
               className="absolute inset-0 h-full w-full object-cover"
                             style={{ objectPosition: bookingImagePosition }}
             />
-            <div className="absolute right-6 bottom-6 left-6 z-10">
+            <div className="absolute bottom-6 left-6 right-6 z-10">
               <h2 className="text-sm leading-tight font-medium md:text-base lg:text-xl">
                 Build your interface with stunning components and modern design.
               </h2>
@@ -58,9 +54,7 @@ const Feature261 = ({ className }: Feature261Props) => {
             <CardContent className="flex h-full flex-col justify-center p-4 md:p-6">
               <div className="mb-2 text-4xl font-bold md:text-4xl lg:text-6xl">
                 95
-                <span className="align-top text-2xl md:text-xl lg:text-3xl">
-                  %
-                </span>
+                <span className="align-top text-2xl md:text-xl lg:text-3xl">%</span>
               </div>
               <p className="text-sm leading-tight md:text-sm">
                 Developers choose us
