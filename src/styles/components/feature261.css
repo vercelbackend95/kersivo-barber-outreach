@@ -431,6 +431,10 @@
   background:
     linear-gradient(180deg, color-mix(in srgb, var(--fg) 2%, transparent) 0%, transparent 100%);
 }
+.feature261 .feature261-text-card__content--tall {
+  min-height: 18rem;
+}
+
 
 .feature261 .feature261-text-card__frame,
 .feature261 .feature261-text-card__topbar,
@@ -729,6 +733,14 @@
   .feature261 .lg\:h-full {
     height: 100%;
   }
+  .feature261 .lg\:h-\[220px\] {
+    height: 220px;
+  }
+
+  .feature261 .lg\:h-\[300px\] {
+    height: 300px;
+  }
+
 
   .feature261 .lg\:h-10 {
     height: 2.5rem;
@@ -745,4 +757,87 @@
   .feature261 .lg\:text-6xl {
     font-size: 3.75rem;
   }
+  
+  .feature261 .feature261-text-card {
+    min-width: 0;
+  }
+
+  .feature261 .feature261-text-card__content {
+    gap: 0.9rem;
+    min-height: 0;
+    padding: 1rem;
+  }
+
+  .feature261 .feature261-text-card__content--tall {
+    gap: 1rem;
+    padding: 1.125rem;
+  }
+
+  .feature261 .feature261-text-card__eyebrow {
+    gap: 0.35rem;
+    min-height: auto;
+    font-size: 0.58rem;
+    letter-spacing: 0.14em;
+  }
+
+  .feature261 .feature261-text-card__eyebrow::before {
+    width: 0.45rem;
+    height: 0.45rem;
+  }
+
+  .feature261 .feature261-text-card__icon {
+    width: 2.15rem;
+    height: 2.15rem;
+  }
+
+  .feature261 .feature261-text-card__icon-svg {
+    width: 0.95rem;
+    height: 0.95rem;
+  }
+
+  .feature261 .feature261-text-card__body {
+    gap: 0.45rem;
+  }
+
+  .feature261 .feature261-text-card__title {
+    max-width: none;
+    font-size: clamp(2rem, 2.55vw, 2.7rem);
+    line-height: 0.9;
+  }
+
+  .feature261 .feature261-text-card__content--tall .feature261-text-card__title {
+    font-size: clamp(2.3rem, 3vw, 3.2rem);
+  }
+
+  .feature261 .feature261-text-card__description {
+    max-width: 22ch;
+    font-size: 0.84rem;
+    line-height: 1.35;
+  }
+
+  .feature261 .feature261-text-card__content--tall .feature261-text-card__description {
+    max-width: 20ch;
+    font-size: 0.92rem;
+    line-height: 1.45;
+  }
+
+  .feature261 .feature261-text-card__meta {
+    gap: 0.4rem;
+  }
+
+  .feature261 .feature261-text-card__tag {
+    min-height: 1.65rem;
+    padding: 0.32rem 0.5rem;
+    font-size: 0.58rem;
+    letter-spacing: 0.12em;
+  }
+
+  .feature261 .feature261-text-card__background-word {
+    font-size: clamp(2.9rem, 5vw, 4.4rem);
+  }
+
+  .feature261 .feature261-text-card__content--tall .feature261-text-card__background-word {
+    font-size: clamp(4.1rem, 6vw, 5.8rem);
+  }
+
 }

@@ -17,6 +17,7 @@ interface TextFeatureCardProps {
   meta: [string, string, string];
   icon: ReactNode;
   className?: string;
+    variant?: "compact" | "tall";
 }
 
 
@@ -59,10 +60,16 @@ const TextFeatureCard = ({
   meta,
   icon,
   className,
+    variant = "compact",
 }: TextFeatureCardProps) => {
   return (
     <Card className={cn("feature261-text-card rounded-3xl", className)}>
-      <CardContent className="feature261-text-card__content">
+      <CardContent
+        className={cn(
+          "feature261-text-card__content",
+          variant === "tall" && "feature261-text-card__content--tall",
+        )}
+      >
         <div className="feature261-text-card__frame" aria-hidden="true" />
         <div className="feature261-text-card__topbar" aria-hidden="true" />
         <div className="feature261-text-card__corner" aria-hidden="true" />
@@ -158,7 +165,7 @@ const Feature261 = ({ className }: Feature261Props) => {
             backgroundWord="Setup"
             meta={["Barbers", "Services", "Pricing"]}
             icon={<SetupIcon />}
-            className="col-span-1 md:col-span-2 md:row-span-1 md:h-[192px] lg:col-span-2"
+            className="col-span-1 md:col-span-2 md:row-span-1 md:h-[192px] lg:col-span-2 lg:h-[220px]"
           />
 
           <TextFeatureCard
@@ -168,7 +175,7 @@ const Feature261 = ({ className }: Feature261Props) => {
             backgroundWord="Store"
             meta={["Stock", "Shop", "Checkout"]}
             icon={<ProductsIcon />}
-            className="col-span-1 md:col-span-2 md:row-span-1 md:h-[192px] lg:col-span-2"
+            className="col-span-1 md:col-span-2 md:row-span-1 md:h-[192px] lg:col-span-2 lg:h-[220px]"
           />
 
           <Card className="feature261-footer-card feature261-mobile-tall-card relative col-span-1 h-60 overflow-hidden rounded-3xl bg-muted md:col-span-4 md:row-span-1 md:h-[300px] lg:col-span-4">
@@ -201,7 +208,9 @@ const Feature261 = ({ className }: Feature261Props) => {
             backgroundWord="Control"
             meta={["Bookings", "Store", "Daily flow"]}
             icon={<AdminIcon />}
-            className="col-span-1 md:col-span-2 md:row-span-1 md:h-[300px] lg:col-span-3"
+            className="col-span-1 md:col-span-2 md:row-span-1 md:h-[300px] lg:col-span-3 lg:h-[300px]"
+            variant="tall"
+
           />
 
 
