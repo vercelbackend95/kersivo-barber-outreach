@@ -707,6 +707,49 @@
   letter-spacing: 0.08em;
 
 }
+.booking-action-bar__steps {
+  list-style: none;
+  margin: 0.2rem 0 0;
+  padding: 0;
+  display: grid;
+  gap: 0.55rem;
+}
+
+.booking-action-bar__step {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  align-items: center;
+  gap: 0.7rem;
+  padding: 0.55rem 0.7rem;
+  border: 1px solid var(--border);
+  background: color-mix(in srgb, var(--surface) 92%, var(--bg));
+  color: var(--muted);
+}
+
+.booking-action-bar__step.is-complete {
+  border-color: color-mix(in srgb, var(--accent) 48%, var(--border));
+  background: color-mix(in srgb, var(--accent) 10%, var(--surface));
+  color: var(--fg);
+}
+
+.booking-action-bar__step-index {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 2.1rem;
+  min-height: 2.1rem;
+  border: 1px solid currentColor;
+  font-family: var(--font-heading);
+  font-size: var(--booking-text-sm);
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.booking-action-bar__step-label {
+  font-size: var(--booking-text-sm);
+  line-height: 1.45;
+}
+
 
 .booking-action-bar__button {
   width: 100%;

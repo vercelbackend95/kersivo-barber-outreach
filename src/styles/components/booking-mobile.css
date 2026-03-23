@@ -270,6 +270,28 @@
     line-height: 1.4;
   }
 
+  .booking-action-bar__steps {
+    gap: 0.45rem;
+    margin-top: 0.3rem;
+  }
+
+  .booking-action-bar__step {
+    gap: 0.55rem;
+    padding: 0.45rem 0.55rem;
+  }
+
+  .booking-action-bar__step-index {
+    min-width: 1.75rem;
+    min-height: 1.75rem;
+    font-size: 0.82rem;
+  }
+
+  .booking-action-bar__step-label {
+    font-size: 0.78rem;
+    line-height: 1.35;
+  }
+
+
   .booking-action-bar__button {
     min-height: 3.15rem;
     padding: 0.7rem 0.9rem;

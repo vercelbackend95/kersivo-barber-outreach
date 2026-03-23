@@ -173,8 +173,7 @@ function calculateEndTime(startTime: string, durationMinutes: number): string | 
 
 export default function BookingFlow({ services, barbers, mode = 'create', token = '', shopDetails }: Props) {
   const bookingTimezone = shopDetails?.timezone || DEFAULT_BOOKING_TIMEZONE;
-
-  const [serviceId, setServiceId] = useState(services[0]?.id ?? '');
+  const [serviceId, setServiceId] = useState('');
   const [barberId, setBarberId] = useState('');
   const [date, setDate] = useState(() => getCurrentIsoDateInTimezone(bookingTimezone));
   const [slots, setSlots] = useState<string[]>([]);
@@ -214,6 +213,9 @@ export default function BookingFlow({ services, barbers, mode = 'create', token 
   const bookingDateSummary = normalizedDate ? formatDateForSummary(normalizedDate, bookingTimezone) : 'Select date';
   const minBookingDate = getCurrentIsoDateInTimezone(bookingTimezone);
   const estimatedEndTime = selectedService && time ? calculateEndTime(time, selectedService.durationMinutes) : null;
+  const hasSelectedDate = Boolean(normalizedDate);
+  const hasSelectedContactDetails = isCreateMode ? Boolean(normalizedFullName && normalizedEmail) : true;
+  const canLoadAvailability = Boolean(serviceId && barberId && normalizedDate);
 
   const missingItems = useMemo(() => {
     const items: string[] = [];
@@ -233,11 +235,27 @@ export default function BookingFlow({ services, barbers, mode = 'create', token 
 
   const isReadyToSubmit = missingItems.length === 0;
   const isSubmitDisabled = isSubmitting || !isReadyToSubmit;
+    const actionSteps = useMemo(
+    () =>
+      [
+        { id: 'service', label: 'Choose a service', complete: Boolean(serviceId) },
+        { id: 'barber', label: 'Choose a barber', complete: Boolean(barberId) },
+        { id: 'date-time', label: 'Choose date and time', complete: hasSelectedDate && Boolean(time) },
+        ...(isCreateMode ? [{ id: 'details', label: 'Add your details', complete: hasSelectedContactDetails }] : [])
+      ] as Array<{ id: string; label: string; complete: boolean }>,
+    [barberId, hasSelectedContactDetails, hasSelectedDate, isCreateMode, serviceId, time]
+  );
+  const remainingStepCount = actionSteps.filter((step) => !step.complete).length;
+
   const compactStatusLabel = isSubmitting
     ? 'Submitting booking'
     : isReadyToSubmit
       ? 'Ready to confirm'
-      : `${missingItems.length} item${missingItems.length === 1 ? '' : 's'} left`;
+      : `${remainingStepCount} step${remainingStepCount === 1 ? '' : 's'} left`;
+  const compactStatusTitle = isReadyToSubmit
+    ? (isCreateMode ? 'Final confirmation' : 'Confirm reschedule')
+    : 'Complete each booking step';
+
   const compactStatusMeta = isSubmitting
     ? (mode === 'reschedule'
       ? 'Updating your appointment and locking the new slot now.'
@@ -245,6 +263,15 @@ export default function BookingFlow({ services, barbers, mode = 'create', token 
     : isReadyToSubmit
       ? (normalizedDate && time ? `${bookingDateSummary} · ${time}` : 'Final details checked')
       : missingItems[0] ?? 'Complete the remaining details';
+  const slotsHelperText = !serviceId
+    ? 'Choose a service first to see matching availability.'
+    : !barberId
+      ? 'Choose a barber to load availability for this service.'
+      : !normalizedDate
+        ? 'Choose a date to load available times.'
+        : slots.length > 0
+          ? 'Select the slot that works best for your schedule.'
+          : 'No slots available for this date.';
 
 
   const appointmentRows = useMemo(
@@ -299,8 +326,7 @@ export default function BookingFlow({ services, barbers, mode = 'create', token 
 
   useEffect(() => {
     if (!barberOptions.some((barber) => barber.id === barberId)) {
-      setBarberId(barberOptions[0]?.id ?? '');
-
+      setBarberId('');
       setTime('');
       setSlots([]);
     }
@@ -567,7 +593,12 @@ export default function BookingFlow({ services, barbers, mode = 'create', token 
                   );
                 })}
               </div>
-              {availableBarbers.length === 0 ? <p className="muted">No active barbers offer this service right now.</p> : null}
+              {!serviceId ? (
+                <p className="muted">Choose a service first to see matching barbers.</p>
+              ) : availableBarbers.length === 0 ? (
+                <p className="muted">No active barbers offer this service right now.</p>
+              ) : null}
+
             </section>
 
 
@@ -608,9 +639,7 @@ export default function BookingFlow({ services, barbers, mode = 'create', token 
               <div className="booking-slots-section">
                 <div className="booking-slots-section__head">
                   <label id="booking-time-slots">Available times {selectedService ? `for ${selectedService.name}` : ''}</label>
-                  <span className="muted">
-                    {slots.length > 0 ? 'Select the slot that works best for your schedule.' : 'Choose a barber and date to load availability.'}
-                  </span>
+                  <span className="muted">{slotsHelperText}</span>
 
                 </div>
                 <div className="slot-grid" role="radiogroup" aria-labelledby="booking-time-slots">
@@ -630,7 +659,12 @@ export default function BookingFlow({ services, barbers, mode = 'create', token 
                       </button>
                     );
                   })}
-                  {slots.length === 0 ? <p className="muted booking-slots-section__empty">No slots available for this date.</p> : null}
+                  {!canLoadAvailability ? (
+                    <p className="muted booking-slots-section__empty">{slotsHelperText}</p>
+                  ) : slots.length === 0 ? (
+                    <p className="muted booking-slots-section__empty">No slots available for this date.</p>
+                  ) : null}
+
                 </div>
               </div>
 
@@ -672,8 +706,21 @@ export default function BookingFlow({ services, barbers, mode = 'create', token 
 
               <div className="booking-action-bar__summary">
                 <span className="booking-action-bar__label">{compactStatusLabel}</span>
-                <strong>{isCreateMode ? 'Final confirmation' : 'Confirm reschedule'}</strong>
+                <strong>{compactStatusTitle}</strong>
                 <span className="booking-action-bar__meta">{compactStatusMeta}</span>
+                <ol className="booking-action-bar__steps" aria-label="Booking progress">
+                  {actionSteps.map((step, index) => (
+                    <li
+                      key={step.id}
+                      className={`booking-action-bar__step${step.complete ? ' is-complete' : ''}`}
+                    >
+                      <span className="booking-action-bar__step-index" aria-hidden="true">
+                        {String(index + 1).padStart(2, '0')}
+                      </span>
+                      <span className="booking-action-bar__step-label">{step.label}</span>
+                    </li>
+                  ))}
+                </ol>
 
               </div>
                             <button
