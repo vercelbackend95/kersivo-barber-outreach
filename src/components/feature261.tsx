@@ -70,10 +70,7 @@ const Feature261 = ({ className }: Feature261Props) => {
 
           <Card className="col-span-1 rounded-3xl md:col-span-2 md:row-span-1 md:h-[192px] lg:col-span-2">
             <CardContent className="flex h-full flex-col justify-center p-4 md:p-6">
-              <div className="mb-2 text-4xl font-bold md:text-4xl lg:text-6xl">
-                95
-                <span className="align-top text-2xl md:text-xl lg:text-3xl">%</span>
-              </div>
+
               <p className="text-sm leading-tight md:text-sm">
                 Your setup, your rules
                 <br />
@@ -121,10 +118,7 @@ const Feature261 = ({ className }: Feature261Props) => {
 
           <Card className="col-span-1 rounded-3xl md:col-span-2 md:row-span-1 md:h-[300px] lg:col-span-3">
             <CardContent className="flex h-full flex-col justify-center p-4 md:p-5">
-              <div className="mb-3">
-                <span className="text-4xl font-bold md:text-3xl lg:text-6xl">300</span>
-                <span className="align-top text-2xl font-bold md:text-xl lg:text-3xl">+</span>
-              </div>
+
               <p className="mb-2 text-sm md:text-sm">One app, less admin</p>
               <p className="text-sm leading-tight md:text-sm">
                 Bookings, shop and day-to-day control in one place.
