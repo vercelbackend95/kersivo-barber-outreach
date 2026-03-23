@@ -6,9 +6,8 @@ import { generateToken, hashToken } from './tokens';
 import { addMinutes, londonDayOfWeekFromIsoDate, toUtcFromLondon } from './time';
 import { sendInstantBookingConfirmationEmail, sendRescheduledBookingEmail, sendShopCancelledBookingEmail } from '../email/sender';
 import { generateSlots } from './slots';
+import { ANY_BARBER_ID } from './constants';
 const CANCELLED_BOOKING_MESSAGE = 'This booking is already cancelled. Please create a new booking.';
-export const ANY_BARBER_ID = 'any-barber';
-export const ANY_BARBER_NAME = 'Any barber';
 
 
 function resolvePublicSiteUrl(): string {

@@ -2,7 +2,7 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import BookingConfirmationPanel, { type BookingSummary } from './BookingConfirmationPanel';
 import BookingReviewPanel from './BookingReviewPanel';
-
+import { ANY_BARBER_ID, ANY_BARBER_NAME } from '../../lib/booking/constants';
 type Service = {
   id: string;
   name: string;
@@ -58,8 +58,6 @@ type Props = {
   token?: string;
     shopDetails?: ShopReviewDetails;
 };
-const ANY_BARBER_ID = 'any';
-const ANY_BARBER_NAME = 'Any barber';
 const DEFAULT_BOOKING_TIMEZONE = 'Europe/London';
 
 

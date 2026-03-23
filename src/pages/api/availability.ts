@@ -1,8 +1,7 @@
 // src/pages/api/availability.ts
 import type { APIRoute } from 'astro';
 import { normalizeToIsoDate } from '../../lib/booking/time';
-import { ANY_BARBER_ID, getAvailabilitySlots } from '../../lib/booking/service';
-
+import { getAvailabilitySlots } from '../../lib/booking/service';
 
 export const prerender = false;
 
@@ -40,7 +39,7 @@ export const GET: APIRoute = async ({ request }) => {
   try {
     const { slots } = await getAvailabilitySlots({
       serviceId,
-      barberId: barberId || ANY_BARBER_ID,
+      barberId,
       date
 
     });
