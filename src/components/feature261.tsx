@@ -88,9 +88,7 @@ const Feature261 = ({ className }: Feature261Props) => {
             <div className="absolute inset-0 bg-gradient-to-r from-black/60 via-black/30 to-transparent" />
             <CardContent className="relative z-10 flex h-full flex-col justify-end p-4 md:p-5">
               <div className="space-y-2 text-white">
-                <div className="text-4xl font-normal md:text-5xl lg:text-6xl">
-                  Meet Our Barbers
-                </div>
+
                 <div>
                   Skilled professionals delivering sharp cuts, beard trims, and a premium barbershop experience.
 
