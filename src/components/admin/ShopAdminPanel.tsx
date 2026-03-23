@@ -177,6 +177,8 @@ const PRODUCT_IMAGE_MAX_SIZE_BYTES = 5 * 1024 * 1024;
 const PRODUCT_IMAGE_ALLOWED_MIME_PREFIX = 'image/';
 const PRODUCT_IMAGE_ACCEPT = '.jpg,.jpeg,.png,.webp,.gif';
 const MOBILE_PRODUCT_EDITOR_MEDIA_QUERY = '(max-width: 47.99rem)';
+const BLOB_STORAGE_NOT_CONFIGURED_CODE = 'BLOB_STORAGE_NOT_CONFIGURED';
+const BLOB_STORAGE_NOT_CONFIGURED_MESSAGE = 'Blob storage is not configured.';
 
 type ProductImageUploadStatus = 'idle' | 'uploading' | 'processing' | 'uploaded' | 'failed';
 const PRODUCT_SLOT_COLORS = ['#E6EAF0', '#7DD3FC', '#5EEAD4', '#FBBF24', '#C4B5FD'];
@@ -194,6 +196,27 @@ function debugUploadLog(message: string, details?: Record<string, unknown>) {
   }
   console.info(`[product-upload] ${message}`);
 }
+function isBlobStorageNotConfiguredError(message: string): boolean {
+  return message.includes(BLOB_STORAGE_NOT_CONFIGURED_MESSAGE)
+    || message.includes('BLOB_READ_WRITE_TOKEN')
+    || message.includes('VERCEL_BLOB_READ_WRITE_TOKEN');
+}
+
+function readFileAsDataUrl(file: File): Promise<string> {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onload = () => {
+      if (typeof reader.result === 'string' && reader.result.startsWith('data:image/')) {
+        resolve(reader.result);
+        return;
+      }
+      reject(new Error('Could not prepare image preview.'));
+    };
+    reader.onerror = () => reject(new Error('Could not read the selected image.'));
+    reader.readAsDataURL(file);
+  });
+}
+
 
 
 
@@ -776,6 +799,7 @@ export default function ShopAdminPanel({ initialTab = 'products' }: ShopAdminPan
   const [deleteConfirmOpen, setDeleteConfirmOpen] = useState(false);
   const [imageUploadStatus, setImageUploadStatus] = useState<ProductImageUploadStatus>('idle');
   const [imageUploadError, setImageUploadError] = useState<string | null>(null);
+    const [imageUploadNotice, setImageUploadNotice] = useState<string | null>(null);
   const [imageUploadProgress, setImageUploadProgress] = useState(0);
   const [localImagePreviewUrl, setLocalImagePreviewUrl] = useState<string | null>(null);
   const [selectedImageFile, setSelectedImageFile] = useState<File | null>(null);
@@ -1169,6 +1193,7 @@ export default function ShopAdminPanel({ initialTab = 'products' }: ShopAdminPan
         setHasPendingFileUpload(false);
     setImageUploadStatus('idle');
     setImageUploadError(null);
+        setImageUploadNotice(null);
     setImageUploadProgress(0);
 
     setForm(EMPTY_FORM);
@@ -1236,6 +1261,7 @@ export default function ShopAdminPanel({ initialTab = 'products' }: ShopAdminPan
     setImageUploadStatus('idle');
 
     setImageUploadError(null);
+        setImageUploadNotice(null);
     setImageUploadProgress(0);
     setSelectedImageFile(null);
         setHasPendingFileUpload(false);
@@ -1268,9 +1294,14 @@ export default function ShopAdminPanel({ initialTab = 'products' }: ShopAdminPan
       setImageUploadStatus('processing');
       setImageUploadProgress(90);
 
-      const payload = (await response.json().catch(() => ({}))) as { url?: string; error?: string };
+      const payload = (await response.json().catch(() => ({}))) as { code?: string; url?: string; error?: string };
       if (!response.ok) {
-        throw new Error(payload.error || 'Upload failed.');
+        const nextError = new Error(payload.error || 'Upload failed.');
+        if (payload.code) {
+          nextError.name = payload.code;
+        }
+        throw nextError;
+
       }
 
       if (!payload.url) {
@@ -1305,6 +1336,7 @@ export default function ShopAdminPanel({ initialTab = 'products' }: ShopAdminPan
     setSelectedImageFile(file);
     setHasPendingFileUpload(true);
     setImageUploadError(null);
+        setImageUploadNotice(null);
         setForm((previous) => ({ ...previous, imageUrl: '' }));
     setImageUploadStatus('uploading');
     setImageUploadProgress(0);
@@ -1327,9 +1359,38 @@ export default function ShopAdminPanel({ initialTab = 'products' }: ShopAdminPan
         return null;
       });
     } catch (uploadError) {
+            if (uploadError instanceof Error && (uploadError.name === BLOB_STORAGE_NOT_CONFIGURED_CODE || isBlobStorageNotConfiguredError(uploadError.message))) {
+        try {
+          const inlineImageUrl = await readFileAsDataUrl(file);
+          setForm((previous) => ({ ...previous, imageUrl: inlineImageUrl }));
+          setImageUploadStatus('uploaded');
+          setImageUploadProgress(100);
+          setImageUploadError(null);
+          setImageUploadNotice('Blob storage is not configured, so the image was embedded directly and will still save correctly.');
+          setHasPendingFileUpload(false);
+          setSelectedImageFile(null);
+          setLocalImagePreviewUrl((previous) => {
+            if (previous) URL.revokeObjectURL(previous);
+            return null;
+          });
+          debugUploadLog('upload stored inline', { name: file.name, size: file.size });
+          return;
+        } catch (inlineFallbackError) {
+          setImageUploadStatus('failed');
+          setHasPendingFileUpload(true);
+          setImageUploadError(inlineFallbackError instanceof Error ? inlineFallbackError.message : 'Upload failed. Please try again.');
+          setImageUploadNotice(null);
+          debugUploadLog('inline upload fallback failed', {
+            message: inlineFallbackError instanceof Error ? inlineFallbackError.message : 'Unknown error'
+          });
+          return;
+        }
+      }
+
       setImageUploadStatus('failed');
       setHasPendingFileUpload(true);
       setImageUploadError(uploadError instanceof Error ? uploadError.message : 'Upload failed. Please try again.');
+            setImageUploadNotice(null);
       debugUploadLog('upload failed', { message: uploadError instanceof Error ? uploadError.message : 'Unknown error' });
     }
   }
@@ -1698,6 +1759,7 @@ export default function ShopAdminPanel({ initialTab = 'products' }: ShopAdminPan
                                                         setSelectedImageFile(null);
                             setImageUploadStatus('idle');
                             setImageUploadError(null);
+                                                        setImageUploadNotice(null);
                           }
                         }}
 
@@ -1717,6 +1779,7 @@ export default function ShopAdminPanel({ initialTab = 'products' }: ShopAdminPan
 
                   {imageUploadStatus === 'failed' ? <span>Upload failed</span> : null}
                   {imageUploadError ? <span className="admin-product-image-status__error">{imageUploadError}</span> : null}
+                                   {imageUploadNotice ? <span>{imageUploadNotice}</span> : null}
                   {imageUploadStatus === 'failed' && selectedImageFile ? (
                     <button type="button" className="btn btn--ghost admin-product-image-retry" onClick={() => { void retryImageUpload(); }}>
                       Retry upload

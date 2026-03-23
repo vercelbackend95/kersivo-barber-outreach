@@ -20,17 +20,14 @@ export const POST: APIRoute = async (ctx) => {
 
   if (!getBlobReadWriteToken()) {
     return jsonResponse(
-      { error: 'Blob storage is not configured. Set BLOB_READ_WRITE_TOKEN or VERCEL_BLOB_READ_WRITE_TOKEN.' },
-      500
+      {
+        code: 'BLOB_STORAGE_NOT_CONFIGURED',
+        error: 'Blob storage is not configured. Set BLOB_READ_WRITE_TOKEN or VERCEL_BLOB_READ_WRITE_TOKEN.'
+      },
+      503
     );
 
 
-  }
-
-
-  const blobToken = process.env.BLOB_READ_WRITE_TOKEN ?? import.meta.env.BLOB_READ_WRITE_TOKEN;
-  if (!blobToken) {
-    return jsonResponse({ error: "Missing BLOB_READ_WRITE_TOKEN in runtime." }, 500);
   }
   try {
     const contentType = ctx.request.headers.get('content-type') ?? '';

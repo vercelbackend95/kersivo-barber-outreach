@@ -9,11 +9,18 @@ import { insertProductIntoShopOrder, normalizeRequestedProductSortOrder } from '
 import { makeBlobPath, uploadPublicImageToBlob } from '../../../../../lib/storage/vercelBlob';
 const PRODUCT_DESCRIPTION_MAX_LENGTH = 2000;
 const PRODUCT_CATEGORY_VALUES = ['POMADES_AND_CLAYS', 'BEARD_CARE', 'HAIR_WASH', 'STYLING', 'TOOLS', 'GIFT_SETS'] as const;
+const imageUrlSchema = z.string().trim().refine((value) => {
+  if (!value) return true;
+  if (value.startsWith('data:image/')) return true;
+  return z.string().url().safeParse(value).success;
+}, 'Image URL must be a valid URL or inline image data.');
+
+
 const createSchema = z.object({
   name: z.string().trim().min(1, 'Name is required.'),
   description: z.string().trim().max(PRODUCT_DESCRIPTION_MAX_LENGTH, `Description must be at most ${PRODUCT_DESCRIPTION_MAX_LENGTH} characters.`).optional().or(z.literal('')),
   pricePence: z.number().int().positive('Price must be greater than zero.'),
-  imageUrl: z.string().trim().url('Image URL must be a valid URL.').optional().or(z.literal('')),
+  imageUrl: imageUrlSchema.optional().or(z.literal('')),
   active: z.boolean().default(true),
   featured: z.boolean().default(false),
     category: z.enum(PRODUCT_CATEGORY_VALUES).default('STYLING'),
@@ -24,7 +31,7 @@ const multipartCreateSchema = z.object({
   name: z.string().trim().min(1, 'Name is required.'),
   description: z.string().trim().max(PRODUCT_DESCRIPTION_MAX_LENGTH, `Description must be at most ${PRODUCT_DESCRIPTION_MAX_LENGTH} characters.`).optional().or(z.literal('')),
   pricePence: z.number().int().positive('Price must be greater than zero.'),
-  imageUrl: z.string().trim().url('Image URL must be a valid URL.').optional().or(z.literal('')),
+  imageUrl: imageUrlSchema.optional().or(z.literal('')),
 
   active: z.boolean().default(true),
   featured: z.boolean().default(false),
