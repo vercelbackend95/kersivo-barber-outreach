@@ -380,7 +380,6 @@ export default function BookingFlow({ services, barbers, mode = 'create', token 
 
               <div className="booking-date-panel">
                 <div className="booking-flow__field booking-flow__field--date">
-                  <span>Date</span>
                   <label className="admin-filter-tab admin-filter-tab--split admin-filter-tab--active booking-date-tab" htmlFor="booking-date">
                     <span className="admin-filter-tab-main booking-date-tab__main">{bookingDateLabel}</span>
                     <span className="admin-filter-tab-calendar booking-date-tab__calendar" aria-hidden="true">
