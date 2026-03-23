@@ -7,7 +7,7 @@ import { Card, CardContent } from "@/components/ui/card";
 interface Feature261Props {
   className?: string;
 }
-const TIMELINE_FOOTER_HEIGHT = "4.5rem";
+const TIMELINE_FOOTER_HEIGHT = "5.5rem";
 const Feature261 = ({ className }: Feature261Props) => {
   const timelineImagePosition = "center 0%";
   const bookingImagePosition = "center 0%";
@@ -30,11 +30,15 @@ const Feature261 = ({ className }: Feature261Props) => {
               }}
 
             />
-            <div className="feature261-primary-card__footer absolute inset-x-0 bottom-0 z-10 px-6 py-4 text-white">
-              <p className="text-lg font-medium">Experience Design Excellence.</p>
+            <div className="feature261-primary-card__image-overlay absolute inset-x-0 top-0" />
+            <div className="feature261-primary-card__footer absolute inset-x-0 bottom-0 z-10 text-white">
+              <div className="feature261-primary-card__footer-inner">
+                <span className="feature261-primary-card__eyebrow">Booking dashboard</span>
+                <p className="feature261-primary-card__title">Experience Design Excellence.</p>
+              </div>
             </div>
             <div className="absolute right-6 top-6 z-10">
-              <div className="flex h-10 w-10 items-center justify-center rounded-full bg-white/20">
+              <div className="feature261-primary-card__badge flex h-10 w-10 items-center justify-center">
                 <Zap className="h-5 w-5 text-white" />
               </div>
             </div>
@@ -97,12 +101,8 @@ const Feature261 = ({ className }: Feature261Props) => {
           <Card className="col-span-1 rounded-3xl md:col-span-2 md:row-span-1 md:h-[300px] lg:col-span-3">
             <CardContent className="flex h-full flex-col justify-center p-4 md:p-5">
               <div className="mb-3">
-                <span className="text-4xl font-bold md:text-3xl lg:text-6xl">
-                  300
-                </span>
-                <span className="align-top text-2xl font-bold md:text-xl lg:text-3xl">
-                  +
-                </span>
+                <span className="text-4xl font-bold md:text-3xl lg:text-6xl">300</span>
+                <span className="align-top text-2xl font-bold md:text-xl lg:text-3xl">+</span>
               </div>
               <p className="mb-4 text-sm md:text-sm">Delighted developers</p>
               <div className="flex -space-x-2">
@@ -141,9 +141,7 @@ const Feature261 = ({ className }: Feature261Props) => {
             <div className="absolute inset-0 z-10 flex items-center justify-start p-4 md:p-6">
               <div className="text-white">
                 <div className="mb-2 flex items-center gap-2 md:gap-3">
-                  <span className="text-base font-semibold md:text-lg">
-                    Rapid Development
-                  </span>
+                  <span className="text-base font-semibold md:text-lg">Rapid Development</span>
                 </div>
                 <p className="text-sm opacity-90 md:text-sm">
                   Build your interface faster
