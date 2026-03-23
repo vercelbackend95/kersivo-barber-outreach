@@ -3,7 +3,6 @@ import { Clock, Zap } from "@/components/lucide-react";
 import { cn } from "@/lib/utils";
 
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 
 interface Feature261Props {
@@ -93,7 +92,6 @@ const Feature261 = ({ className }: Feature261Props) => {
                   Skilled professionals delivering sharp cuts, beard trims, and a premium barbershop experience.
 
                 </div>
-                                <Button>Meet the Team</Button>
               </div>
             </CardContent>
           </Card>
@@ -145,9 +143,6 @@ const Feature261 = ({ className }: Feature261Props) => {
             <div className="absolute inset-0 z-10 flex items-center justify-start p-4 md:p-6">
               <div className="text-white">
                 <div className="mb-2 flex items-center gap-2 md:gap-3">
-                  <div className="flex h-6 w-6 items-center justify-center rounded-full bg-white/20 md:h-7 md:w-7">
-                    <Clock className="h-3 w-3 md:h-4 md:w-4" />
-                  </div>
                   <span className="text-base font-semibold md:text-lg">
                     Rapid Development
                   </span>
