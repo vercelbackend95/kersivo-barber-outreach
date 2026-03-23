@@ -299,6 +299,15 @@
   box-shadow: 0 18px 40px rgb(0 0 0 / 24%);
   isolation: isolate;
 }
+.feature261 .feature261-footer-card {
+  background:
+    linear-gradient(180deg, rgb(11 13 16 / 0%) 0%, rgb(11 13 16 / 0%) 58%, rgb(11 13 16 / 28%) 100%),
+    var(--surface);
+  border: 1px solid color-mix(in srgb, var(--border) 88%, transparent);
+  box-shadow: 0 18px 40px rgb(0 0 0 / 24%);
+  isolation: isolate;
+}
+
 
 .feature261 .feature261-primary-card__image-overlay {
   z-index: 1;
@@ -342,6 +351,9 @@
   line-height: 1.12;
   font-weight: 600;
   color: var(--fg);
+}
+.feature261 .feature261-primary-card__title--wide {
+  max-width: none;
 }
 
 .feature261 .feature261-primary-card__badge {

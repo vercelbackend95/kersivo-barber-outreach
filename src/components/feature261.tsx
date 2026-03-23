@@ -8,6 +8,7 @@ interface Feature261Props {
   className?: string;
 }
 const TIMELINE_FOOTER_HEIGHT = "5.5rem";
+const FEATURE_CARD_FOOTER_HEIGHT = "5.5rem";
 const Feature261 = ({ className }: Feature261Props) => {
   const timelineImagePosition = "center 0%";
   const bookingImagePosition = "center 0%";
@@ -44,17 +45,26 @@ const Feature261 = ({ className }: Feature261Props) => {
             </div>
           </div>
 
-          <div className="relative h-60 overflow-hidden rounded-3xl border md:col-span-2 md:row-span-2 md:h-[400px] lg:col-span-4 lg:h-full">
+          <div className="feature261-footer-card relative h-60 overflow-hidden rounded-3xl border md:col-span-2 md:row-span-2 md:h-[400px] lg:col-span-4 lg:h-full">
             <img
               src="/hero-assets/screens/booking.jpg"
               alt="Booking flow screen"
-              className="absolute inset-0 h-full w-full object-cover"
-                            style={{ objectPosition: bookingImagePosition }}
+              className="absolute inset-x-0 top-0 w-full object-cover"
+              style={{
+                bottom: FEATURE_CARD_FOOTER_HEIGHT,
+                height: `calc(100% - ${FEATURE_CARD_FOOTER_HEIGHT})`,
+                objectPosition: bookingImagePosition,
+              }}
+
             />
-            <div className="absolute bottom-6 left-6 right-6 z-10">
-              <h2 className="text-sm leading-tight font-medium md:text-base lg:text-xl">
-                Build your interface with stunning components and modern design.
-              </h2>
+            <div className="feature261-primary-card__image-overlay absolute inset-x-0 top-0" />
+            <div className="feature261-primary-card__footer absolute inset-x-0 bottom-0 z-10 text-white">
+              <div className="feature261-primary-card__footer-inner">
+                <span className="feature261-primary-card__eyebrow">Design system</span>
+                <p className="feature261-primary-card__title feature261-primary-card__title--wide">
+                  Build your interface with stunning components and modern design.
+                </p>
+              </div>
             </div>
           </div>
 
@@ -79,23 +89,26 @@ const Feature261 = ({ className }: Feature261Props) => {
               className="absolute inset-0 h-full w-full object-cover"
             />
           </div>
-          <Card className="relative col-span-1 h-60 overflow-hidden rounded-3xl bg-muted md:col-span-4 md:row-span-1 md:h-[300px] lg:col-span-4">
+          <Card className="feature261-footer-card relative col-span-1 h-60 overflow-hidden rounded-3xl bg-muted md:col-span-4 md:row-span-1 md:h-[300px] lg:col-span-4">
             <img
               src="/hero-assets/screens/barbers.jpg"
               alt="Barbers team at work"
-              className="absolute inset-0 h-full w-full object-cover"
-              style={{ objectPosition: barbersImagePosition }}
+              className="absolute inset-x-0 top-0 w-full object-cover"
+              style={{
+                bottom: FEATURE_CARD_FOOTER_HEIGHT,
+                height: `calc(100% - ${FEATURE_CARD_FOOTER_HEIGHT})`,
+                objectPosition: barbersImagePosition,
+              }}
+
             />
-            <div className="absolute inset-0 bg-gradient-to-r from-black/60 via-black/30 to-transparent" />
-            <CardContent className="relative z-10 flex h-full flex-col justify-end p-4 md:p-5">
-              <div className="space-y-2 text-white">
-
-                <div>
+            <div className="feature261-primary-card__image-overlay absolute inset-x-0 top-0" />
+            <div className="feature261-primary-card__footer absolute inset-x-0 bottom-0 z-10 text-white">
+              <div className="feature261-primary-card__footer-inner">
+                <span className="feature261-primary-card__eyebrow">Expert barbers</span>
+                <p className="feature261-primary-card__title feature261-primary-card__title--wide">
                   Skilled professionals delivering sharp cuts, beard trims, and a premium barbershop experience.
-
-                </div>
               </div>
-            </CardContent>
+                          </div>
           </Card>
 
           <Card className="col-span-1 rounded-3xl md:col-span-2 md:row-span-1 md:h-[300px] lg:col-span-3">
