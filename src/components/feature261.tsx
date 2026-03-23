@@ -11,7 +11,10 @@ interface Feature261Props {
 }
 
 const Feature261 = ({ className }: Feature261Props) => {
-    const timelineImagePosition = "center 0%";
+  const timelineImagePosition = "center 0%";
+  const bookingImagePosition = "center 0%";
+
+
   return (
     <section className={cn("feature261 py-32", className)}>
       <div className="container">
@@ -42,6 +45,7 @@ const Feature261 = ({ className }: Feature261Props) => {
               src="/hero-assets/screens/booking.jpg"
               alt="Booking flow screen"
               className="absolute inset-0 h-full w-full object-cover"
+                            style={{ objectPosition: bookingImagePosition }}
             />
             <div className="absolute right-6 bottom-6 left-6 z-10">
               <h2 className="text-sm leading-tight font-medium md:text-base lg:text-xl">
@@ -119,8 +123,8 @@ const Feature261 = ({ className }: Feature261Props) => {
 
           <Card className="relative col-span-1 h-60 overflow-hidden rounded-3xl md:col-span-3 md:row-span-1 md:h-[300px] lg:col-span-5">
             <img
-              src="https://deifkwefumgah.cloudfront.net/shadcnblocks/block/placeholder-3.svg"
-              alt="shadcn UI components"
+              src="/hero-assets/screens/shop.jpg"
+              alt="Barbershop interior"
               className="absolute inset-0 h-full w-full object-cover"
             />
           </Card>
