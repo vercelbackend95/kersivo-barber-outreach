@@ -12,7 +12,7 @@ const FEATURE_CARD_FOOTER_HEIGHT = "5.5rem";
 const Feature261 = ({ className }: Feature261Props) => {
   const timelineImagePosition = "center 0%";
   const bookingImagePosition = "center 0%";
-    const barbersImagePosition = "center 0%";
+  const barbersImagePosition = "center 0%";
   const shopImagePosition = "center 0%";
   const servicesImagePosition = "center 0%";
   return (
@@ -106,7 +106,9 @@ const Feature261 = ({ className }: Feature261Props) => {
               <div className="feature261-primary-card__footer-inner">
                 <span className="feature261-primary-card__eyebrow">Expert barbers</span>
                 <p className="feature261-primary-card__title feature261-primary-card__title--wide">
-                  Skilled professionals delivering sharp cuts, beard trims, and a premium barbershop experience.
+                  Skilled professionals delivering sharp cuts, beard trims, and a premium
+                  barbershop experience.
+                </p>
               </div>
                           </div>
           </Card>
@@ -134,34 +136,48 @@ const Feature261 = ({ className }: Feature261Props) => {
             </CardContent>
           </Card>
 
-          <Card className="relative col-span-1 h-60 overflow-hidden rounded-3xl md:col-span-3 md:row-span-1 md:h-[300px] lg:col-span-5">
+          <Card className="feature261-footer-card relative col-span-1 h-60 overflow-hidden rounded-3xl md:col-span-3 md:row-span-1 md:h-[300px] lg:col-span-5">
             <img
               src="/hero-assets/screens/shop.jpg"
               alt="Barbershop interior"
-              className="absolute inset-0 h-full w-full object-cover"
-                            style={{ objectPosition: shopImagePosition }}
+              className="absolute inset-x-0 top-0 w-full object-cover"
+              style={{
+                bottom: FEATURE_CARD_FOOTER_HEIGHT,
+                height: `calc(100% - ${FEATURE_CARD_FOOTER_HEIGHT})`,
+                objectPosition: shopImagePosition,
+              }}
+
             />
+                        <div className="feature261-primary-card__image-overlay absolute inset-x-0 top-0" />
+            <div className="feature261-primary-card__footer absolute inset-x-0 bottom-0 z-10 text-white">
+              <div className="feature261-primary-card__footer-inner">
+                <span className="feature261-primary-card__eyebrow">Barbershop atmosphere</span>
+                <p className="feature261-primary-card__title feature261-primary-card__title--wide">
+                  Step into a clean, bold space built for premium grooming and effortless client comfort.
+                </p>
+              </div>
+            </div>
           </Card>
 
-          <Card className="relative col-span-1 h-60 overflow-hidden rounded-3xl md:col-span-3 md:row-span-1 md:h-[300px] lg:col-span-4">
+          <Card className="feature261-footer-card relative col-span-1 h-60 overflow-hidden rounded-3xl md:col-span-3 md:row-span-1 md:h-[300px] lg:col-span-4">
             <img
               src="/hero-assets/screens/services.jpg"
               alt="Barbershop services overview"
-              className="absolute inset-0 h-full w-full object-cover"
-                            style={{ objectPosition: servicesImagePosition }}
+              className="absolute inset-x-0 top-0 w-full object-cover"
+              style={{
+                bottom: FEATURE_CARD_FOOTER_HEIGHT,
+                height: `calc(100% - ${FEATURE_CARD_FOOTER_HEIGHT})`,
+                objectPosition: servicesImagePosition,
+              }}
+
             />
-            <div className="absolute inset-0 bg-gradient-to-r from-black/60 via-black/30 to-transparent" />
-            <div className="absolute inset-0 z-10 flex items-center justify-start p-4 md:p-6">
-              <div className="text-white">
-                <div className="mb-2 flex items-center gap-2 md:gap-3">
-                  <span className="text-base font-semibold md:text-lg">Rapid Development</span>
-                </div>
-                <p className="text-sm opacity-90 md:text-sm">
-                  Build your interface faster
-                  <br />
-                  <span className="text-sm font-semibold md:text-sm">
-                    with ready-to-use components
-                  </span>
+            <div className="feature261-primary-card__image-overlay absolute inset-x-0 top-0" />
+            <div className="feature261-primary-card__footer absolute inset-x-0 bottom-0 z-10 text-white">
+              <div className="feature261-primary-card__footer-inner">
+                <span className="feature261-primary-card__eyebrow">Barber services</span>
+                <p className="feature261-primary-card__title feature261-primary-card__title--wide">
+                  From skin fades to beard sculpting, every service is presented with clarity and premium detail.
+
                 </p>
               </div>
             </div>

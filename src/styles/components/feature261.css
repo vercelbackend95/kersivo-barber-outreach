@@ -347,7 +347,7 @@
 .feature261 .feature261-primary-card__title {
   margin: 0;
   max-width: 14ch;
-  font-size: 1.25rem;
+  font-size: 1rem;
   line-height: 1.12;
   font-weight: 600;
   color: var(--fg);
@@ -463,7 +463,7 @@
   }
 
   .feature261 .feature261-primary-card__title {
-    font-size: 1.5rem;
+    font-size: 1rem;
   }
 
 }
