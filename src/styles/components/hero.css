@@ -7,23 +7,15 @@
   overflow: hidden;
   border-bottom: 1px solid color-mix(in srgb, var(--muted) 40%, transparent);
 
-}
-
-.hero10__pattern {
-  position: absolute;
-  inset: 0;
-  background-image: url('https://deifkwefumgah.cloudfront.net/shadcnblocks/block/patterns/grid1.svg');
-  background-repeat: repeat;
-  background-size: contain;
-  opacity: 0.18;
-  mask-image: linear-gradient(to right, var(--border), transparent, transparent, var(--border));
-  pointer-events: none;
-
+  background: var(--bg);
 }
 
 .hero10__container {
   position: relative;
   z-index: 1;
+    width: min(100% - 1rem, 82rem);
+  margin-inline: auto;
+
   padding-top: clamp(4rem, 18vw, 7rem);
   padding-bottom: clamp(3.5rem, 12vw, 7rem);
 }
@@ -33,8 +25,9 @@
 
   justify-items: center;
   text-align: center;
-    gap: 1.25rem;
-  max-width: 64rem;
+  gap: 1.25rem;
+  max-width: 72rem;
+
   margin: 0 auto;
 
 }
@@ -59,6 +52,7 @@
 
 .hero10__title {
   margin: 0;
+    max-width: 20ch;
   font-family: 'Bebas Neue', sans-serif;
   font-size: clamp(2.8rem, 14vw, 7rem);
   font-weight: 800;
@@ -68,8 +62,10 @@
   color: var(--fg);
     text-wrap: balance;
 }
+
 .hero10__lead {
-  max-width: 44rem;
+  max-width: 50rem;
+
 
   margin: 0;
   color: color-mix(in srgb, var(--muted) 80%, var(--fg));
@@ -138,8 +134,13 @@
 }
 
 @media (min-width: 48rem) {
-    .hero10__actions {
+  .hero10__container {
+    width: min(100% - 2rem, 86rem);
+  }
+
+  .hero10__actions {
     grid-auto-flow: column;
+
 
     align-items: center;
     justify-content: center;
@@ -259,73 +260,78 @@
 .system-chooser__tile {
   position: relative;
 
+  display: grid;
+  gap: 0.65rem;
+  padding: clamp(1rem, 2.4vw, 1.5rem);
+
   border: 1px solid var(--border);
   border-radius: var(--radius-md);
-  background: color-mix(in srgb, var(--surface) 94%, var(--bg));
-  padding: clamp(1rem, 2vw, 1.4rem);
-  display: grid;
-  gap: 0.55rem;
+  background: color-mix(in srgb, var(--surface) 95%, transparent);
 
   cursor: pointer;
-  transition:
-    border-color 160ms ease,
-    transform 160ms ease,
-    background-color 160ms ease,
-    box-shadow 160ms ease;
-
+  transition: border-color 160ms ease, transform 160ms ease, background-color 160ms ease;
 }
 
-.system-chooser__tile:hover,
-.system-chooser__tile:focus-visible {
-  border-color: color-mix(in srgb, var(--accent) 65%, var(--border));
-  background: color-mix(in srgb, var(--surface) 88%, var(--bg));
-  transform: translateY(-2px);
-  box-shadow: 0 1rem 2.2rem color-mix(in srgb, var(--bg) 78%, transparent);
+.system-chooser__tile:focus-visible,
+.system-chooser__tile:hover {
 
-  outline: none;
+  border-color: color-mix(in srgb, var(--accent) 65%, var(--border));
+  background: color-mix(in srgb, var(--surface) 85%, transparent);
+  transform: translateY(-1px);
+}
+.system-chooser__tile h3 {
+  margin: 0;
+  font-size: clamp(1.5rem, 3.8vw, 2rem);
+  line-height: 0.95;
+}
+
+.system-chooser__tile p {
+  margin: 0;
+  color: var(--muted);
+  max-width: 40ch;
 
 }
 
 .system-chooser__tile-badge {
-    display: inline-flex;
-  width: fit-content;
-  border: 1px solid color-mix(in srgb, var(--accent) 48%, var(--border));
+  display: inline-flex;
+  align-items: center;
+  width: max-content;
+  padding: 0.2rem 0.5rem;
+  border: 1px solid color-mix(in srgb, var(--accent) 60%, transparent);
+
   border-radius: var(--radius-sm);
-  background: color-mix(in srgb, var(--accent) 16%, var(--surface));
+
 
   color: var(--fg);
-  padding: 0.3rem 0.5rem;
-  font-size: 0.7rem;
+  background: color-mix(in srgb, var(--accent) 18%, transparent);
+  font-size: 0.72rem;
 
-  letter-spacing: 0.08em;
   text-transform: uppercase;
-}
-
-.system-chooser__tile h3 {
-  margin: 0;
-}
-
-.system-chooser__tile p {
-    margin: 0;
-  color: var(--muted);
+    letter-spacing: 0.06em;
 }
 
 .system-chooser__tile-meta {
-  color: var(--fg);
+  font-size: 0.85rem;
+
 }
 
-@media (min-width: 48rem) {
+.system-chooser__tile--default {
+  border-color: color-mix(in srgb, var(--accent) 40%, var(--border));
+
+}
+
+.system-chooser__tile--admin {
+  background: color-mix(in srgb, var(--surface) 93%, var(--bg));
+
+}
+
+@media (min-width: 52rem) {
   .system-chooser {
     align-items: center;
+        padding: var(--space-lg);
   }
 
   .system-chooser__grid {
     grid-template-columns: repeat(3, minmax(0, 1fr));
   }
-}
-@media (prefers-reduced-motion: reduce) {
-  .system-chooser__tile {
-    transition: none;
-  }
-
 }

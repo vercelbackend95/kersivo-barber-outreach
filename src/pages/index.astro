@@ -40,7 +40,6 @@ const DEMO_ADMIN_PASSWORD = import.meta.env.PUBLIC_DEMO_ADMIN_PASSWORD
 <MainLayout title="Kersivo Barber Outreach">
     <main class="hero10">
     <section id="home" class="hero10__section">
-      <div class="hero10__pattern" aria-hidden="true"></div>
       <div class="container hero10__container">
         <div class="hero10__content">
           <span class="hero10__badge">New Release</span>
@@ -260,63 +259,78 @@ const DEMO_ADMIN_PASSWORD = import.meta.env.PUBLIC_DEMO_ADMIN_PASSWORD
       document.body.classList.toggle('body--modal-open', nextOpen);
 
       if (nextOpen) {
-        focusTarget?.focus();
-      } else {
-        lastOpenTrigger?.focus();
+                window.requestAnimationFrame(() => {
+          if (focusTarget instanceof HTMLElement) {
+            focusTarget.focus();
+          }
+        });
+      } else if (lastOpenTrigger instanceof HTMLElement) {
+        lastOpenTrigger.focus();
       }
     };
-    const openChooser = () => {
-      setChooserOpen(true);
-    };
+    const handleClose = () => {
+      if (!isChooserOpen) {
+        return;
+      }
 
-    const closeChooser = () => {
-      setChooserOpen(false);
+
     };
     setChooserOpen(false);
     openTriggers.forEach((trigger) => {
-      if (!(trigger instanceof HTMLElement)) return;
+      if (!(trigger instanceof HTMLButtonElement)) {
+        return;
+      }
 
       trigger.addEventListener('click', () => {
         lastOpenTrigger = trigger;
-        openChooser();
+        setChooserOpen(true);
       });
     });
-    closeTriggers.forEach((trigger) => trigger.addEventListener('click', closeChooser));
-    const navigateToTile = (target) => {
-      if (!(target instanceof HTMLElement)) return;
-      const tile = target.closest('[data-tile-href]');
-      if (!(tile instanceof HTMLElement)) return;
-      const href = tile.dataset.tileHref;
-      if (!href) return;
-      
-      if (href.startsWith('/admin') && DEMO_ADMIN_SECRET) {
-        window.localStorage.setItem(ADMIN_SECRET_STORAGE_KEY, DEMO_ADMIN_SECRET);
-      }
-
-
-      closeChooser();
-      window.location.href = href;
-    };
-
-
-    chooser.addEventListener('click', (event) => {
-     const target = event.target;
-      if (!(target instanceof HTMLElement)) return;
-      navigateToTile(target);
+    closeTriggers.forEach((trigger) => {
+      trigger.addEventListener('click', handleClose);
     });
 
     chooser.addEventListener('keydown', (event) => {
-      if (!(event.target instanceof HTMLElement)) return;
-      if (!event.target.closest('[data-tile-href]')) return;
-      if (event.key !== 'Enter' && event.key !== ' ') return;
-      event.preventDefault();
-      navigateToTile(event.target);
+      if (event.key === 'Escape') {
+        event.preventDefault();
+        handleClose();
+      }
     });
 
-    document.addEventListener('keydown', (event) => {
-      if (event.key === 'Escape' && isChooserOpen) {
-        closeChooser();
+    const tiles = chooser.querySelectorAll('[data-tile-href]');
+
+    const activateTile = (tile) => {
+      const href = tile.getAttribute('data-tile-href');
+      if (!href) {
+        return;
       }
+
+      if (href.startsWith('/admin')) {
+        try {
+          localStorage.setItem(ADMIN_SECRET_STORAGE_KEY, DEMO_ADMIN_SECRET);
+        } catch {
+          // Ignore storage failures to avoid breaking navigation.
+        }
+      }
+
+      window.location.assign(href);
+    };
+
+    tiles.forEach((tile) => {
+      if (!(tile instanceof HTMLElement)) {
+        return;
+      }
+      
+      tile.addEventListener('click', () => {
+        activateTile(tile);
+      });
+
+      tile.addEventListener('keydown', (event) => {
+        if (event.key === 'Enter' || event.key === ' ') {
+          event.preventDefault();
+          activateTile(tile);
+        }
+      });
     });
   }
 </script>
