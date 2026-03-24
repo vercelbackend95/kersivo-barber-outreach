@@ -325,7 +325,7 @@ const DEMO_ADMIN_PASSWORD = import.meta.env.PUBLIC_DEMO_ADMIN_PASSWORD
 
     const revealCard = (card, index) => {
       if (!(card instanceof HTMLElement)) return;
-      card.style.transitionDelay = `${index * 90}ms`;
+      card.style.transitionDelay = `${index * 140}ms`;
       card.dataset.feature261Visible = 'true';
     };
 
@@ -344,20 +344,23 @@ const DEMO_ADMIN_PASSWORD = import.meta.env.PUBLIC_DEMO_ADMIN_PASSWORD
 
     let hasRevealed = false;
     const observer = new IntersectionObserver(
-      ([entry]) => {
-        if (!entry?.isIntersecting || hasRevealed) return;
+      (entries) => {
+        const shouldReveal = entries.some((entry) => entry?.isIntersecting);
+        if (!shouldReveal || hasRevealed) return;
 
         hasRevealed = true;
         cards.forEach((card, index) => revealCard(card, index));
         observer.disconnect();
       },
       {
-        threshold: 0.22,
-        rootMargin: '0px 0px -14% 0px',
+        threshold: 0.01,
+        rootMargin: '0px 0px -6% 0px',
       },
     );
-
-    observer.observe(section);
+    cards.forEach((card) => {
+      if (!(card instanceof HTMLElement)) return;
+      observer.observe(card);
+    });
   };
 
   initFeature261StaggerReveal();
