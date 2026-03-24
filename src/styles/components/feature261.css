@@ -890,7 +890,7 @@
     line-height: 0.9;
   }
   .feature261 .feature261-text-card__content--compact .feature261-text-card__title {
-    font-size: clamp(1.85rem, 2.2vw, 2.45rem);
+    font-size: clamp(1.85rem, 1vw, 2.45rem);
     line-height: 0.9;
   }
 
@@ -932,6 +932,7 @@
     padding: 0.3rem 0.48rem;
     font-size: 0.56rem;
   }
+
 
   .feature261 .feature261-text-card__background-word {
     font-size: clamp(2.9rem, 5vw, 4.4rem);
