@@ -256,6 +256,10 @@
   padding: 0.5rem;
 
 }
+.system-chooser[hidden] {
+  display: none;
+}
+
 
 .body--modal-open {
   overflow: hidden;
@@ -348,9 +352,7 @@
 .system-chooser__grid {
   padding: 0.85rem;
   display: grid;
-    grid-template-columns: 1fr;
-  grid-template-rows: repeat(3, minmax(0, 1fr));
-
+  grid-template-columns: 1fr;
   gap: 0.65rem;
   overflow: auto;
 }
@@ -520,6 +522,7 @@
 
   .system-chooser__grid {
     grid-template-columns: repeat(3, minmax(0, 1fr));
+        grid-template-rows: auto;
     gap: 0.8rem;
     padding: 1rem 1.15rem 1.15rem;
   }
