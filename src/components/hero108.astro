@@ -10,7 +10,6 @@ interface Props {
   description?: string;
   bullets?: Bullet[];
   ctaText?: string;
-  ctaUrl?: string;
   imageUrl?: string;
   imageAlt?: string;
 }
@@ -26,8 +25,7 @@ const {
     { text: "Built to support teams, schedules and daily updates" },
     { text: "A stronger online experience for both clients and owners" },
   ],
-  ctaText = "See how it works",
-  ctaUrl = "#",
+  ctaText = "SEE THE SYSTEM",
   imageUrl =
     "https://images.unsplash.com/photo-1621605815971-fbc98d665033?auto=format&fit=crop&w=1280&q=80",
   imageAlt = "Barber preparing tools in a modern barbershop",
@@ -58,10 +56,10 @@ const highlightTitle = title.replace(highlightedWord, `<span class=\"hero108__hi
         }
       </ul>
 
-      <a class="btn btn--primary hero108__cta" href={ctaUrl}>
+      <button class="btn btn--primary hero108__cta" type="button" data-system-chooser-open>
         <span>{ctaText}</span>
         <span class="hero108__arrow" aria-hidden="true">→</span>
-      </a>
+      </button>
     </div>
 
     <div class="hero108__media">
