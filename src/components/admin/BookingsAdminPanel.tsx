@@ -1631,6 +1631,41 @@ export default function BookingsAdminPanel({ isActive, mode, onBackToDashboard }
     setBarberSaveMessage(isActive ? 'Barber reactivated.' : 'Barber deactivated.');
     await fetchBarbers();
   }
+  async function deleteBarber(barberId: string) {
+    setBarberSaveMessage('');
+    setBarberSaveError('');
+    setBarberSaving(true);
+
+    try {
+      const response = await fetch('/api/admin/barbers/delete', {
+        method: 'POST',
+        credentials: 'include',
+        headers: { 'content-type': 'application/json' },
+        body: JSON.stringify({ id: barberId })
+      });
+      const payload = await response.json().catch(() => ({ error: 'Could not delete barber.' }));
+
+      if (!response.ok) {
+        setBarberSaveError(payload.error || 'Could not delete barber.');
+        return;
+      }
+
+      setSelectedBarberId((current) => current === barberId ? null : current);
+      setHistoryBarberId((current) => current === barberId ? 'all' : current);
+      setReportsBarberId((current) => current === barberId ? null : current);
+      setBlockScopeBarberId((current) => current === barberId ? 'all' : current);
+      setSelectedBarberStatsCount(0);
+      setWorkingHours([]);
+      setEditingBarberAvatarFile(null);
+      setEditingBarberAvatarPreviewUrl(null);
+      setBarberSaveMessage('Barber deleted.');
+      await Promise.all([fetchBarbers(), fetchTimeBlocks()]);
+    } catch (deleteError) {
+      setBarberSaveError(deleteError instanceof Error ? deleteError.message : 'Could not delete barber.');
+    } finally {
+      setBarberSaving(false);
+    }
+  }
   async function saveBarberOrder(orderedIds: string[]) {
     setBarberReordering(true);
     setBarberSaveMessage('');
@@ -1722,6 +1757,7 @@ export default function BookingsAdminPanel({ isActive, mode, onBackToDashboard }
                 onSaveWorkingHours={saveWorkingHours}
                 onCreateBlock={(payload) => void createProfileBlock(payload)}
                 onDeleteBlock={(blockId) => void deleteTimeBlock(blockId)}
+                onDeleteBarber={() => void deleteBarber(selectedBarber.id)}
               />
             ) : (
               <BarbersOverview

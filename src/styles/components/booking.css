@@ -206,7 +206,7 @@
 .booking-confirmation__eyebrow,
 .booking-choice-card__eyebrow,
 .booking-action-bar__label {
-  color: color-mix(in srgb, var(--accent) 78%, var(--fg));
+   color: var(--accent);
 
 }
 
@@ -6383,6 +6383,14 @@
 
 .admin-barber-actions-dropdown-item:hover {
   background: color-mix(in srgb, var(--accent) 12%, var(--surface));
+}
+
+.admin-barber-actions-dropdown-item--danger {
+  color: var(--status-cancelled);
+}
+
+.admin-barber-actions-dropdown-item--danger:hover {
+  background: color-mix(in srgb, var(--status-cancelled) 12%, var(--surface));
 }
 
 .admin-barber-actions-dropdown-item:focus-visible {

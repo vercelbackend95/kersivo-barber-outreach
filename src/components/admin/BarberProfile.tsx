@@ -34,6 +34,7 @@ type BarberProfileProps = {
   onSaveWorkingHours: (rules?: WorkingHourRow[]) => Promise<boolean>;
   onCreateBlock: (payload: { type: 'BREAK' | 'HOLIDAY'; startAtInput: string; endAtInput: string; allDay?: boolean }) => void;
   onDeleteBlock: (blockId: string) => void;
+  onDeleteBarber: () => void;
 };
 
 export default function BarberProfile({
@@ -65,11 +66,12 @@ export default function BarberProfile({
   onSetWorkingHours,
   onSaveWorkingHours,
   onCreateBlock,
-    onDeleteBlock
+    onDeleteBlock,
+  onDeleteBarber
 }: BarberProfileProps) {
     const actionsMenuRef = React.useRef<HTMLDivElement | null>(null);
   const [isActionsMenuOpen, setIsActionsMenuOpen] = React.useState(false);
-  const [isConfirmDialogOpen, setIsConfirmDialogOpen] = React.useState(false);
+  const [confirmAction, setConfirmAction] = React.useState<'toggle' | 'delete' | null>(null);
   const confirmDialogRef = React.useRef<HTMLDivElement | null>(null);
   const cancelButtonRef = React.useRef<HTMLButtonElement | null>(null);
 
@@ -117,6 +119,8 @@ export default function BarberProfile({
     };
   }, [isActionsMenuOpen]);
 
+  const isConfirmDialogOpen = confirmAction !== null;
+
   React.useEffect(() => {
     if (!isConfirmDialogOpen) return;
 
@@ -130,7 +134,7 @@ export default function BarberProfile({
     const handleKeyDown = (event: KeyboardEvent) => {
       if (event.key === 'Escape') {
         event.preventDefault();
-        setIsConfirmDialogOpen(false);
+        setConfirmAction(null);
         return;
       }
 
@@ -170,6 +174,15 @@ export default function BarberProfile({
   const actionLabel = isActive ? 'Deactivate' : 'Reactivate';
   const hasAvatarPreview = Boolean(barberAvatarPreviewUrl);
   const displayedAvatarUrl = barberAvatarPreviewUrl ?? barber.avatarUrl ?? null;
+  const isDeleteConfirm = confirmAction === 'delete';
+  const confirmTitle = isDeleteConfirm
+    ? 'Delete barber?'
+    : isActive
+      ? 'Deactivate barber?'
+      : 'Reactivate barber?';
+  const confirmActionLabel = isDeleteConfirm
+    ? (barberSaving ? 'Deleting...' : 'Delete')
+    : actionLabel;
 
 
 
@@ -202,6 +215,7 @@ export default function BarberProfile({
                 aria-haspopup="menu"
                 aria-expanded={isActionsMenuOpen}
                 aria-label="More actions"
+                disabled={barberSaving}
               >
                 <span aria-hidden="true">⋯</span>
               </button>
@@ -213,12 +227,25 @@ export default function BarberProfile({
                     type="button"
                     role="menuitem"
                     className="admin-barber-actions-dropdown-item"
+                    disabled={barberSaving}
                     onClick={() => {
                       setIsActionsMenuOpen(false);
-                                            setIsConfirmDialogOpen(true);
+                      setConfirmAction('toggle');
                     }}
                   >
                     {actionLabel}
+                  </button>
+                  <button
+                    type="button"
+                    role="menuitem"
+                    className="admin-barber-actions-dropdown-item admin-barber-actions-dropdown-item--danger"
+                    disabled={barberSaving}
+                    onClick={() => {
+                      setIsActionsMenuOpen(false);
+                      setConfirmAction('delete');
+                    }}
+                  >
+                    Delete
                   </button>
                 </div>
               ) : null}
@@ -271,21 +298,27 @@ export default function BarberProfile({
             type="button"
             className="admin-barber-confirm-backdrop"
             aria-label="Close confirmation dialog"
-            onClick={() => setIsConfirmDialogOpen(false)}
+            onClick={() => setConfirmAction(null)}
           />
           <div
             ref={confirmDialogRef}
             className="admin-barber-confirm-dialog"
             role="dialog"
             aria-modal="true"
-            aria-labelledby="barber-toggle-title"
-            aria-describedby="barber-toggle-description"
+            aria-labelledby="barber-confirm-title"
+            aria-describedby="barber-confirm-description"
           >
-            <h3 id="barber-toggle-title" className="admin-barber-confirm-title">
-              {isActive ? 'Deactivate barber?' : 'Reactivate barber?'}
+            <h3 id="barber-confirm-title" className="admin-barber-confirm-title">
+              {confirmTitle}
             </h3>
-            <div id="barber-toggle-description" className="admin-barber-confirm-body">
-              {isActive ? (
+            <div id="barber-confirm-description" className="admin-barber-confirm-body">
+              {isDeleteConfirm ? (
+                <ul>
+                  <li>This permanently removes the barber profile from the system.</li>
+                  <li>Assigned services, working hours, and time off entries will be removed.</li>
+                  <li>If the barber has any bookings, deletion will be blocked.</li>
+                </ul>
+              ) : isActive ? (
                 <ul>
                   <li>This will remove the barber from the booking dropdown.</li>
                   <li>Existing booking history stays intact.</li>
@@ -300,19 +333,26 @@ export default function BarberProfile({
                 ref={cancelButtonRef}
                 type="button"
                 className="btn btn--ghost"
-                onClick={() => setIsConfirmDialogOpen(false)}
+                onClick={() => setConfirmAction(null)}
+                disabled={barberSaving}
               >
                 Cancel
               </button>
               <button
                 type="button"
-                className="btn btn--primary"
+                className={`btn ${isDeleteConfirm ? 'btn--destructive' : 'btn--primary'}`}
+                disabled={barberSaving}
                 onClick={() => {
+                  const nextAction = confirmAction;
+                  setConfirmAction(null);
+                  if (nextAction === 'delete') {
+                    onDeleteBarber();
+                    return;
+                  }
                   onToggleActive();
-                  setIsConfirmDialogOpen(false);
                 }}
               >
-                {actionLabel}
+                {confirmActionLabel}
               </button>
             </div>
           </div>
