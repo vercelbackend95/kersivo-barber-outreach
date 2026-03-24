@@ -67,6 +67,7 @@ const TextFeatureCard = ({
       <CardContent
         className={cn(
           "feature261-text-card__content",
+                    variant === "compact" && "feature261-text-card__content--compact",
           variant === "tall" && "feature261-text-card__content--tall",
         )}
       >
@@ -160,7 +161,7 @@ Fast, reliable and built in from day one. Give clients a smooth way to book with
             backgroundWord="Setup"
             meta={["Barbers", "Services", "Pricing"]}
             icon={<SetupIcon />}
-            className="col-span-1 md:col-span-2 md:row-span-1 md:h-[192px] lg:col-span-2 lg:h-[220px]"
+            className="col-span-1 md:col-span-2 md:row-span-1 md:h-[192px] lg:col-span-2 lg:h-[260px]"
           />
 
           <TextFeatureCard
@@ -170,7 +171,7 @@ Fast, reliable and built in from day one. Give clients a smooth way to book with
             backgroundWord="Store"
             meta={["Stock", "Shop", "Checkout"]}
             icon={<ProductsIcon />}
-            className="col-span-1 md:col-span-2 md:row-span-1 md:h-[192px] lg:col-span-2 lg:h-[220px]"
+            className="col-span-1 md:col-span-2 md:row-span-1 md:h-[192px] lg:col-span-2 lg:h-[260px]"
           />
           <Card className="feature261-footer-card feature261-mobile-feature-card feature261-mobile-feature-card--expert relative col-span-1 h-60 overflow-hidden rounded-3xl bg-muted md:col-span-4 md:row-span-1 md:h-[300px] lg:col-span-4">
             <img

@@ -488,6 +488,12 @@
   background:
     linear-gradient(180deg, color-mix(in srgb, var(--fg) 2%, transparent) 0%, transparent 100%);
 }
+
+.feature261 .feature261-text-card__content--compact {
+  min-height: 15.5rem;
+}
+
+
 .feature261 .feature261-text-card__content--tall {
   min-height: 18rem;
 }
@@ -805,6 +811,10 @@
   .feature261 .lg\:h-\[220px\] {
     height: 220px;
   }
+ .feature261 .lg\:h-\[260px\] {
+    height: 260px;
+  }
+
 
   .feature261 .lg\:h-\[300px\] {
     height: 300px;
@@ -834,7 +844,13 @@
   .feature261 .feature261-text-card__content {
     gap: 0.9rem;
     min-height: 0;
-    padding: 1rem;
+    padding: 1.1rem;
+  }
+
+  .feature261 .feature261-text-card__content--compact {
+    gap: 0.95rem;
+    min-height: 15.8rem;
+
   }
 
   .feature261 .feature261-text-card__content--tall {
@@ -873,6 +889,11 @@
     font-size: clamp(2rem, 2.55vw, 2.7rem);
     line-height: 0.9;
   }
+  .feature261 .feature261-text-card__content--compact .feature261-text-card__title {
+    font-size: clamp(1.85rem, 2.2vw, 2.45rem);
+    line-height: 0.9;
+  }
+
 
   .feature261 .feature261-text-card__content--tall .feature261-text-card__title {
     font-size: clamp(2.3rem, 3vw, 3.2rem);
@@ -883,6 +904,12 @@
     font-size: 0.84rem;
     line-height: 1.35;
   }
+  .feature261 .feature261-text-card__content--compact .feature261-text-card__description {
+    max-width: 23ch;
+    font-size: 0.82rem;
+    line-height: 1.38;
+  }
+
 
   .feature261 .feature261-text-card__content--tall .feature261-text-card__description {
     max-width: 20ch;
@@ -899,6 +926,11 @@
     padding: 0.32rem 0.5rem;
     font-size: 0.58rem;
     letter-spacing: 0.12em;
+  }
+  .feature261 .feature261-text-card__content--compact .feature261-text-card__tag {
+    min-height: 1.6rem;
+    padding: 0.3rem 0.48rem;
+    font-size: 0.56rem;
   }
 
   .feature261 .feature261-text-card__background-word {
