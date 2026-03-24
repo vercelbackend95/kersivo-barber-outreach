@@ -171,6 +171,27 @@
   font-size: clamp(1.02rem, 2.1vw, 1.3rem);
   line-height: 1.6;
 }
+
+.hero10__impact {
+  width: min(100%, 44rem);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  display: grid;
+  gap: 0.36rem;
+}
+
+.hero10__impact li {
+  border-left: 2px solid var(--accent);
+  padding: 0.22rem 0.5rem;
+  color: color-mix(in srgb, var(--muted) 66%, var(--fg));
+  font-size: 0.78rem;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  text-align: left;
+}
+
+
 .hero10__actions-wrap {
   width: 100%;
   max-width: 35rem;
@@ -198,37 +219,44 @@
   text-transform: uppercase;
 }
 
-
-.hero10__proof {
+.hero10__wow {
   width: min(100%, 56rem);
-  margin: clamp(0.75rem, 1.8vw, 1.2rem) 0 0;
-  padding: 0.52rem;
-
-  list-style: none;
-  display: grid;
-  gap: 0.4rem;
-  border: 1px solid color-mix(in srgb, var(--border) 72%, transparent);
-  border-radius: var(--radius-sm);
-  background: linear-gradient(
-    to bottom,
-    color-mix(in srgb, var(--surface) 86%, transparent),
-    color-mix(in srgb, var(--surface) 62%, transparent)
-  );
-  box-shadow: 0 0.6rem 1.6rem color-mix(in srgb, var(--bg) 30%, transparent);
-
+  margin: 0;
+  padding: 0.8rem;
+  border: 1px solid color-mix(in srgb, var(--border) 74%, transparent);
+  background: color-mix(in srgb, var(--surface) 72%, transparent);
+  text-align: left;
 }
 
-.hero10__proof li {
-  padding: 0.36rem 0.46rem;
-  border: 1px solid color-mix(in srgb, var(--border) 56%, transparent);
-  border-radius: var(--radius-xs);
-  color: color-mix(in srgb, var(--muted) 68%, var(--fg));
-  font-size: 0.72rem;
-
-  font-weight: 600;
-  letter-spacing: 0.09em;
+.hero10__wow-kicker {
+  margin: 0 0 0.5rem;
+  color: color-mix(in srgb, var(--fg) 86%, var(--muted));
+  font-size: 0.7rem;
+  font-weight: 700;
+  letter-spacing: 0.12em;
   text-transform: uppercase;
 }
+
+.hero10__wow ul {
+  margin: 0;
+  padding-left: 1rem;
+  display: grid;
+  gap: 0.46rem;
+}
+
+.hero10__wow li {
+  color: color-mix(in srgb, var(--muted) 72%, var(--fg));
+  font-size: 0.82rem;
+  line-height: 1.4;
+}
+
+.hero10__wow strong {
+  color: var(--fg);
+  font-weight: 700;
+}
+
+
+
 
 
 @media (min-width: 48rem) {
@@ -253,6 +281,16 @@
     gap: clamp(1rem, 1.6vw, 1.6rem);
 
   }
+  .hero10__impact {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 0.5rem;
+  }
+
+  .hero10__impact li {
+    font-size: 0.72rem;
+    min-height: 100%;
+  }
+
 
   .hero10__actions {
     grid-auto-flow: column;
@@ -270,16 +308,14 @@
     min-width: 12.25rem;
   }
 
-  .hero10__proof {
-    grid-template-columns: repeat(3, minmax(0, 1fr));
-    gap: 0.5rem;
-    padding: 0.7rem;
+  .hero10__wow {
+    padding: 1rem;
   }
 
-  .hero10__proof li {
-    padding: 0.44rem 0.5rem;
-
+  .hero10__wow li {
+    font-size: 0.86rem;
   }
+
 }
 
 .body--modal-open {
