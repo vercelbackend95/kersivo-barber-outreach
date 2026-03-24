@@ -142,13 +142,18 @@ export default function CartDrawer() {
       <aside className={`cart-drawer ${open ? 'cart-drawer--open' : ''}`} aria-hidden={open ? 'false' : 'true'}>
         <div className="cart-drawer__header">
           <div className="cart-drawer__header-top">
-          </div>
+                        <h2>Your cart</h2>
+            <button
+              type="button"
+              className="btn btn--ghost cart-drawer__close"
+              onClick={closeCart}
+              aria-label="Close cart drawer"
+            >
+              ×
+            </button>
 
-          <h2>Your cart</h2>
+          </div>
           <p className="muted cart-drawer__intro">Order online now and collect when it suits you. No shipping needed.</p>
-          <button type="button" className="btn btn--ghost cart-drawer__close" onClick={closeCart}>
-            X
-          </button>
         </div>
 
         <div className="cart-items" aria-live="polite">

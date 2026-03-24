@@ -483,14 +483,16 @@
 .cart-drawer__header {
   display: grid;
   gap: 0.48rem;
-
+  position: relative;
   padding: 0.7rem 0.72rem;
 }
 
 .cart-drawer__header-top {
   display: flex;
   align-items: center;
-  justify-content: space-between;
+  justify-content: flex-start;
+  padding-right: 2.5rem;
+
 
 }
 
@@ -516,6 +518,10 @@
   color: var(--muted);
 }
 .cart-drawer__close {
+    position: absolute;
+  top: 0.7rem;
+  right: 0.72rem;
+
   width: 2rem;
   min-height: 2rem;
   padding: 0;

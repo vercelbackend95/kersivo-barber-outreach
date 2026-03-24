@@ -29,8 +29,6 @@
 .navbar17__brand img {
   width: 2.55rem;
   height: 2.55rem;
-  border: 1px solid color-mix(in srgb, var(--accent) 30%, var(--border));
-  background: color-mix(in srgb, var(--surface) 88%, var(--bg));
 
 }
 
