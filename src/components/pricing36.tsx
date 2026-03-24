@@ -11,6 +11,17 @@ const Pricing36 = ({ className }: Pricing36Props) => {
   return (
     <section id="pricing" className={cn("pricing36 py-32", className)}>
       <div className="container">
+                <div className="compare3-block__header">
+          <span className="compare3-block__badge">Pricing</span>
+          <h2>Choose the setup that fits your barbershop</h2>
+          <p>
+            Both options include a custom barber website system — the
+            difference is how far we push the presentation, sales flow and
+            retail setup.
+          </p>
+        </div>
+
+
         <div className="mx-auto grid max-w-4xl gap-6 md:grid-cols-2">
           <div className="flex flex-col gap-4">
             <div className="flex h-full flex-col rounded-4xl bg-gradient-to-r from-blue-500 to-purple-500 p-px">

@@ -5,6 +5,9 @@
 .pricing36 .container {
   width: min(100% - 2rem, 72rem);
   margin-inline: auto;
+    display: grid;
+  gap: 2rem;
+
 }
 
 .pricing36 .mx-auto {
