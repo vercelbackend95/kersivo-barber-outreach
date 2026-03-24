@@ -138,7 +138,7 @@ const Feature261 = ({ className }: Feature261Props) => {
 
           <div className="feature261-footer-card feature261-mobile-tall-card relative h-60 overflow-hidden rounded-3xl border md:col-span-2 md:row-span-2 md:h-[400px] lg:col-span-4 lg:h-full">
             <img
-              src="/hero-assets/screens/booking.jpg"
+              src="/hero-assets/screens/1.jpg"
               alt="Booking flow screen"
               className="absolute inset-x-0 top-0 w-full object-cover"
               style={{
@@ -180,7 +180,7 @@ const Feature261 = ({ className }: Feature261Props) => {
 
           <Card className="feature261-footer-card feature261-mobile-tall-card relative col-span-1 h-60 overflow-hidden rounded-3xl bg-muted md:col-span-4 md:row-span-1 md:h-[300px] lg:col-span-4">
             <img
-              src="/hero-assets/screens/barbers.jpg"
+              src="/hero-assets/screens/3.jpg"
               alt="Barbers team at work"
               className="absolute inset-x-0 top-0 w-full object-cover"
               style={{
@@ -216,7 +216,7 @@ const Feature261 = ({ className }: Feature261Props) => {
 
           <Card className="feature261-footer-card feature261-mobile-tall-card relative col-span-1 h-60 overflow-hidden rounded-3xl md:col-span-3 md:row-span-1 md:h-[300px] lg:col-span-5">
             <img
-              src="/hero-assets/screens/shop.jpg"
+              src="/hero-assets/screens/2.jpg"
               alt="Barbershop interior"
               className="absolute inset-x-0 top-0 w-full object-cover"
               style={{
