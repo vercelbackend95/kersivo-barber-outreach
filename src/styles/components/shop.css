@@ -280,12 +280,14 @@
 
 .shop-card h3 {
   margin: 0;
-  font-size: 0.7rem;
-  letter-spacing: 0.02em;
+  font-family: var(--font-body);
+  font-size: 0.72rem;
+  font-weight: 600;
+  letter-spacing: 0.015em;
+  line-height: 1.32;
+  text-transform: none;
+  min-height: calc(2 * 1.32em);
 
-  line-height: 1.2;
-  text-transform: uppercase;
-  min-height: calc(2 * 1.2em);
 }
 .shop-card h3 a {
   display: -webkit-box;
@@ -349,7 +351,7 @@
   }
 
   .shop-card h3 {
-    font-size: 0.8rem;
+    font-size: 0.72rem;
 
   }
 
@@ -411,7 +413,7 @@
   }
 
   .shop-card h3 {
-    font-size: 0.9rem;
+    font-size: 0.72rem;
   }
 
   .shop-price {
