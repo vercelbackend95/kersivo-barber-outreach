@@ -79,7 +79,7 @@ const TextFeatureCard = ({
     variant = "compact",
 }: TextFeatureCardProps) => {
   return (
-    <Card className={cn("feature261-text-card rounded-3xl", className)}>
+    <Card data-feature261-card className={cn("feature261-text-card rounded-3xl", className)}>
       <CardContent
         className={cn(
           "feature261-text-card__content",
@@ -137,7 +137,7 @@ const Feature261 = ({ className }: Feature261Props) => {
         </header>
 
         <div className="grid grid-cols-1 gap-4 md:grid-cols-6 lg:grid-cols-12">
-          <div className="feature261-primary-card relative h-60 overflow-hidden rounded-3xl md:col-span-2 md:row-span-2 md:h-[400px] lg:col-span-4 lg:h-full">
+          <div data-feature261-card className="feature261-primary-card relative h-60 overflow-hidden rounded-3xl md:col-span-2 md:row-span-2 md:h-[400px] lg:col-span-4 lg:h-full">
             <img
               src="/hero-assets/screens/timeline.png"
               alt="Barber bookings timeline"
@@ -162,7 +162,7 @@ const Feature261 = ({ className }: Feature261Props) => {
               </div>
             </div>
           </div>
-          <div className="feature261-footer-card feature261-mobile-feature-card feature261-mobile-feature-card--design relative h-60 overflow-hidden rounded-3xl border md:col-span-2 md:row-span-2 md:h-[400px] lg:col-span-4 lg:h-full">
+          <div data-feature261-card className="feature261-footer-card feature261-mobile-feature-card feature261-mobile-feature-card--design relative h-60 overflow-hidden rounded-3xl border md:col-span-2 md:row-span-2 md:h-[400px] lg:col-span-4 lg:h-full">
             <img
               src="/hero-assets/screens/bookingi.jpg"
               alt="Booking flow screen"
@@ -202,7 +202,7 @@ Fast, reliable and built in from day one. Give clients a smooth way to book with
             icon={<ProductsIcon />}
             className="col-span-1 md:col-span-2 md:row-span-1 md:h-[192px] lg:col-span-2 lg:h-[260px]"
           />
-          <Card className="feature261-footer-card feature261-mobile-feature-card feature261-mobile-feature-card--expert relative col-span-1 h-60 overflow-hidden rounded-3xl bg-muted md:col-span-4 md:row-span-1 md:h-[300px] lg:col-span-4">
+          <Card data-feature261-card className="feature261-footer-card feature261-mobile-feature-card feature261-mobile-feature-card--expert relative col-span-1 h-60 overflow-hidden rounded-3xl bg-muted md:col-span-4 md:row-span-1 md:h-[300px] lg:col-span-4">
             <img
               src="/hero-assets/screens/3.jpg"
               alt="Barbers management screen"
@@ -234,7 +234,7 @@ Add your barbers, assign services, set working hours and manage your team from o
             variant="tall"
 
           />
-          <Card className="feature261-footer-card feature261-mobile-feature-card feature261-mobile-feature-card--atmosphere relative col-span-1 h-60 overflow-hidden rounded-3xl md:col-span-3 md:row-span-1 md:h-[300px] lg:col-span-5">
+          <Card data-feature261-card className="feature261-footer-card feature261-mobile-feature-card feature261-mobile-feature-card--atmosphere relative col-span-1 h-60 overflow-hidden rounded-3xl md:col-span-3 md:row-span-1 md:h-[300px] lg:col-span-5">
             <img
               src="/hero-assets/screens/2.jpg"
               alt="Barber retail store screen"
@@ -255,7 +255,7 @@ Add your favourite products in minutes and start selling anytime with a shop tha
               </div>
             </div>
           </Card>
-          <Card className="feature261-footer-card feature261-mobile-feature-card feature261-mobile-feature-card--services relative col-span-1 h-60 overflow-hidden rounded-3xl md:col-span-3 md:row-span-1 md:h-[300px] lg:col-span-4">
+          <Card data-feature261-card className="feature261-footer-card feature261-mobile-feature-card feature261-mobile-feature-card--services relative col-span-1 h-60 overflow-hidden rounded-3xl md:col-span-3 md:row-span-1 md:h-[300px] lg:col-span-4">
             <img
               src="/hero-assets/screens/4.jpg"
               alt="Barbershop services overview"
