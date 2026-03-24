@@ -414,6 +414,52 @@
   letter-spacing: 0.07em;
   text-transform: uppercase;
 }
+.system-chooser__tile-loading {
+  margin: 0;
+  display: none;
+  align-items: center;
+  gap: 0.48rem;
+  color: color-mix(in srgb, var(--accent) 82%, var(--fg));
+  font-size: 0.76rem;
+  font-weight: 600;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+}
+
+.system-chooser__tile-spinner {
+  width: 0.92rem;
+  aspect-ratio: 1;
+  border-radius: 50%;
+  border: 2px solid color-mix(in srgb, var(--accent) 24%, transparent);
+  border-top-color: var(--accent);
+  animation: system-chooser-spinner 700ms linear infinite;
+}
+
+.system-chooser__tile.is-loading {
+  border-color: color-mix(in srgb, var(--accent) 70%, var(--border));
+  background: color-mix(in srgb, var(--surface) 90%, var(--accent));
+}
+
+.system-chooser__tile.is-loading .system-chooser__tile-loading {
+  display: inline-flex;
+}
+
+.system-chooser--navigating .system-chooser__tile:not(.is-loading) {
+  opacity: 0.48;
+  pointer-events: none;
+}
+
+.system-chooser--navigating .system-chooser__close,
+.system-chooser--navigating .system-chooser__backdrop {
+  pointer-events: none;
+}
+
+@keyframes system-chooser-spinner {
+  to {
+    transform: rotate(1turn);
+  }
+}
+
 
 .system-chooser__tile--default {
   border-color: color-mix(in srgb, var(--accent) 66%, var(--border));

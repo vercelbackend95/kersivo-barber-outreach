@@ -123,6 +123,10 @@ const DEMO_ADMIN_PASSWORD = import.meta.env.PUBLIC_DEMO_ADMIN_PASSWORD
             <h3>Client Booking Flow</h3>
                         <p>See how clients choose services and lock in appointments.</p>
             <p class="system-chooser__tile-meta">No password needed</p>
+            <p class="system-chooser__tile-loading" role="status" aria-live="polite">
+              <span class="system-chooser__tile-spinner" aria-hidden="true"></span>
+              <span>Loading page…</span>
+            </p>
 
           </article>
 
@@ -130,6 +134,11 @@ const DEMO_ADMIN_PASSWORD = import.meta.env.PUBLIC_DEMO_ADMIN_PASSWORD
             <span class="system-chooser__tile-badge" aria-hidden="true">Admin view</span>
             <h3>Bookings Dashboard</h3>
             <p>Preview schedules, bookings and day-to-day admin in the guided demo view.</p>
+                        <p class="system-chooser__tile-loading" role="status" aria-live="polite">
+              <span class="system-chooser__tile-spinner" aria-hidden="true"></span>
+              <span>Loading page…</span>
+            </p>
+
           </article>
 
 
@@ -138,6 +147,11 @@ const DEMO_ADMIN_PASSWORD = import.meta.env.PUBLIC_DEMO_ADMIN_PASSWORD
 
             <h3>Shop &amp; Pickup</h3>
             <p>Open the retail demo to explore pickup-ready products and admin tools.</p>
+                        <p class="system-chooser__tile-loading" role="status" aria-live="polite">
+              <span class="system-chooser__tile-spinner" aria-hidden="true"></span>
+              <span>Loading page…</span>
+            </p>
+
           </article>
 
         </div>
@@ -281,12 +295,33 @@ const DEMO_ADMIN_PASSWORD = import.meta.env.PUBLIC_DEMO_ADMIN_PASSWORD
     });
 
     const tiles = chooser.querySelectorAll('[data-tile-href]');
+    let tileNavigationInFlight = false;
+
+    const setTileLoadingState = (activeTile) => {
+      chooser.classList.add('system-chooser--navigating');
+      tiles.forEach((tile) => {
+        if (!(tile instanceof HTMLElement)) {
+          return;
+        }
+
+        const isActive = tile === activeTile;
+        tile.classList.toggle('is-loading', isActive);
+        tile.setAttribute('aria-busy', String(isActive));
+      });
+    };
 
     const activateTile = (tile) => {
+            if (tileNavigationInFlight) {
+        return;
+      }
+
       const href = tile.getAttribute('data-tile-href');
       if (!href) {
         return;
       }
+      tileNavigationInFlight = true;
+      setTileLoadingState(tile);
+
 
       if (href.startsWith('/admin')) {
         try {
