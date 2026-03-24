@@ -1,8 +1,5 @@
 ---
-interface HeroButton {
-  text: string;
-  href: string;
-}
+
 
 interface HeroFeature {
   title: string;
@@ -13,8 +10,6 @@ interface Props {
   eyebrow?: string;
   heading?: string;
   description?: string;
-  buttonPrimary?: HeroButton;
-  buttonSecondary?: HeroButton | null;
   features?: HeroFeature[];
 }
 
@@ -23,11 +18,7 @@ const {
   heading = 'One Website System for Modern Barbershops',
   description =
     'Bookings, barber schedules, client enquiries and pickup orders all stay connected in one clean website system.',
-  buttonPrimary = {
-    text: 'See how it works',
-    href: '#',
-  },
-  buttonSecondary = null,
+
   features = [
     {
       title: 'Online bookings',
@@ -58,19 +49,7 @@ const {
       <h2 id="hero261-title" class="hero261__heading">{heading}</h2>
 
       {description && <p class="hero261__description">{description}</p>}
-      <div class="hero261__actions">
-        {buttonPrimary && (
-          <a class="btn btn--primary" href={buttonPrimary.href}>
-            {buttonPrimary.text}
-          </a>
-        )}
-        {buttonSecondary && (
-          <a class="btn btn--ghost hero261__secondary" href={buttonSecondary.href}>
-            {buttonSecondary.text}
-            <span aria-hidden="true">→</span>
-          </a>
-        )}
-      </div>
+
     </div>
     <div class="hero261__features" aria-label="Connected operations highlights">
       {features.map((feature, index) => (

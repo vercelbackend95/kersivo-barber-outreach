@@ -45,18 +45,6 @@
 
 }
 
-.hero261__actions {
-  display: flex;
-  flex-wrap: wrap;
-    align-items: center;
-  gap: 0.75rem;
-  margin-top: 0.35rem;
-}
-
-.hero261__secondary {
-  gap: 0.45rem;
-}
-
 .hero261__features {
   display: grid;
   gap: 1rem;
@@ -110,9 +98,6 @@
   }
   .hero261__content {
     gap: 1.05rem;
-  }
-  .hero261__actions {
-    margin-top: 0.45rem;
   }
   .hero261__features {
     padding-inline-start: 1.25rem;
