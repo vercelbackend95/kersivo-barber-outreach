@@ -135,7 +135,7 @@ const Feature261 = ({ className }: Feature261Props) => {
 
           <div className="feature261-footer-card feature261-mobile-tall-card relative h-60 overflow-hidden rounded-3xl border md:col-span-2 md:row-span-2 md:h-[400px] lg:col-span-4 lg:h-full">
             <img
-              src="/hero-assets/screens/1-bento.jpg"
+              src="/hero-assets/screens/1.jpg"
               alt="Booking flow screen"
               className="feature261-bento-image feature261-bento-image--booking absolute inset-x-0 top-0 w-full object-cover"
               style={{
@@ -176,7 +176,7 @@ const Feature261 = ({ className }: Feature261Props) => {
 
           <Card className="feature261-footer-card feature261-mobile-tall-card relative col-span-1 h-60 overflow-hidden rounded-3xl bg-muted md:col-span-4 md:row-span-1 md:h-[300px] lg:col-span-4">
             <img
-              src="/hero-assets/screens/3-bento.jpg"
+              src="/hero-assets/screens/3.jpg"
               alt="Barbers management screen"
               className="feature261-bento-image feature261-bento-image--barbers absolute inset-x-0 top-0 w-full object-cover"
               style={{
@@ -211,7 +211,7 @@ const Feature261 = ({ className }: Feature261Props) => {
 
           <Card className="feature261-footer-card feature261-mobile-tall-card relative col-span-1 h-60 overflow-hidden rounded-3xl md:col-span-3 md:row-span-1 md:h-[300px] lg:col-span-5">
             <img
-              src="/hero-assets/screens/2-bento.jpg"
+              src="/hero-assets/screens/2.jpg"
               alt="Barber retail store screen"
               className="feature261-bento-image feature261-bento-image--shop absolute inset-x-0 top-0 w-full object-cover"
               style={{
