@@ -134,7 +134,7 @@ const Feature261 = ({ className }: Feature261Props) => {
           </div>
           <div className="feature261-footer-card feature261-mobile-feature-card feature261-mobile-feature-card--design relative h-60 overflow-hidden rounded-3xl border md:col-span-2 md:row-span-2 md:h-[400px] lg:col-span-4 lg:h-full">
             <img
-              src="/hero-assets/screens/1.jpg"
+              src="/hero-assets/screens/bookingi.jpg"
               alt="Booking flow screen"
               className="feature261-bento-image feature261-bento-image--booking absolute inset-x-0 top-0 w-full object-cover"
               style={{

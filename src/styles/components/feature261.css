@@ -70,15 +70,16 @@
 }
 @media (max-width: 767.98px) {
   .feature261 .feature261-mobile-feature-card--design {
-    height: 34rem;
+    height: 40rem;
   }
 
   .feature261 .feature261-mobile-feature-card--expert {
-    height: 32rem;
+    height: 25rem;
+
   }
 
   .feature261 .feature261-mobile-feature-card--atmosphere {
-    height: 30rem;
+    height: 43rem;
   }
 
   .feature261 .feature261-mobile-feature-card--services {
@@ -130,7 +131,7 @@
 }
 
 .feature261 .feature261-bento-image--barbers {
-  object-position: center 5%;
+  object-position: center 90%;
 }
 
 .feature261 .text-white {
