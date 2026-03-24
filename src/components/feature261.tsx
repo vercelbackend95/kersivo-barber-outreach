@@ -232,12 +232,12 @@ const Feature261 = ({ className }: Feature261Props) => {
           </Card>
           <Card className="feature261-footer-card feature261-mobile-tall-card relative col-span-1 h-60 overflow-hidden rounded-3xl md:col-span-3 md:row-span-1 md:h-[300px] lg:col-span-4">
             <img
-              src="/hero-assets/screens/services.jpg"
+              src="/hero-assets/screens/4.jpg"
               alt="Barbershop services overview"
               className="absolute inset-x-0 top-0 w-full object-cover"
               style={{
                 bottom: FEATURE_CARD_FOOTER_HEIGHT,
-                height: `calc(100% - ${FEATURE_CARD_FOOTER_HEIGHT})`,
+                height: `calc(95% - ${FEATURE_CARD_FOOTER_HEIGHT})`,
                 objectPosition: servicesImagePosition,
               }}
 
