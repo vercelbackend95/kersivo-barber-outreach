@@ -6,6 +6,67 @@
   width: min(100% - 2rem, 72rem);
   margin-inline: auto;
 }
+.feature261 .feature261__intro {
+  position: relative;
+  margin-bottom: 1.5rem;
+  padding: 1rem 1rem 1.125rem;
+  box-shadow: 0 12px 28px color-mix(in srgb, var(--bg) 44%, transparent);
+  overflow: hidden;
+}
+
+.feature261 .feature261__kicker {
+  margin: 0;
+  font-family: var(--font-body);
+  font-size: 0.7rem;
+  font-weight: 700;
+  line-height: 1;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: var(--accent);
+}
+
+.feature261 .feature261__heading {
+  margin: 0.65rem 0 0;
+  max-width: 19ch;
+  font-family: var(--font-heading);
+  font-size: clamp(2rem, 9vw, 3.25rem);
+  line-height: 0.95;
+  letter-spacing: var(--tracking-heading);
+  text-transform: uppercase;
+  color: var(--fg);
+}
+
+.feature261 .feature261__description {
+  margin: 0.7rem 0 0;
+  max-width: 54ch;
+  font-family: var(--font-body);
+  font-size: 0.95rem;
+  line-height: 1.55;
+  color: var(--muted);
+}
+
+.feature261 .rate-card1__mark {
+  position: absolute;
+  color: color-mix(in srgb, var(--accent) 90%, var(--fg));
+  opacity: 0.95;
+  pointer-events: none;
+}
+
+.feature261 .rate-card1__mark--top {
+  top: 0.7rem;
+  right: 0.7rem;
+}
+
+.feature261 .rate-card1__mark--bottom {
+  bottom: 0.7rem;
+  left: 0.7rem;
+  transform: rotate(180deg);
+}
+
+.feature261 .feature261__mark {
+  z-index: 1;
+}
+
 
 .feature261 .grid {
   display: grid;
@@ -661,6 +722,15 @@
   .feature261 {
     padding-block: 6rem;
   }
+  .feature261 .feature261__intro {
+    margin-bottom: 1.75rem;
+    padding: 1.25rem 1.25rem 1.375rem;
+  }
+
+  .feature261 .feature261__description {
+    font-size: 1rem;
+  }
+
 
   .feature261 .md\:grid-cols-6 {
     grid-template-columns: repeat(6, minmax(0, 1fr));
@@ -785,6 +855,32 @@
 }
 
 @media (min-width: 1024px) {
+    .feature261 .feature261__intro {
+    margin-bottom: 2rem;
+    padding: 1.4rem 1.5rem 1.55rem;
+  }
+
+  .feature261 .feature261__heading {
+    max-width: 21ch;
+    font-size: clamp(2.5rem, 4.4vw, 4rem);
+  }
+
+  .feature261 .feature261__description {
+    max-width: 70ch;
+    font-size: 1.03rem;
+  }
+
+  .feature261 .rate-card1__mark--top {
+    top: 0.85rem;
+    right: 0.9rem;
+  }
+
+  .feature261 .rate-card1__mark--bottom {
+    bottom: 0.85rem;
+    left: 0.9rem;
+  }
+
+
   .feature261 .lg\:grid-cols-12 {
     grid-template-columns: repeat(12, minmax(0, 1fr));
   }

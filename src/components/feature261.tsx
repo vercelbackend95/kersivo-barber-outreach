@@ -51,6 +51,22 @@ const AdminIcon = () => (
     <path d="M17 10l3 3-3 3" />
   </svg>
 );
+const Illustration = (props: React.SVGProps<SVGSVGElement>) => {
+  return (
+    <svg
+      width="22"
+      height="20"
+      viewBox="0 0 22 20"
+      fill="none"
+      xmlns="http://www.w3.org/2000/svg"
+      {...props}
+    >
+      <line x1="0.607422" y1="2.57422" x2="21.5762" y2="2.57422" stroke="currentColor" strokeWidth="4" />
+      <line x1="19.5762" y1="19.624" x2="19.5762" y2="4.57422" stroke="currentColor" strokeWidth="4" />
+    </svg>
+  );
+};
+
 
 const TextFeatureCard = ({
   eyebrow,
@@ -107,6 +123,16 @@ const Feature261 = ({ className }: Feature261Props) => {
   return (
     <section className={cn("feature261 py-32", className)}>
       <div className="container">
+                <header className="feature261__intro">
+          <p className="feature261__kicker">INSIDE THE SYSTEM</p>
+          <h2 className="feature261__heading">A closer look at the barber system</h2>
+          <p className="feature261__description">
+            Bookings, retail, services and daily shop control — all connected in one clean setup.
+          </p>
+          <Illustration className="rate-card1__mark rate-card1__mark--top feature261__mark" />
+          <Illustration className="rate-card1__mark rate-card1__mark--bottom feature261__mark" />
+        </header>
+
         <div className="grid grid-cols-1 gap-4 md:grid-cols-6 lg:grid-cols-12">
           <div className="feature261-primary-card relative h-60 overflow-hidden rounded-3xl md:col-span-2 md:row-span-2 md:h-[400px] lg:col-span-4 lg:h-full">
             <img
