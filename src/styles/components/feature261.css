@@ -68,6 +68,23 @@
 .feature261 .feature261-mobile-feature-card {
   height: 37rem;
 }
+@media (max-width: 767.98px) {
+  .feature261 .feature261-mobile-feature-card--design {
+    height: 34rem;
+  }
+
+  .feature261 .feature261-mobile-feature-card--expert {
+    height: 32rem;
+  }
+
+  .feature261 .feature261-mobile-feature-card--atmosphere {
+    height: 30rem;
+  }
+
+  .feature261 .feature261-mobile-feature-card--services {
+    height: 28rem;
+  }
+}
 
 
 

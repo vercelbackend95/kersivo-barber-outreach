@@ -132,8 +132,7 @@ const Feature261 = ({ className }: Feature261Props) => {
               </div>
             </div>
           </div>
-
-          <div className="feature261-footer-card feature261-mobile-feature-card relative h-60 overflow-hidden rounded-3xl border md:col-span-2 md:row-span-2 md:h-[400px] lg:col-span-4 lg:h-full">
+          <div className="feature261-footer-card feature261-mobile-feature-card feature261-mobile-feature-card--design relative h-60 overflow-hidden rounded-3xl border md:col-span-2 md:row-span-2 md:h-[400px] lg:col-span-4 lg:h-full">
             <img
               src="/hero-assets/screens/1.jpg"
               alt="Booking flow screen"
@@ -173,8 +172,7 @@ const Feature261 = ({ className }: Feature261Props) => {
             icon={<ProductsIcon />}
             className="col-span-1 md:col-span-2 md:row-span-1 md:h-[192px] lg:col-span-2 lg:h-[220px]"
           />
-
-          <Card className="feature261-footer-card feature261-mobile-feature-card relative col-span-1 h-60 overflow-hidden rounded-3xl bg-muted md:col-span-4 md:row-span-1 md:h-[300px] lg:col-span-4">
+          <Card className="feature261-footer-card feature261-mobile-feature-card feature261-mobile-feature-card--expert relative col-span-1 h-60 overflow-hidden rounded-3xl bg-muted md:col-span-4 md:row-span-1 md:h-[300px] lg:col-span-4">
             <img
               src="/hero-assets/screens/3.jpg"
               alt="Barbers management screen"
@@ -207,8 +205,7 @@ const Feature261 = ({ className }: Feature261Props) => {
             variant="tall"
 
           />
-
-          <Card className="feature261-footer-card feature261-mobile-feature-card relative col-span-1 h-60 overflow-hidden rounded-3xl md:col-span-3 md:row-span-1 md:h-[300px] lg:col-span-5">
+          <Card className="feature261-footer-card feature261-mobile-feature-card feature261-mobile-feature-card--atmosphere relative col-span-1 h-60 overflow-hidden rounded-3xl md:col-span-3 md:row-span-1 md:h-[300px] lg:col-span-5">
             <img
               src="/hero-assets/screens/2.jpg"
               alt="Barber retail store screen"
@@ -229,7 +226,7 @@ const Feature261 = ({ className }: Feature261Props) => {
               </div>
             </div>
           </Card>
-          <Card className="feature261-footer-card feature261-mobile-feature-card relative col-span-1 h-60 overflow-hidden rounded-3xl md:col-span-3 md:row-span-1 md:h-[300px] lg:col-span-4">
+          <Card className="feature261-footer-card feature261-mobile-feature-card feature261-mobile-feature-card--services relative col-span-1 h-60 overflow-hidden rounded-3xl md:col-span-3 md:row-span-1 md:h-[300px] lg:col-span-4">
             <img
               src="/hero-assets/screens/4.jpg"
               alt="Barbershop services overview"
