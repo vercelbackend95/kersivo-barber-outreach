@@ -102,9 +102,6 @@ const TextFeatureCard = ({
 
 const Feature261 = ({ className }: Feature261Props) => {
   const timelineImagePosition = "center 0%";
-  const bookingImagePosition = "center 0%";
-  const barbersImagePosition = "center 0%";
-  const shopImagePosition = "center 0%";
   const servicesImagePosition = "center 0%";
   return (
     <section className={cn("feature261 py-32", className)}>
@@ -138,13 +135,12 @@ const Feature261 = ({ className }: Feature261Props) => {
 
           <div className="feature261-footer-card feature261-mobile-tall-card relative h-60 overflow-hidden rounded-3xl border md:col-span-2 md:row-span-2 md:h-[400px] lg:col-span-4 lg:h-full">
             <img
-              src="/hero-assets/screens/1.jpg"
+              src="/hero-assets/screens/1-bento.jpg"
               alt="Booking flow screen"
-              className="absolute inset-x-0 top-0 w-full object-cover"
+              className="feature261-bento-image feature261-bento-image--booking absolute inset-x-0 top-0 w-full object-cover"
               style={{
                 bottom: FEATURE_CARD_FOOTER_HEIGHT,
                 height: `calc(100% - ${FEATURE_CARD_FOOTER_HEIGHT})`,
-                objectPosition: bookingImagePosition,
               }}
 
             />
@@ -180,13 +176,12 @@ const Feature261 = ({ className }: Feature261Props) => {
 
           <Card className="feature261-footer-card feature261-mobile-tall-card relative col-span-1 h-60 overflow-hidden rounded-3xl bg-muted md:col-span-4 md:row-span-1 md:h-[300px] lg:col-span-4">
             <img
-              src="/hero-assets/screens/3.jpg"
-              alt="Barbers team at work"
-              className="absolute inset-x-0 top-0 w-full object-cover"
+              src="/hero-assets/screens/3-bento.jpg"
+              alt="Barbers management screen"
+              className="feature261-bento-image feature261-bento-image--barbers absolute inset-x-0 top-0 w-full object-cover"
               style={{
                 bottom: FEATURE_CARD_FOOTER_HEIGHT,
                 height: `calc(100% - ${FEATURE_CARD_FOOTER_HEIGHT})`,
-                objectPosition: barbersImagePosition,
               }}
 
             />
@@ -216,13 +211,12 @@ const Feature261 = ({ className }: Feature261Props) => {
 
           <Card className="feature261-footer-card feature261-mobile-tall-card relative col-span-1 h-60 overflow-hidden rounded-3xl md:col-span-3 md:row-span-1 md:h-[300px] lg:col-span-5">
             <img
-              src="/hero-assets/screens/2.jpg"
-              alt="Barbershop interior"
-              className="absolute inset-x-0 top-0 w-full object-cover"
+              src="/hero-assets/screens/2-bento.jpg"
+              alt="Barber retail store screen"
+              className="feature261-bento-image feature261-bento-image--shop absolute inset-x-0 top-0 w-full object-cover"
               style={{
                 bottom: FEATURE_CARD_FOOTER_HEIGHT,
                 height: `calc(100% - ${FEATURE_CARD_FOOTER_HEIGHT})`,
-                objectPosition: shopImagePosition,
               }}
 
             />

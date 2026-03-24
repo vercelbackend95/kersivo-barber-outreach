@@ -104,6 +104,18 @@
   object-fit: cover;
 }
 
+.feature261 .feature261-bento-image--booking {
+  object-position: center 4%;
+}
+
+.feature261 .feature261-bento-image--shop {
+  object-position: center 6%;
+}
+
+.feature261 .feature261-bento-image--barbers {
+  object-position: center 5%;
+}
+
 .feature261 .text-white {
   color: var(--fg);
 }
@@ -705,6 +717,18 @@
 
   .feature261 .feature261-text-card__title {
     font-size: clamp(2.15rem, 4vw, 3.1rem);
+  }
+
+  .feature261 .feature261-bento-image--booking {
+    object-position: center 8%;
+  }
+
+  .feature261 .feature261-bento-image--shop {
+    object-position: center 10%;
+  }
+
+  .feature261 .feature261-bento-image--barbers {
+    object-position: center 8%;
   }
 
 }
