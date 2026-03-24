@@ -201,11 +201,14 @@
 
 .shop6__card-body h3 {
   margin: 0;
-  font-size: 0.7rem;
-  letter-spacing: 0.02em;
-  line-height: 1.2;
-  text-transform: uppercase;
-  min-height: calc(2 * 1.2em);
+  font-family: var(--font-body);
+  font-size: 0.72rem;
+  font-weight: 600;
+  letter-spacing: 0.015em;
+  line-height: 1.32;
+  text-transform: none;
+  min-height: calc(2 * 1.32em);
+
 }
 
 .shop6__card-body h3 a {
@@ -336,8 +339,11 @@
   }
 
   .shop6__grid .shop-card h3 {
-    min-height: calc(2 * 1.2em);
+    min-height: calc(2 * 1.32em);
     font-size: 0.72rem;
+        font-weight: 600;
+    letter-spacing: 0.015em;
+
   }
 
   .shop6__grid .shop-price {
@@ -453,6 +459,14 @@
 
   }
   
+  .shop6__grid .shop-card h3 {
+    font-size: 1rem;
+    font-weight: 500;
+    letter-spacing: 0.01em;
+    line-height: 1.36;
+    min-height: calc(2 * 1.36em);
+  }
+
   .shop6__controls {
     display: flex;
     justify-content: flex-end;
@@ -467,7 +481,10 @@
   }
 
   .shop6__card-body h3 {
-    font-size: 0.85rem;
+    font-size: 0.8rem;
+    font-weight: 500;
+    letter-spacing: 0.008em;
+
   }
 
   .shop6__price {
