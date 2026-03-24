@@ -69,6 +69,34 @@
   height: 37rem;
 }
 @media (max-width: 767.98px) {
+    .feature261 .feature261-primary-card,
+  .feature261 .feature261-mobile-feature-card {
+    background:
+      linear-gradient(
+        180deg,
+        color-mix(in srgb, var(--accent) 8%, transparent) 0%,
+        transparent 38%
+      ),
+      linear-gradient(135deg, color-mix(in srgb, var(--surface) 98%, var(--bg)) 0%, var(--bg) 100%);
+  }
+
+  .feature261 .feature261-primary-card::before,
+  .feature261 .feature261-mobile-feature-card::before {
+    content: "";
+    position: absolute;
+    inset: 0 0 auto;
+    z-index: 2;
+    height: 3px;
+    background: linear-gradient(
+      90deg,
+      var(--accent) 0%,
+      color-mix(in srgb, var(--accent) 35%, transparent) 65%,
+      transparent 100%
+    );
+    pointer-events: none;
+  }
+
+
   .feature261 .feature261-mobile-feature-card--design {
     height: 40rem;
   }

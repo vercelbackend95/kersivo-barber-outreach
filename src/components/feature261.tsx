@@ -122,8 +122,8 @@ const Feature261 = ({ className }: Feature261Props) => {
             <div className="feature261-primary-card__image-overlay absolute inset-x-0 top-0" />
             <div className="feature261-primary-card__footer absolute inset-x-0 bottom-0 z-10 text-white">
               <div className="feature261-primary-card__footer-inner">
-                <span className="feature261-primary-card__eyebrow">Booking dashboard</span>
-                <p className="feature261-primary-card__title">Experience Design Excellence.</p>
+                <span className="feature261-primary-card__eyebrow">BOOKING OVERVIEW</span>
+                <p className="feature261-primary-card__title">See all your barbers’ bookings in one place. Keep track of appointments, schedules and daily flow without the mess.</p>
               </div>
             </div>
             <div className="absolute right-6 top-6 z-10">
@@ -146,9 +146,9 @@ const Feature261 = ({ className }: Feature261Props) => {
             <div className="feature261-primary-card__image-overlay absolute inset-x-0 top-0" />
             <div className="feature261-primary-card__footer absolute inset-x-0 bottom-0 z-10 text-white">
               <div className="feature261-primary-card__footer-inner">
-                <span className="feature261-primary-card__eyebrow">Design system</span>
+                <span className="feature261-primary-card__eyebrow">BUILT-IN BOOKING</span>
                 <p className="feature261-primary-card__title feature261-primary-card__title--wide">
-                  Build your interface with stunning components and modern design.
+Fast, reliable and built in from day one. Give clients a smooth way to book without relying on third-party platforms.
                 </p>
               </div>
             </div>
@@ -186,10 +186,9 @@ const Feature261 = ({ className }: Feature261Props) => {
             <div className="feature261-primary-card__image-overlay absolute inset-x-0 top-0" />
             <div className="feature261-primary-card__footer absolute inset-x-0 bottom-0 z-10 text-white">
               <div className="feature261-primary-card__footer-inner">
-                <span className="feature261-primary-card__eyebrow">Expert barbers</span>
+                <span className="feature261-primary-card__eyebrow">BARBER MANAGEMENT</span>
                 <p className="feature261-primary-card__title feature261-primary-card__title--wide">
-                  Skilled professionals delivering sharp cuts, beard trims, and a premium
-                  barbershop experience.
+Add your barbers, assign services, set working hours and manage your team from one clear system.
                 </p>
               </div>
                           </div>
@@ -219,9 +218,9 @@ const Feature261 = ({ className }: Feature261Props) => {
             <div className="feature261-primary-card__image-overlay absolute inset-x-0 top-0" />
             <div className="feature261-primary-card__footer absolute inset-x-0 bottom-0 z-10 text-white">
               <div className="feature261-primary-card__footer-inner">
-                <span className="feature261-primary-card__eyebrow">Barbershop atmosphere</span>
+                <span className="feature261-primary-card__eyebrow">RETAIL READY</span>
                 <p className="feature261-primary-card__title feature261-primary-card__title--wide">
-                  Step into a clean, bold space built for premium grooming and effortless client comfort.
+Add your favourite products in minutes and start selling anytime with a shop that fits your barbershop.
                 </p>
               </div>
             </div>
@@ -241,9 +240,9 @@ const Feature261 = ({ className }: Feature261Props) => {
             <div className="feature261-primary-card__image-overlay absolute inset-x-0 top-0" />
             <div className="feature261-primary-card__footer absolute inset-x-0 bottom-0 z-10 text-white">
               <div className="feature261-primary-card__footer-inner">
-                <span className="feature261-primary-card__eyebrow">Barber services</span>
+                <span className="feature261-primary-card__eyebrow">SERVICE CONTROL</span>
                 <p className="feature261-primary-card__title feature261-primary-card__title--wide">
-                  From skin fades to beard sculpting, every service is presented with clarity and premium detail.
+Add your own services, update prices anytime and keep your menu clear, flexible and easy to manage.
 
                 </p>
               </div>
