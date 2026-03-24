@@ -483,8 +483,7 @@
 .cart-drawer__header {
   display: grid;
   gap: 0.48rem;
-  border: 1px solid var(--border);
-  background: color-mix(in srgb, var(--bg) 62%, transparent);
+
   padding: 0.7rem 0.72rem;
 }
 
