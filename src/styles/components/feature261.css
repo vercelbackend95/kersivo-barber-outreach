@@ -13,6 +13,14 @@
   box-shadow: 0 12px 28px color-mix(in srgb, var(--bg) 44%, transparent);
   overflow: hidden;
 }
+.feature261 .feature261__headline-wrap {
+  position: relative;
+  width: fit-content;
+  max-width: 100%;
+  padding-right: 0.5rem;
+  padding-left: 0.5rem;
+}
+
 
 .feature261 .feature261__kicker {
   margin: 0;
@@ -53,13 +61,15 @@
 }
 
 .feature261 .rate-card1__mark--top {
-  top: 0.7rem;
-  right: 0.7rem;
+  top: 0.2rem;
+  right: 0;
+
 }
 
 .feature261 .rate-card1__mark--bottom {
-  bottom: 0.7rem;
-  left: 0.7rem;
+  bottom: 0.1rem;
+  left: 0;
+
   transform: rotate(180deg);
 }
 
@@ -859,6 +869,11 @@
     margin-bottom: 2rem;
     padding: 1.4rem 1.5rem 1.55rem;
   }
+  .feature261 .feature261__headline-wrap {
+    padding-right: 0.6rem;
+    padding-left: 0.6rem;
+  }
+
 
   .feature261 .feature261__heading {
     max-width: 21ch;
@@ -871,13 +886,15 @@
   }
 
   .feature261 .rate-card1__mark--top {
-    top: 0.85rem;
-    right: 0.9rem;
+    top: 0.18rem;
+    right: 0;
+
   }
 
   .feature261 .rate-card1__mark--bottom {
-    bottom: 0.85rem;
-    left: 0.9rem;
+    bottom: 0.12rem;
+    left: 0;
+
   }
 
 

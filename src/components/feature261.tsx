@@ -123,9 +123,12 @@ const Feature261 = ({ className }: Feature261Props) => {
   return (
     <section className={cn("feature261 py-32", className)}>
       <div className="container">
-                <header className="feature261__intro">
-          <p className="feature261__kicker">INSIDE THE SYSTEM</p>
-          <h2 className="feature261__heading">A closer look at the barber system</h2>
+        <header className="feature261__intro">
+          <div className="feature261__headline-wrap">
+            <p className="feature261__kicker">INSIDE THE SYSTEM</p>
+            <h2 className="feature261__heading">A closer look at the barber system</h2>
+          </div>
+
           <p className="feature261__description">
             Bookings, retail, services and daily shop control — all connected in one clean setup.
           </p>
