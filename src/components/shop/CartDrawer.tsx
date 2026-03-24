@@ -148,7 +148,7 @@ export default function CartDrawer() {
           <h2>Your cart</h2>
           <p className="muted cart-drawer__intro">Order online now and collect when it suits you. No shipping needed.</p>
           <button type="button" className="btn btn--ghost cart-drawer__close" onClick={closeCart}>
-            Close
+            X
           </button>
         </div>
 
