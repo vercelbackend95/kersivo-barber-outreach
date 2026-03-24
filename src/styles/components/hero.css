@@ -58,22 +58,13 @@
 }
 
 .hero10__bg-layer--panel {
-  background:
-    linear-gradient(
-      to bottom,
-      transparent 0,
-      transparent clamp(10.5rem, 27vw, 14.5rem),
-      color-mix(in srgb, var(--surface) 76%, transparent) clamp(10.5rem, 27vw, 14.5rem),
-      color-mix(in srgb, var(--surface) 76%, transparent) clamp(10.5rem, 27vw, 14.5rem + 1px),
-      transparent clamp(10.5rem, 27vw, 14.5rem + 1px)
-    ),
-    linear-gradient(
-      to bottom,
-      color-mix(in srgb, var(--bg) 2%, transparent) 0%,
-      color-mix(in srgb, var(--bg) 55%, transparent) 72%,
-      color-mix(in srgb, var(--bg) 86%, transparent) 100%
+  background: linear-gradient(
+    to bottom,
+    color-mix(in srgb, var(--bg) 2%, transparent) 0%,
+    color-mix(in srgb, var(--bg) 55%, transparent) 72%,
+    color-mix(in srgb, var(--bg) 86%, transparent) 100%
+  );
 
-    );
   opacity: 0.62;
 
 

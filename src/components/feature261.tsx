@@ -153,7 +153,7 @@ const Feature261 = ({ className }: Feature261Props) => {
             <div className="feature261-primary-card__footer absolute inset-x-0 bottom-0 z-10 text-white">
               <div className="feature261-primary-card__footer-inner">
                 <span className="feature261-primary-card__eyebrow">BOOKING OVERVIEW</span>
-                <p className="feature261-primary-card__title">See all your barbers’ bookings in one place. Keep track of appointments, schedules and daily flow without the mess.</p>
+                <p className="feature261-primary-card__title">One view for the whole day.</p>
               </div>
             </div>
             <div className="absolute right-6 top-6 z-10">
@@ -178,7 +178,7 @@ const Feature261 = ({ className }: Feature261Props) => {
               <div className="feature261-primary-card__footer-inner">
                 <span className="feature261-primary-card__eyebrow">BUILT-IN BOOKING</span>
                 <p className="feature261-primary-card__title feature261-primary-card__title--wide">
-Fast, reliable and built in from day one. Give clients a smooth way to book without relying on third-party platforms.
+                  Smooth booking without third-party platforms.
                 </p>
               </div>
             </div>
@@ -218,7 +218,7 @@ Fast, reliable and built in from day one. Give clients a smooth way to book with
               <div className="feature261-primary-card__footer-inner">
                 <span className="feature261-primary-card__eyebrow">BARBER MANAGEMENT</span>
                 <p className="feature261-primary-card__title feature261-primary-card__title--wide">
-Add your barbers, assign services, set working hours and manage your team from one clear system.
+Add barbers, assign services and set hours.
                 </p>
               </div>
                           </div>
@@ -250,7 +250,7 @@ Add your barbers, assign services, set working hours and manage your team from o
               <div className="feature261-primary-card__footer-inner">
                 <span className="feature261-primary-card__eyebrow">RETAIL READY</span>
                 <p className="feature261-primary-card__title feature261-primary-card__title--wide">
-Add your favourite products in minutes and start selling anytime with a shop that fits your barbershop.
+Add products fast and sell from your own site.
                 </p>
               </div>
             </div>
@@ -272,7 +272,7 @@ Add your favourite products in minutes and start selling anytime with a shop tha
               <div className="feature261-primary-card__footer-inner">
                 <span className="feature261-primary-card__eyebrow">SERVICE CONTROL</span>
                 <p className="feature261-primary-card__title feature261-primary-card__title--wide">
-Add your own services, update prices anytime and keep your menu clear, flexible and easy to manage.
+Update services and pricing anytime.
 
                 </p>
               </div>
