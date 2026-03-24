@@ -82,10 +82,10 @@
 .hero108__media {
   position: relative;
   min-height: 23rem;
-  border: 1px solid var(--border);
+
   border-radius: var(--radius-md);
   overflow: hidden;
-  background: var(--surface);
+
 }
 
 .hero108__media img {

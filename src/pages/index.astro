@@ -40,21 +40,49 @@ const DEMO_ADMIN_PASSWORD = import.meta.env.PUBLIC_DEMO_ADMIN_PASSWORD
 <MainLayout title="Kersivo Barber Outreach">
     <main class="hero10">
     <section id="home" class="hero10__section">
+            <div class="hero10__bg" aria-hidden="true">
+        <div class="hero10__bg-layer hero10__bg-layer--grid"></div>
+        <div class="hero10__bg-layer hero10__bg-layer--radial"></div>
+        <div class="hero10__bg-layer hero10__bg-layer--grain"></div>
+        <div class="hero10__bg-layer hero10__bg-layer--panel"></div>
+      </div>
+
+
       <div class="container hero10__container">
+                <div class="hero10__system-cues" aria-hidden="true">
+          <span class="hero10__cue hero10__cue--left">LIVE · BOOKINGS STABLE</span>
+          <span class="hero10__cue hero10__cue--right">PICKUP FLOW · ACTIVE</span>
+          <span class="hero10__cue hero10__cue--bottom">ADMIN SYNC · ONLINE</span>
+        </div>
+
+
         <div class="hero10__content">
           <span class="hero10__badge">BARBER WEBSITE SYSTEM</span>
-          <h1 class="hero10__title">A BARBER WEBSITE WITH BOOKINGS, RETAIL AND REAL SHOP CONTROL</h1>
+          <h1 class="hero10__title">
+            A BARBER WEBSITE SYSTEM<br />
+            BUILT FOR BOOKINGS,<br />
+            RETAIL &amp; REAL SHOP CONTROL
+          </h1>
+
           <p class="hero10__lead">
             One connected system that turns website traffic into booked appointments, product sales, and smooth daily shop operations.
           </p>
-          <div class="hero10__actions">
-            <button class="btn btn--primary" type="button" data-system-chooser-open>
-              SEE THE SYSTEM
-            </button>
-            <a class="btn btn--secondary" href="#book-demo" data-demo-cta>BOOK A DEMO</a>
+          <div class="hero10__actions-wrap">
+            <div class="hero10__actions">
+              <button class="btn btn--primary" type="button" data-system-chooser-open>
+                SEE THE SYSTEM
+              </button>
+              <a class="btn btn--secondary" href="#book-demo" data-demo-cta>BOOK A DEMO</a>
+            </div>
+            <p class="hero10__actions-note">Guided demo access for booking flow, admin timeline and shop pickup.</p>
 
           </div>
 
+          <ul class="hero10__proof" aria-label="System proof points">
+            <li>LIVE BOOKING FLOW</li>
+            <li>SHOP + PICKUP READY</li>
+            <li>ADMIN DAY CONTROL</li>
+          </ul>
 
 
         </div>
