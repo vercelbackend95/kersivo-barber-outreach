@@ -94,6 +94,8 @@ const Process2 = ({ className }: Process2Props) => {
               </div>
             </div>
             <Button
+                          type="button"
+              data-demo-cta
               className="process2-contact-button flex items-center justify-start gap-2"
             >
               <CornerDownRight className="process2-contact-icon" />
