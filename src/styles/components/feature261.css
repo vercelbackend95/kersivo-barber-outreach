@@ -863,5 +863,11 @@
   .feature261 .feature261-text-card__content--tall .feature261-text-card__background-word {
     font-size: clamp(4.1rem, 6vw, 5.8rem);
   }
+  .feature261 .feature261-bento-image--shop {
+    object-fit: contain;
+    object-position: center center;
+    background: var(--bg);
+  }
+
 
 }
