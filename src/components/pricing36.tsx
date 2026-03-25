@@ -15,7 +15,7 @@ const Pricing36 = ({ className }: Pricing36Props) => {
           <span className="compare3-block__badge">SETUP OPTIONS</span>
           <h2>CHOOSE THE SETUP THAT FITS YOUR BARBERSHOP</h2>
           <p>
-Both packages include a custom barber website system — the difference is how far you want to push the presentation, sales flow and retail setup.
+Both packages include the same core system. The difference is how far you want to push sales flow, presentation and retail capacity.
           </p>
         </div>
 
@@ -35,7 +35,7 @@ Both packages include a custom barber website system — the difference is how f
                     </span>
                   </p>
                   <p className="text-sm text-muted-foreground">
-A strong starting point for barbers who want a sharp, professional website system that covers the essentials.
+Best for shops that want one clean system for bookings, core pages and pickup retail essentials.
                   </p>
                 </div>
                 <Separator className="my-6" />
@@ -78,7 +78,7 @@ A strong starting point for barbers who want a sharp, professional website syste
                 href="#book-demo"
                 className="group flex items-center justify-center gap-1.5 py-3 text-center font-medium text-background"
               >
-                Choose Base
+                Choose Base Setup
                 <ArrowRight className="size-5 transition-transform group-hover:translate-x-1" />
               </a>
             </div>
@@ -100,7 +100,7 @@ A strong starting point for barbers who want a sharp, professional website syste
                     </span>
                   </p>
                   <p className="text-sm text-muted-foreground">
-For barbershops that want a sharper presentation, a stronger sales setup and a more premium client experience.
+Best for shops that want stronger sales flow, higher retail capacity and a more polished brand presentation.
                   </p>
                 </div>
                 <Separator className="my-6" />
@@ -141,7 +141,7 @@ For barbershops that want a sharper presentation, a stronger sales setup and a m
                 href="#book-demo"
                 className="group flex items-center justify-center gap-1.5 py-3 text-center font-medium text-background"
               >
-                Choose Premium
+                Choose Premium Setup
                 <ArrowRight className="size-5 transition-transform group-hover:translate-x-1" />
               </a>
             </div>

@@ -63,7 +63,7 @@ const RateCard1 = ({ className }: RateCard1Props) => {
               ))}
             </ul>
             <p className="rate-card1__note">
-After launch, the website stays hosted, maintained and supported through one simple monthly care plan.
+After launch, Managed Care keeps hosting, updates and support handled — so you don’t manage technical upkeep yourself.
             </p>
           </div>
         </aside>
