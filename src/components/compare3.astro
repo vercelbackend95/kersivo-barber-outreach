@@ -40,7 +40,7 @@ const comparisonRows = [
 
     <div class="compare3-block__table-wrap">
       <div class="compare3-block__grid" role="table" aria-label="Comparison table">
-        <div class="compare3-block__cell compare3-block__brand compare3-block__brand--highlight" role="columnheader">
+        <div class="compare3-block__item compare3-block__brand compare3-block__brand--highlight" role="columnheader">
           <img
             src="https://deifkwefumgah.cloudfront.net/shadcnblocks/block/block-1.svg"
             alt="Kersivo logo"
@@ -51,7 +51,7 @@ const comparisonRows = [
           <p class="compare3-block__brand-title">Kersivo</p>
           <p class="compare3-block__brand-copy">Premium barber website system</p>
         </div>
-        <div class="compare3-block__cell compare3-block__brand" role="columnheader">
+        <div class="compare3-block__item compare3-block__brand" role="columnheader">
           <img
             src="https://deifkwefumgah.cloudfront.net/shadcnblocks/block/block-2.svg"
             alt="Typical alternatives"
@@ -65,12 +65,12 @@ const comparisonRows = [
         {
           comparisonRows.map((row) => (
             <>
-              <div class="compare3-block__cell compare3-block__value compare3-block__value--highlight">
+              <div class="compare3-block__item compare3-block__value compare3-block__value--featured">
                 <span class="compare3-block__row-title">{row.title}</span>
                 <span class="compare3-block__status compare3-block__status--ok">✓</span>
                 <span>{row.kersivo}</span>
               </div>
-              <div class="compare3-block__cell compare3-block__value">
+              <div class="compare3-block__item compare3-block__value">
                 <span class="compare3-block__row-title">{row.title}</span>
                 <span class="compare3-block__status compare3-block__status--bad">−</span>
                 <span>{row.alternatives}</span>
@@ -78,7 +78,7 @@ const comparisonRows = [
             </>
           ))
         }
-        <div class="compare3-block__cell compare3-block__cta-wrap compare3-block__value--highlight">
+        <div class="compare3-block__item compare3-block__cta-row compare3-block__value--featured">
           <a class="compare3-block__cta" href="#book-demo" data-demo-cta>Book a demo</a>
         </div>
       </div>

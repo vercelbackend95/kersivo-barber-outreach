@@ -61,7 +61,7 @@
 
 }
 
-.compare3-block__cell {
+.compare3-block__item {
   border-bottom: 1px solid var(--border);
   padding: 0.85rem 0.55rem;
 }
@@ -84,7 +84,7 @@
 }
 
 .compare3-block__brand:not(.compare3-block__brand--highlight),
-.compare3-block__value:not(.compare3-block__value--highlight) {
+.compare3-block__value:not(.compare3-block__value--featured) {
   background:
     radial-gradient(circle at 20% 18%, color-mix(in srgb, var(--surface) 54%, transparent) 0%, transparent 62%),
     linear-gradient(140deg, color-mix(in srgb, var(--surface) 36%, transparent) 0%, transparent 58%);
@@ -118,7 +118,7 @@
 }
 
 .compare3-block__value,
-.compare3-block__cta-wrap {
+.compare3-block__cta-row {
   display: flex;
   align-items: center;
   justify-content: center;
@@ -140,7 +140,7 @@
   letter-spacing: 0.01em;
 }
 
-.compare3-block__value--highlight {
+.compare3-block__value--featured {
   background: var(--surface);
 }
 
@@ -161,7 +161,7 @@
   color: color-mix(in srgb, var(--fg) 82%, var(--muted));
 }
 
-.compare3-block__cta-wrap {
+.compare3-block__cta-row {
   grid-column: 1;
   border-bottom: 0;
   padding-top: 0.6rem;
@@ -230,7 +230,7 @@
     min-width: 42rem;
   }
 
-  .compare3-block__cell {
+  .compare3-block__item {
     padding: 1.25rem;
   }
 
@@ -251,7 +251,7 @@
     margin-top: 0;
   }
 
-  .compare3-block__cta-wrap {
+  .compare3-block__cta-row {
     padding-top: 1rem;
     padding-bottom: 1.15rem;
   }
