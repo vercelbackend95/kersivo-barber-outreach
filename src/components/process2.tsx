@@ -26,35 +26,50 @@ const Process2 = ({ className }: Process2Props) => {
   const process = [
     {
       step: "01",
-      title: "Intro",
+      title: "Discovery & Setup",
+      timeline: "Day 1",
+
       image:
         "https://deifkwefumgah.cloudfront.net/shadcnblocks/block/guri4/img11.png",
-      description:
-        "We start with a short conversation to understand your barbershop, services, style and what you want the website to do for you.",
+      whatHappens:
+        "We collect your services, team setup, brand assets, and booking rules to map the right structure.",
+      deliverable: "Approved project brief + exact build plan.",
+
     },
     {
       step: "02",
-      title: "Content & Setup",
+      title: "Build & Content",
+      timeline: "Days 2–6",
+
       image:
         "https://deifkwefumgah.cloudfront.net/shadcnblocks/block/guri4/img12.png",
-      description:
-        "You send over the key details — like your logo, photos, services, pricing, opening hours and products — and we shape the site structure from there.",
+      whatHappens:
+        "We build your booking pages, service structure, and key conversion sections around your offer.",
+      deliverable: "First full working draft of your website system.",
+
     },
     {
       step: "03",
-      title: "Build & Review",
+      title: "Review & Refinement",
+      timeline: "Days 7–10",
+
       image:
         "https://deifkwefumgah.cloudfront.net/shadcnblocks/block/guri4/img10.png",
-      description:
-        "We build the full setup, send it over for review, and make the final changes before launch.",
+      whatHappens:
+        "You send feedback and we tighten layout, copy blocks, and customer flow before sign-off.",
+      deliverable: "Final pre-launch version approved by you.",
+
     },
     {
       step: "04",
-      title: "Launch & Ongoing Care",
+      title: "Launch & Handover",
+      timeline: "Days 11–14",
       image:
         "https://deifkwefumgah.cloudfront.net/shadcnblocks/block/guri4/img9.png",
-      description:
-        "Once approved, we launch the site and keep everything running with hosting, updates and ongoing care.",
+      whatHappens:
+        "We connect your domain, run launch checks, and prepare a practical admin walkthrough.",
+      deliverable: "Live website + handover guide + admin access instructions.",
+
     },
   ];
 
@@ -70,7 +85,7 @@ const Process2 = ({ className }: Process2Props) => {
               Our Process
             </h1>
             <p className="text-base text-foreground/50">
-A simple 4-step setup. You send the basics — we handle the heavy lifting.
+              A clear 4-step delivery plan built for busy UK barber teams.
             </p>
             <div className="relative h-90 overflow-hidden border">
               {previousActive !== undefined && (
@@ -115,8 +130,11 @@ const ProcessCard = ({
   step: {
     step: string;
     title: string;
+        timeline: string;
     image: string;
-    description: string;
+    whatHappens: string;
+    deliverable: string;
+
   };
   index: number;
   setActive: (index: number) => void;
@@ -143,11 +161,16 @@ const ProcessCard = ({
       <div className="flex w-fit items-center justify-center px-4 py-1 text-9xl tracking-tighter">
         0{index + 1}
       </div>
-      <div>
-        <h3 className="mb-4 text-2xl font-semibold tracking-tighter lg:text-3xl">
-          {step.title}
+      <div className="space-y-3">
+        <h3 className="text-2xl font-semibold tracking-tighter lg:text-3xl">
+          Step {index + 1} — {step.title}
+
         </h3>
-        <p className="text-foreground/50">{step.description}</p>
+        <p className="text-sm font-medium uppercase tracking-wide text-foreground/70">
+          Timeline: {step.timeline}
+        </p>
+        <p className="text-foreground/50">What happens: {step.whatHappens}</p>
+        <p className="text-foreground/70">You get: {step.deliverable}</p>
       </div>
     </li>
   );

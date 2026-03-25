@@ -127,6 +127,18 @@
 
 }
 
+.hero10__proofline {
+  max-width: 40ch;
+  margin: 0;
+  color: color-mix(in srgb, var(--accent) 78%, var(--fg));
+  font-family: var(--font-body);
+  font-size: clamp(0.98rem, 2.9vw, 1.16rem);
+  font-weight: 600;
+  letter-spacing: 0.02em;
+  line-height: 1.45;
+  text-wrap: balance;
+}
+
 .hero10__lead {
   max-width: 52ch;
   margin: 0;
@@ -459,6 +471,11 @@
     font-size: clamp(3.3rem, 9.4vw, 7.35rem);
     letter-spacing: 0.058em;
   }
+  .hero10__proofline {
+    max-width: 56ch;
+    font-size: clamp(1rem, 1.35vw, 1.18rem);
+  }
+
 
   .hero10__lead {
     max-width: 60ch;
