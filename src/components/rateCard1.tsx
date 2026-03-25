@@ -10,34 +10,34 @@ interface RateCard1Props {
 const CARE_PLAN_BULLETS = [
   "Hosting included",
   "Ongoing maintenance",
-  "Full admin access",
+  "Ongoing admin access",
 ];
 
 const CARE_FEATURES = [
   {
     title: "Hosting included",
     description:
-      "Your website stays live, connected and reliably available with hosting handled for you.",
+      "Hosting is handled for you, so the site stays live and reliable.",
   },
   {
     title: "Security monitoring",
     description:
-      "Ongoing monitoring helps keep your site secure, stable and protected.",
+      "Ongoing monitoring helps keep the site secure and stable.",
   },
   {
     title: "Maintenance and updates",
     description:
-      "We keep core parts of the site maintained so everything continues to run smoothly.",
+      "We keep the site maintained so things keep running smoothly over time.",
   },
   {
     title: "Monthly dev support",
     description:
-      "Small edits, updates or improvements can be handled without starting from scratch every time.",
+      "Small edits and improvements can be handled without starting from scratch every time.",
   },
   {
-    title: "Full admin access",
+    title: "ONGOING ADMIN ACCESS",
     description:
-      "You keep access to your admin system so you can manage bookings, content and products with ease.",
+      "You keep access to the admin system so bookings, content and products stay manageable.",
   },
 ];
 
@@ -48,7 +48,7 @@ const RateCard1 = ({ className }: RateCard1Props) => {
         <aside className="rate-card1__sidebar">
           <div className="rate-card1__heading-wrap">
             <p className="rate-card1__eyebrow">ONGOING CARE</p>
-            <h2 className="rate-card1__heading">Keep your site running smoothly</h2>
+            <h2 className="rate-card1__heading">KEEP EVERYTHING RUNNING — WITHOUT THE HEADACHE</h2>
             <Illustration className="rate-card1__mark rate-card1__mark--top" />
             <Illustration className="rate-card1__mark rate-card1__mark--bottom" />
           </div>
@@ -63,7 +63,7 @@ const RateCard1 = ({ className }: RateCard1Props) => {
               ))}
             </ul>
             <p className="rate-card1__note">
-              After launch, every website stays supported on one simple monthly care plan.
+After launch, the website stays hosted, maintained and supported through one simple monthly care plan.
             </p>
           </div>
         </aside>
