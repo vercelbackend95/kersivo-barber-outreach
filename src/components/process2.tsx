@@ -48,7 +48,7 @@ const Process2 = ({ className }: Process2Props) => {
       image:
         "https://deifkwefumgah.cloudfront.net/shadcnblocks/block/guri4/img10.png",
       description:
-        "We build the website, booking system, shop and admin setup, then send it over for review so you can request a few final changes before launch.",
+        "We build the full setup, send it over for review, and make the final changes before launch.",
     },
     {
       step: "04",
@@ -56,7 +56,7 @@ const Process2 = ({ className }: Process2Props) => {
       image:
         "https://deifkwefumgah.cloudfront.net/shadcnblocks/block/guri4/img9.png",
       description:
-        "Once approved, we launch the site and keep it supported with hosting, maintenance, updates and ongoing admin access through the monthly care plan.",
+        "Once approved, we launch the site and keep everything running with hosting, updates and ongoing care.",
     },
   ];
 
@@ -72,8 +72,7 @@ const Process2 = ({ className }: Process2Props) => {
               Our Process
             </h1>
             <p className="text-base text-foreground/50">
-              A simple, focused process that takes your barbershop from idea to
-              launch — without dragging things out.
+A simple 4-step setup. You send the basics — we handle the heavy lifting.
             </p>
             <div className="relative h-90 overflow-hidden border">
               {previousActive !== undefined && (
