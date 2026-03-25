@@ -12,12 +12,10 @@ const Pricing36 = ({ className }: Pricing36Props) => {
     <section id="pricing" className={cn("pricing36 py-32", className)}>
       <div className="container">
                 <div className="compare3-block__header">
-          <span className="compare3-block__badge">Pricing</span>
-          <h2>Choose the setup that fits your barbershop</h2>
+          <span className="compare3-block__badge">SETUP OPTIONS</span>
+          <h2>CHOOSE THE SETUP THAT FITS YOUR BARBERSHOP</h2>
           <p>
-            Both options include a custom barber website system — the
-            difference is how far we push the presentation, sales flow and
-            retail setup.
+Both packages include a custom barber website system — the difference is how far you want to push the presentation, sales flow and retail setup.
           </p>
         </div>
 
@@ -37,9 +35,7 @@ const Pricing36 = ({ className }: Pricing36Props) => {
                     </span>
                   </p>
                   <p className="text-sm text-muted-foreground">
-                    A strong starting point for barbers who need a professional
-                    website that looks sharp, works smoothly and covers the
-                    essentials.
+A strong starting point for barbers who want a sharp, professional website system that covers the essentials.
                   </p>
                 </div>
                 <Separator className="my-6" />
@@ -55,7 +51,7 @@ const Pricing36 = ({ className }: Pricing36Props) => {
                   <li className="flex gap-2">
                     <Check className="mt-1 size-4 shrink-0 text-green-500" />
                     <p className="font-medium">
-                      Services, gallery and reviews sections
+                      Services, gallery and reviews
                     </p>
                   </li>
                   <li className="flex gap-2">
@@ -66,7 +62,7 @@ const Pricing36 = ({ className }: Pricing36Props) => {
                   </li>
                   <li className="flex gap-2">
                     <Check className="mt-1 size-4 shrink-0 text-green-500" />
-                    <p className="font-medium">Full admin access</p>
+                    <p className="font-medium">1 month of full admin access included</p>
                   </li>
                   <li className="flex gap-2">
                     <Check className="mt-1 size-4 shrink-0 text-green-500" />
@@ -104,8 +100,7 @@ const Pricing36 = ({ className }: Pricing36Props) => {
                     </span>
                   </p>
                   <p className="text-sm text-muted-foreground">
-                    For barbershops that want a stronger online presence, a
-                    sharper sales setup and a more premium customer experience.
+For barbershops that want a sharper presentation, a stronger sales setup and a more premium client experience.
                   </p>
                 </div>
                 <Separator className="my-6" />
@@ -126,6 +121,10 @@ const Pricing36 = ({ className }: Pricing36Props) => {
                   </li>
                   <li className="flex gap-2">
                     <Check className="mt-1 size-4 shrink-0 text-green-500" />
+                    <p className="font-medium">3 months of full admin access included</p>
+                  </li>
+                  <li className="flex gap-2">
+                    <Check className="mt-1 size-4 shrink-0 text-green-500" />
                     <p className="font-medium">Shop setup for up to 50 products</p>
                   </li>
                   <li className="flex gap-2">
@@ -135,10 +134,6 @@ const Pricing36 = ({ className }: Pricing36Props) => {
                   <li className="flex gap-2">
                     <Check className="mt-1 size-4 shrink-0 text-green-500" />
                     <p className="font-medium">Priority launch</p>
-                  </li>
-                  <li className="flex gap-2">
-                    <Check className="mt-1 size-4 shrink-0 text-green-500" />
-                    <p className="font-medium">Launch promotion support included</p>
                   </li>
                 </ul>
               </div>
