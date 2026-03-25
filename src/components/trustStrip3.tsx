@@ -13,18 +13,20 @@ interface TrustStrip3Props {
 }
 const DEFAULT_VALUE_POINTS: ValuePoint[] = [
   {
-    desktop: 'Online bookings built in',
-    mobile: 'Bookings built in',
+    desktop: 'Booking flow built in',
+    mobile: 'Booking flow built in',
   },
   {
     desktop: 'Barber schedules in one place',
-    mobile: 'Schedules in one place',
+    mobile: 'Barber schedules in one place',
   },
   {
-    desktop: 'Shop & pickup ready',
+    desktop: 'Retail & pickup ready',
+        mobile: 'Retail & pickup ready',
   },
   {
-    desktop: 'Easy admin updates',
+    desktop: 'Easy updates across the site',
+        mobile: 'Easy updates across the site',
   },
 
 ];
