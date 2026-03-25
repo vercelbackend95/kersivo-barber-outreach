@@ -478,7 +478,7 @@
   background: linear-gradient(
     180deg,
     color-mix(in srgb, var(--bg) 0%, transparent) 0%,
-    color-mix(in srgb, var(--bg) 14%, transparent) 100%
+    color-mix(in srgb, var(--bg) 16%, transparent) 100%
   );
 
 }
@@ -487,24 +487,26 @@
     position: relative;
   display: flex;
   flex-direction: column;
-  gap: 0.5rem;
+  gap: 0.46rem;
   min-height: 6rem;
 
   justify-content: center;
-  padding: 1rem 1.15rem 1.05rem;
-  border-top: 1px solid color-mix(in srgb, var(--fg) 12%, var(--border));
+  padding: 1rem 1.15rem 1.04rem;
+  border-top: 1px solid color-mix(in srgb, var(--fg) 9%, var(--border));
+
 
   border-radius: 6px 6px 0 0;
   background: linear-gradient(
     180deg,
-    color-mix(in srgb, var(--surface) 65%, var(--bg)) 0%,
-    color-mix(in srgb, var(--bg) 88%, var(--surface)) 55%,
-    color-mix(in srgb, var(--bg) 94%, var(--surface)) 100%
+    color-mix(in srgb, var(--surface) 68%, var(--bg)) 0%,
+    color-mix(in srgb, var(--bg) 86%, var(--surface)) 52%,
+    color-mix(in srgb, var(--bg) 93%, var(--surface)) 100%
   );
   box-shadow:
-    inset 0 1px 0 color-mix(in srgb, var(--fg) 8%, transparent),
-    inset 0 12px 18px color-mix(in srgb, var(--fg) 2.5%, transparent),
-    0 -10px 20px color-mix(in srgb, var(--bg) 38%, transparent);
+    inset 0 1px 0 color-mix(in srgb, var(--fg) 11%, transparent),
+    inset 0 10px 16px color-mix(in srgb, var(--fg) 2.2%, transparent),
+    0 -8px 16px color-mix(in srgb, var(--bg) 34%, transparent);
+
 }
 
 .feature261 .feature261-primary-card__footer-inner::before {
@@ -517,9 +519,10 @@
   background: linear-gradient(
     90deg,
     transparent 0%,
-    color-mix(in srgb, var(--fg) 20%, transparent) 18%,
-    color-mix(in srgb, var(--fg) 26%, transparent) 50%,
-    color-mix(in srgb, var(--fg) 20%, transparent) 82%,
+    color-mix(in srgb, var(--fg) 22%, transparent) 16%,
+    color-mix(in srgb, var(--fg) 31%, transparent) 50%,
+    color-mix(in srgb, var(--fg) 22%, transparent) 84%,
+
     transparent 100%
   );
   pointer-events: none;
@@ -531,8 +534,8 @@
   inset: 0;
   background: linear-gradient(
     180deg,
-    color-mix(in srgb, var(--fg) 1.8%, transparent) 0%,
-    transparent 45%
+    color-mix(in srgb, var(--fg) 1.6%, transparent) 0%,
+    transparent 42%
   );
   pointer-events: none;
 
@@ -541,22 +544,24 @@
 
 .feature261 .feature261-primary-card__eyebrow {
   font-family: var(--font-body);
-  font-size: 0.73rem;
-  font-weight: 700;
-  line-height: 1.2;
-  letter-spacing: 0.16em;
+  font-size: 0.7rem;
+  font-weight: 650;
+  line-height: 1.18;
+  letter-spacing: 0.18em;
 
   text-transform: uppercase;
-  color: var(--muted);
+  color: color-mix(in srgb, var(--muted) 90%, var(--fg));
 }
 
 .feature261 .feature261-primary-card__title {
   margin: 0;
     max-width: 34ch;
   font-size: 1rem;
-  line-height: 1.28;
-  font-weight: 600;
-  color: color-mix(in srgb, var(--fg) 96%, var(--muted));
+  line-height: 1.3;
+  font-weight: 620;
+  letter-spacing: 0.005em;
+  color: color-mix(in srgb, var(--fg) 98%, var(--muted));
+
   text-wrap: pretty;
 
 }
@@ -566,11 +571,11 @@
 @media (min-width: 768px) {
   .feature261 .feature261-primary-card__footer-inner {
     min-height: 6.2rem;
-    padding: 1.05rem 1.25rem 1.1rem;
+    padding: 1.06rem 1.25rem 1.08rem;
   }
 
   .feature261 .feature261-primary-card__eyebrow {
-    font-size: 0.74rem;
+    font-size: 0.72rem;
   }
 
   .feature261 .feature261-primary-card__title {
