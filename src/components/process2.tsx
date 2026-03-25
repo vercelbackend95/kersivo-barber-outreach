@@ -1,12 +1,10 @@
 "use client";
 
 import { useInView } from "@/lib/framer-motion";
-import { CornerDownRight } from "@/components/lucide-react";
 import React, { useEffect, useRef, useState } from "react";
 
 import { cn } from "@/lib/utils";
 
-import { Button } from "@/components/ui/button";
 
 const usePrevious = <T,>(value: T): T | undefined => {
   const [prev, setPrev] = useState<T | undefined>(undefined);
@@ -92,14 +90,6 @@ A simple 4-step setup. You send the basics — we handle the heavy lifting.
                 />
               </div>
             </div>
-            <Button
-                          type="button"
-              data-demo-cta
-              className="process2-contact-button flex items-center justify-start gap-2"
-            >
-              <CornerDownRight className="process2-contact-icon" />
-              Get in touch
-            </Button>
           </div>
           <ul className="relative w-full lg:pl-22">
             {process.map((step, index) => (
