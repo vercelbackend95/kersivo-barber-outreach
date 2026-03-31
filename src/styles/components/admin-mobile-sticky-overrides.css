@@ -13,7 +13,8 @@
     z-index: 220;
   }
 
-  .admin-next-block--mobile-sticky {
+  .admin-next-block--mobile-sticky,
+  .admin-bookings-ops--mobile-sticky {
     top: var(--admin-mobile-sticky-stack-top);
     z-index: 210;
   }
