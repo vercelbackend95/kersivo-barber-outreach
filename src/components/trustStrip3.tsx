@@ -1,45 +1,46 @@
-
-
 import { cn } from '@/lib/utils';
-interface ValuePoint {
-  desktop: string;
-  mobile?: string;
-}
 
+interface PillarItem {
+  heading: string;
+  body: string;
+}
 
 interface TrustStrip3Props {
-  valuePoints?: ValuePoint[];
+  pillars?: PillarItem[];
   className?: string;
 }
-const DEFAULT_VALUE_POINTS: ValuePoint[] = [
-  {
-    desktop: 'Booking flow built in',
-    mobile: 'Booking flow built in',
-  },
-  {
-    desktop: 'Barber schedules in one place',
-    mobile: 'Barber schedules in one place',
-  },
-  {
-    desktop: 'Retail & pickup ready',
-        mobile: 'Retail & pickup ready',
-  },
-  {
-    desktop: 'Easy updates across the site',
-        mobile: 'Easy updates across the site',
-  },
 
+const DEFAULT_PILLARS: PillarItem[] = [
+  {
+    heading: '1–5 chairs',
+    body: 'Built for independent UK shops — not chains, not solo freelancers. Sized for how barbers actually operate day to day.',
+  },
+  {
+    heading: 'Your domain',
+    body: 'Clients book on your website, under your brand. No redirects to a marketplace profile or a third-party booking platform.',
+  },
+  {
+    heading: 'One daily view',
+    body: 'Bookings, barber schedules and retail orders in a single admin panel. One person can run the whole operation.',
+  },
+  {
+    heading: 'GBP. No markup.',
+    body: 'Priced in pounds. No per-booking cuts, no hidden USD rates, no percentage taken when your revenue comes in.',
+  },
 ];
 
-const TrustStrip3 = ({ valuePoints = DEFAULT_VALUE_POINTS, className }: TrustStrip3Props) => {
+const TrustStrip3 = ({ pillars = DEFAULT_PILLARS, className }: TrustStrip3Props) => {
   return (
-    <section className={cn('trust-strip3', className)} aria-label="Barber system value points">
+    <section
+      className={cn('trust-strip3', className)}
+      aria-label="Who this system is built for"
+    >
       <div className="container">
         <ul className="trust-strip3__list" role="list">
-          {valuePoints.map((point) => (
-            <li key={point.desktop} className="trust-strip3__item">
-              <span className="trust-strip3__label trust-strip3__label--desktop">{point.desktop}</span>
-              <span className="trust-strip3__label trust-strip3__label--mobile">{point.mobile ?? point.desktop}</span>
+          {pillars.map((pillar) => (
+            <li key={pillar.heading} className="trust-strip3__item">
+              <p className="trust-strip3__heading">{pillar.heading}</p>
+              <p className="trust-strip3__body">{pillar.body}</p>
             </li>
           ))}
         </ul>

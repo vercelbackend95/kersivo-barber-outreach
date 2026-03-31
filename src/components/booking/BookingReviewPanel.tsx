@@ -16,6 +16,10 @@ type Props = {
   contactRows?: ReviewRow[];
   contactHelper?: string;
   trustItems: TrustItem[];
+  alwaysVisible?: boolean;
+  isSubmitting?: boolean;
+  isSubmitDisabled?: boolean;
+  onSubmit?: () => void;
 };
 
 function ReviewList({ rows, ariaLabel }: { rows: ReviewRow[]; ariaLabel: string }) {
@@ -36,10 +40,21 @@ export default function BookingReviewPanel({
   appointmentRows,
   contactRows = [],
   contactHelper,
-    trustItems
+  trustItems,
+  alwaysVisible = false,
+  isSubmitting = false,
+  isSubmitDisabled = true,
+  onSubmit,
 }: Props) {
+  const ctaLabel = isSubmitting
+    ? (mode === 'reschedule' ? 'Rescheduling…' : 'Confirming…')
+    : (mode === 'reschedule' ? 'Reschedule booking' : 'Confirm booking');
+
   return (
-    <section className="booking-review-panel" aria-labelledby="booking-review-panel-title">
+    <section
+      className={`booking-review-panel${alwaysVisible ? ' booking-review-panel--always-visible' : ''}`}
+      aria-labelledby="booking-review-panel-title"
+    >
       <div className="booking-review-panel__header">
         <p className="booking-review-panel__eyebrow">Final review</p>
         <h2 id="booking-review-panel-title">Review before you confirm</h2>
@@ -83,6 +98,22 @@ export default function BookingReviewPanel({
           </ul>
         </section>
       </div>
+
+      {alwaysVisible && onSubmit ? (
+        <div className="booking-review-panel__cta">
+          <button
+            type="button"
+            className="btn btn--primary booking-review-panel__cta-button"
+            disabled={isSubmitDisabled}
+            aria-disabled={isSubmitDisabled}
+            aria-busy={isSubmitting}
+            onClick={onSubmit}
+          >
+            {isSubmitting ? <span className="booking-action-bar__spinner" aria-hidden="true" /> : null}
+            <span>{ctaLabel}</span>
+          </button>
+        </div>
+      ) : null}
     </section>
   );
 }

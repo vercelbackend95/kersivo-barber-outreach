@@ -1,45 +1,80 @@
 import React, { useEffect, useMemo, useRef, useState } from 'react';
 import type { AdminSection } from './AdminPanel';
+import { SkeletonKPICards, SkeletonTableRows } from '../skeleton';
+import {
+  BarChart2,
+  Calendar,
+  Clock,
+  LogOut,
+  Menu,
+  Package,
+  Scissors,
+  ShoppingBag,
+  TrendingUp,
+  Users,
+  X,
+} from '../lucide-react';
 
 type AdminLayoutProps = {
   activeSection: AdminSection;
   onChangeSection: (section: AdminSection) => void;
+  isTransitioning: boolean;
+  showSectionSkeleton: boolean;
   children: React.ReactNode;
 };
 
 type SectionItem = {
   section: AdminSection;
   label: string;
+  icon: React.ReactElement;
 };
 type SectionGroup = {
   title: string;
   items: SectionItem[];
 };
 
+const ICON = { width: 16, height: 16, 'aria-hidden': true as const };
 
 const menuGroups: SectionGroup[] = [
   {
     title: 'Booking system',
     items: [
-      { section: 'bookings_dashboard', label: 'Bookings' },
-      { section: 'bookings_blocks', label: 'Barbers' },
-      { section: 'bookings_reports', label: 'Reports' },
-      { section: 'bookings_history', label: 'History' },
-      { section: 'services', label: 'Services' },
+      { section: 'bookings_dashboard', label: 'Bookings', icon: <Calendar {...ICON} /> },
+      { section: 'bookings_blocks', label: 'Barbers', icon: <Users {...ICON} /> },
+      { section: 'bookings_reports', label: 'Reports', icon: <BarChart2 {...ICON} /> },
+      { section: 'bookings_history', label: 'History', icon: <Clock {...ICON} /> },
+      { section: 'services', label: 'Services', icon: <Scissors {...ICON} /> },
     ],
   },
   {
     title: 'Shop / Retail',
     items: [
-      { section: 'shop_products', label: 'Products' },
-      { section: 'shop_orders', label: 'Orders' },
-      { section: 'shop_sales', label: 'Sales' },
+      { section: 'shop_products', label: 'Products', icon: <Package {...ICON} /> },
+      { section: 'shop_orders', label: 'Orders', icon: <ShoppingBag {...ICON} /> },
+      { section: 'shop_sales', label: 'Sales', icon: <TrendingUp {...ICON} /> },
     ],
   },
-
 ];
 
-export default function AdminLayout({ activeSection, onChangeSection, children }: AdminLayoutProps) {
+function SidebarBrand() {
+  return (
+    <div className="admin-sidebar-brand">
+      <div className="admin-sidebar-monogram" aria-hidden="true">K</div>
+      <div className="admin-sidebar-brand-text">
+        <span className="admin-sidebar-brand-name">Kersivo</span>
+        <span className="admin-sidebar-brand-sub">Admin</span>
+      </div>
+    </div>
+  );
+}
+
+export default function AdminLayout({
+  activeSection,
+  onChangeSection,
+  isTransitioning,
+  showSectionSkeleton,
+  children,
+}: AdminLayoutProps) {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const mobileDrawerRef = useRef<HTMLDivElement | null>(null);
   const mobileOpenButtonRef = useRef<HTMLButtonElement | null>(null);
@@ -66,13 +101,21 @@ export default function AdminLayout({ activeSection, onChangeSection, children }
               className={`admin-sidebar-link ${activeSection === item.section ? 'admin-sidebar-link--active' : ''}`}
               onClick={() => onSelectSection(item.section)}
             >
-              {item.label}
+              <span className="admin-sidebar-link-icon">{item.icon}</span>
+              <span className="admin-sidebar-link-label">{item.label}</span>
             </button>
           ))}
         </div>
       ))}
     </nav>
   ), [activeSection]);
+
+  const skeletonVariant = useMemo<'kpi' | 'table'>(() => {
+    if (activeSection === 'bookings_reports' || activeSection === 'shop_sales') {
+      return 'kpi';
+    }
+    return 'table';
+  }, [activeSection]);
 
   useEffect(() => {
     if (!isMobileMenuOpen) {
@@ -125,20 +168,28 @@ export default function AdminLayout({ activeSection, onChangeSection, children }
   return (
     <div className="admin-shell">
       <aside className="admin-sidebar" aria-label="Admin sections">
-        <h1 className="admin-sidebar-title">ADMIN</h1>
+        <SidebarBrand />
         {menu}
         <div className="admin-sidebar-logout-wrap">
           <div className="admin-sidebar-divider" aria-hidden="true" />
-
-          <button type="button" className="btn btn--secondary admin-sidebar-logout" onClick={() => void handleLogout()}>
+          <button
+            type="button"
+            className="btn btn--ghost admin-sidebar-logout"
+            onClick={() => void handleLogout()}
+          >
+            <LogOut width={15} height={15} aria-hidden="true" />
             Logout
           </button>
         </div>
       </aside>
 
-      <section className="admin-main-content admin-mobile-edge">
+      <section
+        className="admin-main-content admin-mobile-edge"
+        aria-busy={isTransitioning}
+        data-transitioning={isTransitioning}
+      >
         <header className="admin-mobile-header" aria-label="Admin mobile header">
-          <p className="admin-mobile-title">ADMIN</p>
+          <SidebarBrand />
           <button
             ref={mobileOpenButtonRef}
             type="button"
@@ -148,10 +199,28 @@ export default function AdminLayout({ activeSection, onChangeSection, children }
             aria-expanded={isMobileMenuOpen}
             aria-controls="admin-mobile-drawer"
           >
-            ☰
+            <Menu width={20} height={20} aria-hidden="true" />
           </button>
         </header>
-        {children}
+        {showSectionSkeleton ? (
+          <div className="admin-transition-skeleton" aria-hidden="true">
+            {skeletonVariant === 'kpi' ? (
+              <div className="admin-transition-skeleton-kpi-grid">
+                <SkeletonKPICards count={3} />
+              </div>
+            ) : (
+              <div className="admin-transition-skeleton-table-wrap">
+                <table className="admin-transition-skeleton-table">
+                  <tbody>
+                    <SkeletonTableRows count={6} cols={6} />
+                  </tbody>
+                </table>
+              </div>
+            )}
+          </div>
+        ) : (
+          children
+        )}
       </section>
 
       <div
@@ -167,19 +236,24 @@ export default function AdminLayout({ activeSection, onChangeSection, children }
         aria-hidden={!isMobileMenuOpen}
       >
         <div className="admin-mobile-drawer-head">
-          <p className="admin-mobile-title">ADMIN</p>
+          <SidebarBrand />
           <button
             type="button"
             className="admin-mobile-close-button"
             onClick={() => setIsMobileMenuOpen(false)}
             aria-label="Close admin menu"
           >
-            ✕
+            <X width={20} height={20} aria-hidden="true" />
           </button>
         </div>
         {menu}
         <div className="admin-sidebar-divider" aria-hidden="true" />
-        <button type="button" className="btn btn--secondary admin-mobile-logout" onClick={() => void handleLogout()}>
+        <button
+          type="button"
+          className="btn btn--ghost admin-mobile-logout"
+          onClick={() => void handleLogout()}
+        >
+          <LogOut width={15} height={15} aria-hidden="true" />
           Logout
         </button>
       </aside>

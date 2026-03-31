@@ -2,7 +2,11 @@
 import React, { useEffect, useMemo, useRef, useState } from 'react';
 import BookingConfirmationPanel, { type BookingSummary } from './BookingConfirmationPanel';
 import BookingReviewPanel from './BookingReviewPanel';
+import BookingStepIndicator from './BookingStepIndicator';
+import { SkeletonSlotGrid } from '../skeleton';
 import { ANY_BARBER_ID, ANY_BARBER_NAME } from '../../lib/booking/constants';
+import EmptyState from '../EmptyState';
+import { Clock } from '../lucide-react';
 type Service = {
   id: string;
   name: string;
@@ -183,10 +187,11 @@ export default function BookingFlow({ services, barbers, mode = 'create', token 
   const [phone, setPhone] = useState('');
   const [message, setMessage] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isSlotsLoading, setIsSlotsLoading] = useState(false);
   const [brokenAvatarIds, setBrokenAvatarIds] = useState<Record<string, boolean>>({});
   const confirmationRef = useRef<HTMLElement | null>(null);
   const [confirmation, setConfirmation] = useState<{ type: 'booked' | 'rescheduled'; summary: BookingSummary } | null>(null);
-    const isCreateMode = mode === 'create';
+  const isCreateMode = mode === 'create';
   const normalizedFullName = fullName.trim();
   const normalizedEmail = email.trim();
   const normalizedPhone = phone.trim();
@@ -216,6 +221,13 @@ export default function BookingFlow({ services, barbers, mode = 'create', token 
   const hasSelectedDate = Boolean(normalizedDate);
   const hasSelectedContactDetails = isCreateMode ? Boolean(normalizedFullName && normalizedEmail) : true;
   const canLoadAvailability = Boolean(serviceId && barberId && normalizedDate);
+
+  const currentStep = useMemo(() => {
+    if (!serviceId) return 1;
+    if (!barberId) return 2;
+    if (!time) return 3;
+    return 4;
+  }, [serviceId, barberId, time]);
 
   const missingItems = useMemo(() => {
     const items: string[] = [];
@@ -328,22 +340,24 @@ export default function BookingFlow({ services, barbers, mode = 'create', token 
 
     const nextDate = normalizeToIsoDate(date);
     if (!nextDate) {
-
       setSlots([]);
       setTime('');
       return;
     }
 
+    setIsSlotsLoading(true);
     fetch(`/api/availability?serviceId=${serviceId}&barberId=${barberId}&date=${nextDate}`)
       .then((res) => res.json())
       .then((data) => {
         setSlots(data.slots ?? []);
         setTime('');
-              })
+      })
       .catch(() => {
         setSlots([]);
         setTime('');
-
+      })
+      .finally(() => {
+        setIsSlotsLoading(false);
       });
   }, [serviceId, barberId, date]);
 
@@ -490,6 +504,8 @@ export default function BookingFlow({ services, barbers, mode = 'create', token 
 
 
         <div className="booking-flow__layout">
+          <div className="booking-flow__left">
+            <BookingStepIndicator currentStep={currentStep} steps={[{ label: 'Service' }, { label: 'Barber' }, { label: 'Schedule' }, { label: 'Details' }]} />
           <div className="booking-flow__main">
             <section className="booking-step" aria-labelledby="booking-step-service">
               <div className="booking-step__head">
@@ -632,29 +648,38 @@ export default function BookingFlow({ services, barbers, mode = 'create', token 
                   <span className="muted">{slotsHelperText}</span>
 
                 </div>
-                <div className="slot-grid" role="radiogroup" aria-labelledby="booking-time-slots">
-                  {slots.map((slot) => {
-                    const isSelected = time === slot;
+                <div className="slot-grid" role="radiogroup" aria-labelledby="booking-time-slots" aria-busy={isSlotsLoading}>
+                  {isSlotsLoading ? (
+                    <SkeletonSlotGrid count={8} />
+                  ) : (
+                    <>
+                      {slots.map((slot) => {
+                        const isSelected = time === slot;
 
-                    return (
-                      <button
-                        type="button"
-                        key={slot}
-                        className={`booking-slot${isSelected ? ' is-selected' : ''}`}
-                        aria-pressed={isSelected}
-                        onClick={() => setTime(slot)}
-                      >
-                        <span className="booking-slot__label">{slot}</span>
-                        <span className="booking-slot__meta">{isSelected ? 'Selected' : 'Available'}</span>
-                      </button>
-                    );
-                  })}
-                  {!canLoadAvailability ? (
-                    <p className="muted booking-slots-section__empty">{slotsHelperText}</p>
-                  ) : slots.length === 0 ? (
-                    <p className="muted booking-slots-section__empty">No slots available for this date.</p>
-                  ) : null}
-
+                        return (
+                          <button
+                            type="button"
+                            key={slot}
+                            className={`booking-slot${isSelected ? ' is-selected' : ''}`}
+                            aria-pressed={isSelected}
+                            onClick={() => setTime(slot)}
+                          >
+                            <span className="booking-slot__label">{slot}</span>
+                            <span className="booking-slot__meta">{isSelected ? 'Selected' : 'Available'}</span>
+                          </button>
+                        );
+                      })}
+                      {!canLoadAvailability ? (
+                        <p className="muted booking-slots-section__empty">{slotsHelperText}</p>
+                      ) : slots.length === 0 ? (
+                        <EmptyState
+                          icon={Clock}
+                          title="No available times"
+                          description="No slots are available for this date. Try a different date or barber."
+                        />
+                      ) : null}
+                    </>
+                  )}
                 </div>
               </div>
 
@@ -684,14 +709,6 @@ export default function BookingFlow({ services, barbers, mode = 'create', token 
               </section>
             ) : null}
 
-            <BookingReviewPanel
-              mode={mode}
-              appointmentRows={appointmentRows}
-              contactRows={contactRows}
-              contactHelper={isCreateMode ? 'Confirmation will be sent to the provided email address.' : undefined}
-              trustItems={trustItems}
-            />
-
             <div className={`booking-action-bar${isSubmitting ? ' is-submitting' : ''}`} aria-live="polite">
 
               <div className="booking-action-bar__summary">
@@ -699,11 +716,11 @@ export default function BookingFlow({ services, barbers, mode = 'create', token 
                 <span className="booking-action-bar__meta">{compactStatusMeta}</span>
 
               </div>
-                            <button
+              <button
                 type="button"
                 className="btn btn--primary booking-action-bar__button"
                 disabled={isSubmitDisabled}
-                                aria-disabled={isSubmitDisabled}
+                aria-disabled={isSubmitDisabled}
                 aria-busy={isSubmitting}
                 onClick={() => void submit()}
               >
@@ -720,7 +737,21 @@ export default function BookingFlow({ services, barbers, mode = 'create', token 
 
             </div>
           </div>
+          </div>
 
+          <div className="booking-flow__right">
+            <BookingReviewPanel
+              mode={mode}
+              appointmentRows={appointmentRows}
+              contactRows={contactRows}
+              contactHelper={isCreateMode ? 'Confirmation will be sent to the provided email address.' : undefined}
+              trustItems={trustItems}
+              alwaysVisible
+              isSubmitting={isSubmitting}
+              isSubmitDisabled={isSubmitDisabled}
+              onSubmit={() => void submit()}
+            />
+          </div>
 
         </div>
       </div>

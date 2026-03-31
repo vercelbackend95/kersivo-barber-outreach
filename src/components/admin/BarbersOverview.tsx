@@ -1,6 +1,7 @@
 import React from 'react';
 import type { Barber, ServiceOption, TimeBlock } from './barbersTypes';
 import { SettingsGearIcon } from './SettingsGearIcon';
+import { X } from '../lucide-react';
 type BarberBookingPreview = {
   barberId: string;
   status: string;
@@ -107,10 +108,9 @@ function getNextBookingForBarber(bookings: BarberBookingPreview[], barberId: str
 }
 
 
+/** Single source of truth for barber activity. Reads the canonical `isActive` field. */
 function normalizeBarberStatus(barber: Barber) {
-  if (typeof barber.isActive === 'boolean') return barber.isActive;
-  if (typeof barber.active === 'boolean') return barber.active;
-  return true;
+  return barber.isActive;
 }
 function getTodayLine(barber: Barber) {
   const todayLabel = barber.todayLabel?.trim() || '—';
@@ -183,7 +183,7 @@ export default function BarbersOverview({
 
   return (
     <section className="admin-quick-blocks">
-      <h2>Barbers</h2>
+      <h3>Barbers</h3>
       <p className="muted">Manage active barbers and open a barber profile for details.</p>
 
       <div className="admin-barber-filter" role="group" aria-label="Filter barbers">
@@ -288,7 +288,7 @@ export default function BarbersOverview({
           >
             <div className="admin-barber-sheet-head">
               <h3>Add barber</h3>
-              <button type="button" className="btn btn--ghost" onClick={onCloseAddBarberSheet} aria-label="Close add barber form">✕</button>
+              <button type="button" className="btn btn--ghost" onClick={onCloseAddBarberSheet} aria-label="Close add barber form"><X width={18} height={18} aria-hidden="true" /></button>
             </div>
 
             <div className="admin-barber-sheet-content">

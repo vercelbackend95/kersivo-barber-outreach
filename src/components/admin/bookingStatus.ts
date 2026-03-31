@@ -19,5 +19,8 @@ export function getStatusTextColorClass(tone: BookingStatusTone): string {
   if (tone === 'cancelled') return 'admin-status-text--cancelled';
   if (tone === 'rescheduled') return 'admin-status-text--rescheduled';
   return 'admin-status-text--pending';
+}
 
+export function getStatusBadgeClass(tone: BookingStatusTone): string {
+  return `badge badge--${tone}`;
 }

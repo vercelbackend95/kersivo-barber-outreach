@@ -1,5 +1,9 @@
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import { SettingsGearIcon } from './SettingsGearIcon';
+import AdminSectionHeader from './AdminSectionHeader';
+import EmptyState from '../EmptyState';
+import { SkeletonBookingChoices } from '../skeleton';
+import { Scissors, Users, X } from '../lucide-react';
 
 type ServiceBarberRow = {
   id: string;
@@ -10,13 +14,14 @@ type ServiceBarberRow = {
 type BarberListRow = {
   id: string;
   name: string;
-  active: boolean;
-  isActive?: boolean;
-    avatarUrl?: string | null;
+  /** Canonical activity field — always present in /api/admin/barbers responses. */
+  isActive: boolean;
+  /** Raw DB field, also returned by the API. Prefer `isActive`. */
+  active?: boolean;
+  avatarUrl?: string | null;
   email?: string | null;
-
   serviceIds?: string[];
-    todayIsOnShift?: boolean;
+  todayIsOnShift?: boolean;
 };
 
 type ServicePanelBarberRow = {
@@ -102,8 +107,8 @@ function BarberAssignmentSection({ barbers, selectedBarberIds, isLoading, onChan
   const sortedBarbers = useMemo(
     () =>
       [...barbers].sort((left, right) => {
-        const leftIsActive = left.isActive ?? left.active;
-        const rightIsActive = right.isActive ?? right.active;
+        const leftIsActive = left.isActive;
+        const rightIsActive = right.isActive;
 
         if (leftIsActive !== rightIsActive) {
           return leftIsActive ? -1 : 1;
@@ -163,19 +168,26 @@ function BarberAssignmentSection({ barbers, selectedBarberIds, isLoading, onChan
         </div>
       </div>
 
-      {isLoading ? <p className="muted admin-service-assignment-feedback">Loading barbers…</p> : null}
+      {isLoading ? (
+        <div className="admin-service-assignment-skeleton" aria-hidden="true" aria-label="Loading barbers">
+          {Array.from({ length: 3 }, (_, i) => (
+            <div key={i} className="skeleton--row skeleton" />
+          ))}
+        </div>
+      ) : null}
 
       {!isLoading && sortedBarbers.length === 0 ? (
-        <div className="admin-service-assignment-empty" role="status">
-          <p>No barbers available yet.</p>
-          <span>Add barbers in the Barbers section first, then assign them to this service here.</span>
-        </div>
+        <EmptyState
+          icon={Users}
+          title="No barbers available"
+          description="Add barbers in the Barbers section first, then assign them to this service here."
+        />
       ) : null}
 
       {!isLoading && sortedBarbers.length > 0 ? (
         <div className="admin-service-assignment-list" role="list" aria-label="Available barbers for this service">
           {sortedBarbers.map((barber) => {
-            const barberIsActive = barber.isActive ?? barber.active;
+            const barberIsActive = barber.isActive;
             const isSelected = selectedBarberIdSet.has(barber.id);
             return (
               <button
@@ -228,7 +240,6 @@ export default function ServicesAdminPanel() {
   const [isServiceSheetOpen, setIsServiceSheetOpen] = useState(false);
   const [activeServiceForPanelId, setActiveServiceForPanelId] = useState<string | null>(null);
 
-  const editingService = useMemo(() => services.find((s) => s.id === editingId) ?? null, [editingId, services]);
   const activeServiceForPanel = useMemo(
     () => services.find((service) => service.id === activeServiceForPanelId) ?? null,
     [activeServiceForPanelId, services]
@@ -424,16 +435,38 @@ export default function ServicesAdminPanel() {
     setError('Unable to update service status.');
   }
 
+  const nameHasError = error === 'Service name is required.';
+  const priceHasError = error === 'Price must be a valid amount.';
+
   return (
     <section className="surface booking-shell admin-services-shell">
-      <h1>SERVICES</h1>
-      <p className="muted admin-services-intro">Manage service catalog and pricing for all new bookings.</p>
+      <AdminSectionHeader
+        title="Services"
+        description="Configure your service catalogue"
+        actions={
+          <button type="button" className="btn btn--primary" onClick={openCreateServiceSheet}>
+            Add Service
+          </button>
+        }
+      />
 
       {message ? <p className="admin-inline-success">{message}</p> : null}
       {error ? <p className="admin-inline-error">{error}</p> : null}
 
-      {loading ? <p className="muted">Loading services…</p> : null}
-      {!loading && services.length === 0 ? <p className="muted">No services yet. Add your first service.</p> : null}
+      {loading ? (
+        <div className="admin-barber-list-wrap" aria-busy="true">
+          <div className="admin-barber-grid admin-services-grid" aria-hidden="true">
+            <SkeletonBookingChoices count={4} variant="service" />
+          </div>
+        </div>
+      ) : null}
+      {!loading && services.length === 0 ? (
+        <EmptyState
+          icon={Scissors}
+          title="No services yet"
+          description="Add your first service to start accepting bookings."
+        />
+      ) : null}
 
       <div className="admin-barber-list-wrap">
         <ul className="admin-barber-grid admin-services-grid" aria-label="Services list">
@@ -508,14 +541,14 @@ export default function ServicesAdminPanel() {
         >
           <section className="admin-barber-sheet admin-service-sheet" onMouseDown={(event) => event.stopPropagation()}>
             <div className="admin-barber-sheet-head admin-service-panel-head admin-client-modal-head">
-              <h2>{activeServiceForPanel.name} panel</h2>
+              <h3>{activeServiceForPanel.name} panel</h3>
               <button
                 type="button"
                 className="btn btn--ghost admin-client-modal-close admin-service-panel-close"
                 onClick={() => setActiveServiceForPanelId(null)}
                 aria-label="Close service settings"
               >
-                ✕
+                <X width={18} height={18} aria-hidden="true" />
               </button>
             </div>
 
@@ -580,7 +613,7 @@ export default function ServicesAdminPanel() {
         >
           <form className="admin-barber-sheet admin-service-sheet" onSubmit={submitForm} onMouseDown={(event) => event.stopPropagation()}>
             <div className="admin-barber-sheet-head admin-service-sheet-head admin-service-panel-head admin-client-modal-head">
-              <h2>{editingId ? 'EDIT SERVICE' : 'ADD SERVICE'}</h2>
+              <h3>{editingId ? 'EDIT SERVICE' : 'ADD SERVICE'}</h3>
 
               <button
                 type="button"
@@ -588,15 +621,16 @@ export default function ServicesAdminPanel() {
                 onClick={resetServiceFormState}
                 aria-label="Close service form"
               >
-                ✕
+                <X width={18} height={18} aria-hidden="true" />
               </button>
             </div>
 
             <div className="admin-barber-sheet-content admin-service-sheet-content">
-              <div className="admin-service-field-stack">
-                <label htmlFor="service-name">Service name</label>
+              <div className={`field admin-service-field-stack${nameHasError ? ' field--error' : ''}`}>
+                <label htmlFor="service-name" className="field__label">Service name</label>
                 <input
                   id="service-name"
+                  className={`input${nameHasError ? ' input--error' : ''}`}
                   value={form.name}
                   onChange={(e) => setForm((c) => ({ ...c, name: e.target.value }))}
                   placeholder="e.g. Haircut"
@@ -604,38 +638,52 @@ export default function ServicesAdminPanel() {
                 />
               </div>
 
-              <div className="admin-service-field-stack">
-                <label htmlFor="service-description">Description (optional)</label>
+              <div className="field admin-service-field-stack">
+                <label htmlFor="service-description" className="field__label">Description</label>
+                <span className="field__hint">Optional — shown in the booking flow</span>
                 <input
                   id="service-description"
+                  className="input"
                   value={form.description}
                   onChange={(e) => setForm((c) => ({ ...c, description: e.target.value }))}
+                  placeholder="e.g. Classic cut with scissors and clippers"
                 />
               </div>
 
-              <div className="admin-service-field-stack">
-                <label htmlFor="service-category">Category (optional)</label>
+              <div className="field admin-service-field-stack">
+                <label htmlFor="service-category" className="field__label">Category</label>
+                <span className="field__hint">Optional — groups services in the catalogue</span>
                 <input
                   id="service-category"
+                  className="input"
                   value={form.category}
                   onChange={(e) => setForm((c) => ({ ...c, category: e.target.value }))}
+                  placeholder="e.g. Hair, Beard"
                 />
               </div>
 
               <div className="admin-service-form-grid">
-                <div>
-                  <label htmlFor="service-price">Price (GBP)</label>
-                  <input
-                    id="service-price"
-                    value={form.priceGbp}
-                    onChange={(e) => setForm((c) => ({ ...c, priceGbp: e.target.value }))}
-                    required
-                  />
+                <div className={`field${priceHasError ? ' field--error' : ''}`}>
+                  <label htmlFor="service-price" className="field__label">Price</label>
+                  <span className="field__hint">In GBP</span>
+                  <div className={`admin-price-input-wrap${priceHasError ? ' admin-price-input-wrap--error' : ''}`}>
+                    <span>£</span>
+                    <input
+                      id="service-price"
+                      inputMode="decimal"
+                      value={form.priceGbp}
+                      onChange={(e) => setForm((c) => ({ ...c, priceGbp: e.target.value }))}
+                      placeholder="0.00"
+                      required
+                    />
+                  </div>
                 </div>
-                <div>
-                  <label htmlFor="service-duration">Duration (minutes)</label>
+                <div className="field">
+                  <label htmlFor="service-duration" className="field__label">Duration</label>
+                  <span className="field__hint">Minutes</span>
                   <input
                     id="service-duration"
+                    className="input"
                     type="number"
                     min={5}
                     value={form.durationMinutes}
@@ -643,20 +691,24 @@ export default function ServicesAdminPanel() {
                     required
                   />
                 </div>
-                <div>
-                  <label htmlFor="service-buffer">Buffer (minutes)</label>
+                <div className="field">
+                  <label htmlFor="service-buffer" className="field__label">Buffer</label>
+                  <span className="field__hint">Minutes after service</span>
                   <input
                     id="service-buffer"
+                    className="input"
                     type="number"
                     min={0}
                     value={form.bufferMinutes}
                     onChange={(e) => setForm((c) => ({ ...c, bufferMinutes: e.target.value }))}
                   />
                 </div>
-                <div>
-                  <label htmlFor="service-order">Display order</label>
+                <div className="field">
+                  <label htmlFor="service-order" className="field__label">Display order</label>
+                  <span className="field__hint">Lower = shown first</span>
                   <input
                     id="service-order"
+                    className="input"
                     type="number"
                     min={0}
                     value={form.displayOrder}
@@ -713,7 +765,6 @@ export default function ServicesAdminPanel() {
         </div>
       ) : null}
 
-      {editingService ? <p className="muted">Editing: {editingService.name}</p> : null}
     </section>
   );
 }

@@ -1,40 +1,35 @@
 ---
 import NavbarCartButton from '@/components/shop/NavbarCartButton.astro';
 
-const navLogo = {
-  url: '/#home',
-  src: 'https://deifkwefumgah.cloudfront.net/shadcnblocks/block/logos/shadcnblockscom-icon.svg',
-  alt: 'Kersivo logo',
-  title: 'Kersivo'
-};
-
 const navItems = [
-  { name: 'Home', link: '/#home', sectionId: 'home' },
-  { name: 'System', link: '/#system', sectionId: 'system' },
-  { name: 'Pricing', link: '/#pricing', sectionId: 'pricing' },
-  { name: 'FAQ', link: '/#faq', sectionId: 'faq' },
-  { name: 'Contact', link: '/#contact', sectionId: 'contact' }
-
+  { name: 'Home',    link: '/#home',    sectionId: 'home',    isPage: false },
+  { name: 'System',  link: '/#system',  sectionId: 'system',  isPage: false },
+  { name: 'Pricing', link: '/#pricing', sectionId: 'pricing', isPage: false },
+  { name: 'FAQ',     link: '/#faq',     sectionId: 'faq',     isPage: false },
+  { name: 'Shop',    link: '/shop',     sectionId: null,      isPage: true  },
+  { name: 'Contact', link: '/#contact', sectionId: 'contact', isPage: false },
 ];
 ---
 
 <header class="navbar17" data-navbar17>
   <div class="container navbar17__wrap">
-    <a href={navLogo.url} class="navbar17__brand" aria-label="Kersivo home">
-      <img src={navLogo.src} alt={navLogo.alt} width="40" height="40" loading="lazy" />
-      <span>{navLogo.title}</span>
+
+    <a href="/#home" class="navbar17__brand" aria-label="Kersivo – back to homepage">
+      <!-- Local monogram mark – no external CDN dependency; swap for real logo asset when ready -->
+      <span class="navbar17__brand-mark" aria-hidden="true">K</span>
+      <span class="navbar17__brand-name">Kersivo</span>
     </a>
 
-    <nav class="navbar17__desktop" aria-label="Primary">
-      <ul class="navbar17__list" data-nav-list>
+    <nav class="navbar17__desktop" aria-label="Primary navigation">
+      <ul class="navbar17__list" data-nav-list role="list">
         {navItems.map((item) => (
           <li>
             <a
               href={item.link}
               class="navbar17__link"
               data-nav-item
-              data-nav-name={item.name}
-                            data-nav-section={item.sectionId}
+              data-nav-section={item.sectionId || undefined}
+              data-nav-page={item.isPage ? item.link : undefined}
             >
               {item.name}
             </a>
@@ -44,119 +39,211 @@ const navItems = [
       </ul>
     </nav>
 
-    <div class="navbar17__actions">
-      <NavbarCartButton class="navbar17__cart-btn" />
+    <div class="navbar17__right">
+      <!-- Desktop actions -->
+      <div class="navbar17__actions">
+        <NavbarCartButton class="navbar17__cart-btn" />
+        <a href="/book" class="navbar17__cta-btn">Book Demo</a>
+      </div>
+
+      <!-- Mobile controls: cart icon + hamburger -->
+      <div class="navbar17__mobile-controls">
+        <NavbarCartButton class="navbar17__cart-btn navbar17__cart-btn--mobile" />
+        <button
+          class="navbar17__toggle"
+          type="button"
+          aria-expanded="false"
+          aria-controls="mobile-menu"
+          data-nav-toggle
+        >
+          <span class="navbar17__toggle-icon" aria-hidden="true"></span>
+          <span class="sr-only">Open navigation menu</span>
+        </button>
+      </div>
     </div>
 
-    <NavbarCartButton class="navbar17__cart-btn navbar17__cart-btn--top-mobile" />
-
-    <button class="navbar17__toggle" type="button" aria-expanded="false" aria-controls="mobile-menu" data-nav-toggle>
-      <span class="navbar17__toggle-icon" aria-hidden="true"></span>
-      <span class="sr-only">Toggle navigation menu</span>
-    </button>
   </div>
 
-  <nav id="mobile-menu" class="navbar17__mobile" aria-label="Mobile primary" data-mobile-nav hidden>
-    <ul>
+  <nav
+    id="mobile-menu"
+    class="navbar17__mobile"
+    aria-label="Mobile navigation"
+    data-mobile-nav
+    hidden
+  >
+    <ul class="navbar17__mobile-list" role="list">
       {navItems.map((item) => (
         <li>
           <a
             href={item.link}
             class="navbar17__mobile-link"
             data-mobile-item
-            data-nav-name={item.name}
-                        data-nav-section={item.sectionId}
+            data-nav-section={item.sectionId || undefined}
+            data-nav-page={item.isPage ? item.link : undefined}
           >
             {item.name}
           </a>
         </li>
       ))}
     </ul>
+    <div class="navbar17__mobile-footer">
+      <a href="/book" class="navbar17__mobile-cta">Book Demo</a>
+    </div>
   </nav>
 </header>
 
 <script type="module">
   const navbar = document.querySelector('[data-navbar17]');
+  if (!navbar) { /* guard */ }
+  else {
+    const links       = [...navbar.querySelectorAll('[data-nav-item]')];
+    const mobileLinks = [...navbar.querySelectorAll('[data-mobile-item]')];
+    const indicator   = navbar.querySelector('[data-nav-indicator]');
+    const navList     = navbar.querySelector('[data-nav-list]');
+    const toggle      = navbar.querySelector('[data-nav-toggle]');
+    const mobileNav   = navbar.querySelector('[data-mobile-nav]');
 
-  if (navbar) {
-    const links = Array.from(navbar.querySelectorAll('[data-nav-item]'));
-    const mobileLinks = Array.from(navbar.querySelectorAll('[data-mobile-item]'));
-    const indicator = navbar.querySelector('[data-nav-indicator]');
-    const navList = navbar.querySelector('[data-nav-list]');
-    const toggle = navbar.querySelector('[data-nav-toggle]');
-    const mobileNav = navbar.querySelector('[data-mobile-nav]');
-    const homePathname = '/';
-    const setActive = (sectionId) => {
-      links.forEach((link) => {
-        const isActive = link.getAttribute('data-nav-section') === sectionId;
-        link.classList.toggle('is-active', isActive);
-
-      });
-
-      mobileLinks.forEach((link) => {
-        const isActive = link.getAttribute('data-nav-section') === sectionId;
-        link.classList.toggle('is-active', isActive);
-      });
-      const activeDesktop = links.find((link) => link.classList.contains('is-active'));
-
-      if (activeDesktop instanceof HTMLElement && indicator instanceof HTMLElement && navList instanceof HTMLElement) {
-        const listRect = navList.getBoundingClientRect();
-        const activeRect = activeDesktop.getBoundingClientRect();
-
-        indicator.style.width = `${activeRect.width}px`;
-        indicator.style.transform = `translateX(${activeRect.left - listRect.left}px)`;
-                indicator.style.opacity = '1';
+    /* ── Indicator ─────────────────────────────────────────── */
+    const moveIndicator = (linkEl) => {
+      if (!(indicator instanceof HTMLElement) || !(navList instanceof HTMLElement)) return;
+      if (!linkEl) {
+        indicator.style.width   = '0px';
+        indicator.style.opacity = '0';
         return;
       }
-
-      if (indicator instanceof HTMLElement) {
-        indicator.style.width = '0px';
-        indicator.style.opacity = '0';
-      }
-    };
-    const getSectionFromLocation = () => {
-      const { pathname, hash } = window.location;
-      const normalizedPathname = pathname.replace(/\/$/, '') || '/';
-
-      if (normalizedPathname !== homePathname) {
-        return '';
-      }
-
-      const sectionId = hash.replace('#', '');
-      return sectionId || 'home';
+      const listRect   = navList.getBoundingClientRect();
+      const activeRect = linkEl.getBoundingClientRect();
+      indicator.style.width     = `${activeRect.width}px`;
+      indicator.style.transform = `translateX(${activeRect.left - listRect.left}px)`;
+      indicator.style.opacity   = '1';
     };
 
-    const syncActiveFromLocation = () => {
-      setActive(getSectionFromLocation());
-    };
-
-
-    links.forEach((link) => {
-      link.addEventListener('click', () => {
-        setActive(link.getAttribute('data-nav-section') || '');
+    /* ── Active state setters ───────────────────────────────── */
+    const setActiveById = (sectionId) => {
+      [...links, ...mobileLinks].forEach((link) => {
+        link.classList.toggle(
+          'is-active',
+          link.getAttribute('data-nav-section') === sectionId
+        );
       });
-    });
+      moveIndicator(links.find((l) => l.classList.contains('is-active')) ?? null);
+    };
 
-    mobileLinks.forEach((link) => {
-      link.addEventListener('click', () => {
-        setActive(link.getAttribute('data-nav-section') || '');
-        if (toggle instanceof HTMLButtonElement && mobileNav instanceof HTMLElement) {
-          toggle.setAttribute('aria-expanded', 'false');
-          mobileNav.hidden = true;
-        }
+    const setActiveByPage = (pathname) => {
+      [...links, ...mobileLinks].forEach((link) => {
+        const page = link.getAttribute('data-nav-page');
+        link.classList.toggle('is-active', !!page && pathname.startsWith(page));
       });
-    });
+      // Delay indicator positioning until after layout paint
+      requestAnimationFrame(() => {
+        moveIndicator(links.find((l) => l.classList.contains('is-active')) ?? null);
+      });
+    };
+
+    /* ── Scroll state (frosted glass sticky) ────────────────── */
+    const updateScrollState = () => {
+      navbar.toggleAttribute('data-scrolled', window.scrollY > 10);
+    };
+    window.addEventListener('scroll', updateScrollState, { passive: true });
+    updateScrollState();
+
+    /* ── IntersectionObserver scroll-spy ────────────────────── */
+    const initScrollSpy = () => {
+      const sectionIds = [
+        ...new Set(links.map((l) => l.getAttribute('data-nav-section')).filter(Boolean)),
+      ];
+      if (!sectionIds.length) return;
+
+      const visible = new Set();
+
+      const observer = new IntersectionObserver(
+        (entries) => {
+          entries.forEach((entry) => {
+            if (entry.isIntersecting) visible.add(entry.target.id);
+            else visible.delete(entry.target.id);
+          });
+
+          if (!visible.size) return;
+
+          // Among currently visible sections, pick the one whose top is
+          // closest to the viewport's top edge — most-prominent rule
+          let closestId   = null;
+          let closestDist = Infinity;
+          visible.forEach((id) => {
+            const el = document.getElementById(id);
+            if (!el) return;
+            const dist = Math.abs(el.getBoundingClientRect().top);
+            if (dist < closestDist) { closestDist = dist; closestId = id; }
+          });
+
+          if (closestId) setActiveById(closestId);
+        },
+        // Root margin: top 5% dead zone, bottom 40% cut-off — ensures the
+        // section that dominates the upper viewport is the one marked active
+        { threshold: 0, rootMargin: '-5% 0px -40% 0px' }
+      );
+
+      sectionIds.forEach((id) => {
+        const el = document.getElementById(id);
+        if (el) observer.observe(el);
+      });
+    };
+
+    /* ── Mobile toggle ──────────────────────────────────────── */
+    const closeMobileMenu = () => {
+      if (!(toggle instanceof HTMLButtonElement) || !(mobileNav instanceof HTMLElement)) return;
+      toggle.setAttribute('aria-expanded', 'false');
+      mobileNav.hidden = true;
+      const label = toggle.querySelector('.sr-only');
+      if (label) label.textContent = 'Open navigation menu';
+    };
 
     if (toggle instanceof HTMLButtonElement && mobileNav instanceof HTMLElement) {
       toggle.addEventListener('click', () => {
         const isOpen = toggle.getAttribute('aria-expanded') === 'true';
-        toggle.setAttribute('aria-expanded', String(!isOpen));
-        mobileNav.hidden = isOpen;
+        if (isOpen) {
+          closeMobileMenu();
+        } else {
+          toggle.setAttribute('aria-expanded', 'true');
+          mobileNav.hidden = false;
+          const label = toggle.querySelector('.sr-only');
+          if (label) label.textContent = 'Close navigation menu';
+        }
       });
     }
 
-    window.addEventListener('hashchange', syncActiveFromLocation);
-    window.addEventListener('resize', syncActiveFromLocation);
-    syncActiveFromLocation();
+    mobileLinks.forEach((link) => {
+      link.addEventListener('click', closeMobileMenu);
+    });
+
+    // Also close on Escape key
+    document.addEventListener('keydown', (e) => {
+      if (e.key === 'Escape' && toggle?.getAttribute('aria-expanded') === 'true') {
+        closeMobileMenu();
+        toggle?.focus();
+      }
+    });
+
+    /* ── Init ───────────────────────────────────────────────── */
+    const pathname = window.location.pathname.replace(/\/$/, '') || '/';
+    const isHome   = pathname === '/';
+
+    if (isHome) {
+      initScrollSpy();
+      const hash = window.location.hash.replace('#', '');
+      setActiveById(hash || 'home');
+      window.addEventListener('hashchange', () => {
+        const h = window.location.hash.replace('#', '');
+        setActiveById(h || 'home');
+      });
+    } else {
+      setActiveByPage(pathname);
+    }
+
+    // Recalculate indicator on resize (handles font/layout shifts)
+    window.addEventListener('resize', () => {
+      const active = links.find((l) => l.classList.contains('is-active'));
+      if (active) moveIndicator(active);
+    });
   }
 </script>

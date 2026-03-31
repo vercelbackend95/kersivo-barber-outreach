@@ -1,7 +1,13 @@
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
 import OrdersDataTable22 from './OrdersDataTable22';
+import AdminSectionHeader from './AdminSectionHeader';
+import AdminLineChart from './charts/AdminLineChart';
 import { SettingsGearIcon } from './SettingsGearIcon';
+import EmptyState from '../EmptyState';
+import { Package, Search, X } from '../lucide-react';
+import { formatDelta } from './reportsFormatting';
+import { SkeletonKPICards } from '../skeleton';
 type ShopTab = 'products' | 'orders' | 'sales';
 type SalesRangePreset = '7' | '30' | '90' | 'custom';
 
@@ -64,14 +70,17 @@ type OrderDetail = {
     lineTotalPence: number;
   }>;
 };
+type SalesKpis = {
+  revenuePence: number;
+  ordersCount: number;
+  avgOrderValuePence: number;
+  bestProduct?: { productId: string; name: string; revenuePence: number; units: number };
+};
+
 type SalesResponse = {
   range: { from: string; to: string; tz: string };
-  kpis: {
-    revenuePence: number;
-    ordersCount: number;
-    avgOrderValuePence: number;
-    bestProduct?: { productId: string; name: string; revenuePence: number; units: number };
-  };
+  kpis: SalesKpis;
+  previousKpis?: SalesKpis | null;
   series: {
     overall?: Array<{ date: string; revenuePence: number; units: number }>;
     products?: Array<{
@@ -132,6 +141,31 @@ type ShopPanelErrorBoundaryState = {
 const MAX_SELECTED_PRODUCTS = 5;
 const SALES_SELECTION_LIMIT_MESSAGE = 'Max 5 products can be compared.';
 
+
+function useBulkSelection<T extends string>() {
+  const [selectedIds, setSelectedIds] = useState<Set<T>>(new Set());
+
+  const toggle = useCallback((id: T) => {
+    setSelectedIds((prev) => {
+      const next = new Set(prev);
+      if (next.has(id)) next.delete(id);
+      else next.add(id);
+      return next;
+    });
+  }, []);
+
+  const selectAll = useCallback((ids: T[]) => {
+    setSelectedIds(new Set(ids));
+  }, []);
+
+  const clearAll = useCallback(() => {
+    setSelectedIds(new Set());
+  }, []);
+
+  const isSelected = useCallback((id: T) => selectedIds.has(id), [selectedIds]);
+
+  return { selectedIds, toggle, selectAll, clearAll, isSelected, selectedCount: selectedIds.size };
+}
 
 function useBodyScrollLock(isLocked: boolean): void {
   useEffect(() => {
@@ -333,17 +367,6 @@ class ShopPanelErrorBoundary extends React.Component<ShopPanelErrorBoundaryProps
 
 
 
-type MiniLineChartProps = {
-  series: SalesChartSeries[];
-  metric: SalesMetric;
-  getSeriesColor: (seriesKey: string) => string;
-  getSeriesStrokeWidth?: (seriesKey: string) => number;
-
-  height?: string;
-  onExpand?: () => void;
-  isFullscreen?: boolean;
-  useResponsiveResize?: boolean;
-};
 
 type SeriesPillsProps = {
   seriesList: SalesSeriesPill[];
@@ -398,7 +421,7 @@ function SeriesPills({
                 onClick={() => onRemove(series.key)}
                 aria-label={`Remove ${series.label}`}
               >
-                ×
+                <X width={12} height={12} aria-hidden="true" />
               </button>
             ) : null}
           </span>
@@ -474,6 +497,60 @@ function EditFooterActions({
 }
 
 
+
+type BulkActionBarProps = {
+  count: number;
+  loading: boolean;
+  onActivate: () => void;
+  onDeactivate: () => void;
+  onClear: () => void;
+};
+
+function BulkActionBar({ count, loading, onActivate, onDeactivate, onClear }: BulkActionBarProps) {
+  return createPortal(
+    <div
+      className={`admin-bulk-bar${count > 0 ? ' admin-bulk-bar--visible' : ''}`}
+      role="toolbar"
+      aria-label="Bulk product actions"
+      aria-hidden={count === 0}
+    >
+      <span className="admin-bulk-bar__count">
+        {count} {count === 1 ? 'selected' : 'selected'}
+      </span>
+      <div className="admin-bulk-bar__actions">
+        <button
+          type="button"
+          className="btn btn--primary admin-bulk-bar__btn"
+          disabled={loading || count === 0}
+          onClick={onActivate}
+          aria-label={`Activate ${count} selected products`}
+        >
+          {loading ? <span className="admin-bulk-spinner" aria-hidden="true" /> : null}
+          Activate
+        </button>
+        <button
+          type="button"
+          className="btn btn--secondary admin-bulk-bar__btn"
+          disabled={loading || count === 0}
+          onClick={onDeactivate}
+          aria-label={`Deactivate ${count} selected products`}
+        >
+          Deactivate
+        </button>
+        <button
+          type="button"
+          className="admin-bulk-bar__clear"
+          disabled={loading}
+          onClick={onClear}
+          aria-label="Clear selection"
+        >
+          <X width={16} height={16} aria-hidden="true" /> Clear
+        </button>
+      </div>
+    </div>,
+    document.body
+  );
+}
 
 function useProductSeriesSelection(allSalesSeries: SalesChartSeries[]) {
   const [enabledProductIds, setEnabledProductIds] = useState<Set<string>>(new Set());
@@ -566,184 +643,6 @@ function useProductSeriesSelection(allSalesSeries: SalesChartSeries[]) {
 }
 
 
-function MiniLineChart({
-  series,
-  metric,
-  getSeriesColor,
-  getSeriesStrokeWidth,
-
-  height,
-  onExpand,
-  isFullscreen = false,
-  useResponsiveResize = false
-}: MiniLineChartProps) {
-    const isEmptySelection = series.length === 0;
-  const chartCanvasRef = useRef<HTMLDivElement | null>(null);
-  const [dimensions, setDimensions] = useState({ width: 900, height: 320 });
-
-  useEffect(() => {
-    if (!useResponsiveResize || !chartCanvasRef.current) return undefined;
-
-    const element = chartCanvasRef.current;
-    const updateDimensions = () => {
-      const nextWidth = Math.max(320, Math.round(element.clientWidth));
-      const nextHeight = Math.max(220, Math.round(element.clientHeight));
-      setDimensions((prev) => {
-        if (prev.width === nextWidth && prev.height === nextHeight) return prev;
-        return { width: nextWidth, height: nextHeight };
-      });
-    };
-
-    updateDimensions();
-
-    if (typeof window === 'undefined' || typeof ResizeObserver === 'undefined') return undefined;
-    const observer = new ResizeObserver(() => {
-      updateDimensions();
-    });
-    observer.observe(element);
-    return () => {
-      observer.disconnect();
-    };
-  }, [useResponsiveResize]);
-
-
-
-  const width = dimensions.width;
-  const chartHeight = dimensions.height;
-
-  const padding = { top: 20, right: 20, bottom: 36, left: 54 };
-  const safeSeries = series
-    .map((line) => ({ ...line, points: line.points ?? [] }))
-    .filter((line) => line.points.length > 0);
-
-  const fallbackDates = ['start', 'end'];
-  const fallbackSeries: SalesChartSeries = {
-    key: '__empty__',
-    name: 'No data',
-    points: fallbackDates.map((date) => ({ date, revenuePence: 0, units: 0 }))
-  };
-  const seriesForChart = safeSeries.length > 0 ? safeSeries : [fallbackSeries];
-  const allPoints = seriesForChart.flatMap((line) => line.points);
-
-
-  const allDates = Array.from(new Set(allPoints.map((point) => point.date))).sort((a, b) => a.localeCompare(b));
-  const values = allPoints.map((point) => (metric === 'revenue' ? point.revenuePence : point.units));
-  const maxValue = values.length > 0 ? Math.max(0, ...values) : 0;
-  const yMax = Math.max(maxValue, metric === 'revenue' ? 100 : 1);
-
-
-  const innerWidth = width - padding.left - padding.right;
-  const innerHeight = chartHeight - padding.top - padding.bottom;
-
-  const xPosition = (date: string): number => {
-    const index = allDates.indexOf(date);
-    if (index <= 0 || allDates.length <= 1) return padding.left;
-    return padding.left + (index / (allDates.length - 1)) * innerWidth;
-  };
-
-  const yPosition = (value: number): number => padding.top + (1 - value / yMax) * innerHeight;
-
-  const ticks = 4;
-  const yTicks = Array.from({ length: ticks + 1 }, (_, index) => (yMax / ticks) * index);
-  const formatAxisValue = (value: number): string => {
-    if (metric === 'revenue') {
-      return new Intl.NumberFormat('en-GB', {
-        style: 'currency',
-        currency: 'GBP',
-        maximumFractionDigits: 0,
-        minimumFractionDigits: 0
-      }).format(value / 100);
-    }
-    return `${Math.round(value)}`;
-  };
-
-  const formatTooltipValue = (value: number): string => (metric === 'revenue' ? formatPrice(value) : `${Math.round(value)} units`);
-
-
-  return (
-    <div className={`admin-sales-chart-inner ${isFullscreen ? 'admin-sales-chart-inner--fullscreen' : ''}`}>
-      <div
-        ref={chartCanvasRef}
-        className={`admin-sales-chart-canvas ${onExpand ? 'admin-sales-chart-canvas--clickable' : ''}`}
-        style={height ? { height } : undefined}
-        onClick={onExpand}
-        role={onExpand ? 'button' : undefined}
-        tabIndex={onExpand ? 0 : undefined}
-        onKeyDown={onExpand ? (event) => {
-          if (event.key === 'Enter' || event.key === ' ') {
-            event.preventDefault();
-            onExpand();
-          }
-        } : undefined}
-        aria-label={onExpand ? 'Tap to expand sales chart' : undefined}
-
-      >
-        <svg
-          viewBox={`0 0 ${width} ${chartHeight}`}
-          preserveAspectRatio="none"
-          className="admin-sales-chart-svg"
-          role="img"
-          aria-label={`Sales ${metric === 'revenue' ? 'revenue' : 'units'} chart`}
-        >
-
-        {yTicks.map((tick) => (
-          <g key={`tick-${tick}`}>
-            <line x1={padding.left} y1={yPosition(tick)} x2={width - padding.right} y2={yPosition(tick)} className="admin-sales-grid-line" />
-            <text x={padding.left - 8} y={yPosition(tick) + 4} textAnchor="end" className="admin-sales-axis-label">{formatAxisValue(tick)}</text>
-          </g>
-        ))}
-
-        {seriesForChart.map((line) => {
-          const path = line.points
-            .map((point, pointIndex) => {
-              const value = metric === 'revenue' ? point.revenuePence : point.units;
-              return `${pointIndex === 0 ? 'M' : 'L'} ${xPosition(point.date)} ${yPosition(value)}`;
-            })
-
-          .join(' ');
-
-          return (
-            <g key={line.key}>
-              <path
-                d={path}
-                fill="none"
-                stroke={getSeriesColor(line.key)}
-                strokeWidth={getSeriesStrokeWidth ? getSeriesStrokeWidth(line.key) : 2}
-              />
-
-              {line.key === '__empty__' ? null : line.points.map((point) => {
-                const value = metric === 'revenue' ? point.revenuePence : point.units;
-                return (
-                  <circle key={`${line.key}-${point.date}`} cx={xPosition(point.date)} cy={yPosition(value)} r="2.25" fill={getSeriesColor(line.key)}>
-                    <title>{`${new Date(`${point.date}T00:00:00`).toLocaleDateString('en-GB')} · ${line.name}: ${formatTooltipValue(value)}`}</title>
-                  </circle>
-                );
-              })}
-
-            </g>
-          );
-        })}
-
-        {allDates.filter((date, index) => date !== 'start' && date !== 'end' && (index % Math.max(1, Math.ceil(allDates.length / 6)) === 0 || index === allDates.length - 1)).map((date) => (
-          <text key={`x-${date}`} x={xPosition(date)} y={chartHeight - 12} textAnchor="middle" className="admin-sales-axis-label">
-            {new Date(`${date}T00:00:00`).toLocaleDateString('en-GB', { day: '2-digit', month: '2-digit' })}
-          </text>
-        ))}
-                </svg>
-                        {isEmptySelection ? (
-          <div className="admin-sales-chart-overlay" aria-live="polite">
-            <p>No products selected</p>
-            <p>Enable a product below to display data.</p>
-          </div>
-        ) : null}
-
-      </div>
-
-
-
-    </div>
-  );
-}
 
 
 type ShopAdminPanelProps = {
@@ -785,7 +684,7 @@ export default function ShopAdminPanel({ initialTab = 'products' }: ShopAdminPan
 
   const [isSalesChartExpanded, setIsSalesChartExpanded] = useState(false);
   const [expandedProductSearch, setExpandedProductSearch] = useState('');
-    useBodyScrollLock(formOpen || (isMobileSalesView && isSalesChartExpanded));
+    useBodyScrollLock((formOpen && isMobileProductEditor) || (isMobileSalesView && isSalesChartExpanded));
 
 
     const [productSearch, setProductSearch] = useState('');
@@ -807,6 +706,16 @@ export default function ShopAdminPanel({ initialTab = 'products' }: ShopAdminPan
   const imageUploadAbortControllerRef = useRef<AbortController | null>(null);
   const fileInputRef = useRef<HTMLInputElement | null>(null);
 
+  const {
+    selectedIds: bulkSelectedIds,
+    toggle: bulkToggle,
+    selectAll: bulkSelectAll,
+    clearAll: bulkClearAll,
+    isSelected: bulkIsSelected,
+    selectedCount: bulkSelectedCount
+  } = useBulkSelection<string>();
+  const [bulkLoading, setBulkLoading] = useState(false);
+
   const sortedProducts = useMemo(
     () => [...products].sort((a, b) => a.sortOrder - b.sortOrder || Date.parse(b.updatedAt) - Date.parse(a.updatedAt)),
     [products]
@@ -822,9 +731,7 @@ export default function ShopAdminPanel({ initialTab = 'products' }: ShopAdminPan
       setIsMobileProductEditor(mediaQuery.matches);
       if (!mediaQuery.matches) {
         setIsSalesChartExpanded(false);
-        resetForm(true);
       }
-
     };
     handleChange();
     mediaQuery.addEventListener('change', handleChange);
@@ -924,6 +831,10 @@ export default function ShopAdminPanel({ initialTab = 'products' }: ShopAdminPan
     const timeoutId = window.setTimeout(() => setFooterFeedback(null), 1200);
     return () => window.clearTimeout(timeoutId);
   }, [footerFeedback]);
+
+  useEffect(() => {
+    bulkClearAll();
+  }, [productFilter, productSearch, productSortMode]);
   useEffect(() => {
     const timeoutId = window.setTimeout(() => {
       setDebouncedImageUrlPreview(form.imageUrl.trim());
@@ -1009,6 +920,58 @@ export default function ShopAdminPanel({ initialTab = 'products' }: ShopAdminPan
 
   const chartSeries = useMemo(() => allSalesSeries.filter((series) => activeSeriesKeys.includes(series.key)), [activeSeriesKeys, allSalesSeries]);
   const legendSeries = useMemo(() => seriesPills.filter((series) => activeSeriesKeys.includes(series.key)), [activeSeriesKeys, seriesPills]);
+
+  const adminChartSeries = useMemo(
+    () =>
+      chartSeries.map((s) => ({
+        key: s.key,
+        name: s.name,
+        points: (s.points ?? []).map((p) => ({
+          label: p.date,
+          value: salesMetric === 'revenue' ? p.revenuePence : p.units,
+        })),
+      })),
+    [chartSeries, salesMetric],
+  );
+
+  const fmtSalesValue = useCallback(
+    (v: number) => (salesMetric === 'revenue' ? formatPrice(v) : `${Math.round(v)} units`),
+    [salesMetric],
+  );
+
+  const salesKpiDeltas = useMemo(() => {
+    const prev = salesData?.previousKpis ?? null;
+    if (!prev) return null;
+
+    const pctOrNull = (current: number, previous: number) =>
+      previous > 0 ? ((current - previous) / previous) * 100 : null;
+
+    const current = salesData!.kpis;
+
+    return {
+      revenue: formatDelta({
+        value: pctOrNull(current.revenuePence, prev.revenuePence),
+        type: 'percent',
+        tone: 'higher_better',
+        currentValue: current.revenuePence,
+        previousValue: prev.revenuePence
+      }),
+      orders: formatDelta({
+        value: pctOrNull(current.ordersCount, prev.ordersCount),
+        type: 'percent',
+        tone: 'higher_better',
+        currentValue: current.ordersCount,
+        previousValue: prev.ordersCount
+      }),
+      avgOrderValue: formatDelta({
+        value: pctOrNull(current.avgOrderValuePence, prev.avgOrderValuePence),
+        type: 'percent',
+        tone: 'higher_better',
+        currentValue: current.avgOrderValuePence,
+        previousValue: prev.avgOrderValuePence
+      })
+    };
+  }, [salesData]);
   const ordersSafe = orders ?? [];
   const filteredOrders = useMemo(() => {
     const normalizedQuery = normalize(debouncedOrdersSearchQuery);
@@ -1149,10 +1112,17 @@ export default function ShopAdminPanel({ initialTab = 'products' }: ShopAdminPan
     }
 
   }, [activeTab]);
+  const salesDateError = useMemo(() => {
+    if (salesPreset !== 'custom') return null;
+    if (!salesFrom || !salesTo) return null;
+    return salesFrom > salesTo ? 'End date must be after start date' : null;
+  }, [salesPreset, salesFrom, salesTo]);
+
   useEffect(() => {
     if (activeTab !== 'sales') return;
+    if (salesDateError) return;
     void fetchSales();
-  }, [activeTab, salesPreset, salesFrom, salesTo]);
+  }, [activeTab, salesPreset, salesFrom, salesTo, salesDateError]);
 
 
 
@@ -1205,11 +1175,6 @@ export default function ShopAdminPanel({ initialTab = 'products' }: ShopAdminPan
   }
 
   function startCreate() {
-        if (!isMobileProductEditor) {
-      setError('Add product is available on mobile only.');
-      return;
-    }
-
     const nextForm = {
       ...EMPTY_FORM,
       sortOrder: productSortMode === 'manual' ? defaultSortOrder : EMPTY_FORM.sortOrder
@@ -1229,11 +1194,6 @@ export default function ShopAdminPanel({ initialTab = 'products' }: ShopAdminPan
   }
 
   function startEdit(product: Product) {
-        if (!isMobileProductEditor) {
-      setError('Edit product is available on mobile only.');
-      return;
-    }
-
     const normalizedSortOrder = Number.isFinite(product.sortOrder)
       ? Math.min(SORT_ORDER_MAX, Math.max(SORT_ORDER_MIN, product.sortOrder))
       : defaultSortOrder;
@@ -1515,6 +1475,47 @@ export default function ShopAdminPanel({ initialTab = 'products' }: ShopAdminPan
     }
   }
 
+  async function bulkPatchActive(active: boolean) {
+    if (bulkLoading) return;
+    const ids = Array.from(bulkSelectedIds);
+    if (ids.length === 0) return;
+
+    setBulkLoading(true);
+    setError(null);
+    setSuccess(null);
+
+    try {
+      const results = await Promise.allSettled(
+        ids.map((id) => {
+          const existing = products.find((p) => p.id === id);
+          const body = active
+            ? { active: true, featured: existing?.featured ?? false }
+            : { active: false, featured: false };
+          return fetch(`/api/admin/shop/products/${id}`, {
+            method: 'PATCH',
+            credentials: 'include',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(body)
+          });
+        })
+      );
+
+      const failedCount = results.filter((r) => r.status === 'rejected').length;
+      await fetchProducts();
+      bulkClearAll();
+
+      if (failedCount > 0) {
+        setError(`${ids.length - failedCount} updated, ${failedCount} failed.`);
+      } else {
+        setSuccess(`${ids.length} product${ids.length !== 1 ? 's' : ''} ${active ? 'activated' : 'deactivated'}.`);
+      }
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Bulk operation failed.');
+    } finally {
+      setBulkLoading(false);
+    }
+  }
+
   async function disableProduct(productId: string) {
     setError(null);
     setSuccess(null);
@@ -1641,9 +1642,23 @@ export default function ShopAdminPanel({ initialTab = 'products' }: ShopAdminPan
     <ShopPanelErrorBoundary>
       <section className="booking-shell" aria-live="polite">
 
-      <h1>SHOP</h1>
-
-      <p className="admin-shop-kicker muted">{activeSectionLabel}</p>
+      <AdminSectionHeader
+        title={
+          activeTab === 'orders' ? 'Orders'
+          : activeTab === 'sales' ? 'Sales Analytics'
+          : 'Shop Products'
+        }
+        description={
+          activeTab === 'orders' ? 'Customer orders and fulfilment'
+          : activeTab === 'sales' ? 'Revenue and sales trends'
+          : 'Manage your retail product catalogue'
+        }
+        actions={activeTab === 'products' ? (
+          <button type="button" className="btn btn--primary" onClick={startCreate}>
+            Add Product
+          </button>
+        ) : undefined}
+      />
 
       {activeTab === 'products' && (
         <div className="admin-reports admin-products-panel">
@@ -1686,14 +1701,37 @@ export default function ShopAdminPanel({ initialTab = 'products' }: ShopAdminPan
                 </div>
 
 
-                <p className="admin-products-count muted">{filteredProducts.length} products • {featuredCount} featured</p>
+                <div className="admin-products-toolbar-bulk">
+                  <p className="admin-products-count muted">{filteredProducts.length} products • {featuredCount} featured</p>
+                  {filteredProducts.length > 0 ? (
+                    <button
+                      type="button"
+                      className="admin-bulk-select-all"
+                      onClick={() => {
+                        const allIds = filteredProducts.map((p) => p.id);
+                        if (bulkSelectedCount === filteredProducts.length) {
+                          bulkClearAll();
+                        } else {
+                          bulkSelectAll(allIds);
+                        }
+                      }}
+                      aria-pressed={bulkSelectedCount === filteredProducts.length && filteredProducts.length > 0}
+                    >
+                      {bulkSelectedCount > 0 && bulkSelectedCount === filteredProducts.length
+                        ? 'Deselect all'
+                        : bulkSelectedCount > 0
+                          ? `Select all (${filteredProducts.length})`
+                          : 'Select all'}
+                    </button>
+                  ) : null}
+                </div>
 
               </div>
             </div>
           </div>
 
-          {formOpen && isMobileProductEditor ? createPortal((
-            <div className="admin-product-sheet-backdrop" onClick={() => resetForm()}>
+          {formOpen ? createPortal((
+            <div className={`admin-product-sheet-backdrop${isMobileProductEditor ? '' : ' admin-product-sheet-backdrop--drawer'}`} onClick={() => resetForm()}>
               <form
                 className="admin-product-sheet"
                 onSubmit={saveProduct}
@@ -1711,7 +1749,7 @@ export default function ShopAdminPanel({ initialTab = 'products' }: ShopAdminPan
                     onClick={() => resetForm()}
                     aria-label="Close product form"
                   >
-                    ✕
+                    <X width={18} height={18} aria-hidden="true" />
                   </button>
 
                 </div>
@@ -1894,28 +1932,46 @@ export default function ShopAdminPanel({ initialTab = 'products' }: ShopAdminPan
           <div className="admin-products-scroll" role="region" aria-label="Products list">
             {error ? <p className="admin-inline-error">{error}</p> : null}
             {success ? <p className="admin-inline-success">{success}</p> : null}
-            {!isMobileProductEditor ? (
-              <div className="admin-products-mobile-only-note" role="note">
-                <p className="admin-products-mobile-only-note__eyebrow">Mobile only</p>
-                <p className="admin-products-mobile-only-note__body">Use a phone viewport to add products, edit products, and upload product images.</p>
-              </div>
-            ) : null}
 
             <div className="admin-products-cards">
               {filteredProducts.length === 0 ? (
-                <article className="admin-product-card"><p>No products yet.</p></article>
-                            ) : filteredProducts.map((product, index) => {
+                baseProducts.length === 0 ? (
+                  <EmptyState
+                    icon={Package}
+                    title="No products yet"
+                    description="Add your first product to launch your storefront."
+                  />
+                ) : (
+                  <EmptyState
+                    icon={Search}
+                    title="No products match"
+                    description="Try adjusting your search or filter to find what you're looking for."
+                    variant="filtered"
+                  />
+                )
+              ) : filteredProducts.map((product, index) => {
                 const isSavingCard = Boolean(productSavingById[product.id]);
-                              const isFirstItem = index === 0;
+                const isFirstItem = index === 0;
                 const isLastItem = index === filteredProducts.length - 1;
-
+                const isCardSelected = bulkIsSelected(product.id);
+                const reorderDisabled = productSortMode !== 'manual' || !canReorder || bulkSelectedCount > 0;
 
                 return (
                   <article
                     key={product.id}
-                    className="admin-product-card"
+                    className={`admin-product-card${isCardSelected ? ' admin-product-card--selected' : ''}`}
+                    aria-selected={isCardSelected}
+                  >
+                    <label className="admin-product-card-checkbox-wrap" title={isCardSelected ? `Deselect ${product.name}` : `Select ${product.name}`}>
+                      <input
+                        type="checkbox"
+                        className="admin-product-card-checkbox"
+                        checked={isCardSelected}
+                        onChange={() => bulkToggle(product.id)}
+                        aria-label={isCardSelected ? `Deselect ${product.name}` : `Select ${product.name}`}
+                      />
+                    </label>
 
-                >
                   <div className="admin-product-card-main">
                     <div className="admin-product-thumb">{product.imageUrl ? <img src={product.imageUrl} alt={product.name} loading="lazy" draggable={false} /> : <span>No image</span>}</div>
                     <div>
@@ -1925,13 +1981,13 @@ export default function ShopAdminPanel({ initialTab = 'products' }: ShopAdminPan
                     </div>
 
                     <div className="admin-reorder-controls admin-reorder-controls--barber" role="group" aria-label={`${product.name} controls`}>
-                                          <div className="admin-reorder-arrow-stack admin-reorder-arrow-stack--barber">
+                      <div className="admin-reorder-arrow-stack admin-reorder-arrow-stack--barber">
 
                         <button
                           type="button"
                           className="admin-reorder-btn admin-reorder-btn--barber"
                           aria-label={`Move ${product.name} up`}
-                          disabled={productSortMode !== 'manual' || !canReorder || isFirstItem}
+                          disabled={reorderDisabled || isFirstItem}
                           onClick={() => moveItemUp(index)}
                         >
                           ▲
@@ -1940,23 +1996,21 @@ export default function ShopAdminPanel({ initialTab = 'products' }: ShopAdminPan
                           type="button"
                           className="admin-reorder-btn admin-reorder-btn--barber"
                           aria-label={`Move ${product.name} down`}
-                          disabled={productSortMode !== 'manual' || !canReorder || isLastItem}
+                          disabled={reorderDisabled || isLastItem}
                           onClick={() => moveItemDown(index)}
                         >
                           ▼
                         </button>
                       </div>
 
-                      {isMobileProductEditor ? (
-                        <button
-                          type="button"
-                          className="admin-reorder-btn admin-reorder-btn--settings admin-reorder-btn--barber admin-reorder-btn--barber-settings"
-                          aria-label={`Edit ${product.name}`}
-                          onClick={() => startEdit(product)}
-                        >
-                          <SettingsGearIcon className="admin-control-icon" />
-                        </button>
-                      ) : null}
+                      <button
+                        type="button"
+                        className="admin-reorder-btn admin-reorder-btn--settings admin-reorder-btn--barber admin-reorder-btn--barber-settings"
+                        aria-label={`Edit ${product.name}`}
+                        onClick={() => startEdit(product)}
+                      >
+                        <SettingsGearIcon className="admin-control-icon" />
+                      </button>
 
                     </div>
 
@@ -1991,18 +2045,24 @@ export default function ShopAdminPanel({ initialTab = 'products' }: ShopAdminPan
                 </article>
                 );
               })}
-              {isMobileProductEditor ? (
-                <article className="admin-product-card admin-product-card--add">
-                  <button type="button" className="admin-product-add-btn" onClick={startCreate}>
-                    <span className="admin-product-add-icon" aria-hidden="true">+</span>
-                    <span>Add product</span>
-                  </button>
-                </article>
-              ) : null}
+              <article className="admin-product-card admin-product-card--add">
+                <button type="button" className="admin-product-add-btn" onClick={startCreate}>
+                  <span className="admin-product-add-icon" aria-hidden="true">+</span>
+                  <span>Add product</span>
+                </button>
+              </article>
 
             </div>
 
           </div>
+
+          <BulkActionBar
+            count={bulkSelectedCount}
+            loading={bulkLoading}
+            onActivate={() => { void bulkPatchActive(true); }}
+            onDeactivate={() => { void bulkPatchActive(false); }}
+            onClear={bulkClearAll}
+          />
         </div>
       )}
 
@@ -2041,7 +2101,7 @@ export default function ShopAdminPanel({ initialTab = 'products' }: ShopAdminPan
                 }}
                 aria-label="Clear order search"
               >
-                ×
+                <X width={12} height={12} aria-hidden="true" />
               </button>
             ) : null}
             </div>
@@ -2079,10 +2139,54 @@ export default function ShopAdminPanel({ initialTab = 'products' }: ShopAdminPan
           {success ? <p className="admin-inline-success">{success}</p> : null}
 
           <div className="admin-sales-kpis">
-            <article className="admin-sales-kpi"><p>Total revenue</p><strong>{formatPrice(salesData?.kpis.revenuePence ?? 0)}</strong></article>
-            <article className="admin-sales-kpi"><p>Orders count</p><strong>{salesData?.kpis.ordersCount ?? 0}</strong></article>
-            <article className="admin-sales-kpi"><p>Average order value</p><strong>{formatPrice(salesData?.kpis.avgOrderValuePence ?? 0)}</strong></article>
-            <article className="admin-sales-kpi"><p>Best-selling product</p><strong>{salesData?.kpis.bestProduct ? `${salesData.kpis.bestProduct.name} (${formatPrice(salesData.kpis.bestProduct.revenuePence)})` : '—'}</strong></article>
+            {salesLoading && !salesData ? (
+              <SkeletonKPICards count={4} />
+            ) : (
+              <>
+                <article className="admin-kpi-card">
+                  <p className="admin-kpi-label">Total revenue</p>
+                  <p className="admin-kpi-value">{formatPrice(salesData?.kpis.revenuePence ?? 0)}</p>
+                  {salesKpiDeltas ? (
+                    <p className={`admin-kpi-trend ${salesKpiDeltas.revenue.className}`}>
+                      {salesKpiDeltas.revenue.direction === 'up' ? '↑ ' : salesKpiDeltas.revenue.direction === 'down' ? '↓ ' : ''}
+                      {salesKpiDeltas.revenue.text}
+                    </p>
+                  ) : null}
+                </article>
+
+                <article className="admin-kpi-card">
+                  <p className="admin-kpi-label">Orders</p>
+                  <p className="admin-kpi-value">{salesData?.kpis.ordersCount ?? 0}</p>
+                  {salesKpiDeltas ? (
+                    <p className={`admin-kpi-trend ${salesKpiDeltas.orders.className}`}>
+                      {salesKpiDeltas.orders.direction === 'up' ? '↑ ' : salesKpiDeltas.orders.direction === 'down' ? '↓ ' : ''}
+                      {salesKpiDeltas.orders.text}
+                    </p>
+                  ) : null}
+                </article>
+
+                <article className="admin-kpi-card">
+                  <p className="admin-kpi-label">Avg order value</p>
+                  <p className="admin-kpi-value">{formatPrice(salesData?.kpis.avgOrderValuePence ?? 0)}</p>
+                  {salesKpiDeltas ? (
+                    <p className={`admin-kpi-trend ${salesKpiDeltas.avgOrderValue.className}`}>
+                      {salesKpiDeltas.avgOrderValue.direction === 'up' ? '↑ ' : salesKpiDeltas.avgOrderValue.direction === 'down' ? '↓ ' : ''}
+                      {salesKpiDeltas.avgOrderValue.text}
+                    </p>
+                  ) : null}
+                </article>
+
+                <article className="admin-kpi-card">
+                  <p className="admin-kpi-label">Best-selling product</p>
+                  <p className="admin-kpi-value">{salesData?.kpis.bestProduct?.name ?? '—'}</p>
+                  {salesData?.kpis.bestProduct ? (
+                    <p className="admin-kpi-note">
+                      {formatPrice(salesData.kpis.bestProduct.revenuePence)} · {salesData.kpis.bestProduct.units} units
+                    </p>
+                  ) : null}
+                </article>
+              </>
+            )}
           </div>
 
           <div className="admin-sales-controls">
@@ -2095,8 +2199,37 @@ export default function ShopAdminPanel({ initialTab = 'products' }: ShopAdminPan
 
             {salesPreset === 'custom' ? (
               <div className="admin-sales-custom-dates">
-                <label>From<input type="date" value={salesFrom} onChange={(event) => setSalesFrom(event.target.value)} /></label>
-                <label>To<input type="date" value={salesTo} onChange={(event) => setSalesTo(event.target.value)} /></label>
+                <div className="field">
+                  <label className="field__label" htmlFor="sales-from">From</label>
+                  <input
+                    id="sales-from"
+                    type="date"
+                    className={`input${salesDateError ? ' input--error' : ''}`}
+                    value={salesFrom}
+                    max={salesTo || undefined}
+                    aria-invalid={Boolean(salesDateError)}
+                    aria-describedby={salesDateError ? 'sales-date-error' : undefined}
+                    onChange={(event) => setSalesFrom(event.target.value)}
+                  />
+                </div>
+                <div className="field">
+                  <label className="field__label" htmlFor="sales-to">To</label>
+                  <input
+                    id="sales-to"
+                    type="date"
+                    className={`input${salesDateError ? ' input--error' : ''}`}
+                    value={salesTo}
+                    min={salesFrom || undefined}
+                    aria-invalid={Boolean(salesDateError)}
+                    aria-describedby={salesDateError ? 'sales-date-error' : undefined}
+                    onChange={(event) => setSalesTo(event.target.value)}
+                  />
+                </div>
+                {salesDateError ? (
+                  <span id="sales-date-error" className="field__hint field__hint--error admin-sales-date-error">
+                    {salesDateError}
+                  </span>
+                ) : null}
               </div>
             ) : null}
                         <div className="admin-filter-tabs admin-filter-tabs--metric" role="tablist" aria-label="Sales metric toggle">
@@ -2120,17 +2253,22 @@ export default function ShopAdminPanel({ initialTab = 'products' }: ShopAdminPan
                 ) : null}
 
                 <SalesChartErrorBoundary>
-                  <MiniLineChart
-                    series={chartSeries}
-                    metric={salesMetric}
-                    getSeriesColor={getSeriesColor}
-                    getSeriesStrokeWidth={getSeriesStrokeWidth}
-
+                  <AdminLineChart
+                    series={adminChartSeries}
+                    metric={salesMetric === 'revenue' ? 'currency' : 'number'}
+                    getColor={getSeriesColor}
+                    getStrokeWidth={getSeriesStrokeWidth}
+                    formatValue={fmtSalesValue}
                     height={isMobileSalesView ? 'clamp(280px, 45vh, 520px)' : undefined}
                     onExpand={isMobileSalesView ? () => setIsSalesChartExpanded(true) : undefined}
-                    useResponsiveResize={isMobileSalesView}
+                    responsive={isMobileSalesView}
+                    emptyNode={
+                      <>
+                        <p>No products selected</p>
+                        <p>Enable a product below to display data.</p>
+                      </>
+                    }
                   />
-
                 </SalesChartErrorBoundary>
                 
                 <SeriesPills
@@ -2152,12 +2290,20 @@ export default function ShopAdminPanel({ initialTab = 'products' }: ShopAdminPan
                       <button type="button" className="btn btn--secondary" onClick={() => setIsSalesChartExpanded(false)}>Close</button>
                     </div>
                     <SalesChartErrorBoundary>
-                      <MiniLineChart
-                        series={chartSeries}
-                        metric={salesMetric}
-                        getSeriesStrokeWidth={getSeriesStrokeWidth}
+                      <AdminLineChart
+                        series={adminChartSeries}
+                        metric={salesMetric === 'revenue' ? 'currency' : 'number'}
+                        getColor={getSeriesColor}
+                        getStrokeWidth={getSeriesStrokeWidth}
+                        formatValue={fmtSalesValue}
                         height="clamp(220px, 34vh, 320px)"
-                        useResponsiveResize
+                        responsive
+                        emptyNode={
+                          <>
+                            <p>No products selected</p>
+                            <p>Enable a product below to display data.</p>
+                          </>
+                        }
                       />
                     </SalesChartErrorBoundary>
 

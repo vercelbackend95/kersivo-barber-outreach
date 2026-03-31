@@ -40,49 +40,198 @@ const DEMO_ADMIN_PASSWORD = import.meta.env.PUBLIC_DEMO_ADMIN_PASSWORD
 <MainLayout title="Kersivo Barber Outreach">
     <main class="hero10">
     <section id="home" class="hero10__section">
-            <div class="hero10__bg" aria-hidden="true">
+      <div class="hero10__bg" aria-hidden="true">
         <div class="hero10__bg-layer hero10__bg-layer--grid"></div>
         <div class="hero10__bg-layer hero10__bg-layer--radial"></div>
         <div class="hero10__bg-layer hero10__bg-layer--grain"></div>
         <div class="hero10__bg-layer hero10__bg-layer--panel"></div>
       </div>
 
-
       <div class="container hero10__container">
 
-
+        <!-- COPY SIDE -->
         <div class="hero10__content">
           <span class="hero10__badge">BARBER WEBSITE SYSTEM</span>
 
           <h1 class="hero10__title">
-            <span class="hero10__title-line">A BARBER WEBSITE</span>
-            <span class="hero10__title-line">BUILT TO BOOK,</span>
-            <span class="hero10__title-line">SELL</span>
-            <span class="hero10__title-line"> AND RUN THE SHOP.</span>
-
+            <span class="hero10__title-line">CLIENTS BOOK ONLINE.</span>
+            <span class="hero10__title-line">NO PLATFORM FEES.</span>
+            <span class="hero10__title-line">ONE SYSTEM.</span>
           </h1>
-          <p class="hero10__proofline">Launch in ~14 days. No third-party booking fees. One system for bookings, retail and daily updates.</p>
+
           <p class="hero10__lead">
-Give clients one clear place to book and buy — while you run bookings, products and updates in one daily workflow.
+            Give clients a clean way to book and shop — while you manage bookings, retail orders and daily updates from one dashboard.
           </p>
 
-          <ul class="hero10__impact" aria-label="Why this feels different">
-            <li>SHOW YOUR SHOP LIKE A REAL BRAND</li>
-            <li>TURN WEBSITE TRAFFIC INTO BOOKINGS + PRODUCT SALES</li>
-            <li>LOOK SHARPER. MANAGE CLEANER.</li>
+          <div class="hero10__proofline" role="list" aria-label="Key facts">
+            <span class="hero10__proof-chip" role="listitem">
+              <span class="hero10__proof-dot" aria-hidden="true"></span>
+              Live in 14 days
+            </span>
+            <span class="hero10__proof-chip" role="listitem">
+              <span class="hero10__proof-dot" aria-hidden="true"></span>
+              No third-party fees
+            </span>
+            <span class="hero10__proof-chip" role="listitem">
+              <span class="hero10__proof-dot" aria-hidden="true"></span>
+              Bookings, retail &amp; admin in one
+            </span>
+          </div>
+
+          <ul class="hero10__impact" aria-label="Core advantages">
+            <li class="hero10__impact-item">
+              <svg class="hero10__impact-icon" viewBox="0 0 16 16" fill="none" aria-hidden="true">
+                <circle cx="8" cy="8" r="6.5" stroke="currentColor" stroke-width="1.25"/>
+                <path d="M5 8l2 2 4-4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+              </svg>
+              <div class="hero10__impact-text">
+                <strong>Keep 100% of every booking</strong>
+                <span>No platform taking a cut — revenue goes straight to your shop.</span>
+              </div>
+            </li>
+            <li class="hero10__impact-item">
+              <svg class="hero10__impact-icon" viewBox="0 0 16 16" fill="none" aria-hidden="true">
+                <rect x="1.5" y="3" width="13" height="10" rx="1" stroke="currentColor" stroke-width="1.25"/>
+                <path d="M1.5 7h13M5 3V1.5M11 3V1.5" stroke="currentColor" stroke-width="1.25" stroke-linecap="round"/>
+              </svg>
+              <div class="hero10__impact-text">
+                <strong>One dashboard for everything</strong>
+                <span>Bookings, retail and admin — not spread across 3 separate apps.</span>
+              </div>
+            </li>
+            <li class="hero10__impact-item">
+              <svg class="hero10__impact-icon" viewBox="0 0 16 16" fill="none" aria-hidden="true">
+                <circle cx="8" cy="8" r="6.5" stroke="currentColor" stroke-width="1.25"/>
+                <path d="M8 4.5V8l2.5 2" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+              </svg>
+              <div class="hero10__impact-text">
+                <strong>Up and running in 14 days</strong>
+                <span>Full system from day one — no months of agency back-and-forth.</span>
+              </div>
+            </li>
           </ul>
 
-            <div class="hero10__actions-wrap">
+          <div class="hero10__actions-wrap">
             <div class="hero10__actions">
               <button class="btn btn--primary" type="button" data-system-chooser-open>
                 SEE THE SYSTEM
               </button>
               <a class="btn btn--secondary" href="#book-demo" data-demo-cta>BOOK A DEMO</a>
             </div>
-            <p class="hero10__actions-note">Guided demo: see booking flow, admin workflow and pickup retail in one system.</p>
-
+            <p class="hero10__actions-note">
+              Live demo — explore booking flow, admin and retail. No signup needed.
+            </p>
           </div>
         </div>
+
+        <!-- PRODUCT VISUAL SIDE -->
+        <div class="hero10__visual" aria-hidden="true">
+          <div class="hero10__product">
+            <!-- Browser chrome -->
+            <div class="hero10__product-chrome">
+              <span class="hero10__product-dots">
+                <i></i><i></i><i></i>
+              </span>
+              <span class="hero10__product-url">kersivo.com/admin</span>
+            </div>
+            <!-- App layout -->
+            <div class="hero10__product-app">
+              <aside class="hero10__product-sidebar">
+                <div class="hero10__product-logomark">K</div>
+                <nav class="hero10__product-nav">
+                  <span class="hero10__product-nav-item is-active">
+                    <svg viewBox="0 0 14 14" fill="none"><rect x="1" y="2" width="12" height="10" rx="1" stroke="currentColor" stroke-width="1.2"/><path d="M1 6h12M5 2V1M9 2V1" stroke="currentColor" stroke-width="1.2" stroke-linecap="round"/></svg>
+                  </span>
+                  <span class="hero10__product-nav-item">
+                    <svg viewBox="0 0 14 14" fill="none"><path d="M2 4h10l-1 7H3L2 4z" stroke="currentColor" stroke-width="1.2" stroke-linejoin="round"/><path d="M5 4V3a2 2 0 014 0v1" stroke="currentColor" stroke-width="1.2" stroke-linecap="round"/></svg>
+                  </span>
+                  <span class="hero10__product-nav-item">
+                    <svg viewBox="0 0 14 14" fill="none"><circle cx="7" cy="5" r="2.5" stroke="currentColor" stroke-width="1.2"/><path d="M2.5 12c0-2.5 2-3.5 4.5-3.5s4.5 1 4.5 3.5" stroke="currentColor" stroke-width="1.2" stroke-linecap="round"/></svg>
+                  </span>
+                  <span class="hero10__product-nav-item">
+                    <svg viewBox="0 0 14 14" fill="none"><circle cx="7" cy="7" r="2" stroke="currentColor" stroke-width="1.2"/><path d="M7 1v1.5M7 11.5V13M1 7h1.5M11.5 7H13M2.5 2.5l1 1M10.5 10.5l1 1M2.5 11.5l1-1M10.5 3.5l1-1" stroke="currentColor" stroke-width="1.2" stroke-linecap="round"/></svg>
+                  </span>
+                </nav>
+              </aside>
+              <!-- Main content area -->
+              <div class="hero10__product-main">
+                <div class="hero10__product-topbar">
+                  <div>
+                    <p class="hero10__product-shop">FADE &amp; EDGE</p>
+                    <p class="hero10__product-today">Mon 31 Mar &middot; 12 bookings</p>
+                  </div>
+                  <span class="hero10__product-live">&#x25CF; Live</span>
+                </div>
+                <div class="hero10__product-stats">
+                  <div class="hero10__product-stat">
+                    <span class="hero10__product-stat-val">12</span>
+                    <span class="hero10__product-stat-label">Bookings</span>
+                  </div>
+                  <div class="hero10__product-stat is-accent">
+                    <span class="hero10__product-stat-val">&pound;840</span>
+                    <span class="hero10__product-stat-label">Revenue</span>
+                  </div>
+                  <div class="hero10__product-stat">
+                    <span class="hero10__product-stat-val">3</span>
+                    <span class="hero10__product-stat-label">Orders</span>
+                  </div>
+                </div>
+                <p class="hero10__product-section">Today's Schedule</p>
+                <div class="hero10__product-slots">
+                  <div class="hero10__product-slot is-done">
+                    <span class="hero10__product-slot-time">09:00</span>
+                    <div class="hero10__product-slot-info">
+                      <span class="hero10__product-slot-name">Marcus T.</span>
+                      <span class="hero10__product-slot-svc">Fade + Beard &middot; 45 min</span>
+                    </div>
+                    <span class="hero10__product-slot-barber">Jay</span>
+                    <span class="hero10__product-slot-badge is-confirmed">Done</span>
+                  </div>
+                  <div class="hero10__product-slot is-done">
+                    <span class="hero10__product-slot-time">09:45</span>
+                    <div class="hero10__product-slot-info">
+                      <span class="hero10__product-slot-name">Jamie K.</span>
+                      <span class="hero10__product-slot-svc">Skin Fade &middot; 30 min</span>
+                    </div>
+                    <span class="hero10__product-slot-barber">Leo</span>
+                    <span class="hero10__product-slot-badge is-confirmed">Done</span>
+                  </div>
+                  <div class="hero10__product-slot is-now">
+                    <span class="hero10__product-slot-time">10:30</span>
+                    <div class="hero10__product-slot-info">
+                      <span class="hero10__product-slot-name">Ryan O.</span>
+                      <span class="hero10__product-slot-svc">Beard Shape &middot; 20 min</span>
+                    </div>
+                    <span class="hero10__product-slot-barber">Jay</span>
+                    <span class="hero10__product-slot-badge is-now">Now</span>
+                  </div>
+                  <div class="hero10__product-slot">
+                    <span class="hero10__product-slot-time">14:30</span>
+                    <div class="hero10__product-slot-info">
+                      <span class="hero10__product-slot-name">Daniel W.</span>
+                      <span class="hero10__product-slot-svc">Full Groom &middot; 60 min</span>
+                    </div>
+                    <span class="hero10__product-slot-barber">Leo</span>
+                    <span class="hero10__product-slot-badge">14:30</span>
+                  </div>
+                </div>
+                <div class="hero10__product-toast">
+                  <span class="hero10__product-toast-dot"></span>
+                  <span>New: James K. booked Skin Fade &middot; 16:00 today</span>
+                </div>
+              </div>
+            </div>
+          </div>
+          <!-- Floating pill badge -->
+          <div class="hero10__visual-pill">
+            <span class="hero10__visual-pill-dot"></span>
+            <div>
+              <p class="hero10__visual-pill-label">Pickup ready</p>
+              <p class="hero10__visual-pill-val">Order #47 &middot; &pound;32.50</p>
+            </div>
+          </div>
+        </div>
+
       </div>
     </section>
     
@@ -96,10 +245,10 @@ Give clients one clear place to book and buy — while you run bookings, product
         aria-describedby="system-chooser-description"
       >
         <div class="system-chooser__header">
-          <div>
-            <p class="system-chooser__eyebrow">Guided demo entry</p>
-            <h2 id="system-chooser-title">Explore the barber system</h2>
-            <p id="system-chooser-description">Choose what you want to test first — bookings, admin workflow or pickup retail.</p>
+          <div class="system-chooser__header-copy">
+            <p class="system-chooser__eyebrow">Live demo &middot; 3 areas to explore</p>
+            <h2 id="system-chooser-title">Choose your entry point</h2>
+            <p id="system-chooser-description" class="system-chooser__header-lead">Each demo opens in a new tab — close it to return here.</p>
           </div>
           <button
             class="system-chooser__close"
@@ -107,46 +256,135 @@ Give clients one clear place to book and buy — while you run bookings, product
             data-system-chooser-close
             aria-label="Close system chooser"
           >
-            ×
+            <svg viewBox="0 0 14 14" fill="none" aria-hidden="true">
+              <path d="M2 2l10 10M12 2L2 12" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/>
+            </svg>
           </button>
         </div>
 
         <div class="system-chooser__grid">
-          <article class="system-chooser__tile system-chooser__tile--default" role="link" tabindex="0" data-tile-href="/book">
-            <span class="system-chooser__tile-badge" aria-hidden="true">Start here</span>
 
-            <h3>Client Booking Flow</h3>
-                        <p>See how clients self-book services without back-and-forth messages.</p>
-            <p class="system-chooser__tile-meta">No password needed</p>
-            <p class="system-chooser__tile-loading" role="status" aria-live="polite">
-              <span class="system-chooser__tile-spinner" aria-hidden="true"></span>
-              <span>Loading page…</span>
-            </p>
-
+          <!-- Tile 1: Client Booking Flow -->
+          <article
+            class="system-chooser__tile system-chooser__tile--featured"
+            role="link"
+            tabindex="0"
+            data-tile-href="/book"
+          >
+            <div class="system-chooser__tile-preview" aria-hidden="true">
+              <img
+                src="/hero-assets/screens/booking.webp"
+                alt=""
+                class="system-chooser__tile-img"
+                loading="eager"
+                decoding="async"
+                width="600"
+                height="400"
+              />
+              <div class="system-chooser__tile-preview-overlay"></div>
+              <span class="system-chooser__tile-badge">Start here</span>
+            </div>
+            <div class="system-chooser__tile-body">
+              <h3>Client Booking Flow</h3>
+              <p class="system-chooser__tile-desc">Exactly what your clients see — pick a barber, choose a service and lock in a slot in under a minute.</p>
+              <div class="system-chooser__tile-footer">
+                <span class="system-chooser__tile-access">
+                  <svg viewBox="0 0 12 12" fill="none" aria-hidden="true"><circle cx="6" cy="6" r="4.5" stroke="currentColor" stroke-width="1.2"/><path d="M4 6l1.5 1.5 2.5-3" stroke="currentColor" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+                  No password
+                </span>
+                <span class="system-chooser__tile-footer-sep" aria-hidden="true"></span>
+                <span class="system-chooser__tile-tab">
+                  <svg viewBox="0 0 12 12" fill="none" aria-hidden="true"><path d="M5 2H2.5a.5.5 0 00-.5.5v7a.5.5 0 00.5.5h7a.5.5 0 00.5-.5V7M7.5 2H10v2.5M6 6l4-4" stroke="currentColor" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+                  New tab
+                </span>
+              </div>
+              <p class="system-chooser__tile-loading" role="status" aria-live="polite">
+                <span class="system-chooser__tile-spinner" aria-hidden="true"></span>
+                <span>Opening demo&hellip;</span>
+              </p>
+            </div>
           </article>
 
-          <article class="system-chooser__tile system-chooser__tile--admin" role="link" tabindex="0" data-tile-href="/admin?section=bookings_dashboard">
-            <span class="system-chooser__tile-badge" aria-hidden="true">Admin view</span>
-            <h3>Bookings Dashboard</h3>
-            <p>Preview one clear day view for schedules, bookings and admin updates</p>
-                        <p class="system-chooser__tile-loading" role="status" aria-live="polite">
-              <span class="system-chooser__tile-spinner" aria-hidden="true"></span>
-              <span>Loading page…</span>
-            </p>
-
+          <!-- Tile 2: Bookings Dashboard -->
+          <article
+            class="system-chooser__tile"
+            role="link"
+            tabindex="0"
+            data-tile-href="/admin?section=bookings_dashboard"
+          >
+            <div class="system-chooser__tile-preview" aria-hidden="true">
+              <img
+                src="/hero-assets/screens/timeline.webp"
+                alt=""
+                class="system-chooser__tile-img"
+                loading="eager"
+                decoding="async"
+                width="600"
+                height="400"
+              />
+              <div class="system-chooser__tile-preview-overlay"></div>
+              <span class="system-chooser__tile-badge">Admin view</span>
+            </div>
+            <div class="system-chooser__tile-body">
+              <h3>Bookings Dashboard</h3>
+              <p class="system-chooser__tile-desc">The owner's daily view — schedule per barber, live statuses, cancellations and updates in one screen.</p>
+              <div class="system-chooser__tile-footer">
+                <span class="system-chooser__tile-access">
+                  <svg viewBox="0 0 12 12" fill="none" aria-hidden="true"><rect x="3" y="5.5" width="6" height="5" rx=".5" stroke="currentColor" stroke-width="1.2"/><path d="M4.5 5.5V4a1.5 1.5 0 013 0v1.5" stroke="currentColor" stroke-width="1.2" stroke-linecap="round"/></svg>
+                  Password auto-filled
+                </span>
+                <span class="system-chooser__tile-footer-sep" aria-hidden="true"></span>
+                <span class="system-chooser__tile-tab">
+                  <svg viewBox="0 0 12 12" fill="none" aria-hidden="true"><path d="M5 2H2.5a.5.5 0 00-.5.5v7a.5.5 0 00.5.5h7a.5.5 0 00.5-.5V7M7.5 2H10v2.5M6 6l4-4" stroke="currentColor" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+                  New tab
+                </span>
+              </div>
+              <p class="system-chooser__tile-loading" role="status" aria-live="polite">
+                <span class="system-chooser__tile-spinner" aria-hidden="true"></span>
+                <span>Opening demo&hellip;</span>
+              </p>
+            </div>
           </article>
 
-
-          <article class="system-chooser__tile system-chooser__tile--admin" role="link" tabindex="0" data-tile-href="/admin?section=shop_products">
-            <span class="system-chooser__tile-badge" aria-hidden="true">Retail admin</span>
-
-            <h3>Shop &amp; Pickup</h3>
-            <p>Open retail demo to see products, pickup flow and admin control in one place.</p>
-                        <p class="system-chooser__tile-loading" role="status" aria-live="polite">
-              <span class="system-chooser__tile-spinner" aria-hidden="true"></span>
-              <span>Loading page…</span>
-            </p>
-
+          <!-- Tile 3: Shop & Pickup -->
+          <article
+            class="system-chooser__tile"
+            role="link"
+            tabindex="0"
+            data-tile-href="/admin?section=shop_products"
+          >
+            <div class="system-chooser__tile-preview" aria-hidden="true">
+              <img
+                src="/hero-assets/screens/shop.webp"
+                alt=""
+                class="system-chooser__tile-img"
+                loading="eager"
+                decoding="async"
+                width="600"
+                height="400"
+              />
+              <div class="system-chooser__tile-preview-overlay"></div>
+              <span class="system-chooser__tile-badge">Retail admin</span>
+            </div>
+            <div class="system-chooser__tile-body">
+              <h3>Shop &amp; Pickup</h3>
+              <p class="system-chooser__tile-desc">Manage products, track orders and mark them ready for pickup — all from the same admin panel.</p>
+              <div class="system-chooser__tile-footer">
+                <span class="system-chooser__tile-access">
+                  <svg viewBox="0 0 12 12" fill="none" aria-hidden="true"><rect x="3" y="5.5" width="6" height="5" rx=".5" stroke="currentColor" stroke-width="1.2"/><path d="M4.5 5.5V4a1.5 1.5 0 013 0v1.5" stroke="currentColor" stroke-width="1.2" stroke-linecap="round"/></svg>
+                  Password auto-filled
+                </span>
+                <span class="system-chooser__tile-footer-sep" aria-hidden="true"></span>
+                <span class="system-chooser__tile-tab">
+                  <svg viewBox="0 0 12 12" fill="none" aria-hidden="true"><path d="M5 2H2.5a.5.5 0 00-.5.5v7a.5.5 0 00.5.5h7a.5.5 0 00.5-.5V7M7.5 2H10v2.5M6 6l4-4" stroke="currentColor" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+                  New tab
+                </span>
+              </div>
+              <p class="system-chooser__tile-loading" role="status" aria-live="polite">
+                <span class="system-chooser__tile-spinner" aria-hidden="true"></span>
+                <span>Opening demo&hellip;</span>
+              </p>
+            </div>
           </article>
 
         </div>
@@ -303,8 +541,18 @@ Give clients one clear place to book and buy — while you run bookings, product
       });
     };
 
+    const resetTileLoadingState = () => {
+      tileNavigationInFlight = false;
+      chooser.classList.remove('system-chooser--navigating');
+      tiles.forEach((t) => {
+        if (!(t instanceof HTMLElement)) return;
+        t.classList.remove('is-loading');
+        t.setAttribute('aria-busy', 'false');
+      });
+    };
+
     const activateTile = (tile) => {
-            if (tileNavigationInFlight) {
+      if (tileNavigationInFlight) {
         return;
       }
 
@@ -315,7 +563,6 @@ Give clients one clear place to book and buy — while you run bookings, product
       tileNavigationInFlight = true;
       setTileLoadingState(tile);
 
-
       if (href.startsWith('/admin')) {
         try {
           localStorage.setItem(ADMIN_SECRET_STORAGE_KEY, DEMO_ADMIN_SECRET);
@@ -324,7 +571,12 @@ Give clients one clear place to book and buy — while you run bookings, product
         }
       }
 
-      window.location.assign(href);
+      // Brief visual feedback before opening new tab
+      setTimeout(() => {
+        window.open(href, '_blank', 'noopener');
+        // Reset tile state — user stays on this page after new tab opens
+        setTimeout(resetTileLoadingState, 600);
+      }, 260);
     };
 
     tiles.forEach((tile) => {

@@ -1,45 +1,91 @@
+/* ================================================================
+   navbar17 — Premium barber SaaS navigation
+   ================================================================ */
+
+/* ── Root element ─────────────────────────────────────────────── */
+
 .navbar17 {
   position: sticky;
   top: 0;
   z-index: 30;
-  border-bottom: 1px solid color-mix(in srgb, var(--border) 85%, transparent);
-  background: color-mix(in srgb, var(--bg) 92%, var(--surface));
-
+  background: color-mix(in srgb, var(--bg) 97%, var(--surface));
+  border-bottom: 1px solid color-mix(in srgb, var(--border) 65%, transparent);
+  transition:
+    background    240ms ease,
+    border-color  240ms ease,
+    box-shadow    240ms ease,
+    backdrop-filter 240ms ease;
 }
+
+/* Frosted-glass enhancement once the user scrolls past 10 px */
+.navbar17[data-scrolled] {
+  background: color-mix(in srgb, var(--bg) 78%, transparent);
+  backdrop-filter: blur(20px) saturate(1.3);
+  -webkit-backdrop-filter: blur(20px) saturate(1.3);
+  border-bottom-color: var(--border);
+  box-shadow:
+    0 1px 0 color-mix(in srgb, var(--accent) 9%, transparent),
+    0 8px 24px color-mix(in srgb, var(--bg) 65%, transparent);
+}
+
+/* ── Wrap (3-column grid: brand | nav | right) ───────────────── */
 
 .navbar17__wrap {
   display: grid;
-  grid-template-columns: auto 1fr auto auto;
+  grid-template-columns: auto 1fr auto;
   align-items: center;
-  gap: clamp(0.65rem, 1vw, 1.2rem);
-  min-height: 5.15rem;
-  padding-block: 0.3rem;
-
+  gap: clamp(0.5rem, 1.5vw, 2rem);
+  min-height: 5rem;
+  padding-block: 0.25rem;
 }
+
+/* ── Brand / Logo ─────────────────────────────────────────────── */
 
 .navbar17__brand {
   display: inline-flex;
   align-items: center;
-  gap: 0.72rem;
+  gap: 0.65rem;
   color: var(--fg);
   text-decoration: none;
-    padding-right: clamp(0.5rem, 1vw, 1rem);
+  outline: none;
 }
 
-.navbar17__brand img {
-  width: 2.55rem;
-  height: 2.55rem;
-
+.navbar17__brand:focus-visible {
+  outline: 2px solid var(--focus);
+  outline-offset: 4px;
 }
 
-.navbar17__brand span {
+/*
+ * Monogram badge — intentional placeholder for the real logo asset.
+ * Replace the <span> with an <img> pointing to your SVG/WebP logo
+ * and remove this block when the brand asset is ready.
+ */
+.navbar17__brand-mark {
+  flex-shrink: 0;
+  width: 2.1rem;
+  height: 2.1rem;
+  background: var(--accent);
+  color: #fff;
+  display: grid;
+  place-items: center;
   font-family: var(--font-heading);
-  font-size: clamp(1.5rem, 1.8vw, 1.88rem);
-  letter-spacing: 0.08em;
+  font-size: 1.3rem;
+  letter-spacing: 0;
+  line-height: 1;
+  user-select: none;
+  /* Zero radius matches the sharp design system (--radius-xs: 0) */
+}
 
+.navbar17__brand-name {
+  font-family: var(--font-heading);
+  font-size: clamp(1.4rem, 1.65vw, 1.72rem);
+  letter-spacing: 0.1em;
   text-transform: uppercase;
   line-height: 1;
+  color: var(--fg);
 }
+
+/* ── Desktop navigation ───────────────────────────────────────── */
 
 .navbar17__desktop {
   justify-self: center;
@@ -49,7 +95,7 @@
   position: relative;
   display: flex;
   align-items: center;
-  gap: clamp(0.3rem, 0.65vw, 0.55rem);
+  gap: clamp(0.1rem, 0.3vw, 0.25rem);
   margin: 0;
   padding: 0;
   list-style: none;
@@ -61,139 +107,186 @@
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  min-height: 2.7rem;
-  padding-inline: clamp(0.72rem, 1vw, 1rem);
-
+  min-height: 2.75rem;
+  padding-inline: clamp(0.6rem, 0.9vw, 0.9rem);
   color: var(--muted);
-  text-transform: uppercase;
-  letter-spacing: 0.08em;
-  font-size: 0.79rem;
-
+  font-size: 0.775rem;
   font-weight: 600;
+  letter-spacing: 0.09em;
+  text-transform: uppercase;
   text-decoration: none;
-    transition: color 180ms ease;
+  transition: color 160ms ease;
 }
 
-.navbar17__link::after {
-  content: '';
-  position: absolute;
-  left: 0;
-  right: 0;
-  bottom: 0.5rem;
-  height: 1px;
-  background: color-mix(in srgb, var(--accent) 40%, transparent);
-  transform: scaleX(0);
-  transform-origin: center;
-  transition: transform 180ms ease;
-
+.navbar17__link:hover {
+  color: var(--fg);
+  text-decoration: none;
 }
 
-.navbar17__link:hover,
 .navbar17__link.is-active {
   color: var(--fg);
 }
-.navbar17__link:hover::after,
-.navbar17__link.is-active::after {
-  transform: scaleX(1);
+
+.navbar17__link:focus-visible {
+  outline: 2px solid var(--focus);
+  outline-offset: 2px;
 }
 
-
+/* Animated underline indicator — slides between active items */
 .navbar17__indicator {
   position: absolute;
+  bottom: 0.3rem;
   left: 0;
-  bottom: 0.45rem;
-  width: 0;
   height: 2px;
+  width: 0;
+  opacity: 0;
   background: var(--accent);
   pointer-events: none;
-  transition: transform 220ms ease, width 220ms ease;
+  transition:
+    transform  220ms ease,
+    width      220ms ease,
+    opacity    180ms ease;
+  will-change: transform, width;
 }
+
+/* ── Right column: desktop actions + mobile controls ─────────── */
+
+.navbar17__right {
+  display: flex;
+  align-items: center;
+}
+
+/* ── Desktop actions (cart + Book Demo CTA) ───────────────────── */
 
 .navbar17__actions {
   display: flex;
   align-items: center;
-  padding-left: clamp(0.45rem, 0.8vw, 0.85rem);
-  border-left: 1px solid color-mix(in srgb, var(--border) 82%, transparent);
-
+  gap: 0.55rem;
 }
 
+/* Cart button — shared between desktop and mobile instances */
 .navbar17__cart-btn {
   display: inline-flex;
   align-items: center;
-  gap: 0.55rem;
-  min-height: 2.72rem;
-  padding: 0.5rem 0.86rem;
-  border: 1px solid color-mix(in srgb, var(--border) 78%, var(--accent) 22%);
-  background: color-mix(in srgb, var(--surface) 86%, var(--bg));
-
-  color: var(--fg);
+  gap: 0.5rem;
+  height: 2.5rem;
+  padding: 0 0.8rem;
+  background: transparent;
+  border: 1px solid var(--border);
+  color: var(--muted);
+  font-size: 0.775rem;
   font-weight: 600;
-  letter-spacing: 0.05em;
+  letter-spacing: 0.06em;
   text-transform: uppercase;
-  font-size: 0.74rem;
-  transition: border-color 180ms ease, background-color 180ms ease, color 180ms ease;
-
+  text-decoration: none;
+  cursor: pointer;
+  transition:
+    border-color   160ms ease,
+    color          160ms ease,
+    background     160ms ease;
+  white-space: nowrap;
 }
 
 .navbar17__cart-btn:hover {
   border-color: color-mix(in srgb, var(--accent) 50%, var(--border));
-  background: color-mix(in srgb, var(--surface) 66%, var(--accent));
-
+  color: var(--fg);
+  background: color-mix(in srgb, var(--surface) 70%, transparent);
 }
 
 .navbar17__cart-btn:focus-visible {
-  outline: 3px solid var(--focus);
+  outline: 2px solid var(--focus);
   outline-offset: 2px;
 }
 
+/* Cart item count badge */
 .navbar17__cart-badge {
-  min-width: 1.35rem;
-  height: 1.35rem;
-
+  min-width: 1.3rem;
+  height: 1.3rem;
   display: inline-grid;
   place-items: center;
-  padding: 0 0.2rem;
-  border: 1px solid color-mix(in srgb, var(--accent) 55%, var(--border));
+  padding: 0 0.15rem;
   background: var(--accent);
-  color: var(--accent-contrast);
-  font-size: 0.72rem;
+  border: 1px solid color-mix(in srgb, var(--accent) 60%, transparent);
+  color: #fff;
+  font-size: 0.7rem;
   line-height: 1;
 }
 
 .navbar17__cart-badge.is-empty {
-    border-color: var(--border);
   background: var(--surface);
+  border-color: var(--border);
   color: var(--muted);
-
 }
 
-.navbar17__cart-btn--top-mobile {
-  display: none;
+/* Primary conversion CTA — "Book Demo" */
+.navbar17__cta-btn {
+  display: inline-flex;
+  align-items: center;
+  height: 2.5rem;
+  padding: 0 1.15rem;
+  background: var(--accent);
+  color: #fff;
+  font-size: 0.775rem;
+  font-weight: 700;
+  letter-spacing: 0.07em;
+  text-transform: uppercase;
+  text-decoration: none;
+  white-space: nowrap;
+  transition: background 160ms ease;
+  border: 1px solid transparent;
 }
 
-.navbar17__toggle {
-  display: none;
-  place-items: center;
-  width: 2.75rem;
-  height: 2.75rem;
-  border: 1px solid var(--border);
-  background: var(--surface);
-  color: var(--fg);
+.navbar17__cta-btn:hover {
+  background: var(--accent-hover);
+  color: #fff;
+  text-decoration: none;
 }
 
-.navbar17__toggle:focus-visible {
-  outline: 3px solid var(--focus);
+.navbar17__cta-btn:focus-visible {
+  outline: 2px solid var(--focus);
   outline-offset: 2px;
 }
 
+/* ── Mobile controls (cart icon + hamburger) ──────────────────── */
+
+.navbar17__mobile-controls {
+  display: none;
+  align-items: center;
+  gap: 0.45rem;
+}
+
+/* Hamburger toggle button */
+.navbar17__toggle {
+  display: grid;
+  place-items: center;
+  width: 2.75rem;
+  height: 2.75rem;
+  background: transparent;
+  border: 1px solid var(--border);
+  color: var(--fg);
+  cursor: pointer;
+  flex-shrink: 0;
+  transition: border-color 160ms ease;
+}
+
+.navbar17__toggle:hover {
+  border-color: color-mix(in srgb, var(--accent) 55%, var(--border));
+}
+
+.navbar17__toggle:focus-visible {
+  outline: 2px solid var(--focus);
+  outline-offset: 2px;
+}
+
+/* 3-line hamburger — animates to × on open */
 .navbar17__toggle-icon,
 .navbar17__toggle-icon::before,
 .navbar17__toggle-icon::after {
   display: block;
-  width: 1.125rem;
-  height: 2px;
+  width: 1.1rem;
+  height: 1.5px;
   background: currentColor;
-  transition: transform 160ms ease, opacity 160ms ease;
+  transition: transform 200ms ease, opacity 200ms ease;
 }
 
 .navbar17__toggle-icon {
@@ -207,13 +300,8 @@
   left: 0;
 }
 
-.navbar17__toggle-icon::before {
-  top: -0.34rem;
-}
-
-.navbar17__toggle-icon::after {
-  top: 0.34rem;
-}
+.navbar17__toggle-icon::before { top: -0.34rem; }
+.navbar17__toggle-icon::after  { top:  0.34rem; }
 
 .navbar17__toggle[aria-expanded='true'] .navbar17__toggle-icon {
   background: transparent;
@@ -227,51 +315,96 @@
   transform: translateY(-0.34rem) rotate(-45deg);
 }
 
-.navbar17__mobile {
-  border-top: 1px solid color-mix(in srgb, var(--border) 70%, transparent);
-  background: linear-gradient(180deg, color-mix(in srgb, var(--surface) 94%, transparent), color-mix(in srgb, var(--bg) 88%, var(--surface)));
+/* ── Mobile navigation panel ─────────────────────────────────── */
 
+.navbar17__mobile {
+  border-top: 1px solid color-mix(in srgb, var(--border) 75%, transparent);
+  background: color-mix(in srgb, var(--surface) 98%, var(--bg));
+  animation: nav-slide-down 220ms ease both;
 }
 
-.navbar17__mobile ul {
-  margin: 0;
-  padding: 0.9rem 1rem 1.2rem;
-  list-style: none;
-    display: grid;
-  gap: 0.18rem;
+@keyframes nav-slide-down {
+  from { opacity: 0; transform: translateY(-6px); }
+  to   { opacity: 1; transform: translateY(0);    }
+}
 
+.navbar17__mobile-list {
+  margin: 0;
+  padding: 0.7rem 1rem 0.5rem;
+  list-style: none;
+  display: grid;
+  gap: 0.08rem;
 }
 
 .navbar17__mobile-link {
-    position: relative;
-  display: block;
-  padding: 0.88rem 0.85rem 0.88rem 1.02rem;
+  position: relative;
+  display: flex;
+  align-items: center;
+  padding: 0.82rem 0.9rem 0.82rem 1rem;
   color: var(--muted);
-  text-transform: uppercase;
-  letter-spacing: 0.08em;
-  font-size: 0.84rem;
-
+  font-size: 0.82rem;
   font-weight: 600;
+  letter-spacing: 0.09em;
+  text-transform: uppercase;
   text-decoration: none;
-    border-left: 2px solid transparent;
-  transition: color 180ms ease, border-color 180ms ease, background-color 180ms ease;
-
-
+  border-left: 2px solid transparent;
+  transition:
+    color        160ms ease,
+    border-color 160ms ease,
+    background   160ms ease;
 }
 
 .navbar17__mobile-link:hover {
   color: var(--fg);
-  border-left-color: color-mix(in srgb, var(--accent) 45%, var(--border));
-
+  border-left-color: color-mix(in srgb, var(--accent) 45%, transparent);
+  background: color-mix(in srgb, var(--surface) 45%, transparent);
+  text-decoration: none;
 }
-
 
 .navbar17__mobile-link.is-active {
   color: var(--fg);
-
-  border-left-color: color-mix(in srgb, var(--accent) 80%, var(--border));
-  background: transparent;
+  border-left-color: var(--accent);
 }
+
+.navbar17__mobile-link:focus-visible {
+  outline: 2px solid var(--focus);
+  outline-offset: -2px;
+}
+
+/* Mobile menu footer — prominent Book Demo CTA */
+.navbar17__mobile-footer {
+  padding: 0.65rem 1rem 1.3rem;
+  border-top: 1px solid color-mix(in srgb, var(--border) 55%, transparent);
+}
+
+.navbar17__mobile-cta {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  height: 3rem;
+  background: var(--accent);
+  color: #fff;
+  font-size: 0.84rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  text-decoration: none;
+  transition: background 160ms ease;
+}
+
+.navbar17__mobile-cta:hover {
+  background: var(--accent-hover);
+  color: #fff;
+  text-decoration: none;
+}
+
+.navbar17__mobile-cta:focus-visible {
+  outline: 2px solid var(--focus);
+  outline-offset: 2px;
+}
+
+/* ── Utilities ────────────────────────────────────────────────── */
 
 .sr-only {
   position: absolute;
@@ -285,10 +418,11 @@
   border: 0;
 }
 
+/* ── Responsive breakpoints ───────────────────────────────────── */
+
 @media (max-width: 63.99rem) {
   .navbar17__wrap {
-    grid-template-columns: auto 1fr auto;
-        min-height: 4.5rem;
+    min-height: 4.25rem;
   }
 
   .navbar17__desktop,
@@ -296,13 +430,7 @@
     display: none;
   }
 
-  .navbar17__cart-btn--top-mobile {
-    display: inline-flex;
-    justify-self: end;
-  }
-
-  .navbar17__toggle {
-    display: grid;
-    justify-self: end;
+  .navbar17__mobile-controls {
+    display: flex;
   }
 }

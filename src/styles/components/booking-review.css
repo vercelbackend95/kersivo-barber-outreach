@@ -166,6 +166,21 @@
   }
 }
 
+@media (min-width: 1024px) {
+  .booking-review-panel--always-visible .booking-review-panel__grid {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .booking-review-panel--always-visible .booking-review-panel__card:last-child {
+    grid-column: auto;
+  }
+
+  .booking-review-panel--always-visible .booking-review-panel__row {
+    grid-template-columns: minmax(5.5rem, auto) minmax(0, 1fr);
+    gap: 0.5rem;
+  }
+}
+
 @media (min-width: 1080px) {
   .booking-review-panel__grid {
     grid-template-columns: repeat(3, minmax(0, 1fr));
@@ -173,5 +188,124 @@
 
   .booking-review-panel__card:last-child {
     grid-column: auto;
+  }
+}
+
+/* ── Desktop CTA inside review panel ── */
+
+.booking-review-panel__cta {
+  display: none;
+}
+
+@media (min-width: 1024px) {
+  .booking-review-panel--always-visible .booking-review-panel__cta {
+    display: block;
+    padding-top: 0.25rem;
+  }
+
+  .booking-review-panel__cta-button {
+    width: 100%;
+    min-height: 3.5rem;
+    font-size: var(--booking-text-base, 1rem);
+  }
+}
+
+/* ─────────────────────────────────────────────────────────────
+   Booking Step Indicator
+   ───────────────────────────────────────────────────────────── */
+
+.booking-step-indicator {
+  display: none;
+}
+
+@media (min-width: 1024px) {
+  .booking-step-indicator {
+    display: block;
+  }
+
+  .booking-step-indicator__list {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    display: flex;
+    align-items: center;
+    gap: 0;
+  }
+
+  .booking-step-indicator__step {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0.4rem;
+    flex-shrink: 0;
+  }
+
+  .booking-step-indicator__circle {
+    width: 2rem;
+    height: 2rem;
+    border-radius: 50%;
+    border: 2px solid var(--border);
+    background: color-mix(in srgb, var(--surface) 80%, var(--bg));
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--muted);
+    transition: border-color 200ms ease, background-color 200ms ease, color 200ms ease;
+    flex-shrink: 0;
+  }
+
+  .booking-step-indicator__circle svg {
+    width: 0.875rem;
+    height: 0.875rem;
+  }
+
+  .booking-step-indicator__number {
+    font-size: 0.75rem;
+    font-weight: 700;
+    line-height: 1;
+  }
+
+  .booking-step-indicator__label {
+    font-size: 0.7rem;
+    font-weight: 600;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    color: var(--muted);
+    white-space: nowrap;
+    transition: color 200ms ease;
+  }
+
+  .booking-step-indicator__step--active .booking-step-indicator__circle {
+    border-color: var(--accent);
+    background: color-mix(in srgb, var(--accent) 16%, var(--surface));
+    color: var(--accent);
+    box-shadow: 0 0 0 3px color-mix(in srgb, var(--accent) 18%, transparent);
+  }
+
+  .booking-step-indicator__step--active .booking-step-indicator__label {
+    color: var(--accent);
+  }
+
+  .booking-step-indicator__step--completed .booking-step-indicator__circle {
+    border-color: var(--accent);
+    background: var(--accent);
+    color: var(--accent-contrast);
+  }
+
+  .booking-step-indicator__step--completed .booking-step-indicator__label {
+    color: var(--fg);
+  }
+
+  .booking-step-indicator__connector {
+    flex: 1;
+    height: 2px;
+    background: var(--border);
+    min-width: 1.5rem;
+    margin-bottom: 1.4rem;
+    transition: background-color 200ms ease;
+  }
+
+  .booking-step-indicator__connector--completed {
+    background: var(--accent);
   }
 }

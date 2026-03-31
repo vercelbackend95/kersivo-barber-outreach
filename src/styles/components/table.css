@@ -1,0 +1,280 @@
+/* ─────────────────────────────────────────────────────────────────
+   Admin Table System — Unified Design
+   Stripe-Dashboard-inspired. Single source of truth for all admin
+   tables across the application.
+
+   Desktop usage:
+     <div class="admin-table-wrap">
+       <table class="admin-table">
+         <thead>...</thead>
+         <tbody>...</tbody>
+       </table>
+     </div>
+
+   Mobile fallback:
+     <div class="admin-card-list" role="list">
+       <article class="admin-card" role="listitem">
+         <div class="admin-card__header">
+           <p class="admin-card__title">...</p>
+           <span class="badge ...">STATUS</span>
+         </div>
+         <dl class="admin-card__dl">
+           <dt class="admin-card__dt">Field</dt>
+           <dd class="admin-card__dd">Value</dd>
+         </dl>
+         <div class="admin-card__actions">
+           <button class="btn btn--secondary">Action</button>
+         </div>
+       </article>
+     </div>
+   ───────────────────────────────────────────────────────────────── */
+
+/* ── Wrapper ──────────────────────────────────────────────────── */
+
+.admin-table-wrap {
+  width: 100%;
+  min-width: 0;
+  max-width: 100%;
+  overflow-x: auto;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  background: var(--surface-2);
+  scrollbar-width: thin;
+  scrollbar-color: var(--border) transparent;
+}
+
+/* ── Table ────────────────────────────────────────────────────── */
+
+.admin-table {
+  width: 100%;
+  border-collapse: collapse;
+  table-layout: auto;
+  min-width: 0;
+}
+
+/* ── Header — sticky ─────────────────────────────────────────── */
+
+.admin-table thead {
+  position: sticky;
+  top: 0;
+  z-index: 2;
+  background: var(--surface-2);
+}
+
+.admin-table th {
+  padding: 0.625rem 0.875rem;
+  text-align: left;
+  font-family: var(--font-body);
+  font-size: var(--text-xs);
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--muted);
+  border-bottom: 1px solid var(--border);
+  white-space: nowrap;
+  vertical-align: middle;
+}
+
+/* ── Cells ────────────────────────────────────────────────────── */
+
+.admin-table td {
+  padding: 0.75rem 0.875rem;
+  text-align: left;
+  font-size: var(--text-sm);
+  color: var(--fg);
+  border-bottom: 1px solid var(--border);
+  vertical-align: middle;
+}
+
+.admin-table tbody tr:last-child td {
+  border-bottom: none;
+}
+
+/* ── Row hover ────────────────────────────────────────────────── */
+
+.admin-table tbody tr {
+  transition: background-color 120ms ease;
+}
+
+.admin-table tbody tr:hover {
+  background: color-mix(in srgb, var(--surface-3) 80%, transparent);
+}
+
+/* ── Row updated highlight ────────────────────────────────────── */
+
+.admin-table .admin-row--updated {
+  background: color-mix(in srgb, var(--success) 8%, transparent);
+}
+
+/* ── First column emphasis ────────────────────────────────────── */
+
+.admin-table tbody tr td:first-child {
+  font-weight: 600;
+}
+
+/* ── Numeric right-align ──────────────────────────────────────── */
+
+.admin-table .col-num,
+.admin-table [data-col-num] {
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+}
+
+.admin-customer-cell {
+  min-width: 0;
+}
+
+.admin-customer-cell__name {
+  display: block;
+  font-weight: 600;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.admin-customer-cell__email {
+  display: block;
+  font-size: var(--text-xs);
+  line-height: 1.35;
+  margin-top: 0.125rem;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.admin-order-number-cell {
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+  font-size: var(--text-xs);
+  letter-spacing: 0.01em;
+}
+
+/* ── ════════════════════════════════════════════════════════════
+   Mobile Card List (≤ 767px)
+   ════════════════════════════════════════════════════════════ */
+
+.admin-card-list {
+  display: grid;
+  gap: var(--space-sm);
+}
+
+.admin-card {
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  background: var(--surface-2);
+  padding: var(--space-sm);
+  display: grid;
+  gap: var(--space-xs);
+}
+
+.admin-card__header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-xs);
+  min-width: 0;
+}
+
+.admin-card__title {
+  margin: 0;
+  font-weight: 600;
+  font-size: var(--text-sm);
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.admin-card__title-wrap {
+  min-width: 0;
+}
+
+.admin-card__subtitle {
+  margin: 0.125rem 0 0;
+  font-size: var(--text-xs);
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.admin-card__dl {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  gap: 0.2rem 0.875rem;
+  margin: 0;
+}
+
+.admin-card__dt {
+  font-size: var(--text-xs);
+  font-weight: 600;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  color: var(--muted);
+  white-space: nowrap;
+  align-self: baseline;
+  padding-top: 0.1em;
+}
+
+.admin-card__dd {
+  margin: 0;
+  font-size: var(--text-sm);
+  min-width: 0;
+  overflow-wrap: break-word;
+}
+
+.admin-card__actions {
+  display: flex;
+  gap: var(--space-xs);
+  flex-wrap: wrap;
+  padding-top: var(--space-xs);
+  border-top: 1px solid var(--border);
+  margin-top: 0.125rem;
+}
+
+/* ── Orders pipeline summary ──────────────────────────────────── */
+
+.admin-orders-table22__pipeline {
+  display: flex;
+  align-items: center;
+  gap: var(--space-sm);
+  flex-wrap: wrap;
+  padding: var(--space-sm) 0;
+  margin-bottom: var(--space-xs);
+}
+
+.admin-orders-table22__pipeline-step {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+}
+
+.admin-orders-table22__pipeline-count {
+  font-size: var(--text-sm);
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+  color: var(--fg);
+}
+
+.admin-orders-table22__pipeline-arrow {
+  color: var(--muted);
+  font-size: var(--text-sm);
+  flex-shrink: 0;
+}
+
+/* ── Responsive breakpoints ──────────────────────────────────── */
+
+@media (max-width: 47.99rem) {
+  .admin-table-wrap {
+    display: none;
+  }
+
+  .admin-card-list {
+    display: grid;
+  }
+}
+
+@media (min-width: 48rem) {
+  .admin-card-list {
+    display: none;
+  }
+}

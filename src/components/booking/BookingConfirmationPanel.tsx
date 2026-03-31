@@ -59,7 +59,9 @@ const BookingConfirmationPanel = forwardRef<HTMLElement, Props>(function Booking
 
       <div className="booking-confirmation__status-strip" aria-label="Booking success state">
         <span className="booking-confirmation__status-label">Status</span>
-        <strong>{content.accent}</strong>
+        <span className={`badge ${variant === 'booked' ? 'badge--confirmed' : 'badge--rescheduled'}`}>
+          {content.accent}
+        </span>
       </div>
 
       {rows.length > 0 && (

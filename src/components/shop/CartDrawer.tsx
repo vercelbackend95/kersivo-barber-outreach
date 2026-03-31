@@ -11,6 +11,8 @@ import {
   subscribe,
   type CartItem
 } from '@/lib/shop/cartStore';
+import EmptyState from '@/components/EmptyState';
+import { ShoppingCart } from '@/components/lucide-react';
 
 const CART_OPEN_REQUEST_EVENT = 'kersivo:cart-open-request';
 const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
@@ -158,10 +160,11 @@ export default function CartDrawer() {
 
         <div className="cart-items" aria-live="polite">
           {items.length === 0 ? (
-            <div className="cart-empty-state">
-              <p className="cart-empty-state__title">Your cart is empty</p>
-              <p className="muted">Add products to build your pickup order.</p>
-            </div>
+            <EmptyState
+              icon={ShoppingCart}
+              title="Your cart is empty"
+              description="Add products to build your pickup order."
+            />
           ) : (
             items.map((item) => (
               <article className="cart-row" key={item.productId}>

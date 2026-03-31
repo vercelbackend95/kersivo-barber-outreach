@@ -1,0 +1,143 @@
+/* ─────────────────────────────────────────────────────────────
+   Skeleton loading system
+   ───────────────────────────────────────────────────────────── */
+
+@keyframes skeleton-shimmer {
+  0% {
+    background-position: -200% 0;
+  }
+  100% {
+    background-position: 200% 0;
+  }
+}
+
+.skeleton {
+  display: block;
+  border-radius: var(--radius-sm);
+  background: color-mix(in srgb, var(--surface) 80%, var(--border));
+  background-image: linear-gradient(
+    90deg,
+    color-mix(in srgb, var(--surface) 80%, var(--border)) 0%,
+    color-mix(in srgb, var(--surface) 60%, var(--fg) 8%) 40%,
+    color-mix(in srgb, var(--surface) 80%, var(--border)) 80%
+  );
+  background-size: 200% 100%;
+  animation: skeleton-shimmer 1.6s ease-in-out infinite;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .skeleton {
+    animation: none;
+    background-image: none;
+    opacity: 0.5;
+  }
+}
+
+/* ── Variants ── */
+
+.skeleton--text {
+  height: 1em;
+  border-radius: var(--radius-full);
+  width: 80%;
+}
+
+.skeleton--text-sm {
+  height: 0.75rem;
+  border-radius: var(--radius-full);
+  width: 60%;
+}
+
+.skeleton--title {
+  height: 1.5em;
+  border-radius: var(--radius-full);
+  width: 40%;
+}
+
+.skeleton--avatar {
+  width: 2.75rem;
+  height: 2.75rem;
+  border-radius: var(--radius-full);
+  flex-shrink: 0;
+}
+
+.skeleton--card {
+  height: 80px;
+  border-radius: var(--radius-md);
+  border: 1px solid var(--border);
+  background: color-mix(in srgb, var(--surface) 80%, var(--border));
+  background-image: linear-gradient(
+    90deg,
+    color-mix(in srgb, var(--surface) 80%, var(--border)) 0%,
+    color-mix(in srgb, var(--surface) 60%, var(--fg) 8%) 40%,
+    color-mix(in srgb, var(--surface) 80%, var(--border)) 80%
+  );
+  background-size: 200% 100%;
+  animation: skeleton-shimmer 1.6s ease-in-out infinite;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .skeleton--card {
+    animation: none;
+    background-image: none;
+    opacity: 0.5;
+  }
+}
+
+.skeleton--row {
+  height: 48px;
+  width: 100%;
+  border-radius: var(--radius-sm);
+}
+
+/* ── Booking choice card skeleton ── */
+
+.skeleton-booking-choice-card {
+  min-height: 8.8rem;
+  border: 1px solid var(--border);
+  padding: 0.95rem;
+  display: grid;
+  gap: 0.55rem;
+  align-content: start;
+}
+
+.skeleton-booking-choice-card--service {
+  min-height: 10.5rem;
+}
+
+.skeleton-booking-choice-card--slot {
+  min-height: 4.2rem;
+  padding: 0.8rem 0.5rem;
+  align-content: center;
+  justify-items: center;
+}
+
+/* ── KPI card skeleton ── */
+
+.skeleton-kpi-card {
+  border: 1px solid var(--border);
+  padding: 1rem;
+  display: grid;
+  gap: 0.6rem;
+  align-content: start;
+  min-height: 6rem;
+}
+
+/* ── Table row skeleton ── */
+
+.skeleton-table-row td {
+  padding: 0.65rem 0.5rem;
+  border: 1px solid var(--border);
+}
+
+.skeleton-table-cell {
+  display: block;
+  height: 0.85rem;
+  border-radius: var(--radius-full);
+}
+
+/* ── Assignment list skeleton ── */
+
+.admin-service-assignment-skeleton {
+  display: grid;
+  gap: 0.5rem;
+}

@@ -1,6 +1,7 @@
 import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
 import { formatInTimeZone, fromZonedTime } from 'date-fns-tz';
+import { X } from '../lucide-react';
 
 type HistoryDateRange = {
   from?: Date;
@@ -315,7 +316,7 @@ export default function HistoryDateRangePicker({ dateRange, isMobileViewport, ti
           onClick={handleClear}
           aria-label="Clear date range"
         >
-          ×
+          <X width={12} height={12} aria-hidden="true" />
         </button>
       ) : null}
       {isMounted && typeof document !== 'undefined' ? createPortal(popoverContent, document.body) : popoverContent}

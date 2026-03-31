@@ -1,0 +1,103 @@
+/* ── Admin login full-viewport wrapper ─────────────────────────────────── */
+.admin-login-viewport {
+  position: fixed;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: var(--space-xl) var(--space-md);
+  background: var(--bg);
+  z-index: 1;
+}
+
+/* ── Login card ─────────────────────────────────────────────────────────── */
+.admin-login-card {
+  width: 100%;
+  max-width: 400px;
+  background: var(--surface-1);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-20);
+  box-shadow: var(--shadow-lg);
+  padding: var(--space-xl) clamp(var(--space-lg), 6vw, var(--space-xl));
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-lg);
+}
+
+/* ── Brand header ───────────────────────────────────────────────────────── */
+.admin-login-brand {
+  display: flex;
+  align-items: center;
+  gap: var(--space-sm);
+}
+
+.admin-login-monogram {
+  width: 46px;
+  height: 46px;
+  background: var(--accent);
+  border-radius: var(--radius-12);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-family: var(--font-body);
+  font-size: var(--text-xl);
+  font-weight: 800;
+  color: var(--accent-contrast);
+  flex-shrink: 0;
+  letter-spacing: -0.02em;
+  user-select: none;
+}
+
+.admin-login-brand-text {
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+}
+
+.admin-login-brand-name {
+  font-family: var(--font-body);
+  font-size: var(--text-lg);
+  font-weight: 700;
+  color: var(--fg);
+  line-height: 1.2;
+}
+
+.admin-login-brand-sub {
+  font-size: var(--text-sm);
+  color: var(--muted);
+  line-height: 1.3;
+}
+
+/* ── Submit button ──────────────────────────────────────────────────────── */
+.admin-login-submit {
+  width: 100%;
+}
+
+/* ── Spinner ────────────────────────────────────────────────────────────── */
+@keyframes admin-login-spin {
+  to { transform: rotate(360deg); }
+}
+
+.admin-login-spinner {
+  animation: admin-login-spin 0.75s linear infinite;
+  flex-shrink: 0;
+}
+
+/* ── Secure-access footer ───────────────────────────────────────────────── */
+.admin-login-footer {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-xs);
+  font-size: var(--text-xs);
+  color: var(--muted);
+  border-top: 1px solid var(--border);
+  padding-top: var(--space-md);
+  line-height: 1.4;
+  text-align: center;
+}
+
+.admin-login-footer svg {
+  flex-shrink: 0;
+  opacity: 0.65;
+}

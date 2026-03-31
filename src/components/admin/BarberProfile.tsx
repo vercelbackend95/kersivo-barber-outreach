@@ -199,7 +199,7 @@ export default function BarberProfile({
               )}
 
             </div>
-            <h2 className="admin-barber-profile-title">{barber.name}</h2>
+            <h3 className="admin-barber-profile-title">{barber.name}</h3>
           </div>
                     <div className="admin-barber-profile-nav-actions">
             <button type="button" className="admin-barber-nav-icon-btn" onClick={onBack} aria-label="Back to list">

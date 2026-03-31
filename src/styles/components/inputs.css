@@ -1,0 +1,100 @@
+.field {
+  display: grid;
+  gap: var(--space-2xs);
+}
+
+.field__label {
+  font-size: var(--text-sm);
+  font-weight: 600;
+  color: var(--fg);
+}
+
+.field__hint {
+  font-size: var(--text-sm);
+  color: var(--muted);
+}
+
+.input,
+.textarea,
+.select {
+  width: 100%;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-12);
+  background: var(--surface-1);
+  color: var(--fg);
+  font-size: var(--text-md);
+  line-height: 1.4;
+  transition: border-color 160ms ease, box-shadow 160ms ease, background-color 160ms ease;
+}
+
+.input,
+.select {
+  min-height: 2.75rem;
+  padding: 0.6rem 0.85rem;
+}
+
+.textarea {
+  min-height: 7.5rem;
+  padding: 0.7rem 0.85rem;
+  resize: vertical;
+}
+
+.input::placeholder,
+.textarea::placeholder {
+  color: color-mix(in srgb, var(--muted) 85%, transparent);
+}
+
+.input:hover:not(:disabled):not([aria-invalid="true"]),
+.textarea:hover:not(:disabled):not([aria-invalid="true"]),
+.select:hover:not(:disabled):not([aria-invalid="true"]) {
+  border-color: color-mix(in srgb, var(--border) 35%, var(--fg));
+  background: var(--surface-2);
+}
+
+.input:focus-visible,
+.textarea:focus-visible,
+.select:focus-visible {
+  outline: 0;
+  border-color: var(--focus);
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--focus) 40%, transparent);
+}
+
+.input[aria-invalid="true"],
+.textarea[aria-invalid="true"],
+.select[aria-invalid="true"],
+.input--error,
+.textarea--error,
+.select--error {
+  border-color: var(--danger);
+  background: color-mix(in srgb, var(--danger) 10%, var(--surface-1));
+}
+
+.input[aria-invalid="true"]:focus-visible,
+.textarea[aria-invalid="true"]:focus-visible,
+.select[aria-invalid="true"]:focus-visible,
+.input--error:focus-visible,
+.textarea--error:focus-visible,
+.select--error:focus-visible {
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--danger) 35%, transparent);
+}
+
+.input:disabled,
+.textarea:disabled,
+.select:disabled {
+  cursor: not-allowed;
+  color: color-mix(in srgb, var(--fg) 60%, transparent);
+  border-color: color-mix(in srgb, var(--border) 70%, transparent);
+  background: color-mix(in srgb, var(--surface-1) 88%, var(--bg));
+}
+
+.field--error .field__label {
+  color: var(--danger);
+}
+
+.field--error .field__hint {
+  color: var(--danger);
+}
+
+.field__hint--error {
+  color: var(--danger);
+}

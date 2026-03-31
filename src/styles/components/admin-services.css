@@ -184,6 +184,12 @@
   display: grid;
   grid-template-columns: 1fr;
   gap: 0.85rem;
+  align-items: start;
+}
+
+.admin-price-input-wrap--error {
+  border-color: var(--danger);
+  background: color-mix(in srgb, var(--danger) 10%, var(--surface-1));
 }
 .admin-service-switch-wrap {
   position: relative;
