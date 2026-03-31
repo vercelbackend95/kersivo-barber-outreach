@@ -972,6 +972,26 @@ export default function ShopAdminPanel({ initialTab = 'products' }: ShopAdminPan
       })
     };
   }, [salesData]);
+
+  const salesRevenueSparkSeries = useMemo(
+    () => (salesData?.series.overall ?? []).map((p) => ({ label: p.date, value: p.revenuePence })),
+    [salesData],
+  );
+
+  const salesOrdersSparkSeries = useMemo(
+    () => (salesData?.series.overall ?? []).map((p) => ({ label: p.date, value: p.units })),
+    [salesData],
+  );
+
+  const salesAvgOrderSparkSeries = useMemo(
+    () =>
+      (salesData?.series.overall ?? []).map((p) => ({
+        label: p.date,
+        value: p.units > 0 ? p.revenuePence / p.units : 0,
+      })),
+    [salesData],
+  );
+
   const ordersSafe = orders ?? [];
   const filteredOrders = useMemo(() => {
     const normalizedQuery = normalize(debouncedOrdersSearchQuery);
@@ -2143,42 +2163,51 @@ export default function ShopAdminPanel({ initialTab = 'products' }: ShopAdminPan
               <SkeletonKPICards count={4} />
             ) : (
               <>
-                <article className="admin-kpi-card">
+                <article className={`admin-kpi-card${salesKpiDeltas?.revenue.className === 'admin-kpi-trend--up' ? ' admin-kpi-card--trend-up' : salesKpiDeltas?.revenue.className === 'admin-kpi-trend--down' ? ' admin-kpi-card--trend-down' : ''}`}>
                   <p className="admin-kpi-label">Total revenue</p>
                   <p className="admin-kpi-value">{formatPrice(salesData?.kpis.revenuePence ?? 0)}</p>
                   {salesKpiDeltas ? (
                     <p className={`admin-kpi-trend ${salesKpiDeltas.revenue.className}`}>
-                      {salesKpiDeltas.revenue.direction === 'up' ? '↑ ' : salesKpiDeltas.revenue.direction === 'down' ? '↓ ' : ''}
+                      {salesKpiDeltas.revenue.direction === 'up' ? <svg aria-hidden="true" className="admin-kpi-trend-icon" viewBox="0 0 8 8" fill="currentColor"><path d="M4 0L8 8H0Z"/></svg> : salesKpiDeltas.revenue.direction === 'down' ? <svg aria-hidden="true" className="admin-kpi-trend-icon" viewBox="0 0 8 8" fill="currentColor"><path d="M4 8L0 0H8Z"/></svg> : null}
                       {salesKpiDeltas.revenue.text}
                     </p>
                   ) : null}
+                  <div className="admin-kpi-sparkline" aria-hidden="true">
+                    <AdminLineChart variant="sparkline" responsive series={[{ key: 'revenue', name: 'Revenue', points: salesRevenueSparkSeries }]} getColor={() => 'var(--fg)'} emptyLabel="" />
+                  </div>
                 </article>
 
-                <article className="admin-kpi-card">
+                <article className={`admin-kpi-card${salesKpiDeltas?.orders.className === 'admin-kpi-trend--up' ? ' admin-kpi-card--trend-up' : salesKpiDeltas?.orders.className === 'admin-kpi-trend--down' ? ' admin-kpi-card--trend-down' : ''}`}>
                   <p className="admin-kpi-label">Orders</p>
                   <p className="admin-kpi-value">{salesData?.kpis.ordersCount ?? 0}</p>
                   {salesKpiDeltas ? (
                     <p className={`admin-kpi-trend ${salesKpiDeltas.orders.className}`}>
-                      {salesKpiDeltas.orders.direction === 'up' ? '↑ ' : salesKpiDeltas.orders.direction === 'down' ? '↓ ' : ''}
+                      {salesKpiDeltas.orders.direction === 'up' ? <svg aria-hidden="true" className="admin-kpi-trend-icon" viewBox="0 0 8 8" fill="currentColor"><path d="M4 0L8 8H0Z"/></svg> : salesKpiDeltas.orders.direction === 'down' ? <svg aria-hidden="true" className="admin-kpi-trend-icon" viewBox="0 0 8 8" fill="currentColor"><path d="M4 8L0 0H8Z"/></svg> : null}
                       {salesKpiDeltas.orders.text}
                     </p>
                   ) : null}
+                  <div className="admin-kpi-sparkline" aria-hidden="true">
+                    <AdminLineChart variant="sparkline" responsive series={[{ key: 'orders', name: 'Orders', points: salesOrdersSparkSeries }]} getColor={() => 'var(--fg)'} emptyLabel="" />
+                  </div>
                 </article>
 
-                <article className="admin-kpi-card">
+                <article className={`admin-kpi-card${salesKpiDeltas?.avgOrderValue.className === 'admin-kpi-trend--up' ? ' admin-kpi-card--trend-up' : salesKpiDeltas?.avgOrderValue.className === 'admin-kpi-trend--down' ? ' admin-kpi-card--trend-down' : ''}`}>
                   <p className="admin-kpi-label">Avg order value</p>
                   <p className="admin-kpi-value">{formatPrice(salesData?.kpis.avgOrderValuePence ?? 0)}</p>
                   {salesKpiDeltas ? (
                     <p className={`admin-kpi-trend ${salesKpiDeltas.avgOrderValue.className}`}>
-                      {salesKpiDeltas.avgOrderValue.direction === 'up' ? '↑ ' : salesKpiDeltas.avgOrderValue.direction === 'down' ? '↓ ' : ''}
+                      {salesKpiDeltas.avgOrderValue.direction === 'up' ? <svg aria-hidden="true" className="admin-kpi-trend-icon" viewBox="0 0 8 8" fill="currentColor"><path d="M4 0L8 8H0Z"/></svg> : salesKpiDeltas.avgOrderValue.direction === 'down' ? <svg aria-hidden="true" className="admin-kpi-trend-icon" viewBox="0 0 8 8" fill="currentColor"><path d="M4 8L0 0H8Z"/></svg> : null}
                       {salesKpiDeltas.avgOrderValue.text}
                     </p>
                   ) : null}
+                  <div className="admin-kpi-sparkline" aria-hidden="true">
+                    <AdminLineChart variant="sparkline" responsive series={[{ key: 'avg', name: 'Avg order', points: salesAvgOrderSparkSeries }]} getColor={() => 'var(--fg)'} emptyLabel="" />
+                  </div>
                 </article>
 
                 <article className="admin-kpi-card">
                   <p className="admin-kpi-label">Best-selling product</p>
-                  <p className="admin-kpi-value">{salesData?.kpis.bestProduct?.name ?? '—'}</p>
+                  <p className="admin-kpi-value admin-kpi-value--text">{salesData?.kpis.bestProduct?.name ?? '—'}</p>
                   {salesData?.kpis.bestProduct ? (
                     <p className="admin-kpi-note">
                       {formatPrice(salesData.kpis.bestProduct.revenuePence)} · {salesData.kpis.bestProduct.units} units

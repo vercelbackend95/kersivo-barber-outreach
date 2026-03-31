@@ -68,6 +68,21 @@ function SidebarBrand() {
   );
 }
 
+function SidebarStatus() {
+  const dateStr = new Date().toLocaleDateString('en-GB', {
+    weekday: 'short',
+    day: 'numeric',
+    month: 'short',
+  });
+  return (
+    <div className="admin-sidebar-status" aria-label="System status">
+      <span className="admin-sidebar-status-date">{dateStr}</span>
+      <span className="admin-sidebar-status-dot" aria-hidden="true" />
+      <span className="admin-sidebar-status-label">Online</span>
+    </div>
+  );
+}
+
 export default function AdminLayout({
   activeSection,
   onChangeSection,
@@ -109,6 +124,14 @@ export default function AdminLayout({
       ))}
     </nav>
   ), [activeSection]);
+
+  const activeSectionLabel = useMemo(() => {
+    for (const group of menuGroups) {
+      const item = group.items.find((i) => i.section === activeSection);
+      if (item) return item.label;
+    }
+    return '';
+  }, [activeSection]);
 
   const skeletonVariant = useMemo<'kpi' | 'table'>(() => {
     if (activeSection === 'bookings_reports' || activeSection === 'shop_sales') {
@@ -171,6 +194,7 @@ export default function AdminLayout({
         <SidebarBrand />
         {menu}
         <div className="admin-sidebar-logout-wrap">
+          <SidebarStatus />
           <div className="admin-sidebar-divider" aria-hidden="true" />
           <button
             type="button"
@@ -190,6 +214,11 @@ export default function AdminLayout({
       >
         <header className="admin-mobile-header" aria-label="Admin mobile header">
           <SidebarBrand />
+          {activeSectionLabel && (
+            <span className="admin-mobile-section-name" aria-current="page">
+              {activeSectionLabel}
+            </span>
+          )}
           <button
             ref={mobileOpenButtonRef}
             type="button"

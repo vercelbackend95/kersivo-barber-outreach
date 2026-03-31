@@ -1084,6 +1084,31 @@ export default function BookingsAdminPanel({ isActive, mode, onBackToDashboard }
     });
   }, [chartMetric, reports, reportsRange]);
 
+  const bookingsSparkSeries = useMemo((): Array<{ label: string; value: number }> => {
+    if (!reports) return [];
+    const map = new Map<string, number>();
+    for (const row of reports.reportBookings ?? []) {
+      const key = formatInTimeZone(new Date(row.startAt), ADMIN_TIMEZONE, reportsRange === '1y' ? "yyyy-'W'II" : 'yyyy-MM-dd');
+      map.set(key, (map.get(key) ?? 0) + 1);
+    }
+    return reports.revenueSeries.map((p) => ({ label: p.label, value: map.get(p.label) ?? 0 }));
+  }, [reports, reportsRange]);
+
+  const cancelledSparkSeries = useMemo((): Array<{ label: string; value: number }> => {
+    if (!reports) return [];
+    const map = new Map<string, { total: number; cancelled: number }>();
+    for (const row of reports.reportBookings ?? []) {
+      const key = formatInTimeZone(new Date(row.startAt), ADMIN_TIMEZONE, reportsRange === '1y' ? "yyyy-'W'II" : 'yyyy-MM-dd');
+      const c = map.get(key) ?? { total: 0, cancelled: 0 };
+      c.total += 1;
+      if (['CANCELLED_BY_CLIENT', 'CANCELLED_BY_SHOP', 'CANCELLED_BY_ADMIN', 'EXPIRED'].includes(row.status)) c.cancelled += 1;
+      map.set(key, c);
+    }
+    return reports.revenueSeries.map((p) => {
+      const b = map.get(p.label) ?? { total: 0, cancelled: 0 };
+      return { label: p.label, value: b.total > 0 ? (b.cancelled / b.total) * 100 : 0 };
+    });
+  }, [reports, reportsRange]);
 
   const drilldownRows = useMemo(() => {
     const rows = reports?.reportBookings ?? [];
@@ -2202,10 +2227,10 @@ export default function BookingsAdminPanel({ isActive, mode, onBackToDashboard }
             </div>
           ) : null}
           <div className={`admin-reports-grid${reportsLoading && reports === null ? ' admin-reports-grid--hidden' : ''}`}>
-            <article className="admin-kpi-card admin-kpi-card--hero admin-kpi-clickable" onClick={() => setOpenDrilldown('revenue')}>
+            <article className={`admin-kpi-card admin-kpi-card--hero admin-kpi-clickable${revenueDelta.className === 'admin-kpi-trend--up' ? ' admin-kpi-card--trend-up' : revenueDelta.className === 'admin-kpi-trend--down' ? ' admin-kpi-card--trend-down' : ''}`} onClick={() => setOpenDrilldown('revenue')}>
               <div className="admin-kpi-row"><p className="admin-kpi-label">Revenue</p><div className="admin-chart-switcher">{(['revenue', 'bookings', 'cancelRate'] as const).map((metric) => <button type="button" key={metric} className={`admin-chart-switch ${chartMetric === metric ? 'is-active' : ''}`} onClick={(event) => { event.stopPropagation(); setChartMetric(metric); }}>{metric === 'cancelRate' ? 'Cancel rate' : metric.charAt(0).toUpperCase() + metric.slice(1)}</button>)}</div></div>
               <p className="admin-kpi-value admin-kpi-value--hero">{chartMetric === 'revenue' ? formatCurrencyGbp(reports?.revenue ?? 0) : chartMetric === 'bookings' ? `${reports?.bookingsCount ?? 0}` : `${(reports?.cancelledRate ?? 0).toFixed(1)}%`}</p>
-              <p className={`admin-kpi-trend ${revenueDelta.className}`}>{revenueDelta.direction === 'up' ? '↑ ' : revenueDelta.direction === 'down' ? '↓ ' : ''}{revenueDelta.text}{isSmallSample ? <span className="admin-kpi-sample-inline">Small sample</span> : null}</p>
+              <p className={`admin-kpi-trend ${revenueDelta.className}`}>{revenueDelta.direction === 'up' ? <svg aria-hidden="true" className="admin-kpi-trend-icon" viewBox="0 0 8 8" fill="currentColor"><path d="M4 0L8 8H0Z"/></svg> : revenueDelta.direction === 'down' ? <svg aria-hidden="true" className="admin-kpi-trend-icon" viewBox="0 0 8 8" fill="currentColor"><path d="M4 8L0 0H8Z"/></svg> : null}{revenueDelta.text}{isSmallSample ? <span className="admin-kpi-sample-inline">Small sample</span> : null}</p>
 
               {reports?.usedDemoPricing ? <p className="admin-kpi-note">Estimated (demo prices)</p> : null}
               <AdminLineChart
@@ -2218,23 +2243,46 @@ export default function BookingsAdminPanel({ isActive, mode, onBackToDashboard }
               />
             </article>
 
-            <article className="admin-kpi-card admin-kpi-card--bookings admin-kpi-clickable" onClick={() => setOpenDrilldown('bookings')}><p className="admin-kpi-label">Bookings</p><p className="admin-kpi-value">{reports?.bookingsCount ?? 0}</p><p className={`admin-kpi-trend ${bookingsDelta.className}`}>{bookingsDelta.direction === 'up' ? '↑ ' : bookingsDelta.direction === 'down' ? '↓ ' : ''}{bookingsDelta.text}{isSmallSample ? <span className="admin-kpi-sample-inline">Small sample</span> : null}</p></article>
-
-            <article className="admin-kpi-card admin-kpi-card--cancelled admin-kpi-clickable" onClick={() => setOpenDrilldown('cancelled')}>
-              <p className="admin-kpi-label">Cancelled rate</p><p className="admin-kpi-value">{`${(reports?.cancelledRate ?? 0).toFixed(1)}%`}</p><p className={`admin-kpi-trend ${cancelledDelta.className}`}>{cancelledDelta.direction === 'up' ? '↑ ' : cancelledDelta.direction === 'down' ? '↓ ' : ''}{cancelledDelta.text}</p><p className="admin-kpi-note">{reportsCancelledCount} of {reports?.bookingsCount ?? 0} bookings</p>
-              <div className="admin-reports-breakdown" role="list" aria-label="Completion breakdown"><div className="admin-reports-breakdown-bar" aria-hidden="true"><span style={{ width: `${reportsBreakdownTotal ? ((reports?.breakdown.completed ?? 0) / reportsBreakdownTotal) * 100 : 0}%` }} className="is-completed" /><span style={{ width: `${reportsBreakdownTotal ? ((reports?.breakdown.cancelledByClient ?? 0) / reportsBreakdownTotal) * 100 : 0}%` }} className="is-cancel-client" /><span style={{ width: `${reportsBreakdownTotal ? ((reports?.breakdown.cancelledByShop ?? 0) / reportsBreakdownTotal) * 100 : 0}%` }} className="is-cancel-shop" /><span style={{ width: `${reportsBreakdownTotal ? ((reports?.breakdown.noShowExpired ?? 0) / reportsBreakdownTotal) * 100 : 0}%` }} className="is-no-show" /></div></div>
-
+            <article className={`admin-kpi-card admin-kpi-card--bookings admin-kpi-clickable${bookingsDelta.className === 'admin-kpi-trend--up' ? ' admin-kpi-card--trend-up' : bookingsDelta.className === 'admin-kpi-trend--down' ? ' admin-kpi-card--trend-down' : ''}`} onClick={() => setOpenDrilldown('bookings')}>
+              <p className="admin-kpi-label">Bookings</p>
+              <p className="admin-kpi-value">{reports?.bookingsCount ?? 0}</p>
+              <p className={`admin-kpi-trend ${bookingsDelta.className}`}>{bookingsDelta.direction === 'up' ? <svg aria-hidden="true" className="admin-kpi-trend-icon" viewBox="0 0 8 8" fill="currentColor"><path d="M4 0L8 8H0Z"/></svg> : bookingsDelta.direction === 'down' ? <svg aria-hidden="true" className="admin-kpi-trend-icon" viewBox="0 0 8 8" fill="currentColor"><path d="M4 8L0 0H8Z"/></svg> : null}{bookingsDelta.text}{isSmallSample ? <span className="admin-kpi-sample-inline">Small sample</span> : null}</p>
+              <div className="admin-kpi-sparkline" aria-hidden="true">
+                <AdminLineChart variant="sparkline" responsive series={[{ key: 'bookings', name: 'Bookings', points: bookingsSparkSeries }]} getColor={() => 'var(--fg)'} emptyLabel="" />
+              </div>
             </article>
-            <article className="admin-kpi-card admin-kpi-card--utilization"><p className="admin-kpi-label">Utilization</p><p className="admin-kpi-value">{reports?.utilizationPct == null ? '—' : `${reports.utilizationPct.toFixed(1)}%`}</p><p className={`admin-kpi-trend ${utilizationDelta.className}`}>{utilizationDelta.direction === 'up' ? '↑ ' : utilizationDelta.direction === 'down' ? '↓ ' : ''}{utilizationDelta.text}</p><p className="admin-kpi-note">{reportsBookedVsAvailableLabel}</p></article>
-            <article className="admin-kpi-card"><p className="admin-kpi-label">Avg booking value</p><p className="admin-kpi-value">{formatCurrencyGbp(reports?.avgBookingValue ?? 0)}</p><p className={`admin-kpi-trend ${avgBookingValueDelta.className}`}>{avgBookingValueDelta.direction === 'up' ? '↑ ' : avgBookingValueDelta.direction === 'down' ? '↓ ' : ''}{avgBookingValueDelta.text}</p></article>
-            <article className="admin-kpi-card"><p className="admin-kpi-label">No-show/expired rate</p><p className="admin-kpi-value">{`${(reports?.noShowExpiredRate ?? 0).toFixed(1)}%`}</p><p className={`admin-kpi-trend ${noShowExpiredDelta.className}`}>{noShowExpiredDelta.direction === 'up' ? '↑ ' : noShowExpiredDelta.direction === 'down' ? '↓ ' : ''}{noShowExpiredDelta.text}</p></article>
 
+            <article className={`admin-kpi-card admin-kpi-card--cancelled admin-kpi-clickable${cancelledDelta.className === 'admin-kpi-trend--up' ? ' admin-kpi-card--trend-up' : cancelledDelta.className === 'admin-kpi-trend--down' ? ' admin-kpi-card--trend-down' : ''}`} onClick={() => setOpenDrilldown('cancelled')}>
+              <p className="admin-kpi-label">Cancelled rate</p>
+              <p className="admin-kpi-value">{`${(reports?.cancelledRate ?? 0).toFixed(1)}%`}</p>
+              <p className={`admin-kpi-trend ${cancelledDelta.className}`}>{cancelledDelta.direction === 'up' ? <svg aria-hidden="true" className="admin-kpi-trend-icon" viewBox="0 0 8 8" fill="currentColor"><path d="M4 0L8 8H0Z"/></svg> : cancelledDelta.direction === 'down' ? <svg aria-hidden="true" className="admin-kpi-trend-icon" viewBox="0 0 8 8" fill="currentColor"><path d="M4 8L0 0H8Z"/></svg> : null}{cancelledDelta.text}</p>
+              <p className="admin-kpi-note">{reportsCancelledCount} of {reports?.bookingsCount ?? 0} bookings</p>
+              <div className="admin-reports-breakdown" role="list" aria-label="Completion breakdown"><div className="admin-reports-breakdown-bar" aria-hidden="true"><span style={{ width: `${reportsBreakdownTotal ? ((reports?.breakdown.completed ?? 0) / reportsBreakdownTotal) * 100 : 0}%` }} className="is-completed" /><span style={{ width: `${reportsBreakdownTotal ? ((reports?.breakdown.cancelledByClient ?? 0) / reportsBreakdownTotal) * 100 : 0}%` }} className="is-cancel-client" /><span style={{ width: `${reportsBreakdownTotal ? ((reports?.breakdown.cancelledByShop ?? 0) / reportsBreakdownTotal) * 100 : 0}%` }} className="is-cancel-shop" /><span style={{ width: `${reportsBreakdownTotal ? ((reports?.breakdown.noShowExpired ?? 0) / reportsBreakdownTotal) * 100 : 0}%` }} className="is-no-show" /></div></div>
+              <div className="admin-kpi-sparkline" aria-hidden="true">
+                <AdminLineChart variant="sparkline" responsive series={[{ key: 'cancelled', name: 'Cancel rate', points: cancelledSparkSeries }]} getColor={() => 'var(--accent)'} getPathClassName={() => 'is-warning'} emptyLabel="" />
+              </div>
+            </article>
+            <article className={`admin-kpi-card admin-kpi-card--utilization${utilizationDelta.className === 'admin-kpi-trend--up' ? ' admin-kpi-card--trend-up' : utilizationDelta.className === 'admin-kpi-trend--down' ? ' admin-kpi-card--trend-down' : ''}`}>
+              <p className="admin-kpi-label">Utilization</p>
+              <p className="admin-kpi-value">{reports?.utilizationPct == null ? '—' : `${reports.utilizationPct.toFixed(1)}%`}</p>
+              <p className={`admin-kpi-trend ${utilizationDelta.className}`}>{utilizationDelta.direction === 'up' ? <svg aria-hidden="true" className="admin-kpi-trend-icon" viewBox="0 0 8 8" fill="currentColor"><path d="M4 0L8 8H0Z"/></svg> : utilizationDelta.direction === 'down' ? <svg aria-hidden="true" className="admin-kpi-trend-icon" viewBox="0 0 8 8" fill="currentColor"><path d="M4 8L0 0H8Z"/></svg> : null}{utilizationDelta.text}</p>
+              <p className="admin-kpi-note">{reportsBookedVsAvailableLabel}</p>
+            </article>
+            <article className={`admin-kpi-card${avgBookingValueDelta.className === 'admin-kpi-trend--up' ? ' admin-kpi-card--trend-up' : avgBookingValueDelta.className === 'admin-kpi-trend--down' ? ' admin-kpi-card--trend-down' : ''}`}>
+              <p className="admin-kpi-label">Avg booking value</p>
+              <p className="admin-kpi-value">{formatCurrencyGbp(reports?.avgBookingValue ?? 0)}</p>
+              <p className={`admin-kpi-trend ${avgBookingValueDelta.className}`}>{avgBookingValueDelta.direction === 'up' ? <svg aria-hidden="true" className="admin-kpi-trend-icon" viewBox="0 0 8 8" fill="currentColor"><path d="M4 0L8 8H0Z"/></svg> : avgBookingValueDelta.direction === 'down' ? <svg aria-hidden="true" className="admin-kpi-trend-icon" viewBox="0 0 8 8" fill="currentColor"><path d="M4 8L0 0H8Z"/></svg> : null}{avgBookingValueDelta.text}</p>
+            </article>
+            <article className={`admin-kpi-card${noShowExpiredDelta.className === 'admin-kpi-trend--up' ? ' admin-kpi-card--trend-up' : noShowExpiredDelta.className === 'admin-kpi-trend--down' ? ' admin-kpi-card--trend-down' : ''}`}>
+              <p className="admin-kpi-label">No-show/expired rate</p>
+              <p className="admin-kpi-value">{`${(reports?.noShowExpiredRate ?? 0).toFixed(1)}%`}</p>
+              <p className={`admin-kpi-trend ${noShowExpiredDelta.className}`}>{noShowExpiredDelta.direction === 'up' ? <svg aria-hidden="true" className="admin-kpi-trend-icon" viewBox="0 0 8 8" fill="currentColor"><path d="M4 0L8 8H0Z"/></svg> : noShowExpiredDelta.direction === 'down' ? <svg aria-hidden="true" className="admin-kpi-trend-icon" viewBox="0 0 8 8" fill="currentColor"><path d="M4 8L0 0H8Z"/></svg> : null}{noShowExpiredDelta.text}</p>
+            </article>
 
-
-            <article className="admin-kpi-card"><p className="admin-kpi-label">Peak day</p><p className="admin-kpi-value">{reports?.peakDay ?? '—'}</p></article>
-            <article className="admin-kpi-card"><p className="admin-kpi-label">Peak hour</p><p className="admin-kpi-value">{reports?.peakHour ?? '—'}</p></article>
-            <article className="admin-kpi-card admin-kpi-clickable" onClick={() => setOpenDrilldown('service')}><p className="admin-kpi-label">Most popular service</p><p className="admin-kpi-value">{reports?.mostPopularService ? `${reports.mostPopularService.name} (${reports.mostPopularService.count})` : 'No confirmed bookings'}</p></article>
-            <article className="admin-kpi-card"><p className="admin-kpi-label">{reportsBarberId ? 'Selected barber' : 'Busiest barber'}</p><p className="admin-kpi-value">{reportsBarberId ? reportsSelectedBarberName : reports?.busiestBarber ? `${reports.busiestBarber.name} (${reports.busiestBarber.count})` : 'No confirmed bookings'}</p></article>
+            <article className="admin-kpi-card"><p className="admin-kpi-label">Peak day</p><p className="admin-kpi-value admin-kpi-value--text">{reports?.peakDay ?? '—'}</p></article>
+            <article className="admin-kpi-card"><p className="admin-kpi-label">Peak hour</p><p className="admin-kpi-value admin-kpi-value--text">{reports?.peakHour ?? '—'}</p></article>
+            <article className="admin-kpi-card admin-kpi-clickable" onClick={() => setOpenDrilldown('service')}><p className="admin-kpi-label">Most popular service</p><p className="admin-kpi-value admin-kpi-value--text">{reports?.mostPopularService ? `${reports.mostPopularService.name} (${reports.mostPopularService.count})` : 'No confirmed bookings'}</p></article>
+            <article className="admin-kpi-card"><p className="admin-kpi-label">{reportsBarberId ? 'Selected barber' : 'Busiest barber'}</p><p className="admin-kpi-value admin-kpi-value--text">{reportsBarberId ? reportsSelectedBarberName : reports?.busiestBarber ? `${reports.busiestBarber.name} (${reports.busiestBarber.count})` : 'No confirmed bookings'}</p></article>
           </div>
           {openDrilldown ? <div className="admin-client-modal-backdrop" role="presentation" onClick={() => setOpenDrilldown(null)}><div className="admin-reports-drawer" onClick={(event) => event.stopPropagation()} role="dialog" aria-modal="true"><div className="admin-client-modal-head"><h3>Drill-down</h3><button type="button" className="btn btn--ghost" onClick={() => setOpenDrilldown(null)}>Close</button></div><input value={drilldownSearch} onChange={(event) => setDrilldownSearch(event.target.value)} placeholder="Search client/email/service" /><div className="admin-reports-drawer-list">{filteredDrilldownRows.map((row) => <article key={row.id} className="admin-kpi-card"><p>{formatInTimeZone(new Date(row.startAt), ADMIN_TIMEZONE, 'dd MMM HH:mm')} · {row.barberName}</p><p>{row.serviceName} · {row.status}</p><p>{row.clientName ?? 'Unknown'} · {row.clientEmail ?? 'No email'}</p>{row.computedValueGbp != null ? <p>{formatCurrencyGbp(row.computedValueGbp)}</p> : null}</article>)}</div></div></div> : null}
         </section>
