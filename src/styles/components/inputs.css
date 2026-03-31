@@ -18,9 +18,9 @@
 .textarea,
 .select {
   width: 100%;
-  border: 1px solid var(--border);
-  border-radius: var(--radius-12);
-  background: var(--surface-1);
+  border: 1px solid color-mix(in srgb, var(--border) 80%, transparent);
+  border-radius: var(--radius-8);
+  background: color-mix(in srgb, var(--bg) 70%, var(--surface-1) 30%);
   color: var(--fg);
   font-size: var(--text-md);
   line-height: 1.4;
@@ -56,7 +56,7 @@
 .select:focus-visible {
   outline: 0;
   border-color: var(--focus);
-  box-shadow: 0 0 0 3px color-mix(in srgb, var(--focus) 40%, transparent);
+  box-shadow: 0 0 0 2px color-mix(in srgb, var(--focus) 20%, transparent);
 }
 
 .input[aria-invalid="true"],

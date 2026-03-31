@@ -438,11 +438,14 @@ export default function ServicesAdminPanel() {
   const nameHasError = error === 'Service name is required.';
   const priceHasError = error === 'Price must be a valid amount.';
 
+  const editingService = editingId ? services.find((s) => s.id === editingId) ?? null : null;
+
   return (
     <section className="surface booking-shell admin-services-shell">
       <AdminSectionHeader
         title="Services"
         description="Configure your service catalogue"
+        metaBadge={`${services.length} services`}
         actions={
           <button type="button" className="btn btn--primary" onClick={openCreateServiceSheet}>
             Add Service
@@ -613,7 +616,22 @@ export default function ServicesAdminPanel() {
         >
           <form className="admin-barber-sheet admin-service-sheet" onSubmit={submitForm} onMouseDown={(event) => event.stopPropagation()}>
             <div className="admin-barber-sheet-head admin-service-sheet-head admin-service-panel-head admin-client-modal-head">
-              <h3>{editingId ? 'EDIT SERVICE' : 'ADD SERVICE'}</h3>
+              <div className="admin-sheet-head-copy">
+                <div className="admin-sheet-head-title-row">
+                  <h3>{editingId ? 'EDIT SERVICE' : 'ADD SERVICE'}</h3>
+                  {editingService ? (
+                    <span
+                      className={`badge badge--sm ${editingService.isActive ? 'badge--confirmed' : 'badge--neutral'}`}
+                      aria-label={editingService.isActive ? 'Active' : 'Inactive'}
+                    >
+                      {editingService.isActive ? 'Active' : 'Inactive'}
+                    </span>
+                  ) : null}
+                </div>
+                {editingService ? (
+                  <p className="admin-sheet-entity-name" title={editingService.name}>{editingService.name}</p>
+                ) : null}
+              </div>
 
               <button
                 type="button"
@@ -626,117 +644,134 @@ export default function ServicesAdminPanel() {
             </div>
 
             <div className="admin-barber-sheet-content admin-service-sheet-content">
-              <div className={`field admin-service-field-stack${nameHasError ? ' field--error' : ''}`}>
-                <label htmlFor="service-name" className="field__label">Service name</label>
-                <input
-                  id="service-name"
-                  className={`input${nameHasError ? ' input--error' : ''}`}
-                  value={form.name}
-                  onChange={(e) => setForm((c) => ({ ...c, name: e.target.value }))}
-                  placeholder="e.g. Haircut"
-                  required
-                />
-              </div>
 
-              <div className="field admin-service-field-stack">
-                <label htmlFor="service-description" className="field__label">Description</label>
-                <span className="field__hint">Optional — shown in the booking flow</span>
-                <input
-                  id="service-description"
-                  className="input"
-                  value={form.description}
-                  onChange={(e) => setForm((c) => ({ ...c, description: e.target.value }))}
-                  placeholder="e.g. Classic cut with scissors and clippers"
-                />
-              </div>
+              <fieldset className="admin-form-section">
+                <legend className="admin-form-section-title">Basic Information</legend>
 
-              <div className="field admin-service-field-stack">
-                <label htmlFor="service-category" className="field__label">Category</label>
-                <span className="field__hint">Optional — groups services in the catalogue</span>
-                <input
-                  id="service-category"
-                  className="input"
-                  value={form.category}
-                  onChange={(e) => setForm((c) => ({ ...c, category: e.target.value }))}
-                  placeholder="e.g. Hair, Beard"
-                />
-              </div>
+                <div className={`field admin-service-field-stack${nameHasError ? ' field--error' : ''}`}>
+                  <label htmlFor="service-name" className="field__label">Service name</label>
+                  <input
+                    id="service-name"
+                    className={`input${nameHasError ? ' input--error' : ''}`}
+                    value={form.name}
+                    onChange={(e) => setForm((c) => ({ ...c, name: e.target.value }))}
+                    placeholder="e.g. Haircut"
+                    required
+                    aria-invalid={nameHasError || undefined}
+                  />
+                  {nameHasError ? <span className="field__hint field__hint--error">{error}</span> : null}
+                </div>
 
-              <div className="admin-service-form-grid">
-                <div className={`field${priceHasError ? ' field--error' : ''}`}>
-                  <label htmlFor="service-price" className="field__label">Price</label>
-                  <span className="field__hint">In GBP</span>
-                  <div className={`admin-price-input-wrap${priceHasError ? ' admin-price-input-wrap--error' : ''}`}>
-                    <span>£</span>
+                <div className="field admin-service-field-stack">
+                  <label htmlFor="service-description" className="field__label">Description</label>
+                  <span className="field__hint">Optional — shown in the booking flow</span>
+                  <input
+                    id="service-description"
+                    className="input"
+                    value={form.description}
+                    onChange={(e) => setForm((c) => ({ ...c, description: e.target.value }))}
+                    placeholder="e.g. Classic cut with scissors and clippers"
+                  />
+                </div>
+
+                <div className="field admin-service-field-stack">
+                  <label htmlFor="service-category" className="field__label">Category</label>
+                  <span className="field__hint">Optional — groups services in the catalogue</span>
+                  <input
+                    id="service-category"
+                    className="input"
+                    value={form.category}
+                    onChange={(e) => setForm((c) => ({ ...c, category: e.target.value }))}
+                    placeholder="e.g. Hair, Beard"
+                  />
+                </div>
+              </fieldset>
+
+              <fieldset className="admin-form-section">
+                <legend className="admin-form-section-title">Pricing &amp; Timing</legend>
+
+                <div className="admin-service-form-grid">
+                  <div className={`field${priceHasError ? ' field--error' : ''}`}>
+                    <label htmlFor="service-price" className="field__label">Price</label>
+                    <span className="field__hint">In GBP</span>
+                    <div className={`admin-price-input-wrap${priceHasError ? ' admin-price-input-wrap--error' : ''}`}>
+                      <span>£</span>
+                      <input
+                        id="service-price"
+                        inputMode="decimal"
+                        value={form.priceGbp}
+                        onChange={(e) => setForm((c) => ({ ...c, priceGbp: e.target.value }))}
+                        placeholder="0.00"
+                        required
+                        aria-invalid={priceHasError || undefined}
+                      />
+                    </div>
+                    {priceHasError ? <span className="field__hint field__hint--error">{error}</span> : null}
+                  </div>
+                  <div className="field">
+                    <label htmlFor="service-duration" className="field__label">Duration</label>
+                    <span className="field__hint">Minutes</span>
                     <input
-                      id="service-price"
-                      inputMode="decimal"
-                      value={form.priceGbp}
-                      onChange={(e) => setForm((c) => ({ ...c, priceGbp: e.target.value }))}
-                      placeholder="0.00"
+                      id="service-duration"
+                      className="input"
+                      type="number"
+                      min={5}
+                      value={form.durationMinutes}
+                      onChange={(e) => setForm((c) => ({ ...c, durationMinutes: e.target.value }))}
                       required
                     />
                   </div>
+                  <div className="field">
+                    <label htmlFor="service-buffer" className="field__label">Buffer</label>
+                    <span className="field__hint">Minutes after service</span>
+                    <input
+                      id="service-buffer"
+                      className="input"
+                      type="number"
+                      min={0}
+                      value={form.bufferMinutes}
+                      onChange={(e) => setForm((c) => ({ ...c, bufferMinutes: e.target.value }))}
+                    />
+                  </div>
+                  <div className="field">
+                    <label htmlFor="service-order" className="field__label">Display order</label>
+                    <span className="field__hint">Lower = shown first</span>
+                    <input
+                      id="service-order"
+                      className="input"
+                      type="number"
+                      min={0}
+                      value={form.displayOrder}
+                      onChange={(e) => setForm((c) => ({ ...c, displayOrder: e.target.value }))}
+                    />
+                  </div>
                 </div>
-                <div className="field">
-                  <label htmlFor="service-duration" className="field__label">Duration</label>
-                  <span className="field__hint">Minutes</span>
-                  <input
-                    id="service-duration"
-                    className="input"
-                    type="number"
-                    min={5}
-                    value={form.durationMinutes}
-                    onChange={(e) => setForm((c) => ({ ...c, durationMinutes: e.target.value }))}
-                    required
-                  />
-                </div>
-                <div className="field">
-                  <label htmlFor="service-buffer" className="field__label">Buffer</label>
-                  <span className="field__hint">Minutes after service</span>
-                  <input
-                    id="service-buffer"
-                    className="input"
-                    type="number"
-                    min={0}
-                    value={form.bufferMinutes}
-                    onChange={(e) => setForm((c) => ({ ...c, bufferMinutes: e.target.value }))}
-                  />
-                </div>
-                <div className="field">
-                  <label htmlFor="service-order" className="field__label">Display order</label>
-                  <span className="field__hint">Lower = shown first</span>
-                  <input
-                    id="service-order"
-                    className="input"
-                    type="number"
-                    min={0}
-                    value={form.displayOrder}
-                    onChange={(e) => setForm((c) => ({ ...c, displayOrder: e.target.value }))}
-                  />
-                </div>
-              </div>
+              </fieldset>
 
-              <div className="admin-service-active-row">
-                <div className="admin-service-active-copy">
-                  <p className="admin-service-active-title">Service visibility</p>
-                  <p className="admin-service-active-hint">Show this service in bookings and admin lists.</p>
+              <fieldset className="admin-form-section">
+                <legend className="admin-form-section-title">Visibility</legend>
+
+                <div className="admin-service-active-row">
+                  <div className="admin-service-active-copy">
+                    <p className="admin-service-active-title">Service visibility</p>
+                    <p className="admin-service-active-hint">Show this service in bookings and admin lists.</p>
+                  </div>
+                  <label className="admin-service-switch-wrap" htmlFor="service-active">
+                    <input
+                      id="service-active"
+                      type="checkbox"
+                      className="admin-service-switch-input"
+                      checked={form.isActive}
+                      onChange={(e) => setForm((c) => ({ ...c, isActive: e.target.checked }))}
+                    />
+                    <span className="admin-service-switch-track" aria-hidden="true">
+                      <span className="admin-service-switch-thumb" />
+                    </span>
+                    <span className="admin-service-switch-label">Active</span>
+                  </label>
                 </div>
-                <label className="admin-service-switch-wrap" htmlFor="service-active">
-                  <input
-                    id="service-active"
-                    type="checkbox"
-                                        className="admin-service-switch-input"
-                    checked={form.isActive}
-                    onChange={(e) => setForm((c) => ({ ...c, isActive: e.target.checked }))}
-                  />
-                  <span className="admin-service-switch-track" aria-hidden="true">
-                    <span className="admin-service-switch-thumb" />
-                  </span>
-                  <span className="admin-service-switch-label">Active</span>
-                </label>
-              </div>
-              
+              </fieldset>
+
               <BarberAssignmentSection
                 barbers={barbers}
                 selectedBarberIds={selectedBarberIds}
@@ -749,14 +784,12 @@ export default function ServicesAdminPanel() {
             <div className="admin-barber-sheet-footer admin-service-sheet-foot">
               <button type="submit" className="btn btn--primary" disabled={isSaving}>
                 {isSaving ? (editingId ? 'Updating…' : 'Creating…') : (editingId ? 'Update service' : 'Create service')}
-
               </button>
               <button
                 type="button"
                 className="btn btn--secondary"
                 onClick={resetServiceFormState}
                 disabled={isSaving}
-
               >
                 Cancel
               </button>

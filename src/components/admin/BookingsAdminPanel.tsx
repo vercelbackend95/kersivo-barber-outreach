@@ -6,10 +6,12 @@ import { formatInTimeZone, fromZonedTime, toZonedTime } from 'date-fns-tz';
 import TodayTimeline from './TodayTimeline';
 import AdminErrorBoundary from './AdminErrorBoundary';
 import HistoryDateRangePicker from './HistoryDateRangePicker';
-import { getBookingStatusTone, getStatusBadgeClass, getStatusTextColorClass } from './bookingStatus';
+import { getBookingStatusTone, getStatusTextColorClass } from './bookingStatus';
+import StatusBadge from './StatusBadge';
 import BarbersOverview from './BarbersOverview';
 import BarberProfile from './BarberProfile';
 import BarberChip from './BarberChip';
+import AdminLeaderboard from './AdminLeaderboard';
 import type { Barber, ServiceOption, TimeBlock, WorkingHourRow } from './barbersTypes';
 import { formatDelta } from './reportsFormatting';
 import EmptyState from '../EmptyState';
@@ -145,7 +147,7 @@ const LIVE_THRESHOLD_MS = 20000;
 const CONNECTING_GRACE_MS = 2000;
 
 const UPDATED_ROW_HIGHLIGHT_MS = 2000;
-const MOBILE_BREAKPOINT_PX = 768;
+const MOBILE_BREAKPOINT_PX = 767;
 const MOBILE_RECENT_BARBERS_COUNT = 5;
 const DESKTOP_RECENT_BARBERS_COUNT = 11;
 const WEEK_DAYS = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
@@ -328,6 +330,88 @@ const STATUS_LEGEND_ITEMS: Array<{ key: string; label: string; Icon: (props: Sta
   { key: 'cancelled-by-shop', label: 'Cancelled by shop', Icon: BanIcon, className: 'admin-status-text--cancelled' }
 ];
 
+
+type TemporalGroup = 'past' | 'now' | 'upcoming';
+
+function getTemporalGroup(booking: Booking, nowMs: number): TemporalGroup {
+  const startMs = new Date(booking.startAt).getTime();
+  const endMs = new Date(booking.endAt).getTime();
+  const windowMs = 30 * 60 * 1000;
+  if (nowMs >= startMs - windowMs && nowMs < endMs + windowMs) return 'now';
+  if (endMs <= nowMs) return 'past';
+  return 'upcoming';
+}
+
+type GroupedBookings = {
+  past: Booking[];
+  now: Booking[];
+  upcoming: Booking[];
+};
+
+function groupBookingsByTime(bookings: Booking[], nowMs: number): GroupedBookings {
+  const groups: GroupedBookings = { past: [], now: [], upcoming: [] };
+  for (const booking of bookings) {
+    groups[getTemporalGroup(booking, nowMs)].push(booking);
+  }
+  return groups;
+}
+
+type DaySummaryBarProps = {
+  bookings: Booking[];
+  activeBarberCount: number;
+  nowMs: number;
+};
+
+function DaySummaryBar({ bookings, activeBarberCount, nowMs }: DaySummaryBarProps) {
+  const totalCount = bookings.length;
+  const pendingCount = bookings.filter((b) => b.status === 'PENDING_CONFIRMATION').length;
+  const upcomingCount = bookings.filter((b) => {
+    const endMs = new Date(b.endAt).getTime();
+    return endMs > nowMs && (b.status === 'CONFIRMED' || b.status === 'PENDING_CONFIRMATION');
+  }).length;
+
+  return (
+    <div className="admin-day-summary-bar" role="region" aria-label="Day overview">
+      <div className="admin-day-summary-stat">
+        <svg className="admin-day-summary-icon" viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+          <path d="M8 2a1 1 0 0 1 1 1v1h6V3a1 1 0 1 1 2 0v1h1a3 3 0 0 1 3 3v11a4 4 0 0 1-4 4H7a4 4 0 0 1-4-4V7a3 3 0 0 1 3-3h1V3a1 1 0 0 1 1-1Zm11 7H5v8a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2v-8ZM6 6a1 1 0 0 0-1 1v1h14V7a1 1 0 0 0-1-1H6Z" fill="currentColor" />
+        </svg>
+        <span className="admin-day-summary-value">{totalCount}</span>
+        <span className="admin-day-summary-label">Bookings today</span>
+      </div>
+      <div className="admin-day-summary-divider" aria-hidden="true" />
+      <div className="admin-day-summary-stat">
+        <svg className="admin-day-summary-icon admin-day-summary-icon--pending" viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+          <circle cx="12" cy="12" r="9" fill="none" stroke="currentColor" strokeWidth="2" />
+          <path d="M12 8v4" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
+          <circle cx="12" cy="16" r="1" fill="currentColor" />
+        </svg>
+        <span className="admin-day-summary-value">{pendingCount}</span>
+        <span className="admin-day-summary-label">Pending confirm</span>
+      </div>
+      <div className="admin-day-summary-divider" aria-hidden="true" />
+      <div className="admin-day-summary-stat">
+        <svg className="admin-day-summary-icon admin-day-summary-icon--upcoming" viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+          <path d="M12 6v6l4 2" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+          <circle cx="12" cy="12" r="9" fill="none" stroke="currentColor" strokeWidth="2" />
+        </svg>
+        <span className="admin-day-summary-value">{upcomingCount}</span>
+        <span className="admin-day-summary-label">Still to come</span>
+      </div>
+      <div className="admin-day-summary-divider" aria-hidden="true" />
+      <div className="admin-day-summary-stat">
+        <svg className="admin-day-summary-icon admin-day-summary-icon--barbers" viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+          <circle cx="9" cy="7" r="3" fill="none" stroke="currentColor" strokeWidth="2" />
+          <path d="M3 20a6 6 0 0 1 12 0" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
+          <circle cx="18" cy="7" r="2" fill="none" stroke="currentColor" strokeWidth="2" />
+          <path d="M21 20a3 3 0 0 0-5.12-2.12" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
+        </svg>
+        <span className="admin-day-summary-value">{activeBarberCount}</span>
+        <span className="admin-day-summary-label">Active barbers</span>
+      </div>
+    </div>
+  );
+}
 
 function parseBookingStartAt(startAt: string) {
   const parsedDate = new Date(startAt);
@@ -602,12 +686,15 @@ export default function BookingsAdminPanel({ isActive, mode, onBackToDashboard }
     const lastBookingsQueryKeyRef = useRef<string | null>(null);
   const updatedRowsTimeoutRef = useRef<number | null>(null);
   const timelineScrollRef = useRef<HTMLDivElement | null>(null);
+  const historyRecentBarbersScrollRef = useRef<HTMLDivElement | null>(null);
+  const reportsRecentBarbersScrollRef = useRef<HTMLDivElement | null>(null);
   const searchInputRef = useRef<HTMLInputElement | null>(null);
   const searchResultsRef = useRef<HTMLDivElement | null>(null);
   const reportsMoreRef = useRef<HTMLDivElement | null>(null);
   const timelineScrollRestoreRef = useRef<{ left: number; top: number } | null>(null);
   const timelineScrollRafRef = useRef<number | null>(null);
     const pendingTimelineScrollBookingIdRef = useRef<string | null>(null);
+  const wasMobileViewportRef = useRef(false);
   const initialMountMsRef = useRef(Date.now());
   const captureTimelineScroll = useCallback(() => {
     const container = timelineScrollRef.current;
@@ -862,6 +949,13 @@ export default function BookingsAdminPanel({ isActive, mode, onBackToDashboard }
   }, []);
 
   useEffect(() => {
+    if (isMobileViewport && !wasMobileViewportRef.current) {
+      setActiveView('list');
+    }
+    wasMobileViewportRef.current = isMobileViewport;
+  }, [isMobileViewport]);
+
+  useEffect(() => {
     setIsSearchDebouncing(clientSearchQuery !== debouncedSearchQuery);
     const timeoutId = window.setTimeout(() => {
       setDebouncedSearchQuery(clientSearchQuery);
@@ -985,6 +1079,34 @@ export default function BookingsAdminPanel({ isActive, mode, onBackToDashboard }
       .sort((a, b) => Number(normalizeBarberStatus(b)) - Number(normalizeBarberStatus(a)));
   }, [barbers, bookings, visibleRecentBarberIds]);
 
+  useEffect(() => {
+    const bindEdgeHint = (node: HTMLDivElement | null) => {
+      if (!node) return () => undefined;
+
+      const updateEdgeHint = () => {
+        const isAtEnd = node.scrollLeft + node.clientWidth >= node.scrollWidth - 2;
+        node.parentElement?.classList.toggle('admin-filter-scroll-wrap--at-end', isAtEnd);
+      };
+
+      updateEdgeHint();
+      node.addEventListener('scroll', updateEdgeHint, { passive: true });
+      window.addEventListener('resize', updateEdgeHint);
+
+      return () => {
+        node.removeEventListener('scroll', updateEdgeHint);
+        window.removeEventListener('resize', updateEdgeHint);
+      };
+    };
+
+    const unbindHistory = bindEdgeHint(historyRecentBarbersScrollRef.current);
+    const unbindReports = bindEdgeHint(reportsRecentBarbersScrollRef.current);
+
+    return () => {
+      unbindHistory();
+      unbindReports();
+    };
+  }, [mode, recentBarbers]);
+
 
   const reportRecentBarbers = useMemo(() => {
     const byId = new Map(barbers.map((barber) => [barber.id, barber]));
@@ -1021,13 +1143,6 @@ export default function BookingsAdminPanel({ isActive, mode, onBackToDashboard }
     tone: 'higher_better',
     currentValue: reports?.bookingsCount,
     previousValue: reports?.previousMetrics.bookingsCount
-  });
-  const revenueDelta = formatDelta({
-    value: reports?.trends.revenueDelta ?? null,
-    type: 'currency',
-    tone: 'higher_better',
-    currentValue: reports?.revenue,
-    previousValue: reports?.previousMetrics.revenue
   });
   const utilizationDelta = formatDelta({
     value: reports?.trends.utilizationPp ?? null,
@@ -1083,6 +1198,33 @@ export default function BookingsAdminPanel({ isActive, mode, onBackToDashboard }
       };
     });
   }, [chartMetric, reports, reportsRange]);
+
+  const reportsHeroValue = formatCurrencyGbp(reports?.revenue ?? 0);
+
+  const reportsChartSeries = useMemo(
+    () => [{ key: 'main', name: chartMetric === 'cancelRate' ? 'Cancel rate' : chartMetric === 'bookings' ? 'Bookings' : 'Revenue', points: chartSeries }],
+    [chartMetric, chartSeries],
+  );
+
+  const reportsLeaderboardRows = useMemo(() => {
+    if (!reports) return [];
+    const byBarber = new Map<string, { name: string; revenue: number; bookings: number }>();
+    for (const row of reports.reportBookings ?? []) {
+      const entry = byBarber.get(row.barberId) ?? { name: row.barberName, revenue: 0, bookings: 0 };
+      entry.bookings += 1;
+      entry.revenue += row.computedValueGbp ?? 0;
+      byBarber.set(row.barberId, entry);
+    }
+    return Array.from(byBarber.entries())
+      .map(([id, entry]) => ({
+        id,
+        name: entry.name,
+        value: entry.revenue > 0 ? entry.revenue : entry.bookings,
+        valueLabel: entry.revenue > 0 ? formatCurrencyGbp(entry.revenue) : `${entry.bookings}`,
+        note: `${entry.bookings} bookings`,
+      }))
+      .sort((a, b) => b.value - a.value);
+  }, [reports]);
 
   const bookingsSparkSeries = useMemo((): Array<{ label: string; value: number }> => {
     if (!reports) return [];
@@ -1716,6 +1858,8 @@ export default function BookingsAdminPanel({ isActive, mode, onBackToDashboard }
       <AdminSectionHeader
         title={BOOKINGS_SECTION_HEADER[mode].title}
         description={BOOKINGS_SECTION_HEADER[mode].description}
+        metaBadge={mode === 'dashboard' ? `${todayBookings.length} today` : undefined}
+        metaBadgeVariant={mode === 'dashboard' ? 'success' : undefined}
       />
       <div className={`admin-next-block ${isMobileViewport ? 'admin-next-block--mobile-sticky' : ''}`}><div className="admin-next-header"><div className="admin-next-header-copy"><p className="admin-next-primary">Today: {todayBookings.length} bookings</p>{nextBooking && <p className="admin-next-secondary">Next: {nextBooking.barber?.name} — {nextBooking.service?.name} — {formatStartTime(nextBooking.startAt)} ({formatRelativeTime(nextBooking.startAt, nextBooking.endAt)})</p>}</div><div className={`admin-live-status admin-live-status--${connectionStateLabel === 'LIVE' ? 'live' : connectionStateLabel === 'OFFLINE' ? 'offline' : 'connecting'}`} role="status" aria-live="polite"><span className={`admin-live-status-dot ${hasLivePulse ? 'admin-live-status-dot--pulse' : ''}`} aria-hidden="true" /><span className="admin-live-status-label">{connectionStateLabel}</span></div></div><p className="muted admin-next-updated">{freshnessLabel}</p></div>
 
@@ -1797,48 +1941,39 @@ export default function BookingsAdminPanel({ isActive, mode, onBackToDashboard }
       <>
 
       {mode === 'dashboard' && (
-        <>
-          <div className={`admin-view-tabs admin-view-tabs--two ${isMobileDashboard ? 'admin-chip-row' : ''}`} role="tablist" aria-label="Admin views">
+        <div className="admin-dashboard-controls">
+          <div className="admin-view-toggle" role="tablist" aria-label="Booking view">
             {(['timeline', 'list'] as const).map((view) => {
               const isActiveTab = activeView === view;
-              const tabLabel = `${view === 'timeline' ? 'Timeline' : 'List'} · ${selectedDateLabel}`;
+              const label = view === 'timeline' ? 'Timeline' : 'List';
               return (
-                <div key={view} className={`admin-filter-tab admin-filter-tab--split ${isActiveTab ? 'admin-filter-tab--active' : ''}`}>
-                  <button
-                    type="button"
-                    className="admin-filter-tab-main"
-                    role="tab"
-                    aria-selected={isActiveTab}
-                    onClick={() => setActiveView(view)}
-                  >
-                    {tabLabel}
-                  </button>
-                    <label
-                    className="admin-filter-tab-calendar"
-                    onClick={(event) => {
-                      event.stopPropagation();
-                    }}
-                    aria-label={`Choose ${view} date`}
-                  >
-                                        <input
-                      type="date"
-                      className="admin-filter-tab-calendar-input"
-                      value={selectedDate}
-                      onChange={(event) => setSelectedDate(event.target.value)}
-                      onClick={(event) => event.stopPropagation()}
-                      aria-label="Select date"
-                    />
-
-                    <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">
-                      <path d="M7 2a1 1 0 0 1 1 1v1h8V3a1 1 0 1 1 2 0v1h1a3 3 0 0 1 3 3v11a4 4 0 0 1-4 4H6a4 4 0 0 1-4-4V7a3 3 0 0 1 3-3h1V3a1 1 0 0 1 1-1Zm13 8H4v8a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-8ZM5 6a1 1 0 0 0-1 1v1h16V7a1 1 0 0 0-1-1H5Z" />
-                    </svg>
-                                      </label>
-                </div>
+                <button
+                  key={view}
+                  type="button"
+                  role="tab"
+                  aria-selected={isActiveTab}
+                  className={isActiveTab ? 'active' : ''}
+                  onClick={() => setActiveView(view)}
+                >
+                  {label}
+                </button>
               );
             })}
-
           </div>
-        </>
+          <label className="admin-date-picker-label" aria-label="Select date">
+            <span className="admin-date-picker-text">{selectedDateLabel}</span>
+            <input
+              type="date"
+              className="admin-filter-tab-calendar-input"
+              value={selectedDate}
+              onChange={(event) => setSelectedDate(event.target.value)}
+              aria-label="Select date"
+            />
+            <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+              <path d="M7 2a1 1 0 0 1 1 1v1h8V3a1 1 0 1 1 2 0v1h1a3 3 0 0 1 3 3v11a4 4 0 0 1-4 4H6a4 4 0 0 1-4-4V7a3 3 0 0 1 3-3h1V3a1 1 0 0 1 1-1Zm13 8H4v8a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-8ZM5 6a1 1 0 0 0-1 1v1h16V7a1 1 0 0 0-1-1H5Z" fill="currentColor" />
+            </svg>
+          </label>
+        </div>
       )}
       {mode === 'history' && (
 
@@ -1846,7 +1981,8 @@ export default function BookingsAdminPanel({ isActive, mode, onBackToDashboard }
           <div className="admin-history-row">
             <label>Recent barbers</label>
             <div className="admin-history-barber-controls">
-              <div className="admin-history-recent-scroll">
+              <div className="admin-filter-scroll-wrap">
+                <div ref={historyRecentBarbersScrollRef} className="admin-history-recent-scroll">
                 <div className="admin-history-recent-barbers" role="group" aria-label="Recent barbers">
 
                   <button
@@ -1875,6 +2011,7 @@ export default function BookingsAdminPanel({ isActive, mode, onBackToDashboard }
 
                     );
                   })}
+                </div>
                 </div>
               </div>
 
@@ -2021,6 +2158,14 @@ export default function BookingsAdminPanel({ isActive, mode, onBackToDashboard }
       </div>
 
 
+      {mode === 'dashboard' && !bookingsInitialLoading && (
+        <DaySummaryBar
+          bookings={bookings}
+          activeBarberCount={activeBarbers.length}
+          nowMs={nowMs}
+        />
+      )}
+
       {mode !== 'history' && activeView === 'timeline' ? (
         <AdminErrorBoundary>
           <TodayTimeline
@@ -2047,7 +2192,7 @@ export default function BookingsAdminPanel({ isActive, mode, onBackToDashboard }
             <article className={`admin-booking-card ${updatedBookingIds.includes(booking.id) ? 'admin-booking-card--updated' : ''}`} key={booking.id}>
               <div className="admin-booking-card-top">
                 <p><strong>{formatStartTime(booking.startAt)}</strong> · {booking.service?.name}</p>
-                <span className={getStatusBadgeClass(getBookingStatusTone(booking))}>{booking.status === 'CONFIRMED' && booking.rescheduledAt ? 'CONFIRMED · RESCHEDULED' : booking.status}</span>
+                <StatusBadge status={booking.status} rescheduledAt={booking.rescheduledAt} variant="pill" size="sm" />
               </div>
               <p className="admin-booking-card-barber">Barber: {booking.barber?.name}</p>
               <button type="button" className="admin-link-button" onClick={() => void openClientProfile(booking.clientId)}>{highlightMatch(booking.fullName)}</button>
@@ -2095,32 +2240,105 @@ export default function BookingsAdminPanel({ isActive, mode, onBackToDashboard }
                   <td colSpan={mode === 'history' ? 6 : 7}>
                     <EmptyState
                       icon={Calendar}
-                      title={mode === 'history' ? 'No booking history' : 'No bookings'}
-                      description={mode === 'history' ? 'Past appointments will appear here once bookings are completed or cancelled.' : 'When clients book appointments, they will appear here.'}
+                      title={
+                        mode === 'history'
+                          ? historyDateRange
+                            ? 'No bookings in this period'
+                            : 'No booking history'
+                          : 'No bookings'
+                      }
+                      description={
+                        mode === 'history'
+                          ? historyDateRange
+                            ? 'No appointments were found for the selected date range.'
+                            : 'Past appointments will appear here once bookings are completed or cancelled.'
+                          : 'When clients book appointments, they will appear here.'
+                      }
+                      variant={mode === 'history' && historyDateRange ? 'filtered' : undefined}
+                      action={
+                        mode === 'history' && historyDateRange ? (
+                          <button
+                            type="button"
+                            className="btn btn--ghost btn--sm"
+                            onClick={() => setHistoryDateRange(null)}
+                          >
+                            Clear date range
+                          </button>
+                        ) : undefined
+                      }
                     />
                   </td>
                 </tr>
               ) : null}
-              {visibleBookings.map((booking) => {
-                const bookingStatusLabel = getBookingStatusLabel(booking);
-                const statusIconMeta = getStatusIconMeta(booking, bookingStatusLabel);
-                                const StatusIcon = statusIconMeta.Icon;
-                const fullEmail = booking.email ?? '';
-                const short = shortEmail(fullEmail);
-                const desktopEmail = formatEmailDesktop(fullEmail);
+              {(() => {
+                const colSpan = mode === 'history' ? 6 : 7;
+                const isDashboard = mode === 'dashboard';
+                const groups = isDashboard ? groupBookingsByTime(visibleBookings, nowMs) : null;
+                const orderedGroups: Array<{ key: TemporalGroup; label: string; bookings: Booking[] }> = groups
+                  ? [
+                      { key: 'past', label: 'Past', bookings: groups.past },
+                      { key: 'now', label: 'Now', bookings: groups.now },
+                      { key: 'upcoming', label: 'Upcoming', bookings: groups.upcoming },
+                    ]
+                  : [];
 
+                function renderBookingRow(booking: Booking) {
+                  const bookingStatusLabel = getBookingStatusLabel(booking);
+                  const statusIconMeta = getStatusIconMeta(booking, bookingStatusLabel);
+                  const StatusIcon = statusIconMeta.Icon;
+                  const fullEmail = booking.email ?? '';
+                  const short = shortEmail(fullEmail);
+                  const desktopEmail = formatEmailDesktop(fullEmail);
+                  return (
+                    <tr className={updatedBookingIds.includes(booking.id) ? 'admin-row--updated' : ''} key={booking.id}>
+                      <td className="admin-table-col-client"><button type="button" className="admin-link-button" onClick={() => void openClientProfile(booking.clientId)}>{highlightMatch(booking.fullName)}</button></td>
+                      <td className={`admin-table-col-email ${mode === 'history' ? '' : 'hidden md:table-cell'}`}><button type="button" className="admin-link-button" onClick={() => void openClientProfile(booking.clientId)}><span className="admin-email-mobile" title={fullEmail} aria-label={fullEmail}>{short}</span><span className="admin-email-desktop" title={fullEmail} aria-label={fullEmail}>{desktopEmail}</span></button></td>
+                      <td className="admin-table-col-service"><span className="admin-service-desktop">{booking.service?.name}</span><span className="admin-service-mobile">{mode === 'history' ? getMobileHistoryServiceLabel(booking.service?.name) : booking.service?.name}</span></td>
+                      <td className="admin-table-col-barber">{booking.barber?.name}</td>
+                      <td className={mode === 'history' ? 'admin-table-col-status admin-table-col-status--history' : 'admin-table-col-status'}>{mode === 'history' ? <span className="admin-status-icon-wrap"><StatusIcon className={`admin-status-icon ${statusIconMeta.className}`} aria-label={statusIconMeta.label} title={statusIconMeta.label} /></span> : <><span className="admin-status-label-desktop"><StatusBadge status={booking.status} rescheduledAt={booking.rescheduledAt} size="sm" variant="dot" /></span><span className="admin-status-icon-wrap admin-status-icon-wrap--mobile"><StatusIcon className={`admin-status-icon ${statusIconMeta.className}`} aria-label={statusIconMeta.label} title={statusIconMeta.label} /></span></>}</td>
+                      <td className="admin-table-col-start"><span className="admin-start-desktop">{formatStartDateTime(booking.startAt)}</span><span className="admin-start-mobile">{formatStartTimeMobile(booking.startAt)}</span></td>
+                      {mode !== 'history' ? <td className="admin-table-col-actions">{canBeCancelledByShop(booking) ? <button type="button" className="btn btn--secondary admin-cancel-btn" onClick={() => void cancelBookingByShop(booking)} disabled={cancelLoadingBookingId === booking.id}>{cancelLoadingBookingId === booking.id ? 'Cancelling...' : 'Cancel'}</button> : null}</td> : null}
+                    </tr>
+                  );
+                }
 
-                return (
-                  <tr className={updatedBookingIds.includes(booking.id) ? 'admin-row--updated' : ''} key={booking.id}>
-                    <td className="admin-table-col-client"><button type="button" className="admin-link-button" onClick={() => void openClientProfile(booking.clientId)}>{highlightMatch(booking.fullName)}</button></td>
-                    <td className={`admin-table-col-email ${mode === 'history' ? '' : 'hidden md:table-cell'}`}><button type="button" className="admin-link-button" onClick={() => void openClientProfile(booking.clientId)}><span className="admin-email-mobile" title={fullEmail} aria-label={fullEmail}>{short}</span><span className="admin-email-desktop" title={fullEmail} aria-label={fullEmail}>{desktopEmail}</span></button></td>
+                if (!isDashboard || !groups) {
+                  return visibleBookings.map(renderBookingRow);
+                }
 
-                    <td className="admin-table-col-service"><span className="admin-service-desktop">{booking.service?.name}</span><span className="admin-service-mobile">{mode === 'history' ? getMobileHistoryServiceLabel(booking.service?.name) : booking.service?.name}</span></td><td className="admin-table-col-barber">{booking.barber?.name}</td><td className={mode === 'history' ? 'admin-table-col-status admin-table-col-status--history' : 'admin-table-col-status'}>{mode === 'history' ? <span className="admin-status-icon-wrap"><StatusIcon className={`admin-status-icon ${statusIconMeta.className}`} aria-label={statusIconMeta.label} title={statusIconMeta.label} /></span> : <><span className={`${getStatusBadgeClass(getBookingStatusTone(booking))} admin-status-label-desktop`}>{bookingStatusLabel}</span><span className="admin-status-icon-wrap admin-status-icon-wrap--mobile"><StatusIcon className={`admin-status-icon ${statusIconMeta.className}`} aria-label={statusIconMeta.label} title={statusIconMeta.label} /></span></>}</td><td className="admin-table-col-start"><span className="admin-start-desktop">{formatStartDateTime(booking.startAt)}</span><span className="admin-start-mobile">{formatStartTimeMobile(booking.startAt)}</span></td>
-                    {mode !== 'history' ? <td className="admin-table-col-actions">{canBeCancelledByShop(booking) ? <button type="button" className="btn btn--secondary admin-cancel-btn" onClick={() => void cancelBookingByShop(booking)} disabled={cancelLoadingBookingId === booking.id}>{cancelLoadingBookingId === booking.id ? 'Cancelling...' : 'Cancel'}</button> : null}</td> : null}
-
-                  </tr>
-                );
-              })}
+                return orderedGroups.flatMap(({ key, label, bookings: groupBookings }) => {
+                  if (groupBookings.length === 0) return [];
+                  return [
+                    <tr key={`sep-${key}`} className={`admin-bookings-temporal-sep-row admin-bookings-temporal-sep-row--${key}`} aria-hidden="true">
+                      <td colSpan={colSpan}>
+                        <div className={`admin-bookings-temporal-sep admin-bookings-temporal-sep--${key}`}>
+                          {key === 'past' && (
+                            <svg className="admin-temporal-sep-icon" viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+                              <path d="M12 8v4l-2 2" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" fill="none" />
+                              <circle cx="12" cy="12" r="9" stroke="currentColor" strokeWidth="2" fill="none" />
+                            </svg>
+                          )}
+                          {key === 'now' && (
+                            <svg className="admin-temporal-sep-icon" viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+                              <circle cx="12" cy="12" r="4" fill="currentColor" />
+                              <circle cx="12" cy="12" r="9" stroke="currentColor" strokeWidth="2" fill="none" />
+                            </svg>
+                          )}
+                          {key === 'upcoming' && (
+                            <svg className="admin-temporal-sep-icon" viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+                              <path d="M12 8v4l3 2" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" fill="none" />
+                              <circle cx="12" cy="12" r="9" stroke="currentColor" strokeWidth="2" fill="none" />
+                            </svg>
+                          )}
+                          <span>{label}</span>
+                          <span className="admin-temporal-sep-count">{groupBookings.length}</span>
+                        </div>
+                      </td>
+                    </tr>,
+                    ...groupBookings.map(renderBookingRow),
+                  ];
+                });
+              })()}
 
             </tbody>
           </table>
@@ -2140,6 +2358,7 @@ export default function BookingsAdminPanel({ isActive, mode, onBackToDashboard }
             <h3>Reports</h3>
           </div>
 
+          <div className="admin-reports-filter-bar">
           <p className="admin-kpi-note">Timezone: {ADMIN_TIMEZONE}</p>
           <div className="admin-reports-range-scroll">
             <div className="admin-reports-range-tabs" role="tablist" aria-label="Report range">
@@ -2155,7 +2374,8 @@ export default function BookingsAdminPanel({ isActive, mode, onBackToDashboard }
           <div className="admin-history-row">
             <label>Recent barbers</label>
             <div className="admin-history-barber-controls">
-              <div className="admin-history-recent-scroll">
+              <div className="admin-filter-scroll-wrap">
+                <div ref={reportsRecentBarbersScrollRef} className="admin-history-recent-scroll">
                 <div className="admin-history-recent-barbers" role="group" aria-label="Recent barbers">
                   <button type="button" className={`admin-history-avatar admin-history-avatar--all ${reportsBarberId === null ? 'is-active' : ''}`} onClick={() => setReportsBarberId(null)} aria-pressed={reportsBarberId === null}>ALL</button>
                   {reportRecentBarbers.map((barber) => {
@@ -2163,6 +2383,7 @@ export default function BookingsAdminPanel({ isActive, mode, onBackToDashboard }
                     const isActive = reportsBarberId === barber.id;
                     return <BarberChip key={barber.id} barber={barber} toneIndex={hashIndex} isSelected={isActive} onClick={() => setReportsBarberId(barber.id)} ariaLabel={`Filter by ${barber.name}`} />;
                   })}
+                </div>
                 </div>
               </div>
 
@@ -2215,10 +2436,35 @@ export default function BookingsAdminPanel({ isActive, mode, onBackToDashboard }
                 </div>
               </div>
             </div>
-
-
+          </div>
           </div>
 
+
+          <div className="admin-reports-hero admin-kpi-clickable" onClick={() => setOpenDrilldown('revenue')}>
+            <span className="admin-reports-hero-value">{reportsHeroValue}</span>
+            <p className="admin-reports-hero-label">Revenue in selected period</p>
+          </div>
+
+          <div className="admin-sales-chart-wrap">
+            <div className="admin-kpi-row">
+              <p className="admin-kpi-label">Trend</p>
+              <div className="admin-chart-switcher">
+                {(['revenue', 'bookings', 'cancelRate'] as const).map((metric) => (
+                  <button type="button" key={metric} className={`admin-chart-switch ${chartMetric === metric ? 'is-active' : ''}`} onClick={() => setChartMetric(metric)}>
+                    {metric === 'cancelRate' ? 'Cancel rate' : metric.charAt(0).toUpperCase() + metric.slice(1)}
+                  </button>
+                ))}
+              </div>
+            </div>
+            <AdminLineChart
+              series={reportsChartSeries}
+              metric={chartMetric === 'revenue' ? 'currency' : 'number'}
+              getColor={() => (chartMetric === 'cancelRate' ? 'var(--accent)' : 'var(--fg)')}
+              formatValue={(v) => (chartMetric === 'revenue' ? formatCurrencyGbp(v) : chartMetric === 'cancelRate' ? `${v.toFixed(1)}%` : `${Math.round(v)}`)}
+              responsive
+              emptyLabel="No data for this range"
+            />
+          </div>
 
           {reportsError && <p className="admin-inline-error">{reportsError}</p>}
           {reportsLoading && reports === null ? (
@@ -2227,21 +2473,6 @@ export default function BookingsAdminPanel({ isActive, mode, onBackToDashboard }
             </div>
           ) : null}
           <div className={`admin-reports-grid${reportsLoading && reports === null ? ' admin-reports-grid--hidden' : ''}`}>
-            <article className={`admin-kpi-card admin-kpi-card--hero admin-kpi-clickable${revenueDelta.className === 'admin-kpi-trend--up' ? ' admin-kpi-card--trend-up' : revenueDelta.className === 'admin-kpi-trend--down' ? ' admin-kpi-card--trend-down' : ''}`} onClick={() => setOpenDrilldown('revenue')}>
-              <div className="admin-kpi-row"><p className="admin-kpi-label">Revenue</p><div className="admin-chart-switcher">{(['revenue', 'bookings', 'cancelRate'] as const).map((metric) => <button type="button" key={metric} className={`admin-chart-switch ${chartMetric === metric ? 'is-active' : ''}`} onClick={(event) => { event.stopPropagation(); setChartMetric(metric); }}>{metric === 'cancelRate' ? 'Cancel rate' : metric.charAt(0).toUpperCase() + metric.slice(1)}</button>)}</div></div>
-              <p className="admin-kpi-value admin-kpi-value--hero">{chartMetric === 'revenue' ? formatCurrencyGbp(reports?.revenue ?? 0) : chartMetric === 'bookings' ? `${reports?.bookingsCount ?? 0}` : `${(reports?.cancelledRate ?? 0).toFixed(1)}%`}</p>
-              <p className={`admin-kpi-trend ${revenueDelta.className}`}>{revenueDelta.direction === 'up' ? <svg aria-hidden="true" className="admin-kpi-trend-icon" viewBox="0 0 8 8" fill="currentColor"><path d="M4 0L8 8H0Z"/></svg> : revenueDelta.direction === 'down' ? <svg aria-hidden="true" className="admin-kpi-trend-icon" viewBox="0 0 8 8" fill="currentColor"><path d="M4 8L0 0H8Z"/></svg> : null}{revenueDelta.text}{isSmallSample ? <span className="admin-kpi-sample-inline">Small sample</span> : null}</p>
-
-              {reports?.usedDemoPricing ? <p className="admin-kpi-note">Estimated (demo prices)</p> : null}
-              <AdminLineChart
-                variant="sparkline"
-                series={[{ key: 'main', name: chartMetric === 'revenue' ? 'Revenue' : chartMetric === 'bookings' ? 'Bookings' : 'Cancel rate', points: chartSeries }]}
-                getColor={() => chartMetric === 'cancelRate' ? 'var(--accent)' : 'var(--fg)'}
-                getPathClassName={() => chartMetric === 'cancelRate' ? 'is-warning' : ''}
-                formatValue={(v) => chartMetric === 'revenue' ? formatCurrencyGbp(v) : chartMetric === 'cancelRate' ? `${v.toFixed(1)}%` : String(Math.round(v))}
-                emptyLabel="No data for this range"
-              />
-            </article>
 
             <article className={`admin-kpi-card admin-kpi-card--bookings admin-kpi-clickable${bookingsDelta.className === 'admin-kpi-trend--up' ? ' admin-kpi-card--trend-up' : bookingsDelta.className === 'admin-kpi-trend--down' ? ' admin-kpi-card--trend-down' : ''}`} onClick={() => setOpenDrilldown('bookings')}>
               <p className="admin-kpi-label">Bookings</p>
@@ -2284,6 +2515,11 @@ export default function BookingsAdminPanel({ isActive, mode, onBackToDashboard }
             <article className="admin-kpi-card admin-kpi-clickable" onClick={() => setOpenDrilldown('service')}><p className="admin-kpi-label">Most popular service</p><p className="admin-kpi-value admin-kpi-value--text">{reports?.mostPopularService ? `${reports.mostPopularService.name} (${reports.mostPopularService.count})` : 'No confirmed bookings'}</p></article>
             <article className="admin-kpi-card"><p className="admin-kpi-label">{reportsBarberId ? 'Selected barber' : 'Busiest barber'}</p><p className="admin-kpi-value admin-kpi-value--text">{reportsBarberId ? reportsSelectedBarberName : reports?.busiestBarber ? `${reports.busiestBarber.name} (${reports.busiestBarber.count})` : 'No confirmed bookings'}</p></article>
           </div>
+          <AdminLeaderboard
+            title="Barber leaderboard"
+            emptyLabel="No bookings in this range."
+            rows={reportsLeaderboardRows}
+          />
           {openDrilldown ? <div className="admin-client-modal-backdrop" role="presentation" onClick={() => setOpenDrilldown(null)}><div className="admin-reports-drawer" onClick={(event) => event.stopPropagation()} role="dialog" aria-modal="true"><div className="admin-client-modal-head"><h3>Drill-down</h3><button type="button" className="btn btn--ghost" onClick={() => setOpenDrilldown(null)}>Close</button></div><input value={drilldownSearch} onChange={(event) => setDrilldownSearch(event.target.value)} placeholder="Search client/email/service" /><div className="admin-reports-drawer-list">{filteredDrilldownRows.map((row) => <article key={row.id} className="admin-kpi-card"><p>{formatInTimeZone(new Date(row.startAt), ADMIN_TIMEZONE, 'dd MMM HH:mm')} · {row.barberName}</p><p>{row.serviceName} · {row.status}</p><p>{row.clientName ?? 'Unknown'} · {row.clientEmail ?? 'No email'}</p>{row.computedValueGbp != null ? <p>{formatCurrencyGbp(row.computedValueGbp)}</p> : null}</article>)}</div></div></div> : null}
         </section>
       )}

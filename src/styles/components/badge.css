@@ -75,10 +75,22 @@
   flex-shrink: 0;
 }
 
-/* ── Size modifier ───────────────────────────────────────────── */
+/* ── Size modifiers ──────────────────────────────────────────── */
 
 .badge--sm {
-  font-size: 0.65rem;
-  padding: 0.15rem 0.35rem;
+  font-size: var(--text-xs);
+  padding: 0.15rem 0.45rem;
   letter-spacing: 0.03em;
+}
+
+.badge--md {
+  font-size: var(--text-sm);
+  padding: 0.25rem 0.6rem;
+  letter-spacing: 0.04em;
+}
+
+/* ── Shape modifier ──────────────────────────────────────────── */
+
+.badge--pill {
+  border-radius: var(--radius-full);
 }

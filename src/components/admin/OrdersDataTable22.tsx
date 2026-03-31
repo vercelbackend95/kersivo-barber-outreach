@@ -1,6 +1,8 @@
-import React from 'react';
+import React, { useMemo, useState } from 'react';
 import EmptyState from '../EmptyState';
 import { Package, ShoppingBag } from '../lucide-react';
+import StatusBadge from './StatusBadge';
+import { getStatusLabel } from './bookingStatus';
 
 type OrderListItem = {
   id: string;
@@ -60,31 +62,19 @@ function getOrderNumberLabel(order: Pick<OrderListItem, 'orderNumber' | 'id'>): 
   return order.orderNumber ?? `${order.id.slice(0, 8)}…`;
 }
 
-function getStatusBadgeClass(status: OrderListItem['status']): string {
-  switch (status) {
-    case 'PENDING':   return 'badge badge--pending';
-    case 'PAID':      return 'badge badge--info';
-    case 'COLLECTED': return 'badge badge--confirmed';
-    default:          return 'badge badge--neutral';
-  }
-}
-
-function getStatusLabel(status: OrderListItem['status']): string {
-  switch (status) {
-    case 'PENDING':   return 'Pending';
-    case 'PAID':      return 'Paid';
-    case 'COLLECTED': return 'Collected';
-    default:          return status;
-  }
-}
 
 const emptyTitle = (msg: string) =>
   msg === 'No orders yet.' ? 'No orders yet' : 'No orders match your search';
 
 const emptyDesc = (msg: string) =>
   msg === 'No orders yet.'
-    ? 'When customers place orders, they will appear here.'
+    ? 'Orders will appear here when customers checkout.'
     : "Try a different search term to find what you're looking for.";
+
+type SortColumn = 'orderNumber' | 'total' | 'status' | 'items';
+type SortDir = 'asc' | 'desc';
+
+const STATUS_SORT_ORDER: Record<string, number> = { PENDING: 0, PAID: 1, COLLECTED: 2 };
 
 export default function OrdersDataTable22({
   orders,
@@ -99,6 +89,45 @@ export default function OrdersDataTable22({
 }: OrdersDataTable22Props) {
   const isEmpty = !ordersUnauthorized && orders.length === 0;
 
+  const [sortColumn, setSortColumn] = useState<SortColumn | null>(null);
+  const [sortDir, setSortDir] = useState<SortDir>('asc');
+
+  function handleSort(col: SortColumn) {
+    if (sortColumn === col) {
+      setSortDir((d) => (d === 'asc' ? 'desc' : 'asc'));
+    } else {
+      setSortColumn(col);
+      setSortDir('asc');
+    }
+  }
+
+  function getSortAttr(col: SortColumn): 'asc' | 'desc' | 'none' {
+    if (sortColumn !== col) return 'none';
+    return sortDir;
+  }
+
+  function getAriaSort(col: SortColumn): 'ascending' | 'descending' | 'none' {
+    if (sortColumn !== col) return 'none';
+    return sortDir === 'asc' ? 'ascending' : 'descending';
+  }
+
+  const sortedOrders = useMemo(() => {
+    if (!sortColumn) return orders;
+    return [...orders].sort((a, b) => {
+      let cmp = 0;
+      if (sortColumn === 'orderNumber') {
+        cmp = getOrderNumberLabel(a).localeCompare(getOrderNumberLabel(b));
+      } else if (sortColumn === 'total') {
+        cmp = a.totalPence - b.totalPence;
+      } else if (sortColumn === 'status') {
+        cmp = (STATUS_SORT_ORDER[a.status] ?? 0) - (STATUS_SORT_ORDER[b.status] ?? 0);
+      } else if (sortColumn === 'items') {
+        cmp = a._count.items - b._count.items;
+      }
+      return sortDir === 'asc' ? cmp : -cmp;
+    });
+  }, [orders, sortColumn, sortDir]);
+
   const pendingCount   = orders.filter((o) => o.status === 'PENDING').length;
   const paidCount      = orders.filter((o) => o.status === 'PAID').length;
   const collectedCount = orders.filter((o) => o.status === 'COLLECTED').length;
@@ -110,30 +139,21 @@ export default function OrdersDataTable22({
       {!isEmpty && (
         <div className="admin-orders-table22__pipeline" aria-label="Order status summary">
           <span className="admin-orders-table22__pipeline-step">
-            <span className="badge badge--pending">
-              <span className="badge__dot" />
-              Pending
-            </span>
+            <StatusBadge status="PENDING" variant="dot" size="sm" />
             <span className="admin-orders-table22__pipeline-count">{pendingCount}</span>
           </span>
 
           <span className="admin-orders-table22__pipeline-arrow" aria-hidden="true">→</span>
 
           <span className="admin-orders-table22__pipeline-step">
-            <span className="badge badge--info">
-              <span className="badge__dot" />
-              Paid
-            </span>
+            <StatusBadge status="PAID" variant="dot" size="sm" />
             <span className="admin-orders-table22__pipeline-count">{paidCount}</span>
           </span>
 
           <span className="admin-orders-table22__pipeline-arrow" aria-hidden="true">→</span>
 
           <span className="admin-orders-table22__pipeline-step">
-            <span className="badge badge--confirmed">
-              <span className="badge__dot" />
-              Collected
-            </span>
+            <StatusBadge status="COLLECTED" variant="dot" size="sm" />
             <span className="admin-orders-table22__pipeline-count">{collectedCount}</span>
           </span>
         </div>
@@ -145,11 +165,37 @@ export default function OrdersDataTable22({
           <thead>
             <tr>
               <th aria-label="Expand row" style={{ width: '3rem' }} />
-              <th>Order #</th>
-              <th>Customer</th>
-              <th className="col-num">Total</th>
-              <th>Status</th>
-              <th className="col-num">Items</th>
+              <th
+                data-sort={getSortAttr('orderNumber')}
+                aria-sort={getAriaSort('orderNumber')}
+                onClick={() => handleSort('orderNumber')}
+              >
+                Order #
+              </th>
+              <th>{/* TODO: add sort by customer name if needed */}Customer</th>
+              <th
+                className="col-num"
+                data-sort={getSortAttr('total')}
+                aria-sort={getAriaSort('total')}
+                onClick={() => handleSort('total')}
+              >
+                Total
+              </th>
+              <th
+                data-sort={getSortAttr('status')}
+                aria-sort={getAriaSort('status')}
+                onClick={() => handleSort('status')}
+              >
+                Status
+              </th>
+              <th
+                className="col-num"
+                data-sort={getSortAttr('items')}
+                aria-sort={getAriaSort('items')}
+                onClick={() => handleSort('items')}
+              >
+                Items
+              </th>
               <th>Actions</th>
             </tr>
           </thead>
@@ -166,7 +212,7 @@ export default function OrdersDataTable22({
                 </td>
               </tr>
             ) : (
-              orders.map((order) => {
+              sortedOrders.map((order) => {
                 const isExpanded = expandedOrderId === order.id;
                 const detail = orderDetailsById[order.id];
                 const isDetailLoading = orderDetailsLoadingId === order.id && !detail;
@@ -211,10 +257,7 @@ export default function OrdersDataTable22({
                       </td>
                       <td className="col-num">{formatPrice(order.totalPence)}</td>
                       <td>
-                        <span className={getStatusBadgeClass(order.status)}>
-                          <span className="badge__dot" />
-                          {getStatusLabel(order.status)}
-                        </span>
+                        <StatusBadge status={order.status} variant="dot" size="sm" />
                       </td>
                       <td className="col-num">{order._count.items}</td>
                       <td>
@@ -261,7 +304,7 @@ export default function OrdersDataTable22({
             variant={emptyMessage !== 'No orders yet.' ? 'filtered' : undefined}
           />
         ) : (
-          orders.map((order) => {
+          sortedOrders.map((order) => {
             const isExpanded = expandedOrderId === order.id;
             const detail = orderDetailsById[order.id];
             const isDetailLoading = orderDetailsLoadingId === order.id && !detail;
@@ -277,10 +320,7 @@ export default function OrdersDataTable22({
                       <p className="admin-card__subtitle muted">{order.customerEmail}</p>
                     ) : null}
                   </div>
-                  <span className={getStatusBadgeClass(order.status)}>
-                    <span className="badge__dot" />
-                    {getStatusLabel(order.status)}
-                  </span>
+                  <StatusBadge status={order.status} variant="pill" size="sm" />
                 </div>
 
                 <dl className="admin-card__dl">

@@ -3,6 +3,7 @@ import { createPortal } from 'react-dom';
 import OrdersDataTable22 from './OrdersDataTable22';
 import AdminSectionHeader from './AdminSectionHeader';
 import AdminLineChart from './charts/AdminLineChart';
+import AdminLeaderboard from './AdminLeaderboard';
 import { SettingsGearIcon } from './SettingsGearIcon';
 import EmptyState from '../EmptyState';
 import { Package, Search, X } from '../lucide-react';
@@ -705,6 +706,7 @@ export default function ShopAdminPanel({ initialTab = 'products' }: ShopAdminPan
   const [debouncedImageUrlPreview, setDebouncedImageUrlPreview] = useState('');
   const imageUploadAbortControllerRef = useRef<AbortController | null>(null);
   const fileInputRef = useRef<HTMLInputElement | null>(null);
+  const productFiltersScrollRef = useRef<HTMLDivElement | null>(null);
 
   const {
     selectedIds: bulkSelectedIds,
@@ -752,6 +754,25 @@ export default function ShopAdminPanel({ initialTab = 'products' }: ShopAdminPan
       mediaQuery.removeEventListener('change', handleChange);
     };
   }, []);
+
+  useEffect(() => {
+    const node = productFiltersScrollRef.current;
+    if (!node) return;
+
+    const updateEdgeHint = () => {
+      const isAtEnd = node.scrollLeft + node.clientWidth >= node.scrollWidth - 2;
+      node.parentElement?.classList.toggle('admin-filter-scroll-wrap--at-end', isAtEnd);
+    };
+
+    updateEdgeHint();
+    node.addEventListener('scroll', updateEdgeHint, { passive: true });
+    window.addEventListener('resize', updateEdgeHint);
+
+    return () => {
+      node.removeEventListener('scroll', updateEdgeHint);
+      window.removeEventListener('resize', updateEdgeHint);
+    };
+  }, [activeTab]);
 
 
   const manualProducts = useMemo(() => {
@@ -992,7 +1013,37 @@ export default function ShopAdminPanel({ initialTab = 'products' }: ShopAdminPan
     [salesData],
   );
 
+  const salesHeroValue = useMemo(
+    () => (salesMetric === 'revenue'
+      ? formatPrice(salesData?.kpis.revenuePence ?? 0)
+      : `${salesData?.kpis.ordersCount ?? 0}`),
+    [salesData, salesMetric],
+  );
+
+  const salesHeroLabel = salesMetric === 'revenue'
+    ? 'Revenue in selected period'
+    : 'Orders in selected period';
+
+  const salesLeaderboardRows = useMemo(
+    () => (salesData?.leaderboard ?? []).map((row) => ({
+      id: row.productId,
+      name: row.name,
+      value: salesMetric === 'revenue' ? row.revenuePence : row.units,
+      valueLabel: salesMetric === 'revenue'
+        ? formatPrice(row.revenuePence)
+        : `${row.units} units`,
+      note: salesMetric === 'revenue'
+        ? `${row.units} units`
+        : formatPrice(row.revenuePence),
+    })),
+    [salesData, salesMetric],
+  );
+
   const ordersSafe = orders ?? [];
+  const pendingOrdersCount = useMemo(
+    () => ordersSafe.filter((order) => order.status === 'PAID').length,
+    [ordersSafe],
+  );
   const filteredOrders = useMemo(() => {
     const normalizedQuery = normalize(debouncedOrdersSearchQuery);
     if (!normalizedQuery) return ordersSafe;
@@ -1673,6 +1724,14 @@ export default function ShopAdminPanel({ initialTab = 'products' }: ShopAdminPan
           : activeTab === 'sales' ? 'Revenue and sales trends'
           : 'Manage your retail product catalogue'
         }
+        metaBadge={
+          activeTab === 'products'
+            ? `${products.length} products`
+            : activeTab === 'orders'
+              ? `${pendingOrdersCount} pending`
+              : undefined
+        }
+        metaBadgeVariant={activeTab === 'orders' ? 'warning' : 'default'}
         actions={activeTab === 'products' ? (
           <button type="button" className="btn btn--primary" onClick={startCreate}>
             Add Product
@@ -1699,17 +1758,19 @@ export default function ShopAdminPanel({ initialTab = 'products' }: ShopAdminPan
               </div>
               <div className="admin-products-toolbar-row">
                 <div className="admin-products-controls-row">
-                  <div className="admin-products-filters" role="tablist" aria-label="Product filters">
-                    {(['all', 'active', 'inactive', 'featured'] as ProductFilter[]).map((filter) => (
-                      <button
-                        key={filter}
-                        type="button"
-                        className={`admin-filter-tab ${productFilter === filter ? 'admin-filter-tab--active' : ''}`}
-                        onClick={() => setProductFilter(filter)}
-                      >
-                        {filter === 'all' ? 'All' : filter === 'active' ? 'Active' : filter === 'inactive' ? 'Inactive' : 'Featured'}
-                      </button>
-                    ))}
+                  <div className="admin-filter-scroll-wrap">
+                    <div ref={productFiltersScrollRef} className="admin-products-filters" role="tablist" aria-label="Product filters">
+                      {(['all', 'active', 'inactive', 'featured'] as ProductFilter[]).map((filter) => (
+                        <button
+                          key={filter}
+                          type="button"
+                          className={`admin-filter-tab ${productFilter === filter ? 'admin-filter-tab--active' : ''}`}
+                          onClick={() => setProductFilter(filter)}
+                        >
+                          {filter === 'all' ? 'All' : filter === 'active' ? 'Active' : filter === 'inactive' ? 'Inactive' : 'Featured'}
+                        </button>
+                      ))}
+                    </div>
                   </div>
                   <select value={productSortMode} onChange={(event) => setProductSortMode(event.target.value as ProductSortMode)} className="admin-products-sort" aria-label="Sort products">
                     <option value="manual">Manual order</option>
@@ -1762,7 +1823,22 @@ export default function ShopAdminPanel({ initialTab = 'products' }: ShopAdminPan
               >
 
                 <div className="admin-product-sheet-head">
-                  <h3 id="admin-product-sheet-title">{form.id ? 'Edit product' : 'Add product'}</h3>
+                  <div className="admin-sheet-head-copy">
+                    <div className="admin-sheet-head-title-row">
+                      <h3 id="admin-product-sheet-title">{form.id ? 'Edit product' : 'Add product'}</h3>
+                      {form.id ? (
+                        <span
+                          className={`badge badge--sm ${form.active ? 'badge--confirmed' : 'badge--neutral'}`}
+                          aria-label={form.active ? 'Active' : 'Inactive'}
+                        >
+                          {form.active ? 'Active' : 'Inactive'}
+                        </span>
+                      ) : null}
+                    </div>
+                    {form.id ? (
+                      <p className="admin-sheet-entity-name" title={form.name}>{form.name}</p>
+                    ) : null}
+                  </div>
                   <button
                     type="button"
                     className="admin-product-sheet-close"
@@ -1771,140 +1847,146 @@ export default function ShopAdminPanel({ initialTab = 'products' }: ShopAdminPan
                   >
                     <X width={18} height={18} aria-hidden="true" />
                   </button>
-
                 </div>
-                <p className="admin-product-unsaved muted">{formDirty ? 'Unsaved changes' : 'All changes saved'}</p>
-                <div className="admin-product-image-section">
-                  <p className="admin-product-image-section__title">Image</p>
-                  <div className="admin-product-image-controls">
-                    <div className="admin-product-image-upload-wrap">
-                      <input
-                        ref={fileInputRef}
-                        type="file"
-                        accept={PRODUCT_IMAGE_ACCEPT}
-                        onChange={onImageFileInputChange}
-                        className="admin-product-image-file-input"
-                        tabIndex={-1}
-                        aria-hidden="true"
-                                                aria-describedby="admin-product-image-upload-help"
-                      />
-                      <button
-                        type="button"
-                        className="btn btn--secondary admin-product-image-upload-btn"
-                        onClick={() => fileInputRef.current?.click()}
-                        disabled={imageUploadStatus === 'uploading' || imageUploadStatus === 'processing'}
-                      >
-                        <span aria-hidden="true">⇪</span>
-                        <span>Upload photo</span>
-                      </button>
-                    </div>
-                                        <p id="admin-product-image-upload-help" className="admin-product-image-upload-help muted">Select an image from the phone gallery or device files. Camera capture is disabled.</p>
-                    <label className="admin-product-field admin-product-image-url-field">Image URL (fallback)
-                      <input
-                        type="url"
-                        value={form.imageUrl}
-                        onChange={(event) => {
-                          const nextValue = event.target.value;
-                          setForm((prev) => ({ ...prev, imageUrl: nextValue }));
-                          if (nextValue.trim()) {
-                            setHasPendingFileUpload(false);
-                                                        setSelectedImageFile(null);
-                            setImageUploadStatus('idle');
-                            setImageUploadError(null);
-                          }
-                        }}
 
-                        placeholder="https://..."
-                      />
-                    </label>
+                <div className="admin-product-sheet-body">
+                  <p className="admin-product-unsaved muted">{formDirty ? 'Unsaved changes' : 'All changes saved'}</p>
+
+                  <div className="admin-product-image-section">
+                    <p className="admin-product-image-section__title">Image</p>
+                    <div className="admin-product-image-controls">
+                      <div className="admin-product-image-upload-wrap">
+                        <input
+                          ref={fileInputRef}
+                          type="file"
+                          accept={PRODUCT_IMAGE_ACCEPT}
+                          onChange={onImageFileInputChange}
+                          className="admin-product-image-file-input"
+                          tabIndex={-1}
+                          aria-hidden="true"
+                          aria-describedby="admin-product-image-upload-help"
+                        />
+                        <button
+                          type="button"
+                          className="btn btn--secondary admin-product-image-upload-btn"
+                          onClick={() => fileInputRef.current?.click()}
+                          disabled={imageUploadStatus === 'uploading' || imageUploadStatus === 'processing'}
+                        >
+                          <span aria-hidden="true">⇪</span>
+                          <span>Upload photo</span>
+                        </button>
+                      </div>
+                      <p id="admin-product-image-upload-help" className="admin-product-image-upload-help muted">Select an image from the phone gallery or device files. Camera capture is disabled.</p>
+                      <label className="admin-product-field admin-product-image-url-field">Image URL (fallback)
+                        <input
+                          type="url"
+                          value={form.imageUrl}
+                          onChange={(event) => {
+                            const nextValue = event.target.value;
+                            setForm((prev) => ({ ...prev, imageUrl: nextValue }));
+                            if (nextValue.trim()) {
+                              setHasPendingFileUpload(false);
+                              setSelectedImageFile(null);
+                              setImageUploadStatus('idle');
+                              setImageUploadError(null);
+                            }
+                          }}
+                          placeholder="https://..."
+                        />
+                      </label>
+                    </div>
                   </div>
-                </div>
 
-                <div className="admin-product-image-preview" aria-hidden="true">
-                  {effectiveImagePreviewUrl ? <img src={effectiveImagePreviewUrl} alt="Preview" draggable={false} /> : <span>No image preview</span>}
-                </div>
-                <div className="admin-product-image-status" aria-live="polite">
-                  {imageUploadStatus === 'uploading' ? <span>Uploading… {Math.max(1, Math.min(99, imageUploadProgress))}%</span> : null}
-                  {imageUploadStatus === 'processing' ? <span>Processing…</span> : null}
-                  {imageUploadStatus === 'uploaded' ? <span>Done</span> : null}
+                  <div className="admin-product-image-preview" aria-hidden="true">
+                    {effectiveImagePreviewUrl ? <img src={effectiveImagePreviewUrl} alt="Preview" draggable={false} /> : <span>No image preview</span>}
+                  </div>
+                  <div className="admin-product-image-status" aria-live="polite">
+                    {imageUploadStatus === 'uploading' ? <span>Uploading… {Math.max(1, Math.min(99, imageUploadProgress))}%</span> : null}
+                    {imageUploadStatus === 'processing' ? <span>Processing…</span> : null}
+                    {imageUploadStatus === 'uploaded' ? <span>Done</span> : null}
+                    {imageUploadStatus === 'failed' ? <span>Upload failed</span> : null}
+                    {imageUploadError ? <span className="admin-product-image-status__error">{imageUploadError}</span> : null}
+                    {imageUploadStatus === 'failed' && selectedImageFile ? (
+                      <button type="button" className="btn btn--ghost admin-product-image-retry" onClick={() => { void retryImageUpload(); }}>
+                        Retry upload
+                      </button>
+                    ) : null}
+                  </div>
 
-                  {imageUploadStatus === 'failed' ? <span>Upload failed</span> : null}
-                  {imageUploadError ? <span className="admin-product-image-status__error">{imageUploadError}</span> : null}
-                  {imageUploadStatus === 'failed' && selectedImageFile ? (
-                    <button type="button" className="btn btn--ghost admin-product-image-retry" onClick={() => { void retryImageUpload(); }}>
-                      Retry upload
-                    </button>
-                  ) : null}
+                  <fieldset className="admin-form-section">
+                    <legend className="admin-form-section-title">Product Details</legend>
 
-                </div>
+                    <label className="admin-product-field">Name
+                      <input value={form.name} onChange={(event) => setForm((prev) => ({ ...prev, name: event.target.value }))} required />
+                    </label>
+                    <label className="admin-product-field">Price (GBP)
+                      <div className="admin-price-input-wrap"><span>£</span><input inputMode="decimal" value={form.priceGbp} onChange={(event) => setForm((prev) => ({ ...prev, priceGbp: event.target.value.replace(/[^0-9.,]/g, '') }))} required /></div>
+                    </label>
+                    <label className="admin-product-field">Description
+                      <textarea value={form.description} onChange={(event) => setForm((prev) => ({ ...prev, description: event.target.value }))} rows={4} />
+                    </label>
+                    <label className="admin-product-field">Category
+                      <select value={form.category} onChange={(event) => setForm((prev) => ({ ...prev, category: event.target.value as ProductCategory }))}>
+                        {PRODUCT_CATEGORY_OPTIONS.map((option) => (
+                          <option key={option.value} value={option.value}>{option.label}</option>
+                        ))}
+                      </select>
+                    </label>
+                  </fieldset>
 
-                <label className="admin-product-field">Name
-                  <input value={form.name} onChange={(event) => setForm((prev) => ({ ...prev, name: event.target.value }))} required />
-                </label>
-                <label className="admin-product-field">Price (GBP)
-                  <div className="admin-price-input-wrap"><span>£</span><input inputMode="decimal" value={form.priceGbp} onChange={(event) => setForm((prev) => ({ ...prev, priceGbp: event.target.value.replace(/[^0-9.,]/g, '') }))} required /></div>
-                </label>
-                <label className="admin-product-field">Description
-                  <textarea value={form.description} onChange={(event) => setForm((prev) => ({ ...prev, description: event.target.value }))} rows={4} />
-                </label>
-                <label className="admin-product-field">Category
-                  <select value={form.category} onChange={(event) => setForm((prev) => ({ ...prev, category: event.target.value as ProductCategory }))}>
-                    {PRODUCT_CATEGORY_OPTIONS.map((option) => (
-                      <option key={option.value} value={option.value}>{option.label}</option>
-                    ))}
-                  </select>
-                </label>
+                  <fieldset className="admin-form-section">
+                    <legend className="admin-form-section-title">Settings</legend>
 
-                <div className="admin-product-switches">
-                  <ProductStatusSwitch
-                    label="Active"
-                    checked={form.active}
-                    onLabel="Active"
-                    offLabel="Inactive"
-                    tone="active"
-                    onChange={(nextValue) => setForm((prev) => ({ ...prev, active: nextValue, featured: nextValue ? prev.featured : false }))}
-                  />
-                  <ProductStatusSwitch
-                    label="Featured"
-                    checked={form.featured}
-                    onLabel="Featured"
-                    offLabel="Not featured"
-                    tone="featured"
-                    onChange={(nextValue) => setForm((prev) => ({ ...prev, featured: nextValue, active: nextValue ? true : prev.active }))}
-                  />
-                  {productSortMode === 'manual' ? (
-                    <div className="admin-product-sort-inline">
-                      <div className="admin-product-sort-inline__copy">
-                        <p className="admin-product-sort-inline__label">List position</p>
-                        <p className="admin-product-sort-inline__helper muted">1 = first on the list</p>
-                      </div>
-                      <div className="admin-product-sort-inline__control" role="group" aria-label="List position controls">
-                        <span className="admin-product-sort-inline__rank" aria-live="polite">#{displayListPosition}</span>
-                        <button
-                          type="button"
-                          className="admin-product-sort-inline__stepper"
-                          onClick={() => setForm((prev) => ({ ...prev, sortOrder: Math.max(SORT_ORDER_MIN, prev.sortOrder - 1) }))}
-                          aria-label="Move up"
-                          disabled={isFormAtTop}
-
-                        >
-                          ↑
-                        </button>
-                        <button
-                          type="button"
-                          className="admin-product-sort-inline__stepper"
-                          onClick={() => setForm((prev) => ({ ...prev, sortOrder: Math.min(maxFormSortOrder, prev.sortOrder + 1) }))}
-                          aria-label="Move down"
-                          disabled={isFormAtBottom}
-
-                        >
-                          ↓
-                        </button>
-                      </div>
+                    <div className="admin-product-switches">
+                      <ProductStatusSwitch
+                        label="Active"
+                        checked={form.active}
+                        onLabel="Active"
+                        offLabel="Inactive"
+                        tone="active"
+                        onChange={(nextValue) => setForm((prev) => ({ ...prev, active: nextValue, featured: nextValue ? prev.featured : false }))}
+                      />
+                      <ProductStatusSwitch
+                        label="Featured"
+                        checked={form.featured}
+                        onLabel="Featured"
+                        offLabel="Not featured"
+                        tone="featured"
+                        onChange={(nextValue) => setForm((prev) => ({ ...prev, featured: nextValue, active: nextValue ? true : prev.active }))}
+                      />
+                      {productSortMode === 'manual' ? (
+                        <div className="admin-product-sort-inline">
+                          <div className="admin-product-sort-inline__copy">
+                            <p className="admin-product-sort-inline__label">List position</p>
+                            <p className="admin-product-sort-inline__helper muted">1 = first on the list</p>
+                          </div>
+                          <div className="admin-product-sort-inline__control" role="group" aria-label="List position controls">
+                            <span className="admin-product-sort-inline__rank" aria-live="polite">#{displayListPosition}</span>
+                            <button
+                              type="button"
+                              className="admin-product-sort-inline__stepper"
+                              onClick={() => setForm((prev) => ({ ...prev, sortOrder: Math.max(SORT_ORDER_MIN, prev.sortOrder - 1) }))}
+                              aria-label="Move up"
+                              disabled={isFormAtTop}
+                            >
+                              ↑
+                            </button>
+                            <button
+                              type="button"
+                              className="admin-product-sort-inline__stepper"
+                              onClick={() => setForm((prev) => ({ ...prev, sortOrder: Math.min(maxFormSortOrder, prev.sortOrder + 1) }))}
+                              aria-label="Move down"
+                              disabled={isFormAtBottom}
+                            >
+                              ↓
+                            </button>
+                          </div>
+                        </div>
+                      ) : null}
                     </div>
-                  ) : null}
-
+                  </fieldset>
                 </div>
+
                 <EditFooterActions
                   canDelete={Boolean(form.id)}
                   disableDelete={saving}
@@ -2158,6 +2240,58 @@ export default function ShopAdminPanel({ initialTab = 'products' }: ShopAdminPan
           {salesError ? <p className="admin-inline-error">{salesError}</p> : null}
           {success ? <p className="admin-inline-success">{success}</p> : null}
 
+          <div className="admin-reports-filter-bar">
+            <div className="admin-sales-controls">
+              <div className="admin-filter-tabs" role="tablist" aria-label="Sales range presets">
+                <button type="button" className={`admin-filter-tab ${salesPreset === '7' ? 'admin-filter-tab--active' : ''}`} onClick={() => applyPreset('7')}>Last 7 days</button>
+                <button type="button" className={`admin-filter-tab ${salesPreset === '30' ? 'admin-filter-tab--active' : ''}`} onClick={() => applyPreset('30')}>Last 30 days</button>
+                <button type="button" className={`admin-filter-tab ${salesPreset === '90' ? 'admin-filter-tab--active' : ''}`} onClick={() => applyPreset('90')}>Last 90 days</button>
+                <button type="button" className={`admin-filter-tab ${salesPreset === 'custom' ? 'admin-filter-tab--active' : ''}`} onClick={() => setSalesPreset('custom')}>Custom</button>
+              </div>
+
+              {salesPreset === 'custom' ? (
+                <div className="admin-sales-custom-dates">
+                  <div className="field">
+                    <label className="field__label" htmlFor="sales-from">From</label>
+                    <input
+                      id="sales-from"
+                      type="date"
+                      className={`input${salesDateError ? ' input--error' : ''}`}
+                      value={salesFrom}
+                      max={salesTo || undefined}
+                      aria-invalid={Boolean(salesDateError)}
+                      aria-describedby={salesDateError ? 'sales-date-error' : undefined}
+                      onChange={(event) => setSalesFrom(event.target.value)}
+                    />
+                  </div>
+                  <div className="field">
+                    <label className="field__label" htmlFor="sales-to">To</label>
+                    <input
+                      id="sales-to"
+                      type="date"
+                      className={`input${salesDateError ? ' input--error' : ''}`}
+                      value={salesTo}
+                      min={salesFrom || undefined}
+                      aria-invalid={Boolean(salesDateError)}
+                      aria-describedby={salesDateError ? 'sales-date-error' : undefined}
+                      onChange={(event) => setSalesTo(event.target.value)}
+                    />
+                  </div>
+                  {salesDateError ? (
+                    <span id="sales-date-error" className="field__hint field__hint--error admin-sales-date-error">
+                      {salesDateError}
+                    </span>
+                  ) : null}
+                </div>
+              ) : null}
+            </div>
+          </div>
+
+          <div className="admin-reports-hero" aria-live="polite">
+            <span className="admin-reports-hero-value">{salesHeroValue}</span>
+            <p className="admin-reports-hero-label">{salesHeroLabel}</p>
+          </div>
+
           <div className="admin-sales-kpis">
             {salesLoading && !salesData ? (
               <SkeletonKPICards count={4} />
@@ -2218,59 +2352,14 @@ export default function ShopAdminPanel({ initialTab = 'products' }: ShopAdminPan
             )}
           </div>
 
-          <div className="admin-sales-controls">
-            <div className="admin-filter-tabs" role="tablist" aria-label="Sales range presets">
-              <button type="button" className={`admin-filter-tab ${salesPreset === '7' ? 'admin-filter-tab--active' : ''}`} onClick={() => applyPreset('7')}>Last 7 days</button>
-              <button type="button" className={`admin-filter-tab ${salesPreset === '30' ? 'admin-filter-tab--active' : ''}`} onClick={() => applyPreset('30')}>Last 30 days</button>
-              <button type="button" className={`admin-filter-tab ${salesPreset === '90' ? 'admin-filter-tab--active' : ''}`} onClick={() => applyPreset('90')}>Last 90 days</button>
-              <button type="button" className={`admin-filter-tab ${salesPreset === 'custom' ? 'admin-filter-tab--active' : ''}`} onClick={() => setSalesPreset('custom')}>Custom</button>
-            </div>
-
-            {salesPreset === 'custom' ? (
-              <div className="admin-sales-custom-dates">
-                <div className="field">
-                  <label className="field__label" htmlFor="sales-from">From</label>
-                  <input
-                    id="sales-from"
-                    type="date"
-                    className={`input${salesDateError ? ' input--error' : ''}`}
-                    value={salesFrom}
-                    max={salesTo || undefined}
-                    aria-invalid={Boolean(salesDateError)}
-                    aria-describedby={salesDateError ? 'sales-date-error' : undefined}
-                    onChange={(event) => setSalesFrom(event.target.value)}
-                  />
-                </div>
-                <div className="field">
-                  <label className="field__label" htmlFor="sales-to">To</label>
-                  <input
-                    id="sales-to"
-                    type="date"
-                    className={`input${salesDateError ? ' input--error' : ''}`}
-                    value={salesTo}
-                    min={salesFrom || undefined}
-                    aria-invalid={Boolean(salesDateError)}
-                    aria-describedby={salesDateError ? 'sales-date-error' : undefined}
-                    onChange={(event) => setSalesTo(event.target.value)}
-                  />
-                </div>
-                {salesDateError ? (
-                  <span id="sales-date-error" className="field__hint field__hint--error admin-sales-date-error">
-                    {salesDateError}
-                  </span>
-                ) : null}
-              </div>
-            ) : null}
-                        <div className="admin-filter-tabs admin-filter-tabs--metric" role="tablist" aria-label="Sales metric toggle">
+          <div className="admin-filter-tabs admin-filter-tabs--metric" role="tablist" aria-label="Sales metric toggle">
               <button type="button" className={`admin-filter-tab ${salesMetric === 'revenue' ? 'admin-filter-tab--active' : ''}`} onClick={() => setSalesMetric('revenue')}>Revenue (£)</button>
               <button type="button" className={`admin-filter-tab ${salesMetric === 'units' ? 'admin-filter-tab--active' : ''}`} onClick={() => setSalesMetric('units')}>Units</button>
-            </div>
+          </div>
 
-
-</div>
-            <>
-              <div className="admin-sales-chart-wrap">
-                                {isMobileSalesView ? (
+          <>
+            <div className="admin-sales-chart-wrap">
+                {isMobileSalesView ? (
                   <button
                     type="button"
                     className="admin-sales-expand-btn"
@@ -2281,111 +2370,100 @@ export default function ShopAdminPanel({ initialTab = 'products' }: ShopAdminPan
                   </button>
                 ) : null}
 
-                <SalesChartErrorBoundary>
-                  <AdminLineChart
-                    series={adminChartSeries}
-                    metric={salesMetric === 'revenue' ? 'currency' : 'number'}
-                    getColor={getSeriesColor}
-                    getStrokeWidth={getSeriesStrokeWidth}
-                    formatValue={fmtSalesValue}
-                    height={isMobileSalesView ? 'clamp(280px, 45vh, 520px)' : undefined}
-                    onExpand={isMobileSalesView ? () => setIsSalesChartExpanded(true) : undefined}
-                    responsive={isMobileSalesView}
-                    emptyNode={
-                      <>
-                        <p>No products selected</p>
-                        <p>Enable a product below to display data.</p>
-                      </>
-                    }
-                  />
-                </SalesChartErrorBoundary>
-                
-                <SeriesPills
-                 seriesList={legendSeries}
-                  onRemove={removeSeriesSelection}
-
-
-                  maxHintVisible={Boolean(selectionLimitMessage)}
-                  emptySelectionHintVisible={chartSeries.length === 0}
+              <SalesChartErrorBoundary>
+                <AdminLineChart
+                  series={adminChartSeries}
+                  metric={salesMetric === 'revenue' ? 'currency' : 'number'}
+                  getColor={getSeriesColor}
+                  getStrokeWidth={getSeriesStrokeWidth}
+                  formatValue={fmtSalesValue}
+                  height={isMobileSalesView ? 'clamp(280px, 45vh, 520px)' : undefined}
+                  onExpand={isMobileSalesView ? () => setIsSalesChartExpanded(true) : undefined}
+                  responsive={isMobileSalesView}
+                  emptyNode={
+                    <>
+                      <p>No products selected</p>
+                      <p>Enable a product below to display data.</p>
+                    </>
+                  }
                 />
+              </SalesChartErrorBoundary>
 
-              </div>
-              {isMobileSalesView && isSalesChartExpanded ? (
-                <div className="admin-sales-modal" role="dialog" aria-modal="true" aria-label="Expanded sales chart">
-                  <button type="button" className="admin-sales-modal-backdrop" onClick={() => setIsSalesChartExpanded(false)} aria-label="Close expanded chart" />
-                  <div className="admin-sales-modal-panel">
-                    <div className="admin-sales-modal-header">
-                      <p>Sales chart</p>
-                      <button type="button" className="btn btn--secondary" onClick={() => setIsSalesChartExpanded(false)}>Close</button>
-                    </div>
-                    <SalesChartErrorBoundary>
-                      <AdminLineChart
-                        series={adminChartSeries}
-                        metric={salesMetric === 'revenue' ? 'currency' : 'number'}
-                        getColor={getSeriesColor}
-                        getStrokeWidth={getSeriesStrokeWidth}
-                        formatValue={fmtSalesValue}
-                        height="clamp(220px, 34vh, 320px)"
-                        responsive
-                        emptyNode={
-                          <>
-                            <p>No products selected</p>
-                            <p>Enable a product below to display data.</p>
-                          </>
-                        }
-                      />
-                    </SalesChartErrorBoundary>
+              <SeriesPills
+                seriesList={legendSeries}
+                onRemove={removeSeriesSelection}
 
+                maxHintVisible={Boolean(selectionLimitMessage)}
+                emptySelectionHintVisible={chartSeries.length === 0}
+              />
+
+            </div>
+            {isMobileSalesView && isSalesChartExpanded ? (
+              <div className="admin-sales-modal" role="dialog" aria-modal="true" aria-label="Expanded sales chart">
+                <button type="button" className="admin-sales-modal-backdrop" onClick={() => setIsSalesChartExpanded(false)} aria-label="Close expanded chart" />
+                <div className="admin-sales-modal-panel">
+                  <div className="admin-sales-modal-header">
+                    <p>Sales chart</p>
+                    <button type="button" className="btn btn--secondary" onClick={() => setIsSalesChartExpanded(false)}>Close</button>
                   </div>
+                  <SalesChartErrorBoundary>
+                    <AdminLineChart
+                      series={adminChartSeries}
+                      metric={salesMetric === 'revenue' ? 'currency' : 'number'}
+                      getColor={getSeriesColor}
+                      getStrokeWidth={getSeriesStrokeWidth}
+                      formatValue={fmtSalesValue}
+                      height="clamp(220px, 34vh, 320px)"
+                      responsive
+                      emptyNode={
+                        <>
+                          <p>No products selected</p>
+                          <p>Enable a product below to display data.</p>
+                        </>
+                      }
+                    />
+                  </SalesChartErrorBoundary>
+
                 </div>
-              ) : null}
-
-                    <div className="admin-sales-modal-selector">
-
-                      <label className="admin-sales-modal-search-wrap">
-                        <span className="sr-only">Search products</span>
-                        <input
-                          type="search"
-                          className="admin-sales-modal-search"
-                          value={expandedProductSearch}
-                          onChange={(event) => setExpandedProductSearch(event.target.value)}
-                          placeholder="Search products"
-                          aria-label="Search products"
-                        />
-                      </label>
-
-                      <div className="admin-sales-search-results" role="list" aria-label="Search results">
-                        {filteredExpandableProducts.map((series) => (
-                          <button
-                            key={`search-${series.key}`}
-                            type="button"
-                            className="admin-sales-search-result"
-                            onClick={() => handleAddSeriesSelection(series.key)}
-                          >
-                            <span className="admin-sales-series-pill__swatch" style={{ background: series.color }} aria-hidden="true" />
-                            <span>{series.label}</span>
-                          </button>
-                        ))}
-                      </div>
-
-                    </div>
-
-
-              <div className="admin-products-table-wrap">
-                <table className="admin-table">
-                  <thead><tr><th>Product</th><th>Units sold</th><th>Revenue (GBP)</th></tr></thead>
-                  <tbody>
-                    {(salesData?.leaderboard ?? []).length === 0 ? (
-                      <tr><td colSpan={3}>No paid order items in this range.</td></tr>
-                    ) : (
-                      (salesData?.leaderboard ?? []).map((row) => (
-                        <tr key={row.productId}><td>{row.name}</td><td>{row.units}</td><td>{formatPrice(row.revenuePence)}</td></tr>
-                      ))
-                    )}
-                  </tbody>
-                </table>
               </div>
-            </>
+            ) : null}
+
+            <div className="admin-sales-modal-selector">
+
+              <label className="admin-sales-modal-search-wrap">
+                <span className="sr-only">Search products</span>
+                <input
+                  type="search"
+                  className="admin-sales-modal-search"
+                  value={expandedProductSearch}
+                  onChange={(event) => setExpandedProductSearch(event.target.value)}
+                  placeholder="Search products"
+                  aria-label="Search products"
+                />
+              </label>
+
+              <div className="admin-sales-search-results" role="list" aria-label="Search results">
+                {filteredExpandableProducts.map((series) => (
+                  <button
+                    key={`search-${series.key}`}
+                    type="button"
+                    className="admin-sales-search-result"
+                    onClick={() => handleAddSeriesSelection(series.key)}
+                  >
+                    <span className="admin-sales-series-pill__swatch" style={{ background: series.color }} aria-hidden="true" />
+                    <span>{series.label}</span>
+                  </button>
+                ))}
+              </div>
+
+            </div>
+
+            <AdminLeaderboard
+              title="Product leaderboard"
+              emptyLabel="No paid order items in this range."
+              rows={salesLeaderboardRows}
+            />
+          </>
         </div>
       )}
 

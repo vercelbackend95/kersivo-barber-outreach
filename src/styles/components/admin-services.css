@@ -161,11 +161,12 @@
   padding: 0.95rem 1rem;
   gap: 0.85rem;
   background: color-mix(in srgb, var(--surface) 88%, var(--bg));
+  align-items: flex-start;
 }
 
-.admin-service-sheet-head h2 {
+.admin-service-sheet-head h2,
+.admin-service-sheet-head h3 {
   margin: 0;
-
 }
 
 
@@ -299,11 +300,17 @@
 }
 
 .admin-service-sheet-foot {
+  position: sticky;
+  bottom: 0;
+  z-index: 2;
+  flex: 0 0 auto;
   border-top: 1px solid var(--border);
-  padding: 1rem;
+  padding: var(--space-md);
+  padding-bottom: calc(var(--space-md) + env(safe-area-inset-bottom, 0px));
+  background: var(--surface);
   display: grid;
   grid-template-columns: 1fr;
-  gap: 0.6rem;
+  gap: var(--space-xs);
 }
 
 .admin-service-sheet-foot .btn {
@@ -669,6 +676,14 @@
   .admin-service-sheet-foot {
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
+
+  .admin-service-sheet-foot .btn--secondary {
+    order: 1;
+  }
+
+  .admin-service-sheet-foot .btn--primary {
+    order: 2;
+  }
 }
 
 @media (max-width: 33.99rem) {
@@ -714,6 +729,7 @@
 
   .admin-service-sheet-foot {
     padding: 0.85rem;
+    padding-bottom: calc(0.85rem + env(safe-area-inset-bottom, 0px));
     gap: 0.5rem;
   }
 }
@@ -741,5 +757,77 @@
 @media (max-width: 47.99rem) {
   .admin-service-panel-head {
     padding: 1rem;
+  }
+}
+
+/* ─── Admin Form Sections ───────────────────────────────────────── */
+
+.admin-form-section {
+  display: grid;
+  gap: 0.85rem;
+  border: 0;
+  padding: 0;
+  margin: 0;
+  min-width: 0;
+}
+
+.admin-form-section-title {
+  font-size: var(--text-xs);
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--muted);
+  font-weight: 600;
+  margin: 0 0 0.25rem;
+}
+
+.admin-form-section + .admin-form-section {
+  border-top: 1px solid var(--border);
+  padding-top: 0.85rem;
+}
+
+/* ─── Sheet Header: entity name subtitle ───────────────────────── */
+
+.admin-sheet-head-copy {
+  min-width: 0;
+  display: grid;
+  gap: 0.1rem;
+}
+
+.admin-sheet-head-copy h2,
+.admin-sheet-head-copy h3 {
+  margin: 0;
+}
+
+.admin-sheet-entity-name {
+  font-size: var(--text-sm);
+  color: var(--muted);
+  margin: 0.25rem 0 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* ─── Sheet header badge (status inline with title) ────────────── */
+
+.admin-sheet-head-title-row {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+  min-width: 0;
+}
+
+/* ─── Mobile Entrance Animation ─────────────────────────────────── */
+
+@keyframes sheet-slide-up {
+  from { transform: translateY(30px); opacity: 0; }
+  to   { transform: translateY(0); opacity: 1; }
+}
+
+@media (max-width: 47.99rem) {
+  @media (prefers-reduced-motion: no-preference) {
+    .admin-service-sheet {
+      animation: sheet-slide-up 240ms cubic-bezier(0.16, 1, 0.3, 1);
+    }
   }
 }

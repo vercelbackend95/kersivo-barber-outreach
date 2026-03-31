@@ -156,6 +156,8 @@ export default function AdminLineChart({
 
   const fmtTooltipValue = formatValue ?? ((v: number) => defaultFormatValue(v, metric));
   const fmtAxisValue = (v: number) => defaultFormatAxisValue(v, metric);
+  const yAxisTitle = metric === 'currency' ? 'Value (GBP)' : 'Value';
+  const xAxisTitle = 'Date';
 
   const yTicks = Array.from({ length: TICK_COUNT + 1 }, (_, i) =>
     yMin + (yRange / TICK_COUNT) * i,
@@ -306,6 +308,28 @@ export default function AdminLineChart({
             {formatXAxisLabel(label)}
           </text>
         ))}
+
+      {!isSparkline && (
+        <>
+          <text
+            x={padding.left + innerW / 2}
+            y={svgH - 2}
+            textAnchor="middle"
+            className="admin-sales-axis-title"
+          >
+            {xAxisTitle}
+          </text>
+          <text
+            x={14}
+            y={padding.top + innerH / 2}
+            textAnchor="middle"
+            transform={`rotate(-90 14 ${padding.top + innerH / 2})`}
+            className="admin-sales-axis-title"
+          >
+            {yAxisTitle}
+          </text>
+        </>
+      )}
     </svg>
   );
 

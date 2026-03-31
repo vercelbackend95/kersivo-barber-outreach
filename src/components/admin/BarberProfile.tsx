@@ -3,6 +3,7 @@ import BarberServicesEditor from './BarberServicesEditor';
 import BarberWorkingHoursEditor from './BarberWorkingHoursEditor';
 import BarberBlocksEditor from './BarberBlocksEditor';
 import type { Barber, ServiceOption, TimeBlock, WorkingHourRow } from './barbersTypes';
+import StatusBadge from './StatusBadge';
 
 type BarberProfileProps = {
   barber: Barber;
@@ -253,8 +254,7 @@ export default function BarberProfile({
           </div>
       </div>
               <p className="admin-barber-status-line">
-          <span className={`admin-status-dot ${isActive ? 'is-active' : 'is-inactive'}`} aria-hidden="true" />
-          {isActive ? 'Active' : 'Inactive'}
+          <StatusBadge status={isActive ? 'ACTIVE' : 'INACTIVE'} variant="dot" size="sm" />
         </p>
         <div className="admin-barber-avatar-editor">
           <label className="btn btn--secondary admin-barber-avatar-upload" htmlFor="admin-barber-avatar-input">

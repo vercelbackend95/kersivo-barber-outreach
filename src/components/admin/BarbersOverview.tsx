@@ -1,7 +1,8 @@
 import React from 'react';
 import type { Barber, ServiceOption, TimeBlock } from './barbersTypes';
 import { SettingsGearIcon } from './SettingsGearIcon';
-import { X } from '../lucide-react';
+import { Plus, X } from '../lucide-react';
+
 type BarberBookingPreview = {
   barberId: string;
   status: string;
@@ -17,6 +18,13 @@ type NextBookingPreview = {
   serviceLabel: string;
 };
 
+type BarberAvailabilityStatus = 'busy' | 'active' | 'free' | 'off';
+
+type DayFillData = {
+  pct: number;
+  count: number;
+  workingH: number;
+};
 
 type BarbersOverviewProps = {
   barbers: Barber[];
@@ -31,7 +39,7 @@ type BarbersOverviewProps = {
   barberSaveError: string;
   isAddBarberSheetOpen: boolean;
   globalBlocks: TimeBlock[];
-    bookings: BarberBookingPreview[];
+  bookings: BarberBookingPreview[];
   getInitials: (name: string) => string;
   onBarberNameChange: (value: string) => void;
   onBarberAvatarChange: (file: File | null) => void;
@@ -42,9 +50,9 @@ type BarbersOverviewProps = {
   onMoveBarber: (index: number, direction: 'up' | 'down') => void;
   onOpenAddBarberSheet: () => void;
   onCloseAddBarberSheet: () => void;
-
   formatBlockRange: (startAt: string, endAt: string) => string;
 };
+
 const DEFAULT_SERVICE_OPTIONS: ServiceOption[] = [
   { id: 'svc-haircut', name: 'Haircut' },
   { id: 'svc-skin-fade', name: 'Skin Fade' },
@@ -53,6 +61,16 @@ const DEFAULT_SERVICE_OPTIONS: ServiceOption[] = [
 ];
 
 const SCHEDULED_BOOKING_STATUSES = ['CONFIRMED', 'PENDING', 'PENDING_CONFIRMATION', 'RESCHEDULED'] as const;
+
+const AVAIL_STATUS_LABELS: Record<BarberAvailabilityStatus, string> = {
+  busy: 'Busy',
+  active: 'Has bookings today',
+  free: 'Available',
+  off: 'Off today',
+};
+
+const WORKING_HOURS_PER_DAY = 8;
+const ESTIMATED_BOOKING_DURATION_H = 0.75;
 
 function formatTimeHHMM(date: Date) {
   return new Intl.DateTimeFormat('en-GB', {
@@ -81,8 +99,51 @@ function formatRelative(date: Date, now: Date) {
 function truncateServiceLabel(serviceName: string) {
   const trimmed = serviceName.trim();
   if (!trimmed) return 'Service';
-  if (trimmed.length <= 24) return trimmed;
-  return `${trimmed.slice(0, 21)}...`;
+  if (trimmed.length <= 20) return trimmed;
+  return `${trimmed.slice(0, 17)}...`;
+}
+
+function getTodayBounds(now: Date) {
+  const start = new Date(now);
+  start.setHours(0, 0, 0, 0);
+  const end = new Date(now);
+  end.setHours(23, 59, 59, 999);
+  return { startMs: start.getTime(), endMs: end.getTime() };
+}
+
+function getTodayBookingsForBarber(bookings: BarberBookingPreview[], barberId: string, now: Date) {
+  const { startMs, endMs } = getTodayBounds(now);
+  return bookings.filter((b) => {
+    if (b.barberId !== barberId) return false;
+    if (!SCHEDULED_BOOKING_STATUSES.includes(b.status as (typeof SCHEDULED_BOOKING_STATUSES)[number])) return false;
+    const t = new Date(b.startAt).getTime();
+    return Number.isFinite(t) && t >= startMs && t <= endMs;
+  });
+}
+
+function getBarberAvailabilityStatus(barber: Barber, bookings: BarberBookingPreview[], now: Date): BarberAvailabilityStatus {
+  if (barber.todayIsOnShift === false || barber.todayLabel?.trim() === 'Off') {
+    return 'off';
+  }
+
+  const todayBookings = getTodayBookingsForBarber(bookings, barber.id, now);
+  if (todayBookings.length === 0) return 'free';
+
+  const nowMs = now.getTime();
+  const BUSY_WINDOW_MS = 90 * 60 * 1000;
+  const isBusy = todayBookings.some((b) => {
+    const startMs = new Date(b.startAt).getTime();
+    return startMs <= nowMs && nowMs - startMs <= BUSY_WINDOW_MS;
+  });
+
+  return isBusy ? 'busy' : 'active';
+}
+
+function getDayFill(bookings: BarberBookingPreview[], barberId: string, now: Date): DayFillData {
+  const count = getTodayBookingsForBarber(bookings, barberId, now).length;
+  const estimatedH = count * ESTIMATED_BOOKING_DURATION_H;
+  const pct = Math.min(100, Math.round((estimatedH / WORKING_HOURS_PER_DAY) * 100));
+  return { pct, count, workingH: WORKING_HOURS_PER_DAY };
 }
 
 function getNextBookingForBarber(bookings: BarberBookingPreview[], barberId: string, now: Date): NextBookingPreview | null {
@@ -107,17 +168,16 @@ function getNextBookingForBarber(bookings: BarberBookingPreview[], barberId: str
   };
 }
 
-
 /** Single source of truth for barber activity. Reads the canonical `isActive` field. */
 function normalizeBarberStatus(barber: Barber) {
   return barber.isActive;
 }
+
 function getTodayLine(barber: Barber) {
   const todayLabel = barber.todayLabel?.trim() || '—';
   if (todayLabel === 'Off') {
     return { text: 'Today: Off', title: 'Today: Off', isOff: true };
   }
-
   return { text: `Today: ${todayLabel}`, title: `Today: ${todayLabel}`, isOff: false };
 }
 
@@ -128,14 +188,14 @@ export default function BarbersOverview({
   barbersFilter,
   barberNameDraft,
   barberAvatarPreviewUrl,
-    selectedServiceIds,
+  selectedServiceIds,
   barberSaving,
   barberReordering,
   barberSaveMessage,
   barberSaveError,
-    isAddBarberSheetOpen,
+  isAddBarberSheetOpen,
   globalBlocks,
-    bookings,
+  bookings,
   getInitials,
   onBarberNameChange,
   onBarberAvatarChange,
@@ -146,7 +206,6 @@ export default function BarbersOverview({
   onMoveBarber,
   onOpenAddBarberSheet,
   onCloseAddBarberSheet,
-
   formatBlockRange,
 }: BarbersOverviewProps) {
   const availableServices = services.length > 0 ? services : DEFAULT_SERVICE_OPTIONS;
@@ -162,9 +221,18 @@ export default function BarbersOverview({
     };
   }, []);
 
-  const nextBookingsByBarberId = React.useMemo(() => {
+  const barberComputedData = React.useMemo(() => {
     const now = new Date(nowTick);
-    return new Map(barbers.map((barber) => [barber.id, getNextBookingForBarber(bookings, barber.id, now)]));
+    return new Map(
+      barbers.map((barber) => [
+        barber.id,
+        {
+          nextBooking: getNextBookingForBarber(bookings, barber.id, now),
+          availStatus: getBarberAvailabilityStatus(barber, bookings, now),
+          dayFill: getDayFill(bookings, barber.id, now),
+        },
+      ])
+    );
   }, [barbers, bookings, nowTick]);
 
   React.useEffect(() => {
@@ -203,7 +271,6 @@ export default function BarbersOverview({
         >
           All
         </button>
-
       </div>
 
       {barberSaveMessage ? <p className="admin-inline-success">{barberSaveMessage}</p> : null}
@@ -212,37 +279,67 @@ export default function BarbersOverview({
       <div className="admin-barber-list-wrap">
         <ul className="admin-barber-grid" aria-label="Barbers list">
           {barbers.map((barber, index) => {
-
             const barberIsActive = normalizeBarberStatus(barber);
             const isFirstItem = index === 0;
             const isLastItem = index === barbers.length - 1;
-            const nextBookingPreview = nextBookingsByBarberId.get(barber.id);
+            const computed = barberComputedData.get(barber.id);
+            const nextBookingPreview = computed?.nextBooking ?? null;
+            const availStatus = computed?.availStatus ?? 'free';
+            const dayFill = computed?.dayFill ?? { pct: 0, count: 0, workingH: WORKING_HOURS_PER_DAY };
             const todayLine = getTodayLine(barber);
-            return (
+            const availLabel = AVAIL_STATUS_LABELS[availStatus];
+            const dayFillAriaLabel = `${dayFill.count} booking${dayFill.count !== 1 ? 's' : ''} today (est. ${Math.round(dayFill.count * ESTIMATED_BOOKING_DURATION_H * 10) / 10} of ${dayFill.workingH} hours)`;
 
-              <li key={barber.id} className={`admin-barber-card ${barberIsActive ? '' : 'is-inactive'}`}>
+            return (
+              <li key={barber.id} className={`admin-barber-card${barberIsActive ? '' : ' is-inactive'}`}>
                 <button type="button" className="admin-barber-identity" onClick={() => onOpenBarber(barber.id)}>
-                  <div className="admin-barber-avatar">
-                    {barber.avatarUrl ? <img src={barber.avatarUrl} alt={barber.name} loading="lazy" /> : <span>{getInitials(barber.name)}</span>}
+                  <div className="admin-barber-avatar-wrap">
+                    <div className={`admin-barber-avatar admin-barber-avatar--status-${availStatus}`}>
+                      {barber.avatarUrl ? <img src={barber.avatarUrl} alt={barber.name} loading="lazy" /> : <span>{getInitials(barber.name)}</span>}
+                    </div>
+                    <span
+                      className={`admin-barber-avail-dot admin-barber-avail-dot--${availStatus}`}
+                      role="status"
+                      aria-label={`Status: ${availLabel}`}
+                    />
                   </div>
                   <div className="admin-barber-copy">
                     <div className="admin-barber-name-row">
                       <p className="admin-barber-name">{barber.name}</p>
-                      <span className="admin-barber-status-indicator" role="status" aria-label={barberIsActive ? 'Active' : 'Inactive'}>
-                        <span className={`admin-status-dot ${barberIsActive ? 'is-active' : 'is-inactive'}`} aria-hidden="true" />
-                      </span>
                     </div>
-                    <p className="admin-barber-next-line" title={nextBookingPreview ? `Next: ${nextBookingPreview.timeLabel} (${nextBookingPreview.relativeLabel}) · ${nextBookingPreview.serviceLabel}` : 'Next: none'}>
-                      {nextBookingPreview ? `Next: ${nextBookingPreview.timeLabel} (${nextBookingPreview.relativeLabel}) · ${nextBookingPreview.serviceLabel}` : bookings.length > 0 ? 'Next: none' : 'Next: —'}
-                    </p>
-                                        <p className={`admin-barber-today-line ${todayLine.isOff ? 'is-off' : ''}`} title={todayLine.title}>
+                    {nextBookingPreview ? (
+                      <>
+                        <p
+                          className="admin-barber-next-line"
+                          title={`Next: ${nextBookingPreview.timeLabel} · ${nextBookingPreview.serviceLabel} (${nextBookingPreview.relativeLabel})`}
+                        >
+                          {`${nextBookingPreview.timeLabel} · ${nextBookingPreview.serviceLabel}`}
+                        </p>
+                        <p className="admin-barber-next-subline">{nextBookingPreview.relativeLabel}</p>
+                      </>
+                    ) : (
+                      <p className="admin-barber-next-line" title="No upcoming bookings">
+                        {bookings.length > 0 ? 'No upcoming' : '—'}
+                      </p>
+                    )}
+                    <p className={`admin-barber-today-line${todayLine.isOff ? ' is-off' : ''}`} title={todayLine.title}>
                       {todayLine.text}
                     </p>
-
                   </div>
-
                 </button>
-                                <div className="admin-barber-actions">
+
+                <div
+                  className="admin-barber-day-fill-row"
+                  aria-label={dayFillAriaLabel}
+                >
+                  <div
+                    className="admin-barber-day-fill"
+                    aria-hidden="true"
+                    style={{ width: `${dayFill.pct}%` }}
+                  />
+                </div>
+
+                <div className="admin-barber-actions">
                   <div className="admin-reorder-controls admin-reorder-controls--barber" role="group" aria-label={`Reorder ${barber.name}`}>
                     <div className="admin-reorder-arrow-stack admin-reorder-arrow-stack--barber">
                       <button type="button" className="admin-reorder-btn admin-reorder-btn--barber" onClick={() => onMoveBarber(index, 'up')} disabled={isFirstItem || barberReordering} aria-label={`Move ${barber.name} up`}>▲</button>
@@ -252,16 +349,15 @@ export default function BarbersOverview({
                       <SettingsGearIcon className="admin-control-icon" />
                     </button>
                   </div>
-
                 </div>
               </li>
             );
-
           })}
+
           <li className="admin-barber-card admin-barber-card--add">
             <button type="button" className="admin-barber-add-btn admin-barber-add-btn--barbers" onClick={onOpenAddBarberSheet}>
               <span className="admin-barber-add-cluster">
-                <span className="admin-barber-add-icon" aria-hidden="true">+</span>
+                <Plus className="admin-barber-add-icon" aria-hidden="true" width={24} height={24} />
                 <span className="admin-barber-add-label">Add barber</span>
               </span>
             </button>
@@ -306,7 +402,6 @@ export default function BarbersOverview({
                 required
               />
 
-
               <label htmlFor="barber-avatar">Avatar (optional)</label>
               <div className="admin-barber-file-input-wrap">
                 <input id="barber-avatar" type="file" accept="image/jpeg,image/png,image/webp" onChange={(event) => onBarberAvatarChange(event.target.files?.[0] ?? null)} />
@@ -327,7 +422,6 @@ export default function BarbersOverview({
                         aria-pressed={selected}
                         onClick={() => {
                           if (selected) {
-
                             onSelectedServiceIdsChange(selectedServiceIds.filter((serviceId) => serviceId !== service.id));
                             return;
                           }
@@ -340,7 +434,7 @@ export default function BarbersOverview({
                           </svg>
                         </span>
                         <span>{service.name}</span>
-                                              </button>
+                      </button>
                     );
                   })}
                 </div>
@@ -353,7 +447,6 @@ export default function BarbersOverview({
           </form>
         </div>
       ) : null}
-
 
       {globalBlocks.length > 0 ? (
         <>

@@ -100,6 +100,71 @@
   background: color-mix(in srgb, var(--surface-3) 80%, transparent);
 }
 
+/* ── Clickable row modifier ───────────────────────────────────── */
+/*
+   Add .admin-table--clickable on <table> only when each <tbody tr>
+   has an onClick handler. Provides cursor:pointer + stronger hover
+   tint + a right-arrow hint in the last column.
+*/
+
+.admin-table--clickable tbody tr {
+  cursor: pointer;
+}
+
+.admin-table--clickable tbody tr:hover {
+  background: color-mix(in srgb, var(--accent) 5%, var(--surface-3));
+}
+
+.admin-table--clickable td:last-child .admin-row-action-hint {
+  opacity: 0;
+  transition: opacity 120ms ease;
+  color: var(--muted);
+  font-size: var(--text-xs);
+  user-select: none;
+  pointer-events: none;
+}
+
+.admin-table--clickable tbody tr:hover td:last-child .admin-row-action-hint {
+  opacity: 0.5;
+}
+
+/* ── Sort indicators ──────────────────────────────────────────── */
+/*
+   Place data-sort="asc|desc|none" + aria-sort on <th> when that
+   column is sortable. aria-sort handles screen readers; the ::after
+   pseudo-element is purely visual.
+*/
+
+.admin-table th[data-sort] {
+  cursor: pointer;
+  user-select: none;
+}
+
+.admin-table th[data-sort]:hover {
+  color: var(--fg);
+}
+
+.admin-table th[data-sort="none"]::after {
+  content: " ⇅";
+  opacity: 0.35;
+  font-size: 0.7em;
+  vertical-align: middle;
+}
+
+.admin-table th[data-sort="asc"]::after {
+  content: " ▲";
+  color: var(--accent);
+  font-size: 0.7em;
+  vertical-align: middle;
+}
+
+.admin-table th[data-sort="desc"]::after {
+  content: " ▼";
+  color: var(--accent);
+  font-size: 0.7em;
+  vertical-align: middle;
+}
+
 /* ── Row updated highlight ────────────────────────────────────── */
 
 .admin-table .admin-row--updated {
@@ -161,9 +226,10 @@
   border: 1px solid var(--border);
   border-radius: var(--radius-md);
   background: var(--surface-2);
-  padding: var(--space-sm);
+  padding: var(--space-md);
   display: grid;
   gap: var(--space-xs);
+  box-shadow: var(--shadow-xs);
 }
 
 .admin-card__header {
