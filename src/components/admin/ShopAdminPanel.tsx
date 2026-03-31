@@ -6,7 +6,7 @@ import AdminLineChart from './charts/AdminLineChart';
 import AdminLeaderboard from './AdminLeaderboard';
 import { SettingsGearIcon } from './SettingsGearIcon';
 import EmptyState from '../EmptyState';
-import { Package, Search, X } from '../lucide-react';
+import { ChevronDown, ChevronUp, Package, Search, X } from '../lucide-react';
 import { formatDelta } from './reportsFormatting';
 import { SkeletonKPICards } from '../skeleton';
 type ShopTab = 'products' | 'orders' | 'sales';
@@ -2058,10 +2058,26 @@ export default function ShopAdminPanel({ initialTab = 'products' }: ShopAdminPan
                 const isCardSelected = bulkIsSelected(product.id);
                 const reorderDisabled = productSortMode !== 'manual' || !canReorder || bulkSelectedCount > 0;
 
+                const categoryLabel = PRODUCT_CATEGORY_OPTIONS.find((option) => option.value === product.category)?.label ?? 'Styling';
+                const updatedLabel = new Date(product.updatedAt).toLocaleString('en-GB', {
+                  day: 'numeric',
+                  month: 'short',
+                  year: 'numeric',
+                  hour: '2-digit',
+                  minute: '2-digit'
+                });
+
                 return (
                   <article
                     key={product.id}
-                    className={`admin-product-card${isCardSelected ? ' admin-product-card--selected' : ''}`}
+                    className={[
+                      'admin-product-card',
+                      isCardSelected ? 'admin-product-card--selected' : '',
+                      product.active ? '' : 'admin-product-card--inactive',
+                      product.featured ? 'admin-product-card--featured' : ''
+                    ]
+                      .filter(Boolean)
+                      .join(' ')}
                     aria-selected={isCardSelected}
                   >
                     <label className="admin-product-card-checkbox-wrap" title={isCardSelected ? `Deselect ${product.name}` : `Select ${product.name}`}>
@@ -2074,77 +2090,110 @@ export default function ShopAdminPanel({ initialTab = 'products' }: ShopAdminPan
                       />
                     </label>
 
-                  <div className="admin-product-card-main">
-                    <div className="admin-product-thumb">{product.imageUrl ? <img src={product.imageUrl} alt={product.name} loading="lazy" draggable={false} /> : <span>No image</span>}</div>
-                    <div>
-                      <h4>{product.name}</h4>
-                      <p className="admin-product-price">{formatPrice(product.pricePence)}</p>
-                      <p className="admin-product-meta muted">{PRODUCT_CATEGORY_OPTIONS.find((option) => option.value === product.category)?.label ?? 'Styling'} • Updated {new Date(product.updatedAt).toLocaleString('en-GB')} • List position #{product.sortOrder + 1}</p>
-                    </div>
-
-                    <div className="admin-reorder-controls admin-reorder-controls--barber" role="group" aria-label={`${product.name} controls`}>
-                      <div className="admin-reorder-arrow-stack admin-reorder-arrow-stack--barber">
-
-                        <button
-                          type="button"
-                          className="admin-reorder-btn admin-reorder-btn--barber"
-                          aria-label={`Move ${product.name} up`}
-                          disabled={reorderDisabled || isFirstItem}
-                          onClick={() => moveItemUp(index)}
-                        >
-                          ▲
-                        </button>
-                        <button
-                          type="button"
-                          className="admin-reorder-btn admin-reorder-btn--barber"
-                          aria-label={`Move ${product.name} down`}
-                          disabled={reorderDisabled || isLastItem}
-                          onClick={() => moveItemDown(index)}
-                        >
-                          ▼
-                        </button>
+                    <div className="admin-product-card__shell">
+                      <div className="admin-product-card__media">
+                        <div className="admin-product-thumb">
+                          {product.imageUrl ? (
+                            <img src={product.imageUrl} alt={product.name} loading="lazy" draggable={false} />
+                          ) : (
+                            <span className="admin-product-thumb__placeholder">No image</span>
+                          )}
+                        </div>
                       </div>
 
-                      <button
-                        type="button"
-                        className="admin-reorder-btn admin-reorder-btn--settings admin-reorder-btn--barber admin-reorder-btn--barber-settings"
-                        aria-label={`Edit ${product.name}`}
-                        onClick={() => startEdit(product)}
-                      >
-                        <SettingsGearIcon className="admin-control-icon" />
-                      </button>
+                      <div className="admin-product-card__body">
+                        <header className="admin-product-card__header">
+                          <p className="admin-product-card__eyebrow">{categoryLabel}</p>
+                          <h4 className="admin-product-card__title">{product.name}</h4>
+                          <p className="admin-product-card__price">{formatPrice(product.pricePence)}</p>
+                          <div className="admin-product-card__badges" aria-label="Product status">
+                            <span className={product.active ? 'admin-product-badge admin-product-badge--live' : 'admin-product-badge admin-product-badge--hidden'}>
+                              {product.active ? 'Live' : 'Hidden'}
+                            </span>
+                            {product.featured ? (
+                              <span className="admin-product-badge admin-product-badge--featured">Featured</span>
+                            ) : null}
+                          </div>
+                        </header>
 
+                        <div className="admin-product-card__meta">
+                          <span className="admin-product-card__meta-item">
+                            <span className="admin-product-card__meta-k">Updated</span>
+                            <span className="admin-product-card__meta-v">{updatedLabel}</span>
+                          </span>
+                          <span className="admin-product-card__meta-item">
+                            <span className="admin-product-card__meta-k">List</span>
+                            <span className="admin-product-card__meta-v">#{product.sortOrder + 1}</span>
+                          </span>
+                        </div>
+
+                        <div className="admin-product-card__controls">
+                          <div className="admin-product-switches admin-product-switches--card">
+                            <ProductStatusSwitch
+                              label="Active"
+                              checked={product.active}
+                              disabled={isSavingCard}
+                              onLabel="Active"
+                              offLabel="Inactive"
+                              tone="active"
+                              onChange={(nextValue) => void patchProductFlags(product.id, { active: nextValue })}
+                            />
+                            <ProductStatusSwitch
+                              label="Featured"
+                              checked={product.featured}
+                              disabled={isSavingCard}
+                              onLabel="Featured"
+                              offLabel="Not featured"
+                              tone="featured"
+                              onChange={(nextValue) => void patchProductFlags(product.id, { featured: nextValue })}
+                            />
+                          </div>
+
+                          <div className="admin-product-card__actions-row">
+                            <div className="admin-reorder-controls admin-reorder-controls--barber" role="group" aria-label={`Reorder ${product.name}`}>
+                              <div className="admin-reorder-arrow-stack admin-reorder-arrow-stack--barber">
+                                <button
+                                  type="button"
+                                  className="admin-reorder-btn admin-reorder-btn--barber"
+                                  aria-label={`Move ${product.name} up`}
+                                  disabled={reorderDisabled || isFirstItem}
+                                  onClick={() => moveItemUp(index)}
+                                >
+                                  <ChevronUp width={16} height={16} strokeWidth={2.25} aria-hidden="true" />
+                                </button>
+                                <button
+                                  type="button"
+                                  className="admin-reorder-btn admin-reorder-btn--barber"
+                                  aria-label={`Move ${product.name} down`}
+                                  disabled={reorderDisabled || isLastItem}
+                                  onClick={() => moveItemDown(index)}
+                                >
+                                  <ChevronDown width={16} height={16} strokeWidth={2.25} aria-hidden="true" />
+                                </button>
+                              </div>
+                            </div>
+
+                            <div className="admin-product-card__actions-end">
+                              <button
+                                type="button"
+                                className="admin-product-card__edit"
+                                aria-label={`Edit ${product.name}`}
+                                onClick={() => startEdit(product)}
+                              >
+                                <SettingsGearIcon className="admin-control-icon" aria-hidden="true" />
+                                <span className="admin-product-card__edit-label">Edit</span>
+                              </button>
+                              <div className="admin-products-actions">
+                                <span className="admin-product-saving muted" aria-live="polite">
+                                  {isSavingCard ? 'Saving…' : (productStatusById[product.id] || '')}
+                                </span>
+                              </div>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
                     </div>
-
-                  </div>
-
-                  <div className="admin-product-switches admin-product-switches--card">
-                    <ProductStatusSwitch
-                      label="Active"
-                      checked={product.active}
-                      disabled={isSavingCard}
-                      onLabel="Active"
-                      offLabel="Inactive"
-                      tone="active"
-                      onChange={(nextValue) => void patchProductFlags(product.id, { active: nextValue })}
-                    />
-                    <ProductStatusSwitch
-                      label="Featured"
-                      checked={product.featured}
-                      disabled={isSavingCard}
-                      onLabel="Featured"
-                      offLabel="Not featured"
-                      tone="featured"
-                      onChange={(nextValue) => void patchProductFlags(product.id, { featured: nextValue })}
-                    />
-
-                  </div>
-
-                  <div className="admin-products-actions">
-
-                    <span className="admin-product-saving muted">{isSavingCard ? 'Saving…' : (productStatusById[product.id] || '')}</span>
-                  </div>
-                </article>
+                  </article>
                 );
               })}
               <article className="admin-product-card admin-product-card--add">

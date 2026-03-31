@@ -1,7 +1,7 @@
 import React from 'react';
 import type { Barber, ServiceOption, TimeBlock } from './barbersTypes';
 import { SettingsGearIcon } from './SettingsGearIcon';
-import { Plus, X } from '../lucide-react';
+import { ArrowRight, Calendar, Clock, Plus, X } from '../lucide-react';
 
 type BarberBookingPreview = {
   barberId: string;
@@ -276,8 +276,8 @@ export default function BarbersOverview({
       {barberSaveMessage ? <p className="admin-inline-success">{barberSaveMessage}</p> : null}
       {barberSaveError ? <p className="admin-inline-error">{barberSaveError}</p> : null}
 
-      <div className="admin-barber-list-wrap">
-        <ul className="admin-barber-grid" aria-label="Barbers list">
+      <div className="admin-barber-list-wrap admin-barbers-overview-list-wrap">
+        <ul className="admin-barber-grid admin-barbers-overview-grid" aria-label="Barbers list">
           {barbers.map((barber, index) => {
             const barberIsActive = normalizeBarberStatus(barber);
             const isFirstItem = index === 0;
@@ -289,73 +289,100 @@ export default function BarbersOverview({
             const todayLine = getTodayLine(barber);
             const availLabel = AVAIL_STATUS_LABELS[availStatus];
             const dayFillAriaLabel = `${dayFill.count} booking${dayFill.count !== 1 ? 's' : ''} today (est. ${Math.round(dayFill.count * ESTIMATED_BOOKING_DURATION_H * 10) / 10} of ${dayFill.workingH} hours)`;
+            const nextBookingTitle = nextBookingPreview
+              ? `Next: ${nextBookingPreview.timeLabel} · ${nextBookingPreview.serviceLabel} (${nextBookingPreview.relativeLabel})`
+              : 'No upcoming bookings';
 
             return (
-              <li key={barber.id} className={`admin-barber-card${barberIsActive ? '' : ' is-inactive'}`}>
-                <button type="button" className="admin-barber-identity" onClick={() => onOpenBarber(barber.id)}>
-                  <div className="admin-barber-avatar-wrap">
-                    <div className={`admin-barber-avatar admin-barber-avatar--status-${availStatus}`}>
-                      {barber.avatarUrl ? <img src={barber.avatarUrl} alt={barber.name} loading="lazy" /> : <span>{getInitials(barber.name)}</span>}
+              <li key={barber.id} className={`admin-barber-card admin-barber-card--roster${barberIsActive ? '' : ' is-inactive'}`}>
+                <button
+                  type="button"
+                  className="admin-barber-identity admin-barber-identity--roster"
+                  onClick={() => onOpenBarber(barber.id)}
+                  aria-label={`Open ${barber.name} profile and settings`}
+                >
+                  <div className="admin-barber-roster-hero">
+                    <div className="admin-barber-roster-hero-shine" aria-hidden="true" />
+                    <div className="admin-barber-roster-avatar-shell">
+                      <div className={`admin-barber-avatar admin-barber-avatar--roster admin-barber-avatar--status-${availStatus}`}>
+                        {barber.avatarUrl ? <img src={barber.avatarUrl} alt="" loading="lazy" /> : <span>{getInitials(barber.name)}</span>}
+                      </div>
+                      <span className={`admin-barber-avail-dot admin-barber-avail-dot--${availStatus}`} />
                     </div>
-                    <span
-                      className={`admin-barber-avail-dot admin-barber-avail-dot--${availStatus}`}
-                      role="status"
-                      aria-label={`Status: ${availLabel}`}
-                    />
+                    <span className={`admin-barber-avail-pill admin-barber-avail-pill--${availStatus}`} role="status">
+                      {availLabel}
+                    </span>
                   </div>
-                  <div className="admin-barber-copy">
-                    <div className="admin-barber-name-row">
-                      <p className="admin-barber-name">{barber.name}</p>
+
+                  <div className="admin-barber-roster-body">
+                    <div className="admin-barber-name-row admin-barber-roster-name-row">
+                      <p className="admin-barber-name admin-barber-roster-name">{barber.name}</p>
+                      {barberIsActive ? null : (
+                        <span className="admin-barber-roster-inactive-badge">Hidden</span>
+                      )}
                     </div>
-                    {nextBookingPreview ? (
-                      <>
-                        <p
-                          className="admin-barber-next-line"
-                          title={`Next: ${nextBookingPreview.timeLabel} · ${nextBookingPreview.serviceLabel} (${nextBookingPreview.relativeLabel})`}
-                        >
-                          {`${nextBookingPreview.timeLabel} · ${nextBookingPreview.serviceLabel}`}
-                        </p>
-                        <p className="admin-barber-next-subline">{nextBookingPreview.relativeLabel}</p>
-                      </>
-                    ) : (
-                      <p className="admin-barber-next-line" title="No upcoming bookings">
-                        {bookings.length > 0 ? 'No upcoming' : '—'}
-                      </p>
-                    )}
-                    <p className={`admin-barber-today-line${todayLine.isOff ? ' is-off' : ''}`} title={todayLine.title}>
-                      {todayLine.text}
-                    </p>
+
+                    <div className="admin-barber-roster-meta">
+                      <span className={`admin-barber-roster-shift${todayLine.isOff ? ' is-off' : ''}`} title={todayLine.title}>
+                        <Clock className="admin-barber-roster-meta-icon" width={16} height={16} aria-hidden />
+                        <span className="admin-barber-roster-shift-text">{todayLine.text}</span>
+                      </span>
+
+                      <div className={`admin-barber-roster-next${nextBookingPreview ? '' : ' is-muted'}`} title={nextBookingTitle}>
+                        <Calendar className="admin-barber-roster-meta-icon" width={16} height={16} aria-hidden />
+                        {nextBookingPreview ? (
+                          <div className="admin-barber-roster-next-copy">
+                            <span className="admin-barber-roster-next-primary">
+                              {nextBookingPreview.timeLabel} · {nextBookingPreview.serviceLabel}
+                            </span>
+                            <span className="admin-barber-roster-next-secondary">{nextBookingPreview.relativeLabel}</span>
+                          </div>
+                        ) : (
+                          <span className="admin-barber-roster-next-empty">
+                            {bookings.length > 0 ? 'No upcoming bookings' : 'No schedule data'}
+                          </span>
+                        )}
+                      </div>
+                    </div>
+
+                    <span className="admin-barber-roster-cta">
+                      <span className="admin-barber-roster-cta-label">Profile & settings</span>
+                      <ArrowRight className="admin-barber-roster-cta-icon" width={18} height={18} aria-hidden />
+                    </span>
                   </div>
                 </button>
 
-                <div
-                  className="admin-barber-day-fill-row"
-                  aria-label={dayFillAriaLabel}
-                >
-                  <div
-                    className="admin-barber-day-fill"
-                    aria-hidden="true"
-                    style={{ width: `${dayFill.pct}%` }}
-                  />
-                </div>
-
-                <div className="admin-barber-actions">
-                  <div className="admin-reorder-controls admin-reorder-controls--barber" role="group" aria-label={`Reorder ${barber.name}`}>
-                    <div className="admin-reorder-arrow-stack admin-reorder-arrow-stack--barber">
-                      <button type="button" className="admin-reorder-btn admin-reorder-btn--barber" onClick={() => onMoveBarber(index, 'up')} disabled={isFirstItem || barberReordering} aria-label={`Move ${barber.name} up`}>▲</button>
-                      <button type="button" className="admin-reorder-btn admin-reorder-btn--barber" onClick={() => onMoveBarber(index, 'down')} disabled={isLastItem || barberReordering} aria-label={`Move ${barber.name} down`}>▼</button>
+                <div className="admin-barber-roster-toolbar">
+                  <div className="admin-barber-day-fill-row admin-barber-day-fill-row--roster" aria-label={dayFillAriaLabel}>
+                    <div className="admin-barber-day-fill" aria-hidden="true" style={{ width: `${dayFill.pct}%` }} />
+                  </div>
+                  <div className="admin-barber-actions admin-barber-actions--roster">
+                    <div className="admin-reorder-controls admin-reorder-controls--barber" role="group" aria-label={`Reorder ${barber.name}`}>
+                      <div className="admin-reorder-arrow-stack admin-reorder-arrow-stack--barber">
+                        <button type="button" className="admin-reorder-btn admin-reorder-btn--barber" onClick={() => onMoveBarber(index, 'up')} disabled={isFirstItem || barberReordering} aria-label={`Move ${barber.name} up`}>
+                          ▲
+                        </button>
+                        <button type="button" className="admin-reorder-btn admin-reorder-btn--barber" onClick={() => onMoveBarber(index, 'down')} disabled={isLastItem || barberReordering} aria-label={`Move ${barber.name} down`}>
+                          ▼
+                        </button>
+                      </div>
+                      <button
+                        type="button"
+                        className="admin-reorder-btn admin-reorder-btn--settings admin-reorder-btn--barber admin-reorder-btn--barber-settings"
+                        onClick={() => onOpenBarber(barber.id)}
+                        aria-label={`Open ${barber.name} settings`}
+                      >
+                        <SettingsGearIcon className="admin-control-icon" />
+                      </button>
                     </div>
-                    <button type="button" className="admin-reorder-btn admin-reorder-btn--settings admin-reorder-btn--barber admin-reorder-btn--barber-settings" onClick={() => onOpenBarber(barber.id)} aria-label={`Open ${barber.name} settings`}>
-                      <SettingsGearIcon className="admin-control-icon" />
-                    </button>
                   </div>
                 </div>
               </li>
             );
           })}
 
-          <li className="admin-barber-card admin-barber-card--add">
-            <button type="button" className="admin-barber-add-btn admin-barber-add-btn--barbers" onClick={onOpenAddBarberSheet}>
+          <li className="admin-barber-card admin-barber-card--add admin-barber-card--roster-add">
+            <button type="button" className="admin-barber-add-btn admin-barber-add-btn--barbers admin-barber-add-btn--roster" onClick={onOpenAddBarberSheet}>
               <span className="admin-barber-add-cluster">
                 <Plus className="admin-barber-add-icon" aria-hidden="true" width={24} height={24} />
                 <span className="admin-barber-add-label">Add barber</span>

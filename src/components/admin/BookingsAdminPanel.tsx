@@ -1,14 +1,13 @@
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { SkeletonKPICards, SkeletonTableRows } from '../skeleton';
+import { SkeletonKPICards } from '../skeleton';
 import AdminSectionHeader from './AdminSectionHeader';
 import AdminBookingsOpsSearch from './AdminBookingsOpsSearch';
+import AdminBookingsScheduleList from './AdminBookingsScheduleList';
 import AdminLineChart from './charts/AdminLineChart';
 import { formatInTimeZone, fromZonedTime, toZonedTime } from 'date-fns-tz';
-import TodayTimeline from './TodayTimeline';
+import TodayTimeline, { type TimelineBooking } from './TodayTimeline';
 import AdminErrorBoundary from './AdminErrorBoundary';
 import HistoryDateRangePicker from './HistoryDateRangePicker';
-import { getBookingStatusTone, getStatusTextColorClass } from './bookingStatus';
-import StatusBadge from './StatusBadge';
 import BarbersOverview from './BarbersOverview';
 import BarberProfile from './BarberProfile';
 import BarberChip from './BarberChip';
@@ -236,21 +235,6 @@ function useBodyScrollLock(isLocked: boolean): void {
 }
 
 
-const MOBILE_HISTORY_SERVICE_SHORTCUTS: Record<string, string> = {
-  haircut: 'H',
-  'haircut + beard': 'H+B',
-  'haircut & beard': 'H+B',
-  'beard trim': 'BT',
-  'skin fade': 'SF'
-};
-
-function getMobileHistoryServiceLabel(serviceName?: string | null) {
-  const normalizedServiceName = (serviceName ?? '').trim().replace(/\s+/g, ' ').toLowerCase();
-  if (!normalizedServiceName) return '—';
-  return MOBILE_HISTORY_SERVICE_SHORTCUTS[normalizedServiceName] ?? serviceName ?? '—';
-}
-
-
 function getTodayLondonDate() {
   return formatInTimeZone(new Date(), ADMIN_TIMEZONE, 'yyyy-MM-dd');
 }
@@ -311,19 +295,6 @@ function Repeat2Icon({ className, ...a11yProps }: StatusIconProps) {
   return <svg viewBox="0 0 24 24" className={className} fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" {...a11yProps}><path d="M20 7h-6l2-2" /><path d="M4 17h6l-2 2" /><path d="M20 7a8 8 0 0 0-14-3" /><path d="M4 17a8 8 0 0 0 14 3" /></svg>;
 }
 
-function AlertCircleIcon({ className, ...a11yProps }: StatusIconProps) {
-  return <svg viewBox="0 0 24 24" className={className} fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" {...a11yProps}><circle cx="12" cy="12" r="9" /><path d="M12 8v4" /><circle cx="12" cy="16" r="1" fill="currentColor" stroke="none" /></svg>;
-}
-
-function getStatusIconMeta(booking: Booking, statusLabel: string): { Icon: (props: StatusIconProps) => JSX.Element; className: string; label: string } {
-  if (statusLabel === 'CONFIRMED') return { Icon: CheckCircleIcon, className: getStatusTextColorClass(getBookingStatusTone(booking)), label: getStatusA11yLabel(statusLabel) };
-  if (statusLabel === 'CANCELLED_BY_CLIENT') return { Icon: UserXIcon, className: getStatusTextColorClass(getBookingStatusTone(booking)), label: getStatusA11yLabel(statusLabel) };
-  if (statusLabel === 'CANCELLED_BY_SHOP') return { Icon: BanIcon, className: getStatusTextColorClass(getBookingStatusTone(booking)), label: getStatusA11yLabel(statusLabel) };
-  if (statusLabel === 'CONFIRMED · RESCHEDULED') return { Icon: Repeat2Icon, className: getStatusTextColorClass(getBookingStatusTone(booking)), label: getStatusA11yLabel(statusLabel) };
-  return { Icon: AlertCircleIcon, className: getStatusTextColorClass(getBookingStatusTone(booking)), label: getStatusA11yLabel(statusLabel) };
-
-
-}
 const STATUS_LEGEND_ITEMS: Array<{ key: string; label: string; Icon: (props: StatusIconProps) => JSX.Element; className: string }> = [
   { key: 'confirmed', label: 'Confirmed', Icon: CheckCircleIcon, className: 'admin-status-text--confirmed' },
   { key: 'rescheduled', label: 'Rescheduled', Icon: Repeat2Icon, className: 'admin-status-text--rescheduled' },
@@ -331,31 +302,6 @@ const STATUS_LEGEND_ITEMS: Array<{ key: string; label: string; Icon: (props: Sta
   { key: 'cancelled-by-shop', label: 'Cancelled by shop', Icon: BanIcon, className: 'admin-status-text--cancelled' }
 ];
 
-
-type TemporalGroup = 'past' | 'now' | 'upcoming';
-
-function getTemporalGroup(booking: Booking, nowMs: number): TemporalGroup {
-  const startMs = new Date(booking.startAt).getTime();
-  const endMs = new Date(booking.endAt).getTime();
-  const windowMs = 30 * 60 * 1000;
-  if (nowMs >= startMs - windowMs && nowMs < endMs + windowMs) return 'now';
-  if (endMs <= nowMs) return 'past';
-  return 'upcoming';
-}
-
-type GroupedBookings = {
-  past: Booking[];
-  now: Booking[];
-  upcoming: Booking[];
-};
-
-function groupBookingsByTime(bookings: Booking[], nowMs: number): GroupedBookings {
-  const groups: GroupedBookings = { past: [], now: [], upcoming: [] };
-  for (const booking of bookings) {
-    groups[getTemporalGroup(booking, nowMs)].push(booking);
-  }
-  return groups;
-}
 
 type DayOpsFilter = 'all' | 'pending' | 'upcoming';
 
@@ -384,12 +330,17 @@ function DaySummaryBar({ bookings, activeBarberCount, nowMs, dayOpsFilter, onDay
         className={`admin-day-summary-stat admin-day-summary-stat--action ${dayOpsFilter === 'all' ? 'is-active' : ''}`}
         onClick={() => onDayOpsFilterChange('all')}
         aria-pressed={dayOpsFilter === 'all'}
+        aria-label={`${totalCount} bookings today${dayOpsFilter === 'all' ? ', filter active' : ''}`}
       >
         <svg className="admin-day-summary-icon" viewBox="0 0 24 24" aria-hidden="true" focusable="false">
           <path d="M8 2a1 1 0 0 1 1 1v1h6V3a1 1 0 1 1 2 0v1h1a3 3 0 0 1 3 3v11a4 4 0 0 1-4 4H7a4 4 0 0 1-4-4V7a3 3 0 0 1 3-3h1V3a1 1 0 0 1 1-1Zm11 7H5v8a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2v-8ZM6 6a1 1 0 0 0-1 1v1h14V7a1 1 0 0 0-1-1H6Z" fill="currentColor" />
         </svg>
-        <span className="admin-day-summary-value">{totalCount}</span>
-        <span className="admin-day-summary-label">Bookings today</span>
+        <span className="admin-day-summary-value" aria-hidden="true">
+          {totalCount}
+        </span>
+        <span className="admin-day-summary-label" aria-hidden="true">
+          Bookings today
+        </span>
         <span className="admin-day-summary-label-short" aria-hidden="true">
           Today
         </span>
@@ -400,14 +351,19 @@ function DaySummaryBar({ bookings, activeBarberCount, nowMs, dayOpsFilter, onDay
         className={`admin-day-summary-stat admin-day-summary-stat--action ${dayOpsFilter === 'pending' ? 'is-active' : ''}`}
         onClick={() => onDayOpsFilterChange(dayOpsFilter === 'pending' ? 'all' : 'pending')}
         aria-pressed={dayOpsFilter === 'pending'}
+        aria-label={`${pendingCount} pending confirmation${dayOpsFilter === 'pending' ? ', filter active' : ''}`}
       >
         <svg className="admin-day-summary-icon admin-day-summary-icon--pending" viewBox="0 0 24 24" aria-hidden="true" focusable="false">
           <circle cx="12" cy="12" r="9" fill="none" stroke="currentColor" strokeWidth="2" />
           <path d="M12 8v4" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
           <circle cx="12" cy="16" r="1" fill="currentColor" />
         </svg>
-        <span className="admin-day-summary-value">{pendingCount}</span>
-        <span className="admin-day-summary-label">Pending confirm</span>
+        <span className="admin-day-summary-value" aria-hidden="true">
+          {pendingCount}
+        </span>
+        <span className="admin-day-summary-label" aria-hidden="true">
+          Pending confirm
+        </span>
         <span className="admin-day-summary-label-short" aria-hidden="true">
           Pending
         </span>
@@ -418,27 +374,36 @@ function DaySummaryBar({ bookings, activeBarberCount, nowMs, dayOpsFilter, onDay
         className={`admin-day-summary-stat admin-day-summary-stat--action ${dayOpsFilter === 'upcoming' ? 'is-active' : ''}`}
         onClick={() => onDayOpsFilterChange(dayOpsFilter === 'upcoming' ? 'all' : 'upcoming')}
         aria-pressed={dayOpsFilter === 'upcoming'}
+        aria-label={`${upcomingCount} still to come${dayOpsFilter === 'upcoming' ? ', filter active' : ''}`}
       >
         <svg className="admin-day-summary-icon admin-day-summary-icon--upcoming" viewBox="0 0 24 24" aria-hidden="true" focusable="false">
           <path d="M12 6v6l4 2" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
           <circle cx="12" cy="12" r="9" fill="none" stroke="currentColor" strokeWidth="2" />
         </svg>
-        <span className="admin-day-summary-value">{upcomingCount}</span>
-        <span className="admin-day-summary-label">Still to come</span>
+        <span className="admin-day-summary-value" aria-hidden="true">
+          {upcomingCount}
+        </span>
+        <span className="admin-day-summary-label" aria-hidden="true">
+          Still to come
+        </span>
         <span className="admin-day-summary-label-short" aria-hidden="true">
           Soon
         </span>
       </button>
       <div className="admin-day-summary-divider" aria-hidden="true" />
-      <div className="admin-day-summary-stat admin-day-summary-stat--readonly" aria-label={`Active barbers: ${activeBarberCount}`}>
+      <div className="admin-day-summary-stat admin-day-summary-stat--readonly" aria-label={`${activeBarberCount} active barbers`}>
         <svg className="admin-day-summary-icon admin-day-summary-icon--barbers" viewBox="0 0 24 24" aria-hidden="true" focusable="false">
           <circle cx="9" cy="7" r="3" fill="none" stroke="currentColor" strokeWidth="2" />
           <path d="M3 20a6 6 0 0 1 12 0" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
           <circle cx="18" cy="7" r="2" fill="none" stroke="currentColor" strokeWidth="2" />
           <path d="M21 20a3 3 0 0 0-5.12-2.12" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
         </svg>
-        <span className="admin-day-summary-value">{activeBarberCount}</span>
-        <span className="admin-day-summary-label">Active barbers</span>
+        <span className="admin-day-summary-value" aria-hidden="true">
+          {activeBarberCount}
+        </span>
+        <span className="admin-day-summary-label" aria-hidden="true">
+          Active barbers
+        </span>
         <span className="admin-day-summary-label-short" aria-hidden="true">
           Staff
         </span>
@@ -475,23 +440,11 @@ function formatStartDateTime(startAt: string) {
 
 }
 
-function formatStartTimeMobile(startAt: string) {
-  const parsedDate = parseBookingStartAt(startAt);
-  if (!parsedDate) return '—';
-  return formatInTimeZone(parsedDate, ADMIN_TIMEZONE, 'HH:mm');
-}
-
 function shortEmail(email: string) {
   const clean = (email || '').trim();
   if (clean.length <= 3) return `${clean}...`;
   return `${clean.slice(0, 3)}...`;
 }
-function formatEmailDesktop(email: string) {
-  if (!email) return '';
-  return email.length > 20 ? `${email.slice(0, 18)}...` : email;
-}
-
-
 
 function getUpcomingBookings(bookings: Booking[]) {
   const nowMs = Date.now();
@@ -777,7 +730,6 @@ export default function BookingsAdminPanel({ isActive, mode, onBackToDashboard }
   const timelineScrollRafRef = useRef<number | null>(null);
     const pendingTimelineScrollBookingIdRef = useRef<string | null>(null);
   const pendingListScrollBookingIdRef = useRef<string | null>(null);
-  const wasMobileViewportRef = useRef(false);
   const initialMountMsRef = useRef(Date.now());
   const captureTimelineScroll = useCallback(() => {
     const container = timelineScrollRef.current;
@@ -1030,13 +982,6 @@ export default function BookingsAdminPanel({ isActive, mode, onBackToDashboard }
     mediaQuery.addEventListener('change', update);
     return () => mediaQuery.removeEventListener('change', update);
   }, []);
-
-  useEffect(() => {
-    if (isMobileViewport && !wasMobileViewportRef.current) {
-      setActiveView('list');
-    }
-    wasMobileViewportRef.current = isMobileViewport;
-  }, [isMobileViewport]);
 
   useEffect(() => {
     if (typeof navigator === 'undefined') return;
@@ -1449,8 +1394,6 @@ export default function BookingsAdminPanel({ isActive, mode, onBackToDashboard }
   }, [isSearchDebouncing, normalizedClientSearchQuery, visibleBookings]);
 
 
-  const isMobileDashboard = mode === 'dashboard' && isMobileViewport;
-  const isMobileHistory = mode === 'history' && isMobileViewport;
   const isAnyOverlayOpen = isAddBarberSheetOpen || openDrilldown !== null || showHolidayModal || selectedTimelineBooking !== null || selectedClientId !== null;
   useBodyScrollLock(isMobileViewport && isAnyOverlayOpen);
 
@@ -1489,8 +1432,8 @@ export default function BookingsAdminPanel({ isActive, mode, onBackToDashboard }
     setNotesSaving(false);
 
   }
-  const openTimelineBooking = useCallback((booking: Booking) => {
-    setSelectedTimelineBooking(booking);
+  const openTimelineBooking = useCallback((booking: Booking | TimelineBooking) => {
+    setSelectedTimelineBooking(booking as Booking);
     setTimelineNotesDraft(booking.notes ?? '');
     setTimelineNotesMessage('');
   }, []);
@@ -2456,247 +2399,63 @@ export default function BookingsAdminPanel({ isActive, mode, onBackToDashboard }
             selectedDate={selectedDate}
             isSearchActive={Boolean(normalizedClientSearchQuery) || (mode === 'dashboard' && dayOpsFilter !== 'all')}
             scrollContainerRef={timelineScrollRef}
-            onBookingClick={(booking) => openTimelineBooking(booking as Booking)}
+            onBookingClick={openTimelineBooking}
           />
         </AdminErrorBoundary>
-      ) : isMobileDashboard ? (
-
-        <div className="admin-booking-cards" aria-live="polite">
-          {visibleBookings.length === 0 ? (
-            <EmptyState
-              icon={Calendar}
-              title="No bookings"
-              description="When clients book appointments, they will appear here."
-            />
-          ) : null}
-          {visibleBookings.map((booking) => (
-            <article
-              className={`admin-booking-card ${updatedBookingIds.includes(booking.id) ? 'admin-booking-card--updated' : ''}`}
-              key={booking.id}
-              data-booking-id={booking.id}
-            >
-              <div className="admin-booking-card-top">
-                <p><strong>{formatStartTime(booking.startAt)}</strong> · {booking.service?.name}</p>
-                <StatusBadge status={booking.status} rescheduledAt={booking.rescheduledAt} variant="pill" size="sm" />
-              </div>
-              <p className="admin-booking-card-barber">Barber: {booking.barber?.name}</p>
-              <button type="button" className="admin-link-button" onClick={() => void openClientProfile(booking.clientId)}>{highlightMatch(booking.fullName)}</button>
-              <p className="admin-booking-card-email">{highlightMatch(booking.email)}</p>
-
-              {canBeCancelledByShop(booking) ? <button type="button" className="btn btn--secondary" onClick={() => void cancelBookingByShop(booking)} disabled={cancelLoadingBookingId === booking.id}>{cancelLoadingBookingId === booking.id ? 'Cancelling...' : 'Cancel'}</button> : null}
-            </article>
-          ))}
-        </div>
-
-      ) : isMobileHistory ? (
-        <div className="admin-card-list" role="list" aria-live="polite">
-          {bookingsInitialLoading ? (
-            <div className="admin-card" role="listitem" aria-busy="true">
-              <p className="muted">Loading history...</p>
-            </div>
-          ) : visibleBookings.length === 0 ? (
-            <EmptyState
-              icon={Calendar}
-              title={historyDateRange ? 'No bookings in this period' : 'No booking history'}
-              description={historyDateRange ? 'No appointments were found for the selected date range.' : 'Past appointments will appear here once bookings are completed or cancelled.'}
-              variant={historyDateRange ? 'filtered' : undefined}
-              action={historyDateRange ? (
-                <button
-                  type="button"
-                  className="btn btn--ghost btn--sm"
-                  onClick={() => setHistoryDateRange(null)}
-                >
-                  Clear date range
-                </button>
-              ) : undefined}
-            />
-          ) : (
-            visibleBookings.map((booking) => {
-              const bookingStatusLabel = getBookingStatusLabel(booking);
-              const statusIconMeta = getStatusIconMeta(booking, bookingStatusLabel);
-              const StatusIcon = statusIconMeta.Icon;
-              const fullEmail = booking.email ?? '';
-              const short = shortEmail(fullEmail);
-              const serviceLabel = booking.service?.name ?? '-';
-              const barberLabel = booking.barber?.name ?? '-';
-              return (
-                <article className="admin-card" role="listitem" key={booking.id} data-booking-id={booking.id}>
-                  <div className="admin-card__header">
-                    <div className="admin-card__title-wrap">
-                      <p className="admin-card__title">
-                        <button type="button" className="admin-link-button" onClick={() => void openClientProfile(booking.clientId)}>
-                          {highlightMatch(booking.fullName)}
-                        </button>
-                      </p>
-                      <p className="admin-card__subtitle">{formatStartDateTime(booking.startAt)}</p>
-                    </div>
-                    <span className="admin-status-icon-wrap" aria-label={statusIconMeta.label} title={statusIconMeta.label}>
-                      <StatusIcon className={`admin-status-icon ${statusIconMeta.className}`} />
-                    </span>
-                  </div>
-                  <dl className="admin-card__dl">
-                    <dt className="admin-card__dt">Email</dt>
-                    <dd className="admin-card__dd">
-                      <button type="button" className="admin-link-button" onClick={() => void openClientProfile(booking.clientId)}>{short}</button>
-                    </dd>
-                    <dt className="admin-card__dt">Service</dt>
-                    <dd className="admin-card__dd">{serviceLabel}</dd>
-                    <dt className="admin-card__dt">Barber</dt>
-                    <dd className="admin-card__dd">{barberLabel}</dd>
-                    <dt className="admin-card__dt">Status</dt>
-                    <dd className="admin-card__dd">{statusIconMeta.label}</dd>
-                  </dl>
-                </article>
-              );
-            })
-          )}
-        </div>
-      ) : (
-                <>
-        <section className="admin-status-legend" aria-label="Status icons legend">
-          <p className="admin-status-legend__title">Status icons</p>
-          <div className="admin-status-legend__items">
-            {STATUS_LEGEND_ITEMS.map(({ key, label, Icon, className }) => (
-              <span key={key} className="admin-status-legend__item">
-                <span className="admin-status-legend__icon-wrap" aria-hidden="true">
-                  <Icon className={`admin-status-icon ${className}`} />
+      ) : mode === 'dashboard' && activeView === 'list' ? (
+        <AdminBookingsScheduleList
+          bookings={visibleBookings}
+          nowMs={nowMs}
+          selectedDate={selectedDate}
+          todayLondonDate={todayLondonDate}
+          selectedDateLabel={selectedDateLabel}
+          bookingsInitialLoading={bookingsInitialLoading}
+          updatedBookingIds={updatedBookingIds}
+          highlightMatch={highlightMatch}
+          formatStartTime={formatStartTime}
+          onOpenClient={openClientProfile}
+          onCancelBooking={cancelBookingByShop}
+          cancelLoadingBookingId={cancelLoadingBookingId}
+          canCancelBooking={canBeCancelledByShop}
+        />
+      ) : mode === 'history' ? (
+        <>
+          <section className="admin-status-legend admin-status-legend--schedule-context" aria-label="Status icons legend">
+            <p className="admin-status-legend__title">Status icons</p>
+            <div className="admin-status-legend__items">
+              {STATUS_LEGEND_ITEMS.map(({ key, label, Icon, className }) => (
+                <span key={key} className="admin-status-legend__item">
+                  <span className="admin-status-legend__icon-wrap" aria-hidden="true">
+                    <Icon className={`admin-status-icon ${className}`} />
+                  </span>
+                  <span>{label}</span>
                 </span>
-                <span>{label}</span>
-              </span>
-            ))}
-          </div>
-        </section>
+              ))}
+            </div>
+          </section>
 
-        <div className={`admin-table-wrap ${mode === 'history' ? 'listTableWrap--history' : ''}`}>
-          <table className={`admin-table admin-bookings-table ${mode === 'history' ? 'admin-bookings-table--history' : ''}`}>
-            <colgroup>
-              <col className="col-client" />
-              <col className="col-email" />
-              <col className="col-service" />
-              <col className="col-barber" />
-              <col className="col-status" />
-              <col className="col-start" />
-              {mode !== 'history' ? <col className="col-actions" /> : null}
-
-            </colgroup>
-            <thead><tr><th>Client</th><th className={mode === 'history' ? '' : 'hidden md:table-cell'}>Email</th><th>Service</th><th>Barber</th><th><span className="admin-status-heading-desktop">Status</span><span className="admin-status-heading-mobile">St.</span></th><th>Start</th>{mode !== 'history' ? <th>Actions</th> : null}</tr></thead>
-            <tbody aria-busy={bookingsInitialLoading}>
-              {bookingsInitialLoading ? (
-                <SkeletonTableRows count={5} cols={mode === 'history' ? 6 : 7} />
-              ) : visibleBookings.length === 0 ? (
-                <tr>
-                  <td colSpan={mode === 'history' ? 6 : 7}>
-                    <EmptyState
-                      icon={Calendar}
-                      title={
-                        mode === 'history'
-                          ? historyDateRange
-                            ? 'No bookings in this period'
-                            : 'No booking history'
-                          : 'No bookings'
-                      }
-                      description={
-                        mode === 'history'
-                          ? historyDateRange
-                            ? 'No appointments were found for the selected date range.'
-                            : 'Past appointments will appear here once bookings are completed or cancelled.'
-                          : 'When clients book appointments, they will appear here.'
-                      }
-                      variant={mode === 'history' && historyDateRange ? 'filtered' : undefined}
-                      action={
-                        mode === 'history' && historyDateRange ? (
-                          <button
-                            type="button"
-                            className="btn btn--ghost btn--sm"
-                            onClick={() => setHistoryDateRange(null)}
-                          >
-                            Clear date range
-                          </button>
-                        ) : undefined
-                      }
-                    />
-                  </td>
-                </tr>
-              ) : null}
-              {(() => {
-                const colSpan = mode === 'history' ? 6 : 7;
-                const isDashboard = mode === 'dashboard';
-                const groups = isDashboard ? groupBookingsByTime(visibleBookings, nowMs) : null;
-                const orderedGroups: Array<{ key: TemporalGroup; label: string; bookings: Booking[] }> = groups
-                  ? [
-                      { key: 'past', label: 'Past', bookings: groups.past },
-                      { key: 'now', label: 'Now', bookings: groups.now },
-                      { key: 'upcoming', label: 'Upcoming', bookings: groups.upcoming },
-                    ]
-                  : [];
-
-                function renderBookingRow(booking: Booking) {
-                  const bookingStatusLabel = getBookingStatusLabel(booking);
-                  const statusIconMeta = getStatusIconMeta(booking, bookingStatusLabel);
-                  const StatusIcon = statusIconMeta.Icon;
-                  const fullEmail = booking.email ?? '';
-                  const short = shortEmail(fullEmail);
-                  const desktopEmail = formatEmailDesktop(fullEmail);
-                  return (
-                    <tr
-                      className={updatedBookingIds.includes(booking.id) ? 'admin-row--updated' : ''}
-                      key={booking.id}
-                      data-booking-id={booking.id}
-                    >
-                      <td className="admin-table-col-client"><button type="button" className="admin-link-button" onClick={() => void openClientProfile(booking.clientId)}>{highlightMatch(booking.fullName)}</button></td>
-                      <td className={`admin-table-col-email ${mode === 'history' ? '' : 'hidden md:table-cell'}`}><button type="button" className="admin-link-button" onClick={() => void openClientProfile(booking.clientId)}><span className="admin-email-mobile" title={fullEmail} aria-label={fullEmail}>{short}</span><span className="admin-email-desktop" title={fullEmail} aria-label={fullEmail}>{desktopEmail}</span></button></td>
-                      <td className="admin-table-col-service"><span className="admin-service-desktop">{booking.service?.name}</span><span className="admin-service-mobile">{mode === 'history' ? getMobileHistoryServiceLabel(booking.service?.name) : booking.service?.name}</span></td>
-                      <td className="admin-table-col-barber">{booking.barber?.name}</td>
-                      <td className={mode === 'history' ? 'admin-table-col-status admin-table-col-status--history' : 'admin-table-col-status'}>{mode === 'history' ? <span className="admin-status-icon-wrap"><StatusIcon className={`admin-status-icon ${statusIconMeta.className}`} aria-label={statusIconMeta.label} title={statusIconMeta.label} /></span> : <><span className="admin-status-label-desktop"><StatusBadge status={booking.status} rescheduledAt={booking.rescheduledAt} size="sm" variant="dot" /></span><span className="admin-status-icon-wrap admin-status-icon-wrap--mobile"><StatusIcon className={`admin-status-icon ${statusIconMeta.className}`} aria-label={statusIconMeta.label} title={statusIconMeta.label} /></span></>}</td>
-                      <td className="admin-table-col-start"><span className="admin-start-desktop">{formatStartDateTime(booking.startAt)}</span><span className="admin-start-mobile">{formatStartTimeMobile(booking.startAt)}</span></td>
-                      {mode !== 'history' ? <td className="admin-table-col-actions">{canBeCancelledByShop(booking) ? <button type="button" className="btn btn--secondary admin-cancel-btn" onClick={() => void cancelBookingByShop(booking)} disabled={cancelLoadingBookingId === booking.id}>{cancelLoadingBookingId === booking.id ? 'Cancelling...' : 'Cancel'}</button> : null}</td> : null}
-                    </tr>
-                  );
-                }
-
-                if (!isDashboard || !groups) {
-                  return visibleBookings.map(renderBookingRow);
-                }
-
-                return orderedGroups.flatMap(({ key, label, bookings: groupBookings }) => {
-                  if (groupBookings.length === 0) return [];
-                  return [
-                    <tr key={`sep-${key}`} className={`admin-bookings-temporal-sep-row admin-bookings-temporal-sep-row--${key}`} aria-hidden="true">
-                      <td colSpan={colSpan}>
-                        <div className={`admin-bookings-temporal-sep admin-bookings-temporal-sep--${key}`}>
-                          {key === 'past' && (
-                            <svg className="admin-temporal-sep-icon" viewBox="0 0 24 24" aria-hidden="true" focusable="false">
-                              <path d="M12 8v4l-2 2" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" fill="none" />
-                              <circle cx="12" cy="12" r="9" stroke="currentColor" strokeWidth="2" fill="none" />
-                            </svg>
-                          )}
-                          {key === 'now' && (
-                            <svg className="admin-temporal-sep-icon" viewBox="0 0 24 24" aria-hidden="true" focusable="false">
-                              <circle cx="12" cy="12" r="4" fill="currentColor" />
-                              <circle cx="12" cy="12" r="9" stroke="currentColor" strokeWidth="2" fill="none" />
-                            </svg>
-                          )}
-                          {key === 'upcoming' && (
-                            <svg className="admin-temporal-sep-icon" viewBox="0 0 24 24" aria-hidden="true" focusable="false">
-                              <path d="M12 8v4l3 2" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" fill="none" />
-                              <circle cx="12" cy="12" r="9" stroke="currentColor" strokeWidth="2" fill="none" />
-                            </svg>
-                          )}
-                          <span>{label}</span>
-                          <span className="admin-temporal-sep-count">{groupBookings.length}</span>
-                        </div>
-                      </td>
-                    </tr>,
-                    ...groupBookings.map(renderBookingRow),
-                  ];
-                });
-              })()}
-
-            </tbody>
-          </table>
-        </div>
-                </>
-      )}
+          <AdminBookingsScheduleList
+            variant="history"
+            heading="Booking history"
+            bookings={visibleBookings}
+            nowMs={nowMs}
+            bookingsInitialLoading={bookingsInitialLoading}
+            updatedBookingIds={updatedBookingIds}
+            highlightMatch={highlightMatch}
+            formatStartTime={formatStartTime}
+            formatDateTime={formatStartDateTime}
+            formatHistorySubline={(booking) => {
+              const svc = booking.service?.name ?? '—';
+              const em = shortEmail(booking.email ?? '');
+              return `${svc} · ${em}`;
+            }}
+            getHistoryStatusLine={(booking) => getStatusA11yLabel(getBookingStatusLabel(booking))}
+            historyDateFiltered={Boolean(historyDateRange)}
+            onClearHistoryDateRange={historyDateRange ? () => setHistoryDateRange(null) : undefined}
+            onOpenClient={openClientProfile}
+          />
+        </>
+      ) : null}
       {mode === 'history' && historyHasMore && <button type="button" className="btn btn--secondary" onClick={() => void loadMoreHistory()} disabled={historyLoadingMore}>{historyLoadingMore ? 'Loading...' : 'Load more'}</button>}
     </>
   )}

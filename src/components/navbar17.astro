@@ -64,12 +64,19 @@ const navItems = [
 
   </div>
 
+  <div
+    class="navbar17__mobile-backdrop"
+    data-mobile-nav-backdrop
+    aria-hidden="true"
+  ></div>
+
   <nav
     id="mobile-menu"
     class="navbar17__mobile"
     aria-label="Mobile navigation"
     data-mobile-nav
-    hidden
+    aria-hidden="true"
+    inert
   >
     <ul class="navbar17__mobile-list" role="list">
       {navItems.map((item) => (
@@ -102,6 +109,7 @@ const navItems = [
     const navList     = navbar.querySelector('[data-nav-list]');
     const toggle      = navbar.querySelector('[data-nav-toggle]');
     const mobileNav   = navbar.querySelector('[data-mobile-nav]');
+    const mobileBackdrop = navbar.querySelector('[data-mobile-nav-backdrop]');
 
     /* ── Indicator ─────────────────────────────────────────── */
     const moveIndicator = (linkEl) => {
@@ -189,40 +197,98 @@ const navItems = [
       });
     };
 
-    /* ── Mobile toggle ──────────────────────────────────────── */
+    /* ── Mobile: right off-canvas + backdrop + a11y ─────────── */
+    const FOCUSABLE_SELECTOR =
+      'a[href], button:not([disabled]), [tabindex]:not([tabindex="-1"])';
+
+    let mobileKeyHandler = null;
+
+    const setMenuButtonLabel = (open) => {
+      const label = toggle?.querySelector('.sr-only');
+      if (label) label.textContent = open ? 'Close navigation menu' : 'Open navigation menu';
+    };
+
     const closeMobileMenu = () => {
       if (!(toggle instanceof HTMLButtonElement) || !(mobileNav instanceof HTMLElement)) return;
+      if (toggle.getAttribute('aria-expanded') !== 'true') return;
+
       toggle.setAttribute('aria-expanded', 'false');
-      mobileNav.hidden = true;
-      const label = toggle.querySelector('.sr-only');
-      if (label) label.textContent = 'Open navigation menu';
+      navbar.classList.remove('navbar17--mobile-nav-open');
+      mobileNav.setAttribute('aria-hidden', 'true');
+      mobileNav.setAttribute('inert', '');
+      document.body.style.overflow = '';
+      setMenuButtonLabel(false);
+
+      if (mobileKeyHandler) {
+        document.removeEventListener('keydown', mobileKeyHandler);
+        mobileKeyHandler = null;
+      }
+
+      if (!window.matchMedia('(min-width: 64rem)').matches) {
+        toggle.focus();
+      }
+    };
+
+    const openMobileMenu = () => {
+      if (!(toggle instanceof HTMLButtonElement) || !(mobileNav instanceof HTMLElement)) return;
+      if (toggle.getAttribute('aria-expanded') === 'true') return;
+
+      toggle.setAttribute('aria-expanded', 'true');
+      navbar.classList.add('navbar17--mobile-nav-open');
+      mobileNav.removeAttribute('inert');
+      mobileNav.setAttribute('aria-hidden', 'false');
+      document.body.style.overflow = 'hidden';
+      setMenuButtonLabel(true);
+
+      const focusable = [...mobileNav.querySelectorAll(FOCUSABLE_SELECTOR)].filter(
+        (el) => el instanceof HTMLElement,
+      );
+      focusable[0]?.focus();
+
+      mobileKeyHandler = (event) => {
+        if (event.key === 'Escape') {
+          event.preventDefault();
+          closeMobileMenu();
+          return;
+        }
+        if (event.key !== 'Tab' || focusable.length === 0) return;
+
+        const first = focusable[0];
+        const last = focusable[focusable.length - 1];
+
+        if (event.shiftKey && document.activeElement === first) {
+          event.preventDefault();
+          last.focus();
+        } else if (!event.shiftKey && document.activeElement === last) {
+          event.preventDefault();
+          first.focus();
+        }
+      };
+
+      document.addEventListener('keydown', mobileKeyHandler);
     };
 
     if (toggle instanceof HTMLButtonElement && mobileNav instanceof HTMLElement) {
       toggle.addEventListener('click', () => {
         const isOpen = toggle.getAttribute('aria-expanded') === 'true';
-        if (isOpen) {
-          closeMobileMenu();
-        } else {
-          toggle.setAttribute('aria-expanded', 'true');
-          mobileNav.hidden = false;
-          const label = toggle.querySelector('.sr-only');
-          if (label) label.textContent = 'Close navigation menu';
-        }
+        if (isOpen) closeMobileMenu();
+        else openMobileMenu();
       });
     }
+
+    mobileBackdrop?.addEventListener('click', () => {
+      closeMobileMenu();
+    });
 
     mobileLinks.forEach((link) => {
       link.addEventListener('click', closeMobileMenu);
     });
 
-    // Also close on Escape key
-    document.addEventListener('keydown', (e) => {
-      if (e.key === 'Escape' && toggle?.getAttribute('aria-expanded') === 'true') {
-        closeMobileMenu();
-        toggle?.focus();
-      }
-    });
+    const desktopNavMq = window.matchMedia('(min-width: 64rem)');
+    const onDesktopNavBreakpoint = () => {
+      if (desktopNavMq.matches) closeMobileMenu();
+    };
+    desktopNavMq.addEventListener('change', onDesktopNavBreakpoint);
 
     /* ── Init ───────────────────────────────────────────────── */
     const pathname = window.location.pathname.replace(/\/$/, '') || '/';

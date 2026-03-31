@@ -1,4 +1,4 @@
-import React, { memo, useEffect, useMemo, useRef, useState } from 'react';
+import React, { memo, useEffect, useMemo, useRef } from 'react';
 import { formatInTimeZone } from 'date-fns-tz';
 import { minutesInLondonDay } from '../../lib/booking/time';
 import { getBookingStatusTone } from './bookingStatus';
@@ -7,7 +7,7 @@ type TimelineBarber = {
   name: string;
 };
 
-type TimelineBooking = {
+export type TimelineBooking = {
   id: string;
   fullName: string;
   email: string;
@@ -77,12 +77,16 @@ const TIMELINE_TOTAL_MINUTES = (TIMELINE_END_HOUR - TIMELINE_START_HOUR) * 60;
 const TIMELINE_TOTAL_SLOTS = TIMELINE_TOTAL_MINUTES / TIMELINE_SLOT_INTERVAL_MINUTES;
 const TIMELINE_CANVAS_MIN_WIDTH_REM = TIMELINE_TOTAL_SLOTS * TIMELINE_SLOT_WIDTH_REM;
 const TIMELINE_MOBILE_CANVAS_MIN_WIDTH_REM = TIMELINE_CANVAS_MIN_WIDTH_REM * MOBILE_TIMELINE_HOUR_SPACING_MULTIPLIER;
-const BOOKING_CARD_HEIGHT = 56;
+/** Fits time + service + client line at compact density */
+const BOOKING_CARD_HEIGHT = 64;
 const BOOKING_STACK_GAP = 6;
 const LANE_INNER_PADDING = 8;
 const NOW_INDICATOR_REFRESH_MS = 15000;
 const INITIAL_NOW_SCROLL_OFFSET_RATIO = 0.38;
 const INITIAL_NOW_SCROLL_RETRY_COUNT = 6;
+
+const TIMELINE_MAJOR_STEP_PCT = (TIMELINE_SLOT_INTERVAL_MINUTES / TIMELINE_TOTAL_MINUTES) * 100;
+const TIMELINE_MINOR_STEP_PCT = (15 / TIMELINE_TOTAL_MINUTES) * 100;
 
 let hasLoggedInvalidTimelineDate = false;
 
@@ -115,7 +119,7 @@ function getTimelinePosition(startAt: Date | string, endAt: Date | string) {
 
 function getInitials(fullName: string) {
   const parts = fullName.trim().split(/\s+/).filter(Boolean);
-  if (parts.length === 0) return 'NA';
+  if (parts.length === 0) return '—';
   if (parts.length === 1) return parts[0].slice(0, 2).toUpperCase();
 
   return `${parts[0][0] ?? ''}${parts[parts.length - 1][0] ?? ''}`.toUpperCase();
@@ -242,6 +246,19 @@ function getCurrentLondonTimelineMinute() {
   return hour * 60 + minute - TIMELINE_START_HOUR * 60;
 }
 
+/** Horizontal anchor on the timeline scale (0 = TIMELINE_START_HOUR, 1 = TIMELINE_END_HOUR) for initial scroll. */
+function getTimelineInitialScrollRatio(selectedDate: string): number {
+  const todayLondon = formatInTimeZone(new Date(), ADMIN_TIMEZONE, 'yyyy-MM-dd');
+  if (selectedDate !== todayLondon) {
+    return 0;
+  }
+
+  const nowMinute = getCurrentLondonTimelineMinute();
+  if (nowMinute < 0) return 0;
+  if (nowMinute > TIMELINE_TOTAL_MINUTES) return 1;
+  return nowMinute / TIMELINE_TOTAL_MINUTES;
+}
+
 function clampScrollLeft(value: number, container: HTMLDivElement) {
   const maxScrollLeft = Math.max(0, container.scrollWidth - container.clientWidth);
   if (maxScrollLeft <= 0) return 0;
@@ -249,63 +266,28 @@ function clampScrollLeft(value: number, container: HTMLDivElement) {
   return Math.max(0, Math.min(value, maxScrollLeft));
 }
 
-const DESKTOP_TIMELINE_MEDIA_QUERY = '(min-width: 769px)';
-const TIMELINE_TEXT_FIT_EPSILON = 0.1;
-let timelineTextMeasureCanvas: HTMLCanvasElement | null = null;
-
-function measureTextWidth(text: string, fontSizePx: number, fontWeight: string, fontFamily: string, letterSpacingPx: number) {
-  if (typeof document === 'undefined') return text.length * fontSizePx * 0.6;
-
-  const canvas = timelineTextMeasureCanvas ??= document.createElement('canvas');
-  const context = canvas.getContext('2d');
-  if (!context) return text.length * fontSizePx * 0.6;
-
-  context.font = `${fontWeight} ${fontSizePx}px ${fontFamily}`;
-  const baseWidth = context.measureText(text).width;
-  const trackingWidth = Math.max(0, text.length - 1) * letterSpacingPx;
-  return baseWidth + trackingWidth;
+function bookingCardPropsEqual(
+  prev: { item: PositionedBooking; isSearchActive: boolean; onBookingClick: (booking: TimelineBooking) => void },
+  next: { item: PositionedBooking; isSearchActive: boolean; onBookingClick: (booking: TimelineBooking) => void }
+): boolean {
+  if (prev.isSearchActive !== next.isSearchActive) return false;
+  if (prev.onBookingClick !== next.onBookingClick) return false;
+  const a = prev.item;
+  const b = next.item;
+  if (a.id !== b.id) return false;
+  if (a.leftPct !== b.leftPct || a.widthPct !== b.widthPct || a.topPx !== b.topPx || a.heightPx !== b.heightPx) return false;
+  if (a.startLabel !== b.startLabel || a.endLabel !== b.endLabel) return false;
+  const ab = a.booking;
+  const bb = b.booking;
+  return (
+    ab.status === bb.status &&
+    ab.rescheduledAt === bb.rescheduledAt &&
+    ab.fullName === bb.fullName &&
+    (ab.service?.name ?? '') === (bb.service?.name ?? '')
+  );
 }
 
-function getFittedFontSize({
-  text,
-  widthPx,
-  maxFontSizePx,
-  minFontSizePx,
-  fontWeight,
-  fontFamily,
-  letterSpacingPx
-}: {
-  text: string;
-  widthPx: number;
-  maxFontSizePx: number;
-  minFontSizePx: number;
-  fontWeight: string;
-  fontFamily: string;
-  letterSpacingPx: number;
-}) {
-  if (!text.trim()) return maxFontSizePx;
-  if (widthPx <= 0) return minFontSizePx;
-
-  let low = minFontSizePx;
-  let high = maxFontSizePx;
-  let best = minFontSizePx;
-
-  while (high - low > TIMELINE_TEXT_FIT_EPSILON) {
-    const mid = (low + high) / 2;
-    const measuredWidth = measureTextWidth(text, mid, fontWeight, fontFamily, letterSpacingPx);
-
-    if (measuredWidth <= widthPx) {
-      best = mid;
-      low = mid;
-    } else {
-      high = mid;
-    }
-  }
-
-  return Math.max(minFontSizePx, Math.min(maxFontSizePx, best));
-}
-
-function TimelineBookingCard({
+const TimelineBookingCard = memo(function TimelineBookingCard({
   item,
   isSearchActive,
   onBookingClick
@@ -314,109 +296,34 @@ function TimelineBookingCard({
   isSearchActive: boolean;
   onBookingClick: (booking: TimelineBooking) => void;
 }) {
-  const cardRef = useRef<HTMLButtonElement | null>(null);
-  const [fontSizes, setFontSizes] = useState<{ time: number; service: number } | null>(null);
-
-  useEffect(() => {
-    const card = cardRef.current;
-    if (!card || typeof window === 'undefined') return;
-
-    let frameId = 0;
-    let observer: ResizeObserver | null = null;
-
-    const updateTextFit = () => {
-      const isDesktopViewport = window.matchMedia(DESKTOP_TIMELINE_MEDIA_QUERY).matches;
-      if (!isDesktopViewport) {
-        setFontSizes((current) => (current === null ? current : null));
-        return;
-      }
-
-      const computedStyle = window.getComputedStyle(card);
-      const paddingLeft = Number.parseFloat(computedStyle.paddingLeft) || 0;
-      const paddingRight = Number.parseFloat(computedStyle.paddingRight) || 0;
-      const availableWidth = Math.max(0, card.clientWidth - paddingLeft - paddingRight);
-
-      const timeSize = getFittedFontSize({
-        text: `${item.startLabel}-${item.endLabel}`,
-        widthPx: availableWidth,
-        maxFontSizePx: 14,
-        minFontSizePx: 5,
-        fontWeight: '700',
-        fontFamily: 'Inter, sans-serif',
-        letterSpacingPx: -0.2
-      });
-
-      const serviceSize = getFittedFontSize({
-        text: item.booking.service?.name ?? 'Service',
-        widthPx: availableWidth,
-        maxFontSizePx: 12,
-        minFontSizePx: 5,
-        fontWeight: '700',
-        fontFamily: 'Inter, sans-serif',
-        letterSpacingPx: -0.08
-      });
-
-      setFontSizes((current) => {
-        if (current && Math.abs(current.time - timeSize) < 0.2 && Math.abs(current.service - serviceSize) < 0.2) {
-          return current;
-        }
-
-        return { time: timeSize, service: serviceSize };
-      });
-    };
-
-    const scheduleUpdate = () => {
-      window.cancelAnimationFrame(frameId);
-      frameId = window.requestAnimationFrame(updateTextFit);
-    };
-
-    const mediaQuery = window.matchMedia(DESKTOP_TIMELINE_MEDIA_QUERY);
-    const fontReady = document.fonts?.ready;
-
-    scheduleUpdate();
-    if (fontReady) void fontReady.then(scheduleUpdate);
-
-    observer = new ResizeObserver(() => {
-      scheduleUpdate();
-    });
-    observer.observe(card);
-
-    const handleViewportChange = () => scheduleUpdate();
-    mediaQuery.addEventListener('change', handleViewportChange);
-    window.addEventListener('resize', handleViewportChange);
-
-    return () => {
-      window.cancelAnimationFrame(frameId);
-      observer?.disconnect();
-      mediaQuery.removeEventListener('change', handleViewportChange);
-      window.removeEventListener('resize', handleViewportChange);
-    };
-  }, [item.booking.service?.name, item.endLabel, item.startLabel]);
+  const initials = getInitials(item.booking.fullName);
+  const tone = getBookingStatusTone(item.booking);
 
   return (
     <button
-      ref={cardRef}
       type="button"
       data-booking-id={item.booking.id}
-      className={`admin-timeline-card admin-timeline-card--booking admin-timeline-card--${getBookingStatusTone(item.booking)} ${isSearchActive ? 'admin-timeline-card--search-match' : ''}`}
+      className={`admin-timeline-card admin-timeline-card--booking admin-timeline-card--${tone} ${isSearchActive ? 'admin-timeline-card--search-match' : ''}`}
       style={{
         left: `${item.leftPct}%`,
         width: `${item.widthPct}%`,
         top: `${item.topPx}px`,
-        height: `${item.heightPx}px`,
-        ...(fontSizes ? ({
-          '--timeline-card-time-font-size': `${fontSizes.time}px`,
-          '--timeline-card-service-font-size': `${fontSizes.service}px`
-        } as React.CSSProperties) : null)
+        height: `${item.heightPx}px`
       }}
       onClick={() => onBookingClick(item.booking)}
-      title={`${item.startLabel}-${item.endLabel} · ${item.booking.service?.name ?? 'Service'} · ${item.booking.fullName}`}
+      title={`${item.startLabel}–${item.endLabel} · ${item.booking.service?.name ?? 'Service'} · ${item.booking.fullName}`}
     >
-      <span className="admin-timeline-card-time">{`${item.startLabel}-${item.endLabel}`}</span>
+      <span className="admin-timeline-card-time">{`${item.startLabel}–${item.endLabel}`}</span>
       <strong className="admin-timeline-card-service">{item.booking.service?.name ?? 'Service'}</strong>
+      <span className="admin-timeline-card-client-row">
+        <span className="admin-timeline-card-initials" aria-hidden="true">
+          {initials}
+        </span>
+        <span className="admin-timeline-card-client">{item.booking.fullName}</span>
+      </span>
     </button>
   );
-}
+}, bookingCardPropsEqual);
 
 
 const NowIndicator = memo(function NowIndicator({ selectedDate }: NowIndicatorProps) {
@@ -442,22 +349,31 @@ function TodayTimeline({ barbers, bookings, timeBlocks, selectedDate, isSearchAc
   const localScrollContainerRef = useRef<HTMLDivElement | null>(null);
   const timelineScrollContainerRef = scrollContainerRef ?? localScrollContainerRef;
   const autoPositionedDateRef = useRef<string | null>(null);
+  const prevLaneCountRef = useRef(0);
   const lanes = useMemo(() => buildLanes(barbers, bookings, timeBlocks), [barbers, bookings, timeBlocks]);
   const ticks = useMemo(() => getTickRows(), []);
   const timelineLayoutStyle = useMemo(
-    () => ({
-      '--admin-timeline-canvas-width': `${TIMELINE_CANVAS_MIN_WIDTH_REM}rem`,
-      '--admin-timeline-mobile-canvas-width': `${TIMELINE_MOBILE_CANVAS_MIN_WIDTH_REM}rem`
-    }) as React.CSSProperties,
+    () =>
+      ({
+        '--admin-timeline-canvas-width': `${TIMELINE_CANVAS_MIN_WIDTH_REM}rem`,
+        '--admin-timeline-mobile-canvas-width': `${TIMELINE_MOBILE_CANVAS_MIN_WIDTH_REM}rem`,
+        '--admin-timeline-major-step-pct': `${TIMELINE_MAJOR_STEP_PCT}`,
+        '--admin-timeline-minor-step-pct': `${TIMELINE_MINOR_STEP_PCT}`
+      }) as React.CSSProperties,
 
     []
   );
   useEffect(() => {
-    if (autoPositionedDateRef.current === selectedDate) return;
+    if (lanes.length === 0) {
+      prevLaneCountRef.current = 0;
+      return;
+    }
 
-    const todayLondon = formatInTimeZone(new Date(), ADMIN_TIMEZONE, 'yyyy-MM-dd');
-    if (selectedDate !== todayLondon) {
-      autoPositionedDateRef.current = selectedDate;
+    const previousLaneCount = prevLaneCountRef.current;
+    prevLaneCountRef.current = lanes.length;
+    const becameReady = previousLaneCount === 0 && lanes.length > 0;
+
+    if (!becameReady && autoPositionedDateRef.current === selectedDate) {
       return;
     }
 
@@ -465,14 +381,14 @@ function TodayTimeline({ barbers, bookings, timeBlocks, selectedDate, isSearchAc
     let rafId = 0;
     let timeoutId = 0;
 
-    const positionToNow = (attempt: number) => {
+    const applyInitialHorizontalScroll = (attempt: number) => {
       if (cancelled) return;
 
       const container = timelineScrollContainerRef.current;
       if (!container) {
         if (attempt < INITIAL_NOW_SCROLL_RETRY_COUNT) {
           timeoutId = window.setTimeout(() => {
-            rafId = window.requestAnimationFrame(() => positionToNow(attempt + 1));
+            rafId = window.requestAnimationFrame(() => applyInitialHorizontalScroll(attempt + 1));
           }, 32);
         }
         return;
@@ -482,33 +398,29 @@ function TodayTimeline({ barbers, bookings, timeBlocks, selectedDate, isSearchAc
       if (!hasOverflow) {
         if (attempt < INITIAL_NOW_SCROLL_RETRY_COUNT) {
           timeoutId = window.setTimeout(() => {
-            rafId = window.requestAnimationFrame(() => positionToNow(attempt + 1));
+            rafId = window.requestAnimationFrame(() => applyInitialHorizontalScroll(attempt + 1));
           }, 32);
+        } else {
+          autoPositionedDateRef.current = selectedDate;
         }
         return;
       }
 
-      const nowMinute = getCurrentLondonTimelineMinute();
-      if (nowMinute < 0 || nowMinute > TIMELINE_TOTAL_MINUTES) {
-        autoPositionedDateRef.current = selectedDate;
-        return;
-      }
-
-      const nowRatio = nowMinute / TIMELINE_TOTAL_MINUTES;
-      const nowPixel = nowRatio * container.scrollWidth;
-      const targetLeft = nowPixel - container.clientWidth * INITIAL_NOW_SCROLL_OFFSET_RATIO;
+      const ratio = getTimelineInitialScrollRatio(selectedDate);
+      const anchorPixel = ratio * container.scrollWidth;
+      const targetLeft = anchorPixel - container.clientWidth * INITIAL_NOW_SCROLL_OFFSET_RATIO;
       container.scrollLeft = clampScrollLeft(targetLeft, container);
       autoPositionedDateRef.current = selectedDate;
     };
 
-    rafId = window.requestAnimationFrame(() => positionToNow(0));
+    rafId = window.requestAnimationFrame(() => applyInitialHorizontalScroll(0));
 
     return () => {
       cancelled = true;
       window.cancelAnimationFrame(rafId);
       window.clearTimeout(timeoutId);
     };
-  }, [selectedDate, timelineScrollContainerRef]);
+  }, [lanes.length, selectedDate]);
 
 
 
@@ -647,20 +559,14 @@ function TodayTimeline({ barbers, bookings, timeBlocks, selectedDate, isSearchAc
           <div className="admin-timeline-lane-row" key={lane.barber.id}>
             <div className="admin-timeline-lane-label">{lane.barber.name}</div>
             <div className="admin-timeline-lane-canvas" style={{ minHeight: `${lane.laneHeight}px` }}>
-              {ticks.majorTicks.map((tick) => (
-                <span
-                  key={`grid-${lane.barber.id}-${tick.minute}`}
-                  className="admin-timeline-grid-line"
-                  style={{ left: `${(tick.minute / TIMELINE_TOTAL_MINUTES) * 100}%` }}
-                />
-              ))}
+              <span className="admin-timeline-lane-grid" aria-hidden="true" />
 
               {lane.timeBlocks.map((item) => (
                 <article
                   key={item.id}
                   className="admin-timeline-card admin-timeline-card--block"
                   style={{ left: `${item.leftPct}%`, width: `${item.widthPct}%`, top: `${item.topPx}px`, height: `${item.heightPx}px` }}
-                  title={`${item.timeBlock.title} (${item.startLabel}-${item.endLabel})`}
+                  title={`${item.timeBlock.title} (${item.startLabel}–${item.endLabel})`}
                 >
                   <p>{item.timeBlock.title}</p>
                 </article>
