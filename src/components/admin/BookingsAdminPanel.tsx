@@ -686,6 +686,8 @@ export default function BookingsAdminPanel({ isActive, mode, onBackToDashboard }
     const lastBookingsQueryKeyRef = useRef<string | null>(null);
   const updatedRowsTimeoutRef = useRef<number | null>(null);
   const timelineScrollRef = useRef<HTMLDivElement | null>(null);
+  const bookingShellRef = useRef<HTMLElement | null>(null);
+  const nextBlockRef = useRef<HTMLDivElement | null>(null);
   const historyRecentBarbersScrollRef = useRef<HTMLDivElement | null>(null);
   const reportsRecentBarbersScrollRef = useRef<HTMLDivElement | null>(null);
   const searchInputRef = useRef<HTMLInputElement | null>(null);
@@ -1297,6 +1299,7 @@ export default function BookingsAdminPanel({ isActive, mode, onBackToDashboard }
 
 
   const isMobileDashboard = mode === 'dashboard' && isMobileViewport;
+  const isMobileHistory = mode === 'history' && isMobileViewport;
   const isAnyOverlayOpen = isAddBarberSheetOpen || openDrilldown !== null || showHolidayModal || selectedTimelineBooking !== null || selectedClientId !== null;
   useBodyScrollLock(isMobileViewport && isAnyOverlayOpen);
 
@@ -1849,19 +1852,44 @@ export default function BookingsAdminPanel({ isActive, mode, onBackToDashboard }
 
 
 
+  useEffect(() => {
+    const bookingShellNode = bookingShellRef.current;
+    const nextBlockNode = nextBlockRef.current;
+    if (!bookingShellNode || !nextBlockNode) return undefined;
+
+    const mainContentNode = bookingShellNode.closest('.admin-main-content') as HTMLElement | null;
+    if (!mainContentNode) return undefined;
+
+    const updateNextBlockHeightVariable = () => {
+      const nextHeight = nextBlockNode.getBoundingClientRect().height;
+      mainContentNode.style.setProperty('--admin-next-block-h', `${Math.ceil(nextHeight)}px`);
+    };
+
+    updateNextBlockHeightVariable();
+    const resizeObserver = new ResizeObserver(updateNextBlockHeightVariable);
+    resizeObserver.observe(nextBlockNode);
+    window.addEventListener('resize', updateNextBlockHeightVariable);
+
+    return () => {
+      resizeObserver.disconnect();
+      window.removeEventListener('resize', updateNextBlockHeightVariable);
+      mainContentNode.style.removeProperty('--admin-next-block-h');
+    };
+  }, [isMobileViewport, mode]);
+
   if (!isActive) return null;
   if (isCheckingSession) return <section className="surface booking-shell"><h2>Admin</h2><p className="muted">Checking session...</p></section>;
   if (!loggedIn) return <section className="surface booking-shell"><h2>ADMIN</h2><p className="muted">Unauthorized. Verify your admin secret and reload this page.</p>{error && <p>{error}</p>}</section>;
 
   return (
-    <section className="surface booking-shell">
+    <section ref={bookingShellRef} className={`surface booking-shell${mode === 'reports' ? ' booking-shell--reports' : ''}`}>
       <AdminSectionHeader
         title={BOOKINGS_SECTION_HEADER[mode].title}
         description={BOOKINGS_SECTION_HEADER[mode].description}
         metaBadge={mode === 'dashboard' ? `${todayBookings.length} today` : undefined}
         metaBadgeVariant={mode === 'dashboard' ? 'success' : undefined}
       />
-      <div className={`admin-next-block ${isMobileViewport ? 'admin-next-block--mobile-sticky' : ''}`}><div className="admin-next-header"><div className="admin-next-header-copy"><p className="admin-next-primary">Today: {todayBookings.length} bookings</p>{nextBooking && <p className="admin-next-secondary">Next: {nextBooking.barber?.name} — {nextBooking.service?.name} — {formatStartTime(nextBooking.startAt)} ({formatRelativeTime(nextBooking.startAt, nextBooking.endAt)})</p>}</div><div className={`admin-live-status admin-live-status--${connectionStateLabel === 'LIVE' ? 'live' : connectionStateLabel === 'OFFLINE' ? 'offline' : 'connecting'}`} role="status" aria-live="polite"><span className={`admin-live-status-dot ${hasLivePulse ? 'admin-live-status-dot--pulse' : ''}`} aria-hidden="true" /><span className="admin-live-status-label">{connectionStateLabel}</span></div></div><p className="muted admin-next-updated">{freshnessLabel}</p></div>
+      <div ref={nextBlockRef} className={`admin-next-block ${isMobileViewport ? 'admin-next-block--mobile-sticky' : ''}`}><div className="admin-next-header"><div className="admin-next-header-copy"><p className="admin-next-primary">Today: {todayBookings.length} bookings</p>{nextBooking && <p className="admin-next-secondary">Next: {nextBooking.barber?.name} — {nextBooking.service?.name} — {formatStartTime(nextBooking.startAt)} ({formatRelativeTime(nextBooking.startAt, nextBooking.endAt)})</p>}</div><div className={`admin-live-status admin-live-status--${connectionStateLabel === 'LIVE' ? 'live' : connectionStateLabel === 'OFFLINE' ? 'offline' : 'connecting'}`} role="status" aria-live="polite"><span className={`admin-live-status-dot ${hasLivePulse ? 'admin-live-status-dot--pulse' : ''}`} aria-hidden="true" /><span className="admin-live-status-label">{connectionStateLabel}</span></div></div><p className="muted admin-next-updated">{freshnessLabel}</p></div>
 
       {cancelSuccessMessage && <p className="admin-inline-success">{cancelSuccessMessage}</p>}
       {cancelErrorMessage && <p className="admin-inline-error">{cancelErrorMessage}</p>}
@@ -2203,6 +2231,69 @@ export default function BookingsAdminPanel({ isActive, mode, onBackToDashboard }
           ))}
         </div>
 
+      ) : isMobileHistory ? (
+        <div className="admin-card-list" role="list" aria-live="polite">
+          {bookingsInitialLoading ? (
+            <div className="admin-card" role="listitem" aria-busy="true">
+              <p className="muted">Loading history...</p>
+            </div>
+          ) : visibleBookings.length === 0 ? (
+            <EmptyState
+              icon={Calendar}
+              title={historyDateRange ? 'No bookings in this period' : 'No booking history'}
+              description={historyDateRange ? 'No appointments were found for the selected date range.' : 'Past appointments will appear here once bookings are completed or cancelled.'}
+              variant={historyDateRange ? 'filtered' : undefined}
+              action={historyDateRange ? (
+                <button
+                  type="button"
+                  className="btn btn--ghost btn--sm"
+                  onClick={() => setHistoryDateRange(null)}
+                >
+                  Clear date range
+                </button>
+              ) : undefined}
+            />
+          ) : (
+            visibleBookings.map((booking) => {
+              const bookingStatusLabel = getBookingStatusLabel(booking);
+              const statusIconMeta = getStatusIconMeta(booking, bookingStatusLabel);
+              const StatusIcon = statusIconMeta.Icon;
+              const fullEmail = booking.email ?? '';
+              const short = shortEmail(fullEmail);
+              const serviceLabel = booking.service?.name ?? '-';
+              const barberLabel = booking.barber?.name ?? '-';
+              return (
+                <article className="admin-card" role="listitem" key={booking.id}>
+                  <div className="admin-card__header">
+                    <div className="admin-card__title-wrap">
+                      <p className="admin-card__title">
+                        <button type="button" className="admin-link-button" onClick={() => void openClientProfile(booking.clientId)}>
+                          {highlightMatch(booking.fullName)}
+                        </button>
+                      </p>
+                      <p className="admin-card__subtitle">{formatStartDateTime(booking.startAt)}</p>
+                    </div>
+                    <span className="admin-status-icon-wrap" aria-label={statusIconMeta.label} title={statusIconMeta.label}>
+                      <StatusIcon className={`admin-status-icon ${statusIconMeta.className}`} />
+                    </span>
+                  </div>
+                  <dl className="admin-card__dl">
+                    <dt className="admin-card__dt">Email</dt>
+                    <dd className="admin-card__dd">
+                      <button type="button" className="admin-link-button" onClick={() => void openClientProfile(booking.clientId)}>{short}</button>
+                    </dd>
+                    <dt className="admin-card__dt">Service</dt>
+                    <dd className="admin-card__dd">{serviceLabel}</dd>
+                    <dt className="admin-card__dt">Barber</dt>
+                    <dd className="admin-card__dd">{barberLabel}</dd>
+                    <dt className="admin-card__dt">Status</dt>
+                    <dd className="admin-card__dd">{statusIconMeta.label}</dd>
+                  </dl>
+                </article>
+              );
+            })
+          )}
+        </div>
       ) : (
                 <>
         <section className="admin-status-legend" aria-label="Status icons legend">

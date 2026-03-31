@@ -72,7 +72,7 @@
   }
 
   .admin-section-header--sticky {
-    top: calc(3.25rem + var(--space-xs) + env(safe-area-inset-top, 0px));
+    top: calc(var(--admin-mobile-header-h, 3.25rem) + var(--space-xs) + env(safe-area-inset-top, 0px));
     -webkit-backdrop-filter: blur(10px);
     backdrop-filter: blur(10px);
   }

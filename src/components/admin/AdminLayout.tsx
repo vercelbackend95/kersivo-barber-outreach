@@ -68,14 +68,14 @@ function SidebarBrand() {
   );
 }
 
-function SidebarStatus() {
+function SidebarStatus({ className = '' }: { className?: string }) {
   const dateStr = new Date().toLocaleDateString('en-GB', {
     weekday: 'short',
     day: 'numeric',
     month: 'short',
   });
   return (
-    <div className="admin-sidebar-status" aria-label="System status">
+    <div className={`admin-sidebar-status ${className}`.trim()} aria-label="System status">
       <span className="admin-sidebar-status-date">{dateStr}</span>
       <span className="admin-sidebar-status-dot" aria-hidden="true" />
       <span className="admin-sidebar-status-label">Online</span>
@@ -91,6 +91,8 @@ export default function AdminLayout({
   children,
 }: AdminLayoutProps) {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+  const mainContentRef = useRef<HTMLElement | null>(null);
+  const mobileHeaderRef = useRef<HTMLElement | null>(null);
   const mobileDrawerRef = useRef<HTMLDivElement | null>(null);
   const mobileOpenButtonRef = useRef<HTMLButtonElement | null>(null);
 
@@ -188,6 +190,28 @@ export default function AdminLayout({
     };
   }, [isMobileMenuOpen]);
 
+  useEffect(() => {
+    const mainContentNode = mainContentRef.current;
+    const mobileHeaderNode = mobileHeaderRef.current;
+    if (!mainContentNode || !mobileHeaderNode) return undefined;
+
+    const updateHeaderHeightVariable = () => {
+      const nextHeight = mobileHeaderNode.getBoundingClientRect().height;
+      mainContentNode.style.setProperty('--admin-mobile-header-h', `${Math.ceil(nextHeight)}px`);
+    };
+
+    updateHeaderHeightVariable();
+    const resizeObserver = new ResizeObserver(updateHeaderHeightVariable);
+    resizeObserver.observe(mobileHeaderNode);
+    window.addEventListener('resize', updateHeaderHeightVariable);
+
+    return () => {
+      resizeObserver.disconnect();
+      window.removeEventListener('resize', updateHeaderHeightVariable);
+      mainContentNode.style.removeProperty('--admin-mobile-header-h');
+    };
+  }, []);
+
   return (
     <div className="admin-shell">
       <aside className="admin-sidebar" aria-label="Admin sections">
@@ -208,17 +232,21 @@ export default function AdminLayout({
       </aside>
 
       <section
+        ref={mainContentRef}
         className="admin-main-content admin-mobile-edge"
         aria-busy={isTransitioning}
         data-transitioning={isTransitioning}
       >
-        <header className="admin-mobile-header" aria-label="Admin mobile header">
+        <header ref={mobileHeaderRef} className="admin-mobile-header" aria-label="Admin mobile header">
           <SidebarBrand />
-          {activeSectionLabel && (
-            <span className="admin-mobile-section-name" aria-current="page">
-              {activeSectionLabel}
-            </span>
-          )}
+          <div className="admin-mobile-header-center">
+            {activeSectionLabel && (
+              <span className="admin-mobile-section-name" aria-current="page">
+                {activeSectionLabel}
+              </span>
+            )}
+            <SidebarStatus className="admin-sidebar-status--mobile-header" />
+          </div>
           <button
             ref={mobileOpenButtonRef}
             type="button"
@@ -266,6 +294,7 @@ export default function AdminLayout({
       >
         <div className="admin-mobile-drawer-head">
           <SidebarBrand />
+          <SidebarStatus className="admin-sidebar-status--mobile-drawer" />
           <button
             type="button"
             className="admin-mobile-close-button"

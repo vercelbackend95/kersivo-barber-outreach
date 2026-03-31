@@ -1,4 +1,8 @@
 @media (max-width: 47.99rem) {
+  .admin-main-content {
+    --admin-mobile-sticky-stack-top: calc(var(--admin-mobile-header-h, 0px) + env(safe-area-inset-top, 0px));
+  }
+
   .admin-main-content,
   .booking-shell {
     isolation: isolate;
@@ -10,12 +14,12 @@
   }
 
   .admin-next-block--mobile-sticky {
-    top: calc(3.1rem + env(safe-area-inset-top, 0px));
+    top: var(--admin-mobile-sticky-stack-top);
     z-index: 210;
   }
 
   .admin-search-row--sticky {
-    top: calc(5.9rem + env(safe-area-inset-top, 0px));
+    top: calc(var(--admin-mobile-sticky-stack-top) + var(--admin-next-block-h, 0px) + var(--space-2xs));
     z-index: 200;
   }
 

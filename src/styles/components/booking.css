@@ -2376,6 +2376,8 @@
   padding: var(--space-sm);
   display: grid;
   gap: var(--space-sm);
+  width: 100%;
+  min-width: 0;
 }
 
 .admin-reports-filter-bar {
@@ -2661,6 +2663,7 @@
 .admin-history-row {
   display: grid;
   gap: 0.35rem;
+  min-width: 0;
 }
 
 .admin-history-barber-controls {
@@ -2669,6 +2672,7 @@
   gap: 0.75rem;
   flex-wrap: nowrap;
   justify-content: space-between;
+  min-width: 0;
 }
 
 .admin-history-recent-scroll {
@@ -2713,6 +2717,38 @@
   display: inline-flex;
   align-items: center;
   gap: 0.45rem;
+}
+
+.booking-shell--reports {
+  --admin-reports-content-max: 88rem;
+}
+
+.booking-shell--reports > .admin-section-header,
+.booking-shell--reports > .admin-next-block,
+.booking-shell--reports > .admin-inline-success,
+.booking-shell--reports > .admin-inline-error,
+.booking-shell--reports > .admin-reports {
+  width: min(100%, var(--admin-reports-content-max));
+  margin-inline: auto;
+}
+
+.booking-shell--reports .admin-reports-filter-bar,
+.booking-shell--reports .admin-history-row,
+.booking-shell--reports .admin-sales-chart-wrap,
+.booking-shell--reports .admin-reports-grid,
+.booking-shell--reports .admin-leaderboard {
+  min-width: 0;
+}
+
+@media (max-width: 64rem) {
+  .booking-shell--reports .admin-history-barber-controls {
+    flex-wrap: wrap;
+    align-items: flex-start;
+  }
+
+  .booking-shell--reports .admin-history-control-actions {
+    margin-left: auto;
+  }
 }
 
 .admin-history-date-filter-wrap {
@@ -3494,6 +3530,15 @@
   padding-bottom: 0;
 }
 
+.admin-mobile-header-center {
+  flex: 1;
+  min-width: 0;
+  display: grid;
+  justify-items: center;
+  gap: 0.1rem;
+  padding: 0 var(--space-xs);
+}
+
 /* ── Sidebar status bar ─────────────────────────────────────────────────── */
 .admin-sidebar-status {
   display: flex;
@@ -3525,7 +3570,6 @@
 
 /* ── Mobile header section name ─────────────────────────────────────────── */
 .admin-mobile-section-name {
-  flex: 1;
   text-align: center;
   font-size: var(--text-xs);
   color: var(--muted);
@@ -3533,13 +3577,47 @@
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
-  padding: 0 var(--space-xs);
   letter-spacing: 0.02em;
+  width: 100%;
+}
+
+.admin-sidebar-status--mobile-header {
+  gap: 0.28rem;
+  padding: 0;
+  flex-wrap: nowrap;
+  font-size: 0.68rem;
+  line-height: 1.2;
+}
+
+.admin-sidebar-status--mobile-header .admin-sidebar-status-date,
+.admin-sidebar-status--mobile-header .admin-sidebar-status-label {
+  white-space: nowrap;
+}
+
+.admin-sidebar-status--mobile-header .admin-sidebar-status-dot {
+  width: 5px;
+  height: 5px;
+}
+
+.admin-sidebar-status--mobile-drawer {
+  margin-left: auto;
+  margin-right: 0.3rem;
+  padding: 0.15rem 0;
+  flex-wrap: nowrap;
+  white-space: nowrap;
 }
 
 
 
 @media (max-width: 768px) {
+
+  .admin-mobile-header {
+    gap: 0.5rem;
+  }
+
+  .admin-mobile-header .admin-sidebar-brand {
+    min-width: 0;
+  }
 
   .admin-sidebar-nav {
     gap: 0.75rem;
@@ -3564,6 +3642,24 @@
 
 
 
+  }
+}
+
+@media (max-width: 23.5rem) {
+  .admin-mobile-header-center {
+    justify-items: start;
+  }
+
+  .admin-mobile-section-name {
+    text-align: left;
+  }
+
+  .admin-sidebar-status--mobile-header {
+    font-size: 0.64rem;
+  }
+
+  .admin-sidebar-status--mobile-drawer {
+    display: none;
   }
 }
 
