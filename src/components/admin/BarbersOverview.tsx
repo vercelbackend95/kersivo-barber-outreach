@@ -1,30 +1,14 @@
 import React from 'react';
 import type { Barber, ServiceOption, TimeBlock } from './barbersTypes';
-import { SettingsGearIcon } from './SettingsGearIcon';
-import { ArrowRight, Calendar, Clock, Plus, X } from '../lucide-react';
-
-type BarberBookingPreview = {
-  barberId: string;
-  status: string;
-  startAt: string;
-  service?: {
-    name?: string | null;
-  } | null;
-};
-
-type NextBookingPreview = {
-  timeLabel: string;
-  relativeLabel: string;
-  serviceLabel: string;
-};
-
-type BarberAvailabilityStatus = 'busy' | 'active' | 'free' | 'off';
-
-type DayFillData = {
-  pct: number;
-  count: number;
-  workingH: number;
-};
+import type { BarberBookingPreview } from '../../lib/admin/barberRosterPresentation';
+import { Plus, X } from '../lucide-react';
+import AdminBarberRosterCard from './AdminBarberRosterCard';
+import {
+  getDayFill,
+  getNextBookingForBarber,
+  getBarberAvailabilityStatus,
+  getTodayLine,
+} from '../../lib/admin/barberRosterPresentation';
 
 type BarbersOverviewProps = {
   barbers: Barber[];
@@ -60,127 +44,10 @@ const DEFAULT_SERVICE_OPTIONS: ServiceOption[] = [
   { id: 'svc-haircut-beard', name: 'Haircut + Beard' },
 ];
 
-const SCHEDULED_BOOKING_STATUSES = ['CONFIRMED', 'PENDING', 'PENDING_CONFIRMATION', 'RESCHEDULED'] as const;
-
-const AVAIL_STATUS_LABELS: Record<BarberAvailabilityStatus, string> = {
-  busy: 'Busy',
-  active: 'Has bookings today',
-  free: 'Available',
-  off: 'Off today',
-};
-
-const WORKING_HOURS_PER_DAY = 8;
-const ESTIMATED_BOOKING_DURATION_H = 0.75;
-
-function formatTimeHHMM(date: Date) {
-  return new Intl.DateTimeFormat('en-GB', {
-    hour: '2-digit',
-    minute: '2-digit',
-    hour12: false,
-  }).format(date);
-}
-
-function formatRelative(date: Date, now: Date) {
-  const diffMs = date.getTime() - now.getTime();
-  if (diffMs <= 0) return 'now';
-  const diffMinutes = Math.round(diffMs / 60000);
-
-  if (diffMinutes < 60) return `in ${Math.max(1, diffMinutes)}m`;
-
-  const diffHours = Math.round(diffMinutes / 60);
-  if (diffHours < 24) return `in ${Math.max(1, diffHours)}h`;
-
-  if (diffHours < 48) return 'tomorrow';
-
-  const diffDays = Math.round(diffHours / 24);
-  return `in ${Math.max(2, diffDays)}d`;
-}
-
-function truncateServiceLabel(serviceName: string) {
-  const trimmed = serviceName.trim();
-  if (!trimmed) return 'Service';
-  if (trimmed.length <= 20) return trimmed;
-  return `${trimmed.slice(0, 17)}...`;
-}
-
-function getTodayBounds(now: Date) {
-  const start = new Date(now);
-  start.setHours(0, 0, 0, 0);
-  const end = new Date(now);
-  end.setHours(23, 59, 59, 999);
-  return { startMs: start.getTime(), endMs: end.getTime() };
-}
-
-function getTodayBookingsForBarber(bookings: BarberBookingPreview[], barberId: string, now: Date) {
-  const { startMs, endMs } = getTodayBounds(now);
-  return bookings.filter((b) => {
-    if (b.barberId !== barberId) return false;
-    if (!SCHEDULED_BOOKING_STATUSES.includes(b.status as (typeof SCHEDULED_BOOKING_STATUSES)[number])) return false;
-    const t = new Date(b.startAt).getTime();
-    return Number.isFinite(t) && t >= startMs && t <= endMs;
-  });
-}
-
-function getBarberAvailabilityStatus(barber: Barber, bookings: BarberBookingPreview[], now: Date): BarberAvailabilityStatus {
-  if (barber.todayIsOnShift === false || barber.todayLabel?.trim() === 'Off') {
-    return 'off';
-  }
-
-  const todayBookings = getTodayBookingsForBarber(bookings, barber.id, now);
-  if (todayBookings.length === 0) return 'free';
-
-  const nowMs = now.getTime();
-  const BUSY_WINDOW_MS = 90 * 60 * 1000;
-  const isBusy = todayBookings.some((b) => {
-    const startMs = new Date(b.startAt).getTime();
-    return startMs <= nowMs && nowMs - startMs <= BUSY_WINDOW_MS;
-  });
-
-  return isBusy ? 'busy' : 'active';
-}
-
-function getDayFill(bookings: BarberBookingPreview[], barberId: string, now: Date): DayFillData {
-  const count = getTodayBookingsForBarber(bookings, barberId, now).length;
-  const estimatedH = count * ESTIMATED_BOOKING_DURATION_H;
-  const pct = Math.min(100, Math.round((estimatedH / WORKING_HOURS_PER_DAY) * 100));
-  return { pct, count, workingH: WORKING_HOURS_PER_DAY };
-}
-
-function getNextBookingForBarber(bookings: BarberBookingPreview[], barberId: string, now: Date): NextBookingPreview | null {
-  const nowMs = now.getTime();
-  const nextBooking = bookings
-    .filter((booking) => booking.barberId === barberId)
-    .filter((booking) => {
-      if (!SCHEDULED_BOOKING_STATUSES.includes(booking.status as (typeof SCHEDULED_BOOKING_STATUSES)[number])) return false;
-      const startAtMs = new Date(booking.startAt).getTime();
-      return Number.isFinite(startAtMs) && startAtMs > nowMs;
-    })
-    .sort((a, b) => new Date(a.startAt).getTime() - new Date(b.startAt).getTime())[0];
-
-  if (!nextBooking) return null;
-
-  const startDate = new Date(nextBooking.startAt);
-
-  return {
-    timeLabel: formatTimeHHMM(startDate),
-    relativeLabel: formatRelative(startDate, now),
-    serviceLabel: truncateServiceLabel(nextBooking.service?.name ?? ''),
-  };
-}
-
 /** Single source of truth for barber activity. Reads the canonical `isActive` field. */
 function normalizeBarberStatus(barber: Barber) {
   return barber.isActive;
 }
-
-function getTodayLine(barber: Barber) {
-  const todayLabel = barber.todayLabel?.trim() || '—';
-  if (todayLabel === 'Off') {
-    return { text: 'Today: Off', title: 'Today: Off', isOff: true };
-  }
-  return { text: `Today: ${todayLabel}`, title: `Today: ${todayLabel}`, isOff: false };
-}
-
 
 export default function BarbersOverview({
   barbers,
@@ -285,99 +152,30 @@ export default function BarbersOverview({
             const computed = barberComputedData.get(barber.id);
             const nextBookingPreview = computed?.nextBooking ?? null;
             const availStatus = computed?.availStatus ?? 'free';
-            const dayFill = computed?.dayFill ?? { pct: 0, count: 0, workingH: WORKING_HOURS_PER_DAY };
+            const dayFill = computed?.dayFill ?? { pct: 0, count: 0, workingH: 8 };
             const todayLine = getTodayLine(barber);
-            const availLabel = AVAIL_STATUS_LABELS[availStatus];
-            const dayFillAriaLabel = `${dayFill.count} booking${dayFill.count !== 1 ? 's' : ''} today (est. ${Math.round(dayFill.count * ESTIMATED_BOOKING_DURATION_H * 10) / 10} of ${dayFill.workingH} hours)`;
-            const nextBookingTitle = nextBookingPreview
-              ? `Next: ${nextBookingPreview.timeLabel} · ${nextBookingPreview.serviceLabel} (${nextBookingPreview.relativeLabel})`
-              : 'No upcoming bookings';
 
             return (
-              <li key={barber.id} className={`admin-barber-card admin-barber-card--roster${barberIsActive ? '' : ' is-inactive'}`}>
-                <button
-                  type="button"
-                  className="admin-barber-identity admin-barber-identity--roster"
-                  onClick={() => onOpenBarber(barber.id)}
-                  aria-label={`Open ${barber.name} profile and settings`}
-                >
-                  <div className="admin-barber-roster-hero">
-                    <div className="admin-barber-roster-hero-shine" aria-hidden="true" />
-                    <div className="admin-barber-roster-avatar-shell">
-                      <div className={`admin-barber-avatar admin-barber-avatar--roster admin-barber-avatar--status-${availStatus}`}>
-                        {barber.avatarUrl ? <img src={barber.avatarUrl} alt="" loading="lazy" /> : <span>{getInitials(barber.name)}</span>}
-                      </div>
-                      <span className={`admin-barber-avail-dot admin-barber-avail-dot--${availStatus}`} />
-                    </div>
-                    <span className={`admin-barber-avail-pill admin-barber-avail-pill--${availStatus}`} role="status">
-                      {availLabel}
-                    </span>
-                  </div>
-
-                  <div className="admin-barber-roster-body">
-                    <div className="admin-barber-name-row admin-barber-roster-name-row">
-                      <p className="admin-barber-name admin-barber-roster-name">{barber.name}</p>
-                      {barberIsActive ? null : (
-                        <span className="admin-barber-roster-inactive-badge">Hidden</span>
-                      )}
-                    </div>
-
-                    <div className="admin-barber-roster-meta">
-                      <span className={`admin-barber-roster-shift${todayLine.isOff ? ' is-off' : ''}`} title={todayLine.title}>
-                        <Clock className="admin-barber-roster-meta-icon" width={16} height={16} aria-hidden />
-                        <span className="admin-barber-roster-shift-text">{todayLine.text}</span>
-                      </span>
-
-                      <div className={`admin-barber-roster-next${nextBookingPreview ? '' : ' is-muted'}`} title={nextBookingTitle}>
-                        <Calendar className="admin-barber-roster-meta-icon" width={16} height={16} aria-hidden />
-                        {nextBookingPreview ? (
-                          <div className="admin-barber-roster-next-copy">
-                            <span className="admin-barber-roster-next-primary">
-                              {nextBookingPreview.timeLabel} · {nextBookingPreview.serviceLabel}
-                            </span>
-                            <span className="admin-barber-roster-next-secondary">{nextBookingPreview.relativeLabel}</span>
-                          </div>
-                        ) : (
-                          <span className="admin-barber-roster-next-empty">
-                            {bookings.length > 0 ? 'No upcoming bookings' : 'No schedule data'}
-                          </span>
-                        )}
-                      </div>
-                    </div>
-
-                    <span className="admin-barber-roster-cta">
-                      <span className="admin-barber-roster-cta-label">Profile & settings</span>
-                      <ArrowRight className="admin-barber-roster-cta-icon" width={18} height={18} aria-hidden />
-                    </span>
-                  </div>
-                </button>
-
-                <div className="admin-barber-roster-toolbar">
-                  <div className="admin-barber-day-fill-row admin-barber-day-fill-row--roster" aria-label={dayFillAriaLabel}>
-                    <div className="admin-barber-day-fill" aria-hidden="true" style={{ width: `${dayFill.pct}%` }} />
-                  </div>
-                  <div className="admin-barber-actions admin-barber-actions--roster">
-                    <div className="admin-reorder-controls admin-reorder-controls--barber" role="group" aria-label={`Reorder ${barber.name}`}>
-                      <div className="admin-reorder-arrow-stack admin-reorder-arrow-stack--barber">
-                        <button type="button" className="admin-reorder-btn admin-reorder-btn--barber" onClick={() => onMoveBarber(index, 'up')} disabled={isFirstItem || barberReordering} aria-label={`Move ${barber.name} up`}>
-                          ▲
-                        </button>
-                        <button type="button" className="admin-reorder-btn admin-reorder-btn--barber" onClick={() => onMoveBarber(index, 'down')} disabled={isLastItem || barberReordering} aria-label={`Move ${barber.name} down`}>
-                          ▼
-                        </button>
-                      </div>
-                      <button
-                        type="button"
-                        className="admin-reorder-btn admin-reorder-btn--settings admin-reorder-btn--barber admin-reorder-btn--barber-settings"
-                        onClick={() => onOpenBarber(barber.id)}
-                        aria-label={`Open ${barber.name} settings`}
-                      >
-                        <SettingsGearIcon className="admin-control-icon" />
-                      </button>
-                    </div>
-                  </div>
-                </div>
-              </li>
+              <AdminBarberRosterCard
+                key={barber.id}
+                barber={barber}
+                barberIsActive={barberIsActive}
+                nextBookingPreview={nextBookingPreview}
+                availStatus={availStatus}
+                dayFill={dayFill}
+                todayLine={todayLine}
+                getInitials={getInitials}
+                onOpenBarber={onOpenBarber}
+                bookingsLength={bookings.length}
+                variant="manage"
+                manageControls={{
+                  index,
+                  isFirstItem,
+                  isLastItem,
+                  barberReordering,
+                  onMoveBarber,
+                }}
+              />
             );
           })}
 

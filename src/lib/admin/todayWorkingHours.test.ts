@@ -1,5 +1,11 @@
 import { describe, expect, it } from 'vitest';
-import { getTodayInLondon, getTodayScheduleForBarber } from './todayWorkingHours';
+import {
+  getLondonMinutesFromMidnight,
+  getTodayInLondon,
+  getTodayScheduleForBarber,
+  getTodayShiftWindowForBarber,
+  isWithinShiftNow
+} from './todayWorkingHours';
 
 describe('getTodayInLondon', () => {
   it('maps Monday to 0', () => {
@@ -35,5 +41,82 @@ describe('getTodayScheduleForBarber', () => {
       todayLabel: '—',
       todayIsOnShift: null
     });
+  });
+});
+
+describe('getTodayShiftWindowForBarber', () => {
+  it('returns null when no rules', () => {
+    expect(getTodayShiftWindowForBarber(undefined)).toBeNull();
+    expect(getTodayShiftWindowForBarber([])).toBeNull();
+  });
+
+  it('returns null when no active rule', () => {
+    expect(getTodayShiftWindowForBarber([{ active: false, startMinutes: 600, endMinutes: 1080 }])).toBeNull();
+  });
+
+  it('returns window with break fields', () => {
+    expect(
+      getTodayShiftWindowForBarber([
+        { active: true, startMinutes: 600, endMinutes: 1080, breakStartMin: 780, breakEndMin: 840 }
+      ])
+    ).toEqual({
+      startMinutes: 600,
+      endMinutes: 1080,
+      breakStartMin: 780,
+      breakEndMin: 840
+    });
+  });
+});
+
+describe('getLondonMinutesFromMidnight', () => {
+  it('reads London wall time in winter (GMT)', () => {
+    const jan = new Date('2026-01-15T14:30:00.000Z');
+    expect(getLondonMinutesFromMidnight(jan)).toBe(14 * 60 + 30);
+  });
+});
+
+describe('isWithinShiftNow', () => {
+  const window = { startMinutes: 600, endMinutes: 1080, breakStartMin: null, breakEndMin: null };
+
+  it('returns false for null window', () => {
+    expect(isWithinShiftNow(new Date(), null)).toBe(false);
+    expect(isWithinShiftNow(new Date(), undefined)).toBe(false);
+  });
+
+  it('is true inside [start, end) without break', () => {
+    const t = new Date('2026-01-15T15:00:00.000Z');
+    expect(isWithinShiftNow(t, window)).toBe(true);
+  });
+
+  it('is false before shift', () => {
+    const t = new Date('2026-01-15T08:00:00.000Z');
+    expect(isWithinShiftNow(t, window)).toBe(false);
+  });
+
+  it('is false at or after endMinutes', () => {
+    const atEnd = new Date('2026-01-15T18:00:00.000Z');
+    expect(isWithinShiftNow(atEnd, window)).toBe(false);
+  });
+
+  it('is false inside lunch break', () => {
+    const withBreak = {
+      startMinutes: 600,
+      endMinutes: 1080,
+      breakStartMin: 780,
+      breakEndMin: 840
+    };
+    const duringBreak = new Date('2026-01-15T13:30:00.000Z');
+    expect(isWithinShiftNow(duringBreak, withBreak)).toBe(false);
+  });
+
+  it('is true after break same day', () => {
+    const withBreak = {
+      startMinutes: 600,
+      endMinutes: 1080,
+      breakStartMin: 780,
+      breakEndMin: 840
+    };
+    const afterBreak = new Date('2026-01-15T14:30:00.000Z');
+    expect(isWithinShiftNow(afterBreak, withBreak)).toBe(true);
   });
 });

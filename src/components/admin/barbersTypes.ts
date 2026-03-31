@@ -14,6 +14,10 @@
  * `barber.isActive` as a single source of truth).
  */
 
+import type { TodayShiftWindow } from '../../lib/admin/todayWorkingHours';
+
+export type { TodayShiftWindow };
+
 export type Barber = {
   id: string;
   name: string;
@@ -26,6 +30,8 @@ export type Barber = {
   serviceIds?: string[];
   todayLabel?: string;
   todayIsOnShift?: boolean | null;
+  /** First active availability rule for London calendar today; null if off / no rules. */
+  todayShiftWindow?: TodayShiftWindow | null;
 };
 
 export type ServiceOption = {

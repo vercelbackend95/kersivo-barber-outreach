@@ -9919,12 +9919,29 @@
   line-height: 1.1;
 }
 
-/* Mobile + narrow tablet: 2×2 metric tiles — no horizontal scroll, clear hierarchy */
+.admin-bookings-ops-staff-roster {
+  margin-top: var(--space-sm);
+  padding-top: var(--space-sm);
+  border-top: 1px solid color-mix(in srgb, var(--border) 70%, transparent);
+}
+
+.admin-bookings-ops-staff-roster-note {
+  margin: 0 0 var(--space-sm);
+  font-size: var(--text-xs);
+  line-height: 1.35;
+}
+
+.admin-bookings-ops-staff-roster-empty {
+  margin: 0;
+  padding: var(--space-sm) 0;
+}
+
+/* Mobile + narrow tablet: single summary row (4 metrics) — no horizontal scroll */
 @media (max-width: 47.99rem) {
   .admin-day-summary-bar {
     display: grid;
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-    grid-auto-rows: minmax(4.25rem, auto);
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    grid-auto-rows: minmax(2.75rem, auto);
     gap: 1px;
     align-items: stretch;
     background: var(--border);
@@ -9950,14 +9967,14 @@
     text-align: center;
     gap: 0.2rem;
     min-width: 0;
-    min-height: 4.25rem;
-    padding: var(--space-sm) var(--space-xs);
+    min-height: 2.75rem;
+    padding: 0.35rem 0.2rem;
     background: color-mix(in srgb, var(--surface-2) 80%, transparent);
     border-radius: 0;
   }
 
   .admin-day-summary-stat--action {
-    min-height: 4.25rem;
+    min-height: 2.75rem;
     touch-action: manipulation;
     -webkit-tap-highlight-color: transparent;
   }
@@ -9979,7 +9996,7 @@
   }
 
   .admin-day-summary-value {
-    font-size: clamp(1.125rem, 4.5vw, 1.35rem);
+    font-size: clamp(0.95rem, 3.4vw, 1.2rem);
     font-weight: 700;
     line-height: 1.05;
     letter-spacing: -0.02em;
@@ -9991,9 +10008,9 @@
     white-space: normal;
     overflow: visible;
     text-overflow: unset;
-    font-size: 0.6875rem;
+    font-size: clamp(0.58rem, 2.1vw, 0.6875rem);
     font-weight: 500;
-    line-height: 1.25;
+    line-height: 1.2;
     color: var(--muted);
     overflow-wrap: break-word;
   }
@@ -10004,10 +10021,13 @@
 }
 
 /*
- * Very narrow tiles (~320px viewport / 2-col): show compact labels; full names stay in aria-label on controls.
- * Depends on container set on .admin-day-summary-stat inside the mobile breakpoint only.
+ * Narrow cells (~320px / 4): compact labels + hide icons; full names stay in aria-label on controls.
  */
-@container admin-day-stat (max-width: 13rem) {
+@container admin-day-stat (max-width: 5.5rem) {
+  .admin-day-summary-icon {
+    display: none;
+  }
+
   .admin-day-summary-label {
     display: none;
   }
@@ -10015,12 +10035,12 @@
   .admin-day-summary-label-short {
     display: block;
     max-width: 100%;
-    font-size: 0.625rem;
+    font-size: 0.58rem;
     font-weight: 600;
-    letter-spacing: 0.05em;
+    letter-spacing: 0.04em;
     text-transform: uppercase;
     color: var(--muted);
-    line-height: 1.2;
+    line-height: 1.15;
     overflow-wrap: break-word;
   }
 }

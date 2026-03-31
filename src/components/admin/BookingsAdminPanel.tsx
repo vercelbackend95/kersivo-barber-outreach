@@ -9,7 +9,15 @@ import TodayTimeline, { type TimelineBooking } from './TodayTimeline';
 import AdminErrorBoundary from './AdminErrorBoundary';
 import HistoryDateRangePicker from './HistoryDateRangePicker';
 import BarbersOverview from './BarbersOverview';
+import AdminBarberRosterCard from './AdminBarberRosterCard';
 import BarberProfile from './BarberProfile';
+import { isWithinShiftNow } from '../../lib/admin/todayWorkingHours';
+import {
+  getBarberAvailabilityStatusForDayRange,
+  getDayFillForRange,
+  getNextBookingForBarber,
+  getTodayLine,
+} from '../../lib/admin/barberRosterPresentation';
 import BarberChip from './BarberChip';
 import AdminLeaderboard from './AdminLeaderboard';
 import type { Barber, ServiceOption, TimeBlock, WorkingHourRow } from './barbersTypes';
@@ -307,10 +315,12 @@ type DayOpsFilter = 'all' | 'pending' | 'upcoming';
 
 type DaySummaryBarProps = {
   bookings: Booking[];
-  activeBarberCount: number;
+  staffOnFloorCount: number;
   nowMs: number;
   dayOpsFilter: DayOpsFilter;
   onDayOpsFilterChange: (next: DayOpsFilter) => void;
+  staffPanelOpen: boolean;
+  onStaffToggle: () => void;
 };
 
 function isUpcomingDayStatBooking(booking: Booking, nowMs: number) {
@@ -318,7 +328,15 @@ function isUpcomingDayStatBooking(booking: Booking, nowMs: number) {
   return endMs > nowMs && (booking.status === 'CONFIRMED' || booking.status === 'PENDING_CONFIRMATION');
 }
 
-function DaySummaryBar({ bookings, activeBarberCount, nowMs, dayOpsFilter, onDayOpsFilterChange }: DaySummaryBarProps) {
+function DaySummaryBar({
+  bookings,
+  staffOnFloorCount,
+  nowMs,
+  dayOpsFilter,
+  onDayOpsFilterChange,
+  staffPanelOpen,
+  onStaffToggle,
+}: DaySummaryBarProps) {
   const totalCount = bookings.length;
   const pendingCount = bookings.filter((b) => b.status === 'PENDING_CONFIRMATION').length;
   const upcomingCount = bookings.filter((b) => isUpcomingDayStatBooking(b, nowMs)).length;
@@ -327,7 +345,7 @@ function DaySummaryBar({ bookings, activeBarberCount, nowMs, dayOpsFilter, onDay
     <div className="admin-day-summary-bar" role="group" aria-label="Day metrics and quick filters">
       <button
         type="button"
-        className={`admin-day-summary-stat admin-day-summary-stat--action ${dayOpsFilter === 'all' ? 'is-active' : ''}`}
+        className={`admin-day-summary-stat admin-day-summary-stat--action ${dayOpsFilter === 'all' && !staffPanelOpen ? 'is-active' : ''}`}
         onClick={() => onDayOpsFilterChange('all')}
         aria-pressed={dayOpsFilter === 'all'}
         aria-label={`${totalCount} bookings today${dayOpsFilter === 'all' ? ', filter active' : ''}`}
@@ -391,7 +409,13 @@ function DaySummaryBar({ bookings, activeBarberCount, nowMs, dayOpsFilter, onDay
         </span>
       </button>
       <div className="admin-day-summary-divider" aria-hidden="true" />
-      <div className="admin-day-summary-stat admin-day-summary-stat--readonly" aria-label={`${activeBarberCount} active barbers`}>
+      <button
+        type="button"
+        className={`admin-day-summary-stat admin-day-summary-stat--action ${staffPanelOpen ? 'is-active' : ''}`}
+        onClick={onStaffToggle}
+        aria-pressed={staffPanelOpen}
+        aria-label={`${staffOnFloorCount} barbers on shift now${staffPanelOpen ? ', roster expanded' : ''}`}
+      >
         <svg className="admin-day-summary-icon admin-day-summary-icon--barbers" viewBox="0 0 24 24" aria-hidden="true" focusable="false">
           <circle cx="9" cy="7" r="3" fill="none" stroke="currentColor" strokeWidth="2" />
           <path d="M3 20a6 6 0 0 1 12 0" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
@@ -399,15 +423,15 @@ function DaySummaryBar({ bookings, activeBarberCount, nowMs, dayOpsFilter, onDay
           <path d="M21 20a3 3 0 0 0-5.12-2.12" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
         </svg>
         <span className="admin-day-summary-value" aria-hidden="true">
-          {activeBarberCount}
+          {staffOnFloorCount}
         </span>
         <span className="admin-day-summary-label" aria-hidden="true">
-          Active barbers
+          On shift now
         </span>
         <span className="admin-day-summary-label-short" aria-hidden="true">
           Staff
         </span>
-      </div>
+      </button>
     </div>
   );
 }
@@ -659,6 +683,12 @@ export default function BookingsAdminPanel({ isActive, mode, onBackToDashboard }
   const [isSearchDebouncing, setIsSearchDebouncing] = useState(false);
   const [activeSearchResultIndex, setActiveSearchResultIndex] = useState(-1);
   const [dayOpsFilter, setDayOpsFilter] = useState<DayOpsFilter>('all');
+  const [staffRosterOpen, setStaffRosterOpen] = useState(false);
+
+  const applyDayOpsFilter = useCallback((next: DayOpsFilter) => {
+    setStaffRosterOpen(false);
+    setDayOpsFilter(next);
+  }, []);
   const [searchShortcutHint, setSearchShortcutHint] = useState('Ctrl+K');
   const [showSearchKbdHint, setShowSearchKbdHint] = useState(false);
   const [activeView, setActiveView] = useState<AdminBookingView>('timeline');
@@ -1000,12 +1030,17 @@ export default function BookingsAdminPanel({ isActive, mode, onBackToDashboard }
   }, []);
 
   useEffect(() => {
-    setDayOpsFilter('all');
-  }, [selectedDate]);
+    applyDayOpsFilter('all');
+  }, [selectedDate, applyDayOpsFilter]);
 
   useEffect(() => {
-    if (mode !== 'dashboard') setDayOpsFilter('all');
-  }, [mode]);
+    if (mode !== 'dashboard') applyDayOpsFilter('all');
+  }, [mode, applyDayOpsFilter]);
+
+  useEffect(() => {
+    if (!staffRosterOpen) return;
+    setDayOpsFilter('all');
+  }, [staffRosterOpen]);
 
   useEffect(() => {
     setIsSearchDebouncing(clientSearchQuery !== debouncedSearchQuery);
@@ -1099,6 +1134,20 @@ export default function BookingsAdminPanel({ isActive, mode, onBackToDashboard }
 
   const allBarbersSorted = useMemo(() => [...barbers].sort((a, b) => (a.sortOrder ?? Number.MAX_SAFE_INTEGER) - (b.sortOrder ?? Number.MAX_SAFE_INTEGER) || a.name.localeCompare(b.name, 'en')), [barbers]);
   const activeBarbers = useMemo(() => allBarbersSorted.filter((barber) => normalizeBarberStatus(barber)), [allBarbersSorted]);
+  const selectedDayBoundsLondon = useMemo(() => {
+    const start = fromZonedTime(`${selectedDate}T00:00:00`, ADMIN_TIMEZONE);
+    const end = fromZonedTime(`${selectedDate}T23:59:59.999`, ADMIN_TIMEZONE);
+    return { startMs: start.getTime(), endMs: end.getTime() };
+  }, [selectedDate]);
+
+  const onFloorBarbersNow = useMemo(() => {
+    const now = new Date(nowMs);
+    return activeBarbers.filter((barber) => isWithinShiftNow(now, barber.todayShiftWindow ?? null));
+  }, [activeBarbers, nowMs]);
+
+  const onStaffToggle = useCallback(() => {
+    setStaffRosterOpen((open) => !open);
+  }, []);
   const visibleBarbersForManagement = useMemo(() => barbersFilter === 'all' ? allBarbersSorted : activeBarbers, [activeBarbers, allBarbersSorted, barbersFilter]);
   const selectedBarber = useMemo(() => allBarbersSorted.find((barber) => barber.id === selectedBarberId) ?? null, [allBarbersSorted, selectedBarberId]);
   const enabledServiceIds = useMemo(() => new Set(selectedBarber?.serviceIds ?? []), [selectedBarber]);
@@ -1358,12 +1407,12 @@ export default function BookingsAdminPanel({ isActive, mode, onBackToDashboard }
   }, [dayOpsFilter, mode, normalizedClientSearchQuery, opsFilteredViewActive]);
 
   const clearOpsFilters = useCallback(() => {
-    setDayOpsFilter('all');
+    applyDayOpsFilter('all');
     setClientSearchQuery('');
     setDebouncedSearchQuery('');
     setActiveSearchResultIndex(-1);
     searchInputRef.current?.focus();
-  }, []);
+  }, [applyDayOpsFilter]);
 
   const clearSearchField = useCallback(() => {
     setClientSearchQuery('');
@@ -2058,11 +2107,59 @@ export default function BookingsAdminPanel({ isActive, mode, onBackToDashboard }
           {!bookingsInitialLoading ? (
             <DaySummaryBar
               bookings={bookings}
-              activeBarberCount={activeBarbers.length}
+              staffOnFloorCount={onFloorBarbersNow.length}
               nowMs={nowMs}
               dayOpsFilter={dayOpsFilter}
-              onDayOpsFilterChange={setDayOpsFilter}
+              onDayOpsFilterChange={applyDayOpsFilter}
+              staffPanelOpen={staffRosterOpen}
+              onStaffToggle={onStaffToggle}
             />
+          ) : null}
+
+          {staffRosterOpen ? (
+            <div className="admin-bookings-ops-staff-roster">
+              {selectedDate !== todayLondonDate ? (
+                <p className="muted admin-bookings-ops-staff-roster-note">
+                  On-floor staff reflects today (London time), not the selected calendar date.
+                </p>
+              ) : null}
+              {onFloorBarbersNow.length === 0 ? (
+                <p className="muted admin-bookings-ops-staff-roster-empty">No barbers on shift right now.</p>
+              ) : (
+                <div className="admin-barber-list-wrap admin-barbers-overview-list-wrap">
+                  <ul className="admin-barber-grid admin-barbers-overview-grid" aria-label="Barbers on shift now">
+                    {onFloorBarbersNow.map((barber) => {
+                      const now = new Date(nowMs);
+                      const nextBookingPreview = getNextBookingForBarber(bookings, barber.id, now);
+                      const availStatus = getBarberAvailabilityStatusForDayRange(
+                        barber,
+                        bookings,
+                        now,
+                        selectedDayBoundsLondon.startMs,
+                        selectedDayBoundsLondon.endMs
+                      );
+                      const dayFill = getDayFillForRange(bookings, barber.id, selectedDayBoundsLondon.startMs, selectedDayBoundsLondon.endMs);
+                      const todayLine = getTodayLine(barber);
+                      return (
+                        <AdminBarberRosterCard
+                          key={barber.id}
+                          barber={barber}
+                          barberIsActive={normalizeBarberStatus(barber)}
+                          nextBookingPreview={nextBookingPreview}
+                          availStatus={availStatus}
+                          dayFill={dayFill}
+                          todayLine={todayLine}
+                          getInitials={getInitials}
+                          onOpenBarber={setSelectedBarberId}
+                          bookingsLength={bookings.length}
+                          variant="ops"
+                        />
+                      );
+                    })}
+                  </ul>
+                </div>
+              )}
+            </div>
           ) : null}
 
           <div className="admin-bookings-ops-toolbar admin-bookings-ops-toolbar--grid">

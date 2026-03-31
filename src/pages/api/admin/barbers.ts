@@ -5,7 +5,7 @@ import type { APIRoute } from 'astro';
 import { z } from 'zod';
 import { requireAdmin } from '../../../lib/admin/auth';
 import { ensureBarberHasAvailabilityRules } from '../../../lib/admin/defaultAvailability';
-import { getTodayInLondon, getTodayScheduleForBarber } from '../../../lib/admin/todayWorkingHours';
+import { getTodayInLondon, getTodayScheduleForBarber, getTodayShiftWindowForBarber } from '../../../lib/admin/todayWorkingHours';
 import { prisma } from '../../../lib/db/client';
 import { getBlobReadWriteToken, makeBlobPath, uploadPublicImageToBlob } from '../../../lib/storage/vercelBlob';
 import type { Prisma } from '@prisma/client';
@@ -160,7 +160,15 @@ export const GET: APIRoute = async (ctx) => {
           barberId: { in: barbers.map((barber) => barber.id) },
           dayOfWeek: todayInLondon
         },
-        orderBy: [{ barberId: 'asc' }, { startMinutes: 'asc' }]
+        orderBy: [{ barberId: 'asc' }, { startMinutes: 'asc' }],
+        select: {
+          barberId: true,
+          active: true,
+          startMinutes: true,
+          endMinutes: true,
+          breakStartMin: true,
+          breakEndMin: true
+        }
       });
 
 
@@ -187,13 +195,16 @@ export const GET: APIRoute = async (ctx) => {
 
   return new Response(JSON.stringify({
     barbers: barbers.map((barber) => {
-      const todaySchedule = getTodayScheduleForBarber(rulesByBarberId.get(barber.id));
+      const rules = rulesByBarberId.get(barber.id);
+      const todaySchedule = getTodayScheduleForBarber(rules);
+      const todayShiftWindow = getTodayShiftWindowForBarber(rules);
       return {
         ...barber,
         serviceIds: serviceIdsByBarber.get(barber.id) ?? [],
         isActive: barber.active,
         todayLabel: todaySchedule.todayLabel,
-        todayIsOnShift: todaySchedule.todayIsOnShift
+        todayIsOnShift: todaySchedule.todayIsOnShift,
+        todayShiftWindow
       };
     })
 
