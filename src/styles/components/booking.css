@@ -3122,9 +3122,14 @@
   }
 }
 
+.admin-page-wrap.container {
+  width: min(100% - clamp(1rem, 2vw, 2rem), 120rem);
+}
+
 .admin-shell {
   display: grid;
   gap: 0;
+  min-height: 100dvh;
 }
 .admin-mobile-header {
   position: sticky;
@@ -3345,6 +3350,7 @@
   --admin-mobile-header-h: 0px;
   background: var(--surface-1);
   transition: opacity 120ms ease;
+  overflow-x: clip;
 }
 
 .admin-main-content[data-transitioning="true"] {
@@ -3942,8 +3948,8 @@
 }
 .admin-products-sort {
   flex: 0 0 auto;
-  width: clamp(8.75rem, 32vw, 10rem);
-  min-width: 8.75rem;
+  width: clamp(7rem, 32vw, 10rem);
+  min-width: 7rem;
   max-width: 10rem;
 }
 
@@ -3965,6 +3971,7 @@
   gap: 0.5rem;
   width: 100%;
   min-width: 0;
+  flex-wrap: wrap;
 }
 .admin-products-filters {
   display: flex;
@@ -5040,7 +5047,7 @@
   }
 
   .admin-page-wrap .admin-products-toolbar-actions {
-    grid-template-columns: minmax(0, 3fr) minmax(0, 2fr);
+    grid-template-columns: 1fr;
   }
 
   .admin-page-wrap .admin-products-toolbar-row {
@@ -5049,6 +5056,13 @@
   
   .admin-page-wrap .admin-products-controls-row {
     gap: 0.5rem;
+    flex-wrap: wrap;
+  }
+
+  .admin-page-wrap .admin-products-sort {
+    width: 100%;
+    min-width: 0;
+    max-width: none;
   }
 
   .admin-page-wrap .admin-product-switches {
@@ -5114,8 +5128,9 @@
     grid-template-columns: minmax(0, 1fr) auto;
     align-items: center;
   }
-    .admin-products-controls-row {
+  .admin-products-controls-row {
     min-width: 0;
+    flex-wrap: nowrap;
 
   }
 
@@ -5209,13 +5224,13 @@
   width: 100%;
   max-width: 100%;
   min-width: 0;
-  overflow-x: hidden;
+  overflow-x: auto;
 
 }
 
 .admin-orders-table22__table {
   width: 100%;
-  table-layout: fixed;
+  table-layout: auto;
 }
 
 .admin-orders-table22__table th:nth-child(1),
@@ -5758,6 +5773,7 @@
   right: 0;
   bottom: 0;
   height: min(85dvh, 720px);
+  max-height: calc(100dvh - env(safe-area-inset-top, 0px));
   background: var(--surface);
   border: 1px solid var(--border);
   border-bottom: 0;
@@ -5768,7 +5784,8 @@
   display: flex;
   flex-direction: column;
   gap: 0.5rem;
-    overflow: hidden;
+  overflow-y: auto;
+  overflow-x: hidden;
   overscroll-behavior: contain;
   pointer-events: auto;
 
@@ -6464,8 +6481,8 @@
     height: 2rem;
   }
   .admin-reorder-btn--settings {
-    width: 5rem;
-    height: 5rem;
+    width: 2.5rem;
+    height: 2.5rem;
   }
   .admin-reorder-arrow-stack--barber .admin-reorder-btn--barber {
     width: 2.2rem;
@@ -6482,14 +6499,18 @@
 
 
   .admin-product-card-main {
-    grid-template-columns: 5rem minmax(0, 1fr) auto;
+    grid-template-columns: 4.25rem minmax(0, 1fr);
+    align-items: start;
   }
 
   .admin-product-thumb {
-    width: 5rem;
-    height: 5rem;
+    width: 4.25rem;
+    height: 4.25rem;
+  }
 
-
+  .admin-product-card-main .admin-reorder-controls {
+    grid-column: 1 / -1;
+    justify-self: end;
   }
 }
 
