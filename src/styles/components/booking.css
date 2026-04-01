@@ -1301,19 +1301,19 @@
   box-shadow: 0 0 0 2px color-mix(in srgb, var(--focus) 38%, transparent);
 }
 
-.admin-bookings-ops .admin-search-row input {
+.admin-bookings-ops--compact .admin-search-row input {
   background: var(--surface);
   border-radius: var(--radius-sm);
   border-color: color-mix(in srgb, var(--border) 92%, var(--fg));
 }
 
-.admin-bookings-ops .admin-search-row input:focus-visible {
+.admin-bookings-ops--compact .admin-search-row input:focus-visible {
   outline: none;
   border-color: color-mix(in srgb, var(--focus) 55%, var(--border));
   box-shadow: 0 0 0 3px color-mix(in srgb, var(--focus) 32%, transparent);
 }
 
-.admin-bookings-ops .admin-search-results {
+.admin-bookings-ops--compact .admin-search-results {
   border-radius: var(--radius-sm);
   box-shadow: 0 10px 28px color-mix(in srgb, var(--fg) 12%, transparent);
 }
@@ -3593,8 +3593,13 @@
   display: flex;
   align-items: center;
   justify-content: space-between;
-  border: 1px solid var(--border);
-  background: color-mix(in srgb, var(--surface) 92%, var(--bg));
+  border: 1px solid color-mix(in srgb, var(--border) 72%, transparent);
+  background: color-mix(in srgb, var(--surface-1) 82%, var(--bg));
+  -webkit-backdrop-filter: blur(14px);
+  backdrop-filter: blur(14px);
+  box-shadow:
+    0 1px 0 color-mix(in srgb, var(--fg) 5%, transparent),
+    var(--shadow-xs);
   padding: calc(0.6rem + env(safe-area-inset-top, 0px)) 0.75rem 0.6rem;
   margin-bottom: var(--space-sm);
 
@@ -3923,9 +3928,15 @@
 
   width: min(84vw, 20rem);
   max-width: 100%;
-  background: linear-gradient(180deg, color-mix(in srgb, var(--surface) 94%, var(--bg)) 0%, var(--surface) 100%);
+  background: linear-gradient(
+    165deg,
+    color-mix(in srgb, var(--surface-2) 55%, var(--bg)) 0%,
+    var(--surface-1) 52%,
+    color-mix(in srgb, var(--surface-1) 88%, var(--bg)) 100%
+  );
 
-  border-left: 1px solid var(--border);
+  border-left: 1px solid color-mix(in srgb, var(--border) 75%, transparent);
+  box-shadow: -16px 0 48px rgb(0 0 0 / 0.38);
   padding: calc(0.75rem + env(safe-area-inset-top, 0px)) calc(0.75rem + env(safe-area-inset-right, 0px)) calc(0.75rem + env(safe-area-inset-bottom, 0px)) 0.75rem;
   transform: translateX(100%);
   transition: transform 300ms cubic-bezier(0.34, 1.08, 0.64, 1);
@@ -4096,6 +4107,8 @@
     grid-template-columns: minmax(15rem, 16rem) minmax(0, 1fr);
     align-items: stretch;
     column-gap: clamp(0.65rem, 1.4vw, 1.1rem);
+    /* Recessed channel between rail and canvas reads as intentional depth */
+    background: color-mix(in srgb, var(--bg) 91%, #000);
   }
   .admin-sidebar-group-title {
     font-size: 0.72rem;
@@ -4114,27 +4127,34 @@
     overflow-y: auto;
     border-right: none;
     padding: var(--space-md);
-    /* Hair-soft lift toward the channel: no hard line, still reads as its own plane */
+    border-radius: var(--radius-12) 0 0 var(--radius-12);
+    /* Matte rail: darker than canvas, soft edge into the channel */
     background: linear-gradient(
-      105deg,
-      var(--bg) 0%,
-      color-mix(in srgb, var(--surface-2) 14%, var(--bg)) 72%,
-      color-mix(in srgb, var(--surface-2) 22%, var(--bg)) 100%
+      112deg,
+      color-mix(in srgb, var(--bg) 88%, #000) 0%,
+      color-mix(in srgb, var(--surface-2) 26%, var(--bg)) 58%,
+      color-mix(in srgb, var(--surface-2) 18%, var(--bg)) 100%
     );
+    box-shadow: inset -1px 0 0 color-mix(in srgb, var(--border) 50%, transparent);
   }
 
   .admin-main-content {
     min-height: 100dvh;
-    /* Replace inset “tech stripe” with a wide, token-based entrance into the workspace */
+    border-radius: 0 var(--radius-12) var(--radius-12) 0;
+    border: 1px solid color-mix(in srgb, var(--border) 42%, transparent);
+    border-left: 1px solid color-mix(in srgb, var(--fg) 7%, var(--border));
+    /* Lifted workspace sheet + hairline where it meets the channel */
     background:
       linear-gradient(
         100deg,
-        color-mix(in srgb, var(--bg) 55%, var(--surface-1)) 0px,
-        color-mix(in srgb, var(--bg) 18%, var(--surface-1)) 2.25rem,
-        var(--surface-1) min(4.5rem, 14%)
+        color-mix(in srgb, var(--bg) 48%, var(--surface-1)) 0px,
+        color-mix(in srgb, var(--bg) 12%, var(--surface-1)) 2.5rem,
+        var(--surface-1) min(5rem, 16%)
       ),
       var(--surface-1);
-    box-shadow: none;
+    box-shadow:
+      inset 1px 0 0 color-mix(in srgb, var(--fg) 5%, transparent),
+      0 10px 36px rgb(0 0 0 / 0.22);
   }
 
   
@@ -7290,8 +7310,12 @@
     position: sticky;
     top: 3.1rem;
     z-index: 32;
-    background: color-mix(in srgb, var(--surface-2) 92%, var(--surface));
-    box-shadow: 0 8px 24px color-mix(in srgb, var(--fg) 8%, transparent);
+    background: color-mix(in srgb, var(--surface-2) 88%, var(--surface));
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
+    box-shadow:
+      0 1px 0 color-mix(in srgb, var(--fg) 4%, transparent) inset,
+      0 12px 36px color-mix(in srgb, var(--fg) 7%, transparent);
     max-height: min(72vh, 100%);
     overflow-y: auto;
     -webkit-overflow-scrolling: touch;
@@ -9420,7 +9444,231 @@
 }
 
 .admin-bookings-ops--dashboard {
-  gap: var(--space-md);
+  --admin-ops-rail-radius: clamp(0.95rem, 2.4vw, 1.2rem);
+  --admin-ops-pill-pad-y: clamp(0.5rem, 1.35vw, 0.72rem);
+  gap: clamp(0.65rem, 1.8vw, 1.05rem);
+  padding: clamp(0.7rem, 1.75vw, 1rem) clamp(0.78rem, 2.1vw, 1.2rem);
+  background: linear-gradient(
+    152deg,
+    color-mix(in srgb, var(--surface-2) 90%, var(--bg)) 0%,
+    color-mix(in srgb, var(--surface-2) 74%, var(--bg)) 45%,
+    color-mix(in srgb, var(--surface-3) 18%, var(--surface-2)) 100%
+  );
+  border: 1px solid color-mix(in srgb, var(--border) 50%, transparent);
+  border-radius: clamp(1rem, 2.5vw, 1.25rem);
+  box-shadow:
+    0 1px 0 color-mix(in srgb, var(--fg) 4.5%, transparent) inset,
+    0 18px 48px color-mix(in srgb, var(--fg) 5%, transparent);
+}
+
+/* ─── Dashboard: soft instrument layers (scoped) ─────────────────────────── */
+.admin-bookings-ops-dash-hero {
+  display: flex;
+  flex-direction: column;
+  gap: 0.42rem;
+  padding: var(--admin-ops-pill-pad-y) clamp(0.62rem, 1.6vw, 0.9rem);
+  background: color-mix(in srgb, var(--surface) 54%, var(--surface-2));
+  border: 1px solid color-mix(in srgb, var(--border) 42%, transparent);
+  border-radius: var(--admin-ops-rail-radius);
+  box-shadow:
+    0 1px 0 color-mix(in srgb, var(--fg) 4%, transparent) inset,
+    0 8px 24px color-mix(in srgb, var(--fg) 2.5%, transparent);
+}
+
+.admin-bookings-ops--dashboard .admin-bookings-ops-status {
+  align-items: center;
+  flex-wrap: wrap;
+  row-gap: 0.5rem;
+}
+
+.admin-bookings-ops--dashboard .admin-bookings-ops-status .admin-live-status {
+  margin-left: auto;
+}
+
+.admin-bookings-ops--dashboard .admin-bookings-ops-updated {
+  font-size: 0.72rem;
+  letter-spacing: 0.03em;
+  opacity: 0.92;
+}
+
+.admin-bookings-ops--dashboard .admin-live-status {
+  border-radius: var(--radius-full);
+  padding: 0.32rem 0.58rem;
+  font-size: 0.62rem;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  line-height: 1.15;
+  border-width: 1px;
+  backdrop-filter: blur(10px);
+}
+
+.admin-bookings-ops--dashboard .admin-bookings-ops-masthead {
+  margin: 0.05rem 0 0;
+}
+
+.admin-bookings-ops--dashboard .admin-bookings-ops-kicker {
+  letter-spacing: 0.16em;
+  opacity: 0.92;
+}
+
+.admin-bookings-ops--dashboard .admin-bookings-ops-title {
+  font-size: clamp(1.08rem, 2.2vw, 1.28rem);
+  font-weight: 700;
+}
+
+.admin-bookings-ops--dashboard .admin-bookings-ops-head:not(.admin-bookings-ops-dash-head) {
+  border-bottom: none;
+  padding-bottom: 0.1rem;
+}
+
+.admin-bookings-ops--dashboard .admin-bookings-ops-staff-roster {
+  margin-top: 0.35rem;
+  padding-top: 0.4rem;
+  border-top: none;
+}
+
+.admin-bookings-ops--dashboard .admin-bookings-ops-staff-roster::before {
+  content: '';
+  display: block;
+  height: 1px;
+  margin-bottom: 0.45rem;
+  background: linear-gradient(
+    to right,
+    transparent,
+    color-mix(in srgb, var(--border) 52%, transparent) 18%,
+    color-mix(in srgb, var(--border) 52%, transparent) 82%,
+    transparent
+  );
+}
+
+.admin-bookings-ops-dash-control-deck {
+  display: flex;
+  flex-direction: column;
+  gap: 0.55rem;
+  padding: clamp(0.52rem, 1.35vw, 0.72rem) clamp(0.55rem, 1.45vw, 0.78rem);
+  background: color-mix(in srgb, var(--surface) 48%, var(--surface-2));
+  border: 1px solid color-mix(in srgb, var(--border) 40%, transparent);
+  border-radius: var(--admin-ops-rail-radius);
+  box-shadow:
+    0 1px 0 color-mix(in srgb, var(--fg) 3.5%, transparent) inset,
+    0 10px 28px color-mix(in srgb, var(--fg) 2.8%, transparent);
+}
+
+.admin-bookings-ops--dashboard .admin-bookings-ops-dash-control-deck .admin-bookings-ops-toolbar {
+  margin: 0;
+  gap: 0.45rem 0.65rem;
+}
+
+.admin-bookings-ops--dashboard .admin-bookings-ops-dash-control-deck .admin-bookings-ops-search-row {
+  margin: 0;
+  width: 100%;
+}
+
+.admin-bookings-ops--dashboard .admin-dashboard-controls--ops-dash {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: center;
+  gap: 0.35rem;
+  padding: 0.32rem;
+  width: 100%;
+  max-width: 100%;
+  box-sizing: border-box;
+  background: color-mix(in srgb, var(--surface-3) 22%, var(--surface-2));
+  border: 1px solid color-mix(in srgb, var(--border) 38%, transparent);
+  border-radius: var(--radius-full);
+  box-shadow: 0 1px 0 color-mix(in srgb, var(--fg) 3%, transparent) inset;
+}
+
+@media (min-width: 64rem) {
+  .admin-bookings-ops--dashboard .admin-dashboard-controls--ops-dash {
+    display: inline-flex;
+    width: auto;
+    justify-content: flex-start;
+  }
+}
+
+.admin-bookings-ops--dashboard .admin-dashboard-controls--ops-dash .admin-view-toggle {
+  flex: 0 0 auto;
+  background: transparent;
+  border: none;
+  padding: 3px;
+  gap: 3px;
+  min-height: 0;
+  box-shadow: none;
+}
+
+.admin-bookings-ops--dashboard .admin-dashboard-controls--ops-dash .admin-view-toggle button {
+  padding: 0.38rem 0.88rem;
+  min-height: 2.15rem;
+}
+
+.admin-bookings-ops--dashboard .admin-dashboard-controls--ops-dash .admin-view-toggle button.active {
+  background: color-mix(in srgb, var(--surface-3) 78%, var(--surface));
+  box-shadow: 0 1px 0 color-mix(in srgb, var(--fg) 4%, transparent) inset;
+}
+
+.admin-bookings-ops--dashboard .admin-dashboard-controls--ops-dash .admin-date-picker-label {
+  flex: 0 1 auto;
+  min-width: 0;
+  min-height: 2.15rem;
+  padding: 0.38rem 0.82rem;
+  margin: 0;
+  background: color-mix(in srgb, var(--surface) 55%, transparent);
+  border: 1px solid color-mix(in srgb, var(--border) 36%, transparent);
+  border-radius: var(--radius-full);
+  font-weight: 600;
+  color: color-mix(in srgb, var(--muted) 70%, var(--fg));
+  box-shadow: 0 1px 0 color-mix(in srgb, var(--fg) 2.5%, transparent) inset;
+}
+
+.admin-bookings-ops--dashboard .admin-dashboard-controls--ops-dash .admin-date-picker-label:hover {
+  color: var(--fg);
+  border-color: color-mix(in srgb, var(--border) 55%, var(--accent));
+}
+
+.admin-bookings-ops--dashboard .admin-bookings-ops-filter-bar {
+  padding: 0.42rem 0.72rem;
+  background: color-mix(in srgb, var(--surface) 38%, var(--surface-2));
+  border: 1px solid color-mix(in srgb, var(--border) 36%, transparent);
+  border-radius: var(--radius-full);
+  box-shadow: 0 1px 0 color-mix(in srgb, var(--fg) 2.5%, transparent) inset;
+}
+
+.admin-bookings-ops--dashboard .admin-bookings-ops-filter-chip {
+  background: color-mix(in srgb, var(--surface-3) 35%, var(--surface));
+  border-color: color-mix(in srgb, var(--border) 45%, transparent);
+}
+
+.admin-bookings-ops--dashboard .admin-kbd {
+  background: color-mix(in srgb, var(--surface) 45%, var(--surface-3));
+  border-color: color-mix(in srgb, var(--border) 48%, transparent);
+  box-shadow: 0 1px 0 color-mix(in srgb, var(--fg) 5%, transparent);
+}
+
+@media (min-width: 64rem) {
+  .admin-bookings-ops-dash-control-deck {
+    flex-direction: row;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 0.55rem 0.85rem;
+  }
+
+  .admin-bookings-ops--dashboard .admin-bookings-ops-dash-control-deck .admin-bookings-ops-toolbar {
+    flex: 0 0 auto;
+  }
+
+  .admin-bookings-ops--dashboard .admin-bookings-ops-dash-control-deck .admin-bookings-ops-search-row {
+    flex: 1 1 14rem;
+    min-width: 0;
+    width: auto;
+  }
+}
+
+@media (min-width: 80rem) {
+  .admin-bookings-ops--dashboard .admin-bookings-ops-dash-control-deck {
+    padding-inline: clamp(0.65rem, 1.1vw, 0.85rem);
+  }
 }
 
 .admin-bookings-ops-status {
@@ -9443,6 +9691,40 @@
   font-weight: 700;
   font-size: var(--text-sm);
   line-height: 1.25;
+}
+
+.admin-bookings-ops--dashboard .admin-bookings-ops-status-primary {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 0.35rem 0.5rem;
+  font-weight: 600;
+  font-size: clamp(0.8rem, 2.1vw, 0.9rem);
+  letter-spacing: -0.01em;
+  line-height: 1.35;
+}
+
+.admin-bookings-ops-status-lead {
+  flex-shrink: 0;
+  font-size: 0.62rem;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--muted);
+}
+
+.admin-bookings-ops--dashboard .admin-bookings-ops-status-lead {
+  padding: 0.2rem 0.5rem;
+  border-radius: var(--radius-full);
+  background: color-mix(in srgb, var(--surface-3) 40%, transparent);
+  border: 1px solid color-mix(in srgb, var(--border) 55%, transparent);
+  color: color-mix(in srgb, var(--muted) 88%, var(--fg));
+}
+
+.admin-bookings-ops-status-detail {
+  min-width: 0;
+  font-weight: 600;
+  color: var(--fg);
 }
 
 .admin-bookings-ops-status-secondary {
@@ -9498,6 +9780,27 @@
   border-bottom: 1px solid color-mix(in srgb, var(--border) 70%, transparent);
 }
 
+.admin-bookings-ops-dash-head {
+  padding-bottom: 0.15rem;
+  border-bottom: none;
+  position: relative;
+}
+
+.admin-bookings-ops-dash-head::after {
+  content: '';
+  display: block;
+  height: 1px;
+  margin-top: 0.45rem;
+  border-radius: 1px;
+  background: linear-gradient(
+    90deg,
+    color-mix(in srgb, var(--border) 35%, transparent) 0%,
+    color-mix(in srgb, var(--border) 72%, transparent) 42%,
+    color-mix(in srgb, var(--accent) 22%, var(--border)) 100%
+  );
+  opacity: 0.95;
+}
+
 .admin-bookings-ops-head-text {
   min-width: 0;
 }
@@ -9543,13 +9846,6 @@
   flex-wrap: wrap;
   align-items: flex-start;
   gap: var(--space-sm) var(--space-md);
-}
-
-.admin-bookings-ops-toolbar--grid {
-  display: grid;
-  gap: var(--space-sm);
-  grid-template-columns: 1fr;
-  align-items: start;
 }
 
 .admin-bookings-ops-toolbar--compact {
@@ -9628,6 +9924,72 @@
   margin: 0;
 }
 
+.admin-bookings-ops-search-row {
+  width: 100%;
+  min-width: 0;
+}
+
+.admin-bookings-ops--dashboard .admin-bookings-ops-search {
+  width: 100%;
+  max-width: 100%;
+  flex: 1 1 auto;
+}
+
+.admin-bookings-ops--dashboard .admin-search-row--in-ops {
+  flex: 1 1 auto;
+  min-width: 0;
+  max-width: 100%;
+}
+
+.admin-bookings-ops--dashboard .admin-search-row input {
+  -webkit-appearance: none;
+  appearance: none;
+  background: color-mix(in srgb, var(--surface) 32%, var(--surface-2));
+  border: 1px solid color-mix(in srgb, var(--border) 58%, transparent);
+  border-radius: var(--radius-full);
+  color: var(--fg);
+  font-size: var(--text-sm);
+  line-height: 1.35;
+  min-height: 2.5rem;
+  padding-left: 2.4rem;
+  transition:
+    border-color 0.15s ease,
+    background 0.15s ease,
+    box-shadow 0.15s ease;
+}
+
+.admin-bookings-ops--dashboard .admin-search-row input::placeholder {
+  color: var(--muted);
+  opacity: 1;
+  font-size: var(--text-xs);
+}
+
+.admin-bookings-ops--dashboard .admin-search-row input:hover:not(:focus-visible) {
+  border-color: color-mix(in srgb, var(--border) 65%, var(--fg));
+  background: color-mix(in srgb, var(--surface) 48%, var(--surface-2));
+}
+
+.admin-bookings-ops--dashboard .admin-search-row input:focus-visible {
+  outline: none;
+  border-color: color-mix(in srgb, var(--focus) 48%, var(--border));
+  box-shadow: 0 0 0 2px color-mix(in srgb, var(--focus) 34%, transparent);
+}
+
+.admin-bookings-ops--dashboard .admin-search-icon {
+  left: 0.88rem;
+}
+
+.admin-bookings-ops--dashboard .admin-search-results {
+  border-radius: var(--radius-md);
+  border: 1px solid color-mix(in srgb, var(--border) 88%, transparent);
+  background: var(--surface);
+  box-shadow: 0 14px 36px color-mix(in srgb, var(--fg) 9%, transparent);
+}
+
+.admin-bookings-ops--dashboard .admin-kbd {
+  border-radius: var(--radius-full);
+}
+
 .admin-bookings-ops-search {
   flex: 1 1 16rem;
   max-width: 100%;
@@ -9683,37 +10045,15 @@
 }
 
 @media (min-width: 64rem) {
-  .admin-bookings-ops-toolbar:not(.admin-bookings-ops-toolbar--compact):not(.admin-bookings-ops-toolbar--grid) {
+  .admin-bookings-ops-toolbar:not(.admin-bookings-ops-toolbar--compact) {
     flex-wrap: nowrap;
     align-items: center;
   }
 
-  .admin-bookings-ops-toolbar--grid {
-    grid-template-columns: auto minmax(0, 1fr);
+  .admin-bookings-ops--dashboard .admin-bookings-ops-search {
+    justify-content: space-between;
     align-items: center;
-  }
-
-  .admin-bookings-ops-toolbar--grid .admin-bookings-ops-controls {
-    flex: 0 0 auto;
-  }
-
-  .admin-bookings-ops-toolbar--grid .admin-bookings-ops-search {
-    justify-content: flex-end;
-    justify-self: end;
-    width: 100%;
-    max-width: min(100%, 38rem);
-  }
-
-  .admin-bookings-ops-toolbar--grid .admin-search-row--in-ops {
-    max-width: 100%;
-  }
-
-  .admin-bookings-ops-search {
-    justify-content: flex-end;
-  }
-
-  .admin-bookings-ops-toolbar:not(.admin-bookings-ops-toolbar--compact):not(.admin-bookings-ops-toolbar--grid) .admin-search-row--in-ops {
-    max-width: min(100%, 36rem);
+    flex-wrap: nowrap;
   }
 }
 
@@ -9721,6 +10061,22 @@
   .admin-bookings-ops {
     padding: var(--space-sm);
     border-radius: var(--radius-sm);
+  }
+
+  .admin-bookings-ops.admin-bookings-ops--dashboard {
+    border-radius: clamp(0.88rem, 3vw, 1.08rem);
+    padding: clamp(0.55rem, 2.8vw, 0.78rem) clamp(0.58rem, 3.2vw, 0.88rem);
+    gap: clamp(0.55rem, 2.6vw, 0.82rem);
+  }
+
+  .admin-bookings-ops--dashboard .admin-bookings-ops-dash-hero {
+    padding-block: clamp(0.45rem, 2.4vw, 0.62rem);
+  }
+
+  .admin-bookings-ops--dashboard .admin-bookings-ops-status .admin-live-status {
+    width: 100%;
+    margin-left: 0;
+    justify-content: center;
   }
 
   .admin-bookings-ops-toolbar:not(.admin-bookings-ops-toolbar--compact) {
@@ -10042,6 +10398,113 @@
     color: var(--muted);
     line-height: 1.15;
     overflow-wrap: break-word;
+  }
+}
+
+/* Dashboard: metric capsules — tablet/desktop single row */
+@media (min-width: 48rem) {
+  .admin-bookings-ops--dashboard .admin-day-summary-bar {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: stretch;
+    gap: 0.45rem;
+    padding: 0;
+    overflow: visible;
+    background: transparent;
+    border: none;
+    box-shadow: none;
+    border-radius: 0;
+  }
+
+  .admin-bookings-ops--dashboard .admin-day-summary-divider {
+    display: none;
+  }
+
+  .admin-bookings-ops--dashboard .admin-day-summary-stat {
+    flex: 1 1 calc(25% - 0.34rem);
+    min-width: min(100%, 6.25rem);
+    border-radius: var(--radius-full);
+    padding: 0.52rem 0.75rem;
+    background: color-mix(in srgb, var(--surface) 46%, var(--surface-2));
+    border: 1px solid color-mix(in srgb, var(--border) 42%, transparent);
+    box-shadow: 0 1px 0 color-mix(in srgb, var(--fg) 3%, transparent) inset;
+  }
+
+  .admin-bookings-ops--dashboard .admin-day-summary-stat--action:hover {
+    background: color-mix(in srgb, var(--accent) 7%, var(--surface));
+    border-color: color-mix(in srgb, var(--border) 52%, var(--accent));
+  }
+
+  .admin-bookings-ops--dashboard .admin-day-summary-stat--action.is-active {
+    background: color-mix(in srgb, var(--accent) 12%, var(--surface-2));
+    border-color: color-mix(in srgb, var(--accent) 32%, var(--border));
+    box-shadow:
+      0 1px 0 color-mix(in srgb, var(--fg) 3.5%, transparent) inset,
+      0 0 0 1px color-mix(in srgb, var(--accent) 18%, transparent);
+  }
+
+  .admin-bookings-ops--dashboard .admin-day-summary-stat--action:focus-visible {
+    outline: none;
+    box-shadow:
+      0 0 0 2px var(--focus, var(--accent)),
+      0 1px 0 color-mix(in srgb, var(--fg) 3%, transparent) inset;
+  }
+}
+
+@media (max-width: 47.99rem) {
+  .admin-bookings-ops--dashboard .admin-day-summary-bar {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    grid-auto-rows: minmax(3rem, auto);
+    gap: 0.4rem;
+    padding: 0;
+    background: transparent;
+    border: none;
+    box-shadow: none;
+    overflow: visible;
+    border-radius: 0;
+  }
+
+  .admin-bookings-ops--dashboard .admin-day-summary-divider {
+    display: none;
+  }
+
+  .admin-bookings-ops--dashboard .admin-day-summary-stat {
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    gap: 0.22rem;
+    min-height: 3.05rem;
+    padding: 0.42rem 0.35rem;
+    border-radius: clamp(0.88rem, 3.2vw, 1.05rem);
+    border: 1px solid color-mix(in srgb, var(--border) 44%, transparent);
+    background: color-mix(in srgb, var(--surface) 50%, var(--surface-2));
+    box-shadow: 0 1px 0 color-mix(in srgb, var(--fg) 2.6%, transparent) inset;
+  }
+
+  .admin-bookings-ops--dashboard .admin-day-summary-stat--action.is-active {
+    background: color-mix(in srgb, var(--accent) 14%, var(--surface-2));
+    border-color: color-mix(in srgb, var(--accent) 30%, var(--border));
+  }
+
+  .admin-bookings-ops--dashboard .admin-day-summary-stat--action:hover {
+    background: color-mix(in srgb, var(--accent) 8%, var(--surface));
+  }
+
+  .admin-bookings-ops--dashboard .admin-day-summary-stat--action:focus-visible {
+    outline: none;
+    box-shadow: inset 0 0 0 2px var(--focus, var(--accent));
+  }
+}
+
+@media (min-width: 48rem) and (max-width: 63.99rem) {
+  .admin-bookings-ops--dashboard .admin-day-summary-label {
+    font-size: 0.68rem;
+  }
+
+  .admin-bookings-ops--dashboard .admin-day-summary-value {
+    font-size: 0.98rem;
   }
 }
 

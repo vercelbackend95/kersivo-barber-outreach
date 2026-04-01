@@ -2069,40 +2069,50 @@ export default function BookingsAdminPanel({ isActive, mode, onBackToDashboard }
           className={`admin-bookings-ops admin-bookings-ops--dashboard ${isMobileViewport ? 'admin-bookings-ops--mobile-sticky' : ''}`}
           aria-labelledby="admin-bookings-ops-heading"
         >
-          <div className="admin-bookings-ops-status">
-            <div className="admin-bookings-ops-status-copy">
-              {nextBooking ? (
-                <>
+          <div className="admin-bookings-ops-dash-hero">
+            <div className="admin-bookings-ops-status">
+              <div className="admin-bookings-ops-status-copy">
+                {nextBooking ? (
+                  <>
+                    <p className="admin-bookings-ops-status-primary">
+                      <span className="admin-bookings-ops-status-lead">Next</span>
+                      <span className="admin-bookings-ops-status-detail">
+                        {nextBooking.barber?.name} · {nextBooking.service?.name} · {formatStartTime(nextBooking.startAt)}
+                      </span>
+                    </p>
+                    <p className="admin-bookings-ops-status-secondary muted">
+                      {formatRelativeTime(nextBooking.startAt, nextBooking.endAt)}
+                    </p>
+                  </>
+                ) : (
                   <p className="admin-bookings-ops-status-primary">
-                    Next: {nextBooking.barber?.name} — {nextBooking.service?.name} — {formatStartTime(nextBooking.startAt)}
+                    <span className="admin-bookings-ops-status-lead">Next</span>
+                    <span className="admin-bookings-ops-status-detail">No upcoming bookings</span>
                   </p>
-                  <p className="admin-bookings-ops-status-secondary muted">
-                    {formatRelativeTime(nextBooking.startAt, nextBooking.endAt)}
-                  </p>
-                </>
-              ) : (
-                <p className="admin-bookings-ops-status-primary">No upcoming bookings</p>
-              )}
+                )}
+              </div>
+              <div
+                className={`admin-live-status admin-live-status--${connectionStateLabel === 'LIVE' ? 'live' : connectionStateLabel === 'OFFLINE' ? 'offline' : 'connecting'}`}
+                role="status"
+                aria-live="polite"
+              >
+                <span className={`admin-live-status-dot ${hasLivePulse ? 'admin-live-status-dot--pulse' : ''}`} aria-hidden="true" />
+                <span className="admin-live-status-label">{connectionStateLabel}</span>
+              </div>
             </div>
-            <div
-              className={`admin-live-status admin-live-status--${connectionStateLabel === 'LIVE' ? 'live' : connectionStateLabel === 'OFFLINE' ? 'offline' : 'connecting'}`}
-              role="status"
-              aria-live="polite"
-            >
-              <span className={`admin-live-status-dot ${hasLivePulse ? 'admin-live-status-dot--pulse' : ''}`} aria-hidden="true" />
-              <span className="admin-live-status-label">{connectionStateLabel}</span>
-            </div>
+            <p className="muted admin-bookings-ops-updated">{freshnessLabel}</p>
           </div>
-          <p className="muted admin-bookings-ops-updated">{freshnessLabel}</p>
 
-          <header className="admin-bookings-ops-head">
-            <div className="admin-bookings-ops-head-text">
-              <p className="admin-bookings-ops-kicker">Today</p>
-              <h2 id="admin-bookings-ops-heading" className="admin-bookings-ops-title">
-                Operations
-              </h2>
-            </div>
-          </header>
+          <div className="admin-bookings-ops-masthead">
+            <header className="admin-bookings-ops-head admin-bookings-ops-dash-head">
+              <div className="admin-bookings-ops-head-text">
+                <p className="admin-bookings-ops-kicker">Today</p>
+                <h2 id="admin-bookings-ops-heading" className="admin-bookings-ops-title">
+                  Operations
+                </h2>
+              </div>
+            </header>
+          </div>
 
           {!bookingsInitialLoading ? (
             <DaySummaryBar
@@ -2162,62 +2172,66 @@ export default function BookingsAdminPanel({ isActive, mode, onBackToDashboard }
             </div>
           ) : null}
 
-          <div className="admin-bookings-ops-toolbar admin-bookings-ops-toolbar--grid">
-            <div className="admin-bookings-ops-controls">
-              <div className="admin-dashboard-controls">
-                <div className="admin-view-toggle" role="tablist" aria-label="Booking view">
-                  {(['timeline', 'list'] as const).map((view) => {
-                    const isActiveTab = activeView === view;
-                    const label = view === 'timeline' ? 'Timeline' : 'List';
-                    return (
-                      <button
-                        key={view}
-                        type="button"
-                        role="tab"
-                        aria-selected={isActiveTab}
-                        className={isActiveTab ? 'active' : ''}
-                        onClick={() => setActiveView(view)}
-                      >
-                        {label}
-                      </button>
-                    );
-                  })}
-                </div>
-                <label className="admin-date-picker-label" aria-label={`Select date, currently ${selectedDateLabel}`}>
-                  <span className="admin-date-picker-text">{selectedDateLabel}</span>
-                  <input
-                    type="date"
-                    className="admin-filter-tab-calendar-input"
-                    value={selectedDate}
-                    onChange={(event) => setSelectedDate(event.target.value)}
-                    aria-label="Select date"
-                  />
-                  <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">
-                    <path
-                      d="M7 2a1 1 0 0 1 1 1v1h8V3a1 1 0 1 1 2 0v1h1a3 3 0 0 1 3 3v11a4 4 0 0 1-4 4H6a4 4 0 0 1-4-4V7a3 3 0 0 1 3-3h1V3a1 1 0 0 1 1-1Zm13 8H4v8a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-8ZM5 6a1 1 0 0 0-1 1v1h16V7a1 1 0 0 0-1-1H5Z"
-                      fill="currentColor"
+          <div className="admin-bookings-ops-dash-control-deck">
+            <div className="admin-bookings-ops-toolbar">
+              <div className="admin-bookings-ops-controls">
+                <div className="admin-dashboard-controls admin-dashboard-controls--ops-dash">
+                  <div className="admin-view-toggle" role="tablist" aria-label="Booking view">
+                    {(['timeline', 'list'] as const).map((view) => {
+                      const isActiveTab = activeView === view;
+                      const label = view === 'timeline' ? 'Timeline' : 'List';
+                      return (
+                        <button
+                          key={view}
+                          type="button"
+                          role="tab"
+                          aria-selected={isActiveTab}
+                          className={isActiveTab ? 'active' : ''}
+                          onClick={() => setActiveView(view)}
+                        >
+                          {label}
+                        </button>
+                      );
+                    })}
+                  </div>
+                  <label className="admin-date-picker-label" aria-label={`Select date, currently ${selectedDateLabel}`}>
+                    <span className="admin-date-picker-text">{selectedDateLabel}</span>
+                    <input
+                      type="date"
+                      className="admin-filter-tab-calendar-input"
+                      value={selectedDate}
+                      onChange={(event) => setSelectedDate(event.target.value)}
+                      aria-label="Select date"
                     />
-                  </svg>
-                </label>
+                    <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+                      <path
+                        d="M7 2a1 1 0 0 1 1 1v1h8V3a1 1 0 1 1 2 0v1h1a3 3 0 0 1 3 3v11a4 4 0 0 1-4 4H6a4 4 0 0 1-4-4V7a3 3 0 0 1 3-3h1V3a1 1 0 0 1 1-1Zm13 8H4v8a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-8ZM5 6a1 1 0 0 0-1 1v1h16V7a1 1 0 0 0-1-1H5Z"
+                        fill="currentColor"
+                      />
+                    </svg>
+                  </label>
+                </div>
               </div>
             </div>
-            <AdminBookingsOpsSearch
-              variant="standard"
-              searchInputRef={searchInputRef}
-              searchResultsRef={searchResultsRef}
-              clientSearchQuery={clientSearchQuery}
-              onClientSearchQueryChange={setClientSearchQuery}
-              searchDropdownBookings={searchDropdownBookings}
-              searchResultsLabel={searchResultsLabel}
-              activeSearchResultIndex={activeSearchResultIndex}
-              onActiveSearchResultIndexChange={setActiveSearchResultIndex}
-              highlightMatch={highlightMatch}
-              formatStartTime={formatStartTime}
-              onSelectBooking={jumpToTimelineBooking}
-              onClearSearch={clearSearchField}
-              showKbdHint={showSearchKbdHint}
-              searchShortcutHint={searchShortcutHint}
-            />
+            <div className="admin-bookings-ops-search-row">
+              <AdminBookingsOpsSearch
+                variant="standard"
+                searchInputRef={searchInputRef}
+                searchResultsRef={searchResultsRef}
+                clientSearchQuery={clientSearchQuery}
+                onClientSearchQueryChange={setClientSearchQuery}
+                searchDropdownBookings={searchDropdownBookings}
+                searchResultsLabel={searchResultsLabel}
+                activeSearchResultIndex={activeSearchResultIndex}
+                onActiveSearchResultIndexChange={setActiveSearchResultIndex}
+                highlightMatch={highlightMatch}
+                formatStartTime={formatStartTime}
+                onSelectBooking={jumpToTimelineBooking}
+                onClearSearch={clearSearchField}
+                showKbdHint={showSearchKbdHint}
+                searchShortcutHint={searchShortcutHint}
+              />
+            </div>
           </div>
 
           {opsFilteredViewActive ? (

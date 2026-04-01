@@ -87,7 +87,11 @@ export default function AdminBookingsOpsSearch({
                 if (selectedBooking) onSelectBooking(selectedBooking);
               }
             }}
-            placeholder="Search name, email, barber, service, time…"
+            placeholder={
+              variant === 'standard'
+                ? 'Search clients, services, times…'
+                : 'Search name, email, barber, service, time…'
+            }
             aria-label="Search bookings by client name, email, barber, service, time, or booking reference"
             aria-controls="admin-booking-search-results"
             aria-expanded={searchDropdownBookings.length > 0}
@@ -142,7 +146,7 @@ export default function AdminBookingsOpsSearch({
   );
 
   if (variant === 'standard') {
-    return <div className="admin-bookings-ops-search">{inner}</div>;
+    return <div className="admin-bookings-ops-search admin-bookings-ops-search--dashboard">{inner}</div>;
   }
 
   return inner;
