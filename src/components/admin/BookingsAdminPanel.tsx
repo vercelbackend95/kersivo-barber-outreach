@@ -2103,28 +2103,25 @@ export default function BookingsAdminPanel({ isActive, mode, onBackToDashboard }
             <p className="muted admin-bookings-ops-updated">{freshnessLabel}</p>
           </div>
 
-          <div className="admin-bookings-ops-masthead">
-            <header className="admin-bookings-ops-head admin-bookings-ops-dash-head">
-              <div className="admin-bookings-ops-head-text">
-                <p className="admin-bookings-ops-kicker">Today</p>
-                <h2 id="admin-bookings-ops-heading" className="admin-bookings-ops-title">
-                  Operations
-                </h2>
-              </div>
+          <div className="admin-bookings-ops-operations-stack">
+            <header className="admin-bookings-ops-operations-head">
+              <p className="admin-bookings-ops-kicker">Today</p>
+              <h2 id="admin-bookings-ops-heading" className="admin-bookings-ops-title admin-bookings-ops-title--compact">
+                Operations
+              </h2>
             </header>
+            {!bookingsInitialLoading ? (
+              <DaySummaryBar
+                bookings={bookings}
+                staffOnFloorCount={onFloorBarbersNow.length}
+                nowMs={nowMs}
+                dayOpsFilter={dayOpsFilter}
+                onDayOpsFilterChange={applyDayOpsFilter}
+                staffPanelOpen={staffRosterOpen}
+                onStaffToggle={onStaffToggle}
+              />
+            ) : null}
           </div>
-
-          {!bookingsInitialLoading ? (
-            <DaySummaryBar
-              bookings={bookings}
-              staffOnFloorCount={onFloorBarbersNow.length}
-              nowMs={nowMs}
-              dayOpsFilter={dayOpsFilter}
-              onDayOpsFilterChange={applyDayOpsFilter}
-              staffPanelOpen={staffRosterOpen}
-              onStaffToggle={onStaffToggle}
-            />
-          ) : null}
 
           {staffRosterOpen ? (
             <div className="admin-bookings-ops-staff-roster">

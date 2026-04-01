@@ -7310,12 +7310,12 @@
     position: sticky;
     top: 3.1rem;
     z-index: 32;
-    background: color-mix(in srgb, var(--surface-2) 88%, var(--surface));
+    background: color-mix(in srgb, var(--surface-2) 92%, var(--surface));
     backdrop-filter: blur(10px);
     -webkit-backdrop-filter: blur(10px);
     box-shadow:
-      0 1px 0 color-mix(in srgb, var(--fg) 4%, transparent) inset,
-      0 12px 36px color-mix(in srgb, var(--fg) 7%, transparent);
+      0 1px 0 color-mix(in srgb, var(--fg) 3.5%, transparent) inset,
+      0 8px 24px color-mix(in srgb, var(--fg) 4.5%, transparent);
     max-height: min(72vh, 100%);
     overflow-y: auto;
     -webkit-overflow-scrolling: touch;
@@ -7334,16 +7334,16 @@
   }
 
   .admin-bookings-ops--mobile-sticky .admin-live-status {
-    font-size: 0.62rem;
-    padding: 0.22rem 0.38rem;
+    font-size: 0.56rem;
+    padding: 0.2rem 0.42rem;
   }
 
-  .admin-bookings-ops--mobile-sticky .admin-bookings-ops-head {
-    padding-bottom: 0.2rem;
+  .admin-bookings-ops--mobile-sticky .admin-bookings-ops-operations-head {
+    gap: 0.28rem 0.45rem;
   }
 
-  .admin-bookings-ops--mobile-sticky .admin-bookings-ops-title {
-    font-size: 1rem;
+  .admin-bookings-ops--mobile-sticky .admin-bookings-ops-title--compact {
+    font-size: 0.95rem;
   }
 
   .admin-search-row--sticky {
@@ -9444,76 +9444,103 @@
 }
 
 .admin-bookings-ops--dashboard {
-  --admin-ops-rail-radius: clamp(0.95rem, 2.4vw, 1.2rem);
-  --admin-ops-pill-pad-y: clamp(0.5rem, 1.35vw, 0.72rem);
-  gap: clamp(0.65rem, 1.8vw, 1.05rem);
-  padding: clamp(0.7rem, 1.75vw, 1rem) clamp(0.78rem, 2.1vw, 1.2rem);
-  background: linear-gradient(
-    152deg,
-    color-mix(in srgb, var(--surface-2) 90%, var(--bg)) 0%,
-    color-mix(in srgb, var(--surface-2) 74%, var(--bg)) 45%,
-    color-mix(in srgb, var(--surface-3) 18%, var(--surface-2)) 100%
-  );
-  border: 1px solid color-mix(in srgb, var(--border) 50%, transparent);
-  border-radius: clamp(1rem, 2.5vw, 1.25rem);
-  box-shadow:
-    0 1px 0 color-mix(in srgb, var(--fg) 4.5%, transparent) inset,
-    0 18px 48px color-mix(in srgb, var(--fg) 5%, transparent);
+  --admin-ops-rail-radius: clamp(0.85rem, 2vw, 1.05rem);
+  --admin-ops-pill-pad-y: clamp(0.32rem, 1vw, 0.48rem);
+  --admin-ops-control-h: 2.2rem;
+  gap: clamp(0.38rem, 1.1vw, 0.55rem);
+  padding: clamp(0.5rem, 1.35vw, 0.72rem) clamp(0.62rem, 1.65vw, 0.95rem);
+  background: color-mix(in srgb, var(--surface-2) 82%, var(--bg));
+  border: 1px solid color-mix(in srgb, var(--border) 45%, transparent);
+  border-radius: clamp(0.92rem, 2.2vw, 1.12rem);
+  box-shadow: 0 1px 0 color-mix(in srgb, var(--fg) 3.5%, transparent) inset;
 }
 
-/* ─── Dashboard: soft instrument layers (scoped) ─────────────────────────── */
+/* ─── Dashboard: compact top + controls (scoped) ─────────────────────────── */
 .admin-bookings-ops-dash-hero {
   display: flex;
   flex-direction: column;
-  gap: 0.42rem;
-  padding: var(--admin-ops-pill-pad-y) clamp(0.62rem, 1.6vw, 0.9rem);
-  background: color-mix(in srgb, var(--surface) 54%, var(--surface-2));
-  border: 1px solid color-mix(in srgb, var(--border) 42%, transparent);
-  border-radius: var(--admin-ops-rail-radius);
-  box-shadow:
-    0 1px 0 color-mix(in srgb, var(--fg) 4%, transparent) inset,
-    0 8px 24px color-mix(in srgb, var(--fg) 2.5%, transparent);
+  gap: 0.28rem;
+  padding: var(--admin-ops-pill-pad-y) 0;
+  margin: 0;
+  background: transparent;
+  border: none;
+  border-radius: 0;
+  box-shadow: none;
+  border-bottom: 1px solid color-mix(in srgb, var(--border) 38%, transparent);
 }
 
 .admin-bookings-ops--dashboard .admin-bookings-ops-status {
-  align-items: center;
-  flex-wrap: wrap;
-  row-gap: 0.5rem;
+  align-items: flex-start;
+  flex-wrap: nowrap;
+  gap: 0.4rem;
 }
 
 .admin-bookings-ops--dashboard .admin-bookings-ops-status .admin-live-status {
+  flex-shrink: 0;
   margin-left: auto;
+  align-self: flex-start;
 }
 
 .admin-bookings-ops--dashboard .admin-bookings-ops-updated {
-  font-size: 0.72rem;
-  letter-spacing: 0.03em;
-  opacity: 0.92;
+  font-size: 0.68rem;
+  letter-spacing: 0.02em;
+  opacity: 0.88;
 }
 
 .admin-bookings-ops--dashboard .admin-live-status {
   border-radius: var(--radius-full);
-  padding: 0.32rem 0.58rem;
-  font-size: 0.62rem;
+  padding: 0.22rem 0.48rem;
+  font-size: 0.58rem;
   font-weight: 600;
-  letter-spacing: 0.08em;
-  line-height: 1.15;
+  letter-spacing: 0.07em;
+  line-height: 1.1;
   border-width: 1px;
-  backdrop-filter: blur(10px);
+  backdrop-filter: blur(8px);
 }
 
-.admin-bookings-ops--dashboard .admin-bookings-ops-masthead {
-  margin: 0.05rem 0 0;
+.admin-bookings-ops--dashboard .admin-live-status--live {
+  color: color-mix(in srgb, var(--status-confirmed) 88%, var(--fg));
+  border-color: color-mix(in srgb, var(--status-confirmed) 32%, var(--border));
+  background: color-mix(in srgb, var(--status-confirmed) 7%, transparent);
+}
+
+.admin-bookings-ops--dashboard .admin-live-status--live .admin-live-status-dot {
+  background: var(--status-confirmed);
+}
+
+.admin-bookings-ops-operations-stack {
+  display: flex;
+  flex-direction: column;
+  gap: 0.32rem;
+  margin: 0;
+  padding: 0;
+}
+
+.admin-bookings-ops-operations-head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 0.35rem 0.55rem;
+}
+
+.admin-bookings-ops--dashboard .admin-bookings-ops-operations-head .admin-bookings-ops-kicker {
+  margin: 0;
+  letter-spacing: 0.14em;
+  opacity: 0.9;
+}
+
+.admin-bookings-ops-title--compact {
+  margin: 0;
+  font-size: clamp(0.92rem, 2vw, 1.05rem);
+  font-weight: 600;
+  letter-spacing: -0.02em;
+  line-height: 1.15;
+  color: var(--fg);
 }
 
 .admin-bookings-ops--dashboard .admin-bookings-ops-kicker {
-  letter-spacing: 0.16em;
-  opacity: 0.92;
-}
-
-.admin-bookings-ops--dashboard .admin-bookings-ops-title {
-  font-size: clamp(1.08rem, 2.2vw, 1.28rem);
-  font-weight: 700;
+  letter-spacing: 0.14em;
+  opacity: 0.9;
 }
 
 .admin-bookings-ops--dashboard .admin-bookings-ops-head:not(.admin-bookings-ops-dash-head) {
@@ -9544,19 +9571,19 @@
 .admin-bookings-ops-dash-control-deck {
   display: flex;
   flex-direction: column;
-  gap: 0.55rem;
-  padding: clamp(0.52rem, 1.35vw, 0.72rem) clamp(0.55rem, 1.45vw, 0.78rem);
-  background: color-mix(in srgb, var(--surface) 48%, var(--surface-2));
-  border: 1px solid color-mix(in srgb, var(--border) 40%, transparent);
-  border-radius: var(--admin-ops-rail-radius);
-  box-shadow:
-    0 1px 0 color-mix(in srgb, var(--fg) 3.5%, transparent) inset,
-    0 10px 28px color-mix(in srgb, var(--fg) 2.8%, transparent);
+  gap: 0.38rem;
+  padding: clamp(0.38rem, 1.1vw, 0.52rem) 0 0;
+  margin: 0;
+  background: transparent;
+  border: none;
+  border-radius: 0;
+  box-shadow: none;
+  border-top: 1px solid color-mix(in srgb, var(--border) 32%, transparent);
 }
 
 .admin-bookings-ops--dashboard .admin-bookings-ops-dash-control-deck .admin-bookings-ops-toolbar {
   margin: 0;
-  gap: 0.45rem 0.65rem;
+  gap: 0.35rem 0.5rem;
 }
 
 .admin-bookings-ops--dashboard .admin-bookings-ops-dash-control-deck .admin-bookings-ops-search-row {
@@ -9569,15 +9596,16 @@
   flex-wrap: wrap;
   align-items: center;
   justify-content: center;
-  gap: 0.35rem;
-  padding: 0.32rem;
+  gap: 0.28rem;
+  padding: 0.22rem;
   width: 100%;
   max-width: 100%;
   box-sizing: border-box;
-  background: color-mix(in srgb, var(--surface-3) 22%, var(--surface-2));
-  border: 1px solid color-mix(in srgb, var(--border) 38%, transparent);
+  min-height: var(--admin-ops-control-h);
+  background: color-mix(in srgb, var(--surface-3) 14%, var(--surface-2));
+  border: 1px solid color-mix(in srgb, var(--border) 34%, transparent);
   border-radius: var(--radius-full);
-  box-shadow: 0 1px 0 color-mix(in srgb, var(--fg) 3%, transparent) inset;
+  box-shadow: none;
 }
 
 @media (min-width: 64rem) {
@@ -9599,8 +9627,8 @@
 }
 
 .admin-bookings-ops--dashboard .admin-dashboard-controls--ops-dash .admin-view-toggle button {
-  padding: 0.38rem 0.88rem;
-  min-height: 2.15rem;
+  padding: 0.28rem 0.72rem;
+  min-height: calc(var(--admin-ops-control-h) - 0.44rem);
 }
 
 .admin-bookings-ops--dashboard .admin-dashboard-controls--ops-dash .admin-view-toggle button.active {
@@ -9611,8 +9639,8 @@
 .admin-bookings-ops--dashboard .admin-dashboard-controls--ops-dash .admin-date-picker-label {
   flex: 0 1 auto;
   min-width: 0;
-  min-height: 2.15rem;
-  padding: 0.38rem 0.82rem;
+  min-height: calc(var(--admin-ops-control-h) - 0.44rem);
+  padding: 0.28rem 0.72rem;
   margin: 0;
   background: color-mix(in srgb, var(--surface) 55%, transparent);
   border: 1px solid color-mix(in srgb, var(--border) 36%, transparent);
@@ -9651,7 +9679,7 @@
     flex-direction: row;
     flex-wrap: wrap;
     align-items: center;
-    gap: 0.55rem 0.85rem;
+    gap: 0.42rem 0.65rem;
   }
 
   .admin-bookings-ops--dashboard .admin-bookings-ops-dash-control-deck .admin-bookings-ops-toolbar {
@@ -9702,6 +9730,14 @@
   font-size: clamp(0.8rem, 2.1vw, 0.9rem);
   letter-spacing: -0.01em;
   line-height: 1.35;
+  min-width: 0;
+}
+
+.admin-bookings-ops--dashboard .admin-bookings-ops-status-detail {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  max-width: 100%;
 }
 
 .admin-bookings-ops-status-lead {
@@ -9950,8 +9986,8 @@
   color: var(--fg);
   font-size: var(--text-sm);
   line-height: 1.35;
-  min-height: 2.5rem;
-  padding-left: 2.4rem;
+  min-height: var(--admin-ops-control-h);
+  padding-left: 2.15rem;
   transition:
     border-color 0.15s ease,
     background 0.15s ease,
@@ -9976,7 +10012,7 @@
 }
 
 .admin-bookings-ops--dashboard .admin-search-icon {
-  left: 0.88rem;
+  left: 0.75rem;
 }
 
 .admin-bookings-ops--dashboard .admin-search-results {
@@ -10070,13 +10106,7 @@
   }
 
   .admin-bookings-ops--dashboard .admin-bookings-ops-dash-hero {
-    padding-block: clamp(0.45rem, 2.4vw, 0.62rem);
-  }
-
-  .admin-bookings-ops--dashboard .admin-bookings-ops-status .admin-live-status {
-    width: 100%;
-    margin-left: 0;
-    justify-content: center;
+    padding-block: clamp(0.32rem, 2vw, 0.48rem);
   }
 
   .admin-bookings-ops-toolbar:not(.admin-bookings-ops-toolbar--compact) {
@@ -10401,110 +10431,125 @@
   }
 }
 
-/* Dashboard: metric capsules — tablet/desktop single row */
-@media (min-width: 48rem) {
-  .admin-bookings-ops--dashboard .admin-day-summary-bar {
-    display: flex;
-    flex-wrap: wrap;
-    align-items: stretch;
-    gap: 0.45rem;
-    padding: 0;
-    overflow: visible;
-    background: transparent;
-    border: none;
-    box-shadow: none;
-    border-radius: 0;
-  }
+/* Dashboard: operations metric rail (single row; scroll on narrow viewports) */
+.admin-bookings-ops--dashboard .admin-day-summary-bar {
+  display: flex;
+  flex-wrap: nowrap;
+  align-items: stretch;
+  gap: 0.3rem;
+  padding: 0;
+  margin: 0;
+  overflow-x: auto;
+  overflow-y: hidden;
+  overscroll-behavior-x: contain;
+  -webkit-overflow-scrolling: touch;
+  scroll-snap-type: x proximity;
+  scrollbar-width: thin;
+  background: transparent;
+  border: none;
+  box-shadow: none;
+  border-radius: 0;
+}
 
-  .admin-bookings-ops--dashboard .admin-day-summary-divider {
-    display: none;
-  }
+.admin-bookings-ops--dashboard .admin-day-summary-divider {
+  display: none;
+}
 
-  .admin-bookings-ops--dashboard .admin-day-summary-stat {
-    flex: 1 1 calc(25% - 0.34rem);
-    min-width: min(100%, 6.25rem);
-    border-radius: var(--radius-full);
-    padding: 0.52rem 0.75rem;
-    background: color-mix(in srgb, var(--surface) 46%, var(--surface-2));
-    border: 1px solid color-mix(in srgb, var(--border) 42%, transparent);
-    box-shadow: 0 1px 0 color-mix(in srgb, var(--fg) 3%, transparent) inset;
-  }
+.admin-bookings-ops--dashboard .admin-day-summary-stat {
+  display: flex;
+  flex-direction: row;
+  flex-wrap: nowrap;
+  align-items: center;
+  justify-content: flex-start;
+  gap: 0.28rem;
+  min-width: 0;
+  min-height: var(--admin-ops-control-h);
+  padding: 0.26rem 0.55rem;
+  flex: 0 0 auto;
+  border-radius: var(--radius-full);
+  border: 1px solid color-mix(in srgb, var(--border) 40%, transparent);
+  background: color-mix(in srgb, var(--surface) 42%, var(--surface-2));
+  box-shadow: 0 1px 0 color-mix(in srgb, var(--fg) 2.2%, transparent) inset;
+  text-align: left;
+  scroll-snap-align: start;
+}
 
-  .admin-bookings-ops--dashboard .admin-day-summary-stat--action:hover {
-    background: color-mix(in srgb, var(--accent) 7%, var(--surface));
-    border-color: color-mix(in srgb, var(--border) 52%, var(--accent));
-  }
+.admin-bookings-ops--dashboard .admin-day-summary-stat--action:hover {
+  background: color-mix(in srgb, var(--accent) 6%, var(--surface));
+  border-color: color-mix(in srgb, var(--border) 48%, var(--accent));
+}
 
-  .admin-bookings-ops--dashboard .admin-day-summary-stat--action.is-active {
-    background: color-mix(in srgb, var(--accent) 12%, var(--surface-2));
-    border-color: color-mix(in srgb, var(--accent) 32%, var(--border));
-    box-shadow:
-      0 1px 0 color-mix(in srgb, var(--fg) 3.5%, transparent) inset,
-      0 0 0 1px color-mix(in srgb, var(--accent) 18%, transparent);
-  }
+.admin-bookings-ops--dashboard .admin-day-summary-stat--action.is-active {
+  background: color-mix(in srgb, var(--accent) 11%, var(--surface-2));
+  border-color: color-mix(in srgb, var(--accent) 28%, var(--border));
+  box-shadow:
+    0 1px 0 color-mix(in srgb, var(--fg) 2.5%, transparent) inset,
+    0 0 0 1px color-mix(in srgb, var(--accent) 14%, transparent);
+}
 
-  .admin-bookings-ops--dashboard .admin-day-summary-stat--action:focus-visible {
-    outline: none;
-    box-shadow:
-      0 0 0 2px var(--focus, var(--accent)),
-      0 1px 0 color-mix(in srgb, var(--fg) 3%, transparent) inset;
-  }
+.admin-bookings-ops--dashboard .admin-day-summary-stat--action:focus-visible {
+  outline: none;
+  box-shadow:
+    0 0 0 2px var(--focus, var(--accent)),
+    0 1px 0 color-mix(in srgb, var(--fg) 2.5%, transparent) inset;
+}
+
+.admin-bookings-ops--dashboard .admin-day-summary-value {
+  font-size: 0.88rem;
+  font-weight: 700;
+  line-height: 1;
+  flex-shrink: 0;
+}
+
+.admin-bookings-ops--dashboard .admin-day-summary-label {
+  display: block;
+  font-size: 0.62rem;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+  color: var(--muted);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  min-width: 0;
+}
+
+.admin-bookings-ops--dashboard .admin-day-summary-label-short {
+  display: none;
 }
 
 @media (max-width: 47.99rem) {
-  .admin-bookings-ops--dashboard .admin-day-summary-bar {
-    display: grid;
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-    grid-auto-rows: minmax(3rem, auto);
-    gap: 0.4rem;
-    padding: 0;
-    background: transparent;
-    border: none;
-    box-shadow: none;
-    overflow: visible;
-    border-radius: 0;
+  .admin-bookings-ops--dashboard .admin-day-summary-stat {
+    min-width: 5rem;
+    max-width: 42vw;
+    padding-inline: 0.48rem;
   }
 
-  .admin-bookings-ops--dashboard .admin-day-summary-divider {
+  .admin-bookings-ops--dashboard .admin-day-summary-icon {
     display: none;
+  }
+}
+
+@media (min-width: 48rem) {
+  .admin-bookings-ops--dashboard .admin-day-summary-bar {
+    overflow-x: visible;
+    gap: 0.35rem;
   }
 
   .admin-bookings-ops--dashboard .admin-day-summary-stat {
-    flex-direction: column;
-    align-items: center;
+    flex: 1 1 0;
+    min-width: 0;
     justify-content: center;
-    text-align: center;
-    gap: 0.22rem;
-    min-height: 3.05rem;
-    padding: 0.42rem 0.35rem;
-    border-radius: clamp(0.88rem, 3.2vw, 1.05rem);
-    border: 1px solid color-mix(in srgb, var(--border) 44%, transparent);
-    background: color-mix(in srgb, var(--surface) 50%, var(--surface-2));
-    box-shadow: 0 1px 0 color-mix(in srgb, var(--fg) 2.6%, transparent) inset;
-  }
-
-  .admin-bookings-ops--dashboard .admin-day-summary-stat--action.is-active {
-    background: color-mix(in srgb, var(--accent) 14%, var(--surface-2));
-    border-color: color-mix(in srgb, var(--accent) 30%, var(--border));
-  }
-
-  .admin-bookings-ops--dashboard .admin-day-summary-stat--action:hover {
-    background: color-mix(in srgb, var(--accent) 8%, var(--surface));
-  }
-
-  .admin-bookings-ops--dashboard .admin-day-summary-stat--action:focus-visible {
-    outline: none;
-    box-shadow: inset 0 0 0 2px var(--focus, var(--accent));
+    padding: 0.28rem 0.62rem;
   }
 }
 
 @media (min-width: 48rem) and (max-width: 63.99rem) {
   .admin-bookings-ops--dashboard .admin-day-summary-label {
-    font-size: 0.68rem;
+    font-size: 0.6rem;
   }
 
   .admin-bookings-ops--dashboard .admin-day-summary-value {
-    font-size: 0.98rem;
+    font-size: 0.92rem;
   }
 }
 
