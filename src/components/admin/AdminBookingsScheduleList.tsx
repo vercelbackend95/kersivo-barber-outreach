@@ -92,8 +92,7 @@ export type AdminBookingsScheduleHistoryProps = CommonScheduleListProps & {
   variant: 'history';
   heading: string;
   formatDateTime: (startAt: string) => string;
-  formatHistorySubline: (booking: ScheduleListBooking) => string;
-  /** Human-readable status line (aligned with status legend copy). */
+  /** Human-readable status line for the row (e.g. Done, Cancelled by client). */
   getHistoryStatusLine: (booking: ScheduleListBooking) => string;
   historyDateFiltered: boolean;
   onClearHistoryDateRange?: () => void;
@@ -186,9 +185,8 @@ export default function AdminBookingsScheduleList(props: AdminBookingsScheduleLi
             const temporal = getTemporalGroup(booking, nowMs);
             const timeStr = history ? props.formatDateTime(booking.startAt) : formatStartTime(booking.startAt);
             const serviceName = booking.service?.name ?? '—';
-            const subline = history
-              ? props.formatHistorySubline(booking)
-              : `${serviceName} · ${formatDurationLine(bookingDurationMinutes(booking))}`;
+            const subline = `${serviceName} · ${formatDurationLine(bookingDurationMinutes(booking))}`;
+            const emailTrimmed = (booking.email ?? '').trim();
             const barberShort = barberFirstName(booking.barber?.name);
             const isUpdated = updatedBookingIds.includes(booking.id);
             const canCancel =
@@ -251,7 +249,7 @@ export default function AdminBookingsScheduleList(props: AdminBookingsScheduleLi
                 >
                   {timeStr}
                 </div>
-                <div className="admin-bookings-schedule__main">
+                <div className={`admin-bookings-schedule__main${history ? ' admin-bookings-schedule__main--history' : ''}`}>
                   <button
                     type="button"
                     className="admin-bookings-schedule__client"
@@ -260,6 +258,11 @@ export default function AdminBookingsScheduleList(props: AdminBookingsScheduleLi
                     {highlightMatch(formatClientShort(booking.fullName))}
                   </button>
                   <p className="admin-bookings-schedule__subline">{subline}</p>
+                  {history ? (
+                    <p className="admin-bookings-schedule__history-email">
+                      {emailTrimmed ? highlightMatch(emailTrimmed) : '—'}
+                    </p>
+                  ) : null}
                 </div>
                 <div className="admin-bookings-schedule__right">{right}</div>
                 {canCancel && 'onCancelBooking' in props ? (

@@ -75,6 +75,7 @@ export default function BarberProfile({
   const [confirmAction, setConfirmAction] = React.useState<'toggle' | 'delete' | null>(null);
   const confirmDialogRef = React.useRef<HTMLDivElement | null>(null);
   const cancelButtonRef = React.useRef<HTMLButtonElement | null>(null);
+  const avatarInputRef = React.useRef<HTMLInputElement | null>(null);
 
   const selectedServicesCount = enabledServiceIds.size;
   const totalServicesCount = services.length;
@@ -184,6 +185,9 @@ export default function BarberProfile({
   const confirmActionLabel = isDeleteConfirm
     ? (barberSaving ? 'Deleting...' : 'Delete')
     : actionLabel;
+  const openAvatarPicker = React.useCallback(() => {
+    avatarInputRef.current?.click();
+  }, []);
 
 
 
@@ -192,13 +196,28 @@ export default function BarberProfile({
       <header className="admin-barber-profile-top" aria-label="Barber profile header">
         <div className="admin-barber-profile-nav">
           <div className="admin-barber-profile-title-wrap" title={barber.name}>
-            <div className="admin-barber-avatar admin-barber-avatar--tiny">
-              {displayedAvatarUrl ? (
-                <img src={displayedAvatarUrl} alt={barber.name} loading="lazy" />
-              ) : (
-                <span>{getInitials(barber.name)}</span>
-              )}
-
+            <div className="admin-barber-profile-avatar-wrap">
+              <div className="admin-barber-avatar admin-barber-avatar--tiny">
+                {displayedAvatarUrl ? (
+                  <img src={displayedAvatarUrl} alt={barber.name} loading="lazy" />
+                ) : (
+                  <span>{getInitials(barber.name)}</span>
+                )}
+              </div>
+              <button
+                type="button"
+                className="admin-barber-avatar-overlay-action"
+                aria-label={displayedAvatarUrl ? 'Change avatar' : 'Upload avatar'}
+                title={displayedAvatarUrl ? 'Change avatar' : 'Upload avatar'}
+                onClick={openAvatarPicker}
+                disabled={barberSaving}
+              >
+                <span aria-hidden="true">
+                  <svg viewBox="0 0 24 24" focusable="false">
+                    <path d="M6 7.5A2.5 2.5 0 0 1 8.5 5h1.2a2 2 0 0 0 1.6-.8l.3-.4A2 2 0 0 1 13.2 3h1.3A2.5 2.5 0 0 1 17 5.5V6h.8A2.2 2.2 0 0 1 20 8.2v8.6a2.2 2.2 0 0 1-2.2 2.2H6.2A2.2 2.2 0 0 1 4 16.8V8.2A2.2 2.2 0 0 1 6.2 6H6v1.5Zm6 9.5a4 4 0 1 0 0-8 4 4 0 0 0 0 8Zm0-1.8a2.2 2.2 0 1 1 0-4.4 2.2 2.2 0 0 1 0 4.4Z" />
+                  </svg>
+                </span>
+              </button>
             </div>
             <h3 className="admin-barber-profile-title">{barber.name}</h3>
           </div>
@@ -257,10 +276,8 @@ export default function BarberProfile({
           <StatusBadge status={isActive ? 'ACTIVE' : 'INACTIVE'} variant="dot" size="sm" />
         </p>
         <div className="admin-barber-avatar-editor">
-          <label className="btn btn--secondary admin-barber-avatar-upload" htmlFor="admin-barber-avatar-input">
-            {displayedAvatarUrl ? 'Change avatar' : 'Upload avatar'}
-          </label>
           <input
+            ref={avatarInputRef}
             id="admin-barber-avatar-input"
             type="file"
             accept="image/jpeg,image/png,image/webp"

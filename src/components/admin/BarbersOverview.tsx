@@ -1,7 +1,7 @@
 import React from 'react';
 import type { Barber, ServiceOption, TimeBlock } from './barbersTypes';
 import type { BarberBookingPreview } from '../../lib/admin/barberRosterPresentation';
-import { Plus, X } from '../lucide-react';
+import { X } from '../lucide-react';
 import AdminBarberRosterCard from './AdminBarberRosterCard';
 import {
   getDayFill,
@@ -32,7 +32,6 @@ type BarbersOverviewProps = {
   onBarbersFilterChange: (value: 'active' | 'all') => void;
   onOpenBarber: (barberId: string) => void;
   onMoveBarber: (index: number, direction: 'up' | 'down') => void;
-  onOpenAddBarberSheet: () => void;
   onCloseAddBarberSheet: () => void;
   formatBlockRange: (startAt: string, endAt: string) => string;
 };
@@ -71,10 +70,10 @@ export default function BarbersOverview({
   onBarbersFilterChange,
   onOpenBarber,
   onMoveBarber,
-  onOpenAddBarberSheet,
   onCloseAddBarberSheet,
   formatBlockRange,
 }: BarbersOverviewProps) {
+  const barberFilterLabelId = React.useId();
   const availableServices = services.length > 0 ? services : DEFAULT_SERVICE_OPTIONS;
   const [nowTick, setNowTick] = React.useState(() => Date.now());
 
@@ -118,26 +117,28 @@ export default function BarbersOverview({
 
   return (
     <section className="admin-quick-blocks">
-      <h3>Barbers</h3>
-      <p className="muted">Manage active barbers and open a barber profile for details.</p>
-
-      <div className="admin-barber-filter" role="group" aria-label="Filter barbers">
-        <button
-          type="button"
-          className={`admin-barber-filter-btn ${barbersFilter === 'active' ? 'is-active' : ''}`}
-          aria-pressed={barbersFilter === 'active'}
-          onClick={() => onBarbersFilterChange('active')}
-        >
-          Active
-        </button>
-        <button
-          type="button"
-          className={`admin-barber-filter-btn ${barbersFilter === 'all' ? 'is-active' : ''}`}
-          aria-pressed={barbersFilter === 'all'}
-          onClick={() => onBarbersFilterChange('all')}
-        >
-          All
-        </button>
+      <div className="admin-barber-filter-stack">
+        <p id={barberFilterLabelId} className="admin-barber-filter-eyebrow">
+          Roster
+        </p>
+        <div className="admin-barber-filter" role="group" aria-labelledby={barberFilterLabelId}>
+          <button
+            type="button"
+            className={`admin-barber-filter-btn ${barbersFilter === 'active' ? 'is-active' : ''}`}
+            aria-pressed={barbersFilter === 'active'}
+            onClick={() => onBarbersFilterChange('active')}
+          >
+            Active
+          </button>
+          <button
+            type="button"
+            className={`admin-barber-filter-btn ${barbersFilter === 'all' ? 'is-active' : ''}`}
+            aria-pressed={barbersFilter === 'all'}
+            onClick={() => onBarbersFilterChange('all')}
+          >
+            All
+          </button>
+        </div>
       </div>
 
       {barberSaveMessage ? <p className="admin-inline-success">{barberSaveMessage}</p> : null}
@@ -159,6 +160,7 @@ export default function BarbersOverview({
               <AdminBarberRosterCard
                 key={barber.id}
                 barber={barber}
+                orderIndex={index}
                 barberIsActive={barberIsActive}
                 nextBookingPreview={nextBookingPreview}
                 availStatus={availStatus}
@@ -178,15 +180,6 @@ export default function BarbersOverview({
               />
             );
           })}
-
-          <li className="admin-barber-card admin-barber-card--add admin-barber-card--roster-add">
-            <button type="button" className="admin-barber-add-btn admin-barber-add-btn--barbers admin-barber-add-btn--roster" onClick={onOpenAddBarberSheet}>
-              <span className="admin-barber-add-cluster">
-                <Plus className="admin-barber-add-icon" aria-hidden="true" width={24} height={24} />
-                <span className="admin-barber-add-label">Add barber</span>
-              </span>
-            </button>
-          </li>
         </ul>
       </div>
 

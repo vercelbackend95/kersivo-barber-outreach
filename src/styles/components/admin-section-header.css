@@ -58,7 +58,7 @@
   gap: var(--space-xs);
 }
 
-@media (max-width: 47.99rem) {
+@media (max-width: 48rem) {
   .admin-section-header {
     gap: var(--space-sm);
   }
@@ -72,8 +72,17 @@
   }
 
   .admin-section-header--sticky {
-    top: calc(var(--admin-mobile-header-h, 3.25rem) + var(--space-xs) + env(safe-area-inset-top, 0px));
+    top: calc(var(--admin-mobile-header-h, 4.5rem) + var(--space-xs));
     -webkit-backdrop-filter: blur(10px);
     backdrop-filter: blur(10px);
+  }
+
+  /* Bookings: hero strip is sticky above; stack section title below measured --admin-next-block-h */
+  .booking-shell .admin-section-header--sticky {
+    top: calc(
+      var(--admin-mobile-sticky-stack-top, var(--admin-mobile-header-h, 4.5rem)) + var(--admin-next-block-h, 0px) +
+        var(--space-xs)
+    );
+    z-index: 25;
   }
 }

@@ -106,8 +106,32 @@ function getTypeLabel(block: TimeBlock) {
     : 'Break 15m';
 }
 
+function formatDateTimePreview(value: string) {
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) return 'Select date and time';
+  return new Intl.DateTimeFormat('en-GB', {
+    timeZone: ADMIN_TIMEZONE,
+    day: '2-digit',
+    month: 'short',
+    hour: '2-digit',
+    minute: '2-digit',
+    hour12: false
+  }).format(date);
+}
+
+function formatDatePreview(value: string) {
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) return 'Select date';
+  return new Intl.DateTimeFormat('en-GB', {
+    timeZone: ADMIN_TIMEZONE,
+    day: '2-digit',
+    month: 'short'
+  }).format(date);
+}
+
 
 export default function BarberBlocksEditor({
+  barberName,
   blocks,
   successMessage,
   errorMessage,
@@ -139,6 +163,17 @@ export default function BarberBlocksEditor({
     const startMs = new Date(startValue).getTime();
     const endMs = new Date(endValue).getTime();
     return Number.isFinite(startMs) && Number.isFinite(endMs) && endMs < startMs;
+  }, [vacationAllDay, vacationEndDate, vacationEndTime, vacationStartDate, vacationStartTime]);
+
+  const breakPreview = React.useMemo(() => {
+    return `${formatDateTimePreview(breakStartInput)} -> ${formatDateTimePreview(breakEndInput)}`;
+  }, [breakEndInput, breakStartInput]);
+
+  const vacationPreview = React.useMemo(() => {
+    if (vacationAllDay) {
+      return `${formatDatePreview(vacationStartDate)} -> ${formatDatePreview(vacationEndDate)} (all day)`;
+    }
+    return `${formatDateTimePreview(`${vacationStartDate}T${vacationStartTime}`)} -> ${formatDateTimePreview(`${vacationEndDate}T${vacationEndTime}`)}`;
   }, [vacationAllDay, vacationEndDate, vacationEndTime, vacationStartDate, vacationStartTime]);
 
 
@@ -184,47 +219,56 @@ export default function BarberBlocksEditor({
       <p className="muted">Manage unavailable time for this barber.</p>
 
       <div className="admin-timeoff-card">
-        <header className="admin-timeoff-header-row">
-          <h4>Create time off</h4>
-          <p className="admin-timeoff-helper">Breaks are always 15 minutes. Vacation can be all-day or timed.</p>
+        <header className="admin-timeoff-header-row admin-timeoff-header-shell">
+          <div>
+            <h4>Create time off</h4>
+            <p className="admin-timeoff-helper">Set short breaks or longer vacation windows without breaking booking flow.</p>
+          </div>
+          <p className="admin-timeoff-context">{barberName} schedule</p>
         </header>
 
         <div className="admin-timeoff-create-area">
-          <div className="admin-timeoff-mode-grid" role="radiogroup" aria-label="Time off type">
+          <div className="admin-timeoff-mode-segmented" role="radiogroup" aria-label="Time off type">
 
             <button
               type="button"
-                            role="radio"
+              role="radio"
               aria-checked={activeCreateMode === 'break'}
               aria-pressed={activeCreateMode === 'break'}
 
-              className={`admin-timeoff-mode-tile ${activeCreateMode === 'break' ? 'is-active' : ''}`}
+              className={`admin-timeoff-mode-pill ${activeCreateMode === 'break' ? 'is-active' : ''}`}
               onClick={() => setActiveCreateMode('break')}
             >
-              <span className="admin-timeoff-mode-title">Break</span>
-              <span className="admin-timeoff-mode-meta">15 minutes</span>
+              <span className="admin-timeoff-mode-pill-title">Break</span>
+              <span className="admin-timeoff-mode-pill-meta">15 min auto-block</span>
 
             </button>
             <button
               type="button"
-                            role="radio"
+              role="radio"
               aria-checked={activeCreateMode === 'vacation'}
               aria-pressed={activeCreateMode === 'vacation'}
 
-              className={`admin-timeoff-mode-tile ${activeCreateMode === 'vacation' ? 'is-active' : ''}`}
+              className={`admin-timeoff-mode-pill ${activeCreateMode === 'vacation' ? 'is-active' : ''}`}
               onClick={() => setActiveCreateMode('vacation')}
             >
-              <span className="admin-timeoff-mode-title">Vacation</span>
-              <span className="admin-timeoff-mode-meta">Single or multi-day</span>
+              <span className="admin-timeoff-mode-pill-title">Vacation</span>
+              <span className="admin-timeoff-mode-pill-meta">Single or multi-day</span>
 
             </button>
 
           </div>
 
+          <div className="admin-timeoff-flow-note" aria-live="polite">
+            {activeCreateMode === 'break'
+              ? 'Break instantly blocks exactly 15 minutes starting from your selected time.'
+              : 'Vacation can be all-day or specific hours across one or more dates.'}
+          </div>
+
           {activeCreateMode === 'break' ? (
-            <div className="admin-timeoff-form-wrap">
+            <div className="admin-timeoff-form-wrap admin-timeoff-form-surface">
               <div className="admin-timeoff-fields-grid">
-                <label>
+                <label className="admin-timeoff-field-card">
                   <span className="admin-timeoff-label">Start</span>
                   <input
                     type="datetime-local"
@@ -232,24 +276,27 @@ export default function BarberBlocksEditor({
                     onChange={(event) => setBreakStartInput(event.target.value)}
                     className={breakHasRangeError ? 'has-error' : ''}
                   />
+                  <span className="admin-timeoff-field-help">Pick when the 15-minute break begins.</span>
                 </label>
-                <label>
+                <label className="admin-timeoff-field-card">
                   <span className="admin-timeoff-label">End</span>
                   <input type="datetime-local" value={breakEndInput} readOnly tabIndex={-1} aria-readonly="true" />
+                  <span className="admin-timeoff-field-help">Calculated automatically (+15 min).</span>
                 </label>
               </div>
+              <p className="admin-timeoff-preview">Preview: {breakPreview}</p>
               {breakHasRangeError ? <p className="admin-inline-error">End time must be after start time.</p> : null}
               <div className="admin-timeoff-cta-row">
-                <button type="button" className="btn btn--secondary" onClick={handleCreateBreak} disabled={breakHasRangeError}>
+                <button type="button" className="btn btn--secondary admin-timeoff-submit" onClick={handleCreateBreak} disabled={breakHasRangeError}>
                   Add Break
                 </button>
               </div>
 
             </div>
           ) : (
-            <div className="admin-timeoff-form-wrap">
+            <div className="admin-timeoff-form-wrap admin-timeoff-form-surface">
               <div className="admin-timeoff-fields-grid">
-                <label>
+                <label className="admin-timeoff-field-card">
                   <span className="admin-timeoff-label">Start date</span>
                   <input
                     type="date"
@@ -257,8 +304,9 @@ export default function BarberBlocksEditor({
                     onChange={(event) => setVacationStartDate(event.target.value)}
                     className={vacationHasRangeError ? 'has-error' : ''}
                   />
+                  <span className="admin-timeoff-field-help">When vacation starts.</span>
                 </label>
-                <label>
+                <label className="admin-timeoff-field-card">
                   <span className="admin-timeoff-label">End date</span>
                   <input
                     type="date"
@@ -266,11 +314,15 @@ export default function BarberBlocksEditor({
                     onChange={(event) => setVacationEndDate(event.target.value)}
                     className={vacationHasRangeError ? 'has-error' : ''}
                   />
+                  <span className="admin-timeoff-field-help">When barber returns.</span>
                 </label>
               </div>
 
               <div className="admin-timeoff-all-day-row">
-                <span className="admin-timeoff-label">All day</span>
+                <div>
+                  <span className="admin-timeoff-label">All day</span>
+                  <p className="admin-timeoff-switch-caption">Disable to select start/end hours.</p>
+                </div>
                 <button
                   type="button"
                   className={`admin-timeoff-switch ${vacationAllDay ? 'is-on' : ''}`}
@@ -286,30 +338,33 @@ export default function BarberBlocksEditor({
 
               {!vacationAllDay ? (
                 <div className="admin-timeoff-fields-grid">
-                  <label>
+                  <label className="admin-timeoff-field-card">
                     <span className="admin-timeoff-label">Start time</span>
                     <input
                       type="time"
                       value={vacationStartTime}
                       onChange={(event) => setVacationStartTime(event.target.value)}
-                                            className={vacationHasRangeError ? 'has-error' : ''}
+                      className={vacationHasRangeError ? 'has-error' : ''}
                     />
+                    <span className="admin-timeoff-field-help">Local time in salon timezone.</span>
                   </label>
-                  <label>
+                  <label className="admin-timeoff-field-card">
                     <span className="admin-timeoff-label">End time</span>
                     <input
                       type="time"
                       value={vacationEndTime}
                       onChange={(event) => setVacationEndTime(event.target.value)}
-                                            className={vacationHasRangeError ? 'has-error' : ''}
+                      className={vacationHasRangeError ? 'has-error' : ''}
                     />
+                    <span className="admin-timeoff-field-help">Must be after start time.</span>
                   </label>
-                              </div>
+                </div>
               ) : null}
 
+              <p className="admin-timeoff-preview">Preview: {vacationPreview}</p>
               {vacationHasRangeError ? <p className="admin-inline-error">End must be after start.</p> : null}
               <div className="admin-timeoff-cta-row">
-                <button type="button" className="btn btn--secondary" onClick={handleCreateVacation} disabled={vacationHasRangeError}>
+                <button type="button" className="btn btn--secondary admin-timeoff-submit" onClick={handleCreateVacation} disabled={vacationHasRangeError}>
                   Add Vacation
                 </button>
               </div>
@@ -322,11 +377,11 @@ export default function BarberBlocksEditor({
         <hr className="admin-timeoff-divider" />
         <div className="admin-timeoff-upcoming">
           <h4>Upcoming</h4>
-          {sortedUpcoming.length === 0 ? <p className="muted">No time off yet.</p> : (
+          {sortedUpcoming.length === 0 ? <div className="admin-timeoff-empty-state"><p>No upcoming time off.</p><span>New entries appear here with quick remove actions.</span></div> : (
             <ul className="admin-timeoff-upcoming-list">
               {sortedUpcoming.map((block) => (
                 <li key={block.id} className="admin-timeoff-upcoming-card">
-                  <p className="admin-timeoff-upcoming-type">{getTypeLabel(block)}</p>
+                  <p className={`admin-timeoff-upcoming-type ${getTypeLabel(block).toLowerCase().includes('vacation') ? 'is-vacation' : 'is-break'}`}>{getTypeLabel(block)}</p>
                   <p className="admin-timeoff-upcoming-range">{formatUpcomingRange(block)}</p>
 
                   <button

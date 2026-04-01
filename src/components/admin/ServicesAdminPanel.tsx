@@ -1,6 +1,7 @@
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import { SettingsGearIcon } from './SettingsGearIcon';
 import AdminSectionHeader from './AdminSectionHeader';
+import AdminBookingsOpsDashHeroLive from './AdminBookingsOpsDashHeroLive';
 import EmptyState from '../EmptyState';
 import { SkeletonBookingChoices } from '../skeleton';
 import { Scissors, Users, X } from '../lucide-react';
@@ -63,6 +64,8 @@ type BarberAssignmentSectionProps = {
   onChange: (barberIds: string[]) => void;
 };
 
+
+const MOBILE_BREAKPOINT_PX = 767;
 
 const EMPTY_FORM: ServiceForm = {
   name: '',
@@ -239,6 +242,7 @@ export default function ServicesAdminPanel() {
     const [isSaving, setIsSaving] = useState(false);
   const [isServiceSheetOpen, setIsServiceSheetOpen] = useState(false);
   const [activeServiceForPanelId, setActiveServiceForPanelId] = useState<string | null>(null);
+  const [isMobileViewport, setIsMobileViewport] = useState(false);
 
   const activeServiceForPanel = useMemo(
     () => services.find((service) => service.id === activeServiceForPanelId) ?? null,
@@ -275,6 +279,14 @@ export default function ServicesAdminPanel() {
   useEffect(() => {
     void fetchServices();
   }, [fetchServices]);
+
+  useEffect(() => {
+    const mediaQuery = window.matchMedia(`(max-width: ${MOBILE_BREAKPOINT_PX}px)`);
+    const update = () => setIsMobileViewport(mediaQuery.matches);
+    update();
+    mediaQuery.addEventListener('change', update);
+    return () => mediaQuery.removeEventListener('change', update);
+  }, []);
 
   useEffect(() => {
     if (!isServiceSheetOpen) return undefined;
@@ -442,6 +454,7 @@ export default function ServicesAdminPanel() {
 
   return (
     <section className="surface booking-shell admin-services-shell">
+      {isMobileViewport ? <AdminBookingsOpsDashHeroLive /> : null}
       <AdminSectionHeader
         title="Services"
         description="Configure your service catalogue"
@@ -452,6 +465,8 @@ export default function ServicesAdminPanel() {
           </button>
         }
       />
+
+      {!isMobileViewport ? <AdminBookingsOpsDashHeroLive /> : null}
 
       {message ? <p className="admin-inline-success">{message}</p> : null}
       {error ? <p className="admin-inline-error">{error}</p> : null}
@@ -471,64 +486,55 @@ export default function ServicesAdminPanel() {
         />
       ) : null}
 
-      <div className="admin-barber-list-wrap">
-        <ul className="admin-barber-grid admin-services-grid" aria-label="Services list">
-          {services.map((service) => {
-            const assignedBarbers = (service.barberServices ?? []).map((relation) => relation.barber);
-            const serviceMetaChunks = getServiceMetaChunks(service);
-            return (
-              <li key={service.id} className={`admin-barber-card admin-service-list-card ${service.isActive ? '' : 'is-inactive'}`}>
-                <button type="button" className="admin-barber-identity admin-service-identity" onClick={() => startEdit(service)}>
-                  <div className="admin-service-copy">
-                    <div className="admin-barber-name-row">
-                      <p className="admin-barber-name">{service.name}</p>
-                      <span className="admin-barber-status-indicator" role="status" aria-label={service.isActive ? 'Active' : 'Inactive'}>
-                        <span className={`admin-status-dot ${service.isActive ? 'is-active' : 'is-inactive'}`} aria-hidden="true" />
-                      </span>
+      {services.length > 0 ? (
+        <div className="admin-barber-list-wrap">
+          <ul className="admin-barber-grid admin-services-grid" aria-label="Services list">
+            {services.map((service) => {
+              const assignedBarbers = (service.barberServices ?? []).map((relation) => relation.barber);
+              const serviceMetaChunks = getServiceMetaChunks(service);
+              return (
+                <li key={service.id} className={`admin-barber-card admin-service-list-card ${service.isActive ? '' : 'is-inactive'}`}>
+                  <button type="button" className="admin-barber-identity admin-service-identity" onClick={() => startEdit(service)}>
+                    <div className="admin-service-copy">
+                      <div className="admin-barber-name-row">
+                        <p className="admin-barber-name">{service.name}</p>
+                        <span className="admin-barber-status-indicator" role="status" aria-label={service.isActive ? 'Active' : 'Inactive'}>
+                          <span className={`admin-status-dot ${service.isActive ? 'is-active' : 'is-inactive'}`} aria-hidden="true" />
+                        </span>
+                      </div>
+                      <p className="admin-barber-next-line admin-service-meta-row">
+                        {serviceMetaChunks.map((chunk, index) => (
+                          <React.Fragment key={`${service.id}-meta-${chunk}`}>
+                            {index > 0 ? <span className="admin-service-meta-separator" aria-hidden="true">•</span> : null}
+                            <span className="admin-service-meta-chip">{chunk}</span>
+                          </React.Fragment>
+                        ))}
+                      </p>
+                      {service.category ? <p className="admin-barber-today-line">Category: {service.category}</p> : null}
+                      {service.description ? <p className="admin-barber-today-line">{service.description}</p> : null}
                     </div>
-                    <p className="admin-barber-next-line admin-service-meta-row">
-                      {serviceMetaChunks.map((chunk, index) => (
-                        <React.Fragment key={`${service.id}-meta-${chunk}`}>
-                          {index > 0 ? <span className="admin-service-meta-separator" aria-hidden="true">•</span> : null}
-                          <span className="admin-service-meta-chip">{chunk}</span>
-                        </React.Fragment>
-                      ))}
-                    </p>
-                    {service.category ? <p className="admin-barber-today-line">Category: {service.category}</p> : null}
-                    {service.description ? <p className="admin-barber-today-line">{service.description}</p> : null}
-                  </div>
-                </button>
-
-                <div className="admin-barber-actions admin-service-card-actions">
-                  <p className="admin-service-actions-meta" aria-live="polite">
-                    <span className="admin-service-actions-meta-label">Assigned</span>
-                    <span className="admin-service-actions-meta-value">{assignedBarbers.length}</span>
-                  </p>
-                  <button
-                    type="button"
-                    className="admin-reorder-btn admin-reorder-btn--settings"
-                    onClick={() => setActiveServiceForPanelId(service.id)}
-                    aria-label={`Open ${service.name} settings panel`}
-                  >
-                    <SettingsGearIcon className="admin-control-icon" />
                   </button>
-                </div>
-              </li>
-            );
-          })}
 
-          <li className="admin-barber-card admin-barber-card--add admin-service-card--add">
-            <button type="button" className="admin-barber-add-btn" onClick={openCreateServiceSheet}>
-              <span className="admin-barber-add-cluster">
-                <span className="admin-barber-add-icon" aria-hidden="true">
-                  +
-                </span>
-                <span className="admin-barber-add-label">Add service</span>
-              </span>
-            </button>
-          </li>
-        </ul>
-      </div>
+                  <div className="admin-barber-actions admin-service-card-actions">
+                    <p className="admin-service-actions-meta" aria-live="polite">
+                      <span className="admin-service-actions-meta-label">Assigned</span>
+                      <span className="admin-service-actions-meta-value">{assignedBarbers.length}</span>
+                    </p>
+                    <button
+                      type="button"
+                      className="admin-reorder-btn admin-reorder-btn--settings"
+                      onClick={() => setActiveServiceForPanelId(service.id)}
+                      aria-label={`Open ${service.name} settings panel`}
+                    >
+                      <SettingsGearIcon className="admin-control-icon" />
+                    </button>
+                  </div>
+                </li>
+              );
+            })}
+          </ul>
+        </div>
+      ) : null}
 
       {activeServiceForPanel ? (
         <div

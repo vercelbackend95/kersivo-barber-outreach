@@ -45,6 +45,27 @@ function getWeeklySummary(workingHours: WorkingHourRow[]) {
   return `${onShiftDays} on-shift day${onShiftDays === 1 ? '' : 's'} • ${displayHours}`;
 }
 
+function getWeeklyMetrics(workingHours: WorkingHourRow[]) {
+  const onShiftDays = workingHours.filter((day) => day.active).length;
+  const totalMinutes = workingHours.reduce((sum, day) => {
+    if (!day.active) return sum;
+    const [startHour, startMinute] = day.startTime.split(':').map(Number);
+    const [endHour, endMinute] = day.endTime.split(':').map(Number);
+    if ([startHour, startMinute, endHour, endMinute].some((part) => Number.isNaN(part))) {
+      return sum;
+    }
+    const start = startHour * 60 + startMinute;
+    const end = endHour * 60 + endMinute;
+    return end > start ? sum + (end - start) : sum;
+  }, 0);
+
+  const totalHours = totalMinutes / 60;
+  return {
+    onShiftDays,
+    hoursPerWeek: Number.isInteger(totalHours) ? `${totalHours}h` : `${totalHours.toFixed(1)}h`
+  };
+}
+
 export default function BarberWorkingHoursEditor({
   weekDays,
   workingHours,
@@ -63,6 +84,7 @@ export default function BarberWorkingHoursEditor({
 
   const orderedHours = React.useMemo(() => sortByDay(workingHours), [workingHours]);
   const weeklySummary = React.useMemo(() => getWeeklySummary(orderedHours), [orderedHours]);
+  const weeklyMetrics = React.useMemo(() => getWeeklyMetrics(orderedHours), [orderedHours]);
 
   const clearAutoSaveTimeout = React.useCallback(() => {
     if (!autoSaveTimeoutRef.current) return;
@@ -168,13 +190,29 @@ export default function BarberWorkingHoursEditor({
 
   return (
     <section className="admin-settings-panel">
-      <div className="working-hours-header-row">
-        <h3>Working hours</h3>
-        <p className="working-hours-weekly-summary" aria-live="polite">
-          {weeklySummary}
-        </p>
+      <div className="working-hours-shell">
+        <header className="working-hours-header-row">
+          <div className="working-hours-header-row__title">
+            <h3>Working hours</h3>
+            <p className="working-hours-subtitle">Weekly operating schedule with per-day quick edit.</p>
+          </div>
+          <p className="working-hours-weekly-summary" aria-live="polite">
+            {weeklySummary}
+          </p>
+          <div className="working-hours-metrics" aria-hidden="true">
+            <span className="working-hours-metric">
+              <strong>{weeklyMetrics.onShiftDays}</strong>
+              <span>on-shift days</span>
+            </span>
+            <span className="working-hours-metric">
+              <strong>{weeklyMetrics.hoursPerWeek}</strong>
+              <span>this week</span>
+            </span>
+          </div>
+        </header>
+        <p className="muted working-hours-helper">Tap any day to change shift status and hours.</p>
+        <div className="working-hours-divider" aria-hidden="true" />
       </div>
-      <p className="muted">Weekly overview with quick edits per day.</p>
 
       <WorkingHoursOverview
         weekDays={weekDays}

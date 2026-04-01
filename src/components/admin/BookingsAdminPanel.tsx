@@ -2,6 +2,7 @@ import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { SkeletonKPICards } from '../skeleton';
 import AdminSectionHeader from './AdminSectionHeader';
 import AdminBookingsOpsSearch from './AdminBookingsOpsSearch';
+import AdminBookingsOpsDashHero from './AdminBookingsOpsDashHero';
 import AdminBookingsScheduleList from './AdminBookingsScheduleList';
 import AdminLineChart from './charts/AdminLineChart';
 import { formatInTimeZone, fromZonedTime, toZonedTime } from 'date-fns-tz';
@@ -155,7 +156,8 @@ const LIVE_THRESHOLD_MS = 20000;
 const CONNECTING_GRACE_MS = 2000;
 
 const UPDATED_ROW_HIGHLIGHT_MS = 2000;
-const MOBILE_BREAKPOINT_PX = 767;
+/** Align with CSS `max-width: 48rem` (768px at 16px root). */
+const MOBILE_BREAKPOINT_PX = 768;
 const MOBILE_RECENT_BARBERS_COUNT = 5;
 const DESKTOP_RECENT_BARBERS_COUNT = 11;
 const WEEK_DAYS = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
@@ -282,34 +284,6 @@ function getStatusA11yLabel(statusLabel: string) {
   if (statusLabel === 'CONFIRMED · RESCHEDULED') return 'Confirmed and rescheduled';
   return statusLabel.replace(/_/g, ' ').toLowerCase().replace(/(^|\s)\S/g, (char) => char.toUpperCase());
 }
-type StatusIconProps = {
-  className?: string;
-  'aria-label'?: string;
-  title?: string;
-};
-function CheckCircleIcon({ className, ...a11yProps }: StatusIconProps) {
-  return <svg viewBox="0 0 24 24" className={className} fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" {...a11yProps}><circle cx="12" cy="12" r="9" /><path d="m9 12 2 2 4-4" /></svg>;
-}
-
-function UserXIcon({ className, ...a11yProps }: StatusIconProps) {
-  return <svg viewBox="0 0 24 24" className={className} fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" {...a11yProps}><circle cx="12" cy="8" r="3" /><path d="M5 20a7 7 0 0 1 14 0" /><path d="m5 5 14 14" /></svg>;
-}
-
-function BanIcon({ className, ...a11yProps }: StatusIconProps) {
-  return <svg viewBox="0 0 24 24" className={className} fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" {...a11yProps}><circle cx="12" cy="12" r="9" /><path d="M7 7l10 10" /></svg>;
-}
-
-function Repeat2Icon({ className, ...a11yProps }: StatusIconProps) {
-  return <svg viewBox="0 0 24 24" className={className} fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" {...a11yProps}><path d="M20 7h-6l2-2" /><path d="M4 17h6l-2 2" /><path d="M20 7a8 8 0 0 0-14-3" /><path d="M4 17a8 8 0 0 0 14 3" /></svg>;
-}
-
-const STATUS_LEGEND_ITEMS: Array<{ key: string; label: string; Icon: (props: StatusIconProps) => JSX.Element; className: string }> = [
-  { key: 'confirmed', label: 'Confirmed', Icon: CheckCircleIcon, className: 'admin-status-text--confirmed' },
-  { key: 'rescheduled', label: 'Rescheduled', Icon: Repeat2Icon, className: 'admin-status-text--rescheduled' },
-  { key: 'cancelled-by-client', label: 'Cancelled by client', Icon: UserXIcon, className: 'admin-status-text--cancelled' },
-  { key: 'cancelled-by-shop', label: 'Cancelled by shop', Icon: BanIcon, className: 'admin-status-text--cancelled' }
-];
-
 
 type DayOpsFilter = 'all' | 'pending' | 'upcoming';
 
@@ -462,12 +436,6 @@ function formatStartDateTime(startAt: string) {
 
   return String(startAt);
 
-}
-
-function shortEmail(email: string) {
-  const clean = (email || '').trim();
-  if (clean.length <= 3) return `${clean}...`;
-  return `${clean.slice(0, 3)}...`;
 }
 
 function getUpcomingBookings(bookings: Booking[]) {
@@ -633,7 +601,7 @@ const BOOKINGS_HEADER_KICKER: Record<BookingsAdminMode, string> = {
 
 const BOOKINGS_SECTION_HEADER: Record<BookingsAdminMode, { title: string; description: string }> = {
   dashboard: { title: 'Bookings', description: "Manage today's appointments and upcoming schedule" },
-  blocks: { title: 'Barbers', description: "Manage your team's schedules and services" },
+  blocks: { title: 'Barbers', description: 'Configure your barber roster, schedules, and services' },
   reports: { title: 'Reports', description: 'Business performance analytics' },
   history: { title: 'History', description: 'Complete booking history with filters' },
 };
@@ -650,6 +618,8 @@ export default function BookingsAdminPanel({ isActive, mode, onBackToDashboard }
   const [loggedIn, setLoggedIn] = useState(false);
   const [isCheckingSession, setIsCheckingSession] = useState(true);
   const [bookings, setBookings] = useState<Booking[]>([]);
+  /** Today's day-view bookings for the ops dash hero on non-dashboard tabs (matches Bookings "today" strip). */
+  const [opsStripBookings, setOpsStripBookings] = useState<Booking[]>([]);
   const [bookingsInitialLoading, setBookingsInitialLoading] = useState(true);
   const [barbers, setBarbers] = useState<Barber[]>([]);
   const [barbersFilter, setBarbersFilter] = useState<'active' | 'all'>('active');
@@ -751,6 +721,7 @@ export default function BookingsAdminPanel({ isActive, mode, onBackToDashboard }
   const timelineScrollRef = useRef<HTMLDivElement | null>(null);
   const bookingShellRef = useRef<HTMLElement | null>(null);
   const nextBlockRef = useRef<HTMLDivElement | null>(null);
+  const sectionHeaderRef = useRef<HTMLDivElement | null>(null);
   const historyRecentBarbersScrollRef = useRef<HTMLDivElement | null>(null);
   const reportsRecentBarbersScrollRef = useRef<HTMLDivElement | null>(null);
   const searchInputRef = useRef<HTMLInputElement | null>(null);
@@ -939,6 +910,29 @@ export default function BookingsAdminPanel({ isActive, mode, onBackToDashboard }
       setHistoryLoadingMore(false);
     }
   }, [activeView, bookings, captureTimelineScroll, historyBarberId, historyCursor, historyDateRange, isActive, loggedIn, mode, restoreTimelineScroll, selectedDate]);
+
+  const fetchOpsStripBookings = useCallback(async () => {
+    if (!loggedIn || !isActive || mode === 'dashboard' || pollingStoppedRef.current) return;
+    try {
+      const today = getTodayLondonDate();
+      const response = await fetch(
+        `/api/admin/bookings?date=${encodeURIComponent(today)}&mode=day`,
+        { credentials: 'include' }
+      );
+      if (response.status === 401) {
+        pollingStoppedRef.current = true;
+        setLoggedIn(false);
+        setError('Session expired. Please log in again.');
+        return;
+      }
+      if (!response.ok) return;
+      const data = (await response.json()) as { bookings?: Booking[] };
+      setOpsStripBookings(data.bookings ?? []);
+    } catch {
+      /* ignore strip errors; main fetch still drives LIVE state */
+    }
+  }, [isActive, loggedIn, mode]);
+
   const loadMoreHistory = useCallback(async () => {
     if (!historyHasMore || historyLoadingMore || mode !== 'history') return;
     setHistoryLoadingMore(true);
@@ -948,6 +942,14 @@ export default function BookingsAdminPanel({ isActive, mode, onBackToDashboard }
 
   useEffect(() => { void (async () => { try { const response = await fetch('/api/admin/session', { credentials: 'include' }); setLoggedIn(response.ok); } finally { setIsCheckingSession(false); } })(); }, []);
   useEffect(() => { if (!loggedIn || !isActive) return; void fetchBookings(); void fetchBarbers(); void fetchTimeBlocks(); void fetchReports(); const id = window.setInterval(() => { void fetchBookings(); void fetchTimeBlocks(); void fetchReports(); }, POLL_INTERVAL_MS); return () => window.clearInterval(id); }, [activeView, fetchBookings, fetchBarbers, fetchReports, fetchTimeBlocks, isActive, loggedIn, mode]);
+  useEffect(() => {
+    if (!loggedIn || !isActive || mode === 'dashboard') return undefined;
+    void fetchOpsStripBookings();
+    const id = window.setInterval(() => {
+      void fetchOpsStripBookings();
+    }, POLL_INTERVAL_MS);
+    return () => window.clearInterval(id);
+  }, [fetchOpsStripBookings, isActive, loggedIn, mode]);
   useEffect(() => { if (!loggedIn || !isActive) return; const id = window.setInterval(() => setNowMs(Date.now()), LAST_UPDATED_REFRESH_MS); return () => window.clearInterval(id); }, [isActive, loggedIn]);
   useEffect(() => {
     if (!loggedIn || !isActive || mode !== 'history') return;
@@ -1116,6 +1118,7 @@ export default function BookingsAdminPanel({ isActive, mode, onBackToDashboard }
   const upcomingBookings = useMemo(() => getUpcomingBookings(todayBookings), [todayBookings]);
 
   const nextBooking = upcomingBookings[0] ?? null;
+  const opsStripNextBooking = useMemo(() => getUpcomingBookings(opsStripBookings)[0] ?? null, [opsStripBookings]);
   const filteredBookings = useMemo(() => {
     if (mode !== 'history') return bookings;
     return [...bookings]
@@ -2024,7 +2027,11 @@ export default function BookingsAdminPanel({ isActive, mode, onBackToDashboard }
     await saveBarberOrder(orderedIds);
   }
 
-
+  const openAddBarberSheet = useCallback(() => {
+    setBarberSaveError('');
+    setBarberSaveMessage('');
+    setIsAddBarberSheetOpen(true);
+  }, []);
 
   useEffect(() => {
     const bookingShellNode = bookingShellRef.current;
@@ -2034,20 +2041,89 @@ export default function BookingsAdminPanel({ isActive, mode, onBackToDashboard }
     const mainContentNode = bookingShellNode.closest('.admin-main-content') as HTMLElement | null;
     if (!mainContentNode) return undefined;
 
-    const updateNextBlockHeightVariable = () => {
-      const nextHeight = nextBlockNode.getBoundingClientRect().height;
-      mainContentNode.style.setProperty('--admin-next-block-h', `${Math.ceil(nextHeight)}px`);
+    /** Avoid 1px oscillation on .admin-search-row--sticky top offset. */
+    const HEIGHT_PUBLISH_THRESHOLD_PX = 3;
+    let lastPublishedPx = -1;
+    let debounceId: ReturnType<typeof window.setTimeout> | null = null;
+
+    const publishNextBlockHeight = () => {
+      const nextPx = Math.round(nextBlockNode.getBoundingClientRect().height);
+      if (lastPublishedPx < 0) {
+        mainContentNode.style.setProperty('--admin-next-block-h', `${nextPx}px`);
+        lastPublishedPx = nextPx;
+        return;
+      }
+      if (Math.abs(nextPx - lastPublishedPx) >= HEIGHT_PUBLISH_THRESHOLD_PX) {
+        mainContentNode.style.setProperty('--admin-next-block-h', `${nextPx}px`);
+        lastPublishedPx = nextPx;
+      }
     };
 
-    updateNextBlockHeightVariable();
-    const resizeObserver = new ResizeObserver(updateNextBlockHeightVariable);
+    /** Debounce: avoids thrashing sticky search-row `top` during scroll-induced layout noise. */
+    const schedulePublish = () => {
+      if (debounceId !== null) window.clearTimeout(debounceId);
+      debounceId = window.setTimeout(() => {
+        debounceId = null;
+        publishNextBlockHeight();
+      }, 120);
+    };
+
+    publishNextBlockHeight();
+    const resizeObserver = new ResizeObserver(schedulePublish);
     resizeObserver.observe(nextBlockNode);
-    window.addEventListener('resize', updateNextBlockHeightVariable);
+    window.addEventListener('resize', schedulePublish);
 
     return () => {
+      if (debounceId !== null) window.clearTimeout(debounceId);
       resizeObserver.disconnect();
-      window.removeEventListener('resize', updateNextBlockHeightVariable);
+      window.removeEventListener('resize', schedulePublish);
       mainContentNode.style.removeProperty('--admin-next-block-h');
+    };
+  }, [isMobileViewport, mode]);
+
+  useEffect(() => {
+    const bookingShellNode = bookingShellRef.current;
+    const sectionHeaderNode = sectionHeaderRef.current;
+    if (!bookingShellNode || !sectionHeaderNode) return undefined;
+
+    const mainContentNode = bookingShellNode.closest('.admin-main-content') as HTMLElement | null;
+    if (!mainContentNode) return undefined;
+
+    const HEIGHT_PUBLISH_THRESHOLD_PX = 3;
+    let lastPublishedPx = -1;
+    let debounceId: ReturnType<typeof window.setTimeout> | null = null;
+
+    const publishSectionHeaderHeight = () => {
+      const h = Math.round(sectionHeaderNode.getBoundingClientRect().height);
+      if (lastPublishedPx < 0) {
+        mainContentNode.style.setProperty('--admin-bookings-section-header-h', `${h}px`);
+        lastPublishedPx = h;
+        return;
+      }
+      if (Math.abs(h - lastPublishedPx) >= HEIGHT_PUBLISH_THRESHOLD_PX) {
+        mainContentNode.style.setProperty('--admin-bookings-section-header-h', `${h}px`);
+        lastPublishedPx = h;
+      }
+    };
+
+    const schedulePublish = () => {
+      if (debounceId !== null) window.clearTimeout(debounceId);
+      debounceId = window.setTimeout(() => {
+        debounceId = null;
+        publishSectionHeaderHeight();
+      }, 120);
+    };
+
+    publishSectionHeaderHeight();
+    const resizeObserver = new ResizeObserver(schedulePublish);
+    resizeObserver.observe(sectionHeaderNode);
+    window.addEventListener('resize', schedulePublish);
+
+    return () => {
+      if (debounceId !== null) window.clearTimeout(debounceId);
+      resizeObserver.disconnect();
+      window.removeEventListener('resize', schedulePublish);
+      mainContentNode.style.removeProperty('--admin-bookings-section-header-h');
     };
   }, [isMobileViewport, mode]);
 
@@ -2055,228 +2131,227 @@ export default function BookingsAdminPanel({ isActive, mode, onBackToDashboard }
   if (isCheckingSession) return <section className="surface booking-shell"><h2>Admin</h2><p className="muted">Checking session...</p></section>;
   if (!loggedIn) return <section className="surface booking-shell"><h2>ADMIN</h2><p className="muted">Unauthorized. Verify your admin secret and reload this page.</p>{error && <p>{error}</p>}</section>;
 
+  const bookingsDashHeroEl =
+    mode === 'dashboard' ? (
+      <AdminBookingsOpsDashHero
+        nextBooking={nextBooking}
+        connectionStateLabel={connectionStateLabel}
+        hasLivePulse={hasLivePulse}
+        freshnessLabel={freshnessLabel}
+        formatStartTime={formatStartTime}
+        formatRelativeTime={formatRelativeTime}
+      />
+    ) : null;
+
+  const nonDashboardOpsDashHeroEl = (
+    <AdminBookingsOpsDashHero
+      nextBooking={opsStripNextBooking}
+      connectionStateLabel={connectionStateLabel}
+      hasLivePulse={hasLivePulse}
+      freshnessLabel={freshnessLabel}
+      formatStartTime={formatStartTime}
+      formatRelativeTime={formatRelativeTime}
+    />
+  );
+
+  const dashHeroSlotClassName = [
+    'admin-next-block',
+    'admin-next-block--dash-hero-slot',
+    isMobileViewport ? 'admin-next-block--dash-hero-slot--mobile' : '',
+  ]
+    .filter(Boolean)
+    .join(' ');
+
+  const renderOpsDashHeroSlot = (child: React.ReactNode) => (
+    <div ref={nextBlockRef} className={dashHeroSlotClassName}>
+      {child}
+    </div>
+  );
+
   return (
-    <section ref={bookingShellRef} className={`surface booking-shell${mode === 'reports' ? ' booking-shell--reports' : ''}`}>
+    <section
+      ref={bookingShellRef}
+      className={`surface booking-shell${mode === 'reports' ? ' booking-shell--reports' : ''}${mode === 'blocks' ? ' admin-services-shell' : ''}`}
+    >
+      {isMobileViewport
+        ? renderOpsDashHeroSlot(mode === 'dashboard' ? bookingsDashHeroEl : nonDashboardOpsDashHeroEl)
+        : null}
       <AdminSectionHeader
+        ref={sectionHeaderRef}
         title={BOOKINGS_SECTION_HEADER[mode].title}
         description={BOOKINGS_SECTION_HEADER[mode].description}
-        metaBadge={mode === 'dashboard' ? `${todayBookings.length} today` : undefined}
+        metaBadge={
+          mode === 'dashboard'
+            ? `${todayBookings.length} today`
+            : mode === 'blocks'
+              ? `${barbers.length} barbers`
+              : undefined
+        }
         metaBadgeVariant={mode === 'dashboard' ? 'success' : undefined}
+        actions={
+          mode === 'blocks' ? (
+            <button type="button" className="btn btn--primary" onClick={openAddBarberSheet}>
+              Add barber
+            </button>
+          ) : undefined
+        }
       />
       {mode === 'dashboard' ? (
-        <section
-          ref={nextBlockRef}
-          className={`admin-bookings-ops admin-bookings-ops--dashboard ${isMobileViewport ? 'admin-bookings-ops--mobile-sticky' : ''}`}
-          aria-labelledby="admin-bookings-ops-heading"
-        >
-          <div className="admin-bookings-ops-dash-hero">
-            <div className="admin-bookings-ops-status">
-              <div className="admin-bookings-ops-status-copy">
-                {nextBooking ? (
-                  <>
-                    <p className="admin-bookings-ops-status-primary">
-                      <span className="admin-bookings-ops-status-lead">Next</span>
-                      <span className="admin-bookings-ops-status-detail">
-                        {nextBooking.barber?.name} · {nextBooking.service?.name} · {formatStartTime(nextBooking.startAt)}
-                      </span>
-                    </p>
-                    <p className="admin-bookings-ops-status-secondary muted">
-                      {formatRelativeTime(nextBooking.startAt, nextBooking.endAt)}
-                    </p>
-                  </>
-                ) : (
-                  <p className="admin-bookings-ops-status-primary">
-                    <span className="admin-bookings-ops-status-lead">Next</span>
-                    <span className="admin-bookings-ops-status-detail">No upcoming bookings</span>
+        <div className="admin-bookings-ops-dash-cluster">
+          {!isMobileViewport && bookingsDashHeroEl ? renderOpsDashHeroSlot(bookingsDashHeroEl) : null}
+
+          <section className="admin-bookings-ops admin-bookings-ops--dashboard" aria-labelledby="admin-bookings-ops-heading">
+            <div className="admin-bookings-ops-operations-stack">
+              <header className="admin-bookings-ops-operations-head">
+                <p className="admin-bookings-ops-kicker">Today</p>
+                <h2 id="admin-bookings-ops-heading" className="admin-bookings-ops-title admin-bookings-ops-title--compact">
+                  Operations
+                </h2>
+              </header>
+              {!bookingsInitialLoading ? (
+                <DaySummaryBar
+                  bookings={bookings}
+                  staffOnFloorCount={onFloorBarbersNow.length}
+                  nowMs={nowMs}
+                  dayOpsFilter={dayOpsFilter}
+                  onDayOpsFilterChange={applyDayOpsFilter}
+                  staffPanelOpen={staffRosterOpen}
+                  onStaffToggle={onStaffToggle}
+                />
+              ) : null}
+            </div>
+
+            {staffRosterOpen ? (
+              <div className="admin-bookings-ops-staff-roster">
+                {selectedDate !== todayLondonDate ? (
+                  <p className="muted admin-bookings-ops-staff-roster-note">
+                    On-floor staff reflects today (London time), not the selected calendar date.
                   </p>
+                ) : null}
+                {onFloorBarbersNow.length === 0 ? (
+                  <p className="muted admin-bookings-ops-staff-roster-empty">No barbers on shift right now.</p>
+                ) : (
+                  <div className="admin-barber-list-wrap admin-barbers-overview-list-wrap">
+                    <ul className="admin-barber-grid admin-barbers-overview-grid" aria-label="Barbers on shift now">
+                      {onFloorBarbersNow.map((barber) => {
+                        const now = new Date(nowMs);
+                        const nextBookingPreview = getNextBookingForBarber(bookings, barber.id, now);
+                        const availStatus = getBarberAvailabilityStatusForDayRange(
+                          barber,
+                          bookings,
+                          now,
+                          selectedDayBoundsLondon.startMs,
+                          selectedDayBoundsLondon.endMs
+                        );
+                        const dayFill = getDayFillForRange(bookings, barber.id, selectedDayBoundsLondon.startMs, selectedDayBoundsLondon.endMs);
+                        const todayLine = getTodayLine(barber);
+                        return (
+                          <AdminBarberRosterCard
+                            key={barber.id}
+                            barber={barber}
+                            barberIsActive={normalizeBarberStatus(barber)}
+                            nextBookingPreview={nextBookingPreview}
+                            availStatus={availStatus}
+                            dayFill={dayFill}
+                            todayLine={todayLine}
+                            getInitials={getInitials}
+                            onOpenBarber={setSelectedBarberId}
+                            bookingsLength={bookings.length}
+                            variant="ops"
+                          />
+                        );
+                      })}
+                    </ul>
+                  </div>
                 )}
               </div>
-              <div
-                className={`admin-live-status admin-live-status--${connectionStateLabel === 'LIVE' ? 'live' : connectionStateLabel === 'OFFLINE' ? 'offline' : 'connecting'}`}
-                role="status"
-                aria-live="polite"
-              >
-                <span className={`admin-live-status-dot ${hasLivePulse ? 'admin-live-status-dot--pulse' : ''}`} aria-hidden="true" />
-                <span className="admin-live-status-label">{connectionStateLabel}</span>
-              </div>
-            </div>
-            <p className="muted admin-bookings-ops-updated">{freshnessLabel}</p>
-          </div>
-
-          <div className="admin-bookings-ops-operations-stack">
-            <header className="admin-bookings-ops-operations-head">
-              <p className="admin-bookings-ops-kicker">Today</p>
-              <h2 id="admin-bookings-ops-heading" className="admin-bookings-ops-title admin-bookings-ops-title--compact">
-                Operations
-              </h2>
-            </header>
-            {!bookingsInitialLoading ? (
-              <DaySummaryBar
-                bookings={bookings}
-                staffOnFloorCount={onFloorBarbersNow.length}
-                nowMs={nowMs}
-                dayOpsFilter={dayOpsFilter}
-                onDayOpsFilterChange={applyDayOpsFilter}
-                staffPanelOpen={staffRosterOpen}
-                onStaffToggle={onStaffToggle}
-              />
             ) : null}
-          </div>
 
-          {staffRosterOpen ? (
-            <div className="admin-bookings-ops-staff-roster">
-              {selectedDate !== todayLondonDate ? (
-                <p className="muted admin-bookings-ops-staff-roster-note">
-                  On-floor staff reflects today (London time), not the selected calendar date.
-                </p>
-              ) : null}
-              {onFloorBarbersNow.length === 0 ? (
-                <p className="muted admin-bookings-ops-staff-roster-empty">No barbers on shift right now.</p>
-              ) : (
-                <div className="admin-barber-list-wrap admin-barbers-overview-list-wrap">
-                  <ul className="admin-barber-grid admin-barbers-overview-grid" aria-label="Barbers on shift now">
-                    {onFloorBarbersNow.map((barber) => {
-                      const now = new Date(nowMs);
-                      const nextBookingPreview = getNextBookingForBarber(bookings, barber.id, now);
-                      const availStatus = getBarberAvailabilityStatusForDayRange(
-                        barber,
-                        bookings,
-                        now,
-                        selectedDayBoundsLondon.startMs,
-                        selectedDayBoundsLondon.endMs
-                      );
-                      const dayFill = getDayFillForRange(bookings, barber.id, selectedDayBoundsLondon.startMs, selectedDayBoundsLondon.endMs);
-                      const todayLine = getTodayLine(barber);
-                      return (
-                        <AdminBarberRosterCard
-                          key={barber.id}
-                          barber={barber}
-                          barberIsActive={normalizeBarberStatus(barber)}
-                          nextBookingPreview={nextBookingPreview}
-                          availStatus={availStatus}
-                          dayFill={dayFill}
-                          todayLine={todayLine}
-                          getInitials={getInitials}
-                          onOpenBarber={setSelectedBarberId}
-                          bookingsLength={bookings.length}
-                          variant="ops"
-                        />
-                      );
-                    })}
-                  </ul>
-                </div>
-              )}
-            </div>
-          ) : null}
-
-          <div className="admin-bookings-ops-dash-control-deck">
-            <div className="admin-bookings-ops-toolbar">
-              <div className="admin-bookings-ops-controls">
-                <div className="admin-dashboard-controls admin-dashboard-controls--ops-dash">
-                  <div className="admin-view-toggle" role="tablist" aria-label="Booking view">
-                    {(['timeline', 'list'] as const).map((view) => {
-                      const isActiveTab = activeView === view;
-                      const label = view === 'timeline' ? 'Timeline' : 'List';
-                      return (
-                        <button
-                          key={view}
-                          type="button"
-                          role="tab"
-                          aria-selected={isActiveTab}
-                          className={isActiveTab ? 'active' : ''}
-                          onClick={() => setActiveView(view)}
-                        >
-                          {label}
-                        </button>
-                      );
-                    })}
-                  </div>
-                  <label className="admin-date-picker-label" aria-label={`Select date, currently ${selectedDateLabel}`}>
-                    <span className="admin-date-picker-text">{selectedDateLabel}</span>
-                    <input
-                      type="date"
-                      className="admin-filter-tab-calendar-input"
-                      value={selectedDate}
-                      onChange={(event) => setSelectedDate(event.target.value)}
-                      aria-label="Select date"
-                    />
-                    <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">
-                      <path
-                        d="M7 2a1 1 0 0 1 1 1v1h8V3a1 1 0 1 1 2 0v1h1a3 3 0 0 1 3 3v11a4 4 0 0 1-4 4H6a4 4 0 0 1-4-4V7a3 3 0 0 1 3-3h1V3a1 1 0 0 1 1-1Zm13 8H4v8a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-8ZM5 6a1 1 0 0 0-1 1v1h16V7a1 1 0 0 0-1-1H5Z"
-                        fill="currentColor"
+            <div className="admin-bookings-ops-dash-control-deck">
+              <div className="admin-bookings-ops-toolbar">
+                <div className="admin-bookings-ops-controls">
+                  <div className="admin-dashboard-controls admin-dashboard-controls--ops-dash">
+                    <div className="admin-view-toggle" role="tablist" aria-label="Booking view">
+                      {(['timeline', 'list'] as const).map((view) => {
+                        const isActiveTab = activeView === view;
+                        const label = view === 'timeline' ? 'Timeline' : 'List';
+                        return (
+                          <button
+                            key={view}
+                            type="button"
+                            role="tab"
+                            aria-selected={isActiveTab}
+                            className={isActiveTab ? 'active' : ''}
+                            onClick={() => setActiveView(view)}
+                          >
+                            {label}
+                          </button>
+                        );
+                      })}
+                    </div>
+                    <label className="admin-date-picker-label" aria-label={`Select date, currently ${selectedDateLabel}`}>
+                      <span className="admin-date-picker-text">{selectedDateLabel}</span>
+                      <input
+                        type="date"
+                        className="admin-filter-tab-calendar-input"
+                        value={selectedDate}
+                        onChange={(event) => setSelectedDate(event.target.value)}
+                        aria-label="Select date"
                       />
-                    </svg>
-                  </label>
+                      <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+                        <path
+                          d="M7 2a1 1 0 0 1 1 1v1h8V3a1 1 0 1 1 2 0v1h1a3 3 0 0 1 3 3v11a4 4 0 0 1-4 4H6a4 4 0 0 1-4-4V7a3 3 0 0 1 3-3h1V3a1 1 0 0 1 1-1Zm13 8H4v8a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-8ZM5 6a1 1 0 0 0-1 1v1h16V7a1 1 0 0 0-1-1H5Z"
+                          fill="currentColor"
+                        />
+                      </svg>
+                    </label>
+                  </div>
                 </div>
               </div>
-            </div>
-            <div className="admin-bookings-ops-search-row">
-              <AdminBookingsOpsSearch
-                variant="standard"
-                searchInputRef={searchInputRef}
-                searchResultsRef={searchResultsRef}
-                clientSearchQuery={clientSearchQuery}
-                onClientSearchQueryChange={setClientSearchQuery}
-                searchDropdownBookings={searchDropdownBookings}
-                searchResultsLabel={searchResultsLabel}
-                activeSearchResultIndex={activeSearchResultIndex}
-                onActiveSearchResultIndexChange={setActiveSearchResultIndex}
-                highlightMatch={highlightMatch}
-                formatStartTime={formatStartTime}
-                onSelectBooking={jumpToTimelineBooking}
-                onClearSearch={clearSearchField}
-                showKbdHint={showSearchKbdHint}
-                searchShortcutHint={searchShortcutHint}
-              />
-            </div>
-          </div>
-
-          {opsFilteredViewActive ? (
-            <div className="admin-bookings-ops-filter-bar" aria-live="polite">
-              <div className="admin-bookings-ops-filter-bar-main">
-                <span className="admin-bookings-ops-filter-summary">{opsFilteredViewSummary}</span>
-                {opsActiveFilterLabels.length > 0 ? (
-                  <span className="admin-bookings-ops-filter-chips">
-                    {opsActiveFilterLabels.map((label) => (
-                      <span key={label} className="admin-bookings-ops-filter-chip">
-                        {label}
-                      </span>
-                    ))}
-                  </span>
-                ) : null}
+              <div className="admin-bookings-ops-search-row">
+                <AdminBookingsOpsSearch
+                  variant="standard"
+                  searchInputRef={searchInputRef}
+                  searchResultsRef={searchResultsRef}
+                  clientSearchQuery={clientSearchQuery}
+                  onClientSearchQueryChange={setClientSearchQuery}
+                  searchDropdownBookings={searchDropdownBookings}
+                  searchResultsLabel={searchResultsLabel}
+                  activeSearchResultIndex={activeSearchResultIndex}
+                  onActiveSearchResultIndexChange={setActiveSearchResultIndex}
+                  highlightMatch={highlightMatch}
+                  formatStartTime={formatStartTime}
+                  onSelectBooking={jumpToTimelineBooking}
+                  onClearSearch={clearSearchField}
+                  showKbdHint={showSearchKbdHint}
+                  searchShortcutHint={searchShortcutHint}
+                />
               </div>
-              <button type="button" className="btn btn--ghost btn--sm admin-bookings-ops-filter-clear" onClick={clearOpsFilters}>
-                Clear filters
-              </button>
             </div>
-          ) : null}
-        </section>
-      ) : (
-        <div
-          ref={nextBlockRef}
-          className={`admin-next-block ${isMobileViewport ? 'admin-next-block--mobile-sticky' : ''}`}
-        >
-          <div className="admin-next-header">
-            <div className="admin-next-header-copy">
-              <p className="admin-next-primary">Today: {todayBookings.length} bookings</p>
-              {nextBooking ? (
-                <p className="admin-next-secondary">
-                  Next: {nextBooking.barber?.name} — {nextBooking.service?.name} — {formatStartTime(nextBooking.startAt)} (
-                  {formatRelativeTime(nextBooking.startAt, nextBooking.endAt)})
-                </p>
-              ) : null}
-            </div>
-            <div
-              className={`admin-live-status admin-live-status--${connectionStateLabel === 'LIVE' ? 'live' : connectionStateLabel === 'OFFLINE' ? 'offline' : 'connecting'}`}
-              role="status"
-              aria-live="polite"
-            >
-              <span className={`admin-live-status-dot ${hasLivePulse ? 'admin-live-status-dot--pulse' : ''}`} aria-hidden="true" />
-              <span className="admin-live-status-label">{connectionStateLabel}</span>
-            </div>
-          </div>
-          <p className="muted admin-next-updated">{freshnessLabel}</p>
+
+            {opsFilteredViewActive ? (
+              <div className="admin-bookings-ops-filter-bar" aria-live="polite">
+                <div className="admin-bookings-ops-filter-bar-main">
+                  <span className="admin-bookings-ops-filter-summary">{opsFilteredViewSummary}</span>
+                  {opsActiveFilterLabels.length > 0 ? (
+                    <span className="admin-bookings-ops-filter-chips">
+                      {opsActiveFilterLabels.map((label) => (
+                        <span key={label} className="admin-bookings-ops-filter-chip">
+                          {label}
+                        </span>
+                      ))}
+                    </span>
+                  ) : null}
+                </div>
+                <button type="button" className="btn btn--ghost btn--sm admin-bookings-ops-filter-clear" onClick={clearOpsFilters}>
+                  Clear filters
+                </button>
+              </div>
+            ) : null}
+          </section>
         </div>
+      ) : isMobileViewport ? null : (
+        renderOpsDashHeroSlot(nonDashboardOpsDashHeroEl)
       )}
 
       {cancelSuccessMessage && <p className="admin-inline-success">{cancelSuccessMessage}</p>}
@@ -2341,11 +2416,6 @@ export default function BookingsAdminPanel({ isActive, mode, onBackToDashboard }
                 onBarbersFilterChange={setBarbersFilter}
                 onOpenBarber={setSelectedBarberId}
                 onMoveBarber={(index, direction) => void moveBarber(index, direction)}
-                                onOpenAddBarberSheet={() => {
-                  setBarberSaveError('');
-                  setBarberSaveMessage('');
-                  setIsAddBarberSheetOpen(true);
-                }}
                 onCloseAddBarberSheet={() => {
                   setIsAddBarberSheetOpen(false);
                 }}
@@ -2527,42 +2597,21 @@ export default function BookingsAdminPanel({ isActive, mode, onBackToDashboard }
           canCancelBooking={canBeCancelledByShop}
         />
       ) : mode === 'history' ? (
-        <>
-          <section className="admin-status-legend admin-status-legend--schedule-context" aria-label="Status icons legend">
-            <p className="admin-status-legend__title">Status icons</p>
-            <div className="admin-status-legend__items">
-              {STATUS_LEGEND_ITEMS.map(({ key, label, Icon, className }) => (
-                <span key={key} className="admin-status-legend__item">
-                  <span className="admin-status-legend__icon-wrap" aria-hidden="true">
-                    <Icon className={`admin-status-icon ${className}`} />
-                  </span>
-                  <span>{label}</span>
-                </span>
-              ))}
-            </div>
-          </section>
-
-          <AdminBookingsScheduleList
-            variant="history"
-            heading="Booking history"
-            bookings={visibleBookings}
-            nowMs={nowMs}
-            bookingsInitialLoading={bookingsInitialLoading}
-            updatedBookingIds={updatedBookingIds}
-            highlightMatch={highlightMatch}
-            formatStartTime={formatStartTime}
-            formatDateTime={formatStartDateTime}
-            formatHistorySubline={(booking) => {
-              const svc = booking.service?.name ?? '—';
-              const em = shortEmail(booking.email ?? '');
-              return `${svc} · ${em}`;
-            }}
-            getHistoryStatusLine={(booking) => getStatusA11yLabel(getBookingStatusLabel(booking))}
-            historyDateFiltered={Boolean(historyDateRange)}
-            onClearHistoryDateRange={historyDateRange ? () => setHistoryDateRange(null) : undefined}
-            onOpenClient={openClientProfile}
-          />
-        </>
+        <AdminBookingsScheduleList
+          variant="history"
+          heading="Booking history"
+          bookings={visibleBookings}
+          nowMs={nowMs}
+          bookingsInitialLoading={bookingsInitialLoading}
+          updatedBookingIds={updatedBookingIds}
+          highlightMatch={highlightMatch}
+          formatStartTime={formatStartTime}
+          formatDateTime={formatStartDateTime}
+          getHistoryStatusLine={(booking) => getStatusA11yLabel(getBookingStatusLabel(booking))}
+          historyDateFiltered={Boolean(historyDateRange)}
+          onClearHistoryDateRange={historyDateRange ? () => setHistoryDateRange(null) : undefined}
+          onOpenClient={openClientProfile}
+        />
       ) : null}
       {mode === 'history' && historyHasMore && <button type="button" className="btn btn--secondary" onClick={() => void loadMoreHistory()} disabled={historyLoadingMore}>{historyLoadingMore ? 'Loading...' : 'Load more'}</button>}
     </>
@@ -2573,10 +2622,6 @@ export default function BookingsAdminPanel({ isActive, mode, onBackToDashboard }
 
       {mode === 'reports' && (
         <section className="admin-reports" aria-live="polite">
-          <div className="admin-reports-head">
-            <h3>Reports</h3>
-          </div>
-
           <div className="admin-reports-filter-bar">
           <p className="admin-kpi-note">Timezone: {ADMIN_TIMEZONE}</p>
           <div className="admin-reports-range-scroll">

@@ -107,31 +107,6 @@
 
 }
 
-.admin-service-card--add {
-  min-height: 7.35rem;
-}
-
-.admin-service-card--add .admin-barber-add-btn {
-  min-height: 7.35rem;
-  align-content: center;
-}
-
-.admin-service-card--add .admin-barber-add-cluster {
-  gap: 0.52rem;
-}
-
-.admin-service-card--add .admin-barber-add-label {
-  font-size: 0.96rem;
-  letter-spacing: 0.01em;
-}
-
-.admin-service-card--add .admin-barber-add-icon {
-  width: 1.32rem;
-  height: 1.32rem;
-  font-size: 0.88rem;
-
-}
-
 .admin-service-sheet {
   width: min(100%, 42rem);
   max-height: min(calc(100dvh - var(--admin-mobile-sheet-top-offset, 0px)), 760px);
@@ -139,7 +114,7 @@
 
 @media (max-width: 47.99rem) {
   .admin-service-sheet-layer {
-    --admin-mobile-sheet-top-offset: calc(env(safe-area-inset-top, 0px) + var(--admin-mobile-header-h, 0px));
+    --admin-mobile-sheet-top-offset: var(--admin-mobile-header-h, 0px);
   }
 
   .admin-service-sheet {
@@ -153,7 +128,7 @@
 
 @media (max-width: 33.99rem) {
   .admin-service-sheet-layer {
-    --admin-mobile-sheet-top-offset: calc(env(safe-area-inset-top, 0px) + var(--admin-mobile-header-h, 0px));
+    --admin-mobile-sheet-top-offset: var(--admin-mobile-header-h, 0px);
   }
 }
 
@@ -642,15 +617,6 @@
 
   .admin-service-actions-meta-value {
     font-size: 0.96rem;
-  }
-
-  .admin-service-card--add {
-    min-height: 7.6rem;
-  }
-
-  .admin-service-card--add .admin-barber-add-btn {
-    min-height: 7.6rem;
-
   }
 
   .admin-service-form-grid {

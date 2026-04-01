@@ -92,7 +92,6 @@ export default function AdminLayout({
 }: AdminLayoutProps) {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const mainContentRef = useRef<HTMLElement | null>(null);
-  const mobileHeaderRef = useRef<HTMLElement | null>(null);
   const mobileDrawerRef = useRef<HTMLDivElement | null>(null);
   const mobileOpenButtonRef = useRef<HTMLButtonElement | null>(null);
 
@@ -190,28 +189,6 @@ export default function AdminLayout({
     };
   }, [isMobileMenuOpen]);
 
-  useEffect(() => {
-    const mainContentNode = mainContentRef.current;
-    const mobileHeaderNode = mobileHeaderRef.current;
-    if (!mainContentNode || !mobileHeaderNode) return undefined;
-
-    const updateHeaderHeightVariable = () => {
-      const nextHeight = mobileHeaderNode.getBoundingClientRect().height;
-      mainContentNode.style.setProperty('--admin-mobile-header-h', `${Math.ceil(nextHeight)}px`);
-    };
-
-    updateHeaderHeightVariable();
-    const resizeObserver = new ResizeObserver(updateHeaderHeightVariable);
-    resizeObserver.observe(mobileHeaderNode);
-    window.addEventListener('resize', updateHeaderHeightVariable);
-
-    return () => {
-      resizeObserver.disconnect();
-      window.removeEventListener('resize', updateHeaderHeightVariable);
-      mainContentNode.style.removeProperty('--admin-mobile-header-h');
-    };
-  }, []);
-
   return (
     <div className="admin-shell">
       <aside className="admin-sidebar" aria-label="Admin sections">
@@ -237,7 +214,7 @@ export default function AdminLayout({
         aria-busy={isTransitioning}
         data-transitioning={isTransitioning}
       >
-        <header ref={mobileHeaderRef} className="admin-mobile-header" aria-label="Admin mobile header">
+        <header className="admin-mobile-header" aria-label="Admin mobile header">
           <SidebarBrand />
           <div className="admin-mobile-header-center">
             {activeSectionLabel && (
@@ -259,6 +236,7 @@ export default function AdminLayout({
             <Menu width={20} height={20} aria-hidden="true" />
           </button>
         </header>
+        <div className="admin-mobile-header-spacer" aria-hidden="true" />
         {showSectionSkeleton ? (
           <div className="admin-transition-skeleton" aria-hidden="true">
             {skeletonVariant === 'kpi' ? (

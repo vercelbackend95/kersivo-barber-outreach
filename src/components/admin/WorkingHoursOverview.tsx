@@ -48,30 +48,45 @@ export default function WorkingHoursOverview({
       {workingHours.map((hour) => {
         const dayLabel = weekDays[hour.dayOfWeek] ?? `Day ${hour.dayOfWeek}`;
         const isExpanded = expandedDayIndex === hour.dayOfWeek;
-        const editorDay = isExpanded ? draftDay : null;
+        const editorDay = isExpanded && draftDay ? draftDay : hour;
+        const editorSectionId = `working-hours-editor-${hour.dayOfWeek}`;
 
 
         return (
-          <React.Fragment key={hour.dayOfWeek}>
+          <article
+            key={hour.dayOfWeek}
+            className={`working-hours-day-card ${isExpanded ? 'is-expanded' : ''}`}
+            role="listitem"
+          >
             <button
               type="button"
               className={`working-hours-day-row ${isExpanded ? 'is-expanded' : ''}`}
-              role="listitem"
               onClick={() => onToggleDayEditor(hour.dayOfWeek)}
               disabled={loading || saving}
-              aria-label={`${isExpanded ? 'Collapse' : 'Edit'} ${dayLabel}`}
+              aria-label={`${isExpanded ? 'Collapse' : 'Edit'} ${dayLabel} working hours, currently ${getHeaderChipText(hour)}`}
               aria-expanded={isExpanded}
+              aria-controls={editorSectionId}
             >
-              <span className="working-hours-day-row__label">{dayLabel}</span>
-              <span className={`working-hours-time-chip ${hour.active ? 'is-on' : 'is-off'}`}>{getHeaderChipText(hour)}</span>
-              <span className={`working-hours-day-row__chevron ${isExpanded ? 'is-expanded' : ''}`} aria-hidden="true">
-                ⌄
+              <span className="working-hours-day-row__identity">
+                <span className="working-hours-day-row__label">{dayLabel}</span>
+              </span>
+              <span className={`working-hours-time-chip ${hour.active ? 'is-on' : 'is-off'}`}>
+                <span className="working-hours-time-chip__status">{hour.active ? 'On shift' : 'Off shift'}</span>
+                {hour.active ? <span className="working-hours-time-chip__value">{getHeaderChipText(hour)}</span> : null}
+              </span>
+              <span className="working-hours-day-row__action" aria-hidden="true">
+                <span className="working-hours-day-row__action-label">{isExpanded ? 'Close' : 'Edit'}</span>
+                <span className={`working-hours-day-row__chevron ${isExpanded ? 'is-expanded' : ''}`}>⌄</span>
               </span>
             </button>
 
 
-            {isExpanded && editorDay ? (
-              <section className="working-hours-inline-editor" aria-label={`Edit ${dayLabel} shift`}>
+            <section
+              id={editorSectionId}
+              className={`working-hours-day-details ${isExpanded ? 'is-expanded' : 'is-collapsed'}`}
+              aria-label={`Edit ${dayLabel} shift`}
+              aria-hidden={!isExpanded}
+            >
                 <div className="working-hours-inline-toggle">
                   <span className="working-hours-inline-toggle__label">On shift</span>
                   <button
@@ -81,15 +96,14 @@ export default function WorkingHoursOverview({
                     aria-checked={editorDay.active}
                     aria-label={`Toggle ${dayLabel} on shift`}
                     onClick={() => onChangeDraftDay('active', !editorDay.active)}
-
-                    disabled={loading || saving}
+                    disabled={!isExpanded || loading || saving}
                   >
                     <span className="working-hours-switch__thumb" aria-hidden="true" />
                   </button>
                 </div>
 
                 {editorDay.active ? (
-                  <fieldset className="working-hours-range-control" disabled={loading || saving}>
+                  <fieldset className="working-hours-range-control" disabled={!isExpanded || loading || saving}>
                     <div className="working-hours-range-control__inputs">
                       <label className="working-hours-time-field">
                         <span>Start</span>
@@ -113,7 +127,7 @@ export default function WorkingHoursOverview({
                     </div>
                   </fieldset>
                 ) : (
-                  <p className="working-hours-off-helper">Off shift — no bookings</p>
+                  <p className="working-hours-off-helper">This day is off shift and hidden from booking slots.</p>
                 )}
 
 
@@ -125,8 +139,7 @@ export default function WorkingHoursOverview({
 
 
               </section>
-            ) : null}
-          </React.Fragment>
+          </article>
         );
       })}
     </div>

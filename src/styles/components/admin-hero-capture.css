@@ -41,7 +41,19 @@
 .admin-hero-capture .admin-mobile-header {
   position: sticky;
   top: 0;
+  left: auto;
+  right: auto;
+  /* Match booking-shell block margins so the rounded bar aligns with dash-hero / tabs */
+  margin-inline: 0.5rem;
+  width: calc(100% - 1rem);
+  max-width: 100%;
+  box-sizing: border-box;
+  margin-bottom: var(--space-sm);
   z-index: 20;
+}
+
+.admin-hero-capture .admin-mobile-header-spacer {
+  display: none;
 }
 
 .admin-hero-capture .booking-shell {
@@ -53,6 +65,8 @@
 .admin-hero-capture .booking-shell > h1,
 .admin-hero-capture .booking-shell > .admin-shop-kicker,
 .admin-hero-capture .booking-shell > .admin-next-block,
+.admin-hero-capture .booking-shell > .admin-next-block--dash-hero-slot,
+.admin-hero-capture .booking-shell > .admin-bookings-ops--dash-hero,
 .admin-hero-capture .booking-shell > .admin-view-tabs,
 .admin-hero-capture .booking-shell > .admin-search-row,
 .admin-hero-capture .booking-shell > .admin-timeline {
