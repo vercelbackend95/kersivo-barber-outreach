@@ -7812,14 +7812,9 @@
 
 .admin-timeline-terminal-header {
   min-height: 2.65rem;
-  border-bottom: 1px solid color-mix(in srgb, var(--border) 88%, var(--accent) 12%);
-  border-left: 2px solid color-mix(in srgb, var(--accent) 52%, var(--border));
-  background: linear-gradient(
-    180deg,
-    color-mix(in srgb, var(--accent) 18%, var(--surface)),
-    color-mix(in srgb, var(--accent) 11%, color-mix(in srgb, var(--bg) 94%, var(--surface)))
-  );
-  box-shadow: inset 1px 0 0 color-mix(in srgb, var(--accent) 24%, transparent);
+  border-bottom: 1px solid color-mix(in srgb, var(--border) 92%, transparent);
+  border-left: 1px solid color-mix(in srgb, var(--border) 92%, transparent);
+  background: color-mix(in srgb, var(--bg) 94%, var(--surface));
 }
 
 .admin-timeline-terminal-rail {
@@ -7831,13 +7826,8 @@
   min-height: 0;
   height: 100%;
   align-self: stretch;
-  border-left: 2px solid color-mix(in srgb, var(--accent) 52%, var(--border));
-  background: linear-gradient(
-    180deg,
-    color-mix(in srgb, var(--accent) 15%, var(--surface)),
-    color-mix(in srgb, var(--accent) 22%, color-mix(in srgb, var(--surface) 88%, var(--bg)))
-  );
-  box-shadow: inset 1px 0 0 color-mix(in srgb, var(--accent) 20%, transparent);
+  border-left: 1px solid color-mix(in srgb, var(--border) 92%, transparent);
+  background: var(--surface);
   padding: 0.5rem 0.3rem;
 }
 
@@ -7852,10 +7842,10 @@
   min-height: 4.75rem;
   margin: 0;
   padding: 0;
-  border: 1px solid color-mix(in srgb, var(--accent) 46%, var(--border));
+  border: 1px solid color-mix(in srgb, var(--border) 88%, transparent);
   border-radius: 8px;
   background: color-mix(in srgb, var(--surface) 78%, var(--bg));
-  color: var(--accent);
+  color: color-mix(in srgb, var(--muted) 88%, var(--fg));
   cursor: pointer;
   transition: border-color 0.12s ease, background-color 0.12s ease, color 0.12s ease, box-shadow 0.12s ease;
 }
