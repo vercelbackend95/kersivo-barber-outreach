@@ -1,13 +1,15 @@
 import React from 'react';
 import type { Barber, ServiceOption, TimeBlock } from './barbersTypes';
 import type { BarberBookingPreview } from '../../lib/admin/barberRosterPresentation';
-import { X } from '../lucide-react';
+import { Plus, X } from '../lucide-react';
 import AdminBarberRosterCard from './AdminBarberRosterCard';
+import { BarberRosterOverviewGridSkeleton } from '../skeleton';
 import {
   getDayFill,
   getNextBookingForBarber,
   getBarberAvailabilityStatus,
   getTodayLine,
+  WORKING_HOURS_PER_DAY,
 } from '../../lib/admin/barberRosterPresentation';
 
 type BarbersOverviewProps = {
@@ -18,6 +20,7 @@ type BarbersOverviewProps = {
   barberAvatarPreviewUrl: string | null;
   selectedServiceIds: string[];
   barberSaving: boolean;
+  barbersLoading?: boolean;
   barberReordering: boolean;
   barberSaveMessage: string;
   barberSaveError: string;
@@ -56,6 +59,7 @@ export default function BarbersOverview({
   barberAvatarPreviewUrl,
   selectedServiceIds,
   barberSaving,
+  barbersLoading = false,
   barberReordering,
   barberSaveMessage,
   barberSaveError,
@@ -144,16 +148,19 @@ export default function BarbersOverview({
       {barberSaveMessage ? <p className="admin-inline-success">{barberSaveMessage}</p> : null}
       {barberSaveError ? <p className="admin-inline-error">{barberSaveError}</p> : null}
 
-      <div className="admin-barber-list-wrap admin-barbers-overview-list-wrap">
-        <ul className="admin-barber-grid admin-barbers-overview-grid" aria-label="Barbers list">
-          {barbers.map((barber, index) => {
+      {barbersLoading && barbers.length === 0 ? (
+        <BarberRosterOverviewGridSkeleton ariaLabel="Loading barbers" />
+      ) : (
+        <div className="admin-barber-list-wrap admin-barbers-overview-list-wrap">
+          <ul className="admin-barber-grid admin-barbers-overview-grid" aria-label="Barbers list">
+            {barbers.map((barber, index) => {
             const barberIsActive = normalizeBarberStatus(barber);
             const isFirstItem = index === 0;
             const isLastItem = index === barbers.length - 1;
             const computed = barberComputedData.get(barber.id);
             const nextBookingPreview = computed?.nextBooking ?? null;
             const availStatus = computed?.availStatus ?? 'free';
-            const dayFill = computed?.dayFill ?? { pct: 0, count: 0, workingH: 8 };
+            const dayFill = computed?.dayFill ?? { pct: 0, count: 0, workingH: WORKING_HOURS_PER_DAY, bookedHoursH: 0 };
             const todayLine = getTodayLine(barber);
 
             return (
@@ -179,9 +186,10 @@ export default function BarbersOverview({
                 }}
               />
             );
-          })}
-        </ul>
-      </div>
+            })}
+          </ul>
+        </div>
+      )}
 
       {isAddBarberSheetOpen ? (
         <div
@@ -196,7 +204,7 @@ export default function BarbersOverview({
           }}
         >
           <form
-            className="admin-barber-sheet"
+            className="admin-barber-sheet admin-barber-sheet--add"
             onSubmit={onSubmitAddBarber}
             onMouseDown={(event) => event.stopPropagation()}
           >
@@ -220,12 +228,38 @@ export default function BarbersOverview({
                 required
               />
 
-              <label htmlFor="barber-avatar">Avatar (optional)</label>
-              <div className="admin-barber-file-input-wrap">
-                <input id="barber-avatar" type="file" accept="image/jpeg,image/png,image/webp" onChange={(event) => onBarberAvatarChange(event.target.files?.[0] ?? null)} />
+              <div className="admin-add-barber-avatar">
+                <p className="admin-add-barber-avatar__legend">Photo</p>
+                <input
+                  id="barber-avatar"
+                  type="file"
+                  accept="image/jpeg,image/png,image/webp"
+                  className="admin-barber-avatar-input"
+                  onChange={(event) => onBarberAvatarChange(event.target.files?.[0] ?? null)}
+                />
+                <div className="admin-barber-roster-avatar-shell">
+                  <label
+                    htmlFor="barber-avatar"
+                    className="admin-barber-avatar admin-barber-avatar--roster admin-add-barber-avatar__trigger"
+                    aria-label={barberAvatarPreviewUrl ? 'Change photo' : 'Add photo'}
+                  >
+                    {barberAvatarPreviewUrl ? (
+                      <>
+                        <img src={barberAvatarPreviewUrl} alt="" className="admin-add-barber-avatar__preview" />
+                        <span className="admin-add-barber-avatar__change">Change</span>
+                      </>
+                    ) : (
+                      <Plus
+                        className="admin-add-barber-avatar__plus"
+                        width={32}
+                        height={32}
+                        strokeWidth={1.65}
+                        aria-hidden="true"
+                      />
+                    )}
+                  </label>
+                </div>
               </div>
-
-              {barberAvatarPreviewUrl ? <img src={barberAvatarPreviewUrl} alt="Selected avatar preview" className="admin-avatar-preview" /> : null}
 
               <fieldset className="admin-service-select-group">
                 <legend>Services</legend>

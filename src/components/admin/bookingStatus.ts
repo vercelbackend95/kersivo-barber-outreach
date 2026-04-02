@@ -6,13 +6,34 @@ type BookingStatusInput = {
   rescheduledAt?: string | null;
 };
 
+/** True for Prisma `CANCELLED_BY_*` values; aligned with cancelled tone below. */
+export function isCancelledBookingStatus(status: string): boolean {
+  return status.startsWith('CANCELLED');
+}
+
 export function getBookingStatusTone(input: BookingStatusInput): BookingStatusTone {
-  if (input.status.startsWith('CANCELLED')) return 'cancelled';
+  if (isCancelledBookingStatus(input.status)) return 'cancelled';
   if (input.status === 'PENDING_CONFIRMATION' || input.status === 'EXPIRED') return 'pending';
   const hasRescheduledFlag = Boolean(input.rescheduledAt) || input.status.includes('RESCHEDULED');
   if (hasRescheduledFlag) return 'rescheduled';
   if (input.status === 'CONFIRMED') return 'confirmed';
   return 'pending';
+}
+
+export type BookingStatusToneCounts = Record<BookingStatusTone, number>;
+
+/** Counts bookings using the same tone rules as the admin timeline cards. */
+export function countBookingsByStatusTone(bookings: readonly BookingStatusInput[]): BookingStatusToneCounts {
+  const counts: BookingStatusToneCounts = {
+    confirmed: 0,
+    pending: 0,
+    cancelled: 0,
+    rescheduled: 0,
+  };
+  for (const booking of bookings) {
+    counts[getBookingStatusTone(booking)] += 1;
+  }
+  return counts;
 }
 
 export function getStatusTextColorClass(tone: BookingStatusTone): string {

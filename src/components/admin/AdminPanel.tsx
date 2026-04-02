@@ -1,8 +1,10 @@
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import AdminLayout from './AdminLayout';
+import AdminGlobalMobileNextStripHost from './AdminGlobalMobileNextStripHost';
 import BookingsAdminPanel from './BookingsAdminPanel';
 import ShopAdminPanel from './ShopAdminPanel';
 import ServicesAdminPanel from './ServicesAdminPanel';
+import { AdminTodayBookingsLiveProvider } from './useAdminTodayBookingsLive';
 import { getStoredAdminSecret, installAdminFetchInterceptor, saveAdminSecret } from './adminAuth';
 export type AdminSection =
   | 'bookings_dashboard'
@@ -245,26 +247,28 @@ export default function AdminPanel() {
   }
 
   return (
-    <AdminLayout
-      activeSection={activeSection}
-      onChangeSection={handleSectionChange}
-      isTransitioning={isTransitioning}
-      showSectionSkeleton={showSectionSkeleton}
-    >
-      <BookingsAdminPanel
-              key={isBookingsSection ? activeSection : 'bookings-hidden'}
-        isActive={isBookingsSection}
-        mode={
-          activeSection === 'bookings_blocks'
-            ? 'blocks'
-            : activeSection === 'bookings_reports'
-              ? 'reports'
-              : activeSection === 'bookings_history'
-                ? 'history'
-                : 'dashboard'
-        }
-        onBackToDashboard={() => handleSectionChange('bookings_dashboard')}
-      />
+    <AdminTodayBookingsLiveProvider>
+      <AdminLayout
+        activeSection={activeSection}
+        onChangeSection={handleSectionChange}
+        isTransitioning={isTransitioning}
+        showSectionSkeleton={showSectionSkeleton}
+        persistentAdminChrome={<AdminGlobalMobileNextStripHost />}
+      >
+        <BookingsAdminPanel
+          key="bookings"
+          isActive={isBookingsSection}
+          mode={
+            activeSection === 'bookings_blocks'
+              ? 'blocks'
+              : activeSection === 'bookings_reports'
+                ? 'reports'
+                : activeSection === 'bookings_history'
+                  ? 'history'
+                  : 'dashboard'
+          }
+          onBackToDashboard={() => handleSectionChange('bookings_dashboard')}
+        />
       
       {activeSection === 'services' ? (
         <ServicesAdminPanel key="services" />
@@ -274,7 +278,7 @@ export default function AdminPanel() {
         <ShopAdminPanel key={activeSection} initialTab={shopTab} />
       ) : null}
 
-    </AdminLayout>
-
+      </AdminLayout>
+    </AdminTodayBookingsLiveProvider>
   );
 }

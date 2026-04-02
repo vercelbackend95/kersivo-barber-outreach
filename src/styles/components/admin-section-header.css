@@ -10,14 +10,6 @@
   background: color-mix(in srgb, var(--surface-1) 92%, transparent);
 }
 
-.admin-section-header--sticky {
-  position: sticky;
-  top: var(--space-sm);
-  z-index: 15;
-  -webkit-backdrop-filter: blur(12px);
-  backdrop-filter: blur(12px);
-}
-
 .admin-section-header-copy {
   flex: 1 1 auto;
   min-width: 0;
@@ -61,6 +53,8 @@
 @media (max-width: 48rem) {
   .admin-section-header {
     gap: var(--space-sm);
+    /* Tighter top rhythm under mobile chrome; keep bottom separation toward content */
+    padding-block: var(--space-xs) var(--space-sm);
   }
 
   .admin-section-header-actions {
@@ -69,20 +63,5 @@
 
   .admin-section-header-actions > * {
     width: 100%;
-  }
-
-  .admin-section-header--sticky {
-    top: calc(var(--admin-mobile-header-h, 4.5rem) + var(--space-xs));
-    -webkit-backdrop-filter: blur(10px);
-    backdrop-filter: blur(10px);
-  }
-
-  /* Bookings: hero strip is sticky above; stack section title below measured --admin-next-block-h */
-  .booking-shell .admin-section-header--sticky {
-    top: calc(
-      var(--admin-mobile-sticky-stack-top, var(--admin-mobile-header-h, 4.5rem)) + var(--admin-next-block-h, 0px) +
-        var(--space-xs)
-    );
-    z-index: 25;
   }
 }

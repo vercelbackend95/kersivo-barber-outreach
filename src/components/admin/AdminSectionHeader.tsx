@@ -6,7 +6,6 @@ type AdminSectionHeaderProps = {
   actions?: React.ReactNode;
   metaBadge?: string;
   metaBadgeVariant?: 'default' | 'success' | 'warning';
-  sticky?: boolean;
 };
 
 const META_BADGE_CLASS_MAP: Record<NonNullable<AdminSectionHeaderProps['metaBadgeVariant']>, string> = {
@@ -16,23 +15,11 @@ const META_BADGE_CLASS_MAP: Record<NonNullable<AdminSectionHeaderProps['metaBadg
 };
 
 const AdminSectionHeader = forwardRef<HTMLDivElement, AdminSectionHeaderProps>(function AdminSectionHeader(
-  {
-    title,
-    description,
-    actions,
-    metaBadge,
-    metaBadgeVariant = 'default',
-    sticky = true,
-  },
+  { title, description, actions, metaBadge, metaBadgeVariant = 'default' },
   ref,
 ) {
-  const headerClassName = [
-    'admin-section-header',
-    sticky ? 'admin-section-header--sticky' : '',
-  ].filter(Boolean).join(' ');
-
   return (
-    <div ref={ref} className={headerClassName}>
+    <div ref={ref} className="admin-section-header">
       <div className="admin-section-header-copy">
         <div className="admin-section-header-title-row">
           <h2 className="admin-section-header-title">{title}</h2>

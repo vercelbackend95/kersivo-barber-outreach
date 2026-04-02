@@ -6,7 +6,7 @@ import AdminLineChart from './charts/AdminLineChart';
 import AdminLeaderboard from './AdminLeaderboard';
 import { SettingsGearIcon } from './SettingsGearIcon';
 import EmptyState from '../EmptyState';
-import { ChevronDown, ChevronUp, Package, Search, X } from '../lucide-react';
+import { ChevronDown, ChevronUp, Clock, ListOrdered, Package, Search, X } from '../lucide-react';
 import { formatDelta } from './reportsFormatting';
 import { SkeletonKPICards } from '../skeleton';
 type ShopTab = 'products' | 'orders' | 'sales';
@@ -383,6 +383,8 @@ type ProductStatusSwitchProps = {
   offLabel: string;
   tone: 'active' | 'featured';
   onChange: (nextValue: boolean) => void;
+  /** Compact single-line treatment for product list cards */
+  variant?: 'default' | 'card';
 };
 
 type EditFooterActionsProps = {
@@ -441,11 +443,15 @@ function ProductStatusSwitch({
   onLabel,
   offLabel,
   tone,
-  onChange
+  onChange,
+  variant = 'default'
 }: ProductStatusSwitchProps) {
   const statusLabel = checked ? onLabel : offLabel;
   return (
-    <div className="admin-product-switch" data-tone={tone}>
+    <div
+      className={['admin-product-switch', variant === 'card' ? 'admin-product-switch--card' : ''].filter(Boolean).join(' ')}
+      data-tone={tone}
+    >
       <span className="admin-product-switch__copy">
         <span className="admin-product-switch__label">{label}</span>
         <span className="admin-product-switch__status">
@@ -2066,6 +2072,7 @@ export default function ShopAdminPanel({ initialTab = 'products' }: ShopAdminPan
                   hour: '2-digit',
                   minute: '2-digit'
                 });
+                const productStatusLine = isSavingCard ? 'Saving…' : (productStatusById[product.id] || '');
 
                 return (
                   <article
@@ -2080,99 +2087,86 @@ export default function ShopAdminPanel({ initialTab = 'products' }: ShopAdminPan
                       .join(' ')}
                     aria-selected={isCardSelected}
                   >
-                    <label className="admin-product-card-checkbox-wrap" title={isCardSelected ? `Deselect ${product.name}` : `Select ${product.name}`}>
-                      <input
-                        type="checkbox"
-                        className="admin-product-card-checkbox"
-                        checked={isCardSelected}
-                        onChange={() => bulkToggle(product.id)}
-                        aria-label={isCardSelected ? `Deselect ${product.name}` : `Select ${product.name}`}
-                      />
-                    </label>
+                    <div className="admin-product-card__layout">
+                      <label className="admin-product-card-checkbox-wrap" title={isCardSelected ? `Deselect ${product.name}` : `Select ${product.name}`}>
+                        <input
+                          type="checkbox"
+                          className="admin-product-card-checkbox"
+                          checked={isCardSelected}
+                          onChange={() => bulkToggle(product.id)}
+                          aria-label={isCardSelected ? `Deselect ${product.name}` : `Select ${product.name}`}
+                        />
+                      </label>
 
-                    <div className="admin-product-card__shell">
-                      <div className="admin-product-card__media">
-                        <div className="admin-product-thumb">
-                          {product.imageUrl ? (
-                            <img src={product.imageUrl} alt={product.name} loading="lazy" draggable={false} />
-                          ) : (
-                            <span className="admin-product-thumb__placeholder">No image</span>
-                          )}
+                      <div className="admin-product-card__main">
+                        <div className="admin-product-card__primary">
+                          <div className="admin-product-card__media">
+                            <div className="admin-product-thumb">
+                              {product.imageUrl ? (
+                                <img src={product.imageUrl} alt={product.name} loading="lazy" draggable={false} />
+                              ) : (
+                                <span className="admin-product-thumb__placeholder">No image</span>
+                              )}
+                            </div>
+                          </div>
+                          <div className="admin-product-card__primary-copy">
+                            <p className="admin-product-card__eyebrow">{categoryLabel}</p>
+                            <h4 className="admin-product-card__title">{product.name}</h4>
+                            <div className="admin-product-card__price-row">
+                              <p className="admin-product-card__price">{formatPrice(product.pricePence)}</p>
+                              {!product.active ? (
+                                <div className="admin-product-card__badges" aria-label="Product visibility">
+                                  <span className="admin-product-badge admin-product-badge--hidden">Hidden</span>
+                                </div>
+                              ) : null}
+                            </div>
+                          </div>
                         </div>
-                      </div>
 
-                      <div className="admin-product-card__body">
-                        <header className="admin-product-card__header">
-                          <p className="admin-product-card__eyebrow">{categoryLabel}</p>
-                          <h4 className="admin-product-card__title">{product.name}</h4>
-                          <p className="admin-product-card__price">{formatPrice(product.pricePence)}</p>
-                          <div className="admin-product-card__badges" aria-label="Product status">
-                            <span className={product.active ? 'admin-product-badge admin-product-badge--live' : 'admin-product-badge admin-product-badge--hidden'}>
-                              {product.active ? 'Live' : 'Hidden'}
+                        <div className="admin-product-card__meta" aria-label="Product details">
+                          <span className="admin-product-card__meta-item">
+                            <Clock className="admin-product-card__meta-icon" width={16} height={16} strokeWidth={2} aria-hidden />
+                            <span className="admin-product-card__meta-text" title={`Updated ${updatedLabel}`}>
+                              {updatedLabel}
                             </span>
-                            {product.featured ? (
-                              <span className="admin-product-badge admin-product-badge--featured">Featured</span>
-                            ) : null}
-                          </div>
-                        </header>
-
-                        <div className="admin-product-card__meta">
-                          <span className="admin-product-card__meta-item">
-                            <span className="admin-product-card__meta-k">Updated</span>
-                            <span className="admin-product-card__meta-v">{updatedLabel}</span>
+                          </span>
+                          <span className="admin-product-card__meta-sep" aria-hidden="true">
+                            ·
                           </span>
                           <span className="admin-product-card__meta-item">
-                            <span className="admin-product-card__meta-k">List</span>
-                            <span className="admin-product-card__meta-v">#{product.sortOrder + 1}</span>
+                            <ListOrdered className="admin-product-card__meta-icon" width={16} height={16} strokeWidth={2} aria-hidden />
+                            <span className="admin-product-card__meta-text">
+                              List <span className="admin-product-card__meta-strong">#{product.sortOrder + 1}</span>
+                            </span>
                           </span>
                         </div>
 
-                        <div className="admin-product-card__controls">
-                          <div className="admin-product-switches admin-product-switches--card">
-                            <ProductStatusSwitch
-                              label="Active"
-                              checked={product.active}
-                              disabled={isSavingCard}
-                              onLabel="Active"
-                              offLabel="Inactive"
-                              tone="active"
-                              onChange={(nextValue) => void patchProductFlags(product.id, { active: nextValue })}
-                            />
-                            <ProductStatusSwitch
-                              label="Featured"
-                              checked={product.featured}
-                              disabled={isSavingCard}
-                              onLabel="Featured"
-                              offLabel="Not featured"
-                              tone="featured"
-                              onChange={(nextValue) => void patchProductFlags(product.id, { featured: nextValue })}
-                            />
-                          </div>
-
+                        <div className="admin-product-card__utility">
                           <div className="admin-product-card__actions-row">
-                            <div className="admin-reorder-controls admin-reorder-controls--barber" role="group" aria-label={`Reorder ${product.name}`}>
-                              <div className="admin-reorder-arrow-stack admin-reorder-arrow-stack--barber">
-                                <button
-                                  type="button"
-                                  className="admin-reorder-btn admin-reorder-btn--barber"
-                                  aria-label={`Move ${product.name} up`}
-                                  disabled={reorderDisabled || isFirstItem}
-                                  onClick={() => moveItemUp(index)}
-                                >
-                                  <ChevronUp width={16} height={16} strokeWidth={2.25} aria-hidden="true" />
-                                </button>
-                                <button
-                                  type="button"
-                                  className="admin-reorder-btn admin-reorder-btn--barber"
-                                  aria-label={`Move ${product.name} down`}
-                                  disabled={reorderDisabled || isLastItem}
-                                  onClick={() => moveItemDown(index)}
-                                >
-                                  <ChevronDown width={16} height={16} strokeWidth={2.25} aria-hidden="true" />
-                                </button>
+                            <div className="admin-product-card__reorder">
+                              <div className="admin-reorder-controls admin-reorder-controls--product" role="group" aria-label={`Reorder ${product.name}`}>
+                                <div className="admin-reorder-arrow-stack admin-reorder-arrow-stack--product">
+                                  <button
+                                    type="button"
+                                    className="admin-reorder-btn admin-reorder-btn--product"
+                                    aria-label={`Move ${product.name} up`}
+                                    disabled={reorderDisabled || isFirstItem}
+                                    onClick={() => moveItemUp(index)}
+                                  >
+                                    <ChevronUp width={16} height={16} strokeWidth={2.25} aria-hidden="true" />
+                                  </button>
+                                  <button
+                                    type="button"
+                                    className="admin-reorder-btn admin-reorder-btn--product"
+                                    aria-label={`Move ${product.name} down`}
+                                    disabled={reorderDisabled || isLastItem}
+                                    onClick={() => moveItemDown(index)}
+                                  >
+                                    <ChevronDown width={16} height={16} strokeWidth={2.25} aria-hidden="true" />
+                                  </button>
+                                </div>
                               </div>
                             </div>
-
                             <div className="admin-product-card__actions-end">
                               <button
                                 type="button"
@@ -2183,11 +2177,38 @@ export default function ShopAdminPanel({ initialTab = 'products' }: ShopAdminPan
                                 <SettingsGearIcon className="admin-control-icon" aria-hidden="true" />
                                 <span className="admin-product-card__edit-label">Edit</span>
                               </button>
-                              <div className="admin-products-actions">
-                                <span className="admin-product-saving muted" aria-live="polite">
-                                  {isSavingCard ? 'Saving…' : (productStatusById[product.id] || '')}
-                                </span>
-                              </div>
+                              {productStatusLine ? (
+                                <div className="admin-products-actions">
+                                  <span className="admin-product-saving muted" aria-live="polite">
+                                    {productStatusLine}
+                                  </span>
+                                </div>
+                              ) : null}
+                            </div>
+                          </div>
+
+                          <div className="admin-product-card__switch-row">
+                            <div className="admin-product-switches admin-product-switches--toolbar">
+                              <ProductStatusSwitch
+                                label="Active"
+                                checked={product.active}
+                                disabled={isSavingCard}
+                                onLabel="Active"
+                                offLabel="Inactive"
+                                tone="active"
+                                variant="card"
+                                onChange={(nextValue) => void patchProductFlags(product.id, { active: nextValue })}
+                              />
+                              <ProductStatusSwitch
+                                label="Featured"
+                                checked={product.featured}
+                                disabled={isSavingCard}
+                                onLabel="Featured"
+                                offLabel="Off"
+                                tone="featured"
+                                variant="card"
+                                onChange={(nextValue) => void patchProductFlags(product.id, { featured: nextValue })}
+                              />
                             </div>
                           </div>
                         </div>

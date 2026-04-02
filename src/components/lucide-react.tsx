@@ -222,6 +222,21 @@ const LogOut = ({ ...props }: IconProps) => (
   </svg>
 );
 
+const Ban = ({ ...props }: IconProps) => (
+  <svg
+    viewBox="0 0 24 24"
+    fill="none"
+    stroke="currentColor"
+    strokeWidth="2"
+    strokeLinecap="round"
+    strokeLinejoin="round"
+    {...props}
+  >
+    <circle cx="12" cy="12" r="10" />
+    <path d="m4.9 4.9 14.2 14.2" />
+  </svg>
+);
+
 const Menu = ({ ...props }: IconProps) => (
   <svg
     viewBox="0 0 24 24"
@@ -327,8 +342,28 @@ const ChevronDown = ({ ...props }: IconProps) => (
   </svg>
 );
 
+const ListOrdered = ({ ...props }: IconProps) => (
+  <svg
+    viewBox="0 0 24 24"
+    fill="none"
+    stroke="currentColor"
+    strokeWidth="2"
+    strokeLinecap="round"
+    strokeLinejoin="round"
+    {...props}
+  >
+    <path d="M10 6h11" />
+    <path d="M10 12h11" />
+    <path d="M10 18h11" />
+    <path d="M4 6h1v4" />
+    <path d="M4 10h2" />
+    <path d="M6 18H4c0-1 2-2 2-3s-1-1.5-2-1" />
+  </svg>
+);
+
 export {
   ArrowRight,
+  Ban,
   BarChart2,
   Calendar,
   Check,
@@ -336,6 +371,7 @@ export {
   ChevronUp,
   Clock,
   CornerDownRight,
+  ListOrdered,
   LogOut,
   Menu,
   Package,

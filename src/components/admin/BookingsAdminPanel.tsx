@@ -1,10 +1,11 @@
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { SkeletonKPICards } from '../skeleton';
+import { BarberRosterOverviewGridSkeleton, SkeletonKPICards } from '../skeleton';
 import AdminSectionHeader from './AdminSectionHeader';
 import AdminBookingsOpsSearch from './AdminBookingsOpsSearch';
 import AdminBookingsOpsDashHero from './AdminBookingsOpsDashHero';
 import AdminBookingsScheduleList from './AdminBookingsScheduleList';
 import AdminLineChart from './charts/AdminLineChart';
+import { addDays } from 'date-fns';
 import { formatInTimeZone, fromZonedTime, toZonedTime } from 'date-fns-tz';
 import TodayTimeline, { type TimelineBooking } from './TodayTimeline';
 import AdminErrorBoundary from './AdminErrorBoundary';
@@ -24,7 +25,10 @@ import AdminLeaderboard from './AdminLeaderboard';
 import type { Barber, ServiceOption, TimeBlock, WorkingHourRow } from './barbersTypes';
 import { formatDelta } from './reportsFormatting';
 import EmptyState from '../EmptyState';
-import { Calendar, X } from '../lucide-react';
+import { Ban, X } from '../lucide-react';
+import { useAdminTodayBookingsLive } from './useAdminTodayBookingsLive';
+import { canShopAdminCancelByLeadTime } from '../../lib/booking/policies';
+import { countBookingsByStatusTone, getBookingStatusTone, isCancelledBookingStatus } from './bookingStatus';
 type Booking = {
   id: string;
   barberId: string;
@@ -152,8 +156,6 @@ const ADMIN_TIMEZONE = 'Europe/London';
 const SLOT_STEP_MINUTES = 15;
 const POLL_INTERVAL_MS = 15000;
 const LAST_UPDATED_REFRESH_MS = 1000;
-const LIVE_THRESHOLD_MS = 20000;
-const CONNECTING_GRACE_MS = 2000;
 
 const UPDATED_ROW_HIGHLIGHT_MS = 2000;
 /** Align with CSS `max-width: 48rem` (768px at 16px root). */
@@ -253,6 +255,11 @@ function formatTimelineDateLabel(date: string) {
   return formatInTimeZone(dateAtLondonMidnight, ADMIN_TIMEZONE, 'EEE dd MMM');
 }
 
+function addOneLondonCalendarDay(isoDate: string): string {
+  const anchor = fromZonedTime(`${isoDate}T12:00:00`, ADMIN_TIMEZONE);
+  return formatInTimeZone(addDays(anchor, 1), ADMIN_TIMEZONE, 'yyyy-MM-dd');
+}
+
 function formatRelativeTime(startAt: string, endAt: string) {
   const nowMs = Date.now();
   const startMs = new Date(startAt).getTime();
@@ -285,7 +292,7 @@ function getStatusA11yLabel(statusLabel: string) {
   return statusLabel.replace(/_/g, ' ').toLowerCase().replace(/(^|\s)\S/g, (char) => char.toUpperCase());
 }
 
-type DayOpsFilter = 'all' | 'pending' | 'upcoming';
+type DayOpsFilter = 'all' | 'cancelled' | 'rescheduled' | 'upcoming';
 
 type DaySummaryBarProps = {
   bookings: Booking[];
@@ -302,6 +309,10 @@ function isUpcomingDayStatBooking(booking: Booking, nowMs: number) {
   return endMs > nowMs && (booking.status === 'CONFIRMED' || booking.status === 'PENDING_CONFIRMATION');
 }
 
+function isRescheduledDayOpsBooking(booking: Booking): boolean {
+  return getBookingStatusTone({ status: booking.status, rescheduledAt: booking.rescheduledAt ?? null }) === 'rescheduled';
+}
+
 function DaySummaryBar({
   bookings,
   staffOnFloorCount,
@@ -312,8 +323,10 @@ function DaySummaryBar({
   onStaffToggle,
 }: DaySummaryBarProps) {
   const totalCount = bookings.length;
-  const pendingCount = bookings.filter((b) => b.status === 'PENDING_CONFIRMATION').length;
   const upcomingCount = bookings.filter((b) => isUpcomingDayStatBooking(b, nowMs)).length;
+  const toneCounts = useMemo(() => countBookingsByStatusTone(bookings), [bookings]);
+  const cancelledCount = toneCounts.cancelled;
+  const rescheduledCount = toneCounts.rescheduled;
 
   return (
     <div className="admin-day-summary-bar" role="group" aria-label="Day metrics and quick filters">
@@ -340,29 +353,6 @@ function DaySummaryBar({
       <div className="admin-day-summary-divider" aria-hidden="true" />
       <button
         type="button"
-        className={`admin-day-summary-stat admin-day-summary-stat--action ${dayOpsFilter === 'pending' ? 'is-active' : ''}`}
-        onClick={() => onDayOpsFilterChange(dayOpsFilter === 'pending' ? 'all' : 'pending')}
-        aria-pressed={dayOpsFilter === 'pending'}
-        aria-label={`${pendingCount} pending confirmation${dayOpsFilter === 'pending' ? ', filter active' : ''}`}
-      >
-        <svg className="admin-day-summary-icon admin-day-summary-icon--pending" viewBox="0 0 24 24" aria-hidden="true" focusable="false">
-          <circle cx="12" cy="12" r="9" fill="none" stroke="currentColor" strokeWidth="2" />
-          <path d="M12 8v4" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
-          <circle cx="12" cy="16" r="1" fill="currentColor" />
-        </svg>
-        <span className="admin-day-summary-value" aria-hidden="true">
-          {pendingCount}
-        </span>
-        <span className="admin-day-summary-label" aria-hidden="true">
-          Pending confirm
-        </span>
-        <span className="admin-day-summary-label-short" aria-hidden="true">
-          Pending
-        </span>
-      </button>
-      <div className="admin-day-summary-divider" aria-hidden="true" />
-      <button
-        type="button"
         className={`admin-day-summary-stat admin-day-summary-stat--action ${dayOpsFilter === 'upcoming' ? 'is-active' : ''}`}
         onClick={() => onDayOpsFilterChange(dayOpsFilter === 'upcoming' ? 'all' : 'upcoming')}
         aria-pressed={dayOpsFilter === 'upcoming'}
@@ -380,6 +370,58 @@ function DaySummaryBar({
         </span>
         <span className="admin-day-summary-label-short" aria-hidden="true">
           Soon
+        </span>
+      </button>
+      <div className="admin-day-summary-divider" aria-hidden="true" />
+      <button
+        type="button"
+        className={`admin-day-summary-stat admin-day-summary-stat--action ${dayOpsFilter === 'rescheduled' ? 'is-active' : ''}`}
+        onClick={() => onDayOpsFilterChange(dayOpsFilter === 'rescheduled' ? 'all' : 'rescheduled')}
+        aria-pressed={dayOpsFilter === 'rescheduled'}
+        aria-label={`${rescheduledCount} rescheduled${dayOpsFilter === 'rescheduled' ? ', filter active' : ''}`}
+      >
+        <svg className="admin-day-summary-icon admin-day-summary-icon--rescheduled" viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+          <rect x="4" y="5" width="16" height="15" rx="2" fill="none" stroke="currentColor" strokeWidth="2" />
+          <path d="M8 3v4M16 3v4M4 11h16" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
+          <path
+            d="M12 18v-4M9.5 16.5L12 19l2.5-2.5"
+            fill="none"
+            stroke="currentColor"
+            strokeWidth="2"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+          />
+        </svg>
+        <span className="admin-day-summary-value" aria-hidden="true">
+          {rescheduledCount}
+        </span>
+        <span className="admin-day-summary-label" aria-hidden="true">
+          Rescheduled
+        </span>
+        <span className="admin-day-summary-label-short" aria-hidden="true">
+          Resched
+        </span>
+      </button>
+      <div className="admin-day-summary-divider" aria-hidden="true" />
+      <button
+        type="button"
+        className={`admin-day-summary-stat admin-day-summary-stat--action ${dayOpsFilter === 'cancelled' ? 'is-active' : ''}`}
+        onClick={() => onDayOpsFilterChange(dayOpsFilter === 'cancelled' ? 'all' : 'cancelled')}
+        aria-pressed={dayOpsFilter === 'cancelled'}
+        aria-label={`${cancelledCount} cancelled${dayOpsFilter === 'cancelled' ? ', filter active' : ''}`}
+      >
+        <svg className="admin-day-summary-icon admin-day-summary-icon--cancelled" viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+          <circle cx="12" cy="12" r="9" fill="none" stroke="currentColor" strokeWidth="2" />
+          <path d="M9 9l6 6M15 9l-6 6" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
+        </svg>
+        <span className="admin-day-summary-value" aria-hidden="true">
+          {cancelledCount}
+        </span>
+        <span className="admin-day-summary-label" aria-hidden="true">
+          Cancelled
+        </span>
+        <span className="admin-day-summary-label-short" aria-hidden="true">
+          Cancelled
         </span>
       </button>
       <div className="admin-day-summary-divider" aria-hidden="true" />
@@ -438,23 +480,10 @@ function formatStartDateTime(startAt: string) {
 
 }
 
-function getUpcomingBookings(bookings: Booking[]) {
-  const nowMs = Date.now();
-  return bookings.filter((b) => b.status === 'CONFIRMED').filter((b) => new Date(b.endAt).getTime() > nowMs).sort((a, b) => new Date(a.startAt).getTime() - new Date(b.startAt).getTime());
-}
 function isTodayInLondon(value: string, todayLondonDate: string) {
   return formatInTimeZone(new Date(value), ADMIN_TIMEZONE, 'yyyy-MM-dd') === todayLondonDate;
 }
 
-
-function formatLastUpdated(lastSuccessAt: number | null, nowMs: number) {
-  if (!lastSuccessAt) return 'never';
-  const diffSec = Math.floor((nowMs - lastSuccessAt) / 1000);
-
-  if (diffSec <= 4) return 'just now';
-  if (diffSec < 60) return `${diffSec}s ago`;
-  return `${Math.floor(diffSec / 60)}m ago`;
-}
 function bookingRefreshSignature(booking: Booking) {
   return [
     booking.id,
@@ -481,8 +510,6 @@ function hasCollectionChanged<T>(prev: T[], next: T[], getSignature: (item: T) =
 
 
 const normalizeSearchValue = (value: string) => value.trim().toLowerCase();
-const canBeCancelledByShop = (booking: Booking) => booking.status === 'CONFIRMED';
-
 
 function getBookingSearchScore(booking: Booking, normalizedQuery: string) {
   if (!normalizedQuery) return 0;
@@ -615,13 +642,21 @@ type BookingsAdminPanelProps = {
 };
 
 export default function BookingsAdminPanel({ isActive, mode, onBackToDashboard }: BookingsAdminPanelProps) {
+  const {
+    nextBooking: liveNextBooking,
+    connectionStateLabel,
+    hasLivePulse,
+    freshnessLabel,
+    formatStartTime: liveFormatStartTime,
+    formatRelativeTime: liveFormatRelativeTime,
+  } = useAdminTodayBookingsLive();
+
   const [loggedIn, setLoggedIn] = useState(false);
   const [isCheckingSession, setIsCheckingSession] = useState(true);
   const [bookings, setBookings] = useState<Booking[]>([]);
-  /** Today's day-view bookings for the ops dash hero on non-dashboard tabs (matches Bookings "today" strip). */
-  const [opsStripBookings, setOpsStripBookings] = useState<Booking[]>([]);
   const [bookingsInitialLoading, setBookingsInitialLoading] = useState(true);
   const [barbers, setBarbers] = useState<Barber[]>([]);
+  const [barbersInitialLoading, setBarbersInitialLoading] = useState(true);
   const [barbersFilter, setBarbersFilter] = useState<'active' | 'all'>('active');
   const [barberNameDraft, setBarberNameDraft] = useState('');
   const [barberAvatarFile, setBarberAvatarFile] = useState<File | null>(null);
@@ -646,7 +681,6 @@ export default function BookingsAdminPanel({ isActive, mode, onBackToDashboard }
   const [timeBlocks, setTimeBlocks] = useState<TimeBlock[]>([]);
   const [error, setError] = useState('');
   const [updatedBookingIds, setUpdatedBookingIds] = useState<string[]>([]);
-  const [lastSuccessAt, setLastSuccessAt] = useState<number | null>(null);
   const [nowMs, setNowMs] = useState(() => Date.now());
   const [clientSearchQuery, setClientSearchQuery] = useState('');
   const [debouncedSearchQuery, setDebouncedSearchQuery] = useState('');
@@ -688,6 +722,12 @@ export default function BookingsAdminPanel({ isActive, mode, onBackToDashboard }
   const [blockScopeBarberId, setBlockScopeBarberId] = useState<string>('all');
   const [selectedBarberStatsCount, setSelectedBarberStatsCount] = useState(0);
 
+  const canCancelBookingAsShop = useCallback(
+    (booking: Booking) =>
+      booking.status === 'CONFIRMED' && canShopAdminCancelByLeadTime(new Date(booking.startAt), nowMs),
+    [nowMs]
+  );
+
   const [blockSuccessMessage, setBlockSuccessMessage] = useState('');
   const [blockErrorMessage, setBlockErrorMessage] = useState('');
   const [showHolidayModal, setShowHolidayModal] = useState(false);
@@ -707,8 +747,6 @@ export default function BookingsAdminPanel({ isActive, mode, onBackToDashboard }
   const [timelineNotesMessage, setTimelineNotesMessage] = useState('');
   const [isMobileViewport, setIsMobileViewport] = useState(false);
 
-
-
   const inFlightRef = useRef(false);
     const timeBlocksInFlightRef = useRef(false);
   const pollingStoppedRef = useRef(false);
@@ -720,8 +758,7 @@ export default function BookingsAdminPanel({ isActive, mode, onBackToDashboard }
   const updatedRowsTimeoutRef = useRef<number | null>(null);
   const timelineScrollRef = useRef<HTMLDivElement | null>(null);
   const bookingShellRef = useRef<HTMLElement | null>(null);
-  const nextBlockRef = useRef<HTMLDivElement | null>(null);
-  const sectionHeaderRef = useRef<HTMLDivElement | null>(null);
+  const nextBlockMeasureCleanupRef = useRef<(() => void) | null>(null);
   const historyRecentBarbersScrollRef = useRef<HTMLDivElement | null>(null);
   const reportsRecentBarbersScrollRef = useRef<HTMLDivElement | null>(null);
   const searchInputRef = useRef<HTMLInputElement | null>(null);
@@ -731,7 +768,6 @@ export default function BookingsAdminPanel({ isActive, mode, onBackToDashboard }
   const timelineScrollRafRef = useRef<number | null>(null);
     const pendingTimelineScrollBookingIdRef = useRef<string | null>(null);
   const pendingListScrollBookingIdRef = useRef<string | null>(null);
-  const initialMountMsRef = useRef(Date.now());
   const captureTimelineScroll = useCallback(() => {
     const container = timelineScrollRef.current;
     if (!container) return;
@@ -788,10 +824,14 @@ export default function BookingsAdminPanel({ isActive, mode, onBackToDashboard }
  }, [activeView, captureTimelineScroll, mode, restoreTimelineScroll, selectedDate, timeBlocks]);
 
   const fetchBarbers = useCallback(async () => {
-    const response = await fetch('/api/admin/barbers', { credentials: 'include' });
-    if (response.ok) {
-      const data = (await response.json()) as { barbers?: Barber[] };
-      setBarbers(data.barbers ?? []);
+    try {
+      const response = await fetch('/api/admin/barbers', { credentials: 'include' });
+      if (response.ok) {
+        const data = (await response.json()) as { barbers?: Barber[] };
+        setBarbers(data.barbers ?? []);
+      }
+    } finally {
+      setBarbersInitialLoading(false);
     }
   }, []);
   const fetchReports = useCallback(async () => {
@@ -891,7 +931,6 @@ export default function BookingsAdminPanel({ isActive, mode, onBackToDashboard }
 
       previousSignaturesRef.current = nextSignatures;
             lastBookingsQueryKeyRef.current = requestQueryKey;
-      setLastSuccessAt(Date.now());
 
       if (shouldUpdateBookings && changedIds.length) {
         setUpdatedBookingIds(changedIds);
@@ -911,28 +950,6 @@ export default function BookingsAdminPanel({ isActive, mode, onBackToDashboard }
     }
   }, [activeView, bookings, captureTimelineScroll, historyBarberId, historyCursor, historyDateRange, isActive, loggedIn, mode, restoreTimelineScroll, selectedDate]);
 
-  const fetchOpsStripBookings = useCallback(async () => {
-    if (!loggedIn || !isActive || mode === 'dashboard' || pollingStoppedRef.current) return;
-    try {
-      const today = getTodayLondonDate();
-      const response = await fetch(
-        `/api/admin/bookings?date=${encodeURIComponent(today)}&mode=day`,
-        { credentials: 'include' }
-      );
-      if (response.status === 401) {
-        pollingStoppedRef.current = true;
-        setLoggedIn(false);
-        setError('Session expired. Please log in again.');
-        return;
-      }
-      if (!response.ok) return;
-      const data = (await response.json()) as { bookings?: Booking[] };
-      setOpsStripBookings(data.bookings ?? []);
-    } catch {
-      /* ignore strip errors; main fetch still drives LIVE state */
-    }
-  }, [isActive, loggedIn, mode]);
-
   const loadMoreHistory = useCallback(async () => {
     if (!historyHasMore || historyLoadingMore || mode !== 'history') return;
     setHistoryLoadingMore(true);
@@ -942,14 +959,6 @@ export default function BookingsAdminPanel({ isActive, mode, onBackToDashboard }
 
   useEffect(() => { void (async () => { try { const response = await fetch('/api/admin/session', { credentials: 'include' }); setLoggedIn(response.ok); } finally { setIsCheckingSession(false); } })(); }, []);
   useEffect(() => { if (!loggedIn || !isActive) return; void fetchBookings(); void fetchBarbers(); void fetchTimeBlocks(); void fetchReports(); const id = window.setInterval(() => { void fetchBookings(); void fetchTimeBlocks(); void fetchReports(); }, POLL_INTERVAL_MS); return () => window.clearInterval(id); }, [activeView, fetchBookings, fetchBarbers, fetchReports, fetchTimeBlocks, isActive, loggedIn, mode]);
-  useEffect(() => {
-    if (!loggedIn || !isActive || mode === 'dashboard') return undefined;
-    void fetchOpsStripBookings();
-    const id = window.setInterval(() => {
-      void fetchOpsStripBookings();
-    }, POLL_INTERVAL_MS);
-    return () => window.clearInterval(id);
-  }, [fetchOpsStripBookings, isActive, loggedIn, mode]);
   useEffect(() => { if (!loggedIn || !isActive) return; const id = window.setInterval(() => setNowMs(Date.now()), LAST_UPDATED_REFRESH_MS); return () => window.clearInterval(id); }, [isActive, loggedIn]);
   useEffect(() => {
     if (!loggedIn || !isActive || mode !== 'history') return;
@@ -1104,21 +1113,14 @@ export default function BookingsAdminPanel({ isActive, mode, onBackToDashboard }
 
 
   const normalizedClientSearchQuery = useMemo(() => normalizeSearchValue(debouncedSearchQuery), [debouncedSearchQuery]);
+  const shouldApplyBookingSearch = mode !== 'dashboard' || activeView === 'list';
+  const effectiveClientSearchQuery = shouldApplyBookingSearch ? normalizedClientSearchQuery : '';
 
 
 
   const todayLondonDate = useMemo(() => getTodayLondonDate(), [nowMs]);
-    const hasRecentConnectionAttempt = nowMs - initialMountMsRef.current > CONNECTING_GRACE_MS;
-  const isLive = lastSuccessAt ? nowMs - lastSuccessAt <= LIVE_THRESHOLD_MS : false;
-  const connectionStateLabel = !lastSuccessAt && !hasRecentConnectionAttempt ? 'CONNECTING…' : isLive ? 'LIVE' : 'OFFLINE';
-  const hasLivePulse = connectionStateLabel === 'LIVE';
-  const freshnessLabel = lastSuccessAt ? `Updated ${formatLastUpdated(lastSuccessAt, nowMs)}` : 'Waiting for successful refresh';
 
   const todayBookings = useMemo(() => bookings.filter((booking) => isTodayInLondon(booking.startAt, todayLondonDate)), [bookings, todayLondonDate]);
-  const upcomingBookings = useMemo(() => getUpcomingBookings(todayBookings), [todayBookings]);
-
-  const nextBooking = upcomingBookings[0] ?? null;
-  const opsStripNextBooking = useMemo(() => getUpcomingBookings(opsStripBookings)[0] ?? null, [opsStripBookings]);
   const filteredBookings = useMemo(() => {
     if (mode !== 'history') return bookings;
     return [...bookings]
@@ -1129,8 +1131,11 @@ export default function BookingsAdminPanel({ isActive, mode, onBackToDashboard }
   const dayFilteredBookings = useMemo(() => {
     if (mode !== 'dashboard') return filteredBookings;
     if (dayOpsFilter === 'all') return filteredBookings;
-    if (dayOpsFilter === 'pending') {
-      return filteredBookings.filter((b) => b.status === 'PENDING_CONFIRMATION');
+    if (dayOpsFilter === 'cancelled') {
+      return filteredBookings.filter((b) => isCancelledBookingStatus(b.status));
+    }
+    if (dayOpsFilter === 'rescheduled') {
+      return filteredBookings.filter((b) => isRescheduledDayOpsBooking(b));
     }
     return filteredBookings.filter((b) => isUpcomingDayStatBooking(b, nowMs));
   }, [filteredBookings, mode, dayOpsFilter, nowMs]);
@@ -1382,16 +1387,16 @@ export default function BookingsAdminPanel({ isActive, mode, onBackToDashboard }
 
 
   const visibleBookings = useMemo(() => {
-    if (!normalizedClientSearchQuery) return dayFilteredBookings;
+    if (!effectiveClientSearchQuery) return dayFilteredBookings;
     return dayFilteredBookings
-      .map((booking, index) => ({ booking, score: getBookingSearchScore(booking, normalizedClientSearchQuery), index }))
+      .map((booking, index) => ({ booking, score: getBookingSearchScore(booking, effectiveClientSearchQuery), index }))
       .filter((entry) => entry.score > 0)
       .sort((a, b) => b.score - a.score)
       .map((entry) => entry.booking);
-  }, [dayFilteredBookings, normalizedClientSearchQuery]);
+  }, [dayFilteredBookings, effectiveClientSearchQuery]);
 
   const opsFilteredViewActive =
-    Boolean(normalizedClientSearchQuery) || (mode === 'dashboard' && dayOpsFilter !== 'all');
+    Boolean(effectiveClientSearchQuery) || (mode === 'dashboard' && dayOpsFilter !== 'all');
 
   const opsFilteredViewSummary = useMemo(() => {
     if (!opsFilteredViewActive) return '';
@@ -1403,19 +1408,12 @@ export default function BookingsAdminPanel({ isActive, mode, onBackToDashboard }
   const opsActiveFilterLabels = useMemo(() => {
     if (!opsFilteredViewActive) return [] as string[];
     const parts: string[] = [];
-    if (mode === 'dashboard' && dayOpsFilter === 'pending') parts.push('Pending confirmation');
+    if (mode === 'dashboard' && dayOpsFilter === 'cancelled') parts.push('Cancelled');
+    if (mode === 'dashboard' && dayOpsFilter === 'rescheduled') parts.push('Rescheduled');
     if (mode === 'dashboard' && dayOpsFilter === 'upcoming') parts.push('Still to come');
-    if (normalizedClientSearchQuery) parts.push('Search');
+    if (effectiveClientSearchQuery) parts.push('Search');
     return parts;
-  }, [dayOpsFilter, mode, normalizedClientSearchQuery, opsFilteredViewActive]);
-
-  const clearOpsFilters = useCallback(() => {
-    applyDayOpsFilter('all');
-    setClientSearchQuery('');
-    setDebouncedSearchQuery('');
-    setActiveSearchResultIndex(-1);
-    searchInputRef.current?.focus();
-  }, [applyDayOpsFilter]);
+  }, [dayOpsFilter, mode, effectiveClientSearchQuery, opsFilteredViewActive]);
 
   const clearSearchField = useCallback(() => {
     setClientSearchQuery('');
@@ -1423,34 +1421,54 @@ export default function BookingsAdminPanel({ isActive, mode, onBackToDashboard }
     setActiveSearchResultIndex(-1);
     searchInputRef.current?.focus();
   }, []);
-    const searchResultsLabel = useMemo(() => {
+  const searchResultsLabel = useMemo(() => {
     if (isSearchDebouncing) return 'Searching...';
-    if (!normalizedClientSearchQuery) return '';
+    if (!effectiveClientSearchQuery) return '';
     if (visibleBookings.length === 0) return 'No matches';
     return `${visibleBookings.length} matches`;
-  }, [isSearchDebouncing, normalizedClientSearchQuery, visibleBookings.length]);
+  }, [effectiveClientSearchQuery, isSearchDebouncing, visibleBookings.length]);
 
   const highlightMatch = useCallback((value: string) => {
-    if (!normalizedClientSearchQuery) return value;
-    const pattern = new RegExp(`(${escapeRegExp(normalizedClientSearchQuery)})`, 'ig');
+    if (!effectiveClientSearchQuery) return value;
+    const pattern = new RegExp(`(${escapeRegExp(effectiveClientSearchQuery)})`, 'ig');
     const parts = value.split(pattern);
     return parts.map((part, index) => {
-      const isMatch = part.toLowerCase() === normalizedClientSearchQuery;
+      const isMatch = part.toLowerCase() === effectiveClientSearchQuery;
       if (!isMatch) return <React.Fragment key={`${part}-${index}`}>{part}</React.Fragment>;
       return <mark key={`${part}-${index}`} className="admin-search-highlight">{part}</mark>;
     });
-  }, [normalizedClientSearchQuery]);
+  }, [effectiveClientSearchQuery]);
   const searchDropdownBookings = useMemo(() => {
-    if (!normalizedClientSearchQuery || isSearchDebouncing) return [] as Booking[];
+    if (!effectiveClientSearchQuery || isSearchDebouncing) return [] as Booking[];
     return visibleBookings.slice(0, 8);
-  }, [isSearchDebouncing, normalizedClientSearchQuery, visibleBookings]);
+  }, [effectiveClientSearchQuery, isSearchDebouncing, visibleBookings]);
 
 
   const isAnyOverlayOpen = isAddBarberSheetOpen || openDrilldown !== null || showHolidayModal || selectedTimelineBooking !== null || selectedClientId !== null;
   useBodyScrollLock(isMobileViewport && isAnyOverlayOpen);
 
+  useEffect(() => {
+    if (!selectedTimelineBooking) return;
+    const onKeyDown = (event: KeyboardEvent) => {
+      if (event.key !== 'Escape') return;
+      const active = document.activeElement;
+      if (isKeyboardEditableTarget(event.target) || isKeyboardEditableTarget(active)) return;
+      event.preventDefault();
+      setSelectedTimelineBooking(null);
+    };
+    window.addEventListener('keydown', onKeyDown);
+    return () => window.removeEventListener('keydown', onKeyDown);
+  }, [selectedTimelineBooking]);
+
   const isTimelineView = mode === 'dashboard' && activeView === 'timeline';
   const selectedDateLabel = useMemo(() => formatTimelineDateLabel(selectedDate), [selectedDate]);
+  const timelineNextDayLabel = useMemo(
+    () => formatTimelineDateLabel(addOneLondonCalendarDay(selectedDate)),
+    [selectedDate],
+  );
+  const goToNextTimelineDay = useCallback(() => {
+    setSelectedDate((d) => addOneLondonCalendarDay(d));
+  }, []);
 
 
 
@@ -1746,7 +1764,16 @@ export default function BookingsAdminPanel({ isActive, mode, onBackToDashboard }
         setSelectedTimelineBooking((current) => (current ? { ...current, status: 'CANCELLED_BY_SHOP' } : current));
       }
     } else {
-      setCancelErrorMessage('Could not cancel booking right now.');
+      let message = 'Could not cancel booking right now.';
+      try {
+        const payload = (await response.json()) as { error?: string };
+        if (typeof payload?.error === 'string' && payload.error.trim()) {
+          message = payload.error.trim();
+        }
+      } catch {
+        /* ignore */
+      }
+      setCancelErrorMessage(message);
     }
     setCancelLoadingBookingId(null);
 }
@@ -2033,21 +2060,31 @@ export default function BookingsAdminPanel({ isActive, mode, onBackToDashboard }
     setIsAddBarberSheetOpen(true);
   }, []);
 
-  useEffect(() => {
-    const bookingShellNode = bookingShellRef.current;
-    const nextBlockNode = nextBlockRef.current;
-    if (!bookingShellNode || !nextBlockNode) return undefined;
+  /**
+   * Publish measured height of the in-flow dash-hero slot onto `.admin-main-content`
+   * so `.admin-mobile-header-spacer` clears fixed chrome. The mobile Next strip is registered
+   * globally via `AdminGlobalMobileNextStripHost`; this callback ref still handles desktop heroes
+   * and any in-document hero wrapper.
+   */
+  const bindNextBlockMeasureRef = useCallback((node: HTMLDivElement | null) => {
+    nextBlockMeasureCleanupRef.current?.();
+    nextBlockMeasureCleanupRef.current = null;
 
-    const mainContentNode = bookingShellNode.closest('.admin-main-content') as HTMLElement | null;
-    if (!mainContentNode) return undefined;
+    if (!node) {
+      return;
+    }
 
-    /** Avoid 1px oscillation on .admin-search-row--sticky top offset. */
-    const HEIGHT_PUBLISH_THRESHOLD_PX = 3;
+    const mainContentNode = node.closest('.admin-main-content') as HTMLElement | null;
+    if (!mainContentNode) {
+      return;
+    }
+
+    const HEIGHT_PUBLISH_THRESHOLD_PX = 2;
     let lastPublishedPx = -1;
-    let debounceId: ReturnType<typeof window.setTimeout> | null = null;
+    let rafId: number | null = null;
 
     const publishNextBlockHeight = () => {
-      const nextPx = Math.round(nextBlockNode.getBoundingClientRect().height);
+      const nextPx = Math.round(node.getBoundingClientRect().height);
       if (lastPublishedPx < 0) {
         mainContentNode.style.setProperty('--admin-next-block-h', `${nextPx}px`);
         lastPublishedPx = nextPx;
@@ -2059,98 +2096,65 @@ export default function BookingsAdminPanel({ isActive, mode, onBackToDashboard }
       }
     };
 
-    /** Debounce: avoids thrashing sticky search-row `top` during scroll-induced layout noise. */
     const schedulePublish = () => {
-      if (debounceId !== null) window.clearTimeout(debounceId);
-      debounceId = window.setTimeout(() => {
-        debounceId = null;
+      if (rafId !== null) return;
+      rafId = window.requestAnimationFrame(() => {
+        rafId = null;
         publishNextBlockHeight();
-      }, 120);
+      });
     };
 
     publishNextBlockHeight();
+    if (node.closest('.admin-mobile-header-extension')) {
+      mainContentNode.style.setProperty(
+        '--admin-mobile-sheet-strip-chrome',
+        'calc(0.42rem + 0.2rem + 0.55rem)',
+      );
+    }
     const resizeObserver = new ResizeObserver(schedulePublish);
-    resizeObserver.observe(nextBlockNode);
+    resizeObserver.observe(node);
     window.addEventListener('resize', schedulePublish);
+    const visualViewport = window.visualViewport;
+    visualViewport?.addEventListener('resize', schedulePublish);
 
-    return () => {
-      if (debounceId !== null) window.clearTimeout(debounceId);
+    nextBlockMeasureCleanupRef.current = () => {
+      if (rafId !== null) window.cancelAnimationFrame(rafId);
       resizeObserver.disconnect();
       window.removeEventListener('resize', schedulePublish);
+      visualViewport?.removeEventListener('resize', schedulePublish);
       mainContentNode.style.removeProperty('--admin-next-block-h');
+      mainContentNode.style.removeProperty('--admin-mobile-sheet-strip-chrome');
     };
-  }, [isMobileViewport, mode]);
+  }, []);
 
-  useEffect(() => {
-    const bookingShellNode = bookingShellRef.current;
-    const sectionHeaderNode = sectionHeaderRef.current;
-    if (!bookingShellNode || !sectionHeaderNode) return undefined;
-
-    const mainContentNode = bookingShellNode.closest('.admin-main-content') as HTMLElement | null;
-    if (!mainContentNode) return undefined;
-
-    const HEIGHT_PUBLISH_THRESHOLD_PX = 3;
-    let lastPublishedPx = -1;
-    let debounceId: ReturnType<typeof window.setTimeout> | null = null;
-
-    const publishSectionHeaderHeight = () => {
-      const h = Math.round(sectionHeaderNode.getBoundingClientRect().height);
-      if (lastPublishedPx < 0) {
-        mainContentNode.style.setProperty('--admin-bookings-section-header-h', `${h}px`);
-        lastPublishedPx = h;
-        return;
-      }
-      if (Math.abs(h - lastPublishedPx) >= HEIGHT_PUBLISH_THRESHOLD_PX) {
-        mainContentNode.style.setProperty('--admin-bookings-section-header-h', `${h}px`);
-        lastPublishedPx = h;
-      }
-    };
-
-    const schedulePublish = () => {
-      if (debounceId !== null) window.clearTimeout(debounceId);
-      debounceId = window.setTimeout(() => {
-        debounceId = null;
-        publishSectionHeaderHeight();
-      }, 120);
-    };
-
-    publishSectionHeaderHeight();
-    const resizeObserver = new ResizeObserver(schedulePublish);
-    resizeObserver.observe(sectionHeaderNode);
-    window.addEventListener('resize', schedulePublish);
-
-    return () => {
-      if (debounceId !== null) window.clearTimeout(debounceId);
-      resizeObserver.disconnect();
-      window.removeEventListener('resize', schedulePublish);
-      mainContentNode.style.removeProperty('--admin-bookings-section-header-h');
-    };
-  }, [isMobileViewport, mode]);
-
-  if (!isActive) return null;
-  if (isCheckingSession) return <section className="surface booking-shell"><h2>Admin</h2><p className="muted">Checking session...</p></section>;
-  if (!loggedIn) return <section className="surface booking-shell"><h2>ADMIN</h2><p className="muted">Unauthorized. Verify your admin secret and reload this page.</p>{error && <p>{error}</p>}</section>;
+  useEffect(
+    () => () => {
+      nextBlockMeasureCleanupRef.current?.();
+      nextBlockMeasureCleanupRef.current = null;
+    },
+    [],
+  );
 
   const bookingsDashHeroEl =
     mode === 'dashboard' ? (
       <AdminBookingsOpsDashHero
-        nextBooking={nextBooking}
+        nextBooking={liveNextBooking}
         connectionStateLabel={connectionStateLabel}
         hasLivePulse={hasLivePulse}
         freshnessLabel={freshnessLabel}
-        formatStartTime={formatStartTime}
-        formatRelativeTime={formatRelativeTime}
+        formatStartTime={liveFormatStartTime}
+        formatRelativeTime={liveFormatRelativeTime}
       />
     ) : null;
 
   const nonDashboardOpsDashHeroEl = (
     <AdminBookingsOpsDashHero
-      nextBooking={opsStripNextBooking}
+      nextBooking={liveNextBooking}
       connectionStateLabel={connectionStateLabel}
       hasLivePulse={hasLivePulse}
       freshnessLabel={freshnessLabel}
-      formatStartTime={formatStartTime}
-      formatRelativeTime={formatRelativeTime}
+      formatStartTime={liveFormatStartTime}
+      formatRelativeTime={liveFormatRelativeTime}
     />
   );
 
@@ -2163,21 +2167,21 @@ export default function BookingsAdminPanel({ isActive, mode, onBackToDashboard }
     .join(' ');
 
   const renderOpsDashHeroSlot = (child: React.ReactNode) => (
-    <div ref={nextBlockRef} className={dashHeroSlotClassName}>
+    <div ref={bindNextBlockMeasureRef} className={dashHeroSlotClassName}>
       {child}
     </div>
   );
+
+  if (!isActive) return null;
+  if (isCheckingSession) return <section className="surface booking-shell"><h2>Admin</h2><p className="muted">Checking session...</p></section>;
+  if (!loggedIn) return <section className="surface booking-shell"><h2>ADMIN</h2><p className="muted">Unauthorized. Verify your admin secret and reload this page.</p>{error && <p>{error}</p>}</section>;
 
   return (
     <section
       ref={bookingShellRef}
       className={`surface booking-shell${mode === 'reports' ? ' booking-shell--reports' : ''}${mode === 'blocks' ? ' admin-services-shell' : ''}`}
     >
-      {isMobileViewport
-        ? renderOpsDashHeroSlot(mode === 'dashboard' ? bookingsDashHeroEl : nonDashboardOpsDashHeroEl)
-        : null}
       <AdminSectionHeader
-        ref={sectionHeaderRef}
         title={BOOKINGS_SECTION_HEADER[mode].title}
         description={BOOKINGS_SECTION_HEADER[mode].description}
         metaBadge={
@@ -2200,14 +2204,53 @@ export default function BookingsAdminPanel({ isActive, mode, onBackToDashboard }
         <div className="admin-bookings-ops-dash-cluster">
           {!isMobileViewport && bookingsDashHeroEl ? renderOpsDashHeroSlot(bookingsDashHeroEl) : null}
 
-          <section className="admin-bookings-ops admin-bookings-ops--dashboard" aria-labelledby="admin-bookings-ops-heading">
+          <section className="admin-bookings-ops admin-bookings-ops--dashboard" aria-label="Operations dashboard">
+            <div className="admin-bookings-ops-dash-controls-stack" role="region" aria-label="Dashboard view controls">
+              <div className="admin-bookings-ops-dash-control-deck">
+                <div className="admin-bookings-ops-toolbar">
+                  <div className="admin-bookings-ops-controls">
+                    <div className="admin-dashboard-controls admin-dashboard-controls--ops-dash">
+                      <div className="admin-view-toggle" role="tablist" aria-label="Booking view">
+                        {(['timeline', 'list'] as const).map((view) => {
+                          const isActiveTab = activeView === view;
+                          const label = view === 'timeline' ? 'Timeline' : 'List';
+                          return (
+                            <button
+                              key={view}
+                              type="button"
+                              role="tab"
+                              aria-selected={isActiveTab}
+                              className={isActiveTab ? 'active' : ''}
+                              onClick={() => setActiveView(view)}
+                            >
+                              {label}
+                            </button>
+                          );
+                        })}
+                      </div>
+                      <label className="admin-date-picker-label" aria-label={`Select date, currently ${selectedDateLabel}`}>
+                        <span className="admin-date-picker-text">{selectedDateLabel}</span>
+                        <input
+                          type="date"
+                          className="admin-filter-tab-calendar-input"
+                          value={selectedDate}
+                          onChange={(event) => setSelectedDate(event.target.value)}
+                          aria-label="Select date"
+                        />
+                        <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+                          <path
+                            d="M7 2a1 1 0 0 1 1 1v1h8V3a1 1 0 1 1 2 0v1h1a3 3 0 0 1 3 3v11a4 4 0 0 1-4 4H6a4 4 0 0 1-4-4V7a3 3 0 0 1 3-3h1V3a1 1 0 0 1 1-1Zm13 8H4v8a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-8ZM5 6a1 1 0 0 0-1 1v1h16V7a1 1 0 0 0-1-1H5Z"
+                            fill="currentColor"
+                          />
+                        </svg>
+                      </label>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
             <div className="admin-bookings-ops-operations-stack">
-              <header className="admin-bookings-ops-operations-head">
-                <p className="admin-bookings-ops-kicker">Today</p>
-                <h2 id="admin-bookings-ops-heading" className="admin-bookings-ops-title admin-bookings-ops-title--compact">
-                  Operations
-                </h2>
-              </header>
               {!bookingsInitialLoading ? (
                 <DaySummaryBar
                   bookings={bookings}
@@ -2221,6 +2264,23 @@ export default function BookingsAdminPanel({ isActive, mode, onBackToDashboard }
               ) : null}
             </div>
 
+            {opsFilteredViewActive ? (
+              <div className="admin-bookings-ops-filter-bar" aria-live="polite">
+                <div className="admin-bookings-ops-filter-bar-main">
+                  <span className="admin-bookings-ops-filter-summary">{opsFilteredViewSummary}</span>
+                  {opsActiveFilterLabels.length > 0 ? (
+                    <span className="admin-bookings-ops-filter-chips">
+                      {opsActiveFilterLabels.map((label) => (
+                        <span key={label} className="admin-bookings-ops-filter-chip">
+                          {label}
+                        </span>
+                      ))}
+                    </span>
+                  ) : null}
+                </div>
+              </div>
+            ) : null}
+
             {staffRosterOpen ? (
               <div className="admin-bookings-ops-staff-roster">
                 {selectedDate !== todayLondonDate ? (
@@ -2229,7 +2289,11 @@ export default function BookingsAdminPanel({ isActive, mode, onBackToDashboard }
                   </p>
                 ) : null}
                 {onFloorBarbersNow.length === 0 ? (
-                  <p className="muted admin-bookings-ops-staff-roster-empty">No barbers on shift right now.</p>
+                  barbersInitialLoading ? (
+                    <BarberRosterOverviewGridSkeleton ariaLabel="Loading barbers on shift" />
+                  ) : (
+                    <p className="muted admin-bookings-ops-staff-roster-empty">No barbers on shift right now.</p>
+                  )
                 ) : (
                   <div className="admin-barber-list-wrap admin-barbers-overview-list-wrap">
                     <ul className="admin-barber-grid admin-barbers-overview-grid" aria-label="Barbers on shift now">
@@ -2264,88 +2328,6 @@ export default function BookingsAdminPanel({ isActive, mode, onBackToDashboard }
                     </ul>
                   </div>
                 )}
-              </div>
-            ) : null}
-
-            <div className="admin-bookings-ops-dash-control-deck">
-              <div className="admin-bookings-ops-toolbar">
-                <div className="admin-bookings-ops-controls">
-                  <div className="admin-dashboard-controls admin-dashboard-controls--ops-dash">
-                    <div className="admin-view-toggle" role="tablist" aria-label="Booking view">
-                      {(['timeline', 'list'] as const).map((view) => {
-                        const isActiveTab = activeView === view;
-                        const label = view === 'timeline' ? 'Timeline' : 'List';
-                        return (
-                          <button
-                            key={view}
-                            type="button"
-                            role="tab"
-                            aria-selected={isActiveTab}
-                            className={isActiveTab ? 'active' : ''}
-                            onClick={() => setActiveView(view)}
-                          >
-                            {label}
-                          </button>
-                        );
-                      })}
-                    </div>
-                    <label className="admin-date-picker-label" aria-label={`Select date, currently ${selectedDateLabel}`}>
-                      <span className="admin-date-picker-text">{selectedDateLabel}</span>
-                      <input
-                        type="date"
-                        className="admin-filter-tab-calendar-input"
-                        value={selectedDate}
-                        onChange={(event) => setSelectedDate(event.target.value)}
-                        aria-label="Select date"
-                      />
-                      <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">
-                        <path
-                          d="M7 2a1 1 0 0 1 1 1v1h8V3a1 1 0 1 1 2 0v1h1a3 3 0 0 1 3 3v11a4 4 0 0 1-4 4H6a4 4 0 0 1-4-4V7a3 3 0 0 1 3-3h1V3a1 1 0 0 1 1-1Zm13 8H4v8a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-8ZM5 6a1 1 0 0 0-1 1v1h16V7a1 1 0 0 0-1-1H5Z"
-                          fill="currentColor"
-                        />
-                      </svg>
-                    </label>
-                  </div>
-                </div>
-              </div>
-              <div className="admin-bookings-ops-search-row">
-                <AdminBookingsOpsSearch
-                  variant="standard"
-                  searchInputRef={searchInputRef}
-                  searchResultsRef={searchResultsRef}
-                  clientSearchQuery={clientSearchQuery}
-                  onClientSearchQueryChange={setClientSearchQuery}
-                  searchDropdownBookings={searchDropdownBookings}
-                  searchResultsLabel={searchResultsLabel}
-                  activeSearchResultIndex={activeSearchResultIndex}
-                  onActiveSearchResultIndexChange={setActiveSearchResultIndex}
-                  highlightMatch={highlightMatch}
-                  formatStartTime={formatStartTime}
-                  onSelectBooking={jumpToTimelineBooking}
-                  onClearSearch={clearSearchField}
-                  showKbdHint={showSearchKbdHint}
-                  searchShortcutHint={searchShortcutHint}
-                />
-              </div>
-            </div>
-
-            {opsFilteredViewActive ? (
-              <div className="admin-bookings-ops-filter-bar" aria-live="polite">
-                <div className="admin-bookings-ops-filter-bar-main">
-                  <span className="admin-bookings-ops-filter-summary">{opsFilteredViewSummary}</span>
-                  {opsActiveFilterLabels.length > 0 ? (
-                    <span className="admin-bookings-ops-filter-chips">
-                      {opsActiveFilterLabels.map((label) => (
-                        <span key={label} className="admin-bookings-ops-filter-chip">
-                          {label}
-                        </span>
-                      ))}
-                    </span>
-                  ) : null}
-                </div>
-                <button type="button" className="btn btn--ghost btn--sm admin-bookings-ops-filter-clear" onClick={clearOpsFilters}>
-                  Clear filters
-                </button>
               </div>
             ) : null}
           </section>
@@ -2396,6 +2378,7 @@ export default function BookingsAdminPanel({ isActive, mode, onBackToDashboard }
             ) : (
               <BarbersOverview
                 barbers={visibleBarbersForManagement}
+                barbersLoading={barbersInitialLoading}
                                 services={addBarberServiceOptions}
                 barbersFilter={barbersFilter}
                 barberNameDraft={barberNameDraft}
@@ -2540,9 +2523,6 @@ export default function BookingsAdminPanel({ isActive, mode, onBackToDashboard }
                   </span>
                 ) : null}
               </div>
-              <button type="button" className="btn btn--ghost btn--sm admin-bookings-ops-filter-clear" onClick={clearOpsFilters}>
-                Clear filters
-              </button>
             </div>
           ) : null}
           <div className="admin-bookings-ops-toolbar admin-bookings-ops-toolbar--compact">
@@ -2575,27 +2555,51 @@ export default function BookingsAdminPanel({ isActive, mode, onBackToDashboard }
             bookings={visibleBookings}
             timeBlocks={timeBlocks}
             selectedDate={selectedDate}
-            isSearchActive={Boolean(normalizedClientSearchQuery) || (mode === 'dashboard' && dayOpsFilter !== 'all')}
+            isLoading={bookingsInitialLoading || barbersInitialLoading}
+            isSearchActive={Boolean(effectiveClientSearchQuery) || (mode === 'dashboard' && dayOpsFilter !== 'all')}
             scrollContainerRef={timelineScrollRef}
             onBookingClick={openTimelineBooking}
+            onGoToNextDay={goToNextTimelineDay}
+            nextDayShortLabel={timelineNextDayLabel}
           />
         </AdminErrorBoundary>
       ) : mode === 'dashboard' && activeView === 'list' ? (
-        <AdminBookingsScheduleList
-          bookings={visibleBookings}
-          nowMs={nowMs}
-          selectedDate={selectedDate}
-          todayLondonDate={todayLondonDate}
-          selectedDateLabel={selectedDateLabel}
-          bookingsInitialLoading={bookingsInitialLoading}
-          updatedBookingIds={updatedBookingIds}
-          highlightMatch={highlightMatch}
-          formatStartTime={formatStartTime}
-          onOpenClient={openClientProfile}
-          onCancelBooking={cancelBookingByShop}
-          cancelLoadingBookingId={cancelLoadingBookingId}
-          canCancelBooking={canBeCancelledByShop}
-        />
+        <>
+          <div className="admin-bookings-list-search">
+            <AdminBookingsOpsSearch
+              variant="standard"
+              searchInputRef={searchInputRef}
+              searchResultsRef={searchResultsRef}
+              clientSearchQuery={clientSearchQuery}
+              onClientSearchQueryChange={setClientSearchQuery}
+              searchDropdownBookings={searchDropdownBookings}
+              searchResultsLabel={searchResultsLabel}
+              activeSearchResultIndex={activeSearchResultIndex}
+              onActiveSearchResultIndexChange={setActiveSearchResultIndex}
+              highlightMatch={highlightMatch}
+              formatStartTime={formatStartTime}
+              onSelectBooking={jumpToTimelineBooking}
+              onClearSearch={clearSearchField}
+              showKbdHint={showSearchKbdHint}
+              searchShortcutHint={searchShortcutHint}
+            />
+          </div>
+          <AdminBookingsScheduleList
+            bookings={visibleBookings}
+            nowMs={nowMs}
+            selectedDate={selectedDate}
+            todayLondonDate={todayLondonDate}
+            selectedDateLabel={selectedDateLabel}
+            bookingsInitialLoading={bookingsInitialLoading}
+            updatedBookingIds={updatedBookingIds}
+            highlightMatch={highlightMatch}
+            formatStartTime={formatStartTime}
+            onOpenClient={openClientProfile}
+            onCancelBooking={cancelBookingByShop}
+            cancelLoadingBookingId={cancelLoadingBookingId}
+            canCancelBooking={canCancelBookingAsShop}
+          />
+        </>
       ) : mode === 'history' ? (
         <AdminBookingsScheduleList
           variant="history"
@@ -2784,12 +2788,12 @@ export default function BookingsAdminPanel({ isActive, mode, onBackToDashboard }
             emptyLabel="No bookings in this range."
             rows={reportsLeaderboardRows}
           />
-          {openDrilldown ? <div className="admin-client-modal-backdrop" role="presentation" onClick={() => setOpenDrilldown(null)}><div className="admin-reports-drawer" onClick={(event) => event.stopPropagation()} role="dialog" aria-modal="true"><div className="admin-client-modal-head"><h3>Drill-down</h3><button type="button" className="btn btn--ghost" onClick={() => setOpenDrilldown(null)}>Close</button></div><input value={drilldownSearch} onChange={(event) => setDrilldownSearch(event.target.value)} placeholder="Search client/email/service" /><div className="admin-reports-drawer-list">{filteredDrilldownRows.map((row) => <article key={row.id} className="admin-kpi-card"><p>{formatInTimeZone(new Date(row.startAt), ADMIN_TIMEZONE, 'dd MMM HH:mm')} · {row.barberName}</p><p>{row.serviceName} · {row.status}</p><p>{row.clientName ?? 'Unknown'} · {row.clientEmail ?? 'No email'}</p>{row.computedValueGbp != null ? <p>{formatCurrencyGbp(row.computedValueGbp)}</p> : null}</article>)}</div></div></div> : null}
+          {openDrilldown ? <div className="admin-client-modal-backdrop admin-client-modal-backdrop--centered" role="presentation" onClick={() => setOpenDrilldown(null)}><div className="admin-reports-drawer" onClick={(event) => event.stopPropagation()} role="dialog" aria-modal="true"><div className="admin-client-modal-head"><h3>Drill-down</h3><button type="button" className="btn btn--ghost" onClick={() => setOpenDrilldown(null)}>Close</button></div><input value={drilldownSearch} onChange={(event) => setDrilldownSearch(event.target.value)} placeholder="Search client/email/service" /><div className="admin-reports-drawer-list">{filteredDrilldownRows.map((row) => <article key={row.id} className="admin-kpi-card"><p>{formatInTimeZone(new Date(row.startAt), ADMIN_TIMEZONE, 'dd MMM HH:mm')} · {row.barberName}</p><p>{row.serviceName} · {row.status}</p><p>{row.clientName ?? 'Unknown'} · {row.clientEmail ?? 'No email'}</p>{row.computedValueGbp != null ? <p>{formatCurrencyGbp(row.computedValueGbp)}</p> : null}</article>)}</div></div></div> : null}
         </section>
       )}
 
       {showHolidayModal && (
-        <div className="admin-client-modal-backdrop" role="presentation" onClick={() => setShowHolidayModal(false)}>
+        <div className="admin-client-modal-backdrop admin-client-modal-backdrop--centered" role="presentation" onClick={() => setShowHolidayModal(false)}>
           <form className="admin-client-modal" onSubmit={(event) => void submitHoliday(event)} onClick={(event) => event.stopPropagation()}>
             <div className="admin-client-modal-head"><h3>Holiday block</h3><button type="button" className="btn btn--ghost" onClick={() => setShowHolidayModal(false)}>Close</button></div>
             <label htmlFor="holiday-start">Start</label>
@@ -2803,7 +2807,11 @@ export default function BookingsAdminPanel({ isActive, mode, onBackToDashboard }
       )}
 
       {selectedTimelineBooking && (
-        <div className="admin-client-modal-backdrop" role="presentation" onClick={() => setSelectedTimelineBooking(null)}>
+        <div
+          className="admin-client-modal-backdrop admin-client-modal-backdrop--sheet"
+          role="presentation"
+          onClick={() => setSelectedTimelineBooking(null)}
+        >
           <div
             className="admin-client-modal admin-booking-quick-actions-modal"
             role="dialog"
@@ -2811,92 +2819,145 @@ export default function BookingsAdminPanel({ isActive, mode, onBackToDashboard }
             aria-label="Booking quick actions"
             onClick={(event) => event.stopPropagation()}
           >
-            <div className="admin-client-modal-head admin-booking-quick-actions-head">
+            <header className="admin-client-modal-head admin-booking-quick-actions-head">
               <div className="admin-booking-quick-actions-head-copy">
                 <p className="admin-booking-quick-actions-eyebrow">Appointment</p>
-                <h3>Booking quick actions</h3>
-                <p className="admin-booking-quick-actions-subtitle">Review the appointment details, manage booking actions, and update internal notes.</p>
+                <h2 className="admin-booking-quick-actions-title">Quick actions</h2>
+                <p className="admin-booking-quick-actions-kicker">
+                  {new Date(selectedTimelineBooking.startAt).toLocaleString('en-GB', {
+                    timeZone: ADMIN_TIMEZONE,
+                    weekday: 'short',
+                    day: 'numeric',
+                    month: 'short',
+                    hour: '2-digit',
+                    minute: '2-digit',
+                  })}{' '}
+                  · {selectedTimelineBooking.service?.name || 'Service'} · {selectedTimelineBooking.status}
+                </p>
+                <p className="admin-booking-quick-actions-subtitle admin-booking-quick-actions-subtitle--collapse">
+                  Review details, run admin actions, and update internal notes.
+                </p>
               </div>
+            </header>
 
-              <button
-                type="button"
-                className="btn btn--ghost admin-client-modal-close"
-                onClick={() => setSelectedTimelineBooking(null)}
-                aria-label="Close booking quick actions"
-              >
-                <X width={16} height={16} aria-hidden="true" />
-              </button>
-            </div>
-            <section className="admin-booking-quick-section admin-booking-quick-section--summary" aria-labelledby="booking-summary-heading">
-              <div className="admin-booking-quick-section-head">
-                <h3 id="booking-summary-heading">Booking summary</h3>
-                <p className="admin-booking-quick-section-copy">A clear overview of the client, service, and appointment timing.</p>
-
-              </div>
-              <div className="admin-booking-summary-card">
-                <div className="admin-booking-summary-identity">
-                  <p className="admin-booking-summary-name">{selectedTimelineBooking.fullName}</p>
-                  <p className="admin-booking-summary-email">{selectedTimelineBooking.email}</p>
+            <div className="admin-booking-quick-actions-body">
+              <section className="admin-booking-quick-section admin-booking-quick-section--summary" aria-labelledby="booking-summary-heading">
+                <div className="admin-booking-quick-section-summary-top">
+                  <div className="admin-booking-quick-section-head">
+                    <h3 id="booking-summary-heading">Summary</h3>
+                    <p className="admin-booking-quick-section-copy admin-booking-quick-section-copy--collapse">
+                      Client, service, and timing at a glance.
+                    </p>
+                  </div>
+                  <button
+                    type="button"
+                    className="admin-booking-quick-actions-dismiss"
+                    onClick={() => setSelectedTimelineBooking(null)}
+                    aria-label="Close booking quick actions"
+                  >
+                    <X width={18} height={18} aria-hidden="true" />
+                  </button>
                 </div>
-                <dl className="admin-booking-summary-grid">
-                  <div className="admin-booking-summary-item">
-                    <dt>Service</dt>
-                    <dd>{selectedTimelineBooking.service?.name || '—'}</dd>
+                <div className="admin-booking-summary-card">
+                  <div className="admin-booking-summary-identity">
+                    <p className="admin-booking-summary-name">{selectedTimelineBooking.fullName}</p>
+                    <p className="admin-booking-summary-email">{selectedTimelineBooking.email}</p>
                   </div>
-                  <div className="admin-booking-summary-item">
-                    <dt>Barber</dt>
-                    <dd>{selectedTimelineBooking.barber?.name || '—'}</dd>
-                  </div>
-                  <div className="admin-booking-summary-item admin-booking-summary-item--wide">
-                    <dt>Date &amp; time</dt>
-                    <dd>{new Date(selectedTimelineBooking.startAt).toLocaleString('en-GB', { timeZone: ADMIN_TIMEZONE })} → {new Date(selectedTimelineBooking.endAt).toLocaleTimeString('en-GB', { timeZone: ADMIN_TIMEZONE, hour: '2-digit', minute: '2-digit' })}</dd>
-                  </div>
-                </dl>
-              </div>
-            </section>
-            <section className="admin-booking-quick-section admin-booking-quick-section--actions" aria-labelledby="booking-actions-heading">
-              <div className="admin-booking-quick-section-head">
-                <h3 id="booking-actions-heading">Booking actions</h3>
-                <p className="admin-booking-quick-section-copy">Use admin controls to manage this appointment without changing the booking summary.</p>
-              </div>
-              <div className="admin-quick-actions">
-                <article className="admin-booking-action-card admin-booking-action-card--danger">
-                  <div className="admin-booking-action-card__head">
-                    <div>
-                      <p className="admin-booking-action-card__title">Cancel booking</p>
-                      <p className="admin-booking-action-card__description">Cancel this appointment from the admin side.</p>
+                  <dl className="admin-booking-summary-grid">
+                    <div className="admin-booking-summary-item">
+                      <dt>Service</dt>
+                      <dd>{selectedTimelineBooking.service?.name || '—'}</dd>
                     </div>
-                    <span className={`badge ${canBeCancelledByShop(selectedTimelineBooking) ? 'badge--confirmed' : 'badge--neutral'}`}>{canBeCancelledByShop(selectedTimelineBooking) ? 'Available' : 'Unavailable'}</span>
+                    <div className="admin-booking-summary-item">
+                      <dt>Barber</dt>
+                      <dd>{selectedTimelineBooking.barber?.name || '—'}</dd>
+                    </div>
+                    <div className="admin-booking-summary-item admin-booking-summary-item--wide">
+                      <dt>Date &amp; time</dt>
+                      <dd>
+                        {new Date(selectedTimelineBooking.startAt).toLocaleString('en-GB', { timeZone: ADMIN_TIMEZONE })} →{' '}
+                        {new Date(selectedTimelineBooking.endAt).toLocaleTimeString('en-GB', {
+                          timeZone: ADMIN_TIMEZONE,
+                          hour: '2-digit',
+                          minute: '2-digit',
+                        })}
+                      </dd>
+                    </div>
+                  </dl>
+                </div>
+              </section>
+
+              <section className="admin-booking-quick-section admin-booking-quick-section--actions" aria-labelledby="booking-actions-heading">
+                <div className="admin-booking-quick-section-head">
+                  <h3 id="booking-actions-heading">Actions</h3>
+                  <p className="admin-booking-quick-section-copy admin-booking-quick-section-copy--collapse">
+                    Administrative controls for this booking.
+                  </p>
+                </div>
+                <div className="admin-booking-quick-actions-rows" role="list">
+                  <div className="admin-booking-quick-action-row admin-booking-quick-action-row--danger" role="listitem">
+                    <div className="admin-booking-quick-action-row__icon" aria-hidden="true">
+                      <Ban width={18} height={18} />
+                    </div>
+                    <div className="admin-booking-quick-action-row__copy">
+                      <p className="admin-booking-quick-action-row__title">Cancel booking</p>
+                      <p className="admin-booking-quick-action-row__description">
+                        {selectedTimelineBooking.status === 'CONFIRMED' &&
+                        !canShopAdminCancelByLeadTime(new Date(selectedTimelineBooking.startAt), nowMs)
+                          ? 'Cancellations are only possible more than 30 minutes before the start time.'
+                          : 'Remove this appointment from the schedule.'}
+                      </p>
+                    </div>
+                    <div className="admin-booking-quick-action-row__meta">
+                      <span className={`badge ${canCancelBookingAsShop(selectedTimelineBooking) ? 'badge--confirmed' : 'badge--neutral'}`}>
+                        {canCancelBookingAsShop(selectedTimelineBooking) ? 'Available' : 'Unavailable'}
+                      </span>
+                    </div>
+                    <div className="admin-booking-quick-action-row__cta">
+                      <button
+                        type="button"
+                        className="btn btn--secondary"
+                        onClick={() => void cancelBookingByShop(selectedTimelineBooking)}
+                        disabled={!canCancelBookingAsShop(selectedTimelineBooking) || cancelLoadingBookingId === selectedTimelineBooking.id}
+                      >
+                        {cancelLoadingBookingId === selectedTimelineBooking.id ? 'Cancelling...' : 'Cancel'}
+                      </button>
+                    </div>
                   </div>
-                  <div className="admin-booking-action-card__footer">
-                    <button type="button" className="btn btn--secondary admin-booking-action-card__button" onClick={() => void cancelBookingByShop(selectedTimelineBooking)} disabled={!canBeCancelledByShop(selectedTimelineBooking) || cancelLoadingBookingId === selectedTimelineBooking.id}>
-                      {cancelLoadingBookingId === selectedTimelineBooking.id ? 'Cancelling...' : 'Cancel booking'}
+                </div>
+              </section>
+
+              <section className="admin-booking-quick-section" aria-labelledby="booking-notes-heading">
+                <div className="admin-booking-quick-section-head">
+                  <h3 id="booking-notes-heading">Internal notes</h3>
+                  <p className="admin-booking-quick-section-copy admin-booking-quick-section-copy--collapse">
+                    Visible only to your team; not shown to clients.
+                  </p>
+                </div>
+                <div className="admin-booking-notes-card">
+                  <textarea
+                    id="booking-notes"
+                    rows={4}
+                    value={timelineNotesDraft}
+                    onChange={(event) => setTimelineNotesDraft(event.target.value)}
+                    aria-labelledby="booking-notes-heading"
+                  />
+                  {timelineNotesMessage ? (
+                    <div className="admin-booking-notes-status">
+                      <p className={timelineNotesMessage === 'Notes saved.' ? 'admin-inline-success' : 'admin-inline-error'}>{timelineNotesMessage}</p>
+                      <button type="button" className="btn btn--ghost admin-booking-notes-status-clear" onClick={() => setTimelineNotesMessage('')}>
+                        Dismiss message
+                      </button>
+                    </div>
+                  ) : null}
+                  <div className="admin-booking-notes-actions">
+                    <button type="button" className="btn btn--primary" onClick={() => void saveTimelineBookingNotes()} disabled={timelineNotesSaving}>
+                      {timelineNotesSaving ? 'Saving...' : 'Save notes'}
                     </button>
                   </div>
-                </article>
-
-              </div>
-            </section>
-            <section className="admin-booking-quick-section admin-booking-quick-section--notes" aria-labelledby="booking-notes-heading">
-              <div className="admin-booking-quick-section-head">
-                <h3 id="booking-notes-heading">Internal notes</h3>
-                <p className="admin-booking-quick-section-copy">Use notes for internal booking details and follow-up context.</p>
-              </div>
-              <div className="admin-booking-notes-card">
-                <label htmlFor="booking-notes">Notes</label>
-                <textarea id="booking-notes" rows={5} value={timelineNotesDraft} onChange={(event) => setTimelineNotesDraft(event.target.value)} />
-                {timelineNotesMessage ? (
-                  <div className="admin-booking-notes-status">
-                    <p className={timelineNotesMessage === 'Notes saved.' ? 'admin-inline-success' : 'admin-inline-error'}>{timelineNotesMessage}</p>
-                    <button type="button" className="btn btn--ghost admin-booking-notes-status-clear" onClick={() => setTimelineNotesMessage('')}>Dismiss message</button>
-                  </div>
-                ) : null}
-                <div className="admin-booking-notes-actions">
-                  <button type="button" className="btn btn--primary" onClick={() => void saveTimelineBookingNotes()} disabled={timelineNotesSaving}>{timelineNotesSaving ? 'Saving...' : 'Save notes'}</button>
                 </div>
-              </div>
-            </section>
-
+              </section>
+            </div>
           </div>
         </div>
       )}
@@ -2904,15 +2965,78 @@ export default function BookingsAdminPanel({ isActive, mode, onBackToDashboard }
 
 
       {selectedClientId && (
-        <div className="admin-client-modal-backdrop" role="presentation" onClick={() => setSelectedClientId(null)}>
-          <div className="admin-client-modal" role="dialog" aria-modal="true" aria-label="Client profile" onClick={(event) => event.stopPropagation()}>
-            <div className="admin-client-modal-head"><h3>Client profile</h3><button type="button" className="btn btn--ghost admin-client-modal-close" onClick={() => setSelectedClientId(null)} aria-label="Close client profile"><X width={16} height={16} aria-hidden="true" /></button></div>
+        <div className="admin-client-modal-backdrop admin-client-modal-backdrop--centered" role="presentation" onClick={() => setSelectedClientId(null)}>
+          <div
+            className="admin-client-modal admin-client-modal--profile"
+            role="dialog"
+            aria-modal="true"
+            aria-label="Client profile"
+            onClick={(event) => event.stopPropagation()}
+          >
+            <div className="admin-client-modal-head">
+              <h3>Client profile</h3>
+              <button type="button" className="btn btn--ghost admin-client-modal-close" onClick={() => setSelectedClientId(null)} aria-label="Close client profile">
+                <X width={16} height={16} aria-hidden="true" />
+              </button>
+            </div>
             {isClientLoading && <p className="muted">Loading...</p>}
             {clientError && <p className="admin-inline-error">{clientError}</p>}
-            {clientProfile && (<><p><strong>{clientProfile.client.fullName || 'Unnamed client'}</strong><br />{clientProfile.client.email}<br />{clientProfile.client.phone || 'No phone'}</p><div className="admin-client-stats"><p>Total visits: {clientProfile.stats.totalBookings}</p><p>Last visit: {clientProfile.stats.lastBookingAt ? new Date(clientProfile.stats.lastBookingAt).toLocaleString('en-GB', { timeZone: ADMIN_TIMEZONE }) : '—'}</p><p>Cancelled: {clientProfile.stats.cancelledCount}</p></div><h3>Recent bookings</h3><ul className="admin-client-bookings">{clientProfile.recentBookings.map((item) => <li key={item.id}>{new Date(item.startAt).toLocaleString('en-GB', { timeZone: ADMIN_TIMEZONE })} · {item.status} · {item.service?.name} · {item.barber?.name}</li>)}</ul><label htmlFor="client-notes">Notes</label><textarea id="client-notes" value={notesDraft} onChange={(event) => setNotesDraft(event.target.value)} rows={5} /><button type="button" className="btn btn--primary" onClick={() => void saveNotes()} disabled={notesSaving}>{notesSaving ? 'Saving...' : 'Save notes'}</button></>)}          </div>
-
+            {clientProfile && (
+              <>
+                <section className="admin-client-modal__section" aria-label="Client identity">
+                  <p className="admin-client-modal__identity">
+                    <strong>{clientProfile.client.fullName || 'Unnamed client'}</strong>
+                    <br />
+                    {clientProfile.client.email}
+                    <br />
+                    {clientProfile.client.phone || 'No phone'}
+                  </p>
+                </section>
+                <section className="admin-client-modal__section" aria-label="Visit statistics">
+                  <h4 className="admin-client-modal__section-title">Stats</h4>
+                  <div className="admin-client-stats">
+                    <p>Total visits: {clientProfile.stats.totalBookings}</p>
+                    <p>
+                      Last visit:{' '}
+                      {clientProfile.stats.lastBookingAt
+                        ? new Date(clientProfile.stats.lastBookingAt).toLocaleString('en-GB', { timeZone: ADMIN_TIMEZONE })
+                        : '—'}
+                    </p>
+                    <p>Cancelled: {clientProfile.stats.cancelledCount}</p>
+                  </div>
+                </section>
+                <section className="admin-client-modal__section" aria-labelledby="client-recent-bookings">
+                  <h4 className="admin-client-modal__section-title" id="client-recent-bookings">
+                    Recent bookings
+                  </h4>
+                  <ul className="admin-client-bookings">
+                    {clientProfile.recentBookings.map((item) => (
+                      <li key={item.id}>
+                        {new Date(item.startAt).toLocaleString('en-GB', { timeZone: ADMIN_TIMEZONE })} · {item.status} · {item.service?.name} ·{' '}
+                        {item.barber?.name}
+                      </li>
+                    ))}
+                  </ul>
+                </section>
+                <section className="admin-client-modal__section" aria-labelledby="client-notes-heading">
+                  <h4 className="admin-client-modal__section-title" id="client-notes-heading">
+                    Notes
+                  </h4>
+                  <textarea
+                    id="client-notes"
+                    value={notesDraft}
+                    onChange={(event) => setNotesDraft(event.target.value)}
+                    rows={5}
+                    aria-labelledby="client-notes-heading"
+                  />
+                  <button type="button" className="btn btn--primary" onClick={() => void saveNotes()} disabled={notesSaving}>
+                    {notesSaving ? 'Saving...' : 'Save notes'}
+                  </button>
+                </section>
+              </>
+            )}
+          </div>
         </div>
-
       )}
     </section>
   );

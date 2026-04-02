@@ -226,12 +226,6 @@ def render_timeline() -> str:
         '</div>'
         f"{''.join(lanes_markup)}"
         '</div>'
-        '<div class="admin-timeline-legend" aria-label="Timeline status legend">'
-        '<span class="admin-timeline-legend-item"><i class="admin-timeline-legend-swatch admin-timeline-legend-swatch--confirmed" aria-hidden="true"></i>Confirmed</span>'
-        '<span class="admin-timeline-legend-item"><i class="admin-timeline-legend-swatch admin-timeline-legend-swatch--pending" aria-hidden="true"></i>Pending</span>'
-        '<span class="admin-timeline-legend-item"><i class="admin-timeline-legend-swatch admin-timeline-legend-swatch--cancelled" aria-hidden="true"></i>Cancelled</span>'
-        '<span class="admin-timeline-legend-item"><i class="admin-timeline-legend-swatch admin-timeline-legend-swatch--rescheduled" aria-hidden="true"></i>Rescheduled</span>'
-        '</div>'
         '</section>'
     )
 

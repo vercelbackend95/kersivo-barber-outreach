@@ -2,6 +2,8 @@ import React, { memo, useEffect, useMemo, useRef } from 'react';
 import { formatInTimeZone } from 'date-fns-tz';
 import { minutesInLondonDay } from '../../lib/booking/time';
 import { getBookingStatusTone } from './bookingStatus';
+import { SkeletonTimelineRows } from '../skeleton';
+import { ArrowRight } from '../lucide-react';
 type TimelineBarber = {
   id: string;
   name: string;
@@ -61,10 +63,15 @@ type TodayTimelineProps = {
   bookings: TimelineBooking[];
   timeBlocks: TimelineTimeBlock[];
   selectedDate: string;
+  isLoading?: boolean;
   isSearchActive?: boolean;
   scrollContainerRef?: React.RefObject<HTMLDivElement | null>;
 
   onBookingClick: (booking: TimelineBooking) => void;
+  /** Advance timeline to the next calendar day (London); control lives in the terminal rail beside barber rows. */
+  onGoToNextDay?: () => void;
+  /** Short label for the next day (e.g. "Tue 3 Apr") for aria-label / title. */
+  nextDayShortLabel?: string;
 };
 
 const ADMIN_TIMEZONE = 'Europe/London';
@@ -345,7 +352,18 @@ const NowIndicator = memo(function NowIndicator({ selectedDate }: NowIndicatorPr
   return <span ref={indicatorRef} className="admin-timeline-now-indicator" aria-hidden="true" />;
 });
 
-function TodayTimeline({ barbers, bookings, timeBlocks, selectedDate, isSearchActive = false, onBookingClick, scrollContainerRef }: TodayTimelineProps) {
+function TodayTimeline({
+  barbers,
+  bookings,
+  timeBlocks,
+  selectedDate,
+  isLoading = false,
+  isSearchActive = false,
+  onBookingClick,
+  scrollContainerRef,
+  onGoToNextDay,
+  nextDayShortLabel
+}: TodayTimelineProps) {
   const localScrollContainerRef = useRef<HTMLDivElement | null>(null);
   const timelineScrollContainerRef = scrollContainerRef ?? localScrollContainerRef;
   const autoPositionedDateRef = useRef<string | null>(null);
@@ -521,6 +539,10 @@ function TodayTimeline({ barbers, bookings, timeBlocks, selectedDate, isSearchAc
   }, [timelineScrollContainerRef]);
 
 
+  if (isLoading) {
+    return <SkeletonTimelineRows lanes={Math.max(barbers.length, 3)} />;
+  }
+
   if (lanes.length === 0) {
     return (
       <section className="admin-timeline-empty" aria-live="polite">
@@ -529,12 +551,19 @@ function TodayTimeline({ barbers, bookings, timeBlocks, selectedDate, isSearchAc
     );
   }
 
+  const showTerminalRail = Boolean(onGoToNextDay);
+  const nextDayA11y = nextDayShortLabel ? `Next day, ${nextDayShortLabel}` : 'Next day';
+
   return (
     <section className="admin-timeline" aria-label={`Timeline for ${selectedDate}`} style={timelineLayoutStyle}>
       <div className="admin-timeline-scroll" ref={timelineScrollContainerRef}>
-        <div className="admin-timeline-scale-row">
-          <div className="admin-timeline-barber-header">Barber</div>
-          <div className="admin-timeline-scale" role="presentation">
+        <div
+          className={`admin-timeline-matrix${showTerminalRail ? ' admin-timeline-matrix--terminal' : ''}`}
+        >
+          <div className="admin-timeline-barber-header" style={{ gridColumn: 1, gridRow: 1 }}>
+            Barber
+          </div>
+          <div className="admin-timeline-scale" role="presentation" style={{ gridColumn: 2, gridRow: 1 }}>
             {ticks.minorTicks.map((minute) => (
               <span
                 key={`minor-${minute}`}
@@ -542,54 +571,97 @@ function TodayTimeline({ barbers, bookings, timeBlocks, selectedDate, isSearchAc
                 style={{ left: `${(minute / TIMELINE_TOTAL_MINUTES) * 100}%` }}
               />
             ))}
-            {ticks.majorTicks.map((tick) => (
-              <span
-                key={`major-${tick.minute}`}
-                className={`admin-timeline-tick admin-timeline-tick--major ${tick.isHalfHour ? 'admin-timeline-tick--half-hour' : ''}`}
-                style={{ left: `${(tick.minute / TIMELINE_TOTAL_MINUTES) * 100}%` }}
-              >
-                <em>{tick.label}</em>
-              </span>
-            ))}
+            {ticks.majorTicks.map((tick) => {
+              const isDayEnd = tick.minute === TIMELINE_TOTAL_MINUTES;
+              return (
+                <span
+                  key={`major-${tick.minute}`}
+                  className={`admin-timeline-tick admin-timeline-tick--major ${tick.isHalfHour ? 'admin-timeline-tick--half-hour' : ''}${isDayEnd ? ' admin-timeline-tick--day-end' : ''}`}
+                  style={{ left: `${(tick.minute / TIMELINE_TOTAL_MINUTES) * 100}%` }}
+                >
+                  <em>{tick.label}</em>
+                </span>
+              );
+            })}
             <NowIndicator selectedDate={selectedDate} />
           </div>
-        </div>
+          {showTerminalRail ? (
+            <div className="admin-timeline-terminal-header" aria-hidden="true" style={{ gridColumn: 3, gridRow: 1 }} />
+          ) : null}
 
-        {lanes.map((lane) => (
-          <div className="admin-timeline-lane-row" key={lane.barber.id}>
-            <div className="admin-timeline-lane-label">{lane.barber.name}</div>
-            <div className="admin-timeline-lane-canvas" style={{ minHeight: `${lane.laneHeight}px` }}>
-              <span className="admin-timeline-lane-grid" aria-hidden="true" />
-
-              {lane.timeBlocks.map((item) => (
-                <article
-                  key={item.id}
-                  className="admin-timeline-card admin-timeline-card--block"
-                  style={{ left: `${item.leftPct}%`, width: `${item.widthPct}%`, top: `${item.topPx}px`, height: `${item.heightPx}px` }}
-                  title={`${item.timeBlock.title} (${item.startLabel}–${item.endLabel})`}
+          {lanes.map((lane, laneIndex) => {
+            const laneRow = laneIndex + 2;
+            const stripe = laneIndex % 2 === 0;
+            return (
+              <React.Fragment key={lane.barber.id}>
+                <div
+                  className={`admin-timeline-lane-label${stripe ? ' admin-timeline-lane-label--alt' : ''}`}
+                  style={{ gridColumn: 1, gridRow: laneRow }}
                 >
-                  <p>{item.timeBlock.title}</p>
-                </article>
-              ))}
+                  {lane.barber.name}
+                </div>
+                <div
+                  className={`admin-timeline-lane-canvas${stripe ? ' admin-timeline-lane-canvas--alt' : ''}`}
+                  style={{ gridColumn: 2, gridRow: laneRow, minHeight: `${lane.laneHeight}px` }}
+                >
+                  <div className="admin-timeline-lane-grid" aria-hidden="true">
+                    {ticks.minorTicks.map((minute) => (
+                      <span
+                        key={`lane-minor-${lane.barber.id}-${minute}`}
+                        className="admin-timeline-grid-line admin-timeline-grid-line--minor"
+                        style={{ left: `${(minute / TIMELINE_TOTAL_MINUTES) * 100}%` }}
+                      />
+                    ))}
+                    {ticks.majorTicks.map((tick) => (
+                      <span
+                        key={`lane-major-${lane.barber.id}-${tick.minute}`}
+                        className={`admin-timeline-grid-line admin-timeline-grid-line--major ${tick.isHalfHour ? 'admin-timeline-grid-line--half-hour' : ''}`}
+                        style={{ left: `${(tick.minute / TIMELINE_TOTAL_MINUTES) * 100}%` }}
+                      />
+                    ))}
+                  </div>
 
-              {lane.bookings.map((item) => (
-                <TimelineBookingCard
-                  key={item.id}
-                  item={item}
-                  isSearchActive={isSearchActive}
-                  onBookingClick={onBookingClick}
-                />
+                  {lane.timeBlocks.map((item) => (
+                    <article
+                      key={item.id}
+                      className="admin-timeline-card admin-timeline-card--block"
+                      style={{ left: `${item.leftPct}%`, width: `${item.widthPct}%`, top: `${item.topPx}px`, height: `${item.heightPx}px` }}
+                      title={`${item.timeBlock.title} (${item.startLabel}–${item.endLabel})`}
+                    >
+                      <p>{item.timeBlock.title}</p>
+                    </article>
+                  ))}
 
-              ))}
+                  {lane.bookings.map((item) => (
+                    <TimelineBookingCard
+                      key={item.id}
+                      item={item}
+                      isSearchActive={isSearchActive}
+                      onBookingClick={onBookingClick}
+                    />
+                  ))}
+                </div>
+              </React.Fragment>
+            );
+          })}
+
+          {showTerminalRail ? (
+            <div
+              className="admin-timeline-terminal-rail"
+              style={{ gridColumn: 3, gridRow: `2 / ${2 + lanes.length}` }}
+            >
+              <button
+                type="button"
+                className="admin-timeline-next-day-rail"
+                onClick={onGoToNextDay}
+                aria-label={nextDayA11y}
+                title={nextDayShortLabel ? `Next day — ${nextDayShortLabel}` : 'Next day'}
+              >
+                <ArrowRight className="admin-timeline-next-day-rail-icon" aria-hidden />
+              </button>
             </div>
-          </div>
-        ))}
-      </div>
-      <div className="admin-timeline-legend" aria-label="Timeline status legend">
-        <span className="admin-timeline-legend-item"><i className="admin-timeline-legend-swatch admin-timeline-legend-swatch--confirmed" aria-hidden="true" />Confirmed</span>
-        <span className="admin-timeline-legend-item"><i className="admin-timeline-legend-swatch admin-timeline-legend-swatch--pending" aria-hidden="true" />Pending</span>
-        <span className="admin-timeline-legend-item"><i className="admin-timeline-legend-swatch admin-timeline-legend-swatch--cancelled" aria-hidden="true" />Cancelled</span>
-        <span className="admin-timeline-legend-item"><i className="admin-timeline-legend-swatch admin-timeline-legend-swatch--rescheduled" aria-hidden="true" />Rescheduled</span>
+          ) : null}
+        </div>
       </div>
     </section>
   );

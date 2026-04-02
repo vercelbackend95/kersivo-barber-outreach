@@ -4,6 +4,8 @@ export type BarberBookingPreview = {
   barberId: string;
   status: string;
   startAt: string;
+  /** When set (admin API bookings), day-fill uses real slot length; otherwise falls back to {@link ESTIMATED_BOOKING_DURATION_H}. */
+  endAt?: string | null;
   service?: {
     name?: string | null;
   } | null;
@@ -21,6 +23,8 @@ export type DayFillData = {
   pct: number;
   count: number;
   workingH: number;
+  /** Sum of per-booking durations (hours), from `endAt - startAt` when available. */
+  bookedHoursH: number;
 };
 
 export const AVAIL_STATUS_LABELS: Record<BarberAvailabilityStatus, string> = {
@@ -32,6 +36,17 @@ export const AVAIL_STATUS_LABELS: Record<BarberAvailabilityStatus, string> = {
 
 export const WORKING_HOURS_PER_DAY = 8;
 export const ESTIMATED_BOOKING_DURATION_H = 0.75;
+
+/** Hours for one booking when `endAt` is missing or invalid (fallback). */
+export function bookingDurationHours(booking: BarberBookingPreview): number {
+  const startMs = new Date(booking.startAt).getTime();
+  if (!Number.isFinite(startMs)) return ESTIMATED_BOOKING_DURATION_H;
+  const endRaw = booking.endAt;
+  if (endRaw == null || endRaw === '') return ESTIMATED_BOOKING_DURATION_H;
+  const endMs = new Date(endRaw).getTime();
+  if (!Number.isFinite(endMs) || endMs <= startMs) return ESTIMATED_BOOKING_DURATION_H;
+  return (endMs - startMs) / 3_600_000;
+}
 
 const SCHEDULED_BOOKING_STATUSES = ['CONFIRMED', 'PENDING', 'PENDING_CONFIRMATION', 'RESCHEDULED'] as const;
 
@@ -146,17 +161,19 @@ export function getBarberAvailabilityStatusForDayRange(
 }
 
 export function getDayFill(bookings: BarberBookingPreview[], barberId: string, now: Date): DayFillData {
-  const count = getTodayBookingsForBarber(bookings, barberId, now).length;
-  const estimatedH = count * ESTIMATED_BOOKING_DURATION_H;
-  const pct = Math.min(100, Math.round((estimatedH / WORKING_HOURS_PER_DAY) * 100));
-  return { pct, count, workingH: WORKING_HOURS_PER_DAY };
+  const dayBookings = getTodayBookingsForBarber(bookings, barberId, now);
+  const count = dayBookings.length;
+  const bookedHoursH = dayBookings.reduce((sum, b) => sum + bookingDurationHours(b), 0);
+  const pct = Math.min(100, Math.round((bookedHoursH / WORKING_HOURS_PER_DAY) * 100));
+  return { pct, count, workingH: WORKING_HOURS_PER_DAY, bookedHoursH };
 }
 
 export function getDayFillForRange(bookings: BarberBookingPreview[], barberId: string, dayStartMs: number, dayEndMs: number): DayFillData {
-  const count = getBookingsForBarberInRange(bookings, barberId, dayStartMs, dayEndMs).length;
-  const estimatedH = count * ESTIMATED_BOOKING_DURATION_H;
-  const pct = Math.min(100, Math.round((estimatedH / WORKING_HOURS_PER_DAY) * 100));
-  return { pct, count, workingH: WORKING_HOURS_PER_DAY };
+  const dayBookings = getBookingsForBarberInRange(bookings, barberId, dayStartMs, dayEndMs);
+  const count = dayBookings.length;
+  const bookedHoursH = dayBookings.reduce((sum, b) => sum + bookingDurationHours(b), 0);
+  const pct = Math.min(100, Math.round((bookedHoursH / WORKING_HOURS_PER_DAY) * 100));
+  return { pct, count, workingH: WORKING_HOURS_PER_DAY, bookedHoursH };
 }
 
 export function getNextBookingForBarber(bookings: BarberBookingPreview[], barberId: string, now: Date): NextBookingPreview | null {

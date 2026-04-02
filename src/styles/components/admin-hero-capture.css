@@ -97,11 +97,6 @@
   transform: translateX(var(--admin-hero-scroll-offset, 0));
 }
 
-.admin-hero-capture .admin-timeline-legend {
-  padding-inline: 0.75rem;
-  padding-bottom: 0.8rem;
-}
-
 .admin-hero-capture .admin-timeline-card--booking {
   cursor: default;
 }

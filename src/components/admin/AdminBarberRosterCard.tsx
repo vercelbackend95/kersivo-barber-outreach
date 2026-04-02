@@ -1,7 +1,7 @@
 import type { Barber } from './barbersTypes';
 import { ArrowRight, Calendar, ChevronDown, ChevronUp, Clock } from '../lucide-react';
 import type { BarberAvailabilityStatus, DayFillData, NextBookingPreview } from '../../lib/admin/barberRosterPresentation';
-import { AVAIL_STATUS_LABELS, ESTIMATED_BOOKING_DURATION_H } from '../../lib/admin/barberRosterPresentation';
+import { AVAIL_STATUS_LABELS } from '../../lib/admin/barberRosterPresentation';
 
 export type AdminBarberRosterCardProps = {
   barber: Barber;
@@ -39,7 +39,8 @@ export default function AdminBarberRosterCard({
   manageControls,
 }: AdminBarberRosterCardProps) {
   const availLabel = AVAIL_STATUS_LABELS[availStatus];
-  const dayFillAriaLabel = `${dayFill.count} booking${dayFill.count !== 1 ? 's' : ''} today (est. ${Math.round(dayFill.count * ESTIMATED_BOOKING_DURATION_H * 10) / 10} of ${dayFill.workingH} hours)`;
+  const bookedHDisplay = Math.round(dayFill.bookedHoursH * 10) / 10;
+  const dayFillAriaLabel = `${dayFill.count} booking${dayFill.count !== 1 ? 's' : ''} today (${bookedHDisplay}h booked of ${dayFill.workingH}h)`;
   const nextBookingTitle = nextBookingPreview
     ? `Next: ${nextBookingPreview.timeLabel} · ${nextBookingPreview.serviceLabel} (${nextBookingPreview.relativeLabel})`
     : 'No upcoming bookings';

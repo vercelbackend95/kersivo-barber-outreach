@@ -1,17 +1,20 @@
 /* 48rem @ 16px root = 768px — same band as booking.css admin mobile rules */
 @media (max-width: 48rem) {
   /*
-   * Fixed mobile header: --admin-mobile-header-h is the full offset from the top of the viewport
-   * to the start of scrolling content (bar height including safe-area + former margin-bottom gap).
-   * Safe-area is included once in --admin-mobile-header-bar-h, not added again in sticky tops.
+   * Fixed mobile header offsets:
+   * - --admin-mobile-header-bar-h: actual fixed bar height
+   * - --admin-mobile-header-gap: visual breathing room below the bar
+   * - --admin-mobile-header-h: document-flow spacer (bar + gap)
+   * Sticky/fixed layers below the bar anchor to these tokens to avoid a transparent seam.
    */
   .admin-main-content {
     --admin-mobile-header-inner-min: max(2.75rem, 3.5rem);
     --admin-mobile-header-bar-h: calc(
       env(safe-area-inset-top, 0px) + 1.2rem + var(--admin-mobile-header-inner-min) + 2px
     );
-    --admin-mobile-header-h: calc(var(--admin-mobile-header-bar-h) + var(--space-sm));
-    --admin-mobile-sticky-stack-top: var(--admin-mobile-header-h);
+    --admin-mobile-header-gap: var(--space-sm);
+    --admin-mobile-header-h: calc(var(--admin-mobile-header-bar-h) + var(--admin-mobile-header-gap));
+    --admin-mobile-sticky-stack-top: var(--admin-mobile-header-bar-h);
   }
 
   .admin-main-content,
@@ -19,16 +22,9 @@
     isolation: isolate;
   }
 
-  /*
-   * Bookings dash hero slot: `top` + z-index live in booking.css (single source).
-   * Keep search-row stack below the hero strip height published as --admin-next-block-h.
-   */
-  .admin-search-row--sticky {
-    top: calc(var(--admin-mobile-sticky-stack-top) + var(--admin-next-block-h, 0px) + var(--space-2xs));
-    z-index: 27;
-  }
-
-  .admin-timeline-scale-row {
+  .admin-timeline-barber-header,
+  .admin-timeline-scale,
+  .admin-timeline-terminal-header {
     z-index: 30;
   }
 
@@ -47,7 +43,6 @@
     --timeline-card-client-font-size: 0.64rem;
   }
 
-
   .admin-mobile-overlay {
     z-index: 400;
   }
@@ -59,7 +54,7 @@
     bottom: 0;
 
     z-index: 410;
-        height: 100svh;
+    height: 100svh;
     min-height: 100svh;
     max-height: 100svh;
     padding-bottom: calc(0.75rem + env(safe-area-inset-bottom, 0px));
@@ -71,6 +66,5 @@
       min-height: 100dvh;
       max-height: 100dvh;
     }
-
   }
 }

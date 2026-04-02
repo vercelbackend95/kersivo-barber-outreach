@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useRef, useState } from 'react';
+import React, { createContext, useContext, useEffect, useMemo, useRef, useState } from 'react';
 import type { AdminSection } from './AdminPanel';
 import { SkeletonKPICards, SkeletonTableRows } from '../skeleton';
 import {
@@ -20,8 +20,17 @@ type AdminLayoutProps = {
   onChangeSection: (section: AdminSection) => void;
   isTransitioning: boolean;
   showSectionSkeleton: boolean;
+  /** Always mounted (hidden); keeps effects alive while section skeleton replaces `children`. */
+  persistentAdminChrome?: React.ReactNode;
   children: React.ReactNode;
 };
+
+type MobileTopExtensionSetter = (extension: React.ReactNode | null) => void;
+const AdminMobileTopExtensionContext = createContext<MobileTopExtensionSetter>(() => {});
+
+export function useAdminMobileTopExtension() {
+  return useContext(AdminMobileTopExtensionContext);
+}
 
 type SectionItem = {
   section: AdminSection;
@@ -88,9 +97,11 @@ export default function AdminLayout({
   onChangeSection,
   isTransitioning,
   showSectionSkeleton,
+  persistentAdminChrome,
   children,
 }: AdminLayoutProps) {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+  const [mobileTopExtension, setMobileTopExtension] = useState<React.ReactNode | null>(null);
   const mainContentRef = useRef<HTMLElement | null>(null);
   const mobileDrawerRef = useRef<HTMLDivElement | null>(null);
   const mobileOpenButtonRef = useRef<HTMLButtonElement | null>(null);
@@ -190,7 +201,8 @@ export default function AdminLayout({
   }, [isMobileMenuOpen]);
 
   return (
-    <div className="admin-shell">
+    <AdminMobileTopExtensionContext.Provider value={setMobileTopExtension}>
+      <div className="admin-shell">
       <aside className="admin-sidebar" aria-label="Admin sections">
         <SidebarBrand />
         {menu}
@@ -214,29 +226,44 @@ export default function AdminLayout({
         aria-busy={isTransitioning}
         data-transitioning={isTransitioning}
       >
-        <header className="admin-mobile-header" aria-label="Admin mobile header">
-          <SidebarBrand />
-          <div className="admin-mobile-header-center">
-            {activeSectionLabel && (
-              <span className="admin-mobile-section-name" aria-current="page">
-                {activeSectionLabel}
-              </span>
-            )}
-            <SidebarStatus className="admin-sidebar-status--mobile-header" />
+        <header
+          className={`admin-mobile-header${mobileTopExtension ? ' admin-mobile-header--with-next' : ''}`}
+          aria-label="Admin mobile header"
+        >
+          <div className="admin-mobile-header-bar">
+            <SidebarBrand />
+            <div className="admin-mobile-header-center">
+              {activeSectionLabel && (
+                <span className="admin-mobile-section-name" aria-current="page">
+                  {activeSectionLabel}
+                </span>
+              )}
+              <SidebarStatus className="admin-sidebar-status--mobile-header" />
+            </div>
+            <button
+              ref={mobileOpenButtonRef}
+              type="button"
+              className="admin-mobile-menu-button"
+              onClick={() => setIsMobileMenuOpen(true)}
+              aria-label="Open admin menu"
+              aria-expanded={isMobileMenuOpen}
+              aria-controls="admin-mobile-drawer"
+            >
+              <Menu width={20} height={20} aria-hidden="true" />
+            </button>
           </div>
-          <button
-            ref={mobileOpenButtonRef}
-            type="button"
-            className="admin-mobile-menu-button"
-            onClick={() => setIsMobileMenuOpen(true)}
-            aria-label="Open admin menu"
-            aria-expanded={isMobileMenuOpen}
-            aria-controls="admin-mobile-drawer"
-          >
-            <Menu width={20} height={20} aria-hidden="true" />
-          </button>
+          {mobileTopExtension ? (
+            <div className="admin-mobile-header-extension" aria-label="Upcoming appointments">
+              {mobileTopExtension}
+            </div>
+          ) : null}
         </header>
         <div className="admin-mobile-header-spacer" aria-hidden="true" />
+        {persistentAdminChrome ? (
+          <div className="admin-persistent-chrome-host" aria-hidden="true" style={{ display: 'none' }}>
+            {persistentAdminChrome}
+          </div>
+        ) : null}
         {showSectionSkeleton ? (
           <div className="admin-transition-skeleton" aria-hidden="true">
             {skeletonVariant === 'kpi' ? (
@@ -293,6 +320,7 @@ export default function AdminLayout({
           Logout
         </button>
       </aside>
-    </div>
+      </div>
+    </AdminMobileTopExtensionContext.Provider>
   );
 }

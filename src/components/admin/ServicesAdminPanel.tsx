@@ -2,6 +2,7 @@ import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import { SettingsGearIcon } from './SettingsGearIcon';
 import AdminSectionHeader from './AdminSectionHeader';
 import AdminBookingsOpsDashHeroLive from './AdminBookingsOpsDashHeroLive';
+import { useAdminMobileChromeBreakpoint } from './useAdminMobileNextAppointmentsChrome';
 import EmptyState from '../EmptyState';
 import { SkeletonBookingChoices } from '../skeleton';
 import { Scissors, Users, X } from '../lucide-react';
@@ -64,8 +65,6 @@ type BarberAssignmentSectionProps = {
   onChange: (barberIds: string[]) => void;
 };
 
-
-const MOBILE_BREAKPOINT_PX = 767;
 
 const EMPTY_FORM: ServiceForm = {
   name: '',
@@ -242,7 +241,7 @@ export default function ServicesAdminPanel() {
     const [isSaving, setIsSaving] = useState(false);
   const [isServiceSheetOpen, setIsServiceSheetOpen] = useState(false);
   const [activeServiceForPanelId, setActiveServiceForPanelId] = useState<string | null>(null);
-  const [isMobileViewport, setIsMobileViewport] = useState(false);
+  const isMobileAdminChrome = useAdminMobileChromeBreakpoint();
 
   const activeServiceForPanel = useMemo(
     () => services.find((service) => service.id === activeServiceForPanelId) ?? null,
@@ -279,14 +278,6 @@ export default function ServicesAdminPanel() {
   useEffect(() => {
     void fetchServices();
   }, [fetchServices]);
-
-  useEffect(() => {
-    const mediaQuery = window.matchMedia(`(max-width: ${MOBILE_BREAKPOINT_PX}px)`);
-    const update = () => setIsMobileViewport(mediaQuery.matches);
-    update();
-    mediaQuery.addEventListener('change', update);
-    return () => mediaQuery.removeEventListener('change', update);
-  }, []);
 
   useEffect(() => {
     if (!isServiceSheetOpen) return undefined;
@@ -454,7 +445,6 @@ export default function ServicesAdminPanel() {
 
   return (
     <section className="surface booking-shell admin-services-shell">
-      {isMobileViewport ? <AdminBookingsOpsDashHeroLive /> : null}
       <AdminSectionHeader
         title="Services"
         description="Configure your service catalogue"
@@ -466,7 +456,7 @@ export default function ServicesAdminPanel() {
         }
       />
 
-      {!isMobileViewport ? <AdminBookingsOpsDashHeroLive /> : null}
+      {!isMobileAdminChrome ? <AdminBookingsOpsDashHeroLive /> : null}
 
       {message ? <p className="admin-inline-success">{message}</p> : null}
       {error ? <p className="admin-inline-error">{error}</p> : null}

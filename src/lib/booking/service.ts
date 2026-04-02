@@ -5,7 +5,7 @@ import { getTimeBlockDelegate } from '../db/timeBlocks';
 import { sendInstantBookingConfirmationEmail, sendRescheduledBookingEmail, sendShopCancelledBookingEmail } from '../email/sender';
 
 import { ANY_BARBER_ID } from './constants';
-import { canCancelOrReschedule } from './policies';
+import { canCancelOrReschedule, canShopAdminCancelByLeadTime } from './policies';
 import { generateSlots } from './slots';
 import { addMinutes, londonDayOfWeekFromIsoDate, toUtcFromLondon } from './time';
 import { generateToken, hashToken } from './tokens';
@@ -447,6 +447,13 @@ export async function cancelByShop(input: { bookingId: string; reason?: string }
   if (isCancelledStatus(booking.status)) {
     throw new BookingActionError('This booking has already been cancelled.', 409);
 
+  }
+
+  if (!canShopAdminCancelByLeadTime(booking.startAt, Date.now())) {
+    throw new BookingActionError(
+      'This booking can only be cancelled more than 30 minutes before it starts.',
+      409
+    );
   }
 
   const updatedBooking = await prisma.booking.update({
