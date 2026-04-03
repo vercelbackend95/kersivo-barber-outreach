@@ -120,9 +120,12 @@
   .admin-service-sheet {
     width: 100%;
     max-width: 100%;
-    height: calc(100dvh - var(--admin-mobile-sheet-top-offset, 0px));
-    max-height: calc(100dvh - var(--admin-mobile-sheet-top-offset, 0px));
-
+    height: calc(
+      100dvh - var(--admin-mobile-measured-header-bottom, var(--admin-mobile-sheet-top-offset, 0px))
+    );
+    max-height: calc(
+      100dvh - var(--admin-mobile-measured-header-bottom, var(--admin-mobile-sheet-top-offset, 0px))
+    );
   }
 }
 
@@ -704,7 +707,8 @@
   align-items: center;
 }
 
-.admin-service-panel-head h2 {
+.admin-service-panel-head h2,
+.admin-service-panel-head h3 {
   margin: 0;
   letter-spacing: 0.06em;
   text-transform: uppercase;

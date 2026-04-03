@@ -442,99 +442,68 @@ function TodayTimeline({
 
 
 
+  /*
+   * Touch / pen: rely on CSS `touch-action: pan-x pinch-zoom` + native overflow-x scrolling only.
+   * Custom pointer handlers with passive:false + preventDefault() caused intermittent “dead” vertical
+   * scroll when the browser delivered pointer events to the timeline strip (lock / gesture races).
+   *
+   * Mouse: optional drag-to-pan horizontally (primary button).
+   */
   useEffect(() => {
     const container = timelineScrollContainerRef.current;
     if (!container) return;
 
     let startX = 0;
-    let startY = 0;
-    let lock: 'horizontal' | 'vertical' | null = null;
-    let isTracking = false;
     let initialScrollLeft = 0;
-    const threshold = 8;
+    let isMouseDragging = false;
+    let activePointerId: number | null = null;
 
-    const resetGesture = () => {
-      lock = null;
-      isTracking = false;
+    const resetMouse = () => {
+      isMouseDragging = false;
+      activePointerId = null;
     };
 
     const onPointerDown = (event: PointerEvent) => {
-      if (event.pointerType !== 'touch') return;
-      isTracking = true;
-      lock = null;
+      if (event.pointerType !== 'mouse' || event.button !== 0) return;
+      isMouseDragging = true;
+      activePointerId = event.pointerId;
       startX = event.clientX;
-      startY = event.clientY;
       initialScrollLeft = container.scrollLeft;
+      try {
+        container.setPointerCapture(event.pointerId);
+      } catch {
+        /* setPointerCapture unsupported or rejected */
+      }
     };
 
     const onPointerMove = (event: PointerEvent) => {
-      if (!isTracking || event.pointerType !== 'touch') return;
-
-      const dx = Math.abs(event.clientX - startX);
-      const dy = Math.abs(event.clientY - startY);
-
-      if (lock === null) {
-        if (dx > dy && dx > threshold) lock = 'horizontal';
-        else if (dy > dx && dy > threshold) lock = 'vertical';
-      }
-
-      if (lock === 'horizontal') {
-        event.preventDefault();
-        container.scrollLeft = initialScrollLeft + (startX - event.clientX);
-      }
+      if (!isMouseDragging || event.pointerType !== 'mouse' || activePointerId !== event.pointerId) return;
+      event.preventDefault();
+      container.scrollLeft = initialScrollLeft + (startX - event.clientX);
     };
 
-    const onTouchStart = (event: TouchEvent) => {
-      if (event.touches.length !== 1) return;
-      const touch = event.touches[0];
-      isTracking = true;
-      lock = null;
-      startX = touch.clientX;
-      startY = touch.clientY;
-      initialScrollLeft = container.scrollLeft;
+    const onPointerUp = (event: PointerEvent) => {
+      if (event.pointerType !== 'mouse' || activePointerId !== event.pointerId) return;
+      try {
+        container.releasePointerCapture(event.pointerId);
+      } catch {
+        /* ignore */
+      }
+      resetMouse();
     };
 
-    const onTouchMove = (event: TouchEvent) => {
-      if (!isTracking || event.touches.length !== 1) return;
-      const touch = event.touches[0];
-      const dx = Math.abs(touch.clientX - startX);
-      const dy = Math.abs(touch.clientY - startY);
-
-      if (lock === null) {
-        if (dx > dy && dx > threshold) lock = 'horizontal';
-        else if (dy > dx && dy > threshold) lock = 'vertical';
-      }
-
-      if (lock === 'horizontal') {
-        event.preventDefault();
-        container.scrollLeft = initialScrollLeft + (startX - touch.clientX);
-      }
-    };
-
-    if (window.PointerEvent) {
-      container.addEventListener('pointerdown', onPointerDown, { passive: true });
-      container.addEventListener('pointermove', onPointerMove, { passive: false });
-      container.addEventListener('pointerup', resetGesture, { passive: true });
-      container.addEventListener('pointercancel', resetGesture, { passive: true });
-
-      return () => {
-        container.removeEventListener('pointerdown', onPointerDown);
-        container.removeEventListener('pointermove', onPointerMove);
-        container.removeEventListener('pointerup', resetGesture);
-        container.removeEventListener('pointercancel', resetGesture);
-      };
-    }
-
-    container.addEventListener('touchstart', onTouchStart, { passive: true });
-    container.addEventListener('touchmove', onTouchMove, { passive: false });
-    container.addEventListener('touchend', resetGesture, { passive: true });
-    container.addEventListener('touchcancel', resetGesture, { passive: true });
+    container.addEventListener('pointerdown', onPointerDown, { passive: true });
+    container.addEventListener('pointermove', onPointerMove, { passive: false });
+    container.addEventListener('pointerup', onPointerUp, { passive: true });
+    container.addEventListener('pointercancel', onPointerUp, { passive: true });
+    container.addEventListener('lostpointercapture', resetMouse, { passive: true });
 
     return () => {
-      container.removeEventListener('touchstart', onTouchStart);
-      container.removeEventListener('touchmove', onTouchMove);
-      container.removeEventListener('touchend', resetGesture);
-      container.removeEventListener('touchcancel', resetGesture);
+      container.removeEventListener('pointerdown', onPointerDown);
+      container.removeEventListener('pointermove', onPointerMove);
+      container.removeEventListener('pointerup', onPointerUp);
+      container.removeEventListener('pointercancel', onPointerUp);
+      container.removeEventListener('lostpointercapture', resetMouse);
     };
   }, [timelineScrollContainerRef]);
 

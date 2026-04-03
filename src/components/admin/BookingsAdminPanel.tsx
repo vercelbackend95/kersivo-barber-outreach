@@ -23,6 +23,7 @@ import {
 import BarberChip from './BarberChip';
 import AdminLeaderboard from './AdminLeaderboard';
 import type { Barber, ServiceOption, TimeBlock, WorkingHourRow } from './barbersTypes';
+import { getDefaultWorkingHourRows } from '../../lib/admin/defaultWorkingHourRows';
 import { formatDelta } from './reportsFormatting';
 import EmptyState from '../EmptyState';
 import { Ban, X } from '../lucide-react';
@@ -670,6 +671,7 @@ export default function BookingsAdminPanel({ isActive, mode, onBackToDashboard }
 
     const [isAddBarberSheetOpen, setIsAddBarberSheetOpen] = useState(false);
   const [addBarberSelectedServiceIds, setAddBarberSelectedServiceIds] = useState<string[]>([]);
+  const [addBarberWorkingHours, setAddBarberWorkingHours] = useState<WorkingHourRow[]>(() => getDefaultWorkingHourRows());
 
   const [selectedBarberId, setSelectedBarberId] = useState<string | null>(null);
   const [services, setServices] = useState<ServiceOption[]>([]);
@@ -1687,10 +1689,6 @@ export default function BookingsAdminPanel({ isActive, mode, onBackToDashboard }
   }, [fetchSelectedBarberStats, isActive, loggedIn, mode, selectedBarberId]);
 
 
-  function updateWorkingHour(dayOfWeek: number, patch: Partial<WorkingHourRow>) {
-    setWorkingHours((current) => current.map((row) => row.dayOfWeek === dayOfWeek ? { ...row, ...patch } : row));
-  }
-
   async function saveWorkingHours(nextRules?: WorkingHourRow[]) {
     if (!selectedBarberId) return false;
     const rulesToSave = (nextRules ?? workingHours).slice().sort((a, b) => a.dayOfWeek - b.dayOfWeek);
@@ -1878,6 +1876,18 @@ export default function BookingsAdminPanel({ isActive, mode, onBackToDashboard }
       return;
     }
 
+    const rulesSorted = [...addBarberWorkingHours].sort((a, b) => a.dayOfWeek - b.dayOfWeek);
+    if (rulesSorted.length !== 7) {
+      setBarberSaveError('Working hours must include every day of the week.');
+      return;
+    }
+    for (const rule of rulesSorted) {
+      if (rule.active && rule.startTime >= rule.endTime) {
+        const dayLabel = WEEK_DAYS[rule.dayOfWeek] ?? `Day ${rule.dayOfWeek}`;
+        setBarberSaveError(`${dayLabel}: start time must be earlier than end time.`);
+        return;
+      }
+    }
 
     if (barberAvatarFile && barberAvatarFile.size > 5 * 1024 * 1024) {
       setBarberSaveError('Avatar is too large. Maximum size is 5MB.');
@@ -1904,13 +1914,40 @@ export default function BookingsAdminPanel({ isActive, mode, onBackToDashboard }
       return;
     }
 
+    const newBarberId = (payload as { barber?: { id?: string } }).barber?.id;
+    if (!newBarberId) {
+      setBarberSaveError('Barber was saved but the response was missing an id.');
+      setBarberSaving(false);
+      return;
+    }
+
+    const rulesResponse = await fetch(`/api/admin/barbers/${newBarberId}/rules`, {
+      method: 'PUT',
+      credentials: 'include',
+      headers: { 'content-type': 'application/json' },
+      body: JSON.stringify({ rules: rulesSorted })
+    });
+    const rulesPayload = await rulesResponse.json().catch(() => ({} as { error?: string }));
+
     setBarberNameDraft('');
-        setBarberAvatarFile(null);
+    setBarberAvatarFile(null);
     setBarberAvatarPreviewUrl(null);
-        setAddBarberSelectedServiceIds(addBarberServiceOptions.map((service) => service.id));
-    setBarberSaveMessage('Barber saved.');
+    setAddBarberSelectedServiceIds(addBarberServiceOptions.map((service) => service.id));
+    setAddBarberWorkingHours(getDefaultWorkingHourRows());
     setBarberSaving(false);
-        setIsAddBarberSheetOpen(false);
+    setIsAddBarberSheetOpen(false);
+
+    if (!rulesResponse.ok) {
+      setBarberSaveMessage('Barber saved.');
+      setBarberSaveError(
+        rulesPayload.error ?? 'Working hours could not be saved. Open the barber profile to set their schedule.'
+      );
+      await fetchBarbers();
+      return;
+    }
+
+    setBarberSaveError('');
+    setBarberSaveMessage('Barber saved.');
     await fetchBarbers();
   }
   async function saveSelectedBarberAvatar() {
@@ -2057,6 +2094,7 @@ export default function BookingsAdminPanel({ isActive, mode, onBackToDashboard }
   const openAddBarberSheet = useCallback(() => {
     setBarberSaveError('');
     setBarberSaveMessage('');
+    setAddBarberWorkingHours(getDefaultWorkingHourRows());
     setIsAddBarberSheetOpen(true);
   }, []);
 
@@ -2084,7 +2122,7 @@ export default function BookingsAdminPanel({ isActive, mode, onBackToDashboard }
     let rafId: number | null = null;
 
     const publishNextBlockHeight = () => {
-      const nextPx = Math.round(node.getBoundingClientRect().height);
+      const nextPx = Math.round(node.offsetHeight);
       if (lastPublishedPx < 0) {
         mainContentNode.style.setProperty('--admin-next-block-h', `${nextPx}px`);
         lastPublishedPx = nextPx;
@@ -2114,14 +2152,11 @@ export default function BookingsAdminPanel({ isActive, mode, onBackToDashboard }
     const resizeObserver = new ResizeObserver(schedulePublish);
     resizeObserver.observe(node);
     window.addEventListener('resize', schedulePublish);
-    const visualViewport = window.visualViewport;
-    visualViewport?.addEventListener('resize', schedulePublish);
 
     nextBlockMeasureCleanupRef.current = () => {
       if (rafId !== null) window.cancelAnimationFrame(rafId);
       resizeObserver.disconnect();
       window.removeEventListener('resize', schedulePublish);
-      visualViewport?.removeEventListener('resize', schedulePublish);
       mainContentNode.style.removeProperty('--admin-next-block-h');
       mainContentNode.style.removeProperty('--admin-mobile-sheet-strip-chrome');
     };
@@ -2367,7 +2402,6 @@ export default function BookingsAdminPanel({ isActive, mode, onBackToDashboard }
 
                 onToggleActive={() => void updateBarberStatus(selectedBarber.id, !normalizeBarberStatus(selectedBarber))}
                 onToggleService={(serviceId, enabled) => void toggleServiceForBarber(serviceId, enabled)}
-                onChangeWorkingHour={(dayOfWeek, field, value) => updateWorkingHour(dayOfWeek, { [field]: value })}
                 barberSaveError={barberSaveError}
                 onSetWorkingHours={setWorkingHours}
                 onSaveWorkingHours={saveWorkingHours}
@@ -2401,7 +2435,11 @@ export default function BookingsAdminPanel({ isActive, mode, onBackToDashboard }
                 onMoveBarber={(index, direction) => void moveBarber(index, direction)}
                 onCloseAddBarberSheet={() => {
                   setIsAddBarberSheetOpen(false);
+                  setAddBarberWorkingHours(getDefaultWorkingHourRows());
                 }}
+                addBarberWorkingHours={addBarberWorkingHours}
+                onSetAddBarberWorkingHours={setAddBarberWorkingHours}
+                addBarberWeekDays={WEEK_DAYS}
 
                 formatBlockRange={formatBlockRange}
               />

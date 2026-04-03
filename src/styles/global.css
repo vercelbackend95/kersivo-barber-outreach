@@ -22,6 +22,17 @@ html {
     scroll-behavior: smooth;
 }
 
+/* Admin: avoid smooth-scroll + scroll-linked measurements fighting during long inertial scroll. */
+html.admin-app-scroll {
+  scroll-behavior: auto;
+  /* Chrome/WebKit: reduce jump–bounce loops when layout height tweaks at scroll max (e.g. chrome vars). */
+  overflow-anchor: none;
+}
+
+html.admin-app-scroll main.admin-page-wrap {
+  overflow-anchor: none;
+}
+
 body {
   background: var(--bg);
   color: var(--fg);

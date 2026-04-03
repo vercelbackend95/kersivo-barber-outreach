@@ -4313,7 +4313,8 @@
   display: block;
   position: fixed;
   inset: 0;
-  background: linear-gradient(to left, color-mix(in srgb, var(--bg) 60%, transparent) 0%, color-mix(in srgb, var(--bg) 45%, transparent) 35%, transparent 100%);
+  /* Full-screen drawer: uniform dim (no “panel to the right” gradient). */
+  background: color-mix(in srgb, var(--bg) 52%, transparent);
   opacity: 0;
   pointer-events: none;
   transition: opacity 250ms ease;
@@ -4327,6 +4328,11 @@
 }
 
 
+/*
+ * Fixed to viewport (prefer portal to document.body). Top padding = safe-area only so the panel
+ * background can read edge-to-edge under the status bar; breathing room for the header row is on
+ * .admin-mobile-drawer-head (mobile overrides may use 100lvh for Safari chrome).
+ */
 .admin-mobile-drawer {
   display: grid;
   grid-template-rows: auto 1fr auto auto;
@@ -4335,13 +4341,9 @@
   top: 0;
   right: 0;
   bottom: 0;
-  left: auto;
-  min-height: 100vh;
-  min-height: 100svh;
-  min-height: 100dvh;
-
-  width: min(84vw, 20rem);
-  max-width: 100%;
+  left: 0;
+  width: auto;
+  max-width: none;
   background: linear-gradient(
     165deg,
     color-mix(in srgb, var(--surface-2) 55%, var(--bg)) 0%,
@@ -4349,14 +4351,16 @@
     color-mix(in srgb, var(--surface-1) 88%, var(--bg)) 100%
   );
 
-  border-left: 1px solid color-mix(in srgb, var(--border) 75%, transparent);
-  box-shadow: -16px 0 48px rgb(0 0 0 / 0.38);
-  padding: calc(0.75rem + env(safe-area-inset-top, 0px)) calc(0.75rem + env(safe-area-inset-right, 0px)) calc(0.75rem + env(safe-area-inset-bottom, 0px)) 0.75rem;
+  border: none;
+  box-shadow: none;
+  padding: env(safe-area-inset-top, 0px) max(0.75rem, env(safe-area-inset-right, 0px))
+    calc(0.75rem + env(safe-area-inset-bottom, 0px)) max(0.75rem, env(safe-area-inset-left, 0px));
   transform: translateX(100%);
   transition: transform 300ms cubic-bezier(0.34, 1.08, 0.64, 1);
   z-index: var(--admin-z-mobile-menu-drawer, 275);
   overflow-y: auto;
   overflow-x: hidden;
+  overscroll-behavior: contain;
 }
 
 
@@ -4364,11 +4368,24 @@
   transform: translateX(0);
 }
 
+@media (prefers-reduced-motion: reduce) {
+  .admin-mobile-overlay {
+    transition-duration: 0.01ms;
+  }
+
+  .admin-mobile-drawer {
+    transition-duration: 0.01ms;
+  }
+}
+
 .admin-mobile-drawer-head {
   display: flex;
   align-items: center;
   justify-content: space-between;
   gap: var(--space-xs);
+  padding-top: 0.75rem;
+  padding-bottom: 0.65rem;
+  border-bottom: 1px solid color-mix(in srgb, var(--border) 45%, transparent);
 }
 .admin-mobile-drawer-head .admin-sidebar-brand {
   border-bottom: none;
@@ -4580,9 +4597,12 @@
    * fixed header as the bar, so --admin-mobile-header-gap must not be added again here.
    */
   .admin-mobile-header--with-next + .admin-mobile-header-spacer {
-    height: calc(
-      var(--admin-mobile-header-bar-h) + var(--admin-next-block-h, 0px) +
-        var(--admin-mobile-next-strip-chrome, calc(0.42rem + 0.2rem + 0.55rem))
+    height: var(
+      --admin-mobile-measured-header-bottom,
+      calc(
+        var(--admin-mobile-header-bar-h) + var(--admin-next-block-h, 0px) +
+          var(--admin-mobile-next-strip-chrome, calc(0.42rem + 0.2rem + 0.55rem))
+      )
     );
   }
 
@@ -6881,6 +6901,58 @@
   }
 }
 
+/*
+ * Shop product editor: portaled to document.body — use same stacking + top inset + surface wash as
+ * Add barber / Add service (navbar + Next appointments stay visible; no gray seam).
+ * Matches ShopAdminPanel MOBILE_PRODUCT_EDITOR_MEDIA_QUERY (max-width: 47.99rem).
+ */
+@media (max-width: 47.99rem) {
+  .admin-product-sheet-backdrop:not(.admin-product-sheet-backdrop--drawer) {
+    z-index: 140;
+    display: grid;
+    align-items: stretch;
+    justify-items: stretch;
+    padding: 0;
+    padding-top: var(--admin-mobile-measured-header-bottom, 0px);
+    overscroll-behavior: contain;
+    background: color-mix(in srgb, var(--surface-1) 92%, transparent);
+  }
+
+  .admin-product-sheet-backdrop:not(.admin-product-sheet-backdrop--drawer) .admin-product-sheet {
+    width: 100%;
+    max-width: none;
+    margin-inline: 0;
+    height: 100%;
+    min-height: 0;
+    max-height: none;
+    border: none;
+    border-top: none;
+    border-top-left-radius: var(--admin-premium-surface-r-mobile);
+    border-top-right-radius: var(--admin-premium-surface-r-mobile);
+    border-bottom-left-radius: 0;
+    border-bottom-right-radius: 0;
+    overflow: hidden;
+    background: color-mix(in srgb, var(--admin-premium-surface-bg) 94%, var(--surface));
+    box-shadow: var(--admin-premium-shadow-inset);
+  }
+
+  .admin-product-sheet-backdrop:not(.admin-product-sheet-backdrop--drawer) .admin-product-sheet-head {
+    padding: 1rem max(1rem, env(safe-area-inset-right, 0px)) 1rem max(1rem, env(safe-area-inset-left, 0px));
+    border-bottom-color: color-mix(in srgb, var(--border) 70%, transparent);
+    background: transparent;
+  }
+
+  .admin-product-sheet-backdrop:not(.admin-product-sheet-backdrop--drawer) .admin-product-sheet-body {
+    padding: 1rem max(1rem, env(safe-area-inset-right, 0px)) 1rem max(1rem, env(safe-area-inset-left, 0px));
+  }
+
+  .admin-product-sheet-backdrop:not(.admin-product-sheet-backdrop--drawer) .admin-product-sheet-footer {
+    padding: 1rem max(1rem, env(safe-area-inset-right, 0px))
+      calc(1rem + env(safe-area-inset-bottom, 0px)) max(1rem, env(safe-area-inset-left, 0px));
+    border-top-color: color-mix(in srgb, var(--border) 70%, transparent);
+    background: color-mix(in srgb, var(--admin-premium-surface-bg) 88%, var(--surface));
+  }
+}
 
 @media (min-width: 48.0625rem) {
   .admin-products-scroll {
@@ -9504,6 +9576,19 @@
         )
     );
   }
+
+  /*
+   * Prefer measured fixed header bottom from AdminLayout (avoids token sum vs real DOM drift).
+   * Fallback keeps previous calc for first paint / no-JS.
+   */
+  .admin-barber-sheet-layer {
+    --admin-mobile-sheet-top-inset: var(--admin-mobile-measured-header-bottom, var(--admin-mobile-sheet-top-offset));
+    padding-top: var(--admin-mobile-sheet-top-inset);
+  }
+
+  .admin-barber-sheet-layer > .admin-barber-sheet {
+    max-height: min(calc(100dvh - var(--admin-mobile-sheet-top-inset)), 720px);
+  }
 }
 
 .admin-barber-sheet {
@@ -9523,10 +9608,22 @@
 
 /* Add barber: full-viewport-width sheet below Next appointments (no floating card inset) */
 @media (max-width: 48rem) {
-  .admin-barber-sheet-layer:has(.admin-barber-sheet--add) {
+  /*
+   * Default sheet backdrop is semi-transparent fg (reads as gray). Add barber + Add/edit service
+   * sheets sit flush under Next appointments — use one continuous wash like .admin-section-header
+   * (no dim), so corner seams never read gray.
+   */
+  .admin-barber-sheet-layer:has(.admin-barber-sheet--add),
+  .admin-barber-sheet-layer:has(.admin-service-sheet) {
     align-items: stretch;
+    background: color-mix(in srgb, var(--surface-1) 92%, transparent);
   }
 
+  /*
+   * Flush under .admin-mobile-header--with-next: same top radii as header bottom radii
+   * (--admin-premium-surface-r-mobile) so corners meet with no backdrop “holes”.
+   * No top border — avoids a double seam with the chrome stack above.
+   */
   .admin-barber-sheet--add {
     width: 100%;
     max-width: none;
@@ -9535,8 +9632,12 @@
     min-height: 0;
     max-height: none;
     border: none;
-    border-top: 1px solid color-mix(in srgb, var(--border) 45%, transparent);
-    border-radius: 0;
+    border-top: none;
+    border-top-left-radius: var(--admin-premium-surface-r-mobile);
+    border-top-right-radius: var(--admin-premium-surface-r-mobile);
+    border-bottom-left-radius: 0;
+    border-bottom-right-radius: 0;
+    overflow: hidden;
     background: color-mix(in srgb, var(--admin-premium-surface-bg) 94%, var(--surface));
     box-shadow: var(--admin-premium-shadow-inset);
   }
@@ -9551,6 +9652,48 @@
   }
 
   .admin-barber-sheet--add .admin-barber-sheet-footer {
+    padding: 1rem max(1rem, env(safe-area-inset-right, 0px)) calc(1rem + env(safe-area-inset-bottom, 0px))
+      max(1rem, env(safe-area-inset-left, 0px));
+    border-top-color: color-mix(in srgb, var(--border) 70%, transparent);
+    background: color-mix(in srgb, var(--admin-premium-surface-bg) 88%, var(--surface));
+  }
+
+  /*
+   * Add / edit service (+ quick settings section): same flush sheet under Next appointments as
+   * Add barber. Direct-child selector wins over later .admin-service-sheet rules in admin-services.css.
+   */
+  .admin-barber-sheet-layer > .admin-barber-sheet.admin-service-sheet {
+    width: 100%;
+    max-width: none;
+    margin-inline: 0;
+    height: 100%;
+    min-height: 0;
+    max-height: none;
+    border: none;
+    border-top: none;
+    border-top-left-radius: var(--admin-premium-surface-r-mobile);
+    border-top-right-radius: var(--admin-premium-surface-r-mobile);
+    border-bottom-left-radius: 0;
+    border-bottom-right-radius: 0;
+    overflow: hidden;
+    background: color-mix(in srgb, var(--admin-premium-surface-bg) 94%, var(--surface));
+    box-shadow: var(--admin-premium-shadow-inset);
+  }
+
+  .admin-barber-sheet-layer > .admin-barber-sheet.admin-service-sheet .admin-service-sheet-head {
+    background: transparent;
+  }
+
+  .admin-barber-sheet-layer > .admin-barber-sheet.admin-service-sheet .admin-barber-sheet-head {
+    padding: 1rem max(1rem, env(safe-area-inset-right, 0px)) 1rem max(1rem, env(safe-area-inset-left, 0px));
+    border-bottom-color: color-mix(in srgb, var(--border) 70%, transparent);
+  }
+
+  .admin-barber-sheet-layer > .admin-barber-sheet.admin-service-sheet .admin-barber-sheet-content {
+    padding: 1rem max(1rem, env(safe-area-inset-right, 0px)) 1rem max(1rem, env(safe-area-inset-left, 0px));
+  }
+
+  .admin-barber-sheet-layer > .admin-barber-sheet.admin-service-sheet .admin-barber-sheet-footer {
     padding: 1rem max(1rem, env(safe-area-inset-right, 0px)) calc(1rem + env(safe-area-inset-bottom, 0px))
       max(1rem, env(safe-area-inset-left, 0px));
     border-top-color: color-mix(in srgb, var(--border) 70%, transparent);
@@ -9606,13 +9749,17 @@
   -webkit-overflow-scrolling: touch;
 }
 .admin-barber-sheet-content label,
+.admin-barber-sheet-content .field,
 .admin-barber-sheet-content input:not(.admin-barber-avatar-input),
 .admin-barber-sheet-content fieldset,
+.admin-barber-sheet-content .admin-form-section,
+.admin-barber-sheet-content .admin-settings-panel,
 .admin-barber-sheet-content .admin-barber-file-input-wrap,
 .admin-barber-sheet-content .admin-add-barber-avatar {
   width: 100%;
   max-width: 100%;
   box-sizing: border-box;
+  min-width: 0;
 }
 
 .admin-barber-file-input-wrap {
@@ -9643,6 +9790,17 @@
   text-align: left;
   font-size: 0.78rem;
   font-weight: 600;
+  color: var(--fg);
+}
+
+/* Shared sheet field labels (e.g. Photo, Services in Add barber) */
+.admin-barber-sheet-field-label {
+  margin: 0 0 0.4rem;
+  width: 100%;
+  text-align: left;
+  font-size: 0.78rem;
+  font-weight: 600;
+  letter-spacing: 0.02em;
   color: var(--fg);
 }
 
@@ -9740,8 +9898,14 @@
 
 .admin-service-select-group {
   margin: 0;
-  border: 1px solid var(--border);
-  padding: 0.6rem;
+  padding: 0;
+  border: none;
+  min-width: 0;
+}
+
+.admin-service-select-group legend {
+  padding: 0;
+  display: block;
 }
 
 @media (min-width: 48rem) {
@@ -10510,99 +10674,152 @@
   align-items: center;
 }
 
-.admin-services-grid {
+/* Services tab list: needs 2-class specificity so admin-services.css .admin-services-grid does not force 1fr */
+.admin-barber-grid.admin-services-grid {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: 0.75rem;
   margin-top: 0.5rem;
 }
 
-.admin-service-toggle {
-  width: 100%;
+/* Add barber sheet: service selection chips */
+.admin-service-select-group .admin-services-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0.5rem;
+  margin-top: 0.15rem;
+}
 
+.admin-service-select-group .admin-service-toggle {
+  width: 100%;
   min-height: 44px;
+  min-width: 0;
   display: inline-flex;
   align-items: center;
   justify-content: flex-start;
-  gap: 0.45rem;
-  padding: 0.6rem 0.75rem;
+  gap: 0.5rem;
+  padding: 0.42rem 0.65rem 0.42rem 0.48rem;
 
-  border: 1px solid var(--border);
+  border: 1px solid color-mix(in srgb, var(--border) 82%, var(--fg) 10%);
   border-radius: 9999px;
-  background: color-mix(in srgb, var(--surface) 82%, transparent);
-  color: color-mix(in srgb, var(--fg) 82%, var(--muted));
+  background: color-mix(in srgb, var(--admin-premium-surface-bg) 55%, var(--surface) 45%);
+  color: color-mix(in srgb, var(--fg) 90%, var(--muted));
   font: inherit;
   font-weight: 500;
-  line-height: 1.3;
+  line-height: 1.25;
   text-align: left;
 
   cursor: pointer;
-    transform: translateY(0);
-  box-shadow: 0 0 0 rgba(0, 0, 0, 0);
-  transition: background-color 180ms ease, border-color 180ms ease, color 180ms ease, transform 180ms ease, box-shadow 180ms ease;
-
+  box-shadow: inset 0 1px 0 color-mix(in srgb, var(--fg) 5%, transparent);
+  transition:
+    background-color 160ms ease,
+    border-color 160ms ease,
+    color 160ms ease,
+    box-shadow 160ms ease,
+    transform 140ms ease;
 }
 
-.admin-service-toggle-check {
-  width: 0.95rem;
-  height: 0.95rem;
+.admin-service-select-group .admin-service-toggle-label {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.admin-service-select-group .admin-service-toggle-check {
+  flex: 0 0 auto;
+  width: 1.25rem;
+  height: 1.25rem;
+  box-sizing: border-box;
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  color: color-mix(in srgb, var(--fg) 36%, transparent);
-  opacity: 0;
-  transform: scale(0.9);
-  transition: opacity 180ms ease, transform 180ms ease, color 180ms ease;
-
+  border-radius: 50%;
+  border: 1.5px solid color-mix(in srgb, var(--border) 72%, var(--fg) 16%);
+  background: color-mix(in srgb, var(--surface) 88%, var(--bg) 12%);
+  box-shadow: inset 0 1px 0 color-mix(in srgb, var(--fg) 4%, transparent);
+  color: var(--accent-contrast);
+  transition:
+    border-color 160ms ease,
+    background-color 160ms ease,
+    box-shadow 160ms ease;
 }
 
-.admin-service-toggle-check svg {
-  width: 100%;
-  height: 100%;
-
+.admin-service-select-group .admin-service-toggle-check svg {
   display: block;
+  opacity: 0;
+  transform: scale(0.82);
+  transition: opacity 140ms ease, transform 140ms ease;
 }
 
-.admin-service-toggle:hover {
-  transform: translateY(-1px);
-  box-shadow: 0 1px 8px color-mix(in srgb, black 24%, transparent);
-}
-
-.admin-service-toggle:active {
-  transform: translateY(0);
-  box-shadow: 0 1px 4px color-mix(in srgb, black 16%, transparent);
-}
-
-.admin-service-toggle.is-selected {
-  border-color: color-mix(in srgb, var(--accent) 76%, var(--border));
-  background: color-mix(in srgb, var(--surface) 74%, var(--accent) 26%);
-  box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--accent) 26%, transparent), 0 0 0 1px color-mix(in srgb, var(--accent) 14%, transparent);
+.admin-service-select-group .admin-service-toggle.is-selected {
+  border-color: color-mix(in srgb, var(--accent) 38%, var(--border));
+  background: color-mix(in srgb, var(--surface) 90%, var(--accent) 10%);
   color: var(--fg);
-  font-weight: 600;
+  font-weight: 500;
+  box-shadow:
+    inset 0 1px 0 color-mix(in srgb, var(--accent) 14%, transparent),
+    0 0 0 1px color-mix(in srgb, var(--accent) 12%, transparent);
 }
 
-.admin-service-toggle.is-selected .admin-service-toggle-check {
+.admin-service-select-group .admin-service-toggle.is-selected .admin-service-toggle-check {
+  border-color: color-mix(in srgb, var(--accent) 55%, var(--border));
+  background: var(--accent);
+  box-shadow: none;
+}
+
+.admin-service-select-group .admin-service-toggle.is-selected .admin-service-toggle-check svg {
   opacity: 1;
   transform: scale(1);
-  color: color-mix(in srgb, var(--fg) 94%, var(--accent-contrast));
+  color: var(--accent-contrast);
 }
 
-.admin-service-toggle:focus-visible {
+@media (hover: hover) {
+  .admin-service-select-group .admin-service-toggle:hover:not(.is-selected) {
+    border-color: color-mix(in srgb, var(--accent) 24%, var(--border));
+    background: color-mix(in srgb, var(--admin-premium-surface-bg) 48%, var(--surface) 52%);
+    box-shadow:
+      inset 0 1px 0 color-mix(in srgb, var(--fg) 6%, transparent),
+      0 4px 18px color-mix(in srgb, var(--fg) 7%, transparent);
+  }
+
+  .admin-service-select-group .admin-service-toggle.is-selected:hover {
+    border-color: color-mix(in srgb, var(--accent) 48%, var(--border));
+    background: color-mix(in srgb, var(--surface) 86%, var(--accent) 14%);
+    box-shadow:
+      inset 0 1px 0 color-mix(in srgb, var(--accent) 18%, transparent),
+      0 4px 20px color-mix(in srgb, var(--accent) 14%, transparent);
+  }
+}
+
+.admin-service-select-group .admin-service-toggle:active {
+  transform: scale(0.98);
+}
+
+.admin-service-select-group .admin-service-toggle:focus-visible {
   outline: 2px solid var(--focus);
   outline-offset: 2px;
 }
 
 @media (min-width: 48rem) {
-
-  .admin-services-grid {
+  .admin-barber-grid.admin-services-grid {
     grid-template-columns: repeat(3, minmax(0, 1fr));
   }
+
+  .admin-service-select-group .admin-services-grid {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 0.55rem;
+  }
 }
+
 @media (min-width: 72rem) {
-  .admin-services-grid {
+  .admin-barber-grid.admin-services-grid {
     grid-template-columns: repeat(4, minmax(0, 1fr));
   }
 
+  .admin-service-select-group .admin-services-grid {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+  }
 }
 
 .working-hours-shell {

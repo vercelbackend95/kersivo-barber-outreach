@@ -1,4 +1,5 @@
-import React, { createContext, useContext, useEffect, useMemo, useRef, useState } from 'react';
+import React, { createContext, useContext, useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
+import { createPortal } from 'react-dom';
 import type { AdminSection } from './AdminPanel';
 import { SkeletonKPICards, SkeletonTableRows } from '../skeleton';
 import {
@@ -105,6 +106,64 @@ export default function AdminLayout({
   const mainContentRef = useRef<HTMLElement | null>(null);
   const mobileDrawerRef = useRef<HTMLDivElement | null>(null);
   const mobileOpenButtonRef = useRef<HTMLButtonElement | null>(null);
+  const lastPublishedHeaderInsetPxRef = useRef<number | null>(null);
+  const [mobileChromeMounted, setMobileChromeMounted] = useState(false);
+
+  useLayoutEffect(() => {
+    setMobileChromeMounted(true);
+  }, []);
+
+  /*
+   * iOS Safari: fixed layers use the layout viewport; *dvh* / bottom:0 often end above the visible
+   * bottom (URL bar). Publish a pixel height from innerHeight + visualViewport so the menu backdrop
+   * reaches the same vertical extent as scrolled admin content under the browser chrome.
+   */
+  useLayoutEffect(() => {
+    if (!mobileChromeMounted) return undefined;
+
+    const root = document.documentElement;
+    const mq = window.matchMedia('(max-width: 48rem)');
+
+    const clearVvVars = () => {
+      root.style.removeProperty('--admin-mobile-vv-top');
+      root.style.removeProperty('--admin-mobile-vv-h');
+    };
+
+    const syncVisualViewportVars = () => {
+      if (!mq.matches) {
+        clearVvVars();
+        return;
+      }
+      const vv = window.visualViewport;
+      /*
+       * Cover the same vertical band as in-flow admin content under iOS Safari:
+       * - innerHeight tracks chrome show/hide
+       * - vv.height + offsetTop is the visual viewport span inside the layout box (extends past *dvh)
+       */
+      const fromVv = vv ? vv.offsetTop + vv.height : 0;
+      const h = Math.max(window.innerHeight, fromVv);
+      root.style.setProperty('--admin-mobile-vv-top', '0px');
+      root.style.setProperty('--admin-mobile-vv-h', `${h}px`);
+    };
+
+    syncVisualViewportVars();
+    const vv = window.visualViewport;
+    vv?.addEventListener('resize', syncVisualViewportVars);
+    /* vv.scroll while browsing thrashes layout-dependent vars; only sync when the drawer is open. */
+    if (isMobileMenuOpen) {
+      vv?.addEventListener('scroll', syncVisualViewportVars);
+    }
+    mq.addEventListener('change', syncVisualViewportVars);
+    window.addEventListener('resize', syncVisualViewportVars);
+
+    return () => {
+      clearVvVars();
+      vv?.removeEventListener('resize', syncVisualViewportVars);
+      vv?.removeEventListener('scroll', syncVisualViewportVars);
+      mq.removeEventListener('change', syncVisualViewportVars);
+      window.removeEventListener('resize', syncVisualViewportVars);
+    };
+  }, [mobileChromeMounted, isMobileMenuOpen]);
 
   const onSelectSection = (section: AdminSection) => {
     onChangeSection(section);
@@ -200,6 +259,134 @@ export default function AdminLayout({
     };
   }, [isMobileMenuOpen]);
 
+  useLayoutEffect(() => {
+    const mainEl = mainContentRef.current;
+    if (!mainEl) return undefined;
+
+    const mq = window.matchMedia('(max-width: 48rem)');
+    let ro: ResizeObserver | null = null;
+    let rafId = 0;
+
+    const clearWindowListeners = () => {
+      window.removeEventListener('resize', schedulePublish);
+      window.visualViewport?.removeEventListener('resize', schedulePublish);
+    };
+
+    const publish = () => {
+      if (!mq.matches) {
+        lastPublishedHeaderInsetPxRef.current = null;
+        mainEl.style.removeProperty('--admin-mobile-measured-header-bottom');
+        document.documentElement.style.removeProperty('--admin-mobile-measured-header-bottom');
+        return;
+      }
+      const headerEl = mainEl.querySelector<HTMLElement>('.admin-mobile-header');
+      if (!headerEl) {
+        lastPublishedHeaderInsetPxRef.current = null;
+        mainEl.style.removeProperty('--admin-mobile-measured-header-bottom');
+        document.documentElement.style.removeProperty('--admin-mobile-measured-header-bottom');
+        return;
+      }
+      /* Fixed header at top: spacer height == header height; height is stabler than rect.bottom during vv jitter. */
+      const insetPx = Math.ceil(headerEl.getBoundingClientRect().height);
+      if (lastPublishedHeaderInsetPxRef.current === insetPx) {
+        return;
+      }
+      lastPublishedHeaderInsetPxRef.current = insetPx;
+      const insetStr = `${insetPx}px`;
+      mainEl.style.setProperty('--admin-mobile-measured-header-bottom', insetStr);
+      /* Portals (e.g. Shop product sheet → document.body) must read the same inset as main column. */
+      document.documentElement.style.setProperty('--admin-mobile-measured-header-bottom', insetStr);
+    };
+
+    const schedulePublish = () => {
+      if (rafId !== 0) window.cancelAnimationFrame(rafId);
+      rafId = window.requestAnimationFrame(() => {
+        rafId = 0;
+        publish();
+      });
+    };
+
+    const attach = () => {
+      ro?.disconnect();
+      ro = null;
+      clearWindowListeners();
+
+      if (!mq.matches) {
+        lastPublishedHeaderInsetPxRef.current = null;
+        mainEl.style.removeProperty('--admin-mobile-measured-header-bottom');
+        document.documentElement.style.removeProperty('--admin-mobile-measured-header-bottom');
+        return;
+      }
+
+      const headerEl = mainEl.querySelector<HTMLElement>('.admin-mobile-header');
+      if (!headerEl) {
+        lastPublishedHeaderInsetPxRef.current = null;
+        mainEl.style.removeProperty('--admin-mobile-measured-header-bottom');
+        document.documentElement.style.removeProperty('--admin-mobile-measured-header-bottom');
+        return;
+      }
+
+      publish();
+      ro = new ResizeObserver(schedulePublish);
+      ro.observe(headerEl);
+      window.addEventListener('resize', schedulePublish);
+      window.visualViewport?.addEventListener('resize', schedulePublish);
+    };
+
+    attach();
+    mq.addEventListener('change', attach);
+
+    return () => {
+      mq.removeEventListener('change', attach);
+      ro?.disconnect();
+      clearWindowListeners();
+      if (rafId !== 0) window.cancelAnimationFrame(rafId);
+      lastPublishedHeaderInsetPxRef.current = null;
+      mainEl.style.removeProperty('--admin-mobile-measured-header-bottom');
+      document.documentElement.style.removeProperty('--admin-mobile-measured-header-bottom');
+    };
+  }, [mobileTopExtension, activeSectionLabel]);
+
+  const mobileMenuLayer = (
+    <>
+      <div
+        className={`admin-mobile-overlay ${isMobileMenuOpen ? 'admin-mobile-overlay--open' : ''}`}
+        onClick={() => setIsMobileMenuOpen(false)}
+        aria-hidden={!isMobileMenuOpen}
+      />
+      <aside
+        id="admin-mobile-drawer"
+        ref={mobileDrawerRef}
+        className={`admin-mobile-drawer ${isMobileMenuOpen ? 'admin-mobile-drawer--open' : ''}`}
+        aria-label="Admin menu drawer"
+        aria-hidden={!isMobileMenuOpen}
+      >
+        <div className="admin-mobile-drawer-head">
+          <SidebarBrand />
+          <SidebarStatus className="admin-sidebar-status--mobile-drawer" />
+          <button
+            type="button"
+            className="admin-mobile-close-button"
+            onClick={() => setIsMobileMenuOpen(false)}
+            aria-label="Close admin menu"
+          >
+            <X width={20} height={20} aria-hidden="true" />
+          </button>
+        </div>
+        {menu}
+        <div className="admin-sidebar-divider" aria-hidden="true" />
+        <button
+          type="button"
+          className="btn btn--ghost admin-mobile-logout"
+          onClick={() => void handleLogout()}
+        >
+          <LogOut width={15} height={15} aria-hidden="true" />
+          Logout
+        </button>
+      </aside>
+    </>
+  );
+
   return (
     <AdminMobileTopExtensionContext.Provider value={setMobileTopExtension}>
       <div className="admin-shell">
@@ -285,41 +472,7 @@ export default function AdminLayout({
         )}
       </section>
 
-      <div
-        className={`admin-mobile-overlay ${isMobileMenuOpen ? 'admin-mobile-overlay--open' : ''}`}
-        onClick={() => setIsMobileMenuOpen(false)}
-        aria-hidden={!isMobileMenuOpen}
-      />
-      <aside
-        id="admin-mobile-drawer"
-        ref={mobileDrawerRef}
-        className={`admin-mobile-drawer ${isMobileMenuOpen ? 'admin-mobile-drawer--open' : ''}`}
-        aria-label="Admin menu drawer"
-        aria-hidden={!isMobileMenuOpen}
-      >
-        <div className="admin-mobile-drawer-head">
-          <SidebarBrand />
-          <SidebarStatus className="admin-sidebar-status--mobile-drawer" />
-          <button
-            type="button"
-            className="admin-mobile-close-button"
-            onClick={() => setIsMobileMenuOpen(false)}
-            aria-label="Close admin menu"
-          >
-            <X width={20} height={20} aria-hidden="true" />
-          </button>
-        </div>
-        {menu}
-        <div className="admin-sidebar-divider" aria-hidden="true" />
-        <button
-          type="button"
-          className="btn btn--ghost admin-mobile-logout"
-          onClick={() => void handleLogout()}
-        >
-          <LogOut width={15} height={15} aria-hidden="true" />
-          Logout
-        </button>
-      </aside>
+      {mobileChromeMounted ? createPortal(mobileMenuLayer, document.body) : null}
       </div>
     </AdminMobileTopExtensionContext.Provider>
   );

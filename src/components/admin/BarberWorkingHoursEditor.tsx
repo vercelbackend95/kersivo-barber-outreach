@@ -10,6 +10,12 @@ type BarberWorkingHoursEditorProps = {
   saveError: string;
   onSetWorkingHours: (rules: WorkingHourRow[]) => void;
   onSave: (rules?: WorkingHourRow[]) => Promise<boolean>;
+  /** When false, edits only update local state (e.g. Add barber sheet); no debounced API save. */
+  persistToServer?: boolean;
+  /** Overrides default subtitle under “Working hours”. */
+  subtitle?: string;
+  /** Overrides default helper under the header row. */
+  helperText?: string;
 };
 
 const AUTO_SAVE_DELAY_MS = 600;
@@ -73,7 +79,10 @@ export default function BarberWorkingHoursEditor({
   saving,
   saveError,
   onSetWorkingHours,
-  onSave
+  onSave,
+  persistToServer = true,
+  subtitle,
+  helperText
 }: BarberWorkingHoursEditorProps) {
   const [expandedDayIndex, setExpandedDayIndex] = React.useState<number | null>(null);
   const [draftDay, setDraftDay] = React.useState<WorkingHourRow | null>(null);
@@ -172,15 +181,15 @@ export default function BarberWorkingHoursEditor({
       const nextRules = orderedHours.map((hour) => (hour.dayOfWeek === nextDay.dayOfWeek ? nextDay : hour));
       onSetWorkingHours(nextRules);
 
-      if (isValidRange(nextDay)) {
+      if (isValidRange(nextDay) && persistToServer) {
         scheduleAutoSave(nextRules);
       } else {
         clearAutoSaveTimeout();
         clearSavedToastTimeout();
-                setSaveStatus('idle');
+        setSaveStatus('idle');
       }
     },
-    [clearAutoSaveTimeout, clearSavedToastTimeout, draftDay, onSetWorkingHours, orderedHours, scheduleAutoSave]
+    [clearAutoSaveTimeout, clearSavedToastTimeout, draftDay, onSetWorkingHours, orderedHours, persistToServer, scheduleAutoSave]
   );
   React.useEffect(() => {
     if (!saveError && saveStatus !== 'error') return;
@@ -194,7 +203,9 @@ export default function BarberWorkingHoursEditor({
         <header className="working-hours-header-row">
           <div className="working-hours-header-row__title">
             <h3>Working hours</h3>
-            <p className="working-hours-subtitle">Weekly operating schedule with per-day quick edit.</p>
+            <p className="working-hours-subtitle">
+              {subtitle ?? 'Weekly operating schedule with per-day quick edit.'}
+            </p>
           </div>
           <p className="working-hours-weekly-summary" aria-live="polite">
             {weeklySummary}
@@ -210,7 +221,9 @@ export default function BarberWorkingHoursEditor({
             </span>
           </div>
         </header>
-        <p className="muted working-hours-helper">Tap any day to change shift status and hours.</p>
+        <p className="muted working-hours-helper">
+          {helperText ?? 'Tap any day to change shift status and hours.'}
+        </p>
         <div className="working-hours-divider" aria-hidden="true" />
       </div>
 

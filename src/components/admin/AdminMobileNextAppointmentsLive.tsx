@@ -102,7 +102,7 @@ const AdminMobileNextAppointmentsLive = forwardRef<HTMLDivElement>(function Admi
       let rafId: number | null = null;
 
       const publishNextBlockHeight = () => {
-        const nextPx = Math.round(node.getBoundingClientRect().height);
+        const nextPx = Math.round(node.offsetHeight);
         if (lastPublishedPx < 0) {
           mainContentNode.style.setProperty('--admin-next-block-h', `${nextPx}px`);
           lastPublishedPx = nextPx;
@@ -132,14 +132,11 @@ const AdminMobileNextAppointmentsLive = forwardRef<HTMLDivElement>(function Admi
       const resizeObserver = new ResizeObserver(schedulePublish);
       resizeObserver.observe(node);
       window.addEventListener('resize', schedulePublish);
-      const visualViewport = window.visualViewport;
-      visualViewport?.addEventListener('resize', schedulePublish);
 
       measureCleanupRef.current = () => {
         if (rafId !== null) window.cancelAnimationFrame(rafId);
         resizeObserver.disconnect();
         window.removeEventListener('resize', schedulePublish);
-        visualViewport?.removeEventListener('resize', schedulePublish);
         mainContentNode.style.removeProperty('--admin-next-block-h');
         mainContentNode.style.removeProperty('--admin-mobile-sheet-strip-chrome');
       };

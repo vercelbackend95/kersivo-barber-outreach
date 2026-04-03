@@ -1817,12 +1817,19 @@ export default function ShopAdminPanel({ initialTab = 'products' }: ShopAdminPan
             </div>
           </div>
 
-          {formOpen ? createPortal((
-            <div className={`admin-product-sheet-backdrop${isMobileProductEditor ? '' : ' admin-product-sheet-backdrop--drawer'}`} onClick={() => resetForm()}>
+          {formOpen ? (
+            <div
+              className={`admin-product-sheet-backdrop${isMobileProductEditor ? '' : ' admin-product-sheet-backdrop--drawer'}`}
+              onMouseDown={(event) => {
+                if (event.target === event.currentTarget) {
+                  resetForm();
+                }
+              }}
+            >
               <form
                 className="admin-product-sheet"
                 onSubmit={saveProduct}
-                onClick={(event) => event.stopPropagation()}
+                onMouseDown={(event) => event.stopPropagation()}
                 role="dialog"
                 aria-modal="true"
                 aria-labelledby="admin-product-sheet-title"
@@ -2035,7 +2042,7 @@ export default function ShopAdminPanel({ initialTab = 'products' }: ShopAdminPan
 
             </div>
 
-          ), document.body) : null}
+          ) : null}
 
           <div className="admin-products-scroll" role="region" aria-label="Products list">
             {error ? <p className="admin-inline-error">{error}</p> : null}

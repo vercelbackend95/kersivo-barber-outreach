@@ -1,7 +1,8 @@
 import React from 'react';
-import type { Barber, ServiceOption, TimeBlock } from './barbersTypes';
+import type { Barber, ServiceOption, TimeBlock, WorkingHourRow } from './barbersTypes';
+import BarberWorkingHoursEditor from './BarberWorkingHoursEditor';
 import type { BarberBookingPreview } from '../../lib/admin/barberRosterPresentation';
-import { Plus, X } from '../lucide-react';
+import { Check, Plus, X } from '../lucide-react';
 import AdminBarberRosterCard from './AdminBarberRosterCard';
 import { BarberRosterOverviewGridSkeleton } from '../skeleton';
 import {
@@ -36,6 +37,9 @@ type BarbersOverviewProps = {
   onOpenBarber: (barberId: string) => void;
   onMoveBarber: (index: number, direction: 'up' | 'down') => void;
   onCloseAddBarberSheet: () => void;
+  addBarberWorkingHours: WorkingHourRow[];
+  onSetAddBarberWorkingHours: (rules: WorkingHourRow[]) => void;
+  addBarberWeekDays: string[];
   formatBlockRange: (startAt: string, endAt: string) => string;
 };
 
@@ -75,6 +79,9 @@ export default function BarbersOverview({
   onOpenBarber,
   onMoveBarber,
   onCloseAddBarberSheet,
+  addBarberWorkingHours,
+  onSetAddBarberWorkingHours,
+  addBarberWeekDays,
   formatBlockRange,
 }: BarbersOverviewProps) {
   const barberFilterLabelId = React.useId();
@@ -208,61 +215,82 @@ export default function BarbersOverview({
             onSubmit={onSubmitAddBarber}
             onMouseDown={(event) => event.stopPropagation()}
           >
-            <div className="admin-barber-sheet-head">
-              <h3>Add barber</h3>
-              <button type="button" className="btn btn--ghost" onClick={onCloseAddBarberSheet} aria-label="Close add barber form"><X width={18} height={18} aria-hidden="true" /></button>
+            <div className="admin-barber-sheet-head admin-client-modal-head admin-service-panel-head">
+              <div className="admin-sheet-head-copy">
+                <div className="admin-sheet-head-title-row">
+                  <h3>Add barber</h3>
+                </div>
+              </div>
+              <button
+                type="button"
+                className="btn btn--ghost admin-client-modal-close admin-service-panel-close"
+                onClick={onCloseAddBarberSheet}
+                aria-label="Close add barber form"
+              >
+                <X width={18} height={18} aria-hidden="true" />
+              </button>
             </div>
 
             <div className="admin-barber-sheet-content">
-              <label htmlFor="barber-name">Barber name</label>
-              <input
-                id="barber-name"
-                value={barberNameDraft}
-                onChange={(event) => onBarberNameChange(event.target.value)}
-                onKeyDown={(event) => {
-                  if (event.key === 'Enter') {
-                    event.preventDefault();
-                  }
-                }}
-                placeholder="e.g. Marco"
-                required
-              />
-
-              <div className="admin-add-barber-avatar">
-                <p className="admin-add-barber-avatar__legend">Photo</p>
-                <input
-                  id="barber-avatar"
-                  type="file"
-                  accept="image/jpeg,image/png,image/webp"
-                  className="admin-barber-avatar-input"
-                  onChange={(event) => onBarberAvatarChange(event.target.files?.[0] ?? null)}
-                />
-                <div className="admin-barber-roster-avatar-shell">
-                  <label
-                    htmlFor="barber-avatar"
-                    className="admin-barber-avatar admin-barber-avatar--roster admin-add-barber-avatar__trigger"
-                    aria-label={barberAvatarPreviewUrl ? 'Change photo' : 'Add photo'}
-                  >
-                    {barberAvatarPreviewUrl ? (
-                      <>
-                        <img src={barberAvatarPreviewUrl} alt="" className="admin-add-barber-avatar__preview" />
-                        <span className="admin-add-barber-avatar__change">Change</span>
-                      </>
-                    ) : (
-                      <Plus
-                        className="admin-add-barber-avatar__plus"
-                        width={32}
-                        height={32}
-                        strokeWidth={1.65}
-                        aria-hidden="true"
-                      />
-                    )}
+              <fieldset className="admin-form-section">
+                <legend className="admin-form-section-title">Basic information</legend>
+                <div className="field">
+                  <label htmlFor="barber-name" className="field__label">
+                    Barber name
                   </label>
+                  <input
+                    id="barber-name"
+                    className="input"
+                    value={barberNameDraft}
+                    onChange={(event) => onBarberNameChange(event.target.value)}
+                    onKeyDown={(event) => {
+                      if (event.key === 'Enter') {
+                        event.preventDefault();
+                      }
+                    }}
+                    placeholder="e.g. Marco"
+                    required
+                  />
                 </div>
-              </div>
+              </fieldset>
 
-              <fieldset className="admin-service-select-group">
-                <legend>Services</legend>
+              <fieldset className="admin-form-section">
+                <legend className="admin-form-section-title">Photo</legend>
+                <div className="admin-add-barber-avatar">
+                  <input
+                    id="barber-avatar"
+                    type="file"
+                    accept="image/jpeg,image/png,image/webp"
+                    className="admin-barber-avatar-input"
+                    onChange={(event) => onBarberAvatarChange(event.target.files?.[0] ?? null)}
+                  />
+                  <div className="admin-barber-roster-avatar-shell">
+                    <label
+                      htmlFor="barber-avatar"
+                      className="admin-barber-avatar admin-barber-avatar--roster admin-add-barber-avatar__trigger"
+                      aria-label={barberAvatarPreviewUrl ? 'Change photo' : 'Add photo'}
+                    >
+                      {barberAvatarPreviewUrl ? (
+                        <>
+                          <img src={barberAvatarPreviewUrl} alt="" className="admin-add-barber-avatar__preview" />
+                          <span className="admin-add-barber-avatar__change">Change</span>
+                        </>
+                      ) : (
+                        <Plus
+                          className="admin-add-barber-avatar__plus"
+                          width={32}
+                          height={32}
+                          strokeWidth={1.65}
+                          aria-hidden="true"
+                        />
+                      )}
+                    </label>
+                  </div>
+                </div>
+              </fieldset>
+
+              <fieldset className="admin-form-section admin-service-select-group">
+                <legend className="admin-form-section-title">Services</legend>
                 <div className="admin-services-grid">
                   {availableServices.map((service) => {
                     const selected = selectedServiceIds.includes(service.id);
@@ -281,16 +309,27 @@ export default function BarbersOverview({
                         }}
                       >
                         <span className="admin-service-toggle-check" aria-hidden="true">
-                          <svg viewBox="0 0 12 12" fill="none" xmlns="http://www.w3.org/2000/svg">
-                            <path d="M2.2 6.3 4.8 8.9 9.8 3.9" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
-                          </svg>
+                          <Check width={11} height={11} strokeWidth={2.5} aria-hidden="true" />
                         </span>
-                        <span>{service.name}</span>
+                        <span className="admin-service-toggle-label">{service.name}</span>
                       </button>
                     );
                   })}
                 </div>
               </fieldset>
+
+              <BarberWorkingHoursEditor
+                weekDays={addBarberWeekDays}
+                workingHours={addBarberWorkingHours}
+                loading={false}
+                saving={false}
+                saveError=""
+                persistToServer={false}
+                subtitle="Saved together with this barber when you tap Save barber."
+                helperText="Tap any day to change shift status and hours."
+                onSetWorkingHours={onSetAddBarberWorkingHours}
+                onSave={async () => true}
+              />
             </div>
 
             <div className="admin-barber-sheet-footer">

@@ -43,28 +43,32 @@
     --timeline-card-client-font-size: 0.64rem;
   }
 
+  /*
+   * Overlay + drawer track the *visual* viewport (see AdminLayout: --admin-mobile-vv-*). Pure CSS
+   * *vh/*lvh cannot match what the user sees under iOS Safari’s dynamic chrome the way flow
+   * content does when scrolled.
+   */
   .admin-mobile-overlay {
     z-index: 400;
+    inset: unset;
+    top: var(--admin-mobile-vv-top, 0px);
+    left: 0;
+    right: 0;
+    width: 100%;
+    height: var(--admin-mobile-vv-h, 100dvh);
+    min-height: var(--admin-mobile-vv-h, 100dvh);
   }
 
   .admin-mobile-drawer {
-    top: 0;
+    top: var(--admin-mobile-vv-top, 0px);
+    left: 0;
     right: 0;
-    left: auto;
-    bottom: 0;
-
+    bottom: auto;
+    width: auto;
+    max-width: none;
+    height: var(--admin-mobile-vv-h, 100dvh);
     z-index: 410;
-    height: 100svh;
-    min-height: 100svh;
-    max-height: 100svh;
-    padding-bottom: calc(0.75rem + env(safe-area-inset-bottom, 0px));
-  }
-
-  @supports (height: 100dvh) {
-    .admin-mobile-drawer {
-      height: 100dvh;
-      min-height: 100dvh;
-      max-height: 100dvh;
-    }
+    border-radius: 0;
+    max-height: none;
   }
 }
