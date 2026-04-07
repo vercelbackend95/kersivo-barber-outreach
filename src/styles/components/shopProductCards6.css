@@ -78,8 +78,11 @@
   padding: 0;
   display: flex;
   gap: var(--shop6-desktop-gap);
+  min-width: 0;
   overflow-x: auto;
   overscroll-behavior-x: contain;
+  -webkit-overflow-scrolling: touch;
+  touch-action: pan-x pan-y pinch-zoom;
   scrollbar-width: thin;
   padding-bottom: 0.45rem;
 
@@ -242,7 +245,10 @@
   min-height: 100%;
 }
 .shop6__controls {
-  display: none;
+  display: flex;
+  justify-content: flex-end;
+  gap: 0.4rem;
+  flex-wrap: wrap;
 }
 
 .shop6__control {
@@ -279,11 +285,6 @@
   border-color: var(--border);
   color: var(--muted);
 }
-.shop6__carousel--no-scroll .shop6__controls {
-  display: none;
-}
-
-
 
 @media (max-width: 47.99rem) {
 
@@ -360,11 +361,6 @@
     font-size: 0.58rem;
   }
 
-  .shop6__grid .shop6__quick-view {
-    display: none;
-  }
-
-
   .shop6__usps {
     gap: 0.32rem 0.38rem;
   }
@@ -418,7 +414,7 @@
 
 @media (min-width: 48rem) {
   .shop6__item--mobile-extra {
-    display: none;
+    display: flex;
   }
 
   .shop6__grid {
@@ -428,7 +424,6 @@
     gap: var(--shop6-desktop-gap);
     overflow-x: auto;
     overscroll-behavior-x: contain;
-    scroll-snap-type: x mandatory;
     scrollbar-width: none;
     -ms-overflow-style: none;
     padding: 0 0 0.45rem;
@@ -454,9 +449,6 @@
 
   .shop6__item {
     flex: 0 0 calc((100% - (var(--shop6-desktop-gap) * (var(--shop6-desktop-visible-cards) - 1))) / var(--shop6-desktop-visible-cards));
-    scroll-snap-align: start;
-    scroll-snap-stop: always;
-
   }
   
   .shop6__grid .shop-card h3 {
@@ -465,12 +457,6 @@
     letter-spacing: 0.01em;
     line-height: 1.36;
     min-height: calc(2 * 1.36em);
-  }
-
-  .shop6__controls {
-    display: flex;
-    justify-content: flex-end;
-    gap: 0.4rem;
   }
 
 }

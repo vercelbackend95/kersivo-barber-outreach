@@ -219,10 +219,10 @@ export default function AdminBookingsScheduleList(props: AdminBookingsScheduleLi
                 right = <span className="admin-bookings-schedule__status-muted">{pastLine(booking)}</span>;
               } else {
                 right = (
-                  <span className="admin-bookings-schedule__right-inline">
+                  <div className="admin-bookings-schedule__right-stack">
                     <span className="admin-bookings-schedule__barber">{barberShort}</span>
                     <span className="admin-bookings-schedule__upcoming-time">{formatStartTime(booking.startAt)}</span>
-                  </span>
+                  </div>
                 );
               }
             } else if (isDonePast) {

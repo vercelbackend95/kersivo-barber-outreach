@@ -5,7 +5,6 @@
   flex-wrap: wrap;
   gap: var(--space-md);
   padding-block: var(--space-sm);
-  border-bottom: 1px solid var(--border);
   margin-bottom: var(--space-lg);
   background: color-mix(in srgb, var(--surface-1) 92%, transparent);
 }
@@ -63,5 +62,14 @@
 
   .admin-section-header-actions > * {
     width: 100%;
+  }
+
+  /*
+   * Admin mobile: .booking-shell is a grid with gap (--booking-space-3). The section header also
+   * used margin-bottom --space-lg, which stacked with row-gap into a large void under the header.
+   * Cancel one row-gap so the next shell row sits flush under the header border; other rows keep gap.
+   */
+  .admin-page-wrap .booking-shell > .admin-section-header {
+    margin-bottom: calc(-1 * var(--booking-space-3, 1.35rem));
   }
 }

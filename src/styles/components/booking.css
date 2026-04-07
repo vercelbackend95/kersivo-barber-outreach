@@ -1855,61 +1855,96 @@
 }
 
 @media (max-width: 640px) {
+  /* Single-row reference layout on narrow phones (was split below 480px; that broke time | main | right zones). */
   .admin-bookings-schedule__row {
-    grid-template-columns: 4px minmax(2.65rem, 3rem) minmax(0, 1fr) minmax(0, max-content) auto;
-    gap: 0 0.55rem;
-    min-height: 3.5rem;
+    grid-template-columns:
+      4px minmax(2.75rem, 3.25rem) minmax(0, 1fr) minmax(4.25rem, 5.75rem) auto;
+    gap: 0 0.5rem;
+    min-height: 3.55rem;
+    padding-top: 0.6rem;
+    padding-bottom: 0.6rem;
+    align-items: center;
   }
 
   .admin-bookings-schedule--history .admin-bookings-schedule__row {
-    grid-template-columns: 4px minmax(4.5rem, 5.75rem) minmax(0, 1fr) minmax(0, max-content);
-  }
-
-  .admin-bookings-schedule__right-stack {
-    gap: 0.08rem;
-  }
-}
-
-@media (max-width: 480px) {
-  .admin-bookings-schedule__row {
-    grid-template-columns: 4px minmax(2.65rem, 3rem) minmax(0, 1fr);
-    grid-template-rows: auto auto auto;
-    grid-template-areas:
-      'accent time right'
-      'accent main main'
-      'accent actions actions';
-    row-gap: 0.32rem;
-    column-gap: 0.5rem;
-    align-items: start;
-  }
-
-  .admin-bookings-schedule__accent {
-    grid-area: accent;
-  }
-
-  .admin-bookings-schedule__time {
-    grid-area: time;
-  }
-
-  .admin-bookings-schedule__main {
-    grid-area: main;
-  }
-
-  .admin-bookings-schedule__right {
-    grid-area: right;
-    justify-self: end;
-    align-self: start;
-  }
-
-  .admin-bookings-schedule__actions {
-    grid-area: actions;
-    justify-self: end;
-    padding-left: 0;
+    grid-template-columns:
+      4px minmax(5rem, 6.75rem) minmax(0, 1fr) minmax(4.25rem, 5.75rem);
   }
 
   .admin-bookings-schedule__row--now {
     margin-inline: calc(-1 * clamp(0.65rem, 4vw, 0.85rem));
     padding-inline: clamp(0.65rem, 4vw, 0.85rem);
+  }
+
+  .admin-bookings-schedule__main {
+    gap: 0.22rem;
+  }
+
+  .admin-bookings-schedule__client {
+    display: block;
+    width: 100%;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  .admin-bookings-schedule__subline {
+    width: 100%;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    overflow-wrap: normal;
+  }
+
+  .admin-bookings-schedule__history-email {
+    width: 100%;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    word-break: normal;
+  }
+
+  .admin-bookings-schedule__right-stack > span {
+    max-width: 100%;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  .admin-bookings-schedule__right > .admin-bookings-schedule__status-muted {
+    display: block;
+    max-width: 100%;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  .admin-bookings-schedule__right-stack {
+    gap: 0.1rem;
+  }
+
+  .admin-bookings-schedule__actions {
+    padding-left: 0.25rem;
+  }
+
+  .admin-bookings-schedule__cancel {
+    font-size: 0.68rem;
+    padding: 0.22rem 0.4rem;
+    letter-spacing: 0.03em;
+  }
+
+  .admin-bookings-schedule__skeleton-row {
+    grid-template-columns:
+      4px minmax(2.75rem, 3.25rem) minmax(0, 1fr) minmax(4.25rem, 5.75rem);
+    gap: 0 0.5rem;
+    min-height: 3.55rem;
+    padding-top: 0.6rem;
+    padding-bottom: 0.6rem;
+  }
+
+  .admin-bookings-schedule__skeleton-row--history {
+    grid-template-columns:
+      4px minmax(5rem, 6.75rem) minmax(0, 1fr) minmax(4.25rem, 5.75rem);
   }
 }
 
@@ -5452,13 +5487,11 @@
 
 .admin-product-card__layout {
   flex: 1 1 auto;
-  display: grid;
-  grid-template-columns: auto minmax(0, 1fr);
-  gap: 0.45rem 0.65rem;
-  align-items: start;
+  display: flex;
+  flex-direction: column;
   min-width: 0;
   min-height: 0;
-  padding: 0.85rem 0.85rem 0.85rem 0.7rem;
+  padding: 0.85rem;
 }
 
 .admin-product-card__main {
@@ -5485,6 +5518,8 @@
 }
 
 .admin-product-card__media {
+  position: relative;
+  isolation: isolate;
   min-width: 0;
 }
 
@@ -5515,6 +5550,22 @@
 
   .admin-product-thumb {
     max-height: 5.25rem;
+  }
+
+  .admin-product-card-checkbox-wrap {
+    top: 0.22rem;
+    right: 0.22rem;
+    left: auto;
+    width: 1.4rem;
+    height: 1.4rem;
+    min-width: 1.4rem;
+    min-height: 1.4rem;
+    padding: 0;
+  }
+
+  .admin-product-card-checkbox {
+    width: 0.9rem;
+    height: 0.9rem;
   }
 }
 
@@ -6297,29 +6348,55 @@
 }
 
 .admin-product-card-checkbox-wrap {
-  position: relative;
-  z-index: 4;
+  position: absolute;
+  z-index: 2;
+  top: 0.3rem;
+  right: 0.3rem;
+  left: auto;
   display: flex;
   align-items: center;
-  align-self: start;
-  margin-top: 0.12rem;
+  justify-content: center;
+  box-sizing: border-box;
+  width: 1.5rem;
+  height: 1.5rem;
+  min-width: 1.5rem;
+  min-height: 1.5rem;
+  margin: 0;
+  padding: 0;
   cursor: pointer;
   line-height: 0;
-  padding: 0.2rem;
   border-radius: var(--radius-4);
-  background: color-mix(in srgb, var(--surface) 78%, transparent);
-  backdrop-filter: blur(10px);
-  -webkit-backdrop-filter: blur(10px);
-  box-shadow: 0 1px 3px color-mix(in srgb, var(--bg) 35%, transparent);
+  border: 1px solid color-mix(in srgb, var(--border) 55%, var(--fg) 45%);
+  background: color-mix(in srgb, var(--surface) 82%, var(--bg) 18%);
+  backdrop-filter: blur(12px) saturate(1.15);
+  -webkit-backdrop-filter: blur(12px) saturate(1.15);
+  box-shadow:
+    0 1px 0 color-mix(in srgb, var(--fg) 12%, transparent),
+    0 0.2rem 0.45rem color-mix(in srgb, var(--bg) 45%, transparent);
+}
+
+.admin-product-card-checkbox-wrap:hover {
+  border-color: color-mix(in srgb, var(--border) 35%, var(--fg) 65%);
+  background: color-mix(in srgb, var(--surface) 88%, var(--bg) 12%);
+}
+
+.admin-product-card-checkbox-wrap:focus-within {
+  outline: 2px solid var(--focus);
+  outline-offset: 2px;
 }
 
 .admin-product-card-checkbox {
-  width: 1.125rem;
-  height: 1.125rem;
+  width: 0.95rem;
+  height: 0.95rem;
+  margin: 0;
   accent-color: var(--accent);
   cursor: pointer;
-  border-radius: var(--radius-4);
+  border-radius: 2px;
   flex-shrink: 0;
+}
+
+.admin-product-card-checkbox:focus {
+  outline: none;
 }
 
 /* ─── Toolbar bulk controls ─── */
@@ -6945,8 +7022,7 @@
   }
 
   .admin-page-wrap .admin-product-card__layout {
-    padding: 0.65rem 0.65rem 0.65rem 0.55rem;
-    gap: 0.4rem 0.55rem;
+    padding: 0.65rem;
   }
 
   .admin-page-wrap .admin-product-card__media {
@@ -6957,6 +7033,22 @@
   .admin-page-wrap .admin-product-thumb {
     max-height: 4.25rem;
     border-radius: var(--radius-8);
+  }
+
+  .admin-page-wrap .admin-product-card-checkbox-wrap {
+    top: 0.22rem;
+    right: 0.22rem;
+    left: auto;
+    width: 1.4rem;
+    height: 1.4rem;
+    min-width: 1.4rem;
+    min-height: 1.4rem;
+    padding: 0;
+  }
+
+  .admin-page-wrap .admin-product-card-checkbox {
+    width: 0.9rem;
+    height: 0.9rem;
   }
 
   .admin-page-wrap .admin-product-card--add {
@@ -8664,8 +8756,7 @@
   }
 
   .admin-product-card__layout {
-    padding: 0.75rem 0.75rem 0.75rem 0.55rem;
-    gap: 0.4rem 0.55rem;
+    padding: 0.75rem;
   }
 
   .admin-product-card__primary {
@@ -8676,6 +8767,22 @@
   .admin-product-card__media {
     margin: 0;
     padding: 0;
+  }
+
+  .admin-product-card-checkbox-wrap {
+    top: 0.22rem;
+    right: 0.22rem;
+    left: auto;
+    width: 1.4rem;
+    height: 1.4rem;
+    min-width: 1.4rem;
+    min-height: 1.4rem;
+    padding: 0;
+  }
+
+  .admin-product-card-checkbox {
+    width: 0.9rem;
+    height: 0.9rem;
   }
 
   .admin-product-thumb {

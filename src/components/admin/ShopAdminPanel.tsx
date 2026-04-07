@@ -2095,19 +2095,21 @@ export default function ShopAdminPanel({ initialTab = 'products' }: ShopAdminPan
                     aria-selected={isCardSelected}
                   >
                     <div className="admin-product-card__layout">
-                      <label className="admin-product-card-checkbox-wrap" title={isCardSelected ? `Deselect ${product.name}` : `Select ${product.name}`}>
-                        <input
-                          type="checkbox"
-                          className="admin-product-card-checkbox"
-                          checked={isCardSelected}
-                          onChange={() => bulkToggle(product.id)}
-                          aria-label={isCardSelected ? `Deselect ${product.name}` : `Select ${product.name}`}
-                        />
-                      </label>
-
                       <div className="admin-product-card__main">
                         <div className="admin-product-card__primary">
                           <div className="admin-product-card__media">
+                            <label
+                              className="admin-product-card-checkbox-wrap"
+                              title={isCardSelected ? `Deselect ${product.name}` : `Select ${product.name}`}
+                            >
+                              <input
+                                type="checkbox"
+                                className="admin-product-card-checkbox"
+                                checked={isCardSelected}
+                                onChange={() => bulkToggle(product.id)}
+                                aria-label={isCardSelected ? `Deselect ${product.name}` : `Select ${product.name}`}
+                              />
+                            </label>
                             <div className="admin-product-thumb">
                               {product.imageUrl ? (
                                 <img src={product.imageUrl} alt={product.name} loading="lazy" draggable={false} />

@@ -16,19 +16,6 @@ const { class: className = '' } = Astro.props;
 <script type="module">
   const CART_OPEN_REQUEST_EVENT = 'kersivo:cart-open-request';
 
-  const forceOpenDrawerClass = () => {
-    const drawers = Array.from(document.querySelectorAll('.cart-drawer'));
-
-    drawers.forEach((drawer) => {
-      if (!(drawer instanceof HTMLElement)) {
-        return;
-      }
-
-      drawer.classList.add('cart-drawer--open');
-      drawer.setAttribute('aria-hidden', 'false');
-    });
-  };
-
   const bindCartButtons = () => {
     const cartButtons = Array.from(document.querySelectorAll('[data-navbar-cart-button]'));
 
@@ -44,7 +31,6 @@ const { class: className = '' } = Astro.props;
       button.dataset.cartSyncBound = 'true';
       button.addEventListener('click', () => {
         window.dispatchEvent(new CustomEvent(CART_OPEN_REQUEST_EVENT));
-        forceOpenDrawerClass();
       });
     });
   };
