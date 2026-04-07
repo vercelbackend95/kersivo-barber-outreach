@@ -29,7 +29,17 @@ type BarberListRow = {
 type ServicePanelBarberRow = {
   id: string;
   name: string;
+  isActive: boolean;
+  avatarUrl?: string | null;
   isAssigned: boolean;
+};
+type ServiceBarberAssignmentListRow = {
+  id: string;
+  name: string;
+  isActive: boolean;
+  avatarUrl?: string | null;
+  isSelected: boolean;
+  subline: string;
 };
 
 
@@ -64,6 +74,11 @@ type BarberAssignmentSectionProps = {
   isLoading: boolean;
   onChange: (barberIds: string[]) => void;
 };
+type ServiceBarberAssignmentListProps = {
+  rows: ServiceBarberAssignmentListRow[];
+  ariaLabel: string;
+  onToggle?: (barberId: string) => void;
+};
 
 
 const EMPTY_FORM: ServiceForm = {
@@ -86,11 +101,11 @@ function toPence(input: string): number {
   if (!Number.isFinite(n)) return -1;
   return Math.round(n * 100);
 }
-function getServiceMetaChunks(service: ServiceRow) {
-  const chunks = [`${formatPrice(service.pricePence)}`, `${service.durationMinutes} min`];
-  if (service.bufferMinutes > 0) chunks.push(`Buffer ${service.bufferMinutes} min`);
-  chunks.push(`Order ${service.displayOrder}`);
-  return chunks;
+function getServiceMeta(service: ServiceRow) {
+  const core = [`${formatPrice(service.pricePence)}`, `${service.durationMinutes} min`];
+  const secondary = [`Order ${service.displayOrder}`];
+  if (service.bufferMinutes > 0) secondary.unshift(`Buffer ${service.bufferMinutes} min`);
+  return { core, secondary };
 }
 function getInitials(name: string) {
   const parts = name
@@ -101,6 +116,57 @@ function getInitials(name: string) {
 
   if (parts.length === 0) return 'B';
   return parts.map((part) => part.charAt(0).toUpperCase()).join('');
+}
+function ServiceBarberAssignmentList({ rows, ariaLabel, onToggle }: ServiceBarberAssignmentListProps) {
+  return (
+    <div className="admin-service-assignment-list" role="list" aria-label={ariaLabel}>
+      {rows.map((barber) => {
+        const rowClassName = `admin-service-assignment-row${barber.isSelected ? ' is-selected' : ''}${onToggle ? '' : ' is-readonly'}`;
+        const content = (
+          <>
+            <span className="admin-service-assignment-row-main">
+              <span className="admin-barber-avatar admin-service-assignment-avatar" aria-hidden="true">
+                {barber.avatarUrl ? <img src={barber.avatarUrl} alt="" loading="lazy" /> : <span>{getInitials(barber.name)}</span>}
+              </span>
+              <span className="admin-service-assignment-text">
+                <span className="admin-service-assignment-name-row">
+                  <span className="admin-service-assignment-name">{barber.name}</span>
+                  <span className="admin-service-assignment-status" aria-label={barber.isActive ? 'Active barber' : 'Inactive barber'}>
+                    <span className={`admin-status-dot ${barber.isActive ? 'is-active' : 'is-inactive'}`} aria-hidden="true" />
+                  </span>
+                </span>
+                <span className="admin-service-assignment-subline">{barber.subline}</span>
+              </span>
+            </span>
+
+            <span className={`admin-service-assignment-indicator ${barber.isSelected ? 'is-selected' : ''}`} aria-hidden="true">
+              <span className="admin-service-assignment-indicator-mark">✓</span>
+            </span>
+          </>
+        );
+
+        if (!onToggle) {
+          return (
+            <div key={barber.id} className={rowClassName} role="listitem">
+              {content}
+            </div>
+          );
+        }
+
+        return (
+          <button
+            key={barber.id}
+            type="button"
+            className={rowClassName}
+            aria-pressed={barber.isSelected}
+            onClick={() => onToggle(barber.id)}
+          >
+            {content}
+          </button>
+        );
+      })}
+    </div>
+  );
 }
 
 function BarberAssignmentSection({ barbers, selectedBarberIds, isLoading, onChange }: BarberAssignmentSectionProps) {
@@ -187,42 +253,18 @@ function BarberAssignmentSection({ barbers, selectedBarberIds, isLoading, onChan
       ) : null}
 
       {!isLoading && sortedBarbers.length > 0 ? (
-        <div className="admin-service-assignment-list" role="list" aria-label="Available barbers for this service">
-          {sortedBarbers.map((barber) => {
-            const barberIsActive = barber.isActive;
-            const isSelected = selectedBarberIdSet.has(barber.id);
-            return (
-              <button
-                key={barber.id}
-                type="button"
-                className={`admin-service-assignment-row ${isSelected ? 'is-selected' : ''}`}
-                aria-pressed={isSelected}
-                onClick={() => toggleBarber(barber.id)}
-              >
-                <span className="admin-service-assignment-row-main">
-                  <span className="admin-barber-avatar admin-service-assignment-avatar" aria-hidden="true">
-                    {barber.avatarUrl ? <img src={barber.avatarUrl} alt="" loading="lazy" /> : <span>{getInitials(barber.name)}</span>}
-                  </span>
-                  <span className="admin-service-assignment-text">
-                    <span className="admin-service-assignment-name-row">
-                      <span className="admin-service-assignment-name">{barber.name}</span>
-                      <span className="admin-service-assignment-status" aria-label={barberIsActive ? 'Active barber' : 'Inactive barber'}>
-                        <span className={`admin-status-dot ${barberIsActive ? 'is-active' : 'is-inactive'}`} aria-hidden="true" />
-                      </span>
-                    </span>
-                    <span className="admin-service-assignment-subline">
-                      {barberIsActive ? 'Available for bookings' : 'Hidden from live bookings'}
-                    </span>
-                  </span>
-                </span>
-
-                <span className={`admin-service-assignment-indicator ${isSelected ? 'is-selected' : ''}`} aria-hidden="true">
-                  <span className="admin-service-assignment-indicator-mark">✓</span>
-                </span>
-              </button>
-            );
-          })}
-        </div>
+        <ServiceBarberAssignmentList
+          rows={sortedBarbers.map((barber) => ({
+            id: barber.id,
+            name: barber.name,
+            isActive: barber.isActive,
+            avatarUrl: barber.avatarUrl,
+            isSelected: selectedBarberIdSet.has(barber.id),
+            subline: barber.isActive ? 'Available for bookings' : 'Hidden from live bookings'
+          }))}
+          ariaLabel="Available barbers for this service"
+          onToggle={toggleBarber}
+        />
       ) : null}
     </section>
   );
@@ -314,16 +356,25 @@ export default function ServicesAdminPanel() {
 
     const assignedBarberIds = new Set((activeServiceForPanel.barberServices ?? []).map((relation) => relation.barber.id));
     const sourceBarbers = barbers.length > 0
-      ? barbers.map((barber) => ({ id: barber.id, name: barber.name }))
+      ? barbers.map((barber) => ({
+          id: barber.id,
+          name: barber.name,
+          isActive: barber.isActive,
+          avatarUrl: barber.avatarUrl
+        }))
       : (activeServiceForPanel.barberServices ?? []).map((relation) => ({
           id: relation.barber.id,
-          name: relation.barber.name
+          name: relation.barber.name,
+          isActive: relation.barber.active,
+          avatarUrl: null
         }));
 
     return sourceBarbers
       .map((barber) => ({
         id: barber.id,
         name: barber.name,
+        isActive: barber.isActive,
+        avatarUrl: barber.avatarUrl,
         isAssigned: assignedBarberIds.has(barber.id)
       }))
       .sort((left, right) => {
@@ -462,8 +513,8 @@ export default function ServicesAdminPanel() {
       {error ? <p className="admin-inline-error">{error}</p> : null}
 
       {loading ? (
-        <div className="admin-barber-list-wrap" aria-busy="true">
-          <div className="admin-barber-grid admin-services-grid" aria-hidden="true">
+        <div className="admin-services-list-wrap" aria-busy="true">
+          <div className="admin-services-list admin-services-list--loading" aria-hidden="true">
             <SkeletonBookingChoices count={4} variant="service" />
           </div>
         </div>
@@ -477,46 +528,55 @@ export default function ServicesAdminPanel() {
       ) : null}
 
       {services.length > 0 ? (
-        <div className="admin-barber-list-wrap">
-          <ul className="admin-barber-grid admin-services-grid" aria-label="Services list">
+        <div className="admin-services-list-wrap">
+          <ul className="admin-services-list" aria-label="Services list">
             {services.map((service) => {
               const assignedBarbers = (service.barberServices ?? []).map((relation) => relation.barber);
-              const serviceMetaChunks = getServiceMetaChunks(service);
+              const serviceMeta = getServiceMeta(service);
               return (
-                <li key={service.id} className={`admin-barber-card admin-service-list-card ${service.isActive ? '' : 'is-inactive'}`}>
-                  <button type="button" className="admin-barber-identity admin-service-identity" onClick={() => startEdit(service)}>
-                    <div className="admin-service-copy">
-                      <div className="admin-barber-name-row">
-                        <p className="admin-barber-name">{service.name}</p>
-                        <span className="admin-barber-status-indicator" role="status" aria-label={service.isActive ? 'Active' : 'Inactive'}>
+                <li key={service.id} className={`admin-service-card ${service.isActive ? '' : 'is-inactive'}`}>
+                  <div className="admin-service-card-header">
+                    <div className="admin-service-card-title-wrap">
+                      <p className="admin-service-card-name" title={service.name}>{service.name}</p>
+                      <span className="admin-service-card-status" role="status" aria-label={service.isActive ? 'Active' : 'Inactive'}>
+                        <span className="admin-service-card-status-label">{service.isActive ? 'Active' : 'Inactive'}</span>
+                        <span className="admin-service-card-status-dot-wrap">
                           <span className={`admin-status-dot ${service.isActive ? 'is-active' : 'is-inactive'}`} aria-hidden="true" />
                         </span>
-                      </div>
-                      <p className="admin-barber-next-line admin-service-meta-row">
-                        {serviceMetaChunks.map((chunk, index) => (
-                          <React.Fragment key={`${service.id}-meta-${chunk}`}>
-                            {index > 0 ? <span className="admin-service-meta-separator" aria-hidden="true">•</span> : null}
-                            <span className="admin-service-meta-chip">{chunk}</span>
-                          </React.Fragment>
-                        ))}
-                      </p>
-                      {service.category ? <p className="admin-barber-today-line">Category: {service.category}</p> : null}
-                      {service.description ? <p className="admin-barber-today-line">{service.description}</p> : null}
+                      </span>
                     </div>
-                  </button>
-
-                  <div className="admin-barber-actions admin-service-card-actions">
-                    <p className="admin-service-actions-meta" aria-live="polite">
-                      <span className="admin-service-actions-meta-label">Assigned</span>
-                      <span className="admin-service-actions-meta-value">{assignedBarbers.length}</span>
-                    </p>
                     <button
                       type="button"
-                      className="admin-reorder-btn admin-reorder-btn--settings"
+                      className="admin-reorder-btn admin-reorder-btn--settings admin-service-settings-btn"
                       onClick={() => setActiveServiceForPanelId(service.id)}
                       aria-label={`Open ${service.name} settings panel`}
                     >
                       <SettingsGearIcon className="admin-control-icon" />
+                    </button>
+                  </div>
+
+                  <div className="admin-service-card-body">
+                    <div className="admin-service-meta-group admin-service-meta-group--core">
+                      {serviceMeta.core.map((chunk) => (
+                        <span key={`${service.id}-core-${chunk}`} className="admin-service-meta-chip admin-service-meta-chip--core">{chunk}</span>
+                      ))}
+                    </div>
+                    <div className="admin-service-meta-group admin-service-meta-group--secondary">
+                      {serviceMeta.secondary.map((chunk) => (
+                        <span key={`${service.id}-secondary-${chunk}`} className="admin-service-meta-chip">{chunk}</span>
+                      ))}
+                    </div>
+                    {service.category ? <p className="admin-service-support-line">Category: {service.category}</p> : null}
+                    {service.description ? <p className="admin-service-support-line">{service.description}</p> : null}
+                  </div>
+
+                  <div className="admin-service-card-footer">
+                    <p className="admin-service-actions-meta" aria-live="polite">
+                      <span className="admin-service-actions-meta-label">Assigned</span>
+                      <span className="admin-service-actions-meta-value">{assignedBarbers.length}</span>
+                    </p>
+                    <button type="button" className="btn btn--ghost admin-service-edit-btn" onClick={() => startEdit(service)}>
+                      Edit
                     </button>
                   </div>
                 </li>
@@ -556,27 +616,44 @@ export default function ServicesAdminPanel() {
                 <span className={`admin-status-dot ${activeServiceForPanel.isActive ? 'is-active' : 'is-inactive'}`} aria-hidden="true" />
                 {activeServiceForPanel.isActive ? 'Active' : 'Inactive'}
               </p>
-              <p className="admin-barber-next-line">{getServiceMetaChunks(activeServiceForPanel).join(' · ')}</p>
+              <p className="admin-barber-next-line">
+                {[...getServiceMeta(activeServiceForPanel).core, ...getServiceMeta(activeServiceForPanel).secondary].join(' · ')}
+              </p>
               {activeServiceForPanel.category ? <p className="admin-barber-today-line">Category: {activeServiceForPanel.category}</p> : null}
 
-              <div className="admin-service-assigned-barbers">
-                <h4>Barbers assigned to this service.</h4>
+              <section className="admin-service-assignment-section admin-service-assigned-barbers-section" aria-labelledby="service-panel-assigned-barbers-title">
+                <div className="admin-service-assignment-header">
+                  <div className="admin-service-assignment-copy">
+                    <p className="admin-service-assignment-eyebrow">BARBERS FOR THIS SERVICE</p>
+                    <h3 id="service-panel-assigned-barbers-title">Current barber assignment.</h3>
+                  </div>
+                  <div className="admin-service-assignment-tools" aria-label="Assigned barbers summary">
+                    <span className="admin-service-assignment-count">
+                      {barbersForActiveServicePanel.filter((barber) => barber.isAssigned).length} assigned
+                    </span>
+                  </div>
+                </div>
+
                 {barbersForActiveServicePanel.length > 0 ? (
-                  <ul>
-                    {barbersForActiveServicePanel.map((barber) => (
-                      <li key={barber.id} className={barber.isAssigned ? 'is-assigned' : 'is-unassigned'}>
-                        <span>{barber.name}</span>
-                        <span
-                          className={`admin-status-dot ${barber.isAssigned ? 'is-active' : 'is-inactive'}`}
-                          aria-hidden="true"
-                        />
-                      </li>
-                    ))}
-                  </ul>
+                  <ServiceBarberAssignmentList
+                    rows={barbersForActiveServicePanel.map((barber) => ({
+                      id: barber.id,
+                      name: barber.name,
+                      isActive: barber.isActive,
+                      avatarUrl: barber.avatarUrl,
+                      isSelected: barber.isAssigned,
+                      subline: barber.isAssigned ? 'Assigned to this service' : 'Not assigned to this service'
+                    }))}
+                    ariaLabel="Barbers assigned in this service panel"
+                  />
                 ) : (
-                  <p className="muted">No barbers available yet.</p>
+                  <EmptyState
+                    icon={Users}
+                    title="No barbers available"
+                    description="Add barbers in the Barbers section first, then assign them to this service."
+                  />
                 )}
-              </div>
+              </section>
             </div>
 
             <div className="admin-barber-sheet-footer admin-service-sheet-foot">

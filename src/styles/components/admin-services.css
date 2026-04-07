@@ -6,34 +6,101 @@
 }
 
 
-.admin-services-grid {
-  margin-top: 0.75rem;
+.admin-services-list-wrap {
+  width: 100%;
+  max-width: min(100%, 116rem);
+  margin-inline: auto;
+}
+
+.admin-services-list {
+  --service-card-min: 18rem;
+  margin: 0.75rem 0 1rem;
+  padding: 0;
+  list-style: none;
+  display: grid;
+  gap: 0.82rem;
   grid-template-columns: 1fr;
 }
 
-.admin-service-list-card {
-  align-items: stretch;
-  gap: 0.7rem;
-}
-
-.admin-service-identity {
+.admin-services-list--loading {
   grid-template-columns: 1fr;
-  align-items: center;
 }
 
-.admin-service-copy {
+.admin-service-card {
+  display: grid;
+  grid-template-rows: auto auto auto;
+  gap: 0.72rem;
+  min-height: 11.25rem;
+  padding: 0.86rem;
+  border: 1px solid var(--border);
+  background: color-mix(in srgb, var(--surface) 92%, var(--bg) 8%);
+}
+
+.admin-service-card.is-inactive {
+  opacity: 0.72;
+}
+
+.admin-service-card-header {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: start;
+  gap: 0.55rem;
+}
+
+.admin-service-card-title-wrap {
   min-width: 0;
   display: grid;
-  gap: 0.36rem;
+  gap: 0.34rem;
 }
 
-.admin-service-meta-row {
+.admin-service-card-name {
+  margin: 0;
+  font-size: 0.94rem;
+  line-height: 1.3;
+  font-weight: 650;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+.admin-service-card-status {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  min-width: 0;
+}
+
+.admin-service-card-status-label {
+  color: color-mix(in srgb, var(--muted) 84%, var(--fg) 16%);
+  text-transform: uppercase;
+  letter-spacing: 0.045em;
+  font-size: 0.67rem;
+  line-height: 1;
+}
+
+.admin-service-card-status-dot-wrap {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.admin-service-card-body {
+  min-width: 0;
+  display: grid;
+  gap: 0.42rem;
+}
+
+.admin-service-meta-group {
   display: flex;
   flex-wrap: wrap;
   align-items: center;
-  gap: 0.28rem;
-  margin-top: 0.05rem;
+  gap: 0.32rem;
+  min-width: 0;
+}
 
+.admin-service-meta-group--core {
+  gap: 0.36rem;
 }
 
 .admin-service-meta-chip {
@@ -41,44 +108,58 @@
   font-size: 0.74rem;
   letter-spacing: 0.015em;
   line-height: 1.25;
-
+  padding: 0.22rem 0.42rem;
+  border: 1px solid color-mix(in srgb, var(--border) 84%, transparent);
+  background: color-mix(in srgb, var(--bg) 65%, var(--surface) 35%);
+  white-space: nowrap;
+  max-width: 100%;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
-.admin-service-meta-separator {
-  color: color-mix(in srgb, var(--muted) 74%, var(--border) 26%);
-  font-size: 0.64rem;
-
-  line-height: 1;
-
+.admin-service-meta-chip--core {
+  color: color-mix(in srgb, var(--fg) 92%, var(--muted) 8%);
+  border-color: color-mix(in srgb, var(--accent) 26%, var(--border) 74%);
+  background: color-mix(in srgb, var(--surface) 84%, var(--accent) 16%);
 }
 
-.admin-service-card-actions {
-  width: 100%;
-  display: flex;
-  justify-content: flex-end;
-
-  align-items: center;
-  gap: 0.6rem;
+.admin-service-support-line {
+  margin: 0;
+  color: var(--muted);
+  font-size: 0.8rem;
+  line-height: 1.3;
+  display: -webkit-box;
+  -webkit-line-clamp: 1;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
 }
 
-.admin-service-card-actions .admin-reorder-btn--settings {
+.admin-service-settings-btn {
   width: 2.25rem;
   height: 2.25rem;
+  align-self: start;
   border-color: transparent;
   background: transparent;
   color: color-mix(in srgb, var(--fg) 72%, var(--muted) 28%);
 }
 
-.admin-service-card-actions .admin-reorder-btn--settings:hover:not(:disabled) {
+.admin-service-settings-btn:hover:not(:disabled) {
   border-color: color-mix(in srgb, var(--accent) 24%, transparent);
   background: color-mix(in srgb, var(--accent) 10%, transparent);
   color: color-mix(in srgb, var(--accent) 78%, var(--fg) 22%);
-
 }
 
-.admin-service-card-actions .admin-reorder-btn--settings:focus-visible {
+.admin-service-settings-btn:focus-visible {
   border-color: transparent;
   color: color-mix(in srgb, var(--accent) 78%, var(--fg) 22%);
+}
+
+.admin-service-card-footer {
+  margin-top: auto;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.6rem;
 }
 
 .admin-service-actions-meta {
@@ -104,7 +185,39 @@
   font-size: 0.92rem;
   font-weight: 700;
   letter-spacing: 0.01em;
+}
 
+.admin-service-edit-btn {
+  min-height: 2rem;
+  padding: 0.28rem 0.6rem;
+  font-size: 0.8rem;
+  color: color-mix(in srgb, var(--muted) 80%, var(--fg) 20%);
+}
+
+@media (min-width: 48rem) {
+  .admin-services-list {
+    grid-template-columns: repeat(2, minmax(var(--service-card-min), 1fr));
+    gap: 0.9rem;
+  }
+}
+
+@media (min-width: 64rem) {
+  .admin-services-list {
+    grid-template-columns: repeat(2, minmax(var(--service-card-min), 1fr));
+  }
+}
+
+@media (min-width: 80rem) {
+  .admin-services-list {
+    grid-template-columns: repeat(3, minmax(var(--service-card-min), 1fr));
+    gap: 1rem;
+  }
+}
+
+@media (min-width: 100rem) {
+  .admin-services-list {
+    grid-template-columns: repeat(4, minmax(var(--service-card-min), 1fr));
+  }
 }
 
 .admin-service-sheet {
@@ -449,6 +562,13 @@
   border-color: color-mix(in srgb, var(--accent) 42%, var(--border) 58%);
   background: color-mix(in srgb, var(--accent) 10%, var(--surface) 90%);
 }
+.admin-service-assignment-row.is-readonly {
+  cursor: default;
+}
+
+.admin-service-assignment-row.is-readonly:active {
+  transform: none;
+}
 
 .admin-service-assignment-row-main {
   min-width: 0;
@@ -527,36 +647,8 @@
 
 
 
-.admin-service-assigned-barbers {
-  border: 1px solid var(--border);
-  padding: 0.6rem;
-  display: grid;
-  gap: 0.45rem;
-}
-
-.admin-service-assigned-barbers h4 {
-  margin: 0;
-  font-size: 0.92rem;
-  letter-spacing: 0.03em;
-  text-transform: uppercase;
-}
-
-.admin-service-assigned-barbers ul {
-  margin: 0;
-  padding: 0;
-  list-style: none;
-  display: grid;
-  gap: 0.3rem;
-}
-
-.admin-service-assigned-barbers li {
-  display: inline-flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 0.5rem;
-  padding: 0.4rem 0.5rem;
-  border: 1px solid var(--border);
-  background: color-mix(in srgb, var(--bg) 70%, transparent);
+.admin-service-assigned-barbers-section {
+  margin-top: 0.2rem;
 }
 @media (max-width: 47.99rem) {
   .admin-services-shell > h1,
@@ -582,40 +674,20 @@
   }
 
 
-  .admin-service-list-card {
-    align-items: center;
-    gap: 1rem;
-  }
-    .admin-service-meta-row {
-    gap: 0.35rem;
-    margin-top: 0;
-  }
-
-
   .admin-service-meta-chip {
     font-size: 0.8rem;
-        letter-spacing: 0.02em;
-  }
-  .admin-service-meta-separator {
-    font-size: 0.68rem;
+    letter-spacing: 0.02em;
   }
 
-
-
-  .admin-service-card-actions {
-    width: auto;
-    gap: 0.75rem;
-  }
-
-  .admin-service-card-actions .admin-reorder-btn--settings {
+  .admin-service-settings-btn {
     width: 2.4rem;
     height: 2.4rem;
   }
 
   .admin-service-actions-meta {
-        gap: 0.36rem;
+    gap: 0.36rem;
     font-size: 0.74rem;
-        letter-spacing: 0.03em;
+    letter-spacing: 0.03em;
   }
 
   .admin-service-actions-meta-value {
@@ -720,9 +792,6 @@
 }
 
 
-.admin-service-assigned-barbers li.is-unassigned .admin-status-dot {
-  background: color-mix(in srgb, var(--muted) 78%, var(--surface) 22%);
-}
 
 @media (max-width: 47.99rem) {
   .admin-service-panel-head {

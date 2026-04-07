@@ -5503,11 +5503,20 @@
 
 .admin-product-card__price-row {
   display: flex;
-  flex-wrap: wrap;
+  flex-wrap: nowrap;
   align-items: center;
-  gap: 0.35rem 0.55rem;
+  justify-content: space-between;
+  gap: 0.45rem 0.65rem;
   margin-top: 0.12rem;
   min-width: 0;
+}
+
+.admin-product-card__price-actions {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  min-width: 0;
+  margin-inline-start: auto;
 }
 
 .admin-product-card__price {
@@ -5637,8 +5646,8 @@
   flex-direction: row;
   flex-wrap: nowrap;
   align-items: center;
-  justify-content: space-between;
-  gap: 0.5rem 0.65rem;
+  justify-content: flex-start;
+  gap: 0.45rem 0.65rem;
   min-width: 0;
 }
 
@@ -5648,24 +5657,37 @@
   align-items: center;
 }
 
-.admin-product-card__actions-end {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  justify-content: flex-end;
-  gap: 0.45rem 0.65rem;
-  flex: 0 1 auto;
-  min-width: 0;
-}
-
-.admin-product-card__actions-end .admin-products-actions {
-  flex: 0 1 auto;
-  min-width: 0;
-  justify-content: flex-end;
-}
-
 .admin-product-card__switch-row {
+  flex: 1 1 auto;
   min-width: 0;
+  display: flex;
+  align-items: center;
+}
+
+.admin-product-card__switch-row .admin-product-switches--toolbar {
+  width: 100%;
+}
+
+.admin-product-card__status-row {
+  display: flex;
+  justify-content: flex-end;
+  min-width: 0;
+}
+
+.admin-product-card__status-row .admin-products-actions {
+  flex: 0 1 auto;
+  min-width: 0;
+  justify-content: flex-end;
+}
+
+@container admin-product-card (max-width: 21rem) {
+  .admin-product-card__actions-row {
+    flex-wrap: wrap;
+  }
+
+  .admin-product-card__switch-row {
+    flex-basis: 100%;
+  }
 }
 
 .admin-product-card__edit {
@@ -5991,25 +6013,20 @@
   transition: opacity 160ms ease;
 }
 
+.admin-reorder-controls--product {
+  opacity: 1;
+  pointer-events: auto;
+}
+
 /* Desktop: hide reorder controls, reveal on card hover or keyboard focus */
 @media (hover: hover) {
-  .admin-reorder-controls--barber,
-  .admin-reorder-controls--product {
+  .admin-reorder-controls--barber {
     opacity: 0;
     pointer-events: none;
   }
 
   .admin-barber-card:hover .admin-reorder-controls--barber,
-  .admin-barber-card:focus-within .admin-reorder-controls--barber,
-  .admin-product-card:hover .admin-reorder-controls--product,
-  .admin-product-card:focus-within .admin-reorder-controls--product {
-    opacity: 1;
-    pointer-events: auto;
-  }
-}
-
-@media (hover: none) {
-  .admin-reorder-controls--product {
+  .admin-barber-card:focus-within .admin-reorder-controls--barber {
     opacity: 1;
     pointer-events: auto;
   }

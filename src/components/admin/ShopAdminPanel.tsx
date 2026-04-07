@@ -2121,11 +2121,22 @@ export default function ShopAdminPanel({ initialTab = 'products' }: ShopAdminPan
                             <h4 className="admin-product-card__title">{product.name}</h4>
                             <div className="admin-product-card__price-row">
                               <p className="admin-product-card__price">{formatPrice(product.pricePence)}</p>
-                              {!product.active ? (
-                                <div className="admin-product-card__badges" aria-label="Product visibility">
-                                  <span className="admin-product-badge admin-product-badge--hidden">Hidden</span>
-                                </div>
-                              ) : null}
+                              <div className="admin-product-card__price-actions">
+                                {!product.active ? (
+                                  <div className="admin-product-card__badges" aria-label="Product visibility">
+                                    <span className="admin-product-badge admin-product-badge--hidden">Hidden</span>
+                                  </div>
+                                ) : null}
+                                <button
+                                  type="button"
+                                  className="admin-product-card__edit"
+                                  aria-label={`Edit ${product.name}`}
+                                  onClick={() => startEdit(product)}
+                                >
+                                  <SettingsGearIcon className="admin-control-icon" aria-hidden="true" />
+                                  <span className="admin-product-card__edit-label">Edit</span>
+                                </button>
+                              </div>
                             </div>
                           </div>
                         </div>
@@ -2174,50 +2185,40 @@ export default function ShopAdminPanel({ initialTab = 'products' }: ShopAdminPan
                                 </div>
                               </div>
                             </div>
-                            <div className="admin-product-card__actions-end">
-                              <button
-                                type="button"
-                                className="admin-product-card__edit"
-                                aria-label={`Edit ${product.name}`}
-                                onClick={() => startEdit(product)}
-                              >
-                                <SettingsGearIcon className="admin-control-icon" aria-hidden="true" />
-                                <span className="admin-product-card__edit-label">Edit</span>
-                              </button>
-                              {productStatusLine ? (
-                                <div className="admin-products-actions">
-                                  <span className="admin-product-saving muted" aria-live="polite">
-                                    {productStatusLine}
-                                  </span>
-                                </div>
-                              ) : null}
+                            <div className="admin-product-card__switch-row">
+                              <div className="admin-product-switches admin-product-switches--toolbar">
+                                <ProductStatusSwitch
+                                  label="Active"
+                                  checked={product.active}
+                                  disabled={isSavingCard}
+                                  onLabel="Active"
+                                  offLabel="Inactive"
+                                  tone="active"
+                                  variant="card"
+                                  onChange={(nextValue) => void patchProductFlags(product.id, { active: nextValue })}
+                                />
+                                <ProductStatusSwitch
+                                  label="Featured"
+                                  checked={product.featured}
+                                  disabled={isSavingCard}
+                                  onLabel="Featured"
+                                  offLabel="Off"
+                                  tone="featured"
+                                  variant="card"
+                                  onChange={(nextValue) => void patchProductFlags(product.id, { featured: nextValue })}
+                                />
+                              </div>
                             </div>
                           </div>
-
-                          <div className="admin-product-card__switch-row">
-                            <div className="admin-product-switches admin-product-switches--toolbar">
-                              <ProductStatusSwitch
-                                label="Active"
-                                checked={product.active}
-                                disabled={isSavingCard}
-                                onLabel="Active"
-                                offLabel="Inactive"
-                                tone="active"
-                                variant="card"
-                                onChange={(nextValue) => void patchProductFlags(product.id, { active: nextValue })}
-                              />
-                              <ProductStatusSwitch
-                                label="Featured"
-                                checked={product.featured}
-                                disabled={isSavingCard}
-                                onLabel="Featured"
-                                offLabel="Off"
-                                tone="featured"
-                                variant="card"
-                                onChange={(nextValue) => void patchProductFlags(product.id, { featured: nextValue })}
-                              />
+                          {productStatusLine ? (
+                            <div className="admin-product-card__status-row">
+                              <div className="admin-products-actions">
+                                <span className="admin-product-saving muted" aria-live="polite">
+                                  {productStatusLine}
+                                </span>
+                              </div>
                             </div>
-                          </div>
+                          ) : null}
                         </div>
                       </div>
                     </div>
