@@ -4644,10 +4644,10 @@
   .admin-mobile-next-strip {
     display: flex;
     flex-direction: column;
-    gap: 0.24rem;
+    gap: 0.18rem;
     width: 100%;
     min-width: 0;
-    padding: 0.15rem 0 0;
+    padding: 0.1rem 0 0;
   }
 
   .admin-mobile-next-strip-head {
@@ -4717,14 +4717,15 @@
     margin: 0;
     padding: 0;
     display: grid;
-    gap: 0.18rem;
+    gap: 0.12rem;
+    position: relative;
   }
 
   .admin-mobile-next-strip-item {
     display: grid;
     gap: 0.02rem;
     min-width: 0;
-    padding: 0.2rem 0;
+    padding: 0.12rem 0;
     opacity: 0.82;
   }
 
@@ -4736,19 +4737,20 @@
     padding-block: 0;
   }
 
-  .admin-mobile-next-strip-item--drawer-extra:has(.admin-mobile-next-strip-item-clip--open) {
+  .admin-mobile-next-strip-item--drawer-open {
     padding-block: 0.2rem;
   }
 
   /* Subtle drawer: extra rows expand/collapse height + light fade/slide */
   .admin-mobile-next-strip-item-clip {
-    display: grid;
-    grid-template-rows: 0fr;
-    transition: grid-template-rows 0.32s cubic-bezier(0.33, 1, 0.32, 1);
+    max-height: 0;
+    overflow: hidden;
+    transition: max-height 0.32s cubic-bezier(0.22, 1, 0.36, 1);
+    will-change: max-height;
   }
 
   .admin-mobile-next-strip-item-clip--open {
-    grid-template-rows: 1fr;
+    max-height: 6rem;
   }
 
   .admin-mobile-next-strip-item-clip-inner {
@@ -4762,6 +4764,7 @@
     transition:
       opacity 0.26s cubic-bezier(0.33, 1, 0.32, 1),
       transform 0.32s cubic-bezier(0.33, 1, 0.32, 1);
+    will-change: opacity, transform;
   }
 
   .admin-mobile-next-strip-item-clip--open .admin-mobile-next-strip-item-clip-inner {
@@ -4803,24 +4806,39 @@
     letter-spacing: 0.01em;
   }
 
-  /* Meta row + pill: time left; pill centered on same line (collapsed = first row, expanded = last row). */
+  /* Meta row reserves room for the floating expand/collapse pill. */
   .admin-mobile-next-strip-meta-row--with-pill {
     position: relative;
     min-width: 0;
+    padding-inline-end: 3.1rem;
   }
 
   .admin-mobile-next-strip-meta--with-pill {
     position: relative;
     z-index: 1;
-    max-width: calc(100% - 3.1rem);
+    max-width: 100%;
   }
 
-  .admin-mobile-next-strip-toggle-anchor {
+  .admin-mobile-next-strip-toggle-float-wrap {
+    position: static;
+    margin: 0;
+    padding: 0;
+    list-style: none;
+  }
+
+  .admin-mobile-next-strip-toggle-float {
     position: absolute;
     left: 50%;
-    top: 50%;
+    top: 0;
     transform: translate(-50%, -50%);
     z-index: 2;
+    transition: top 0.32s cubic-bezier(0.22, 1, 0.36, 1);
+    will-change: top;
+    pointer-events: none;
+  }
+
+  .admin-mobile-next-strip-toggle-float .admin-mobile-next-strip-toggle {
+    pointer-events: auto;
   }
 
   .admin-mobile-next-strip-item--empty .admin-mobile-next-strip-main {
