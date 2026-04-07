@@ -1,4 +1,5 @@
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { createPortal } from 'react-dom';
 import { BarberRosterOverviewGridSkeleton, SkeletonKPICards } from '../skeleton';
 import AdminSectionHeader from './AdminSectionHeader';
 import AdminBookingsOpsSearch from './AdminBookingsOpsSearch';
@@ -2844,161 +2845,164 @@ export default function BookingsAdminPanel({ isActive, mode, onBackToDashboard }
         </div>
       )}
 
-      {selectedTimelineBooking && (
-        <div
-          className="admin-client-modal-backdrop admin-client-modal-backdrop--sheet"
-          role="presentation"
-          onClick={() => setSelectedTimelineBooking(null)}
-        >
-          <div
-            className="admin-client-modal admin-booking-quick-actions-modal"
-            role="dialog"
-            aria-modal="true"
-            aria-label="Booking quick actions"
-            onClick={(event) => event.stopPropagation()}
-          >
-            <header className="admin-client-modal-head admin-booking-quick-actions-head">
-              <div className="admin-booking-quick-actions-head-copy">
-                <p className="admin-booking-quick-actions-eyebrow">Appointment</p>
-                <h2 className="admin-booking-quick-actions-title">Quick actions</h2>
-                <p className="admin-booking-quick-actions-kicker">
-                  {new Date(selectedTimelineBooking.startAt).toLocaleString('en-GB', {
-                    timeZone: ADMIN_TIMEZONE,
-                    weekday: 'short',
-                    day: 'numeric',
-                    month: 'short',
-                    hour: '2-digit',
-                    minute: '2-digit',
-                  })}{' '}
-                  · {selectedTimelineBooking.service?.name || 'Service'} · {selectedTimelineBooking.status}
-                </p>
-                <p className="admin-booking-quick-actions-subtitle admin-booking-quick-actions-subtitle--collapse">
-                  Review details, run admin actions, and update internal notes.
-                </p>
-              </div>
-            </header>
-
-            <div className="admin-booking-quick-actions-body">
-              <section className="admin-booking-quick-section admin-booking-quick-section--summary" aria-labelledby="booking-summary-heading">
-                <div className="admin-booking-quick-section-summary-top">
-                  <div className="admin-booking-quick-section-head">
-                    <h3 id="booking-summary-heading">Summary</h3>
-                    <p className="admin-booking-quick-section-copy admin-booking-quick-section-copy--collapse">
-                      Client, service, and timing at a glance.
+      {selectedTimelineBooking && typeof document !== 'undefined'
+        ? createPortal(
+            <div
+              className="admin-client-modal-backdrop admin-client-modal-backdrop--sheet"
+              role="presentation"
+              onClick={() => setSelectedTimelineBooking(null)}
+            >
+              <div
+                className="admin-client-modal admin-booking-quick-actions-modal"
+                role="dialog"
+                aria-modal="true"
+                aria-label="Booking quick actions"
+                onClick={(event) => event.stopPropagation()}
+              >
+                <header className="admin-client-modal-head admin-booking-quick-actions-head">
+                  <div className="admin-booking-quick-actions-head-copy">
+                    <p className="admin-booking-quick-actions-eyebrow">Appointment</p>
+                    <h2 className="admin-booking-quick-actions-title">Quick actions</h2>
+                    <p className="admin-booking-quick-actions-kicker">
+                      {new Date(selectedTimelineBooking.startAt).toLocaleString('en-GB', {
+                        timeZone: ADMIN_TIMEZONE,
+                        weekday: 'short',
+                        day: 'numeric',
+                        month: 'short',
+                        hour: '2-digit',
+                        minute: '2-digit',
+                      })}{' '}
+                      · {selectedTimelineBooking.service?.name || 'Service'} · {selectedTimelineBooking.status}
+                    </p>
+                    <p className="admin-booking-quick-actions-subtitle admin-booking-quick-actions-subtitle--collapse">
+                      Review details, run admin actions, and update internal notes.
                     </p>
                   </div>
-                  <button
-                    type="button"
-                    className="admin-booking-quick-actions-dismiss"
-                    onClick={() => setSelectedTimelineBooking(null)}
-                    aria-label="Close booking quick actions"
-                  >
-                    <X width={18} height={18} aria-hidden="true" />
-                  </button>
-                </div>
-                <div className="admin-booking-summary-card">
-                  <div className="admin-booking-summary-identity">
-                    <p className="admin-booking-summary-name">{selectedTimelineBooking.fullName}</p>
-                    <p className="admin-booking-summary-email">{selectedTimelineBooking.email}</p>
-                  </div>
-                  <dl className="admin-booking-summary-grid">
-                    <div className="admin-booking-summary-item">
-                      <dt>Service</dt>
-                      <dd>{selectedTimelineBooking.service?.name || '—'}</dd>
-                    </div>
-                    <div className="admin-booking-summary-item">
-                      <dt>Barber</dt>
-                      <dd>{selectedTimelineBooking.barber?.name || '—'}</dd>
-                    </div>
-                    <div className="admin-booking-summary-item admin-booking-summary-item--wide">
-                      <dt>Date &amp; time</dt>
-                      <dd>
-                        {new Date(selectedTimelineBooking.startAt).toLocaleString('en-GB', { timeZone: ADMIN_TIMEZONE })} →{' '}
-                        {new Date(selectedTimelineBooking.endAt).toLocaleTimeString('en-GB', {
-                          timeZone: ADMIN_TIMEZONE,
-                          hour: '2-digit',
-                          minute: '2-digit',
-                        })}
-                      </dd>
-                    </div>
-                  </dl>
-                </div>
-              </section>
+                </header>
 
-              <section className="admin-booking-quick-section admin-booking-quick-section--actions" aria-labelledby="booking-actions-heading">
-                <div className="admin-booking-quick-section-head">
-                  <h3 id="booking-actions-heading">Actions</h3>
-                  <p className="admin-booking-quick-section-copy admin-booking-quick-section-copy--collapse">
-                    Administrative controls for this booking.
-                  </p>
-                </div>
-                <div className="admin-booking-quick-actions-rows" role="list">
-                  <div className="admin-booking-quick-action-row admin-booking-quick-action-row--danger" role="listitem">
-                    <div className="admin-booking-quick-action-row__icon" aria-hidden="true">
-                      <Ban width={18} height={18} />
-                    </div>
-                    <div className="admin-booking-quick-action-row__copy">
-                      <p className="admin-booking-quick-action-row__title">Cancel booking</p>
-                      <p className="admin-booking-quick-action-row__description">
-                        {selectedTimelineBooking.status === 'CONFIRMED' &&
-                        !canShopAdminCancelByLeadTime(new Date(selectedTimelineBooking.startAt), nowMs)
-                          ? 'Cancellations are only possible more than 30 minutes before the start time.'
-                          : 'Remove this appointment from the schedule.'}
-                      </p>
-                    </div>
-                    <div className="admin-booking-quick-action-row__meta">
-                      <span className={`badge ${canCancelBookingAsShop(selectedTimelineBooking) ? 'badge--confirmed' : 'badge--neutral'}`}>
-                        {canCancelBookingAsShop(selectedTimelineBooking) ? 'Available' : 'Unavailable'}
-                      </span>
-                    </div>
-                    <div className="admin-booking-quick-action-row__cta">
+                <div className="admin-booking-quick-actions-body">
+                  <section className="admin-booking-quick-section admin-booking-quick-section--summary" aria-labelledby="booking-summary-heading">
+                    <div className="admin-booking-quick-section-summary-top">
+                      <div className="admin-booking-quick-section-head">
+                        <h3 id="booking-summary-heading">Summary</h3>
+                        <p className="admin-booking-quick-section-copy admin-booking-quick-section-copy--collapse">
+                          Client, service, and timing at a glance.
+                        </p>
+                      </div>
                       <button
                         type="button"
-                        className="btn btn--secondary"
-                        onClick={() => void cancelBookingByShop(selectedTimelineBooking)}
-                        disabled={!canCancelBookingAsShop(selectedTimelineBooking) || cancelLoadingBookingId === selectedTimelineBooking.id}
+                        className="admin-booking-quick-actions-dismiss"
+                        onClick={() => setSelectedTimelineBooking(null)}
+                        aria-label="Close booking quick actions"
                       >
-                        {cancelLoadingBookingId === selectedTimelineBooking.id ? 'Cancelling...' : 'Cancel'}
+                        <X width={18} height={18} aria-hidden="true" />
                       </button>
                     </div>
-                  </div>
-                </div>
-              </section>
+                    <div className="admin-booking-summary-card">
+                      <div className="admin-booking-summary-identity">
+                        <p className="admin-booking-summary-name">{selectedTimelineBooking.fullName}</p>
+                        <p className="admin-booking-summary-email">{selectedTimelineBooking.email}</p>
+                      </div>
+                      <dl className="admin-booking-summary-grid">
+                        <div className="admin-booking-summary-item">
+                          <dt>Service</dt>
+                          <dd>{selectedTimelineBooking.service?.name || '—'}</dd>
+                        </div>
+                        <div className="admin-booking-summary-item">
+                          <dt>Barber</dt>
+                          <dd>{selectedTimelineBooking.barber?.name || '—'}</dd>
+                        </div>
+                        <div className="admin-booking-summary-item admin-booking-summary-item--wide">
+                          <dt>Date &amp; time</dt>
+                          <dd>
+                            {new Date(selectedTimelineBooking.startAt).toLocaleString('en-GB', { timeZone: ADMIN_TIMEZONE })} →{' '}
+                            {new Date(selectedTimelineBooking.endAt).toLocaleTimeString('en-GB', {
+                              timeZone: ADMIN_TIMEZONE,
+                              hour: '2-digit',
+                              minute: '2-digit',
+                            })}
+                          </dd>
+                        </div>
+                      </dl>
+                    </div>
+                  </section>
 
-              <section className="admin-booking-quick-section" aria-labelledby="booking-notes-heading">
-                <div className="admin-booking-quick-section-head">
-                  <h3 id="booking-notes-heading">Internal notes</h3>
-                  <p className="admin-booking-quick-section-copy admin-booking-quick-section-copy--collapse">
-                    Visible only to your team; not shown to clients.
-                  </p>
-                </div>
-                <div className="admin-booking-notes-card">
-                  <textarea
-                    id="booking-notes"
-                    rows={4}
-                    value={timelineNotesDraft}
-                    onChange={(event) => setTimelineNotesDraft(event.target.value)}
-                    aria-labelledby="booking-notes-heading"
-                  />
-                  {timelineNotesMessage ? (
-                    <div className="admin-booking-notes-status">
-                      <p className={timelineNotesMessage === 'Notes saved.' ? 'admin-inline-success' : 'admin-inline-error'}>{timelineNotesMessage}</p>
-                      <button type="button" className="btn btn--ghost admin-booking-notes-status-clear" onClick={() => setTimelineNotesMessage('')}>
-                        Dismiss message
-                      </button>
+                  <section className="admin-booking-quick-section admin-booking-quick-section--actions" aria-labelledby="booking-actions-heading">
+                    <div className="admin-booking-quick-section-head">
+                      <h3 id="booking-actions-heading">Actions</h3>
+                      <p className="admin-booking-quick-section-copy admin-booking-quick-section-copy--collapse">
+                        Administrative controls for this booking.
+                      </p>
                     </div>
-                  ) : null}
-                  <div className="admin-booking-notes-actions">
-                    <button type="button" className="btn btn--primary" onClick={() => void saveTimelineBookingNotes()} disabled={timelineNotesSaving}>
-                      {timelineNotesSaving ? 'Saving...' : 'Save notes'}
-                    </button>
-                  </div>
+                    <div className="admin-booking-quick-actions-rows" role="list">
+                      <div className="admin-booking-quick-action-row admin-booking-quick-action-row--danger" role="listitem">
+                        <div className="admin-booking-quick-action-row__icon" aria-hidden="true">
+                          <Ban width={18} height={18} />
+                        </div>
+                        <div className="admin-booking-quick-action-row__copy">
+                          <p className="admin-booking-quick-action-row__title">Cancel booking</p>
+                          <p className="admin-booking-quick-action-row__description">
+                            {selectedTimelineBooking.status === 'CONFIRMED' &&
+                            !canShopAdminCancelByLeadTime(new Date(selectedTimelineBooking.startAt), nowMs)
+                              ? 'Cancellations are only possible more than 30 minutes before the start time.'
+                              : 'Remove this appointment from the schedule.'}
+                          </p>
+                        </div>
+                        <div className="admin-booking-quick-action-row__meta">
+                          <span className={`badge ${canCancelBookingAsShop(selectedTimelineBooking) ? 'badge--confirmed' : 'badge--neutral'}`}>
+                            {canCancelBookingAsShop(selectedTimelineBooking) ? 'Available' : 'Unavailable'}
+                          </span>
+                        </div>
+                        <div className="admin-booking-quick-action-row__cta">
+                          <button
+                            type="button"
+                            className="btn btn--secondary"
+                            onClick={() => void cancelBookingByShop(selectedTimelineBooking)}
+                            disabled={!canCancelBookingAsShop(selectedTimelineBooking) || cancelLoadingBookingId === selectedTimelineBooking.id}
+                          >
+                            {cancelLoadingBookingId === selectedTimelineBooking.id ? 'Cancelling...' : 'Cancel'}
+                          </button>
+                        </div>
+                      </div>
+                    </div>
+                  </section>
+
+                  <section className="admin-booking-quick-section" aria-labelledby="booking-notes-heading">
+                    <div className="admin-booking-quick-section-head">
+                      <h3 id="booking-notes-heading">Internal notes</h3>
+                      <p className="admin-booking-quick-section-copy admin-booking-quick-section-copy--collapse">
+                        Visible only to your team; not shown to clients.
+                      </p>
+                    </div>
+                    <div className="admin-booking-notes-card">
+                      <textarea
+                        id="booking-notes"
+                        rows={4}
+                        value={timelineNotesDraft}
+                        onChange={(event) => setTimelineNotesDraft(event.target.value)}
+                        aria-labelledby="booking-notes-heading"
+                      />
+                      {timelineNotesMessage ? (
+                        <div className="admin-booking-notes-status">
+                          <p className={timelineNotesMessage === 'Notes saved.' ? 'admin-inline-success' : 'admin-inline-error'}>{timelineNotesMessage}</p>
+                          <button type="button" className="btn btn--ghost admin-booking-notes-status-clear" onClick={() => setTimelineNotesMessage('')}>
+                            Dismiss message
+                          </button>
+                        </div>
+                      ) : null}
+                      <div className="admin-booking-notes-actions">
+                        <button type="button" className="btn btn--primary" onClick={() => void saveTimelineBookingNotes()} disabled={timelineNotesSaving}>
+                          {timelineNotesSaving ? 'Saving...' : 'Save notes'}
+                        </button>
+                      </div>
+                    </div>
+                  </section>
                 </div>
-              </section>
-            </div>
-          </div>
-        </div>
-      )}
+              </div>
+            </div>,
+            document.body,
+          )
+        : null}
 
 
 

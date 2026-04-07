@@ -101,10 +101,10 @@ export function SkeletonKPICards({ count = 3 }: { count?: number }) {
 
 export function SkeletonTimelineRows({ lanes = 4 }: { lanes?: number }) {
   const laneWidths = [
-    ['22%', '18%', '26%'],
-    ['18%', '30%', '20%'],
-    ['26%', '16%', '24%'],
-    ['20%', '22%', '18%']
+    ['14%', '11%', '16%'],
+    ['12%', '18%', '13%'],
+    ['16%', '10%', '15%'],
+    ['13%', '14%', '12%']
   ];
 
   return (
@@ -159,7 +159,7 @@ export function SkeletonTimelineRows({ lanes = 4 }: { lanes?: number }) {
                         left: `${8 + blockIndex * 30}%`,
                         width,
                         top: `${10 + blockIndex * 22}px`,
-                        height: '44px'
+                        height: '58px'
                       }}
                     >
                       <span className="skeleton skeleton--text-sm" style={{ width: '40%' }} />

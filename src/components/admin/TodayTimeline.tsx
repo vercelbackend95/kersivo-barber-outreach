@@ -44,6 +44,8 @@ type PositionedItem = {
 type PositionedBooking = PositionedItem & {
   type: 'booking';
   booking: TimelineBooking;
+  density: 'compact' | 'standard' | 'detailed';
+  durationMinutes: number;
 };
 
 type PositionedBlock = PositionedItem & {
@@ -78,12 +80,9 @@ const ADMIN_TIMEZONE = 'Europe/London';
 const TIMELINE_START_HOUR = 8;
 const TIMELINE_END_HOUR = 24;
 const TIMELINE_SLOT_INTERVAL_MINUTES = 30;
-const TIMELINE_SLOT_WIDTH_REM = 3.15;
-const MOBILE_TIMELINE_HOUR_SPACING_MULTIPLIER = 1;
+const TIMELINE_SLOT_WIDTH_REM = 4;
 const TIMELINE_TOTAL_MINUTES = (TIMELINE_END_HOUR - TIMELINE_START_HOUR) * 60;
 const TIMELINE_TOTAL_SLOTS = TIMELINE_TOTAL_MINUTES / TIMELINE_SLOT_INTERVAL_MINUTES;
-const TIMELINE_CANVAS_MIN_WIDTH_REM = TIMELINE_TOTAL_SLOTS * TIMELINE_SLOT_WIDTH_REM;
-const TIMELINE_MOBILE_CANVAS_MIN_WIDTH_REM = TIMELINE_CANVAS_MIN_WIDTH_REM * MOBILE_TIMELINE_HOUR_SPACING_MULTIPLIER;
 /** Fits time + service + client line at compact density */
 const BOOKING_CARD_HEIGHT = 64;
 const BOOKING_STACK_GAP = 6;
@@ -124,6 +123,16 @@ function getTimelinePosition(startAt: Date | string, endAt: Date | string) {
   };
 }
 
+function getTimelinePositionFromRelativeMinutes(startMinute: number, endMinute: number) {
+  const clampedStart = Math.max(0, Math.min(startMinute, TIMELINE_TOTAL_MINUTES));
+  const clampedEnd = Math.max(clampedStart, Math.min(endMinute, TIMELINE_TOTAL_MINUTES));
+  const widthMinutes = clampedEnd - clampedStart;
+  return {
+    leftPct: (clampedStart / TIMELINE_TOTAL_MINUTES) * 100,
+    widthPct: (widthMinutes / TIMELINE_TOTAL_MINUTES) * 100
+  };
+}
+
 function getInitials(fullName: string) {
   const parts = fullName.trim().split(/\s+/).filter(Boolean);
   if (parts.length === 0) return '—';
@@ -149,19 +158,30 @@ function buildLanes(barbers: TimelineBarber[], bookings: TimelineBooking[], time
     const positionedBookings: PositionedBooking[] = laneBookings.map((booking) => {
       const startMinute = getMinuteOfDay(booking.startAt);
       const endMinute = getMinuteOfDay(booking.endAt);
+      const clampedStartMinute = Math.max(TIMELINE_START_HOUR * 60, Math.min(startMinute, TIMELINE_END_HOUR * 60));
+      const clampedEndMinute = Math.max(clampedStartMinute, Math.min(endMinute, TIMELINE_END_HOUR * 60));
+      const durationMinutes = Math.max(0, clampedEndMinute - clampedStartMinute);
+      const displayDurationRem = (durationMinutes / TIMELINE_SLOT_INTERVAL_MINUTES) * TIMELINE_SLOT_WIDTH_REM;
+      const density: PositionedBooking['density'] =
+        displayDurationRem < 7 ? 'compact' : displayDurationRem < 10 ? 'standard' : 'detailed';
 
       let level = 0;
-      while (level < activeOverlapEndByLevel.length && activeOverlapEndByLevel[level] > startMinute) {
+      while (level < activeOverlapEndByLevel.length && activeOverlapEndByLevel[level] > clampedStartMinute) {
         level += 1;
       }
-      activeOverlapEndByLevel[level] = endMinute;
+      activeOverlapEndByLevel[level] = clampedEndMinute;
 
-      const position = getTimelinePosition(booking.startAt, booking.endAt);
+      const position = getTimelinePositionFromRelativeMinutes(
+        clampedStartMinute - TIMELINE_START_HOUR * 60,
+        clampedEndMinute - TIMELINE_START_HOUR * 60
+      );
 
       return {
         id: booking.id,
         type: 'booking',
         booking,
+        density,
+        durationMinutes,
         leftPct: position.leftPct,
         widthPct: position.widthPct,
         topPx: LANE_INNER_PADDING + level * (BOOKING_CARD_HEIGHT + BOOKING_STACK_GAP),
@@ -282,6 +302,7 @@ function bookingCardPropsEqual(
   const a = prev.item;
   const b = next.item;
   if (a.id !== b.id) return false;
+  if (a.density !== b.density || a.durationMinutes !== b.durationMinutes) return false;
   if (a.leftPct !== b.leftPct || a.widthPct !== b.widthPct || a.topPx !== b.topPx || a.heightPx !== b.heightPx) return false;
   if (a.startLabel !== b.startLabel || a.endLabel !== b.endLabel) return false;
   const ab = a.booking;
@@ -310,7 +331,8 @@ const TimelineBookingCard = memo(function TimelineBookingCard({
     <button
       type="button"
       data-booking-id={item.booking.id}
-      className={`admin-timeline-card admin-timeline-card--booking admin-timeline-card--${tone} ${isSearchActive ? 'admin-timeline-card--search-match' : ''}`}
+      className={`admin-timeline-card admin-timeline-card--booking admin-timeline-card--${tone} admin-timeline-card--${item.density} ${isSearchActive ? 'admin-timeline-card--search-match' : ''}`}
+      data-density={item.density}
       style={{
         left: `${item.leftPct}%`,
         width: `${item.widthPct}%`,
@@ -327,6 +349,9 @@ const TimelineBookingCard = memo(function TimelineBookingCard({
           {initials}
         </span>
         <span className="admin-timeline-card-client">{item.booking.fullName}</span>
+      </span>
+      <span className="admin-timeline-card-duration" aria-hidden="true">
+        {`${Math.max(1, Math.round(item.durationMinutes))} min`}
       </span>
     </button>
   );
@@ -373,8 +398,6 @@ function TodayTimeline({
   const timelineLayoutStyle = useMemo(
     () =>
       ({
-        '--admin-timeline-canvas-width': `${TIMELINE_CANVAS_MIN_WIDTH_REM}rem`,
-        '--admin-timeline-mobile-canvas-width': `${TIMELINE_MOBILE_CANVAS_MIN_WIDTH_REM}rem`,
         '--admin-timeline-major-step-pct': `${TIMELINE_MAJOR_STEP_PCT}`,
         '--admin-timeline-minor-step-pct': `${TIMELINE_MINOR_STEP_PCT}`
       }) as React.CSSProperties,
