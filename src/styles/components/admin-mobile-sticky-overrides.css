@@ -61,11 +61,12 @@
 
   .admin-mobile-drawer {
     top: var(--admin-mobile-vv-top, 0px);
-    left: 0;
+    left: max(0px, calc(100vw - var(--admin-mobile-drawer-width, 70vw)));
     right: 0;
     bottom: auto;
     width: auto;
     max-width: none;
+    box-sizing: border-box;
     height: var(--admin-mobile-vv-h, 100dvh);
     z-index: 410;
     border-radius: 0;

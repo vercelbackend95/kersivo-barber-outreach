@@ -4335,6 +4335,7 @@
  * .admin-mobile-drawer-head (mobile overrides may use 100lvh for Safari chrome).
  */
 .admin-mobile-drawer {
+  --admin-mobile-drawer-width: 70vw;
   display: grid;
   grid-template-rows: auto 1fr auto auto;
   gap: 0.72rem;
@@ -4342,9 +4343,10 @@
   top: 0;
   right: 0;
   bottom: 0;
-  left: 0;
+  left: max(0px, calc(100vw - var(--admin-mobile-drawer-width)));
   width: auto;
   max-width: none;
+  box-sizing: border-box;
   background: linear-gradient(
     165deg,
     color-mix(in srgb, var(--surface-2) 55%, var(--bg)) 0%,
@@ -4354,8 +4356,8 @@
 
   border: none;
   box-shadow: none;
-  padding: env(safe-area-inset-top, 0px) max(0.75rem, env(safe-area-inset-right, 0px))
-    calc(0.75rem + env(safe-area-inset-bottom, 0px)) max(0.75rem, env(safe-area-inset-left, 0px));
+  padding: env(safe-area-inset-top, 0px) max(0.62rem, env(safe-area-inset-right, 0px))
+    calc(0.72rem + env(safe-area-inset-bottom, 0px)) max(0.62rem, env(safe-area-inset-left, 0px));
   transform: translateX(100%);
   transition: transform 300ms cubic-bezier(0.34, 1.08, 0.64, 1);
   z-index: var(--admin-z-mobile-menu-drawer, 275);
@@ -4380,18 +4382,26 @@
 }
 
 .admin-mobile-drawer-head {
+  display: grid;
+  gap: 0.42rem;
+  padding-top: 0.75rem;
+  padding-bottom: 0.58rem;
+  border-bottom: 1px solid color-mix(in srgb, var(--border) 45%, transparent);
+  min-width: 0;
+}
+
+.admin-mobile-drawer-head-top {
   display: flex;
   align-items: center;
-  justify-content: space-between;
-  gap: var(--space-xs);
-  padding-top: 0.75rem;
-  padding-bottom: 0.65rem;
-  border-bottom: 1px solid color-mix(in srgb, var(--border) 45%, transparent);
+  gap: 0.55rem;
+  min-width: 0;
 }
 .admin-mobile-drawer-head .admin-sidebar-brand {
   border-bottom: none;
   margin-bottom: 0;
   padding-bottom: 0;
+  flex: 1;
+  min-width: 0;
 }
 
 .admin-mobile-header-center {
@@ -4464,11 +4474,35 @@
 }
 
 .admin-sidebar-status--mobile-drawer {
-  margin-left: auto;
-  margin-right: 0.3rem;
-  padding: 0.15rem 0;
-  flex-wrap: nowrap;
-  white-space: nowrap;
+  margin: 0;
+  padding: 0.08rem 0 0;
+  min-width: 0;
+  flex-wrap: wrap;
+  white-space: normal;
+  row-gap: 0.08rem;
+}
+
+.admin-mobile-drawer .admin-sidebar-status-date,
+.admin-mobile-drawer .admin-sidebar-status-label {
+  white-space: normal;
+}
+
+.admin-mobile-drawer .admin-sidebar-nav,
+.admin-mobile-drawer .admin-sidebar-group,
+.admin-mobile-drawer .admin-sidebar-link {
+  min-width: 0;
+}
+
+.admin-mobile-drawer .admin-sidebar-link {
+  align-items: flex-start;
+}
+
+.admin-mobile-drawer .admin-sidebar-link-label {
+  white-space: normal;
+  overflow: visible;
+  text-overflow: clip;
+  overflow-wrap: anywhere;
+  line-height: 1.26;
 }
 
 

@@ -100,8 +100,8 @@ export default function AdminMobileNextAppointmentsStrip({
         ? 'offline'
         : 'connecting';
 
-  /** Pill shares the meta row with the first booking when collapsed, last visible when expanded. */
-  const pillMetaRowIndex = !effectiveExpanded ? 0 : Math.max(0, visibleAppointments.length - 1);
+  /** Keep toggle pill anchored to the first row in all states to avoid row reflow jitter. */
+  const pillMetaRowIndex = 0;
 
   const renderAppointmentBody = (appointment: MobileNextAppointmentItem, showPillOnThisRow: boolean) => (
     <>

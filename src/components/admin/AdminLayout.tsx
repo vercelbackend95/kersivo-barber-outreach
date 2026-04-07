@@ -362,16 +362,18 @@ export default function AdminLayout({
         aria-hidden={!isMobileMenuOpen}
       >
         <div className="admin-mobile-drawer-head">
-          <SidebarBrand />
+          <div className="admin-mobile-drawer-head-top">
+            <SidebarBrand />
+            <button
+              type="button"
+              className="admin-mobile-close-button"
+              onClick={() => setIsMobileMenuOpen(false)}
+              aria-label="Close admin menu"
+            >
+              <X width={20} height={20} aria-hidden="true" />
+            </button>
+          </div>
           <SidebarStatus className="admin-sidebar-status--mobile-drawer" />
-          <button
-            type="button"
-            className="admin-mobile-close-button"
-            onClick={() => setIsMobileMenuOpen(false)}
-            aria-label="Close admin menu"
-          >
-            <X width={20} height={20} aria-hidden="true" />
-          </button>
         </div>
         {menu}
         <div className="admin-sidebar-divider" aria-hidden="true" />
