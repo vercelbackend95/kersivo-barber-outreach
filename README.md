@@ -18,6 +18,7 @@ Astro + React (TypeScript) booking + shop system for barbershops.
 5. Configure environment:
    - `RESEND_API_KEY`: required for real email delivery via Resend.
    - `FROM_EMAIL`: sender identity used by Resend (must be verified in your Resend account).
+   - `CONTACT_INBOX_EMAIL`: inbox that receives landing page contact/demo inquiries (defaults to `FROM_EMAIL` if unset).
    - `PUBLIC_SITE_URL`: public base URL used by booking + shop links and Stripe success/cancel links (for local dev: `http://localhost:4321`).
    - `STRIPE_SECRET_KEY`: Stripe test secret key used for checkout session creation.
    - `STRIPE_WEBHOOK_SECRET`: Stripe webhook signing secret used to verify `/api/shop/webhook`.

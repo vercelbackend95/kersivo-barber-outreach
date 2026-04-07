@@ -180,6 +180,46 @@ export async function sendShopCancelledBookingEmail(
   });
 }
 
+function escapeHtml(text: string): string {
+  return text
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;');
+}
+
+export async function sendContactInquiryEmail(input: {
+  name: string;
+  email: string;
+  message: string;
+  intent?: string;
+}) {
+  const inbox =
+    import.meta.env.CONTACT_INBOX_EMAIL ??
+    process.env.CONTACT_INBOX_EMAIL ??
+    FROM_EMAIL;
+
+  const html = `<p><strong>New landing page inquiry</strong></p>
+  <p><strong>Name:</strong> ${escapeHtml(input.name)}</p>
+  <p><strong>Email:</strong> ${escapeHtml(input.email)}</p>
+  ${input.intent ? `<p><strong>Intent:</strong> ${escapeHtml(input.intent)}</p>` : ''}
+  <p><strong>Message:</strong></p><p>${escapeHtml(input.message).replace(/\n/g, '<br/>')}</p>`;
+
+  return sendEmail({
+    to: inbox,
+    subject: `Barber demo inquiry — ${input.name}`,
+    html,
+    devLogLabel: '[DEV EMAIL] Contact inquiry',
+    devPayload: {
+      to: inbox,
+      name: input.name,
+      email: input.email,
+      intent: input.intent ?? '',
+      message: input.message
+    }
+  });
+}
+
 export async function sendShopOrderConfirmationEmail(input: {
   to: string;
   itemLines: string[];

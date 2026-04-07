@@ -72,6 +72,31 @@ export default function CartDrawer() {
   }, []);
 
   useEffect(() => {
+    if (!open) {
+      return;
+    }
+
+    const html = document.documentElement;
+    const body = document.body;
+    const prevHtmlOverflow = html.style.overflow;
+    const prevBodyOverflow = body.style.overflow;
+    const prevHtmlOverscroll = html.style.overscrollBehavior;
+    const prevBodyOverscroll = body.style.overscrollBehavior;
+
+    html.style.overflow = 'hidden';
+    body.style.overflow = 'hidden';
+    html.style.overscrollBehavior = 'none';
+    body.style.overscrollBehavior = 'none';
+
+    return () => {
+      html.style.overflow = prevHtmlOverflow;
+      body.style.overflow = prevBodyOverflow;
+      html.style.overscrollBehavior = prevHtmlOverscroll;
+      body.style.overscrollBehavior = prevBodyOverscroll;
+    };
+  }, [open]);
+
+  useEffect(() => {
     const onDocumentClick = (event: MouseEvent) => {
       const target = event.target;
       if (!(target instanceof Element)) {
@@ -144,14 +169,14 @@ export default function CartDrawer() {
       <aside className={`cart-drawer ${open ? 'cart-drawer--open' : ''}`} aria-hidden={open ? 'false' : 'true'}>
         <div className="cart-drawer__header">
           <div className="cart-drawer__header-top">
-                        <h2>Your cart</h2>
+            <h2>Your cart</h2>
             <button
               type="button"
-              className="btn btn--ghost cart-drawer__close"
+              className="navbar17__toggle navbar17__toggle--as-close cart-drawer__close"
               onClick={closeCart}
               aria-label="Close cart drawer"
             >
-              ×
+              <span className="navbar17__toggle-icon" aria-hidden="true" />
             </button>
 
           </div>

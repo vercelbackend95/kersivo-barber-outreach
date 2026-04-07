@@ -41,6 +41,11 @@
   justify-content: center;
 }
 
+.footer50__menu li,
+.footer50__legal li {
+  max-width: none;
+}
+
 .footer50__menu a {
   color: var(--fg);
   text-decoration: none;

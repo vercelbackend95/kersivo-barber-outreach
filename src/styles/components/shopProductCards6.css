@@ -288,7 +288,9 @@
 
 @media (max-width: 47.99rem) {
 
-  
+  .shop6__controls {
+    display: none;
+  }
 
   .shop6__grid {
     --shop6-desktop-gap: 0.65rem;

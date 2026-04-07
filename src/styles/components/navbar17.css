@@ -134,6 +134,11 @@
   list-style: none;
 }
 
+.navbar17__list > li,
+.navbar17__mobile-list > li {
+  max-width: none;
+}
+
 .navbar17__link {
   position: relative;
   z-index: 1;
@@ -384,6 +389,19 @@
   transform: translateY(-0.34rem) rotate(-45deg);
 }
 
+/* Static × (e.g. cart drawer close) — same geometry as open-menu state */
+.navbar17__toggle--as-close .navbar17__toggle-icon {
+  background: transparent;
+}
+
+.navbar17__toggle--as-close .navbar17__toggle-icon::before {
+  transform: translateY(0.34rem) rotate(45deg);
+}
+
+.navbar17__toggle--as-close .navbar17__toggle-icon::after {
+  transform: translateY(-0.34rem) rotate(-45deg);
+}
+
 /* ── Mobile navigation: premium top-down sheet + backdrop ─────── */
 
 .navbar17__mobile-backdrop {
@@ -572,6 +590,46 @@
 .navbar17__mobile-link:focus-visible {
   outline: 2px solid var(--focus);
   outline-offset: 1px;
+}
+
+/* Mobile sheet: cart row — action, not a nav section */
+.navbar17__mobile-cart-item {
+  margin-top: 0.35rem;
+  padding-top: 0.42rem;
+  border-top: 1px solid color-mix(in srgb, var(--border) 45%, transparent);
+  list-style: none;
+}
+
+@media (max-width: 63.99rem) {
+  .navbar17__cart-btn--mobile-list {
+    width: 100%;
+    min-height: 3.25rem;
+    height: auto;
+    padding: 0.86rem 0.9rem 0.86rem 0.84rem;
+    justify-content: space-between;
+    box-sizing: border-box;
+    text-align: left;
+    border-radius: var(--radius-md);
+    border: 1px solid color-mix(in srgb, var(--accent) 38%, var(--border));
+    border-left: 3px solid var(--accent);
+    background: color-mix(in srgb, var(--accent) 10%, var(--surface-2));
+    color: var(--fg);
+    font-size: 0.9rem;
+    font-weight: 700;
+    letter-spacing: 0.06em;
+  }
+
+  .navbar17__cart-btn--mobile-list:hover {
+    border-color: color-mix(in srgb, var(--accent) 55%, var(--border));
+    border-left-color: var(--accent-hover);
+    color: var(--fg);
+    background: color-mix(in srgb, var(--accent) 16%, var(--surface-2));
+  }
+
+  .navbar17__cart-btn--mobile-list:focus-visible {
+    outline: 2px solid var(--focus);
+    outline-offset: 1px;
+  }
 }
 
 /* ── Utilities ────────────────────────────────────────────────── */

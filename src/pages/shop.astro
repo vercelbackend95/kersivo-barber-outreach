@@ -194,6 +194,14 @@ const selectedCategory = categoryValues.has(selectedCategoryParam) ? selectedCat
     const productItems = Array.from(root.querySelectorAll('[data-product-item]'));
     const validCategories = new Set(filterButtons.map((button) => button.getAttribute('data-category-filter') || 'ALL'));
 
+    const updateEmptyFilterState = () => {
+      const emptyEl = root.querySelector('.shop-empty-filter');
+      const items = root.querySelectorAll('[data-product-item]');
+      if (!emptyEl) return;
+      const anyVisible = [...items].some((item) => !(item as HTMLElement).hidden);
+      emptyEl.classList.toggle('is-visible', !anyVisible);
+    };
+
     const getCategoryFromUrl = () => {
       const searchParams = new URLSearchParams(window.location.search);
       const categoryParam = searchParams.get('category') || 'ALL';
@@ -264,15 +272,6 @@ const selectedCategory = categoryValues.has(selectedCategoryParam) ? selectedCat
     });
 
     applyCategoryFilter(currentCategory);
-  }
-
-  /* ── Empty filter state ─────────────────────────────────────── */
-  function updateEmptyFilterState() {
-    const emptyEl = document.querySelector('.shop-empty-filter');
-    const items = Array.from(document.querySelectorAll('[data-product-item]'));
-    if (!emptyEl) return;
-    const anyVisible = items.some((item) => !(item as HTMLElement).hidden);
-    emptyEl.classList.toggle('is-visible', !anyVisible);
   }
 
   /* ── Sort ────────────────────────────────────────────────────── */

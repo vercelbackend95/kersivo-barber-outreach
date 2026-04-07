@@ -97,6 +97,43 @@
 .compare3-block__logo {
   width: 2rem;
   height: 2rem;
+  flex: none;
+}
+
+.compare3-block__logo--kersivo {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 0.35rem;
+  border: 1px solid var(--border);
+  background: var(--surface);
+  font-family: 'Bebas Neue', Inter, system-ui, sans-serif;
+  font-size: 1.05rem;
+  line-height: 1;
+  letter-spacing: 0.02em;
+  color: var(--fg);
+}
+
+.compare3-block__logo--alt {
+  display: inline-block;
+  border-radius: 0.35rem;
+  border: 1px dashed color-mix(in srgb, var(--muted) 55%, var(--border));
+  background: color-mix(in srgb, var(--surface) 88%, transparent);
+  position: relative;
+}
+
+.compare3-block__logo--alt::after {
+  content: '';
+  position: absolute;
+  inset: 50% auto auto 50%;
+  width: 0.55rem;
+  height: 0.55rem;
+  transform: translate(-50%, -50%);
+  border-radius: 0.1rem;
+  background: color-mix(in srgb, var(--muted) 70%, transparent);
+  box-shadow:
+    -0.65rem 0 0 0 color-mix(in srgb, var(--muted) 45%, transparent),
+    0.65rem 0 0 0 color-mix(in srgb, var(--muted) 45%, transparent);
 }
 
 .compare3-block__brand-title {

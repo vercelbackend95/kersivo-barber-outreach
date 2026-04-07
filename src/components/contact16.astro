@@ -15,12 +15,13 @@ const { className = "" } = Astro.props as Contact16Props;
     <div class="contact16__layout">
       <div class="contact16__info">
         <p class="contact16__description">
-Send a few details about your barbershop and we’ll get back to you with the right website, booking and retail direction.
-
+          Send a few details about your barbershop and we’ll get back to you with the right website, booking and retail direction.
         </p>
+        <p class="contact16__note">We usually reply within one to two business days.</p>
       </div>
 
-      <form class="contact16__form" action="#" method="post">
+      <form class="contact16__form" data-contact-form novalidate>
+        <p class="contact16__status contact16__status--idle" data-contact-status role="status" aria-live="polite"></p>
         <input type="hidden" name="intent" value="" data-demo-intent />
         <label>
           <span class="sr-only">Name</span>
@@ -43,10 +44,67 @@ Send a few details about your barbershop and we’ll get back to you with the ri
 
         </label>
 
-        <button type="submit" class="btn btn--ghost contact16__submit">
+        <button type="submit" class="btn btn--ghost contact16__submit" data-contact-submit>
           ↳ Book a demo
         </button>
       </form>
     </div>
   </div>
 </section>
+
+<script>
+  const form = document.querySelector('[data-contact-form]');
+  const statusEl = document.querySelector('[data-contact-status]');
+  const submitBtn = document.querySelector('[data-contact-submit]');
+
+  if (form instanceof HTMLFormElement && statusEl instanceof HTMLElement) {
+    form.addEventListener('submit', async (event) => {
+      event.preventDefault();
+
+      const fd = new FormData(form);
+      const name = String(fd.get('name') ?? '').trim();
+      const email = String(fd.get('email') ?? '').trim();
+      const message = String(fd.get('message') ?? '').trim();
+      const intent = String(fd.get('intent') ?? '').trim();
+
+      statusEl.textContent = '';
+      statusEl.className = 'contact16__status contact16__status--idle';
+
+      if (!name || !email || !message) {
+        statusEl.textContent = 'Please fill in name, email and your message.';
+        statusEl.classList.add('contact16__status--error');
+        return;
+      }
+
+      if (submitBtn instanceof HTMLButtonElement) {
+        submitBtn.disabled = true;
+      }
+
+      try {
+        const response = await fetch('/api/contact', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ name, email, message, intent }),
+        });
+        const data = (await response.json().catch(() => ({}))) as { ok?: boolean; error?: string };
+
+        if (!response.ok || !data.ok) {
+          statusEl.textContent = data.error ?? 'Something went wrong. Please try again.';
+          statusEl.className = 'contact16__status contact16__status--error';
+          return;
+        }
+
+        statusEl.textContent = 'Thanks — we’ve received your message and will be in touch shortly.';
+        statusEl.className = 'contact16__status contact16__status--success';
+        form.reset();
+      } catch {
+        statusEl.textContent = 'Network error. Check your connection and try again.';
+        statusEl.className = 'contact16__status contact16__status--error';
+      } finally {
+        if (submitBtn instanceof HTMLButtonElement) {
+          submitBtn.disabled = false;
+        }
+      }
+    });
+  }
+</script>

@@ -135,6 +135,10 @@ Best for shops that want stronger sales flow, higher retail capacity and a more 
                     <Check className="mt-1 size-4 shrink-0 text-green-500" />
                     <p className="font-medium">Priority launch</p>
                   </li>
+                  <li className="flex gap-2">
+                    <Check className="mt-1 size-4 shrink-0 text-green-500" />
+                    <p className="font-medium">Launch promotion support</p>
+                  </li>
                 </ul>
               </div>
               <a

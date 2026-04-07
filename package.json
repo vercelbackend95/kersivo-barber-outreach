@@ -14,7 +14,8 @@
     "seed": "prisma db seed",
     "test": "vitest run",
     "vercel:dev": "vercel dev",
-    "prisma:migrate:dev": "prisma migrate dev --schema prisma/schema.prisma"
+    "prisma:migrate:dev": "prisma migrate dev --schema prisma/schema.prisma",
+    "screenshots:feature261": "node scripts/capture-feature261-screens.mjs"
   },
   "dependencies": {
     "@astrojs/react": "^4.4.2",
@@ -33,6 +34,7 @@
   },
   "devDependencies": {
     "@astrojs/vercel": "^9.0.4",
+    "playwright": "^1.59.1",
     "prisma": "^5.22.0",
     "tsx": "^4.20.3",
     "vitest": "^2.1.9"
