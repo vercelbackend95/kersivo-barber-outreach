@@ -1,21 +1,23 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
-const prismaMock = {
-  availabilityRule: {
-    count: vi.fn(),
-    createMany: vi.fn()
-  },
-  barber: {
-    findFirst: vi.fn()
-  },
-  barberService: {
-    count: vi.fn(),
-    createMany: vi.fn()
-  },
-  service: {
-    findMany: vi.fn()
+const { prismaMock } = vi.hoisted(() => ({
+  prismaMock: {
+    availabilityRule: {
+      count: vi.fn(),
+      createMany: vi.fn()
+    },
+    barber: {
+      findFirst: vi.fn()
+    },
+    barberService: {
+      count: vi.fn(),
+      createMany: vi.fn()
+    },
+    service: {
+      findMany: vi.fn()
+    }
   }
-};
+}));
 
 vi.mock('../db/client', () => ({
   prisma: prismaMock

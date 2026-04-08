@@ -493,6 +493,25 @@ export async function cancelByShop(input: { bookingId: string; reason?: string }
 
 export async function rescheduleByToken(input: { token: string; serviceId: string; barberId: string; date: string; time: string }) {
   try {
+    const existing = await resolveManageTokenBooking(input.token);
+    const settings = await prisma.shopSettings.findFirstOrThrow();
+    if (!canCancelOrReschedule(existing.startAt, settings.rescheduleWindowHours)) {
+      throw new BookingActionError('Reschedule window has passed.', 409);
+    }
+
+    const service = await prisma.service.findUniqueOrThrow({ where: { id: input.serviceId } });
+    if (!service.isActive) throw new Error('Selected service is unavailable for new bookings.');
+
+    const resolvedBarber = await resolveRequestedBarber({
+      barberId: input.barberId,
+      serviceId: input.serviceId,
+      date: input.date,
+      time: input.time,
+      service,
+      settings,
+      ignoreBookingId: existing.id
+    });
+
     const [h, m] = input.time.split(':').map(Number);
     const startAt = toUtcFromLondon(input.date, h * 60 + m);
     const endAt = addMinutes(startAt, service.durationMinutes + (service.bufferMinutes || settings.defaultBufferMinutes));
@@ -522,13 +541,12 @@ export async function rescheduleByToken(input: { token: string; serviceId: strin
       { isolationLevel: Prisma.TransactionIsolationLevel.Serializable }
     );
     const baseUrl = resolvePublicSiteUrl();
-    const settingsForEmail = await prisma.shopSettings.findFirstOrThrow();
     await sendRescheduledBookingEmail({
       to: updatedBooking.email,
       fullName: updatedBooking.fullName,
       cancelUrl: `${baseUrl}/book/cancel?token=${input.token}`,
       rescheduleUrl: `${baseUrl}/book/reschedule?token=${input.token}`,
-      shopName: settingsForEmail.name,
+      shopName: settings.name,
       serviceName: updatedBooking.serviceNameAtBooking ?? updatedBooking.service.name,
       barberName: updatedBooking.barber.name,
       startAt: updatedBooking.startAt,
