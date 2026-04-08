@@ -8,36 +8,33 @@ interface RateCard1Props {
 }
 
 const CARE_PLAN_BULLETS = [
-  "Hosting included",
-  "Ongoing maintenance",
-  "Ongoing admin access",
+  "Guaranteed 0% commission from Kersivo—Stripe card fees only",
+  "Hosting & SSL on us",
+  "Full admin & shop",
+  "SMS reminders (where enabled)",
+  "1h Kersivo dev / month",
 ];
 
 const CARE_FEATURES = [
   {
-    title: "Hosting included",
+    title: "Hosting & SSL",
     description:
-      "Hosting is handled for you, so the site stays live and reliable.",
+      "We keep your site, booking, and shop online—SSL renewals and baseline uptime work are on us, not on your weekend.",
   },
   {
-    title: "Security monitoring",
+    title: "One admin for everything",
     description:
-      "Ongoing monitoring helps keep the site secure and stable.",
+      "Diary, barbers, services, retail, and pickup orders in one panel—sensible day-to-day edits without a dev queue.",
   },
   {
-    title: "Maintenance and updates",
+    title: "SMS, patches & builder hour",
     description:
-      "We keep the site maintained so things keep running smoothly over time.",
+      "Client SMS when enabled, security and dependency updates, plus one hour a month for small in-scope tweaks.",
   },
   {
-    title: "Monthly dev support",
+    title: "Same Care price as you grow",
     description:
-      "Small edits and improvements can be handled without starting from scratch every time.",
-  },
-  {
-    title: "ONGOING ADMIN ACCESS",
-    description:
-      "You keep access to the admin system so bookings, content and products stay manageable.",
+      "No per-barber surcharge—add chairs or staff without the monthly plan creeping up.",
   },
 ];
 
@@ -48,7 +45,11 @@ const RateCard1 = ({ className }: RateCard1Props) => {
         <aside className="rate-card1__sidebar">
           <div className="rate-card1__heading-wrap">
             <p className="rate-card1__eyebrow">ONGOING CARE</p>
-            <h2 className="rate-card1__heading">KEEP EVERYTHING RUNNING — WITHOUT THE HEADACHE</h2>
+            <h2 className="rate-card1__heading">MANAGED CARE</h2>
+            <p className="rate-card1__lead">
+              After your included hosting/admin months: hosting, full admin + shop, SMS (where enabled), security patches,
+              and <strong>1h dev/month</strong>.
+            </p>
             <Illustration className="rate-card1__mark rate-card1__mark--top" />
             <Illustration className="rate-card1__mark rate-card1__mark--bottom" />
           </div>
@@ -62,9 +63,6 @@ const RateCard1 = ({ className }: RateCard1Props) => {
                 <li key={condition}>{condition}</li>
               ))}
             </ul>
-            <p className="rate-card1__note">
-After launch, Managed Care keeps hosting, updates and support handled — so you don’t manage technical upkeep yourself.
-            </p>
           </div>
         </aside>
 

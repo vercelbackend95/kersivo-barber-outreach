@@ -2,29 +2,34 @@
 const comparisonRows = [
   {
     title: 'Bookings',
-    kersivo: 'Built into the site from day one, so clients can self-book directly.',
-    alternatives: 'Usually pushed into separate tools or generic booking pages.'
+    kersivo: 'Self-book on your URL. £0 booking fees from us.',
+    alternatives: 'Apps that tax every chair—or own the client, not you.',
   },
   {
-    title: 'Shop & pickup',
-    kersivo: 'Products and pickup live in the same flow as your bookings.',
-    alternatives: 'Often no store at all — or a disconnected add-on that feels separate.'
+    title: 'Retail',
+    kersivo: 'Buy-and-collect on the same site. No shop cut from us.',
+    alternatives: 'No store—or a separate stack that skims again.',
   },
   {
-    title: 'Barber schedules',
-    kersivo: 'Services, barbers and availability stay clear in one place.',
-    alternatives: 'Manual workarounds, limited control or platform restrictions.'
+    title: 'Team',
+    kersivo: 'Add barbers & services freely. One admin stays in sync.',
+    alternatives: 'Seat caps, rigid plans, spreadsheet + DM chaos.',
   },
   {
-    title: 'Admin updates',
-    kersivo: 'Update services, products and key details in one admin flow.',
-    alternatives: 'Edits get scattered across tools — or depend on slow agency updates.'
+    title: 'Operations',
+    kersivo: 'Bookings, orders, reports—one dashboard.',
+    alternatives: 'Split tools. Nobody sees the whole day.',
   },
   {
-    title: 'Brand feel',
-    kersivo: 'The whole site feels like one premium barber brand.',
-    alternatives: 'Often stuck with a template feel or platform-style layout limits.'
-  }
+    title: 'Brand',
+    kersivo: 'Your site, your look—not a rented profile.',
+    alternatives: 'Generic templates. Traffic that isn’t really yours.',
+  },
+  {
+    title: 'Go-live',
+    kersivo: '~14 days to a full launch—booking, retail pickup & admin together.',
+    alternatives: 'Long agency loops—or a slick site with booking still “later.”',
+  },
 ];
 ---
 
@@ -32,9 +37,10 @@ const comparisonRows = [
   <div class="container">
     <div class="compare3-block__header">
       <span class="compare3-block__badge">WHY IT WORKS BETTER</span>
-      <h2>WHY BARBERS PICK KERSIVO</h2>
+      <h2>ONE STACK. YOUR DOMAIN. YOUR MARGIN.</h2>
       <p>
-Bookings, admin and retail in one connected system — without patchwork tools.
+        One connected stack on your domain. The usual mix splits booking, retail, and admin across apps and sites that
+        tax you again—or park clients where you don&apos;t own the relationship.
       </p>
     </div>
 
@@ -43,12 +49,12 @@ Bookings, admin and retail in one connected system — without patchwork tools.
         <div class="compare3-block__item compare3-block__brand compare3-block__brand--highlight" role="columnheader">
           <span class="compare3-block__logo compare3-block__logo--kersivo" aria-hidden="true">K</span>
           <p class="compare3-block__brand-title">Kersivo</p>
-          <p class="compare3-block__brand-copy">Barber operating system for bookings, retail and admin</p>
+          <p class="compare3-block__brand-copy">Booking · retail pickup · one admin</p>
         </div>
         <div class="compare3-block__item compare3-block__brand" role="columnheader">
           <span class="compare3-block__logo compare3-block__logo--alt" aria-hidden="true"></span>
-          <p class="compare3-block__brand-title">Typical alternatives</p>
-          <p class="compare3-block__brand-copy">Templates, platforms or disconnected tools</p>
+          <p class="compare3-block__brand-title">Typical mix</p>
+          <p class="compare3-block__brand-copy">Apps · templates · extra tools</p>
         </div>
         {
           comparisonRows.map((row) => (

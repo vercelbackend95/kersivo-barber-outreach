@@ -252,6 +252,12 @@ function useBodyScrollLock(isLocked: boolean): void {
 function getTodayLondonDate() {
   return formatInTimeZone(new Date(), ADMIN_TIMEZONE, 'yyyy-MM-dd');
 }
+
+function readInitialBookingDateFromUrl(): string | null {
+  if (typeof window === 'undefined') return null;
+  const raw = new URLSearchParams(window.location.search).get('bookingDate');
+  return raw && /^\d{4}-\d{2}-\d{2}$/.test(raw) ? raw : null;
+}
 function formatTimelineDateLabel(date: string) {
   const dateAtLondonMidnight = fromZonedTime(`${date}T00:00:00.000`, ADMIN_TIMEZONE);
   return formatInTimeZone(dateAtLondonMidnight, ADMIN_TIMEZONE, 'EEE dd MMM');
@@ -699,7 +705,7 @@ export default function BookingsAdminPanel({ isActive, mode, onBackToDashboard }
   const [searchShortcutHint, setSearchShortcutHint] = useState('Ctrl+K');
   const [showSearchKbdHint, setShowSearchKbdHint] = useState(false);
   const [activeView, setActiveView] = useState<AdminBookingView>('timeline');
-  const [selectedDate, setSelectedDate] = useState(() => getTodayLondonDate());
+  const [selectedDate, setSelectedDate] = useState(() => readInitialBookingDateFromUrl() ?? getTodayLondonDate());
   const [historyBarberId, setHistoryBarberId] = useState<string>('all');
   const [historyDateRange, setHistoryDateRange] = useState<HistoryDateRange | null>(null);
   const [isHistoryMoreOpen, setIsHistoryMoreOpen] = useState(false);
@@ -2208,6 +2214,141 @@ export default function BookingsAdminPanel({ isActive, mode, onBackToDashboard }
     </div>
   );
 
+  const dashboardOpsDashCluster =
+    mode === 'dashboard' ? (
+      <div className="admin-bookings-ops-dash-cluster">
+        {!isMobileViewport && bookingsDashHeroEl ? renderOpsDashHeroSlot(bookingsDashHeroEl) : null}
+
+        <section className="admin-bookings-ops admin-bookings-ops--dashboard" aria-label="Operations dashboard">
+          <div className="admin-bookings-ops-dash-controls-stack" role="region" aria-label="Dashboard view controls">
+            <div className="admin-bookings-ops-dash-control-deck">
+              <div className="admin-bookings-ops-toolbar">
+                <div className="admin-bookings-ops-controls">
+                  <div className="admin-dashboard-controls admin-dashboard-controls--ops-dash">
+                    <div className="admin-view-toggle" role="tablist" aria-label="Booking view">
+                      {(['timeline', 'list'] as const).map((view) => {
+                        const isActiveTab = activeView === view;
+                        const label = view === 'timeline' ? 'Timeline' : 'List';
+                        return (
+                          <button
+                            key={view}
+                            type="button"
+                            role="tab"
+                            aria-selected={isActiveTab}
+                            className={isActiveTab ? 'active' : ''}
+                            onClick={() => setActiveView(view)}
+                          >
+                            {label}
+                          </button>
+                        );
+                      })}
+                    </div>
+                    <label className="admin-date-picker-label" aria-label={`Select date, currently ${selectedDateLabel}`}>
+                      <span className="admin-date-picker-text">{selectedDateLabel}</span>
+                      <input
+                        type="date"
+                        className="admin-filter-tab-calendar-input"
+                        value={selectedDate}
+                        onChange={(event) => setSelectedDate(event.target.value)}
+                        aria-label="Select date"
+                      />
+                      <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+                        <path
+                          d="M7 2a1 1 0 0 1 1 1v1h8V3a1 1 0 1 1 2 0v1h1a3 3 0 0 1 3 3v11a4 4 0 0 1-4 4H6a4 4 0 0 1-4-4V7a3 3 0 0 1 3-3h1V3a1 1 0 0 1 1-1Zm13 8H4v8a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-8ZM5 6a1 1 0 0 0-1 1v1h16V7a1 1 0 0 0-1-1H5Z"
+                          fill="currentColor"
+                        />
+                      </svg>
+                    </label>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div className="admin-bookings-ops-operations-stack">
+            {!bookingsInitialLoading ? (
+              <DaySummaryBar
+                bookings={bookings}
+                staffOnFloorCount={onFloorBarbersNow.length}
+                nowMs={nowMs}
+                dayOpsFilter={dayOpsFilter}
+                onDayOpsFilterChange={applyDayOpsFilter}
+                staffPanelOpen={staffRosterOpen}
+                onStaffToggle={onStaffToggle}
+              />
+            ) : null}
+          </div>
+
+          {opsFilteredViewActive ? (
+            <div className="admin-bookings-ops-filter-bar" aria-live="polite">
+              <div className="admin-bookings-ops-filter-bar-main">
+                <span className="admin-bookings-ops-filter-summary">{opsFilteredViewSummary}</span>
+                {opsActiveFilterLabels.length > 0 ? (
+                  <span className="admin-bookings-ops-filter-chips">
+                    {opsActiveFilterLabels.map((label) => (
+                      <span key={label} className="admin-bookings-ops-filter-chip">
+                        {label}
+                      </span>
+                    ))}
+                  </span>
+                ) : null}
+              </div>
+            </div>
+          ) : null}
+
+          {staffRosterOpen ? (
+            <div className="admin-bookings-ops-staff-roster">
+              {selectedDate !== todayLondonDate ? (
+                <p className="muted admin-bookings-ops-staff-roster-note">
+                  On-floor staff reflects today (London time), not the selected calendar date.
+                </p>
+              ) : null}
+              {onFloorBarbersNow.length === 0 ? (
+                barbersInitialLoading ? (
+                  <BarberRosterOverviewGridSkeleton ariaLabel="Loading barbers on shift" />
+                ) : (
+                  <p className="muted admin-bookings-ops-staff-roster-empty">No barbers on shift right now.</p>
+                )
+              ) : (
+                <div className="admin-barber-list-wrap admin-barbers-overview-list-wrap">
+                  <ul className="admin-barber-grid admin-barbers-overview-grid" aria-label="Barbers on shift now">
+                    {onFloorBarbersNow.map((barber) => {
+                      const now = new Date(nowMs);
+                      const nextBookingPreview = getNextBookingForBarber(bookings, barber.id, now);
+                      const availStatus = getBarberAvailabilityStatusForDayRange(
+                        barber,
+                        bookings,
+                        now,
+                        selectedDayBoundsLondon.startMs,
+                        selectedDayBoundsLondon.endMs
+                      );
+                      const dayFill = getDayFillForRange(bookings, barber.id, selectedDayBoundsLondon.startMs, selectedDayBoundsLondon.endMs);
+                      const todayLine = getTodayLine(barber);
+                      return (
+                        <AdminBarberRosterCard
+                          key={barber.id}
+                          barber={barber}
+                          barberIsActive={normalizeBarberStatus(barber)}
+                          nextBookingPreview={nextBookingPreview}
+                          availStatus={availStatus}
+                          dayFill={dayFill}
+                          todayLine={todayLine}
+                          getInitials={getInitials}
+                          onOpenBarber={setSelectedBarberId}
+                          bookingsLength={bookings.length}
+                          variant="ops"
+                        />
+                      );
+                    })}
+                  </ul>
+                </div>
+              )}
+            </div>
+          ) : null}
+        </section>
+      </div>
+    ) : null;
+
   if (!isActive) return null;
   if (isCheckingSession) return <section className="surface booking-shell"><h2>Admin</h2><p className="muted">Checking session...</p></section>;
   if (!loggedIn) return <section className="surface booking-shell"><h2>ADMIN</h2><p className="muted">Unauthorized. Verify your admin secret and reload this page.</p>{error && <p>{error}</p>}</section>;
@@ -2217,159 +2358,54 @@ export default function BookingsAdminPanel({ isActive, mode, onBackToDashboard }
       ref={bookingShellRef}
       className={`surface booking-shell${mode === 'reports' ? ' booking-shell--reports' : ''}${mode === 'blocks' ? ' admin-services-shell' : ''}`}
     >
-      <AdminSectionHeader
-        title={BOOKINGS_SECTION_HEADER[mode].title}
-        description={BOOKINGS_SECTION_HEADER[mode].description}
-        metaBadge={
-          mode === 'dashboard'
-            ? `${todayBookings.length} today`
-            : mode === 'blocks'
-              ? `${barbers.length} barbers`
-              : undefined
-        }
-        metaBadgeVariant={mode === 'dashboard' ? 'success' : undefined}
-        actions={
-          mode === 'blocks' ? (
-            <button type="button" className="btn btn--primary" onClick={openAddBarberSheet}>
-              Add barber
-            </button>
-          ) : undefined
-        }
-      />
-      {mode === 'dashboard' ? (
-        <div className="admin-bookings-ops-dash-cluster">
-          {!isMobileViewport && bookingsDashHeroEl ? renderOpsDashHeroSlot(bookingsDashHeroEl) : null}
-
-          <section className="admin-bookings-ops admin-bookings-ops--dashboard" aria-label="Operations dashboard">
-            <div className="admin-bookings-ops-dash-controls-stack" role="region" aria-label="Dashboard view controls">
-              <div className="admin-bookings-ops-dash-control-deck">
-                <div className="admin-bookings-ops-toolbar">
-                  <div className="admin-bookings-ops-controls">
-                    <div className="admin-dashboard-controls admin-dashboard-controls--ops-dash">
-                      <div className="admin-view-toggle" role="tablist" aria-label="Booking view">
-                        {(['timeline', 'list'] as const).map((view) => {
-                          const isActiveTab = activeView === view;
-                          const label = view === 'timeline' ? 'Timeline' : 'List';
-                          return (
-                            <button
-                              key={view}
-                              type="button"
-                              role="tab"
-                              aria-selected={isActiveTab}
-                              className={isActiveTab ? 'active' : ''}
-                              onClick={() => setActiveView(view)}
-                            >
-                              {label}
-                            </button>
-                          );
-                        })}
-                      </div>
-                      <label className="admin-date-picker-label" aria-label={`Select date, currently ${selectedDateLabel}`}>
-                        <span className="admin-date-picker-text">{selectedDateLabel}</span>
-                        <input
-                          type="date"
-                          className="admin-filter-tab-calendar-input"
-                          value={selectedDate}
-                          onChange={(event) => setSelectedDate(event.target.value)}
-                          aria-label="Select date"
-                        />
-                        <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">
-                          <path
-                            d="M7 2a1 1 0 0 1 1 1v1h8V3a1 1 0 1 1 2 0v1h1a3 3 0 0 1 3 3v11a4 4 0 0 1-4 4H6a4 4 0 0 1-4-4V7a3 3 0 0 1 3-3h1V3a1 1 0 0 1 1-1Zm13 8H4v8a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-8ZM5 6a1 1 0 0 0-1 1v1h16V7a1 1 0 0 0-1-1H5Z"
-                            fill="currentColor"
-                          />
-                        </svg>
-                      </label>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </div>
-
-            <div className="admin-bookings-ops-operations-stack">
-              {!bookingsInitialLoading ? (
-                <DaySummaryBar
-                  bookings={bookings}
-                  staffOnFloorCount={onFloorBarbersNow.length}
-                  nowMs={nowMs}
-                  dayOpsFilter={dayOpsFilter}
-                  onDayOpsFilterChange={applyDayOpsFilter}
-                  staffPanelOpen={staffRosterOpen}
-                  onStaffToggle={onStaffToggle}
-                />
-              ) : null}
-            </div>
-
-            {opsFilteredViewActive ? (
-              <div className="admin-bookings-ops-filter-bar" aria-live="polite">
-                <div className="admin-bookings-ops-filter-bar-main">
-                  <span className="admin-bookings-ops-filter-summary">{opsFilteredViewSummary}</span>
-                  {opsActiveFilterLabels.length > 0 ? (
-                    <span className="admin-bookings-ops-filter-chips">
-                      {opsActiveFilterLabels.map((label) => (
-                        <span key={label} className="admin-bookings-ops-filter-chip">
-                          {label}
-                        </span>
-                      ))}
-                    </span>
-                  ) : null}
-                </div>
-              </div>
-            ) : null}
-
-            {staffRosterOpen ? (
-              <div className="admin-bookings-ops-staff-roster">
-                {selectedDate !== todayLondonDate ? (
-                  <p className="muted admin-bookings-ops-staff-roster-note">
-                    On-floor staff reflects today (London time), not the selected calendar date.
-                  </p>
-                ) : null}
-                {onFloorBarbersNow.length === 0 ? (
-                  barbersInitialLoading ? (
-                    <BarberRosterOverviewGridSkeleton ariaLabel="Loading barbers on shift" />
-                  ) : (
-                    <p className="muted admin-bookings-ops-staff-roster-empty">No barbers on shift right now.</p>
-                  )
-                ) : (
-                  <div className="admin-barber-list-wrap admin-barbers-overview-list-wrap">
-                    <ul className="admin-barber-grid admin-barbers-overview-grid" aria-label="Barbers on shift now">
-                      {onFloorBarbersNow.map((barber) => {
-                        const now = new Date(nowMs);
-                        const nextBookingPreview = getNextBookingForBarber(bookings, barber.id, now);
-                        const availStatus = getBarberAvailabilityStatusForDayRange(
-                          barber,
-                          bookings,
-                          now,
-                          selectedDayBoundsLondon.startMs,
-                          selectedDayBoundsLondon.endMs
-                        );
-                        const dayFill = getDayFillForRange(bookings, barber.id, selectedDayBoundsLondon.startMs, selectedDayBoundsLondon.endMs);
-                        const todayLine = getTodayLine(barber);
-                        return (
-                          <AdminBarberRosterCard
-                            key={barber.id}
-                            barber={barber}
-                            barberIsActive={normalizeBarberStatus(barber)}
-                            nextBookingPreview={nextBookingPreview}
-                            availStatus={availStatus}
-                            dayFill={dayFill}
-                            todayLine={todayLine}
-                            getInitials={getInitials}
-                            onOpenBarber={setSelectedBarberId}
-                            bookingsLength={bookings.length}
-                            variant="ops"
-                          />
-                        );
-                      })}
-                    </ul>
-                  </div>
-                )}
-              </div>
-            ) : null}
-          </section>
+      {mode === 'dashboard' && activeView === 'timeline' ? (
+        <div data-feature261-booking-overview-shot="">
+          <AdminSectionHeader
+            title={BOOKINGS_SECTION_HEADER.dashboard.title}
+            description={BOOKINGS_SECTION_HEADER.dashboard.description}
+            metaBadge={`${todayBookings.length} today`}
+            metaBadgeVariant="success"
+            actions={undefined}
+          />
+          {dashboardOpsDashCluster}
+          <AdminErrorBoundary>
+            <TodayTimeline
+              barbers={activeBarbers}
+              bookings={visibleBookings}
+              timeBlocks={timeBlocks}
+              selectedDate={selectedDate}
+              isLoading={bookingsInitialLoading || barbersInitialLoading}
+              isSearchActive={Boolean(effectiveClientSearchQuery) || dayOpsFilter !== 'all'}
+              scrollContainerRef={timelineScrollRef}
+              onBookingClick={openTimelineBooking}
+              onGoToNextDay={goToNextTimelineDay}
+              nextDayShortLabel={timelineNextDayLabel}
+            />
+          </AdminErrorBoundary>
         </div>
-      ) : isMobileViewport ? null : (
-        renderOpsDashHeroSlot(nonDashboardOpsDashHeroEl)
+      ) : (
+        <>
+          <AdminSectionHeader
+            title={BOOKINGS_SECTION_HEADER[mode].title}
+            description={BOOKINGS_SECTION_HEADER[mode].description}
+            metaBadge={
+              mode === 'dashboard'
+                ? `${todayBookings.length} today`
+                : mode === 'blocks'
+                  ? `${barbers.length} barbers`
+                  : undefined
+            }
+            metaBadgeVariant={mode === 'dashboard' ? 'success' : undefined}
+            actions={
+              mode === 'blocks' ? (
+                <button type="button" className="btn btn--primary" onClick={openAddBarberSheet}>
+                  Add barber
+                </button>
+              ) : undefined
+            }
+          />
+          {mode === 'dashboard' ? dashboardOpsDashCluster : isMobileViewport ? null : renderOpsDashHeroSlot(nonDashboardOpsDashHeroEl)}
+        </>
       )}
 
       {cancelSuccessMessage && <p className="admin-inline-success">{cancelSuccessMessage}</p>}
@@ -2587,22 +2623,7 @@ export default function BookingsAdminPanel({ isActive, mode, onBackToDashboard }
         </div>
       )}
 
-      {mode !== 'history' && activeView === 'timeline' ? (
-        <AdminErrorBoundary>
-          <TodayTimeline
-            barbers={activeBarbers}
-            bookings={visibleBookings}
-            timeBlocks={timeBlocks}
-            selectedDate={selectedDate}
-            isLoading={bookingsInitialLoading || barbersInitialLoading}
-            isSearchActive={Boolean(effectiveClientSearchQuery) || (mode === 'dashboard' && dayOpsFilter !== 'all')}
-            scrollContainerRef={timelineScrollRef}
-            onBookingClick={openTimelineBooking}
-            onGoToNextDay={goToNextTimelineDay}
-            nextDayShortLabel={timelineNextDayLabel}
-          />
-        </AdminErrorBoundary>
-      ) : mode === 'dashboard' && activeView === 'list' ? (
+      {mode === 'dashboard' && activeView === 'list' ? (
         <>
           <div className="admin-bookings-list-search">
             <AdminBookingsOpsSearch

@@ -66,11 +66,12 @@ const Feature261 = ({ className }: Feature261Props) => {
         <header className="feature261__intro">
           <div className="feature261__headline-wrap">
             <p className="feature261__kicker">INSIDE THE SYSTEM</p>
-            <h2 className="feature261__heading">Real screens. One operating rhythm.</h2>
+            <h2 className="feature261__heading">Real screens. One stack in motion.</h2>
           </div>
 
           <p className="feature261__description">
-            Admin, booking and shop — one product, not three disconnected tools.
+            The same system you compared above—here as real UI: client booking on your domain, one admin for the floor,
+            buy-and-collect retail, and booking or shop numbers without bolting on another tool.
           </p>
         </header>
 
@@ -79,7 +80,7 @@ const Feature261 = ({ className }: Feature261Props) => {
             src="/hero-assets/screens/feature261-bookings-dashboard.jpg"
             alt="Signed-in admin — bookings dashboard and day schedule"
             eyebrow="BOOKING OVERVIEW"
-            title="The full day: columns, statuses, what’s next."
+            title="Chairs, statuses, what's next—plus the pulse when you need it."
             imageClassName="feature261-bento-image--bookings"
             loading="eager"
             mobileVariant="tall"
@@ -89,7 +90,7 @@ const Feature261 = ({ className }: Feature261Props) => {
             src="/hero-assets/screens/feature261-booking-flow.jpg"
             alt="Public booking — pick service, barber and time"
             eyebrow="CLIENT BOOKING"
-            title="Service, barber, slot — on your own site."
+            title="Service, barber, time—your URL, your brand, not their app."
             imageClassName="feature261-bento-image--booking"
             loading="eager"
             mobileVariant="tall"
@@ -99,7 +100,7 @@ const Feature261 = ({ className }: Feature261Props) => {
             src="/hero-assets/screens/feature261-barbers.jpg"
             alt="Signed-in admin — barber roster, hours and assignments"
             eyebrow="BARBERS"
-            title="Team roster, hours, who does what."
+            title="Roster, hours, who offers what—grow the team in one place."
             imageClassName="feature261-bento-image--barbers"
             mobileVariant="medium"
             gridClassName="md:col-span-2 md:h-[272px] lg:col-span-4 lg:h-[min(18rem,36vh)]"
@@ -108,7 +109,7 @@ const Feature261 = ({ className }: Feature261Props) => {
             src="/hero-assets/screens/feature261-shop-admin.jpg"
             alt="Signed-in admin — products and shop catalog"
             eyebrow="RETAIL"
-            title="Catalog, stock, orders under control."
+            title="Catalog, orders, pickup ready—same panel as the chair."
             imageClassName="feature261-bento-image--shop"
             mobileVariant="wide"
             gridClassName="md:col-span-2 md:h-[272px] lg:col-span-4 lg:h-[min(18rem,36vh)]"
@@ -117,7 +118,7 @@ const Feature261 = ({ className }: Feature261Props) => {
             src="/hero-assets/screens/feature261-services.jpg"
             alt="Signed-in admin — services, prices and durations"
             eyebrow="SERVICES"
-            title="Pricing and durations always current."
+            title="Price, duration, menu—what they book matches what you run."
             imageClassName="feature261-bento-image--services"
             mobileVariant="medium"
             gridClassName="md:col-span-2 md:h-[272px] lg:col-span-4 lg:h-[min(18rem,36vh)]"

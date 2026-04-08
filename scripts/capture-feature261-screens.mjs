@@ -2,6 +2,10 @@
  * Captures marketing JPEGs for feature261 bento (Playwright).
  * Prereq: `npm run dev` on 127.0.0.1:4321
  * Required for admin shots: ADMIN_SECRET (e.g. from .env — do not commit secrets).
+ *
+ * Booking overview timeline: run `npm run seed` first so demo bookings exist.
+ * Optional: DEMO_BOOKINGS_DATE or FEATURE261_BOOKING_DATE (YYYY-MM-DD, London calendar day)
+ * must match between seed and capture (defaults to today in London when unset).
  */
 import { chromium } from 'playwright';
 import { mkdir } from 'node:fs/promises';
@@ -14,6 +18,12 @@ const outDir = join(root, 'public', 'hero-assets', 'screens');
 
 const base = process.env.FEATURE261_SCREEN_BASE ?? 'http://127.0.0.1:4321';
 const adminSecret = (process.env.ADMIN_SECRET ?? '').trim();
+
+const feature261BookingDate = (process.env.DEMO_BOOKINGS_DATE ?? process.env.FEATURE261_BOOKING_DATE ?? '').trim();
+const bookingDateQuery =
+  feature261BookingDate && /^\d{4}-\d{2}-\d{2}$/.test(feature261BookingDate)
+    ? `&bookingDate=${encodeURIComponent(feature261BookingDate)}`
+    : '';
 
 const LS_KEY = 'kersivo.admin.secret';
 
@@ -61,6 +71,35 @@ async function captureAdminSection(page, section, fileName, settleMs) {
   });
 }
 
+/** Bookings dashboard: cropped to timeline chrome + horizontal scroll for busy morning/midday band. */
+async function captureBookingsDashboardForFeature261(page) {
+  const url = `${base}/admin?section=bookings_dashboard${bookingDateQuery}`;
+  await page.goto(url, { waitUntil: 'domcontentloaded', timeout: 60000 });
+  await page.locator('aside.admin-sidebar').first().waitFor({ state: 'visible', timeout: 15000 });
+  await page.locator('[data-feature261-booking-overview-shot]').waitFor({ state: 'visible', timeout: 25000 });
+  await page.waitForTimeout(1200);
+
+  const scroll = page.locator('.admin-timeline-scroll').first();
+  const scrollCount = await scroll.count();
+  if (scrollCount > 0) {
+    await scroll.evaluate((el) => {
+      const dayHours = 24 - 8;
+      const ratio = (9.5 - 8) / dayHours;
+      const anchorPx = ratio * el.scrollWidth;
+      const target = anchorPx - el.clientWidth * 0.12;
+      const max = Math.max(0, el.scrollWidth - el.clientWidth);
+      el.scrollLeft = Math.max(0, Math.min(target, max));
+    });
+    await page.waitForTimeout(500);
+  }
+
+  await page.locator('[data-feature261-booking-overview-shot]').screenshot({
+    path: join(outDir, 'feature261-bookings-dashboard.jpg'),
+    type: 'jpeg',
+    quality: 90,
+  });
+}
+
 async function capturePublic(page, pathSuffix, fileName, settleMs) {
   const url = `${base}${pathSuffix}`;
   await page.goto(url, { waitUntil: 'domcontentloaded', timeout: 60000 });
@@ -86,8 +125,8 @@ async function main() {
   process.stderr.write('Unlocking admin session …\n');
   await ensureAdminSession(page);
 
-  process.stderr.write('Capturing feature261-bookings-dashboard.jpg (admin) …\n');
-  await captureAdminSection(page, 'bookings_dashboard', 'feature261-bookings-dashboard.jpg', 4200);
+  process.stderr.write('Capturing feature261-bookings-dashboard.jpg (admin timeline) …\n');
+  await captureBookingsDashboardForFeature261(page);
 
   process.stderr.write('Capturing feature261-barbers.jpg (admin) …\n');
   await captureAdminSection(page, 'bookings_blocks', 'feature261-barbers.jpg', 4200);

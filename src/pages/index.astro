@@ -7,7 +7,6 @@ import { TrustStrip3 } from '../components/trustStrip3';
 import Compare3 from '../components/compare3.astro';
 import { Feature261 } from '../components/feature261';
 import { Process2 } from '../components/process2';
-import Feature228 from '../components/feature228.astro';
 import '../styles/components/hero108.css';
 import Hero108 from '../components/hero108.astro';
 import SettingsIntegrations3a from '../components/settingsIntegrations3a.astro';
@@ -27,7 +26,6 @@ import '../styles/components/contact16.css';
 import Footer50 from '../components/footer50.astro';
 import '../styles/components/footer50.css';
 import '../styles/components/feature261.css';
-import '../styles/components/feature228.css';
 import '../styles/components/process2.css';
 const DEMO_ADMIN_PASSWORD = import.meta.env.PUBLIC_DEMO_ADMIN_PASSWORD
   ?? import.meta.env.PUBLIC_ADMIN_DEMO_PASSWORD
@@ -37,7 +35,7 @@ const DEMO_ADMIN_PASSWORD = import.meta.env.PUBLIC_DEMO_ADMIN_PASSWORD
 
 ---
 
-<MainLayout title="Kersivo — Barber website, bookings & retail (UK)">
+<MainLayout title="Kersivo — Barber website, £0 booking fees, shop pickup & one admin (UK)">
     <main class="hero10">
     <section id="home" class="hero10__section">
       <div class="hero10__bg" aria-hidden="true">
@@ -51,62 +49,66 @@ const DEMO_ADMIN_PASSWORD = import.meta.env.PUBLIC_DEMO_ADMIN_PASSWORD
 
         <!-- COPY SIDE -->
         <div class="hero10__content">
-          <span class="hero10__badge">BARBER WEBSITE SYSTEM</span>
+          <span class="hero10__badge">BARBER WEBSITE &amp; BOOKING SYSTEM</span>
 
           <h1 class="hero10__title">
-            <span class="hero10__title-line">CLIENTS BOOK ONLINE.</span>
-            <span class="hero10__title-line">NO PLATFORM FEES.</span>
-            <span class="hero10__title-line">ONE SYSTEM.</span>
+            <span class="hero10__title-line">QUIT FEEDING THE BOOKING APPS.</span>
+            <span class="hero10__title-line">YOUR SITE. YOUR SHOP. ONE SYSTEM.</span>
           </h1>
 
-          <p class="hero10__lead">
-            Give clients a clean way to book and shop — while you manage bookings, retail orders and daily updates from one dashboard.
-          </p>
+          <div class="hero10__lead-block">
+            <p class="hero10__lead">
+              Booking, buy-and-collect retail, and one admin—on your domain, under your brand.
+            </p>
+            <p class="hero10__lead-note">
+              No cut from us on bookings or retail. Shop cards run through Stripe (standard fees).
+            </p>
+          </div>
 
           <div class="hero10__proofline" role="list" aria-label="Key facts">
             <span class="hero10__proof-chip" role="listitem">
               <span class="hero10__proof-dot" aria-hidden="true"></span>
-              Live in 14 days
+              Live in ~14 days
             </span>
             <span class="hero10__proof-chip" role="listitem">
               <span class="hero10__proof-dot" aria-hidden="true"></span>
-              No third-party fees
+              £0 booking fees
             </span>
             <span class="hero10__proof-chip" role="listitem">
               <span class="hero10__proof-dot" aria-hidden="true"></span>
-              Bookings, retail &amp; admin in one
+              No shop cut from us
             </span>
           </div>
 
           <ul class="hero10__impact" aria-label="Core advantages">
             <li class="hero10__impact-item">
               <svg class="hero10__impact-icon" viewBox="0 0 16 16" fill="none" aria-hidden="true">
-                <circle cx="8" cy="8" r="6.5" stroke="currentColor" stroke-width="1.25"/>
-                <path d="M5 8l2 2 4-4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
-              </svg>
-              <div class="hero10__impact-text">
-                <strong>Keep 100% of every booking</strong>
-                <span>No platform taking a cut — revenue goes straight to your shop.</span>
-              </div>
-            </li>
-            <li class="hero10__impact-item">
-              <svg class="hero10__impact-icon" viewBox="0 0 16 16" fill="none" aria-hidden="true">
                 <rect x="1.5" y="3" width="13" height="10" rx="1" stroke="currentColor" stroke-width="1.25"/>
                 <path d="M1.5 7h13M5 3V1.5M11 3V1.5" stroke="currentColor" stroke-width="1.25" stroke-linecap="round"/>
               </svg>
               <div class="hero10__impact-text">
-                <strong>One dashboard for everything</strong>
-                <span>Bookings, retail and admin — not spread across 3 separate apps.</span>
+                <strong>One dashboard</strong>
+                <span>Team, bookings, shop, reports—one login. Update anytime.</span>
               </div>
             </li>
             <li class="hero10__impact-item">
               <svg class="hero10__impact-icon" viewBox="0 0 16 16" fill="none" aria-hidden="true">
                 <circle cx="8" cy="8" r="6.5" stroke="currentColor" stroke-width="1.25"/>
-                <path d="M8 4.5V8l2.5 2" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+                <path d="M5 8l2 2 4-4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
               </svg>
               <div class="hero10__impact-text">
-                <strong>Up and running in 14 days</strong>
-                <span>Full system from day one — no months of agency back-and-forth.</span>
+                <strong>Bookings on your URL</strong>
+                <span>They book on your site—not inside someone else&apos;s app.</span>
+              </div>
+            </li>
+            <li class="hero10__impact-item">
+              <svg class="hero10__impact-icon" viewBox="0 0 16 16" fill="none" aria-hidden="true">
+                <path d="M3 5.5h10l-1 6.5H4L3 5.5z" stroke="currentColor" stroke-width="1.25" stroke-linejoin="round"/>
+                <path d="M5.5 5.5V4.5a2.5 2.5 0 015 0v1" stroke="currentColor" stroke-width="1.25" stroke-linecap="round"/>
+              </svg>
+              <div class="hero10__impact-text">
+                <strong>Buy &amp; collect retail</strong>
+                <span>Online checkout; pickup in the chair.</span>
               </div>
             </li>
           </ul>
@@ -119,7 +121,7 @@ const DEMO_ADMIN_PASSWORD = import.meta.env.PUBLIC_DEMO_ADMIN_PASSWORD
               <a class="btn btn--secondary" href="#book-demo" data-demo-cta>BOOK A DEMO</a>
             </div>
             <p class="hero10__actions-note">
-              Live demo — explore booking flow, admin and retail. No signup needed.
+              Live walkthrough—no signup.
             </p>
           </div>
         </div>
@@ -327,7 +329,7 @@ const DEMO_ADMIN_PASSWORD = import.meta.env.PUBLIC_DEMO_ADMIN_PASSWORD
             </div>
             <div class="system-chooser__tile-body">
               <h3>Bookings Dashboard</h3>
-              <p class="system-chooser__tile-desc">The owner's daily view — schedule per barber, live statuses, cancellations and updates in one screen.</p>
+              <p class="system-chooser__tile-desc">Your daily command centre—per-barber schedule, live statuses, search, and booking reports when you want the numbers.</p>
               <div class="system-chooser__tile-footer">
                 <span class="system-chooser__tile-access">
                   <svg viewBox="0 0 12 12" fill="none" aria-hidden="true"><rect x="3" y="5.5" width="6" height="5" rx=".5" stroke="currentColor" stroke-width="1.2"/><path d="M4.5 5.5V4a1.5 1.5 0 013 0v1.5" stroke="currentColor" stroke-width="1.2" stroke-linecap="round"/></svg>
@@ -368,7 +370,7 @@ const DEMO_ADMIN_PASSWORD = import.meta.env.PUBLIC_DEMO_ADMIN_PASSWORD
             </div>
             <div class="system-chooser__tile-body">
               <h3>Shop &amp; Pickup</h3>
-              <p class="system-chooser__tile-desc">Manage products, track orders and mark them ready for pickup — all from the same admin panel.</p>
+              <p class="system-chooser__tile-desc">Add products, track orders, mark pickup ready, and follow shop sales—same admin, no selling fees from us.</p>
               <div class="system-chooser__tile-footer">
                 <span class="system-chooser__tile-access">
                   <svg viewBox="0 0 12 12" fill="none" aria-hidden="true"><rect x="3" y="5.5" width="6" height="5" rx=".5" stroke="currentColor" stroke-width="1.2"/><path d="M4.5 5.5V4a1.5 1.5 0 013 0v1.5" stroke="currentColor" stroke-width="1.2" stroke-linecap="round"/></svg>

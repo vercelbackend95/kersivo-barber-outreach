@@ -182,7 +182,8 @@
 }
 
 .feature261 .feature261-bento-image--bookings {
-  object-position: center 12%;
+  /* Cropped admin timeline shot: keep header, day stats, and lane labels visible in tall card */
+  object-position: center 5%;
 }
 
 .feature261 .feature261-bento-image--booking {

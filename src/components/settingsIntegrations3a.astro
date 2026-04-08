@@ -15,28 +15,30 @@ interface Props {
 
 const {
   eyebrow = 'Connected operations',
-  heading = 'ONE SYSTEM. LESS DAILY CHAOS.',
+  heading = 'SAME DETAILS. EVERYWHERE THAT MATTERS.',
   description =
-    'Keep bookings, schedules, shop orders and daily updates connected in one clear barber-first system.',
+    "Your booking link, today's column, retail orders, and the headline figures all run off the same admin—set services, hours, and catalog once, and they stay aligned everywhere clients and staff look.",
 
   features = [
     {
-      title: 'Online bookings',
-      description: 'Cut out the back-and-forth with built-in booking.',
-
+      title: 'Client booking',
+      description:
+        "Service, barber, and time slot on your site; confirmation email arrives with reschedule and cancel links whenever your shop rules allow them.",
     },
     {
-      title: 'Barber schedules',
-      description: 'Keep services, availability and the day’s schedule clear.',
-
+      title: 'Roster, hours & menu',
+      description:
+        "Each barber's shifts, the services on their card, and how long each cut takes—the slot a client locks in is the slot your team sees on the day.",
     },
     {
-      title: 'Client enquiries',
-      description: 'Keep service questions and client enquiries in one place.',
+      title: 'Checkout & pickup',
+      description:
+        "Cards are charged through Stripe; orders sit beside bookings in admin. Flip them to ready when the product is waiting at the chair.",
     },
     {
-      title: 'Shop & pickup',
-      description: 'Sell products online and keep pickup simple in the shop.',
+      title: 'Figures when you need them',
+      description:
+        "Booking and shop totals live in the same place as the diary—no second login, no export detour, for a straight read on how the week is moving.",
     },
   ],
 } = Astro.props as Props;

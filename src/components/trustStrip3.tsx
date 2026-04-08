@@ -12,20 +12,20 @@ interface TrustStrip3Props {
 
 const DEFAULT_PILLARS: PillarItem[] = [
   {
-    heading: '1–5 chairs',
-    body: 'Built for independent UK shops — not chains, not solo freelancers. Sized for how barbers actually operate day to day.',
+    heading: 'No barber limit',
+    body: 'Few chairs or a big floor—the stack scales. We don’t cap your roster.',
   },
   {
     heading: 'Your domain',
-    body: 'Clients book on your website, under your brand. No redirects to a marketplace profile or a third-party booking platform.',
+    body: 'Book and sell on your URL. Your traffic, your client list.',
   },
   {
-    heading: 'One daily view',
-    body: 'Bookings, barber schedules and retail orders in a single admin panel. One person can run the whole operation.',
+    heading: 'One admin',
+    body: 'Team, bookings, pickup orders, reports—one login.',
   },
   {
-    heading: 'GBP. No markup.',
-    body: 'Priced in pounds. No per-booking cuts, no hidden USD rates, no percentage taken when your revenue comes in.',
+    heading: '£0 booking fees · no shop cut',
+    body: 'We don’t take a cut on bookings or retail. Shop cards: Stripe. GBP pricing.',
   },
 ];
 
