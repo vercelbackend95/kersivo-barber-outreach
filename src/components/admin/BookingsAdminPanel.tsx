@@ -1,4 +1,4 @@
-import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import React, { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
 import { BarberRosterOverviewGridSkeleton, SkeletonKPICards } from '../skeleton';
 import AdminSectionHeader from './AdminSectionHeader';
@@ -29,6 +29,7 @@ import { formatDelta } from './reportsFormatting';
 import EmptyState from '../EmptyState';
 import { Ban, X } from '../lucide-react';
 import { useAdminTodayBookingsLive } from './useAdminTodayBookingsLive';
+import { ADMIN_BOOKING_HISTORY_PAGE_SIZE } from '../../lib/admin/bookingHistoryPageSize';
 import { canShopAdminCancelByLeadTime } from '../../lib/booking/policies';
 import { countBookingsByStatusTone, getBookingStatusTone, isCancelledBookingStatus } from './bookingStatus';
 type Booking = {
@@ -45,6 +46,27 @@ type Booking = {
   barber: { name: string };
   service: { name: string };
 };
+
+/** Window + scrollable ancestors to minimum scroll (full header visible on mobile admin). */
+function scrollDocumentAndAncestorsToTop(scrollOrigin: HTMLElement | null) {
+  if (typeof window === 'undefined') return;
+
+  window.scrollTo({ top: 0, left: 0, behavior: 'auto' });
+  document.documentElement.scrollTop = 0;
+  document.body.scrollTop = 0;
+
+  let node: HTMLElement | null = scrollOrigin;
+  while (node) {
+    const { overflowY } = window.getComputedStyle(node);
+    const yScrollable =
+      (overflowY === 'auto' || overflowY === 'scroll' || overflowY === 'overlay') &&
+      node.scrollHeight > node.clientHeight;
+    if (yScrollable && node.scrollTop > 0) {
+      node.scrollTop = 0;
+    }
+    node = node.parentElement;
+  }
+}
 
 
 type ClientProfile = {
@@ -757,6 +779,10 @@ export default function BookingsAdminPanel({ isActive, mode, onBackToDashboard }
   const [isMobileViewport, setIsMobileViewport] = useState(false);
 
   const inFlightRef = useRef(false);
+  /** History "Load more" uses its own lock so it is not blocked by the main bookings fetch / polling. */
+  const historyAppendInFlightRef = useRef(false);
+  const bookingsRef = useRef<Booking[]>([]);
+  const historyCursorRef = useRef<string | null>(null);
     const timeBlocksInFlightRef = useRef(false);
   const pollingStoppedRef = useRef(false);
     const bookingsRequestIdRef = useRef(0);
@@ -799,6 +825,14 @@ export default function BookingsAdminPanel({ isActive, mode, onBackToDashboard }
       timelineScrollRestoreRef.current = null;
     });
   }, []);
+
+  useEffect(() => {
+    bookingsRef.current = bookings;
+  }, [bookings]);
+
+  useEffect(() => {
+    historyCursorRef.current = historyCursor;
+  }, [historyCursor]);
 
   const fetchTimeBlocks = useCallback(async () => {
     if (timeBlocksInFlightRef.current) return;
@@ -879,27 +913,56 @@ export default function BookingsAdminPanel({ isActive, mode, onBackToDashboard }
 
 
   const fetchBookings = useCallback(async (appendHistory = false) => {
-    if (!loggedIn || !isActive || pollingStoppedRef.current || inFlightRef.current) return;
-    if (mode === 'history' && !appendHistory) setHistoryCursor(null);
+    const isHistoryAppend = mode === 'history' && appendHistory;
 
-    inFlightRef.current = true;
+    if (!loggedIn || !isActive || pollingStoppedRef.current) {
+      if (isHistoryAppend) setHistoryLoadingMore(false);
+      return;
+    }
+
+    if (isHistoryAppend) {
+      if (historyAppendInFlightRef.current) {
+        setHistoryLoadingMore(false);
+        return;
+      }
+      if (inFlightRef.current) {
+        setHistoryLoadingMore(false);
+        return;
+      }
+      historyAppendInFlightRef.current = true;
+    } else {
+      if (inFlightRef.current) return;
+      if (historyAppendInFlightRef.current) return;
+      inFlightRef.current = true;
+    }
+
+    if (mode === 'history' && !appendHistory) {
+      setHistoryCursor(null);
+      historyCursorRef.current = null;
+    }
+
     const requestId = ++bookingsRequestIdRef.current;
     const requestQueryKey = mode === 'history'
-      ? ['history', historyBarberId, historyDateRange?.from ? formatInTimeZone(historyDateRange.from, ADMIN_TIMEZONE, 'yyyy-MM-dd') : '', historyDateRange?.to ? formatInTimeZone(historyDateRange.to, ADMIN_TIMEZONE, 'yyyy-MM-dd') : ''].join(':')
+      ? ['history', historyBarberId, historyDateRange?.from ? formatInTimeZone(historyDateRange.from, ADMIN_TIMEZONE, 'yyyy-MM-dd') : '', historyDateRange?.to ? formatInTimeZone(historyDateRange.to, ADMIN_TIMEZONE, 'yyyy-MM-dd') : '', normalizeSearchValue(debouncedSearchQuery)].join(':')
       : ['dashboard', selectedDate].join(':');
 
 
     try {
       const endpoint = (() => {
           if (mode === 'history') {
-          const params = new URLSearchParams({ view: 'history', limit: '50' });
+          const params = new URLSearchParams({
+            view: 'history',
+            limit: String(ADMIN_BOOKING_HISTORY_PAGE_SIZE),
+          });
           params.set('barberId', historyBarberId ?? 'all');
           if (historyDateRange?.from && historyDateRange?.to) {
             params.set('from', formatInTimeZone(historyDateRange.from, ADMIN_TIMEZONE, 'yyyy-MM-dd'));
             params.set('to', formatInTimeZone(historyDateRange.to, ADMIN_TIMEZONE, 'yyyy-MM-dd'));
           }
 
-          if (appendHistory && historyCursor) params.set('cursor', historyCursor);
+          if (appendHistory && historyCursorRef.current) params.set('cursor', historyCursorRef.current);
+          const historySearchQ = normalizeSearchValue(debouncedSearchQuery);
+          if (historySearchQ) params.set('q', historySearchQ);
           return `/api/admin/bookings?${params.toString()}`;
         }
         return `/api/admin/bookings?date=${encodeURIComponent(selectedDate)}&mode=day`;
@@ -918,7 +981,8 @@ export default function BookingsAdminPanel({ isActive, mode, onBackToDashboard }
       const data = (await response.json()) as { bookings?: Booking[]; hasMore?: boolean; cursor?: string | null };
             if (requestId !== bookingsRequestIdRef.current) return;
       const incomingBookings = data.bookings ?? [];
-      const mergedBookings = appendHistory ? [...bookings, ...incomingBookings] : incomingBookings;
+      const prevList = bookingsRef.current;
+      const mergedBookings = appendHistory ? [...prevList, ...incomingBookings] : incomingBookings;
       const nextSignatures = new Map(mergedBookings.map((b) => [b.id, bookingRefreshSignature(b)]));
       const previousQueryKey = lastBookingsQueryKeyRef.current;
       const canHighlightUpdatedRows = !appendHistory && previousSignaturesRef.current.size > 0 && previousQueryKey === requestQueryKey;
@@ -926,7 +990,7 @@ export default function BookingsAdminPanel({ isActive, mode, onBackToDashboard }
         ? mergedBookings.filter((b) => previousSignaturesRef.current.get(b.id) !== nextSignatures.get(b.id)).map((b) => b.id)
         : [];
 
-      const shouldUpdateBookings = appendHistory || hasCollectionChanged(bookings, mergedBookings, bookingRefreshSignature);
+      const shouldUpdateBookings = appendHistory || hasCollectionChanged(prevList, mergedBookings, bookingRefreshSignature);
       if (shouldUpdateBookings) {
         if (activeView === 'timeline') captureTimelineScroll();
         setBookings(mergedBookings);
@@ -935,7 +999,9 @@ export default function BookingsAdminPanel({ isActive, mode, onBackToDashboard }
 
       if (mode === 'history') {
         setHistoryHasMore(Boolean(data.hasMore));
-        setHistoryCursor(data.cursor ?? null);
+        const nextCursor = data.cursor ?? null;
+        setHistoryCursor(nextCursor);
+        historyCursorRef.current = nextCursor;
       }
 
       previousSignaturesRef.current = nextSignatures;
@@ -951,13 +1017,17 @@ export default function BookingsAdminPanel({ isActive, mode, onBackToDashboard }
       setError('Could not refresh bookings right now.');
     } finally {
       if (requestId === bookingsRequestIdRef.current) {
-        inFlightRef.current = false;
+        if (isHistoryAppend) {
+          historyAppendInFlightRef.current = false;
+        } else {
+          inFlightRef.current = false;
+        }
         setBookingsInitialLoading(false);
       }
 
       setHistoryLoadingMore(false);
     }
-  }, [activeView, bookings, captureTimelineScroll, historyBarberId, historyCursor, historyDateRange, isActive, loggedIn, mode, restoreTimelineScroll, selectedDate]);
+  }, [activeView, captureTimelineScroll, debouncedSearchQuery, historyBarberId, historyDateRange, isActive, loggedIn, mode, restoreTimelineScroll, selectedDate]);
 
   const loadMoreHistory = useCallback(async () => {
     if (!historyHasMore || historyLoadingMore || mode !== 'history') return;
@@ -967,7 +1037,7 @@ export default function BookingsAdminPanel({ isActive, mode, onBackToDashboard }
 
 
   useEffect(() => { void (async () => { try { const response = await fetch('/api/admin/session', { credentials: 'include' }); setLoggedIn(response.ok); } finally { setIsCheckingSession(false); } })(); }, []);
-  useEffect(() => { if (!loggedIn || !isActive) return; void fetchBookings(); void fetchBarbers(); void fetchTimeBlocks(); void fetchReports(); const id = window.setInterval(() => { void fetchBookings(); void fetchTimeBlocks(); void fetchReports(); }, POLL_INTERVAL_MS); return () => window.clearInterval(id); }, [activeView, fetchBookings, fetchBarbers, fetchReports, fetchTimeBlocks, isActive, loggedIn, mode]);
+  useEffect(() => { if (!loggedIn || !isActive) return; void fetchBookings(); void fetchBarbers(); void fetchTimeBlocks(); void fetchReports(); const id = window.setInterval(() => { if (mode !== 'history') void fetchBookings(); void fetchTimeBlocks(); void fetchReports(); }, POLL_INTERVAL_MS); return () => window.clearInterval(id); }, [activeView, fetchBookings, fetchBarbers, fetchReports, fetchTimeBlocks, isActive, loggedIn, mode]);
   useEffect(() => { if (!loggedIn || !isActive) return; const id = window.setInterval(() => setNowMs(Date.now()), LAST_UPDATED_REFRESH_MS); return () => window.clearInterval(id); }, [isActive, loggedIn]);
   useEffect(() => {
     if (!loggedIn || !isActive || mode !== 'history') return;
@@ -1397,12 +1467,16 @@ export default function BookingsAdminPanel({ isActive, mode, onBackToDashboard }
 
   const visibleBookings = useMemo(() => {
     if (!effectiveClientSearchQuery) return dayFilteredBookings;
-    return dayFilteredBookings
+    const ranked = dayFilteredBookings
       .map((booking, index) => ({ booking, score: getBookingSearchScore(booking, effectiveClientSearchQuery), index }))
       .filter((entry) => entry.score > 0)
-      .sort((a, b) => b.score - a.score)
-      .map((entry) => entry.booking);
-  }, [dayFilteredBookings, effectiveClientSearchQuery]);
+      .sort((a, b) => b.score - a.score);
+    if (ranked.length > 0) return ranked.map((entry) => entry.booking);
+    if (mode === 'history') {
+      return [...dayFilteredBookings].sort((a, b) => new Date(b.startAt).getTime() - new Date(a.startAt).getTime());
+    }
+    return [];
+  }, [dayFilteredBookings, effectiveClientSearchQuery, mode]);
 
   const opsFilteredViewActive =
     Boolean(effectiveClientSearchQuery) || (mode === 'dashboard' && dayOpsFilter !== 'all');
@@ -1631,6 +1705,21 @@ export default function BookingsAdminPanel({ isActive, mode, onBackToDashboard }
     setEditingBarberAvatarFile(null);
     setEditingBarberAvatarPreviewUrl(null);
   }, [selectedBarberId]);
+
+  useLayoutEffect(() => {
+    if (mode !== 'blocks' || !selectedBarberId) return;
+    const el = bookingShellRef.current;
+    if (!el) return;
+
+    const run = () => scrollDocumentAndAncestorsToTop(el);
+    run();
+    const raf = requestAnimationFrame(run);
+    const t = window.setTimeout(run, 0);
+    return () => {
+      cancelAnimationFrame(raf);
+      window.clearTimeout(t);
+    };
+  }, [mode, selectedBarberId]);
 
   useEffect(() => {
     if (addBarberServiceOptions.length === 0) return;
@@ -2033,10 +2122,16 @@ export default function BookingsAdminPanel({ isActive, mode, onBackToDashboard }
         headers: { 'content-type': 'application/json' },
         body: JSON.stringify({ id: barberId })
       });
-      const payload = await response.json().catch(() => ({ error: 'Could not delete barber.' }));
+      const payload = (await response.json().catch(() => ({}))) as { error?: unknown };
+      const errorFromPayload =
+        typeof payload.error === 'string' ? payload.error : 'Could not delete barber.';
+      const treatAsSuccess =
+        response.ok ||
+        response.status === 404 ||
+        (!response.ok && errorFromPayload === 'Barber not found.');
 
-      if (!response.ok) {
-        setBarberSaveError(payload.error || 'Could not delete barber.');
+      if (!treatAsSuccess) {
+        setBarberSaveError(errorFromPayload);
         return;
       }
 
@@ -2048,7 +2143,7 @@ export default function BookingsAdminPanel({ isActive, mode, onBackToDashboard }
       setWorkingHours([]);
       setEditingBarberAvatarFile(null);
       setEditingBarberAvatarPreviewUrl(null);
-      setBarberSaveMessage('Barber deleted.');
+      setBarberSaveMessage('Barber removed successfully.');
       await Promise.all([fetchBarbers(), fetchTimeBlocks()]);
     } catch (deleteError) {
       setBarberSaveError(deleteError instanceof Error ? deleteError.message : 'Could not delete barber.');
@@ -2417,7 +2512,7 @@ export default function BookingsAdminPanel({ isActive, mode, onBackToDashboard }
             selectedBarber ? (
               <BarberProfile
                 barber={selectedBarber}
-                                barberAvatarPreviewUrl={editingBarberAvatarPreviewUrl}
+                barberAvatarPreviewUrl={editingBarberAvatarPreviewUrl}
                 barberSaving={barberSaving}
 
                 weekDays={WEEK_DAYS}
@@ -2434,11 +2529,12 @@ export default function BookingsAdminPanel({ isActive, mode, onBackToDashboard }
                 blockErrorMessage={blockErrorMessage}
                 getInitials={getInitials}
                 onBack={() => setSelectedBarberId(null)}
-                                onBarberAvatarChange={setEditingBarberAvatarFile}
+                onBarberAvatarChange={setEditingBarberAvatarFile}
                 onSaveAvatar={() => void saveSelectedBarberAvatar()}
 
                 onToggleActive={() => void updateBarberStatus(selectedBarber.id, !normalizeBarberStatus(selectedBarber))}
                 onToggleService={(serviceId, enabled) => void toggleServiceForBarber(serviceId, enabled)}
+                barberSaveMessage={barberSaveMessage}
                 barberSaveError={barberSaveError}
                 onSetWorkingHours={setWorkingHours}
                 onSaveWorkingHours={saveWorkingHours}

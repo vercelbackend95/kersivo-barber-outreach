@@ -1,5 +1,6 @@
 import type { APIRoute } from 'astro';
 import { fromZonedTime, formatInTimeZone } from 'date-fns-tz';
+import { ADMIN_BOOKING_HISTORY_PAGE_SIZE } from '../../../lib/admin/bookingHistoryPageSize';
 import { requireAdmin } from '../../../lib/admin/auth';
 import { prisma } from '../../../lib/db/client';
 import { BookingStatus, Prisma } from '@prisma/client';
@@ -86,7 +87,14 @@ export const GET: APIRoute = async (ctx) => {
     const barberId = ctx.url.searchParams.get('barberId');
     const from = ctx.url.searchParams.get('from');
     const to = ctx.url.searchParams.get('to');
-    const limit = Math.min(Math.max(Number(ctx.url.searchParams.get('limit') || '50'), 1), 100);
+    const searchQ = ctx.url.searchParams.get('q')?.trim();
+    const limit = Math.min(
+      Math.max(
+        Number(ctx.url.searchParams.get('limit') || ADMIN_BOOKING_HISTORY_PAGE_SIZE),
+        1
+      ),
+      100
+    );
     const cursor = ctx.url.searchParams.get('cursor');
     const [cursorStartAt, cursorId] = cursor ? cursor.split('|') : [null, null];
     const startAtFilter = from && to
@@ -94,17 +102,33 @@ export const GET: APIRoute = async (ctx) => {
 
       : undefined;
 
+    const andConditions: Prisma.BookingWhereInput[] = [];
+    if (barberId && barberId !== 'all') andConditions.push({ barberId });
+    if (startAtFilter) andConditions.push({ startAt: startAtFilter });
+    if (cursorStartAt && cursorId) {
+      andConditions.push({
+        OR: [
+          { startAt: { lt: new Date(cursorStartAt) } },
+          { startAt: new Date(cursorStartAt), id: { lt: cursorId } }
+        ]
+      });
+    }
+    if (searchQ) {
+      andConditions.push({
+        OR: [
+          { fullName: { contains: searchQ, mode: 'insensitive' } },
+          { email: { contains: searchQ, mode: 'insensitive' } },
+          { phone: { contains: searchQ, mode: 'insensitive' } },
+          { id: { contains: searchQ, mode: 'insensitive' } },
+          { notes: { contains: searchQ, mode: 'insensitive' } },
+          { barber: { name: { contains: searchQ, mode: 'insensitive' } } },
+          { service: { name: { contains: searchQ, mode: 'insensitive' } } }
+        ]
+      });
+    }
+
     const bookings = await findBookingsWithFallback({
-      where: {
-        barberId: barberId && barberId !== 'all' ? barberId : undefined,
-        startAt: startAtFilter,
-        ...(cursorStartAt && cursorId ? {
-          OR: [
-            { startAt: { lt: new Date(cursorStartAt) } },
-            { startAt: new Date(cursorStartAt), id: { lt: cursorId } }
-          ]
-        } : {})
-      },
+      where: andConditions.length ? { AND: andConditions } : {},
       include: { barber: true, service: true },
       orderBy: [{ startAt: 'desc' }, { id: 'desc' }],
       take: limit + 1

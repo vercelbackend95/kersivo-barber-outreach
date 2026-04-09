@@ -6923,7 +6923,8 @@
 
   .admin-page-wrap .booking-shell > h1,
   .admin-page-wrap .booking-shell > .admin-shop-kicker,
-  .admin-page-wrap .booking-shell > .admin-section-header {
+  .admin-page-wrap .booking-shell > .admin-section-header,
+  .admin-page-wrap .booking-shell [data-feature261-booking-overview-shot] > .admin-section-header {
     padding-inline: 0.5rem;
   }
 
@@ -11687,6 +11688,17 @@
   flex-direction: column;
   gap: clamp(0.82rem, 2.2vw, 1.22rem);
   margin-bottom: var(--space-sm);
+  width: 100%;
+  max-width: 100%;
+  box-sizing: border-box;
+}
+
+/*
+ * Timeline dashboard wraps header + ops cluster + timeline in one grid child of .booking-shell.
+ * Without min-width: 0, grid min-size follows the wide timeline canvas and stretches the whole block.
+ */
+[data-feature261-booking-overview-shot] {
+  min-width: 0;
   width: 100%;
   max-width: 100%;
   box-sizing: border-box;

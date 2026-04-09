@@ -29,6 +29,7 @@ type BarberProfileProps = {
 
   onToggleActive: () => void;
   onToggleService: (serviceId: string, enabled: boolean) => void;
+  barberSaveMessage: string;
   barberSaveError: string;
   onSetWorkingHours: (rules: WorkingHourRow[]) => void;
   onSaveWorkingHours: (rules?: WorkingHourRow[]) => Promise<boolean>;
@@ -61,6 +62,7 @@ export default function BarberProfile({
 
   onToggleActive,
   onToggleService,
+  barberSaveMessage,
   barberSaveError,
   onSetWorkingHours,
   onSaveWorkingHours,
@@ -306,6 +308,17 @@ export default function BarberProfile({
           <span>Next time off: {nextBlockLabel}</span>
         </p>
       </header>
+
+      {barberSaveMessage ? (
+        <p className="admin-inline-success" role="status" aria-live="polite">
+          {barberSaveMessage}
+        </p>
+      ) : null}
+      {barberSaveError ? (
+        <p className="admin-inline-error" role="alert">
+          {barberSaveError}
+        </p>
+      ) : null}
 
       {isConfirmDialogOpen ? (
         <div className="admin-barber-confirm-layer" role="presentation">
