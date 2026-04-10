@@ -62,13 +62,13 @@ const Hero227 = ({ className }: Hero227Props) => {
               No Credit Card Required
             </Button>
           </div>
-          <div className="relative flex min-h-[790px] w-full shrink-0 items-center justify-center overflow-visible py-8 md:min-h-[870px] md:py-10">
+          <div className="hero227-mock-stack relative flex w-full shrink-0 items-center justify-center overflow-visible py-8 md:py-10">
             <div className="hero227-mock-clip shrink-0">
               <motion.div
                 initial={{ opacity: 0, y: 200, scale: 0.8 }}
                 animate={{ opacity: 1, y: 0, scale: 1 }}
                 transition={{ ease: [0, 0.71, 0.2, 1.01], duration: 0.8 }}
-                className="hero227-mock relative mx-auto flex h-[850px] w-[400px] shrink-0 items-center justify-center rounded-[75px] bg-black md:h-[920px] md:w-[450px]"
+                className="hero227-mock relative mx-auto flex shrink-0 items-center justify-center bg-black"
               >
                 <div className="hero227-mock-screen-wrap">
                   <div

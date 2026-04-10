@@ -8,6 +8,29 @@
 [data-hero227] {
   isolation: isolate;
   /* layout+style containment can interact badly with layered mockup paints; keep isolation only */
+  /*
+    Physical screenshot: 1179×2556 (iPhone 14 Pro full-screen capture).
+    Mock black rect + aspect-ratio must match so status bar / Safari bar align with phone-5.png glass.
+    Reduced ratio gcd(1179,2556)=9 → 131:284.
+
+    Max width: 480px (mobile-first hero) / 540px (md+). ~1.22× / 1.37× iOS logical 393pt width.
+    Height follows 1179:2556 — e.g. 480px → ~1041px tall; 540px → ~1171px.
+  */
+  --hero227-mock-max-w: 480px;
+  --hero227-mock-ar-w: 131;
+  --hero227-mock-ar-h: 284;
+  /* Shift bitmap down vs clip so clock/signal sit under Dynamic Island (pair with height). */
+  --hero227-screen-nudge: 5px;
+  /* Slightly smaller than full bleed so status bar / sides clear the rounded clip + PNG glass. */
+  --hero227-screen-bg-size: 97%;
+  --hero227-screen-bg-pos-y: 20px;
+}
+
+@media (min-width: 48rem) {
+  .hero227-root,
+  [data-hero227] {
+    --hero227-mock-max-w: 540px;
+  }
 }
 
 .hero227-root,
@@ -32,27 +55,44 @@
 }
 
 /*
-  Crop bottom ~15% of the full mockup (frame + screen).
-  Width must clear .hero227-mock-frame scale(1.05) or overflow:hidden clips the bezel on the sides.
-  Padding-top reserves space for scale(1.05) on the frame PNG — without it the top bezel is clipped.
+  Full device height (no bottom crop): clip wraps the scaled mock + vertical room for frame scale(1.05).
+  Width clears scaled bezel; padding balances overflow above/below the black rect.
 */
+.hero227-root .hero227-mock-stack {
+  min-height: calc(
+    min(100%, var(--hero227-mock-max-w)) * var(--hero227-mock-ar-h) / var(--hero227-mock-ar-w) + 4rem
+  );
+}
+
+@media (min-width: 48rem) {
+  .hero227-root .hero227-mock-stack {
+    min-height: calc(
+      min(100%, var(--hero227-mock-max-w)) * var(--hero227-mock-ar-h) / var(--hero227-mock-ar-w) + 5rem
+    );
+  }
+}
+
 .hero227-root .hero227-mock-clip {
   display: flex;
   justify-content: center;
   align-items: flex-start;
   overflow: hidden;
   box-sizing: border-box;
-  /* ~half of 5% vertical overflow from scale(1.05) on full-height frame; keeps gold top visible */
+  /* ~2.5% vertical overflow each way from scale(1.05); keep gold top + bottom speaker curve visible */
   padding-top: 34px;
-  height: calc(850px * 0.85 + 34px);
-  width: calc(400px * 1.05 + 4px);
+  padding-bottom: 38px;
+  width: calc(min(100%, var(--hero227-mock-max-w)) * 1.05 + 4px);
+  height: auto;
 }
 
-@media (min-width: 48rem) {
-  .hero227-root .hero227-mock-clip {
-    height: calc(920px * 0.85 + 34px);
-    width: calc(450px * 1.05 + 4px);
-  }
+/* Phone chassis: width cap × 1179:2556 — matches hometimeiphone.jpg so Safari bar / home indicator land in glass. */
+.hero227-root .hero227-mock {
+  --hero227-outer-r: min(4.6875rem, calc(min(100%, var(--hero227-mock-max-w)) * 0.1875));
+  width: min(100%, var(--hero227-mock-max-w)) !important;
+  aspect-ratio: var(--hero227-mock-ar-w) / var(--hero227-mock-ar-h);
+  height: auto !important;
+  max-width: 100%;
+  border-radius: var(--hero227-outer-r);
 }
 
 /* Global typography/img resets in other files should not affect the phone mockup internals. */
@@ -72,29 +112,29 @@
   box-sizing: border-box !important;
   overflow: hidden !important;
   pointer-events: none !important;
-  /* top / right / bottom / left — minimal band; was ~0.3–0.9% and read as thick margins on desktop */
-  inset: 0.04% 0.12% 0.16% 0.07% !important;
-  border-radius: 3.55rem !important;
+  /* Inset ~1%: aligns glass with phone-5.png and keeps screenshot off the corner radius clip */
+  inset: 1.6% 0% 1.15% 1.1% !important;
+  /* Slightly tighter curve than chassis (was ~3.55rem vs 75px outer) */
+  border-radius: calc(var(--hero227-outer-r) * 0.76) !important;
 }
 
 /*
-  background-size: 100% auto = full width of the clip; no horizontal crop.
-  Negative top + extra height shifts bitmap up to close gap under Dynamic Island / status bar.
+  Screenshot slightly smaller than clip so UI clears rounded corners; nudge + Y position vs Dynamic Island.
 */
 .hero227-root .hero227-mock-screen {
   position: absolute !important;
   left: 0 !important;
   right: 0 !important;
-  top: -10px !important;
-  width: 100% !important;
-  height: calc(100% + 10px) !important;
+  top: calc(-1 * var(--hero227-screen-nudge)) !important;
+  width:100% !important;
+  height: calc(100% + var(--hero227-screen-nudge)) !important;
   box-sizing: border-box !important;
   border-radius: inherit !important;
   background-color: #000 !important;
   background-image: url("/hero-assets/screens/hometimeiphone.jpg") !important;
   background-repeat: no-repeat !important;
-  background-size: 100% auto !important;
-  background-position: top center !important;
+  background-size: var(--hero227-screen-bg-size) auto !important;
+  background-position: center var(--hero227-screen-bg-pos-y) !important;
 }
 
 /*
