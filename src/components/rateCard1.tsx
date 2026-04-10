@@ -1,7 +1,13 @@
 import React from "react";
 
-import { Ticket } from "lucide-react";
+import { Armchair, GlobeLock, LayoutDashboard, MessagesSquare } from "lucide-react";
 import { cn } from "@/lib/utils";
+
+type CareFeature = {
+  title: string;
+  description: string;
+  Icon: typeof GlobeLock;
+};
 
 interface RateCard1Props {
   className?: string;
@@ -15,26 +21,30 @@ const CARE_PLAN_BULLETS = [
   "1h Kersivo dev / month",
 ];
 
-const CARE_FEATURES = [
+const CARE_FEATURES: CareFeature[] = [
   {
     title: "Hosting & SSL",
     description:
       "We keep your site, booking, and shop online—SSL renewals and baseline uptime work are on us, not on your weekend.",
+    Icon: GlobeLock,
   },
   {
     title: "One admin for everything",
     description:
       "Diary, barbers, services, retail, and pickup orders in one panel—sensible day-to-day edits without a dev queue.",
+    Icon: LayoutDashboard,
   },
   {
     title: "SMS, patches & builder hour",
     description:
       "Client SMS when enabled, security and dependency updates, plus one hour a month for small in-scope tweaks.",
+    Icon: MessagesSquare,
   },
   {
     title: "Same Care price as you grow",
     description:
       "No per-barber surcharge—add chairs or staff without the monthly plan creeping up.",
+    Icon: Armchair,
   },
 ];
 
@@ -67,14 +77,14 @@ const RateCard1 = ({ className }: RateCard1Props) => {
         </aside>
 
         <ol className="rate-card1__steps" aria-label="Ongoing care plan features">
-          {CARE_FEATURES.map((step) => (
-            <li key={step.title} className="rate-card1__step-item">
+          {CARE_FEATURES.map(({ Icon, title, description }) => (
+            <li key={title} className="rate-card1__step-item">
               <div className="rate-card1__step-icon" aria-hidden="true">
-                <Ticket className="rate-card1__ticket" />
+                <Icon className="rate-card1__step-svg" />
               </div>
               <div>
-                <h3>{step.title}</h3>
-                <p>{step.description}</p>
+                <h3>{title}</h3>
+                <p>{description}</p>
               </div>
             </li>
           ))}

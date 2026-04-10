@@ -10,13 +10,13 @@
   /* layout+style containment can interact badly with layered mockup paints; keep isolation only */
   /*
     Physical screenshot: 1179×2556 (iPhone 14 Pro full-screen capture).
-    Mock black rect + aspect-ratio must match so status bar / Safari bar align with phone-5.png glass.
+    Mock chassis rect + aspect-ratio must match so status bar / Safari bar align with phone-5.png glass.
     Reduced ratio gcd(1179,2556)=9 → 131:284.
 
-    Max width: 480px (mobile-first hero) / 540px (md+). ~1.22× / 1.37× iOS logical 393pt width.
-    Height follows 1179:2556 — e.g. 480px → ~1041px tall; 540px → ~1171px.
+    Max width: ~70% of 540px (same crop on mobile and desktop); min(100%, …) shrinks on narrow viewports.
+    Height follows 1179:2556 from width.
   */
-  --hero227-mock-max-w: 480px;
+  --hero227-mock-max-w: calc(540px * 0.7);
   --hero227-mock-ar-w: 131;
   --hero227-mock-ar-h: 284;
   /* Shift bitmap down vs clip so clock/signal sit under Dynamic Island (pair with height). */
@@ -24,13 +24,6 @@
   /* Slightly smaller than full bleed so status bar / sides clear the rounded clip + PNG glass. */
   --hero227-screen-bg-size: 97%;
   --hero227-screen-bg-pos-y: 20px;
-}
-
-@media (min-width: 48rem) {
-  .hero227-root,
-  [data-hero227] {
-    --hero227-mock-max-w: 540px;
-  }
 }
 
 .hero227-root,
@@ -56,33 +49,23 @@
 
 /*
   Full device height (no bottom crop): clip wraps the scaled mock + vertical room for frame scale(1.05).
-  Width clears scaled bezel; padding balances overflow above/below the black rect.
+  Width clears scaled bezel; padding balances overflow above/below the chassis rect.
 */
 .hero227-root .hero227-mock-stack {
-  min-height: calc(
-    min(100%, var(--hero227-mock-max-w)) * var(--hero227-mock-ar-h) / var(--hero227-mock-ar-w) + 4rem
-  );
-}
-
-@media (min-width: 48rem) {
-  .hero227-root .hero227-mock-stack {
-    min-height: calc(
-      min(100%, var(--hero227-mock-max-w)) * var(--hero227-mock-ar-h) / var(--hero227-mock-ar-w) + 5rem
-    );
-  }
+  height: 730px;
 }
 
 .hero227-root .hero227-mock-clip {
   display: flex;
   justify-content: center;
   align-items: flex-start;
-  overflow: hidden;
+  overflow: visible;
   box-sizing: border-box;
   /* ~2.5% vertical overflow each way from scale(1.05); keep gold top + bottom speaker curve visible */
-  padding-top: 34px;
-  padding-bottom: 38px;
+  padding-top: 24px;
+  padding-bottom: 27px;
   width: calc(min(100%, var(--hero227-mock-max-w)) * 1.05 + 4px);
-  height: auto;
+  height: 580px;
 }
 
 /* Phone chassis: width cap × 1179:2556 — matches hometimeiphone.jpg so Safari bar / home indicator land in glass. */
@@ -93,6 +76,12 @@
   height: auto !important;
   max-width: 100%;
   border-radius: var(--hero227-outer-r);
+  /* Same token as section bg-background — avoids black “square” corners showing through PNG transparency. */
+  background-color: var(--bg);
+  /*
+    No overflow:hidden here: .hero227-mock-frame uses scale(1.05) and must paint past this box; clipping would crop the bezel.
+    .hero227-mock-clip centers the stack with padding; overflow is visible so scaled content is not clipped.
+  */
 }
 
 /* Global typography/img resets in other files should not affect the phone mockup internals. */
@@ -103,7 +92,7 @@
 }
 
 /*
-  Clip viewport: inset shrinks the “glass” vs the black .hero227-mock rect → wide black bands.
+  Clip viewport: inset shrinks the “glass” vs the chassis .hero227-mock rect → wide bands at screen edges.
   Tight insets hug phone-5.png inner bezel; radius tracks the larger opening.
 */
 .hero227-root .hero227-mock-screen-wrap {
@@ -113,7 +102,7 @@
   overflow: hidden !important;
   pointer-events: none !important;
   /* Inset ~1%: aligns glass with phone-5.png and keeps screenshot off the corner radius clip */
-  inset: 1.6% 0% 1.15% 1.1% !important;
+  inset: 1% 1.7% 1.15% 1.7% !important;
   /* Slightly tighter curve than chassis (was ~3.55rem vs 75px outer) */
   border-radius: calc(var(--hero227-outer-r) * 0.76) !important;
 }
@@ -130,7 +119,8 @@
   height: calc(100% + var(--hero227-screen-nudge)) !important;
   box-sizing: border-box !important;
   border-radius: inherit !important;
-  background-color: #000 !important;
+  /* Match --bg (#0b0d10), not #000 — pure black reads as a wedge vs chassis + PNG fringe. */
+  background-color: var(--bg) !important;
   background-image: url("/hero-assets/screens/hometimeiphone.jpg") !important;
   background-repeat: no-repeat !important;
   background-size: var(--hero227-screen-bg-size) auto !important;
@@ -160,4 +150,40 @@
 /* Prevent app-level focus outline rules from changing the original button treatment. */
 .hero227-root :where(button):focus-visible {
   outline: none;
+}
+
+/* Segmented CTA: restrained hover — no lift, no opacity flash, shared easing */
+.hero227-root .hero227-cta-system {
+  transition:
+    background-color 200ms cubic-bezier(0.4, 0, 0.2, 1),
+    box-shadow 200ms cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.hero227-root .hero227-cta-system:hover {
+  background-color: color-mix(in srgb, var(--accent) 90%, #fff 10%);
+  box-shadow: 0 2px 10px rgb(0 0 0 / 0.1);
+}
+
+.hero227-root .hero227-cta-system:focus-visible {
+  background-color: color-mix(in srgb, var(--accent) 90%, #fff 10%);
+  box-shadow: 0 0 0 2px var(--focus);
+}
+
+.hero227-root .hero227-cta-demo {
+  transition:
+    background-color 200ms cubic-bezier(0.4, 0, 0.2, 1),
+    color 200ms cubic-bezier(0.4, 0, 0.2, 1);
+  text-decoration: none;
+  text-decoration-color: transparent;
+}
+
+.hero227-root .hero227-cta-demo:hover,
+.hero227-root .hero227-cta-demo:focus-visible {
+  color: var(--fg);
+  background-color: color-mix(in srgb, var(--fg) 8%, transparent);
+}
+
+.hero227-root .hero227-cta-demo:focus-visible {
+  outline: 2px solid var(--focus);
+  outline-offset: 2px;
 }

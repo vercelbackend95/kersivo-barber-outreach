@@ -49,20 +49,23 @@
 }
 
 .hero108__check {
-  width: 1.75rem;
-  height: 1.75rem;
+  width: 1.375rem;
+  height: 1.375rem;
   flex-shrink: 0;
   display: grid;
   place-items: center;
-  border: 1px solid var(--border);
-  background: var(--surface);
-  color: var(--accent);
-  border-radius: var(--radius-sm);
+  border-radius: var(--radius-full);
+  background: var(--accent);
+  color: var(--accent-contrast);
+  box-shadow:
+    0 0.0625rem 0.125rem color-mix(in srgb, var(--bg) 55%, transparent),
+    inset 0 0.0625rem 0 color-mix(in srgb, var(--accent-contrast) 22%, transparent);
 }
 
-.hero108__check svg {
-  width: 1rem;
-  height: 1rem;
+.hero108__check-icon {
+  width: 0.75rem;
+  height: 0.75rem;
+  display: block;
 }
 
 .hero108__cta {

@@ -26,8 +26,6 @@
   position: relative;
   width: fit-content;
   max-width: 100%;
-  padding-right: 0.5rem;
-  padding-left: 0.5rem;
 }
 
 
@@ -137,11 +135,12 @@
 }
 
 @media (max-width: 767.98px) {
+  /* Keep slight surface lift so the outer frame reads against section --bg */
   .feature261 .feature261-visual-card {
     background: linear-gradient(
-      135deg,
-      color-mix(in srgb, var(--surface) 98%, var(--bg)) 0%,
-      var(--bg) 100%
+      160deg,
+      color-mix(in srgb, var(--surface) 96%, var(--bg)) 0%,
+      color-mix(in srgb, var(--bg) 86%, var(--surface)) 100%
     );
   }
 }
@@ -388,37 +387,39 @@
 }
 
 .feature261 .feature261__bento.grid {
-  gap: 1rem;
+  gap: 1.125rem;
 }
 
 .feature261 .feature261-visual-card {
   position: relative;
   isolation: isolate;
-  border-radius: 14px;
-  border: 1px solid color-mix(in srgb, var(--accent) 14%, var(--border));
+  border-radius: 19px;
+  border: 1px solid color-mix(in srgb, var(--border) 52%, var(--fg) 22%);
   background: linear-gradient(
-    180deg,
-    color-mix(in srgb, var(--surface) 96%, var(--bg)) 0%,
-    color-mix(in srgb, var(--bg) 94%, var(--surface)) 100%
+    165deg,
+    color-mix(in srgb, var(--surface) 97%, var(--bg)) 0%,
+    color-mix(in srgb, var(--bg) 92%, var(--surface)) 100%
   );
   box-shadow:
-    0 1px 0 color-mix(in srgb, var(--fg) 5%, transparent),
-    0 20px 50px color-mix(in srgb, var(--bg) 55%, transparent),
-    0 0 0 1px color-mix(in srgb, var(--bg) 40%, transparent);
+    0 -2px 10px -6px color-mix(in srgb, var(--bg) 12%, transparent),
+    0 1px 0 color-mix(in srgb, var(--fg) 3%, transparent),
+    0 1px 3px -1px color-mix(in srgb, var(--fg) 3%, transparent),
+    0 6px 14px -10px color-mix(in srgb, var(--bg) 14%, transparent);
   transition:
     border-color 220ms ease,
     box-shadow 220ms ease,
     transform 220ms ease;
 }
 
-@media (hover: hover) and (pointer: fine) {
+@media (hover: hover) and (pointer: fine) and (min-width: 1024px) {
   .feature261 .feature261-visual-card:hover {
-    border-color: color-mix(in srgb, var(--accent) 28%, var(--border));
+    border-color: color-mix(in srgb, var(--accent) 32%, var(--border));
     box-shadow:
-      0 1px 0 color-mix(in srgb, var(--fg) 7%, transparent),
-      0 28px 64px color-mix(in srgb, var(--bg) 58%, transparent),
-      0 0 0 1px color-mix(in srgb, var(--accent) 12%, transparent);
-    transform: translateY(-2px);
+      0 -3px 12px -6px color-mix(in srgb, var(--bg) 14%, transparent),
+      0 1px 0 color-mix(in srgb, var(--fg) 4%, transparent),
+      0 2px 6px -2px color-mix(in srgb, var(--fg) 5%, transparent),
+      0 10px 22px -12px color-mix(in srgb, var(--bg) 18%, transparent);
+    transform: translateY(-1px);
   }
 }
 
@@ -433,7 +434,20 @@
   inset: 0;
   border-radius: inherit;
   pointer-events: none;
-  box-shadow: inset 0 1px 0 color-mix(in srgb, var(--fg) 8%, transparent);
+  z-index: 0;
+  background: linear-gradient(
+    148deg,
+    color-mix(in srgb, var(--fg) 14%, transparent) 0%,
+    color-mix(in srgb, var(--accent) 8%, transparent) 22%,
+    transparent 42%,
+    transparent 58%,
+    color-mix(in srgb, var(--bg) 38%, transparent) 100%
+  );
+  box-shadow:
+    inset 0 1px 0 color-mix(in srgb, var(--fg) 16%, transparent),
+    inset 0 -1px 0 color-mix(in srgb, var(--bg) 52%, transparent),
+    inset 1px 0 0 color-mix(in srgb, var(--fg) 7%, transparent),
+    inset -1px 0 0 color-mix(in srgb, var(--bg) 22%, transparent);
 }
 
 .feature261 .feature261-visual-card__inner {
@@ -452,11 +466,14 @@
   flex: 1 1 auto;
   min-height: 0;
   overflow: hidden;
-  border-radius: 13px 13px 0 0;
-  background: color-mix(in srgb, var(--bg) 88%, var(--surface));
+  /* Outer card 19px − 1px border */
+  border-radius: 18px 18px 0 0;
+  background: color-mix(in srgb, var(--bg) 86%, var(--surface));
   box-shadow:
-    inset 0 0 0 1px color-mix(in srgb, var(--fg) 6%, transparent),
-    inset 0 12px 28px color-mix(in srgb, var(--bg) 35%, transparent);
+    inset 0 1px 0 color-mix(in srgb, var(--fg) 10%, transparent),
+    inset 0 0 0 1px color-mix(in srgb, var(--fg) 7%, transparent),
+    inset 0 -18px 36px color-mix(in srgb, var(--bg) 42%, transparent),
+    inset 0 14px 32px color-mix(in srgb, var(--bg) 28%, transparent);
 }
 
 .feature261 .feature261-visual-card__shot {
@@ -489,6 +506,53 @@
   gap: 0.35rem;
   padding: 0.85rem 0.85rem 0.95rem;
   padding-top: 0.75rem;
+  border-top: 1px solid color-mix(in srgb, var(--border) 82%, var(--fg) 6%);
+  background: linear-gradient(
+    180deg,
+    color-mix(in srgb, var(--surface) 94%, var(--bg)) 0%,
+    color-mix(in srgb, var(--bg) 90%, var(--surface)) 100%
+  );
+}
+
+/* Below lg: ambient shadows keyed to --bg vanish against the section; use fg-tinted depth + solid border */
+@media (max-width: 1023.98px) {
+  .feature261 .feature261-visual-card {
+    border-color: color-mix(in srgb, var(--border) 42%, var(--fg) 24%);
+    box-shadow:
+      0 -2px 10px -6px color-mix(in srgb, var(--fg) 4%, transparent),
+      0 1px 0 color-mix(in srgb, var(--fg) 5%, transparent),
+      0 1px 4px -1px color-mix(in srgb, var(--fg) 4%, transparent),
+      0 5px 16px color-mix(in srgb, var(--fg) 3%, transparent),
+      0 10px 26px -10px color-mix(in srgb, var(--fg) 3%, transparent);
+  }
+
+  .feature261 .feature261-visual-card__rim {
+    background: linear-gradient(
+      148deg,
+      color-mix(in srgb, var(--fg) 16%, transparent) 0%,
+      color-mix(in srgb, var(--accent) 10%, transparent) 24%,
+      transparent 34%,
+      transparent 66%,
+      color-mix(in srgb, var(--bg) 42%, transparent) 100%
+    );
+    box-shadow:
+      inset 0 1px 0 color-mix(in srgb, var(--fg) 16%, transparent),
+      inset 0 -1px 0 color-mix(in srgb, var(--bg) 42%, transparent),
+      inset 1px 0 0 color-mix(in srgb, var(--fg) 8%, transparent),
+      inset -1px 0 0 color-mix(in srgb, var(--fg) 4%, transparent);
+  }
+
+  .feature261 .feature261-visual-card__viewport {
+    box-shadow:
+      inset 0 1px 0 color-mix(in srgb, var(--fg) 12%, transparent),
+      inset 0 0 0 1px color-mix(in srgb, var(--fg) 10%, transparent),
+      inset 0 -14px 32px color-mix(in srgb, var(--bg) 48%, transparent),
+      inset 0 12px 28px color-mix(in srgb, var(--fg) 5%, transparent);
+  }
+
+  .feature261 .feature261-visual-card__meta {
+    border-top-color: color-mix(in srgb, var(--border) 70%, var(--fg) 14%);
+  }
 }
 
 .feature261 .feature261-visual-card__eyebrow {
@@ -533,7 +597,7 @@
 
 @media (min-width: 1024px) {
   .feature261 .feature261__bento.grid {
-    gap: 1.15rem;
+    gap: 1.25rem;
   }
 
   .feature261 .feature261-visual-card__meta {
@@ -699,12 +763,6 @@
     margin-bottom: 2rem;
     padding: 1.4rem 1.5rem 1.55rem;
   }
-  .feature261 .feature261__headline-wrap {
-    padding-right: 0.6rem;
-    padding-left: 0.6rem;
-  }
-
-
   .feature261 .feature261__heading {
     max-width: 28ch;
     font-size: clamp(2.5rem, 4.4vw, 4rem);

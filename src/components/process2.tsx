@@ -83,7 +83,7 @@ const Process2 = ({ className }: Process2Props) => {
               launch: client booking, buy-and-collect retail, and your back office, together on your own site.               Most UK
               shops go live in about 14 days; we give you a straight checklist so you always know what we need next.
             </p>
-            <div className="relative h-90 overflow-hidden border">
+            <div className="process2-image-frame relative h-90 overflow-hidden border">
               {previousActive !== undefined && (
                 <div className="absolute top-0 h-full w-full">
                   <img

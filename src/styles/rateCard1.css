@@ -138,7 +138,7 @@
   flex-shrink: 0;
 }
 
-.rate-card1__ticket {
+.rate-card1__step-svg {
   width: 1rem;
   height: 1rem;
   color: var(--accent);

@@ -46,8 +46,14 @@ const highlightTitle = title.replace(highlightedWord, `<span class=\"hero108__hi
           bullets.map((bullet) => (
             <li class="hero108__list-item">
               <span class="hero108__check" aria-hidden="true">
-                <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                  <path d="M5 12.5L9.2 16.7L19 7" stroke="currentColor" stroke-width="2.5" stroke-linecap="square" stroke-linejoin="miter"></path>
+                <svg class="hero108__check-icon" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                  <path
+                    d="M20 6.5 9.5 17 4 11.5"
+                    stroke="currentColor"
+                    stroke-width="2.125"
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                  />
                 </svg>
               </span>
               <span>{bullet.text}</span>

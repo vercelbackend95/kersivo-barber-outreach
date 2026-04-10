@@ -43,16 +43,20 @@
 
 .shop6__usps li {
   display: inline-flex;
+  align-items: center;
   width: fit-content;
   max-width: 100%;
-  border: 1px solid color-mix(in srgb, var(--border) 88%, var(--surface));
-  background: color-mix(in srgb, var(--surface) 88%, var(--bg));
-  padding: 0.18rem 0.48rem;
-  font-size: 0.68rem;
-  line-height: 1.15;
-  font-weight: 500;
+  padding: 0.2rem 0.56rem;
+  border-radius: var(--radius-full);
+  border: 1px solid color-mix(in srgb, var(--accent) 38%, var(--border));
+  background: color-mix(in srgb, var(--surface) 72%, transparent);
+  font-family: var(--font-body);
+  font-size: 0.65rem;
+  line-height: 1.25;
+  font-weight: 400;
   text-transform: uppercase;
-  letter-spacing: 0.055em;
+  letter-spacing: 0.06em;
+  color: color-mix(in srgb, var(--muted) 42%, var(--fg));
   white-space: nowrap;
 }
 
@@ -368,8 +372,8 @@
   }
 
   .shop6__usps li {
-    padding: 0.16rem 0.44rem;
-    font-size: 0.66rem;
+    padding: 0.18rem 0.52rem;
+    font-size: 0.64rem;
   }
 
 }
