@@ -7,7 +7,7 @@
 .hero227-root,
 [data-hero227] {
   isolation: isolate;
-  contain: layout style;
+  /* layout+style containment can interact badly with layered mockup paints; keep isolation only */
 }
 
 .hero227-root,
@@ -31,16 +31,90 @@
   padding-inline: 2rem;
 }
 
+/*
+  Crop bottom ~15% of the full mockup (frame + screen).
+  Width must clear .hero227-mock-frame scale(1.05) or overflow:hidden clips the bezel on the sides.
+  Padding-top reserves space for scale(1.05) on the frame PNG — without it the top bezel is clipped.
+*/
+.hero227-root .hero227-mock-clip {
+  display: flex;
+  justify-content: center;
+  align-items: flex-start;
+  overflow: hidden;
+  box-sizing: border-box;
+  /* ~half of 5% vertical overflow from scale(1.05) on full-height frame; keeps gold top visible */
+  padding-top: 34px;
+  height: calc(850px * 0.85 + 34px);
+  width: calc(400px * 1.05 + 4px);
+}
+
+@media (min-width: 48rem) {
+  .hero227-root .hero227-mock-clip {
+    height: calc(920px * 0.85 + 34px);
+    width: calc(450px * 1.05 + 4px);
+  }
+}
+
 /* Global typography/img resets in other files should not affect the phone mockup internals. */
-.hero227-root .hero227-mock :where(h1, p, img, svg) {
+.hero227-root .hero227-mock :where(h1, p, svg),
+.hero227-root .hero227-mock img:not(.hero227-mock-screen) {
 
   max-width: none !important;
 }
 
-.hero227-root .hero227-mock > img:first-of-type {
-  display: block;
-  object-fit: cover;
-  object-position: center;
+/*
+  Clip viewport: inset shrinks the “glass” vs the black .hero227-mock rect → wide black bands.
+  Tight insets hug phone-5.png inner bezel; radius tracks the larger opening.
+*/
+.hero227-root .hero227-mock-screen-wrap {
+  position: absolute !important;
+  z-index: 1 !important;
+  box-sizing: border-box !important;
+  overflow: hidden !important;
+  pointer-events: none !important;
+  /* top / right / bottom / left — minimal band; was ~0.3–0.9% and read as thick margins on desktop */
+  inset: 0.04% 0.12% 0.16% 0.07% !important;
+  border-radius: 3.55rem !important;
+}
+
+/*
+  background-size: 100% auto = full width of the clip; no horizontal crop.
+  Negative top + extra height shifts bitmap up to close gap under Dynamic Island / status bar.
+*/
+.hero227-root .hero227-mock-screen {
+  position: absolute !important;
+  left: 0 !important;
+  right: 0 !important;
+  top: -10px !important;
+  width: 100% !important;
+  height: calc(100% + 10px) !important;
+  box-sizing: border-box !important;
+  border-radius: inherit !important;
+  background-color: #000 !important;
+  background-image: url("/hero-assets/screens/hometimeiphone.jpg") !important;
+  background-repeat: no-repeat !important;
+  background-size: 100% auto !important;
+  background-position: top center !important;
+}
+
+/*
+  Gold bezel must stay visible on its own layer.
+  Locked with !important so global img/object-fit rules cannot flatten this layer.
+*/
+.hero227-root .hero227-mock-frame {
+  position: absolute !important;
+  inset: 0 !important;
+  box-sizing: border-box !important;
+  display: block !important;
+  width: 100% !important;
+  height: 100% !important;
+  max-width: none !important;
+  object-fit: contain !important;
+  object-position: center !important;
+  pointer-events: none !important;
+  z-index: 10 !important;
+  transform: scale(1.05);
+  transform-origin: center center;
 }
 
 /* Prevent app-level focus outline rules from changing the original button treatment. */
