@@ -1,0 +1,29 @@
+/* Tailwind v4 + bridge to existing :root tokens (tokens.css loads before global.css in MainLayout). */
+@import "tailwindcss";
+
+@theme inline {
+  --color-background: var(--bg);
+  --color-foreground: var(--fg);
+  --color-card: var(--surface-1);
+  --color-card-foreground: var(--fg);
+  --color-primary: var(--accent);
+  --color-primary-foreground: var(--accent-contrast);
+  --color-muted: var(--surface-2);
+  --color-muted-foreground: var(--muted);
+  --color-border: var(--border);
+  --color-accent: var(--surface-2);
+  --color-accent-foreground: var(--fg);
+  --color-destructive: var(--danger);
+  --color-destructive-foreground: #fafaf9;
+  --color-secondary: var(--surface-3);
+  --color-secondary-foreground: var(--fg);
+  --color-ring: var(--focus);
+  --color-input: var(--border);
+  --font-sans: var(--font-body);
+  /* shadcnblocks Hero227: matches template `font-antonio` + `z-2` utilities */
+  --font-antonio: Antonio, ui-sans-serif, system-ui, sans-serif;
+}
+
+@utility z-2 {
+  z-index: 2;
+}

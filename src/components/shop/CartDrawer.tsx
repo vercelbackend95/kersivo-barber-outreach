@@ -12,7 +12,7 @@ import {
   type CartItem
 } from '@/lib/shop/cartStore';
 import EmptyState from '@/components/EmptyState';
-import { ShoppingCart } from '@/components/lucide-react';
+import { ShoppingCart } from "lucide-react";
 
 const CART_OPEN_REQUEST_EVENT = 'kersivo:cart-open-request';
 const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;

@@ -1,6 +1,6 @@
 import React from "react";
 
-import { Ticket } from "@/components/lucide-react";
+import { Ticket } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 interface RateCard1Props {
