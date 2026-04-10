@@ -11,7 +11,8 @@ export type AdminOpsDashHeroProps = {
   lead: string;
   detail: React.ReactNode;
   secondary?: React.ReactNode;
-  footer: string;
+  /** Shown only when there is no connection pill (`connectionStateLabel` empty). */
+  footer?: string;
   /** LIVE / OFFLINE / CONNECTING… pill — mutually exclusive with `trailing`. */
   connectionStateLabel?: string;
   hasLivePulse?: boolean;
@@ -63,7 +64,7 @@ export default function AdminOpsDashHero({
           </div>
           {trailingEl}
         </div>
-        <p className="muted admin-bookings-ops-updated">{footer}</p>
+        {footer && !useLive ? <p className="muted admin-bookings-ops-updated">{footer}</p> : null}
       </div>
     </section>
   );

@@ -6,7 +6,7 @@ Astro + React (TypeScript) booking + shop system for barbershops.
    ```bash
    npm install
    ```
-2. Create Neon Postgres database and set `DATABASE_URL` in `.env`.
+2. Create a Neon Postgres database and set `DATABASE_URL` in `.env` (use the dashboard connection string; add `?sslmode=require` if needed; on serverless hosting use Neon’s **pooled** URL so the hostname includes `-pooler`).
 3. Reset database and apply migrations (this command **wipes all data** and then runs seed):
    ```bash
    npx prisma migrate reset

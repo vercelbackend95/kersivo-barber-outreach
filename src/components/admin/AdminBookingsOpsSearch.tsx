@@ -18,6 +18,8 @@ type AdminBookingsOpsSearchProps = {
   onClientSearchQueryChange: (value: string) => void;
   searchDropdownBookings: AdminBookingsOpsSearchBooking[];
   searchResultsLabel: string;
+  /** When true, show skeleton in the dropdown instead of stale results (e.g. history API fetch). */
+  searchResultsLoading?: boolean;
   activeSearchResultIndex: number;
   onActiveSearchResultIndexChange: (update: (current: number) => number) => void;
   highlightMatch: (value: string) => ReactNode;
@@ -36,6 +38,7 @@ export default function AdminBookingsOpsSearch({
   onClientSearchQueryChange,
   searchDropdownBookings,
   searchResultsLabel,
+  searchResultsLoading = false,
   activeSearchResultIndex,
   onActiveSearchResultIndexChange,
   highlightMatch,
@@ -46,6 +49,8 @@ export default function AdminBookingsOpsSearch({
   searchShortcutHint
 }: AdminBookingsOpsSearchProps) {
   const searchWrapClass = 'admin-search-row admin-search-row--in-ops';
+  const showSearchDropdown =
+    searchDropdownBookings.length > 0 || (searchResultsLoading && clientSearchQuery.trim().length > 0);
 
   const inner = (
     <>
@@ -94,11 +99,14 @@ export default function AdminBookingsOpsSearch({
             }
             aria-label="Search bookings by client name, email, barber, service, time, or booking reference"
             aria-controls="admin-booking-search-results"
-            aria-expanded={searchDropdownBookings.length > 0}
+            aria-expanded={showSearchDropdown}
+            aria-busy={searchResultsLoading || undefined}
             aria-activedescendant={
-              activeSearchResultIndex >= 0
-                ? `admin-search-result-${searchDropdownBookings[activeSearchResultIndex]?.id}`
-                : undefined
+              searchResultsLoading
+                ? undefined
+                : activeSearchResultIndex >= 0
+                  ? `admin-search-result-${searchDropdownBookings[activeSearchResultIndex]?.id}`
+                  : undefined
             }
           />
           {searchResultsLabel ? (
@@ -111,27 +119,45 @@ export default function AdminBookingsOpsSearch({
               <X width={12} height={12} aria-hidden="true" />
             </button>
           ) : null}
-          {searchDropdownBookings.length > 0 ? (
-            <div className="admin-search-results" id="admin-booking-search-results" role="listbox" ref={searchResultsRef}>
-              {searchDropdownBookings.map((booking, index) => (
-                <button
-                  type="button"
-                  key={booking.id}
-                  id={`admin-search-result-${booking.id}`}
-                  data-search-result-index={index}
-                  role="option"
-                  aria-selected={activeSearchResultIndex === index}
-                  className={`admin-search-result-item ${activeSearchResultIndex === index ? 'is-active' : ''}`}
-                  onMouseDown={(event) => event.preventDefault()}
-                  onClick={() => onSelectBooking(booking)}
-                >
-                  <span className="admin-search-result-main">{highlightMatch(booking.fullName)}</span>
-                  <span className="admin-search-result-meta">
-                    {highlightMatch(booking.email)} · {highlightMatch(booking.service?.name ?? '')} ·{' '}
-                    {highlightMatch(booking.barber?.name ?? '')} · {formatStartTime(booking.startAt)}
-                  </span>
-                </button>
-              ))}
+          {showSearchDropdown ? (
+            <div
+              className="admin-search-results"
+              id="admin-booking-search-results"
+              ref={searchResultsRef}
+              role={searchResultsLoading ? 'status' : 'listbox'}
+              aria-live={searchResultsLoading ? 'polite' : undefined}
+              aria-label={searchResultsLoading ? 'Loading search results' : undefined}
+            >
+              {searchResultsLoading ? (
+                <div className="admin-search-results__skeleton" aria-hidden="true">
+                  {Array.from({ length: 4 }, (_, i) => (
+                    <div key={i} className="admin-search-results__skeleton-row">
+                      <span className="admin-search-results__skeleton-line admin-search-results__skeleton-line--main" />
+                      <span className="admin-search-results__skeleton-line admin-search-results__skeleton-line--meta" />
+                    </div>
+                  ))}
+                </div>
+              ) : (
+                searchDropdownBookings.map((booking, index) => (
+                  <button
+                    type="button"
+                    key={booking.id}
+                    id={`admin-search-result-${booking.id}`}
+                    data-search-result-index={index}
+                    role="option"
+                    aria-selected={activeSearchResultIndex === index}
+                    className={`admin-search-result-item ${activeSearchResultIndex === index ? 'is-active' : ''}`}
+                    onMouseDown={(event) => event.preventDefault()}
+                    onClick={() => onSelectBooking(booking)}
+                  >
+                    <span className="admin-search-result-main">{highlightMatch(booking.fullName)}</span>
+                    <span className="admin-search-result-meta">
+                      {highlightMatch(booking.email)} · {highlightMatch(booking.service?.name ?? '')} ·{' '}
+                      {highlightMatch(booking.barber?.name ?? '')} · {formatStartTime(booking.startAt)}
+                    </span>
+                  </button>
+                ))
+              )}
             </div>
           ) : null}
         </div>

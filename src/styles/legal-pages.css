@@ -1,0 +1,52 @@
+.legal-page {
+  padding-block: clamp(3rem, 8vw, 5rem);
+}
+
+.legal-page__inner {
+  max-width: 65ch;
+  margin-inline: auto;
+}
+
+.legal-page__title {
+  font-size: clamp(2rem, 5vw, 2.75rem);
+  margin-bottom: var(--space-sm);
+}
+
+.legal-page__updated {
+  color: var(--muted);
+  font-size: 0.9rem;
+  margin-bottom: var(--space-xl);
+}
+
+.legal-page h2 {
+  font-size: clamp(1.25rem, 3vw, 1.5rem);
+  margin-top: var(--space-xl);
+  margin-bottom: var(--space-sm);
+}
+
+.legal-page h3 {
+  font-size: 1.05rem;
+  margin-top: var(--space-lg);
+  margin-bottom: var(--space-xs);
+}
+
+.legal-page p,
+.legal-page li {
+  color: color-mix(in srgb, var(--fg) 88%, var(--muted));
+  margin-bottom: var(--space-sm);
+}
+
+.legal-page ul {
+  padding-left: 1.25rem;
+  margin-bottom: var(--space-md);
+}
+
+.legal-page .legal-placeholder {
+  background: color-mix(in srgb, var(--surface) 85%, transparent);
+  border: 1px dashed var(--border);
+  padding: var(--space-sm) var(--space-md);
+  border-radius: var(--radius-sm);
+  font-size: 0.9rem;
+  color: var(--muted);
+  margin: var(--space-sm) 0 var(--space-md);
+}

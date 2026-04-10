@@ -1,4 +1,4 @@
-import React, { useLayoutEffect, useMemo, useRef, useState } from 'react';
+import React, { useId, useLayoutEffect, useMemo, useRef, useState } from 'react';
 import { ChevronDown } from '../lucide-react';
 
 export type MobileNextAppointmentItem = {
@@ -24,6 +24,7 @@ export default function AdminMobileNextAppointmentsStrip({
   formatStartTime,
   connectionStateLabel,
 }: AdminMobileNextAppointmentsStripProps) {
+  const listDomId = `admin-mobile-next-strip-list-${useId().replace(/:/g, '')}`;
   const MAX_VISIBLE_APPOINTMENTS = 4;
   const hasExpandableContent = appointments.length > 1;
   const listRef = useRef<HTMLUListElement | null>(null);
@@ -116,7 +117,7 @@ export default function AdminMobileNextAppointmentsStrip({
         </span>
       </div>
 
-      <ul className="admin-mobile-next-strip-list" id="admin-mobile-next-strip-list" ref={listRef}>
+      <ul className="admin-mobile-next-strip-list" id={listDomId} ref={listRef}>
         {visibleAppointments.length > 0 ? (
           visibleAppointments.map((appointment, index) => {
             const isDrawerExtra = index >= 1;
@@ -153,7 +154,7 @@ export default function AdminMobileNextAppointmentsStrip({
                 className="admin-mobile-next-strip-toggle"
                 onClick={onToggleExpanded}
                 aria-expanded={isExpanded}
-                aria-controls="admin-mobile-next-strip-list"
+                aria-controls={listDomId}
                 aria-label={isExpanded ? 'Collapse upcoming appointments' : 'Show more upcoming appointments'}
               >
                 <ChevronDown width={11} height={11} aria-hidden="true" strokeWidth={2.25} />

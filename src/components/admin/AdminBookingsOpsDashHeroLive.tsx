@@ -3,7 +3,7 @@ import AdminBookingsOpsDashHero from './AdminBookingsOpsDashHero';
 import { useAdminTodayBookingsLive } from './useAdminTodayBookingsLive';
 
 /**
- * Same Bookings ops dash hero (next booking + LIVE + freshness), with its own
+ * Same Bookings ops dash hero (next booking + LIVE), with its own
  * poll of today's schedule — used when BookingsAdminPanel is not mounted (e.g. Services tab desktop).
  */
 export default function AdminBookingsOpsDashHeroLive() {
@@ -13,7 +13,6 @@ export default function AdminBookingsOpsDashHeroLive() {
     nextBooking,
     connectionStateLabel,
     hasLivePulse,
-    freshnessLabel,
     formatStartTime,
     formatRelativeTime,
   } = useAdminTodayBookingsLive();
@@ -25,7 +24,6 @@ export default function AdminBookingsOpsDashHeroLive() {
       nextBooking={nextBooking}
       connectionStateLabel={connectionStateLabel}
       hasLivePulse={hasLivePulse}
-      freshnessLabel={freshnessLabel}
       formatStartTime={formatStartTime}
       formatRelativeTime={formatRelativeTime}
     />

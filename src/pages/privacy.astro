@@ -1,0 +1,140 @@
+---
+import MainLayout from '@/layouts/MainLayout.astro';
+import '@/styles/legal-pages.css';
+---
+
+<MainLayout title="Privacy Policy | Kersivo">
+  <main class="legal-page">
+    <article class="container legal-page__inner">
+      <h1 class="legal-page__title">Privacy Policy</h1>
+      <p class="legal-page__updated">Last updated: 9 April 2026</p>
+
+      <p>
+        This policy describes how personal data is processed when you use websites and services operated under the
+        Kersivo brand for UK barbershops, including marketing pages, demo booking and shop flows, and (where applicable)
+        the barbershop admin experience. It is written in plain language and does not replace legal advice.
+      </p>
+
+      <h2>Who is responsible for your data?</h2>
+      <div class="legal-placeholder">
+        [TO BE COMPLETED: legal name of the data controller, registered address, country]
+      </div>
+      <p>
+        References below to &ldquo;we&rdquo;, &ldquo;us&rdquo; and &ldquo;our&rdquo; mean that organisation. For data
+        protection enquiries (including rights requests), contact:
+      </p>
+      <div class="legal-placeholder">
+        [TO BE COMPLETED: contact email for privacy requests]
+      </div>
+
+      <h2>What data we process and why</h2>
+      <p>Depending on how you interact with us, we may process:</p>
+      <ul>
+        <li>
+          <strong>Contact and demo enquiries</strong> — name, email address and message content you submit through our
+          contact form. <strong>Purpose:</strong> responding to your request. <strong>Typical legal basis (UK):</strong>
+          steps prior to a contract and/or legitimate interests in operating our business.
+        </li>
+        <li>
+          <strong>Booking data</strong> — service, barber, date/time, and your contact details (name and email; phone
+          if you provide it). <strong>Purpose:</strong> managing appointments, confirmations, reschedule and cancel
+          links, and related emails. <strong>Typical legal basis:</strong> performance of a contract and legitimate
+          interests in running the booking service.
+        </li>
+        <li>
+          <strong>Shop orders (buy-and-collect)</strong> — email address used at checkout, order contents, payment
+          status as recorded after payment, and related confirmation emails. Card payments are handled by
+          <strong>Stripe</strong> on the <strong>barbershop&rsquo;s own Stripe account</strong>; we do not store full
+          card numbers on our servers.
+        </li>
+        <li>
+          <strong>Admin access</strong> — session cookies / tokens for authenticated access to the barbershop admin
+          panel, and operational logs needed for security.
+        </li>
+        <li>
+          <strong>Content you upload</strong> — for example barber or product images where the product allows uploads.
+          Stored so the site and shop can display them.
+        </li>
+        <li>
+          <strong>Email delivery</strong> — transactional emails (booking confirmations, order confirmations, contact
+          form delivery to our inbox) are sent through an email provider (e.g. Resend) using the addresses involved in
+          each message.
+        </li>
+        <li>
+          <strong>SMS (optional)</strong> — if you subscribe to a plan that includes SMS and we enable it for your shop,
+          we may process mobile numbers and message metadata needed to send reminders or similar messages. The exact
+          provider and categories will be listed here once confirmed for production.
+        </li>
+      </ul>
+
+      <h2>Recipients and processors</h2>
+      <p>We use service providers to host and operate the service, for example:</p>
+      <ul>
+        <li>Hosting and application runtime (e.g. Vercel or similar) in line with our deployment;</li>
+        <li>Database and storage (e.g. managed PostgreSQL, object storage for images);</li>
+        <li>Email delivery (e.g. Resend);</li>
+        <li>Stripe, for payment processing on the barber&rsquo;s account;</li>
+        <li>Future SMS provider, only where that feature is enabled.</li>
+      </ul>
+      <p>
+        We do not sell your personal data. We may share data with processors strictly to provide the service, under
+        appropriate agreements where required by law.
+      </p>
+
+      <h2>International transfers</h2>
+      <p>
+        Some providers may process data outside the UK. Where that happens, we aim to rely on approved transfer tools
+        (such as UK adequacy regulations or standard contractual clauses) as required by UK data protection law.
+        [TO BE COMPLETED: specific sub-processors and transfers after production review]
+      </p>
+
+      <h2>How long we keep data</h2>
+      <p>
+        We keep personal data only as long as needed for the purposes above, including legal, accounting and security
+        requirements. Exact retention periods depend on the type of data and your relationship with us.
+        [TO BE COMPLETED: specific retention periods once internal policy is set]
+      </p>
+
+      <h2>Your rights (UK)</h2>
+      <p>Under UK GDPR and the Data Protection Act 2018, you may have the right to:</p>
+      <ul>
+        <li>request access to your personal data;</li>
+        <li>ask us to correct inaccurate data;</li>
+        <li>ask us to erase data in certain circumstances;</li>
+        <li>restrict or object to processing in certain circumstances;</li>
+        <li>data portability where applicable;</li>
+        <li>withdraw consent where processing is based on consent.</li>
+      </ul>
+      <p>
+        To exercise these rights, contact us using the details above. You may also complain to the UK Information
+        Commissioner&rsquo;s Office (ICO): <a href="https://ico.org.uk/">https://ico.org.uk/</a>.
+      </p>
+
+      <h2>Cookies and similar technologies</h2>
+      <p>
+        The public marketing site does not load third-party advertising or analytics scripts by default in our
+        codebase. Admin sessions use cookies (or similar) needed for login.         [TO BE COMPLETED: if you add analytics or marketing pixels, update this section and consent mechanics.]
+      </p>
+
+      <h2>Security</h2>
+      <p>
+        We apply appropriate technical and organisational measures appropriate to the nature of the service, including
+        access controls for admin areas and encrypted connections (HTTPS) for site traffic. No online service can be
+        guaranteed 100% secure.
+      </p>
+
+      <h2>Changes to this policy</h2>
+      <p>
+        We may update this policy from time to time. The &ldquo;Last updated&rdquo; date will change when we do.
+        Material changes may also be communicated where appropriate (for example by email to active clients).
+        [TO BE COMPLETED: preferred channel for notifying B2B clients of material changes]
+      </p>
+
+      <p>
+        <a href="/">Back to home</a>
+        &nbsp;·&nbsp;
+        <a href="/terms">Terms of Service</a>
+      </p>
+    </article>
+  </main>
+</MainLayout>

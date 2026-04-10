@@ -5,6 +5,10 @@ import { BookingStatus, OrderStatus, Prisma } from '@prisma/client';
 import { addMilliseconds, differenceInMilliseconds, subDays, subYears } from 'date-fns';
 import { formatInTimeZone, fromZonedTime, toZonedTime } from 'date-fns-tz';
 import { requireAdmin } from '../../../lib/admin/auth';
+import {
+  ADMIN_REPORTS_DATABASE_UNAVAILABLE_MESSAGE,
+  isPrismaDatabaseUnavailableError
+} from '../../../lib/db/resilience';
 import { prisma } from '../../../lib/db/client';
 const ADMIN_TIMEZONE = 'Europe/London';
 
@@ -513,63 +517,70 @@ export const GET: APIRoute = async (ctx) => {
   }
 
   const selectedBarberId = ctx.url.searchParams.get('barberId') || null;
-  const shop = await prisma.shopSettings.findFirstOrThrow({ select: { id: true } });
-  const selectedRange = getReportsRange(range);
-  const previousRange = getPreviousRange(range, selectedRange);
 
-   const [selectedBarberEntity, recentBarbers, currentMetrics, previousMetrics] = await Promise.all([
-    selectedBarberId
-      ? prisma.barber.findUnique({ where: { id: selectedBarberId }, select: { id: true, name: true, avatarUrl: true } })
-      : Promise.resolve(null),
-    getRecentBarbers(shop.id, selectedRange.from, selectedRange.to),
-    computeMetrics(shop.id, selectedRange, selectedBarberId, range),
-    computeMetrics(shop.id, previousRange, selectedBarberId, range)
+  try {
+    const shop = await prisma.shopSettings.findFirstOrThrow({ select: { id: true } });
+    const selectedRange = getReportsRange(range);
+    const previousRange = getPreviousRange(range, selectedRange);
 
+    const [selectedBarberEntity, recentBarbers, currentMetrics, previousMetrics] = await Promise.all([
+      selectedBarberId
+        ? prisma.barber.findUnique({ where: { id: selectedBarberId }, select: { id: true, name: true, avatarUrl: true } })
+        : Promise.resolve(null),
+      getRecentBarbers(shop.id, selectedRange.from, selectedRange.to),
+      computeMetrics(shop.id, selectedRange, selectedBarberId, range),
+      computeMetrics(shop.id, previousRange, selectedBarberId, range)
+    ]);
 
-  ]);
+    return new Response(JSON.stringify({
+      range,
+      rangeBoundaries: {
+        from: selectedRange.from.toISOString(),
+        to: selectedRange.to.toISOString(),
 
+        tz: ADMIN_TIMEZONE
+      },
+      previousRangeBoundaries: {
+        from: previousRange.from.toISOString(),
+        to: previousRange.to.toISOString(),
+        tz: ADMIN_TIMEZONE
+      },
+      recentBarbers,
 
-  return new Response(JSON.stringify({
-    range,
-    rangeBoundaries: {
-      from: selectedRange.from.toISOString(),
-      to: selectedRange.to.toISOString(),
+      selectedBarber: selectedBarberEntity,
 
-      tz: ADMIN_TIMEZONE
-    },
-    previousRangeBoundaries: {
-      from: previousRange.from.toISOString(),
-      to: previousRange.to.toISOString(),
-      tz: ADMIN_TIMEZONE
-    },
-    recentBarbers,
+      ...currentMetrics,
+      trends: {
+        bookingsPct: toTrendPercent(currentMetrics.bookingsCount, previousMetrics.bookingsCount),
+        cancelledRatePp: currentMetrics.cancelledRate - previousMetrics.cancelledRate,
+        revenuePct: toTrendPercent(currentMetrics.revenue, previousMetrics.revenue),
+        revenueDelta: currentMetrics.revenue - previousMetrics.revenue,
+        avgBookingValueDelta: currentMetrics.avgBookingValue - previousMetrics.avgBookingValue,
+        noShowExpiredCountDelta: currentMetrics.breakdown.noShowExpired - previousMetrics.breakdown.noShowExpired,
+        noShowExpiredRatePp: currentMetrics.noShowExpiredRate - previousMetrics.noShowExpiredRate,
 
-    selectedBarber: selectedBarberEntity,
-
-    ...currentMetrics,
-    trends: {
-      bookingsPct: toTrendPercent(currentMetrics.bookingsCount, previousMetrics.bookingsCount),
-      cancelledRatePp: currentMetrics.cancelledRate - previousMetrics.cancelledRate,
-      revenuePct: toTrendPercent(currentMetrics.revenue, previousMetrics.revenue),
-      revenueDelta: currentMetrics.revenue - previousMetrics.revenue,
-            avgBookingValueDelta: currentMetrics.avgBookingValue - previousMetrics.avgBookingValue,
-      noShowExpiredCountDelta: currentMetrics.breakdown.noShowExpired - previousMetrics.breakdown.noShowExpired,
-      noShowExpiredRatePp: currentMetrics.noShowExpiredRate - previousMetrics.noShowExpiredRate,
-
-      utilizationPp: currentMetrics.utilizationPct == null || previousMetrics.utilizationPct == null
-        ? null
-        : currentMetrics.utilizationPct - previousMetrics.utilizationPct
-            },
-    previousMetrics: {
-      bookingsCount: previousMetrics.bookingsCount,
-      cancelledRate: previousMetrics.cancelledRate,
-      revenue: previousMetrics.revenue,
-      avgBookingValue: previousMetrics.avgBookingValue,
-      utilizationPct: previousMetrics.utilizationPct,
-      noShowExpiredCount: previousMetrics.breakdown.noShowExpired,
-      noShowExpiredRate: previousMetrics.noShowExpiredRate
-}
-
-
-  }));
+        utilizationPp: currentMetrics.utilizationPct == null || previousMetrics.utilizationPct == null
+          ? null
+          : currentMetrics.utilizationPct - previousMetrics.utilizationPct
+      },
+      previousMetrics: {
+        bookingsCount: previousMetrics.bookingsCount,
+        cancelledRate: previousMetrics.cancelledRate,
+        revenue: previousMetrics.revenue,
+        avgBookingValue: previousMetrics.avgBookingValue,
+        utilizationPct: previousMetrics.utilizationPct,
+        noShowExpiredCount: previousMetrics.breakdown.noShowExpired,
+        noShowExpiredRate: previousMetrics.noShowExpiredRate
+      }
+    }));
+  } catch (error) {
+    if (isPrismaDatabaseUnavailableError(error)) {
+      console.error('[api/admin/reports] Database unreachable:', error instanceof Error ? error.message : error);
+      return new Response(JSON.stringify({ error: ADMIN_REPORTS_DATABASE_UNAVAILABLE_MESSAGE }), {
+        status: 503,
+        headers: { 'Content-Type': 'application/json' }
+      });
+    }
+    throw error;
+  }
 };

@@ -56,15 +56,6 @@ export function formatAdminLiveRelativeTime(startAt: string, endAt: string) {
   return mins ? `in ${hours}h ${mins}m` : `in ${hours}h`;
 }
 
-function formatLastUpdated(lastSuccessAt: number | null, nowMs: number) {
-  if (!lastSuccessAt) return 'never';
-  const diffSec = Math.floor((nowMs - lastSuccessAt) / 1000);
-
-  if (diffSec <= 4) return 'just now';
-  if (diffSec < 60) return `${diffSec}s ago`;
-  return `${Math.floor(diffSec / 60)}m ago`;
-}
-
 export type AdminTodayBookingsLiveValue = {
   sessionChecked: boolean;
   loggedIn: boolean;
@@ -72,7 +63,6 @@ export type AdminTodayBookingsLiveValue = {
   nextBooking: AdminBookingsOpsDashHeroBooking | null;
   connectionStateLabel: string;
   hasLivePulse: boolean;
-  freshnessLabel: string;
   formatStartTime: (iso: string) => string;
   formatRelativeTime: (startAt: string, endAt: string) => string;
 };
@@ -149,9 +139,6 @@ export function AdminTodayBookingsLiveProvider({ children }: { children: React.R
   const connectionStateLabel =
     !lastSuccessAt && !hasRecentConnectionAttempt ? 'CONNECTING…' : isLive ? 'LIVE' : 'OFFLINE';
   const hasLivePulse = connectionStateLabel === 'LIVE';
-  const freshnessLabel = lastSuccessAt
-    ? `Updated ${formatLastUpdated(lastSuccessAt, nowMs)}`
-    : 'Waiting for successful refresh';
 
   const formatStartTime = useCallback((iso: string) => formatAdminLiveStartTime(iso), []);
   const formatRelativeTime = useCallback(
@@ -167,7 +154,6 @@ export function AdminTodayBookingsLiveProvider({ children }: { children: React.R
       nextBooking,
       connectionStateLabel,
       hasLivePulse,
-      freshnessLabel,
       formatStartTime,
       formatRelativeTime,
     }),
@@ -178,7 +164,6 @@ export function AdminTodayBookingsLiveProvider({ children }: { children: React.R
       nextBooking,
       connectionStateLabel,
       hasLivePulse,
-      freshnessLabel,
       formatStartTime,
       formatRelativeTime,
     ],

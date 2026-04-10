@@ -1,5 +1,5 @@
-import React, { forwardRef, useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import AdminMobileNextAppointmentsStrip from './AdminMobileNextAppointmentsStrip';
+import React, { forwardRef, useCallback, useEffect, useRef } from 'react';
+import AdminNextAppointmentsStripLive from './AdminNextAppointmentsStripLive';
 import { useAdminTodayBookingsLive } from './useAdminTodayBookingsLive';
 
 const DASH_HERO_SLOT_CLASS = [
@@ -9,10 +9,6 @@ const DASH_HERO_SLOT_CLASS = [
 ].join(' ');
 
 const HEIGHT_PUBLISH_THRESHOLD_PX = 2;
-
-function bookingStableId(booking: { id?: string; startAt: string; endAt: string }, index: number) {
-  return booking.id ?? `${booking.startAt}-${booking.endAt}-${index}`;
-}
 
 function assignForwardedRef<T>(r: React.Ref<T> | undefined, value: T | null) {
   if (typeof r === 'function') r(value);
@@ -29,59 +25,8 @@ const AdminMobileNextAppointmentsLive = forwardRef<HTMLDivElement>(function Admi
   _props,
   ref,
 ) {
-  const {
-    sessionChecked,
-    loggedIn,
-    upcomingBookings,
-    connectionStateLabel,
-    formatStartTime,
-    formatRelativeTime,
-  } = useAdminTodayBookingsLive();
-
-  const [isMobileNextExpanded, setIsMobileNextExpanded] = useState(false);
-  const userCollapsedRef = useRef(false);
-  const latestTopFourFingerprintRef = useRef('');
+  const { sessionChecked, loggedIn } = useAdminTodayBookingsLive();
   const measureCleanupRef = useRef<(() => void) | null>(null);
-
-  const topFourUpcomingBookings = useMemo(() => upcomingBookings.slice(0, 4), [upcomingBookings]);
-
-  const mobileTopAppointments = useMemo(
-    () =>
-      topFourUpcomingBookings.map((booking, index) => ({
-        id: bookingStableId(booking, index),
-        barberName: booking.barber?.name ?? 'Barber',
-        serviceName: booking.service?.name ?? 'Service',
-        startAt: booking.startAt,
-        relativeLabel: formatRelativeTime(booking.startAt, booking.endAt),
-      })),
-    [formatRelativeTime, topFourUpcomingBookings],
-  );
-
-  useEffect(() => {
-    const nextFingerprint = topFourUpcomingBookings
-      .map((booking, i) => `${bookingStableId(booking, i)}:${booking.startAt}:${booking.endAt}`)
-      .join('|');
-    const previousFingerprint = latestTopFourFingerprintRef.current;
-
-    if (!previousFingerprint) {
-      latestTopFourFingerprintRef.current = nextFingerprint;
-      return;
-    }
-
-    if (nextFingerprint && nextFingerprint !== previousFingerprint && !userCollapsedRef.current) {
-      setIsMobileNextExpanded(true);
-    }
-
-    latestTopFourFingerprintRef.current = nextFingerprint;
-  }, [topFourUpcomingBookings]);
-
-  const handleToggleMobileNextExpanded = useCallback(() => {
-    setIsMobileNextExpanded((current) => {
-      const next = !current;
-      userCollapsedRef.current = !next;
-      return next;
-    });
-  }, []);
 
   const setRootRef = useCallback(
     (node: HTMLDivElement | null) => {
@@ -156,13 +101,7 @@ const AdminMobileNextAppointmentsLive = forwardRef<HTMLDivElement>(function Admi
 
   return (
     <div ref={setRootRef} className={DASH_HERO_SLOT_CLASS}>
-      <AdminMobileNextAppointmentsStrip
-        appointments={mobileTopAppointments}
-        isExpanded={isMobileNextExpanded}
-        onToggleExpanded={handleToggleMobileNextExpanded}
-        formatStartTime={formatStartTime}
-        connectionStateLabel={connectionStateLabel}
-      />
+      <AdminNextAppointmentsStripLive />
     </div>
   );
 });

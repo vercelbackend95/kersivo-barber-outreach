@@ -1104,13 +1104,271 @@
   gap: var(--space-xs);
 }
 
-/* Dash hero supplies its own lifted surface — avoid double border/background */
-.admin-next-block:has(> .admin-bookings-ops--dash-hero) {
+/* Dash hero or next strip supplies its own lifted surface — avoid double border/background */
+.admin-next-block:has(> .admin-bookings-ops--dash-hero),
+.admin-next-block:has(> .admin-mobile-next-strip) {
   border: none;
   background: transparent;
   padding: 0;
   gap: 0;
   margin-bottom: 0;
+}
+
+/* Next appointments strip — mobile header and desktop Bookings dash slot */
+.admin-mobile-next-strip {
+  display: flex;
+  flex-direction: column;
+  gap: 0.18rem;
+  width: 100%;
+  min-width: 0;
+  padding: 0.1rem 0 0;
+}
+
+.admin-mobile-next-strip-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem;
+}
+
+.admin-mobile-next-strip-kicker {
+  margin: 0;
+  font-size: 0.62rem;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: color-mix(in srgb, var(--muted) 76%, var(--fg));
+}
+
+.admin-mobile-next-strip-live {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.28rem;
+  border-radius: var(--radius-full);
+  border: 1px solid color-mix(in srgb, var(--border) 72%, transparent);
+  padding: 0.18rem 0.44rem;
+  font-size: 0.54rem;
+  letter-spacing: 0.08em;
+  line-height: 1;
+  color: color-mix(in srgb, var(--muted) 70%, var(--fg));
+  background: color-mix(in srgb, var(--surface-1) 78%, transparent);
+}
+
+.admin-mobile-next-strip-live-dot {
+  width: 0.36rem;
+  height: 0.36rem;
+  border-radius: var(--radius-full);
+  background: color-mix(in srgb, var(--muted) 70%, var(--fg));
+}
+
+.admin-mobile-next-strip-live--live {
+  color: color-mix(in srgb, var(--status-confirmed) 88%, var(--fg));
+  border-color: color-mix(in srgb, var(--status-confirmed) 32%, var(--border));
+  background: color-mix(in srgb, var(--status-confirmed) 9%, transparent);
+}
+
+.admin-mobile-next-strip-live--live .admin-mobile-next-strip-live-dot {
+  background: var(--status-confirmed);
+  box-shadow: 0 0 0 0 color-mix(in srgb, var(--status-confirmed) 36%, transparent);
+}
+
+.admin-mobile-next-strip-live-dot--pulse {
+  animation: adminMobileLivePulse 1.65s ease-out infinite;
+}
+
+.admin-mobile-next-strip-live--offline {
+  color: color-mix(in srgb, #ff6b6b 70%, var(--fg));
+  border-color: color-mix(in srgb, #ff6b6b 28%, var(--border));
+}
+
+.admin-mobile-next-strip-live--offline .admin-mobile-next-strip-live-dot {
+  background: color-mix(in srgb, #ff6b6b 78%, var(--fg));
+}
+
+.admin-mobile-next-strip-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  gap: 0.12rem;
+  position: relative;
+}
+
+.admin-mobile-next-strip-item {
+  display: grid;
+  gap: 0.02rem;
+  min-width: 0;
+  padding: 0.12rem 0;
+  opacity: 0.82;
+}
+
+.admin-mobile-next-strip-item--primary {
+  opacity: 1;
+}
+
+.admin-mobile-next-strip-item--drawer-extra {
+  padding-block: 0;
+}
+
+.admin-mobile-next-strip-item--drawer-open {
+  padding-block: 0.2rem;
+}
+
+/* Subtle drawer: extra rows expand/collapse height + light fade/slide */
+.admin-mobile-next-strip-item-clip {
+  max-height: 0;
+  overflow: hidden;
+  transition: max-height 0.32s cubic-bezier(0.22, 1, 0.36, 1);
+  will-change: max-height;
+}
+
+.admin-mobile-next-strip-item-clip--open {
+  max-height: 6rem;
+}
+
+.admin-mobile-next-strip-item-clip-inner {
+  min-height: 0;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  gap: 0.02rem;
+  opacity: 0;
+  transform: translateY(-3px);
+  transition:
+    opacity 0.26s cubic-bezier(0.33, 1, 0.32, 1),
+    transform 0.32s cubic-bezier(0.33, 1, 0.32, 1);
+  will-change: opacity, transform;
+}
+
+.admin-mobile-next-strip-item-clip--open .admin-mobile-next-strip-item-clip-inner {
+  opacity: 0.82;
+  transform: translateY(0);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .admin-mobile-next-strip-item-clip,
+  .admin-mobile-next-strip-item-clip-inner {
+    transition-duration: 0.01ms;
+  }
+}
+
+.admin-mobile-next-strip-main,
+.admin-mobile-next-strip-meta {
+  margin: 0;
+  min-width: 0;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.admin-mobile-next-strip-main {
+  display: inline-flex;
+  align-items: baseline;
+  gap: 0.24rem;
+  font-size: 0.84rem;
+  letter-spacing: -0.01em;
+  color: var(--fg);
+}
+
+.admin-mobile-next-strip-meta {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.22rem;
+  font-size: 0.66rem;
+  color: var(--muted);
+  letter-spacing: 0.01em;
+}
+
+/* Meta row reserves room for the floating expand/collapse pill. */
+.admin-mobile-next-strip-meta-row--with-pill {
+  position: relative;
+  min-width: 0;
+  padding-inline-end: 3.1rem;
+}
+
+.admin-mobile-next-strip-meta--with-pill {
+  position: relative;
+  z-index: 1;
+  max-width: 100%;
+}
+
+.admin-mobile-next-strip-toggle-float-wrap {
+  position: static;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.admin-mobile-next-strip-toggle-float {
+  position: absolute;
+  left: 50%;
+  top: 0;
+  transform: translate(-50%, -50%);
+  z-index: 2;
+  transition: top 0.32s cubic-bezier(0.22, 1, 0.36, 1);
+  will-change: top;
+  pointer-events: none;
+}
+
+.admin-mobile-next-strip-toggle-float .admin-mobile-next-strip-toggle {
+  pointer-events: auto;
+}
+
+.admin-mobile-next-strip-item--empty .admin-mobile-next-strip-main {
+  font-size: 0.72rem;
+  color: var(--muted);
+}
+
+.admin-mobile-next-strip-toggle {
+  margin: 0;
+  min-height: 1.35rem;
+  min-width: 1.35rem;
+  padding: 0.18rem;
+  border-radius: var(--radius-full);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0;
+  color: color-mix(in srgb, var(--muted) 58%, var(--fg));
+  background: transparent;
+  border: 1px solid color-mix(in srgb, var(--border) 42%, transparent);
+  box-shadow: none;
+  transition:
+    background-color 160ms ease,
+    border-color 160ms ease,
+    color 160ms ease;
+}
+
+.admin-mobile-next-strip-toggle:hover {
+  background: color-mix(in srgb, var(--surface-1) 45%, transparent);
+  border-color: color-mix(in srgb, var(--border) 70%, transparent);
+}
+
+.admin-mobile-next-strip-toggle:active {
+  background: color-mix(in srgb, var(--surface-1) 62%, transparent);
+}
+
+.admin-mobile-next-strip-toggle svg {
+  flex-shrink: 0;
+  opacity: 0.92;
+  transition: transform 170ms cubic-bezier(0.2, 0.75, 0.2, 1);
+}
+
+.admin-mobile-next-strip-toggle[aria-expanded='true'] svg {
+  transform: rotate(180deg);
+}
+
+@keyframes adminMobileLivePulse {
+  0% {
+    box-shadow: 0 0 0 0 color-mix(in srgb, var(--status-confirmed) 38%, transparent);
+  }
+  70% {
+    box-shadow: 0 0 0 8px color-mix(in srgb, var(--status-confirmed) 0%, transparent);
+  }
+  100% {
+    box-shadow: 0 0 0 0 color-mix(in srgb, var(--status-confirmed) 0%, transparent);
+  }
 }
 
 /* Dash hero slot: in document flow with section header and dashboard content */
@@ -1130,7 +1388,35 @@
   box-sizing: border-box;
 }
 
+/*
+ * Next strip in dash slot: premium cloud on desktop only (matches .admin-bookings-ops--dash-hero).
+ * Mobile header / small viewports keep the flat strip — same as before the cloud frame.
+ */
+@media (min-width: 48.0625rem) {
+  .admin-next-block--dash-hero-slot > .admin-mobile-next-strip {
+    position: static;
+    z-index: auto;
+    box-sizing: border-box;
+    background: var(--admin-premium-surface-bg);
+    border: var(--admin-premium-surface-border);
+    border-radius: var(--admin-premium-surface-r);
+    box-shadow: var(--admin-premium-shadow-inset), var(--admin-premium-shadow-lift);
+    padding: clamp(0.55rem, 1.45vw, 0.78rem) clamp(0.65rem, 1.7vw, 1rem);
+  }
+}
+
 @media (max-width: 48rem) {
+  .admin-next-block--dash-hero-slot > .admin-mobile-next-strip {
+    position: static;
+    z-index: auto;
+    box-sizing: border-box;
+    background: transparent;
+    border: none;
+    border-radius: 0;
+    box-shadow: none;
+    padding: 0.1rem 0 0;
+  }
+
   .booking-shell .admin-next-block--dash-hero-slot {
     margin-bottom: clamp(0.48rem, 1.3vw, 0.65rem);
     background: linear-gradient(
@@ -1409,6 +1695,45 @@
   z-index: 35;
   max-height: 16rem;
   overflow-y: auto;
+}
+
+.admin-search-results__skeleton {
+  padding: 0.15rem 0;
+}
+
+.admin-search-results__skeleton-row {
+  display: grid;
+  gap: 0.35rem;
+  padding: 0.55rem 0.7rem;
+  border-bottom: 1px solid var(--border);
+}
+
+.admin-search-results__skeleton-row:last-child {
+  border-bottom: 0;
+}
+
+.admin-search-results__skeleton-line {
+  display: block;
+  border-radius: 4px;
+  background: linear-gradient(
+    90deg,
+    color-mix(in srgb, var(--border) 88%, transparent) 0%,
+    color-mix(in srgb, var(--muted) 22%, transparent) 50%,
+    color-mix(in srgb, var(--border) 88%, transparent) 100%
+  );
+  background-size: 200% 100%;
+  animation: admin-schedule-skeleton-shimmer 1.2s ease-in-out infinite;
+}
+
+.admin-search-results__skeleton-line--main {
+  width: min(100%, 12rem);
+  height: 0.72rem;
+}
+
+.admin-search-results__skeleton-line--meta {
+  width: min(100%, 18rem);
+  height: 0.55rem;
+  opacity: 0.88;
 }
 
 .admin-search-result-item {
@@ -4676,261 +5001,6 @@
     );
   }
 
-  .admin-mobile-next-strip {
-    display: flex;
-    flex-direction: column;
-    gap: 0.18rem;
-    width: 100%;
-    min-width: 0;
-    padding: 0.1rem 0 0;
-  }
-
-  .admin-mobile-next-strip-head {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    gap: 0.5rem;
-  }
-
-  .admin-mobile-next-strip-kicker {
-    margin: 0;
-    font-size: 0.62rem;
-    font-weight: 700;
-    letter-spacing: 0.1em;
-    text-transform: uppercase;
-    color: color-mix(in srgb, var(--muted) 76%, var(--fg));
-  }
-
-  .admin-mobile-next-strip-live {
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    gap: 0.28rem;
-    border-radius: var(--radius-full);
-    border: 1px solid color-mix(in srgb, var(--border) 72%, transparent);
-    padding: 0.18rem 0.44rem;
-    font-size: 0.54rem;
-    letter-spacing: 0.08em;
-    line-height: 1;
-    color: color-mix(in srgb, var(--muted) 70%, var(--fg));
-    background: color-mix(in srgb, var(--surface-1) 78%, transparent);
-  }
-
-  .admin-mobile-next-strip-live-dot {
-    width: 0.36rem;
-    height: 0.36rem;
-    border-radius: var(--radius-full);
-    background: color-mix(in srgb, var(--muted) 70%, var(--fg));
-  }
-
-  .admin-mobile-next-strip-live--live {
-    color: color-mix(in srgb, var(--status-confirmed) 88%, var(--fg));
-    border-color: color-mix(in srgb, var(--status-confirmed) 32%, var(--border));
-    background: color-mix(in srgb, var(--status-confirmed) 9%, transparent);
-  }
-
-  .admin-mobile-next-strip-live--live .admin-mobile-next-strip-live-dot {
-    background: var(--status-confirmed);
-    box-shadow: 0 0 0 0 color-mix(in srgb, var(--status-confirmed) 36%, transparent);
-  }
-
-  .admin-mobile-next-strip-live-dot--pulse {
-    animation: adminMobileLivePulse 1.65s ease-out infinite;
-  }
-
-  .admin-mobile-next-strip-live--offline {
-    color: color-mix(in srgb, #ff6b6b 70%, var(--fg));
-    border-color: color-mix(in srgb, #ff6b6b 28%, var(--border));
-  }
-
-  .admin-mobile-next-strip-live--offline .admin-mobile-next-strip-live-dot {
-    background: color-mix(in srgb, #ff6b6b 78%, var(--fg));
-  }
-
-  .admin-mobile-next-strip-list {
-    list-style: none;
-    margin: 0;
-    padding: 0;
-    display: grid;
-    gap: 0.12rem;
-    position: relative;
-  }
-
-  .admin-mobile-next-strip-item {
-    display: grid;
-    gap: 0.02rem;
-    min-width: 0;
-    padding: 0.12rem 0;
-    opacity: 0.82;
-  }
-
-  .admin-mobile-next-strip-item--primary {
-    opacity: 1;
-  }
-
-  .admin-mobile-next-strip-item--drawer-extra {
-    padding-block: 0;
-  }
-
-  .admin-mobile-next-strip-item--drawer-open {
-    padding-block: 0.2rem;
-  }
-
-  /* Subtle drawer: extra rows expand/collapse height + light fade/slide */
-  .admin-mobile-next-strip-item-clip {
-    max-height: 0;
-    overflow: hidden;
-    transition: max-height 0.32s cubic-bezier(0.22, 1, 0.36, 1);
-    will-change: max-height;
-  }
-
-  .admin-mobile-next-strip-item-clip--open {
-    max-height: 6rem;
-  }
-
-  .admin-mobile-next-strip-item-clip-inner {
-    min-height: 0;
-    overflow: hidden;
-    display: flex;
-    flex-direction: column;
-    gap: 0.02rem;
-    opacity: 0;
-    transform: translateY(-3px);
-    transition:
-      opacity 0.26s cubic-bezier(0.33, 1, 0.32, 1),
-      transform 0.32s cubic-bezier(0.33, 1, 0.32, 1);
-    will-change: opacity, transform;
-  }
-
-  .admin-mobile-next-strip-item-clip--open .admin-mobile-next-strip-item-clip-inner {
-    opacity: 0.82;
-    transform: translateY(0);
-  }
-
-  @media (prefers-reduced-motion: reduce) {
-    .admin-mobile-next-strip-item-clip,
-    .admin-mobile-next-strip-item-clip-inner {
-      transition-duration: 0.01ms;
-    }
-  }
-
-  .admin-mobile-next-strip-main,
-  .admin-mobile-next-strip-meta {
-    margin: 0;
-    min-width: 0;
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
-  }
-
-  .admin-mobile-next-strip-main {
-    display: inline-flex;
-    align-items: baseline;
-    gap: 0.24rem;
-    font-size: 0.84rem;
-    letter-spacing: -0.01em;
-    color: var(--fg);
-  }
-
-  .admin-mobile-next-strip-meta {
-    display: inline-flex;
-    align-items: center;
-    gap: 0.22rem;
-    font-size: 0.66rem;
-    color: var(--muted);
-    letter-spacing: 0.01em;
-  }
-
-  /* Meta row reserves room for the floating expand/collapse pill. */
-  .admin-mobile-next-strip-meta-row--with-pill {
-    position: relative;
-    min-width: 0;
-    padding-inline-end: 3.1rem;
-  }
-
-  .admin-mobile-next-strip-meta--with-pill {
-    position: relative;
-    z-index: 1;
-    max-width: 100%;
-  }
-
-  .admin-mobile-next-strip-toggle-float-wrap {
-    position: static;
-    margin: 0;
-    padding: 0;
-    list-style: none;
-  }
-
-  .admin-mobile-next-strip-toggle-float {
-    position: absolute;
-    left: 50%;
-    top: 0;
-    transform: translate(-50%, -50%);
-    z-index: 2;
-    transition: top 0.32s cubic-bezier(0.22, 1, 0.36, 1);
-    will-change: top;
-    pointer-events: none;
-  }
-
-  .admin-mobile-next-strip-toggle-float .admin-mobile-next-strip-toggle {
-    pointer-events: auto;
-  }
-
-  .admin-mobile-next-strip-item--empty .admin-mobile-next-strip-main {
-    font-size: 0.72rem;
-    color: var(--muted);
-  }
-
-  .admin-mobile-next-strip-toggle {
-    margin: 0;
-    min-height: 1.35rem;
-    min-width: 1.35rem;
-    padding: 0.18rem;
-    border-radius: var(--radius-full);
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    gap: 0;
-    color: color-mix(in srgb, var(--muted) 58%, var(--fg));
-    background: transparent;
-    border: 1px solid color-mix(in srgb, var(--border) 42%, transparent);
-    box-shadow: none;
-    transition:
-      background-color 160ms ease,
-      border-color 160ms ease,
-      color 160ms ease;
-  }
-
-  .admin-mobile-next-strip-toggle:hover {
-    background: color-mix(in srgb, var(--surface-1) 45%, transparent);
-    border-color: color-mix(in srgb, var(--border) 70%, transparent);
-  }
-
-  .admin-mobile-next-strip-toggle:active {
-    background: color-mix(in srgb, var(--surface-1) 62%, transparent);
-  }
-
-  .admin-mobile-next-strip-toggle svg {
-    flex-shrink: 0;
-    opacity: 0.92;
-    transition: transform 170ms cubic-bezier(0.2, 0.75, 0.2, 1);
-  }
-
-  .admin-mobile-next-strip-toggle[aria-expanded='true'] svg {
-    transform: rotate(180deg);
-  }
-
-  @keyframes adminMobileLivePulse {
-    0% {
-      box-shadow: 0 0 0 0 color-mix(in srgb, var(--status-confirmed) 38%, transparent);
-    }
-    70% {
-      box-shadow: 0 0 0 8px color-mix(in srgb, var(--status-confirmed) 0%, transparent);
-    }
-    100% {
-      box-shadow: 0 0 0 0 color-mix(in srgb, var(--status-confirmed) 0%, transparent);
-    }
-  }
 
   .admin-mobile-header .admin-sidebar-brand {
     min-width: 0;
@@ -7952,7 +8022,17 @@
   color: color-mix(in srgb, var(--fg) 88%, var(--muted));
 }
 
+.admin-timeline-lane-label {
+  position: sticky;
+  left: 0;
+  z-index: 18;
+}
+
 .admin-timeline-barber-header {
+  position: sticky;
+  top: 0;
+  left: 0;
+  z-index: 21;
   text-transform: uppercase;
   font-size: 0.68rem;
   letter-spacing: 0.06em;
@@ -7960,7 +8040,9 @@
 }
 
 .admin-timeline-scale {
-  position: relative;
+  position: sticky;
+  top: 0;
+  z-index: 20;
   min-height: 2.65rem;
   border-bottom: 1px solid color-mix(in srgb, var(--border) 92%, transparent);
   background: color-mix(in srgb, var(--bg) 94%, var(--surface));
@@ -8063,6 +8145,9 @@
 }
 
 .admin-timeline-terminal-header {
+  position: sticky;
+  top: 0;
+  z-index: 19;
   min-height: 2.65rem;
   border-bottom: 1px solid color-mix(in srgb, var(--border) 92%, transparent);
   border-left: 1px solid color-mix(in srgb, var(--border) 92%, transparent);
@@ -8524,10 +8609,6 @@
     display: none;
   }
 
-  .booking-shell .admin-next-block--dash-hero-slot--mobile .admin-bookings-ops--dash-hero .admin-bookings-ops-updated {
-    display: none;
-  }
-
   .booking-shell .admin-next-block--dash-hero-slot--mobile .admin-bookings-ops--dash-hero .admin-live-status {
     font-size: 0.56rem;
     padding: 0.2rem 0.42rem;
@@ -8636,30 +8717,6 @@
     grid-template-columns:
       5.5rem minmax(var(--admin-timeline-mobile-canvas-width, 40rem), var(--admin-timeline-mobile-canvas-width, 56rem))
       var(--admin-timeline-terminal-rail-width);
-  }
-
-  .admin-timeline-lane-label {
-    position: sticky;
-    left: 0;
-    z-index: 18;
-  }
-
-  .admin-timeline-barber-header {
-    position: sticky;
-    top: 0;
-    left: 0;
-    z-index: 21;
-  }
-
-  .admin-timeline-scale,
-  .admin-timeline-terminal-header {
-    position: sticky;
-    top: 0;
-    z-index: 20;
-  }
-
-  .admin-timeline-terminal-header {
-    z-index: 19;
   }
 
   .admin-sales-chart-wrap {
@@ -11750,12 +11807,6 @@
   flex-shrink: 0;
   margin-left: auto;
   align-self: flex-start;
-}
-
-.admin-bookings-ops--dash-hero .admin-bookings-ops-updated {
-  font-size: 0.68rem;
-  letter-spacing: 0.02em;
-  opacity: 0.88;
 }
 
 .admin-bookings-ops--dash-hero .admin-live-status {

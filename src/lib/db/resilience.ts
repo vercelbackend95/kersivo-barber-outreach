@@ -36,6 +36,18 @@ export function isPrismaQuotaExceededError(error: unknown): boolean {
   );
 }
 
+/** Prisma P1001 or equivalent: TCP/SSL failure reaching the database host (Neon down, wrong URL, firewall, etc.). */
+export function isPrismaDatabaseUnavailableError(error: unknown): boolean {
+  if (error instanceof Prisma.PrismaClientKnownRequestError && error.code === 'P1001') {
+    return true;
+  }
+  const message = error instanceof Error ? error.message : String(error ?? '');
+  return message.includes("Can't reach database server");
+}
+
+export const ADMIN_REPORTS_DATABASE_UNAVAILABLE_MESSAGE =
+  'Reports are temporarily unavailable because the database could not be reached. Please try again shortly.';
+
 export function logPrismaQuotaFallback(scope: string, error: unknown) {
   console.warn(`[db] Falling back because Prisma quota was exceeded in ${scope}.`, {
     error: error instanceof Error ? error.message : error

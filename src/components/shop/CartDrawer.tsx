@@ -228,7 +228,7 @@ export default function CartDrawer() {
             <p><strong>{formatGbp(subtotalPence)}</strong></p>
           </div>
           <ul className="cart-summary__pickup-points">
-            <li>Ready for pickup at Kersivo.</li>
+            <li>Ready for pickup in store when staff mark the order.</li>
             <li>Collect in shop during opening hours.</li>
             <li>We will send your confirmation to email.</li>
           </ul>

@@ -2,6 +2,8 @@
 interface FaqItem {
   question: string;
   answer: string;
+  /** Optional extra context for teams that want more depth. */
+  details?: string;
 }
 
 interface Props {
@@ -16,7 +18,8 @@ interface Props {
 
 const {
   heading = "Questions Barbers Usually Ask Before Launch",
-  subHeading = "What’s in the box, how Essential vs PRO differs, and what £40/mo Care does after launch.",
+  subHeading =
+    "What’s in the box, how Essential vs PRO differs, Managed Care (£40/m), domains, Stripe, and what happens if you don’t continue Care.",
   supportHeading = "Still have questions?",
   supportText = "If you want to talk through your shop's setup first, we can walk you through the best option.",
   supportLinkLabel = "Contact Support",
@@ -25,52 +28,72 @@ const {
     {
       question: "What’s included in the website system?",
       answer:
-        "Same stack on both tiers: custom site (per brief), booking on your domain, full admin (team, diary, shop, reports), buy-and-collect with Stripe, contact + map + hours. Essential: 20 products at setup, 1 month hosting + admin. PRO: 50 products, 3 months, featured products, stronger homepage, extra polish, priority launch, go-live support, plus SMS on Managed Care (where enabled) prepped at launch.",
+        "Both tiers give you the same software stack: a custom site built to your brief, booking on your domain, a full admin (team, diary, shop, reports), buy-and-collect checkout, plus contact details, map and hours.",
+      details:
+        "Essential includes setup for up to 20 products and 1 month of hosting plus admin access. PRO includes up to 50 products, 3 months of hosting plus admin, featured products, more homepage and visual polish (per brief), priority in the launch queue, stronger go-live support, and we prep SMS on Managed Care (when you want it enabled) at go-live.",
     },
     {
       question: "What’s the difference between Essential and PRO?",
       answer:
-        "Same software—PRO adds 3 months included (vs 1), 50 vs 20 products, featured products, more homepage and visual polish (per brief), priority queue, tighter go-live support, and SMS on Managed Care (where enabled) prepped at go-live.",
+        "Same platform—PRO adds a longer included period (3 months vs 1 month), more products at setup (50 vs 20), featured products, extra layout and polish on the homepage and key pages (per brief), priority launch, tighter go-live support, and SMS prep on Managed Care when you choose to turn it on.",
+    },
+    {
+      question: "Does Kersivo take a cut of bookings or shop sales?",
+      answer:
+        "No. We don’t charge commission on bookings or retail run through your site. Card payments go through Stripe on your own Stripe account, so only Stripe’s standard processing fees apply there.",
+    },
+    {
+      question: "How does payment work for the build?",
+      answer:
+        "It’s 50% to start and 50% before go-live. Prices are the totals shown for Essential or PRO. You review the near-final site before the balance is due and can request a small round of final tweaks as part of sign-off.",
     },
     {
       question: "Is booking included in every package?",
       answer:
-        "Yes. Booking is part of the website system in both Essential and PRO. If a shop strongly prefers an existing external booking tool, that can be discussed, but the system is built to work best with the integrated setup.",
+        "Yes—integrated booking is part of both packages. The system is designed to work best with our built-in flow on your domain.",
+      details:
+        "If you already rely on another tool, we can discuss options, but the integrated booking path is what the product is optimised for.",
     },
     {
       question: "Can I sell products through the site?",
       answer:
-        "Yes. The system includes a built-in shop with pickup flow. Essential includes setup for up to 20 products, while PRO includes setup for up to 50 products. If you choose not to use the shop, the package price does not change.",
+        "Yes. There’s a built-in shop with pickup (no delivery step). Essential covers setup for up to 20 products; PRO up to 50. If you don’t use retail, the package price is unchanged.",
+      details:
+        "Returns and in-store pickup rules are yours to set as the seller; card payments are processed by Stripe on your account.",
     },
     {
-      question: "What does the £40/month care plan include?",
+      question: "What does Managed Care (£40/month) include?",
       answer:
-        "Hosting, maintenance, security monitoring, full admin + shop, client SMS (where enabled), and 1h Kersivo dev per month for small changes. It kicks in after your included hosting/admin period ends.",
+        "After your included hosting/admin months end, Managed Care covers hosting, maintenance, security monitoring, full admin and shop access, optional client SMS when you want it enabled, and up to one hour of small in-scope changes from us each month.",
     },
     {
       question: "What happens if I don’t take Managed Care after the included period?",
       answer:
-        "Our admin and integrated shop switch off. We can help point booking to a third-party tool if you need one; the built-in shop stays off until Care is on. There’s no separate self-serve way to keep our admin or shop without Care.",
+        "Our admin and integrated shop are switched off. We usually help you point clients to a third-party booking flow—for example Booksy or another scheduling tool you choose. The built-in shop stays off until Managed Care is on. There’s no self-serve way to keep our admin or shop without Managed Care.",
     },
     {
-      question: "How does payment work?",
+      question: "What about my domain name?",
       answer:
-        "50% to start, 50% before go-live. Prices are totals as shown (we’re not VAT-registered). You review before the final payment and can request a small round of final tweaks.",
+        "Your first year of domain registration is included in Essential and PRO—you don’t pay us an extra domain fee for that initial registration as part of those packages.",
+      details:
+        "If you are not on Managed Care (£40/month), renewal after the first 12 months is your responsibility: you pay the registrar’s renewal cost directly (or through the billing path we agree). Keep contact details on the registration up to date so you don’t lose the name.",
     },
     {
       question: "How long does a project usually take?",
       answer:
-        "Most projects are completed in around 2 weeks, depending on the package, the materials provided and final revisions. PRO projects are given priority.",
+        "Most shops go live in about 14 days from kickoff, depending on how quickly you send assets and feedback. PRO gets priority in the queue when timelines are tight.",
     },
     {
-      question: "What do you need from me before you start?",
+      question: "Can I get SMS reminders for clients?",
       answer:
-        "The essentials are usually your logo, photos, service list, opening hours, contact details and product information if you want to use the shop. If you already have written content, that helps — but copy can also be created for you as part of the setup.",
+        "Yes, when you want them. SMS on Managed Care can be enabled for your shop; we’ll wire the integration when you’re ready. Until then, email confirmations and links still cover the core journey.",
     },
     {
-      question: "Do I need technical skills to use the system?",
+      question: "What do you need from me before you start—and do I need to be technical?",
       answer:
-        "No. If you’re on the monthly care plan, the system is designed to be easy to manage through the admin side without technical knowledge. If you need larger changes beyond normal ongoing updates, those can be quoted separately.",
+        "We’ll need your logo, photos, service list, hours, contact details, and product info if you’re using the shop. Written content helps, but we can help shape copy during setup.",
+      details:
+        "You don’t need developer skills for day-to-day work on Managed Care—the admin is built for shop staff. Larger changes outside the monthly scope can be quoted separately.",
     },
   ],
 } = Astro.props as Props;
@@ -86,13 +109,21 @@ const {
 
     <div class="faq4__list" role="list">
       {
-        faqs.map((faq, index) => (
+        faqs.map((faq) => (
           <details class="faq4__item" name="faq4-group" role="listitem">
             <summary>
               <span>{faq.question}</span>
               <span class="faq4__icon" aria-hidden="true">→</span>
             </summary>
-            <p>{faq.answer}</p>
+            <div class="faq4__answer">
+              <p>{faq.answer}</p>
+              {faq.details ? (
+                <details class="faq4__more">
+                  <summary>More detail</summary>
+                  <p>{faq.details}</p>
+                </details>
+              ) : null}
+            </div>
           </details>
         ))
       }

@@ -12,7 +12,6 @@ export type AdminBookingsOpsDashHeroProps = {
   nextBooking: AdminBookingsOpsDashHeroBooking | null;
   connectionStateLabel: string;
   hasLivePulse: boolean;
-  freshnessLabel: string;
   formatStartTime: (iso: string) => string;
   formatRelativeTime: (startAt: string, endAt: string) => string;
 };
@@ -21,7 +20,6 @@ export default function AdminBookingsOpsDashHero({
   nextBooking,
   connectionStateLabel,
   hasLivePulse,
-  freshnessLabel,
   formatStartTime,
   formatRelativeTime,
 }: AdminBookingsOpsDashHeroProps) {
@@ -41,7 +39,6 @@ export default function AdminBookingsOpsDashHero({
       secondary={
         nextBooking ? formatRelativeTime(nextBooking.startAt, nextBooking.endAt) : undefined
       }
-      footer={freshnessLabel}
       connectionStateLabel={connectionStateLabel}
       hasLivePulse={hasLivePulse}
     />

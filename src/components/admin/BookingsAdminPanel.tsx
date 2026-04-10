@@ -3,7 +3,7 @@ import { createPortal } from 'react-dom';
 import { BarberRosterOverviewGridSkeleton, SkeletonKPICards } from '../skeleton';
 import AdminSectionHeader from './AdminSectionHeader';
 import AdminBookingsOpsSearch from './AdminBookingsOpsSearch';
-import AdminBookingsOpsDashHero from './AdminBookingsOpsDashHero';
+import AdminNextAppointmentsStripLive from './AdminNextAppointmentsStripLive';
 import AdminBookingsScheduleList from './AdminBookingsScheduleList';
 import AdminLineChart from './charts/AdminLineChart';
 import { addDays } from 'date-fns';
@@ -28,7 +28,6 @@ import { getDefaultWorkingHourRows } from '../../lib/admin/defaultWorkingHourRow
 import { formatDelta } from './reportsFormatting';
 import EmptyState from '../EmptyState';
 import { Ban, X } from '../lucide-react';
-import { useAdminTodayBookingsLive } from './useAdminTodayBookingsLive';
 import { ADMIN_BOOKING_HISTORY_PAGE_SIZE } from '../../lib/admin/bookingHistoryPageSize';
 import { canShopAdminCancelByLeadTime } from '../../lib/booking/policies';
 import { countBookingsByStatusTone, getBookingStatusTone, isCancelledBookingStatus } from './bookingStatus';
@@ -672,15 +671,6 @@ type BookingsAdminPanelProps = {
 };
 
 export default function BookingsAdminPanel({ isActive, mode, onBackToDashboard }: BookingsAdminPanelProps) {
-  const {
-    nextBooking: liveNextBooking,
-    connectionStateLabel,
-    hasLivePulse,
-    freshnessLabel,
-    formatStartTime: liveFormatStartTime,
-    formatRelativeTime: liveFormatRelativeTime,
-  } = useAdminTodayBookingsLive();
-
   const [loggedIn, setLoggedIn] = useState(false);
   const [isCheckingSession, setIsCheckingSession] = useState(true);
   const [bookings, setBookings] = useState<Booking[]>([]);
@@ -737,6 +727,7 @@ export default function BookingsAdminPanel({ isActive, mode, onBackToDashboard }
   const [historyCursor, setHistoryCursor] = useState<string | null>(null);
   const [historyHasMore, setHistoryHasMore] = useState(false);
   const [historyLoadingMore, setHistoryLoadingMore] = useState(false);
+  const [historySearchLoading, setHistorySearchLoading] = useState(false);
   const [reports, setReports] = useState<ReportsPayload | null>(null);
   const [reportsLoading, setReportsLoading] = useState(true);
   const [reportsError, setReportsError] = useState('');
@@ -1023,6 +1014,9 @@ export default function BookingsAdminPanel({ isActive, mode, onBackToDashboard }
           inFlightRef.current = false;
         }
         setBookingsInitialLoading(false);
+        if (mode === 'history' && !isHistoryAppend) {
+          setHistorySearchLoading(false);
+        }
       }
 
       setHistoryLoadingMore(false);
@@ -1041,9 +1035,21 @@ export default function BookingsAdminPanel({ isActive, mode, onBackToDashboard }
   useEffect(() => { if (!loggedIn || !isActive) return; const id = window.setInterval(() => setNowMs(Date.now()), LAST_UPDATED_REFRESH_MS); return () => window.clearInterval(id); }, [isActive, loggedIn]);
   useEffect(() => {
     if (!loggedIn || !isActive || mode !== 'history') return;
+    const q = normalizeSearchValue(debouncedSearchQuery);
+    if (q) {
+      setHistorySearchLoading(true);
+    } else {
+      setHistorySearchLoading(false);
+    }
     const timeoutId = window.setTimeout(() => { void fetchBookings(); }, 300);
     return () => window.clearTimeout(timeoutId);
-  }, [fetchBookings, historyBarberId, historyDateRange, isActive, loggedIn, mode]);
+  }, [fetchBookings, debouncedSearchQuery, historyBarberId, historyDateRange, isActive, loggedIn, mode]);
+
+  useEffect(() => {
+    if (mode !== 'history') {
+      setHistorySearchLoading(false);
+    }
+  }, [mode]);
 
   useEffect(() => {
     if (!isHistoryMoreOpen) return;
@@ -1467,16 +1473,19 @@ export default function BookingsAdminPanel({ isActive, mode, onBackToDashboard }
 
   const visibleBookings = useMemo(() => {
     if (!effectiveClientSearchQuery) return dayFilteredBookings;
+    if (mode === 'history' && historySearchLoading) {
+      return [];
+    }
     const ranked = dayFilteredBookings
       .map((booking, index) => ({ booking, score: getBookingSearchScore(booking, effectiveClientSearchQuery), index }))
       .filter((entry) => entry.score > 0)
       .sort((a, b) => b.score - a.score);
     if (ranked.length > 0) return ranked.map((entry) => entry.booking);
     if (mode === 'history') {
-      return [...dayFilteredBookings].sort((a, b) => new Date(b.startAt).getTime() - new Date(a.startAt).getTime());
+      return [];
     }
     return [];
-  }, [dayFilteredBookings, effectiveClientSearchQuery, mode]);
+  }, [dayFilteredBookings, effectiveClientSearchQuery, historySearchLoading, mode]);
 
   const opsFilteredViewActive =
     Boolean(effectiveClientSearchQuery) || (mode === 'dashboard' && dayOpsFilter !== 'all');
@@ -1507,9 +1516,10 @@ export default function BookingsAdminPanel({ isActive, mode, onBackToDashboard }
   const searchResultsLabel = useMemo(() => {
     if (isSearchDebouncing) return 'Searching...';
     if (!effectiveClientSearchQuery) return '';
+    if (mode === 'history' && historySearchLoading) return 'Loading...';
     if (visibleBookings.length === 0) return 'No matches';
     return `${visibleBookings.length} matches`;
-  }, [effectiveClientSearchQuery, isSearchDebouncing, visibleBookings.length]);
+  }, [effectiveClientSearchQuery, historySearchLoading, isSearchDebouncing, mode, visibleBookings.length]);
 
   const highlightMatch = useCallback((value: string) => {
     if (!effectiveClientSearchQuery) return value;
@@ -1523,8 +1533,11 @@ export default function BookingsAdminPanel({ isActive, mode, onBackToDashboard }
   }, [effectiveClientSearchQuery]);
   const searchDropdownBookings = useMemo(() => {
     if (!effectiveClientSearchQuery || isSearchDebouncing) return [] as Booking[];
+    if (mode === 'history' && historySearchLoading) return [] as Booking[];
     return visibleBookings.slice(0, 8);
-  }, [effectiveClientSearchQuery, isSearchDebouncing, visibleBookings]);
+  }, [effectiveClientSearchQuery, historySearchLoading, isSearchDebouncing, mode, visibleBookings]);
+
+  const historySearchResultsLoading = mode === 'history' && Boolean(effectiveClientSearchQuery) && historySearchLoading;
 
 
   const isAnyOverlayOpen = isAddBarberSheetOpen || openDrilldown !== null || showHolidayModal || selectedTimelineBooking !== null || selectedClientId !== null;
@@ -2272,28 +2285,9 @@ export default function BookingsAdminPanel({ isActive, mode, onBackToDashboard }
     [],
   );
 
-  const bookingsDashHeroEl =
-    mode === 'dashboard' ? (
-      <AdminBookingsOpsDashHero
-        nextBooking={liveNextBooking}
-        connectionStateLabel={connectionStateLabel}
-        hasLivePulse={hasLivePulse}
-        freshnessLabel={freshnessLabel}
-        formatStartTime={liveFormatStartTime}
-        formatRelativeTime={liveFormatRelativeTime}
-      />
-    ) : null;
+  const bookingsDashHeroEl = mode === 'dashboard' ? <AdminNextAppointmentsStripLive /> : null;
 
-  const nonDashboardOpsDashHeroEl = (
-    <AdminBookingsOpsDashHero
-      nextBooking={liveNextBooking}
-      connectionStateLabel={connectionStateLabel}
-      hasLivePulse={hasLivePulse}
-      freshnessLabel={freshnessLabel}
-      formatStartTime={liveFormatStartTime}
-      formatRelativeTime={liveFormatRelativeTime}
-    />
-  );
+  const nonDashboardOpsDashHeroEl = <AdminNextAppointmentsStripLive />;
 
   const dashHeroSlotClassName = [
     'admin-next-block',
@@ -2705,6 +2699,7 @@ export default function BookingsAdminPanel({ isActive, mode, onBackToDashboard }
               onClientSearchQueryChange={setClientSearchQuery}
               searchDropdownBookings={searchDropdownBookings}
               searchResultsLabel={searchResultsLabel}
+              searchResultsLoading={historySearchResultsLoading}
               activeSearchResultIndex={activeSearchResultIndex}
               onActiveSearchResultIndexChange={setActiveSearchResultIndex}
               highlightMatch={highlightMatch}
@@ -2730,6 +2725,7 @@ export default function BookingsAdminPanel({ isActive, mode, onBackToDashboard }
               onClientSearchQueryChange={setClientSearchQuery}
               searchDropdownBookings={searchDropdownBookings}
               searchResultsLabel={searchResultsLabel}
+              searchResultsLoading={historySearchResultsLoading}
               activeSearchResultIndex={activeSearchResultIndex}
               onActiveSearchResultIndexChange={setActiveSearchResultIndex}
               highlightMatch={highlightMatch}
@@ -2762,7 +2758,7 @@ export default function BookingsAdminPanel({ isActive, mode, onBackToDashboard }
           heading="Booking history"
           bookings={visibleBookings}
           nowMs={nowMs}
-          bookingsInitialLoading={bookingsInitialLoading}
+          bookingsInitialLoading={bookingsInitialLoading || historySearchLoading}
           updatedBookingIds={updatedBookingIds}
           highlightMatch={highlightMatch}
           formatStartTime={formatStartTime}

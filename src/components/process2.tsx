@@ -80,8 +80,8 @@ const Process2 = ({ className }: Process2Props) => {
             </h1>
             <p className="text-base text-foreground/50">
               You&apos;ve already seen what&apos;s inside—here&apos;s how we get you live. Four clear stages from kickoff to
-              launch: client booking, buy-and-collect retail, and your back office, together on your own site. Most UK
-              shops go live in about two weeks; we give you a straight checklist so you always know what we need next.
+              launch: client booking, buy-and-collect retail, and your back office, together on your own site.               Most UK
+              shops go live in about 14 days; we give you a straight checklist so you always know what we need next.
             </p>
             <div className="relative h-90 overflow-hidden border">
               {previousActive !== undefined && (
