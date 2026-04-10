@@ -1,7 +1,6 @@
 ---
 import MainLayout from '@/layouts/MainLayout.astro';
 import '../styles/components/system-chooser.css';
-import { Hero227 } from '../components/hero227';
 import '../styles/components/compare3.css';
 import '../styles/components/trustStrip3.css';
 import { TrustStrip3 } from '../components/trustStrip3';
@@ -28,6 +27,8 @@ import Footer50 from '../components/footer50.astro';
 import '../styles/components/footer50.css';
 import '../styles/components/feature261.css';
 import '../styles/components/process2.css';
+import '../styles/components/hero227.css';
+import { Hero227 } from '../components/hero227';
 const DEMO_ADMIN_PASSWORD = import.meta.env.PUBLIC_DEMO_ADMIN_PASSWORD
   ?? import.meta.env.PUBLIC_ADMIN_DEMO_PASSWORD
   ?? import.meta.env.ADMIN_SECRET
@@ -37,10 +38,7 @@ const DEMO_ADMIN_PASSWORD = import.meta.env.PUBLIC_DEMO_ADMIN_PASSWORD
 ---
 
 <MainLayout title="Kersivo — Barber website, £0 booking fees, shop pickup & one admin (UK)">
-    <main>
-    <div id="home">
-    <Hero227 client:load />
-    </div>
+    <main id="home">
 
     <div class="system-chooser" data-system-chooser hidden>
       <div class="system-chooser__backdrop" data-system-chooser-close aria-hidden="true"></div>
@@ -198,6 +196,7 @@ const DEMO_ADMIN_PASSWORD = import.meta.env.PUBLIC_DEMO_ADMIN_PASSWORD
       </section>
     </div>
 
+    <Hero227 client:load />
 
     <TrustStrip3 />
     <Compare3 />

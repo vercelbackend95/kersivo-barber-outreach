@@ -15,7 +15,8 @@ const Hero227 = ({ className }: Hero227Props) => {
   useGoogleFont("Antonio");
   return (
     <section
-      className={cn("bg-background py-32", className)}
+      data-hero227=""
+      className={cn("hero227-root bg-background py-32", className)}
       style={
         {
           "--font-antonio": "Antonio",
@@ -23,7 +24,8 @@ const Hero227 = ({ className }: Hero227Props) => {
       }
     >
       <div className="border-b border-muted-foreground/40">
-        <div className="container flex flex-col items-center justify-center gap-4 text-center">
+        {/* Avoid global `.container` (unlayered) — it overrides Tailwind and breaks layout */}
+        <div className="hero227-inner flex flex-col items-center justify-center gap-4 text-center">
           <div className="flex flex-wrap items-center justify-center gap-6">
             <div className="flex items-center justify-center gap-2 text-xs font-medium tracking-tight text-primary/40 md:text-lg">
               <Copy className="size-4" />
@@ -50,54 +52,52 @@ const Hero227 = ({ className }: Hero227Props) => {
             odio!
           </p>
           <div className="flex rounded-3xl bg-muted-foreground/10 p-1.5">
-            <Button className="text-md flex h-full items-center justify-center rounded-2xl font-medium">
+            <Button className="flex h-full items-center justify-center rounded-2xl text-base font-medium">
               Get Started
             </Button>
             <Button
               variant="ghost"
-              className="text-md flex h-full items-center justify-center rounded-2xl font-medium opacity-40"
+              className="flex h-full items-center justify-center rounded-2xl text-base font-medium opacity-40"
             >
               No Credit Card Required
             </Button>
           </div>
 
-          {/* Iphone mockup — screen content is clipped + scaled to the glass area; frame sits on top */}
-          <div className="relative flex w-full justify-center overflow-x-hidden pb-6 pt-2">
+          {/* Iphone mockup with content — structure matches shadcnblocks template */}
+          <div className="relative h-[500px] w-full overflow-hidden">
             <motion.div
               initial={{ opacity: 0, y: 200, scale: 0.8 }}
               animate={{ opacity: 1, y: 0, scale: 1 }}
               transition={{ ease: [0, 0.71, 0.2, 1.01], duration: 0.8 }}
-              className="relative mx-auto mt-6 aspect-[400/850] w-[min(100%,360px)] overflow-hidden rounded-[75px] bg-black md:mt-10 md:w-[400px]"
+              className="hero227-mock relative mx-auto mt-6 flex h-[850px] w-[400px] items-center justify-center rounded-[75px] bg-black md:mt-12 md:h-[920px] md:w-[450px]"
             >
-              {/* Bezel + screen cutout: inner UI only inside this box */}
-              <div className="absolute inset-[9%_6%_10%_6%] z-[1] overflow-hidden rounded-[2rem] bg-black md:inset-[9%_5.5%_10%_5.5%] md:rounded-[2.25rem]">
-                <div className="flex h-full min-h-0 flex-col px-3 pt-5 sm:px-4 sm:pt-6">
-                  <div className="flex shrink-0 items-start justify-between gap-2">
-                    <div className="flex min-w-0 items-end gap-1.5">
-                      <span className="truncate text-2xl font-semibold leading-none tracking-tight text-white sm:text-3xl">
-                        Mon
-                      </span>
-                      <span className="mb-0.5 size-2 shrink-0 rounded-full bg-red-500 sm:mb-1 sm:size-2.5" />
-                    </div>
-                    <div className="shrink-0 text-right">
-                      <p className="text-[10px] leading-tight tracking-tight text-zinc-400 sm:text-xs">Feburary 9</p>
-                      <p className="-mt-0.5 text-xs font-semibold tracking-tighter text-zinc-500 sm:text-sm">2025</p>
-                    </div>
-                  </div>
-                  <div className="flex min-h-0 flex-1 items-start justify-center pt-4 sm:pt-5">
-                    <img
-                      className="h-auto w-[55%] max-w-[9rem] object-contain"
-                      alt=""
-                      src="https://deifkwefumgah.cloudfront.net/shadcnblocks/block/block-white-1.svg"
-                    />
+              <img
+                className="pointer-events-none absolute inset-0 z-[2] h-full w-full max-w-none scale-105 object-cover"
+                alt="Gold phone frame"
+                src="https://deifkwefumgah.cloudfront.net/shadcnblocks/block/mockups/phone-5.png"
+                decoding="async"
+              />
+              <div className="relative z-[3] h-full w-full">
+                <div className="mt-20 flex justify-between px-0">
+                  <h1 className="flex items-end gap-2 px-12 text-5xl font-semibold tracking-tight text-background md:text-6xl">
+                    Mon
+                    <div className="mb-2 size-3 rounded-full bg-red-500 md:size-5" />
+                  </h1>
+                  <div className="mt-2 mr-8 flex flex-col items-end">
+                    <p className="text-lg tracking-tight text-muted-foreground md:text-xl">
+                      Feburary 9
+                    </p>
+                    <p className="-mt-1 text-xl font-semibold tracking-tighter text-muted-foreground/50 md:text-2xl">
+                      2025
+                    </p>
                   </div>
                 </div>
+                <img
+                  className="relative z-[3] mx-auto mt-20 size-40 object-cover"
+                  alt="Gold phone frame"
+                  src="https://deifkwefumgah.cloudfront.net/shadcnblocks/block/block-white-1.svg"
+                />
               </div>
-              <img
-                className="pointer-events-none absolute inset-0 z-[2] h-full w-full select-none object-contain"
-                alt=""
-                src="https://deifkwefumgah.cloudfront.net/shadcnblocks/block/mockups/phone-5.png"
-              />
             </motion.div>
           </div>
         </div>

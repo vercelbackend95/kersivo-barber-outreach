@@ -43,15 +43,6 @@ body {
   letter-spacing: 0.01em;
 }
 
-img,
-picture,
-svg,
-canvas,
-video {
-  max-width: 100%;
-  display: block;
-}
-
 input,
 button,
 textarea,
@@ -78,15 +69,6 @@ a:focus-visible {
   outline-offset: 3px;
 }
 
-h1,
-h2,
-h3 {
-  font-family: var(--font-body);
-  font-weight: 700;
-  line-height: 1.05;
-  color: var(--fg);
-}
-
 .display-heading {
   font-family: var(--font-heading);
   text-transform: uppercase;
@@ -95,42 +77,62 @@ h3 {
   color: var(--fg);
 }
 
-h1 {
-  font-size: clamp(2.75rem, 6vw, 5rem);
-}
+@layer base {
+  img,
+  picture,
+  svg,
+  canvas,
+  video {
+    max-width: 100%;
+    display: block;
+  }
 
-h2 {
-  font-size: clamp(2rem, 4.2vw, 3.4rem);
-}
+  h1,
+  h2,
+  h3 {
+    font-family: var(--font-body);
+    font-weight: 700;
+    line-height: 1.05;
+    color: var(--fg);
+  }
 
-h3 {
-  font-size: clamp(1.5rem, 3.2vw, 2.4rem);
-}
+  h1 {
+    font-size: clamp(2.75rem, 6vw, 5rem);
+  }
 
-h4,
-h5,
-h6 {
-  font-family: var(--font-body);
-  font-weight: 700;
-  line-height: 1.2;
-}
+  h2 {
+    font-size: clamp(2rem, 4.2vw, 3.4rem);
+  }
 
-p,
-li,
-dd,
-dt,
-small,
-label,
-input,
-textarea,
-button {
-  font-family: var(--font-body);
-}
+  h3 {
+    font-size: clamp(1.5rem, 3.2vw, 2.4rem);
+  }
 
-p,
-li {
-  color: var(--fg);
-  max-width: 68ch;
+  h4,
+  h5,
+  h6 {
+    font-family: var(--font-body);
+    font-weight: 700;
+    line-height: 1.2;
+  }
+
+  p,
+  li,
+  dd,
+  dt,
+  small,
+  label,
+  input,
+  textarea,
+  button {
+    font-family: var(--font-body);
+  }
+
+  p,
+  li {
+    color: var(--fg);
+    max-width: 68ch;
+  }
 }
 
 small,

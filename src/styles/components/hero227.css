@@ -1,0 +1,59 @@
+/*
+  Hero227 island: global.css has unlayered `.container` (overrides layered Tailwind utilities)
+  and @layer base rules for h1/p/img. Scope layout + mockup resets under .hero227-root only.
+*/
+
+.hero227-root,
+[data-hero227] {
+  isolation: isolate;
+  contain: layout style;
+}
+
+.hero227-root :where(.font-antonio) {
+  font-family: var(--font-antonio), ui-sans-serif, system-ui, sans-serif;
+}
+
+.hero227-root {
+  --bg: #fafafa;
+  --fg: #09090b;
+  --muted: #71717a;
+  --border: #e4e4e7;
+  --surface-1: #f4f4f5;
+  --surface-2: #e4e4e7;
+  --surface-3: #d4d4d8;
+  --surface: var(--surface-1);
+  --accent: #18181b;
+  --accent-contrast: #fafafa;
+  --accent-hover: #27272a;
+  --focus: #6366f1;
+}
+
+/* Do not use class `container` — site global `.container` is unlayered and wins over Tailwind */
+.hero227-inner {
+  box-sizing: border-box;
+  width: min(100% - 2rem, 72rem);
+  max-width: 72rem;
+  margin-inline: auto;
+  padding-inline: 0;
+}
+
+/* Mock screen: global `p { max-width: 68ch }` breaks the row */
+.hero227-root .hero227-mock :where(h1, p) {
+  max-width: none !important;
+}
+
+/* Mock: global `img { max-width: 100% }` shrinks bezel and assets */
+.hero227-root .hero227-mock :where(img, svg) {
+  max-width: none !important;
+}
+
+.hero227-root .hero227-mock > img:first-of-type {
+  display: block;
+  object-fit: cover;
+  object-position: center;
+}
+
+/* Shadcn buttons use ring; global :focus-visible adds a second outline */
+.hero227-root :where(button):focus-visible {
+  outline: none;
+}
