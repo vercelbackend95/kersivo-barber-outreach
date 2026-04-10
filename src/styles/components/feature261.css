@@ -125,15 +125,15 @@
   min-height: 0;
 }
 .feature261 .feature261-mobile-visual--medium {
-  height: 30rem;
+  height: 32rem;
 }
 
 .feature261 .feature261-mobile-visual--tall {
-  height: 38rem;
+  height: 40rem;
 }
 
 .feature261 .feature261-mobile-visual--wide {
-  height: 36rem;
+  height: 38rem;
 }
 
 @media (max-width: 767.98px) {
@@ -182,8 +182,9 @@
 }
 
 .feature261 .feature261-bento-image--bookings {
-  /* Cropped admin timeline shot: keep header, day stats, and lane labels visible in tall card */
-  object-position: center 5%;
+  /* Full-width timeline UI: show entire screenshot without side crop; letterbox in tall cards */
+  object-fit: contain;
+  object-position: center top;
 }
 
 .feature261 .feature261-bento-image--booking {
@@ -195,7 +196,9 @@
 }
 
 .feature261 .feature261-bento-image--barbers {
-  object-position: center 55%;
+  /* Wide roster row: show full screenshot without side crop; letterbox vertically */
+  object-fit: contain;
+  object-position: center top;
 }
 
 .feature261 .feature261-bento-image--services {
@@ -440,7 +443,7 @@
   flex-direction: column;
   height: 100%;
   min-height: 0;
-  padding: 0.65rem 0.65rem 0;
+  padding: 0;
   gap: 0;
 }
 
@@ -449,7 +452,7 @@
   flex: 1 1 auto;
   min-height: 0;
   overflow: hidden;
-  border-radius: 10px;
+  border-radius: 13px 13px 0 0;
   background: color-mix(in srgb, var(--bg) 88%, var(--surface));
   box-shadow:
     inset 0 0 0 1px color-mix(in srgb, var(--fg) 6%, transparent),
@@ -462,7 +465,7 @@
   width: 100%;
   height: 100%;
   object-fit: cover;
-  transform: scale(1.01);
+  transform: none;
   transform-origin: center top;
 }
 
@@ -511,14 +514,6 @@
 }
 
 @media (min-width: 768px) {
-  .feature261 .feature261-visual-card__inner {
-    padding: 0.72rem 0.72rem 0;
-  }
-
-  .feature261 .feature261-visual-card__viewport {
-    border-radius: 11px;
-  }
-
   .feature261 .feature261-visual-card__meta {
     gap: 0.4rem;
     padding: 0.95rem 0.95rem 1.05rem;
@@ -539,10 +534,6 @@
 @media (min-width: 1024px) {
   .feature261 .feature261__bento.grid {
     gap: 1.15rem;
-  }
-
-  .feature261 .feature261-visual-card__inner {
-    padding: 0.78rem 0.78rem 0;
   }
 
   .feature261 .feature261-visual-card__meta {
@@ -689,20 +680,12 @@
     height: 272px;
   }
 
-  .feature261 .feature261-bento-image--bookings {
-    object-position: center 8%;
-  }
-
   .feature261 .feature261-bento-image--booking {
     object-position: center 0%;
   }
 
   .feature261 .feature261-bento-image--shop {
     object-position: center 8%;
-  }
-
-  .feature261 .feature261-bento-image--barbers {
-    object-position: center 50%;
   }
 
   .feature261 .feature261-bento-image--services {
@@ -804,12 +787,37 @@
     min-width: 0;
   }
 
-  .feature261 .feature261-bento-image--bookings {
-    object-position: center 10%;
-  }
-
   .feature261 .feature261-bento-image--services {
     object-position: center 8%;
   }
 
+}
+
+/* Below lg: full screenshot width + natural height — no tiny image + dead letterbox under flex */
+@media (max-width: 1023.98px) {
+  .feature261 [data-feature261-card] {
+    height: auto !important;
+    min-height: 0;
+  }
+
+  .feature261 .feature261-visual-card__inner {
+    height: auto;
+    min-height: 0;
+  }
+
+  .feature261 .feature261-visual-card__viewport {
+    flex: 0 0 auto;
+    min-height: 0;
+  }
+
+  .feature261 .feature261-visual-card__shot {
+    position: relative;
+    inset: auto;
+    display: block;
+    width: 100%;
+    height: auto;
+    object-fit: contain;
+    object-position: center top;
+    vertical-align: top;
+  }
 }

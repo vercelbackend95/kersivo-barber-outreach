@@ -73,3 +73,9 @@
     margin-bottom: calc(-1 * var(--booking-space-3, 1.35rem));
   }
 }
+
+@media (min-width: 48.0625rem) {
+  .admin-section-header {
+    padding-inline-start: 5px;
+  }
+}

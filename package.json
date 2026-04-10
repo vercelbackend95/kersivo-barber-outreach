@@ -15,7 +15,8 @@
     "test": "vitest run",
     "vercel:dev": "vercel dev",
     "prisma:migrate:dev": "prisma migrate dev --schema prisma/schema.prisma",
-    "screenshots:feature261": "node scripts/capture-feature261-screens.mjs"
+    "screenshots:feature261": "node scripts/capture-feature261-screens.mjs",
+    "enhance:timeline": "node scripts/enhance-timeline-screenshot.mjs"
   },
   "dependencies": {
     "@astrojs/react": "^4.4.2",
@@ -37,6 +38,7 @@
     "@tailwindcss/vite": "^4.2.2",
     "playwright": "^1.59.1",
     "prisma": "^5.22.0",
+    "sharp": "^0.34.5",
     "tailwindcss": "^4.2.2",
     "tsx": "^4.20.3",
     "vitest": "^2.1.9"

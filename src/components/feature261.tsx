@@ -10,6 +10,9 @@ type BentoVisualCardProps = {
   eyebrow: string;
   title: string;
   imageClassName?: string;
+  /** Intrinsic pixels — avoids wrong aspect-ratio hint when the asset is not 1520×920 */
+  imgWidth?: number;
+  imgHeight?: number;
   loading?: "eager" | "lazy";
   gridClassName: string;
   mobileVariant?: "tall" | "medium" | "wide";
@@ -21,6 +24,8 @@ function BentoVisualCard({
   eyebrow,
   title,
   imageClassName,
+  imgWidth = 1520,
+  imgHeight = 920,
   loading = "lazy",
   gridClassName,
   mobileVariant = "medium",
@@ -42,8 +47,8 @@ function BentoVisualCard({
           <img
             src={src}
             alt={alt}
-            width={1520}
-            height={920}
+            width={imgWidth}
+            height={imgHeight}
             decoding="async"
             loading={loading}
             className={cn("feature261-visual-card__shot", imageClassName)}
@@ -77,7 +82,9 @@ const Feature261 = ({ className }: Feature261Props) => {
 
         <div className="feature261__bento grid grid-cols-1 gap-4 md:grid-cols-6 lg:grid-cols-12">
           <BentoVisualCard
-            src="/hero-assets/screens/feature261-bookings-dashboard.jpg"
+            src="/hero-assets/screens/1.png"
+            imgWidth={1603}
+            imgHeight={878}
             alt="Signed-in admin — bookings dashboard and day schedule"
             eyebrow="BOOKING OVERVIEW"
             title="Chairs, statuses, what's next—plus the pulse when you need it."
@@ -87,7 +94,7 @@ const Feature261 = ({ className }: Feature261Props) => {
             gridClassName="md:col-span-3 md:row-span-2 md:h-[400px] lg:col-span-7 lg:row-span-2 lg:h-[min(29rem,54vh)]"
           />
           <BentoVisualCard
-            src="/hero-assets/screens/feature261-booking-flow.jpg"
+            src="/hero-assets/screens/2.png"
             alt="Public booking — pick service, barber and time"
             eyebrow="CLIENT BOOKING"
             title="Service, barber, time—your URL, your brand, not their app."
@@ -97,7 +104,9 @@ const Feature261 = ({ className }: Feature261Props) => {
             gridClassName="md:col-span-3 md:row-span-2 md:h-[400px] lg:col-span-5 lg:row-span-2 lg:h-[min(29rem,54vh)]"
           />
           <BentoVisualCard
-            src="/hero-assets/screens/feature261-barbers.jpg"
+            src="/hero-assets/barbers.png"
+            imgWidth={1621}
+            imgHeight={896}
             alt="Signed-in admin — barber roster, hours and assignments"
             eyebrow="BARBERS"
             title="Roster, hours, who offers what—grow the team in one place."
@@ -106,7 +115,7 @@ const Feature261 = ({ className }: Feature261Props) => {
             gridClassName="md:col-span-2 md:h-[272px] lg:col-span-4 lg:h-[min(18rem,36vh)]"
           />
           <BentoVisualCard
-            src="/hero-assets/screens/feature261-shop-admin.jpg"
+            src="/hero-assets/screens/5.png"
             alt="Signed-in admin — products and shop catalog"
             eyebrow="RETAIL"
             title="Catalog, orders, pickup ready—same panel as the chair."
@@ -115,7 +124,7 @@ const Feature261 = ({ className }: Feature261Props) => {
             gridClassName="md:col-span-2 md:h-[272px] lg:col-span-4 lg:h-[min(18rem,36vh)]"
           />
           <BentoVisualCard
-            src="/hero-assets/screens/feature261-services.jpg"
+            src="/hero-assets/screens/6.png"
             alt="Signed-in admin — services, prices and durations"
             eyebrow="SERVICES"
             title="Price, duration, menu—what they book matches what you run."
