@@ -1,3 +1,4 @@
+"use client";
 import { motion } from "framer-motion";
 import { Copy, Globe, ShieldCheck } from "lucide-react";
 import React from "react";
@@ -24,7 +25,6 @@ const Hero227 = ({ className }: Hero227Props) => {
       }
     >
       <div className="border-b border-muted-foreground/40">
-        {/* Avoid global `.container` (unlayered) — it overrides Tailwind and breaks layout */}
         <div className="hero227-inner flex flex-col items-center justify-center gap-4 text-center">
           <div className="flex flex-wrap items-center justify-center gap-6">
             <div className="flex items-center justify-center gap-2 text-xs font-medium tracking-tight text-primary/40 md:text-lg">
@@ -52,32 +52,29 @@ const Hero227 = ({ className }: Hero227Props) => {
             odio!
           </p>
           <div className="flex rounded-3xl bg-muted-foreground/10 p-1.5">
-            <Button className="flex h-full items-center justify-center rounded-2xl text-base font-medium">
+            <Button className="text-md flex h-full items-center justify-center rounded-2xl font-medium">
               Get Started
             </Button>
             <Button
               variant="ghost"
-              className="flex h-full items-center justify-center rounded-2xl text-base font-medium opacity-40"
+              className="text-md flex h-full items-center justify-center rounded-2xl font-medium opacity-40"
             >
               No Credit Card Required
             </Button>
           </div>
-
-          {/* Iphone mockup with content — structure matches shadcnblocks template */}
           <div className="relative h-[500px] w-full overflow-hidden">
             <motion.div
               initial={{ opacity: 0, y: 200, scale: 0.8 }}
-              animate={{ opacity: 1, y: 0, scale: 1 }}
+              animate={{ opacity: 100, y: 0, scale: 1 }}
               transition={{ ease: [0, 0.71, 0.2, 1.01], duration: 0.8 }}
               className="hero227-mock relative mx-auto mt-6 flex h-[850px] w-[400px] items-center justify-center rounded-[75px] bg-black md:mt-12 md:h-[920px] md:w-[450px]"
             >
               <img
-                className="pointer-events-none absolute inset-0 z-[2] h-full w-full max-w-none scale-105 object-cover"
+                className="absolute z-2 scale-105 object-cover"
                 alt="Gold phone frame"
                 src="https://deifkwefumgah.cloudfront.net/shadcnblocks/block/mockups/phone-5.png"
-                decoding="async"
               />
-              <div className="relative z-[3] h-full w-full">
+              <div className="h-full w-full">
                 <div className="mt-20 flex justify-between px-0">
                   <h1 className="flex items-end gap-2 px-12 text-5xl font-semibold tracking-tight text-background md:text-6xl">
                     Mon
@@ -93,7 +90,7 @@ const Hero227 = ({ className }: Hero227Props) => {
                   </div>
                 </div>
                 <img
-                  className="relative z-[3] mx-auto mt-20 size-40 object-cover"
+                  className="z-2 mx-auto mt-20 size-40 object-cover"
                   alt="Gold phone frame"
                   src="https://deifkwefumgah.cloudfront.net/shadcnblocks/block/block-white-1.svg"
                 />
