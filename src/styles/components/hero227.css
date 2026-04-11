@@ -6,6 +6,8 @@
 
 .hero227-root,
 [data-hero227] {
+  position: relative;
+  z-index: 0;
   isolation: isolate;
   /* layout+style containment can interact badly with layered mockup paints; keep isolation only */
   /*
@@ -153,18 +155,24 @@
 }
 
 /* Segmented CTA: restrained hover — no lift, no opacity flash, shared easing */
+/* Light label on accent: beat global `a` / `a:hover` and long Tailwind utility chains on the Button `asChild` anchor. */
 .hero227-root .hero227-cta-system {
+  color: var(--fg) !important;
+  text-decoration: none !important;
   transition:
     background-color 200ms cubic-bezier(0.4, 0, 0.2, 1),
-    box-shadow 200ms cubic-bezier(0.4, 0, 0.2, 1);
+    box-shadow 200ms cubic-bezier(0.4, 0, 0.2, 1),
+    color 200ms cubic-bezier(0.4, 0, 0.2, 1);
 }
 
 .hero227-root .hero227-cta-system:hover {
+  color: var(--fg) !important;
   background-color: color-mix(in srgb, var(--accent) 90%, #fff 10%);
   box-shadow: 0 2px 10px rgb(0 0 0 / 0.1);
 }
 
 .hero227-root .hero227-cta-system:focus-visible {
+  color: var(--fg) !important;
   background-color: color-mix(in srgb, var(--accent) 90%, #fff 10%);
   box-shadow: 0 0 0 2px var(--focus);
 }

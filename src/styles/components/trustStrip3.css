@@ -14,7 +14,8 @@
 
 .trust-strip3 {
   position: relative;
-  z-index: 1;
+  z-index: 10;
+  isolation: isolate;
   border-top: 2px solid var(--accent);
   border-bottom: 1px solid var(--border);
   background: var(--surface);
@@ -127,6 +128,7 @@
 
 @media (min-width: 768px) {
   .trust-strip3 {
+    height: 185px;
     padding: var(--space-xl) 0;
   }
 

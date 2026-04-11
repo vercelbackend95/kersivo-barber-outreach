@@ -26,25 +26,6 @@ const trustGlyphStroke = {
   strokeLinejoin: "round" as const,
 };
 
-const titleAccentStroke = {
-  fill: "none" as const,
-  stroke: "currentColor",
-  strokeWidth: 2,
-  strokeLinecap: "round" as const,
-  strokeLinejoin: "round" as const,
-};
-
-const HERO_TITLE_SCISSORS_OPEN_DEG = 11;
-
-const heroTitleScissorsFullCutTransition = {
-  duration: 1.45,
-  times: [0, 0.24, 0.44, 0.53, 1] as const,
-  ease: ["linear", [0.42, 0, 0.48, 1], "linear", [0.28, 0, 0.58, 1]] as const,
-  repeat: Infinity,
-  repeatDelay: 0.55,
-  delay: 1.15,
-} as const;
-
 /** Dial center (12,12), face radius 8 — hands from origin toward edge. */
 const HERO_TRUST_CLOCK_R = 8;
 const HERO_TRUST_CLOCK_HOUR_LEN = HERO_TRUST_CLOCK_R * 0.58;
@@ -184,20 +165,18 @@ const Hero227 = ({ className }: Hero227Props) => {
           </p>
           <div className="hero227-cta-pill flex rounded-3xl bg-muted-foreground/10 p-1.5">
             <Button
-              type="button"
               className="hero227-cta-system text-md flex h-full items-center justify-center rounded-2xl font-medium"
-              data-system-chooser-open
+              asChild
             >
-              SEE THE SYSTEM
+              <a href="#contact">GET THE SYSTEM</a>
             </Button>
             <Button
               variant="ghost"
+              type="button"
               className="hero227-cta-demo text-md flex h-full items-center justify-center rounded-2xl font-medium text-muted-foreground"
-              asChild
+              data-system-chooser-open
             >
-              <a href="#book-demo" data-demo-cta>
-                BOOK A DEMO
-              </a>
+              WATCH PERFORMANCE
             </Button>
           </div>
           <div className="hero227-mock-stack relative flex w-full shrink-0 items-center justify-center overflow-visible py-8 md:py-10">
@@ -237,59 +216,25 @@ const Hero227 = ({ className }: Hero227Props) => {
 
 export { Hero227 };
 
+/** Bootstrap `bi-scissors` path (matches `public/scissors.svg`). */
+const SCISSORS_PATH_D =
+  "M3.5 3.5c-.614-.884-.074-1.962.858-2.5L8 7.226 11.642 1c.932.538 1.472 1.616.858 2.5L8.81 8.61l1.556 2.661a2.5 2.5 0 1 1-.794.637L8 9.73l-1.572 2.177a2.5 2.5 0 1 1-.794-.637L7.19 8.61zm2.5 10a1.5 1.5 0 1 0-3 0 1.5 1.5 0 0 0 3 0m7 0a1.5 1.5 0 1 0-3 0 1.5 1.5 0 0 0 3 0";
+
 const HeroTitleAccent = (props: React.ComponentProps<typeof motion.svg>) => {
   const { className, ...rest } = props;
   return (
     <motion.svg
-      initial={{ opacity: 0, rotate: -45, scale: 0.5 }}
-      animate={{ opacity: 1, rotate: 0, scale: 1 }}
-      transition={{ duration: 0.5, bounce: 0.4, type: "spring", delay: 0.6 }}
-      className={cn("text-primary", className)}
-      aria-hidden
-      viewBox="0 0 24 24"
-      fill="none"
+      viewBox="0 0 16 16"
       xmlns="http://www.w3.org/2000/svg"
+      fill="#dc2626"
+      aria-hidden
+      initial={{ opacity: 0, rotate: -45, scale: 0.5 }}
+      animate={{ opacity: 1, rotate: 25, scale: 1 }}
+      transition={{ duration: 0.5, bounce: 0.4, type: "spring", delay: 0.6 }}
+      className={cn("shrink-0", className)}
       {...rest}
     >
-      <g transform="translate(12 12)">
-        <motion.g
-          initial={{ rotate: HERO_TITLE_SCISSORS_OPEN_DEG }}
-          animate={{
-            rotate: [
-              HERO_TITLE_SCISSORS_OPEN_DEG,
-              HERO_TITLE_SCISSORS_OPEN_DEG,
-              0,
-              0,
-              HERO_TITLE_SCISSORS_OPEN_DEG,
-            ],
-          }}
-          transition={heroTitleScissorsFullCutTransition}
-        >
-          <g transform="translate(-12 -12)">
-            <circle cx="6" cy="6" r="3" {...titleAccentStroke} />
-            <path d="M8.12 8.12 12 12 20 4" {...titleAccentStroke} />
-          </g>
-        </motion.g>
-        <motion.g
-          initial={{ rotate: -HERO_TITLE_SCISSORS_OPEN_DEG }}
-          animate={{
-            rotate: [
-              -HERO_TITLE_SCISSORS_OPEN_DEG,
-              -HERO_TITLE_SCISSORS_OPEN_DEG,
-              0,
-              0,
-              -HERO_TITLE_SCISSORS_OPEN_DEG,
-            ],
-          }}
-          transition={heroTitleScissorsFullCutTransition}
-        >
-          <g transform="translate(-12 -12)">
-            <circle cx="6" cy="18" r="3" {...titleAccentStroke} />
-            <path d="M12 12 8.12 15.88" {...titleAccentStroke} />
-            <path d="M12 12 14.47 14.48 20 20" {...titleAccentStroke} />
-          </g>
-        </motion.g>
-      </g>
+      <path d={SCISSORS_PATH_D} />
     </motion.svg>
   );
 };

@@ -194,7 +194,7 @@
   align-items: center;
 }
 
-/* ── Desktop actions (cart + Book Demo CTA) ───────────────────── */
+/* ── Desktop actions (cart + primary CTA) ─────────────────────── */
 
 .navbar17__actions {
   display: flex;
@@ -256,7 +256,7 @@
   color: var(--muted);
 }
 
-/* Primary conversion CTA — "Book Demo" */
+/* Primary conversion CTA — "Get the system" */
 .navbar17__cta-btn {
   display: inline-flex;
   align-items: center;
@@ -266,8 +266,8 @@
   color: #fff;
   font-size: 0.775rem;
   font-weight: 700;
-  letter-spacing: 0.07em;
-  text-transform: uppercase;
+  letter-spacing: 0.02em;
+  text-transform: none;
   text-decoration: none;
   white-space: nowrap;
   transition: background 160ms ease;
@@ -305,8 +305,8 @@
   color: #fff;
   font-size: 0.72rem;
   font-weight: 700;
-  letter-spacing: 0.08em;
-  text-transform: uppercase;
+  letter-spacing: 0.02em;
+  text-transform: none;
   text-decoration: none;
   white-space: nowrap;
   transition: background 160ms ease;
@@ -739,7 +739,7 @@ body.navbar17-body-lock {
   .navbar17__mobile-bar-cta {
     padding-inline: 0.7rem;
     font-size: 0.72rem;
-    letter-spacing: 0.07em;
+    letter-spacing: 0.02em;
   }
 
   .navbar17__toggle {
