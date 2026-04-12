@@ -4406,21 +4406,24 @@
 }
 
 .admin-sidebar-monogram {
-  width: 34px;
-  height: 34px;
-  background: var(--accent);
+  width: 42px;
+  height: 42px;
+  background: transparent;
   border-radius: var(--radius-8);
   display: flex;
   align-items: center;
   justify-content: center;
-  font-family: var(--font-body);
-  font-size: var(--text-md);
-  font-weight: 800;
-  color: var(--accent-contrast);
   flex-shrink: 0;
-  letter-spacing: -0.02em;
   user-select: none;
-  line-height: 1;
+  line-height: 0;
+  overflow: hidden;
+}
+
+.admin-sidebar-logo-img {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  display: block;
 }
 
 .admin-sidebar-brand-text {
@@ -4649,9 +4652,8 @@
 }
 
 .admin-mobile-header .admin-sidebar-monogram {
-  width: 28px;
-  height: 28px;
-  font-size: var(--text-sm);
+  width: 36px;
+  height: 36px;
 }
 
 .admin-mobile-header .admin-sidebar-brand-name {

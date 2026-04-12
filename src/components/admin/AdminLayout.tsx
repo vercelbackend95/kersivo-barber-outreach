@@ -69,9 +69,18 @@ const menuGroups: SectionGroup[] = [
 function SidebarBrand() {
   return (
     <div className="admin-sidebar-brand">
-      <div className="admin-sidebar-monogram" aria-hidden="true">K</div>
+      <div className="admin-sidebar-monogram" aria-hidden="true">
+        <img
+          className="admin-sidebar-logo-img"
+          src="/images/logo-kersivo.png"
+          alt=""
+          width={42}
+          height={42}
+          decoding="async"
+        />
+      </div>
       <div className="admin-sidebar-brand-text">
-        <span className="admin-sidebar-brand-name">Kersivo</span>
+
         <span className="admin-sidebar-brand-sub">Admin</span>
       </div>
     </div>
