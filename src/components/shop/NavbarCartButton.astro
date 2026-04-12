@@ -2,15 +2,41 @@
 // src/components/shop/NavbarCartButton.astro
 type Props = {
   class?: string;
+  /** Use mobile sheet row layout (icon + label like other nav links) */
+  mobileSheet?: boolean;
 };
 
-const { class: className = '' } = Astro.props;
+const { class: className = '', mobileSheet = false } = Astro.props;
 ---
 
 <button type="button" class={className} aria-label="Open cart" data-navbar-cart-button>
-  <span aria-hidden="true">🛒</span>
-  <span>Cart</span>
-  <span class="navbar17__cart-badge is-empty" data-navbar-cart-badge>0</span>
+  <span
+    class:list={['navbar17__cart-btn__icon', mobileSheet && 'navbar17__mobile-link-icon']}
+    aria-hidden="true"
+  >
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+      <path d="M2.05 2.05h2l2.66 12.42a2 2 0 0 0 2 1.58h9.78a2 2 0 0 0 1.95-1.57l1.65-7.43H5.12"></path>
+      <circle cx="8" cy="21" r="1" fill="none"></circle>
+      <circle cx="19" cy="21" r="1" fill="none"></circle>
+    </svg>
+  </span>
+  {
+    mobileSheet ? (
+      <span class="navbar17__cart-btn__sheet-body">
+        <span class="navbar17__cart-btn__label">Cart</span>
+        <span class="navbar17__cart-badge is-empty" data-navbar-cart-badge>
+          0
+        </span>
+      </span>
+    ) : (
+      <>
+        <span class="navbar17__cart-btn__label">Cart</span>
+        <span class="navbar17__cart-badge is-empty" data-navbar-cart-badge>
+          0
+        </span>
+      </>
+    )
+  }
 </button>
 
 <script type="module">

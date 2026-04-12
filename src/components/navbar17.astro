@@ -16,9 +16,15 @@ const navItems = [
     <div class="navbar17__bar">
       <div class="container navbar17__wrap">
         <a href="/#home" class="navbar17__brand" aria-label="Kersivo – back to homepage">
-          <!-- Local monogram mark – no external CDN dependency; swap for real logo asset when ready -->
-          <span class="navbar17__brand-mark" aria-hidden="true">K</span>
-          <span class="navbar17__brand-name">Kersivo</span>
+          <img
+            class="navbar17__brand-img"
+            src="/images/logo-kersivo.png"
+            alt=""
+            width="488"
+            height="335"
+            decoding="async"
+            fetchpriority="high"
+          />
         </a>
 
         <nav class="navbar17__desktop" aria-label="Primary navigation">
@@ -94,7 +100,7 @@ const navItems = [
           </li>
         ))}
         <li class="navbar17__mobile-cart-item">
-          <NavbarCartButton class="navbar17__cart-btn navbar17__cart-btn--mobile-list" />
+          <NavbarCartButton class="navbar17__cart-btn navbar17__cart-btn--mobile-list" mobileSheet />
         </li>
       </ul>
     </nav>

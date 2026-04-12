@@ -77,7 +77,7 @@
 .navbar17__brand {
   display: inline-flex;
   align-items: center;
-  gap: 0.65rem;
+  gap: 0;
   color: var(--fg);
   text-decoration: none;
   outline: none;
@@ -88,34 +88,14 @@
   outline-offset: 4px;
 }
 
-/*
- * Monogram badge — intentional placeholder for the real logo asset.
- * Replace the <span> with an <img> pointing to your SVG/WebP logo
- * and remove this block when the brand asset is ready.
- */
-.navbar17__brand-mark {
+.navbar17__brand-img {
+  display: block;
   flex-shrink: 0;
-  width: 2.1rem;
-  height: 2.1rem;
-  background: var(--accent);
-  color: #fff;
-  display: grid;
-  place-items: center;
-  font-family: var(--font-heading);
-  font-size: 1.3rem;
-  letter-spacing: 0;
-  line-height: 1;
-  user-select: none;
-  /* Zero radius matches the sharp design system (--radius-xs: 0) */
-}
-
-.navbar17__brand-name {
-  font-family: var(--font-heading);
-  font-size: clamp(1.4rem, 1.65vw, 1.72rem);
-  letter-spacing: 0.1em;
-  text-transform: uppercase;
-  line-height: 1;
-  color: var(--fg);
+  width: auto;
+  height: clamp(1.65rem, 2.8vw, 2.35rem);
+  max-width: min(12rem, 38vw);
+  object-fit: contain;
+  object-position: left center;
 }
 
 /* ── Desktop navigation ───────────────────────────────────────── */
@@ -234,6 +214,30 @@
 .navbar17__cart-btn:focus-visible {
   outline: 2px solid var(--focus);
   outline-offset: 2px;
+}
+
+/* Cart icon — SVG matches stroke nav icons; desktop size only (.navbar17__mobile-link-icon overrides in sheet) */
+.navbar17__cart-btn__icon {
+  display: inline-flex;
+  flex-shrink: 0;
+  width: 1.05rem;
+  height: 1.05rem;
+  color: currentColor;
+}
+
+.navbar17__cart-btn__icon svg {
+  width: 100%;
+  height: 100%;
+  display: block;
+}
+
+.navbar17__cart-btn__sheet-body {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  min-width: 0;
+  flex: 1;
+  justify-content: flex-start;
 }
 
 /* Cart item count badge */
@@ -416,7 +420,8 @@
   height: auto;
   min-height: 0;
   z-index: var(--navbar17-z-backdrop-layer);
-  background: color-mix(in srgb, var(--bg) 62%, transparent);
+  /* Dark dim — matches black page, not a milky gray wash */
+  background: rgb(0 0 0 / 0.72);
   opacity: 0;
   pointer-events: none;
   visibility: hidden;
@@ -451,11 +456,15 @@
   box-sizing: border-box;
   display: flex;
   flex-direction: column;
-  background: color-mix(in srgb, var(--surface-1) 93%, var(--bg));
-  border: var(--admin-premium-surface-border);
+  /* Same foundation as page body — not lifted gray “card” */
+  background: var(--bg);
+  border: 1px solid color-mix(in srgb, var(--border) 55%, transparent);
+  border-top: none;
   border-radius: 0 0 var(--radius-lg) var(--radius-lg);
-  box-shadow: 0 10px 26px color-mix(in srgb, var(--bg) 40%, transparent);
-  padding: 0.54rem
+  box-shadow:
+    0 1px 0 color-mix(in srgb, var(--border) 35%, transparent) inset,
+    0 20px 50px rgb(0 0 0 / 0.55);
+  padding: 0.35rem
     max(0.82rem, env(safe-area-inset-right, 0px))
     calc(0.88rem + env(safe-area-inset-bottom, 0px))
     max(0.74rem, env(safe-area-inset-left, 0px));
@@ -507,10 +516,11 @@
 
 .navbar17__mobile-list {
   margin: 0;
-  padding: 0.58rem 0 0.42rem;
+  padding: 0.25rem 0 0.35rem;
   list-style: none;
-  display: grid;
-  gap: 0.3rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0;
   flex: 1;
   min-height: 0;
   overflow-y: auto;
@@ -526,6 +536,11 @@
     opacity 160ms ease 25ms;
 }
 
+/* Hairline dividers between rows (incl. before cart) */
+.navbar17__mobile-list > li:not(:last-child) {
+  border-bottom: 1px solid color-mix(in srgb, var(--border) 42%, transparent);
+}
+
 .navbar17[data-mobile-open] .navbar17__mobile-list {
   transform: translate3d(0, 0, 0);
   opacity: 1;
@@ -535,18 +550,19 @@
   position: relative;
   display: flex;
   align-items: center;
-  gap: 0.68rem;
-  min-height: 3.25rem;
-  padding: 0.86rem 0.9rem 0.86rem 0.84rem;
+  gap: 0.72rem;
+  min-height: 3.1rem;
+  padding: 0.72rem 0.35rem 0.72rem 0.2rem;
+  margin-inline: -0.1rem;
   color: var(--muted);
   font-size: 0.9rem;
   font-weight: 600;
   letter-spacing: 0.06em;
   text-transform: uppercase;
   text-decoration: none;
-  border: 1px solid color-mix(in srgb, var(--border) 22%, transparent);
-  border-left: 1.5px solid transparent;
-  border-radius: var(--radius-md);
+  border: none;
+  border-radius: var(--radius-sm);
+  border-left: 2px solid transparent;
   transition:
     color        160ms ease,
     border-color 160ms ease,
@@ -557,7 +573,8 @@
   width: 0.9rem;
   height: 0.9rem;
   flex-shrink: 0;
-  color: color-mix(in srgb, var(--muted) 88%, var(--fg));
+  color: color-mix(in srgb, var(--muted) 92%, var(--fg));
+  opacity: 0.92;
 }
 
 .navbar17__mobile-link-icon svg {
@@ -568,23 +585,21 @@
 
 .navbar17__mobile-link:hover {
   color: var(--fg);
-  border-color: color-mix(in srgb, var(--border) 64%, transparent);
-  border-left-color: color-mix(in srgb, var(--accent) 34%, transparent);
-  background: color-mix(in srgb, var(--surface-2) 42%, transparent);
+  background: color-mix(in srgb, var(--fg) 4%, transparent);
   text-decoration: none;
 }
 
 .navbar17__mobile-link.is-active {
   color: var(--fg);
-  border-color: color-mix(in srgb, var(--accent) 26%, var(--border));
-  border-left-color: color-mix(in srgb, var(--accent) 72%, transparent);
-  background: color-mix(in srgb, var(--accent) 12%, var(--surface-2));
+  border-left-color: color-mix(in srgb, var(--fg) 42%, transparent);
+  background: color-mix(in srgb, var(--fg) 3%, transparent);
   font-weight: 650;
 }
 
 .navbar17__mobile-link:hover .navbar17__mobile-link-icon,
 .navbar17__mobile-link.is-active .navbar17__mobile-link-icon {
-  color: var(--accent);
+  color: var(--fg);
+  opacity: 0.88;
 }
 
 .navbar17__mobile-link:focus-visible {
@@ -592,38 +607,53 @@
   outline-offset: 1px;
 }
 
-/* Mobile sheet: cart row — action, not a nav section */
+/* Mobile sheet: cart row — match .navbar17__mobile-link (icon + label + badge) */
 .navbar17__mobile-cart-item {
-  margin-top: 0.35rem;
-  padding-top: 0.42rem;
-  border-top: 1px solid color-mix(in srgb, var(--border) 45%, transparent);
+  margin-top: 0.2rem;
+  padding-top: 0.35rem;
   list-style: none;
 }
 
 @media (max-width: 63.99rem) {
   .navbar17__cart-btn--mobile-list {
+    position: relative;
     width: 100%;
-    min-height: 3.25rem;
+    display: flex;
+    align-items: center;
+    gap: 0.72rem;
+    min-height: 3.1rem;
     height: auto;
-    padding: 0.86rem 0.9rem 0.86rem 0.84rem;
-    justify-content: space-between;
+    padding: 0.72rem 0.35rem 0.72rem 0.2rem;
+    margin-inline: -0.1rem;
+    justify-content: flex-start;
     box-sizing: border-box;
     text-align: left;
-    border-radius: var(--radius-md);
-    border: 1px solid color-mix(in srgb, var(--accent) 38%, var(--border));
-    border-left: 3px solid var(--accent);
-    background: color-mix(in srgb, var(--accent) 10%, var(--surface-2));
-    color: var(--fg);
+
+    color: var(--muted);
     font-size: 0.9rem;
-    font-weight: 700;
+    font-weight: 600;
     letter-spacing: 0.06em;
+    text-transform: uppercase;
+
+    background: transparent;
+    border: none;
+    border-radius: var(--radius-sm);
+    border-left: 2px solid transparent;
+
+    transition:
+      color        160ms ease,
+      border-color 160ms ease,
+      background   160ms ease;
   }
 
   .navbar17__cart-btn--mobile-list:hover {
-    border-color: color-mix(in srgb, var(--accent) 55%, var(--border));
-    border-left-color: var(--accent-hover);
     color: var(--fg);
-    background: color-mix(in srgb, var(--accent) 16%, var(--surface-2));
+    background: color-mix(in srgb, var(--fg) 4%, transparent);
+  }
+
+  .navbar17__cart-btn--mobile-list:hover .navbar17__mobile-link-icon {
+    color: var(--fg);
+    opacity: 0.88;
   }
 
   .navbar17__cart-btn--mobile-list:focus-visible {
@@ -711,12 +741,9 @@
     min-width: 0;
   }
 
-  .navbar17__brand-name {
-    font-size: clamp(1.05rem, 6vw, 1.35rem);
-    letter-spacing: 0.08em;
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
+  .navbar17__brand-img {
+    height: clamp(1.65rem, 6.25vw, 2.15rem);
+    max-width: min(11rem, 54vw);
   }
 }
 

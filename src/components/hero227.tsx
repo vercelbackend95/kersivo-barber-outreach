@@ -168,7 +168,10 @@ const Hero227 = ({ className }: Hero227Props) => {
               className="hero227-cta-system text-md flex h-full items-center justify-center rounded-2xl font-medium"
               asChild
             >
-              <a href="#contact">GET THE SYSTEM</a>
+              <a href="#contact">
+                <span className="md:hidden">GET STARTED</span>
+                <span className="hidden md:inline">GET THE SYSTEM</span>
+              </a>
             </Button>
             <Button
               variant="ghost"
