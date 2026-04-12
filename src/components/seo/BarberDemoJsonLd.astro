@@ -1,0 +1,7 @@
+---
+import { buildBarberDemoJsonLd } from '@/lib/seo/barberDemoJsonLd';
+
+const jsonLd = buildBarberDemoJsonLd();
+---
+
+<script type="application/ld+json" is:inline set:html={JSON.stringify(jsonLd)} />
