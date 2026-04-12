@@ -158,61 +158,187 @@
   border-color: color-mix(in srgb, var(--accent) 48%, var(--border));
 }
 
-/* ── Preview image zone ──────────────────────────────────── */
+/* ── Tile visual (vector art + gradient — no photo placeholders) ─ */
 
-.system-chooser__tile-preview {
+.system-chooser__tile-visual {
   position: relative;
-  height: 8.5rem;
+  display: grid;
+  place-items: center;
+  min-height: 7.75rem;
   overflow: hidden;
-  background: color-mix(in srgb, var(--bg) 70%, var(--surface));
-  border-bottom: 1px solid color-mix(in srgb, var(--border) 70%, transparent);
+  border-bottom: 1px solid color-mix(in srgb, var(--border) 65%, transparent);
+  color: color-mix(in srgb, var(--muted) 35%, var(--fg));
+  isolation: isolate;
 }
 
-.system-chooser__tile-img {
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
-  object-position: top center;
-  display: block;
-  transition: transform 420ms cubic-bezier(0.22, 1, 0.36, 1);
-}
-
-.system-chooser__tile-preview-overlay {
+.system-chooser__tile-visual::before {
+  content: "";
   position: absolute;
   inset: 0;
+  opacity: 0.55;
   background:
-    linear-gradient(
-      to bottom,
-      color-mix(in srgb, var(--bg) 4%, transparent) 0%,
-      color-mix(in srgb, var(--bg) 50%, transparent) 100%
+    radial-gradient(
+      ellipse 120% 90% at 20% 15%,
+      color-mix(in srgb, var(--fg) 10%, transparent),
+      transparent 55%
+    ),
+    radial-gradient(
+      ellipse 100% 80% at 88% 75%,
+      color-mix(in srgb, var(--accent) 14%, transparent),
+      transparent 50%
     );
   pointer-events: none;
 }
 
-/* Badge pinned inside preview, bottom-left */
+.system-chooser__tile-visual--booking {
+  background:
+    linear-gradient(
+      145deg,
+      color-mix(in srgb, var(--accent) 16%, var(--surface)) 0%,
+      color-mix(in srgb, var(--bg) 42%, var(--surface)) 48%,
+      var(--surface) 100%
+    );
+}
+
+.system-chooser__tile-visual--booking::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  opacity: 0.12;
+  background-image: repeating-linear-gradient(
+    -12deg,
+    transparent,
+    transparent 11px,
+    color-mix(in srgb, var(--fg) 18%, transparent) 11px,
+    color-mix(in srgb, var(--fg) 18%, transparent) 12px
+  );
+  pointer-events: none;
+}
+
+.system-chooser__tile-visual--admin {
+  background:
+    linear-gradient(
+      168deg,
+      color-mix(in srgb, var(--bg) 55%, var(--surface)),
+      color-mix(in srgb, var(--fg) 6%, var(--surface))
+    );
+}
+
+.system-chooser__tile-visual--admin::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  opacity: 0.09;
+  background-image:
+    linear-gradient(color-mix(in srgb, var(--fg) 22%, transparent) 1px, transparent 1px),
+    linear-gradient(90deg, color-mix(in srgb, var(--fg) 22%, transparent) 1px, transparent 1px);
+  background-size: 14px 14px;
+  pointer-events: none;
+}
+
+.system-chooser__tile-visual--shop {
+  background:
+    linear-gradient(
+      155deg,
+      color-mix(in srgb, var(--accent) 10%, var(--surface)),
+      color-mix(in srgb, var(--bg) 38%, var(--surface)) 70%
+    );
+}
+
+.system-chooser__tile-visual--shop::after {
+  content: "";
+  position: absolute;
+  inset: -40%;
+  opacity: 0.07;
+  background: radial-gradient(
+    circle at 30% 40%,
+    color-mix(in srgb, var(--accent) 35%, transparent),
+    transparent 42%
+  );
+  pointer-events: none;
+}
+
+/* Bookings + shop combined: split gradient + light grid */
+.system-chooser__tile-visual--system {
+  background:
+    linear-gradient(
+      118deg,
+      color-mix(in srgb, var(--bg) 50%, var(--surface)) 0%,
+      color-mix(in srgb, var(--fg) 5%, var(--surface)) 42%,
+      color-mix(in srgb, var(--accent) 11%, var(--surface)) 100%
+    );
+}
+
+.system-chooser__tile-visual--system::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  opacity: 0.075;
+  background-image:
+    linear-gradient(color-mix(in srgb, var(--fg) 18%, transparent) 1px, transparent 1px),
+    linear-gradient(90deg, color-mix(in srgb, var(--fg) 18%, transparent) 1px, transparent 1px);
+  background-size: 15px 15px;
+  pointer-events: none;
+}
+
+.system-chooser__tile-art {
+  position: relative;
+  z-index: 1;
+  display: grid;
+  place-items: center;
+  padding: 1rem 1rem 1.15rem;
+}
+
+.system-chooser__tile-icon {
+  width: clamp(4.5rem, 38vw, 5.75rem);
+  height: auto;
+  display: block;
+  transition: transform 420ms cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.system-chooser__tile-visual--booking .system-chooser__tile-icon {
+  color: color-mix(in srgb, var(--accent) 72%, var(--fg));
+}
+
+.system-chooser__tile-visual--admin .system-chooser__tile-icon {
+  color: color-mix(in srgb, var(--fg) 78%, var(--muted));
+}
+
+.system-chooser__tile-visual--shop .system-chooser__tile-icon {
+  color: color-mix(in srgb, var(--accent) 55%, var(--fg));
+}
+
+.system-chooser__tile-visual--system .system-chooser__tile-icon {
+  color: color-mix(in srgb, var(--accent) 32%, var(--fg));
+}
+
+/* Badge — top strip, reads before the illustration */
 .system-chooser__tile-badge {
   position: absolute;
-  bottom: 0.55rem;
-  left: 0.6rem;
+  top: 0.55rem;
+  right: 0.6rem;
+  z-index: 2;
   display: inline-flex;
   align-items: center;
-  padding: 0.18rem 0.44rem;
-  border: 1px solid color-mix(in srgb, var(--border) 66%, transparent);
-  border-radius: var(--radius-xs);
-  background: color-mix(in srgb, var(--bg) 78%, transparent);
-  backdrop-filter: blur(6px);
-  -webkit-backdrop-filter: blur(6px);
-  color: color-mix(in srgb, var(--muted) 82%, var(--fg));
-  font-size: 0.6rem;
+  padding: 0.22rem 0.5rem;
+  border: 1px solid color-mix(in srgb, var(--border) 58%, transparent);
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--surface) 88%, transparent);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  box-shadow: 0 1px 0 color-mix(in srgb, var(--fg) 6%, transparent);
+  color: color-mix(in srgb, var(--muted) 78%, var(--fg));
+  font-size: 0.58rem;
   font-weight: 700;
-  letter-spacing: 0.1em;
+  letter-spacing: 0.11em;
   text-transform: uppercase;
   line-height: 1;
 }
 
 .system-chooser__tile--featured .system-chooser__tile-badge {
-  border-color: color-mix(in srgb, var(--accent) 48%, var(--border));
-  color: color-mix(in srgb, var(--accent) 90%, var(--fg));
+  border-color: color-mix(in srgb, var(--accent) 42%, var(--border));
+  color: color-mix(in srgb, var(--accent) 92%, var(--fg));
+  background: color-mix(in srgb, var(--surface) 92%, color-mix(in srgb, var(--accent) 12%, transparent));
 }
 
 /* ── Tile body ───────────────────────────────────────────── */
@@ -346,8 +472,12 @@
       0 0 0 1px color-mix(in srgb, var(--accent) 16%, transparent);
   }
 
-  .system-chooser__tile:hover .system-chooser__tile-img {
-    transform: scale(1.05);
+  .system-chooser__tile:hover .system-chooser__tile-icon {
+    transform: scale(1.06);
+  }
+
+  .system-chooser__tile:hover .system-chooser__tile-visual::before {
+    opacity: 0.72;
   }
 }
 
@@ -364,13 +494,13 @@
   }
 
   .system-chooser__grid {
-    grid-template-columns: repeat(3, minmax(0, 1fr));
+    grid-template-columns: repeat(2, minmax(0, 1fr));
     gap: 0.9rem;
     padding: 1rem 1.5rem 1.5rem;
   }
 
-  .system-chooser__tile-preview {
-    height: 11rem;
+  .system-chooser__tile-visual {
+    min-height: 9.25rem;
   }
 
   .system-chooser__tile-body {
@@ -382,10 +512,14 @@
   }
 }
 
-/* Wide desktop: taller previews for more visual weight */
+/* Wide desktop: slightly taller art area */
 @media (min-width: 72rem) {
-  .system-chooser__tile-preview {
-    height: 13rem;
+  .system-chooser__tile-visual {
+    min-height: 10.5rem;
+  }
+
+  .system-chooser__tile-icon {
+    width: clamp(5rem, 12vw, 6.25rem);
   }
 }
 
@@ -400,7 +534,7 @@
     transform: none;
   }
 
-  .system-chooser__tile-img {
+  .system-chooser__tile-icon {
     transition: none;
   }
 }

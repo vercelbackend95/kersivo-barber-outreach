@@ -22,14 +22,43 @@ interface Process2Props {
   className?: string;
 }
 
+/** Matches Tailwind `lg` (1024px): below that, optional imageMobile is used. */
+const PROCESS_IMAGE_MOBILE_MEDIA = "(max-width: 1023px)";
+
+type ProcessStep = {
+  step: string;
+  title: string;
+  timeline: string;
+  image: string;
+  /** When set, shown below `lg` instead of `image` (desktop unchanged). */
+  imageMobile?: string;
+  whatHappens: string;
+  deliverable: string;
+};
+
+const ProcessStepPicture = ({
+  desktopSrc,
+  mobileSrc,
+}: {
+  desktopSrc: string;
+  mobileSrc?: string;
+}) => (
+  <picture className="block h-full w-full">
+    {mobileSrc != null ? (
+      <source media={PROCESS_IMAGE_MOBILE_MEDIA} srcSet={mobileSrc} />
+    ) : null}
+    <img src={desktopSrc} className="h-full w-full object-cover" alt="" />
+  </picture>
+);
+
 const Process2 = ({ className }: Process2Props) => {
-  const process = [
+  const process: ProcessStep[] = [
     {
       step: "01",
       title: "Discovery & setup",
       timeline: "Day 1",
-      image:
-        "https://deifkwefumgah.cloudfront.net/shadcnblocks/block/guri4/img11.png",
+      image: "/images/discoverypic.jpg",
+      imageMobile: "/images/Launchpic.jpg",
       whatHappens:
         "We pull together your logo, photos, service list, who's on the team, opening hours, and how you want clients to book. Buy-and-collect retail ships with the system—you'll add and manage products in your own admin when we're done; here we just agree what should feel ready for opening day.",
       deliverable:
@@ -39,8 +68,8 @@ const Process2 = ({ className }: Process2Props) => {
       step: "02",
       title: "Build & wiring",
       timeline: "Days 2–10",
-      image:
-        "https://deifkwefumgah.cloudfront.net/shadcnblocks/block/guri4/img12.png",
+      image: "/images/Buildpic.jpg",
+      imageMobile: "/images/Reviewpic.jpg",
       whatHappens:
         "We build your public site, the booking flow clients use, the admin you run daily, and the retail pickup flow—already wired together, not three tools stuck on afterwards.",
       deliverable: "A working version you can click through yourself, from a client's first visit to what you see behind the scenes.",
@@ -49,8 +78,7 @@ const Process2 = ({ className }: Process2Props) => {
       step: "03",
       title: "Review & sign-off",
       timeline: "Days 11–12",
-      image:
-        "https://deifkwefumgah.cloudfront.net/shadcnblocks/block/guri4/img10.png",
+      image: "/images/Reviewpic.jpg",
       whatHappens:
         "You use it like a real week in the shop and send honest notes. We tweak layout, wording, and the customer journey until it feels right for your team and your clients.",
       deliverable: "Your green light on the version we'll take live.",
@@ -59,8 +87,7 @@ const Process2 = ({ className }: Process2Props) => {
       step: "04",
       title: "Launch & handover",
       timeline: "Days 13–14",
-      image:
-        "https://deifkwefumgah.cloudfront.net/shadcnblocks/block/guri4/img9.png",
+      image: "/images/Launchpic.jpg",
       whatHappens:
         "We connect your domain, run final checks, then walk you through day-to-day life in the system—bookings, pickup orders, your team, and where to see the numbers when you want them—so launch day feels familiar, not frantic.",
       deliverable: "Your site live on your own URL, simple handover notes, and your admin access ready to use.",
@@ -86,18 +113,16 @@ const Process2 = ({ className }: Process2Props) => {
             <div className="process2-image-frame relative h-90 overflow-hidden border">
               {previousActive !== undefined && (
                 <div className="absolute top-0 h-full w-full">
-                  <img
-                    src={process[previousActive].image}
-                    className="h-full w-full object-cover"
-                    alt=""
+                  <ProcessStepPicture
+                    desktopSrc={process[previousActive].image}
+                    mobileSrc={process[previousActive].imageMobile}
                   />
                 </div>
               )}
               <div key={active} className="process2-image-reveal h-full w-full">
-                <img
-                  src={process[active].image}
-                  className="h-full w-full object-cover"
-                  alt=""
+                <ProcessStepPicture
+                  desktopSrc={process[active].image}
+                  mobileSrc={process[active].imageMobile}
                 />
               </div>
             </div>
@@ -123,14 +148,7 @@ const ProcessCard = ({
   index,
   setActive,
 }: {
-  step: {
-    step: string;
-    title: string;
-    timeline: string;
-    image: string;
-    whatHappens: string;
-    deliverable: string;
-  };
+  step: ProcessStep;
   index: number;
   setActive: (index: number) => void;
 }) => {

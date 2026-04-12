@@ -72,7 +72,7 @@
 }
 
 .process2 .border {
-  border: 1px solid var(--border);
+  border: 0px solid var(--border);
 }
 
 .process2 .border-b {

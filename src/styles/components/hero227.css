@@ -178,6 +178,7 @@
 }
 
 .hero227-root .hero227-cta-demo {
+  cursor: pointer;
   transition:
     background-color 200ms cubic-bezier(0.4, 0, 0.2, 1),
     color 200ms cubic-bezier(0.4, 0, 0.2, 1);

@@ -45,12 +45,14 @@ function getSectionFromUrl(): AdminSection {
 
 }
 
+/** Pre-fills the login field so demos work without emailing secrets (must match server `ADMIN_SECRET`). */
+const ADMIN_LOGIN_PREFILL_SECRET = 'supersecret123';
 
 export default function AdminPanel() {
   const [activeSection, setActiveSection] = useState<AdminSection>('bookings_dashboard');
   const [isTransitioning, setIsTransitioning] = useState(false);
   const [showSectionSkeleton, setShowSectionSkeleton] = useState(false);
-  const [adminSecretDraft, setAdminSecretDraft] = useState('');
+  const [adminSecretDraft, setAdminSecretDraft] = useState(ADMIN_LOGIN_PREFILL_SECRET);
   const [hasAdminSecret, setHasAdminSecret] = useState(false);
   const [isVerifying, setIsVerifying] = useState(false);
   const [secretError, setSecretError] = useState('');
