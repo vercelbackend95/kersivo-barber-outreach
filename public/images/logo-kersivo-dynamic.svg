@@ -1,0 +1,27 @@
+<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" viewBox="0 0 488 335" width="488" height="335">
+  <style>
+    svg {
+      color: white;
+    }
+    .favicon-fill {
+      fill: currentColor;
+    }
+    @media (prefers-color-scheme: light) {
+      svg {
+        color: black;
+      }
+    }
+  </style>
+  <defs>
+    <mask id="kersivo-logo-mask" maskUnits="userSpaceOnUse" x="0" y="0" width="488" height="335">
+      <image
+        href="/images/logo-kersivo.png"
+        xlink:href="/images/logo-kersivo.png"
+        width="488"
+        height="335"
+        preserveAspectRatio="xMidYMid meet"
+      />
+    </mask>
+  </defs>
+  <rect class="favicon-fill" x="0" y="0" width="488" height="335" mask="url(#kersivo-logo-mask)" />
+</svg>
