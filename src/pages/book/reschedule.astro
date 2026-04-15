@@ -1,5 +1,6 @@
 ---
 import BookingFlow from '../../components/booking/BookingFlow';
+import GoogleAnalytics from '../../components/seo/GoogleAnalytics.astro';
 import '../../styles/tokens.css';
 
 import '../../styles/global.css';
@@ -60,6 +61,7 @@ const tokenStatus = bookingUnavailable ? { valid: false as const, message: PUBLI
 ---
 <html lang="en">
     <head>
+          <GoogleAnalytics />
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>Reschedule Booking | Kersivo Barber Outreach</title>

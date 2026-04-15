@@ -3,11 +3,17 @@ import '../../styles/tokens.css';
 import '../../styles/global.css';
 import '../../styles/components/buttons.css';
 import '../../styles/components/shop.css';
-
+import GoogleAnalytics from '../../components/seo/GoogleAnalytics.astro';
 const sessionId = Astro.url.searchParams.get('session_id');
 ---
 <html lang="en">
-  <head><meta charset="utf-8" /><meta name="viewport" content="width=device-width" /><title>Pickup confirmed</title></head>
+  <head>
+    <GoogleAnalytics />
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width" />
+    <title>Pickup confirmed</title>
+  </head>
+
   <body>
     <main class="container shop-page">
       <section class="shop-card shop-success-card">

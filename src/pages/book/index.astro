@@ -1,5 +1,6 @@
 ---
 import BookingFlow from '../../components/booking/BookingFlow';
+import GoogleAnalytics from '../../components/seo/GoogleAnalytics.astro';
 import { prisma } from '../../lib/db/client';
 import {
   PUBLIC_BOOKING_UNAVAILABLE_MESSAGE,
@@ -66,6 +67,7 @@ const { services, barbers, shopSettings, bookingUnavailable } = bookingPageData;
 ---
 <html lang="en">
   <head>
+        <GoogleAnalytics />
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>Book Appointment | Kersivo Barber Outreach</title>

@@ -1,5 +1,6 @@
 ---
 import BarberDemoJsonLd from '@/components/seo/BarberDemoJsonLd.astro';
+import GoogleAnalytics from '@/components/seo/GoogleAnalytics.astro';
 import Navbar17 from '@/components/navbar17.astro';
 import CartDrawerMount from '@/components/shop/CartDrawerMount.astro';
 import '@/styles/tokens.css';
@@ -22,6 +23,7 @@ const { title, barberDemoJsonLd = false } = Astro.props;
 
 <html lang="en">
   <head>
+        <GoogleAnalytics />
     <meta charset="utf-8" />
     <link rel="icon" type="image/png" href="/images/kersivologorefresh.png" />
     <meta name="viewport" content="width=device-width" />
