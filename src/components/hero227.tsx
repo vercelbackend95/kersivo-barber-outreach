@@ -152,16 +152,14 @@ const Hero227 = ({ className }: Hero227Props) => {
             <h1 className="font-antonio text-5xl font-extrabold tracking-tight text-foreground uppercase md:text-9xl">
               <VerticalCutReveal splitBy="lines">
                 {
-                  "Barber website — zero booking fees\nBookings, shop pickup & one admin"
+                  "Get more clients and fill empty slots — \n without paying booking app fees"
                 }
               </VerticalCutReveal>
             </h1>
             <HeroTitleAccent className="absolute -top-2 -right-6 size-5 md:size-10 lg:-right-14" />
           </div>
           <p className="max-w-xl text-muted-foreground/80">
-            Ditch the patchwork of booking links, spreadsheets and a bolt-on shop.
-            Kersivo is one barber website with client bookings, retail pickup and a
-            single admin your team runs daily—with no booking fees from us.
+A simple barber website with built-in bookings and online shop — designed to grow your shop, not just manage it
           </p>
           <div className="hero227-cta-pill flex rounded-3xl bg-muted-foreground/10 p-1.5">
             <Button
