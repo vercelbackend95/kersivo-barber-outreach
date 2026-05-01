@@ -46,7 +46,34 @@
   max-width: 80rem;
 
   margin-inline: auto;
-  padding-inline: 2rem;
+  padding-inline: clamp(1rem, 4.2vw, 2rem);
+}
+
+.hero227-stack {
+  gap: clamp(0.85rem, 2.2vw, 1.25rem);
+}
+
+.hero227-copy-layer {
+  /* Keeps headline + intro visually anchored across breakpoints */
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.25rem;
+  /* Headline typography uses `cqi` in Tailwind arbitrary values → sizes track this column width. */
+  container-type: inline-size;
+}
+
+/*
+  VerticalCutReveal × lines: default flex-col leaves each `inline-flex` row start-aligned → ragged left.
+  Center each line’s glyph row for a true centered hero stack.
+*/
+.hero227-root .hero227-heading-reveal > span[aria-hidden="true"] {
+  justify-content: center;
+}
+
+.hero227-mid-band {
+  /* Trust chips + example + CTAs stay one visual band aligned with headline */
+  margin-top: 0.15rem;
 }
 
 /*
@@ -54,7 +81,14 @@
   Width clears scaled bezel; padding balances overflow above/below the chassis rect.
 */
 .hero227-root .hero227-mock-stack {
-  height: 730px;
+  height: clamp(460px, 52vh, 730px);
+  min-height: 0;
+}
+
+@media (min-width: 768px) {
+  .hero227-root .hero227-mock-stack {
+    height: clamp(560px, 58vh, 730px);
+  }
 }
 
 .hero227-root .hero227-mock-clip {
@@ -64,10 +98,10 @@
   overflow: visible;
   box-sizing: border-box;
   /* ~2.5% vertical overflow each way from scale(1.05); keep gold top + bottom speaker curve visible */
-  padding-top: 24px;
-  padding-bottom: 27px;
+  padding-top: clamp(14px, 3vw, 24px);
+  padding-bottom: clamp(16px, 3vw, 27px);
   width: calc(min(100%, var(--hero227-mock-max-w)) * 1.05 + 4px);
-  height: 580px;
+  height: clamp(340px, 48vh, 580px);
 }
 
 /* Phone chassis: width cap × 1179:2556 — matches hometimeiphone.jpg so Safari bar / home indicator land in glass. */
@@ -195,4 +229,83 @@
 .hero227-root .hero227-cta-demo:focus-visible {
   outline: 2px solid var(--focus);
   outline-offset: 2px;
+}
+
+/* Reference scenario chip — the dual-audience anchor placed under the CTAs.
+   Keeps switcher/newcomer financial framing visible without a calculator. */
+.hero227-root .hero227-scenario-chip {
+  display: inline-flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem 0.75rem;
+  margin-top: 0.5rem;
+  padding: 0.45rem 0.85rem;
+  border: 1px solid color-mix(in srgb, var(--accent) 35%, var(--border));
+  border-radius: var(--radius-full);
+  background: color-mix(in srgb, var(--accent) 8%, transparent);
+  font-size: 0.78rem;
+  line-height: 1.4;
+  color: color-mix(in srgb, var(--fg) 88%, var(--muted));
+  max-width: 36rem;
+}
+
+.hero227-root .hero227-scenario-chip__label {
+  font-family: var(--font-body);
+  font-size: 0.66rem;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--accent);
+  padding: 0.1rem 0.5rem;
+  border-radius: var(--radius-4);
+  background: color-mix(in srgb, var(--accent) 14%, transparent);
+}
+
+.hero227-root .hero227-scenario-chip__strike {
+  text-decoration: line-through;
+  text-decoration-thickness: 1px;
+  color: var(--muted);
+}
+
+.hero227-root .hero227-scenario-chip__win {
+  color: var(--accent);
+  font-weight: 700;
+}
+
+/* "Open the live admin — no signup" tertiary text-link CTA */
+.hero227-root .hero227-cta-live {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  padding: 0.5rem 0.6rem;
+  background: transparent;
+  border: 0;
+  border-radius: var(--radius-8);
+  color: var(--muted);
+  font-family: var(--font-body);
+  font-size: 0.92rem;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+  cursor: pointer;
+  text-decoration: underline;
+  text-decoration-color: color-mix(in srgb, var(--muted) 40%, transparent);
+  text-underline-offset: 4px;
+  transition: color 160ms ease, text-decoration-color 160ms ease;
+}
+
+.hero227-root .hero227-cta-live:hover,
+.hero227-root .hero227-cta-live:focus-visible {
+  color: var(--accent);
+  text-decoration-color: var(--accent);
+}
+
+.hero227-root .hero227-cta-live:focus-visible {
+  outline: 2px solid var(--focus);
+  outline-offset: 2px;
+}
+
+/* Stack vertical CTAs cleanly on mobile and desktop alike */
+.hero227-root .hero227-cta-pill {
+  margin-top: 0.5rem;
 }

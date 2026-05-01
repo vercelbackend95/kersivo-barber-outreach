@@ -10,14 +10,17 @@ const { className = "" } = Astro.props as Contact16Props;
   <span id="book-demo" aria-hidden="true"></span>
 
   <div class="container">
-    <h2 id="contact16-title" class="contact16__title">GET THIS PERFORMANCE FOR YOUR SHOP.</h2>
+    <h2 id="contact16-title" class="contact16__title">PLAN YOUR SETUP &mdash; ON US.</h2>
 
     <div class="contact16__layout">
       <div class="contact16__info">
         <p class="contact16__description">
-          Ready to outpace your competition? Send us a few details and we'll show you how a sub-second website with zero-commission bookings can scale your business.
+          Tell us about your shop &mdash; size, current booking stack (or none yet), and what you want to fix or build.
+          Whether you are switching from Booksy/Fresha or launching your first system, we map a setup path that fits your shop.
         </p>
-        <p class="contact16__note">We usually reply within 24 hours.</p>
+        <p class="contact16__note">
+          We reply within 24 hours with a one-page setup plan for your shop &mdash; yours to keep, no obligation. Works for switchers and new shops alike.
+        </p>
       </div>
 
       <form class="contact16__form" data-contact-form novalidate>
@@ -30,6 +33,28 @@ const { className = "" } = Astro.props as Contact16Props;
         <label>
           <span class="sr-only">Email</span>
           <input type="email" name="email" placeholder="Email*" required />
+        </label>
+        <label>
+          <span class="contact16__field-label">Shop size (chairs)</span>
+          <select name="shopSize" required>
+            <option value="">Select shop size*</option>
+            <option value="1-2">1-2 chairs</option>
+            <option value="3-4">3-4 chairs</option>
+            <option value="5-6">5-6 chairs</option>
+            <option value="7-8">7-8 chairs</option>
+            <option value="9+">9+ chairs</option>
+          </select>
+        </label>
+        <label>
+          <span class="contact16__field-label">Current booking stack</span>
+          <select name="currentStack" required>
+            <option value="">Select current stack*</option>
+            <option value="booksy">Booksy</option>
+            <option value="fresha">Fresha</option>
+            <option value="other-app">Other app</option>
+            <option value="mixed-manual">Mixed tools/manual</option>
+            <option value="none">No booking system</option>
+          </select>
         </label>
         <label>
           <span class="contact16__field-label">Tell us about your shop</span>
@@ -45,7 +70,7 @@ const { className = "" } = Astro.props as Contact16Props;
         </label>
 
         <button type="submit" class="btn btn--ghost contact16__submit" data-contact-submit>
-          ↳ GET STARTED
+          ↳ PLAN MY SETUP
         </button>
       </form>
     </div>
@@ -66,12 +91,14 @@ const { className = "" } = Astro.props as Contact16Props;
       const email = String(fd.get('email') ?? '').trim();
       const message = String(fd.get('message') ?? '').trim();
       const intent = String(fd.get('intent') ?? '').trim();
+      const shopSize = String(fd.get('shopSize') ?? '').trim();
+      const currentStack = String(fd.get('currentStack') ?? '').trim();
 
       statusEl.textContent = '';
       statusEl.className = 'contact16__status contact16__status--idle';
 
-      if (!name || !email || !message) {
-        statusEl.textContent = 'Please fill in name, email and your message.';
+      if (!name || !email || !shopSize || !currentStack || !message) {
+        statusEl.textContent = 'Please fill in name, email, shop details and your message.';
         statusEl.classList.add('contact16__status--error');
         return;
       }
@@ -84,7 +111,7 @@ const { className = "" } = Astro.props as Contact16Props;
         const response = await fetch('/api/contact', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ name, email, message, intent }),
+          body: JSON.stringify({ name, email, message, intent, shopSize, currentStack }),
         });
         const data = (await response.json().catch(() => ({}))) as { ok?: boolean; error?: string };
 

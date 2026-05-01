@@ -5,6 +5,7 @@ import { EmailDeliveryError, sendContactInquiryEmail } from '../../lib/email/sen
 
 const MAX_MESSAGE = 8000;
 const MAX_NAME = 200;
+const MAX_META = 120;
 
 function badRequest(message: string) {
   return new Response(JSON.stringify({ ok: false, error: message }), {
@@ -30,6 +31,8 @@ export const POST: APIRoute = async ({ request }) => {
   const email = typeof record.email === 'string' ? record.email.trim() : '';
   const message = typeof record.message === 'string' ? record.message.trim() : '';
   const intent = typeof record.intent === 'string' ? record.intent.trim() : '';
+  const shopSize = typeof record.shopSize === 'string' ? record.shopSize.trim() : '';
+  const currentStack = typeof record.currentStack === 'string' ? record.currentStack.trim() : '';
 
   if (!name || name.length > MAX_NAME) {
     return badRequest('Please enter your name.');
@@ -40,9 +43,22 @@ export const POST: APIRoute = async ({ request }) => {
   if (!message || message.length > MAX_MESSAGE) {
     return badRequest('Please enter a message.');
   }
+  if (!shopSize || shopSize.length > MAX_META) {
+    return badRequest('Please enter your shop size.');
+  }
+  if (!currentStack || currentStack.length > MAX_META) {
+    return badRequest('Please enter your current booking stack.');
+  }
 
   try {
-    await sendContactInquiryEmail({ name, email, message, intent: intent || undefined });
+    await sendContactInquiryEmail({
+      name,
+      email,
+      message,
+      intent: intent || undefined,
+      shopSize,
+      currentStack
+    });
   } catch (error) {
     if (error instanceof EmailDeliveryError) {
       return new Response(JSON.stringify({ ok: false, error: 'Could not send your message. Try again later.' }), {

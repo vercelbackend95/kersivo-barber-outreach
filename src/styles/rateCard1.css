@@ -19,7 +19,8 @@
 
 .rate-card1__heading-wrap {
   position: relative;
-  width: fit-content;
+  width: 100%;
+  max-width: 36rem;
 }
 
 .rate-card1__eyebrow {
@@ -71,8 +72,37 @@
   gap: 0.85rem;
 }
 
-.rate-card1__price {
+@media (min-width: 40rem) {
+  .rate-card1__price-block {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    align-items: stretch;
+  }
+
+  .rate-card1__plan-note {
+    grid-column: 1 / -1;
+  }
+}
+
+.rate-card1__plan-block {
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 0.95rem 1.05rem;
+  background: color-mix(in srgb, var(--surface-1) 88%, var(--bg));
+  box-shadow: 0 1px 0 color-mix(in srgb, var(--border) 55%, transparent);
+}
+
+.rate-card1__plan-title {
   margin: 0;
+  font-family: Inter, sans-serif;
+  font-size: 0.82rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--accent);
+}
+
+.rate-card1__price {
+  margin: 0.35rem 0 0;
   font-family: "Bebas Neue", sans-serif;
   letter-spacing: 0.03em;
   font-size: clamp(2.5rem, 9vw, 4.75rem);
@@ -89,7 +119,7 @@
 
 .rate-card1__conditions {
   list-style: none;
-  margin: 0;
+  margin: 0.75rem 0 0;
   padding: 0;
   display: grid;
   gap: 0.75rem;
@@ -111,6 +141,13 @@
   width: 0.42rem;
   height: 0.42rem;
   background: var(--accent);
+}
+
+.rate-card1__plan-note {
+  margin: 0.15rem 0 0;
+  font-size: 0.95rem;
+  line-height: 1.5;
+  color: var(--muted);
 }
 
 .rate-card1__steps {

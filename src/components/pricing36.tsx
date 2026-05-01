@@ -11,64 +11,82 @@ const Pricing36 = ({ className }: Pricing36Props) => {
   return (
     <section id="pricing" className={cn("pricing36 py-32", className)}>
       <div className="container">
-                <div className="compare3-block__header">
+        <div className="compare3-block__header">
           <span className="compare3-block__badge">PRICING</span>
-          <h2>TWO SETUPS, ONE PLATFORM</h2>
+          <h2>ONE SETUP. ONE MONTHLY FEE. ZERO COMMISSION.</h2>
           <p>
-            <strong>£695</strong> or <strong>£995</strong> one-time—<strong>total as shown</strong>.{" "}
-            <strong>50% to start, 50% before go-live.</strong> Essential: <strong>1 month</strong> hosting + admin; PRO:{" "}
-            <strong>3 months</strong>.
+            <strong>Launch: &pound;99 setup + &pound;39/month Care.</strong> Kersivo never takes a cut of your bookings or retail.
+            Stripe applies only to online card payments, on your own account.
           </p>
         </div>
 
+        <div className="pricing36__guarantee" role="note">
+          <span className="pricing36__guarantee-tag">Risk-free setup</span>
+          <p className="pricing36__guarantee-body">
+            <strong>Pay 50% to start, 50% only on go-live.</strong> We carry the build risk. You only pay the second half
+            once your system is live, tested, and signed off by you.
+          </p>
+        </div>
 
         <div className="mx-auto grid max-w-4xl gap-6 md:grid-cols-2">
           <div className="flex flex-col gap-4">
             <div className="flex h-full flex-col rounded-4xl bg-gradient-to-r from-blue-500 to-purple-500 p-px">
               <div className="h-full rounded-[31px] bg-background p-8">
                 <div className="flex items-center justify-between">
-                  <p className="text-xl font-semibold">Essential</p>
+                  <p className="text-xl font-semibold">Launch</p>
                 </div>
                 <div className="mt-6 flex flex-col gap-2">
                   <p className="text-6xl font-bold">
-                    £695
+                    £99
                     <span className="text-base font-semibold text-muted-foreground">
-                      / one-time
+                      / setup
                     </span>
                   </p>
+                  <p className="text-xl font-semibold">+ £39/month Ongoing Care</p>
                   <p className="text-sm text-muted-foreground">
-                    Full system; up to 20 products at launch; 1 month hosting + admin included.
+                    One monthly fee for hosting, support, admin access, and monthly small updates.
                   </p>
                 </div>
                 <Separator className="my-6" />
                 <ul className="space-y-6">
                   <li className="flex gap-2">
                     <Check className="mt-1 size-4 shrink-0 text-green-500" />
-                    <p className="font-medium">Custom site (pages per brief) · mobile-first</p>
+                    <p className="font-medium">Custom site + booking + admin + pickup shop setup</p>
                   </li>
                   <li className="flex gap-2">
                     <Check className="mt-1 size-4 shrink-0 text-green-500" />
-                    <p className="font-medium">Booking on your domain + full admin (team, diary, shop, reports)</p>
+                    <p className="font-medium">Domain setup + deployment handled by us</p>
                   </li>
                   <li className="flex gap-2">
                     <Check className="mt-1 size-4 shrink-0 text-green-500" />
-                    <p className="font-medium">Shop: Stripe checkout, buy-and-collect, up to 20 products at setup</p>
+                    <p className="font-medium">0% Kersivo commission (Stripe card fees only)</p>
                   </li>
                   <li className="flex gap-2">
                     <Check className="mt-1 size-4 shrink-0 text-green-500" />
-                    <p className="font-medium">Contact form, map, hours</p>
+                    <p className="font-medium">Hosting + SSL included while subscription is active</p>
                   </li>
                   <li className="flex gap-2">
                     <Check className="mt-1 size-4 shrink-0 text-green-500" />
-                    <p className="font-medium">1 month hosting + admin &amp; shop—then £40/mo Care to continue</p>
+                    <p className="font-medium">Includes SMS reminders, support, and 1h dev/month (small in-scope edits)</p>
                   </li>
                 </ul>
+                <div className="pricing36__anchors">
+                  <p className="pricing36__anchor pricing36__anchor--switcher">
+                    <span className="pricing36__anchor-tag">Switching</span>
+                    Many busy shops on marketplace apps see subscription plus traffic-related fees in the ~&pound;120&ndash;&pound;300/mo range &mdash; line it up with your own statements.
+                  </p>
+                  <p className="pricing36__anchor pricing36__anchor--newcomer">
+                    <span className="pricing36__anchor-tag pricing36__anchor-tag--newcomer">Starting fresh</span>
+                    Live booking on your own domain in about two weeks. 0% commission from booking #1.
+                  </p>
+                </div>
               </div>
               <a
                 href="#book-demo"
                 className="group flex items-center justify-center gap-1.5 py-3 text-center font-medium text-background"
+                data-demo-cta
               >
-                Choose Essential Setup
+                Plan my setup on Launch
                 <ArrowRight className="size-5 transition-transform group-hover:translate-x-1" />
               </a>
             </div>
@@ -77,59 +95,63 @@ const Pricing36 = ({ className }: Pricing36Props) => {
             <div className="flex h-full flex-col rounded-4xl bg-primary p-px">
               <div className="h-full rounded-[31px] bg-background p-8">
                 <div className="flex items-center justify-between gap-2">
-                  <p className="text-xl font-semibold">PRO</p>
+                  <p className="text-xl font-semibold">Priority Growth</p>
                   <p className="recommended-badge text-sm font-semibold text-primary">
-                    Recommended
+                    Anchor Plan
                   </p>
                 </div>
                 <div className="mt-6 flex flex-col gap-2">
                   <p className="text-6xl font-bold">
-                    £995
+                    £299
                     <span className="text-base font-semibold text-muted-foreground">
-                      / one-time
+                      / setup
                     </span>
                   </p>
+                  <p className="text-xl font-semibold">+ £59/month Ongoing Care</p>
                   <p className="text-sm text-muted-foreground">
-                    3 months hosting + admin; up to 50 products; more polish &amp; homepage focus.
+                    Everything in £39/month, plus priority support and more monthly change capacity.
                   </p>
                 </div>
                 <Separator className="my-6" />
                 <ul className="space-y-6">
                   <li className="flex gap-2">
                     <Check className="mt-1 size-4 shrink-0 text-green-500" />
-                    <p className="font-medium">Everything in Essential</p>
+                    <p className="font-medium">Everything in Launch</p>
                   </li>
                   <li className="flex gap-2">
                     <Check className="mt-1 size-4 shrink-0 text-green-500" />
-                    <p className="font-medium">
-                      3 months hosting + admin &amp; shop · up to 50 products · featured products · stronger homepage CTAs
-                    </p>
+                    <p className="font-medium">Priority launch queue and faster support response</p>
                   </li>
                   <li className="flex gap-2">
                     <Check className="mt-1 size-4 shrink-0 text-green-500" />
-                    <p className="font-medium">Extra layout &amp; polish vs Essential (per brief)</p>
+                    <p className="font-medium">Extra setup polish for key pages and product catalogue depth</p>
                   </li>
                   <li className="flex gap-2">
                     <Check className="mt-1 size-4 shrink-0 text-green-500" />
-                    <p className="font-medium">
-                      <a href="#faq" className="text-primary underline-offset-4 hover:underline">
-                        Managed Care
-                      </a>{" "}
-                      includes client SMS <span className="text-muted-foreground">(where enabled)</span>—on PRO we prep it
-                      at go-live
-                    </p>
+                    <p className="font-medium">2h dev/month for ongoing in-scope changes</p>
                   </li>
                   <li className="flex gap-2">
                     <Check className="mt-1 size-4 shrink-0 text-green-500" />
-                    <p className="font-medium">Priority launch · go-live week support</p>
+                    <p className="font-medium">Monthly performance check-in and practical growth improvements</p>
                   </li>
                 </ul>
+                <div className="pricing36__anchors">
+                  <p className="pricing36__anchor pricing36__anchor--switcher">
+                    <span className="pricing36__anchor-tag">Switching</span>
+                    When marketplace fees scale with chairs and volume, a flat Care plan keeps margin predictable next to Stripe only.
+                  </p>
+                  <p className="pricing36__anchor pricing36__anchor--newcomer">
+                    <span className="pricing36__anchor-tag pricing36__anchor-tag--newcomer">Starting fresh</span>
+                    Faster launch queue and more monthly dev capacity if you want to grow harder from day one.
+                  </p>
+                </div>
               </div>
               <a
                 href="#book-demo"
                 className="group flex items-center justify-center gap-1.5 py-3 text-center font-medium text-background"
+                data-demo-cta
               >
-                Choose PRO Setup
+                Plan my setup on Priority Growth
                 <ArrowRight className="size-5 transition-transform group-hover:translate-x-1" />
               </a>
             </div>

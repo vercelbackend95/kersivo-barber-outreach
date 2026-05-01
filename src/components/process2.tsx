@@ -32,7 +32,8 @@ type ProcessStep = {
   image: string;
   /** When set, shown below `lg` instead of `image` (desktop unchanged). */
   imageMobile?: string;
-  whatHappens: string;
+  weDo: string;
+  youDo: string;
   deliverable: string;
 };
 
@@ -55,42 +56,42 @@ const Process2 = ({ className }: Process2Props) => {
   const process: ProcessStep[] = [
     {
       step: "01",
-      title: "Discovery & setup",
-      timeline: "Day 1",
+      title: "Brief and plan",
+      timeline: "Days 1\u20134",
       image: "/images/discoverypic.jpg",
       imageMobile: "/images/Launchpic.jpg",
-      whatHappens:
-        "We pull together your logo, photos, service list, who's on the team, opening hours, and how you want clients to book. Buy-and-collect retail ships with the system—you'll add and manage products in your own admin when we're done; here we just agree what should feel ready for opening day.",
+      weDo:
+        "Audit your current setup or build the plan from scratch, map services and team, confirm domain, deposit policy, and lock the launch date.",
+      youDo:
+        "Send your services list, prices, team and opening hours. If you are switching, point us at your Booksy or Fresha setup.",
       deliverable:
-        "A clear, short plan you sign off on—so when we build, nobody's guessing what \"done\" looks like.",
+        "A confirmed setup plan with responsibilities, timeline, and what will be moved.",
     },
     {
       step: "02",
-      title: "Build & wiring",
-      timeline: "Days 2–10",
+      title: "We build your system",
+      timeline: "Days 5\u201311",
       image: "/images/Buildpic.jpg",
       imageMobile: "/images/Reviewpic.jpg",
-      whatHappens:
-        "We build your public site, the booking flow clients use, the admin you run daily, and the retail pickup flow—already wired together, not three tools stuck on afterwards.",
-      deliverable: "A working version you can click through yourself, from a client's first visit to what you see behind the scenes.",
+      weDo:
+        "Build the booking site on your domain, configure Stripe deposits, automated SMS reminders, win-back, and pay & collect retail \u2014 ready to run on day one.",
+      youDo:
+        "Stay focused on cutting hair. If you are switching, keep taking bookings on Booksy/Fresha as normal.",
+      deliverable:
+        "A tested system that protects margin, reduces no-shows, and automates follow-up.",
     },
     {
       step: "03",
-      title: "Review & sign-off",
-      timeline: "Days 11–12",
+      title: "Go live",
+      timeline: "Days 12\u201314",
       image: "/images/Reviewpic.jpg",
-      whatHappens:
-        "You use it like a real week in the shop and send honest notes. We tweak layout, wording, and the customer journey until it feels right for your team and your clients.",
-      deliverable: "Your green light on the version we'll take live.",
-    },
-    {
-      step: "04",
-      title: "Launch & handover",
-      timeline: "Days 13–14",
-      image: "/images/Launchpic.jpg",
-      whatHappens:
-        "We connect your domain, run final checks, then walk you through day-to-day life in the system—bookings, pickup orders, your team, and where to see the numbers when you want them—so launch day feels familiar, not frantic.",
-      deliverable: "Your site live on your own URL, simple handover notes, and your admin access ready to use.",
+      imageMobile: "/images/Launchpic.jpg",
+      weDo:
+        "Push your site live on your domain, set up your Google Business Profile pointer, walk your team through the admin, and \u2014 for switchers \u2014 swap your public booking link.",
+      youDo:
+        "Confirm everything looks right. Then take your first booking on Kersivo at 0% commission.",
+      deliverable:
+        "Live system, trained team, and a clean start at 0% commission on bookings and retail.",
     },
   ];
 
@@ -98,17 +99,16 @@ const Process2 = ({ className }: Process2Props) => {
   const previousActive = usePrevious(active);
 
   return (
-    <section className={cn("process2 py-32", className)}>
+    <section id="onboarding" className={cn("process2 py-32", className)}>
       <div className="container">
         <div className="grid grid-cols-1 gap-5 lg:grid-cols-2 lg:gap-20">
           <div className="top-10 h-fit w-fit gap-3 space-y-7 py-8 lg:sticky">
             <h1 className="relative w-fit text-5xl font-semibold tracking-tight lg:text-7xl">
-              Our process
+              Go live in about two weeks. We do most of it.
             </h1>
             <p className="text-base text-foreground/50">
-              You&apos;ve already seen what&apos;s inside—here&apos;s how we get you live. Four clear stages from kickoff to
-              launch: client booking, buy-and-collect retail, and your back office, together on your own site.               Most UK
-              shops go live in about 14 days; we give you a straight checklist so you always know what we need next.
+              Same plan whether you are switching from Booksy/Fresha or starting your first system. We carry the build,
+              you stay focused on the chair.
             </p>
             <div className="process2-image-frame relative h-90 overflow-hidden border">
               {previousActive !== undefined && (
@@ -177,15 +177,16 @@ const ProcessCard = ({
       <div className="space-y-3">
         <h3 className="text-2xl font-semibold tracking-tighter lg:text-3xl">
           <span className="sr-only">
-            Step {index + 1} of 4:{" "}
+            Step {index + 1} of 3:{" "}
           </span>
           {step.title}
         </h3>
         <p className="text-sm font-medium uppercase tracking-wide text-foreground/70">
-          Timeline: {step.timeline}
+          {step.timeline}
         </p>
-        <p className="text-foreground/50">What we do: {step.whatHappens}</p>
-        <p className="text-foreground/70">What you get: {step.deliverable}</p>
+        <p className="text-foreground/70"><span className="font-semibold text-foreground">We do:</span> {step.weDo}</p>
+        <p className="text-foreground/50"><span className="font-semibold text-foreground/80">You do:</span> {step.youDo}</p>
+        <p className="text-foreground/70"><span className="font-semibold text-foreground">You get:</span> {step.deliverable}</p>
       </div>
     </li>
   );

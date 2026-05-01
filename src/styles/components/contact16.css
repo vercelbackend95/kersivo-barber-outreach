@@ -77,6 +77,7 @@ margin-top: clamp(1.5rem, 5vw, 3.5rem);
 }
 
 .contact16__form input,
+.contact16__form select,
 .contact16__form textarea {
 
   width: 100%;
@@ -97,12 +98,14 @@ margin-top: clamp(1.5rem, 5vw, 3.5rem);
 }
 
 .contact16__form input::placeholder,
+.contact16__form select,
 .contact16__form textarea::placeholder {
 
   color: color-mix(in srgb, var(--fg) 35%, transparent);
 }
 
 .contact16__form input:focus-visible,
+.contact16__form select:focus-visible,
 .contact16__form textarea:focus-visible {
 
   outline: 2px solid var(--focus);

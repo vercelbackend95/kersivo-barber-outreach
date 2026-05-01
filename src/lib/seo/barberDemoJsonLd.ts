@@ -36,7 +36,7 @@ export function buildBarberDemoJsonLd(): Record<string, unknown> {
         applicationCategory: 'BusinessApplication',
         operatingSystem: 'Web',
         description:
-          'An all-in-one booking and management system tailored for modern barbershops in the UK.',
+          'Booking, admin and retail under your UK barbershop domain with 0% commission from Kersivo.',
         url: SOFTWARE_PAGE_URL,
         author: { '@id': KERSIVO_ORGANIZATION_ID },
         publisher: { '@id': KERSIVO_ORGANIZATION_ID },

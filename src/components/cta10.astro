@@ -15,16 +15,13 @@ interface Props {
 }
 
 const {
-  heading = "SEE HOW THIS SYSTEM COULD RUN YOUR BARBERSHOP",
+  heading = "YOUR BOOKING. YOUR BRAND. ZERO COMMISSION.",
   description =
-    "Book a demo and we’ll show how this setup can reduce day-to-day chaos and improve booking + retail flow for your shop.",  buttons = {
+    "Whether you are switching from Booksy/Fresha or starting your first system, we set it up for you in about two weeks. 0% commission on bookings and retail \u2014 always.",
+  buttons = {
     primary: {
-      text: "GET THE SYSTEM",
+      text: "PLAN MY SETUP \u2014 FREE",
       url: "#book-demo",
-    },
-    secondary: {
-      text: "WATCH PERFORMANCE",
-      url: "/book",
     },
   },
   className = "",
@@ -41,15 +38,8 @@ const {
 
       <div class="cta10__actions">
         {
-          buttons.secondary && (
-            <button type="button" class="btn btn--secondary" data-system-chooser-open>
-              {buttons.secondary.text}
-            </button>
-          )
-        }
-        {
           buttons.primary && (
-            <a href={buttons.primary.url} class="btn btn--primary" data-demo-cta>
+            <a href={buttons.primary.url} class="btn btn--primary btn--lg" data-demo-cta>
               {buttons.primary.text}
             </a>
           )

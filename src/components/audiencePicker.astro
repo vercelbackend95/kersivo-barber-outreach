@@ -1,0 +1,63 @@
+---
+interface Props {
+  className?: string;
+}
+
+const { className = '' } = Astro.props as Props;
+---
+
+<section
+  id="paths"
+  class={`audience-picker scroll-mt-24 ${className}`.trim()}
+  aria-labelledby="audience-picker-title"
+>
+  <div class="container">
+    <div class="audience-picker__intro">
+      <p class="audience-picker__eyebrow">PICK YOUR PATH</p>
+      <h2 id="audience-picker-title" class="audience-picker__heading">Where are you starting from?</h2>
+      <p class="audience-picker__lead">
+        Two routes through the page. Same product, same price, same 0% commission either way.
+      </p>
+    </div>
+
+    <div class="audience-picker__grid">
+      <a class="audience-picker__card audience-picker__card--switcher" href="#switcher-path">
+        <span class="audience-picker__tag">For switchers</span>
+        <h3 class="audience-picker__card-title">On Booksy or Fresha right now?</h3>
+        <p class="audience-picker__card-body">
+          See the named comparison, what staying costs each month, and the day-by-day switch plan that keeps every client.
+        </p>
+        <ul class="audience-picker__bullets" role="list">
+          <li>Named Kersivo vs Booksy vs Fresha comparison</li>
+          <li>Switch-day timeline &mdash; no client lost</li>
+          <li>Three guarantees pinned to the migration</li>
+        </ul>
+        <span class="audience-picker__card-cta">
+          See the switch path
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <path d="M5 12h14"/><path d="m12 5 7 7-7 7"/>
+          </svg>
+        </span>
+      </a>
+
+      <a class="audience-picker__card audience-picker__card--newcomer" href="#newcomer-path">
+        <span class="audience-picker__tag">For new shops</span>
+        <h3 class="audience-picker__card-title">Starting fresh &mdash; no system yet?</h3>
+        <p class="audience-picker__card-body">
+          See why your own brand wins from day one and how we get you live on your own domain in about two weeks.
+        </p>
+        <ul class="audience-picker__bullets" role="list">
+          <li>Why own-brand beats a marketplace</li>
+          <li>Live on your domain in about two weeks</li>
+          <li>Deposit-protected bookings from booking #1</li>
+        </ul>
+        <span class="audience-picker__card-cta">
+          See the launch path
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <path d="M5 12h14"/><path d="m12 5 7 7-7 7"/>
+          </svg>
+        </span>
+      </a>
+    </div>
+  </div>
+</section>

@@ -71,13 +71,20 @@ const Feature261 = ({ className }: Feature261Props) => {
         <header className="feature261__intro">
           <div className="feature261__headline-wrap">
             <p className="feature261__kicker">INSIDE THE SYSTEM</p>
-            <h2 className="feature261__heading">Real screens. One stack in motion.</h2>
+            <h2 className="feature261__heading">Same screens you&rsquo;ll run your shop on.</h2>
           </div>
 
           <p className="feature261__description">
-            The same system you compared above—here as real UI: client booking on your domain, one admin for the floor,
-            buy-and-collect retail, and booking or shop numbers without bolting on another tool.
+            Client booking on your domain, one admin for the floor, buy-and-collect retail, and the day&rsquo;s numbers
+            in one panel. Open the live admin in a new tab and click around &mdash; no signup, no demo call.
           </p>
+          <button
+            type="button"
+            className="btn btn--primary mt-5"
+            data-system-chooser-open
+          >
+            OPEN THE LIVE ADMIN &mdash; NO SIGNUP
+          </button>
         </header>
 
         <div className="feature261__bento grid grid-cols-1 gap-4 md:grid-cols-6 lg:grid-cols-12">

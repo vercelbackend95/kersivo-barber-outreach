@@ -13,10 +13,16 @@ interface Hero227Props {
 }
 
 const TRUST_ROW_ITEMS = [
-  { label: "Live in ~14 days", variant: "clock" as const },
-  { label: "£0 booking fees", variant: "poundZero" as const },
-  { label: "No shop cut from us", variant: "noCut" as const },
+  { label: "0% on bookings", variant: "noCut" as const },
+  { label: "0% on retail", variant: "poundZero" as const },
+  { label: "Stripe only on online cards", variant: "clock" as const },
 ];
+
+const HERO_H1_LINES =
+  "Your bookings on \nyour domain. \n0% commission from Kersivo." as const;
+
+const HERO_H1_ACCESSIBLE_LABEL =
+  "Your bookings on your domain. 0% commission from Kersivo.";
 
 const trustGlyphStroke = {
   fill: "none" as const,
@@ -117,9 +123,31 @@ const Hero227 = ({ className }: Hero227Props) => {
       }
     >
       <div>
-        <div className="hero227-inner flex flex-col items-center justify-center gap-4 text-center">
+        <div className="hero227-inner hero227-stack flex flex-col items-center justify-center gap-4 text-center">
+          <div className="hero227-copy-layer w-full max-w-4xl md:max-w-5xl xl:max-w-6xl 2xl:max-w-7xl px-2 sm:px-3">
+          <div className="relative mx-auto w-max min-w-0 max-w-full">
+            <h1
+              aria-label={HERO_H1_ACCESSIBLE_LABEL}
+              className="font-antonio mx-auto block w-max max-w-full text-center font-extrabold tracking-tight text-foreground uppercase text-balance hyphens-none px-1 sm:px-0 text-[clamp(2.125rem,calc(0.55rem+8.75cqi),5.75rem)] md:text-[clamp(2.375rem,calc(0.65rem+7.85cqi),6.25rem)] lg:text-[clamp(2.5rem,calc(0.7rem+7.1cqi),6.75rem)] leading-[1.03] md:leading-[1.02]"
+            >
+              <VerticalCutReveal
+                skipScreenReaderDup
+                splitBy="lines"
+                containerClassName="hero227-heading-reveal items-center text-center"
+              >
+                {HERO_H1_LINES}
+              </VerticalCutReveal>
+            </h1>
+            <HeroTitleAccent className="pointer-events-none absolute -top-1 -right-2 size-[1.125rem] min-[380px]:-right-4 min-[380px]:size-5 sm:-top-2 sm:-right-5 md:size-8 lg:size-10 lg:-right-8 xl:-right-14" aria-hidden />
+          </div>
+          <p className="mx-auto mt-1 max-w-2xl md:max-w-3xl text-pretty text-sm leading-relaxed text-muted-foreground/85 sm:text-base sm:leading-relaxed">
+            Your booking, your domain, your clients &mdash; with 0% commission on bookings and retail, set up for you.
+          </p>
+          </div>
+
+          <div className="hero227-mid-band w-full max-w-3xl space-y-3 px-1 sm:px-2">
           <motion.div
-            className="flex flex-wrap items-center justify-center gap-6 opacity-75"
+            className="flex flex-wrap items-center justify-center gap-x-5 gap-y-2 opacity-80"
             initial="hidden"
             animate="visible"
             variants={{
@@ -130,7 +158,7 @@ const Hero227 = ({ className }: Hero227Props) => {
             {TRUST_ROW_ITEMS.map((item) => (
               <motion.div
                 key={item.label}
-                className="flex items-center justify-center gap-2 text-xs font-medium tracking-tight text-[color:var(--accent-hover)] md:text-lg"
+                className="flex items-center justify-center gap-2 text-xs font-medium tracking-tight text-[color:var(--accent-hover)] md:text-base"
                 variants={{
                   hidden: { opacity: 0, y: 6 },
                   visible: {
@@ -148,38 +176,40 @@ const Hero227 = ({ className }: Hero227Props) => {
               </motion.div>
             ))}
           </motion.div>
-          <div className="relative">
-            <h1 className="font-antonio text-5xl font-extrabold tracking-tight text-foreground uppercase md:text-9xl">
-              <VerticalCutReveal splitBy="lines">
-                {
-                  "Get more clients and fill empty slots — \n without paying booking app fees"
-                }
-              </VerticalCutReveal>
-            </h1>
-            <HeroTitleAccent className="absolute -top-2 -right-6 size-5 md:size-10 lg:-right-14" />
+          <div
+            className="hero227-scenario-chip"
+            role="note"
+            aria-label="Example savings"
+          >
+            <span className="hero227-scenario-chip__label">Example</span>
+            <span className="hero227-scenario-chip__body">
+              4-chair shop, ~800 cuts/mo:
+              {" "}
+              <span className="hero227-scenario-chip__strike">~&pound;240/mo to a marketplace</span>
+              {" \u2192 "}
+              <span className="hero227-scenario-chip__win">&pound;0 commission on Kersivo</span>
+            </span>
           </div>
-          <p className="max-w-xl text-muted-foreground/80">
-A simple barber website with built-in bookings and online shop — designed to grow your shop, not just manage it
-          </p>
-          <div className="hero227-cta-pill flex rounded-3xl bg-muted-foreground/10 p-1.5">
+          <div className="hero227-cta-pill flex flex-col items-center gap-3">
             <Button
               className="hero227-cta-system text-md flex h-full items-center justify-center rounded-2xl font-medium"
               asChild
             >
-              <a href="#contact">
-                <span className="md:hidden">GET STARTED</span>
-                <span className="hidden md:inline">GET THE SYSTEM</span>
+              <a href="#contact" data-demo-cta>
+                PLAN MY SETUP &mdash; FREE
               </a>
             </Button>
-            <Button
-              variant="ghost"
+            <button
               type="button"
-              className="hero227-cta-demo text-md flex h-full items-center justify-center rounded-2xl font-medium text-muted-foreground"
+              className="hero227-cta-live"
               data-system-chooser-open
             >
-              WATCH PERFORMANCE
-            </Button>
+              Open the live admin &mdash; no signup
+              <span aria-hidden="true">&rarr;</span>
+            </button>
           </div>
+          </div>
+
           <div className="hero227-mock-stack relative flex w-full shrink-0 items-center justify-center overflow-visible py-8 md:py-10">
             <div className="hero227-mock-clip shrink-0">
               <motion.div
@@ -198,7 +228,7 @@ A simple barber website with built-in bookings and online shop — designed to g
                   <div
                     className="hero227-mock-screen"
                     role="img"
-                    aria-label="Podgląd aplikacji na ekranie iPhone’a"
+                    aria-label="Kersivo booking preview on an iPhone screen"
                   />
                 </div>
                 <img

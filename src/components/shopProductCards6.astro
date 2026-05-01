@@ -1,10 +1,10 @@
 ---
 import { prisma } from '../lib/db/client';
-import { withPrismaQuotaFallback } from '../lib/db/resilience';
+import { withPrismaResilienceFallback } from '../lib/db/resilience';
 import { resolveShopId } from '../lib/db/shopScope';
 import { formatGbp } from '../lib/shop/money';
 
-const { products } = await withPrismaQuotaFallback(
+const { products } = await withPrismaResilienceFallback(
   'components/shopProductCards6.astro',
   async () => {
     const shopId = await resolveShopId();
@@ -40,21 +40,25 @@ const CATEGORY_LABELS: Record<string, string> = {
 <section class="shop6" aria-labelledby="shop6-title">
   <div class="container shop6__container">
     <div class="shop6__content-column">
-      <p class="shop6__eyebrow">Live retail</p>
-      <h2 id="shop6-title">RETAIL AS YOUR CLIENTS SEE IT</h2>
+      <p class="shop6__eyebrow">A SECOND REVENUE LINE</p>
+      <h2 id="shop6-title">A second commission-free revenue line, in the same admin.</h2>
       <p class="shop6__lead">
-        A live strip of your catalog—browse, then continue in the shop for cart, checkout, and pickup. We take no
-        commission on sales; cards run through Stripe at standard rates.
+        Pomades, beard oil, gift sets &mdash; sold on your own domain, picked up at the chair. Kersivo takes 0% on every order.
+        Most shops can add an extra few hundred a month from a small product range without bolting on a separate store.
       </p>
 
       <ul class="shop6__usps" aria-label="Retail highlights">
-        <li>Live catalog strip</li>
-        <li>Full checkout</li>
-        <li>No sales fee from us</li>
+        <li>Pay & collect checkout flow on your URL</li>
+        <li>0% Kersivo cut on every sale &mdash; always</li>
+        <li>Cash collection in-shop at 0% fee</li>
+        <li>Same admin as your bookings &mdash; one login, one stack</li>
       </ul>
 
       <div class="shop6__ctas">
-        <a class="btn btn--primary" href="/shop">View shop</a>
+        <a class="btn btn--primary" href="/shop">View the shop page</a>
+        <button type="button" class="btn btn--secondary" data-system-chooser-open>
+          Open the shop admin
+        </button>
       </div>
     </div>
     <div class="shop6__carousel" data-shop6-carousel-root>

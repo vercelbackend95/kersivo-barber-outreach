@@ -7,6 +7,13 @@ Astro + React (TypeScript) booking + shop system for barbershops.
    npm install
    ```
 2. Create a Neon Postgres database and set `DATABASE_URL` in `.env` (use the dashboard connection string; add `?sslmode=require` if needed; on serverless hosting use Neon’s **pooled** URL so the hostname includes `-pooler`).
+   - If Prisma throws `P1001: Can't reach database server` on Windows/dev while `Test-NetConnection ... -Port 5432` succeeds, regenerate the Neon string and use the endpoint routing option in the query string:
+     - `...&options=endpoint%3D<your_neon_endpoint_id>`
+   - If needed as a local workaround, temporarily pin an IPv4 host in `DATABASE_URL` and keep the `options=endpoint%3D...` parameter so Neon can route the connection correctly.
+   - P1001 quick fix checklist:
+     1. Make sure `DATABASE_URL` uses Neon pooled host (`-pooler`) and includes `sslmode=require`.
+     2. Keep/add endpoint routing: `options=endpoint%3D<your_neon_endpoint_id>`.
+     3. Validate Prisma can connect: `npx prisma migrate status` (or `npx prisma db pull`).
 3. Reset database and apply migrations (this command **wipes all data** and then runs seed):
    ```bash
    npx prisma migrate reset
@@ -100,3 +107,9 @@ SSR build requires adapter; use Vercel adapter + output: server.
 4. Add `BLOB_READ_WRITE_TOKEN` (recommended name) with the read-write token value from Blob.
    - The app also accepts `VERCEL_BLOB_READ_WRITE_TOKEN` for compatibility.
 5. Redeploy the project so serverless functions can read the token.
+
+## GTM strategy docs
+- `docs/gtm/icp-segment-uk-barbers.md` - single-segment ICP definition and qualification rules.
+- `docs/gtm/proof-stack-case-studies.md` - three case-study frameworks with strict evidence requirements.
+- `docs/gtm/offer-migration-sprint.md` - risk-reversal migration sprint offer model.
+- `docs/gtm/channel-playbook-uk.md` - account-based outbound + partnerships + proof-led inbound playbook.

@@ -1,0 +1,132 @@
+---
+interface Props {
+  className?: string;
+}
+
+const { className = '' } = Astro.props as Props;
+
+const feeBreakdown = [
+  { label: 'Setup', value: '\u00a399 or \u00a3299', detail: 'one-time, paid 50% to start, 50% before go-live' },
+  { label: 'Ongoing Care', value: '\u00a339 or \u00a359/month', detail: 'hosting, admin, support, monthly dev time' },
+  { label: 'Bookings + retail', value: '0%', detail: 'Kersivo never takes a cut. Always.' },
+  { label: 'Online card payments', value: 'Stripe standard', detail: 'charged direct to your Stripe account, not ours' },
+  { label: 'Cash in-shop', value: '0% fee', detail: 'no gateway, no platform cut' },
+];
+
+const guarantees = [
+  {
+    title: 'Pay 50% to start, 50% on go-live',
+    body:
+      'Half of your setup fee is paid only when your system is live and you have signed off. We carry the build risk, not you.',
+  },
+  {
+    title: 'Stay on Booksy or Fresha until tested',
+    body:
+      'For switchers: you keep taking bookings on your current platform until your Kersivo system is built, tested, and you confirm. We swap one link.',
+  },
+  {
+    title: 'Revised timeline before any commit',
+    body:
+      'If your setup needs longer than our typical ~14-day go-live window, we tell you the revised timeline first. You commit when you are ready, not before.',
+  },
+];
+
+const measureSteps = [
+  {
+    label: 'Pick one metric',
+    body: 'Utilisation, no-show \u00a3, or owner ops hours \u2014 you choose what matters most.',
+  },
+  {
+    label: 'Baseline 28 days',
+    body: 'Before go-live we capture your numbers from your existing tools.',
+  },
+  {
+    label: 'Measure 28 days',
+    body: 'After launch we measure the same metric on the same window.',
+  },
+  {
+    label: 'Share the result',
+    body: 'You get the before/after with sources \u2014 your own data, no spin.',
+  },
+];
+---
+
+<section
+  class={`trust-block scroll-mt-24 ${className}`.trim()}
+  aria-labelledby="trust-block-title"
+>
+  <div class="container">
+    <header class="trust-block__intro">
+      <p class="trust-block__eyebrow">TRANSPARENCY &amp; GUARANTEES</p>
+      <h2 id="trust-block-title" class="trust-block__heading">Founding partners in the UK — clear terms, full attention.</h2>
+      <p class="trust-block__lead">
+        We focus on founding barbershops while we ramp up: milestone-based pricing, open live admin before you commit, and space to agree one outcome measure on your numbers &mdash;
+        alongside plain-English fees.
+      </p>
+    </header>
+
+    <div class="trust-block__panels">
+      <div class="trust-block__col trust-block__col--stack">
+        <article class="trust-block__panel trust-block__panel--fees">
+          <header class="trust-block__panel-header">
+            <span class="trust-block__panel-tag">No hidden fees</span>
+            <h3 class="trust-block__panel-title">The whole bill, on one screen.</h3>
+          </header>
+          <ul class="trust-block__fees" role="list">
+            {feeBreakdown.map((item) => (
+              <li class="trust-block__fee-row">
+                <span class="trust-block__fee-label">{item.label}</span>
+                <span class="trust-block__fee-value">{item.value}</span>
+                <span class="trust-block__fee-detail">{item.detail}</span>
+              </li>
+            ))}
+          </ul>
+          <p class="trust-block__panel-anchor">
+            Setup + monthly Care + Stripe on online cards. That is the entire bill. Forever.
+          </p>
+        </article>
+
+        <article class="trust-block__panel trust-block__panel--guarantees">
+          <header class="trust-block__panel-header">
+            <span class="trust-block__panel-tag">Three guarantees</span>
+            <h3 class="trust-block__panel-title">You commit when you are ready, not before.</h3>
+          </header>
+          <ul class="trust-block__guarantees" role="list">
+            {guarantees.map((g, index) => (
+              <li class="trust-block__guarantee">
+                <span class="trust-block__guarantee-num" aria-hidden="true">{`0${index + 1}`}</span>
+                <div>
+                  <p class="trust-block__guarantee-title">{g.title}</p>
+                  <p class="trust-block__guarantee-body">{g.body}</p>
+                </div>
+              </li>
+            ))}
+          </ul>
+        </article>
+      </div>
+
+      <div class="trust-block__col trust-block__col--measure">
+        <article class="trust-block__panel trust-block__panel--measure">
+          <header class="trust-block__panel-header">
+            <span class="trust-block__panel-tag">Measured outcome</span>
+            <h3 class="trust-block__panel-title">We measure your shop, with your data.</h3>
+          </header>
+          <ol class="trust-block__measure" role="list">
+            {measureSteps.map((step, index) => (
+              <li class="trust-block__measure-step">
+                <span class="trust-block__measure-num" aria-hidden="true">{index + 1}</span>
+                <div>
+                  <p class="trust-block__measure-title">{step.label}</p>
+                  <p class="trust-block__measure-body">{step.body}</p>
+                </div>
+              </li>
+            ))}
+          </ol>
+          <p class="trust-block__panel-anchor">
+            A before/after on a metric you pick &mdash; useful for running the shop, not just for marketing copy.
+          </p>
+        </article>
+      </div>
+    </div>
+  </div>
+</section>

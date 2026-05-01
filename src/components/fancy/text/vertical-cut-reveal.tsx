@@ -26,6 +26,8 @@ interface TextProps {
   onStart?: () => void
   onComplete?: () => void
   autoStart?: boolean // Whether to start the animation automatically
+  /** When the parent establishes an accessible name (e.g. `aria-label` on `h1`), omit the duplicate `sr-only` copy. */
+  skipScreenReaderDup?: boolean
 }
 
 // Ref interface to allow external control of the animation
@@ -59,6 +61,7 @@ const VerticalCutReveal = forwardRef<VerticalCutRevealRef, TextProps>(
       onStart,
       onComplete,
       autoStart = true,
+      skipScreenReaderDup = false,
       ...props
     },
     ref
@@ -163,7 +166,7 @@ const VerticalCutReveal = forwardRef<VerticalCutRevealRef, TextProps>(
         ref={containerRef}
         {...props}
       >
-        <span className="sr-only">{text}</span>
+        {!skipScreenReaderDup ? <span className="sr-only">{text}</span> : null}
 
         {(splitBy === "characters"
           ? (elements as WordObject[])

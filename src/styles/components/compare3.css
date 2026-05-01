@@ -61,6 +61,17 @@
 
 }
 
+/* Dual-column: Kersivo | Marketplace apps */
+.compare3-block__grid--dual {
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+}
+
+@media (max-width: 40rem) {
+  .compare3-block__grid--dual {
+    grid-template-columns: 1fr;
+  }
+}
+
 .compare3-block__item {
   border-bottom: 1px solid var(--border);
   padding: 0.85rem 0.55rem;
@@ -84,10 +95,42 @@
 }
 
 .compare3-block__brand:not(.compare3-block__brand--highlight),
-.compare3-block__value:not(.compare3-block__value--featured) {
+.compare3-block__value:not(.compare3-block__value--featured):not(.compare3-block__value--marketplace) {
   background:
     radial-gradient(circle at 20% 18%, color-mix(in srgb, var(--surface) 54%, transparent) 0%, transparent 62%),
     linear-gradient(140deg, color-mix(in srgb, var(--surface) 36%, transparent) 0%, transparent 58%);
+}
+
+.compare3-block__brand--marketplace {
+  min-height: clamp(7.5rem, 18vw, 9.4rem);
+  padding-top: 1.35rem;
+  justify-content: center;
+}
+
+.compare3-block__brand-sub {
+  margin: -0.2rem 0 0;
+  font-size: 0.74rem;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  font-weight: 600;
+  color: var(--accent);
+}
+
+.compare3-block__brand-copy--wide {
+  max-width: 32ch !important;
+  padding-top: 0.65rem !important;
+}
+
+.compare3-block__value--marketplace {
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+}
+
+.compare3-block__value--marketplace:not(.compare3-block__value--cost) {
+  background:
+    radial-gradient(circle at 80% 18%, color-mix(in srgb, var(--surface) 54%, transparent) 0%, transparent 62%),
+    linear-gradient(220deg, color-mix(in srgb, var(--surface) 36%, transparent) 0%, transparent 58%);
 }
 
 .compare3-block__brand:not(.compare3-block__brand--highlight) {
@@ -158,10 +201,10 @@
 
 .compare3-block__value {
   flex-direction: column;
-  font-size: 0.72rem;
+  font-size: clamp(0.78rem, 1.6vw, 0.875rem);
   color: var(--muted);
   text-align: center;
-  line-height: 1.35;
+  line-height: 1.45;
 }
 
 .compare3-block__row-title {
@@ -190,6 +233,12 @@
 
 .compare3-block__status--bad {
   color: color-mix(in srgb, var(--fg) 82%, var(--muted));
+}
+
+/* Neutral marker for competitor columns — not a moral pass/fail */
+.compare3-block__status--neutral {
+  color: color-mix(in srgb, var(--muted) 70%, var(--fg));
+  font-size: 1.1rem;
 }
 
 .compare3-block__cta-row {
@@ -242,6 +291,61 @@
   }
 }
 
+/* Highlight the final "estimated monthly cost" row */
+.compare3-block__value--cost {
+  background: color-mix(in srgb, var(--accent) 6%, var(--surface)) !important;
+  font-weight: 600;
+}
+
+.compare3-block__value--featured.compare3-block__value--cost {
+  background: color-mix(in srgb, var(--accent) 12%, var(--surface)) !important;
+}
+
+/* Anchor line below the comparison */
+.compare3-block__anchor {
+  box-sizing: border-box;
+  /* Narrow on phones → wider tablets → full `.container` on desktop so copy can breathe. */
+  max-width: min(58ch, 100%);
+  margin-block: 0;
+  margin-inline: auto;
+  padding-inline: max(0.25rem, env(safe-area-inset-inline, 0px));
+  padding-top: clamp(1.35rem, 4vw, 1.85rem);
+  padding-bottom: 0;
+  text-align: center;
+  text-wrap: balance;
+  font-family: var(--font-heading);
+  font-size: clamp(1.05rem, 2.4vw + 0.62rem, 1.875rem);
+  font-weight: 400;
+  line-height: 1.28;
+  letter-spacing: 0.02em;
+  text-transform: uppercase;
+  hyphens: none;
+  color: var(--fg);
+}
+
+@media (min-width: 40rem) {
+  .compare3-block__anchor {
+    max-width: min(82ch, 100%);
+  }
+}
+
+@media (min-width: 64rem) {
+  .compare3-block__anchor {
+    max-width: 100%;
+    font-size: clamp(1.15rem, 1.05rem + 0.85vw, 2.125rem);
+  }
+}
+
+.compare3-block__footnote {
+  margin: 0;
+  text-align: center;
+  font-size: var(--text-xs);
+  line-height: 1.65;
+  color: color-mix(in srgb, var(--muted) 70%, transparent);
+  max-width: 60ch;
+  margin-inline: auto;
+}
+
 @media (min-width: 48rem) {
   .compare3-block {
     padding-block: 8rem;
@@ -258,7 +362,11 @@
   }
 
   .compare3-block__grid {
-    min-width: 42rem;
+    min-width: 0;
+  }
+
+  .compare3-block__grid--dual {
+    min-width: 0;
   }
 
   .compare3-block__item {

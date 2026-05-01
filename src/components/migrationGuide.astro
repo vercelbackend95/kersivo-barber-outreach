@@ -1,0 +1,165 @@
+---
+interface Props {
+  className?: string;
+}
+
+const { className = '' } = Astro.props as Props;
+
+type MigrationBeat = {
+  range: string;
+  contextTag: string;
+  contextLane: 'marketplace' | 'kersivo';
+  title: string;
+  body: string;
+  /** Single plain line — our lift + any tiny barber moment, no IT jargon */
+  reassure: string;
+  isPivot: boolean;
+};
+
+const migrationBeats: MigrationBeat[] = [
+  {
+    range: 'Days 1\u201310',
+    contextTag: 'Booksy / Fresha on',
+    contextLane: 'marketplace',
+    title: 'Shop runs as normal',
+    body:
+      'Keep every booking on the platform you already use. We build your Kersivo site on your domain in the background \u2014 services, team, deposits, texts, retail.',
+    reassure:
+      'We move whatever Booksy or Fresha allows across to us. Nothing for you to export or wire up.',
+    isPivot: false,
+  },
+  {
+    range: 'Days 11\u201312',
+    contextTag: 'Booksy / Fresha on',
+    contextLane: 'marketplace',
+    title: 'One quick look on your link',
+    body:
+      'When it is ready, book once as if you were a client on your own URL. We check deposits, reminder texts, and the phone flow feel like your shop.',
+    reassure: 'We stay on the line while you tap through \u2014 usually a couple of minutes on your phone.',
+    isPivot: false,
+  },
+  {
+    range: 'Day 13',
+    contextTag: 'New bookings here',
+    contextLane: 'kersivo',
+    title: 'One link change',
+    body:
+      'Your public booking link points to Kersivo. Guests already on Booksy or Fresha finish there. New visits land on your site the same way as before \u2014 no new app.',
+    reassure: 'We flip that link only after you tell us the rehearsal felt right.',
+    isPivot: true,
+  },
+  {
+    range: 'Day 14+',
+    contextTag: 'New bookings here',
+    contextLane: 'kersivo',
+    title: 'Drop the marketplace fee when you want',
+    body:
+      'When the new flow feels normal, downgrade or cancel the old plan on your timeline. Kersivo bookings stay at 0% commission from us.',
+    reassure:
+      'Dial back or cancel the marketplace plan whenever it suits \u2014 you choose the timing. We stay reachable for quick admin tweaks.',
+    isPivot: false,
+  },
+];
+
+const guarantees = [
+  {
+    label: '50% setup paid only on go-live',
+    detail:
+      'Half your setup fee is held until your system is live and you have signed off. We carry the build risk, not you.',
+  },
+  {
+    label: 'Stay on Booksy / Fresha until tested',
+    detail:
+      'You keep taking bookings on your current platform throughout. We do not switch your link until you confirm.',
+  },
+  {
+    label: 'Revised timeline before any commit',
+    detail:
+      'If your shop needs more than the standard ~14 days, we tell you the new timeline before you commit. No deadline pressure.',
+  },
+];
+---
+
+<section
+  id="migration"
+  class={`mg scroll-mt-24 ${className}`.trim()}
+  aria-labelledby="mg-headline"
+>
+  <div class="mg__glow" aria-hidden="true"></div>
+
+  <div class="container">
+    <div class="mg__intro">
+      <span class="mg__eyebrow">For switchers &middot; Zero-risk migration</span>
+      <h2 id="mg-headline" class="mg__headline">
+        Your clients move with you.<br />Your commission doesn&rsquo;t.
+      </h2>
+      <p class="mg__lead">
+        Most shops go live in about two weeks. You stay on Booksy or Fresha taking bookings while we build your Kersivo
+        system on your domain. When everything is tested, we swap one link &mdash; your clients book exactly as before.
+      </p>
+    </div>
+
+    <p class="mg__path-preface" id="mg-path-desc">
+      No pause on the shop floor &mdash; we handle the swap. Below is what happens in four simple beats.
+    </p>
+
+    <ol class="mg__path" aria-label="How switching works in four steps" aria-describedby="mg-path-desc">
+      {migrationBeats.map((beat, index) => (
+        <li class:list={['mg__beat', { 'mg__beat--pivot': beat.isPivot }]}>
+          <article class="mg__beat-inner">
+            <div class="mg__beat-meta">
+              <span class="mg__beat-num" aria-hidden="true">{String(index + 1).padStart(2, '0')}</span>
+              <span class="mg__beat-tags">
+                <span class="mg__beat-range">{beat.range}</span>
+                <span
+                  class:list={[
+                    'mg__beat-lane',
+                    beat.contextLane === 'kersivo' ? 'mg__beat-lane--kersivo' : 'mg__beat-lane--marketplace',
+                  ]}
+                >
+                  {beat.contextTag}
+                </span>
+              </span>
+            </div>
+            <h3 class="mg__beat-title">{beat.title}</h3>
+            <p class="mg__beat-body">{beat.body}</p>
+            <p class="mg__beat-reassure">{beat.reassure}</p>
+          </article>
+        </li>
+      ))}
+    </ol>
+
+    <p class="mg__anchor">
+      What stays: your clients, your schedule, your reputation.
+      <br class="mg__anchor-break" />
+      What <strong class="mg__anchor-accent">changes</strong>: the commission you hand over.
+    </p>
+
+    <ul class="mg__benefits" role="list" aria-label="Migration guarantees">
+      {guarantees.map((g) => (
+        <li class="mg__benefit">
+          <span class="mg__benefit-check" aria-hidden="true">&check;</span>
+          <div>
+            <span class="mg__benefit-label">{g.label}</span>
+            <span class="mg__benefit-detail">{g.detail}</span>
+          </div>
+        </li>
+      ))}
+    </ul>
+
+    <div class="mg__cta-block">
+      <div class="mg__ctas">
+        <a href="#contact" class="btn btn--primary btn--lg" data-demo-cta>
+          Plan my switch &mdash; free
+        </a>
+        <button type="button" class="btn btn--secondary btn--lg" data-system-chooser-open>
+          Open the live admin
+        </button>
+      </div>
+      <p class="mg__footnote">
+        Client data follows UK GDPR &mdash; any contact list imported must reflect your existing lawful basis for processing.
+        We work within the data-export limits of Booksy/Fresha and stay in contact throughout.
+      </p>
+    </div>
+  </div>
+</section>

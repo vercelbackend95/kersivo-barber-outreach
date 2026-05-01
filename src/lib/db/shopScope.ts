@@ -1,5 +1,10 @@
 import { prisma } from './client';
-import { PUBLIC_FALLBACK_SHOP_SETTINGS, isPrismaQuotaExceededError, logPrismaQuotaFallback } from './resilience';
+import {
+  PUBLIC_FALLBACK_SHOP_SETTINGS,
+  isPrismaDatabaseUnavailableError,
+  isPrismaQuotaExceededError,
+  logPrismaQuotaFallback
+} from './resilience';
 export const DEMO_SHOP_ID = 'demo-shop';
 
 const SHOP_SETTINGS_MISSING_MESSAGE =
@@ -28,7 +33,7 @@ export async function resolveShopId(): Promise<string> {
       return createdDemoShop.id;
     }
   } catch (error) {
-    if (!isPrismaQuotaExceededError(error)) {
+    if (!isPrismaQuotaExceededError(error) && !isPrismaDatabaseUnavailableError(error)) {
       throw error;
     }
 

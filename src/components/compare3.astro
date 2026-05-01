@@ -1,52 +1,79 @@
 ---
 const comparisonRows = [
   {
-    title: 'Bookings',
-    kersivo: 'Self-book on your URL. £0 booking fees from us.',
-    alternatives: 'Apps that tax every chair—or own the client, not you.',
+    title: 'Commission on bookings',
+    kersivo: '0% from Kersivo. Predictable monthly Care instead of platform take.',
+    marketplace:
+      'Popular apps such as Booksy and Fresha combine subscriptions with promotions and marketplace traffic. Your invoice shows the mix for your tier and region.',
   },
   {
-    title: 'Retail',
-    kersivo: 'Buy-and-collect on the same site. No shop cut from us.',
-    alternatives: 'No store—or a separate stack that skims again.',
+    title: 'Commission on retail',
+    kersivo: '0% from Kersivo on product sales. Stripe only takes its standard card fee on online checkout.',
+    marketplace:
+      'Retail sold via Booksy or Fresha follows each platform\u2019s published fees at checkout time.',
   },
   {
-    title: 'Team',
-    kersivo: 'Add barbers & services freely. One admin stays in sync.',
-    alternatives: 'Seat caps, rigid plans, spreadsheet + DM chaos.',
+    title: 'No-show protection',
+    kersivo:
+      'Stripe deposits land in your Stripe account before the appointment; you define the deposit rules.',
+    marketplace:
+      'Deposit and prepaid tools are standard on major apps \u2014 exact behaviour depends on the plan you run.',
   },
   {
-    title: 'Operations',
-    kersivo: 'Bookings, orders, reports—one dashboard.',
-    alternatives: 'Split tools. Nobody sees the whole day.',
+    title: 'Who owns client data day-to-day',
+    kersivo:
+      'Exports, tooling and client touchpoints carry your signage. We never surface your clients to neighbouring barbers inside Kersivo.',
+    marketplace:
+      'You plug into trusted ecosystems millions of guests already know. Profiles and reminders live largely inside those apps.',
   },
   {
-    title: 'Brand',
-    kersivo: 'Your site, your look—not a rented profile.',
-    alternatives: 'Generic templates. Traffic that isn’t really yours.',
+    title: 'Where clients book',
+    kersivo:
+      'Guests land on your domain in the browser\u2014no extra install to book a haircut with you.',
+    marketplace:
+      'Most repeat guests stay inside branded apps alongside inspiration for brows, nails and other salons in the directory.',
   },
   {
-    title: 'Go-live',
-    kersivo: '~14 days to a full launch—booking, retail pickup & admin together.',
-    alternatives: 'Long agency loops—or a slick site with booking still “later.”',
+    title: 'Hands-on switching',
+    kersivo:
+      'We migrate services and chairs from Booksy/Fresha, rehearse together, stage go-live and swap links with you.',
+    marketplace:
+      'Onboarding is mature when you arrive; planning a bespoke exit toward another stack is largely your roadmap.',
+  },
+  {
+    title: 'Illustrative monthly stack \u2014 4-chair shop, ~800 cuts',
+    kersivo: '\u00a339\u201359/month Care + Stripe on cards. Zero Kersivo take on bookings or retail.',
+    marketplace:
+      'Busy Booksy-era shops regularly see subscriptions plus incremental marketplace charges in roughly the \u00a3150\u2013\u00a3300/mo corridor; comparable Fresha stacks often fall near \u00a3120\u2013\u00a3280/mo\u2014verify with your statement.',
+    isCost: true,
   },
 ];
+
+const costNote =
+  'Illustration only. Booksy and Fresha publish their own calculators—use your latest statements when you compare.';
 ---
 
-<section id="system" class="compare3-block" aria-label="Comparison">
+<section
+  id="switcher-path"
+  class="compare3-block scroll-mt-24"
+  aria-label="Kersivo versus marketplace booking apps"
+>
   <div class="container">
     <div class="compare3-block__header">
-      <span class="compare3-block__badge">WHY IT WORKS BETTER</span>
-      <h2>ONE STACK. YOUR DOMAIN. YOUR MARGIN.</h2>
+      <span class="compare3-block__badge">FOR SWITCHERS &middot; TWO MODELS</span>
+      <h2>KERSIVO VS MARKETPLACE APPS.</h2>
       <p>
-        One connected stack on your domain. The usual mix splits booking, retail, and admin across apps and sites that
-        tax you again—or park clients where you don&apos;t own the relationship.
+        Booksy and Fresha are proven at scale. Kersivo is built for owners who want <strong>zero Kersivo commission</strong>,
+        a booking site on their own domain, and retail plus admin in one stack. Here is how the two postures differ.
       </p>
     </div>
 
     <div class="compare3-block__table-wrap">
-      <div class="compare3-block__grid" role="table" aria-label="Comparison table">
-        <div class="compare3-block__item compare3-block__brand compare3-block__brand--highlight" role="columnheader">
+      <div class="compare3-block__grid compare3-block__grid--dual" role="table" aria-label="Comparison table">
+        <div
+          class="compare3-block__item compare3-block__brand compare3-block__brand--highlight"
+          role="columnheader"
+        >
           <img
             class="compare3-block__logo compare3-block__logo--kersivo"
             src="/images/logo-kersivo.png"
@@ -56,63 +83,51 @@ const comparisonRows = [
             loading="lazy"
             decoding="async"
           />
-          <p class="compare3-block__brand-copy">Booking · retail pickup · one admin</p>
+          <p class="compare3-block__brand-copy">Your domain, your admin, zero Kersivo take</p>
         </div>
-        <div class="compare3-block__item compare3-block__brand" role="columnheader">
-          <span class="compare3-block__logo compare3-block__logo--alt" aria-hidden="true">
-            <svg
-              class="compare3-block__logo-svg"
-              viewBox="0 0 32 32"
-              fill="none"
-              xmlns="http://www.w3.org/2000/svg"
-              focusable="false"
+        <div class="compare3-block__item compare3-block__brand compare3-block__brand--marketplace" role="columnheader">
+          <p class="compare3-block__brand-title">Marketplace apps</p>
+          <p class="compare3-block__brand-sub">e.g. Booksy, Fresha</p>
+          <p class="compare3-block__brand-copy compare3-block__brand-copy--wide">
+            Large networks, built-in discovery, pricing that blends subscription and marketplace usage.
+          </p>
+        </div>
+
+        {comparisonRows.map((row) => (
+          <>
+            <div
+              class:list={[
+                'compare3-block__item',
+                'compare3-block__value',
+                'compare3-block__value--featured',
+                row.isCost ? 'compare3-block__value--cost' : null,
+              ]}
             >
-              <!-- Apps · template page · tools (reads at 32×32) -->
-              <g fill="none" stroke="currentColor" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round">
-                <!-- Apps: compact 2×2 -->
-                <rect x="2.15" y="11.35" width="2.45" height="2.45" rx="0.45" />
-                <rect x="5.35" y="11.35" width="2.45" height="2.45" rx="0.45" />
-                <rect x="2.15" y="14.55" width="2.45" height="2.45" rx="0.45" />
-                <rect x="5.35" y="14.55" width="2.45" height="2.45" rx="0.45" />
-                <!-- Template: page + folded corner + two lines -->
-                <rect x="11.35" y="11.1" width="7.05" height="9.45" rx="0.75" />
-                <path d="M16.85 11.1v2.1h2.15" />
-                <path d="M13.15 16.15h4.4M13.15 17.95h5.1" />
-                <!-- Tools: small settings / gear -->
-                <g transform="translate(26.35 16)">
-                  <circle r="1.75" />
-                  <line x1="0" y1="-2.15" x2="0" y2="-3.95" />
-                  <line x1="0" y1="2.15" x2="0" y2="3.95" />
-                  <line x1="-2.15" y1="0" x2="-3.95" y2="0" />
-                  <line x1="2.15" y1="0" x2="3.95" y2="0" />
-                  <line x1="-1.52" y1="-1.52" x2="-2.8" y2="-2.8" />
-                  <line x1="1.52" y1="-1.52" x2="2.8" y2="-2.8" />
-                  <line x1="-1.52" y1="1.52" x2="-2.8" y2="2.8" />
-                  <line x1="1.52" y1="1.52" x2="2.8" y2="2.8" />
-                </g>
-              </g>
-            </svg>
-          </span>
-          <p class="compare3-block__brand-title">Typical mix</p>
-          <p class="compare3-block__brand-copy">Apps · templates · extra tools</p>
-        </div>
-        {
-          comparisonRows.map((row) => (
-            <>
-              <div class="compare3-block__item compare3-block__value compare3-block__value--featured">
-                <span class="compare3-block__row-title">{row.title}</span>
-                <span class="compare3-block__status compare3-block__status--ok">✓</span>
-                <span>{row.kersivo}</span>
-              </div>
-              <div class="compare3-block__item compare3-block__value">
-                <span class="compare3-block__row-title">{row.title}</span>
-                <span class="compare3-block__status compare3-block__status--bad">−</span>
-                <span>{row.alternatives}</span>
-              </div>
-            </>
-          ))
-        }
+              <span class="compare3-block__row-title">{row.title}</span>
+              <span class="compare3-block__status compare3-block__status--ok">&check;</span>
+              <span>{row.kersivo}</span>
+            </div>
+            <div
+              class:list={[
+                'compare3-block__item',
+                'compare3-block__value',
+                'compare3-block__value--marketplace',
+                row.isCost ? 'compare3-block__value--cost' : null,
+              ]}
+            >
+              <span class="compare3-block__row-title">{row.title}</span>
+              <span class="compare3-block__status compare3-block__status--neutral" aria-hidden="true">&middot;</span>
+              <span>{row.marketplace}</span>
+            </div>
+          </>
+        ))}
       </div>
     </div>
+
+    <p class="compare3-block__anchor">
+      Choose breadth inside a marketplace, or margin and brand control on your own URL &mdash; both are valid; Kersivo is for the latter.
+    </p>
+
+    <p class="compare3-block__footnote">{costNote}</p>
   </div>
 </section>

@@ -1,0 +1,101 @@
+---
+interface ValueCard {
+  heading: string;
+  body: string;
+  glyph: 'shop' | 'zero' | 'system' | 'setup' | 'open';
+}
+
+interface Props {
+  values?: ValueCard[];
+}
+
+const {
+  values = [
+    {
+      heading: 'Own your shop online',
+      body: 'Your domain. Your brand. Your client list. Not a tile in someone else\u2019s marketplace.',
+      glyph: 'shop',
+    },
+    {
+      heading: '0% commission, by design',
+      body: 'Never a cut on bookings or retail. Stripe applies only to online card payments.',
+      glyph: 'zero',
+    },
+    {
+      heading: 'One system for the day',
+      body: 'Booking, admin and retail under one login. No glued-together stack.',
+      glyph: 'system',
+    },
+    {
+      heading: 'Set up for you',
+      body: 'Services, team, deposits, reminders, retail, domain. We build, you run your shop.',
+      glyph: 'setup',
+    },
+    {
+      heading: 'Transparent. No lock-in.',
+      body: 'Setup + monthly Care + Stripe = the whole bill. Your data exports anytime.',
+      glyph: 'open',
+    },
+  ],
+} = Astro.props as Props;
+---
+
+<section class="brand-values" aria-labelledby="brand-values-title">
+  <div class="container">
+    <div class="brand-values__intro">
+      <p class="brand-values__eyebrow">WHAT KERSIVO IS</p>
+      <h2 id="brand-values-title" class="brand-values__heading">YOUR BOOKING. YOUR BRAND. ZERO COMMISSION.</h2>
+      <p class="brand-values__lead">
+        A complete booking, admin and retail system on your own domain &mdash; built and launched for you, then yours to run.
+      </p>
+    </div>
+
+    <ul class="brand-values__grid" role="list">
+      {values.map((value) => (
+        <li class="brand-values__card">
+          <span class="brand-values__icon" aria-hidden="true">
+            {value.glyph === 'shop' && (
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M3 9 4.5 4h15L21 9"/>
+                <path d="M3 9v11h18V9"/>
+                <path d="M3 9c0 1.66 1.34 3 3 3s3-1.34 3-3 1.34 3 3 3 3-1.34 3-3 1.34 3 3 3 3-1.34 3-3"/>
+                <path d="M9 20v-5h6v5"/>
+              </svg>
+            )}
+            {value.glyph === 'zero' && (
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round">
+                <ellipse cx="12" cy="12" rx="6" ry="8"/>
+                <path d="m5 5 14 14"/>
+              </svg>
+            )}
+            {value.glyph === 'system' && (
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round">
+                <rect x="3" y="4" width="18" height="6" rx="1.5"/>
+                <rect x="3" y="14" width="8" height="6" rx="1.5"/>
+                <rect x="13" y="14" width="8" height="6" rx="1.5"/>
+              </svg>
+            )}
+            {value.glyph === 'setup' && (
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M14.7 6.3a4 4 0 1 1-5 5L4 17v3h3l5.7-5.7"/>
+                <path d="m14 8 2 2"/>
+                <path d="M17 3l4 4-3 3-4-4z"/>
+              </svg>
+            )}
+            {value.glyph === 'open' && (
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round">
+                <rect x="3" y="11" width="18" height="10" rx="1.5"/>
+                <path d="M7 11V8a5 5 0 0 1 10 0"/>
+                <circle cx="12" cy="16" r="1"/>
+              </svg>
+            )}
+          </span>
+          <div class="brand-values__card-body">
+            <h3 class="brand-values__card-title">{value.heading}</h3>
+            <p class="brand-values__card-body-text">{value.body}</p>
+          </div>
+        </li>
+      ))}
+    </ul>
+  </div>
+</section>

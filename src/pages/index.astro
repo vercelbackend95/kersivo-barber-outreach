@@ -2,16 +2,18 @@
 import MainLayout from '@/layouts/MainLayout.astro';
 import '../styles/components/system-chooser.css';
 import '../styles/components/compare3.css';
-import '../styles/components/trustStrip3.css';
-import { TrustStrip3 } from '../components/trustStrip3';
+import '../styles/components/brandValues.css';
+import '../styles/components/audiencePicker.css';
+import '../styles/components/newcomerPath.css';
+import '../styles/components/trustBlock.css';
+import BrandValues from '../components/brandValues.astro';
+import AudiencePicker from '../components/audiencePicker.astro';
+import NewcomerPath from '../components/newcomerPath.astro';
+import TrustBlock from '../components/trustBlock.astro';
 import Compare3 from '../components/compare3.astro';
 import { Feature261 } from '../components/feature261';
 import { Process2 } from '../components/process2';
-import '../styles/components/hero108.css';
-import Hero108 from '../components/hero108.astro';
-import SettingsIntegrations3a from '../components/settingsIntegrations3a.astro';
 import ShopProductCards6 from '../components/shopProductCards6.astro';
-import '../styles/components/settingsIntegrations3a.css';
 import '../styles/components/shopProductCards6.css';
 import { Pricing36 } from '../components/pricing36';
 import { RateCard1 } from '../components/rateCard1';
@@ -26,6 +28,8 @@ import '../styles/components/contact16.css';
 import Footer50 from '../components/footer50.astro';
 import '../styles/components/footer50.css';
 import '../styles/components/feature261.css';
+import '../styles/components/migrationGuide.css';
+import MigrationGuide from '../components/migrationGuide.astro';
 import '../styles/components/process2.css';
 import '../styles/components/hero227.css';
 import { Hero227 } from '../components/hero227';
@@ -38,7 +42,7 @@ const DEMO_ADMIN_PASSWORD = import.meta.env.PUBLIC_DEMO_ADMIN_PASSWORD
 ---
 
 <MainLayout
-  title="Kersivo — Barber Management System"
+  title="Kersivo — Bookings on your domain, 0% commission"
   barberDemoJsonLd={true}
 >
     <main>
@@ -176,29 +180,31 @@ const DEMO_ADMIN_PASSWORD = import.meta.env.PUBLIC_DEMO_ADMIN_PASSWORD
 
     <Hero227 client:load />
 
-    <TrustStrip3 />
+    <BrandValues />
+    <AudiencePicker />
     <Compare3 />
+    <MigrationGuide />
+    <NewcomerPath />
     <Feature261 />
-        <Process2 client:load />
-    <Hero108 />
-    <SettingsIntegrations3a />
     <ShopProductCards6 />
-        <Pricing36 />
-            <RateCard1 />
+    <Process2 client:load />
+    <Pricing36 />
+    <RateCard1 />
+    <TrustBlock />
     <Faq4 />
     <Cta10 />
     <Contact16 />
     <Footer50
-      heading="Ready for a high-performance shop? Switch to a sub-second booking system."
-      description="This demo is just the beginning. Let's build your custom, lightning-fast setup in Bournemouth."
-      ctaText="GET STARTED"
+      heading="Your booking. Your brand. Zero commission."
+      description="Whether you are switching from Booksy/Fresha or starting your first system, we set you up in about two weeks and never take a cut of your bookings."
+      ctaText="PLAN MY SETUP"
 
       ctaHref="#book-demo"
       ctaIsDemo={true}
       brandName="Kersivo"
       navigation={[
         { name: 'Home', href: '#home' },
-        { name: 'System', href: '#system' },
+        { name: 'Paths', href: '#paths' },
         { name: 'Pricing', href: '#pricing' },
         { name: 'FAQ', href: '#faq' },
         { name: 'Contact', href: '#contact' },

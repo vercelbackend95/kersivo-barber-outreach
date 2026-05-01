@@ -1,0 +1,455 @@
+/* ============================================================
+   migration-guide ("The Pivot") — high-conversion switching section
+   BEM: .mg__*
+   Tokens: var(--*) from tokens.css
+   ============================================================ */
+
+/* ── Section shell ────────────────────────────────────────── */
+
+.mg {
+  position: relative;
+  background: var(--bg);
+  padding: 8rem 0 7rem;
+  overflow: hidden;
+  /* Visual break between surface-1 sections on either side */
+  border-top: 1px solid var(--border);
+  border-bottom: 1px solid var(--border);
+}
+
+/* Radial accent glow — sits behind all content */
+.mg__glow {
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(
+    ellipse 80% 55% at 50% 0%,
+    color-mix(in srgb, var(--accent) 7%, transparent) 0%,
+    transparent 70%
+  );
+  pointer-events: none;
+  z-index: 0;
+}
+
+.mg .container {
+  position: relative;
+  z-index: 1;
+}
+
+/* ── Zone 1: Intro (centred headline block) ───────────────── */
+
+.mg__intro {
+  text-align: center;
+  margin-bottom: 2.75rem;
+}
+
+.mg__eyebrow {
+  display: inline-block;
+  font-family: var(--font-body);
+  font-size: var(--text-xs);
+  font-weight: 700;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--accent);
+  border: 1px solid color-mix(in srgb, var(--accent) 40%, transparent);
+  border-radius: var(--radius-4);
+  padding: 0.28rem 0.72rem;
+  margin-bottom: 1.75rem;
+}
+
+.mg__headline {
+  font-family: var(--font-heading);
+  font-size: clamp(3.25rem, 8vw, 6.5rem);
+  font-weight: 400;
+  line-height: 0.97;
+  letter-spacing: var(--tracking-heading);
+  text-transform: uppercase;
+  color: var(--fg);
+  margin-bottom: 2rem;
+}
+
+.mg__lead {
+  font-size: var(--text-lg);
+  line-height: 1.7;
+  color: var(--muted);
+  max-width: 56ch;
+  margin: 0 auto;
+}
+
+/* Preface above compact beats — no timeline metaphor */
+.mg__path-preface {
+  text-align: center;
+  font-size: var(--text-md);
+  line-height: 1.65;
+  color: color-mix(in srgb, var(--muted) 92%, var(--fg));
+  max-width: 44ch;
+  margin: 0 auto 1.5rem;
+}
+
+/* ── Zone 2: Compact beats (single row XL, stacked mobile) ─── */
+
+.mg__path {
+  list-style: none;
+  margin: 0 auto 2.75rem;
+  padding: 0;
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 0.85rem;
+  max-width: 72rem;
+}
+
+@media (min-width: 640px) {
+  .mg__path {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 0.875rem;
+  }
+}
+
+@media (min-width: 1100px) {
+  .mg__path {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: 0.75rem;
+    margin-bottom: 3rem;
+  }
+}
+
+.mg__beat {
+  margin: 0;
+}
+
+.mg__beat-inner {
+  height: 100%;
+  background: var(--surface-1);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-12);
+  padding: 0.95rem 1rem 1.05rem;
+  box-shadow: 0 4px 14px rgb(0 0 0 / 0.16);
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+}
+
+.mg__beat--pivot .mg__beat-inner {
+  border-color: color-mix(in srgb, var(--accent) 38%, var(--border));
+  box-shadow:
+    0 4px 16px rgb(0 0 0 / 0.18),
+    inset 3px 0 0 color-mix(in srgb, var(--accent) 82%, transparent);
+}
+
+.mg__beat-meta {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-start;
+  gap: 0.4rem 0.55rem;
+  margin-bottom: 0.15rem;
+}
+
+.mg__beat-num {
+  flex: none;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 1.85rem;
+  height: 1.85rem;
+  padding: 0 0.35rem;
+  border-radius: var(--radius-4);
+  font-family: var(--font-heading);
+  font-size: 0.95rem;
+  font-weight: 400;
+  letter-spacing: 0.06em;
+  line-height: 1;
+  color: var(--accent);
+  background: color-mix(in srgb, var(--accent) 10%, transparent);
+  border: 1px solid color-mix(in srgb, var(--accent) 32%, transparent);
+}
+
+.mg__beat--pivot .mg__beat-num {
+  background: color-mix(in srgb, var(--accent) 16%, transparent);
+  border-color: color-mix(in srgb, var(--accent) 48%, transparent);
+}
+
+.mg__beat-tags {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.35rem;
+  flex: 1;
+  min-width: 0;
+}
+
+.mg__beat-range {
+  display: inline-flex;
+  font-family: var(--font-body);
+  font-size: 0.65rem;
+  font-weight: 700;
+  letter-spacing: 0.09em;
+  text-transform: uppercase;
+  color: color-mix(in srgb, var(--muted) 92%, var(--fg));
+}
+
+.mg__beat-lane {
+  display: inline-flex;
+  font-family: var(--font-body);
+  font-size: 0.62rem;
+  font-weight: 700;
+  letter-spacing: 0.09em;
+  text-transform: uppercase;
+  border-radius: var(--radius-full);
+  padding: 0.12rem 0.42rem;
+}
+
+.mg__beat-lane--marketplace {
+  color: var(--muted);
+  background: color-mix(in srgb, var(--muted) 8%, transparent);
+  border: 1px solid color-mix(in srgb, var(--border) 75%, var(--muted));
+}
+
+.mg__beat-lane--kersivo {
+  color: var(--info);
+  background: color-mix(in srgb, var(--info) 10%, transparent);
+  border: 1px solid color-mix(in srgb, var(--info) 32%, transparent);
+}
+
+.mg__beat-title {
+  margin: 0;
+  font-family: var(--font-heading);
+  font-size: clamp(1rem, 1.8vw, 1.2rem);
+  font-weight: 400;
+  line-height: 1.06;
+  letter-spacing: 0.03em;
+  text-transform: uppercase;
+  color: var(--fg);
+}
+
+.mg__beat-body {
+  margin: 0;
+  font-size: var(--text-xs);
+  line-height: 1.5;
+  color: var(--muted);
+  flex: 1;
+}
+
+.mg__beat-reassure {
+  margin: 0.35rem 0 0;
+  padding-top: 0.5rem;
+  border-top: 1px solid var(--border);
+  font-size: 0.6875rem;
+  line-height: 1.5;
+  color: color-mix(in srgb, var(--muted) 85%, var(--fg));
+}
+
+/* ── Zone 3: Anchor line ──────────────────────────────────── */
+
+.mg__anchor {
+  box-sizing: border-box;
+  max-width: min(52ch, 100%);
+  margin-inline: auto;
+  margin-bottom: 4.5rem;
+  padding-block: 2rem;
+  padding-inline: max(0.25rem, env(safe-area-inset-inline, 0px));
+  border-top: 1px solid var(--border);
+  border-bottom: 1px solid var(--border);
+  text-align: center;
+  text-wrap: balance;
+  font-size: var(--text-lg);
+  line-height: 1.65;
+  color: var(--muted);
+}
+
+@media (min-width: 64rem) {
+  .mg__anchor {
+    max-width: min(72ch, 100%);
+    font-size: var(--text-xl);
+  }
+}
+
+.mg__anchor-accent {
+  color: var(--fg);
+  font-weight: 700;
+}
+
+.mg__anchor-break {
+  display: none;
+}
+
+@media (min-width: 640px) {
+  .mg__anchor-break {
+    display: block;
+  }
+}
+
+/* ── Zone 4: Benefit strip ────────────────────────────────── */
+
+.mg__benefits {
+  list-style: none;
+  padding: 0;
+  margin: 0 auto 4.5rem;
+  width: 100%;
+  max-width: 100%;
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 1rem;
+  justify-content: center;
+}
+
+@media (min-width: 480px) {
+  .mg__benefits {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  /* Three cards in two columns → single orphan centred on middle row */
+  .mg__benefits .mg__benefit:nth-child(3):last-child {
+    grid-column: 1 / -1;
+    justify-self: center;
+    width: calc((100% - 1rem) / 2);
+    max-width: 100%;
+  }
+}
+
+@media (min-width: 1024px) {
+  .mg__benefits {
+    /* Was repeat(4) with three items → empty lane read as “flush left”; three cards need three lanes. */
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+
+  .mg__benefits .mg__benefit:nth-child(3):last-child {
+    grid-column: auto;
+    justify-self: stretch;
+    width: auto;
+    max-width: none;
+  }
+}
+
+.mg__benefit {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.875rem;
+  background: var(--surface-1);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-12);
+  padding: 1.25rem 1.25rem 1.375rem;
+}
+
+.mg__benefit-check {
+  flex: none;
+  width: 1.5rem;
+  height: 1.5rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: color-mix(in srgb, var(--success) 14%, transparent);
+  border-radius: var(--radius-full);
+  font-size: 0.7rem;
+  font-weight: 700;
+  color: var(--success);
+  margin-top: 0.1rem;
+}
+
+.mg__benefit > div {
+  display: flex;
+  flex-direction: column;
+  gap: 0.3rem;
+}
+
+.mg__benefit-label {
+  display: block;
+  font-size: var(--text-md);
+  font-weight: 700;
+  color: var(--fg);
+  line-height: 1.2;
+}
+
+.mg__benefit-detail {
+  display: block;
+  font-size: var(--text-sm);
+  line-height: 1.55;
+  color: var(--muted);
+}
+
+/* ── Zone 5: CTA + footnote ───────────────────────────────── */
+
+.mg__cta-block {
+  text-align: center;
+}
+
+.mg__ctas {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: center;
+  gap: 1rem;
+  margin-bottom: 2rem;
+}
+
+.mg__footnote {
+  font-size: var(--text-xs);
+  line-height: 1.7;
+  color: color-mix(in srgb, var(--muted) 50%, transparent);
+  max-width: 64ch;
+  margin: 0 auto;
+}
+
+/* ── Focus states ─────────────────────────────────────────── */
+
+.mg__ctas a:focus-visible,
+.mg__ctas button:focus-visible {
+  outline: 2px solid var(--focus);
+  outline-offset: 3px;
+  border-radius: var(--radius-4);
+}
+
+/* ── Mobile overrides ─────────────────────────────────────── */
+
+@media (max-width: 639px) {
+  .mg {
+    padding: 5rem 0 4.5rem;
+  }
+
+  .mg__intro {
+    margin-bottom: 2rem;
+  }
+
+  .mg__headline {
+    font-size: clamp(2.75rem, 12vw, 3.75rem);
+  }
+
+  .mg__lead {
+    font-size: var(--text-md);
+  }
+
+  .mg__path {
+    margin-bottom: 2rem;
+  }
+
+  .mg__path-preface {
+    font-size: var(--text-sm);
+    margin-bottom: 1.25rem;
+  }
+
+  .mg__anchor {
+    font-size: var(--text-md);
+    margin-bottom: 3rem;
+  }
+
+  .mg__benefits {
+    margin-bottom: 3rem;
+  }
+
+  .mg__ctas {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .mg__ctas .btn {
+    width: 100%;
+    justify-content: center;
+  }
+}
+
+/* ── Reduced motion ───────────────────────────────────────── */
+
+@media (prefers-reduced-motion: reduce) {
+  .mg,
+  .mg * {
+    transition: none !important;
+    animation: none !important;
+  }
+}

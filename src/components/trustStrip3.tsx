@@ -12,20 +12,20 @@ interface TrustStrip3Props {
 
 const DEFAULT_PILLARS: PillarItem[] = [
   {
-    heading: 'No barber limit',
-    body: 'Few chairs or a big floor—the stack scales. We don’t cap your roster.',
+    heading: '0% commission from us',
+    body: 'Every booking and product sale reaches you at full value. No platform cut — Stripe applies only to online card payments.',
   },
   {
-    heading: 'Your domain',
-    body: 'Book and sell on your URL. Your traffic, your client list.',
+    heading: 'Deposits reduce no-shows',
+    body: 'Require a deposit when booking is made. Clients commit financially — empty chairs drop and filled slots are paid.',
   },
   {
-    heading: 'One admin',
-    body: 'Team, bookings, pickup orders, reports—one login.',
+    heading: 'Automations recover revenue',
+    body: 'Automated SMS reminders, old-client win-back campaigns, and post-visit review requests run on schedule — no staff time required.',
   },
   {
-    heading: '£0 booking fees · no shop cut',
-    body: 'We don’t take a cut on bookings or retail. Shop cards: Stripe. GBP pricing.',
+    heading: 'Switch handled for you',
+    body: 'We build your system while you stay live on Booksy/Fresha, then handle the go-live switch. No downtime, no lost bookings.',
   },
 ];
 

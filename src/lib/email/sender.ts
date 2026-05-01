@@ -193,6 +193,8 @@ export async function sendContactInquiryEmail(input: {
   email: string;
   message: string;
   intent?: string;
+  shopSize: string;
+  currentStack: string;
 }) {
   const inbox =
     import.meta.env.CONTACT_INBOX_EMAIL ??
@@ -202,6 +204,8 @@ export async function sendContactInquiryEmail(input: {
   const html = `<p><strong>New landing page inquiry</strong></p>
   <p><strong>Name:</strong> ${escapeHtml(input.name)}</p>
   <p><strong>Email:</strong> ${escapeHtml(input.email)}</p>
+  <p><strong>Shop size:</strong> ${escapeHtml(input.shopSize)}</p>
+  <p><strong>Current stack:</strong> ${escapeHtml(input.currentStack)}</p>
   ${input.intent ? `<p><strong>Intent:</strong> ${escapeHtml(input.intent)}</p>` : ''}
   <p><strong>Message:</strong></p><p>${escapeHtml(input.message).replace(/\n/g, '<br/>')}</p>`;
 
@@ -214,6 +218,8 @@ export async function sendContactInquiryEmail(input: {
       to: inbox,
       name: input.name,
       email: input.email,
+      shopSize: input.shopSize,
+      currentStack: input.currentStack,
       intent: input.intent ?? '',
       message: input.message
     }

@@ -1,0 +1,134 @@
+---
+interface Props {
+  className?: string;
+}
+
+const { className = '' } = Astro.props as Props;
+
+const ownBrandReasons = [
+  {
+    title: 'A real website for YOUR barbershop—not a tucked-away cloud screen',
+    body: 'Guests book on your domain in the browser using a branded, barber-shop flow tailored to your chairs and services. It reads as yours on the doorstep of Google—not a generic tenant inside an app marketplace.',
+  },
+  {
+    title: 'Returning clients ride the same URL; Kersivo take stays at 0%',
+    body: 'Every repeat cut goes through your own booking surface. Predictable margins on bookings and retail from day one—with no incremental platform commission from us.',
+  },
+  {
+    title: 'Compounding upside lives on assets you actually own',
+    body: 'Search visibility, Maps presence, SMS opt-ins and review history reinforce your trading name—not a directory\u2019s brand. Growing the base you keep matters more every year.',
+  },
+];
+
+const launchSteps = [
+  {
+    range: 'Days 1\u20133',
+    title: 'You brief us',
+    youGive: 'Services list, prices, team, opening hours, logo (or none \u2014 we suggest).',
+    weDo: 'We lock scope with you: DNS/domain, deposit rules, SMS tone, retail flow, then how your public booking site presents your shop before we lay down code.',
+  },
+  {
+    range: 'Days 4\u201311',
+    title: 'We build your shop online',
+    youGive: 'You stay focused on cutting hair.',
+    weDo:
+      'We design and configure your branded client-facing booking website on your domain, wire Stripe deposits, automated SMS reminders, team + services panels, plus retail pickup—all before go-live rehearsals.',
+  },
+  {
+    range: 'Days 12\u201314',
+    title: 'You go live',
+    youGive: 'You confirm everything looks right.',
+    weDo: 'We push your site live, point Google Business Profile to your URL where needed, and walk your chairs through admin. Live bookings settle at 0% commission from Kersivo.',
+  },
+];
+
+const launchExtras = [
+  'Branded booking website on your URL—looks like YOUR shop online, built for bookings + retail cues',
+  'Google Business Profile setup so people find you on Maps alongside your owned domain flow',
+  'Stripe deposits from booking \u2014 fewer no-shows from day one',
+  'SMS reminders, win-back nudges, and review requests baked into the workflow',
+];
+---
+
+<section
+  id="newcomer-path"
+  class={`newcomer-path scroll-mt-24 ${className}`.trim()}
+  aria-labelledby="newcomer-path-title"
+>
+  <div class="container">
+    <header class="newcomer-path__intro">
+      <p class="newcomer-path__eyebrow">FOR NEW SHOPS &middot; NO SYSTEM YET</p>
+      <h2 id="newcomer-path-title" class="newcomer-path__heading">
+        Launch on your own branded website—not someone else&apos;s playground.
+      </h2>
+      <p class="newcomer-path__lead">
+        We deliver a branded client-facing booking website on your domain: front-of-house polish with admin that lives
+        in the browser. Not a marketplace profile and not a nameless cloud login &mdash; your list, your URL, 0%
+        booking take from Kersivo, usually live in about two weeks.
+      </p>
+    </header>
+
+    <div class="newcomer-path__split">
+      <article class="newcomer-path__own">
+        <h3 class="newcomer-path__sub-heading">Invest where the long-term payoff is: YOUR brand URL</h3>
+        <p class="newcomer-path__own-kicker">
+          Visitors experience your bespoke booking website on your domain. Admin keeps you organised in the browser, but clients never mistake you for a marketplace listing.
+        </p>
+        <ul class="newcomer-path__own-list" role="list">
+          {ownBrandReasons.map((reason) => (
+            <li class="newcomer-path__own-item">
+              <span class="newcomer-path__own-icon" aria-hidden="true">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <path d="M20 6 9 17l-5-5"/>
+                </svg>
+              </span>
+              <div>
+                <p class="newcomer-path__own-title">{reason.title}</p>
+                <p class="newcomer-path__own-body">{reason.body}</p>
+              </div>
+            </li>
+          ))}
+        </ul>
+      </article>
+
+      <article class="newcomer-path__launch">
+        <h3 class="newcomer-path__sub-heading">Live in about two weeks</h3>
+        <ol class="newcomer-path__steps" role="list">
+          {launchSteps.map((step, index) => (
+            <li class="newcomer-path__step">
+              <span class="newcomer-path__step-range">{step.range}</span>
+              <p class="newcomer-path__step-title">{`0${index + 1}. ${step.title}`}</p>
+              <p class="newcomer-path__step-line">
+                <span class="newcomer-path__step-actor newcomer-path__step-actor--we">We do:</span>
+                {step.weDo}
+              </p>
+              <p class="newcomer-path__step-line">
+                <span class="newcomer-path__step-actor newcomer-path__step-actor--you">You do:</span>
+                {step.youGive}
+              </p>
+            </li>
+          ))}
+        </ol>
+      </article>
+    </div>
+
+    <ul class="newcomer-path__extras" role="list" aria-label="What you get from day one">
+      {launchExtras.map((extra) => (
+        <li class="newcomer-path__extra">
+          <span class="newcomer-path__extra-check" aria-hidden="true">&check;</span>
+          {extra}
+        </li>
+      ))}
+    </ul>
+
+    <div class="newcomer-path__cta-block">
+      <a href="#book-demo" class="btn btn--primary btn--lg" data-demo-cta>Plan my setup &mdash; free</a>
+      <button type="button" class="btn btn--secondary btn--lg" data-system-chooser-open>
+        Open the live admin
+      </button>
+      <p class="newcomer-path__footnote">
+        Most shops go live in about two weeks. We confirm your timeline before you commit, and you stay in control of when you go live.
+      </p>
+    </div>
+  </div>
+</section>

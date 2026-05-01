@@ -48,21 +48,36 @@ export function isPrismaDatabaseUnavailableError(error: unknown): boolean {
 export const ADMIN_REPORTS_DATABASE_UNAVAILABLE_MESSAGE =
   'Reports are temporarily unavailable because the database could not be reached. Please try again shortly.';
 
-export function logPrismaQuotaFallback(scope: string, error: unknown) {
-  console.warn(`[db] Falling back because Prisma quota was exceeded in ${scope}.`, {
+function getPrismaFallbackReason(error: unknown): 'quota exceeded' | 'database unavailable' | null {
+  if (isPrismaQuotaExceededError(error)) return 'quota exceeded';
+  if (isPrismaDatabaseUnavailableError(error)) return 'database unavailable';
+  return null;
+}
+
+export function logPrismaResilienceFallback(scope: string, error: unknown) {
+  const reason = getPrismaFallbackReason(error) ?? 'unknown error';
+  console.warn(`[db] Falling back in ${scope} (${reason}).`, {
     error: error instanceof Error ? error.message : error
   });
 }
 
-export async function withPrismaQuotaFallback<T>(scope: string, load: () => Promise<T>, fallback: T): Promise<T> {
+export function logPrismaQuotaFallback(scope: string, error: unknown) {
+  logPrismaResilienceFallback(scope, error);
+}
+
+export async function withPrismaResilienceFallback<T>(scope: string, load: () => Promise<T>, fallback: T): Promise<T> {
   try {
     return await load();
   } catch (error) {
-    if (!isPrismaQuotaExceededError(error)) {
+    if (!getPrismaFallbackReason(error)) {
       throw error;
     }
 
-    logPrismaQuotaFallback(scope, error);
+    logPrismaResilienceFallback(scope, error);
     return fallback;
   }
+}
+
+export async function withPrismaQuotaFallback<T>(scope: string, load: () => Promise<T>, fallback: T): Promise<T> {
+  return withPrismaResilienceFallback(scope, load, fallback);
 }

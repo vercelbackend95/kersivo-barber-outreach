@@ -1,0 +1,200 @@
+/* ============================================================
+   audience-picker — two equal-weight cards: switcher vs newcomer.
+   Lets each ICP self-select their path through the page.
+   BEM: .audience-picker__*
+   ============================================================ */
+
+.audience-picker {
+  position: relative;
+  background: var(--bg);
+  padding: 5.5rem 0 5rem;
+}
+
+.audience-picker .container {
+  display: grid;
+  gap: 2.75rem;
+}
+
+.audience-picker__intro {
+  text-align: center;
+  max-width: 56ch;
+  margin-inline: auto;
+  display: grid;
+  gap: 0.85rem;
+}
+
+.audience-picker__eyebrow {
+  display: inline-block;
+  margin: 0 auto;
+  padding: 0.28rem 0.72rem;
+  border: 1px solid color-mix(in srgb, var(--accent) 40%, transparent);
+  border-radius: var(--radius-4);
+  font-family: var(--font-body);
+  font-size: var(--text-xs);
+  font-weight: 700;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--accent);
+}
+
+.audience-picker__heading {
+  margin: 0;
+  font-family: var(--font-heading);
+  font-size: clamp(2rem, 5vw, 3.25rem);
+  font-weight: 400;
+  line-height: 0.97;
+  letter-spacing: var(--tracking-heading);
+  text-transform: uppercase;
+  color: var(--fg);
+}
+
+.audience-picker__lead {
+  margin: 0;
+  font-size: var(--text-md);
+  line-height: 1.6;
+  color: var(--muted);
+}
+
+.audience-picker__grid {
+  display: grid;
+  gap: 1.25rem;
+  grid-template-columns: 1fr;
+}
+
+@media (min-width: 800px) {
+  .audience-picker__grid {
+    grid-template-columns: 1fr 1fr;
+  }
+}
+
+/* ── Card ─────────────────────────────────────────────────── */
+
+.audience-picker__card {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  padding: 1.75rem 1.6rem 1.6rem;
+  background: var(--surface-1);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-16);
+  text-decoration: none;
+  color: var(--fg);
+  transition: border-color 180ms ease, transform 180ms ease, box-shadow 180ms ease;
+}
+
+.audience-picker__card:hover {
+  border-color: color-mix(in srgb, var(--accent) 60%, var(--border));
+  transform: translateY(-2px);
+  box-shadow:
+    0 0 0 1px color-mix(in srgb, var(--accent) 18%, transparent),
+    0 18px 40px rgb(0 0 0 / 0.32);
+  text-decoration: none;
+}
+
+.audience-picker__card:focus-visible {
+  outline: 2px solid var(--focus);
+  outline-offset: 3px;
+}
+
+.audience-picker__tag {
+  display: inline-flex;
+  align-self: flex-start;
+  font-family: var(--font-body);
+  font-size: var(--text-xs);
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--accent);
+  background: color-mix(in srgb, var(--accent) 14%, transparent);
+  border: 1px solid color-mix(in srgb, var(--accent) 32%, transparent);
+  border-radius: var(--radius-full);
+  padding: 0.22rem 0.7rem;
+}
+
+.audience-picker__card--newcomer .audience-picker__tag {
+  color: var(--info);
+  background: color-mix(in srgb, var(--info) 14%, transparent);
+  border-color: color-mix(in srgb, var(--info) 36%, transparent);
+}
+
+.audience-picker__card-title {
+  margin: 0;
+  font-family: var(--font-heading);
+  font-size: clamp(1.5rem, 3vw, 2rem);
+  font-weight: 400;
+  line-height: 1.05;
+  letter-spacing: 0.025em;
+  text-transform: uppercase;
+}
+
+.audience-picker__card-body {
+  margin: 0;
+  font-size: var(--text-md);
+  line-height: 1.55;
+  color: var(--muted);
+}
+
+.audience-picker__bullets {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  gap: 0.45rem;
+}
+
+.audience-picker__bullets li {
+  position: relative;
+  padding-left: 1.4rem;
+  font-size: var(--text-sm);
+  line-height: 1.5;
+  color: color-mix(in srgb, var(--fg) 86%, var(--muted));
+}
+
+.audience-picker__bullets li::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  top: 0.55rem;
+  width: 0.55rem;
+  height: 0.12rem;
+  background: var(--accent);
+  border-radius: 999px;
+}
+
+.audience-picker__card--newcomer .audience-picker__bullets li::before {
+  background: var(--info);
+}
+
+.audience-picker__card-cta {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  margin-top: auto;
+  padding-top: 0.85rem;
+  font-family: var(--font-body);
+  font-size: var(--text-sm);
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--accent);
+}
+
+.audience-picker__card--newcomer .audience-picker__card-cta {
+  color: var(--info);
+}
+
+.audience-picker__card-cta svg {
+  width: 1rem;
+  height: 1rem;
+  transition: transform 180ms ease;
+}
+
+.audience-picker__card:hover .audience-picker__card-cta svg {
+  transform: translateX(3px);
+}
+
+@media (max-width: 599px) {
+  .audience-picker {
+    padding: 4rem 0 3.5rem;
+  }
+}
