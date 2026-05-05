@@ -124,6 +124,56 @@ const Users = ({ ...props }: IconProps) => (
   </svg>
 );
 
+const User = ({ ...props }: IconProps) => (
+  <svg
+    viewBox="0 0 24 24"
+    fill="none"
+    stroke="currentColor"
+    strokeWidth="2"
+    strokeLinecap="round"
+    strokeLinejoin="round"
+    {...props}
+  >
+    <path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2" />
+    <circle cx="12" cy="7" r="4" />
+  </svg>
+);
+
+const MessageCircle = ({ ...props }: IconProps) => (
+  <svg
+    viewBox="0 0 24 24"
+    fill="none"
+    stroke="currentColor"
+    strokeWidth="2"
+    strokeLinecap="round"
+    strokeLinejoin="round"
+    {...props}
+  >
+    <path d="M7.9 20A9 9 0 1 0 4 16.1L2 22Z" />
+  </svg>
+);
+
+const NotebookPen = ({ ...props }: IconProps) => (
+  <svg
+    viewBox="0 0 24 24"
+    fill="none"
+    stroke="currentColor"
+    strokeWidth="2"
+    strokeLinecap="round"
+    strokeLinejoin="round"
+    {...props}
+  >
+    <path d="M2 6h4" />
+    <path d="M2 10h4" />
+    <path d="M2 14h4" />
+    <path d="M2 18h4" />
+    <rect x="6" y="3" width="14" height="18" rx="2" />
+    <path d="M12 13h4" />
+    <path d="M12 17h4" />
+    <path d="m14 8-2 2 2 2" />
+  </svg>
+);
+
 const BarChart2 = ({ ...props }: IconProps) => (
   <svg
     viewBox="0 0 24 24"
@@ -382,6 +432,9 @@ export {
   ShoppingCart,
   Ticket,
   TrendingUp,
+  User,
+  MessageCircle,
+  NotebookPen,
   Users,
   X,
   Zap,

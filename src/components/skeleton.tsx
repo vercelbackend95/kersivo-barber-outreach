@@ -255,6 +255,32 @@ export function SkeletonBarberRosterCards({
   );
 }
 
+/* ─────────────────────────────────────────────────────────────
+   Vertical timeline skeleton (Admin → Bookings → Timeline)
+   ───────────────────────────────────────────────────────────── */
+
+export function SkeletonVerticalTimeline() {
+  return (
+    <section className="admin-vtl admin-vtl--skeleton" aria-busy="true" aria-hidden="true">
+      <div className="admin-vtl-scroll">
+        {Array.from({ length: 6 }, (_, i) => (
+          <div key={i} className="admin-vtl-slot admin-vtl-slot--skeleton">
+            <span className="skeleton skeleton--text-sm admin-vtl-skeleton-time" />
+            <div className="admin-vtl-slot-body">
+              <div className="admin-vtl-cluster">
+                {Array.from({ length: i % 3 === 0 ? 2 : 1 }, (__, j) => (
+                  <span key={j} className="skeleton skeleton--avatar admin-vtl-skeleton-avatar" />
+                ))}
+              </div>
+              <span className="skeleton admin-vtl-skeleton-line" />
+            </div>
+          </div>
+        ))}
+      </div>
+    </section>
+  );
+}
+
 /** Barber roster grid loading shell — matches Admin → Barbers (manage skeleton × 6). */
 export function BarberRosterOverviewGridSkeleton({ ariaLabel }: { ariaLabel: string }) {
   return (

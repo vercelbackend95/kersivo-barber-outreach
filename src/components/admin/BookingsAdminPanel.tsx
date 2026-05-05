@@ -1,4 +1,5 @@
 import React, { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
+import { AnimatePresence, motion } from 'framer-motion';
 import { createPortal } from 'react-dom';
 import { BarberRosterOverviewGridSkeleton, SkeletonKPICards } from '../skeleton';
 import AdminSectionHeader from './AdminSectionHeader';
@@ -27,7 +28,7 @@ import type { Barber, ServiceOption, TimeBlock, WorkingHourRow } from './barbers
 import { getDefaultWorkingHourRows } from '../../lib/admin/defaultWorkingHourRows';
 import { formatDelta } from './reportsFormatting';
 import EmptyState from '../EmptyState';
-import { Ban, X } from '../lucide-react';
+import { Ban, Clock, ListOrdered, X } from '../lucide-react';
 import { ADMIN_BOOKING_HISTORY_PAGE_SIZE } from '../../lib/admin/bookingHistoryPageSize';
 import { canShopAdminCancelByLeadTime } from '../../lib/booking/policies';
 import { countBookingsByStatusTone, getBookingStatusTone, isCancelledBookingStatus } from './bookingStatus';
@@ -90,6 +91,26 @@ type ClientProfilePayload = {
 
 
 type AdminBookingView = 'timeline' | 'list';
+
+const VIEW_ORDER: Record<AdminBookingView, number> = { timeline: 0, list: 1 };
+
+const viewSlideVariants = {
+  enter: (custom: { dir: number; mobile: boolean }) => ({
+    x: custom.dir * (custom.mobile ? 28 : 48),
+    opacity: 0,
+  }),
+  center: {
+    x: 0,
+    opacity: 1,
+    transition: { duration: 0.24, ease: [0.4, 0.0, 0.2, 1] },
+  },
+  exit: (custom: { dir: number; mobile: boolean }) => ({
+    x: custom.dir * (custom.mobile ? -28 : -48),
+    opacity: 0,
+    transition: { duration: 0.18, ease: [0.4, 0.0, 1.0, 1] },
+  }),
+};
+
 type HistoryDateRange = {
   from?: Date;
   to?: Date;
@@ -717,6 +738,9 @@ export default function BookingsAdminPanel({ isActive, mode, onBackToDashboard }
   const [searchShortcutHint, setSearchShortcutHint] = useState('Ctrl+K');
   const [showSearchKbdHint, setShowSearchKbdHint] = useState(false);
   const [activeView, setActiveView] = useState<AdminBookingView>('timeline');
+  const prevViewRef = useRef<AdminBookingView>('timeline');
+  const [slideDirection, setSlideDirection] = useState(0);
+  const [isTimelineEnterComplete, setIsTimelineEnterComplete] = useState(activeView !== 'timeline');
   const [selectedDate, setSelectedDate] = useState(() => readInitialBookingDateFromUrl() ?? getTodayLondonDate());
   const [historyBarberId, setHistoryBarberId] = useState<string>('all');
   const [historyDateRange, setHistoryDateRange] = useState<HistoryDateRange | null>(null);
@@ -824,6 +848,16 @@ export default function BookingsAdminPanel({ isActive, mode, onBackToDashboard }
   useEffect(() => {
     historyCursorRef.current = historyCursor;
   }, [historyCursor]);
+
+  useEffect(() => {
+    if (prevViewRef.current !== activeView) {
+      setSlideDirection(VIEW_ORDER[activeView] > VIEW_ORDER[prevViewRef.current] ? 1 : -1);
+      prevViewRef.current = activeView;
+    }
+    if (activeView === 'timeline') {
+      setIsTimelineEnterComplete(false);
+    }
+  }, [activeView]);
 
   const fetchTimeBlocks = useCallback(async () => {
     if (timeBlocksInFlightRef.current) return;
@@ -2327,7 +2361,12 @@ export default function BookingsAdminPanel({ isActive, mode, onBackToDashboard }
                             className={isActiveTab ? 'active' : ''}
                             onClick={() => setActiveView(view)}
                           >
-                            {label}
+                            {view === 'timeline' ? (
+                              <Clock className="admin-view-toggle-icon" aria-hidden />
+                            ) : (
+                              <ListOrdered className="admin-view-toggle-icon" aria-hidden />
+                            )}
+                            <span className="admin-view-toggle-label">{label}</span>
                           </button>
                         );
                       })}
@@ -2447,7 +2486,7 @@ export default function BookingsAdminPanel({ isActive, mode, onBackToDashboard }
       ref={bookingShellRef}
       className={`surface booking-shell${mode === 'reports' ? ' booking-shell--reports' : ''}${mode === 'blocks' ? ' admin-services-shell' : ''}`}
     >
-      {mode === 'dashboard' && activeView === 'timeline' ? (
+      {mode === 'dashboard' ? (
         <div data-feature261-booking-overview-shot="">
           <AdminSectionHeader
             title={BOOKINGS_SECTION_HEADER.dashboard.title}
@@ -2457,20 +2496,103 @@ export default function BookingsAdminPanel({ isActive, mode, onBackToDashboard }
             actions={undefined}
           />
           {dashboardOpsDashCluster}
-          <AdminErrorBoundary>
-            <TodayTimeline
-              barbers={activeBarbers}
-              bookings={visibleBookings}
-              timeBlocks={timeBlocks}
-              selectedDate={selectedDate}
-              isLoading={bookingsInitialLoading || barbersInitialLoading}
-              isSearchActive={Boolean(effectiveClientSearchQuery) || dayOpsFilter !== 'all'}
-              scrollContainerRef={timelineScrollRef}
-              onBookingClick={openTimelineBooking}
-              onGoToNextDay={goToNextTimelineDay}
-              nextDayShortLabel={timelineNextDayLabel}
-            />
-          </AdminErrorBoundary>
+          <div className="admin-view-transition-container">
+            <AnimatePresence initial={false} custom={{ dir: slideDirection, mobile: isMobileViewport }} mode="wait">
+              {activeView === 'timeline' ? (
+                <motion.div
+                  key="timeline"
+                  className="admin-view-motion-wrap admin-view-motion-wrap--timeline"
+                  custom={{ dir: slideDirection, mobile: isMobileViewport }}
+                  variants={viewSlideVariants}
+                  initial="enter"
+                  animate="center"
+                  exit="exit"
+                  onAnimationComplete={() => setIsTimelineEnterComplete(true)}
+                  style={{ width: '100%' }}
+                >
+                  <AdminErrorBoundary>
+                    <TodayTimeline
+                      barbers={activeBarbers}
+                      bookings={visibleBookings}
+                      timeBlocks={timeBlocks}
+                      selectedDate={selectedDate}
+                      isLoading={bookingsInitialLoading || barbersInitialLoading}
+                      isSearchActive={Boolean(effectiveClientSearchQuery) || dayOpsFilter !== 'all'}
+                      scrollContainerRef={timelineScrollRef}
+                      onBookingClick={openTimelineBooking}
+                      onGoToNextDay={goToNextTimelineDay}
+                      nextDayShortLabel={timelineNextDayLabel}
+                      allowInitialNowScroll={isTimelineEnterComplete}
+                      floatingTopRight={
+                        isMobileViewport ? (
+                          <label
+                            className="admin-date-picker-label admin-date-picker-label--floating"
+                            aria-label={`Select date, currently ${selectedDateLabel}`}
+                          >
+                            <span className="admin-date-picker-text">{selectedDateLabel}</span>
+                            <input
+                              type="date"
+                              className="admin-filter-tab-calendar-input"
+                              value={selectedDate}
+                              onChange={(event) => setSelectedDate(event.target.value)}
+                              aria-label="Select date"
+                            />
+                          </label>
+                        ) : null
+                      }
+                    />
+                  </AdminErrorBoundary>
+                </motion.div>
+              ) : (
+                <motion.div
+                  key="list"
+                  className="admin-view-motion-wrap admin-view-motion-wrap--list"
+                  custom={{ dir: slideDirection, mobile: isMobileViewport }}
+                  variants={viewSlideVariants}
+                  initial="enter"
+                  animate="center"
+                  exit="exit"
+                  style={{ width: '100%' }}
+                >
+                  <div className="admin-bookings-list-search">
+                    <AdminBookingsOpsSearch
+                      variant="standard"
+                      searchInputRef={searchInputRef}
+                      searchResultsRef={searchResultsRef}
+                      clientSearchQuery={clientSearchQuery}
+                      onClientSearchQueryChange={setClientSearchQuery}
+                      searchDropdownBookings={searchDropdownBookings}
+                      searchResultsLabel={searchResultsLabel}
+                      searchResultsLoading={historySearchResultsLoading}
+                      activeSearchResultIndex={activeSearchResultIndex}
+                      onActiveSearchResultIndexChange={setActiveSearchResultIndex}
+                      highlightMatch={highlightMatch}
+                      formatStartTime={formatStartTime}
+                      onSelectBooking={jumpToTimelineBooking}
+                      onClearSearch={clearSearchField}
+                      showKbdHint={showSearchKbdHint}
+                      searchShortcutHint={searchShortcutHint}
+                    />
+                  </div>
+                  <AdminBookingsScheduleList
+                    bookings={visibleBookings}
+                    nowMs={nowMs}
+                    selectedDate={selectedDate}
+                    todayLondonDate={todayLondonDate}
+                    selectedDateLabel={selectedDateLabel}
+                    bookingsInitialLoading={bookingsInitialLoading}
+                    updatedBookingIds={updatedBookingIds}
+                    highlightMatch={highlightMatch}
+                    formatStartTime={formatStartTime}
+                    onOpenClient={openClientProfile}
+                    onCancelBooking={cancelBookingByShop}
+                    cancelLoadingBookingId={cancelLoadingBookingId}
+                    canCancelBooking={canCancelBookingAsShop}
+                  />
+                </motion.div>
+              )}
+            </AnimatePresence>
+          </div>
         </div>
       ) : (
         <>
@@ -2478,13 +2600,11 @@ export default function BookingsAdminPanel({ isActive, mode, onBackToDashboard }
             title={BOOKINGS_SECTION_HEADER[mode].title}
             description={BOOKINGS_SECTION_HEADER[mode].description}
             metaBadge={
-              mode === 'dashboard'
-                ? `${todayBookings.length} today`
-                : mode === 'blocks'
-                  ? `${barbers.length} barbers`
-                  : undefined
+              mode === 'blocks'
+                ? `${barbers.length} barbers`
+                : undefined
             }
-            metaBadgeVariant={mode === 'dashboard' ? 'success' : undefined}
+            metaBadgeVariant={undefined}
             actions={
               mode === 'blocks' ? (
                 <button type="button" className="btn btn--primary" onClick={openAddBarberSheet}>
@@ -2493,7 +2613,7 @@ export default function BookingsAdminPanel({ isActive, mode, onBackToDashboard }
               ) : undefined
             }
           />
-          {mode === 'dashboard' ? dashboardOpsDashCluster : isMobileViewport ? null : renderOpsDashHeroSlot(nonDashboardOpsDashHeroEl)}
+          {isMobileViewport ? null : renderOpsDashHeroSlot(nonDashboardOpsDashHeroEl)}
         </>
       )}
 
@@ -2714,45 +2834,7 @@ export default function BookingsAdminPanel({ isActive, mode, onBackToDashboard }
         </div>
       )}
 
-      {mode === 'dashboard' && activeView === 'list' ? (
-        <>
-          <div className="admin-bookings-list-search">
-            <AdminBookingsOpsSearch
-              variant="standard"
-              searchInputRef={searchInputRef}
-              searchResultsRef={searchResultsRef}
-              clientSearchQuery={clientSearchQuery}
-              onClientSearchQueryChange={setClientSearchQuery}
-              searchDropdownBookings={searchDropdownBookings}
-              searchResultsLabel={searchResultsLabel}
-              searchResultsLoading={historySearchResultsLoading}
-              activeSearchResultIndex={activeSearchResultIndex}
-              onActiveSearchResultIndexChange={setActiveSearchResultIndex}
-              highlightMatch={highlightMatch}
-              formatStartTime={formatStartTime}
-              onSelectBooking={jumpToTimelineBooking}
-              onClearSearch={clearSearchField}
-              showKbdHint={showSearchKbdHint}
-              searchShortcutHint={searchShortcutHint}
-            />
-          </div>
-          <AdminBookingsScheduleList
-            bookings={visibleBookings}
-            nowMs={nowMs}
-            selectedDate={selectedDate}
-            todayLondonDate={todayLondonDate}
-            selectedDateLabel={selectedDateLabel}
-            bookingsInitialLoading={bookingsInitialLoading}
-            updatedBookingIds={updatedBookingIds}
-            highlightMatch={highlightMatch}
-            formatStartTime={formatStartTime}
-            onOpenClient={openClientProfile}
-            onCancelBooking={cancelBookingByShop}
-            cancelLoadingBookingId={cancelLoadingBookingId}
-            canCancelBooking={canCancelBookingAsShop}
-          />
-        </>
-      ) : mode === 'history' ? (
+      {mode === 'history' ? (
         <AdminBookingsScheduleList
           variant="history"
           heading="Booking history"

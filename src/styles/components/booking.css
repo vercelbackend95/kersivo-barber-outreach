@@ -11937,22 +11937,61 @@
 
 .admin-bookings-ops-dash-control-deck .admin-dashboard-controls--ops-dash .admin-view-toggle {
   flex: 0 0 auto;
-  background: transparent;
-  border: none;
-  padding: 3px;
-  gap: 3px;
+  display: inline-flex;
+  align-items: center;
+  background: color-mix(in srgb, var(--fg) 7%, var(--surface));
+  border: 0;
+  border-radius: 8px;
+  padding: 2px;
+  gap: 0;
   min-height: 0;
   box-shadow: none;
 }
 
 .admin-bookings-ops-dash-control-deck .admin-dashboard-controls--ops-dash .admin-view-toggle button {
-  padding: 0.28rem 0.72rem;
-  min-height: calc(var(--admin-ops-control-h) - 0.44rem);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.3rem;
+  padding: 0.26rem 0.65rem;
+  min-height: 0;
+  border: 0;
+  border-radius: 6px;
+  background: transparent;
+  color: color-mix(in srgb, var(--fg) 70%, var(--muted));
+  font-size: 0.72rem;
+  font-weight: 500;
+  letter-spacing: 0.01em;
+  white-space: nowrap;
+  transition: background 0.18s ease, color 0.18s ease, box-shadow 0.18s ease;
+}
+
+.admin-bookings-ops-dash-control-deck .admin-dashboard-controls--ops-dash .admin-view-toggle button:hover {
+  color: var(--fg);
+  background: transparent;
 }
 
 .admin-bookings-ops-dash-control-deck .admin-dashboard-controls--ops-dash .admin-view-toggle button.active {
-  background: color-mix(in srgb, var(--surface-3) 78%, var(--surface));
-  box-shadow: 0 1px 0 color-mix(in srgb, var(--fg) 4%, transparent) inset;
+  background: var(--surface);
+  color: var(--fg);
+  font-weight: 600;
+  box-shadow: 0 1px 2px color-mix(in srgb, var(--fg) 12%, transparent);
+}
+
+.admin-bookings-ops-dash-control-deck .admin-dashboard-controls--ops-dash .admin-view-toggle-icon {
+  width: 0.72rem;
+  height: 0.72rem;
+  stroke-width: 2.1;
+  flex-shrink: 0;
+  opacity: 0.85;
+}
+
+.admin-bookings-ops-dash-control-deck .admin-dashboard-controls--ops-dash .admin-view-toggle button.active .admin-view-toggle-icon {
+  opacity: 1;
+}
+
+.admin-bookings-ops-dash-control-deck .admin-dashboard-controls--ops-dash .admin-view-toggle-label {
+  line-height: 1;
 }
 
 .admin-bookings-ops-dash-control-deck .admin-dashboard-controls--ops-dash .admin-date-picker-label {
@@ -12961,4 +13000,912 @@
   padding: 0.05em 0.4em;
   border-radius: var(--radius-full);
   background: color-mix(in srgb, var(--border) 50%, transparent);
+}
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   Vertical Timeline  (.admin-vtl*)
+   ─ Replaces the horizontal barber-row timeline.
+   ─ Single shared vertical axis, time top→bottom, bookings as accent lines
+     with barber avatar clusters anchored on the left.
+   ═══════════════════════════════════════════════════════════════════════════ */
+
+/* ── Pulse animation for "Now" row ─────────────────────────────────────────── */
+@keyframes admin-vtl-pulse {
+  0%, 100% { opacity: 1; }
+  50%       { opacity: 0.55; }
+}
+
+/* ── Wrapper ─────────────────────────────────────────────────────────────── */
+.admin-vtl {
+  --admin-vtl-time-col: 3.25rem;
+  --admin-vtl-avatar-size: 28px;
+  --admin-vtl-slot-gap: 0.75rem;
+  --admin-vtl-slot-pad-y: 0.6rem;
+  --admin-vtl-slot-pad-x: 1.1rem;
+  --admin-vtl-avatar-overlap: -7px;
+
+  position: relative;
+  border: 1px solid color-mix(in srgb, var(--border) 88%, var(--fg));
+  border-radius: 6px;
+  background: var(--surface);
+  width: 100%;
+  overflow: hidden;
+  box-shadow: 0 1px 0 color-mix(in srgb, var(--fg) 4%, transparent);
+}
+
+/* ── Floating top-right slot (mobile date picker, etc.) ──────────────────── */
+.admin-vtl-floating-slot {
+  position: absolute;
+  top: 0.5rem;
+  right: 0.5rem;
+  z-index: 10;
+  pointer-events: auto;
+}
+
+.admin-date-picker-label--floating {
+  padding: 0.32rem 0.62rem;
+  font-size: 0.72rem;
+  background: color-mix(in srgb, var(--surface-2, var(--surface)) 92%, var(--bg));
+  border: 1px solid color-mix(in srgb, var(--border) 65%, transparent);
+  border-radius: var(--radius-full);
+  box-shadow: 0 2px 6px color-mix(in srgb, var(--fg) 14%, transparent);
+  color: color-mix(in srgb, var(--fg) 92%, var(--muted));
+  font-weight: 600;
+  letter-spacing: 0.02em;
+  position: relative;
+}
+
+/* ── Scroll container ────────────────────────────────────────────────────── */
+.admin-vtl-scroll {
+  overflow-y: auto;
+  overflow-x: hidden;
+  max-height: 72vh;
+  padding: 0.35rem 0;
+  position: relative;
+  scroll-behavior: smooth;
+  overscroll-behavior-y: contain;
+  scrollbar-gutter: stable;
+}
+
+/* ── Slot row ────────────────────────────────────────────────────────────── */
+.admin-vtl-slot {
+  display: flex;
+  align-items: center;
+  gap: var(--admin-vtl-slot-gap);
+  padding: var(--admin-vtl-slot-pad-y) var(--admin-vtl-slot-pad-x);
+  position: relative;
+  transition: background-color 0.1s ease;
+}
+
+.admin-vtl-slot:hover {
+  background: color-mix(in srgb, var(--surface-1, var(--surface)) 60%, var(--bg));
+}
+
+.admin-vtl-slot--interactive {
+  cursor: pointer;
+}
+
+.admin-vtl-slot--interactive:focus-visible {
+  outline: 2px solid var(--focus);
+  outline-offset: -2px;
+  background: color-mix(in srgb, var(--surface-1, var(--surface)) 72%, var(--bg));
+}
+
+/* ── Time label ──────────────────────────────────────────────────────────── */
+.admin-vtl-slot-time {
+  min-width: var(--admin-vtl-time-col);
+  flex-shrink: 0;
+  font-size: 0.72rem;
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+  letter-spacing: 0.01em;
+  color: color-mix(in srgb, var(--muted) 90%, var(--fg));
+  line-height: 1;
+}
+
+/* ── Slot body (cluster + line) ──────────────────────────────────────────── */
+.admin-vtl-slot-body {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  min-width: 0;
+}
+
+/* ── Progress lane + track ───────────────────────────────────────────────── */
+.admin-vtl-progress-lane {
+  flex: 0 1 80%;
+  max-width: 80%;
+  min-width: 9rem;
+  display: flex;
+  align-items: center;
+  gap: 0.55rem;
+}
+
+.admin-vtl-progress-track {
+  position: relative;
+  flex: 1 1 auto;
+  min-width: 0;
+  height: calc(var(--admin-vtl-avatar-size) + 0.75rem);
+  overflow: visible;
+}
+
+/* ── Avatar pin (motion.button) ──────────────────────────────────────────── */
+.admin-vtl-avatar {
+  width: var(--admin-vtl-avatar-size);
+  height: var(--admin-vtl-avatar-size);
+  border-radius: 50%;
+  border: 2px solid var(--surface);
+  background: color-mix(in srgb, var(--surface-2, var(--surface)) 85%, var(--accent));
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  overflow: hidden;
+  /* position:absolute set via inline style — Framer Motion owns the transform */
+  transition: box-shadow 0.12s ease, border-color 0.12s ease;
+  box-shadow: 0 1px 3px color-mix(in srgb, var(--fg) 12%, transparent);
+  padding: 0;
+}
+
+.admin-vtl-avatar:hover {
+  box-shadow: 0 3px 8px color-mix(in srgb, var(--fg) 18%, transparent);
+}
+
+.admin-vtl-avatar:focus-visible {
+  outline: 2px solid var(--focus);
+  outline-offset: 1px;
+  z-index: 3;
+}
+
+/* Status-toned avatar border */
+.admin-vtl-avatar--confirmed {
+  border-color: color-mix(in srgb, var(--status-confirmed, var(--success)) 55%, var(--surface));
+}
+.admin-vtl-avatar--pending {
+  border-color: color-mix(in srgb, var(--status-pending, var(--warning)) 55%, var(--surface));
+}
+.admin-vtl-avatar--cancelled {
+  border-color: color-mix(in srgb, var(--status-cancelled, var(--danger)) 45%, var(--surface));
+  opacity: 0.7;
+}
+.admin-vtl-avatar--rescheduled {
+  border-color: color-mix(in srgb, var(--status-rescheduled, var(--info)) 55%, var(--surface));
+}
+
+.admin-vtl-avatar--search {
+  opacity: 0.5;
+}
+
+/* ── Avatar image ────────────────────────────────────────────────────────── */
+.admin-vtl-avatar-img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  border-radius: 50%;
+  display: block;
+}
+
+/* ── Avatar initials fallback ────────────────────────────────────────────── */
+.admin-vtl-avatar-initials {
+  font-size: 0.62rem;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+  color: color-mix(in srgb, var(--fg) 82%, var(--muted));
+  line-height: 1;
+  pointer-events: none;
+  user-select: none;
+}
+
+/* ── Overflow badge (+N) ─────────────────────────────────────────────────── */
+.admin-vtl-avatar-overflow {
+  width: var(--admin-vtl-avatar-size);
+  height: var(--admin-vtl-avatar-size);
+  border-radius: 50%;
+  border: 2px solid var(--surface);
+  background: color-mix(in srgb, var(--surface-2, var(--surface)) 90%, var(--fg));
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.6rem;
+  font-weight: 700;
+  color: color-mix(in srgb, var(--fg) 75%, var(--muted));
+  letter-spacing: 0;
+  flex-shrink: 0;
+  pointer-events: none;
+  user-select: none;
+}
+
+.admin-vtl-slot-end-time {
+  flex: 0 0 auto;
+  min-width: 2.9rem;
+  text-align: right;
+  font-size: 0.72rem;
+  font-weight: 650;
+  font-variant-numeric: tabular-nums;
+  letter-spacing: 0.01em;
+  color: color-mix(in srgb, var(--muted) 88%, var(--fg));
+  line-height: 1;
+}
+
+/* ── Active avatar state (scale handled by Framer Motion animate.scale) ─── */
+.admin-vtl-avatar--active {
+  box-shadow: 0 0 0 2px var(--surface), 0 0 0 3.5px color-mix(in srgb, var(--accent) 65%, transparent);
+}
+
+/* ── Slot group (block wrapper for slot row + expansion) ─────────────────── */
+.admin-vtl-slot-group {
+  position: relative;
+}
+
+/* ── Inline expansion container (overflow:hidden required for height anim) ── */
+.admin-vtl-expansion {
+  overflow: hidden;
+}
+
+.admin-vtl-expansion-list {
+  display: flex;
+  flex-direction: column;
+}
+
+.admin-vtl-expansion-list > .admin-vtl-expansion-card + .admin-vtl-expansion-card {
+  border-top: 1px solid color-mix(in srgb, var(--border) 55%, transparent);
+}
+
+/* ── Expansion card (the actual content) ────────────────────────────────── */
+.admin-vtl-expansion-card {
+  padding:
+    calc(var(--admin-vtl-slot-pad-y) * 1.1)
+    var(--admin-vtl-slot-pad-x)
+    calc(var(--admin-vtl-slot-pad-y) * 1.4);
+  border-top: 1px solid color-mix(in srgb, var(--border) 70%, transparent);
+  border-left: 3px solid var(--accent);
+  background: color-mix(in srgb, var(--surface-1, var(--surface)) 60%, var(--bg, #000));
+  display: flex;
+  flex-direction: column;
+  gap: 0.45rem;
+}
+
+.admin-vtl-expansion-layout {
+  position: relative;
+  display: grid;
+  grid-template-columns: 38px minmax(0, 1fr);
+  align-items: start;
+  gap: 0.65rem;
+}
+
+.admin-vtl-expansion-avatars {
+  width: 38px;
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+}
+
+.admin-vtl-expansion-avatar {
+  width: 32px;
+  height: 32px;
+  border-radius: 999px;
+  overflow: hidden;
+  border: 2px solid var(--surface);
+  background: color-mix(in srgb, var(--surface-2, var(--surface)) 88%, var(--accent));
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.admin-vtl-expansion-avatar--client-placeholder {
+  border-color: color-mix(in srgb, var(--border) 80%, var(--surface));
+  background: color-mix(in srgb, var(--surface-2, var(--surface)) 90%, var(--fg));
+}
+
+.admin-vtl-expansion-avatar-img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  border-radius: 999px;
+  display: block;
+}
+
+.admin-vtl-expansion-avatar-initials {
+  font-size: 0.6rem;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+  color: color-mix(in srgb, var(--fg) 85%, var(--muted));
+  line-height: 1;
+}
+
+.admin-vtl-expansion-avatar-placeholder-icon {
+  width: 13px;
+  height: 13px;
+  color: color-mix(in srgb, var(--muted) 74%, var(--fg));
+  opacity: 0.86;
+}
+
+.admin-vtl-expansion-main {
+  min-width: 0;
+  padding-right: 8.2rem;
+}
+
+.admin-vtl-expansion-actions {
+  position: absolute;
+  top: 0;
+  right: 0;
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
+}
+
+.admin-vtl-expansion-action-btn {
+  width: 32px;
+  height: 32px;
+  padding: 0;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid color-mix(in srgb, var(--border) 70%, transparent);
+  background: color-mix(in srgb, var(--surface-2, var(--surface)) 88%, var(--bg));
+  color: color-mix(in srgb, var(--fg) 84%, var(--muted));
+  border-radius: 999px;
+  cursor: pointer;
+  transition: border-color 0.12s ease, color 0.12s ease, background 0.12s ease, transform 0.12s ease;
+}
+
+.admin-vtl-expansion-action-btn:hover {
+  border-color: color-mix(in srgb, var(--accent) 58%, var(--border));
+  color: color-mix(in srgb, var(--fg) 96%, var(--accent));
+  transform: translateY(-1px);
+}
+
+.admin-vtl-expansion-action-btn:focus-visible {
+  outline: 2px solid var(--focus);
+  outline-offset: 2px;
+}
+
+.admin-vtl-expansion-action-icon {
+  width: 16px;
+  height: 16px;
+}
+
+.admin-vtl-expansion-action-btn--cancel {
+  border-color: color-mix(in srgb, var(--status-cancelled, var(--danger)) 45%, var(--border));
+  background: color-mix(in srgb, var(--status-cancelled, var(--danger)) 18%, var(--surface-2, var(--surface)));
+  color: color-mix(in srgb, var(--status-cancelled, var(--danger)) 82%, var(--fg));
+}
+
+.admin-vtl-expansion-action-btn--cancel:hover {
+  border-color: color-mix(in srgb, var(--status-cancelled, var(--danger)) 70%, var(--border));
+  background: color-mix(in srgb, var(--status-cancelled, var(--danger)) 26%, var(--surface-2, var(--surface)));
+  color: var(--status-cancelled, var(--danger));
+}
+
+.admin-vtl-expansion-action-btn--notes {
+  border-color: color-mix(in srgb, var(--status-rescheduled, var(--info)) 48%, var(--border));
+  background: color-mix(in srgb, var(--status-rescheduled, var(--info)) 16%, var(--surface-2, var(--surface)));
+  color: color-mix(in srgb, var(--status-rescheduled, var(--info)) 80%, var(--fg));
+}
+
+.admin-vtl-expansion-action-btn--notes:hover {
+  border-color: color-mix(in srgb, var(--status-rescheduled, var(--info)) 72%, var(--border));
+  background: color-mix(in srgb, var(--status-rescheduled, var(--info)) 24%, var(--surface-2, var(--surface)));
+  color: var(--status-rescheduled, var(--info));
+}
+
+.admin-vtl-expansion-action-btn--message {
+  border-color: color-mix(in srgb, var(--status-confirmed, var(--success)) 44%, var(--border));
+  background: color-mix(in srgb, var(--status-confirmed, var(--success)) 16%, var(--surface-2, var(--surface)));
+  color: color-mix(in srgb, var(--status-confirmed, var(--success)) 80%, var(--fg));
+}
+
+.admin-vtl-expansion-action-btn--message:hover {
+  border-color: color-mix(in srgb, var(--status-confirmed, var(--success)) 68%, var(--border));
+  background: color-mix(in srgb, var(--status-confirmed, var(--success)) 25%, var(--surface-2, var(--surface)));
+  color: var(--status-confirmed, var(--success));
+}
+
+/* Status-toned left border */
+.admin-vtl-expansion-card--confirmed {
+  border-left-color: var(--status-confirmed, var(--success));
+}
+.admin-vtl-expansion-card--pending {
+  border-left-color: var(--status-pending, var(--warning));
+}
+.admin-vtl-expansion-card--cancelled {
+  border-left-color: var(--status-cancelled, var(--danger));
+  opacity: 0.75;
+}
+.admin-vtl-expansion-card--rescheduled {
+  border-left-color: var(--status-rescheduled, var(--info));
+}
+
+.admin-vtl-expansion-time {
+  font-size: 0.67rem;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: color-mix(in srgb, var(--muted) 90%, var(--fg));
+  margin: 0 0 4px;
+  line-height: 1;
+}
+
+.admin-vtl-expansion-service {
+  font-size: 0.85rem;
+  font-weight: 650;
+  color: color-mix(in srgb, var(--fg) 95%, transparent);
+  margin: 0 0 2px;
+  line-height: 1.3;
+}
+
+.admin-vtl-expansion-client {
+  font-size: 0.78rem;
+  font-weight: 400;
+  color: color-mix(in srgb, var(--muted) 80%, var(--fg));
+  margin: 0 0 10px;
+  line-height: 1.3;
+}
+
+.admin-vtl-expansion-footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  border-top: 1px solid color-mix(in srgb, var(--border) 55%, transparent);
+  padding-top: 8px;
+}
+
+.admin-vtl-expansion-duration {
+  font-size: 0.7rem;
+  font-weight: 500;
+  color: color-mix(in srgb, var(--muted) 70%, var(--fg));
+  letter-spacing: 0.02em;
+}
+
+.admin-vtl-expansion-more {
+  display: flex;
+  align-items: center;
+  gap: 3px;
+  background: none;
+  border: none;
+  padding: 2px 0;
+  cursor: pointer;
+  font-size: 0.72rem;
+  font-weight: 500;
+  letter-spacing: 0.02em;
+  color: color-mix(in srgb, var(--accent) 80%, var(--fg));
+  border-radius: 3px;
+  transition: color 0.12s ease, opacity 0.12s ease;
+}
+
+.admin-vtl-expansion-more:hover {
+  color: var(--accent);
+  opacity: 1;
+}
+
+.admin-vtl-expansion-more:focus-visible {
+  outline: 2px solid var(--focus);
+  outline-offset: 2px;
+}
+
+.admin-vtl-expansion-more-icon {
+  width: 12px;
+  height: 12px;
+  flex-shrink: 0;
+}
+
+@media (max-width: 640px) {
+  .admin-vtl-expansion-card {
+    padding-top: calc(var(--admin-vtl-slot-pad-y) * 1.3);
+    padding-bottom: calc(var(--admin-vtl-slot-pad-y) * 1.6);
+  }
+
+  .admin-vtl-expansion-layout {
+    grid-template-columns: 36px minmax(0, 1fr);
+    gap: 0.55rem;
+  }
+
+  .admin-vtl-expansion-main {
+    padding-right: 7.1rem;
+  }
+
+  .admin-vtl-expansion-actions {
+    gap: 0.3rem;
+  }
+
+  .admin-vtl-expansion-action-btn {
+    width: 30px;
+    height: 30px;
+  }
+
+  .admin-vtl-expansion-action-icon {
+    width: 15px;
+    height: 15px;
+  }
+
+  .admin-vtl-expansion-avatar {
+    width: 30px;
+    height: 30px;
+  }
+
+  .admin-vtl-expansion-service {
+    font-size: 0.9rem;
+  }
+
+  .admin-vtl-expansion-client {
+    font-size: 0.82rem;
+  }
+
+  .admin-vtl-expansion-more {
+    padding: 4px 2px;
+    font-size: 0.78rem;
+  }
+
+  .admin-vtl-expansion-more-icon {
+    width: 14px;
+    height: 14px;
+  }
+}
+
+/* ── Time-block chips ────────────────────────────────────────────────────── */
+.admin-vtl-blocks {
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
+  flex-shrink: 0;
+  margin-right: 0.5rem;
+}
+
+.admin-vtl-block-chip {
+  font-size: 0.65rem;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+  color: color-mix(in srgb, var(--fg) 60%, var(--muted));
+  background: color-mix(in srgb, var(--muted) 10%, var(--surface));
+  border: 1px dashed color-mix(in srgb, var(--border) 72%, transparent);
+  border-radius: 3px;
+  padding: 0.15em 0.45em;
+  white-space: nowrap;
+  max-width: 7rem;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* ── Accent line ─────────────────────────────────────────────────────────── */
+/* Default: flex item inside .admin-vtl-slot-body (non-booking variants) */
+.admin-vtl-slot-line {
+  flex: 1;
+  height: 1.5px;
+  margin-left: 0.55rem;
+  border-radius: 1px;
+  background: linear-gradient(
+    to right,
+    var(--accent),
+    color-mix(in srgb, var(--accent) 20%, transparent)
+  );
+  min-width: 1rem;
+}
+
+/* Override: absolutely centred inside the fixed-width progress track */
+.admin-vtl-progress-track .admin-vtl-slot-line {
+  position: absolute;
+  top: 50%;
+  left: 0;
+  transform: translateY(-50%);
+  width: 100%;
+  flex: none;
+  margin-left: 0;
+  min-width: 0;
+}
+
+.admin-vtl-slot-line--block {
+  background: linear-gradient(
+    to right,
+    color-mix(in srgb, var(--muted) 60%, transparent),
+    transparent
+  );
+}
+
+.admin-vtl-slot-line--empty {
+  background: linear-gradient(
+    to right,
+    color-mix(in srgb, var(--border) 52%, transparent),
+    color-mix(in srgb, var(--border) 8%, transparent)
+  );
+}
+
+/* ── "Now" indicator row ─────────────────────────────────────────────────── */
+.admin-vtl-now-row {
+  display: flex;
+  align-items: center;
+  gap: var(--admin-vtl-slot-gap);
+  padding: 0.35rem var(--admin-vtl-slot-pad-x);
+  pointer-events: none;
+  user-select: none;
+  position: relative;
+  z-index: 4;
+}
+
+.admin-vtl-now-time {
+  min-width: var(--admin-vtl-time-col);
+  flex-shrink: 0;
+  font-size: 0.72rem;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+  letter-spacing: 0.01em;
+  color: var(--accent);
+  line-height: 1;
+}
+
+.admin-vtl-now-track {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  gap: 0;
+  min-width: 0;
+}
+
+.admin-vtl-now-dot {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: var(--accent);
+  flex-shrink: 0;
+  box-shadow: 0 0 0 2px color-mix(in srgb, var(--accent) 25%, transparent);
+  animation: admin-vtl-pulse 2.2s ease-in-out infinite;
+}
+
+.admin-vtl-now-line {
+  flex: 1;
+  height: 2px;
+  background: var(--accent);
+  box-shadow: 0 0 6px color-mix(in srgb, var(--accent) 50%, transparent);
+  border-radius: 1px;
+  animation: admin-vtl-pulse 2.2s ease-in-out infinite;
+}
+
+/* ── Floating "Next day" button (bottom-right of timeline) ──────────────── */
+.admin-vtl-next-day-btn {
+  position: absolute;
+  bottom: 0.5rem;
+  right: 0.5rem;
+  z-index: 10;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.32rem;
+  padding: 0.32rem 0.62rem 0.32rem 0.7rem;
+  border: 1px solid color-mix(in srgb, var(--border) 65%, transparent);
+  border-radius: var(--radius-full);
+  background: color-mix(in srgb, var(--surface-2, var(--surface)) 92%, var(--bg));
+  color: color-mix(in srgb, var(--fg) 92%, var(--muted));
+  font-size: 0.72rem;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+  cursor: pointer;
+  box-shadow: 0 2px 6px color-mix(in srgb, var(--fg) 14%, transparent);
+  transition: background 0.14s ease, color 0.14s ease, border-color 0.14s ease, box-shadow 0.14s ease;
+}
+
+.admin-vtl-next-day-btn:hover {
+  border-color: color-mix(in srgb, var(--accent-hover, var(--accent)) 55%, var(--border));
+  background: color-mix(in srgb, var(--accent) 10%, var(--surface-2, var(--surface)));
+  color: var(--fg);
+  box-shadow: 0 3px 10px color-mix(in srgb, var(--fg) 18%, transparent);
+}
+
+.admin-vtl-next-day-btn:focus-visible {
+  outline: 2px solid var(--focus);
+  outline-offset: 2px;
+}
+
+.admin-vtl-next-day-icon {
+  width: 0.85rem;
+  height: 0.85rem;
+  flex-shrink: 0;
+  opacity: 0.85;
+}
+
+/* ── Empty state ─────────────────────────────────────────────────────────── */
+.admin-vtl-empty {
+  padding: 2.5rem 1.5rem;
+  text-align: center;
+}
+
+.admin-vtl-empty-overlay {
+  position: sticky;
+  top: 48%;
+  z-index: 1;
+  width: 100%;
+  display: flex;
+  justify-content: center;
+  pointer-events: none;
+  margin-bottom: -1.4rem;
+}
+
+.admin-vtl-empty-overlay p {
+  margin: 0;
+  padding: 0.3rem 0.7rem;
+  border-radius: 999px;
+  font-size: 0.72rem;
+  letter-spacing: 0.02em;
+  color: color-mix(in srgb, var(--muted) 82%, var(--fg));
+  background: color-mix(in srgb, var(--surface) 72%, transparent);
+  border: 1px solid color-mix(in srgb, var(--border) 60%, transparent);
+  backdrop-filter: blur(2px);
+}
+
+/* ── Skeleton ────────────────────────────────────────────────────────────── */
+.admin-vtl--skeleton {
+  pointer-events: none;
+}
+
+.admin-vtl-slot--skeleton {
+  gap: 0.75rem;
+}
+
+.admin-vtl-skeleton-time {
+  width: 2.6rem;
+  flex-shrink: 0;
+}
+
+.admin-vtl-skeleton-avatar {
+  width: var(--admin-vtl-avatar-size, 28px) !important;
+  height: var(--admin-vtl-avatar-size, 28px) !important;
+  border-radius: 50% !important;
+  flex-shrink: 0;
+}
+
+.admin-vtl-skeleton-line {
+  flex: 1;
+  height: 1.5px;
+  border-radius: 1px;
+  margin-left: 0.55rem;
+}
+
+/* ── Responsive ──────────────────────────────────────────────────────────── */
+@media (max-width: 47.99rem) {
+  .admin-vtl {
+    --admin-vtl-avatar-size: 26px;
+    --admin-vtl-slot-pad-y: 0.5rem;
+    --admin-vtl-slot-pad-x: 0.75rem;
+    --admin-vtl-slot-gap: 0.55rem;
+    --admin-vtl-time-col: 2.9rem;
+    --admin-vtl-avatar-overlap: -6px;
+  }
+
+  .admin-vtl-progress-lane {
+    flex-basis: 78%;
+    max-width: 78%;
+    min-width: 7.5rem;
+    gap: 0.42rem;
+  }
+
+  .admin-vtl-slot-end-time {
+    min-width: 2.6rem;
+    font-size: 0.68rem;
+  }
+
+  .admin-vtl-slot-time,
+  .admin-vtl-now-time {
+    font-size: 0.68rem;
+  }
+
+  /* ── Mobile single-scroll layout for dashboard timeline view ────────────
+     Eliminates the dual-scroll trap: the timeline becomes the only scroll
+     container, ops cluster stays sticky at the top, section header hidden. */
+  .booking-shell:has([data-feature261-booking-overview-shot]) {
+    padding: 0;
+    margin: 0;
+    border: 0;
+    background: transparent;
+    border-radius: 0;
+    box-shadow: none;
+  }
+
+  .booking-shell [data-feature261-booking-overview-shot] {
+    display: flex;
+    flex-direction: column;
+    height: calc(
+      100dvh -
+      var(
+        --admin-mobile-measured-header-bottom,
+        var(--admin-mobile-header-h, 0px)
+      )
+    );
+    min-height: 0;
+    width: 100%;
+  }
+
+  .booking-shell [data-feature261-booking-overview-shot] > .admin-section-header {
+    display: none;
+  }
+
+  .booking-shell [data-feature261-booking-overview-shot]
+    .admin-bookings-ops--dashboard
+    .admin-date-picker-label {
+    display: none;
+  }
+
+  /* Right-align Timeline/List toggle on mobile (covers both Timeline and List views) */
+  .admin-bookings-ops-dash-control-deck
+    .admin-dashboard-controls--ops-dash {
+    justify-content: flex-end;
+    margin-left: auto;
+  }
+
+  .booking-shell [data-feature261-booking-overview-shot] > .admin-bookings-ops-dash-cluster {
+    flex: 0 0 auto;
+    position: sticky;
+    top: 0;
+    z-index: 5;
+    background: var(--surface);
+    box-shadow: none;
+    border-bottom: 1px solid color-mix(in srgb, var(--border) 88%, var(--fg));
+    gap: 0;
+    padding: 0;
+    margin: 0;
+  }
+
+  .booking-shell [data-feature261-booking-overview-shot] .admin-bookings-ops--dashboard {
+    border: 0;
+    border-radius: 0;
+    background: var(--surface);
+    box-shadow: none;
+    margin: 0;
+  }
+
+  /* Extend the flex height chain through the animation wrapper layers so
+     .admin-vtl-scroll gets its bounded height and can scroll properly. */
+  .booking-shell [data-feature261-booking-overview-shot] > .admin-view-transition-container {
+    flex: 1 1 auto;
+    min-height: 0;
+    display: flex;
+    flex-direction: column;
+  }
+
+  .booking-shell [data-feature261-booking-overview-shot] .admin-view-motion-wrap--timeline {
+    flex: 1 1 auto;
+    min-height: 0;
+    display: flex;
+    flex-direction: column;
+    width: 100%;
+  }
+
+  .booking-shell [data-feature261-booking-overview-shot] .admin-view-motion-wrap--timeline > .admin-vtl {
+    flex: 1 1 auto;
+    min-height: 0;
+    display: flex;
+    flex-direction: column;
+    border-radius: 0;
+    border-left: 0;
+    border-right: 0;
+    border-top: 0;
+  }
+
+  .booking-shell [data-feature261-booking-overview-shot] .admin-vtl-scroll {
+    flex: 1 1 auto;
+    min-height: 0;
+    max-height: none;
+    overscroll-behavior: contain;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  /* Fallback for the original timeline mobile rule (kept for any non-dashboard
+     contexts that may render the timeline outside the data-feature wrapper). */
+  .admin-vtl-scroll {
+    max-height: 80vh;
+  }
+}
+
+@media (min-width: 48rem) and (max-width: 79.99rem) {
+  .admin-vtl {
+    --admin-vtl-slot-pad-y: 0.55rem;
+    --admin-vtl-slot-pad-x: 0.95rem;
+  }
+}
+
+/* View slide transition container — clips horizontal slide animation without
+   creating a new scroll container (overflow-x: clip preserves sticky/absolute
+   children and does not affect vertical scrolling). */
+.admin-view-transition-container {
+  position: relative;
+  overflow-x: clip;
 }

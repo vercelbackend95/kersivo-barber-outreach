@@ -1,12 +1,15 @@
-import React, { memo, useEffect, useMemo, useRef } from 'react';
+import React, { memo, useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { AnimatePresence, motion, useMotionValue, useReducedMotion } from 'framer-motion';
 import { formatInTimeZone } from 'date-fns-tz';
 import { minutesInLondonDay } from '../../lib/booking/time';
 import { getBookingStatusTone } from './bookingStatus';
-import { SkeletonTimelineRows } from '../skeleton';
-import { ArrowRight } from '../lucide-react';
+import { SkeletonVerticalTimeline } from '../skeleton';
+import { ArrowRight, MessageCircle, NotebookPen, User, X } from '../lucide-react';
+
 type TimelineBarber = {
   id: string;
   name: string;
+  avatarUrl?: string | null;
 };
 
 export type TimelineBooking = {
@@ -31,35 +34,6 @@ type TimelineTimeBlock = {
   endAt: string;
 };
 
-type PositionedItem = {
-  id: string;
-  leftPct: number;
-  widthPct: number;
-  topPx: number;
-  heightPx: number;
-  startLabel: string;
-  endLabel: string;
-};
-
-type PositionedBooking = PositionedItem & {
-  type: 'booking';
-  booking: TimelineBooking;
-  density: 'compact' | 'standard' | 'detailed';
-  durationMinutes: number;
-};
-
-type PositionedBlock = PositionedItem & {
-  type: 'timeBlock';
-  timeBlock: TimelineTimeBlock;
-};
-
-type LaneModel = {
-  barber: TimelineBarber;
-  bookings: PositionedBooking[];
-  timeBlocks: PositionedBlock[];
-  laneHeight: number;
-};
-
 type TodayTimelineProps = {
   barbers: TimelineBarber[];
   bookings: TimelineBooking[];
@@ -67,315 +41,686 @@ type TodayTimelineProps = {
   selectedDate: string;
   isLoading?: boolean;
   isSearchActive?: boolean;
+  allowInitialNowScroll?: boolean;
   scrollContainerRef?: React.RefObject<HTMLDivElement | null>;
-
   onBookingClick: (booking: TimelineBooking) => void;
-  /** Advance timeline to the next calendar day (London); control lives in the terminal rail beside barber rows. */
   onGoToNextDay?: () => void;
-  /** Short label for the next day (e.g. "Tue 3 Apr") for aria-label / title. */
   nextDayShortLabel?: string;
+  floatingTopRight?: React.ReactNode;
 };
 
 const ADMIN_TIMEZONE = 'Europe/London';
 const TIMELINE_START_HOUR = 8;
 const TIMELINE_END_HOUR = 24;
 const TIMELINE_SLOT_INTERVAL_MINUTES = 30;
-const TIMELINE_SLOT_WIDTH_REM = 4;
 const TIMELINE_TOTAL_MINUTES = (TIMELINE_END_HOUR - TIMELINE_START_HOUR) * 60;
-const TIMELINE_TOTAL_SLOTS = TIMELINE_TOTAL_MINUTES / TIMELINE_SLOT_INTERVAL_MINUTES;
-/** Fits time + service + client line at compact density */
-const BOOKING_CARD_HEIGHT = 64;
-const BOOKING_STACK_GAP = 6;
-const LANE_INNER_PADDING = 8;
-const NOW_INDICATOR_REFRESH_MS = 15000;
-const INITIAL_NOW_SCROLL_OFFSET_RATIO = 0.38;
-const INITIAL_NOW_SCROLL_RETRY_COUNT = 6;
+const NOW_REFRESH_MS = 15000;
+const MAX_VISIBLE_AVATARS = 3;
 
-const TIMELINE_MAJOR_STEP_PCT = (TIMELINE_SLOT_INTERVAL_MINUTES / TIMELINE_TOTAL_MINUTES) * 100;
-const TIMELINE_MINOR_STEP_PCT = (15 / TIMELINE_TOTAL_MINUTES) * 100;
+// ─── Progress track constants ─────────────────────────────────────────────────
+const PROGRESS_AVATAR_SIZE = 28; // px — must match --admin-vtl-avatar-size
+const AVATAR_LANE_OFFSETS = [0, -8, 8] as const;
 
-let hasLoggedInvalidTimelineDate = false;
+// ─── Utility formatters ───────────────────────────────────────────────────────
 
-function getMinuteOfDay(input: Date | string): number {
-  const date = input instanceof Date ? input : new Date(input);
-  if (Number.isNaN(date.getTime())) {
-    if (import.meta.env.DEV && !hasLoggedInvalidTimelineDate) {
-      console.warn('[TodayTimeline] Invalid date provided to getMinuteOfDay.', input);
-      hasLoggedInvalidTimelineDate = true;
-    }
-    return 0;
-  }
-
-  return minutesInLondonDay(date);
+function formatTimeRange(startAt: string, endAt: string): string {
+  const start = formatInTimeZone(new Date(startAt), ADMIN_TIMEZONE, 'HH:mm');
+  const end = formatInTimeZone(new Date(endAt), ADMIN_TIMEZONE, 'HH:mm');
+  return `${start} – ${end}`;
 }
 
-function getTimelinePosition(startAt: Date | string, endAt: Date | string) {
-  const timelineStartMinute = TIMELINE_START_HOUR * 60;
-  const rawStart = getMinuteOfDay(startAt) - timelineStartMinute;
-  const rawEnd = getMinuteOfDay(endAt) - timelineStartMinute;
-  const clampedStart = Math.max(0, Math.min(rawStart, TIMELINE_TOTAL_MINUTES));
-  const clampedEnd = Math.max(clampedStart, Math.min(rawEnd, TIMELINE_TOTAL_MINUTES));
-  const widthMinutes = clampedEnd - clampedStart;
-
-  return {
-    leftPct: (clampedStart / TIMELINE_TOTAL_MINUTES) * 100,
-    widthPct: (widthMinutes / TIMELINE_TOTAL_MINUTES) * 100
-  };
+function formatDuration(startAt: string, endAt: string): string {
+  const mins = Math.round((new Date(endAt).getTime() - new Date(startAt).getTime()) / 60000);
+  if (mins < 60) return `${mins} min`;
+  const h = Math.floor(mins / 60);
+  const m = mins % 60;
+  return m === 0 ? `${h} hr` : `${h} hr ${m} min`;
 }
 
-function getTimelinePositionFromRelativeMinutes(startMinute: number, endMinute: number) {
-  const clampedStart = Math.max(0, Math.min(startMinute, TIMELINE_TOTAL_MINUTES));
-  const clampedEnd = Math.max(clampedStart, Math.min(endMinute, TIMELINE_TOTAL_MINUTES));
-  const widthMinutes = clampedEnd - clampedStart;
-  return {
-    leftPct: (clampedStart / TIMELINE_TOTAL_MINUTES) * 100,
-    widthPct: (widthMinutes / TIMELINE_TOTAL_MINUTES) * 100
-  };
-}
-
-function getInitials(fullName: string) {
+function getInitials(fullName: string): string {
   const parts = fullName.trim().split(/\s+/).filter(Boolean);
   if (parts.length === 0) return '—';
   if (parts.length === 1) return parts[0].slice(0, 2).toUpperCase();
-
   return `${parts[0][0] ?? ''}${parts[parts.length - 1][0] ?? ''}`.toUpperCase();
 }
 
-
-function buildLanes(barbers: TimelineBarber[], bookings: TimelineBooking[], timeBlocks: TimelineTimeBlock[]): LaneModel[] {
-  const activeBarberIds = new Set(barbers.map((barber) => barber.id));
-
-  return barbers.map((barber) => {
-    const laneBookings = bookings
-      .filter((booking) => booking.barberId === barber.id && activeBarberIds.has(booking.barberId))
-      .sort((a, b) => new Date(a.startAt).getTime() - new Date(b.startAt).getTime());
-
-    const laneBlocks = timeBlocks
-      .filter((block) => !block.barberId || block.barberId === barber.id)
-      .sort((a, b) => new Date(a.startAt).getTime() - new Date(b.startAt).getTime());
-
-    const activeOverlapEndByLevel: number[] = [];
-    const positionedBookings: PositionedBooking[] = laneBookings.map((booking) => {
-      const startMinute = getMinuteOfDay(booking.startAt);
-      const endMinute = getMinuteOfDay(booking.endAt);
-      const clampedStartMinute = Math.max(TIMELINE_START_HOUR * 60, Math.min(startMinute, TIMELINE_END_HOUR * 60));
-      const clampedEndMinute = Math.max(clampedStartMinute, Math.min(endMinute, TIMELINE_END_HOUR * 60));
-      const durationMinutes = Math.max(0, clampedEndMinute - clampedStartMinute);
-      const displayDurationRem = (durationMinutes / TIMELINE_SLOT_INTERVAL_MINUTES) * TIMELINE_SLOT_WIDTH_REM;
-      const density: PositionedBooking['density'] =
-        displayDurationRem < 7 ? 'compact' : displayDurationRem < 10 ? 'standard' : 'detailed';
-
-      let level = 0;
-      while (level < activeOverlapEndByLevel.length && activeOverlapEndByLevel[level] > clampedStartMinute) {
-        level += 1;
-      }
-      activeOverlapEndByLevel[level] = clampedEndMinute;
-
-      const position = getTimelinePositionFromRelativeMinutes(
-        clampedStartMinute - TIMELINE_START_HOUR * 60,
-        clampedEndMinute - TIMELINE_START_HOUR * 60
-      );
-
-      return {
-        id: booking.id,
-        type: 'booking',
-        booking,
-        density,
-        durationMinutes,
-        leftPct: position.leftPct,
-        widthPct: position.widthPct,
-        topPx: LANE_INNER_PADDING + level * (BOOKING_CARD_HEIGHT + BOOKING_STACK_GAP),
-        heightPx: BOOKING_CARD_HEIGHT,
-        startLabel: formatInTimeZone(booking.startAt, ADMIN_TIMEZONE, 'HH:mm'),
-        endLabel: formatInTimeZone(booking.endAt, ADMIN_TIMEZONE, 'HH:mm')
-      };
-    });
-
-    const positionedBlocks: PositionedBlock[] = laneBlocks.map((timeBlock) => {
-      const position = getTimelinePosition(timeBlock.startAt, timeBlock.endAt);
-      return {
-        id: timeBlock.id,
-        type: 'timeBlock',
-        timeBlock,
-        leftPct: position.leftPct,
-        widthPct: position.widthPct,
-        topPx: 10,
-        heightPx: 38,
-        startLabel: formatInTimeZone(timeBlock.startAt, ADMIN_TIMEZONE, 'HH:mm'),
-        endLabel: formatInTimeZone(timeBlock.endAt, ADMIN_TIMEZONE, 'HH:mm')
-      };
-    });
-
-    const overlapRows = Math.max(1, activeOverlapEndByLevel.length);
-    const laneHeight =
-      LANE_INNER_PADDING * 2 +
-      overlapRows * BOOKING_CARD_HEIGHT +
-      Math.max(0, overlapRows - 1) * BOOKING_STACK_GAP;
-
-    return {
-      barber,
-      bookings: positionedBookings,
-      timeBlocks: positionedBlocks,
-      laneHeight: Math.max(laneHeight, 96)
-    };
-  });
+function getLondonMinuteOfDay(input: Date | string): number {
+  const date = input instanceof Date ? input : new Date(input);
+  if (Number.isNaN(date.getTime())) return 0;
+  return minutesInLondonDay(date);
 }
 
-function getTickRows() {
-  const majorTicks: Array<{ minute: number; label: string; isHalfHour: boolean }> = [];
-  const minorTicks: number[] = [];
-
-  for (let minute = 0; minute <= TIMELINE_TOTAL_MINUTES; minute += 15) {
-    const isMajor = minute % TIMELINE_SLOT_INTERVAL_MINUTES === 0;
-    if (isMajor) {
-      const hour = TIMELINE_START_HOUR + Math.floor(minute / 60);
-      const min = minute % 60;
-      majorTicks.push({
-        minute,
-        isHalfHour: min === 30,
-        label: `${String(hour).padStart(2, '0')}:${String(min).padStart(2, '0')}`
-      });
-    } else {
-      minorTicks.push(minute);
-    }
-  }
-
-  return { majorTicks, minorTicks };
+function getLondonRelativeMinute(input: Date | string): number {
+  return getLondonMinuteOfDay(input) - TIMELINE_START_HOUR * 60;
 }
 
-type NowIndicatorProps = {
-  selectedDate: string;
-};
-
-function updateNowIndicatorPosition(indicator: HTMLSpanElement, selectedDate: string) {
-  const currentMs = Date.now();
-  const currentLondonMinute = (() => {
-    const now = new Date(currentMs);
-
-    const hour = Number(formatInTimeZone(now, ADMIN_TIMEZONE, 'HH'));
-    const minute = Number(formatInTimeZone(now, ADMIN_TIMEZONE, 'mm'));
-    return hour * 60 + minute - TIMELINE_START_HOUR * 60;
-  })();
-
-  const todayLondon = formatInTimeZone(new Date(currentMs), ADMIN_TIMEZONE, 'yyyy-MM-dd');
-  const shouldShow = selectedDate === todayLondon && currentLondonMinute >= 0 && currentLondonMinute <= TIMELINE_TOTAL_MINUTES;
-
-  indicator.style.display = shouldShow ? 'block' : 'none';
-  if (!shouldShow) return;
-
-  indicator.style.left = `${(currentLondonMinute / TIMELINE_TOTAL_MINUTES) * 100}%`;
-}
-function getCurrentLondonTimelineMinute() {
+function getCurrentLondonMinute(): number {
   const now = new Date();
   const hour = Number(formatInTimeZone(now, ADMIN_TIMEZONE, 'HH'));
   const minute = Number(formatInTimeZone(now, ADMIN_TIMEZONE, 'mm'));
-
   return hour * 60 + minute - TIMELINE_START_HOUR * 60;
 }
 
-/** Horizontal anchor on the timeline scale (0 = TIMELINE_START_HOUR, 1 = TIMELINE_END_HOUR) for initial scroll. */
-function getTimelineInitialScrollRatio(selectedDate: string): number {
-  const todayLondon = formatInTimeZone(new Date(), ADMIN_TIMEZONE, 'yyyy-MM-dd');
-  if (selectedDate !== todayLondon) {
-    return 0;
+function getCurrentLondonTimeLabel(): string {
+  const now = new Date();
+  return formatInTimeZone(now, ADMIN_TIMEZONE, 'HH:mm');
+}
+
+// ─── Progress calculation ─────────────────────────────────────────────────────
+
+function formatEndTime(endAt: string): string {
+  return formatInTimeZone(new Date(endAt), ADMIN_TIMEZONE, 'HH:mm');
+}
+
+function computeBookingProgress(
+  booking: TimelineBooking,
+  nowMs: number | null,
+  trackMaxX: number
+): {
+  initialX: number;
+  targetX: number;
+  delaySeconds: number;
+  durationSeconds: number;
+} {
+  if (!nowMs) {
+    return { initialX: 0, targetX: 0, delaySeconds: 0, durationSeconds: 0 };
   }
 
-  const nowMinute = getCurrentLondonTimelineMinute();
-  if (nowMinute < 0) return 0;
-  if (nowMinute > TIMELINE_TOTAL_MINUTES) return 1;
-  return nowMinute / TIMELINE_TOTAL_MINUTES;
+  const startMs = new Date(booking.startAt).getTime();
+  const endMs   = new Date(booking.endAt).getTime();
+  const durMs   = endMs - startMs;
+
+  if (durMs <= 0 || nowMs >= endMs)
+    return {
+      initialX: trackMaxX,
+      targetX: trackMaxX,
+      delaySeconds: 0,
+      durationSeconds: 0,
+    };
+
+  if (nowMs < startMs) {
+    return {
+      initialX: 0,
+      targetX: trackMaxX,
+      delaySeconds: (startMs - nowMs) / 1000,
+      durationSeconds: (endMs - startMs) / 1000,
+    };
+  }
+
+  const progress         = (nowMs - startMs) / durMs;
+  const initialX         = progress * trackMaxX;
+  const remainingSeconds = (endMs - nowMs) / 1000;
+  return {
+    initialX,
+    targetX: trackMaxX,
+    delaySeconds: 0,
+    durationSeconds: remainingSeconds,
+  };
 }
 
-function clampScrollLeft(value: number, container: HTMLDivElement) {
-  const maxScrollLeft = Math.max(0, container.scrollWidth - container.clientWidth);
-  if (maxScrollLeft <= 0) return 0;
-  if (!Number.isFinite(value)) return 0;
-  return Math.max(0, Math.min(value, maxScrollLeft));
+// ─── Data model ──────────────────────────────────────────────────────────────
+
+type BookingAtSlot = {
+  booking: TimelineBooking;
+  barber: TimelineBarber;
+};
+
+type SlotModel = {
+  timeLabel: string;
+  relativeMinute: number;
+  bookings: BookingAtSlot[];
+  timeBlocks: TimelineTimeBlock[];
+};
+
+type ListItem =
+  | { kind: 'slot'; slot: SlotModel }
+  | { kind: 'now'; relativeMinute: number; timeLabel: string };
+
+function buildSlotList(
+  barbers: TimelineBarber[],
+  bookings: TimelineBooking[],
+  timeBlocks: TimelineTimeBlock[],
+  nowMinute: number | null
+): ListItem[] {
+  const barberMap = new Map(barbers.map((b) => [b.id, b]));
+
+  // Seed the day timeline so the structure is always visible, even with no data.
+  const slotMap = new Map<string, SlotModel>();
+  for (let minute = 0; minute <= TIMELINE_TOTAL_MINUTES; minute += TIMELINE_SLOT_INTERVAL_MINUTES) {
+    const hour = TIMELINE_START_HOUR + Math.floor(minute / 60);
+    const min = minute % 60;
+    const timeLabel = `${String(hour).padStart(2, '0')}:${String(min).padStart(2, '0')}`;
+    slotMap.set(timeLabel, { timeLabel, relativeMinute: minute, bookings: [], timeBlocks: [] });
+  }
+
+  for (const booking of bookings) {
+    const relMin = getLondonRelativeMinute(booking.startAt);
+    if (relMin < 0 || relMin > TIMELINE_TOTAL_MINUTES) continue;
+    const timeLabel = formatInTimeZone(booking.startAt, ADMIN_TIMEZONE, 'HH:mm');
+    if (!slotMap.has(timeLabel)) {
+      slotMap.set(timeLabel, { timeLabel, relativeMinute: relMin, bookings: [], timeBlocks: [] });
+    }
+    const barber = booking.barberId
+      ? (barberMap.get(booking.barberId) ?? { id: booking.barberId, name: booking.barber.name })
+      : { id: '', name: booking.barber.name };
+    slotMap.get(timeLabel)!.bookings.push({ booking, barber });
+  }
+
+  for (const block of timeBlocks) {
+    const relMin = getLondonRelativeMinute(block.startAt);
+    if (relMin < 0 || relMin > TIMELINE_TOTAL_MINUTES) continue;
+    const timeLabel = formatInTimeZone(block.startAt, ADMIN_TIMEZONE, 'HH:mm');
+    if (!slotMap.has(timeLabel)) {
+      slotMap.set(timeLabel, { timeLabel, relativeMinute: relMin, bookings: [], timeBlocks: [] });
+    }
+    slotMap.get(timeLabel)!.timeBlocks.push(block);
+  }
+
+  const slots: ListItem[] = Array.from(slotMap.values())
+    .sort((a, b) => a.relativeMinute - b.relativeMinute)
+    .map((slot) => ({ kind: 'slot', slot }));
+
+  if (nowMinute !== null && nowMinute >= 0 && nowMinute <= TIMELINE_TOTAL_MINUTES) {
+    const nowItem: ListItem = {
+      kind: 'now',
+      relativeMinute: nowMinute,
+      timeLabel: getCurrentLondonTimeLabel(),
+    };
+    const insertIdx = slots.findIndex(
+      (item) => item.kind === 'slot' && item.slot.relativeMinute > nowMinute
+    );
+    if (insertIdx === -1) {
+      slots.push(nowItem);
+    } else {
+      slots.splice(insertIdx, 0, nowItem);
+    }
+  }
+
+  return slots;
 }
 
-function bookingCardPropsEqual(
-  prev: { item: PositionedBooking; isSearchActive: boolean; onBookingClick: (booking: TimelineBooking) => void },
-  next: { item: PositionedBooking; isSearchActive: boolean; onBookingClick: (booking: TimelineBooking) => void }
-): boolean {
-  if (prev.isSearchActive !== next.isSearchActive) return false;
-  if (prev.onBookingClick !== next.onBookingClick) return false;
-  const a = prev.item;
-  const b = next.item;
-  if (a.id !== b.id) return false;
-  if (a.density !== b.density || a.durationMinutes !== b.durationMinutes) return false;
-  if (a.leftPct !== b.leftPct || a.widthPct !== b.widthPct || a.topPx !== b.topPx || a.heightPx !== b.heightPx) return false;
-  if (a.startLabel !== b.startLabel || a.endLabel !== b.endLabel) return false;
-  const ab = a.booking;
-  const bb = b.booking;
-  return (
-    ab.status === bb.status &&
-    ab.rescheduledAt === bb.rescheduledAt &&
-    ab.fullName === bb.fullName &&
-    (ab.service?.name ?? '') === (bb.service?.name ?? '')
-  );
-}
+// ─── Booking expansion card ───────────────────────────────────────────────────
 
-const TimelineBookingCard = memo(function TimelineBookingCard({
-  item,
-  isSearchActive,
-  onBookingClick
-}: {
-  item: PositionedBooking;
-  isSearchActive: boolean;
-  onBookingClick: (booking: TimelineBooking) => void;
-}) {
-  const initials = getInitials(item.booking.fullName);
-  const tone = getBookingStatusTone(item.booking);
+type BookingExpansionCardProps = {
+  booking: TimelineBooking;
+  barber: TimelineBarber;
+  toneClass: string;
+  onExpand: () => void;
+};
 
-  return (
-    <button
-      type="button"
-      data-booking-id={item.booking.id}
-      className={`admin-timeline-card admin-timeline-card--booking admin-timeline-card--${tone} admin-timeline-card--${item.density} ${isSearchActive ? 'admin-timeline-card--search-match' : ''}`}
-      data-density={item.density}
-      style={{
-        left: `${item.leftPct}%`,
-        width: `${item.widthPct}%`,
-        top: `${item.topPx}px`,
-        height: `${item.heightPx}px`
-      }}
-      onClick={() => onBookingClick(item.booking)}
-      title={`${item.startLabel}–${item.endLabel} · ${item.booking.service?.name ?? 'Service'} · ${item.booking.fullName}`}
-    >
-      <span className="admin-timeline-card-time">{`${item.startLabel}–${item.endLabel}`}</span>
-      <strong className="admin-timeline-card-service">{item.booking.service?.name ?? 'Service'}</strong>
-      <span className="admin-timeline-card-client-row">
-        <span className="admin-timeline-card-initials" aria-hidden="true">
-          {initials}
-        </span>
-        <span className="admin-timeline-card-client">{item.booking.fullName}</span>
-      </span>
-      <span className="admin-timeline-card-duration" aria-hidden="true">
-        {`${Math.max(1, Math.round(item.durationMinutes))} min`}
-      </span>
-    </button>
-  );
-}, bookingCardPropsEqual);
-
-
-const NowIndicator = memo(function NowIndicator({ selectedDate }: NowIndicatorProps) {
-  const indicatorRef = useRef<HTMLSpanElement | null>(null);
-
+const BookingExpansionCard = memo(function BookingExpansionCard({
+  booking,
+  barber,
+  toneClass,
+  onExpand,
+}: BookingExpansionCardProps) {
+  const timeRange = formatTimeRange(booking.startAt, booking.endAt);
+  const duration = formatDuration(booking.startAt, booking.endAt);
+  const [barberImgError, setBarberImgError] = useState(false);
+  const barberInitials = getInitials(barber.name);
 
   useEffect(() => {
-    const indicator = indicatorRef.current;
-    if (!indicator) return;
-    const refreshMs = typeof NOW_INDICATOR_REFRESH_MS === 'number' ? NOW_INDICATOR_REFRESH_MS : 15000;
-    updateNowIndicatorPosition(indicator, selectedDate);
-    const intervalId = window.setInterval(() => {
-      updateNowIndicatorPosition(indicator, selectedDate);
-    }, refreshMs);
+    setBarberImgError(false);
+  }, [barber.avatarUrl]);
 
-    return () => window.clearInterval(intervalId);
-  }, [selectedDate]);
+  const handleQuickActionClick = useCallback((e: React.MouseEvent) => {
+    e.stopPropagation();
+  }, []);
 
-  return <span ref={indicatorRef} className="admin-timeline-now-indicator" aria-hidden="true" />;
+  return (
+    <div
+      className={`admin-vtl-expansion-card admin-vtl-expansion-card--${toneClass}`}
+      onClick={(e) => e.stopPropagation()}
+    >
+      <div className="admin-vtl-expansion-layout">
+        <div className="admin-vtl-expansion-avatars" aria-hidden="true">
+          <div className="admin-vtl-expansion-avatar admin-vtl-expansion-avatar--barber">
+            {barber.avatarUrl && !barberImgError ? (
+              <img
+                src={barber.avatarUrl}
+                alt={barber.name}
+                className="admin-vtl-expansion-avatar-img"
+                loading="lazy"
+                onError={() => setBarberImgError(true)}
+              />
+            ) : (
+              <span className="admin-vtl-expansion-avatar-initials">{barberInitials}</span>
+            )}
+          </div>
+          <div className="admin-vtl-expansion-avatar admin-vtl-expansion-avatar--client-placeholder">
+            <User className="admin-vtl-expansion-avatar-placeholder-icon" aria-hidden />
+          </div>
+        </div>
+
+        <div className="admin-vtl-expansion-main">
+          <p className="admin-vtl-expansion-time">{timeRange}</p>
+          <p className="admin-vtl-expansion-service">{booking.service.name}</p>
+          <p className="admin-vtl-expansion-client">{booking.fullName}</p>
+        </div>
+
+        <div className="admin-vtl-expansion-actions">
+          <button
+            type="button"
+            className="admin-vtl-expansion-action-btn admin-vtl-expansion-action-btn--cancel"
+            onClick={handleQuickActionClick}
+            aria-label={`Cancel booking for ${booking.fullName}`}
+            title="Cancel booking"
+          >
+            <X className="admin-vtl-expansion-action-icon" aria-hidden />
+          </button>
+          <button
+            type="button"
+            className="admin-vtl-expansion-action-btn admin-vtl-expansion-action-btn--notes"
+            onClick={handleQuickActionClick}
+            aria-label={`Open notes for ${booking.fullName}`}
+            title="Notes"
+          >
+            <NotebookPen className="admin-vtl-expansion-action-icon" aria-hidden />
+          </button>
+          <button
+            type="button"
+            className="admin-vtl-expansion-action-btn admin-vtl-expansion-action-btn--message"
+            onClick={handleQuickActionClick}
+            aria-label={`Message ${booking.fullName}`}
+            title="Message"
+          >
+            <MessageCircle className="admin-vtl-expansion-action-icon" aria-hidden />
+          </button>
+        </div>
+      </div>
+
+      <div className="admin-vtl-expansion-footer">
+        <span className="admin-vtl-expansion-duration">{duration}</span>
+        <button
+          type="button"
+          className="admin-vtl-expansion-more"
+          onClick={(e) => {
+            e.stopPropagation();
+            onExpand();
+          }}
+          aria-label={`Open full details for ${booking.fullName}`}
+        >
+          <span>See more</span>
+          <ArrowRight className="admin-vtl-expansion-more-icon" aria-hidden />
+        </button>
+      </div>
+    </div>
+  );
 });
+
+// ─── Avatar pin (progress-track version) ─────────────────────────────────────
+
+type BarberAvatarPinProps = {
+  barber: TimelineBarber;
+  booking: TimelineBooking;
+  onAvatarClick: (booking: TimelineBooking) => void;
+  isSearchActive: boolean;
+  toneClass: string;
+  isActive: boolean;
+  initialX: number;
+  targetX: number;
+  delaySeconds: number;
+  durationSeconds: number;
+  baseZIndex: number;
+  laneOffsetY: number;
+};
+
+const BarberAvatarPin = memo(function BarberAvatarPin({
+  barber,
+  booking,
+  onAvatarClick,
+  isSearchActive,
+  toneClass,
+  isActive,
+  initialX,
+  targetX,
+  delaySeconds,
+  durationSeconds,
+  baseZIndex,
+  laneOffsetY,
+}: BarberAvatarPinProps) {
+  const [imgError, setImgError] = useState(false);
+  const initials = getInitials(barber.name);
+  const reduceMotion = useReducedMotion();
+
+  // Initialise the MotionValue imperatively so the avatar starts at the correct
+  // progress point regardless of any parent AnimatePresence initial={false}.
+  const x = useMotionValue(initialX);
+  const RESYNC_EPSILON_PX = 6;
+
+  useEffect(() => {
+    setImgError(false);
+  }, [barber.avatarUrl]);
+
+  useEffect(() => {
+    const currentX = x.get();
+    if (!Number.isFinite(currentX) || Math.abs(currentX - initialX) > RESYNC_EPSILON_PX) {
+      x.set(initialX);
+    }
+  }, [initialX, x]);
+
+  const handleClick = useCallback(
+    (e: React.MouseEvent) => {
+      e.stopPropagation();
+      onAvatarClick(booking);
+    },
+    [onAvatarClick, booking]
+  );
+
+  const label = `${barber.name} — ${booking.service.name} — ${booking.fullName}`;
+
+  // Linear progress animation; re-renders every 15 s (nowMinute tick) update
+  // duration/delay so Framer Motion continues from the current visual position
+  // without a jump. With reduceMotion, position snaps immediately.
+  const xTransition = reduceMotion || durationSeconds <= 0
+    ? { duration: 0 }
+    : { delay: delaySeconds, duration: durationSeconds, ease: 'linear' as const };
+
+  // For reduced motion users, keep the avatar at the correct position *at now*,
+  // rather than jumping to targetX.
+  const animateX = reduceMotion ? initialX : targetX;
+
+  return (
+    <motion.button
+      type="button"
+      className={[
+        'admin-vtl-avatar',
+        `admin-vtl-avatar--${toneClass}`,
+        isSearchActive ? 'admin-vtl-avatar--search' : '',
+        isActive ? 'admin-vtl-avatar--active' : '',
+      ]
+        .filter(Boolean)
+        .join(' ')}
+      style={{
+        position: 'absolute',
+        top: '50%',
+        marginTop: `-${PROGRESS_AVATAR_SIZE / 2}px`,
+        zIndex: isActive ? MAX_VISIBLE_AVATARS + 1 : baseZIndex,
+        x,
+        y: laneOffsetY,
+      }}
+      animate={{ x: animateX, scale: isActive ? 1.08 : 1 }}
+      transition={{
+        x: xTransition,
+        scale: { duration: 0.12, ease: [0.4, 0, 0.2, 1] },
+      }}
+      whileHover={{ scale: isActive ? 1.1 : 1.07 }}
+      whileTap={{ scale: 0.97 }}
+      onClick={handleClick}
+      aria-expanded={isActive}
+      aria-label={label}
+      title={label}
+    >
+      {barber.avatarUrl && !imgError ? (
+        <img
+          src={barber.avatarUrl}
+          alt={barber.name}
+          className="admin-vtl-avatar-img"
+          loading="lazy"
+          onError={() => setImgError(true)}
+        />
+      ) : (
+        <span className="admin-vtl-avatar-initials" aria-hidden="true">
+          {initials}
+        </span>
+      )}
+    </motion.button>
+  );
+});
+
+// ─── Progress track (replaces cluster + slot-line for booking slots) ──────────
+
+type ProgressTrackProps = {
+  items: BookingAtSlot[];
+  nowMs: number | null;
+  activeBookingId: string | null;
+  isSearchActive: boolean;
+  onAvatarClick: (booking: TimelineBooking) => void;
+};
+
+const ProgressTrack = memo(function ProgressTrack({
+  items,
+  nowMs,
+  activeBookingId,
+  isSearchActive,
+  onAvatarClick,
+}: ProgressTrackProps) {
+  const trackRef = useRef<HTMLDivElement | null>(null);
+  const [trackWidth, setTrackWidth] = useState(0);
+  const visible  = items.slice(0, MAX_VISIBLE_AVATARS);
+  const overflow = items.length - MAX_VISIBLE_AVATARS;
+  const trackMaxX = Math.max(trackWidth - PROGRESS_AVATAR_SIZE, 0);
+  const latestVisibleEndTime = useMemo(() => {
+    if (visible.length === 0) return '';
+    return visible.reduce((latest, item) => {
+      return new Date(item.booking.endAt).getTime() > new Date(latest.endAt).getTime()
+        ? item.booking
+        : latest;
+    }, visible[0].booking).endAt;
+  }, [visible]);
+
+  useEffect(() => {
+    const element = trackRef.current;
+    if (!element) return;
+
+    const updateWidth = () => {
+      setTrackWidth((prev) => {
+        const next = Math.round(element.getBoundingClientRect().width);
+        return prev === next ? prev : next;
+      });
+    };
+
+    updateWidth();
+
+    if (typeof ResizeObserver === 'undefined') return;
+    const observer = new ResizeObserver(() => updateWidth());
+    observer.observe(element);
+    return () => observer.disconnect();
+  }, []);
+
+  return (
+    <>
+      <div className="admin-vtl-progress-lane">
+        {overflow > 0 && (
+          <span
+            className="admin-vtl-avatar-overflow"
+            aria-label={`${overflow} more booking${overflow === 1 ? '' : 's'}`}
+          >
+            +{overflow}
+          </span>
+        )}
+        <div ref={trackRef} className="admin-vtl-progress-track">
+          <div className="admin-vtl-slot-line" aria-hidden="true" />
+          {visible.map(({ booking, barber }, index) => {
+            const tone = getBookingStatusTone(booking);
+            const { initialX, targetX, delaySeconds, durationSeconds } = computeBookingProgress(
+              booking,
+              nowMs,
+              trackMaxX
+            );
+            return (
+              <BarberAvatarPin
+                key={booking.id}
+                barber={barber}
+                booking={booking}
+                toneClass={tone}
+                isActive={booking.id === activeBookingId}
+                isSearchActive={isSearchActive}
+                onAvatarClick={onAvatarClick}
+                initialX={initialX}
+                targetX={targetX}
+                delaySeconds={delaySeconds}
+                durationSeconds={durationSeconds}
+                baseZIndex={MAX_VISIBLE_AVATARS - index}
+                laneOffsetY={AVATAR_LANE_OFFSETS[index] ?? 0}
+              />
+            );
+          })}
+        </div>
+      </div>
+      <time className="admin-vtl-slot-end-time" dateTime={latestVisibleEndTime || undefined}>
+        {latestVisibleEndTime ? formatEndTime(latestVisibleEndTime) : ''}
+      </time>
+    </>
+  );
+});
+
+// ─── Now row ──────────────────────────────────────────────────────────────────
+
+type NowRowProps = { timeLabel: string };
+
+const NowRow = memo(function NowRow({ timeLabel }: NowRowProps) {
+  return (
+    <div className="admin-vtl-now-row" aria-hidden="true">
+      <span className="admin-vtl-now-time">{timeLabel}</span>
+      <div className="admin-vtl-now-track">
+        <span className="admin-vtl-now-dot" />
+        <div className="admin-vtl-now-line" />
+      </div>
+    </div>
+  );
+});
+
+// ─── Slot row (with inline expansion) ────────────────────────────────────────
+
+type SlotRowProps = {
+  slotKey: string;
+  slot: SlotModel;
+  nowMs: number | null;
+  isExpanded: boolean;
+  activeBookingId: string | null;
+  onAvatarClick: (slotKey: string, booking: TimelineBooking) => void;
+  onSlotToggle: (slotKey: string) => void;
+  onExpand: (booking: TimelineBooking) => void;
+  isSearchActive: boolean;
+};
+
+const SlotRow = memo(function SlotRow({
+  slotKey,
+  slot,
+  nowMs,
+  isExpanded,
+  activeBookingId,
+  onAvatarClick,
+  onSlotToggle,
+  onExpand,
+  isSearchActive,
+}: SlotRowProps) {
+  const hasBookings = slot.bookings.length > 0;
+  const hasBlocks = slot.timeBlocks.length > 0;
+  const expansionId = `admin-vtl-expansion-${slotKey.replace(/[^a-z0-9_-]/gi, '-')}`;
+
+  const handleSlotToggle = useCallback(
+    (e: React.MouseEvent | React.KeyboardEvent) => {
+      e.stopPropagation();
+      if (!hasBookings) return;
+      onSlotToggle(slotKey);
+    },
+    [hasBookings, onSlotToggle, slotKey]
+  );
+
+  const handleSlotKeyDown = useCallback(
+    (e: React.KeyboardEvent<HTMLDivElement>) => {
+      if (!hasBookings) return;
+      if (e.key === 'Enter' || e.key === ' ') {
+        e.preventDefault();
+        handleSlotToggle(e);
+      }
+    },
+    [handleSlotToggle, hasBookings]
+  );
+
+  const handleSlotAvatarClick = useCallback(
+    (booking: TimelineBooking) => {
+      onAvatarClick(slotKey, booking);
+    },
+    [onAvatarClick, slotKey]
+  );
+
+  return (
+    <motion.div
+      layout="position"
+      className="admin-vtl-slot-group"
+      aria-label={`${slot.timeLabel}${hasBookings ? ` — ${slot.bookings.length} booking${slot.bookings.length === 1 ? '' : 's'}` : ''}${hasBlocks ? ` — ${slot.timeBlocks.length} block${slot.timeBlocks.length === 1 ? '' : 's'}` : ''}`}
+      role="group"
+    >
+      <div
+        className={`admin-vtl-slot${hasBookings ? ' admin-vtl-slot--interactive' : ''}`}
+        role={hasBookings ? 'button' : undefined}
+        tabIndex={hasBookings ? 0 : undefined}
+        aria-expanded={hasBookings ? isExpanded : undefined}
+        aria-controls={hasBookings ? expansionId : undefined}
+        onClick={handleSlotToggle}
+        onKeyDown={handleSlotKeyDown}
+      >
+        <time className="admin-vtl-slot-time" dateTime={slot.timeLabel}>
+          {slot.timeLabel}
+        </time>
+        <div className="admin-vtl-slot-body">
+          {hasBookings ? (
+            <ProgressTrack
+              items={slot.bookings}
+              nowMs={nowMs}
+              activeBookingId={activeBookingId}
+              isSearchActive={isSearchActive}
+              onAvatarClick={handleSlotAvatarClick}
+            />
+          ) : (
+            <>
+              {hasBlocks && (
+                <div className="admin-vtl-blocks">
+                  {slot.timeBlocks.map((block) => (
+                    <span key={block.id} className="admin-vtl-block-chip" title={block.title}>
+                      {block.title}
+                    </span>
+                  ))}
+                </div>
+              )}
+              <div
+                className={`admin-vtl-slot-line${
+                  hasBlocks
+                    ? ' admin-vtl-slot-line--block'
+                    : ' admin-vtl-slot-line--empty'
+                }`}
+                aria-hidden="true"
+              />
+            </>
+          )}
+        </div>
+      </div>
+
+      <AnimatePresence initial={false}>
+        {isExpanded && hasBookings && (
+          <motion.div
+            key={slotKey}
+            id={expansionId}
+            className="admin-vtl-expansion"
+            initial={{ height: 0, opacity: 0 }}
+            animate={{ height: 'auto', opacity: 1 }}
+            exit={{ height: 0, opacity: 0 }}
+            transition={{ duration: 0.22, ease: [0.4, 0, 0.2, 1] }}
+            style={{ overflow: 'hidden' }}
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="admin-vtl-expansion-list">
+              {slot.bookings.map(({ booking, barber }) => (
+                <BookingExpansionCard
+                  key={booking.id}
+                  booking={booking}
+                  barber={barber}
+                  toneClass={getBookingStatusTone(booking)}
+                  onExpand={() => onExpand(booking)}
+                />
+              ))}
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+    </motion.div>
+  );
+});
+
+// ─── Main component ───────────────────────────────────────────────────────────
 
 function TodayTimeline({
   barbers,
@@ -384,280 +729,180 @@ function TodayTimeline({
   selectedDate,
   isLoading = false,
   isSearchActive = false,
+  allowInitialNowScroll = true,
   onBookingClick,
   scrollContainerRef,
   onGoToNextDay,
-  nextDayShortLabel
+  nextDayShortLabel,
+  floatingTopRight,
 }: TodayTimelineProps) {
-  const localScrollContainerRef = useRef<HTMLDivElement | null>(null);
-  const timelineScrollContainerRef = scrollContainerRef ?? localScrollContainerRef;
-  const autoPositionedDateRef = useRef<string | null>(null);
-  const prevLaneCountRef = useRef(0);
-  const lanes = useMemo(() => buildLanes(barbers, bookings, timeBlocks), [barbers, bookings, timeBlocks]);
-  const ticks = useMemo(() => getTickRows(), []);
-  const timelineLayoutStyle = useMemo(
-    () =>
-      ({
-        '--admin-timeline-major-step-pct': `${TIMELINE_MAJOR_STEP_PCT}`,
-        '--admin-timeline-minor-step-pct': `${TIMELINE_MINOR_STEP_PCT}`
-      }) as React.CSSProperties,
+  const localScrollRef = useRef<HTMLDivElement | null>(null);
+  const activeScrollRef = scrollContainerRef ?? localScrollRef;
+  const nowRowRef = useRef<HTMLDivElement | null>(null);
+  const hasScrolledToNow = useRef(false);
+  const scrollToNowRafRefs = useRef<{ first: number | null; second: number | null }>({ first: null, second: null });
 
-    []
+  const [activeBookingId, setActiveBookingId] = useState<string | null>(null);
+  const [expandedSlotKey, setExpandedSlotKey] = useState<string | null>(null);
+
+  const handleAvatarClick = useCallback((slotKey: string, booking: TimelineBooking) => {
+    setExpandedSlotKey(slotKey);
+    setActiveBookingId((prev) => (prev === booking.id ? null : booking.id));
+  }, []);
+
+  const handleSlotToggle = useCallback((slotKey: string) => {
+    setExpandedSlotKey((prev) => (prev === slotKey ? null : slotKey));
+  }, []);
+
+  const handleExpand = useCallback(
+    (booking: TimelineBooking) => {
+      onBookingClick(booking);
+      setExpandedSlotKey(null);
+      setActiveBookingId(null);
+    },
+    [onBookingClick]
   );
+
+  // Close on ESC
   useEffect(() => {
-    if (lanes.length === 0) {
-      prevLaneCountRef.current = 0;
+    const handler = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') {
+        setExpandedSlotKey(null);
+        setActiveBookingId(null);
+      }
+    };
+    document.addEventListener('keydown', handler);
+    return () => document.removeEventListener('keydown', handler);
+  }, []);
+
+  const todayLondon = formatInTimeZone(new Date(), ADMIN_TIMEZONE, 'yyyy-MM-dd');
+  const isToday = selectedDate === todayLondon;
+
+  const [nowMinute, setNowMinute] = useState<number | null>(() =>
+    isToday ? getCurrentLondonMinute() : null
+  );
+  const [nowTimeLabel, setNowTimeLabel] = useState<string>(() =>
+    isToday ? getCurrentLondonTimeLabel() : ''
+  );
+
+  useEffect(() => {
+    if (!isToday) {
+      setNowMinute(null);
+      setNowTimeLabel('');
       return;
     }
-
-    const previousLaneCount = prevLaneCountRef.current;
-    prevLaneCountRef.current = lanes.length;
-    const becameReady = previousLaneCount === 0 && lanes.length > 0;
-
-    if (!becameReady && autoPositionedDateRef.current === selectedDate) {
-      return;
-    }
-
-    let cancelled = false;
-    let rafId = 0;
-    let timeoutId = 0;
-
-    const applyInitialHorizontalScroll = (attempt: number) => {
-      if (cancelled) return;
-
-      const container = timelineScrollContainerRef.current;
-      if (!container) {
-        if (attempt < INITIAL_NOW_SCROLL_RETRY_COUNT) {
-          timeoutId = window.setTimeout(() => {
-            rafId = window.requestAnimationFrame(() => applyInitialHorizontalScroll(attempt + 1));
-          }, 32);
-        }
-        return;
-      }
-
-      const hasOverflow = container.scrollWidth > container.clientWidth + 1;
-      if (!hasOverflow) {
-        if (attempt < INITIAL_NOW_SCROLL_RETRY_COUNT) {
-          timeoutId = window.setTimeout(() => {
-            rafId = window.requestAnimationFrame(() => applyInitialHorizontalScroll(attempt + 1));
-          }, 32);
-        } else {
-          autoPositionedDateRef.current = selectedDate;
-        }
-        return;
-      }
-
-      const ratio = getTimelineInitialScrollRatio(selectedDate);
-      const anchorPixel = ratio * container.scrollWidth;
-      const targetLeft = anchorPixel - container.clientWidth * INITIAL_NOW_SCROLL_OFFSET_RATIO;
-      container.scrollLeft = clampScrollLeft(targetLeft, container);
-      autoPositionedDateRef.current = selectedDate;
+    const tick = () => {
+      setNowMinute(getCurrentLondonMinute());
+      setNowTimeLabel(getCurrentLondonTimeLabel());
     };
+    tick();
+    const id = window.setInterval(tick, NOW_REFRESH_MS);
+    return () => window.clearInterval(id);
+  }, [isToday, selectedDate]);
 
-    rafId = window.requestAnimationFrame(() => applyInitialHorizontalScroll(0));
+  // nowMs drives the progress animation in BarberAvatarPin. It is recomputed
+  // every 15 s when nowMinute updates so Framer Motion gets fresh remaining-
+  // duration values and continues each avatar's linear animation smoothly —
+  // no requestAnimationFrame loop required between ticks.
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  const nowMs = useMemo(() => (isToday ? Date.now() : null), [nowMinute, isToday]);
 
-    return () => {
-      cancelled = true;
-      window.cancelAnimationFrame(rafId);
-      window.clearTimeout(timeoutId);
-    };
-  }, [lanes.length, selectedDate]);
+  const items = useMemo(
+    () => buildSlotList(barbers, bookings, timeBlocks, nowMinute),
+    [barbers, bookings, timeBlocks, nowMinute]
+  );
 
-
-
-  /*
-   * Touch / pen: rely on CSS `touch-action: pan-x pinch-zoom` + native overflow-x scrolling only.
-   * Custom pointer handlers with passive:false + preventDefault() caused intermittent “dead” vertical
-   * scroll when the browser delivered pointer events to the timeline strip (lock / gesture races).
-   *
-   * Mouse: optional drag-to-pan horizontally (primary button).
-   */
   useEffect(() => {
-    const container = timelineScrollContainerRef.current;
-    if (!container) return;
-
-    let startX = 0;
-    let initialScrollLeft = 0;
-    let isMouseDragging = false;
-    let activePointerId: number | null = null;
-
-    const resetMouse = () => {
-      isMouseDragging = false;
-      activePointerId = null;
-    };
-
-    const onPointerDown = (event: PointerEvent) => {
-      if (event.pointerType !== 'mouse' || event.button !== 0) return;
-      isMouseDragging = true;
-      activePointerId = event.pointerId;
-      startX = event.clientX;
-      initialScrollLeft = container.scrollLeft;
-      try {
-        container.setPointerCapture(event.pointerId);
-      } catch {
-        /* setPointerCapture unsupported or rejected */
-      }
-    };
-
-    const onPointerMove = (event: PointerEvent) => {
-      if (!isMouseDragging || event.pointerType !== 'mouse' || activePointerId !== event.pointerId) return;
-      event.preventDefault();
-      container.scrollLeft = initialScrollLeft + (startX - event.clientX);
-    };
-
-    const onPointerUp = (event: PointerEvent) => {
-      if (event.pointerType !== 'mouse' || activePointerId !== event.pointerId) return;
-      try {
-        container.releasePointerCapture(event.pointerId);
-      } catch {
-        /* ignore */
-      }
-      resetMouse();
-    };
-
-    container.addEventListener('pointerdown', onPointerDown, { passive: true });
-    container.addEventListener('pointermove', onPointerMove, { passive: false });
-    container.addEventListener('pointerup', onPointerUp, { passive: true });
-    container.addEventListener('pointercancel', onPointerUp, { passive: true });
-    container.addEventListener('lostpointercapture', resetMouse, { passive: true });
-
+    if (!isToday || !allowInitialNowScroll || hasScrolledToNow.current) return;
+    const el = nowRowRef.current;
+    if (!el) return;
+    hasScrolledToNow.current = true;
+    scrollToNowRafRefs.current.first = window.requestAnimationFrame(() => {
+      scrollToNowRafRefs.current.first = null;
+      scrollToNowRafRefs.current.second = window.requestAnimationFrame(() => {
+        scrollToNowRafRefs.current.second = null;
+        el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      });
+    });
     return () => {
-      container.removeEventListener('pointerdown', onPointerDown);
-      container.removeEventListener('pointermove', onPointerMove);
-      container.removeEventListener('pointerup', onPointerUp);
-      container.removeEventListener('pointercancel', onPointerUp);
-      container.removeEventListener('lostpointercapture', resetMouse);
+      if (scrollToNowRafRefs.current.first !== null) {
+        window.cancelAnimationFrame(scrollToNowRafRefs.current.first);
+        scrollToNowRafRefs.current.first = null;
+      }
+      if (scrollToNowRafRefs.current.second !== null) {
+        window.cancelAnimationFrame(scrollToNowRafRefs.current.second);
+        scrollToNowRafRefs.current.second = null;
+      }
     };
-  }, [timelineScrollContainerRef]);
+  }, [allowInitialNowScroll, isToday, items]);
 
+  useEffect(() => {
+    hasScrolledToNow.current = false;
+  }, [selectedDate]);
+
+  // Close expansion when clicking the empty scroll area
+  const handleScrollClick = useCallback(() => {
+    setExpandedSlotKey(null);
+    setActiveBookingId(null);
+  }, []);
 
   if (isLoading) {
-    return <SkeletonTimelineRows lanes={Math.max(barbers.length, 3)} />;
+    return <SkeletonVerticalTimeline />;
   }
 
-  if (lanes.length === 0) {
-    return (
-      <section className="admin-timeline-empty" aria-live="polite">
-        <p className="muted">No barber lanes available for timeline yet.</p>
-      </section>
-    );
-  }
-
-  const showTerminalRail = Boolean(onGoToNextDay);
-  const nextDayA11y = nextDayShortLabel ? `Next day, ${nextDayShortLabel}` : 'Next day';
+  const hasAnyBookings = bookings.length > 0;
+  const nextDayA11y = nextDayShortLabel ? `Next day — ${nextDayShortLabel}` : 'Next day';
 
   return (
-    <section className="admin-timeline" aria-label={`Timeline for ${selectedDate}`} style={timelineLayoutStyle}>
-      <div className="admin-timeline-scroll" ref={timelineScrollContainerRef}>
-        <div
-          className={`admin-timeline-matrix${showTerminalRail ? ' admin-timeline-matrix--terminal' : ''}`}
-        >
-          <div className="admin-timeline-barber-header" style={{ gridColumn: 1, gridRow: 1 }}>
-            Barber
+    <section className="admin-vtl" aria-label={`Timeline for ${selectedDate}`}>
+      {floatingTopRight ? (
+        <div className="admin-vtl-floating-slot">{floatingTopRight}</div>
+      ) : null}
+      <div className="admin-vtl-scroll" ref={activeScrollRef} onClick={handleScrollClick}>
+        {!hasAnyBookings ? (
+          <div className="admin-vtl-empty-overlay" aria-live="polite">
+            <p>This day is completely free</p>
           </div>
-          <div className="admin-timeline-scale" role="presentation" style={{ gridColumn: 2, gridRow: 1 }}>
-            {ticks.minorTicks.map((minute) => (
-              <span
-                key={`minor-${minute}`}
-                className="admin-timeline-tick admin-timeline-tick--minor"
-                style={{ left: `${(minute / TIMELINE_TOTAL_MINUTES) * 100}%` }}
-              />
-            ))}
-            {ticks.majorTicks.map((tick) => {
-              const isDayEnd = tick.minute === TIMELINE_TOTAL_MINUTES;
-              return (
-                <span
-                  key={`major-${tick.minute}`}
-                  className={`admin-timeline-tick admin-timeline-tick--major ${tick.isHalfHour ? 'admin-timeline-tick--half-hour' : ''}${isDayEnd ? ' admin-timeline-tick--day-end' : ''}`}
-                  style={{ left: `${(tick.minute / TIMELINE_TOTAL_MINUTES) * 100}%` }}
-                >
-                  <em>{tick.label}</em>
-                </span>
-              );
-            })}
-            <NowIndicator selectedDate={selectedDate} />
-          </div>
-          {showTerminalRail ? (
-            <div className="admin-timeline-terminal-header" aria-hidden="true" style={{ gridColumn: 3, gridRow: 1 }} />
-          ) : null}
-
-          {lanes.map((lane, laneIndex) => {
-            const laneRow = laneIndex + 2;
-            const stripe = laneIndex % 2 === 0;
+        ) : null}
+        {items.map((item, idx) => {
+          if (item.kind === 'now') {
             return (
-              <React.Fragment key={lane.barber.id}>
-                <div
-                  className={`admin-timeline-lane-label${stripe ? ' admin-timeline-lane-label--alt' : ''}`}
-                  style={{ gridColumn: 1, gridRow: laneRow }}
-                >
-                  {lane.barber.name}
-                </div>
-                <div
-                  className={`admin-timeline-lane-canvas${stripe ? ' admin-timeline-lane-canvas--alt' : ''}`}
-                  style={{ gridColumn: 2, gridRow: laneRow, minHeight: `${lane.laneHeight}px` }}
-                >
-                  <div className="admin-timeline-lane-grid" aria-hidden="true">
-                    {ticks.minorTicks.map((minute) => (
-                      <span
-                        key={`lane-minor-${lane.barber.id}-${minute}`}
-                        className="admin-timeline-grid-line admin-timeline-grid-line--minor"
-                        style={{ left: `${(minute / TIMELINE_TOTAL_MINUTES) * 100}%` }}
-                      />
-                    ))}
-                    {ticks.majorTicks.map((tick) => (
-                      <span
-                        key={`lane-major-${lane.barber.id}-${tick.minute}`}
-                        className={`admin-timeline-grid-line admin-timeline-grid-line--major ${tick.isHalfHour ? 'admin-timeline-grid-line--half-hour' : ''}`}
-                        style={{ left: `${(tick.minute / TIMELINE_TOTAL_MINUTES) * 100}%` }}
-                      />
-                    ))}
-                  </div>
-
-                  {lane.timeBlocks.map((item) => (
-                    <article
-                      key={item.id}
-                      className="admin-timeline-card admin-timeline-card--block"
-                      style={{ left: `${item.leftPct}%`, width: `${item.widthPct}%`, top: `${item.topPx}px`, height: `${item.heightPx}px` }}
-                      title={`${item.timeBlock.title} (${item.startLabel}–${item.endLabel})`}
-                    >
-                      <p>{item.timeBlock.title}</p>
-                    </article>
-                  ))}
-
-                  {lane.bookings.map((item) => (
-                    <TimelineBookingCard
-                      key={item.id}
-                      item={item}
-                      isSearchActive={isSearchActive}
-                      onBookingClick={onBookingClick}
-                    />
-                  ))}
-                </div>
-              </React.Fragment>
+              <div key="now-indicator" ref={nowRowRef}>
+                <NowRow timeLabel={nowTimeLabel || item.timeLabel} />
+              </div>
             );
-          })}
-
-          {showTerminalRail ? (
-            <div
-              className="admin-timeline-terminal-rail"
-              style={{ gridColumn: 3, gridRow: `2 / ${2 + lanes.length}` }}
-            >
-              <button
-                type="button"
-                className="admin-timeline-next-day-rail"
-                onClick={onGoToNextDay}
-                aria-label={nextDayA11y}
-                title={nextDayShortLabel ? `Next day — ${nextDayShortLabel}` : 'Next day'}
-              >
-                <ArrowRight className="admin-timeline-next-day-rail-icon" aria-hidden />
-              </button>
-            </div>
-          ) : null}
-        </div>
+          }
+          return (
+            <SlotRow
+              key={item.slot.timeLabel + idx}
+              slotKey={item.slot.timeLabel}
+              slot={item.slot}
+              nowMs={nowMs}
+              isExpanded={expandedSlotKey === item.slot.timeLabel}
+              activeBookingId={activeBookingId}
+              onAvatarClick={handleAvatarClick}
+              onSlotToggle={handleSlotToggle}
+              onExpand={handleExpand}
+              isSearchActive={isSearchActive}
+            />
+          );
+        })}
       </div>
+
+      {onGoToNextDay && (
+        <button
+          type="button"
+          className="admin-vtl-next-day-btn"
+          onClick={onGoToNextDay}
+          aria-label={nextDayA11y}
+          title={nextDayShortLabel ? `Next day — ${nextDayShortLabel}` : 'Next day'}
+        >
+          <span>{nextDayShortLabel ?? 'Next day'}</span>
+          <ArrowRight className="admin-vtl-next-day-icon" aria-hidden />
+        </button>
+      )}
     </section>
   );
 }
-
 
 export default memo(TodayTimeline);
