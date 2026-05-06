@@ -64,7 +64,7 @@ function pastStatusShort(booking: ScheduleListBooking): string {
   if (booking.status === 'CANCELLED_BY_ADMIN') return 'Cancelled';
   if (booking.status === 'EXPIRED') return 'Expired';
   if (booking.status === 'RESCHEDULED') return 'Rescheduled';
-  if (booking.status === 'PENDING_CONFIRMATION') return 'Pending';
+  if (booking.status === 'BOOKED') return 'Booked';
   return 'Closed';
 }
 
@@ -192,7 +192,7 @@ export default function AdminBookingsScheduleList(props: AdminBookingsScheduleLi
             const canCancel =
               !history && 'canCancelBooking' in props && props.canCancelBooking(booking);
 
-            const isDonePast = temporal === 'past' && booking.status === 'CONFIRMED';
+            const isDonePast = temporal === 'past' && booking.status === 'BOOKED';
             const isPastOther = temporal === 'past' && !isDonePast;
 
             const rowClass = [

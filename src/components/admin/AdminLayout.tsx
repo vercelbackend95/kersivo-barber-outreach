@@ -12,6 +12,7 @@ import {
   Scissors,
   ShoppingBag,
   TrendingUp,
+  User,
   Users,
   X,
 } from '../lucide-react';
@@ -53,6 +54,7 @@ const menuGroups: SectionGroup[] = [
       { section: 'bookings_blocks', label: 'Barbers', icon: <Users {...ICON} /> },
       { section: 'bookings_reports', label: 'Reports', icon: <BarChart2 {...ICON} /> },
       { section: 'bookings_history', label: 'History', icon: <Clock {...ICON} /> },
+      { section: 'bookings_clients', label: 'Clients', icon: <User {...ICON} /> },
       { section: 'services', label: 'Services', icon: <Scissors {...ICON} /> },
     ],
   },

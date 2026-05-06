@@ -1,6 +1,5 @@
 import React, { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
 import { AnimatePresence, motion } from 'framer-motion';
-import { createPortal } from 'react-dom';
 import { BarberRosterOverviewGridSkeleton, SkeletonKPICards } from '../skeleton';
 import AdminSectionHeader from './AdminSectionHeader';
 import AdminBookingsOpsSearch from './AdminBookingsOpsSearch';
@@ -9,7 +8,7 @@ import AdminBookingsScheduleList from './AdminBookingsScheduleList';
 import AdminLineChart from './charts/AdminLineChart';
 import { addDays } from 'date-fns';
 import { formatInTimeZone, fromZonedTime, toZonedTime } from 'date-fns-tz';
-import TodayTimeline, { type TimelineBooking } from './TodayTimeline';
+import TodayTimeline from './TodayTimeline';
 import AdminErrorBoundary from './AdminErrorBoundary';
 import HistoryDateRangePicker from './HistoryDateRangePicker';
 import BarbersOverview from './BarbersOverview';
@@ -28,7 +27,7 @@ import type { Barber, ServiceOption, TimeBlock, WorkingHourRow } from './barbers
 import { getDefaultWorkingHourRows } from '../../lib/admin/defaultWorkingHourRows';
 import { formatDelta } from './reportsFormatting';
 import EmptyState from '../EmptyState';
-import { Ban, Clock, ListOrdered, X } from '../lucide-react';
+import { Clock, ListOrdered, X } from '../lucide-react';
 import { ADMIN_BOOKING_HISTORY_PAGE_SIZE } from '../../lib/admin/bookingHistoryPageSize';
 import { canShopAdminCancelByLeadTime } from '../../lib/booking/policies';
 import { countBookingsByStatusTone, getBookingStatusTone, isCancelledBookingStatus } from './bookingStatus';
@@ -36,8 +35,10 @@ type Booking = {
   id: string;
   barberId: string;
   clientId?: string | null;
+  clientTags?: string[];
   fullName: string;
   email: string;
+  phone?: string | null;
   status: string;
   startAt: string;
   endAt: string;
@@ -329,16 +330,16 @@ function formatStartTime(startAt: string) {
 return new Date(startAt).toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit', timeZone: ADMIN_TIMEZONE });
 }
 function getBookingStatusLabel(booking: Booking) {
-  if (booking.status === 'CONFIRMED' && booking.rescheduledAt) return 'CONFIRMED · RESCHEDULED';
+  if (booking.status === 'BOOKED' && booking.rescheduledAt) return 'BOOKED · RESCHEDULED';
   return booking.status;
 }
 
 function getStatusA11yLabel(statusLabel: string) {
-  if (statusLabel === 'CONFIRMED') return 'Confirmed';
+  if (statusLabel === 'BOOKED') return 'Booked';
   if (statusLabel === 'EXPIRED') return 'Expired';
   if (statusLabel === 'CANCELLED_BY_CLIENT') return 'Cancelled by client';
   if (statusLabel === 'CANCELLED_BY_SHOP') return 'Cancelled by shop';
-  if (statusLabel === 'CONFIRMED · RESCHEDULED') return 'Confirmed and rescheduled';
+  if (statusLabel === 'BOOKED · RESCHEDULED') return 'Booked and rescheduled';
   return statusLabel.replace(/_/g, ' ').toLowerCase().replace(/(^|\s)\S/g, (char) => char.toUpperCase());
 }
 
@@ -356,7 +357,7 @@ type DaySummaryBarProps = {
 
 function isUpcomingDayStatBooking(booking: Booking, nowMs: number) {
   const endMs = new Date(booking.endAt).getTime();
-  return endMs > nowMs && (booking.status === 'CONFIRMED' || booking.status === 'PENDING_CONFIRMATION');
+  return endMs > nowMs && booking.status === 'BOOKED';
 }
 
 function isRescheduledDayOpsBooking(booking: Booking): boolean {
@@ -770,7 +771,7 @@ export default function BookingsAdminPanel({ isActive, mode, onBackToDashboard }
 
   const canCancelBookingAsShop = useCallback(
     (booking: Booking) =>
-      booking.status === 'CONFIRMED' && canShopAdminCancelByLeadTime(new Date(booking.startAt), nowMs),
+      booking.status === 'BOOKED' && canShopAdminCancelByLeadTime(new Date(booking.startAt), nowMs),
     [nowMs]
   );
 
@@ -787,10 +788,6 @@ export default function BookingsAdminPanel({ isActive, mode, onBackToDashboard }
   const [clientError, setClientError] = useState('');
   const [notesDraft, setNotesDraft] = useState('');
   const [notesSaving, setNotesSaving] = useState(false);
-  const [selectedTimelineBooking, setSelectedTimelineBooking] = useState<Booking | null>(null);
-  const [timelineNotesDraft, setTimelineNotesDraft] = useState('');
-  const [timelineNotesSaving, setTimelineNotesSaving] = useState(false);
-  const [timelineNotesMessage, setTimelineNotesMessage] = useState('');
   const [isMobileViewport, setIsMobileViewport] = useState(false);
 
   const inFlightRef = useRef(false);
@@ -1574,21 +1571,8 @@ export default function BookingsAdminPanel({ isActive, mode, onBackToDashboard }
   const historySearchResultsLoading = mode === 'history' && Boolean(effectiveClientSearchQuery) && historySearchLoading;
 
 
-  const isAnyOverlayOpen = isAddBarberSheetOpen || openDrilldown !== null || showHolidayModal || selectedTimelineBooking !== null || selectedClientId !== null;
+  const isAnyOverlayOpen = isAddBarberSheetOpen || openDrilldown !== null || showHolidayModal || selectedClientId !== null;
   useBodyScrollLock(isMobileViewport && isAnyOverlayOpen);
-
-  useEffect(() => {
-    if (!selectedTimelineBooking) return;
-    const onKeyDown = (event: KeyboardEvent) => {
-      if (event.key !== 'Escape') return;
-      const active = document.activeElement;
-      if (isKeyboardEditableTarget(event.target) || isKeyboardEditableTarget(active)) return;
-      event.preventDefault();
-      setSelectedTimelineBooking(null);
-    };
-    window.addEventListener('keydown', onKeyDown);
-    return () => window.removeEventListener('keydown', onKeyDown);
-  }, [selectedTimelineBooking]);
 
   const isTimelineView = mode === 'dashboard' && activeView === 'timeline';
   const selectedDateLabel = useMemo(() => formatTimelineDateLabel(selectedDate), [selectedDate]);
@@ -1632,11 +1616,6 @@ export default function BookingsAdminPanel({ isActive, mode, onBackToDashboard }
     setNotesSaving(false);
 
   }
-  const openTimelineBooking = useCallback((booking: Booking | TimelineBooking) => {
-    setSelectedTimelineBooking(booking as Booking);
-    setTimelineNotesDraft(booking.notes ?? '');
-    setTimelineNotesMessage('');
-  }, []);
   const scrollToTimelineBooking = useCallback((bookingId: string) => {
     const card = document.querySelector(`[data-booking-id="${bookingId}"]`) as HTMLElement | null;
     if (!card) return false;
@@ -1676,13 +1655,24 @@ export default function BookingsAdminPanel({ isActive, mode, onBackToDashboard }
         }
       }
 
-      openTimelineBooking(booking);
+      if (booking.clientId) {
+        void openClientProfile(booking.clientId);
+      }
       setClientSearchQuery('');
       setDebouncedSearchQuery('');
       setActiveSearchResultIndex(-1);
       searchInputRef.current?.blur();
     },
-    [activeView, mode, openTimelineBooking, scrollToListBooking, scrollToTimelineBooking]
+    [activeView, mode, openClientProfile, scrollToListBooking, scrollToTimelineBooking]
+  );
+
+  const handleTimelineBookingClick = useCallback(
+    (booking: Booking) => {
+      if (booking.clientId) {
+        void openClientProfile(booking.clientId);
+      }
+    },
+    [openClientProfile]
   );
 
   useEffect(() => {
@@ -1700,32 +1690,6 @@ export default function BookingsAdminPanel({ isActive, mode, onBackToDashboard }
       pendingListScrollBookingIdRef.current = null;
     }
   }, [activeView, mode, scrollToListBooking, visibleBookings]);
-
-
-  async function saveTimelineBookingNotes() {
-    if (!selectedTimelineBooking) return;
-    setTimelineNotesSaving(true);
-    setTimelineNotesMessage('');
-
-    const response = await fetch(`/api/admin/bookings/${selectedTimelineBooking.id}/notes`, {
-      method: 'PATCH',
-      credentials: 'include',
-      headers: { 'content-type': 'application/json' },
-      body: JSON.stringify({ notes: timelineNotesDraft })
-    });
-
-    if (!response.ok) {
-      setTimelineNotesMessage('Could not save booking notes.');
-      setTimelineNotesSaving(false);
-      return;
-    }
-
-    setTimelineNotesMessage('Notes saved.');
-    setBookings((current) => current.map((item) => (item.id === selectedTimelineBooking.id ? { ...item, notes: timelineNotesDraft } : item)));
-    setSelectedTimelineBooking((current) => (current ? { ...current, notes: timelineNotesDraft } : current));
-    setTimelineNotesSaving(false);
-  }
-
 
   useEffect(() => {
     if (!barberAvatarFile) {
@@ -1901,9 +1865,6 @@ export default function BookingsAdminPanel({ isActive, mode, onBackToDashboard }
     if (response.ok) {
       setCancelSuccessMessage('Booking cancelled successfully.');
       await fetchBookings();
-      if (selectedTimelineBooking?.id === booking.id) {
-        setSelectedTimelineBooking((current) => (current ? { ...current, status: 'CANCELLED_BY_SHOP' } : current));
-      }
     } else {
       let message = 'Could not cancel booking right now.';
       try {
@@ -2519,7 +2480,7 @@ export default function BookingsAdminPanel({ isActive, mode, onBackToDashboard }
                       isLoading={bookingsInitialLoading || barbersInitialLoading}
                       isSearchActive={Boolean(effectiveClientSearchQuery) || dayOpsFilter !== 'all'}
                       scrollContainerRef={timelineScrollRef}
-                      onBookingClick={openTimelineBooking}
+                      onBookingClick={handleTimelineBookingClick}
                       onGoToNextDay={goToNextTimelineDay}
                       nextDayShortLabel={timelineNextDayLabel}
                       allowInitialNowScroll={isTimelineEnterComplete}
@@ -3039,167 +3000,6 @@ export default function BookingsAdminPanel({ isActive, mode, onBackToDashboard }
           </form>
         </div>
       )}
-
-      {selectedTimelineBooking && typeof document !== 'undefined'
-        ? createPortal(
-            <div
-              className="admin-client-modal-backdrop admin-client-modal-backdrop--sheet"
-              role="presentation"
-              onClick={() => setSelectedTimelineBooking(null)}
-            >
-              <div
-                className="admin-client-modal admin-booking-quick-actions-modal"
-                role="dialog"
-                aria-modal="true"
-                aria-label="Booking quick actions"
-                onClick={(event) => event.stopPropagation()}
-              >
-                <header className="admin-client-modal-head admin-booking-quick-actions-head">
-                  <div className="admin-booking-quick-actions-head-copy">
-                    <p className="admin-booking-quick-actions-eyebrow">Appointment</p>
-                    <h2 className="admin-booking-quick-actions-title">Quick actions</h2>
-                    <p className="admin-booking-quick-actions-kicker">
-                      {new Date(selectedTimelineBooking.startAt).toLocaleString('en-GB', {
-                        timeZone: ADMIN_TIMEZONE,
-                        weekday: 'short',
-                        day: 'numeric',
-                        month: 'short',
-                        hour: '2-digit',
-                        minute: '2-digit',
-                      })}{' '}
-                      · {selectedTimelineBooking.service?.name || 'Service'} · {selectedTimelineBooking.status}
-                    </p>
-                    <p className="admin-booking-quick-actions-subtitle admin-booking-quick-actions-subtitle--collapse">
-                      Review details, run admin actions, and update internal notes.
-                    </p>
-                  </div>
-                </header>
-
-                <div className="admin-booking-quick-actions-body">
-                  <section className="admin-booking-quick-section admin-booking-quick-section--summary" aria-labelledby="booking-summary-heading">
-                    <div className="admin-booking-quick-section-summary-top">
-                      <div className="admin-booking-quick-section-head">
-                        <h3 id="booking-summary-heading">Summary</h3>
-                        <p className="admin-booking-quick-section-copy admin-booking-quick-section-copy--collapse">
-                          Client, service, and timing at a glance.
-                        </p>
-                      </div>
-                      <button
-                        type="button"
-                        className="admin-booking-quick-actions-dismiss"
-                        onClick={() => setSelectedTimelineBooking(null)}
-                        aria-label="Close booking quick actions"
-                      >
-                        <X width={18} height={18} aria-hidden="true" />
-                      </button>
-                    </div>
-                    <div className="admin-booking-summary-card">
-                      <div className="admin-booking-summary-identity">
-                        <p className="admin-booking-summary-name">{selectedTimelineBooking.fullName}</p>
-                        <p className="admin-booking-summary-email">{selectedTimelineBooking.email}</p>
-                      </div>
-                      <dl className="admin-booking-summary-grid">
-                        <div className="admin-booking-summary-item">
-                          <dt>Service</dt>
-                          <dd>{selectedTimelineBooking.service?.name || '—'}</dd>
-                        </div>
-                        <div className="admin-booking-summary-item">
-                          <dt>Barber</dt>
-                          <dd>{selectedTimelineBooking.barber?.name || '—'}</dd>
-                        </div>
-                        <div className="admin-booking-summary-item admin-booking-summary-item--wide">
-                          <dt>Date &amp; time</dt>
-                          <dd>
-                            {new Date(selectedTimelineBooking.startAt).toLocaleString('en-GB', { timeZone: ADMIN_TIMEZONE })} →{' '}
-                            {new Date(selectedTimelineBooking.endAt).toLocaleTimeString('en-GB', {
-                              timeZone: ADMIN_TIMEZONE,
-                              hour: '2-digit',
-                              minute: '2-digit',
-                            })}
-                          </dd>
-                        </div>
-                      </dl>
-                    </div>
-                  </section>
-
-                  <section className="admin-booking-quick-section admin-booking-quick-section--actions" aria-labelledby="booking-actions-heading">
-                    <div className="admin-booking-quick-section-head">
-                      <h3 id="booking-actions-heading">Actions</h3>
-                      <p className="admin-booking-quick-section-copy admin-booking-quick-section-copy--collapse">
-                        Administrative controls for this booking.
-                      </p>
-                    </div>
-                    <div className="admin-booking-quick-actions-rows" role="list">
-                      <div className="admin-booking-quick-action-row admin-booking-quick-action-row--danger" role="listitem">
-                        <div className="admin-booking-quick-action-row__icon" aria-hidden="true">
-                          <Ban width={18} height={18} />
-                        </div>
-                        <div className="admin-booking-quick-action-row__copy">
-                          <p className="admin-booking-quick-action-row__title">Cancel booking</p>
-                          <p className="admin-booking-quick-action-row__description">
-                            {selectedTimelineBooking.status === 'CONFIRMED' &&
-                            !canShopAdminCancelByLeadTime(new Date(selectedTimelineBooking.startAt), nowMs)
-                              ? 'Cancellations are only possible more than 30 minutes before the start time.'
-                              : 'Remove this appointment from the schedule.'}
-                          </p>
-                        </div>
-                        <div className="admin-booking-quick-action-row__meta">
-                          <span className={`badge ${canCancelBookingAsShop(selectedTimelineBooking) ? 'badge--confirmed' : 'badge--neutral'}`}>
-                            {canCancelBookingAsShop(selectedTimelineBooking) ? 'Available' : 'Unavailable'}
-                          </span>
-                        </div>
-                        <div className="admin-booking-quick-action-row__cta">
-                          <button
-                            type="button"
-                            className="btn btn--secondary"
-                            onClick={() => void cancelBookingByShop(selectedTimelineBooking)}
-                            disabled={!canCancelBookingAsShop(selectedTimelineBooking) || cancelLoadingBookingId === selectedTimelineBooking.id}
-                          >
-                            {cancelLoadingBookingId === selectedTimelineBooking.id ? 'Cancelling...' : 'Cancel'}
-                          </button>
-                        </div>
-                      </div>
-                    </div>
-                  </section>
-
-                  <section className="admin-booking-quick-section" aria-labelledby="booking-notes-heading">
-                    <div className="admin-booking-quick-section-head">
-                      <h3 id="booking-notes-heading">Internal notes</h3>
-                      <p className="admin-booking-quick-section-copy admin-booking-quick-section-copy--collapse">
-                        Visible only to your team; not shown to clients.
-                      </p>
-                    </div>
-                    <div className="admin-booking-notes-card">
-                      <textarea
-                        id="booking-notes"
-                        rows={4}
-                        value={timelineNotesDraft}
-                        onChange={(event) => setTimelineNotesDraft(event.target.value)}
-                        aria-labelledby="booking-notes-heading"
-                      />
-                      {timelineNotesMessage ? (
-                        <div className="admin-booking-notes-status">
-                          <p className={timelineNotesMessage === 'Notes saved.' ? 'admin-inline-success' : 'admin-inline-error'}>{timelineNotesMessage}</p>
-                          <button type="button" className="btn btn--ghost admin-booking-notes-status-clear" onClick={() => setTimelineNotesMessage('')}>
-                            Dismiss message
-                          </button>
-                        </div>
-                      ) : null}
-                      <div className="admin-booking-notes-actions">
-                        <button type="button" className="btn btn--primary" onClick={() => void saveTimelineBookingNotes()} disabled={timelineNotesSaving}>
-                          {timelineNotesSaving ? 'Saving...' : 'Save notes'}
-                        </button>
-                      </div>
-                    </div>
-                  </section>
-                </div>
-              </div>
-            </div>,
-            document.body,
-          )
-        : null}
-
-
 
       {selectedClientId && (
         <div className="admin-client-modal-backdrop admin-client-modal-backdrop--centered" role="presentation" onClick={() => setSelectedClientId(null)}>

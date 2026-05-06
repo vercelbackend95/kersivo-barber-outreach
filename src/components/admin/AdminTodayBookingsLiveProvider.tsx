@@ -28,7 +28,7 @@ function isTodayInLondon(value: string, todayLondonDate: string) {
 function getUpcomingBookings(bookings: AdminLiveBookingRow[]) {
   const nowMs = Date.now();
   return bookings
-    .filter((b) => b.status === 'CONFIRMED')
+    .filter((b) => b.status === 'BOOKED')
     .filter((b) => new Date(b.endAt).getTime() > nowMs)
     .sort((a, b) => new Date(a.startAt).getTime() - new Date(b.startAt).getTime());
 }

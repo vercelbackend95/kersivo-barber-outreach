@@ -152,7 +152,7 @@ async function getAvailableSlotsForBarber(input: {
       where: {
         barberId: input.barberId,
         id: input.ignoreBookingId ? { not: input.ignoreBookingId } : undefined,
-        status: { in: [BookingStatus.CONFIRMED] }
+        status: { in: [BookingStatus.BOOKED] }
       },
       select: { startAt: true, endAt: true }
     }),
@@ -250,7 +250,7 @@ async function ensureSlotAvailable(
     where: {
       barberId: input.barberId,
       id: input.ignoreBookingId ? { not: input.ignoreBookingId } : undefined,
-      status: { in: [BookingStatus.CONFIRMED] },
+      status: { in: [BookingStatus.BOOKED] },
       NOT: [{ endAt: { lte: input.startAt } }, { startAt: { gte: input.endAt } }]
     }
   });
@@ -382,7 +382,7 @@ export async function createInstantBooking(input: {
             phone: input.phone || null,
             startAt,
             endAt,
-            status: BookingStatus.CONFIRMED,
+            status: BookingStatus.BOOKED,
             confirmTokenHash: null,
             confirmTokenExpiresAt: null,
             manageTokenHash: hashToken(manageToken),
@@ -451,7 +451,7 @@ export async function cancelByShop(input: { bookingId: string; reason?: string }
 
   if (!canShopAdminCancelByLeadTime(booking.startAt, Date.now())) {
     throw new BookingActionError(
-      'This booking can only be cancelled more than 30 minutes before it starts.',
+      'This booking can only be cancelled more than 1 hour before it starts.',
       409
     );
   }
@@ -533,7 +533,7 @@ export async function rescheduleByToken(input: { token: string; serviceId: strin
             rescheduledAt: new Date(),
             originalStartAt: existing.originalStartAt ?? existing.startAt,
             originalEndAt: existing.originalEndAt ?? existing.endAt,
-            status: BookingStatus.CONFIRMED
+            status: BookingStatus.BOOKED
           },
           include: { service: true, barber: true }
         });

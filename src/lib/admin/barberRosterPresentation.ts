@@ -48,7 +48,7 @@ export function bookingDurationHours(booking: BarberBookingPreview): number {
   return (endMs - startMs) / 3_600_000;
 }
 
-const SCHEDULED_BOOKING_STATUSES = ['CONFIRMED', 'PENDING', 'PENDING_CONFIRMATION', 'RESCHEDULED'] as const;
+const SCHEDULED_BOOKING_STATUSES = ['BOOKED', 'PENDING', 'RESCHEDULED'] as const;
 
 function formatTimeHHMM(date: Date) {
   return new Intl.DateTimeFormat('en-GB', {

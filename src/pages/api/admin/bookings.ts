@@ -3,6 +3,7 @@ import { fromZonedTime, formatInTimeZone } from 'date-fns-tz';
 import { ADMIN_BOOKING_HISTORY_PAGE_SIZE } from '../../../lib/admin/bookingHistoryPageSize';
 import { requireAdmin } from '../../../lib/admin/auth';
 import { prisma } from '../../../lib/db/client';
+import { getEffectiveBookingStatus } from '../../../lib/booking/operationalStatus';
 import { BookingStatus, Prisma } from '@prisma/client';
 
 const ADMIN_TIMEZONE = 'Europe/London';
@@ -25,6 +26,31 @@ function getTodayRangeInLondon() {
 function withHistoricalServiceName<T extends { serviceNameAtBooking?: string | null; service?: { name?: string | null } | null }>(booking: T): T {
   if (!booking.serviceNameAtBooking || !booking.service) return booking;
   return { ...booking, service: { ...booking.service, name: booking.serviceNameAtBooking } };
+}
+
+function withClientTags<
+  T extends { client?: { tags?: string[] | null } | null }
+>(booking: T): Omit<T, 'client'> & { clientTags: string[] } {
+  const { client, ...rest } = booking;
+  return {
+    ...rest,
+    clientTags: Array.isArray(client?.tags)
+      ? client.tags.filter((tag): tag is string => typeof tag === 'string' && tag.trim().length > 0)
+      : [],
+  };
+}
+
+function withEffectiveBookingStatus<
+  T extends { status: string; startAt: Date | string; endAt: Date | string }
+>(booking: T): T {
+  return {
+    ...booking,
+    status: getEffectiveBookingStatus({
+      status: booking.status,
+      startAt: booking.startAt,
+      endAt: booking.endAt,
+    }),
+  };
 }
 const LEGACY_BOOKING_SELECT = {
   id: true,
@@ -129,7 +155,7 @@ export const GET: APIRoute = async (ctx) => {
 
     const bookings = await findBookingsWithFallback({
       where: andConditions.length ? { AND: andConditions } : {},
-      include: { barber: true, service: true },
+      include: { barber: true, service: true, client: { select: { tags: true } } },
       orderBy: [{ startAt: 'desc' }, { id: 'desc' }],
       take: limit + 1
     });
@@ -140,7 +166,11 @@ export const GET: APIRoute = async (ctx) => {
       ? `${page[page.length - 1]?.startAt.toISOString() ?? ''}|${page[page.length - 1]?.id ?? ''}`
       : null;
 
-    return new Response(JSON.stringify({ bookings: page.map(withHistoricalServiceName), hasMore, cursor: nextCursor }));
+    return new Response(JSON.stringify({
+      bookings: page.map(withHistoricalServiceName).map(withEffectiveBookingStatus).map(withClientTags),
+      hasMore,
+      cursor: nextCursor,
+    }));
   }
   if (view === 'stats') {
     const barberId = ctx.url.searchParams.get('barberId');
@@ -151,7 +181,7 @@ export const GET: APIRoute = async (ctx) => {
     const totalBookingsServed = await prisma.booking.count({
       where: {
         barberId,
-        status: { in: [BookingStatus.CONFIRMED, BookingStatus.EXPIRED, BookingStatus.RESCHEDULED] }
+        status: { in: [BookingStatus.BOOKED, BookingStatus.EXPIRED, BookingStatus.RESCHEDULED] }
       }
     });
 
@@ -178,9 +208,9 @@ export const GET: APIRoute = async (ctx) => {
       OR: q ? [{ fullName: { contains: q, mode: 'insensitive' } }, { email: { contains: q, mode: 'insensitive' } }] : undefined,
       startAt: startAtRange
     },
-    include: { barber: true, service: true },
+    include: { barber: true, service: true, client: { select: { tags: true } } },
     orderBy: { startAt: 'asc' }
   });
 
-  return new Response(JSON.stringify({ bookings: bookings.map(withHistoricalServiceName) }));
+  return new Response(JSON.stringify({ bookings: bookings.map(withHistoricalServiceName).map(withEffectiveBookingStatus).map(withClientTags) }));
 };

@@ -10,6 +10,7 @@ import {
   isPrismaDatabaseUnavailableError
 } from '../../../lib/db/resilience';
 import { prisma } from '../../../lib/db/client';
+import { isBookingPaidQualified } from '../../../lib/booking/paymentReporting';
 const ADMIN_TIMEZONE = 'Europe/London';
 
 type ReportsRange = 'week' | '7d' | '30d' | '90d' | '1y';
@@ -41,9 +42,8 @@ type ReportBookingRow = {
 
 
 
-const BOOKED_STATUSES = new Set<BookingStatus>([BookingStatus.CONFIRMED, BookingStatus.RESCHEDULED]);
-// Revenue business rules: only confirmed bookings and paid/collected shop orders count as revenue.
-const REVENUE_STATUSES = new Set<BookingStatus>([BookingStatus.CONFIRMED]);
+const BOOKED_STATUSES = new Set<BookingStatus>([BookingStatus.BOOKED, BookingStatus.RESCHEDULED]);
+// Revenue business rules: only paid-qualified bookings and paid/collected shop orders count as revenue.
 const ORDER_REVENUE_STATUSES = new Set<OrderStatus>([OrderStatus.PAID, OrderStatus.COLLECTED]);
 
 const LEGACY_BOOKING_SELECT = {
@@ -57,6 +57,8 @@ const LEGACY_BOOKING_SELECT = {
   email: true,
   barber: { select: { name: true, avatarUrl: true } },
   service: { select: { id: true, name: true, durationMinutes: true, pricePence: true } }
+  ,
+  paymentStatus: true
 } satisfies Prisma.BookingSelect;
 
 function isMissingHistoricalColumnError(error: unknown) {
@@ -216,6 +218,7 @@ async function computeMetrics(shopId: string, range: RangeBoundaries, selectedBa
       select: {
         ...LEGACY_BOOKING_SELECT,
         serviceNameAtBooking: true,
+        paymentStatus: true,
 
         servicePricePenceAtBooking: true,
         serviceDurationMinutesAtBooking: true,
@@ -311,6 +314,12 @@ async function computeMetrics(shopId: string, range: RangeBoundaries, selectedBa
     }
     const bookingValuePence = booking.totalPricePence ?? booking.servicePricePenceAtBooking ?? booking.service?.pricePence ?? 0;
     const bookingValue = bookingValuePence / 100;
+    const isPaidQualified = isBookingPaidQualified({
+      status: booking.status,
+      startAt: booking.startAt,
+      endAt: booking.endAt,
+      paymentStatus: booking.paymentStatus ?? null,
+    });
 
     reportBookings.push({
       id: booking.id,
@@ -321,10 +330,10 @@ async function computeMetrics(shopId: string, range: RangeBoundaries, selectedBa
       status: booking.status,
       clientName: booking.fullName,
       clientEmail: booking.email,
-      computedValueGbp: REVENUE_STATUSES.has(booking.status) ? bookingValue : null
+      computedValueGbp: isPaidQualified ? bookingValue : null
     });
 
-    if (!REVENUE_STATUSES.has(booking.status)) continue;
+    if (!isPaidQualified) continue;
 
 
         revenue += bookingValue;

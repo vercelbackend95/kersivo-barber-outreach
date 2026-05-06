@@ -8,13 +8,16 @@ datasource db {
 }
 
 enum BookingStatus {
-  PENDING_CONFIRMATION
-  CONFIRMED
+  BOOKED
   CANCELLED_BY_CLIENT
   CANCELLED_BY_ADMIN
   CANCELLED_BY_SHOP
   RESCHEDULED
   EXPIRED
+  ARRIVED
+  IN_PROGRESS
+  COMPLETED
+  NO_SHOW
 }
 
 enum PaymentStatus {
@@ -61,6 +64,7 @@ model Client {
   email     String
   phone     String?
   notes     String?
+  tags      String[] @default([])
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
@@ -178,7 +182,7 @@ model Booking {
   originalStartAt         DateTime?
   originalEndAt           DateTime?
   rescheduledAt           DateTime?
-  status                  BookingStatus @default(CONFIRMED)
+  status                  BookingStatus @default(BOOKED)
   notes                   String?
   parentBookingId         String?
   newBookingId            String?

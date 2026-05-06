@@ -13,10 +13,17 @@ export function isCancelledBookingStatus(status: string): boolean {
 
 export function getBookingStatusTone(input: BookingStatusInput): BookingStatusTone {
   if (isCancelledBookingStatus(input.status)) return 'cancelled';
-  if (input.status === 'PENDING_CONFIRMATION' || input.status === 'EXPIRED') return 'pending';
+  if (input.status === 'NO_SHOW') return 'cancelled';
+  if (input.status === 'EXPIRED') return 'pending';
   const hasRescheduledFlag = Boolean(input.rescheduledAt) || input.status.includes('RESCHEDULED');
   if (hasRescheduledFlag) return 'rescheduled';
-  if (input.status === 'CONFIRMED') return 'confirmed';
+  if (
+    input.status === 'BOOKED' ||
+    input.status === 'ARRIVED' ||
+    input.status === 'IN_PROGRESS' ||
+    input.status === 'COMPLETED'
+  )
+    return 'confirmed';
   return 'pending';
 }
 
@@ -58,14 +65,17 @@ export function getStatusTone(status: string, rescheduledAt?: string | null): St
 
 /** Returns a human-readable label for any admin status string. */
 export function getStatusLabel(status: string, rescheduledAt?: string | null): string {
-  if (status === 'CONFIRMED' && rescheduledAt) return 'Confirmed · Rescheduled';
-  if (status === 'CONFIRMED') return 'Confirmed';
+  if (status === 'BOOKED' && rescheduledAt) return 'Booked · Rescheduled';
+  if (status === 'BOOKED') return 'Booked';
   if (status === 'CANCELLED_BY_CLIENT') return 'Cancelled by client';
   if (status === 'CANCELLED_BY_SHOP') return 'Cancelled by shop';
   if (status === 'CANCELLED_BY_ADMIN') return 'Cancelled by admin';
-  if (status === 'PENDING_CONFIRMATION') return 'Pending';
   if (status === 'EXPIRED') return 'Expired';
   if (status === 'RESCHEDULED') return 'Rescheduled';
+  if (status === 'ARRIVED') return 'Arrived';
+  if (status === 'IN_PROGRESS') return 'In Progress';
+  if (status === 'COMPLETED') return 'Completed';
+  if (status === 'NO_SHOW') return 'No Show';
   if (status === 'PAID') return 'Paid';
   if (status === 'COLLECTED') return 'Collected';
   if (status === 'PENDING') return 'Pending';

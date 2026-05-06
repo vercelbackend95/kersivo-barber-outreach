@@ -18,7 +18,7 @@ describe('bookingDurationHours', () => {
   it('uses endAt minus startAt when valid', () => {
     const b = preview({
       barberId: 'a',
-      status: 'CONFIRMED',
+      status: 'BOOKED',
       startAt: '2026-06-15T10:00:00.000Z',
       endAt: '2026-06-15T10:45:00.000Z',
     });
@@ -28,7 +28,7 @@ describe('bookingDurationHours', () => {
   it('falls back when endAt is missing', () => {
     const b = preview({
       barberId: 'a',
-      status: 'CONFIRMED',
+      status: 'BOOKED',
       startAt: '2026-06-15T10:00:00.000Z',
     });
     expect(bookingDurationHours(b)).toBe(ESTIMATED_BOOKING_DURATION_H);
@@ -37,7 +37,7 @@ describe('bookingDurationHours', () => {
   it('falls back when endAt is not after startAt', () => {
     const b = preview({
       barberId: 'a',
-      status: 'CONFIRMED',
+      status: 'BOOKED',
       startAt: '2026-06-15T10:00:00.000Z',
       endAt: '2026-06-15T10:00:00.000Z',
     });
@@ -53,13 +53,13 @@ describe('getDayFillForRange', () => {
     const bookings: BarberBookingPreview[] = [
       preview({
         barberId: 'b1',
-        status: 'CONFIRMED',
+        status: 'BOOKED',
         startAt: new Date(Date.UTC(2026, 5, 15, 9, 0)).toISOString(),
         endAt: new Date(Date.UTC(2026, 5, 15, 10, 0)).toISOString(),
       }),
       preview({
         barberId: 'b1',
-        status: 'CONFIRMED',
+        status: 'BOOKED',
         startAt: new Date(Date.UTC(2026, 5, 15, 11, 0)).toISOString(),
         endAt: new Date(Date.UTC(2026, 5, 15, 11, 30)).toISOString(),
       }),
@@ -75,13 +75,13 @@ describe('getDayFillForRange', () => {
     const bookings: BarberBookingPreview[] = [
       preview({
         barberId: 'b1',
-        status: 'CONFIRMED',
+        status: 'BOOKED',
         startAt: new Date(Date.UTC(2026, 5, 15, 9, 0)).toISOString(),
         endAt: new Date(Date.UTC(2026, 5, 15, 10, 0)).toISOString(),
       }),
       preview({
         barberId: 'b2',
-        status: 'CONFIRMED',
+        status: 'BOOKED',
         startAt: new Date(Date.UTC(2026, 5, 15, 9, 0)).toISOString(),
         endAt: new Date(Date.UTC(2026, 5, 15, 12, 0)).toISOString(),
       }),

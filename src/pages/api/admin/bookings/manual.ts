@@ -59,7 +59,7 @@ export const POST: APIRoute = async (ctx) => {
         serviceDurationMinutesAtBooking: service.durationMinutes,
         totalPricePence: service.pricePence,
 
-        status: BookingStatus.CONFIRMED,
+        status: BookingStatus.BOOKED,
         manageTokenHash: `manual-${Date.now()}`
       },
       include: { service: true, barber: true }

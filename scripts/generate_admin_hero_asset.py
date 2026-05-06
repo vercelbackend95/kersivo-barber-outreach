@@ -31,41 +31,41 @@ BARBERS = [
 ]
 
 BOOKINGS = [
-    ('mason-1145', 'barber-mason', 'Haircut', 'CONFIRMED', '11:45', '12:15'),
-    ('mason-1230', 'barber-mason', 'Skin Fade', 'CONFIRMED', '12:30', '13:15'),
-    ('mason-1315', 'barber-mason', 'Haircut + Beard', 'CONFIRMED', '13:15', '14:05'),
-    ('mason-1415', 'barber-mason', 'Haircut', 'CONFIRMED', '14:15', '14:45'),
-    ('mason-1500', 'barber-mason', 'Beard Trim', 'CONFIRMED', '15:00', '15:20'),
-    ('mason-1530', 'barber-mason', 'Skin Fade', 'PENDING_CONFIRMATION', '15:30', '16:15'),
-    ('mason-1615', 'barber-mason', 'Haircut + Beard', 'CONFIRMED', '16:15', '17:05'),
-    ('mason-1715', 'barber-mason', 'Haircut', 'CONFIRMED', '17:15', '17:45'),
-    ('mason-1800', 'barber-mason', 'Beard Trim', 'CONFIRMED', '18:00', '18:20'),
-    ('theo-1200', 'barber-theo', 'Beard Trim', 'CONFIRMED', '12:00', '12:20'),
-    ('theo-1230', 'barber-theo', 'Haircut', 'CONFIRMED', '12:30', '13:00'),
-    ('theo-1315', 'barber-theo', 'Skin Fade', 'CONFIRMED', '13:15', '14:00'),
-    ('theo-1400', 'barber-theo', 'Haircut + Beard', 'CONFIRMED', '14:00', '14:50'),
+    ('mason-1145', 'barber-mason', 'Haircut', 'BOOKED', '11:45', '12:15'),
+    ('mason-1230', 'barber-mason', 'Skin Fade', 'BOOKED', '12:30', '13:15'),
+    ('mason-1315', 'barber-mason', 'Haircut + Beard', 'BOOKED', '13:15', '14:05'),
+    ('mason-1415', 'barber-mason', 'Haircut', 'BOOKED', '14:15', '14:45'),
+    ('mason-1500', 'barber-mason', 'Beard Trim', 'BOOKED', '15:00', '15:20'),
+    ('mason-1530', 'barber-mason', 'Skin Fade', 'BOOKED', '15:30', '16:15'),
+    ('mason-1615', 'barber-mason', 'Haircut + Beard', 'BOOKED', '16:15', '17:05'),
+    ('mason-1715', 'barber-mason', 'Haircut', 'BOOKED', '17:15', '17:45'),
+    ('mason-1800', 'barber-mason', 'Beard Trim', 'BOOKED', '18:00', '18:20'),
+    ('theo-1200', 'barber-theo', 'Beard Trim', 'BOOKED', '12:00', '12:20'),
+    ('theo-1230', 'barber-theo', 'Haircut', 'BOOKED', '12:30', '13:00'),
+    ('theo-1315', 'barber-theo', 'Skin Fade', 'BOOKED', '13:15', '14:00'),
+    ('theo-1400', 'barber-theo', 'Haircut + Beard', 'BOOKED', '14:00', '14:50'),
     ('theo-1500', 'barber-theo', 'Haircut', 'RESCHEDULED', '15:00', '15:30'),
-    ('theo-1545', 'barber-theo', 'Haircut', 'CONFIRMED', '15:45', '16:15'),
-    ('theo-1630', 'barber-theo', 'Haircut + Beard', 'CONFIRMED', '16:30', '17:20'),
-    ('theo-1730', 'barber-theo', 'Skin Fade', 'CONFIRMED', '17:30', '18:15'),
-    ('leo-1145', 'barber-leo', 'Haircut + Beard', 'CONFIRMED', '11:45', '13:05'),
-    ('leo-1245', 'barber-leo', 'Haircut', 'CONFIRMED', '12:45', '13:15'),
-    ('leo-1330', 'barber-leo', 'Beard Trim', 'CONFIRMED', '13:30', '13:50'),
-    ('leo-1400', 'barber-leo', 'Skin Fade', 'CONFIRMED', '14:00', '14:45'),
-    ('leo-1445', 'barber-leo', 'Haircut', 'PENDING_CONFIRMATION', '14:45', '15:15'),
-    ('leo-1530', 'barber-leo', 'Haircut + Beard', 'CONFIRMED', '15:30', '16:20'),
-    ('leo-1630', 'barber-leo', 'Beard Trim', 'CONFIRMED', '16:30', '16:50'),
-    ('leo-1700', 'barber-leo', 'Haircut', 'CONFIRMED', '17:00', '17:30'),
-    ('leo-1745', 'barber-leo', 'Skin Fade', 'CONFIRMED', '17:45', '18:30'),
-    ('noah-1215', 'barber-noah', 'Haircut', 'CONFIRMED', '12:15', '12:45'),
-    ('noah-1300', 'barber-noah', 'Beard Trim', 'CONFIRMED', '13:00', '13:20'),
-    ('noah-1330', 'barber-noah', 'Haircut', 'CONFIRMED', '13:30', '14:00'),
-    ('noah-1415', 'barber-noah', 'Haircut + Beard', 'CONFIRMED', '14:15', '15:05'),
-    ('noah-1515', 'barber-noah', 'Skin Fade', 'CONFIRMED', '15:15', '16:00'),
+    ('theo-1545', 'barber-theo', 'Haircut', 'BOOKED', '15:45', '16:15'),
+    ('theo-1630', 'barber-theo', 'Haircut + Beard', 'BOOKED', '16:30', '17:20'),
+    ('theo-1730', 'barber-theo', 'Skin Fade', 'BOOKED', '17:30', '18:15'),
+    ('leo-1145', 'barber-leo', 'Haircut + Beard', 'BOOKED', '11:45', '13:05'),
+    ('leo-1245', 'barber-leo', 'Haircut', 'BOOKED', '12:45', '13:15'),
+    ('leo-1330', 'barber-leo', 'Beard Trim', 'BOOKED', '13:30', '13:50'),
+    ('leo-1400', 'barber-leo', 'Skin Fade', 'BOOKED', '14:00', '14:45'),
+    ('leo-1445', 'barber-leo', 'Haircut', 'BOOKED', '14:45', '15:15'),
+    ('leo-1530', 'barber-leo', 'Haircut + Beard', 'BOOKED', '15:30', '16:20'),
+    ('leo-1630', 'barber-leo', 'Beard Trim', 'BOOKED', '16:30', '16:50'),
+    ('leo-1700', 'barber-leo', 'Haircut', 'BOOKED', '17:00', '17:30'),
+    ('leo-1745', 'barber-leo', 'Skin Fade', 'BOOKED', '17:45', '18:30'),
+    ('noah-1215', 'barber-noah', 'Haircut', 'BOOKED', '12:15', '12:45'),
+    ('noah-1300', 'barber-noah', 'Beard Trim', 'BOOKED', '13:00', '13:20'),
+    ('noah-1330', 'barber-noah', 'Haircut', 'BOOKED', '13:30', '14:00'),
+    ('noah-1415', 'barber-noah', 'Haircut + Beard', 'BOOKED', '14:15', '15:05'),
+    ('noah-1515', 'barber-noah', 'Skin Fade', 'BOOKED', '15:15', '16:00'),
     ('noah-1600', 'barber-noah', 'Beard Trim', 'CANCELLED_BY_SHOP', '16:00', '16:20'),
-    ('noah-1630', 'barber-noah', 'Haircut', 'CONFIRMED', '16:30', '17:00'),
-    ('noah-1715', 'barber-noah', 'Haircut + Beard', 'CONFIRMED', '17:15', '18:05'),
-    ('noah-1815', 'barber-noah', 'Haircut', 'CONFIRMED', '18:15', '18:45'),
+    ('noah-1630', 'barber-noah', 'Haircut', 'BOOKED', '16:30', '17:00'),
+    ('noah-1715', 'barber-noah', 'Haircut + Beard', 'BOOKED', '17:15', '18:05'),
+    ('noah-1815', 'barber-noah', 'Haircut', 'BOOKED', '18:15', '18:45'),
 ]
 
 
@@ -106,11 +106,11 @@ def timeline_position(start: str, end: str) -> tuple[float, float]:
 def tone(status: str) -> str:
     if status.startswith('CANCELLED'):
         return 'cancelled'
-    if status in {'PENDING_CONFIRMATION', 'EXPIRED'}:
+    if status in {'EXPIRED'}:
         return 'pending'
     if 'RESCHEDULED' in status:
         return 'rescheduled'
-    if status == 'CONFIRMED':
+    if status == 'BOOKED':
         return 'confirmed'
     return 'pending'
 

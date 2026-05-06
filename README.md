@@ -63,14 +63,14 @@ Astro + React (TypeScript) booking + shop system for barbershops.
 - Shop cancelled: `/shop/cancelled`
 - Admin panel: `/admin`
 ## Booking flow (instant confirmation)
-- New booking is created immediately as `CONFIRMED` (active booking).
+- New booking is created immediately as `BOOKED` (active booking).
 - Slot is occupied immediately after form submission.
 - Customer does **not** need to confirm via email.
 - Customer receives one confirmation email with full booking details.
 - Confirmation email includes secure token links to:
   - `Reschedule booking`
   - `Cancel booking`
-- `EXPIRED` and `PENDING_CONFIRMATION` are no longer used in the customer booking confirmation flow.
+- `EXPIRED` and `PENDING_CONFIRMATION` are no longer used in the customer booking confirmation flow (`BOOKED` is used instead).
 - If customer uses the cancel link and confirms cancellation, booking changes to `CANCELLED_BY_CLIENT`.
 - If customer uses reschedule link, booking is updated in place, old slot is released, new slot is reserved, and a reschedule confirmation email is sent.
 

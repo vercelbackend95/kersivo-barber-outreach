@@ -1,10 +1,14 @@
 import React, { memo, useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { createPortal } from 'react-dom';
 import { AnimatePresence, motion, useMotionValue, useReducedMotion } from 'framer-motion';
 import { formatInTimeZone } from 'date-fns-tz';
 import { minutesInLondonDay } from '../../lib/booking/time';
-import { getBookingStatusTone } from './bookingStatus';
+import { getEffectiveBookingStatus, getManualBookingActionOptions } from '../../lib/booking/operationalStatus';
+import { getBookingPaymentChipState } from '../../lib/booking/paymentReporting';
+import { getBookingStatusTone, getStatusLabel } from './bookingStatus';
 import { SkeletonVerticalTimeline } from '../skeleton';
-import { ArrowRight, MessageCircle, NotebookPen, User, X } from '../lucide-react';
+import { ArrowRight, ListOrdered, MessageCircle, Plus, User, X } from '../lucide-react';
+import ClientProfilePanel from './ClientProfilePanel';
 
 type TimelineBarber = {
   id: string;
@@ -16,14 +20,22 @@ export type TimelineBooking = {
   id: string;
   fullName: string;
   email: string;
+  phone?: string | null;
+  clientTags?: string[];
   status: string;
   startAt: string;
   endAt: string;
   barberId?: string;
+  clientId?: string | null;
   notes?: string | null;
   rescheduledAt?: string | null;
   barber: { name: string };
   service: { id?: string; name: string };
+  paymentRequired?: boolean;
+  depositAmountPence?: number | null;
+  paymentStatus?: string | null;
+  totalPricePence?: number | null;
+  servicePricePenceAtBooking?: number | null;
 };
 
 type TimelineTimeBlock = {
@@ -241,11 +253,48 @@ function buildSlotList(
 
 // ─── Booking expansion card ───────────────────────────────────────────────────
 
+type SwipeState = 'closed' | 'left' | 'right';
+
+type ServiceOption = {
+  id: string;
+  name: string;
+  durationMinutes: number;
+  pricePence: number;
+};
+
 type BookingExpansionCardProps = {
   booking: TimelineBooking;
   barber: TimelineBarber;
   toneClass: string;
   onExpand: () => void;
+  onStatusChange?: (bookingId: string, newStatus: string) => void;
+  onClientProfile?: (clientId: string) => void;
+};
+
+const CLIENT_PANEL_W = 120;
+const ACTIONS_PANEL_W = 200;
+function formatPence(pence: number): string {
+  return `£${(pence / 100).toFixed(2)}`;
+}
+
+function normalizePhoneForSms(raw: string): string {
+  return raw.trim().replace(/\s+/g, '');
+}
+
+function normalizePhoneForWhatsApp(raw: string): string {
+  return raw.replace(/\D/g, '');
+}
+
+function getFirstName(fullName: string): string {
+  const first = fullName.trim().split(/\s+/).find(Boolean);
+  return first || 'there';
+}
+
+type StatusMenuItem = {
+  value: 'NO_SHOW' | 'CANCELLED_BY_SHOP' | 'RESCHEDULE';
+  label: string;
+  enabled: boolean;
+  reason: string;
 };
 
 const BookingExpansionCard = memo(function BookingExpansionCard({
@@ -253,96 +302,617 @@ const BookingExpansionCard = memo(function BookingExpansionCard({
   barber,
   toneClass,
   onExpand,
+  onStatusChange,
+  onClientProfile,
 }: BookingExpansionCardProps) {
   const timeRange = formatTimeRange(booking.startAt, booking.endAt);
   const duration = formatDuration(booking.startAt, booking.endAt);
   const [barberImgError, setBarberImgError] = useState(false);
   const barberInitials = getInitials(barber.name);
+  const clientInitials = getInitials(booking.fullName);
+  const clientTags = (booking.clientTags ?? [])
+    .map((tag) => tag.trim())
+    .filter(Boolean);
+
+  // ── Swipe tri-state ───────────────────────────────────────────────────────────
+  const [swipeState, setSwipeState] = useState<SwipeState>('closed');
+  const trackRef = useRef<HTMLDivElement>(null);
+  const touchStartX = useRef(0);
+  const isDragging = useRef(false);
+
+  // ── Optimistic status ─────────────────────────────────────────────────────────
+  const [localStatus, setLocalStatus] = useState(booking.status);
+  const [isMobileView, setIsMobileView] = useState(false);
+  const [isStatusSheetOpen, setIsStatusSheetOpen] = useState(false);
+  const [isServiceSheetOpen, setIsServiceSheetOpen] = useState(false);
+  const [isMessageSheetOpen, setIsMessageSheetOpen] = useState(false);
+  const [messageError, setMessageError] = useState('');
+
+  // ── Service picker ────────────────────────────────────────────────────────────
+  const [services, setServices] = useState<ServiceOption[]>([]);
+  const [serviceLoading, setServiceLoading] = useState(false);
+
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+    const mq = window.matchMedia('(max-width: 640px)');
+    const sync = () => setIsMobileView(mq.matches);
+    sync();
+    mq.addEventListener('change', sync);
+    return () => mq.removeEventListener('change', sync);
+  }, []);
 
   useEffect(() => {
     setBarberImgError(false);
   }, [barber.avatarUrl]);
 
+  useEffect(() => {
+    setLocalStatus(booking.status);
+  }, [booking.status]);
+
+  // Sync CSS class when swipeState changes — clear inline transform
+  useEffect(() => {
+    if (trackRef.current) {
+      trackRef.current.style.transform = '';
+    }
+    if (swipeState !== 'right') {
+      setIsStatusSheetOpen(false);
+      setIsServiceSheetOpen(false);
+      setIsMessageSheetOpen(false);
+    }
+  }, [swipeState]);
+
+  useEffect(() => {
+    if (!isMobileView) return undefined;
+    if (!(isStatusSheetOpen || isServiceSheetOpen || isMessageSheetOpen)) return undefined;
+    const prev = document.body.style.overflow;
+    document.body.style.overflow = 'hidden';
+    return () => {
+      document.body.style.overflow = prev;
+    };
+  }, [isMobileView, isStatusSheetOpen, isServiceSheetOpen, isMessageSheetOpen]);
+
+  // ── Status mutation ───────────────────────────────────────────────────────────
+  const handleStatusChange = useCallback(
+    async (newStatus: string) => {
+      const prev = localStatus;
+      setLocalStatus(newStatus);
+      try {
+        const res = await fetch(`/api/admin/bookings/${booking.id}/status`, {
+          method: 'PATCH',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ status: newStatus }),
+        });
+        if (!res.ok) throw new Error('failed');
+        onStatusChange?.(booking.id, newStatus);
+      } catch {
+        setLocalStatus(prev);
+      }
+    },
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [booking.id, localStatus, onStatusChange],
+  );
+
+  // ── Service picker helpers ────────────────────────────────────────────────────
+  const openServicePicker = useCallback(async () => {
+    setServiceLoading(true);
+    try {
+      const res = await fetch('/api/admin/services');
+      const data = (await res.json()) as { services?: ServiceOption[] };
+      setServices(data.services ?? []);
+    } finally {
+      setServiceLoading(false);
+    }
+  }, []);
+
+  const handleServiceReplace = useCallback(
+    async (serviceId: string) => {
+      try {
+        await fetch(`/api/admin/bookings/${booking.id}/service`, {
+          method: 'PATCH',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ serviceId }),
+        });
+        setIsServiceSheetOpen(false);
+        onStatusChange?.(booking.id, localStatus);
+      } catch {
+        // silent — UI keeps showing old service name until next refresh
+      }
+    },
+    [booking.id, localStatus, onStatusChange],
+  );
+
+  // ── Touch / swipe handlers ────────────────────────────────────────────────────
   const handleQuickActionClick = useCallback((e: React.MouseEvent) => {
     e.stopPropagation();
   }, []);
 
-  return (
-    <div
-      className={`admin-vtl-expansion-card admin-vtl-expansion-card--${toneClass}`}
-      onClick={(e) => e.stopPropagation()}
-    >
-      <div className="admin-vtl-expansion-layout">
-        <div className="admin-vtl-expansion-avatars" aria-hidden="true">
-          <div className="admin-vtl-expansion-avatar admin-vtl-expansion-avatar--barber">
-            {barber.avatarUrl && !barberImgError ? (
-              <img
-                src={barber.avatarUrl}
-                alt={barber.name}
-                className="admin-vtl-expansion-avatar-img"
-                loading="lazy"
-                onError={() => setBarberImgError(true)}
-              />
-            ) : (
-              <span className="admin-vtl-expansion-avatar-initials">{barberInitials}</span>
-            )}
-          </div>
-          <div className="admin-vtl-expansion-avatar admin-vtl-expansion-avatar--client-placeholder">
-            <User className="admin-vtl-expansion-avatar-placeholder-icon" aria-hidden />
-          </div>
-        </div>
+  const handleMessageAction = useCallback(
+    (e: React.MouseEvent) => {
+      e.stopPropagation();
+      setMessageError('');
+      setIsStatusSheetOpen(false);
+      setIsServiceSheetOpen(false);
+      setIsMessageSheetOpen(true);
+    },
+    [],
+  );
 
-        <div className="admin-vtl-expansion-main">
-          <p className="admin-vtl-expansion-time">{timeRange}</p>
-          <p className="admin-vtl-expansion-service">{booking.service.name}</p>
-          <p className="admin-vtl-expansion-client">{booking.fullName}</p>
-        </div>
+  const openMessageChannel = useCallback(
+    (channel: 'sms' | 'whatsapp') => {
+      const rawPhone = booking.phone?.trim() ?? '';
+      if (!rawPhone) {
+        setMessageError('No phone number is available for this client.');
+        return;
+      }
+      const firstName = getFirstName(booking.fullName);
+      const prefill = `Hi ${firstName}, this is Kersivo.`;
+      if (channel === 'sms') {
+        const smsPhone = normalizePhoneForSms(rawPhone);
+        if (!smsPhone) {
+          setMessageError('Phone number is invalid for SMS.');
+          return;
+        }
+        window.location.href = `sms:${smsPhone}?body=${encodeURIComponent(prefill)}`;
+        setIsMessageSheetOpen(false);
+        return;
+      }
 
-        <div className="admin-vtl-expansion-actions">
+      const whatsappPhone = normalizePhoneForWhatsApp(rawPhone);
+      if (!whatsappPhone) {
+        setMessageError('Phone number is invalid for WhatsApp.');
+        return;
+      }
+      window.open(
+        `https://wa.me/${whatsappPhone}?text=${encodeURIComponent(prefill)}`,
+        '_blank',
+        'noopener,noreferrer',
+      );
+      setIsMessageSheetOpen(false);
+    },
+    [booking.fullName, booking.phone],
+  );
+
+  const applyTrackTransform = useCallback((offsetX: number) => {
+    if (trackRef.current) {
+      trackRef.current.style.transform = `translateX(${offsetX}px)`;
+    }
+  }, []);
+
+  const handleTouchStart = useCallback((e: React.TouchEvent) => {
+    touchStartX.current = e.touches[0].clientX;
+    isDragging.current = true;
+    trackRef.current?.classList.add('admin-vtl-swipe-track--dragging');
+  }, []);
+
+  const handleTouchMove = useCallback(
+    (e: React.TouchEvent) => {
+      if (!isDragging.current) return;
+      const delta = e.touches[0].clientX - touchStartX.current;
+      const base =
+        swipeState === 'left'
+          ? 0
+          : swipeState === 'right'
+            ? -(CLIENT_PANEL_W + ACTIONS_PANEL_W)
+            : -CLIENT_PANEL_W;
+      const clamped = Math.min(0, Math.max(-(CLIENT_PANEL_W + ACTIONS_PANEL_W), base + delta));
+      applyTrackTransform(clamped);
+    },
+    [swipeState, applyTrackTransform],
+  );
+
+  const handleTouchEnd = useCallback(
+    (e: React.TouchEvent) => {
+      if (!isDragging.current) return;
+      isDragging.current = false;
+      const delta = e.changedTouches[0].clientX - touchStartX.current;
+      trackRef.current?.classList.remove('admin-vtl-swipe-track--dragging');
+
+      if (delta >= 60) {
+        setSwipeState('left');
+      } else if (delta <= -60) {
+        setSwipeState('right');
+      } else {
+        const snapTo =
+          swipeState === 'left'
+            ? 0
+            : swipeState === 'right'
+              ? -(CLIENT_PANEL_W + ACTIONS_PANEL_W)
+              : -CLIENT_PANEL_W;
+        applyTrackTransform(snapTo);
+      }
+    },
+    [swipeState, applyTrackTransform],
+  );
+
+  // ── Derived status flags ──────────────────────────────────────────────────────
+  const effectiveStatus = getEffectiveBookingStatus({
+    status: localStatus,
+    startAt: booking.startAt,
+    endAt: booking.endAt,
+  });
+  const isCancelled = effectiveStatus.startsWith('CANCELLED');
+  const isCompleted = effectiveStatus === 'COMPLETED';
+  const statusMenuItems: StatusMenuItem[] = getManualBookingActionOptions({
+    startAt: booking.startAt,
+    endAt: booking.endAt,
+  });
+  const localTone = getBookingStatusTone({
+    status: effectiveStatus,
+    rescheduledAt: booking.rescheduledAt ?? null,
+  });
+
+  const openStatusActions = useCallback(
+    (e: React.MouseEvent) => {
+      e.stopPropagation();
+      if (!isMobileView) return;
+      setIsServiceSheetOpen(false);
+      setIsMessageSheetOpen(false);
+      setIsStatusSheetOpen(true);
+    },
+    [isMobileView],
+  );
+
+  const setPanelState = useCallback((next: SwipeState) => {
+    setSwipeState(next);
+  }, []);
+
+  const openServiceActions = useCallback(
+    (e: React.MouseEvent) => {
+      e.stopPropagation();
+      if (!isMobileView) return;
+      setIsStatusSheetOpen(false);
+      setIsMessageSheetOpen(false);
+      setIsServiceSheetOpen(true);
+      void openServicePicker();
+    },
+    [isMobileView, openServicePicker],
+  );
+
+  // ── Payment helpers ───────────────────────────────────────────────────────────
+  const displayAmount =
+    booking.totalPricePence != null
+      ? formatPence(booking.totalPricePence)
+      : booking.servicePricePenceAtBooking != null
+        ? formatPence(booking.servicePricePenceAtBooking)
+        : null;
+  const paymentMethod = booking.paymentRequired ? 'Deposit' : 'Cash';
+  const paymentChipState = getBookingPaymentChipState({
+    status: effectiveStatus,
+    startAt: booking.startAt,
+    endAt: booking.endAt,
+    paymentStatus: booking.paymentStatus ?? null,
+  });
+  const isPaid = paymentChipState === 'paid';
+
+  // ── Track class ───────────────────────────────────────────────────────────────
+  const trackClass = [
+    'admin-vtl-swipe-track',
+    swipeState === 'left' ? 'admin-vtl-swipe-track--open' : '',
+    swipeState === 'right' ? 'admin-vtl-swipe-track--right' : '',
+  ]
+    .filter(Boolean)
+    .join(' ');
+
+  const bottomSheetPortal =
+    isMobileView && (isStatusSheetOpen || isServiceSheetOpen || isMessageSheetOpen)
+      ? createPortal(
+          <div
+            className="admin-vtl-bottom-sheet-backdrop"
+            onClick={(e) => {
+              e.stopPropagation();
+              setIsStatusSheetOpen(false);
+              setIsServiceSheetOpen(false);
+              setIsMessageSheetOpen(false);
+            }}
+          >
+            <div className="admin-vtl-bottom-sheet" onClick={(e) => e.stopPropagation()}>
+              <div className="admin-vtl-bottom-sheet-header">
+                <p className="admin-vtl-bottom-sheet-title">
+                  {isStatusSheetOpen ? 'Status' : isServiceSheetOpen ? 'Service' : 'Message client'}
+                </p>
+                <button
+                  type="button"
+                  className="admin-vtl-bottom-sheet-close"
+                  onClick={() => {
+                    setIsStatusSheetOpen(false);
+                    setIsServiceSheetOpen(false);
+                    setIsMessageSheetOpen(false);
+                  }}
+                  aria-label="Close bottom sheet"
+                >
+                  <X className="admin-vtl-bottom-sheet-close-icon" aria-hidden />
+                </button>
+              </div>
+
+              {isStatusSheetOpen ? (
+                <div className="admin-vtl-bottom-sheet-content">
+                  {statusMenuItems.map((item) => {
+                    const isReschedule = item.value === 'RESCHEDULE';
+                    const tone = isReschedule
+                      ? 'rescheduled'
+                      : getBookingStatusTone({ status: item.value, rescheduledAt: booking.rescheduledAt ?? null });
+                    const isUnavailableFromState =
+                      (item.value === 'CANCELLED_BY_SHOP' || item.value === 'RESCHEDULE')
+                      && (isCancelled || isCompleted);
+                    const enabled = item.enabled && !isUnavailableFromState;
+                    const reason = isUnavailableFromState
+                      ? `Unavailable: booking is ${getStatusLabel(effectiveStatus, booking.rescheduledAt).toLowerCase()}.`
+                      : item.reason;
+                    const label = isReschedule ? item.label : getStatusLabel(item.value, booking.rescheduledAt);
+                    return (
+                      <button
+                        key={item.value}
+                        type="button"
+                        className={`admin-vtl-bottom-sheet-pill admin-vtl-bottom-sheet-pill--${tone}${enabled ? '' : ' admin-vtl-bottom-sheet-pill--disabled'}`}
+                        disabled={!enabled}
+                        onClick={() => {
+                          if (!enabled) return;
+                          setIsStatusSheetOpen(false);
+                          if (isReschedule) {
+                            onExpand();
+                          } else if (item.value !== effectiveStatus) {
+                            void handleStatusChange(item.value);
+                          }
+                        }}
+                      >
+                        <span className="admin-vtl-bottom-sheet-pill-label">{label}</span>
+                        <span className="admin-vtl-bottom-sheet-pill-reason">{reason}</span>
+                      </button>
+                    );
+                  })}
+
+                </div>
+              ) : isServiceSheetOpen ? (
+                <div className="admin-vtl-bottom-sheet-content">
+                  {serviceLoading ? (
+                    <p className="admin-vtl-ap-service-loading">Loading…</p>
+                  ) : (
+                    services.map((svc) => (
+                      <button
+                        key={svc.id}
+                        type="button"
+                        className="admin-vtl-ap-service-option"
+                        onClick={() => {
+                          void handleServiceReplace(svc.id);
+                        }}
+                      >
+                        <span className="admin-vtl-ap-service-option-name">{svc.name}</span>
+                        <span className="admin-vtl-ap-service-option-price">{formatPence(svc.pricePence)}</span>
+                      </button>
+                    ))
+                  )}
+                </div>
+              ) : (
+                <div className="admin-vtl-bottom-sheet-content admin-vtl-message-chooser">
+                  <p className="admin-vtl-message-chooser-copy">Choose contact channel for {booking.fullName}.</p>
+                  {messageError ? <p className="admin-vtl-message-chooser-error">{messageError}</p> : null}
+                  <button
+                    type="button"
+                    className="admin-vtl-bottom-sheet-pill admin-vtl-bottom-sheet-pill--confirmed"
+                    onClick={() => openMessageChannel('sms')}
+                  >
+                    <span className="admin-vtl-bottom-sheet-pill-label">SMS</span>
+                    <span className="admin-vtl-bottom-sheet-pill-reason">Open your default text messaging app.</span>
+                  </button>
+                  <button
+                    type="button"
+                    className="admin-vtl-bottom-sheet-pill admin-vtl-bottom-sheet-pill--rescheduled"
+                    onClick={() => openMessageChannel('whatsapp')}
+                  >
+                    <span className="admin-vtl-bottom-sheet-pill-label">WhatsApp</span>
+                    <span className="admin-vtl-bottom-sheet-pill-reason">Open WhatsApp chat with prefilled message.</span>
+                  </button>
+                </div>
+              )}
+            </div>
+          </div>,
+          document.body,
+        )
+      : null;
+
+  const desktopMessagePopover =
+    !isMobileView && isMessageSheetOpen ? (
+      <div className="admin-vtl-message-popover" role="dialog" aria-label="Choose message app">
+        <p className="admin-vtl-message-chooser-copy">Choose contact channel.</p>
+        {messageError ? <p className="admin-vtl-message-chooser-error">{messageError}</p> : null}
+        <div className="admin-vtl-message-popover-actions">
           <button
             type="button"
-            className="admin-vtl-expansion-action-btn admin-vtl-expansion-action-btn--cancel"
-            onClick={handleQuickActionClick}
-            aria-label={`Cancel booking for ${booking.fullName}`}
-            title="Cancel booking"
+            className="admin-vtl-bottom-sheet-pill admin-vtl-bottom-sheet-pill--confirmed"
+            onClick={() => openMessageChannel('sms')}
           >
-            <X className="admin-vtl-expansion-action-icon" aria-hidden />
+            <span className="admin-vtl-bottom-sheet-pill-label">SMS</span>
+            <span className="admin-vtl-bottom-sheet-pill-reason">Open your default text messaging app.</span>
           </button>
           <button
             type="button"
-            className="admin-vtl-expansion-action-btn admin-vtl-expansion-action-btn--notes"
-            onClick={handleQuickActionClick}
-            aria-label={`Open notes for ${booking.fullName}`}
-            title="Notes"
+            className="admin-vtl-bottom-sheet-pill admin-vtl-bottom-sheet-pill--rescheduled"
+            onClick={() => openMessageChannel('whatsapp')}
           >
-            <NotebookPen className="admin-vtl-expansion-action-icon" aria-hidden />
+            <span className="admin-vtl-bottom-sheet-pill-label">WhatsApp</span>
+            <span className="admin-vtl-bottom-sheet-pill-reason">Open WhatsApp chat with prefilled message.</span>
           </button>
           <button
             type="button"
-            className="admin-vtl-expansion-action-btn admin-vtl-expansion-action-btn--message"
-            onClick={handleQuickActionClick}
-            aria-label={`Message ${booking.fullName}`}
-            title="Message"
+            className="admin-vtl-message-popover-cancel"
+            onClick={() => setIsMessageSheetOpen(false)}
           >
-            <MessageCircle className="admin-vtl-expansion-action-icon" aria-hidden />
+            Cancel
           </button>
         </div>
       </div>
+    ) : null;
 
-      <div className="admin-vtl-expansion-footer">
-        <span className="admin-vtl-expansion-duration">{duration}</span>
+  return (
+    <div className="admin-vtl-swipe-shell">
+      <div className="admin-vtl-panel-segmented" role="tablist" aria-label="Reveal booking panels">
         <button
           type="button"
-          className="admin-vtl-expansion-more"
+          className={`admin-vtl-panel-segmented-btn${swipeState === 'left' ? ' is-active' : ''}`}
+          onClick={() => setPanelState('left')}
+          aria-current={swipeState === 'left' ? 'true' : undefined}
+        >
+          Left
+        </button>
+        <button
+          type="button"
+          className={`admin-vtl-panel-segmented-btn${swipeState === 'closed' ? ' is-active' : ''}`}
+          onClick={() => setPanelState('closed')}
+          aria-current={swipeState === 'closed' ? 'true' : undefined}
+        >
+          Main
+        </button>
+        <button
+          type="button"
+          className={`admin-vtl-panel-segmented-btn${swipeState === 'right' ? ' is-active' : ''}`}
+          onClick={() => setPanelState('right')}
+          aria-current={swipeState === 'right' ? 'true' : undefined}
+        >
+          Right
+        </button>
+      </div>
+
+      <div
+        className="admin-vtl-swipe-root"
+        onTouchStart={handleTouchStart}
+        onTouchMove={handleTouchMove}
+        onTouchEnd={handleTouchEnd}
+      >
+        <div ref={trackRef} className={trackClass}>
+        {/* ── Left: client panel ── */}
+        <div className="admin-vtl-client-panel" aria-hidden={swipeState !== 'left'}>
+          {booking.clientId && onClientProfile ? (
+            <button
+              type="button"
+              className="admin-vtl-client-panel-avatar admin-vtl-client-panel-avatar--btn"
+              onClick={(e) => { e.stopPropagation(); onClientProfile(booking.clientId!); }}
+              tabIndex={swipeState === 'left' ? 0 : -1}
+              aria-label={`View profile for ${booking.fullName}`}
+              title="View client profile"
+            >
+              <span className="admin-vtl-client-panel-avatar-initials">{clientInitials}</span>
+            </button>
+          ) : (
+            <div className="admin-vtl-client-panel-avatar">
+              <span className="admin-vtl-client-panel-avatar-initials">{clientInitials}</span>
+            </div>
+          )}
+          <p className="admin-vtl-client-panel-name">{booking.fullName.split(' ')[0]}</p>
+          <button
+            type="button"
+            className="admin-vtl-expansion-action-btn admin-vtl-expansion-action-btn--message"
+            onClick={handleMessageAction}
+            aria-label={`Message ${booking.fullName}`}
+            title="Message"
+            tabIndex={swipeState === 'left' ? 0 : -1}
+          >
+            <MessageCircle className="admin-vtl-expansion-action-icon" aria-hidden />
+          </button>
+          {desktopMessagePopover}
+        </div>
+
+        {/* ── Center: main card ── */}
+        <div
+          className={`admin-vtl-expansion-card admin-vtl-expansion-card--${toneClass}`}
           onClick={(e) => {
             e.stopPropagation();
-            onExpand();
+            setIsStatusSheetOpen(false);
+            setIsServiceSheetOpen(false);
+            if (swipeState !== 'closed') setSwipeState('closed');
           }}
-          aria-label={`Open full details for ${booking.fullName}`}
         >
-          <span>See more</span>
-          <ArrowRight className="admin-vtl-expansion-more-icon" aria-hidden />
-        </button>
+          <div className="admin-vtl-expansion-layout">
+            <div className="admin-vtl-expansion-avatars" aria-hidden="true">
+              <div className="admin-vtl-expansion-avatar admin-vtl-expansion-avatar--barber">
+                {barber.avatarUrl && !barberImgError ? (
+                  <img
+                    src={barber.avatarUrl}
+                    alt={barber.name}
+                    className="admin-vtl-expansion-avatar-img"
+                    loading="lazy"
+                    onError={() => setBarberImgError(true)}
+                  />
+                ) : (
+                  <span className="admin-vtl-expansion-avatar-initials">{barberInitials}</span>
+                )}
+              </div>
+              <div className="admin-vtl-expansion-avatar admin-vtl-expansion-avatar--client-placeholder">
+                <User className="admin-vtl-expansion-avatar-placeholder-icon" aria-hidden />
+              </div>
+            </div>
+            <div className="admin-vtl-expansion-main">
+              <p className="admin-vtl-expansion-time">{`${timeRange} ~ ${duration}`}</p>
+              <p className="admin-vtl-expansion-service">{booking.service.name}</p>
+              <p className="admin-vtl-expansion-client">{booking.fullName}</p>
+            </div>
+            <div className="admin-vtl-expansion-status-wrap">
+              <span
+                className={`admin-vtl-expansion-status-pill admin-vtl-expansion-status-pill--${localTone}`}
+                aria-label={`Status ${getStatusLabel(effectiveStatus, booking.rescheduledAt)}`}
+              >
+                {getStatusLabel(effectiveStatus, booking.rescheduledAt)}
+              </span>
+            </div>
+            <div className="admin-vtl-expansion-payments">
+              <p className="admin-vtl-expansion-payment-amount">{displayAmount ?? '—'}</p>
+              <p className="admin-vtl-expansion-payment-meta">{paymentMethod}</p>
+              <span
+                className={`admin-vtl-expansion-payment-chip admin-vtl-expansion-payment-chip--${isPaid ? 'paid' : 'unpaid'}`}
+              >
+                {isPaid ? 'Paid' : 'Unpaid'}
+              </span>
+            </div>
+          </div>
+          {clientTags.length > 0 ? (
+            <div className="admin-vtl-expansion-footer">
+              <div className="admin-vtl-expansion-client-tags" aria-label="Client tags">
+                {clientTags.map((tag, index) => (
+                  <span key={`${booking.id}-${tag}-${index}`} className="admin-vtl-expansion-client-tag">
+                    {tag}
+                  </span>
+                ))}
+              </div>
+            </div>
+          ) : null}
+        </div>
+
+        {/* ── Right: booking actions panel ── */}
+        <div className="admin-vtl-actions-panel" aria-hidden={swipeState !== 'right'}>
+          <button
+            type="button"
+            className="admin-vtl-ap-circle-btn admin-vtl-ap-circle-btn--status"
+            onClick={openStatusActions}
+            tabIndex={swipeState === 'right' ? 0 : -1}
+            aria-label={`Change status for ${booking.fullName}`}
+          >
+            <span className="admin-vtl-ap-circle-icon-wrap">
+              <ListOrdered className="admin-vtl-ap-circle-icon" aria-hidden />
+            </span>
+            <span className="admin-vtl-ap-circle-label">Status</span>
+          </button>
+
+          <button
+            type="button"
+            className="admin-vtl-ap-circle-btn admin-vtl-ap-circle-btn--service"
+            onClick={openServiceActions}
+            tabIndex={swipeState === 'right' ? 0 : -1}
+            aria-label={`Change service for ${booking.fullName}`}
+          >
+            <span className="admin-vtl-ap-circle-icon-wrap">
+              <Plus className="admin-vtl-ap-circle-icon" aria-hidden />
+            </span>
+            <span className="admin-vtl-ap-circle-label">Service</span>
+          </button>
+        </div>
+
+          {bottomSheetPortal}
+        </div>
+
+        <div className="admin-vtl-swipe-dots" aria-hidden="true">
+          <span className={`admin-vtl-swipe-dot${swipeState === 'left' ? ' is-active' : ''}`} />
+          <span className={`admin-vtl-swipe-dot${swipeState === 'closed' ? ' is-active' : ''}`} />
+          <span className={`admin-vtl-swipe-dot${swipeState === 'right' ? ' is-active' : ''}`} />
+        </div>
       </div>
     </div>
   );
@@ -592,6 +1162,7 @@ type SlotRowProps = {
   onAvatarClick: (slotKey: string, booking: TimelineBooking) => void;
   onSlotToggle: (slotKey: string) => void;
   onExpand: (booking: TimelineBooking) => void;
+  onClientProfile: (clientId: string) => void;
   isSearchActive: boolean;
 };
 
@@ -604,6 +1175,7 @@ const SlotRow = memo(function SlotRow({
   onAvatarClick,
   onSlotToggle,
   onExpand,
+  onClientProfile,
   isSearchActive,
 }: SlotRowProps) {
   const hasBookings = slot.bookings.length > 0;
@@ -710,6 +1282,7 @@ const SlotRow = memo(function SlotRow({
                   barber={barber}
                   toneClass={getBookingStatusTone(booking)}
                   onExpand={() => onExpand(booking)}
+                  onClientProfile={onClientProfile}
                 />
               ))}
             </div>
@@ -744,6 +1317,11 @@ function TodayTimeline({
 
   const [activeBookingId, setActiveBookingId] = useState<string | null>(null);
   const [expandedSlotKey, setExpandedSlotKey] = useState<string | null>(null);
+  const [clientPanelId, setClientPanelId] = useState<string | null>(null);
+
+  const handleClientProfile = useCallback((clientId: string) => {
+    setClientPanelId(clientId);
+  }, []);
 
   const handleAvatarClick = useCallback((slotKey: string, booking: TimelineBooking) => {
     setExpandedSlotKey(slotKey);
@@ -883,6 +1461,7 @@ function TodayTimeline({
               onAvatarClick={handleAvatarClick}
               onSlotToggle={handleSlotToggle}
               onExpand={handleExpand}
+              onClientProfile={handleClientProfile}
               isSearchActive={isSearchActive}
             />
           );
@@ -900,6 +1479,13 @@ function TodayTimeline({
           <span>{nextDayShortLabel ?? 'Next day'}</span>
           <ArrowRight className="admin-vtl-next-day-icon" aria-hidden />
         </button>
+      )}
+
+      {clientPanelId && (
+        <ClientProfilePanel
+          clientId={clientPanelId}
+          onClose={() => setClientPanelId(null)}
+        />
       )}
     </section>
   );

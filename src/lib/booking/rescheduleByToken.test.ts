@@ -24,7 +24,7 @@ vi.mock('../email/sender', () => ({
 function baseBooking(overrides: { startAt: Date }) {
   return {
     id: 'booking-1',
-    status: BookingStatus.CONFIRMED,
+    status: BookingStatus.BOOKED,
     email: 'c@example.com',
     fullName: 'Client',
     originalStartAt: null,
