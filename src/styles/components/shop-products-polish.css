@@ -1,23 +1,3 @@
 .admin-products-toolbar-row {
   align-items: end;
 }
-
-/* Colour / surface polish only — sizing comes from booking.css (toolbar + --card variant) */
-.admin-product-switches--toolbar .admin-product-switch--card {
-  border-color: color-mix(in srgb, var(--border) 72%, transparent);
-  background: color-mix(in srgb, var(--surface) 86%, var(--bg));
-  box-shadow: inset 0 1px 0 color-mix(in srgb, var(--fg) 5%, transparent);
-}
-
-.admin-product-switches--toolbar .admin-product-switch--card .admin-product-switch__label {
-  color: color-mix(in srgb, var(--fg) 78%, var(--muted));
-}
-
-.admin-product-switches--toolbar .admin-product-switch--card .admin-product-switch__status {
-  color: color-mix(in srgb, var(--fg) 86%, var(--muted));
-}
-
-.admin-product-switches--toolbar .admin-product-switch--card .admin-product-switch__track {
-  border-color: color-mix(in srgb, var(--border) 74%, transparent);
-  background: color-mix(in srgb, var(--surface) 80%, var(--bg));
-}

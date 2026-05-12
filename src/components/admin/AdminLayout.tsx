@@ -138,6 +138,7 @@ export default function AdminLayout({
     const clearVvVars = () => {
       root.style.removeProperty('--admin-mobile-vv-top');
       root.style.removeProperty('--admin-mobile-vv-h');
+      root.style.removeProperty('--admin-mobile-app-h');
     };
 
     const syncVisualViewportVars = () => {
@@ -153,8 +154,10 @@ export default function AdminLayout({
        */
       const fromVv = vv ? vv.offsetTop + vv.height : 0;
       const h = Math.max(window.innerHeight, fromVv);
+      const hPx = `${Math.ceil(h)}px`;
       root.style.setProperty('--admin-mobile-vv-top', '0px');
-      root.style.setProperty('--admin-mobile-vv-h', `${h}px`);
+      root.style.setProperty('--admin-mobile-vv-h', hPx);
+      root.style.setProperty('--admin-mobile-app-h', hPx);
     };
 
     syncVisualViewportVars();

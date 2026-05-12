@@ -1,4 +1,45 @@
 import React, { useCallback, useEffect, useRef, useState } from 'react';
+
+function SearchIcon() {
+  return (
+    <svg
+      className="admin-search-bar__icon"
+      xmlns="http://www.w3.org/2000/svg"
+      width="16"
+      height="16"
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="2"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      aria-hidden="true"
+    >
+      <circle cx="11" cy="11" r="8" />
+      <line x1="21" y1="21" x2="16.65" y2="16.65" />
+    </svg>
+  );
+}
+
+function ClearIcon() {
+  return (
+    <svg
+      xmlns="http://www.w3.org/2000/svg"
+      width="14"
+      height="14"
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="2.5"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      aria-hidden="true"
+    >
+      <line x1="18" y1="6" x2="6" y2="18" />
+      <line x1="6" y1="6" x2="18" y2="18" />
+    </svg>
+  );
+}
 import AdminSectionHeader from './AdminSectionHeader';
 import ClientProfilePanel from './ClientProfilePanel';
 
@@ -53,24 +94,49 @@ export default function ClientsAdminPanel() {
   const [error, setError] = useState<string | null>(null);
   const [search, setSearch] = useState('');
   const [debouncedSearch, setDebouncedSearch] = useState('');
+  const [isSearching, setIsSearching] = useState(false);
   const [openClientId, setOpenClientId] = useState<string | null>(null);
 
   const debounceRef = useRef<number | null>(null);
+  const inputRef = useRef<HTMLInputElement>(null);
 
   const handleSearchChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
     const val = e.target.value;
     setSearch(val);
+    setIsSearching(true);
     if (debounceRef.current !== null) window.clearTimeout(debounceRef.current);
     debounceRef.current = window.setTimeout(() => {
       setDebouncedSearch(val.trim());
+      setIsSearching(false);
       debounceRef.current = null;
     }, DEBOUNCE_MS);
+  }, []);
+
+  const handleClear = useCallback(() => {
+    if (debounceRef.current !== null) window.clearTimeout(debounceRef.current);
+    debounceRef.current = null;
+    setSearch('');
+    setDebouncedSearch('');
+    setIsSearching(false);
+    inputRef.current?.focus();
   }, []);
 
   useEffect(() => {
     return () => {
       if (debounceRef.current !== null) window.clearTimeout(debounceRef.current);
     };
+  }, []);
+
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key !== '/') return;
+      const target = e.target as HTMLElement;
+      if (target.tagName === 'INPUT' || target.tagName === 'TEXTAREA' || target.isContentEditable) return;
+      e.preventDefault();
+      inputRef.current?.focus();
+    };
+    document.addEventListener('keydown', handleKeyDown);
+    return () => document.removeEventListener('keydown', handleKeyDown);
   }, []);
 
   useEffect(() => {
@@ -109,18 +175,49 @@ export default function ClientsAdminPanel() {
         metaBadge={!loading && !error ? String(clients.length) : undefined}
       />
 
-      <div className="admin-clients-search-row">
-        <input
-          type="search"
-          className="input admin-clients-search-input"
-          placeholder="Search by name, email or phone…"
-          value={search}
-          onChange={handleSearchChange}
-          aria-label="Search clients"
-        />
-      </div>
-
       <div className="admin-clients-table-wrap">
+        <div className="admin-clients-search-row">
+          <div
+            className={`admin-search-bar${isSearching ? ' admin-search-bar--loading' : ''}`}
+            role="search"
+          >
+            <SearchIcon />
+
+            <input
+              ref={inputRef}
+              type="search"
+              className="admin-search-bar__input"
+              placeholder="Search by name, email or phone…"
+              value={search}
+              onChange={handleSearchChange}
+              onKeyDown={(e) => e.key === 'Escape' && handleClear()}
+              aria-label="Search clients"
+              autoComplete="off"
+              spellCheck={false}
+            />
+
+            {isSearching && (
+              <span className="admin-search-bar__spinner" aria-hidden="true" />
+            )}
+
+            {search && !isSearching && (
+              <button
+                type="button"
+                className="admin-search-bar__clear"
+                onClick={handleClear}
+                aria-label="Clear search"
+                tabIndex={0}
+              >
+                <ClearIcon />
+              </button>
+            )}
+
+            {!search && !isSearching && (
+              <kbd className="admin-search-bar__kbd">/</kbd>
+            )}
+          </div>
+        </div>
+
         {/* Column header */}
         <div className="admin-clients-header-row" aria-hidden="true">
           <span />

@@ -222,7 +222,7 @@
 
 .admin-service-sheet {
   width: min(100%, 42rem);
-  max-height: min(calc(100dvh - var(--admin-mobile-sheet-top-offset, 0px)), 760px);
+  max-height: min(calc(var(--admin-mobile-app-h, 100dvh) - var(--admin-mobile-sheet-top-offset, 0px)), 760px);
 }
 
 @media (max-width: 47.99rem) {
@@ -234,10 +234,12 @@
     width: 100%;
     max-width: 100%;
     height: calc(
-      100dvh - var(--admin-mobile-measured-header-bottom, var(--admin-mobile-sheet-top-offset, 0px))
+      var(--admin-mobile-app-h, 100dvh) -
+        var(--admin-mobile-measured-header-bottom, var(--admin-mobile-sheet-top-offset, 0px))
     );
     max-height: calc(
-      100dvh - var(--admin-mobile-measured-header-bottom, var(--admin-mobile-sheet-top-offset, 0px))
+      var(--admin-mobile-app-h, 100dvh) -
+        var(--admin-mobile-measured-header-bottom, var(--admin-mobile-sheet-top-offset, 0px))
     );
   }
 }

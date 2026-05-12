@@ -2774,44 +2774,6 @@ export default function BookingsAdminPanel({ isActive, mode, onBackToDashboard }
             </div>
           </div>
         </section>
-        <section className="admin-bookings-ops admin-bookings-ops--compact" aria-label="Search booking history">
-          {opsFilteredViewActive ? (
-            <div className="admin-bookings-ops-filter-bar admin-bookings-ops-filter-bar--compact" aria-live="polite">
-              <div className="admin-bookings-ops-filter-bar-main">
-                <span className="admin-bookings-ops-filter-summary">{opsFilteredViewSummary}</span>
-                {opsActiveFilterLabels.length > 0 ? (
-                  <span className="admin-bookings-ops-filter-chips">
-                    {opsActiveFilterLabels.map((label) => (
-                      <span key={label} className="admin-bookings-ops-filter-chip">
-                        {label}
-                      </span>
-                    ))}
-                  </span>
-                ) : null}
-              </div>
-            </div>
-          ) : null}
-          <div className="admin-bookings-ops-toolbar admin-bookings-ops-toolbar--compact">
-            <AdminBookingsOpsSearch
-              variant="compact"
-              searchInputRef={searchInputRef}
-              searchResultsRef={searchResultsRef}
-              clientSearchQuery={clientSearchQuery}
-              onClientSearchQueryChange={setClientSearchQuery}
-              searchDropdownBookings={searchDropdownBookings}
-              searchResultsLabel={searchResultsLabel}
-              searchResultsLoading={historySearchResultsLoading}
-              activeSearchResultIndex={activeSearchResultIndex}
-              onActiveSearchResultIndexChange={setActiveSearchResultIndex}
-              highlightMatch={highlightMatch}
-              formatStartTime={formatStartTime}
-              onSelectBooking={jumpToTimelineBooking}
-              onClearSearch={clearSearchField}
-              showKbdHint={showSearchKbdHint}
-              searchShortcutHint={searchShortcutHint}
-            />
-          </div>
-        </section>
         </div>
       )}
 
@@ -2830,6 +2792,46 @@ export default function BookingsAdminPanel({ isActive, mode, onBackToDashboard }
           historyDateFiltered={Boolean(historyDateRange)}
           onClearHistoryDateRange={historyDateRange ? () => setHistoryDateRange(null) : undefined}
           onOpenClient={openClientProfile}
+          historyToolbar={(
+            <div className="admin-bookings-history-search-toolbar">
+              {opsFilteredViewActive ? (
+                <div className="admin-bookings-ops-filter-bar admin-bookings-ops-filter-bar--compact" aria-live="polite">
+                  <div className="admin-bookings-ops-filter-bar-main">
+                    <span className="admin-bookings-ops-filter-summary">{opsFilteredViewSummary}</span>
+                    {opsActiveFilterLabels.length > 0 ? (
+                      <span className="admin-bookings-ops-filter-chips">
+                        {opsActiveFilterLabels.map((label) => (
+                          <span key={label} className="admin-bookings-ops-filter-chip">
+                            {label}
+                          </span>
+                        ))}
+                      </span>
+                    ) : null}
+                  </div>
+                </div>
+              ) : null}
+              <div className="admin-bookings-ops-toolbar admin-bookings-ops-toolbar--compact">
+                <AdminBookingsOpsSearch
+                  variant="compact"
+                  searchInputRef={searchInputRef}
+                  searchResultsRef={searchResultsRef}
+                  clientSearchQuery={clientSearchQuery}
+                  onClientSearchQueryChange={setClientSearchQuery}
+                  searchDropdownBookings={searchDropdownBookings}
+                  searchResultsLabel={searchResultsLabel}
+                  searchResultsLoading={historySearchResultsLoading}
+                  activeSearchResultIndex={activeSearchResultIndex}
+                  onActiveSearchResultIndexChange={setActiveSearchResultIndex}
+                  highlightMatch={highlightMatch}
+                  formatStartTime={formatStartTime}
+                  onSelectBooking={jumpToTimelineBooking}
+                  onClearSearch={clearSearchField}
+                  showKbdHint={showSearchKbdHint}
+                  searchShortcutHint={searchShortcutHint}
+                />
+              </div>
+            </div>
+          )}
         />
       ) : null}
       {mode === 'history' && historyHasMore && <button type="button" className="btn btn--secondary" onClick={() => void loadMoreHistory()} disabled={historyLoadingMore}>{historyLoadingMore ? 'Loading...' : 'Load more'}</button>}

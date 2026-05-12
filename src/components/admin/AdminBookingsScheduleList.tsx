@@ -91,6 +91,7 @@ export type AdminBookingsScheduleDayProps = CommonScheduleListProps & {
 export type AdminBookingsScheduleHistoryProps = CommonScheduleListProps & {
   variant: 'history';
   heading: string;
+  historyToolbar?: React.ReactNode;
   formatDateTime: (startAt: string) => string;
   /** Human-readable status line for the row (e.g. Done, Cancelled by client). */
   getHistoryStatusLine: (booking: ScheduleListBooking) => string;
@@ -134,6 +135,12 @@ export default function AdminBookingsScheduleList(props: AdminBookingsScheduleLi
 
   return (
     <section className={rootClass} aria-label={heading}>
+      {history && props.historyToolbar ? (
+        <div className="admin-bookings-schedule__toolbar">
+          {props.historyToolbar}
+        </div>
+      ) : null}
+
       <header className="admin-bookings-schedule__head">
         <h2 className="admin-bookings-schedule__title">{heading}</h2>
         <div className="admin-bookings-schedule__rule" aria-hidden="true" />
