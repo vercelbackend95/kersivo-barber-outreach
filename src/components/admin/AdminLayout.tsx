@@ -134,8 +134,12 @@ export default function AdminLayout({
 
     const root = document.documentElement;
     const mq = window.matchMedia('(max-width: 48rem)');
+    let rafId = 0;
+    let settleTimeoutId = 0;
+    let lastPublishedHeightPx: string | null = null;
 
     const clearVvVars = () => {
+      lastPublishedHeightPx = null;
       root.style.removeProperty('--admin-mobile-vv-top');
       root.style.removeProperty('--admin-mobile-vv-h');
       root.style.removeProperty('--admin-mobile-app-h');
@@ -155,29 +159,43 @@ export default function AdminLayout({
       const fromVv = vv ? vv.offsetTop + vv.height : 0;
       const h = Math.max(window.innerHeight, fromVv);
       const hPx = `${Math.ceil(h)}px`;
+      if (lastPublishedHeightPx === hPx) return;
+      lastPublishedHeightPx = hPx;
       root.style.setProperty('--admin-mobile-vv-top', '0px');
       root.style.setProperty('--admin-mobile-vv-h', hPx);
       root.style.setProperty('--admin-mobile-app-h', hPx);
     };
 
+    const scheduleVisualViewportSync = () => {
+      if (rafId !== 0) return;
+      rafId = window.requestAnimationFrame(() => {
+        rafId = 0;
+        syncVisualViewportVars();
+      });
+    };
+
     syncVisualViewportVars();
+    scheduleVisualViewportSync();
+    settleTimeoutId = window.setTimeout(scheduleVisualViewportSync, 250);
+
     const vv = window.visualViewport;
-    vv?.addEventListener('resize', syncVisualViewportVars);
-    /* vv.scroll while browsing thrashes layout-dependent vars; only sync when the drawer is open. */
-    if (isMobileMenuOpen) {
-      vv?.addEventListener('scroll', syncVisualViewportVars);
-    }
-    mq.addEventListener('change', syncVisualViewportVars);
-    window.addEventListener('resize', syncVisualViewportVars);
+    vv?.addEventListener('resize', scheduleVisualViewportSync);
+    vv?.addEventListener('scroll', scheduleVisualViewportSync, { passive: true });
+    mq.addEventListener('change', scheduleVisualViewportSync);
+    window.addEventListener('resize', scheduleVisualViewportSync);
+    window.addEventListener('orientationchange', scheduleVisualViewportSync);
 
     return () => {
+      if (rafId !== 0) window.cancelAnimationFrame(rafId);
+      if (settleTimeoutId !== 0) window.clearTimeout(settleTimeoutId);
       clearVvVars();
-      vv?.removeEventListener('resize', syncVisualViewportVars);
-      vv?.removeEventListener('scroll', syncVisualViewportVars);
-      mq.removeEventListener('change', syncVisualViewportVars);
-      window.removeEventListener('resize', syncVisualViewportVars);
+      vv?.removeEventListener('resize', scheduleVisualViewportSync);
+      vv?.removeEventListener('scroll', scheduleVisualViewportSync);
+      mq.removeEventListener('change', scheduleVisualViewportSync);
+      window.removeEventListener('resize', scheduleVisualViewportSync);
+      window.removeEventListener('orientationchange', scheduleVisualViewportSync);
     };
-  }, [mobileChromeMounted, isMobileMenuOpen]);
+  }, [mobileChromeMounted, activeSection, showSectionSkeleton]);
 
   const onSelectSection = (section: AdminSection) => {
     onChangeSection(section);

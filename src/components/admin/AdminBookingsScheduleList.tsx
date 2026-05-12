@@ -68,6 +68,21 @@ function pastStatusShort(booking: ScheduleListBooking): string {
   return 'Closed';
 }
 
+function getInitials(fullName: string): string {
+  const parts = fullName.trim().split(/\s+/).filter(Boolean);
+  if (parts.length === 0) return '?';
+  if (parts.length === 1) return parts[0].slice(0, 2).toUpperCase();
+  return `${parts[0][0] ?? ''}${parts[parts.length - 1][0] ?? ''}`.toUpperCase();
+}
+
+function historyChipVariant(status: string): 'done' | 'cancelled' | 'expired' | 'rescheduled' | 'default' {
+  if (status === 'BOOKED') return 'done';
+  if (status.startsWith('CANCELLED')) return 'cancelled';
+  if (status === 'EXPIRED') return 'expired';
+  if (status === 'RESCHEDULED') return 'rescheduled';
+  return 'default';
+}
+
 type CommonScheduleListProps = {
   bookings: ScheduleListBooking[];
   nowMs: number;
@@ -147,19 +162,44 @@ export default function AdminBookingsScheduleList(props: AdminBookingsScheduleLi
       </header>
 
       {bookingsInitialLoading ? (
-        <div className="admin-bookings-schedule__list" aria-busy="true" aria-live="polite">
-          {Array.from({ length: 6 }, (_, i) => (
-            <div
-              key={i}
-              className={`admin-bookings-schedule__skeleton-row${history ? ' admin-bookings-schedule__skeleton-row--history' : ''}`}
-              aria-hidden="true"
-            >
-              <span className="admin-bookings-schedule__skeleton-block admin-bookings-schedule__skeleton-block--time" />
-              <span className="admin-bookings-schedule__skeleton-block admin-bookings-schedule__skeleton-block--main" />
-              <span className="admin-bookings-schedule__skeleton-block admin-bookings-schedule__skeleton-block--right" />
+        history ? (
+          <div className="admin-bookings-schedule__history-table-wrap">
+            <div className="admin-bookings-schedule__history-head-row" aria-hidden="true">
+              <span />
+              <span>Client</span>
+              <span>Service</span>
+              <span>Date &amp; Time</span>
+              <span>Barber</span>
+              <span>Status</span>
             </div>
-          ))}
-        </div>
+            <div aria-busy="true" aria-live="polite">
+              {Array.from({ length: 6 }, (_, i) => (
+                <div key={i} className="admin-bookings-schedule__history-skeleton-row" aria-hidden="true">
+                  <span className="admin-bookings-schedule__history-skeleton-avatar" />
+                  <span className="admin-bookings-schedule__history-skeleton-cell admin-bookings-schedule__history-skeleton-cell--name" />
+                  <span className="admin-bookings-schedule__history-skeleton-cell" />
+                  <span className="admin-bookings-schedule__history-skeleton-cell" />
+                  <span className="admin-bookings-schedule__history-skeleton-cell admin-bookings-schedule__history-skeleton-cell--sm" />
+                  <span className="admin-bookings-schedule__history-skeleton-cell admin-bookings-schedule__history-skeleton-cell--chip" />
+                </div>
+              ))}
+            </div>
+          </div>
+        ) : (
+          <div className="admin-bookings-schedule__list" aria-busy="true" aria-live="polite">
+            {Array.from({ length: 6 }, (_, i) => (
+              <div
+                key={i}
+                className="admin-bookings-schedule__skeleton-row"
+                aria-hidden="true"
+              >
+                <span className="admin-bookings-schedule__skeleton-block admin-bookings-schedule__skeleton-block--time" />
+                <span className="admin-bookings-schedule__skeleton-block admin-bookings-schedule__skeleton-block--main" />
+                <span className="admin-bookings-schedule__skeleton-block admin-bookings-schedule__skeleton-block--right" />
+              </div>
+            ))}
+          </div>
+        )
       ) : displayBookings.length === 0 ? (
         <EmptyState
           icon={Calendar}
@@ -186,18 +226,84 @@ export default function AdminBookingsScheduleList(props: AdminBookingsScheduleLi
             ) : undefined
           }
         />
+      ) : history ? (
+        <div className="admin-bookings-schedule__history-table-wrap">
+          <div className="admin-bookings-schedule__history-head-row" aria-hidden="true">
+            <span />
+            <span>Client</span>
+            <span>Service</span>
+            <span>Date &amp; Time</span>
+            <span>Barber</span>
+            <span>Status</span>
+          </div>
+          <ul className="admin-bookings-schedule__history-list" role="list" aria-live="polite">
+            {displayBookings.map((booking) => {
+              const isUpdated = updatedBookingIds.includes(booking.id);
+              const initials = getInitials(booking.fullName);
+              const chipVariant = historyChipVariant(booking.status);
+              const chipLabel = props.getHistoryStatusLine(booking);
+              const serviceName = booking.service?.name ?? '—';
+              const serviceStr = `${serviceName} · ${formatDurationLine(bookingDurationMinutes(booking))}`;
+              const emailTrimmed = (booking.email ?? '').trim();
+              const dateTimeStr = props.formatDateTime(booking.startAt);
+              const barberShort = barberFirstName(booking.barber?.name);
+
+              return (
+                <li
+                  key={booking.id}
+                  className={isUpdated ? 'admin-bookings-schedule__history-item--updated' : undefined}
+                >
+                  <button
+                    type="button"
+                    className="admin-bookings-schedule__history-row"
+                    onClick={() => void onOpenClient(booking.clientId)}
+                    data-booking-id={booking.id}
+                    aria-label={`View booking for ${booking.fullName}`}
+                  >
+                    <div className="admin-bookings-schedule__history-avatar" aria-hidden="true">
+                      <span className="admin-bookings-schedule__history-avatar-initials">{initials}</span>
+                    </div>
+
+                    <div className="admin-bookings-schedule__history-identity">
+                      <span className="admin-bookings-schedule__history-name">
+                        {highlightMatch(booking.fullName)}
+                      </span>
+                      <span className="admin-bookings-schedule__history-email">
+                        {emailTrimmed ? highlightMatch(emailTrimmed) : '—'}
+                      </span>
+                    </div>
+
+                    <span className="admin-bookings-schedule__history-service">
+                      {highlightMatch(serviceStr)}
+                    </span>
+
+                    <span className="admin-bookings-schedule__history-time">
+                      {dateTimeStr}
+                    </span>
+
+                    <span className="admin-bookings-schedule__history-barber">
+                      {barberShort}
+                    </span>
+
+                    <span className={`admin-bookings-schedule__history-chip admin-bookings-schedule__history-chip--${chipVariant}`}>
+                      {chipLabel}
+                    </span>
+                  </button>
+                </li>
+              );
+            })}
+          </ul>
+        </div>
       ) : (
         <div className="admin-bookings-schedule__list" role="list" aria-live="polite">
           {displayBookings.map((booking) => {
             const temporal = getTemporalGroup(booking, nowMs);
-            const timeStr = history ? props.formatDateTime(booking.startAt) : formatStartTime(booking.startAt);
+            const timeStr = formatStartTime(booking.startAt);
             const serviceName = booking.service?.name ?? '—';
             const subline = `${serviceName} · ${formatDurationLine(bookingDurationMinutes(booking))}`;
-            const emailTrimmed = (booking.email ?? '').trim();
             const barberShort = barberFirstName(booking.barber?.name);
             const isUpdated = updatedBookingIds.includes(booking.id);
-            const canCancel =
-              !history && 'canCancelBooking' in props && props.canCancelBooking(booking);
+            const canCancel = 'canCancelBooking' in props && props.canCancelBooking(booking);
 
             const isDonePast = temporal === 'past' && booking.status === 'BOOKED';
             const isPastOther = temporal === 'past' && !isDonePast;
@@ -251,12 +357,10 @@ export default function AdminBookingsScheduleList(props: AdminBookingsScheduleLi
             return (
               <div key={booking.id} className={rowClass} role="listitem" data-booking-id={booking.id}>
                 <div className="admin-bookings-schedule__accent" aria-hidden="true" />
-                <div
-                  className={`admin-bookings-schedule__time${temporal === 'now' ? ' admin-bookings-schedule__time--now' : ''}${history ? ' admin-bookings-schedule__time--history' : ''}`}
-                >
+                <div className={`admin-bookings-schedule__time${temporal === 'now' ? ' admin-bookings-schedule__time--now' : ''}`}>
                   {timeStr}
                 </div>
-                <div className={`admin-bookings-schedule__main${history ? ' admin-bookings-schedule__main--history' : ''}`}>
+                <div className="admin-bookings-schedule__main">
                   <button
                     type="button"
                     className="admin-bookings-schedule__client"
@@ -265,11 +369,6 @@ export default function AdminBookingsScheduleList(props: AdminBookingsScheduleLi
                     {highlightMatch(formatClientShort(booking.fullName))}
                   </button>
                   <p className="admin-bookings-schedule__subline">{subline}</p>
-                  {history ? (
-                    <p className="admin-bookings-schedule__history-email">
-                      {emailTrimmed ? highlightMatch(emailTrimmed) : '—'}
-                    </p>
-                  ) : null}
                 </div>
                 <div className="admin-bookings-schedule__right">{right}</div>
                 {canCancel && 'onCancelBooking' in props ? (
