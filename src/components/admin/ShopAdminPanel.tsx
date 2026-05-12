@@ -109,6 +109,13 @@ type ProductFormState = {
 type ProductFilter = 'all' | 'active' | 'inactive' | 'featured';
 type ProductSortMode = 'manual' | 'newest' | 'price' | 'name';
 
+const PRODUCT_SORT_OPTIONS: Array<{ value: ProductSortMode; label: string }> = [
+  { value: 'manual', label: 'Manual' },
+  { value: 'newest', label: 'Newest' },
+  { value: 'price', label: 'Price' },
+  { value: 'name', label: 'Name' },
+];
+
 
 
 type SalesChartSeries = {
@@ -707,6 +714,7 @@ export default function ShopAdminPanel({ initialTab = 'products' }: ShopAdminPan
     const [productSearch, setProductSearch] = useState('');
   const [productFilter, setProductFilter] = useState<ProductFilter>('all');
   const [productSortMode, setProductSortMode] = useState<ProductSortMode>('manual');
+  const [productSortOpen, setProductSortOpen] = useState(false);
   const [manualOrderIds, setManualOrderIds] = useState<string[]>([]);
   const [productSavingById, setProductSavingById] = useState<Record<string, boolean>>({});
   const [productStatusById, setProductStatusById] = useState<Record<string, string>>({});
@@ -723,6 +731,8 @@ export default function ShopAdminPanel({ initialTab = 'products' }: ShopAdminPan
   const imageUploadAbortControllerRef = useRef<AbortController | null>(null);
   const fileInputRef = useRef<HTMLInputElement | null>(null);
   const productFiltersScrollRef = useRef<HTMLDivElement | null>(null);
+  const productSearchInputRef = useRef<HTMLInputElement | null>(null);
+  const productSortRef = useRef<HTMLDivElement | null>(null);
 
   const {
     selectedIds: bulkSelectedIds,
@@ -733,6 +743,11 @@ export default function ShopAdminPanel({ initialTab = 'products' }: ShopAdminPan
     selectedCount: bulkSelectedCount
   } = useBulkSelection<string>();
   const [bulkLoading, setBulkLoading] = useState(false);
+
+  const handleProductSearchClear = useCallback(() => {
+    setProductSearch('');
+    productSearchInputRef.current?.focus();
+  }, []);
 
   const sortedProducts = useMemo(
     () => [...products].sort((a, b) => a.sortOrder - b.sortOrder || Date.parse(b.updatedAt) - Date.parse(a.updatedAt)),
@@ -790,6 +805,38 @@ export default function ShopAdminPanel({ initialTab = 'products' }: ShopAdminPan
     };
   }, [activeTab]);
 
+  useEffect(() => {
+    if (activeTab !== 'products') return;
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key !== '/') return;
+      const target = e.target as HTMLElement;
+      if (target.tagName === 'INPUT' || target.tagName === 'TEXTAREA' || target.isContentEditable) return;
+      e.preventDefault();
+      productSearchInputRef.current?.focus();
+    };
+    document.addEventListener('keydown', handleKeyDown);
+    return () => document.removeEventListener('keydown', handleKeyDown);
+  }, [activeTab]);
+
+  useEffect(() => {
+    if (!productSortOpen) return;
+
+    const handlePointerDown = (event: PointerEvent) => {
+      if (productSortRef.current?.contains(event.target as Node)) return;
+      setProductSortOpen(false);
+    };
+
+    const handleKeyDown = (event: KeyboardEvent) => {
+      if (event.key === 'Escape') setProductSortOpen(false);
+    };
+
+    document.addEventListener('pointerdown', handlePointerDown);
+    document.addEventListener('keydown', handleKeyDown);
+    return () => {
+      document.removeEventListener('pointerdown', handlePointerDown);
+      document.removeEventListener('keydown', handleKeyDown);
+    };
+  }, [productSortOpen]);
 
   const manualProducts = useMemo(() => {
     const validIds = manualOrderIds.filter((id) => productMap.has(id));
@@ -1072,8 +1119,12 @@ export default function ShopAdminPanel({ initialTab = 'products' }: ShopAdminPan
   );
 
   const ordersSafe = orders ?? [];
-  const pendingOrdersCount = useMemo(
+  const paidOrdersCount = useMemo(
     () => ordersSafe.filter((order) => order.status === 'PAID').length,
+    [ordersSafe],
+  );
+  const collectedOrdersCount = useMemo(
+    () => ordersSafe.filter((order) => order.status === 'COLLECTED').length,
     [ordersSafe],
   );
   const filteredOrders = useMemo(() => {
@@ -1722,11 +1773,13 @@ export default function ShopAdminPanel({ initialTab = 'products' }: ShopAdminPan
         metaBadge={
           activeTab === 'products'
             ? `${products.length} products`
-            : activeTab === 'orders'
-              ? `${pendingOrdersCount} pending`
-              : undefined
+            : undefined
         }
-        metaBadgeVariant={activeTab === 'orders' ? 'warning' : 'default'}
+        metaBadges={activeTab === 'orders' ? [
+          { label: `${paidOrdersCount} paid`, variant: 'info' },
+          { label: `${collectedOrdersCount} collected`, variant: 'success' },
+        ] : undefined}
+        metaBadgeVariant="default"
         actions={activeTab === 'products' ? (
           <button type="button" className="btn btn--primary" onClick={startCreate}>
             Add Product
@@ -1738,69 +1791,125 @@ export default function ShopAdminPanel({ initialTab = 'products' }: ShopAdminPan
         <div className="admin-reports admin-products-panel">
           <div className="admin-products-toolbar-sticky">
             <div className="admin-products-toolbar">
-              <div className="admin-products-toolbar-top">
+
+              {/* Row 1 — Search */}
+              <div className="admin-search-bar admin-products-toolbar-search" role="search">
+                <Search className="admin-search-bar__icon" width={16} height={16} aria-hidden="true" />
                 <input
-                  value={productSearch}
-                  onChange={(event) => setProductSearch(event.target.value)}
+                  ref={productSearchInputRef}
                   type="search"
-                  className="admin-products-search"
-                  placeholder="Search products"
+                  className="admin-search-bar__input"
+                  placeholder="Search products…"
+                  value={productSearch}
+                  onChange={(e) => setProductSearch(e.target.value)}
+                  onKeyDown={(e) => e.key === 'Escape' && handleProductSearchClear()}
                   aria-label="Search products"
+                  autoComplete="off"
+                  spellCheck={false}
                 />
-
-
-
+                {productSearch ? (
+                  <button
+                    type="button"
+                    className="admin-search-bar__clear"
+                    onClick={handleProductSearchClear}
+                    aria-label="Clear search"
+                  >
+                    <X width={14} height={14} aria-hidden="true" />
+                  </button>
+                ) : (
+                  <kbd className="admin-search-bar__kbd">/</kbd>
+                )}
               </div>
-              <div className="admin-products-toolbar-row">
-                <div className="admin-products-controls-row">
-                  <div className="admin-filter-scroll-wrap">
-                    <div ref={productFiltersScrollRef} className="admin-products-filters" role="group" aria-label="Product filters">
-                      {(['all', 'active', 'inactive', 'featured'] as ProductFilter[]).map((filter) => (
-                        <button
-                          key={filter}
-                          type="button"
-                          className={`admin-filter-tab ${productFilter === filter ? 'admin-filter-tab--active' : ''}`}
-                          onClick={() => setProductFilter(filter)}
-                          aria-pressed={productFilter === filter}
-                        >
-                          {filter === 'all' ? 'All' : filter === 'active' ? 'Active' : filter === 'inactive' ? 'Inactive' : 'Featured'}
-                        </button>
-                      ))}
-                    </div>
-                  </div>
-                  <select value={productSortMode} onChange={(event) => setProductSortMode(event.target.value as ProductSortMode)} className="admin-products-sort" aria-label="Sort products">
-                    <option value="manual">Manual order</option>
-                    <option value="newest">Newest</option>
-                    <option value="price">Price</option>
-                    <option value="name">Name</option>
-                  </select>
 
+              {/* Row 2 — Controls */}
+              <div className="admin-products-toolbar-controls">
+
+                {/* Filter tabs */}
+                <div className="admin-filter-scroll-wrap">
+                  <div ref={productFiltersScrollRef} className="admin-products-filters" role="group" aria-label="Product filters">
+                    {(['all', 'active', 'inactive', 'featured'] as ProductFilter[]).map((filter) => (
+                      <button
+                        key={filter}
+                        type="button"
+                        className={`admin-products-filter-tab${productFilter === filter ? ' admin-products-filter-tab--active' : ''}`}
+                        onClick={() => setProductFilter(filter)}
+                        aria-pressed={productFilter === filter}
+                      >
+                        {filter === 'all' ? 'All' : filter === 'active' ? 'Active' : filter === 'inactive' ? 'Inactive' : 'Featured'}
+                      </button>
+                    ))}
+                  </div>
                 </div>
 
-
-                <div className="admin-products-toolbar-bulk">
-                  <p className="admin-products-count muted">{filteredProducts.length} products • {featuredCount} featured</p>
-                  {filteredProducts.length > 0 ? (
+                {/* Sort + Meta — right cluster */}
+                <div className="admin-products-toolbar-right">
+                  <div
+                    ref={productSortRef}
+                    className={`admin-products-sort-wrap${productSortOpen ? ' admin-products-sort-wrap--open' : ''}`}
+                  >
                     <button
                       type="button"
-                      className="admin-bulk-select-all"
-                      onClick={() => {
-                        const allIds = filteredProducts.map((p) => p.id);
-                        if (bulkSelectedCount === filteredProducts.length) {
-                          bulkClearAll();
-                        } else {
-                          bulkSelectAll(allIds);
+                      className="admin-products-sort-trigger"
+                      aria-label="Sort products"
+                      aria-haspopup="listbox"
+                      aria-expanded={productSortOpen}
+                      onClick={() => setProductSortOpen((open) => !open)}
+                      onKeyDown={(event) => {
+                        if (event.key === 'ArrowDown' || event.key === 'ArrowUp') {
+                          event.preventDefault();
+                          setProductSortOpen(true);
                         }
                       }}
-                      aria-pressed={bulkSelectedCount === filteredProducts.length && filteredProducts.length > 0}
                     >
-                      {bulkSelectedCount > 0 && bulkSelectedCount === filteredProducts.length
-                        ? 'Deselect all'
-                        : bulkSelectedCount > 0
-                          ? `Select all (${filteredProducts.length})`
-                          : 'Select all'}
+                      <span>{PRODUCT_SORT_OPTIONS.find((option) => option.value === productSortMode)?.label}</span>
+                      <ChevronDown className="admin-products-sort-chevron" width={12} height={12} aria-hidden="true" />
                     </button>
-                  ) : null}
+
+                    {productSortOpen ? (
+                      <div className="admin-products-sort-menu" role="listbox" aria-label="Sort products">
+                        {PRODUCT_SORT_OPTIONS.map((option) => (
+                          <button
+                            key={option.value}
+                            type="button"
+                            className={`admin-products-sort-option${productSortMode === option.value ? ' admin-products-sort-option--active' : ''}`}
+                            role="option"
+                            aria-selected={productSortMode === option.value}
+                            onClick={() => {
+                              setProductSortMode(option.value);
+                              setProductSortOpen(false);
+                            }}
+                          >
+                            {option.label}
+                          </button>
+                        ))}
+                      </div>
+                    ) : null}
+                  </div>
+
+                  <div className="admin-products-meta">
+                    <span className="admin-products-count">{filteredProducts.length} products · {featuredCount} featured</span>
+                    {filteredProducts.length > 0 && (
+                      <button
+                        type="button"
+                        className="admin-products-select-all"
+                        onClick={() => {
+                          const allIds = filteredProducts.map((p) => p.id);
+                          if (bulkSelectedCount === filteredProducts.length) {
+                            bulkClearAll();
+                          } else {
+                            bulkSelectAll(allIds);
+                          }
+                        }}
+                        aria-pressed={bulkSelectedCount === filteredProducts.length && filteredProducts.length > 0}
+                      >
+                        {bulkSelectedCount > 0 && bulkSelectedCount === filteredProducts.length
+                          ? 'Deselect all'
+                          : bulkSelectedCount > 0
+                            ? `Select all (${filteredProducts.length})`
+                            : 'Select all'}
+                      </button>
+                    )}
+                  </div>
                 </div>
 
               </div>
@@ -2191,15 +2300,6 @@ export default function ShopAdminPanel({ initialTab = 'products' }: ShopAdminPan
                   </article>
                 );
               })}
-              {!productsInitiallyLoading ? (
-                <article className="admin-product-row admin-product-row--add">
-                  <button type="button" className="admin-product-add-btn" onClick={startCreate}>
-                    <span className="admin-product-add-icon" aria-hidden="true">+</span>
-                    <span>Add product</span>
-                  </button>
-                </article>
-              ) : null}
-
             </div>
 
           </div>
@@ -2227,44 +2327,6 @@ export default function ShopAdminPanel({ initialTab = 'products' }: ShopAdminPan
             </div>
           ) : null}
           {success ? <p className="admin-inline-success">{success}</p> : null}
-          <div className="admin-search-row">
-            <div className={`admin-search-field ${ordersSearchQuery ? 'admin-search-field--has-clear' : ''}`}>
-            <span className="admin-search-icon" aria-hidden="true">
-              <svg viewBox="0 0 20 20" focusable="false" aria-hidden="true">
-                <path d="M8.5 3a5.5 5.5 0 0 1 4.4 8.8l3.65 3.65a1 1 0 0 1-1.42 1.42l-3.65-3.65A5.5 5.5 0 1 1 8.5 3Zm0 2a3.5 3.5 0 1 0 0 7 3.5 3.5 0 0 0 0-7Z" fill="currentColor" />
-              </svg>
-            </span>
-            <input
-              type="search"
-              value={ordersSearchQuery}
-              onChange={(event) => setOrdersSearchQuery(event.target.value)}
-              onKeyDown={(event) => {
-                if (event.key !== 'Escape') return;
-                event.preventDefault();
-                setOrdersSearchQuery('');
-                setDebouncedOrdersSearchQuery('');
-              }}
-              placeholder={ordersLoading ? 'Loading…' : 'Search orders...'}
-              aria-label="Search orders"
-              disabled={ordersLoading}
-            />
-            {ordersSearchQuery ? (
-              <button
-                type="button"
-                className="admin-search-clear"
-                onClick={() => {
-                  setOrdersSearchQuery('');
-                  setDebouncedOrdersSearchQuery('');
-                }}
-                aria-label="Clear order search"
-              >
-                <X width={12} height={12} aria-hidden="true" />
-              </button>
-            ) : null}
-            </div>
-          </div>
-
-          {!ordersLoading ? <p className="muted">Showing {filteredOrders.length} of {ordersSafe.length}</p> : null}
 
 
           {ordersUnauthorized ? (
@@ -2286,6 +2348,51 @@ export default function ShopAdminPanel({ initialTab = 'products' }: ShopAdminPan
             onMarkCollected={(orderId) => void markCollected(orderId)}
             ordersUnauthorized={ordersUnauthorized}
                         emptyMessage={debouncedOrdersSearchQuery ? 'No orders match your search.' : 'No orders yet.'}
+            searchSlot={
+              <div className="admin-orders-search-row admin-clients-search-row">
+                <div className="admin-search-bar" role="search">
+                  <Search className="admin-search-bar__icon" width={16} height={16} aria-hidden="true" />
+                  <input
+                    type="search"
+                    className="admin-search-bar__input"
+                    value={ordersSearchQuery}
+                    onChange={(event) => setOrdersSearchQuery(event.target.value)}
+                    onKeyDown={(event) => {
+                      if (event.key !== 'Escape') return;
+                      event.preventDefault();
+                      setOrdersSearchQuery('');
+                      setDebouncedOrdersSearchQuery('');
+                    }}
+                    placeholder={ordersLoading ? 'Loading…' : 'Search orders...'}
+                    aria-label="Search orders"
+                    disabled={ordersLoading}
+                    autoComplete="off"
+                    spellCheck={false}
+                  />
+                  {!ordersLoading ? (
+                    <span className="admin-orders-search-count" aria-live="polite">
+                      {filteredOrders.length} / {ordersSafe.length}
+                    </span>
+                  ) : null}
+                  {ordersSearchQuery ? (
+                    <button
+                      type="button"
+                      className="admin-search-bar__clear"
+                      onClick={() => {
+                        setOrdersSearchQuery('');
+                        setDebouncedOrdersSearchQuery('');
+                      }}
+                      aria-label="Clear order search"
+                    >
+                      <X width={14} height={14} aria-hidden="true" />
+                    </button>
+                  ) : null}
+                  {!ordersSearchQuery && !ordersLoading ? (
+                    <kbd className="admin-search-bar__kbd">/</kbd>
+                  ) : null}
+                </div>
+              </div>
+            }
           />
 
         </div>

@@ -5,11 +5,23 @@ import { requireAdmin } from '../../../../../lib/admin/auth';
 import { prisma } from '../../../../../lib/db/client';
 import { resolveShopId } from '../../../../../lib/db/shopScope';
 
-const DEMO_EMAIL_PREFIX = 'demo+shop-sales-';
+const LEGACY_DEMO_EMAIL_PREFIX = 'demo+shop-sales-';
+const DEMO_EMAIL_TAG = '+demo-';
 const MIN_TARGET_ORDERS = 15;
 const MAX_TARGET_ORDERS = 40;
 const MAX_DEMO_ORDERS_IN_WINDOW = 60;
 const WINDOW_DAYS = 30;
+
+const DEMO_CUSTOMER_EMAILS = [
+  'oliver.reed@example.com',
+  'amelia.clarke@example.com',
+  'noah.bennett@example.com',
+  'isla.morgan@example.com',
+  'leo.carter@example.com',
+  'maya.brooks@example.com',
+  'theo.hughes@example.com',
+  'grace.turner@example.com',
+];
 
 function randomInt(min: number, max: number): number {
   return Math.floor(Math.random() * (max - min + 1)) + min;
@@ -41,7 +53,11 @@ export const POST: APIRoute = async (ctx) => {
     const existingDemoOrders = await prisma.order.count({
       where: {
         shopId,
-        customerEmail: { startsWith: DEMO_EMAIL_PREFIX },
+        OR: [
+          { customerEmail: { startsWith: LEGACY_DEMO_EMAIL_PREFIX } },
+          { customerEmail: { contains: DEMO_EMAIL_TAG } },
+          { customerEmail: { in: DEMO_CUSTOMER_EMAILS } }
+        ],
         createdAt: { gte: windowStart }
       }
     });
@@ -85,11 +101,12 @@ export const POST: APIRoute = async (ctx) => {
         });
 
         const totalPence = items.reduce((sum, item) => sum + item.lineTotalPence, 0);
+        const customerEmail = DEMO_CUSTOMER_EMAILS[index % DEMO_CUSTOMER_EMAILS.length];
 
         return prisma.order.create({
           data: {
             shopId,
-            customerEmail: `${DEMO_EMAIL_PREFIX}${Date.now()}-${index}@kersivo.local`,
+            customerEmail,
             status: 'PAID',
             currency: 'gbp',
             totalPence,

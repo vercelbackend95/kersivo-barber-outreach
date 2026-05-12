@@ -1,7 +1,6 @@
-import { type SVGProps, useMemo, useState } from 'react';
+import { type MouseEvent, type ReactNode, type SVGProps, useMemo, useState } from 'react';
 import EmptyState from '../EmptyState';
-import { ShoppingBag } from '../lucide-react';
-import StatusBadge from './StatusBadge';
+import { ChevronDown, ChevronUp, ShoppingBag } from '../lucide-react';
 
 type OrderListItem = {
   id: string;
@@ -46,6 +45,7 @@ type OrdersDataTable22Props = {
   onMarkCollected: (orderId: string) => void;
   ordersUnauthorized: boolean;
   emptyMessage?: string;
+  searchSlot?: ReactNode;
 };
 
 function formatPrice(pricePence: number): string {
@@ -61,8 +61,56 @@ function getOrderNumberLabel(order: Pick<OrderListItem, 'orderNumber' | 'id'>): 
   return order.orderNumber ?? `${order.id.slice(0, 8)}…`;
 }
 
-function getCustomerInitials(order: Pick<OrderListItem, 'customerName' | 'customerEmail'>): string {
-  const source = order.customerName || order.customerEmail;
+const DEMO_CUSTOMERS = [
+  { displayName: 'Oliver Reed', email: 'oliver.reed@example.com' },
+  { displayName: 'Amelia Clarke', email: 'amelia.clarke@example.com' },
+  { displayName: 'Noah Bennett', email: 'noah.bennett@example.com' },
+  { displayName: 'Isla Morgan', email: 'isla.morgan@example.com' },
+  { displayName: 'Leo Carter', email: 'leo.carter@example.com' },
+  { displayName: 'Maya Brooks', email: 'maya.brooks@example.com' },
+  { displayName: 'Theo Hughes', email: 'theo.hughes@example.com' },
+  { displayName: 'Grace Turner', email: 'grace.turner@example.com' },
+];
+
+function getStableIndex(value: string, length: number): number {
+  let hash = 0;
+  for (let i = 0; i < value.length; i += 1) {
+    hash = (hash * 31 + value.charCodeAt(i)) >>> 0;
+  }
+  return hash % length;
+}
+
+function toTitleCase(value: string): string {
+  return value
+    .split(/[\s._-]+/)
+    .filter(Boolean)
+    .map((part) => part.charAt(0).toUpperCase() + part.slice(1).toLowerCase())
+    .join(' ');
+}
+
+function getCustomerIdentity(order: Pick<OrderListItem, 'id' | 'customerName' | 'customerEmail'>): {
+  displayName: string;
+  email: string;
+} {
+  const email = order.customerEmail.trim();
+  const storedName = order.customerName?.trim();
+
+  if (storedName) {
+    return { displayName: storedName, email };
+  }
+
+  if (/^demo\+shop-sales-/i.test(email)) {
+    return DEMO_CUSTOMERS[getStableIndex(order.id || email, DEMO_CUSTOMERS.length)];
+  }
+
+  const localPart = email.split('@')[0]?.split('+')[0] ?? '';
+  const inferredName = toTitleCase(localPart);
+
+  return { displayName: inferredName || 'Customer', email };
+}
+
+function getCustomerInitials(order: Pick<OrderListItem, 'id' | 'customerName' | 'customerEmail'>): string {
+  const source = getCustomerIdentity(order).displayName;
   const parts = source.split(/[\s@._-]+/).filter(Boolean);
   if (parts.length === 0) return '?';
   if (parts.length === 1) return parts[0].slice(0, 2).toUpperCase();
@@ -80,8 +128,47 @@ const emptyDesc = (msg: string) =>
 
 type SortColumn = 'orderNumber' | 'total' | 'status' | 'items';
 type SortDir = 'asc' | 'desc';
+type SortState = SortDir | 'none';
 
 const STATUS_SORT_ORDER: Record<string, number> = { PAID: 0, COLLECTED: 1 };
+
+function getOrderStatusLabel(status: OrderListItem['status']): string {
+  return status === 'PAID' ? 'Paid' : 'Collected';
+}
+
+function formatItemCount(count: number): string {
+  return `${count} item${count === 1 ? '' : 's'}`;
+}
+
+function OrderStatusDot({ status }: { status: OrderListItem['status'] }) {
+  const label = getOrderStatusLabel(status);
+
+  return (
+    <span
+      className={`aog-status-dot aog-status-dot--${status.toLowerCase()}`}
+      role="img"
+      aria-label={label}
+      title={label}
+    />
+  );
+}
+
+function SortIcon({ state }: { state: SortState }) {
+  if (state === 'asc') {
+    return <ChevronUp className="admin-orders-grid-sort-icon" width={13} height={13} aria-hidden="true" />;
+  }
+
+  if (state === 'desc') {
+    return <ChevronDown className="admin-orders-grid-sort-icon" width={13} height={13} aria-hidden="true" />;
+  }
+
+  return (
+    <span className="admin-orders-grid-sort-icon admin-orders-grid-sort-icon--neutral" aria-hidden="true">
+      <ChevronUp width={12} height={12} />
+      <ChevronDown width={12} height={12} />
+    </span>
+  );
+}
 
 function CollectedOrderIcon(props: SVGProps<SVGSVGElement>) {
   return (
@@ -112,6 +199,7 @@ export default function OrdersDataTable22({
   onMarkCollected,
   ordersUnauthorized,
   emptyMessage = 'No orders yet.',
+  searchSlot,
 }: OrdersDataTable22Props) {
   const isEmpty = !ordersUnauthorized && orders.length === 0;
 
@@ -154,34 +242,19 @@ export default function OrdersDataTable22({
     });
   }, [orders, sortColumn, sortDir]);
 
-  const paidCount      = orders.filter((o) => o.status === 'PAID').length;
-  const collectedCount = orders.filter((o) => o.status === 'COLLECTED').length;
+  function handleCollectClick(event: MouseEvent<HTMLButtonElement>, orderId: string) {
+    event.stopPropagation();
+    onMarkCollected(orderId);
+  }
 
   return (
     <section className="admin-orders-table22" aria-label="Orders table">
-
-      {/* ── Status pipeline summary ── */}
-      {!isEmpty && (
-        <div className="admin-orders-table22__pipeline" aria-label="Order status summary">
-          <span className="admin-orders-table22__pipeline-step">
-            <StatusBadge status="PAID" variant="dot" size="sm" />
-            <span className="admin-orders-table22__pipeline-count">{paidCount}</span>
-          </span>
-
-          <span className="admin-orders-table22__pipeline-arrow" aria-hidden="true">→</span>
-
-          <span className="admin-orders-table22__pipeline-step">
-            <StatusBadge status="COLLECTED" variant="dot" size="sm" />
-            <span className="admin-orders-table22__pipeline-count">{collectedCount}</span>
-          </span>
-        </div>
-      )}
-
       {/* ── Clients-style grid ── */}
       <div className="admin-orders-grid-wrap" aria-label="Orders">
+        {searchSlot}
+
         {!isEmpty ? (
           <div className="admin-orders-grid-header">
-            <span aria-label="Expand row" />
             <span
               className="admin-orders-grid-header-cell admin-orders-grid-header-cell--identity"
               role="columnheader"
@@ -193,7 +266,8 @@ export default function OrdersDataTable22({
                 data-sort={getSortAttr('orderNumber')}
                 onClick={() => handleSort('orderNumber')}
               >
-                Order / customer
+                <span className="admin-orders-grid-sort-label">Order / customer</span>
+                <SortIcon state={getSortAttr('orderNumber')} />
               </button>
             </span>
             <span
@@ -207,11 +281,12 @@ export default function OrdersDataTable22({
                 data-sort={getSortAttr('total')}
                 onClick={() => handleSort('total')}
               >
-                Total
+                <span className="admin-orders-grid-sort-label">Total</span>
+                <SortIcon state={getSortAttr('total')} />
               </button>
             </span>
             <span
-              className="admin-orders-grid-header-cell"
+              className="admin-orders-grid-header-cell admin-orders-grid-header-cell--status"
               role="columnheader"
               aria-sort={getAriaSort('status')}
             >
@@ -220,8 +295,10 @@ export default function OrdersDataTable22({
                 className="admin-orders-grid-sort"
                 data-sort={getSortAttr('status')}
                 onClick={() => handleSort('status')}
+                aria-label="Sort by status"
               >
-                Status
+                <span className="admin-orders-grid-sort-label">Status</span>
+                <SortIcon state={getSortAttr('status')} />
               </button>
             </span>
             <span
@@ -235,10 +312,11 @@ export default function OrdersDataTable22({
                 data-sort={getSortAttr('items')}
                 onClick={() => handleSort('items')}
               >
-                Items
+                <span className="admin-orders-grid-sort-label">Items</span>
+                <SortIcon state={getSortAttr('items')} />
               </button>
             </span>
-            <span className="admin-orders-grid-header-cell">Actions</span>
+            <span className="admin-orders-grid-header-cell admin-orders-grid-header-cell--actions">Actions</span>
           </div>
         ) : null}
 
@@ -258,6 +336,15 @@ export default function OrdersDataTable22({
               const detail = orderDetailsById[order.id];
               const isDetailLoading = orderDetailsLoadingId === order.id && !detail;
               const orderLabel = getOrderNumberLabel(order);
+              const customerIdentity = getCustomerIdentity(order);
+              const rowLabel = [
+                `Order ${orderLabel}`,
+                customerIdentity.displayName,
+                customerIdentity.email,
+                formatPrice(order.totalPence),
+                getOrderStatusLabel(order.status),
+                formatItemCount(order._count.items),
+              ].join(', ');
 
               return (
                 <li
@@ -268,61 +355,74 @@ export default function OrdersDataTable22({
                       : 'admin-orders-grid-item'
                   }
                 >
-                  <div className="admin-orders-grid-row">
-                    <div className="admin-orders-grid-leading">
-                      <button
-                        type="button"
-                        className="admin-orders-table22__expand"
-                        onClick={() => onToggleExpand(order.id)}
-                        aria-expanded={isExpanded}
-                        aria-label={isExpanded ? `Collapse order ${orderLabel}` : `Expand order ${orderLabel}`}
-                      >
-                        {isExpanded ? '−' : '+'}
-                      </button>
+                  <button
+                    type="button"
+                    className={
+                      isExpanded
+                        ? 'admin-orders-grid-row admin-orders-grid-row--expanded'
+                        : 'admin-orders-grid-row'
+                    }
+                    aria-expanded={isExpanded}
+                    aria-label={rowLabel}
+                    onClick={() => onToggleExpand(order.id)}
+                  >
+                    <div
+                      className="admin-orders-grid-identity"
+                      title={`Order ${orderLabel}: ${customerIdentity.displayName} (${customerIdentity.email})`}
+                    >
                       <span className="admin-orders-grid-avatar" aria-hidden="true">
                         <span className="admin-orders-grid-avatar-initials">
                           {getCustomerInitials(order)}
                         </span>
                       </span>
-                    </div>
-
-                    <div className="admin-orders-grid-identity" title={order.customerEmail}>
-                      <span className="admin-orders-grid-order admin-order-number-cell" title={order.orderNumber ?? order.id}>
-                        {orderLabel}
-                      </span>
-                      <span className="admin-orders-grid-customer">
-                        {order.customerName || order.customerEmail}
-                      </span>
-                      {order.customerName ? (
-                        <span className="admin-orders-grid-email">
-                          {order.customerEmail}
+                      <div className="admin-orders-grid-identity__text">
+                        <span className="admin-orders-grid-identity__title">
+                          <span className="admin-orders-grid-customer">
+                            {customerIdentity.displayName}
+                          </span>
+                          <span className="admin-orders-grid-identity__meta" aria-hidden="true">
+                            <span>{formatItemCount(order._count.items)}</span>
+                            <span aria-hidden="true">·</span>
+                            <OrderStatusDot status={order.status} />
+                          </span>
                         </span>
-                      ) : null}
+                        <span className="admin-orders-grid-email">
+                          {customerIdentity.email}
+                        </span>
+                      </div>
                     </div>
 
                     <span className="admin-orders-grid-total">{formatPrice(order.totalPence)}</span>
                     <span className="admin-orders-grid-status">
-                      <StatusBadge status={order.status} variant="dot" size="sm" />
+                      <OrderStatusDot status={order.status} />
                     </span>
                     <span className="admin-orders-grid-items">{order._count.items}</span>
-                    <div className="admin-orders-grid-actions">
-                      {order.status === 'PAID' ? (
-                        <button
-                          type="button"
-                          className="btn btn--ghost btn--sm admin-orders-grid-collect-btn"
-                          onClick={() => onMarkCollected(order.id)}
-                          title="Mark as Collected"
-                          aria-label={`Mark ${orderLabel} as collected`}
-                        >
-                          <CollectedOrderIcon width={32} height={32} strokeWidth={2.6} aria-hidden="true" />
-                        </button>
-                      ) : (
-                        <span className="admin-orders-grid-action-empty" aria-hidden="true">—</span>
-                      )}
-                    </div>
+                    <ChevronDown className="admin-orders-grid-row-chevron" width={15} height={15} aria-hidden="true" />
+                  </button>
+
+                  <div className="admin-orders-grid-actions">
+                    {order.status === 'PAID' ? (
+                      <button
+                        type="button"
+                        className="btn btn--ghost btn--sm admin-orders-grid-collect-btn"
+                        onClick={(event) => handleCollectClick(event, order.id)}
+                        title="Mark as Collected"
+                        aria-label={`Mark ${orderLabel} as collected`}
+                      >
+                        <CollectedOrderIcon width={24} height={24} strokeWidth={2.25} aria-hidden="true" />
+                      </button>
+                    ) : null}
                   </div>
 
-                  {isExpanded ? (
+                  <div
+                    className={
+                      isExpanded
+                        ? 'admin-orders-expand-wrap admin-orders-expand-wrap--open'
+                        : 'admin-orders-expand-wrap'
+                    }
+                    aria-hidden={!isExpanded}
+                    inert={!isExpanded ? true : undefined}
+                  >
                     <div className="admin-orders-grid-details">
                       <OrderDetailsPanel
                         detail={detail}
@@ -330,7 +430,7 @@ export default function OrdersDataTable22({
                         onMarkCollected={onMarkCollected}
                       />
                     </div>
-                  ) : null}
+                  </div>
                 </li>
               );
             })}
