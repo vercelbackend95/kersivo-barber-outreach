@@ -102,7 +102,7 @@ export default function ClientsAdminPanel() {
   }, [debouncedSearch]);
 
   return (
-    <section className="admin-clients-section" aria-label="Clients">
+    <section className="surface booking-shell admin-clients-section" aria-label="Clients">
       <AdminSectionHeader
         title="Clients"
         description="Manage your client list, tags and reliability scores"

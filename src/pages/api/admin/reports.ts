@@ -517,12 +517,12 @@ export const GET: APIRoute = async (ctx) => {
   if (unauthorized) return unauthorized;
 
   const rangeParam = ctx.url.searchParams.get('range');
-  const range = rangeParam === 'week' || rangeParam === '7d' || rangeParam === '30d' || rangeParam === '90d' || rangeParam === '1y'
+  const range = rangeParam === 'week' || rangeParam === '7d' || rangeParam === '30d'
     ? rangeParam
     : null;
 
   if (!range) {
-    return new Response(JSON.stringify({ error: 'Invalid range.' }), { status: 400 });
+    return new Response(JSON.stringify({ error: 'Invalid range. Reports are capped at 30 days while Neon Free mode is active.' }), { status: 400 });
   }
 
   const selectedBarberId = ctx.url.searchParams.get('barberId') || null;

@@ -9,6 +9,7 @@ import { getBookingStatusTone, getStatusLabel } from './bookingStatus';
 import { SkeletonVerticalTimeline } from '../skeleton';
 import { ArrowRight, ListOrdered, MessageCircle, Plus, User, X } from '../lucide-react';
 import ClientProfilePanel from './ClientProfilePanel';
+import { adminFetchJson } from './adminAuth';
 
 type TimelineBarber = {
   id: string;
@@ -327,6 +328,8 @@ const BookingExpansionCard = memo(function BookingExpansionCard({
   const [isServiceSheetOpen, setIsServiceSheetOpen] = useState(false);
   const [isMessageSheetOpen, setIsMessageSheetOpen] = useState(false);
   const [messageError, setMessageError] = useState('');
+  const [actionError, setActionError] = useState('');
+  const [serviceError, setServiceError] = useState('');
 
   // ── Service picker ────────────────────────────────────────────────────────────
   const [services, setServices] = useState<ServiceOption[]>([]);
@@ -371,21 +374,36 @@ const BookingExpansionCard = memo(function BookingExpansionCard({
     };
   }, [isMobileView, isStatusSheetOpen, isServiceSheetOpen, isMessageSheetOpen]);
 
+  useEffect(() => {
+    if (!(isStatusSheetOpen || isServiceSheetOpen || isMessageSheetOpen)) return undefined;
+    const onKeyDown = (event: KeyboardEvent) => {
+      if (event.key !== 'Escape') return;
+      setIsStatusSheetOpen(false);
+      setIsServiceSheetOpen(false);
+      setIsMessageSheetOpen(false);
+    };
+    document.addEventListener('keydown', onKeyDown);
+    return () => document.removeEventListener('keydown', onKeyDown);
+  }, [isStatusSheetOpen, isServiceSheetOpen, isMessageSheetOpen]);
+
   // ── Status mutation ───────────────────────────────────────────────────────────
   const handleStatusChange = useCallback(
     async (newStatus: string) => {
       const prev = localStatus;
       setLocalStatus(newStatus);
+      setActionError('');
       try {
-        const res = await fetch(`/api/admin/bookings/${booking.id}/status`, {
+        await adminFetchJson(`/api/admin/bookings/${booking.id}/status`, {
           method: 'PATCH',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ status: newStatus }),
+          errorMessage: 'Could not update booking status.',
         });
-        if (!res.ok) throw new Error('failed');
         onStatusChange?.(booking.id, newStatus);
-      } catch {
+        setIsStatusSheetOpen(false);
+      } catch (error) {
         setLocalStatus(prev);
+        setActionError(error instanceof Error ? error.message : 'Could not update booking status.');
       }
     },
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -395,10 +413,15 @@ const BookingExpansionCard = memo(function BookingExpansionCard({
   // ── Service picker helpers ────────────────────────────────────────────────────
   const openServicePicker = useCallback(async () => {
     setServiceLoading(true);
+    setServiceError('');
     try {
-      const res = await fetch('/api/admin/services');
-      const data = (await res.json()) as { services?: ServiceOption[] };
+      const data = await adminFetchJson<{ services?: ServiceOption[] }>('/api/admin/services', {
+        errorMessage: 'Could not load services.',
+      });
       setServices(data.services ?? []);
+    } catch (error) {
+      setServices([]);
+      setServiceError(error instanceof Error ? error.message : 'Could not load services.');
     } finally {
       setServiceLoading(false);
     }
@@ -406,16 +429,18 @@ const BookingExpansionCard = memo(function BookingExpansionCard({
 
   const handleServiceReplace = useCallback(
     async (serviceId: string) => {
+      setServiceError('');
       try {
-        await fetch(`/api/admin/bookings/${booking.id}/service`, {
+        await adminFetchJson(`/api/admin/bookings/${booking.id}/service`, {
           method: 'PATCH',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ serviceId }),
+          errorMessage: 'Could not update booking service.',
         });
         setIsServiceSheetOpen(false);
         onStatusChange?.(booking.id, localStatus);
-      } catch {
-        // silent — UI keeps showing old service name until next refresh
+      } catch (error) {
+        setServiceError(error instanceof Error ? error.message : 'Could not update booking service.');
       }
     },
     [booking.id, localStatus, onStatusChange],
@@ -545,6 +570,7 @@ const BookingExpansionCard = memo(function BookingExpansionCard({
     (e: React.MouseEvent) => {
       e.stopPropagation();
       if (!isMobileView) return;
+      setActionError('');
       setIsServiceSheetOpen(false);
       setIsMessageSheetOpen(false);
       setIsStatusSheetOpen(true);
@@ -560,6 +586,7 @@ const BookingExpansionCard = memo(function BookingExpansionCard({
     (e: React.MouseEvent) => {
       e.stopPropagation();
       if (!isMobileView) return;
+      setServiceError('');
       setIsStatusSheetOpen(false);
       setIsMessageSheetOpen(false);
       setIsServiceSheetOpen(true);
@@ -598,6 +625,9 @@ const BookingExpansionCard = memo(function BookingExpansionCard({
       ? createPortal(
           <div
             className="admin-vtl-bottom-sheet-backdrop"
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="admin-vtl-bottom-sheet-title"
             onClick={(e) => {
               e.stopPropagation();
               setIsStatusSheetOpen(false);
@@ -607,7 +637,7 @@ const BookingExpansionCard = memo(function BookingExpansionCard({
           >
             <div className="admin-vtl-bottom-sheet" onClick={(e) => e.stopPropagation()}>
               <div className="admin-vtl-bottom-sheet-header">
-                <p className="admin-vtl-bottom-sheet-title">
+                <p id="admin-vtl-bottom-sheet-title" className="admin-vtl-bottom-sheet-title">
                   {isStatusSheetOpen ? 'Status' : isServiceSheetOpen ? 'Service' : 'Message client'}
                 </p>
                 <button
@@ -626,6 +656,7 @@ const BookingExpansionCard = memo(function BookingExpansionCard({
 
               {isStatusSheetOpen ? (
                 <div className="admin-vtl-bottom-sheet-content">
+                  {actionError ? <p className="admin-vtl-message-chooser-error" role="alert">{actionError}</p> : null}
                   {statusMenuItems.map((item) => {
                     const isReschedule = item.value === 'RESCHEDULE';
                     const tone = isReschedule
@@ -647,11 +678,13 @@ const BookingExpansionCard = memo(function BookingExpansionCard({
                         disabled={!enabled}
                         onClick={() => {
                           if (!enabled) return;
-                          setIsStatusSheetOpen(false);
                           if (isReschedule) {
+                            setIsStatusSheetOpen(false);
                             onExpand();
                           } else if (item.value !== effectiveStatus) {
                             void handleStatusChange(item.value);
+                          } else {
+                            setIsStatusSheetOpen(false);
                           }
                         }}
                       >
@@ -664,8 +697,11 @@ const BookingExpansionCard = memo(function BookingExpansionCard({
                 </div>
               ) : isServiceSheetOpen ? (
                 <div className="admin-vtl-bottom-sheet-content">
+                  {serviceError ? <p className="admin-vtl-message-chooser-error" role="alert">{serviceError}</p> : null}
                   {serviceLoading ? (
                     <p className="admin-vtl-ap-service-loading">Loading…</p>
+                  ) : !serviceError && services.length === 0 ? (
+                    <p className="admin-vtl-ap-service-loading">No services available.</p>
                   ) : (
                     services.map((svc) => (
                       <button
@@ -745,12 +781,12 @@ const BookingExpansionCard = memo(function BookingExpansionCard({
 
   return (
     <div className="admin-vtl-swipe-shell">
-      <div className="admin-vtl-panel-segmented" role="tablist" aria-label="Reveal booking panels">
+      <div className="admin-vtl-panel-segmented" role="group" aria-label="Reveal booking panels">
         <button
           type="button"
           className={`admin-vtl-panel-segmented-btn${swipeState === 'left' ? ' is-active' : ''}`}
           onClick={() => setPanelState('left')}
-          aria-current={swipeState === 'left' ? 'true' : undefined}
+          aria-pressed={swipeState === 'left'}
         >
           Left
         </button>
@@ -758,7 +794,7 @@ const BookingExpansionCard = memo(function BookingExpansionCard({
           type="button"
           className={`admin-vtl-panel-segmented-btn${swipeState === 'closed' ? ' is-active' : ''}`}
           onClick={() => setPanelState('closed')}
-          aria-current={swipeState === 'closed' ? 'true' : undefined}
+          aria-pressed={swipeState === 'closed'}
         >
           Main
         </button>
@@ -766,7 +802,7 @@ const BookingExpansionCard = memo(function BookingExpansionCard({
           type="button"
           className={`admin-vtl-panel-segmented-btn${swipeState === 'right' ? ' is-active' : ''}`}
           onClick={() => setPanelState('right')}
-          aria-current={swipeState === 'right' ? 'true' : undefined}
+          aria-pressed={swipeState === 'right'}
         >
           Right
         </button>

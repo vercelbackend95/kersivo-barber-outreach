@@ -1,6 +1,5 @@
 export const prerender = false;
 
-import { Buffer } from 'node:buffer';
 import type { APIRoute } from 'astro';
 import { z } from 'zod';
 import { requireAdmin } from '../../../lib/admin/auth';
@@ -78,13 +77,6 @@ async function ensureSelectedServices(tx: Prisma.TransactionClient, selectedServ
 
   return uniqueRequestedIds.filter((serviceId) => existingIds.has(serviceId));
 }
-async function fileToDataUrl(file: File) {
-  const bytes = Buffer.from(await file.arrayBuffer());
-  return `data:${file.type};base64,${bytes.toString('base64')}`;
-}
-
-
-
 async function storeAvatar(file: File, barberId?: string) {
   if (!ALLOWED_AVATAR_TYPES.has(file.type)) {
     throw new Error('Avatar must be a JPG, PNG, or WEBP image.');
@@ -98,7 +90,7 @@ async function storeAvatar(file: File, barberId?: string) {
     throw new Error('Unsupported avatar format.');
   }
   if (!getBlobReadWriteToken()) {
-    return fileToDataUrl(file);
+    throw new Error('Blob storage is not configured. Set BLOB_READ_WRITE_TOKEN before uploading barber avatars.');
   }
 
 

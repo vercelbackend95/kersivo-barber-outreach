@@ -38,13 +38,13 @@ export const GET: APIRoute = async (ctx) => {
   });
 
   const nowMs = Date.now();
-
-  const clientsWithStats = await Promise.all(
-    clients.map(async (client) => {
-      const bookings = await prisma.booking.findMany({
-        where: { clientId: client.id },
-        orderBy: { startAt: 'desc' },
+  const clientIds = clients.map((client) => client.id);
+  const bookings = clientIds.length > 0
+    ? await prisma.booking.findMany({
+        where: { clientId: { in: clientIds } },
+        orderBy: [{ clientId: 'asc' }, { startAt: 'desc' }],
         select: {
+          clientId: true,
           status: true,
           startAt: true,
           endAt: true,
@@ -55,7 +55,19 @@ export const GET: APIRoute = async (ctx) => {
           serviceNameAtBooking: true,
           service: { select: { name: true } },
         },
-      });
+      })
+    : [];
+  const bookingsByClientId = new Map<string, Array<Omit<(typeof bookings)[number], 'clientId'>>>();
+  for (const booking of bookings) {
+    if (!booking.clientId) continue;
+    const { clientId, ...bookingForStats } = booking;
+    const bucket = bookingsByClientId.get(clientId) ?? [];
+    bucket.push(bookingForStats);
+    bookingsByClientId.set(clientId, bucket);
+  }
+
+  const clientsWithStats = clients.map((client) => {
+      const bookings = bookingsByClientId.get(client.id) ?? [];
       const stats = computeClientStats(bookings, nowMs);
       const reliabilityScore = computeReliabilityScore(bookings, nowMs);
       return {
@@ -67,8 +79,7 @@ export const GET: APIRoute = async (ctx) => {
         completedCount: stats.completedCount,
         noShowCount: stats.noShowCount,
       };
-    }),
-  );
+    });
 
   return new Response(JSON.stringify({ clients: clientsWithStats }));
 };

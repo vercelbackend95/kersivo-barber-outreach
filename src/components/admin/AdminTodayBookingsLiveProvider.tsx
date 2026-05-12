@@ -3,9 +3,9 @@ import { formatInTimeZone } from 'date-fns-tz';
 import type { AdminBookingsOpsDashHeroBooking } from './AdminBookingsOpsDashHero';
 
 const ADMIN_TIMEZONE = 'Europe/London';
-export const ADMIN_TODAY_BOOKINGS_POLL_MS = 15000;
+export const ADMIN_TODAY_BOOKINGS_POLL_MS = 120000;
 const LAST_UPDATED_REFRESH_MS = 1000;
-const LIVE_THRESHOLD_MS = 20000;
+const LIVE_THRESHOLD_MS = 130000;
 const CONNECTING_GRACE_MS = 2000;
 
 export type AdminLiveBookingRow = {

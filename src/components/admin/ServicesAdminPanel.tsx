@@ -6,6 +6,7 @@ import { useAdminMobileChromeBreakpoint } from './useAdminMobileNextAppointments
 import EmptyState from '../EmptyState';
 import { SkeletonBookingChoices } from '../skeleton';
 import { Scissors, Users, X } from '../lucide-react';
+import { adminFetchJson } from './adminAuth';
 
 type ServiceBarberRow = {
   id: string;
@@ -117,6 +118,22 @@ function getInitials(name: string) {
   if (parts.length === 0) return 'B';
   return parts.map((part) => part.charAt(0).toUpperCase()).join('');
 }
+
+function useAdminBodyScrollLock(isLocked: boolean): void {
+  useEffect(() => {
+    if (!isLocked || typeof document === 'undefined') return undefined;
+    const previousBodyOverflow = document.body.style.overflow;
+    const previousHtmlOverflow = document.documentElement.style.overflow;
+    document.body.style.overflow = 'hidden';
+    document.documentElement.style.overflow = 'hidden';
+
+    return () => {
+      document.body.style.overflow = previousBodyOverflow;
+      document.documentElement.style.overflow = previousHtmlOverflow;
+    };
+  }, [isLocked]);
+}
+
 function ServiceBarberAssignmentList({ rows, ariaLabel, onToggle }: ServiceBarberAssignmentListProps) {
   return (
     <div className="admin-service-assignment-list" role="list" aria-label={ariaLabel}>
@@ -284,6 +301,7 @@ export default function ServicesAdminPanel() {
   const [isServiceSheetOpen, setIsServiceSheetOpen] = useState(false);
   const [activeServiceForPanelId, setActiveServiceForPanelId] = useState<string | null>(null);
   const isMobileAdminChrome = useAdminMobileChromeBreakpoint();
+  useAdminBodyScrollLock(isMobileAdminChrome && (isServiceSheetOpen || Boolean(activeServiceForPanelId)));
 
   const activeServiceForPanel = useMemo(
     () => services.find((service) => service.id === activeServiceForPanelId) ?? null,
@@ -299,18 +317,22 @@ export default function ServicesAdminPanel() {
 
   const fetchServices = useCallback(async () => {
     setLoading(true);
+    setError('');
 
     try {
-      const [servicesRes, barbersRes] = await Promise.all([
-        fetch('/api/admin/services', { credentials: 'include' }),
-        fetch('/api/admin/barbers', { credentials: 'include' })
+      const [servicesData, barbersData] = await Promise.all([
+        adminFetchJson<{ services?: ServiceRow[] }>('/api/admin/services', {
+          errorMessage: 'Unable to load services.',
+        }),
+        adminFetchJson<{ barbers?: BarberListRow[] }>('/api/admin/barbers', {
+          errorMessage: 'Unable to load barbers.',
+        })
       ]);
-
-      const servicesData = await servicesRes.json().catch(() => ({} as { services?: ServiceRow[] }));
-      const barbersData = await barbersRes.json().catch(() => ({} as { barbers?: BarberListRow[] }));
 
       setServices(servicesData.services ?? []);
       setBarbers(barbersData.barbers ?? []);
+    } catch (fetchError) {
+      setError(fetchError instanceof Error ? fetchError.message : 'Unable to load services.');
     } finally {
       setLoading(false);
     }
@@ -449,21 +471,18 @@ export default function ServicesAdminPanel() {
     setIsSaving(true);
 
     try {
-      const res = await fetch(endpoint, {
+      await adminFetchJson<{ service?: ServiceRow }>(endpoint, {
         method,
-        credentials: 'include',
         headers: { 'content-type': 'application/json' },
-        body: JSON.stringify(payload)
+        body: JSON.stringify(payload),
+        errorMessage: 'Unable to save service.',
       });
-      if (!res.ok) {
-        const data = await res.json().catch(() => ({} as { error?: string }));
-        setError(data.error ?? 'Unable to save service.');
-        return;
-      }
 
       setMessage(editingId ? 'Service updated.' : 'Service created.');
       resetServiceFormState();
       await fetchServices();
+    } catch (submitError) {
+      setError(submitError instanceof Error ? submitError.message : 'Unable to save service.');
     } finally {
       setIsSaving(false);
     }
@@ -471,22 +490,21 @@ export default function ServicesAdminPanel() {
   }
 
   async function toggleActive(service: ServiceRow) {
-    const res = await fetch(`/api/admin/services/${service.id}`, {
-      method: 'PATCH',
-      credentials: 'include',
-      headers: { 'content-type': 'application/json' },
-      body: JSON.stringify({ isActive: !service.isActive })
-    });
-
-    if (res.ok) {
+    try {
+      await adminFetchJson<{ service?: ServiceRow }>(`/api/admin/services/${service.id}`, {
+        method: 'PATCH',
+        headers: { 'content-type': 'application/json' },
+        body: JSON.stringify({ isActive: !service.isActive }),
+        errorMessage: 'Unable to update service status.',
+      });
       setMessage(service.isActive ? 'Service deactivated.' : 'Service activated.');
       setError('');
       setActiveServiceForPanelId(null);
       await fetchServices();
       return;
+    } catch (toggleError) {
+      setError(toggleError instanceof Error ? toggleError.message : 'Unable to update service status.');
     }
-
-    setError('Unable to update service status.');
   }
 
   const nameHasError = error === 'Service name is required.';
@@ -591,7 +609,7 @@ export default function ServicesAdminPanel() {
           className="admin-barber-sheet-layer admin-service-sheet-layer"
           role="dialog"
           aria-modal="true"
-          aria-label={`${activeServiceForPanel.name} settings`}
+          aria-labelledby="admin-service-panel-title"
           onMouseDown={(event) => {
             if (event.target === event.currentTarget) {
               setActiveServiceForPanelId(null);
@@ -600,7 +618,7 @@ export default function ServicesAdminPanel() {
         >
           <section className="admin-barber-sheet admin-service-sheet" onMouseDown={(event) => event.stopPropagation()}>
             <div className="admin-barber-sheet-head admin-service-panel-head admin-client-modal-head">
-              <h3>{activeServiceForPanel.name} panel</h3>
+              <h3 id="admin-service-panel-title">{activeServiceForPanel.name} panel</h3>
               <button
                 type="button"
                 className="btn btn--ghost admin-client-modal-close admin-service-panel-close"
@@ -680,7 +698,7 @@ export default function ServicesAdminPanel() {
           className="admin-barber-sheet-layer admin-service-sheet-layer"
           role="dialog"
           aria-modal="true"
-          aria-label={editingId ? 'Edit service' : 'Add service'}
+          aria-labelledby="admin-service-form-title"
           onMouseDown={(event) => {
             if (event.target === event.currentTarget) {
               resetServiceFormState();
@@ -691,7 +709,7 @@ export default function ServicesAdminPanel() {
             <div className="admin-barber-sheet-head admin-service-sheet-head admin-service-panel-head admin-client-modal-head">
               <div className="admin-sheet-head-copy">
                 <div className="admin-sheet-head-title-row">
-                  <h3>{editingId ? 'EDIT SERVICE' : 'ADD SERVICE'}</h3>
+                  <h3 id="admin-service-form-title">{editingId ? 'EDIT SERVICE' : 'ADD SERVICE'}</h3>
                   {editingService ? (
                     <span
                       className={`badge badge--sm ${editingService.isActive ? 'badge--confirmed' : 'badge--neutral'}`}

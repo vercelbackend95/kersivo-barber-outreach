@@ -31,6 +31,7 @@ import { Clock, ListOrdered, X } from '../lucide-react';
 import { ADMIN_BOOKING_HISTORY_PAGE_SIZE } from '../../lib/admin/bookingHistoryPageSize';
 import { canShopAdminCancelByLeadTime } from '../../lib/booking/policies';
 import { countBookingsByStatusTone, getBookingStatusTone, isCancelledBookingStatus } from './bookingStatus';
+import { adminFetchJson } from './adminAuth';
 type Booking = {
   id: string;
   barberId: string;
@@ -199,7 +200,7 @@ type ReportsRange = 'week' | '7d' | '30d' | '90d' | '1y';
 
 const ADMIN_TIMEZONE = 'Europe/London';
 const SLOT_STEP_MINUTES = 15;
-const POLL_INTERVAL_MS = 15000;
+const POLL_INTERVAL_MS = 120000;
 const LAST_UPDATED_REFRESH_MS = 1000;
 
 const UPDATED_ROW_HIGHLIGHT_MS = 2000;
@@ -211,9 +212,7 @@ const WEEK_DAYS = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
 const REPORTS_RANGE_OPTIONS: Array<{ value: ReportsRange; label: string }> = [
   { value: 'week', label: 'This week' },
   { value: '7d', label: 'Last 7 days' },
-  { value: '30d', label: 'Last 30 days' },
-  { value: '90d', label: 'Last 90 days' },
-  { value: '1y', label: 'Last 1 year' }
+  { value: '30d', label: 'Last 30 days' }
 ];
 
 
@@ -1062,7 +1061,30 @@ export default function BookingsAdminPanel({ isActive, mode, onBackToDashboard }
 
 
   useEffect(() => { void (async () => { try { const response = await fetch('/api/admin/session', { credentials: 'include' }); setLoggedIn(response.ok); } finally { setIsCheckingSession(false); } })(); }, []);
-  useEffect(() => { if (!loggedIn || !isActive) return; void fetchBookings(); void fetchBarbers(); void fetchTimeBlocks(); void fetchReports(); const id = window.setInterval(() => { if (mode !== 'history') void fetchBookings(); void fetchTimeBlocks(); void fetchReports(); }, POLL_INTERVAL_MS); return () => window.clearInterval(id); }, [activeView, fetchBookings, fetchBarbers, fetchReports, fetchTimeBlocks, isActive, loggedIn, mode]);
+  useEffect(() => {
+    if (!loggedIn || !isActive) return;
+
+    void fetchBarbers();
+
+    if (mode !== 'reports') {
+      void fetchBookings();
+      void fetchTimeBlocks();
+    }
+
+    if (mode === 'history' || mode === 'reports') return;
+
+    const id = window.setInterval(() => {
+      void fetchBookings();
+      void fetchTimeBlocks();
+    }, POLL_INTERVAL_MS);
+
+    return () => window.clearInterval(id);
+  }, [fetchBookings, fetchBarbers, fetchTimeBlocks, isActive, loggedIn, mode]);
+
+  useEffect(() => {
+    if (!loggedIn || !isActive || mode !== 'reports') return;
+    void fetchReports();
+  }, [fetchReports, isActive, loggedIn, mode]);
   useEffect(() => { if (!loggedIn || !isActive) return; const id = window.setInterval(() => setNowMs(Date.now()), LAST_UPDATED_REFRESH_MS); return () => window.clearInterval(id); }, [isActive, loggedIn]);
   useEffect(() => {
     if (!loggedIn || !isActive || mode !== 'history') return;
@@ -1860,37 +1882,35 @@ export default function BookingsAdminPanel({ isActive, mode, onBackToDashboard }
 
   async function cancelBookingByShop(booking: Booking) {
     setCancelLoadingBookingId(booking.id);
-
-    const response = await fetch('/api/admin/bookings/cancel', { method: 'POST', credentials: 'same-origin', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ bookingId: booking.id }) });
-    if (response.ok) {
+    setCancelErrorMessage('');
+    try {
+      await adminFetchJson('/api/admin/bookings/cancel', {
+        method: 'POST',
+        headers: { 'content-type': 'application/json' },
+        body: JSON.stringify({ bookingId: booking.id }),
+        errorMessage: 'Could not cancel booking right now.',
+      });
       setCancelSuccessMessage('Booking cancelled successfully.');
       await fetchBookings();
-    } else {
-      let message = 'Could not cancel booking right now.';
-      try {
-        const payload = (await response.json()) as { error?: string };
-        if (typeof payload?.error === 'string' && payload.error.trim()) {
-          message = payload.error.trim();
-        }
-      } catch {
-        /* ignore */
-      }
-      setCancelErrorMessage(message);
+    } catch (cancelError) {
+      setCancelErrorMessage(cancelError instanceof Error ? cancelError.message : 'Could not cancel booking right now.');
+    } finally {
+      setCancelLoadingBookingId(null);
     }
-    setCancelLoadingBookingId(null);
 }
 
   async function createTimeBlock(title: string, startAt: Date, endAt: Date) {
     setBlockErrorMessage('');
     setBlockSuccessMessage('');
-    const response = await fetch('/api/admin/timeblocks/create', {
-      method: 'POST',
-      credentials: 'include',
-      headers: { 'content-type': 'application/json' },
-      body: JSON.stringify({ title, startAt: startAt.toISOString(), endAt: endAt.toISOString(), barberId: selectedBarberId ?? (blockScopeBarberId === 'all' ? null : blockScopeBarberId) })
-    });
-    if (!response.ok) {
-      setBlockErrorMessage('Could not create time block.');
+    try {
+      await adminFetchJson('/api/admin/timeblocks/create', {
+        method: 'POST',
+        headers: { 'content-type': 'application/json' },
+        body: JSON.stringify({ title, startAt: startAt.toISOString(), endAt: endAt.toISOString(), barberId: selectedBarberId ?? (blockScopeBarberId === 'all' ? null : blockScopeBarberId) }),
+        errorMessage: 'Could not create time block.',
+      });
+    } catch (blockError) {
+      setBlockErrorMessage(blockError instanceof Error ? blockError.message : 'Could not create time block.');
       return;
     }
     setBlockSuccessMessage('Time block created.');

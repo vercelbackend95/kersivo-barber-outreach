@@ -1,6 +1,7 @@
 import React, { memo, useCallback, useEffect, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
 import { Mail, Phone, Plus, Tag, X } from '../lucide-react';
+import { adminFetchJson } from './adminAuth';
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -63,11 +64,18 @@ function getScoreColorClass(score: number): string {
   return 'admin-cp-score-bar--red';
 }
 
+async function fetchClientProfile(clientId: string): Promise<ProfileData> {
+  return adminFetchJson<ProfileData>(`/api/admin/clients/${clientId}`, {
+    errorMessage: 'Could not load client data.',
+  });
+}
+
 // ─── Notes textarea with debounced save ───────────────────────────────────────
 
 function NotesEditor({ clientId, initialNotes }: { clientId: string; initialNotes: string | null }) {
   const [value, setValue] = useState(initialNotes ?? '');
-  const [saveState, setSaveState] = useState<'idle' | 'saving' | 'saved'>('idle');
+  const [saveState, setSaveState] = useState<'idle' | 'saving' | 'saved' | 'failed'>('idle');
+  const [saveError, setSaveError] = useState('');
   const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const handleChange = useCallback(
@@ -75,19 +83,22 @@ function NotesEditor({ clientId, initialNotes }: { clientId: string; initialNote
       const next = e.target.value;
       setValue(next);
       setSaveState('idle');
+      setSaveError('');
       if (timerRef.current) clearTimeout(timerRef.current);
       timerRef.current = setTimeout(async () => {
         setSaveState('saving');
         try {
-          await fetch(`/api/admin/clients/${clientId}`, {
+          await adminFetchJson(`/api/admin/clients/${clientId}`, {
             method: 'PATCH',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ notes: next }),
+            errorMessage: 'Could not save notes.',
           });
           setSaveState('saved');
           setTimeout(() => setSaveState('idle'), 2000);
-        } catch {
-          setSaveState('idle');
+        } catch (error) {
+          setSaveState('failed');
+          setSaveError(error instanceof Error ? error.message : 'Could not save notes.');
         }
       }, 500);
     },
@@ -102,7 +113,9 @@ function NotesEditor({ clientId, initialNotes }: { clientId: string; initialNote
         <span className="admin-cp-section-title">Notes</span>
         {saveState === 'saving' && <span className="admin-cp-save-hint admin-cp-save-hint--saving">Saving…</span>}
         {saveState === 'saved' && <span className="admin-cp-save-hint admin-cp-save-hint--saved">Saved</span>}
+        {saveState === 'failed' && <span className="admin-cp-save-hint admin-cp-save-hint--failed">Failed</span>}
       </div>
+      {saveError ? <p className="admin-cp-error admin-cp-error--inline" role="alert">{saveError}</p> : null}
       <textarea
         className="admin-cp-notes-textarea"
         value={value}
@@ -119,33 +132,39 @@ function NotesEditor({ clientId, initialNotes }: { clientId: string; initialNote
 function TagsEditor({ clientId, initialTags }: { clientId: string; initialTags: string[] }) {
   const [tags, setTags] = useState<string[]>(initialTags);
   const [input, setInput] = useState('');
+  const [saveError, setSaveError] = useState('');
   const inputRef = useRef<HTMLInputElement>(null);
 
-  const saveTags = useCallback(async (next: string[]) => {
+  const saveTags = useCallback(async (next: string[], previous: string[]) => {
+    setSaveError('');
     try {
-      await fetch(`/api/admin/clients/${clientId}`, {
+      await adminFetchJson(`/api/admin/clients/${clientId}`, {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ tags: next }),
+        errorMessage: 'Could not save tags.',
       });
-    } catch {
-      // silent — optimistic update stays
+    } catch (error) {
+      setTags(previous);
+      setSaveError(error instanceof Error ? error.message : 'Could not save tags.');
     }
   }, [clientId]);
 
   const addTag = useCallback(() => {
     const trimmed = input.trim();
     if (!trimmed || tags.includes(trimmed)) { setInput(''); return; }
+    const previous = tags;
     const next = [...tags, trimmed];
     setTags(next);
     setInput('');
-    void saveTags(next);
+    void saveTags(next, previous);
   }, [input, tags, saveTags]);
 
   const removeTag = useCallback((tag: string) => {
+    const previous = tags;
     const next = tags.filter((t) => t !== tag);
     setTags(next);
-    void saveTags(next);
+    void saveTags(next, previous);
   }, [tags, saveTags]);
 
   const handleKeyDown = useCallback((e: React.KeyboardEvent<HTMLInputElement>) => {
@@ -161,6 +180,7 @@ function TagsEditor({ clientId, initialTags }: { clientId: string; initialTags: 
         <Tag className="admin-cp-section-icon" aria-hidden />
         <span className="admin-cp-section-title">Tags</span>
       </div>
+      {saveError ? <p className="admin-cp-error admin-cp-error--inline" role="alert">{saveError}</p> : null}
       <div className="admin-cp-tags-row">
         {tags.map((tag) => (
           <button
@@ -205,18 +225,43 @@ export type ClientProfilePanelProps = {
 
 const ClientProfilePanel = memo(function ClientProfilePanel({ clientId, onClose }: ClientProfilePanelProps) {
   const [data, setData] = useState<ProfileData | null>(null);
-  const [error, setError] = useState(false);
+  const [error, setError] = useState('');
+
+  const loadProfile = useCallback(async () => {
+    setData(null);
+    setError('');
+    try {
+      const profile = await fetchClientProfile(clientId);
+      setData(profile);
+    } catch (loadError) {
+      setError(loadError instanceof Error ? loadError.message : 'Could not load client data.');
+    }
+  }, [clientId]);
 
   useEffect(() => {
     let cancelled = false;
     setData(null);
-    setError(false);
-    fetch(`/api/admin/clients/${clientId}`)
-      .then((r) => r.json())
-      .then((json: ProfileData) => { if (!cancelled) setData(json); })
-      .catch(() => { if (!cancelled) setError(true); });
+    setError('');
+    fetchClientProfile(clientId)
+      .then((json) => { if (!cancelled) setData(json); })
+      .catch((loadError) => {
+        if (!cancelled) {
+          setError(loadError instanceof Error ? loadError.message : 'Could not load client data.');
+        }
+      });
     return () => { cancelled = true; };
   }, [clientId]);
+
+  useEffect(() => {
+    const previousBodyOverflow = document.body.style.overflow;
+    const previousHtmlOverflow = document.documentElement.style.overflow;
+    document.body.style.overflow = 'hidden';
+    document.documentElement.style.overflow = 'hidden';
+    return () => {
+      document.body.style.overflow = previousBodyOverflow;
+      document.documentElement.style.overflow = previousHtmlOverflow;
+    };
+  }, []);
 
   // Close on Escape
   useEffect(() => {
@@ -234,19 +279,24 @@ const ClientProfilePanel = memo(function ClientProfilePanel({ clientId, onClose 
       onClick={onClose}
       role="dialog"
       aria-modal="true"
-      aria-label="Client profile"
+      aria-labelledby="admin-client-profile-title"
     >
       <div className="admin-cp-panel" onClick={(e) => e.stopPropagation()}>
         {/* Header */}
         <div className="admin-cp-header">
-          <span className="admin-cp-header-title">Client profile</span>
+          <span id="admin-client-profile-title" className="admin-cp-header-title">Client profile</span>
           <button type="button" className="admin-cp-close-btn" onClick={onClose} aria-label="Close">
             <X className="admin-cp-close-icon" aria-hidden />
           </button>
         </div>
 
         {error && (
-          <p className="admin-cp-error">Could not load client data.</p>
+          <div className="admin-cp-error" role="alert">
+            <p>{error}</p>
+            <button type="button" className="btn btn--secondary" onClick={() => { void loadProfile(); }}>
+              Retry
+            </button>
+          </div>
         )}
 
         {!data && !error && (

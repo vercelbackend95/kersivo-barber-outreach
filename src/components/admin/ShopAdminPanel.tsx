@@ -8,7 +8,8 @@ import { SettingsGearIcon } from './SettingsGearIcon';
 import EmptyState from '../EmptyState';
 import { ChevronDown, ChevronUp, Clock, ListOrdered, Package, Search, X } from '../lucide-react';
 import { formatDelta } from './reportsFormatting';
-import { SkeletonKPICards } from '../skeleton';
+import { SkeletonBookingChoices, SkeletonKPICards } from '../skeleton';
+import { AdminFetchError, adminFetchJson } from './adminAuth';
 type ShopTab = 'products' | 'orders' | 'sales';
 type SalesRangePreset = '7' | '30' | '90' | 'custom';
 
@@ -212,8 +213,6 @@ const PRODUCT_IMAGE_MAX_SIZE_BYTES = 5 * 1024 * 1024;
 const PRODUCT_IMAGE_ALLOWED_MIME_PREFIX = 'image/';
 const PRODUCT_IMAGE_ACCEPT = '.jpg,.jpeg,.png,.webp,.gif';
 const MOBILE_PRODUCT_EDITOR_MEDIA_QUERY = '(max-width: 47.99rem)';
-const BLOB_STORAGE_NOT_CONFIGURED_CODE = 'BLOB_STORAGE_NOT_CONFIGURED';
-const BLOB_STORAGE_NOT_CONFIGURED_MESSAGE = 'Blob storage is not configured.';
 
 type ProductImageUploadStatus = 'idle' | 'uploading' | 'processing' | 'uploaded' | 'failed';
 const PRODUCT_SLOT_COLORS = ['#E6EAF0', '#7DD3FC', '#5EEAD4', '#FBBF24', '#C4B5FD'];
@@ -230,26 +229,6 @@ function debugUploadLog(message: string, details?: Record<string, unknown>) {
     return;
   }
   console.info(`[product-upload] ${message}`);
-}
-function isBlobStorageNotConfiguredError(message: string): boolean {
-  return message.includes(BLOB_STORAGE_NOT_CONFIGURED_MESSAGE)
-    || message.includes('BLOB_READ_WRITE_TOKEN')
-    || message.includes('VERCEL_BLOB_READ_WRITE_TOKEN');
-}
-
-function readFileAsDataUrl(file: File): Promise<string> {
-  return new Promise((resolve, reject) => {
-    const reader = new FileReader();
-    reader.onload = () => {
-      if (typeof reader.result === 'string' && reader.result.startsWith('data:image/')) {
-        resolve(reader.result);
-        return;
-      }
-      reject(new Error('Could not prepare image preview.'));
-    };
-    reader.onerror = () => reject(new Error('Could not read the selected image.'));
-    reader.readAsDataURL(file);
-  });
 }
 
 
@@ -827,6 +806,7 @@ export default function ShopAdminPanel({ initialTab = 'products' }: ShopAdminPan
   const formDirty = useMemo(() => JSON.stringify(form) !== JSON.stringify(formInitial), [form, formInitial]);
   const formPricePence = useMemo(() => penceFromGbp(form.priceGbp), [form.priceGbp]);
   const formValid = useMemo(() => form.name.trim().length > 0 && formPricePence > 0, [form.name, formPricePence]);
+  const productsInitiallyLoading = loading && products.length === 0;
   const effectiveImagePreviewUrl = useMemo(() => {
     if (localImagePreviewUrl) return localImagePreviewUrl;
     return debouncedImageUrlPreview;
@@ -846,12 +826,27 @@ export default function ShopAdminPanel({ initialTab = 'products' }: ShopAdminPan
     if (!formOpen) return;
     const onKeyDown = (event: KeyboardEvent) => {
       if (event.key === 'Escape') {
+        if (deleteConfirmOpen) {
+          setDeleteConfirmOpen(false);
+          return;
+        }
         resetForm();
       }
     };
     window.addEventListener('keydown', onKeyDown);
     return () => window.removeEventListener('keydown', onKeyDown);
-  }, [formOpen]);
+  }, [deleteConfirmOpen, formOpen]);
+
+  useEffect(() => {
+    if (!isSalesChartExpanded) return;
+    const onKeyDown = (event: KeyboardEvent) => {
+      if (event.key === 'Escape') {
+        setIsSalesChartExpanded(false);
+      }
+    };
+    window.addEventListener('keydown', onKeyDown);
+    return () => window.removeEventListener('keydown', onKeyDown);
+  }, [isSalesChartExpanded]);
   
   useEffect(() => {
     if (!footerFeedback) return;
@@ -1088,9 +1083,9 @@ export default function ShopAdminPanel({ initialTab = 'products' }: ShopAdminPan
     setLoading(true);
     setError(null);
     try {
-      const response = await fetch('/api/admin/shop/products', { credentials: 'include' });
-      const payload = await response.json();
-      if (!response.ok) throw new Error(payload.error || 'Could not fetch products.');
+      const payload = await adminFetchJson<{ products: Product[] }>('/api/admin/shop/products', {
+        errorMessage: 'Could not fetch products.',
+      });
       setProducts(payload.products as Product[]);
     } catch (fetchError) {
       setError(fetchError instanceof Error ? fetchError.message : 'Could not fetch products.');
@@ -1103,9 +1098,12 @@ export default function ShopAdminPanel({ initialTab = 'products' }: ShopAdminPan
     setError(null);
     setOrdersUnauthorized(false);
     try {
-      const response = await fetch('/api/admin/shop/orders', { credentials: 'include' });
-      const payload = await response.json();
-            if (response.status === 401) {
+      const payload = await adminFetchJson<{ orders: OrderListItem[] }>('/api/admin/shop/orders', {
+        errorMessage: 'Could not fetch orders.',
+      });
+      setOrders(payload.orders as OrderListItem[]);
+    } catch (fetchError) {
+      if (fetchError instanceof AdminFetchError && fetchError.status === 401) {
         setOrders([]);
         setExpandedOrderId(null);
         setOrderDetailsById({});
@@ -1113,10 +1111,6 @@ export default function ShopAdminPanel({ initialTab = 'products' }: ShopAdminPan
         setOrdersUnauthorized(true);
         return;
       }
-
-      if (!response.ok) throw new Error(payload.error || 'Could not fetch orders.');
-      setOrders(payload.orders as OrderListItem[]);
-    } catch (fetchError) {
       setError(fetchError instanceof Error ? fetchError.message : 'Could not fetch orders.');
     } finally {
       setOrdersLoading(false);
@@ -1128,19 +1122,18 @@ export default function ShopAdminPanel({ initialTab = 'products' }: ShopAdminPan
     setError(null);
     setOrderDetailsLoadingId(orderId);
     try {
-     const response = await fetch(`/api/admin/shop/orders/${orderId}`, { credentials: 'include' });
-      const payload = await response.json();
-            if (response.status === 401) {
-        setExpandedOrderId(null);
-        setOrdersUnauthorized(true);
-        return;
-      }
-
-      if (!response.ok) throw new Error(payload.error || 'Could not fetch order details.');
+      const payload = await adminFetchJson<{ order: OrderDetail }>(`/api/admin/shop/orders/${orderId}`, {
+        errorMessage: 'Could not fetch order details.',
+      });
       const detail = payload.order as OrderDetail;
       setOrderDetailsById((previous) => ({ ...previous, [detail.id]: detail }));
 
     } catch (fetchError) {
+      if (fetchError instanceof AdminFetchError && fetchError.status === 401) {
+        setExpandedOrderId(null);
+        setOrdersUnauthorized(true);
+        return;
+      }
       setError(fetchError instanceof Error ? fetchError.message : 'Could not fetch order details.');
           } finally {
       setOrderDetailsLoadingId((previous) => (previous === orderId ? null : previous));
@@ -1165,9 +1158,9 @@ export default function ShopAdminPanel({ initialTab = 'products' }: ShopAdminPan
     }
 
     try {
-      const response = await fetch(`/api/admin/shop/sales?${query.toString()}`, { credentials: 'include' });
-      const payload = await response.json();
-      if (!response.ok) throw new Error(payload.error || 'Could not fetch sales analytics.');
+      const payload = await adminFetchJson<SalesResponse>(`/api/admin/shop/sales?${query.toString()}`, {
+        errorMessage: 'Could not fetch sales analytics.',
+      });
       setSalesData(payload as SalesResponse);
     } catch (fetchError) {
       setSalesError(fetchError instanceof Error ? fetchError.message : 'Could not fetch sales analytics.');
@@ -1211,7 +1204,7 @@ export default function ShopAdminPanel({ initialTab = 'products' }: ShopAdminPan
         void fetchOrderDetails(expandedOrderId);
 
       }
-    }, 15000);
+    }, 120000);
 
     return () => window.clearInterval(intervalId);
   }, [activeTab, expandedOrderId]);
@@ -1392,33 +1385,6 @@ export default function ShopAdminPanel({ initialTab = 'products' }: ShopAdminPan
         return null;
       });
     } catch (uploadError) {
-            if (uploadError instanceof Error && (uploadError.name === BLOB_STORAGE_NOT_CONFIGURED_CODE || isBlobStorageNotConfiguredError(uploadError.message))) {
-        try {
-          const inlineImageUrl = await readFileAsDataUrl(file);
-          setForm((previous) => ({ ...previous, imageUrl: inlineImageUrl }));
-          setImageUploadStatus('uploaded');
-          setImageUploadProgress(100);
-          setImageUploadError(null);
-          setHasPendingFileUpload(false);
-          setSelectedImageFile(null);
-          setLocalImagePreviewUrl((previous) => {
-            if (previous) URL.revokeObjectURL(previous);
-            return null;
-          });
-          debugUploadLog('upload stored inline', { name: file.name, size: file.size });
-          return;
-        } catch (inlineFallbackError) {
-          setImageUploadStatus('failed');
-          setHasPendingFileUpload(true);
-          setImageUploadError(inlineFallbackError instanceof Error ? inlineFallbackError.message : 'Upload failed. Please try again.');
-
-          debugUploadLog('inline upload fallback failed', {
-            message: inlineFallbackError instanceof Error ? inlineFallbackError.message : 'Unknown error'
-          });
-          return;
-        }
-      }
-
       setImageUploadStatus('failed');
       setHasPendingFileUpload(true);
       setImageUploadError(uploadError instanceof Error ? uploadError.message : 'Upload failed. Please try again.');
@@ -1471,9 +1437,8 @@ export default function ShopAdminPanel({ initialTab = 'products' }: ShopAdminPan
     setSaving(true);
     try {
       const endpoint = form.id ? '/api/admin/shop/products/update' : '/api/admin/shop/products/create';
-      const response = await fetch(endpoint, {
+      await adminFetchJson<{ product: Product }>(endpoint, {
         method: 'POST',
-        credentials: 'include',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           id: form.id,
@@ -1485,10 +1450,9 @@ export default function ShopAdminPanel({ initialTab = 'products' }: ShopAdminPan
           featured: form.active ? form.featured : false,
           category: form.category,
           sortOrder: Math.min(SORT_ORDER_MAX, Math.max(SORT_ORDER_MIN, form.sortOrder))
-        })
+        }),
+        errorMessage: 'Unable to save product.',
       });
-      const payload = await response.json();
-      if (!response.ok) throw new Error(payload.error || 'Unable to save product.');
 
       await fetchProducts();
       setSuccess(form.id ? 'Product updated.' : 'Product created.');
@@ -1522,15 +1486,13 @@ export default function ShopAdminPanel({ initialTab = 'products' }: ShopAdminPan
 
 
     try {
-      const response = await fetch(`/api/admin/shop/products/${productId}`, {
+      const payload = await adminFetchJson<{ product: Product }>(`/api/admin/shop/products/${productId}`, {
         method: 'PATCH',
 
-        credentials: 'include',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(normalized)
+        body: JSON.stringify(normalized),
+        errorMessage: 'Unable to update product.',
       });
-      const payload = await response.json();
-      if (!response.ok) throw new Error(payload.error || 'Unable to update product.');
       setProducts((previous) => previous.map((product) => (product.id === productId ? payload.product as Product : product)));
       setProductStatusById((previous) => ({ ...previous, [productId]: 'Saved' }));
       window.setTimeout(() => {
@@ -1568,11 +1530,11 @@ export default function ShopAdminPanel({ initialTab = 'products' }: ShopAdminPan
           const body = active
             ? { active: true, featured: existing?.featured ?? false }
             : { active: false, featured: false };
-          return fetch(`/api/admin/shop/products/${id}`, {
+          return adminFetchJson<{ product: Product }>(`/api/admin/shop/products/${id}`, {
             method: 'PATCH',
-            credentials: 'include',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify(body)
+            body: JSON.stringify(body),
+            errorMessage: 'Unable to update product.',
           });
         })
       );
@@ -1597,14 +1559,12 @@ export default function ShopAdminPanel({ initialTab = 'products' }: ShopAdminPan
     setError(null);
     setSuccess(null);
     try {
-      const response = await fetch('/api/admin/shop/products/delete', {
+      await adminFetchJson<{ product?: Product }>('/api/admin/shop/products/delete', {
         method: 'POST',
-        credentials: 'include',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ id: productId })
+        body: JSON.stringify({ id: productId }),
+        errorMessage: 'Unable to delete product.',
       });
-      const payload = await response.json();
-      if (!response.ok) throw new Error(payload.error || 'Unable to delete product.');
       await fetchProducts();
       setSuccess('Product deleted.');
       resetForm();
@@ -1629,14 +1589,12 @@ export default function ShopAdminPanel({ initialTab = 'products' }: ShopAdminPan
 
 
     try {
-      const response = await fetch('/api/admin/shop/products/reorder', {
+      const payload = await adminFetchJson<{ products?: Product[] }>('/api/admin/shop/products/reorder', {
         method: 'POST',
-        credentials: 'include',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ orderedIds })
+        body: JSON.stringify({ orderedIds }),
+        errorMessage: 'Unable to save order.',
       });
-      const payload = await response.json();
-      if (!response.ok) throw new Error(payload.error || 'Unable to save order.');
       if (Array.isArray(payload.products)) {
         setProducts(payload.products as Product[]);
       }
@@ -1675,19 +1633,19 @@ export default function ShopAdminPanel({ initialTab = 'products' }: ShopAdminPan
     setError(null);
     setSuccess(null);
     try {
-      const response = await fetch(`/api/admin/shop/orders/${orderId}/collect`, { method: 'POST', credentials: 'include' });
-      const payload = await response.json();
-      if (response.status === 401) {
-        setOrdersUnauthorized(true);
-        setExpandedOrderId(null);
-        return;
-      }
-
-      if (!response.ok) throw new Error(payload.error || 'Unable to mark order as collected.');
+      await adminFetchJson<{ order?: OrderDetail }>(`/api/admin/shop/orders/${orderId}/collect`, {
+        method: 'POST',
+        errorMessage: 'Unable to mark order as collected.',
+      });
       await fetchOrders();
       await fetchOrderDetails(orderId);
       setSuccess('Order marked as collected.');
     } catch (collectError) {
+      if (collectError instanceof AdminFetchError && collectError.status === 401) {
+        setOrdersUnauthorized(true);
+        setExpandedOrderId(null);
+        return;
+      }
       setError(collectError instanceof Error ? collectError.message : 'Unable to mark order as collected.');
     }
   }
@@ -1765,13 +1723,14 @@ export default function ShopAdminPanel({ initialTab = 'products' }: ShopAdminPan
               <div className="admin-products-toolbar-row">
                 <div className="admin-products-controls-row">
                   <div className="admin-filter-scroll-wrap">
-                    <div ref={productFiltersScrollRef} className="admin-products-filters" role="tablist" aria-label="Product filters">
+                    <div ref={productFiltersScrollRef} className="admin-products-filters" role="group" aria-label="Product filters">
                       {(['all', 'active', 'inactive', 'featured'] as ProductFilter[]).map((filter) => (
                         <button
                           key={filter}
                           type="button"
                           className={`admin-filter-tab ${productFilter === filter ? 'admin-filter-tab--active' : ''}`}
                           onClick={() => setProductFilter(filter)}
+                          aria-pressed={productFilter === filter}
                         >
                           {filter === 'all' ? 'All' : filter === 'active' ? 'Active' : filter === 'inactive' ? 'Inactive' : 'Featured'}
                         </button>
@@ -2045,11 +2004,24 @@ export default function ShopAdminPanel({ initialTab = 'products' }: ShopAdminPan
           ) : null}
 
           <div className="admin-products-scroll" role="region" aria-label="Products list">
-            {error ? <p className="admin-inline-error">{error}</p> : null}
+            {error ? (
+              <div className="admin-inline-error" role="alert">
+                <p>{error}</p>
+                {!loading ? (
+                  <button type="button" className="btn btn--secondary" onClick={() => { void fetchProducts(); }}>
+                    Retry products
+                  </button>
+                ) : null}
+              </div>
+            ) : null}
             {success ? <p className="admin-inline-success">{success}</p> : null}
 
             <div className="admin-products-cards">
-              {filteredProducts.length === 0 ? (
+              {productsInitiallyLoading ? (
+                <div className="admin-services-list admin-services-list--loading admin-products-loading" aria-label="Loading products" aria-busy="true">
+                  <SkeletonBookingChoices count={4} variant="service" />
+                </div>
+              ) : filteredProducts.length === 0 ? (
                 baseProducts.length === 0 ? (
                   <EmptyState
                     icon={Package}
@@ -2227,12 +2199,14 @@ export default function ShopAdminPanel({ initialTab = 'products' }: ShopAdminPan
                   </article>
                 );
               })}
-              <article className="admin-product-card admin-product-card--add">
-                <button type="button" className="admin-product-add-btn" onClick={startCreate}>
-                  <span className="admin-product-add-icon" aria-hidden="true">+</span>
-                  <span>Add product</span>
-                </button>
-              </article>
+              {!productsInitiallyLoading ? (
+                <article className="admin-product-card admin-product-card--add">
+                  <button type="button" className="admin-product-add-btn" onClick={startCreate}>
+                    <span className="admin-product-add-icon" aria-hidden="true">+</span>
+                    <span>Add product</span>
+                  </button>
+                </article>
+              ) : null}
 
             </div>
 
@@ -2250,7 +2224,16 @@ export default function ShopAdminPanel({ initialTab = 'products' }: ShopAdminPan
 
       {activeTab === 'orders' && (
         <div className="admin-orders-panel">
-          {error ? <p className="admin-inline-error">{error}</p> : null}
+          {error ? (
+            <div className="admin-inline-error" role="alert">
+              <p>{error}</p>
+              {!ordersLoading ? (
+                <button type="button" className="btn btn--secondary" onClick={() => { void fetchOrders(); }}>
+                  Retry orders
+                </button>
+              ) : null}
+            </div>
+          ) : null}
           {success ? <p className="admin-inline-success">{success}</p> : null}
           <div className="admin-search-row">
             <div className={`admin-search-field ${ordersSearchQuery ? 'admin-search-field--has-clear' : ''}`}>
@@ -2317,16 +2300,25 @@ export default function ShopAdminPanel({ initialTab = 'products' }: ShopAdminPan
       )}
       {activeTab === 'sales' && (
         <div className="admin-reports admin-sales-panel">
-          {salesError ? <p className="admin-inline-error">{salesError}</p> : null}
+          {salesError ? (
+            <div className="admin-inline-error" role="alert">
+              <p>{salesError}</p>
+              {!salesLoading ? (
+                <button type="button" className="btn btn--secondary" onClick={() => { void fetchSales(); }}>
+                  Retry sales
+                </button>
+              ) : null}
+            </div>
+          ) : null}
           {success ? <p className="admin-inline-success">{success}</p> : null}
 
           <div className="admin-reports-filter-bar">
             <div className="admin-sales-controls">
-              <div className="admin-filter-tabs" role="tablist" aria-label="Sales range presets">
-                <button type="button" className={`admin-filter-tab ${salesPreset === '7' ? 'admin-filter-tab--active' : ''}`} onClick={() => applyPreset('7')}>Last 7 days</button>
-                <button type="button" className={`admin-filter-tab ${salesPreset === '30' ? 'admin-filter-tab--active' : ''}`} onClick={() => applyPreset('30')}>Last 30 days</button>
-                <button type="button" className={`admin-filter-tab ${salesPreset === '90' ? 'admin-filter-tab--active' : ''}`} onClick={() => applyPreset('90')}>Last 90 days</button>
-                <button type="button" className={`admin-filter-tab ${salesPreset === 'custom' ? 'admin-filter-tab--active' : ''}`} onClick={() => setSalesPreset('custom')}>Custom</button>
+              <div className="admin-filter-tabs" role="group" aria-label="Sales range presets">
+                <button type="button" className={`admin-filter-tab ${salesPreset === '7' ? 'admin-filter-tab--active' : ''}`} onClick={() => applyPreset('7')} aria-pressed={salesPreset === '7'}>Last 7 days</button>
+                <button type="button" className={`admin-filter-tab ${salesPreset === '30' ? 'admin-filter-tab--active' : ''}`} onClick={() => applyPreset('30')} aria-pressed={salesPreset === '30'}>Last 30 days</button>
+                <button type="button" className={`admin-filter-tab ${salesPreset === '90' ? 'admin-filter-tab--active' : ''}`} onClick={() => applyPreset('90')} aria-pressed={salesPreset === '90'}>Last 90 days</button>
+                <button type="button" className={`admin-filter-tab ${salesPreset === 'custom' ? 'admin-filter-tab--active' : ''}`} onClick={() => setSalesPreset('custom')} aria-pressed={salesPreset === 'custom'}>Custom</button>
               </div>
 
               {salesPreset === 'custom' ? (
@@ -2432,9 +2424,9 @@ export default function ShopAdminPanel({ initialTab = 'products' }: ShopAdminPan
             )}
           </div>
 
-          <div className="admin-filter-tabs admin-filter-tabs--metric" role="tablist" aria-label="Sales metric toggle">
-              <button type="button" className={`admin-filter-tab ${salesMetric === 'revenue' ? 'admin-filter-tab--active' : ''}`} onClick={() => setSalesMetric('revenue')}>Revenue (£)</button>
-              <button type="button" className={`admin-filter-tab ${salesMetric === 'units' ? 'admin-filter-tab--active' : ''}`} onClick={() => setSalesMetric('units')}>Units</button>
+          <div className="admin-filter-tabs admin-filter-tabs--metric" role="group" aria-label="Sales metric toggle">
+              <button type="button" className={`admin-filter-tab ${salesMetric === 'revenue' ? 'admin-filter-tab--active' : ''}`} onClick={() => setSalesMetric('revenue')} aria-pressed={salesMetric === 'revenue'}>Revenue (£)</button>
+              <button type="button" className={`admin-filter-tab ${salesMetric === 'units' ? 'admin-filter-tab--active' : ''}`} onClick={() => setSalesMetric('units')} aria-pressed={salesMetric === 'units'}>Units</button>
           </div>
 
           <>
@@ -2479,11 +2471,11 @@ export default function ShopAdminPanel({ initialTab = 'products' }: ShopAdminPan
 
             </div>
             {isMobileSalesView && isSalesChartExpanded ? (
-              <div className="admin-sales-modal" role="dialog" aria-modal="true" aria-label="Expanded sales chart">
+              <div className="admin-sales-modal" role="dialog" aria-modal="true" aria-labelledby="admin-sales-modal-title">
                 <button type="button" className="admin-sales-modal-backdrop" onClick={() => setIsSalesChartExpanded(false)} aria-label="Close expanded chart" />
                 <div className="admin-sales-modal-panel">
                   <div className="admin-sales-modal-header">
-                    <p>Sales chart</p>
+                    <p id="admin-sales-modal-title">Sales chart</p>
                     <button type="button" className="btn btn--secondary" onClick={() => setIsSalesChartExpanded(false)}>Close</button>
                   </div>
                   <SalesChartErrorBoundary>

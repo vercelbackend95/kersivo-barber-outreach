@@ -11,9 +11,8 @@ const PRODUCT_DESCRIPTION_MAX_LENGTH = 2000;
 const PRODUCT_CATEGORY_VALUES = ['POMADES_AND_CLAYS', 'BEARD_CARE', 'HAIR_WASH', 'STYLING', 'TOOLS', 'GIFT_SETS'] as const;
 const imageUrlSchema = z.string().trim().refine((value) => {
   if (!value) return true;
-  if (value.startsWith('data:image/')) return true;
   return z.string().url().safeParse(value).success;
-}, 'Image URL must be a valid URL or inline image data.');
+}, 'Image URL must be a valid URL.');
 
 
 const updateSchema = z.object({

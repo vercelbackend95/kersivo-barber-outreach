@@ -52,7 +52,7 @@ function withEffectiveBookingStatus<
     }),
   };
 }
-const LEGACY_BOOKING_SELECT = {
+const BOOKING_LIST_SELECT = {
   id: true,
   serviceId: true,
   barberId: true,
@@ -62,26 +62,40 @@ const LEGACY_BOOKING_SELECT = {
   clientId: true,
   startAt: true,
   endAt: true,
-  originalStartAt: true,
-  originalEndAt: true,
-  rescheduledAt: true,
   status: true,
   notes: true,
-  parentBookingId: true,
-  newBookingId: true,
-  confirmTokenHash: true,
-  confirmTokenExpiresAt: true,
-  manageTokenHash: true,
-  manageTokenExpiresAt: true,
+  rescheduledAt: true,
   paymentRequired: true,
   depositAmountPence: true,
   paymentStatus: true,
-  stripeCheckoutSessionId: true,
-  paidAt: true,
-  createdAt: true,
-  updatedAt: true,
-  barber: true,
-  service: true
+  totalPricePence: true,
+  serviceNameAtBooking: true,
+  servicePricePenceAtBooking: true,
+  barber: { select: { name: true } },
+  service: { select: { name: true } },
+  client: { select: { tags: true } }
+} satisfies Prisma.BookingSelect;
+
+const BOOKING_LIST_LEGACY_SELECT = {
+  id: true,
+  serviceId: true,
+  barberId: true,
+  fullName: true,
+  email: true,
+  phone: true,
+  clientId: true,
+  startAt: true,
+  endAt: true,
+  status: true,
+  notes: true,
+  rescheduledAt: true,
+  paymentRequired: true,
+  depositAmountPence: true,
+  paymentStatus: true,
+  totalPricePence: true,
+  barber: { select: { name: true } },
+  service: { select: { name: true } },
+  client: { select: { tags: true } }
 } satisfies Prisma.BookingSelect;
 
 function isMissingHistoricalColumnError(error: unknown) {
@@ -98,7 +112,7 @@ async function findBookingsWithFallback(args: Prisma.BookingFindManyArgs) {
     const { include, ...rest } = args;
     return prisma.booking.findMany({
       ...rest,
-      select: LEGACY_BOOKING_SELECT
+      select: BOOKING_LIST_LEGACY_SELECT
     });
   }
 }
@@ -155,7 +169,7 @@ export const GET: APIRoute = async (ctx) => {
 
     const bookings = await findBookingsWithFallback({
       where: andConditions.length ? { AND: andConditions } : {},
-      include: { barber: true, service: true, client: { select: { tags: true } } },
+      select: BOOKING_LIST_SELECT,
       orderBy: [{ startAt: 'desc' }, { id: 'desc' }],
       take: limit + 1
     });
@@ -208,7 +222,7 @@ export const GET: APIRoute = async (ctx) => {
       OR: q ? [{ fullName: { contains: q, mode: 'insensitive' } }, { email: { contains: q, mode: 'insensitive' } }] : undefined,
       startAt: startAtRange
     },
-    include: { barber: true, service: true, client: { select: { tags: true } } },
+    select: BOOKING_LIST_SELECT,
     orderBy: { startAt: 'asc' }
   });
 

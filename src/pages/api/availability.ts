@@ -6,6 +6,11 @@ import { getAvailabilitySlots } from '../../lib/booking/service';
 
 export const prerender = false;
 
+const AVAILABILITY_CACHE_HEADERS = {
+  'Content-Type': 'application/json',
+  'Cache-Control': 'public, max-age=30, s-maxage=60, stale-while-revalidate=60'
+};
+
 export const GET: APIRoute = async ({ request }) => {
   const searchParams = new URL(request.url).searchParams;
   const query = Object.fromEntries(searchParams.entries());
@@ -52,10 +57,13 @@ export const GET: APIRoute = async ({ request }) => {
       });
     }
 
-    return new Response(JSON.stringify({ slots }));
+    return new Response(JSON.stringify({ slots }), { headers: AVAILABILITY_CACHE_HEADERS });
   } catch (error) {
     const status = error instanceof BookingActionError ? error.statusCode : 400;
-    return new Response(JSON.stringify({ error: error instanceof Error ? error.message : 'Unable to load availability.' }), { status });
+    return new Response(JSON.stringify({ error: error instanceof Error ? error.message : 'Unable to load availability.' }), {
+      status,
+      headers: { 'Content-Type': 'application/json' }
+    });
 
   }
 

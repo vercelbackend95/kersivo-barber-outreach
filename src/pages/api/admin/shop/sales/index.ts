@@ -265,8 +265,8 @@ export const GET: APIRoute = async (ctx) => {
     return await buildSalesResponse(shopId, range.from, range.to, productIds, includeOverall);
   } catch (error) {
     console.error('Failed to load sales analytics', error);
-    const message = error instanceof Error ? error.message : 'Could not load sales analytics.';
-    const details = error instanceof Error && error.stack ? error.stack : undefined;
-    return new Response(JSON.stringify({ error: message, details }), { status: 400 });
+    const isRangeError = error instanceof Error && error.message.startsWith('Invalid date range');
+    const message = isRangeError ? error.message : 'Could not load sales analytics.';
+    return new Response(JSON.stringify({ error: message }), { status: isRangeError ? 400 : 500 });
   }
 };

@@ -152,11 +152,20 @@ async function getAvailableSlotsForBarber(input: {
       where: {
         barberId: input.barberId,
         id: input.ignoreBookingId ? { not: input.ignoreBookingId } : undefined,
-        status: { in: [BookingStatus.BOOKED] }
+        status: { in: [BookingStatus.BOOKED] },
+        startAt: { lt: dayEndUtc },
+        endAt: { gt: dayStartUtc }
       },
       select: { startAt: true, endAt: true }
     }),
-    prisma.barberTimeOff.findMany({ where: { barberId: input.barberId }, select: { startsAt: true, endsAt: true } }),
+    prisma.barberTimeOff.findMany({
+      where: {
+        barberId: input.barberId,
+        startsAt: { lt: dayEndUtc },
+        endsAt: { gt: dayStartUtc }
+      },
+      select: { startsAt: true, endsAt: true }
+    }),
     timeBlockDelegate
       ? timeBlockDelegate.findMany({
           where: {
