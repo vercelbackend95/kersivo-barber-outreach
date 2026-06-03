@@ -3,6 +3,13 @@ interface ValueCard {
   heading: string;
   body: string;
   glyph: 'shop' | 'zero' | 'system' | 'setup' | 'open';
+  /** PNG/WebP with transparency — floats into section background (no photo frame). */
+  image?: string;
+  imageWidth?: number;
+  imageHeight?: number;
+  imageAlt?: string;
+  /** Flat marketing illustration (Booksy-style), not a boxed photo. */
+  imageStyle?: 'illustration' | 'photo';
 }
 
 interface Props {
@@ -15,21 +22,41 @@ const {
       heading: 'Own your shop online',
       body: 'Your domain. Your brand. Your client list. Not a tile in someone else\u2019s marketplace.',
       glyph: 'shop',
+      image: '/images/Ilustracje/happy-composed.webp',
+      imageWidth: 960,
+      imageHeight: 1200,
+      imageAlt: 'Barber and client in the chair, both on their phones — barber with a Kersivo speech bubble',
+      imageStyle: 'illustration',
     },
     {
       heading: '0% commission, by design',
       body: 'Never a cut on bookings or retail. Stripe applies only to online card payments.',
       glyph: 'zero',
+      image: '/images/Ilustracje/0%25.png',
+      imageWidth: 822,
+      imageHeight: 1024,
+      imageAlt: 'Barber in chair on his phone; speech bubble reads 0% commission!',
+      imageStyle: 'illustration',
     },
     {
       heading: 'One system for the day',
       body: 'Booking, admin and retail under one login. No glued-together stack.',
       glyph: 'system',
+      image: '/images/Ilustracje/sms.png',
+      imageWidth: 960,
+      imageHeight: 1200,
+      imageAlt: 'Barber checking an SMS appointment reminder on his phone',
+      imageStyle: 'illustration',
     },
     {
       heading: 'Set up for you',
       body: 'Services, team, deposits, reminders, retail, domain. We build, you run your shop.',
       glyph: 'setup',
+      image: '/images/Ilustracje/reminder.png',
+      imageWidth: 928,
+      imageHeight: 1152,
+      imageAlt: 'Barber with an appointment reminder while Kersivo sets up his shop',
+      imageStyle: 'illustration',
     },
     {
       heading: 'Transparent. No lock-in.',
@@ -50,47 +77,74 @@ const {
       </p>
     </div>
 
-    <ul class="brand-values__grid" role="list">
-      {values.map((value) => (
-        <li class="brand-values__card">
-          <span class="brand-values__icon" aria-hidden="true">
-            {value.glyph === 'shop' && (
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round">
-                <path d="M3 9 4.5 4h15L21 9"/>
-                <path d="M3 9v11h18V9"/>
-                <path d="M3 9c0 1.66 1.34 3 3 3s3-1.34 3-3 1.34 3 3 3 3-1.34 3-3 1.34 3 3 3 3-1.34 3-3"/>
-                <path d="M9 20v-5h6v5"/>
-              </svg>
+    <ul class="brand-values__list" role="list">
+      {values.map((value, index) => (
+        <li
+          class:list={[
+            'brand-values__row',
+            { 'brand-values__row--reverse': index % 2 === 1 },
+            { 'brand-values__row--visual': Boolean(value.image) },
+            { 'brand-values__row--illustration': value.imageStyle === 'illustration' },
+          ]}
+        >
+          <div
+            class:list={[
+              'brand-values__visual',
+              { 'brand-values__visual--illustration': value.imageStyle === 'illustration' },
+            ]}
+          >
+            {value.image ? (
+              <img
+                class:list={[
+                  'brand-values__image',
+                  { 'brand-values__image--illustration': value.imageStyle === 'illustration' },
+                ]}
+                src={value.image}
+                alt={value.imageAlt ?? ''}
+                width={value.imageWidth ?? (value.imageStyle === 'illustration' ? 912 : 1600)}
+                height={value.imageHeight ?? (value.imageStyle === 'illustration' ? 1136 : 1000)}
+                loading={index === 0 ? 'eager' : 'lazy'}
+                decoding="async"
+              />
+            ) : (
+              <div class="brand-values__visual-fallback" aria-hidden="true">
+                <span class="brand-values__icon">
+                  {value.glyph === 'zero' && (
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round">
+                      <ellipse cx="12" cy="12" rx="6" ry="8"/>
+                      <path d="m5 5 14 14"/>
+                    </svg>
+                  )}
+                  {value.glyph === 'system' && (
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round">
+                      <rect x="3" y="4" width="18" height="6" rx="1.5"/>
+                      <rect x="3" y="14" width="8" height="6" rx="1.5"/>
+                      <rect x="13" y="14" width="8" height="6" rx="1.5"/>
+                    </svg>
+                  )}
+                  {value.glyph === 'setup' && (
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round">
+                      <path d="M14.7 6.3a4 4 0 1 1-5 5L4 17v3h3l5.7-5.7"/>
+                      <path d="m14 8 2 2"/>
+                      <path d="M17 3l4 4-3 3-4-4z"/>
+                    </svg>
+                  )}
+                  {value.glyph === 'open' && (
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round">
+                      <rect x="3" y="11" width="18" height="10" rx="1.5"/>
+                      <path d="M7 11V8a5 5 0 0 1 10 0"/>
+                      <circle cx="12" cy="16" r="1"/>
+                    </svg>
+                  )}
+                </span>
+              </div>
             )}
-            {value.glyph === 'zero' && (
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round">
-                <ellipse cx="12" cy="12" rx="6" ry="8"/>
-                <path d="m5 5 14 14"/>
-              </svg>
+            {value.imageStyle !== 'illustration' && (
+              <div class="brand-values__visual-fade" aria-hidden="true"></div>
             )}
-            {value.glyph === 'system' && (
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round">
-                <rect x="3" y="4" width="18" height="6" rx="1.5"/>
-                <rect x="3" y="14" width="8" height="6" rx="1.5"/>
-                <rect x="13" y="14" width="8" height="6" rx="1.5"/>
-              </svg>
-            )}
-            {value.glyph === 'setup' && (
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round">
-                <path d="M14.7 6.3a4 4 0 1 1-5 5L4 17v3h3l5.7-5.7"/>
-                <path d="m14 8 2 2"/>
-                <path d="M17 3l4 4-3 3-4-4z"/>
-              </svg>
-            )}
-            {value.glyph === 'open' && (
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round">
-                <rect x="3" y="11" width="18" height="10" rx="1.5"/>
-                <path d="M7 11V8a5 5 0 0 1 10 0"/>
-                <circle cx="12" cy="16" r="1"/>
-              </svg>
-            )}
-          </span>
-          <div class="brand-values__card-body">
+          </div>
+
+          <div class="brand-values__content">
             <h3 class="brand-values__card-title">{value.heading}</h3>
             <p class="brand-values__card-body-text">{value.body}</p>
           </div>

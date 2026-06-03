@@ -1,7 +1,6 @@
 /* ============================================================
    brand-values — Kersivo's own positive proposition strip.
-   Five short value cards stating what Kersivo IS, not what it ISN'T.
-   No competitor mention; no anti-Booksy framing here.
+   Feature rows with visuals (photos or icon fallbacks).
    BEM: .brand-values__*
    ============================================================ */
 
@@ -15,7 +14,7 @@
 
 .brand-values .container {
   display: grid;
-  gap: 3rem;
+  gap: 3.5rem;
 }
 
 /* ── Intro ────────────────────────────────────────────────── */
@@ -60,91 +59,220 @@
   color: var(--muted);
 }
 
-/* ── Grid ─────────────────────────────────────────────────── */
+/* ── Feature rows ─────────────────────────────────────────── */
 
-.brand-values__grid {
+.brand-values__list {
   list-style: none;
   margin: 0;
   padding: 0;
   display: grid;
-  gap: 1rem;
-  grid-template-columns: 1fr;
+  gap: 3.5rem;
 }
 
-@media (min-width: 600px) {
-  .brand-values__grid {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
+.brand-values__row {
+  display: grid;
+  gap: 1.75rem;
+  align-items: center;
+}
+
+@media (min-width: 900px) {
+  .brand-values__list {
+    gap: 4.5rem;
+  }
+
+  .brand-values__row {
+    grid-template-columns: minmax(0, 1.05fr) minmax(0, 0.95fr);
+    gap: clamp(2rem, 4vw, 4rem);
+  }
+
+  .brand-values__row--reverse {
+    direction: rtl;
+  }
+
+  .brand-values__row--reverse > * {
+    direction: ltr;
   }
 }
 
-@media (min-width: 1024px) {
-  .brand-values__grid {
-    grid-template-columns: repeat(5, minmax(0, 1fr));
-    gap: 0.875rem;
-  }
-}
+/* ── Visual panel ─────────────────────────────────────────── */
 
-/* ── Card ─────────────────────────────────────────────────── */
-
-.brand-values__card {
-  display: flex;
-  flex-direction: column;
-  gap: 1rem;
-  padding: 1.4rem 1.25rem 1.5rem;
-  background: var(--surface-1);
+.brand-values__visual {
+  position: relative;
+  overflow: hidden;
   border: 1px solid var(--border);
   border-radius: var(--radius-12);
-  transition: border-color 160ms ease, transform 160ms ease;
+  background: linear-gradient(
+    165deg,
+    color-mix(in srgb, var(--surface-2) 88%, var(--bg)) 0%,
+    color-mix(in srgb, var(--bg) 92%, var(--surface-1)) 100%
+  );
+  box-shadow:
+    0 1px 0 color-mix(in srgb, var(--fg) 4%, transparent) inset,
+    var(--shadow-md);
+  aspect-ratio: 16 / 10;
 }
 
-.brand-values__card:hover {
-  border-color: color-mix(in srgb, var(--accent) 50%, var(--border));
-  transform: translateY(-2px);
+/* Booksy-style float — no frame; PNG bleeds into section --bg */
+.brand-values__visual--illustration {
+  overflow: visible;
+  border: none;
+  border-radius: 0;
+  background: transparent;
+  box-shadow: none;
+  aspect-ratio: auto;
+  min-height: clamp(16rem, 42vw, 26rem);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0.5rem 0;
+}
+
+.brand-values__row--illustration {
+  align-items: center;
+}
+
+@media (min-width: 900px) {
+  .brand-values__row--illustration {
+    grid-template-columns: minmax(0, 1.1fr) minmax(0, 0.9fr);
+  }
+
+  .brand-values__row--illustration.brand-values__row--reverse .brand-values__visual--illustration {
+    justify-content: flex-end;
+  }
+
+  .brand-values__row--illustration:not(.brand-values__row--reverse) .brand-values__visual--illustration {
+    justify-content: flex-start;
+  }
+}
+
+.brand-values__row--visual .brand-values__visual:not(.brand-values__visual--illustration) {
+  border-color: color-mix(in srgb, var(--accent) 22%, var(--border));
+}
+
+.brand-values__image {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: center;
+}
+
+.brand-values__image--illustration {
+  width: auto;
+  height: auto;
+  max-width: min(100%, 28rem);
+  max-height: clamp(18rem, 52vw, 32rem);
+  object-fit: contain;
+  object-position: center;
+  /* Soft edge after auto background removal */
+  -webkit-mask-image: radial-gradient(
+    ellipse 92% 88% at 50% 50%,
+    #000 88%,
+    transparent 100%
+  );
+  mask-image: radial-gradient(
+    ellipse 92% 88% at 50% 50%,
+    #000 88%,
+    transparent 100%
+  );
+  filter: drop-shadow(0 28px 48px color-mix(in srgb, var(--bg) 55%, transparent));
+}
+
+@media (min-width: 900px) {
+  .brand-values__image--illustration {
+    max-width: min(100%, 34rem);
+    max-height: 34rem;
+  }
+}
+
+.brand-values__visual-fade {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background: linear-gradient(
+    180deg,
+    transparent 62%,
+    color-mix(in srgb, var(--bg) 42%, transparent) 100%
+  );
+}
+
+.brand-values__visual-fallback {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  height: 100%;
+  min-height: 12rem;
+  background:
+    radial-gradient(circle at 72% 38%, color-mix(in srgb, var(--accent) 16%, transparent), transparent 42%),
+    linear-gradient(
+      160deg,
+      color-mix(in srgb, var(--surface-2) 90%, var(--bg)) 0%,
+      color-mix(in srgb, var(--bg) 94%, var(--surface-1)) 100%
+    );
 }
 
 .brand-values__icon {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  width: 2.5rem;
-  height: 2.5rem;
-  border-radius: var(--radius-8);
+  width: 4.5rem;
+  height: 4.5rem;
+  border-radius: var(--radius-12);
   background: color-mix(in srgb, var(--accent) 14%, transparent);
   border: 1px solid color-mix(in srgb, var(--accent) 32%, transparent);
   color: var(--accent);
-  flex: none;
 }
 
 .brand-values__icon svg {
-  width: 1.25rem;
-  height: 1.25rem;
+  width: 2rem;
+  height: 2rem;
 }
 
-.brand-values__card-body {
+/* ── Copy ─────────────────────────────────────────────────── */
+
+.brand-values__content {
   display: grid;
-  gap: 0.5rem;
+  gap: 0.75rem;
+  max-width: 42ch;
+}
+
+.brand-values__row--reverse .brand-values__content {
+  margin-inline-start: auto;
 }
 
 .brand-values__card-title {
   margin: 0;
   font-family: var(--font-heading);
-  font-size: clamp(1.05rem, 2vw, 1.25rem);
+  font-size: clamp(1.65rem, 3.5vw, 2.35rem);
   font-weight: 400;
-  line-height: 1.05;
-  letter-spacing: 0.02em;
+  line-height: 0.98;
+  letter-spacing: var(--tracking-heading);
   text-transform: uppercase;
   color: var(--fg);
 }
 
 .brand-values__card-body-text {
   margin: 0;
-  font-size: var(--text-sm);
-  line-height: 1.55;
+  font-size: var(--text-md);
+  line-height: 1.6;
   color: var(--muted);
 }
 
 @media (max-width: 599px) {
   .brand-values {
     padding: 4rem 0 3.5rem;
+  }
+
+  .brand-values .container {
+    gap: 2.75rem;
+  }
+
+  .brand-values__list {
+    gap: 2.75rem;
+  }
+
+  .brand-values__content {
+    max-width: none;
   }
 }

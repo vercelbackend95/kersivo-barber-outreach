@@ -16,7 +16,15 @@
     "vercel:dev": "vercel dev",
     "prisma:migrate:dev": "prisma migrate dev --schema prisma/schema.prisma",
     "screenshots:feature261": "node scripts/capture-feature261-screens.mjs",
-    "enhance:timeline": "node scripts/enhance-timeline-screenshot.mjs"
+    "enhance:timeline": "node scripts/enhance-timeline-screenshot.mjs",
+    "assets:brand-values": "node scripts/generate-brand-values-assets.mjs --variant=all",
+    "assets:shoponline-bg": "node scripts/remove-illustration-bg.mjs",
+    "assets:zero-bg": "node scripts/remove-illustration-bg.mjs public/images/Ilustracje/0%.png --strip-watermark",
+    "assets:smss-bg": "node scripts/remove-illustration-bg.mjs public/images/Ilustracje/smss.png",
+    "assets:zero-illustration": "node scripts/convert-zero-illustration-webp.mjs",
+    "assets:zero-commission-compose": "node scripts/compose-zero-commission-illustration.mjs && node scripts/remove-illustration-bg.mjs public/images/Ilustracje/zero-commission-composed.png && node scripts/finalize-zero-commission-asset.mjs",
+    "assets:bubble-clean": "node scripts/inpaint-speech-bubble-text.mjs",
+    "assets:happy-compose": "node scripts/compose-happy-bubble.mjs"
   },
   "dependencies": {
     "@astrojs/react": "^4.4.2",
@@ -43,6 +51,7 @@
   },
   "devDependencies": {
     "@astrojs/vercel": "^9.0.4",
+    "@fontsource/caveat": "^5.2.8",
     "@tailwindcss/vite": "^4.2.2",
     "playwright": "^1.59.1",
     "prisma": "^5.22.0",
