@@ -24,7 +24,8 @@
     "assets:zero-illustration": "node scripts/convert-zero-illustration-webp.mjs",
     "assets:zero-commission-compose": "node scripts/compose-zero-commission-illustration.mjs && node scripts/remove-illustration-bg.mjs public/images/Ilustracje/zero-commission-composed.png && node scripts/finalize-zero-commission-asset.mjs",
     "assets:bubble-clean": "node scripts/inpaint-speech-bubble-text.mjs",
-    "assets:happy-compose": "node scripts/compose-happy-bubble.mjs"
+    "assets:happy-compose": "node scripts/compose-happy-bubble.mjs",
+    "assets:setup-reminder-flip": "node scripts/flip-setup-reminder.mjs"
   },
   "dependencies": {
     "@astrojs/react": "^4.4.2",

@@ -10,11 +10,18 @@
   padding: 6rem 0 5.5rem;
   border-top: 1px solid var(--border);
   border-bottom: 1px solid var(--border);
+  /* Illustration scale: stacked layout default (mobile/tablet); desktop overrides at 900px */
+  --bv-illus-max-w: min(100%, 28rem);
+  --bv-illus-max-h: clamp(18rem, 52vw, 32rem);
+  --bv-visual-min-h: clamp(16rem, 42vw, 26rem);
+  --bv-row-max-w: 100%;
+  --bv-section-gap: 3.5rem;
+  --bv-row-gap: 1.75rem;
 }
 
 .brand-values .container {
   display: grid;
-  gap: 3.5rem;
+  gap: var(--bv-section-gap);
 }
 
 /* ── Intro ────────────────────────────────────────────────── */
@@ -66,23 +73,36 @@
   margin: 0;
   padding: 0;
   display: grid;
-  gap: 3.5rem;
+  gap: var(--bv-section-gap);
 }
 
 .brand-values__row {
   display: grid;
-  gap: 1.75rem;
+  gap: var(--bv-row-gap);
   align-items: center;
 }
 
+/* Stacked layout: centered copy under illustration */
+@media (max-width: 899px) {
+  .brand-values__row--illustration .brand-values__content {
+    text-align: center;
+    margin-inline: auto;
+    max-width: 36ch;
+  }
+}
+
 @media (min-width: 900px) {
+  .brand-values {
+    --bv-section-gap: 3.5rem;
+    --bv-row-gap: clamp(2rem, 4vw, 4rem);
+  }
+
   .brand-values__list {
     gap: 4.5rem;
   }
 
   .brand-values__row {
     grid-template-columns: minmax(0, 1.05fr) minmax(0, 0.95fr);
-    gap: clamp(2rem, 4vw, 4rem);
   }
 
   .brand-values__row--reverse {
@@ -120,7 +140,7 @@
   background: transparent;
   box-shadow: none;
   aspect-ratio: auto;
-  min-height: clamp(16rem, 42vw, 26rem);
+  min-height: var(--bv-visual-min-h);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -129,19 +149,38 @@
 
 .brand-values__row--illustration {
   align-items: center;
+  max-width: var(--bv-row-max-w);
+  margin-inline: auto;
+  width: 100%;
 }
 
 @media (min-width: 900px) {
+  .brand-values {
+    --bv-illus-max-w: min(100%, 26rem);
+    --bv-illus-max-h: min(28rem, 40vh);
+    --bv-visual-min-h: clamp(13rem, 24vh, 20rem);
+    --bv-row-max-w: min(100%, 68rem);
+  }
+
   .brand-values__row--illustration {
-    grid-template-columns: minmax(0, 1.1fr) minmax(0, 0.9fr);
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
   }
 
-  .brand-values__row--illustration.brand-values__row--reverse .brand-values__visual--illustration {
-    justify-content: flex-end;
+  .brand-values__row--illustration .brand-values__visual--illustration {
+    justify-content: center;
   }
 
-  .brand-values__row--illustration:not(.brand-values__row--reverse) .brand-values__visual--illustration {
-    justify-content: flex-start;
+  .brand-values__row--illustration .brand-values__content {
+    text-align: start;
+    margin-inline: auto;
+    max-width: 42ch;
+  }
+}
+
+@media (min-width: 1200px) {
+  .brand-values {
+    --bv-illus-max-w: min(100%, 28rem);
+    --bv-illus-max-h: min(30rem, 42vh);
   }
 }
 
@@ -160,8 +199,8 @@
 .brand-values__image--illustration {
   width: auto;
   height: auto;
-  max-width: min(100%, 28rem);
-  max-height: clamp(18rem, 52vw, 32rem);
+  max-width: var(--bv-illus-max-w);
+  max-height: var(--bv-illus-max-h);
   object-fit: contain;
   object-position: center;
   /* Soft edge after auto background removal */
@@ -176,13 +215,6 @@
     transparent 100%
   );
   filter: drop-shadow(0 28px 48px color-mix(in srgb, var(--bg) 55%, transparent));
-}
-
-@media (min-width: 900px) {
-  .brand-values__image--illustration {
-    max-width: min(100%, 34rem);
-    max-height: 34rem;
-  }
 }
 
 .brand-values__visual-fade {
@@ -237,7 +269,7 @@
   max-width: 42ch;
 }
 
-.brand-values__row--reverse .brand-values__content {
+.brand-values__row--reverse:not(.brand-values__row--illustration) .brand-values__content {
   margin-inline-start: auto;
 }
 
@@ -259,17 +291,22 @@
   color: var(--muted);
 }
 
+/* ── Tablet (600–899px) ───────────────────────────────────── */
+
+@media (min-width: 600px) and (max-width: 899px) {
+  .brand-values {
+    --bv-section-gap: 3rem;
+    --bv-row-gap: 2rem;
+  }
+}
+
+/* ── Mobile (≤599px) ──────────────────────────────────────── */
+
 @media (max-width: 599px) {
   .brand-values {
     padding: 4rem 0 3.5rem;
-  }
-
-  .brand-values .container {
-    gap: 2.75rem;
-  }
-
-  .brand-values__list {
-    gap: 2.75rem;
+    --bv-section-gap: 2.75rem;
+    --bv-row-gap: 1.75rem;
   }
 
   .brand-values__content {
