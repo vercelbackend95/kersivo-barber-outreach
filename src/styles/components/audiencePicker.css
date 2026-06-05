@@ -1,19 +1,21 @@
 /* ============================================================
-   audience-picker — two equal-weight cards: switcher vs newcomer.
-   Lets each ICP self-select their path through the page.
-   BEM: .audience-picker__*
+   audience-picker — story chapter gateway: switcher vs newcomer.
+   Visual language matches illustrated barber scenes (organic blobs,
+   crimson stages, black bleed). BEM: .audience-picker__*
    ============================================================ */
 
 .audience-picker {
   position: relative;
   background: var(--bg);
-  padding: 5.5rem 0 5rem;
+  padding: clamp(2.5rem, 5vw, 3.5rem) 0 clamp(2rem, 4vw, 3rem);
 }
 
 .audience-picker .container {
   display: grid;
-  gap: 2.75rem;
+  gap: 1.75rem;
 }
+
+/* ── Intro ──────────────────────────────────────────────────── */
 
 .audience-picker__intro {
   text-align: center;
@@ -55,146 +57,365 @@
   color: var(--muted);
 }
 
+/* ── Grid — always 50/50 ────────────────────────────────────── */
+
 .audience-picker__grid {
   display: grid;
-  gap: 1.25rem;
-  grid-template-columns: 1fr;
+  grid-template-columns: 1fr 1fr;
+  gap: clamp(0.65rem, 2vw, 1.25rem);
+  align-items: stretch;
 }
 
-@media (min-width: 800px) {
-  .audience-picker__grid {
-    grid-template-columns: 1fr 1fr;
+/* ── Card tokens ────────────────────────────────────────────── */
+
+.audience-picker__card--switcher {
+  --ap-crimson: #cf0c24;
+  --ap-crimson-deep: #9a0818;
+  --ap-mustard: #e8b923;
+  --ap-stage-floor: #b81828;
+  --ap-cta: var(--ap-crimson);
+}
+
+.audience-picker__card--newcomer {
+  --ap-crimson: #cf0c24;
+  --ap-crimson-deep: #8f0a1a;
+  --ap-neon: #f4f0e8;
+  --ap-cta: #2596be;
+}
+
+/* ── Card shell ─────────────────────────────────────────────── */
+
+.audience-picker__card {
+  display: grid;
+  grid-template-rows: 1fr auto;
+  height: 100%;
+  min-height: clamp(12rem, 42vw, 24rem);
+  background: transparent;
+  border: none;
+  box-shadow: none;
+  text-decoration: none;
+  color: var(--fg);
+  overflow: visible;
+  transition: transform 280ms cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+/* ── Stage (black canvas) ───────────────────────────────────── */
+
+.audience-picker__stage {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 0;
+  padding: clamp(0.35rem, 1.5vw, 0.75rem);
+  background: var(--bg);
+  overflow: visible;
+}
+
+/* ── Organic blob ───────────────────────────────────────────── */
+
+.audience-picker__blob {
+  position: relative;
+  width: 100%;
+  aspect-ratio: 4 / 5;
+  max-height: 100%;
+  isolation: isolate;
+  overflow: hidden;
+  background:
+    radial-gradient(
+      ellipse 90% 70% at 50% 85%,
+      color-mix(in srgb, var(--ap-crimson-deep) 55%, transparent),
+      transparent 65%
+    ),
+    repeating-linear-gradient(
+      90deg,
+      color-mix(in srgb, var(--ap-crimson) 92%, #000) 0,
+      color-mix(in srgb, var(--ap-crimson) 92%, #000) 3px,
+      color-mix(in srgb, var(--ap-crimson-deep) 88%, #000) 3px,
+      color-mix(in srgb, var(--ap-crimson-deep) 88%, #000) 14px
+    );
+  transition:
+    filter 320ms ease,
+    transform 320ms cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.audience-picker__card--switcher .audience-picker__blob,
+.audience-picker__card--newcomer .audience-picker__blob {
+  background: var(--bg);
+  border-radius: var(--radius-12);
+  overflow: visible;
+  aspect-ratio: 4 / 5;
+}
+
+@media (min-width: 600px) {
+  .audience-picker__card--switcher .audience-picker__blob,
+  .audience-picker__card--newcomer .audience-picker__blob {
+    aspect-ratio: 5 / 4;
   }
 }
 
-/* ── Card ─────────────────────────────────────────────────── */
+.audience-picker__card--switcher .audience-picker__blob::before,
+.audience-picker__card--newcomer .audience-picker__blob::before {
+  display: none;
+}
 
-.audience-picker__card {
+.audience-picker__blob::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(
+    ellipse 80% 60% at 50% 30%,
+    color-mix(in srgb, var(--ap-crimson) 18%, transparent),
+    transparent 70%
+  );
+  pointer-events: none;
+  z-index: 0;
+}
+
+/* ── Scene container ────────────────────────────────────────── */
+
+.audience-picker__scene {
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+}
+
+.audience-picker__svg {
+  position: absolute;
+  pointer-events: none;
+}
+
+/* ── Switch scene ───────────────────────────────────────────── */
+
+.audience-picker__scene--switch::before {
+  content: "";
+  position: absolute;
+  left: 50%;
+  bottom: 6%;
+  width: 78%;
+  height: 28%;
+  transform: translateX(-50%);
+  border-radius: 50%;
+  background: radial-gradient(
+    ellipse at 50% 80%,
+    var(--ap-stage-floor),
+    color-mix(in srgb, var(--ap-stage-floor) 60%, transparent) 70%
+  );
+  opacity: 0.9;
+  z-index: 0;
+}
+
+.audience-picker__scene--switch::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(
+    125deg,
+    transparent 35%,
+    color-mix(in srgb, var(--ap-mustard) 12%, transparent) 48%,
+    transparent 62%
+  );
+  opacity: 0.7;
+  z-index: 2;
+  transition: transform 600ms ease, opacity 320ms ease;
+}
+
+.audience-picker__scene--switch .audience-picker__svg--floor {
+  bottom: 4%;
+  left: 50%;
+  width: 72%;
+  transform: translateX(-50%);
+  color: var(--ap-stage-floor);
+  z-index: 1;
+}
+
+.audience-picker__scene--switch .audience-picker__svg--arc {
+  top: 18%;
+  left: 50%;
+  width: 55%;
+  transform: translateX(-50%);
+  color: var(--ap-mustard);
+  z-index: 3;
+}
+
+.audience-picker__scene--switch .audience-picker__svg--figure-left {
+  bottom: 14%;
+  left: 8%;
+  width: 28%;
+  color: #1a1410;
+  z-index: 2;
+}
+
+.audience-picker__scene--switch .audience-picker__svg--figure-right {
+  bottom: 10%;
+  right: 6%;
+  width: 34%;
+  color: #1a1410;
+  z-index: 2;
+}
+
+/* ── Figure slot (illustration PNG) ─────────────────────────── */
+
+.audience-picker__figure {
+  position: absolute;
+  inset: 8% 10% 18%;
+  z-index: 4;
+  pointer-events: none;
+  -webkit-mask-image: radial-gradient(
+    ellipse 90% 85% at 50% 45%,
+    #000 80%,
+    transparent 100%
+  );
+  mask-image: radial-gradient(
+    ellipse 90% 85% at 50% 45%,
+    #000 80%,
+    transparent 100%
+  );
+  filter: drop-shadow(0 16px 32px rgb(0 0 0 / 0.55));
+}
+
+.audience-picker__card--switcher .audience-picker__figure,
+.audience-picker__card--newcomer .audience-picker__figure {
+  position: relative;
+  inset: auto;
   display: flex;
-  flex-direction: column;
-  gap: 1rem;
-  padding: 1.75rem 1.6rem 1.6rem;
-  background: var(--surface-1);
-  border: 1px solid var(--border);
-  border-radius: var(--radius-16);
-  text-decoration: none;
-  color: var(--fg);
-  transition: border-color 180ms ease, transform 180ms ease, box-shadow 180ms ease;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  height: 100%;
+  mask-image: none;
+  -webkit-mask-image: none;
+  filter: drop-shadow(0 16px 32px rgb(0 0 0 / 0.55));
 }
 
-.audience-picker__card:hover {
-  border-color: color-mix(in srgb, var(--accent) 60%, var(--border));
-  transform: translateY(-2px);
-  box-shadow:
-    0 0 0 1px color-mix(in srgb, var(--accent) 18%, transparent),
-    0 18px 40px rgb(0 0 0 / 0.32);
-  text-decoration: none;
+.audience-picker__image {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  object-position: center;
 }
 
-.audience-picker__card:focus-visible {
-  outline: 2px solid var(--focus);
-  outline-offset: 3px;
+.audience-picker__figure img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
 }
 
-.audience-picker__tag {
-  display: inline-flex;
-  align-self: flex-start;
-  font-family: var(--font-body);
-  font-size: var(--text-xs);
-  font-weight: 700;
-  letter-spacing: 0.1em;
-  text-transform: uppercase;
-  color: var(--accent);
-  background: color-mix(in srgb, var(--accent) 14%, transparent);
-  border: 1px solid color-mix(in srgb, var(--accent) 32%, transparent);
-  border-radius: var(--radius-full);
-  padding: 0.22rem 0.7rem;
-}
+/* ── Chapter strip ──────────────────────────────────────────── */
 
-.audience-picker__card--newcomer .audience-picker__tag {
-  color: var(--info);
-  background: color-mix(in srgb, var(--info) 14%, transparent);
-  border-color: color-mix(in srgb, var(--info) 36%, transparent);
+.audience-picker__chapter {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: clamp(0.4rem, 1.5vw, 0.75rem);
+  min-height: 2.75rem;
+  padding: clamp(0.6rem, 2vw, 0.85rem) clamp(0.5rem, 1.5vw, 0.65rem) 0;
+  background: transparent;
+  border-top: 1px solid color-mix(in srgb, var(--fg) 6%, transparent);
 }
 
 .audience-picker__card-title {
   margin: 0;
   font-family: var(--font-heading);
-  font-size: clamp(1.5rem, 3vw, 2rem);
+  font-size: clamp(1.1rem, 4.5vw, 2rem);
   font-weight: 400;
-  line-height: 1.05;
-  letter-spacing: 0.025em;
+  line-height: 1;
+  letter-spacing: 0.03em;
   text-transform: uppercase;
-}
-
-.audience-picker__card-body {
-  margin: 0;
-  font-size: var(--text-md);
-  line-height: 1.55;
-  color: var(--muted);
-}
-
-.audience-picker__bullets {
-  list-style: none;
-  margin: 0;
-  padding: 0;
-  display: grid;
-  gap: 0.45rem;
-}
-
-.audience-picker__bullets li {
-  position: relative;
-  padding-left: 1.4rem;
-  font-size: var(--text-sm);
-  line-height: 1.5;
-  color: color-mix(in srgb, var(--fg) 86%, var(--muted));
-}
-
-.audience-picker__bullets li::before {
-  content: '';
-  position: absolute;
-  left: 0;
-  top: 0.55rem;
-  width: 0.55rem;
-  height: 0.12rem;
-  background: var(--accent);
-  border-radius: 999px;
-}
-
-.audience-picker__card--newcomer .audience-picker__bullets li::before {
-  background: var(--info);
+  transition: letter-spacing 220ms ease;
 }
 
 .audience-picker__card-cta {
   display: inline-flex;
   align-items: center;
-  gap: 0.4rem;
-  margin-top: auto;
-  padding-top: 0.85rem;
+  gap: clamp(0.2rem, 1vw, 0.35rem);
+  flex-shrink: 0;
   font-family: var(--font-body);
-  font-size: var(--text-sm);
+  font-size: clamp(0.65rem, 2.8vw, 0.875rem);
   font-weight: 600;
-  letter-spacing: 0.04em;
+  letter-spacing: 0.06em;
   text-transform: uppercase;
-  color: var(--accent);
-}
-
-.audience-picker__card--newcomer .audience-picker__card-cta {
-  color: var(--info);
+  color: var(--ap-cta);
 }
 
 .audience-picker__card-cta svg {
-  width: 1rem;
-  height: 1rem;
-  transition: transform 180ms ease;
+  width: clamp(0.7rem, 2.8vw, 0.95rem);
+  height: clamp(0.7rem, 2.8vw, 0.95rem);
+  transition: transform 220ms cubic-bezier(0.22, 1, 0.36, 1);
 }
 
-.audience-picker__card:hover .audience-picker__card-cta svg {
-  transform: translateX(3px);
+/* ── Desktop hover ──────────────────────────────────────────── */
+
+@media (hover: hover) {
+  .audience-picker__card:hover {
+    transform: translateY(-3px);
+    text-decoration: none;
+  }
+
+  .audience-picker__card:hover .audience-picker__blob {
+    filter: brightness(1.08);
+    transform: scale(1.02);
+  }
+
+  .audience-picker__card:hover .audience-picker__card-title {
+    letter-spacing: 0.05em;
+  }
+
+  .audience-picker__card:hover .audience-picker__card-cta svg {
+    transform: translateX(4px);
+  }
 }
 
-@media (max-width: 599px) {
-  .audience-picker {
-    padding: 4rem 0 3.5rem;
+/* ── Touch active ───────────────────────────────────────────── */
+
+.audience-picker__card:active .audience-picker__blob {
+  transform: scale(0.98);
+}
+
+@media (hover: hover) {
+  .audience-picker__card:active {
+    transform: translateY(-1px);
+  }
+
+  .audience-picker__card:active .audience-picker__blob {
+    transform: scale(0.99);
+  }
+}
+
+/* ── Focus ──────────────────────────────────────────────────── */
+
+.audience-picker__card:focus-visible {
+  outline: 2px solid var(--focus);
+  outline-offset: 4px;
+  border-radius: var(--radius-8);
+}
+
+.audience-picker__card:focus-visible .audience-picker__blob {
+  filter: brightness(1.06);
+}
+
+/* ── Reduced motion ─────────────────────────────────────────── */
+
+@media (prefers-reduced-motion: reduce) {
+  .audience-picker__card,
+  .audience-picker__blob,
+  .audience-picker__card-cta svg,
+  .audience-picker__card-title {
+    transition: none;
+  }
+
+  .audience-picker__card:hover,
+  .audience-picker__card:active,
+  .audience-picker__card:hover .audience-picker__blob,
+  .audience-picker__card:active .audience-picker__blob {
+    transform: none;
+  }
+
+  @media (hover: hover) {
+    .audience-picker__card:hover .audience-picker__card-cta svg {
+      transform: none;
+    }
   }
 }
