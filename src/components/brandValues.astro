@@ -19,53 +19,63 @@ interface Props {
 const {
   values = [
     {
-      heading: 'Own your shop online',
-      body: 'Your domain. Your brand. Your client list. Not a tile in someone else\u2019s marketplace.',
+      heading: 'Easy booking for clients',
+      body: 'Service, barber, slot \u2014 three taps and they\u2019re in. No app-store detour, no marketplace maze. Your page, their phone, booked before the fade\u2019s dry.',
       glyph: 'shop',
       image: '/images/Ilustracje/8.png',
-      imageWidth: 918,
-      imageHeight: 1152,
-      imageAlt: 'Barber and client in the chair, both on their phones — your shop online, your brand',
-      imageStyle: 'illustration',
-    },
-    {
-      heading: '0% commission, by design',
-      body: 'Never a cut on bookings or retail. Stripe applies only to online card payments.',
-      glyph: 'zero',
-      image: '/images/Ilustracje/0%25.png',
-      imageWidth: 822,
+      imageWidth: 1536,
       imageHeight: 1024,
-      imageAlt: 'Barber in chair on his phone; speech bubble reads 0% commission!',
+      imageAlt: 'Client in the barber chair on their phone \u2014 easy booking in a few taps',
       imageStyle: 'illustration',
     },
     {
-      heading: 'One system for the day',
-      body: 'Booking, admin and retail under one login. No glued-together stack.',
+      heading: 'Own your shop online',
+      body: 'Your domain, your brand \u2014 not a tile in someone else\u2019s marketplace. Clients book easy and pre-order for pickup at the chair while they\u2019re getting the cut. Money lands in your Stripe account. Simple.',
+      glyph: 'zero',
+      image: '/images/Ilustracje/shoppyonline.png',
+      imageWidth: 1536,
+      imageHeight: 1024,
+      imageAlt: 'Barber in the chair on his laptop \u2014 running his shop online from the chair',
+      imageStyle: 'illustration',
+    },
+    {
+      heading: 'SMS reminders',
+      body: 'Clients get a ping before their cut \u2014 fewer no-shows. QR on the shop window: passers-by scan it, see your next free slot, and book on the spot.',
       glyph: 'system',
       image: '/images/Ilustracje/reminder.png',
       imageWidth: 928,
       imageHeight: 1152,
-      imageAlt: 'Barber walking with phone and a Kersivo speech bubble reminder',
+      imageAlt: 'Person walking with phone \u2014 SMS appointment reminder pops up',
       imageStyle: 'illustration',
     },
     {
-      heading: 'Set up for you',
-      body: 'Services, team, deposits, reminders, retail, domain. We build, you run your shop.',
+      heading: 'No-show protection',
+      body: 'Deposits, reminders, and booking safeguards that keep your chair filled and your schedule protected. Ghost slots? Not today.',
       glyph: 'setup',
       image: '/images/Ilustracje/3.png',
       imageWidth: 912,
       imageHeight: 1136,
-      imageAlt: 'Barber chair with shield icons — Kersivo sets up your shop for you',
+      imageAlt: 'Barber chair with shield icons \u2014 no-show protection keeps your schedule safe',
       imageStyle: 'illustration',
     },
     {
-      heading: 'Transparent. No lock-in.',
-      body: 'Setup + monthly Care + Stripe = the whole bill. Your data exports anytime.',
+      heading: '0% commission',
+      body: 'Monthly Care is all we charge \u2014 zero cut on bookings, zero cut on retail. Not a penny more from Kersivo. Stripe handles cards; your margin stays yours.',
       glyph: 'open',
       image: '/images/Ilustracje/0%25.png',
       imageWidth: 822,
       imageHeight: 1024,
-      imageAlt: 'Barber in chair on his phone; speech bubble reads 0% — transparent pricing, no lock-in',
+      imageAlt: 'Barber in chair on his phone \u2014 speech bubble reads 0% commission!',
+      imageStyle: 'illustration',
+    },
+    {
+      heading: 'Build your own brand',
+      body: 'Every booking strengthens your business, not somebody else\u2019s platform. Your domain, your customers, your reputation \u2014 compounding on your name, not theirs.',
+      glyph: 'shop',
+      image: '/images/Ilustracje/barberszyld.png',
+      imageWidth: 1536,
+      imageHeight: 1024,
+      imageAlt: 'Barber on a ladder outside his barbershop \u2014 BARBER sign mounted on the building',
       imageStyle: 'illustration',
     },
   ],
@@ -88,7 +98,7 @@ const {
           class:list={[
             'brand-values__row',
             { 'brand-values__row--reverse': index % 2 === 1 },
-            { 'brand-values__row--visual': Boolean(value.image) },
+            { 'brand-values__row--visual': Boolean(value.image) || value.imageStyle === 'illustration' },
             { 'brand-values__row--illustration': value.imageStyle === 'illustration' },
           ]}
         >
@@ -111,6 +121,8 @@ const {
                 loading={index === 0 ? 'eager' : 'lazy'}
                 decoding="async"
               />
+            ) : value.imageStyle === 'illustration' ? (
+              <div class="brand-values__illustration-placeholder" aria-hidden="true"></div>
             ) : (
               <div class="brand-values__visual-fallback" aria-hidden="true">
                 <span class="brand-values__icon">

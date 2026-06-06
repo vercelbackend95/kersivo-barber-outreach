@@ -76,7 +76,7 @@
 
 @media (min-width: 720px) {
   .mg__story {
-    grid-template-columns: 1fr auto 1fr;
+    grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr);
     align-items: start;
     gap: 0;
   }
@@ -114,11 +114,18 @@
   object-position: center bottom;
   padding: 0 0.5rem;
   filter: drop-shadow(0 12px 28px rgb(0 0 0 / 0.45));
-  transition: transform 0.35s ease;
 }
 
-.mg__panel-fig:hover .mg__panel-img {
-  transform: scale(1.03) translateY(-4px);
+/* After illustration — same slot as Before; scale inside clipped fig */
+.mg__panel--after .mg__panel-fig {
+  aspect-ratio: 4 / 3;
+  overflow: hidden;
+}
+
+.mg__panel--after .mg__panel-img {
+  padding: 0;
+  transform: scale(clamp(1.22, 1.16 + 0.9vw, 1.36));
+  transform-origin: center bottom;
 }
 
 /* Text block — separate floating card below image */
@@ -406,12 +413,15 @@
     width: 100%;
     justify-content: center;
   }
+
+  .mg__panel--after .mg__panel-img {
+    transform: scale(clamp(1.5, 1.43 + 2.3vw, 1.66));
+  }
 }
 
 /* ── Reduced motion ───────────────────────────────────────── */
 
 @media (prefers-reduced-motion: reduce) {
-  .mg__panel-img,
   .mg__panel-body {
     transition: none !important;
   }

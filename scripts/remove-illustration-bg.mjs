@@ -16,7 +16,7 @@ import sharp from "sharp";
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const root = path.join(__dirname, "..");
 
-const defaultInput = path.join(root, "public/images/Ilustracje/shoponline.jpg");
+const defaultInput = path.join(root, "public/images/Ilustracje/shoppyonline-source.jpg");
 
 /** Bottom-right ROI for Gemini star on 0% illustration (925×1152). */
 const WATERMARK_ROI = { left: 0.82, top: 0.88, width: 0.18, height: 0.12 };

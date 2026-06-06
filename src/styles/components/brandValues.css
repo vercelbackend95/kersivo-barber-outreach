@@ -217,6 +217,22 @@
   filter: drop-shadow(0 28px 48px color-mix(in srgb, var(--bg) 55%, transparent));
 }
 
+.brand-values__illustration-placeholder {
+  width: 100%;
+  max-width: var(--bv-illus-max-w);
+  min-height: var(--bv-visual-min-h);
+  aspect-ratio: 912 / 1136;
+  border: 1px dashed color-mix(in srgb, var(--border) 88%, var(--fg));
+  border-radius: var(--radius-12);
+  background:
+    radial-gradient(circle at 50% 42%, color-mix(in srgb, var(--accent) 8%, transparent), transparent 55%),
+    linear-gradient(
+      165deg,
+      color-mix(in srgb, var(--surface-2) 88%, var(--bg)) 0%,
+      color-mix(in srgb, var(--bg) 92%, var(--surface-1)) 100%
+    );
+}
+
 .brand-values__visual-fade {
   position: absolute;
   inset: 0;

@@ -396,6 +396,45 @@
   filter: brightness(1.06);
 }
 
+/* ── Mobile — larger illustrations, side-by-side ────────────── */
+
+@media (max-width: 599px) {
+  .audience-picker__grid {
+    gap: 0.35rem;
+  }
+
+  .audience-picker__card {
+    min-height: clamp(9.5rem, 36vw, 14rem);
+  }
+
+  .audience-picker__stage {
+    padding: 0.1rem 0;
+    overflow: hidden;
+  }
+
+  .audience-picker__card--switcher .audience-picker__blob,
+  .audience-picker__card--newcomer .audience-picker__blob {
+    aspect-ratio: 5 / 6;
+    transform: scale(1.28);
+    transform-origin: center center;
+  }
+
+  .audience-picker__card:active .audience-picker__blob {
+    transform: scale(1.24);
+  }
+}
+
+@media (max-width: 359px) {
+  .audience-picker__card--switcher .audience-picker__blob,
+  .audience-picker__card--newcomer .audience-picker__blob {
+    transform: scale(1.18);
+  }
+
+  .audience-picker__card:active .audience-picker__blob {
+    transform: scale(1.14);
+  }
+}
+
 /* ── Reduced motion ─────────────────────────────────────────── */
 
 @media (prefers-reduced-motion: reduce) {
