@@ -69,22 +69,12 @@ const Feature261 = ({ className }: Feature261Props) => {
     <section className={cn("feature261 py-32", className)}>
       <div className="container">
         <header className="feature261__intro">
-          <div className="feature261__headline-wrap">
-            <p className="feature261__kicker">INSIDE THE SYSTEM</p>
-            <h2 className="feature261__heading">Same screens you&rsquo;ll run your shop on.</h2>
-          </div>
-
+          <p className="feature261__kicker">INSIDE THE SYSTEM</p>
+          <h2 className="feature261__heading">Same screens you&rsquo;ll run your shop on.</h2>
           <p className="feature261__description">
             Client booking on your domain, one admin for the floor, buy-and-collect retail, and the day&rsquo;s numbers
-            in one panel. Open the live admin in a new tab and click around &mdash; no signup, no demo call.
+            in one panel.
           </p>
-          <button
-            type="button"
-            className="btn btn--primary mt-5"
-            data-system-chooser-open
-          >
-            OPEN THE LIVE ADMIN &mdash; NO SIGNUP
-          </button>
         </header>
 
         <div className="feature261__bento grid grid-cols-1 gap-4 md:grid-cols-6 lg:grid-cols-12">
@@ -139,6 +129,16 @@ const Feature261 = ({ className }: Feature261Props) => {
             mobileVariant="medium"
             gridClassName="md:col-span-2 md:h-[272px] lg:col-span-4 lg:h-[min(18rem,36vh)]"
           />
+        </div>
+
+        <div className="feature261__cta-block">
+          <button type="button" className="btn btn--primary" data-system-chooser-open>
+            See the Live Shop
+          </button>
+          <p className="feature261__footnote">
+            Opens in a new tab&mdash;wander the booking flow, floor panel and shop shelf at your pace.
+            No signup, no demo call; close the tab when you&rsquo;re done.
+          </p>
         </div>
       </div>
     </section>

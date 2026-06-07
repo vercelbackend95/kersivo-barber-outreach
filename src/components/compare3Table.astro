@@ -1,0 +1,112 @@
+---
+export const comparisonRows = [
+  {
+    title: 'Commission on bookings',
+    kersivo: '0% from Kersivo. Predictable monthly Care instead of platform take.',
+    marketplace:
+      'Popular apps such as Booksy and Fresha combine subscriptions with promotions and marketplace traffic. Your invoice shows the mix for your tier and region.',
+  },
+  {
+    title: 'Commission on retail',
+    kersivo: '0% from Kersivo on product sales. Stripe only takes its standard card fee on online checkout.',
+    marketplace:
+      'Retail sold via Booksy or Fresha follows each platform\u2019s published fees at checkout time.',
+  },
+  {
+    title: 'No-show protection',
+    kersivo:
+      'Stripe deposits land in your Stripe account before the appointment; you define the deposit rules.',
+    marketplace:
+      'Deposit and prepaid tools are standard on major apps \u2014 exact behaviour depends on the plan you run.',
+  },
+  {
+    title: 'Who owns client data day-to-day',
+    kersivo:
+      'Exports, tooling and client touchpoints carry your signage. We never surface your clients to neighbouring barbers inside Kersivo.',
+    marketplace:
+      'You plug into trusted ecosystems millions of guests already know. Profiles and reminders live largely inside those apps.',
+  },
+  {
+    title: 'Where clients book',
+    kersivo:
+      'Guests land on your domain in the browser\u2014no extra install to book a haircut with you.',
+    marketplace:
+      'Most repeat guests stay inside branded apps alongside inspiration for brows, nails and other salons in the directory.',
+  },
+  {
+    title: 'Hands-on switching',
+    kersivo:
+      'We migrate services and chairs from Booksy/Fresha, rehearse together, stage go-live and swap links with you.',
+    marketplace:
+      'Onboarding is mature when you arrive; planning a bespoke exit toward another stack is largely your roadmap.',
+  },
+  {
+    title: 'Illustrative monthly stack \u2014 4-chair shop, ~800 cuts',
+    kersivo: '\u00a339\u201359/month Care + Stripe on cards. Zero Kersivo take on bookings or retail.',
+    marketplace:
+      'Busy Booksy-era shops regularly see subscriptions plus incremental marketplace charges in roughly the \u00a3150\u2013\u00a3300/mo corridor; comparable Fresha stacks often fall near \u00a3120\u2013\u00a3280/mo\u2014verify with your statement.',
+    isCost: true,
+  },
+];
+
+export const costNote =
+  'Illustration only. Booksy and Fresha publish their own calculators—use your latest statements when you compare.';
+---
+
+<div class="compare3-block__table-wrap">
+  <div class="compare3-block__grid compare3-block__grid--dual" role="table" aria-label="Comparison table">
+    <div
+      class="compare3-block__item compare3-block__brand compare3-block__brand--highlight"
+      role="columnheader"
+    >
+      <img
+        class="compare3-block__logo compare3-block__logo--kersivo"
+        src="/images/logo-kersivo.png"
+        alt="Kersivo"
+        width="160"
+        height="40"
+        loading="lazy"
+        decoding="async"
+      />
+      <p class="compare3-block__brand-copy">Your domain, your admin, zero Kersivo take</p>
+    </div>
+    <div class="compare3-block__item compare3-block__brand compare3-block__brand--marketplace" role="columnheader">
+      <p class="compare3-block__brand-title">Marketplace apps</p>
+      <p class="compare3-block__brand-sub">e.g. Booksy, Fresha</p>
+      <p class="compare3-block__brand-copy compare3-block__brand-copy--wide">
+        Large networks, built-in discovery, pricing that blends subscription and marketplace usage.
+      </p>
+    </div>
+
+    {comparisonRows.map((row) => (
+      <>
+        <div
+          class:list={[
+            'compare3-block__item',
+            'compare3-block__value',
+            'compare3-block__value--featured',
+            row.isCost ? 'compare3-block__value--cost' : null,
+          ]}
+        >
+          <span class="compare3-block__row-title">{row.title}</span>
+          <span class="compare3-block__status compare3-block__status--ok">&check;</span>
+          <span>{row.kersivo}</span>
+        </div>
+        <div
+          class:list={[
+            'compare3-block__item',
+            'compare3-block__value',
+            'compare3-block__value--marketplace',
+            row.isCost ? 'compare3-block__value--cost' : null,
+          ]}
+        >
+          <span class="compare3-block__row-title">{row.title}</span>
+          <span class="compare3-block__status compare3-block__status--neutral" aria-hidden="true">&middot;</span>
+          <span>{row.marketplace}</span>
+        </div>
+      </>
+    ))}
+  </div>
+</div>
+
+<p class="compare3-block__footnote">{costNote}</p>

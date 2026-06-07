@@ -10,7 +10,6 @@ import BrandValues from '../components/brandValues.astro';
 import AudiencePicker from '../components/audiencePicker.astro';
 import NewcomerPath from '../components/newcomerPath.astro';
 import TrustBlock from '../components/trustBlock.astro';
-import Compare3 from '../components/compare3.astro';
 import { Feature261 } from '../components/feature261';
 import { Process2 } from '../components/process2';
 import ShopProductCards6 from '../components/shopProductCards6.astro';
@@ -182,7 +181,6 @@ const DEMO_ADMIN_PASSWORD = import.meta.env.PUBLIC_DEMO_ADMIN_PASSWORD
 
     <BrandValues />
     <AudiencePicker />
-    <Compare3 />
     <MigrationGuide />
     <NewcomerPath />
     <Feature261 />
@@ -434,4 +432,84 @@ const DEMO_ADMIN_PASSWORD = import.meta.env.PUBLIC_DEMO_ADMIN_PASSWORD
   };
 
   initFeature261StaggerReveal();
+
+  const comparisonToggle = document.querySelector('[data-comparison-toggle]');
+  const comparisonPanel = document.getElementById('mg-comparison-panel');
+  const comparisonAutoOpenLinks = document.querySelectorAll('[data-comparison-auto-open]');
+  const prefersReducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+  const setComparisonOpen = (nextOpen, { focusToggle = false } = {}) => {
+    if (!(comparisonPanel instanceof HTMLElement) || !(comparisonToggle instanceof HTMLButtonElement)) {
+      return;
+    }
+
+    const showLabel = comparisonToggle.dataset.comparisonLabelShow ?? 'See full comparison';
+    const hideLabel = comparisonToggle.dataset.comparisonLabelHide ?? 'Hide comparison';
+
+    comparisonToggle.setAttribute('aria-expanded', String(nextOpen));
+    comparisonToggle.textContent = nextOpen ? hideLabel : showLabel;
+
+    if (nextOpen) {
+      comparisonPanel.hidden = false;
+      window.requestAnimationFrame(() => {
+        comparisonPanel.classList.add('mg__comparison--open');
+      });
+    } else {
+      comparisonPanel.classList.remove('mg__comparison--open');
+
+      const finishCollapse = () => {
+        if (comparisonToggle.getAttribute('aria-expanded') !== 'false') {
+          return;
+        }
+        comparisonPanel.hidden = true;
+      };
+
+      if (prefersReducedMotion) {
+        finishCollapse();
+      } else {
+        window.setTimeout(finishCollapse, 300);
+      }
+    }
+
+    if (focusToggle) {
+      comparisonToggle.focus();
+    }
+  };
+
+  const openComparisonFromDeepLink = () => {
+    const migrationSection = document.getElementById('migration');
+    if (!(migrationSection instanceof HTMLElement)) {
+      return;
+    }
+
+    setComparisonOpen(true);
+
+    window.requestAnimationFrame(() => {
+      migrationSection.scrollIntoView({ behavior: prefersReducedMotion ? 'auto' : 'smooth', block: 'start' });
+    });
+  };
+
+  if (comparisonToggle && comparisonPanel) {
+    comparisonToggle.addEventListener('click', () => {
+      const isOpen = comparisonToggle.getAttribute('aria-expanded') === 'true';
+      setComparisonOpen(!isOpen);
+    });
+
+    comparisonAutoOpenLinks.forEach((link) => {
+      link.addEventListener('click', () => {
+        window.setTimeout(() => {
+          openComparisonFromDeepLink();
+        }, 0);
+      });
+    });
+
+    const handleComparisonHash = () => {
+      if (window.location.hash === '#switcher-path') {
+        openComparisonFromDeepLink();
+      }
+    };
+
+    handleComparisonHash();
+    window.addEventListener('hashchange', handleComparisonHash);
+  }
 </script>

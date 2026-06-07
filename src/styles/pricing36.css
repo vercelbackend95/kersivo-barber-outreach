@@ -62,13 +62,17 @@
   border-radius: 31px;
 }
 
-.pricing36 .bg-gradient-to-r {
-  background-image: linear-gradient(to right, var(--pricing-base-start), var(--pricing-base-end));
+.pricing36 .pricing36__plan-frame {
+  display: flex;
+  flex-direction: column;
 }
 
-.pricing36 .from-blue-500,
-.pricing36 .to-purple-500 {
-  background-color: transparent;
+.pricing36 .pricing36__plan-frame--launch {
+  background: var(--info);
+}
+
+.pricing36 .pricing36__plan-frame--growth {
+  background: var(--accent);
 }
 
 .pricing36 .bg-primary {
@@ -243,13 +247,28 @@
   }
 }
 
+.pricing36 .compare3-block__header .compare3-block__badge {
+  display: inline-block;
+  border: 1px solid color-mix(in srgb, var(--accent) 40%, transparent);
+  border-radius: var(--radius-4);
+  padding: 0.28rem 0.72rem;
+  font-family: var(--font-body);
+  font-size: var(--text-xs);
+  font-weight: 700;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--accent);
+}
+
 /* 50/50 setup guarantee badge above the plan cards */
 .pricing36 .pricing36__guarantee {
   margin: 0 auto 1.75rem;
   max-width: 56rem;
   display: flex;
-  align-items: flex-start;
-  gap: 0.85rem;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  gap: 0.65rem;
   padding: 1rem 1.2rem;
   background: color-mix(in srgb, var(--accent) 8%, var(--surface-1));
   border: 1px solid color-mix(in srgb, var(--accent) 38%, var(--border));
@@ -275,6 +294,8 @@
 
 .pricing36 .pricing36__guarantee-body {
   margin: 0;
+  max-width: 52ch;
+  text-align: center;
   font-size: var(--text-sm);
   line-height: 1.55;
   color: color-mix(in srgb, var(--fg) 88%, var(--muted));

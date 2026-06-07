@@ -30,7 +30,7 @@ const Pricing36 = ({ className }: Pricing36Props) => {
 
         <div className="mx-auto grid max-w-4xl gap-6 md:grid-cols-2">
           <div className="flex flex-col gap-4">
-            <div className="flex h-full flex-col rounded-4xl bg-gradient-to-r from-blue-500 to-purple-500 p-px">
+            <div className="pricing36__plan-frame pricing36__plan-frame--launch flex h-full flex-col rounded-4xl p-px">
               <div className="h-full rounded-[31px] bg-background p-8">
                 <div className="flex items-center justify-between">
                   <p className="text-xl font-semibold">Launch</p>
@@ -92,7 +92,7 @@ const Pricing36 = ({ className }: Pricing36Props) => {
             </div>
           </div>
           <div className="flex flex-col gap-4">
-            <div className="flex h-full flex-col rounded-4xl bg-primary p-px">
+            <div className="pricing36__plan-frame pricing36__plan-frame--growth flex h-full flex-col rounded-4xl p-px">
               <div className="h-full rounded-[31px] bg-background p-8">
                 <div className="flex items-center justify-between gap-2">
                   <p className="text-xl font-semibold">Priority Growth</p>

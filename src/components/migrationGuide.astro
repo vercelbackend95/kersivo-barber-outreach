@@ -1,4 +1,6 @@
 ---
+import Compare3Table from './compare3Table.astro';
+
 interface Props {
   className?: string;
 }
@@ -11,6 +13,7 @@ const { className = '' } = Astro.props as Props;
   class={`mg scroll-mt-24 ${className}`.trim()}
   aria-labelledby="mg-headline"
 >
+  <span id="switcher-path" class="mg__hash-anchor" aria-hidden="true"></span>
   <div class="mg__glow" aria-hidden="true"></div>
 
   <div class="container">
@@ -18,6 +21,10 @@ const { className = '' } = Astro.props as Props;
     <div class="mg__intro">
       <span class="mg__eyebrow">For switchers &middot; Zero-risk</span>
       <h2 id="mg-headline" class="mg__headline">Before.<br />After.</h2>
+      <p class="mg__lead">
+        Keep Booksy live while we set up client booking on your domain, one admin for the floor,
+        buy-and-collect retail, and the day&rsquo;s numbers in one panel.
+      </p>
     </div>
 
     <div class="mg__story" role="img" aria-label="Migration story: from paying marketplace fees to zero commission">
@@ -91,10 +98,41 @@ const { className = '' } = Astro.props as Props;
         <a href="#contact" class="btn btn--primary btn--lg" data-demo-cta>
           Plan my switch &mdash; free
         </a>
-        <button type="button" class="btn btn--secondary btn--lg" data-system-chooser-open>
-          Open the live admin
+        <button
+          type="button"
+          class="btn btn--secondary btn--lg"
+          data-comparison-toggle
+          aria-expanded="false"
+          aria-controls="mg-comparison-panel"
+          data-comparison-label-show="See full comparison"
+          data-comparison-label-hide="Hide comparison"
+        >
+          See full comparison
         </button>
       </div>
+
+      <div
+        id="mg-comparison-panel"
+        class="mg__comparison"
+        hidden
+        aria-labelledby="mg-comparison-title"
+      >
+        <div class="mg__comparison-header">
+          <span class="compare3-block__badge">FOR SWITCHERS &middot; TWO MODELS</span>
+          <h3 id="mg-comparison-title">Kersivo vs marketplace apps</h3>
+          <p>
+            Booksy and Fresha are proven at scale. Kersivo is built for owners who want <strong>zero Kersivo commission</strong>,
+            a booking site on their own domain, and retail plus admin in one stack. Here is how the two postures differ.
+          </p>
+        </div>
+
+        <Compare3Table />
+
+        <p class="compare3-block__anchor">
+          Choose breadth inside a marketplace, or margin and brand control on your own URL &mdash; both are valid; Kersivo is for the latter.
+        </p>
+      </div>
+
       <p class="mg__footnote">
         Client data follows UK GDPR &mdash; any contact list imported must reflect your existing lawful basis for processing.
       </p>
