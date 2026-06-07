@@ -10,6 +10,7 @@ import { SkeletonVerticalTimeline } from '../skeleton';
 import { ArrowRight, ListOrdered, MessageCircle, Plus, User, X } from '../lucide-react';
 import ClientProfilePanel from './ClientProfilePanel';
 import { adminFetchJson } from './adminAuth';
+import { resolveClientIdForBooking } from '../../lib/admin/resolveClientIdForBooking';
 
 type TimelineBarber = {
   id: string;
@@ -269,7 +270,8 @@ type BookingExpansionCardProps = {
   toneClass: string;
   onExpand: () => void;
   onStatusChange?: (bookingId: string, newStatus: string) => void;
-  onClientProfile?: (clientId: string) => void;
+  onClientProfile?: (booking: TimelineBooking) => void;
+  isClientProfileLoading?: boolean;
 };
 
 const CLIENT_PANEL_W = 120;
@@ -305,6 +307,7 @@ const BookingExpansionCard = memo(function BookingExpansionCard({
   onExpand,
   onStatusChange,
   onClientProfile,
+  isClientProfileLoading = false,
 }: BookingExpansionCardProps) {
   const timeRange = formatTimeRange(booking.startAt, booking.endAt);
   const duration = formatDuration(booking.startAt, booking.endAt);
@@ -817,22 +820,21 @@ const BookingExpansionCard = memo(function BookingExpansionCard({
         <div ref={trackRef} className={trackClass}>
         {/* ── Left: client panel ── */}
         <div className="admin-vtl-client-panel" aria-hidden={swipeState !== 'left'}>
-          {booking.clientId && onClientProfile ? (
-            <button
-              type="button"
-              className="admin-vtl-client-panel-avatar admin-vtl-client-panel-avatar--btn"
-              onClick={(e) => { e.stopPropagation(); onClientProfile(booking.clientId!); }}
-              tabIndex={swipeState === 'left' ? 0 : -1}
-              aria-label={`View profile for ${booking.fullName}`}
-              title="View client profile"
-            >
-              <span className="admin-vtl-client-panel-avatar-initials">{clientInitials}</span>
-            </button>
-          ) : (
-            <div className="admin-vtl-client-panel-avatar">
-              <span className="admin-vtl-client-panel-avatar-initials">{clientInitials}</span>
-            </div>
-          )}
+          <button
+            type="button"
+            className="admin-vtl-client-panel-avatar admin-vtl-client-panel-avatar--btn"
+            onClick={(e) => {
+              e.stopPropagation();
+              onClientProfile?.(booking);
+            }}
+            disabled={isClientProfileLoading || !onClientProfile}
+            tabIndex={swipeState === 'left' ? 0 : -1}
+            aria-label={`View profile for ${booking.fullName}`}
+            aria-busy={isClientProfileLoading}
+            title="View client profile"
+          >
+            <span className="admin-vtl-client-panel-avatar-initials">{clientInitials}</span>
+          </button>
           <p className="admin-vtl-client-panel-name">{booking.fullName.split(' ')[0]}</p>
           <button
             type="button"
@@ -1198,7 +1200,8 @@ type SlotRowProps = {
   onAvatarClick: (slotKey: string, booking: TimelineBooking) => void;
   onSlotToggle: (slotKey: string) => void;
   onExpand: (booking: TimelineBooking) => void;
-  onClientProfile: (clientId: string) => void;
+  onClientProfile: (booking: TimelineBooking) => void;
+  clientProfileLoadingBookingId: string | null;
   isSearchActive: boolean;
 };
 
@@ -1212,6 +1215,7 @@ const SlotRow = memo(function SlotRow({
   onSlotToggle,
   onExpand,
   onClientProfile,
+  clientProfileLoadingBookingId,
   isSearchActive,
 }: SlotRowProps) {
   const hasBookings = slot.bookings.length > 0;
@@ -1319,6 +1323,7 @@ const SlotRow = memo(function SlotRow({
                   toneClass={getBookingStatusTone(booking)}
                   onExpand={() => onExpand(booking)}
                   onClientProfile={onClientProfile}
+                  isClientProfileLoading={clientProfileLoadingBookingId === booking.id}
                 />
               ))}
             </div>
@@ -1354,9 +1359,16 @@ function TodayTimeline({
   const [activeBookingId, setActiveBookingId] = useState<string | null>(null);
   const [expandedSlotKey, setExpandedSlotKey] = useState<string | null>(null);
   const [clientPanelId, setClientPanelId] = useState<string | null>(null);
+  const [clientProfileLoadingBookingId, setClientProfileLoadingBookingId] = useState<string | null>(null);
 
-  const handleClientProfile = useCallback((clientId: string) => {
-    setClientPanelId(clientId);
+  const handleClientProfile = useCallback(async (booking: TimelineBooking) => {
+    setClientProfileLoadingBookingId(booking.id);
+    try {
+      const clientId = await resolveClientIdForBooking(booking);
+      if (clientId) setClientPanelId(clientId);
+    } finally {
+      setClientProfileLoadingBookingId(null);
+    }
   }, []);
 
   const handleAvatarClick = useCallback((slotKey: string, booking: TimelineBooking) => {
@@ -1498,6 +1510,7 @@ function TodayTimeline({
               onSlotToggle={handleSlotToggle}
               onExpand={handleExpand}
               onClientProfile={handleClientProfile}
+              clientProfileLoadingBookingId={clientProfileLoadingBookingId}
               isSearchActive={isSearchActive}
             />
           );

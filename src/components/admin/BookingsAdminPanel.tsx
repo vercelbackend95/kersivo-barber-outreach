@@ -5,6 +5,7 @@ import AdminSectionHeader from './AdminSectionHeader';
 import AdminBookingsOpsSearch from './AdminBookingsOpsSearch';
 import AdminNextAppointmentsStripLive from './AdminNextAppointmentsStripLive';
 import AdminBookingsScheduleList from './AdminBookingsScheduleList';
+import AdminBookingDatePicker from './AdminBookingDatePicker';
 import AdminLineChart from './charts/AdminLineChart';
 import { addDays } from 'date-fns';
 import { formatInTimeZone, fromZonedTime, toZonedTime } from 'date-fns-tz';
@@ -2352,22 +2353,11 @@ export default function BookingsAdminPanel({ isActive, mode, onBackToDashboard }
                         );
                       })}
                     </div>
-                    <label className="admin-date-picker-label" aria-label={`Select date, currently ${selectedDateLabel}`}>
-                      <span className="admin-date-picker-text">{selectedDateLabel}</span>
-                      <input
-                        type="date"
-                        className="admin-filter-tab-calendar-input"
-                        value={selectedDate}
-                        onChange={(event) => setSelectedDate(event.target.value)}
-                        aria-label="Select date"
-                      />
-                      <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">
-                        <path
-                          d="M7 2a1 1 0 0 1 1 1v1h8V3a1 1 0 1 1 2 0v1h1a3 3 0 0 1 3 3v11a4 4 0 0 1-4 4H6a4 4 0 0 1-4-4V7a3 3 0 0 1 3-3h1V3a1 1 0 0 1 1-1Zm13 8H4v8a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-8ZM5 6a1 1 0 0 0-1 1v1h16V7a1 1 0 0 0-1-1H5Z"
-                          fill="currentColor"
-                        />
-                      </svg>
-                    </label>
+                    <AdminBookingDatePicker
+                      value={selectedDate}
+                      label={selectedDateLabel}
+                      onChange={setSelectedDate}
+                    />
                   </div>
                 </div>
               </div>
@@ -2506,19 +2496,13 @@ export default function BookingsAdminPanel({ isActive, mode, onBackToDashboard }
                       allowInitialNowScroll={isTimelineEnterComplete}
                       floatingTopRight={
                         isMobileViewport ? (
-                          <label
-                            className="admin-date-picker-label admin-date-picker-label--floating"
-                            aria-label={`Select date, currently ${selectedDateLabel}`}
-                          >
-                            <span className="admin-date-picker-text">{selectedDateLabel}</span>
-                            <input
-                              type="date"
-                              className="admin-filter-tab-calendar-input"
-                              value={selectedDate}
-                              onChange={(event) => setSelectedDate(event.target.value)}
-                              aria-label="Select date"
-                            />
-                          </label>
+                          <AdminBookingDatePicker
+                            value={selectedDate}
+                            label={selectedDateLabel}
+                            onChange={setSelectedDate}
+                            className="admin-date-picker-label--floating"
+                            showIcon={false}
+                          />
                         ) : null
                       }
                     />

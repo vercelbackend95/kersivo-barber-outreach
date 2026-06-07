@@ -1,6 +1,7 @@
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
 import OrdersDataTable22 from './OrdersDataTable22';
+import ClientProfilePanel from './ClientProfilePanel';
 import AdminSectionHeader from './AdminSectionHeader';
 import AdminLineChart from './charts/AdminLineChart';
 import AdminLeaderboard from './AdminLeaderboard';
@@ -10,6 +11,7 @@ import { ChevronDown, ChevronUp, Package, Search, Star, X } from '../lucide-reac
 import { formatDelta } from './reportsFormatting';
 import { SkeletonBookingChoices, SkeletonKPICards } from '../skeleton';
 import { AdminFetchError, adminFetchJson } from './adminAuth';
+import { resolveClientIdForBooking } from '../../lib/admin/resolveClientIdForBooking';
 type ShopTab = 'products' | 'orders' | 'sales';
 type SalesRangePreset = '7' | '30' | '90' | 'custom';
 
@@ -694,6 +696,7 @@ export default function ShopAdminPanel({ initialTab = 'products' }: ShopAdminPan
   const [orderDetailsLoadingId, setOrderDetailsLoadingId] = useState<string | null>(null);
 
   const [ordersUnauthorized, setOrdersUnauthorized] = useState(false);
+  const [openClientId, setOpenClientId] = useState<string | null>(null);
 
   const [salesPreset, setSalesPreset] = useState<SalesRangePreset>('30');
   const [salesFrom, setSalesFrom] = useState(() => getRangeDates('30').from);
@@ -1732,6 +1735,18 @@ export default function ShopAdminPanel({ initialTab = 'products' }: ShopAdminPan
     }
   }
 
+  const handleOpenClientProfile = useCallback(async (contact: { email: string; fullName: string }) => {
+    try {
+      const clientId = await resolveClientIdForBooking({
+        email: contact.email,
+        fullName: contact.fullName,
+      });
+      if (clientId) setOpenClientId(clientId);
+    } catch (profileError) {
+      setError(profileError instanceof Error ? profileError.message : 'Could not open client profile.');
+    }
+  }, []);
+
 
   function toggleOrderExpand(orderId: string) {
     if (expandedOrderId === orderId) {
@@ -2346,6 +2361,7 @@ export default function ShopAdminPanel({ initialTab = 'products' }: ShopAdminPan
             orderDetailsById={orderDetailsById}
             orderDetailsLoadingId={orderDetailsLoadingId}
             onMarkCollected={(orderId) => void markCollected(orderId)}
+            onOpenClientProfile={(contact) => void handleOpenClientProfile(contact)}
             ordersUnauthorized={ordersUnauthorized}
                         emptyMessage={debouncedOrdersSearchQuery ? 'No orders match your search.' : 'No orders yet.'}
             searchSlot={
@@ -2637,6 +2653,10 @@ export default function ShopAdminPanel({ initialTab = 'products' }: ShopAdminPan
           </>
         </div>
       )}
+
+      {openClientId ? (
+        <ClientProfilePanel clientId={openClientId} onClose={() => setOpenClientId(null)} />
+      ) : null}
 
       </section>
     </ShopPanelErrorBoundary>

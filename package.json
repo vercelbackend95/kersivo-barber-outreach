@@ -12,6 +12,7 @@
     "dev:with-generate": "npm run prisma:generate && astro dev",
     "postinstall": "prisma generate --schema prisma/schema.prisma",
     "seed": "prisma db seed",
+    "seed:hero-bookings": "tsx scripts/seed-hero-bookings.ts",
     "test": "vitest run",
     "vercel:dev": "vercel dev",
     "prisma:migrate:dev": "prisma migrate dev --schema prisma/schema.prisma",

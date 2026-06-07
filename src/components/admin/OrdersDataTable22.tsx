@@ -43,6 +43,7 @@ type OrdersDataTable22Props = {
   orderDetailsById: Record<string, OrderDetail>;
   orderDetailsLoadingId: string | null;
   onMarkCollected: (orderId: string) => void;
+  onOpenClientProfile?: (contact: { email: string; fullName: string }) => void;
   ordersUnauthorized: boolean;
   emptyMessage?: string;
   searchSlot?: ReactNode;
@@ -197,6 +198,7 @@ export default function OrdersDataTable22({
   orderDetailsById,
   orderDetailsLoadingId,
   onMarkCollected,
+  onOpenClientProfile,
   ordersUnauthorized,
   emptyMessage = 'No orders yet.',
   searchSlot,
@@ -245,6 +247,14 @@ export default function OrdersDataTable22({
   function handleCollectClick(event: MouseEvent<HTMLButtonElement>, orderId: string) {
     event.stopPropagation();
     onMarkCollected(orderId);
+  }
+
+  function handleAvatarClick(
+    event: MouseEvent<HTMLButtonElement>,
+    contact: { email: string; fullName: string },
+  ) {
+    event.stopPropagation();
+    onOpenClientProfile?.(contact);
   }
 
   return (
@@ -370,11 +380,17 @@ export default function OrdersDataTable22({
                       className="admin-orders-grid-identity"
                       title={`Order ${orderLabel}: ${customerIdentity.displayName} (${customerIdentity.email})`}
                     >
-                      <span className="admin-orders-grid-avatar" aria-hidden="true">
+                      <button
+                        type="button"
+                        className="admin-orders-grid-avatar admin-orders-grid-avatar--btn"
+                        onClick={(event) => handleAvatarClick(event, customerIdentity)}
+                        aria-label={`View profile for ${customerIdentity.displayName}`}
+                        title="View client profile"
+                      >
                         <span className="admin-orders-grid-avatar-initials">
                           {getCustomerInitials(order)}
                         </span>
-                      </span>
+                      </button>
                       <div className="admin-orders-grid-identity__text">
                         <span className="admin-orders-grid-identity__title">
                           <span className="admin-orders-grid-customer">

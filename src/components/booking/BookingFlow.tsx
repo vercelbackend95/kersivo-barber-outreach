@@ -2,7 +2,7 @@
 import React, { useEffect, useMemo, useRef, useState } from 'react';
 import BookingConfirmationPanel, { type BookingSummary } from './BookingConfirmationPanel';
 import BookingReviewPanel from './BookingReviewPanel';
-import BookingStepIndicator from './BookingStepIndicator';
+import { BookingStepRailItem } from './BookingStepIndicator';
 import { SkeletonSlotGrid } from '../skeleton';
 import { ANY_BARBER_ID, ANY_BARBER_NAME } from '../../lib/booking/constants';
 import EmptyState from '../EmptyState';
@@ -175,6 +175,19 @@ function calculateEndTime(startTime: string, durationMinutes: number): string | 
   return `${String(nextHours).padStart(2, '0')}:${String(nextMinutes).padStart(2, '0')}`;
 }
 
+const BOOKING_STEP_REVEAL_MS = 520;
+
+type BookingStepId = 'barber' | 'schedule' | 'details';
+
+function scrollToBookingStep(section: HTMLElement, onReveal?: () => void) {
+  const reduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  section.scrollIntoView({ behavior: reduced ? 'auto' : 'smooth', block: 'start' });
+
+  if (!reduced) {
+    onReveal?.();
+  }
+}
+
 export default function BookingFlow({ services, barbers, mode = 'create', token = '', shopDetails }: Props) {
   const bookingTimezone = shopDetails?.timezone || DEFAULT_BOOKING_TIMEZONE;
   const [serviceId, setServiceId] = useState('');
@@ -190,6 +203,12 @@ export default function BookingFlow({ services, barbers, mode = 'create', token 
   const [isSlotsLoading, setIsSlotsLoading] = useState(false);
   const [brokenAvatarIds, setBrokenAvatarIds] = useState<Record<string, boolean>>({});
   const confirmationRef = useRef<HTMLElement | null>(null);
+  const barberStepRef = useRef<HTMLElement>(null);
+  const scheduleStepRef = useRef<HTMLElement>(null);
+  const detailsStepRef = useRef<HTMLElement>(null);
+  const prevStepRef = useRef(1);
+  const revealTimeoutRef = useRef<number | null>(null);
+  const [revealingStepId, setRevealingStepId] = useState<BookingStepId | null>(null);
   const [confirmation, setConfirmation] = useState<{ type: 'booked' | 'rescheduled'; summary: BookingSummary } | null>(null);
   const isCreateMode = mode === 'create';
   const normalizedFullName = fullName.trim();
@@ -303,6 +322,46 @@ export default function BookingFlow({ services, barbers, mode = 'create', token 
 
     confirmationRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
   }, [confirmation]);
+
+  useEffect(() => {
+    const prev = prevStepRef.current;
+    if (currentStep > prev) {
+      const stepTargets: Record<number, { ref: React.RefObject<HTMLElement | null>; id: BookingStepId } | undefined> = {
+        2: { ref: barberStepRef, id: 'barber' },
+        3: { ref: scheduleStepRef, id: 'schedule' },
+        4: isCreateMode ? { ref: detailsStepRef, id: 'details' } : undefined
+      };
+
+      const target = stepTargets[currentStep];
+      if (target?.ref.current) {
+        if (revealTimeoutRef.current !== null) {
+          window.clearTimeout(revealTimeoutRef.current);
+        }
+
+        const reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+        if (!reducedMotion) {
+          setRevealingStepId(target.id);
+        }
+
+        scrollToBookingStep(target.ref.current, () => {
+          revealTimeoutRef.current = window.setTimeout(() => {
+            setRevealingStepId(null);
+            revealTimeoutRef.current = null;
+          }, BOOKING_STEP_REVEAL_MS);
+        });
+      }
+    }
+
+    prevStepRef.current = currentStep;
+  }, [currentStep, isCreateMode]);
+
+  useEffect(() => {
+    return () => {
+      if (revealTimeoutRef.current !== null) {
+        window.clearTimeout(revealTimeoutRef.current);
+      }
+    };
+  }, []);
 
 
   const trustItems = useMemo(() => {
@@ -505,8 +564,11 @@ export default function BookingFlow({ services, barbers, mode = 'create', token 
 
         <div className="booking-flow__layout">
           <div className="booking-flow__left">
-            <BookingStepIndicator currentStep={currentStep} steps={[{ label: 'Service' }, { label: 'Barber' }, { label: 'Schedule' }, { label: 'Details' }]} />
           <div className="booking-flow__main">
+            <div className="booking-synced-step-row">
+              <div className="booking-synced-step-row__rail">
+                <BookingStepRailItem stepNumber={1} label="Service" currentStep={currentStep} showConnector />
+              </div>
             <section className="booking-step" aria-labelledby="booking-step-service">
               <div className="booking-step__head">
                 <span className="booking-step__index">01</span>
@@ -545,8 +607,17 @@ export default function BookingFlow({ services, barbers, mode = 'create', token 
 
               </div>
                           </section>
+            </div>
 
-            <section className="booking-step" aria-labelledby="booking-step-barber">
+            <div className="booking-synced-step-row">
+              <div className="booking-synced-step-row__rail">
+                <BookingStepRailItem stepNumber={2} label="Barber" currentStep={currentStep} showConnector />
+              </div>
+            <section
+              ref={barberStepRef}
+              className={`booking-step${revealingStepId === 'barber' ? ' is-revealing' : ''}`}
+              aria-labelledby="booking-step-barber"
+            >
               <div className="booking-step__head">
                 <span className="booking-step__index">02</span>
                 <div className="booking-step__title">
@@ -606,10 +677,24 @@ export default function BookingFlow({ services, barbers, mode = 'create', token 
               ) : null}
 
             </section>
+            </div>
 
 
 
-            <section className="booking-step" aria-labelledby="booking-step-date-time">
+            <div className="booking-synced-step-row">
+              <div className="booking-synced-step-row__rail">
+                <BookingStepRailItem
+                  stepNumber={3}
+                  label="Schedule"
+                  currentStep={currentStep}
+                  showConnector={isCreateMode}
+                />
+              </div>
+            <section
+              ref={scheduleStepRef}
+              className={`booking-step${revealingStepId === 'schedule' ? ' is-revealing' : ''}`}
+              aria-labelledby="booking-step-date-time"
+            >
               <div className="booking-step__head">
                 <span className="booking-step__index">03</span>
                 <div className="booking-step__title">
@@ -684,8 +769,17 @@ export default function BookingFlow({ services, barbers, mode = 'create', token 
               </div>
 
             </section>
+            </div>
             {isCreateMode ? (
-              <section className="booking-step" aria-labelledby="booking-step-details">
+              <div className="booking-synced-step-row">
+                <div className="booking-synced-step-row__rail">
+                  <BookingStepRailItem stepNumber={4} label="Details" currentStep={currentStep} />
+                </div>
+              <section
+                ref={detailsStepRef}
+                className={`booking-step${revealingStepId === 'details' ? ' is-revealing' : ''}`}
+                aria-labelledby="booking-step-details"
+              >
                 <div className="booking-step__head">
                   <span className="booking-step__index">04</span>
                   <div className="booking-step__title">
@@ -707,6 +801,7 @@ export default function BookingFlow({ services, barbers, mode = 'create', token 
                   </label>
                 </div>
               </section>
+              </div>
             ) : null}
 
             <div className={`booking-action-bar${isSubmitting ? ' is-submitting' : ''}`} aria-live="polite">
