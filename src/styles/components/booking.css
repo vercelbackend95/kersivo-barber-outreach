@@ -14878,6 +14878,35 @@ body.admin-theme-premium-black {
     margin: 0;
   }
 
+  .booking-shell [data-feature261-booking-overview-shot]:has(.admin-bookings-ops--staff-roster-open)
+    > .admin-bookings-ops-dash-cluster {
+    flex: 1 1 auto;
+    min-height: 0;
+  }
+
+  .booking-shell [data-feature261-booking-overview-shot]:has(.admin-bookings-ops--staff-roster-open)
+    > .admin-view-transition-container {
+    display: none;
+  }
+
+  .booking-shell [data-feature261-booking-overview-shot] .admin-bookings-ops--staff-roster-open {
+    flex: 1 1 auto;
+    min-height: 0;
+  }
+
+  .booking-shell [data-feature261-booking-overview-shot]
+    .admin-bookings-ops--staff-roster-open
+    .admin-bookings-ops-staff-roster {
+    flex: 1 1 auto;
+    min-height: 0;
+    max-height: none;
+    overflow-x: hidden;
+    overflow-y: auto;
+    overscroll-behavior: contain;
+    -webkit-overflow-scrolling: touch;
+    touch-action: pan-y;
+  }
+
   /* Extend the flex height chain through the animation wrapper layers so
      .admin-vtl-scroll gets its bounded height and can scroll properly. */
   .booking-shell [data-feature261-booking-overview-shot] > .admin-view-transition-container {

@@ -15,7 +15,7 @@ const Pricing36 = ({ className }: Pricing36Props) => {
           <span className="compare3-block__badge">PRICING</span>
           <h2>ONE SETUP. ONE MONTHLY FEE. ZERO COMMISSION.</h2>
           <p>
-            <strong>Launch: &pound;99 setup + &pound;39/month Care.</strong> Kersivo never takes a cut of your bookings or retail.
+            <strong>Launch: &pound;199 setup + &pound;39/month Care.</strong> Kersivo never takes a cut of your bookings or retail.
             Stripe applies only to online card payments, on your own account.
           </p>
         </div>
@@ -37,7 +37,7 @@ const Pricing36 = ({ className }: Pricing36Props) => {
                 </div>
                 <div className="mt-6 flex flex-col gap-2">
                   <p className="text-6xl font-bold">
-                    £99
+                    £199
                     <span className="text-base font-semibold text-muted-foreground">
                       / setup
                     </span>

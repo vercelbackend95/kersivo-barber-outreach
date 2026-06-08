@@ -101,7 +101,7 @@ const RateCard1 = ({ className }: RateCard1Props) => {
               </ul>
             </div>
             <p className="rate-card1__plan-note">
-              Your setup fee (£99 or £299) is separate; Care starts once you are live. No mystery line items stacked on top.
+              Your setup fee (£199 or £299) is separate; Care starts once you are live. No mystery line items stacked on top.
             </p>
           </div>
         </aside>

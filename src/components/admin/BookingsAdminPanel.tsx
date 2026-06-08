@@ -715,6 +715,7 @@ export default function BookingsAdminPanel({ isActive, mode, onBackToDashboard }
   const [addBarberWorkingHours, setAddBarberWorkingHours] = useState<WorkingHourRow[]>(() => getDefaultWorkingHourRows());
 
   const [selectedBarberId, setSelectedBarberId] = useState<string | null>(null);
+  const [barberProfileSource, setBarberProfileSource] = useState<'ops' | null>(null);
   const [services, setServices] = useState<ServiceOption[]>([]);
   const [workingHours, setWorkingHours] = useState<WorkingHourRow[]>([]);
   const [workingHoursLoading, setWorkingHoursLoading] = useState(false);
@@ -1188,6 +1189,13 @@ export default function BookingsAdminPanel({ isActive, mode, onBackToDashboard }
   }, [mode, applyDayOpsFilter]);
 
   useEffect(() => {
+    if (mode !== 'dashboard' && barberProfileSource === 'ops') {
+      setSelectedBarberId(null);
+      setBarberProfileSource(null);
+    }
+  }, [barberProfileSource, mode]);
+
+  useEffect(() => {
     if (!staffRosterOpen) return;
     setDayOpsFilter('all');
   }, [staffRosterOpen]);
@@ -1295,8 +1303,21 @@ export default function BookingsAdminPanel({ isActive, mode, onBackToDashboard }
   const onStaffToggle = useCallback(() => {
     setStaffRosterOpen((open) => !open);
   }, []);
+
+  const openBarberFromOpsRoster = useCallback((barberId: string) => {
+    setSelectedBarberId(barberId);
+    setStaffRosterOpen(false);
+    setBarberProfileSource('ops');
+  }, []);
+
+  const handleBarberProfileBack = useCallback(() => {
+    setSelectedBarberId(null);
+    setBarberProfileSource(null);
+  }, []);
+
   const visibleBarbersForManagement = useMemo(() => barbersFilter === 'all' ? allBarbersSorted : activeBarbers, [activeBarbers, allBarbersSorted, barbersFilter]);
   const selectedBarber = useMemo(() => allBarbersSorted.find((barber) => barber.id === selectedBarberId) ?? null, [allBarbersSorted, selectedBarberId]);
+  const barberProfileContextActive = Boolean(selectedBarberId) && (mode === 'blocks' || barberProfileSource === 'ops');
   const enabledServiceIds = useMemo(() => new Set(selectedBarber?.serviceIds ?? []), [selectedBarber]);
   const selectedBarberBlocks = useMemo(() => timeBlocks.filter((block) => block.barberId === selectedBarberId), [selectedBarberId, timeBlocks]);
   const globalBlocks = useMemo(() => timeBlocks.filter((block) => !block.barberId), [timeBlocks]);
@@ -1594,7 +1615,11 @@ export default function BookingsAdminPanel({ isActive, mode, onBackToDashboard }
   const historySearchResultsLoading = mode === 'history' && Boolean(effectiveClientSearchQuery) && historySearchLoading;
 
 
-  const isAnyOverlayOpen = isAddBarberSheetOpen || openDrilldown !== null || showHolidayModal || selectedClientId !== null;
+  const isAnyOverlayOpen =
+    isAddBarberSheetOpen ||
+    openDrilldown !== null ||
+    showHolidayModal ||
+    selectedClientId !== null;
   useBodyScrollLock(isMobileViewport && isAnyOverlayOpen);
 
   const isTimelineView = mode === 'dashboard' && activeView === 'timeline';
@@ -1741,7 +1766,7 @@ export default function BookingsAdminPanel({ isActive, mode, onBackToDashboard }
   }, [selectedBarberId]);
 
   useLayoutEffect(() => {
-    if (mode !== 'blocks' || !selectedBarberId) return;
+    if (!barberProfileContextActive) return;
     const el = bookingShellRef.current;
     if (!el) return;
 
@@ -1753,7 +1778,7 @@ export default function BookingsAdminPanel({ isActive, mode, onBackToDashboard }
       cancelAnimationFrame(raf);
       window.clearTimeout(t);
     };
-  }, [mode, selectedBarberId]);
+  }, [barberProfileContextActive, selectedBarberId]);
 
   useEffect(() => {
     if (addBarberServiceOptions.length === 0) return;
@@ -1786,9 +1811,10 @@ export default function BookingsAdminPanel({ isActive, mode, onBackToDashboard }
   }, []);
 
   useEffect(() => {
-    if (!loggedIn || !isActive || mode !== 'blocks') return;
+    if (!loggedIn || !isActive) return;
+    if (mode !== 'blocks' && barberProfileSource !== 'ops') return;
     void fetchServices();
-  }, [fetchServices, isActive, loggedIn, mode]);
+  }, [barberProfileSource, fetchServices, isActive, loggedIn, mode]);
 
   const fetchSelectedBarberStats = useCallback(async (barberId: string) => {
     if (!barberId) {
@@ -1807,16 +1833,16 @@ export default function BookingsAdminPanel({ isActive, mode, onBackToDashboard }
 
 
   useEffect(() => {
-    if (!loggedIn || !isActive || mode !== 'blocks' || !selectedBarberId) return;
+    if (!loggedIn || !isActive || !barberProfileContextActive || !selectedBarberId) return;
     void fetchWorkingHours(selectedBarberId);
-  }, [fetchWorkingHours, isActive, loggedIn, mode, selectedBarberId]);
+  }, [barberProfileContextActive, fetchWorkingHours, isActive, loggedIn, selectedBarberId]);
   useEffect(() => {
-    if (!loggedIn || !isActive || mode !== 'blocks' || !selectedBarberId) {
+    if (!loggedIn || !isActive || !barberProfileContextActive || !selectedBarberId) {
       setSelectedBarberStatsCount(0);
       return;
     }
     void fetchSelectedBarberStats(selectedBarberId);
-  }, [fetchSelectedBarberStats, isActive, loggedIn, mode, selectedBarberId]);
+  }, [barberProfileContextActive, fetchSelectedBarberStats, isActive, loggedIn, selectedBarberId]);
 
 
   async function saveWorkingHours(nextRules?: WorkingHourRow[]) {
@@ -2324,7 +2350,10 @@ export default function BookingsAdminPanel({ isActive, mode, onBackToDashboard }
       <div className="admin-bookings-ops-dash-cluster">
         {!isMobileViewport && bookingsDashHeroEl ? renderOpsDashHeroSlot(bookingsDashHeroEl) : null}
 
-        <section className="admin-bookings-ops admin-bookings-ops--dashboard" aria-label="Operations dashboard">
+        <section
+          className={`admin-bookings-ops admin-bookings-ops--dashboard${staffRosterOpen ? ' admin-bookings-ops--staff-roster-open' : ''}`}
+          aria-label="Operations dashboard"
+        >
           <div className="admin-bookings-ops-dash-controls-stack" role="region" aria-label="Dashboard view controls">
             <div className="admin-bookings-ops-dash-control-deck">
               <div className="admin-bookings-ops-toolbar">
@@ -2433,7 +2462,7 @@ export default function BookingsAdminPanel({ isActive, mode, onBackToDashboard }
                           dayFill={dayFill}
                           todayLine={todayLine}
                           getInitials={getInitials}
-                          onOpenBarber={setSelectedBarberId}
+                          onOpenBarber={openBarberFromOpsRoster}
                           bookingsLength={bookings.length}
                           variant="ops"
                         />
@@ -2448,6 +2477,39 @@ export default function BookingsAdminPanel({ isActive, mode, onBackToDashboard }
       </div>
     ) : null;
 
+  const barberProfileView = selectedBarber ? (
+    <BarberProfile
+      barber={selectedBarber}
+      barberAvatarPreviewUrl={editingBarberAvatarPreviewUrl}
+      barberSaving={barberSaving}
+      weekDays={WEEK_DAYS}
+      isActive={normalizeBarberStatus(selectedBarber)}
+      totalBookingsServed={selectedBarberStatsCount}
+      services={services}
+      enabledServiceIds={enabledServiceIds}
+      servicesSaving={servicesSaving}
+      workingHours={workingHours}
+      workingHoursLoading={workingHoursLoading}
+      workingHoursSaving={workingHoursSaving}
+      blocks={selectedBarberBlocks}
+      blockSuccessMessage={blockSuccessMessage}
+      blockErrorMessage={blockErrorMessage}
+      getInitials={getInitials}
+      onBack={handleBarberProfileBack}
+      onBarberAvatarChange={setEditingBarberAvatarFile}
+      onSaveAvatar={() => void saveSelectedBarberAvatar()}
+      onToggleActive={() => void updateBarberStatus(selectedBarber.id, !normalizeBarberStatus(selectedBarber))}
+      onToggleService={(serviceId, enabled) => void toggleServiceForBarber(serviceId, enabled)}
+      barberSaveMessage={barberSaveMessage}
+      barberSaveError={barberSaveError}
+      onSetWorkingHours={setWorkingHours}
+      onSaveWorkingHours={saveWorkingHours}
+      onCreateBlock={(payload) => void createProfileBlock(payload)}
+      onDeleteBlock={(blockId) => void deleteTimeBlock(blockId)}
+      onDeleteBarber={() => void deleteBarber(selectedBarber.id)}
+    />
+  ) : null;
+
   if (!isActive) return null;
   if (isCheckingSession) return <section className="surface booking-shell"><h2>Admin</h2><p className="muted">Checking session...</p></section>;
   if (!loggedIn) return <section className="surface booking-shell"><h2>ADMIN</h2><p className="muted">Unauthorized. Verify your admin secret and reload this page.</p>{error && <p>{error}</p>}</section>;
@@ -2458,6 +2520,9 @@ export default function BookingsAdminPanel({ isActive, mode, onBackToDashboard }
       className={`surface booking-shell${mode === 'reports' ? ' booking-shell--reports' : ''}${mode === 'blocks' ? ' admin-services-shell' : ''}`}
     >
       {mode === 'dashboard' ? (
+        barberProfileSource === 'ops' && barberProfileView ? (
+          barberProfileView
+        ) : (
         <div data-feature261-booking-overview-shot="">
           <AdminSectionHeader
             title={BOOKINGS_SECTION_HEADER.dashboard.title}
@@ -2559,6 +2624,7 @@ export default function BookingsAdminPanel({ isActive, mode, onBackToDashboard }
             </AnimatePresence>
           </div>
         </div>
+        )
       ) : (
         <>
           <AdminSectionHeader
@@ -2588,39 +2654,8 @@ export default function BookingsAdminPanel({ isActive, mode, onBackToDashboard }
         <>
 
           {mode === 'blocks' ? (
-            selectedBarber ? (
-              <BarberProfile
-                barber={selectedBarber}
-                barberAvatarPreviewUrl={editingBarberAvatarPreviewUrl}
-                barberSaving={barberSaving}
-
-                weekDays={WEEK_DAYS}
-                isActive={normalizeBarberStatus(selectedBarber)}
-                totalBookingsServed={selectedBarberStatsCount}
-                services={services}
-                enabledServiceIds={enabledServiceIds}
-                servicesSaving={servicesSaving}
-                workingHours={workingHours}
-                workingHoursLoading={workingHoursLoading}
-                workingHoursSaving={workingHoursSaving}
-                blocks={selectedBarberBlocks}
-                blockSuccessMessage={blockSuccessMessage}
-                blockErrorMessage={blockErrorMessage}
-                getInitials={getInitials}
-                onBack={() => setSelectedBarberId(null)}
-                onBarberAvatarChange={setEditingBarberAvatarFile}
-                onSaveAvatar={() => void saveSelectedBarberAvatar()}
-
-                onToggleActive={() => void updateBarberStatus(selectedBarber.id, !normalizeBarberStatus(selectedBarber))}
-                onToggleService={(serviceId, enabled) => void toggleServiceForBarber(serviceId, enabled)}
-                barberSaveMessage={barberSaveMessage}
-                barberSaveError={barberSaveError}
-                onSetWorkingHours={setWorkingHours}
-                onSaveWorkingHours={saveWorkingHours}
-                onCreateBlock={(payload) => void createProfileBlock(payload)}
-                onDeleteBlock={(blockId) => void deleteTimeBlock(blockId)}
-                onDeleteBarber={() => void deleteBarber(selectedBarber.id)}
-              />
+            barberProfileView ? (
+              barberProfileView
             ) : (
               <BarbersOverview
                 barbers={visibleBarbersForManagement}
