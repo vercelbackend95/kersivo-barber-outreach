@@ -148,13 +148,12 @@
   }
 
   .shop-sort-wrap {
-    flex: 1 1 100%;
-    width: 100%;
+    flex: 0 0 auto;
+    align-self: flex-start;
   }
 
   .shop-sort-select {
-    width: 100%;
-    max-width: 100%;
+    width: auto;
   }
 }
 
