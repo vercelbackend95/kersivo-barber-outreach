@@ -276,6 +276,39 @@ type BookingExpansionCardProps = {
 
 const CLIENT_PANEL_W = 120;
 const ACTIONS_PANEL_W = 200;
+
+const SWIPE_OFFSETS: Record<SwipeState, number> = {
+  left: 0,
+  closed: -CLIENT_PANEL_W,
+  right: -(CLIENT_PANEL_W + ACTIONS_PANEL_W),
+};
+
+const SWIPE_PANEL_ORDER: SwipeState[] = ['left', 'closed', 'right'];
+
+function clampSwipeOffset(offset: number): number {
+  return Math.min(0, Math.max(SWIPE_OFFSETS.right, offset));
+}
+
+function getNearestSwipeState(offset: number): SwipeState {
+  let nearest: SwipeState = 'closed';
+  let minDistance = Infinity;
+
+  for (const state of SWIPE_PANEL_ORDER) {
+    const distance = Math.abs(offset - SWIPE_OFFSETS[state]);
+    if (distance < minDistance) {
+      minDistance = distance;
+      nearest = state;
+    }
+  }
+
+  return nearest;
+}
+
+function getDotStrength(offset: number, panel: SwipeState): number {
+  const distance = Math.abs(offset - SWIPE_OFFSETS[panel]);
+  return Math.max(0, 1 - distance / CLIENT_PANEL_W);
+}
+
 function formatPence(pence: number): string {
   return `£${(pence / 100).toFixed(2)}`;
 }
@@ -307,6 +340,8 @@ const BookingExpansionCard = memo(function BookingExpansionCard({
 
   // ── Swipe tri-state ───────────────────────────────────────────────────────────
   const [swipeState, setSwipeState] = useState<SwipeState>('closed');
+  const [dragOffsetX, setDragOffsetX] = useState<number | null>(null);
+  const [isSwipeDragging, setIsSwipeDragging] = useState(false);
   const trackRef = useRef<HTMLDivElement>(null);
   const touchStartX = useRef(0);
   const isDragging = useRef(false);
@@ -347,6 +382,7 @@ const BookingExpansionCard = memo(function BookingExpansionCard({
     if (trackRef.current) {
       trackRef.current.style.transform = '';
     }
+    setDragOffsetX(null);
     if (swipeState !== 'right') {
       setIsStatusSheetOpen(false);
       setIsServiceSheetOpen(false);
@@ -484,6 +520,7 @@ const BookingExpansionCard = memo(function BookingExpansionCard({
   const handleTouchStart = useCallback((e: React.TouchEvent) => {
     touchStartX.current = e.touches[0].clientX;
     isDragging.current = true;
+    setIsSwipeDragging(true);
     trackRef.current?.classList.add('admin-vtl-swipe-track--dragging');
   }, []);
 
@@ -491,14 +528,9 @@ const BookingExpansionCard = memo(function BookingExpansionCard({
     (e: React.TouchEvent) => {
       if (!isDragging.current) return;
       const delta = e.touches[0].clientX - touchStartX.current;
-      const base =
-        swipeState === 'left'
-          ? 0
-          : swipeState === 'right'
-            ? -(CLIENT_PANEL_W + ACTIONS_PANEL_W)
-            : -CLIENT_PANEL_W;
-      const clamped = Math.min(0, Math.max(-(CLIENT_PANEL_W + ACTIONS_PANEL_W), base + delta));
+      const clamped = clampSwipeOffset(SWIPE_OFFSETS[swipeState] + delta);
       applyTrackTransform(clamped);
+      setDragOffsetX(clamped);
     },
     [swipeState, applyTrackTransform],
   );
@@ -507,24 +539,15 @@ const BookingExpansionCard = memo(function BookingExpansionCard({
     (e: React.TouchEvent) => {
       if (!isDragging.current) return;
       isDragging.current = false;
+      setIsSwipeDragging(false);
       const delta = e.changedTouches[0].clientX - touchStartX.current;
       trackRef.current?.classList.remove('admin-vtl-swipe-track--dragging');
 
-      if (delta >= 60) {
-        setSwipeState('left');
-      } else if (delta <= -60) {
-        setSwipeState('right');
-      } else {
-        const snapTo =
-          swipeState === 'left'
-            ? 0
-            : swipeState === 'right'
-              ? -(CLIENT_PANEL_W + ACTIONS_PANEL_W)
-              : -CLIENT_PANEL_W;
-        applyTrackTransform(snapTo);
-      }
+      const finalOffset = clampSwipeOffset(SWIPE_OFFSETS[swipeState] + delta);
+      setDragOffsetX(null);
+      setSwipeState(getNearestSwipeState(finalOffset));
     },
-    [swipeState, applyTrackTransform],
+    [swipeState],
   );
 
   // ── Derived status flags ──────────────────────────────────────────────────────
@@ -705,6 +728,14 @@ const BookingExpansionCard = memo(function BookingExpansionCard({
     'admin-vtl-swipe-track',
     swipeState === 'left' ? 'admin-vtl-swipe-track--open' : '',
     swipeState === 'right' ? 'admin-vtl-swipe-track--right' : '',
+  ]
+    .filter(Boolean)
+    .join(' ');
+
+  const currentSwipeOffset = dragOffsetX ?? SWIPE_OFFSETS[swipeState];
+  const swipeDotsClass = [
+    'admin-vtl-swipe-dots',
+    isSwipeDragging ? 'admin-vtl-swipe-dots--dragging' : '',
   ]
     .filter(Boolean)
     .join(' ');
@@ -928,10 +959,24 @@ const BookingExpansionCard = memo(function BookingExpansionCard({
           {bottomSheetPortal}
         </div>
 
-        <div className="admin-vtl-swipe-dots" aria-hidden="true">
-          <span className={`admin-vtl-swipe-dot${swipeState === 'left' ? ' is-active' : ''}`} />
-          <span className={`admin-vtl-swipe-dot${swipeState === 'closed' ? ' is-active' : ''}`} />
-          <span className={`admin-vtl-swipe-dot${swipeState === 'right' ? ' is-active' : ''}`} />
+        <div className={swipeDotsClass} aria-hidden="true">
+          {SWIPE_PANEL_ORDER.map((panel) => {
+            const strength = getDotStrength(currentSwipeOffset, panel);
+            const markScaleX = 0.85 + 1.48 * strength;
+            const markScaleY = 0.85 + 0.15 * strength;
+            return (
+              <span
+                key={panel}
+                className={`admin-vtl-swipe-dot${strength > 0.5 ? ' is-active' : ''}`}
+                style={{ opacity: 0.45 + 0.55 * strength }}
+              >
+                <span
+                  className="admin-vtl-swipe-dot__mark"
+                  style={{ transform: `scaleX(${markScaleX}) scaleY(${markScaleY})` }}
+                />
+              </span>
+            );
+          })}
         </div>
       </div>
     </div>

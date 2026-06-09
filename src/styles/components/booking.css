@@ -13926,21 +13926,37 @@ body.admin-theme-premium-black {
   justify-content: center;
   align-items: center;
   gap: 5px;
+  min-height: 12px;
   padding-top: 6px;
+  contain: layout;
 }
 
 .admin-vtl-swipe-dot {
-  width: 5px;
-  height: 5px;
-  border-radius: 999px;
-  background: color-mix(in srgb, var(--muted) 70%, var(--border));
-  opacity: 0.7;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 14px;
+  height: 6px;
+  flex-shrink: 0;
 }
 
-.admin-vtl-swipe-dot.is-active {
-  width: 14px;
+.admin-vtl-swipe-dot__mark {
+  display: block;
+  width: 6px;
+  height: 6px;
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--muted) 70%, var(--border));
+  transform-origin: center center;
+  will-change: transform;
+  transition: transform 0.2s cubic-bezier(0.4, 0, 0.2, 1), background-color 0.2s ease;
+}
+
+.admin-vtl-swipe-dots--dragging .admin-vtl-swipe-dot__mark {
+  transition: none;
+}
+
+.admin-vtl-swipe-dot.is-active .admin-vtl-swipe-dot__mark {
   background: color-mix(in srgb, var(--accent) 78%, var(--fg));
-  opacity: 1;
 }
 
 /* ── Sliding track: [client-panel][card] laid out as a flex row ── */
