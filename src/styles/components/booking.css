@@ -4293,8 +4293,8 @@ body.admin-theme-premium-black {
 }
 
 .admin-sidebar-monogram {
-  width: 42px;
-  height: 42px;
+  width: 56px;
+  height: 56px;
   background: transparent;
   border-radius: var(--radius-8);
   display: flex;
@@ -4541,8 +4541,8 @@ body.admin-theme-premium-black {
 }
 
 .admin-mobile-header .admin-sidebar-monogram {
-  width: 36px;
-  height: 36px;
+  width: 48px;
+  height: 48px;
 }
 
 .admin-mobile-header .admin-sidebar-brand-name {

@@ -4,7 +4,7 @@ export const KERSIVO_ORGANIZATION_ID = 'https://kersivo.co.uk/#organization';
 const KERSIVO_SITE = 'https://kersivo.co.uk';
 /** Canonical public demo origin (BarberDemo). */
 const BARBERDEMO_CANONICAL = 'https://barberdemo.kersivo.co.uk';
-const ORG_LOGO_URL = `${KERSIVO_SITE}/images/logo-kersivo.png`;
+const ORG_LOGO_URL = `${KERSIVO_SITE}/images/logo_nobg.png`;
 
 const SOFTWARE_ID = `${BARBERDEMO_CANONICAL}/#software/kersivo-barber-management`;
 const SERVICE_ID = `${BARBERDEMO_CANONICAL}/#service/barber-booking`;

@@ -74,10 +74,10 @@ function SidebarBrand() {
       <div className="admin-sidebar-monogram" aria-hidden="true">
         <img
           className="admin-sidebar-logo-img"
-          src="/images/logo-kersivo.png"
+          src="/images/logo_nobg.png"
           alt=""
-          width={42}
-          height={42}
+          width={56}
+          height={56}
           decoding="async"
         />
       </div>

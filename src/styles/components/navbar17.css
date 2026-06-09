@@ -92,8 +92,8 @@
   display: block;
   flex-shrink: 0;
   width: auto;
-  height: clamp(1.65rem, 2.8vw, 2.35rem);
-  max-width: min(12rem, 38vw);
+  height: clamp(3rem, 5.5vw, 4.25rem);
+  max-width: min(18rem, 48vw);
   object-fit: contain;
   object-position: left center;
 }
@@ -742,8 +742,8 @@
   }
 
   .navbar17__brand-img {
-    height: clamp(1.65rem, 6.25vw, 2.15rem);
-    max-width: min(11rem, 54vw);
+    height: clamp(2.75rem, 14vw, 3.75rem);
+    max-width: min(16rem, 72vw);
   }
 }
 
