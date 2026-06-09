@@ -1,6 +1,6 @@
 import React from "react";
 
-import { Armchair, GlobeLock, LayoutDashboard, MessagesSquare } from "lucide-react";
+import { GlobeLock, LayoutDashboard, MessagesSquare, ShieldCheck, TrendingUp } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 type CareFeature = {
@@ -13,44 +13,46 @@ interface RateCard1Props {
   className?: string;
 }
 
-const LAUNCH_CARE_BULLETS = [
-  "Hosting, SSL, admin and shop unlocked 24/7",
-  "Client SMS reminders where you enable them",
-  "Support inbox + up to 1 hour of scoped tweaks/month",
-  "0% commission from Kersivo (Stripe still charges cards)",
-];
-
-const PRIORITY_CARE_BULLETS = [
-  "Everything in Launch-tier Care above",
-  "Priority queue + faster human responses",
-  "Up to 2 hours of scoped site/booking tweaks/month",
-  "Monthly pulse on performance with practical fixes",
+const ONGOING_CARE_BULLETS = [
+  "Online booking — 0% Kersivo commission",
+  "Your shop online — 0% Kersivo commission on retail",
+  "SMS reminders when you enable them",
+  "No-show protection on bookings",
+  "Hosting, SSL, admin + shop live 24/7",
+  "Support inbox + 1 hour scoped tweaks/month",
+  "Platform updates — performance and scale as you add barbers and chairs",
 ];
 
 const CARE_FEATURES: CareFeature[] = [
   {
-    title: "Hosting & SSL",
+    title: "Booking & shop — 0% commission",
     description:
-      "We keep your storefront, diary and pickup shop reachable around the clock; SSL renewal and infra noise stay off your weekends.",
-    Icon: GlobeLock,
-  },
-  {
-    title: "One admin for bookings + retail",
-    description:
-      "Chairs, services, retail SKU and pickup orders share a single cockpit so your managers are not juggling tabs.",
+      "Clients book and buy on your domain. Kersivo never takes a cut of bookings or retail; Stripe charges cards on your account only.",
     Icon: LayoutDashboard,
   },
   {
-    title: "SMS, patching & Care hours",
+    title: "Always on",
     description:
-      "SMS automations fire when you enable them, dependencies stay patched, and contracted builder time refreshes monthly.",
+      "Hosting, SSL renewal, admin panel and pickup shop stay reachable 24/7 — infra noise stays off your weekends.",
+    Icon: GlobeLock,
+  },
+  {
+    title: "Client comms",
+    description:
+      "SMS reminders fire when you enable them. No-show protection helps cut empty chairs without awkward chase-ups.",
     Icon: MessagesSquare,
   },
   {
-    title: "Flat Care as you add chairs",
+    title: "Humans on call",
     description:
-      "More barbers does not automatically bump monthly Care; we price on attention, not headcount creep.",
-    Icon: Armchair,
+      "Support inbox for day-to-day questions, plus up to one hour of scoped site or booking tweaks each month.",
+    Icon: ShieldCheck,
+  },
+  {
+    title: "Keeps scaling",
+    description:
+      "We ship platform updates so the system stays fast and handles more barbers and chairs as your shop grows.",
+    Icon: TrendingUp,
   },
 ];
 
@@ -69,39 +71,32 @@ const RateCard1 = ({ className }: RateCard1Props) => {
               WHAT YOUR SUBSCRIPTION BUYS EACH MONTH
             </h2>
             <p className="rate-card1__lead">
-              Ongoing Care is the flat subscription next to Stripe: uptime, tooling, and the humans who keep bookings
-              flowing. Launch runs at <strong>£39/month</strong>; Priority Growth at <strong>£59/month</strong> with extra
-              response speed and monthly change capacity.
+              One flat <strong>£39/month</strong> after go-live. Booking, shop, admin, SMS, support, and ongoing platform
+              updates — <strong>0% Kersivo commission</strong> on bookings and retail. Stripe charges cards on your
+              account only.
             </p>
             <Illustration className="rate-card1__mark rate-card1__mark--top" />
             <Illustration className="rate-card1__mark rate-card1__mark--bottom" />
           </div>
 
           <div className="rate-card1__price-block">
-            <div className="rate-card1__plan-block" aria-label="Launch monthly care">
-              <p className="rate-card1__plan-title">Launch Care</p>
+            <div
+              className="rate-card1__plan-block rate-card1__plan-block--solo"
+              aria-label="Ongoing monthly care"
+            >
+              <p className="rate-card1__plan-title">Ongoing Care</p>
               <p className="rate-card1__price">
                 £39 <span>/ month</span>
               </p>
               <ul className="rate-card1__conditions">
-                {LAUNCH_CARE_BULLETS.map((condition) => (
-                  <li key={condition}>{condition}</li>
-                ))}
-              </ul>
-            </div>
-            <div className="rate-card1__plan-block" aria-label="Priority monthly care">
-              <p className="rate-card1__plan-title">Priority Care</p>
-              <p className="rate-card1__price">
-                £59 <span>/ month</span>
-              </p>
-              <ul className="rate-card1__conditions">
-                {PRIORITY_CARE_BULLETS.map((condition) => (
+                {ONGOING_CARE_BULLETS.map((condition) => (
                   <li key={condition}>{condition}</li>
                 ))}
               </ul>
             </div>
             <p className="rate-card1__plan-note">
-              Your setup fee (£199 or £299) is separate; Care starts once you are live. No mystery line items stacked on top.
+              Your setup fee (£199 or £299) is separate; Care starts once you are live. No mystery line items stacked on
+              top.
             </p>
           </div>
         </aside>

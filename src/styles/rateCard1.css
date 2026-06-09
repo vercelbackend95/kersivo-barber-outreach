@@ -72,23 +72,20 @@
   gap: 0.85rem;
 }
 
-@media (min-width: 40rem) {
-  .rate-card1__price-block {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-    align-items: stretch;
-  }
-
-  .rate-card1__plan-note {
-    grid-column: 1 / -1;
-  }
-}
-
 .rate-card1__plan-block {
   border: 1px solid var(--border);
   border-radius: 12px;
   padding: 0.95rem 1.05rem;
   background: color-mix(in srgb, var(--surface-1) 88%, var(--bg));
   box-shadow: 0 1px 0 color-mix(in srgb, var(--border) 55%, transparent);
+}
+
+.rate-card1__plan-block--solo {
+  padding: 1.15rem 1.25rem;
+  border-color: color-mix(in srgb, var(--accent) 28%, var(--border));
+  box-shadow:
+    0 1px 0 color-mix(in srgb, var(--border) 55%, transparent),
+    0 12px 28px color-mix(in srgb, var(--accent) 8%, transparent);
 }
 
 .rate-card1__plan-title {

@@ -44,7 +44,7 @@ const Pricing36 = ({ className }: Pricing36Props) => {
                   </p>
                   <p className="text-xl font-semibold">+ £39/month Ongoing Care</p>
                   <p className="text-sm text-muted-foreground">
-                    One monthly fee for hosting, support, admin access, and monthly small updates.
+                    Hosting, SMS, support, platform updates, and 1h scoped tweaks/month — same Care on every plan.
                   </p>
                 </div>
                 <Separator className="my-6" />
@@ -67,7 +67,7 @@ const Pricing36 = ({ className }: Pricing36Props) => {
                   </li>
                   <li className="flex gap-2">
                     <Check className="mt-1 size-4 shrink-0 text-green-500" />
-                    <p className="font-medium">Includes SMS reminders, support, and 1h dev/month (small in-scope edits)</p>
+                    <p className="font-medium">Ongoing Care: SMS, no-show protection, support, platform updates, 1h tweaks/month</p>
                   </li>
                 </ul>
                 <div className="pricing36__anchors">
@@ -107,9 +107,9 @@ const Pricing36 = ({ className }: Pricing36Props) => {
                       / setup
                     </span>
                   </p>
-                  <p className="text-xl font-semibold">+ £59/month Ongoing Care</p>
+                  <p className="text-xl font-semibold">+ £39/month Ongoing Care</p>
                   <p className="text-sm text-muted-foreground">
-                    Everything in £39/month, plus priority support and more monthly change capacity.
+                    Same £39/month Care as Launch — extra setup polish and priority launch queue during the build.
                   </p>
                 </div>
                 <Separator className="my-6" />
@@ -120,7 +120,7 @@ const Pricing36 = ({ className }: Pricing36Props) => {
                   </li>
                   <li className="flex gap-2">
                     <Check className="mt-1 size-4 shrink-0 text-green-500" />
-                    <p className="font-medium">Priority launch queue and faster support response</p>
+                    <p className="font-medium">Priority launch queue during setup</p>
                   </li>
                   <li className="flex gap-2">
                     <Check className="mt-1 size-4 shrink-0 text-green-500" />
@@ -128,11 +128,7 @@ const Pricing36 = ({ className }: Pricing36Props) => {
                   </li>
                   <li className="flex gap-2">
                     <Check className="mt-1 size-4 shrink-0 text-green-500" />
-                    <p className="font-medium">2h dev/month for ongoing in-scope changes</p>
-                  </li>
-                  <li className="flex gap-2">
-                    <Check className="mt-1 size-4 shrink-0 text-green-500" />
-                    <p className="font-medium">Monthly performance check-in and practical growth improvements</p>
+                    <p className="font-medium">Same Ongoing Care: hosting, SMS, support, platform updates, 1h tweaks/month</p>
                   </li>
                 </ul>
                 <div className="pricing36__anchors">
@@ -142,7 +138,7 @@ const Pricing36 = ({ className }: Pricing36Props) => {
                   </p>
                   <p className="pricing36__anchor pricing36__anchor--newcomer">
                     <span className="pricing36__anchor-tag pricing36__anchor-tag--newcomer">Starting fresh</span>
-                    Faster launch queue and more monthly dev capacity if you want to grow harder from day one.
+                    Faster launch queue and deeper catalogue setup if you want to grow harder from day one.
                   </p>
                 </div>
               </div>

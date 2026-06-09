@@ -13,6 +13,8 @@
     "postinstall": "prisma generate --schema prisma/schema.prisma",
     "seed": "prisma db seed",
     "seed:hero-bookings": "tsx scripts/seed-hero-bookings.ts",
+    "seed:timeline-today": "tsx scripts/seed-timeline-today.ts",
+    "seed:timeline-booking": "tsx scripts/add-timeline-booking.ts",
     "test": "vitest run",
     "vercel:dev": "vercel dev",
     "prisma:migrate:dev": "prisma migrate dev --schema prisma/schema.prisma",

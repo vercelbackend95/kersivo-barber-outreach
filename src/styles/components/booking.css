@@ -382,6 +382,17 @@
   display: grid;
   gap: 0.85rem;
 }
+
+.booking-slots-section__head {
+  display: grid;
+  gap: 0.4rem;
+}
+
+.booking-slots-section__head label,
+.booking-slots-section__head .muted {
+  display: block;
+}
+
 .booking-choice-grid--services,
 .booking-choice-grid--barbers,
 .booking-flow__grid--details,
