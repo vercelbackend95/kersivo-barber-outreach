@@ -13922,25 +13922,53 @@ body.admin-theme-premium-black {
 }
 
 .admin-vtl-swipe-dots {
+  position: relative;
   display: flex;
   justify-content: center;
   align-items: center;
   gap: 5px;
+  width: fit-content;
+  margin-inline: auto;
   padding-top: 6px;
+  isolation: isolate;
+}
+
+.admin-vtl-swipe-dots::after {
+  content: '';
+  position: absolute;
+  top: 6px;
+  left: 0;
+  width: 14px;
+  height: 5px;
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--accent) 78%, var(--fg));
+  pointer-events: none;
+  z-index: 2;
+  transition: transform 0.22s cubic-bezier(0.4, 0, 0.2, 1);
+  will-change: transform;
+}
+
+.admin-vtl-swipe-dots[data-active='left']::after {
+  transform: translateX(-4.5px);
+}
+
+.admin-vtl-swipe-dots[data-active='closed']::after {
+  transform: translateX(5.5px);
+}
+
+.admin-vtl-swipe-dots[data-active='right']::after {
+  transform: translateX(15.5px);
 }
 
 .admin-vtl-swipe-dot {
   width: 5px;
   height: 5px;
+  flex-shrink: 0;
   border-radius: 999px;
   background: color-mix(in srgb, var(--muted) 70%, var(--border));
   opacity: 0.7;
-}
-
-.admin-vtl-swipe-dot.is-active {
-  width: 14px;
-  background: color-mix(in srgb, var(--accent) 78%, var(--fg));
-  opacity: 1;
+  position: relative;
+  z-index: 1;
 }
 
 /* ── Sliding track: [client-panel][card] laid out as a flex row ── */
@@ -13968,21 +13996,6 @@ body.admin-theme-premium-black {
 .admin-vtl-swipe-track > .admin-vtl-expansion-card {
   min-width: 100%;
   flex-shrink: 0;
-}
-
-/* Swipe junctions: rely on background contrast — borders peek as visible stripes */
-.admin-vtl-swipe-track .admin-vtl-client-panel {
-  border-right: none;
-}
-
-.admin-vtl-swipe-track .admin-vtl-actions-panel {
-  border-left: none;
-}
-
-.admin-vtl-swipe-track--open > .admin-vtl-expansion-card,
-.admin-vtl-swipe-track--right > .admin-vtl-expansion-card,
-.admin-vtl-swipe-track--dragging > .admin-vtl-expansion-card {
-  border-left: none;
 }
 
 /* ── Client panel (revealed on swipe right) ──────────────────────────────── */

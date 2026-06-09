@@ -928,10 +928,10 @@ const BookingExpansionCard = memo(function BookingExpansionCard({
           {bottomSheetPortal}
         </div>
 
-        <div className="admin-vtl-swipe-dots" aria-hidden="true">
-          <span className={`admin-vtl-swipe-dot${swipeState === 'left' ? ' is-active' : ''}`} />
-          <span className={`admin-vtl-swipe-dot${swipeState === 'closed' ? ' is-active' : ''}`} />
-          <span className={`admin-vtl-swipe-dot${swipeState === 'right' ? ' is-active' : ''}`} />
+        <div className="admin-vtl-swipe-dots" data-active={swipeState} aria-hidden="true">
+          <span className="admin-vtl-swipe-dot" />
+          <span className="admin-vtl-swipe-dot" />
+          <span className="admin-vtl-swipe-dot" />
         </div>
       </div>
     </div>
