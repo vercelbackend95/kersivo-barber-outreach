@@ -15557,8 +15557,9 @@ body.admin-theme-premium-black {
   border: 1px solid color-mix(in srgb, var(--border) 70%, transparent);
   background: var(--surface-2);
   border-radius: 99px;
-  padding: 0.2rem 0.65rem;
-  font-size: 0.75rem;
+  padding: 0.25rem 0.65rem;
+  min-height: 2rem;
+  font-size: max(16px, 0.75rem);
   color: var(--fg);
   width: 7rem;
   outline: none;
