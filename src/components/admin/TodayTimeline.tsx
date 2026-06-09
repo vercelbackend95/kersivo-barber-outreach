@@ -322,6 +322,8 @@ const BookingExpansionCard = memo(function BookingExpansionCard({
   // ── Service picker ────────────────────────────────────────────────────────────
   const [services, setServices] = useState<ServiceOption[]>([]);
   const [serviceLoading, setServiceLoading] = useState(false);
+  const [pendingService, setPendingService] = useState<ServiceOption | null>(null);
+  const [serviceReplaceLoading, setServiceReplaceLoading] = useState(false);
 
   useEffect(() => {
     if (typeof window === 'undefined') return;
@@ -348,6 +350,7 @@ const BookingExpansionCard = memo(function BookingExpansionCard({
     if (swipeState !== 'right') {
       setIsStatusSheetOpen(false);
       setIsServiceSheetOpen(false);
+      setPendingService(null);
     }
   }, [swipeState]);
 
@@ -365,12 +368,17 @@ const BookingExpansionCard = memo(function BookingExpansionCard({
     if (!(isStatusSheetOpen || isServiceSheetOpen)) return undefined;
     const onKeyDown = (event: KeyboardEvent) => {
       if (event.key !== 'Escape') return;
+      if (pendingService) {
+        setPendingService(null);
+        setServiceError('');
+        return;
+      }
       setIsStatusSheetOpen(false);
       setIsServiceSheetOpen(false);
     };
     document.addEventListener('keydown', onKeyDown);
     return () => document.removeEventListener('keydown', onKeyDown);
-  }, [isStatusSheetOpen, isServiceSheetOpen]);
+  }, [isStatusSheetOpen, isServiceSheetOpen, pendingService]);
 
   // ── Status mutation ───────────────────────────────────────────────────────────
   const handleStatusChange = useCallback(
@@ -413,9 +421,18 @@ const BookingExpansionCard = memo(function BookingExpansionCard({
     }
   }, []);
 
+  const isSameBookingService = useCallback(
+    (svc: ServiceOption) => {
+      if (booking.service.id && svc.id === booking.service.id) return true;
+      return svc.name === booking.service.name;
+    },
+    [booking.service.id, booking.service.name],
+  );
+
   const handleServiceReplace = useCallback(
     async (serviceId: string) => {
       setServiceError('');
+      setServiceReplaceLoading(true);
       try {
         await adminFetchJson(`/api/admin/bookings/${booking.id}/service`, {
           method: 'PATCH',
@@ -423,13 +440,34 @@ const BookingExpansionCard = memo(function BookingExpansionCard({
           body: JSON.stringify({ serviceId }),
           errorMessage: 'Could not update booking service.',
         });
+        setPendingService(null);
         setIsServiceSheetOpen(false);
         onStatusChange?.(booking.id, localStatus);
       } catch (error) {
         setServiceError(error instanceof Error ? error.message : 'Could not update booking service.');
+      } finally {
+        setServiceReplaceLoading(false);
       }
     },
     [booking.id, localStatus, onStatusChange],
+  );
+
+  const confirmServiceReplace = useCallback(() => {
+    if (!pendingService || serviceReplaceLoading) return;
+    void handleServiceReplace(pendingService.id);
+  }, [pendingService, serviceReplaceLoading, handleServiceReplace]);
+
+  const handleServiceOptionSelect = useCallback(
+    (svc: ServiceOption) => {
+      setServiceError('');
+      if (isSameBookingService(svc)) {
+        setPendingService(null);
+        setIsServiceSheetOpen(false);
+        return;
+      }
+      setPendingService(svc);
+    },
+    [isSameBookingService],
   );
 
   // ── Touch / swipe handlers ────────────────────────────────────────────────────
@@ -509,12 +547,15 @@ const BookingExpansionCard = memo(function BookingExpansionCard({
   const closeActionSheets = useCallback(() => {
     setIsStatusSheetOpen(false);
     setIsServiceSheetOpen(false);
+    setPendingService(null);
+    setServiceError('');
   }, []);
 
   const openStatusActions = useCallback(
     (e: React.MouseEvent) => {
       e.stopPropagation();
       setActionError('');
+      setPendingService(null);
       setIsServiceSheetOpen(false);
       setIsStatusSheetOpen(true);
     },
@@ -529,6 +570,7 @@ const BookingExpansionCard = memo(function BookingExpansionCard({
     (e: React.MouseEvent) => {
       e.stopPropagation();
       setServiceError('');
+      setPendingService(null);
       setIsStatusSheetOpen(false);
       setIsServiceSheetOpen(true);
       void openServicePicker();
@@ -580,25 +622,64 @@ const BookingExpansionCard = memo(function BookingExpansionCard({
 
   const serviceActionsContent = (
     <div className="admin-vtl-bottom-sheet-content admin-vtl-action-sheet-content">
-      {serviceError ? <p className="admin-vtl-message-chooser-error" role="alert">{serviceError}</p> : null}
-      {serviceLoading ? (
+      {pendingService ? (
+        <div className="admin-vtl-service-confirm">
+          <p className="admin-vtl-service-confirm-title">Change service?</p>
+          <p className="admin-vtl-service-confirm-copy">
+            Change <strong>{booking.fullName}</strong> from the current service to the one below.
+          </p>
+          <div className="admin-vtl-service-confirm-services">
+            <span>
+              <strong>{booking.service.name}</strong>
+              {' → '}
+              <strong>{pendingService.name}</strong>
+            </span>
+          </div>
+          <p className="admin-vtl-service-confirm-price">New price: {formatPence(pendingService.pricePence)}</p>
+          {serviceError ? <p className="admin-vtl-message-chooser-error" role="alert">{serviceError}</p> : null}
+          <div className="admin-vtl-service-confirm-actions">
+            <button
+              type="button"
+              className="btn btn--ghost"
+              disabled={serviceReplaceLoading}
+              onClick={() => {
+                setPendingService(null);
+                setServiceError('');
+              }}
+            >
+              Cancel
+            </button>
+            <button
+              type="button"
+              className="btn btn--primary"
+              disabled={serviceReplaceLoading}
+              onClick={confirmServiceReplace}
+            >
+              {serviceReplaceLoading ? 'Saving…' : 'Change service'}
+            </button>
+          </div>
+        </div>
+      ) : serviceLoading ? (
         <p className="admin-vtl-ap-service-loading">Loading…</p>
+      ) : serviceError && services.length === 0 ? (
+        <p className="admin-vtl-message-chooser-error" role="alert">{serviceError}</p>
       ) : !serviceError && services.length === 0 ? (
         <p className="admin-vtl-ap-service-loading">No services available.</p>
       ) : (
-        services.map((svc) => (
-          <button
-            key={svc.id}
-            type="button"
-            className="admin-vtl-ap-service-option"
-            onClick={() => {
-              void handleServiceReplace(svc.id);
-            }}
-          >
-            <span className="admin-vtl-ap-service-option-name">{svc.name}</span>
-            <span className="admin-vtl-ap-service-option-price">{formatPence(svc.pricePence)}</span>
-          </button>
-        ))
+        <>
+          {serviceError ? <p className="admin-vtl-message-chooser-error" role="alert">{serviceError}</p> : null}
+          {services.map((svc) => (
+            <button
+              key={svc.id}
+              type="button"
+              className="admin-vtl-ap-service-option"
+              onClick={() => handleServiceOptionSelect(svc)}
+            >
+              <span className="admin-vtl-ap-service-option-name">{svc.name}</span>
+              <span className="admin-vtl-ap-service-option-price">{formatPence(svc.pricePence)}</span>
+            </button>
+          ))}
+        </>
       )}
     </div>
   );

@@ -14635,49 +14635,114 @@ body.admin-theme-premium-black {
 }
 
 .admin-vtl-ap-service-loading {
-  font-size: 0.68rem;
+  font-size: 0.8rem;
   color: color-mix(in srgb, var(--muted) 80%, var(--fg));
   margin: 0;
-  padding: 6px 8px;
+  padding: 0.75rem 0.5rem;
 }
 
 .admin-vtl-ap-service-option {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  gap: 4px;
+  gap: 0.65rem;
   width: 100%;
-  padding: 5px 8px;
-  background: none;
-  border: none;
-  border-bottom: 1px solid color-mix(in srgb, var(--border) 40%, transparent);
+  min-height: 2.75rem;
+  padding: 0.85rem 0.9rem;
+  margin-bottom: 0.35rem;
+  background: color-mix(in srgb, var(--surface-2, var(--surface)) 88%, var(--bg));
+  border: 1px solid color-mix(in srgb, var(--border) 55%, transparent);
+  border-radius: var(--radius-sm);
   cursor: pointer;
   text-align: left;
-  transition: background 0.1s ease;
+  font: inherit;
+  transition: background 0.12s ease, border-color 0.12s ease;
 }
 
 .admin-vtl-ap-service-option:last-child {
-  border-bottom: none;
+  margin-bottom: 0;
 }
 
 .admin-vtl-ap-service-option:hover {
   background: color-mix(in srgb, var(--accent) 10%, var(--surface-2, var(--surface)));
+  border-color: color-mix(in srgb, var(--accent) 40%, var(--border));
+}
+
+.admin-vtl-ap-service-option:focus-visible {
+  outline: 2px solid var(--focus);
+  outline-offset: 2px;
 }
 
 .admin-vtl-ap-service-option-name {
-  font-size: 0.7rem;
-  font-weight: 500;
-  color: color-mix(in srgb, var(--fg) 90%, var(--muted));
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: color-mix(in srgb, var(--fg) 92%, var(--muted));
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
 }
 
 .admin-vtl-ap-service-option-price {
-  font-size: 0.65rem;
+  font-size: 0.8125rem;
   font-weight: 650;
   color: color-mix(in srgb, var(--accent) 80%, var(--fg));
   flex-shrink: 0;
+}
+
+.admin-vtl-service-confirm {
+  display: grid;
+  gap: 0.75rem;
+  padding: 0.15rem 0.05rem 0.25rem;
+}
+
+.admin-vtl-service-confirm-title {
+  margin: 0;
+  font-size: 0.9rem;
+  font-weight: 700;
+  color: var(--fg);
+}
+
+.admin-vtl-service-confirm-copy {
+  margin: 0;
+  font-size: 0.8125rem;
+  line-height: 1.45;
+  color: color-mix(in srgb, var(--muted) 82%, var(--fg));
+}
+
+.admin-vtl-service-confirm-services {
+  display: grid;
+  gap: 0.35rem;
+  padding: 0.65rem 0.75rem;
+  border-radius: var(--radius-sm);
+  border: 1px solid color-mix(in srgb, var(--border) 60%, transparent);
+  background: color-mix(in srgb, var(--surface-2, var(--surface)) 90%, var(--bg));
+  font-size: 0.8125rem;
+  line-height: 1.4;
+}
+
+.admin-vtl-service-confirm-services strong {
+  color: var(--fg);
+  font-weight: 650;
+}
+
+.admin-vtl-service-confirm-price {
+  margin: 0;
+  font-size: 0.8125rem;
+  font-weight: 650;
+  color: color-mix(in srgb, var(--accent) 82%, var(--fg));
+}
+
+.admin-vtl-service-confirm-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  padding-top: 0.15rem;
+}
+
+.admin-vtl-service-confirm-actions .btn {
+  flex: 1;
+  min-width: 7rem;
+  min-height: 2.75rem;
 }
 
 @media (min-width: 641px) {
@@ -15066,6 +15131,31 @@ body.admin-theme-premium-black {
     max-height: none;
     overscroll-behavior: contain;
     -webkit-overflow-scrolling: touch;
+  }
+
+  /* ── Mobile single-scroll layout for dashboard list view ────────────────
+     Mirrors the timeline flex chain: search stays pinned, schedule scrolls. */
+  .booking-shell [data-feature261-booking-overview-shot] .admin-view-motion-wrap--list {
+    flex: 1 1 auto;
+    min-height: 0;
+    display: flex;
+    flex-direction: column;
+    width: 100%;
+    overflow: hidden;
+  }
+
+  .booking-shell [data-feature261-booking-overview-shot] .admin-view-motion-wrap--list .admin-bookings-list-search {
+    flex: 0 0 auto;
+  }
+
+  .booking-shell [data-feature261-booking-overview-shot] .admin-view-motion-wrap--list .admin-bookings-schedule {
+    flex: 1 1 auto;
+    min-height: 0;
+    overflow-x: hidden;
+    overflow-y: auto;
+    overscroll-behavior: contain;
+    -webkit-overflow-scrolling: touch;
+    touch-action: pan-y;
   }
 
   /* Fallback for the original timeline mobile rule (kept for any non-dashboard
