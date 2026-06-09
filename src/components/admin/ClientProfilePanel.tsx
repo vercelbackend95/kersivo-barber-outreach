@@ -78,6 +78,14 @@ function NotesEditor({ clientId, initialNotes }: { clientId: string; initialNote
   const [saveState, setSaveState] = useState<'idle' | 'saving' | 'saved' | 'failed'>('idle');
   const [saveError, setSaveError] = useState('');
   const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const textareaRef = useRef<HTMLTextAreaElement>(null);
+
+  const syncNotesHeight = useCallback(() => {
+    const textarea = textareaRef.current;
+    if (!textarea) return;
+    textarea.style.height = 'auto';
+    textarea.style.height = `${textarea.scrollHeight}px`;
+  }, []);
 
   const handleChange = useCallback(
     (e: React.ChangeEvent<HTMLTextAreaElement>) => {
@@ -108,6 +116,14 @@ function NotesEditor({ clientId, initialNotes }: { clientId: string; initialNote
 
   useEffect(() => () => { if (timerRef.current) clearTimeout(timerRef.current); }, []);
 
+  useEffect(() => {
+    setValue(initialNotes ?? '');
+  }, [initialNotes]);
+
+  useEffect(() => {
+    syncNotesHeight();
+  }, [value, initialNotes, syncNotesHeight]);
+
   return (
     <div className="admin-cp-notes-wrap">
       <div className="admin-cp-section-header">
@@ -118,6 +134,7 @@ function NotesEditor({ clientId, initialNotes }: { clientId: string; initialNote
       </div>
       {saveError ? <p className="admin-cp-error admin-cp-error--inline" role="alert">{saveError}</p> : null}
       <textarea
+        ref={textareaRef}
         className="admin-cp-notes-textarea"
         value={value}
         onChange={handleChange}

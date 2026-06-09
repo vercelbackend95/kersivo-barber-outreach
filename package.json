@@ -17,6 +17,7 @@
     "seed:timeline-booking": "tsx scripts/add-timeline-booking.ts",
     "seed:timeline-afternoon": "tsx scripts/seed-timeline-afternoon.ts",
     "seed:enrich-reese-ward": "tsx scripts/enrich-client-reese-ward.ts",
+    "seed:enrich-connor-walsh": "tsx scripts/enrich-client-connor-walsh.ts",
     "test": "vitest run",
     "vercel:dev": "vercel dev",
     "prisma:migrate:dev": "prisma migrate dev --schema prisma/schema.prisma",

@@ -16,7 +16,7 @@ const LONDON_TZ = 'Europe/London';
 const BOOKING_ID_PREFIX = 'timeline-mock-bk-';
 
 const CLIENT_NAMES = [
-  'Harper Quinn',
+  'Connor Walsh',
   'Blake Sutton',
   'Rowan Ellis',
   'Sage Holloway',
