@@ -506,16 +506,19 @@ const BookingExpansionCard = memo(function BookingExpansionCard({
     rescheduledAt: booking.rescheduledAt ?? null,
   });
 
+  const closeActionSheets = useCallback(() => {
+    setIsStatusSheetOpen(false);
+    setIsServiceSheetOpen(false);
+  }, []);
+
   const openStatusActions = useCallback(
     (e: React.MouseEvent) => {
       e.stopPropagation();
-      if (!isMobileView) return;
       setActionError('');
       setIsServiceSheetOpen(false);
-      setIsMessageSheetOpen(false);
       setIsStatusSheetOpen(true);
     },
-    [isMobileView],
+    [],
   );
 
   const setPanelState = useCallback((next: SwipeState) => {
@@ -525,14 +528,79 @@ const BookingExpansionCard = memo(function BookingExpansionCard({
   const openServiceActions = useCallback(
     (e: React.MouseEvent) => {
       e.stopPropagation();
-      if (!isMobileView) return;
       setServiceError('');
       setIsStatusSheetOpen(false);
-      setIsMessageSheetOpen(false);
       setIsServiceSheetOpen(true);
       void openServicePicker();
     },
-    [isMobileView, openServicePicker],
+    [openServicePicker],
+  );
+
+  const statusActionsContent = (
+    <div className="admin-vtl-bottom-sheet-content admin-vtl-action-sheet-content">
+      {actionError ? <p className="admin-vtl-message-chooser-error" role="alert">{actionError}</p> : null}
+      {statusMenuItems.map((item) => {
+        const isReschedule = item.value === 'RESCHEDULE';
+        const tone = isReschedule
+          ? 'rescheduled'
+          : getBookingStatusTone({ status: item.value, rescheduledAt: booking.rescheduledAt ?? null });
+        const isUnavailableFromState =
+          (item.value === 'CANCELLED_BY_SHOP' || item.value === 'RESCHEDULE')
+          && (isCancelled || isCompleted);
+        const enabled = item.enabled && !isUnavailableFromState;
+        const reason = isUnavailableFromState
+          ? `Unavailable: booking is ${getStatusLabel(effectiveStatus, booking.rescheduledAt).toLowerCase()}.`
+          : item.reason;
+        const label = isReschedule ? item.label : getStatusLabel(item.value, booking.rescheduledAt);
+        return (
+          <button
+            key={item.value}
+            type="button"
+            className={`admin-vtl-bottom-sheet-pill admin-vtl-bottom-sheet-pill--${tone}${enabled ? '' : ' admin-vtl-bottom-sheet-pill--disabled'}`}
+            disabled={!enabled}
+            onClick={() => {
+              if (!enabled) return;
+              if (isReschedule) {
+                closeActionSheets();
+                onExpand();
+              } else if (item.value !== effectiveStatus) {
+                void handleStatusChange(item.value);
+              } else {
+                closeActionSheets();
+              }
+            }}
+          >
+            <span className="admin-vtl-bottom-sheet-pill-label">{label}</span>
+            <span className="admin-vtl-bottom-sheet-pill-reason">{reason}</span>
+          </button>
+        );
+      })}
+    </div>
+  );
+
+  const serviceActionsContent = (
+    <div className="admin-vtl-bottom-sheet-content admin-vtl-action-sheet-content">
+      {serviceError ? <p className="admin-vtl-message-chooser-error" role="alert">{serviceError}</p> : null}
+      {serviceLoading ? (
+        <p className="admin-vtl-ap-service-loading">Loading…</p>
+      ) : !serviceError && services.length === 0 ? (
+        <p className="admin-vtl-ap-service-loading">No services available.</p>
+      ) : (
+        services.map((svc) => (
+          <button
+            key={svc.id}
+            type="button"
+            className="admin-vtl-ap-service-option"
+            onClick={() => {
+              void handleServiceReplace(svc.id);
+            }}
+          >
+            <span className="admin-vtl-ap-service-option-name">{svc.name}</span>
+            <span className="admin-vtl-ap-service-option-price">{formatPence(svc.pricePence)}</span>
+          </button>
+        ))
+      )}
+    </div>
   );
 
   // ── Payment helpers ───────────────────────────────────────────────────────────
@@ -570,8 +638,7 @@ const BookingExpansionCard = memo(function BookingExpansionCard({
             aria-labelledby="admin-vtl-bottom-sheet-title"
             onClick={(e) => {
               e.stopPropagation();
-              setIsStatusSheetOpen(false);
-              setIsServiceSheetOpen(false);
+              closeActionSheets();
             }}
           >
             <div className="admin-vtl-bottom-sheet" onClick={(e) => e.stopPropagation()}>
@@ -582,86 +649,44 @@ const BookingExpansionCard = memo(function BookingExpansionCard({
                 <button
                   type="button"
                   className="admin-vtl-bottom-sheet-close"
-                  onClick={() => {
-                    setIsStatusSheetOpen(false);
-                    setIsServiceSheetOpen(false);
-                  }}
+                  onClick={closeActionSheets}
                   aria-label="Close bottom sheet"
                 >
                   <X className="admin-vtl-bottom-sheet-close-icon" aria-hidden />
                 </button>
               </div>
 
-              {isStatusSheetOpen ? (
-                <div className="admin-vtl-bottom-sheet-content">
-                  {actionError ? <p className="admin-vtl-message-chooser-error" role="alert">{actionError}</p> : null}
-                  {statusMenuItems.map((item) => {
-                    const isReschedule = item.value === 'RESCHEDULE';
-                    const tone = isReschedule
-                      ? 'rescheduled'
-                      : getBookingStatusTone({ status: item.value, rescheduledAt: booking.rescheduledAt ?? null });
-                    const isUnavailableFromState =
-                      (item.value === 'CANCELLED_BY_SHOP' || item.value === 'RESCHEDULE')
-                      && (isCancelled || isCompleted);
-                    const enabled = item.enabled && !isUnavailableFromState;
-                    const reason = isUnavailableFromState
-                      ? `Unavailable: booking is ${getStatusLabel(effectiveStatus, booking.rescheduledAt).toLowerCase()}.`
-                      : item.reason;
-                    const label = isReschedule ? item.label : getStatusLabel(item.value, booking.rescheduledAt);
-                    return (
-                      <button
-                        key={item.value}
-                        type="button"
-                        className={`admin-vtl-bottom-sheet-pill admin-vtl-bottom-sheet-pill--${tone}${enabled ? '' : ' admin-vtl-bottom-sheet-pill--disabled'}`}
-                        disabled={!enabled}
-                        onClick={() => {
-                          if (!enabled) return;
-                          if (isReschedule) {
-                            setIsStatusSheetOpen(false);
-                            onExpand();
-                          } else if (item.value !== effectiveStatus) {
-                            void handleStatusChange(item.value);
-                          } else {
-                            setIsStatusSheetOpen(false);
-                          }
-                        }}
-                      >
-                        <span className="admin-vtl-bottom-sheet-pill-label">{label}</span>
-                        <span className="admin-vtl-bottom-sheet-pill-reason">{reason}</span>
-                      </button>
-                    );
-                  })}
-
-                </div>
-              ) : (
-                <div className="admin-vtl-bottom-sheet-content">
-                  {serviceError ? <p className="admin-vtl-message-chooser-error" role="alert">{serviceError}</p> : null}
-                  {serviceLoading ? (
-                    <p className="admin-vtl-ap-service-loading">Loading…</p>
-                  ) : !serviceError && services.length === 0 ? (
-                    <p className="admin-vtl-ap-service-loading">No services available.</p>
-                  ) : (
-                    services.map((svc) => (
-                      <button
-                        key={svc.id}
-                        type="button"
-                        className="admin-vtl-ap-service-option"
-                        onClick={() => {
-                          void handleServiceReplace(svc.id);
-                        }}
-                      >
-                        <span className="admin-vtl-ap-service-option-name">{svc.name}</span>
-                        <span className="admin-vtl-ap-service-option-price">{formatPence(svc.pricePence)}</span>
-                      </button>
-                    ))
-                  )}
-                </div>
-              )}
+              {isStatusSheetOpen ? statusActionsContent : serviceActionsContent}
             </div>
           </div>,
           document.body,
         )
       : null;
+
+  const desktopActionPopover =
+    !isMobileView && (isStatusSheetOpen || isServiceSheetOpen) ? (
+      <div
+        className="admin-vtl-action-popover"
+        role="dialog"
+        aria-labelledby={`admin-vtl-action-popover-title-${booking.id}`}
+        onClick={(e) => e.stopPropagation()}
+      >
+        <div className="admin-vtl-action-popover-header">
+          <p id={`admin-vtl-action-popover-title-${booking.id}`} className="admin-vtl-action-popover-title">
+            {isStatusSheetOpen ? 'Status' : 'Service'}
+          </p>
+          <button
+            type="button"
+            className="admin-vtl-action-popover-close"
+            onClick={closeActionSheets}
+            aria-label="Close actions menu"
+          >
+            <X className="admin-vtl-action-popover-close-icon" aria-hidden />
+          </button>
+        </div>
+        {isStatusSheetOpen ? statusActionsContent : serviceActionsContent}
+      </div>
+    ) : null;
 
   return (
     <div className="admin-vtl-swipe-shell">
@@ -727,8 +752,7 @@ const BookingExpansionCard = memo(function BookingExpansionCard({
           className={`admin-vtl-expansion-card admin-vtl-expansion-card--${toneClass}`}
           onClick={(e) => {
             e.stopPropagation();
-            setIsStatusSheetOpen(false);
-            setIsServiceSheetOpen(false);
+            closeActionSheets();
             if (swipeState !== 'closed') setSwipeState('closed');
           }}
         >
@@ -791,10 +815,11 @@ const BookingExpansionCard = memo(function BookingExpansionCard({
         <div className="admin-vtl-actions-panel" aria-hidden={swipeState !== 'right'}>
           <button
             type="button"
-            className="admin-vtl-ap-circle-btn admin-vtl-ap-circle-btn--status"
+            className={`admin-vtl-ap-circle-btn admin-vtl-ap-circle-btn--status${isStatusSheetOpen ? ' is-active' : ''}`}
             onClick={openStatusActions}
             tabIndex={swipeState === 'right' ? 0 : -1}
             aria-label={`Change status for ${booking.fullName}`}
+            aria-expanded={isStatusSheetOpen}
           >
             <span className="admin-vtl-ap-circle-icon-wrap">
               <ListOrdered className="admin-vtl-ap-circle-icon" aria-hidden />
@@ -804,16 +829,19 @@ const BookingExpansionCard = memo(function BookingExpansionCard({
 
           <button
             type="button"
-            className="admin-vtl-ap-circle-btn admin-vtl-ap-circle-btn--service"
+            className={`admin-vtl-ap-circle-btn admin-vtl-ap-circle-btn--service${isServiceSheetOpen ? ' is-active' : ''}`}
             onClick={openServiceActions}
             tabIndex={swipeState === 'right' ? 0 : -1}
             aria-label={`Change service for ${booking.fullName}`}
+            aria-expanded={isServiceSheetOpen}
           >
             <span className="admin-vtl-ap-circle-icon-wrap">
               <Plus className="admin-vtl-ap-circle-icon" aria-hidden />
             </span>
             <span className="admin-vtl-ap-circle-label">Service</span>
           </button>
+
+          {desktopActionPopover}
         </div>
 
           {bottomSheetPortal}

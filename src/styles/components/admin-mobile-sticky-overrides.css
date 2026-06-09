@@ -8,7 +8,7 @@
    * Sticky/fixed layers below the bar anchor to these tokens to avoid a transparent seam.
    */
   .admin-main-content {
-    --admin-mobile-header-inner-min: 5rem;
+    --admin-mobile-header-inner-min: 3.75rem;
     --admin-mobile-header-bar-h: calc(
       env(safe-area-inset-top, 0px) + 0.45rem + var(--admin-mobile-header-inner-min) + 2px
     );

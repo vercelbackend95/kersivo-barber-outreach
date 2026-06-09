@@ -76,8 +76,8 @@ function SidebarBrand() {
           className="admin-sidebar-logo-img"
           src="/images/logo_nobg.png"
           alt=""
-          width={72}
-          height={72}
+          width={60}
+          height={60}
           decoding="async"
         />
       </div>

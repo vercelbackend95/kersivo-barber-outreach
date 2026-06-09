@@ -4546,13 +4546,13 @@ body.admin-theme-premium-black {
 }
 
 .admin-mobile-header .admin-sidebar-monogram {
-  width: 80px;
-  height: 80px;
+  width: 60px;
+  height: 60px;
 }
 
 .admin-mobile-drawer-head .admin-sidebar-monogram {
-  width: 80px;
-  height: 80px;
+  width: 60px;
+  height: 60px;
 }
 
 .admin-mobile-header .admin-sidebar-brand-name {
@@ -14046,18 +14046,25 @@ body.admin-theme-premium-black {
   white-space: nowrap;
 }
 
-/* ── Booking actions panel (revealed on swipe left) ─────────────────────── */
+/* ── Booking actions panel (revealed on swipe right) ─────────────────────── */
 .admin-vtl-actions-panel {
+  position: relative;
   min-width: var(--actions-panel-w, 200px);
   width: var(--actions-panel-w, 200px);
   flex-shrink: 0;
   display: flex;
   align-items: center;
   justify-content: center;
-  gap: 0.7rem;
-  padding: 0.7rem 0.5rem;
-  background: color-mix(in srgb, var(--surface-2, var(--surface)) 92%, var(--accent));
+  gap: 0.85rem;
+  padding: 0.75rem 0.55rem;
+  background:
+    linear-gradient(180deg, color-mix(in srgb, var(--accent) 5%, transparent), transparent 58%),
+    color-mix(in srgb, var(--accent) 7%, var(--surface-1, var(--surface)));
   border-left: 1px solid color-mix(in srgb, var(--border) 60%, transparent);
+}
+
+.admin-vtl-actions-panel[aria-hidden='true'] {
+  pointer-events: none;
 }
 
 .admin-vtl-ap-circle-btn {
@@ -14066,47 +14073,142 @@ body.admin-theme-premium-black {
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 0.35rem;
+  gap: 0.4rem;
   cursor: pointer;
   padding: 0;
+  transition: transform 0.12s ease;
+}
+
+.admin-vtl-ap-circle-btn:hover:not(:disabled) {
+  transform: translateY(-1px);
+}
+
+.admin-vtl-ap-circle-btn:active:not(:disabled) {
+  transform: translateY(0);
 }
 
 .admin-vtl-ap-circle-icon-wrap {
-  width: 44px;
-  height: 44px;
+  width: 48px;
+  height: 48px;
   border-radius: 999px;
   display: inline-flex;
   align-items: center;
   justify-content: center;
   border: 1px solid color-mix(in srgb, var(--border) 66%, transparent);
-  background: color-mix(in srgb, var(--surface-2, var(--surface)) 84%, var(--bg));
+  background: color-mix(in srgb, var(--surface-2, var(--surface)) 88%, var(--bg));
+  box-shadow: 0 2px 8px color-mix(in srgb, var(--bg) 72%, transparent);
+  transition: border-color 0.12s ease, box-shadow 0.12s ease, background 0.12s ease;
 }
 
 .admin-vtl-ap-circle-btn--status .admin-vtl-ap-circle-icon-wrap {
-  border-color: color-mix(in srgb, var(--status-rescheduled, var(--info)) 40%, var(--border));
-  color: color-mix(in srgb, var(--status-rescheduled, var(--info)) 84%, var(--fg));
+  border-color: color-mix(in srgb, var(--status-rescheduled, var(--info)) 44%, var(--border));
+  color: color-mix(in srgb, var(--status-rescheduled, var(--info)) 88%, var(--fg));
 }
 
 .admin-vtl-ap-circle-btn--service .admin-vtl-ap-circle-icon-wrap {
-  border-color: color-mix(in srgb, var(--accent) 44%, var(--border));
-  color: color-mix(in srgb, var(--accent) 84%, var(--fg));
+  border-color: color-mix(in srgb, var(--accent) 48%, var(--border));
+  color: color-mix(in srgb, var(--accent) 88%, var(--fg));
+}
+
+.admin-vtl-ap-circle-btn--status:hover:not(:disabled) .admin-vtl-ap-circle-icon-wrap {
+  border-color: color-mix(in srgb, var(--status-rescheduled, var(--info)) 68%, var(--border));
+  box-shadow: 0 4px 12px color-mix(in srgb, var(--status-rescheduled, var(--info)) 18%, transparent);
+}
+
+.admin-vtl-ap-circle-btn--service:hover:not(:disabled) .admin-vtl-ap-circle-icon-wrap {
+  border-color: color-mix(in srgb, var(--accent) 68%, var(--border));
+  box-shadow: 0 4px 12px color-mix(in srgb, var(--accent) 18%, transparent);
+}
+
+.admin-vtl-ap-circle-btn--status.is-active .admin-vtl-ap-circle-icon-wrap {
+  border-color: color-mix(in srgb, var(--status-rescheduled, var(--info)) 72%, var(--border));
+  background: color-mix(in srgb, var(--status-rescheduled, var(--info)) 16%, var(--surface-2, var(--surface)));
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--status-rescheduled, var(--info)) 24%, transparent);
+}
+
+.admin-vtl-ap-circle-btn--service.is-active .admin-vtl-ap-circle-icon-wrap {
+  border-color: color-mix(in srgb, var(--accent) 72%, var(--border));
+  background: color-mix(in srgb, var(--accent) 14%, var(--surface-2, var(--surface)));
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--accent) 22%, transparent);
 }
 
 .admin-vtl-ap-circle-icon {
-  width: 18px;
-  height: 18px;
+  width: 19px;
+  height: 19px;
 }
 
 .admin-vtl-ap-circle-label {
-  font-size: 0.64rem;
-  font-weight: 600;
-  color: color-mix(in srgb, var(--muted) 82%, var(--fg));
+  font-size: 0.68rem;
+  font-weight: 650;
+  color: color-mix(in srgb, var(--fg) 78%, var(--muted));
   letter-spacing: 0.02em;
 }
 
 .admin-vtl-ap-circle-btn:focus-visible .admin-vtl-ap-circle-icon-wrap {
   outline: 2px solid var(--focus);
   outline-offset: 2px;
+}
+
+.admin-vtl-action-popover {
+  position: absolute;
+  right: calc(100% + 0.5rem);
+  top: 50%;
+  transform: translateY(-50%);
+  width: min(19rem, 72vw);
+  display: grid;
+  gap: 0;
+  border-radius: var(--radius-sm);
+  border: 1px solid color-mix(in srgb, var(--border) 75%, transparent);
+  background: color-mix(in srgb, var(--surface) 96%, var(--bg));
+  box-shadow: 0 14px 34px color-mix(in srgb, var(--bg) 70%, transparent);
+  z-index: 12;
+  overflow: hidden;
+}
+
+.admin-vtl-action-popover-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem;
+  padding: 0.55rem 0.65rem 0.45rem;
+  border-bottom: 1px solid color-mix(in srgb, var(--border) 50%, transparent);
+}
+
+.admin-vtl-action-popover-title {
+  margin: 0;
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: color-mix(in srgb, var(--muted) 78%, var(--fg));
+}
+
+.admin-vtl-action-popover-close {
+  border: none;
+  background: transparent;
+  color: color-mix(in srgb, var(--muted) 70%, var(--fg));
+  width: 28px;
+  height: 28px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 999px;
+  cursor: pointer;
+}
+
+.admin-vtl-action-popover-close:hover {
+  background: color-mix(in srgb, var(--surface-2, var(--surface)) 80%, var(--bg));
+}
+
+.admin-vtl-action-popover-close-icon {
+  width: 15px;
+  height: 15px;
+}
+
+.admin-vtl-action-popover .admin-vtl-action-sheet-content {
+  padding: 0.55rem 0.65rem 0.65rem;
+  max-height: min(52vh, 22rem);
+  overflow-y: auto;
 }
 
 .admin-vtl-bottom-sheet-backdrop {
