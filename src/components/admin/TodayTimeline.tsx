@@ -280,19 +280,6 @@ function formatPence(pence: number): string {
   return `£${(pence / 100).toFixed(2)}`;
 }
 
-function normalizePhoneForSms(raw: string): string {
-  return raw.trim().replace(/\s+/g, '');
-}
-
-function normalizePhoneForWhatsApp(raw: string): string {
-  return raw.replace(/\D/g, '');
-}
-
-function getFirstName(fullName: string): string {
-  const first = fullName.trim().split(/\s+/).find(Boolean);
-  return first || 'there';
-}
-
 type StatusMenuItem = {
   value: 'NO_SHOW' | 'CANCELLED_BY_SHOP' | 'RESCHEDULE';
   label: string;
@@ -329,8 +316,6 @@ const BookingExpansionCard = memo(function BookingExpansionCard({
   const [isMobileView, setIsMobileView] = useState(false);
   const [isStatusSheetOpen, setIsStatusSheetOpen] = useState(false);
   const [isServiceSheetOpen, setIsServiceSheetOpen] = useState(false);
-  const [isMessageSheetOpen, setIsMessageSheetOpen] = useState(false);
-  const [messageError, setMessageError] = useState('');
   const [actionError, setActionError] = useState('');
   const [serviceError, setServiceError] = useState('');
 
@@ -363,31 +348,29 @@ const BookingExpansionCard = memo(function BookingExpansionCard({
     if (swipeState !== 'right') {
       setIsStatusSheetOpen(false);
       setIsServiceSheetOpen(false);
-      setIsMessageSheetOpen(false);
     }
   }, [swipeState]);
 
   useEffect(() => {
     if (!isMobileView) return undefined;
-    if (!(isStatusSheetOpen || isServiceSheetOpen || isMessageSheetOpen)) return undefined;
+    if (!(isStatusSheetOpen || isServiceSheetOpen)) return undefined;
     const prev = document.body.style.overflow;
     document.body.style.overflow = 'hidden';
     return () => {
       document.body.style.overflow = prev;
     };
-  }, [isMobileView, isStatusSheetOpen, isServiceSheetOpen, isMessageSheetOpen]);
+  }, [isMobileView, isStatusSheetOpen, isServiceSheetOpen]);
 
   useEffect(() => {
-    if (!(isStatusSheetOpen || isServiceSheetOpen || isMessageSheetOpen)) return undefined;
+    if (!(isStatusSheetOpen || isServiceSheetOpen)) return undefined;
     const onKeyDown = (event: KeyboardEvent) => {
       if (event.key !== 'Escape') return;
       setIsStatusSheetOpen(false);
       setIsServiceSheetOpen(false);
-      setIsMessageSheetOpen(false);
     };
     document.addEventListener('keydown', onKeyDown);
     return () => document.removeEventListener('keydown', onKeyDown);
-  }, [isStatusSheetOpen, isServiceSheetOpen, isMessageSheetOpen]);
+  }, [isStatusSheetOpen, isServiceSheetOpen]);
 
   // ── Status mutation ───────────────────────────────────────────────────────────
   const handleStatusChange = useCallback(
@@ -453,52 +436,6 @@ const BookingExpansionCard = memo(function BookingExpansionCard({
   const handleQuickActionClick = useCallback((e: React.MouseEvent) => {
     e.stopPropagation();
   }, []);
-
-  const handleMessageAction = useCallback(
-    (e: React.MouseEvent) => {
-      e.stopPropagation();
-      setMessageError('');
-      setIsStatusSheetOpen(false);
-      setIsServiceSheetOpen(false);
-      setIsMessageSheetOpen(true);
-    },
-    [],
-  );
-
-  const openMessageChannel = useCallback(
-    (channel: 'sms' | 'whatsapp') => {
-      const rawPhone = booking.phone?.trim() ?? '';
-      if (!rawPhone) {
-        setMessageError('No phone number is available for this client.');
-        return;
-      }
-      const firstName = getFirstName(booking.fullName);
-      const prefill = `Hi ${firstName}, this is Kersivo.`;
-      if (channel === 'sms') {
-        const smsPhone = normalizePhoneForSms(rawPhone);
-        if (!smsPhone) {
-          setMessageError('Phone number is invalid for SMS.');
-          return;
-        }
-        window.location.href = `sms:${smsPhone}?body=${encodeURIComponent(prefill)}`;
-        setIsMessageSheetOpen(false);
-        return;
-      }
-
-      const whatsappPhone = normalizePhoneForWhatsApp(rawPhone);
-      if (!whatsappPhone) {
-        setMessageError('Phone number is invalid for WhatsApp.');
-        return;
-      }
-      window.open(
-        `https://wa.me/${whatsappPhone}?text=${encodeURIComponent(prefill)}`,
-        '_blank',
-        'noopener,noreferrer',
-      );
-      setIsMessageSheetOpen(false);
-    },
-    [booking.fullName, booking.phone],
-  );
 
   const applyTrackTransform = useCallback((offsetX: number) => {
     if (trackRef.current) {
@@ -624,7 +561,7 @@ const BookingExpansionCard = memo(function BookingExpansionCard({
     .join(' ');
 
   const bottomSheetPortal =
-    isMobileView && (isStatusSheetOpen || isServiceSheetOpen || isMessageSheetOpen)
+    isMobileView && (isStatusSheetOpen || isServiceSheetOpen)
       ? createPortal(
           <div
             className="admin-vtl-bottom-sheet-backdrop"
@@ -635,13 +572,12 @@ const BookingExpansionCard = memo(function BookingExpansionCard({
               e.stopPropagation();
               setIsStatusSheetOpen(false);
               setIsServiceSheetOpen(false);
-              setIsMessageSheetOpen(false);
             }}
           >
             <div className="admin-vtl-bottom-sheet" onClick={(e) => e.stopPropagation()}>
               <div className="admin-vtl-bottom-sheet-header">
                 <p id="admin-vtl-bottom-sheet-title" className="admin-vtl-bottom-sheet-title">
-                  {isStatusSheetOpen ? 'Status' : isServiceSheetOpen ? 'Service' : 'Message client'}
+                  {isStatusSheetOpen ? 'Status' : 'Service'}
                 </p>
                 <button
                   type="button"
@@ -649,7 +585,6 @@ const BookingExpansionCard = memo(function BookingExpansionCard({
                   onClick={() => {
                     setIsStatusSheetOpen(false);
                     setIsServiceSheetOpen(false);
-                    setIsMessageSheetOpen(false);
                   }}
                   aria-label="Close bottom sheet"
                 >
@@ -698,7 +633,7 @@ const BookingExpansionCard = memo(function BookingExpansionCard({
                   })}
 
                 </div>
-              ) : isServiceSheetOpen ? (
+              ) : (
                 <div className="admin-vtl-bottom-sheet-content">
                   {serviceError ? <p className="admin-vtl-message-chooser-error" role="alert">{serviceError}</p> : null}
                   {serviceLoading ? (
@@ -721,66 +656,12 @@ const BookingExpansionCard = memo(function BookingExpansionCard({
                     ))
                   )}
                 </div>
-              ) : (
-                <div className="admin-vtl-bottom-sheet-content admin-vtl-message-chooser">
-                  <p className="admin-vtl-message-chooser-copy">Choose contact channel for {booking.fullName}.</p>
-                  {messageError ? <p className="admin-vtl-message-chooser-error">{messageError}</p> : null}
-                  <button
-                    type="button"
-                    className="admin-vtl-bottom-sheet-pill admin-vtl-bottom-sheet-pill--confirmed"
-                    onClick={() => openMessageChannel('sms')}
-                  >
-                    <span className="admin-vtl-bottom-sheet-pill-label">SMS</span>
-                    <span className="admin-vtl-bottom-sheet-pill-reason">Open your default text messaging app.</span>
-                  </button>
-                  <button
-                    type="button"
-                    className="admin-vtl-bottom-sheet-pill admin-vtl-bottom-sheet-pill--rescheduled"
-                    onClick={() => openMessageChannel('whatsapp')}
-                  >
-                    <span className="admin-vtl-bottom-sheet-pill-label">WhatsApp</span>
-                    <span className="admin-vtl-bottom-sheet-pill-reason">Open WhatsApp chat with prefilled message.</span>
-                  </button>
-                </div>
               )}
             </div>
           </div>,
           document.body,
         )
       : null;
-
-  const desktopMessagePopover =
-    !isMobileView && isMessageSheetOpen ? (
-      <div className="admin-vtl-message-popover" role="dialog" aria-label="Choose message app">
-        <p className="admin-vtl-message-chooser-copy">Choose contact channel.</p>
-        {messageError ? <p className="admin-vtl-message-chooser-error">{messageError}</p> : null}
-        <div className="admin-vtl-message-popover-actions">
-          <button
-            type="button"
-            className="admin-vtl-bottom-sheet-pill admin-vtl-bottom-sheet-pill--confirmed"
-            onClick={() => openMessageChannel('sms')}
-          >
-            <span className="admin-vtl-bottom-sheet-pill-label">SMS</span>
-            <span className="admin-vtl-bottom-sheet-pill-reason">Open your default text messaging app.</span>
-          </button>
-          <button
-            type="button"
-            className="admin-vtl-bottom-sheet-pill admin-vtl-bottom-sheet-pill--rescheduled"
-            onClick={() => openMessageChannel('whatsapp')}
-          >
-            <span className="admin-vtl-bottom-sheet-pill-label">WhatsApp</span>
-            <span className="admin-vtl-bottom-sheet-pill-reason">Open WhatsApp chat with prefilled message.</span>
-          </button>
-          <button
-            type="button"
-            className="admin-vtl-message-popover-cancel"
-            onClick={() => setIsMessageSheetOpen(false)}
-          >
-            Cancel
-          </button>
-        </div>
-      </div>
-    ) : null;
 
   return (
     <div className="admin-vtl-swipe-shell">
@@ -834,19 +715,11 @@ const BookingExpansionCard = memo(function BookingExpansionCard({
             title="View client profile"
           >
             <span className="admin-vtl-client-panel-avatar-initials">{clientInitials}</span>
+            <span className="admin-vtl-client-panel-avatar-badge" aria-hidden="true">
+              <MessageCircle className="admin-vtl-client-panel-avatar-badge-icon" aria-hidden />
+            </span>
           </button>
           <p className="admin-vtl-client-panel-name">{booking.fullName.split(' ')[0]}</p>
-          <button
-            type="button"
-            className="admin-vtl-expansion-action-btn admin-vtl-expansion-action-btn--message"
-            onClick={handleMessageAction}
-            aria-label={`Message ${booking.fullName}`}
-            title="Message"
-            tabIndex={swipeState === 'left' ? 0 : -1}
-          >
-            <MessageCircle className="admin-vtl-expansion-action-icon" aria-hidden />
-          </button>
-          {desktopMessagePopover}
         </div>
 
         {/* ── Center: main card ── */}

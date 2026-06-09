@@ -8,9 +8,9 @@
    * Sticky/fixed layers below the bar anchor to these tokens to avoid a transparent seam.
    */
   .admin-main-content {
-    --admin-mobile-header-inner-min: max(2.75rem, 3.5rem);
+    --admin-mobile-header-inner-min: 5rem;
     --admin-mobile-header-bar-h: calc(
-      env(safe-area-inset-top, 0px) + 1.2rem + var(--admin-mobile-header-inner-min) + 2px
+      env(safe-area-inset-top, 0px) + 0.45rem + var(--admin-mobile-header-inner-min) + 2px
     );
     --admin-mobile-header-gap: var(--space-sm);
     --admin-mobile-header-h: calc(var(--admin-mobile-header-bar-h) + var(--admin-mobile-header-gap));

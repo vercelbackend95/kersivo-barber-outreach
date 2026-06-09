@@ -1,6 +1,7 @@
 import React, { memo, useCallback, useEffect, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
-import { Mail, Phone, Plus, Tag, X } from '../lucide-react';
+import { Mail, MessageCircle, Phone, Plus, Tag, X } from '../lucide-react';
+import { openClientMessageChannel } from '../../lib/admin/clientMessaging';
 import { adminFetchJson } from './adminAuth';
 
 // ─── Types ────────────────────────────────────────────────────────────────────
@@ -216,6 +217,80 @@ function TagsEditor({ clientId, initialTags }: { clientId: string; initialTags: 
   );
 }
 
+// ─── Message client ───────────────────────────────────────────────────────────
+
+function ClientMessageActions({
+  phone,
+  fullName,
+}: {
+  phone: string | null;
+  fullName: string | null;
+}) {
+  const [isChooserOpen, setIsChooserOpen] = useState(false);
+  const [messageError, setMessageError] = useState('');
+
+  const displayName = fullName ?? 'Client';
+
+  if (!phone?.trim()) {
+    return (
+      <p className="admin-cp-message-unavailable">No phone number on file — messaging unavailable.</p>
+    );
+  }
+
+  const handleChannel = (channel: 'sms' | 'whatsapp') => {
+    setMessageError('');
+    const result = openClientMessageChannel({
+      phone,
+      fullName: displayName,
+      channel,
+    });
+    if (!result.ok) {
+      setMessageError(result.error);
+      return;
+    }
+    setIsChooserOpen(false);
+  };
+
+  return (
+    <div className="admin-cp-message-wrap">
+      <button
+        type="button"
+        className="admin-cp-message-btn"
+        onClick={() => {
+          setMessageError('');
+          setIsChooserOpen((open) => !open);
+        }}
+        aria-expanded={isChooserOpen}
+      >
+        <MessageCircle className="admin-cp-contact-icon" aria-hidden />
+        Message client
+      </button>
+      {isChooserOpen ? (
+        <div className="admin-cp-message-chooser">
+          <p className="admin-cp-message-chooser-copy">Choose contact channel for {displayName}.</p>
+          {messageError ? <p className="admin-cp-message-chooser-error" role="alert">{messageError}</p> : null}
+          <button
+            type="button"
+            className="admin-cp-message-channel admin-cp-message-channel--sms"
+            onClick={() => handleChannel('sms')}
+          >
+            <span className="admin-cp-message-channel-label">SMS</span>
+            <span className="admin-cp-message-channel-reason">Open your default text messaging app.</span>
+          </button>
+          <button
+            type="button"
+            className="admin-cp-message-channel admin-cp-message-channel--whatsapp"
+            onClick={() => handleChannel('whatsapp')}
+          >
+            <span className="admin-cp-message-channel-label">WhatsApp</span>
+            <span className="admin-cp-message-channel-reason">Open WhatsApp chat with prefilled message.</span>
+          </button>
+        </div>
+      ) : null}
+    </div>
+  );
+}
+
 // ─── Main panel ───────────────────────────────────────────────────────────────
 
 export type ClientProfilePanelProps = {
@@ -328,6 +403,10 @@ const ClientProfilePanel = memo(function ClientProfilePanel({ clientId, onClose 
                   <Mail className="admin-cp-contact-icon" aria-hidden />
                   {data.client.email}
                 </a>
+                <ClientMessageActions
+                  phone={data.client.phone}
+                  fullName={data.client.fullName}
+                />
               </div>
             </div>
 
