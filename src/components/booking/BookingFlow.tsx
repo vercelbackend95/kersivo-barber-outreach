@@ -786,20 +786,45 @@ export default function BookingFlow({ services, barbers, mode = 'create', token 
                     <h2 id="booking-step-details">Your details</h2>
                   </div>
                 </div>
-                <div className="booking-flow__grid booking-flow__grid--details">
-                  <label className="booking-flow__field">
+                <form
+                  id="booking-details-form"
+                  className="booking-flow__grid booking-flow__grid--details"
+                  autoComplete="on"
+                  onSubmit={(event) => event.preventDefault()}
+                >
+                  <label className="booking-flow__field" htmlFor="booking-full-name">
                     <span>Name</span>
-                    <input value={fullName} onChange={(event) => setFullName(event.target.value)} autoComplete="name" />
+                    <input
+                      id="booking-full-name"
+                      name="name"
+                      value={fullName}
+                      onChange={(event) => setFullName(event.target.value)}
+                      autoComplete="name"
+                    />
                   </label>
-                  <label className="booking-flow__field">
+                  <label className="booking-flow__field" htmlFor="booking-email">
                     <span>Email</span>
-                    <input type="email" value={email} onChange={(event) => setEmail(event.target.value)} autoComplete="email" />
+                    <input
+                      id="booking-email"
+                      name="email"
+                      type="email"
+                      value={email}
+                      onChange={(event) => setEmail(event.target.value)}
+                      autoComplete="email"
+                    />
                   </label>
-                  <label className="booking-flow__field">
+                  <label className="booking-flow__field" htmlFor="booking-phone">
                     <span>Phone (optional)</span>
-                    <input value={phone} onChange={(event) => setPhone(event.target.value)} autoComplete="tel" />
+                    <input
+                      id="booking-phone"
+                      name="tel"
+                      type="tel"
+                      value={phone}
+                      onChange={(event) => setPhone(event.target.value)}
+                      autoComplete="tel"
+                    />
                   </label>
-                </div>
+                </form>
               </section>
               </div>
             ) : null}
@@ -814,6 +839,7 @@ export default function BookingFlow({ services, barbers, mode = 'create', token 
               <button
                 type="button"
                 className="btn btn--primary booking-action-bar__button"
+                form={isCreateMode ? 'booking-details-form' : undefined}
                 disabled={isSubmitDisabled}
                 aria-disabled={isSubmitDisabled}
                 aria-busy={isSubmitting}
