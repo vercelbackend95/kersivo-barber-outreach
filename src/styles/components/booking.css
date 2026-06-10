@@ -4216,6 +4216,14 @@ body.admin-theme-premium-black {
   color: var(--fg);
 }
 
+body.admin-theme-premium-black .booking-page-wrap {
+  background: var(--bg);
+}
+
+body.admin-theme-premium-black .booking-page-wrap .booking-shell.surface {
+  background: var(--bg);
+}
+
 .admin-page-wrap.container {
   width: min(100% - clamp(1rem, 2vw, 2rem), 120rem);
 }
