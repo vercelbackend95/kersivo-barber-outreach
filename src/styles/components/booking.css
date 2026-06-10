@@ -147,7 +147,7 @@
   color: var(--fg);
   border-radius: var(--radius-sm);
   padding: 0.95rem 1rem;
-  font-size: var(--booking-text-sm);
+  font-size: max(16px, var(--booking-text-sm));
 
   line-height: 1.25;
   transition: border-color 160ms ease, background-color 160ms ease, box-shadow 160ms ease;

@@ -14,6 +14,7 @@
     "seed": "prisma db seed",
     "seed:hero-bookings": "tsx scripts/seed-hero-bookings.ts",
     "seed:timeline-today": "tsx scripts/seed-timeline-today.ts",
+    "seed:timeline-day-24": "tsx scripts/seed-timeline-day-24.ts",
     "seed:timeline-booking": "tsx scripts/add-timeline-booking.ts",
     "seed:timeline-afternoon": "tsx scripts/seed-timeline-afternoon.ts",
     "seed:enrich-reese-ward": "tsx scripts/enrich-client-reese-ward.ts",
