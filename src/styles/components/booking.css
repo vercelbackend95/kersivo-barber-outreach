@@ -644,8 +644,27 @@
 
 
 .booking-flow__grid--details input {
-    min-height: 4rem;
+  min-height: 4rem;
+  color: var(--fg);
+  background: var(--bg);
+}
 
+.booking-flow__grid--details input:-webkit-autofill,
+.booking-flow__grid--details input:-webkit-autofill:hover,
+.booking-flow__grid--details input:-webkit-autofill:focus,
+.booking-flow__grid--details input:-webkit-autofill:active {
+  -webkit-text-fill-color: var(--fg);
+  caret-color: var(--fg);
+  box-shadow: 0 0 0 1000px var(--bg) inset;
+  -webkit-box-shadow: 0 0 0 1000px var(--bg) inset;
+  border-color: var(--border);
+  transition: background-color 99999s ease-out 0s;
+}
+
+.booking-flow__grid--details input:autofill {
+  box-shadow: 0 0 0 1000px var(--bg) inset;
+  -webkit-text-fill-color: var(--fg);
+  caret-color: var(--fg);
 }
 .booking-flow__field--date {
   gap: 0.45rem;
