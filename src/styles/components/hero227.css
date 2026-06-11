@@ -104,7 +104,7 @@
   height: clamp(340px, 48vh, 580px);
 }
 
-/* Phone chassis: width cap × 1179:2556 — matches hometimeiphone.jpg so Safari bar / home indicator land in glass. */
+/* Phone chassis: width cap × 1179:2556 — matches iphonemockup.jpg so Safari bar / home indicator land in glass. */
 .hero227-root .hero227-mock {
   --hero227-outer-r: min(4.6875rem, calc(min(100%, var(--hero227-mock-max-w)) * 0.1875));
   width: min(100%, var(--hero227-mock-max-w)) !important;
@@ -157,7 +157,7 @@
   border-radius: inherit !important;
   /* Match --bg (#0b0d10), not #000 — pure black reads as a wedge vs chassis + PNG fringe. */
   background-color: var(--bg) !important;
-  background-image: url("/hero-assets/screens/hometimeiphone.jpg") !important;
+  background-image: url("/images/hero/iphonemockup.jpg") !important;
   background-repeat: no-repeat !important;
   background-size: var(--hero227-screen-bg-size) auto !important;
   background-position: center var(--hero227-screen-bg-pos-y) !important;
