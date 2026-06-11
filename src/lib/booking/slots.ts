@@ -11,6 +11,8 @@ type SlotInput = {
   timeOff: Pick<BarberTimeOff, 'startsAt' | 'endsAt'>[];
   timeBlocks: Pick<TimeBlock, 'startAt' | 'endAt'>[];
   settings: ShopSettings;
+  /** Override "now" for slot generation (e.g. timeline seed scripts). */
+  now?: Date;
 };
 
 export function generateSlots(input: SlotInput): string[] {
@@ -21,7 +23,8 @@ export function generateSlots(input: SlotInput): string[] {
   if (!rule) return [];
   const earliestBookableMinute = getEarliestBookableSlotMinute({
     date: input.date,
-    slotIntervalMinutes: input.settings.slotIntervalMinutes
+    slotIntervalMinutes: input.settings.slotIntervalMinutes,
+    now: input.now
   });
 
   if (earliestBookableMinute == null || earliestBookableMinute >= 24 * 60) {

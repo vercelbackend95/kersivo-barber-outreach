@@ -14,23 +14,8 @@ const prisma = new PrismaClient();
 const LONDON_TZ = 'Europe/London';
 const BOOKING_ID_PREFIX = 'timeline-mock-bk-';
 const TARGET_BOOKING_COUNT = 24;
-const REMAINING_AFTER_CONNOR = TARGET_BOOKING_COUNT - 1;
-const TARGET_BARBERS = ['Mason', 'Theo', 'Leo'] as const;
-const WINDOW_START_MINUTES = 11 * 60;
+const WINDOW_START_MINUTES = 10 * 60;
 const WINDOW_END_MINUTES = 18 * 60;
-const CONNOR_PINNED_TIME = '13:45';
-const CONNOR_BARBER_PREFERENCE = ['Leo', 'Mason', 'Theo'] as const;
-
-const CONNOR_FULL_NAME = 'Connor Walsh';
-const CONNOR_EMAIL = 'connor.walsh@gmail.com';
-const CONNOR_PHONE = '07841 293756';
-const CONNOR_TAGS = ['VIP', 'Regular', 'Haircut + Beard', 'Prefers Leo', 'Beard care'];
-const CONNOR_NOTES = [
-  'Prefers Leo for haircut + beard combos — books him whenever possible.',
-  'Usually books Friday afternoons around 14:00–17:00.',
-  'Loyal regular since early 2024; always on time, never missed an appointment.',
-  'Sensitive skin under the beard — go easy with straight razor on the neck line.',
-].join('\n');
 
 const CLIENT_NAMES = [
   'Alex Morgan',
@@ -56,6 +41,7 @@ const CLIENT_NAMES = [
   'Marlowe Kent',
   'Remy Foster',
   'Arden Cole',
+  'Blair Quinn',
 ];
 
 type SlotCandidate = {
@@ -120,7 +106,10 @@ async function loadSlotCandidates(date: string): Promise<{
   const dayEndUtc = addMinutes(dayStartUtc, 24 * 60);
 
   const barbers = await prisma.barber.findMany({
-    where: { active: true, name: { in: [...TARGET_BARBERS] } },
+    where: {
+      active: true,
+      barberServices: { some: { service: { isActive: true } } }
+    },
     orderBy: [{ sortOrder: 'asc' }, { createdAt: 'asc' }],
     select: {
       id: true,
@@ -133,19 +122,8 @@ async function loadSlotCandidates(date: string): Promise<{
     }
   });
 
-  const foundNames = new Set(barbers.map((b) => b.name));
-  const missing = TARGET_BARBERS.filter((name) => !foundNames.has(name));
-  if (missing.length > 0) {
-    throw new Error(
-      `Missing active barber(s): ${missing.join(', ')}. Expected Mason, Theo and Leo to be active in the database.`
-    );
-  }
-
-  const hasActiveService = barbers.some((barber) =>
-    barber.barberServices.some((link) => link.service.isActive)
-  );
-  if (!hasActiveService) {
-    throw new Error('No active services linked to barbers. Configure services before seeding timeline bookings.');
+  if (barbers.length === 0) {
+    throw new Error('No active barbers with active services found. Configure barbers before seeding timeline bookings.');
   }
 
   const existingBookings = await prisma.booking.findMany({
@@ -207,7 +185,8 @@ async function loadSlotCandidates(date: string): Promise<{
         confirmedBookings,
         timeOff,
         timeBlocks,
-        settings
+        settings,
+        now: toUtcFromLondon(date, 0)
       });
 
       const totalDuration = serviceTotalDuration(service, settings.defaultBufferMinutes);
@@ -240,92 +219,6 @@ async function loadSlotCandidates(date: string): Promise<{
   });
 
   return { candidates, barbers: barbers.map(({ id, name }) => ({ id, name })) };
-}
-
-async function buildConnorPinnedSlot(date: string): Promise<SlotCandidate> {
-  const settings = await prisma.shopSettings.findFirstOrThrow();
-  const dayStartUtc = toUtcFromLondon(date, 0);
-  const dayEndUtc = addMinutes(dayStartUtc, 24 * 60);
-  const [hour, minute] = CONNOR_PINNED_TIME.split(':').map(Number);
-  const startMinutes = hour * 60 + minute;
-  const startAt = toUtcFromLondon(date, startMinutes);
-
-  const service =
-    (await prisma.service.findFirst({
-      where: { isActive: true, name: { equals: 'Haircut + Beard', mode: 'insensitive' } },
-    })) ??
-    (await prisma.service.findFirst({
-      where: { isActive: true, name: { contains: 'Haircut', mode: 'insensitive' } },
-      orderBy: [{ displayOrder: 'asc' }, { name: 'asc' }],
-    }));
-
-  if (!service) {
-    throw new Error('No active service found for Connor Walsh pinned booking.');
-  }
-
-  const endAt = addMinutes(
-    startAt,
-    serviceTotalDuration(service, settings.defaultBufferMinutes)
-  );
-
-  const barbers = await prisma.barber.findMany({
-    where: { active: true, name: { in: [...CONNOR_BARBER_PREFERENCE] } },
-    select: {
-      id: true,
-      name: true,
-      barberServices: {
-        where: { serviceId: service.id },
-        select: { serviceId: true },
-      },
-    },
-  });
-
-  const barberByName = new Map(barbers.map((barber) => [barber.name, barber]));
-  const orderedBarbers = CONNOR_BARBER_PREFERENCE.map((name) => barberByName.get(name)).filter(
-    (barber): barber is NonNullable<typeof barber> => barber != null
-  );
-
-  if (orderedBarbers.length === 0) {
-    throw new Error('No active barbers found for Connor Walsh pinned booking.');
-  }
-
-  const existingBookings = await prisma.booking.findMany({
-    where: {
-      status: BookingStatus.BOOKED,
-      startAt: { lt: dayEndUtc },
-      endAt: { gt: dayStartUtc },
-      barberId: { in: orderedBarbers.map((barber) => barber.id) },
-      NOT: { id: { startsWith: BOOKING_ID_PREFIX } },
-    },
-    select: { barberId: true, startAt: true, endAt: true },
-  });
-
-  const bookingsByBarber = new Map<string, Interval[]>();
-  for (const booking of existingBookings) {
-    const list = bookingsByBarber.get(booking.barberId) ?? [];
-    list.push({ startAt: booking.startAt, endAt: booking.endAt });
-    bookingsByBarber.set(booking.barberId, list);
-  }
-
-  const slot = { startAt, endAt };
-  for (const barber of orderedBarbers) {
-    if (barber.barberServices.length === 0) continue;
-    const intervals = bookingsByBarber.get(barber.id) ?? [];
-    if (hasAnyOverlap(slot, intervals)) continue;
-
-    return {
-      barberId: barber.id,
-      barberName: barber.name,
-      service,
-      startAt,
-      endAt,
-      time: CONNOR_PINNED_TIME,
-    };
-  }
-
-  throw new Error(
-    `No available barber for Connor Walsh at ${CONNOR_PINNED_TIME} on ${date}. All preferred barbers are busy.`
-  );
 }
 
 function pickBookings(
@@ -397,31 +290,10 @@ function pickBookings(
   return selected.slice(0, targetCount);
 }
 
-async function resolveConnorClient(shopId: string) {
-  return prisma.client.upsert({
-    where: { shopId_email: { shopId, email: CONNOR_EMAIL } },
-    update: {
-      fullName: CONNOR_FULL_NAME,
-      phone: CONNOR_PHONE,
-      tags: CONNOR_TAGS,
-      notes: CONNOR_NOTES,
-    },
-    create: {
-      shopId,
-      email: CONNOR_EMAIL,
-      fullName: CONNOR_FULL_NAME,
-      phone: CONNOR_PHONE,
-      tags: CONNOR_TAGS,
-      notes: CONNOR_NOTES,
-    },
-  });
-}
-
 async function main() {
   const date = resolveBookingsDate();
   console.info(`[timeline-day-24] Target date (Europe/London): ${date}`);
-  console.info(`[timeline-day-24] Window: 11:00–18:00, count: ${TARGET_BOOKING_COUNT}`);
-  console.info(`[timeline-day-24] Barbers: ${TARGET_BARBERS.join(', ')}`);
+  console.info(`[timeline-day-24] Window: 10:00–18:00, count: ${TARGET_BOOKING_COUNT}`);
 
   const deleted = await prisma.booking.deleteMany({
     where: { id: { startsWith: BOOKING_ID_PREFIX } }
@@ -430,27 +302,16 @@ async function main() {
     console.info(`[timeline-day-24] Removed ${deleted.count} previous timeline mock booking(s).`);
   }
 
-  const settings = await prisma.shopSettings.findFirstOrThrow();
-  const connorClient = await resolveConnorClient(settings.id);
-
   const { candidates, barbers } = await loadSlotCandidates(date);
+  console.info(`[timeline-day-24] Active barbers: ${barbers.map((b) => b.name).join(', ')}`);
+
   if (candidates.length === 0) {
     throw new Error(
-      `No bookable slots found between 11:00 and 18:00 on ${date}. Check barber availability rules and time off.`
+      `No bookable slots found between 10:00 and 18:00 on ${date}. Check barber availability rules and time off.`
     );
   }
 
-  const connorSlot = await buildConnorPinnedSlot(date);
-  const remainingCandidates = candidates.filter(
-    (candidate) => candidate.time !== CONNOR_PINNED_TIME
-  );
-
-  const connorIntervals = new Map<string, Interval[]>([
-    [connorSlot.barberId, [{ startAt: connorSlot.startAt, endAt: connorSlot.endAt }]],
-  ]);
-
-  const pickedRest = pickBookings(remainingCandidates, barbers, REMAINING_AFTER_CONNOR, connorIntervals);
-  const picked = [connorSlot, ...pickedRest].sort((a, b) => a.startAt.getTime() - b.startAt.getTime());
+  const picked = pickBookings(candidates, barbers, TARGET_BOOKING_COUNT);
 
   if (picked.length < TARGET_BOOKING_COUNT) {
     console.warn(
@@ -458,22 +319,18 @@ async function main() {
     );
   }
 
-  let mockClientIndex = 0;
-
   for (let index = 0; index < picked.length; index += 1) {
     const row = picked[index];
     const bookingIndex = index + 1;
-    const isConnor = isSameSlot(row, connorSlot);
 
     await prisma.booking.create({
       data: {
         id: timelineBookingId(bookingIndex),
         barberId: row.barberId,
         serviceId: row.service.id,
-        clientId: isConnor ? connorClient.id : undefined,
-        fullName: isConnor ? CONNOR_FULL_NAME : (CLIENT_NAMES[mockClientIndex] ?? `Timeline Client ${bookingIndex}`),
-        email: isConnor ? CONNOR_EMAIL : clientEmail(mockClientIndex + 1),
-        phone: isConnor ? CONNOR_PHONE : ukPhone(mockClientIndex + 1),
+        fullName: CLIENT_NAMES[index] ?? `Timeline Client ${bookingIndex}`,
+        email: clientEmail(bookingIndex),
+        phone: ukPhone(bookingIndex),
         startAt: row.startAt,
         endAt: row.endAt,
         status: BookingStatus.BOOKED,
@@ -484,10 +341,6 @@ async function main() {
         totalPricePence: row.service.pricePence
       }
     });
-
-    if (!isConnor) {
-      mockClientIndex += 1;
-    }
   }
 
   const perBarber = picked.reduce<Record<string, number>>((acc, row) => {
@@ -497,14 +350,10 @@ async function main() {
 
   console.info(`[timeline-day-24] Inserted ${picked.length} booking(s) for ${date}.`);
   console.info('[timeline-day-24] Distribution per barber:', perBarber);
-  console.info(
-    `[timeline-day-24] Connor Walsh pinned: ${CONNOR_PINNED_TIME} · ${connorSlot.barberName} · ${connorSlot.service.name} (clientId: ${connorClient.id})`
-  );
   console.info('[timeline-day-24] Schedule:');
   for (const row of picked) {
-    const clientLabel = isSameSlot(row, connorSlot) ? CONNOR_FULL_NAME : 'mock client';
     console.info(
-      `  ${formatLondonTime(row.startAt)}–${formatLondonTime(row.endAt)} · ${row.barberName} · ${row.service.name} · ${clientLabel}`
+      `  ${formatLondonTime(row.startAt)}–${formatLondonTime(row.endAt)} · ${row.barberName} · ${row.service.name}`
     );
   }
 }
