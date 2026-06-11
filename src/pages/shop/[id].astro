@@ -181,7 +181,7 @@ const highlights = createHighlights(product.description, product.category);
       </div>
 
       <div class="product-content">
-        <p class="product-overline">{CATEGORY_LABELS[product.category] ?? 'Styling'} · Kersivo retail</p>
+        <p class="product-overline">{CATEGORY_LABELS[product.category] ?? 'Styling'}</p>
         <h1>{product.name}</h1>
         <p class="product-price">{formatGbp(product.pricePence)}</p>
         <p class="product-intro">{intro}</p>
@@ -231,25 +231,37 @@ const highlights = createHighlights(product.description, product.category);
         <div class="related-products-carousel" data-related-carousel-root>
           <div class="related-products-grid" data-related-carousel>
             {relatedProductsForCarousel.map((item, index) => (
-              <article class:list={["related-card", index >= DESKTOP_RELATED_PRODUCT_COUNT && 'related-card--mobile-only']}>
-                <a href={`/shop/${item.id}`} class="related-card-media-link" aria-label={`View ${item.name}`}>
-                  {item.imageUrl ? <img src={item.imageUrl} alt={item.name} class="related-card-image" loading="lazy" /> : <div class="related-card-image related-card-image--placeholder">No image</div>}
+              <article
+                class:list={["shop-card", index >= DESKTOP_RELATED_PRODUCT_COUNT && 'related-card--mobile-only']}
+                data-category={item.category}
+              >
+                <a href={`/shop/${item.id}`} class="shop-media-link" aria-label={`View ${item.name}`}>
+                  <div class="shop-media">
+                    {item.imageUrl ? (
+                      <img src={item.imageUrl} alt={item.name} class="shop-image" loading="lazy" />
+                    ) : (
+                      <div class="shop-image shop-image--placeholder" aria-hidden="true"></div>
+                    )}
+                  </div>
                 </a>
-                <div class="related-card-body">
-                  <p class="related-card-category">{CATEGORY_LABELS[item.category] ?? 'Styling'}</p>
+                <div class="shop-card-body">
+                  <p class="shop-category">{CATEGORY_LABELS[item.category] ?? 'Styling'}</p>
                   <h3><a href={`/shop/${item.id}`}>{item.name}</a></h3>
-                  <p class="related-card-price">{formatGbp(item.pricePence)}</p>
-                  <button
-                    type="button"
-                    class="btn btn--secondary"
-                    data-add-to-cart
-                    data-product-id={item.id}
-                    data-product-name={item.name}
-                    data-product-price-pence={String(item.pricePence)}
-                    data-product-image-url={item.imageUrl ?? ''}
-                  >
-                    Add to cart
-                  </button>
+                  <p class="shop-price">{formatGbp(item.pricePence)}</p>
+                  <div class="shop-card-actions">
+                    <button
+                      type="button"
+                      class="btn btn--primary btn--atc"
+                      data-add-to-cart
+                      data-product-id={item.id}
+                      data-product-name={item.name}
+                      data-product-price-pence={String(item.pricePence)}
+                      data-product-image-url={item.imageUrl ?? ''}
+                      data-atc-label="Add to cart"
+                    >
+                      Add to cart
+                    </button>
+                  </div>
                 </div>
               </article>
             ))}

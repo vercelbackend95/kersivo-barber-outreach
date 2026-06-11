@@ -780,4 +780,13 @@ body.navbar17-body-lock {
   .navbar17__mobile {
     display: none;
   }
+
+  .navbar17__brand-img {
+    height: clamp(2.5rem, 4vw, 3.25rem);
+    max-width: min(14rem, 28vw);
+  }
+
+  .navbar17__wrap {
+    min-height: 4.25rem;
+  }
 }

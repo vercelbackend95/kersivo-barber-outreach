@@ -96,9 +96,7 @@ const Pricing36 = ({ className }: Pricing36Props) => {
               <div className="h-full rounded-[31px] bg-background p-8">
                 <div className="flex items-center justify-between gap-2">
                   <p className="text-xl font-semibold">Priority Growth</p>
-                  <p className="recommended-badge text-sm font-semibold text-primary">
-                    Anchor Plan
-                  </p>
+                  <span className="compare3-block__badge">Best Value</span>
                 </div>
                 <div className="mt-6 flex flex-col gap-2">
                   <p className="text-6xl font-bold">
