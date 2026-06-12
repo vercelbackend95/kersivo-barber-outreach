@@ -104,7 +104,11 @@ const Process2 = ({ className }: Process2Props) => {
         <div className="grid grid-cols-1 gap-5 lg:grid-cols-2 lg:gap-20">
           <div className="top-10 h-fit w-fit gap-3 space-y-7 py-8 lg:sticky">
             <h1 className="relative w-fit text-5xl font-semibold tracking-tight lg:text-7xl">
-              Go live in about two weeks. We do most of it.
+              Go live in two weeks.
+              <br />
+              We build it.
+              <br />
+              You just show up.
             </h1>
             <p className="text-base text-foreground/50">
               Same plan whether you are switching from Booksy/Fresha or starting your first system. We carry the build,
