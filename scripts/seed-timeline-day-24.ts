@@ -13,7 +13,15 @@ const prisma = new PrismaClient();
 
 const LONDON_TZ = 'Europe/London';
 const BOOKING_ID_PREFIX = 'timeline-mock-bk-';
-const TARGET_BOOKING_COUNT = 24;
+const DEFAULT_BOOKING_COUNT = 32;
+
+function resolveBookingCount(): number {
+  const raw = Number.parseInt(process.env.BOOKING_COUNT ?? String(DEFAULT_BOOKING_COUNT), 10);
+  if (!Number.isFinite(raw) || raw < 1) {
+    throw new Error('BOOKING_COUNT must be a positive integer.');
+  }
+  return raw;
+}
 const WINDOW_START_MINUTES = 10 * 60;
 const WINDOW_END_MINUTES = 18 * 60;
 
@@ -42,6 +50,16 @@ const CLIENT_NAMES = [
   'Remy Foster',
   'Arden Cole',
   'Blair Quinn',
+  'Lennox Shaw',
+  'Harper Vale',
+  'Emery Cross',
+  'Parker Knox',
+  'Dakota Wells',
+  'River Stone',
+  'Phoenix Hart',
+  'Sterling Lane',
+  'Winter Brooks',
+  'Atlas Gray',
 ];
 
 type SlotCandidate = {
@@ -292,8 +310,9 @@ function pickBookings(
 
 async function main() {
   const date = resolveBookingsDate();
+  const targetBookingCount = resolveBookingCount();
   console.info(`[timeline-day-24] Target date (Europe/London): ${date}`);
-  console.info(`[timeline-day-24] Window: 10:00–18:00, count: ${TARGET_BOOKING_COUNT}`);
+  console.info(`[timeline-day-24] Window: 10:00–18:00, count: ${targetBookingCount}`);
 
   const deleted = await prisma.booking.deleteMany({
     where: { id: { startsWith: BOOKING_ID_PREFIX } }
@@ -311,11 +330,11 @@ async function main() {
     );
   }
 
-  const picked = pickBookings(candidates, barbers, TARGET_BOOKING_COUNT);
+  const picked = pickBookings(candidates, barbers, targetBookingCount);
 
-  if (picked.length < TARGET_BOOKING_COUNT) {
+  if (picked.length < targetBookingCount) {
     console.warn(
-      `[timeline-day-24] Only ${picked.length}/${TARGET_BOOKING_COUNT} non-overlapping slots available; inserting what fits.`
+      `[timeline-day-24] Only ${picked.length}/${targetBookingCount} non-overlapping slots available; inserting what fits.`
     );
   }
 

@@ -18,7 +18,7 @@ function resolvePublicSiteUrl(): string {
   const configured = (import.meta.env.PUBLIC_SITE_URL ?? process.env.PUBLIC_SITE_URL ?? '').trim();
   if (configured) return configured.replace(/\/$/, '');
 
-  return 'https://barberdemo.kersivo.co.uk';
+  return 'https://kersivo.co.uk';
 }
 
 

@@ -137,7 +137,7 @@ const Feature261 = ({ className }: Feature261Props) => {
           </button>
           <p className="feature261__footnote">
             Opens in a new tab&mdash;wander the booking flow, floor panel and shop shelf at your pace.
-            No signup, no demo call; close the tab when you&rsquo;re done.
+            No signup, no sales call; close the tab when you&rsquo;re done.
           </p>
         </div>
       </div>

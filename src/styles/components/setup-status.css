@@ -1,0 +1,31 @@
+.setup-status-page .shop-card {
+  max-width: 42rem;
+  margin-inline: auto;
+}
+
+.setup-status-page .shop-card-body {
+  display: grid;
+  gap: var(--space-sm);
+}
+
+.setup-status-page .shop-card-body h1 {
+  margin: 0;
+}
+
+.setup-status-page .shop-card-body p {
+  margin: 0;
+}
+
+.setup-status-next {
+  margin: 0;
+  padding-left: 1.25rem;
+  display: grid;
+  gap: 0.5rem;
+}
+
+.setup-status-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-xs);
+  margin-top: var(--space-xs);
+}

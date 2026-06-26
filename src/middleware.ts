@@ -27,7 +27,8 @@ function parseAllowedOrigins(): Set<string> {
     .flatMap((value) => value.split(','));
 
   const defaults = [
-    'https://barberdemo.kersivo.co.uk',
+    'https://kersivo.co.uk',
+    'https://www.kersivo.co.uk',
     'https://kersivo-barber-outreach.vercel.app'
   ];
 

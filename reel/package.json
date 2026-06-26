@@ -1,0 +1,29 @@
+{
+  "name": "kersivo-zero-commission-reel",
+  "private": true,
+  "version": "1.0.0",
+  "type": "module",
+  "scripts": {
+    "preview": "remotion studio",
+    "render": "node scripts/render.mjs",
+    "render:background": "node scripts/render-background.mjs",
+    "render:counter": "node scripts/render-percent-counter.mjs",
+    "render:barber-math": "node scripts/render-barber-math.mjs",
+    "render:no-show": "node scripts/render-no-show.mjs",
+    "render:spinning-chair": "node scripts/render-spinning-chair.mjs",
+    "render:viral-cta": "node scripts/render-viral-cta-bumper.mjs",
+    "render:oj-fix": "node scripts/render-oj-phone-fix.mjs",
+    "mix:no-show": "node scripts/mix-no-show-audio.mjs"
+  },
+  "dependencies": {
+    "@remotion/cli": "^4.0.286",
+    "@remotion/google-fonts": "^4.0.286",
+    "react": "^19.0.0",
+    "react-dom": "^19.0.0",
+    "remotion": "^4.0.286"
+  },
+  "devDependencies": {
+    "@types/react": "^19.0.0",
+    "typescript": "^5.8.2"
+  }
+}

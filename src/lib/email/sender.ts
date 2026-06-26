@@ -188,6 +188,115 @@ function escapeHtml(text: string): string {
     .replace(/"/g, '&quot;');
 }
 
+function getSetupOnboardingFormUrl(): string {
+  const configured = (
+    import.meta.env.SETUP_ONBOARDING_FORM_URL ??
+    process.env.SETUP_ONBOARDING_FORM_URL ??
+    ''
+  ).trim();
+
+  if (configured) return configured;
+
+  if (import.meta.env.DEV) {
+    console.warn('[EMAIL] SETUP_ONBOARDING_FORM_URL is not set; using placeholder onboarding link.');
+  }
+
+  return '#';
+}
+
+function getContactInboxEmail(): string {
+  return (
+    import.meta.env.CONTACT_INBOX_EMAIL ??
+    process.env.CONTACT_INBOX_EMAIL ??
+    FROM_EMAIL
+  );
+}
+
+export async function sendSetupDepositConfirmationEmail(input: {
+  to: string;
+  customerName: string;
+  shopName: string;
+  planName: string;
+  depositFormatted: string;
+  remainingFormatted: string;
+}) {
+  const onboardingFormUrl = getSetupOnboardingFormUrl();
+
+  const html = `<p>Hi ${escapeHtml(input.customerName)},</p>
+  <h2>Thanks for your deposit</h2>
+  <p>Your setup deposit for <strong>${escapeHtml(input.planName)}</strong> is confirmed for <strong>${escapeHtml(input.shopName)}</strong>.</p>
+  <p><strong>Deposit paid:</strong> ${escapeHtml(input.depositFormatted)}</p>
+  <p><strong>Remaining on go-live:</strong> ${escapeHtml(input.remainingFormatted)} (due after you sign off the system)</p>
+  <p><a href="${escapeHtml(onboardingFormUrl)}"><strong>Complete your onboarding form</strong></a></p>
+  <p><strong>What to prepare:</strong></p>
+  <ul>
+    <li>Booksy/Fresha export (or your current booking data)</li>
+    <li>Services list and prices</li>
+    <li>Barber names and roles</li>
+    <li>Logo and shop photos</li>
+    <li>Domain or DNS details (if you already have one)</li>
+  </ul>
+  <p>Please complete the onboarding form within <strong>5 working days</strong> to hold your launch slot.</p>
+  <p>Questions? Email <a href="mailto:hello@kersivo.co.uk">hello@kersivo.co.uk</a>.</p>`;
+
+  return sendEmail({
+    to: input.to,
+    subject: 'Your Kersivo setup deposit is confirmed',
+    html,
+    devLogLabel: '[DEV EMAIL] Setup deposit confirmation',
+    devPayload: {
+      to: input.to,
+      customerName: input.customerName,
+      shopName: input.shopName,
+      planName: input.planName,
+      depositFormatted: input.depositFormatted,
+      remainingFormatted: input.remainingFormatted,
+      onboardingFormUrl
+    }
+  });
+}
+
+export async function sendSetupDepositInternalNotificationEmail(input: {
+  customerName: string;
+  customerEmail: string;
+  shopName: string;
+  shopSize: string;
+  currentStack: string;
+  planName: string;
+  depositFormatted: string;
+  stripeSessionId: string;
+}) {
+  const inbox = getContactInboxEmail();
+
+  const html = `<p><strong>New setup deposit</strong></p>
+  <p><strong>Customer:</strong> ${escapeHtml(input.customerName)}</p>
+  <p><strong>Email:</strong> ${escapeHtml(input.customerEmail)}</p>
+  <p><strong>Shop:</strong> ${escapeHtml(input.shopName)}</p>
+  <p><strong>Shop size:</strong> ${escapeHtml(input.shopSize)}</p>
+  <p><strong>Current stack:</strong> ${escapeHtml(input.currentStack)}</p>
+  <p><strong>Plan:</strong> ${escapeHtml(input.planName)}</p>
+  <p><strong>Deposit:</strong> ${escapeHtml(input.depositFormatted)}</p>
+  <p><strong>Stripe session:</strong> ${escapeHtml(input.stripeSessionId)}</p>`;
+
+  return sendEmail({
+    to: inbox,
+    subject: `New setup deposit — ${input.shopName} (${input.planName})`,
+    html,
+    devLogLabel: '[DEV EMAIL] Setup deposit internal notification',
+    devPayload: {
+      to: inbox,
+      customerName: input.customerName,
+      customerEmail: input.customerEmail,
+      shopName: input.shopName,
+      shopSize: input.shopSize,
+      currentStack: input.currentStack,
+      planName: input.planName,
+      depositFormatted: input.depositFormatted,
+      stripeSessionId: input.stripeSessionId
+    }
+  });
+}
+
 export async function sendContactInquiryEmail(input: {
   name: string;
   email: string;
@@ -196,10 +305,7 @@ export async function sendContactInquiryEmail(input: {
   shopSize: string;
   currentStack: string;
 }) {
-  const inbox =
-    import.meta.env.CONTACT_INBOX_EMAIL ??
-    process.env.CONTACT_INBOX_EMAIL ??
-    FROM_EMAIL;
+  const inbox = getContactInboxEmail();
 
   const html = `<p><strong>New landing page inquiry</strong></p>
   <p><strong>Name:</strong> ${escapeHtml(input.name)}</p>
@@ -211,7 +317,7 @@ export async function sendContactInquiryEmail(input: {
 
   return sendEmail({
     to: inbox,
-    subject: `Barber demo inquiry — ${input.name}`,
+    subject: `Kersivo setup inquiry — ${input.name}`,
     html,
     devLogLabel: '[DEV EMAIL] Contact inquiry',
     devPayload: {

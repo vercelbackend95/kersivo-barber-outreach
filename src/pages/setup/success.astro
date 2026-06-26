@@ -1,0 +1,26 @@
+---
+import MainLayout from '@/layouts/MainLayout.astro';
+import '@/styles/components/setup-status.css';
+
+const sessionId = Astro.url.searchParams.get('session_id');
+---
+
+<MainLayout title="Deposit received — next steps">
+  <main class="container shop-page setup-status-page">
+    <section class="shop-card shop-success-card">
+      <div class="shop-card-body">
+        <h1>Your setup deposit is confirmed.</h1>
+        <p class="muted">Check your email in the next few minutes for your onboarding form.</p>
+        <ul class="setup-status-next shop-success-next" aria-label="What happens next">
+          <li>Complete the form within 5 working days to hold your launch slot.</li>
+          <li>Remaining 50% is due on go-live after you sign off the system.</li>
+        </ul>
+        {sessionId ? <p class="muted">Reference: {sessionId}</p> : null}
+        <div class="setup-status-actions">
+          <a href="/" class="btn btn--primary">Back to home</a>
+          <a href="mailto:hello@kersivo.co.uk" class="btn btn--secondary">hello@kersivo.co.uk</a>
+        </div>
+      </div>
+    </section>
+  </main>
+</MainLayout>

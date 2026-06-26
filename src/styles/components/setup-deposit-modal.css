@@ -1,0 +1,97 @@
+.setup-deposit-modal {
+  position: fixed;
+  inset: 0;
+  z-index: 300;
+  display: grid;
+  place-items: center;
+  padding: clamp(1rem, 4vw, 2rem);
+}
+
+.setup-deposit-modal__backdrop {
+  position: absolute;
+  inset: 0;
+  border: 0;
+  margin: 0;
+  padding: 0;
+  background: color-mix(in srgb, var(--bg) 35%, #000 65%);
+  backdrop-filter: blur(6px);
+  -webkit-backdrop-filter: blur(6px);
+  cursor: pointer;
+}
+
+.setup-deposit-modal__panel {
+  position: relative;
+  z-index: 1;
+  width: min(100%, 32rem);
+  max-height: min(92vh, 48rem);
+  overflow: auto;
+  border: 1px solid color-mix(in srgb, var(--border) 80%, transparent);
+  border-radius: var(--radius-16);
+  background: var(--surface-1);
+  box-shadow: 0 24px 64px color-mix(in srgb, #000 28%, transparent);
+  padding: clamp(1.25rem, 4vw, 1.75rem);
+  display: grid;
+  gap: var(--space-md);
+}
+
+.setup-deposit-modal__header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: var(--space-sm);
+}
+
+.setup-deposit-modal__title {
+  margin: 0;
+  font-size: clamp(1.25rem, 4vw, 1.5rem);
+  font-weight: 700;
+  line-height: 1.2;
+}
+
+.setup-deposit-modal__close {
+  flex-shrink: 0;
+}
+
+.setup-deposit-modal__note {
+  margin: 0;
+  font-size: var(--text-sm);
+  line-height: 1.5;
+  color: color-mix(in srgb, var(--muted) 75%, var(--fg) 25%);
+}
+
+.setup-deposit-modal__form {
+  display: grid;
+  gap: var(--space-sm);
+}
+
+.setup-deposit-modal__terms {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.6rem;
+  font-size: var(--text-sm);
+  line-height: 1.45;
+  color: color-mix(in srgb, var(--muted) 70%, var(--fg) 30%);
+}
+
+.setup-deposit-modal__terms input {
+  margin-top: 0.2rem;
+  flex-shrink: 0;
+}
+
+.setup-deposit-modal__terms a {
+  color: var(--accent);
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+
+.setup-deposit-modal__actions {
+  display: grid;
+  gap: var(--space-xs);
+}
+
+.setup-deposit-modal__error {
+  margin: 0;
+  font-size: var(--text-sm);
+  line-height: 1.45;
+  color: color-mix(in srgb, #c44 70%, var(--fg));
+}

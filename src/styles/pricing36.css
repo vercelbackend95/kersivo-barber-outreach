@@ -333,3 +333,35 @@
   color: var(--info) !important;
   background: color-mix(in srgb, var(--info) 18%, transparent);
 }
+
+.pricing36__plan-cta {
+  border: 0;
+  background: transparent;
+  cursor: pointer;
+  font: inherit;
+}
+
+.pricing36 button.pricing36__plan-cta {
+  color: inherit;
+}
+
+.pricing36__questions,
+.pricing36__calendly {
+  margin: var(--space-sm) auto 0;
+  max-width: 42rem;
+  text-align: center;
+  font-size: var(--text-sm);
+  line-height: 1.5;
+  color: color-mix(in srgb, var(--muted) 75%, var(--fg) 25%);
+}
+
+.pricing36__calendly {
+  margin-top: var(--space-2xs);
+}
+
+.pricing36__questions a,
+.pricing36__calendly a {
+  color: var(--accent);
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}

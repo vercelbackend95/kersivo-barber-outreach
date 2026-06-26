@@ -1,6 +1,12 @@
-import { ArrowRight, Check } from "lucide-react";
+"use client";
 
+import { ArrowRight, Check } from "lucide-react";
+import { useState } from "react";
+
+import { SetupDepositModal } from "@/components/setup/SetupDepositModal";
 import { Separator } from "@/components/ui/separator";
+import { getSetupPlan, type SetupPlanId } from "@/lib/setup/plans";
+import { formatGbp } from "@/lib/shop/money";
 import { cn } from "@/lib/utils";
 
 interface Pricing36Props {
@@ -8,6 +14,17 @@ interface Pricing36Props {
 }
 
 const Pricing36 = ({ className }: Pricing36Props) => {
+  const [modalOpen, setModalOpen] = useState(false);
+  const [selectedPlan, setSelectedPlan] = useState<SetupPlanId>("launch");
+
+  const openDepositModal = (planId: SetupPlanId) => {
+    setSelectedPlan(planId);
+    setModalOpen(true);
+  };
+
+  const activePlan = getSetupPlan(selectedPlan);
+  const calendlyUrl = (import.meta.env.PUBLIC_CALENDLY_URL ?? "").trim();
+
   return (
     <section id="pricing" className={cn("pricing36 py-32", className)}>
       <div className="container">
@@ -27,6 +44,20 @@ const Pricing36 = ({ className }: Pricing36Props) => {
             once your system is live, tested, and signed off by you.
           </p>
         </div>
+
+        <p className="pricing36__questions">
+          Questions first? Email{" "}
+          <a href="mailto:hello@kersivo.co.uk">hello@kersivo.co.uk</a>
+          {" "}— or use the contact form below.
+        </p>
+
+        {calendlyUrl ? (
+          <p className="pricing36__calendly">
+            <a href={calendlyUrl} target="_blank" rel="noopener noreferrer">
+              Book a 15-min scorecard call
+            </a>
+          </p>
+        ) : null}
 
         <div className="mx-auto grid max-w-4xl gap-6 md:grid-cols-2">
           <div className="flex flex-col gap-4">
@@ -81,14 +112,14 @@ const Pricing36 = ({ className }: Pricing36Props) => {
                   </p>
                 </div>
               </div>
-              <a
-                href="#book-demo"
-                className="group flex items-center justify-center gap-1.5 py-3 text-center font-medium text-background"
-                data-demo-cta
+              <button
+                type="button"
+                className="group pricing36__plan-cta flex w-full items-center justify-center gap-1.5 py-3 text-center font-medium text-background"
+                onClick={() => openDepositModal("launch")}
               >
                 Plan my setup on Launch
                 <ArrowRight className="size-5 transition-transform group-hover:translate-x-1" />
-              </a>
+              </button>
             </div>
           </div>
           <div className="flex flex-col gap-4">
@@ -140,18 +171,26 @@ const Pricing36 = ({ className }: Pricing36Props) => {
                   </p>
                 </div>
               </div>
-              <a
-                href="#book-demo"
-                className="group flex items-center justify-center gap-1.5 py-3 text-center font-medium text-background"
-                data-demo-cta
+              <button
+                type="button"
+                className="group pricing36__plan-cta flex w-full items-center justify-center gap-1.5 py-3 text-center font-medium text-background"
+                onClick={() => openDepositModal("priority")}
               >
                 Plan my setup on Priority Growth
                 <ArrowRight className="size-5 transition-transform group-hover:translate-x-1" />
-              </a>
+              </button>
             </div>
           </div>
         </div>
       </div>
+
+      <SetupDepositModal
+        open={modalOpen}
+        onClose={() => setModalOpen(false)}
+        planId={selectedPlan}
+        planName={activePlan.name}
+        depositFormatted={formatGbp(activePlan.depositPence)}
+      />
     </section>
   );
 };

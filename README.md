@@ -25,8 +25,10 @@ Astro + React (TypeScript) booking + shop system for barbershops.
 5. Configure environment:
    - `RESEND_API_KEY`: required for real email delivery via Resend.
    - `FROM_EMAIL`: sender identity used by Resend (must be verified in your Resend account).
-   - `CONTACT_INBOX_EMAIL`: inbox that receives landing page contact/demo inquiries (defaults to `FROM_EMAIL` if unset).
-   - `PUBLIC_SITE_URL`: public base URL used by booking + shop links and Stripe success/cancel links (for local dev: `http://localhost:4321`). For the public BarberDemo deployment, set this to the demo origin (e.g. `https://barberdemo.kersivo.co.uk`) so JSON-LD structured data and canonical asset URLs resolve correctly.
+   - `CONTACT_INBOX_EMAIL`: inbox that receives landing page contact/setup inquiries (defaults to `FROM_EMAIL` if unset).
+   - `SETUP_ONBOARDING_FORM_URL`: Tally (or other) onboarding form URL linked from setup deposit confirmation emails.
+   - `PUBLIC_CALENDLY_URL`: optional Calendly link shown under pricing (e.g. scorecard call).
+   - `PUBLIC_SITE_URL`: public base URL used by booking + shop links and Stripe success/cancel links (for local dev: `http://localhost:4321`). For production, set to `https://kersivo.co.uk`.
    - `STRIPE_SECRET_KEY`: Stripe test secret key used for checkout session creation.
    - `STRIPE_WEBHOOK_SECRET`: Stripe webhook signing secret used to verify `/api/shop/webhook`.
    - `ADMIN_SECRET`: admin panel login secret.
@@ -39,6 +41,31 @@ Astro + React (TypeScript) booking + shop system for barbershops.
    ```bash
    npm run dev
    ```
+
+## Production domain (kersivo.co.uk)
+
+1. Set `PUBLIC_SITE_URL=https://kersivo.co.uk` in Vercel (Production environment) and in local `.env` when testing production-like URLs.
+2. Add `kersivo.co.uk` as the production domain in the Vercel project (Settings → Domains).
+3. Legacy redirect: `barberdemo.kersivo.co.uk` → `https://kersivo.co.uk` is configured in [`vercel.json`](vercel.json) (permanent redirect, all paths).
+4. Stripe webhook endpoint (production): `https://kersivo.co.uk/api/shop/webhook` — register this URL in the Stripe Dashboard and set `STRIPE_WEBHOOK_SECRET` in Vercel.
+5. `SETUP_ONBOARDING_FORM_URL`: your Tally onboarding form link (e.g. `https://tally.so/r/XXXXX`). Sent to clients in the setup deposit confirmation email after they pay the 50% deposit.
+
+## Setup deposit flow test
+
+1. Run the dev server:
+   ```bash
+   npm run dev
+   ```
+2. In another terminal, forward Stripe webhooks locally:
+   ```bash
+   stripe listen --forward-to localhost:4321/api/shop/webhook
+   ```
+   Copy the signing secret into `.env` as `STRIPE_WEBHOOK_SECRET`.
+3. Open the homepage, click **Launch** (or Priority) under Pricing, fill in the setup deposit modal, and pay with Stripe test card `4242 4242 4242 4242`.
+4. Confirm:
+   - A `SetupDeposit` row exists in the database (correct plan, `depositPence`, `stripeSessionId`).
+   - Customer confirmation + internal notification emails (via Resend, or `[DEV EMAIL]` logs if `RESEND_API_KEY` is unset).
+   - Replaying the same webhook returns `{ ok: true, duplicate: true }` without a second DB row.
 
 ## Stripe local webhook testing (end-to-end)
 1. Set `STRIPE_SECRET_KEY` in `.env`.

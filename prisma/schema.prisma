@@ -285,3 +285,33 @@ model RateLimitEvent {
 
   @@index([ip, action, createdAt])
 }
+
+enum SetupPlan {
+  LAUNCH
+  PRIORITY
+}
+
+enum SetupDepositStatus {
+  PAID
+}
+
+model SetupDeposit {
+  id                    String             @id @default(cuid())
+  stripeSessionId       String             @unique
+  plan                  SetupPlan
+  status                SetupDepositStatus @default(PAID)
+  customerName          String
+  customerEmail         String
+  shopName              String
+  shopSize              String
+  currentStack          String
+  depositPence          Int
+  currency              String             @default("gbp")
+  paidAt                DateTime
+  onboardingSubmittedAt DateTime?
+  createdAt             DateTime           @default(now())
+  updatedAt             DateTime           @updatedAt
+
+  @@index([customerEmail])
+  @@index([plan, paidAt])
+}

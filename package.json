@@ -38,7 +38,22 @@
     "assets:zero-commission-compose": "node scripts/compose-zero-commission-illustration.mjs && node scripts/remove-illustration-bg.mjs public/images/Ilustracje/zero-commission-composed.png && node scripts/finalize-zero-commission-asset.mjs",
     "assets:bubble-clean": "node scripts/inpaint-speech-bubble-text.mjs",
     "assets:happy-compose": "node scripts/compose-happy-bubble.mjs",
-    "assets:setup-reminder-flip": "node scripts/flip-setup-reminder.mjs"
+    "assets:setup-reminder-flip": "node scripts/flip-setup-reminder.mjs",
+    "assets:reel-icons": "node scripts/generate-reel-icons.mjs",
+    "assets:barber-chair": "node scripts/extract-barber-chair.mjs",
+    "assets:fotel-bg": "node scripts/remove-illustration-bg.mjs public/images/Ilustracje/fotel.png --tolerance=20 --feather=16",
+    "assets:fotel-video-key": "node scripts/key-fotel-video.mjs",
+    "reel:fetch-assets": "node scripts/fetch-reel-assets.mjs",
+    "reel:prepare-no-show-ui": "node scripts/prepare-no-show-ui-assets.mjs",
+    "reel:render": "cd reel && npm run render",
+    "reel:render-background": "cd reel && npm run render:background",
+    "reel:render-counter": "cd reel && npm run render:counter",
+    "reel:render:barber-math": "cd reel && npm run render:barber-math",
+    "reel:render:no-show": "cd reel && npm run render:no-show",
+    "reel:render:spinning-chair": "cd reel && npm run render:spinning-chair",
+    "reel:render:viral-cta": "cd reel && npm run render:viral-cta",
+    "reel:render:oj-fix": "cd reel && npm run render:oj-fix",
+    "reel:mix:no-show": "cd reel && npm run mix:no-show"
   },
   "dependencies": {
     "@astrojs/react": "^4.4.2",

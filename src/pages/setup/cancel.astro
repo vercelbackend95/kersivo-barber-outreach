@@ -1,0 +1,19 @@
+---
+import MainLayout from '@/layouts/MainLayout.astro';
+import '@/styles/components/setup-status.css';
+---
+
+<MainLayout title="Checkout cancelled">
+  <main class="container shop-page setup-status-page">
+    <section class="shop-card shop-success-card">
+      <div class="shop-card-body">
+        <h1>Checkout cancelled</h1>
+        <p class="muted">No payment was taken. You can try again from pricing or contact us.</p>
+        <div class="setup-status-actions">
+          <a href="/#pricing" class="btn btn--primary">Back to pricing</a>
+          <a href="/#contact" class="btn btn--secondary">Contact us</a>
+        </div>
+      </div>
+    </section>
+  </main>
+</MainLayout>

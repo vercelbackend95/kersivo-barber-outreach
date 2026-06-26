@@ -1,0 +1,156 @@
+{
+  "generatedAt": "2026-06-18T14:29:51.199Z",
+  "liveBase": "https://kersivo.co.uk",
+  "assets": [
+    {
+      "path": "images/Ilustracje/0%.png",
+      "local": true,
+      "resolved": "C:\\dev\\kersivo-barber-outreach\\public\\images\\Ilustracje\\0%.png"
+    },
+    {
+      "path": "images/Ilustracje/0%25.png",
+      "local": false,
+      "resolved": "C:\\dev\\kersivo-barber-outreach\\public\\images\\Ilustracje\\0%25.png"
+    },
+    {
+      "path": "images/Ilustracje/shoppyonline.png",
+      "local": true,
+      "resolved": "C:\\dev\\kersivo-barber-outreach\\public\\images\\Ilustracje\\shoppyonline.png"
+    },
+    {
+      "path": "images/Ilustracje/8.png",
+      "local": true,
+      "resolved": "C:\\dev\\kersivo-barber-outreach\\public\\images\\Ilustracje\\8.png"
+    },
+    {
+      "path": "images/Ilustracje/newshop.png",
+      "local": true,
+      "resolved": "C:\\dev\\kersivo-barber-outreach\\public\\images\\Ilustracje\\newshop.png"
+    },
+    {
+      "path": "images/Ilustracje/barberwelcome.png",
+      "local": true,
+      "resolved": "C:\\dev\\kersivo-barber-outreach\\public\\images\\Ilustracje\\barberwelcome.png"
+    },
+    {
+      "path": "images/Ilustracje/barberszyld.png",
+      "local": true,
+      "resolved": "C:\\dev\\kersivo-barber-outreach\\public\\images\\Ilustracje\\barberszyld.png"
+    },
+    {
+      "path": "images/Ilustracje/barber-chair.png",
+      "local": true,
+      "resolved": "C:\\dev\\kersivo-barber-outreach\\public\\images\\Ilustracje\\barber-chair.png"
+    },
+    {
+      "path": "images/Ilustracje/reminder.png",
+      "local": true,
+      "resolved": "C:\\dev\\kersivo-barber-outreach\\public\\images\\Ilustracje\\reminder.png"
+    },
+    {
+      "path": "images/Ilustracje/zegar.png",
+      "local": true,
+      "resolved": "C:\\dev\\kersivo-barber-outreach\\public\\images\\Ilustracje\\zegar.png"
+    },
+    {
+      "path": "images/Ilustracje/fotel.png",
+      "local": true,
+      "resolved": "C:\\dev\\kersivo-barber-outreach\\public\\images\\Ilustracje\\fotel.png"
+    },
+    {
+      "path": "images/Ilustracje/ddd.png",
+      "local": true,
+      "resolved": "C:\\dev\\kersivo-barber-outreach\\public\\images\\Ilustracje\\ddd.png"
+    },
+    {
+      "path": "images/Ilustracje/ccc.webm",
+      "local": true,
+      "resolved": "C:\\dev\\kersivo-barber-outreach\\public\\images\\Ilustracje\\ccc.webm"
+    },
+    {
+      "path": "images/Ilustracje/fotel wideo.mp4",
+      "local": true,
+      "resolved": "C:\\dev\\kersivo-barber-outreach\\public\\images\\Ilustracje\\fotel wideo.mp4"
+    },
+    {
+      "path": "images/insta/0% commission.jpg",
+      "local": true,
+      "resolved": "C:\\dev\\kersivo-barber-outreach\\public\\images\\insta\\0% commission.jpg"
+    },
+    {
+      "path": "hero-assets/screens/feature261-shop-storefront.jpg",
+      "local": true,
+      "resolved": "C:\\dev\\kersivo-barber-outreach\\public\\hero-assets\\screens\\feature261-shop-storefront.jpg"
+    },
+    {
+      "path": "reel-assets/zero-commission.png",
+      "alias": true,
+      "source": "images/Ilustracje/0%.png"
+    },
+    {
+      "path": "reel-assets/shoppyonline.png",
+      "alias": true,
+      "source": "images/Ilustracje/shoppyonline.png"
+    },
+    {
+      "path": "reel-assets/hero-booking.png",
+      "alias": true,
+      "source": "images/Ilustracje/8.png"
+    },
+    {
+      "path": "reel-assets/hero-newshop.png",
+      "alias": true,
+      "source": "images/Ilustracje/newshop.png"
+    },
+    {
+      "path": "reel-assets/hero-barberwelcome.png",
+      "alias": true,
+      "source": "images/Ilustracje/barberwelcome.png"
+    },
+    {
+      "path": "reel-assets/hero-barberszyld.png",
+      "alias": true,
+      "source": "images/Ilustracje/barberszyld.png"
+    },
+    {
+      "path": "reel-assets/barber-chair.png",
+      "alias": true,
+      "source": "images/Ilustracje/barber-chair.png"
+    },
+    {
+      "path": "reel-assets/reminder.png",
+      "alias": true,
+      "source": "images/Ilustracje/reminder.png"
+    },
+    {
+      "path": "reel-assets/zegar.png",
+      "alias": true,
+      "source": "images/Ilustracje/zegar.png"
+    },
+    {
+      "path": "reel-assets/fotel.png",
+      "alias": true,
+      "source": "images/Ilustracje/fotel.png"
+    },
+    {
+      "path": "reel-assets/ddd.png",
+      "alias": true,
+      "source": "images/Ilustracje/ddd.png"
+    },
+    {
+      "path": "reel-assets/broll/ccc.webm",
+      "alias": true,
+      "source": "images/Ilustracje/ccc.webm"
+    },
+    {
+      "path": "reel-assets/iphone-15-pro-frame.png",
+      "alias": true,
+      "source": "reel-assets/iphone-15-pro-frame.png"
+    },
+    {
+      "path": "reel-assets/barbershop-screen-bg.jpg",
+      "alias": true,
+      "source": "reel-assets/barbershop-screen-bg.jpg"
+    }
+  ]
+}

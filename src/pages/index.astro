@@ -57,9 +57,9 @@ const DEMO_ADMIN_PASSWORD = import.meta.env.PUBLIC_DEMO_ADMIN_PASSWORD
       >
         <div class="system-chooser__header">
           <div class="system-chooser__header-copy">
-            <p class="system-chooser__eyebrow">Live demo &middot; 2 areas to explore</p>
+            <p class="system-chooser__eyebrow">Live product preview &middot; 2 areas to explore</p>
             <h2 id="system-chooser-title">Choose your entry point</h2>
-            <p id="system-chooser-description" class="system-chooser__header-lead">Each demo opens in a new tab — close it to return here.</p>
+            <p id="system-chooser-description" class="system-chooser__header-lead">Each preview opens in a new tab — close it to return here.</p>
           </div>
           <button
             class="system-chooser__close"
@@ -113,7 +113,7 @@ const DEMO_ADMIN_PASSWORD = import.meta.env.PUBLIC_DEMO_ADMIN_PASSWORD
               </div>
               <p class="system-chooser__tile-loading" role="status" aria-live="polite">
                 <span class="system-chooser__tile-spinner" aria-hidden="true"></span>
-                <span>Opening demo&hellip;</span>
+                <span>Opening preview&hellip;</span>
               </p>
             </div>
           </article>
@@ -153,7 +153,7 @@ const DEMO_ADMIN_PASSWORD = import.meta.env.PUBLIC_DEMO_ADMIN_PASSWORD
               <h3>Kersivo system</h3>
               <p class="system-chooser__tile-desc">
                 Bookings dashboard and shop admin in one place—schedules, statuses and reports, plus products, orders and
-                pickup. Same login for everything; the demo opens on bookings first.
+                pickup. Same login for everything; the preview opens on bookings first.
               </p>
               <div class="system-chooser__tile-footer">
                 <span class="system-chooser__tile-access">
@@ -168,7 +168,7 @@ const DEMO_ADMIN_PASSWORD = import.meta.env.PUBLIC_DEMO_ADMIN_PASSWORD
               </div>
               <p class="system-chooser__tile-loading" role="status" aria-live="polite">
                 <span class="system-chooser__tile-spinner" aria-hidden="true"></span>
-                <span>Opening demo&hellip;</span>
+                <span>Opening preview&hellip;</span>
               </p>
             </div>
           </article>
@@ -186,7 +186,7 @@ const DEMO_ADMIN_PASSWORD = import.meta.env.PUBLIC_DEMO_ADMIN_PASSWORD
     <Feature261 />
     <ShopProductCards6 />
     <Process2 client:load />
-    <Pricing36 />
+    <Pricing36 client:load />
     <RateCard1 />
     <TrustBlock />
     <Faq4 />
@@ -223,7 +223,7 @@ const DEMO_ADMIN_PASSWORD = import.meta.env.PUBLIC_DEMO_ADMIN_PASSWORD
   const demoCtas = document.querySelectorAll('[data-demo-cta]');
   const demoSection = document.querySelector('#book-demo');
     const demoForm = document.querySelector('.contact16__form');
-  const DEMO_MESSAGE = "Hi, I’m interested in a barber website demo with bookings, admin and retail features.";
+  const DEMO_MESSAGE = "Hi, I'm interested in setting up Kersivo with bookings, admin and retail features.";
 
   const applyDemoPrefill = () => {
     if (!(demoForm instanceof HTMLFormElement)) return;
@@ -232,7 +232,7 @@ const DEMO_ADMIN_PASSWORD = import.meta.env.PUBLIC_DEMO_ADMIN_PASSWORD
     const intentField = demoForm.querySelector('[data-demo-intent]');
 
     if (intentField instanceof HTMLInputElement) {
-      intentField.value = 'demo';
+      intentField.value = 'setup';
     }
 
     if (!(messageField instanceof HTMLTextAreaElement)) return;
