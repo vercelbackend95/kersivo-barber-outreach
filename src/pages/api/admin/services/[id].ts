@@ -3,6 +3,11 @@ export const prerender = false;
 import type { APIRoute } from 'astro';
 import { z } from 'zod';
 import { requireAdmin } from '../../../../lib/admin/auth';
+import {
+  ensureCustomServiceCategory,
+  loadMergedServiceCategories,
+  normalizeServiceCategory
+} from '../../../../lib/admin/serviceCategories';
 import { prisma } from '../../../../lib/db/client';
 
 const updateSchema = z.object({
@@ -12,10 +17,9 @@ const updateSchema = z.object({
   durationMinutes: z.number().int().min(5).max(480).optional(),
   bufferMinutes: z.number().int().min(0).max(120).optional(),
   displayOrder: z.number().int().min(0).optional(),
-  category: z.string().trim().max(80).optional().nullable(),
+  category: z.string().trim().min(1, 'Category is required').max(80).optional(),
   isActive: z.boolean().optional(),
   barberIds: z.array(z.string().trim().min(1)).optional()
-
 });
 
 export const PATCH: APIRoute = async (ctx) => {
@@ -30,11 +34,20 @@ export const PATCH: APIRoute = async (ctx) => {
 
   const data = parsed.data;
   const uniqueBarberIds = data.barberIds ? Array.from(new Set(data.barberIds)) : null;
+  const normalizedCategory =
+    data.category !== undefined ? normalizeServiceCategory(data.category) : undefined;
 
-  const service = await prisma.$transaction(async (tx) => {
-    const validBarberIds = uniqueBarberIds && uniqueBarberIds.length > 0
-      ? (await tx.barber.findMany({ where: { id: { in: uniqueBarberIds } }, select: { id: true } })).map((barber) => barber.id)
-      : [];
+  if (data.category !== undefined && !normalizedCategory) {
+    return new Response(JSON.stringify({ error: 'Category is required.' }), { status: 400 });
+  }
+
+  const { service, categories } = await prisma.$transaction(async (tx) => {
+    const validBarberIds =
+      uniqueBarberIds && uniqueBarberIds.length > 0
+        ? (await tx.barber.findMany({ where: { id: { in: uniqueBarberIds } }, select: { id: true } })).map(
+            (barber) => barber.id
+          )
+        : [];
 
     if (uniqueBarberIds !== null) {
       await tx.barberService.deleteMany({ where: { serviceId: id } });
@@ -44,10 +57,9 @@ export const PATCH: APIRoute = async (ctx) => {
           skipDuplicates: true
         });
       }
-
     }
-    
-    return tx.service.update({
+
+    const updated = await tx.service.update({
       where: { id },
       data: {
         ...(data.name !== undefined ? { name: data.name } : {}),
@@ -56,7 +68,7 @@ export const PATCH: APIRoute = async (ctx) => {
         ...(data.durationMinutes !== undefined ? { durationMinutes: data.durationMinutes } : {}),
         ...(data.bufferMinutes !== undefined ? { bufferMinutes: data.bufferMinutes } : {}),
         ...(data.displayOrder !== undefined ? { displayOrder: data.displayOrder } : {}),
-        ...(data.category !== undefined ? { category: data.category?.trim() || null } : {}),
+        ...(normalizedCategory !== undefined ? { category: normalizedCategory } : {}),
         ...(data.isActive !== undefined ? { isActive: data.isActive } : {})
       },
       include: {
@@ -79,7 +91,13 @@ export const PATCH: APIRoute = async (ctx) => {
       }
     });
 
+    const nextCategories =
+      normalizedCategory !== undefined
+        ? await ensureCustomServiceCategory(normalizedCategory, tx)
+        : await loadMergedServiceCategories(tx);
+
+    return { service: updated, categories: nextCategories };
   });
 
-  return new Response(JSON.stringify({ service }));
+  return new Response(JSON.stringify({ service, categories }));
 };

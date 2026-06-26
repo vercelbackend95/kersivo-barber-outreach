@@ -4,6 +4,7 @@
   "version": "0.0.1",
   "scripts": {
     "dev": "astro dev",
+    "dev:fresh": "npm run prisma:generate && astro dev",
     "build": "npm run prisma:generate && astro build",
     "preview": "npm run prisma:generate && astro preview",
     "astro": "astro",
@@ -18,6 +19,10 @@
     "seed:trim-barber-today": "tsx scripts/trim-barber-bookings-today.ts",
     "seed:timeline-booking": "tsx scripts/add-timeline-booking.ts",
     "seed:timeline-afternoon": "tsx scripts/seed-timeline-afternoon.ts",
+    "seed:bookings-today-32": "tsx scripts/seed-bookings-today-32.ts",
+    "seed:set-hours-9-20": "tsx scripts/set-barbershop-hours-9-20.ts",
+    "seed:clear-services": "tsx scripts/clear-all-services-and-bookings.ts",
+    "seed:catalog-services": "tsx scripts/seed-catalog-services.ts",
     "seed:enrich-reese-ward": "tsx scripts/enrich-client-reese-ward.ts",
     "seed:enrich-connor-walsh": "tsx scripts/enrich-client-connor-walsh.ts",
     "test": "vitest run",

@@ -5,6 +5,7 @@ import BookingReviewPanel from './BookingReviewPanel';
 import { BookingStepRailItem } from './BookingStepIndicator';
 import { SkeletonSlotGrid } from '../skeleton';
 import { ANY_BARBER_ID, ANY_BARBER_NAME } from '../../lib/booking/constants';
+import { groupServicesByCategory } from '../../lib/booking/groupServicesByCategory';
 import EmptyState from '../EmptyState';
 import { Clock } from '../lucide-react';
 type Service = {
@@ -12,6 +13,8 @@ type Service = {
   name: string;
   durationMinutes: number;
   pricePence: number;
+  category?: string | null;
+  displayOrder?: number;
 };
 
 type Barber = {
@@ -230,6 +233,7 @@ export default function BookingFlow({ services, barbers, mode = 'create', token 
 
 
   const selectedService = useMemo(() => services.find((service) => service.id === serviceId), [serviceId, services]);
+  const serviceGroups = useMemo(() => groupServicesByCategory(services), [services]);
   const selectedBarber = useMemo(() => availableBarbers.find((barber) => barber.id === barberId), [availableBarbers, barberId]);
   const selectedBarberLabel = barberId === ANY_BARBER_ID ? ANY_BARBER_NAME : selectedBarber?.name;
   const normalizedDate = normalizeToIsoDate(date);
@@ -576,35 +580,48 @@ export default function BookingFlow({ services, barbers, mode = 'create', token 
                   <h2 id="booking-step-service">Choose a service</h2>
                 </div>
                               </div>
-              <div className="booking-choice-grid booking-choice-grid--services" role="radiogroup" aria-label="Services">
-                {services.map((service) => {
-                  const isSelected = service.id === serviceId;
-
-                  return (
-                    <button
-                      type="button"
-                      key={service.id}
-                      className={`booking-choice-card booking-choice-card--service${isSelected ? ' is-selected' : ''}`}
-                      aria-pressed={isSelected}
-                      onClick={() => setServiceId(service.id)}
+              <div className="booking-service-catalog" role="radiogroup" aria-label="Services">
+                {serviceGroups.map((group) => (
+                  <section
+                    key={group.category}
+                    className="booking-service-category"
+                    aria-labelledby={`booking-service-category-${group.category}`}
+                  >
+                    <h3
+                      id={`booking-service-category-${group.category}`}
+                      className="booking-service-category__heading"
                     >
-                      <span className="booking-choice-card__title">{service.name}</span>
-                      <span className="booking-choice-card__meta booking-choice-card__meta--service">
-                        <span className="booking-choice-card__meta-item">
-                          <span className="booking-choice-card__meta-label">Duration</span>
-                          <span className="booking-choice-card__stat">{service.durationMinutes} min</span>
-                        </span>
-                        <span className="booking-choice-card__meta-item booking-choice-card__meta-item--price">
-                          <span className="booking-choice-card__meta-label">Price</span>
-                          <span className="booking-choice-card__price">{formatPrice(service.pricePence)}</span>
+                      {group.label}
+                    </h3>
+                    <div className="booking-choice-grid booking-choice-grid--services">
+                      {group.services.map((service) => {
+                        const isSelected = service.id === serviceId;
 
-                        </span>
-                      </span>
-
-                    </button>
-                  );
-                })}
-
+                        return (
+                          <button
+                            type="button"
+                            key={service.id}
+                            className={`booking-choice-card booking-choice-card--service${isSelected ? ' is-selected' : ''}`}
+                            aria-pressed={isSelected}
+                            onClick={() => setServiceId(service.id)}
+                          >
+                            <span className="booking-choice-card__title">{service.name}</span>
+                            <span className="booking-choice-card__meta booking-choice-card__meta--service">
+                              <span className="booking-choice-card__meta-item">
+                                <span className="booking-choice-card__meta-label">Duration</span>
+                                <span className="booking-choice-card__stat">{service.durationMinutes} min</span>
+                              </span>
+                              <span className="booking-choice-card__meta-item booking-choice-card__meta-item--price">
+                                <span className="booking-choice-card__meta-label">Price</span>
+                                <span className="booking-choice-card__price">{formatPrice(service.pricePence)}</span>
+                              </span>
+                            </span>
+                          </button>
+                        );
+                      })}
+                    </div>
+                  </section>
+                ))}
               </div>
                           </section>
             </div>

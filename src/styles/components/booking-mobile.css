@@ -83,6 +83,20 @@
   .slot-grid {
     gap: 0.55rem;
   }
+
+  .booking-service-catalog {
+    gap: 1.35rem;
+  }
+
+  .booking-service-category {
+    gap: 0.65rem;
+  }
+
+  .booking-service-category__heading {
+    font-size: 0.68rem;
+    letter-spacing: 0.1em;
+  }
+
   .booking-choice-grid--services {
     grid-template-columns: repeat(3, minmax(0, 1fr));
     align-items: stretch;

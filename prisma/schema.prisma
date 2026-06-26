@@ -48,6 +48,7 @@ model ShopSettings {
   pendingConfirmationMins     Int      @default(15)
   slotIntervalMinutes         Int      @default(15)
   defaultBufferMinutes        Int      @default(0)
+  customServiceCategories     String[] @default([])
   createdAt                   DateTime @default(now())
   updatedAt                   DateTime @updatedAt
   clients                     Client[]

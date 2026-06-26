@@ -7,6 +7,7 @@ import EmptyState from '../EmptyState';
 import { SkeletonBookingChoices } from '../skeleton';
 import { Scissors, Users, X } from '../lucide-react';
 import { adminFetchJson } from './adminAuth';
+import ServiceCategoryPicker from './ServiceCategoryPicker';
 
 type ServiceBarberRow = {
   id: string;
@@ -290,6 +291,7 @@ function BarberAssignmentSection({ barbers, selectedBarberIds, isLoading, onChan
 
 export default function ServicesAdminPanel() {
   const [services, setServices] = useState<ServiceRow[]>([]);
+  const [availableCategories, setAvailableCategories] = useState<string[]>([]);
   const [loading, setLoading] = useState(true);
   const [barbers, setBarbers] = useState<BarberListRow[]>([]);
   const [editingId, setEditingId] = useState<string | null>(null);
@@ -321,7 +323,7 @@ export default function ServicesAdminPanel() {
 
     try {
       const [servicesData, barbersData] = await Promise.all([
-        adminFetchJson<{ services?: ServiceRow[] }>('/api/admin/services', {
+        adminFetchJson<{ services?: ServiceRow[]; categories?: string[] }>('/api/admin/services', {
           errorMessage: 'Unable to load services.',
         }),
         adminFetchJson<{ barbers?: BarberListRow[] }>('/api/admin/barbers', {
@@ -330,12 +332,23 @@ export default function ServicesAdminPanel() {
       ]);
 
       setServices(servicesData.services ?? []);
+      setAvailableCategories(servicesData.categories ?? []);
       setBarbers(barbersData.barbers ?? []);
     } catch (fetchError) {
       setError(fetchError instanceof Error ? fetchError.message : 'Unable to load services.');
     } finally {
       setLoading(false);
     }
+  }, []);
+
+  const handleAddCategory = useCallback(async (name: string) => {
+    const data = await adminFetchJson<{ categories?: string[] }>('/api/admin/service-categories', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ name }),
+      errorMessage: 'Could not add category.',
+    });
+    setAvailableCategories(data.categories ?? []);
   }, []);
 
 
@@ -446,6 +459,11 @@ export default function ServicesAdminPanel() {
       return;
     }
 
+    if (!form.category.trim()) {
+      setError('Category is required.');
+      return;
+    }
+
     const pricePence = toPence(form.priceGbp);
     if (pricePence < 0) {
       setError('Price must be a valid amount.');
@@ -455,7 +473,7 @@ export default function ServicesAdminPanel() {
     const payload = {
       name: form.name.trim(),
       description: form.description.trim() || null,
-      category: form.category.trim() || null,
+      category: form.category.trim(),
       pricePence,
       durationMinutes: Number(form.durationMinutes),
       bufferMinutes: Number(form.bufferMinutes),
@@ -471,12 +489,16 @@ export default function ServicesAdminPanel() {
     setIsSaving(true);
 
     try {
-      await adminFetchJson<{ service?: ServiceRow }>(endpoint, {
+      const data = await adminFetchJson<{ service?: ServiceRow; categories?: string[] }>(endpoint, {
         method,
         headers: { 'content-type': 'application/json' },
         body: JSON.stringify(payload),
         errorMessage: 'Unable to save service.',
       });
+
+      if (data.categories) {
+        setAvailableCategories(data.categories);
+      }
 
       setMessage(editingId ? 'Service updated.' : 'Service created.');
       resetServiceFormState();
@@ -508,6 +530,7 @@ export default function ServicesAdminPanel() {
   }
 
   const nameHasError = error === 'Service name is required.';
+  const categoryHasError = error === 'Category is required.';
   const priceHasError = error === 'Price must be a valid amount.';
 
   const editingService = editingId ? services.find((s) => s.id === editingId) ?? null : null;
@@ -584,7 +607,9 @@ export default function ServicesAdminPanel() {
                         <span key={`${service.id}-secondary-${chunk}`} className="admin-service-meta-chip">{chunk}</span>
                       ))}
                     </div>
-                    {service.category ? <p className="admin-service-support-line">Category: {service.category}</p> : null}
+                    {service.category ? (
+                      <span className="admin-service-category-pill admin-service-category-pill--readonly">{service.category}</span>
+                    ) : null}
                     {service.description ? <p className="admin-service-support-line">{service.description}</p> : null}
                   </div>
 
@@ -637,7 +662,9 @@ export default function ServicesAdminPanel() {
               <p className="admin-barber-next-line">
                 {[...getServiceMeta(activeServiceForPanel).core, ...getServiceMeta(activeServiceForPanel).secondary].join(' · ')}
               </p>
-              {activeServiceForPanel.category ? <p className="admin-barber-today-line">Category: {activeServiceForPanel.category}</p> : null}
+              {activeServiceForPanel.category ? (
+                <span className="admin-service-category-pill admin-service-category-pill--readonly">{activeServiceForPanel.category}</span>
+              ) : null}
 
               <section className="admin-service-assignment-section admin-service-assigned-barbers-section" aria-labelledby="service-panel-assigned-barbers-title">
                 <div className="admin-service-assignment-header">
@@ -765,16 +792,18 @@ export default function ServicesAdminPanel() {
                   />
                 </div>
 
-                <div className="field admin-service-field-stack">
-                  <label htmlFor="service-category" className="field__label">Category</label>
-                  <span className="field__hint">Optional — groups services in the catalogue</span>
-                  <input
-                    id="service-category"
-                    className="input"
+                <div className={`field admin-service-field-stack${categoryHasError ? ' field--error' : ''}`}>
+                  <span className="field__label">Category</span>
+                  <span className="field__hint">Required — pick a category or add your own</span>
+                  <ServiceCategoryPicker
                     value={form.category}
-                    onChange={(e) => setForm((c) => ({ ...c, category: e.target.value }))}
-                    placeholder="e.g. Hair, Beard"
+                    onChange={(category) => setForm((current) => ({ ...current, category }))}
+                    categories={availableCategories}
+                    onAddCategory={handleAddCategory}
+                    hasError={categoryHasError}
+                    disabled={isSaving}
                   />
+                  {categoryHasError ? <span className="field__hint field__hint--error">{error}</span> : null}
                 </div>
               </fieldset>
 

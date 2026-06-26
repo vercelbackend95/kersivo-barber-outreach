@@ -12,14 +12,6 @@ import type { Prisma } from '@prisma/client';
 const MAX_AVATAR_SIZE_BYTES = 5 * 1024 * 1024;
 const ALLOWED_AVATAR_TYPES = new Set(['image/jpeg', 'image/png', 'image/webp']);
 
-const DEFAULT_SERVICE_DEFINITIONS = [
-  { id: 'svc-haircut', name: 'Haircut', durationMinutes: 30 },
-  { id: 'svc-skin-fade', name: 'Skin Fade', durationMinutes: 45 },
-  { id: 'svc-beard-trim', name: 'Beard Trim', durationMinutes: 20 },
-  { id: 'svc-haircut-beard', name: 'Haircut + Beard', durationMinutes: 50 }
-] as const;
-
-
 const jsonSchema = z.object({
   id: z.string().optional(),
   name: z.string().trim().min(1, 'Name is required.').optional(),
@@ -55,26 +47,14 @@ function parseServiceIds(rawValue: FormDataEntryValue | null): string[] {
 }
 
 async function ensureSelectedServices(tx: Prisma.TransactionClient, selectedServiceIds: string[]) {
-  const requestedIds = selectedServiceIds.length > 0 ? selectedServiceIds : DEFAULT_SERVICE_DEFINITIONS.map((service) => service.id);
-  const uniqueRequestedIds = Array.from(new Set(requestedIds));
+  if (selectedServiceIds.length === 0) return [];
 
-  const existingServices = await tx.service.findMany({ where: { id: { in: uniqueRequestedIds } }, select: { id: true } });
+  const uniqueRequestedIds = Array.from(new Set(selectedServiceIds));
+  const existingServices = await tx.service.findMany({
+    where: { id: { in: uniqueRequestedIds } },
+    select: { id: true }
+  });
   const existingIds = new Set(existingServices.map((service) => service.id));
-
-  for (const definition of DEFAULT_SERVICE_DEFINITIONS) {
-    if (!uniqueRequestedIds.includes(definition.id) || existingIds.has(definition.id)) continue;
-    await tx.service.create({
-      data: {
-        id: definition.id,
-        name: definition.name,
-        durationMinutes: definition.durationMinutes,
-        bufferMinutes: 0,
-        active: true
-      }
-    });
-    existingIds.add(definition.id);
-  }
-
   return uniqueRequestedIds.filter((serviceId) => existingIds.has(serviceId));
 }
 async function storeAvatar(file: File, barberId?: string) {

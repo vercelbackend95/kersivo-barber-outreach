@@ -2,16 +2,14 @@ import type { WorkingHourRow } from '../../components/admin/barbersTypes';
 
 /**
  * Minute-based defaults for new barbers — must match `DEFAULT_RULES` in
- * `defaultAvailability.ts` (days 0–5 on shift; Sunday 6 has no DB row = off).
+ * `defaultAvailability.ts` (Mon–Sun 09:00–20:00, no breaks).
  */
-const DEFAULT_ACTIVE_RULES_MINUTES: { dayOfWeek: number; startMinutes: number; endMinutes: number }[] = [
-  { dayOfWeek: 0, startMinutes: 10 * 60, endMinutes: 18 * 60 },
-  { dayOfWeek: 1, startMinutes: 10 * 60, endMinutes: 18 * 60 },
-  { dayOfWeek: 2, startMinutes: 10 * 60, endMinutes: 18 * 60 },
-  { dayOfWeek: 3, startMinutes: 10 * 60, endMinutes: 18 * 60 },
-  { dayOfWeek: 4, startMinutes: 10 * 60, endMinutes: 18 * 60 },
-  { dayOfWeek: 5, startMinutes: 10 * 60, endMinutes: 16 * 60 }
-];
+const DEFAULT_ACTIVE_RULES_MINUTES: { dayOfWeek: number; startMinutes: number; endMinutes: number }[] =
+  Array.from({ length: 7 }, (_, dayOfWeek) => ({
+    dayOfWeek,
+    startMinutes: 9 * 60,
+    endMinutes: 20 * 60
+  }));
 
 function minutesToTime(minutes: number): string {
   const hh = String(Math.floor(minutes / 60)).padStart(2, '0');
@@ -35,8 +33,8 @@ export function getDefaultWorkingHourRows(): WorkingHourRow[] {
     return {
       dayOfWeek,
       active: false,
-      startTime: minutesToTime(10 * 60),
-      endTime: minutesToTime(18 * 60)
+      startTime: minutesToTime(9 * 60),
+      endTime: minutesToTime(20 * 60)
     };
   });
 }
