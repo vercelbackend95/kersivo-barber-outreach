@@ -13,9 +13,17 @@ const prisma = new PrismaClient();
 
 const LONDON_TZ = 'Europe/London';
 const BOOKING_ID_PREFIX = 'today-batch-bk-';
-const TARGET_BOOKING_COUNT = 32;
+const DEFAULT_BOOKING_COUNT = 32;
 const DEFAULT_WINDOW_START = '10:00';
 const DEFAULT_WINDOW_END = '19:00';
+
+function resolveBookingCount(): number {
+  const raw = Number.parseInt(process.env.BOOKING_COUNT ?? String(DEFAULT_BOOKING_COUNT), 10);
+  if (!Number.isFinite(raw) || raw < 1) {
+    throw new Error('BOOKING_COUNT must be a positive integer.');
+  }
+  return raw;
+}
 
 const CLIENT_NAMES = [
   'Alex Morgan',
@@ -49,7 +57,8 @@ const CLIENT_NAMES = [
   'Indigo Price',
   'Marlowe Kent',
   'Remy Foster',
-  'Arden Cole'
+  'Arden Cole',
+  'Blair Quinn'
 ];
 
 type SlotCandidate = {
@@ -315,10 +324,11 @@ async function main() {
 
   console.info(`[bookings-today-32] Active barbers: ${barbers.map((b) => b.name).join(', ')}`);
 
-  const picked = pickBookings(candidates, TARGET_BOOKING_COUNT);
-  if (picked.length < TARGET_BOOKING_COUNT) {
+  const targetCount = resolveBookingCount();
+  const picked = pickBookings(candidates, targetCount);
+  if (picked.length < targetCount) {
     console.warn(
-      `[bookings-today-32] Only ${picked.length}/${TARGET_BOOKING_COUNT} non-overlapping slots available; inserting what fits.`
+      `[bookings-today-32] Only ${picked.length}/${targetCount} non-overlapping slots available; inserting what fits.`
     );
   }
 
