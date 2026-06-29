@@ -1,40 +1,14 @@
 ---
-import { prisma } from '../lib/db/client';
-import { withPrismaResilienceFallback } from '../lib/db/resilience';
-import { resolveShopId } from '../lib/db/shopScope';
-import { formatGbp } from '../lib/shop/money';
+import { ShopProductCarousel } from '@/components/shop/ShopProductCarousel';
+import { expandCarouselProducts, fetchCarouselProducts, type CarouselProduct } from '@/lib/shop/carouselProducts';
 
-const { products } = await withPrismaResilienceFallback(
-  'components/shopProductCards6.astro',
-  async () => {
-    const shopId = await resolveShopId();
-    const products = await prisma.product.findMany({
-      where: { shopId, active: true },
-      orderBy: [{ sortOrder: 'asc' }, { featured: 'desc' }, { updatedAt: 'desc' }],
-      take: 10
-    });
+interface Props {
+  products?: CarouselProduct[];
+}
 
-    return { products };
-  },
-  { products: [] }
-);
-const MIN_CAROUSEL_ITEMS = 10;
+const { products: productsProp } = Astro.props as Props;
 
-const carouselProducts =
-  products.length > 0 && products.length < MIN_CAROUSEL_ITEMS
-    ? Array.from({ length: MIN_CAROUSEL_ITEMS }, (_, index) => products[index % products.length])
-    : products;
-
-
-const CATEGORY_LABELS: Record<string, string> = {
-  POMADES_AND_CLAYS: 'Pomades',
-  BEARD_CARE: 'Beard',
-  HAIR_WASH: 'Wash',
-  STYLING: 'Styling',
-  TOOLS: 'Tools',
-  GIFT_SETS: 'Sets'
-};
-
+const carouselProducts = productsProp ? expandCarouselProducts(productsProp) : await fetchCarouselProducts();
 ---
 
 <section class="shop6" aria-labelledby="shop6-title">
@@ -55,161 +29,12 @@ const CATEGORY_LABELS: Record<string, string> = {
         </button>
       </div>
     </div>
-    <div class="shop6__carousel" data-shop6-carousel-root>
-      <ul class="shop6__grid" aria-label="Featured products" data-shop6-carousel>
-        {carouselProducts.length === 0 ? (
-          <li class="shop6__item">
-            <article class="shop6__card shop6__card--empty">
-              <div class="shop6__card-body">
-                <p class="shop6__category">Preview</p>
-                <h3>The strip appears when products are live</h3>
-                <p class="shop6__price">The shop page shows the full flow—no commission from us; Stripe for cards</p>
-                <a class="btn btn--secondary" href="/shop">View shop</a>
-
-              </div>
-                          </article>
-          </li>
-        ) : carouselProducts.map((product, index) => (
-          <li class:list={["shop6__item", index >= 3 && 'shop6__item--mobile-extra']} key={`${product.id}-${index}`}>
-
-            <article class="shop-card" data-category={product.category}>
-              <a href={`/shop/${product.id}`} class="shop-media-link" aria-label={`View ${product.name}`}>
-                <div class="shop-media">
-                  {product.imageUrl ? (
-                    <img src={product.imageUrl} alt={product.name} loading="lazy" class="shop-image" />
-                  ) : (
-                    <div class="shop-image shop-image--placeholder" aria-hidden="true"></div>
-                  )}
-                </div>
-              </a>
-
-              <div class="shop-card-body">
-                <p class="shop-category">{CATEGORY_LABELS[product.category] ?? 'Styling'}</p>
-                <h3><a href={`/shop/${product.id}`}>{product.name}</a></h3>
-                <p class="shop-price">{formatGbp(product.pricePence)}</p>
-
-                <div class="shop-card-actions">
-                  <button
-                    class="btn btn--primary"
-                    type="button"
-                    data-add-to-cart
-                    data-product-id={product.id}
-                    data-product-name={product.name}
-                    data-product-price-pence={String(product.pricePence)}
-                    data-product-image-url={product.imageUrl ?? ''}
-                  >
-                    Add to cart
-                  </button>
-                </div>
-
-              </div>
-
-            </article>
-          </li>
-        ))}
-      </ul>
-
-      {carouselProducts.length > 0 && (
-        <div class="shop6__controls" aria-label="Carousel controls">
-          <button class="shop6__control" type="button" data-shop6-prev aria-label="Previous products">Prev</button>
-          <button class="shop6__control" type="button" data-shop6-next aria-label="Next products">Next</button>
-        </div>
-      )}
-    </div>
-
+    <ShopProductCarousel products={carouselProducts} />
   </div>
 </section>
 
 <script>
-  const roots = document.querySelectorAll('[data-shop6-carousel-root]');
-  const SCROLL_TOLERANCE = 2;
-  roots.forEach((root) => {
-    const carousel = root.querySelector('[data-shop6-carousel]');
-    const prevButton = root.querySelector('[data-shop6-prev]');
-    const nextButton = root.querySelector('[data-shop6-next]');
-    const firstItem = carousel?.querySelector('.shop6__item');
+  import { initShop6Carousels } from '@/lib/shop/initShop6Carousel';
 
-    if (!(carousel instanceof HTMLElement) || !(firstItem instanceof HTMLElement)) return;
-    const getMaxScroll = () => Math.max(0, carousel.scrollWidth - carousel.clientWidth);
-    const cardStep = () => {
-      const items = carousel.querySelectorAll('.shop6__item');
-      const a = items[0];
-      const b = items[1];
-      if (a instanceof HTMLElement && b instanceof HTMLElement && b.offsetParent !== null) {
-        const step = b.offsetLeft - a.offsetLeft;
-        if (step > 1) return step;
-      }
-      const itemWidth = firstItem.getBoundingClientRect().width;
-      const carouselStyles = window.getComputedStyle(carousel);
-      const gap = Number.parseFloat(carouselStyles.columnGap || carouselStyles.gap || '0') || 0;
-      return itemWidth + gap;
-    };
-    const cardsPerPage = () => {
-      const step = cardStep();
-      if (step <= 0) return 1;
-      return Math.max(1, Math.floor((carousel.clientWidth + SCROLL_TOLERANCE) / step));
-    };
-
-
-    const updateControls = () => {
-      if (!(prevButton instanceof HTMLButtonElement) || !(nextButton instanceof HTMLButtonElement)) return;
-
-      const maxScroll = getMaxScroll();
-      const currentScroll = carousel.scrollLeft;
-      const canScroll = maxScroll > SCROLL_TOLERANCE;
-
-      prevButton.disabled = !canScroll || currentScroll <= SCROLL_TOLERANCE;
-      nextButton.disabled = !canScroll || currentScroll >= maxScroll - SCROLL_TOLERANCE;
-    };
-
-    const scrollCards = (direction) => {
-      const maxScroll = getMaxScroll();
-      if (maxScroll <= SCROLL_TOLERANCE) return;
-
-      const pageStep = cardStep() * cardsPerPage();
-      const target = Math.max(0, Math.min(maxScroll, carousel.scrollLeft + pageStep * direction));
-      carousel.scrollTo({ left: target, behavior: 'smooth' });
-    };
-
-    prevButton?.addEventListener('click', () => scrollCards(-1));
-    nextButton?.addEventListener('click', () => scrollCards(1));
-
-    carousel.addEventListener(
-      'wheel',
-      (event) => {
-        const maxScroll = getMaxScroll();
-        if (maxScroll <= SCROLL_TOLERANCE) return;
-
-        let dx = 0;
-        if (Math.abs(event.deltaX) > Math.abs(event.deltaY)) {
-          dx = event.deltaX;
-        } else if (Math.abs(event.deltaY) > Math.abs(event.deltaX)) {
-          dx = event.deltaY;
-        } else {
-          return;
-        }
-
-        event.preventDefault();
-        carousel.scrollBy({
-          left: dx,
-          behavior: 'auto'
-        });
-      },
-      { passive: false }
-    );
-    carousel.addEventListener('scroll', updateControls, { passive: true });
-    window.addEventListener('resize', updateControls);
-    if (typeof ResizeObserver !== 'undefined') {
-      const ro = new ResizeObserver(() => updateControls());
-      ro.observe(carousel);
-    }
-    requestAnimationFrame(() => requestAnimationFrame(updateControls));
-    carousel.addEventListener(
-      'load',
-      () => updateControls(),
-      true
-    );
-    updateControls();
-  });
-
+  initShop6Carousels();
 </script>

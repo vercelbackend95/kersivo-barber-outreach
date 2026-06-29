@@ -134,9 +134,7 @@
       color-mix(in srgb, var(--ap-crimson-deep) 88%, #000) 3px,
       color-mix(in srgb, var(--ap-crimson-deep) 88%, #000) 14px
     );
-  transition:
-    filter 320ms ease,
-    transform 320ms cubic-bezier(0.22, 1, 0.36, 1);
+  transition: filter 320ms ease;
 }
 
 .audience-picker__card--switcher .audience-picker__blob,
@@ -356,7 +354,6 @@
 
   .audience-picker__card:hover .audience-picker__blob {
     filter: brightness(1.08);
-    transform: scale(1.02);
   }
 
   .audience-picker__card:hover .audience-picker__card-title {
@@ -370,17 +367,9 @@
 
 /* ── Touch active ───────────────────────────────────────────── */
 
-.audience-picker__card:active .audience-picker__blob {
-  transform: scale(0.98);
-}
-
 @media (hover: hover) {
   .audience-picker__card:active {
     transform: translateY(-1px);
-  }
-
-  .audience-picker__card:active .audience-picker__blob {
-    transform: scale(0.99);
   }
 }
 
@@ -418,20 +407,12 @@
     transform: scale(1.28);
     transform-origin: center center;
   }
-
-  .audience-picker__card:active .audience-picker__blob {
-    transform: scale(1.24);
-  }
 }
 
 @media (max-width: 359px) {
   .audience-picker__card--switcher .audience-picker__blob,
   .audience-picker__card--newcomer .audience-picker__blob {
     transform: scale(1.18);
-  }
-
-  .audience-picker__card:active .audience-picker__blob {
-    transform: scale(1.14);
   }
 }
 
@@ -446,9 +427,7 @@
   }
 
   .audience-picker__card:hover,
-  .audience-picker__card:active,
-  .audience-picker__card:hover .audience-picker__blob,
-  .audience-picker__card:active .audience-picker__blob {
+  .audience-picker__card:active {
     transform: none;
   }
 

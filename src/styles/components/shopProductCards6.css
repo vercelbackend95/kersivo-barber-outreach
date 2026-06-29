@@ -100,7 +100,7 @@
 
 }
 
-.shop6__grid .shop-media {
+:is(.shop6__carousel, .feature261-retail-carousel) .shop6__grid .shop-media {
   position: relative;
   display: grid;
   place-items: center;
@@ -115,7 +115,7 @@
   );
 }
 
-.shop6__grid .shop-image {
+:is(.shop6__carousel, .feature261-retail-carousel) .shop6__grid .shop-image {
   width: 100%;
   height: 100%;
   max-width: 96%;
@@ -128,13 +128,21 @@
   background: transparent;
 }
 
-.shop6__grid .shop-image--placeholder {
+:is(.shop6__carousel, .feature261-retail-carousel) .shop6__grid .shop-image--placeholder {
   width: 100%;
   height: 100%;
   border-bottom: 0;
 }
 
-.shop6__grid .shop-card:hover .shop-image {
+:is(.shop6__carousel, .feature261-retail-carousel) .shop6__grid .shop-category {
+  margin: 0;
+  color: var(--muted);
+  font-size: 0.58rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+:is(.shop6__carousel, .feature261-retail-carousel) .shop6__grid .shop-card:hover .shop-image {
   transform: scale(1.02);
 }
 
@@ -332,28 +340,28 @@
     scroll-snap-stop: always;
   }
 
-  .shop6__grid .shop-card {
+  :is(.shop6__carousel, .feature261-retail-carousel) .shop6__grid .shop-card {
     min-height: 100%;
   }
 
-  .shop6__grid .shop-media {
+  :is(.shop6__carousel, .feature261-retail-carousel) .shop6__grid .shop-media {
     aspect-ratio: 1 / 1;
     padding: 0.4rem;
 
   }
 
-  .shop6__grid .shop-image {
+  :is(.shop6__carousel, .feature261-retail-carousel) .shop6__grid .shop-image {
     max-width: 98%;
     max-height: 98%;
 
   }
 
-  .shop6__grid .shop-card-body {
+  :is(.shop6__carousel, .feature261-retail-carousel) .shop6__grid .shop-card-body {
     padding: 0.45rem;
     gap: 0.28rem;
   }
 
-  .shop6__grid .shop-card h3 {
+  :is(.shop6__carousel, .feature261-retail-carousel) .shop6__grid .shop-card h3 {
     min-height: calc(2 * 1.32em);
     font-size: 0.72rem;
         font-weight: 600;
@@ -361,15 +369,15 @@
 
   }
 
-  .shop6__grid .shop-price {
+  :is(.shop6__carousel, .feature261-retail-carousel) .shop6__grid .shop-price {
     font-size: 0.74rem;
   }
 
-  .shop6__grid .shop-card-actions {
+  :is(.shop6__carousel, .feature261-retail-carousel) .shop6__grid .shop-card-actions {
     margin-top: 0.1rem;
   }
 
-  .shop6__grid .shop-card-actions .btn {
+  :is(.shop6__carousel, .feature261-retail-carousel) .shop6__grid .shop-card-actions .btn {
     min-height: 1.9rem;
     padding: 0.34rem 0.44rem;
     font-size: 0.58rem;
@@ -449,13 +457,13 @@
   }
 
 
-  .shop6__grid .shop-media {
+  :is(.shop6__carousel, .feature261-retail-carousel) .shop6__grid .shop-media {
     aspect-ratio: 1 / 1;
     padding: 0.48rem;
 
   }
 
-  .shop6__grid .shop-image {
+  :is(.shop6__carousel, .feature261-retail-carousel) .shop6__grid .shop-image {
     max-width: 95%;
     max-height: 95%;
 
@@ -465,7 +473,7 @@
     flex: 0 0 calc((100% - (var(--shop6-desktop-gap) * (var(--shop6-desktop-visible-cards) - 1))) / var(--shop6-desktop-visible-cards));
   }
   
-  .shop6__grid .shop-card h3 {
+  :is(.shop6__carousel, .feature261-retail-carousel) .shop6__grid .shop-card h3 {
     font-size: 1rem;
     font-weight: 500;
     letter-spacing: 0.01em;

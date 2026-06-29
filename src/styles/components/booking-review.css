@@ -123,7 +123,7 @@
   font-size: var(--booking-text-base);
   font-weight: 600;
   line-height: 1.35;
-  overflow-wrap: anywhere;
+  overflow-wrap: break-word;
 }
 
 .booking-review-panel__helper {
@@ -176,8 +176,9 @@
   }
 
   .booking-review-panel--always-visible .booking-review-panel__row {
-    grid-template-columns: minmax(5.5rem, auto) minmax(0, 1fr);
-    gap: 0.5rem;
+    grid-template-columns: minmax(0, 1fr);
+    gap: 0.35rem;
+    align-items: start;
   }
 }
 

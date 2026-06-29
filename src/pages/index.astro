@@ -32,6 +32,10 @@ import MigrationGuide from '../components/migrationGuide.astro';
 import '../styles/components/process2.css';
 import '../styles/components/hero227.css';
 import { Hero227 } from '../components/hero227';
+import { fetchCarouselProducts } from '@/lib/shop/carouselProducts';
+
+const carouselProducts = await fetchCarouselProducts();
+
 const DEMO_ADMIN_PASSWORD = import.meta.env.PUBLIC_DEMO_ADMIN_PASSWORD
   ?? import.meta.env.PUBLIC_ADMIN_DEMO_PASSWORD
   ?? import.meta.env.ADMIN_SECRET
@@ -183,8 +187,8 @@ const DEMO_ADMIN_PASSWORD = import.meta.env.PUBLIC_DEMO_ADMIN_PASSWORD
     <AudiencePicker />
     <MigrationGuide />
     <NewcomerPath />
-    <Feature261 />
-    <ShopProductCards6 />
+    <Feature261 retailProducts={carouselProducts} />
+    <ShopProductCards6 products={carouselProducts} />
     <Process2 client:load />
     <Pricing36 client:load />
     <RateCard1 />
@@ -512,4 +516,10 @@ const DEMO_ADMIN_PASSWORD = import.meta.env.PUBLIC_DEMO_ADMIN_PASSWORD
     handleComparisonHash();
     window.addEventListener('hashchange', handleComparisonHash);
   }
+</script>
+
+<script>
+  import { initShop6Carousels } from '@/lib/shop/initShop6Carousel';
+
+  initShop6Carousels();
 </script>

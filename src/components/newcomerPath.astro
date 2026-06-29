@@ -3,7 +3,55 @@ interface Props {
   className?: string;
 }
 
+type DayOneIcon =
+  | 'booking'
+  | 'admin'
+  | 'shop'
+  | 'sms'
+  | 'shield'
+  | 'reports';
+
+interface DayOneItem {
+  icon: DayOneIcon;
+  title: string;
+  body: string;
+}
+
 const { className = '' } = Astro.props as Props;
+
+// "Menu board" — everything live on day one. Rewritten for conviction.
+const dayOneItems: DayOneItem[] = [
+  {
+    icon: 'booking',
+    title: 'Your own booking site',
+    body: 'On your domain, three-tap flow — no app-store detour, no marketplace.',
+  },
+  {
+    icon: 'admin',
+    title: 'One-login floor admin',
+    body: 'Bookings, barbers, services and clients in a single panel.',
+  },
+  {
+    icon: 'shop',
+    title: 'Buy-and-collect shop',
+    body: 'Pomades, oils and gift sets — 0% Kersivo on every retail order.',
+  },
+  {
+    icon: 'sms',
+    title: 'SMS that fills chairs',
+    body: 'Reminders, win-backs and review nudges from booking #1.',
+  },
+  {
+    icon: 'shield',
+    title: 'No-show protection',
+    body: 'Stripe deposits on your rules — stop eating empty slots.',
+  },
+  {
+    icon: 'reports',
+    title: 'End-of-day clarity',
+    body: 'Today\u2019s takings and tomorrow\u2019s book in one glance.',
+  },
+];
 
 const ownBrandReasons = [
   {
@@ -19,13 +67,6 @@ const ownBrandReasons = [
     body: 'Search visibility, Maps presence, SMS opt-ins and review history reinforce your trading name—not a directory\u2019s brand. Growing the base you keep matters more every year.',
   },
 ];
-
-const launchExtras = [
-  'Branded booking website on your URL—looks like YOUR shop online, built for bookings + retail cues',
-  'Google Business Profile setup so people find you on Maps alongside your owned domain flow',
-  'Stripe deposits from booking \u2014 fewer no-shows from day one',
-  'SMS reminders, win-back nudges, and review requests baked into the workflow',
-];
 ---
 
 <section
@@ -33,58 +74,125 @@ const launchExtras = [
   class={`newcomer-path scroll-mt-24 ${className}`.trim()}
   aria-labelledby="newcomer-path-title"
 >
-  <div class="newcomer-path__backdrop" aria-hidden="true">
-    <div class="newcomer-path__halftone"></div>
-    <div class="newcomer-path__glow"></div>
+  <div class="newcomer-path__stage" aria-hidden="true"></div>
+
+  <!-- Hero collage — left copy aligns to container, right media bleeds to edge -->
+  <div class="newcomer-path__hero">
+    <div class="newcomer-path__hero-copy">
+      <p class="newcomer-path__kicker">
+        <span class="newcomer-path__kicker-sign">
+          <span class="newcomer-path__kicker-dot" aria-hidden="true"></span>
+          Grand opening
+        </span>
+        <span class="newcomer-path__kicker-meta">For new shops &middot; No system yet</span>
+      </p>
+
+      <h2 id="newcomer-path-title" class="newcomer-path__heading">
+        Open the doors<br />on a <em class="newcomer-path__accent">full house.</em>
+      </h2>
+
+      <p class="newcomer-path__lead">
+        The complete Kersivo stack goes live before you flip the sign &mdash; branded booking, floor
+        admin, retail, SMS, deposits and daily reports. Not a trial. Not half a system. The exact
+        setup switchers pay to move to &mdash; yours from booking #1.
+      </p>
+
+      <ul class="newcomer-path__bombs" role="list">
+        <li class="newcomer-path__bomb">0% commission</li>
+        <li class="newcomer-path__bomb">Live in ~2 weeks</li>
+        <li class="newcomer-path__bomb">Your domain, your list</li>
+      </ul>
+    </div>
+
+    <div class="newcomer-path__media" aria-hidden="true">
+      <div class="newcomer-path__media-glow"></div>
+      <img
+        src="/images/Ilustracje/shophere.png"
+        alt=""
+        class="newcomer-path__shot newcomer-path__shot--store"
+        width="1536"
+        height="1024"
+        loading="lazy"
+        draggable="false"
+      />
+      <img
+        src="/images/Ilustracje/POV.png"
+        alt=""
+        class="newcomer-path__shot newcomer-path__shot--pov"
+        width="1536"
+        height="1024"
+        loading="lazy"
+        draggable="false"
+      />
+    </div>
   </div>
 
   <div class="container">
-    <header class="newcomer-path__intro">
-      <p class="newcomer-path__eyebrow">FOR NEW SHOPS &middot; NO SYSTEM YET</p>
-    </header>
-
-    <div class="newcomer-path__spread">
-      <div class="newcomer-path__pov-col">
-        <div class="newcomer-path__pov-frame">
-          <div class="newcomer-path__pov-halftone newcomer-path__pov-halftone--tl" aria-hidden="true"></div>
-          <div class="newcomer-path__pov-halftone newcomer-path__pov-halftone--br" aria-hidden="true"></div>
-          <img
-            src="/images/Ilustracje/POV.png"
-            alt="POV: barber in the chair checking bookings on a tablet — your shop, your system"
-            class="newcomer-path__pov-img"
-            width="1536"
-            height="1024"
-            loading="lazy"
-            draggable="false"
-          />
-        </div>
-        <p class="newcomer-path__bubble" role="note">
-          Open the tablet.<br />That&apos;s your shop.
-        </p>
+    <!-- Menu board — everything included, styled like a barbershop service list -->
+    <div class="newcomer-path__board">
+      <div class="newcomer-path__board-head">
+        <p class="newcomer-path__board-title">Everything. Day one.</p>
+        <p class="newcomer-path__board-sub">No add-ons, no tiers to unlock.</p>
       </div>
-
-      <div class="newcomer-path__copy-col">
-        <h2 id="newcomer-path-title" class="newcomer-path__heading">
-          Day one starts in your chair &mdash; not in a marketplace queue.
-        </h2>
-        <p class="newcomer-path__lead">
-          We deliver a branded booking website on your domain &mdash; front-of-house polish with admin in the browser.
-          Your list, your URL, 0% booking take from Kersivo.
-        </p>
-
-        <div class="newcomer-path__pull-quotes" aria-label="Key launch facts">
-          <p class="newcomer-path__pull newcomer-path__pull--zero">
-            <span class="newcomer-path__pull-value">0%</span>
-            <span class="newcomer-path__pull-label">from us</span>
-          </p>
-          <p class="newcomer-path__pull newcomer-path__pull--days">
-            <span class="newcomer-path__pull-value">~14</span>
-            <span class="newcomer-path__pull-label">days to live</span>
-          </p>
-        </div>
-      </div>
+      <ul class="newcomer-path__board-list" role="list" aria-label="Everything included at launch">
+        {dayOneItems.map((item) => (
+          <li class="newcomer-path__board-row">
+            <span class="newcomer-path__board-icon" aria-hidden="true">
+              {item.icon === 'booking' && (
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round">
+                  <rect x="3" y="4" width="18" height="18" rx="2" />
+                  <path d="M16 2v4M8 2v4M3 10h18" />
+                </svg>
+              )}
+              {item.icon === 'admin' && (
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round">
+                  <rect x="3" y="3" width="7" height="9" rx="1" />
+                  <rect x="14" y="3" width="7" height="5" rx="1" />
+                  <rect x="14" y="12" width="7" height="9" rx="1" />
+                  <rect x="3" y="16" width="7" height="5" rx="1" />
+                </svg>
+              )}
+              {item.icon === 'shop' && (
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round">
+                  <path d="M6 2 3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4Z" />
+                  <path d="M3 6h18M16 10a4 4 0 0 1-8 0" />
+                </svg>
+              )}
+              {item.icon === 'sms' && (
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round">
+                  <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" />
+                  <path d="M8 10h.01M12 10h.01M16 10h.01" />
+                </svg>
+              )}
+              {item.icon === 'shield' && (
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round">
+                  <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" />
+                  <path d="m9 12 2 2 4-4" />
+                </svg>
+              )}
+              {item.icon === 'reports' && (
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round">
+                  <path d="M3 3v18h18" />
+                  <path d="M18 17V9M13 17V5M8 17v-3" />
+                </svg>
+              )}
+            </span>
+            <span class="newcomer-path__board-text">
+              <span class="newcomer-path__board-feature">{item.title}</span>
+              <span class="newcomer-path__board-note">{item.body}</span>
+            </span>
+            <span class="newcomer-path__board-tag">
+              <svg viewBox="0 0 16 16" fill="none" aria-hidden="true">
+                <path d="M3.5 8.5l3 3 6-7" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
+              </svg>
+              <span class="newcomer-path__board-tag-label">Included</span>
+            </span>
+          </li>
+        ))}
+      </ul>
     </div>
 
+    <!-- Beats — unchanged -->
     <ul class="newcomer-path__beats" role="list" aria-label="Why own your brand URL">
       {ownBrandReasons.map((reason, index) => (
         <li class={`newcomer-path__beat newcomer-path__beat--${index + 1}`}>
@@ -97,25 +205,22 @@ const launchExtras = [
       ))}
     </ul>
 
-    <aside class="newcomer-path__manifest" aria-label="What you get from day one">
-      <p class="newcomer-path__manifest-kicker">From booking #1</p>
-      <ul class="newcomer-path__manifest-list" role="list">
-        {launchExtras.map((extra) => (
-          <li class="newcomer-path__manifest-item">
-            <span class="newcomer-path__manifest-bullet" aria-hidden="true"></span>
-            {extra}
-          </li>
-        ))}
-      </ul>
-    </aside>
-
     <div class="newcomer-path__cta-block">
-      <a href="#book-demo" class="btn btn--primary btn--lg" data-demo-cta>Plan my setup &mdash; free</a>
-      <button type="button" class="btn btn--secondary btn--lg" data-system-chooser-open>
-        Open the live admin
-      </button>
+      <ul class="newcomer-path__conviction" role="list">
+        <li class="newcomer-path__conviction-item">~2 weeks to live</li>
+        <li class="newcomer-path__conviction-item">0% commission, ever</li>
+        <li class="newcomer-path__conviction-item">You own the data</li>
+        <li class="newcomer-path__conviction-item">Cancel anytime</li>
+      </ul>
+      <div class="newcomer-path__cta-actions">
+        <a href="#book-demo" class="btn btn--primary btn--lg" data-demo-cta>Plan my setup &mdash; free</a>
+        <button type="button" class="btn btn--secondary btn--lg" data-system-chooser-open>
+          Open the live admin
+        </button>
+      </div>
       <p class="newcomer-path__footnote">
-        Most shops go live in about two weeks. We confirm your timeline before you commit, and you stay in control of when you go live.
+        Most shops go live in about two weeks. We confirm your timeline before you commit &mdash; and
+        you decide the day you open.
       </p>
     </div>
   </div>
