@@ -1,3 +1,4 @@
+import { saveAdminSecret } from '@/components/admin/adminAuth';
 import { ShopProductCarousel } from '@/components/shop/ShopProductCarousel';
 import { type CarouselProduct } from '@/lib/shop/carouselProducts';
 import { cn } from '@/lib/utils';
@@ -7,11 +8,15 @@ interface Feature261Props {
   retailProducts?: CarouselProduct[];
 }
 
+/** Must match demo prefill in AdminPanel and system chooser on the homepage. */
+const DEMO_ADMIN_SECRET = 'supersecret123';
+
 type FeatureRowData = {
   kicker: string;
   heading: string;
   description: string;
   ctaLabel: string;
+  ctaHref: string;
   media: 'image' | 'carousel';
   src?: string;
   alt?: string;
@@ -31,7 +36,8 @@ const rows: FeatureRowData[] = [
     heading: "Chairs, statuses, what's next—plus the pulse when you need it.",
     description:
       "Timeline, statuses and today's pulse in one signed-in view. See who's in the chair, what's coming up and how the day is tracking without jumping between screens.",
-    ctaLabel: 'See it live',
+    ctaLabel: 'See the timeline',
+    ctaHref: '/admin?section=bookings_dashboard',
     imageClassName: 'feature261-row-image--bookings',
     loading: 'eager',
     media: 'image',
@@ -45,21 +51,23 @@ const rows: FeatureRowData[] = [
     heading: 'Service, barber, time—your URL, your brand, not their app.',
     description:
       'Clients pick a service, barber and slot on your domain in three taps. No app-store detour, no marketplace tile—just your brand, end to end.',
-    ctaLabel: 'See it live',
+    ctaLabel: 'See the booking flow',
+    ctaHref: '/book',
     imageClassName: 'feature261-row-image--booking',
     loading: 'eager',
     media: 'image',
   },
   {
-    src: '/hero-assets/barbers.png',
-    imgWidth: 1621,
-    imgHeight: 896,
+    src: '/images/screenshots/barbers.png',
+    imgWidth: 1211,
+    imgHeight: 584,
     alt: 'Signed-in admin — barber roster, hours and assignments',
     kicker: 'BARBERS',
     heading: 'Roster, hours, who offers what—grow the team in one place.',
     description:
       "Add barbers, set hours and assign services from one roster. Everyone on the floor knows who does what—and clients only see who's actually available.",
-    ctaLabel: 'See it live',
+    ctaLabel: 'See how to manage barbers',
+    ctaHref: '/admin?section=bookings_blocks',
     imageClassName: 'feature261-row-image--barbers',
     media: 'image',
   },
@@ -68,21 +76,29 @@ const rows: FeatureRowData[] = [
     heading: 'Catalog, orders, pickup ready—same panel as the chair.',
     description:
       'Products, orders and pickup status live beside bookings in the same admin. Clients pre-order from your shop page; you mark it ready when they walk in.',
-    ctaLabel: 'See it live',
+    ctaLabel: 'See the shop live',
+    ctaHref: '/shop',
     media: 'carousel',
   },
   {
-    src: '/hero-assets/screens/6.png',
-    alt: 'Signed-in admin — services, prices and durations',
-    kicker: 'SERVICES',
-    heading: 'Price, duration, menu—what they book matches what you run.',
+    src: '/images/screenshots/diagram.png',
+    alt: 'Signed-in admin — sales analytics, revenue chart and product breakdown',
+    kicker: 'MONETIZATION',
+    heading: 'Shop sales, payouts, barber income—see what you earned.',
     description:
-      "Set prices, durations and what's on the menu once. What clients see when they book is exactly what lands on your schedule and in your reports.",
-    ctaLabel: 'See it live',
-    imageClassName: 'feature261-row-image--services',
+      'Track retail revenue, order totals and how income breaks down across the team. Sales charts and KPIs live in the same signed-in admin as bookings and the shop.',
+    ctaLabel: 'See the KPIs',
+    ctaHref: '/admin?section=shop_sales',
+    imageClassName: 'feature261-row-image--sales',
     media: 'image',
   },
 ];
+
+function handleRowCtaClick(ctaHref: string) {
+  if (ctaHref.startsWith('/admin')) {
+    saveAdminSecret(DEMO_ADMIN_SECRET);
+  }
+}
 
 type FeatureRowProps = FeatureRowData & {
   reverse?: boolean;
@@ -96,6 +112,7 @@ function FeatureRow({
   heading,
   description,
   ctaLabel,
+  ctaHref,
   imageClassName,
   imgWidth = 1520,
   imgHeight = 920,
@@ -137,7 +154,13 @@ function FeatureRow({
         <p className="feature261__row-kicker">{kicker}</p>
         <h3 className="feature261__row-heading">{heading}</h3>
         <p className="feature261__row-body">{description}</p>
-        <a href="#" className="btn btn--primary feature261__row-cta">
+        <a
+          href={ctaHref}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="btn btn--primary feature261__row-cta"
+          onClick={() => handleRowCtaClick(ctaHref)}
+        >
           {ctaLabel}
         </a>
       </div>
@@ -148,6 +171,7 @@ function FeatureRow({
 const Feature261 = ({ className, retailProducts = [] }: Feature261Props) => {
   return (
     <section className={cn('feature261 py-32', className)}>
+      <div className="feature261__glow" aria-hidden="true" />
       <div className="container">
         <header className="feature261__intro">
           <p className="feature261__kicker">INSIDE THE SYSTEM</p>
@@ -168,16 +192,6 @@ const Feature261 = ({ className, retailProducts = [] }: Feature261Props) => {
             />
           ))}
         </ul>
-
-        <div className="feature261__cta-block">
-          <button type="button" className="btn btn--primary" data-system-chooser-open>
-            See the Live Shop
-          </button>
-          <p className="feature261__footnote">
-            Opens in a new tab&mdash;wander the booking flow, floor panel and shop shelf at your pace.
-            No signup, no sales call; close the tab when you&rsquo;re done.
-          </p>
-        </div>
       </div>
     </section>
   );

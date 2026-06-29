@@ -20,6 +20,8 @@
     "seed:timeline-booking": "tsx scripts/add-timeline-booking.ts",
     "seed:timeline-afternoon": "tsx scripts/seed-timeline-afternoon.ts",
     "seed:bookings-today-32": "tsx scripts/seed-bookings-today-32.ts",
+    "seed:shop-sales-7d": "tsx scripts/seed-shop-sales-7d.ts",
+    "seed:shop-sales-bump": "tsx scripts/seed-shop-sales-bump.ts",
     "seed:set-hours-9-20": "tsx scripts/set-barbershop-hours-9-20.ts",
     "seed:clear-services": "tsx scripts/clear-all-services-and-bookings.ts",
     "seed:catalog-services": "tsx scripts/seed-catalog-services.ts",

@@ -21,8 +21,7 @@
   overflow-y: visible;
 }
 
-/* Storefront stage glow — teal light spill from the lit-shop side
-   (top-right), warm hint, soft bottom vignette. No centered radial. */
+/* Storefront stage — warm hint, soft bottom vignette. Top glow is newcomer-path__glow. */
 .newcomer-path__stage {
   position: absolute;
   inset: 0;
@@ -30,16 +29,23 @@
   z-index: 0;
   background:
     radial-gradient(
-      55% 70% at 86% 8%,
-      color-mix(in srgb, var(--np-teal) 12%, transparent) 0%,
-      transparent 62%
-    ),
-    radial-gradient(
       40% 50% at 74% 26%,
       color-mix(in srgb, #f5b56b 7%, transparent) 0%,
       transparent 66%
     ),
     linear-gradient(180deg, transparent 70%, color-mix(in srgb, #000 22%, transparent) 100%);
+}
+
+.newcomer-path__glow {
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(
+    ellipse 80% 55% at 50% 0%,
+    color-mix(in srgb, var(--np-teal) 7%, transparent) 0%,
+    transparent 70%
+  );
+  pointer-events: none;
+  z-index: 0;
 }
 
 .newcomer-path .container {
@@ -183,7 +189,10 @@
 .newcomer-path__media {
   position: relative;
   z-index: 1;
-  /* media column already reaches the right viewport edge */
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  padding-right: max(0rem, calc(50vw - 36rem));
 }
 
 .newcomer-path__media-glow {
@@ -200,23 +209,11 @@
 
 .newcomer-path__shot {
   display: block;
+  width: min(100%, 34rem);
   height: auto;
-}
-
-.newcomer-path__shot--store {
-  width: 100%;
+  margin-left: auto;
   border-radius: 6px;
-  box-shadow:
-    0 30px 60px rgb(0 0 0 / 0.55),
-    0 8px 20px rgb(0 0 0 / 0.4);
-}
 
-/* POV cutout — smaller, overlapping the lower-left corner */
-.newcomer-path__shot--pov {
-  position: absolute;
-  left: -5%;
-  bottom: -7%;
-  width: 44%;
   filter:
     drop-shadow(0 22px 42px rgb(0 0 0 / 0.55))
     drop-shadow(0 4px 10px rgb(0 0 0 / 0.35));
@@ -235,12 +232,8 @@
   .newcomer-path__media {
     width: min(100% - 2rem, 38rem);
     margin-inline: auto;
-  }
-
-  .newcomer-path__shot--pov {
-    left: -2%;
-    bottom: -8%;
-    width: 42%;
+    padding-right: 0;
+    justify-content: center;
   }
 }
 

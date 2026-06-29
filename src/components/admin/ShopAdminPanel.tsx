@@ -698,9 +698,9 @@ export default function ShopAdminPanel({ initialTab = 'products' }: ShopAdminPan
   const [ordersUnauthorized, setOrdersUnauthorized] = useState(false);
   const [openClientId, setOpenClientId] = useState<string | null>(null);
 
-  const [salesPreset, setSalesPreset] = useState<SalesRangePreset>('30');
-  const [salesFrom, setSalesFrom] = useState(() => getRangeDates('30').from);
-  const [salesTo, setSalesTo] = useState(() => getCurrentYmdInLondon());
+  const [salesPreset, setSalesPreset] = useState<SalesRangePreset>('7');
+  const [salesFrom, setSalesFrom] = useState(() => getRangeDates('7').from);
+  const [salesTo, setSalesTo] = useState(() => getRangeDates('7').to);
   const [salesMetric, setSalesMetric] = useState<SalesMetric>('revenue');
   const [salesLoading, setSalesLoading] = useState(false);
   const [salesError, setSalesError] = useState<string | null>(null);
@@ -736,6 +736,7 @@ export default function ShopAdminPanel({ initialTab = 'products' }: ShopAdminPan
   const productFiltersScrollRef = useRef<HTMLDivElement | null>(null);
   const productSearchInputRef = useRef<HTMLInputElement | null>(null);
   const productSortRef = useRef<HTMLDivElement | null>(null);
+  const salesFetchRequestRef = useRef(0);
 
   const {
     selectedIds: bulkSelectedIds,
@@ -1076,25 +1077,6 @@ export default function ShopAdminPanel({ initialTab = 'products' }: ShopAdminPan
     };
   }, [salesData]);
 
-  const salesRevenueSparkSeries = useMemo(
-    () => (salesData?.series.overall ?? []).map((p) => ({ label: p.date, value: p.revenuePence })),
-    [salesData],
-  );
-
-  const salesOrdersSparkSeries = useMemo(
-    () => (salesData?.series.overall ?? []).map((p) => ({ label: p.date, value: p.units })),
-    [salesData],
-  );
-
-  const salesAvgOrderSparkSeries = useMemo(
-    () =>
-      (salesData?.series.overall ?? []).map((p) => ({
-        label: p.date,
-        value: p.units > 0 ? p.revenuePence / p.units : 0,
-      })),
-    [salesData],
-  );
-
   const salesHeroValue = useMemo(
     () => (salesMetric === 'revenue'
       ? formatPrice(salesData?.kpis.revenuePence ?? 0)
@@ -1227,6 +1209,8 @@ export default function ShopAdminPanel({ initialTab = 'products' }: ShopAdminPan
   }
 
   async function fetchSales(options?: { explicitFrom?: string; explicitTo?: string; explicitPreset?: SalesRangePreset }) {
+    const requestId = salesFetchRequestRef.current + 1;
+    salesFetchRequestRef.current = requestId;
     setSalesLoading(true);
     setSalesError(null);
 
@@ -1234,23 +1218,28 @@ export default function ShopAdminPanel({ initialTab = 'products' }: ShopAdminPan
     const from = options?.explicitFrom ?? salesFrom;
     const to = options?.explicitTo ?? salesTo;
 
+    const range =
+      preset === 'custom'
+        ? { from, to }
+        : getRangeDates(preset);
+
     const query = new URLSearchParams();
-    if (preset === 'custom') {
-      query.set('from', from);
-      query.set('to', to);
-    } else {
-      query.set('range', preset);
-    }
+    query.set('from', range.from);
+    query.set('to', range.to);
 
     try {
       const payload = await adminFetchJson<SalesResponse>(`/api/admin/shop/sales?${query.toString()}`, {
         errorMessage: 'Could not fetch sales analytics.',
       });
+      if (salesFetchRequestRef.current !== requestId) return;
       setSalesData(payload as SalesResponse);
     } catch (fetchError) {
+      if (salesFetchRequestRef.current !== requestId) return;
       setSalesError(fetchError instanceof Error ? fetchError.message : 'Could not fetch sales analytics.');
     } finally {
-      setSalesLoading(false);
+      if (salesFetchRequestRef.current === requestId) {
+        setSalesLoading(false);
+      }
     }
   }
 
@@ -1262,10 +1251,6 @@ export default function ShopAdminPanel({ initialTab = 'products' }: ShopAdminPan
     if (activeTab === 'orders') {
       void fetchOrders();
     }
-        if (activeTab === 'sales') {
-      void fetchSales();
-    }
-
   }, [activeTab]);
   const salesDateError = useMemo(() => {
     if (salesPreset !== 'custom') return null;
@@ -1767,6 +1752,11 @@ export default function ShopAdminPanel({ initialTab = 'products' }: ShopAdminPan
     setSalesPreset(nextPreset);
     setSalesFrom(dates.from);
     setSalesTo(dates.to);
+    void fetchSales({
+      explicitPreset: nextPreset,
+      explicitFrom: dates.from,
+      explicitTo: dates.to,
+    });
   }
 
 
@@ -2493,9 +2483,6 @@ export default function ShopAdminPanel({ initialTab = 'products' }: ShopAdminPan
                       {salesKpiDeltas.revenue.text}
                     </p>
                   ) : null}
-                  <div className="admin-kpi-sparkline" aria-hidden="true">
-                    <AdminLineChart variant="sparkline" responsive series={[{ key: 'revenue', name: 'Revenue', points: salesRevenueSparkSeries }]} getColor={() => 'var(--fg)'} emptyLabel="" />
-                  </div>
                 </article>
 
                 <article className={`admin-kpi-card${salesKpiDeltas?.orders.className === 'admin-kpi-trend--up' ? ' admin-kpi-card--trend-up' : salesKpiDeltas?.orders.className === 'admin-kpi-trend--down' ? ' admin-kpi-card--trend-down' : ''}`}>
@@ -2507,9 +2494,6 @@ export default function ShopAdminPanel({ initialTab = 'products' }: ShopAdminPan
                       {salesKpiDeltas.orders.text}
                     </p>
                   ) : null}
-                  <div className="admin-kpi-sparkline" aria-hidden="true">
-                    <AdminLineChart variant="sparkline" responsive series={[{ key: 'orders', name: 'Orders', points: salesOrdersSparkSeries }]} getColor={() => 'var(--fg)'} emptyLabel="" />
-                  </div>
                 </article>
 
                 <article className={`admin-kpi-card${salesKpiDeltas?.avgOrderValue.className === 'admin-kpi-trend--up' ? ' admin-kpi-card--trend-up' : salesKpiDeltas?.avgOrderValue.className === 'admin-kpi-trend--down' ? ' admin-kpi-card--trend-down' : ''}`}>
@@ -2521,9 +2505,6 @@ export default function ShopAdminPanel({ initialTab = 'products' }: ShopAdminPan
                       {salesKpiDeltas.avgOrderValue.text}
                     </p>
                   ) : null}
-                  <div className="admin-kpi-sparkline" aria-hidden="true">
-                    <AdminLineChart variant="sparkline" responsive series={[{ key: 'avg', name: 'Avg order', points: salesAvgOrderSparkSeries }]} getColor={() => 'var(--fg)'} emptyLabel="" />
-                  </div>
                 </article>
 
                 <article className="admin-kpi-card">
