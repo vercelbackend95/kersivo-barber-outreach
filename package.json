@@ -33,6 +33,7 @@
     "screenshots:feature261": "node scripts/capture-feature261-screens.mjs",
     "enhance:timeline": "node scripts/enhance-timeline-screenshot.mjs",
     "assets:brand-values": "node scripts/generate-brand-values-assets.mjs --variant=all",
+    "generate:favicons": "node scripts/generate-favicons.mjs",
     "assets:shoponline-bg": "node scripts/remove-illustration-bg.mjs public/images/Ilustracje/shoppyonline-source.jpg --strip-watermark",
     "assets:barberszyld-bg": "node scripts/remove-illustration-bg.mjs public/images/Ilustracje/barberszyld-source.jpg --strip-watermark",
     "assets:barberwelcome-bg": "node scripts/remove-illustration-bg.mjs public/images/Ilustracje/barberwelcome-source.jpg --strip-watermark",
@@ -93,6 +94,7 @@
     "prisma": "^5.22.0",
     "sharp": "^0.34.5",
     "tailwindcss": "^4.2.2",
+    "to-ico": "^1.1.5",
     "tsx": "^4.20.3",
     "vitest": "^2.1.9"
   },
