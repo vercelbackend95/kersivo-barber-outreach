@@ -1,6 +1,6 @@
 ---
+import MinimalLayout from '@/layouts/MinimalLayout.astro';
 import BookingFlow from '../../components/booking/BookingFlow';
-import GoogleAnalytics from '../../components/seo/GoogleAnalytics.astro';
 import { prisma } from '../../lib/db/client';
 import {
   PUBLIC_BOOKING_UNAVAILABLE_MESSAGE,
@@ -65,15 +65,13 @@ const bookingPageData = await withPrismaQuotaFallback(
 
 const { services, barbers, shopSettings, bookingUnavailable } = bookingPageData;
 ---
-<html lang="en">
-  <head>
-        <GoogleAnalytics />
-    <meta charset="utf-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title>Book Appointment | Kersivo Barber Outreach</title>
-  </head>
-  <body class="admin-theme-premium-black">
-    <main class="container page-wrap booking-page-wrap">
+
+<MinimalLayout
+  title="Book appointment | Kersivo"
+  canonicalPath="/book"
+  bodyClass="admin-theme-premium-black"
+>
+  <main class="container page-wrap booking-page-wrap">
       {
         bookingUnavailable ? (
           <section class="surface booking-shell">
@@ -103,5 +101,4 @@ const { services, barbers, shopSettings, bookingUnavailable } = bookingPageData;
         )
       }
     </main>
-  </body>
-</html>
+</MinimalLayout>

@@ -1,8 +1,10 @@
 ---
 import BarberDemoJsonLd from '@/components/seo/BarberDemoJsonLd.astro';
 import GoogleAnalytics from '@/components/seo/GoogleAnalytics.astro';
+import SeoHead from '@/components/seo/SeoHead.astro';
 import Navbar17 from '@/components/navbar17.astro';
 import CartDrawerMount from '@/components/shop/CartDrawerMount.astro';
+import type { PageSeo } from '@/lib/seo/meta';
 import '@/styles/tokens.css';
 import '@/styles/global.css';
 import '@/styles/components/buttons.css';
@@ -12,24 +14,52 @@ import '@/styles/components/navbar17.css';
 import '@/styles/components/shop.css';
 import '@/styles/components/empty-state.css';
 import '@/styles/components/shop-product.css';
-interface Props {
+
+interface Props extends PageSeo {
   title: string;
   /** BarberDemo home JSON-LD (@graph); only enable on the main marketing landing page. */
   barberDemoJsonLd?: boolean;
+  /** Optional extra JSON-LD object(s) rendered as script tags. */
+  jsonLd?: Record<string, unknown> | Record<string, unknown>[];
 }
 
-const { title, barberDemoJsonLd = false } = Astro.props;
+const {
+  title,
+  description,
+  canonicalPath,
+  ogImagePath,
+  noindex,
+  barberDemoJsonLd = false,
+  jsonLd,
+} = Astro.props;
+
+const jsonLdBlocks = jsonLd
+  ? Array.isArray(jsonLd)
+    ? jsonLd
+    : [jsonLd]
+  : [];
 ---
 
 <html lang="en">
   <head>
-        <GoogleAnalytics />
+    <GoogleAnalytics />
     <meta charset="utf-8" />
     <link rel="icon" type="image/jpeg" href="/images/logo.jpg" />
     <meta name="viewport" content="width=device-width" />
-    <meta name="generator" content={Astro.generator} />
     <title>{title}</title>
+    <SeoHead
+      title={title}
+      description={description}
+      canonicalPath={canonicalPath}
+      ogImagePath={ogImagePath}
+      noindex={noindex}
+    />
     {barberDemoJsonLd ? <BarberDemoJsonLd /> : null}
+    {
+      jsonLdBlocks.map((block) => (
+        <script type="application/ld+json" set:html={JSON.stringify(block)} />
+      ))
+    }
   </head>
   <body>
     <Navbar17 />

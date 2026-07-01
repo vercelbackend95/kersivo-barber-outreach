@@ -2,6 +2,12 @@
   "redirects": [
     {
       "source": "/:path*",
+      "has": [{ "type": "host", "value": "www.kersivo.co.uk" }],
+      "destination": "https://kersivo.co.uk/:path*",
+      "permanent": true
+    },
+    {
+      "source": "/:path*",
       "has": [{ "type": "host", "value": "barberdemo.kersivo.co.uk" }],
       "destination": "https://kersivo.co.uk/:path*",
       "permanent": true

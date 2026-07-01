@@ -1,0 +1,97 @@
+export type FaqItem = {
+  question: string;
+  answer: string;
+  /** Optional extra context for teams that want more depth. */
+  details?: string;
+};
+
+export const FAQ_ITEMS: FaqItem[] = [
+  {
+    question: 'Do you take any percentage from bookings or product sales?',
+    answer: 'No. Kersivo commission is 0% on bookings and retail sales.',
+    details:
+      'You keep service and product revenue; we do not skim a platform cut from your transactions.',
+  },
+  {
+    question: 'What fees do I still pay?',
+    answer:
+      'Only Stripe fees on online card transactions, such as booking deposits and online checkout.',
+    details: 'If you take cash in-shop, payment processing fee can be 0%.',
+  },
+  {
+    question: 'I have no booking system yet — does this work for me?',
+    answer:
+      'Yes. We launch new shops on their own domain in about two weeks, with deposit-protected bookings and SMS reminders from booking #1. Same product, same price, same 0% commission as switchers.',
+    details:
+      'We build your booking site on your domain, configure deposits and reminders, set up a Google Business Profile pointer so people find you on Maps, and walk your team through the admin. You start on your own brand from day one — not as a tile in a marketplace.',
+  },
+  {
+    question: 'Can you migrate us from Booksy or Fresha?',
+    answer:
+      'Yes. We handle the switch with guided onboarding, service/team mapping, and controlled go-live support.',
+    details:
+      'We configure your services, team, deposits, and reminders before go-live. Where direct data transfer is limited by source platform restrictions, we use the fastest supported migration path and stay in contact throughout. You stay on your current system until everything is ready and confirmed.',
+  },
+  {
+    question: 'Will my clients have to download a new app or register again?',
+    answer:
+      'No. Your clients book through your URL on a normal web page — no app install, no account creation. The booking experience feels the same as before, only on your brand.',
+    details:
+      'If you are switching, the public booking link they have used before redirects to your Kersivo system. From their side, nothing changes except the page they land on now belongs to you. Bookings made on Booksy/Fresha before the switch are honoured there until they expire.',
+  },
+  {
+    question: 'Are you new — do you have other shops using this yet?',
+    answer:
+      'We are onboarding founding barbershops in the UK right now while we widen the rollout. Early partners get our full attention, milestone-based pricing (half of setup only once you approve go-live), and an optional KPI check on your live data.',
+    details:
+      'Open the live admin without signup, inspect the booking flow yourself, compare the pricing page to anything else you evaluate, then decide. If helpful, we can agree one KPI baseline (utilisation, no-show £, or owner ops hours) measured over 28 days after launch.',
+  },
+  {
+    question: "What if I don't get more bookings after launching?",
+    answer:
+      'If we agree a KPI before go-live (utilisation, no-show £, or owner ops hours), we measure it on your data for 28 days post-launch and share the result. Your monthly Care includes ongoing dev time we use to act on what the numbers show.',
+    details:
+      'Kersivo replaces commission with control — you keep more of every booking and own your client list. The point is your margin per booking, not just booking volume. Within your Care plan we have monthly time to refine your setup based on the measured outcome.',
+  },
+  {
+    question: 'How does this reduce no-shows?',
+    answer:
+      'Booking deposits plus reminders increase commitment before appointment time, which reduces empty-chair losses.',
+    details: 'The outcome is fewer dead slots, more paid appointments, and less daily disruption.',
+  },
+  {
+    question: 'What automations are included to recover revenue?',
+    answer:
+      'SMS reminders, old-client win-back campaigns, and post-visit review follow-ups are built into your operating flow.',
+    details:
+      'The point is simple: your team spends less time chasing and more time delivering paid services.',
+  },
+  {
+    question: 'Who controls the client relationship after switching?',
+    answer:
+      'You do. Kersivo is set up around your shop operations and direct communication with clients.',
+    details:
+      'You run under your signage and URLs, not as a pooled listing inside another brand’s client app.',
+  },
+  {
+    question: 'Can I leave? What happens to my data?',
+    answer:
+      'Yes. There is no lock-in. You can cancel Ongoing Care at any time, and your booking data, client list, and product catalogue are exportable in standard formats whenever you ask.',
+    details:
+      'We do not hold your data hostage to keep you on the system. The site, domain, and database are yours — the same way the chairs in your shop are yours. If you ever decide to leave, we hand over what we built and stand down cleanly.',
+  },
+  {
+    question: 'What is the full cost breakdown — are there any charges I have not seen?',
+    answer:
+      'No hidden charges. Your complete cost is: setup fee (£199 or £299, one-time) + Ongoing Care (£39/month) + Stripe’s standard card processing rate on online transactions.',
+    details:
+      'Kersivo charges 0% on bookings and retail — always. There are no per-booking fees, no volume surcharges, and no extra monthly charge as you add barbers or increase booking volume. Take cash in-shop and total processing fees can be 0%.',
+  },
+  {
+    question: 'What happens if the setup takes longer than expected, or something goes wrong?',
+    answer:
+      'If your setup needs more time, we confirm the revised timeline with you before you commit. We do not move you live until you have reviewed and confirmed everything.',
+    details:
+      'Switchers stay active on Booksy/Fresha throughout the build. New shops have no deadline pressure either. If a specific data transfer or integration is limited by an external platform, we tell you what is possible and agree the path forward with you.',
+  },
+];

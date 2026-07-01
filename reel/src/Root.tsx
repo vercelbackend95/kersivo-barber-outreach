@@ -16,6 +16,13 @@ import {
   VIRAL_CTA_BUMPER_DURATION_FRAMES,
 } from './theme-viral-cta-bumper';
 import { OJ_DURATION_FRAMES, OJ_FPS } from './oj-phone-calibration';
+import { InstagramCarouselSlide } from './carousel/InstagramCarouselSlide';
+import {
+  CAROUSEL_DURATION_FRAMES,
+  CAROUSEL_FPS,
+  CAROUSEL_HEIGHT,
+  CAROUSEL_WIDTH,
+} from './theme-carousel';
 import { DURATION_FRAMES, FPS, HEIGHT, PERCENT_COUNTER_DURATION, WIDTH } from './theme';
 
 export const RemotionRoot: React.FC = () => {
@@ -88,6 +95,15 @@ export const RemotionRoot: React.FC = () => {
         fps={OJ_FPS}
         width={WIDTH}
         height={HEIGHT}
+      />
+      <Composition
+        id="InstagramCarouselSlide"
+        component={InstagramCarouselSlide}
+        durationInFrames={CAROUSEL_DURATION_FRAMES}
+        fps={CAROUSEL_FPS}
+        width={CAROUSEL_WIDTH}
+        height={CAROUSEL_HEIGHT}
+        defaultProps={{ slideIndex: 0 }}
       />
     </>
   );

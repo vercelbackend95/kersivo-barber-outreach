@@ -1,5 +1,7 @@
 ---
 import MainLayout from '@/layouts/MainLayout.astro';
+import { buildFaqJsonLd } from '@/lib/seo/faqJsonLd';
+import { DEFAULT_DESCRIPTION, DEFAULT_TITLE } from '@/lib/seo/defaults';
 import '../styles/components/system-chooser.css';
 import '../styles/components/compare3.css';
 import '../styles/components/brandValues.css';
@@ -44,8 +46,11 @@ const DEMO_ADMIN_PASSWORD = import.meta.env.PUBLIC_DEMO_ADMIN_PASSWORD
 ---
 
 <MainLayout
-  title="Kersivo — Bookings on your domain, 0% commission"
+  title={DEFAULT_TITLE}
+  description={DEFAULT_DESCRIPTION}
+  canonicalPath="/"
   barberDemoJsonLd={true}
+  jsonLd={buildFaqJsonLd()}
 >
     <main>
 

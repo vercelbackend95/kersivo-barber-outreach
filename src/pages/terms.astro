@@ -1,9 +1,14 @@
 ---
 import MainLayout from '@/layouts/MainLayout.astro';
+import { PAGE_DESCRIPTIONS } from '@/lib/seo/defaults';
 import '@/styles/legal-pages.css';
 ---
 
-<MainLayout title="Terms of Service | Kersivo">
+<MainLayout
+  title="Terms of Service | Kersivo"
+  description={PAGE_DESCRIPTIONS.terms}
+  canonicalPath="/terms"
+>
   <main class="legal-page">
     <article class="container legal-page__inner">
       <h1 class="legal-page__title">Terms of Service</h1>

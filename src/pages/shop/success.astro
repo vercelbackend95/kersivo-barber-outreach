@@ -1,78 +1,70 @@
 ---
+import MinimalLayout from '@/layouts/MinimalLayout.astro';
 import '../../styles/tokens.css';
 import '../../styles/global.css';
 import '../../styles/components/buttons.css';
 import '../../styles/components/shop.css';
-import GoogleAnalytics from '../../components/seo/GoogleAnalytics.astro';
+
 const sessionId = Astro.url.searchParams.get('session_id');
 ---
-<html lang="en">
-  <head>
-    <GoogleAnalytics />
-    <meta charset="utf-8" />
-    <meta name="viewport" content="width=device-width" />
-    <title>Pickup confirmed</title>
-  </head>
 
-  <body>
-    <main class="container shop-page">
-      <section class="shop-card shop-success-card">
-        <div class="shop-card-body">
-          <h1>Pickup order received.</h1>
-          <p class="muted">Thank you — your payment is confirmed and your products are now being prepared for collection.</p>
-          <ul class="shop-success-next" aria-label="What happens next">
-            <li>We are preparing your order now.</li>
-            <li>Collect in shop when it suits you during opening hours.</li>
-            <li>No shipping needed for this order.</li>
-          </ul>
-          {sessionId ? <p class="muted">Reference: {sessionId}</p> : null}
+<MinimalLayout title="Pickup confirmed | Kersivo" canonicalPath="/shop/success">
+  <main class="container shop-page">
+    <section class="shop-card shop-success-card">
+      <div class="shop-card-body">
+        <h1>Pickup order received.</h1>
+        <p class="muted">Thank you — your payment is confirmed and your products are now being prepared for collection.</p>
+        <ul class="shop-success-next" aria-label="What happens next">
+          <li>We are preparing your order now.</li>
+          <li>Collect in shop when it suits you during opening hours.</li>
+          <li>No shipping needed for this order.</li>
+        </ul>
+        {sessionId ? <p class="muted">Reference: {sessionId}</p> : null}
 
-          <div class="shop-order-summary" data-order-summary hidden>
-            <h2>Pickup order summary</h2>
-            <p class="muted" data-order-summary-total></p>
-            <ul data-order-summary-items></ul>
-          </div>
-
-          <a href="/shop" class="btn btn--primary">Back to shop</a>
+        <div class="shop-order-summary" data-order-summary hidden>
+          <h2>Pickup order summary</h2>
+          <p class="muted" data-order-summary-total></p>
+          <ul data-order-summary-items></ul>
         </div>
-      </section>
-    </main>
-    <script is:inline define:vars={{ sessionId }}>
-      
-      async function loadOrderSummary() {
-        if (!sessionId) return;
 
-        const summary = document.querySelector('[data-order-summary]');
-        const total = document.querySelector('[data-order-summary-total]');
-        const list = document.querySelector('[data-order-summary-items]');
-        if (!summary || !total || !list) return;
+        <a href="/shop" class="btn btn--primary">Back to shop</a>
+      </div>
+    </section>
+  </main>
+  <script is:inline define:vars={{ sessionId }}>
+    async function loadOrderSummary() {
+      if (!sessionId) return;
 
-        try {
-          const response = await fetch(`/api/shop/order-by-session?session_id=${encodeURIComponent(sessionId)}`);
-          if (!response.ok) return;
+      const summary = document.querySelector('[data-order-summary]');
+      const total = document.querySelector('[data-order-summary-total]');
+      const list = document.querySelector('[data-order-summary-items]');
+      if (!summary || !total || !list) return;
 
-          const payload = await response.json();
-          const order = payload.order;
-          if (!order) return;
+      try {
+        const response = await fetch(`/api/shop/order-by-session?session_id=${encodeURIComponent(sessionId)}`);
+        if (!response.ok) return;
 
-          total.textContent = `Total paid: ${new Intl.NumberFormat('en-GB', { style: 'currency', currency: 'GBP' }).format(order.totalPence / 100)}`;
+        const payload = await response.json();
+        const order = payload.order;
+        if (!order) return;
 
-          list.innerHTML = '';
-          for (const item of order.items ?? []) {
-            const row = document.createElement('li');
-            row.textContent = `${item.nameSnapshot} × ${item.quantity}`;
-            list.append(row);
-          }
+        total.textContent = `Total paid: ${new Intl.NumberFormat('en-GB', { style: 'currency', currency: 'GBP' }).format(order.totalPence / 100)}`;
 
-          summary.hidden = false;
-        } catch {
-          // no-op, summary is optional
+        list.innerHTML = '';
+        for (const item of order.items ?? []) {
+          const row = document.createElement('li');
+          row.textContent = `${item.nameSnapshot} × ${item.quantity}`;
+          list.append(row);
         }
+
+        summary.hidden = false;
+      } catch {
+        // no-op, summary is optional
       }
+    }
 
-      loadOrderSummary();
+    loadOrderSummary();
 
-      localStorage.removeItem('kersivo_shop_cart_v2');
-    </script>
-  </body>
-</html>
+    localStorage.removeItem('kersivo_shop_cart_v2');
+  </script>
+</MinimalLayout>

@@ -13,6 +13,7 @@
     "render:spinning-chair": "node scripts/render-spinning-chair.mjs",
     "render:viral-cta": "node scripts/render-viral-cta-bumper.mjs",
     "render:oj-fix": "node scripts/render-oj-phone-fix.mjs",
+    "render:carousel": "node scripts/render-carousel.mjs",
     "mix:no-show": "node scripts/mix-no-show-audio.mjs"
   },
   "dependencies": {

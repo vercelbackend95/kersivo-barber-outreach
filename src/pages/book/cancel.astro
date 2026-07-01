@@ -1,8 +1,10 @@
 ---
+import MinimalLayout from '@/layouts/MinimalLayout.astro';
 import '../../styles/tokens.css';
 import '../../styles/global.css';
 import '../../styles/components/booking.css';
 import '../../styles/components/buttons.css';
+
 const token = Astro.url.searchParams.get('token') ?? '';
 const confirm = Astro.url.searchParams.get('confirm') === '1';
 let heading = 'Cancel booking';
@@ -16,12 +18,11 @@ if (!token) {
   isError = true;
   showConfirmAction = false;
 } else if (confirm) {
-
   try {
     const apiResponse = await fetch(new URL('/api/bookings/cancel', Astro.url), {
       method: 'POST',
       headers: { 'content-type': 'application/json' },
-      body: JSON.stringify({ token })
+      body: JSON.stringify({ token }),
     });
 
     const payload = await apiResponse.json();
@@ -31,37 +32,35 @@ if (!token) {
       message = payload?.message ?? 'Your appointment has been cancelled successfully.';
       showConfirmAction = false;
     } else {
-            heading = 'Cancel booking';
+      heading = 'Cancel booking';
       message = payload?.error ?? 'We could not cancel this booking. Please contact the shop for help.';
-            isError = true;
+      isError = true;
       showConfirmAction = false;
     }
   } catch {
     message = 'We could not cancel this booking right now. Please try again shortly.';
-        isError = true;
+    isError = true;
     showConfirmAction = false;
   }
 }
 ---
-<html lang="en">
-  <body>
-    <main class="container page-wrap">
-      <section class="surface booking-shell">
-        <h1>{heading}</h1>
-        <p class={isError ? 'admin-inline-error' : ''}>{message}</p>
 
-        {showConfirmAction ? (
-          <div class="booking-flow__grid">
-            <a class="btn btn--destructive" href={`/book/cancel?token=${encodeURIComponent(token)}&confirm=1`}>Confirm cancellation</a>
-            <a class="btn btn--secondary" href="/book">Keep booking</a>
-          </div>
-        ) : (
-          <a class="btn btn--secondary" href="/book">Back to booking</a>
-        )}
+<MinimalLayout title="Cancel booking | Kersivo" canonicalPath="/book/cancel">
+  <main class="container page-wrap">
+    <section class="surface booking-shell">
+      <h1>{heading}</h1>
+      <p class={isError ? 'admin-inline-error' : ''}>{message}</p>
 
+      {showConfirmAction ? (
+        <div class="booking-flow__grid">
+          <a class="btn btn--destructive" href={`/book/cancel?token=${encodeURIComponent(token)}&confirm=1`}>Confirm cancellation</a>
+          <a class="btn btn--secondary" href="/book">Keep booking</a>
+        </div>
+      ) : (
+        <a class="btn btn--secondary" href="/book">Back to booking</a>
+      )}
 
-        {isError && <p class="muted">If this keeps happening, please contact the barbershop directly.</p>}
-      </section>
-    </main>
-  </body>
-</html>
+      {isError && <p class="muted">If this keeps happening, please contact the barbershop directly.</p>}
+    </section>
+  </main>
+</MinimalLayout>

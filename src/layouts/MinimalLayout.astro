@@ -1,0 +1,44 @@
+---
+import GoogleAnalytics from '@/components/seo/GoogleAnalytics.astro';
+import SeoHead from '@/components/seo/SeoHead.astro';
+import type { PageSeo } from '@/lib/seo/meta';
+
+interface Props extends PageSeo {
+  title: string;
+  bodyClass?: string;
+  htmlClass?: string;
+  noindex?: boolean;
+  viewportContent?: string;
+}
+
+const {
+  title,
+  description,
+  canonicalPath,
+  ogImagePath,
+  noindex = true,
+  bodyClass,
+  htmlClass,
+  viewportContent = 'width=device-width, initial-scale=1',
+} = Astro.props;
+---
+
+<html lang="en" class={htmlClass}>
+  <head>
+    <GoogleAnalytics />
+    <meta charset="utf-8" />
+    <meta name="viewport" content={viewportContent} />
+    <title>{title}</title>
+    <SeoHead
+      title={title}
+      description={description}
+      canonicalPath={canonicalPath}
+      ogImagePath={ogImagePath}
+      noindex={noindex}
+    />
+    <slot name="head" />
+  </head>
+  <body class={bodyClass}>
+    <slot />
+  </body>
+</html>

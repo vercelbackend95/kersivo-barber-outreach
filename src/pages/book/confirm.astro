@@ -1,19 +1,18 @@
 ---
-
+import MinimalLayout from '@/layouts/MinimalLayout.astro';
 import '../../styles/tokens.css';
 import '../../styles/global.css';
 import '../../styles/components/booking.css';
 import '../../styles/components/buttons.css';
 ---
-<html lang="en">
-  <body>
-    <main class="container page-wrap">
-      <section class="surface booking-shell">
-       <h1>Booking confirmed instantly</h1>
-        <p>Email confirmation is no longer required. Bookings are confirmed immediately after you submit the booking form.</p>
 
-        <a class="btn btn--secondary" href="/book">Back to booking</a>
-      </section>
-    </main>
-  </body>
-</html>
+<MinimalLayout title="Booking confirmed | Kersivo" canonicalPath="/book/confirm">
+  <main class="container page-wrap">
+    <section class="surface booking-shell">
+      <h1>Booking confirmed instantly</h1>
+      <p>Email confirmation is no longer required. Bookings are confirmed immediately after you submit the booking form.</p>
+
+      <a class="btn btn--secondary" href="/book">Back to booking</a>
+    </section>
+  </main>
+</MinimalLayout>

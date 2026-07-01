@@ -1,28 +1,31 @@
+import { getPublicSiteUrl } from '@/lib/setup/siteUrl';
+
 /** Stable @id for schema.org cross-references (brand site). */
-export const KERSIVO_ORGANIZATION_ID = 'https://kersivo.co.uk/#organization';
-
-const KERSIVO_SITE = 'https://kersivo.co.uk';
-/** Canonical production site origin. */
-const BARBERDEMO_CANONICAL = 'https://kersivo.co.uk';
-const ORG_LOGO_URL = `${KERSIVO_SITE}/images/logo_nobg.png`;
-
-const SOFTWARE_ID = `${BARBERDEMO_CANONICAL}/#software/kersivo-barber-management`;
-const SERVICE_ID = `${BARBERDEMO_CANONICAL}/#service/barber-booking`;
-const SOFTWARE_PAGE_URL = `${BARBERDEMO_CANONICAL}/`;
+export function getKersivoOrganizationId(siteUrl: string): string {
+  return `${siteUrl}/#organization`;
+}
 
 export function buildBarberDemoJsonLd(): Record<string, unknown> {
+  const siteUrl = getPublicSiteUrl();
+  const organizationId = getKersivoOrganizationId(siteUrl);
+  const orgLogoUrl = `${siteUrl}/images/logo_nobg.png`;
+  const softwareId = `${siteUrl}/#software/kersivo-barber-management`;
+  const serviceId = `${siteUrl}/#service/barber-booking`;
+  const websiteId = `${siteUrl}/#website`;
+
   return {
     '@context': 'https://schema.org',
     '@graph': [
       {
         '@type': 'Organization',
-        '@id': KERSIVO_ORGANIZATION_ID,
+        '@id': organizationId,
         name: 'Kersivo',
-        url: KERSIVO_SITE,
+        url: siteUrl,
         logo: {
           '@type': 'ImageObject',
-          url: ORG_LOGO_URL,
+          url: orgLogoUrl,
         },
+        sameAs: [],
         contactPoint: {
           '@type': 'ContactPoint',
           email: 'hello@kersivo.co.uk',
@@ -30,25 +33,32 @@ export function buildBarberDemoJsonLd(): Record<string, unknown> {
         },
       },
       {
+        '@type': 'WebSite',
+        '@id': websiteId,
+        url: siteUrl,
+        name: 'Kersivo',
+        publisher: { '@id': organizationId },
+      },
+      {
         '@type': 'SoftwareApplication',
-        '@id': SOFTWARE_ID,
+        '@id': softwareId,
         name: 'Kersivo Barber Management System',
         applicationCategory: 'BusinessApplication',
         operatingSystem: 'Web',
         description:
           'Booking, admin and retail under your UK barbershop domain with 0% commission from Kersivo.',
-        url: SOFTWARE_PAGE_URL,
-        author: { '@id': KERSIVO_ORGANIZATION_ID },
-        publisher: { '@id': KERSIVO_ORGANIZATION_ID },
-        provider: { '@id': KERSIVO_ORGANIZATION_ID },
+        url: siteUrl,
+        author: { '@id': organizationId },
+        publisher: { '@id': organizationId },
+        provider: { '@id': organizationId },
         browserRequirements: 'Requires JavaScript. Requires HTML5.',
       },
       {
         '@type': 'Service',
-        '@id': SERVICE_ID,
+        '@id': serviceId,
         name: 'Barber Booking Software',
         serviceType: 'Barber Booking Software',
-        provider: { '@id': KERSIVO_ORGANIZATION_ID },
+        provider: { '@id': organizationId },
         areaServed: {
           '@type': 'Country',
           name: 'United Kingdom',

@@ -1,6 +1,6 @@
 ---
+import MinimalLayout from '@/layouts/MinimalLayout.astro';
 import BookingFlow from '../../components/booking/BookingFlow';
-import GoogleAnalytics from '../../components/seo/GoogleAnalytics.astro';
 import '../../styles/tokens.css';
 
 import '../../styles/global.css';
@@ -59,16 +59,13 @@ const bookingPageData = await withPrismaQuotaFallback(
 const { services, barbers, shopSettings, bookingUnavailable } = bookingPageData;
 const tokenStatus = bookingUnavailable ? { valid: false as const, message: PUBLIC_BOOKING_UNAVAILABLE_MESSAGE } : await getRescheduleTokenStatus(token);
 ---
-<html lang="en">
-    <head>
-          <GoogleAnalytics />
-    <meta charset="utf-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title>Reschedule Booking | Kersivo Barber Outreach</title>
-  </head>
 
-  <body class="admin-theme-premium-black">
-    <main class="container page-wrap booking-page-wrap">
+<MinimalLayout
+  title="Reschedule booking | Kersivo"
+  canonicalPath="/book/reschedule"
+  bodyClass="admin-theme-premium-black"
+>
+  <main class="container page-wrap booking-page-wrap">
      {
         bookingUnavailable ? (
           <section class="surface booking-shell">
@@ -107,5 +104,4 @@ const tokenStatus = bookingUnavailable ? { valid: false as const, message: PUBLI
         )
       }
     </main>
-  </body>
-</html>
+</MinimalLayout>

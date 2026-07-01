@@ -1,9 +1,15 @@
 ---
 import MainLayout from '@/layouts/MainLayout.astro';
+import { PAGE_DESCRIPTIONS } from '@/lib/seo/defaults';
 import '@/styles/components/setup-status.css';
 ---
 
-<MainLayout title="Checkout cancelled">
+<MainLayout
+  title="Checkout cancelled"
+  description={PAGE_DESCRIPTIONS.setupCancel}
+  canonicalPath="/setup/cancel"
+  noindex={true}
+>
   <main class="container shop-page setup-status-page">
     <section class="shop-card shop-success-card">
       <div class="shop-card-body">
