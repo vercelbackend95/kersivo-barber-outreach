@@ -1,6 +1,7 @@
 ---
 import MinimalLayout from '@/layouts/MinimalLayout.astro';
 import BookingFlow from '../../components/booking/BookingFlow';
+import { PAGE_DESCRIPTIONS } from '@/lib/seo/defaults';
 import { prisma } from '../../lib/db/client';
 import {
   PUBLIC_BOOKING_UNAVAILABLE_MESSAGE,
@@ -68,6 +69,7 @@ const { services, barbers, shopSettings, bookingUnavailable } = bookingPageData;
 
 <MinimalLayout
   title="Book appointment | Kersivo"
+  description={PAGE_DESCRIPTIONS.book}
   canonicalPath="/book"
   bodyClass="admin-theme-premium-black"
 >

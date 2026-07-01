@@ -1,5 +1,6 @@
 ---
 import MinimalLayout from '@/layouts/MinimalLayout.astro';
+import { PAGE_DESCRIPTIONS } from '@/lib/seo/defaults';
 import '../../styles/tokens.css';
 import '../../styles/global.css';
 import '../../styles/components/buttons.css';
@@ -8,7 +9,7 @@ import '../../styles/components/shop.css';
 const sessionId = Astro.url.searchParams.get('session_id');
 ---
 
-<MinimalLayout title="Pickup confirmed | Kersivo" canonicalPath="/shop/success">
+<MinimalLayout title="Pickup confirmed | Kersivo" description={PAGE_DESCRIPTIONS.shopSuccess} canonicalPath="/shop/success">
   <main class="container shop-page">
     <section class="shop-card shop-success-card">
       <div class="shop-card-body">

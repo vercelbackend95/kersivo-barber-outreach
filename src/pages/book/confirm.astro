@@ -1,12 +1,13 @@
 ---
 import MinimalLayout from '@/layouts/MinimalLayout.astro';
+import { PAGE_DESCRIPTIONS } from '@/lib/seo/defaults';
 import '../../styles/tokens.css';
 import '../../styles/global.css';
 import '../../styles/components/booking.css';
 import '../../styles/components/buttons.css';
 ---
 
-<MinimalLayout title="Booking confirmed | Kersivo" canonicalPath="/book/confirm">
+<MinimalLayout title="Booking confirmed | Kersivo" description={PAGE_DESCRIPTIONS.bookConfirm} canonicalPath="/book/confirm">
   <main class="container page-wrap">
     <section class="surface booking-shell">
       <h1>Booking confirmed instantly</h1>

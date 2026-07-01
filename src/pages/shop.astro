@@ -1,6 +1,7 @@
 ---
 import MainLayout from '@/layouts/MainLayout.astro';
 import { PAGE_DESCRIPTIONS } from '@/lib/seo/defaults';
+import { buildShopBreadcrumbJsonLd } from '@/lib/seo/productJsonLd';
 import Footer50 from '../components/footer50.astro';
 import '../styles/components/footer50.css';
 import { prisma } from '../lib/db/client';
@@ -75,6 +76,7 @@ const selectedCategory = categoryValues.has(selectedCategoryParam) ? selectedCat
   title="Shop | Kersivo"
   description={PAGE_DESCRIPTIONS.shop}
   canonicalPath="/shop"
+  jsonLd={buildShopBreadcrumbJsonLd()}
 >
   <main class="container shop-page" aria-labelledby="shop-page-title" data-active-category={selectedCategory}>
     <header class="shop-header-block">

@@ -1,3 +1,10 @@
+import {
+  DEFAULT_DESCRIPTION,
+  ONGOING_CARE_MONTHLY_GBP,
+  SITE_NAME,
+} from './defaults';
+import { getSocialProfileUrls } from './socialProfiles';
+import { SETUP_PLANS } from '@/lib/setup/plans';
 import { getPublicSiteUrl } from '@/lib/setup/siteUrl';
 
 /** Stable @id for schema.org cross-references (brand site). */
@@ -12,6 +19,8 @@ export function buildBarberDemoJsonLd(): Record<string, unknown> {
   const softwareId = `${siteUrl}/#software/kersivo-barber-management`;
   const serviceId = `${siteUrl}/#service/barber-booking`;
   const websiteId = `${siteUrl}/#website`;
+  const launchPlan = SETUP_PLANS.launch;
+  const socialProfiles = getSocialProfileUrls();
 
   return {
     '@context': 'https://schema.org',
@@ -19,25 +28,28 @@ export function buildBarberDemoJsonLd(): Record<string, unknown> {
       {
         '@type': 'Organization',
         '@id': organizationId,
-        name: 'Kersivo',
+        name: SITE_NAME,
         url: siteUrl,
         logo: {
           '@type': 'ImageObject',
           url: orgLogoUrl,
         },
-        sameAs: [],
+        sameAs: socialProfiles,
         contactPoint: {
           '@type': 'ContactPoint',
           email: 'hello@kersivo.co.uk',
           contactType: 'customer support',
+          areaServed: 'GB',
+          availableLanguage: 'English',
         },
       },
       {
         '@type': 'WebSite',
         '@id': websiteId,
         url: siteUrl,
-        name: 'Kersivo',
+        name: SITE_NAME,
         publisher: { '@id': organizationId },
+        inLanguage: 'en-GB',
       },
       {
         '@type': 'SoftwareApplication',
@@ -45,13 +57,39 @@ export function buildBarberDemoJsonLd(): Record<string, unknown> {
         name: 'Kersivo Barber Management System',
         applicationCategory: 'BusinessApplication',
         operatingSystem: 'Web',
-        description:
-          'Booking, admin and retail under your UK barbershop domain with 0% commission from Kersivo.',
+        description: DEFAULT_DESCRIPTION,
         url: siteUrl,
         author: { '@id': organizationId },
         publisher: { '@id': organizationId },
         provider: { '@id': organizationId },
         browserRequirements: 'Requires JavaScript. Requires HTML5.',
+        offers: [
+          {
+            '@type': 'Offer',
+            name: `${launchPlan.name} setup`,
+            price: (launchPlan.setupTotalPence / 100).toFixed(2),
+            priceCurrency: 'GBP',
+            description: `One-time setup from £${launchPlan.setupTotalPence / 100}. 50% deposit to start, 50% on go-live.`,
+            url: `${siteUrl}/#pricing`,
+            availability: 'https://schema.org/InStock',
+          },
+          {
+            '@type': 'Offer',
+            name: 'Ongoing Care',
+            price: ONGOING_CARE_MONTHLY_GBP.toFixed(2),
+            priceCurrency: 'GBP',
+            priceSpecification: {
+              '@type': 'UnitPriceSpecification',
+              price: ONGOING_CARE_MONTHLY_GBP.toFixed(2),
+              priceCurrency: 'GBP',
+              unitText: 'MONTH',
+            },
+            description:
+              'Hosting, SMS, support, platform updates, and scoped monthly tweaks.',
+            url: `${siteUrl}/#pricing`,
+            availability: 'https://schema.org/InStock',
+          },
+        ],
       },
       {
         '@type': 'Service',

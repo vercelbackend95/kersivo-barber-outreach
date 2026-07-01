@@ -2,6 +2,7 @@ import type { APIRoute } from 'astro';
 import { prisma } from '@/lib/db/client';
 import { withPrismaQuotaFallback } from '@/lib/db/resilience';
 import { resolveShopId } from '@/lib/db/shopScope';
+import { STATIC_SITEMAP_LASTMOD } from '@/lib/seo/defaults';
 import { buildAbsoluteUrl } from '@/lib/seo/meta';
 
 type SitemapEntry = {
@@ -26,21 +27,22 @@ ${urlNodes}
 `;
 }
 
-export const GET: APIRoute = async () => {
-  const lastmod = new Date().toISOString().slice(0, 10);
+function formatLastmod(date: Date): string {
+  return date.toISOString().slice(0, 10);
+}
 
+export const GET: APIRoute = async () => {
   const staticPaths = ['/', '/privacy', '/terms', '/shop'];
 
-  const productIds = await withPrismaQuotaFallback(
+  const products = await withPrismaQuotaFallback(
     'sitemap.xml.ts',
     async () => {
       const shopId = await resolveShopId();
-      const products = await prisma.product.findMany({
+      return prisma.product.findMany({
         where: { shopId, active: true },
-        select: { id: true },
+        select: { id: true, updatedAt: true },
         orderBy: [{ sortOrder: 'asc' }, { updatedAt: 'desc' }],
       });
-      return products.map((product) => product.id);
     },
     []
   );
@@ -48,11 +50,11 @@ export const GET: APIRoute = async () => {
   const entries: SitemapEntry[] = [
     ...staticPaths.map((path) => ({
       loc: buildAbsoluteUrl(path),
-      lastmod,
+      lastmod: STATIC_SITEMAP_LASTMOD,
     })),
-    ...productIds.map((id) => ({
-      loc: buildAbsoluteUrl(`/shop/${id}`),
-      lastmod,
+    ...products.map((product) => ({
+      loc: buildAbsoluteUrl(`/shop/${product.id}`),
+      lastmod: formatLastmod(product.updatedAt),
     })),
   ];
 

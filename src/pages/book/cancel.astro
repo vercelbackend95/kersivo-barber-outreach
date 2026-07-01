@@ -1,5 +1,6 @@
 ---
 import MinimalLayout from '@/layouts/MinimalLayout.astro';
+import { PAGE_DESCRIPTIONS } from '@/lib/seo/defaults';
 import '../../styles/tokens.css';
 import '../../styles/global.css';
 import '../../styles/components/booking.css';
@@ -45,7 +46,7 @@ if (!token) {
 }
 ---
 
-<MinimalLayout title="Cancel booking | Kersivo" canonicalPath="/book/cancel">
+<MinimalLayout title="Cancel booking | Kersivo" description={PAGE_DESCRIPTIONS.bookCancel} canonicalPath="/book/cancel">
   <main class="container page-wrap">
     <section class="surface booking-shell">
       <h1>{heading}</h1>

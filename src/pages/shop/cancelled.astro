@@ -1,12 +1,13 @@
 ---
 import MinimalLayout from '@/layouts/MinimalLayout.astro';
+import { PAGE_DESCRIPTIONS } from '@/lib/seo/defaults';
 import '../../styles/tokens.css';
 import '../../styles/global.css';
 import '../../styles/components/buttons.css';
 import '../../styles/components/shop.css';
 ---
 
-<MinimalLayout title="Checkout cancelled | Kersivo" canonicalPath="/shop/cancelled">
+<MinimalLayout title="Checkout cancelled | Kersivo" description={PAGE_DESCRIPTIONS.shopCancelled} canonicalPath="/shop/cancelled">
   <main class="container shop-page">
     <section class="shop-card shop-success-card">
       <div class="shop-card-body">

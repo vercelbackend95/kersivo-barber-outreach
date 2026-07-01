@@ -16,6 +16,10 @@ const {
   description,
   canonicalPath,
   ogImagePath,
+  ogImageWidth,
+  ogImageHeight,
+  ogImageAlt,
+  ogType,
   noindex = true,
   bodyClass,
   htmlClass,
@@ -23,10 +27,11 @@ const {
 } = Astro.props;
 ---
 
-<html lang="en" class={htmlClass}>
+<html lang="en-GB" class={htmlClass}>
   <head>
     <GoogleAnalytics />
     <meta charset="utf-8" />
+    <link rel="icon" type="image/jpeg" href="/images/logo.jpg" />
     <meta name="viewport" content={viewportContent} />
     <title>{title}</title>
     <SeoHead
@@ -34,6 +39,10 @@ const {
       description={description}
       canonicalPath={canonicalPath}
       ogImagePath={ogImagePath}
+      ogImageWidth={ogImageWidth}
+      ogImageHeight={ogImageHeight}
+      ogImageAlt={ogImageAlt}
+      ogType={ogType}
       noindex={noindex}
     />
     <slot name="head" />

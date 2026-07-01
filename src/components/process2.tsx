@@ -30,8 +30,12 @@ type ProcessStep = {
   title: string;
   timeline: string;
   image: string;
+  imageWidth: number;
+  imageHeight: number;
   /** When set, shown below `lg` instead of `image` (desktop unchanged). */
   imageMobile?: string;
+  imageMobileWidth?: number;
+  imageMobileHeight?: number;
   weDo: string;
   youDo: string;
   deliverable: string;
@@ -40,17 +44,39 @@ type ProcessStep = {
 const ProcessStepPicture = ({
   desktopSrc,
   mobileSrc,
+  width,
+  height,
+  alt,
 }: {
   desktopSrc: string;
   mobileSrc?: string;
-}) => (
-  <picture className="block h-full w-full">
-    {mobileSrc != null ? (
-      <source media={PROCESS_IMAGE_MOBILE_MEDIA} srcSet={mobileSrc} />
-    ) : null}
-    <img src={desktopSrc} className="h-full w-full object-cover" alt="" />
-  </picture>
-);
+  width: number;
+  height: number;
+  mobileWidth?: number;
+  mobileHeight?: number;
+  alt: string;
+}) => {
+  const desktopWebp = desktopSrc.replace(/\.jpe?g$/i, '.webp');
+  const mobileWebp = mobileSrc?.replace(/\.jpe?g$/i, '.webp');
+
+  return (
+    <picture className="block h-full w-full">
+      {mobileWebp != null ? (
+        <source media={PROCESS_IMAGE_MOBILE_MEDIA} srcSet={mobileWebp} type="image/webp" />
+      ) : null}
+      <source srcSet={desktopWebp} type="image/webp" />
+      <img
+        src={desktopSrc}
+        className="h-full w-full object-cover"
+        alt={alt}
+        width={width}
+        height={height}
+        loading="lazy"
+        decoding="async"
+      />
+    </picture>
+  );
+};
 
 const Process2 = ({ className }: Process2Props) => {
   const process: ProcessStep[] = [
@@ -60,6 +86,10 @@ const Process2 = ({ className }: Process2Props) => {
       timeline: "Days 1\u20134",
       image: "/images/discoverypic.jpg",
       imageMobile: "/images/Launchpic.jpg",
+      imageWidth: 1600,
+      imageHeight: 2133,
+      imageMobileWidth: 1600,
+      imageMobileHeight: 1107,
       weDo:
         "Audit your current setup or build the plan from scratch, map services and team, confirm domain, deposit policy, and lock the launch date.",
       youDo:
@@ -73,6 +103,10 @@ const Process2 = ({ className }: Process2Props) => {
       timeline: "Days 5\u201311",
       image: "/images/Buildpic.jpg",
       imageMobile: "/images/Reviewpic.jpg",
+      imageWidth: 1600,
+      imageHeight: 1067,
+      imageMobileWidth: 1600,
+      imageMobileHeight: 2400,
       weDo:
         "Build the booking site on your domain, configure Stripe deposits, automated SMS reminders, win-back, and pay & collect retail \u2014 ready to run on day one.",
       youDo:
@@ -86,6 +120,10 @@ const Process2 = ({ className }: Process2Props) => {
       timeline: "Days 12\u201314",
       image: "/images/Reviewpic.jpg",
       imageMobile: "/images/Launchpic.jpg",
+      imageWidth: 1600,
+      imageHeight: 2400,
+      imageMobileWidth: 1600,
+      imageMobileHeight: 1107,
       weDo:
         "Push your site live on your domain, set up your Google Business Profile pointer, walk your team through the admin, and \u2014 for switchers \u2014 swap your public booking link.",
       youDo:
@@ -103,13 +141,13 @@ const Process2 = ({ className }: Process2Props) => {
       <div className="container">
         <div className="grid grid-cols-1 gap-5 lg:grid-cols-2 lg:gap-20">
           <div className="top-10 h-fit w-fit gap-3 space-y-7 py-8 lg:sticky">
-            <h1 className="relative w-fit text-5xl font-semibold tracking-tight lg:text-7xl">
+            <h2 className="relative w-fit text-5xl font-semibold tracking-tight lg:text-7xl">
               Go live in two weeks.
               <br />
               We build it.
               <br />
               You just show up.
-            </h1>
+            </h2>
             <p className="text-base text-foreground/50">
               Same plan whether you are switching from Booksy/Fresha or starting your first system. We carry the build,
               you stay focused on the chair.
@@ -120,6 +158,11 @@ const Process2 = ({ className }: Process2Props) => {
                   <ProcessStepPicture
                     desktopSrc={process[previousActive].image}
                     mobileSrc={process[previousActive].imageMobile}
+                    width={process[previousActive].imageWidth}
+                    height={process[previousActive].imageHeight}
+                    mobileWidth={process[previousActive].imageMobileWidth}
+                    mobileHeight={process[previousActive].imageMobileHeight}
+                    alt=""
                   />
                 </div>
               )}
@@ -127,6 +170,11 @@ const Process2 = ({ className }: Process2Props) => {
                 <ProcessStepPicture
                   desktopSrc={process[active].image}
                   mobileSrc={process[active].imageMobile}
+                  width={process[active].imageWidth}
+                  height={process[active].imageHeight}
+                  mobileWidth={process[active].imageMobileWidth}
+                  mobileHeight={process[active].imageMobileHeight}
+                  alt={`${process[active].title} — Kersivo barbershop setup`}
                 />
               </div>
             </div>

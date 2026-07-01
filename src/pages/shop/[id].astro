@@ -6,6 +6,7 @@ import { prisma } from '@/lib/db/client';
 import { withPrismaQuotaFallback } from '@/lib/db/resilience';
 import { resolveShopId } from '@/lib/db/shopScope';
 import { formatGbp } from '@/lib/shop/money';
+import { buildProductPageJsonLd } from '@/lib/seo/productJsonLd';
 
 const { id } = Astro.params;
 const MOBILE_RELATED_PRODUCT_COUNT = 10;
@@ -169,6 +170,14 @@ const createHighlights = (description: string | null, category: string) => {
 
 const { intro, details } = splitDescription(product.description);
 const highlights = createHighlights(product.description, product.category);
+const productJsonLd = buildProductPageJsonLd({
+  id: product.id,
+  name: product.name,
+  description: intro || product.name,
+  imageUrl: product.imageUrl,
+  pricePence: product.pricePence,
+  inStock: true,
+});
 ---
 
 <MainLayout
@@ -176,6 +185,9 @@ const highlights = createHighlights(product.description, product.category);
   description={intro}
   canonicalPath={`/shop/${product.id}`}
   ogImagePath={product.imageUrl?.startsWith('/') ? product.imageUrl : undefined}
+  ogImageAlt={`${product.name} — Kersivo demo grooming shop`}
+  ogType="product"
+  jsonLd={productJsonLd}
 >
   <main class="container product-page">
     <a href="/shop" class="product-back-link">← Back to shop</a>

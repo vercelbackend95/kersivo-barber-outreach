@@ -1,6 +1,7 @@
 ---
 import MinimalLayout from '@/layouts/MinimalLayout.astro';
 import BookingFlow from '../../components/booking/BookingFlow';
+import { PAGE_DESCRIPTIONS } from '@/lib/seo/defaults';
 import '../../styles/tokens.css';
 
 import '../../styles/global.css';
@@ -62,6 +63,7 @@ const tokenStatus = bookingUnavailable ? { valid: false as const, message: PUBLI
 
 <MinimalLayout
   title="Reschedule booking | Kersivo"
+  description={PAGE_DESCRIPTIONS.bookReschedule}
   canonicalPath="/book/reschedule"
   bodyClass="admin-theme-premium-black"
 >

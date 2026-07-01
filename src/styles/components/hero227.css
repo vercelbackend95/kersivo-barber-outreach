@@ -157,7 +157,10 @@
   border-radius: inherit !important;
   /* Match --bg (#0b0d10), not #000 — pure black reads as a wedge vs chassis + PNG fringe. */
   background-color: var(--bg) !important;
-  background-image: url("/images/hero/iphonemockup.jpg") !important;
+  background-image: image-set(
+    url("/images/hero/iphonemockup.webp") type("image/webp"),
+    url("/images/hero/iphonemockup.jpg") type("image/jpeg")
+  ) !important;
   background-repeat: no-repeat !important;
   background-size: var(--hero227-screen-bg-size) auto !important;
   background-position: center var(--hero227-screen-bg-pos-y) !important;

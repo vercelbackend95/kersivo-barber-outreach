@@ -28,6 +28,10 @@ const {
   description,
   canonicalPath,
   ogImagePath,
+  ogImageWidth,
+  ogImageHeight,
+  ogImageAlt,
+  ogType,
   noindex,
   barberDemoJsonLd = false,
   jsonLd,
@@ -40,7 +44,7 @@ const jsonLdBlocks = jsonLd
   : [];
 ---
 
-<html lang="en">
+<html lang="en-GB">
   <head>
     <GoogleAnalytics />
     <meta charset="utf-8" />
@@ -52,6 +56,10 @@ const jsonLdBlocks = jsonLd
       description={description}
       canonicalPath={canonicalPath}
       ogImagePath={ogImagePath}
+      ogImageWidth={ogImageWidth}
+      ogImageHeight={ogImageHeight}
+      ogImageAlt={ogImageAlt}
+      ogType={ogType}
       noindex={noindex}
     />
     {barberDemoJsonLd ? <BarberDemoJsonLd /> : null}
