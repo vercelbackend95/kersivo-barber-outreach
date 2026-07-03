@@ -40,6 +40,8 @@ export const PAGE_DESCRIPTIONS = {
     'Reschedule your barbershop appointment — pick a new date and time slot online.',
   admin:
     'Kersivo admin panel for barbershops — manage bookings, team, services, clients, and retail orders.',
+  adminDemo:
+    'Safe preview of the KERSIVO admin dashboard with example barbershop data — no signup or password required.',
   shopSuccess:
     'Your grooming product pickup order is confirmed. Collect your items on your next barbershop visit.',
   shopCancelled:

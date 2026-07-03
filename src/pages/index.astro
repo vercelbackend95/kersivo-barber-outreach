@@ -34,14 +34,9 @@ import '../styles/components/process2.css';
 import '../styles/components/hero227.css';
 import { Hero227 } from '../components/hero227';
 import { fetchCarouselProducts } from '@/lib/shop/carouselProducts';
+import { DEMO_ADMIN_SECRET } from '@/lib/admin/demoConfig';
 
 const carouselProducts = await fetchCarouselProducts();
-
-const DEMO_ADMIN_PASSWORD = import.meta.env.PUBLIC_DEMO_ADMIN_PASSWORD
-  ?? import.meta.env.PUBLIC_ADMIN_DEMO_PASSWORD
-  ?? import.meta.env.ADMIN_SECRET
-  ?? 'demo-access';
-
 
 ---
 
@@ -131,7 +126,7 @@ const DEMO_ADMIN_PASSWORD = import.meta.env.PUBLIC_DEMO_ADMIN_PASSWORD
             class="system-chooser__tile system-chooser__tile--system"
             role="link"
             tabindex="0"
-            data-tile-href="/admin?section=bookings_dashboard"
+            data-tile-href="/admin-demo?section=bookings_dashboard"
           >
             <div class="system-chooser__tile-visual system-chooser__tile-visual--system" aria-hidden="true">
               <span class="system-chooser__tile-badge">System</span>
@@ -158,15 +153,15 @@ const DEMO_ADMIN_PASSWORD = import.meta.env.PUBLIC_DEMO_ADMIN_PASSWORD
               </div>
             </div>
             <div class="system-chooser__tile-body">
-              <h3>Kersivo system</h3>
+              <h3>Admin Demo</h3>
               <p class="system-chooser__tile-desc">
                 Bookings dashboard and shop admin in one place—schedules, statuses and reports, plus products, orders and
-                pickup. Same login for everything; the preview opens on bookings first.
+                pickup. Opens instantly with example data; no signup required.
               </p>
               <div class="system-chooser__tile-footer">
                 <span class="system-chooser__tile-access">
                   <svg viewBox="0 0 12 12" fill="none" aria-hidden="true"><rect x="3" y="5.5" width="6" height="5" rx=".5" stroke="currentColor" stroke-width="1.2"/><path d="M4.5 5.5V4a1.5 1.5 0 013 0v1.5" stroke="currentColor" stroke-width="1.2" stroke-linecap="round"/></svg>
-                  Password auto-filled
+                  No signup required
                 </span>
                 <span class="system-chooser__tile-footer-sep" aria-hidden="true"></span>
                 <span class="system-chooser__tile-tab">
@@ -213,7 +208,7 @@ const DEMO_ADMIN_PASSWORD = import.meta.env.PUBLIC_DEMO_ADMIN_PASSWORD
         { name: 'Pricing', href: '#pricing' },
         { name: 'FAQ', href: '#faq' },
         { name: 'Contact', href: '#contact' },
-        { name: 'Shop', href: '/shop' }
+        { name: 'Retail Demo', href: '/shop' }
       ]}
             social={[]}
       legal={[
@@ -223,7 +218,7 @@ const DEMO_ADMIN_PASSWORD = import.meta.env.PUBLIC_DEMO_ADMIN_PASSWORD
     />
   </main>
 </MainLayout>
-<script define:vars={{ DEMO_ADMIN_SECRET: DEMO_ADMIN_PASSWORD }}>
+<script define:vars={{ DEMO_ADMIN_SECRET }}>
   const ADMIN_SECRET_STORAGE_KEY = 'kersivo.admin.secret';
 
 
@@ -358,11 +353,11 @@ const DEMO_ADMIN_PASSWORD = import.meta.env.PUBLIC_DEMO_ADMIN_PASSWORD
       tileNavigationInFlight = true;
       setTileLoadingState(tile);
 
-      if (href.startsWith('/admin')) {
+      if (href.startsWith('/admin-demo')) {
         try {
           localStorage.setItem(ADMIN_SECRET_STORAGE_KEY, DEMO_ADMIN_SECRET);
         } catch {
-          // Ignore storage failures to avoid breaking navigation.
+          // /admin-demo enables access without storage — best-effort prefetch only.
         }
       }
 

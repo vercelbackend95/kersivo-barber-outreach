@@ -1,0 +1,13 @@
+---
+import { DEMO_NOTICE_TEXT } from '@/lib/shop/demoCopy';
+
+type Props = {
+  class?: string;
+};
+
+const { class: className = '' } = Astro.props;
+---
+
+<p class:list={['demo-notice', className]} role="note">
+  {DEMO_NOTICE_TEXT}
+</p>

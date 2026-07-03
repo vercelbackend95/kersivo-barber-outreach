@@ -1,4 +1,4 @@
-import { saveAdminSecret } from '@/components/admin/adminAuth';
+import { adminDemoHref, DEMO_ADMIN_SECRET } from '@/lib/admin/demoConfig';
 import { ShopProductCarousel } from '@/components/shop/ShopProductCarousel';
 import { type CarouselProduct } from '@/lib/shop/carouselProducts';
 import { cn } from '@/lib/utils';
@@ -7,9 +7,6 @@ interface Feature261Props {
   className?: string;
   retailProducts?: CarouselProduct[];
 }
-
-/** Must match demo prefill in AdminPanel and system chooser on the homepage. */
-const DEMO_ADMIN_SECRET = 'supersecret123';
 
 type FeatureRowData = {
   kicker: string;
@@ -37,7 +34,7 @@ const rows: FeatureRowData[] = [
     description:
       "Timeline, statuses and today's pulse in one signed-in view. See who's in the chair, what's coming up and how the day is tracking without jumping between screens.",
     ctaLabel: 'See the timeline',
-    ctaHref: '/admin?section=bookings_dashboard',
+    ctaHref: adminDemoHref('bookings_dashboard'),
     imageClassName: 'feature261-row-image--bookings',
     loading: 'eager',
     media: 'image',
@@ -67,7 +64,7 @@ const rows: FeatureRowData[] = [
     description:
       "Add barbers, set hours and assign services from one roster. Everyone on the floor knows who does what—and clients only see who's actually available.",
     ctaLabel: 'See how to manage barbers',
-    ctaHref: '/admin?section=bookings_blocks',
+    ctaHref: adminDemoHref('bookings_blocks'),
     imageClassName: 'feature261-row-image--barbers',
     media: 'image',
   },
@@ -88,15 +85,19 @@ const rows: FeatureRowData[] = [
     description:
       'Track retail revenue, order totals and how income breaks down across the team. Sales charts and KPIs live in the same signed-in admin as bookings and the shop.',
     ctaLabel: 'See the KPIs',
-    ctaHref: '/admin?section=shop_sales',
+    ctaHref: adminDemoHref('shop_sales'),
     imageClassName: 'feature261-row-image--sales',
     media: 'image',
   },
 ];
 
 function handleRowCtaClick(ctaHref: string) {
-  if (ctaHref.startsWith('/admin')) {
-    saveAdminSecret(DEMO_ADMIN_SECRET);
+  if (ctaHref.startsWith('/admin-demo')) {
+    try {
+      localStorage.setItem('kersivo.admin.secret', DEMO_ADMIN_SECRET);
+    } catch {
+      // /admin-demo enables access without storage — best-effort prefetch only.
+    }
   }
 }
 

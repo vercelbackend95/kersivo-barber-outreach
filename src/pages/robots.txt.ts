@@ -1,4 +1,5 @@
 import type { APIRoute } from 'astro';
+import { DEMO_ACTION_BLOCKED_MESSAGE, DEMO_ADMIN_MODE_HEADER } from '@/lib/admin/demoConfig';
 import { getPublicSiteUrl } from '@/lib/setup/siteUrl';
 
 export const GET: APIRoute = () => {
@@ -8,6 +9,7 @@ export const GET: APIRoute = () => {
     'User-agent: *',
     'Allow: /',
     'Disallow: /admin',
+    'Disallow: /admin-demo',
     'Disallow: /book',
     'Disallow: /api/',
     'Disallow: /setup/',

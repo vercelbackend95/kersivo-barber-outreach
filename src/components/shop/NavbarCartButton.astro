@@ -9,7 +9,7 @@ type Props = {
 const { class: className = '', mobileSheet = false } = Astro.props;
 ---
 
-<button type="button" class={className} aria-label="Open cart" data-navbar-cart-button>
+<button type="button" class={className} aria-label="Open demo cart" data-navbar-cart-button>
   <span
     class:list={['navbar17__cart-btn__icon', mobileSheet && 'navbar17__mobile-link-icon']}
     aria-hidden="true"
@@ -23,14 +23,14 @@ const { class: className = '', mobileSheet = false } = Astro.props;
   {
     mobileSheet ? (
       <span class="navbar17__cart-btn__sheet-body">
-        <span class="navbar17__cart-btn__label">Cart</span>
+        <span class="navbar17__cart-btn__label">Demo Cart</span>
         <span class="navbar17__cart-badge is-empty" data-navbar-cart-badge>
           0
         </span>
       </span>
     ) : (
       <>
-        <span class="navbar17__cart-btn__label">Cart</span>
+        <span class="navbar17__cart-btn__label">Demo Cart</span>
         <span class="navbar17__cart-badge is-empty" data-navbar-cart-badge>
           0
         </span>

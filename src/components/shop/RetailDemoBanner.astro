@@ -1,0 +1,22 @@
+---
+import {
+  RETAIL_DEMO_BANNER_LABEL,
+  RETAIL_DEMO_BANNER_LEAD,
+  RETAIL_DEMO_BANNER_SUPPORT,
+} from '@/lib/shop/demoCopy';
+
+type Props = {
+  class?: string;
+};
+
+const { class: className = '' } = Astro.props;
+---
+
+<section
+  class:list={['retail-demo-banner', className]}
+  aria-label="Retail demo information"
+>
+  <p class="retail-demo-banner__label">{RETAIL_DEMO_BANNER_LABEL}</p>
+  <p class="retail-demo-banner__lead">{RETAIL_DEMO_BANNER_LEAD}</p>
+  <p class="retail-demo-banner__support">{RETAIL_DEMO_BANNER_SUPPORT}</p>
+</section>

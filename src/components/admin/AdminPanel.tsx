@@ -6,7 +6,14 @@ import ShopAdminPanel from './ShopAdminPanel';
 import ServicesAdminPanel from './ServicesAdminPanel';
 import ClientsAdminPanel from './ClientsAdminPanel';
 import { AdminTodayBookingsLiveProvider } from './useAdminTodayBookingsLive';
-import { getStoredAdminSecret, installAdminFetchInterceptor, saveAdminSecret } from './adminAuth';
+import { DEMO_ADMIN_SECRET } from '@/lib/admin/demoConfig';
+import {
+  enablePublicAdminDemo,
+  getStoredAdminSecret,
+  installAdminFetchInterceptor,
+  saveAdminSecret,
+  setPublicAdminDemoMode,
+} from './adminAuth';
 export type AdminSection =
   | 'bookings_dashboard'
   | 'bookings_blocks'
@@ -48,33 +55,47 @@ function getSectionFromUrl(): AdminSection {
 
 }
 
-/** Pre-fills the login field so demos work without emailing secrets (must match server `ADMIN_SECRET`). */
-const ADMIN_LOGIN_PREFILL_SECRET = 'supersecret123';
+/** Pre-fills the login field on the protected /admin route (must match server `ADMIN_SECRET`). */
+const ADMIN_LOGIN_PREFILL_SECRET = DEMO_ADMIN_SECRET;
 
-export default function AdminPanel() {
+type AdminPanelProps = {
+  demoMode?: boolean;
+};
+
+export default function AdminPanel({ demoMode = false }: AdminPanelProps) {
   const [activeSection, setActiveSection] = useState<AdminSection>('bookings_dashboard');
   const [isTransitioning, setIsTransitioning] = useState(false);
   const [showSectionSkeleton, setShowSectionSkeleton] = useState(false);
   const [adminSecretDraft, setAdminSecretDraft] = useState(ADMIN_LOGIN_PREFILL_SECRET);
-  const [hasAdminSecret, setHasAdminSecret] = useState(false);
+  const [hasAdminSecret, setHasAdminSecret] = useState(() => demoMode || Boolean(getStoredAdminSecret()));
   const [isVerifying, setIsVerifying] = useState(false);
   const [secretError, setSecretError] = useState('');
   const transitionTimeoutRef = useRef<number | null>(null);
   const skeletonTimeoutRef = useRef<number | null>(null);
 
   useEffect(() => {
-        installAdminFetchInterceptor();
-    const existingSecret = getStoredAdminSecret();
-    setHasAdminSecret(Boolean(existingSecret));
+    installAdminFetchInterceptor();
+
+    if (demoMode) {
+      enablePublicAdminDemo();
+      setHasAdminSecret(true);
+    } else {
+      setPublicAdminDemoMode(false);
+      setHasAdminSecret(Boolean(getStoredAdminSecret()));
+    }
 
     setActiveSection(getSectionFromUrl());
     const handlePopState = () => {
       setActiveSection(getSectionFromUrl());
     };
     window.addEventListener('popstate', handlePopState);
-    return () => window.removeEventListener('popstate', handlePopState);
-
-  }, []);
+    return () => {
+      window.removeEventListener('popstate', handlePopState);
+      if (demoMode) {
+        setPublicAdminDemoMode(false);
+      }
+    };
+  }, [demoMode]);
 
   const handleSectionChange = useCallback((section: AdminSection) => {
     if (section === activeSection) return;
@@ -155,7 +176,7 @@ export default function AdminPanel() {
   }, []);
 
 
-  if (!hasAdminSecret) {
+  if (!hasAdminSecret && !demoMode) {
     return (
       <div className="admin-login-viewport">
         <div className="admin-login-card">
@@ -258,6 +279,7 @@ export default function AdminPanel() {
         onChangeSection={handleSectionChange}
         isTransitioning={isTransitioning}
         showSectionSkeleton={showSectionSkeleton}
+        isPublicDemo={demoMode}
         persistentAdminChrome={<AdminGlobalMobileNextStripHost />}
       >
         <BookingsAdminPanel

@@ -1,0 +1,35 @@
+---
+import MinimalLayout from '@/layouts/MinimalLayout.astro';
+import AdminPanel from '../components/admin/AdminPanel';
+import { PAGE_DESCRIPTIONS } from '@/lib/seo/defaults';
+import '../styles/tokens.css';
+import '../styles/global.css';
+import '../styles/components/booking.css';
+import '../styles/components/admin-mobile-sticky-overrides.css';
+import '../styles/components/inputs.css';
+import '../styles/components/buttons.css';
+import '../styles/components/badge.css';
+import '../styles/components/admin-login.css';
+import '../styles/components/admin-section-header.css';
+import '../styles/components/admin-demo.css';
+import '../styles/components/empty-state.css';
+import '../styles/components/skeleton.css';
+import '../styles/components/admin-services.css';
+import '../styles/components/shop-products-polish.css';
+import '../styles/components/table.css';
+---
+
+<MinimalLayout
+  title="Admin Demo | Kersivo"
+  description={PAGE_DESCRIPTIONS.adminDemo}
+  canonicalPath="/admin-demo"
+  htmlClass="admin-app-scroll"
+  bodyClass="admin-theme-premium-black"
+  viewportContent="width=device-width, initial-scale=1, viewport-fit=cover"
+  noindex={true}
+>
+  <main class="container page-wrap admin-page-wrap">
+    <h1 class="sr-only">Kersivo Admin Demo</h1>
+    <AdminPanel client:load demoMode={true} />
+  </main>
+</MinimalLayout>

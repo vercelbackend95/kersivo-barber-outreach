@@ -1,5 +1,7 @@
 ---
 import MainLayout from '@/layouts/MainLayout.astro';
+import DemoNotice from '@/components/shop/DemoNotice.astro';
+import RetailDemoBanner from '@/components/shop/RetailDemoBanner.astro';
 import { PAGE_DESCRIPTIONS } from '@/lib/seo/defaults';
 import { buildShopBreadcrumbJsonLd } from '@/lib/seo/productJsonLd';
 import Footer50 from '../components/footer50.astro';
@@ -46,7 +48,7 @@ const FOOTER_PROPS = {
     { name: 'Pricing', href: '/#pricing' },
     { name: 'FAQ', href: '/#faq' },
     { name: 'Contact', href: '/#contact' },
-    { name: 'Shop', href: '/shop' }
+    { name: 'Retail Demo', href: '/shop' }
 
   ],
     social: [],
@@ -73,12 +75,14 @@ const selectedCategory = categoryValues.has(selectedCategoryParam) ? selectedCat
 ---
 
 <MainLayout
-  title="Shop | Kersivo"
+  title="Retail Demo | Kersivo"
   description={PAGE_DESCRIPTIONS.shop}
   canonicalPath="/shop"
   jsonLd={buildShopBreadcrumbJsonLd()}
 >
   <main class="container shop-page" aria-labelledby="shop-page-title" data-active-category={selectedCategory}>
+    <RetailDemoBanner />
+    <DemoNotice />
     <header class="shop-header-block">
       <p class="shop-eyebrow">Pick up in shop</p>
       <h1 id="shop-page-title">Grooming essentials</h1>
@@ -125,7 +129,7 @@ const selectedCategory = categoryValues.has(selectedCategoryParam) ? selectedCat
           <p class="shop-promo-kicker">Retail built in</p>
           <h2>{shopUnavailable ? 'Shop temporarily unavailable' : 'Add products to launch your storefront'}</h2>
           <p>{shopUnavailable ? PUBLIC_SHOP_UNAVAILABLE_MESSAGE : 'Publish products in admin and they will appear here instantly.'}</p>
-          <a class="btn btn--primary" href="/shop">Open shop page</a>
+          <a class="btn btn--primary" href="/shop">View retail demo</a>
         </article>
       ) : (
         <ul class="shop-grid" aria-label="Products">

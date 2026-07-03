@@ -1,5 +1,6 @@
 ---
 import MainLayout from '@/layouts/MainLayout.astro';
+import DemoNotice from '@/components/shop/DemoNotice.astro';
 import Footer50 from '@/components/footer50.astro';
 import '@/styles/components/footer50.css';
 import { prisma } from '@/lib/db/client';
@@ -82,7 +83,7 @@ const FOOTER_PROPS = {
     { name: 'Pricing', href: '/#pricing' },
     { name: 'FAQ', href: '/#faq' },
     { name: 'Contact', href: '/#contact' },
-    { name: 'Shop', href: '/shop' }
+    { name: 'Retail Demo', href: '/shop' }
   ],
     social: [],
   legal: [
@@ -181,7 +182,7 @@ const productJsonLd = buildProductPageJsonLd({
 ---
 
 <MainLayout
-  title={`${product.name} | Kersivo Shop`}
+  title={`${product.name} | Kersivo Retail Demo`}
   description={intro}
   canonicalPath={`/shop/${product.id}`}
   ogImagePath={product.imageUrl?.startsWith('/') ? product.imageUrl : undefined}
@@ -190,7 +191,8 @@ const productJsonLd = buildProductPageJsonLd({
   jsonLd={productJsonLd}
 >
   <main class="container product-page">
-    <a href="/shop" class="product-back-link">← Back to shop</a>
+    <a href="/shop" class="product-back-link">← Back to retail demo</a>
+    <DemoNotice />
 
     <section class="product-hero" aria-label="Product details">
       <div class="product-media">

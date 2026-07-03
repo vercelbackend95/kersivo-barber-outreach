@@ -25,7 +25,7 @@ export function buildShopBreadcrumbJsonLd(): Record<string, unknown> {
     '@type': 'BreadcrumbList',
     itemListElement: [
       breadcrumbItem(1, 'Home', '/'),
-      breadcrumbItem(2, 'Shop', '/shop'),
+      breadcrumbItem(2, 'Retail Demo', '/shop'),
     ],
   };
 }
@@ -73,7 +73,7 @@ export function buildProductPageJsonLd(input: ProductJsonLdInput): Record<string
     '@type': 'BreadcrumbList',
     itemListElement: [
       breadcrumbItem(1, 'Home', '/'),
-      breadcrumbItem(2, 'Shop', '/shop'),
+      breadcrumbItem(2, 'Retail Demo', '/shop'),
       breadcrumbItem(3, input.name, productPath),
     ],
   };

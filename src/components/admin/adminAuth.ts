@@ -1,5 +1,15 @@
+import {
+  DEMO_ACTION_BLOCKED_MESSAGE,
+  DEMO_ADMIN_MODE_HEADER,
+  DEMO_ADMIN_SECRET,
+  isPublicAdminDemoPathname,
+} from '@/lib/admin/demoConfig';
+
 const ADMIN_SECRET_STORAGE_KEY = 'kersivo.admin.secret';
 const ADMIN_SECRET_HEADER = 'x-admin-secret';
+
+let memoryAdminSecret = '';
+let publicAdminDemoMode = false;
 
 type AdminFetchJsonOptions = RequestInit & {
   errorMessage?: string;
@@ -31,19 +41,63 @@ function resolveRequestPath(input: RequestInfo | URL): string | null {
   return null;
 }
 
+function resolveRequestMethod(input: RequestInfo | URL, init?: RequestInit): string {
+  if (init?.method) return init.method.toUpperCase();
+  if (input instanceof Request) return input.method.toUpperCase();
+  return 'GET';
+}
+
+export function isPublicAdminDemoMode(): boolean {
+  if (typeof window !== 'undefined' && isPublicAdminDemoPathname(window.location.pathname)) {
+    return true;
+  }
+  return publicAdminDemoMode;
+}
+
+export function setPublicAdminDemoMode(enabled: boolean): void {
+  publicAdminDemoMode = enabled;
+}
+
+/** Enables instant demo API access — works without localStorage (incognito-safe). */
+export function enablePublicAdminDemo(): void {
+  setPublicAdminDemoMode(true);
+  saveAdminSecret(DEMO_ADMIN_SECRET);
+}
+
 export function getStoredAdminSecret(): string {
+  if (memoryAdminSecret) return memoryAdminSecret;
   if (typeof window === 'undefined') return '';
-  return window.localStorage.getItem(ADMIN_SECRET_STORAGE_KEY) ?? '';
+  try {
+    return window.localStorage.getItem(ADMIN_SECRET_STORAGE_KEY) ?? '';
+  } catch {
+    return '';
+  }
 }
 
 export function saveAdminSecret(secret: string): void {
+  memoryAdminSecret = secret.trim();
   if (typeof window === 'undefined') return;
-  window.localStorage.setItem(ADMIN_SECRET_STORAGE_KEY, secret.trim());
+  try {
+    window.localStorage.setItem(ADMIN_SECRET_STORAGE_KEY, memoryAdminSecret);
+  } catch {
+    // Incognito / in-app browsers may block storage — memory fallback still works.
+  }
 }
 
 export function clearAdminSecret(): void {
+  memoryAdminSecret = '';
   if (typeof window === 'undefined') return;
-  window.localStorage.removeItem(ADMIN_SECRET_STORAGE_KEY);
+  try {
+    window.localStorage.removeItem(ADMIN_SECRET_STORAGE_KEY);
+  } catch {
+    // no-op
+  }
+}
+
+function isDemoWriteBlocked(method: string, pathname: string): boolean {
+  if (!isPublicAdminDemoMode()) return false;
+  const safe = method === 'GET' || method === 'HEAD' || method === 'OPTIONS';
+  return !safe;
 }
 
 export async function adminFetchJson<T>(input: RequestInfo | URL, options: AdminFetchJsonOptions = {}): Promise<T> {
@@ -99,15 +153,26 @@ export function installAdminFetchInterceptor(): void {
     const pathname = resolveRequestPath(input);
     if (!pathname?.startsWith('/api/admin/')) return nativeFetch(input, init);
 
+    const method = resolveRequestMethod(input, init);
+    if (isDemoWriteBlocked(method, pathname)) {
+      return new Response(JSON.stringify({ error: DEMO_ACTION_BLOCKED_MESSAGE }), {
+        status: 403,
+        headers: { 'Content-Type': 'application/json' },
+      });
+    }
+
     const secret = getStoredAdminSecret();
     const headers = new Headers(init?.headers ?? (input instanceof Request ? input.headers : undefined));
     if (secret) {
       headers.set(ADMIN_SECRET_HEADER, secret);
     }
+    if (isPublicAdminDemoMode()) {
+      headers.set(DEMO_ADMIN_MODE_HEADER, 'true');
+    }
 
     return nativeFetch(input, {
       ...init,
-      headers
+      headers,
     });
   };
 

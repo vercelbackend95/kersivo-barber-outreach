@@ -1,6 +1,5 @@
 "use client";
 import { motion } from "framer-motion";
-import { ReceiptPoundSterling, ShoppingBag } from "lucide-react";
 import React from "react";
 
 import VerticalCutReveal from "@/components/fancy/components/text/vertical-cut-reveal";
@@ -12,30 +11,14 @@ interface Hero227Props {
   className?: string;
 }
 
-const TRUST_ROW_ITEMS = [
-  { label: "0% on bookings", variant: "noCut" as const },
-  { label: "0% on retail", variant: "poundZero" as const },
-  { label: "Stripe only on online cards", variant: "clock" as const },
-];
+const HERO_H1_LINES_DESKTOP =
+  "Stop sending your clients \nto someone else's platform." as const;
 
-const HERO_H1_LINES =
-  "Your bookings on \nyour domain. \n0% commission from Kersivo." as const;
+const HERO_H1_LINES_MOBILE =
+  "Stop sending\nyour clients\nto someone else's platform." as const;
 
 const HERO_H1_ACCESSIBLE_LABEL =
-  "Your bookings on your domain. 0% commission from Kersivo.";
-
-const trustGlyphStroke = {
-  fill: "none" as const,
-  stroke: "currentColor",
-  strokeWidth: 2,
-  strokeLinecap: "round" as const,
-  strokeLinejoin: "round" as const,
-};
-
-/** Dial center (12,12), face radius 8 — hands from origin toward edge. */
-const HERO_TRUST_CLOCK_R = 8;
-const HERO_TRUST_CLOCK_HOUR_LEN = HERO_TRUST_CLOCK_R * 0.58;
-const HERO_TRUST_CLOCK_MINUTE_LEN = HERO_TRUST_CLOCK_R * 0.92;
+  "Stop sending your clients to someone else's platform.";
 
 /** Below Tailwind `md` — looser IO margin so the mock animates sooner (less empty band). */
 function useHero227MockViewportMargin() {
@@ -55,58 +38,29 @@ function useHero227MockViewportMargin() {
   return margin;
 }
 
-function HeroTrustGlyph({ variant }: { variant: (typeof TRUST_ROW_ITEMS)[number]["variant"] }) {
-  if (variant === "poundZero") {
-    return (
-      <ReceiptPoundSterling
-        className="size-5 shrink-0"
-        strokeWidth={2}
-        aria-hidden
-      />
-    );
-  }
+/** Mobile: 3 short VCR lines; desktop: 2 lines — avoids 4-line word-wrap on narrow viewports. */
+function useHero227HeadlineLines() {
+  const [lines, setLines] = React.useState<
+    typeof HERO_H1_LINES_DESKTOP | typeof HERO_H1_LINES_MOBILE
+  >(HERO_H1_LINES_DESKTOP);
 
-  if (variant === "noCut") {
-    return (
-      <ShoppingBag
-        className="size-5 shrink-0"
-        strokeWidth={2}
-        aria-hidden
-      />
-    );
-  }
+  React.useEffect(() => {
+    const mq = window.matchMedia("(max-width: 767px)");
+    const apply = () => {
+      setLines(mq.matches ? HERO_H1_LINES_MOBILE : HERO_H1_LINES_DESKTOP);
+    };
+    apply();
+    mq.addEventListener("change", apply);
+    return () => mq.removeEventListener("change", apply);
+  }, []);
 
-  return (
-    <svg
-      className="size-5 shrink-0"
-      viewBox="0 0 24 24"
-      aria-hidden
-      xmlns="http://www.w3.org/2000/svg"
-    >
-      <circle cx="12" cy="12" r={HERO_TRUST_CLOCK_R} {...trustGlyphStroke} />
-      <g transform="translate(12 12)">
-        <line
-          x1="0"
-          y1="0"
-          x2="0"
-          y2={-HERO_TRUST_CLOCK_HOUR_LEN}
-          {...trustGlyphStroke}
-        />
-        <line
-          x1="0"
-          y1="0"
-          x2="0"
-          y2={-HERO_TRUST_CLOCK_MINUTE_LEN}
-          {...trustGlyphStroke}
-        />
-      </g>
-    </svg>
-  );
+  return lines;
 }
 
 const Hero227 = ({ className }: Hero227Props) => {
   useGoogleFont("Antonio");
   const mockWhileInViewMargin = useHero227MockViewportMargin();
+  const heroH1Lines = useHero227HeadlineLines();
 
   return (
     <section
@@ -125,89 +79,65 @@ const Hero227 = ({ className }: Hero227Props) => {
       <div>
         <div className="hero227-inner hero227-stack flex flex-col items-center justify-center gap-4 text-center">
           <div className="hero227-copy-layer w-full max-w-4xl md:max-w-5xl xl:max-w-6xl 2xl:max-w-7xl px-2 sm:px-3">
-          <div className="relative mx-auto w-max min-w-0 max-w-full">
-            <h1
-              aria-label={HERO_H1_ACCESSIBLE_LABEL}
-              className="font-antonio mx-auto block w-max max-w-full text-center font-extrabold tracking-tight text-foreground uppercase text-balance hyphens-none px-1 sm:px-0 text-[clamp(2.125rem,calc(0.55rem+8.75cqi),5.75rem)] md:text-[clamp(2.375rem,calc(0.65rem+7.85cqi),6.25rem)] lg:text-[clamp(2.5rem,calc(0.7rem+7.1cqi),6.75rem)] leading-[1.03] md:leading-[1.02]"
-            >
-              <VerticalCutReveal
-                skipScreenReaderDup
-                splitBy="lines"
-                containerClassName="hero227-heading-reveal items-center text-center"
+            <p className="hero227-kicker">Built for independent UK barbershops</p>
+            <div className="relative mx-auto w-max min-w-0 max-w-full">
+              <h1
+                aria-label={HERO_H1_ACCESSIBLE_LABEL}
+                className="font-antonio mx-auto block w-max max-w-full text-center font-extrabold tracking-tight text-foreground text-balance hyphens-none px-1 sm:px-0 text-[clamp(2.625rem,10.5vw,3.75rem)] sm:text-[clamp(2.875rem,9vw,4.5rem)] md:text-[clamp(3rem,calc(0.75rem+7.5cqi),6.5rem)] lg:text-[clamp(3.25rem,calc(0.8rem+7cqi),7rem)] leading-[1.18] md:leading-[1.15]"
               >
-                {HERO_H1_LINES}
-              </VerticalCutReveal>
-            </h1>
-            <HeroTitleAccent className="pointer-events-none absolute -top-1 -right-2 size-[1.125rem] min-[380px]:-right-4 min-[380px]:size-5 sm:-top-2 sm:-right-5 md:size-8 lg:size-10 lg:-right-8 xl:-right-14" aria-hidden />
-          </div>
-          <p className="mx-auto mt-1 max-w-2xl md:max-w-3xl text-pretty text-sm leading-relaxed text-muted-foreground/85 sm:text-base sm:leading-relaxed">
-            Your booking, your domain, your clients &mdash; with 0% commission on bookings and retail, set up for you.
-          </p>
+                <VerticalCutReveal
+                  skipScreenReaderDup
+                  splitBy="lines"
+                  containerClassName="hero227-heading-reveal items-center text-center"
+                  wordLevelClassName="pb-[0.14em]"
+                >
+                  {heroH1Lines}
+                </VerticalCutReveal>
+              </h1>
+              <HeroTitleAccent className="pointer-events-none absolute -top-1 -right-2 size-[1.125rem] min-[380px]:-right-4 min-[380px]:size-5 sm:-top-2 sm:-right-5 md:size-8 lg:size-10 lg:-right-8 xl:-right-14" aria-hidden />
+            </div>
+            <p className="mx-auto mt-1 max-w-2xl md:max-w-3xl text-pretty text-sm leading-relaxed text-muted-foreground/85 sm:text-base sm:leading-relaxed">
+              Booking, retail and admin for UK barbershops &mdash; on your own domain, with 0%
+              KERSIVO commission.
+            </p>
           </div>
 
           <div className="hero227-mid-band w-full max-w-3xl space-y-3 px-1 sm:px-2">
-          <motion.div
-            className="flex flex-wrap items-center justify-center gap-x-5 gap-y-2 opacity-80"
-            initial="hidden"
-            animate="visible"
-            variants={{
-              visible: { transition: { staggerChildren: 0.08 } },
-              hidden: {},
-            }}
-          >
-            {TRUST_ROW_ITEMS.map((item) => (
-              <motion.div
-                key={item.label}
-                className="flex items-center justify-center gap-2 text-xs font-medium tracking-tight text-[color:var(--accent-hover)] md:text-base"
-                variants={{
-                  hidden: { opacity: 0, y: 6 },
-                  visible: {
-                    opacity: 1,
-                    y: 0,
-                    transition: {
-                      duration: 0.38,
-                      ease: [0, 0.71, 0.2, 1],
-                    },
-                  },
-                }}
+            <div
+              className="hero227-scenario-chip"
+              role="note"
+              aria-label="Example savings"
+            >
+              <span className="hero227-scenario-chip__label">Example</span>
+              <span className="hero227-scenario-chip__body">
+                4-chair shop, ~800 cuts/mo:
+                {" "}
+                <span className="hero227-scenario-chip__strike">~&pound;240/mo to a marketplace</span>
+                {" \u2192 "}
+                <span className="hero227-scenario-chip__win">&pound;0 commission on Kersivo</span>
+              </span>
+            </div>
+            <div className="hero227-cta-pill flex flex-wrap items-center justify-center gap-3">
+              <Button
+                className="hero227-cta-system text-md flex h-full items-center justify-center rounded-2xl font-medium"
+                asChild
               >
-                <HeroTrustGlyph variant={item.variant} />
-                {item.label}
-              </motion.div>
-            ))}
-          </motion.div>
-          <div
-            className="hero227-scenario-chip"
-            role="note"
-            aria-label="Example savings"
-          >
-            <span className="hero227-scenario-chip__label">Example</span>
-            <span className="hero227-scenario-chip__body">
-              4-chair shop, ~800 cuts/mo:
-              {" "}
-              <span className="hero227-scenario-chip__strike">~&pound;240/mo to a marketplace</span>
-              {" \u2192 "}
-              <span className="hero227-scenario-chip__win">&pound;0 commission on Kersivo</span>
-            </span>
-          </div>
-          <div className="hero227-cta-pill flex flex-col items-center gap-3">
-            <Button
-              className="hero227-cta-system text-md flex h-full items-center justify-center rounded-2xl font-medium"
-              asChild
-            >
-              <a href="#contact" data-demo-cta>
-                PLAN MY SETUP &mdash; FREE
-              </a>
-            </Button>
-            <button
-              type="button"
-              className="hero227-cta-live"
-              data-system-chooser-open
-            >
-              Open the live admin &mdash; no signup
-              <span aria-hidden="true">&rarr;</span>
-            </button>
-          </div>
+                <a href="#book-demo" data-demo-cta>
+                  Plan My Setup
+                </a>
+              </Button>
+              <Button
+                type="button"
+                variant="outline"
+                className="hero227-cta-demo text-md rounded-2xl font-medium"
+                data-system-chooser-open
+              >
+                View Live Demo
+              </Button>
+            </div>
+            <p className="hero227-trust-line">
+              Hands-on setup. Your domain. Your client data. No KERSIVO commission.
+            </p>
           </div>
 
           <div className="hero227-mock-stack relative flex w-full shrink-0 items-center justify-center overflow-visible py-8 md:py-10">

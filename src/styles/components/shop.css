@@ -13,6 +13,70 @@
   box-sizing: border-box;
 }
 
+/* ── Retail demo banner + notice ─────────────────────────────── */
+
+.retail-demo-banner {
+  border: 1px solid color-mix(in srgb, var(--accent) 32%, var(--border));
+  border-radius: var(--radius-md);
+  background: linear-gradient(
+    145deg,
+    color-mix(in srgb, var(--accent) 6%, var(--surface)),
+    color-mix(in srgb, var(--surface) 88%, var(--bg))
+  );
+  padding: var(--space-md);
+  display: grid;
+  gap: 0.5rem;
+  min-width: 0;
+  max-width: 100%;
+  text-align: left;
+}
+
+.retail-demo-banner__label {
+  display: inline-block;
+  width: fit-content;
+  margin: 0;
+  padding: 0.18rem 0.55rem;
+  border: 1px solid color-mix(in srgb, var(--accent) 28%, transparent);
+  border-radius: var(--radius-4);
+  font-family: var(--font-body);
+  font-size: clamp(0.625rem, 2.2vw, 0.6875rem);
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: color-mix(in srgb, var(--accent) 82%, var(--muted));
+}
+
+.retail-demo-banner__lead {
+  margin: 0;
+  font-size: clamp(0.92rem, 2.8vw, 1rem);
+  line-height: 1.5;
+  color: var(--fg);
+  max-width: 52ch;
+  text-wrap: balance;
+}
+
+.retail-demo-banner__support {
+  margin: 0;
+  font-size: 0.82rem;
+  line-height: 1.45;
+  color: var(--muted);
+  max-width: 48ch;
+  text-wrap: balance;
+}
+
+.demo-notice {
+  margin: 0;
+  padding: 0.5rem 0.75rem;
+  border: 1px solid color-mix(in srgb, var(--accent) 22%, var(--border));
+  border-radius: var(--radius-4);
+  background: color-mix(in srgb, var(--accent) 5%, var(--surface));
+  font-family: var(--font-body);
+  font-size: 0.78rem;
+  line-height: 1.45;
+  color: color-mix(in srgb, var(--fg) 88%, var(--muted));
+  text-wrap: balance;
+}
+
 /* ── Header block ────────────────────────────────────────────── */
 
 .shop-header-block {

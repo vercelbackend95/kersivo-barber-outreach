@@ -1,4 +1,5 @@
 import { defineMiddleware } from 'astro:middleware';
+import { DEMO_ACTION_BLOCKED_MESSAGE, DEMO_ADMIN_MODE_HEADER } from '@/lib/admin/demoConfig';
 
 const SAFE_METHODS = new Set(['GET', 'HEAD', 'OPTIONS']);
 const ADMIN_API_PREFIX = '/api/admin';
@@ -71,6 +72,17 @@ function getCandidateOrigin(request: Request): string | null {
 export const onRequest = defineMiddleware(async (context, next) => {
   const { request, url } = context;
   const method = request.method.toUpperCase();
+
+  if (
+    !SAFE_METHODS.has(method) &&
+    url.pathname.startsWith(ADMIN_API_PREFIX) &&
+    request.headers.get(DEMO_ADMIN_MODE_HEADER) === 'true'
+  ) {
+    return new Response(JSON.stringify({ error: DEMO_ACTION_BLOCKED_MESSAGE }), {
+      status: 403,
+      headers: { 'Content-Type': 'application/json' },
+    });
+  }
 
   if (SAFE_METHODS.has(method) || !url.pathname.startsWith(ADMIN_API_PREFIX)) {
     return next();

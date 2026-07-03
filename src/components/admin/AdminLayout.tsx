@@ -17,11 +17,14 @@ import {
   X,
 } from '../lucide-react';
 
+import AdminDemoBanner from './AdminDemoBanner';
+
 type AdminLayoutProps = {
   activeSection: AdminSection;
   onChangeSection: (section: AdminSection) => void;
   isTransitioning: boolean;
   showSectionSkeleton: boolean;
+  isPublicDemo?: boolean;
   /** Always mounted (hidden); keeps effects alive while section skeleton replaces `children`. */
   persistentAdminChrome?: React.ReactNode;
   children: React.ReactNode;
@@ -109,6 +112,7 @@ export default function AdminLayout({
   onChangeSection,
   isTransitioning,
   showSectionSkeleton,
+  isPublicDemo = false,
   persistentAdminChrome,
   children,
 }: AdminLayoutProps) {
@@ -203,6 +207,10 @@ export default function AdminLayout({
   };
 
   const handleLogout = async () => {
+    if (isPublicDemo) {
+      window.location.assign('/');
+      return;
+    }
     await fetch('/api/admin/logout', { method: 'POST', credentials: 'include' });
     window.location.assign('/admin');
   };
@@ -415,7 +423,7 @@ export default function AdminLayout({
           onClick={() => void handleLogout()}
         >
           <LogOut width={15} height={15} aria-hidden="true" />
-          Logout
+          {isPublicDemo ? 'Back to site' : 'Logout'}
         </button>
       </aside>
     </>
@@ -436,7 +444,7 @@ export default function AdminLayout({
             onClick={() => void handleLogout()}
           >
             <LogOut width={15} height={15} aria-hidden="true" />
-            Logout
+            {isPublicDemo ? 'Back to site' : 'Logout'}
           </button>
         </div>
       </aside>
@@ -480,6 +488,7 @@ export default function AdminLayout({
           ) : null}
         </header>
         <div className="admin-mobile-header-spacer" aria-hidden="true" />
+        {isPublicDemo ? <AdminDemoBanner /> : null}
         {persistentAdminChrome ? (
           <div className="admin-persistent-chrome-host" aria-hidden="true" style={{ display: 'none' }}>
             {persistentAdminChrome}

@@ -1,5 +1,6 @@
 ---
 import MinimalLayout from '@/layouts/MinimalLayout.astro';
+import DemoNotice from '@/components/shop/DemoNotice.astro';
 import { PAGE_DESCRIPTIONS } from '@/lib/seo/defaults';
 import '../../styles/tokens.css';
 import '../../styles/global.css';
@@ -13,6 +14,7 @@ const sessionId = Astro.url.searchParams.get('session_id');
   <main class="container shop-page">
     <section class="shop-card shop-success-card">
       <div class="shop-card-body">
+        <DemoNotice />
         <h1>Pickup order received.</h1>
         <p class="muted">Thank you — your payment is confirmed and your products are now being prepared for collection.</p>
         <ul class="shop-success-next" aria-label="What happens next">
@@ -28,7 +30,7 @@ const sessionId = Astro.url.searchParams.get('session_id');
           <ul data-order-summary-items></ul>
         </div>
 
-        <a href="/shop" class="btn btn--primary">Back to shop</a>
+        <a href="/shop" class="btn btn--primary">Back to retail demo</a>
       </div>
     </section>
   </main>

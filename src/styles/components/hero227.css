@@ -58,9 +58,25 @@
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 0.25rem;
+  gap: 0.35rem;
   /* Headline typography uses `cqi` in Tailwind arbitrary values → sizes track this column width. */
   container-type: inline-size;
+}
+
+.hero227-kicker {
+  display: inline-block;
+  margin: 0 0 0.65rem;
+  padding: 0.18rem 0.55rem;
+  border: 1px solid color-mix(in srgb, var(--accent) 28%, transparent);
+  border-radius: var(--radius-4);
+  font-family: var(--font-body);
+  font-size: clamp(0.625rem, 2.2vw, 0.6875rem);
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  text-wrap: balance;
+  max-width: 22rem;
+  color: color-mix(in srgb, var(--accent) 82%, var(--muted));
 }
 
 /*
@@ -69,10 +85,16 @@
 */
 .hero227-root .hero227-heading-reveal > span[aria-hidden="true"] {
   justify-content: center;
+  align-items: flex-end;
+  padding-bottom: 0.18em;
+}
+
+.hero227-root .hero227-heading-reveal.flex-col {
+  gap: 0.1em;
 }
 
 .hero227-mid-band {
-  /* Trust chips + example + CTAs stay one visual band aligned with headline */
+  /* Example chip + CTAs + trust line stay one visual band aligned with headline */
   margin-top: 0.15rem;
 }
 
@@ -234,6 +256,17 @@
   outline-offset: 2px;
 }
 
+.hero227-root .hero227-trust-line {
+  margin: 0 auto;
+  max-width: 28rem;
+  font-family: var(--font-body);
+  font-size: 0.8125rem;
+  line-height: 1.5;
+  letter-spacing: 0.02em;
+  color: color-mix(in srgb, var(--muted) 92%, var(--fg));
+  text-wrap: balance;
+}
+
 /* Reference scenario chip — the dual-audience anchor placed under the CTAs.
    Keeps switcher/newcomer financial framing visible without a calculator. */
 .hero227-root .hero227-scenario-chip {
@@ -242,7 +275,7 @@
   align-items: center;
   justify-content: center;
   gap: 0.5rem 0.75rem;
-  margin-top: 0.5rem;
+  margin-top: 0;
   padding: 0.45rem 0.85rem;
   border: 1px solid color-mix(in srgb, var(--accent) 35%, var(--border));
   border-radius: var(--radius-full);
@@ -276,39 +309,7 @@
   font-weight: 700;
 }
 
-/* "Open the live admin — no signup" tertiary text-link CTA */
-.hero227-root .hero227-cta-live {
-  display: inline-flex;
-  align-items: center;
-  gap: 0.4rem;
-  padding: 0.5rem 0.6rem;
-  background: transparent;
-  border: 0;
-  border-radius: var(--radius-8);
-  color: var(--muted);
-  font-family: var(--font-body);
-  font-size: 0.92rem;
-  font-weight: 600;
-  letter-spacing: 0.02em;
-  cursor: pointer;
-  text-decoration: underline;
-  text-decoration-color: color-mix(in srgb, var(--muted) 40%, transparent);
-  text-underline-offset: 4px;
-  transition: color 160ms ease, text-decoration-color 160ms ease;
-}
-
-.hero227-root .hero227-cta-live:hover,
-.hero227-root .hero227-cta-live:focus-visible {
-  color: var(--accent);
-  text-decoration-color: var(--accent);
-}
-
-.hero227-root .hero227-cta-live:focus-visible {
-  outline: 2px solid var(--focus);
-  outline-offset: 2px;
-}
-
-/* Stack vertical CTAs cleanly on mobile and desktop alike */
+/* Stack CTAs side by side on wider viewports */
 .hero227-root .hero227-cta-pill {
   margin-top: 0.5rem;
 }

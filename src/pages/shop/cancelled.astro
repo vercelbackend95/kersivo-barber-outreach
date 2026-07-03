@@ -1,5 +1,6 @@
 ---
 import MinimalLayout from '@/layouts/MinimalLayout.astro';
+import DemoNotice from '@/components/shop/DemoNotice.astro';
 import { PAGE_DESCRIPTIONS } from '@/lib/seo/defaults';
 import '../../styles/tokens.css';
 import '../../styles/global.css';
@@ -11,10 +12,11 @@ import '../../styles/components/shop.css';
   <main class="container shop-page">
     <section class="shop-card shop-success-card">
       <div class="shop-card-body">
+        <DemoNotice />
         <h1>Checkout cancelled.</h1>
         <p class="muted">No payment was taken. You can return to your cart and confirm pickup when you're ready.</p>
         <p class="muted">Pickup model stays the same: order online, collect in shop.</p>
-        <a href="/shop" class="btn btn--primary">Return to shop</a>
+        <a href="/shop" class="btn btn--primary">Return to retail demo</a>
       </div>
     </section>
   </main>

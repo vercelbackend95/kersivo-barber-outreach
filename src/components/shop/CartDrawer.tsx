@@ -11,6 +11,7 @@ import {
   subscribe,
   type CartItem
 } from '@/lib/shop/cartStore';
+import { DEMO_NOTICE_TEXT } from '@/lib/shop/demoCopy';
 import EmptyState from '@/components/EmptyState';
 import { ShoppingCart } from "lucide-react";
 
@@ -169,7 +170,7 @@ export default function CartDrawer() {
       <aside className={`cart-drawer ${open ? 'cart-drawer--open' : ''}`} aria-hidden={open ? 'false' : 'true'}>
         <div className="cart-drawer__header">
           <div className="cart-drawer__header-top">
-            <h2>Your cart</h2>
+            <h2>Demo cart</h2>
             <button
               type="button"
               className="navbar17__toggle navbar17__toggle--as-close cart-drawer__close"
@@ -181,6 +182,9 @@ export default function CartDrawer() {
 
           </div>
           <p className="muted cart-drawer__intro">Order online now and collect when it suits you. No shipping needed.</p>
+          <p className="demo-notice" role="note">
+            {DEMO_NOTICE_TEXT}
+          </p>
         </div>
 
         <div className="cart-items" aria-live="polite">
@@ -257,7 +261,7 @@ export default function CartDrawer() {
       {open ? <button type="button" className="cart-drawer__backdrop" aria-label="Close cart drawer" onClick={closeCart} /> : null}
 
       <span className="cart-count-announcer" aria-live="polite" aria-atomic="true">
-        Cart has {cartCount} item{cartCount === 1 ? '' : 's'}.
+        Demo cart has {cartCount} item{cartCount === 1 ? '' : 's'}.
       </span>
     </>
   );
