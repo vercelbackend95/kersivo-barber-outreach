@@ -26,3 +26,30 @@ export function isPublicAdminDemoPathname(pathname: string): boolean {
     normalized.startsWith(`${PUBLIC_ADMIN_DEMO_PATH}/`)
   );
 }
+
+/** Marketing-friendly URL section params → canonical AdminSection values. */
+export const DEMO_SECTION_ALIASES = {
+  timeline: 'bookings_dashboard',
+  dashboard: 'bookings_dashboard',
+  kpis: 'shop_sales',
+  retail: 'shop_products',
+  barbers: 'bookings_blocks',
+  reports: 'bookings_reports',
+} as const;
+
+export function resolveDemoSectionAlias(section: string | null): string | null {
+  if (!section) return null;
+  if (section in DEMO_SECTION_ALIASES) {
+    return DEMO_SECTION_ALIASES[section as keyof typeof DEMO_SECTION_ALIASES];
+  }
+  return section;
+}
+
+export function isPublicAdminHref(href: string): boolean {
+  try {
+    const url = new URL(href, 'https://kersivo.local');
+    return isPublicAdminDemoPathname(url.pathname);
+  } catch {
+    return false;
+  }
+}

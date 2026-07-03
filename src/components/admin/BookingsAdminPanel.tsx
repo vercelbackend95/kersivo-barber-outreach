@@ -687,14 +687,14 @@ const BOOKINGS_SECTION_HEADER: Record<BookingsAdminMode, { title: string; descri
 
 type BookingsAdminPanelProps = {
   isActive: boolean;
-    mode: BookingsAdminMode;
+  mode: BookingsAdminMode;
   onBackToDashboard?: () => void;
-
+  isPublicDemo?: boolean;
 };
 
-export default function BookingsAdminPanel({ isActive, mode, onBackToDashboard }: BookingsAdminPanelProps) {
-  const [loggedIn, setLoggedIn] = useState(false);
-  const [isCheckingSession, setIsCheckingSession] = useState(true);
+export default function BookingsAdminPanel({ isActive, mode, onBackToDashboard, isPublicDemo = false }: BookingsAdminPanelProps) {
+  const [loggedIn, setLoggedIn] = useState(isPublicDemo);
+  const [isCheckingSession, setIsCheckingSession] = useState(!isPublicDemo);
   const [bookings, setBookings] = useState<Booking[]>([]);
   const [bookingsInitialLoading, setBookingsInitialLoading] = useState(true);
   const [barbers, setBarbers] = useState<Barber[]>([]);
@@ -1062,7 +1062,17 @@ export default function BookingsAdminPanel({ isActive, mode, onBackToDashboard }
   }, [fetchBookings, historyHasMore, historyLoadingMore, mode]);
 
 
-  useEffect(() => { void (async () => { try { const response = await fetch('/api/admin/session', { credentials: 'include' }); setLoggedIn(response.ok); } finally { setIsCheckingSession(false); } })(); }, []);
+  useEffect(() => {
+    if (isPublicDemo) return;
+    void (async () => {
+      try {
+        const response = await fetch('/api/admin/session', { credentials: 'include' });
+        setLoggedIn(response.ok);
+      } finally {
+        setIsCheckingSession(false);
+      }
+    })();
+  }, [isPublicDemo]);
   useEffect(() => {
     if (!loggedIn || !isActive) return;
 
@@ -2511,8 +2521,8 @@ export default function BookingsAdminPanel({ isActive, mode, onBackToDashboard }
   ) : null;
 
   if (!isActive) return null;
-  if (isCheckingSession) return <section className="surface booking-shell"><h2>Admin</h2><p className="muted">Checking session...</p></section>;
-  if (!loggedIn) return <section className="surface booking-shell"><h2>ADMIN</h2><p className="muted">Unauthorized. Verify your admin secret and reload this page.</p>{error && <p>{error}</p>}</section>;
+  if (!isPublicDemo && isCheckingSession) return <section className="surface booking-shell"><h2>Admin</h2><p className="muted">Checking session...</p></section>;
+  if (!isPublicDemo && !loggedIn) return <section className="surface booking-shell"><h2>ADMIN</h2><p className="muted">Unauthorized. Verify your admin secret and reload this page.</p>{error && <p>{error}</p>}</section>;
 
   return (
     <section

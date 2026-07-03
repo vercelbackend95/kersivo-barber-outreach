@@ -34,7 +34,6 @@ import '../styles/components/process2.css';
 import '../styles/components/hero227.css';
 import { Hero227 } from '../components/hero227';
 import { fetchCarouselProducts } from '@/lib/shop/carouselProducts';
-import { DEMO_ADMIN_SECRET } from '@/lib/admin/demoConfig';
 
 const carouselProducts = await fetchCarouselProducts();
 
@@ -218,10 +217,7 @@ const carouselProducts = await fetchCarouselProducts();
     />
   </main>
 </MainLayout>
-<script define:vars={{ DEMO_ADMIN_SECRET }}>
-  const ADMIN_SECRET_STORAGE_KEY = 'kersivo.admin.secret';
-
-
+<script>
   const demoCtas = document.querySelectorAll('[data-demo-cta]');
   const demoSection = document.querySelector('#book-demo');
     const demoForm = document.querySelector('.contact16__form');
@@ -352,14 +348,6 @@ const carouselProducts = await fetchCarouselProducts();
       }
       tileNavigationInFlight = true;
       setTileLoadingState(tile);
-
-      if (href.startsWith('/admin-demo')) {
-        try {
-          localStorage.setItem(ADMIN_SECRET_STORAGE_KEY, DEMO_ADMIN_SECRET);
-        } catch {
-          // /admin-demo enables access without storage — best-effort prefetch only.
-        }
-      }
 
       // Brief visual feedback before opening new tab
       setTimeout(() => {

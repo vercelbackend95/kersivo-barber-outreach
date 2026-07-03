@@ -1,12 +1,12 @@
 import {
   DEMO_ACTION_BLOCKED_MESSAGE,
   DEMO_ADMIN_MODE_HEADER,
-  DEMO_ADMIN_SECRET,
   isPublicAdminDemoPathname,
 } from '@/lib/admin/demoConfig';
 
 const ADMIN_SECRET_STORAGE_KEY = 'kersivo.admin.secret';
 const ADMIN_SECRET_HEADER = 'x-admin-secret';
+export const ADMIN_DEMO_BLOCKED_EVENT = 'kersivo-admin-demo-blocked';
 
 let memoryAdminSecret = '';
 let publicAdminDemoMode = false;
@@ -27,24 +27,33 @@ export class AdminFetchError extends Error {
   }
 }
 
-function resolveRequestPath(input: RequestInfo | URL): string | null {
-  if (input instanceof URL) return input.pathname;
-  if (input instanceof Request) return new URL(input.url, window.location.origin).pathname;
-  if (typeof input === 'string') {
-    try {
-      return new URL(input, window.location.origin).pathname;
-    } catch {
-      return null;
-    }
+function resolveRequestUrl(input: RequestInfo | URL, init?: RequestInit): URL | null {
+  try {
+    if (input instanceof URL) return input;
+    if (input instanceof Request) return new URL(input.url, window.location.origin);
+    return new URL(input, window.location.origin);
+  } catch {
+    return null;
   }
+}
 
-  return null;
+function resolveRequestPath(input: RequestInfo | URL): string | null {
+  return resolveRequestUrl(input)?.pathname ?? null;
 }
 
 function resolveRequestMethod(input: RequestInfo | URL, init?: RequestInit): string {
   if (init?.method) return init.method.toUpperCase();
   if (input instanceof Request) return input.method.toUpperCase();
   return 'GET';
+}
+
+function rewriteAdminUrlForDemo(input: RequestInfo | URL, init?: RequestInit): string | null {
+  if (!isPublicAdminDemoMode()) return null;
+  const parsed = resolveRequestUrl(input, init);
+  if (!parsed?.pathname.startsWith('/api/admin/')) return null;
+  const rest = parsed.pathname.slice('/api/admin/'.length);
+  parsed.pathname = `/api/admin-demo/${rest}`;
+  return parsed.toString();
 }
 
 export function isPublicAdminDemoMode(): boolean {
@@ -58,10 +67,9 @@ export function setPublicAdminDemoMode(enabled: boolean): void {
   publicAdminDemoMode = enabled;
 }
 
-/** Enables instant demo API access — works without localStorage (incognito-safe). */
+/** Enables public demo mode — no secret or localStorage required. */
 export function enablePublicAdminDemo(): void {
   setPublicAdminDemoMode(true);
-  saveAdminSecret(DEMO_ADMIN_SECRET);
 }
 
 export function getStoredAdminSecret(): string {
@@ -94,10 +102,14 @@ export function clearAdminSecret(): void {
   }
 }
 
-function isDemoWriteBlocked(method: string, pathname: string): boolean {
+function isDemoWriteBlocked(method: string): boolean {
   if (!isPublicAdminDemoMode()) return false;
-  const safe = method === 'GET' || method === 'HEAD' || method === 'OPTIONS';
-  return !safe;
+  return method !== 'GET' && method !== 'HEAD' && method !== 'OPTIONS';
+}
+
+function dispatchDemoBlockedToast(): void {
+  if (typeof window === 'undefined') return;
+  window.dispatchEvent(new CustomEvent(ADMIN_DEMO_BLOCKED_EVENT));
 }
 
 export async function adminFetchJson<T>(input: RequestInfo | URL, options: AdminFetchJsonOptions = {}): Promise<T> {
@@ -134,6 +146,9 @@ export async function adminFetchJson<T>(input: RequestInfo | URL, options: Admin
     const serverMessage = payload && typeof payload === 'object' && 'error' in payload
       ? String((payload as { error?: unknown }).error || '')
       : '';
+    if (response.status === 403 && serverMessage === DEMO_ACTION_BLOCKED_MESSAGE) {
+      dispatchDemoBlockedToast();
+    }
     const message = serverMessage || (response.status === 401 ? 'Session expired. Please log in again.' : errorMessage);
     throw new AdminFetchError(message, response.status, payload);
   }
@@ -154,23 +169,28 @@ export function installAdminFetchInterceptor(): void {
     if (!pathname?.startsWith('/api/admin/')) return nativeFetch(input, init);
 
     const method = resolveRequestMethod(input, init);
-    if (isDemoWriteBlocked(method, pathname)) {
+    if (isDemoWriteBlocked(method)) {
+      dispatchDemoBlockedToast();
       return new Response(JSON.stringify({ error: DEMO_ACTION_BLOCKED_MESSAGE }), {
         status: 403,
         headers: { 'Content-Type': 'application/json' },
       });
     }
 
-    const secret = getStoredAdminSecret();
+    const demoUrl = rewriteAdminUrlForDemo(input, init);
+    const effectiveInput = demoUrl ?? input;
+
     const headers = new Headers(init?.headers ?? (input instanceof Request ? input.headers : undefined));
-    if (secret) {
-      headers.set(ADMIN_SECRET_HEADER, secret);
-    }
-    if (isPublicAdminDemoMode()) {
+    if (!isPublicAdminDemoMode()) {
+      const secret = getStoredAdminSecret();
+      if (secret) {
+        headers.set(ADMIN_SECRET_HEADER, secret);
+      }
+    } else {
       headers.set(DEMO_ADMIN_MODE_HEADER, 'true');
     }
 
-    return nativeFetch(input, {
+    return nativeFetch(effectiveInput, {
       ...init,
       headers,
     });
@@ -178,3 +198,13 @@ export function installAdminFetchInterceptor(): void {
 
   patchedWindow.__kersivoAdminFetchPatched = true;
 }
+
+/** Install demo interceptor before React effects — avoids 401 on first /admin-demo load. */
+export function bootstrapPublicAdminDemoIfNeeded(): void {
+  if (typeof window === 'undefined') return;
+  if (!isPublicAdminDemoPathname(window.location.pathname)) return;
+  enablePublicAdminDemo();
+  installAdminFetchInterceptor();
+}
+
+bootstrapPublicAdminDemoIfNeeded();

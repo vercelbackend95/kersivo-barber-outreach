@@ -6,7 +6,7 @@ import ShopAdminPanel from './ShopAdminPanel';
 import ServicesAdminPanel from './ServicesAdminPanel';
 import ClientsAdminPanel from './ClientsAdminPanel';
 import { AdminTodayBookingsLiveProvider } from './useAdminTodayBookingsLive';
-import { DEMO_ADMIN_SECRET } from '@/lib/admin/demoConfig';
+import { DEMO_ADMIN_SECRET, resolveDemoSectionAlias } from '@/lib/admin/demoConfig';
 import {
   enablePublicAdminDemo,
   getStoredAdminSecret,
@@ -42,7 +42,8 @@ function clearTransientAdminViewportState() {
 function getSectionFromUrl(): AdminSection {
   if (typeof window === 'undefined') return 'bookings_dashboard';
 
-  const section = new URLSearchParams(window.location.search).get('section');
+  const rawSection = new URLSearchParams(window.location.search).get('section');
+  const section = resolveDemoSectionAlias(rawSection) ?? rawSection;
   if (section === 'bookings_blocks') return 'bookings_blocks';
   if (section === 'bookings_reports') return 'bookings_reports';
   if (section === 'bookings_history') return 'bookings_history';
@@ -52,7 +53,6 @@ function getSectionFromUrl(): AdminSection {
   if (section === 'shop_sales') return 'shop_sales';
   if (section === 'shop_products') return 'shop_products';
   return 'bookings_dashboard';
-
 }
 
 /** Pre-fills the login field on the protected /admin route (must match server `ADMIN_SECRET`). */
@@ -67,9 +67,10 @@ export default function AdminPanel({ demoMode = false }: AdminPanelProps) {
   const [isTransitioning, setIsTransitioning] = useState(false);
   const [showSectionSkeleton, setShowSectionSkeleton] = useState(false);
   const [adminSecretDraft, setAdminSecretDraft] = useState(ADMIN_LOGIN_PREFILL_SECRET);
-  const [hasAdminSecret, setHasAdminSecret] = useState(() => demoMode || Boolean(getStoredAdminSecret()));
+  const [hasAdminSecret, setHasAdminSecret] = useState(() => !demoMode && Boolean(getStoredAdminSecret()));
   const [isVerifying, setIsVerifying] = useState(false);
   const [secretError, setSecretError] = useState('');
+  const [demoLoadError, setDemoLoadError] = useState(false);
   const transitionTimeoutRef = useRef<number | null>(null);
   const skeletonTimeoutRef = useRef<number | null>(null);
 
@@ -78,7 +79,6 @@ export default function AdminPanel({ demoMode = false }: AdminPanelProps) {
 
     if (demoMode) {
       enablePublicAdminDemo();
-      setHasAdminSecret(true);
     } else {
       setPublicAdminDemoMode(false);
       setHasAdminSecret(Boolean(getStoredAdminSecret()));
@@ -95,6 +95,18 @@ export default function AdminPanel({ demoMode = false }: AdminPanelProps) {
         setPublicAdminDemoMode(false);
       }
     };
+  }, [demoMode]);
+
+  useEffect(() => {
+    if (!demoMode) return;
+    void (async () => {
+      try {
+        const response = await fetch('/api/admin-demo/session');
+        if (!response.ok) setDemoLoadError(true);
+      } catch {
+        setDemoLoadError(true);
+      }
+    })();
   }, [demoMode]);
 
   const handleSectionChange = useCallback((section: AdminSection) => {
@@ -176,7 +188,19 @@ export default function AdminPanel({ demoMode = false }: AdminPanelProps) {
   }, []);
 
 
-  if (!hasAdminSecret && !demoMode) {
+  if (demoMode && demoLoadError) {
+    return (
+      <div className="admin-login-viewport">
+        <div className="admin-login-card">
+          <p className="admin-login-brand-sub" style={{ margin: 0, textAlign: 'center' }}>
+            Could not load the demo dashboard. Please refresh or try again later.
+          </p>
+        </div>
+      </div>
+    );
+  }
+
+  if (!demoMode && !hasAdminSecret) {
     return (
       <div className="admin-login-viewport">
         <div className="admin-login-card">
@@ -273,7 +297,7 @@ export default function AdminPanel({ demoMode = false }: AdminPanelProps) {
   }
 
   return (
-    <AdminTodayBookingsLiveProvider>
+    <AdminTodayBookingsLiveProvider isPublicDemo={demoMode}>
       <AdminLayout
         activeSection={activeSection}
         onChangeSection={handleSectionChange}
@@ -285,6 +309,7 @@ export default function AdminPanel({ demoMode = false }: AdminPanelProps) {
         <BookingsAdminPanel
           key="bookings"
           isActive={isBookingsSection}
+          isPublicDemo={demoMode}
           mode={
             activeSection === 'bookings_blocks'
               ? 'blocks'

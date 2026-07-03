@@ -69,9 +69,15 @@ export type AdminTodayBookingsLiveValue = {
 
 const AdminTodayBookingsLiveContext = createContext<AdminTodayBookingsLiveValue | null>(null);
 
-export function AdminTodayBookingsLiveProvider({ children }: { children: React.ReactNode }) {
-  const [loggedIn, setLoggedIn] = useState(false);
-  const [sessionChecked, setSessionChecked] = useState(false);
+export function AdminTodayBookingsLiveProvider({
+  children,
+  isPublicDemo = false,
+}: {
+  children: React.ReactNode;
+  isPublicDemo?: boolean;
+}) {
+  const [loggedIn, setLoggedIn] = useState(isPublicDemo);
+  const [sessionChecked, setSessionChecked] = useState(isPublicDemo);
   const [bookings, setBookings] = useState<AdminLiveBookingRow[]>([]);
   const [lastSuccessAt, setLastSuccessAt] = useState<number | null>(null);
   const [nowMs, setNowMs] = useState(() => Date.now());
@@ -79,6 +85,7 @@ export function AdminTodayBookingsLiveProvider({ children }: { children: React.R
   const inFlightRef = useRef(false);
 
   useEffect(() => {
+    if (isPublicDemo) return;
     void (async () => {
       try {
         const response = await fetch('/api/admin/session', { credentials: 'include' });
@@ -87,7 +94,7 @@ export function AdminTodayBookingsLiveProvider({ children }: { children: React.R
         setSessionChecked(true);
       }
     })();
-  }, []);
+  }, [isPublicDemo]);
 
   const fetchToday = useCallback(async () => {
     if (!loggedIn || inFlightRef.current) return;

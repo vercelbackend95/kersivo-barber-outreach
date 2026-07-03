@@ -47,3 +47,24 @@
     max-width: 52ch;
   }
 }
+
+.admin-demo-toast {
+  position: fixed;
+  bottom: 1.25rem;
+  left: 50%;
+  z-index: 9999;
+  transform: translateX(-50%);
+  max-width: min(24rem, calc(100vw - 2rem));
+  padding: 0.75rem 1rem;
+  border: 1px solid color-mix(in srgb, var(--accent) 30%, var(--border));
+  border-radius: var(--radius-4);
+  background: color-mix(in srgb, var(--surface) 96%, var(--bg));
+  box-shadow: 0 8px 24px color-mix(in srgb, var(--fg) 12%, transparent);
+  font-family: var(--font-body);
+  font-size: 0.8125rem;
+  line-height: 1.4;
+  color: var(--fg);
+  text-align: center;
+  text-wrap: balance;
+  pointer-events: none;
+}
