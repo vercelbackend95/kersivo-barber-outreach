@@ -46,4 +46,6 @@ export const PAGE_DESCRIPTIONS = {
     'Your grooming product pickup order is confirmed. Collect your items on your next barbershop visit.',
   shopCancelled:
     'Your Kersivo shop checkout was cancelled. No payment was taken.',
+  barbershopBookingSystem:
+    'Booking, retail pickup and admin for independent UK barbershops. Built on your own domain with 0% KERSIVO commission on bookings and retail.',
 } as const;

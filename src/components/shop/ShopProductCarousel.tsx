@@ -6,13 +6,16 @@ interface ShopProductCarouselProps {
   products: CarouselProduct[];
   className?: string;
   showControls?: boolean;
+  previewMode?: boolean;
 }
 
 export function ShopProductCarousel({
   products,
   className,
   showControls = true,
+  previewMode = false,
 }: ShopProductCarouselProps) {
+  const productHref = previewMode ? '/shop' : undefined;
   return (
     <div className={cn('shop6__carousel', className)} data-shop6-carousel-root>
       <ul className="shop6__grid" aria-label="Featured products" data-shop6-carousel>
@@ -32,13 +35,16 @@ export function ShopProductCarousel({
             </article>
           </li>
         ) : (
-          products.map((product, index) => (
+          products.map((product, index) => {
+            const href = productHref ?? `/shop/${product.id}`;
+
+            return (
             <li
               key={`${product.id}-${index}`}
               className={cn('shop6__item', index >= 3 && 'shop6__item--mobile-extra')}
             >
               <article className="shop-card" data-category={product.category}>
-                <a href={`/shop/${product.id}`} className="shop-media-link" aria-label={`View ${product.name}`}>
+                <a href={href} className="shop-media-link" aria-label={`View ${product.name}`}>
                   <div className="shop-media">
                     {product.imageUrl ? (
                       <img src={product.imageUrl} alt={product.name} loading="lazy" className="shop-image" />
@@ -51,27 +57,30 @@ export function ShopProductCarousel({
                 <div className="shop-card-body">
                   <p className="shop-category">{CATEGORY_LABELS[product.category] ?? 'Styling'}</p>
                   <h3>
-                    <a href={`/shop/${product.id}`}>{product.name}</a>
+                    <a href={href}>{product.name}</a>
                   </h3>
                   <p className="shop-price">{formatGbp(product.pricePence)}</p>
 
-                  <div className="shop-card-actions">
-                    <button
-                      className="btn btn--primary"
-                      type="button"
-                      data-add-to-cart
-                      data-product-id={product.id}
-                      data-product-name={product.name}
-                      data-product-price-pence={String(product.pricePence)}
-                      data-product-image-url={product.imageUrl ?? ''}
-                    >
-                      Add to cart
-                    </button>
-                  </div>
+                  {!previewMode ? (
+                    <div className="shop-card-actions">
+                      <button
+                        className="btn btn--primary"
+                        type="button"
+                        data-add-to-cart
+                        data-product-id={product.id}
+                        data-product-name={product.name}
+                        data-product-price-pence={String(product.pricePence)}
+                        data-product-image-url={product.imageUrl ?? ''}
+                      >
+                        Add to cart
+                      </button>
+                    </div>
+                  ) : null}
                 </div>
               </article>
             </li>
-          ))
+            );
+          })
         )}
       </ul>
 

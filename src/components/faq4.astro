@@ -15,6 +15,8 @@ interface Props {
   supportText?: string;
   supportLinkLabel?: string;
   supportLinkHref?: string;
+  supportSecondaryLinkLabel?: string;
+  supportSecondaryLinkOpensDemo?: boolean;
   faqs?: FaqItem[];
 }
 
@@ -26,6 +28,8 @@ const {
   supportText = "Tell us your current setup \u2014 or that you have none yet \u2014 and we will map the cleanest setup path for your shop.",
   supportLinkLabel = "Talk to us about your shop",
   supportLinkHref = "#contact",
+  supportSecondaryLinkLabel,
+  supportSecondaryLinkOpensDemo = false,
   faqs = FAQ_ITEMS,
 } = Astro.props as Props;
 ---
@@ -67,10 +71,22 @@ const {
         <h3>{supportHeading}</h3>
         <p>{supportText}</p>
       </div>
-      <a href={supportLinkHref} class="faq4__support-link">
-        {supportLinkLabel}
-        <span aria-hidden="true">→</span>
-      </a>
+      <div class="faq4__footer-actions">
+        <a href={supportLinkHref} class="faq4__support-link">
+          {supportLinkLabel}
+          <span aria-hidden="true">→</span>
+        </a>
+        {
+          supportSecondaryLinkLabel ? (
+            supportSecondaryLinkOpensDemo ? (
+              <button type="button" class="faq4__support-link faq4__support-link--secondary" data-system-chooser-open>
+                {supportSecondaryLinkLabel}
+                <span aria-hidden="true">→</span>
+              </button>
+            ) : null
+          ) : null
+        }
+      </div>
     </div>
   </div>
 </section>

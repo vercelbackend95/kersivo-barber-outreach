@@ -313,3 +313,193 @@
 .hero227-root .hero227-cta-pill {
   margin-top: 0.5rem;
 }
+
+/* Landing page variant: side-by-side desktop layout for Google Ads traffic */
+.hero227-root .hero227-price-line {
+  margin: 0 auto;
+  max-width: 28rem;
+  font-family: var(--font-body);
+  font-size: 0.9375rem;
+  font-weight: 600;
+  line-height: 1.45;
+  letter-spacing: 0.01em;
+  color: color-mix(in srgb, var(--fg) 90%, var(--muted));
+  text-wrap: balance;
+}
+
+@media (min-width: 1024px) {
+  .hero227-root--landing .hero227-landing-grid {
+    display: grid;
+    grid-template-columns: 1fr minmax(280px, 42%);
+    align-items: center;
+    gap: clamp(1.5rem, 4vw, 3rem);
+    text-align: left;
+  }
+
+  .hero227-root--landing .hero227-landing-copy {
+    align-items: flex-start;
+    text-align: left;
+  }
+
+  .hero227-root--landing .hero227-copy-layer {
+    align-items: flex-start;
+  }
+
+  .hero227-root--landing .hero227-kicker {
+    margin-left: 0;
+  }
+
+  .hero227-root--landing .hero227-copy-layer h1,
+  .hero227-root--landing .hero227-heading-reveal {
+    text-align: left;
+    margin-inline: 0;
+  }
+
+  .hero227-root--landing .hero227-heading-wrap {
+    width: 100%;
+    margin-inline: 0;
+  }
+
+  .hero227-root--landing .hero227-copy-layer h1 {
+    width: 100%;
+    max-width: 100%;
+  }
+
+  .hero227-root--landing .hero227-heading-reveal--landing {
+    align-items: flex-start;
+    text-align: left;
+  }
+
+  .hero227-root--landing .hero227-heading-reveal--landing > span[aria-hidden="true"] {
+    width: 100%;
+    justify-content: flex-start;
+  }
+
+  .hero227-root--landing .hero227-heading-reveal--landing.flex-col {
+    gap: 0.02em;
+  }
+
+  .hero227-root--landing .hero227-copy-layer p {
+    margin-inline: 0;
+    text-align: left;
+  }
+
+  .hero227-root--landing .hero227-mid-band {
+    margin-inline: 0;
+  }
+
+  .hero227-root--landing .hero227-price-line,
+  .hero227-root--landing .hero227-trust-line {
+    margin-inline: 0;
+    text-align: left;
+  }
+
+  .hero227-root--landing .hero227-cta-pill {
+    justify-content: flex-start;
+  }
+
+  .hero227-root--landing .hero227-mock-stack {
+    height: clamp(420px, 52vh, 620px);
+    padding-block: 0;
+  }
+
+  .hero227-root--landing .hero227-mock-clip {
+    height: clamp(320px, 46vh, 520px);
+  }
+}
+
+/* Landing hero polish — Google Ads page only */
+.hero227-root--landing .hero227-landing-copy {
+  gap: clamp(0.75rem, 2vw, 1.1rem);
+}
+
+.hero227-root--landing .hero227-copy-layer {
+  gap: 0.5rem;
+}
+
+.hero227-root--landing .hero227-copy-layer > p {
+  margin-top: 0.35rem;
+}
+
+.hero227-root--landing .hero227-mid-band {
+  margin-top: 0.35rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.65rem;
+}
+
+.hero227-root--landing .hero227-cta-pill {
+  margin-top: 0.25rem;
+}
+
+.hero227-root--landing .hero227-trust-line--landing {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.35rem 0.5rem;
+  max-width: 36rem;
+  font-size: 0.75rem;
+  font-weight: 500;
+  line-height: 1.4;
+  color: var(--muted);
+}
+
+.hero227-root--landing .hero227-trust-line__item {
+  display: inline-flex;
+  align-items: center;
+  padding: 0.2rem 0.55rem;
+  border: 1px solid color-mix(in srgb, var(--border) 85%, transparent);
+  border-radius: var(--radius-full);
+  background: color-mix(in srgb, var(--surface-1) 60%, transparent);
+  color: color-mix(in srgb, var(--fg) 70%, var(--muted));
+}
+
+.hero227-root--landing .hero227-trust-line__sep {
+  color: color-mix(in srgb, var(--muted) 70%, transparent);
+  font-size: 0.7rem;
+  line-height: 1;
+}
+
+.hero227-root--landing .hero227-mock-stack {
+  position: relative;
+}
+
+.hero227-root--landing .hero227-mock-stack::before {
+  content: "";
+  position: absolute;
+  inset: 10% 5% 5%;
+  background: radial-gradient(
+    ellipse 70% 60% at 50% 45%,
+    color-mix(in srgb, var(--accent) 12%, transparent),
+    transparent 70%
+  );
+  pointer-events: none;
+  z-index: 0;
+}
+
+.hero227-root--landing .hero227-mock-clip {
+  position: relative;
+  z-index: 1;
+}
+
+@media (min-width: 1024px) {
+  .hero227-root--landing .hero227-copy-layer h1 {
+    font-size: clamp(3rem, calc(0.85rem + 5.6cqi), 5.45rem) !important;
+    line-height: 1.08 !important;
+  }
+}
+
+@media (max-width: 1023px) {
+  .hero227-root--landing .hero227-mock-stack {
+    height: clamp(300px, 36vh, 400px);
+    padding-block: 0.75rem;
+  }
+
+  .hero227-root--landing .hero227-mock-clip {
+    height: clamp(240px, 32vh, 340px);
+  }
+
+  .hero227-root--landing .hero227-mid-band {
+    margin-top: 0.15rem;
+  }
+}

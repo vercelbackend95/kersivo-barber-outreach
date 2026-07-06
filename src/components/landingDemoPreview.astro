@@ -1,0 +1,132 @@
+---
+import { adminDemoHref } from '@/lib/admin/demoConfig';
+import { ShopProductCarousel } from '@/components/shop/ShopProductCarousel';
+import type { CarouselProduct } from '@/lib/shop/carouselProducts';
+
+type PreviewRow = {
+  kicker: string;
+  heading: string;
+  description: string;
+  ctaLabel: string;
+  ctaHref: string;
+  media: 'image' | 'carousel';
+  src?: string;
+  alt?: string;
+  imageClassName?: string;
+  imgWidth?: number;
+  imgHeight?: number;
+  loading?: 'eager' | 'lazy';
+};
+
+interface Props {
+  className?: string;
+  retailProducts?: CarouselProduct[];
+}
+
+const { className = '', retailProducts = [] } = Astro.props as Props;
+
+const rows: PreviewRow[] = [
+  {
+    src: '/images/screenshots/timeline1.png',
+    imgWidth: 1260,
+    imgHeight: 909,
+    alt: 'Signed-in admin - bookings timeline and day schedule',
+    kicker: 'ADMIN PREVIEW',
+    heading: "Chairs, statuses and what's next — all in one view.",
+    description: "See today's bookings, chairs and statuses in one admin view.",
+    ctaLabel: 'View Admin Demo',
+    ctaHref: adminDemoHref('timeline'),
+    imageClassName: 'feature261-row-image--bookings',
+    loading: 'eager',
+    media: 'image',
+  },
+  {
+    src: '/images/screenshots/bookingi.png',
+    imgWidth: 1338,
+    imgHeight: 870,
+    alt: 'Public booking - pick service, barber and time',
+    kicker: 'CLIENT BOOKING PREVIEW',
+    heading: 'Service, barber, time-your URL, your brand, not their app.',
+    description: 'Clients choose a service, barber and time on your own domain - no app download.',
+    ctaLabel: 'View Booking Flow',
+    ctaHref: '/book',
+    imageClassName: 'feature261-row-image--booking',
+    loading: 'eager',
+    media: 'image',
+  },
+  {
+    kicker: 'RETAIL PICKUP PREVIEW',
+    heading: 'Catalog, orders, pickup ready-same panel as the chair.',
+    description: 'Clients browse products and reserve items for in-shop pickup.',
+    ctaLabel: 'View Retail Demo',
+    ctaHref: '/shop',
+    media: 'carousel',
+  },
+];
+---
+
+<section
+  class={`feature261 landing-demo-preview landing-demo-preview--compact ${className}`.trim()}
+  aria-labelledby="landing-demo-preview-title"
+>
+  <div class="feature261__glow" aria-hidden="true"></div>
+  <div class="container">
+    <header class="feature261__intro">
+      <p class="feature261__kicker">INSIDE THE SYSTEM</p>
+      <h2 id="landing-demo-preview-title" class="feature261__heading">
+        Same screens you'll run your shop on.
+      </h2>
+      <p class="feature261__description">
+        Preview the booking, admin and retail screens before you choose your setup.
+      </p>
+    </header>
+
+    <ul class="feature261__rows" role="list">
+      {rows.map((row, index) => (
+        <li
+          data-feature261-card
+          class:list={['feature261__row', index % 2 === 0 && 'feature261__row--reverse']}
+        >
+          {row.media === 'carousel' ? (
+            <div class="feature261__media feature261__media--carousel">
+              <ShopProductCarousel
+                products={retailProducts}
+                className="feature261-retail-carousel"
+                showControls={false}
+                previewMode={true}
+              />
+            </div>
+          ) : (
+            <div class="feature261__media">
+              <div class="feature261-visual-card__viewport">
+                <img
+                  src={row.src}
+                  alt={row.alt ?? ''}
+                  width={row.imgWidth ?? 1520}
+                  height={row.imgHeight ?? 920}
+                  decoding="async"
+                  loading={row.loading ?? 'lazy'}
+                  class:list={['feature261-visual-card__shot', row.imageClassName]}
+                />
+              </div>
+            </div>
+          )}
+
+          <div class="feature261__copy">
+            <p class="feature261__row-kicker">{row.kicker}</p>
+            <h3 class="feature261__row-heading">{row.heading}</h3>
+            <p class="feature261__row-body">{row.description}</p>
+            <a
+              href={row.ctaHref}
+              class="btn btn--primary feature261__row-cta"
+              target="_blank"
+              rel="noopener noreferrer"
+            >
+              {row.ctaLabel}
+            </a>
+          </div>
+        </li>
+      ))}
+    </ul>
+  </div>
+</section>

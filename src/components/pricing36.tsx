@@ -5,15 +5,18 @@ import { useState } from "react";
 
 import { SetupDepositModal } from "@/components/setup/SetupDepositModal";
 import { Separator } from "@/components/ui/separator";
+import { getPricing36Copy, type Pricing36Variant } from "@/lib/pricing/pricing36Copy";
 import { getSetupPlan, type SetupPlanId } from "@/lib/setup/plans";
 import { formatGbp } from "@/lib/shop/money";
 import { cn } from "@/lib/utils";
 
 interface Pricing36Props {
   className?: string;
+  variant?: Pricing36Variant;
 }
 
-const Pricing36 = ({ className }: Pricing36Props) => {
+const Pricing36 = ({ className, variant = "default" }: Pricing36Props) => {
+  const copy = getPricing36Copy(variant);
   const [modalOpen, setModalOpen] = useState(false);
   const [selectedPlan, setSelectedPlan] = useState<SetupPlanId>("launch");
 
@@ -26,13 +29,13 @@ const Pricing36 = ({ className }: Pricing36Props) => {
   const calendlyUrl = (import.meta.env.PUBLIC_CALENDLY_URL ?? "").trim();
 
   return (
-    <section id="pricing" className={cn("pricing36 py-32", className)}>
+    <section id="pricing" className={cn("pricing36 py-32", variant === "landing" && "pricing36--landing", className)}>
       <div className="container">
         <div className="compare3-block__header">
           <span className="compare3-block__badge">PRICING</span>
           <h2>ONE SETUP. ONE MONTHLY FEE. ZERO COMMISSION.</h2>
           <p>
-            <strong>Launch: &pound;199 setup + &pound;39/month Care.</strong> Kersivo never takes a cut of your bookings or retail.
+            <strong>Launch: &pound;199 setup + &pound;39/month Care.</strong> {copy.introCommission}{" "}
             Stripe applies only to online card payments, on your own account.
           </p>
         </div>
@@ -75,31 +78,17 @@ const Pricing36 = ({ className }: Pricing36Props) => {
                   </p>
                   <p className="text-xl font-semibold">+ £39/month Ongoing Care</p>
                   <p className="text-sm text-muted-foreground">
-                    Hosting, SMS, support, platform updates, and 1h scoped tweaks/month — same Care on every plan.
+                    {copy.launchSubtext}
                   </p>
                 </div>
                 <Separator className="my-6" />
                 <ul className="space-y-6">
-                  <li className="flex gap-2">
-                    <Check className="mt-1 size-4 shrink-0 text-green-500" />
-                    <p className="font-medium">Custom site + booking + admin + pickup shop setup</p>
-                  </li>
-                  <li className="flex gap-2">
-                    <Check className="mt-1 size-4 shrink-0 text-green-500" />
-                    <p className="font-medium">Domain setup + deployment handled by us</p>
-                  </li>
-                  <li className="flex gap-2">
-                    <Check className="mt-1 size-4 shrink-0 text-green-500" />
-                    <p className="font-medium">0% Kersivo commission (Stripe card fees only)</p>
-                  </li>
-                  <li className="flex gap-2">
-                    <Check className="mt-1 size-4 shrink-0 text-green-500" />
-                    <p className="font-medium">Hosting + SSL included while subscription is active</p>
-                  </li>
-                  <li className="flex gap-2">
-                    <Check className="mt-1 size-4 shrink-0 text-green-500" />
-                    <p className="font-medium">Ongoing Care: SMS, no-show protection, support, platform updates, 1h tweaks/month</p>
-                  </li>
+                  {copy.launchBullets.map((item) => (
+                    <li key={item} className="flex gap-2">
+                      <Check className="mt-1 size-4 shrink-0 text-green-500" />
+                      <p className="font-medium">{item}</p>
+                    </li>
+                  ))}
                 </ul>
                 <div className="pricing36__anchors">
                   <p className="pricing36__anchor pricing36__anchor--switcher">
@@ -108,7 +97,7 @@ const Pricing36 = ({ className }: Pricing36Props) => {
                   </p>
                   <p className="pricing36__anchor pricing36__anchor--newcomer">
                     <span className="pricing36__anchor-tag pricing36__anchor-tag--newcomer">Starting fresh</span>
-                    Live booking on your own domain in about two weeks. 0% commission from booking #1.
+                    {copy.launchNewcomerAnchor}
                   </p>
                 </div>
               </div>
@@ -138,27 +127,17 @@ const Pricing36 = ({ className }: Pricing36Props) => {
                   </p>
                   <p className="text-xl font-semibold">+ £39/month Ongoing Care</p>
                   <p className="text-sm text-muted-foreground">
-                    Same £39/month Care as Launch — extra setup polish and priority launch queue during the build.
+                    {copy.prioritySubtext}
                   </p>
                 </div>
                 <Separator className="my-6" />
                 <ul className="space-y-6">
-                  <li className="flex gap-2">
-                    <Check className="mt-1 size-4 shrink-0 text-green-500" />
-                    <p className="font-medium">Everything in Launch</p>
-                  </li>
-                  <li className="flex gap-2">
-                    <Check className="mt-1 size-4 shrink-0 text-green-500" />
-                    <p className="font-medium">Priority launch queue during setup</p>
-                  </li>
-                  <li className="flex gap-2">
-                    <Check className="mt-1 size-4 shrink-0 text-green-500" />
-                    <p className="font-medium">Extra setup polish for key pages and product catalogue depth</p>
-                  </li>
-                  <li className="flex gap-2">
-                    <Check className="mt-1 size-4 shrink-0 text-green-500" />
-                    <p className="font-medium">Same Ongoing Care: hosting, SMS, support, platform updates, 1h tweaks/month</p>
-                  </li>
+                  {copy.priorityBullets.map((item) => (
+                    <li key={item} className="flex gap-2">
+                      <Check className="mt-1 size-4 shrink-0 text-green-500" />
+                      <p className="font-medium">{item}</p>
+                    </li>
+                  ))}
                 </ul>
                 <div className="pricing36__anchors">
                   <p className="pricing36__anchor pricing36__anchor--switcher">
@@ -167,7 +146,7 @@ const Pricing36 = ({ className }: Pricing36Props) => {
                   </p>
                   <p className="pricing36__anchor pricing36__anchor--newcomer">
                     <span className="pricing36__anchor-tag pricing36__anchor-tag--newcomer">Starting fresh</span>
-                    Faster launch queue and deeper catalogue setup if you want to grow harder from day one.
+                    {copy.priorityNewcomerAnchor}
                   </p>
                 </div>
               </div>

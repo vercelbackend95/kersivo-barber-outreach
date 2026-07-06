@@ -1,4 +1,10 @@
 ---
+import {
+  getFooterSocialLinks,
+  type FooterSocialLink,
+  type FooterSocialPlatform,
+} from '@/lib/seo/footerSocialLinks';
+
 interface NavItem {
   name: string;
   href: string;
@@ -9,20 +15,30 @@ interface Footer50Props {
   description?: string;
   ctaText?: string;
   ctaHref?: string;
-    ctaIsDemo?: boolean;
+  ctaIsDemo?: boolean;
+  showIntro?: boolean;
+  brandLine?: string;
+  contactEmail?: string;
+  copyright?: string;
   navigation?: NavItem[];
-  social?: NavItem[];
+  social?: FooterSocialLink[];
   legal?: NavItem[];
   brandName?: string;
   className?: string;
 }
+
+const currentYear = new Date().getFullYear();
 
 const {
   heading = "Start your free trial today",
   description = "The fit-for-purpose tool for planning and building modern software products.",
   ctaText = "Get started",
   ctaHref = "#",
-    ctaIsDemo = false,
+  ctaIsDemo = false,
+  showIntro = true,
+  brandLine = "",
+  contactEmail = "",
+  copyright = `© ${currentYear} Kersivo`,
   navigation = [
     { name: "Product", href: "#" },
     { name: "About Us", href: "/about" },
@@ -30,24 +46,46 @@ const {
     { name: "FAQ", href: "/faq" },
     { name: "Contact", href: "/contact" },
   ],
-  social = [
-    { name: "Twitter", href: "#" },
-    { name: "LinkedIn", href: "#" },
-  ],
+  social = getFooterSocialLinks(),
   legal = [{ name: "Privacy Policy", href: "/privacy" }],
   brandName = "mainline",
   className = "",
 } = Astro.props as Footer50Props;
+
+const footerClassName = [
+  'footer50',
+  !showIntro && 'footer50--compact',
+  className,
+].filter(Boolean).join(' ');
+
+function isExternalHref(href: string): boolean {
+  return /^https?:\/\//i.test(href);
+}
+
+function socialIconPath(id: Exclude<FooterSocialPlatform, 'instagram'>): string {
+  switch (id) {
+    case 'tiktok':
+      return 'M19.59 6.69a4.83 4.83 0 0 1-3.77-4.25V2h-3.45v13.67a2.89 2.89 0 0 1-5.2 1.74 2.89 2.89 0 0 1 2.31-4.64 2.93 2.93 0 0 1 .88.13V9.4a6.84 6.84 0 0 0-1-.05A6.33 6.33 0 0 0 5 20.1a6.34 6.34 0 0 0 10.86-4.43v-7a8.16 8.16 0 0 0 4.77 1.52v-3.4a4.85 4.85 0 0 1-1-.1z';
+    case 'facebook':
+      return 'M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z';
+  }
+}
 ---
 
-<footer class={`footer50 ${className}`.trim()} aria-label="Footer">
-  <div class="container footer50__intro">
-    <h2>{heading}</h2>
-    <p>{description}</p>
-    <div>
-      <a class="btn btn--primary footer50__cta" href={ctaHref} data-demo-cta={ctaIsDemo ? true : undefined}>{ctaText}</a>
+<footer class={footerClassName} aria-label="Footer">
+  {showIntro ? (
+    <div class="container footer50__intro">
+      <h2>{heading}</h2>
+      <p>{description}</p>
+      <div>
+        <a class="btn btn--primary footer50__cta" href={ctaHref} data-demo-cta={ctaIsDemo ? true : undefined}>{ctaText}</a>
+      </div>
     </div>
-  </div>
+  ) : brandLine ? (
+    <div class="container footer50__brand-line-wrap">
+      <p class="footer50__brand-line">{brandLine}</p>
+    </div>
+  ) : null}
 
   <nav class="container footer50__nav" aria-label="Footer navigation">
     <ul class="footer50__menu">
@@ -56,26 +94,57 @@ const {
           <a href={item.href}>{item.name}</a>
         </li>
       ))}
-      {social.map((item) => (
-        <li>
-          <a href={item.href} class="footer50__social-link">
-            {item.name}
-            <span aria-hidden="true" class="footer50__arrow">↗</span>
-          </a>
-        </li>
-      ))}
     </ul>
 
     <ul class="footer50__legal">
       {legal.map((item) => (
         <li>
-          <a href={item.href}>{item.name}</a>
+          <a
+            href={item.href}
+            {...(isExternalHref(item.href) ? { target: '_blank', rel: 'noopener noreferrer' } : {})}
+          >
+            {item.name}
+          </a>
         </li>
       ))}
     </ul>
+
+    {contactEmail ? (
+      <p class="footer50__contact">
+        <a href={`mailto:${contactEmail}`}>{contactEmail}</a>
+      </p>
+    ) : null}
   </nav>
 
   <div class="footer50__brand" aria-label={brandName}>
-    <span>{brandName}</span>
+    <span class="footer50__brand-name">{brandName}</span>
+    {social.length > 0 ? (
+      <ul class="footer50__social-icons" aria-label="Social media">
+        {social.map((item) => (
+          <li>
+            <a
+              href={item.href}
+              class="footer50__social-icon"
+              target="_blank"
+              rel="noopener noreferrer"
+              aria-label={item.name}
+            >
+              {item.id === 'instagram' ? (
+                <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+                  <rect x="2" y="2" width="20" height="20" rx="5" ry="5" fill="none" stroke="currentColor" stroke-width="2" />
+                  <circle cx="12" cy="12" r="4" fill="none" stroke="currentColor" stroke-width="2" />
+                  <circle cx="17.5" cy="6.5" r="1" fill="currentColor" stroke="none" />
+                </svg>
+              ) : (
+                <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+                  <path fill="currentColor" d={socialIconPath(item.id)} />
+                </svg>
+              )}
+            </a>
+          </li>
+        ))}
+      </ul>
+    ) : null}
+    {copyright ? <p class="footer50__copyright">{copyright}</p> : null}
   </div>
 </footer>

@@ -8,6 +8,11 @@
   border-top: 1px solid var(--border);
 }
 
+.footer50--compact {
+  gap: 2rem;
+  padding-top: clamp(2.5rem, 5vw, 3.5rem);
+}
+
 .footer50__intro {
   display: grid;
   gap: 0.75rem;
@@ -22,6 +27,20 @@
 
 .footer50__cta {
   margin-top: 0.5rem;
+}
+
+.footer50__brand-line-wrap {
+  text-align: center;
+}
+
+.footer50__brand-line {
+  margin: 0;
+  max-width: 42rem;
+  margin-inline: auto;
+  color: var(--muted);
+  font-size: var(--text-md);
+  line-height: 1.65;
+  text-wrap: pretty;
 }
 
 .footer50__nav {
@@ -52,30 +71,41 @@
   font-weight: 600;
 }
 
-.footer50__social-link {
-  display: inline-flex;
-  align-items: center;
-  gap: 0.15rem;
-}
-
-.footer50__arrow {
-  font-size: 0.9em;
-}
-
 .footer50__legal a {
   color: var(--muted);
   text-decoration: none;
   font-size: 0.875rem;
 }
 
+.footer50__contact {
+  margin: 0;
+  text-align: center;
+  font-size: 0.875rem;
+}
+
+.footer50__contact a {
+  color: var(--muted);
+  text-decoration: none;
+}
+
+.footer50__contact a:hover {
+  color: var(--fg);
+  text-decoration: underline;
+}
+
 .footer50__brand {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
   width: 100%;
   border-top: 1px solid var(--border);
   padding-top: 1rem;
+  text-align: center;
 }
 
-.footer50__brand span {
+.footer50__brand-name {
   display: block;
+  width: 100%;
   text-align: center;
   font-family: var(--font-heading);
   letter-spacing: 0.08em;
@@ -83,6 +113,53 @@
   color: color-mix(in srgb, var(--fg) 80%, var(--muted));
   font-size: clamp(2rem, 10vw, 5rem);
   line-height: 1;
+}
+
+.footer50__social-icons {
+  list-style: none;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: center;
+  gap: 0.65rem;
+  margin: 1rem 0 0;
+  padding: 0;
+}
+
+.footer50__social-icons li {
+  max-width: none;
+}
+
+.footer50__social-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 2.75rem;
+  height: 2.75rem;
+  border-radius: var(--radius-full);
+  border: 1px solid color-mix(in srgb, var(--border) 85%, transparent);
+  color: color-mix(in srgb, var(--fg) 75%, var(--muted));
+  text-decoration: none;
+  transition: color 0.15s ease, border-color 0.15s ease, background-color 0.15s ease;
+}
+
+.footer50__social-icon:hover {
+  color: var(--fg);
+  border-color: color-mix(in srgb, var(--fg) 25%, var(--border));
+  background: color-mix(in srgb, var(--surface-1) 70%, transparent);
+}
+
+.footer50__social-icon svg {
+  width: 1.15rem;
+  height: 1.15rem;
+}
+
+.footer50__copyright {
+  margin: 0.85rem 0 0;
+  width: 100%;
+  text-align: center;
+  font-size: 0.8125rem;
+  color: var(--muted);
 }
 
 @media (min-width: 64rem) {

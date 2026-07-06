@@ -365,3 +365,18 @@
   text-decoration: underline;
   text-underline-offset: 2px;
 }
+
+@media (max-width: 767px) {
+  .pricing36--landing {
+    padding-block: clamp(3rem, 8vw, 5rem) !important;
+  }
+
+  .pricing36--landing .compare3-block__header h2 {
+    font-size: clamp(1.45rem, 5.8vw, 2rem);
+    line-height: 1.15;
+  }
+
+  .pricing36--landing .pricing36__guarantee {
+    padding: 0.85rem 1rem;
+  }
+}

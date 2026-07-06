@@ -1,0 +1,129 @@
+---
+type IncludeIcon = 'website' | 'shop' | 'admin' | 'sms' | 'shield' | 'commission';
+
+interface IncludeItem {
+  title: string;
+  body: string;
+  icon: IncludeIcon;
+}
+
+interface Props {
+  className?: string;
+}
+
+const { className = '' } = Astro.props as Props;
+
+const items: IncludeItem[] = [
+  {
+    title: 'Your own booking website',
+    body: 'Clients book on your domain \u2014 no app-store detour.',
+    icon: 'website',
+  },
+  {
+    title: 'Retail pickup shop',
+    body: 'Let clients reserve products for in-shop collection.',
+    icon: 'shop',
+  },
+  {
+    title: 'One-login admin',
+    body: 'Manage bookings, barbers, services and retail orders in one place.',
+    icon: 'admin',
+  },
+  {
+    title: 'SMS reminders',
+    body: 'Help reduce missed appointments and awkward chase-ups.',
+    icon: 'sms',
+  },
+  {
+    title: 'No-show protection',
+    body: 'Deposits and safeguards help protect your schedule.',
+    icon: 'shield',
+  },
+  {
+    title: '0% KERSIVO commission',
+    body: 'No KERSIVO cut from bookings or retail sales.',
+    icon: 'commission',
+  },
+];
+---
+
+<section
+  class={`landing-value-cards ${className}`.trim()}
+  aria-labelledby="landing-value-cards-title"
+>
+  <div class="container">
+    <header class="landing-value-cards__intro">
+      <p class="landing-value-cards__eyebrow">WHAT KERSIVO INCLUDES</p>
+      <h2 id="landing-value-cards-title" class="landing-value-cards__heading">
+        Everything your barbershop needs &mdash; day one.
+      </h2>
+      <p class="landing-value-cards__lead">
+        A branded booking website, retail pickup shop and admin system under your own brand.
+      </p>
+    </header>
+
+    <div class="landing-value-cards__panel">
+      <div class="landing-value-cards__panel-head">
+        <p class="landing-value-cards__panel-title">Included in every KERSIVO setup.</p>
+        <span class="landing-value-cards__panel-badge">Included from day one</span>
+      </div>
+
+      <ul class="landing-value-cards__list" role="list" aria-label="What KERSIVO includes">
+        {items.map((item) => (
+          <li class="landing-value-cards__row">
+            <span class="landing-value-cards__icon" aria-hidden="true">
+              {item.icon === 'website' && (
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round">
+                  <rect x="3" y="4" width="18" height="18" rx="2" />
+                  <path d="M16 2v4M8 2v4M3 10h18" />
+                </svg>
+              )}
+              {item.icon === 'admin' && (
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round">
+                  <rect x="3" y="3" width="7" height="9" rx="1" />
+                  <rect x="14" y="3" width="7" height="5" rx="1" />
+                  <rect x="14" y="12" width="7" height="9" rx="1" />
+                  <rect x="3" y="16" width="7" height="5" rx="1" />
+                </svg>
+              )}
+              {item.icon === 'shop' && (
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round">
+                  <path d="M6 2 3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4Z" />
+                  <path d="M3 6h18M16 10a4 4 0 0 1-8 0" />
+                </svg>
+              )}
+              {item.icon === 'sms' && (
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round">
+                  <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" />
+                  <path d="M8 10h.01M12 10h.01M16 10h.01" />
+                </svg>
+              )}
+              {item.icon === 'shield' && (
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round">
+                  <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" />
+                  <path d="m9 12 2 2 4-4" />
+                </svg>
+              )}
+              {item.icon === 'commission' && (
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round">
+                  <ellipse cx="12" cy="12" rx="6" ry="8" />
+                  <path d="m5 5 14 14" />
+                </svg>
+              )}
+            </span>
+            <span class="landing-value-cards__text">
+              <span class="landing-value-cards__feature">{item.title}</span>
+              <span class="landing-value-cards__note">{item.body}</span>
+            </span>
+            <span class="landing-value-cards__tag">
+              <svg viewBox="0 0 16 16" fill="none" aria-hidden="true">
+                <path d="M3.5 8.5l3 3 6-7" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
+              </svg>
+              <span class="landing-value-cards__tag-label">Included</span>
+            </span>
+          </li>
+        ))}
+      </ul>
+    </div>
+  </div>
+</section>

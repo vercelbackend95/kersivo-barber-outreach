@@ -1,6 +1,7 @@
 import React from "react";
 
 import { GlobeLock, LayoutDashboard, MessagesSquare, ShieldCheck, TrendingUp } from "lucide-react";
+import { getRateCard1Copy, rateCard1SharedCopy, type RateCard1Variant } from "@/lib/pricing/rateCard1Copy";
 import { cn } from "@/lib/utils";
 
 type CareFeature = {
@@ -11,52 +12,45 @@ type CareFeature = {
 
 interface RateCard1Props {
   className?: string;
+  variant?: RateCard1Variant;
 }
 
-const ONGOING_CARE_BULLETS = [
-  "Online booking — 0% Kersivo commission",
-  "Your shop online — 0% Kersivo commission on retail",
-  "SMS reminders when you enable them",
-  "No-show protection on bookings",
-  "Hosting, SSL, admin + shop live 24/7",
-  "Support inbox + 1 hour scoped tweaks/month",
-  "Platform updates — performance and scale as you add barbers and chairs",
-];
+function buildCareFeatures(variant: RateCard1Variant): CareFeature[] {
+  const copy = getRateCard1Copy(variant);
 
-const CARE_FEATURES: CareFeature[] = [
-  {
-    title: "Booking & shop — 0% commission",
-    description:
-      "Clients book and buy on your domain. Kersivo never takes a cut of bookings or retail; Stripe charges cards on your account only.",
-    Icon: LayoutDashboard,
-  },
-  {
-    title: "Always on",
-    description:
-      "Hosting, SSL renewal, admin panel and pickup shop stay reachable 24/7 — infra noise stays off your weekends.",
-    Icon: GlobeLock,
-  },
-  {
-    title: "Client comms",
-    description:
-      "SMS reminders fire when you enable them. No-show protection helps cut empty chairs without awkward chase-ups.",
-    Icon: MessagesSquare,
-  },
-  {
-    title: "Humans on call",
-    description:
-      "Support inbox for day-to-day questions, plus up to one hour of scoped site or booking tweaks each month.",
-    Icon: ShieldCheck,
-  },
-  {
-    title: "Keeps scaling",
-    description:
-      "We ship platform updates so the system stays fast and handles more barbers and chairs as your shop grows.",
-    Icon: TrendingUp,
-  },
-];
+  return [
+    {
+      title: "Booking & shop — 0% commission",
+      description: copy.bookingShopDescription,
+      Icon: LayoutDashboard,
+    },
+    {
+      title: "Always on",
+      description: copy.alwaysOnDescription,
+      Icon: GlobeLock,
+    },
+    {
+      title: "Client comms",
+      description: copy.clientCommsDescription,
+      Icon: MessagesSquare,
+    },
+    {
+      title: "Humans on call",
+      description: rateCard1SharedCopy.humansOnCallDescription,
+      Icon: ShieldCheck,
+    },
+    {
+      title: "Keeps scaling",
+      description: rateCard1SharedCopy.keepsScalingDescription,
+      Icon: TrendingUp,
+    },
+  ];
+}
 
-const RateCard1 = ({ className }: RateCard1Props) => {
+const RateCard1 = ({ className, variant = "default" }: RateCard1Props) => {
+  const copy = getRateCard1Copy(variant);
+  const careFeatures = buildCareFeatures(variant);
+
   return (
     <section
       id="ongoing-care"
@@ -72,7 +66,7 @@ const RateCard1 = ({ className }: RateCard1Props) => {
             </h2>
             <p className="rate-card1__lead">
               One flat <strong>£39/month</strong> after go-live. Booking, shop, admin, SMS, support, and ongoing platform
-              updates — <strong>0% Kersivo commission</strong> on bookings and retail. Stripe charges cards on your
+              updates — <strong>{copy.leadCommissionLabel}</strong> on bookings and retail. Stripe charges cards on your
               account only.
             </p>
             <Illustration className="rate-card1__mark rate-card1__mark--top" />
@@ -89,7 +83,7 @@ const RateCard1 = ({ className }: RateCard1Props) => {
                 £39 <span>/ month</span>
               </p>
               <ul className="rate-card1__conditions">
-                {ONGOING_CARE_BULLETS.map((condition) => (
+                {copy.ongoingCareBullets.map((condition) => (
                   <li key={condition}>{condition}</li>
                 ))}
               </ul>
@@ -102,7 +96,7 @@ const RateCard1 = ({ className }: RateCard1Props) => {
         </aside>
 
         <ol className="rate-card1__steps" aria-label="What we deliver inside Ongoing Care">
-          {CARE_FEATURES.map(({ Icon, title, description }) => (
+          {careFeatures.map(({ Icon, title, description }) => (
             <li key={title} className="rate-card1__step-item">
               <div className="rate-card1__step-icon" aria-hidden="true">
                 <Icon className="rate-card1__step-svg" />

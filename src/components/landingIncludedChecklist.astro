@@ -1,0 +1,55 @@
+---
+interface Props {
+  className?: string;
+}
+
+const { className = '' } = Astro.props as Props;
+
+const features = [
+  'Your own branded booking website',
+  'Booking flow for services, barbers and time slots',
+  'Admin dashboard for bookings, clients, services and barbers',
+  'Retail pickup shop for products',
+  'SMS reminders when enabled',
+  'No-show protection with deposits',
+  'Hosting, SSL and platform updates while Care is active',
+  '0% KERSIVO commission on bookings and retail',
+];
+---
+
+<section
+  class={`landing-included-checklist ${className}`.trim()}
+  aria-labelledby="landing-included-checklist-title"
+>
+  <div class="container">
+    <header class="landing-included-checklist__intro">
+      <h2 id="landing-included-checklist-title" class="landing-included-checklist__heading">
+        What KERSIVO includes
+      </h2>
+      <p class="landing-included-checklist__lead">
+        A complete booking, retail and admin setup for independent UK barbershops.
+      </p>
+    </header>
+
+    <div class="landing-included-checklist__panel">
+      <ul class="landing-included-checklist__grid" role="list">
+        {features.map((feature) => (
+          <li class="landing-included-checklist__item">
+            <span class="landing-included-checklist__check" aria-hidden="true">
+              <svg class="landing-included-checklist__check-icon" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <path
+                  d="M20 6.5 9.5 17 4 11.5"
+                  stroke="currentColor"
+                  stroke-width="2.125"
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                />
+              </svg>
+            </span>
+            <span class="landing-included-checklist__text">{feature}</span>
+          </li>
+        ))}
+      </ul>
+    </div>
+  </div>
+</section>

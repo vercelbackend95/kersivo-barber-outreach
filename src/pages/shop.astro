@@ -6,6 +6,7 @@ import { PAGE_DESCRIPTIONS } from '@/lib/seo/defaults';
 import { buildShopBreadcrumbJsonLd } from '@/lib/seo/productJsonLd';
 import Footer50 from '../components/footer50.astro';
 import '../styles/components/footer50.css';
+import { getFooterSocialLinks } from '@/lib/seo/footerSocialLinks';
 import { prisma } from '../lib/db/client';
 import { PUBLIC_SHOP_UNAVAILABLE_MESSAGE, withPrismaQuotaFallback } from '../lib/db/resilience';
 import { resolveShopId } from '../lib/db/shopScope';
@@ -51,7 +52,7 @@ const FOOTER_PROPS = {
     { name: 'Retail Demo', href: '/shop' }
 
   ],
-    social: [],
+    social: getFooterSocialLinks(),
   legal: [
     { name: 'Privacy Policy', href: '/privacy' },
     { name: 'Terms', href: '/terms' }

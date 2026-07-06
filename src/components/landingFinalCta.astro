@@ -1,0 +1,36 @@
+---
+interface Props {
+  className?: string;
+}
+
+const { className = '' } = Astro.props as Props;
+---
+
+<section
+  class={`landing-final-cta ${className}`.trim()}
+  aria-labelledby="landing-final-cta-title"
+>
+  <div class="container">
+    <div class="landing-final-cta__panel">
+      <div class="landing-final-cta__content">
+        <h2 id="landing-final-cta-title" class="landing-final-cta__heading">
+          Ready to run bookings on your own domain?
+        </h2>
+        <p class="landing-final-cta__subheadline">
+          Choose your setup package, complete your onboarding form and let KERSIVO build your booking website, retail pickup shop and admin system.
+        </p>
+      </div>
+
+      <div class="landing-final-cta__actions">
+        <a href="/#book-demo" class="btn btn--primary btn--lg">Plan My Setup</a>
+        <button type="button" class="btn btn--secondary btn--lg" data-system-chooser-open>
+          View Live Demo
+        </button>
+      </div>
+
+      <p class="landing-final-cta__note">
+        Questions first? Email <a href="mailto:hello@kersivo.co.uk">hello@kersivo.co.uk</a>
+      </p>
+    </div>
+  </div>
+</section>

@@ -3,6 +3,7 @@ import MainLayout from '@/layouts/MainLayout.astro';
 import DemoNotice from '@/components/shop/DemoNotice.astro';
 import Footer50 from '@/components/footer50.astro';
 import '@/styles/components/footer50.css';
+import { getFooterSocialLinks } from '@/lib/seo/footerSocialLinks';
 import { prisma } from '@/lib/db/client';
 import { withPrismaQuotaFallback } from '@/lib/db/resilience';
 import { resolveShopId } from '@/lib/db/shopScope';
@@ -85,7 +86,7 @@ const FOOTER_PROPS = {
     { name: 'Contact', href: '/#contact' },
     { name: 'Retail Demo', href: '/shop' }
   ],
-    social: [],
+    social: getFooterSocialLinks(),
   legal: [
     { name: 'Privacy Policy', href: '/privacy' },
     { name: 'Terms', href: '/terms' }

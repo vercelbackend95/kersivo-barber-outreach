@@ -1,0 +1,69 @@
+---
+interface Pillar {
+  title: string;
+  body: string;
+}
+
+interface Props {
+  className?: string;
+}
+
+const { className = '' } = Astro.props as Props;
+
+const pillars: Pillar[] = [
+  {
+    title: 'Not a marketplace',
+    body: 'KERSIVO does not list your clients next to competing shops inside a consumer marketplace.',
+  },
+  {
+    title: 'Your own domain',
+    body: 'Clients book through your barbershop\u2019s own branded booking website.',
+  },
+  {
+    title: 'Bookings + retail + admin',
+    body: 'Your shop gets more than a booking link \u2014 it gets a connected system for daily operations.',
+  },
+];
+---
+
+<section
+  id="why-kersivo-is-different"
+  class={`landing-difference ${className}`.trim()}
+  aria-labelledby="landing-difference-title"
+>
+  <div class="landing-difference__glow" aria-hidden="true"></div>
+
+  <div class="container">
+    <header class="landing-difference__intro">
+      <p class="landing-difference__eyebrow">WHY KERSIVO IS DIFFERENT</p>
+      <h2 id="landing-difference-title" class="landing-difference__heading">
+        Built for barbershops that want control &mdash; not another marketplace.
+      </h2>
+      <p class="landing-difference__lead">
+        KERSIVO is designed for independent shops that want their bookings, clients and customer experience
+        under their own brand.
+      </p>
+    </header>
+
+    <div class="landing-difference__panel">
+      <ol class="landing-difference__pillars" role="list">
+        {pillars.map((pillar, index) => (
+          <li class="landing-difference__pillar">
+            <article aria-label={`Pillar ${index + 1}: ${pillar.title}`}>
+              <div class="landing-difference__number" aria-hidden="true">
+                0{index + 1}
+              </div>
+              <div class="landing-difference__content">
+                <h3 class="landing-difference__pillar-title">
+                  <span class="sr-only">Pillar {index + 1} of {pillars.length}: </span>
+                  {pillar.title}
+                </h3>
+                <p class="landing-difference__pillar-body">{pillar.body}</p>
+              </div>
+            </article>
+          </li>
+        ))}
+      </ol>
+    </div>
+  </div>
+</section>

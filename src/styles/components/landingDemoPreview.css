@@ -1,0 +1,112 @@
+/* Landing-only compact overrides for the Google Ads proof section. */
+
+.landing-demo-preview--compact {
+  padding-block: clamp(2.5rem, 5vw, 4rem);
+  border-bottom: 1px solid var(--border);
+}
+
+.landing-demo-preview--compact .container {
+  gap: clamp(1.65rem, 3.25vw, 2.15rem);
+}
+
+.landing-demo-preview--compact .feature261__intro {
+  margin-bottom: clamp(1.5rem, 3.25vw, 2.25rem);
+  gap: 0.8rem;
+  max-width: 52ch;
+}
+
+.landing-demo-preview--compact .feature261__heading {
+  margin-top: 0.1rem;
+}
+
+.landing-demo-preview--compact .feature261__description {
+  max-width: 50ch;
+  font-size: var(--text-md);
+  line-height: 1.6;
+}
+
+.landing-demo-preview--compact .feature261__rows {
+  gap: clamp(2.15rem, 4.25vw, 3.15rem);
+}
+
+.landing-demo-preview--compact .feature261__row {
+  gap: clamp(1.2rem, 2.85vw, 1.95rem);
+}
+
+.landing-demo-preview--compact .feature261__copy {
+  gap: 0.8rem;
+  max-width: min(40ch, 100%);
+}
+
+.landing-demo-preview--compact .feature261__row-heading {
+  font-size: clamp(1.4rem, 2.8vw, 1.95rem);
+}
+
+.landing-demo-preview--compact .feature261__row-body {
+  font-size: var(--text-sm);
+  line-height: 1.55;
+}
+
+.landing-demo-preview--compact .feature261__row-cta {
+  margin-top: 0.25rem;
+}
+
+/* Retail preview: contained panel, full cards, no accidental clipping */
+.landing-demo-preview--compact .feature261__media--carousel {
+  position: relative;
+  overflow: hidden;
+  min-height: clamp(13rem, 23vh, 18.5rem);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-4);
+  isolation: isolate;
+}
+
+.landing-demo-preview--compact .feature261__media--carousel .shop6__carousel,
+.landing-demo-preview--compact .feature261__media--carousel .feature261-retail-carousel {
+  height: 100%;
+}
+
+.landing-demo-preview--compact .feature261__media--carousel .shop6__grid {
+  --shop6-desktop-visible-cards: 2;
+  --shop6-desktop-gap: 0.45rem;
+  --shop6-desktop-padding: 0;
+  margin-inline: 0;
+  padding-inline: 0;
+  padding-bottom: 0.25rem;
+  scrollbar-width: none;
+}
+
+.landing-demo-preview--compact .feature261__media--carousel .shop6__grid::-webkit-scrollbar {
+  display: none;
+}
+
+.landing-demo-preview--compact .feature261__media--carousel .shop-card {
+  border-radius: var(--radius-4);
+}
+
+@media (min-width: 768px) {
+  .landing-demo-preview--compact {
+    padding-block: clamp(3.25rem, 5vw, 4.5rem);
+  }
+}
+
+@media (max-width: 899px) {
+  .landing-demo-preview--compact .feature261__media--carousel {
+    min-height: clamp(14.5rem, 38vw, 18.5rem);
+  }
+
+  .landing-demo-preview--compact .feature261__media--carousel .shop6__grid {
+    --shop6-desktop-visible-cards: 2;
+    --shop6-desktop-padding: 0;
+    margin-inline: 0;
+    padding-inline: 0;
+    scroll-snap-type: x mandatory;
+  }
+}
+
+@media (max-width: 599px) {
+  .landing-demo-preview--compact .feature261__row-cta {
+    width: 100%;
+    min-height: 2.75rem;
+  }
+}

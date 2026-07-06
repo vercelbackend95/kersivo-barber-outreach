@@ -32,7 +32,7 @@ function formatLastmod(date: Date): string {
 }
 
 export const GET: APIRoute = async () => {
-  const staticPaths = ['/', '/privacy', '/terms', '/shop'];
+  const staticPaths = ['/', '/barbershop-booking-system', '/privacy', '/terms', '/shop'];
 
   const products = await withPrismaQuotaFallback(
     'sitemap.xml.ts',

@@ -1,0 +1,156 @@
+---
+import MainLayout from '@/layouts/MainLayout.astro';
+import { PAGE_DESCRIPTIONS } from '@/lib/seo/defaults';
+import Faq4 from '@/components/faq4.astro';
+import LandingFinalCta from '@/components/landingFinalCta.astro';
+import SystemChooser from '@/components/SystemChooser.astro';
+import LandingValueCards from '@/components/landingValueCards.astro';
+import LandingDemoPreview from '@/components/landingDemoPreview.astro';
+import LandingPostPurchaseSteps from '@/components/landingPostPurchaseSteps.astro';
+import LandingSwitcherReassurance from '@/components/landingSwitcherReassurance.astro';
+import LandingDifference from '@/components/landingDifference.astro';
+import Footer50 from '@/components/footer50.astro';
+import {
+  BARBERSHOP_BOOKING_FAQ_ITEMS,
+  buildBarbershopBookingFaqJsonLd,
+} from '@/lib/seo/barbershopBookingFaq';
+import { getFooterSocialLinks } from '@/lib/seo/footerSocialLinks';
+import { getLandingDemoCarouselProducts } from '@/lib/shop/landingDemoCarouselProducts';
+import { Pricing36 } from '../components/pricing36';
+import { RateCard1 } from '../components/rateCard1';
+import { BarbershopBookingHero } from '@/components/barbershopBookingHero';
+import '../styles/components/system-chooser.css';
+import '../styles/components/compare3.css';
+import '../styles/components/faq4.css';
+import '../styles/components/feature261.css';
+import '../styles/components/hero227.css';
+import '../styles/components/landingFinalCta.css';
+import '../styles/components/landingDemoPreview.css';
+import '../styles/components/landingValueCards.css';
+import '../styles/components/landingPostPurchaseSteps.css';
+import '../styles/components/landingSwitcherReassurance.css';
+import '../styles/components/landingDifference.css';
+import '../styles/components/shopProductCards6.css';
+import '../styles/components/footer50.css';
+import '../styles/pricing36.css';
+import '../styles/rateCard1.css';
+
+const PAGE_TITLE = 'Barbershop Booking System UK | KERSIVO';
+const carouselProducts = getLandingDemoCarouselProducts();
+---
+
+<MainLayout
+  title={PAGE_TITLE}
+  description={PAGE_DESCRIPTIONS.barbershopBookingSystem}
+  canonicalPath="/barbershop-booking-system"
+  jsonLd={buildBarbershopBookingFaqJsonLd()}
+>
+  <main>
+    <SystemChooser />
+    <BarbershopBookingHero client:load />
+    <LandingValueCards />
+    <LandingDemoPreview retailProducts={carouselProducts} />
+    <Pricing36 client:load variant="landing" />
+    <RateCard1 variant="landing" />
+    <LandingPostPurchaseSteps />
+    <LandingSwitcherReassurance />
+    <LandingDifference />
+    <Faq4
+      heading="Questions before you choose your setup?"
+      subHeading="Clear answers on commission, fees, switching, setup and what happens after purchase."
+      supportHeading="Still deciding?"
+      supportText="Explore the live demo or go straight to your setup package when you are ready."
+      supportLinkLabel="Plan My Setup"
+      supportLinkHref="/#book-demo"
+      supportSecondaryLinkLabel="View Live Demo"
+      supportSecondaryLinkOpensDemo={true}
+      faqs={BARBERSHOP_BOOKING_FAQ_ITEMS}
+    />
+    <LandingFinalCta />
+    <Footer50
+      heading="Your booking. Your brand. Zero commission."
+      description="Whether you are switching from Booksy/Fresha or starting your first system, we set you up in about two weeks and never take a cut of your bookings."
+      ctaText="PLAN MY SETUP"
+      ctaHref="/#book-demo"
+      ctaIsDemo={true}
+      brandName="KERSIVO"
+      navigation={[
+        { name: 'Home', href: '/#home' },
+        { name: 'Paths', href: '/#paths' },
+        { name: 'Pricing', href: '/#pricing' },
+        { name: 'FAQ', href: '/#faq' },
+        { name: 'Contact', href: '/#contact' },
+        { name: 'Retail Demo', href: '/shop' },
+      ]}
+      social={getFooterSocialLinks()}
+      legal={[
+        { name: 'Privacy Policy', href: '/privacy' },
+        { name: 'Terms', href: '/terms' },
+      ]}
+    />
+  </main>
+</MainLayout>
+
+<script>
+  import { initSystemChooser } from '@/lib/initSystemChooser';
+
+  initSystemChooser();
+</script>
+
+<script>
+  const initFeature261StaggerReveal = () => {
+    const section = document.querySelector('.feature261');
+    if (!(section instanceof HTMLElement)) return;
+
+    const cards = Array.from(section.querySelectorAll('[data-feature261-card]'));
+    if (cards.length === 0) return;
+
+    const revealCard = (card: Element, index: number) => {
+      if (!(card instanceof HTMLElement)) return;
+      card.style.transitionDelay = `${index * 140}ms`;
+      card.dataset.feature261Visible = 'true';
+    };
+
+    const prefersReducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    section.dataset.feature261Enhanced = 'true';
+
+    cards.forEach((card) => {
+      if (!(card instanceof HTMLElement)) return;
+      card.dataset.feature261Visible = 'false';
+    });
+
+    if (prefersReducedMotion || !('IntersectionObserver' in window)) {
+      cards.forEach((card, index) => revealCard(card, index));
+      return;
+    }
+
+    let hasRevealed = false;
+    const observer = new IntersectionObserver(
+      (entries) => {
+        const shouldReveal = entries.some((entry) => entry?.isIntersecting);
+        if (!shouldReveal || hasRevealed) return;
+
+        hasRevealed = true;
+        cards.forEach((card, index) => revealCard(card, index));
+        observer.disconnect();
+      },
+      {
+        threshold: 0.01,
+        rootMargin: '0px 0px -6% 0px',
+      },
+    );
+
+    cards.forEach((card) => {
+      if (!(card instanceof HTMLElement)) return;
+      observer.observe(card);
+    });
+  };
+
+  initFeature261StaggerReveal();
+</script>
+
+<script>
+  import { initShop6Carousels } from '@/lib/shop/initShop6Carousel';
+
+  initShop6Carousels();
+</script>

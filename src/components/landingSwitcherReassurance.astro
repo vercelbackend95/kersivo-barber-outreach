@@ -1,0 +1,129 @@
+---
+interface Props {
+  className?: string;
+}
+
+const { className = '' } = Astro.props as Props;
+
+const trustPills = [
+  {
+    full: 'Keep your current system live during setup',
+    short: 'Keep current system live',
+  },
+  {
+    full: 'We help map your services, barbers and hours',
+    short: 'Map services, barbers and hours',
+  },
+  {
+    full: 'Move your public booking link when ready',
+    short: 'Move link when ready',
+  },
+  {
+    full: '0% KERSIVO commission on bookings and retail',
+    short: '0% KERSIVO commission',
+  },
+];
+---
+
+<section
+  id="for-switchers"
+  class={`landing-switcher-reassurance ${className}`.trim()}
+  aria-labelledby="landing-switcher-reassurance-title"
+>
+  <div class="landing-switcher-reassurance__glow" aria-hidden="true"></div>
+
+  <div class="container">
+    <header class="landing-switcher-reassurance__intro">
+      <span class="landing-switcher-reassurance__eyebrow">FOR SWITCHERS</span>
+      <h2 id="landing-switcher-reassurance-title" class="landing-switcher-reassurance__heading">
+        Before.<br />
+        After.
+      </h2>
+      <p class="landing-switcher-reassurance__lead">
+        Already using Booksy, Fresha, Nearcut or another booking platform? Keep your current setup live
+        while KERSIVO is prepared on your own domain.
+      </p>
+    </header>
+
+    <div
+      class="landing-switcher-reassurance__story"
+      role="img"
+      aria-label="Switcher story: keep your current system live, then move bookings onto your own domain when ready"
+    >
+      <div class="landing-switcher-reassurance__panel landing-switcher-reassurance__panel--before">
+        <div class="landing-switcher-reassurance__panel-fig">
+          <img
+            src="/images/Ilustracje/grupaludziidzie.png"
+            alt=""
+            class="landing-switcher-reassurance__panel-img"
+            width="1536"
+            height="1024"
+            loading="lazy"
+            decoding="async"
+            draggable="false"
+          />
+        </div>
+        <div class="landing-switcher-reassurance__panel-body">
+          <span class="landing-switcher-reassurance__panel-tag landing-switcher-reassurance__panel-tag--before">
+            Before
+          </span>
+          <h3 class="landing-switcher-reassurance__panel-title">Keep your current system live</h3>
+          <p class="landing-switcher-reassurance__panel-line">
+            Keep taking bookings as normal while your KERSIVO setup is prepared.
+          </p>
+        </div>
+      </div>
+
+      <div class="landing-switcher-reassurance__connector" aria-hidden="true">
+        <div class="landing-switcher-reassurance__connector-line"></div>
+        <span class="landing-switcher-reassurance__connector-badge">NO RUSH</span>
+        <div class="landing-switcher-reassurance__connector-arrow">&#8594;</div>
+      </div>
+
+      <div class="landing-switcher-reassurance__panel landing-switcher-reassurance__panel--after">
+        <div class="landing-switcher-reassurance__panel-fig">
+          <img
+            src="/images/Ilustracje/barberwelcome.png"
+            alt=""
+            class="landing-switcher-reassurance__panel-img"
+            width="1536"
+            height="1024"
+            loading="lazy"
+            decoding="async"
+            draggable="false"
+          />
+        </div>
+        <div class="landing-switcher-reassurance__panel-body">
+          <span class="landing-switcher-reassurance__panel-tag landing-switcher-reassurance__panel-tag--after">
+            After
+          </span>
+          <h3 class="landing-switcher-reassurance__panel-title">Move bookings onto your own domain</h3>
+          <p class="landing-switcher-reassurance__panel-line">
+            When you are ready, we help move your public booking link to your branded KERSIVO booking website.
+          </p>
+        </div>
+      </div>
+    </div>
+
+    <ul class="landing-switcher-reassurance__chips" role="list" aria-label="Switcher reassurances">
+      {trustPills.map((pill) => (
+        <li class="landing-switcher-reassurance__chip">
+          <span class="landing-switcher-reassurance__chip-check" aria-hidden="true">&#10003;</span>
+          <span class="landing-switcher-reassurance__chip-label landing-switcher-reassurance__chip-label--full">
+            {pill.full}
+          </span>
+          <span class="landing-switcher-reassurance__chip-label landing-switcher-reassurance__chip-label--short">
+            {pill.short}
+          </span>
+        </li>
+      ))}
+    </ul>
+
+    <div class="landing-switcher-reassurance__ctas">
+      <a href="/#book-demo" class="btn btn--primary btn--lg">Plan My Setup</a>
+      <button type="button" class="btn btn--secondary btn--lg" data-system-chooser-open>
+        View Live Demo
+      </button>
+    </div>
+  </div>
+</section>

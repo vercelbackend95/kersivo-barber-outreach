@@ -1,0 +1,92 @@
+---
+interface Props {
+  className?: string;
+}
+
+interface Step {
+  title: string;
+  body: string;
+}
+
+const { className = '' } = Astro.props as Props;
+
+const steps: Step[] = [
+  {
+    title: 'Choose your setup package',
+    body: 'Pick Launch or Priority Growth and pay securely through Stripe.',
+  },
+  {
+    title: 'Complete your onboarding form',
+    body: 'Send your services, prices, barbers, opening hours, branding, domain and retail products.',
+  },
+  {
+    title: 'We build your system',
+    body: 'KERSIVO prepares your booking website, admin dashboard and retail pickup shop.',
+  },
+  {
+    title: 'You review before go-live',
+    body: 'You check the setup and confirm anything that needs adjusting.',
+  },
+  {
+    title: 'Your shop goes live',
+    body: 'Your booking website launches on your domain when you are ready.',
+  },
+];
+---
+
+<section
+  id="what-happens-after-you-buy"
+  class={`landing-post-purchase-steps ${className}`.trim()}
+  aria-labelledby="landing-post-purchase-steps-title"
+>
+  <div class="container">
+    <div class="landing-post-purchase-steps__layout">
+      <header class="landing-post-purchase-steps__intro">
+        <p class="landing-post-purchase-steps__eyebrow">SETUP PROCESS</p>
+        <h2 id="landing-post-purchase-steps-title" class="landing-post-purchase-steps__heading">
+          What happens<br />
+          after you buy?
+        </h2>
+        <p class="landing-post-purchase-steps__lead">
+          From checkout to go-live, KERSIVO guides the setup so you know exactly what happens next.
+        </p>
+        <p class="landing-post-purchase-steps__support">
+          Choose your package, complete the onboarding form, review the setup and launch when your shop is ready.
+        </p>
+        <p class="landing-post-purchase-steps__reassurance">
+          Nothing goes live without your review.
+        </p>
+        <div class="landing-post-purchase-steps__illustration" aria-hidden="true">
+          <img
+            src="/images/Ilustracje/shoppyonline.png"
+            alt="Barber running his shop online from the chair — KERSIVO setup"
+            width="1536"
+            height="1024"
+            loading="lazy"
+            decoding="async"
+            class="landing-post-purchase-steps__illustration-img"
+          />
+        </div>
+      </header>
+
+      <ol class="landing-post-purchase-steps__timeline">
+        {steps.map((step, index) => (
+          <li class="landing-post-purchase-steps__step">
+            <article aria-label={`Step ${index + 1}: ${step.title}`}>
+              <div class="landing-post-purchase-steps__number" aria-hidden="true">
+                0{index + 1}
+              </div>
+              <div class="landing-post-purchase-steps__content">
+                <h3 class="landing-post-purchase-steps__title">
+                  <span class="sr-only">Step {index + 1} of {steps.length}: </span>
+                  {step.title}
+                </h3>
+                <p class="landing-post-purchase-steps__body">{step.body}</p>
+              </div>
+            </article>
+          </li>
+        ))}
+      </ol>
+    </div>
+  </div>
+</section>

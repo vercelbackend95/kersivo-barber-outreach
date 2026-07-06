@@ -1,0 +1,82 @@
+/* ============================================================
+   landing-final-cta — compact closing CTA for landing page.
+   Premium panel inspired by cta10, with dual CTAs and email.
+   BEM: .landing-final-cta__*
+   ============================================================ */
+
+.landing-final-cta {
+  padding-block: clamp(3.5rem, 7vw, 6rem);
+  background: var(--bg);
+}
+
+.landing-final-cta__panel {
+  display: grid;
+  gap: clamp(1rem, 2.5vw, 1.5rem);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  background: var(--surface);
+  padding: clamp(1.35rem, 4vw, 2.75rem);
+  text-align: center;
+}
+
+.landing-final-cta__content {
+  display: grid;
+  gap: 0.75rem;
+  justify-items: center;
+}
+
+.landing-final-cta__heading {
+  margin: 0;
+  font-size: clamp(1.85rem, 4.8vw, 3rem);
+  line-height: 1.08;
+  text-wrap: balance;
+}
+
+.landing-final-cta__subheadline {
+  margin: 0;
+  max-width: 42rem;
+  color: var(--muted);
+  line-height: 1.65;
+  text-wrap: pretty;
+}
+
+.landing-final-cta__actions {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-sm);
+  justify-content: center;
+}
+
+.landing-final-cta__actions .btn {
+  width: 100%;
+}
+
+.landing-final-cta__note {
+  margin: 0;
+  color: var(--muted);
+  font-size: 0.95rem;
+  line-height: 1.6;
+}
+
+.landing-final-cta__note a {
+  color: var(--fg);
+  text-decoration: none;
+  font-weight: 600;
+}
+
+.landing-final-cta__note a:hover {
+  text-decoration: underline;
+}
+
+@media (min-width: 48rem) {
+  .landing-final-cta__actions {
+    flex-direction: row;
+    flex-wrap: wrap;
+    align-items: center;
+  }
+
+  .landing-final-cta__actions .btn {
+    width: auto;
+    min-width: 12rem;
+  }
+}
