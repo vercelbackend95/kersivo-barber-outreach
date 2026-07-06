@@ -37,11 +37,11 @@ const DEFAULT_COPY: RateCard1Copy = {
 const LANDING_COPY: RateCard1Copy = {
   ongoingCareBullets: [
     'Online booking — 0% KERSIVO commission',
-    'Your shop online — 0% KERSIVO commission on retail',
+    'Retail pickup shop — 0% KERSIVO commission',
     'SMS reminders when you enable them',
     'No-show protection on bookings',
     'Hosting, SSL, admin + shop live 24/7',
-    'Support inbox + 1 hour scoped tweaks/month',
+    'Support inbox + 1 hour of scoped tweaks each month',
     'Platform updates — performance and scale as you add barbers and chairs',
   ],
   leadCommissionLabel: '0% KERSIVO commission',

@@ -54,7 +54,11 @@ const RateCard1 = ({ className, variant = "default" }: RateCard1Props) => {
   return (
     <section
       id="ongoing-care"
-      className={cn("rate-card1 scroll-mt-24", className)}
+      className={cn(
+        "rate-card1 scroll-mt-24",
+        variant === "landing" && "rate-card1--landing",
+        className,
+      )}
       aria-labelledby="rate-card1-heading"
     >
       <div className="container rate-card1__layout">

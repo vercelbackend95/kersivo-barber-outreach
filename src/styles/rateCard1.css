@@ -213,3 +213,9 @@
     padding: 7rem 0;
   }
 }
+
+@media (max-width: 767px) {
+  .rate-card1.rate-card1--landing {
+    padding-block: clamp(2.5rem, 6vw, 4rem);
+  }
+}

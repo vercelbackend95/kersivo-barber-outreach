@@ -1,0 +1,19 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 150" role="img" aria-hidden="true">
+  <defs>
+    <linearGradient id="sprayBody" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#2e3846"/>
+      <stop offset="100%" stop-color="#171c23"/>
+    </linearGradient>
+    <radialGradient id="sprayHighlight" cx="40%" cy="30%" r="50%">
+      <stop offset="0%" stop-color="#ffffff" stop-opacity="0.12"/>
+      <stop offset="100%" stop-color="#ffffff" stop-opacity="0"/>
+    </radialGradient>
+  </defs>
+  <rect width="200" height="150" fill="#11151b"/>
+  <ellipse cx="100" cy="122" rx="34" ry="8" fill="#0b0d10" opacity="0.4"/>
+  <rect x="78" y="48" width="44" height="68" rx="6" fill="url(#sprayBody)"/>
+  <rect x="78" y="48" width="44" height="68" rx="6" fill="url(#sprayHighlight)"/>
+  <rect x="86" y="34" width="28" height="18" rx="3" fill="#3d4654"/>
+  <rect x="92" y="24" width="16" height="12" rx="2" fill="#4a5568"/>
+  <path d="M98 24 L98 14 L102 14 L102 24" stroke="#6b7280" stroke-width="2" fill="none" stroke-linecap="round"/>
+</svg>

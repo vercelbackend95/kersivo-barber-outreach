@@ -16,12 +16,17 @@ import '@/styles/components/shop.css';
 import '@/styles/components/empty-state.css';
 import '@/styles/components/shop-product.css';
 
+import type { Navbar17Variant } from '@/lib/nav/navbar17Items';
+import '@/styles/components/shop-product.css';
+
 interface Props extends PageSeo {
   title: string;
   /** BarberDemo home JSON-LD (@graph); only enable on the main marketing landing page. */
   barberDemoJsonLd?: boolean;
   /** Optional extra JSON-LD object(s) rendered as script tags. */
   jsonLd?: Record<string, unknown> | Record<string, unknown>[];
+  /** Navbar variant — `landing` simplifies nav on Google Ads pages. */
+  navbarVariant?: Navbar17Variant;
 }
 
 const {
@@ -36,6 +41,7 @@ const {
   noindex,
   barberDemoJsonLd = false,
   jsonLd,
+  navbarVariant = 'default',
 } = Astro.props;
 
 const jsonLdBlocks = jsonLd
@@ -71,7 +77,7 @@ const jsonLdBlocks = jsonLd
     }
   </head>
   <body>
-    <Navbar17 />
+    <Navbar17 variant={navbarVariant} />
     <slot />
     <CartDrawerMount />
   </body>

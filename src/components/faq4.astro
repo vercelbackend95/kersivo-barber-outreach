@@ -18,6 +18,7 @@ interface Props {
   supportSecondaryLinkLabel?: string;
   supportSecondaryLinkOpensDemo?: boolean;
   faqs?: FaqItem[];
+  className?: string;
 }
 
 const {
@@ -31,10 +32,11 @@ const {
   supportSecondaryLinkLabel,
   supportSecondaryLinkOpensDemo = false,
   faqs = FAQ_ITEMS,
+  className = '',
 } = Astro.props as Props;
 ---
 
-<section id="faq" class="faq4" aria-labelledby="faq4-title">
+<section id="faq" class={`faq4 ${className}`.trim()} aria-labelledby="faq4-title">
   <div class="container faq4__container">
     <div class="faq4__header">
       <p class="faq4__badge">FAQ</p>

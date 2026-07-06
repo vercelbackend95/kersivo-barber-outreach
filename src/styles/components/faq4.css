@@ -192,3 +192,7 @@
     transition: none;
   }
 }
+
+.faq4.faq4--landing {
+  scroll-margin-top: clamp(5rem, 12vw, 6.5rem);
+}

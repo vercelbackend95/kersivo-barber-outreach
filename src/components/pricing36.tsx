@@ -51,7 +51,7 @@ const Pricing36 = ({ className, variant = "default" }: Pricing36Props) => {
         <p className="pricing36__questions">
           Questions first? Email{" "}
           <a href="mailto:hello@kersivo.co.uk">hello@kersivo.co.uk</a>
-          {" "}— or use the contact form below.
+          {copy.questionsSuffix ? ` ${copy.questionsSuffix}` : null}
         </p>
 
         {calendlyUrl ? (
@@ -66,7 +66,7 @@ const Pricing36 = ({ className, variant = "default" }: Pricing36Props) => {
           <div className="flex flex-col gap-4">
             <div className="pricing36__plan-frame pricing36__plan-frame--launch flex h-full flex-col rounded-4xl p-px">
               <div className="h-full rounded-[31px] bg-background p-8">
-                <div className="flex items-center justify-between">
+                <div className="pricing36__plan-header flex items-center justify-between">
                   <p className="text-xl font-semibold">Launch</p>
                 </div>
                 <div className="mt-6 flex flex-col gap-2">
@@ -93,7 +93,7 @@ const Pricing36 = ({ className, variant = "default" }: Pricing36Props) => {
                 <div className="pricing36__anchors">
                   <p className="pricing36__anchor pricing36__anchor--switcher">
                     <span className="pricing36__anchor-tag">Switching</span>
-                    Many busy shops on marketplace apps see subscription plus traffic-related fees in the ~&pound;120&ndash;&pound;300/mo range &mdash; line it up with your own statements.
+                    {copy.launchSwitcherAnchor}
                   </p>
                   <p className="pricing36__anchor pricing36__anchor--newcomer">
                     <span className="pricing36__anchor-tag pricing36__anchor-tag--newcomer">Starting fresh</span>
@@ -106,7 +106,7 @@ const Pricing36 = ({ className, variant = "default" }: Pricing36Props) => {
                 className="group pricing36__plan-cta flex w-full items-center justify-center gap-1.5 py-3 text-center font-medium text-background"
                 onClick={() => openDepositModal("launch")}
               >
-                Plan my setup on Launch
+                {copy.launchCtaLabel}
                 <ArrowRight className="size-5 transition-transform group-hover:translate-x-1" />
               </button>
             </div>
@@ -114,7 +114,7 @@ const Pricing36 = ({ className, variant = "default" }: Pricing36Props) => {
           <div className="flex flex-col gap-4">
             <div className="pricing36__plan-frame pricing36__plan-frame--growth flex h-full flex-col rounded-4xl p-px">
               <div className="h-full rounded-[31px] bg-background p-8">
-                <div className="flex items-center justify-between gap-2">
+                <div className="pricing36__plan-header flex items-center justify-between gap-2">
                   <p className="text-xl font-semibold">Priority Growth</p>
                   <span className="compare3-block__badge">Best Value</span>
                 </div>
@@ -142,7 +142,7 @@ const Pricing36 = ({ className, variant = "default" }: Pricing36Props) => {
                 <div className="pricing36__anchors">
                   <p className="pricing36__anchor pricing36__anchor--switcher">
                     <span className="pricing36__anchor-tag">Switching</span>
-                    When marketplace fees scale with chairs and volume, a flat Care plan keeps margin predictable next to Stripe only.
+                    {copy.prioritySwitcherAnchor}
                   </p>
                   <p className="pricing36__anchor pricing36__anchor--newcomer">
                     <span className="pricing36__anchor-tag pricing36__anchor-tag--newcomer">Starting fresh</span>
@@ -155,7 +155,7 @@ const Pricing36 = ({ className, variant = "default" }: Pricing36Props) => {
                 className="group pricing36__plan-cta flex w-full items-center justify-center gap-1.5 py-3 text-center font-medium text-background"
                 onClick={() => openDepositModal("priority")}
               >
-                Plan my setup on Priority Growth
+                {copy.priorityCtaLabel}
                 <ArrowRight className="size-5 transition-transform group-hover:translate-x-1" />
               </button>
             </div>

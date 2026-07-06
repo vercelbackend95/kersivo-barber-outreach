@@ -35,7 +35,7 @@ export function ShopProductCarousel({
             </article>
           </li>
         ) : (
-          products.map((product, index) => {
+          (previewMode ? products.slice(0, 3) : products).map((product, index) => {
             const href = productHref ?? `/shop/${product.id}`;
 
             return (
@@ -48,6 +48,8 @@ export function ShopProductCarousel({
                   <div className="shop-media">
                     {product.imageUrl ? (
                       <img src={product.imageUrl} alt={product.name} loading="lazy" className="shop-image" />
+                    ) : previewMode ? (
+                      <div className="shop-image shop-image--placeholder shop-image--preview-demo" aria-hidden="true" />
                     ) : (
                       <div className="shop-image shop-image--placeholder" aria-hidden="true" />
                     )}

@@ -9,7 +9,7 @@ export const BARBERSHOP_BOOKING_FAQ_ITEMS: LandingFaqItem[] = [
   {
     question: 'Do you take any percentage from bookings or product sales?',
     answer:
-      'No. KERSIVO does not take commission from your bookings or retail sales. Your bookings and product sales stay with your shop. Stripe card processing fees may apply for online payments.',
+      'KERSIVO takes 0% commission from bookings and retail sales. Stripe/card processing fees may still apply to online card payments.',
   },
   {
     question: 'What fees do I still pay?',
@@ -19,12 +19,12 @@ export const BARBERSHOP_BOOKING_FAQ_ITEMS: LandingFaqItem[] = [
   {
     question: 'Can I buy without speaking to someone first?',
     answer:
-      'Yes. You can choose your setup package online and pay securely through Stripe. After checkout, you’ll receive the onboarding form for your shop details. If anything needs clarification, we’ll contact you before the build continues.',
+      'Yes. You can choose a setup package, pay securely, then complete the onboarding form. KERSIVO will prepare the setup and nothing goes live without your review.',
   },
   {
     question: 'Can you migrate us from Booksy, Fresha or Nearcut?',
     answer:
-      'We help map your services, barbers, opening hours and booking flow while your current system stays live. When your KERSIVO setup is ready, we help you move your public booking link over to your own domain.',
+      'We help map your services, barbers, opening hours and booking flow. Where export/import is available, we can also help move client data from CSV.',
   },
   {
     question: 'Will my clients have to download a new app?',
@@ -49,7 +49,7 @@ export const BARBERSHOP_BOOKING_FAQ_ITEMS: LandingFaqItem[] = [
   {
     question: 'Is KERSIVO new?',
     answer:
-      'Yes. KERSIVO is an early-stage platform built for independent UK barbershops. That is why the live booking flow and admin demo are available to explore before purchase, so you can see the system clearly before choosing your setup.',
+      'Yes — KERSIVO is early-stage and currently onboarding selected UK barbershops. That means you get closer setup support, direct founder attention and a system built around real barbershop needs.',
   },
 ];
 

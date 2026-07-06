@@ -51,11 +51,12 @@
   margin-top: 0.25rem;
 }
 
-/* Retail preview: contained panel, full cards, no accidental clipping */
+/* Retail preview: grid of full cards — no partial carousel peek */
 .landing-demo-preview--compact .feature261__media--carousel {
   position: relative;
-  overflow: hidden;
-  min-height: clamp(13rem, 23vh, 18.5rem);
+  overflow: visible;
+  min-height: auto;
+  padding: 0.65rem;
   border: 1px solid var(--border);
   border-radius: var(--radius-4);
   isolation: isolate;
@@ -63,25 +64,79 @@
 
 .landing-demo-preview--compact .feature261__media--carousel .shop6__carousel,
 .landing-demo-preview--compact .feature261__media--carousel .feature261-retail-carousel {
-  height: 100%;
+  height: auto;
 }
 
 .landing-demo-preview--compact .feature261__media--carousel .shop6__grid {
-  --shop6-desktop-visible-cards: 2;
-  --shop6-desktop-gap: 0.45rem;
-  --shop6-desktop-padding: 0;
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0.5rem;
+  width: 100%;
   margin-inline: 0;
   padding-inline: 0;
-  padding-bottom: 0.25rem;
-  scrollbar-width: none;
+  padding-bottom: 0;
+  overflow: visible;
+  scroll-snap-type: none;
 }
 
-.landing-demo-preview--compact .feature261__media--carousel .shop6__grid::-webkit-scrollbar {
+.landing-demo-preview--compact .feature261__media--carousel .shop6__item {
+  flex: unset;
+  min-width: 0;
+  max-width: none;
+}
+
+.landing-demo-preview--compact .feature261__media--carousel .shop6__item:nth-child(n + 3) {
   display: none;
+}
+
+.landing-demo-preview--compact .feature261__media--carousel .shop6__item--mobile-extra {
+  display: flex;
 }
 
 .landing-demo-preview--compact .feature261__media--carousel .shop-card {
   border-radius: var(--radius-4);
+  height: 100%;
+}
+
+.landing-demo-preview--compact .feature261__media--carousel .shop6__grid .shop-media {
+  aspect-ratio: 4 / 3;
+  min-height: 0;
+  padding: 0.45rem;
+  box-shadow: inset 0 1px 0 color-mix(in srgb, var(--fg) 6%, transparent);
+}
+
+.landing-demo-preview--compact .feature261__media--carousel .shop-image {
+  object-fit: contain;
+  object-position: center;
+  padding: 0.15rem;
+}
+
+.landing-demo-preview--compact .feature261__media--carousel .shop-image--preview-demo {
+  background:
+    radial-gradient(
+      ellipse 70% 60% at 50% 40%,
+      color-mix(in srgb, var(--fg) 8%, var(--surface-2)),
+      color-mix(in srgb, var(--surface-2) 94%, var(--bg))
+    );
+  border-bottom: 0;
+}
+
+.landing-demo-preview--compact .feature261__media--carousel .shop-card[data-category='STYLING'] .shop-image--preview-demo {
+  background:
+    radial-gradient(
+      ellipse 55% 75% at 50% 35%,
+      color-mix(in srgb, var(--fg) 7%, var(--surface-2)),
+      color-mix(in srgb, var(--surface-2) 94%, var(--bg))
+    );
+}
+
+.landing-demo-preview--compact .feature261__media--carousel .shop-card[data-category='BEARD_CARE'] .shop-image--preview-demo {
+  background:
+    radial-gradient(
+      ellipse 45% 70% at 50% 38%,
+      color-mix(in srgb, var(--info) 10%, var(--surface-2)),
+      color-mix(in srgb, var(--surface-2) 94%, var(--bg))
+    );
 }
 
 @media (min-width: 768px) {
@@ -90,17 +145,24 @@
   }
 }
 
-@media (max-width: 899px) {
-  .landing-demo-preview--compact .feature261__media--carousel {
-    min-height: clamp(14.5rem, 38vw, 18.5rem);
+@media (min-width: 900px) {
+  .landing-demo-preview--compact .feature261__media--carousel .shop6__grid {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 0.55rem;
   }
 
-  .landing-demo-preview--compact .feature261__media--carousel .shop6__grid {
-    --shop6-desktop-visible-cards: 2;
-    --shop6-desktop-padding: 0;
-    margin-inline: 0;
-    padding-inline: 0;
-    scroll-snap-type: x mandatory;
+  .landing-demo-preview--compact .feature261__media--carousel .shop6__item:nth-child(n + 3) {
+    display: flex;
+  }
+
+  .landing-demo-preview--compact .feature261__media--carousel .shop6__item:nth-child(n + 4) {
+    display: none;
+  }
+}
+
+@media (max-width: 899px) {
+  .landing-demo-preview--compact .feature261__media--carousel {
+    min-height: auto;
   }
 }
 
@@ -109,4 +171,17 @@
     width: 100%;
     min-height: 2.75rem;
   }
+}
+
+/* Admin preview row — slightly clearer screenshot without changing content */
+.landing-demo-preview--compact .feature261__row:first-child .feature261-visual-card__viewport {
+  border: 1px solid color-mix(in srgb, var(--border) 88%, var(--fg) 12%);
+  box-shadow:
+    0 0 0 1px color-mix(in srgb, var(--border) 70%, transparent),
+    0 10px 28px color-mix(in srgb, var(--fg) 6%, transparent);
+}
+
+.landing-demo-preview--compact .feature261__row:first-child .feature261-row-image--bookings {
+  transform: scale(1.03);
+  transform-origin: center top;
 }

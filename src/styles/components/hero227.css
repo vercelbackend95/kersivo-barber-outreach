@@ -491,15 +491,30 @@
 
 @media (max-width: 1023px) {
   .hero227-root--landing .hero227-mock-stack {
-    height: clamp(300px, 36vh, 400px);
-    padding-block: 0.75rem;
+    height: clamp(250px, 30vh, 340px);
+    padding-block: 0.5rem;
   }
 
   .hero227-root--landing .hero227-mock-clip {
-    height: clamp(240px, 32vh, 340px);
+    height: clamp(200px, 28vh, 280px);
   }
 
   .hero227-root--landing .hero227-mid-band {
     margin-top: 0.15rem;
+  }
+
+  .hero227-root--landing .hero227-trust-line--landing {
+    gap: 0.3rem 0.4rem;
+  }
+}
+
+@media (max-width: 599px) {
+  .hero227-root--landing .hero227-mock-stack {
+    height: clamp(220px, 28vh, 300px);
+    padding-block: 0.35rem;
+  }
+
+  .hero227-root--landing .hero227-mock-clip {
+    height: clamp(175px, 26vh, 250px);
   }
 }

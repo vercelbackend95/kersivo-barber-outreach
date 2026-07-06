@@ -15,7 +15,7 @@ import {
   buildBarbershopBookingFaqJsonLd,
 } from '@/lib/seo/barbershopBookingFaq';
 import { getFooterSocialLinks } from '@/lib/seo/footerSocialLinks';
-import { getLandingDemoCarouselProducts } from '@/lib/shop/landingDemoCarouselProducts';
+import { resolveLandingDemoCarouselProducts } from '@/lib/shop/landingDemoCarouselProducts';
 import { Pricing36 } from '../components/pricing36';
 import { RateCard1 } from '../components/rateCard1';
 import { BarbershopBookingHero } from '@/components/barbershopBookingHero';
@@ -36,7 +36,8 @@ import '../styles/pricing36.css';
 import '../styles/rateCard1.css';
 
 const PAGE_TITLE = 'Barbershop Booking System UK | KERSIVO';
-const carouselProducts = getLandingDemoCarouselProducts();
+const carouselProducts = await resolveLandingDemoCarouselProducts();
+const currentYear = new Date().getFullYear();
 ---
 
 <MainLayout
@@ -44,6 +45,7 @@ const carouselProducts = getLandingDemoCarouselProducts();
   description={PAGE_DESCRIPTIONS.barbershopBookingSystem}
   canonicalPath="/barbershop-booking-system"
   jsonLd={buildBarbershopBookingFaqJsonLd()}
+  navbarVariant="landing"
 >
   <main>
     <SystemChooser />
@@ -56,6 +58,7 @@ const carouselProducts = getLandingDemoCarouselProducts();
     <LandingSwitcherReassurance />
     <LandingDifference />
     <Faq4
+      className="faq4--landing"
       heading="Questions before you choose your setup?"
       subHeading="Clear answers on commission, fees, switching, setup and what happens after purchase."
       supportHeading="Still deciding?"
@@ -74,13 +77,11 @@ const carouselProducts = getLandingDemoCarouselProducts();
       ctaHref="/#book-demo"
       ctaIsDemo={true}
       brandName="KERSIVO"
+      copyright={`© ${currentYear} KERSIVO`}
       navigation={[
-        { name: 'Home', href: '/#home' },
-        { name: 'Paths', href: '/#paths' },
-        { name: 'Pricing', href: '/#pricing' },
-        { name: 'FAQ', href: '/#faq' },
+        { name: 'Pricing', href: '#pricing' },
+        { name: 'FAQ', href: '#faq' },
         { name: 'Contact', href: '/#contact' },
-        { name: 'Retail Demo', href: '/shop' },
       ]}
       social={getFooterSocialLinks()}
       legal={[

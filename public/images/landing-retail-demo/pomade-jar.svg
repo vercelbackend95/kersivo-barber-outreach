@@ -1,0 +1,22 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 150" role="img" aria-hidden="true">
+  <defs>
+    <linearGradient id="jarBg" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#2a3340"/>
+      <stop offset="100%" stop-color="#151a22"/>
+    </linearGradient>
+    <linearGradient id="jarLid" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#3d4654"/>
+      <stop offset="100%" stop-color="#252c36"/>
+    </linearGradient>
+    <radialGradient id="jarHighlight" cx="35%" cy="28%" r="55%">
+      <stop offset="0%" stop-color="#ffffff" stop-opacity="0.14"/>
+      <stop offset="100%" stop-color="#ffffff" stop-opacity="0"/>
+    </radialGradient>
+  </defs>
+  <rect width="200" height="150" fill="#11151b"/>
+  <ellipse cx="100" cy="118" rx="52" ry="10" fill="#0b0d10" opacity="0.45"/>
+  <rect x="58" y="42" width="84" height="72" rx="8" fill="url(#jarBg)"/>
+  <rect x="58" y="42" width="84" height="72" rx="8" fill="url(#jarHighlight)"/>
+  <rect x="66" y="28" width="68" height="18" rx="4" fill="url(#jarLid)"/>
+  <rect x="72" y="22" width="56" height="8" rx="2" fill="#3d4654"/>
+</svg>

@@ -1,21 +1,30 @@
 ---
 import NavbarCartButton from '@/components/shop/NavbarCartButton.astro';
+import {
+  getNavbar17CtaLabel,
+  getNavbar17Items,
+  navbar17ShowsCart,
+  type Navbar17Variant,
+} from '@/lib/nav/navbar17Items';
 
-const navItems = [
-  { name: 'Home',    link: '/#home',    sectionId: 'home',    isPage: false, icon: 'M3 10.5 12 3l9 7.5M5 9v11h14V9' },
-  { name: 'Paths',   link: '/#paths',   sectionId: 'paths',   isPage: false, icon: 'M12 3v4M12 17v4M3 12h4M17 12h4M5.64 5.64l2.83 2.83M15.53 15.53l2.83 2.83M18.36 5.64l-2.83 2.83M8.47 15.53l-2.83 2.83M12 16a4 4 0 1 0 0-8 4 4 0 0 0 0 8Z' },
-  { name: 'Pricing', link: '/#pricing', sectionId: 'pricing', isPage: false, icon: 'M12 1v22M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6' },
-  { name: 'FAQ',     link: '/#faq',     sectionId: 'faq',     isPage: false, icon: 'M12 17h.01M9.1 9a3 3 0 1 1 4.9 2.3c-.92.62-1.5 1.21-1.5 2.2v.5M22 12a10 10 0 1 1-20 0 10 10 0 0 1 20 0Z' },
-  { name: 'Retail Demo', link: '/shop',     sectionId: null,      isPage: true,  icon: 'M6 7h12l-1 13H7L6 7Zm3-3h6l1 3H8l1-3Z' },
-  { name: 'Contact', link: '/#contact', sectionId: 'contact', isPage: false, icon: 'M4 6h16v12H4V6Zm1.5 1.5L12 12l6.5-4.5' },
-];
+interface Props {
+  variant?: Navbar17Variant;
+}
+
+const { variant = 'default' } = Astro.props as Props;
+
+const navItems = getNavbar17Items(variant);
+const ctaLabel = getNavbar17CtaLabel(variant);
+const showCart = navbar17ShowsCart(variant);
+const brandAriaLabel =
+  variant === 'landing' ? 'KERSIVO – back to homepage' : 'Kersivo – back to homepage';
 ---
 
-<header class="navbar17" data-navbar17>
+<header class="navbar17" data-navbar17 data-navbar-variant={variant}>
   <div class="navbar17__stack" data-navbar17-stack>
     <div class="navbar17__bar">
       <div class="container navbar17__wrap">
-        <a href="/#home" class="navbar17__brand" aria-label="Kersivo – back to homepage">
+        <a href="/#home" class="navbar17__brand" aria-label={brandAriaLabel}>
           <img
             class="navbar17__brand-img"
             src="/images/logo_nobg.png"
@@ -49,13 +58,13 @@ const navItems = [
         <div class="navbar17__right">
           <!-- Desktop actions -->
           <div class="navbar17__actions">
-            <NavbarCartButton class="navbar17__cart-btn" />
-            <a href="/#book-demo" class="navbar17__cta-btn" data-demo-cta>Plan my setup</a>
+            {showCart ? <NavbarCartButton class="navbar17__cart-btn" /> : null}
+            <a href="/#book-demo" class="navbar17__cta-btn" data-demo-cta>{ctaLabel}</a>
           </div>
 
           <!-- Mobile controls: hamburger -->
           <div class="navbar17__mobile-controls">
-            <a href="/#book-demo" class="navbar17__mobile-bar-cta" data-demo-cta>Plan my setup</a>
+            <a href="/#book-demo" class="navbar17__mobile-bar-cta" data-demo-cta>{ctaLabel}</a>
             <button
               class="navbar17__toggle"
               type="button"
@@ -99,9 +108,11 @@ const navItems = [
             </a>
           </li>
         ))}
-        <li class="navbar17__mobile-cart-item">
-          <NavbarCartButton class="navbar17__cart-btn navbar17__cart-btn--mobile-list" mobileSheet />
-        </li>
+        {showCart ? (
+          <li class="navbar17__mobile-cart-item">
+            <NavbarCartButton class="navbar17__cart-btn navbar17__cart-btn--mobile-list" mobileSheet />
+          </li>
+        ) : null}
       </ul>
     </nav>
   </div>
@@ -528,6 +539,8 @@ const navItems = [
 
       const pathname = window.location.pathname.replace(/\/$/, '') || '/';
       const isHome = pathname === '/';
+      const isLandingNav = navbar.getAttribute('data-navbar-variant') === 'landing';
+      const useScrollSpy = isHome || isLandingNav;
 
       updateScrollState();
       window.addEventListener('scroll', updateScrollState, { passive: true });
@@ -585,7 +598,7 @@ const navItems = [
       mobileBackdrop?.addEventListener('click', () => closeMobileMenu());
       mobileLinks.forEach((link) => link.addEventListener('click', onMobileNavLinkClick));
 
-      if (isHome) {
+      if (useScrollSpy) {
         initScrollSpy();
         onHashChange();
       } else {

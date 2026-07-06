@@ -27,14 +27,29 @@
 
 .landing-final-cta__heading {
   margin: 0;
+  width: 100%;
+  text-align: center;
   font-size: clamp(1.85rem, 4.8vw, 3rem);
   line-height: 1.08;
   text-wrap: balance;
 }
 
+.landing-final-cta__note {
+  margin: 0 auto;
+  max-width: 42rem;
+  width: 100%;
+  text-align: center;
+  justify-self: center;
+  color: var(--muted);
+  font-size: 0.95rem;
+  line-height: 1.6;
+}
+
 .landing-final-cta__subheadline {
   margin: 0;
   max-width: 42rem;
+  width: 100%;
+  text-align: center;
   color: var(--muted);
   line-height: 1.65;
   text-wrap: pretty;
@@ -45,17 +60,12 @@
   flex-direction: column;
   gap: var(--space-sm);
   justify-content: center;
+  align-items: center;
 }
 
 .landing-final-cta__actions .btn {
   width: 100%;
-}
-
-.landing-final-cta__note {
-  margin: 0;
-  color: var(--muted);
-  font-size: 0.95rem;
-  line-height: 1.6;
+  max-width: 18rem;
 }
 
 .landing-final-cta__note a {
@@ -73,6 +83,7 @@
     flex-direction: row;
     flex-wrap: wrap;
     align-items: center;
+    justify-content: center;
   }
 
   .landing-final-cta__actions .btn {
