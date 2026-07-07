@@ -1,3 +1,5 @@
+import { ChevronLeft, ChevronRight } from 'lucide-react';
+
 import { CATEGORY_LABELS, type CarouselProduct } from '@/lib/shop/carouselProducts';
 import { formatGbp } from '@/lib/shop/money';
 import { cn } from '@/lib/utils';
@@ -95,6 +97,30 @@ export function ShopProductCarousel({
             Next
           </button>
         </div>
+      )}
+
+      {products.length > 0 && previewMode && (
+        <>
+          <button
+            className="feature261-retail-carousel__arrow feature261-retail-carousel__arrow--prev"
+            type="button"
+            data-shop6-prev
+            aria-label="Previous products"
+          >
+            <ChevronLeft aria-hidden="true" />
+          </button>
+          <button
+            className="feature261-retail-carousel__arrow feature261-retail-carousel__arrow--next"
+            type="button"
+            data-shop6-next
+            aria-label="Next products"
+          >
+            <ChevronRight aria-hidden="true" />
+          </button>
+          <span className="feature261-retail-carousel__cue" aria-hidden="true">
+            Scroll products &rarr;
+          </span>
+        </>
       )}
     </div>
   );

@@ -190,7 +190,7 @@
 .landing-value-cards__included {
   display: flex;
   flex-wrap: wrap;
-  align-items: baseline;
+  align-items: center;
   gap: 0.35rem 0.65rem;
   padding: clamp(0.85rem, 2vw, 1.1rem) clamp(1rem, 2.5vw, 1.35rem);
   background: var(--surface-1);
@@ -214,11 +214,26 @@
 
 .landing-value-cards__included-items {
   margin: 0;
+  padding: 0;
+  list-style: none;
   min-width: 0;
   flex: 1 1 16rem;
-  font-size: var(--text-sm);
-  line-height: 1.55;
-  color: var(--muted);
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4rem 0.5rem;
+}
+
+.landing-value-cards__included-chip {
+  display: inline-flex;
+  align-items: center;
+  padding: 0.28rem 0.7rem;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-full);
+  background: color-mix(in srgb, var(--surface-2) 85%, var(--bg));
+  font-size: var(--text-xs);
+  line-height: 1.4;
+  color: var(--fg);
+  white-space: nowrap;
 }
 
 @media (max-width: 767px) {
@@ -247,5 +262,6 @@
 
   .landing-value-cards__included-items {
     flex-basis: auto;
+    justify-content: center;
   }
 }

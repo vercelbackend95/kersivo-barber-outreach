@@ -68,7 +68,7 @@
 }
 
 .pricing36 .pricing36__plan-frame--launch {
-  background: #2596be;
+  background: color-mix(in srgb, var(--fg) 14%, var(--surface-2));
 }
 
 .pricing36 .pricing36__plan-frame--growth {
@@ -367,6 +367,26 @@
   text-underline-offset: 2px;
 }
 
+.pricing36__soft-cta {
+  margin: var(--space-2xs) auto 0;
+  max-width: 42rem;
+  text-align: center;
+  font-size: var(--text-sm);
+  line-height: 1.5;
+  color: color-mix(in srgb, var(--muted) 80%, var(--fg) 20%);
+}
+
+.pricing36__soft-cta a {
+  color: color-mix(in srgb, var(--muted) 40%, var(--fg) 60%);
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+
+.pricing36__soft-cta a:hover,
+.pricing36__soft-cta a:focus-visible {
+  color: var(--fg);
+}
+
 @media (max-width: 767px) {
   .pricing36--landing {
     padding-block: clamp(3rem, 8vw, 5rem) !important;
@@ -406,6 +426,13 @@
 
 .pricing36.pricing36--landing {
   scroll-margin-top: clamp(5rem, 12vw, 6.5rem);
+}
+
+/* Tighten the gap into the Ongoing Care section on desktop (landing only) */
+@media (min-width: 768px) {
+  .pricing36--landing {
+    padding-bottom: 5rem;
+  }
 }
 
 .pricing36--landing .compare3-block__header h2 {

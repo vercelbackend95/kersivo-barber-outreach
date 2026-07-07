@@ -17,14 +17,17 @@ const navItems = getNavbar17Items(variant);
 const ctaLabel = getNavbar17CtaLabel(variant);
 const showCart = navbar17ShowsCart(variant);
 const brandAriaLabel =
-  variant === 'landing' ? 'KERSIVO – back to homepage' : 'Kersivo – back to homepage';
+  variant === 'landing' ? 'KERSIVO – back to top' : 'Kersivo – back to homepage';
+const brandHref = variant === 'landing' ? '#hero' : '/#home';
+const ctaHref = variant === 'landing' ? '#pricing' : '/#book-demo';
+const isLanding = variant === 'landing';
 ---
 
 <header class="navbar17" data-navbar17 data-navbar-variant={variant}>
   <div class="navbar17__stack" data-navbar17-stack>
     <div class="navbar17__bar">
       <div class="container navbar17__wrap">
-        <a href="/#home" class="navbar17__brand" aria-label={brandAriaLabel}>
+        <a href={brandHref} class="navbar17__brand" aria-label={brandAriaLabel}>
           <img
             class="navbar17__brand-img"
             src="/images/logo_nobg.png"
@@ -59,12 +62,12 @@ const brandAriaLabel =
           <!-- Desktop actions -->
           <div class="navbar17__actions">
             {showCart ? <NavbarCartButton class="navbar17__cart-btn" /> : null}
-            <a href="/#book-demo" class="navbar17__cta-btn" data-demo-cta>{ctaLabel}</a>
+            <a href={ctaHref} class="navbar17__cta-btn" data-demo-cta={isLanding ? undefined : true} data-track={isLanding ? 'plan_my_setup_click' : undefined}>{ctaLabel}</a>
           </div>
 
           <!-- Mobile controls: hamburger -->
           <div class="navbar17__mobile-controls">
-            <a href="/#book-demo" class="navbar17__mobile-bar-cta" data-demo-cta>{ctaLabel}</a>
+            <a href={ctaHref} class="navbar17__mobile-bar-cta" data-demo-cta={isLanding ? undefined : true} data-track={isLanding ? 'plan_my_setup_click' : undefined}>{ctaLabel}</a>
             <button
               class="navbar17__toggle"
               type="button"
@@ -475,6 +478,7 @@ const brandAriaLabel =
       };
 
       const onHashChange = () => {
+        if (isLandingNav) return;
         const hash = window.location.hash.replace('#', '');
         if (hash && sectionIds.includes(hash)) {
           setActiveById(hash);
@@ -540,7 +544,7 @@ const brandAriaLabel =
       const pathname = window.location.pathname.replace(/\/$/, '') || '/';
       const isHome = pathname === '/';
       const isLandingNav = navbar.getAttribute('data-navbar-variant') === 'landing';
-      const useScrollSpy = isHome || isLandingNav;
+      const useScrollSpy = isHome;
 
       updateScrollState();
       window.addEventListener('scroll', updateScrollState, { passive: true });
@@ -601,7 +605,7 @@ const brandAriaLabel =
       if (useScrollSpy) {
         initScrollSpy();
         onHashChange();
-      } else {
+      } else if (!isLandingNav) {
         setActiveByPage(pathname, window.location.hash);
       }
 

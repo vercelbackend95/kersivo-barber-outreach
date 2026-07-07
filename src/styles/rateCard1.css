@@ -217,6 +217,11 @@
   .rate-card1 {
     padding: 7rem 0;
   }
+
+  /* Landing pairs directly after pricing — trim the top gap, keep breathing room */
+  .rate-card1.rate-card1--landing {
+    padding-top: 4.5rem;
+  }
 }
 
 @media (max-width: 767px) {

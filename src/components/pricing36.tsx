@@ -99,6 +99,8 @@ const Pricing36 = ({ className, variant = "default" }: Pricing36Props) => {
                 type="button"
                 className="group pricing36__plan-cta flex w-full items-center justify-center gap-1.5 py-3 text-center font-medium text-background"
                 onClick={() => openDepositModal("launch")}
+                data-track="launch_stripe_click"
+                data-setup-plan="launch"
               >
                 {copy.launchCtaLabel}
                 <ArrowRight className="size-5 transition-transform group-hover:translate-x-1" />
@@ -148,6 +150,8 @@ const Pricing36 = ({ className, variant = "default" }: Pricing36Props) => {
                 type="button"
                 className="group pricing36__plan-cta flex w-full items-center justify-center gap-1.5 py-3 text-center font-medium text-background"
                 onClick={() => openDepositModal("priority")}
+                data-track="priority_growth_stripe_click"
+                data-setup-plan="priority"
               >
                 {copy.priorityCtaLabel}
                 <ArrowRight className="size-5 transition-transform group-hover:translate-x-1" />
@@ -161,6 +165,13 @@ const Pricing36 = ({ className, variant = "default" }: Pricing36Props) => {
           <a href="mailto:hello@kersivo.co.uk">hello@kersivo.co.uk</a>
           {copy.questionsSuffix ? ` ${copy.questionsSuffix}` : null}
         </p>
+
+        {variant === "landing" ? (
+          <p className="pricing36__soft-cta">
+            Not sure which setup fits your shop?{" "}
+            <a href="#contact" data-track="ask-about-setup">Ask About My Setup</a>
+          </p>
+        ) : null}
       </div>
 
       <SetupDepositModal

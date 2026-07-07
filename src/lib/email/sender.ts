@@ -332,6 +332,33 @@ export async function sendContactInquiryEmail(input: {
   });
 }
 
+export async function sendDemoCaptureLeadEmail(input: {
+  email: string;
+  shopName: string;
+  currentSystem?: string;
+}) {
+  const inbox = getContactInboxEmail();
+
+  const html = `<p><strong>New demo &amp; pricing request</strong> (review-later capture)</p>
+  <p><strong>Email:</strong> ${escapeHtml(input.email)}</p>
+  <p><strong>Barbershop:</strong> ${escapeHtml(input.shopName)}</p>
+  ${input.currentSystem ? `<p><strong>Current system:</strong> ${escapeHtml(input.currentSystem)}</p>` : ''}
+  <p><strong>Source:</strong> /barbershop-booking-system review-later capture</p>`;
+
+  return sendEmail({
+    to: inbox,
+    subject: `Demo & pricing request — ${input.shopName}`,
+    html,
+    devLogLabel: '[DEV EMAIL] Demo & pricing capture',
+    devPayload: {
+      to: inbox,
+      email: input.email,
+      shopName: input.shopName,
+      currentSystem: input.currentSystem ?? ''
+    }
+  });
+}
+
 export async function sendShopOrderConfirmationEmail(input: {
   to: string;
   itemLines: string[];

@@ -2,6 +2,8 @@
 import MainLayout from '@/layouts/MainLayout.astro';
 import { PAGE_DESCRIPTIONS } from '@/lib/seo/defaults';
 import Faq4 from '@/components/faq4.astro';
+import Contact16 from '@/components/contact16.astro';
+import LandingDemoCapture from '@/components/landingDemoCapture.astro';
 import LandingFinalCta from '@/components/landingFinalCta.astro';
 import SystemChooser from '@/components/SystemChooser.astro';
 import LandingValueCards from '@/components/landingValueCards.astro';
@@ -32,6 +34,8 @@ import '../styles/components/landingSwitcherReassurance.css';
 import '../styles/components/landingDifference.css';
 import '../styles/components/shopProductCards6.css';
 import '../styles/components/footer50.css';
+import '../styles/components/contact16.css';
+import '../styles/components/landingDemoCapture.css';
 import '../styles/pricing36.css';
 import '../styles/rateCard1.css';
 
@@ -64,24 +68,32 @@ const currentYear = new Date().getFullYear();
       supportHeading="Still deciding?"
       supportText="Explore the live demo or go straight to your setup package when you are ready."
       supportLinkLabel="Plan My Setup"
-      supportLinkHref="/#book-demo"
+      supportLinkHref="#pricing"
       supportSecondaryLinkLabel="View Live Demo"
       supportSecondaryLinkOpensDemo={true}
       faqs={BARBERSHOP_BOOKING_FAQ_ITEMS}
     />
     <LandingFinalCta />
+    <LandingDemoCapture />
+    <Contact16
+      submitLabel="↳ Ask About My Setup"
+      title="NOT READY TO CHOOSE A SETUP YET?"
+      description="Tell us about your barbershop and we’ll point you to the right KERSIVO setup."
+      note="No pressure. We’ll reply with the clearest next step for your shop."
+    />
     <Footer50
       heading="Your booking. Your brand. Zero commission."
       description="Whether you are switching from Booksy/Fresha or starting your first system, we set you up in about two weeks and never take a cut of your bookings."
       ctaText="PLAN MY SETUP"
-      ctaHref="/#book-demo"
-      ctaIsDemo={true}
+      ctaHref="#pricing"
+      ctaIsDemo={false}
+      ctaTrack="plan_my_setup_click"
       brandName="KERSIVO"
       copyright={`© ${currentYear} KERSIVO`}
       navigation={[
         { name: 'Pricing', href: '#pricing' },
         { name: 'FAQ', href: '#faq' },
-        { name: 'Contact', href: '/#contact' },
+        { name: 'Contact', href: '#contact' },
       ]}
       social={getFooterSocialLinks()}
       legal={[

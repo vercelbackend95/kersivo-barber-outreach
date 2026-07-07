@@ -96,9 +96,11 @@ const includedItems = [
 
     <div class="landing-value-cards__included">
       <p class="landing-value-cards__included-label">Included from day one:</p>
-      <p class="landing-value-cards__included-items">
-        {includedItems.join(' \u00b7 ')}
-      </p>
+      <ul class="landing-value-cards__included-items" role="list">
+        {includedItems.map((item) => (
+          <li class="landing-value-cards__included-chip">{item}</li>
+        ))}
+      </ul>
     </div>
   </div>
 </section>

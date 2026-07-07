@@ -528,3 +528,154 @@
     padding-block: 6rem;
   }
 }
+
+/* ── Retail preview carousel affordances ───────────────────── */
+
+.feature261 .feature261-retail-carousel {
+  position: relative;
+}
+
+/* Soft edge fades that signal horizontal scrollability */
+.feature261 .feature261-retail-carousel::before,
+.feature261 .feature261-retail-carousel::after {
+  content: "";
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  width: clamp(1.5rem, 6%, 3rem);
+  pointer-events: none;
+  z-index: 2;
+  opacity: 0;
+  transition: opacity 200ms ease;
+}
+
+.feature261 .feature261-retail-carousel::before {
+  left: 0;
+  background: linear-gradient(to right, var(--feature261-bg), transparent);
+}
+
+/* Default (before JS): assume more content sits to the right */
+.feature261 .feature261-retail-carousel::after {
+  right: 0;
+  background: linear-gradient(to left, var(--feature261-bg), transparent);
+  opacity: 1;
+}
+
+.feature261 .feature261-retail-carousel[data-can-scroll-left="true"]::before {
+  opacity: 1;
+}
+
+.feature261 .feature261-retail-carousel[data-can-scroll-left="false"]::before {
+  opacity: 0;
+}
+
+.feature261 .feature261-retail-carousel[data-can-scroll-right="true"]::after {
+  opacity: 1;
+}
+
+.feature261 .feature261-retail-carousel[data-can-scroll-right="false"]::after {
+  opacity: 0;
+}
+
+/* Round chevron controls (desktop affordance) */
+.feature261 .feature261-retail-carousel__arrow {
+  position: absolute;
+  top: 50%;
+  transform: translateY(-50%);
+  z-index: 3;
+  display: none;
+  align-items: center;
+  justify-content: center;
+  width: 2.25rem;
+  height: 2.25rem;
+  padding: 0;
+  border-radius: var(--radius-full);
+  border: 1px solid var(--border);
+  background: color-mix(in srgb, var(--surface) 92%, var(--bg));
+  color: var(--fg);
+  cursor: pointer;
+  box-shadow: 0 6px 16px color-mix(in srgb, var(--bg) 70%, transparent);
+  transition:
+    background-color 160ms ease,
+    border-color 160ms ease,
+    color 160ms ease,
+    opacity 160ms ease;
+}
+
+.feature261 .feature261-retail-carousel__arrow--prev {
+  left: 0.5rem;
+}
+
+.feature261 .feature261-retail-carousel__arrow--next {
+  right: 0.5rem;
+}
+
+.feature261 .feature261-retail-carousel__arrow svg {
+  width: 1.1rem;
+  height: 1.1rem;
+}
+
+.feature261 .feature261-retail-carousel__arrow:hover {
+  border-color: var(--accent);
+  color: var(--accent);
+}
+
+.feature261 .feature261-retail-carousel__arrow:focus-visible {
+  outline: 2px solid var(--focus);
+  outline-offset: 2px;
+}
+
+.feature261 .feature261-retail-carousel__arrow:disabled {
+  opacity: 0;
+  pointer-events: none;
+}
+
+/* "Scroll products" cue (mobile affordance) */
+.feature261 .feature261-retail-carousel__cue {
+  position: absolute;
+  right: 0.5rem;
+  bottom: 0.5rem;
+  z-index: 3;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
+  padding: 0.24rem 0.6rem;
+  border-radius: var(--radius-full);
+  border: 1px solid color-mix(in srgb, var(--accent) 38%, var(--border));
+  background: color-mix(in srgb, var(--surface) 82%, transparent);
+  color: color-mix(in srgb, var(--muted) 40%, var(--fg));
+  font-family: var(--font-body);
+  font-size: 0.62rem;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  white-space: nowrap;
+  pointer-events: none;
+  opacity: 1;
+  transition: opacity 200ms ease;
+  -webkit-backdrop-filter: blur(4px);
+  backdrop-filter: blur(4px);
+}
+
+.feature261 .feature261-retail-carousel[data-can-scroll-right="false"] .feature261-retail-carousel__cue {
+  opacity: 0;
+}
+
+@media (min-width: 900px) {
+  .feature261 .feature261-retail-carousel__arrow {
+    display: inline-flex;
+  }
+
+  .feature261 .feature261-retail-carousel__cue {
+    display: none;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .feature261 .feature261-retail-carousel::before,
+  .feature261 .feature261-retail-carousel::after,
+  .feature261 .feature261-retail-carousel__arrow,
+  .feature261 .feature261-retail-carousel__cue {
+    transition: none;
+  }
+}

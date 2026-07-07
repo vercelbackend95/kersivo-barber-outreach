@@ -51,7 +51,18 @@ function initShop6CarouselRoot(root: HTMLElement): void {
     return Math.max(1, Math.floor((carousel.clientWidth + SCROLL_TOLERANCE) / step));
   };
 
+  const updateEdges = () => {
+    const maxScroll = getMaxScroll();
+    const currentScroll = carousel.scrollLeft;
+    const canScroll = maxScroll > SCROLL_TOLERANCE;
+
+    root.dataset.canScrollLeft = String(canScroll && currentScroll > SCROLL_TOLERANCE);
+    root.dataset.canScrollRight = String(canScroll && currentScroll < maxScroll - SCROLL_TOLERANCE);
+  };
+
   const updateControls = () => {
+    updateEdges();
+
     if (!(prevButton instanceof HTMLButtonElement) || !(nextButton instanceof HTMLButtonElement)) {
       return;
     }

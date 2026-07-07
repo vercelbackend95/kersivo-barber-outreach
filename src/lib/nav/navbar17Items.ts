@@ -64,7 +64,7 @@ const LANDING_NAV_ITEMS: Navbar17Item[] = [
   },
   {
     name: 'Contact',
-    link: '/#contact',
+    link: '#contact',
     sectionId: 'contact',
     isPage: false,
     icon: 'M4 6h16v12H4V6Zm1.5 1.5L12 12l6.5-4.5',

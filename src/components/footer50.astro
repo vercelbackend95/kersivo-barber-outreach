@@ -16,6 +16,7 @@ interface Footer50Props {
   ctaText?: string;
   ctaHref?: string;
   ctaIsDemo?: boolean;
+  ctaTrack?: string;
   showIntro?: boolean;
   brandLine?: string;
   contactEmail?: string;
@@ -35,6 +36,7 @@ const {
   ctaText = "Get started",
   ctaHref = "#",
   ctaIsDemo = false,
+  ctaTrack,
   showIntro = true,
   brandLine = "",
   contactEmail = "",
@@ -78,7 +80,7 @@ function socialIconPath(id: Exclude<FooterSocialPlatform, 'instagram'>): string 
       <h2>{heading}</h2>
       <p>{description}</p>
       <div>
-        <a class="btn btn--primary footer50__cta" href={ctaHref} data-demo-cta={ctaIsDemo ? true : undefined}>{ctaText}</a>
+        <a class="btn btn--primary footer50__cta" href={ctaHref} data-demo-cta={ctaIsDemo ? true : undefined} data-track={ctaTrack || undefined}>{ctaText}</a>
       </div>
     </div>
   ) : brandLine ? (

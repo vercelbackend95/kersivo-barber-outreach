@@ -1,0 +1,131 @@
+---
+interface Props {
+  className?: string;
+}
+
+const { className = '' } = Astro.props as Props;
+---
+
+<section
+  class={`landing-demo-capture ${className}`.trim()}
+  aria-labelledby="landing-demo-capture-title"
+>
+  <div class="container">
+    <div class="landing-demo-capture__box">
+      <p class="landing-demo-capture__eyebrow">Want to review this later?</p>
+      <h2 id="landing-demo-capture-title" class="landing-demo-capture__title">
+        Send the KERSIVO demo and pricing to your inbox.
+      </h2>
+      <p class="landing-demo-capture__subtitle">
+        Get the live demo link, setup options and pricing breakdown so you can come back when you&rsquo;re ready.
+      </p>
+
+      <form class="landing-demo-capture__form" data-demo-capture-form novalidate>
+        <p
+          class="landing-demo-capture__status landing-demo-capture__status--idle"
+          data-demo-capture-status
+          role="status"
+          aria-live="polite"
+        ></p>
+
+        <div class="landing-demo-capture__row">
+          <label class="landing-demo-capture__field">
+            <span class="sr-only">Email</span>
+            <input type="email" name="email" placeholder="Email*" required />
+          </label>
+          <label class="landing-demo-capture__field">
+            <span class="sr-only">Barbershop name</span>
+            <input type="text" name="shopName" placeholder="Barbershop name*" required />
+          </label>
+        </div>
+
+        <label class="landing-demo-capture__field">
+          <span class="landing-demo-capture__field-label">Current booking system (optional)</span>
+          <select name="currentSystem">
+            <option value="">Select current system</option>
+            <option value="booksy">Booksy</option>
+            <option value="fresha">Fresha</option>
+            <option value="nearcut">Nearcut</option>
+            <option value="none">No system yet</option>
+            <option value="other">Other</option>
+          </select>
+        </label>
+
+        <button
+          type="submit"
+          class="btn btn--secondary landing-demo-capture__submit"
+          data-demo-capture-submit
+          data-track="demo_pricing_capture_submit"
+        >
+          Send Me The Demo
+        </button>
+
+        <p class="landing-demo-capture__microcopy">
+          No spam. Just the demo link and setup details.
+        </p>
+      </form>
+    </div>
+  </div>
+</section>
+
+<script>
+  const form = document.querySelector('[data-demo-capture-form]');
+  const statusEl = document.querySelector('[data-demo-capture-status]');
+  const submitBtn = document.querySelector('[data-demo-capture-submit]');
+  const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+
+  if (form instanceof HTMLFormElement && statusEl instanceof HTMLElement) {
+    form.addEventListener('submit', async (event) => {
+      event.preventDefault();
+
+      const fd = new FormData(form);
+      const email = String(fd.get('email') ?? '').trim();
+      const shopName = String(fd.get('shopName') ?? '').trim();
+      const currentSystem = String(fd.get('currentSystem') ?? '').trim();
+
+      statusEl.textContent = '';
+      statusEl.className = 'landing-demo-capture__status landing-demo-capture__status--idle';
+
+      if (!email || !EMAIL_RE.test(email)) {
+        statusEl.textContent = 'Please enter a valid email address.';
+        statusEl.classList.add('landing-demo-capture__status--error');
+        return;
+      }
+      if (!shopName) {
+        statusEl.textContent = 'Please enter your barbershop name.';
+        statusEl.classList.add('landing-demo-capture__status--error');
+        return;
+      }
+
+      if (submitBtn instanceof HTMLButtonElement) {
+        submitBtn.disabled = true;
+      }
+
+      try {
+        const response = await fetch('/api/lead', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ email, shopName, currentSystem }),
+        });
+        const data = (await response.json().catch(() => ({}))) as { ok?: boolean; error?: string };
+
+        if (!response.ok || !data.ok) {
+          statusEl.textContent = data.error ?? 'Something went wrong. Please try again.';
+          statusEl.className = 'landing-demo-capture__status landing-demo-capture__status--error';
+          return;
+        }
+
+        statusEl.textContent = 'Thanks — we’ll send the KERSIVO demo and pricing details to your inbox shortly.';
+        statusEl.className = 'landing-demo-capture__status landing-demo-capture__status--success';
+        form.reset();
+      } catch {
+        statusEl.textContent = 'Network error. Check your connection and try again.';
+        statusEl.className = 'landing-demo-capture__status landing-demo-capture__status--error';
+      } finally {
+        if (submitBtn instanceof HTMLButtonElement) {
+          submitBtn.disabled = false;
+        }
+      }
+    });
+  }
+</script>

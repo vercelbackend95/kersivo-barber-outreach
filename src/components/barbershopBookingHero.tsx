@@ -92,6 +92,10 @@ const BarbershopBookingHero = ({ className }: BarbershopBookingHeroProps) => {
                     {heroH1Lines}
                   </VerticalCutReveal>
                 </h1>
+                <HeroTitleAccent
+                  className="pointer-events-none absolute -top-2 right-2 size-6 sm:size-7 md:size-8 lg:top-0 lg:right-4 lg:size-10"
+                  aria-hidden
+                />
               </div>
               <p className="mx-auto mt-1 max-w-2xl md:max-w-3xl text-pretty text-sm leading-relaxed text-muted-foreground/85 sm:text-base sm:leading-relaxed">
                 Booking, retail pickup and admin for UK barbershops &mdash; with 0%
@@ -108,13 +112,14 @@ const BarbershopBookingHero = ({ className }: BarbershopBookingHeroProps) => {
                   className="hero227-cta-system text-md flex h-full items-center justify-center rounded-2xl font-medium"
                   asChild
                 >
-                  <a href="/#book-demo">Plan My Setup</a>
+                  <a href="#pricing" data-track="plan_my_setup_click">Plan My Setup</a>
                 </Button>
                 <Button
                   type="button"
                   variant="outline"
                   className="hero227-cta-demo text-md rounded-2xl font-medium"
                   data-system-chooser-open
+                  data-track="view_live_demo_click"
                 >
                   View Live Demo
                 </Button>
@@ -180,3 +185,26 @@ const BarbershopBookingHero = ({ className }: BarbershopBookingHeroProps) => {
 };
 
 export { BarbershopBookingHero };
+
+/** Bootstrap `bi-scissors` path (matches the homepage hero accent). */
+const SCISSORS_PATH_D =
+  "M3.5 3.5c-.614-.884-.074-1.962.858-2.5L8 7.226 11.642 1c.932.538 1.472 1.616.858 2.5L8.81 8.61l1.556 2.661a2.5 2.5 0 1 1-.794.637L8 9.73l-1.572 2.177a2.5 2.5 0 1 1-.794-.637L7.19 8.61zm2.5 10a1.5 1.5 0 1 0-3 0 1.5 1.5 0 0 0 3 0m7 0a1.5 1.5 0 1 0-3 0 1.5 1.5 0 0 0 3 0";
+
+const HeroTitleAccent = (props: React.ComponentProps<typeof motion.svg>) => {
+  const { className, ...rest } = props;
+  return (
+    <motion.svg
+      viewBox="0 0 16 16"
+      xmlns="http://www.w3.org/2000/svg"
+      fill="#dc2626"
+      aria-hidden
+      initial={{ opacity: 0, rotate: -45, scale: 0.5 }}
+      animate={{ opacity: 1, rotate: 25, scale: 1 }}
+      transition={{ duration: 0.5, bounce: 0.4, type: "spring", delay: 0.6 }}
+      className={cn("shrink-0", className)}
+      {...rest}
+    >
+      <path d={SCISSORS_PATH_D} />
+    </motion.svg>
+  );
+};

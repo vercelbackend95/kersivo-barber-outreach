@@ -1,26 +1,31 @@
 ---
 interface Contact16Props {
   className?: string;
+  submitLabel?: string;
+  title?: string;
+  description?: string;
+  note?: string;
 }
 
-const { className = "" } = Astro.props as Contact16Props;
+const {
+  className = "",
+  submitLabel = "↳ PLAN MY SETUP",
+  title = "PLAN YOUR SETUP — ON US.",
+  description = "Tell us about your shop — size, current booking stack (or none yet), and what you want to fix or build. Whether you are switching from Booksy/Fresha or launching your first system, we map a setup path that fits your shop.",
+  note = "We reply within 24 hours with a one-page setup plan for your shop — yours to keep, no obligation. Works for switchers and new shops alike.",
+} = Astro.props as Contact16Props;
 ---
 
 <section id="contact" class={`contact16 ${className}`.trim()} aria-labelledby="contact16-title">
   <span id="book-demo" aria-hidden="true"></span>
 
   <div class="container">
-    <h2 id="contact16-title" class="contact16__title">PLAN YOUR SETUP &mdash; ON US.</h2>
+    <h2 id="contact16-title" class="contact16__title">{title}</h2>
 
     <div class="contact16__layout">
       <div class="contact16__info">
-        <p class="contact16__description">
-          Tell us about your shop &mdash; size, current booking stack (or none yet), and what you want to fix or build.
-          Whether you are switching from Booksy/Fresha or launching your first system, we map a setup path that fits your shop.
-        </p>
-        <p class="contact16__note">
-          We reply within 24 hours with a one-page setup plan for your shop &mdash; yours to keep, no obligation. Works for switchers and new shops alike.
-        </p>
+        <p class="contact16__description">{description}</p>
+        <p class="contact16__note">{note}</p>
       </div>
 
       <form class="contact16__form" data-contact-form novalidate>
@@ -69,8 +74,8 @@ const { className = "" } = Astro.props as Contact16Props;
 
         </label>
 
-        <button type="submit" class="btn btn--ghost contact16__submit" data-contact-submit>
-          ↳ PLAN MY SETUP
+        <button type="submit" class="btn btn--ghost contact16__submit" data-contact-submit data-track="setup_enquiry_submit">
+          {submitLabel}
         </button>
       </form>
     </div>
