@@ -17,7 +17,6 @@ import {
   X,
 } from '../lucide-react';
 
-import AdminDemoBanner from './AdminDemoBanner';
 import DemoActionToast from './DemoActionToast';
 
 type AdminLayoutProps = {
@@ -489,7 +488,6 @@ export default function AdminLayout({
           ) : null}
         </header>
         <div className="admin-mobile-header-spacer" aria-hidden="true" />
-        {isPublicDemo ? <AdminDemoBanner /> : null}
         {isPublicDemo ? <DemoActionToast /> : null}
         {persistentAdminChrome ? (
           <div className="admin-persistent-chrome-host" aria-hidden="true" style={{ display: 'none' }}>

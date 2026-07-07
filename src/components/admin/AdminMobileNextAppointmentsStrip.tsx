@@ -1,5 +1,6 @@
 import React, { useId, useLayoutEffect, useMemo, useRef, useState } from 'react';
 import { ChevronDown } from '../lucide-react';
+import AdminDemoPill from './AdminDemoPill';
 
 export type MobileNextAppointmentItem = {
   id: string;
@@ -15,6 +16,7 @@ type AdminMobileNextAppointmentsStripProps = {
   onToggleExpanded: () => void;
   formatStartTime: (iso: string) => string;
   connectionStateLabel: string;
+  isDemo?: boolean;
 };
 
 export default function AdminMobileNextAppointmentsStrip({
@@ -23,6 +25,7 @@ export default function AdminMobileNextAppointmentsStrip({
   onToggleExpanded,
   formatStartTime,
   connectionStateLabel,
+  isDemo = false,
 }: AdminMobileNextAppointmentsStripProps) {
   const listDomId = `admin-mobile-next-strip-list-${useId().replace(/:/g, '')}`;
   const MAX_VISIBLE_APPOINTMENTS = 4;
@@ -108,12 +111,15 @@ export default function AdminMobileNextAppointmentsStrip({
     <section className="admin-mobile-next-strip" aria-label="Upcoming appointments">
       <div className="admin-mobile-next-strip-head">
         <p className="admin-mobile-next-strip-kicker">Next appointments</p>
-        <span className={`admin-mobile-next-strip-live admin-mobile-next-strip-live--${liveModifier}`}>
-          <span
-            className={`admin-mobile-next-strip-live-dot${liveModifier === 'live' ? ' admin-mobile-next-strip-live-dot--pulse' : ''}`}
-            aria-hidden="true"
-          />
-          <span>{connectionStateLabel}</span>
+        <span className="admin-mobile-next-strip-status">
+          {isDemo ? <AdminDemoPill /> : null}
+          <span className={`admin-mobile-next-strip-live admin-mobile-next-strip-live--${liveModifier}`}>
+            <span
+              className={`admin-mobile-next-strip-live-dot${liveModifier === 'live' ? ' admin-mobile-next-strip-live-dot--pulse' : ''}`}
+              aria-hidden="true"
+            />
+            <span>{connectionStateLabel}</span>
+          </span>
         </span>
       </div>
 

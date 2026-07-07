@@ -10,6 +10,7 @@ export default function AdminBookingsOpsDashHeroLive() {
   const {
     sessionChecked,
     loggedIn,
+    isPublicDemo,
     nextBooking,
     connectionStateLabel,
     hasLivePulse,
@@ -26,6 +27,7 @@ export default function AdminBookingsOpsDashHeroLive() {
       hasLivePulse={hasLivePulse}
       formatStartTime={formatStartTime}
       formatRelativeTime={formatRelativeTime}
+      showDemoPill={isPublicDemo}
     />
   );
 }

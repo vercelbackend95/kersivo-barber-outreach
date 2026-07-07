@@ -1,5 +1,5 @@
 /* ============================================================
-   SYSTEM CHOOSER MODAL — Premium product chooser
+   SYSTEM CHOOSER MODAL — Premium cinematic product chooser
    ============================================================ */
 
 .system-chooser {
@@ -24,106 +24,156 @@
 .system-chooser__backdrop {
   position: absolute;
   inset: 0;
-  background: color-mix(in srgb, var(--bg) 74%, transparent);
-  backdrop-filter: blur(6px);
-  -webkit-backdrop-filter: blur(6px);
+  z-index: 0;
+  background: color-mix(in srgb, var(--bg) 86%, transparent);
+  backdrop-filter: blur(18px) saturate(115%);
+  -webkit-backdrop-filter: blur(18px) saturate(115%);
+}
+
+/* ── Ambient glow (sits behind the dialog, bleeds past its edges) ── */
+
+.system-chooser__glow {
+  position: absolute;
+  z-index: 1;
+  top: 50%;
+  left: 50%;
+  width: min(72rem, 150vw);
+  height: min(46rem, 120vh);
+  transform: translate(-50%, -50%);
+  background: radial-gradient(
+    52% 58% at 50% 38%,
+    color-mix(in srgb, var(--accent) 20%, transparent) 0%,
+    color-mix(in srgb, var(--accent) 7%, transparent) 42%,
+    transparent 72%
+  );
+  filter: blur(6px);
+  opacity: 0.55;
+  pointer-events: none;
 }
 
 /* ── Dialog container ────────────────────────────────────── */
 
 .system-chooser__dialog {
   position: relative;
-  z-index: 1;
+  z-index: 2;
   width: min(100%, 30rem);
   max-height: calc(100dvh - 2rem);
   display: grid;
-  grid-template-rows: auto minmax(0, 1fr);
-  border: 1px solid color-mix(in srgb, var(--border) 85%, transparent);
-  border-top: 2px solid var(--accent);
-  border-radius: var(--radius-md);
-  background: var(--surface);
+  grid-template-rows: auto minmax(0, 1fr) auto;
+  border: 1px solid color-mix(in srgb, var(--fg) 9%, transparent);
+  border-radius: var(--radius-16);
+  background:
+    radial-gradient(
+      120% 46% at 50% -8%,
+      color-mix(in srgb, var(--accent) 12%, transparent) 0%,
+      transparent 62%
+    ),
+    linear-gradient(
+      165deg,
+      color-mix(in srgb, var(--fg) 3%, var(--surface-2)) 0%,
+      color-mix(in srgb, var(--bg) 68%, var(--surface-1)) 100%
+    );
   box-shadow:
-    0 0 0 1px color-mix(in srgb, var(--border) 40%, transparent),
-    0 2.5rem 6rem -0.5rem color-mix(in srgb, var(--bg) 92%, transparent),
-    0 0 5rem color-mix(in srgb, var(--accent) 8%, transparent);
+    inset 0 1px 0 color-mix(in srgb, var(--fg) 6%, transparent),
+    0 1.5rem 3rem -1rem color-mix(in srgb, var(--bg) 88%, transparent),
+    0 4rem 8rem -2rem color-mix(in srgb, var(--bg) 92%, transparent),
+    0 0 5rem -0.5rem color-mix(in srgb, var(--accent) 22%, transparent);
   overflow: hidden;
+}
+
+.system-chooser__dialog::before {
+  content: '';
+  position: absolute;
+  inset: 0 0 auto 0;
+  height: 1px;
+  background: linear-gradient(
+    90deg,
+    transparent 0%,
+    color-mix(in srgb, var(--accent) 75%, transparent) 22%,
+    color-mix(in srgb, var(--accent-hover) 92%, transparent) 50%,
+    color-mix(in srgb, var(--accent) 75%, transparent) 78%,
+    transparent 100%
+  );
+  opacity: 0.9;
+  pointer-events: none;
 }
 
 /* ── Header ──────────────────────────────────────────────── */
 
 .system-chooser__header {
+  position: relative;
   display: grid;
   grid-template-columns: minmax(0, 1fr) auto;
-  gap: 0.75rem;
+  gap: 1rem;
   align-items: start;
-  padding: 1.1rem 1.1rem 1rem;
-  border-bottom: 1px solid color-mix(in srgb, var(--border) 72%, transparent);
-  background: color-mix(in srgb, var(--bg) 40%, var(--surface));
+  padding: 1.65rem 1.5rem 1.35rem;
+  border-bottom: 1px solid color-mix(in srgb, var(--fg) 7%, transparent);
 }
 
 .system-chooser__header-copy {
   display: grid;
-  gap: 0.25rem;
+  gap: 0.5rem;
 }
 
 .system-chooser__eyebrow {
   margin: 0;
-  color: var(--accent);
+  color: color-mix(in srgb, var(--accent-hover) 70%, var(--accent));
   font-family: var(--font-body);
-  font-size: 0.65rem;
+  font-size: 0.66rem;
   font-weight: 700;
-  letter-spacing: 0.13em;
+  letter-spacing: 0.18em;
   text-transform: uppercase;
 }
 
 .system-chooser__header h2 {
   margin: 0;
   font-family: var(--font-heading);
-  font-size: clamp(1.45rem, 7vw, 1.95rem);
-  letter-spacing: 0.06em;
-  line-height: 0.95;
+  font-size: clamp(1.55rem, 7.5vw, 2.05rem);
+  letter-spacing: 0.05em;
+  line-height: 0.96;
   text-transform: uppercase;
   color: var(--fg);
 }
 
 .system-chooser__header-lead {
   margin: 0;
-  color: color-mix(in srgb, var(--muted) 80%, var(--fg));
-  font-size: 0.82rem;
-  line-height: 1.5;
+  max-width: 34ch;
+  color: color-mix(in srgb, var(--muted) 82%, var(--fg));
+  font-size: 0.84rem;
+  line-height: 1.55;
 }
 
 /* ── Close button ────────────────────────────────────────── */
 
 .system-chooser__close {
-  width: 2.2rem;
-  height: 2.2rem;
+  width: 2.25rem;
+  height: 2.25rem;
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  border: 1px solid color-mix(in srgb, var(--border) 78%, transparent);
-  border-radius: var(--radius-sm);
-  background: transparent;
-  color: color-mix(in srgb, var(--muted) 72%, var(--fg));
+  border: 1px solid color-mix(in srgb, var(--fg) 13%, transparent);
+  border-radius: var(--radius-8);
+  background: color-mix(in srgb, var(--fg) 4%, transparent);
+  color: color-mix(in srgb, var(--muted) 75%, var(--fg));
   cursor: pointer;
-  transition: border-color 140ms ease, color 140ms ease, background 140ms ease;
+  transition: border-color 180ms ease, color 180ms ease, background 180ms ease;
   flex-shrink: 0;
 }
 
 .system-chooser__close svg {
-  width: 0.82rem;
-  height: 0.82rem;
+  width: 0.8rem;
+  height: 0.8rem;
   pointer-events: none;
 }
 
 .system-chooser__close:hover {
-  border-color: color-mix(in srgb, var(--border) 50%, var(--fg));
+  border-color: color-mix(in srgb, var(--accent-hover) 45%, transparent);
   color: var(--fg);
-  background: color-mix(in srgb, var(--fg) 7%, transparent);
+  background: color-mix(in srgb, var(--accent) 12%, transparent);
 }
 
 .system-chooser__close:focus-visible {
-  outline: 2px solid var(--focus);
+  outline: 2px solid color-mix(in srgb, var(--accent-hover) 80%, var(--fg));
   outline-offset: 2px;
 }
 
@@ -132,285 +182,111 @@
 .system-chooser__grid {
   display: grid;
   grid-template-columns: 1fr;
-  gap: 0.65rem;
-  padding: 0.85rem;
+  gap: 0.75rem;
+  padding: 1rem;
   overflow-y: auto;
 }
 
-/* ── Individual tile ─────────────────────────────────────── */
+/* ── Individual tile (black gloss, typography-led) ───────── */
 
 .system-chooser__tile {
-  display: grid;
-  grid-template-rows: auto 1fr;
-  border: 1px solid color-mix(in srgb, var(--border) 76%, transparent);
-  border-radius: var(--radius-md);
-  background: color-mix(in srgb, var(--bg) 26%, var(--surface));
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  gap: 0.6rem;
+  min-height: 12.5rem;
+  padding: clamp(1.35rem, 4vw, 1.75rem);
+  border: 1px solid color-mix(in srgb, var(--fg) 9%, transparent);
+  border-radius: var(--radius-12);
+  background:
+    linear-gradient(
+      125deg,
+      color-mix(in srgb, var(--fg) 7%, transparent) 0%,
+      transparent 32%
+    ),
+    radial-gradient(
+      62% 55% at 88% 6%,
+      color-mix(in srgb, var(--accent) 17%, transparent) 0%,
+      transparent 70%
+    ),
+    linear-gradient(
+      165deg,
+      color-mix(in srgb, var(--fg) 3%, var(--surface-2)) 0%,
+      color-mix(in srgb, var(--bg) 58%, black) 100%
+    );
+  box-shadow: inset 0 1px 0 color-mix(in srgb, var(--fg) 8%, transparent);
   cursor: pointer;
   overflow: hidden;
   transition:
-    border-color 200ms ease,
-    transform 200ms cubic-bezier(0.22, 1, 0.36, 1),
-    box-shadow 200ms ease;
+    border-color 220ms ease,
+    transform 220ms ease,
+    box-shadow 220ms ease;
 }
 
-/* Featured tile (Client Booking) */
-.system-chooser__tile--featured {
-  border-color: color-mix(in srgb, var(--accent) 48%, var(--border));
-}
-
-/* ── Tile visual (vector art + gradient — no photo placeholders) ─ */
-
-.system-chooser__tile-visual {
-  position: relative;
-  display: grid;
-  place-items: center;
-  min-height: 7.75rem;
-  overflow: hidden;
-  border-bottom: 1px solid color-mix(in srgb, var(--border) 65%, transparent);
-  color: color-mix(in srgb, var(--muted) 35%, var(--fg));
-  isolation: isolate;
-}
-
-.system-chooser__tile-visual::before {
-  content: "";
-  position: absolute;
-  inset: 0;
-  opacity: 0.55;
-  background:
-    radial-gradient(
-      ellipse 120% 90% at 20% 15%,
-      color-mix(in srgb, var(--fg) 10%, transparent),
-      transparent 55%
-    ),
-    radial-gradient(
-      ellipse 100% 80% at 88% 75%,
-      color-mix(in srgb, var(--accent) 14%, transparent),
-      transparent 50%
-    );
-  pointer-events: none;
-}
-
-.system-chooser__tile-visual--booking {
-  background:
-    linear-gradient(
-      145deg,
-      color-mix(in srgb, var(--accent) 16%, var(--surface)) 0%,
-      color-mix(in srgb, var(--bg) 42%, var(--surface)) 48%,
-      var(--surface) 100%
-    );
-}
-
-.system-chooser__tile-visual--booking::after {
-  content: "";
-  position: absolute;
-  inset: 0;
-  opacity: 0.12;
-  background-image: repeating-linear-gradient(
-    -12deg,
-    transparent,
-    transparent 11px,
-    color-mix(in srgb, var(--fg) 18%, transparent) 11px,
-    color-mix(in srgb, var(--fg) 18%, transparent) 12px
-  );
-  pointer-events: none;
-}
-
-.system-chooser__tile-visual--admin {
-  background:
-    linear-gradient(
-      168deg,
-      color-mix(in srgb, var(--bg) 55%, var(--surface)),
-      color-mix(in srgb, var(--fg) 6%, var(--surface))
-    );
-}
-
-.system-chooser__tile-visual--admin::after {
-  content: "";
-  position: absolute;
-  inset: 0;
-  opacity: 0.09;
-  background-image:
-    linear-gradient(color-mix(in srgb, var(--fg) 22%, transparent) 1px, transparent 1px),
-    linear-gradient(90deg, color-mix(in srgb, var(--fg) 22%, transparent) 1px, transparent 1px);
-  background-size: 14px 14px;
-  pointer-events: none;
-}
-
-.system-chooser__tile-visual--shop {
-  background:
-    linear-gradient(
-      155deg,
-      color-mix(in srgb, var(--accent) 10%, var(--surface)),
-      color-mix(in srgb, var(--bg) 38%, var(--surface)) 70%
-    );
-}
-
-.system-chooser__tile-visual--shop::after {
-  content: "";
-  position: absolute;
-  inset: -40%;
-  opacity: 0.07;
-  background: radial-gradient(
-    circle at 30% 40%,
-    color-mix(in srgb, var(--accent) 35%, transparent),
-    transparent 42%
-  );
-  pointer-events: none;
-}
-
-/* Bookings + shop combined: split gradient + light grid */
-.system-chooser__tile-visual--system {
-  background:
-    linear-gradient(
-      118deg,
-      color-mix(in srgb, var(--bg) 50%, var(--surface)) 0%,
-      color-mix(in srgb, var(--fg) 5%, var(--surface)) 42%,
-      color-mix(in srgb, var(--accent) 11%, var(--surface)) 100%
-    );
-}
-
-.system-chooser__tile-visual--system::after {
-  content: "";
-  position: absolute;
-  inset: 0;
-  opacity: 0.075;
-  background-image:
-    linear-gradient(color-mix(in srgb, var(--fg) 18%, transparent) 1px, transparent 1px),
-    linear-gradient(90deg, color-mix(in srgb, var(--fg) 18%, transparent) 1px, transparent 1px);
-  background-size: 15px 15px;
-  pointer-events: none;
-}
-
-.system-chooser__tile-art {
-  position: relative;
-  z-index: 1;
-  display: grid;
-  place-items: center;
-  padding: 1rem 1rem 1.15rem;
-}
-
-.system-chooser__tile-icon {
-  width: clamp(4.5rem, 38vw, 5.75rem);
-  height: auto;
-  display: block;
-  transition: transform 420ms cubic-bezier(0.22, 1, 0.36, 1);
-}
-
-.system-chooser__tile-visual--booking .system-chooser__tile-icon {
-  color: color-mix(in srgb, var(--accent) 72%, var(--fg));
-}
-
-.system-chooser__tile-visual--admin .system-chooser__tile-icon {
-  color: color-mix(in srgb, var(--fg) 78%, var(--muted));
-}
-
-.system-chooser__tile-visual--shop .system-chooser__tile-icon {
-  color: color-mix(in srgb, var(--accent) 55%, var(--fg));
-}
-
-.system-chooser__tile-visual--system .system-chooser__tile-icon {
-  color: color-mix(in srgb, var(--accent) 32%, var(--fg));
-}
-
-/* Badge — top strip, reads before the illustration */
-.system-chooser__tile-badge {
-  position: absolute;
-  top: 0.55rem;
-  right: 0.6rem;
-  z-index: 2;
-  display: inline-flex;
-  align-items: center;
-  padding: 0.22rem 0.5rem;
-  border: 1px solid color-mix(in srgb, var(--border) 58%, transparent);
-  border-radius: 999px;
-  background: color-mix(in srgb, var(--surface) 88%, transparent);
-  backdrop-filter: blur(8px);
-  -webkit-backdrop-filter: blur(8px);
-  box-shadow: 0 1px 0 color-mix(in srgb, var(--fg) 6%, transparent);
-  color: color-mix(in srgb, var(--muted) 78%, var(--fg));
-  font-size: 0.58rem;
+.system-chooser__tile-label {
+  font-family: var(--font-body);
+  font-size: 0.64rem;
   font-weight: 700;
-  letter-spacing: 0.11em;
+  letter-spacing: 0.17em;
   text-transform: uppercase;
-  line-height: 1;
+  color: var(--accent);
+  transition: color 220ms ease;
 }
 
-.system-chooser__tile--featured .system-chooser__tile-badge {
-  border-color: color-mix(in srgb, var(--accent) 42%, var(--border));
-  color: color-mix(in srgb, var(--accent) 92%, var(--fg));
-  background: color-mix(in srgb, var(--surface) 92%, color-mix(in srgb, var(--accent) 12%, transparent));
-}
-
-/* ── Tile body ───────────────────────────────────────────── */
-
-.system-chooser__tile-body {
-  display: grid;
-  grid-template-rows: auto 1fr auto auto;
-  gap: 0.45rem;
-  padding: 0.75rem 0.85rem 0.8rem;
-}
-
-.system-chooser__tile h3 {
+.system-chooser__tile-title {
   margin: 0;
   font-family: var(--font-heading);
-  font-size: clamp(1.1rem, 4.6vw, 1.35rem);
-  letter-spacing: 0.04em;
-  line-height: 1;
+  font-size: clamp(1.55rem, 4.8vw, 2.1rem);
+  line-height: 0.98;
+  letter-spacing: 0.03em;
   text-transform: uppercase;
   color: var(--fg);
 }
 
 .system-chooser__tile-desc {
   margin: 0;
-  color: color-mix(in srgb, var(--muted) 76%, var(--fg));
-  font-size: 0.81rem;
+  max-width: 26ch;
+  color: color-mix(in srgb, var(--muted) 80%, var(--fg));
+  font-size: 0.87rem;
   line-height: 1.5;
 }
 
-/* ── Tile footer: access info + tab indicator ────────────── */
-
-.system-chooser__tile-footer {
-  display: flex;
-  align-items: center;
-  gap: 0.6rem;
-  flex-wrap: wrap;
-  padding-top: 0.55rem;
-  border-top: 1px solid color-mix(in srgb, var(--border) 58%, transparent);
-}
-
-.system-chooser__tile-access,
-.system-chooser__tile-tab {
-  display: inline-flex;
-  align-items: center;
-  gap: 0.28rem;
-  color: color-mix(in srgb, var(--muted) 68%, var(--fg));
-  font-size: 0.67rem;
-  font-weight: 600;
+.system-chooser__tile-meta {
+  margin: auto 2rem 0 0;
+  font-size: 0.68rem;
   letter-spacing: 0.08em;
   text-transform: uppercase;
-  white-space: nowrap;
+  color: color-mix(in srgb, var(--muted) 62%, var(--fg));
+  transition: color 220ms ease;
 }
 
-.system-chooser__tile-access svg,
-.system-chooser__tile-tab svg {
-  width: 0.7rem;
-  height: 0.7rem;
-  flex-shrink: 0;
-  opacity: 0.65;
+.system-chooser__tile-arrow {
+  position: absolute;
+  right: clamp(1.35rem, 4vw, 1.75rem);
+  bottom: clamp(1.35rem, 4vw, 1.75rem);
+  font-family: var(--font-body);
+  font-size: 1rem;
+  line-height: 1;
+  color: color-mix(in srgb, var(--muted) 50%, transparent);
+  transition: color 220ms ease, transform 220ms ease;
 }
 
-.system-chooser__tile-footer-sep {
-  display: block;
-  width: 1px;
-  height: 0.65rem;
-  background: color-mix(in srgb, var(--border) 80%, transparent);
-  flex-shrink: 0;
+/* ── Modal footer helper line ────────────────────────────── */
+
+.system-chooser__footer {
+  margin: 0;
+  padding: 0 1.5rem 1.35rem;
+  text-align: center;
+  color: color-mix(in srgb, var(--muted) 58%, transparent);
+  font-size: 0.72rem;
+  letter-spacing: 0.02em;
+  line-height: 1.5;
 }
 
 /* ── Loading state ───────────────────────────────────────── */
 
 .system-chooser__tile-loading {
-  margin: 0;
+  margin: 0.15rem 2rem 0 0;
   display: none;
   align-items: center;
   gap: 0.44rem;
@@ -432,15 +308,18 @@
 }
 
 .system-chooser__tile.is-loading {
-  border-color: color-mix(in srgb, var(--accent) 60%, var(--border));
-  box-shadow: 0 0 0 1px color-mix(in srgb, var(--accent) 22%, transparent);
+  border-color: color-mix(in srgb, var(--accent) 55%, transparent);
+  box-shadow:
+    inset 0 1px 0 color-mix(in srgb, var(--fg) 8%, transparent),
+    0 0 0 1px color-mix(in srgb, var(--accent) 24%, transparent);
 }
 
 .system-chooser__tile.is-loading .system-chooser__tile-loading {
   display: inline-flex;
 }
 
-.system-chooser__tile.is-loading .system-chooser__tile-footer {
+.system-chooser__tile.is-loading .system-chooser__tile-meta,
+.system-chooser__tile.is-loading .system-chooser__tile-arrow {
   display: none;
 }
 
@@ -456,70 +335,74 @@
   pointer-events: none;
 }
 
-/* ── Hover & focus ───────────────────────────────────────── */
+/* ── Hover, focus & active ───────────────────────────────── */
 
 .system-chooser__tile:focus-visible {
-  outline: 2px solid var(--focus);
-  outline-offset: 2px;
+  outline: 2px solid color-mix(in srgb, var(--accent-hover) 80%, var(--fg));
+  outline-offset: 3px;
+}
+
+.system-chooser__tile:active {
+  transform: translateY(-1px) scale(1.003);
+  transition-duration: 90ms;
 }
 
 @media (hover: hover) {
   .system-chooser__tile:hover {
-    border-color: color-mix(in srgb, var(--accent) 58%, var(--border));
-    transform: translateY(-3px);
+    border-color: color-mix(in srgb, var(--accent-hover) 45%, transparent);
+    transform: translateY(-3px) scale(1.01);
     box-shadow:
-      0 0.9rem 2.2rem -0.2rem color-mix(in srgb, var(--bg) 68%, transparent),
-      0 0 0 1px color-mix(in srgb, var(--accent) 16%, transparent);
+      inset 0 1px 0 color-mix(in srgb, var(--fg) 11%, transparent),
+      0 1.25rem 2.5rem -0.75rem color-mix(in srgb, var(--bg) 72%, transparent),
+      0 0 0 1px color-mix(in srgb, var(--accent) 30%, transparent),
+      0 0 3.25rem -0.4rem color-mix(in srgb, var(--accent) 48%, transparent);
   }
 
-  .system-chooser__tile:hover .system-chooser__tile-icon {
-    transform: scale(1.06);
+  .system-chooser__tile:hover .system-chooser__tile-label {
+    color: color-mix(in srgb, var(--accent-hover) 100%, var(--fg) 10%);
   }
 
-  .system-chooser__tile:hover .system-chooser__tile-visual::before {
-    opacity: 0.72;
+  .system-chooser__tile:hover .system-chooser__tile-meta {
+    color: color-mix(in srgb, var(--fg) 55%, var(--muted));
+  }
+
+  .system-chooser__tile:hover .system-chooser__tile-arrow {
+    color: var(--accent-hover);
+    transform: translateX(3px);
   }
 }
 
-/* ── Responsive: 3 columns on tablet+ ───────────────────── */
+/* ── Responsive: 2 columns on tablet+ ───────────────────── */
 
 @media (min-width: 48rem) {
   .system-chooser__dialog {
-    width: min(100%, 64rem);
-    max-height: calc(100dvh - 3rem);
+    width: min(100%, 49rem);
+    max-height: calc(100dvh - 3.5rem);
+    border-radius: var(--radius-20);
   }
 
   .system-chooser__header {
-    padding: 1.3rem 1.5rem 1.1rem;
+    padding: 2.25rem 2.5rem 1.85rem;
+  }
+
+  .system-chooser__header h2 {
+    font-size: 2.35rem;
   }
 
   .system-chooser__grid {
     grid-template-columns: repeat(2, minmax(0, 1fr));
-    gap: 0.9rem;
-    padding: 1rem 1.5rem 1.5rem;
+    gap: 1.35rem;
+    padding: 1.5rem 2.5rem 1.25rem;
   }
 
-  .system-chooser__tile-visual {
-    min-height: 9.25rem;
+  .system-chooser__tile {
+    min-height: 20.5rem;
+    padding: 2.1rem;
   }
 
-  .system-chooser__tile-body {
-    padding: 0.9rem 1rem 0.95rem;
-  }
-
-  .system-chooser__tile h3 {
-    font-size: clamp(1.1rem, 2.4vw, 1.45rem);
-  }
-}
-
-/* Wide desktop: slightly taller art area */
-@media (min-width: 72rem) {
-  .system-chooser__tile-visual {
-    min-height: 10.5rem;
-  }
-
-  .system-chooser__tile-icon {
-    width: clamp(5rem, 12vw, 6.25rem);
+  .system-chooser__footer {
+    padding: 0 2.5rem 2rem;
+    font-size: 0.76rem;
   }
 }
 
@@ -530,12 +413,9 @@
     transition: border-color 140ms ease, box-shadow 140ms ease;
   }
 
-  .system-chooser__tile:hover {
+  .system-chooser__tile:hover,
+  .system-chooser__tile:active {
     transform: none;
-  }
-
-  .system-chooser__tile-icon {
-    transition: none;
   }
 }
 

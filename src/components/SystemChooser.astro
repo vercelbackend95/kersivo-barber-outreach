@@ -1,5 +1,6 @@
 <div class="system-chooser" data-system-chooser hidden>
   <div class="system-chooser__backdrop" data-system-chooser-close aria-hidden="true"></div>
+  <div class="system-chooser__glow" aria-hidden="true"></div>
   <section
     class="system-chooser__dialog"
     role="dialog"
@@ -9,15 +10,17 @@
   >
     <div class="system-chooser__header">
       <div class="system-chooser__header-copy">
-        <p class="system-chooser__eyebrow">Live product preview &middot; 2 areas to explore</p>
-        <h2 id="system-chooser-title">Choose your entry point</h2>
-        <p id="system-chooser-description" class="system-chooser__header-lead">Each preview opens in a new tab — close it to return here.</p>
+        <p class="system-chooser__eyebrow">Live product preview</p>
+        <h2 id="system-chooser-title">See both sides of KERSIVO</h2>
+        <p id="system-chooser-description" class="system-chooser__header-lead">
+          Preview the client booking experience or the barbershop system. Each opens in a new tab.
+        </p>
       </div>
       <button
         class="system-chooser__close"
         type="button"
         data-system-chooser-close
-        aria-label="Close system chooser"
+        aria-label="Close preview chooser"
       >
         <svg viewBox="0 0 14 14" fill="none" aria-hidden="true">
           <path d="M2 2l10 10M12 2L2 12" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/>
@@ -27,104 +30,46 @@
 
     <div class="system-chooser__grid">
 
-      <!-- Tile 1: Client Booking Flow -->
+      <!-- Tile 1: Client Booking Experience -->
       <article
-        class="system-chooser__tile system-chooser__tile--featured"
+        class="system-chooser__tile system-chooser__tile--clients"
         role="link"
         tabindex="0"
         data-tile-href="/book"
+        aria-label="Booking Experience — opens the client booking preview in a new tab"
       >
-        <div class="system-chooser__tile-visual system-chooser__tile-visual--booking" aria-hidden="true">
-          <span class="system-chooser__tile-badge">Start here</span>
-          <div class="system-chooser__tile-art">
-            <svg class="system-chooser__tile-icon" viewBox="0 0 96 96" fill="none" xmlns="http://www.w3.org/2000/svg">
-              <rect x="14" y="22" width="68" height="54" rx="8" stroke="currentColor" stroke-width="2" opacity="0.9"/>
-              <path d="M14 38h68" stroke="currentColor" stroke-width="2" opacity="0.55"/>
-              <path d="M34 14v12M62 14v12" stroke="currentColor" stroke-width="2" stroke-linecap="round" opacity="0.75"/>
-              <rect x="22" y="46" width="18" height="14" rx="3" fill="currentColor" opacity="0.22"/>
-              <rect x="44" y="46" width="18" height="14" rx="3" stroke="currentColor" stroke-width="1.75" opacity="0.85"/>
-              <rect x="66" y="46" width="10" height="14" rx="2" stroke="currentColor" stroke-width="1.5" opacity="0.45"/>
-              <circle cx="53" cy="53" r="8" stroke="currentColor" stroke-width="1.75" opacity="0.9"/>
-              <path d="M50 53l2 2 5-5" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"/>
-            </svg>
-          </div>
-        </div>
-        <div class="system-chooser__tile-body">
-          <h3>Client Booking Flow</h3>
-          <p class="system-chooser__tile-desc">Exactly what your clients see — pick a barber, choose a service and lock in a slot in under a minute.</p>
-          <div class="system-chooser__tile-footer">
-            <span class="system-chooser__tile-access">
-              <svg viewBox="0 0 12 12" fill="none" aria-hidden="true"><circle cx="6" cy="6" r="4.5" stroke="currentColor" stroke-width="1.2"/><path d="M4 6l1.5 1.5 2.5-3" stroke="currentColor" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round"/></svg>
-              No password
-            </span>
-            <span class="system-chooser__tile-footer-sep" aria-hidden="true"></span>
-            <span class="system-chooser__tile-tab">
-              <svg viewBox="0 0 12 12" fill="none" aria-hidden="true"><path d="M5 2H2.5a.5.5 0 00-.5.5v7a.5.5 0 00.5.5h7a.5.5 0 00.5-.5V7M7.5 2H10v2.5M6 6l4-4" stroke="currentColor" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round"/></svg>
-              New tab
-            </span>
-          </div>
-          <p class="system-chooser__tile-loading" role="status" aria-live="polite">
-            <span class="system-chooser__tile-spinner" aria-hidden="true"></span>
-            <span>Opening preview&hellip;</span>
-          </p>
-        </div>
+        <span class="system-chooser__tile-label">For clients</span>
+        <h3 class="system-chooser__tile-title">Booking Experience</h3>
+        <p class="system-chooser__tile-desc">See exactly what clients see when they book.</p>
+        <p class="system-chooser__tile-meta">Client side &middot; New tab</p>
+        <p class="system-chooser__tile-loading" role="status" aria-live="polite">
+          <span class="system-chooser__tile-spinner" aria-hidden="true"></span>
+          <span>Opening preview&hellip;</span>
+        </p>
+        <span class="system-chooser__tile-arrow" aria-hidden="true">&rarr;</span>
       </article>
 
-      <!-- Tile 2: Full admin system (opens bookings dashboard; shop lives in same admin) -->
+      <!-- Tile 2: Admin & Shop System (bookings dashboard; shop lives in same admin) -->
       <article
-        class="system-chooser__tile system-chooser__tile--system"
+        class="system-chooser__tile system-chooser__tile--barbers"
         role="link"
         tabindex="0"
         data-tile-href="/admin-demo?section=bookings_dashboard"
+        aria-label="Admin & Shop System — opens the admin preview in a new tab"
       >
-        <div class="system-chooser__tile-visual system-chooser__tile-visual--system" aria-hidden="true">
-          <span class="system-chooser__tile-badge">System</span>
-          <div class="system-chooser__tile-art">
-            <svg class="system-chooser__tile-icon" viewBox="0 0 96 96" fill="none" xmlns="http://www.w3.org/2000/svg">
-              <path d="M10 26h34v46H10V26z" stroke="currentColor" stroke-width="1.75" opacity="0.4"/>
-              <path d="M10 38h34" stroke="currentColor" stroke-width="1.75" opacity="0.45"/>
-              <path d="M22 26v46" stroke="currentColor" stroke-width="1.25" opacity="0.3"/>
-              <rect x="14" y="44" width="10" height="7" rx="1.5" fill="currentColor" opacity="0.22"/>
-              <rect x="28" y="42" width="10" height="9" rx="1.5" fill="currentColor" opacity="0.32"/>
-              <path
-                d="M52 34h34l3.5 24.5H49L52 34z"
-                stroke="currentColor"
-                stroke-width="1.85"
-                stroke-linejoin="round"
-                opacity="0.78"
-              />
-              <path d="M56.5 34V29a12.5 12.5 0 0125 0v5" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" opacity="0.55"/>
-              <rect x="56" y="58" width="28" height="16" rx="2.5" stroke="currentColor" stroke-width="1.5" opacity="0.42"/>
-              <path d="M62 66h16" stroke="currentColor" stroke-width="1.25" stroke-linecap="round" opacity="0.35"/>
-              <circle cx="69" cy="24" r="7" fill="currentColor" opacity="0.14"/>
-              <path d="M66 24l2 2 4.5-4.5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" opacity="0.85"/>
-            </svg>
-          </div>
-        </div>
-        <div class="system-chooser__tile-body">
-          <h3>Admin Demo</h3>
-          <p class="system-chooser__tile-desc">
-            Bookings dashboard and shop admin in one place—schedules, statuses and reports, plus products, orders and
-            pickup. Opens instantly with example data; no signup required.
-          </p>
-          <div class="system-chooser__tile-footer">
-            <span class="system-chooser__tile-access">
-              <svg viewBox="0 0 12 12" fill="none" aria-hidden="true"><rect x="3" y="5.5" width="6" height="5" rx=".5" stroke="currentColor" stroke-width="1.2"/><path d="M4.5 5.5V4a1.5 1.5 0 013 0v1.5" stroke="currentColor" stroke-width="1.2" stroke-linecap="round"/></svg>
-              No signup required
-            </span>
-            <span class="system-chooser__tile-footer-sep" aria-hidden="true"></span>
-            <span class="system-chooser__tile-tab">
-              <svg viewBox="0 0 12 12" fill="none" aria-hidden="true"><path d="M5 2H2.5a.5.5 0 00-.5.5v7a.5.5 0 00.5.5h7a.5.5 0 00.5-.5V7M7.5 2H10v2.5M6 6l4-4" stroke="currentColor" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round"/></svg>
-              New tab
-            </span>
-          </div>
-          <p class="system-chooser__tile-loading" role="status" aria-live="polite">
-            <span class="system-chooser__tile-spinner" aria-hidden="true"></span>
-            <span>Opening preview&hellip;</span>
-          </p>
-        </div>
+        <span class="system-chooser__tile-label">For barbers</span>
+        <h3 class="system-chooser__tile-title">Admin &amp; Shop System</h3>
+        <p class="system-chooser__tile-desc">See bookings, admin, reports and retail tools.</p>
+        <p class="system-chooser__tile-meta">Shop side &middot; New tab</p>
+        <p class="system-chooser__tile-loading" role="status" aria-live="polite">
+          <span class="system-chooser__tile-spinner" aria-hidden="true"></span>
+          <span>Opening preview&hellip;</span>
+        </p>
+        <span class="system-chooser__tile-arrow" aria-hidden="true">&rarr;</span>
       </article>
 
     </div>
+
+    <p class="system-chooser__footer">No signup required. Both previews open in a new tab.</p>
   </section>
 </div>

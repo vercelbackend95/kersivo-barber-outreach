@@ -59,6 +59,7 @@ export function formatAdminLiveRelativeTime(startAt: string, endAt: string) {
 export type AdminTodayBookingsLiveValue = {
   sessionChecked: boolean;
   loggedIn: boolean;
+  isPublicDemo: boolean;
   upcomingBookings: AdminLiveBookingRow[];
   nextBooking: AdminBookingsOpsDashHeroBooking | null;
   connectionStateLabel: string;
@@ -157,6 +158,7 @@ export function AdminTodayBookingsLiveProvider({
     () => ({
       sessionChecked,
       loggedIn,
+      isPublicDemo,
       upcomingBookings,
       nextBooking,
       connectionStateLabel,
@@ -167,6 +169,7 @@ export function AdminTodayBookingsLiveProvider({
     [
       sessionChecked,
       loggedIn,
+      isPublicDemo,
       upcomingBookings,
       nextBooking,
       connectionStateLabel,

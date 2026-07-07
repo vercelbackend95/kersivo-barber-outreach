@@ -14,6 +14,7 @@ export type AdminBookingsOpsDashHeroProps = {
   hasLivePulse: boolean;
   formatStartTime: (iso: string) => string;
   formatRelativeTime: (startAt: string, endAt: string) => string;
+  showDemoPill?: boolean;
 };
 
 export default function AdminBookingsOpsDashHero({
@@ -22,6 +23,7 @@ export default function AdminBookingsOpsDashHero({
   hasLivePulse,
   formatStartTime,
   formatRelativeTime,
+  showDemoPill = false,
 }: AdminBookingsOpsDashHeroProps) {
   return (
     <AdminOpsDashHero
@@ -41,6 +43,7 @@ export default function AdminBookingsOpsDashHero({
       }
       connectionStateLabel={connectionStateLabel}
       hasLivePulse={hasLivePulse}
+      showDemoPill={showDemoPill}
     />
   );
 }

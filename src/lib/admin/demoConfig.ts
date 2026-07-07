@@ -7,10 +7,11 @@ export const DEMO_ADMIN_SECRET = 'supersecret123';
 export const DEMO_ACTION_BLOCKED_MESSAGE =
   'This action is disabled in the public demo.';
 
-export const DEMO_BANNER_LABEL = 'Admin Demo';
+export const DEMO_PILL_LABEL_FULL = 'DEMO MODE';
 
-export const DEMO_BANNER_LEAD =
-  'This is a safe preview of the KERSIVO admin dashboard using example barbershop data.';
+export const DEMO_PILL_LABEL_SHORT = 'DEMO';
+
+export const DEMO_PILL_TOOLTIP = 'This preview uses example barbershop data.';
 
 export const DEMO_ADMIN_MODE_HEADER = 'x-admin-demo-mode';
 

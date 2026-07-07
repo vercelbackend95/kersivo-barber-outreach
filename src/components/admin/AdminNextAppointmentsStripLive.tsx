@@ -14,6 +14,7 @@ export default function AdminNextAppointmentsStripLive() {
   const {
     sessionChecked,
     loggedIn,
+    isPublicDemo,
     upcomingBookings,
     connectionStateLabel,
     formatStartTime,
@@ -73,6 +74,7 @@ export default function AdminNextAppointmentsStripLive() {
       onToggleExpanded={handleToggleExpanded}
       formatStartTime={formatStartTime}
       connectionStateLabel={connectionStateLabel}
+      isDemo={isPublicDemo}
     />
   );
 }

@@ -1,4 +1,5 @@
 import React from 'react';
+import AdminDemoPill from './AdminDemoPill';
 
 function liveStatusModifier(label: string): 'live' | 'offline' | 'connecting' {
   if (label === 'LIVE') return 'live';
@@ -18,6 +19,8 @@ export type AdminOpsDashHeroProps = {
   hasLivePulse?: boolean;
   /** Replaces connection pill when set (e.g. Services catalogue badge). */
   trailing?: React.ReactNode;
+  /** Shows a subtle DEMO MODE pill next to the connection/badge (public demo only). */
+  showDemoPill?: boolean;
 };
 
 export default function AdminOpsDashHero({
@@ -29,6 +32,7 @@ export default function AdminOpsDashHero({
   connectionStateLabel,
   hasLivePulse = false,
   trailing,
+  showDemoPill = false,
 }: AdminOpsDashHeroProps) {
   const useLive = connectionStateLabel != null && connectionStateLabel !== '';
   const statusMod = useLive ? liveStatusModifier(connectionStateLabel) : null;
@@ -49,6 +53,14 @@ export default function AdminOpsDashHero({
     <div className="admin-ops-dash-hero-trailing">{trailing}</div>
   ) : null;
 
+  const trailingCluster =
+    showDemoPill || trailingEl ? (
+      <div className="admin-ops-dash-hero-status">
+        {showDemoPill ? <AdminDemoPill /> : null}
+        {trailingEl}
+      </div>
+    ) : null;
+
   return (
     <section className="admin-bookings-ops admin-bookings-ops--dash-hero" aria-label={ariaLabel}>
       <div className="admin-bookings-ops-dash-hero">
@@ -62,7 +74,7 @@ export default function AdminOpsDashHero({
               <p className="admin-bookings-ops-status-secondary muted">{secondary}</p>
             ) : null}
           </div>
-          {trailingEl}
+          {trailingCluster}
         </div>
         {footer && !useLive ? <p className="muted admin-bookings-ops-updated">{footer}</p> : null}
       </div>
