@@ -362,7 +362,7 @@ export async function sendDemoCaptureLeadEmail(input: {
 }
 
 export async function sendDemoCaptureVisitorEmail(input: { email: string }) {
-  const liveDemoUrl = 'https://kersivo.co.uk/barbershop-booking-system#live-demo';
+  const liveDemoUrl = 'https://kersivo.co.uk/barbershop-booking-system';
   const bookingFlowUrl = 'https://kersivo.co.uk/book';
   const adminDemoUrl = 'https://kersivo.co.uk/admin-demo?section=bookings_dashboard';
   const retailDemoUrl = 'https://kersivo.co.uk/shop';
@@ -374,7 +374,7 @@ export async function sendDemoCaptureVisitorEmail(input: { email: string }) {
   <p>KERSIVO is built for independent UK barbershops that want their own branded booking website, their own client experience and 0% KERSIVO commission on bookings and retail.</p>
 
   <p><strong>Demo links:</strong></p>
-  <p>View the demo overview:<br/><a href="${liveDemoUrl}">${liveDemoUrl}</a></p>
+  <p>View the full KERSIVO overview:<br/><a href="${liveDemoUrl}">${liveDemoUrl}</a></p>
   <p>See the client booking flow:<br/><a href="${bookingFlowUrl}">${bookingFlowUrl}</a></p>
   <p>Preview the admin:<br/><a href="${adminDemoUrl}">${adminDemoUrl}</a></p>
   <p>See retail pickup shop:<br/><a href="${retailDemoUrl}">${retailDemoUrl}</a></p>
