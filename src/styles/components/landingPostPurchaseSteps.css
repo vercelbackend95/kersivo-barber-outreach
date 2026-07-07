@@ -49,9 +49,9 @@
   margin: 0;
   max-width: 18ch;
   font-family: var(--font-heading);
-  font-size: clamp(2rem, 5.5vw, 3.25rem);
+  font-size: clamp(2rem, 4.2vw, 3.4rem);
   font-weight: 400;
-  line-height: 0.98;
+  line-height: 1.05;
   letter-spacing: var(--tracking-heading);
   text-transform: uppercase;
   color: var(--fg);
@@ -101,11 +101,11 @@
 .landing-post-purchase-steps__illustration-img {
   display: block;
   width: 100%;
-  max-width: min(100%, 18rem);
+  max-width: min(100%, 26rem);
   height: auto;
-  max-height: clamp(7.5rem, 24vw, 10rem);
+  max-height: clamp(12rem, 52vw, 18rem);
   object-fit: contain;
-  object-position: left center;
+  object-position: center;
 }
 
 .landing-post-purchase-steps__timeline {
@@ -176,13 +176,14 @@
   }
 
   .landing-post-purchase-steps__heading {
-    font-size: clamp(2.5rem, 4vw, 3.5rem);
+    font-size: clamp(2rem, 4.2vw, 3.4rem);
     max-width: none;
   }
 
   .landing-post-purchase-steps__illustration-img {
-    max-width: min(100%, 24rem);
-    max-height: 16rem;
+    max-width: min(100%, 34rem);
+    max-height: 24rem;
+    object-position: left center;
   }
 
   .landing-post-purchase-steps__timeline {

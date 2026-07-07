@@ -47,7 +47,7 @@ const currentYear = new Date().getFullYear();
   jsonLd={buildBarbershopBookingFaqJsonLd()}
   navbarVariant="landing"
 >
-  <main>
+  <main class="landing-overflow-guard">
     <SystemChooser />
     <BarbershopBookingHero client:load />
     <LandingValueCards />
@@ -155,3 +155,9 @@ const currentYear = new Date().getFullYear();
 
   initShop6Carousels();
 </script>
+
+<style>
+  .landing-overflow-guard {
+    overflow-x: clip;
+  }
+</style>

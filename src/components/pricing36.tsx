@@ -48,12 +48,6 @@ const Pricing36 = ({ className, variant = "default" }: Pricing36Props) => {
           </p>
         </div>
 
-        <p className="pricing36__questions">
-          Questions first? Email{" "}
-          <a href="mailto:hello@kersivo.co.uk">hello@kersivo.co.uk</a>
-          {copy.questionsSuffix ? ` ${copy.questionsSuffix}` : null}
-        </p>
-
         {calendlyUrl ? (
           <p className="pricing36__calendly">
             <a href={calendlyUrl} target="_blank" rel="noopener noreferrer">
@@ -161,6 +155,12 @@ const Pricing36 = ({ className, variant = "default" }: Pricing36Props) => {
             </div>
           </div>
         </div>
+
+        <p className="pricing36__questions">
+          Questions first? Email{" "}
+          <a href="mailto:hello@kersivo.co.uk">hello@kersivo.co.uk</a>
+          {copy.questionsSuffix ? ` ${copy.questionsSuffix}` : null}
+        </p>
       </div>
 
       <SetupDepositModal

@@ -59,9 +59,9 @@
 .landing-difference__heading {
   margin: 0;
   font-family: var(--font-heading);
-  font-size: clamp(1.85rem, 4.5vw, 2.75rem);
+  font-size: clamp(2rem, 4.2vw, 3.4rem);
   font-weight: 400;
-  line-height: 0.98;
+  line-height: 1.05;
   letter-spacing: var(--tracking-heading);
   text-transform: uppercase;
   color: var(--fg);

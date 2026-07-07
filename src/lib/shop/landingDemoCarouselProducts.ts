@@ -34,6 +34,55 @@ const LANDING_DEMO_PRODUCTS: CarouselProduct[] = [
     pricePence: 1400,
     imageUrl: null,
   },
+  {
+    id: 'landing-demo-beard-oil',
+    name: 'Beard Oil',
+    category: 'BEARD_CARE',
+    pricePence: 1800,
+    imageUrl: null,
+  },
+  {
+    id: 'landing-demo-beard-balm',
+    name: 'Beard Balm',
+    category: 'BEARD_CARE',
+    pricePence: 1500,
+    imageUrl: null,
+  },
+  {
+    id: 'landing-demo-texturising-clay',
+    name: 'Texturising Clay',
+    category: 'POMADES_AND_CLAYS',
+    pricePence: 1650,
+    imageUrl: null,
+  },
+  {
+    id: 'landing-demo-styling-powder',
+    name: 'Styling Powder',
+    category: 'STYLING',
+    pricePence: 1200,
+    imageUrl: null,
+  },
+  {
+    id: 'landing-demo-daily-shampoo',
+    name: 'Daily Shampoo',
+    category: 'HAIR_WASH',
+    pricePence: 1300,
+    imageUrl: null,
+  },
+  {
+    id: 'landing-demo-grooming-gift-set',
+    name: 'Grooming Gift Set',
+    category: 'GIFT_SETS',
+    pricePence: 3500,
+    imageUrl: null,
+  },
+  {
+    id: 'landing-demo-barber-comb',
+    name: 'Barber Comb',
+    category: 'TOOLS',
+    pricePence: 900,
+    imageUrl: null,
+  },
 ];
 
 function fallbackImageForCategory(category: string): string {

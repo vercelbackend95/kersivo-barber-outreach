@@ -6,8 +6,8 @@
   padding: clamp(2.75rem, 5vw, 3.75rem) 0;
   border-top: 1px solid var(--border);
   overflow: hidden;
-  --lvc-illus-max-w: min(100%, 24rem);
-  --lvc-illus-max-h: clamp(14rem, 38vw, 22rem);
+  --lvc-illus-max-w: min(100%, 25.2rem);
+  --lvc-illus-max-h: clamp(14.7rem, 39.9vw, 23.1rem);
   --lvc-visual-min-h: clamp(13rem, 36vw, 18rem);
   --lvc-row-gap: clamp(2rem, 4vw, 2.75rem);
   --lvc-blocks-gap: clamp(2rem, 4vw, 2.75rem);
@@ -62,9 +62,9 @@
 .landing-value-cards__heading {
   margin: 0;
   font-family: var(--font-heading);
-  font-size: clamp(1.95rem, 5vw, 3rem);
+  font-size: clamp(2rem, 4.2vw, 3.4rem);
   font-weight: 400;
-  line-height: 0.98;
+  line-height: 1.05;
   letter-spacing: var(--tracking-heading);
   text-transform: uppercase;
   color: var(--fg);
@@ -108,8 +108,8 @@
 
 @media (min-width: 900px) {
   .landing-value-cards {
-    --lvc-illus-max-w: min(100%, 24rem);
-    --lvc-illus-max-h: clamp(14rem, 24vh, 20rem);
+    --lvc-illus-max-w: min(100%, 25.2rem);
+    --lvc-illus-max-h: clamp(14.7rem, 25.2vh, 21rem);
     --lvc-visual-min-h: clamp(12rem, 20vh, 17rem);
   }
 
@@ -223,7 +223,7 @@
 
 @media (max-width: 767px) {
   .landing-value-cards {
-    --lvc-illus-max-h: clamp(11rem, 32vw, 16rem);
+    --lvc-illus-max-h: clamp(11.55rem, 33.6vw, 16.8rem);
     --lvc-visual-min-h: clamp(9.5rem, 28vw, 13rem);
     --lvc-blocks-gap: clamp(1.5rem, 4vw, 2rem);
     --lvc-row-gap: clamp(1.25rem, 3.5vw, 1.65rem);
@@ -232,7 +232,7 @@
 
 @media (max-width: 599px) {
   .landing-value-cards {
-    --lvc-illus-max-h: clamp(9.5rem, 38vw, 13rem);
+    --lvc-illus-max-h: clamp(9.98rem, 39.9vw, 13.65rem);
     --lvc-visual-min-h: clamp(8rem, 30vw, 11rem);
     --lvc-blocks-gap: 1.35rem;
     --lvc-row-gap: 1.15rem;
@@ -240,7 +240,8 @@
 
   .landing-value-cards__included {
     flex-direction: column;
-    align-items: flex-start;
+    align-items: center;
+    text-align: center;
     gap: 0.4rem;
   }
 

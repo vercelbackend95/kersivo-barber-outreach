@@ -81,7 +81,7 @@ const BarbershopBookingHero = ({ className }: BarbershopBookingHeroProps) => {
               <div className="hero227-heading-wrap relative w-full min-w-0 max-w-full">
                 <h1
                   aria-label={HERO_H1_ACCESSIBLE_LABEL}
-                  className="hero227-heading--landing font-antonio block w-full max-w-full font-extrabold tracking-tight text-foreground text-balance hyphens-none px-1 sm:px-0 text-[clamp(2rem,8.5vw,3.25rem)] sm:text-[clamp(2.25rem,7.5vw,3.75rem)] md:text-[clamp(2.5rem,calc(0.65rem+5.5cqi),4.25rem)] lg:text-[clamp(2.75rem,calc(0.7rem+5cqi),4.75rem)] leading-[1.18] md:leading-[1.15]"
+                  className="hero227-heading--landing font-antonio block w-full max-w-full font-extrabold tracking-tight text-foreground text-balance hyphens-none px-1 sm:px-0 text-[clamp(2.35rem,10vw,3.75rem)] sm:text-[clamp(2.25rem,7.5vw,3.75rem)] md:text-[clamp(2.5rem,calc(0.65rem+5.5cqi),4.25rem)] lg:text-[clamp(2.75rem,calc(0.7rem+5cqi),4.75rem)] leading-[1.18] md:leading-[1.15]"
                 >
                   <VerticalCutReveal
                     skipScreenReaderDup

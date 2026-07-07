@@ -240,6 +240,7 @@
   font-family: var(--font-body);
   font-size: var(--text-xs);
   font-weight: 700;
+  line-height: 1;
   letter-spacing: 0.14em;
   text-transform: uppercase;
   color: var(--accent);
@@ -372,8 +373,8 @@
   }
 
   .pricing36--landing .compare3-block__header h2 {
-    font-size: clamp(1.45rem, 5.8vw, 2rem);
-    line-height: 1.15;
+    font-size: clamp(2rem, 4.2vw, 3.4rem);
+    line-height: 1.05;
   }
 
   .pricing36--landing .pricing36__guarantee {
@@ -405,6 +406,11 @@
 
 .pricing36.pricing36--landing {
   scroll-margin-top: clamp(5rem, 12vw, 6.5rem);
+}
+
+.pricing36--landing .compare3-block__header h2 {
+  font-size: clamp(2rem, 4.2vw, 3.4rem);
+  line-height: 1.05;
 }
 
 .pricing36--landing .pricing36__plan-header {
