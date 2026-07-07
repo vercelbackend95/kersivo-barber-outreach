@@ -3,6 +3,7 @@
 .landing-demo-preview--compact {
   padding-block: clamp(2.5rem, 5vw, 4rem);
   border-bottom: 1px solid var(--border);
+  scroll-margin-top: clamp(5rem, 10vw, 7rem);
 }
 
 .landing-demo-preview--compact .container {

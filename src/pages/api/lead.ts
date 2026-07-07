@@ -1,7 +1,7 @@
 export const prerender = false;
 
 import type { APIRoute } from 'astro';
-import { EmailDeliveryError, sendDemoCaptureLeadEmail } from '../../lib/email/sender';
+import { EmailDeliveryError, sendDemoCaptureLeadEmail, sendDemoCaptureVisitorEmail } from '../../lib/email/sender';
 
 const MAX_NAME = 200;
 const MAX_META = 120;
@@ -33,8 +33,8 @@ export const POST: APIRoute = async ({ request }) => {
   if (!email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
     return badRequest('Please enter a valid email address.');
   }
-  if (!shopName || shopName.length > MAX_NAME) {
-    return badRequest('Please enter your barbershop name.');
+  if (shopName.length > MAX_NAME) {
+    return badRequest('Invalid barbershop name.');
   }
   if (currentSystem.length > MAX_META) {
     return badRequest('Invalid current system value.');
@@ -43,7 +43,7 @@ export const POST: APIRoute = async ({ request }) => {
   try {
     await sendDemoCaptureLeadEmail({
       email,
-      shopName,
+      shopName: shopName || undefined,
       currentSystem: currentSystem || undefined
     });
   } catch (error) {
@@ -54,6 +54,15 @@ export const POST: APIRoute = async ({ request }) => {
       });
     }
     throw error;
+  }
+
+  try {
+    await sendDemoCaptureVisitorEmail({ email });
+  } catch (visitorError) {
+    console.error('[EMAIL] Visitor demo confirmation failed (internal notification already sent)', {
+      email,
+      error: visitorError
+    });
   }
 
   return new Response(JSON.stringify({ ok: true }), {

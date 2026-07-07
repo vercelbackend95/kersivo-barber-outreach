@@ -160,16 +160,11 @@ const Pricing36 = ({ className, variant = "default" }: Pricing36Props) => {
           </div>
         </div>
 
-        <p className="pricing36__questions">
-          Questions first? Email{" "}
-          <a href="mailto:hello@kersivo.co.uk">hello@kersivo.co.uk</a>
-          {copy.questionsSuffix ? ` ${copy.questionsSuffix}` : null}
-        </p>
-
-        {variant === "landing" ? (
-          <p className="pricing36__soft-cta">
-            Not sure which setup fits your shop?{" "}
-            <a href="#contact" data-track="ask-about-setup">Ask About My Setup</a>
+        {variant !== "landing" ? (
+          <p className="pricing36__questions">
+            Questions first? Email{" "}
+            <a href="mailto:hello@kersivo.co.uk">hello@kersivo.co.uk</a>
+            {copy.questionsSuffix ? ` ${copy.questionsSuffix}` : null}
           </p>
         ) : null}
       </div>

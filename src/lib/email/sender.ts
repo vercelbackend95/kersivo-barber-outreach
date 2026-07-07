@@ -34,6 +34,7 @@ async function sendEmail(input: {
   to: string;
   subject: string;
   html: string;
+  replyTo?: string;
   devLogLabel: string;
   devPayload: Record<string, string>;
 }): Promise<{ messageId: string | null }> {
@@ -51,7 +52,8 @@ async function sendEmail(input: {
       from: FROM_EMAIL,
       to: input.to,
       subject: input.subject,
-      html: input.html
+      html: input.html,
+      ...(input.replyTo ? { replyTo: input.replyTo } : {})
     });
 
     const responseWithData = response as { data?: { id?: string | null }; error?: unknown };
@@ -334,27 +336,81 @@ export async function sendContactInquiryEmail(input: {
 
 export async function sendDemoCaptureLeadEmail(input: {
   email: string;
-  shopName: string;
+  shopName?: string;
   currentSystem?: string;
 }) {
   const inbox = getContactInboxEmail();
 
   const html = `<p><strong>New demo &amp; pricing request</strong> (review-later capture)</p>
   <p><strong>Email:</strong> ${escapeHtml(input.email)}</p>
-  <p><strong>Barbershop:</strong> ${escapeHtml(input.shopName)}</p>
+  ${input.shopName ? `<p><strong>Barbershop:</strong> ${escapeHtml(input.shopName)}</p>` : ''}
   ${input.currentSystem ? `<p><strong>Current system:</strong> ${escapeHtml(input.currentSystem)}</p>` : ''}
   <p><strong>Source:</strong> /barbershop-booking-system review-later capture</p>`;
 
   return sendEmail({
     to: inbox,
-    subject: `Demo & pricing request — ${input.shopName}`,
+    subject: `Demo & pricing request — ${input.email}`,
     html,
     devLogLabel: '[DEV EMAIL] Demo & pricing capture',
     devPayload: {
       to: inbox,
       email: input.email,
-      shopName: input.shopName,
+      shopName: input.shopName ?? '',
       currentSystem: input.currentSystem ?? ''
+    }
+  });
+}
+
+export async function sendDemoCaptureVisitorEmail(input: { email: string }) {
+  const liveDemoUrl = 'https://kersivo.co.uk/barbershop-booking-system#live-demo';
+  const bookingFlowUrl = 'https://kersivo.co.uk/book';
+  const adminDemoUrl = 'https://kersivo.co.uk/admin-demo?section=bookings_dashboard';
+  const retailDemoUrl = 'https://kersivo.co.uk/shop';
+  const pricingUrl = 'https://kersivo.co.uk/barbershop-booking-system#pricing';
+  const replyTo = getContactInboxEmail();
+
+  const html = `<p>Hi,</p>
+  <p>Here are the KERSIVO demo and pricing details you asked for.</p>
+  <p>KERSIVO is built for independent UK barbershops that want their own branded booking website, their own client experience and 0% KERSIVO commission on bookings and retail.</p>
+
+  <p><strong>Demo links:</strong></p>
+  <p>View the demo overview:<br/><a href="${liveDemoUrl}">${liveDemoUrl}</a></p>
+  <p>See the client booking flow:<br/><a href="${bookingFlowUrl}">${bookingFlowUrl}</a></p>
+  <p>Preview the admin:<br/><a href="${adminDemoUrl}">${adminDemoUrl}</a></p>
+  <p>See retail pickup shop:<br/><a href="${retailDemoUrl}">${retailDemoUrl}</a></p>
+
+  <p><strong>Pricing:</strong></p>
+  <p><strong>Launch — £199 setup + £39/month Ongoing Care</strong><br/>Best if you want the complete KERSIVO booking, retail and admin setup without extra launch priority.</p>
+  <p><strong>Priority Growth — £299 setup + £39/month Ongoing Care</strong><br/>Best if you want priority setup and extra polish around key pages and retail products.</p>
+
+  <p><strong>Both setups include:</strong></p>
+  <ul>
+    <li>branded booking website</li>
+    <li>admin dashboard</li>
+    <li>retail pickup shop</li>
+    <li>SMS reminders</li>
+    <li>no-show protection</li>
+    <li>hosting, SSL and support</li>
+    <li>0% KERSIVO commission</li>
+  </ul>
+
+  <p>You can start with a 50% setup deposit. The remaining 50% is only due when your setup is live and reviewed by you.</p>
+
+  <p><strong>Ready to choose a setup?</strong><br/><a href="${pricingUrl}">${pricingUrl}</a></p>
+
+  <p>Not sure yet? Reply to this email with what you&rsquo;re trying to improve — switching from Booksy/Fresha/Nearcut, launching your first system, reducing no-shows or selling retail pickup.</p>
+
+  <p>KERSIVO<br/>Own your brand. Own your bookings.<br/><a href="mailto:hello@kersivo.co.uk">hello@kersivo.co.uk</a></p>`;
+
+  return sendEmail({
+    to: input.email,
+    subject: 'Your KERSIVO demo & pricing details',
+    html,
+    replyTo,
+    devLogLabel: '[DEV EMAIL] Visitor demo & pricing confirmation',
+    devPayload: {
+      to: input.email,
+      replyTo
     }
   });
 }
