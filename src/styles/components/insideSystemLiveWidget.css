@@ -21,7 +21,7 @@
 
   position: relative;
   display: block;
-  width: min(24rem, 100%);
+  width: 100%;
   margin-inline: auto;
   min-width: 0;
   font-family: var(--font-body);
@@ -73,12 +73,9 @@
   display: flex !important;
 }
 
-/* ── Swipe hint (preview only) ────────────────────────────────── */
+/* ── Swipe hint (preview only) — sits directly above the swipe dots ── */
 .isw .admin-vtl-swipe-hint {
-  position: absolute;
-  top: 0.4rem;
-  right: 0.4rem;
-  z-index: 4;
+  position: relative;
   display: inline-flex;
   align-items: center;
   gap: 0.3rem;
@@ -121,6 +118,14 @@
   }
 }
 
+/* ── Dim / mute while the preview lock is open ─────────────────── */
+.isw.is-dimmed .admin-vtl-scroll {
+  filter: blur(2px);
+  opacity: 0.5;
+  pointer-events: none;
+  transition: filter 180ms ease, opacity 180ms ease;
+}
+
 /* ── Lock overlay ─────────────────────────────────────────────── */
 .isw-lock {
   position: absolute;
@@ -146,7 +151,7 @@
 
 .isw-lock__card {
   position: relative;
-  width: min(24rem, 100%);
+  width: 100%;
   max-height: 100%;
   overflow-y: auto;
   display: flex;
@@ -215,15 +220,13 @@
 }
 
 .isw-lock__cta {
-  align-self: start;
+  align-self: stretch;
+  text-align: center;
+  min-height: 2.75rem;
 }
 
 /* ── Responsive ───────────────────────────────────────────────── */
 @media (max-width: 560px) {
-  .isw {
-    width: 100%;
-  }
-
   .isw .admin-vtl-scroll {
     max-height: clamp(16.5rem, 46vh, 22.5rem);
   }
@@ -246,10 +249,12 @@
     font-size: 0.8rem;
     line-height: 1.45;
   }
+}
 
-  .isw-lock__cta {
-    align-self: stretch;
-    text-align: center;
-    min-height: 2.75rem;
+@media (prefers-reduced-motion: reduce) {
+  .isw.is-dimmed .admin-vtl-scroll,
+  .isw-lock {
+    transition: none;
+    animation: none;
   }
 }

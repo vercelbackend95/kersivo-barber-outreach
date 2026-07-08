@@ -338,12 +338,20 @@ const BookingExpansionCard = memo(function BookingExpansionCard({
 
   // ── Swipe tri-state ───────────────────────────────────────────────────────────
   const [swipeState, setSwipeState] = useState<SwipeState>('closed');
+  const swipeStateRef = useRef<SwipeState>('closed');
   const trackRef = useRef<HTMLDivElement>(null);
+  const swipeRootRef = useRef<HTMLDivElement>(null);
   const touchStartX = useRef(0);
+  const touchStartY = useRef(0);
+  const swipeAxis = useRef<'undecided' | 'h' | 'v'>('undecided');
   const isDragging = useRef(false);
   const didDragRef = useRef(false);
   const wheelCooldownRef = useRef(0);
   const [hintVisible, setHintVisible] = useState(showSwipeHint);
+
+  useEffect(() => {
+    swipeStateRef.current = swipeState;
+  }, [swipeState]);
 
   // ── Optimistic status ─────────────────────────────────────────────────────────
   const [localStatus, setLocalStatus] = useState(booking.status);
@@ -515,52 +523,6 @@ const BookingExpansionCard = memo(function BookingExpansionCard({
     }
   }, []);
 
-  const handleTouchStart = useCallback((e: React.TouchEvent) => {
-    touchStartX.current = e.touches[0].clientX;
-    isDragging.current = true;
-    trackRef.current?.classList.add('admin-vtl-swipe-track--dragging');
-  }, []);
-
-  const handleTouchMove = useCallback(
-    (e: React.TouchEvent) => {
-      if (!isDragging.current) return;
-      const delta = e.touches[0].clientX - touchStartX.current;
-      const base =
-        swipeState === 'left'
-          ? 0
-          : swipeState === 'right'
-            ? -(CLIENT_PANEL_W + ACTIONS_PANEL_W)
-            : -CLIENT_PANEL_W;
-      const clamped = Math.min(0, Math.max(-(CLIENT_PANEL_W + ACTIONS_PANEL_W), base + delta));
-      applyTrackTransform(clamped);
-    },
-    [swipeState, applyTrackTransform],
-  );
-
-  const handleTouchEnd = useCallback(
-    (e: React.TouchEvent) => {
-      if (!isDragging.current) return;
-      isDragging.current = false;
-      const delta = e.changedTouches[0].clientX - touchStartX.current;
-      trackRef.current?.classList.remove('admin-vtl-swipe-track--dragging');
-
-      const next = stepSwipe(swipeState, delta);
-      if (next === swipeState) {
-        const snapTo =
-          swipeState === 'left'
-            ? 0
-            : swipeState === 'right'
-              ? -(CLIENT_PANEL_W + ACTIONS_PANEL_W)
-              : -CLIENT_PANEL_W;
-        applyTrackTransform(snapTo);
-      } else {
-        setSwipeState(next);
-      }
-    },
-    [swipeState, applyTrackTransform],
-  );
-
-  // ── Mouse / wheel swipe (preview embeds only) ─────────────────────────────────
   const snapForState = useCallback(
     (state: SwipeState) =>
       state === 'left'
@@ -571,9 +533,90 @@ const BookingExpansionCard = memo(function BookingExpansionCard({
     [],
   );
 
+  const handleTouchStart = useCallback((e: React.TouchEvent) => {
+    touchStartX.current = e.touches[0].clientX;
+    touchStartY.current = e.touches[0].clientY;
+    swipeAxis.current = 'undecided';
+    isDragging.current = true;
+    didDragRef.current = false;
+    trackRef.current?.classList.add('admin-vtl-swipe-track--dragging');
+  }, []);
+
+  // Native non-passive touchmove so preventDefault works for horizontal swipes.
+  // React's onTouchMove is often passive and cannot block vertical scroll steal.
+  useEffect(() => {
+    const root = swipeRootRef.current;
+    if (!root) return undefined;
+
+    const AXIS_LOCK_PX = 8;
+
+    const onTouchMove = (e: TouchEvent) => {
+      if (!isDragging.current) return;
+      const touch = e.touches[0];
+      if (!touch) return;
+
+      const dx = touch.clientX - touchStartX.current;
+      const dy = touch.clientY - touchStartY.current;
+
+      if (swipeAxis.current === 'undecided') {
+        if (Math.abs(dx) < AXIS_LOCK_PX && Math.abs(dy) < AXIS_LOCK_PX) return;
+        swipeAxis.current = Math.abs(dx) > Math.abs(dy) ? 'h' : 'v';
+        if (swipeAxis.current === 'v') {
+          trackRef.current?.classList.remove('admin-vtl-swipe-track--dragging');
+          return;
+        }
+      }
+
+      if (swipeAxis.current === 'v') return;
+
+      e.preventDefault();
+      if (Math.abs(dx) > 6) didDragRef.current = true;
+      const base = snapForState(swipeStateRef.current);
+      const clamped = Math.min(0, Math.max(-(CLIENT_PANEL_W + ACTIONS_PANEL_W), base + dx));
+      applyTrackTransform(clamped);
+    };
+
+    root.addEventListener('touchmove', onTouchMove, { passive: false });
+    return () => root.removeEventListener('touchmove', onTouchMove);
+  }, [applyTrackTransform, snapForState]);
+
+  const handleTouchEnd = useCallback(
+    (e: React.TouchEvent) => {
+      if (!isDragging.current) return;
+      isDragging.current = false;
+      trackRef.current?.classList.remove('admin-vtl-swipe-track--dragging');
+
+      const axis = swipeAxis.current;
+      swipeAxis.current = 'undecided';
+
+      // Vertical scroll or undecided tap — leave swipe state alone.
+      if (axis !== 'h') {
+        applyTrackTransform(snapForState(swipeState));
+        return;
+      }
+
+      const delta = e.changedTouches[0].clientX - touchStartX.current;
+      const next = stepSwipe(swipeState, delta);
+      if (next === swipeState) {
+        applyTrackTransform(snapForState(swipeState));
+      } else {
+        setSwipeState(next);
+      }
+    },
+    [swipeState, applyTrackTransform, snapForState],
+  );
+
+  // ── Mouse / wheel swipe (preview embeds only) ─────────────────────────────────
+
   const handlePointerDown = useCallback(
     (e: React.PointerEvent) => {
       if (!previewSwipe || e.pointerType === 'touch') return;
+      // Don't capture pointer on controls — otherwise setPointerCapture on the
+      // swipe root suppresses the button's click (desktop/tablet lock overlay).
+      const interactive = (e.target as Element | null)?.closest?.(
+        'button, a, input, select, textarea, [role="button"]',
+      );
+      if (interactive) return;
       touchStartX.current = e.clientX;
       isDragging.current = true;
       didDragRef.current = false;
@@ -934,9 +977,9 @@ const BookingExpansionCard = memo(function BookingExpansionCard({
       </div>
 
       <div
+        ref={swipeRootRef}
         className="admin-vtl-swipe-root"
         onTouchStart={handleTouchStart}
-        onTouchMove={handleTouchMove}
         onTouchEnd={handleTouchEnd}
         onPointerDown={previewSwipe ? handlePointerDown : undefined}
         onPointerMove={previewSwipe ? handlePointerMove : undefined}
@@ -944,14 +987,6 @@ const BookingExpansionCard = memo(function BookingExpansionCard({
         onPointerCancel={previewSwipe ? handlePointerUp : undefined}
         onWheel={previewSwipe ? handleWheel : undefined}
       >
-        {hintVisible && (
-          <div className="admin-vtl-swipe-hint" role="status">
-            <span className="admin-vtl-swipe-hint-arrows" aria-hidden="true">
-              ‹ ›
-            </span>
-            Swipe
-          </div>
-        )}
         <div ref={trackRef} className={trackClass}>
         {/* ── Left: client panel ── */}
         <div className="admin-vtl-client-panel" aria-hidden={swipeState !== 'left'}>
@@ -1080,10 +1115,20 @@ const BookingExpansionCard = memo(function BookingExpansionCard({
           {bottomSheetPortal}
         </div>
 
-        <div className="admin-vtl-swipe-dots" data-active={swipeState} aria-hidden="true">
-          <span className="admin-vtl-swipe-dot" />
-          <span className="admin-vtl-swipe-dot" />
-          <span className="admin-vtl-swipe-dot" />
+        <div className="admin-vtl-swipe-nav">
+          {hintVisible && (
+            <div className="admin-vtl-swipe-hint" role="status">
+              <span className="admin-vtl-swipe-hint-arrows" aria-hidden="true">
+                ‹ ›
+              </span>
+              Swipe
+            </div>
+          )}
+          <div className="admin-vtl-swipe-dots" data-active={swipeState} aria-hidden="true">
+            <span className="admin-vtl-swipe-dot" />
+            <span className="admin-vtl-swipe-dot" />
+            <span className="admin-vtl-swipe-dot" />
+          </div>
         </div>
       </div>
     </div>

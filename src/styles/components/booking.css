@@ -13936,6 +13936,8 @@ body.admin-theme-premium-black .booking-page-wrap .booking-shell.surface {
   overflow: hidden;
   position: relative;
   width: 100%;
+  /* Allow vertical scroll on parent; horizontal swipe is claimed via JS axis-lock. */
+  touch-action: pan-y;
 }
 
 .admin-vtl-swipe-shell {
@@ -13975,6 +13977,13 @@ body.admin-theme-premium-black .booking-page-wrap .booking-shell.surface {
 .admin-vtl-panel-segmented-btn:focus-visible {
   outline: 2px solid var(--focus);
   outline-offset: 2px;
+}
+
+.admin-vtl-swipe-nav {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.35rem;
 }
 
 .admin-vtl-swipe-dots {

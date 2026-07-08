@@ -132,15 +132,16 @@ const rows: PreviewRow[] = [
             <p class="feature261__row-kicker">{row.kicker}</p>
             <h3 class="feature261__row-heading">{row.heading}</h3>
             <p class="feature261__row-body">{row.description}</p>
-            <a
-              href={row.ctaHref}
-              class="btn btn--primary feature261__row-cta"
-              target="_blank"
-              rel="noopener noreferrer"
-            >
-              {row.ctaLabel}
-            </a>
           </div>
+
+          <a
+            href={row.ctaHref}
+            class="btn btn--primary feature261__row-cta"
+            target="_blank"
+            rel="noopener noreferrer"
+          >
+            {row.ctaLabel}
+          </a>
         </li>
       ))}
     </ul>

@@ -184,13 +184,14 @@
 
 /*
   Screenshot slightly smaller than clip so UI clears rounded corners; nudge + Y position vs Dynamic Island.
+  Homepage keeps the static bitmap; landing overrides below for the animated admin preview.
 */
 .hero227-root .hero227-mock-screen {
   position: absolute !important;
   left: 0 !important;
   right: 0 !important;
   top: calc(-1 * var(--hero227-screen-nudge)) !important;
-  width:100% !important;
+  width: 100% !important;
   height: calc(100% + var(--hero227-screen-nudge)) !important;
   box-sizing: border-box !important;
   border-radius: inherit !important;

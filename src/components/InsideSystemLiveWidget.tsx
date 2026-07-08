@@ -86,19 +86,21 @@ export function InsideSystemLiveWidget({
   }, [lockOpen]);
 
   return (
-    <div className="isw">
+    <div className={`isw${lockOpen ? ' is-dimmed' : ''}`}>
       <div className="isw__stage">
-        <TodayTimeline
-          barbers={data.barbers}
-          bookings={data.bookings}
-          timeBlocks={data.timeBlocks}
-          selectedDate={data.selectedDate}
-          allowInitialNowScroll={false}
-          scrollContainerRef={scrollRef}
-          previewSwipe
-          onBookingClick={() => setLockOpen(true)}
-          onClientProfileIntercept={() => setLockOpen(true)}
-        />
+        <div aria-hidden={lockOpen ? 'true' : undefined}>
+          <TodayTimeline
+            barbers={data.barbers}
+            bookings={data.bookings}
+            timeBlocks={data.timeBlocks}
+            selectedDate={data.selectedDate}
+            allowInitialNowScroll={false}
+            scrollContainerRef={scrollRef}
+            previewSwipe
+            onBookingClick={() => setLockOpen(true)}
+            onClientProfileIntercept={() => setLockOpen(true)}
+          />
+        </div>
 
         {lockOpen && (
           <div
@@ -122,8 +124,9 @@ export function InsideSystemLiveWidget({
                 This is just a preview.
               </p>
               <p className="isw-lock__body">
-                Client profiles, statuses, services and rescheduling open in the
-                full admin. Tap below to explore the complete version.
+                This is a compact widget of your real admin timeline. Open the
+                full admin to manage clients, statuses, services and today&apos;s
+                bookings.
               </p>
               <a
                 href={ADMIN_DEMO_HREF}

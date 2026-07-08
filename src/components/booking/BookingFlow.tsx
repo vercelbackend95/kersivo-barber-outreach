@@ -74,6 +74,17 @@ type Props = {
 };
 const DEFAULT_BOOKING_TIMEZONE = 'Europe/London';
 
+/** Fixed free slots for landing preview — no real availability fetch. */
+const PREVIEW_STATIC_SLOTS = [
+  '09:00',
+  '09:30',
+  '10:00',
+  '10:30',
+  '11:00',
+  '11:30',
+  '14:00',
+  '14:30',
+] as const;
 
 function normalizeToIsoDate(input: string): string | null {
   const trimmed = input.trim();
@@ -301,9 +312,11 @@ export default function BookingFlow({ services, barbers, mode = 'create', token 
       ? 'Choose a barber to load availability for this service.'
       : !normalizedDate
         ? 'Choose a date to load available times.'
-        : slots.length > 0
-          ? 'Select the slot that works best for your schedule.'
-          : 'No slots available for this date.';
+        : previewMode
+          ? 'Preview times'
+          : slots.length > 0
+            ? 'Select the slot that works best for your schedule.'
+            : 'No slots available for this date.';
 
 
   const appointmentRows = useMemo(
@@ -424,6 +437,14 @@ export default function BookingFlow({ services, barbers, mode = 'create', token 
       return;
     }
 
+    // Landing preview: skip real availability — always the same 8 free slots.
+    if (previewMode) {
+      setSlots([...PREVIEW_STATIC_SLOTS]);
+      setTime('');
+      setIsSlotsLoading(false);
+      return;
+    }
+
     setIsSlotsLoading(true);
     fetch(`/api/availability?serviceId=${serviceId}&barberId=${barberId}&date=${nextDate}`)
       .then((res) => res.json())
@@ -438,7 +459,7 @@ export default function BookingFlow({ services, barbers, mode = 'create', token 
       .finally(() => {
         setIsSlotsLoading(false);
       });
-  }, [serviceId, barberId, date]);
+  }, [serviceId, barberId, date, previewMode]);
 
 
   async function submit() {

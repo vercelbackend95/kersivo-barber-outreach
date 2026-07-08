@@ -67,6 +67,81 @@
   }
 }
 
+/* Stacked viewports: copy → media → CTA */
+@media (max-width: 899px) {
+  .landing-demo-preview .feature261__copy {
+    order: 1;
+  }
+
+  .landing-demo-preview .feature261__media {
+    order: 2;
+  }
+
+  .landing-demo-preview .feature261__row-cta {
+    order: 3;
+    justify-self: center;
+  }
+}
+
+/*
+  Desktop: CTA is a sibling of media/copy, so place explicitly instead of
+  relying on direction:rtl zigzag (which breaks with three children).
+*/
+@media (min-width: 900px) {
+  .landing-demo-preview .feature261__row {
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+    /* Outer 1fr rows center the copy+CTA stack beside the media */
+    grid-template-rows: 1fr auto auto 1fr;
+  }
+
+  .landing-demo-preview .feature261__row--reverse {
+    direction: ltr;
+  }
+
+  .landing-demo-preview .feature261__media {
+    grid-column: 1;
+    grid-row: 1 / -1;
+    align-self: center;
+  }
+
+  .landing-demo-preview .feature261__copy {
+    grid-column: 2;
+    grid-row: 2;
+    align-self: stretch;
+  }
+
+  .landing-demo-preview .feature261__row-cta {
+    grid-column: 2;
+    grid-row: 3;
+    align-self: start;
+  }
+
+  /* Booking (non-reverse): flush copy + CTA to the right edge of column 2 */
+  .landing-demo-preview .feature261__row:not(.feature261__row--reverse) .feature261__copy {
+    justify-self: end;
+    text-align: end;
+  }
+
+  .landing-demo-preview .feature261__row:not(.feature261__row--reverse) .feature261__row-cta {
+    justify-self: end;
+  }
+
+  .landing-demo-preview .feature261__row--reverse .feature261__media {
+    grid-column: 2;
+  }
+
+  /* Admin + Retail (reverse): flush copy + CTA to the left edge of column 1 */
+  .landing-demo-preview .feature261__row--reverse .feature261__copy,
+  .landing-demo-preview .feature261__row--reverse .feature261__row-cta {
+    grid-column: 1;
+    justify-self: start;
+  }
+
+  .landing-demo-preview .feature261__row--reverse .feature261__copy {
+    text-align: start;
+  }
+}
+
 /* Admin preview row now hosts the live widget — let it self-align, no image frame. */
 .landing-demo-preview--compact .feature261__media--widget {
   align-self: center;

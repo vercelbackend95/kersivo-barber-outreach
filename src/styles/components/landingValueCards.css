@@ -258,6 +258,10 @@
     align-items: center;
     text-align: center;
     gap: 0.4rem;
+    padding: 0;
+    background: transparent;
+    border: none;
+    border-radius: 0;
   }
 
   .landing-value-cards__included-items {
