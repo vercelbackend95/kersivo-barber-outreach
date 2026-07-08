@@ -88,6 +88,10 @@
   relying on direction:rtl zigzag (which breaks with three children).
 */
 @media (min-width: 900px) {
+  .landing-demo-preview--compact .feature261__rows > .feature261__row:first-child {
+    margin-bottom: -1.4rem;
+  }
+
   .landing-demo-preview .feature261__row {
     grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
     /* Outer 1fr rows center the copy+CTA stack beside the media */

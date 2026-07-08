@@ -1,11 +1,18 @@
 import { adminDemoHref } from '@/lib/admin/demoConfig';
+import HomepageSalesKpiWidget from '@/components/HomepageSalesKpiWidget';
+import { InsideSystemLiveWidget } from '@/components/InsideSystemLiveWidget';
+import { LandingBookingWidget } from '@/components/LandingBookingWidget';
 import { ShopProductCarousel } from '@/components/shop/ShopProductCarousel';
 import { type CarouselProduct } from '@/lib/shop/carouselProducts';
+import type { LandingBookingData } from '@/lib/landing/landingBookingData';
+import type { LandingBarber } from '@/lib/landing/liveTimelineData';
 import { cn } from '@/lib/utils';
 
 interface Feature261Props {
   className?: string;
   retailProducts?: CarouselProduct[];
+  barbers?: LandingBarber[];
+  bookingData?: LandingBookingData;
 }
 
 type FeatureRowData = {
@@ -14,7 +21,7 @@ type FeatureRowData = {
   description: string;
   ctaLabel: string;
   ctaHref: string;
-  media: 'image' | 'carousel';
+  media: 'image' | 'carousel' | 'widget' | 'booking' | 'kpi';
   src?: string;
   alt?: string;
   imageClassName?: string;
@@ -25,19 +32,13 @@ type FeatureRowData = {
 
 const rows: FeatureRowData[] = [
   {
-    src: '/images/screenshots/timeline1.png',
-    imgWidth: 1260,
-    imgHeight: 909,
-    alt: 'Signed-in admin — bookings timeline and day schedule',
     kicker: 'BOOKING OVERVIEW',
     heading: "Chairs, statuses, what's next—plus the pulse when you need it.",
     description:
       "Timeline, statuses and today's pulse in one signed-in view. See who's in the chair, what's coming up and how the day is tracking without jumping between screens.",
     ctaLabel: 'See the timeline',
     ctaHref: adminDemoHref('timeline'),
-    imageClassName: 'feature261-row-image--bookings',
-    loading: 'eager',
-    media: 'image',
+    media: 'widget',
   },
   {
     src: '/images/screenshots/bookingi.png',
@@ -52,21 +53,7 @@ const rows: FeatureRowData[] = [
     ctaHref: '/book',
     imageClassName: 'feature261-row-image--booking',
     loading: 'eager',
-    media: 'image',
-  },
-  {
-    src: '/images/screenshots/barbers.png',
-    imgWidth: 1211,
-    imgHeight: 584,
-    alt: 'Signed-in admin — barber roster, hours and assignments',
-    kicker: 'BARBERS',
-    heading: 'Roster, hours, who offers what—grow the team in one place.',
-    description:
-      "Add barbers, set hours and assign services from one roster. Everyone on the floor knows who does what—and clients only see who's actually available.",
-    ctaLabel: 'See how to manage barbers',
-    ctaHref: adminDemoHref('barbers'),
-    imageClassName: 'feature261-row-image--barbers',
-    media: 'image',
+    media: 'booking',
   },
   {
     kicker: 'RETAIL',
@@ -78,22 +65,21 @@ const rows: FeatureRowData[] = [
     media: 'carousel',
   },
   {
-    src: '/images/screenshots/diagram.png',
-    alt: 'Signed-in admin — sales analytics, revenue chart and product breakdown',
     kicker: 'MONETIZATION',
     heading: 'Shop sales, payouts, barber income—see what you earned.',
     description:
       'Track retail revenue, order totals and how income breaks down across the team. Sales charts and KPIs live in the same signed-in admin as bookings and the shop.',
     ctaLabel: 'See the KPIs',
     ctaHref: adminDemoHref('kpis'),
-    imageClassName: 'feature261-row-image--sales',
-    media: 'image',
+    media: 'kpi',
   },
 ];
 
 type FeatureRowProps = FeatureRowData & {
   reverse?: boolean;
   retailProducts?: CarouselProduct[];
+  barbers?: LandingBarber[];
+  bookingData?: LandingBookingData;
 };
 
 function FeatureRow({
@@ -111,6 +97,8 @@ function FeatureRow({
   media,
   reverse = false,
   retailProducts = [],
+  barbers = [],
+  bookingData,
 }: FeatureRowProps) {
   return (
     <li
@@ -123,7 +111,24 @@ function FeatureRow({
             products={retailProducts}
             className="feature261-retail-carousel"
             showControls={false}
+            previewMode={true}
           />
+        </div>
+      ) : media === 'widget' ? (
+        <div className="feature261__media feature261__media--widget">
+          <InsideSystemLiveWidget barbers={barbers} />
+        </div>
+      ) : media === 'booking' && bookingData ? (
+        <div className="feature261__media feature261__media--widget">
+          <LandingBookingWidget
+            services={bookingData.services}
+            barbers={bookingData.barbers}
+            shopDetails={bookingData.shopDetails}
+          />
+        </div>
+      ) : media === 'kpi' ? (
+        <div className="feature261__media feature261__media--widget">
+          <HomepageSalesKpiWidget />
         </div>
       ) : (
         <div className="feature261__media">
@@ -145,20 +150,28 @@ function FeatureRow({
         <p className="feature261__row-kicker">{kicker}</p>
         <h3 className="feature261__row-heading">{heading}</h3>
         <p className="feature261__row-body">{description}</p>
-        <a
-          href={ctaHref}
-          target="_blank"
-          rel="noopener noreferrer"
-          className="btn btn--primary feature261__row-cta"
-        >
-          {ctaLabel}
-        </a>
       </div>
+
+      <a
+        href={ctaHref}
+        target="_blank"
+        rel="noopener noreferrer"
+        className="btn btn--primary feature261__row-cta"
+      >
+        {ctaLabel}
+      </a>
     </li>
   );
 }
 
-const Feature261 = ({ className, retailProducts = [] }: Feature261Props) => {
+const Feature261 = ({
+  className,
+  retailProducts = [],
+  barbers = [],
+  bookingData,
+}: Feature261Props) => {
+  const bookingWidgetAvailable = Boolean(bookingData?.available);
+
   return (
     <section className={cn('feature261 py-32', className)}>
       <div className="feature261__glow" aria-hidden="true" />
@@ -173,14 +186,26 @@ const Feature261 = ({ className, retailProducts = [] }: Feature261Props) => {
         </header>
 
         <ul className="feature261__rows" role="list">
-          {rows.map((row, index) => (
-            <FeatureRow
-              key={row.kicker}
-              {...row}
-              reverse={index % 2 === 1}
-              retailProducts={row.media === 'carousel' ? retailProducts : undefined}
-            />
-          ))}
+          {rows.map((row, index) => {
+            const media =
+              row.media === 'booking'
+                ? bookingWidgetAvailable
+                  ? 'booking'
+                  : 'image'
+                : row.media;
+
+            return (
+              <FeatureRow
+                key={row.kicker}
+                {...row}
+                media={media}
+                reverse={index % 2 === 1}
+                retailProducts={media === 'carousel' ? retailProducts : undefined}
+                barbers={media === 'widget' ? barbers : undefined}
+                bookingData={media === 'booking' ? bookingData : undefined}
+              />
+            );
+          })}
         </ul>
       </div>
     </section>

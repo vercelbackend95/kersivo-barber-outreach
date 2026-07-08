@@ -29,15 +29,26 @@ import Footer50 from '../components/footer50.astro';
 import '../styles/components/footer50.css';
 import { getFooterSocialLinks } from '@/lib/seo/footerSocialLinks';
 import '../styles/components/feature261.css';
+import '../styles/components/booking.css';
+import '../styles/components/booking-mobile.css';
+import '../styles/components/admin-demo.css';
+import '../styles/components/empty-state.css';
+import '../styles/components/skeleton.css';
+import '../styles/components/insideSystemLiveWidget.css';
+import '../styles/components/landingBookingWidget.css';
 import '../styles/components/migrationGuide.css';
 import MigrationGuide from '../components/migrationGuide.astro';
 import '../styles/components/process2.css';
 import '../styles/components/hero227.css';
 import { Hero227 } from '../components/hero227';
 import SystemChooser from '../components/SystemChooser.astro';
-import { fetchCarouselProducts } from '@/lib/shop/carouselProducts';
+import { resolveLandingDemoCarouselProducts } from '@/lib/shop/landingDemoCarouselProducts';
+import { resolveLandingDemoBarbers } from '@/lib/landing/landingDemoBarbers';
+import { resolveLandingBookingData } from '@/lib/landing/landingBookingData';
 
-const carouselProducts = await fetchCarouselProducts();
+const carouselProducts = await resolveLandingDemoCarouselProducts();
+const demoBarbers = await resolveLandingDemoBarbers();
+const landingBookingData = await resolveLandingBookingData();
 
 ---
 
@@ -58,7 +69,12 @@ const carouselProducts = await fetchCarouselProducts();
     <AudiencePicker />
     <MigrationGuide />
     <NewcomerPath />
-    <Feature261 retailProducts={carouselProducts} />
+    <Feature261
+      client:load
+      retailProducts={carouselProducts}
+      barbers={demoBarbers}
+      bookingData={landingBookingData}
+    />
     <Pricing36 client:load />
     <RateCard1 />
     <Process2 client:load />
