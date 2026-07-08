@@ -444,12 +444,14 @@
   }
 
   .feature261 .feature261__row:not(.feature261__row--reverse) .feature261__copy {
-    justify-self: end;
-    text-align: end;
+    justify-self: start;
+    text-align: start;
+    padding-inline-start: 0.85rem;
   }
 
   .feature261 .feature261__row:not(.feature261__row--reverse) .feature261__row-cta {
-    justify-self: end;
+    justify-self: start;
+    margin-inline-start: 0.85rem;
   }
 
   .feature261 .feature261__row--reverse .feature261__media {

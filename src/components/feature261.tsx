@@ -1,5 +1,5 @@
 import { adminDemoHref } from '@/lib/admin/demoConfig';
-import HomepageSalesKpiWidget from '@/components/HomepageSalesKpiWidget';
+import { Feature261MonetizationRow } from '@/components/feature261/Feature261MonetizationRow';
 import { InsideSystemLiveWidget } from '@/components/InsideSystemLiveWidget';
 import { LandingBookingWidget } from '@/components/LandingBookingWidget';
 import { ShopProductCarousel } from '@/components/shop/ShopProductCarousel';
@@ -23,7 +23,7 @@ type FeatureRowData = {
   description: string;
   ctaLabel: string;
   ctaHref: string;
-  media: 'image' | 'carousel' | 'widget' | 'booking' | 'kpi';
+  media: 'image' | 'carousel' | 'widget' | 'booking';
   src?: string;
   alt?: string;
   imageClassName?: string;
@@ -59,15 +59,6 @@ const rows: FeatureRowData[] = [
     ctaLabel: 'See the shop live',
     ctaHref: '/shop',
     media: 'carousel',
-  },
-  {
-    kicker: 'MONETIZATION',
-    heading: 'Shop sales, payouts, barber income—see what you earned.',
-    description:
-      'Track retail revenue, order totals and how income breaks down across the team. Sales charts and KPIs live in the same signed-in admin as bookings and the shop.',
-    ctaLabel: 'See the KPIs',
-    ctaHref: adminDemoHref('kpis'),
-    media: 'kpi',
   },
 ];
 
@@ -115,10 +106,6 @@ function FeatureRow({
             barbers={bookingData.barbers}
             shopDetails={bookingData.shopDetails}
           />
-        </div>
-      ) : media === 'kpi' ? (
-        <div className="feature261__media feature261__media--widget">
-          <HomepageSalesKpiWidget />
         </div>
       ) : null}
 
@@ -173,6 +160,7 @@ const Feature261 = ({
               bookingData={resolvedBookingData}
             />
           ))}
+          <Feature261MonetizationRow reverse />
         </ul>
       </div>
     </section>
