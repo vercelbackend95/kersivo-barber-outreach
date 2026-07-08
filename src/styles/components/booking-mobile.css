@@ -462,36 +462,6 @@
     min-width: 0;
   }
 
-  .booking-page-wrap .booking-shell.booking-flow .booking-synced-step-row {
-    column-gap: clamp(0.813rem, 1.625vw, 1.3rem);
-  }
-
-  .booking-page-wrap .booking-shell.booking-flow .booking-synced-step-row__rail {
-    min-width: clamp(4rem, 5vw, 5.5rem);
-  }
-
-  .booking-page-wrap .booking-shell.booking-flow
-    .booking-synced-step-row__rail
-    .booking-step-indicator__label {
-    white-space: nowrap;
-    max-width: none;
-  }
-
-  .booking-page-wrap .booking-shell.booking-flow
-    .booking-synced-step-row__rail
-    .booking-step-indicator__step {
-    padding-top: calc(
-      clamp(1rem, 4vw, 1.5rem) * var(--booking-desktop-scale) +
-        (clamp(3rem, 7vw, 4rem) * var(--booking-desktop-scale) - 2rem * var(--booking-desktop-scale)) / 2
-    );
-  }
-
-  .booking-page-wrap .booking-shell.booking-flow
-    .booking-synced-step-row__rail
-    .booking-step-indicator__connector {
-    min-height: calc(1.5rem * var(--booking-desktop-scale));
-  }
-
   .booking-page-wrap .booking-shell.booking-flow .booking-choice-grid--services {
     grid-template-columns: repeat(auto-fill, minmax(9.5rem, 1fr));
   }
@@ -522,8 +492,12 @@
   }
 
   .booking-page-wrap .booking-shell.booking-flow .booking-flow__right .booking-review-panel__card-head h3 {
-    font-size: var(--booking-text-lg);
-    line-height: 1.1;
+    font-family: var(--font-body);
+    font-size: max(var(--booking-text-sm), 0.8rem);
+    font-weight: 700;
+    letter-spacing: 0.1em;
+    line-height: 1.25;
+    text-transform: uppercase;
   }
 
   .booking-page-wrap .booking-shell.booking-flow .booking-review-panel--always-visible .booking-review-panel__row {

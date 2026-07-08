@@ -122,6 +122,11 @@
   border: 0;
   box-shadow: none;
   padding: 0;
+  overflow: visible;
+}
+
+.feature261 .homepage-sales-kpi-widget .admin-sales-chart-canvas {
+  overflow: visible;
 }
 
 .feature261 .homepage-sales-kpi-widget .admin-sales-modal-selector {
@@ -130,10 +135,16 @@
   border: 0;
   box-shadow: none;
   padding: 0;
+  pointer-events: auto;
 }
 
 .feature261 .homepage-sales-kpi-widget .admin-sales-search-results {
   background: transparent;
+  pointer-events: auto;
+}
+
+.feature261 .homepage-sales-kpi-widget .admin-sales-search-result {
+  pointer-events: auto;
 }
 
 @media (min-width: 900px) {

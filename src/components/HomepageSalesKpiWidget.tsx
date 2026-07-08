@@ -16,6 +16,7 @@ type SalesSeriesPill = {
   isOverall?: boolean;
 };
 
+const CHART_HEIGHT = 'clamp(220px, 34vh, 320px)';
 const MAX_SELECTED_PRODUCTS = 5;
 const SALES_SELECTION_LIMIT_MESSAGE = 'Max 5 products can be compared.';
 const PRODUCT_SLOT_COLORS = ['#E6EAF0', '#7DD3FC', '#5EEAD4', '#FBBF24', '#C4B5FD'];
@@ -23,6 +24,21 @@ const OVERALL_COLOR = '#E11D2E';
 
 function formatPrice(pricePence: number): string {
   return new Intl.NumberFormat('en-GB', { style: 'currency', currency: 'GBP' }).format(pricePence / 100);
+}
+
+function HomepageSalesKpiWidgetPlaceholder() {
+  return (
+    <div className="homepage-sales-kpi-widget" aria-hidden="true">
+      <div className="admin-sales-chart-wrap">
+        <div className="admin-sales-chart-inner">
+          <div className="admin-sales-chart-canvas" style={{ height: CHART_HEIGHT }} />
+        </div>
+      </div>
+      <div className="admin-sales-modal-selector">
+        <div className="admin-sales-search-results" />
+      </div>
+    </div>
+  );
 }
 
 function useProductSeriesSelection(allSalesSeries: SalesChartSeries[]) {
@@ -143,7 +159,7 @@ function SeriesPills({
   );
 }
 
-export default function HomepageSalesKpiWidget() {
+function HomepageSalesKpiWidgetContent() {
   const salesData = useMemo(() => getLandingSalesKpiData(), []);
 
   const allSalesSeries = useMemo(() => {
@@ -243,7 +259,7 @@ export default function HomepageSalesKpiWidget() {
           getStrokeWidth={getSeriesStrokeWidth}
           formatValue={formatPrice}
           responsive
-          height="clamp(220px, 34vh, 320px)"
+          height={CHART_HEIGHT}
           emptyNode={
             <>
               <p>No products selected</p>
@@ -277,4 +293,18 @@ export default function HomepageSalesKpiWidget() {
       </div>
     </div>
   );
+}
+
+export default function HomepageSalesKpiWidget() {
+  const [isMounted, setIsMounted] = useState(false);
+
+  useEffect(() => {
+    setIsMounted(true);
+  }, []);
+
+  if (!isMounted) {
+    return <HomepageSalesKpiWidgetPlaceholder />;
+  }
+
+  return <HomepageSalesKpiWidgetContent />;
 }

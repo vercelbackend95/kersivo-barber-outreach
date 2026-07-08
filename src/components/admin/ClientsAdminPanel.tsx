@@ -41,6 +41,7 @@ function ClearIcon() {
   );
 }
 import AdminSectionHeader from './AdminSectionHeader';
+import AdminDesktopDashHeroSlot from './AdminDesktopDashHeroSlot';
 import ClientProfilePanel from './ClientProfilePanel';
 
 type ClientListRow = {
@@ -174,6 +175,8 @@ export default function ClientsAdminPanel() {
         description="Manage your client list, tags and reliability scores"
         metaBadge={!loading && !error ? String(clients.length) : undefined}
       />
+
+      <AdminDesktopDashHeroSlot />
 
       <div className="admin-clients-table-wrap">
         <div className="admin-clients-search-row">

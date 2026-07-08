@@ -3,7 +3,7 @@ import { AnimatePresence, motion } from 'framer-motion';
 import { BarberRosterOverviewGridSkeleton, SkeletonKPICards } from '../skeleton';
 import AdminSectionHeader from './AdminSectionHeader';
 import AdminBookingsOpsSearch from './AdminBookingsOpsSearch';
-import AdminNextAppointmentsStripLive from './AdminNextAppointmentsStripLive';
+import AdminDesktopDashHeroSlot from './AdminDesktopDashHeroSlot';
 import AdminBookingsScheduleList from './AdminBookingsScheduleList';
 import AdminBookingDatePicker from './AdminBookingDatePicker';
 import AdminLineChart from './charts/AdminLineChart';
@@ -806,7 +806,6 @@ export default function BookingsAdminPanel({ isActive, mode, onBackToDashboard, 
   const updatedRowsTimeoutRef = useRef<number | null>(null);
   const timelineScrollRef = useRef<HTMLDivElement | null>(null);
   const bookingShellRef = useRef<HTMLElement | null>(null);
-  const nextBlockMeasureCleanupRef = useRef<(() => void) | null>(null);
   const historyRecentBarbersScrollRef = useRef<HTMLDivElement | null>(null);
   const reportsRecentBarbersScrollRef = useRef<HTMLDivElement | null>(null);
   const searchInputRef = useRef<HTMLInputElement | null>(null);
@@ -2265,100 +2264,11 @@ export default function BookingsAdminPanel({ isActive, mode, onBackToDashboard, 
     setIsAddBarberSheetOpen(true);
   }, []);
 
-  /**
-   * Publish measured height of the in-flow dash-hero slot onto `.admin-main-content`
-   * so `.admin-mobile-header-spacer` clears fixed chrome. The mobile Next strip is registered
-   * globally via `AdminGlobalMobileNextStripHost`; this callback ref still handles desktop heroes
-   * and any in-document hero wrapper.
-   */
-  const bindNextBlockMeasureRef = useCallback((node: HTMLDivElement | null) => {
-    nextBlockMeasureCleanupRef.current?.();
-    nextBlockMeasureCleanupRef.current = null;
-
-    if (!node) {
-      return;
-    }
-
-    const mainContentNode = node.closest('.admin-main-content') as HTMLElement | null;
-    if (!mainContentNode) {
-      return;
-    }
-
-    const HEIGHT_PUBLISH_THRESHOLD_PX = 2;
-    let lastPublishedPx = -1;
-    let rafId: number | null = null;
-
-    const publishNextBlockHeight = () => {
-      const nextPx = Math.round(node.offsetHeight);
-      if (lastPublishedPx < 0) {
-        mainContentNode.style.setProperty('--admin-next-block-h', `${nextPx}px`);
-        lastPublishedPx = nextPx;
-        return;
-      }
-      if (Math.abs(nextPx - lastPublishedPx) >= HEIGHT_PUBLISH_THRESHOLD_PX) {
-        mainContentNode.style.setProperty('--admin-next-block-h', `${nextPx}px`);
-        lastPublishedPx = nextPx;
-      }
-    };
-
-    const schedulePublish = () => {
-      if (rafId !== null) return;
-      rafId = window.requestAnimationFrame(() => {
-        rafId = null;
-        publishNextBlockHeight();
-      });
-    };
-
-    publishNextBlockHeight();
-    if (node.closest('.admin-mobile-header-extension')) {
-      mainContentNode.style.setProperty(
-        '--admin-mobile-sheet-strip-chrome',
-        'calc(0.42rem + 0.2rem + 0.55rem)',
-      );
-    }
-    const resizeObserver = new ResizeObserver(schedulePublish);
-    resizeObserver.observe(node);
-    window.addEventListener('resize', schedulePublish);
-
-    nextBlockMeasureCleanupRef.current = () => {
-      if (rafId !== null) window.cancelAnimationFrame(rafId);
-      resizeObserver.disconnect();
-      window.removeEventListener('resize', schedulePublish);
-      mainContentNode.style.removeProperty('--admin-next-block-h');
-      mainContentNode.style.removeProperty('--admin-mobile-sheet-strip-chrome');
-    };
-  }, []);
-
-  useEffect(
-    () => () => {
-      nextBlockMeasureCleanupRef.current?.();
-      nextBlockMeasureCleanupRef.current = null;
-    },
-    [],
-  );
-
-  const bookingsDashHeroEl = mode === 'dashboard' ? <AdminNextAppointmentsStripLive /> : null;
-
-  const nonDashboardOpsDashHeroEl = <AdminNextAppointmentsStripLive />;
-
-  const dashHeroSlotClassName = [
-    'admin-next-block',
-    'admin-next-block--dash-hero-slot',
-    isMobileViewport ? 'admin-next-block--dash-hero-slot--mobile' : '',
-  ]
-    .filter(Boolean)
-    .join(' ');
-
-  const renderOpsDashHeroSlot = (child: React.ReactNode) => (
-    <div ref={bindNextBlockMeasureRef} className={dashHeroSlotClassName}>
-      {child}
-    </div>
-  );
 
   const dashboardOpsDashCluster =
     mode === 'dashboard' ? (
       <div className="admin-bookings-ops-dash-cluster">
-        {!isMobileViewport && bookingsDashHeroEl ? renderOpsDashHeroSlot(bookingsDashHeroEl) : null}
+        {!isMobileViewport ? <AdminDesktopDashHeroSlot /> : null}
 
         <section
           className={`admin-bookings-ops admin-bookings-ops--dashboard${staffRosterOpen ? ' admin-bookings-ops--staff-roster-open' : ''}`}
@@ -2654,7 +2564,7 @@ export default function BookingsAdminPanel({ isActive, mode, onBackToDashboard, 
               ) : undefined
             }
           />
-          {isMobileViewport ? null : renderOpsDashHeroSlot(nonDashboardOpsDashHeroEl)}
+          {!isMobileViewport ? <AdminDesktopDashHeroSlot /> : null}
         </>
       )}
 

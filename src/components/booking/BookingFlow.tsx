@@ -2,7 +2,7 @@
 import React, { useEffect, useMemo, useRef, useState } from 'react';
 import BookingConfirmationPanel, { type BookingSummary } from './BookingConfirmationPanel';
 import BookingReviewPanel from './BookingReviewPanel';
-import { BookingStepRailItem } from './BookingStepIndicator';
+import BookingStepIndicator from './BookingStepIndicator';
 import { SkeletonSlotGrid } from '../skeleton';
 import { ANY_BARBER_ID, ANY_BARBER_NAME } from '../../lib/booking/constants';
 import { groupServicesByCategory } from '../../lib/booking/groupServicesByCategory';
@@ -269,6 +269,14 @@ export default function BookingFlow({ services, barbers, mode = 'create', token 
     if (!time) return 3;
     return 4;
   }, [serviceId, barberId, time]);
+
+  const bookingSteps = useMemo(
+    () =>
+      isCreateMode
+        ? [{ label: 'Service' }, { label: 'Barber' }, { label: 'Schedule' }, { label: 'Details' }]
+        : [{ label: 'Service' }, { label: 'Barber' }, { label: 'Schedule' }],
+    [isCreateMode],
+  );
 
   const missingItems = useMemo(() => {
     const items: string[] = [];
@@ -606,10 +614,9 @@ export default function BookingFlow({ services, barbers, mode = 'create', token 
         <div className="booking-flow__layout">
           <div className="booking-flow__left">
           <div className="booking-flow__main">
-            <div className="booking-synced-step-row">
-              <div className="booking-synced-step-row__rail">
-                <BookingStepRailItem stepNumber={1} label="Service" currentStep={currentStep} showConnector />
-              </div>
+            {!previewMode ? (
+              <BookingStepIndicator currentStep={currentStep} steps={bookingSteps} />
+            ) : null}
             <section className="booking-step" aria-labelledby="booking-step-service">
               <div className="booking-step__head">
                 <span className="booking-step__index">01</span>
@@ -660,13 +667,8 @@ export default function BookingFlow({ services, barbers, mode = 'create', token 
                   </section>
                 ))}
               </div>
-                          </section>
-            </div>
+            </section>
 
-            <div className="booking-synced-step-row">
-              <div className="booking-synced-step-row__rail">
-                <BookingStepRailItem stepNumber={2} label="Barber" currentStep={currentStep} showConnector />
-              </div>
             <section
               ref={barberStepRef}
               className={`booking-step${revealingStepId === 'barber' ? ' is-revealing' : ''}`}
@@ -731,19 +733,7 @@ export default function BookingFlow({ services, barbers, mode = 'create', token 
               ) : null}
 
             </section>
-            </div>
 
-
-
-            <div className="booking-synced-step-row">
-              <div className="booking-synced-step-row__rail">
-                <BookingStepRailItem
-                  stepNumber={3}
-                  label="Schedule"
-                  currentStep={currentStep}
-                  showConnector={isCreateMode}
-                />
-              </div>
             <section
               ref={scheduleStepRef}
               className={`booking-step${revealingStepId === 'schedule' ? ' is-revealing' : ''}`}
@@ -823,12 +813,7 @@ export default function BookingFlow({ services, barbers, mode = 'create', token 
               </div>
 
             </section>
-            </div>
             {isCreateMode && !previewMode ? (
-              <div className="booking-synced-step-row">
-                <div className="booking-synced-step-row__rail">
-                  <BookingStepRailItem stepNumber={4} label="Details" currentStep={currentStep} />
-                </div>
               <section
                 ref={detailsStepRef}
                 className={`booking-step${revealingStepId === 'details' ? ' is-revealing' : ''}`}
@@ -880,7 +865,6 @@ export default function BookingFlow({ services, barbers, mode = 'create', token 
                   </label>
                 </form>
               </section>
-              </div>
             ) : null}
 
             {!previewMode ? (

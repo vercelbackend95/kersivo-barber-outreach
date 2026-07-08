@@ -165,18 +165,19 @@ export default function AdminBookingsScheduleList(props: AdminBookingsScheduleLi
         history ? (
           <div className="admin-bookings-schedule__history-table-wrap">
             <div className="admin-bookings-schedule__history-head-row" aria-hidden="true">
-              <span />
               <span>Client</span>
               <span>Service</span>
               <span>Date &amp; Time</span>
               <span>Barber</span>
               <span>Status</span>
             </div>
-            <div aria-busy="true" aria-live="polite">
+            <div className="admin-bookings-schedule__history-loading" aria-busy="true" aria-live="polite">
               {Array.from({ length: 6 }, (_, i) => (
                 <div key={i} className="admin-bookings-schedule__history-skeleton-row" aria-hidden="true">
-                  <span className="admin-bookings-schedule__history-skeleton-avatar" />
-                  <span className="admin-bookings-schedule__history-skeleton-cell admin-bookings-schedule__history-skeleton-cell--name" />
+                  <div className="admin-bookings-schedule__history-skeleton-client">
+                    <span className="admin-bookings-schedule__history-skeleton-avatar" />
+                    <span className="admin-bookings-schedule__history-skeleton-cell admin-bookings-schedule__history-skeleton-cell--name" />
+                  </div>
                   <span className="admin-bookings-schedule__history-skeleton-cell" />
                   <span className="admin-bookings-schedule__history-skeleton-cell" />
                   <span className="admin-bookings-schedule__history-skeleton-cell admin-bookings-schedule__history-skeleton-cell--sm" />
@@ -229,7 +230,6 @@ export default function AdminBookingsScheduleList(props: AdminBookingsScheduleLi
       ) : history ? (
         <div className="admin-bookings-schedule__history-table-wrap">
           <div className="admin-bookings-schedule__history-head-row" aria-hidden="true">
-            <span />
             <span>Client</span>
             <span>Service</span>
             <span>Date &amp; Time</span>
@@ -260,17 +260,19 @@ export default function AdminBookingsScheduleList(props: AdminBookingsScheduleLi
                     data-booking-id={booking.id}
                     aria-label={`View booking for ${booking.fullName}`}
                   >
-                    <div className="admin-bookings-schedule__history-avatar" aria-hidden="true">
-                      <span className="admin-bookings-schedule__history-avatar-initials">{initials}</span>
-                    </div>
+                    <div className="admin-bookings-schedule__history-client">
+                      <div className="admin-bookings-schedule__history-avatar" aria-hidden="true">
+                        <span className="admin-bookings-schedule__history-avatar-initials">{initials}</span>
+                      </div>
 
-                    <div className="admin-bookings-schedule__history-identity">
-                      <span className="admin-bookings-schedule__history-name">
-                        {highlightMatch(booking.fullName)}
-                      </span>
-                      <span className="admin-bookings-schedule__history-email">
-                        {emailTrimmed ? highlightMatch(emailTrimmed) : '—'}
-                      </span>
+                      <div className="admin-bookings-schedule__history-identity">
+                        <span className="admin-bookings-schedule__history-name">
+                          {highlightMatch(booking.fullName)}
+                        </span>
+                        <span className="admin-bookings-schedule__history-email">
+                          {emailTrimmed ? highlightMatch(emailTrimmed) : '—'}
+                        </span>
+                      </div>
                     </div>
 
                     <span className="admin-bookings-schedule__history-service">

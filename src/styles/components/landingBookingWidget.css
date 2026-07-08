@@ -130,20 +130,6 @@
   }
 }
 
-/* ── Fix the desktop step rail ───────────────────────────────────
-   booking.css re-enables a 7.5rem step-number/label rail column at
-   >=1024px (`.booking-synced-step-row__rail`), which on a desktop viewport
-   squeezes the widget's real step content into a cramped right column. Force
-   the single-column, rail-free layout regardless of viewport. */
-.lbw .booking-synced-step-row {
-  grid-template-columns: minmax(0, 1fr) !important;
-  column-gap: 0 !important;
-}
-
-.lbw .booking-synced-step-row__rail {
-  display: none !important;
-}
-
 /* ── Match /book mobile: always 3 columns on every device ────────
    booking.css uses viewport media queries; here we pin the same 3-col
    service/barber/slot grids regardless of landing viewport width. */
