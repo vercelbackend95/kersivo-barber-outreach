@@ -1,26 +1,7 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 
 import AdminLineChart, { type AdminLineChartSeries } from '@/components/admin/charts/AdminLineChart';
-import { adminFetchJson, enablePublicAdminDemo, installAdminFetchInterceptor } from '@/components/admin/adminAuth';
-
-type SalesResponse = {
-  range: { from: string; to: string; tz: string };
-  kpis: {
-    revenuePence: number;
-    ordersCount: number;
-    avgOrderValuePence: number;
-    bestProduct?: { productId: string; name: string; revenuePence: number; units: number };
-  };
-  series: {
-    overall?: Array<{ date: string; revenuePence: number; units: number }>;
-    products?: Array<{
-      productId: string;
-      name: string;
-      points: Array<{ date: string; revenuePence: number; units: number }>;
-    }>;
-  };
-  leaderboard: Array<{ productId: string; name: string; units: number; revenuePence: number }>;
-};
+import { getLandingSalesKpiData } from '@/lib/landing/landingSalesKpiData';
 
 type SalesChartSeries = {
   key: string;
@@ -163,45 +144,9 @@ function SeriesPills({
 }
 
 export default function HomepageSalesKpiWidget() {
-  const [salesData, setSalesData] = useState<SalesResponse | null>(null);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
-
-  useEffect(() => {
-    let cancelled = false;
-
-    const load = async () => {
-      setLoading(true);
-      setError(null);
-      try {
-        enablePublicAdminDemo();
-        installAdminFetchInterceptor();
-        const payload = await adminFetchJson<SalesResponse>('/api/admin/shop/sales', {
-          errorMessage: 'Could not load sales analytics.',
-        });
-        if (!cancelled) {
-          setSalesData(payload);
-        }
-      } catch (fetchError) {
-        if (!cancelled) {
-          setError(fetchError instanceof Error ? fetchError.message : 'Could not load sales analytics.');
-        }
-      } finally {
-        if (!cancelled) {
-          setLoading(false);
-        }
-      }
-    };
-
-    load();
-    return () => {
-      cancelled = true;
-    };
-  }, []);
+  const salesData = useMemo(() => getLandingSalesKpiData(), []);
 
   const allSalesSeries = useMemo(() => {
-    if (!salesData) return [] as SalesChartSeries[];
-
     const lines: SalesChartSeries[] = [];
     if (salesData.series.overall) {
       lines.push({ key: 'overall', name: 'Overall', points: salesData.series.overall });
@@ -291,38 +236,28 @@ export default function HomepageSalesKpiWidget() {
   return (
     <div className="homepage-sales-kpi-widget">
       <div className="admin-sales-chart-wrap">
-        {loading ? (
-          <div className="admin-inline-loading" aria-live="polite">Loading sales chart...</div>
-        ) : error ? (
-          <div className="admin-inline-error" role="alert">
-            <p>{error}</p>
-          </div>
-        ) : (
-          <>
-            <AdminLineChart
-              series={adminChartSeries}
-              metric="currency"
-              getColor={getSeriesColor}
-              getStrokeWidth={getSeriesStrokeWidth}
-              formatValue={formatPrice}
-              responsive
-              height="clamp(220px, 34vh, 320px)"
-              emptyNode={
-                <>
-                  <p>No products selected</p>
-                  <p>Enable a product below to display data.</p>
-                </>
-              }
-            />
+        <AdminLineChart
+          series={adminChartSeries}
+          metric="currency"
+          getColor={getSeriesColor}
+          getStrokeWidth={getSeriesStrokeWidth}
+          formatValue={formatPrice}
+          responsive
+          height="clamp(220px, 34vh, 320px)"
+          emptyNode={
+            <>
+              <p>No products selected</p>
+              <p>Enable a product below to display data.</p>
+            </>
+          }
+        />
 
-            <SeriesPills
-              seriesList={legendSeries}
-              onRemove={removeProduct}
-              maxHintVisible={Boolean(selectionLimitMessage)}
-              emptySelectionHintVisible={false}
-            />
-          </>
-        )}
+        <SeriesPills
+          seriesList={legendSeries}
+          onRemove={removeProduct}
+          maxHintVisible={Boolean(selectionLimitMessage)}
+          emptySelectionHintVisible={false}
+        />
       </div>
 
       <div className="admin-sales-modal-selector">
