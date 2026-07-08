@@ -67,15 +67,7 @@
   }
 }
 
-/* Admin preview row — slightly clearer screenshot without changing content */
-.landing-demo-preview--compact .feature261__row:first-child .feature261-visual-card__viewport {
-  border: 1px solid color-mix(in srgb, var(--border) 88%, var(--fg) 12%);
-  box-shadow:
-    0 0 0 1px color-mix(in srgb, var(--border) 70%, transparent),
-    0 10px 28px color-mix(in srgb, var(--fg) 6%, transparent);
-}
-
-.landing-demo-preview--compact .feature261__row:first-child .feature261-row-image--bookings {
-  transform: scale(1.03);
-  transform-origin: center top;
+/* Admin preview row now hosts the live widget — let it self-align, no image frame. */
+.landing-demo-preview--compact .feature261__media--widget {
+  align-self: center;
 }

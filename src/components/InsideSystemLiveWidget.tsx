@@ -1,0 +1,144 @@
+/**
+ * InsideSystemLiveWidget — live admin timeline preview for the landing page.
+ *
+ * Embeds the real admin `TodayTimeline` 1:1 (pulsing "now" line, animated
+ * avatars, expandable slots) fed by believable demo data anchored to today.
+ * Deep actions (client profile, status/service edits) are gated: they open a
+ * "View full admin" overlay instead of mutating anything.
+ *
+ * Rendered as a client-only island (time/timezone dependent), so it ships as an
+ * interactive React component with no SSR hydration mismatch.
+ */
+import { useEffect, useMemo, useRef, useState } from 'react';
+import TodayTimeline from '@/components/admin/TodayTimeline';
+import {
+  ADMIN_DEMO_BLOCKED_EVENT,
+  installAdminFetchInterceptor,
+  setPublicAdminDemoMode,
+} from '@/components/admin/adminAuth';
+import { getLandingTimelineData, type LandingBarber } from '@/lib/landing/liveTimelineData';
+import { adminDemoHref } from '@/lib/admin/demoConfig';
+
+const ADMIN_DEMO_HREF = adminDemoHref('timeline');
+
+export function InsideSystemLiveWidget({
+  barbers,
+}: {
+  barbers?: LandingBarber[];
+} = {}) {
+  const [lockOpen, setLockOpen] = useState(false);
+  const scrollRef = useRef<HTMLDivElement | null>(null);
+
+  const data = useMemo(() => getLandingTimelineData(barbers), [barbers]);
+
+  useEffect(() => {
+    // Route every /api/admin write to a blocked 403 + toast event, so no deep
+    // action ever mutates real data from the public landing page.
+    setPublicAdminDemoMode(true);
+    installAdminFetchInterceptor();
+
+    const openLock = () => setLockOpen(true);
+    window.addEventListener(ADMIN_DEMO_BLOCKED_EVENT, openLock);
+    return () => window.removeEventListener(ADMIN_DEMO_BLOCKED_EVENT, openLock);
+  }, []);
+
+  useEffect(() => {
+    // Center the "now" line inside the widget's own scroll container only —
+    // never scrollIntoView (which would jump the whole landing page here).
+    // Runs once, when the widget first becomes visible, so the current time is
+    // always centered (and therefore the largest in the odometer) by default.
+    const container = scrollRef.current;
+    if (!container) return undefined;
+
+    let done = false;
+    const centerNow = () => {
+      const nowRow = container.querySelector<HTMLElement>('.admin-vtl-now-row');
+      if (!nowRow) return;
+      container.scrollTop = Math.max(
+        0,
+        nowRow.offsetTop - container.clientHeight / 2 + nowRow.offsetHeight / 2,
+      );
+    };
+
+    const observer = new IntersectionObserver(
+      (entries) => {
+        if (done || !entries.some((entry) => entry.isIntersecting)) return;
+        done = true;
+        observer.disconnect();
+        // rAF x2 so layout (and any expansion) is settled before measuring.
+        window.requestAnimationFrame(() =>
+          window.requestAnimationFrame(centerNow),
+        );
+      },
+      { threshold: 0.25 },
+    );
+    observer.observe(container);
+    return () => observer.disconnect();
+  }, []);
+
+  useEffect(() => {
+    if (!lockOpen) return;
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') setLockOpen(false);
+    };
+    window.addEventListener('keydown', onKey);
+    return () => window.removeEventListener('keydown', onKey);
+  }, [lockOpen]);
+
+  return (
+    <div className="isw">
+      <div className="isw__stage">
+        <TodayTimeline
+          barbers={data.barbers}
+          bookings={data.bookings}
+          timeBlocks={data.timeBlocks}
+          selectedDate={data.selectedDate}
+          allowInitialNowScroll={false}
+          scrollContainerRef={scrollRef}
+          previewSwipe
+          onBookingClick={() => setLockOpen(true)}
+          onClientProfileIntercept={() => setLockOpen(true)}
+        />
+
+        {lockOpen && (
+          <div
+            className="isw-lock"
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="isw-lock-title"
+            onClick={() => setLockOpen(false)}
+          >
+            <div className="isw-lock__card" onClick={(e) => e.stopPropagation()}>
+              <button
+                type="button"
+                className="isw-lock__close"
+                aria-label="Close preview message"
+                onClick={() => setLockOpen(false)}
+              >
+                ×
+              </button>
+              <p className="isw-lock__eyebrow">Live preview</p>
+              <p id="isw-lock-title" className="isw-lock__title">
+                This is just a preview.
+              </p>
+              <p className="isw-lock__body">
+                Client profiles, statuses, services and rescheduling open in the
+                full admin. Tap below to explore the complete version.
+              </p>
+              <a
+                href={ADMIN_DEMO_HREF}
+                className="btn btn--primary isw-lock__cta"
+                target="_blank"
+                rel="noopener noreferrer"
+              >
+                View Admin Demo
+              </a>
+            </div>
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}
+
+export default InsideSystemLiveWidget;

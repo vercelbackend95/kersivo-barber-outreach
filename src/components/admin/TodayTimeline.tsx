@@ -9,7 +9,7 @@ import { getBookingStatusTone, getStatusLabel } from './bookingStatus';
 import { SkeletonVerticalTimeline } from '../skeleton';
 import { ArrowRight, ListOrdered, MessageCircle, Plus, User, X } from '../lucide-react';
 import ClientProfilePanel from './ClientProfilePanel';
-import { adminFetchJson } from './adminAuth';
+import { adminFetchJson, ADMIN_DEMO_BLOCKED_EVENT } from './adminAuth';
 import { resolveClientIdForBooking } from '../../lib/admin/resolveClientIdForBooking';
 
 type TimelineBarber = {
@@ -61,6 +61,18 @@ type TodayTimelineProps = {
   onGoToNextDay?: () => void;
   nextDayShortLabel?: string;
   floatingTopRight?: React.ReactNode;
+  /**
+   * Preview/landing embeds: when provided, tapping a client profile routes to
+   * this handler instead of opening the real ClientProfilePanel (and skips the
+   * client-lookup fetch). Admin usage leaves this undefined for normal behavior.
+   */
+  onClientProfileIntercept?: (booking: TimelineBooking) => void;
+  /**
+   * Preview/landing embeds: force the mobile-style swipe interaction on every
+   * viewport, enabling mouse-drag + wheel navigation of the expansion panels
+   * and a one-time animated swipe hint. Real admin leaves this undefined.
+   */
+  previewSwipe?: boolean;
 };
 
 const ADMIN_TIMEZONE = 'Europe/London';
@@ -272,10 +284,27 @@ type BookingExpansionCardProps = {
   onStatusChange?: (bookingId: string, newStatus: string) => void;
   onClientProfile?: (booking: TimelineBooking) => void;
   isClientProfileLoading?: boolean;
+  /** Preview embeds: enable mouse-drag + wheel swipe navigation. */
+  previewSwipe?: boolean;
+  /** Preview embeds: show the one-time animated swipe hint on this card. */
+  showSwipeHint?: boolean;
 };
 
 const CLIENT_PANEL_W = 120;
 const ACTIONS_PANEL_W = 200;
+
+const SWIPE_THRESHOLD = 60;
+
+// Step one panel at a time relative to the current state so the center ("Main")
+// card stays reachable from either side. Panel order (left→right of revealed
+// content): client panel ('left') · main ('closed') · actions ('right').
+function stepSwipe(current: SwipeState, delta: number): SwipeState {
+  const order: SwipeState[] = ['left', 'closed', 'right'];
+  const idx = order.indexOf(current);
+  if (delta >= SWIPE_THRESHOLD) return order[Math.max(0, idx - 1)];
+  if (delta <= -SWIPE_THRESHOLD) return order[Math.min(order.length - 1, idx + 1)];
+  return current;
+}
 function formatPence(pence: number): string {
   return `£${(pence / 100).toFixed(2)}`;
 }
@@ -295,6 +324,8 @@ const BookingExpansionCard = memo(function BookingExpansionCard({
   onStatusChange,
   onClientProfile,
   isClientProfileLoading = false,
+  previewSwipe = false,
+  showSwipeHint = false,
 }: BookingExpansionCardProps) {
   const timeRange = formatTimeRange(booking.startAt, booking.endAt);
   const duration = formatDuration(booking.startAt, booking.endAt);
@@ -310,6 +341,9 @@ const BookingExpansionCard = memo(function BookingExpansionCard({
   const trackRef = useRef<HTMLDivElement>(null);
   const touchStartX = useRef(0);
   const isDragging = useRef(false);
+  const didDragRef = useRef(false);
+  const wheelCooldownRef = useRef(0);
+  const [hintVisible, setHintVisible] = useState(showSwipeHint);
 
   // ── Optimistic status ─────────────────────────────────────────────────────────
   const [localStatus, setLocalStatus] = useState(booking.status);
@@ -510,11 +544,8 @@ const BookingExpansionCard = memo(function BookingExpansionCard({
       const delta = e.changedTouches[0].clientX - touchStartX.current;
       trackRef.current?.classList.remove('admin-vtl-swipe-track--dragging');
 
-      if (delta >= 60) {
-        setSwipeState('left');
-      } else if (delta <= -60) {
-        setSwipeState('right');
-      } else {
+      const next = stepSwipe(swipeState, delta);
+      if (next === swipeState) {
         const snapTo =
           swipeState === 'left'
             ? 0
@@ -522,10 +553,106 @@ const BookingExpansionCard = memo(function BookingExpansionCard({
               ? -(CLIENT_PANEL_W + ACTIONS_PANEL_W)
               : -CLIENT_PANEL_W;
         applyTrackTransform(snapTo);
+      } else {
+        setSwipeState(next);
       }
     },
     [swipeState, applyTrackTransform],
   );
+
+  // ── Mouse / wheel swipe (preview embeds only) ─────────────────────────────────
+  const snapForState = useCallback(
+    (state: SwipeState) =>
+      state === 'left'
+        ? 0
+        : state === 'right'
+          ? -(CLIENT_PANEL_W + ACTIONS_PANEL_W)
+          : -CLIENT_PANEL_W,
+    [],
+  );
+
+  const handlePointerDown = useCallback(
+    (e: React.PointerEvent) => {
+      if (!previewSwipe || e.pointerType === 'touch') return;
+      touchStartX.current = e.clientX;
+      isDragging.current = true;
+      didDragRef.current = false;
+      trackRef.current?.classList.add('admin-vtl-swipe-track--dragging');
+      try {
+        (e.currentTarget as HTMLElement).setPointerCapture(e.pointerId);
+      } catch {
+        /* no-op */
+      }
+    },
+    [previewSwipe],
+  );
+
+  const handlePointerMove = useCallback(
+    (e: React.PointerEvent) => {
+      if (!previewSwipe || !isDragging.current || e.pointerType === 'touch') return;
+      const delta = e.clientX - touchStartX.current;
+      if (Math.abs(delta) > 6) didDragRef.current = true;
+      const clamped = Math.min(
+        0,
+        Math.max(-(CLIENT_PANEL_W + ACTIONS_PANEL_W), snapForState(swipeState) + delta),
+      );
+      applyTrackTransform(clamped);
+    },
+    [previewSwipe, swipeState, applyTrackTransform, snapForState],
+  );
+
+  const finishPointerDrag = useCallback(
+    (clientX: number) => {
+      if (!isDragging.current) return;
+      isDragging.current = false;
+      const delta = clientX - touchStartX.current;
+      trackRef.current?.classList.remove('admin-vtl-swipe-track--dragging');
+      const next = stepSwipe(swipeState, delta);
+      if (next === swipeState) applyTrackTransform(snapForState(swipeState));
+      else setSwipeState(next);
+    },
+    [swipeState, applyTrackTransform, snapForState],
+  );
+
+  const handlePointerUp = useCallback(
+    (e: React.PointerEvent) => {
+      if (!previewSwipe || e.pointerType === 'touch') return;
+      finishPointerDrag(e.clientX);
+    },
+    [previewSwipe, finishPointerDrag],
+  );
+
+  const handleWheel = useCallback(
+    (e: React.WheelEvent) => {
+      if (!previewSwipe) return;
+      const horizontal =
+        Math.abs(e.deltaX) > Math.abs(e.deltaY)
+          ? e.deltaX
+          : e.shiftKey
+            ? e.deltaY
+            : 0;
+      if (Math.abs(horizontal) < 16) return;
+      const now = Date.now();
+      if (now < wheelCooldownRef.current) return;
+      wheelCooldownRef.current = now + 380;
+      const order: SwipeState[] = ['left', 'closed', 'right'];
+      const idx = order.indexOf(swipeState);
+      const nextIdx = horizontal > 0 ? Math.min(order.length - 1, idx + 1) : Math.max(0, idx - 1);
+      if (nextIdx !== idx) setSwipeState(order[nextIdx]);
+    },
+    [previewSwipe, swipeState],
+  );
+
+  // Dismiss the swipe hint on first interaction, and auto-clear after its fade.
+  useEffect(() => {
+    if (!showSwipeHint) return undefined;
+    if (swipeState !== 'closed') {
+      setHintVisible(false);
+      return undefined;
+    }
+    const id = window.setTimeout(() => setHintVisible(false), 3200);
+    return () => window.clearTimeout(id);
+  }, [showSwipeHint, swipeState]);
 
   // ── Derived status flags ──────────────────────────────────────────────────────
   const effectiveStatus = getEffectiveBookingStatus({
@@ -554,12 +681,16 @@ const BookingExpansionCard = memo(function BookingExpansionCard({
   const openStatusActions = useCallback(
     (e: React.MouseEvent) => {
       e.stopPropagation();
+      if (previewSwipe) {
+        window.dispatchEvent(new CustomEvent(ADMIN_DEMO_BLOCKED_EVENT));
+        return;
+      }
       setActionError('');
       setPendingService(null);
       setIsServiceSheetOpen(false);
       setIsStatusSheetOpen(true);
     },
-    [],
+    [previewSwipe],
   );
 
   const setPanelState = useCallback((next: SwipeState) => {
@@ -569,13 +700,17 @@ const BookingExpansionCard = memo(function BookingExpansionCard({
   const openServiceActions = useCallback(
     (e: React.MouseEvent) => {
       e.stopPropagation();
+      if (previewSwipe) {
+        window.dispatchEvent(new CustomEvent(ADMIN_DEMO_BLOCKED_EVENT));
+        return;
+      }
       setServiceError('');
       setPendingService(null);
       setIsStatusSheetOpen(false);
       setIsServiceSheetOpen(true);
       void openServicePicker();
     },
-    [openServicePicker],
+    [openServicePicker, previewSwipe],
   );
 
   const statusActionsContent = (
@@ -803,7 +938,20 @@ const BookingExpansionCard = memo(function BookingExpansionCard({
         onTouchStart={handleTouchStart}
         onTouchMove={handleTouchMove}
         onTouchEnd={handleTouchEnd}
+        onPointerDown={previewSwipe ? handlePointerDown : undefined}
+        onPointerMove={previewSwipe ? handlePointerMove : undefined}
+        onPointerUp={previewSwipe ? handlePointerUp : undefined}
+        onPointerCancel={previewSwipe ? handlePointerUp : undefined}
+        onWheel={previewSwipe ? handleWheel : undefined}
       >
+        {hintVisible && (
+          <div className="admin-vtl-swipe-hint" role="status">
+            <span className="admin-vtl-swipe-hint-arrows" aria-hidden="true">
+              ‹ ›
+            </span>
+            Swipe
+          </div>
+        )}
         <div ref={trackRef} className={trackClass}>
         {/* ── Left: client panel ── */}
         <div className="admin-vtl-client-panel" aria-hidden={swipeState !== 'left'}>
@@ -833,6 +981,10 @@ const BookingExpansionCard = memo(function BookingExpansionCard({
           className={`admin-vtl-expansion-card admin-vtl-expansion-card--${toneClass}`}
           onClick={(e) => {
             e.stopPropagation();
+            if (didDragRef.current) {
+              didDragRef.current = false;
+              return;
+            }
             closeActionSheets();
             if (swipeState !== 'closed') setSwipeState('closed');
           }}
@@ -1162,7 +1314,7 @@ type NowRowProps = { timeLabel: string };
 const NowRow = memo(function NowRow({ timeLabel }: NowRowProps) {
   return (
     <div className="admin-vtl-now-row" aria-hidden="true">
-      <span className="admin-vtl-now-time">{timeLabel}</span>
+      <span className="admin-vtl-now-time" data-vtl-time>{timeLabel}</span>
       <div className="admin-vtl-now-track">
         <span className="admin-vtl-now-dot" />
         <div className="admin-vtl-now-line" />
@@ -1185,6 +1337,7 @@ type SlotRowProps = {
   onClientProfile: (booking: TimelineBooking) => void;
   clientProfileLoadingBookingId: string | null;
   isSearchActive: boolean;
+  previewSwipe?: boolean;
 };
 
 const SlotRow = memo(function SlotRow({
@@ -1199,6 +1352,7 @@ const SlotRow = memo(function SlotRow({
   onClientProfile,
   clientProfileLoadingBookingId,
   isSearchActive,
+  previewSwipe = false,
 }: SlotRowProps) {
   const hasBookings = slot.bookings.length > 0;
   const hasBlocks = slot.timeBlocks.length > 0;
@@ -1247,7 +1401,7 @@ const SlotRow = memo(function SlotRow({
         onClick={handleSlotToggle}
         onKeyDown={handleSlotKeyDown}
       >
-        <time className="admin-vtl-slot-time" dateTime={slot.timeLabel}>
+        <time className="admin-vtl-slot-time" dateTime={slot.timeLabel} data-vtl-time>
           {slot.timeLabel}
         </time>
         <div className="admin-vtl-slot-body">
@@ -1297,7 +1451,7 @@ const SlotRow = memo(function SlotRow({
             onClick={(e) => e.stopPropagation()}
           >
             <div className="admin-vtl-expansion-list">
-              {slot.bookings.map(({ booking, barber }) => (
+              {slot.bookings.map(({ booking, barber }, bookingIdx) => (
                 <BookingExpansionCard
                   key={booking.id}
                   booking={booking}
@@ -1306,6 +1460,8 @@ const SlotRow = memo(function SlotRow({
                   onExpand={() => onExpand(booking)}
                   onClientProfile={onClientProfile}
                   isClientProfileLoading={clientProfileLoadingBookingId === booking.id}
+                  previewSwipe={previewSwipe}
+                  showSwipeHint={previewSwipe && bookingIdx === 0}
                 />
               ))}
             </div>
@@ -1331,12 +1487,15 @@ function TodayTimeline({
   onGoToNextDay,
   nextDayShortLabel,
   floatingTopRight,
+  onClientProfileIntercept,
+  previewSwipe = false,
 }: TodayTimelineProps) {
   const localScrollRef = useRef<HTMLDivElement | null>(null);
   const activeScrollRef = scrollContainerRef ?? localScrollRef;
   const nowRowRef = useRef<HTMLDivElement | null>(null);
   const hasScrolledToNow = useRef(false);
   const scrollToNowRafRefs = useRef<{ first: number | null; second: number | null }>({ first: null, second: null });
+  const reduceMotion = useReducedMotion();
 
   const [activeBookingId, setActiveBookingId] = useState<string | null>(null);
   const [expandedSlotKey, setExpandedSlotKey] = useState<string | null>(null);
@@ -1344,6 +1503,10 @@ function TodayTimeline({
   const [clientProfileLoadingBookingId, setClientProfileLoadingBookingId] = useState<string | null>(null);
 
   const handleClientProfile = useCallback(async (booking: TimelineBooking) => {
+    if (onClientProfileIntercept) {
+      onClientProfileIntercept(booking);
+      return;
+    }
     setClientProfileLoadingBookingId(booking.id);
     try {
       const clientId = await resolveClientIdForBooking(booking);
@@ -1351,7 +1514,7 @@ function TodayTimeline({
     } finally {
       setClientProfileLoadingBookingId(null);
     }
-  }, []);
+  }, [onClientProfileIntercept]);
 
   const handleAvatarClick = useCallback((slotKey: string, booking: TimelineBooking) => {
     setExpandedSlotKey(slotKey);
@@ -1448,6 +1611,60 @@ function TodayTimeline({
     hasScrolledToNow.current = false;
   }, [selectedDate]);
 
+  // ── Odometer effect: scale/fade time labels by distance from viewport center ──
+  useEffect(() => {
+    const container = activeScrollRef.current;
+    if (!container) return undefined;
+
+    const nodes = () =>
+      container.querySelectorAll<HTMLElement>('[data-vtl-time]');
+
+    if (reduceMotion) {
+      nodes().forEach((el) => {
+        el.style.transform = '';
+        el.style.opacity = '';
+      });
+      return undefined;
+    }
+
+    const SIGMA = 96;
+    const SCALE_MAX = 1.42;
+    const SCALE_MIN = 0.86;
+    const OPACITY_MIN = 0.5;
+
+    let rafId: number | null = null;
+
+    const update = () => {
+      rafId = null;
+      const rect = container.getBoundingClientRect();
+      const centerY = rect.top + rect.height / 2;
+      nodes().forEach((el) => {
+        const r = el.getBoundingClientRect();
+        const d = r.top + r.height / 2 - centerY;
+        const t = Math.exp(-(d * d) / (2 * SIGMA * SIGMA));
+        const scale = SCALE_MIN + (SCALE_MAX - SCALE_MIN) * t;
+        const opacity = OPACITY_MIN + (1 - OPACITY_MIN) * t;
+        el.style.transform = `scale(${scale.toFixed(3)})`;
+        el.style.opacity = opacity.toFixed(3);
+      });
+    };
+
+    const schedule = () => {
+      if (rafId !== null) return;
+      rafId = window.requestAnimationFrame(update);
+    };
+
+    schedule();
+    window.addEventListener('scroll', schedule, true);
+    window.addEventListener('resize', schedule);
+
+    return () => {
+      if (rafId !== null) window.cancelAnimationFrame(rafId);
+      window.removeEventListener('scroll', schedule, true);
+      window.removeEventListener('resize', schedule);
+    };
+  }, [activeScrollRef, reduceMotion, items, expandedSlotKey]);
+
   // Close expansion when clicking the empty scroll area
   const handleScrollClick = useCallback(() => {
     setExpandedSlotKey(null);
@@ -1494,6 +1711,7 @@ function TodayTimeline({
               onClientProfile={handleClientProfile}
               clientProfileLoadingBookingId={clientProfileLoadingBookingId}
               isSearchActive={isSearchActive}
+              previewSwipe={previewSwipe}
             />
           );
         })}

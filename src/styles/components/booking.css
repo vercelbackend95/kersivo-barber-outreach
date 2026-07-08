@@ -13343,6 +13343,9 @@ body.admin-theme-premium-black .booking-page-wrap .booking-shell.surface {
   letter-spacing: 0.01em;
   color: color-mix(in srgb, var(--muted) 90%, var(--fg));
   line-height: 1;
+  /* Odometer scaling (JS-driven transform); origin left keeps the column width. */
+  transform-origin: left center;
+  will-change: transform;
 }
 
 /* ── Slot body (cluster + line) ──────────────────────────────────────────── */
@@ -14930,6 +14933,9 @@ body.admin-theme-premium-black .booking-page-wrap .booking-shell.surface {
   letter-spacing: 0.01em;
   color: var(--accent);
   line-height: 1;
+  /* Odometer scaling (JS-driven transform); origin left keeps the column width. */
+  transform-origin: left center;
+  will-change: transform;
 }
 
 .admin-vtl-now-track {

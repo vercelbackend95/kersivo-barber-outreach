@@ -1,0 +1,255 @@
+/*
+ * InsideSystemLiveWidget — bare, floating admin timeline for the landing page.
+ * No card frame and no panel background: the real admin `.admin-vtl-*` timeline is
+ * dropped straight onto (and floats over) the landing background. Only the small
+ * inner surfaces (expansion cards, avatars, dots) keep a subtle premium-black tint
+ * for legibility. Always rendered in its mobile/phone form (swipe dots, swipeable
+ * expansion cards).
+ */
+
+.isw {
+  /* Real admin premium-black theme, scoped so the embedded timeline matches
+     the true admin look instead of the landing tokens. */
+  --bg: #030303;
+  --surface-1: #070707;
+  --surface-2: #0d0d0d;
+  --surface-3: #141414;
+  --surface: var(--surface-1);
+  --border: #24201c;
+  --fg: #fff8ee;
+  --muted: #c9c1b7;
+
+  position: relative;
+  display: block;
+  width: min(24rem, 100%);
+  margin-inline: auto;
+  min-width: 0;
+  font-family: var(--font-body);
+  color: var(--fg);
+}
+
+/* ── Stage (timeline + overlay) ───────────────────────────────── */
+.isw__stage {
+  position: relative;
+  min-width: 0;
+}
+
+/* Un-frame the timeline so it floats over the landing background instead of
+   reading as a widget card. Transparent panel: the landing page background shows
+   through; only the inner surfaces keep the scoped premium-black tint. */
+.isw .admin-vtl {
+  border: none;
+  border-radius: 0;
+  box-shadow: none;
+  background: transparent;
+}
+
+/* Compact height + no visible scrollbar (mobile-feel scroll). */
+.isw .admin-vtl-scroll {
+  max-height: clamp(18rem, 44vh, 25.5rem);
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+}
+
+/* Reserve horizontal touch for the swipe gesture; vertical still scrolls. */
+.isw .admin-vtl-swipe-root {
+  touch-action: pan-y;
+}
+
+.isw .admin-vtl-scroll::-webkit-scrollbar {
+  width: 0;
+  height: 0;
+  display: none;
+}
+
+/* ── Force mobile form on every viewport ─────────────────────────
+   Override the viewport-driven rules in booking.css so the phone-style
+   swipe-dots presentation shows even on desktop widths. */
+.isw .admin-vtl-panel-segmented {
+  display: none !important;
+}
+
+.isw .admin-vtl-swipe-dots {
+  display: flex !important;
+}
+
+/* ── Swipe hint (preview only) ────────────────────────────────── */
+.isw .admin-vtl-swipe-hint {
+  position: absolute;
+  top: 0.4rem;
+  right: 0.4rem;
+  z-index: 4;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
+  padding: 0.2rem 0.55rem;
+  border-radius: var(--radius-full);
+  border: 1px solid color-mix(in srgb, var(--accent) 40%, transparent);
+  background: color-mix(in srgb, var(--surface-2) 92%, transparent);
+  color: color-mix(in srgb, var(--fg) 88%, var(--muted));
+  font-size: 0.58rem;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  white-space: nowrap;
+  pointer-events: none;
+  box-shadow: 0 4px 14px color-mix(in srgb, #000 55%, transparent);
+  animation: isw-hint-fade 2.8s ease-in-out forwards;
+}
+
+.isw .admin-vtl-swipe-hint-arrows {
+  display: inline-flex;
+  animation: isw-hint-nudge 1.1s ease-in-out infinite;
+}
+
+@keyframes isw-hint-fade {
+  0% { opacity: 0; }
+  12% { opacity: 1; }
+  80% { opacity: 1; }
+  100% { opacity: 0; }
+}
+
+@keyframes isw-hint-nudge {
+  0%, 100% { transform: translateX(-2px); }
+  50% { transform: translateX(2px); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .isw .admin-vtl-swipe-hint,
+  .isw .admin-vtl-swipe-hint-arrows {
+    animation: none;
+  }
+}
+
+/* ── Lock overlay ─────────────────────────────────────────────── */
+.isw-lock {
+  position: absolute;
+  inset: 0;
+  z-index: 20;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0.85rem;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  border-radius: var(--radius-16);
+  background: color-mix(in srgb, var(--bg) 55%, transparent);
+  backdrop-filter: blur(6px);
+  -webkit-backdrop-filter: blur(6px);
+  animation: isw-fade 160ms ease-out;
+}
+
+@keyframes isw-fade {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+.isw-lock__card {
+  position: relative;
+  width: min(24rem, 100%);
+  max-height: 100%;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+  padding: clamp(1rem, 3vw, 1.5rem);
+  border-radius: var(--radius-16);
+  border: 1px solid color-mix(in srgb, var(--border) 82%, var(--fg) 6%);
+  background:
+    linear-gradient(
+      180deg,
+      color-mix(in srgb, var(--surface-3) 92%, transparent),
+      color-mix(in srgb, var(--surface-2) 96%, transparent)
+    );
+  box-shadow: 0 24px 60px color-mix(in srgb, #000 60%, transparent);
+  text-align: left;
+}
+
+.isw-lock__close {
+  position: absolute;
+  top: 0.5rem;
+  right: 0.6rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 1.75rem;
+  height: 1.75rem;
+  border: none;
+  border-radius: var(--radius-full);
+  background: transparent;
+  color: var(--muted);
+  font-size: 1.35rem;
+  line-height: 1;
+  cursor: pointer;
+  transition: color 120ms ease, background 120ms ease;
+}
+
+.isw-lock__close:hover {
+  color: var(--fg);
+  background: color-mix(in srgb, var(--fg) 8%, transparent);
+}
+
+.isw-lock__eyebrow {
+  margin: 0;
+  font-size: 0.6rem;
+  font-weight: 700;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: color-mix(in srgb, var(--accent-hover) 82%, var(--fg));
+}
+
+.isw-lock__title {
+  margin: 0;
+  font-family: var(--font-heading);
+  font-size: clamp(1.35rem, 3.5vw, 1.7rem);
+  line-height: 1.05;
+  letter-spacing: var(--tracking-heading);
+  color: var(--fg);
+}
+
+.isw-lock__body {
+  margin: 0 0 0.4rem;
+  font-size: var(--text-sm);
+  line-height: 1.5;
+  color: var(--muted);
+}
+
+.isw-lock__cta {
+  align-self: start;
+}
+
+/* ── Responsive ───────────────────────────────────────────────── */
+@media (max-width: 560px) {
+  .isw {
+    width: 100%;
+  }
+
+  .isw .admin-vtl-scroll {
+    max-height: clamp(16.5rem, 46vh, 22.5rem);
+  }
+
+  .isw-lock {
+    padding: 0.6rem;
+    align-items: flex-start;
+  }
+
+  .isw-lock__card {
+    gap: 0.3rem;
+    padding: 0.9rem 0.95rem 1rem;
+  }
+
+  .isw-lock__title {
+    font-size: clamp(1.15rem, 5.5vw, 1.4rem);
+  }
+
+  .isw-lock__body {
+    font-size: 0.8rem;
+    line-height: 1.45;
+  }
+
+  .isw-lock__cta {
+    align-self: stretch;
+    text-align: center;
+    min-height: 2.75rem;
+  }
+}

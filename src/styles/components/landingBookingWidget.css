@@ -1,0 +1,394 @@
+/*
+ * LandingBookingWidget — compact, phone-shaped preview of the real booking form
+ * dropped onto the landing page. The embedded `BookingFlow` (preview mode) keeps
+ * its true admin/premium-black look, forced into a single-column mobile layout
+ * regardless of viewport, inside a scrollable widget viewport. Once the visitor
+ * completes the visible steps the form mutes and the `.lbw-lock` overlay invites
+ * them into the full `/book` flow.
+ */
+
+.lbw {
+  /* Real admin premium-black theme, scoped so the embedded booking form matches
+     the true /book look instead of inheriting the landing tokens. */
+  --bg: #030303;
+  --surface-1: #070707;
+  --surface-2: #0d0d0d;
+  --surface-3: #141414;
+  --surface: var(--surface-1);
+  --border: #24201c;
+  --fg: #fff8ee;
+  --muted: #c9c1b7;
+
+  position: relative;
+  display: block;
+  width: min(26rem, 100%);
+  margin-inline: auto;
+  min-width: 0;
+  font-family: var(--font-body);
+  color: var(--fg);
+}
+
+/* ── Stage (form + overlay) ───────────────────────────────────────
+   Frameless: like the admin timeline widget (`.isw .admin-vtl`), the booking
+   form floats straight over the landing background — no card border, fill or
+   shadow. Only the inner interactive surfaces (choice cards, slots, date tab)
+   keep their own tint. */
+.lbw__stage {
+  position: relative;
+  min-width: 0;
+  border: none;
+  background: transparent;
+  box-shadow: none;
+}
+
+/* Compact height + no visible scrollbar (mobile-feel scroll).
+   `container-type: inline-size` makes the widget a query container so the
+   embedded form responds to the *widget's* width (not the viewport) on every
+   device — see the `@container lbw (...)` grid rules below. */
+.lbw__scroll {
+  container-type: inline-size;
+  container-name: lbw;
+  max-height: clamp(24rem, 62vh, 34rem);
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+  transition: filter 180ms ease, opacity 180ms ease;
+}
+
+.lbw__scroll::-webkit-scrollbar {
+  width: 0;
+  height: 0;
+  display: none;
+}
+
+/* ── Force the mobile single-column form on every viewport ───────
+   booking.css switches to a 2-column layout with a sticky review column at
+   >=1024px. In preview mode the review column is not rendered, so force the
+   single-column presentation here regardless of the (desktop) landing viewport. */
+.lbw .booking-shell.booking-flow {
+  width: 100%;
+  border: none;
+  border-radius: 0;
+  box-shadow: none;
+  background: transparent;
+}
+
+.lbw .booking-flow__layout {
+  grid-template-columns: minmax(0, 1fr) !important;
+  gap: var(--booking-space-2) !important;
+}
+
+.lbw .booking-flow__right {
+  display: none !important;
+}
+
+/* Un-frame the hero, steps and confirmation so they float over the landing
+   background (only the interactive surfaces below keep their tint). */
+.lbw .booking-flow__hero,
+.lbw .booking-flow__hero-copy,
+.lbw .booking-step,
+.lbw .booking-confirmation {
+  border: none;
+  background: transparent;
+  box-shadow: none;
+}
+
+/* Compact the hero so the form itself leads. */
+.lbw .booking-flow__hero {
+  padding-block: var(--booking-space-1);
+}
+
+.lbw .booking-flow__hero h1 {
+  font-size: clamp(1.35rem, 5vw, 1.7rem);
+  line-height: 1.05;
+}
+
+.lbw .booking-flow__hero .muted {
+  font-size: 0.82rem;
+  line-height: 1.45;
+}
+
+/* Content aligns to the widget edges (outer breathing room comes from the
+   booking-shell padding), so drop the per-step card padding. */
+.lbw .booking-step {
+  padding: 0;
+}
+
+/* ── Fix the desktop step rail ───────────────────────────────────
+   booking.css re-enables a 7.5rem step-number/label rail column at
+   >=1024px (`.booking-synced-step-row__rail`), which on a desktop viewport
+   squeezes the widget's real step content into a cramped right column. Force
+   the single-column, rail-free layout regardless of viewport. */
+.lbw .booking-synced-step-row {
+  grid-template-columns: minmax(0, 1fr) !important;
+  column-gap: 0 !important;
+}
+
+.lbw .booking-synced-step-row__rail {
+  display: none !important;
+}
+
+/* ── Container-responsive grids ──────────────────────────────────
+   booking.css drives the service/barber/slot column counts from *viewport*
+   media queries, which forces 3-5 cramped columns inside the narrow widget on
+   desktop. Re-base them to the widget's own width (the `.lbw__scroll` query
+   container) so they scale correctly on every device. The `.lbw` prefix raises
+   specificity above booking.css's bare selectors, so these win cleanly. */
+.lbw .booking-choice-grid--services {
+  grid-template-columns: minmax(0, 1fr);
+  gap: 0.6rem;
+}
+
+.lbw .booking-choice-grid--barbers {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0.6rem;
+}
+
+.lbw .slot-grid {
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 0.55rem;
+}
+
+@container lbw (min-width: 19rem) {
+  .lbw .booking-choice-grid--services {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@container lbw (max-width: 15rem) {
+  .lbw .booking-choice-grid--barbers {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+
+@container lbw (max-width: 17rem) {
+  .lbw .slot-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@container lbw (min-width: 30rem) {
+  .lbw .slot-grid {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+  }
+}
+
+/* ── Widget-scoped compact scale (viewport-independent) ──────────
+   Mirror the good "mobile" typography/sizing from booking.css's
+   `@media (max-width: 767px)` block so cards read well at the widget width no
+   matter the actual viewport. */
+.lbw .booking-choice-card {
+  min-height: 0;
+  padding: 0.8rem;
+}
+
+.lbw .booking-choice-card--service {
+  min-height: 8.25rem;
+  gap: 0.55rem;
+  padding: 0.85rem 0.75rem 0.8rem;
+}
+
+.lbw .booking-choice-card--barber {
+  min-height: 6.75rem;
+  gap: 0.5rem;
+  padding: 0.85rem 0.6rem 0.75rem;
+}
+
+.lbw .booking-choice-card__title {
+  font-size: 1rem;
+  line-height: 1.06;
+  text-wrap: balance;
+  word-break: break-word;
+}
+
+.lbw .booking-choice-card--barber .booking-choice-card__title {
+  font-size: 0.95rem;
+}
+
+.lbw .booking-choice-card--service .booking-choice-card__meta--service {
+  gap: 0.4rem;
+  padding-top: 0.5rem;
+}
+
+.lbw .booking-choice-card__stat,
+.lbw .booking-choice-card__price {
+  font-size: 0.72rem;
+  letter-spacing: 0.06em;
+}
+
+.lbw .booking-choice-card__meta-label {
+  font-size: 0.62rem;
+}
+
+.lbw .booking-choice-card--barber .booking-choice-card__avatar {
+  width: 2.85rem;
+  height: 2.85rem;
+  font-size: 1.25rem;
+}
+
+/* The "Fastest matching barber" helper is noise at widget scale. */
+.lbw .booking-choice-card--barber .booking-choice-card__helper {
+  display: none;
+}
+
+.lbw .booking-slot {
+  min-height: 3.35rem;
+  padding: 0.55rem 0.4rem;
+}
+
+.lbw .booking-slot__label {
+  font-size: 0.9rem;
+}
+
+.lbw .booking-slot__meta {
+  font-size: 0.6rem;
+}
+
+/* ── Dim / mute once the preview is complete ─────────────────────── */
+.lbw.is-dimmed .lbw__scroll {
+  filter: blur(2px);
+  opacity: 0.5;
+  pointer-events: none;
+}
+
+/* ── Lock overlay ─────────────────────────────────────────────── */
+.lbw-lock {
+  position: absolute;
+  inset: 0;
+  z-index: 20;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0.85rem;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  border-radius: var(--radius-16);
+  background: color-mix(in srgb, var(--bg) 55%, transparent);
+  backdrop-filter: blur(6px);
+  -webkit-backdrop-filter: blur(6px);
+  animation: lbw-fade 160ms ease-out;
+}
+
+@keyframes lbw-fade {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+.lbw-lock__card {
+  position: relative;
+  width: min(22rem, 100%);
+  max-height: 100%;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+  padding: clamp(1rem, 3vw, 1.5rem);
+  border-radius: var(--radius-16);
+  border: 1px solid color-mix(in srgb, var(--border) 82%, var(--fg) 6%);
+  background:
+    linear-gradient(
+      180deg,
+      color-mix(in srgb, var(--surface-3) 92%, transparent),
+      color-mix(in srgb, var(--surface-2) 96%, transparent)
+    );
+  box-shadow: 0 24px 60px color-mix(in srgb, #000 60%, transparent);
+  text-align: left;
+}
+
+.lbw-lock__close {
+  position: absolute;
+  top: 0.5rem;
+  right: 0.6rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 1.75rem;
+  height: 1.75rem;
+  border: none;
+  border-radius: var(--radius-full);
+  background: transparent;
+  color: var(--muted);
+  font-size: 1.35rem;
+  line-height: 1;
+  cursor: pointer;
+  transition: color 120ms ease, background 120ms ease;
+}
+
+.lbw-lock__close:hover {
+  color: var(--fg);
+  background: color-mix(in srgb, var(--fg) 8%, transparent);
+}
+
+.lbw-lock__eyebrow {
+  margin: 0;
+  font-size: 0.6rem;
+  font-weight: 700;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: color-mix(in srgb, var(--accent-hover) 82%, var(--fg));
+}
+
+.lbw-lock__title {
+  margin: 0;
+  font-family: var(--font-heading);
+  font-size: clamp(1.35rem, 3.5vw, 1.7rem);
+  line-height: 1.05;
+  letter-spacing: var(--tracking-heading);
+  color: var(--fg);
+}
+
+.lbw-lock__body {
+  margin: 0 0 0.4rem;
+  font-size: var(--text-sm);
+  line-height: 1.5;
+  color: var(--muted);
+}
+
+.lbw-lock__cta {
+  align-self: start;
+}
+
+/* ── Responsive ───────────────────────────────────────────────── */
+@media (max-width: 560px) {
+  .lbw {
+    width: 100%;
+  }
+
+  .lbw__scroll {
+    max-height: clamp(22rem, 66vh, 30rem);
+  }
+
+  .lbw-lock {
+    padding: 0.6rem;
+    align-items: flex-start;
+  }
+
+  .lbw-lock__card {
+    gap: 0.3rem;
+    padding: 0.9rem 0.95rem 1rem;
+  }
+
+  .lbw-lock__title {
+    font-size: clamp(1.15rem, 5.5vw, 1.4rem);
+  }
+
+  .lbw-lock__body {
+    font-size: 0.8rem;
+    line-height: 1.45;
+  }
+
+  .lbw-lock__cta {
+    align-self: stretch;
+    text-align: center;
+    min-height: 2.75rem;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .lbw__scroll,
+  .lbw-lock {
+    transition: none;
+    animation: none;
+  }
+}

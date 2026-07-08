@@ -64,6 +64,13 @@ type Props = {
   mode?: 'create' | 'reschedule';
   token?: string;
     shopDetails?: ShopReviewDetails;
+  /**
+   * Landing "live preview" mode: hides the Details step, the sticky action bar
+   * and the review/confirm panel, and never submits. Instead, `onComplete` fires
+   * once service + barber + time are all chosen so the host can gate the preview.
+   */
+  previewMode?: boolean;
+  onComplete?: () => void;
 };
 const DEFAULT_BOOKING_TIMEZONE = 'Europe/London';
 
@@ -191,7 +198,7 @@ function scrollToBookingStep(section: HTMLElement, onReveal?: () => void) {
   }
 }
 
-export default function BookingFlow({ services, barbers, mode = 'create', token = '', shopDetails }: Props) {
+export default function BookingFlow({ services, barbers, mode = 'create', token = '', shopDetails, previewMode = false, onComplete }: Props) {
   const bookingTimezone = shopDetails?.timezone || DEFAULT_BOOKING_TIMEZONE;
   const [serviceId, setServiceId] = useState('');
   const [barberId, setBarberId] = useState('');
@@ -367,6 +374,15 @@ export default function BookingFlow({ services, barbers, mode = 'create', token 
     };
   }, []);
 
+  const hasFiredCompleteRef = useRef(false);
+  useEffect(() => {
+    if (!previewMode) return;
+    if (serviceId && barberId && time && !hasFiredCompleteRef.current) {
+      hasFiredCompleteRef.current = true;
+      onComplete?.();
+    }
+  }, [previewMode, serviceId, barberId, time, onComplete]);
+
 
   const trustItems = useMemo(() => {
     const items = [
@@ -539,7 +555,7 @@ export default function BookingFlow({ services, barbers, mode = 'create', token 
   }
 
   return (
-    <section className="surface booking-shell booking-flow" aria-live="polite">
+    <section className={`surface booking-shell booking-flow${previewMode ? ' booking-flow--preview' : ''}`} aria-live="polite">
       <div className="booking-form-content">
         <div className="booking-flow__hero">
           <div className="booking-flow__hero-copy">
@@ -787,7 +803,7 @@ export default function BookingFlow({ services, barbers, mode = 'create', token 
 
             </section>
             </div>
-            {isCreateMode ? (
+            {isCreateMode && !previewMode ? (
               <div className="booking-synced-step-row">
                 <div className="booking-synced-step-row__rail">
                   <BookingStepRailItem stepNumber={4} label="Details" currentStep={currentStep} />
@@ -846,6 +862,7 @@ export default function BookingFlow({ services, barbers, mode = 'create', token 
               </div>
             ) : null}
 
+            {!previewMode ? (
             <div className={`booking-action-bar${isSubmitting ? ' is-submitting' : ''}`} aria-live="polite">
 
               <div className="booking-action-bar__summary">
@@ -874,9 +891,11 @@ export default function BookingFlow({ services, barbers, mode = 'create', token 
               ) : null}
 
             </div>
+            ) : null}
           </div>
           </div>
 
+          {!previewMode ? (
           <div className="booking-flow__right">
             <BookingReviewPanel
               mode={mode}
@@ -890,6 +909,7 @@ export default function BookingFlow({ services, barbers, mode = 'create', token 
               onSubmit={() => void submit()}
             />
           </div>
+          ) : null}
 
         </div>
       </div>

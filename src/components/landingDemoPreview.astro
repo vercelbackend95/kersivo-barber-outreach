@@ -1,7 +1,11 @@
 ---
 import { adminDemoHref } from '@/lib/admin/demoConfig';
 import { ShopProductCarousel } from '@/components/shop/ShopProductCarousel';
+import { InsideSystemLiveWidget } from '@/components/InsideSystemLiveWidget';
+import { LandingBookingWidget } from '@/components/LandingBookingWidget';
 import type { CarouselProduct } from '@/lib/shop/carouselProducts';
+import type { LandingBarber } from '@/lib/landing/liveTimelineData';
+import type { LandingBookingData } from '@/lib/landing/landingBookingData';
 
 type PreviewRow = {
   kicker: string;
@@ -9,7 +13,7 @@ type PreviewRow = {
   description: string;
   ctaLabel: string;
   ctaHref: string;
-  media: 'image' | 'carousel';
+  media: 'image' | 'carousel' | 'widget' | 'booking';
   src?: string;
   alt?: string;
   imageClassName?: string;
@@ -21,24 +25,22 @@ type PreviewRow = {
 interface Props {
   className?: string;
   retailProducts?: CarouselProduct[];
+  barbers?: LandingBarber[];
+  bookingData?: LandingBookingData;
 }
 
-const { className = '', retailProducts = [] } = Astro.props as Props;
+const { className = '', retailProducts = [], barbers = [], bookingData } = Astro.props as Props;
+
+const bookingWidgetAvailable = Boolean(bookingData?.available);
 
 const rows: PreviewRow[] = [
   {
-    src: '/images/screenshots/timeline1.png',
-    imgWidth: 1260,
-    imgHeight: 909,
-    alt: 'Signed-in admin - bookings timeline and day schedule',
     kicker: 'ADMIN PREVIEW',
     heading: "Chairs, statuses and what's next — all in one view.",
     description: "See today's bookings, chairs and statuses in one admin view.",
     ctaLabel: 'View Admin Demo',
     ctaHref: adminDemoHref('timeline'),
-    imageClassName: 'feature261-row-image--bookings',
-    loading: 'eager',
-    media: 'image',
+    media: 'widget',
   },
   {
     src: '/images/screenshots/bookingi.png',
@@ -52,7 +54,7 @@ const rows: PreviewRow[] = [
     ctaHref: '/book',
     imageClassName: 'feature261-row-image--booking',
     loading: 'lazy',
-    media: 'image',
+    media: bookingWidgetAvailable ? 'booking' : 'image',
   },
   {
     kicker: 'RETAIL PICKUP PREVIEW',
@@ -95,6 +97,19 @@ const rows: PreviewRow[] = [
                 className="feature261-retail-carousel"
                 showControls={false}
                 previewMode={true}
+              />
+            </div>
+          ) : row.media === 'widget' ? (
+            <div class="feature261__media feature261__media--widget">
+              <InsideSystemLiveWidget barbers={barbers} client:only="react" />
+            </div>
+          ) : row.media === 'booking' && bookingData ? (
+            <div class="feature261__media feature261__media--widget">
+              <LandingBookingWidget
+                services={bookingData.services}
+                barbers={bookingData.barbers}
+                shopDetails={bookingData.shopDetails}
+                client:only="react"
               />
             </div>
           ) : (
