@@ -12,6 +12,7 @@ type ClientData = {
   email: string;
   phone: string | null;
   notes: string | null;
+  avatarUrl?: string | null;
   tags: string[];
 };
 
@@ -69,6 +70,114 @@ async function fetchClientProfile(clientId: string): Promise<ProfileData> {
   return adminFetchJson<ProfileData>(`/api/admin/clients/${clientId}`, {
     errorMessage: 'Could not load client data.',
   });
+}
+
+// ─── Client avatar upload ─────────────────────────────────────────────────────
+
+function ClientAvatarUpload({
+  clientId,
+  fullName,
+  avatarUrl,
+  onAvatarChange,
+}: {
+  clientId: string;
+  fullName: string | null;
+  avatarUrl: string | null | undefined;
+  onAvatarChange: (nextUrl: string) => void;
+}) {
+  const inputRef = useRef<HTMLInputElement>(null);
+  const [previewUrl, setPreviewUrl] = useState<string | null>(null);
+  const [uploading, setUploading] = useState(false);
+  const [uploadError, setUploadError] = useState('');
+
+  const displayedUrl = previewUrl ?? avatarUrl ?? null;
+  const initials = getInitials(fullName);
+
+  const openPicker = useCallback(() => {
+    if (uploading) return;
+    inputRef.current?.click();
+  }, [uploading]);
+
+  const handleFileChange = useCallback(async (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    event.target.value = '';
+    if (!file) return;
+
+    setUploadError('');
+    const objectUrl = URL.createObjectURL(file);
+    setPreviewUrl(objectUrl);
+    setUploading(true);
+
+    try {
+      const formData = new FormData();
+      formData.append('avatar', file);
+
+      const response = await adminFetchJson<{ client: { avatarUrl?: string | null } }>(
+        `/api/admin/clients/${clientId}`,
+        {
+          method: 'PATCH',
+          body: formData,
+          errorMessage: 'Could not upload photo.',
+        },
+      );
+
+      const nextUrl = response.client.avatarUrl ?? objectUrl;
+      onAvatarChange(nextUrl);
+      if (response.client.avatarUrl) {
+        setPreviewUrl(null);
+        URL.revokeObjectURL(objectUrl);
+      }
+    } catch (error) {
+      setPreviewUrl(null);
+      URL.revokeObjectURL(objectUrl);
+      setUploadError(error instanceof Error ? error.message : 'Could not upload photo.');
+    } finally {
+      setUploading(false);
+    }
+  }, [clientId, onAvatarChange]);
+
+  useEffect(() => () => {
+    if (previewUrl?.startsWith('blob:')) {
+      URL.revokeObjectURL(previewUrl);
+    }
+  }, [previewUrl]);
+
+  return (
+    <div className="admin-cp-avatar-wrap">
+      <div className="admin-cp-avatar" aria-hidden="true">
+        {displayedUrl ? (
+          <img src={displayedUrl} alt="" className="admin-cp-avatar-img" loading="lazy" />
+        ) : (
+          <span className="admin-cp-avatar-initials">{initials}</span>
+        )}
+      </div>
+      <button
+        type="button"
+        className="admin-cp-avatar-overlay-action"
+        onClick={openPicker}
+        disabled={uploading}
+        aria-label={displayedUrl ? 'Change client photo' : 'Add client photo'}
+        title={displayedUrl ? 'Change photo' : 'Add photo'}
+        aria-busy={uploading}
+      >
+        <span aria-hidden="true">
+          <svg viewBox="0 0 24 24" focusable="false">
+            <path d="M6 7.5A2.5 2.5 0 0 1 8.5 5h1.2a2 2 0 0 0 1.6-.8l.3-.4A2 2 0 0 1 13.2 3h1.3A2.5 2.5 0 0 1 17 5.5V6h.8A2.2 2.2 0 0 1 20 8.2v8.6a2.2 2.2 0 0 1-2.2 2.2H6.2A2.2 2.2 0 0 1 4 16.8V8.2A2.2 2.2 0 0 1 6.2 6H6v1.5Zm6 9.5a4 4 0 1 0 0-8 4 4 0 0 0 0 8Zm0-1.8a2.2 2.2 0 1 1 0-4.4 2.2 2.2 0 0 1 0 4.4Z" />
+          </svg>
+        </span>
+      </button>
+      <input
+        ref={inputRef}
+        type="file"
+        accept="image/jpeg,image/png,image/webp"
+        className="admin-cp-avatar-input"
+        onChange={(event) => { void handleFileChange(event); }}
+        tabIndex={-1}
+        aria-hidden="true"
+      />
+      {uploadError ? <p className="admin-cp-error admin-cp-error--inline admin-cp-avatar-error" role="alert">{uploadError}</p> : null}
+    </div>
+  );
 }
 
 // ─── Notes textarea with debounced save ───────────────────────────────────────
@@ -362,8 +471,20 @@ const ClientProfilePanel = memo(function ClientProfilePanel({ clientId, onClose 
     return () => document.removeEventListener('keydown', onKey);
   }, [onClose]);
 
-  const initials = data ? getInitials(data.client.fullName) : '…';
   const score = data?.reliabilityScore ?? 0;
+
+  const handleAvatarChange = useCallback((avatarUrl: string) => {
+    setData((current) => {
+      if (!current) return current;
+      return {
+        ...current,
+        client: {
+          ...current.client,
+          avatarUrl,
+        },
+      };
+    });
+  }, []);
 
   const panel = (
     <div
@@ -405,9 +526,12 @@ const ClientProfilePanel = memo(function ClientProfilePanel({ clientId, onClose 
           <div className="admin-cp-body">
             {/* Identity */}
             <div className="admin-cp-identity">
-              <div className="admin-cp-avatar" aria-hidden="true">
-                {initials}
-              </div>
+              <ClientAvatarUpload
+                clientId={clientId}
+                fullName={data.client.fullName}
+                avatarUrl={data.client.avatarUrl}
+                onAvatarChange={handleAvatarChange}
+              />
               <div className="admin-cp-identity-info">
                 <p className="admin-cp-full-name">{data.client.fullName ?? data.client.email}</p>
                 {data.client.phone && (

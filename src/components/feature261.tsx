@@ -5,7 +5,9 @@ import { LandingBookingWidget } from '@/components/LandingBookingWidget';
 import { ShopProductCarousel } from '@/components/shop/ShopProductCarousel';
 import { type CarouselProduct } from '@/lib/shop/carouselProducts';
 import type { LandingBookingData } from '@/lib/landing/landingBookingData';
+import { getLandingDemoBookingFallback } from '@/lib/landing/landingDemoBookingFallback';
 import type { LandingBarber } from '@/lib/landing/liveTimelineData';
+import { useFeature261StaggerReveal } from '@/lib/landing/useFeature261StaggerReveal';
 import { cn } from '@/lib/utils';
 
 interface Feature261Props {
@@ -41,18 +43,12 @@ const rows: FeatureRowData[] = [
     media: 'widget',
   },
   {
-    src: '/images/screenshots/bookingi.png',
-    imgWidth: 1338,
-    imgHeight: 870,
-    alt: 'Public booking — pick service, barber and time',
     kicker: 'CLIENT BOOKING',
     heading: 'Service, barber, time—your URL, your brand, not their app.',
     description:
       'Clients pick a service, barber and slot on your domain in three taps. No app-store detour, no marketplace tile—just your brand, end to end.',
     ctaLabel: 'See the booking flow',
     ctaHref: '/book',
-    imageClassName: 'feature261-row-image--booking',
-    loading: 'eager',
     media: 'booking',
   },
   {
@@ -79,21 +75,15 @@ type FeatureRowProps = FeatureRowData & {
   reverse?: boolean;
   retailProducts?: CarouselProduct[];
   barbers?: LandingBarber[];
-  bookingData?: LandingBookingData;
+  bookingData: LandingBookingData;
 };
 
 function FeatureRow({
-  src,
-  alt,
   kicker,
   heading,
   description,
   ctaLabel,
   ctaHref,
-  imageClassName,
-  imgWidth = 1520,
-  imgHeight = 920,
-  loading = 'lazy',
   media,
   reverse = false,
   retailProducts = [],
@@ -118,7 +108,7 @@ function FeatureRow({
         <div className="feature261__media feature261__media--widget">
           <InsideSystemLiveWidget barbers={barbers} />
         </div>
-      ) : media === 'booking' && bookingData ? (
+      ) : media === 'booking' ? (
         <div className="feature261__media feature261__media--widget">
           <LandingBookingWidget
             services={bookingData.services}
@@ -130,21 +120,7 @@ function FeatureRow({
         <div className="feature261__media feature261__media--widget">
           <HomepageSalesKpiWidget />
         </div>
-      ) : (
-        <div className="feature261__media">
-          <div className="feature261-visual-card__viewport">
-            <img
-              src={src}
-              alt={alt ?? ''}
-              width={imgWidth}
-              height={imgHeight}
-              decoding="async"
-              loading={loading}
-              className={cn('feature261-visual-card__shot', imageClassName)}
-            />
-          </div>
-        </div>
-      )}
+      ) : null}
 
       <div className="feature261__copy">
         <p className="feature261__row-kicker">{kicker}</p>
@@ -170,10 +146,11 @@ const Feature261 = ({
   barbers = [],
   bookingData,
 }: Feature261Props) => {
-  const bookingWidgetAvailable = Boolean(bookingData?.available);
+  const sectionRef = useFeature261StaggerReveal();
+  const resolvedBookingData = bookingData ?? getLandingDemoBookingFallback();
 
   return (
-    <section className={cn('feature261 py-32', className)}>
+    <section ref={sectionRef} className={cn('feature261 py-32', className)}>
       <div className="feature261__glow" aria-hidden="true" />
       <div className="container">
         <header className="feature261__intro">
@@ -186,26 +163,16 @@ const Feature261 = ({
         </header>
 
         <ul className="feature261__rows" role="list">
-          {rows.map((row, index) => {
-            const media =
-              row.media === 'booking'
-                ? bookingWidgetAvailable
-                  ? 'booking'
-                  : 'image'
-                : row.media;
-
-            return (
-              <FeatureRow
-                key={row.kicker}
-                {...row}
-                media={media}
-                reverse={index % 2 === 1}
-                retailProducts={media === 'carousel' ? retailProducts : undefined}
-                barbers={media === 'widget' ? barbers : undefined}
-                bookingData={media === 'booking' ? bookingData : undefined}
-              />
-            );
-          })}
+          {rows.map((row, index) => (
+            <FeatureRow
+              key={row.kicker}
+              {...row}
+              reverse={index % 2 === 1}
+              retailProducts={row.media === 'carousel' ? retailProducts : undefined}
+              barbers={row.media === 'widget' ? barbers : undefined}
+              bookingData={resolvedBookingData}
+            />
+          ))}
         </ul>
       </div>
     </section>

@@ -161,25 +161,67 @@ export const PATCH: APIRoute = async (ctx) => {
   const clientId = ctx.params.clientId;
   if (!clientId) return new Response(JSON.stringify({ error: 'Missing client id.' }), { status: 400 });
 
+  const shop = await prisma.shopSettings.findFirstOrThrow({ select: { id: true } });
+
+  const contentType = ctx.request.headers.get('content-type') ?? '';
+
+  if (contentType.includes('multipart/form-data')) {
+    const form = await ctx.request.formData();
+    const avatar = form.get('avatar');
+
+    if (!(avatar instanceof File) || avatar.size === 0) {
+      return new Response(JSON.stringify({ error: 'Choose an image to upload.' }), { status: 400 });
+    }
+
+    let avatarUrl: string;
+    try {
+      const { storeAdminAvatar } = await import('../../../../../lib/storage/storeAdminAvatar');
+      avatarUrl = await storeAdminAvatar(avatar, 'clients', clientId);
+    } catch (error) {
+      return new Response(
+        JSON.stringify({ error: error instanceof Error ? error.message : 'Could not upload avatar.' }),
+        { status: 400 },
+      );
+    }
+
+    const updated = await prisma.client.updateMany({
+      where: { id: clientId, shopId: shop.id },
+      data: { avatarUrl },
+    });
+
+    if (updated.count === 0) {
+      return new Response(JSON.stringify({ error: 'Client not found.' }), { status: 404 });
+    }
+
+    const client = await prisma.client.findUnique({
+      where: { id: clientId },
+      select: { id: true, fullName: true, email: true, phone: true, notes: true, tags: true, avatarUrl: true, updatedAt: true },
+    });
+
+    return new Response(JSON.stringify({ client }));
+  }
+
   const payload = (await ctx.request.json().catch(() => null)) as {
     notes?: unknown;
     tags?: unknown;
+    avatarUrl?: unknown;
   } | null;
 
   if (!payload) return new Response(JSON.stringify({ error: 'Invalid payload.' }), { status: 400 });
 
-  const data: { notes?: string; tags?: string[] } = {};
+  const data: { notes?: string; tags?: string[]; avatarUrl?: string | null } = {};
 
   if (typeof payload.notes === 'string') data.notes = payload.notes;
   if (Array.isArray(payload.tags) && payload.tags.every((t) => typeof t === 'string')) {
     data.tags = payload.tags as string[];
   }
+  if (typeof payload.avatarUrl === 'string') {
+    data.avatarUrl = payload.avatarUrl.trim() ? payload.avatarUrl.trim() : null;
+  }
 
   if (Object.keys(data).length === 0) {
     return new Response(JSON.stringify({ error: 'Nothing to update.' }), { status: 400 });
   }
-
-  const shop = await prisma.shopSettings.findFirstOrThrow({ select: { id: true } });
 
   const updated = await prisma.client.updateMany({
     where: { id: clientId, shopId: shop.id },
@@ -192,7 +234,7 @@ export const PATCH: APIRoute = async (ctx) => {
 
   const client = await prisma.client.findUnique({
     where: { id: clientId },
-    select: { id: true, notes: true, tags: true, updatedAt: true },
+    select: { id: true, notes: true, tags: true, avatarUrl: true, updatedAt: true },
   });
 
   return new Response(JSON.stringify({ client }));

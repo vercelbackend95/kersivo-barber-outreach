@@ -55,14 +55,14 @@ function booking(
 export function getDemoBookingsResponse() {
   return {
     bookings: [
-      booking('demo-booking-01', 'Oliver Reed', 'oliver.reed@example.com', DEMO_BARBER_IDS.jamie, 'Jamie Reed', DEMO_SERVICE_IDS.skinFade, 'Skin Fade', 9, 0, 45, 'BOOKED', 2800),
-      booking('demo-booking-02', 'Amelia Clarke', 'amelia.clarke@example.com', DEMO_BARBER_IDS.jamie, 'Jamie Reed', DEMO_SERVICE_IDS.classicCut, 'Classic Cut', 10, 0, 40, 'BOOKED', 2400),
-      booking('demo-booking-03', 'Noah Bennett', 'noah.bennett@example.com', DEMO_BARBER_IDS.alex, 'Alex Morgan', DEMO_SERVICE_IDS.skinFade, 'Skin Fade', 11, 30, 45, 'BOOKED', 2800),
-      booking('demo-booking-04', 'Isla Morgan', 'isla.morgan@example.com', DEMO_BARBER_IDS.alex, 'Alex Morgan', DEMO_SERVICE_IDS.beardTrim, 'Beard Trim', 13, 0, 20, 'BOOKED', 1500),
-      booking('demo-booking-05', 'Leo Carter', 'leo.carter@example.com', DEMO_BARBER_IDS.jamie, 'Jamie Reed', DEMO_SERVICE_IDS.skinFade, 'Skin Fade', 14, 30, 45, 'BOOKED', 2800),
-      booking('demo-booking-06', 'Maya Brooks', 'maya.brooks@example.com', DEMO_BARBER_IDS.alex, 'Alex Morgan', DEMO_SERVICE_IDS.classicCut, 'Classic Cut', 15, 30, 40, 'BOOKED', 2400),
-      booking('demo-booking-07', 'Theo Hughes', 'theo.hughes@example.com', DEMO_BARBER_IDS.jamie, 'Jamie Reed', DEMO_SERVICE_IDS.beardTrim, 'Beard Trim', 16, 15, 20, 'BOOKED', 1500),
-      booking('demo-booking-08', 'Grace Turner', 'grace.turner@example.com', DEMO_BARBER_IDS.alex, 'Alex Morgan', DEMO_SERVICE_IDS.skinFade, 'Skin Fade', 17, 0, 45, 'BOOKED', 2800),
+      booking('demo-booking-01', 'Oliver Reed', 'oliver.reed@example.com', DEMO_BARBER_IDS.jamie, 'Jamie Reed', DEMO_SERVICE_IDS.skinFade, 'Skin fade with haircut', 9, 0, 45, 'BOOKED', 4000),
+      booking('demo-booking-02', 'Amelia Clarke', 'amelia.clarke@example.com', DEMO_BARBER_IDS.jamie, 'Jamie Reed', DEMO_SERVICE_IDS.classicCut, 'Quality haircut', 10, 0, 30, 'BOOKED', 3500),
+      booking('demo-booking-03', 'Noah Bennett', 'noah.bennett@example.com', DEMO_BARBER_IDS.alex, 'Alex Morgan', DEMO_SERVICE_IDS.skinFade, 'Skin fade with haircut', 11, 30, 45, 'BOOKED', 4000),
+      booking('demo-booking-04', 'Isla Morgan', 'isla.morgan@example.com', DEMO_BARBER_IDS.alex, 'Alex Morgan', DEMO_SERVICE_IDS.beardTrim, 'Quality beard trim', 13, 0, 15, 'BOOKED', 1500),
+      booking('demo-booking-05', 'Leo Carter', 'leo.carter@example.com', DEMO_BARBER_IDS.jamie, 'Jamie Reed', DEMO_SERVICE_IDS.skinFade, 'Skin fade with haircut', 14, 30, 45, 'BOOKED', 4000),
+      booking('demo-booking-06', 'Maya Brooks', 'maya.brooks@example.com', DEMO_BARBER_IDS.alex, 'Alex Morgan', DEMO_SERVICE_IDS.classicCut, 'Quality haircut', 15, 30, 30, 'BOOKED', 3500),
+      booking('demo-booking-07', 'Theo Hughes', 'theo.hughes@example.com', DEMO_BARBER_IDS.jamie, 'Jamie Reed', DEMO_SERVICE_IDS.beardTrim, 'Quality beard trim', 16, 15, 15, 'BOOKED', 1500),
+      booking('demo-booking-08', 'Grace Turner', 'grace.turner@example.com', DEMO_BARBER_IDS.alex, 'Alex Morgan', DEMO_SERVICE_IDS.skinFade, 'Skin fade with haircut', 17, 0, 45, 'BOOKED', 4000),
     ],
   };
 }

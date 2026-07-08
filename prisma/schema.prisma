@@ -65,6 +65,7 @@ model Client {
   email     String
   phone     String?
   notes     String?
+  avatarUrl String?
   tags      String[] @default([])
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt

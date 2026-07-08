@@ -6,6 +6,7 @@ import { LandingBookingWidget } from '@/components/LandingBookingWidget';
 import type { CarouselProduct } from '@/lib/shop/carouselProducts';
 import type { LandingBarber } from '@/lib/landing/liveTimelineData';
 import type { LandingBookingData } from '@/lib/landing/landingBookingData';
+import { getLandingDemoBookingFallback } from '@/lib/landing/landingDemoBookingFallback';
 
 type PreviewRow = {
   kicker: string;
@@ -13,13 +14,7 @@ type PreviewRow = {
   description: string;
   ctaLabel: string;
   ctaHref: string;
-  media: 'image' | 'carousel' | 'widget' | 'booking';
-  src?: string;
-  alt?: string;
-  imageClassName?: string;
-  imgWidth?: number;
-  imgHeight?: number;
-  loading?: 'eager' | 'lazy';
+  media: 'carousel' | 'widget' | 'booking';
 };
 
 interface Props {
@@ -31,7 +26,7 @@ interface Props {
 
 const { className = '', retailProducts = [], barbers = [], bookingData } = Astro.props as Props;
 
-const bookingWidgetAvailable = Boolean(bookingData?.available);
+const resolvedBookingData = bookingData ?? getLandingDemoBookingFallback();
 
 const rows: PreviewRow[] = [
   {
@@ -43,18 +38,12 @@ const rows: PreviewRow[] = [
     media: 'widget',
   },
   {
-    src: '/images/screenshots/bookingi.png',
-    imgWidth: 1338,
-    imgHeight: 870,
-    alt: 'Public booking - pick service, barber and time',
     kicker: 'CLIENT BOOKING PREVIEW',
     heading: 'Service, barber, time — your URL, your brand, not their app.',
     description: 'Clients choose a service, barber and time on your own domain — no app download.',
     ctaLabel: 'View Booking Flow',
     ctaHref: '/book',
-    imageClassName: 'feature261-row-image--booking',
-    loading: 'lazy',
-    media: bookingWidgetAvailable ? 'booking' : 'image',
+    media: 'booking',
   },
   {
     kicker: 'RETAIL PICKUP PREVIEW',
@@ -101,30 +90,16 @@ const rows: PreviewRow[] = [
             </div>
           ) : row.media === 'widget' ? (
             <div class="feature261__media feature261__media--widget">
-              <InsideSystemLiveWidget barbers={barbers} client:only="react" />
-            </div>
-          ) : row.media === 'booking' && bookingData ? (
-            <div class="feature261__media feature261__media--widget">
-              <LandingBookingWidget
-                services={bookingData.services}
-                barbers={bookingData.barbers}
-                shopDetails={bookingData.shopDetails}
-                client:only="react"
-              />
+              <InsideSystemLiveWidget barbers={barbers} client:load />
             </div>
           ) : (
-            <div class="feature261__media">
-              <div class="feature261-visual-card__viewport">
-                <img
-                  src={row.src}
-                  alt={row.alt ?? ''}
-                  width={row.imgWidth ?? 1520}
-                  height={row.imgHeight ?? 920}
-                  decoding="async"
-                  loading={row.loading ?? 'lazy'}
-                  class:list={['feature261-visual-card__shot', row.imageClassName]}
-                />
-              </div>
+            <div class="feature261__media feature261__media--widget">
+              <LandingBookingWidget
+                services={resolvedBookingData.services}
+                barbers={resolvedBookingData.barbers}
+                shopDetails={resolvedBookingData.shopDetails}
+                client:load
+              />
             </div>
           )}
 

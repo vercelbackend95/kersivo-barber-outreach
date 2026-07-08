@@ -38,6 +38,7 @@ type Booking = {
   barberId: string;
   clientId?: string | null;
   clientTags?: string[];
+  clientAvatarUrl?: string | null;
   fullName: string;
   email: string;
   phone?: string | null;

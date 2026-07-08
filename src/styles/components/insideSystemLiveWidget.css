@@ -22,6 +22,7 @@
   position: relative;
   display: block;
   width: 100%;
+  max-width: 100%;
   margin-inline: auto;
   min-width: 0;
   font-family: var(--font-body);
@@ -32,6 +33,7 @@
 .isw__stage {
   position: relative;
   min-width: 0;
+  max-width: 100%;
 }
 
 /* Un-frame the timeline so it floats over the landing background instead of

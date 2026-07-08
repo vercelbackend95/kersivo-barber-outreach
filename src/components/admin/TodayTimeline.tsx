@@ -24,6 +24,7 @@ export type TimelineBooking = {
   email: string;
   phone?: string | null;
   clientTags?: string[];
+  clientAvatarUrl?: string | null;
   status: string;
   startAt: string;
   endAt: string;
@@ -330,8 +331,10 @@ const BookingExpansionCard = memo(function BookingExpansionCard({
   const timeRange = formatTimeRange(booking.startAt, booking.endAt);
   const duration = formatDuration(booking.startAt, booking.endAt);
   const [barberImgError, setBarberImgError] = useState(false);
+  const [clientImgError, setClientImgError] = useState(false);
   const barberInitials = getInitials(barber.name);
   const clientInitials = getInitials(booking.fullName);
+  const hasClientAvatar = Boolean(booking.clientAvatarUrl?.trim()) && !clientImgError;
   const clientTags = (booking.clientTags ?? [])
     .map((tag) => tag.trim())
     .filter(Boolean);
@@ -379,6 +382,10 @@ const BookingExpansionCard = memo(function BookingExpansionCard({
   useEffect(() => {
     setBarberImgError(false);
   }, [barber.avatarUrl]);
+
+  useEffect(() => {
+    setClientImgError(false);
+  }, [booking.clientAvatarUrl]);
 
   useEffect(() => {
     setLocalStatus(booking.status);
@@ -1003,7 +1010,17 @@ const BookingExpansionCard = memo(function BookingExpansionCard({
             aria-busy={isClientProfileLoading}
             title="View client profile"
           >
-            <span className="admin-vtl-client-panel-avatar-initials">{clientInitials}</span>
+            {hasClientAvatar ? (
+              <img
+                src={booking.clientAvatarUrl ?? undefined}
+                alt={booking.fullName}
+                className="admin-vtl-client-panel-avatar-img"
+                loading="lazy"
+                onError={() => setClientImgError(true)}
+              />
+            ) : (
+              <span className="admin-vtl-client-panel-avatar-initials">{clientInitials}</span>
+            )}
             <span className="admin-vtl-client-panel-avatar-badge" aria-hidden="true">
               <MessageCircle className="admin-vtl-client-panel-avatar-badge-icon" aria-hidden />
             </span>
@@ -1039,8 +1056,24 @@ const BookingExpansionCard = memo(function BookingExpansionCard({
                   <span className="admin-vtl-expansion-avatar-initials">{barberInitials}</span>
                 )}
               </div>
-              <div className="admin-vtl-expansion-avatar admin-vtl-expansion-avatar--client-placeholder">
-                <User className="admin-vtl-expansion-avatar-placeholder-icon" aria-hidden />
+              <div
+                className={
+                  hasClientAvatar
+                    ? 'admin-vtl-expansion-avatar admin-vtl-expansion-avatar--client'
+                    : 'admin-vtl-expansion-avatar admin-vtl-expansion-avatar--client-placeholder'
+                }
+              >
+                {hasClientAvatar ? (
+                  <img
+                    src={booking.clientAvatarUrl ?? undefined}
+                    alt={booking.fullName}
+                    className="admin-vtl-expansion-avatar-img"
+                    loading="lazy"
+                    onError={() => setClientImgError(true)}
+                  />
+                ) : (
+                  <User className="admin-vtl-expansion-avatar-placeholder-icon" aria-hidden />
+                )}
               </div>
             </div>
             <div className="admin-vtl-expansion-main">

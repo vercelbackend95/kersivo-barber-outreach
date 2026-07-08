@@ -146,15 +146,33 @@ function resolveImageForSlot(
   return fallbackImageForCategory(category);
 }
 
-export async function resolveLandingDemoCarouselProducts(): Promise<CarouselProduct[]> {
-  const imagesByCategory = await fetchShopProductImagesByCategory();
-  const fallbackPool = [...imagesByCategory.values()].flat();
+function withDemoProductImages(): CarouselProduct[] {
   const usedImages = new Set<string>();
 
   return LANDING_DEMO_PRODUCTS.map((product) => ({
     ...product,
-    imageUrl: resolveImageForSlot(product.category, imagesByCategory, usedImages, fallbackPool),
+    imageUrl: resolveImageForSlot(
+      product.category,
+      new Map(),
+      usedImages,
+      [],
+    ),
   }));
+}
+
+export async function resolveLandingDemoCarouselProducts(): Promise<CarouselProduct[]> {
+  try {
+    const imagesByCategory = await fetchShopProductImagesByCategory();
+    const fallbackPool = [...imagesByCategory.values()].flat();
+    const usedImages = new Set<string>();
+
+    return LANDING_DEMO_PRODUCTS.map((product) => ({
+      ...product,
+      imageUrl: resolveImageForSlot(product.category, imagesByCategory, usedImages, fallbackPool),
+    }));
+  } catch {
+    return withDemoProductImages();
+  }
 }
 
 /** @deprecated Use resolveLandingDemoCarouselProducts for SSR with images. */

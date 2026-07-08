@@ -2,12 +2,32 @@ export const DEMO_BARBER_IDS = {
   jamie: 'demo-barber-jamie',
   alex: 'demo-barber-alex',
   sam: 'demo-barber-sam',
+  marcus: 'demo-barber-marcus',
 } as const;
 
 export const DEMO_SERVICE_IDS = {
-  skinFade: 'demo-service-skin-fade',
-  beardTrim: 'demo-service-beard-trim',
-  classicCut: 'demo-service-classic-cut',
+  qualityHaircut: 'demo-service-quality-haircut',
+  premiumHaircut: 'demo-service-premium-haircut',
+  qualityBeardTrim: 'demo-service-quality-beard-trim',
+  skinFadeWithHaircut: 'demo-service-skin-fade-with-haircut',
+  clippersOnly: 'demo-service-clippers-only',
+  shortBackAndSides: 'demo-service-short-back-and-sides-clipper',
+  longerHaircut: 'demo-service-longer-haircut',
+  skinFadeBackSides: 'demo-service-skin-fade-back-sides-only',
+  headShave: 'demo-service-head-shave',
+  hairWash: 'demo-service-hair-wash',
+  premiumBeardTrim: 'demo-service-premium-beard-trim',
+  longerBeardTrim: 'demo-service-longer-beard-trim',
+  luxuryWetShave: 'demo-service-luxury-wet-shave',
+  expressShave: 'demo-service-express-shave',
+  friction: 'demo-service-friction',
+  friction10Min: 'demo-service-friction-10-min',
+  /** @deprecated use skinFadeWithHaircut */
+  skinFade: 'demo-service-skin-fade-with-haircut',
+  /** @deprecated use qualityBeardTrim */
+  beardTrim: 'demo-service-quality-beard-trim',
+  /** @deprecated use qualityHaircut */
+  classicCut: 'demo-service-quality-haircut',
 } as const;
 
 export const DEMO_CLIENT_IDS = {

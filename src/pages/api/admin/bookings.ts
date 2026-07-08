@@ -29,14 +29,15 @@ function withHistoricalServiceName<T extends { serviceNameAtBooking?: string | n
 }
 
 function withClientTags<
-  T extends { client?: { tags?: string[] | null } | null }
->(booking: T): Omit<T, 'client'> & { clientTags: string[] } {
+  T extends { client?: { tags?: string[] | null; avatarUrl?: string | null } | null }
+>(booking: T): Omit<T, 'client'> & { clientTags: string[]; clientAvatarUrl: string | null } {
   const { client, ...rest } = booking;
   return {
     ...rest,
     clientTags: Array.isArray(client?.tags)
       ? client.tags.filter((tag): tag is string => typeof tag === 'string' && tag.trim().length > 0)
       : [],
+    clientAvatarUrl: client?.avatarUrl ?? null,
   };
 }
 
@@ -73,7 +74,7 @@ const BOOKING_LIST_SELECT = {
   servicePricePenceAtBooking: true,
   barber: { select: { name: true } },
   service: { select: { name: true } },
-  client: { select: { tags: true } }
+  client: { select: { tags: true, avatarUrl: true } }
 } satisfies Prisma.BookingSelect;
 
 const BOOKING_LIST_LEGACY_SELECT = {
@@ -95,7 +96,7 @@ const BOOKING_LIST_LEGACY_SELECT = {
   totalPricePence: true,
   barber: { select: { name: true } },
   service: { select: { name: true } },
-  client: { select: { tags: true } }
+  client: { select: { tags: true, avatarUrl: true } }
 } satisfies Prisma.BookingSelect;
 
 function isMissingHistoricalColumnError(error: unknown) {

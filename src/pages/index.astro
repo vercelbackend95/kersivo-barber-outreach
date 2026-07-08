@@ -148,55 +148,6 @@ const landingBookingData = await resolveLandingBookingData();
 });
 
 
-  const initFeature261StaggerReveal = () => {
-    const section = document.querySelector('.feature261');
-    if (!(section instanceof HTMLElement)) return;
-
-    const cards = Array.from(section.querySelectorAll('[data-feature261-card]'));
-    if (cards.length === 0) return;
-
-    const revealCard = (card, index) => {
-      if (!(card instanceof HTMLElement)) return;
-      card.style.transitionDelay = `${index * 140}ms`;
-      card.dataset.feature261Visible = 'true';
-    };
-
-    const prefersReducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-    section.dataset.feature261Enhanced = 'true';
-
-    cards.forEach((card) => {
-      if (!(card instanceof HTMLElement)) return;
-      card.dataset.feature261Visible = 'false';
-    });
-
-    if (prefersReducedMotion || !('IntersectionObserver' in window)) {
-      cards.forEach((card, index) => revealCard(card, index));
-      return;
-    }
-
-    let hasRevealed = false;
-    const observer = new IntersectionObserver(
-      (entries) => {
-        const shouldReveal = entries.some((entry) => entry?.isIntersecting);
-        if (!shouldReveal || hasRevealed) return;
-
-        hasRevealed = true;
-        cards.forEach((card, index) => revealCard(card, index));
-        observer.disconnect();
-      },
-      {
-        threshold: 0.01,
-        rootMargin: '0px 0px -6% 0px',
-      },
-    );
-    cards.forEach((card) => {
-      if (!(card instanceof HTMLElement)) return;
-      observer.observe(card);
-    });
-  };
-
-  initFeature261StaggerReveal();
-
   const comparisonToggle = document.querySelector('[data-comparison-toggle]');
   const comparisonPanel = document.getElementById('mg-comparison-panel');
   const comparisonAutoOpenLinks = document.querySelectorAll('[data-comparison-auto-open]');

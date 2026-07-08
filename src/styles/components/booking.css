@@ -1,4 +1,4 @@
-﻿
+
 .booking-shell {
   --booking-text-xs: clamp(0.78rem, 2.4vw, 0.92rem);
   --booking-text-sm: clamp(0.92rem, 3vw, 1.02rem);
@@ -13601,6 +13601,11 @@ body.admin-theme-premium-black .booking-page-wrap .booking-shell.surface {
   background: color-mix(in srgb, var(--surface-2, var(--surface)) 90%, var(--fg));
 }
 
+.admin-vtl-expansion-avatar--client {
+  border-color: color-mix(in srgb, var(--border) 80%, var(--surface));
+  background: color-mix(in srgb, var(--surface-2, var(--surface)) 90%, var(--fg));
+}
+
 .admin-vtl-expansion-avatar-img {
   width: 100%;
   height: 100%;
@@ -14150,6 +14155,15 @@ body.admin-theme-premium-black .booking-page-wrap .booking-shell.surface {
   align-items: center;
   justify-content: center;
   flex-shrink: 0;
+  overflow: hidden;
+  position: relative;
+}
+
+.admin-vtl-client-panel-avatar-img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
 }
 
 .admin-vtl-client-panel-avatar-initials {
@@ -15491,6 +15505,13 @@ body.admin-theme-premium-black .booking-page-wrap .booking-shell.surface {
   gap: 1rem;
 }
 
+.admin-cp-avatar-wrap {
+  position: relative;
+  width: 64px;
+  height: 64px;
+  flex-shrink: 0;
+}
+
 .admin-cp-avatar {
   width: 64px;
   height: 64px;
@@ -15503,7 +15524,89 @@ body.admin-theme-premium-black .booking-page-wrap .booking-shell.surface {
   font-size: 1.25rem;
   font-weight: 700;
   letter-spacing: 0.02em;
-  flex-shrink: 0;
+  overflow: hidden;
+}
+
+.admin-cp-avatar-img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+
+.admin-cp-avatar-initials {
+  line-height: 1;
+}
+
+.admin-cp-avatar-input {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  opacity: 0;
+  pointer-events: none;
+}
+
+.admin-cp-avatar-overlay-action {
+  position: absolute;
+  right: -2px;
+  bottom: -2px;
+  width: 28px;
+  height: 28px;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  font: inherit;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  cursor: pointer;
+}
+
+.admin-cp-avatar-overlay-action > span {
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--surface-2, var(--surface));
+  border: 1px solid color-mix(in srgb, var(--border) 80%, var(--fg) 8%);
+  color: var(--fg);
+  box-shadow: 0 4px 12px color-mix(in srgb, #000 28%, transparent);
+}
+
+.admin-cp-avatar-overlay-action svg {
+  width: 13px;
+  height: 13px;
+  fill: currentColor;
+}
+
+.admin-cp-avatar-overlay-action:focus-visible > span {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
+
+@media (hover: hover) {
+  .admin-cp-avatar-overlay-action:hover > span {
+    background: color-mix(in srgb, var(--accent) 14%, var(--surface-2, var(--surface)));
+    border-color: color-mix(in srgb, var(--accent) 45%, var(--border));
+  }
+}
+
+.admin-cp-avatar-overlay-action:disabled {
+  cursor: wait;
+  opacity: 0.7;
+}
+
+.admin-cp-avatar-error {
+  position: absolute;
+  left: 0;
+  top: calc(100% + 0.35rem);
+  width: max-content;
+  max-width: 12rem;
+  margin: 0;
+  font-size: 0.68rem;
 }
 
 .admin-cp-identity-info {
