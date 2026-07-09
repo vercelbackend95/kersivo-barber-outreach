@@ -10,6 +10,7 @@ import AdminLineChart from './charts/AdminLineChart';
 import { addDays } from 'date-fns';
 import { formatInTimeZone, fromZonedTime, toZonedTime } from 'date-fns-tz';
 import TodayTimeline from './TodayTimeline';
+import { resolveClientIdForBooking } from '@/lib/admin/resolveClientIdForBooking';
 import AdminErrorBoundary from './AdminErrorBoundary';
 import HistoryDateRangePicker from './HistoryDateRangePicker';
 import BarbersOverview from './BarbersOverview';
@@ -1644,8 +1645,7 @@ export default function BookingsAdminPanel({ isActive, mode, onBackToDashboard, 
 
 
 
-  async function openClientProfile(clientId?: string | null) {
-    if (!clientId) return;
+  const openClientProfileById = useCallback(async (clientId: string) => {
     setSelectedClientId(clientId);
     setIsClientLoading(true);
     setClientError('');
@@ -1659,8 +1659,24 @@ export default function BookingsAdminPanel({ isActive, mode, onBackToDashboard, 
     setClientProfile(payload);
     setNotesDraft(payload.client.notes ?? '');
     setIsClientLoading(false);
+  }, []);
 
-  }
+  const openClientProfileForBooking = useCallback(
+    async (booking: Pick<Booking, 'clientId' | 'email' | 'fullName' | 'phone'>) => {
+      setClientError('');
+      try {
+        const clientId = await resolveClientIdForBooking(booking);
+        if (!clientId) {
+          setClientError('Could not open client profile.');
+          return;
+        }
+        await openClientProfileById(clientId);
+      } catch {
+        setClientError('Could not open client profile.');
+      }
+    },
+    [openClientProfileById],
+  );
 
   async function saveNotes() {
     if (!selectedClientId) return;
@@ -1713,24 +1729,20 @@ export default function BookingsAdminPanel({ isActive, mode, onBackToDashboard, 
         }
       }
 
-      if (booking.clientId) {
-        void openClientProfile(booking.clientId);
-      }
+      void openClientProfileForBooking(booking);
       setClientSearchQuery('');
       setDebouncedSearchQuery('');
       setActiveSearchResultIndex(-1);
       searchInputRef.current?.blur();
     },
-    [activeView, mode, openClientProfile, scrollToListBooking, scrollToTimelineBooking]
+    [activeView, mode, openClientProfileForBooking, scrollToListBooking, scrollToTimelineBooking]
   );
 
   const handleTimelineBookingClick = useCallback(
     (booking: Booking) => {
-      if (booking.clientId) {
-        void openClientProfile(booking.clientId);
-      }
+      void openClientProfileForBooking(booking);
     },
-    [openClientProfile]
+    [openClientProfileForBooking]
   );
 
   useEffect(() => {
@@ -2535,7 +2547,7 @@ export default function BookingsAdminPanel({ isActive, mode, onBackToDashboard, 
                     updatedBookingIds={updatedBookingIds}
                     highlightMatch={highlightMatch}
                     formatStartTime={formatStartTime}
-                    onOpenClient={openClientProfile}
+                    onOpenClient={openClientProfileForBooking}
                     onCancelBooking={cancelBookingByShop}
                     cancelLoadingBookingId={cancelLoadingBookingId}
                     canCancelBooking={canCancelBookingAsShop}
@@ -2731,7 +2743,7 @@ export default function BookingsAdminPanel({ isActive, mode, onBackToDashboard, 
           getHistoryStatusLine={(booking) => getStatusA11yLabel(getBookingStatusLabel(booking))}
           historyDateFiltered={Boolean(historyDateRange)}
           onClearHistoryDateRange={historyDateRange ? () => setHistoryDateRange(null) : undefined}
-          onOpenClient={openClientProfile}
+          onOpenClient={openClientProfileForBooking}
           historyToolbar={(
             <div className="admin-bookings-history-search-toolbar">
               {opsFilteredViewActive ? (

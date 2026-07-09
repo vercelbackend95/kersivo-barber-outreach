@@ -90,7 +90,7 @@ type CommonScheduleListProps = {
   updatedBookingIds: string[];
   highlightMatch: (value: string) => React.ReactNode;
   formatStartTime: (startAt: string) => string;
-  onOpenClient: (clientId?: string | null) => void | Promise<void>;
+  onOpenClient: (booking: ScheduleListBooking) => void | Promise<void>;
 };
 
 export type AdminBookingsScheduleDayProps = CommonScheduleListProps & {
@@ -256,7 +256,7 @@ export default function AdminBookingsScheduleList(props: AdminBookingsScheduleLi
                   <button
                     type="button"
                     className="admin-bookings-schedule__history-row"
-                    onClick={() => void onOpenClient(booking.clientId)}
+                    onClick={() => void onOpenClient(booking)}
                     data-booking-id={booking.id}
                     aria-label={`View booking for ${booking.fullName}`}
                   >
@@ -366,7 +366,7 @@ export default function AdminBookingsScheduleList(props: AdminBookingsScheduleLi
                   <button
                     type="button"
                     className="admin-bookings-schedule__client"
-                    onClick={() => void onOpenClient(booking.clientId)}
+                    onClick={() => void onOpenClient(booking)}
                   >
                     {highlightMatch(formatClientShort(booking.fullName))}
                   </button>

@@ -3,6 +3,7 @@ import MinimalLayout from '@/layouts/MinimalLayout.astro';
 import AdminPanel from '../components/admin/AdminPanel';
 import { PAGE_DESCRIPTIONS } from '@/lib/seo/defaults';
 import '../styles/tokens.css';
+import '@/styles/fonts-admin.css';
 import '../styles/global.css';
 import '../styles/components/booking.css';
 import '../styles/components/admin-mobile-sticky-overrides.css';
@@ -26,6 +27,22 @@ import '../styles/components/table.css';
   bodyClass="admin-theme-premium-black"
   viewportContent="width=device-width, initial-scale=1, viewport-fit=cover"
 >
+  <link
+    slot="head"
+    rel="preload"
+    href="/fonts/inter-latin-400-normal.woff2"
+    as="font"
+    type="font/woff2"
+    crossorigin
+  />
+  <link
+    slot="head"
+    rel="preload"
+    href="/fonts/inter-latin-600-normal.woff2"
+    as="font"
+    type="font/woff2"
+    crossorigin
+  />
   <main class="container page-wrap admin-page-wrap">
     <h1 class="sr-only">Kersivo Admin Panel</h1>
     <AdminPanel client:load />
