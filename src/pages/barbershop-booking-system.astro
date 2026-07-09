@@ -49,9 +49,11 @@ import '../styles/pricing36.css';
 import '../styles/rateCard1.css';
 
 const PAGE_TITLE = 'Barbershop Booking System UK | KERSIVO';
-const carouselProducts = await resolveLandingDemoCarouselProducts();
-const demoBarbers = await resolveLandingDemoBarbers();
-const landingBookingData = await resolveLandingBookingData();
+const [carouselProducts, demoBarbers, landingBookingData] = await Promise.all([
+  resolveLandingDemoCarouselProducts(),
+  resolveLandingDemoBarbers(),
+  resolveLandingBookingData(),
+]);
 const currentYear = new Date().getFullYear();
 ---
 
@@ -62,12 +64,19 @@ const currentYear = new Date().getFullYear();
   jsonLd={buildBarbershopBookingFaqJsonLd()}
   navbarVariant="landing"
 >
+  <link
+    slot="head"
+    rel="preload"
+    as="image"
+    href="/images/hero/phone-5.webp"
+    fetchpriority="high"
+  />
   <main class="landing-overflow-guard">
     <SystemChooser />
     <BarbershopBookingHero client:load />
     <LandingValueCards />
     <LandingDemoPreview retailProducts={carouselProducts} barbers={demoBarbers} bookingData={landingBookingData} />
-    <Pricing36 client:load variant="landing" />
+    <Pricing36 client:visible={{ rootMargin: '200px' }} variant="landing" />
     <LandingDemoCapture />
     <RateCard1 variant="landing" />
     <LandingPostPurchaseSteps />

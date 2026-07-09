@@ -2,6 +2,7 @@
 import BarberDemoJsonLd from '@/components/seo/BarberDemoJsonLd.astro';
 import GoogleAnalytics from '@/components/seo/GoogleAnalytics.astro';
 import FaviconLinks from '@/components/seo/FaviconLinks.astro';
+import FontLinks from '@/components/seo/FontLinks.astro';
 import SeoHead from '@/components/seo/SeoHead.astro';
 import Navbar17 from '@/components/navbar17.astro';
 import CartDrawerMount from '@/components/shop/CartDrawerMount.astro';
@@ -56,6 +57,7 @@ const jsonLdBlocks = jsonLd
     <GoogleAnalytics />
     <meta charset="utf-8" />
     <FaviconLinks />
+    <FontLinks />
     <meta name="viewport" content="width=device-width" />
     <title>{title}</title>
     <SeoHead
@@ -75,10 +77,11 @@ const jsonLdBlocks = jsonLd
         <script type="application/ld+json" set:html={JSON.stringify(block)} />
       ))
     }
+    <slot name="head" />
   </head>
   <body>
     <Navbar17 variant={navbarVariant} />
     <slot />
-    <CartDrawerMount />
+    <CartDrawerMount navbarVariant={navbarVariant} />
   </body>
 </html>

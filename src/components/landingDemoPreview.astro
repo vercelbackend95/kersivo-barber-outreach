@@ -92,7 +92,7 @@ const rows: PreviewRow[] = [
             </div>
           ) : row.media === 'widget' ? (
             <div class="feature261__media feature261__media--widget">
-              <InsideSystemLiveWidget barbers={barbers} client:load />
+              <InsideSystemLiveWidget barbers={barbers} client:visible={{ rootMargin: '200px' }} />
             </div>
           ) : (
             <div class="feature261__media feature261__media--widget">
@@ -100,7 +100,7 @@ const rows: PreviewRow[] = [
                 services={resolvedBookingData.services}
                 barbers={resolvedBookingData.barbers}
                 shopDetails={resolvedBookingData.shopDetails}
-                client:load
+                client:visible={{ rootMargin: '200px' }}
               />
             </div>
           )}
@@ -121,8 +121,8 @@ const rows: PreviewRow[] = [
           </a>
         </li>
       ))}
-      <Feature261MonetizationRow client:load />
+      <Feature261MonetizationRow client:visible={{ rootMargin: '200px' }} />
     </ul>
-    <Feature261MoreIncluded client:load />
+    <Feature261MoreIncluded client:visible={{ rootMargin: '200px' }} />
   </div>
 </section>

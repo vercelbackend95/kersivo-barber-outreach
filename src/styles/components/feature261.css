@@ -108,6 +108,8 @@
 .feature261 .feature261__media--widget {
   align-self: center;
   overflow: visible;
+  min-height: clamp(14rem, 26vh, 22rem);
+  width: 100%;
 }
 
 .feature261 .homepage-sales-kpi-widget {

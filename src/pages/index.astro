@@ -59,6 +59,13 @@ const landingBookingData = await resolveLandingBookingData();
   barberDemoJsonLd={true}
   jsonLd={buildFaqJsonLd()}
 >
+  <link
+    slot="head"
+    rel="preload"
+    as="image"
+    href="/images/hero/phone-5.webp"
+    fetchpriority="high"
+  />
     <main>
 
     <SystemChooser />

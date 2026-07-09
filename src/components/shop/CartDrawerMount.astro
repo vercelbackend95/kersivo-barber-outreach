@@ -1,5 +1,16 @@
 ---
 import CartDrawer from './CartDrawer';
+import type { Navbar17Variant } from '@/lib/nav/navbar17Items';
+
+interface Props {
+  navbarVariant?: Navbar17Variant;
+}
+
+const { navbarVariant = 'default' } = Astro.props;
 ---
 
-<CartDrawer client:load />
+{navbarVariant === 'landing' ? (
+  <CartDrawer client:idle />
+) : (
+  <CartDrawer client:load />
+)}
