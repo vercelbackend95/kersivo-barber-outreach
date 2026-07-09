@@ -1,5 +1,6 @@
 import { adminDemoHref } from '@/lib/admin/demoConfig';
 import { Feature261MonetizationRow } from '@/components/feature261/Feature261MonetizationRow';
+import { Feature261MoreIncluded } from '@/components/feature261/Feature261MoreIncluded';
 import { InsideSystemLiveWidget } from '@/components/InsideSystemLiveWidget';
 import { LandingBookingWidget } from '@/components/LandingBookingWidget';
 import { ShopProductCarousel } from '@/components/shop/ShopProductCarousel';
@@ -162,6 +163,7 @@ const Feature261 = ({
           ))}
           <Feature261MonetizationRow reverse />
         </ul>
+        <Feature261MoreIncluded />
       </div>
     </section>
   );

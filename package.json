@@ -30,6 +30,7 @@
     "test": "vitest run",
     "check:widgets": "node scripts/check-landing-widgets.mjs",
     "assets:landing-demo": "node scripts/fetch-landing-demo-assets.mjs",
+    "assets:landing-illustrations-webp": "node scripts/convert-landing-page-illustrations-webp.mjs",
     "vercel:dev": "vercel dev",
     "prisma:migrate:dev": "prisma migrate dev --schema prisma/schema.prisma",
     "screenshots:feature261": "node scripts/capture-feature261-screens.mjs",

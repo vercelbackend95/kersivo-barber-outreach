@@ -152,3 +152,7 @@
 .landing-demo-preview--compact .feature261__media--widget {
   align-self: center;
 }
+
+.landing-demo-preview--compact .feature261__more-included {
+  margin-top: clamp(1.5rem, 3vw, 2.25rem);
+}
