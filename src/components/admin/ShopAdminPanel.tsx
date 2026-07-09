@@ -2163,7 +2163,7 @@ export default function ShopAdminPanel({ initialTab = 'products' }: ShopAdminPan
 
             <div className="admin-product-list">
               {productsInitiallyLoading ? (
-                <div className="admin-services-list admin-services-list--loading admin-products-loading" aria-label="Loading products" aria-busy="true">
+                <div className="admin-product-list" aria-label="Loading products" aria-busy="true">
                   <SkeletonBookingChoices count={4} variant="service" />
                 </div>
               ) : filteredProducts.length === 0 ? (

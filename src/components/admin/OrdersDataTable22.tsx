@@ -305,9 +305,9 @@ export default function OrdersDataTable22({
                 className="admin-orders-grid-sort"
                 data-sort={getSortAttr('status')}
                 onClick={() => handleSort('status')}
-                aria-label="Sort by status"
+                aria-label="Sort by collection"
               >
-                <span className="admin-orders-grid-sort-label">Status</span>
+                <span className="admin-orders-grid-sort-label">Collection</span>
                 <SortIcon state={getSortAttr('status')} />
               </button>
             </span>
@@ -413,7 +413,6 @@ export default function OrdersDataTable22({
                       <OrderStatusDot status={order.status} />
                     </span>
                     <span className="admin-orders-grid-items">{order._count.items}</span>
-                    <ChevronDown className="admin-orders-grid-row-chevron" width={15} height={15} aria-hidden="true" />
                   </button>
 
                   <div className="admin-orders-grid-actions">
@@ -428,6 +427,18 @@ export default function OrdersDataTable22({
                         <CollectedOrderIcon width={24} height={24} strokeWidth={2.25} aria-hidden="true" />
                       </button>
                     ) : null}
+                    <button
+                      type="button"
+                      className="admin-orders-grid-expand-chevron"
+                      onClick={(event) => {
+                        event.stopPropagation();
+                        onToggleExpand(order.id);
+                      }}
+                      aria-expanded={isExpanded}
+                      aria-label={`${isExpanded ? 'Collapse' : 'Expand'} order ${orderLabel}`}
+                    >
+                      <ChevronDown width={15} height={15} aria-hidden="true" />
+                    </button>
                   </div>
 
                   <div

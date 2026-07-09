@@ -1,6 +1,5 @@
 import React, { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState } from 'react';
 import { formatInTimeZone } from 'date-fns-tz';
-import type { AdminBookingsOpsDashHeroBooking } from './AdminBookingsOpsDashHero';
 
 const ADMIN_TIMEZONE = 'Europe/London';
 export const ADMIN_TODAY_BOOKINGS_POLL_MS = 120000;
@@ -61,7 +60,6 @@ export type AdminTodayBookingsLiveValue = {
   loggedIn: boolean;
   isPublicDemo: boolean;
   upcomingBookings: AdminLiveBookingRow[];
-  nextBooking: AdminBookingsOpsDashHeroBooking | null;
   connectionStateLabel: string;
   hasLivePulse: boolean;
   formatStartTime: (iso: string) => string;
@@ -140,7 +138,6 @@ export function AdminTodayBookingsLiveProvider({
     [bookings, todayLondonDate],
   );
   const upcomingBookings = useMemo(() => getUpcomingBookings(todayBookings), [todayBookings]);
-  const nextBooking: AdminBookingsOpsDashHeroBooking | null = upcomingBookings[0] ?? null;
 
   const hasRecentConnectionAttempt = nowMs - initialMountMsRef.current > CONNECTING_GRACE_MS;
   const isLive = lastSuccessAt ? nowMs - lastSuccessAt <= LIVE_THRESHOLD_MS : false;
@@ -160,7 +157,6 @@ export function AdminTodayBookingsLiveProvider({
       loggedIn,
       isPublicDemo,
       upcomingBookings,
-      nextBooking,
       connectionStateLabel,
       hasLivePulse,
       formatStartTime,
@@ -171,7 +167,6 @@ export function AdminTodayBookingsLiveProvider({
       loggedIn,
       isPublicDemo,
       upcomingBookings,
-      nextBooking,
       connectionStateLabel,
       hasLivePulse,
       formatStartTime,

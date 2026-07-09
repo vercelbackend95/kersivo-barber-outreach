@@ -1,11 +1,11 @@
-import React, { useCallback, useEffect, useMemo, useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { SettingsGearIcon } from './SettingsGearIcon';
 import AdminSectionHeader from './AdminSectionHeader';
-import AdminBookingsOpsDashHeroLive from './AdminBookingsOpsDashHeroLive';
+import AdminDesktopDashHeroSlot from './AdminDesktopDashHeroSlot';
 import { useAdminMobileChromeBreakpoint } from './useAdminMobileNextAppointmentsChrome';
 import EmptyState from '../EmptyState';
 import { SkeletonBookingChoices } from '../skeleton';
-import { Scissors, Users, X } from '../lucide-react';
+import { ChevronDown, ChevronUp, Scissors, Search, Users, X } from '../lucide-react';
 import { adminFetchJson } from './adminAuth';
 import ServiceCategoryPicker from './ServiceCategoryPicker';
 
@@ -28,13 +28,7 @@ type BarberListRow = {
   todayIsOnShift?: boolean;
 };
 
-type ServicePanelBarberRow = {
-  id: string;
-  name: string;
-  isActive: boolean;
-  avatarUrl?: string | null;
-  isAssigned: boolean;
-};
+
 type ServiceBarberAssignmentListRow = {
   id: string;
   name: string;
@@ -55,10 +49,22 @@ type ServiceRow = {
   displayOrder: number;
   category?: string | null;
   isActive: boolean;
+  createdAt?: string;
+  updatedAt?: string;
   barberServices?: Array<{
     barber: ServiceBarberRow;
   }>;
 };
+
+type ServiceFilter = 'all' | 'active' | 'inactive' | 'featured';
+type ServiceSortMode = 'manual' | 'newest' | 'price' | 'name';
+
+const SERVICE_SORT_OPTIONS: Array<{ value: ServiceSortMode; label: string }> = [
+  { value: 'manual', label: 'Manual' },
+  { value: 'newest', label: 'Newest' },
+  { value: 'price', label: 'Price' },
+  { value: 'name', label: 'Name' }
+];
 
 type ServiceForm = {
   name: string;
@@ -103,12 +109,44 @@ function toPence(input: string): number {
   if (!Number.isFinite(n)) return -1;
   return Math.round(n * 100);
 }
-function getServiceMeta(service: ServiceRow) {
-  const core = [`${formatPrice(service.pricePence)}`, `${service.durationMinutes} min`];
-  const secondary = [`Order ${service.displayOrder}`];
-  if (service.bufferMinutes > 0) secondary.unshift(`Buffer ${service.bufferMinutes} min`);
-  return { core, secondary };
+
+function isFeaturedCategory(category: string | null | undefined): boolean {
+  return category?.trim().toLowerCase() === 'featured';
 }
+
+function formatCategoryLabel(category: string | null | undefined): string {
+  if (!category?.trim()) return 'Uncategorised';
+  return category;
+}
+
+type ServiceStatusPillProps = {
+  on: boolean;
+  disabled?: boolean;
+  ariaLabel: string;
+  onClick: () => void;
+};
+
+function ServiceStatusPill({ on, disabled, ariaLabel, onClick }: ServiceStatusPillProps) {
+  return (
+    <button
+      type="button"
+      className={[
+        'admin-product-row__status-pill',
+        'admin-product-row__status-pill--active',
+        on ? 'is-on' : ''
+      ].filter(Boolean).join(' ')}
+      role="switch"
+      aria-checked={on}
+      aria-label={ariaLabel}
+      disabled={disabled}
+      onClick={onClick}
+    >
+      <span className="admin-product-row__status-dot" aria-hidden="true" />
+      <span>{on ? 'Active' : 'Inactive'}</span>
+    </button>
+  );
+}
+
 function getInitials(name: string) {
   const parts = name
     .trim()
@@ -296,19 +334,80 @@ export default function ServicesAdminPanel() {
   const [barbers, setBarbers] = useState<BarberListRow[]>([]);
   const [editingId, setEditingId] = useState<string | null>(null);
   const [form, setForm] = useState<ServiceForm>(EMPTY_FORM);
-    const [selectedBarberIds, setSelectedBarberIds] = useState<string[]>([]);
+  const [selectedBarberIds, setSelectedBarberIds] = useState<string[]>([]);
   const [message, setMessage] = useState<string>('');
   const [error, setError] = useState<string>('');
-    const [isSaving, setIsSaving] = useState(false);
+  const [isSaving, setIsSaving] = useState(false);
   const [isServiceSheetOpen, setIsServiceSheetOpen] = useState(false);
-  const [activeServiceForPanelId, setActiveServiceForPanelId] = useState<string | null>(null);
+  const [serviceSearch, setServiceSearch] = useState('');
+  const [serviceFilter, setServiceFilter] = useState<ServiceFilter>('all');
+  const [serviceSortMode, setServiceSortMode] = useState<ServiceSortMode>('manual');
+  const [serviceSortOpen, setServiceSortOpen] = useState(false);
+  const [manualOrderIds, setManualOrderIds] = useState<string[]>([]);
+  const [serviceSavingById, setServiceSavingById] = useState<Record<string, boolean>>({});
+  const [serviceStatusById, setServiceStatusById] = useState<Record<string, string>>({});
+  const serviceSearchInputRef = useRef<HTMLInputElement | null>(null);
+  const serviceSortRef = useRef<HTMLDivElement | null>(null);
   const isMobileAdminChrome = useAdminMobileChromeBreakpoint();
-  useAdminBodyScrollLock(isMobileAdminChrome && (isServiceSheetOpen || Boolean(activeServiceForPanelId)));
+  useAdminBodyScrollLock(isMobileAdminChrome && isServiceSheetOpen);
 
-  const activeServiceForPanel = useMemo(
-    () => services.find((service) => service.id === activeServiceForPanelId) ?? null,
-    [activeServiceForPanelId, services]
+  const serviceMap = useMemo(() => new Map(services.map((service) => [service.id, service])), [services]);
+
+  const sortedServices = useMemo(
+    () => [...services].sort((a, b) => a.displayOrder - b.displayOrder || a.name.localeCompare(b.name)),
+    [services]
   );
+
+  const manualServices = useMemo(() => {
+    const validIds = manualOrderIds.filter((id) => serviceMap.has(id));
+    const missingIds = sortedServices.map((service) => service.id).filter((id) => !validIds.includes(id));
+    return [...validIds, ...missingIds]
+      .map((id) => serviceMap.get(id))
+      .filter((service): service is ServiceRow => Boolean(service));
+  }, [manualOrderIds, serviceMap, sortedServices]);
+
+  const baseServices = useMemo(() => {
+    if (serviceSortMode === 'manual') return manualServices;
+    const source = [...sortedServices];
+    if (serviceSortMode === 'newest') {
+      return source.sort(
+        (a, b) =>
+          Date.parse(b.updatedAt ?? b.createdAt ?? '') - Date.parse(a.updatedAt ?? a.createdAt ?? '') ||
+          b.displayOrder - a.displayOrder
+      );
+    }
+    if (serviceSortMode === 'price') {
+      return source.sort((a, b) => b.pricePence - a.pricePence || a.name.localeCompare(b.name));
+    }
+    return source.sort((a, b) => a.name.localeCompare(b.name));
+  }, [manualServices, serviceSortMode, sortedServices]);
+
+  const filteredServices = useMemo(() => {
+    const query = serviceSearch.trim().toLowerCase();
+    return baseServices.filter((service) => {
+      if (serviceFilter === 'active' && !service.isActive) return false;
+      if (serviceFilter === 'inactive' && service.isActive) return false;
+      if (serviceFilter === 'featured' && !isFeaturedCategory(service.category)) return false;
+      if (!query) return true;
+      return (
+        service.name.toLowerCase().includes(query) ||
+        (service.description || '').toLowerCase().includes(query) ||
+        (service.category || '').toLowerCase().includes(query)
+      );
+    });
+  }, [baseServices, serviceFilter, serviceSearch]);
+
+  const featuredCount = useMemo(
+    () => services.filter((service) => isFeaturedCategory(service.category)).length,
+    [services]
+  );
+  const canReorder = serviceSortMode === 'manual' && serviceFilter === 'all' && serviceSearch.trim().length === 0;
+  const servicesInitiallyLoading = loading && services.length === 0;
+
+  const handleServiceSearchClear = useCallback(() => {
+    setServiceSearch('');
+    serviceSearchInputRef.current?.focus();
+  }, []);
   const resetServiceFormState = useCallback(() => {
     setEditingId(null);
     setForm(EMPTY_FORM);
@@ -357,6 +456,42 @@ export default function ServicesAdminPanel() {
   }, [fetchServices]);
 
   useEffect(() => {
+    setManualOrderIds(sortedServices.map((service) => service.id));
+  }, [sortedServices]);
+
+  useEffect(() => {
+    const handleKeyDown = (event: KeyboardEvent) => {
+      if (event.key !== '/') return;
+      const target = event.target as HTMLElement;
+      if (target.tagName === 'INPUT' || target.tagName === 'TEXTAREA' || target.isContentEditable) return;
+      event.preventDefault();
+      serviceSearchInputRef.current?.focus();
+    };
+    document.addEventListener('keydown', handleKeyDown);
+    return () => document.removeEventListener('keydown', handleKeyDown);
+  }, []);
+
+  useEffect(() => {
+    if (!serviceSortOpen) return undefined;
+
+    const handlePointerDown = (event: PointerEvent) => {
+      if (serviceSortRef.current?.contains(event.target as Node)) return;
+      setServiceSortOpen(false);
+    };
+
+    const handleKeyDown = (event: KeyboardEvent) => {
+      if (event.key === 'Escape') setServiceSortOpen(false);
+    };
+
+    document.addEventListener('pointerdown', handlePointerDown);
+    document.addEventListener('keydown', handleKeyDown);
+    return () => {
+      document.removeEventListener('pointerdown', handlePointerDown);
+      document.removeEventListener('keydown', handleKeyDown);
+    };
+  }, [serviceSortOpen]);
+
+  useEffect(() => {
     if (!isServiceSheetOpen) return undefined;
 
     const onKeyDown = (event: KeyboardEvent) => {
@@ -370,57 +505,6 @@ export default function ServicesAdminPanel() {
       window.removeEventListener('keydown', onKeyDown);
     };
   }, [isServiceSheetOpen, resetServiceFormState]);
-
-  useEffect(() => {
-    if (!activeServiceForPanel) return undefined;
-
-    const onKeyDown = (event: KeyboardEvent) => {
-      if (event.key === 'Escape') {
-        setActiveServiceForPanelId(null);
-      }
-    };
-
-    document.addEventListener('keydown', onKeyDown);
-    return () => {
-      document.removeEventListener('keydown', onKeyDown);
-    };
-  }, [activeServiceForPanel]);
-
-  const barbersForActiveServicePanel = useMemo<ServicePanelBarberRow[]>(() => {
-    if (!activeServiceForPanel) return [];
-
-    const assignedBarberIds = new Set((activeServiceForPanel.barberServices ?? []).map((relation) => relation.barber.id));
-    const sourceBarbers = barbers.length > 0
-      ? barbers.map((barber) => ({
-          id: barber.id,
-          name: barber.name,
-          isActive: barber.isActive,
-          avatarUrl: barber.avatarUrl
-        }))
-      : (activeServiceForPanel.barberServices ?? []).map((relation) => ({
-          id: relation.barber.id,
-          name: relation.barber.name,
-          isActive: relation.barber.active,
-          avatarUrl: null
-        }));
-
-    return sourceBarbers
-      .map((barber) => ({
-        id: barber.id,
-        name: barber.name,
-        isActive: barber.isActive,
-        avatarUrl: barber.avatarUrl,
-        isAssigned: assignedBarberIds.has(barber.id)
-      }))
-      .sort((left, right) => {
-        if (left.isAssigned !== right.isAssigned) {
-          return left.isAssigned ? -1 : 1;
-        }
-
-        return left.name.localeCompare(right.name, 'en', { sensitivity: 'base' });
-      });
-  }, [activeServiceForPanel, barbers]);
-
 
   function openCreateServiceSheet() {
     setEditingId(null);
@@ -512,21 +596,92 @@ export default function ServicesAdminPanel() {
   }
 
   async function toggleActive(service: ServiceRow) {
+    const previousServices = services;
+    setServiceSavingById((previous) => ({ ...previous, [service.id]: true }));
+    setServiceStatusById((previous) => ({ ...previous, [service.id]: 'Saving…' }));
+    setServices((previous) =>
+      previous.map((entry) => (entry.id === service.id ? { ...entry, isActive: !entry.isActive } : entry))
+    );
+
     try {
-      await adminFetchJson<{ service?: ServiceRow }>(`/api/admin/services/${service.id}`, {
+      const payload = await adminFetchJson<{ service?: ServiceRow }>(`/api/admin/services/${service.id}`, {
         method: 'PATCH',
         headers: { 'content-type': 'application/json' },
         body: JSON.stringify({ isActive: !service.isActive }),
         errorMessage: 'Unable to update service status.',
       });
+      if (payload.service) {
+        setServices((previous) =>
+          previous.map((entry) => (entry.id === service.id ? { ...entry, ...payload.service } : entry))
+        );
+      }
+      setServiceStatusById((previous) => ({ ...previous, [service.id]: 'Saved' }));
+      window.setTimeout(() => {
+        setServiceStatusById((previous) => {
+          const next = { ...previous };
+          delete next[service.id];
+          return next;
+        });
+      }, 900);
       setMessage(service.isActive ? 'Service deactivated.' : 'Service activated.');
       setError('');
-      setActiveServiceForPanelId(null);
-      await fetchServices();
-      return;
     } catch (toggleError) {
+      setServices(previousServices);
+      setServiceStatusById((previous) => ({ ...previous, [service.id]: '' }));
       setError(toggleError instanceof Error ? toggleError.message : 'Unable to update service status.');
+    } finally {
+      setServiceSavingById((previous) => ({ ...previous, [service.id]: false }));
     }
+  }
+
+  async function saveManualOrder(orderedIds: string[]) {
+    if (!canReorder) return;
+    if (orderedIds.length === 0) return;
+
+    const previous = manualOrderIds;
+    setManualOrderIds(orderedIds);
+    setServices((previousServices) => {
+      const orderLookup = new Map(orderedIds.map((id, index) => [id, index]));
+      return [...previousServices].sort(
+        (a, b) => (orderLookup.get(a.id) ?? Number.MAX_SAFE_INTEGER) - (orderLookup.get(b.id) ?? Number.MAX_SAFE_INTEGER)
+      );
+    });
+
+    try {
+      const payload = await adminFetchJson<{ services?: ServiceRow[] }>('/api/admin/services/reorder', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ orderedIds }),
+        errorMessage: 'Unable to save order.',
+      });
+      if (Array.isArray(payload.services)) {
+        setServices(payload.services);
+      }
+      setMessage('Order updated.');
+      setError('');
+    } catch (reorderError) {
+      setManualOrderIds(previous);
+      await fetchServices();
+      setError(reorderError instanceof Error ? reorderError.message : 'Unable to save order.');
+    }
+  }
+
+  function moveItemUp(index: number) {
+    if (!canReorder || index <= 0) return;
+    const orderedIds = manualServices.map((service) => service.id);
+    const nextOrderedIds = [...orderedIds];
+    const [movedId] = nextOrderedIds.splice(index, 1);
+    nextOrderedIds.splice(index - 1, 0, movedId);
+    void saveManualOrder(nextOrderedIds);
+  }
+
+  function moveItemDown(index: number) {
+    if (!canReorder || index < 0 || index >= manualServices.length - 1) return;
+    const orderedIds = manualServices.map((service) => service.id);
+    const nextOrderedIds = [...orderedIds];
+    const [movedId] = nextOrderedIds.splice(index, 1);
+    nextOrderedIds.splice(index + 1, 0, movedId);
+    void saveManualOrder(nextOrderedIds);
   }
 
   const nameHasError = error === 'Service name is required.';
@@ -548,18 +703,11 @@ export default function ServicesAdminPanel() {
         }
       />
 
-      {!isMobileAdminChrome ? <AdminBookingsOpsDashHeroLive /> : null}
+      <AdminDesktopDashHeroSlot />
 
       {message ? <p className="admin-inline-success">{message}</p> : null}
       {error ? <p className="admin-inline-error">{error}</p> : null}
 
-      {loading ? (
-        <div className="admin-services-list-wrap" aria-busy="true">
-          <div className="admin-services-list admin-services-list--loading" aria-hidden="true">
-            <SkeletonBookingChoices count={4} variant="service" />
-          </div>
-        </div>
-      ) : null}
       {!loading && services.length === 0 ? (
         <EmptyState
           icon={Scissors}
@@ -568,155 +716,227 @@ export default function ServicesAdminPanel() {
         />
       ) : null}
 
-      {services.length > 0 ? (
-        <div className="admin-services-list-wrap">
-          <ul className="admin-services-list" aria-label="Services list">
-            {services.map((service) => {
-              const assignedBarbers = (service.barberServices ?? []).map((relation) => relation.barber);
-              const serviceMeta = getServiceMeta(service);
-              return (
-                <li key={service.id} className={`admin-service-card ${service.isActive ? '' : 'is-inactive'}`}>
-                  <div className="admin-service-card-header">
-                    <div className="admin-service-card-title-wrap">
-                      <p className="admin-service-card-name" title={service.name}>{service.name}</p>
-                      <span className="admin-service-card-status" role="status" aria-label={service.isActive ? 'Active' : 'Inactive'}>
-                        <span className="admin-service-card-status-label">{service.isActive ? 'Active' : 'Inactive'}</span>
-                        <span className="admin-service-card-status-dot-wrap">
-                          <span className={`admin-status-dot ${service.isActive ? 'is-active' : 'is-inactive'}`} aria-hidden="true" />
-                        </span>
-                      </span>
-                    </div>
-                    <button
-                      type="button"
-                      className="admin-reorder-btn admin-reorder-btn--settings admin-service-settings-btn"
-                      onClick={() => setActiveServiceForPanelId(service.id)}
-                      aria-label={`Open ${service.name} settings panel`}
-                    >
-                      <SettingsGearIcon className="admin-control-icon" />
-                    </button>
-                  </div>
+      {services.length > 0 || loading ? (
+        <div className="admin-reports admin-services-panel">
+          <div className="admin-products-toolbar-sticky">
+            <div className="admin-products-toolbar">
+              <div className="admin-search-bar admin-products-toolbar-search" role="search">
+                <Search className="admin-search-bar__icon" width={16} height={16} aria-hidden="true" />
+                <input
+                  ref={serviceSearchInputRef}
+                  type="search"
+                  className="admin-search-bar__input"
+                  placeholder="Search services…"
+                  value={serviceSearch}
+                  onChange={(e) => setServiceSearch(e.target.value)}
+                  onKeyDown={(e) => e.key === 'Escape' && handleServiceSearchClear()}
+                  aria-label="Search services"
+                  autoComplete="off"
+                  spellCheck={false}
+                />
+                {serviceSearch ? (
+                  <button
+                    type="button"
+                    className="admin-search-bar__clear"
+                    onClick={handleServiceSearchClear}
+                    aria-label="Clear search"
+                  >
+                    <X width={14} height={14} aria-hidden="true" />
+                  </button>
+                ) : (
+                  <kbd className="admin-search-bar__kbd">/</kbd>
+                )}
+              </div>
 
-                  <div className="admin-service-card-body">
-                    <div className="admin-service-meta-group admin-service-meta-group--core">
-                      {serviceMeta.core.map((chunk) => (
-                        <span key={`${service.id}-core-${chunk}`} className="admin-service-meta-chip admin-service-meta-chip--core">{chunk}</span>
-                      ))}
-                    </div>
-                    <div className="admin-service-meta-group admin-service-meta-group--secondary">
-                      {serviceMeta.secondary.map((chunk) => (
-                        <span key={`${service.id}-secondary-${chunk}`} className="admin-service-meta-chip">{chunk}</span>
-                      ))}
-                    </div>
-                    {service.category ? (
-                      <span className="admin-service-category-pill admin-service-category-pill--readonly">{service.category}</span>
-                    ) : null}
-                    {service.description ? <p className="admin-service-support-line">{service.description}</p> : null}
-                  </div>
-
-                  <div className="admin-service-card-footer">
-                    <p className="admin-service-actions-meta" aria-live="polite">
-                      <span className="admin-service-actions-meta-label">Assigned</span>
-                      <span className="admin-service-actions-meta-value">{assignedBarbers.length}</span>
-                    </p>
-                    <button type="button" className="btn btn--ghost admin-service-edit-btn" onClick={() => startEdit(service)}>
-                      Edit
-                    </button>
-                  </div>
-                </li>
-              );
-            })}
-          </ul>
-        </div>
-      ) : null}
-
-      {activeServiceForPanel ? (
-        <div
-          className="admin-barber-sheet-layer admin-service-sheet-layer"
-          role="dialog"
-          aria-modal="true"
-          aria-labelledby="admin-service-panel-title"
-          onMouseDown={(event) => {
-            if (event.target === event.currentTarget) {
-              setActiveServiceForPanelId(null);
-            }
-          }}
-        >
-          <section className="admin-barber-sheet admin-service-sheet" onMouseDown={(event) => event.stopPropagation()}>
-            <div className="admin-barber-sheet-head admin-service-panel-head admin-client-modal-head">
-              <h3 id="admin-service-panel-title">{activeServiceForPanel.name} panel</h3>
-              <button
-                type="button"
-                className="btn btn--ghost admin-client-modal-close admin-service-panel-close"
-                onClick={() => setActiveServiceForPanelId(null)}
-                aria-label="Close service settings"
-              >
-                <X width={18} height={18} aria-hidden="true" />
-              </button>
-            </div>
-
-            <div className="admin-barber-sheet-content admin-service-sheet-content">
-              <p className="admin-barber-status-line">
-                <span className={`admin-status-dot ${activeServiceForPanel.isActive ? 'is-active' : 'is-inactive'}`} aria-hidden="true" />
-                {activeServiceForPanel.isActive ? 'Active' : 'Inactive'}
-              </p>
-              <p className="admin-barber-next-line">
-                {[...getServiceMeta(activeServiceForPanel).core, ...getServiceMeta(activeServiceForPanel).secondary].join(' · ')}
-              </p>
-              {activeServiceForPanel.category ? (
-                <span className="admin-service-category-pill admin-service-category-pill--readonly">{activeServiceForPanel.category}</span>
-              ) : null}
-
-              <section className="admin-service-assignment-section admin-service-assigned-barbers-section" aria-labelledby="service-panel-assigned-barbers-title">
-                <div className="admin-service-assignment-header">
-                  <div className="admin-service-assignment-copy">
-                    <p className="admin-service-assignment-eyebrow">BARBERS FOR THIS SERVICE</p>
-                    <h3 id="service-panel-assigned-barbers-title">Current barber assignment.</h3>
-                  </div>
-                  <div className="admin-service-assignment-tools" aria-label="Assigned barbers summary">
-                    <span className="admin-service-assignment-count">
-                      {barbersForActiveServicePanel.filter((barber) => barber.isAssigned).length} assigned
-                    </span>
+              <div className="admin-products-toolbar-controls">
+                <div className="admin-filter-scroll-wrap">
+                  <div className="admin-products-filters" role="group" aria-label="Service filters">
+                    {(['all', 'active', 'inactive', 'featured'] as ServiceFilter[]).map((filter) => (
+                      <button
+                        key={filter}
+                        type="button"
+                        className={`admin-products-filter-tab${serviceFilter === filter ? ' admin-products-filter-tab--active' : ''}`}
+                        onClick={() => setServiceFilter(filter)}
+                        aria-pressed={serviceFilter === filter}
+                      >
+                        {filter === 'all' ? 'All' : filter === 'active' ? 'Active' : filter === 'inactive' ? 'Inactive' : 'Featured'}
+                      </button>
+                    ))}
                   </div>
                 </div>
 
-                {barbersForActiveServicePanel.length > 0 ? (
-                  <ServiceBarberAssignmentList
-                    rows={barbersForActiveServicePanel.map((barber) => ({
-                      id: barber.id,
-                      name: barber.name,
-                      isActive: barber.isActive,
-                      avatarUrl: barber.avatarUrl,
-                      isSelected: barber.isAssigned,
-                      subline: barber.isAssigned ? 'Assigned to this service' : 'Not assigned to this service'
-                    }))}
-                    ariaLabel="Barbers assigned in this service panel"
-                  />
-                ) : (
-                  <EmptyState
-                    icon={Users}
-                    title="No barbers available"
-                    description="Add barbers in the Barbers section first, then assign them to this service."
-                  />
-                )}
-              </section>
-            </div>
+                <div className="admin-products-toolbar-right">
+                  <div
+                    ref={serviceSortRef}
+                    className={`admin-products-sort-wrap${serviceSortOpen ? ' admin-products-sort-wrap--open' : ''}`}
+                  >
+                    <button
+                      type="button"
+                      className="admin-products-sort-trigger"
+                      aria-label="Sort services"
+                      aria-haspopup="listbox"
+                      aria-expanded={serviceSortOpen}
+                      onClick={() => setServiceSortOpen((open) => !open)}
+                      onKeyDown={(event) => {
+                        if (event.key === 'ArrowDown' || event.key === 'ArrowUp') {
+                          event.preventDefault();
+                          setServiceSortOpen(true);
+                        }
+                      }}
+                    >
+                      <span>{SERVICE_SORT_OPTIONS.find((option) => option.value === serviceSortMode)?.label}</span>
+                      <ChevronDown className="admin-products-sort-chevron" width={12} height={12} aria-hidden="true" />
+                    </button>
 
-            <div className="admin-barber-sheet-footer admin-service-sheet-foot">
-              <button type="button" className="btn btn--primary" onClick={() => void toggleActive(activeServiceForPanel)}>
-                {activeServiceForPanel.isActive ? 'Deactivate' : 'Activate'}
-              </button>
-              <button
-                type="button"
-                className="btn btn--secondary"
-                onClick={() => {
-                  setActiveServiceForPanelId(null);
-                  startEdit(activeServiceForPanel);
-                }}
-              >
-                Edit service
-              </button>
+                    {serviceSortOpen ? (
+                      <div className="admin-products-sort-menu" role="listbox" aria-label="Sort services">
+                        {SERVICE_SORT_OPTIONS.map((option) => (
+                          <button
+                            key={option.value}
+                            type="button"
+                            className={`admin-products-sort-option${serviceSortMode === option.value ? ' admin-products-sort-option--active' : ''}`}
+                            role="option"
+                            aria-selected={serviceSortMode === option.value}
+                            onClick={() => {
+                              setServiceSortMode(option.value);
+                              setServiceSortOpen(false);
+                            }}
+                          >
+                            {option.label}
+                          </button>
+                        ))}
+                      </div>
+                    ) : null}
+                  </div>
+
+                  <div className="admin-products-meta">
+                    <span className="admin-products-count">
+                      {filteredServices.length} services · {featuredCount} featured
+                    </span>
+                  </div>
+                </div>
+              </div>
             </div>
-          </section>
+          </div>
+
+          <div className="admin-products-scroll" role="region" aria-label="Services list">
+            <div className="admin-product-list">
+              {servicesInitiallyLoading ? (
+                <div aria-label="Loading services" aria-busy="true">
+                  <SkeletonBookingChoices count={4} variant="service" />
+                </div>
+              ) : filteredServices.length === 0 ? (
+                <EmptyState
+                  icon={Search}
+                  title="No services match"
+                  description="Try adjusting your search or filter to find what you're looking for."
+                  variant="filtered"
+                />
+              ) : (
+                filteredServices.map((service, index) => {
+                  const isSavingRow = Boolean(serviceSavingById[service.id]);
+                  const manualIndex = manualServices.findIndex((entry) => entry.id === service.id);
+                  const isFirstItem = manualIndex <= 0;
+                  const isLastItem = manualIndex < 0 || manualIndex >= manualServices.length - 1;
+                  const reorderDisabled = serviceSortMode !== 'manual' || !canReorder;
+                  const categoryLabel = formatCategoryLabel(service.category);
+                  const updatedLabel = service.updatedAt || service.createdAt
+                    ? new Date(service.updatedAt ?? service.createdAt ?? '').toLocaleString('en-GB', {
+                        day: 'numeric',
+                        month: 'short',
+                        year: 'numeric'
+                      })
+                    : '—';
+                  const serviceStatusLine = isSavingRow ? 'Saving…' : (serviceStatusById[service.id] || '');
+
+                  return (
+                    <article
+                      key={service.id}
+                      className={[
+                        'admin-product-row',
+                        'admin-product-row--service',
+                        service.isActive ? '' : 'admin-product-row--inactive'
+                      ].filter(Boolean).join(' ')}
+                    >
+                      <div className="admin-product-row__thumb">
+                        <Scissors className="admin-product-row__thumb-icon" aria-hidden="true" />
+                      </div>
+
+                      <div className="admin-product-row__identity">
+                        <p className="admin-product-row__name">{service.name}</p>
+                        <p className="admin-product-row__meta">
+                          <span>{categoryLabel}</span>
+                          <span className="admin-product-row__meta-sep" aria-hidden="true"> · </span>
+                          <span title={`Updated ${updatedLabel}`}>{updatedLabel}</span>
+                        </p>
+                      </div>
+
+                      <div className="admin-service-row__duration-col">
+                        <span className="admin-service-row__duration">{service.durationMinutes} min</span>
+                      </div>
+                      <div className="admin-service-row__description-col">
+                        {service.description ? (
+                          <span className="admin-service-row__description" title={service.description}>
+                            {service.description}
+                          </span>
+                        ) : (
+                          <span className="admin-service-row__description admin-service-row__description--empty" aria-hidden="true">—</span>
+                        )}
+                      </div>
+
+                      <div className="admin-product-row__price-status">
+                        <p className="admin-product-row__price">{formatPrice(service.pricePence)}</p>
+                        <ServiceStatusPill
+                          on={service.isActive}
+                          disabled={isSavingRow}
+                          ariaLabel={`${service.name}: ${service.isActive ? 'Active' : 'Inactive'}`}
+                          onClick={() => void toggleActive(service)}
+                        />
+                      </div>
+
+                      <div className="admin-product-row__controls">
+                        <button
+                          type="button"
+                          className="admin-product-row__edit-btn"
+                          aria-label={`Edit ${service.name}`}
+                          onClick={() => startEdit(service)}
+                        >
+                          <SettingsGearIcon className="admin-control-icon" aria-hidden="true" />
+                        </button>
+
+                        <div className="admin-reorder-controls admin-reorder-controls--product" role="group" aria-label={`Reorder ${service.name}`}>
+                          <div className="admin-reorder-arrow-stack admin-reorder-arrow-stack--product">
+                            <button
+                              type="button"
+                              className="admin-reorder-btn admin-reorder-btn--product"
+                              aria-label={`Move ${service.name} up`}
+                              disabled={reorderDisabled || isFirstItem}
+                              onClick={() => moveItemUp(manualIndex >= 0 ? manualIndex : index)}
+                            >
+                              <ChevronUp width={14} height={14} strokeWidth={2.5} aria-hidden="true" />
+                            </button>
+                            <button
+                              type="button"
+                              className="admin-reorder-btn admin-reorder-btn--product"
+                              aria-label={`Move ${service.name} down`}
+                              disabled={reorderDisabled || isLastItem}
+                              onClick={() => moveItemDown(manualIndex >= 0 ? manualIndex : index)}
+                            >
+                              <ChevronDown width={14} height={14} strokeWidth={2.5} aria-hidden="true" />
+                            </button>
+                          </div>
+                        </div>
+                      </div>
+
+                      {serviceStatusLine ? (
+                        <p className="admin-product-row__saving-line" aria-live="polite">{serviceStatusLine}</p>
+                      ) : null}
+                    </article>
+                  );
+                })
+              )}
+            </div>
+          </div>
         </div>
       ) : null}
 
