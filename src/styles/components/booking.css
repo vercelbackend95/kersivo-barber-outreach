@@ -14155,7 +14155,7 @@ body.admin-theme-premium-black .booking-page-wrap .booking-shell.surface {
   align-items: center;
   justify-content: center;
   flex-shrink: 0;
-  overflow: hidden;
+  overflow: visible;
   position: relative;
 }
 
@@ -14164,6 +14164,7 @@ body.admin-theme-premium-black .booking-page-wrap .booking-shell.surface {
   height: 100%;
   object-fit: cover;
   display: block;
+  border-radius: 999px;
 }
 
 .admin-vtl-client-panel-avatar-initials {
@@ -16089,8 +16090,8 @@ body.admin-theme-premium-black .booking-page-wrap .booking-shell.surface {
 
 .admin-vtl-client-panel-avatar-badge {
   position: absolute;
-  right: -2px;
-  bottom: -2px;
+  right: -4px;
+  bottom: -4px;
   width: 18px;
   height: 18px;
   display: inline-flex;
@@ -16101,7 +16102,8 @@ body.admin-theme-premium-black .booking-page-wrap .booking-shell.surface {
   background: color-mix(in srgb, var(--status-confirmed, var(--success)) 22%, var(--surface-2, var(--surface)));
   color: color-mix(in srgb, var(--status-confirmed, var(--success)) 88%, var(--fg));
   pointer-events: none;
-  box-shadow: 0 1px 3px color-mix(in srgb, var(--bg) 55%, transparent);
+  z-index: 2;
+  box-shadow: 0 2px 6px color-mix(in srgb, var(--bg) 60%, transparent);
 }
 
 .admin-vtl-client-panel-avatar-badge-icon {
