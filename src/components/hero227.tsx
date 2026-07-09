@@ -164,7 +164,7 @@ const Hero227 = ({ className }: Hero227Props) => {
                 <img
                   className="hero227-mock-frame"
                   alt=""
-                  src="https://deifkwefumgah.cloudfront.net/shadcnblocks/block/mockups/phone-5.png"
+                  src="/images/hero/phone-5.webp"
                 />
               </motion.div>
             </div>

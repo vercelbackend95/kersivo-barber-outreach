@@ -52,29 +52,33 @@ const ProcessStepPicture = ({
   mobileSrc?: string;
   width: number;
   height: number;
-  mobileWidth?: number;
-  mobileHeight?: number;
   alt: string;
 }) => {
-  const desktopWebp = desktopSrc.replace(/\.jpe?g$/i, '.webp');
-  const mobileWebp = mobileSrc?.replace(/\.jpe?g$/i, '.webp');
+  const [src, setSrc] = useState(desktopSrc);
+
+  useEffect(() => {
+    if (mobileSrc == null) {
+      setSrc(desktopSrc);
+      return;
+    }
+
+    const mq = window.matchMedia(PROCESS_IMAGE_MOBILE_MEDIA);
+    const update = () => setSrc(mq.matches ? mobileSrc : desktopSrc);
+    update();
+    mq.addEventListener("change", update);
+    return () => mq.removeEventListener("change", update);
+  }, [desktopSrc, mobileSrc]);
 
   return (
-    <picture className="block h-full w-full">
-      {mobileWebp != null ? (
-        <source media={PROCESS_IMAGE_MOBILE_MEDIA} srcSet={mobileWebp} type="image/webp" />
-      ) : null}
-      <source srcSet={desktopWebp} type="image/webp" />
-      <img
-        src={desktopSrc}
-        className="h-full w-full object-cover"
-        alt={alt}
-        width={width}
-        height={height}
-        loading="lazy"
-        decoding="async"
-      />
-    </picture>
+    <img
+      src={src}
+      className="h-full w-full object-cover"
+      alt={alt}
+      width={width}
+      height={height}
+      loading="lazy"
+      decoding="async"
+    />
   );
 };
 
@@ -84,8 +88,8 @@ const Process2 = ({ className }: Process2Props) => {
       step: "01",
       title: "Brief and plan",
       timeline: "Days 1\u20134",
-      image: "/images/discoverypic.jpg",
-      imageMobile: "/images/Launchpic.jpg",
+      image: "/images/discoverypic.webp",
+      imageMobile: "/images/Launchpic.webp",
       imageWidth: 1600,
       imageHeight: 2133,
       imageMobileWidth: 1600,
@@ -101,8 +105,8 @@ const Process2 = ({ className }: Process2Props) => {
       step: "02",
       title: "We build your system",
       timeline: "Days 5\u201311",
-      image: "/images/Buildpic.jpg",
-      imageMobile: "/images/Reviewpic.jpg",
+      image: "/images/Buildpic.webp",
+      imageMobile: "/images/Reviewpic.webp",
       imageWidth: 1600,
       imageHeight: 1067,
       imageMobileWidth: 1600,
@@ -118,8 +122,8 @@ const Process2 = ({ className }: Process2Props) => {
       step: "03",
       title: "Go live",
       timeline: "Days 12\u201314",
-      image: "/images/Reviewpic.jpg",
-      imageMobile: "/images/Launchpic.jpg",
+      image: "/images/Reviewpic.webp",
+      imageMobile: "/images/Launchpic.webp",
       imageWidth: 1600,
       imageHeight: 2400,
       imageMobileWidth: 1600,
@@ -160,8 +164,6 @@ const Process2 = ({ className }: Process2Props) => {
                     mobileSrc={process[previousActive].imageMobile}
                     width={process[previousActive].imageWidth}
                     height={process[previousActive].imageHeight}
-                    mobileWidth={process[previousActive].imageMobileWidth}
-                    mobileHeight={process[previousActive].imageMobileHeight}
                     alt=""
                   />
                 </div>
@@ -172,8 +174,6 @@ const Process2 = ({ className }: Process2Props) => {
                   mobileSrc={process[active].imageMobile}
                   width={process[active].imageWidth}
                   height={process[active].imageHeight}
-                  mobileWidth={process[active].imageMobileWidth}
-                  mobileHeight={process[active].imageMobileHeight}
                   alt={`${process[active].title} — Kersivo barbershop setup`}
                 />
               </div>
