@@ -1,0 +1,71 @@
+---
+import GoogleAnalytics from '@/components/seo/GoogleAnalytics.astro';
+import FaviconLinks from '@/components/seo/FaviconLinks.astro';
+import SeoHead from '@/components/seo/SeoHead.astro';
+import Navbar17 from '@/components/navbar17.astro';
+import type { PageSeo } from '@/lib/seo/meta';
+import '@/styles/tokens.css';
+import '@/styles/fonts-landing.css';
+import '@/styles/global.css';
+import '@/styles/components/buttons.css';
+import '@/styles/components/navbar17.css';
+
+interface Props extends PageSeo {
+  title: string;
+  jsonLd?: Record<string, unknown> | Record<string, unknown>[];
+}
+
+const {
+  title,
+  description,
+  canonicalPath,
+  ogImagePath,
+  ogImageWidth,
+  ogImageHeight,
+  ogImageAlt,
+  ogType,
+  noindex,
+  jsonLd,
+} = Astro.props;
+
+const jsonLdBlocks = jsonLd
+  ? Array.isArray(jsonLd)
+    ? jsonLd
+    : [jsonLd]
+  : [];
+---
+
+<html lang="en-GB">
+  <head>
+    <GoogleAnalytics />
+    <meta charset="utf-8" />
+    <FaviconLinks />
+    <meta name="viewport" content="width=device-width" />
+    <link rel="preload" href="/fonts/inter-latin-400-normal.woff2" as="font" type="font/woff2" crossorigin />
+    <link rel="preload" href="/fonts/inter-latin-600-normal.woff2" as="font" type="font/woff2" crossorigin />
+    <link rel="preload" href="/fonts/antonio-latin-700-normal.woff2" as="font" type="font/woff2" crossorigin />
+    <link rel="preload" href="/fonts/bebas-neue-latin-400-normal.woff2" as="font" type="font/woff2" crossorigin />
+    <title>{title}</title>
+    <SeoHead
+      title={title}
+      description={description}
+      canonicalPath={canonicalPath}
+      ogImagePath={ogImagePath}
+      ogImageWidth={ogImageWidth}
+      ogImageHeight={ogImageHeight}
+      ogImageAlt={ogImageAlt}
+      ogType={ogType}
+      noindex={noindex}
+    />
+    {
+      jsonLdBlocks.map((block) => (
+        <script type="application/ld+json" set:html={JSON.stringify(block)} />
+      ))
+    }
+    <slot name="head" />
+  </head>
+  <body>
+    <Navbar17 variant="landing" />
+    <slot />
+  </body>
+</html>

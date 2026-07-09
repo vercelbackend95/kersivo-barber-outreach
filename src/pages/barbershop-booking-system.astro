@@ -1,5 +1,5 @@
 ---
-import MainLayout from '@/layouts/MainLayout.astro';
+import LandingLayout from '@/layouts/LandingLayout.astro';
 import { PAGE_DESCRIPTIONS } from '@/lib/seo/defaults';
 import Faq4 from '@/components/faq4.astro';
 import Contact16 from '@/components/contact16.astro';
@@ -36,32 +36,24 @@ const [carouselProducts, demoBarbers, landingBookingData] = await Promise.all([
 const currentYear = new Date().getFullYear();
 ---
 
-<MainLayout
+<LandingLayout
   title={PAGE_TITLE}
   description={PAGE_DESCRIPTIONS.barbershopBookingSystem}
   canonicalPath="/barbershop-booking-system"
   jsonLd={buildBarbershopBookingFaqJsonLd()}
-  navbarVariant="landing"
 >
   <link
     slot="head"
     rel="preload"
     as="image"
-    href="/images/hero/iphonemockup.webp"
-    fetchpriority="high"
-  />
-  <link
-    slot="head"
-    rel="preload"
-    as="image"
     href="/images/hero/phone-5.webp"
+    fetchpriority="high"
   />
   <link
     slot="head"
     rel="preload"
     as="image"
     href="/images/brand/logo-navbar-228.webp"
-    fetchpriority="high"
   />
   <main class="landing-overflow-guard">
     <SystemChooser />
@@ -114,12 +106,20 @@ const currentYear = new Date().getFullYear();
       ]}
     />
   </main>
-</MainLayout>
+</LandingLayout>
 
 <script>
   import { initSystemChooser } from '@/lib/initSystemChooser';
 
-  initSystemChooser();
+  const scheduleInit = () => {
+    requestAnimationFrame(() => initSystemChooser());
+  };
+
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', scheduleInit, { once: true });
+  } else {
+    scheduleInit();
+  }
 </script>
 
 <script>

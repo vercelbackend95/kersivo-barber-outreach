@@ -119,7 +119,6 @@ const SCISSORS_PATH_D =
                 alt="KERSIVO booking preview on an iPhone screen"
                 width={MOCK_SCREEN_WIDTH}
                 height={MOCK_SCREEN_HEIGHT}
-                fetchpriority="high"
                 decoding="async"
               />
             </div>
@@ -129,7 +128,8 @@ const SCISSORS_PATH_D =
               src="/images/hero/phone-5.webp"
               width={PHONE_FRAME_WIDTH}
               height={PHONE_FRAME_HEIGHT}
-              decoding="async"
+              fetchpriority="high"
+              decoding="sync"
             />
           </div>
         </div>

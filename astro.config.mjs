@@ -12,7 +12,10 @@ export default defineConfig({
   output: 'server',
   adapter: vercel(),
   integrations: [react()],
-    security: {
+  build: {
+    inlineStylesheets: 'auto',
+  },
+  security: {
     checkOrigin: false
   },
 
