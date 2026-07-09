@@ -1,6 +1,7 @@
 import HomepageSalesKpiWidget from '@/components/HomepageSalesKpiWidget';
 import { FEATURE261_MONETIZATION_ROW } from '@/lib/landing/feature261MonetizationRow';
 import { cn } from '@/lib/utils';
+import '@/styles/components/booking.css';
 
 type Feature261MonetizationRowProps = {
   reverse?: boolean;

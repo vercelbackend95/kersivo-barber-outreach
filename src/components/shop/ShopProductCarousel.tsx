@@ -3,6 +3,7 @@ import { ChevronLeft, ChevronRight } from 'lucide-react';
 import { CATEGORY_LABELS, type CarouselProduct } from '@/lib/shop/carouselProducts';
 import { formatGbp } from '@/lib/shop/money';
 import { cn } from '@/lib/utils';
+import '@/styles/components/shop.css';
 
 interface ShopProductCarouselProps {
   products: CarouselProduct[];
