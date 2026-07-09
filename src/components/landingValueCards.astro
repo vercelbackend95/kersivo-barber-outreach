@@ -14,6 +14,27 @@ interface Props {
 
 const { className = '' } = Astro.props as Props;
 
+function valueCardResponsiveSrc(image: string): string {
+  const match = image.match(/\/([^/]+)\.webp$/);
+  if (!match) return image;
+  const base = match[1];
+  const dir = image.replace(/\/[^/]+$/, '');
+  return `${dir}/${base}-768w.webp`;
+}
+
+function valueCardSrcset(image: string): string {
+  const match = image.match(/\/([^/]+)\.webp$/);
+  if (!match) return image;
+  const base = match[1];
+  const dir = image.replace(/\/[^/]+$/, '');
+  return [
+    `${dir}/${base}-480w.webp 480w`,
+    `${dir}/${base}-768w.webp 768w`,
+    `${dir}/${base}-1024w.webp 1024w`,
+    `${image} 1536w`,
+  ].join(', ');
+}
+
 const blocks: ValueBlock[] = [
   {
     heading: 'Easy booking for clients',
@@ -77,12 +98,15 @@ const includedItems = [
           <div class="landing-value-cards__visual">
             <img
               class="landing-value-cards__image"
-              src={block.image}
+              src={valueCardResponsiveSrc(block.image)}
+              srcset={valueCardSrcset(block.image)}
+              sizes="(max-width: 640px) 90vw, (max-width: 1024px) 45vw, 430px"
               alt={block.imageAlt}
               width={block.imageWidth}
               height={block.imageHeight}
               loading={index === 0 ? 'eager' : 'lazy'}
               decoding="async"
+              fetchpriority={index === 0 ? 'high' : undefined}
             />
           </div>
 

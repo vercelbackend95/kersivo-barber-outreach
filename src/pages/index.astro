@@ -14,7 +14,6 @@ import NewcomerPath from '../components/newcomerPath.astro';
 import TrustBlock from '../components/trustBlock.astro';
 import { Feature261 } from '../components/feature261';
 import { Process2 } from '../components/process2';
-import '../styles/components/shopProductCards6.css';
 import { Pricing36 } from '../components/pricing36';
 import { RateCard1 } from '../components/rateCard1';
 import '../styles/pricing36.css';
@@ -28,14 +27,6 @@ import '../styles/components/contact16.css';
 import Footer50 from '../components/footer50.astro';
 import '../styles/components/footer50.css';
 import { getFooterSocialLinks } from '@/lib/seo/footerSocialLinks';
-import '../styles/components/feature261.css';
-import '../styles/components/booking.css';
-import '../styles/components/booking-mobile.css';
-import '../styles/components/admin-demo.css';
-import '../styles/components/empty-state.css';
-import '../styles/components/skeleton.css';
-import '../styles/components/insideSystemLiveWidget.css';
-import '../styles/components/landingBookingWidget.css';
 import '../styles/components/migrationGuide.css';
 import MigrationGuide from '../components/migrationGuide.astro';
 import '../styles/components/process2.css';
@@ -77,12 +68,12 @@ const landingBookingData = await resolveLandingBookingData();
     <MigrationGuide />
     <NewcomerPath />
     <Feature261
-      client:load
+      client:visible={{ rootMargin: '200px' }}
       retailProducts={carouselProducts}
       barbers={demoBarbers}
       bookingData={landingBookingData}
     />
-    <Pricing36 client:load />
+    <Pricing36 client:visible={{ rootMargin: '200px' }} />
     <RateCard1 />
     <Process2 client:load />
     <TrustBlock />

@@ -4,6 +4,8 @@ import { Feature261MoreIncluded } from '@/components/feature261/Feature261MoreIn
 import { InsideSystemLiveWidget } from '@/components/InsideSystemLiveWidget';
 import { LandingBookingWidget } from '@/components/LandingBookingWidget';
 import { ShopProductCarousel } from '@/components/shop/ShopProductCarousel';
+import '@/styles/components/feature261.css';
+import '@/styles/components/shopProductCards6.css';
 import { type CarouselProduct } from '@/lib/shop/carouselProducts';
 import type { LandingBookingData } from '@/lib/landing/landingBookingData';
 import { getLandingDemoBookingFallback } from '@/lib/landing/landingDemoBookingFallback';

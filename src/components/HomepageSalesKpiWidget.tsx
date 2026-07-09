@@ -2,6 +2,7 @@ import { useEffect, useMemo, useRef, useState } from 'react';
 
 import AdminLineChart, { type AdminLineChartSeries } from '@/components/admin/charts/AdminLineChart';
 import { getLandingSalesKpiData } from '@/lib/landing/landingSalesKpiData';
+import '@/styles/components/booking.css';
 
 type SalesChartSeries = {
   key: string;

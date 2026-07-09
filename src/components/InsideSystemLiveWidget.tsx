@@ -10,7 +10,12 @@
  * interactive React component with no SSR hydration mismatch.
  */
 import { useEffect, useMemo, useRef, useState } from 'react';
+
 import TodayTimeline from '@/components/admin/TodayTimeline';
+import '@/styles/components/admin-demo.css';
+import '@/styles/components/booking.css';
+import '@/styles/components/insideSystemLiveWidget.css';
+import '@/styles/components/skeleton.css';
 import {
   ADMIN_DEMO_BLOCKED_EVENT,
   installAdminFetchInterceptor,

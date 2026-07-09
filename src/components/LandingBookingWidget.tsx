@@ -12,6 +12,11 @@
  */
 import { useEffect, useState } from 'react';
 import BookingFlow from '@/components/booking/BookingFlow';
+import '@/styles/components/booking.css';
+import '@/styles/components/booking-mobile.css';
+import '@/styles/components/empty-state.css';
+import '@/styles/components/landingBookingWidget.css';
+import '@/styles/components/skeleton.css';
 
 type WidgetService = {
   id: string;

@@ -2,12 +2,12 @@
 import BarberDemoJsonLd from '@/components/seo/BarberDemoJsonLd.astro';
 import GoogleAnalytics from '@/components/seo/GoogleAnalytics.astro';
 import FaviconLinks from '@/components/seo/FaviconLinks.astro';
-import FontLinks from '@/components/seo/FontLinks.astro';
 import SeoHead from '@/components/seo/SeoHead.astro';
 import Navbar17 from '@/components/navbar17.astro';
 import CartDrawerMount from '@/components/shop/CartDrawerMount.astro';
 import type { PageSeo } from '@/lib/seo/meta';
 import '@/styles/tokens.css';
+import '@/styles/fonts.css';
 import '@/styles/global.css';
 import '@/styles/components/buttons.css';
 import '@/styles/components/badge.css';
@@ -57,7 +57,6 @@ const jsonLdBlocks = jsonLd
     <GoogleAnalytics />
     <meta charset="utf-8" />
     <FaviconLinks />
-    <FontLinks />
     <meta name="viewport" content="width=device-width" />
     <title>{title}</title>
     <SeoHead
