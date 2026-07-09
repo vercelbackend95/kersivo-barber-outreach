@@ -19,7 +19,7 @@ function valueCardResponsiveSrc(image: string): string {
   if (!match) return image;
   const base = match[1];
   const dir = image.replace(/\/[^/]+$/, '');
-  return `${dir}/${base}-768w.webp`;
+  return `${dir}/${base}-480w.webp`;
 }
 
 function valueCardSrcset(image: string): string {
@@ -28,6 +28,7 @@ function valueCardSrcset(image: string): string {
   const base = match[1];
   const dir = image.replace(/\/[^/]+$/, '');
   return [
+    `${dir}/${base}-320w.webp 320w`,
     `${dir}/${base}-480w.webp 480w`,
     `${dir}/${base}-768w.webp 768w`,
     `${dir}/${base}-1024w.webp 1024w`,
@@ -100,13 +101,12 @@ const includedItems = [
               class="landing-value-cards__image"
               src={valueCardResponsiveSrc(block.image)}
               srcset={valueCardSrcset(block.image)}
-              sizes="(max-width: 640px) 90vw, (max-width: 1024px) 45vw, 430px"
+              sizes="(max-width: 640px) min(90vw, 280px), (max-width: 1024px) 45vw, 403px"
               alt={block.imageAlt}
               width={block.imageWidth}
               height={block.imageHeight}
               loading={index === 0 ? 'eager' : 'lazy'}
               decoding="async"
-              fetchpriority={index === 0 ? 'high' : undefined}
             />
           </div>
 

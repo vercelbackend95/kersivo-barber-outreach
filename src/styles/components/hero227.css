@@ -197,6 +197,10 @@
   border-radius: inherit !important;
   /* Match --bg (#0b0d10), not #000 — pure black reads as a wedge vs chassis + PNG fringe. */
   background-color: var(--bg) !important;
+}
+
+/* Homepage React hero — CSS background (not LCP-discoverable). */
+.hero227-root div.hero227-mock-screen {
   background-image: image-set(
     url("/images/hero/iphonemockup.webp") type("image/webp"),
     url("/images/hero/iphonemockup.jpg") type("image/jpeg")
@@ -204,6 +208,17 @@
   background-repeat: no-repeat !important;
   background-size: var(--hero227-screen-bg-size) auto !important;
   background-position: center var(--hero227-screen-bg-pos-y) !important;
+}
+
+/* Landing static hero — <img> in HTML for early LCP discovery. */
+.hero227-root img.hero227-mock-screen {
+  display: block !important;
+  margin-inline: auto !important;
+  width: var(--hero227-screen-bg-size) !important;
+  height: auto !important;
+  max-height: calc(100% + var(--hero227-screen-nudge)) !important;
+  object-fit: contain !important;
+  object-position: center var(--hero227-screen-bg-pos-y) !important;
 }
 
 /*

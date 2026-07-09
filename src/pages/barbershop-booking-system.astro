@@ -22,26 +22,10 @@ import { resolveLandingDemoBarbers } from '@/lib/landing/landingDemoBarbers';
 import { resolveLandingBookingData } from '@/lib/landing/landingBookingData';
 import { Pricing36 } from '../components/pricing36';
 import { RateCard1 } from '../components/rateCard1';
-import { BarbershopBookingHero } from '@/components/barbershopBookingHero';
+import BarbershopBookingHero from '@/components/barbershopBookingHero.astro';
 import '../styles/components/system-chooser.css';
-import '../styles/components/compare3.css';
-import '../styles/components/faq4.css';
-import '../styles/components/feature261.css';
 import '../styles/components/hero227.css';
-import '../styles/components/landingFinalCta.css';
-import '../styles/components/landingDemoPreview.css';
-import '../styles/components/feature261.css';
-import '../styles/components/shopProductCards6.css';
 import '../styles/components/landingValueCards.css';
-import '../styles/components/landingPostPurchaseSteps.css';
-import '../styles/components/landingSwitcherReassurance.css';
-import '../styles/components/landingDifference.css';
-import '../styles/components/shopProductCards6.css';
-import '../styles/components/footer50.css';
-import '../styles/components/contact16.css';
-import '../styles/components/landingDemoCapture.css';
-import '../styles/pricing36.css';
-import '../styles/rateCard1.css';
 
 const PAGE_TITLE = 'Barbershop Booking System UK | KERSIVO';
 const [carouselProducts, demoBarbers, landingBookingData] = await Promise.all([
@@ -63,8 +47,14 @@ const currentYear = new Date().getFullYear();
     slot="head"
     rel="preload"
     as="image"
-    href="/images/hero/phone-5.webp"
+    href="/images/hero/iphonemockup.webp"
     fetchpriority="high"
+  />
+  <link
+    slot="head"
+    rel="preload"
+    as="image"
+    href="/images/hero/phone-5.webp"
   />
   <link
     slot="head"
@@ -75,7 +65,7 @@ const currentYear = new Date().getFullYear();
   />
   <main class="landing-overflow-guard">
     <SystemChooser />
-    <BarbershopBookingHero client:load />
+    <BarbershopBookingHero />
     <LandingValueCards />
     <LandingDemoPreview retailProducts={carouselProducts} barbers={demoBarbers} bookingData={landingBookingData} />
     <Pricing36 client:visible={{ rootMargin: '200px' }} variant="landing" />
@@ -181,7 +171,15 @@ const currentYear = new Date().getFullYear();
     });
   };
 
-  initFeature261StaggerReveal();
+  const scheduleInit = () => {
+    requestAnimationFrame(initFeature261StaggerReveal);
+  };
+
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', scheduleInit, { once: true });
+  } else {
+    scheduleInit();
+  }
 </script>
 
 <script>

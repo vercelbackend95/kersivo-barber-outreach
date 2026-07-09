@@ -3,6 +3,7 @@ import React from "react";
 import { GlobeLock, LayoutDashboard, MessagesSquare, ShieldCheck, TrendingUp } from "lucide-react";
 import { getRateCard1Copy, rateCard1SharedCopy, type RateCard1Variant } from "@/lib/pricing/rateCard1Copy";
 import { cn } from "@/lib/utils";
+import "@/styles/rateCard1.css";
 
 type CareFeature = {
   title: string;

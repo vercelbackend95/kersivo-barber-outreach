@@ -9,6 +9,8 @@ import { getPricing36Copy, type Pricing36Variant } from "@/lib/pricing/pricing36
 import { getSetupPlan, type SetupPlanId } from "@/lib/setup/plans";
 import { formatGbp } from "@/lib/shop/money";
 import { cn } from "@/lib/utils";
+import "@/styles/pricing36.css";
+import "@/styles/components/compare3.css";
 
 interface Pricing36Props {
   className?: string;

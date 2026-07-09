@@ -142,12 +142,54 @@ function initShop6CarouselRoot(root: HTMLElement): void {
 }
 
 export function initShop6Carousels(scope: ParentNode = document): void {
-  const roots = scope.querySelectorAll('[data-shop6-carousel-root]');
-  roots.forEach((root) => {
-    if (root instanceof HTMLElement) {
+  const roots = Array.from(scope.querySelectorAll('[data-shop6-carousel-root]')).filter(
+    (root): root is HTMLElement => root instanceof HTMLElement,
+  );
+
+  if (roots.length === 0) {
+    return;
+  }
+
+  const initAll = () => {
+    roots.forEach((root) => {
       initShop6CarouselRoot(root);
+    });
+  };
+
+  const scheduleInit = () => {
+    if ('requestIdleCallback' in window) {
+      window.requestIdleCallback(initAll, { timeout: 2000 });
+      return;
     }
-  });
+
+    window.requestAnimationFrame(initAll);
+  };
+
+  if (!('IntersectionObserver' in window)) {
+    scheduleInit();
+    return;
+  }
+
+  let hasInitialized = false;
+  const observer = new IntersectionObserver(
+    (entries) => {
+      if (hasInitialized) {
+        return;
+      }
+
+      const isVisible = entries.some((entry) => entry.isIntersecting);
+      if (!isVisible) {
+        return;
+      }
+
+      hasInitialized = true;
+      observer.disconnect();
+      scheduleInit();
+    },
+    { rootMargin: '200px 0px' },
+  );
+
+  roots.forEach((root) => observer.observe(root));
 }
 
 export function destroyShop6Carousels(scope: ParentNode = document): void {

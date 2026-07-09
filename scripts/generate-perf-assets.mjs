@@ -35,9 +35,9 @@ async function main() {
   await resizeWebp(logoSrc, path.join(logoOutDir, 'logo-navbar-456.webp'), 456);
 
   const valueCardSources = [
-    { file: '8.webp', widths: [480, 768, 1024] },
-    { file: 'shoppyonline.webp', widths: [480, 768, 1024] },
-    { file: 'reminder.webp', widths: [480, 768, 1024] },
+    { file: '8.webp', widths: [320, 480, 768, 1024] },
+    { file: 'shoppyonline.webp', widths: [320, 480, 768, 1024] },
+    { file: 'reminder.webp', widths: [320, 480, 768, 1024] },
   ];
 
   for (const { file, widths } of valueCardSources) {
