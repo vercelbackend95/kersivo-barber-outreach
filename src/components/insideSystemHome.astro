@@ -1,0 +1,128 @@
+---
+import { adminDemoHref } from '@/lib/admin/demoConfig';
+import { ShopProductCarousel } from '@/components/shop/ShopProductCarousel';
+import { InsideSystemLiveWidget } from '@/components/InsideSystemLiveWidget';
+import { LandingBookingWidget } from '@/components/LandingBookingWidget';
+import type { CarouselProduct } from '@/lib/shop/carouselProducts';
+import type { LandingBarber } from '@/lib/landing/liveTimelineData';
+import type { LandingBookingData } from '@/lib/landing/landingBookingData';
+import { getLandingDemoBookingFallback } from '@/lib/landing/landingDemoBookingFallback';
+import { Feature261MonetizationRow } from '@/components/feature261/Feature261MonetizationRow';
+import { Feature261MoreIncluded } from '@/components/feature261/Feature261MoreIncluded';
+import '../styles/components/feature261.css';
+import '../styles/components/shopProductCards6.css';
+
+type PreviewRow = {
+  kicker: string;
+  heading: string;
+  description: string;
+  ctaLabel: string;
+  ctaHref: string;
+  media: 'carousel' | 'widget' | 'booking';
+};
+
+interface Props {
+  className?: string;
+  retailProducts?: CarouselProduct[];
+  barbers?: LandingBarber[];
+  bookingData?: LandingBookingData;
+}
+
+const { className = '', retailProducts = [], barbers = [], bookingData } = Astro.props as Props;
+
+const resolvedBookingData = bookingData ?? getLandingDemoBookingFallback();
+
+const rows: PreviewRow[] = [
+  {
+    kicker: 'BOOKING OVERVIEW',
+    heading: "Chairs, statuses, what's next—plus the pulse when you need it.",
+    description:
+      "Timeline, statuses and today's pulse in one signed-in view. See who's in the chair, what's coming up and how the day is tracking without jumping between screens.",
+    ctaLabel: 'See the timeline',
+    ctaHref: adminDemoHref('timeline'),
+    media: 'widget',
+  },
+  {
+    kicker: 'CLIENT BOOKING',
+    heading: 'Service, barber, time—your URL, your brand, not their app.',
+    description:
+      'Clients pick a service, barber and slot on your domain in three taps. No app-store detour, no marketplace tile—just your brand, end to end.',
+    ctaLabel: 'See the booking flow',
+    ctaHref: '/book',
+    media: 'booking',
+  },
+  {
+    kicker: 'RETAIL',
+    heading: 'Catalog, orders, pickup ready—same panel as the chair.',
+    description:
+      'Products, orders and pickup status live beside bookings in the same admin. Clients pre-order from your shop page; you mark it ready when they walk in.',
+    ctaLabel: 'See the shop live',
+    ctaHref: '/shop',
+    media: 'carousel',
+  },
+];
+---
+
+<section class={`feature261 py-32 ${className}`.trim()}>
+  <div class="feature261__glow" aria-hidden="true"></div>
+  <div class="container">
+    <header class="feature261__intro">
+      <p class="feature261__kicker">INSIDE THE SYSTEM</p>
+      <h2 class="feature261__heading">Same screens you&rsquo;ll run your shop on.</h2>
+      <p class="feature261__description">
+        Client booking on your domain, one admin for the floor, buy-and-collect retail, and the day&rsquo;s numbers
+        in one panel.
+      </p>
+    </header>
+
+    <ul class="feature261__rows" role="list">
+      {rows.map((row, index) => (
+        <li
+          data-feature261-card
+          class:list={['feature261__row', index % 2 === 1 && 'feature261__row--reverse']}
+        >
+          {row.media === 'carousel' ? (
+            <div class="feature261__media feature261__media--carousel">
+              <ShopProductCarousel
+                products={retailProducts}
+                className="feature261-retail-carousel"
+                showControls={false}
+                previewMode={true}
+              />
+            </div>
+          ) : row.media === 'widget' ? (
+            <div class="feature261__media feature261__media--widget">
+              <InsideSystemLiveWidget barbers={barbers} client:visible={{ rootMargin: '200px' }} />
+            </div>
+          ) : (
+            <div class="feature261__media feature261__media--widget">
+              <LandingBookingWidget
+                services={resolvedBookingData.services}
+                barbers={resolvedBookingData.barbers}
+                shopDetails={resolvedBookingData.shopDetails}
+                client:visible={{ rootMargin: '200px' }}
+              />
+            </div>
+          )}
+
+          <div class="feature261__copy">
+            <p class="feature261__row-kicker">{row.kicker}</p>
+            <h3 class="feature261__row-heading">{row.heading}</h3>
+            <p class="feature261__row-body">{row.description}</p>
+          </div>
+
+          <a
+            href={row.ctaHref}
+            class="btn btn--primary feature261__row-cta"
+            target="_blank"
+            rel="noopener noreferrer"
+          >
+            {row.ctaLabel}
+          </a>
+        </li>
+      ))}
+      <Feature261MonetizationRow reverse client:visible={{ rootMargin: '200px' }} />
+    </ul>
+    <Feature261MoreIncluded client:visible={{ rootMargin: '200px' }} />
+  </div>
+</section>

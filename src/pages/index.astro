@@ -12,7 +12,7 @@ import BrandValues from '../components/brandValues.astro';
 import AudiencePicker from '../components/audiencePicker.astro';
 import NewcomerPath from '../components/newcomerPath.astro';
 import TrustBlock from '../components/trustBlock.astro';
-import { Feature261 } from '../components/feature261';
+import InsideSystemHome from '../components/insideSystemHome.astro';
 import { Process2 } from '../components/process2';
 import { Pricing36 } from '../components/pricing36';
 import { RateCard1 } from '../components/rateCard1';
@@ -31,7 +31,6 @@ import '../styles/components/migrationGuide.css';
 import MigrationGuide from '../components/migrationGuide.astro';
 import '../styles/components/process2.css';
 import '../styles/components/hero227.css';
-import '../styles/components/feature261.css';
 import { Hero227 } from '../components/hero227';
 import SystemChooser from '../components/SystemChooser.astro';
 import { resolveLandingDemoCarouselProducts } from '@/lib/shop/landingDemoCarouselProducts';
@@ -68,8 +67,7 @@ const landingBookingData = await resolveLandingBookingData();
     <AudiencePicker />
     <MigrationGuide />
     <NewcomerPath />
-    <Feature261
-      client:visible={{ rootMargin: '200px' }}
+    <InsideSystemHome
       retailProducts={carouselProducts}
       barbers={demoBarbers}
       bookingData={landingBookingData}
@@ -238,4 +236,18 @@ const landingBookingData = await resolveLandingBookingData();
   import { initShop6Carousels } from '@/lib/shop/initShop6Carousel';
 
   initShop6Carousels();
+</script>
+
+<script>
+  import { initFeature261StaggerReveal } from '@/lib/landing/initFeature261StaggerReveal';
+
+  const scheduleInit = () => {
+    requestAnimationFrame(() => initFeature261StaggerReveal());
+  };
+
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', scheduleInit, { once: true });
+  } else {
+    scheduleInit();
+  }
 </script>

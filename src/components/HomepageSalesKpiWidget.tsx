@@ -27,21 +27,6 @@ function formatPrice(pricePence: number): string {
   return new Intl.NumberFormat('en-GB', { style: 'currency', currency: 'GBP' }).format(pricePence / 100);
 }
 
-function HomepageSalesKpiWidgetPlaceholder() {
-  return (
-    <div className="homepage-sales-kpi-widget" aria-hidden="true">
-      <div className="admin-sales-chart-wrap">
-        <div className="admin-sales-chart-inner">
-          <div className="admin-sales-chart-canvas" style={{ height: CHART_HEIGHT }} />
-        </div>
-      </div>
-      <div className="admin-sales-modal-selector">
-        <div className="admin-sales-search-results" />
-      </div>
-    </div>
-  );
-}
-
 function useProductSeriesSelection(allSalesSeries: SalesChartSeries[]) {
   const [enabledProductIds, setEnabledProductIds] = useState<Set<string>>(new Set());
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
@@ -160,7 +145,7 @@ function SeriesPills({
   );
 }
 
-function HomepageSalesKpiWidgetContent() {
+export default function HomepageSalesKpiWidget() {
   const salesData = useMemo(() => getLandingSalesKpiData(), []);
 
   const allSalesSeries = useMemo(() => {
@@ -294,18 +279,4 @@ function HomepageSalesKpiWidgetContent() {
       </div>
     </div>
   );
-}
-
-export default function HomepageSalesKpiWidget() {
-  const [isMounted, setIsMounted] = useState(false);
-
-  useEffect(() => {
-    setIsMounted(true);
-  }, []);
-
-  if (!isMounted) {
-    return <HomepageSalesKpiWidgetPlaceholder />;
-  }
-
-  return <HomepageSalesKpiWidgetContent />;
 }
