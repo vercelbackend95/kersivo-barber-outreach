@@ -1,9 +1,9 @@
 export const prerender = false;
 
 import type { APIRoute } from 'astro';
-import { requireAdmin } from '../../../../../lib/admin/auth';
-import { prisma } from '../../../../../lib/db/client';
-import { getEffectiveBookingStatus } from '../../../../../lib/booking/operationalStatus';
+import { requireAdmin } from '@/lib/admin/auth';
+import { prisma } from '@/lib/db/client';
+import { getEffectiveBookingStatus } from '@/lib/booking/operationalStatus';
 
 const MS_PER_HOUR = 1000 * 60 * 60;
 const MS_PER_DAY = MS_PER_HOUR * 24;

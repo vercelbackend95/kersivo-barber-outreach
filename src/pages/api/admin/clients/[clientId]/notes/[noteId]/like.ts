@@ -1,8 +1,8 @@
 export const prerender = false;
 
 import type { APIRoute } from 'astro';
-import { getSessionBarberId, requireAdmin, resolveNoteAuthorBarberId } from '../../../../../../lib/admin/auth';
-import { prisma } from '../../../../../../lib/db/client';
+import { getSessionBarberId, requireAdmin, resolveNoteAuthorBarberId } from '@/lib/admin/auth';
+import { prisma } from '@/lib/db/client';
 
 async function assertNoteInClientShop(noteId: string, clientId: string, shopId: string) {
   return prisma.clientNote.findFirst({
