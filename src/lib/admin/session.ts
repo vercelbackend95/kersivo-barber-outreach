@@ -27,34 +27,40 @@ export function getSessionSecret(): string | null {
     ?? null;
 }
 
-export function createAdminSessionToken(secret: string): string {
+export function createAdminSessionToken(secret: string, barberId?: string): string {
   const exp = Math.floor(Date.now() / 1000) + THIRTY_DAYS_IN_SECONDS;
-  const payload = JSON.stringify({ exp });
+  const payload = JSON.stringify(barberId ? { exp, barberId } : { exp });
   const encodedPayload = toBase64Url(payload);
   const signature = signPayload(encodedPayload, secret);
   return `${encodedPayload}.${signature}`;
 }
 
-export function verifyAdminSessionToken(token: string, secret: string): boolean {
+export function parseAdminSessionToken(token: string, secret: string): { exp: number; barberId?: string } | null {
   const [encodedPayload, signature] = token.split('.');
-  if (!encodedPayload || !signature) return false;
+  if (!encodedPayload || !signature) return null;
 
   const expectedSignature = signPayload(encodedPayload, secret);
   const providedBuffer = Buffer.from(signature, 'utf8');
   const expectedBuffer = Buffer.from(expectedSignature, 'utf8');
-  if (providedBuffer.length !== expectedBuffer.length) return false;
-  if (!timingSafeEqual(providedBuffer, expectedBuffer)) return false;
+  if (providedBuffer.length !== expectedBuffer.length) return null;
+  if (!timingSafeEqual(providedBuffer, expectedBuffer)) return null;
 
   const payload = fromBase64Url(encodedPayload);
-  if (!payload) return false;
+  if (!payload) return null;
 
   try {
-    const parsed = JSON.parse(payload) as { exp?: number };
-    if (!parsed.exp || typeof parsed.exp !== 'number') return false;
-    return parsed.exp > Math.floor(Date.now() / 1000);
+    const parsed = JSON.parse(payload) as { exp?: number; barberId?: string };
+    if (!parsed.exp || typeof parsed.exp !== 'number') return null;
+    if (parsed.exp <= Math.floor(Date.now() / 1000)) return null;
+    if (parsed.barberId !== undefined && typeof parsed.barberId !== 'string') return null;
+    return { exp: parsed.exp, barberId: parsed.barberId };
   } catch {
-    return false;
+    return null;
   }
+}
+
+export function verifyAdminSessionToken(token: string, secret: string): boolean {
+  return parseAdminSessionToken(token, secret) !== null;
 }
 
 export function getAdminSessionCookieOptions(isProduction: boolean) {

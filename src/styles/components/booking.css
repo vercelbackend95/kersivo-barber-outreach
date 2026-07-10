@@ -16032,9 +16032,34 @@ body.admin-theme-premium-black .booking-page-wrap .booking-shell.surface {
 
 .admin-cp-score-value {
   margin-left: auto;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
   font-size: 0.75rem;
   font-weight: 600;
   color: var(--muted);
+}
+
+.admin-cp-score-tier-icon {
+  width: 0.875rem;
+  height: 0.875rem;
+  flex-shrink: 0;
+}
+
+.admin-cp-score-value--excellent {
+  color: #22c55e;
+}
+
+.admin-cp-score-value--good {
+  color: color-mix(in srgb, #22c55e 75%, var(--muted));
+}
+
+.admin-cp-score-value--fair {
+  color: #f59e0b;
+}
+
+.admin-cp-score-value--poor {
+  color: #ef4444;
 }
 
 .admin-cp-score-track {
@@ -16101,7 +16126,423 @@ body.admin-theme-premium-black .booking-page-wrap .booking-shell.surface {
 }
 
 /* Notes */
-.admin-cp-notes-wrap {}
+.admin-cp-notes-wrap {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.admin-cp-notes-feed {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.admin-cp-notes-feed--loading {
+  min-height: 4.5rem;
+  justify-content: center;
+}
+
+.admin-cp-notes-empty {
+  margin: 0;
+  font-size: 0.8125rem;
+  color: var(--muted);
+  text-align: center;
+  padding: 0.75rem 0;
+}
+
+.admin-cp-note-post {
+  position: relative;
+  background: var(--surface-2);
+  border: 1px solid color-mix(in srgb, var(--border) 70%, transparent);
+  border-radius: 0.75rem;
+  padding: 0.875rem 1rem;
+}
+
+.admin-cp-note-post--feed-pinned {
+  border-color: color-mix(in srgb, #f59e0b 45%, var(--border));
+  background: color-mix(in srgb, #f59e0b 6%, var(--surface-2));
+  box-shadow: 0 0 0 1px color-mix(in srgb, #f59e0b 18%, transparent);
+}
+
+.admin-cp-note-post-pin {
+  position: absolute;
+  top: 0.5rem;
+  right: 0.5rem;
+  width: 28px;
+  height: 28px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: none;
+  border-radius: 999px;
+  background: transparent;
+  color: var(--muted);
+  cursor: pointer;
+  padding: 0;
+  transition: color 0.12s, transform 0.12s;
+}
+
+.admin-cp-note-post-pin:hover:not(:disabled) {
+  color: color-mix(in srgb, #f59e0b 70%, var(--fg));
+  transform: scale(1.05);
+}
+
+.admin-cp-note-post-pin:disabled {
+  cursor: default;
+  opacity: 0.7;
+}
+
+.admin-cp-note-post-pin.is-pinned-by-me,
+.admin-cp-note-post-pin.is-feed-pinned {
+  color: #f59e0b;
+}
+
+.admin-cp-note-post-pin-icon {
+  width: 18px;
+  height: 18px;
+  display: block;
+}
+
+.admin-cp-pin-icon-head {
+  fill: none;
+}
+
+.admin-cp-note-post-pin.is-pinned-by-me .admin-cp-pin-icon-head,
+.admin-cp-note-post-pin.is-feed-pinned .admin-cp-pin-icon-head,
+.admin-cp-note-post-pinned-badge .admin-cp-pin-icon-head {
+  fill: currentColor;
+}
+
+.admin-cp-note-post-pin.admin-cp-note-pin-stick .admin-cp-note-post-pin-icon {
+  animation: admin-cp-pin-stick 0.6s ease-out;
+}
+
+.admin-cp-note-pin-burst {
+  position: absolute;
+  top: -2px;
+  right: -2px;
+  font-size: 0.75rem;
+  font-weight: 700;
+  color: #f59e0b;
+  pointer-events: none;
+  animation: admin-cp-pin-burst 0.6s ease-out forwards;
+}
+
+@keyframes admin-cp-pin-stick {
+  0% {
+    transform: translateY(-3px) rotate(-8deg) scale(1.15);
+  }
+  55% {
+    transform: translateY(1px) rotate(2deg) scale(1.05);
+  }
+  100% {
+    transform: translateY(0) rotate(0deg) scale(1);
+  }
+}
+
+@keyframes admin-cp-pin-burst {
+  0% {
+    opacity: 1;
+    transform: scale(0.6);
+  }
+  40% {
+    opacity: 1;
+    transform: scale(1.2);
+  }
+  100% {
+    opacity: 0;
+    transform: scale(1);
+  }
+}
+
+.admin-cp-note-post-meta-row {
+  display: flex;
+  align-items: center;
+  gap: 0.375rem;
+  min-width: 0;
+}
+
+.admin-cp-note-post-pinned-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.2rem;
+  flex-shrink: 0;
+  font-size: 0.62rem;
+  font-weight: 700;
+  letter-spacing: 0.03em;
+  text-transform: uppercase;
+  color: #f59e0b;
+  background: color-mix(in srgb, #f59e0b 14%, var(--surface-2));
+  border: 1px solid color-mix(in srgb, #f59e0b 28%, transparent);
+  border-radius: 99px;
+  padding: 0.1rem 0.4rem 0.1rem 0.3rem;
+}
+
+.admin-cp-note-post-pinned-badge-icon {
+  width: 11px;
+  height: 11px;
+}
+
+.admin-cp-note-lightbox-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 650;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 1rem;
+  background: color-mix(in srgb, #000 72%, transparent);
+  animation: admin-cp-fade-in 0.15s ease;
+}
+
+.admin-cp-note-lightbox-panel {
+  position: relative;
+  max-width: min(92vw, 56rem);
+  max-height: 85dvh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.admin-cp-note-lightbox-img {
+  display: block;
+  max-width: 100%;
+  max-height: 85dvh;
+  width: auto;
+  height: auto;
+  object-fit: contain;
+  border-radius: 0.75rem;
+  box-shadow: 0 12px 40px color-mix(in srgb, #000 45%, transparent);
+}
+
+.admin-cp-note-lightbox-close {
+  position: absolute;
+  top: -0.5rem;
+  right: -0.5rem;
+  width: 36px;
+  height: 36px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: none;
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--surface) 92%, #000);
+  color: var(--fg);
+  cursor: pointer;
+  box-shadow: 0 4px 16px color-mix(in srgb, #000 35%, transparent);
+  z-index: 1;
+}
+
+.admin-cp-note-lightbox-close-icon {
+  width: 18px;
+  height: 18px;
+}
+
+.admin-cp-note-post-header {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin-bottom: 0.625rem;
+}
+
+.admin-cp-note-post-avatar {
+  width: 32px;
+  height: 32px;
+  border-radius: 999px;
+  border: 2px solid color-mix(in srgb, var(--border) 80%, transparent);
+  background: color-mix(in srgb, var(--accent) 22%, var(--surface-2));
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  overflow: hidden;
+}
+
+.admin-cp-note-post-avatar-img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+
+.admin-cp-note-post-avatar-initials {
+  font-size: 0.65rem;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+  color: color-mix(in srgb, var(--fg) 88%, var(--accent));
+  text-transform: uppercase;
+  line-height: 1;
+}
+
+.admin-cp-note-post-meta {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+
+.admin-cp-note-post-author {
+  font-size: 0.82rem;
+  font-weight: 650;
+  color: var(--fg);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  min-width: 0;
+  flex: 1;
+}
+
+.admin-cp-note-post-time {
+  font-size: 0.68rem;
+  font-weight: 400;
+  color: var(--muted);
+}
+
+.admin-cp-note-post-body {
+  margin: 0;
+  font-size: 0.875rem;
+  line-height: 1.6;
+  color: var(--fg);
+  white-space: pre-wrap;
+  word-break: break-word;
+}
+
+.admin-cp-note-post-images {
+  display: grid;
+  gap: 0.5rem;
+  margin-top: 0.625rem;
+}
+
+.admin-cp-note-post-images--count-1 {
+  grid-template-columns: 1fr;
+}
+
+.admin-cp-note-post-images--count-2 {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.admin-cp-note-post-images--count-3 {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.admin-cp-note-post-images--count-3 .admin-cp-note-post-image-btn:last-child {
+  grid-column: 1 / -1;
+}
+
+.admin-cp-note-post-image-btn {
+  display: block;
+  width: 100%;
+  padding: 0;
+  border: none;
+  border-radius: 0.625rem;
+  overflow: hidden;
+  cursor: pointer;
+  background: color-mix(in srgb, var(--border) 40%, transparent);
+}
+
+.admin-cp-note-post-image {
+  display: block;
+  width: 100%;
+  aspect-ratio: 4 / 3;
+  object-fit: cover;
+}
+
+.admin-cp-note-compose {
+  display: flex;
+  flex-direction: column;
+  gap: 0.625rem;
+  padding-top: 0.25rem;
+  border-top: 1px solid color-mix(in srgb, var(--border) 60%, transparent);
+}
+
+.admin-cp-note-compose-actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.admin-cp-note-compose-attach-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.375rem;
+  min-height: 44px;
+  padding-inline: 0.75rem;
+}
+
+.admin-cp-note-compose-attach-icon {
+  width: 16px;
+  height: 16px;
+  flex-shrink: 0;
+}
+
+.admin-cp-note-compose-count {
+  margin-left: auto;
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: var(--muted);
+}
+
+.admin-cp-note-compose-file-input {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+.admin-cp-note-compose-previews {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+
+.admin-cp-note-compose-preview {
+  position: relative;
+  width: 64px;
+  height: 64px;
+  border-radius: 0.5rem;
+  overflow: hidden;
+  border: 1px solid color-mix(in srgb, var(--border) 70%, transparent);
+}
+
+.admin-cp-note-compose-preview-img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+
+.admin-cp-note-compose-preview-remove {
+  position: absolute;
+  top: 2px;
+  right: 2px;
+  width: 22px;
+  height: 22px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: none;
+  border-radius: 999px;
+  background: color-mix(in srgb, #000 55%, transparent);
+  color: #fff;
+  cursor: pointer;
+  padding: 0;
+}
+
+.admin-cp-note-compose-preview-remove-icon {
+  width: 12px;
+  height: 12px;
+}
+
+.admin-cp-note-submit {
+  align-self: flex-start;
+}
 
 .admin-cp-save-hint {
   margin-left: auto;
@@ -16133,7 +16574,7 @@ body.admin-theme-premium-black .booking-page-wrap .booking-shell.surface {
   border: 1px solid color-mix(in srgb, var(--border) 70%, transparent);
   border-radius: 0.75rem;
   padding: 0.75rem;
-  font-size: 0.875rem;
+  font-size: max(16px, 0.875rem);
   color: var(--fg);
   resize: none;
   overflow: hidden;

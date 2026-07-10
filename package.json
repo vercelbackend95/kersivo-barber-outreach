@@ -27,6 +27,7 @@
     "seed:catalog-services": "tsx scripts/seed-catalog-services.ts",
     "seed:enrich-reese-ward": "tsx scripts/enrich-client-reese-ward.ts",
     "seed:enrich-connor-walsh": "tsx scripts/enrich-client-connor-walsh.ts",
+    "seed:client-notes-oliver-reed": "tsx scripts/seed-client-notes-oliver-reed.ts",
     "test": "vitest run",
     "check:widgets": "node scripts/check-landing-widgets.mjs",
     "assets:landing-demo": "node scripts/fetch-landing-demo-assets.mjs",

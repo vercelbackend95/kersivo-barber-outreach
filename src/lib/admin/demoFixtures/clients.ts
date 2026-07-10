@@ -60,7 +60,6 @@ export function getDemoClientDetailResponse(clientId: string) {
       fullName: listItem.fullName,
       email: listItem.email,
       phone: listItem.phone,
-      notes: clientId === DEMO_CLIENT_IDS.oliver ? 'Prefers skin fade, #2 on sides.' : clientId === DEMO_CLIENT_IDS.noah ? 'Allergic to certain products — check before use.' : null,
       tags: listItem.tags,
       createdAt: now,
       updatedAt: listItem.updatedAt,

@@ -108,79 +108,8 @@
 .feature261 .feature261__media--widget {
   align-self: center;
   overflow: visible;
-  min-height: clamp(14rem, 26vh, 22rem);
+  min-height: clamp(18rem, 34vh, 26rem);
   width: 100%;
-}
-
-.feature261 .homepage-sales-kpi-widget {
-  display: grid;
-  gap: 0;
-  width: 100%;
-}
-
-.feature261 .homepage-sales-kpi-widget .admin-sales-chart-wrap {
-  width: 100%;
-  background: transparent;
-  border: 0;
-  box-shadow: none;
-  padding: 0;
-  overflow: visible;
-  display: flex;
-  flex-direction: column;
-  gap: 0.75rem;
-}
-
-.feature261 .homepage-sales-kpi-widget .admin-sales-chart-canvas {
-  overflow: visible;
-}
-
-.feature261 .homepage-sales-kpi-widget .admin-sales-series-pills-wrap {
-  margin-top: 0;
-  padding: 0;
-  gap: 0.45rem;
-}
-
-.feature261 .homepage-sales-kpi-widget .admin-sales-series-pills {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  gap: 0.45rem;
-  overflow: visible;
-}
-
-.feature261 .homepage-sales-kpi-widget .admin-sales-series-pill {
-  border-radius: 999px;
-  width: auto;
-  flex: 0 0 auto;
-  white-space: nowrap;
-  cursor: pointer;
-  font: inherit;
-  border: 1px solid var(--border);
-  background: color-mix(in srgb, var(--surface) 92%, var(--bg) 8%);
-  color: var(--muted);
-  min-height: 2.35rem;
-  padding: 0.4rem 0.7rem;
-  font-size: 0.8rem;
-  transition: border-color 0.15s ease, background-color 0.15s ease, color 0.15s ease;
-}
-
-.feature261 .homepage-sales-kpi-widget .admin-sales-series-pill--active {
-  border-color: var(--accent);
-  background: color-mix(in srgb, var(--accent) 14%, var(--surface) 86%);
-  color: var(--fg);
-}
-
-.feature261 .homepage-sales-kpi-widget .admin-sales-series-pill:hover,
-.feature261 .homepage-sales-kpi-widget .admin-sales-series-pill:focus-visible {
-  border-color: var(--accent);
-  outline: none;
-}
-
-@media (min-width: 900px) {
-  .feature261 .homepage-sales-kpi-widget {
-    min-height: calc(clamp(220px, 34vh, 320px) + 2.35rem + 0.75rem);
-    align-content: start;
-  }
 }
 
 .feature261 .feature261__media--carousel {

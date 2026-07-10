@@ -8,6 +8,8 @@ type UseBarberSeriesSelectionArgs = {
   validBarberIds: Set<string>;
   selectionKey: string;
   enabled?: boolean;
+  controlledSelectedBarberIds?: string[];
+  onSelectedBarberIdsChange?: (ids: string[]) => void;
 };
 
 function setsEqual(a: Set<string>, b: Set<string>): boolean {
@@ -23,7 +25,10 @@ export function useBarberSeriesSelection({
   validBarberIds,
   selectionKey,
   enabled = true,
+  controlledSelectedBarberIds,
+  onSelectedBarberIdsChange,
 }: UseBarberSeriesSelectionArgs) {
+  const isControlled = controlledSelectedBarberIds !== undefined;
   const [enabledBarberIds, setEnabledBarberIds] = useState<Set<string>>(new Set());
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const isManualSelectionRef = useRef(false);
@@ -43,7 +48,7 @@ export function useBarberSeriesSelection({
   }, []);
 
   useEffect(() => {
-    if (!enabled) return;
+    if (!enabled || isControlled) return;
 
     const validIds = validBarberIdsRef.current;
     const selectionContextChanged = lastSelectionKeyRef.current !== selectionKey;
@@ -66,7 +71,7 @@ export function useBarberSeriesSelection({
         : defaultIds;
       return setsEqual(previous, next) ? previous : next;
     });
-  }, [enabled, winnerBarberId, validBarberIdsKey, selectionKey]);
+  }, [enabled, isControlled, winnerBarberId, validBarberIdsKey, selectionKey]);
 
   const setLimitError = () => {
     setErrorMessage(BARBER_SELECTION_LIMIT_MESSAGE);
@@ -82,33 +87,46 @@ export function useBarberSeriesSelection({
     }
   };
 
+  const applySelection = (next: Set<string>) => {
+    if (isControlled) {
+      onSelectedBarberIdsChange?.(Array.from(next));
+      return;
+    }
+    setEnabledBarberIds(next);
+  };
+
   const addBarber = (barberId: string) => {
     isManualSelectionRef.current = true;
-    setEnabledBarberIds((previous) => {
-      if (previous.has(barberId)) return previous;
-      if (previous.size >= MAX_SELECTED_BARBERS) {
-        setLimitError();
-        return previous;
-      }
-      clearLimitError();
-      const next = new Set(previous);
-      next.add(barberId);
-      return next;
-    });
+    const previous = isControlled
+      ? new Set(controlledSelectedBarberIds)
+      : enabledBarberIds;
+    if (previous.has(barberId)) return;
+    if (previous.size >= MAX_SELECTED_BARBERS) {
+      setLimitError();
+      return;
+    }
+    clearLimitError();
+    const next = new Set(previous);
+    next.add(barberId);
+    applySelection(next);
   };
 
   const removeBarber = (barberId: string) => {
     isManualSelectionRef.current = true;
-    setEnabledBarberIds((previous) => {
-      if (!previous.has(barberId)) return previous;
-      const next = new Set(previous);
-      next.delete(barberId);
-      clearLimitError();
-      return next;
-    });
+    const previous = isControlled
+      ? new Set(controlledSelectedBarberIds)
+      : enabledBarberIds;
+    if (!previous.has(barberId)) return;
+    const next = new Set(previous);
+    next.delete(barberId);
+    clearLimitError();
+    applySelection(next);
   };
 
-  const selectedBarberIds = useMemo(() => Array.from(enabledBarberIds), [enabledBarberIds]);
+  const selectedBarberIds = useMemo(
+    () => (isControlled ? controlledSelectedBarberIds : Array.from(enabledBarberIds)),
+    [controlledSelectedBarberIds, enabledBarberIds, isControlled],
+  );
   const activeSeriesKeys = useMemo(
     () => (enabled ? ['overall', ...selectedBarberIds] : ['overall']),
     [enabled, selectedBarberIds],

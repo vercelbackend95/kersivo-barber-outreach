@@ -1,12 +1,23 @@
 import type { APIContext } from 'astro';
-import { getAdminSessionCookieName, getSessionSecret, verifyAdminSessionToken } from './session';
+import { getAdminSessionCookieName, getSessionSecret, parseAdminSessionToken } from './session';
+
+export function getSessionBarberId(context: APIContext): string | null {
+  const sessionSecret = getSessionSecret();
+  const cookieToken = context.cookies.get(getAdminSessionCookieName())?.value;
+  if (!cookieToken || !sessionSecret) return null;
+  return parseAdminSessionToken(cookieToken, sessionSecret)?.barberId ?? null;
+}
+
+export function resolveNoteAuthorBarberId(context: APIContext): string | null {
+  return getSessionBarberId(context);
+}
 
 export function isAdminAuthorized(context: APIContext): boolean {
   const secret = import.meta.env.ADMIN_SECRET ?? process.env.ADMIN_SECRET;
   const sessionSecret = getSessionSecret();
 
   const cookieToken = context.cookies.get(getAdminSessionCookieName())?.value;
-  if (cookieToken && sessionSecret && verifyAdminSessionToken(cookieToken, sessionSecret)) {
+  if (cookieToken && sessionSecret && parseAdminSessionToken(cookieToken, sessionSecret)) {
     return true;
   }
 

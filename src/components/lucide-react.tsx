@@ -483,26 +483,110 @@ const Crown = ({ ...props }: IconProps) => (
   </svg>
 );
 
+const Shield = ({ ...props }: IconProps) => (
+  <svg
+    viewBox="0 0 24 24"
+    fill="none"
+    stroke="currentColor"
+    strokeWidth="2"
+    strokeLinecap="round"
+    strokeLinejoin="round"
+    {...props}
+  >
+    <path d="M20 13c0 5-3.5 7.5-7.66 8.95a1 1 0 0 1-.67-.01C7.5 20.5 4 18 4 13V6a1 1 0 0 1 1-1c2 0 4.5-1.2 6.24-2.72a1.17 1.17 0 0 1 1.52 0C14.51 3.81 17 5 19 5a1 1 0 0 1 1 1z" />
+  </svg>
+);
+
+const StickyNote = ({ ...props }: IconProps) => (
+  <svg
+    viewBox="0 0 24 24"
+    fill="none"
+    stroke="currentColor"
+    strokeWidth="2"
+    strokeLinecap="round"
+    strokeLinejoin="round"
+    {...props}
+  >
+    <path d="M16 3H5a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V8Z" />
+    <path d="M15 3v4a2 2 0 0 0 2 2h4" />
+  </svg>
+);
+
+const Camera = ({ ...props }: IconProps) => (
+  <svg
+    viewBox="0 0 24 24"
+    fill="none"
+    stroke="currentColor"
+    strokeWidth="2"
+    strokeLinecap="round"
+    strokeLinejoin="round"
+    {...props}
+  >
+    <path d="M14.5 4h-5L7 7H4a2 2 0 0 0-2 2v9a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V9a2 2 0 0 0-2-2h-3l-2.5-3z" />
+    <circle cx="12" cy="13" r="3" />
+  </svg>
+);
+
+const ImagePlus = ({ ...props }: IconProps) => (
+  <svg
+    viewBox="0 0 24 24"
+    fill="none"
+    stroke="currentColor"
+    strokeWidth="2"
+    strokeLinecap="round"
+    strokeLinejoin="round"
+    {...props}
+  >
+    <path d="M16 5h6" />
+    <path d="M19 2v6" />
+    <path d="M21 11.5V19a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h7.5" />
+    <path d="m21 15-5-5L5 21" />
+    <path d="M14.5 4H7a2 2 0 0 0-2 2v2" />
+  </svg>
+);
+
+const Pin = ({ ...props }: IconProps) => (
+  <svg
+    viewBox="0 0 24 24"
+    fill="none"
+    stroke="currentColor"
+    strokeWidth="2"
+    strokeLinecap="round"
+    strokeLinejoin="round"
+    {...props}
+  >
+    <path
+      className="admin-cp-pin-icon-head"
+      d="M12 2.5c-2.8 0-5 2.2-5 5a4.9 4.9 0 0 0 3.2 4.6V12h3.6v-.9A4.9 4.9 0 0 0 17 7.5c0-2.8-2.2-5-5-5z"
+    />
+    <path d="M12 12v9.5" />
+  </svg>
+);
+
 export {
   ArrowRight,
   Ban,
   BarChart2,
   Calendar,
+  Camera,
   Check,
   ChevronDown,
   ChevronUp,
   Clock,
   CornerDownRight,
   Crown,
+  ImagePlus,
   ListOrdered,
   LogOut,
   Mail,
   Menu,
   Package,
   Phone,
+  Pin,
   Plus,
   Scissors,
   Search,
+  Shield,
   ShoppingBag,
   ShoppingCart,
   Tag,
@@ -515,4 +599,5 @@ export {
   X,
   Zap,
   Star,
+  StickyNote,
 };

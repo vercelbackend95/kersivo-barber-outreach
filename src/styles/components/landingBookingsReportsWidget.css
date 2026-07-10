@@ -1,0 +1,111 @@
+/*
+ * LandingBookingsReportsWidget — bare, floating admin reports studio for feature261.
+ * No card frame: chart, toolbars and legend float over the landing background.
+ * Small inner surfaces (legend pills, delta badges) keep a light tint for legibility.
+ */
+
+.lbrw {
+  --bg: #030303;
+  --surface-1: #070707;
+  --surface-2: #0d0d0d;
+  --surface-3: #141414;
+  --surface: var(--surface-1);
+  --border: #24201c;
+  --fg: #fff8ee;
+  --muted: #c9c1b7;
+
+  position: relative;
+  display: grid;
+  gap: 0;
+  width: 100%;
+  max-width: 100%;
+  min-width: 0;
+  font-family: var(--font-body);
+  color: var(--fg);
+}
+
+.lbrw .admin-analytics-studio {
+  background: transparent;
+  border: none;
+  box-shadow: none;
+  padding: 0;
+  gap: clamp(0.45rem, 1.4vw, 0.75rem);
+}
+
+.lbrw .admin-analytics-studio--bookings-reports {
+  --reports-headline-offset-top: 0.85rem;
+  --reports-headline-offset-left: 0.65rem;
+  width: 100%;
+  min-width: 0;
+}
+
+.lbrw .admin-analytics-studio__headline-main {
+  background: transparent;
+}
+
+.lbrw .admin-sales-chart-wrap {
+  width: 100%;
+  background: transparent;
+  border: 0;
+  box-shadow: none;
+  padding: 0;
+  overflow: visible;
+}
+
+.lbrw .admin-sales-chart-canvas {
+  overflow: visible;
+  height: clamp(200px, 30vh, 320px);
+}
+
+.lbrw .admin-segmented-control {
+  background: transparent;
+  border-color: color-mix(in srgb, var(--border) 35%, transparent);
+}
+
+.lbrw .admin-chart-legend__pill {
+  background: color-mix(in srgb, var(--surface-2) 78%, transparent);
+  border-color: color-mix(in srgb, var(--pill-series-color, var(--border)) 35%, var(--border));
+}
+
+.feature261 .lbrw .admin-sales-chart-canvas {
+  height: clamp(200px, 30vh, 320px);
+}
+
+@media (min-width: 480px) and (max-width: 899px) {
+  .feature261 .lbrw .admin-sales-chart-canvas {
+    height: clamp(200px, 32vh, 300px);
+  }
+}
+
+@media (min-width: 900px) {
+  .feature261 .lbrw {
+    min-height: clamp(22rem, 38vh, 28rem);
+    align-content: start;
+  }
+
+  .feature261 .lbrw .admin-sales-chart-canvas {
+    height: clamp(220px, 34vh, 360px);
+  }
+}
+
+@media (max-width: 47.99rem) {
+  .lbrw .admin-analytics-studio--bookings-reports .admin-analytics-studio__headline-main {
+    background: linear-gradient(
+      to bottom,
+      color-mix(in srgb, var(--feature261-bg, #030303) 88%, transparent) 0%,
+      color-mix(in srgb, var(--feature261-bg, #030303) 55%, transparent) 60%,
+      transparent 100%
+    );
+  }
+}
+
+@container reports-studio (max-width: 42rem) {
+  .lbrw .admin-analytics-studio--bookings-reports .admin-analytics-studio__headline-main {
+    background: linear-gradient(
+      to bottom,
+      color-mix(in srgb, var(--feature261-bg, #030303) 88%, transparent) 0%,
+      color-mix(in srgb, var(--feature261-bg, #030303) 55%, transparent) 60%,
+      transparent 100%
+    );
+  }
+}

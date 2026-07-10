@@ -202,16 +202,14 @@ export const PATCH: APIRoute = async (ctx) => {
   }
 
   const payload = (await ctx.request.json().catch(() => null)) as {
-    notes?: unknown;
     tags?: unknown;
     avatarUrl?: unknown;
   } | null;
 
   if (!payload) return new Response(JSON.stringify({ error: 'Invalid payload.' }), { status: 400 });
 
-  const data: { notes?: string; tags?: string[]; avatarUrl?: string | null } = {};
+  const data: { tags?: string[]; avatarUrl?: string | null } = {};
 
-  if (typeof payload.notes === 'string') data.notes = payload.notes;
   if (Array.isArray(payload.tags) && payload.tags.every((t) => typeof t === 'string')) {
     data.tags = payload.tags as string[];
   }
@@ -234,7 +232,7 @@ export const PATCH: APIRoute = async (ctx) => {
 
   const client = await prisma.client.findUnique({
     where: { id: clientId },
-    select: { id: true, notes: true, tags: true, avatarUrl: true, updatedAt: true },
+    select: { id: true, tags: true, avatarUrl: true, updatedAt: true },
   });
 
   return new Response(JSON.stringify({ client }));

@@ -4,5 +4,6 @@ export * from './barbers';
 export * from './services';
 export * from './bookings';
 export * from './clients';
+export * from './clientNotes';
 export * from './reports';
 export * from './shop';

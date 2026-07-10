@@ -70,11 +70,52 @@ model Client {
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
-  shop     ShopSettings @relation(fields: [shopId], references: [id], onDelete: Cascade)
-  bookings Booking[]
+  shop        ShopSettings @relation(fields: [shopId], references: [id], onDelete: Cascade)
+  bookings    Booking[]
+  clientNotes ClientNote[]
 
   @@unique([shopId, email])
   @@index([shopId])
+}
+
+model ClientNote {
+  id        String   @id @default(cuid())
+  clientId  String
+  barberId  String?
+  body      String
+  createdAt DateTime @default(now())
+
+  client Client  @relation(fields: [clientId], references: [id], onDelete: Cascade)
+  barber Barber? @relation(fields: [barberId], references: [id], onDelete: SetNull)
+  likes  ClientNoteLike[]
+  images ClientNoteImage[]
+
+  @@index([clientId, createdAt])
+}
+
+model ClientNoteImage {
+  id        String   @id @default(cuid())
+  noteId    String
+  url       String
+  sortOrder Int      @default(0)
+  createdAt DateTime @default(now())
+
+  note ClientNote @relation(fields: [noteId], references: [id], onDelete: Cascade)
+
+  @@index([noteId, sortOrder])
+}
+
+model ClientNoteLike {
+  id        String   @id @default(cuid())
+  noteId    String
+  barberId  String
+  createdAt DateTime @default(now())
+
+  note   ClientNote @relation(fields: [noteId], references: [id], onDelete: Cascade)
+  barber Barber     @relation(fields: [barberId], references: [id], onDelete: Cascade)
+
+  @@unique([noteId, barberId])
+  @@index([noteId])
 }
 
 model Service {
@@ -108,6 +149,8 @@ model Barber {
   timeOff    BarberTimeOff[]
   timeBlocks TimeBlock[]
   barberServices BarberService[]
+  clientNotes    ClientNote[]
+  noteLikes      ClientNoteLike[]
   @@index([active, sortOrder])
 }
 model BarberService {

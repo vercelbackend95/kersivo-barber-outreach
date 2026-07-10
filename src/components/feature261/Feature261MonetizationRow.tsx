@@ -1,4 +1,4 @@
-import HomepageSalesKpiWidget from '@/components/HomepageSalesKpiWidget';
+import LandingBookingsReportsWidget from '@/components/LandingBookingsReportsWidget';
 import { FEATURE261_MONETIZATION_ROW } from '@/lib/landing/feature261MonetizationRow';
 import { cn } from '@/lib/utils';
 import '@/styles/components/booking.css';
@@ -16,7 +16,7 @@ function Feature261MonetizationRow({ reverse = false }: Feature261MonetizationRo
       className={cn('feature261__row', reverse && 'feature261__row--reverse')}
     >
       <div className="feature261__media feature261__media--widget">
-        <HomepageSalesKpiWidget />
+        <LandingBookingsReportsWidget />
       </div>
 
       <div className="feature261__copy">

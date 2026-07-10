@@ -10,6 +10,9 @@ import {
   getDemoBookingsHistoryResponse,
   getDemoBookingsResponse,
   getDemoClientDetailResponse,
+  getDemoClientNotesResponse,
+  toggleDemoClientNoteLike,
+  createDemoClientNoteFromRequest,
   getDemoReportsResponse,
   getDemoShopOrderDetail,
   getDemoShopProductDetail,
@@ -20,7 +23,12 @@ import {
 
 type DemoFixtureResult = { status: number; body: unknown };
 
-export function resolveDemoFixture(pathname: string, searchParams: URLSearchParams): DemoFixtureResult | null {
+export async function resolveDemoFixture(
+  pathname: string,
+  searchParams: URLSearchParams,
+  method = 'GET',
+  request?: Request,
+): Promise<DemoFixtureResult | null> {
   const normalized = pathname.replace(/\/$/, '');
   const adminDemoPrefix = '/api/admin-demo';
   if (!normalized.startsWith(adminDemoPrefix)) return null;
@@ -72,6 +80,37 @@ export function resolveDemoFixture(pathname: string, searchParams: URLSearchPara
     const detail = getDemoClientDetailResponse(clientDetailMatch[1]);
     if (!detail) return { status: 404, body: { error: 'Client not found.' } };
     return { status: 200, body: detail };
+  }
+
+  const clientNotesMatch = subPath.match(/^clients\/([^/]+)\/notes$/);
+  if (clientNotesMatch && method === 'GET') {
+    const detail = getDemoClientDetailResponse(clientNotesMatch[1]);
+    if (!detail) return { status: 404, body: { error: 'Client not found.' } };
+    return { status: 200, body: getDemoClientNotesResponse(clientNotesMatch[1]) };
+  }
+
+  if (clientNotesMatch && method === 'POST' && request) {
+    const detail = getDemoClientDetailResponse(clientNotesMatch[1]);
+    if (!detail) return { status: 404, body: { error: 'Client not found.' } };
+    try {
+      const result = await createDemoClientNoteFromRequest(clientNotesMatch[1], request);
+      if (!result) return { status: 404, body: { error: 'Client not found.' } };
+      return { status: 201, body: result };
+    } catch (error) {
+      return {
+        status: 400,
+        body: { error: error instanceof Error ? error.message : 'Could not post note.' },
+      };
+    }
+  }
+
+  const clientNoteLikeMatch = subPath.match(/^clients\/([^/]+)\/notes\/([^/]+)\/like$/);
+  if (clientNoteLikeMatch && method === 'POST') {
+    const detail = getDemoClientDetailResponse(clientNoteLikeMatch[1]);
+    if (!detail) return { status: 404, body: { error: 'Client not found.' } };
+    const result = toggleDemoClientNoteLike(clientNoteLikeMatch[1], clientNoteLikeMatch[2]);
+    if (!result) return { status: 404, body: { error: 'Note not found.' } };
+    return { status: 200, body: result };
   }
 
   if (subPath === 'reports') {

@@ -102,8 +102,20 @@ export function clearAdminSecret(): void {
   }
 }
 
-function isDemoWriteBlocked(method: string): boolean {
+function isDemoNoteLikeRequest(pathname: string | null, method: string): boolean {
+  if (method !== 'POST') return false;
+  return !!pathname?.match(/^\/api\/admin\/clients\/[^/]+\/notes\/[^/]+\/like$/);
+}
+
+function isDemoNotePostRequest(pathname: string | null, method: string): boolean {
+  if (method !== 'POST') return false;
+  return !!pathname?.match(/^\/api\/admin\/clients\/[^/]+\/notes$/);
+}
+
+function isDemoWriteBlocked(method: string, pathname?: string | null): boolean {
   if (!isPublicAdminDemoMode()) return false;
+  if (isDemoNoteLikeRequest(pathname ?? null, method)) return false;
+  if (isDemoNotePostRequest(pathname ?? null, method)) return false;
   return method !== 'GET' && method !== 'HEAD' && method !== 'OPTIONS';
 }
 
@@ -169,7 +181,7 @@ export function installAdminFetchInterceptor(): void {
     if (!pathname?.startsWith('/api/admin/')) return nativeFetch(input, init);
 
     const method = resolveRequestMethod(input, init);
-    if (isDemoWriteBlocked(method)) {
+    if (isDemoWriteBlocked(method, pathname)) {
       dispatchDemoBlockedToast();
       return new Response(JSON.stringify({ error: DEMO_ACTION_BLOCKED_MESSAGE }), {
         status: 403,

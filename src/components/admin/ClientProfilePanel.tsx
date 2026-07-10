@@ -1,6 +1,6 @@
-import React, { memo, useCallback, useEffect, useRef, useState } from 'react';
+import React, { memo, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
-import { Mail, MessageCircle, Phone, Plus, Tag, X } from '../lucide-react';
+import { Ban, Check, Clock, Crown, ImagePlus, Mail, MessageCircle, Phone, Pin, Plus, Shield, StickyNote, Tag, X } from '../lucide-react';
 import { openClientMessageChannel } from '../../lib/admin/clientMessaging';
 import { adminFetchJson } from './adminAuth';
 
@@ -58,6 +58,23 @@ function getScoreLabel(score: number): string {
   if (score >= 55) return 'Good';
   if (score >= 35) return 'Fair';
   return 'Poor';
+}
+
+type ScoreTier = 'excellent' | 'good' | 'fair' | 'poor';
+
+function getScoreTier(score: number): ScoreTier {
+  if (score >= 75) return 'excellent';
+  if (score >= 55) return 'good';
+  if (score >= 35) return 'fair';
+  return 'poor';
+}
+
+function ScoreTierIcon({ tier }: { tier: ScoreTier }) {
+  const className = `admin-cp-score-tier-icon admin-cp-score-tier-icon--${tier}`;
+  if (tier === 'excellent') return <Crown className={className} aria-hidden />;
+  if (tier === 'good') return <Check className={className} aria-hidden />;
+  if (tier === 'fair') return <Clock className={className} aria-hidden />;
+  return <Ban className={className} aria-hidden />;
 }
 
 function getScoreColorClass(score: number): string {
@@ -180,76 +197,551 @@ function ClientAvatarUpload({
   );
 }
 
-// ─── Notes textarea with debounced save ───────────────────────────────────────
+// ─── Client notes feed ────────────────────────────────────────────────────────
 
-function NotesEditor({ clientId, initialNotes }: { clientId: string; initialNotes: string | null }) {
-  const [value, setValue] = useState(initialNotes ?? '');
-  const [saveState, setSaveState] = useState<'idle' | 'saving' | 'saved' | 'failed'>('idle');
-  const [saveError, setSaveError] = useState('');
-  const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+type BarberOption = {
+  id: string;
+  name: string;
+  avatarUrl: string | null;
+};
+
+type ClientNoteImage = {
+  id: string;
+  url: string;
+};
+
+type ClientNotePost = {
+  id: string;
+  body: string;
+  createdAt: string;
+  likeCount: number;
+  likedByMe: boolean;
+  images: ClientNoteImage[];
+  barber: BarberOption | null;
+};
+
+const MAX_NOTE_IMAGES = 3;
+
+type PendingNoteImage = {
+  id: string;
+  file: File;
+  previewUrl: string;
+};
+
+function createPendingNoteImage(file: File): PendingNoteImage {
+  return {
+    id: `${Date.now()}-${Math.random().toString(36).slice(2)}`,
+    file,
+    previewUrl: URL.createObjectURL(file),
+  };
+}
+
+function sortNotesChronologically(notes: ClientNotePost[]): ClientNotePost[] {
+  return [...notes].sort(
+    (a, b) => new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime(),
+  );
+}
+
+function sortNotesForFeed(notes: ClientNotePost[]): ClientNotePost[] {
+  const chronological = sortNotesChronologically(notes);
+  if (chronological.length === 0) return chronological;
+
+  const top = chronological.reduce((best, note) => {
+    if (note.likeCount > best.likeCount) return note;
+    if (note.likeCount === best.likeCount && note.likeCount > 0) {
+      return new Date(note.createdAt) > new Date(best.createdAt) ? note : best;
+    }
+    return best;
+  });
+
+  if (top.likeCount === 0) return chronological;
+  return [top, ...chronological.filter((note) => note.id !== top.id)];
+}
+
+function formatNoteTime(iso: string): string {
+  const date = new Date(iso);
+  const now = Date.now();
+  const diffMs = now - date.getTime();
+  const diffMin = Math.floor(diffMs / 60000);
+
+  if (diffMin < 1) return 'Just now';
+  if (diffMin < 60) return `${diffMin}m ago`;
+
+  const diffHours = Math.floor(diffMin / 60);
+  if (diffHours < 24) return `${diffHours}h ago`;
+
+  const diffDays = Math.floor(diffHours / 24);
+  if (diffDays === 1) return 'Yesterday';
+  if (diffDays < 7) return `${diffDays}d ago`;
+
+  return date.toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' });
+}
+
+function NotePostAvatar({ barber }: { barber: BarberOption | null }) {
+  const [hasImageError, setHasImageError] = useState(false);
+  const name = barber?.name ?? 'Previous note';
+  const initials = barber ? getInitials(barber.name) : '—';
+
+  useEffect(() => {
+    setHasImageError(false);
+  }, [barber?.id, barber?.avatarUrl]);
+
+  return (
+    <div className="admin-cp-note-post-avatar" aria-hidden="true">
+      {barber?.avatarUrl && !hasImageError ? (
+        <img
+          src={barber.avatarUrl}
+          alt=""
+          className="admin-cp-note-post-avatar-img"
+          loading="lazy"
+          onError={() => setHasImageError(true)}
+        />
+      ) : (
+        <span className="admin-cp-note-post-avatar-initials">{initials}</span>
+      )}
+      <span className="sr-only">{name}</span>
+    </div>
+  );
+}
+
+function NoteImageLightbox({
+  imageUrl,
+  onClose,
+}: {
+  imageUrl: string;
+  onClose: () => void;
+}) {
+  useEffect(() => {
+    const onKey = (event: KeyboardEvent) => {
+      if (event.key === 'Escape') onClose();
+    };
+    document.addEventListener('keydown', onKey);
+    return () => document.removeEventListener('keydown', onKey);
+  }, [onClose]);
+
+  const lightbox = (
+    <div
+      className="admin-cp-note-lightbox-backdrop"
+      onClick={onClose}
+      role="dialog"
+      aria-modal="true"
+      aria-label="Note image preview"
+    >
+      <div className="admin-cp-note-lightbox-panel" onClick={(event) => event.stopPropagation()}>
+        <button
+          type="button"
+          className="admin-cp-note-lightbox-close"
+          onClick={onClose}
+          aria-label="Close image preview"
+        >
+          <X className="admin-cp-note-lightbox-close-icon" aria-hidden />
+        </button>
+        <img src={imageUrl} alt="" className="admin-cp-note-lightbox-img" />
+      </div>
+    </div>
+  );
+
+  return createPortal(lightbox, document.body);
+}
+
+function NotePost({
+  note,
+  onLike,
+  liking,
+  isFeedPinned,
+  onImageOpen,
+}: {
+  note: ClientNotePost;
+  onLike: (noteId: string) => void;
+  liking: boolean;
+  isFeedPinned: boolean;
+  onImageOpen: (url: string) => void;
+}) {
+  const authorName = note.barber?.name ?? 'Previous note';
+  const [burstCount, setBurstCount] = useState<number | null>(null);
+  const [pinStick, setPinStick] = useState(false);
+  const burstKeyRef = useRef(0);
+
+  const handlePin = useCallback(() => {
+    if (liking) return;
+    const nextCount = note.likedByMe ? note.likeCount - 1 : note.likeCount + 1;
+    burstKeyRef.current += 1;
+    setBurstCount(nextCount);
+    setPinStick(true);
+    window.setTimeout(() => {
+      setBurstCount(null);
+      setPinStick(false);
+    }, 600);
+    onLike(note.id);
+  }, [liking, note.id, note.likeCount, note.likedByMe, onLike]);
+
+  const pinButtonClassName = [
+    'admin-cp-note-post-pin',
+    note.likedByMe ? 'is-pinned-by-me' : '',
+    isFeedPinned ? 'is-feed-pinned' : '',
+    pinStick ? 'admin-cp-note-pin-stick' : '',
+  ].filter(Boolean).join(' ');
+
+  return (
+    <article className={`admin-cp-note-post${isFeedPinned ? ' admin-cp-note-post--feed-pinned' : ''}`}>
+      <button
+        type="button"
+        className={pinButtonClassName}
+        onClick={handlePin}
+        disabled={liking}
+        aria-label={note.likedByMe ? 'Unpin note' : 'Pin note'}
+        aria-pressed={note.likedByMe}
+      >
+        <Pin className="admin-cp-note-post-pin-icon" aria-hidden />
+        {burstCount !== null && burstCount > 0 ? (
+          <span key={burstKeyRef.current} className="admin-cp-note-pin-burst">{burstCount}</span>
+        ) : null}
+      </button>
+      <header className="admin-cp-note-post-header">
+        <NotePostAvatar barber={note.barber} />
+        <div className="admin-cp-note-post-meta">
+          <div className="admin-cp-note-post-meta-row">
+            <span className="admin-cp-note-post-author">{authorName}</span>
+            {isFeedPinned ? (
+              <span className="admin-cp-note-post-pinned-badge">
+                <Pin className="admin-cp-note-post-pinned-badge-icon" aria-hidden />
+                Pinned
+              </span>
+            ) : null}
+          </div>
+          <time className="admin-cp-note-post-time" dateTime={note.createdAt}>
+            {formatNoteTime(note.createdAt)}
+          </time>
+        </div>
+      </header>
+      {note.body ? <p className="admin-cp-note-post-body">{note.body}</p> : null}
+      {note.images.length > 0 ? (
+        <div
+          className={`admin-cp-note-post-images admin-cp-note-post-images--count-${Math.min(note.images.length, MAX_NOTE_IMAGES)}`}
+        >
+          {note.images.map((image) => (
+            <button
+              key={image.id}
+              type="button"
+              className="admin-cp-note-post-image-btn"
+              onClick={() => onImageOpen(image.url)}
+              aria-label="View note image"
+            >
+              <img src={image.url} alt="" className="admin-cp-note-post-image" loading="lazy" />
+            </button>
+          ))}
+        </div>
+      ) : null}
+    </article>
+  );
+}
+
+function NotesEditor({ clientId }: { clientId: string }) {
+  const [notes, setNotes] = useState<ClientNotePost[]>([]);
+  const [draft, setDraft] = useState('');
+  const [loading, setLoading] = useState(true);
+  const [loadError, setLoadError] = useState('');
+  const [postState, setPostState] = useState<'idle' | 'posting' | 'posted' | 'failed'>('idle');
+  const [postError, setPostError] = useState('');
+  const [likingNoteId, setLikingNoteId] = useState<string | null>(null);
+  const [pendingImages, setPendingImages] = useState<PendingNoteImage[]>([]);
+  const [attachError, setAttachError] = useState('');
+  const [lightboxImageUrl, setLightboxImageUrl] = useState<string | null>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
+  const attachInputRef = useRef<HTMLInputElement>(null);
+  const pendingImagesRef = useRef(pendingImages);
+  pendingImagesRef.current = pendingImages;
 
-  const syncNotesHeight = useCallback(() => {
+  const clearPendingImages = useCallback(() => {
+    setPendingImages((current) => {
+      current.forEach((image) => URL.revokeObjectURL(image.previewUrl));
+      return [];
+    });
+  }, []);
+
+  useEffect(() => () => {
+    pendingImagesRef.current.forEach((image) => URL.revokeObjectURL(image.previewUrl));
+  }, []);
+
+  const handleFilesSelected = useCallback((files: FileList | null) => {
+    if (!files || files.length === 0) return;
+
+    setAttachError('');
+    setPostError('');
+    setPendingImages((current) => {
+      const remaining = MAX_NOTE_IMAGES - current.length;
+      if (remaining <= 0) {
+        setAttachError(`You can attach up to ${MAX_NOTE_IMAGES} images per note.`);
+        return current;
+      }
+
+      const next = [...current];
+      for (const file of Array.from(files)) {
+        if (next.length >= MAX_NOTE_IMAGES) break;
+        if (!file.type.startsWith('image/')) continue;
+        next.push(createPendingNoteImage(file));
+      }
+
+      if (next.length === current.length) {
+        setAttachError('Please choose a valid image file.');
+      }
+
+      return next;
+    });
+  }, []);
+
+  const removePendingImage = useCallback((imageId: string) => {
+    setAttachError('');
+    setPendingImages((current) => {
+      const target = current.find((image) => image.id === imageId);
+      if (target) URL.revokeObjectURL(target.previewUrl);
+      return current.filter((image) => image.id !== imageId);
+    });
+  }, []);
+
+  const syncComposeHeight = useCallback(() => {
     const textarea = textareaRef.current;
     if (!textarea) return;
     textarea.style.height = 'auto';
     textarea.style.height = `${textarea.scrollHeight}px`;
   }, []);
 
-  const handleChange = useCallback(
-    (e: React.ChangeEvent<HTMLTextAreaElement>) => {
-      const next = e.target.value;
-      setValue(next);
-      setSaveState('idle');
-      setSaveError('');
-      if (timerRef.current) clearTimeout(timerRef.current);
-      timerRef.current = setTimeout(async () => {
-        setSaveState('saving');
-        try {
-          await adminFetchJson(`/api/admin/clients/${clientId}`, {
-            method: 'PATCH',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ notes: next }),
-            errorMessage: 'Could not save notes.',
-          });
-          setSaveState('saved');
-          setTimeout(() => setSaveState('idle'), 2000);
-        } catch (error) {
-          setSaveState('failed');
-          setSaveError(error instanceof Error ? error.message : 'Could not save notes.');
+  useEffect(() => {
+    let cancelled = false;
+    setLoading(true);
+    setLoadError('');
+
+    adminFetchJson<{ notes: ClientNotePost[] }>(`/api/admin/clients/${clientId}/notes`, {
+      errorMessage: 'Could not load notes.',
+    })
+      .then((notesResponse) => {
+        if (!cancelled) setNotes(notesResponse.notes);
+      })
+      .catch((error) => {
+        if (!cancelled) {
+          setLoadError(error instanceof Error ? error.message : 'Could not load notes.');
         }
-      }, 500);
-    },
-    [clientId],
-  );
+      })
+      .finally(() => {
+        if (!cancelled) setLoading(false);
+      });
 
-  useEffect(() => () => { if (timerRef.current) clearTimeout(timerRef.current); }, []);
-
-  useEffect(() => {
-    setValue(initialNotes ?? '');
-  }, [initialNotes]);
+    return () => { cancelled = true; };
+  }, [clientId]);
 
   useEffect(() => {
-    syncNotesHeight();
-  }, [value, initialNotes, syncNotesHeight]);
+    syncComposeHeight();
+  }, [draft, syncComposeHeight]);
+
+  const handlePost = useCallback(async () => {
+    const body = draft.trim();
+    if (!body && pendingImages.length === 0) return;
+
+    setPostState('posting');
+    setPostError('');
+    setAttachError('');
+    try {
+      let response: { note: ClientNotePost };
+
+      if (pendingImages.length > 0) {
+        const formData = new FormData();
+        formData.append('body', body);
+        pendingImages.forEach((image) => {
+          formData.append('images', image.file);
+        });
+
+        response = await adminFetchJson<{ note: ClientNotePost }>(
+          `/api/admin/clients/${clientId}/notes`,
+          {
+            method: 'POST',
+            body: formData,
+            errorMessage: 'Could not post note.',
+          },
+        );
+      } else {
+        response = await adminFetchJson<{ note: ClientNotePost }>(
+          `/api/admin/clients/${clientId}/notes`,
+          {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ body }),
+            errorMessage: 'Could not post note.',
+          },
+        );
+      }
+
+      setNotes((current) => [...current, response.note]);
+      setDraft('');
+      clearPendingImages();
+      setPostState('posted');
+      setTimeout(() => setPostState('idle'), 2000);
+    } catch (error) {
+      setPostState('failed');
+      setPostError(error instanceof Error ? error.message : 'Could not post note.');
+    }
+  }, [clientId, clearPendingImages, draft, pendingImages]);
+
+  const handleLike = useCallback(async (noteId: string) => {
+    let previousNote: ClientNotePost | undefined;
+    setNotes((current) => {
+      const note = current.find((item) => item.id === noteId);
+      if (!note) return current;
+      previousNote = note;
+      const likedByMe = !note.likedByMe;
+      const likeCount = Math.max(0, note.likeCount + (likedByMe ? 1 : -1));
+      return current.map((item) => (
+        item.id === noteId ? { ...item, likedByMe, likeCount } : item
+      ));
+    });
+
+    setLikingNoteId(noteId);
+    try {
+      const result = await adminFetchJson<{ likeCount: number; likedByMe: boolean }>(
+        `/api/admin/clients/${clientId}/notes/${noteId}/like`,
+        {
+          method: 'POST',
+          errorMessage: 'Could not update like.',
+        },
+      );
+      setNotes((current) => current.map((item) => (
+        item.id === noteId
+          ? { ...item, likeCount: result.likeCount, likedByMe: result.likedByMe }
+          : item
+      )));
+    } catch {
+      if (previousNote) {
+        setNotes((current) => current.map((item) => (
+          item.id === noteId ? previousNote! : item
+        )));
+      }
+    } finally {
+      setLikingNoteId(null);
+    }
+  }, [clientId]);
+
+  const canPost = (draft.trim().length > 0 || pendingImages.length > 0) && postState !== 'posting';
+  const sortedNotes = useMemo(() => sortNotesForFeed(notes), [notes]);
+  const feedPinnedNoteId = sortedNotes[0]?.likeCount > 0 ? sortedNotes[0].id : null;
+  const canAttachMore = pendingImages.length < MAX_NOTE_IMAGES;
 
   return (
     <div className="admin-cp-notes-wrap">
       <div className="admin-cp-section-header">
+        <StickyNote className="admin-cp-section-icon" aria-hidden />
         <span className="admin-cp-section-title">Notes</span>
-        {saveState === 'saving' && <span className="admin-cp-save-hint admin-cp-save-hint--saving">Saving…</span>}
-        {saveState === 'saved' && <span className="admin-cp-save-hint admin-cp-save-hint--saved">Saved</span>}
-        {saveState === 'failed' && <span className="admin-cp-save-hint admin-cp-save-hint--failed">Failed</span>}
+        {postState === 'posting' && <span className="admin-cp-save-hint admin-cp-save-hint--saving">Posting…</span>}
+        {postState === 'posted' && <span className="admin-cp-save-hint admin-cp-save-hint--saved">Posted</span>}
+        {postState === 'failed' && <span className="admin-cp-save-hint admin-cp-save-hint--failed">Failed</span>}
       </div>
-      {saveError ? <p className="admin-cp-error admin-cp-error--inline" role="alert">{saveError}</p> : null}
-      <textarea
-        ref={textareaRef}
-        className="admin-cp-notes-textarea"
-        value={value}
-        onChange={handleChange}
-        placeholder="Add notes about this client…"
-        rows={3}
-      />
+
+      {loadError ? <p className="admin-cp-error admin-cp-error--inline" role="alert">{loadError}</p> : null}
+      {postError ? <p className="admin-cp-error admin-cp-error--inline" role="alert">{postError}</p> : null}
+      {attachError ? <p className="admin-cp-error admin-cp-error--inline" role="alert">{attachError}</p> : null}
+
+      {loading ? (
+        <div className="admin-cp-notes-feed admin-cp-notes-feed--loading" aria-busy="true">
+          <div className="admin-cp-skeleton admin-cp-skeleton--line" />
+          <div className="admin-cp-skeleton admin-cp-skeleton--line admin-cp-skeleton--short" />
+        </div>
+      ) : (
+        <div className="admin-cp-notes-feed">
+          {sortedNotes.length === 0 ? (
+            <p className="admin-cp-notes-empty">No notes yet</p>
+          ) : (
+            sortedNotes.map((note) => (
+              <NotePost
+                key={note.id}
+                note={note}
+                onLike={(noteId) => { void handleLike(noteId); }}
+                liking={likingNoteId === note.id}
+                isFeedPinned={note.id === feedPinnedNoteId}
+                onImageOpen={setLightboxImageUrl}
+              />
+            ))
+          )}
+        </div>
+      )}
+
+      {lightboxImageUrl ? (
+        <NoteImageLightbox
+          imageUrl={lightboxImageUrl}
+          onClose={() => setLightboxImageUrl(null)}
+        />
+      ) : null}
+
+      <div className="admin-cp-note-compose">
+        <textarea
+          ref={textareaRef}
+          className="admin-cp-notes-textarea"
+          value={draft}
+          onChange={(e) => {
+            setDraft(e.target.value);
+            if (postState === 'failed') setPostState('idle');
+            setPostError('');
+          }}
+          placeholder="Add a note about this client…"
+          rows={2}
+          disabled={postState === 'posting'}
+        />
+
+        <div className="admin-cp-note-compose-actions">
+          <button
+            type="button"
+            className="btn btn--secondary admin-cp-note-compose-attach-btn"
+            onClick={() => attachInputRef.current?.click()}
+            disabled={postState === 'posting' || !canAttachMore}
+            aria-label="Add photos"
+          >
+            <ImagePlus className="admin-cp-note-compose-attach-icon" aria-hidden />
+            <span>Add photos</span>
+          </button>
+          {pendingImages.length > 0 ? (
+            <span className="admin-cp-note-compose-count">{pendingImages.length}/{MAX_NOTE_IMAGES}</span>
+          ) : null}
+        </div>
+
+        <input
+          ref={attachInputRef}
+          type="file"
+          accept="image/*"
+          multiple
+          className="admin-cp-note-compose-file-input"
+          tabIndex={-1}
+          aria-hidden="true"
+          onChange={(event) => {
+            handleFilesSelected(event.target.files);
+            event.target.value = '';
+          }}
+        />
+
+        {pendingImages.length > 0 ? (
+          <div className="admin-cp-note-compose-previews">
+            {pendingImages.map((image) => (
+              <div key={image.id} className="admin-cp-note-compose-preview">
+                <img src={image.previewUrl} alt="" className="admin-cp-note-compose-preview-img" />
+                <button
+                  type="button"
+                  className="admin-cp-note-compose-preview-remove"
+                  onClick={() => removePendingImage(image.id)}
+                  disabled={postState === 'posting'}
+                  aria-label="Remove image"
+                >
+                  <X className="admin-cp-note-compose-preview-remove-icon" aria-hidden />
+                </button>
+              </div>
+            ))}
+          </div>
+        ) : null}
+
+        <button
+          type="button"
+          className="btn btn--primary admin-cp-note-submit"
+          onClick={() => { void handlePost(); }}
+          disabled={!canPost}
+        >
+          {postState === 'posting' ? 'Posting…' : 'Add note'}
+        </button>
+      </div>
     </div>
   );
 }
@@ -472,6 +964,7 @@ const ClientProfilePanel = memo(function ClientProfilePanel({ clientId, onClose 
   }, [onClose]);
 
   const score = data?.reliabilityScore ?? 0;
+  const scoreTier = getScoreTier(score);
 
   const handleAvatarChange = useCallback((avatarUrl: string) => {
     setData((current) => {
@@ -557,8 +1050,12 @@ const ClientProfilePanel = memo(function ClientProfilePanel({ clientId, onClose 
             {/* Reliability score */}
             <div className="admin-cp-score-section">
               <div className="admin-cp-section-header">
+                <Shield className="admin-cp-section-icon" aria-hidden />
                 <span className="admin-cp-section-title">Reliability score</span>
-                <span className="admin-cp-score-value">{score} / 100 — {getScoreLabel(score)}</span>
+                <span className={`admin-cp-score-value admin-cp-score-value--${scoreTier}`}>
+                  <ScoreTierIcon tier={scoreTier} />
+                  {score} / 100 — {getScoreLabel(score)}
+                </span>
               </div>
               <div className="admin-cp-score-track" role="meter" aria-valuenow={score} aria-valuemin={0} aria-valuemax={100}>
                 <div
@@ -608,7 +1105,7 @@ const ClientProfilePanel = memo(function ClientProfilePanel({ clientId, onClose 
             </div>
 
             {/* Notes */}
-            <NotesEditor clientId={clientId} initialNotes={data.client.notes} />
+            <NotesEditor clientId={clientId} />
           </div>
         )}
       </div>
