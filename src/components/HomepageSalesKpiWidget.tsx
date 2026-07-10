@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 
 import AdminLineChart, { type AdminLineChartSeries } from '@/components/admin/charts/AdminLineChart';
+import { CHART_INACTIVE_COLOR, CHART_OVERALL_COLOR, getProductSlotColor } from '@/lib/admin/chartSeriesColors';
 import { getLandingSalesKpiData } from '@/lib/landing/landingSalesKpiData';
 import { cn } from '@/lib/utils';
 import '@/styles/components/booking.css';
@@ -21,9 +22,7 @@ type SalesSeriesPill = {
 const CHART_HEIGHT = 'clamp(220px, 34vh, 320px)';
 const MAX_SELECTED_PRODUCTS = 5;
 const SALES_SELECTION_LIMIT_MESSAGE = 'Max 5 products can be compared.';
-const INACTIVE_SWATCH_COLOR = '#6B7280';
-const PRODUCT_SLOT_COLORS = ['#E6EAF0', '#7DD3FC', '#5EEAD4', '#FBBF24', '#C4B5FD'];
-const OVERALL_COLOR = '#E11D2E';
+const INACTIVE_SWATCH_COLOR = CHART_INACTIVE_COLOR;
 
 function formatPrice(pricePence: number): string {
   return new Intl.NumberFormat('en-GB', { style: 'currency', currency: 'GBP' }).format(pricePence / 100);
@@ -198,11 +197,11 @@ export default function HomepageSalesKpiWidget() {
 
   const getSlotColor = (productId: string): string => {
     const slotIndex = selectedProductIds.indexOf(productId);
-    return slotIndex >= 0 ? PRODUCT_SLOT_COLORS[slotIndex] : PRODUCT_SLOT_COLORS[0];
+    return getProductSlotColor(slotIndex);
   };
 
   const getSeriesColor = (seriesKey: string): string => {
-    if (seriesKey === 'overall') return OVERALL_COLOR;
+    if (seriesKey === 'overall') return CHART_OVERALL_COLOR;
     if (seriesKey === '__empty__') return 'var(--border)';
     return getSlotColor(seriesKey);
   };
@@ -251,6 +250,8 @@ export default function HomepageSalesKpiWidget() {
           getColor={getSeriesColor}
           getStrokeWidth={getSeriesStrokeWidth}
           formatValue={formatPrice}
+          primarySeriesKey={activeSeriesKeys[0]}
+          showArea={(key) => key === activeSeriesKeys[0]}
           responsive
           height={CHART_HEIGHT}
           emptyNode={

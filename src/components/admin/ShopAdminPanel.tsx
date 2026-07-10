@@ -1,15 +1,21 @@
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
+import { formatInTimeZone, fromZonedTime } from 'date-fns-tz';
 import OrdersDataTable22 from './OrdersDataTable22';
 import ClientProfilePanel from './ClientProfilePanel';
 import AdminSectionHeader from './AdminSectionHeader';
 import AdminLineChart from './charts/AdminLineChart';
+import AdminAnalyticsStudio from './AdminAnalyticsStudio';
+import AdminSegmentedControl from './AdminSegmentedControl';
+import AdminSegmentedRangeControl, { type SegmentedDateRange } from './AdminSegmentedRangeControl';
+import AdminChartLegend from './AdminChartLegend';
 import AdminLeaderboard from './AdminLeaderboard';
+import { CHART_OVERALL_COLOR, getProductSlotColor } from '@/lib/admin/chartSeriesColors';
 import { SettingsGearIcon } from './SettingsGearIcon';
 import EmptyState from '../EmptyState';
 import { ChevronDown, ChevronUp, Package, Search, Star, X } from '../lucide-react';
 import { formatDelta } from './reportsFormatting';
-import { SkeletonBookingChoices, SkeletonKPICards } from '../skeleton';
+import { SkeletonBookingChoices } from '../skeleton';
 import { AdminFetchError, adminFetchJson } from './adminAuth';
 import { resolveClientIdForBooking } from '../../lib/admin/resolveClientIdForBooking';
 type ShopTab = 'products' | 'orders' | 'sales';
@@ -126,13 +132,6 @@ type SalesChartSeries = {
   points: Array<{ date: string; revenuePence: number; units: number }>;
 };
 
-type SalesSeriesPill = {
-  key: string;
-  label: string;
-  color: string;
-  isOverall?: boolean;
-};
-
 type SalesChartErrorBoundaryProps = {
   children: React.ReactNode;
 };
@@ -224,10 +223,20 @@ const PRODUCT_IMAGE_ACCEPT = '.jpg,.jpeg,.png,.webp,.gif';
 const MOBILE_PRODUCT_EDITOR_MEDIA_QUERY = '(max-width: 47.99rem)';
 
 type ProductImageUploadStatus = 'idle' | 'uploading' | 'processing' | 'uploaded' | 'failed';
-const PRODUCT_SLOT_COLORS = ['#E6EAF0', '#7DD3FC', '#5EEAD4', '#FBBF24', '#C4B5FD'];
-const OVERALL_COLOR = '#E11D2E';
-
 const DEFAULT_PRODUCT_SERIES_COLOR = 'var(--border)';
+
+const SALES_RANGE_OPTIONS = [
+  { value: '7' as const, label: '7 days' },
+  { value: '30' as const, label: '30 days' },
+  { value: '90' as const, label: '90 days' },
+];
+
+const SALES_TIMEZONE = 'Europe/London';
+
+const SALES_METRIC_OPTIONS = [
+  { value: 'revenue' as const, label: 'Revenue £' },
+  { value: 'units' as const, label: 'Units' },
+];
 
 const IS_DEV = import.meta.env.DEV;
 
@@ -357,12 +366,6 @@ class ShopPanelErrorBoundary extends React.Component<ShopPanelErrorBoundaryProps
 
 
 
-type SeriesPillsProps = {
-  seriesList: SalesSeriesPill[];
-  onRemove: (seriesKey: string) => void;
-  maxHintVisible: boolean;
-  emptySelectionHintVisible: boolean;
-};
 type ProductStatusPillProps = {
   on: boolean;
   tone: 'active';
@@ -417,44 +420,6 @@ type EditFooterActionsProps = {
 };
 
 
-function SeriesPills({
-  seriesList,
- onRemove,
-  maxHintVisible,
-
-  emptySelectionHintVisible
-
-}: SeriesPillsProps) {
-  return (
-    <div className="admin-sales-series-pills-wrap" aria-live="polite">
-      <div className="admin-sales-series-pills" role="list" aria-label="Chart series legend">
-        {seriesList.map((series) => (
-          <span
-            key={series.key}
-            className="admin-sales-series-pill admin-sales-series-pill--active"
-            role="listitem"
-          >
-            <span className="admin-sales-series-pill__swatch" style={{ background: series.color }} aria-hidden="true" />
-            <span>{series.label}</span>
-            {!series.isOverall ? (
-              <button
-                type="button"
-                className="admin-sales-series-pill__remove"
-                onClick={() => onRemove(series.key)}
-                aria-label={`Remove ${series.label}`}
-              >
-                <X width={12} height={12} aria-hidden="true" />
-              </button>
-            ) : null}
-          </span>
-        ))}
-
-      </div>
-      {maxHintVisible ? <p className="admin-sales-series-hint">{SALES_SELECTION_LIMIT_MESSAGE}</p> : null}
-      {emptySelectionHintVisible ? <p className="admin-sales-series-hint">Select a product to display data</p> : null}
-    </div>
-  );
-}
 function ProductStatusSwitch({
   label,
   checked,
@@ -701,6 +666,7 @@ export default function ShopAdminPanel({ initialTab = 'products' }: ShopAdminPan
   const [salesPreset, setSalesPreset] = useState<SalesRangePreset>('7');
   const [salesFrom, setSalesFrom] = useState(() => getRangeDates('7').from);
   const [salesTo, setSalesTo] = useState(() => getRangeDates('7').to);
+  const [salesCustomRange, setSalesCustomRange] = useState<SegmentedDateRange | null>(null);
   const [salesMetric, setSalesMetric] = useState<SalesMetric>('revenue');
   const [salesLoading, setSalesLoading] = useState(false);
   const [salesError, setSalesError] = useState<string | null>(null);
@@ -711,6 +677,7 @@ export default function ShopAdminPanel({ initialTab = 'products' }: ShopAdminPan
 
   const [isSalesChartExpanded, setIsSalesChartExpanded] = useState(false);
   const [expandedProductSearch, setExpandedProductSearch] = useState('');
+  const [productAddOpen, setProductAddOpen] = useState(false);
     useBodyScrollLock((formOpen && isMobileProductEditor) || (isMobileSalesView && isSalesChartExpanded));
 
 
@@ -994,11 +961,11 @@ export default function ShopAdminPanel({ initialTab = 'products' }: ShopAdminPan
   } = useProductSeriesSelection(allSalesSeries);
   const getSlotColor = useCallback((productId: string): string => {
     const slotIndex = selectedProductIds.indexOf(productId);
-    return slotIndex >= 0 ? PRODUCT_SLOT_COLORS[slotIndex] : PRODUCT_SLOT_COLORS[0];
+    return getProductSlotColor(slotIndex);
   }, [selectedProductIds]);
 
   const getSeriesColor = useCallback((seriesKey: string): string => {
-    if (seriesKey === 'overall') return OVERALL_COLOR;
+    if (seriesKey === 'overall') return CHART_OVERALL_COLOR;
     if (seriesKey === '__empty__') return DEFAULT_PRODUCT_SERIES_COLOR;
     return getSlotColor(seriesKey);
   }, [getSlotColor]);
@@ -1749,6 +1716,7 @@ export default function ShopAdminPanel({ initialTab = 'products' }: ShopAdminPan
 
   function applyPreset(nextPreset: Exclude<SalesRangePreset, 'custom'>) {
     const dates = getRangeDates(nextPreset);
+    setSalesCustomRange(null);
     setSalesPreset(nextPreset);
     setSalesFrom(dates.from);
     setSalesTo(dates.to);
@@ -1758,6 +1726,33 @@ export default function ShopAdminPanel({ initialTab = 'products' }: ShopAdminPan
       explicitTo: dates.to,
     });
   }
+
+  const handleSalesCustomRangeChange = useCallback((range: SegmentedDateRange | null) => {
+    if (!range?.from && !range?.to) {
+      setSalesCustomRange(null);
+      applyPreset('7');
+      return;
+    }
+    setSalesCustomRange(range);
+    if (range.from && range.to) {
+      const from = formatInTimeZone(range.from, SALES_TIMEZONE, 'yyyy-MM-dd');
+      const to = formatInTimeZone(range.to, SALES_TIMEZONE, 'yyyy-MM-dd');
+      setSalesPreset('custom');
+      setSalesFrom(from);
+      setSalesTo(to);
+    }
+  }, []);
+
+  const salesRangeForPicker = useMemo((): SegmentedDateRange | null => {
+    if (salesCustomRange) return salesCustomRange;
+    if (salesPreset !== 'custom' || !salesFrom || !salesTo) return null;
+    return {
+      from: fromZonedTime(`${salesFrom}T00:00:00.000`, SALES_TIMEZONE),
+      to: fromZonedTime(`${salesTo}T00:00:00.000`, SALES_TIMEZONE),
+    };
+  }, [salesCustomRange, salesFrom, salesPreset, salesTo]);
+
+  const salesSegmentedValue = salesPreset === 'custom' ? ('' as Exclude<SalesRangePreset, 'custom'>) : salesPreset;
 
 
   return (
@@ -2417,116 +2412,39 @@ export default function ShopAdminPanel({ initialTab = 'products' }: ShopAdminPan
           ) : null}
           {success ? <p className="admin-inline-success">{success}</p> : null}
 
-          <div className="admin-reports-filter-bar">
-            <div className="admin-sales-controls">
-              <div className="admin-filter-tabs" role="group" aria-label="Sales range presets">
-                <button type="button" className={`admin-filter-tab ${salesPreset === '7' ? 'admin-filter-tab--active' : ''}`} onClick={() => applyPreset('7')} aria-pressed={salesPreset === '7'}>Last 7 days</button>
-                <button type="button" className={`admin-filter-tab ${salesPreset === '30' ? 'admin-filter-tab--active' : ''}`} onClick={() => applyPreset('30')} aria-pressed={salesPreset === '30'}>Last 30 days</button>
-                <button type="button" className={`admin-filter-tab ${salesPreset === '90' ? 'admin-filter-tab--active' : ''}`} onClick={() => applyPreset('90')} aria-pressed={salesPreset === '90'}>Last 90 days</button>
-                <button type="button" className={`admin-filter-tab ${salesPreset === 'custom' ? 'admin-filter-tab--active' : ''}`} onClick={() => setSalesPreset('custom')} aria-pressed={salesPreset === 'custom'}>Custom</button>
-              </div>
-
-              {salesPreset === 'custom' ? (
-                <div className="admin-sales-custom-dates">
-                  <div className="field">
-                    <label className="field__label" htmlFor="sales-from">From</label>
-                    <input
-                      id="sales-from"
-                      type="date"
-                      className={`input${salesDateError ? ' input--error' : ''}`}
-                      value={salesFrom}
-                      max={salesTo || undefined}
-                      aria-invalid={Boolean(salesDateError)}
-                      aria-describedby={salesDateError ? 'sales-date-error' : undefined}
-                      onChange={(event) => setSalesFrom(event.target.value)}
-                    />
-                  </div>
-                  <div className="field">
-                    <label className="field__label" htmlFor="sales-to">To</label>
-                    <input
-                      id="sales-to"
-                      type="date"
-                      className={`input${salesDateError ? ' input--error' : ''}`}
-                      value={salesTo}
-                      min={salesFrom || undefined}
-                      aria-invalid={Boolean(salesDateError)}
-                      aria-describedby={salesDateError ? 'sales-date-error' : undefined}
-                      onChange={(event) => setSalesTo(event.target.value)}
-                    />
-                  </div>
-                  {salesDateError ? (
-                    <span id="sales-date-error" className="field__hint field__hint--error admin-sales-date-error">
-                      {salesDateError}
-                    </span>
-                  ) : null}
-                </div>
-              ) : null}
-            </div>
-          </div>
-
-          <div className="admin-reports-hero" aria-live="polite">
-            <span className="admin-reports-hero-value">{salesHeroValue}</span>
-            <p className="admin-reports-hero-label">{salesHeroLabel}</p>
-          </div>
-
-          <div className="admin-sales-kpis">
-            {salesLoading && !salesData ? (
-              <SkeletonKPICards count={4} />
-            ) : (
-              <>
-                <article className={`admin-kpi-card${salesKpiDeltas?.revenue.className === 'admin-kpi-trend--up' ? ' admin-kpi-card--trend-up' : salesKpiDeltas?.revenue.className === 'admin-kpi-trend--down' ? ' admin-kpi-card--trend-down' : ''}`}>
-                  <p className="admin-kpi-label">Total revenue</p>
-                  <p className="admin-kpi-value">{formatPrice(salesData?.kpis.revenuePence ?? 0)}</p>
-                  {salesKpiDeltas ? (
-                    <p className={`admin-kpi-trend ${salesKpiDeltas.revenue.className}`}>
-                      {salesKpiDeltas.revenue.direction === 'up' ? <svg aria-hidden="true" className="admin-kpi-trend-icon" viewBox="0 0 8 8" fill="currentColor"><path d="M4 0L8 8H0Z"/></svg> : salesKpiDeltas.revenue.direction === 'down' ? <svg aria-hidden="true" className="admin-kpi-trend-icon" viewBox="0 0 8 8" fill="currentColor"><path d="M4 8L0 0H8Z"/></svg> : null}
-                      {salesKpiDeltas.revenue.text}
-                    </p>
-                  ) : null}
-                </article>
-
-                <article className={`admin-kpi-card${salesKpiDeltas?.orders.className === 'admin-kpi-trend--up' ? ' admin-kpi-card--trend-up' : salesKpiDeltas?.orders.className === 'admin-kpi-trend--down' ? ' admin-kpi-card--trend-down' : ''}`}>
-                  <p className="admin-kpi-label">Orders</p>
-                  <p className="admin-kpi-value">{salesData?.kpis.ordersCount ?? 0}</p>
-                  {salesKpiDeltas ? (
-                    <p className={`admin-kpi-trend ${salesKpiDeltas.orders.className}`}>
-                      {salesKpiDeltas.orders.direction === 'up' ? <svg aria-hidden="true" className="admin-kpi-trend-icon" viewBox="0 0 8 8" fill="currentColor"><path d="M4 0L8 8H0Z"/></svg> : salesKpiDeltas.orders.direction === 'down' ? <svg aria-hidden="true" className="admin-kpi-trend-icon" viewBox="0 0 8 8" fill="currentColor"><path d="M4 8L0 0H8Z"/></svg> : null}
-                      {salesKpiDeltas.orders.text}
-                    </p>
-                  ) : null}
-                </article>
-
-                <article className={`admin-kpi-card${salesKpiDeltas?.avgOrderValue.className === 'admin-kpi-trend--up' ? ' admin-kpi-card--trend-up' : salesKpiDeltas?.avgOrderValue.className === 'admin-kpi-trend--down' ? ' admin-kpi-card--trend-down' : ''}`}>
-                  <p className="admin-kpi-label">Avg order value</p>
-                  <p className="admin-kpi-value">{formatPrice(salesData?.kpis.avgOrderValuePence ?? 0)}</p>
-                  {salesKpiDeltas ? (
-                    <p className={`admin-kpi-trend ${salesKpiDeltas.avgOrderValue.className}`}>
-                      {salesKpiDeltas.avgOrderValue.direction === 'up' ? <svg aria-hidden="true" className="admin-kpi-trend-icon" viewBox="0 0 8 8" fill="currentColor"><path d="M4 0L8 8H0Z"/></svg> : salesKpiDeltas.avgOrderValue.direction === 'down' ? <svg aria-hidden="true" className="admin-kpi-trend-icon" viewBox="0 0 8 8" fill="currentColor"><path d="M4 8L0 0H8Z"/></svg> : null}
-                      {salesKpiDeltas.avgOrderValue.text}
-                    </p>
-                  ) : null}
-                </article>
-
-                <article className="admin-kpi-card">
-                  <p className="admin-kpi-label">Best-selling product</p>
-                  <p className="admin-kpi-value admin-kpi-value--text">{salesData?.kpis.bestProduct?.name ?? '—'}</p>
-                  {salesData?.kpis.bestProduct ? (
-                    <p className="admin-kpi-note">
-                      {formatPrice(salesData.kpis.bestProduct.revenuePence)} · {salesData.kpis.bestProduct.units} units
-                    </p>
-                  ) : null}
-                </article>
-              </>
+          <AdminAnalyticsStudio
+            toolbar={(
+              <AdminSegmentedRangeControl
+                options={SALES_RANGE_OPTIONS}
+                value={salesSegmentedValue}
+                onChange={applyPreset}
+                customRange={salesRangeForPicker}
+                isMobileViewport={isMobileSalesView}
+                timezone={SALES_TIMEZONE}
+                onCustomRangeChange={handleSalesCustomRangeChange}
+                ariaLabel="Sales range presets"
+              />
             )}
-          </div>
-
-          <div className="admin-filter-tabs admin-filter-tabs--metric" role="group" aria-label="Sales metric toggle">
-              <button type="button" className={`admin-filter-tab ${salesMetric === 'revenue' ? 'admin-filter-tab--active' : ''}`} onClick={() => setSalesMetric('revenue')} aria-pressed={salesMetric === 'revenue'}>Revenue (£)</button>
-              <button type="button" className={`admin-filter-tab ${salesMetric === 'units' ? 'admin-filter-tab--active' : ''}`} onClick={() => setSalesMetric('units')} aria-pressed={salesMetric === 'units'}>Units</button>
-          </div>
-
-          <>
-            <div className="admin-sales-chart-wrap">
+            toolbarSecondary={(
+              <AdminSegmentedControl
+                options={SALES_METRIC_OPTIONS}
+                value={salesMetric}
+                onChange={setSalesMetric}
+                ariaLabel="Sales metric toggle"
+                size="compact"
+              />
+            )}
+            headlineValue={salesLoading && !salesData ? '—' : salesHeroValue}
+            headlineLabel={salesHeroLabel}
+            headlineDelta={
+              salesKpiDeltas ? (
+                <span className={`admin-kpi-trend ${salesMetric === 'revenue' ? salesKpiDeltas.revenue.className : salesKpiDeltas.orders.className}`}>
+                  {salesMetric === 'revenue' ? salesKpiDeltas.revenue.text : salesKpiDeltas.orders.text}
+                </span>
+              ) : null
+            }
+            chart={(
+              <div className="admin-sales-chart-wrap">
                 {isMobileSalesView ? (
                   <button
                     type="button"
@@ -2537,101 +2455,133 @@ export default function ShopAdminPanel({ initialTab = 'products' }: ShopAdminPan
                     Expand
                   </button>
                 ) : null}
-
-              <SalesChartErrorBoundary>
-                <AdminLineChart
-                  series={adminChartSeries}
-                  metric={salesMetric === 'revenue' ? 'currency' : 'number'}
-                  getColor={getSeriesColor}
-                  getStrokeWidth={getSeriesStrokeWidth}
-                  formatValue={fmtSalesValue}
-                  height={isMobileSalesView ? 'clamp(280px, 45vh, 520px)' : undefined}
-                  onExpand={isMobileSalesView ? () => setIsSalesChartExpanded(true) : undefined}
-                  responsive={isMobileSalesView}
-                  emptyNode={
-                    <>
-                      <p>No products selected</p>
-                      <p>Enable a product below to display data.</p>
-                    </>
-                  }
-                />
-              </SalesChartErrorBoundary>
-
-              <SeriesPills
-                seriesList={legendSeries}
+                <SalesChartErrorBoundary>
+                  <AdminLineChart
+                    series={adminChartSeries}
+                    metric={salesMetric === 'revenue' ? 'currency' : 'number'}
+                    getColor={getSeriesColor}
+                    getStrokeWidth={getSeriesStrokeWidth}
+                    formatValue={fmtSalesValue}
+                    primarySeriesKey={activeSeriesKeys[0]}
+                    showArea={(key) => key === activeSeriesKeys[0]}
+                    onExpand={isMobileSalesView ? () => setIsSalesChartExpanded(true) : undefined}
+                    responsive={isMobileSalesView}
+                    emptyNode={(
+                      <>
+                        <p>No products selected</p>
+                        <p>Enable a product below to display data.</p>
+                      </>
+                    )}
+                  />
+                </SalesChartErrorBoundary>
+              </div>
+            )}
+            footer={(
+              <AdminChartLegend
+                items={legendSeries}
                 onRemove={removeSeriesSelection}
-
-                maxHintVisible={Boolean(selectionLimitMessage)}
-                emptySelectionHintVisible={chartSeries.length === 0}
-              />
-
-            </div>
-            {isMobileSalesView && isSalesChartExpanded ? (
-              <div className="admin-sales-modal" role="dialog" aria-modal="true" aria-labelledby="admin-sales-modal-title">
-                <button type="button" className="admin-sales-modal-backdrop" onClick={() => setIsSalesChartExpanded(false)} aria-label="Close expanded chart" />
-                <div className="admin-sales-modal-panel">
-                  <div className="admin-sales-modal-header">
-                    <p id="admin-sales-modal-title">Sales chart</p>
-                    <button type="button" className="btn btn--secondary" onClick={() => setIsSalesChartExpanded(false)}>Close</button>
+                hint={
+                  selectionLimitMessage
+                    ? SALES_SELECTION_LIMIT_MESSAGE
+                    : chartSeries.length === 0
+                      ? 'Select a product to display data'
+                      : null
+                }
+                addControl={(
+                  <div className="admin-chart-legend__add">
+                    <button
+                      type="button"
+                      className="admin-chart-legend__add-btn"
+                      onClick={() => setProductAddOpen((open) => !open)}
+                      aria-expanded={productAddOpen}
+                    >
+                      + Add product
+                    </button>
+                    {productAddOpen ? (
+                      <div className="admin-chart-legend__search-panel">
+                        <input
+                          type="search"
+                          className="admin-chart-legend__search-input"
+                          value={expandedProductSearch}
+                          onChange={(event) => setExpandedProductSearch(event.target.value)}
+                          placeholder="Search products"
+                          aria-label="Search products"
+                          autoFocus={!isMobileSalesView}
+                        />
+                        <div className="admin-chart-legend__search-results" role="list">
+                          {filteredExpandableProducts.map((series) => (
+                            <button
+                              key={`search-${series.key}`}
+                              type="button"
+                              className="admin-chart-legend__search-result"
+                              role="listitem"
+                              onClick={() => {
+                                handleAddSeriesSelection(series.key);
+                                setProductAddOpen(false);
+                              }}
+                            >
+                              <span className="admin-chart-legend__swatch" style={{ background: series.color }} aria-hidden="true" />
+                              <span>{series.label}</span>
+                            </button>
+                          ))}
+                        </div>
+                      </div>
+                    ) : null}
                   </div>
-                  <SalesChartErrorBoundary>
-                    <AdminLineChart
-                      series={adminChartSeries}
-                      metric={salesMetric === 'revenue' ? 'currency' : 'number'}
-                      getColor={getSeriesColor}
-                      getStrokeWidth={getSeriesStrokeWidth}
-                      formatValue={fmtSalesValue}
-                      height="clamp(220px, 34vh, 320px)"
-                      responsive
-                      emptyNode={
-                        <>
-                          <p>No products selected</p>
-                          <p>Enable a product below to display data.</p>
-                        </>
-                      }
-                    />
-                  </SalesChartErrorBoundary>
-
-                </div>
-              </div>
+                )}
+              />
+            )}
+            statsRow={salesData ? (
+              <>
+                <p className="admin-analytics-studio__stat">
+                  Orders <strong>{salesData.kpis.ordersCount}</strong>
+                </p>
+                <p className="admin-analytics-studio__stat">
+                  AOV <strong>{formatPrice(salesData.kpis.avgOrderValuePence)}</strong>
+                </p>
+                <p className="admin-analytics-studio__stat">
+                  Top <strong>{salesData.kpis.bestProduct?.name ?? '—'}</strong>
+                </p>
+              </>
             ) : null}
+          />
 
-            <div className="admin-sales-modal-selector">
-
-              <label className="admin-sales-modal-search-wrap">
-                <span className="sr-only">Search products</span>
-                <input
-                  type="search"
-                  className="admin-sales-modal-search"
-                  value={expandedProductSearch}
-                  onChange={(event) => setExpandedProductSearch(event.target.value)}
-                  placeholder="Search products"
-                  aria-label="Search products"
-                />
-              </label>
-
-              <div className="admin-sales-search-results" role="list" aria-label="Search results">
-                {filteredExpandableProducts.map((series) => (
-                  <button
-                    key={`search-${series.key}`}
-                    type="button"
-                    className="admin-sales-search-result"
-                    onClick={() => handleAddSeriesSelection(series.key)}
-                  >
-                    <span className="admin-sales-series-pill__swatch" style={{ background: series.color }} aria-hidden="true" />
-                    <span>{series.label}</span>
-                  </button>
-                ))}
+          {isMobileSalesView && isSalesChartExpanded ? (
+            <div className="admin-sales-modal" role="dialog" aria-modal="true" aria-labelledby="admin-sales-modal-title">
+              <button type="button" className="admin-sales-modal-backdrop" onClick={() => setIsSalesChartExpanded(false)} aria-label="Close expanded chart" />
+              <div className="admin-sales-modal-panel">
+                <div className="admin-sales-modal-header">
+                  <p id="admin-sales-modal-title">Sales chart</p>
+                  <button type="button" className="btn btn--secondary" onClick={() => setIsSalesChartExpanded(false)}>Close</button>
+                </div>
+                <SalesChartErrorBoundary>
+                  <AdminLineChart
+                    series={adminChartSeries}
+                    metric={salesMetric === 'revenue' ? 'currency' : 'number'}
+                    getColor={getSeriesColor}
+                    getStrokeWidth={getSeriesStrokeWidth}
+                    formatValue={fmtSalesValue}
+                    primarySeriesKey={activeSeriesKeys[0]}
+                    showArea={(key) => key === activeSeriesKeys[0]}
+                    isFullscreen
+                    responsive
+                    emptyNode={(
+                      <>
+                        <p>No products selected</p>
+                        <p>Enable a product below to display data.</p>
+                      </>
+                    )}
+                  />
+                </SalesChartErrorBoundary>
               </div>
-
             </div>
+          ) : null}
 
-            <AdminLeaderboard
-              title="Product leaderboard"
-              emptyLabel="No paid order items in this range."
-              rows={salesLeaderboardRows}
-            />
-          </>
+          <AdminLeaderboard
+            title="Product leaderboard"
+            emptyLabel="No paid order items in this range."
+            rows={salesLeaderboardRows}
+          />
         </div>
       )}
 

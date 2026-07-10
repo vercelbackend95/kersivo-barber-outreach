@@ -24,6 +24,7 @@ type BarberProfileProps = {
   blockErrorMessage: string;
   getInitials: (name: string) => string;
   onBack: () => void;
+  backAriaLabel?: string;
     onBarberAvatarChange: (file: File | null) => void;
   onSaveAvatar: () => void;
 
@@ -57,6 +58,7 @@ export default function BarberProfile({
   blockErrorMessage,
   getInitials,
   onBack,
+  backAriaLabel = 'Back to list',
     onBarberAvatarChange,
   onSaveAvatar,
 
@@ -222,7 +224,7 @@ export default function BarberProfile({
             <h3 className="admin-barber-profile-title">{barber.name}</h3>
           </div>
                     <div className="admin-barber-profile-nav-actions">
-            <button type="button" className="admin-barber-nav-icon-btn" onClick={onBack} aria-label="Back to list">
+            <button type="button" className="admin-barber-nav-icon-btn" onClick={onBack} aria-label={backAriaLabel}>
               <span aria-hidden="true">←</span>
             </button>
 

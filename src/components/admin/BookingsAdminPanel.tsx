@@ -1,12 +1,12 @@
-import React, { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
+import React, { Suspense, lazy, useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
 import { AnimatePresence, motion } from 'framer-motion';
-import { BarberRosterOverviewGridSkeleton, SkeletonKPICards } from '../skeleton';
+import { BarberRosterOverviewGridSkeleton } from '../skeleton';
 import AdminSectionHeader from './AdminSectionHeader';
 import AdminBookingsOpsSearch from './AdminBookingsOpsSearch';
 import AdminDesktopDashHeroSlot from './AdminDesktopDashHeroSlot';
 import AdminBookingsScheduleList from './AdminBookingsScheduleList';
 import AdminBookingDatePicker from './AdminBookingDatePicker';
-import AdminLineChart from './charts/AdminLineChart';
+const BookingsReportsSection = lazy(() => import('./BookingsReportsSection'));
 import { addDays } from 'date-fns';
 import { formatInTimeZone, fromZonedTime, toZonedTime } from 'date-fns-tz';
 import TodayTimeline from './TodayTimeline';
@@ -24,10 +24,8 @@ import {
   getTodayLine,
 } from '../../lib/admin/barberRosterPresentation';
 import BarberChip from './BarberChip';
-import AdminLeaderboard from './AdminLeaderboard';
 import type { Barber, ServiceOption, TimeBlock, WorkingHourRow } from './barbersTypes';
 import { getDefaultWorkingHourRows } from '../../lib/admin/defaultWorkingHourRows';
-import { formatDelta } from './reportsFormatting';
 import EmptyState from '../EmptyState';
 import { Clock, ListOrdered, X } from '../lucide-react';
 import { ADMIN_BOOKING_HISTORY_PAGE_SIZE } from '../../lib/admin/bookingHistoryPageSize';
@@ -121,86 +119,6 @@ type HistoryDateRange = {
   to?: Date;
 };
 
-type ReportBookingRow = {
-  id: string;
-  startAt: string;
-  barberId: string;
-  barberName: string;
-  serviceName: string;
-  status: string;
-  clientName: string | null;
-  clientEmail: string | null;
-  computedValueGbp: number | null;
-};
-
-
-
-
-type ReportsPayload = {
-  range: ReportsRange;
-  rangeBoundaries: {
-        from: string;
-    to: string;
-    tz: string;
-  };
-  previousRangeBoundaries: {
-
-
-    from: string;
-    to: string;
-    tz: string;
-  };
-  bookingsCount: number;
-  cancelledRate: number;
-    noShowExpiredRate: number;
-  revenue: number;
-  avgBookingValue: number;
-  revenueCount: number;
-  usedDemoPricing: boolean;
-  breakdown: {
-    completed: number;
-    cancelledByClient: number;
-    cancelledByShop: number;
-    noShowExpired: number;
-  };
-  peakDay: string | null;
-  peakHour: string | null;
-  bookedMinutes: number;
-  availableMinutes: number;
-  utilizationPct: number | null;
-    revenueSeries: Array<{ label: string; value: number }>;
-  trends: {
-    bookingsPct: number | null;
-    cancelledRatePp: number;
-    revenuePct: number | null;
-    revenueDelta: number;
-        avgBookingValueDelta: number;
-    noShowExpiredCountDelta: number;
-    noShowExpiredRatePp: number;
-
-    utilizationPp: number | null;
-  };
-  recentBarbers: Array<{ id: string; name: string; avatarUrl: string | null }>;
-
-  selectedBarber: { id: string; name: string; avatarUrl: string | null } | null;
-  previousMetrics: {
-    bookingsCount: number;
-    cancelledRate: number;
-    revenue: number;
-    avgBookingValue: number;
-    utilizationPct: number | null;
-    noShowExpiredCount: number;
-    noShowExpiredRate: number;
-  };
-
-  mostPopularService: { name: string; count: number } | null;
-  busiestBarber: { name: string; count: number } | null;
-  reportBookings: ReportBookingRow[];
-
-};
-type ReportsRange = 'week' | '7d' | '30d' | '90d' | '1y';
-
-
 const ADMIN_TIMEZONE = 'Europe/London';
 const SLOT_STEP_MINUTES = 15;
 const POLL_INTERVAL_MS = 120000;
@@ -212,31 +130,19 @@ const MOBILE_BREAKPOINT_PX = 768;
 const MOBILE_RECENT_BARBERS_COUNT = 5;
 const DESKTOP_RECENT_BARBERS_COUNT = 11;
 const WEEK_DAYS = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
-const REPORTS_RANGE_OPTIONS: Array<{ value: ReportsRange; label: string }> = [
-  { value: 'week', label: 'This week' },
-  { value: '7d', label: 'Last 7 days' },
-  { value: '30d', label: 'Last 30 days' }
-];
 
-
-function formatCurrencyGbp(value: number): string {
-  const rounded = Math.abs(value) >= 100 ? Math.round(value) : Math.round(value * 100) / 100;
-  return new Intl.NumberFormat('en-GB', {
-    style: 'currency',
-    currency: 'GBP',
-    minimumFractionDigits: Math.abs(rounded) >= 100 ? 0 : 2,
-    maximumFractionDigits: Math.abs(rounded) >= 100 ? 0 : 2
-  }).format(rounded);
+function buildReportsBarberStub(id: string, name: string): Barber {
+  return {
+    id,
+    name,
+    isActive: true,
+    active: true,
+    avatarUrl: null,
+    sortOrder: undefined,
+    serviceIds: [],
+  };
 }
 
-function formatDurationMinutes(totalMinutes: number): string {
-  const safe = Math.max(0, Math.round(totalMinutes));
-  const hours = Math.floor(safe / 60);
-  const minutes = safe % 60;
-  if (hours <= 0) return `${minutes}m`;
-  if (minutes <= 0) return `${hours}h`;
-  return `${hours}h ${minutes}m`;
-}
 function getInitials(name: string): string {
   const normalized = name.trim();
   if (!normalized) return '?';
@@ -257,6 +163,20 @@ const DEFAULT_ADD_BARBER_SERVICES: ServiceOption[] = [
   { id: 'svc-beard-trim', name: 'Beard Trim' },
   { id: 'svc-haircut-beard', name: 'Haircut + Beard' }
 ];
+
+function clearTransientAdminViewportState() {
+  if (typeof document === 'undefined') return;
+
+  const { body, documentElement } = document;
+  body.style.overflow = '';
+  body.style.overscrollBehavior = '';
+  body.style.position = '';
+  body.style.top = '';
+  body.style.left = '';
+  body.style.right = '';
+  body.style.width = '';
+  documentElement.style.overflow = '';
+}
 
 function useBodyScrollLock(isLocked: boolean): void {
   useEffect(() => {
@@ -717,7 +637,8 @@ export default function BookingsAdminPanel({ isActive, mode, onBackToDashboard, 
   const [addBarberWorkingHours, setAddBarberWorkingHours] = useState<WorkingHourRow[]>(() => getDefaultWorkingHourRows());
 
   const [selectedBarberId, setSelectedBarberId] = useState<string | null>(null);
-  const [barberProfileSource, setBarberProfileSource] = useState<'ops' | null>(null);
+  const [barberProfileSource, setBarberProfileSource] = useState<'ops' | 'reports' | null>(null);
+  const [reportsProfileBarberMeta, setReportsProfileBarberMeta] = useState<{ id: string; name: string } | null>(null);
   const [services, setServices] = useState<ServiceOption[]>([]);
   const [workingHours, setWorkingHours] = useState<WorkingHourRow[]>([]);
   const [workingHoursLoading, setWorkingHoursLoading] = useState(false);
@@ -756,15 +677,6 @@ export default function BookingsAdminPanel({ isActive, mode, onBackToDashboard, 
   const [historyHasMore, setHistoryHasMore] = useState(false);
   const [historyLoadingMore, setHistoryLoadingMore] = useState(false);
   const [historySearchLoading, setHistorySearchLoading] = useState(false);
-  const [reports, setReports] = useState<ReportsPayload | null>(null);
-  const [reportsLoading, setReportsLoading] = useState(true);
-  const [reportsError, setReportsError] = useState('');
-    const [reportsRange, setReportsRange] = useState<ReportsRange>('week');
-  const [reportsBarberId, setReportsBarberId] = useState<string | null>(null);
-    const [isReportsMoreOpen, setIsReportsMoreOpen] = useState(false);
-  const [chartMetric, setChartMetric] = useState<'revenue' | 'bookings' | 'cancelRate'>('revenue');
-  const [openDrilldown, setOpenDrilldown] = useState<'bookings' | 'cancelled' | 'revenue' | 'service' | null>(null);
-  const [drilldownSearch, setDrilldownSearch] = useState('');
 
   const [cancelSuccessMessage, setCancelSuccessMessage] = useState('');
   const [cancelErrorMessage, setCancelErrorMessage] = useState('');
@@ -809,10 +721,8 @@ export default function BookingsAdminPanel({ isActive, mode, onBackToDashboard, 
   const timelineScrollRef = useRef<HTMLDivElement | null>(null);
   const bookingShellRef = useRef<HTMLElement | null>(null);
   const historyRecentBarbersScrollRef = useRef<HTMLDivElement | null>(null);
-  const reportsRecentBarbersScrollRef = useRef<HTMLDivElement | null>(null);
   const searchInputRef = useRef<HTMLInputElement | null>(null);
   const searchResultsRef = useRef<HTMLDivElement | null>(null);
-  const reportsMoreRef = useRef<HTMLDivElement | null>(null);
   const timelineScrollRestoreRef = useRef<{ left: number; top: number } | null>(null);
   const timelineScrollRafRef = useRef<number | null>(null);
     const pendingTimelineScrollBookingIdRef = useRef<string | null>(null);
@@ -901,41 +811,6 @@ export default function BookingsAdminPanel({ isActive, mode, onBackToDashboard, 
       setBarbersInitialLoading(false);
     }
   }, []);
-  const fetchReports = useCallback(async () => {
-    if (!loggedIn) return;
-
-    setReportsError('');
-    setReportsLoading(true);
-    const params = new URLSearchParams({ range: reportsRange });
-    if (reportsBarberId) params.set('barberId', reportsBarberId);
-    try {
-      const response = await fetch(`/api/admin/reports?${params.toString()}`, { credentials: 'include' });
-
-      if (response.status === 401) {
-        pollingStoppedRef.current = true;
-        setLoggedIn(false);
-        setError('Session expired. Please log in again.');
-        return;
-      }
-
-      if (!response.ok) {
-        setReportsError('Could not load reports right now.');
-        return;
-      }
-
-      const data = (await response.json()) as ReportsPayload;
-      setReports(data);
-      if (reportsBarberId && data.selectedBarber == null) {
-        setReportsBarberId(null);
-      }
-    } finally {
-      setReportsLoading(false);
-    }
-  }, [loggedIn, reportsBarberId, reportsRange]);
-
-
-
-
   const fetchBookings = useCallback(async (appendHistory = false) => {
     const isHistoryAppend = mode === 'history' && appendHistory;
 
@@ -1082,6 +957,8 @@ export default function BookingsAdminPanel({ isActive, mode, onBackToDashboard, 
     if (mode !== 'reports') {
       void fetchBookings();
       void fetchTimeBlocks();
+    } else {
+      setBookingsInitialLoading(false);
     }
 
     if (mode === 'history' || mode === 'reports') return;
@@ -1094,10 +971,6 @@ export default function BookingsAdminPanel({ isActive, mode, onBackToDashboard, 
     return () => window.clearInterval(id);
   }, [fetchBookings, fetchBarbers, fetchTimeBlocks, isActive, loggedIn, mode]);
 
-  useEffect(() => {
-    if (!loggedIn || !isActive || mode !== 'reports') return;
-    void fetchReports();
-  }, [fetchReports, isActive, loggedIn, mode]);
   useEffect(() => { if (!loggedIn || !isActive) return; const id = window.setInterval(() => setNowMs(Date.now()), LAST_UPDATED_REFRESH_MS); return () => window.clearInterval(id); }, [isActive, loggedIn]);
   useEffect(() => {
     if (!loggedIn || !isActive || mode !== 'history') return;
@@ -1137,26 +1010,6 @@ export default function BookingsAdminPanel({ isActive, mode, onBackToDashboard, 
       window.removeEventListener('keydown', handleEscape);
     };
   }, [isHistoryMoreOpen]);
-  useEffect(() => {
-    if (!isReportsMoreOpen) return;
-
-    const handleOutsideClick = (event: MouseEvent) => {
-      const target = event.target as Node;
-      if (reportsMoreRef.current?.contains(target)) return;
-      setIsReportsMoreOpen(false);
-    };
-
-    const handleEscape = (event: KeyboardEvent) => {
-      if (event.key === 'Escape') setIsReportsMoreOpen(false);
-    };
-
-    document.addEventListener('mousedown', handleOutsideClick);
-    window.addEventListener('keydown', handleEscape);
-    return () => {
-      document.removeEventListener('mousedown', handleOutsideClick);
-      window.removeEventListener('keydown', handleEscape);
-    };
-  }, [isReportsMoreOpen]);
 
 
     useEffect(() => () => {
@@ -1200,7 +1053,11 @@ export default function BookingsAdminPanel({ isActive, mode, onBackToDashboard, 
   }, [mode, applyDayOpsFilter]);
 
   useEffect(() => {
-    if (mode !== 'dashboard' && barberProfileSource === 'ops') {
+    if (barberProfileSource === 'ops' && mode !== 'dashboard') {
+      setSelectedBarberId(null);
+      setBarberProfileSource(null);
+    }
+    if (barberProfileSource === 'reports' && mode !== 'reports') {
       setSelectedBarberId(null);
       setBarberProfileSource(null);
     }
@@ -1321,14 +1178,28 @@ export default function BookingsAdminPanel({ isActive, mode, onBackToDashboard, 
     setBarberProfileSource('ops');
   }, []);
 
+  const openBarberFromReports = useCallback((barberId: string, meta: { name: string }) => {
+    setReportsProfileBarberMeta({ id: barberId, name: meta.name });
+    setSelectedBarberId(barberId);
+    setBarberProfileSource('reports');
+  }, []);
+
   const handleBarberProfileBack = useCallback(() => {
     setSelectedBarberId(null);
     setBarberProfileSource(null);
+    setReportsProfileBarberMeta(null);
   }, []);
 
   const visibleBarbersForManagement = useMemo(() => barbersFilter === 'all' ? allBarbersSorted : activeBarbers, [activeBarbers, allBarbersSorted, barbersFilter]);
-  const selectedBarber = useMemo(() => allBarbersSorted.find((barber) => barber.id === selectedBarberId) ?? null, [allBarbersSorted, selectedBarberId]);
-  const barberProfileContextActive = Boolean(selectedBarberId) && (mode === 'blocks' || barberProfileSource === 'ops');
+  const selectedBarber = useMemo(() => {
+    const found = allBarbersSorted.find((barber) => barber.id === selectedBarberId);
+    if (found) return found;
+    if (barberProfileSource === 'reports' && reportsProfileBarberMeta?.id === selectedBarberId) {
+      return buildReportsBarberStub(reportsProfileBarberMeta.id, reportsProfileBarberMeta.name);
+    }
+    return null;
+  }, [allBarbersSorted, selectedBarberId, barberProfileSource, reportsProfileBarberMeta]);
+  const barberProfileContextActive = Boolean(selectedBarberId) && (mode === 'blocks' || mode === 'reports' || barberProfileSource === 'ops');
   const enabledServiceIds = useMemo(() => new Set(selectedBarber?.serviceIds ?? []), [selectedBarber]);
   const selectedBarberBlocks = useMemo(() => timeBlocks.filter((block) => block.barberId === selectedBarberId), [selectedBarberId, timeBlocks]);
   const globalBlocks = useMemo(() => timeBlocks.filter((block) => !block.barberId), [timeBlocks]);
@@ -1388,174 +1259,11 @@ export default function BookingsAdminPanel({ isActive, mode, onBackToDashboard, 
     };
 
     const unbindHistory = bindEdgeHint(historyRecentBarbersScrollRef.current);
-    const unbindReports = bindEdgeHint(reportsRecentBarbersScrollRef.current);
 
     return () => {
       unbindHistory();
-      unbindReports();
     };
   }, [mode, recentBarbers]);
-
-
-  const reportRecentBarbers = useMemo(() => {
-    const byId = new Map(barbers.map((barber) => [barber.id, barber]));
-    return (reports?.recentBarbers ?? []).map((entry) => ({
-      id: entry.id,
-      name: byId.get(entry.id)?.name ?? entry.name,
-      avatarUrl: byId.get(entry.id)?.avatarUrl ?? entry.avatarUrl ?? null
-
-    }));
-  }, [barbers, reports]);
-
-  const reportsSelectedBarberName = useMemo(() => {
-    if (!reportsBarberId) return 'All barbers';
-    const matching = reportRecentBarbers.find((barber) => barber.id === reportsBarberId);
-    if (matching) return matching.name;
-    return reports?.selectedBarber?.name ?? 'Selected barber';
-  }, [reportRecentBarbers, reports, reportsBarberId]);
-
-  const reportsBreakdownTotal = useMemo(() => {
-    if (!reports) return 0;
-    return reports.breakdown.completed + reports.breakdown.cancelledByClient + reports.breakdown.cancelledByShop + reports.breakdown.noShowExpired;
-  }, [reports]);
-
-
-  const reportsBookedVsAvailableLabel = useMemo(() => {
-    if (!reports) return '—';
-        if (reports.availableMinutes <= 0) return 'No working hours in range';
-    return `Booked ${formatDurationMinutes(reports.bookedMinutes)} / Available ${formatDurationMinutes(reports.availableMinutes)}`;
-  }, [reports]);
-
-  const bookingsDelta = formatDelta({
-    value: reports?.trends.bookingsPct ?? null,
-    type: 'percent',
-    tone: 'higher_better',
-    currentValue: reports?.bookingsCount,
-    previousValue: reports?.previousMetrics.bookingsCount
-  });
-  const utilizationDelta = formatDelta({
-    value: reports?.trends.utilizationPp ?? null,
-    type: 'pp',
-    tone: 'higher_better',
-    currentValue: reports?.utilizationPct,
-    previousValue: reports?.previousMetrics.utilizationPct
-  });
-  const cancelledDelta = formatDelta({
-    value: reports?.trends.cancelledRatePp ?? null,
-    type: 'pp',
-    tone: 'lower_better',
-    currentValue: reports?.cancelledRate,
-    previousValue: reports?.previousMetrics.cancelledRate
-  });
-  const avgBookingValueDelta = formatDelta({
-    value: reports?.trends.avgBookingValueDelta ?? null,
-    type: 'currency',
-    tone: 'higher_better',
-    currentValue: reports?.avgBookingValue,
-    previousValue: reports?.previousMetrics.avgBookingValue
-  });
-  const noShowExpiredDelta = formatDelta({
-    value: reports?.trends.noShowExpiredRatePp ?? null,
-    type: 'pp',
-    tone: 'lower_better',
-    currentValue: reports?.noShowExpiredRate,
-    previousValue: reports?.previousMetrics.noShowExpiredRate
-  });
-
-  const reportsCancelledCount = (reports?.breakdown.cancelledByClient ?? 0) + (reports?.breakdown.cancelledByShop ?? 0);
-
-
-  const isSmallSample = (reports?.bookingsCount ?? 0) > 0 && (reports?.bookingsCount ?? 0) < 10;
-
-
-  const chartSeries = useMemo(() => {
-    if (!reports) return [] as Array<{ label: string; value: number }>;
-    if (chartMetric === 'revenue') return reports.revenueSeries;
-    const map = new Map<string, { total: number; cancelled: number }>();
-    for (const row of reports.reportBookings ?? []) {
-      const key = formatInTimeZone(new Date(row.startAt), ADMIN_TIMEZONE, reportsRange === '1y' ? "yyyy-'W'II" : 'yyyy-MM-dd');
-      const current = map.get(key) ?? { total: 0, cancelled: 0 };
-      current.total += 1;
-      if (row.status === 'CANCELLED_BY_CLIENT' || row.status === 'CANCELLED_BY_SHOP' || row.status === 'CANCELLED_BY_ADMIN' || row.status === 'EXPIRED') current.cancelled += 1;
-      map.set(key, current);
-    }
-    return reports.revenueSeries.map((point) => {
-      const bucket = map.get(point.label) ?? { total: 0, cancelled: 0 };
-      return {
-        label: point.label,
-        value: chartMetric === 'bookings' ? bucket.total : (bucket.total > 0 ? (bucket.cancelled / bucket.total) * 100 : 0)
-      };
-    });
-  }, [chartMetric, reports, reportsRange]);
-
-  const reportsHeroValue = formatCurrencyGbp(reports?.revenue ?? 0);
-
-  const reportsChartSeries = useMemo(
-    () => [{ key: 'main', name: chartMetric === 'cancelRate' ? 'Cancel rate' : chartMetric === 'bookings' ? 'Bookings' : 'Revenue', points: chartSeries }],
-    [chartMetric, chartSeries],
-  );
-
-  const reportsLeaderboardRows = useMemo(() => {
-    if (!reports) return [];
-    const byBarber = new Map<string, { name: string; revenue: number; bookings: number }>();
-    for (const row of reports.reportBookings ?? []) {
-      const entry = byBarber.get(row.barberId) ?? { name: row.barberName, revenue: 0, bookings: 0 };
-      entry.bookings += 1;
-      entry.revenue += row.computedValueGbp ?? 0;
-      byBarber.set(row.barberId, entry);
-    }
-    return Array.from(byBarber.entries())
-      .map(([id, entry]) => ({
-        id,
-        name: entry.name,
-        value: entry.revenue > 0 ? entry.revenue : entry.bookings,
-        valueLabel: entry.revenue > 0 ? formatCurrencyGbp(entry.revenue) : `${entry.bookings}`,
-        note: `${entry.bookings} bookings`,
-      }))
-      .sort((a, b) => b.value - a.value);
-  }, [reports]);
-
-  const bookingsSparkSeries = useMemo((): Array<{ label: string; value: number }> => {
-    if (!reports) return [];
-    const map = new Map<string, number>();
-    for (const row of reports.reportBookings ?? []) {
-      const key = formatInTimeZone(new Date(row.startAt), ADMIN_TIMEZONE, reportsRange === '1y' ? "yyyy-'W'II" : 'yyyy-MM-dd');
-      map.set(key, (map.get(key) ?? 0) + 1);
-    }
-    return reports.revenueSeries.map((p) => ({ label: p.label, value: map.get(p.label) ?? 0 }));
-  }, [reports, reportsRange]);
-
-  const cancelledSparkSeries = useMemo((): Array<{ label: string; value: number }> => {
-    if (!reports) return [];
-    const map = new Map<string, { total: number; cancelled: number }>();
-    for (const row of reports.reportBookings ?? []) {
-      const key = formatInTimeZone(new Date(row.startAt), ADMIN_TIMEZONE, reportsRange === '1y' ? "yyyy-'W'II" : 'yyyy-MM-dd');
-      const c = map.get(key) ?? { total: 0, cancelled: 0 };
-      c.total += 1;
-      if (['CANCELLED_BY_CLIENT', 'CANCELLED_BY_SHOP', 'CANCELLED_BY_ADMIN', 'EXPIRED'].includes(row.status)) c.cancelled += 1;
-      map.set(key, c);
-    }
-    return reports.revenueSeries.map((p) => {
-      const b = map.get(p.label) ?? { total: 0, cancelled: 0 };
-      return { label: p.label, value: b.total > 0 ? (b.cancelled / b.total) * 100 : 0 };
-    });
-  }, [reports, reportsRange]);
-
-  const drilldownRows = useMemo(() => {
-    const rows = reports?.reportBookings ?? [];
-    if (openDrilldown === 'bookings') return rows;
-    if (openDrilldown === 'cancelled') return rows.filter((row) => ['CANCELLED_BY_CLIENT', 'CANCELLED_BY_SHOP', 'CANCELLED_BY_ADMIN', 'EXPIRED'].includes(row.status));
-    if (openDrilldown === 'revenue') return rows.filter((row) => row.computedValueGbp != null);
-    if (openDrilldown === 'service') return rows.filter((row) => reports?.mostPopularService && row.serviceName === reports.mostPopularService.name);
-    return [] as ReportBookingRow[];
-  }, [openDrilldown, reports]);
-
-  const filteredDrilldownRows = useMemo(() => {
-    const q = drilldownSearch.trim().toLowerCase();
-    if (!q) return drilldownRows;
-    return drilldownRows.filter((row) => [row.clientName, row.clientEmail, row.serviceName].join(' ').toLowerCase().includes(q));
-  }, [drilldownRows, drilldownSearch]);
-
 
   const visibleBookings = useMemo(() => {
     if (!effectiveClientSearchQuery) return dayFilteredBookings;
@@ -1628,7 +1336,6 @@ export default function BookingsAdminPanel({ isActive, mode, onBackToDashboard, 
 
   const isAnyOverlayOpen =
     isAddBarberSheetOpen ||
-    openDrilldown !== null ||
     showHolidayModal ||
     selectedClientId !== null;
   useBodyScrollLock(isMobileViewport && isAnyOverlayOpen);
@@ -1641,6 +1348,19 @@ export default function BookingsAdminPanel({ isActive, mode, onBackToDashboard, 
   );
   const goToNextTimelineDay = useCallback(() => {
     setSelectedDate((d) => addOneLondonCalendarDay(d));
+  }, []);
+
+  const handleReportsUnauthorized = useCallback(() => {
+    pollingStoppedRef.current = true;
+    setLoggedIn(false);
+    setError('Session expired. Please log in again.');
+  }, []);
+
+  useEffect(() => {
+    clearTransientAdminViewportState();
+    return () => {
+      clearTransientAdminViewportState();
+    };
   }, []);
 
 
@@ -1834,9 +1554,9 @@ export default function BookingsAdminPanel({ isActive, mode, onBackToDashboard, 
 
   useEffect(() => {
     if (!loggedIn || !isActive) return;
-    if (mode !== 'blocks' && barberProfileSource !== 'ops') return;
+    if (!barberProfileContextActive) return;
     void fetchServices();
-  }, [barberProfileSource, fetchServices, isActive, loggedIn, mode]);
+  }, [barberProfileContextActive, fetchServices, isActive, loggedIn]);
 
   const fetchSelectedBarberStats = useCallback(async (barberId: string) => {
     if (!barberId) {
@@ -2214,7 +1934,7 @@ export default function BookingsAdminPanel({ isActive, mode, onBackToDashboard, 
 
       setSelectedBarberId((current) => current === barberId ? null : current);
       setHistoryBarberId((current) => current === barberId ? 'all' : current);
-      setReportsBarberId((current) => current === barberId ? null : current);
+      setReportsProfileBarberMeta((current) => (current?.id === barberId ? null : current));
       setBlockScopeBarberId((current) => current === barberId ? 'all' : current);
       setSelectedBarberStatsCount(0);
       setWorkingHours([]);
@@ -2429,6 +2149,7 @@ export default function BookingsAdminPanel({ isActive, mode, onBackToDashboard, 
       blockErrorMessage={blockErrorMessage}
       getInitials={getInitials}
       onBack={handleBarberProfileBack}
+      backAriaLabel={barberProfileSource === 'reports' ? 'Back to reports' : undefined}
       onBarberAvatarChange={setEditingBarberAvatarFile}
       onSaveAvatar={() => void saveSelectedBarberAvatar()}
       onToggleActive={() => void updateBarberStatus(selectedBarber.id, !normalizeBarberStatus(selectedBarber))}
@@ -2450,7 +2171,7 @@ export default function BookingsAdminPanel({ isActive, mode, onBackToDashboard, 
   return (
     <section
       ref={bookingShellRef}
-      className={`surface booking-shell${mode === 'reports' ? ' booking-shell--reports' : ''}${mode === 'blocks' ? ' admin-services-shell' : ''}`}
+      className={`surface booking-shell${mode === 'reports' ? ' booking-shell--reports' : ''}${mode === 'reports' && barberProfileSource === 'reports' && selectedBarberId ? ' booking-shell--reports-profile' : ''}${mode === 'blocks' ? ' admin-services-shell' : ''}`}
     >
       {mode === 'dashboard' ? (
         barberProfileSource === 'ops' && barberProfileView ? (
@@ -2793,173 +2514,23 @@ export default function BookingsAdminPanel({ isActive, mode, onBackToDashboard, 
       )}
 
 
-      {mode === 'reports' && (
-        <section className="admin-reports" aria-live="polite">
-          <div className="admin-reports-filter-bar">
-          <p className="admin-kpi-note">Timezone: {ADMIN_TIMEZONE}</p>
-          <div className="admin-reports-range-scroll">
-            <div className="admin-reports-range-tabs" role="tablist" aria-label="Report range">
-              {REPORTS_RANGE_OPTIONS.map((option) => {
-                const isActive = reportsRange === option.value;
-                return (
-                  <button key={option.value} type="button" role="tab" aria-selected={isActive} className={`admin-reports-range-tab ${isActive ? 'is-active' : ''}`} onClick={() => setReportsRange(option.value)}>{option.label}</button>
-                );
-              })}
-            </div>
-          </div>
-
-          <div className="admin-history-row">
-            <label>Recent barbers</label>
-            <div className="admin-history-barber-controls">
-              <div className="admin-filter-scroll-wrap">
-                <div ref={reportsRecentBarbersScrollRef} className="admin-history-recent-scroll">
-                <div className="admin-history-recent-barbers" role="group" aria-label="Recent barbers">
-                  <button type="button" className={`admin-history-avatar admin-history-avatar--all ${reportsBarberId === null ? 'is-active' : ''}`} onClick={() => setReportsBarberId(null)} aria-pressed={reportsBarberId === null}>ALL</button>
-                  {reportRecentBarbers.map((barber) => {
-                    const hashIndex = hashValue(`${barber.id}:${barber.name}`) % 6;
-                    const isActive = reportsBarberId === barber.id;
-                    return <BarberChip key={barber.id} barber={barber} toneIndex={hashIndex} isSelected={isActive} onClick={() => setReportsBarberId(barber.id)} ariaLabel={`Filter by ${barber.name}`} />;
-                  })}
-                </div>
-                </div>
-              </div>
-
-              <div className="admin-history-control-actions">
-                <div className="admin-history-more" ref={reportsMoreRef}>
-                  <button
-                    type="button"
-                    className={`admin-history-icon-button ${isReportsMoreOpen ? 'is-active' : ''}`}
-                    onClick={() => setIsReportsMoreOpen((current) => !current)}
-                    aria-haspopup="menu"
-                    aria-expanded={isReportsMoreOpen}
-                    aria-label="Show all barbers"
-                  >
-                    <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">
-                      <path d="M4 6.5A1.5 1.5 0 0 1 5.5 5h13A1.5 1.5 0 0 1 20 6.5v1A1.5 1.5 0 0 1 18.5 9h-13A1.5 1.5 0 0 1 4 7.5v-1Zm0 5A1.5 1.5 0 0 1 5.5 10h13a1.5 1.5 0 0 1 1.5 1.5v1a1.5 1.5 0 0 1-1.5 1.5h-13A1.5 1.5 0 0 1 4 12.5v-1Zm1.5 3.5A1.5 1.5 0 0 0 4 16.5v1A1.5 1.5 0 0 0 5.5 19h13a1.5 1.5 0 0 0 1.5-1.5v-1a1.5 1.5 0 0 0-1.5-1.5h-13Z" fill="currentColor" />
-                    </svg>
-                  </button>
-
-                  {isReportsMoreOpen ? (
-                    <div className="admin-history-more-menu" role="menu" aria-label="All barbers">
-                      <button
-                        type="button"
-                        role="menuitemradio"
-                        aria-checked={reportsBarberId === null}
-                        className={`admin-history-more-item ${reportsBarberId === null ? 'is-active' : ''}`}
-                        onClick={() => {
-                          setReportsBarberId(null);
-                          setIsReportsMoreOpen(false);
-                        }}
-                      >
-                        All barbers
-                      </button>
-                      {allBarbersSorted.map((barber) => (
-                        <button
-                          key={barber.id}
-                          type="button"
-                          role="menuitemradio"
-                          aria-checked={reportsBarberId === barber.id}
-                          className={`admin-history-more-item ${reportsBarberId === barber.id ? 'is-active' : ''}`}
-                          onClick={() => {
-                            setReportsBarberId(barber.id);
-                            setIsReportsMoreOpen(false);
-                          }}
-                        >
-                          {barber.name}
-                        </button>
-                      ))}
-                    </div>
-                  ) : null}
-                </div>
-              </div>
-            </div>
-          </div>
-          </div>
-
-
-          <div className="admin-reports-hero admin-kpi-clickable" onClick={() => setOpenDrilldown('revenue')}>
-            <span className="admin-reports-hero-value">{reportsHeroValue}</span>
-            <p className="admin-reports-hero-label">Revenue in selected period</p>
-          </div>
-
-          <div className="admin-sales-chart-wrap">
-            <div className="admin-kpi-row">
-              <p className="admin-kpi-label">Trend</p>
-              <div className="admin-chart-switcher">
-                {(['revenue', 'bookings', 'cancelRate'] as const).map((metric) => (
-                  <button type="button" key={metric} className={`admin-chart-switch ${chartMetric === metric ? 'is-active' : ''}`} onClick={() => setChartMetric(metric)}>
-                    {metric === 'cancelRate' ? 'Cancel rate' : metric.charAt(0).toUpperCase() + metric.slice(1)}
-                  </button>
-                ))}
-              </div>
-            </div>
-            <AdminLineChart
-              series={reportsChartSeries}
-              metric={chartMetric === 'revenue' ? 'currency' : 'number'}
-              getColor={() => (chartMetric === 'cancelRate' ? 'var(--accent)' : 'var(--fg)')}
-              formatValue={(v) => (chartMetric === 'revenue' ? formatCurrencyGbp(v) : chartMetric === 'cancelRate' ? `${v.toFixed(1)}%` : `${Math.round(v)}`)}
-              responsive
-              emptyLabel="No data for this range"
+      {mode === 'reports' ? (
+        barberProfileSource === 'reports' && selectedBarberId && selectedBarber ? (
+          barberProfileView
+        ) : barberProfileSource === 'reports' && selectedBarberId && barbersInitialLoading ? (
+          <p className="muted">Loading barber profile…</p>
+        ) : (
+          <Suspense fallback={<p className="muted" aria-busy="true">Loading reports…</p>}>
+            <BookingsReportsSection
+              isActive={isActive}
+              loggedIn={loggedIn}
+              barbers={barbers}
+              onUnauthorized={handleReportsUnauthorized}
+              onOpenBarber={openBarberFromReports}
             />
-          </div>
-
-          {reportsError && <p className="admin-inline-error">{reportsError}</p>}
-          {reportsLoading && reports === null ? (
-            <div className="admin-reports-grid" aria-busy="true" aria-hidden="true">
-              <SkeletonKPICards count={8} />
-            </div>
-          ) : null}
-          <div className={`admin-reports-grid${reportsLoading && reports === null ? ' admin-reports-grid--hidden' : ''}`}>
-
-            <article className={`admin-kpi-card admin-kpi-card--bookings admin-kpi-clickable${bookingsDelta.className === 'admin-kpi-trend--up' ? ' admin-kpi-card--trend-up' : bookingsDelta.className === 'admin-kpi-trend--down' ? ' admin-kpi-card--trend-down' : ''}`} onClick={() => setOpenDrilldown('bookings')}>
-              <p className="admin-kpi-label">Bookings</p>
-              <p className="admin-kpi-value">{reports?.bookingsCount ?? 0}</p>
-              <p className={`admin-kpi-trend ${bookingsDelta.className}`}>{bookingsDelta.direction === 'up' ? <svg aria-hidden="true" className="admin-kpi-trend-icon" viewBox="0 0 8 8" fill="currentColor"><path d="M4 0L8 8H0Z"/></svg> : bookingsDelta.direction === 'down' ? <svg aria-hidden="true" className="admin-kpi-trend-icon" viewBox="0 0 8 8" fill="currentColor"><path d="M4 8L0 0H8Z"/></svg> : null}{bookingsDelta.text}{isSmallSample ? <span className="admin-kpi-sample-inline">Small sample</span> : null}</p>
-              <div className="admin-kpi-sparkline" aria-hidden="true">
-                <AdminLineChart variant="sparkline" responsive series={[{ key: 'bookings', name: 'Bookings', points: bookingsSparkSeries }]} getColor={() => 'var(--fg)'} emptyLabel="" />
-              </div>
-            </article>
-
-            <article className={`admin-kpi-card admin-kpi-card--cancelled admin-kpi-clickable${cancelledDelta.className === 'admin-kpi-trend--up' ? ' admin-kpi-card--trend-up' : cancelledDelta.className === 'admin-kpi-trend--down' ? ' admin-kpi-card--trend-down' : ''}`} onClick={() => setOpenDrilldown('cancelled')}>
-              <p className="admin-kpi-label">Cancelled rate</p>
-              <p className="admin-kpi-value">{`${(reports?.cancelledRate ?? 0).toFixed(1)}%`}</p>
-              <p className={`admin-kpi-trend ${cancelledDelta.className}`}>{cancelledDelta.direction === 'up' ? <svg aria-hidden="true" className="admin-kpi-trend-icon" viewBox="0 0 8 8" fill="currentColor"><path d="M4 0L8 8H0Z"/></svg> : cancelledDelta.direction === 'down' ? <svg aria-hidden="true" className="admin-kpi-trend-icon" viewBox="0 0 8 8" fill="currentColor"><path d="M4 8L0 0H8Z"/></svg> : null}{cancelledDelta.text}</p>
-              <p className="admin-kpi-note">{reportsCancelledCount} of {reports?.bookingsCount ?? 0} bookings</p>
-              <div className="admin-reports-breakdown" role="list" aria-label="Completion breakdown"><div className="admin-reports-breakdown-bar" aria-hidden="true"><span style={{ width: `${reportsBreakdownTotal ? ((reports?.breakdown.completed ?? 0) / reportsBreakdownTotal) * 100 : 0}%` }} className="is-completed" /><span style={{ width: `${reportsBreakdownTotal ? ((reports?.breakdown.cancelledByClient ?? 0) / reportsBreakdownTotal) * 100 : 0}%` }} className="is-cancel-client" /><span style={{ width: `${reportsBreakdownTotal ? ((reports?.breakdown.cancelledByShop ?? 0) / reportsBreakdownTotal) * 100 : 0}%` }} className="is-cancel-shop" /><span style={{ width: `${reportsBreakdownTotal ? ((reports?.breakdown.noShowExpired ?? 0) / reportsBreakdownTotal) * 100 : 0}%` }} className="is-no-show" /></div></div>
-              <div className="admin-kpi-sparkline" aria-hidden="true">
-                <AdminLineChart variant="sparkline" responsive series={[{ key: 'cancelled', name: 'Cancel rate', points: cancelledSparkSeries }]} getColor={() => 'var(--accent)'} getPathClassName={() => 'is-warning'} emptyLabel="" />
-              </div>
-            </article>
-            <article className={`admin-kpi-card admin-kpi-card--utilization${utilizationDelta.className === 'admin-kpi-trend--up' ? ' admin-kpi-card--trend-up' : utilizationDelta.className === 'admin-kpi-trend--down' ? ' admin-kpi-card--trend-down' : ''}`}>
-              <p className="admin-kpi-label">Utilization</p>
-              <p className="admin-kpi-value">{reports?.utilizationPct == null ? '—' : `${reports.utilizationPct.toFixed(1)}%`}</p>
-              <p className={`admin-kpi-trend ${utilizationDelta.className}`}>{utilizationDelta.direction === 'up' ? <svg aria-hidden="true" className="admin-kpi-trend-icon" viewBox="0 0 8 8" fill="currentColor"><path d="M4 0L8 8H0Z"/></svg> : utilizationDelta.direction === 'down' ? <svg aria-hidden="true" className="admin-kpi-trend-icon" viewBox="0 0 8 8" fill="currentColor"><path d="M4 8L0 0H8Z"/></svg> : null}{utilizationDelta.text}</p>
-              <p className="admin-kpi-note">{reportsBookedVsAvailableLabel}</p>
-            </article>
-            <article className={`admin-kpi-card${avgBookingValueDelta.className === 'admin-kpi-trend--up' ? ' admin-kpi-card--trend-up' : avgBookingValueDelta.className === 'admin-kpi-trend--down' ? ' admin-kpi-card--trend-down' : ''}`}>
-              <p className="admin-kpi-label">Avg booking value</p>
-              <p className="admin-kpi-value">{formatCurrencyGbp(reports?.avgBookingValue ?? 0)}</p>
-              <p className={`admin-kpi-trend ${avgBookingValueDelta.className}`}>{avgBookingValueDelta.direction === 'up' ? <svg aria-hidden="true" className="admin-kpi-trend-icon" viewBox="0 0 8 8" fill="currentColor"><path d="M4 0L8 8H0Z"/></svg> : avgBookingValueDelta.direction === 'down' ? <svg aria-hidden="true" className="admin-kpi-trend-icon" viewBox="0 0 8 8" fill="currentColor"><path d="M4 8L0 0H8Z"/></svg> : null}{avgBookingValueDelta.text}</p>
-            </article>
-            <article className={`admin-kpi-card${noShowExpiredDelta.className === 'admin-kpi-trend--up' ? ' admin-kpi-card--trend-up' : noShowExpiredDelta.className === 'admin-kpi-trend--down' ? ' admin-kpi-card--trend-down' : ''}`}>
-              <p className="admin-kpi-label">No-show/expired rate</p>
-              <p className="admin-kpi-value">{`${(reports?.noShowExpiredRate ?? 0).toFixed(1)}%`}</p>
-              <p className={`admin-kpi-trend ${noShowExpiredDelta.className}`}>{noShowExpiredDelta.direction === 'up' ? <svg aria-hidden="true" className="admin-kpi-trend-icon" viewBox="0 0 8 8" fill="currentColor"><path d="M4 0L8 8H0Z"/></svg> : noShowExpiredDelta.direction === 'down' ? <svg aria-hidden="true" className="admin-kpi-trend-icon" viewBox="0 0 8 8" fill="currentColor"><path d="M4 8L0 0H8Z"/></svg> : null}{noShowExpiredDelta.text}</p>
-            </article>
-
-            <article className="admin-kpi-card"><p className="admin-kpi-label">Peak day</p><p className="admin-kpi-value admin-kpi-value--text">{reports?.peakDay ?? '—'}</p></article>
-            <article className="admin-kpi-card"><p className="admin-kpi-label">Peak hour</p><p className="admin-kpi-value admin-kpi-value--text">{reports?.peakHour ?? '—'}</p></article>
-            <article className="admin-kpi-card admin-kpi-clickable" onClick={() => setOpenDrilldown('service')}><p className="admin-kpi-label">Most popular service</p><p className="admin-kpi-value admin-kpi-value--text">{reports?.mostPopularService ? `${reports.mostPopularService.name} (${reports.mostPopularService.count})` : 'No confirmed bookings'}</p></article>
-            <article className="admin-kpi-card"><p className="admin-kpi-label">{reportsBarberId ? 'Selected barber' : 'Busiest barber'}</p><p className="admin-kpi-value admin-kpi-value--text">{reportsBarberId ? reportsSelectedBarberName : reports?.busiestBarber ? `${reports.busiestBarber.name} (${reports.busiestBarber.count})` : 'No confirmed bookings'}</p></article>
-          </div>
-          <AdminLeaderboard
-            title="Barber leaderboard"
-            emptyLabel="No bookings in this range."
-            rows={reportsLeaderboardRows}
-          />
-          {openDrilldown ? <div className="admin-client-modal-backdrop admin-client-modal-backdrop--centered" role="presentation" onClick={() => setOpenDrilldown(null)}><div className="admin-reports-drawer" onClick={(event) => event.stopPropagation()} role="dialog" aria-modal="true"><div className="admin-client-modal-head"><h3>Drill-down</h3><button type="button" className="btn btn--ghost" onClick={() => setOpenDrilldown(null)}>Close</button></div><input value={drilldownSearch} onChange={(event) => setDrilldownSearch(event.target.value)} placeholder="Search client/email/service" /><div className="admin-reports-drawer-list">{filteredDrilldownRows.map((row) => <article key={row.id} className="admin-kpi-card"><p>{formatInTimeZone(new Date(row.startAt), ADMIN_TIMEZONE, 'dd MMM HH:mm')} · {row.barberName}</p><p>{row.serviceName} · {row.status}</p><p>{row.clientName ?? 'Unknown'} · {row.clientEmail ?? 'No email'}</p>{row.computedValueGbp != null ? <p>{formatCurrencyGbp(row.computedValueGbp)}</p> : null}</article>)}</div></div></div> : null}
-        </section>
-      )}
+          </Suspense>
+        )
+      ) : null}
 
       {showHolidayModal && (
         <div className="admin-client-modal-backdrop admin-client-modal-backdrop--centered" role="presentation" onClick={() => setShowHolidayModal(false)}>

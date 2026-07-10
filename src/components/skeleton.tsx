@@ -81,13 +81,17 @@ export function SkeletonTableRows({ count = 5, cols = 6 }: { count?: number; col
    KPI card skeletons (reports grid)
    ───────────────────────────────────────────────────────────── */
 
-export function SkeletonKPICards({ count = 3 }: { count?: number }) {
+export function SkeletonKPICards({ count = 3, variant = 'legacy' }: { count?: number; variant?: 'legacy' | 'metric' }) {
+  const cardClass = variant === 'metric'
+    ? 'skeleton--card skeleton-kpi-card skeleton-kpi-card--metric'
+    : 'skeleton--card skeleton-kpi-card';
+
   return (
     <>
       {Array.from({ length: count }, (_, i) => (
         <div
           key={i}
-          className="skeleton--card skeleton-kpi-card"
+          className={cardClass}
           aria-hidden="true"
         >
           <span className="skeleton skeleton--text-sm" style={{ width: '45%' }} />

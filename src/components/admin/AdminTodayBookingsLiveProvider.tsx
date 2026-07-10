@@ -118,13 +118,13 @@ export function AdminTodayBookingsLiveProvider({
   }, [loggedIn]);
 
   useEffect(() => {
-    if (!loggedIn) return undefined;
+    if (!loggedIn || isPublicDemo) return undefined;
     void fetchToday();
     const id = window.setInterval(() => {
       void fetchToday();
     }, ADMIN_TODAY_BOOKINGS_POLL_MS);
     return () => window.clearInterval(id);
-  }, [fetchToday, loggedIn]);
+  }, [fetchToday, isPublicDemo, loggedIn]);
 
   useEffect(() => {
     if (!loggedIn) return undefined;
@@ -141,8 +141,13 @@ export function AdminTodayBookingsLiveProvider({
 
   const hasRecentConnectionAttempt = nowMs - initialMountMsRef.current > CONNECTING_GRACE_MS;
   const isLive = lastSuccessAt ? nowMs - lastSuccessAt <= LIVE_THRESHOLD_MS : false;
-  const connectionStateLabel =
-    !lastSuccessAt && !hasRecentConnectionAttempt ? 'CONNECTING…' : isLive ? 'LIVE' : 'OFFLINE';
+  const connectionStateLabel = isPublicDemo
+    ? 'LIVE'
+    : !lastSuccessAt && !hasRecentConnectionAttempt
+      ? 'CONNECTING…'
+      : isLive
+        ? 'LIVE'
+        : 'OFFLINE';
   const hasLivePulse = connectionStateLabel === 'LIVE';
 
   const formatStartTime = useCallback((iso: string) => formatAdminLiveStartTime(iso), []);

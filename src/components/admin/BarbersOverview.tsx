@@ -4,6 +4,7 @@ import BarberWorkingHoursEditor from './BarberWorkingHoursEditor';
 import type { BarberBookingPreview } from '../../lib/admin/barberRosterPresentation';
 import { Check, Plus, X } from '../lucide-react';
 import AdminBarberRosterCard from './AdminBarberRosterCard';
+import AdminBarberRosterSearch from './AdminBarberRosterSearch';
 import { BarberRosterOverviewGridSkeleton } from '../skeleton';
 import {
   getDayFill,
@@ -55,6 +56,13 @@ function normalizeBarberStatus(barber: Barber) {
   return barber.isActive;
 }
 
+function isKeyboardEditableTarget(target: EventTarget | null) {
+  if (!(target instanceof HTMLElement)) return false;
+  const tagName = target.tagName.toLowerCase();
+  if (tagName === 'input' || tagName === 'textarea' || tagName === 'select') return true;
+  return target.isContentEditable;
+}
+
 export default function BarbersOverview({
   barbers,
   services,
@@ -87,6 +95,41 @@ export default function BarbersOverview({
   const barberFilterLabelId = React.useId();
   const availableServices = services.length > 0 ? services : DEFAULT_SERVICE_OPTIONS;
   const [nowTick, setNowTick] = React.useState(() => Date.now());
+  const searchInputRef = React.useRef<HTMLInputElement | null>(null);
+  const [barberSearchQuery, setBarberSearchQuery] = React.useState('');
+  const [searchShortcutHint, setSearchShortcutHint] = React.useState('Ctrl+K');
+  const [showSearchKbdHint, setShowSearchKbdHint] = React.useState(false);
+
+  const trimmedSearchQuery = barberSearchQuery.trim();
+  const searchQueryLower = trimmedSearchQuery.toLowerCase();
+  const isSearchActive = searchQueryLower.length > 0;
+
+  const serviceNameById = React.useMemo(() => {
+    const map = new Map<string, string>();
+    for (const service of availableServices) {
+      map.set(service.id, service.name);
+    }
+    return map;
+  }, [availableServices]);
+
+  const filteredBarbers = React.useMemo(() => {
+    if (!searchQueryLower) return barbers;
+    return barbers.filter((barber) => {
+      if (barber.name.toLowerCase().includes(searchQueryLower)) return true;
+      const serviceIds = barber.serviceIds ?? [];
+      return serviceIds.some((serviceId) => {
+        const serviceName = serviceNameById.get(serviceId);
+        return serviceName ? serviceName.toLowerCase().includes(searchQueryLower) : false;
+      });
+    });
+  }, [barbers, searchQueryLower, serviceNameById]);
+
+  const searchResultsLabel = React.useMemo(() => {
+    if (!trimmedSearchQuery) return '';
+    if (filteredBarbers.length === 0) return 'No matches';
+    const count = filteredBarbers.length;
+    return count === 1 ? '1 barber' : `${count} barbers`;
+  }, [trimmedSearchQuery, filteredBarbers.length]);
 
   React.useEffect(() => {
     const timer = window.setInterval(() => {
@@ -97,6 +140,51 @@ export default function BarbersOverview({
       window.clearInterval(timer);
     };
   }, []);
+
+  React.useEffect(() => {
+    if (typeof navigator === 'undefined') return;
+    const platform = navigator.platform ?? '';
+    const isApple = /Mac|iPhone|iPad|iPod/i.test(platform) || /Mac OS/.test(navigator.userAgent);
+    setSearchShortcutHint(isApple ? '⌘K' : 'Ctrl+K');
+  }, []);
+
+  React.useEffect(() => {
+    if (typeof window === 'undefined') return;
+    const mq = window.matchMedia('(min-width: 768px) and (pointer: fine)');
+    const sync = () => setShowSearchKbdHint(mq.matches);
+    sync();
+    mq.addEventListener('change', sync);
+    return () => mq.removeEventListener('change', sync);
+  }, []);
+
+  React.useEffect(() => {
+    const onGlobalKeyDown = (event: KeyboardEvent) => {
+      const activeElement = document.activeElement;
+      const isSearchFocused = activeElement === searchInputRef.current;
+
+      if ((event.ctrlKey || event.metaKey) && event.key.toLowerCase() === 'k') {
+        if (isKeyboardEditableTarget(event.target) || isKeyboardEditableTarget(activeElement)) return;
+        event.preventDefault();
+        searchInputRef.current?.focus();
+        searchInputRef.current?.select();
+        return;
+      }
+
+      if (event.key !== 'Escape') return;
+
+      if (isSearchFocused) {
+        if (barberSearchQuery) {
+          event.preventDefault();
+          setBarberSearchQuery('');
+        } else {
+          searchInputRef.current?.blur();
+        }
+      }
+    };
+
+    window.addEventListener('keydown', onGlobalKeyDown);
+    return () => window.removeEventListener('keydown', onGlobalKeyDown);
+  }, [barberSearchQuery]);
 
   const barberComputedData = React.useMemo(() => {
     const now = new Date(nowTick);
@@ -152,23 +240,38 @@ export default function BarbersOverview({
         </div>
       </div>
 
+      <div className="admin-barbers-roster-search-toolbar">
+        <AdminBarberRosterSearch
+          searchInputRef={searchInputRef}
+          query={barberSearchQuery}
+          onQueryChange={setBarberSearchQuery}
+          onClear={() => setBarberSearchQuery('')}
+          resultsLabel={searchResultsLabel || undefined}
+          showKbdHint={showSearchKbdHint}
+          searchShortcutHint={searchShortcutHint}
+        />
+      </div>
+
       {barberSaveMessage ? <p className="admin-inline-success">{barberSaveMessage}</p> : null}
       {barberSaveError ? <p className="admin-inline-error">{barberSaveError}</p> : null}
 
       {barbersLoading && barbers.length === 0 ? (
         <BarberRosterOverviewGridSkeleton ariaLabel="Loading barbers" />
+      ) : filteredBarbers.length === 0 && isSearchActive ? (
+        <p className="admin-barbers-roster-search-empty">No barbers match your search.</p>
       ) : (
         <div className="admin-barber-list-wrap admin-barbers-overview-list-wrap">
           <ul className="admin-barber-grid admin-barbers-overview-grid" aria-label="Barbers list">
-            {barbers.map((barber, index) => {
+            {filteredBarbers.map((barber, index) => {
             const barberIsActive = normalizeBarberStatus(barber);
             const isFirstItem = index === 0;
-            const isLastItem = index === barbers.length - 1;
+            const isLastItem = index === filteredBarbers.length - 1;
             const computed = barberComputedData.get(barber.id);
             const nextBookingPreview = computed?.nextBooking ?? null;
             const availStatus = computed?.availStatus ?? 'free';
             const dayFill = computed?.dayFill ?? { pct: 0, count: 0, workingH: WORKING_HOURS_PER_DAY, bookedHoursH: 0 };
             const todayLine = getTodayLine(barber);
+            const fullListIndex = barbers.findIndex((candidate) => candidate.id === barber.id);
 
             return (
               <AdminBarberRosterCard
@@ -184,13 +287,17 @@ export default function BarbersOverview({
                 onOpenBarber={onOpenBarber}
                 bookingsLength={bookings.length}
                 variant="manage"
-                manageControls={{
-                  index,
-                  isFirstItem,
-                  isLastItem,
-                  barberReordering,
-                  onMoveBarber,
-                }}
+                manageControls={
+                  isSearchActive
+                    ? undefined
+                    : {
+                        index: fullListIndex,
+                        isFirstItem: fullListIndex === 0,
+                        isLastItem: fullListIndex === barbers.length - 1,
+                        barberReordering,
+                        onMoveBarber,
+                      }
+                }
               />
             );
             })}

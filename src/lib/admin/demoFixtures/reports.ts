@@ -1,12 +1,53 @@
-import { formatInTimeZone } from 'date-fns-tz';
+import { addMilliseconds } from 'date-fns';
+import { formatInTimeZone, fromZonedTime } from 'date-fns-tz';
+import { customRangeDayCount, getStartOfMonthInLondon, type ReportsRangeKey } from '../reportsRange';
 import { DEMO_BARBER_IDS } from './ids';
 
 const TZ = 'Europe/London';
 
+const DEMO_DAILY_REVENUE = [312, 288, 356, 402, 448, 512, 90];
+
+function dayKeyDaysAgo(daysAgo: number): string {
+  const anchor = fromZonedTime(
+    `${formatInTimeZone(new Date(), TZ, 'yyyy-MM-dd')}T12:00:00.000`,
+    TZ,
+  );
+  return formatInTimeZone(addMilliseconds(anchor, -daysAgo * 24 * 60 * 60 * 1000), TZ, 'yyyy-MM-dd');
+}
+
+function startAtOnDayKey(dayKey: string, hour = 10): string {
+  return fromZonedTime(`${dayKey}T${String(hour).padStart(2, '0')}:00:00.000`, TZ).toISOString();
+}
+
 function isoDaysAgo(days: number): string {
-  const d = new Date();
-  d.setDate(d.getDate() - days);
-  return d.toISOString();
+  return startAtOnDayKey(dayKeyDaysAgo(days));
+}
+
+function buildDemoRevenueSeries(dayCount: number) {
+  return Array.from({ length: dayCount }, (_, index) => {
+    const label = dayKeyDaysAgo(dayCount - 1 - index);
+    return {
+      label,
+      value: DEMO_DAILY_REVENUE[index % DEMO_DAILY_REVENUE.length] ?? 300,
+    };
+  });
+}
+
+function resolveDemoDayCount(range: ReportsRangeKey, customFrom?: string, customTo?: string): number {
+  if (range === 'custom' && customFrom && customTo) {
+    return Math.max(1, Math.min(90, customRangeDayCount(customFrom, customTo)));
+  }
+  if (range === '1d') return 1;
+  if (range === '1y') return 90;
+  if (range === '90d') return 90;
+  if (range === '30d') return 30;
+  if (range === 'month') {
+    const monthStart = getStartOfMonthInLondon(new Date(), TZ);
+    const todayKey = formatInTimeZone(new Date(), TZ, 'yyyy-MM-dd');
+    const monthStartKey = formatInTimeZone(monthStart, TZ, 'yyyy-MM-dd');
+    return Math.max(1, customRangeDayCount(monthStartKey, todayKey));
+  }
+  return 7;
 }
 
 function reportBooking(
@@ -32,17 +73,27 @@ function reportBooking(
   };
 }
 
-export function getDemoReportsResponse(range: 'week' | '7d' | '30d') {
+export function getDemoReportsResponse(range: ReportsRangeKey, customFrom?: string, customTo?: string) {
   const now = new Date();
-  const from = isoDaysAgo(range === 'week' ? 6 : range === '7d' ? 6 : 29);
-  const to = now.toISOString();
+  const dayCount = resolveDemoDayCount(range, customFrom, customTo);
+  const revenueSeries = buildDemoRevenueSeries(dayCount);
+  const from = range === 'custom' && customFrom
+    ? startAtOnDayKey(customFrom, 0)
+    : startAtOnDayKey(revenueSeries[0]?.label ?? dayKeyDaysAgo(dayCount - 1), 0);
+  const to = range === 'custom' && customTo
+    ? startAtOnDayKey(customTo, 23)
+    : now.toISOString();
+  const jamieDay = revenueSeries[revenueSeries.length - 1]?.label ?? dayKeyDaysAgo(1);
+  const alexDay = revenueSeries[revenueSeries.length - 2]?.label ?? dayKeyDaysAgo(2);
+  const jamieEarlierDay = revenueSeries[revenueSeries.length - 3]?.label ?? dayKeyDaysAgo(3);
+  const previousSpan = range === '30d' || range === '90d' ? dayCount : range === 'month' ? dayCount : 7;
 
   return {
     range,
     rangeBoundaries: { from, to, tz: TZ },
     previousRangeBoundaries: {
-      from: isoDaysAgo(range === '30d' ? 59 : 13),
-      to: isoDaysAgo(range === '30d' ? 30 : 7),
+      from: isoDaysAgo(previousSpan * 2 - 1),
+      to: isoDaysAgo(previousSpan),
       tz: TZ,
     },
     bookingsCount: 86,
@@ -63,15 +114,7 @@ export function getDemoReportsResponse(range: 'week' | '7d' | '30d') {
     bookedMinutes: 3840,
     availableMinutes: 5040,
     utilizationPct: 76.2,
-    revenueSeries: [
-      { label: 'Mon', value: 312 },
-      { label: 'Tue', value: 288 },
-      { label: 'Wed', value: 356 },
-      { label: 'Thu', value: 402 },
-      { label: 'Fri', value: 448 },
-      { label: 'Sat', value: 512 },
-      { label: 'Sun', value: 90 },
-    ],
+    revenueSeries,
     trends: {
       bookingsPct: 12.5,
       cancelledRatePp: -1.2,
@@ -100,9 +143,9 @@ export function getDemoReportsResponse(range: 'week' | '7d' | '30d') {
     mostPopularService: { name: 'Skin Fade', count: 34 },
     busiestBarber: { name: 'Jamie Reed', count: 38 },
     reportBookings: [
-      reportBooking('demo-rpt-01', isoDaysAgo(1), DEMO_BARBER_IDS.jamie, 'Jamie Reed', 'Skin Fade', 'Oliver Reed', 'oliver.reed@example.com', 28),
-      reportBooking('demo-rpt-02', isoDaysAgo(2), DEMO_BARBER_IDS.alex, 'Alex Morgan', 'Classic Cut', 'Amelia Clarke', 'amelia.clarke@example.com', 24),
-      reportBooking('demo-rpt-03', isoDaysAgo(3), DEMO_BARBER_IDS.jamie, 'Jamie Reed', 'Beard Trim', 'Noah Bennett', 'noah.bennett@example.com', 15),
+      reportBooking('demo-rpt-01', startAtOnDayKey(jamieDay, 11), DEMO_BARBER_IDS.jamie, 'Jamie Reed', 'Skin Fade', 'Oliver Reed', 'oliver.reed@example.com', 28),
+      reportBooking('demo-rpt-02', startAtOnDayKey(alexDay, 12), DEMO_BARBER_IDS.alex, 'Alex Morgan', 'Classic Cut', 'Amelia Clarke', 'amelia.clarke@example.com', 24),
+      reportBooking('demo-rpt-03', startAtOnDayKey(jamieEarlierDay, 9), DEMO_BARBER_IDS.jamie, 'Jamie Reed', 'Beard Trim', 'Noah Bennett', 'noah.bennett@example.com', 15),
     ],
   };
 }

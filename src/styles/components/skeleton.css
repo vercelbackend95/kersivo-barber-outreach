@@ -122,6 +122,16 @@
   min-height: 6rem;
 }
 
+.skeleton-kpi-card--metric {
+  border-radius: var(--admin-premium-surface-r);
+  background: var(--admin-premium-surface-bg);
+  border: var(--admin-premium-surface-border);
+  box-shadow: var(--admin-premium-shadow-inset), var(--admin-premium-shadow-lift-subtle);
+  padding: clamp(0.85rem, 2vw, 1rem);
+  min-height: 6.5rem;
+  gap: 0.5rem;
+}
+
 /* ── Table row skeleton ── */
 
 .skeleton-table-row td {

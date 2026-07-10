@@ -75,8 +75,25 @@ export function resolveDemoFixture(pathname: string, searchParams: URLSearchPara
   }
 
   if (subPath === 'reports') {
-    const rangeParam = searchParams.get('range');
-    const range = rangeParam === 'week' || rangeParam === '7d' || rangeParam === '30d' ? rangeParam : '7d';
+    const rangeParam = searchParams.get('range')?.trim();
+    const fromParam = searchParams.get('from')?.trim();
+    const toParam = searchParams.get('to')?.trim();
+
+    if (rangeParam === 'custom' || (fromParam && toParam)) {
+      if (!fromParam || !toParam) {
+        return { status: 400, body: { error: 'Custom range requires from and to (YYYY-MM-DD).' } };
+      }
+      return { status: 200, body: getDemoReportsResponse('custom', fromParam, toParam) };
+    }
+
+    const range =
+      rangeParam === 'week'
+      || rangeParam === '7d'
+      || rangeParam === '30d'
+      || rangeParam === '90d'
+      || rangeParam === 'month'
+        ? rangeParam
+        : '7d';
     return { status: 200, body: getDemoReportsResponse(range) };
   }
 

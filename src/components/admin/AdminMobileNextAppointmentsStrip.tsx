@@ -78,10 +78,11 @@ export default function AdminMobileNextAppointmentsStrip({
     };
   }, [hasExpandableContent, targetToggleIndex, visibleAppointments.length, isExpanded]);
 
+  const effectiveLabel = isDemo ? 'LIVE' : connectionStateLabel;
   const liveModifier =
-    connectionStateLabel === 'LIVE'
+    effectiveLabel === 'LIVE'
       ? 'live'
-      : connectionStateLabel === 'OFFLINE'
+      : effectiveLabel === 'OFFLINE'
         ? 'offline'
         : 'connecting';
 
@@ -118,7 +119,7 @@ export default function AdminMobileNextAppointmentsStrip({
               className={`admin-mobile-next-strip-live-dot${liveModifier === 'live' ? ' admin-mobile-next-strip-live-dot--pulse' : ''}`}
               aria-hidden="true"
             />
-            <span>{connectionStateLabel}</span>
+            <span>{effectiveLabel}</span>
           </span>
         </span>
       </div>

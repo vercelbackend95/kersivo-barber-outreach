@@ -96,6 +96,8 @@
     "@astrojs/vercel": "^9.0.4",
     "@fontsource/caveat": "^5.2.8",
     "@tailwindcss/vite": "^4.2.2",
+    "@testing-library/react": "^16.3.2",
+    "jsdom": "^29.1.1",
     "playwright": "^1.59.1",
     "prisma": "^5.22.0",
     "sharp": "^0.34.5",

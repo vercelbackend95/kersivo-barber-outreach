@@ -1,4 +1,13 @@
-import React, { useEffect, useRef, useState } from 'react';
+import React, { useEffect, useId, useRef, useState } from 'react';
+import {
+  buildAreaPath,
+  buildLinearPath,
+  buildSmoothPath,
+  niceTicks,
+  snapIndex,
+  sortChartLabels,
+  type ChartPoint,
+} from '@/lib/admin/chartUtils';
 
 export type AdminLineChartPoint = { label: string; value: number };
 
@@ -11,8 +20,8 @@ export type AdminLineChartSeries = {
 type TooltipState = {
   label: string;
   entries: Array<{ key: string; name: string; value: number; color: string }>;
-  containerX: number;
-  containerY: number;
+  crosshairX: number;
+  activeIndex: number;
 } | null;
 
 export type AdminLineChartProps = {
@@ -35,10 +44,17 @@ export type AdminLineChartProps = {
   onExpand?: () => void;
   isFullscreen?: boolean;
   ariaLabel?: string;
+  curve?: 'linear' | 'smooth';
+  showArea?: boolean | ((seriesKey: string) => boolean);
+  showCrosshair?: boolean;
+  primarySeriesKey?: string;
+  hideAxisTitles?: boolean;
+  /** Extra top padding (px) to reserve space for an HTML overlay headline */
+  contentInsetTop?: number;
 };
 
-const TICK_COUNT = 4;
-const TOOLTIP_MAX_W = 188;
+const TOOLTIP_MAX_W = 220;
+const GRID_TICK_COUNT = 3;
 
 function defaultFormatValue(value: number, metric?: 'currency' | 'number'): string {
   if (metric === 'currency') {
@@ -65,19 +81,39 @@ function defaultFormatAxisValue(value: number, metric?: 'currency' | 'number'): 
 }
 
 function formatTooltipDateLabel(label: string): string {
-  const d = new Date(`${label}T00:00:00`);
-  if (!isNaN(d.getTime())) {
-    return d.toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' });
+  const isoTs = Date.parse(`${label}T00:00:00`);
+  if (!Number.isNaN(isoTs)) {
+    return new Date(isoTs).toLocaleDateString('en-GB', {
+      weekday: 'short',
+      day: 'numeric',
+      month: 'short',
+    });
   }
   return label;
 }
 
-function formatXAxisLabel(label: string): string {
-  const d = new Date(`${label}T00:00:00`);
-  if (!isNaN(d.getTime())) {
-    return d.toLocaleDateString('en-GB', { day: '2-digit', month: '2-digit' });
+function formatXAxisLabel(label: string, labelCount: number): string {
+  const isoTs = Date.parse(`${label}T00:00:00`);
+  if (!Number.isNaN(isoTs)) {
+    const d = new Date(isoTs);
+    if (labelCount <= 8) {
+      return d.toLocaleDateString('en-GB', { weekday: 'short' });
+    }
+    return d.toLocaleDateString('en-GB', { day: '2-digit', month: 'short' });
   }
   return label;
+}
+
+function shouldShowArea(
+  seriesKey: string,
+  showArea: boolean | ((key: string) => boolean) | undefined,
+  primarySeriesKey: string | undefined,
+  safeSeries: AdminLineChartSeries[],
+): boolean {
+  if (typeof showArea === 'function') return showArea(seriesKey);
+  if (typeof showArea === 'boolean') return showArea;
+  const primary = primarySeriesKey ?? safeSeries[0]?.key;
+  return seriesKey === primary;
 }
 
 export default function AdminLineChart({
@@ -95,8 +131,16 @@ export default function AdminLineChart({
   onExpand,
   isFullscreen = false,
   ariaLabel,
+  curve,
+  showArea,
+  showCrosshair = true,
+  primarySeriesKey,
+  hideAxisTitles = true,
+  contentInsetTop,
 }: AdminLineChartProps) {
   const isSparkline = variant === 'sparkline';
+  const useCurve = curve ?? (isSparkline ? 'linear' : 'smooth');
+  const gradientId = useId().replace(/:/g, '');
   const containerRef = useRef<HTMLDivElement>(null);
   const [dims, setDims] = useState({ width: 900, height: isSparkline ? 88 : 320 });
   const [tooltip, setTooltip] = useState<TooltipState>(null);
@@ -120,9 +164,13 @@ export default function AdminLineChart({
     return () => { ro.disconnect(); };
   }, [responsive]);
 
-  const padding = isSparkline
+  const basePadding = isSparkline
     ? { top: 8, right: 8, bottom: 8, left: 8 }
-    : { top: 20, right: 20, bottom: 36, left: 54 };
+    : { top: 16, right: 16, bottom: 32, left: 12 };
+  const padding = {
+    ...basePadding,
+    top: basePadding.top + (contentInsetTop ?? 0),
+  };
 
   const svgW = dims.width;
   const svgH = dims.height;
@@ -131,24 +179,31 @@ export default function AdminLineChart({
 
   const safeSeries = series.filter((s) => s.points.length > 0);
 
-  const allLabels = Array.from(
+  const rawLabels = Array.from(
     new Set(safeSeries.flatMap((s) => s.points.map((p) => p.label))),
-  ).sort((a, b) => a.localeCompare(b));
+  );
+  const sortedLabels = sortChartLabels(
+    rawLabels.length > 0 ? rawLabels : safeSeries[0]?.points.map((p) => p.label) ?? [],
+  );
 
   const allValues = safeSeries.flatMap((s) => s.points.map((p) => p.value));
   const rawMax = allValues.length > 0 ? Math.max(0, ...allValues) : 0;
   const rawMin = allValues.length > 0 ? Math.min(0, ...allValues) : 0;
-  const yMax = Math.max(rawMax, metric === 'currency' ? 100 : 1);
-  const yMin = Math.min(0, rawMin);
+  const minFloor = metric === 'currency' ? 100 : 1;
+  const { min: yMin, max: yMax, ticks: yTicks } = niceTicks(
+    Math.min(0, rawMin),
+    Math.max(rawMax, minFloor),
+    GRID_TICK_COUNT,
+  );
   const yRange = Math.max(1, yMax - yMin);
 
   const isEmpty = safeSeries.length === 0 || allValues.every((v) => v === 0);
 
   const xPos = (label: string): number => {
-    if (allLabels.length <= 1) return padding.left + innerW / 2;
-    const idx = allLabels.indexOf(label);
+    if (sortedLabels.length <= 1) return padding.left + innerW / 2;
+    const idx = sortedLabels.indexOf(label);
     if (idx < 0) return padding.left;
-    return padding.left + (idx / (allLabels.length - 1)) * innerW;
+    return padding.left + (idx / (sortedLabels.length - 1)) * innerW;
   };
 
   const yPos = (value: number): number =>
@@ -156,84 +211,119 @@ export default function AdminLineChart({
 
   const fmtTooltipValue = formatValue ?? ((v: number) => defaultFormatValue(v, metric));
   const fmtAxisValue = (v: number) => defaultFormatAxisValue(v, metric);
-  const yAxisTitle = metric === 'currency' ? 'Value (GBP)' : 'Value';
-  const xAxisTitle = 'Date';
 
-  const yTicks = Array.from({ length: TICK_COUNT + 1 }, (_, i) =>
-    yMin + (yRange / TICK_COUNT) * i,
-  );
+  const estimateYLabelWidth = (label: string) => Math.max(36, label.length * 7 + 12);
 
-  const xTickLabels = allLabels.filter((label, i) => {
+  const xTickLabels = sortedLabels.filter((label, i) => {
     if (label === 'start' || label === 'end') return false;
     return (
-      i % Math.max(1, Math.ceil(allLabels.length / 6)) === 0 ||
-      i === allLabels.length - 1
+      i % Math.max(1, Math.ceil(sortedLabels.length / 6)) === 0 ||
+      i === sortedLabels.length - 1
     );
   });
 
-  const buildLinePath = (points: AdminLineChartPoint[]): string =>
-    points
-      .map((p, i) => `${i === 0 ? 'M' : 'L'} ${xPos(p.label)} ${yPos(p.value)}`)
-      .join(' ');
-
-  const buildAreaPath = (points: AdminLineChartPoint[]): string => {
-    if (points.length === 0) return '';
-    const baseline = yPos(yMin);
-    const firstX = xPos(points[0].label);
-    const lastX = xPos(points[points.length - 1].label);
-    return `${buildLinePath(points)} L ${lastX} ${baseline} L ${firstX} ${baseline} Z`;
+  const buildSeriesPath = (points: AdminLineChartPoint[]): string => {
+    const orderedPoints = sortedLabels.map((label) => ({
+      label,
+      value: points.find((p) => p.label === label)?.value ?? 0,
+    }));
+    const chartPoints: ChartPoint[] = orderedPoints.map((p) => ({
+      x: xPos(p.label),
+      y: yPos(p.value),
+    }));
+    return useCurve === 'smooth' ? buildSmoothPath(chartPoints) : buildLinearPath(chartPoints);
   };
 
-  const handleMouseMove = (event: React.MouseEvent<HTMLDivElement>) => {
-    if (isEmpty || allLabels.length === 0) return;
+  const updateTooltipFromClientX = (clientX: number) => {
+    if (isEmpty || sortedLabels.length === 0) return;
     const el = containerRef.current;
     if (!el) return;
     const rect = el.getBoundingClientRect();
-    const mouseX = event.clientX - rect.left;
-    const mouseY = event.clientY - rect.top;
+    const mouseX = clientX - rect.left;
     const svgMouseX = (mouseX / rect.width) * svgW;
-    const rawIdx = ((svgMouseX - padding.left) / innerW) * (allLabels.length - 1);
-    const idx = Math.max(0, Math.min(allLabels.length - 1, Math.round(rawIdx)));
-    const label = allLabels[idx];
+    const idx = snapIndex(svgMouseX, padding.left, innerW, sortedLabels.length);
+    const label = sortedLabels[idx];
+    const crosshairX = xPos(label);
     const entries = safeSeries.map((s) => {
       const pt = s.points.find((p) => p.label === label);
       return { key: s.key, name: s.name, value: pt?.value ?? 0, color: getColor(s.key) };
     });
-    setTooltip({ label, entries, containerX: mouseX, containerY: mouseY });
+    setTooltip({ label, entries, crosshairX, activeIndex: idx });
   };
 
-  const handleMouseLeave = () => { setTooltip(null); };
+  const handlePointerMove = (event: React.MouseEvent<HTMLDivElement> | React.TouchEvent<HTMLDivElement>) => {
+    const clientX = 'touches' in event ? event.touches[0]?.clientX : event.clientX;
+    if (clientX == null) return;
+    updateTooltipFromClientX(clientX);
+  };
+
+  const handlePointerLeave = () => { setTooltip(null); };
+
+  const activeLabel = tooltip?.label;
 
   const svgNode = (
     <svg
       viewBox={`0 0 ${svgW} ${svgH}`}
-      preserveAspectRatio="none"
+      preserveAspectRatio="xMidYMid meet"
       className={isSparkline ? 'admin-revenue-chart-svg' : 'admin-sales-chart-svg'}
       aria-hidden="true"
     >
-      {/* Y-axis grid lines and labels */}
-      {!isSparkline &&
-        yTicks.map((tick) => (
-          <g key={`ytick-${tick}`}>
-            <line
-              x1={padding.left}
-              y1={yPos(tick)}
-              x2={svgW - padding.right}
-              y2={yPos(tick)}
-              className="admin-sales-grid-line"
-            />
-            <text
-              x={padding.left - 8}
-              y={yPos(tick) + 4}
-              textAnchor="end"
-              className="admin-sales-axis-label"
+      <defs>
+        {safeSeries.map((s) => {
+          const color = getColor(s.key);
+          return (
+            <linearGradient
+              key={`grad-${s.key}`}
+              id={`${gradientId}-${s.key}`}
+              x1="0"
+              y1="0"
+              x2="0"
+              y2="1"
             >
-              {fmtAxisValue(tick)}
-            </text>
-          </g>
-        ))}
+              <stop offset="0%" stopColor={color} stopOpacity="0.22" />
+              <stop offset="100%" stopColor={color} stopOpacity="0" />
+            </linearGradient>
+          );
+        })}
+      </defs>
 
-      {/* Sparkline baseline */}
+      {!isSparkline &&
+        yTicks.map((tick) => {
+          if ((contentInsetTop ?? 0) > 0 && tick === yMax) return null;
+          const label = fmtAxisValue(tick);
+          const labelWidth = estimateYLabelWidth(label);
+          const labelY = yPos(tick);
+          return (
+            <g key={`ytick-${tick}`}>
+              <line
+                x1={padding.left}
+                y1={labelY}
+                x2={svgW - padding.right}
+                y2={labelY}
+                className="admin-sales-grid-line"
+              />
+              <g className="admin-chart-y-label" transform={`translate(${padding.left + 4}, ${labelY - 9})`}>
+                <rect
+                  className="admin-chart-y-label-bg"
+                  width={labelWidth}
+                  height={18}
+                  rx={4}
+                  x={0}
+                  y={0}
+                />
+                <text
+                  x={6}
+                  y={13}
+                  textAnchor="start"
+                  className="admin-sales-axis-label admin-sales-axis-label--floating"
+                >
+                  {label}
+                </text>
+              </g>
+            </g>
+          );
+        })}
+
       {isSparkline && (
         <line
           x1={padding.left}
@@ -244,7 +334,6 @@ export default function AdminLineChart({
         />
       )}
 
-      {/* Empty state text (sparkline only) */}
       {isEmpty && isSparkline && (
         <text
           x="50%"
@@ -257,20 +346,26 @@ export default function AdminLineChart({
         </text>
       )}
 
-      {/* Series paths */}
       {!isEmpty &&
         safeSeries.map((s) => {
-          const linePath = buildLinePath(s.points);
+          const linePath = buildSeriesPath(s.points);
           const extraClass = getPathClassName ? getPathClassName(s.key) : '';
           const color = getColor(s.key);
           const strokeWidth = getStrokeWidth ? getStrokeWidth(s.key) : 2;
+          const showSeriesArea = isSparkline || shouldShowArea(s.key, showArea, primarySeriesKey, safeSeries);
+          const firstLabel = sortedLabels[0];
+          const lastLabel = sortedLabels[sortedLabels.length - 1];
+          const firstX = firstLabel ? xPos(firstLabel) : 0;
+          const lastX = lastLabel ? xPos(lastLabel) : 0;
+          const baseline = yPos(yMin);
 
           return (
             <g key={s.key}>
-              {isSparkline && (
+              {showSeriesArea && (
                 <path
-                  d={buildAreaPath(s.points)}
-                  className={`admin-revenue-chart-area ${extraClass}`}
+                  d={buildAreaPath(linePath, firstX, lastX, baseline)}
+                  fill={isSparkline ? undefined : `url(#${gradientId}-${s.key})`}
+                  className={isSparkline ? `admin-revenue-chart-area ${extraClass}` : `admin-chart-area ${extraClass}`}
                   stroke="none"
                 />
               )}
@@ -279,37 +374,55 @@ export default function AdminLineChart({
                 fill="none"
                 stroke={isSparkline ? undefined : color}
                 strokeWidth={isSparkline ? undefined : strokeWidth}
-                className={isSparkline ? `admin-revenue-chart-line ${extraClass}` : undefined}
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                className={
+                  isSparkline
+                    ? `admin-revenue-chart-line admin-chart-line ${extraClass}`
+                    : 'admin-chart-line'
+                }
               />
-              {!isSparkline &&
-                s.points.map((pt) => (
-                  <circle
-                    key={`${s.key}-${pt.label}`}
-                    cx={xPos(pt.label)}
-                    cy={yPos(pt.value)}
-                    r="2.25"
-                    fill={color}
-                  />
-                ))}
+              {!isSparkline && activeLabel &&
+                s.points
+                  .filter((pt) => pt.label === activeLabel)
+                  .map((pt) => (
+                    <circle
+                      key={`${s.key}-${pt.label}-active`}
+                      cx={xPos(pt.label)}
+                      cy={yPos(pt.value)}
+                      r="5"
+                      fill={color}
+                      className="admin-chart-active-dot"
+                    />
+                  ))}
             </g>
           );
         })}
 
-      {/* X-axis labels */}
+      {!isSparkline && showCrosshair && tooltip && (
+        <line
+          x1={tooltip.crosshairX}
+          y1={padding.top}
+          x2={tooltip.crosshairX}
+          y2={svgH - padding.bottom}
+          className="admin-chart-crosshair"
+        />
+      )}
+
       {!isSparkline &&
         xTickLabels.map((label) => (
           <text
             key={`x-${label}`}
             x={xPos(label)}
-            y={svgH - 12}
+            y={svgH - 10}
             textAnchor="middle"
             className="admin-sales-axis-label"
           >
-            {formatXAxisLabel(label)}
+            {formatXAxisLabel(label, sortedLabels.length)}
           </text>
         ))}
 
-      {!isSparkline && (
+      {!isSparkline && !hideAxisTitles && (
         <>
           <text
             x={padding.left + innerW / 2}
@@ -317,7 +430,7 @@ export default function AdminLineChart({
             textAnchor="middle"
             className="admin-sales-axis-title"
           >
-            {xAxisTitle}
+            Date
           </text>
           <text
             x={14}
@@ -326,42 +439,51 @@ export default function AdminLineChart({
             transform={`rotate(-90 14 ${padding.top + innerH / 2})`}
             className="admin-sales-axis-title"
           >
-            {yAxisTitle}
+            {metric === 'currency' ? 'Value (GBP)' : 'Value'}
           </text>
         </>
       )}
     </svg>
   );
 
+  const tooltipLeft = tooltip
+    ? Math.min(
+        Math.max(8, (tooltip.crosshairX / svgW) * dims.width + 12),
+        dims.width - TOOLTIP_MAX_W - 8,
+      )
+    : 0;
+
   const tooltipNode = tooltip ? (
     <div
-      className="admin-line-chart-tooltip"
-      style={{
-        left: Math.min(
-          tooltip.containerX + 14,
-          dims.width - TOOLTIP_MAX_W - 8,
-        ),
-        top: Math.max(4, tooltip.containerY - 60),
-      }}
+      className="admin-chart-tooltip"
+      style={{ left: tooltipLeft, top: 8 }}
       aria-hidden="true"
     >
-      <p className="admin-line-chart-tooltip-label">
+      <p className="admin-chart-tooltip-label">
         {formatTooltipDateLabel(tooltip.label)}
       </p>
       {tooltip.entries.map((e) => (
-        <p key={e.key} className="admin-line-chart-tooltip-entry">
+        <p key={e.key} className="admin-chart-tooltip-entry">
           <span
-            className="admin-line-chart-tooltip-dot"
+            className="admin-chart-tooltip-dot"
             style={{ background: e.color }}
           />
-          <span className="admin-line-chart-tooltip-name">{e.name}</span>
-          <span className="admin-line-chart-tooltip-value">
+          <span className="admin-chart-tooltip-name">{e.name}</span>
+          <span className="admin-chart-tooltip-value">
             {fmtTooltipValue(e.value)}
           </span>
         </p>
       ))}
     </div>
   ) : null;
+
+  const pointerHandlers = {
+    onMouseMove: handlePointerMove,
+    onMouseLeave: handlePointerLeave,
+    onTouchStart: handlePointerMove,
+    onTouchMove: handlePointerMove,
+    onTouchEnd: handlePointerLeave,
+  };
 
   if (isSparkline) {
     return (
@@ -371,8 +493,7 @@ export default function AdminLineChart({
         role="img"
         aria-label={ariaLabel ?? 'Trend over selected period'}
         style={{ position: 'relative' }}
-        onMouseMove={handleMouseMove}
-        onMouseLeave={handleMouseLeave}
+        {...pointerHandlers}
       >
         {svgNode}
         {tooltipNode}
@@ -394,7 +515,10 @@ export default function AdminLineChart({
       <div
         ref={containerRef}
         className={`admin-sales-chart-canvas ${onExpand ? 'admin-sales-chart-canvas--clickable' : ''}`}
-        style={height ? { height } : undefined}
+        style={{
+          ...(height ? { height } : {}),
+          touchAction: onExpand ? 'manipulation' : 'pan-y',
+        }}
         onClick={onExpand}
         role={onExpand ? 'button' : undefined}
         tabIndex={onExpand ? 0 : undefined}
@@ -413,8 +537,7 @@ export default function AdminLineChart({
             ? 'Tap to expand sales chart'
             : (ariaLabel ?? `Sales ${metric === 'currency' ? 'revenue' : 'chart'}`)
         }
-        onMouseMove={handleMouseMove}
-        onMouseLeave={handleMouseLeave}
+        {...pointerHandlers}
       >
         {svgNode}
         {tooltipNode}

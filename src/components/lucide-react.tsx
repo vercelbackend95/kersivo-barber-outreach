@@ -469,6 +469,20 @@ const Star = ({ ...props }: IconProps) => (
   </svg>
 );
 
+const Crown = ({ ...props }: IconProps) => (
+  <svg
+    viewBox="0 0 24 24"
+    fill="none"
+    stroke="currentColor"
+    strokeWidth="2"
+    strokeLinecap="round"
+    strokeLinejoin="round"
+    {...props}
+  >
+    <path d="M11.562 3.266a1 1 0 0 1 1.876 0L15.39 8.87l5.794.471a1 1 0 0 1 .583 1.753l-4.41 3.84 1.326 5.65a1 1 0 0 1-1.49 1.08L12 18.96l-5.193 2.704a1 1 0 0 1-1.49-1.08l1.326-5.65-4.41-3.84a1 1 0 0 1 .583-1.753l5.794-.471z" />
+  </svg>
+);
+
 export {
   ArrowRight,
   Ban,
@@ -479,6 +493,7 @@ export {
   ChevronUp,
   Clock,
   CornerDownRight,
+  Crown,
   ListOrdered,
   LogOut,
   Mail,

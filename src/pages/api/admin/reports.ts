@@ -2,7 +2,7 @@ export const prerender = false;
 
 import type { APIRoute } from 'astro';
 import { BookingStatus, OrderStatus, Prisma } from '@prisma/client';
-import { addMilliseconds, differenceInMilliseconds, subDays, subYears } from 'date-fns';
+import { addMilliseconds, differenceInCalendarDays, differenceInMilliseconds, subDays, subMonths } from 'date-fns';
 import { formatInTimeZone, fromZonedTime, toZonedTime } from 'date-fns-tz';
 import { requireAdmin } from '../../../lib/admin/auth';
 import {
@@ -11,9 +11,12 @@ import {
 } from '../../../lib/db/resilience';
 import { prisma } from '../../../lib/db/client';
 import { isBookingPaidQualified } from '../../../lib/booking/paymentReporting';
+import {
+  getStartOfMonthInLondon,
+  parseYmdRange,
+  type ReportsRangeKey,
+} from '../../../lib/admin/reportsRange';
 const ADMIN_TIMEZONE = 'Europe/London';
-
-type ReportsRange = 'week' | '7d' | '30d' | '90d' | '1y';
 
 type RangeBoundaries = { from: Date; to: Date };
 
@@ -83,33 +86,91 @@ function getStartOfWeekInLondon(now: Date) {
   return fromZonedTime(`${mondayKey}T00:00:00.000`, ADMIN_TIMEZONE);
 }
 
-function getReportsRange(range: ReportsRange): RangeBoundaries {
+function getReportsRange(range: ReportsRangeKey): RangeBoundaries {
   const now = new Date();
   if (range === 'week') {
     return { from: getStartOfWeekInLondon(now), to: now };
   }
 
+  if (range === 'month') {
+    return { from: getStartOfMonthInLondon(now, ADMIN_TIMEZONE), to: now };
+  }
+
+  if (range === '1d') {
+    return { from: subDays(now, 1), to: now };
+  }
+
+  if (range === '1y') {
+    return { from: subDays(now, 365), to: now };
+  }
+
   const daysBack = range === '7d' ? 7 : range === '30d' ? 30 : range === '90d' ? 90 : 365;
   return { from: subDays(now, daysBack), to: now };
 }
-function getPreviousRange(range: ReportsRange, current: RangeBoundaries): RangeBoundaries {
+
+function getCustomReportsRange(fromYmd: string, toYmd: string): RangeBoundaries {
+  const { from, to } = parseYmdRange(fromYmd, toYmd);
+  return {
+    from: fromZonedTime(`${from}T00:00:00.000`, ADMIN_TIMEZONE),
+    to: fromZonedTime(`${to}T23:59:59.999`, ADMIN_TIMEZONE),
+  };
+}
+
+function resolveReportsRequest(searchParams: URLSearchParams):
+  | { rangeKey: ReportsRangeKey; boundaries: RangeBoundaries }
+  | { error: string } {
+  const rangeParam = searchParams.get('range')?.trim();
+  const fromParam = searchParams.get('from')?.trim();
+  const toParam = searchParams.get('to')?.trim();
+
+  if (rangeParam === 'custom' || (fromParam && toParam)) {
+    if (!fromParam || !toParam) {
+      return { error: 'Custom range requires from and to (YYYY-MM-DD).' };
+    }
+    try {
+      return {
+        rangeKey: 'custom',
+        boundaries: getCustomReportsRange(fromParam, toParam),
+      };
+    } catch (error) {
+      return {
+        error: error instanceof Error ? error.message : 'Invalid date range.',
+      };
+    }
+  }
+
+  if (
+    rangeParam === '1d'
+    || rangeParam === '1y'
+    || rangeParam === 'week'
+    || rangeParam === '7d'
+    || rangeParam === '30d'
+    || rangeParam === '90d'
+    || rangeParam === 'month'
+  ) {
+    return { rangeKey: rangeParam, boundaries: getReportsRange(rangeParam) };
+  }
+
+  return { error: 'Invalid range.' };
+}
+function getPreviousRange(range: ReportsRangeKey, current: RangeBoundaries): RangeBoundaries {
   if (range === 'week') {
     const currentWeekStart = getStartOfWeekInLondon(new Date());
     const previousWeekStart = subDays(currentWeekStart, 7);
     return { from: previousWeekStart, to: addMilliseconds(currentWeekStart, -1) };
   }
 
-  if (range === '1y') {
-    const previousFrom = subYears(current.from, 1);
-    return { from: previousFrom, to: addMilliseconds(current.from, -1) };
+  if (range === 'month') {
+    const currentMonthStart = getStartOfMonthInLondon(new Date(), ADMIN_TIMEZONE);
+    const previousMonthStart = subMonths(currentMonthStart, 1);
+    return { from: previousMonthStart, to: addMilliseconds(currentMonthStart, -1) };
   }
 
   const diffMs = Math.max(0, differenceInMilliseconds(current.to, current.from));
 
   return {
     from: addMilliseconds(current.from, -(diffMs + 1)),
-    to: addMilliseconds(current.from, -1)
-
+    to: addMilliseconds(current.from, -1),
   };
 }
 function minutesOfOverlap(rangeFrom: Date, rangeTo: Date, eventFrom: Date, eventTo: Date): number {
@@ -133,12 +194,16 @@ function getRangeDayKeys(range: RangeBoundaries): string[] {
 }
 
 
-function getRevenueBucketMode(rangeKey: ReportsRange): 'day' | 'week' {
-  return rangeKey === '1y' ? 'week' : 'day';
+function getRevenueBucketMode(rangeKey: ReportsRangeKey, range: RangeBoundaries): 'day' | 'week' {
+  if (rangeKey === 'custom') {
+    const spanDays = differenceInCalendarDays(range.to, range.from) + 1;
+    if (spanDays > 90) return 'week';
+  }
+  return 'day';
 }
 
-function getRevenueSeriesSeed(range: RangeBoundaries, rangeKey: ReportsRange): RevenueSeriesPoint[] {
-  if (getRevenueBucketMode(rangeKey) === 'day') {
+function getRevenueSeriesSeed(range: RangeBoundaries, rangeKey: ReportsRangeKey): RevenueSeriesPoint[] {
+  if (getRevenueBucketMode(rangeKey, range) === 'day') {
     return getRangeDayKeys(range).map((dayKey) => ({ label: dayKey, value: 0 }));
   }
 
@@ -154,8 +219,8 @@ function getRevenueSeriesSeed(range: RangeBoundaries, rangeKey: ReportsRange): R
   return [...new Set(keys)].map((weekKey) => ({ label: weekKey, value: 0 }));
 }
 
-function getRevenueBucketLabel(date: Date, rangeKey: ReportsRange): string {
-  return getRevenueBucketMode(rangeKey) === 'week'
+function getRevenueBucketLabel(date: Date, rangeKey: ReportsRangeKey, range: RangeBoundaries): string {
+  return getRevenueBucketMode(rangeKey, range) === 'week'
     ? formatInTimeZone(date, ADMIN_TIMEZONE, "yyyy-'W'II")
     : formatInTimeZone(date, ADMIN_TIMEZONE, 'yyyy-MM-dd');
 }
@@ -203,7 +268,7 @@ function toTrendPercent(current: number, previous: number): number | null {
 }
 
 
-async function computeMetrics(shopId: string, range: RangeBoundaries, selectedBarberId: string | null, rangeKey: ReportsRange) {
+async function computeMetrics(shopId: string, range: RangeBoundaries, selectedBarberId: string | null, rangeKey: ReportsRangeKey) {
   const whereBase = {
     client: { shopId },
     startAt: { gte: range.from, lte: range.to },
@@ -338,13 +403,13 @@ async function computeMetrics(shopId: string, range: RangeBoundaries, selectedBa
 
         revenue += bookingValue;
     revenueCount += 1;
-    const bucketLabel = getRevenueBucketLabel(booking.startAt, rangeKey);
+    const bucketLabel = getRevenueBucketLabel(booking.startAt, rangeKey, range);
     revenueSeriesMap.set(bucketLabel, (revenueSeriesMap.get(bucketLabel) ?? 0) + bookingValue);
 
   }
  for (const order of orders) {
     revenue += order.totalPence / 100;
-    const bucketLabel = getRevenueBucketLabel(order.createdAt, rangeKey);
+    const bucketLabel = getRevenueBucketLabel(order.createdAt, rangeKey, range);
     revenueSeriesMap.set(bucketLabel, (revenueSeriesMap.get(bucketLabel) ?? 0) + (order.totalPence / 100));
   }
 
@@ -516,20 +581,16 @@ export const GET: APIRoute = async (ctx) => {
   const unauthorized = requireAdmin(ctx);
   if (unauthorized) return unauthorized;
 
-  const rangeParam = ctx.url.searchParams.get('range');
-  const range = rangeParam === 'week' || rangeParam === '7d' || rangeParam === '30d'
-    ? rangeParam
-    : null;
-
-  if (!range) {
-    return new Response(JSON.stringify({ error: 'Invalid range. Reports are capped at 30 days while Neon Free mode is active.' }), { status: 400 });
+  const resolved = resolveReportsRequest(ctx.url.searchParams);
+  if ('error' in resolved) {
+    return new Response(JSON.stringify({ error: resolved.error }), { status: 400 });
   }
 
+  const { rangeKey: range, boundaries: selectedRange } = resolved;
   const selectedBarberId = ctx.url.searchParams.get('barberId') || null;
 
   try {
     const shop = await prisma.shopSettings.findFirstOrThrow({ select: { id: true } });
-    const selectedRange = getReportsRange(range);
     const previousRange = getPreviousRange(range, selectedRange);
 
     const [selectedBarberEntity, recentBarbers, currentMetrics, previousMetrics] = await Promise.all([
