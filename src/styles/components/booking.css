@@ -2015,8 +2015,8 @@
 
 /* ── History table (new table-style layout matching clients panel) ────────── */
 .admin-bookings-schedule__history-table-wrap {
-  --absh-bg: #0a0a0b;
-  --absh-row-line: #1a1a1a;
+  --absh-bg: var(--admin-premium-surface-bg);
+  --absh-row-line: color-mix(in srgb, var(--border) 70%, transparent);
   --absh-muted: #6b6b70;
   --absh-fg: #e8e8ea;
   --absh-fg-soft: #b4b4ba;
@@ -2033,14 +2033,44 @@
   width: 100%;
   max-width: 100%;
   min-width: 0;
-  border: 1px solid var(--absh-row-line);
-  border-radius: 6px;
+  border: var(--admin-premium-surface-border);
+  border-radius: var(--admin-premium-surface-r);
   overflow-x: auto;
   overflow-y: hidden;
   background: var(--absh-bg);
   color: var(--absh-fg);
+  box-shadow: var(--admin-premium-shadow-inset), var(--admin-premium-shadow-lift);
   scrollbar-width: thin;
   scrollbar-color: var(--absh-row-line) transparent;
+}
+
+.admin-bookings-schedule__history-filters {
+  grid-column: 1 / -1;
+  min-width: var(--absh-min-width);
+  padding: 0.75rem 1rem 0.65rem;
+  border-bottom: 1px solid var(--absh-row-line);
+  background: transparent;
+}
+
+.admin-bookings-schedule__history-filters .admin-history-filters {
+  margin-bottom: 0;
+  border: none;
+  background: transparent;
+  padding: 0;
+}
+
+.admin-bookings-schedule__history-service-duration {
+  color: inherit;
+}
+
+@media (max-width: 47.99rem) {
+  .admin-bookings-schedule__history-table-wrap {
+    border-radius: var(--admin-premium-surface-r-mobile);
+  }
+
+  .admin-bookings-schedule__history-service-duration {
+    display: none;
+  }
 }
 
 .admin-bookings-schedule__history-head-row,
@@ -3973,6 +4003,8 @@
   min-width: 2.4rem;
   height: 2.4rem;
   border: 1px solid var(--border);
+  border-radius: 999px;
+  overflow: hidden;
   background: var(--bg);
   color: var(--fg);
   font-size: 0.78rem;
@@ -3982,7 +4014,7 @@
   display: inline-flex;
   align-items: center;
   justify-content: center;
-    padding: 0;
+  padding: 0;
 }
 
 
@@ -3990,7 +4022,7 @@
   width: 100%;
   height: 100%;
   display: block;
-  border-radius: 0.375rem;
+  border-radius: 50%;
   object-fit: cover;
 }
 
@@ -4007,7 +4039,9 @@
 
 .admin-history-avatar.is-active {
   border-color: var(--accent);
-  box-shadow: inset 0 0 0 1px var(--accent);
+  box-shadow:
+    inset 0 0 0 1px var(--accent),
+    0 0 0 2px color-mix(in srgb, var(--accent) 55%, transparent);
 }
 .admin-history-avatar:hover,
 .admin-history-icon-button:hover,
@@ -4045,6 +4079,7 @@
   min-width: 2.75rem;
   height: 2.75rem;
   border: 1px solid var(--border);
+  border-radius: 999px;
   background: var(--bg);
   color: var(--fg);
   display: inline-flex;
@@ -12410,30 +12445,7 @@ body.admin-theme-premium-black .booking-page-wrap .booking-shell.surface {
 }
 
 .admin-history-operations {
-  display: flex;
-  flex-direction: column;
-  gap: var(--space-sm);
-  padding: var(--space-sm);
-  margin-bottom: var(--space-sm);
-  background: color-mix(in srgb, var(--surface-2) 72%, var(--bg));
-  border: 1px solid var(--border);
-  border-radius: var(--radius-md);
-}
-
-.admin-history-operations .admin-history-filters {
-  margin-bottom: 0;
-  border: none;
-  background: transparent;
-  padding: 0;
-}
-
-.admin-history-operations .admin-bookings-ops--compact {
-  margin-bottom: 0;
-  border: none;
-  background: transparent;
-  padding: var(--space-xs) 0 0;
-  border-top: 1px solid color-mix(in srgb, var(--border) 80%, transparent);
-  border-radius: 0;
+  display: contents;
 }
 
 .admin-bookings-history-search-toolbar {
@@ -16920,8 +16932,8 @@ body.admin-theme-premium-black .booking-page-wrap .booking-shell.surface {
 
 /* Table wrapper */
 .admin-clients-table-wrap {
-  --acl-bg: #0a0a0b;
-  --acl-row-line: #1a1a1a;
+  --acl-bg: var(--admin-premium-surface-bg);
+  --acl-row-line: color-mix(in srgb, var(--border) 70%, transparent);
   --acl-muted: #6b6b70;
   --acl-fg: #e8e8ea;
   --acl-fg-soft: #b4b4ba;
@@ -16940,11 +16952,12 @@ body.admin-theme-premium-black .booking-page-wrap .booking-shell.surface {
   width: 100%;
   max-width: 100%;
   min-width: 0;
-  border: 1px solid var(--acl-row-line);
-  border-radius: 6px;
+  border: var(--admin-premium-surface-border);
+  border-radius: var(--admin-premium-surface-r);
   overflow-x: auto;
   overflow-y: hidden;
   background: var(--acl-bg);
+  box-shadow: var(--admin-premium-shadow-inset), var(--admin-premium-shadow-lift);
   color: var(--acl-fg);
   scrollbar-width: thin;
   scrollbar-color: var(--acl-row-line) transparent;
@@ -17046,6 +17059,78 @@ body.admin-theme-premium-black .booking-page-wrap .booking-shell.surface {
   color: color-mix(in srgb, var(--acl-fg) 88%, var(--accent));
   text-transform: uppercase;
   line-height: 1;
+}
+
+/* Shared list avatar (History + Clients) — click to upload */
+.admin-client-list-avatar {
+  width: 32px;
+  height: 32px;
+  padding: 0;
+  border-radius: 999px;
+  border: 2px solid var(--absh-row-line, var(--acl-row-line, var(--border)));
+  background: color-mix(in srgb, var(--accent) 22%, var(--absh-bg, var(--acl-bg, var(--bg))));
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  overflow: hidden;
+  cursor: pointer;
+  color: inherit;
+  font: inherit;
+  position: relative;
+}
+
+.admin-client-list-avatar:hover:not(:disabled),
+.admin-client-list-avatar:focus-visible {
+  border-color: var(--accent);
+  outline: none;
+  box-shadow: 0 0 0 2px color-mix(in srgb, var(--accent) 45%, transparent);
+}
+
+.admin-client-list-avatar:disabled {
+  cursor: default;
+  opacity: 0.85;
+}
+
+.admin-client-list-avatar__img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+  border-radius: 50%;
+}
+
+.admin-client-list-avatar__initials {
+  font-size: 0.65rem;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+  color: color-mix(in srgb, var(--absh-fg, var(--acl-fg, var(--fg))) 88%, var(--accent));
+  text-transform: uppercase;
+  line-height: 1;
+}
+
+.admin-client-list-avatar__input {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  opacity: 0;
+  pointer-events: none;
+}
+
+.admin-bookings-schedule__history-avatar.admin-client-list-avatar {
+  width: 32px;
+  height: 32px;
+}
+
+.admin-clients-avatar.admin-client-list-avatar {
+  width: 32px;
+  height: 32px;
+}
+
+@media (max-width: 47.99rem) {
+  .admin-clients-table-wrap {
+    border-radius: var(--admin-premium-surface-r-mobile);
+  }
 }
 
 /* Identity */

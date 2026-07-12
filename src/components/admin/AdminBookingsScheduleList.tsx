@@ -1,12 +1,14 @@
 import React, { useMemo } from 'react';
 import EmptyState from '../EmptyState';
 import { Calendar } from '../lucide-react';
+import ClientListAvatar from './ClientListAvatar';
 
 /** Mirrors dashboard `Booking` rows from the admin API (structural match for handlers). */
 export type ScheduleListBooking = {
   id: string;
   barberId: string;
   clientId?: string | null;
+  clientAvatarUrl?: string | null;
   fullName: string;
   email: string;
   status: string;
@@ -68,13 +70,6 @@ function pastStatusShort(booking: ScheduleListBooking): string {
   return 'Closed';
 }
 
-function getInitials(fullName: string): string {
-  const parts = fullName.trim().split(/\s+/).filter(Boolean);
-  if (parts.length === 0) return '?';
-  if (parts.length === 1) return parts[0].slice(0, 2).toUpperCase();
-  return `${parts[0][0] ?? ''}${parts[parts.length - 1][0] ?? ''}`.toUpperCase();
-}
-
 function historyChipVariant(status: string): 'done' | 'cancelled' | 'expired' | 'rescheduled' | 'default' {
   if (status === 'BOOKED') return 'done';
   if (status.startsWith('CANCELLED')) return 'cancelled';
@@ -106,12 +101,14 @@ export type AdminBookingsScheduleDayProps = CommonScheduleListProps & {
 export type AdminBookingsScheduleHistoryProps = CommonScheduleListProps & {
   variant: 'history';
   heading: string;
+  historyFilters?: React.ReactNode;
   historyToolbar?: React.ReactNode;
   formatDateTime: (startAt: string) => string;
   /** Human-readable status line for the row (e.g. Done, Cancelled by client). */
   getHistoryStatusLine: (booking: ScheduleListBooking) => string;
   historyDateFiltered: boolean;
   onClearHistoryDateRange?: () => void;
+  onClientAvatarChange?: (clientId: string, nextUrl: string) => void;
 };
 
 export type AdminBookingsScheduleListProps = AdminBookingsScheduleDayProps | AdminBookingsScheduleHistoryProps;
@@ -158,6 +155,13 @@ export default function AdminBookingsScheduleList(props: AdminBookingsScheduleLi
     </div>
   );
 
+  const historyFiltersNode =
+    history && props.historyFilters ? (
+      <div className="admin-bookings-schedule__history-filters">
+        {props.historyFilters}
+      </div>
+    ) : null;
+
   const historyToolbarNode =
     history && props.historyToolbar ? (
       <div className="admin-bookings-schedule__toolbar admin-clients-search-row">
@@ -169,6 +173,7 @@ export default function AdminBookingsScheduleList(props: AdminBookingsScheduleLi
     return (
       <section className={rootClass} aria-label={heading}>
         <div className="admin-bookings-schedule__history-table-wrap">
+          {historyFiltersNode}
           {historyToolbarNode}
 
           {bookingsInitialLoading ? (
@@ -217,11 +222,10 @@ export default function AdminBookingsScheduleList(props: AdminBookingsScheduleLi
               <ul className="admin-bookings-schedule__history-list" role="list" aria-live="polite">
                 {displayBookings.map((booking) => {
                   const isUpdated = updatedBookingIds.includes(booking.id);
-                  const initials = getInitials(booking.fullName);
                   const chipVariant = historyChipVariant(booking.status);
                   const chipLabel = props.getHistoryStatusLine(booking);
                   const serviceName = booking.service?.name ?? '—';
-                  const serviceStr = `${serviceName} · ${formatDurationLine(bookingDurationMinutes(booking))}`;
+                  const durationLabel = formatDurationLine(bookingDurationMinutes(booking));
                   const emailTrimmed = (booking.email ?? '').trim();
                   const dateTimeStr = props.formatDateTime(booking.startAt);
                   const barberShort = barberFirstName(booking.barber?.name);
@@ -231,17 +235,28 @@ export default function AdminBookingsScheduleList(props: AdminBookingsScheduleLi
                       key={booking.id}
                       className={isUpdated ? 'admin-bookings-schedule__history-item--updated' : undefined}
                     >
-                      <button
-                        type="button"
+                      <div
+                        role="button"
+                        tabIndex={0}
                         className="admin-bookings-schedule__history-row"
                         onClick={() => void onOpenClient(booking)}
+                        onKeyDown={(event) => {
+                          if (event.key === 'Enter' || event.key === ' ') {
+                            event.preventDefault();
+                            void onOpenClient(booking);
+                          }
+                        }}
                         data-booking-id={booking.id}
                         aria-label={`View booking for ${booking.fullName}`}
                       >
                         <div className="admin-bookings-schedule__history-client">
-                          <div className="admin-bookings-schedule__history-avatar" aria-hidden="true">
-                            <span className="admin-bookings-schedule__history-avatar-initials">{initials}</span>
-                          </div>
+                          <ClientListAvatar
+                            clientId={booking.clientId}
+                            fullName={booking.fullName}
+                            avatarUrl={booking.clientAvatarUrl}
+                            className="admin-bookings-schedule__history-avatar"
+                            onAvatarChange={props.onClientAvatarChange}
+                          />
 
                           <div className="admin-bookings-schedule__history-identity">
                             <span className="admin-bookings-schedule__history-name">
@@ -254,7 +269,10 @@ export default function AdminBookingsScheduleList(props: AdminBookingsScheduleLi
                         </div>
 
                         <span className="admin-bookings-schedule__history-service">
-                          {highlightMatch(serviceStr)}
+                          {highlightMatch(serviceName)}
+                          <span className="admin-bookings-schedule__history-service-duration">
+                            {` · ${durationLabel}`}
+                          </span>
                         </span>
 
                         <span className="admin-bookings-schedule__history-time">
@@ -268,7 +286,7 @@ export default function AdminBookingsScheduleList(props: AdminBookingsScheduleLi
                         <span className={`admin-bookings-schedule__history-chip admin-bookings-schedule__history-chip--${chipVariant}`}>
                           {chipLabel}
                         </span>
-                      </button>
+                      </div>
                     </li>
                   );
                 })}

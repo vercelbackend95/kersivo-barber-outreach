@@ -42,6 +42,7 @@ function ClearIcon() {
 }
 import AdminSectionHeader from './AdminSectionHeader';
 import AdminDesktopDashHeroSlot from './AdminDesktopDashHeroSlot';
+import ClientListAvatar from './ClientListAvatar';
 import ClientProfilePanel from './ClientProfilePanel';
 
 type ClientListRow = {
@@ -50,6 +51,7 @@ type ClientListRow = {
   email: string;
   phone: string | null;
   tags: string[];
+  avatarUrl?: string | null;
   reliabilityScore: number;
   lastVisitAt: string | null;
   totalSpentPence: number;
@@ -57,14 +59,6 @@ type ClientListRow = {
   completedCount: number;
   noShowCount: number;
 };
-
-function getInitials(fullName: string | null | undefined): string {
-  if (!fullName) return '?';
-  const parts = fullName.trim().split(/\s+/).filter(Boolean);
-  if (parts.length === 0) return '?';
-  if (parts.length === 1) return parts[0].slice(0, 2).toUpperCase();
-  return `${parts[0][0] ?? ''}${parts[parts.length - 1][0] ?? ''}`.toUpperCase();
-}
 
 function formatPence(pence: number): string {
   return `£${(pence / 100).toFixed(2)}`;
@@ -255,7 +249,6 @@ export default function ClientsAdminPanel() {
         ) : (
           <ul className="admin-clients-list" role="list">
             {clients.map((client) => {
-              const initials = getInitials(client.fullName);
               const tone = reliabilityTone(client.reliabilityScore);
               const visibleTags = client.tags.slice(0, MAX_VISIBLE_TAGS);
               const hiddenTagCount = client.tags.length - visibleTags.length;
@@ -263,16 +256,30 @@ export default function ClientsAdminPanel() {
 
               return (
                 <li key={client.id}>
-                  <button
-                    type="button"
+                  <div
+                    role="button"
+                    tabIndex={0}
                     className="admin-clients-row"
                     onClick={() => setOpenClientId(client.id)}
+                    onKeyDown={(event) => {
+                      if (event.key === 'Enter' || event.key === ' ') {
+                        event.preventDefault();
+                        setOpenClientId(client.id);
+                      }
+                    }}
                     aria-label={`View profile for ${displayName}`}
                   >
-                    {/* Avatar */}
-                    <div className="admin-clients-avatar" aria-hidden="true">
-                      <span className="admin-clients-avatar-initials">{initials}</span>
-                    </div>
+                    <ClientListAvatar
+                      clientId={client.id}
+                      fullName={client.fullName || client.email}
+                      avatarUrl={client.avatarUrl}
+                      className="admin-clients-avatar"
+                      onAvatarChange={(clientId, nextUrl) => {
+                        setClients((previous) => previous.map((row) => (
+                          row.id === clientId ? { ...row, avatarUrl: nextUrl } : row
+                        )));
+                      }}
+                    />
 
                     {/* Name + email */}
                     <div className="admin-clients-identity">
@@ -323,7 +330,7 @@ export default function ClientsAdminPanel() {
                     <span className="admin-clients-spent">
                       {client.totalSpentPence > 0 ? formatPence(client.totalSpentPence) : '—'}
                     </span>
-                  </button>
+                  </div>
                 </li>
               );
             })}

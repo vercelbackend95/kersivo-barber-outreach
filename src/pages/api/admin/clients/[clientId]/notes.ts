@@ -166,4 +166,4 @@ export const POST: APIRoute = async (ctx) => {
 
   return jsonResponse({ note: mapNoteWithLikes(created, barberId) }, 201);
 };
-
+

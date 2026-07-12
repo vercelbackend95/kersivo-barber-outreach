@@ -36,6 +36,7 @@ export const DEMO_SECTION_ALIASES = {
   retail: 'shop_products',
   barbers: 'bookings_blocks',
   reports: 'bookings_reports',
+  ai: 'assistant',
 } as const;
 
 export function resolveDemoSectionAlias(section: string | null): string | null {

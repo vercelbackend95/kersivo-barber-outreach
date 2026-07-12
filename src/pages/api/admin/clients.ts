@@ -33,6 +33,7 @@ export const GET: APIRoute = async (ctx) => {
       email: true,
       phone: true,
       tags: true,
+      avatarUrl: true,
       updatedAt: true,
     },
   });

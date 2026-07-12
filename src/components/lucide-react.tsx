@@ -563,6 +563,20 @@ const Pin = ({ ...props }: IconProps) => (
   </svg>
 );
 
+const Sparkles = ({ ...props }: IconProps) => (
+  <svg
+    viewBox="0 0 24 24"
+    fill="none"
+    stroke="currentColor"
+    strokeWidth="2"
+    strokeLinecap="round"
+    strokeLinejoin="round"
+    {...props}
+  >
+    <path d="M11.017 2.814a1 1 0 0 1 1.966 0l1.22 4.684a1 1 0 0 0 .949.694h4.908a1 1 0 0 1 .592 1.806l-3.97 2.888a1 1 0 0 0-.363 1.118l1.52 4.851a1 1 0 0 1-1.542 1.118l-3.96-2.873a1 1 0 0 0-1.175 0l-3.96 2.873a1 1 0 0 1-1.542-1.118l1.52-4.851a1 1 0 0 0-.363-1.118L2.35 9.998a1 1 0 0 1 .592-1.806h4.908a1 1 0 0 0 .949-.694z" />
+  </svg>
+);
+
 export {
   ArrowRight,
   Ban,
@@ -589,6 +603,7 @@ export {
   Shield,
   ShoppingBag,
   ShoppingCart,
+  Sparkles,
   Tag,
   Ticket,
   TrendingUp,

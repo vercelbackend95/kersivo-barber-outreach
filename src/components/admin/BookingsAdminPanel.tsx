@@ -1228,8 +1228,16 @@ export default function BookingsAdminPanel({ isActive, mode, onBackToDashboard, 
   }, [bookings, isMobileViewport, mode]);
   const recentBarbers = useMemo(() => {
     const byId = new Map(barbers.map((barber) => [barber.id, barber]));
-        const fallbackById = new Map(
-      bookings.map((booking) => [booking.barberId, { id: booking.barberId, name: booking.barber?.name ?? 'Barber', avatarUrl: null, isActive: false } as Barber])
+    const fallbackById = new Map(
+      bookings.map((booking) => [
+        booking.barberId,
+        {
+          id: booking.barberId,
+          name: booking.barber?.name ?? 'Barber',
+          avatarUrl: byId.get(booking.barberId)?.avatarUrl ?? null,
+          isActive: false,
+        } as Barber,
+      ]),
     );
 
 
@@ -2348,108 +2356,6 @@ export default function BookingsAdminPanel({ isActive, mode, onBackToDashboard, 
           ) : (
       <>
 
-      {mode === 'history' && (
-        <div className="admin-history-operations">
-        <section className="admin-history-filters">
-          <div className="admin-history-row">
-            <label>Recent barbers</label>
-            <div className="admin-history-barber-controls">
-              <div className="admin-filter-scroll-wrap">
-                <div ref={historyRecentBarbersScrollRef} className="admin-history-recent-scroll">
-                <div className="admin-history-recent-barbers" role="group" aria-label="Recent barbers">
-
-                  <button
-                    type="button"
-                    className={`admin-history-avatar admin-history-avatar--all ${historyBarberId === 'all' ? 'is-active' : ''}`}
-                    onClick={() => setHistoryBarberId('all')}
-                    aria-pressed={historyBarberId === 'all'}
-
-                  >
-                                        ALL
-                  </button>
-                                    {recentBarbers.map((barber) => {
-                    const hashIndex = hashValue(`${barber.id}:${barber.name}`) % 6;
-                    const isActive = historyBarberId === barber.id;
-
-                    return (
-                      <BarberChip
-                        key={barber.id}
-                                                barber={barber}
-                        toneIndex={hashIndex}
-                        isSelected={isActive}
-
-                        onClick={() => setHistoryBarberId(barber.id)}
-                        ariaLabel={`Filter by ${barber.name}`}
-                      />
-
-                    );
-                  })}
-                </div>
-                </div>
-              </div>
-
-              <div className="admin-history-control-actions">
-                <div className="admin-history-more" ref={historyMoreRef}>
-                    <button
-                      type="button"
-                      className={`admin-history-icon-button ${isHistoryMoreOpen ? 'is-active' : ''}`}
-                      onClick={() => setIsHistoryMoreOpen((current) => !current)}
-                      aria-haspopup="menu"
-                      aria-expanded={isHistoryMoreOpen}
-                      aria-label="Show all barbers"
-                    >
-                      <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">
-                        <path d="M4 6.5A1.5 1.5 0 0 1 5.5 5h13A1.5 1.5 0 0 1 20 6.5v1A1.5 1.5 0 0 1 18.5 9h-13A1.5 1.5 0 0 1 4 7.5v-1Zm0 5A1.5 1.5 0 0 1 5.5 10h13a1.5 1.5 0 0 1 1.5 1.5v1a1.5 1.5 0 0 1-1.5 1.5h-13A1.5 1.5 0 0 1 4 12.5v-1Zm1.5 3.5A1.5 1.5 0 0 0 4 16.5v1A1.5 1.5 0 0 0 5.5 19h13a1.5 1.5 0 0 0 1.5-1.5v-1a1.5 1.5 0 0 0-1.5-1.5h-13Z" fill="currentColor" />
-                      </svg>
-                    </button>
-
-                  {isHistoryMoreOpen ? (
-                    <div className="admin-history-more-menu" role="menu" aria-label="All barbers">
-                      <button
-                        type="button"
-                        role="menuitemradio"
-                        aria-checked={historyBarberId === 'all'}
-                        className={`admin-history-more-item ${historyBarberId === 'all' ? 'is-active' : ''}`}
-                        onClick={() => {
-                          setHistoryBarberId('all');
-                          setIsHistoryMoreOpen(false);
-                        }}
-                      >
-                        All barbers
-                      </button>
-                      {allBarbersSorted.map((barber) => (
-                        <button
-                          key={barber.id}
-                          type="button"
-                          role="menuitemradio"
-                          aria-checked={historyBarberId === barber.id}
-                          className={`admin-history-more-item ${historyBarberId === barber.id ? 'is-active' : ''}`}
-                          onClick={() => {
-                            setHistoryBarberId(barber.id);
-                            setIsHistoryMoreOpen(false);
-                          }}
-                        >
-                          {barber.name}
-                        </button>
-                      ))}
-                    </div>
-                  ) : null}
-                </div>
-                <HistoryDateRangePicker
-                  dateRange={historyDateRange}
-                  isMobileViewport={isMobileViewport}
-                  timezone={ADMIN_TIMEZONE}
-                  onChangeRange={setHistoryDateRange}
-                  onClear={() => setHistoryDateRange(null)}
-                />
-
-              </div>
-            </div>
-          </div>
-        </section>
-        </div>
-      )}
-
       {mode === 'history' ? (
         <AdminBookingsScheduleList
           variant="history"
@@ -2465,6 +2371,107 @@ export default function BookingsAdminPanel({ isActive, mode, onBackToDashboard, 
           historyDateFiltered={Boolean(historyDateRange)}
           onClearHistoryDateRange={historyDateRange ? () => setHistoryDateRange(null) : undefined}
           onOpenClient={openClientProfileForBooking}
+          onClientAvatarChange={(clientId, nextUrl) => {
+            setBookings((previous) => previous.map((booking) => (
+              booking.clientId === clientId
+                ? { ...booking, clientAvatarUrl: nextUrl }
+                : booking
+            )));
+          }}
+          historyFilters={(
+            <section className="admin-history-filters">
+              <div className="admin-history-row">
+                <label>Recent barbers</label>
+                <div className="admin-history-barber-controls">
+                  <div className="admin-filter-scroll-wrap">
+                    <div ref={historyRecentBarbersScrollRef} className="admin-history-recent-scroll">
+                      <div className="admin-history-recent-barbers" role="group" aria-label="Recent barbers">
+                        <button
+                          type="button"
+                          className={`admin-history-avatar admin-history-avatar--all ${historyBarberId === 'all' ? 'is-active' : ''}`}
+                          onClick={() => setHistoryBarberId('all')}
+                          aria-pressed={historyBarberId === 'all'}
+                        >
+                          ALL
+                        </button>
+                        {recentBarbers.map((barber) => {
+                          const hashIndex = hashValue(`${barber.id}:${barber.name}`) % 6;
+                          const isActive = historyBarberId === barber.id;
+
+                          return (
+                            <BarberChip
+                              key={barber.id}
+                              barber={barber}
+                              toneIndex={hashIndex}
+                              isSelected={isActive}
+                              onClick={() => setHistoryBarberId(barber.id)}
+                              ariaLabel={`Filter by ${barber.name}`}
+                            />
+                          );
+                        })}
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="admin-history-control-actions">
+                    <div className="admin-history-more" ref={historyMoreRef}>
+                      <button
+                        type="button"
+                        className={`admin-history-icon-button ${isHistoryMoreOpen ? 'is-active' : ''}`}
+                        onClick={() => setIsHistoryMoreOpen((current) => !current)}
+                        aria-haspopup="menu"
+                        aria-expanded={isHistoryMoreOpen}
+                        aria-label="Show all barbers"
+                      >
+                        <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+                          <path d="M4 6.5A1.5 1.5 0 0 1 5.5 5h13A1.5 1.5 0 0 1 20 6.5v1A1.5 1.5 0 0 1 18.5 9h-13A1.5 1.5 0 0 1 4 7.5v-1Zm0 5A1.5 1.5 0 0 1 5.5 10h13a1.5 1.5 0 0 1 1.5 1.5v1a1.5 1.5 0 0 1-1.5 1.5h-13A1.5 1.5 0 0 1 4 12.5v-1Zm1.5 3.5A1.5 1.5 0 0 0 4 16.5v1A1.5 1.5 0 0 0 5.5 19h13a1.5 1.5 0 0 0 1.5-1.5v-1a1.5 1.5 0 0 0-1.5-1.5h-13Z" fill="currentColor" />
+                        </svg>
+                      </button>
+
+                      {isHistoryMoreOpen ? (
+                        <div className="admin-history-more-menu" role="menu" aria-label="All barbers">
+                          <button
+                            type="button"
+                            role="menuitemradio"
+                            aria-checked={historyBarberId === 'all'}
+                            className={`admin-history-more-item ${historyBarberId === 'all' ? 'is-active' : ''}`}
+                            onClick={() => {
+                              setHistoryBarberId('all');
+                              setIsHistoryMoreOpen(false);
+                            }}
+                          >
+                            All barbers
+                          </button>
+                          {allBarbersSorted.map((barber) => (
+                            <button
+                              key={barber.id}
+                              type="button"
+                              role="menuitemradio"
+                              aria-checked={historyBarberId === barber.id}
+                              className={`admin-history-more-item ${historyBarberId === barber.id ? 'is-active' : ''}`}
+                              onClick={() => {
+                                setHistoryBarberId(barber.id);
+                                setIsHistoryMoreOpen(false);
+                              }}
+                            >
+                              {barber.name}
+                            </button>
+                          ))}
+                        </div>
+                      ) : null}
+                    </div>
+                    <HistoryDateRangePicker
+                      dateRange={historyDateRange}
+                      isMobileViewport={isMobileViewport}
+                      timezone={ADMIN_TIMEZONE}
+                      onChangeRange={setHistoryDateRange}
+                      onClear={() => setHistoryDateRange(null)}
+                    />
+                  </div>
+                </div>
+              </div>
+            </section>
+          )}
           historyToolbar={(
             <div className="admin-bookings-history-search-toolbar">
               {opsFilteredViewActive ? (

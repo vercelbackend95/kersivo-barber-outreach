@@ -11,6 +11,7 @@ import {
   Package,
   Scissors,
   ShoppingBag,
+  Sparkles,
   TrendingUp,
   User,
   Users,
@@ -67,6 +68,12 @@ const menuGroups: SectionGroup[] = [
       { section: 'shop_products', label: 'Products', icon: <Package {...ICON} /> },
       { section: 'shop_orders', label: 'Orders', icon: <ShoppingBag {...ICON} /> },
       { section: 'shop_sales', label: 'Sales', icon: <TrendingUp {...ICON} /> },
+    ],
+  },
+  {
+    title: 'Assistant',
+    items: [
+      { section: 'assistant', label: 'Assistant', icon: <Sparkles {...ICON} /> },
     ],
   },
 ];

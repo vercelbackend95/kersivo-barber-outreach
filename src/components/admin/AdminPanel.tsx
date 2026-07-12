@@ -5,6 +5,7 @@ import BookingsAdminPanel from './BookingsAdminPanel';
 import ShopAdminPanel from './ShopAdminPanel';
 import ServicesAdminPanel from './ServicesAdminPanel';
 import ClientsAdminPanel from './ClientsAdminPanel';
+import AiAssistantPanel from './AiAssistantPanel';
 import { AdminTodayBookingsLiveProvider } from './useAdminTodayBookingsLive';
 import { DEMO_ADMIN_SECRET, resolveDemoSectionAlias } from '@/lib/admin/demoConfig';
 import {
@@ -23,7 +24,8 @@ export type AdminSection =
   | 'services'
   | 'shop_products'
   | 'shop_orders'
-  | 'shop_sales';
+  | 'shop_sales'
+  | 'assistant';
 function clearTransientAdminViewportState() {
   if (typeof document === 'undefined') return;
 
@@ -52,6 +54,7 @@ function getSectionFromUrl(): AdminSection {
   if (section === 'shop_orders') return 'shop_orders';
   if (section === 'shop_sales') return 'shop_sales';
   if (section === 'shop_products') return 'shop_products';
+  if (section === 'assistant') return 'assistant';
   return 'bookings_dashboard';
 }
 
@@ -332,6 +335,10 @@ export default function AdminPanel({ demoMode = false }: AdminPanelProps) {
 
       {activeSection === 'shop_products' || activeSection === 'shop_orders' || activeSection === 'shop_sales' ? (
         <ShopAdminPanel key={activeSection} initialTab={shopTab} />
+      ) : null}
+
+      {activeSection === 'assistant' ? (
+        <AiAssistantPanel key="assistant" isPublicDemo={demoMode} />
       ) : null}
 
       </AdminLayout>
