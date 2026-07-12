@@ -239,7 +239,7 @@ export default function AiAssistantPanel({ isPublicDemo = false }: AiAssistantPa
     <section className="surface booking-shell admin-assistant-shell" aria-label="Assistant">
       <AdminSectionHeader
         title="Assistant"
-        description="SEO, retail, barbers, and your site — advisory help for barbershop ops."
+        description="Use every admin feature for stronger shop results — utilisation, no-shows, AOV, retail — plus SEO and ops. Advisory only."
         metaBadge={isPublicDemo ? 'Demo' : undefined}
         metaBadgeVariant="info"
         actions={(
@@ -261,9 +261,9 @@ export default function AiAssistantPanel({ isPublicDemo = false }: AiAssistantPa
               <div className="admin-assistant-empty">
                 <p className="admin-assistant-empty-brand">Kersivo Assistant</p>
                 <p className="admin-assistant-empty-copy">
-                  Ask about local SEO, Google Business, retail product copy, no-shows, schedules,
-                  or switching off marketplace booking apps. Advisory only — it will not change
-                  bookings or shop data.
+                  Ask how to use Bookings, Barbers, Reports, History, Clients, Services, Products,
+                  Orders, or Sales — and how each control drives utilisation, fewer no-shows,
+                  higher AOV, and retail attach. Advisory only — it will not change shop data.
                 </p>
               </div>
             ) : null}
@@ -315,7 +315,7 @@ export default function AiAssistantPanel({ isPublicDemo = false }: AiAssistantPa
               value={draft}
               onChange={(event) => setDraft(event.target.value)}
               onKeyDown={handleComposerKeyDown}
-              placeholder="Ask about SEO, retail, barbers, or your booking site…"
+              placeholder="Ask how to use an admin feature for better utilisation, AOV, or no-shows…"
               disabled={isStreaming && isPublicDemo}
             />
             <div className="admin-assistant-composer-actions">

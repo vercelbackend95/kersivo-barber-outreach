@@ -1,5 +1,7 @@
 import { FAQ_ITEMS } from '@/lib/seo/faqItems';
 import { BARBERSHOP_BOOKING_FAQ_ITEMS } from '@/lib/seo/barbershopBookingFaq';
+import { ADMIN_SECTIONS_PLAYBOOK } from './adminSections';
+import { ADMIN_RESULTS_PLAYBOOK } from './adminResultsPlaybook';
 
 /**
  * Curated domain pack for the admin assistant.
@@ -72,6 +74,8 @@ function faqToSection(
 
 export const KNOWLEDGE_SECTIONS: KnowledgeSection[] = [
   BRAND_FACTS,
+  ADMIN_SECTIONS_PLAYBOOK,
+  ADMIN_RESULTS_PLAYBOOK,
   SEO_OPS,
   RETAIL_OPS,
   BARBER_OPS,
