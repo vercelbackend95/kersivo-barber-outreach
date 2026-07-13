@@ -1,6 +1,10 @@
 import { formatInTimeZone } from 'date-fns-tz';
 
 import type { ReportsRangeKey } from './reportsRange';
+import {
+  getHourBucketLabel,
+  isHourLabel,
+} from './reportsHourlySeries';
 
 export type ReportsChartMetric = 'revenue' | 'bookings' | 'cancelRate';
 export type { ReportsRangeKey };
@@ -37,6 +41,9 @@ const CANCELLED_STATUSES = new Set([
 
 export function getBucketLabel(date: Date | string, rangeKey: ReportsRangeKey): string {
   const d = typeof date === 'string' ? new Date(date) : date;
+  if (rangeKey === '1d') {
+    return getHourBucketLabel(d, ADMIN_TIMEZONE);
+  }
   if (rangeKey === '1y') {
     return formatInTimeZone(d, ADMIN_TIMEZONE, "yyyy-'W'II");
   }
@@ -55,13 +62,34 @@ function isWeeklyLabels(labels: string[]): boolean {
   return labels.some((label) => label.includes('W'));
 }
 
+function isHourlyLabels(labels: string[]): boolean {
+  return labels.length > 0 && labels.every((label) => isHourLabel(label));
+}
+
 function resolveBucketKey(startAt: string, labels: string[]): string | null {
-  const key = getBucketLabel(startAt, isWeeklyLabels(labels) ? '1y' : '7d');
+  const key = isHourlyLabels(labels)
+    ? getHourBucketLabel(startAt, ADMIN_TIMEZONE)
+    : getBucketLabel(startAt, isWeeklyLabels(labels) ? '1y' : '7d');
   return labels.includes(key) ? key : null;
 }
 
 function zeroBuckets(labels: string[]): Map<string, number> {
   return new Map(labels.map((label) => [label, 0]));
+}
+
+function toCumulativePoints(
+  labels: string[],
+  perLabel: Map<string, number>,
+  metric: ReportsChartMetric,
+): ChartPoint[] {
+  let running = 0;
+  return labels.map((label) => {
+    running += perLabel.get(label) ?? 0;
+    if (metric === 'revenue') {
+      return { label, value: Math.round(running * 100) };
+    }
+    return { label, value: Math.round(running) };
+  });
 }
 
 function finalizeBuckets(
@@ -81,11 +109,40 @@ function finalizeBuckets(
   });
 }
 
+function buildRunningCancelRate(
+  rows: ReportsChartBookingRow[],
+  labels: string[],
+): ChartPoint[] {
+  const perHour = new Map<string, { total: number; cancelled: number }>();
+  for (const label of labels) perHour.set(label, { total: 0, cancelled: 0 });
+
+  for (const row of rows) {
+    const key = resolveBucketKey(row.startAt, labels);
+    if (!key) continue;
+    const bucket = perHour.get(key)!;
+    bucket.total += 1;
+    if (isCancelledStatus(row.status)) bucket.cancelled += 1;
+  }
+
+  let total = 0;
+  let cancelled = 0;
+  return labels.map((label) => {
+    const bucket = perHour.get(label) ?? { total: 0, cancelled: 0 };
+    total += bucket.total;
+    cancelled += bucket.cancelled;
+    return {
+      label,
+      value: total > 0 ? (cancelled / total) * 100 : 0,
+    };
+  });
+}
+
 export function buildOverallSeries(
   reports: ReportsChartInput,
   metric: ReportsChartMetric,
 ): ChartPoint[] {
   const labels = seedLabels(reports);
+  const hourly = isHourlyLabels(labels);
 
   if (metric === 'revenue') {
     return reports.revenueSeries.map((point) => ({
@@ -101,7 +158,13 @@ export function buildOverallSeries(
       if (!key) continue;
       buckets.set(key, (buckets.get(key) ?? 0) + 1);
     }
-    return finalizeBuckets(buckets, labels, metric);
+    return hourly
+      ? toCumulativePoints(labels, buckets, metric)
+      : finalizeBuckets(buckets, labels, metric);
+  }
+
+  if (hourly) {
+    return buildRunningCancelRate(reports.reportBookings, labels);
   }
 
   const cancelBuckets = new Map<string, { total: number; cancelled: number }>();
@@ -129,6 +192,7 @@ export function buildBarberSeries(
   metric: ReportsChartMetric,
 ): ChartPoint[] {
   const labels = seedLabels(reports);
+  const hourly = isHourlyLabels(labels);
   const rows = reports.reportBookings.filter((row) => row.barberId === barberId);
 
   if (metric === 'revenue') {
@@ -138,7 +202,9 @@ export function buildBarberSeries(
       if (!key) continue;
       buckets.set(key, (buckets.get(key) ?? 0) + (row.computedValueGbp ?? 0));
     }
-    return finalizeBuckets(buckets, labels, metric);
+    return hourly
+      ? toCumulativePoints(labels, buckets, metric)
+      : finalizeBuckets(buckets, labels, metric);
   }
 
   if (metric === 'bookings') {
@@ -148,7 +214,13 @@ export function buildBarberSeries(
       if (!key) continue;
       buckets.set(key, (buckets.get(key) ?? 0) + 1);
     }
-    return finalizeBuckets(buckets, labels, metric);
+    return hourly
+      ? toCumulativePoints(labels, buckets, metric)
+      : finalizeBuckets(buckets, labels, metric);
+  }
+
+  if (hourly) {
+    return buildRunningCancelRate(rows, labels);
   }
 
   const cancelBuckets = new Map<string, { total: number; cancelled: number }>();

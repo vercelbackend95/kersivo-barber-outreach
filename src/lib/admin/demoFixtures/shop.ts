@@ -1,48 +1,23 @@
 import { formatInTimeZone } from 'date-fns-tz';
+import { getDemoCatalogProducts } from '../../shop/demoCatalog';
 import { DEMO_ORDER_IDS, DEMO_PRODUCT_IDS } from './ids';
 
 const now = new Date().toISOString();
 const TZ = 'Europe/London';
 
 export const demoShopProductsResponse = {
-  products: [
-    {
-      id: DEMO_PRODUCT_IDS.pomade,
-      name: 'Matte Pomade',
-      description: 'Medium hold, natural finish.',
-      pricePence: 1800,
-      imageUrl: null,
-      active: true,
-      featured: true,
-      category: 'POMADES_AND_CLAYS',
-      sortOrder: 0,
-      updatedAt: now,
-    },
-    {
-      id: DEMO_PRODUCT_IDS.beardOil,
-      name: 'Beard Oil',
-      description: 'Cedarwood & sandalwood blend.',
-      pricePence: 2200,
-      imageUrl: null,
-      active: true,
-      featured: false,
-      category: 'BEARD_CARE',
-      sortOrder: 1,
-      updatedAt: now,
-    },
-    {
-      id: DEMO_PRODUCT_IDS.clay,
-      name: 'Styling Clay',
-      description: 'Strong hold, matte texture.',
-      pricePence: 1600,
-      imageUrl: null,
-      active: true,
-      featured: false,
-      category: 'STYLING',
-      sortOrder: 2,
-      updatedAt: now,
-    },
-  ],
+  products: getDemoCatalogProducts({ activeOnly: false }).map((product) => ({
+    id: product.id,
+    name: product.name,
+    description: product.description,
+    pricePence: product.pricePence,
+    imageUrl: product.imageUrl,
+    active: product.active,
+    featured: product.featured,
+    category: product.category,
+    sortOrder: product.sortOrder,
+    updatedAt: product.updatedAt || now,
+  })),
 };
 
 export function getDemoShopProductDetail(productId: string) {
@@ -67,7 +42,7 @@ export const demoShopOrdersResponse = {
       id: DEMO_ORDER_IDS.order2,
       customerEmail: 'amelia.clarke@example.com',
       status: 'COLLECTED',
-      totalPence: 1600,
+      totalPence: 1200,
       currency: 'GBP',
       createdAt: new Date(Date.now() - 2 * 24 * 60 * 60 * 1000).toISOString(),
       paidAt: new Date(Date.now() - 2 * 24 * 60 * 60 * 1000).toISOString(),
@@ -87,7 +62,7 @@ export function getDemoShopOrderDetail(orderId: string) {
         { id: 'demo-item-02', nameSnapshot: 'Beard Oil', unitPricePenceSnapshot: 2200, quantity: 1, lineTotalPence: 2200 },
       ]
     : [
-        { id: 'demo-item-03', nameSnapshot: 'Styling Clay', unitPricePenceSnapshot: 1600, quantity: 1, lineTotalPence: 1600 },
+        { id: 'demo-item-03', nameSnapshot: 'Forge Styling Powder', unitPricePenceSnapshot: 1200, quantity: 1, lineTotalPence: 1200 },
       ];
 
   return {
@@ -124,7 +99,7 @@ export function getDemoShopSalesResponse(searchParams: URLSearchParams) {
       ordersCount: 18,
       avgOrderValuePence: 1578,
       bestProduct: {
-        productId: DEMO_PRODUCT_IDS.pomade,
+        productId: DEMO_PRODUCT_IDS.mattePomade,
         name: 'Matte Pomade',
         revenuePence: 21600,
         units: 12,
@@ -134,7 +109,7 @@ export function getDemoShopSalesResponse(searchParams: URLSearchParams) {
       overall,
       products: [
         {
-          productId: DEMO_PRODUCT_IDS.pomade,
+          productId: DEMO_PRODUCT_IDS.mattePomade,
           name: 'Matte Pomade',
           points: overall.map((p) => ({ ...p, revenuePence: Math.round(p.revenuePence * 0.45), units: Math.max(1, p.units - 1) })),
         },
@@ -146,9 +121,9 @@ export function getDemoShopSalesResponse(searchParams: URLSearchParams) {
       ],
     },
     leaderboard: [
-      { productId: DEMO_PRODUCT_IDS.pomade, name: 'Matte Pomade', units: 12, revenuePence: 21600 },
+      { productId: DEMO_PRODUCT_IDS.mattePomade, name: 'Matte Pomade', units: 12, revenuePence: 21600 },
       { productId: DEMO_PRODUCT_IDS.beardOil, name: 'Beard Oil', units: 8, revenuePence: 17600 },
-      { productId: DEMO_PRODUCT_IDS.clay, name: 'Styling Clay', units: 6, revenuePence: 9600 },
+      { productId: DEMO_PRODUCT_IDS.forgeStylingPowder, name: 'Forge Styling Powder', units: 6, revenuePence: 7200 },
     ],
   };
 }

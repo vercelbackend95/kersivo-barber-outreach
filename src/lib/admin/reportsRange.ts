@@ -15,10 +15,10 @@ export type ReportsCustomDateRange = {
 };
 
 export const DESKTOP_REPORTS_RANGE_OPTIONS: Array<{ value: ReportsPresetKey; label: string }> = [
-  { value: 'week', label: 'This week' },
-  { value: '7d', label: '7 days' },
-  { value: '30d', label: '30 days' },
-  { value: '90d', label: '90 days' },
+  { value: '1d', label: '1 Day' },
+  { value: '7d', label: '1 Week' },
+  { value: '30d', label: '1 Month' },
+  { value: '1y', label: '1 Year' },
 ];
 
 export const MOBILE_REPORTS_RANGE_OPTIONS: Array<{ value: ReportsPresetKey; label: string }> = [
@@ -30,8 +30,8 @@ export const MOBILE_REPORTS_RANGE_OPTIONS: Array<{ value: ReportsPresetKey; labe
 
 const YMD_PATTERN = /^\d{4}-\d{2}-\d{2}$/;
 
-export function getDefaultReportsPreset(isMobileViewport: boolean): ReportsPresetKey {
-  return isMobileViewport ? '7d' : 'week';
+export function getDefaultReportsPreset(_isMobileViewport?: boolean): ReportsPresetKey {
+  return '1d';
 }
 
 export function getStartOfMonthInLondon(now: Date, timezone = ADMIN_REPORTS_TIMEZONE): Date {

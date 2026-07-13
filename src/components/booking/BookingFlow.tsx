@@ -1,5 +1,5 @@
 
-import React, { useEffect, useMemo, useRef, useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useRef, useState, type PointerEvent } from 'react';
 import BookingConfirmationPanel, { type BookingSummary } from './BookingConfirmationPanel';
 import BookingReviewPanel from './BookingReviewPanel';
 import BookingStepIndicator from './BookingStepIndicator';
@@ -200,6 +200,20 @@ const BOOKING_STEP_REVEAL_MS = 520;
 
 type BookingStepId = 'barber' | 'schedule' | 'details';
 
+function openNativeDatePicker(input: HTMLInputElement) {
+  if (typeof input.showPicker === 'function') {
+    try {
+      input.showPicker();
+      return;
+    } catch {
+      // showPicker can throw if not triggered by a user gesture; fall through.
+    }
+  }
+
+  input.focus();
+  input.click();
+}
+
 function scrollToBookingStep(section: HTMLElement, onReveal?: () => void) {
   const reduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
   section.scrollIntoView({ behavior: reduced ? 'auto' : 'smooth', block: 'start' });
@@ -224,6 +238,7 @@ export default function BookingFlow({ services, barbers, mode = 'create', token 
   const [isSlotsLoading, setIsSlotsLoading] = useState(false);
   const [brokenAvatarIds, setBrokenAvatarIds] = useState<Record<string, boolean>>({});
   const confirmationRef = useRef<HTMLElement | null>(null);
+  const dateInputRef = useRef<HTMLInputElement>(null);
   const barberStepRef = useRef<HTMLElement>(null);
   const scheduleStepRef = useRef<HTMLElement>(null);
   const detailsStepRef = useRef<HTMLElement>(null);
@@ -235,6 +250,14 @@ export default function BookingFlow({ services, barbers, mode = 'create', token 
   const normalizedFullName = fullName.trim();
   const normalizedEmail = email.trim();
   const normalizedPhone = phone.trim();
+
+  const handleDateCalendarPointerDown = useCallback((event: PointerEvent<HTMLSpanElement>) => {
+    if (event.pointerType === 'keyboard') return;
+    event.preventDefault();
+    const input = dateInputRef.current;
+    if (!input) return;
+    openNativeDatePicker(input);
+  }, []);
 
   const availableBarbers = useMemo(() => {
     if (!serviceId) return [];
@@ -749,24 +772,38 @@ export default function BookingFlow({ services, barbers, mode = 'create', token 
 
               <div className="booking-date-panel">
                 <div className="booking-flow__field booking-flow__field--date">
-                  <label className="admin-filter-tab admin-filter-tab--split admin-filter-tab--active booking-date-tab" htmlFor="booking-date">
+                  <div className="admin-filter-tab admin-filter-tab--split admin-filter-tab--active booking-date-tab">
                     <span className="admin-filter-tab-main booking-date-tab__main">{bookingDateLabel}</span>
-                    <span className="admin-filter-tab-calendar booking-date-tab__calendar" aria-hidden="true">
+                    <span
+                      className="admin-filter-tab-calendar booking-date-tab__calendar"
+                      role="button"
+                      tabIndex={0}
+                      aria-label="Open calendar to select booking date"
+                      onPointerDown={handleDateCalendarPointerDown}
+                      onKeyDown={(event) => {
+                        if (event.key !== 'Enter' && event.key !== ' ') return;
+                        event.preventDefault();
+                        const input = dateInputRef.current;
+                        if (!input) return;
+                        openNativeDatePicker(input);
+                      }}
+                    >
                       <input
                         id="booking-date"
+                        ref={dateInputRef}
                         type="date"
                         className="admin-filter-tab-calendar-input booking-date-tab__input"
                         value={date}
                         min={minBookingDate}
                         onChange={(event) => setDate(event.target.value)}
-
+                        tabIndex={-1}
                         aria-label="Select booking date"
                       />
-                      <svg viewBox="0 0 24 24" focusable="false">
+                      <svg viewBox="0 0 24 24" focusable="false" aria-hidden="true">
                         <path d="M7 2a1 1 0 0 1 1 1v1h8V3a1 1 0 1 1 2 0v1h1a3 3 0 0 1 3 3v11a4 4 0 0 1-4 4H6a4 4 0 0 1-4-4V7a3 3 0 0 1 3-3h1V3a1 1 0 0 1 1-1Zm13 8H4v8a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-8ZM5 6a1 1 0 0 0-1 1v1h16V7a1 1 0 0 0-1-1H5Z" />
                       </svg>
                     </span>
-                  </label>
+                  </div>
                 </div>
 
               </div>

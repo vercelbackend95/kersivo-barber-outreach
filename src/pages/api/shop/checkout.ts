@@ -1,11 +1,9 @@
 export const prerender = false;
 
 import type { APIRoute } from 'astro';
-import { prisma } from '../../../lib/db/client';
-import { PUBLIC_SHOP_UNAVAILABLE_MESSAGE, isPrismaQuotaExceededError } from '../../../lib/db/resilience';
-import { resolveShopId } from '../../../lib/db/shopScope';
+import { DEMO_SHOP_ID } from '../../../lib/db/shopScope';
+import { getDemoCatalogProductById } from '../../../lib/shop/demoCatalog';
 import { createCheckoutSession } from '../../../lib/shop/stripe';
-
 
 type CheckoutInput = {
   email: string;
@@ -19,7 +17,6 @@ function getPublicSiteUrl() {
   return configured.replace(/\/$/, '');
 }
 
-
 export const POST: APIRoute = async ({ request }) => {
   try {
     const body = (await request.json()) as CheckoutInput;
@@ -27,16 +24,14 @@ export const POST: APIRoute = async ({ request }) => {
 
     if (!email || !EMAIL_REGEX.test(email)) {
       return new Response(JSON.stringify({ error: 'Valid email is required.' }), { status: 400 });
-
     }
 
     const requestedItems = (body.items ?? [])
       .map((item) => ({
         productId: String(item.productId ?? '').trim(),
-        quantity: Math.floor(Number(item.quantity ?? 0))
+        quantity: Math.floor(Number(item.quantity ?? 0)),
       }))
       .filter((item) => item.productId && item.quantity >= 1);
-
 
     if (requestedItems.length === 0) {
       return new Response(JSON.stringify({ error: 'Cart is empty.' }), { status: 400 });
@@ -47,21 +42,9 @@ export const POST: APIRoute = async ({ request }) => {
       quantityByProduct.set(item.productId, (quantityByProduct.get(item.productId) ?? 0) + item.quantity);
     }
 
-    const shopId = await resolveShopId();
-    const products = await prisma.product.findMany({
-      where: {
-        shopId,
-        id: { in: [...quantityByProduct.keys()] },
-        active: true
-      },
-      select: {
-        id: true,
-        name: true,
-        pricePence: true,
-        imageUrl: true
-      }
-
-    });
+    const products = [...quantityByProduct.keys()]
+      .map((productId) => getDemoCatalogProductById(productId))
+      .filter((product): product is NonNullable<typeof product> => Boolean(product?.active));
 
     if (products.length !== quantityByProduct.size) {
       return new Response(JSON.stringify({ error: 'Some products are unavailable.' }), { status: 400 });
@@ -75,7 +58,7 @@ export const POST: APIRoute = async ({ request }) => {
         unitPricePenceSnapshot: product.pricePence,
         quantity,
         lineTotalPence: product.pricePence * quantity,
-        imageUrl: product.imageUrl ?? ''
+        imageUrl: product.imageUrl ?? '',
       };
     });
 
@@ -89,11 +72,10 @@ export const POST: APIRoute = async ({ request }) => {
         name: item.nameSnapshot,
         unitAmount: item.unitPricePenceSnapshot,
         quantity: item.quantity,
-        imageUrl: item.imageUrl || undefined
+        imageUrl: item.imageUrl || undefined,
       })),
       metadata: {
-
-        shopId,
+        shopId: DEMO_SHOP_ID,
         email,
         cart: JSON.stringify(
           snapshot.map((item) => ({
@@ -101,23 +83,15 @@ export const POST: APIRoute = async ({ request }) => {
             name: item.nameSnapshot,
             unitPricePence: item.unitPricePenceSnapshot,
             quantity: item.quantity,
-            lineTotalPence: item.lineTotalPence
-          }))
-        )
-      }
-
-
+            lineTotalPence: item.lineTotalPence,
+          })),
+        ),
+      },
     });
 
     return new Response(JSON.stringify({ url: session.url }), { status: 200 });
   } catch (error) {
     console.error('Checkout session creation failed', error);
-        if (isPrismaQuotaExceededError(error)) {
-      return new Response(JSON.stringify({ error: PUBLIC_SHOP_UNAVAILABLE_MESSAGE }), { status: 503 });
-    }
-
-
     return new Response(JSON.stringify({ error: 'Unable to create checkout session.' }), { status: 500 });
-
   }
 };

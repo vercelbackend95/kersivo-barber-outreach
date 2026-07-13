@@ -28,6 +28,10 @@ export function sortChartLabels(labels: string[]): string[] {
 
   const unique = Array.from(new Set(labels));
 
+  if (unique.every((label) => /^\d{2}:00$/.test(label))) {
+    return unique.sort((a, b) => a.localeCompare(b));
+  }
+
   if (isIsoDateLabels(unique)) {
     return unique.sort((a, b) => (parseIsoDateLabel(a) ?? 0) - (parseIsoDateLabel(b) ?? 0));
   }

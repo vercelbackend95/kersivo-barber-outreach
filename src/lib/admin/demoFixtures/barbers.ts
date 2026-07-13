@@ -1,6 +1,6 @@
 import {
   LANDING_DEMO_BARBER_AVATARS,
-} from '@/lib/landing/landingDemoAssets';
+} from '../../landing/landingDemoAssets';
 import { DEMO_BARBER_IDS, DEMO_SERVICE_IDS } from './ids';
 
 const now = new Date().toISOString();

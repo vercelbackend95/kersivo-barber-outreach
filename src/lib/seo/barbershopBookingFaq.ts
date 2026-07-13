@@ -47,7 +47,7 @@ export const BARBERSHOP_BOOKING_FAQ_ITEMS: LandingFaqItem[] = [
   },
   {
     question: 'What is the full cost breakdown?',
-    answer: `Launch is £199 setup + £39/month Ongoing Care from go-live. Priority Growth is £299 setup + £39/month Ongoing Care from go-live. ${KERSIVO_COMMISSION_WITH_STRIPE} ${SMS_INCLUDED_CLAIM} ${PRICE_VAT_DISCLAIMER}`,
+    answer: `Launch is £199 setup + £39/month Ongoing Care from go-live. Priority Growth is £299 setup + £39/month Ongoing Care from go-live. ${KERSIVO_COMMISSION_WITH_STRIPE} ${SMS_INCLUDED_CLAIM}. ${PRICE_VAT_DISCLAIMER}`,
   },
   {
     question: 'Is KERSIVO new?',

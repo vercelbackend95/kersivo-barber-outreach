@@ -12,7 +12,7 @@
     max-width: 100vw;
     margin-inline: calc(50% - 50vw);
     border-inline: 0;
-    border-radius: 0;
+    border-radius: var(--booking-card-r-mobile);
     overflow-x: clip;
   }
 
@@ -40,7 +40,7 @@
   .booking-action-bar,
   .admin-inline-error {
     border-inline: 0;
-    border-radius: 0;
+    border-radius: var(--booking-card-r-mobile);
   }
 
   .booking-flow__hero-copy,

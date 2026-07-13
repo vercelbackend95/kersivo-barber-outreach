@@ -14,4 +14,4 @@ export const STRIPE_FEES_NOTE = 'Standard Stripe payment-processing fees still a
 
 export const KERSIVO_COMMISSION_WITH_STRIPE = `${KERSIVO_COMMISSION_CLAIM} ${STRIPE_FEES_NOTE}`;
 
-export const SMS_INCLUDED_CLAIM = 'Unlimited automated SMS reminders included.';
+export const SMS_INCLUDED_CLAIM = 'SMS reminders';

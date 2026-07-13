@@ -116,6 +116,8 @@ type BookingsReportsAnalyticsStudioProps = {
   reportsLoading?: boolean;
   barbers: Barber[];
   isCompactLayout: boolean;
+  /** Force 1D/1W/1M/1Y chip labels even when the studio is wide (landing widget). */
+  forceCompactRangeLabels?: boolean;
   reportsRangePreset: ReportsRangeKey;
   reportsCustomRange: ReportsCustomDateRange | null;
   onPresetChange: (preset: Exclude<ReportsRangeKey, 'custom'>) => void;
@@ -135,6 +137,7 @@ const BookingsReportsAnalyticsStudio = forwardRef<HTMLElement, BookingsReportsAn
       reportsLoading = false,
       barbers,
       isCompactLayout,
+      forceCompactRangeLabels = false,
       reportsRangePreset,
       reportsCustomRange,
       onPresetChange,
@@ -319,7 +322,7 @@ const BookingsReportsAnalyticsStudio = forwardRef<HTMLElement, BookingsReportsAn
           <ReportsRangeToolbar
             preset={reportsRangePreset}
             customRange={reportsCustomRange}
-            isMobileViewport={isCompactLayout}
+            isMobileViewport={isCompactLayout || forceCompactRangeLabels}
             timezone={ADMIN_TIMEZONE}
             className="admin-reports-studio-toolbar__range"
             onPresetChange={onPresetChange}

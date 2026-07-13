@@ -2,7 +2,9 @@ import { describe, expect, it } from 'vitest';
 import {
   buildReportsFetchParams,
   customRangeDayCount,
+  DESKTOP_REPORTS_RANGE_OPTIONS,
   getDefaultReportsPreset,
+  MOBILE_REPORTS_RANGE_OPTIONS,
   parseYmdRange,
 } from './reportsRange';
 
@@ -60,9 +62,28 @@ describe('buildReportsFetchParams', () => {
 });
 
 describe('getDefaultReportsPreset', () => {
-  it('defaults to week on desktop and 7d on mobile', () => {
-    expect(getDefaultReportsPreset(false)).toBe('week');
-    expect(getDefaultReportsPreset(true)).toBe('7d');
+  it('defaults to 1d for desktop and mobile', () => {
+    expect(getDefaultReportsPreset(false)).toBe('1d');
+    expect(getDefaultReportsPreset(true)).toBe('1d');
+    expect(getDefaultReportsPreset()).toBe('1d');
+  });
+});
+
+describe('DESKTOP_REPORTS_RANGE_OPTIONS', () => {
+  it('starts with 1 Day and uses word labels', () => {
+    expect(DESKTOP_REPORTS_RANGE_OPTIONS[0]).toEqual({ value: '1d', label: '1 Day' });
+    expect(DESKTOP_REPORTS_RANGE_OPTIONS.map((option) => option.label)).toEqual([
+      '1 Day',
+      '1 Week',
+      '1 Month',
+      '1 Year',
+    ]);
+    expect(MOBILE_REPORTS_RANGE_OPTIONS.map((option) => option.label)).toEqual([
+      '1D',
+      '1W',
+      '1M',
+      '1Y',
+    ]);
   });
 });
 

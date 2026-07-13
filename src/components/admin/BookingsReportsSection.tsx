@@ -62,10 +62,7 @@ export default function BookingsReportsSection({
   const [reports, setReports] = useState<BookingsReportsPayload | null>(null);
   const [reportsLoading, setReportsLoading] = useState(true);
   const [reportsError, setReportsError] = useState('');
-  const [reportsRangePreset, setReportsRangePreset] = useState<ReportsRangeKey>(() => {
-    if (typeof window === 'undefined') return 'week';
-    return getDefaultReportsPreset(window.matchMedia('(max-width: 47.99rem)').matches);
-  });
+  const [reportsRangePreset, setReportsRangePreset] = useState<ReportsRangeKey>(() => getDefaultReportsPreset());
   const [reportsCustomRange, setReportsCustomRange] = useState<ReportsCustomDateRange | null>(null);
   const [isMobileViewport, setIsMobileViewport] = useState(false);
   const reportsStudioRef = useRef<HTMLElement>(null);
@@ -81,15 +78,15 @@ export default function BookingsReportsSection({
   }, []);
 
   useEffect(() => {
-    if (!isCompactLayout || reportsRangePreset === 'custom') return;
+    if (reportsRangePreset === 'custom') return;
     if (reportsRangePreset === 'week') {
       setReportsRangePreset('7d');
       return;
     }
     if (reportsRangePreset === '90d') {
-      setReportsRangePreset('30d');
+      setReportsRangePreset('1y');
     }
-  }, [isCompactLayout, reportsRangePreset]);
+  }, [reportsRangePreset]);
 
   const handlePresetChange = useCallback((preset: Exclude<ReportsRangeKey, 'custom'>) => {
     setReportsRangePreset(preset);
@@ -99,14 +96,14 @@ export default function BookingsReportsSection({
   const handleCustomRangeChange = useCallback((range: ReportsCustomDateRange | null) => {
     if (!range?.from && !range?.to) {
       setReportsCustomRange(null);
-      setReportsRangePreset(getDefaultReportsPreset(isCompactLayout));
+      setReportsRangePreset(getDefaultReportsPreset());
       return;
     }
     setReportsCustomRange(range);
     if (isCustomRangeComplete(range)) {
       setReportsRangePreset('custom');
     }
-  }, [isCompactLayout]);
+  }, []);
 
   const fetchReports = useCallback(async () => {
     if (!loggedIn) return;

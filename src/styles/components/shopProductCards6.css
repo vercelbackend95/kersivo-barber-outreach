@@ -102,26 +102,20 @@
 
 :is(.shop6__carousel, .feature261-retail-carousel) .shop6__grid .shop-media {
   position: relative;
-  display: grid;
-  place-items: center;
+  display: block;
   aspect-ratio: 1 / 1;
   overflow: hidden;
-  padding: clamp(0.35rem, 1.6vw, 0.62rem);
+  padding: 0;
   border-bottom: 1px solid color-mix(in srgb, var(--border) 90%, var(--surface));
-  background: linear-gradient(
-    180deg,
-    color-mix(in srgb, var(--surface) 94%, var(--bg)),
-    color-mix(in srgb, var(--surface) 90%, var(--bg))
-  );
+  background: color-mix(in srgb, var(--surface-2) 88%, var(--bg));
 }
 
 :is(.shop6__carousel, .feature261-retail-carousel) .shop6__grid .shop-image {
   width: 100%;
   height: 100%;
-  max-width: 96%;
-  max-height: 96%;
-
-  object-fit: contain;
+  max-width: none;
+  max-height: none;
+  object-fit: cover;
   object-position: center;
   aspect-ratio: auto;
   transition: transform 220ms ease;
@@ -134,16 +128,36 @@
   border-bottom: 0;
 }
 
+:is(.shop6__carousel, .feature261-retail-carousel) .shop6__grid .shop-card-body {
+  padding: 0.65rem 0.75rem 0.75rem;
+  gap: 0.25rem;
+}
+
 :is(.shop6__carousel, .feature261-retail-carousel) .shop6__grid .shop-category {
   margin: 0;
   color: var(--muted);
-  font-size: 0.58rem;
+  font-size: 0.65rem;
   letter-spacing: 0.08em;
   text-transform: uppercase;
+  font-weight: 600;
+}
+
+:is(.shop6__carousel, .feature261-retail-carousel) .shop6__grid .shop-card h3 {
+  margin: 0;
+  font-size: 0.9375rem;
+  font-weight: 600;
+  line-height: 1.3;
+  min-height: 0;
+}
+
+:is(.shop6__carousel, .feature261-retail-carousel) .shop6__grid .shop-price {
+  margin-top: 0.1rem;
+  font-size: 0.9375rem;
+  font-weight: 700;
 }
 
 :is(.shop6__carousel, .feature261-retail-carousel) .shop6__grid .shop-card:hover .shop-image {
-  transform: scale(1.02);
+  transform: scale(1.03);
 }
 
 .shop6__item {
@@ -346,35 +360,34 @@
 
   :is(.shop6__carousel, .feature261-retail-carousel) .shop6__grid .shop-media {
     aspect-ratio: 1 / 1;
-    padding: 0.4rem;
-
+    padding: 0;
   }
 
   :is(.shop6__carousel, .feature261-retail-carousel) .shop6__grid .shop-image {
-    max-width: 98%;
-    max-height: 98%;
-
+    max-width: none;
+    max-height: none;
+    object-fit: cover;
   }
 
   :is(.shop6__carousel, .feature261-retail-carousel) .shop6__grid .shop-card-body {
-    padding: 0.45rem;
-    gap: 0.28rem;
+    padding: 0.55rem 0.65rem 0.7rem;
+    gap: 0.22rem;
   }
 
   :is(.shop6__carousel, .feature261-retail-carousel) .shop6__grid .shop-card h3 {
-    min-height: calc(2 * 1.32em);
-    font-size: 0.72rem;
-        font-weight: 600;
-    letter-spacing: 0.015em;
-
+    min-height: 0;
+    font-size: 0.84rem;
+    font-weight: 600;
+    letter-spacing: 0.01em;
   }
 
   :is(.shop6__carousel, .feature261-retail-carousel) .shop6__grid .shop-price {
-    font-size: 0.74rem;
+    font-size: 0.84rem;
   }
 
   :is(.shop6__carousel, .feature261-retail-carousel) .shop6__grid .shop-card-actions {
-    margin-top: 0.1rem;
+    margin-top: auto;
+    padding-top: 0.4rem;
   }
 
   :is(.shop6__carousel, .feature261-retail-carousel) .shop6__grid .shop-card-actions .btn {
@@ -459,14 +472,13 @@
 
   :is(.shop6__carousel, .feature261-retail-carousel) .shop6__grid .shop-media {
     aspect-ratio: 1 / 1;
-    padding: 0.48rem;
-
+    padding: 0;
   }
 
   :is(.shop6__carousel, .feature261-retail-carousel) .shop6__grid .shop-image {
-    max-width: 95%;
-    max-height: 95%;
-
+    max-width: none;
+    max-height: none;
+    object-fit: cover;
   }
 
   .shop6__item {
@@ -474,11 +486,11 @@
   }
   
   :is(.shop6__carousel, .feature261-retail-carousel) .shop6__grid .shop-card h3 {
-    font-size: 1rem;
-    font-weight: 500;
+    font-size: 0.95rem;
+    font-weight: 600;
     letter-spacing: 0.01em;
-    line-height: 1.36;
-    min-height: calc(2 * 1.36em);
+    line-height: 1.3;
+    min-height: 0;
   }
 
 }

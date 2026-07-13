@@ -25,7 +25,7 @@ import '@/styles/components/landingBookingsReportsWidget.css';
 const DEMO_BARBERS = landingBookingsReportsBarbers as Barber[];
 
 export default function LandingBookingsReportsWidget() {
-  const [reportsRangePreset, setReportsRangePreset] = useState<ReportsRangeKey>('7d');
+  const [reportsRangePreset, setReportsRangePreset] = useState<ReportsRangeKey>(() => getDefaultReportsPreset());
   const [reportsCustomRange, setReportsCustomRange] = useState<ReportsCustomDateRange | null>(null);
   const [chartMetric, setChartMetric] = useState<ReportsChartMetric>('revenue');
   const [selectedBarberIds, setSelectedBarberIds] = useState<string[]>([]);
@@ -38,10 +38,14 @@ export default function LandingBookingsReportsWidget() {
 
   useEffect(() => {
     const prefs = readLandingReportsWidgetPrefs();
-    if (prefs.rangePreset) {
+    if (prefs.rangePreset === 'week') {
+      setReportsRangePreset('7d');
+    } else if (prefs.rangePreset === '90d') {
+      setReportsRangePreset('1y');
+    } else if (prefs.rangePreset) {
       setReportsRangePreset(prefs.rangePreset);
-    } else if (typeof window !== 'undefined') {
-      setReportsRangePreset(getDefaultReportsPreset(window.matchMedia('(max-width: 47.99rem)').matches));
+    } else {
+      setReportsRangePreset(getDefaultReportsPreset());
     }
     if (prefs.chartMetric) {
       setChartMetric(prefs.chartMetric);
@@ -62,20 +66,20 @@ export default function LandingBookingsReportsWidget() {
   }, []);
 
   useEffect(() => {
-    if (!isCompactLayout || reportsRangePreset === 'custom') return;
+    if (reportsRangePreset === 'custom') return;
     if (reportsRangePreset === 'week') {
       setReportsRangePreset('7d');
       return;
     }
     if (reportsRangePreset === '90d') {
-      setReportsRangePreset('30d');
+      setReportsRangePreset('1y');
     }
-  }, [isCompactLayout, reportsRangePreset]);
+  }, [reportsRangePreset]);
 
   const reports = useMemo(() => {
     const customYmd = customRangeToYmd(reportsCustomRange);
     if (reportsRangePreset === 'custom') {
-      if (!customYmd) return getLandingBookingsReportsData('7d');
+      if (!customYmd) return getLandingBookingsReportsData('1d');
       return getLandingBookingsReportsData('custom', customYmd.from, customYmd.to);
     }
     return getLandingBookingsReportsData(reportsRangePreset);
@@ -110,14 +114,14 @@ export default function LandingBookingsReportsWidget() {
   const handleCustomRangeChange = useCallback((range: ReportsCustomDateRange | null) => {
     if (!range?.from && !range?.to) {
       setReportsCustomRange(null);
-      setReportsRangePreset(getDefaultReportsPreset(isCompactLayout));
+      setReportsRangePreset(getDefaultReportsPreset());
       return;
     }
     setReportsCustomRange(range);
     if (isCustomRangeComplete(range)) {
       setReportsRangePreset('custom');
     }
-  }, [isCompactLayout]);
+  }, []);
 
   return (
     <div className="lbrw landing-bookings-reports-widget">
@@ -126,6 +130,7 @@ export default function LandingBookingsReportsWidget() {
         reports={reports}
         barbers={DEMO_BARBERS}
         isCompactLayout={isCompactLayout}
+        forceCompactRangeLabels
         reportsRangePreset={reportsRangePreset}
         reportsCustomRange={reportsCustomRange}
         onPresetChange={handlePresetChange}

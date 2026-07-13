@@ -16,6 +16,11 @@ import {
   parseYmdRange,
   type ReportsRangeKey,
 } from '../../../lib/admin/reportsRange';
+import {
+  buildWorkdayHourLabels,
+  getHourBucketLabel,
+  toCumulativeSeries,
+} from '../../../lib/admin/reportsHourlySeries';
 const ADMIN_TIMEZONE = 'Europe/London';
 
 type RangeBoundaries = { from: Date; to: Date };
@@ -97,7 +102,11 @@ function getReportsRange(range: ReportsRangeKey): RangeBoundaries {
   }
 
   if (range === '1d') {
-    return { from: subDays(now, 1), to: now };
+    const todayKey = formatInTimeZone(now, ADMIN_TIMEZONE, 'yyyy-MM-dd');
+    return {
+      from: fromZonedTime(`${todayKey}T00:00:00.000`, ADMIN_TIMEZONE),
+      to: now,
+    };
   }
 
   if (range === '1y') {
@@ -194,7 +203,8 @@ function getRangeDayKeys(range: RangeBoundaries): string[] {
 }
 
 
-function getRevenueBucketMode(rangeKey: ReportsRangeKey, range: RangeBoundaries): 'day' | 'week' {
+function getRevenueBucketMode(rangeKey: ReportsRangeKey, range: RangeBoundaries): 'hour' | 'day' | 'week' {
+  if (rangeKey === '1d') return 'hour';
   if (rangeKey === 'custom') {
     const spanDays = differenceInCalendarDays(range.to, range.from) + 1;
     if (spanDays > 90) return 'week';
@@ -203,7 +213,12 @@ function getRevenueBucketMode(rangeKey: ReportsRangeKey, range: RangeBoundaries)
 }
 
 function getRevenueSeriesSeed(range: RangeBoundaries, rangeKey: ReportsRangeKey): RevenueSeriesPoint[] {
-  if (getRevenueBucketMode(rangeKey, range) === 'day') {
+  const mode = getRevenueBucketMode(rangeKey, range);
+  if (mode === 'hour') {
+    return buildWorkdayHourLabels(range.to, ADMIN_TIMEZONE).map((label) => ({ label, value: 0 }));
+  }
+
+  if (mode === 'day') {
     return getRangeDayKeys(range).map((dayKey) => ({ label: dayKey, value: 0 }));
   }
 
@@ -220,9 +235,10 @@ function getRevenueSeriesSeed(range: RangeBoundaries, rangeKey: ReportsRangeKey)
 }
 
 function getRevenueBucketLabel(date: Date, rangeKey: ReportsRangeKey, range: RangeBoundaries): string {
-  return getRevenueBucketMode(rangeKey, range) === 'week'
-    ? formatInTimeZone(date, ADMIN_TIMEZONE, "yyyy-'W'II")
-    : formatInTimeZone(date, ADMIN_TIMEZONE, 'yyyy-MM-dd');
+  const mode = getRevenueBucketMode(rangeKey, range);
+  if (mode === 'hour') return getHourBucketLabel(date, ADMIN_TIMEZONE);
+  if (mode === 'week') return formatInTimeZone(date, ADMIN_TIMEZONE, "yyyy-'W'II");
+  return formatInTimeZone(date, ADMIN_TIMEZONE, 'yyyy-MM-dd');
 }
 
 
@@ -549,6 +565,18 @@ async function computeMetrics(shopId: string, range: RangeBoundaries, selectedBa
       : Promise.resolve(null)
   ]);
 
+  const revenueSeriesSeed = getRevenueSeriesSeed(range, rangeKey);
+  const revenueSeriesRaw = revenueSeriesSeed.map((point) => ({
+    label: point.label,
+    value: revenueSeriesMap.get(point.label) ?? 0,
+  }));
+  const revenueSeries = getRevenueBucketMode(rangeKey, range) === 'hour'
+    ? toCumulativeSeries(
+      revenueSeriesRaw.map((point) => point.label),
+      new Map(revenueSeriesRaw.map((point) => [point.label, point.value])),
+    )
+    : revenueSeriesRaw;
+
   return {
     bookingsCount,
     revenue,
@@ -563,7 +591,7 @@ async function computeMetrics(shopId: string, range: RangeBoundaries, selectedBa
     bookedMinutes,
     availableMinutes,
     utilizationPct,
-    revenueSeries: [...revenueSeriesMap.entries()].map(([label, value]) => ({ label, value })),
+    revenueSeries,
     reportBookings,
 
     mostPopularService: mostPopularServiceTop && mostPopularServiceEntity

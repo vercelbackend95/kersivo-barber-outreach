@@ -81,6 +81,7 @@ function defaultFormatAxisValue(value: number, metric?: 'currency' | 'number'): 
 }
 
 function formatTooltipDateLabel(label: string): string {
+  if (/^\d{2}:00$/.test(label)) return label;
   const isoTs = Date.parse(`${label}T00:00:00`);
   if (!Number.isNaN(isoTs)) {
     return new Date(isoTs).toLocaleDateString('en-GB', {
@@ -93,6 +94,7 @@ function formatTooltipDateLabel(label: string): string {
 }
 
 function formatXAxisLabel(label: string, labelCount: number): string {
+  if (/^\d{2}:00$/.test(label)) return label;
   const isoTs = Date.parse(`${label}T00:00:00`);
   if (!Number.isNaN(isoTs)) {
     const d = new Date(isoTs);

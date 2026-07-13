@@ -29,7 +29,7 @@ export const ADMIN_SECTIONS_PLAYBOOK = {
     '',
     '## Reports (sidebar → Reports)',
     'Purpose: booking performance over a date range (not the live day board).',
-    '1. Open Reports. Pick a range: This week / 7 / 30 / 90 days (mobile compact: 1D / 1W / 1M / 1Y) or custom.',
+    '1. Open Reports. Pick a range: 1 Day / 1 Week / 1 Month / 1 Year (compact: 1D / 1W / 1M / 1Y) or custom.',
     '2. Read KPIs: Bookings, Cancelled rate (Completed / Client cancel / Shop cancel / No-show breakdown), Utilization, Avg booking value, No-show, Peak day/hour, Most popular service, Busiest barber.',
     '3. Charts show trends vs the previous comparable period; “Small sample” appears when fewer than ~10 bookings.',
     '4. Barber leaderboard rows can open that barber’s profile.',

@@ -2,6 +2,7 @@
   display: grid;
   gap: 1rem;
   border: 1px solid var(--border);
+  border-radius: var(--booking-card-r);
   background: linear-gradient(
     180deg,
     color-mix(in srgb, var(--surface) 94%, var(--bg)),
@@ -102,12 +103,15 @@
   gap: 0.85rem;
   padding: 0.95rem;
   border: 1px solid color-mix(in srgb, var(--border) 82%, var(--accent));
+  border-radius: var(--booking-card-r);
   background: color-mix(in srgb, var(--bg) 58%, var(--surface));
 }
 
 .booking-review-panel__list {
   gap: 0;
   border-top: 1px solid var(--border);
+  border-radius: var(--booking-card-r);
+  overflow: clip;
 }
 
 .booking-review-panel__row {
@@ -200,7 +204,7 @@
 
 @media (min-width: 1024px) {
   .booking-review-panel {
-    border-radius: var(--radius-md);
+    border-radius: var(--booking-card-r);
     box-shadow: 0 18px 40px color-mix(in srgb, var(--bg) 72%, transparent);
   }
 

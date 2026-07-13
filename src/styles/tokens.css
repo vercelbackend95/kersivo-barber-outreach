@@ -82,6 +82,8 @@
    */
   --admin-premium-surface-r: clamp(0.92rem, 2.2vw, 1.12rem);
   --admin-premium-surface-r-mobile: clamp(0.88rem, 3vw, 1.08rem);
+  --booking-card-r: var(--radius-md);
+  --booking-card-r-mobile: var(--radius-md);
   --admin-premium-surface-border: 1px solid color-mix(in srgb, var(--border) 58%, transparent);
   --admin-premium-surface-bg: color-mix(in srgb, var(--surface-2) 76%, var(--surface));
   --admin-premium-shadow-inset: 0 1px 0 color-mix(in srgb, var(--fg) 3.5%, transparent) inset;

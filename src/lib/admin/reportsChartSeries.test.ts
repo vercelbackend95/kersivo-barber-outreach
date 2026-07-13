@@ -113,6 +113,51 @@ describe('buildOverallSeries', () => {
     expect(series[0].value).toBe(10000);
     expect(series[1].value).toBe(5000);
   });
+
+  it('builds cumulative bookings for hourly labels', () => {
+    const hourlyReports: ReportsChartInput = {
+      revenueSeries: [
+        { label: '09:00', value: 40 },
+        { label: '10:00', value: 90 },
+        { label: '11:00', value: 90 },
+      ],
+      reportBookings: [
+        {
+          startAt: '2026-07-13T08:00:00.000Z', // 09:00 London BST
+          barberId: 'b1',
+          barberName: 'Alex',
+          status: 'COMPLETED',
+          computedValueGbp: 40,
+        },
+        {
+          startAt: '2026-07-13T09:00:00.000Z', // 10:00 London BST
+          barberId: 'b1',
+          barberName: 'Alex',
+          status: 'COMPLETED',
+          computedValueGbp: 50,
+        },
+        {
+          startAt: '2026-07-13T09:30:00.000Z',
+          barberId: 'b2',
+          barberName: 'Sam',
+          status: 'CANCELLED_BY_CLIENT',
+          computedValueGbp: null,
+        },
+      ],
+    };
+
+    expect(buildOverallSeries(hourlyReports, 'bookings')).toEqual([
+      { label: '09:00', value: 1 },
+      { label: '10:00', value: 3 },
+      { label: '11:00', value: 3 },
+    ]);
+
+    expect(buildBarberSeries(hourlyReports, 'b1', 'revenue')).toEqual([
+      { label: '09:00', value: 4000 },
+      { label: '10:00', value: 9000 },
+      { label: '11:00', value: 9000 },
+    ]);
+  });
 });
 
 describe('toChartValue', () => {

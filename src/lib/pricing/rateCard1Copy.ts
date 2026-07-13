@@ -31,7 +31,7 @@ const DEFAULT_COPY: RateCard1Copy = {
   bookingShopDescription: `Clients book and buy on your domain. ${KERSIVO_COMMISSION_CLAIM} ${STRIPE_FEES_NOTE}`,
   alwaysOnDescription:
     'Hosting, SSL, domain renewal, admin panel and pickup shop stay online while Care is active.',
-  clientCommsDescription: `${SMS_INCLUDED_CLAIM} Transactional emails are included while Care is active.`,
+  clientCommsDescription: `${SMS_INCLUDED_CLAIM}. Transactional emails are included while Care is active.`,
 };
 
 const LANDING_COPY: RateCard1Copy = {
@@ -48,7 +48,7 @@ const LANDING_COPY: RateCard1Copy = {
   bookingShopDescription: `Clients book and buy on your domain. ${KERSIVO_COMMISSION_CLAIM} ${STRIPE_FEES_NOTE}`,
   alwaysOnDescription:
     'Hosting, SSL, domain renewal, admin panel and pickup shop stay online while Care is active.',
-  clientCommsDescription: `${SMS_INCLUDED_CLAIM} Transactional emails are included while Care is active.`,
+  clientCommsDescription: `${SMS_INCLUDED_CLAIM}. Transactional emails are included while Care is active.`,
 };
 
 export function getRateCard1Copy(variant: RateCard1Variant = 'default'): RateCard1Copy {

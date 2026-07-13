@@ -37,9 +37,21 @@ export const DEMO_CLIENT_IDS = {
 } as const;
 
 export const DEMO_PRODUCT_IDS = {
-  pomade: 'demo-product-pomade',
+  mattePomade: 'demo-product-matte-pomade',
+  ironcladPomade: 'demo-product-ironclad-pomade',
   beardOil: 'demo-product-beard-oil',
-  clay: 'demo-product-clay',
+  beardBalm: 'demo-product-beard-balm',
+  hollowayBeardConditioner: 'demo-product-holloway-beard-conditioner',
+  dailyWash: 'demo-product-daily-wash',
+  barberWash: 'demo-product-barber-wash',
+  seaSaltTextureSpray: 'demo-product-sea-salt-texture-spray',
+  hartwellSeaSaltSpray: 'demo-product-hartwell-sea-salt-spray',
+  forgeStylingPowder: 'demo-product-forge-styling-powder',
+  barberFadeComb: 'demo-product-barber-fade-comb',
+  /** @deprecated use mattePomade */
+  pomade: 'demo-product-matte-pomade',
+  /** @deprecated use forgeStylingPowder */
+  clay: 'demo-product-forge-styling-powder',
 } as const;
 
 export const DEMO_ORDER_IDS = {

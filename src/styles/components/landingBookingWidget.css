@@ -76,7 +76,7 @@
   margin-inline: 0 !important;
   overflow-x: clip;
   border: none;
-  border-radius: 0;
+  border-radius: var(--booking-card-r);
   box-shadow: none;
   background: transparent;
 }
@@ -101,6 +101,12 @@
   box-shadow: none;
 }
 
+.lbw .booking-choice-card,
+.lbw .booking-slot,
+.lbw .booking-slots-section__empty {
+  border-radius: var(--booking-card-r);
+}
+
 /* Compact the hero so the form itself leads. */
 .lbw .booking-flow__hero {
   padding-block: var(--booking-space-1);
@@ -108,7 +114,14 @@
 
 .lbw .booking-flow__hero h1 {
   font-size: clamp(1.35rem, 5vw, 1.7rem);
-  line-height: 1.05;
+  line-height: 1.1;
+  letter-spacing: 0.03em;
+}
+
+.lbw .booking-step__head h2,
+.lbw .booking-confirmation__heading {
+  line-height: 1.1;
+  letter-spacing: 0.03em;
 }
 
 .lbw .booking-flow__hero .muted {

@@ -30,7 +30,8 @@ describe('getDemoReportsResponse', () => {
     const month = getDemoReportsResponseForTest('30d', { now: FIXED_NOW });
     const year = getDemoReportsResponseForTest('1y', { now: FIXED_NOW });
 
-    expect(oneDay.revenueSeries).toHaveLength(1);
+    expect(oneDay.revenueSeries.length).toBeGreaterThanOrEqual(2);
+    expect(oneDay.revenueSeries.every((point) => /^\d{2}:00$/.test(point.label))).toBe(true);
     expect(week.revenueSeries).toHaveLength(7);
     expect(month.revenueSeries).toHaveLength(30);
     expect(year.revenueSeries).toHaveLength(90);
@@ -41,6 +42,41 @@ describe('getDemoReportsResponse', () => {
 
     expect(week.bookingsCount).toBeGreaterThan(oneDay.bookingsCount);
     expect(month.bookingsCount).toBeGreaterThan(week.bookingsCount);
+  });
+
+  it('builds cumulative hourly 1d series ending at the current London hour', () => {
+    // 12:00 UTC in July = 13:00 Europe/London
+    const payload = getDemoReportsResponseForTest('1d', { now: FIXED_NOW });
+    expect(payload.revenueSeries[0]?.label).toBe('09:00');
+    expect(payload.revenueSeries.at(-1)?.label).toBe('13:00');
+    expect(payload.revenueSeries.length).toBe(5);
+
+    for (let index = 1; index < payload.revenueSeries.length; index += 1) {
+      expect(payload.revenueSeries[index]!.value).toBeGreaterThanOrEqual(
+        payload.revenueSeries[index - 1]!.value,
+      );
+    }
+    expect(payload.revenueSeries.at(-1)?.value).toBe(payload.revenue);
+  });
+
+  it('uses distinct revenue growth % per range preset', () => {
+    const oneDay = getDemoReportsResponseForTest('1d', { now: FIXED_NOW });
+    const week = getDemoReportsResponseForTest('7d', { now: FIXED_NOW });
+    const month = getDemoReportsResponseForTest('30d', { now: FIXED_NOW });
+    const year = getDemoReportsResponseForTest('1y', { now: FIXED_NOW });
+
+    expect(oneDay.trends.revenuePct).toBe(9.6);
+    expect(week.trends.revenuePct).toBe(12.8);
+    expect(month.trends.revenuePct).toBe(15.3);
+    expect(year.trends.revenuePct).toBe(7.2);
+
+    const pcts = new Set([
+      oneDay.trends.revenuePct,
+      week.trends.revenuePct,
+      month.trends.revenuePct,
+      year.trends.revenuePct,
+    ]);
+    expect(pcts.size).toBe(4);
   });
 
   it('emits only favorable marketing trends', () => {
@@ -61,9 +97,29 @@ describe('getDemoReportsResponse', () => {
 
   it('uses cancel rates as percentages not fractions', () => {
     const payload = getDemoReportsResponseForTest('7d', { now: FIXED_NOW });
-    expect(payload.cancelledRate).toBeGreaterThan(1);
-    expect(payload.cancelledRate).toBeLessThan(30);
+    expect(payload.cancelledRate).toBeGreaterThanOrEqual(2);
+    expect(payload.cancelledRate).toBeLessThanOrEqual(12);
+    expect(payload.noShowExpiredRate).toBeLessThanOrEqual(6);
     expect(payload.previousMetrics.cancelledRate).toBeGreaterThan(1);
+  });
+
+  it('keeps daily revenue in a believable band for a 4-barber shop', () => {
+    const week = getDemoReportsResponseForTest('7d', { now: FIXED_NOW });
+    for (const point of week.revenueSeries) {
+      expect(point.value).toBeGreaterThanOrEqual(80);
+      expect(point.value).toBeLessThanOrEqual(900);
+    }
+    expect(week.avgBookingValue).toBeGreaterThanOrEqual(20);
+    expect(week.avgBookingValue).toBeLessThanOrEqual(55);
+    expect(week.peakHour).toMatch(/^\d{2}:00$/);
+  });
+
+  it('derives peak hour from bookings instead of a fixed stub', () => {
+    const payload = getDemoReportsResponseForTest('7d', { now: FIXED_NOW });
+    expect(payload.peakHour).not.toBe('');
+    const hour = Number(payload.peakHour?.slice(0, 2));
+    expect(hour).toBeGreaterThanOrEqual(9);
+    expect(hour).toBeLessThanOrEqual(19);
   });
 
   it('includes enough reportBookings to drive chart series', () => {

@@ -10,12 +10,10 @@
   --booking-space-2: clamp(1rem, 4vw, 1.35rem);
   --booking-space-3: clamp(1.35rem, 5.5vw, 2rem);
   padding: 0;
-
   display: grid;
-    gap: var(--booking-space-3);
+  gap: var(--booking-space-3);
   overflow: clip;
-
-
+  border-radius: var(--booking-card-r);
 }
 .booking-flow {
   gap: var(--booking-space-3);
@@ -39,8 +37,8 @@
     --booking-text-sm: clamp(0.9rem, 0.24vw + 0.84rem, 0.98rem);
     --booking-text-base: clamp(0.98rem, 0.28vw + 0.9rem, 1.04rem);
     --booking-text-lg: clamp(1.08rem, 0.42vw + 0.96rem, 1.22rem);
-    --booking-text-xl: clamp(1.65rem, 0.9vw + 1.3rem, 2.2rem);
-    --booking-text-hero: clamp(3.25rem, 1.7vw + 2.3rem, 4.45rem);
+    --booking-text-xl: clamp(1.25rem, 0.6vw + 1rem, 1.55rem);
+    --booking-text-hero: clamp(1.6rem, 1.2vw + 1.2rem, 2.1rem);
     --booking-space-1: clamp(0.75rem, 0.18vw + 0.68rem, 0.88rem);
     --booking-space-2: clamp(0.95rem, 0.4vw + 0.8rem, 1.2rem);
     --booking-space-3: clamp(1.2rem, 0.75vw + 0.92rem, 1.7rem);
@@ -240,8 +238,8 @@
   margin: 0;
   font-family: var(--font-heading);
   text-transform: uppercase;
-  letter-spacing: 0.05em;
-  line-height: 0.95;
+  letter-spacing: 0.03em;
+  line-height: 1.1;
 }
 .booking-flow__hero-copy h1 {
   font-size: var(--booking-text-hero);
@@ -312,6 +310,7 @@
 .booking-step {
   scroll-margin-top: clamp(0.75rem, 3vw, 1.25rem);
   scroll-margin-bottom: clamp(5rem, 12vw, 7rem);
+  border-radius: var(--booking-card-r);
 }
 
 @media (prefers-reduced-motion: no-preference) {
@@ -383,6 +382,10 @@
   gap: 0.85rem;
 }
 
+.booking-date-panel {
+  border-radius: var(--booking-card-r);
+}
+
 .booking-slots-section__head {
   display: grid;
   gap: 0.4rem;
@@ -432,6 +435,7 @@
   min-width: 0;
   min-height: 8.8rem;
   border: 1px solid color-mix(in srgb, var(--border) 82%, var(--accent));
+  border-radius: var(--booking-card-r);
   background: color-mix(in srgb, var(--bg) 62%, var(--surface));
 
   color: var(--fg);
@@ -704,6 +708,8 @@
     display: grid;
   grid-template-columns: minmax(0, 1fr) auto;
   align-items: stretch;
+  border-radius: var(--booking-card-r);
+  overflow: hidden;
 
 }
 
@@ -735,6 +741,10 @@
   outline: none;
 }
 
+.booking-date-tab .booking-date-tab__input {
+  pointer-events: none;
+}
+
 
 .slot-grid {
   display: grid;
@@ -745,6 +755,7 @@
   min-height: 4.2rem;
   min-width: 0;
   border: 1px solid color-mix(in srgb, var(--border) 82%, var(--accent));
+  border-radius: var(--booking-card-r);
   background: color-mix(in srgb, var(--bg) 58%, var(--surface));
 
   color: var(--fg);
@@ -770,6 +781,7 @@
   grid-column: 1 / -1;
   padding: 1rem;
   border: 1px dashed var(--border);
+  border-radius: var(--booking-card-r);
     background: color-mix(in srgb, var(--surface) 84%, var(--bg));
   font-size: var(--booking-text-sm);
 }
@@ -1138,14 +1150,14 @@
   .booking-page-wrap .booking-shell.booking-flow {
     background: transparent;
     border: none;
-    border-radius: 0;
+    border-radius: var(--booking-card-r);
     overflow: visible;
     box-shadow: none;
   }
 
   .booking-step,
   .booking-confirmation {
-    border-radius: var(--radius-md);
+    border-radius: var(--booking-card-r);
     box-shadow: 0 18px 40px color-mix(in srgb, var(--bg) 72%, transparent);
   }
 

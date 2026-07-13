@@ -1,6 +1,4 @@
-import { prisma } from '@/lib/db/client';
-import { withPrismaResilienceFallback } from '@/lib/db/resilience';
-import { resolveShopId } from '@/lib/db/shopScope';
+import { getDemoCatalogProducts } from '@/lib/shop/demoCatalog';
 
 export const MIN_CAROUSEL_ITEMS = 10;
 
@@ -34,27 +32,13 @@ export function expandCarouselProducts(products: CarouselProduct[]): CarouselPro
 }
 
 export async function fetchCarouselProducts(): Promise<CarouselProduct[]> {
-  const { products } = await withPrismaResilienceFallback(
-    'lib/shop/carouselProducts',
-    async () => {
-      const shopId = await resolveShopId();
-      const products = await prisma.product.findMany({
-        where: { shopId, active: true },
-        orderBy: [{ sortOrder: 'asc' }, { featured: 'desc' }, { updatedAt: 'desc' }],
-        take: 10,
-        select: {
-          id: true,
-          name: true,
-          category: true,
-          pricePence: true,
-          imageUrl: true,
-        },
-      });
-
-      return { products };
-    },
-    { products: [] },
-  );
+  const products = getDemoCatalogProducts().map((product) => ({
+    id: product.id,
+    name: product.name,
+    category: product.category,
+    pricePence: product.pricePence,
+    imageUrl: product.imageUrl,
+  }));
 
   return expandCarouselProducts(products);
 }

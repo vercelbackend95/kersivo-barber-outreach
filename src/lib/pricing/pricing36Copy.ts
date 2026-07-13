@@ -29,7 +29,7 @@ const DEFAULT_COPY: Pricing36Copy = {
     'Domain purchase, management and renewal while Care is active',
     `${KERSIVO_COMMISSION_CLAIM} ${STRIPE_FEES_NOTE}`,
     'Hosting + SSL included while Care is active',
-    `Ongoing Care (£39/mo): ${SMS_INCLUDED_CLAIM} Support, platform updates, 1h minor changes/month`,
+    `Ongoing Care (£39/mo): ${SMS_INCLUDED_CLAIM}. Support, platform updates, 1h minor changes/month`,
   ],
   launchNewcomerAnchor:
     `Live booking on your own domain in about two weeks. ${KERSIVO_COMMISSION_CLAIM}`,
@@ -60,7 +60,7 @@ const LANDING_COPY: Pricing36Copy = {
     'Domain purchase, management and renewal while Care is active',
     `${KERSIVO_COMMISSION_CLAIM} ${STRIPE_FEES_NOTE}`,
     'Hosting + SSL included while Care is active',
-    `Ongoing Care (£39/mo): ${SMS_INCLUDED_CLAIM} Support, platform updates, and 1 hour of minor changes each month`,
+    `Ongoing Care (£39/mo): ${SMS_INCLUDED_CLAIM}. Support, platform updates, and 1 hour of minor changes each month`,
   ],
   launchNewcomerAnchor:
     `Typical go-live: around two weeks after onboarding. ${KERSIVO_COMMISSION_CLAIM}`,
