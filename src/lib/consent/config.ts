@@ -10,13 +10,6 @@ export const CONSENT_OPEN_EVENT = 'kersivo:cookie-settings-open';
 
 export const CONSENT_CHANGED_EVENT = 'kersivo:consent-changed';
 
-/**
- * Production GA4 measurement ID already shipped publicly in prior builds.
- * Prefer PUBLIC_GA4_MEASUREMENT_ID; this fallback avoids a silent analytics outage
- * if the env var is not yet set on a host.
- */
-export const FALLBACK_GA4_MEASUREMENT_ID = 'G-6QEN5JL0L1';
-
 export const BANNER_COPY = {
   title: 'Your privacy choices',
   body: 'We use necessary cookies to keep KERSIVO working. With your permission, we also use analytics to understand website performance and advertising technologies to measure our Google Ads campaigns. You can accept all optional technologies, reject them, or choose your preferences.',

@@ -1,4 +1,4 @@
-import { CONSENT_CHANGED_EVENT, CONSENT_OPEN_EVENT, FALLBACK_GA4_MEASUREMENT_ID } from './config';
+import { CONSENT_CHANGED_EVENT, CONSENT_OPEN_EVENT } from './config';
 import {
   clearOptionalStorageOnWithdraw,
 } from './cleanup';
@@ -48,7 +48,7 @@ export function resolvePublicTagIds(): TagLoaderIds {
     .trim();
 
   return {
-    gaMeasurementId: gaFromEnv || FALLBACK_GA4_MEASUREMENT_ID,
+    gaMeasurementId: gaFromEnv,
     googleAdsId: adsFromEnv,
   };
 }

@@ -1,13 +1,14 @@
 ---
-import { CONSENT_COOKIE_NAME, CONSENT_VERSION, FALLBACK_GA4_MEASUREMENT_ID } from '@/lib/consent/config';
+import { CONSENT_COOKIE_NAME, CONSENT_VERSION } from '@/lib/consent/config';
 
+/** Empty when unset — Basic Consent Mode will not load GA4 without an explicit public ID. */
 const gaMeasurementId = (
   import.meta.env.PUBLIC_GA4_MEASUREMENT_ID ??
   process.env.PUBLIC_GA4_MEASUREMENT_ID ??
   ''
 )
   .toString()
-  .trim() || FALLBACK_GA4_MEASUREMENT_ID;
+  .trim();
 
 const googleAdsId = (
   import.meta.env.PUBLIC_GOOGLE_ADS_ID ??
