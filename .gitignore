@@ -27,3 +27,5 @@ pnpm-debug.log*
 public/videos/
 
 .vercel/
+.vercel
+.env*

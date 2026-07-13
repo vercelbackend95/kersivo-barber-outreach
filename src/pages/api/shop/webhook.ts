@@ -67,6 +67,13 @@ function attributionSummary(metadata: Record<string, string>): string {
   return parts.join('; ');
 }
 
+function logSetupDepositStage(
+  stage: string,
+  details: Record<string, string | number | boolean | null | undefined> = {},
+): void {
+  console.info('[webhook] setup_deposit', { stage, ...details });
+}
+
 async function handleSetupDepositCheckout(
   sessionId: string,
   session: StripeSession,
@@ -123,9 +130,22 @@ async function handleSetupDepositCheckout(
   const paidAt = Number.isFinite(eventCreated) ? new Date(eventCreated * 1000) : new Date();
   const paymentIntentId = getCheckoutPaymentIntentId(session);
   const currency = (session.currency ?? 'gbp').toLowerCase();
+  const hasPaymentIntent = Boolean(paymentIntentId);
 
+  logSetupDepositStage('deposit_validated', {
+    sessionId,
+    plan: planId,
+    depositPence,
+    hasPaymentIntent,
+  });
+
+  logSetupDepositStage('database_lookup_started', { sessionId });
   let deposit = await prisma.setupDeposit.findUnique({
     where: { stripeSessionId: sessionId },
+  });
+  logSetupDepositStage('database_lookup_completed', {
+    sessionId,
+    found: Boolean(deposit),
   });
 
   if (!deposit) {
@@ -145,10 +165,19 @@ async function handleSetupDepositCheckout(
           paidAt,
         },
       });
+      logSetupDepositStage('deposit_record_created', {
+        sessionId,
+        depositId: deposit.id,
+      });
     } catch (error) {
       if (error instanceof Prisma.PrismaClientKnownRequestError && error.code === 'P2002') {
         deposit = await prisma.setupDeposit.findUnique({
           where: { stripeSessionId: sessionId },
+        });
+        logSetupDepositStage('database_lookup_completed', {
+          sessionId,
+          found: Boolean(deposit),
+          afterUniqueConflict: true,
         });
       } else {
         throw error;
@@ -178,6 +207,10 @@ async function handleSetupDepositCheckout(
 
   if (!customerEmailOk) {
     try {
+      logSetupDepositStage('customer_email_started', {
+        sessionId,
+        hasOnboardingFormUrl: Boolean(onboardingFormUrl),
+      });
       await sendSetupDepositConfirmationEmail({
         to: customerEmail,
         customerName,
@@ -192,6 +225,7 @@ async function handleSetupDepositCheckout(
         data: { customerEmailSentAt: new Date() },
       });
       customerEmailOk = true;
+      logSetupDepositStage('customer_email_sent', { sessionId });
     } catch (error) {
       emailFailure = true;
       console.error('[webhook] Setup deposit confirmation email failed', {
@@ -203,6 +237,7 @@ async function handleSetupDepositCheckout(
 
   if (!internalEmailOk) {
     try {
+      logSetupDepositStage('internal_email_started', { sessionId });
       await sendSetupDepositInternalNotificationEmail({
         customerName,
         customerEmail,
@@ -226,6 +261,7 @@ async function handleSetupDepositCheckout(
         data: { internalEmailSentAt: new Date() },
       });
       internalEmailOk = true;
+      logSetupDepositStage('internal_email_sent', { sessionId });
     } catch (error) {
       emailFailure = true;
       console.error('[webhook] Setup deposit internal notification email failed', {
@@ -241,6 +277,13 @@ async function handleSetupDepositCheckout(
       status: 500,
     });
   }
+
+  logSetupDepositStage('fulfilment_completed', {
+    sessionId,
+    depositId: deposit.id,
+    customerEmailOk,
+    internalEmailOk,
+  });
 
   return new Response(
     JSON.stringify({
@@ -258,6 +301,7 @@ export const POST: APIRoute = async ({ request }) => {
     if (!signature || !verifyStripeWebhookSignature(rawBody, signature)) {
       return new Response(JSON.stringify({ error: 'Invalid signature' }), { status: 400 });
     }
+    logSetupDepositStage('signature_verified');
 
     const event = JSON.parse(rawBody) as StripeEvent;
     const sessionId = event.data.object.id;
@@ -265,7 +309,8 @@ export const POST: APIRoute = async ({ request }) => {
     const metadata = session.metadata ?? event.data.object.metadata ?? {};
 
     if (SETUP_FULFILMENT_EVENTS.has(event.type) && metadata.type === 'setup_deposit') {
-      return handleSetupDepositCheckout(sessionId, session, metadata, event.created);
+      // await so try/catch captures async Prisma/email failures (bare return does not)
+      return await handleSetupDepositCheckout(sessionId, session, metadata, event.created);
     }
 
     if (event.type !== 'checkout.session.completed') {
