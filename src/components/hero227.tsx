@@ -52,7 +52,7 @@ const Hero227 = ({ className }: Hero227Props) => {
                 />
               </h1>
               <HeroTitleAccent
-                className="pointer-events-none absolute -top-1 -right-2 size-[1.125rem] min-[380px]:-right-4 min-[380px]:size-5 sm:-top-2 sm:-right-5 md:size-8 lg:size-10 lg:-right-8 xl:-right-14"
+                className="hero227-scissors-accent pointer-events-none absolute -top-1 -right-2 size-[1.125rem] min-[380px]:-right-4 min-[380px]:size-5 sm:-top-2 sm:-right-5 md:size-8 lg:size-10 lg:-right-8 xl:-right-14"
                 aria-hidden
               />
             </div>
@@ -63,20 +63,6 @@ const Hero227 = ({ className }: Hero227Props) => {
           </div>
 
           <div className="hero227-mid-band w-full max-w-3xl space-y-3 px-1 sm:px-2">
-            <div
-              className="hero227-scenario-chip"
-              role="note"
-              aria-label="Example savings"
-            >
-              <span className="hero227-scenario-chip__label">Example</span>
-              <span className="hero227-scenario-chip__body">
-                4-chair shop, ~800 cuts/mo:
-                {" "}
-                <span className="hero227-scenario-chip__strike">~&pound;240/mo to a marketplace</span>
-                {" \u2192 "}
-                <span className="hero227-scenario-chip__win">&pound;0 commission on Kersivo</span>
-              </span>
-            </div>
             <div className="hero227-cta-pill flex flex-wrap items-center justify-center gap-3">
               <Button
                 className="hero227-cta-system text-md flex h-full items-center justify-center rounded-2xl font-medium"

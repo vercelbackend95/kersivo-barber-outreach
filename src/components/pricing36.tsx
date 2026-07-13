@@ -161,14 +161,6 @@ const Pricing36 = ({ className, variant = "default" }: Pricing36Props) => {
             </div>
           </div>
         </div>
-
-        {variant !== "landing" ? (
-          <p className="pricing36__questions">
-            Questions first? Email{" "}
-            <a href="mailto:hello@kersivo.co.uk">hello@kersivo.co.uk</a>
-            {copy.questionsSuffix ? ` ${copy.questionsSuffix}` : null}
-          </p>
-        ) : null}
       </div>
 
       <SetupDepositModal

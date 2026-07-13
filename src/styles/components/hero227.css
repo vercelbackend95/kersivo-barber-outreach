@@ -110,6 +110,32 @@
   gap: 0.1em;
 }
 
+/* Red scissors accent — rest at +30° with a light entrance on load */
+@keyframes hero227-scissors-in {
+  from {
+    opacity: 0;
+    transform: rotate(12deg) scale(0.86);
+  }
+  to {
+    opacity: 1;
+    transform: rotate(30deg) scale(1);
+  }
+}
+
+.hero227-scissors-accent {
+  transform: rotate(30deg);
+  transform-origin: center center;
+  animation: hero227-scissors-in 0.65s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .hero227-scissors-accent {
+    animation: none;
+    opacity: 1;
+    transform: rotate(30deg);
+  }
+}
+
 .hero227-mid-band {
   /* Example chip + CTAs + trust line stay one visual band aligned with headline */
   margin-top: 0.15rem;
@@ -298,48 +324,6 @@
   letter-spacing: 0.02em;
   color: color-mix(in srgb, var(--muted) 92%, var(--fg));
   text-wrap: balance;
-}
-
-/* Reference scenario chip — the dual-audience anchor placed under the CTAs.
-   Keeps switcher/newcomer financial framing visible without a calculator. */
-.hero227-root .hero227-scenario-chip {
-  display: inline-flex;
-  flex-wrap: wrap;
-  align-items: center;
-  justify-content: center;
-  gap: 0.5rem 0.75rem;
-  margin-top: 0;
-  padding: 0.45rem 0.85rem;
-  border: 1px solid color-mix(in srgb, var(--accent) 35%, var(--border));
-  border-radius: var(--radius-full);
-  background: color-mix(in srgb, var(--accent) 8%, transparent);
-  font-size: 0.78rem;
-  line-height: 1.4;
-  color: color-mix(in srgb, var(--fg) 88%, var(--muted));
-  max-width: 36rem;
-}
-
-.hero227-root .hero227-scenario-chip__label {
-  font-family: var(--font-body);
-  font-size: 0.66rem;
-  font-weight: 700;
-  letter-spacing: 0.12em;
-  text-transform: uppercase;
-  color: var(--accent);
-  padding: 0.1rem 0.5rem;
-  border-radius: var(--radius-4);
-  background: color-mix(in srgb, var(--accent) 14%, transparent);
-}
-
-.hero227-root .hero227-scenario-chip__strike {
-  text-decoration: line-through;
-  text-decoration-thickness: 1px;
-  color: var(--muted);
-}
-
-.hero227-root .hero227-scenario-chip__win {
-  color: var(--accent);
-  font-weight: 700;
 }
 
 /* Stack CTAs side by side on wider viewports */

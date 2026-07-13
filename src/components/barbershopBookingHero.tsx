@@ -53,7 +53,7 @@ const BarbershopBookingHero = ({ className }: BarbershopBookingHeroProps) => {
                   />
                 </h1>
                 <HeroTitleAccent
-                  className="pointer-events-none absolute -top-2 right-2 size-6 sm:size-7 md:size-8 lg:top-0 lg:right-4 lg:size-10"
+                  className="hero227-scissors-accent pointer-events-none absolute -top-2 right-2 size-6 sm:size-7 md:size-8 lg:top-0 lg:right-4 lg:size-10"
                   aria-hidden
                 />
               </div>

@@ -1,7 +1,7 @@
 import { chromium } from 'playwright';
 
 const BASE_URL = process.env.WIDGET_CHECK_BASE_URL ?? 'http://localhost:4321';
-const PATHS = ['/', '/barbershop-booking-system'];
+const PATHS = ['/'];
 
 const browser = await chromium.launch();
 const page = await browser.newPage();

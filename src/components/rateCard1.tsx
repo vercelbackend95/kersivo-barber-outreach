@@ -21,7 +21,7 @@ function buildCareFeatures(variant: RateCard1Variant): CareFeature[] {
 
   return [
     {
-      title: "Booking & shop — 0% commission",
+      title: "Booking & shop — 0% KERSIVO commission",
       description: copy.bookingShopDescription,
       Icon: LayoutDashboard,
     },

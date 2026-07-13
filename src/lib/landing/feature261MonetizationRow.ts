@@ -1,10 +1,10 @@
 import { adminDemoHref } from '@/lib/admin/demoConfig';
 
 export const FEATURE261_MONETIZATION_ROW = {
-  kicker: 'MONETIZATION',
-  heading: 'Revenue, bookings, cancel rate—see how the day is tracking.',
+  kicker: 'REPORTS & REVENUE',
+  heading: 'See bookings, revenue and barber performance in one place.',
   description:
-    'Track booking revenue, daily totals and how performance breaks down across the team. Charts and KPIs live in the same signed-in admin as the timeline and shop.',
-  ctaLabel: 'See the reports',
+    'Track daily revenue, booking totals, cancellations and barber performance from the same admin.',
+  ctaLabel: 'Open Sales',
   ctaHref: adminDemoHref('reports'),
 } as const;

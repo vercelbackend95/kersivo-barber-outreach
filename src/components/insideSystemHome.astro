@@ -34,29 +34,26 @@ const resolvedBookingData = bookingData ?? getLandingDemoBookingFallback();
 
 const rows: PreviewRow[] = [
   {
-    kicker: 'BOOKING OVERVIEW',
-    heading: "Chairs, statuses, what's next—plus the pulse when you need it.",
-    description:
-      "Timeline, statuses and today's pulse in one signed-in view. See who's in the chair, what's coming up and how the day is tracking without jumping between screens.",
-    ctaLabel: 'See the timeline',
+    kicker: 'ADMIN PREVIEW',
+    heading: "Chairs, statuses and what's next — all in one view.",
+    description: "See today's bookings, chairs and statuses in one admin view.",
+    ctaLabel: 'Open Full Admin Demo',
     ctaHref: adminDemoHref('timeline'),
     media: 'widget',
   },
   {
-    kicker: 'CLIENT BOOKING',
-    heading: 'Service, barber, time—your URL, your brand, not their app.',
-    description:
-      'Clients pick a service, barber and slot on your domain in three taps. No app-store detour, no marketplace tile—just your brand, end to end.',
-    ctaLabel: 'See the booking flow',
+    kicker: 'CLIENT BOOKING PREVIEW',
+    heading: 'Service, barber, time — your URL, your brand, not their app.',
+    description: 'Clients choose a service, barber and time on your own domain — no app download.',
+    ctaLabel: 'Open full booking flow',
     ctaHref: '/book',
     media: 'booking',
   },
   {
-    kicker: 'RETAIL',
-    heading: 'Catalog, orders, pickup ready—same panel as the chair.',
-    description:
-      'Products, orders and pickup status live beside bookings in the same admin. Clients pre-order from your shop page; you mark it ready when they walk in.',
-    ctaLabel: 'See the shop live',
+    kicker: 'RETAIL PICKUP PREVIEW',
+    heading: 'Retail orders, pickup ready — in the same admin.',
+    description: 'Clients browse products and reserve items for in-shop pickup.',
+    ctaLabel: 'Open full shop live',
     ctaHref: '/shop',
     media: 'carousel',
   },

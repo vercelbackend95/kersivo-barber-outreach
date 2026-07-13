@@ -29,15 +29,15 @@ const ASSETS = [
   },
   {
     output: 'barbers/sam.webp',
-    source: 'https://images.unsplash.com/photo-1560250097-0b93528c311a?auto=format&fit=crop&w=400&h=400&q=80',
+    source: 'https://images.unsplash.com/photo-1593702233354-259d1f794ed1?auto=format&fit=crop&w=400&h=400&q=80',
     author: 'Unsplash',
-    description: 'Barber portrait',
+    description: 'Barber shaving a client in shop',
   },
   {
     output: 'barbers/marcus.webp',
-    source: 'https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?auto=format&fit=crop&w=400&h=400&q=80',
+    source: 'https://images.unsplash.com/photo-1553521041-d168abd31de3?auto=format&fit=crop&w=400&h=400&q=80',
     author: 'Unsplash',
-    description: 'Barber portrait',
+    description: 'Barber holding scissors',
   },
   {
     output: 'clients/01.webp',

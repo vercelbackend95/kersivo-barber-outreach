@@ -12,7 +12,6 @@ export type Pricing36Copy = {
   prioritySwitcherAnchor: string;
   launchCtaLabel: string;
   priorityCtaLabel: string;
-  questionsSuffix: string;
 };
 
 const DEFAULT_COPY: Pricing36Copy = {
@@ -23,59 +22,58 @@ const DEFAULT_COPY: Pricing36Copy = {
     'Custom site + booking + admin + pickup shop setup',
     'Domain setup + deployment handled by us',
     '0% Kersivo commission (Stripe card fees only)',
-    'Hosting + SSL included while subscription is active',
-    'Ongoing Care: SMS, no-show protection, support, platform updates, 1h tweaks/month',
+    'Hosting + SSL included while Care is active',
+    'Ongoing Care (£39/mo): SMS, no-show protection, support, platform updates, 1h scoped tweaks/month',
   ],
   launchNewcomerAnchor:
     'Live booking on your own domain in about two weeks. 0% commission from booking #1.',
   launchSwitcherAnchor:
-    'Many busy shops on marketplace apps see subscription plus traffic-related fees in the ~£120–£300/mo range — line it up with your own statements.',
+    "Compare your current platform costs with Kersivo's predictable setup and flat monthly Care.",
   prioritySubtext:
-    'Same £39/month Care as Launch — extra setup polish and priority launch queue during the build.',
+    'Same £39/month Care as Launch — extra dedicated pages and deeper catalogue polish in the setup.',
   priorityBullets: [
     'Everything in Launch',
-    'Priority launch queue during setup',
-    'Extra setup polish for key pages and product catalogue depth',
-    'Same Ongoing Care: hosting, SMS, support, platform updates, 1h tweaks/month',
+    'Extra dedicated pages beyond the main landing (e.g. gallery) — scoped with you at setup',
+    'Deeper product-catalogue polish',
+    'Same £39/month Ongoing Care as Launch',
   ],
   priorityNewcomerAnchor:
-    'Faster launch queue and deeper catalogue setup if you want to grow harder from day one.',
+    'More room for dedicated pages and catalogue depth if you want a fuller site from day one.',
   prioritySwitcherAnchor:
     'When marketplace fees scale with chairs and volume, a flat Care plan keeps margin predictable next to Stripe only.',
   launchCtaLabel: 'Plan my setup on Launch',
   priorityCtaLabel: 'Plan my setup on Priority Growth',
-  questionsSuffix: '— or use the contact form below.',
 };
 
 const LANDING_COPY: Pricing36Copy = {
   introCommission: 'KERSIVO never takes a cut of your bookings or retail.',
   launchSubtext:
-    'Hosting, SMS, support, platform updates, and 1 hour of scoped tweaks each month.',
+    'Hosting, SMS, support, platform updates, and 1 hour of scoped tweaks each month — same Care on every plan.',
   launchBullets: [
     'Custom site + booking + admin + pickup shop setup',
     'Domain setup + deployment handled by us',
     '0% KERSIVO commission (Stripe card fees only)',
-    'Hosting + SSL included while subscription is active',
-    'Ongoing Care: SMS, no-show protection, support, and platform updates',
+    'Hosting + SSL included while Care is active',
+    'Ongoing Care (£39/mo): SMS, no-show protection, support, platform updates, and 1 hour of scoped tweaks each month',
   ],
   launchNewcomerAnchor:
     'Typical go-live: around two weeks after onboarding. 0% commission from booking #1.',
   launchSwitcherAnchor:
-    'Marketplace apps often run ~£120–£300/mo in subscription and traffic-related fees — compare with your own statements.',
+    "Compare your current platform costs with KERSIVO's predictable setup and flat monthly Care.",
   prioritySubtext:
-    'Same £39/month Care as Launch — priority queue and extra polish during the build.',
+    'Same £39/month Care as Launch — extra dedicated pages and deeper catalogue polish in the setup.',
   priorityBullets: [
     'Everything in Launch',
-    'Priority launch queue during setup',
-    'Extra polish for key pages and your product catalogue',
-    'Same Ongoing Care: hosting, SMS, support, and 1 hour of scoped tweaks each month',
+    'Extra dedicated pages beyond the main landing (e.g. gallery) — scoped with you at setup',
+    'Deeper product-catalogue polish',
+    'Same £39/month Ongoing Care as Launch',
   ],
-  priorityNewcomerAnchor: 'Typical go-live: around two weeks after onboarding.',
+  priorityNewcomerAnchor:
+    'More room for dedicated pages and catalogue depth if you want a fuller site from day one.',
   prioritySwitcherAnchor:
     'Flat Care keeps margin predictable as chairs and volume grow — Stripe only on cards.',
   launchCtaLabel: 'Plan My Setup — Launch',
   priorityCtaLabel: 'Plan My Setup — Priority Growth',
-  questionsSuffix: '',
 };
 
 export function getPricing36Copy(variant: Pricing36Variant = 'default'): Pricing36Copy {

@@ -345,7 +345,7 @@ export async function sendDemoCaptureLeadEmail(input: {
   <p><strong>Email:</strong> ${escapeHtml(input.email)}</p>
   ${input.shopName ? `<p><strong>Barbershop:</strong> ${escapeHtml(input.shopName)}</p>` : ''}
   ${input.currentSystem ? `<p><strong>Current system:</strong> ${escapeHtml(input.currentSystem)}</p>` : ''}
-  <p><strong>Source:</strong> /barbershop-booking-system review-later capture</p>`;
+  <p><strong>Source:</strong> homepage review-later capture</p>`;
 
   return sendEmail({
     to: inbox,
@@ -362,11 +362,11 @@ export async function sendDemoCaptureLeadEmail(input: {
 }
 
 export async function sendDemoCaptureVisitorEmail(input: { email: string }) {
-  const liveDemoUrl = 'https://kersivo.co.uk/barbershop-booking-system';
+  const liveDemoUrl = 'https://kersivo.co.uk/';
   const bookingFlowUrl = 'https://kersivo.co.uk/book';
   const adminDemoUrl = 'https://kersivo.co.uk/admin-demo?section=bookings_dashboard';
   const retailDemoUrl = 'https://kersivo.co.uk/shop';
-  const pricingUrl = 'https://kersivo.co.uk/barbershop-booking-system#pricing';
+  const pricingUrl = 'https://kersivo.co.uk/#pricing';
   const replyTo = getContactInboxEmail();
 
   const html = `<p>Hi,</p>
@@ -380,8 +380,8 @@ export async function sendDemoCaptureVisitorEmail(input: { email: string }) {
   <p>See retail pickup shop:<br/><a href="${retailDemoUrl}">${retailDemoUrl}</a></p>
 
   <p><strong>Pricing:</strong></p>
-  <p><strong>Launch — £199 setup + £39/month Ongoing Care</strong><br/>Best if you want the complete KERSIVO booking, retail and admin setup without extra launch priority.</p>
-  <p><strong>Priority Growth — £299 setup + £39/month Ongoing Care</strong><br/>Best if you want priority setup and extra polish around key pages and retail products.</p>
+  <p><strong>Launch — £199 setup + £39/month Ongoing Care</strong><br/>Best if you want the complete KERSIVO booking, retail and admin setup on your main site plus pickup shop.</p>
+  <p><strong>Priority Growth — £299 setup + £39/month Ongoing Care</strong><br/>Best if you want extra dedicated pages (e.g. gallery) and deeper product-catalogue polish during setup — same Care as Launch.</p>
 
   <p><strong>Both setups include:</strong></p>
   <ul>

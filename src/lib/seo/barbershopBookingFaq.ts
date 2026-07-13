@@ -59,7 +59,7 @@ export function buildBarbershopBookingFaqJsonLd(): Record<string, unknown> {
   return {
     '@context': 'https://schema.org',
     '@type': 'FAQPage',
-    '@id': `${siteUrl}/barbershop-booking-system#faq`,
+    '@id': `${siteUrl}/#faq`,
     mainEntity: BARBERSHOP_BOOKING_FAQ_ITEMS.map((item) => ({
       '@type': 'Question',
       name: item.question,

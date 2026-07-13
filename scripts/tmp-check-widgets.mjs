@@ -8,7 +8,7 @@ page.on('console', (m) => {
   if (m.type() === 'error') errors.push(m.text());
 });
 
-for (const url of ['http://localhost:4321/', 'http://localhost:4321/barbershop-booking-system']) {
+for (const url of ['http://localhost:4321/']) {
   await page.goto(url, { waitUntil: 'networkidle', timeout: 60000 });
   await page.evaluate(() => {
     document.querySelector('#live-demo, .feature261')?.scrollIntoView({ block: 'center' });

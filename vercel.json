@@ -11,6 +11,16 @@
       "has": [{ "type": "host", "value": "barberdemo.kersivo.co.uk" }],
       "destination": "https://kersivo.co.uk/:path*",
       "permanent": true
+    },
+    {
+      "source": "/barbershop-booking-system",
+      "destination": "/",
+      "permanent": true
+    },
+    {
+      "source": "/barbershop-booking-system/",
+      "destination": "/",
+      "permanent": true
     }
   ]
 }

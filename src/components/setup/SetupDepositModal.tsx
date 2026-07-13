@@ -1,7 +1,9 @@
 import { useEffect, useId, useRef, useState } from 'react';
+import { createPortal } from 'react-dom';
 
 import type { SetupPlanId } from '@/lib/setup/plans';
 
+import '@/styles/components/inputs.css';
 import '@/styles/components/setup-deposit-modal.css';
 
 const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
@@ -103,8 +105,6 @@ export function SetupDepositModal({
     };
   }, [open, onClose]);
 
-  if (!open) return null;
-
   const validate = (): string | null => {
     const trimmedName = name.trim();
     const trimmedEmail = email.trim().toLowerCase();
@@ -161,7 +161,9 @@ export function SetupDepositModal({
     }
   };
 
-  return (
+  if (!open || typeof document === 'undefined') return null;
+
+  return createPortal(
     <div className="setup-deposit-modal" role="presentation">
       <button
         type="button"
@@ -338,6 +340,7 @@ export function SetupDepositModal({
           ) : null}
         </form>
       </div>
-    </div>
+    </div>,
+    document.body,
   );
 }

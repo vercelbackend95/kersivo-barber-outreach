@@ -1,6 +1,6 @@
 /**
  * Convert landing-page illustration PNGs to WebP siblings (PNG sources kept).
- * Used on /barbershop-booking-system — run: npm run assets:landing-illustrations-webp
+ * Used on the homepage landing — run: npm run assets:landing-illustrations-webp
  */
 import fs from 'node:fs';
 import path from 'node:path';

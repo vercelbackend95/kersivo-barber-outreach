@@ -1,54 +1,45 @@
 ---
-import MainLayout from '@/layouts/MainLayout.astro';
-import { buildFaqJsonLd } from '@/lib/seo/faqJsonLd';
+import LandingLayout from '@/layouts/LandingLayout.astro';
 import { DEFAULT_DESCRIPTION, DEFAULT_TITLE } from '@/lib/seo/defaults';
-import '../styles/components/system-chooser.css';
-import '../styles/components/compare3.css';
-import '../styles/components/brandValues.css';
-import '../styles/components/audiencePicker.css';
-import '../styles/components/newcomerPath.css';
-import '../styles/components/trustBlock.css';
-import BrandValues from '../components/brandValues.astro';
-import AudiencePicker from '../components/audiencePicker.astro';
-import NewcomerPath from '../components/newcomerPath.astro';
-import TrustBlock from '../components/trustBlock.astro';
-import InsideSystemHome from '../components/insideSystemHome.astro';
-import { Process2 } from '../components/process2';
-import { Pricing36 } from '../components/pricing36';
-import { RateCard1 } from '../components/rateCard1';
-import '../styles/pricing36.css';
-import '../styles/rateCard1.css';
-import Faq4 from '../components/faq4.astro';
-import Cta10 from '../components/cta10.astro';
-import '../styles/components/faq4.css';
-import '../styles/components/cta10.css';
-import Contact16 from '../components/contact16.astro';
-import '../styles/components/contact16.css';
-import Footer50 from '../components/footer50.astro';
-import '../styles/components/footer50.css';
+import Faq4 from '@/components/faq4.astro';
+import Contact16 from '@/components/contact16.astro';
+import LandingDemoCapture from '@/components/landingDemoCapture.astro';
+import LandingFinalCta from '@/components/landingFinalCta.astro';
+import SystemChooser from '@/components/SystemChooser.astro';
+import LandingValueCards from '@/components/landingValueCards.astro';
+import LandingDemoPreview from '@/components/landingDemoPreview.astro';
+import LandingPostPurchaseSteps from '@/components/landingPostPurchaseSteps.astro';
+import LandingSwitcherReassurance from '@/components/landingSwitcherReassurance.astro';
+import LandingDifference from '@/components/landingDifference.astro';
+import Footer50 from '@/components/footer50.astro';
+import {
+  BARBERSHOP_BOOKING_FAQ_ITEMS,
+  buildBarbershopBookingFaqJsonLd,
+} from '@/lib/seo/barbershopBookingFaq';
 import { getFooterSocialLinks } from '@/lib/seo/footerSocialLinks';
-import '../styles/components/migrationGuide.css';
-import MigrationGuide from '../components/migrationGuide.astro';
-import '../styles/components/process2.css';
-import '../styles/components/hero227.css';
-import { Hero227 } from '../components/hero227';
-import SystemChooser from '../components/SystemChooser.astro';
 import { resolveLandingDemoCarouselProducts } from '@/lib/shop/landingDemoCarouselProducts';
 import { resolveLandingDemoBarbers } from '@/lib/landing/landingDemoBarbers';
 import { resolveLandingBookingData } from '@/lib/landing/landingBookingData';
+import { Pricing36 } from '../components/pricing36';
+import { RateCard1 } from '../components/rateCard1';
+import BarbershopBookingHero from '@/components/barbershopBookingHero.astro';
+import '../styles/components/system-chooser.css';
+import '../styles/components/hero227.css';
+import '../styles/components/landingValueCards.css';
 
-const carouselProducts = await resolveLandingDemoCarouselProducts();
-const demoBarbers = await resolveLandingDemoBarbers();
-const landingBookingData = await resolveLandingBookingData();
-
+const [carouselProducts, demoBarbers, landingBookingData] = await Promise.all([
+  resolveLandingDemoCarouselProducts(),
+  resolveLandingDemoBarbers(),
+  resolveLandingBookingData(),
+]);
+const currentYear = new Date().getFullYear();
 ---
 
-<MainLayout
+<LandingLayout
   title={DEFAULT_TITLE}
   description={DEFAULT_DESCRIPTION}
   canonicalPath="/"
-  barberDemoJsonLd={true}
-  jsonLd={buildFaqJsonLd()}
+  jsonLd={buildBarbershopBookingFaqJsonLd()}
 >
   <link
     slot="head"
@@ -57,185 +48,77 @@ const landingBookingData = await resolveLandingBookingData();
     href="/images/hero/phone-5.webp"
     fetchpriority="high"
   />
-    <main>
-
+  <link
+    slot="head"
+    rel="preload"
+    as="image"
+    href="/images/brand/logo-navbar-228.webp"
+  />
+  <main class="landing-overflow-guard">
     <SystemChooser />
-
-    <Hero227 client:load />
-
-    <BrandValues />
-    <InsideSystemHome
-      retailProducts={carouselProducts}
-      barbers={demoBarbers}
-      bookingData={landingBookingData}
+    <BarbershopBookingHero />
+    <LandingValueCards />
+    <LandingDemoPreview retailProducts={carouselProducts} barbers={demoBarbers} bookingData={landingBookingData} />
+    <Pricing36 client:visible={{ rootMargin: '200px' }} variant="landing" />
+    <LandingDemoCapture />
+    <RateCard1 variant="landing" />
+    <LandingPostPurchaseSteps />
+    <LandingSwitcherReassurance />
+    <LandingDifference />
+    <Faq4
+      className="faq4--landing"
+      heading="Questions before you choose your setup?"
+      subHeading="Clear answers on commission, fees, switching, setup and what happens after purchase."
+      supportHeading="Still deciding?"
+      supportText="Explore the live demo or go straight to your setup package when you are ready."
+      supportLinkLabel="Plan My Setup"
+      supportLinkHref="#pricing"
+      supportSecondaryLinkLabel="View Live Demo"
+      supportSecondaryLinkOpensDemo={true}
+      faqs={BARBERSHOP_BOOKING_FAQ_ITEMS}
     />
-    <AudiencePicker />
-    <MigrationGuide />
-    <NewcomerPath />
-    <Pricing36 client:visible={{ rootMargin: '200px' }} />
-    <RateCard1 />
-    <Process2 client:load />
-    <TrustBlock />
-    <Faq4 />
-    <Cta10 />
-    <Contact16 />
+    <LandingFinalCta />
+    <Contact16
+      submitLabel="↳ Ask About My Setup"
+      title="NOT READY TO CHOOSE A SETUP YET?"
+      description="Tell us about your barbershop and we’ll point you to the right KERSIVO setup."
+      note="No pressure. We’ll reply with the clearest next step for your shop."
+    />
     <Footer50
       heading="Your booking. Your brand. Zero commission."
       description="Whether you are switching from Booksy/Fresha or starting your first system, we set you up in about two weeks and never take a cut of your bookings."
       ctaText="PLAN MY SETUP"
-
-      ctaHref="#book-demo"
-      ctaIsDemo={true}
-      brandName="Kersivo"
+      ctaHref="#pricing"
+      ctaIsDemo={false}
+      ctaTrack="plan_my_setup_click"
+      brandName="KERSIVO"
+      copyright={`© ${currentYear} KERSIVO`}
       navigation={[
-        { name: 'Home', href: '#home' },
-        { name: 'Paths', href: '#paths' },
         { name: 'Pricing', href: '#pricing' },
         { name: 'FAQ', href: '#faq' },
         { name: 'Contact', href: '#contact' },
-        { name: 'Barbershop Booking System', href: '/barbershop-booking-system' },
-        { name: 'Retail Demo', href: '/shop' }
       ]}
-            social={getFooterSocialLinks()}
+      social={getFooterSocialLinks()}
       legal={[
         { name: 'Privacy Policy', href: '/privacy' },
-        { name: 'Terms', href: '/terms' }
+        { name: 'Terms', href: '/terms' },
       ]}
     />
   </main>
-</MainLayout>
-<script>
-  const demoCtas = document.querySelectorAll('[data-demo-cta]');
-  const demoSection = document.querySelector('#book-demo');
-    const demoForm = document.querySelector('.contact16__form');
-  const DEMO_MESSAGE = "Hi, I'm interested in setting up Kersivo with bookings, admin and retail features.";
-
-  const applyDemoPrefill = () => {
-    if (!(demoForm instanceof HTMLFormElement)) return;
-
-    const messageField = demoForm.querySelector('[data-demo-message]');
-    const intentField = demoForm.querySelector('[data-demo-intent]');
-
-    if (intentField instanceof HTMLInputElement) {
-      intentField.value = 'setup';
-    }
-
-    if (!(messageField instanceof HTMLTextAreaElement)) return;
-
-    const currentValue = messageField.value.trim();
-
-    if (!currentValue || currentValue === DEMO_MESSAGE) {
-      messageField.value = DEMO_MESSAGE;
-    }
-  };
-
-  demoCtas.forEach((demoCta) => {
-    if (!(demoCta instanceof HTMLAnchorElement || demoCta instanceof HTMLButtonElement)) return;
-
-
-    demoCta.addEventListener('click', () => {
-      applyDemoPrefill();
-
-      if (demoSection instanceof HTMLElement) {
-        window.requestAnimationFrame(() => {
-          demoSection.scrollIntoView({ behavior: 'smooth', block: 'start' });
-        });
-      }
-    });
-});
-
-
-  const comparisonToggle = document.querySelector('[data-comparison-toggle]');
-  const comparisonPanel = document.getElementById('mg-comparison-panel');
-  const comparisonAutoOpenLinks = document.querySelectorAll('[data-comparison-auto-open]');
-  const prefersReducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-
-  const setComparisonOpen = (nextOpen, { focusToggle = false } = {}) => {
-    if (!(comparisonPanel instanceof HTMLElement) || !(comparisonToggle instanceof HTMLButtonElement)) {
-      return;
-    }
-
-    const showLabel = comparisonToggle.dataset.comparisonLabelShow ?? 'See full comparison';
-    const hideLabel = comparisonToggle.dataset.comparisonLabelHide ?? 'Hide comparison';
-
-    comparisonToggle.setAttribute('aria-expanded', String(nextOpen));
-    comparisonToggle.textContent = nextOpen ? hideLabel : showLabel;
-
-    if (nextOpen) {
-      comparisonPanel.hidden = false;
-      window.requestAnimationFrame(() => {
-        comparisonPanel.classList.add('mg__comparison--open');
-      });
-    } else {
-      comparisonPanel.classList.remove('mg__comparison--open');
-
-      const finishCollapse = () => {
-        if (comparisonToggle.getAttribute('aria-expanded') !== 'false') {
-          return;
-        }
-        comparisonPanel.hidden = true;
-      };
-
-      if (prefersReducedMotion) {
-        finishCollapse();
-      } else {
-        window.setTimeout(finishCollapse, 300);
-      }
-    }
-
-    if (focusToggle) {
-      comparisonToggle.focus();
-    }
-  };
-
-  const openComparisonFromDeepLink = () => {
-    const migrationSection = document.getElementById('migration');
-    if (!(migrationSection instanceof HTMLElement)) {
-      return;
-    }
-
-    setComparisonOpen(true);
-
-    window.requestAnimationFrame(() => {
-      migrationSection.scrollIntoView({ behavior: prefersReducedMotion ? 'auto' : 'smooth', block: 'start' });
-    });
-  };
-
-  if (comparisonToggle && comparisonPanel) {
-    comparisonToggle.addEventListener('click', () => {
-      const isOpen = comparisonToggle.getAttribute('aria-expanded') === 'true';
-      setComparisonOpen(!isOpen);
-    });
-
-    comparisonAutoOpenLinks.forEach((link) => {
-      link.addEventListener('click', () => {
-        window.setTimeout(() => {
-          openComparisonFromDeepLink();
-        }, 0);
-      });
-    });
-
-    const handleComparisonHash = () => {
-      if (window.location.hash === '#switcher-path') {
-        openComparisonFromDeepLink();
-      }
-    };
-
-    handleComparisonHash();
-    window.addEventListener('hashchange', handleComparisonHash);
-  }
-</script>
+</LandingLayout>
 
 <script>
   import { initSystemChooser } from '@/lib/initSystemChooser';
 
-  initSystemChooser();
-</script>
+  const scheduleInit = () => {
+    requestAnimationFrame(() => initSystemChooser());
+  };
 
-<script>
-  import { initShop6Carousels } from '@/lib/shop/initShop6Carousel';
-
-  initShop6Carousels();
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', scheduleInit, { once: true });
+  } else {
+    scheduleInit();
+  }
 </script>
 
 <script>
@@ -251,3 +134,15 @@ const landingBookingData = await resolveLandingBookingData();
     scheduleInit();
   }
 </script>
+
+<script>
+  import { initShop6Carousels } from '@/lib/shop/initShop6Carousel';
+
+  initShop6Carousels();
+</script>
+
+<style>
+  .landing-overflow-guard {
+    overflow-x: clip;
+  }
+</style>

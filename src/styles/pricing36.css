@@ -346,9 +346,8 @@
   color: inherit;
 }
 
-.pricing36__questions,
 .pricing36__calendly {
-  margin: var(--space-sm) auto 0;
+  margin: var(--space-2xs) auto 0;
   max-width: 42rem;
   text-align: center;
   font-size: var(--text-sm);
@@ -356,35 +355,10 @@
   color: color-mix(in srgb, var(--muted) 75%, var(--fg) 25%);
 }
 
-.pricing36__calendly {
-  margin-top: var(--space-2xs);
-}
-
-.pricing36__questions a,
 .pricing36__calendly a {
   color: var(--accent);
   text-decoration: underline;
   text-underline-offset: 2px;
-}
-
-.pricing36__soft-cta {
-  margin: var(--space-2xs) auto 0;
-  max-width: 42rem;
-  text-align: center;
-  font-size: var(--text-sm);
-  line-height: 1.5;
-  color: color-mix(in srgb, var(--muted) 80%, var(--fg) 20%);
-}
-
-.pricing36__soft-cta a {
-  color: color-mix(in srgb, var(--muted) 40%, var(--fg) 60%);
-  text-decoration: underline;
-  text-underline-offset: 2px;
-}
-
-.pricing36__soft-cta a:hover,
-.pricing36__soft-cta a:focus-visible {
-  color: var(--fg);
 }
 
 @media (max-width: 767px) {
@@ -450,10 +424,4 @@
 
 .pricing36--landing .pricing36__plan-header .compare3-block__badge {
   flex-shrink: 0;
-}
-
-.pricing36--landing .pricing36__questions {
-  width: 100%;
-  margin-inline: auto;
-  text-align: center;
 }
