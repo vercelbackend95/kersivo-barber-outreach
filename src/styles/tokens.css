@@ -82,8 +82,8 @@
    */
   --admin-premium-surface-r: clamp(0.92rem, 2.2vw, 1.12rem);
   --admin-premium-surface-r-mobile: clamp(0.88rem, 3vw, 1.08rem);
-  --booking-card-r: var(--radius-md);
-  --booking-card-r-mobile: var(--radius-md);
+  --booking-card-r: var(--admin-premium-surface-r);
+  --booking-card-r-mobile: var(--admin-premium-surface-r-mobile);
   --admin-premium-surface-border: 1px solid color-mix(in srgb, var(--border) 58%, transparent);
   --admin-premium-surface-bg: color-mix(in srgb, var(--surface-2) 76%, var(--surface));
   --admin-premium-shadow-inset: 0 1px 0 color-mix(in srgb, var(--fg) 3.5%, transparent) inset;
@@ -93,6 +93,10 @@
     0 8px 22px color-mix(in srgb, var(--fg) 2%, transparent);
   --admin-premium-shadow-rail-out: 6px 0 26px color-mix(in srgb, var(--fg) 2.1%, transparent),
     14px 0 44px color-mix(in srgb, var(--fg) 2.6%, transparent);
+  /* Public booking form — aliases onto admin premium surface system */
+  --booking-surface-bg: var(--admin-premium-surface-bg);
+  --booking-surface-border: var(--admin-premium-surface-border);
+  --booking-surface-lift: var(--admin-premium-shadow-lift-subtle);
 
   /* Spacing scale */
   --space-2xs: 0.25rem;
