@@ -51,7 +51,7 @@ export const ExampleBadge: React.FC<ExampleBadgeProps> = ({
           ...visualQuality.text,
         }}
       >
-        Example
+        Example · frozen for ads
       </span>
     </div>
   );

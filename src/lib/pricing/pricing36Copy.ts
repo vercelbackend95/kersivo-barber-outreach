@@ -1,3 +1,9 @@
+import {
+  KERSIVO_COMMISSION_CLAIM,
+  SMS_INCLUDED_CLAIM,
+  STRIPE_FEES_NOTE,
+} from '@/lib/pricing/claimsPolicy';
+
 export type Pricing36Variant = 'default' | 'landing';
 
 export type Pricing36Copy = {
@@ -15,20 +21,20 @@ export type Pricing36Copy = {
 };
 
 const DEFAULT_COPY: Pricing36Copy = {
-  introCommission: 'Kersivo never takes a cut of your bookings or retail.',
+  introCommission: `${KERSIVO_COMMISSION_CLAIM} ${STRIPE_FEES_NOTE}`,
   launchSubtext:
-    'Hosting, SMS, support, platform updates, and 1h scoped tweaks/month — same Care on every plan.',
+    'Hosting, SSL, domain renewal, support, platform updates, and 1h minor changes/month — same Care on every plan.',
   launchBullets: [
     'Custom site + booking + admin + pickup shop setup',
-    'Domain setup + deployment handled by us',
-    '0% Kersivo commission (Stripe card fees only)',
+    'Domain purchase, management and renewal while Care is active',
+    `${KERSIVO_COMMISSION_CLAIM} ${STRIPE_FEES_NOTE}`,
     'Hosting + SSL included while Care is active',
-    'Ongoing Care (£39/mo): SMS, no-show protection, support, platform updates, 1h scoped tweaks/month',
+    `Ongoing Care (£39/mo): ${SMS_INCLUDED_CLAIM} Support, platform updates, 1h minor changes/month`,
   ],
   launchNewcomerAnchor:
-    'Live booking on your own domain in about two weeks. 0% commission from booking #1.',
+    `Live booking on your own domain in about two weeks. ${KERSIVO_COMMISSION_CLAIM}`,
   launchSwitcherAnchor:
-    "Compare your current platform costs with Kersivo's predictable setup and flat monthly Care.",
+    'Switch from a marketplace profile to a booking experience built around your brand — with predictable setup and flat monthly Care.',
   prioritySubtext:
     'Same £39/month Care as Launch — extra dedicated pages and deeper catalogue polish in the setup.',
   priorityBullets: [
@@ -40,26 +46,26 @@ const DEFAULT_COPY: Pricing36Copy = {
   priorityNewcomerAnchor:
     'More room for dedicated pages and catalogue depth if you want a fuller site from day one.',
   prioritySwitcherAnchor:
-    'When marketplace fees scale with chairs and volume, a flat Care plan keeps margin predictable next to Stripe only.',
+    'Flat Care keeps margin predictable as chairs and volume grow. Standard Stripe payment-processing fees still apply.',
   launchCtaLabel: 'Plan my setup on Launch',
   priorityCtaLabel: 'Plan my setup on Priority Growth',
 };
 
 const LANDING_COPY: Pricing36Copy = {
-  introCommission: 'KERSIVO never takes a cut of your bookings or retail.',
+  introCommission: `${KERSIVO_COMMISSION_CLAIM} ${STRIPE_FEES_NOTE}`,
   launchSubtext:
-    'Hosting, SMS, support, platform updates, and 1 hour of scoped tweaks each month — same Care on every plan.',
+    'Hosting, SSL, domain renewal, support, platform updates, and 1 hour of minor changes each month — same Care on every plan.',
   launchBullets: [
     'Custom site + booking + admin + pickup shop setup',
-    'Domain setup + deployment handled by us',
-    '0% KERSIVO commission (Stripe card fees only)',
+    'Domain purchase, management and renewal while Care is active',
+    `${KERSIVO_COMMISSION_CLAIM} ${STRIPE_FEES_NOTE}`,
     'Hosting + SSL included while Care is active',
-    'Ongoing Care (£39/mo): SMS, no-show protection, support, platform updates, and 1 hour of scoped tweaks each month',
+    `Ongoing Care (£39/mo): ${SMS_INCLUDED_CLAIM} Support, platform updates, and 1 hour of minor changes each month`,
   ],
   launchNewcomerAnchor:
-    'Typical go-live: around two weeks after onboarding. 0% commission from booking #1.',
+    `Typical go-live: around two weeks after onboarding. ${KERSIVO_COMMISSION_CLAIM}`,
   launchSwitcherAnchor:
-    "Compare your current platform costs with KERSIVO's predictable setup and flat monthly Care.",
+    'Switch from a marketplace profile to a booking experience built around your brand — with predictable setup and flat monthly Care.',
   prioritySubtext:
     'Same £39/month Care as Launch — extra dedicated pages and deeper catalogue polish in the setup.',
   priorityBullets: [
@@ -71,7 +77,7 @@ const LANDING_COPY: Pricing36Copy = {
   priorityNewcomerAnchor:
     'More room for dedicated pages and catalogue depth if you want a fuller site from day one.',
   prioritySwitcherAnchor:
-    'Flat Care keeps margin predictable as chairs and volume grow — Stripe only on cards.',
+    'Flat Care keeps margin predictable as chairs and volume grow. Standard Stripe payment-processing fees still apply.',
   launchCtaLabel: 'Plan My Setup — Launch',
   priorityCtaLabel: 'Plan My Setup — Priority Growth',
 };

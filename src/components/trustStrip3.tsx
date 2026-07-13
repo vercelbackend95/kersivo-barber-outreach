@@ -10,10 +10,11 @@ interface TrustStrip3Props {
   className?: string;
 }
 
+/** ORPHANED defaults — not on live homepage. Softened (Claims Audit 13 Jul 2026). */
 const DEFAULT_PILLARS: PillarItem[] = [
   {
-    heading: '0% commission from us',
-    body: 'Every booking and product sale reaches you at full value. No platform cut — Stripe applies only to online card payments.',
+    heading: '0% Kersivo commission',
+    body: 'Every booking and product sale reaches you without a Kersivo cut — Stripe applies only to online card payments.',
   },
   {
     heading: 'Deposits reduce no-shows',
@@ -25,7 +26,7 @@ const DEFAULT_PILLARS: PillarItem[] = [
   },
   {
     heading: 'Switch handled for you',
-    body: 'We build your system while you stay live on Booksy/Fresha, then handle the go-live switch. No downtime, no lost bookings.',
+    body: 'We build your system while you stay live on your current booking platform, then help move the public booking link when ready.',
   },
 ];
 

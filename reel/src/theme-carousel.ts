@@ -71,9 +71,9 @@ export const CAROUSEL_SLIDES: CarouselSlide[] = [
     outputFile: 'slide-01-hook.png',
     layout: 'hero',
     tagline: 'SMART TOOLS FOR BARBERS',
-    headlineLines: ['YOUR BOOKING.', 'YOUR BRAND.', 'ZERO COMMISSION.'],
+    headlineLines: ['YOUR BOOKING.', 'YOUR BRAND.', 'ZERO KERSIVO COMMISSION.'],
     goldLineIndex: 2,
-    subline: 'Bookings on your domain. 0% commission from Kersivo.',
+    subline: 'Bookings on your domain. 0% KERSIVO commission.',
     photoStrength: 'strong',
   },
   {
@@ -93,8 +93,8 @@ export const CAROUSEL_SLIDES: CarouselSlide[] = [
     features: [
       {
         icon: 'percent',
-        title: '0% COMMISSION FOREVER',
-        body: 'Keep 100% of your earnings.',
+        title: '0% KERSIVO COMMISSION',
+        body: 'No Kersivo cut on bookings or retail.',
       },
       {
         icon: 'message',
@@ -109,27 +109,27 @@ export const CAROUSEL_SLIDES: CarouselSlide[] = [
     outputFile: 'slide-04-pricing.png',
     layout: 'pricingBox',
     pricingAmount: '£39/MONTH',
-    pricingLabel: 'ALL INCLUDED',
+    pricingLabel: 'ONGOING CARE',
     pricingBullets: [
       'Hosting',
-      'SMS',
+      'Unlimited SMS reminders',
       'Support',
       'Platform updates',
       '1h tweaks/month',
     ],
     footnote:
-      '£199 one-time setup · Live in ~2 weeks · 0% commission on bookings & retail',
+      '£199 one-time setup · Live in ~2 weeks · 0% KERSIVO commission · VAT confirmed on invoice',
     photoStrength: 'subtle',
   },
   {
     id: 'cta',
     outputFile: 'slide-05-cta.png',
     layout: 'ctaTrust',
-    ctaText: 'PLAN MY SETUP — FREE',
+    ctaText: 'PLAN MY SETUP',
     trustBadges: [
-      { icon: 'shield', label: 'NO CONTRACT' },
-      { icon: 'xCircle', label: 'CANCEL ANYTIME' },
-      { icon: 'lock', label: 'NO HIDDEN FEES' },
+      { icon: 'shield', label: 'NO LONG CONTRACT' },
+      { icon: 'xCircle', label: 'CANCEL CARE ANYTIME' },
+      { icon: 'lock', label: 'CLEAR FEES' },
       { icon: 'heart', label: 'BUILT FOR BARBERS' },
     ],
     footer: 'kersivo.co.uk',

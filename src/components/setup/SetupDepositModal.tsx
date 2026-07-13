@@ -216,7 +216,8 @@ export function SetupDepositModal({
         </header>
 
         <p className="setup-deposit-modal__note">
-          50% deposit now. Remaining 50% due on go-live only.
+          50% deposit now. Remaining 50% due before go-live. Refundable if you cancel before work begins; non-refundable
+          once work begins.
         </p>
 
         <form className="setup-deposit-modal__form" onSubmit={(event) => void handleSubmit(event)} noValidate>

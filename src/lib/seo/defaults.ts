@@ -11,7 +11,7 @@ export const DEFAULT_OG_IMAGE_PATH = '/images/og/kersivo-og.jpg';
 export const DEFAULT_OG_IMAGE_WIDTH = 1200;
 export const DEFAULT_OG_IMAGE_HEIGHT = 630;
 export const DEFAULT_OG_IMAGE_ALT =
-  'Kersivo — UK barbershop booking on your own domain with 0% commission';
+  'Kersivo — UK barbershop booking on your own domain with 0% KERSIVO commission';
 
 /** ISO date (YYYY-MM-DD) for static marketing/legal pages in sitemap lastmod. */
 export const STATIC_SITEMAP_LASTMOD = '2026-07-13';

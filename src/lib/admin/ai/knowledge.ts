@@ -1,4 +1,3 @@
-import { FAQ_ITEMS } from '@/lib/seo/faqItems';
 import { BARBERSHOP_BOOKING_FAQ_ITEMS } from '@/lib/seo/barbershopBookingFaq';
 import { ADMIN_SECTIONS_PLAYBOOK } from './adminSections';
 import { ADMIN_RESULTS_PLAYBOOK } from './adminResultsPlaybook';
@@ -18,12 +17,14 @@ const BRAND_FACTS: KnowledgeSection = {
   title: 'Kersivo brand facts',
   body: [
     'Kersivo builds branded booking + retail systems for UK barbershops on the shop’s own domain.',
-    'Commission is 0% on bookings and retail sales — always. Stripe card fees may apply on online card payments; cash in-shop can mean 0% processing.',
-    'Pricing framing: setup packages (e.g. Launch ~£199 or Priority Growth ~£299, one-time) + Ongoing Care (~£39/month). No per-booking platform cut, no volume surcharges.',
-    'Product includes: booking site, admin dashboard, barber roster/hours/blocks, clients, services, retail products, orders, sales, SMS reminders and related ops automations.',
-    'Currently onboarding founding UK barbershops with closer setup support; switchers stay on Booksy/Fresha until go-live is confirmed.',
+    '0% KERSIVO commission on bookings and retail. Standard Stripe payment-processing fees still apply; cash in-shop can mean 0% processing.',
+    'Pricing: Launch £199 or Priority Growth £299 one-time setup + Ongoing Care £39/month from go-live (mandatory, auto-billed). Prices shown are final. KERSIVO is not currently VAT registered, so no VAT is added.',
+    'Care includes: hosting, SSL, platform/security updates, maintenance, support, domain renewal, transactional emails, booking/admin/retail, up to 1h minor changes/month, unlimited automated SMS appointment reminders.',
+    'Deposit: 50% to start; remaining 50% before go-live. Work begins after deposit + completed onboarding + delivery start. Refund if cancel before work; non-refundable once work begins; 30-day unresponsive after work begins may close project and retain deposit; refund if KERSIVO cannot deliver.',
+    'Currently onboarding founding UK barbershops with closer setup support; switchers can keep their current booking system live until go-live is confirmed.',
     'Clients book in the browser — no app download, no forced account creation.',
-    'Shop owns client list, domain, and exportable data; no lock-in hostage pattern.',
+    'Customer owns domain, brand, content, client relationship and exported data (free CSV: name, email, phone, booking history during Care + 30 days after). KERSIVO owns platform/code/infra; Care is a licence.',
+    'Do not invent competitor commission rates, monthly cost corridors, or savings figures. Do not claim Booksy takes 30% per booking.',
   ].join('\n'),
 };
 
@@ -54,7 +55,7 @@ const BARBER_OPS: KnowledgeSection = {
   body: [
     'Advise on schedules, buffers, deposits to cut no-shows, SMS reminders, win-back of old clients, and balancing walk-ins vs bookings.',
     'Deposits + reminders increase commitment and reduce empty-chair losses.',
-    'Switching from Booksy/Fresha/Nearcut: map services/team/hours first; clients keep booking via a normal URL after go-live.',
+    'Switching from another booking platform: map services/team/hours first; clients keep booking via a normal URL after go-live.',
   ].join('\n'),
 };
 
@@ -79,7 +80,7 @@ export const KNOWLEDGE_SECTIONS: KnowledgeSection[] = [
   SEO_OPS,
   RETAIL_OPS,
   BARBER_OPS,
-  faqToSection('faq-main', 'Primary FAQ', FAQ_ITEMS),
+  // Orphaned FAQ_ITEMS kept out of AI knowledge — aggressive ownership / competitor wording.
   faqToSection('faq-booking-landing', 'Booking-system FAQ', BARBERSHOP_BOOKING_FAQ_ITEMS),
 ];
 

@@ -97,7 +97,7 @@ const Process2 = ({ className }: Process2Props) => {
       weDo:
         "Audit your current setup or build the plan from scratch, map services and team, confirm domain, deposit policy, and lock the launch date.",
       youDo:
-        "Send your services list, prices, team and opening hours. If you are switching, point us at your Booksy or Fresha setup.",
+        "Send your services list, prices, team and opening hours. If you are switching, point us at your current booking setup.",
       deliverable:
         "A confirmed setup plan with responsibilities, timeline, and what will be moved.",
     },
@@ -114,7 +114,7 @@ const Process2 = ({ className }: Process2Props) => {
       weDo:
         "Build the booking site on your domain, configure Stripe deposits, automated SMS reminders, win-back, and pay & collect retail \u2014 ready to run on day one.",
       youDo:
-        "Stay focused on cutting hair. If you are switching, keep taking bookings on Booksy/Fresha as normal.",
+        "Stay focused on cutting hair. If you are switching, keep taking bookings on your current platform as normal.",
       deliverable:
         "A tested system that protects margin, reduces no-shows, and automates follow-up.",
     },
@@ -153,7 +153,7 @@ const Process2 = ({ className }: Process2Props) => {
               You just show up.
             </h2>
             <p className="text-base text-foreground/50">
-              Same plan whether you are switching from Booksy/Fresha or starting your first system. We carry the build,
+              Same plan whether you are switching from a marketplace profile or starting your first system. We carry the build,
               you stay focused on the chair.
             </p>
             <div className="process2-image-frame relative h-90 overflow-hidden border">

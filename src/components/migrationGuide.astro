@@ -1,4 +1,9 @@
 ---
+/**
+ * ORPHANED — not imported by live src/pages/index.astro.
+ * High-risk competitor fee claims removed (Claims Audit 13 Jul 2026).
+ * Do not restore “30% per booking” or competitor monthly cost corridors without legal review.
+ */
 import Compare3Table from './compare3Table.astro';
 
 interface Props {
@@ -19,22 +24,22 @@ const { className = '' } = Astro.props as Props;
   <div class="container">
 
     <div class="mg__intro">
-      <span class="mg__eyebrow">For switchers &middot; Zero-risk</span>
+      <span class="mg__eyebrow">For switchers</span>
       <h2 id="mg-headline" class="mg__headline">Before.<br />After.</h2>
       <p class="mg__lead">
-        Keep Booksy live while we set up client booking on your domain, one admin for the floor,
+        Keep your current booking system live while we set up client booking on your domain, one admin for the floor,
         buy-and-collect retail, and the day&rsquo;s numbers in one panel.
       </p>
     </div>
 
-    <div class="mg__story" role="img" aria-label="Migration story: from paying marketplace fees to zero commission">
+    <div class="mg__story" role="img" aria-label="Migration story: from marketplace profile to your own branded booking site">
 
       <!-- BEFORE panel -->
       <div class="mg__panel mg__panel--before">
         <div class="mg__panel-fig">
           <img
             src="/images/Ilustracje/grupaludziidzie.webp"
-            alt="Group of people walking — marketplace dependency before switching"
+            alt="Group of people walking — marketplace booking profile before switching"
             class="mg__panel-img"
             loading="lazy"
             draggable="false"
@@ -42,9 +47,9 @@ const { className = '' } = Astro.props as Props;
         </div>
         <div class="mg__panel-body">
           <span class="mg__panel-tag mg__panel-tag--before">Before</span>
-          <p class="mg__panel-stat">Up to<br />30%</p>
-          <p class="mg__panel-label">per booking &mdash; to Booksy.</p>
-          <p class="mg__panel-line">Your schedule fills up.<br />Their pocket too.</p>
+          <p class="mg__panel-stat">Marketplace<br />profile</p>
+          <p class="mg__panel-label">Bookings sit inside someone else&rsquo;s network.</p>
+          <p class="mg__panel-line">Your schedule fills up.<br />Their brand stays in the way.</p>
         </div>
       </div>
 
@@ -60,7 +65,7 @@ const { className = '' } = Astro.props as Props;
         <div class="mg__panel-fig">
           <img
             src="/images/Ilustracje/barberwelcome.webp"
-            alt="Barber welcoming clients outside his own shop — zero commission after switching"
+            alt="Barber welcoming clients outside his own shop — branded booking on his domain"
             class="mg__panel-img"
             loading="lazy"
             draggable="false"
@@ -69,26 +74,26 @@ const { className = '' } = Astro.props as Props;
         <div class="mg__panel-body">
           <span class="mg__panel-tag mg__panel-tag--after">After</span>
           <p class="mg__panel-stat">0%</p>
-          <p class="mg__panel-label">from us. Always.</p>
-          <p class="mg__panel-line">Your site. Your clients.<br />Your money.</p>
+          <p class="mg__panel-label">KERSIVO commission. Always.</p>
+          <p class="mg__panel-line">Your domain. Your clients.<br />Your brand.</p>
         </div>
       </div>
 
     </div>
 
     <!-- Short guarantee chips -->
-    <ul class="mg__chips" role="list" aria-label="Migration guarantees">
+    <ul class="mg__chips" role="list" aria-label="Migration reassurances">
       <li class="mg__chip">
         <span class="mg__chip-check" aria-hidden="true">&#10003;</span>
-        Stay on Booksy until you&rsquo;re ready
+        Stay on your current system until you&rsquo;re ready
       </li>
       <li class="mg__chip">
         <span class="mg__chip-check" aria-hidden="true">&#10003;</span>
-        50&thinsp;% fee held until go-live
+        50&thinsp;% setup deposit; remaining on go-live
       </li>
       <li class="mg__chip">
         <span class="mg__chip-check" aria-hidden="true">&#10003;</span>
-        We flip the link &mdash; you don&rsquo;t touch a thing
+        We help move your public booking link when ready
       </li>
     </ul>
 
@@ -96,7 +101,7 @@ const { className = '' } = Astro.props as Props;
     <div class="mg__cta-block">
       <div class="mg__ctas">
         <a href="#contact" class="btn btn--primary btn--lg" data-demo-cta>
-          Plan my switch &mdash; free
+          Plan my switch
         </a>
         <button
           type="button"
@@ -121,7 +126,7 @@ const { className = '' } = Astro.props as Props;
           <span class="compare3-block__badge">FOR SWITCHERS &middot; TWO MODELS</span>
           <h3 id="mg-comparison-title">Kersivo vs marketplace apps</h3>
           <p>
-            Booksy and Fresha are proven at scale. Kersivo is built for owners who want <strong>zero Kersivo commission</strong>,
+            Marketplace apps are proven at scale. Kersivo is built for owners who want <strong>0% KERSIVO commission</strong>,
             a booking site on their own domain, and retail plus admin in one stack. Here is how the two postures differ.
           </p>
         </div>

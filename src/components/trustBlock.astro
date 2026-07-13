@@ -5,24 +5,28 @@ interface Props {
 
 const { className = '' } = Astro.props as Props;
 
+/**
+ * ORPHANED — not on live homepage. Softened absolute fee / forever / competitor claims (Claims Audit 13 Jul 2026).
+ * Aligned VAT / SMS / deposit with confirmed commercial rules 13 Jul 2026.
+ */
 const feeBreakdown = [
-  { label: 'Setup', value: '\u00a3199 or \u00a3299', detail: 'one-time, paid 50% to start, 50% before go-live' },
-  { label: 'Ongoing Care', value: '\u00a339/month', detail: 'hosting, SMS, support, platform updates, 1h tweaks/month' },
-  { label: 'Bookings + retail', value: '0%', detail: 'Kersivo never takes a cut. Always.' },
+  { label: 'Setup', value: '\u00a3199 or \u00a3299', detail: 'one-time, 50% deposit to start, remaining 50% before go-live' },
+  { label: 'Ongoing Care', value: '\u00a339/month', detail: 'hosting, SSL, domain renewal, unlimited SMS, support, platform updates, 1h minor changes/month' },
+  { label: 'Bookings + retail', value: '0% KERSIVO', detail: '0% KERSIVO commission. Standard Stripe payment-processing fees still apply.' },
   { label: 'Online card payments', value: 'Stripe standard', detail: 'charged direct to your Stripe account, not ours' },
-  { label: 'Cash in-shop', value: '0% fee', detail: 'no gateway, no platform cut' },
+  { label: 'Cash in-shop', value: '0% Stripe', detail: 'no card gateway fee on cash payments' },
 ];
 
 const guarantees = [
   {
-    title: 'Pay 50% to start, 50% on go-live',
+    title: 'Pay 50% to start, remaining 50% before go-live',
     body:
-      'Half of your setup fee is paid only when your system is live and you have signed off. We carry the build risk, not you.',
+      'Work begins after the deposit, completed onboarding and the start of project delivery. If you cancel before work begins, we refund the deposit. Once work begins, the deposit is non-refundable.',
   },
   {
-    title: 'Stay on Booksy or Fresha until tested',
+    title: 'Stay on your current system until tested',
     body:
-      'For switchers: you keep taking bookings on your current platform until your Kersivo system is built, tested, and you confirm. We swap one link.',
+      'For switchers: you keep taking bookings on your current platform until your Kersivo system is built, tested, and you confirm. We help move the public booking link when ready.',
   },
   {
     title: 'Revised timeline before any commit',
@@ -69,7 +73,7 @@ const measureSteps = [
       <div class="trust-block__col trust-block__col--stack">
         <article class="trust-block__panel trust-block__panel--fees">
           <header class="trust-block__panel-header">
-            <span class="trust-block__panel-tag">No hidden fees</span>
+            <span class="trust-block__panel-tag">Clear fees</span>
             <h3 class="trust-block__panel-title">The whole bill, on one screen.</h3>
           </header>
           <ul class="trust-block__fees" role="list">
@@ -82,13 +86,13 @@ const measureSteps = [
             ))}
           </ul>
           <p class="trust-block__panel-anchor">
-            Setup + monthly Care + Stripe on online cards. That is the entire bill. Forever.
+            Setup + monthly Care + Stripe on online cards. Prices shown are final. KERSIVO is not currently VAT registered, so no VAT is added.
           </p>
         </article>
 
         <article class="trust-block__panel trust-block__panel--guarantees">
           <header class="trust-block__panel-header">
-            <span class="trust-block__panel-tag">Three guarantees</span>
+            <span class="trust-block__panel-tag">Three commitments</span>
             <h3 class="trust-block__panel-title">You commit when you are ready, not before.</h3>
           </header>
           <ul class="trust-block__guarantees" role="list">

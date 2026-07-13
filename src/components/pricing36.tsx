@@ -5,6 +5,7 @@ import { useState } from "react";
 
 import { SetupDepositModal } from "@/components/setup/SetupDepositModal";
 import { Separator } from "@/components/ui/separator";
+import { PRICE_VAT_DISCLAIMER } from "@/lib/pricing/claimsPolicy";
 import { getPricing36Copy, type Pricing36Variant } from "@/lib/pricing/pricing36Copy";
 import { getSetupPlan, type SetupPlanId } from "@/lib/setup/plans";
 import { formatGbp } from "@/lib/shop/money";
@@ -35,18 +36,19 @@ const Pricing36 = ({ className, variant = "default" }: Pricing36Props) => {
       <div className="container">
         <div className="compare3-block__header">
           <span className="compare3-block__badge">PRICING</span>
-          <h2>ONE SETUP. ONE MONTHLY FEE. ZERO COMMISSION.</h2>
+          <h2>ONE SETUP. ONE MONTHLY FEE. ZERO KERSIVO COMMISSION.</h2>
           <p>
-            <strong>Launch: &pound;199 setup + &pound;39/month Care.</strong> {copy.introCommission}{" "}
-            Stripe applies only to online card payments, on your own account.
+            <strong>Launch: &pound;199 setup + &pound;39/month Care.</strong> {copy.introCommission}
           </p>
+          <p className="pricing36__vat-note text-sm text-muted-foreground">{PRICE_VAT_DISCLAIMER}</p>
         </div>
 
         <div className="pricing36__guarantee" role="note">
-          <span className="pricing36__guarantee-tag">Risk-free setup</span>
+          <span className="pricing36__guarantee-tag">50 / 50 setup</span>
           <p className="pricing36__guarantee-body">
-            <strong>Pay 50% to start, 50% only on go-live.</strong> We carry the build risk. You only pay the second half
-            once your system is live, tested, and signed off by you.
+            <strong>Pay 50% deposit to start; remaining 50% before go-live.</strong> Work begins after the deposit,
+            completed onboarding and the start of project delivery. If you cancel before work begins, we refund the
+            deposit. Once work begins, the deposit is non-refundable. If KERSIVO cannot deliver, we refund the deposit.
           </p>
         </div>
 
@@ -114,7 +116,7 @@ const Pricing36 = ({ className, variant = "default" }: Pricing36Props) => {
               <div className="h-full rounded-[31px] bg-background p-8">
                 <div className="pricing36__plan-header flex items-center justify-between gap-2">
                   <p className="text-xl font-semibold">Priority Growth</p>
-                  <span className="compare3-block__badge">Best Value</span>
+                  <span className="compare3-block__badge">Most support</span>
                 </div>
                 <div className="mt-6 flex flex-col gap-2">
                   <p className="text-6xl font-bold">

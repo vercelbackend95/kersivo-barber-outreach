@@ -4,7 +4,7 @@ import { colors } from '../theme';
 
 const TICKS = [
   { symbol: '£', top: '12%', left: '8%', drift: 0.4, size: 48 },
-  { symbol: '30%', top: '22%', left: '82%', drift: 0.55, size: 36 },
+  { symbol: '0%', top: '22%', left: '82%', drift: 0.55, size: 36 },
   { symbol: '£', top: '38%', left: '14%', drift: 0.35, size: 32 },
   { symbol: '£', top: '55%', left: '88%', drift: 0.48, size: 44 },
   { symbol: '0%', top: '68%', left: '6%', drift: 0.42, size: 38 },

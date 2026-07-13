@@ -1,6 +1,7 @@
 import React from "react";
 
 import { GlobeLock, LayoutDashboard, MessagesSquare, ShieldCheck, TrendingUp } from "lucide-react";
+import { PRICE_VAT_DISCLAIMER } from "@/lib/pricing/claimsPolicy";
 import { getRateCard1Copy, rateCard1SharedCopy, type RateCard1Variant } from "@/lib/pricing/rateCard1Copy";
 import { cn } from "@/lib/utils";
 import "@/styles/rateCard1.css";
@@ -70,9 +71,9 @@ const RateCard1 = ({ className, variant = "default" }: RateCard1Props) => {
               WHAT YOUR SUBSCRIPTION BUYS EACH MONTH
             </h2>
             <p className="rate-card1__lead">
-              One flat <strong>£39/month</strong> after go-live. Booking, shop, admin, SMS, support, and ongoing platform
-              updates — <strong>{copy.leadCommissionLabel}</strong> on bookings and retail. Stripe charges cards on your
-              account only.
+              One flat <strong>£39/month</strong> from go-live, billed automatically. Booking, shop, admin, hosting,
+              SSL, domain renewal, support and platform updates — <strong>{copy.leadCommissionLabel}</strong> on
+              bookings and retail. Standard Stripe payment-processing fees still apply.
             </p>
             <Illustration className="rate-card1__mark rate-card1__mark--top" />
             <Illustration className="rate-card1__mark rate-card1__mark--bottom" />
@@ -94,8 +95,8 @@ const RateCard1 = ({ className, variant = "default" }: RateCard1Props) => {
               </ul>
             </div>
             <p className="rate-card1__plan-note">
-              Your setup fee (£199 or £299) is separate; Care starts once you are live. No mystery line items stacked on
-              top.
+              Your setup fee (£199 or £299) is separate; Care is mandatory from go-live. No minimum term. Cancel anytime
+              — service stays active until the end of the paid month. {PRICE_VAT_DISCLAIMER}
             </p>
           </div>
         </aside>

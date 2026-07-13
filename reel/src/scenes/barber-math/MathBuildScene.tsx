@@ -59,9 +59,9 @@ export const MathBuildScene: React.FC = () => {
 
           <div style={{ width: '100%', marginTop: 12, display: 'flex', flexDirection: 'column', gap: 10 }}>
             <CostReceiptRow
-              label="Platform sub"
-              sublabel="4 staff · inc. VAT"
-              amount={BARBER_MATH_COSTS.subscriptionIncVat}
+              label="KERSIVO Care"
+              sublabel="Flat monthly · confirm VAT on invoice"
+              amount={BARBER_MATH_COSTS.kersivoMonthly}
               delay={10}
               direction="left"
               highlightOnHit
@@ -89,8 +89,8 @@ export const MathBuildScene: React.FC = () => {
             </div>
 
             <CostReceiptRow
-              label="New client fees*"
-              sublabel="8% marketplace · first visit"
+              label="Platform fees"
+              sublabel="Frozen — not for paid ads"
               amount={BARBER_MATH_COSTS.marketplaceMonthly}
               delay={44}
               direction="right"
@@ -132,7 +132,7 @@ export const MathBuildScene: React.FC = () => {
               ...visualQuality.text,
             }}
           >
-            *first visit only · example · see platform pricing
+            Competitor savings maths frozen — do not use in paid ads until rebuilt
           </p>
         </AbsoluteFill>
       </ScreenHit>

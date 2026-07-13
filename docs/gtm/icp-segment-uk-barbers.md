@@ -4,8 +4,8 @@
 - Location: UK, tier-1 and tier-2 cities with strong walk-in and repeat demand.
 - Shop type: independent barbershop with 3-8 chairs.
 - Team model: owner-managed, at least 2 active barbers with shared schedule pressure.
-- Current stack: Booksy/Fresha or mixed booking tools plus manual workarounds.
-- Revenue posture: stable demand but visible margin pressure from fees, missed slots, and admin overhead.
+- Current stack: marketplace booking apps or mixed booking tools plus manual workarounds.
+- Revenue posture: stable demand but visible margin pressure from platform fees, missed slots, and admin overhead.
 - Decision maker: owner or partner who signs off on operations tools.
 
 ## Why this segment first

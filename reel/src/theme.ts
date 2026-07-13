@@ -36,7 +36,8 @@ export const HOOK_COUNTER_TIMING = {
   STRIKE_END: 32,
 } as const;
 
-/** PercentCounterOverlay — 0%→30% with strike (CapCut overlay) */
+/** PercentCounterOverlay — FROZEN: do not use 0%→30% strike in paid ads (Claims Audit 13 Jul 2026). */
+export const PERCENT_COUNTER_CLAIMS_FROZEN = true as const;
 export const PERCENT_COUNTER_TIMING = {
   /** Frame where count-up ends and 30% is reached (1.0 s) */
   COUNT_END: 30,

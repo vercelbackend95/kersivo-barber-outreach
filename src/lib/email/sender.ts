@@ -239,11 +239,11 @@ export async function sendSetupDepositConfirmationEmail(input: {
   <p>Your KERSIVO setup deposit has been confirmed.</p>
   <p><strong>Package:</strong> ${escapeHtml(input.planName)}<br/>
   <strong>Deposit paid:</strong> ${escapeHtml(input.depositFormatted)}<br/>
-  <strong>Remaining setup balance:</strong> ${escapeHtml(input.remainingFormatted)} — due at go-live after you review and approve your system.</p>
+  <strong>Remaining setup balance:</strong> ${escapeHtml(input.remainingFormatted)} — due before go-live.</p>
   ${onboardingBlock}
-  <p>Nothing goes live without your review.</p>
+  <p>Work begins after the deposit, completed onboarding and the start of project delivery. Nothing goes live without your review.</p>
   <p>Questions? Reply to this email or contact <a href="mailto:hello@kersivo.co.uk">hello@kersivo.co.uk</a>.</p>
-  <p>KERSIVO<br/>Own your brand. Own your bookings.</p>`;
+  <p>KERSIVO<br/>Your domain. Your brand. Your client relationship.</p>`;
 
   return sendEmail({
     to: input.to,
@@ -395,7 +395,7 @@ export async function sendDemoCaptureVisitorEmail(input: { email: string }) {
 
   const html = `<p>Hi,</p>
   <p>Here are the KERSIVO demo and pricing details you asked for.</p>
-  <p>KERSIVO is built for independent UK barbershops that want their own branded booking website, their own client experience and 0% KERSIVO commission on bookings and retail.</p>
+  <p>KERSIVO is built for independent UK barbershops that want their own branded booking website, their own client experience and 0% KERSIVO commission. Standard Stripe payment-processing fees still apply.</p>
 
   <p><strong>Demo links:</strong></p>
   <p>View the full KERSIVO overview:<br/><a href="${liveDemoUrl}">${liveDemoUrl}</a></p>
@@ -404,27 +404,27 @@ export async function sendDemoCaptureVisitorEmail(input: { email: string }) {
   <p>See retail pickup shop:<br/><a href="${retailDemoUrl}">${retailDemoUrl}</a></p>
 
   <p><strong>Pricing:</strong></p>
-  <p><strong>Launch — £199 setup + £39/month Ongoing Care</strong><br/>Best if you want the complete KERSIVO booking, retail and admin setup on your main site plus pickup shop.</p>
-  <p><strong>Priority Growth — £299 setup + £39/month Ongoing Care</strong><br/>Best if you want extra dedicated pages (e.g. gallery) and deeper product-catalogue polish during setup — same Care as Launch.</p>
+  <p><strong>Launch — £199 setup + £39/month Ongoing Care</strong><br/>A complete KERSIVO booking, retail and admin setup on your main site plus pickup shop.</p>
+  <p><strong>Priority Growth — £299 setup + £39/month Ongoing Care</strong><br/>Extra dedicated pages (e.g. gallery) and deeper product-catalogue polish during setup — same Care as Launch.</p>
+  <p>Prices shown are final. KERSIVO is not currently VAT registered, so no VAT is added.</p>
 
   <p><strong>Both setups include:</strong></p>
   <ul>
     <li>branded booking website</li>
     <li>admin dashboard</li>
     <li>retail pickup shop</li>
-    <li>SMS reminders</li>
-    <li>no-show protection</li>
-    <li>hosting, SSL and support</li>
-    <li>0% KERSIVO commission</li>
+    <li>unlimited automated SMS reminders included</li>
+    <li>hosting, SSL, domain renewal and support while Care is active</li>
+    <li>0% KERSIVO commission. Standard Stripe payment-processing fees still apply.</li>
   </ul>
 
-  <p>You can start with a 50% setup deposit. The remaining 50% is only due when your setup is live and reviewed by you.</p>
+  <p>You can start with a 50% setup deposit. The remaining 50% is due before go-live. If you cancel before work begins, we refund the deposit. Once work begins, the deposit is non-refundable. If KERSIVO cannot deliver, we refund the deposit.</p>
 
   <p><strong>Ready to choose a setup?</strong><br/><a href="${pricingUrl}">${pricingUrl}</a></p>
 
-  <p>Not sure yet? Reply to this email with what you&rsquo;re trying to improve — switching from Booksy/Fresha/Nearcut, launching your first system, reducing no-shows or selling retail pickup.</p>
+  <p>Not sure yet? Reply to this email with what you&rsquo;re trying to improve — switching from a marketplace profile, launching your first system, reducing no-shows or selling retail pickup.</p>
 
-  <p>KERSIVO<br/>Own your brand. Own your bookings.<br/><a href="mailto:hello@kersivo.co.uk">hello@kersivo.co.uk</a></p>`;
+  <p>KERSIVO<br/>Your domain. Your brand. Your client relationship.<br/><a href="mailto:hello@kersivo.co.uk">hello@kersivo.co.uk</a></p>`;
 
   return sendEmail({
     to: input.email,

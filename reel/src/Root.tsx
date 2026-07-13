@@ -36,8 +36,9 @@ export const RemotionRoot: React.FC = () => {
         width={WIDTH}
         height={HEIGHT}
       />
+      {/* FROZEN for paid ads until competitor maths rebuilt — Claims Audit 13 Jul 2026 */}
       <Composition
-        id="BarberMathReel"
+        id="BarberMathReel-FROZEN-NOT-FOR-ADS"
         component={BarberMathReel}
         durationInFrames={BARBER_MATH_DURATION_FRAMES}
         fps={FPS}
@@ -68,8 +69,9 @@ export const RemotionRoot: React.FC = () => {
         width={WIDTH}
         height={HEIGHT}
       />
+      {/* FROZEN: 0%→30% strike overlay — do not export for paid ads */}
       <Composition
-        id="PercentCounterOverlay"
+        id="PercentCounterOverlay-FROZEN-NOT-FOR-ADS"
         component={PercentCounterOverlay}
         durationInFrames={PERCENT_COUNTER_DURATION}
         fps={FPS}

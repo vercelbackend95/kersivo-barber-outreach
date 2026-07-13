@@ -2,21 +2,29 @@ import { FPS, HEIGHT, WIDTH } from './theme';
 
 export { FPS, WIDTH, HEIGHT };
 
+/**
+ * CLAIMS FROZEN (Claims Audit 13 Jul 2026).
+ * Do not use BarberMathReel (or former competitor savings figures) in Google Ads / paid social
+ * until rebuilt with dated official competitor evidence + owner/legal approval.
+ * Previous unverified corridor: marketplace £576/mo, saved £603/mo — removed.
+ */
+export const BARBER_MATH_CLAIMS_FROZEN = true as const;
+
 export const BARBER_MATH_DURATION_SECONDS = 15.5;
 export const BARBER_MATH_DURATION_FRAMES = FPS * BARBER_MATH_DURATION_SECONDS;
 
-/** Published-rate example costs for a 4-chair shop */
+/** Safe KERSIVO-only figures while competitor savings maths remain frozen. */
 export const BARBER_MATH_COSTS = {
   staff: 4,
-  subscriptionExVat: 55,
-  subscriptionIncVat: 66,
-  marketplaceMonthly: 576,
-  totalMonthly: 642,
-  totalAnnual: 7704,
-  hookAnnual: 8000,
+  subscriptionExVat: 0,
+  subscriptionIncVat: 0,
+  marketplaceMonthly: 0,
+  totalMonthly: 39,
+  totalAnnual: 468,
+  hookAnnual: 468,
   kersivoMonthly: 39,
   kersivoAnnual: 468,
-  savedMonthly: 603,
+  savedMonthly: 0,
 } as const;
 
 /** Scene durations in frames */
@@ -41,7 +49,7 @@ export const RECEIPT_COUNTER_TIMING = {
   STRIKE_END: 28,
 } as const;
 
-/** Payoff scene — £8K strike then dual reveal */
+/** Payoff scene — strike then dual reveal */
 export const PAYOFF_TIMING = {
   STRIKE_START: 24,
   STRIKE_END: 36,

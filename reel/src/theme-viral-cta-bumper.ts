@@ -7,7 +7,7 @@ export const VIRAL_CTA_BUMPER_DURATION_FRAMES = FPS * VIRAL_CTA_BUMPER_DURATION_
 
 export const VIRAL_CTA_BUMPER_DEFAULTS = {
   headline: 'Let them book themselves.',
-  subline: '0% commission on bookings.',
+  subline: '0% KERSIVO commission on bookings.',
   url: 'kersivo.co.uk',
 } as const;
 
