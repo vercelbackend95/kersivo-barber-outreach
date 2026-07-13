@@ -126,10 +126,12 @@ export async function resolveDemoFixture(
     }
 
     const range =
-      rangeParam === 'week'
+      rangeParam === '1d'
+      || rangeParam === 'week'
       || rangeParam === '7d'
       || rangeParam === '30d'
       || rangeParam === '90d'
+      || rangeParam === '1y'
       || rangeParam === 'month'
         ? rangeParam
         : '7d';

@@ -2,6 +2,7 @@ export * from './ids';
 export * from './session';
 export * from './barbers';
 export * from './services';
+export * from './daySchedule';
 export * from './bookings';
 export * from './clients';
 export * from './clientNotes';

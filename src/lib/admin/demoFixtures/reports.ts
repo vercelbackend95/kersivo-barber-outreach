@@ -1,39 +1,90 @@
+/**
+ * Deterministic demo reports for /admin-demo and the landing REPORTS & REVENUE widget.
+ * Anchored to Europe/London "today" — same shape every day for a given calendar day, no Neon.
+ */
 import { addMilliseconds } from 'date-fns';
 import { formatInTimeZone, fromZonedTime } from 'date-fns-tz';
-import { customRangeDayCount, getStartOfMonthInLondon, type ReportsRangeKey } from '../reportsRange';
+
+import type { BookingsReportsPayload } from '../../../components/admin/BookingsReportsAnalyticsStudio';
+import { LANDING_DEMO_BARBER_AVATARS } from '../../landing/landingDemoAssets';
+import {
+  customRangeDayCount,
+  getStartOfMonthInLondon,
+  type ReportsRangeKey,
+} from '../reportsRange';
 import { DEMO_BARBER_IDS } from './ids';
 
 const TZ = 'Europe/London';
 
-const DEMO_DAILY_REVENUE = [312, 288, 356, 402, 448, 512, 90];
+const BARBERS = {
+  jamie: { id: DEMO_BARBER_IDS.jamie, name: 'Jamie Reed', avatarUrl: LANDING_DEMO_BARBER_AVATARS.jamie },
+  alex: { id: DEMO_BARBER_IDS.alex, name: 'Alex Morgan', avatarUrl: LANDING_DEMO_BARBER_AVATARS.alex },
+  sam: { id: DEMO_BARBER_IDS.sam, name: 'Sam Brooks', avatarUrl: LANDING_DEMO_BARBER_AVATARS.sam },
+  marcus: { id: DEMO_BARBER_IDS.marcus, name: 'Marcus Bell', avatarUrl: LANDING_DEMO_BARBER_AVATARS.marcus },
+} as const;
 
-function dayKeyDaysAgo(daysAgo: number): string {
+type BarberKey = keyof typeof BARBERS;
+
+type ServiceTemplate = {
+  name: string;
+  valueGbp: number;
+};
+
+const SERVICES: ServiceTemplate[] = [
+  { name: 'Skin fade with haircut', valueGbp: 40 },
+  { name: 'Quality haircut', valueGbp: 35 },
+  { name: 'Premium haircut', valueGbp: 45 },
+  { name: 'Quality beard trim', valueGbp: 15 },
+  { name: 'Premium beard trim', valueGbp: 30 },
+  { name: 'Luxury wet shave', valueGbp: 40 },
+  { name: 'Longer haircut', valueGbp: 65 },
+  { name: 'Express shave', valueGbp: 25 },
+];
+
+const CLIENT_NAMES = [
+  'Oliver Reed', 'Amelia Clarke', 'Noah Bennett', 'Harry Watson', 'Daniel Price',
+  'Ethan Walsh', 'Leo Carter', 'Freya Hughes', 'Jack Turner', 'Maya Brooks',
+  'Theo Hughes', 'Grace Turner', 'Charlie Evans', 'Sophie Lane', 'James Foster',
+  'Ruby Shaw', 'Louis Grant', 'Nathan Cole', 'Dylan Reid', 'Aaron Webb',
+  'Connor Walsh', 'Mason Field', 'Rory Ellis', 'Isla Morgan', 'Ella Price',
+];
+
+/** Bookings per day for a 7-day window (oldest → newest). Fri/Sat busier, Sun quieter. */
+const WEEKLY_DAILY_COUNTS = [11, 12, 13, 14, 16, 15, 9];
+
+/** Barber share weights (Jamie leads). */
+const BARBER_WEIGHTS: Record<BarberKey, number> = {
+  jamie: 0.38,
+  alex: 0.26,
+  sam: 0.20,
+  marcus: 0.16,
+};
+
+const BARBER_KEYS: BarberKey[] = ['jamie', 'alex', 'sam', 'marcus'];
+
+const CACHE = new Map<string, BookingsReportsPayload>();
+
+function dayKeyDaysAgo(daysAgo: number, now = new Date()): string {
   const anchor = fromZonedTime(
-    `${formatInTimeZone(new Date(), TZ, 'yyyy-MM-dd')}T12:00:00.000`,
+    `${formatInTimeZone(now, TZ, 'yyyy-MM-dd')}T12:00:00.000`,
     TZ,
   );
   return formatInTimeZone(addMilliseconds(anchor, -daysAgo * 24 * 60 * 60 * 1000), TZ, 'yyyy-MM-dd');
 }
 
-function startAtOnDayKey(dayKey: string, hour = 10): string {
-  return fromZonedTime(`${dayKey}T${String(hour).padStart(2, '0')}:00:00.000`, TZ).toISOString();
+function startAtOnDayKey(dayKey: string, hour: number, minute = 0): string {
+  return fromZonedTime(
+    `${dayKey}T${String(hour).padStart(2, '0')}:${String(minute).padStart(2, '0')}:00.000`,
+    TZ,
+  ).toISOString();
 }
 
-function isoDaysAgo(days: number): string {
-  return startAtOnDayKey(dayKeyDaysAgo(days));
-}
-
-function buildDemoRevenueSeries(dayCount: number) {
-  return Array.from({ length: dayCount }, (_, index) => {
-    const label = dayKeyDaysAgo(dayCount - 1 - index);
-    return {
-      label,
-      value: DEMO_DAILY_REVENUE[index % DEMO_DAILY_REVENUE.length] ?? 300,
-    };
-  });
-}
-
-function resolveDemoDayCount(range: ReportsRangeKey, customFrom?: string, customTo?: string): number {
+export function resolveDemoReportsDayCount(
+  range: ReportsRangeKey,
+  customFrom?: string,
+  customTo?: string,
+  now = new Date(),
+): number {
   if (range === 'custom' && customFrom && customTo) {
     return Math.max(1, Math.min(90, customRangeDayCount(customFrom, customTo)));
   }
@@ -42,110 +93,310 @@ function resolveDemoDayCount(range: ReportsRangeKey, customFrom?: string, custom
   if (range === '90d') return 90;
   if (range === '30d') return 30;
   if (range === 'month') {
-    const monthStart = getStartOfMonthInLondon(new Date(), TZ);
-    const todayKey = formatInTimeZone(new Date(), TZ, 'yyyy-MM-dd');
+    const monthStart = getStartOfMonthInLondon(now, TZ);
+    const todayKey = formatInTimeZone(now, TZ, 'yyyy-MM-dd');
     const monthStartKey = formatInTimeZone(monthStart, TZ, 'yyyy-MM-dd');
     return Math.max(1, customRangeDayCount(monthStartKey, todayKey));
   }
   return 7;
 }
 
-function reportBooking(
-  id: string,
-  startAt: string,
-  barberId: string,
-  barberName: string,
-  serviceName: string,
-  clientName: string,
-  clientEmail: string,
-  valueGbp: number,
-) {
+function pickBarber(seed: number): BarberKey {
+  const roll = (seed % 100) / 100;
+  let cumulative = 0;
+  for (const key of BARBER_KEYS) {
+    cumulative += BARBER_WEIGHTS[key];
+    if (roll < cumulative) return key;
+  }
+  return 'marcus';
+}
+
+function pickService(seed: number): ServiceTemplate {
+  return SERVICES[seed % SERVICES.length]!;
+}
+
+function pickClient(seed: number): string {
+  return CLIENT_NAMES[seed % CLIENT_NAMES.length]!;
+}
+
+function pickStatus(seed: number, cancelBoost = 0): string {
+  const roll = seed % 100;
+  const cancelClient = 6 + cancelBoost;
+  const cancelShop = 8 + cancelBoost;
+  const expired = 10 + cancelBoost;
+  if (roll < cancelClient) return 'CANCELLED_BY_CLIENT';
+  if (roll < cancelShop) return 'CANCELLED_BY_SHOP';
+  if (roll < expired) return 'EXPIRED';
+  return 'COMPLETED';
+}
+
+function dailyBookingCount(dayIndex: number, totalDays: number): number {
+  if (totalDays <= 7) {
+    const offset = 7 - totalDays;
+    return WEEKLY_DAILY_COUNTS[offset + dayIndex] ?? 12;
+  }
+  const base = 12 + (dayIndex % 7);
+  const weekendBoost = (dayIndex % 7) >= 4 ? 2 : 0;
+  return base + weekendBoost;
+}
+
+type GeneratedBooking = BookingsReportsPayload['reportBookings'][number];
+
+function generateBookingsForRange(
+  dayCount: number,
+  dayOffsetBase: number,
+  volumeScale: number,
+  options: { cancelBoost?: number; idPrefix?: string; now?: Date } = {},
+): GeneratedBooking[] {
+  const { cancelBoost = 0, idPrefix = 'demo-rpt', now = new Date() } = options;
+  const bookings: GeneratedBooking[] = [];
+  let seedCounter = dayOffsetBase * 1000;
+
+  for (let dayIndex = 0; dayIndex < dayCount; dayIndex += 1) {
+    const daysAgo = dayCount - 1 - dayIndex + dayOffsetBase;
+    const dayKey = dayKeyDaysAgo(daysAgo, now);
+    const count = Math.max(1, Math.round(dailyBookingCount(dayIndex, dayCount) * volumeScale));
+
+    for (let slot = 0; slot < count; slot += 1) {
+      seedCounter += 1;
+      const barberKey = pickBarber(seedCounter + dayIndex * 17);
+      const barber = BARBERS[barberKey];
+      const service = pickService(seedCounter + slot * 3);
+      const clientName = pickClient(seedCounter + slot);
+      const status = pickStatus(seedCounter + slot * 7, cancelBoost);
+      const hour = 9 + (slot % 9);
+      const minute = (slot * 15) % 60;
+      const email = `${clientName.toLowerCase().replace(/[^a-z]+/g, '.')}@example.com`;
+
+      bookings.push({
+        id: `${idPrefix}-${dayOffsetBase}-${seedCounter}`,
+        startAt: startAtOnDayKey(dayKey, hour, minute),
+        barberId: barber.id,
+        barberName: barber.name,
+        serviceName: service.name,
+        status,
+        clientName,
+        clientEmail: email,
+        computedValueGbp: status === 'COMPLETED' ? service.valueGbp : null,
+      });
+    }
+  }
+
+  return bookings;
+}
+
+function computeMetrics(bookings: GeneratedBooking[], dayCount: number, now = new Date()) {
+  const completed = bookings.filter((row) => row.status === 'COMPLETED');
+  const cancelledByClient = bookings.filter((row) => row.status === 'CANCELLED_BY_CLIENT').length;
+  const cancelledByShop = bookings.filter((row) => row.status === 'CANCELLED_BY_SHOP').length;
+  const noShowExpired = bookings.filter((row) => row.status === 'EXPIRED').length;
+  const revenue = completed.reduce((sum, row) => sum + (row.computedValueGbp ?? 0), 0);
+  const bookingsCount = bookings.length;
+  const cancelledCount = cancelledByClient + cancelledByShop;
+  const cancelledRate = bookingsCount > 0 ? (cancelledCount / bookingsCount) * 100 : 0;
+  const noShowExpiredRate = bookingsCount > 0 ? (noShowExpired / bookingsCount) * 100 : 0;
+  const avgBookingValue = completed.length > 0 ? revenue / completed.length : 0;
+
+  const labels = Array.from({ length: dayCount }, (_, index) => dayKeyDaysAgo(dayCount - 1 - index, now));
+  const revenueByDay = new Map(labels.map((label) => [label, 0]));
+
+  for (const row of completed) {
+    const label = formatInTimeZone(new Date(row.startAt), TZ, 'yyyy-MM-dd');
+    if (revenueByDay.has(label)) {
+      revenueByDay.set(label, (revenueByDay.get(label) ?? 0) + (row.computedValueGbp ?? 0));
+    }
+  }
+
+  const revenueSeries = labels.map((label) => ({
+    label,
+    value: revenueByDay.get(label) ?? 0,
+  }));
+
+  const byBarber = new Map<string, { name: string; count: number; revenue: number }>();
+  for (const row of completed) {
+    const entry = byBarber.get(row.barberId) ?? { name: row.barberName, count: 0, revenue: 0 };
+    entry.count += 1;
+    entry.revenue += row.computedValueGbp ?? 0;
+    byBarber.set(row.barberId, entry);
+  }
+
+  const barberLeader = Array.from(byBarber.entries())
+    .sort((a, b) => b[1].count - a[1].count)[0];
+
+  const serviceCounts = new Map<string, number>();
+  for (const row of completed) {
+    serviceCounts.set(row.serviceName, (serviceCounts.get(row.serviceName) ?? 0) + 1);
+  }
+  const topService = Array.from(serviceCounts.entries()).sort((a, b) => b[1] - a[1])[0];
+
+  const bookedMinutes = completed.length * 35;
+  const availableMinutes = dayCount * 4 * 9 * 60;
+  const utilizationPct = availableMinutes > 0
+    ? Math.round((bookedMinutes / availableMinutes) * 1000) / 10
+    : null;
+
+  const peakDayEntry = revenueSeries.reduce(
+    (best, point) => (point.value > best.value ? point : best),
+    revenueSeries[0] ?? { label: '', value: 0 },
+  );
+  const peakDay = peakDayEntry?.label
+    ? formatInTimeZone(fromZonedTime(`${peakDayEntry.label}T12:00:00.000`, TZ), TZ, 'EEE')
+    : null;
+
   return {
-    id,
-    startAt,
-    barberId,
-    barberName,
-    serviceName,
-    status: 'COMPLETED',
-    clientName,
-    clientEmail,
-    computedValueGbp: valueGbp,
+    bookingsCount,
+    cancelledRate: Math.round(cancelledRate * 10) / 10,
+    noShowExpiredRate: Math.round(noShowExpiredRate * 10) / 10,
+    revenue,
+    avgBookingValue,
+    revenueCount: completed.length,
+    breakdown: {
+      completed: completed.length,
+      cancelledByClient,
+      cancelledByShop,
+      noShowExpired,
+    },
+    revenueSeries,
+    utilizationPct,
+    bookedMinutes,
+    availableMinutes,
+    peakDay,
+    peakHour: '14:00',
+    busiestBarber: barberLeader
+      ? { name: barberLeader[1].name, count: barberLeader[1].count }
+      : null,
+    mostPopularService: topService
+      ? { name: topService[0], count: topService[1] }
+      : null,
   };
 }
 
-export function getDemoReportsResponse(range: ReportsRangeKey, customFrom?: string, customTo?: string) {
-  const now = new Date();
-  const dayCount = resolveDemoDayCount(range, customFrom, customTo);
-  const revenueSeries = buildDemoRevenueSeries(dayCount);
+function round1(value: number): number {
+  return Math.round(value * 10) / 10;
+}
+
+/** Force marketing-friendly growth: higher-better up, lower-better improved (negative pp/count). */
+function clampFavorableTrends(
+  current: ReturnType<typeof computeMetrics>,
+  previous: ReturnType<typeof computeMetrics>,
+): BookingsReportsPayload['trends'] {
+  const rawBookingsPct = previous.bookingsCount > 0
+    ? ((current.bookingsCount - previous.bookingsCount) / previous.bookingsCount) * 100
+    : 8.5;
+  const rawRevenuePct = previous.revenue > 0
+    ? ((current.revenue - previous.revenue) / previous.revenue) * 100
+    : 8.4;
+  const rawUtilPp = current.utilizationPct != null && previous.utilizationPct != null
+    ? current.utilizationPct - previous.utilizationPct
+    : 3.1;
+
+  return {
+    bookingsPct: round1(Math.max(4, Math.abs(rawBookingsPct))),
+    cancelledRatePp: -round1(Math.max(0.5, Math.abs(current.cancelledRate - previous.cancelledRate) || 1.2)),
+    revenuePct: round1(Math.max(4, Math.abs(rawRevenuePct))),
+    revenueDelta: Math.round(Math.max(1, Math.abs(current.revenue - previous.revenue)) * 100) / 100,
+    avgBookingValueDelta: round1(Math.max(0.5, Math.abs(current.avgBookingValue - previous.avgBookingValue) || 1.5)),
+    noShowExpiredCountDelta: -Math.max(1, Math.abs(current.breakdown.noShowExpired - previous.breakdown.noShowExpired) || 1),
+    noShowExpiredRatePp: -round1(Math.max(0.3, Math.abs(current.noShowExpiredRate - previous.noShowExpiredRate) || 0.5)),
+    utilizationPp: round1(Math.max(1, Math.abs(rawUtilPp))),
+  };
+}
+
+function buildPayload(
+  range: ReportsRangeKey,
+  dayCount: number,
+  customFrom?: string,
+  customTo?: string,
+  now = new Date(),
+): BookingsReportsPayload {
+  const currentBookings = generateBookingsForRange(dayCount, 0, 1, { now });
+  const previousBookings = generateBookingsForRange(dayCount, dayCount, 0.85, {
+    cancelBoost: 4,
+    now,
+  });
+
+  const current = computeMetrics(currentBookings, dayCount, now);
+  const previous = computeMetrics(previousBookings, dayCount, now);
+
+  const labels = current.revenueSeries.map((point) => point.label);
+  const fromDay = labels[0] ?? dayKeyDaysAgo(dayCount - 1, now);
+
   const from = range === 'custom' && customFrom
     ? startAtOnDayKey(customFrom, 0)
-    : startAtOnDayKey(revenueSeries[0]?.label ?? dayKeyDaysAgo(dayCount - 1), 0);
+    : startAtOnDayKey(fromDay, 0);
   const to = range === 'custom' && customTo
     ? startAtOnDayKey(customTo, 23)
     : now.toISOString();
-  const jamieDay = revenueSeries[revenueSeries.length - 1]?.label ?? dayKeyDaysAgo(1);
-  const alexDay = revenueSeries[revenueSeries.length - 2]?.label ?? dayKeyDaysAgo(2);
-  const jamieEarlierDay = revenueSeries[revenueSeries.length - 3]?.label ?? dayKeyDaysAgo(3);
-  const previousSpan = range === '30d' || range === '90d' ? dayCount : range === 'month' ? dayCount : 7;
+
+  const previousFromDay = dayKeyDaysAgo(dayCount * 2 - 1, now);
+  const previousToDay = dayKeyDaysAgo(dayCount, now);
 
   return {
     range,
     rangeBoundaries: { from, to, tz: TZ },
     previousRangeBoundaries: {
-      from: isoDaysAgo(previousSpan * 2 - 1),
-      to: isoDaysAgo(previousSpan),
+      from: startAtOnDayKey(previousFromDay, 0),
+      to: startAtOnDayKey(previousToDay, 23),
       tz: TZ,
     },
-    bookingsCount: 86,
-    cancelledRate: 0.08,
-    noShowExpiredRate: 0.04,
-    revenue: 2408,
-    avgBookingValue: 28,
-    revenueCount: 82,
+    bookingsCount: current.bookingsCount,
+    cancelledRate: current.cancelledRate,
+    noShowExpiredRate: current.noShowExpiredRate,
+    revenue: current.revenue,
+    avgBookingValue: current.avgBookingValue,
+    revenueCount: current.revenueCount,
     usedDemoPricing: true,
-    breakdown: {
-      completed: 78,
-      cancelledByClient: 5,
-      cancelledByShop: 2,
-      noShowExpired: 1,
-    },
-    peakDay: formatInTimeZone(now, TZ, 'EEE'),
-    peakHour: '14:00',
-    bookedMinutes: 3840,
-    availableMinutes: 5040,
-    utilizationPct: 76.2,
-    revenueSeries,
-    trends: {
-      bookingsPct: 12.5,
-      cancelledRatePp: -1.2,
-      revenuePct: 8.4,
-      revenueDelta: 186,
-      avgBookingValueDelta: 1.5,
-      noShowExpiredCountDelta: -1,
-      noShowExpiredRatePp: -0.5,
-      utilizationPp: 3.1,
-    },
-    recentBarbers: [
-      { id: DEMO_BARBER_IDS.jamie, name: 'Jamie Reed', avatarUrl: null },
-      { id: DEMO_BARBER_IDS.alex, name: 'Alex Morgan', avatarUrl: null },
-      { id: DEMO_BARBER_IDS.sam, name: 'Sam Brooks', avatarUrl: null },
-    ],
+    breakdown: current.breakdown,
+    peakDay: current.peakDay,
+    peakHour: current.peakHour,
+    bookedMinutes: current.bookedMinutes,
+    availableMinutes: current.availableMinutes,
+    utilizationPct: current.utilizationPct,
+    revenueSeries: current.revenueSeries,
+    trends: clampFavorableTrends(current, previous),
+    recentBarbers: BARBER_KEYS.map((key) => ({
+      id: BARBERS[key].id,
+      name: BARBERS[key].name,
+      avatarUrl: BARBERS[key].avatarUrl,
+    })),
     selectedBarber: null,
     previousMetrics: {
-      bookingsCount: 76,
-      cancelledRate: 0.092,
-      revenue: 2222,
-      avgBookingValue: 26.5,
-      utilizationPct: 73.1,
-      noShowExpiredCount: 2,
-      noShowExpiredRate: 0.045,
+      bookingsCount: previous.bookingsCount,
+      cancelledRate: previous.cancelledRate,
+      revenue: previous.revenue,
+      avgBookingValue: previous.avgBookingValue,
+      utilizationPct: previous.utilizationPct,
+      noShowExpiredCount: previous.breakdown.noShowExpired,
+      noShowExpiredRate: previous.noShowExpiredRate,
     },
-    mostPopularService: { name: 'Skin Fade', count: 34 },
-    busiestBarber: { name: 'Jamie Reed', count: 38 },
-    reportBookings: [
-      reportBooking('demo-rpt-01', startAtOnDayKey(jamieDay, 11), DEMO_BARBER_IDS.jamie, 'Jamie Reed', 'Skin Fade', 'Oliver Reed', 'oliver.reed@example.com', 28),
-      reportBooking('demo-rpt-02', startAtOnDayKey(alexDay, 12), DEMO_BARBER_IDS.alex, 'Alex Morgan', 'Classic Cut', 'Amelia Clarke', 'amelia.clarke@example.com', 24),
-      reportBooking('demo-rpt-03', startAtOnDayKey(jamieEarlierDay, 9), DEMO_BARBER_IDS.jamie, 'Jamie Reed', 'Beard Trim', 'Noah Bennett', 'noah.bennett@example.com', 15),
-    ],
+    mostPopularService: current.mostPopularService,
+    busiestBarber: current.busiestBarber,
+    reportBookings: currentBookings,
   };
+}
+
+export function getDemoReportsResponse(
+  range: ReportsRangeKey,
+  customFrom?: string,
+  customTo?: string,
+): BookingsReportsPayload {
+  const cacheKey = range === 'custom'
+    ? `custom:${customFrom ?? ''}:${customTo ?? ''}:${formatInTimeZone(new Date(), TZ, 'yyyy-MM-dd')}`
+    : `${range}:${formatInTimeZone(new Date(), TZ, 'yyyy-MM-dd')}`;
+  const cached = CACHE.get(cacheKey);
+  if (cached) return cached;
+
+  const dayCount = resolveDemoReportsDayCount(range, customFrom, customTo);
+  const payload = buildPayload(range, dayCount, customFrom, customTo);
+  CACHE.set(cacheKey, payload);
+  return payload;
+}
+
+/** Test helper: bypass module cache and pin "now". */
+export function getDemoReportsResponseForTest(
+  range: ReportsRangeKey,
+  options: { customFrom?: string; customTo?: string; now: Date },
+): BookingsReportsPayload {
+  const dayCount = resolveDemoReportsDayCount(range, options.customFrom, options.customTo, options.now);
+  return buildPayload(range, dayCount, options.customFrom, options.customTo, options.now);
 }

@@ -81,10 +81,11 @@ export function formatDelta({
   }
 
   const direction = value > 0 ? 'up' : 'down';
+  // Favorable higher-better: "+12.5%". Favorable lower-better (negative value): "1.2pp" with no minus.
   const sign = value > 0 ? '+' : '';
 
   return {
-    text: `${sign}${formatRawValue(value, type)}`,
+    text: `${sign}${formatRawValue(Math.abs(value), type)}`,
     direction,
     className: getClassName(direction, tone)
   };
