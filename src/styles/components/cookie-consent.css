@@ -5,6 +5,35 @@
   color: var(--fg);
 }
 
+.cookie-consent__launcher {
+  position: fixed;
+  left: 1rem;
+  bottom: 1rem;
+  z-index: 70;
+  appearance: none;
+  border: 1px solid var(--border);
+  background: var(--surface-1);
+  color: var(--muted);
+  font: inherit;
+  font-size: var(--text-xs);
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  padding: 0.55rem 0.75rem;
+  border-radius: var(--radius-8);
+  cursor: pointer;
+  box-shadow: var(--shadow-sm);
+}
+
+.cookie-consent__launcher:hover {
+  color: var(--fg);
+  border-color: var(--accent);
+}
+
+.cookie-consent__launcher:focus-visible {
+  outline: 0;
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--focus) 45%, transparent);
+}
+
 .cookie-consent__banner {
   position: fixed;
   inset-inline: 0;
@@ -166,6 +195,7 @@
   background: var(--surface-3);
   border: 1px solid var(--border);
   position: relative;
+  pointer-events: none;
   transition: background-color 160ms ease, border-color 160ms ease;
 }
 

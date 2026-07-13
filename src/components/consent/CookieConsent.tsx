@@ -98,10 +98,21 @@ export default function CookieConsent() {
     }
   }
 
-  if (panel === 'hidden') return null;
+  const showLauncher = panel === 'hidden' && hasValidConsentDecision();
 
   return (
     <div className="cookie-consent" data-panel={panel}>
+      {showLauncher ? (
+        <button
+          type="button"
+          className="cookie-consent__launcher"
+          data-cookie-settings
+          onClick={(event) => openPreferences(event.currentTarget)}
+        >
+          Cookie settings
+        </button>
+      ) : null}
+
       {panel === 'banner' ? (
         <section
           className="cookie-consent__banner"
