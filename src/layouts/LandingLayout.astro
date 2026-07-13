@@ -67,5 +67,9 @@ const jsonLdBlocks = jsonLd
   <body>
     <Navbar17 variant="landing" />
     <slot />
+    <script>
+      import { initDataTrack } from '@/lib/analytics/initDataTrack';
+      initDataTrack();
+    </script>
   </body>
 </html>

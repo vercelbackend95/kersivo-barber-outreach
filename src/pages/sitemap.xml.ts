@@ -31,37 +31,52 @@ function formatLastmod(date: Date): string {
   return date.toISOString().slice(0, 10);
 }
 
+const STATIC_PATHS = ['/', '/privacy', '/terms', '/shop'] as const;
+
+function staticEntries(): SitemapEntry[] {
+  return STATIC_PATHS.map((path) => ({
+    loc: buildAbsoluteUrl(path),
+    lastmod: STATIC_SITEMAP_LASTMOD,
+  }));
+}
+
 export const GET: APIRoute = async () => {
-  const staticPaths = ['/', '/privacy', '/terms', '/shop'];
+  try {
+    const products = await withPrismaQuotaFallback(
+      'sitemap.xml.ts',
+      async () => {
+        const shopId = await resolveShopId();
+        return prisma.product.findMany({
+          where: { shopId, active: true },
+          select: { id: true, updatedAt: true },
+          orderBy: [{ sortOrder: 'asc' }, { updatedAt: 'desc' }],
+        });
+      },
+      []
+    );
 
-  const products = await withPrismaQuotaFallback(
-    'sitemap.xml.ts',
-    async () => {
-      const shopId = await resolveShopId();
-      return prisma.product.findMany({
-        where: { shopId, active: true },
-        select: { id: true, updatedAt: true },
-        orderBy: [{ sortOrder: 'asc' }, { updatedAt: 'desc' }],
-      });
-    },
-    []
-  );
+    const entries: SitemapEntry[] = [
+      ...staticEntries(),
+      ...products.map((product) => ({
+        loc: buildAbsoluteUrl(`/shop/${product.id}`),
+        lastmod: formatLastmod(product.updatedAt),
+      })),
+    ];
 
-  const entries: SitemapEntry[] = [
-    ...staticPaths.map((path) => ({
-      loc: buildAbsoluteUrl(path),
-      lastmod: STATIC_SITEMAP_LASTMOD,
-    })),
-    ...products.map((product) => ({
-      loc: buildAbsoluteUrl(`/shop/${product.id}`),
-      lastmod: formatLastmod(product.updatedAt),
-    })),
-  ];
-
-  return new Response(toSitemapXml(entries), {
-    headers: {
-      'Content-Type': 'application/xml; charset=utf-8',
-      'Cache-Control': 'public, max-age=3600',
-    },
-  });
+    return new Response(toSitemapXml(entries), {
+      headers: {
+        'Content-Type': 'application/xml; charset=utf-8',
+        'Cache-Control': 'public, max-age=3600',
+      },
+    });
+  } catch (error) {
+    // Never 500 the sitemap — static marketing URLs alone are enough for crawl recovery.
+    console.error('[sitemap.xml] Falling back to static entries', error);
+    return new Response(toSitemapXml(staticEntries()), {
+      headers: {
+        'Content-Type': 'application/xml; charset=utf-8',
+        'Cache-Control': 'public, max-age=300',
+      },
+    });
+  }
 };

@@ -85,5 +85,9 @@ const jsonLdBlocks = jsonLd
     <Navbar17 variant={navbarVariant} />
     <slot />
     <CartDrawerMount navbarVariant={navbarVariant} />
+    <script>
+      import { initDataTrack } from '@/lib/analytics/initDataTrack';
+      initDataTrack();
+    </script>
   </body>
 </html>
