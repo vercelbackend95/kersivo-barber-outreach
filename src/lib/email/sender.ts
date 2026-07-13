@@ -199,11 +199,13 @@ function getSetupOnboardingFormUrl(): string {
 
   if (configured) return configured;
 
-  if (import.meta.env.DEV) {
-    console.warn('[EMAIL] SETUP_ONBOARDING_FORM_URL is not set; using placeholder onboarding link.');
-  }
+  console.error('[EMAIL] SETUP_ONBOARDING_FORM_URL is not set; onboarding CTA will be unavailable.');
+  return '';
+}
 
-  return '#';
+/** Public helper for success page / webhook — empty string when unset. */
+export function getSetupOnboardingFormUrlOrEmpty(): string {
+  return getSetupOnboardingFormUrl();
 }
 
 function getContactInboxEmail(): string {
@@ -221,29 +223,32 @@ export async function sendSetupDepositConfirmationEmail(input: {
   planName: string;
   depositFormatted: string;
   remainingFormatted: string;
+  onboardingFormUrl?: string;
 }) {
-  const onboardingFormUrl = getSetupOnboardingFormUrl();
+  if (!RESEND_API_KEY) {
+    throw new EmailDeliveryError('RESEND_API_KEY is not configured.', null);
+  }
+
+  const onboardingFormUrl = (input.onboardingFormUrl ?? getSetupOnboardingFormUrl()).trim();
+  const onboardingBlock = onboardingFormUrl
+    ? `<p><strong>Next step:</strong><br/>Complete your onboarding form:<br/><a href="${escapeHtml(onboardingFormUrl)}">${escapeHtml(onboardingFormUrl)}</a></p>
+  <p>Please send us your services, prices, barbers, opening hours, branding, domain details and any retail products you want included.</p>`
+    : `<p><strong>Next step:</strong><br/>Reply to this email or contact <a href="mailto:hello@kersivo.co.uk">hello@kersivo.co.uk</a> for your onboarding form link.</p>`;
 
   const html = `<p>Hi ${escapeHtml(input.customerName)},</p>
-  <h2>Thanks for your deposit</h2>
-  <p>Your setup deposit for <strong>${escapeHtml(input.planName)}</strong> is confirmed for <strong>${escapeHtml(input.shopName)}</strong>.</p>
-  <p><strong>Deposit paid:</strong> ${escapeHtml(input.depositFormatted)}</p>
-  <p><strong>Remaining on go-live:</strong> ${escapeHtml(input.remainingFormatted)} (due after you sign off the system)</p>
-  <p><a href="${escapeHtml(onboardingFormUrl)}"><strong>Complete your onboarding form</strong></a></p>
-  <p><strong>What to prepare:</strong></p>
-  <ul>
-    <li>Booksy/Fresha export (or your current booking data)</li>
-    <li>Services list and prices</li>
-    <li>Barber names and roles</li>
-    <li>Logo and shop photos</li>
-    <li>Domain or DNS details (if you already have one)</li>
-  </ul>
-  <p>Please complete the onboarding form within <strong>5 working days</strong> to hold your launch slot.</p>
-  <p>Questions? Email <a href="mailto:hello@kersivo.co.uk">hello@kersivo.co.uk</a>.</p>`;
+  <p>Your KERSIVO setup deposit has been confirmed.</p>
+  <p><strong>Package:</strong> ${escapeHtml(input.planName)}<br/>
+  <strong>Deposit paid:</strong> ${escapeHtml(input.depositFormatted)}<br/>
+  <strong>Remaining setup balance:</strong> ${escapeHtml(input.remainingFormatted)} — due at go-live after you review and approve your system.</p>
+  ${onboardingBlock}
+  <p>Nothing goes live without your review.</p>
+  <p>Questions? Reply to this email or contact <a href="mailto:hello@kersivo.co.uk">hello@kersivo.co.uk</a>.</p>
+  <p>KERSIVO<br/>Own your brand. Own your bookings.</p>`;
 
   return sendEmail({
     to: input.to,
-    subject: 'Your Kersivo setup deposit is confirmed',
+    subject: 'Your KERSIVO setup deposit is confirmed',
+    replyTo: getContactInboxEmail(),
     html,
     devLogLabel: '[DEV EMAIL] Setup deposit confirmation',
     devPayload: {
@@ -253,8 +258,8 @@ export async function sendSetupDepositConfirmationEmail(input: {
       planName: input.planName,
       depositFormatted: input.depositFormatted,
       remainingFormatted: input.remainingFormatted,
-      onboardingFormUrl
-    }
+      onboardingFormUrl: onboardingFormUrl || '(missing SETUP_ONBOARDING_FORM_URL)',
+    },
   });
 }
 
@@ -266,23 +271,44 @@ export async function sendSetupDepositInternalNotificationEmail(input: {
   currentStack: string;
   planName: string;
   depositFormatted: string;
+  totalSetupFormatted: string;
+  remainingFormatted: string;
+  currency: string;
   stripeSessionId: string;
+  paymentIntentId?: string | null;
+  paymentStatus: string;
+  attributionSummary?: string;
+  onboardingEmailStatus: string;
+  paidAtIso: string;
 }) {
   const inbox = getContactInboxEmail();
 
-  const html = `<p><strong>New setup deposit</strong></p>
-  <p><strong>Customer:</strong> ${escapeHtml(input.customerName)}</p>
-  <p><strong>Email:</strong> ${escapeHtml(input.customerEmail)}</p>
-  <p><strong>Shop:</strong> ${escapeHtml(input.shopName)}</p>
-  <p><strong>Shop size:</strong> ${escapeHtml(input.shopSize)}</p>
-  <p><strong>Current stack:</strong> ${escapeHtml(input.currentStack)}</p>
-  <p><strong>Plan:</strong> ${escapeHtml(input.planName)}</p>
-  <p><strong>Deposit:</strong> ${escapeHtml(input.depositFormatted)}</p>
-  <p><strong>Stripe session:</strong> ${escapeHtml(input.stripeSessionId)}</p>`;
+  if (!RESEND_API_KEY) {
+    throw new EmailDeliveryError('RESEND_API_KEY is not configured.', null);
+  }
+
+  const html = `<p><strong>New KERSIVO setup deposit — ${escapeHtml(input.planName)}</strong></p>
+  <p><strong>Customer:</strong> ${escapeHtml(input.customerName)}<br/>
+  <strong>Email:</strong> ${escapeHtml(input.customerEmail)}<br/>
+  <strong>Shop:</strong> ${escapeHtml(input.shopName)}<br/>
+  <strong>Shop size:</strong> ${escapeHtml(input.shopSize)}<br/>
+  <strong>Current stack:</strong> ${escapeHtml(input.currentStack)}</p>
+  <p><strong>Package:</strong> ${escapeHtml(input.planName)}<br/>
+  <strong>Deposit paid:</strong> ${escapeHtml(input.depositFormatted)}<br/>
+  <strong>Total setup price:</strong> ${escapeHtml(input.totalSetupFormatted)}<br/>
+  <strong>Remaining balance:</strong> ${escapeHtml(input.remainingFormatted)}<br/>
+  <strong>Currency:</strong> ${escapeHtml(input.currency.toUpperCase())}</p>
+  <p><strong>Payment status:</strong> ${escapeHtml(input.paymentStatus)}<br/>
+  <strong>Stripe Checkout Session ID:</strong> ${escapeHtml(input.stripeSessionId)}<br/>
+  <strong>PaymentIntent ID:</strong> ${escapeHtml(input.paymentIntentId || 'n/a')}<br/>
+  <strong>Paid at:</strong> ${escapeHtml(input.paidAtIso)}</p>
+  <p><strong>Attribution:</strong> ${escapeHtml(input.attributionSummary || 'n/a')}<br/>
+  <strong>Onboarding email status:</strong> ${escapeHtml(input.onboardingEmailStatus)}</p>`;
 
   return sendEmail({
     to: inbox,
-    subject: `New setup deposit — ${input.shopName} (${input.planName})`,
+    subject: `New KERSIVO setup deposit — ${input.planName}`,
+    replyTo: input.customerEmail,
     html,
     devLogLabel: '[DEV EMAIL] Setup deposit internal notification',
     devPayload: {
@@ -290,12 +316,10 @@ export async function sendSetupDepositInternalNotificationEmail(input: {
       customerName: input.customerName,
       customerEmail: input.customerEmail,
       shopName: input.shopName,
-      shopSize: input.shopSize,
-      currentStack: input.currentStack,
       planName: input.planName,
       depositFormatted: input.depositFormatted,
-      stripeSessionId: input.stripeSessionId
-    }
+      stripeSessionId: input.stripeSessionId,
+    },
   });
 }
 

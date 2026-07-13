@@ -132,6 +132,25 @@ export function SetupDepositModal({
     setLoading(true);
 
     try {
+      const attribution: Record<string, string> = {};
+      try {
+        const params = new URLSearchParams(window.location.search);
+        for (const key of [
+          'gclid',
+          'gbraid',
+          'wbraid',
+          'utm_source',
+          'utm_medium',
+          'utm_campaign',
+          'utm_term',
+        ] as const) {
+          const value = params.get(key)?.trim();
+          if (value) attribution[key] = value.slice(0, 200);
+        }
+      } catch {
+        // ignore attribution collection failures
+      }
+
       const response = await fetch('/api/setup/deposit-checkout', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -142,6 +161,7 @@ export function SetupDepositModal({
           shopName: shopName.trim(),
           shopSize,
           currentStack,
+          attribution,
         }),
       });
 

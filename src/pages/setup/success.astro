@@ -1,32 +1,124 @@
 ---
-import MainLayout from '@/layouts/MainLayout.astro';
+import MinimalLayout from '@/layouts/MinimalLayout.astro';
 import { PAGE_DESCRIPTIONS } from '@/lib/seo/defaults';
+import { getSetupOnboardingFormUrlOrEmpty } from '@/lib/email/sender';
+import { resolveSetupDepositSuccessView } from '@/lib/setup/verifySetupDepositSession';
+import '@/styles/tokens.css';
+import '@/styles/fonts-landing.css';
+import '@/styles/global.css';
+import '@/styles/components/buttons.css';
 import '@/styles/components/setup-status.css';
+import '@/styles/components/setup-success.css';
 
 const sessionId = Astro.url.searchParams.get('session_id');
+const view = await resolveSetupDepositSuccessView(sessionId);
+const onboardingFormUrl = getSetupOnboardingFormUrlOrEmpty();
+const verified = view.status === 'verified' ? view : null;
 ---
 
-<MainLayout
-  title="Deposit received — next steps"
+<MinimalLayout
+  title={verified ? 'Setup deposit confirmed — KERSIVO' : 'Payment verification — KERSIVO'}
   description={PAGE_DESCRIPTIONS.setupSuccess}
   canonicalPath="/setup/success"
   noindex={true}
+  bodyClass="setup-success-body"
 >
-  <main class="container shop-page setup-status-page">
-    <section class="shop-card shop-success-card">
-      <div class="shop-card-body">
-        <h1>Your setup deposit is confirmed.</h1>
-        <p class="muted">Check your email in the next few minutes for your onboarding form.</p>
-        <ul class="setup-status-next shop-success-next" aria-label="What happens next">
-          <li>Complete the form within 5 working days to hold your launch slot.</li>
-          <li>Remaining 50% is due on go-live after you sign off the system.</li>
-        </ul>
-        {sessionId ? <p class="muted">Reference: {sessionId}</p> : null}
-        <div class="setup-status-actions">
-          <a href="/" class="btn btn--primary">Back to home</a>
-          <a href="mailto:hello@kersivo.co.uk" class="btn btn--secondary">hello@kersivo.co.uk</a>
-        </div>
-      </div>
-    </section>
+  <main class="setup-success">
+    <div class="setup-success__card">
+      <a class="setup-success__brand" href="/" aria-label="KERSIVO home">
+        <img
+          src="/images/brand/logo-navbar-228.webp"
+          srcset="/images/brand/logo-navbar-228.webp 1x, /images/brand/logo-navbar-456.webp 2x"
+          width="160"
+          height="40"
+          alt="KERSIVO"
+        />
+      </a>
+
+      {verified ? (
+        <>
+          <h1 class="setup-success__title">YOUR SETUP DEPOSIT IS CONFIRMED.</h1>
+          <dl class="setup-success__facts">
+            <div>
+              <dt>Package</dt>
+              <dd>{verified.packageName}</dd>
+            </div>
+            <div>
+              <dt>Deposit paid</dt>
+              <dd>{verified.depositFormatted}</dd>
+            </div>
+            <div>
+              <dt>Remaining at go-live</dt>
+              <dd>{verified.remainingFormatted}</dd>
+            </div>
+          </dl>
+          <p class="setup-success__email">
+            We’ve sent your onboarding form to <strong>{verified.customerEmail}</strong>
+          </p>
+          {onboardingFormUrl ? (
+            <a class="btn btn--primary setup-success__cta" href={onboardingFormUrl} rel="noopener noreferrer">
+              Complete Your Onboarding
+            </a>
+          ) : (
+            <p class="setup-success__note">
+              Contact <a href="mailto:hello@kersivo.co.uk">hello@kersivo.co.uk</a> for your onboarding form link.
+            </p>
+          )}
+          <div class="setup-success__actions">
+            <a class="btn btn--secondary" href="/">Back to KERSIVO</a>
+            <a class="btn btn--ghost" href="mailto:hello@kersivo.co.uk">hello@kersivo.co.uk</a>
+          </div>
+          <p class="setup-success__trust">Nothing goes live without your review.</p>
+          <p class="setup-success__ref">Reference: …{verified.shortReference}</p>
+          <script
+            is:inline
+            define:vars={{
+              transactionId: verified.transactionId,
+              value: verified.depositValueGbp,
+              packageSlug: verified.packageSlug,
+            }}
+          >
+            (function () {
+              try {
+                var key = 'setup_deposit_paid:' + transactionId;
+                if (window.sessionStorage.getItem(key)) return;
+                function fire() {
+                  if (typeof window.gtag !== 'function') return false;
+                  window.gtag('event', 'setup_deposit_paid', {
+                    transaction_id: transactionId,
+                    value: value,
+                    currency: 'GBP',
+                    package: packageSlug,
+                    transport_type: 'beacon',
+                  });
+                  window.sessionStorage.setItem(key, '1');
+                  return true;
+                }
+                if (fire()) return;
+                var attempts = 0;
+                var timer = window.setInterval(function () {
+                  attempts += 1;
+                  if (fire() || attempts > 20) window.clearInterval(timer);
+                }, 250);
+              } catch (e) {}
+            })();
+          </script>
+        </>
+      ) : (
+        <>
+          <h1 class="setup-success__title setup-success__title--warn">
+            WE COULDN’T VERIFY THIS PAYMENT YET.
+          </h1>
+          <p class="setup-success__note">
+            Please check your email or contact{' '}
+            <a href="mailto:hello@kersivo.co.uk">hello@kersivo.co.uk</a>.
+          </p>
+          <div class="setup-success__actions">
+            <a class="btn btn--primary" href="/#pricing">Back to pricing</a>
+            <a class="btn btn--secondary" href="/">Back to KERSIVO</a>
+          </div>
+        </>
+      )}
+    </div>
   </main>
-</MainLayout>
+</MinimalLayout>

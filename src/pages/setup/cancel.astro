@@ -1,25 +1,37 @@
 ---
-import MainLayout from '@/layouts/MainLayout.astro';
+import MinimalLayout from '@/layouts/MinimalLayout.astro';
 import { PAGE_DESCRIPTIONS } from '@/lib/seo/defaults';
-import '@/styles/components/setup-status.css';
+import '@/styles/tokens.css';
+import '@/styles/fonts-landing.css';
+import '@/styles/global.css';
+import '@/styles/components/buttons.css';
+import '@/styles/components/setup-success.css';
 ---
 
-<MainLayout
-  title="Checkout cancelled"
+<MinimalLayout
+  title="Checkout cancelled — KERSIVO"
   description={PAGE_DESCRIPTIONS.setupCancel}
   canonicalPath="/setup/cancel"
   noindex={true}
+  bodyClass="setup-success-body"
 >
-  <main class="container shop-page setup-status-page">
-    <section class="shop-card shop-success-card">
-      <div class="shop-card-body">
-        <h1>Checkout cancelled</h1>
-        <p class="muted">No payment was taken. You can try again from pricing or contact us.</p>
-        <div class="setup-status-actions">
-          <a href="/#pricing" class="btn btn--primary">Back to pricing</a>
-          <a href="/#contact" class="btn btn--secondary">Contact us</a>
-        </div>
+  <main class="setup-success">
+    <div class="setup-success__card">
+      <a class="setup-success__brand" href="/" aria-label="KERSIVO home">
+        <img
+          src="/images/brand/logo-navbar-228.webp"
+          srcset="/images/brand/logo-navbar-228.webp 1x, /images/brand/logo-navbar-456.webp 2x"
+          width="160"
+          height="40"
+          alt="KERSIVO"
+        />
+      </a>
+      <h1 class="setup-success__title">Checkout cancelled</h1>
+      <p class="setup-success__note">No payment was taken. You can try again from pricing or contact us.</p>
+      <div class="setup-success__actions">
+        <a href="/#pricing" class="btn btn--primary">Back to pricing</a>
+        <a href="/#contact" class="btn btn--secondary">Contact us</a>
       </div>
-    </section>
+    </div>
   </main>
-</MainLayout>
+</MinimalLayout>

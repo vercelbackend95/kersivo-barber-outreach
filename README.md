@@ -48,7 +48,9 @@ Astro + React (TypeScript) booking + shop system for barbershops.
 2. Add `kersivo.co.uk` as the production domain in the Vercel project (Settings → Domains).
 3. Legacy redirect: `barberdemo.kersivo.co.uk` → `https://kersivo.co.uk` is configured in [`vercel.json`](vercel.json) (permanent redirect, all paths).
 4. Stripe webhook endpoint (production): `https://kersivo.co.uk/api/shop/webhook` — register this URL in the Stripe Dashboard and set `STRIPE_WEBHOOK_SECRET` in Vercel.
-5. `SETUP_ONBOARDING_FORM_URL`: your Tally onboarding form link (e.g. `https://tally.so/r/XXXXX`). Sent to clients in the setup deposit confirmation email after they pay the 50% deposit.
+   - **Test mode:** add the same endpoint under Stripe **Test** webhooks (or use `stripe listen`) and use the **test** signing secret with `sk_test_…` keys. Sandbox `cs_test_…` checkouts will not fulfil if only a Live webhook is configured.
+   - **Live mode:** separate Live webhook + `whsec_…` + `sk_live_…`. Never mix test events with the live signing secret.
+5. `SETUP_ONBOARDING_FORM_URL`: your Tally onboarding form link (e.g. `https://tally.so/r/XXXXX`). Sent to clients in the setup deposit confirmation email and shown on `/setup/success` after verified payment.
 
 ## Setup deposit flow test
 

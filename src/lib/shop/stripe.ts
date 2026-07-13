@@ -8,11 +8,14 @@ type StripeCheckoutParams = {
   metadata: Record<string, string>;
 };
 
-type StripeSession = {
+export type StripeSession = {
   id: string;
-  url: string;
+  url?: string;
   amount_total: number | null;
   currency: string | null;
+  payment_status?: string | null;
+  customer_email?: string | null;
+  payment_intent?: string | { id?: string } | null;
   metadata?: Record<string, string>;
 };
 
@@ -86,6 +89,13 @@ export async function retrieveCheckoutSession(sessionId: string): Promise<Stripe
   }
 
   return (await response.json()) as StripeSession;
+}
+
+export function getCheckoutPaymentIntentId(session: StripeSession): string | null {
+  const pi = session.payment_intent;
+  if (typeof pi === 'string' && pi.trim()) return pi.trim();
+  if (pi && typeof pi === 'object' && typeof pi.id === 'string' && pi.id.trim()) return pi.id.trim();
+  return null;
 }
 
 export function verifyStripeWebhookSignature(payload: string, signatureHeader: string): boolean {
