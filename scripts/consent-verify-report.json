@@ -1,0 +1,169 @@
+{
+  "failures": [],
+  "REPORT": [
+    {
+      "section": "fresh_visit",
+      "trackingRequests": [],
+      "optionalCookies": [],
+      "boot": {
+        "hasDefaultDenied": true,
+        "gaId": "G-6QEN5JL0L1"
+      },
+      "storage": {
+        "cookies": [],
+        "localStorageKeys": [],
+        "sessionStorageKeys": [],
+        "consentCookie": null
+      },
+      "at": "2026-07-13T15:26:24.288Z"
+    },
+    {
+      "section": "reject",
+      "prefs": {
+        "version": 1,
+        "necessary": true,
+        "analytics": false,
+        "advertisingMeasurement": false,
+        "personalisedAdvertising": false,
+        "timestamp": "2026-07-13T15:26:30.798Z"
+      },
+      "tracking": [],
+      "at": "2026-07-13T15:26:43.092Z"
+    },
+    {
+      "section": "analytics_only",
+      "prefs": {
+        "version": 1,
+        "necessary": true,
+        "analytics": true,
+        "advertisingMeasurement": false,
+        "personalisedAdvertising": false,
+        "timestamp": "2026-07-13T15:26:50.079Z"
+      },
+      "gtagLoads": [
+        "https://www.googletagmanager.com/gtag/js?id=G-6QEN5JL0L1"
+      ],
+      "loadCount": 2,
+      "beforeReload": 1,
+      "gaCookies": [
+        {
+          "name": "_ga_6QEN5JL0L1",
+          "domain": ".kersivo.co.uk"
+        },
+        {
+          "name": "_ga",
+          "domain": ".kersivo.co.uk"
+        }
+      ],
+      "at": "2026-07-13T15:27:05.325Z"
+    },
+    {
+      "section": "ads_deferred",
+      "prefs": {
+        "version": 1,
+        "necessary": true,
+        "analytics": false,
+        "advertisingMeasurement": true,
+        "personalisedAdvertising": false,
+        "timestamp": "2026-07-13T15:27:12.115Z"
+      },
+      "adsRequests": [],
+      "at": "2026-07-13T15:27:15.134Z"
+    },
+    {
+      "section": "accept_all",
+      "prefs": {
+        "version": 1,
+        "necessary": true,
+        "analytics": true,
+        "advertisingMeasurement": true,
+        "personalisedAdvertising": false,
+        "timestamp": "2026-07-13T15:27:22.101Z"
+      },
+      "gtagLoads": [
+        "https://www.googletagmanager.com/gtag/js?id=G-6QEN5JL0L1"
+      ],
+      "at": "2026-07-13T15:27:27.111Z"
+    },
+    {
+      "section": "withdraw",
+      "prefs": {
+        "version": 1,
+        "necessary": true,
+        "analytics": false,
+        "advertisingMeasurement": false,
+        "personalisedAdvertising": false,
+        "timestamp": "2026-07-13T15:27:37.865Z"
+      },
+      "optionalLeft": [],
+      "cartKept": true,
+      "at": "2026-07-13T15:27:39.877Z"
+    },
+    {
+      "section": "viewport",
+      "width": 320,
+      "ok": true,
+      "at": "2026-07-13T15:27:46.891Z"
+    },
+    {
+      "section": "viewport",
+      "width": 375,
+      "ok": true,
+      "at": "2026-07-13T15:27:53.304Z"
+    },
+    {
+      "section": "viewport",
+      "width": 768,
+      "ok": true,
+      "at": "2026-07-13T15:27:59.871Z"
+    },
+    {
+      "section": "viewport",
+      "width": 1280,
+      "ok": true,
+      "at": "2026-07-13T15:28:06.735Z"
+    },
+    {
+      "section": "page",
+      "path": "/",
+      "status": 200,
+      "at": "2026-07-13T15:28:13.182Z"
+    },
+    {
+      "section": "page",
+      "path": "/shop",
+      "status": 200,
+      "at": "2026-07-13T15:28:13.687Z"
+    },
+    {
+      "section": "page",
+      "path": "/setup/cancel",
+      "status": 200,
+      "at": "2026-07-13T15:28:13.843Z"
+    },
+    {
+      "section": "page",
+      "path": "/setup/success",
+      "status": 200,
+      "at": "2026-07-13T15:28:13.997Z"
+    },
+    {
+      "section": "page",
+      "path": "/cookies",
+      "status": 200,
+      "at": "2026-07-13T15:28:14.168Z"
+    },
+    {
+      "section": "page",
+      "path": "/privacy",
+      "status": 200,
+      "at": "2026-07-13T15:28:14.356Z"
+    },
+    {
+      "section": "regressions",
+      "ok": true,
+      "trackingCount": 0,
+      "at": "2026-07-13T15:28:17.555Z"
+    }
+  ]
+}
