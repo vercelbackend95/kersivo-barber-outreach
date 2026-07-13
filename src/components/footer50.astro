@@ -50,7 +50,11 @@ const {
     { name: "Contact", href: "/contact" },
   ],
   social = getFooterSocialLinks(),
-  legal = [{ name: "Privacy Policy", href: "/privacy" }],
+  legal = [
+    { name: 'Privacy Policy', href: '/privacy' },
+    { name: 'Cookie Policy', href: '/cookies' },
+    { name: 'Cookie settings', href: '#cookie-settings' },
+  ],
   brandName = "mainline",
   className = "",
 } = Astro.props as Footer50Props;
@@ -102,15 +106,37 @@ function socialIconPath(id: Exclude<FooterSocialPlatform, 'instagram'>): string 
     <ul class="footer50__legal">
       {legal.map((item) => (
         <li>
-          <a
-            href={item.href}
-            {...(isExternalHref(item.href) ? { target: '_blank', rel: 'noopener noreferrer' } : {})}
-          >
-            {item.name}
-          </a>
+          {item.href === '#cookie-settings' ? (
+            <button
+              type="button"
+              class="footer50__cookie-settings"
+              data-cookie-settings
+            >
+              {item.name}
+            </button>
+          ) : (
+            <a
+              href={item.href}
+              {...(isExternalHref(item.href) ? { target: '_blank', rel: 'noopener noreferrer' } : {})}
+            >
+              {item.name}
+            </a>
+          )}
         </li>
       ))}
     </ul>
+    <script>
+      import { CONSENT_OPEN_EVENT } from '@/lib/consent/config';
+      document.querySelectorAll('[data-cookie-settings]').forEach((el) => {
+        el.addEventListener('click', () => {
+          window.dispatchEvent(
+            new CustomEvent(CONSENT_OPEN_EVENT, {
+              detail: { trigger: el instanceof HTMLElement ? el : undefined },
+            }),
+          );
+        });
+      });
+    </script>
 
     {contactEmail ? (
       <p class="footer50__contact">

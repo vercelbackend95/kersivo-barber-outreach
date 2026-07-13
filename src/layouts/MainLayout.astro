@@ -1,6 +1,7 @@
 ---
 import BarberDemoJsonLd from '@/components/seo/BarberDemoJsonLd.astro';
 import GoogleAnalytics from '@/components/seo/GoogleAnalytics.astro';
+import CookieConsentMount from '@/components/consent/CookieConsentMount.astro';
 import FaviconLinks from '@/components/seo/FaviconLinks.astro';
 import SeoHead from '@/components/seo/SeoHead.astro';
 import Navbar17 from '@/components/navbar17.astro';
@@ -85,6 +86,7 @@ const jsonLdBlocks = jsonLd
     <Navbar17 variant={navbarVariant} />
     <slot />
     <CartDrawerMount navbarVariant={navbarVariant} />
+    <CookieConsentMount />
     <script>
       import { initDataTrack } from '@/lib/analytics/initDataTrack';
       initDataTrack();

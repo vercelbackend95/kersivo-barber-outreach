@@ -71,10 +71,23 @@
   font-weight: 600;
 }
 
-.footer50__legal a {
+.footer50__legal a,
+.footer50__legal .footer50__cookie-settings {
   color: var(--muted);
   text-decoration: none;
   font-size: 0.875rem;
+  background: none;
+  border: 0;
+  padding: 0;
+  font-family: inherit;
+  cursor: pointer;
+}
+
+.footer50__legal a:hover,
+.footer50__legal .footer50__cookie-settings:hover {
+  color: var(--accent);
+  text-decoration: underline;
+  text-underline-offset: 0.15em;
 }
 
 .footer50__contact {

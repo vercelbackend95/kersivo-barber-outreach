@@ -31,7 +31,7 @@ function formatLastmod(date: Date): string {
   return date.toISOString().slice(0, 10);
 }
 
-const STATIC_PATHS = ['/', '/privacy', '/terms', '/shop'] as const;
+const STATIC_PATHS = ['/', '/privacy', '/cookies', '/terms', '/shop'] as const;
 
 function staticEntries(): SitemapEntry[] {
   return STATIC_PATHS.map((path) => ({

@@ -19,6 +19,8 @@ export const FACEBOOK_URL =
 
 export const FOOTER_LEGAL_LINKS = {
   privacy: { name: 'Privacy Policy', href: '/privacy' },
+  cookies: { name: 'Cookie Policy', href: '/cookies' },
+  cookieSettings: { name: 'Cookie settings', href: '#cookie-settings' },
   terms: { name: 'Terms', href: '/terms' },
   termsAndCancellation: { name: 'Terms & Cancellation', href: '/terms#setup-deposits' },
 } as const;

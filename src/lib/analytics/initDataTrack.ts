@@ -1,23 +1,11 @@
 /**
  * Sends GA4 events for elements marked with data-track="event_name".
  * Uses beacon transport so clicks that open Stripe/new tabs are less likely to drop.
+ * Events are gated on analytics consent (Consent Mode v2 / Basic).
  */
-declare global {
-  interface Window {
-    gtag?: (...args: unknown[]) => void;
-    dataLayer?: unknown[];
-  }
-}
+import { trackConsentedEvent } from '@/lib/consent/events';
 
 const TRACKED = new WeakSet<EventTarget>();
-
-function trackEvent(name: string, params?: Record<string, string>) {
-  if (typeof window.gtag !== 'function') return;
-  window.gtag('event', name, {
-    transport_type: 'beacon',
-    ...params,
-  });
-}
 
 function eventNameFromTarget(target: EventTarget | null): string | null {
   if (!(target instanceof Element)) return null;
@@ -35,7 +23,7 @@ export function initDataTrack() {
     (event) => {
       const name = eventNameFromTarget(event.target);
       if (!name) return;
-      trackEvent(name);
+      trackConsentedEvent(name, undefined, 'analytics');
     },
     true,
   );
@@ -54,7 +42,7 @@ export function initDataTrack() {
       if (!name) return;
 
       TRACKED.add(form);
-      trackEvent(name);
+      trackConsentedEvent(name, undefined, 'analytics');
       window.setTimeout(() => TRACKED.delete(form), 3000);
     },
     true,

@@ -14,13 +14,15 @@ export const DEFAULT_OG_IMAGE_ALT =
   'Kersivo — UK barbershop booking on your own domain with 0% commission';
 
 /** ISO date (YYYY-MM-DD) for static marketing/legal pages in sitemap lastmod. */
-export const STATIC_SITEMAP_LASTMOD = '2026-07-01';
+export const STATIC_SITEMAP_LASTMOD = '2026-07-13';
 
 export const ONGOING_CARE_MONTHLY_GBP = 39;
 
 export const PAGE_DESCRIPTIONS = {
   privacy:
     'Privacy policy for Kersivo barbershop booking and retail software. How we process personal data for UK barbershops and their clients.',
+  cookies:
+    'Cookie policy for Kersivo. How we use necessary cookies, analytics and advertising measurement, and how to change your choices.',
   terms:
     'Terms of service for Kersivo barbershop website, booking, and retail pickup software for UK business customers.',
   shop:

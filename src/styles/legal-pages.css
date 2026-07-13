@@ -50,3 +50,33 @@
   color: var(--muted);
   margin: var(--space-sm) 0 var(--space-md);
 }
+
+.legal-page__table-wrap {
+  overflow-x: auto;
+  margin: var(--space-md) 0 var(--space-lg);
+}
+
+.legal-page__table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.85rem;
+}
+
+.legal-page__table th,
+.legal-page__table td {
+  border: 1px solid var(--border);
+  padding: 0.55rem 0.65rem;
+  text-align: left;
+  vertical-align: top;
+  color: color-mix(in srgb, var(--fg) 88%, var(--muted));
+}
+
+.legal-page__table th {
+  background: var(--surface-1);
+  color: var(--fg);
+  font-weight: 600;
+}
+
+.legal-page code {
+  font-size: 0.84em;
+}

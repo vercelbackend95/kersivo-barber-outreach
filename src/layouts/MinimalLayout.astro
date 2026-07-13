@@ -1,5 +1,6 @@
 ---
 import GoogleAnalytics from '@/components/seo/GoogleAnalytics.astro';
+import CookieConsentMount from '@/components/consent/CookieConsentMount.astro';
 import FaviconLinks from '@/components/seo/FaviconLinks.astro';
 import SeoHead from '@/components/seo/SeoHead.astro';
 import type { PageSeo } from '@/lib/seo/meta';
@@ -50,5 +51,6 @@ const {
   </head>
   <body class={bodyClass}>
     <slot />
+    <CookieConsentMount />
   </body>
 </html>

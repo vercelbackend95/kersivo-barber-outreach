@@ -12,12 +12,13 @@ import '@/styles/legal-pages.css';
   <main class="legal-page">
     <article class="container legal-page__inner">
       <h1 class="legal-page__title">Privacy Policy</h1>
-      <p class="legal-page__updated">Last updated: 12 April 2026</p>
+      <p class="legal-page__updated">Last updated: 13 July 2026</p>
 
       <p>
         This policy describes how personal data is processed when you use websites and services operated under the
-        Kersivo brand for UK barbershops, including marketing pages, live product preview booking and shop flows, and (where applicable)
-        the barbershop admin experience. It is written in plain language and does not replace legal advice.
+        KERSIVO brand for UK barbershops, including marketing pages, live product preview booking and shop flows,
+        setup deposit checkout, and (where applicable) the barbershop admin experience. It is written in plain language
+        and does not replace legal advice.
       </p>
 
       <h2>Who is responsible for your data?</h2>
@@ -40,15 +41,34 @@ import '@/styles/legal-pages.css';
           legitimate interests.
         </li>
         <li>
+          <strong>Setup deposits</strong> — name, email, shop details and payment status when you pay a KERSIVO setup
+          deposit via Stripe Checkout on our account. <strong>Purpose:</strong> taking payment, confirming the deposit,
+          sending onboarding information and internal fulfilment notices.
+          <strong>Legal basis (UK):</strong> performance of a contract / steps prior to a contract.
+        </li>
+        <li>
+          <strong>Campaign attribution on checkout</strong> — if present in the page URL when you start checkout, we may
+          pass advertising or campaign identifiers (for example gclid, gbraid, wbraid or UTM parameters) into Stripe
+          session metadata and include a summary in internal fulfilment email. We do not store these identifiers in
+          browser cookies or local storage before you choose optional advertising measurement in our cookie banner.
+          <strong>Purpose:</strong> understanding which campaigns relate to setup purchases.
+          <strong>Legal basis (UK):</strong> requires confirmation with our legal adviser (typically legitimate interests
+          and/or consent for related storage technologies — see the Cookie Policy).
+        </li>
+        <li>
           <strong>Booking data</strong> — service, barber, date/time, and your contact details (name and email; phone
           if you provide it). <strong>Purpose:</strong> managing appointments, confirmations, reschedule and cancel
           links, and related emails. <strong>Legal basis (UK):</strong> performance of a contract.
         </li>
         <li>
           <strong>Shop orders (buy-and-collect)</strong> — email address used at checkout, order contents, payment
-          status as recorded after payment, and related confirmation emails to fulfill your purchase. Card payments are
+          status as recorded after payment, and related confirmation emails to fulfil your purchase. Card payments are
           handled securely by <strong>Stripe</strong> on the <strong>barbershop&rsquo;s own Stripe account</strong>; we
           do not store full card numbers on our servers.
+        </li>
+        <li>
+          <strong>Onboarding forms</strong> — if we send you a Tally (or similar) onboarding form link after a setup
+          deposit, information you submit there is processed to configure your system.
         </li>
         <li>
           <strong>Admin access</strong> — session cookies / tokens for authenticated access to the barbershop admin
@@ -59,9 +79,21 @@ import '@/styles/legal-pages.css';
           Stored so the site and shop can display them.
         </li>
         <li>
-          <strong>Email delivery</strong> — we use service providers such as <strong>Resend</strong> to send
-          transactional emails (for example booking confirmations, order confirmations, and contact form delivery to our
+          <strong>Email delivery</strong> — we use <strong>Resend</strong> to send transactional emails (for example
+          booking confirmations, order confirmations, setup deposit confirmations, and contact form delivery to our
           inbox), using the addresses involved in each message.
+        </li>
+        <li>
+          <strong>Website analytics (optional)</strong> — if you accept analytics cookies, Google Analytics 4 may
+          process pseudonymous usage data (for example pages viewed and approximate location derived by Google) to help
+          us understand site performance. <strong>Legal basis (UK):</strong> consent.
+        </li>
+        <li>
+          <strong>Advertising measurement (optional)</strong> — if you accept advertising measurement, Google Ads
+          measurement tags may process data needed to measure whether ads lead to enquiries or setup purchases. We do
+          <strong>not</strong> currently use remarketing audiences, personalised advertising, or Google Ads Enhanced
+          Conversions (we do not send hashed customer emails or phone numbers to Google for enhanced conversions).
+          <strong>Legal basis (UK):</strong> consent.
         </li>
         <li>
           <strong>SMS (optional)</strong> — if you subscribe to a plan that includes SMS and we enable it for your shop,
@@ -74,9 +106,17 @@ import '@/styles/legal-pages.css';
       <p>We use professional service providers to run the business, including:</p>
       <ul>
         <li><strong>Vercel</strong> — hosting and application;</li>
-        <li><strong>Supabase</strong> / <strong>PostgreSQL</strong> — database;</li>
+        <li><strong>Neon</strong> / <strong>PostgreSQL</strong> — database;</li>
         <li><strong>Resend</strong> — email delivery;</li>
-        <li><strong>Stripe</strong> — payments (on the barber&rsquo;s account where applicable);</li>
+        <li>
+          <strong>Stripe</strong> — payments (KERSIVO setup deposits on our Stripe account; barbershop retail checkout
+          on the barber&rsquo;s Stripe account where applicable);
+        </li>
+        <li><strong>Tally</strong> — onboarding forms where we provide a form link;</li>
+        <li>
+          <strong>Google Ireland Limited / Google LLC</strong> — Google Analytics 4 and, when configured and consented,
+          Google Ads measurement;
+        </li>
         <li>an additional SMS processor, only where SMS is enabled for a shop.</li>
       </ul>
       <p>
@@ -87,8 +127,9 @@ import '@/styles/legal-pages.css';
       <h2>International transfers</h2>
       <p>
         Data may be processed by providers outside the UK (for example in the United States). Where that happens, we
-        ensure these providers use approved safeguard mechanisms, such as Standard Contractual Clauses (SCCs), as
-        required by UK data protection law.
+        rely on approved safeguard mechanisms required by UK data protection law (for example the UK International Data
+        Transfer Agreement / Addendum or Standard Contractual Clauses), as offered by those providers. Details of each
+        provider&rsquo;s transfer mechanism should be confirmed in their current data processing terms.
       </p>
 
       <h2>How long we keep data</h2>
@@ -96,7 +137,8 @@ import '@/styles/legal-pages.css';
         We keep personal data only as long as necessary to provide our services and to meet legal, accounting, tax and
         security requirements. Retention depends on the type of data and your relationship with us; financial and
         related records are typically kept for up to <strong>6 years</strong> where required for tax or legal
-        obligations.
+        obligations. Analytics and advertising cookies follow the durations described in our
+        <a href="/cookies">Cookie Policy</a> when you have consented.
       </p>
 
       <h2>Your rights (UK)</h2>
@@ -117,8 +159,14 @@ import '@/styles/legal-pages.css';
 
       <h2>Cookies and similar technologies</h2>
       <p>
-        We do not use third-party tracking or advertising cookies. We only use essential session tokens for the admin
-        panel and system functionality (for example login and secure requests).
+        We use necessary cookies and similar technologies to run the website (for example security, payments-related
+        flows, forms and remembering your privacy choices). With your permission, we also use analytics and advertising
+        measurement technologies as described in our <a href="/cookies">Cookie Policy</a>.
+      </p>
+      <p>
+        You can accept, reject or change optional technologies at any time using
+        <strong>Cookie settings</strong> in the website footer, or by revisiting the cookie banner when your consent
+        version is updated.
       </p>
 
       <h2>Security</h2>
@@ -131,11 +179,14 @@ import '@/styles/legal-pages.css';
       <h2>Changes to this policy</h2>
       <p>
         We may update this policy from time to time. The &ldquo;Last updated&rdquo; date will change when we do. We will
-        notify active clients of any material changes via email.
+        notify active clients of any material changes via email. Material changes to cookie purposes may also require a
+        new consent choice.
       </p>
 
       <p>
         <a href="/">Back to home</a>
+        &nbsp;·&nbsp;
+        <a href="/cookies">Cookie Policy</a>
         &nbsp;·&nbsp;
         <a href="/terms">Terms of Service</a>
       </p>

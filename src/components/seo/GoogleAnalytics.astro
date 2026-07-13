@@ -1,27 +1,128 @@
-<script is:inline>
-  window.dataLayer = window.dataLayer || [];
-  function gtag() {
-    dataLayer.push(arguments);
-  }
+---
+import { CONSENT_COOKIE_NAME, CONSENT_VERSION, FALLBACK_GA4_MEASUREMENT_ID } from '@/lib/consent/config';
 
-  gtag('js', new Date());
+const gaMeasurementId = (
+  import.meta.env.PUBLIC_GA4_MEASUREMENT_ID ??
+  process.env.PUBLIC_GA4_MEASUREMENT_ID ??
+  ''
+)
+  .toString()
+  .trim() || FALLBACK_GA4_MEASUREMENT_ID;
 
-  function loadGtag() {
-    if (window.__gtagLoaded) return;
-    window.__gtagLoaded = true;
+const googleAdsId = (
+  import.meta.env.PUBLIC_GOOGLE_ADS_ID ??
+  process.env.PUBLIC_GOOGLE_ADS_ID ??
+  ''
+)
+  .toString()
+  .trim();
+---
 
-    const script = document.createElement('script');
-    script.async = true;
-    script.src = 'https://www.googletagmanager.com/gtag/js?id=G-6QEN5JL0L1';
-    script.onload = function () {
-      gtag('config', 'G-6QEN5JL0L1');
+{/* Consent Mode v2 defaults must run before any Google tag. Basic mode: do not load gtag.js until consent. */}
+<script
+  is:inline
+  define:vars={{
+    gaMeasurementId,
+    googleAdsId,
+    consentCookieName: CONSENT_COOKIE_NAME,
+    consentVersion: CONSENT_VERSION,
+  }}
+>
+  (function () {
+    window.dataLayer = window.dataLayer || [];
+    function gtag() {
+      dataLayer.push(arguments);
+    }
+    window.gtag = window.gtag || gtag;
+
+    gtag('consent', 'default', {
+      analytics_storage: 'denied',
+      ad_storage: 'denied',
+      ad_user_data: 'denied',
+      ad_personalization: 'denied',
+      wait_for_update: 500,
+    });
+    window.__kersivoConsentDefaultsApplied = true;
+
+    function readPrefs() {
+      try {
+        var parts = document.cookie.split(';');
+        for (var i = 0; i < parts.length; i++) {
+          var part = parts[i].trim();
+          if (part.indexOf(consentCookieName + '=') === 0) {
+            var raw = decodeURIComponent(part.slice(consentCookieName.length + 1));
+            var parsed = JSON.parse(raw);
+            if (
+              parsed &&
+              parsed.version === consentVersion &&
+              parsed.necessary === true &&
+              typeof parsed.analytics === 'boolean' &&
+              typeof parsed.advertisingMeasurement === 'boolean' &&
+              parsed.personalisedAdvertising === false
+            ) {
+              return parsed;
+            }
+          }
+        }
+      } catch (e) {}
+      return null;
+    }
+
+    function loadScript(id, onload) {
+      if (window.__kersivoGtagScriptLoaded) {
+        onload();
+        return;
+      }
+      if (document.querySelector('script[data-kersivo-gtag="1"]')) {
+        window.__kersivoGtagScriptLoaded = true;
+        onload();
+        return;
+      }
+      var script = document.createElement('script');
+      script.async = true;
+      script.src = 'https://www.googletagmanager.com/gtag/js?id=' + encodeURIComponent(id);
+      script.setAttribute('data-kersivo-gtag', '1');
+      script.onload = function () {
+        window.__kersivoGtagScriptLoaded = true;
+        onload();
+      };
+      document.head.appendChild(script);
+    }
+
+    function syncTags(prefs) {
+      var wantAnalytics = prefs.analytics && gaMeasurementId;
+      var wantAds = prefs.advertisingMeasurement && googleAdsId;
+      if (!wantAnalytics && !wantAds) return;
+
+      gtag('consent', 'update', {
+        analytics_storage: prefs.analytics ? 'granted' : 'denied',
+        ad_storage: prefs.advertisingMeasurement ? 'granted' : 'denied',
+        ad_user_data: prefs.advertisingMeasurement ? 'granted' : 'denied',
+        ad_personalization: 'denied',
+      });
+
+      var primaryId = wantAnalytics ? gaMeasurementId : googleAdsId;
+      loadScript(primaryId, function () {
+        gtag('js', new Date());
+        if (wantAnalytics && !window.__kersivoGa4Configured) {
+          gtag('config', gaMeasurementId, { anonymize_ip: true });
+          window.__kersivoGa4Configured = true;
+        }
+        if (wantAds && !window.__kersivoAdsConfigured) {
+          gtag('config', googleAdsId);
+          window.__kersivoAdsConfigured = true;
+        }
+      });
+    }
+
+    window.__kersivoTagIds = {
+      gaMeasurementId: gaMeasurementId,
+      googleAdsId: googleAdsId,
     };
-    document.head.appendChild(script);
-  }
 
-  if ('requestIdleCallback' in window) {
-    requestIdleCallback(loadGtag, { timeout: 2000 });
-  } else {
-    window.setTimeout(loadGtag, 1);
-  }
+    var existing = readPrefs();
+    if (existing) {
+      syncTags(existing);
+    }
+  })();
 </script>

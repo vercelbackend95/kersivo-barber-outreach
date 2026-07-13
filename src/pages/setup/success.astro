@@ -81,8 +81,26 @@ const verified = view.status === 'verified' ? view : null;
             (function () {
               try {
                 var key = 'setup_deposit_paid:' + transactionId;
-                if (window.sessionStorage.getItem(key)) return;
+
+                function analyticsGranted() {
+                  try {
+                    var parts = document.cookie.split(';');
+                    for (var i = 0; i < parts.length; i++) {
+                      var part = parts[i].trim();
+                      if (part.indexOf('kersivo_consent=') === 0) {
+                        var parsed = JSON.parse(
+                          decodeURIComponent(part.slice('kersivo_consent='.length)),
+                        );
+                        return parsed && parsed.version === 1 && parsed.analytics === true;
+                      }
+                    }
+                  } catch (e) {}
+                  return false;
+                }
+
                 function fire() {
+                  if (!analyticsGranted()) return false;
+                  if (window.sessionStorage.getItem(key)) return true;
                   if (typeof window.gtag !== 'function') return false;
                   window.gtag('event', 'setup_deposit_paid', {
                     transaction_id: transactionId,
@@ -94,6 +112,7 @@ const verified = view.status === 'verified' ? view : null;
                   window.sessionStorage.setItem(key, '1');
                   return true;
                 }
+
                 if (fire()) return;
                 var attempts = 0;
                 var timer = window.setInterval(function () {

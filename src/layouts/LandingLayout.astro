@@ -1,5 +1,6 @@
 ---
 import GoogleAnalytics from '@/components/seo/GoogleAnalytics.astro';
+import CookieConsentMount from '@/components/consent/CookieConsentMount.astro';
 import FaviconLinks from '@/components/seo/FaviconLinks.astro';
 import SeoHead from '@/components/seo/SeoHead.astro';
 import Navbar17 from '@/components/navbar17.astro';
@@ -67,6 +68,7 @@ const jsonLdBlocks = jsonLd
   <body>
     <Navbar17 variant="landing" />
     <slot />
+    <CookieConsentMount />
     <script>
       import { initDataTrack } from '@/lib/analytics/initDataTrack';
       initDataTrack();

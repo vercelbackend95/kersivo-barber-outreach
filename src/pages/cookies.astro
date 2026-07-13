@@ -1,0 +1,186 @@
+---
+import MainLayout from '@/layouts/MainLayout.astro';
+import { PAGE_DESCRIPTIONS } from '@/lib/seo/defaults';
+import { CONSENT_COOKIE_NAME, CONSENT_MAX_AGE_SECONDS, CONSENT_VERSION } from '@/lib/consent/config';
+import '@/styles/legal-pages.css';
+
+const consentDays = Math.round(CONSENT_MAX_AGE_SECONDS / (24 * 60 * 60));
+---
+
+<MainLayout
+  title="Cookie Policy | Kersivo"
+  description={PAGE_DESCRIPTIONS.cookies}
+  canonicalPath="/cookies"
+>
+  <main class="legal-page">
+    <article class="container legal-page__inner">
+      <h1 class="legal-page__title">Cookie Policy</h1>
+      <p class="legal-page__updated">Last updated: 13 July 2026</p>
+
+      <p>
+        This Cookie Policy explains how KERSIVO uses cookies and similar technologies on
+        <a href="https://kersivo.co.uk/">kersivo.co.uk</a>. It should be read with our
+        <a href="/privacy">Privacy Policy</a>. Rejecting optional technologies does not block necessary services such as
+        browsing, booking demos, contact forms or paying a setup deposit.
+      </p>
+
+      <h2>What are cookies and similar technologies?</h2>
+      <p>
+        Cookies are small text files stored on your device. Similar technologies include localStorage, sessionStorage
+        and tags/scripts that set identifiers. Some are necessary for the site to work. Others help us understand usage
+        or measure advertising, and are used only with your permission.
+      </p>
+
+      <h2>How we ask for consent</h2>
+      <p>
+        On your first visit (and again when our consent version changes), we show a banner with comparable actions to
+        accept all optional technologies, reject optional technologies, or manage preferences. Your choice is stored in
+        a first-party necessary cookie (<code>{CONSENT_COOKIE_NAME}</code>, consent version {CONSENT_VERSION}, about{' '}
+        {consentDays} days). You can reopen preferences at any time via <strong>Cookie settings</strong> in the footer.
+      </p>
+      <p>
+        We use Google Consent Mode v2 with a privacy-first approach: analytics and advertising measurement tags are not
+        loaded until you grant the relevant permission. Personalised advertising / remarketing is not enabled, and
+        <code>ad_personalization</code> remains denied.
+      </p>
+
+      <h2>Categories we use</h2>
+      <h3>Necessary</h3>
+      <p>
+        Required for security, payments, forms, booking functionality and remembering your privacy choices. These cannot
+        be switched off through the preference tool.
+      </p>
+      <h3>Analytics</h3>
+      <p>
+        Off by default. When accepted, Google Analytics 4 helps us understand how visitors use the site. Provider:
+        Google.
+      </p>
+      <h3>Advertising measurement</h3>
+      <p>
+        Off by default. When accepted and a Google Ads measurement ID is configured, Google Ads tags help us understand
+        whether ads lead to enquiries or setup purchases. We do not currently use this for personalised advertising or
+        Enhanced Conversions.
+      </p>
+
+      <h2>Technology inventory</h2>
+      <p>
+        The table below lists technologies we have verified in the KERSIVO application. Google cookie durations can vary
+        by Google product configuration; where we cannot verify an exact TTL from our code alone, duration is marked as
+        unresolved pending browser verification after consent.
+      </p>
+
+      <div class="legal-page__table-wrap">
+        <table class="legal-page__table">
+          <thead>
+            <tr>
+              <th scope="col">Name</th>
+              <th scope="col">Provider</th>
+              <th scope="col">Category</th>
+              <th scope="col">Purpose</th>
+              <th scope="col">Duration</th>
+              <th scope="col">Party</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td><code>{CONSENT_COOKIE_NAME}</code></td>
+              <td>KERSIVO</td>
+              <td>Necessary</td>
+              <td>Stores your cookie preference version and choices</td>
+              <td>{consentDays} days</td>
+              <td>First-party cookie</td>
+            </tr>
+            <tr>
+              <td><code>kersivo_admin_session</code></td>
+              <td>KERSIVO</td>
+              <td>Necessary</td>
+              <td>Authenticated admin session</td>
+              <td>Session / server-configured</td>
+              <td>First-party cookie</td>
+            </tr>
+            <tr>
+              <td><code>kersivo_shop_cart_v2</code></td>
+              <td>KERSIVO</td>
+              <td>Necessary</td>
+              <td>Retail demo basket contents</td>
+              <td>Until cleared / localStorage</td>
+              <td>First-party localStorage</td>
+            </tr>
+            <tr>
+              <td><code>kersivo.admin.secret</code></td>
+              <td>KERSIVO</td>
+              <td>Necessary</td>
+              <td>Admin demo authentication helper</td>
+              <td>Until cleared / localStorage</td>
+              <td>First-party localStorage</td>
+            </tr>
+            <tr>
+              <td><code>feature261-reports-widget-v1</code></td>
+              <td>KERSIVO</td>
+              <td>Necessary</td>
+              <td>Landing demo reports widget display preferences</td>
+              <td>Session</td>
+              <td>First-party sessionStorage</td>
+            </tr>
+            <tr>
+              <td><code>setup_deposit_paid:*</code></td>
+              <td>KERSIVO</td>
+              <td>Analytics (when consented)</td>
+              <td>Prevents duplicate setup deposit conversion events on refresh</td>
+              <td>Session</td>
+              <td>First-party sessionStorage</td>
+            </tr>
+            <tr>
+              <td><code>_ga</code>, <code>_ga_*</code>, <code>_gid</code></td>
+              <td>Google Analytics</td>
+              <td>Analytics (when consented)</td>
+              <td>Distinguish visitors / sessions for GA4</td>
+              <td>Unresolved — verify in browser after consent</td>
+              <td>First-party cookies set via Google</td>
+            </tr>
+            <tr>
+              <td><code>_gcl_*</code> / Ads cookies (if Ads ID configured)</td>
+              <td>Google Ads</td>
+              <td>Advertising measurement (when consented)</td>
+              <td>Measure ad-driven conversions</td>
+              <td>Unresolved — verify in browser after consent</td>
+              <td>First-party cookies set via Google</td>
+            </tr>
+            <tr>
+              <td>URL parameters (<code>gclid</code>, <code>gbraid</code>, <code>wbraid</code>, UTMs)</td>
+              <td>KERSIVO / advertising platforms</td>
+              <td>See Privacy Policy</td>
+              <td>
+                May remain in the URL. Passed to Stripe metadata only when you voluntarily start setup checkout — not
+                stored in cookies/localStorage before advertising-measurement consent
+              </td>
+              <td>URL lifetime / Stripe metadata retention</td>
+              <td>Not a browser cookie</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <h2>Changing or withdrawing consent</h2>
+      <p>
+        Use <strong>Cookie settings</strong> in the footer. If you withdraw analytics or advertising measurement, we
+        update Google Consent Mode immediately, stop loading optional tags on later visits, and delete removable
+        first-party optional cookies and related sessionStorage keys where technically possible. Cookies set on other
+        domains by third parties cannot always be deleted from our site; those tags will not be loaded again after
+        withdrawal.
+      </p>
+
+      <h2>Contact</h2>
+      <p>
+        Questions: <a href="mailto:hello@kersivo.co.uk">hello@kersivo.co.uk</a>. Complaints may be made to the
+        <a href="https://ico.org.uk/">ICO</a>.
+      </p>
+
+      <p>
+        <a href="/">Back to home</a>
+        &nbsp;·&nbsp;
+        <a href="/privacy">Privacy Policy</a>
+      </p>
+    </article>
+  </main>
+</MainLayout>
