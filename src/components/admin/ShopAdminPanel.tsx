@@ -18,9 +18,7 @@ import { formatDelta } from './reportsFormatting';
 import { SkeletonBookingChoices } from '../skeleton';
 import { AdminFetchError, adminFetchJson, isPublicAdminDemoMode, notifyAdminDemoBlocked } from './adminAuth';
 import { resolveClientIdForBooking } from '../../lib/admin/resolveClientIdForBooking';
-import RetailOnboardingWelcome, {
-  RETAIL_EMPTY_DISMISSED_KEY,
-} from './retail-onboarding/RetailOnboardingWelcome';
+import RetailOnboardingWelcome from './retail-onboarding/RetailOnboardingWelcome';
 type ShopTab = 'products' | 'orders' | 'sales';
 type SalesRangePreset = '7' | '30' | '90' | 'custom';
 
@@ -653,14 +651,8 @@ export default function ShopAdminPanel({ initialTab = 'products' }: ShopAdminPan
   const [form, setForm] = useState<ProductFormState>(EMPTY_FORM);
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState<string | null>(null);
-  const [retailPromptDismissed, setRetailPromptDismissed] = useState(() => {
-    if (typeof window === 'undefined') return false;
-    try {
-      return sessionStorage.getItem(RETAIL_EMPTY_DISMISSED_KEY) === '1';
-    } catch {
-      return false;
-    }
-  });
+  const [retailPromptDismissed, setRetailPromptDismissed] = useState(true); // hide until session loads
+  const [retailFlagsLoaded, setRetailFlagsLoaded] = useState(false);
 
   const [orders, setOrders] = useState<OrderListItem[]>([]);
   const [ordersLoading, setOrdersLoading] = useState(false);
@@ -1225,6 +1217,34 @@ export default function ShopAdminPanel({ initialTab = 'products' }: ShopAdminPan
   useEffect(() => {
     void fetchProducts();
   }, []);
+
+  useEffect(() => {
+    void (async () => {
+      try {
+        const response = await fetch('/api/admin/session', { credentials: 'include' });
+        if (!response.ok) {
+          setRetailPromptDismissed(false);
+          setRetailFlagsLoaded(true);
+          return;
+        }
+        const payload = (await response.json()) as {
+          retailOnboardingCompleted?: boolean;
+          retailOnboardingSkipped?: boolean;
+          via?: string;
+        };
+        const hidePrompt =
+          payload.via !== 'session' ||
+          Boolean(payload.retailOnboardingCompleted) ||
+          Boolean(payload.retailOnboardingSkipped);
+        setRetailPromptDismissed(hidePrompt);
+      } catch {
+        setRetailPromptDismissed(false);
+      } finally {
+        setRetailFlagsLoaded(true);
+      }
+    })();
+  }, []);
+
   useEffect(() => {
     if (activeTab === 'orders') {
       void fetchOrders();
@@ -2178,7 +2198,11 @@ export default function ShopAdminPanel({ initialTab = 'products' }: ShopAdminPan
                 </div>
               ) : filteredProducts.length === 0 ? (
                 baseProducts.length === 0 ? (
-                  retailPromptDismissed ? (
+                  !retailFlagsLoaded ? (
+                    <div className="admin-product-list" aria-label="Loading products" aria-busy="true">
+                      <SkeletonBookingChoices count={2} variant="service" />
+                    </div>
+                  ) : retailPromptDismissed ? (
                     <EmptyState
                       icon={Package}
                       title="No products yet"
@@ -2191,12 +2215,17 @@ export default function ShopAdminPanel({ initialTab = 'products' }: ShopAdminPan
                         window.location.assign('/admin/retail-onboarding?step=1');
                       }}
                       onNotNow={() => {
-                        try {
-                          sessionStorage.setItem(RETAIL_EMPTY_DISMISSED_KEY, '1');
-                        } catch {
-                          /* ignore */
-                        }
-                        setRetailPromptDismissed(true);
+                        void (async () => {
+                          try {
+                            await fetch('/api/admin/retail-onboarding/skip', {
+                              method: 'POST',
+                              credentials: 'include',
+                            });
+                          } catch {
+                            /* ignore */
+                          }
+                          setRetailPromptDismissed(true);
+                        })();
                       }}
                     />
                   )

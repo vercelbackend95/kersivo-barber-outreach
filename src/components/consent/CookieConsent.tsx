@@ -107,9 +107,17 @@ export default function CookieConsent() {
           type="button"
           className="cookie-consent__launcher"
           data-cookie-settings
+          aria-label="Cookie settings"
           onClick={(event) => openPreferences(event.currentTarget)}
         >
-          Cookie settings
+          <img
+            src="/images/svg/cookie-svgrepo-com.svg"
+            alt=""
+            aria-hidden="true"
+            className="cookie-consent__launcher-icon"
+            width={24}
+            height={24}
+          />
         </button>
       ) : null}
 

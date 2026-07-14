@@ -24,7 +24,7 @@ export const PREFS_COPY = {
   necessaryTitle: 'Necessary',
   necessaryStatus: 'Always active',
   necessaryBody:
-    'Required for security, payments, forms, booking functionality and remembering your privacy choices. These technologies cannot be switched off through this tool.',
+    'Required for security, payments, forms, booking functionality, remembering your privacy choices, and keeping your admin account signed in. These technologies cannot be switched off through this tool.',
   analyticsTitle: 'Analytics',
   analyticsBody:
     'Helps us understand how visitors use KERSIVO so we can improve website performance and usability. Provider: Google Analytics 4 (when enabled).',

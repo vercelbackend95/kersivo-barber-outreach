@@ -92,6 +92,11 @@ export default function AdminSidebarProfile({
     window.location.assign('/');
   };
 
+  const handleCreateAccount = () => {
+    setOpen(false);
+    openDemoAuthLock();
+  };
+
   const handleLaunch = () => {
     setOpen(false);
     if (isGuest) {
@@ -106,21 +111,7 @@ export default function AdminSidebarProfile({
       openDemoAuthLock();
       return;
     }
-    void (async () => {
-      try {
-        const response = await fetch('/api/admin/onboarding/restart', {
-          method: 'POST',
-          credentials: 'include',
-        });
-        if (!response.ok) {
-          const payload = (await response.json().catch(() => ({}))) as { error?: string };
-          window.alert(payload.error || 'Could not restart workspace setup.');
-        }
-      } catch {
-        window.alert('Could not restart workspace setup.');
-      }
-      window.location.assign('/admin/onboarding');
-    })();
+    window.location.assign('/admin/onboarding');
   };
 
   const handleRetailOnboarding = () => {
@@ -172,19 +163,50 @@ export default function AdminSidebarProfile({
                 zIndex: 10000,
               }}
             >
-              <div className="admin-profile-menu__header" role="none">
-                <span
-                  className={`admin-sidebar-profile__avatar${isGuest ? ' admin-sidebar-profile__avatar--guest' : ''}`}
-                  aria-hidden="true"
+              {isGuest ? (
+                <button
+                  type="button"
+                  className="admin-profile-menu__header admin-profile-menu__header--action"
+                  role="menuitem"
+                  onClick={handleCreateAccount}
                 >
-                  {avatarContent}
-                </span>
-                <span className="admin-sidebar-profile__meta">
-                  <span className="admin-sidebar-profile__name">{displayName}</span>
-                  <span className="admin-sidebar-profile__plan">{planLabel}</span>
-                </span>
-              </div>
+                  <span
+                    className="admin-sidebar-profile__avatar admin-sidebar-profile__avatar--guest"
+                    aria-hidden="true"
+                  >
+                    {avatarContent}
+                  </span>
+                  <span className="admin-sidebar-profile__meta">
+                    <span className="admin-sidebar-profile__name">{displayName}</span>
+                    <span className="admin-sidebar-profile__plan">{planLabel}</span>
+                  </span>
+                </button>
+              ) : (
+                <div className="admin-profile-menu__header" role="none">
+                  <span className="admin-sidebar-profile__avatar" aria-hidden="true">
+                    {avatarContent}
+                  </span>
+                  <span className="admin-sidebar-profile__meta">
+                    <span className="admin-sidebar-profile__name">{displayName}</span>
+                    <span className="admin-sidebar-profile__plan">{planLabel}</span>
+                  </span>
+                </div>
+              )}
               <div className="admin-profile-menu__divider" aria-hidden="true" />
+              {isGuest ? (
+                <>
+                  <button
+                    type="button"
+                    className="admin-profile-menu__item"
+                    role="menuitem"
+                    onClick={handleCreateAccount}
+                  >
+                    <AccountCircle width={15} height={15} aria-hidden="true" />
+                    Create account
+                  </button>
+                  <div className="admin-profile-menu__divider" aria-hidden="true" />
+                </>
+              ) : null}
               <button
                 type="button"
                 className="admin-profile-menu__item"

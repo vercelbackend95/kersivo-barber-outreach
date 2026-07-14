@@ -15,7 +15,7 @@ const consentDays = Math.round(CONSENT_MAX_AGE_SECONDS / (24 * 60 * 60));
   <main class="legal-page">
     <article class="container legal-page__inner">
       <h1 class="legal-page__title">Cookie Policy</h1>
-      <p class="legal-page__updated">Last updated: 13 July 2026</p>
+      <p class="legal-page__updated">Last updated: 14 July 2026</p>
 
       <p>
         This Cookie Policy explains how KERSIVO uses cookies and similar technologies on
@@ -47,8 +47,11 @@ const consentDays = Math.round(CONSENT_MAX_AGE_SECONDS / (24 * 60 * 60));
       <h2>Categories we use</h2>
       <h3>Necessary</h3>
       <p>
-        Required for security, payments, forms, booking functionality and remembering your privacy choices. These cannot
-        be switched off through the preference tool.
+        Required for security, payments, forms, booking functionality, remembering your privacy choices, and keeping a
+        barbershop admin signed in so you can manage your workspace securely without logging in on every visit. When a
+        valid admin session cookie is present, opening the Admin &amp; Shop product preview takes you straight to your
+        signed-in workspace (without signing in with Google again). These cannot be switched off through the preference
+        tool.
       </p>
       <h3>Analytics</h3>
       <p>
@@ -94,8 +97,19 @@ const consentDays = Math.round(CONSENT_MAX_AGE_SECONDS / (24 * 60 * 60));
               <td><code>kersivo_admin_session</code></td>
               <td>KERSIVO</td>
               <td>Necessary</td>
-              <td>Authenticated admin session</td>
-              <td>Session / server-configured</td>
+              <td>Keeps an authenticated barbershop admin signed in to the admin panel</td>
+              <td>30 days</td>
+              <td>First-party cookie</td>
+            </tr>
+            <tr>
+              <td>
+                <code>better-auth.session_token</code> (on HTTPS:
+                <code>__Secure-better-auth.session_token</code>)
+              </td>
+              <td>KERSIVO</td>
+              <td>Necessary</td>
+              <td>Primary admin authentication session; keeps you signed in to the admin panel and opens your workspace from the Admin &amp; Shop preview when the cookie is valid</td>
+              <td>Up to 30 days</td>
               <td>First-party cookie</td>
             </tr>
             <tr>

@@ -85,7 +85,7 @@ export function initSystemChooser(): void {
     });
   };
 
-  const activateTile = (tile: Element) => {
+  const activateTile = async (tile: Element) => {
     if (tileNavigationInFlight) {
       return;
     }
@@ -97,8 +97,25 @@ export function initSystemChooser(): void {
     tileNavigationInFlight = true;
     setTileLoadingState(tile);
 
+    let targetHref = href;
+    if (href.includes('/admin-demo')) {
+      try {
+        const response = await fetch('/api/admin/session', { credentials: 'include' });
+        if (response.ok) {
+          const payload = (await response.json()) as { ok?: boolean; via?: string };
+          if (payload.ok && payload.via === 'session') {
+            const url = new URL(href, window.location.origin);
+            const section = url.searchParams.get('section') || 'bookings_dashboard';
+            targetHref = `/admin?section=${encodeURIComponent(section)}`;
+          }
+        }
+      } catch {
+        /* fall back to demo href */
+      }
+    }
+
     setTimeout(() => {
-      window.open(href, '_blank', 'noopener');
+      window.open(targetHref, '_blank', 'noopener');
       setTimeout(resetTileLoadingState, 600);
     }, 260);
   };

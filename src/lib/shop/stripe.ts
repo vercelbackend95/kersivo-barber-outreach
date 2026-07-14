@@ -1,7 +1,7 @@
 import crypto from 'node:crypto';
 
 type StripeCheckoutParams = {
-  customerEmail: string;
+  customerEmail?: string;
   successUrl: string;
   cancelUrl: string;
   lineItems: Array<{ productId: string; name: string; unitAmount: number; quantity: number; imageUrl?: string }>;
@@ -15,6 +15,7 @@ export type StripeSession = {
   currency: string | null;
   payment_status?: string | null;
   customer_email?: string | null;
+  customer_details?: { email?: string | null } | null;
   payment_intent?: string | { id?: string } | null;
   metadata?: Record<string, string>;
 };
@@ -35,7 +36,10 @@ export async function createCheckoutSession(params: StripeCheckoutParams): Promi
   body.set('mode', 'payment');
   body.set('success_url', params.successUrl);
   body.set('cancel_url', params.cancelUrl);
-  body.set('customer_email', params.customerEmail);
+  const customerEmail = params.customerEmail?.trim();
+  if (customerEmail) {
+    body.set('customer_email', customerEmail);
+  }
 
   params.lineItems.forEach((item, index) => {
     body.set(`line_items[${index}][price_data][currency]`, 'gbp');

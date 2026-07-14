@@ -469,6 +469,7 @@ export default function AdminLayout({
         <div className="admin-mobile-drawer-head">
           <div className="admin-mobile-drawer-head-top">
             <SidebarBrand logoUrl={isPublicDemo ? null : shopLogoUrl} />
+            <SidebarStatus className="admin-sidebar-status--mobile-drawer" />
             <button
               type="button"
               className="admin-mobile-close-button"
@@ -478,7 +479,6 @@ export default function AdminLayout({
               <X width={20} height={20} aria-hidden="true" />
             </button>
           </div>
-          <SidebarStatus className="admin-sidebar-status--mobile-drawer" />
         </div>
         {menu}
         <div className="admin-sidebar-divider" aria-hidden="true" />

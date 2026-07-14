@@ -532,6 +532,28 @@
   border-color: #ff8d98 !important;
 }
 
+@media (max-width: 767px) {
+  .admin-onboarding__main--welcome {
+    justify-content: center;
+    gap: var(--space-md);
+  }
+
+  .admin-onboarding__main--welcome .admin-onboarding__title {
+    font-size: clamp(1.85rem, 7.5vw, 2.35rem);
+    line-height: 1.15;
+    letter-spacing: -0.02em;
+  }
+
+  .admin-onboarding__main--welcome .admin-onboarding__description {
+    font-size: clamp(1rem, 3.8vw, 1.125rem);
+    line-height: 1.55;
+  }
+
+  .admin-onboarding__main--welcome .admin-onboarding__question-title {
+    font-size: clamp(1.15rem, 4.2vw, 1.3rem);
+  }
+}
+
 @media (min-width: 768px) {
   .admin-onboarding {
     padding-top: var(--space-xl);

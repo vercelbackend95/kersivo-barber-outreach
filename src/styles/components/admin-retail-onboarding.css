@@ -77,6 +77,21 @@
   border-color: color-mix(in srgb, var(--danger, #e11) 70%, transparent);
 }
 
+.admin-onboarding--retail.admin-onboarding--finished .admin-onboarding__main {
+  max-width: 32rem;
+  padding-bottom: var(--space-xl);
+}
+
+.admin-onboarding--retail .booking-confirmation__cta--stack {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-sm);
+}
+
+.admin-onboarding--retail .booking-confirmation__cta--stack .btn {
+  width: 100%;
+}
+
 /* Inline prompt inside Products empty list */
 .admin-retail-empty-prompt {
   display: flex;

@@ -1,30 +1,32 @@
 export const prerender = false;
 
 import type { APIRoute } from 'astro';
+import { resolveAdminAccess } from '../../../lib/admin/auth';
+import { prisma } from '../../../lib/db/client';
 import { DEMO_SHOP_ID } from '../../../lib/db/shopScope';
 import { getDemoCatalogProductById } from '../../../lib/shop/demoCatalog';
 import { createCheckoutSession } from '../../../lib/shop/stripe';
 
 type CheckoutInput = {
-  email: string;
   items: Array<{ productId: string; quantity: number }>;
 };
 
-const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+type CheckoutProduct = {
+  id: string;
+  name: string;
+  pricePence: number;
+  imageUrl: string | null;
+  active: boolean;
+};
 
 function getPublicSiteUrl() {
   const configured = (import.meta.env.PUBLIC_SITE_URL ?? process.env.PUBLIC_SITE_URL ?? 'http://localhost:4321').trim();
   return configured.replace(/\/$/, '');
 }
 
-export const POST: APIRoute = async ({ request }) => {
+export const POST: APIRoute = async (ctx) => {
   try {
-    const body = (await request.json()) as CheckoutInput;
-    const email = body.email?.trim().toLowerCase();
-
-    if (!email || !EMAIL_REGEX.test(email)) {
-      return new Response(JSON.stringify({ error: 'Valid email is required.' }), { status: 400 });
-    }
+    const body = (await ctx.request.json()) as CheckoutInput;
 
     const requestedItems = (body.items ?? [])
       .map((item) => ({
@@ -42,9 +44,41 @@ export const POST: APIRoute = async ({ request }) => {
       quantityByProduct.set(item.productId, (quantityByProduct.get(item.productId) ?? 0) + item.quantity);
     }
 
-    const products = [...quantityByProduct.keys()]
-      .map((productId) => getDemoCatalogProductById(productId))
-      .filter((product): product is NonNullable<typeof product> => Boolean(product?.active));
+    const productIds = [...quantityByProduct.keys()];
+    const access = await resolveAdminAccess(ctx);
+
+    let shopId = DEMO_SHOP_ID;
+    let products: CheckoutProduct[] = [];
+
+    if (access?.via === 'session') {
+      shopId = access.shopId;
+      const rows = await prisma.product.findMany({
+        where: {
+          shopId: access.shopId,
+          id: { in: productIds },
+          active: true,
+        },
+        select: {
+          id: true,
+          name: true,
+          pricePence: true,
+          imageUrl: true,
+          active: true,
+        },
+      });
+      products = rows;
+    } else {
+      products = productIds
+        .map((productId) => getDemoCatalogProductById(productId))
+        .filter((product): product is NonNullable<typeof product> => Boolean(product?.active))
+        .map((product) => ({
+          id: product.id,
+          name: product.name,
+          pricePence: product.pricePence,
+          imageUrl: product.imageUrl,
+          active: product.active,
+        }));
+    }
 
     if (products.length !== quantityByProduct.size) {
       return new Response(JSON.stringify({ error: 'Some products are unavailable.' }), { status: 400 });
@@ -64,7 +98,6 @@ export const POST: APIRoute = async ({ request }) => {
 
     const baseUrl = getPublicSiteUrl();
     const session = await createCheckoutSession({
-      customerEmail: email,
       successUrl: `${baseUrl}/shop/success?session_id={CHECKOUT_SESSION_ID}`,
       cancelUrl: `${baseUrl}/shop/cancelled`,
       lineItems: snapshot.map((item) => ({
@@ -75,8 +108,7 @@ export const POST: APIRoute = async ({ request }) => {
         imageUrl: item.imageUrl || undefined,
       })),
       metadata: {
-        shopId: DEMO_SHOP_ID,
-        email,
+        shopId,
         cart: JSON.stringify(
           snapshot.map((item) => ({
             productId: item.productId,

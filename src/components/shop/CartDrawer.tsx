@@ -6,17 +6,14 @@ import {
   getSnapshot,
   openCart,
   removeItem,
-  setEmail,
   setQuantity,
   subscribe,
-  type CartItem
+  type CartItem,
 } from '@/lib/shop/cartStore';
-import { DEMO_NOTICE_TEXT } from '@/lib/shop/demoCopy';
 import EmptyState from '@/components/EmptyState';
-import { ShoppingCart } from "lucide-react";
+import { ShoppingCart, X } from '@/components/lucide-react';
 
 const CART_OPEN_REQUEST_EVENT = 'kersivo:cart-open-request';
-const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
 function useCartSnapshot() {
   return useSyncExternalStore(subscribe, getSnapshot, getServerSnapshot);
@@ -41,12 +38,12 @@ function getProductFromButton(button: HTMLElement): CartItem | null {
     name,
     pricePence: Math.max(0, Math.floor(pricePence)),
     imageUrl: imageUrl || undefined,
-    quantity: 1
+    quantity: 1,
   };
 }
 
 export default function CartDrawer() {
-  const { items, subtotalPence, isOpen: open, email } = useCartSnapshot();
+  const { items, subtotalPence, isOpen: open } = useCartSnapshot();
   const [checkoutLoading, setCheckoutLoading] = useState(false);
   const [checkoutError, setCheckoutError] = useState<string | null>(null);
 
@@ -124,17 +121,12 @@ export default function CartDrawer() {
       document.removeEventListener('click', onDocumentClick);
     };
   }, []);
+
   const onBuyPickup = async () => {
     setCheckoutError(null);
 
     if (items.length === 0) {
-      setCheckoutError('Your cart is empty. Add products before confirming pickup.');
-      return;
-    }
-
-    const safeEmail = email.trim().toLowerCase();
-    if (!EMAIL_REGEX.test(safeEmail)) {
-      setCheckoutError('Please enter a valid email so we can send your pickup receipt.');
+      setCheckoutError('Your bag is empty. Add products before checkout.');
       return;
     }
 
@@ -142,11 +134,11 @@ export default function CartDrawer() {
     try {
       const response = await fetch('/api/shop/checkout', {
         method: 'POST',
+        credentials: 'include',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          email: safeEmail,
-          items: items.map((item) => ({ productId: item.productId, quantity: item.quantity }))
-        })
+          items: items.map((item) => ({ productId: item.productId, quantity: item.quantity })),
+        }),
       });
       const payload = await response.json();
       if (!response.ok) {
@@ -164,60 +156,68 @@ export default function CartDrawer() {
     }
   };
 
-
   return (
     <>
-      <aside className={`cart-drawer ${open ? 'cart-drawer--open' : ''}`} aria-hidden={open ? 'false' : 'true'}>
-        <div className="cart-drawer__header">
+      <aside className={`cart-drawer${open ? ' cart-drawer--open' : ''}`} aria-hidden={open ? 'false' : 'true'}>
+        <header className="cart-drawer__header">
           <div className="cart-drawer__header-top">
-            <h2>Demo cart</h2>
-            <button
-              type="button"
-              className="navbar17__toggle navbar17__toggle--as-close cart-drawer__close"
-              onClick={closeCart}
-              aria-label="Close cart drawer"
-            >
-              <span className="navbar17__toggle-icon" aria-hidden="true" />
+            <div className="cart-drawer__heading">
+              <p className="cart-drawer__eyebrow">Pickup</p>
+              <h2 className="cart-drawer__title">Your bag</h2>
+            </div>
+            <button type="button" className="cart-drawer__close" onClick={closeCart} aria-label="Close bag">
+              <X aria-hidden="true" width={18} height={18} strokeWidth={2} />
             </button>
-
           </div>
-          <p className="muted cart-drawer__intro">Order online now and collect when it suits you. No shipping needed.</p>
-          <p className="demo-notice" role="note">
-            {DEMO_NOTICE_TEXT}
-          </p>
-        </div>
+          <p className="cart-drawer__intro">Order online, collect in store when it suits you — no shipping.</p>
+        </header>
 
         <div className="cart-items" aria-live="polite">
           {items.length === 0 ? (
-            <EmptyState
-              icon={ShoppingCart}
-              title="Your cart is empty"
-              description="Add products to build your pickup order."
-            />
+            <div className="cart-drawer__empty-wrap">
+              <EmptyState
+                icon={ShoppingCart}
+                title="Your bag is empty"
+                description="Add products to build your pickup order."
+              />
+            </div>
           ) : (
             items.map((item) => (
               <article className="cart-row" key={item.productId}>
                 <div className="cart-row__content">
-                  {item.imageUrl ? <img src={item.imageUrl} alt={item.name} className="cart-row__image" loading="lazy" /> : <div className="cart-row__image cart-row__image--placeholder" aria-hidden="true" />}
+                  {item.imageUrl ? (
+                    <img src={item.imageUrl} alt="" className="cart-row__image" loading="lazy" />
+                  ) : (
+                    <div className="cart-row__image cart-row__image--placeholder" aria-hidden="true" />
+                  )}
                   <div className="cart-row__details">
                     <p className="cart-item-name">{item.name}</p>
-                   <p className="cart-item-price">{formatGbp(item.pricePence)} each</p>
-                    <p className="cart-item-total">Line total: {formatGbp(item.pricePence * item.quantity)}</p>
-
+                    <p className="cart-item-price">{formatGbp(item.pricePence)} each</p>
+                    <p className="cart-item-total">{formatGbp(item.pricePence * item.quantity)}</p>
                   </div>
                 </div>
 
                 <div className="cart-row-actions">
                   <div className="cart-quantity" role="group" aria-label={`Quantity for ${item.name}`}>
-                    <button type="button" className="btn btn--ghost" onClick={() => setQuantity(item.productId, item.quantity - 1)} aria-label={`Decrease quantity of ${item.name}`}>
+                    <button
+                      type="button"
+                      className="cart-quantity__btn"
+                      onClick={() => setQuantity(item.productId, item.quantity - 1)}
+                      aria-label={`Decrease quantity of ${item.name}`}
+                    >
                       −
                     </button>
-                    <span>{item.quantity}</span>
-                    <button type="button" className="btn btn--ghost" onClick={() => setQuantity(item.productId, item.quantity + 1)} aria-label={`Increase quantity of ${item.name}`}>
+                    <span className="cart-quantity__value">{item.quantity}</span>
+                    <button
+                      type="button"
+                      className="cart-quantity__btn"
+                      onClick={() => setQuantity(item.productId, item.quantity + 1)}
+                      aria-label={`Increase quantity of ${item.name}`}
+                    >
                       +
                     </button>
                   </div>
-                  <button type="button" className="btn btn--ghost cart-row__remove" onClick={() => removeItem(item.productId)}>
+                  <button type="button" className="cart-row__remove" onClick={() => removeItem(item.productId)}>
                     Remove
                   </button>
                 </div>
@@ -228,40 +228,34 @@ export default function CartDrawer() {
 
         <section className="cart-summary" aria-label="Pickup summary">
           <div className="cart-summary__totals">
-            <p>Subtotal</p>
-            <p><strong>{formatGbp(subtotalPence)}</strong></p>
+            <p className="cart-summary__label">Subtotal</p>
+            <p className="cart-summary__value">{formatGbp(subtotalPence)}</p>
           </div>
-          <ul className="cart-summary__pickup-points">
-            <li>Ready for pickup in store when staff mark the order.</li>
-            <li>Collect in shop during opening hours.</li>
-            <li>We will send your confirmation to email.</li>
-          </ul>
-
-          <label className="cart-email-label" htmlFor="shop-cart-email">
-            Email for pickup confirmation
-          </label>
-          <input
-            id="shop-cart-email"
-            type="email"
-            autoComplete="email"
-            placeholder="you@example.com"
-            className="cart-email-input"
-            value={email}
-            onChange={(event) => setEmail(event.target.value)}
-          />
+          <p className="cart-summary__pickup-note">
+            Ready for collection in store during opening hours once staff mark the order.
+          </p>
           {checkoutError ? <p className="cart-checkout-error">{checkoutError}</p> : null}
 
-          <button type="button" className="btn btn--primary cart-buy-button" onClick={() => void onBuyPickup()} disabled={checkoutLoading}>
-            {checkoutLoading ? 'Creating secure checkout...' : 'Confirm pickup order'}
+          <button
+            type="button"
+            className="btn btn--primary cart-buy-button"
+            onClick={() => void onBuyPickup()}
+            disabled={checkoutLoading || items.length === 0}
+          >
+            {checkoutLoading ? 'Opening secure checkout…' : 'Continue to secure checkout'}
           </button>
-          <p className="muted cart-checkout-note">Secure Stripe checkout. Pickup only — no delivery step.</p>
+          <p className="cart-checkout-note">
+            Stripe Checkout collects your email for the pickup receipt — it appears on the shop order.
+          </p>
         </section>
       </aside>
 
-      {open ? <button type="button" className="cart-drawer__backdrop" aria-label="Close cart drawer" onClick={closeCart} /> : null}
+      {open ? (
+        <button type="button" className="cart-drawer__backdrop" aria-label="Close bag" onClick={closeCart} />
+      ) : null}
 
       <span className="cart-count-announcer" aria-live="polite" aria-atomic="true">
-        Demo cart has {cartCount} item{cartCount === 1 ? '' : 's'}.
+        Bag has {cartCount} item{cartCount === 1 ? '' : 's'}.
       </span>
     </>
   );

@@ -325,11 +325,19 @@ export const POST: APIRoute = async ({ request }) => {
       return new Response(JSON.stringify({ ok: true, duplicate: true }), { status: 200 });
     }
 
-    const customerEmail = (metadata.email ?? event.data.object.customer_email ?? '').trim().toLowerCase();
+    const customerEmail = (
+      session.customer_details?.email ??
+      session.customer_email ??
+      event.data.object.customer_email ??
+      metadata.email ??
+      ''
+    )
+      .trim()
+      .toLowerCase();
     const shopId = metadata.shopId;
 
     if (!shopId || !customerEmail) {
-      return new Response(JSON.stringify({ error: 'Missing metadata' }), { status: 400 });
+      return new Response(JSON.stringify({ error: 'Missing shop or customer email' }), { status: 400 });
     }
 
     const cart = JSON.parse(metadata.cart ?? '[]') as CartSnapshotItem[];

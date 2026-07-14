@@ -1,13 +1,11 @@
 // src/lib/shop/cartStore.ts
 export const CART_STORAGE_KEY = 'kersivo_shop_cart_v2';
 
-
 export type CartItem = {
   productId: string;
   name: string;
   pricePence: number;
   imageUrl?: string;
-
   quantity: number;
 };
 
@@ -22,14 +20,12 @@ export type AddCartItemInput = {
 type CartState = {
   items: CartItem[];
   isOpen: boolean;
-  email: string;
 };
 
 export type CartSnapshot = {
   items: CartItem[];
   isOpen: boolean;
   subtotalPence: number;
-  email: string;
 };
 
 type CartStoreSingleton = {
@@ -38,7 +34,6 @@ type CartStoreSingleton = {
   listeners: Set<() => void>;
   isHydrated: boolean;
   storageListenerBound: boolean;
-
 };
 
 declare global {
@@ -46,12 +41,10 @@ declare global {
   var __KERSIVO_CART_STORE__: CartStoreSingleton | undefined;
 }
 
-
 const SERVER_SNAPSHOT: CartSnapshot = Object.freeze({
   items: [],
   isOpen: false,
   subtotalPence: 0,
-  email: ''
 });
 
 const store: CartStoreSingleton =
@@ -60,15 +53,12 @@ const store: CartStoreSingleton =
     state: {
       items: [],
       isOpen: false,
-      email: ''
     },
     clientSnapshot: SERVER_SNAPSHOT,
     listeners: new Set<() => void>(),
     isHydrated: false,
-    storageListenerBound: false
+    storageListenerBound: false,
   };
-
-
 
 globalThis.__KERSIVO_CART_STORE__ = store;
 
@@ -77,14 +67,11 @@ function emitChange() {
     items: store.state.items,
     isOpen: store.state.isOpen,
     subtotalPence: store.state.items.reduce((sum, item) => sum + item.pricePence * item.quantity, 0),
-    email: store.state.email
-
   };
 
   for (const listener of store.listeners) {
     listener();
   }
-
 }
 
 function toSafeItem(item: Partial<CartItem>): CartItem | null {
@@ -102,7 +89,7 @@ function toSafeItem(item: Partial<CartItem>): CartItem | null {
     name,
     pricePence,
     imageUrl: item.imageUrl ? String(item.imageUrl) : undefined,
-    quantity
+    quantity,
   };
 }
 
@@ -111,18 +98,13 @@ function readFromStorage(): CartItem[] {
     return [];
   }
 
-
   try {
     const parsed = JSON.parse(window.localStorage.getItem(CART_STORAGE_KEY) ?? '[]') as Partial<CartItem>[];
     if (!Array.isArray(parsed)) {
       return [];
     }
 
-
-    return parsed
-      .map((item) => toSafeItem(item))
-      .filter((item): item is CartItem => Boolean(item));
-
+    return parsed.map((item) => toSafeItem(item)).filter((item): item is CartItem => Boolean(item));
   } catch {
     return [];
   }
@@ -134,15 +116,13 @@ function writeToStorage(items: CartItem[]) {
   }
 
   window.localStorage.setItem(CART_STORAGE_KEY, JSON.stringify(items));
-
 }
 
 function ensureHydrated() {
   if (typeof window === 'undefined' || store.isHydrated) {
     return;
-
   }
-  
+
   store.state.items = readFromStorage();
   store.isHydrated = true;
 
@@ -215,8 +195,8 @@ export function addItem(input: AddCartItemInput) {
         name: safeName,
         pricePence: safePrice,
         imageUrl: input.imageUrl,
-        quantity
-      }
+        quantity,
+      },
     ]);
     return;
   }
@@ -227,16 +207,14 @@ export function addItem(input: AddCartItemInput) {
     name: safeName,
     pricePence: safePrice,
     imageUrl: input.imageUrl ?? nextItems[existingIndex].imageUrl,
-    quantity: nextItems[existingIndex].quantity + quantity
+    quantity: nextItems[existingIndex].quantity + quantity,
   };
   updateItems(nextItems);
-
 }
 
 export function removeItem(productId: string) {
   ensureHydrated();
   updateItems(store.state.items.filter((item) => item.productId !== productId));
-
 }
 
 export function setQuantity(productId: string, quantity: number) {
@@ -246,9 +224,8 @@ export function setQuantity(productId: string, quantity: number) {
   const itemIndex = nextItems.findIndex((item) => item.productId === productId);
   if (itemIndex === -1) {
     return;
-
   }
-  
+
   if (nextQuantity <= 0) {
     nextItems.splice(itemIndex, 1);
     updateItems(nextItems);
@@ -257,7 +234,7 @@ export function setQuantity(productId: string, quantity: number) {
 
   nextItems[itemIndex] = {
     ...nextItems[itemIndex],
-    quantity: nextQuantity
+    quantity: nextQuantity,
   };
   updateItems(nextItems);
 }
@@ -265,37 +242,26 @@ export function setQuantity(productId: string, quantity: number) {
 export function clear() {
   ensureHydrated();
   updateItems([]);
-
 }
-export function setEmail(email: string) {
-  ensureHydrated();
-  store.state.email = String(email ?? '').trim();
-  emitChange();
-}
-
 
 export function getSubtotalPence() {
   ensureHydrated();
   return store.state.items.reduce((sum, item) => sum + item.pricePence * item.quantity, 0);
-
 }
 
 export function openCart() {
   ensureHydrated();
   store.state.isOpen = true;
   emitChange();
-
 }
 
 export function closeCart() {
   ensureHydrated();
   store.state.isOpen = false;
   emitChange();
-
 }
 
 export function isOpen() {
   ensureHydrated();
   return store.state.isOpen;
-
 }

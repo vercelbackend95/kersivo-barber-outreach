@@ -57,6 +57,12 @@ export default function RetailOnboardingWizard() {
   const [imageFile, setImageFile] = useState<File | null>(null);
   const [imagePreview, setImagePreview] = useState<string | null>(null);
   const [imageError, setImageError] = useState('');
+  const [finished, setFinished] = useState(false);
+  const [addedSummary, setAddedSummary] = useState<{
+    name: string;
+    pricePence: number;
+    category: ProductCategory;
+  } | null>(null);
 
   useEffect(() => {
     void (async () => {
@@ -100,7 +106,7 @@ export default function RetailOnboardingWizard() {
   const displayName = name.trim() || 'Your product';
   const displayPrice = Number.isFinite(pricePence) && pricePence > 0 ? formatGbp(pricePence) : '£0.00';
 
-  const setupProgressVisible = step >= 1 && step <= 2;
+  const setupProgressVisible = !finished && step >= 1 && step <= 2;
 
   const validateForm = () => {
     let valid = true;
@@ -164,7 +170,13 @@ export default function RetailOnboardingWizard() {
         throw new Error(await readJsonError(response));
       }
 
-      window.location.assign('/admin?section=shop_products');
+      setAddedSummary({
+        name: name.trim(),
+        pricePence,
+        category,
+      });
+      setFinished(true);
+      setSaving(false);
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Could not add product to the shop.');
       setSaving(false);
@@ -198,7 +210,68 @@ export default function RetailOnboardingWizard() {
     );
   }
 
-  const shellClass = `admin-onboarding admin-onboarding--retail${step === 2 ? ' admin-onboarding--preview' : ''}`;
+  const shellClass = `admin-onboarding admin-onboarding--retail${
+    !finished && step === 2 ? ' admin-onboarding--preview' : ''
+  }${finished ? ' admin-onboarding--finished' : ''}`;
+
+  if (finished && addedSummary) {
+    const categoryLabel =
+      PRODUCT_CATEGORY_OPTIONS.find((option) => option.value === addedSummary.category)?.label ??
+      CATEGORY_LABELS[addedSummary.category];
+
+    return (
+      <div className={shellClass}>
+        <header className="admin-onboarding__header">
+          <div className="admin-onboarding__brand">
+            <img className="admin-onboarding__logo" src="/images/logo_nobg.png" alt="" />
+            <span className="admin-onboarding__brand-name">Kersivo</span>
+          </div>
+        </header>
+
+        <main className="admin-onboarding__main">
+          <div className="booking-flow booking-flow--wizard">
+            <section className="booking-confirmation" role="status" aria-live="polite" tabIndex={-1}>
+              <div className="booking-confirmation__header">
+                <div className="booking-confirmation__icon" aria-hidden="true">
+                  <svg viewBox="0 0 24 24" focusable="false">
+                    <path d="M20.707 5.293a1 1 0 0 1 0 1.414l-10 10a1 1 0 0 1-1.414 0l-4-4a1 1 0 1 1 1.414-1.414L10 14.586l9.293-9.293a1 1 0 0 1 1.414 0Z" />
+                  </svg>
+                </div>
+                <div className="booking-confirmation__copy">
+                  <p className="booking-confirmation__eyebrow">Confirmed</p>
+                  <h2 className="booking-confirmation__heading">Product added</h2>
+                  <p className="booking-confirmation__body">
+                    Your product is live in your shop. Customers can browse it on your storefront.
+                  </p>
+                </div>
+              </div>
+
+              <dl className="booking-confirmation__summary" aria-label="Product summary">
+                <div className="booking-confirmation__summary-row">
+                  <dt>Product</dt>
+                  <dd>{addedSummary.name}</dd>
+                </div>
+                <div className="booking-confirmation__summary-row">
+                  <dt>Price</dt>
+                  <dd>{formatGbp(addedSummary.pricePence)}</dd>
+                </div>
+                <div className="booking-confirmation__summary-row">
+                  <dt>Category</dt>
+                  <dd>{categoryLabel}</dd>
+                </div>
+              </dl>
+
+              <div className="booking-confirmation__cta">
+                <a className="btn btn--primary btn--lg" href="/admin/test-shop">
+                  View in my shop
+                </a>
+              </div>
+            </section>
+          </div>
+        </main>
+      </div>
+    );
+  }
 
   return (
     <div className={shellClass}>
@@ -231,7 +304,7 @@ export default function RetailOnboardingWizard() {
         ) : null}
       </header>
 
-      <main className="admin-onboarding__main">
+      <main className={`admin-onboarding__main${step === 0 ? ' admin-onboarding__main--welcome' : ''}`}>
         {error ? (
           <p className="admin-onboarding__error" role="alert">
             {error}
@@ -456,7 +529,17 @@ export default function RetailOnboardingWizard() {
               type="button"
               className="btn btn--secondary btn--lg"
               onClick={() => {
-                window.location.assign('/admin');
+                void (async () => {
+                  try {
+                    await fetch('/api/admin/retail-onboarding/skip', {
+                      method: 'POST',
+                      credentials: 'include',
+                    });
+                  } catch {
+                    /* ignore */
+                  }
+                  window.location.assign('/admin');
+                })();
               }}
             >
               Not right now

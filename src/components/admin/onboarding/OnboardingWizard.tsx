@@ -563,7 +563,7 @@ export default function OnboardingWizard() {
         ) : null}
       </header>
 
-      <main className="admin-onboarding__main">
+      <main className={`admin-onboarding__main${step === 0 ? ' admin-onboarding__main--welcome' : ''}`}>
         {error ? (
           <p className="admin-onboarding__error" role="alert">
             {error}

@@ -118,6 +118,9 @@ model ShopSettings {
   onboardingCompleted         Boolean  @default(false)
   onboardingCurrentStep       Int      @default(0)
   onboardingCompletedAt       DateTime?
+  retailOnboardingCompleted   Boolean  @default(false)
+  retailOnboardingSkipped     Boolean  @default(false)
+  retailOnboardingCompletedAt DateTime?
   ownerUserId                 String?  @unique
   createdAt                   DateTime @default(now())
   updatedAt                   DateTime @updatedAt

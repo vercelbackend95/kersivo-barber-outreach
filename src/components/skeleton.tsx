@@ -206,17 +206,19 @@ export function SkeletonBarberRosterCards({
         >
           <article className="admin-barber-identity admin-barber-identity--roster">
             <div className="admin-barber-roster-hero">
-              <span className="skeleton skeleton--text-sm admin-barber-skeleton-rank" />
               <div className="admin-barber-roster-avatar-shell">
                 <span className="skeleton skeleton--avatar admin-barber-skeleton-avatar" />
                 <span className="skeleton admin-barber-skeleton-dot" />
               </div>
-              <span className="skeleton skeleton--text-sm admin-barber-skeleton-pill" />
             </div>
 
             <div className="admin-barber-roster-body">
               <div className="admin-barber-name-row admin-barber-roster-name-row admin-barber-skeleton-name-row">
-                <span className="skeleton skeleton--title admin-barber-skeleton-name" />
+                <span className="skeleton admin-barber-skeleton-rank" />
+                <div className="admin-barber-skeleton-title-stack">
+                  <span className="skeleton skeleton--title admin-barber-skeleton-name" />
+                  <span className="skeleton skeleton--text-sm admin-barber-skeleton-status" />
+                </div>
                 {variant === 'manage' ? (
                   <span className="skeleton skeleton--text-sm admin-barber-skeleton-hidden-badge" />
                 ) : null}
@@ -246,13 +248,12 @@ export function SkeletonBarberRosterCards({
                 <span className="skeleton skeleton--text-sm admin-barber-skeleton-cta-copy" />
                 <i className="skeleton admin-barber-skeleton-cta-icon" />
               </span>
+
+              <div className="admin-barber-day-fill-row admin-barber-day-fill-row--roster">
+                <span className="skeleton admin-barber-skeleton-progress" />
+              </div>
             </div>
           </article>
-          <div className="admin-barber-roster-toolbar">
-            <div className="admin-barber-day-fill-row admin-barber-day-fill-row--roster">
-              <span className="skeleton admin-barber-skeleton-progress" />
-            </div>
-          </div>
         </li>
       ))}
     </>

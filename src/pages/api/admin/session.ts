@@ -10,6 +10,8 @@ export const GET: APIRoute = async (context) => {
 
   let onboardingCompleted = true;
   let onboardingCurrentStep = 0;
+  let retailOnboardingCompleted = true;
+  let retailOnboardingSkipped = false;
   let logoUrl: string | null = null;
   let shopName: string | null = null;
 
@@ -19,12 +21,16 @@ export const GET: APIRoute = async (context) => {
       select: {
         onboardingCompleted: true,
         onboardingCurrentStep: true,
+        retailOnboardingCompleted: true,
+        retailOnboardingSkipped: true,
         logoUrl: true,
         name: true,
       },
     });
     onboardingCompleted = shop?.onboardingCompleted ?? true;
     onboardingCurrentStep = shop?.onboardingCurrentStep ?? 0;
+    retailOnboardingCompleted = shop?.retailOnboardingCompleted ?? false;
+    retailOnboardingSkipped = shop?.retailOnboardingSkipped ?? false;
     logoUrl = shop?.logoUrl ?? null;
     shopName = shop?.name ?? null;
   }
@@ -35,6 +41,8 @@ export const GET: APIRoute = async (context) => {
       shopId: access.shopId,
       onboardingCompleted,
       onboardingCurrentStep,
+      retailOnboardingCompleted,
+      retailOnboardingSkipped,
       shop: {
         name: shopName,
         logoUrl,

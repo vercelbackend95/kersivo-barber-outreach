@@ -11,21 +11,27 @@
   bottom: 1rem;
   z-index: 70;
   appearance: none;
+  display: inline-grid;
+  place-items: center;
+  width: 2.5rem;
+  height: 2.5rem;
+  padding: 0;
   border: 1px solid var(--border);
   background: var(--surface-1);
   color: var(--muted);
-  font: inherit;
-  font-size: var(--text-xs);
-  letter-spacing: 0.04em;
-  text-transform: uppercase;
-  padding: 0.55rem 0.75rem;
   border-radius: var(--radius-8);
   cursor: pointer;
   box-shadow: var(--shadow-sm);
 }
 
+.cookie-consent__launcher-icon {
+  display: block;
+  width: 1.4rem;
+  height: 1.4rem;
+  object-fit: contain;
+}
+
 .cookie-consent__launcher:hover {
-  color: var(--fg);
   border-color: var(--accent);
 }
 

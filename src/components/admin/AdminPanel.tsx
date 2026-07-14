@@ -1,11 +1,7 @@
-import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import React, { Suspense, lazy, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import AdminLayout from './AdminLayout';
 import AdminGlobalMobileNextStripHost from './AdminGlobalMobileNextStripHost';
 import BookingsAdminPanel from './BookingsAdminPanel';
-import ShopAdminPanel from './ShopAdminPanel';
-import ServicesAdminPanel from './ServicesAdminPanel';
-import ClientsAdminPanel from './ClientsAdminPanel';
-import AiAssistantPanel from './AiAssistantPanel';
 import PrivateDemoAuthPanel from './PrivateDemoAuthPanel';
 import { AdminTodayBookingsLiveProvider } from './useAdminTodayBookingsLive';
 import { resolveDemoSectionAlias } from '@/lib/admin/demoConfig';
@@ -16,6 +12,12 @@ import {
   setPublicAdminDemoMode,
 } from './adminAuth';
 import type { AdminProfileUser } from './AdminSidebarProfile';
+import { SkeletonKPICards } from '../skeleton';
+
+const ServicesAdminPanel = lazy(() => import('./ServicesAdminPanel'));
+const ClientsAdminPanel = lazy(() => import('./ClientsAdminPanel'));
+const ShopAdminPanel = lazy(() => import('./ShopAdminPanel'));
+const AiAssistantPanel = lazy(() => import('./AiAssistantPanel'));
 
 export type AdminSection =
   | 'bookings_dashboard'
@@ -60,6 +62,16 @@ function getSectionFromUrl(): AdminSection {
   return 'bookings_dashboard';
 }
 
+function PanelChunkFallback() {
+  return (
+    <div className="admin-transition-skeleton" aria-busy="true">
+      <div className="admin-transition-skeleton-kpi-grid">
+        <SkeletonKPICards count={3} />
+      </div>
+    </div>
+  );
+}
+
 type AdminPanelProps = {
   demoMode?: boolean;
 };
@@ -67,14 +79,12 @@ type AdminPanelProps = {
 export default function AdminPanel({ demoMode = false }: AdminPanelProps) {
   const [activeSection, setActiveSection] = useState<AdminSection>('bookings_dashboard');
   const [isTransitioning, setIsTransitioning] = useState(false);
-  const [showSectionSkeleton, setShowSectionSkeleton] = useState(false);
   const [authReady, setAuthReady] = useState(demoMode);
   const [hasAccess, setHasAccess] = useState(() => demoMode || Boolean(getStoredAdminSecret()));
   const [profileUser, setProfileUser] = useState<AdminProfileUser | null>(null);
   const [shopLogoUrl, setShopLogoUrl] = useState<string | null>(null);
   const [demoLoadError, setDemoLoadError] = useState(false);
   const transitionTimeoutRef = useRef<number | null>(null);
-  const skeletonTimeoutRef = useRef<number | null>(null);
 
   useEffect(() => {
     installAdminFetchInterceptor();
@@ -170,13 +180,8 @@ export default function AdminPanel({ demoMode = false }: AdminPanelProps) {
       window.clearTimeout(transitionTimeoutRef.current);
       transitionTimeoutRef.current = null;
     }
-    if (skeletonTimeoutRef.current !== null) {
-      window.clearTimeout(skeletonTimeoutRef.current);
-      skeletonTimeoutRef.current = null;
-    }
 
     setIsTransitioning(true);
-    setShowSectionSkeleton(true);
     setActiveSection(section);
     const params = new URLSearchParams(window.location.search);
     params.set('section', section);
@@ -188,11 +193,6 @@ export default function AdminPanel({ demoMode = false }: AdminPanelProps) {
       setIsTransitioning(false);
       transitionTimeoutRef.current = null;
     }, 100);
-
-    skeletonTimeoutRef.current = window.setTimeout(() => {
-      setShowSectionSkeleton(false);
-      skeletonTimeoutRef.current = null;
-    }, 300);
   }, [activeSection]);
 
   const shopTab = useMemo(() => {
@@ -215,9 +215,6 @@ export default function AdminPanel({ demoMode = false }: AdminPanelProps) {
     return () => {
       if (transitionTimeoutRef.current !== null) {
         window.clearTimeout(transitionTimeoutRef.current);
-      }
-      if (skeletonTimeoutRef.current !== null) {
-        window.clearTimeout(skeletonTimeoutRef.current);
       }
     };
   }, []);
@@ -263,7 +260,7 @@ export default function AdminPanel({ demoMode = false }: AdminPanelProps) {
         activeSection={activeSection}
         onChangeSection={handleSectionChange}
         isTransitioning={isTransitioning}
-        showSectionSkeleton={showSectionSkeleton}
+        showSectionSkeleton={false}
         isPublicDemo={demoMode}
         profileUser={profileUser}
         shopLogoUrl={demoMode ? null : shopLogoUrl}
@@ -285,21 +282,17 @@ export default function AdminPanel({ demoMode = false }: AdminPanelProps) {
           onBackToDashboard={() => handleSectionChange('bookings_dashboard')}
         />
 
-        {activeSection === 'services' ? (
-          <ServicesAdminPanel key="services" />
-        ) : null}
+        <Suspense fallback={<PanelChunkFallback />}>
+          {activeSection === 'services' ? <ServicesAdminPanel key="services" /> : null}
 
-        {activeSection === 'bookings_clients' ? (
-          <ClientsAdminPanel key="clients" />
-        ) : null}
+          {activeSection === 'bookings_clients' ? <ClientsAdminPanel key="clients" /> : null}
 
-        {activeSection === 'shop_products' || activeSection === 'shop_orders' || activeSection === 'shop_sales' ? (
-          <ShopAdminPanel key={activeSection} initialTab={shopTab} />
-        ) : null}
+          {activeSection === 'shop_products' || activeSection === 'shop_orders' || activeSection === 'shop_sales' ? (
+            <ShopAdminPanel key={activeSection} initialTab={shopTab} />
+          ) : null}
 
-        {activeSection === 'assistant' ? (
-          <AiAssistantPanel key="assistant" isPublicDemo={demoMode} />
-        ) : null}
+          {activeSection === 'assistant' ? <AiAssistantPanel key="assistant" isPublicDemo={demoMode} /> : null}
+        </Suspense>
       </AdminLayout>
     </AdminTodayBookingsLiveProvider>
   );

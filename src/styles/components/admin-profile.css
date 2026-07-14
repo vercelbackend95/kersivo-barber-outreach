@@ -98,6 +98,21 @@
   padding: 0.55rem 0.55rem 0.45rem;
 }
 
+button.admin-profile-menu__header--action {
+  width: 100%;
+  border: none;
+  border-radius: var(--radius-8, 8px);
+  background: transparent;
+  color: inherit;
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+}
+
+button.admin-profile-menu__header--action:hover {
+  background: color-mix(in srgb, var(--fg) 7%, transparent);
+}
+
 .admin-profile-menu__divider {
   height: 1px;
   margin: 0.25rem 0.35rem;

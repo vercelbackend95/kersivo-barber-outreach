@@ -6,6 +6,7 @@ import { requireAdminContext } from '../../../../../lib/admin/auth';
 import { runSerializableTransaction } from '../../../../../lib/db/serializableTransaction';
 import { insertProductIntoShopOrder, normalizeRequestedProductSortOrder } from '../../../../../lib/products/sortOrder';
 import { makeBlobPath, uploadPublicImageToBlob } from '../../../../../lib/storage/vercelBlob';
+import { prisma } from '../../../../../lib/db/client';
 const PRODUCT_DESCRIPTION_MAX_LENGTH = 2000;
 const PRODUCT_CATEGORY_VALUES = ['POMADES_AND_CLAYS', 'BEARD_CARE', 'HAIR_WASH', 'STYLING', 'TOOLS', 'GIFT_SETS'] as const;
 const imageUrlSchema = z.string().trim().refine((value) => {
@@ -64,6 +65,17 @@ async function createProductWithReorder(shopId: string, payload: CreatePayload, 
 }
 
 
+async function markRetailOnboardingCompleted(shopId: string) {
+  await prisma.shopSettings.updateMany({
+    where: { id: shopId, retailOnboardingCompleted: false },
+    data: {
+      retailOnboardingCompleted: true,
+      retailOnboardingSkipped: false,
+      retailOnboardingCompletedAt: new Date(),
+    },
+  });
+}
+
 export const POST: APIRoute = async (ctx) => {
   const access = await requireAdminContext(ctx);
   if (access instanceof Response) return access;
@@ -96,6 +108,7 @@ export const POST: APIRoute = async (ctx) => {
         uploadedImageUrl = await uploadPublicImageToBlob(file, makeBlobPath('products', file));
       }
       const product = await createProductWithReorder(shopId, parsed.data, uploadedImageUrl);
+      await markRetailOnboardingCompleted(shopId);
 
       return new Response(JSON.stringify({ product }), { status: 200 });
     }
@@ -105,6 +118,7 @@ export const POST: APIRoute = async (ctx) => {
       return new Response(JSON.stringify({ error: parsed.error.flatten() }), { status: 400 });
     }
     const product = await createProductWithReorder(shopId, parsed.data);
+    await markRetailOnboardingCompleted(shopId);
 
     return new Response(JSON.stringify({ product }), { status: 200 });
   } catch (error) {

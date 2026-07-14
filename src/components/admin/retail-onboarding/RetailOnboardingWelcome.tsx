@@ -1,7 +1,5 @@
 import React from 'react';
 
-export const RETAIL_EMPTY_DISMISSED_KEY = 'kersivo_retail_empty_dismissed';
-
 type RetailOnboardingWelcomeProps = {
   layout?: 'wizard' | 'panel';
   onYes?: () => void;

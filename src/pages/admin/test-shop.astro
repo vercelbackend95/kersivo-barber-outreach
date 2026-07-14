@@ -1,0 +1,364 @@
+---
+export const prerender = false;
+
+import MinimalLayout from '@/layouts/MinimalLayout.astro';
+import CartDrawerMount from '@/components/shop/CartDrawerMount.astro';
+import { resolveAdminAccess } from '@/lib/admin/auth';
+import { prisma } from '@/lib/db/client';
+import { formatGbp } from '@/lib/shop/money';
+import {
+  SHOP_FILTER_LABELS,
+  type ProductCategory,
+} from '@/lib/shop/productPresentation';
+import '@/styles/tokens.css';
+import '@/styles/fonts-admin.css';
+import '@/styles/global.css';
+import '@/styles/components/buttons.css';
+import '@/styles/components/badge.css';
+import '@/styles/components/shop.css';
+import '@/styles/components/shop-product.css';
+import '@/styles/components/empty-state.css';
+import '@/styles/components/inputs.css';
+
+const access = await resolveAdminAccess(Astro);
+if (!access || access.via !== 'session') {
+  return Astro.redirect('/admin');
+}
+
+const shop = await prisma.shopSettings.findUnique({
+  where: { id: access.shopId },
+  select: { name: true },
+});
+
+const products = await prisma.product.findMany({
+  where: { shopId: access.shopId, active: true },
+  orderBy: [{ sortOrder: 'asc' }, { createdAt: 'asc' }],
+  select: {
+    id: true,
+    name: true,
+    pricePence: true,
+    imageUrl: true,
+    featured: true,
+    category: true,
+    updatedAt: true,
+  },
+});
+
+const categoryFilters = [
+  { value: 'ALL', label: 'All products', count: products.length },
+  ...Object.entries(SHOP_FILTER_LABELS).map(([value, label]) => ({
+    value,
+    label,
+    count: products.filter((product) => product.category === value).length,
+  })),
+].filter((filter) => filter.value === 'ALL' || filter.count > 0);
+
+const categoryValues = new Set(categoryFilters.map((filter) => filter.value));
+const selectedCategoryParam = Astro.url.searchParams.get('category') || 'ALL';
+const selectedCategory = categoryValues.has(selectedCategoryParam) ? selectedCategoryParam : 'ALL';
+const shopTitle = shop?.name?.trim() || 'My shop';
+---
+
+<MinimalLayout
+  title={`${shopTitle} | Kersivo Admin`}
+  description="Preview your retail storefront with your shop products."
+  canonicalPath="/admin/test-shop"
+  noindex={true}
+  htmlClass="admin-app-scroll"
+  bodyClass="admin-theme-premium-black"
+  showCookieConsent={false}
+>
+  <main class="container shop-page" aria-labelledby="shop-page-title" data-active-category={selectedCategory}>
+    <div class="test-shop-topbar">
+      <a href="/admin?section=shop_products" class="product-back-link">← Back to products</a>
+      <button type="button" class="btn btn--secondary btn--sm test-shop-cart-btn" data-navbar-cart-button aria-label="Open cart">
+        Cart
+        <span class="test-shop-cart-badge is-empty" data-navbar-cart-badge>0</span>
+      </button>
+    </div>
+
+    <section class="retail-demo-banner" aria-label="Test order guidance">
+      <p class="retail-demo-banner__label">Test order</p>
+      <p class="retail-demo-banner__lead">Place your first test order</p>
+      <p class="retail-demo-banner__support">
+        Add your new product to the basket and experience the checkout as your customer would.
+      </p>
+    </section>
+
+    <header class="shop-header-block">
+      <p class="shop-eyebrow">Your storefront</p>
+      <h1 id="shop-page-title">{shopTitle}</h1>
+      <p class="shop-intro">Browse your products, add them to the cart, and complete a test checkout.</p>
+
+      {
+        products.length > 0 ? (
+          <div class="shop-header-toolbar">
+            <div class="shop-category-filters" role="group" aria-label="Filter by category">
+              {categoryFilters.map((filter) => {
+                const isActive = filter.value === selectedCategory;
+                return (
+                  <button
+                    type="button"
+                    class:list={['filter-chip', isActive && 'is-active']}
+                    data-category-filter={filter.value}
+                    aria-pressed={isActive ? 'true' : 'false'}
+                  >
+                    <span>{filter.label}</span>
+                    <span class="filter-chip__count" aria-hidden="true">
+                      {filter.count}
+                    </span>
+                  </button>
+                );
+              })}
+            </div>
+
+            <div class="shop-sort-wrap">
+              <select class="shop-sort-select" aria-label="Sort products" data-shop-sort>
+                <option value="default">Sort: Featured</option>
+                <option value="price-asc">Price: Low → High</option>
+                <option value="price-desc">Price: High → Low</option>
+                <option value="newest">Newest</option>
+              </select>
+              <svg class="shop-sort-icon" viewBox="0 0 16 16" fill="none" aria-hidden="true">
+                <path
+                  d="M4 5.5l4 4 4-4"
+                  stroke="currentColor"
+                  stroke-width="1.5"
+                  stroke-linecap="round"
+                  stroke-linejoin="round"></path>
+              </svg>
+            </div>
+          </div>
+        ) : null
+      }
+    </header>
+
+    <section class="shop-layout" aria-label="Products">
+      {
+        products.length === 0 ? (
+          <article class="shop-promo-card shop-promo-card--empty">
+            <p class="shop-promo-kicker">Retail setup</p>
+            <h2>No products yet</h2>
+            <p>Add your first product to preview your storefront.</p>
+            <div style="display:flex;flex-direction:column;gap:0.75rem;margin-top:1rem;max-width:20rem;">
+              <a class="btn btn--primary" href="/admin/retail-onboarding?step=1">Add a product</a>
+              <a class="btn btn--secondary" href="/admin?section=shop_products">Manage products</a>
+            </div>
+          </article>
+        ) : (
+          <ul class="shop-grid" aria-label="Products">
+            {products.map((product) => (
+              <li
+                data-product-item
+                data-product-category={product.category}
+                data-product-sort-price={String(product.pricePence)}
+                data-product-sort-date={product.updatedAt.toISOString()}
+                hidden={selectedCategory !== 'ALL' && product.category !== selectedCategory}
+              >
+                <article class="shop-card" data-category={product.category}>
+                  <a
+                    href={`/admin/test-shop/${product.id}`}
+                    class="shop-media-link"
+                    aria-label={`View ${product.name}`}
+                  >
+                    <div class="shop-media">
+                      {product.featured ? <span class="shop-badge">Featured</span> : null}
+                      {product.imageUrl ? (
+                        <img src={product.imageUrl} alt={product.name} class="shop-image" loading="lazy" />
+                      ) : (
+                        <div class="shop-image--placeholder" aria-hidden="true" />
+                      )}
+                    </div>
+                  </a>
+
+                  <div class="shop-card-body">
+                    <span class="badge badge--neutral">
+                      {SHOP_FILTER_LABELS[product.category as ProductCategory] ?? 'Styling'}
+                    </span>
+                    <h3>
+                      <a href={`/admin/test-shop/${product.id}`}>{product.name}</a>
+                    </h3>
+                    <p class="shop-price">{formatGbp(product.pricePence)}</p>
+
+                    <div class="shop-card-actions">
+                      <button
+                        type="button"
+                        class="btn btn--primary btn--atc"
+                        data-add-to-cart
+                        data-product-id={product.id}
+                        data-product-name={product.name}
+                        data-product-price-pence={String(product.pricePence)}
+                        data-product-image-url={product.imageUrl ?? ''}
+                        data-atc-label="Add to cart"
+                      >
+                        Add to cart
+                      </button>
+                    </div>
+                  </div>
+                </article>
+              </li>
+            ))}
+
+            <li class="shop-empty-filter" aria-live="polite" role="status">
+              <p class="shop-empty-filter__title">No products in this category</p>
+              <p class="shop-empty-filter__desc">Try selecting a different category or view all products.</p>
+            </li>
+          </ul>
+        )
+      }
+    </section>
+  </main>
+
+  <CartDrawerMount />
+</MinimalLayout>
+
+<style>
+  .test-shop-topbar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: var(--space-md);
+    margin-top: var(--space-lg);
+    margin-bottom: var(--space-md);
+  }
+
+  .test-shop-cart-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.45rem;
+  }
+
+  .test-shop-cart-badge {
+    min-width: 1.35rem;
+    height: 1.35rem;
+    padding: 0 0.35rem;
+    border-radius: 999px;
+    display: inline-grid;
+    place-items: center;
+    font-size: 0.72rem;
+    font-weight: 700;
+    background: color-mix(in srgb, var(--accent) 22%, transparent);
+    color: var(--fg);
+  }
+
+  .test-shop-cart-badge.is-empty {
+    opacity: 0.55;
+  }
+</style>
+
+<script>
+  const CART_OPEN_REQUEST_EVENT = 'kersivo:cart-open-request';
+  const cartButton = document.querySelector('[data-navbar-cart-button]');
+  if (cartButton instanceof HTMLButtonElement) {
+    cartButton.addEventListener('click', () => {
+      window.dispatchEvent(new CustomEvent(CART_OPEN_REQUEST_EVENT));
+    });
+  }
+
+  const root = document.querySelector('.shop-page');
+
+  if (root) {
+    const filterButtons = Array.from(root.querySelectorAll('[data-category-filter]'));
+    const productItems = Array.from(root.querySelectorAll('[data-product-item]'));
+    const validCategories = new Set(
+      filterButtons.map((button) => button.getAttribute('data-category-filter') || 'ALL'),
+    );
+
+    const updateEmptyFilterState = () => {
+      const emptyEl = root.querySelector('.shop-empty-filter');
+      const items = root.querySelectorAll('[data-product-item]');
+      if (!emptyEl) return;
+      const anyVisible = [...items].some((item) => !(item as HTMLElement).hidden);
+      emptyEl.classList.toggle('is-visible', !anyVisible);
+    };
+
+    const getCategoryFromUrl = () => {
+      const searchParams = new URLSearchParams(window.location.search);
+      const categoryParam = searchParams.get('category') || 'ALL';
+      return validCategories.has(categoryParam) ? categoryParam : 'ALL';
+    };
+
+    const getInitialCategory = () => {
+      const initialFromUrl = getCategoryFromUrl();
+      const initialFromMarkup = root.getAttribute('data-active-category') || 'ALL';
+      if (validCategories.has(initialFromUrl)) return initialFromUrl;
+      return validCategories.has(initialFromMarkup) ? initialFromMarkup : 'ALL';
+    };
+
+    let currentCategory = getInitialCategory();
+
+    const applyCategoryFilter = (category: string) => {
+      const resolvedCategory = validCategories.has(category) ? category : 'ALL';
+
+      for (const item of productItems) {
+        const productCategory = item.getAttribute('data-product-category') || 'STYLING';
+        (item as HTMLElement).hidden = !(
+          resolvedCategory === 'ALL' || productCategory === resolvedCategory
+        );
+      }
+
+      for (const button of filterButtons) {
+        const isActive = button.getAttribute('data-category-filter') === resolvedCategory;
+        button.classList.toggle('is-active', isActive);
+        button.setAttribute('aria-pressed', String(isActive));
+      }
+
+      currentCategory = resolvedCategory;
+      root.setAttribute('data-active-category', resolvedCategory);
+      updateEmptyFilterState();
+    };
+
+    const syncUrlWithCategory = (category: string) => {
+      const nextUrl = new URL(window.location.href);
+      if (category === 'ALL') {
+        nextUrl.searchParams.delete('category');
+      } else {
+        nextUrl.searchParams.set('category', category);
+      }
+      window.history.pushState({ category }, '', nextUrl);
+    };
+
+    for (const button of filterButtons) {
+      button.addEventListener('click', () => {
+        const category = button.getAttribute('data-category-filter') || 'ALL';
+        if (category === currentCategory) return;
+        applyCategoryFilter(category);
+        syncUrlWithCategory(category);
+      });
+    }
+
+    window.addEventListener('popstate', () => {
+      applyCategoryFilter(getCategoryFromUrl());
+    });
+
+    applyCategoryFilter(currentCategory);
+  }
+
+  const sortSelect = document.querySelector('[data-shop-sort]') as HTMLSelectElement | null;
+  const shopGrid = document.querySelector('.shop-grid');
+
+  if (sortSelect && shopGrid) {
+    sortSelect.addEventListener('change', () => {
+      const value = sortSelect.value;
+      const items = Array.from(shopGrid.querySelectorAll('[data-product-item]')) as HTMLElement[];
+
+      const sorted = [...items].sort((a, b) => {
+        if (value === 'price-asc') {
+          return Number(a.dataset.productSortPrice ?? 0) - Number(b.dataset.productSortPrice ?? 0);
+        }
+        if (value === 'price-desc') {
+          return Number(b.dataset.productSortPrice ?? 0) - Number(a.dataset.productSortPrice ?? 0);
+        }
+        if (value === 'newest') {
+          const da = new Date(a.dataset.productSortDate ?? 0).getTime();
+          const db = new Date(b.dataset.productSortDate ?? 0).getTime();
+          return db - da;
+        }
+        return 0;
+      });
+
+      const emptyEl = shopGrid.querySelector('.shop-empty-filter');
+      sorted.forEach((el) => shopGrid.insertBefore(el, emptyEl));
+    });
+  }
+</script>

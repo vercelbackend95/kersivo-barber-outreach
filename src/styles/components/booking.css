@@ -2820,7 +2820,6 @@
   height: 2.4rem;
   border: 1px solid var(--border);
   border-radius: 999px;
-  overflow: hidden;
   background: var(--bg);
   color: var(--fg);
   font-size: 0.78rem;
@@ -2840,6 +2839,7 @@
   display: block;
   border-radius: 50%;
   object-fit: cover;
+  overflow: hidden;
 }
 
 .barber-chip-avatar--initials {
@@ -3155,8 +3155,8 @@ body.admin-theme-premium-black .booking-page-wrap .booking-shell.surface {
 }
 
 .admin-sidebar-monogram--custom {
-  padding: 0.35rem;
-  background: color-mix(in srgb, var(--fg) 4%, transparent);
+  padding: 0;
+  background: transparent;
   box-sizing: border-box;
 }
 
@@ -3164,7 +3164,12 @@ body.admin-theme-premium-black .booking-page-wrap .booking-shell.surface {
   width: 100%;
   height: 100%;
   object-fit: contain;
+  object-position: center;
   display: block;
+}
+
+.admin-sidebar-monogram--custom .admin-sidebar-logo-img {
+  object-fit: cover;
 }
 
 .admin-sidebar-brand-text {
@@ -3331,7 +3336,7 @@ body.admin-theme-premium-black .booking-page-wrap .booking-shell.surface {
 }
 
 .admin-main-content[data-transitioning="true"] {
-  opacity: 0.6;
+  opacity: 0.92;
 }
 
 .admin-transition-skeleton {
@@ -3497,8 +3502,7 @@ body.admin-theme-premium-black .booking-page-wrap .booking-shell.surface {
 }
 
 .admin-mobile-drawer-head {
-  display: grid;
-  gap: 0.42rem;
+  display: block;
   padding-top: 0.45rem;
   padding-bottom: 0.4rem;
   border-bottom: 1px solid color-mix(in srgb, var(--border) 45%, transparent);
@@ -3515,7 +3519,7 @@ body.admin-theme-premium-black .booking-page-wrap .booking-shell.surface {
   border-bottom: none;
   margin-bottom: 0;
   padding-bottom: 0;
-  flex: 1;
+  flex: 0 1 auto;
   min-width: 0;
 }
 
@@ -3589,17 +3593,33 @@ body.admin-theme-premium-black .booking-page-wrap .booking-shell.surface {
 }
 
 .admin-sidebar-status--mobile-drawer {
-  margin: 0;
-  padding: 0.08rem 0 0;
+  margin: 0 0 0 auto;
+  padding: 0;
   min-width: 0;
-  flex-wrap: wrap;
-  white-space: normal;
-  row-gap: 0.08rem;
+  max-width: min(11.5rem, 42vw);
+  flex: 0 1 auto;
+  flex-wrap: nowrap;
+  gap: 0.28rem;
+  font-size: 0.68rem;
+  line-height: 1.2;
+  white-space: nowrap;
+}
+
+.admin-sidebar-status--mobile-drawer .admin-sidebar-status-date,
+.admin-sidebar-status--mobile-drawer .admin-sidebar-status-label {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.admin-sidebar-status--mobile-drawer .admin-sidebar-status-dot {
+  width: 5px;
+  height: 5px;
 }
 
 .admin-mobile-drawer .admin-sidebar-status-date,
 .admin-mobile-drawer .admin-sidebar-status-label {
-  white-space: normal;
+  white-space: nowrap;
 }
 
 .admin-mobile-drawer .admin-sidebar-nav,
@@ -3842,7 +3862,9 @@ body.admin-theme-premium-black .booking-page-wrap .booking-shell.surface {
   }
 
   .admin-sidebar-status--mobile-drawer {
-    display: none;
+    max-width: min(9.5rem, 38vw);
+    font-size: 0.62rem;
+    gap: 0.22rem;
   }
 }
 
@@ -4186,9 +4208,14 @@ body.admin-theme-premium-black .booking-page-wrap .booking-shell.surface {
 
 
 
+.admin-services-panel,
 .admin-products-panel {
   gap: var(--space-sm);
-    min-height: 0;
+  min-height: 0;
+  background: var(--admin-premium-surface-bg);
+  border: var(--admin-premium-surface-border);
+  border-radius: var(--admin-premium-surface-r);
+  box-shadow: var(--admin-premium-shadow-inset), var(--admin-premium-shadow-lift);
 }
 
 .admin-products-toolbar-sticky {
@@ -5612,8 +5639,10 @@ body.admin-theme-premium-black .booking-page-wrap .booking-shell.surface {
     padding-inline: 0.5rem;
   }
 
+  .admin-page-wrap .booking-shell > .admin-services-panel,
   .admin-page-wrap .booking-shell > .admin-products-panel {
     border: 0;
+    border-radius: 0;
     box-shadow: none;
     background: transparent;
     padding-inline: 0;
@@ -6654,7 +6683,16 @@ body.admin-theme-premium-black .booking-page-wrap .booking-shell.surface {
 .admin-sales-panel {
   display: grid;
   gap: var(--space-sm);
-    padding-bottom: calc(var(--space-sm) + env(safe-area-inset-bottom));
+  padding-bottom: calc(var(--space-sm) + env(safe-area-inset-bottom));
+}
+
+/* Outer .admin-reports chrome is redundant — Analytics Studio already has a surface */
+.admin-reports.admin-sales-panel {
+  border: 0;
+  background: transparent;
+  box-shadow: none;
+  padding: 0;
+  padding-bottom: calc(var(--space-sm) + env(safe-area-inset-bottom));
 }
 
 .admin-sales-kpis {
@@ -7936,20 +7974,20 @@ body.admin-theme-premium-black .booking-page-wrap .booking-shell.surface {
 /* Barber roster segmented control (BarbersOverview) — pill track, aligned with .admin-view-toggle */
 .admin-barber-filter-stack {
   display: grid;
-  gap: 0.4rem;
-  margin: 0.35rem 0 0.8rem;
+  gap: 0.35rem;
+  margin: 0 0 0.55rem;
   min-width: 0;
   max-width: 100%;
 }
 
 .admin-barber-filter-eyebrow {
   margin: 0;
-  font-size: 0.72rem;
+  font-size: 0.7rem;
   line-height: 1.25;
-  letter-spacing: 0.12em;
+  letter-spacing: 0.08em;
   text-transform: uppercase;
   font-weight: 600;
-  color: var(--muted);
+  color: color-mix(in srgb, var(--muted) 88%, var(--fg));
 }
 
 .admin-barber-filter {
@@ -8027,7 +8065,7 @@ body.admin-theme-premium-black .booking-page-wrap .booking-shell.surface {
   width: 100%;
   min-width: 0;
   max-width: 100%;
-  margin: 0 0 0.8rem;
+  margin: 0 0 0.65rem;
 }
 
 .admin-barbers-roster-search-toolbar .admin-search-row--in-ops {
@@ -8340,8 +8378,8 @@ body.admin-theme-premium-black .booking-page-wrap .booking-shell.surface {
 }
 
 .admin-barbers-overview-grid {
-  gap: clamp(0.9rem, 2vw, 1.35rem);
-  margin-bottom: 1.25rem;
+  gap: clamp(0.75rem, 1.6vw, 1.1rem);
+  margin-bottom: 0.85rem;
 }
 
 @media (min-width: 48rem) {
@@ -8364,97 +8402,95 @@ body.admin-theme-premium-black .booking-page-wrap .booking-shell.surface {
   min-width: 0;
   padding: 0;
   overflow: hidden;
-  border-radius: 1.35rem;
-  border: 1px solid color-mix(in srgb, var(--border) 82%, var(--fg) 18%);
-  background:
-    linear-gradient(
-      162deg,
-      color-mix(in srgb, var(--surface) 90%, var(--fg) 10%) 0%,
-      color-mix(in srgb, var(--surface) 97%, var(--bg) 3%) 45%,
-      var(--surface) 100%
-    );
-  box-shadow:
-    0 1px 0 color-mix(in srgb, var(--fg) 6%, transparent),
-    0 16px 44px color-mix(in srgb, black 24%, transparent);
+  border-radius: var(--admin-premium-surface-r);
+  border: var(--admin-premium-surface-border);
+  background: var(--admin-premium-surface-bg);
+  box-shadow: var(--admin-premium-shadow-inset), var(--admin-premium-shadow-lift-subtle);
   transition:
     border-color 180ms ease,
-    box-shadow 220ms ease,
-    transform 220ms ease;
+    box-shadow 220ms ease;
 }
 
 .admin-barbers-overview-grid .admin-barber-card--skeleton {
-  transform: none;
-}
-
-.admin-barber-card--skeleton .admin-barber-roster-hero-shine {
-  opacity: 0.45;
+  pointer-events: none;
 }
 
 .admin-barber-skeleton-rank {
-  width: 2.2rem;
+  width: 0.9rem;
+  height: 0.9rem;
+  flex-shrink: 0;
 }
 
 .admin-barber-skeleton-avatar {
-  width: 4.4rem;
-  height: 4.4rem;
-  border-radius: 999px;
+  width: 100%;
+  height: 100%;
+  border-radius: calc(var(--admin-premium-surface-r) * 0.72);
 }
 
 .admin-barber-skeleton-dot {
   position: absolute;
-  width: 0.62rem;
-  height: 0.62rem;
+  width: 0.55rem;
+  height: 0.55rem;
   border-radius: 999px;
-  right: -0.05rem;
-  bottom: -0.05rem;
-}
-
-.admin-barber-skeleton-pill {
-  width: 4.1rem;
+  right: 0.2rem;
+  bottom: 0.2rem;
 }
 
 .admin-barber-skeleton-name-row {
-  align-items: center;
+  align-items: flex-start;
+}
+
+.admin-barber-skeleton-title-stack {
+  display: grid;
+  gap: 0.35rem;
+  min-width: 0;
+  flex: 1 1 auto;
 }
 
 .admin-barber-skeleton-name {
-  width: min(10rem, 66%);
-  height: 1.2rem;
+  width: min(9.5rem, 70%);
+  height: 1.05rem;
+}
+
+.admin-barber-skeleton-status {
+  width: 4.6rem;
+  height: 0.7rem;
 }
 
 .admin-barber-skeleton-hidden-badge {
-  width: 2.7rem;
+  width: 2.6rem;
+  height: 0.95rem;
 }
 
 .admin-barber-skeleton-reorder {
   margin-left: auto;
   display: inline-flex;
-  gap: 0.34rem;
+  gap: 0.28rem;
 }
 
 .admin-barber-skeleton-reorder-btn {
-  width: 1.25rem;
-  height: 1.25rem;
-  border-radius: 0.42rem;
+  width: 1.35rem;
+  height: 1.35rem;
+  border-radius: var(--radius-full);
 }
 
 .admin-barber-skeleton-meta-icon {
-  width: 0.9rem;
-  height: 0.9rem;
+  width: 0.85rem;
+  height: 0.85rem;
   border-radius: 999px;
   flex-shrink: 0;
 }
 
 .admin-barber-skeleton-shift-copy {
-  width: 6.6rem;
+  width: 6.4rem;
 }
 
 .admin-barber-skeleton-next-primary {
-  width: 8.7rem;
+  width: 8.2rem;
 }
 
 .admin-barber-skeleton-next-secondary {
-  width: 5.6rem;
+  width: 4.8rem;
 }
 
 .admin-barber-roster-cta--skeleton {
@@ -8463,45 +8499,42 @@ body.admin-theme-premium-black .booking-page-wrap .booking-shell.surface {
 }
 
 .admin-barber-skeleton-cta-copy {
-  width: 5.8rem;
+  width: 6.4rem;
 }
 
 .admin-barber-skeleton-cta-icon {
-  width: 1rem;
-  height: 1rem;
-  border-radius: 0.35rem;
+  width: 0.9rem;
+  height: 0.9rem;
+  border-radius: 0.3rem;
 }
 
 .admin-barber-skeleton-progress {
   display: block;
-  width: 68%;
+  width: 62%;
   height: 100%;
   border-radius: inherit;
 }
 
 @media (hover: hover) {
   .admin-barbers-overview-grid .admin-barber-card--roster:hover {
-    border-color: color-mix(in srgb, var(--accent) 32%, var(--border) 68%);
-    box-shadow:
-      0 1px 0 color-mix(in srgb, var(--accent) 14%, transparent),
-      0 24px 56px color-mix(in srgb, black 30%, transparent);
-    transform: translateY(-2px);
+    border-color: color-mix(in srgb, var(--accent) 28%, var(--border));
+    box-shadow: var(--admin-premium-shadow-inset), var(--admin-premium-shadow-lift);
   }
 }
 
 .admin-barbers-overview-grid .admin-barber-card--roster:focus-within {
-  border-color: color-mix(in srgb, var(--accent) 38%, var(--border) 62%);
+  border-color: color-mix(in srgb, var(--accent) 34%, var(--border));
   box-shadow:
-    0 0 0 1px color-mix(in srgb, var(--accent) 35%, transparent),
-    0 18px 44px color-mix(in srgb, black 26%, transparent);
+    var(--admin-premium-shadow-inset),
+    0 0 0 2px color-mix(in srgb, var(--focus) 22%, transparent);
 }
 
 .admin-barbers-overview-grid .admin-barber-card--roster.is-inactive {
-  opacity: 0.88;
+  opacity: 0.78;
 }
 
 .admin-barbers-overview-grid .admin-barber-card--roster.is-inactive .admin-barber-roster-hero {
-  filter: saturate(0.72) brightness(0.92);
+  filter: saturate(0.78) brightness(0.94);
 }
 
 .admin-barbers-overview-grid .admin-barber-identity--roster {
@@ -8517,7 +8550,7 @@ body.admin-theme-premium-black .booking-page-wrap .booking-shell.surface {
   background: transparent;
   color: inherit;
   border-radius: 0;
-  transition: none;
+  cursor: default;
 }
 
 .admin-barbers-overview-grid .admin-barber-identity--roster:focus-visible {
@@ -8532,150 +8565,80 @@ body.admin-theme-premium-black .booking-page-wrap .booking-shell.surface {
   position: relative;
   display: grid;
   place-items: center;
-  padding: 1.15rem 1rem 0.95rem;
-  background:
-    radial-gradient(120% 95% at 50% -2%, color-mix(in srgb, var(--accent) 24%, transparent) 0%, transparent 58%),
-    linear-gradient(180deg, color-mix(in srgb, var(--bg) 62%, var(--surface) 38%) 0%, color-mix(in srgb, var(--surface) 94%, var(--bg) 6%) 100%);
-  border-bottom: 1px solid color-mix(in srgb, var(--border) 70%, transparent);
-}
-
-.admin-barber-roster-hero-shine {
-  position: absolute;
-  inset: 0;
-  background: linear-gradient(105deg, transparent 40%, color-mix(in srgb, var(--fg) 5%, transparent) 48%, transparent 56%);
-  opacity: 0.55;
-  pointer-events: none;
-}
-
-.admin-barber-rank-badge {
-  position: absolute;
-  top: 0.62rem;
-  left: 0.62rem;
-  z-index: 2;
-  pointer-events: none;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  min-width: 2rem;
-  padding: 0.24rem 0.52rem;
-  border-radius: 999px;
-  border: 1px solid color-mix(in srgb, var(--accent) 42%, var(--border) 58%);
-  background:
-    linear-gradient(
-      160deg,
-      color-mix(in srgb, var(--accent) 15%, var(--surface) 85%) 0%,
-      color-mix(in srgb, var(--surface) 94%, var(--bg) 6%) 100%
-    );
-  color: color-mix(in srgb, var(--accent) 86%, var(--fg) 14%);
-  font-size: 0.66rem;
-  font-weight: 700;
-  line-height: 1;
-  letter-spacing: 0.07em;
-  text-transform: uppercase;
-  box-shadow:
-    0 5px 14px color-mix(in srgb, black 26%, transparent),
-    inset 0 1px 0 color-mix(in srgb, var(--fg) 10%, transparent);
+  padding: 0.95rem 0.95rem 0.35rem;
+  background: transparent;
+  border-bottom: 0;
 }
 
 .admin-barber-roster-avatar-shell {
   position: relative;
   z-index: 1;
-  width: min(100%, 8.2rem);
+  width: min(100%, 7.6rem);
   aspect-ratio: 3 / 4;
-  max-height: 9.9rem;
+  max-height: 9.2rem;
 }
 
 .admin-barbers-overview-grid .admin-barber-avatar--roster,
 .admin-add-barber-avatar .admin-barber-roster-avatar-shell .admin-barber-avatar--roster {
   width: 100%;
   height: 100%;
-  border-radius: 0.95rem;
-  border-width: 2px;
-  font-size: clamp(1.35rem, 4vw, 1.65rem);
+  border-radius: calc(var(--admin-premium-surface-r) * 0.72);
+  border-width: 1.5px;
+  font-size: clamp(1.25rem, 3.6vw, 1.5rem);
   letter-spacing: 0.02em;
-  box-shadow:
-    0 10px 28px color-mix(in srgb, black 35%, transparent),
-    inset 0 1px 0 color-mix(in srgb, var(--fg) 12%, transparent);
+  box-shadow: var(--admin-premium-shadow-inset);
 }
 
 .admin-barbers-overview-grid .admin-barber-avatar--roster img,
 .admin-add-barber-avatar .admin-barber-roster-avatar-shell .admin-barber-avatar--roster img {
   object-position: center 18%;
+  border-radius: inherit;
 }
 
 .admin-barbers-overview-grid .admin-barber-roster-avatar-shell .admin-barber-avail-dot {
-  bottom: 5px;
-  right: 5px;
-  width: 11px;
-  height: 11px;
+  bottom: 0.28rem;
+  right: 0.28rem;
+  width: 0.62rem;
+  height: 0.62rem;
   border-width: 2px;
-  border-color: color-mix(in srgb, var(--surface) 88%, var(--bg) 12%);
-}
-
-.admin-barber-avail-pill {
-  position: relative;
-  z-index: 1;
-  margin-top: 0.65rem;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  padding: 0.3rem 0.7rem;
-  border-radius: 9999px;
-  font-size: 0.67rem;
-  font-weight: 700;
-  letter-spacing: 0.08em;
-  text-transform: uppercase;
-  border: 1px solid color-mix(in srgb, var(--border) 55%, transparent);
-  background: color-mix(in srgb, var(--surface) 72%, var(--bg) 28%);
-  color: color-mix(in srgb, var(--muted) 78%, var(--fg) 22%);
-}
-
-.admin-barber-avail-pill--free {
-  border-color: color-mix(in srgb, var(--success) 42%, var(--border) 58%);
-  color: color-mix(in srgb, var(--success) 82%, var(--fg) 18%);
-  background: color-mix(in srgb, var(--success) 12%, var(--surface) 88%);
-}
-
-.admin-barber-avail-pill--busy {
-  border-color: color-mix(in srgb, var(--warning) 45%, var(--border) 55%);
-  color: color-mix(in srgb, var(--warning) 88%, var(--fg) 12%);
-  background: color-mix(in srgb, var(--warning) 14%, var(--surface) 86%);
-}
-
-.admin-barber-avail-pill--active {
-  border-color: color-mix(in srgb, var(--accent) 48%, var(--border) 52%);
-  color: color-mix(in srgb, var(--accent) 90%, var(--fg) 10%);
-  background: color-mix(in srgb, var(--accent) 14%, var(--surface) 86%);
-}
-
-.admin-barber-avail-pill--off {
-  border-color: color-mix(in srgb, var(--border) 88%, var(--muted) 12%);
-  color: var(--muted);
-  background: color-mix(in srgb, var(--surface) 88%, var(--bg) 12%);
-}
-
-.admin-barbers-overview-grid .admin-barber-card--roster.is-inactive .admin-barber-rank-badge {
-  border-color: color-mix(in srgb, var(--border) 84%, var(--muted) 16%);
-  color: color-mix(in srgb, var(--muted) 82%, var(--fg) 18%);
-  background: color-mix(in srgb, var(--surface) 88%, var(--bg) 12%);
+  border-color: color-mix(in srgb, var(--admin-premium-surface-bg) 88%, var(--bg));
 }
 
 .admin-barber-roster-body {
   display: flex;
   flex-direction: column;
-  gap: 0.8rem;
-  padding: 1.05rem 1rem 0.95rem;
+  gap: 0.72rem;
+  padding: 0.55rem 0.95rem 0.95rem;
   flex: 1 1 auto;
 }
 
 .admin-barber-roster-name-row {
   display: flex;
-  align-items: baseline;
-  gap: 0.5rem;
+  align-items: flex-start;
+  gap: 0.45rem;
+  min-width: 0;
+}
+
+.admin-barber-roster-rank {
+  flex-shrink: 0;
+  margin-top: 0.18rem;
+  min-width: 1rem;
+  font-size: 0.72rem;
+  font-weight: 650;
+  font-variant-numeric: tabular-nums;
+  letter-spacing: 0.02em;
+  color: color-mix(in srgb, var(--muted) 82%, var(--fg));
+}
+
+.admin-barber-roster-title-stack {
+  display: grid;
+  gap: 0.18rem;
+  min-width: 0;
+  flex: 1 1 auto;
 }
 
 .admin-barber-roster-name {
-  font-size: clamp(1.15rem, 2.4vw, 1.35rem);
+  font-size: clamp(1.05rem, 2.1vw, 1.22rem);
   font-weight: 700;
   letter-spacing: -0.02em;
   line-height: 1.2;
@@ -8684,44 +8647,69 @@ body.admin-theme-premium-black .booking-page-wrap .booking-shell.surface {
   text-overflow: ellipsis;
 }
 
+.admin-barber-roster-status {
+  margin: 0;
+  font-size: 0.78rem;
+  font-weight: 500;
+  line-height: 1.25;
+  color: var(--muted);
+}
+
+.admin-barber-roster-status--free {
+  color: color-mix(in srgb, var(--success) 78%, var(--muted));
+}
+
+.admin-barber-roster-status--busy {
+  color: color-mix(in srgb, var(--warning) 82%, var(--muted));
+}
+
+.admin-barber-roster-status--active {
+  color: color-mix(in srgb, var(--accent) 78%, var(--muted));
+}
+
+.admin-barber-roster-status--off {
+  color: var(--muted);
+}
+
 .admin-barber-roster-inactive-badge {
   flex-shrink: 0;
-  font-size: 0.62rem;
-  font-weight: 700;
-  letter-spacing: 0.06em;
-  text-transform: uppercase;
-  padding: 0.2rem 0.45rem;
-  border-radius: 4px;
-  border: 1px solid color-mix(in srgb, var(--border) 70%, var(--muted) 30%);
+  margin-top: 0.12rem;
+  font-size: 0.68rem;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+  padding: 0.18rem 0.42rem;
+  border-radius: var(--radius-full);
+  border: 1px solid color-mix(in srgb, var(--border) 72%, transparent);
   color: var(--muted);
-  background: color-mix(in srgb, var(--bg) 40%, var(--surface) 60%);
+  background: color-mix(in srgb, var(--surface-3) 45%, transparent);
 }
 
 .admin-barber-roster-meta {
   display: flex;
   flex-direction: column;
-  gap: 0.6rem;
-  padding: 0.6rem 0.7rem;
-  border: 1px solid color-mix(in srgb, var(--border) 72%, transparent);
-  border-radius: 0.8rem;
-  background: color-mix(in srgb, var(--bg) 20%, var(--surface) 80%);
+  gap: 0.48rem;
+  padding: 0;
+  border: 0;
+  border-radius: 0;
+  background: transparent;
 }
 
 .admin-barber-roster-meta-icon {
   flex-shrink: 0;
-  color: color-mix(in srgb, var(--muted) 55%, var(--accent) 45%);
-  opacity: 0.92;
+  margin-top: 0.1rem;
+  color: color-mix(in srgb, var(--muted) 72%, var(--fg));
+  opacity: 0.9;
 }
 
 .admin-barber-roster-shift {
   display: flex;
   align-items: flex-start;
-  gap: 0.45rem;
+  gap: 0.42rem;
   min-width: 0;
-  font-size: 0.84rem;
+  font-size: 0.82rem;
   font-weight: 500;
   line-height: 1.35;
-  color: color-mix(in srgb, var(--fg) 88%, var(--muted) 12%);
+  color: color-mix(in srgb, var(--fg) 86%, var(--muted));
 }
 
 .admin-barber-roster-shift-text {
@@ -8739,7 +8727,7 @@ body.admin-theme-premium-black .booking-page-wrap .booking-shell.surface {
 .admin-barber-roster-next {
   display: flex;
   align-items: flex-start;
-  gap: 0.45rem;
+  gap: 0.42rem;
   min-width: 0;
   font-size: 0.8rem;
   line-height: 1.35;
@@ -8748,13 +8736,13 @@ body.admin-theme-premium-black .booking-page-wrap .booking-shell.surface {
 .admin-barber-roster-next-copy {
   display: flex;
   flex-direction: column;
-  gap: 0.15rem;
+  gap: 0.12rem;
   min-width: 0;
 }
 
 .admin-barber-roster-next-primary {
   font-weight: 600;
-  color: color-mix(in srgb, var(--fg) 92%, var(--muted) 8%);
+  color: color-mix(in srgb, var(--fg) 90%, var(--muted));
   display: -webkit-box;
   -webkit-line-clamp: 2;
   -webkit-box-orient: vertical;
@@ -8762,13 +8750,13 @@ body.admin-theme-premium-black .booking-page-wrap .booking-shell.surface {
 }
 
 .admin-barber-roster-next-secondary {
-  font-size: 0.74rem;
+  font-size: 0.72rem;
   font-weight: 500;
   color: var(--muted);
 }
 
 .admin-barber-roster-next.is-muted .admin-barber-roster-meta-icon {
-  color: color-mix(in srgb, var(--muted) 85%, var(--fg) 15%);
+  color: var(--muted);
   opacity: 0.75;
 }
 
@@ -8782,24 +8770,20 @@ body.admin-theme-premium-black .booking-page-wrap .booking-shell.surface {
   display: inline-flex;
   align-items: center;
   justify-content: space-between;
-  gap: 0.5rem;
+  gap: 0.45rem;
   margin-top: auto;
-  padding: 0.66rem 0.8rem;
-  font-size: 0.75rem;
-  font-weight: 700;
-  letter-spacing: 0.07em;
-  text-transform: uppercase;
-  color: color-mix(in srgb, var(--accent) 82%, var(--fg) 18%);
-  border: 1px solid color-mix(in srgb, var(--accent) 34%, var(--border) 66%);
-  border-radius: 0.78rem;
-  background:
-    linear-gradient(
-      160deg,
-      color-mix(in srgb, var(--accent) 11%, var(--surface) 89%),
-      color-mix(in srgb, var(--surface) 92%, var(--bg) 8%)
-    );
+  padding: 0.35rem 0;
+  font: inherit;
+  font-size: 0.86rem;
+  font-weight: 600;
+  letter-spacing: -0.01em;
+  text-transform: none;
+  color: color-mix(in srgb, var(--accent) 78%, var(--fg));
+  border: 0;
+  border-radius: 0;
+  background: transparent;
   cursor: pointer;
-  transition: border-color 160ms ease, background 160ms ease, color 160ms ease;
+  transition: color 150ms ease;
 }
 
 .admin-barber-roster-cta-icon {
@@ -8808,63 +8792,42 @@ body.admin-theme-premium-black .booking-page-wrap .booking-shell.surface {
 }
 
 .admin-barber-roster-cta:hover {
-  border-color: color-mix(in srgb, var(--accent) 52%, var(--border) 48%);
-  background:
-    linear-gradient(
-      160deg,
-      color-mix(in srgb, var(--accent) 16%, var(--surface) 84%),
-      color-mix(in srgb, var(--surface) 88%, var(--bg) 12%)
-    );
+  color: var(--accent-hover, var(--accent));
+  background: transparent;
+  border: 0;
 }
 
 .admin-barber-roster-cta:hover .admin-barber-roster-cta-icon {
-  transform: translateX(3px);
+  transform: translateX(2px);
 }
 
 .admin-barber-roster-cta:focus-visible {
   outline: 2px solid var(--focus);
-  outline-offset: 2px;
-}
-
-.admin-barber-roster-toolbar {
-  display: flex;
-  align-items: center;
-  gap: 0.72rem;
-  padding: 0.75rem 0.95rem 0.85rem;
-  margin-top: auto;
-  border-top: 1px solid color-mix(in srgb, var(--border) 75%, transparent);
-  background: color-mix(in srgb, var(--bg) 26%, var(--surface) 74%);
+  outline-offset: 3px;
+  border-radius: var(--radius-4);
 }
 
 .admin-barber-day-fill-row--roster {
-  flex: 1 1 auto;
+  flex: 0 0 auto;
+  width: 100%;
   min-width: 0;
   grid-column: unset;
   align-self: unset;
-  height: 6px;
-  background: color-mix(in srgb, var(--border) 85%, var(--bg) 15%);
-  border-radius: 999px;
+  height: 3px;
+  margin-top: 0.15rem;
+  background: color-mix(in srgb, var(--border) 70%, transparent);
+  border-radius: var(--radius-full);
   overflow: hidden;
 }
 
 .admin-barber-day-fill-row--roster .admin-barber-day-fill {
-  background: linear-gradient(
-    90deg,
-    color-mix(in srgb, var(--accent) 88%, var(--success) 12%),
-    var(--accent)
-  );
-}
-
-.admin-barber-actions--roster {
-  flex: 0 0 auto;
-  justify-self: unset;
-  margin: 0;
+  background: color-mix(in srgb, var(--accent) 88%, var(--fg) 12%);
 }
 
 .admin-barber-actions--roster-inline {
   margin-left: auto;
   flex: 0 0 auto;
-  align-self: center;
+  align-self: flex-start;
 }
 
 .admin-barber-actions--roster-inline .admin-reorder-controls--barber {
@@ -8875,41 +8838,21 @@ body.admin-theme-premium-black .booking-page-wrap .booking-shell.surface {
 .admin-reorder-arrow-stack--barber-inline {
   grid-template-rows: none;
   grid-template-columns: 1fr 1fr;
-  border-radius: 999px;
-  box-shadow:
-    inset 0 1px 0 color-mix(in srgb, var(--fg) 8%, transparent),
-    0 3px 10px color-mix(in srgb, black 16%, transparent);
+  border-radius: var(--radius-full);
+  box-shadow: none;
+  border: 1px solid color-mix(in srgb, var(--border) 72%, transparent);
+  background: color-mix(in srgb, var(--surface-3) 42%, transparent);
+  overflow: hidden;
 }
 
 .admin-reorder-btn--barber-inline {
-  width: 1.86rem;
-  height: 1.86rem;
+  width: 1.7rem;
+  height: 1.7rem;
 }
 
 .admin-reorder-btn--barber-inline + .admin-reorder-btn--barber-inline {
   border-top: 0;
-  border-left: 1px solid color-mix(in srgb, var(--border) 78%, transparent);
-}
-
-@media (max-width: 47.99rem) {
-  .admin-barber-roster-toolbar {
-    padding: 0.72rem 0.9rem 0.8rem;
-  }
-
-  .admin-barber-rank-badge {
-    top: 0.56rem;
-    left: 0.56rem;
-    min-width: 1.88rem;
-    font-size: 0.62rem;
-    padding: 0.22rem 0.47rem;
-  }
-}
-
-@media (min-width: 48rem) {
-  .admin-barber-rank-badge {
-    top: 0.7rem;
-    left: 0.7rem;
-  }
+  border-left: 1px solid color-mix(in srgb, var(--border) 72%, transparent);
 }
 
 @media (prefers-reduced-motion: reduce) {
@@ -8917,7 +8860,6 @@ body.admin-theme-premium-black .booking-page-wrap .booking-shell.surface {
   .admin-barbers-overview-grid .admin-barber-card--roster:hover,
   .admin-barbers-overview-grid .admin-barber-card--roster:focus-within {
     transition-duration: 0.01ms;
-    transform: none;
   }
 
   .admin-barber-roster-cta:hover .admin-barber-roster-cta-icon {
@@ -15532,6 +15474,37 @@ body.admin-theme-premium-black .booking-page-wrap .booking-shell.surface {
     linear-gradient(180deg, color-mix(in srgb, var(--fg) 2.5%, transparent), transparent 72%),
     color-mix(in srgb, var(--acl-bg) 88%, var(--surface-1));
   box-sizing: border-box;
+}
+
+/* Clients: lighten search strip + field so it isn't a second card inside the table wrap */
+.admin-clients-table-wrap > .admin-clients-search-row {
+  padding: 0.7rem 0.85rem;
+  background: transparent;
+  border-bottom: 1px solid color-mix(in srgb, var(--acl-row-line) 85%, transparent);
+}
+
+.admin-clients-table-wrap > .admin-clients-search-row .admin-search-bar {
+  min-height: 2.4rem;
+  background: color-mix(in srgb, var(--surface-2) 62%, transparent);
+  border: 1px solid color-mix(in srgb, var(--border) 58%, transparent);
+  border-radius: var(--radius-full);
+  box-shadow: none;
+  padding-inline: 0.85rem;
+}
+
+.admin-clients-table-wrap > .admin-clients-search-row .admin-search-bar::before {
+  display: none;
+}
+
+.admin-clients-table-wrap > .admin-clients-search-row .admin-search-bar:hover {
+  border-color: color-mix(in srgb, var(--border) 78%, var(--muted));
+  background: color-mix(in srgb, var(--surface-2) 78%, transparent);
+}
+
+.admin-clients-table-wrap > .admin-clients-search-row .admin-search-bar:focus-within {
+  border-color: var(--focus);
+  background: color-mix(in srgb, var(--surface-2) 70%, transparent);
+  box-shadow: 0 0 0 2px color-mix(in srgb, var(--focus) 18%, transparent);
 }
 
 .admin-orders-search-row {

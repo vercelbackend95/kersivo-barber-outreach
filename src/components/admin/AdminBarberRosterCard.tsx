@@ -49,24 +49,29 @@ export default function AdminBarberRosterCard({
     <li className={`admin-barber-card admin-barber-card--roster${barberIsActive ? '' : ' is-inactive'}`}>
       <article className="admin-barber-identity admin-barber-identity--roster" aria-label={`${barber.name} roster card`}>
         <div className="admin-barber-roster-hero">
-          <div className="admin-barber-roster-hero-shine" aria-hidden="true" />
-          <span className="admin-barber-rank-badge" aria-label={`Roster position ${orderIndex + 1}`}>
-            #{orderIndex + 1}
-          </span>
           <div className="admin-barber-roster-avatar-shell">
             <div className={`admin-barber-avatar admin-barber-avatar--roster admin-barber-avatar--status-${availStatus}`}>
-              {barber.avatarUrl ? <img src={barber.avatarUrl} alt="" loading="lazy" /> : <span>{getInitials(barber.name)}</span>}
+              {barber.avatarUrl ? (
+                <img src={barber.avatarUrl} alt="" loading="lazy" />
+              ) : (
+                <span>{getInitials(barber.name)}</span>
+              )}
             </div>
-            <span className={`admin-barber-avail-dot admin-barber-avail-dot--${availStatus}`} />
+            <span className={`admin-barber-avail-dot admin-barber-avail-dot--${availStatus}`} aria-hidden="true" />
           </div>
-          <span className={`admin-barber-avail-pill admin-barber-avail-pill--${availStatus}`} role="status">
-            {availLabel}
-          </span>
         </div>
 
         <div className="admin-barber-roster-body">
           <div className="admin-barber-name-row admin-barber-roster-name-row">
-            <p className="admin-barber-name admin-barber-roster-name">{barber.name}</p>
+            <span className="admin-barber-roster-rank" aria-label={`Roster position ${orderIndex + 1}`}>
+              {orderIndex + 1}
+            </span>
+            <div className="admin-barber-roster-title-stack">
+              <p className="admin-barber-name admin-barber-roster-name">{barber.name}</p>
+              <p className={`admin-barber-roster-status admin-barber-roster-status--${availStatus}`} role="status">
+                {availLabel}
+              </p>
+            </div>
             {barberIsActive ? null : <span className="admin-barber-roster-inactive-badge">Hidden</span>}
             {variant === 'manage' && manageControls ? (
               <div className="admin-barber-actions admin-barber-actions--roster-inline">
@@ -98,12 +103,12 @@ export default function AdminBarberRosterCard({
 
           <div className="admin-barber-roster-meta">
             <span className={`admin-barber-roster-shift${todayLine.isOff ? ' is-off' : ''}`} title={todayLine.title}>
-              <Clock className="admin-barber-roster-meta-icon" width={16} height={16} aria-hidden />
+              <Clock className="admin-barber-roster-meta-icon" width={15} height={15} aria-hidden />
               <span className="admin-barber-roster-shift-text">{todayLine.text}</span>
             </span>
 
             <div className={`admin-barber-roster-next${nextBookingPreview ? '' : ' is-muted'}`} title={nextBookingTitle}>
-              <Calendar className="admin-barber-roster-meta-icon" width={16} height={16} aria-hidden />
+              <Calendar className="admin-barber-roster-meta-icon" width={15} height={15} aria-hidden />
               {nextBookingPreview ? (
                 <div className="admin-barber-roster-next-copy">
                   <span className="admin-barber-roster-next-primary">
@@ -126,16 +131,14 @@ export default function AdminBarberRosterCard({
             aria-label={`Open ${barber.name} profile and settings`}
           >
             <span className="admin-barber-roster-cta-label">Profile & settings</span>
-            <ArrowRight className="admin-barber-roster-cta-icon" width={18} height={18} aria-hidden />
+            <ArrowRight className="admin-barber-roster-cta-icon" width={16} height={16} aria-hidden />
           </button>
+
+          <div className="admin-barber-day-fill-row admin-barber-day-fill-row--roster" aria-label={dayFillAriaLabel}>
+            <div className="admin-barber-day-fill" aria-hidden="true" style={{ width: `${dayFill.pct}%` }} />
+          </div>
         </div>
       </article>
-
-      <div className="admin-barber-roster-toolbar">
-        <div className="admin-barber-day-fill-row admin-barber-day-fill-row--roster" aria-label={dayFillAriaLabel}>
-          <div className="admin-barber-day-fill" aria-hidden="true" style={{ width: `${dayFill.pct}%` }} />
-        </div>
-      </div>
     </li>
   );
 }

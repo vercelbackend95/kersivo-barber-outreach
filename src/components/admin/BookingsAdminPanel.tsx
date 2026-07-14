@@ -637,8 +637,8 @@ type BookingsAdminPanelProps = {
 };
 
 export default function BookingsAdminPanel({ isActive, mode, onBackToDashboard, isPublicDemo = false }: BookingsAdminPanelProps) {
-  const [loggedIn, setLoggedIn] = useState(isPublicDemo);
-  const [isCheckingSession, setIsCheckingSession] = useState(!isPublicDemo);
+  /* Parent AdminPanel already gated session; avoid a second blocking "Checking session…" flash. */
+  const [loggedIn, setLoggedIn] = useState(true);
   const [bookings, setBookings] = useState<Booking[]>([]);
   const [bookingsInitialLoading, setBookingsInitialLoading] = useState(true);
   const [barbers, setBarbers] = useState<Barber[]>([]);
@@ -967,9 +967,9 @@ export default function BookingsAdminPanel({ isActive, mode, onBackToDashboard, 
     void (async () => {
       try {
         const response = await fetch('/api/admin/session', { credentials: 'include' });
-        setLoggedIn(response.ok);
-      } finally {
-        setIsCheckingSession(false);
+        if (!response.ok) setLoggedIn(false);
+      } catch {
+        setLoggedIn(false);
       }
     })();
   }, [isPublicDemo]);
@@ -2227,7 +2227,6 @@ export default function BookingsAdminPanel({ isActive, mode, onBackToDashboard, 
   ) : null;
 
   if (!isActive) return null;
-  if (!isPublicDemo && isCheckingSession) return <section className="surface booking-shell"><h2>Admin</h2><p className="muted">Checking session...</p></section>;
   if (!isPublicDemo && !loggedIn) return <section className="surface booking-shell"><h2>ADMIN</h2><p className="muted">Unauthorized. Verify your admin secret and reload this page.</p>{error && <p>{error}</p>}</section>;
 
   return (
