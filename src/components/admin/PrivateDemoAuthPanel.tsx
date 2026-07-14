@@ -58,10 +58,34 @@ export default function PrivateDemoAuthPanel({
     setError('');
     setBusy(true);
     try {
-      await authClient.signIn.social({
+      const result = await authClient.signIn.social({
         provider: 'google',
         callbackURL: '/admin',
+        errorCallbackURL: typeof window !== 'undefined' ? window.location.href : '/admin-demo',
       });
+
+      if (result.error) {
+        const raw = result.error.message || String(result.error.statusText || '') || 'Google sign-in failed.';
+        const notConfigured = /provider|not found|not configured|social/i.test(raw);
+        setError(
+          notConfigured
+            ? 'Google sign-in is not configured. Add GOOGLE_CLIENT_ID and GOOGLE_CLIENT_SECRET to .env, then restart the server.'
+            : raw,
+        );
+        setBusy(false);
+        return;
+      }
+
+      const redirectUrl =
+        result.data && typeof result.data === 'object' && 'url' in result.data
+          ? String((result.data as { url?: string }).url || '')
+          : '';
+      if (redirectUrl) {
+        window.location.assign(redirectUrl);
+        return;
+      }
+
+      // Redirect may already be in progress; keep busy until navigation.
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Google sign-in failed.');
       setBusy(false);
@@ -177,6 +201,12 @@ export default function PrivateDemoAuthPanel({
             Continue with Google
           </button>
 
+          {error && step === 'email' ? (
+            <p className="private-demo-auth__error" role="alert">
+              {error}
+            </p>
+          ) : null}
+
           <div className="private-demo-auth__or" role="separator" aria-label="or">
             <span className="private-demo-auth__or-line" aria-hidden="true" />
             <span className="private-demo-auth__or-text">OR</span>
@@ -201,11 +231,6 @@ export default function PrivateDemoAuthPanel({
               disabled={busy}
               required
             />
-            {error ? (
-              <p className="private-demo-auth__error" role="alert">
-                {error}
-              </p>
-            ) : null}
             <button type="submit" className="btn btn--primary private-demo-auth__submit" disabled={busy}>
               Continue
             </button>

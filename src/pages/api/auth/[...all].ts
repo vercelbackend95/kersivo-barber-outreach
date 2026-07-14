@@ -3,6 +3,8 @@ import { auth } from '@/lib/auth';
 
 export const prerender = false;
 
-export const ALL: APIRoute = async (ctx) => {
-  return auth.handler(ctx.request);
-};
+const handle: APIRoute = async (ctx) => auth.handler(ctx.request);
+
+export const ALL = handle;
+export const GET = handle;
+export const POST = handle;
