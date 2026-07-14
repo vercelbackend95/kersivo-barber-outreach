@@ -35,7 +35,7 @@ export default function DemoActionLock() {
       className="admin-demo-lock"
       role="dialog"
       aria-modal="true"
-      aria-labelledby="admin-demo-lock-title"
+      aria-labelledby={showAuth ? 'private-demo-auth-title' : 'admin-demo-lock-title'}
       onClick={() => {
         setOpen(false);
         setShowAuth(false);
