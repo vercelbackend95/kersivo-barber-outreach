@@ -1,12 +1,12 @@
 export const prerender = false;
 
 import type { APIRoute } from 'astro';
-import { requireAdmin } from '../../../../lib/admin/auth';
+import { requireAdminContext } from '../../../../lib/admin/auth';
 import { upsertShopClient } from '../../../../lib/admin/clientUpsert';
 
 export const POST: APIRoute = async (ctx) => {
-  const unauthorized = requireAdmin(ctx);
-  if (unauthorized) return unauthorized;
+  const access = await requireAdminContext(ctx);
+  if (access instanceof Response) return access;
 
   const payload = (await ctx.request.json().catch(() => null)) as {
     email?: unknown;
@@ -23,6 +23,7 @@ export const POST: APIRoute = async (ctx) => {
       email: payload.email,
       fullName: typeof payload.fullName === 'string' ? payload.fullName : null,
       phone: typeof payload.phone === 'string' ? payload.phone : null,
+      shopId: access.shopId,
     });
 
     return new Response(JSON.stringify({ clientId: client.id }));

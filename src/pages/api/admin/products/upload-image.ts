@@ -15,7 +15,7 @@ function jsonResponse(body: Record<string, unknown>, status = 200) {
 }
 
 export const POST: APIRoute = async (ctx) => {
-  const unauthorized = requireAdmin(ctx);
+  const unauthorized = await requireAdmin(ctx);
   if (unauthorized) return unauthorized;
 
   if (!getBlobReadWriteToken()) {

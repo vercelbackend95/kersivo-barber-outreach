@@ -1,4 +1,5 @@
 import { prisma } from '@/lib/db/client';
+import { DEMO_SHOP_ID } from '@/lib/db/shopScope';
 import {
   PUBLIC_FALLBACK_SHOP_SETTINGS,
   withPrismaQuotaFallback,
@@ -94,17 +95,18 @@ export async function resolveLandingBookingData(): Promise<LandingBookingData> {
     async () => {
       const [services, barbers, shopSettings] = await Promise.all([
         prisma.service.findMany({
-          where: { isActive: true },
+          where: { isActive: true, shopId: DEMO_SHOP_ID },
           orderBy: [{ displayOrder: 'asc' }, { createdAt: 'asc' }],
         }),
         prisma.barber.findMany({
-          where: { active: true },
+          where: { active: true, shopId: DEMO_SHOP_ID },
           orderBy: [{ sortOrder: 'asc' }, { createdAt: 'asc' }],
           include: {
             barberServices: { select: { serviceId: true } },
           },
         }),
-        prisma.shopSettings.findFirst({
+        prisma.shopSettings.findUnique({
+          where: { id: DEMO_SHOP_ID },
           select: {
             timezone: true,
             cancellationWindowHours: true,

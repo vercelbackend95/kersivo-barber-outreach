@@ -2,9 +2,8 @@ export const prerender = false;
 
 import type { APIRoute } from 'astro';
 import { z } from 'zod';
-import { requireAdmin } from '../../../../../lib/admin/auth';
+import { requireAdminContext } from '../../../../../lib/admin/auth';
 import { runSerializableTransaction } from '../../../../../lib/db/serializableTransaction';
-import { resolveShopId } from '../../../../../lib/db/shopScope';
 import { insertProductIntoShopOrder, normalizeRequestedProductSortOrder } from '../../../../../lib/products/sortOrder';
 import { makeBlobPath, uploadPublicImageToBlob } from '../../../../../lib/storage/vercelBlob';
 const PRODUCT_DESCRIPTION_MAX_LENGTH = 2000;
@@ -66,13 +65,13 @@ async function createProductWithReorder(shopId: string, payload: CreatePayload, 
 
 
 export const POST: APIRoute = async (ctx) => {
-  const unauthorized = requireAdmin(ctx);
-  if (unauthorized) return unauthorized;
+  const access = await requireAdminContext(ctx);
+  if (access instanceof Response) return access;
 
   const contentType = ctx.request.headers.get('content-type') ?? '';
 
   try {
-    const shopId = await resolveShopId();
+    const shopId = access.shopId;
     
     if (contentType.includes('multipart/form-data')) {
       const formData = await ctx.request.formData();

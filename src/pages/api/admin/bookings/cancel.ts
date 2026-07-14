@@ -6,7 +6,7 @@ import { adminCancelBookingSchema } from '../../../../lib/booking/schemas';
 import { BookingActionError, cancelByShop } from '../../../../lib/booking/service';
 
 export const POST: APIRoute = async (ctx) => {
-  const unauthorized = requireAdmin(ctx);
+  const unauthorized = await requireAdmin(ctx);
   if (unauthorized) return unauthorized;
 
   const parsed = adminCancelBookingSchema.safeParse(await ctx.request.json());

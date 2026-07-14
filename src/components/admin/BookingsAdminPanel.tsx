@@ -31,7 +31,7 @@ import { Clock, ListOrdered, X } from '../lucide-react';
 import { ADMIN_BOOKING_HISTORY_PAGE_SIZE } from '../../lib/admin/bookingHistoryPageSize';
 import { canShopAdminCancelByLeadTime } from '../../lib/booking/policies';
 import { countBookingsByStatusTone, getBookingStatusTone, isCancelledBookingStatus } from './bookingStatus';
-import { adminFetchJson } from './adminAuth';
+import { adminFetchJson, notifyAdminDemoBlocked } from './adminAuth';
 type Booking = {
   id: string;
   barberId: string;
@@ -1999,11 +1999,15 @@ export default function BookingsAdminPanel({ isActive, mode, onBackToDashboard, 
   }
 
   const openAddBarberSheet = useCallback(() => {
+    if (isPublicDemo) {
+      notifyAdminDemoBlocked();
+      return;
+    }
     setBarberSaveError('');
     setBarberSaveMessage('');
     setAddBarberWorkingHours(getDefaultWorkingHourRows());
     setIsAddBarberSheetOpen(true);
-  }, []);
+  }, [isPublicDemo]);
 
 
   const dashboardOpsDashCluster =

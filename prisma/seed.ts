@@ -32,8 +32,8 @@ async function main() {
     ['Jay', 'Mason', 'Luca'].map((name) =>
       prisma.barber.upsert({
         where: { id: `seed-${name.toLowerCase()}` },
-        update: { name, active: true },
-        create: { id: `seed-${name.toLowerCase()}`, name, active: true }
+        update: { name, active: true, shopId: DEMO_SHOP_ID },
+        create: { id: `seed-${name.toLowerCase()}`, name, active: true, shopId: DEMO_SHOP_ID }
       })
     )
   );

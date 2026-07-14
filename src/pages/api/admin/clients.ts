@@ -1,7 +1,7 @@
 export const prerender = false;
 
 import type { APIRoute } from 'astro';
-import { requireAdmin } from '../../../lib/admin/auth';
+import { requireAdminContext } from '../../../lib/admin/auth';
 import { prisma } from '../../../lib/db/client';
 import {
   computeClientStats,
@@ -9,14 +9,13 @@ import {
 } from './clients/[clientId]/index';
 
 export const GET: APIRoute = async (ctx) => {
-  const unauthorized = requireAdmin(ctx); if (unauthorized) return unauthorized;
+  const access = await requireAdminContext(ctx);
+  if (access instanceof Response) return access;
   const query = ctx.url.searchParams.get('query')?.trim();
-
-  const shop = await prisma.shopSettings.findFirstOrThrow({ select: { id: true } });
 
   const clients = await prisma.client.findMany({
     where: {
-      shopId: shop.id,
+      shopId: access.shopId,
       ...(query ? {
         OR: [
           { email: { contains: query, mode: 'insensitive' } },

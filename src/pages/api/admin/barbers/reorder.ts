@@ -11,7 +11,7 @@ const reorderSchema = z.object({
 });
 
 export const POST: APIRoute = async (ctx) => {
-  const unauthorized = requireAdmin(ctx);
+  const unauthorized = await requireAdmin(ctx);
   if (unauthorized) return unauthorized;
 
   const parsed = reorderSchema.safeParse(await ctx.request.json());

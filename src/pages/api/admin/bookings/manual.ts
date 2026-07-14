@@ -26,7 +26,8 @@ async function upsertClient(tx: Prisma.TransactionClient, input: { email: string
 
 
 export const POST: APIRoute = async (ctx) => {
-  const unauthorized = requireAdmin(ctx); if (unauthorized) return unauthorized;
+  const unauthorized = await requireAdmin(ctx);
+  if (unauthorized) return unauthorized;
   const parsed = bookingCreateSchema.safeParse(await ctx.request.json());
   if (!parsed.success) return new Response(JSON.stringify({ error: parsed.error.flatten() }), { status: 400 });
 

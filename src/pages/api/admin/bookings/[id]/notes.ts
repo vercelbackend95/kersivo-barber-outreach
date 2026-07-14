@@ -5,7 +5,7 @@ import { requireAdmin } from '../../../../../lib/admin/auth';
 import { prisma } from '../../../../../lib/db/client';
 
 export const PATCH: APIRoute = async (ctx) => {
-  const unauthorized = requireAdmin(ctx);
+  const unauthorized = await requireAdmin(ctx);
   if (unauthorized) return unauthorized;
 
   const bookingId = ctx.params.id;

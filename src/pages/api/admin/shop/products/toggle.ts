@@ -2,9 +2,8 @@ export const prerender = false;
 
 import type { APIRoute } from 'astro';
 import { z } from 'zod';
-import { requireAdmin } from '../../../../../lib/admin/auth';
+import { requireAdminContext } from '../../../../../lib/admin/auth';
 import { prisma } from '../../../../../lib/db/client';
-import { resolveShopId } from '../../../../../lib/db/shopScope';
 
 const toggleSchema = z.object({
   id: z.string().min(1),
@@ -13,8 +12,8 @@ const toggleSchema = z.object({
 });
 
 export const POST: APIRoute = async (ctx) => {
-  const unauthorized = requireAdmin(ctx);
-  if (unauthorized) return unauthorized;
+  const access = await requireAdminContext(ctx);
+  if (access instanceof Response) return access;
 
   const parsed = toggleSchema.safeParse(await ctx.request.json());
   if (!parsed.success) {
@@ -22,7 +21,7 @@ export const POST: APIRoute = async (ctx) => {
   }
 
   try {
-    const shopId = await resolveShopId();
+    const shopId = access.shopId;
     const existing = await prisma.product.findFirst({ where: { id: parsed.data.id, shopId }, select: { id: true } });
     if (!existing) {
       return new Response(JSON.stringify({ error: 'Product not found.' }), { status: 404 });

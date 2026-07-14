@@ -3,9 +3,8 @@ export const prerender = false;
 
 import type { APIRoute } from 'astro';
 import { fromZonedTime, formatInTimeZone } from 'date-fns-tz';
-import { requireAdmin } from '../../../../../lib/admin/auth';
+import { requireAdminContext } from '../../../../../lib/admin/auth';
 import { prisma } from '../../../../../lib/db/client';
-import { resolveShopId } from '../../../../../lib/db/shopScope';
 import { toLondonDateBucket } from '../../../../../lib/time/londonDateBucket';
 
 const TZ = 'Europe/London';
@@ -253,11 +252,10 @@ async function buildSalesResponse(
 }
 
 export const GET: APIRoute = async (ctx) => {
-  const unauthorized = requireAdmin(ctx);
-  if (unauthorized) return unauthorized;
-
+  const access = await requireAdminContext(ctx);
+  if (access instanceof Response) return access;
+  const shopId = access.shopId;
   try {
-    const shopId = await resolveShopId();
     const range = getDateRange(ctx.url.searchParams);
     const productIds = parseProductIds(ctx.url.searchParams);
     const includeOverall = ctx.url.searchParams.get('includeOverall') !== 'false';

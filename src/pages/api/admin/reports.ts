@@ -606,7 +606,7 @@ async function computeMetrics(shopId: string, range: RangeBoundaries, selectedBa
 
 
 export const GET: APIRoute = async (ctx) => {
-  const unauthorized = requireAdmin(ctx);
+  const unauthorized = await requireAdmin(ctx);
   if (unauthorized) return unauthorized;
 
   const resolved = resolveReportsRequest(ctx.url.searchParams);

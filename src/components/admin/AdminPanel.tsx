@@ -6,15 +6,17 @@ import ShopAdminPanel from './ShopAdminPanel';
 import ServicesAdminPanel from './ServicesAdminPanel';
 import ClientsAdminPanel from './ClientsAdminPanel';
 import AiAssistantPanel from './AiAssistantPanel';
+import PrivateDemoAuthPanel from './PrivateDemoAuthPanel';
 import { AdminTodayBookingsLiveProvider } from './useAdminTodayBookingsLive';
-import { DEMO_ADMIN_SECRET, resolveDemoSectionAlias } from '@/lib/admin/demoConfig';
+import { resolveDemoSectionAlias } from '@/lib/admin/demoConfig';
 import {
   enablePublicAdminDemo,
   getStoredAdminSecret,
   installAdminFetchInterceptor,
-  saveAdminSecret,
   setPublicAdminDemoMode,
 } from './adminAuth';
+import type { AdminProfileUser } from './AdminSidebarProfile';
+
 export type AdminSection =
   | 'bookings_dashboard'
   | 'bookings_blocks'
@@ -26,6 +28,7 @@ export type AdminSection =
   | 'shop_orders'
   | 'shop_sales'
   | 'assistant';
+
 function clearTransientAdminViewportState() {
   if (typeof document === 'undefined') return;
 
@@ -39,7 +42,6 @@ function clearTransientAdminViewportState() {
   body.style.width = '';
   documentElement.style.overflow = '';
 }
-
 
 function getSectionFromUrl(): AdminSection {
   if (typeof window === 'undefined') return 'bookings_dashboard';
@@ -58,9 +60,6 @@ function getSectionFromUrl(): AdminSection {
   return 'bookings_dashboard';
 }
 
-/** Pre-fills the login field on the protected /admin route (must match server `ADMIN_SECRET`). */
-const ADMIN_LOGIN_PREFILL_SECRET = DEMO_ADMIN_SECRET;
-
 type AdminPanelProps = {
   demoMode?: boolean;
 };
@@ -69,10 +68,9 @@ export default function AdminPanel({ demoMode = false }: AdminPanelProps) {
   const [activeSection, setActiveSection] = useState<AdminSection>('bookings_dashboard');
   const [isTransitioning, setIsTransitioning] = useState(false);
   const [showSectionSkeleton, setShowSectionSkeleton] = useState(false);
-  const [adminSecretDraft, setAdminSecretDraft] = useState(ADMIN_LOGIN_PREFILL_SECRET);
-  const [hasAdminSecret, setHasAdminSecret] = useState(() => !demoMode && Boolean(getStoredAdminSecret()));
-  const [isVerifying, setIsVerifying] = useState(false);
-  const [secretError, setSecretError] = useState('');
+  const [authReady, setAuthReady] = useState(demoMode);
+  const [hasAccess, setHasAccess] = useState(() => demoMode || Boolean(getStoredAdminSecret()));
+  const [profileUser, setProfileUser] = useState<AdminProfileUser | null>(null);
   const [demoLoadError, setDemoLoadError] = useState(false);
   const transitionTimeoutRef = useRef<number | null>(null);
   const skeletonTimeoutRef = useRef<number | null>(null);
@@ -82,9 +80,39 @@ export default function AdminPanel({ demoMode = false }: AdminPanelProps) {
 
     if (demoMode) {
       enablePublicAdminDemo();
+      setAuthReady(true);
+      setHasAccess(true);
     } else {
       setPublicAdminDemoMode(false);
-      setHasAdminSecret(Boolean(getStoredAdminSecret()));
+      void (async () => {
+        try {
+          const response = await fetch('/api/admin/session', { credentials: 'include' });
+          if (response.ok) {
+            const payload = (await response.json()) as {
+              ok?: boolean;
+              user?: { name?: string | null; email?: string | null; image?: string | null } | null;
+            };
+            setHasAccess(true);
+            if (payload.user) {
+              setProfileUser({
+                name: payload.user.name ?? null,
+                email: payload.user.email ?? null,
+                image: payload.user.image ?? null,
+              });
+            } else {
+              setProfileUser(null);
+            }
+          } else {
+            setHasAccess(Boolean(getStoredAdminSecret()));
+            setProfileUser(null);
+          }
+        } catch {
+          setHasAccess(Boolean(getStoredAdminSecret()));
+          setProfileUser(null);
+        } finally {
+          setAuthReady(true);
+        }
+      })();
     }
 
     setActiveSection(getSectionFromUrl());
@@ -144,26 +172,6 @@ export default function AdminPanel({ demoMode = false }: AdminPanelProps) {
     }, 300);
   }, [activeSection]);
 
-  const handleSaveAdminSecret = useCallback(() => {
-    const trimmed = adminSecretDraft.trim();
-    if (!trimmed) return;
-
-    saveAdminSecret(trimmed);
-    setHasAdminSecret(true);
-    setAdminSecretDraft('');
-    window.location.reload();
-  }, [adminSecretDraft]);
-
-  const handleLoginClick = useCallback(() => {
-    if (!adminSecretDraft.trim()) {
-      setSecretError('Please enter your admin secret.');
-      return;
-    }
-    setSecretError('');
-    setIsVerifying(true);
-    handleSaveAdminSecret();
-  }, [adminSecretDraft, handleSaveAdminSecret]);
-
   const shopTab = useMemo(() => {
     if (activeSection === 'shop_orders') return 'orders';
     if (activeSection === 'shop_sales') return 'sales';
@@ -175,6 +183,7 @@ export default function AdminPanel({ demoMode = false }: AdminPanelProps) {
     || activeSection === 'bookings_blocks'
     || activeSection === 'bookings_reports'
     || activeSection === 'bookings_history';
+
   useEffect(() => {
     clearTransientAdminViewportState();
   }, [activeSection]);
@@ -190,7 +199,6 @@ export default function AdminPanel({ demoMode = false }: AdminPanelProps) {
     };
   }, []);
 
-
   if (demoMode && demoLoadError) {
     return (
       <div className="admin-login-viewport">
@@ -203,99 +211,26 @@ export default function AdminPanel({ demoMode = false }: AdminPanelProps) {
     );
   }
 
-  if (!demoMode && !hasAdminSecret) {
+  if (!demoMode && !authReady) {
     return (
       <div className="admin-login-viewport">
         <div className="admin-login-card">
-
-          <div className="admin-login-brand">
-            <div className="admin-login-monogram" aria-hidden="true">K</div>
-            <div className="admin-login-brand-text">
-              <span className="admin-login-brand-name">Kersivo</span>
-              <span className="admin-login-brand-sub">Admin Panel</span>
-            </div>
-          </div>
-
-          <div className={`field${secretError ? ' field--error' : ''}`}>
-            <label className="field__label" htmlFor="admin-secret-input">
-              Admin secret
-            </label>
-            <input
-              id="admin-secret-input"
-              type="password"
-              className={`input${secretError ? ' input--error' : ''}`}
-              value={adminSecretDraft}
-              onChange={(event) => {
-                setAdminSecretDraft(event.target.value);
-                if (secretError) setSecretError('');
-              }}
-              onKeyDown={(e) => { if (e.key === 'Enter') handleLoginClick(); }}
-              autoComplete="current-password"
-              aria-invalid={secretError ? 'true' : undefined}
-              aria-describedby={secretError ? 'admin-secret-error' : undefined}
-              disabled={isVerifying}
-            />
-            {secretError && (
-              <span id="admin-secret-error" className="field__hint" role="alert">
-                {secretError}
-              </span>
-            )}
-          </div>
-
-          <button
-            type="button"
-            className="btn btn--primary admin-login-submit"
-            onClick={handleLoginClick}
-            disabled={isVerifying}
-            aria-busy={isVerifying}
-          >
-            {isVerifying ? (
-              <>
-                <svg
-                  className="admin-login-spinner"
-                  viewBox="0 0 24 24"
-                  fill="none"
-                  aria-hidden="true"
-                  width="18"
-                  height="18"
-                >
-                  <circle
-                    cx="12"
-                    cy="12"
-                    r="9"
-                    stroke="currentColor"
-                    strokeWidth="2.5"
-                    strokeLinecap="round"
-                    strokeDasharray="40 20"
-                  />
-                </svg>
-                Verifying…
-              </>
-            ) : (
-              'Unlock Admin Panel'
-            )}
-          </button>
-
-          <footer className="admin-login-footer">
-            <svg
-              aria-hidden="true"
-              width="14"
-              height="14"
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="currentColor"
-              strokeWidth="2"
-              strokeLinecap="round"
-              strokeLinejoin="round"
-            >
-              <rect x="3" y="11" width="18" height="11" rx="2" ry="2" />
-              <path d="M7 11V7a5 5 0 0 1 10 0v4" />
-            </svg>
-            Secure access — credentials stored locally in this browser
-          </footer>
-
+          <p className="admin-login-brand-sub" style={{ margin: 0, textAlign: 'center' }}>
+            Checking session…
+          </p>
         </div>
       </div>
+    );
+  }
+
+  if (!demoMode && !hasAccess) {
+    return (
+      <PrivateDemoAuthPanel
+        initialMode="signup"
+        onSuccess={() => {
+          window.location.assign('/admin');
+        }}
+      />
     );
   }
 
@@ -307,6 +242,7 @@ export default function AdminPanel({ demoMode = false }: AdminPanelProps) {
         isTransitioning={isTransitioning}
         showSectionSkeleton={showSectionSkeleton}
         isPublicDemo={demoMode}
+        profileUser={profileUser}
         persistentAdminChrome={<AdminGlobalMobileNextStripHost />}
       >
         <BookingsAdminPanel
@@ -324,23 +260,22 @@ export default function AdminPanel({ demoMode = false }: AdminPanelProps) {
           }
           onBackToDashboard={() => handleSectionChange('bookings_dashboard')}
         />
-      
-      {activeSection === 'services' ? (
-        <ServicesAdminPanel key="services" />
-      ) : null}
 
-      {activeSection === 'bookings_clients' ? (
-        <ClientsAdminPanel key="clients" />
-      ) : null}
+        {activeSection === 'services' ? (
+          <ServicesAdminPanel key="services" />
+        ) : null}
 
-      {activeSection === 'shop_products' || activeSection === 'shop_orders' || activeSection === 'shop_sales' ? (
-        <ShopAdminPanel key={activeSection} initialTab={shopTab} />
-      ) : null}
+        {activeSection === 'bookings_clients' ? (
+          <ClientsAdminPanel key="clients" />
+        ) : null}
 
-      {activeSection === 'assistant' ? (
-        <AiAssistantPanel key="assistant" isPublicDemo={demoMode} />
-      ) : null}
+        {activeSection === 'shop_products' || activeSection === 'shop_orders' || activeSection === 'shop_sales' ? (
+          <ShopAdminPanel key={activeSection} initialTab={shopTab} />
+        ) : null}
 
+        {activeSection === 'assistant' ? (
+          <AiAssistantPanel key="assistant" isPublicDemo={demoMode} />
+        ) : null}
       </AdminLayout>
     </AdminTodayBookingsLiveProvider>
   );

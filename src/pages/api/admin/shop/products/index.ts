@@ -1,16 +1,14 @@
 export const prerender = false;
 
 import type { APIRoute } from 'astro';
-import { requireAdmin } from '../../../../../lib/admin/auth';
+import { requireAdminContext } from '../../../../../lib/admin/auth';
 import { prisma } from '../../../../../lib/db/client';
-import { resolveShopId } from '../../../../../lib/db/shopScope';
 
 export const GET: APIRoute = async (ctx) => {
-  const unauthorized = requireAdmin(ctx);
-  if (unauthorized) return unauthorized;
-
+  const access = await requireAdminContext(ctx);
+  if (access instanceof Response) return access;
+  const shopId = access.shopId;
   try {
-    const shopId = await resolveShopId();
     const products = await prisma.product.findMany({
       where: { shopId },
       orderBy: [{ sortOrder: 'asc' }, { updatedAt: 'desc' }]

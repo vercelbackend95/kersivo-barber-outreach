@@ -37,23 +37,124 @@
   }
 }
 
-.admin-demo-toast {
+.admin-demo-lock {
   position: fixed;
-  bottom: 1.25rem;
-  left: 50%;
+  inset: 0;
   z-index: 9999;
-  transform: translateX(-50%);
-  max-width: min(24rem, calc(100vw - 2rem));
-  padding: 0.75rem 1rem;
-  border: 1px solid color-mix(in srgb, var(--accent) 30%, var(--border));
-  border-radius: var(--radius-4);
-  background: color-mix(in srgb, var(--surface) 96%, var(--bg));
-  box-shadow: 0 8px 24px color-mix(in srgb, var(--fg) 12%, transparent);
-  font-family: var(--font-body);
-  font-size: 0.8125rem;
-  line-height: 1.4;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 1rem;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  background: color-mix(in srgb, var(--bg) 55%, transparent);
+  backdrop-filter: blur(6px);
+  -webkit-backdrop-filter: blur(6px);
+  animation: admin-demo-lock-fade 160ms ease-out;
+}
+
+@keyframes admin-demo-lock-fade {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+.admin-demo-lock__card {
+  position: relative;
+  width: 100%;
+  max-width: 26rem;
+  max-height: 100%;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+  padding: clamp(1rem, 3vw, 1.5rem);
+  border-radius: var(--radius-16);
+  border: 1px solid color-mix(in srgb, var(--border) 82%, var(--fg) 6%);
+  background:
+    linear-gradient(
+      180deg,
+      color-mix(in srgb, var(--surface-3) 92%, transparent),
+      color-mix(in srgb, var(--surface-2) 96%, transparent)
+    );
+  box-shadow: 0 24px 60px color-mix(in srgb, #000 60%, transparent);
+  text-align: left;
+}
+
+.admin-demo-lock__close {
+  position: absolute;
+  top: 0.5rem;
+  right: 0.6rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 1.75rem;
+  height: 1.75rem;
+  border: none;
+  border-radius: var(--radius-full);
+  background: transparent;
+  color: var(--muted);
+  font-size: 1.35rem;
+  line-height: 1;
+  cursor: pointer;
+  transition: color 120ms ease, background 120ms ease;
+}
+
+.admin-demo-lock__close:hover {
   color: var(--fg);
-  text-align: center;
-  text-wrap: balance;
-  pointer-events: none;
+  background: color-mix(in srgb, var(--fg) 8%, transparent);
+}
+
+.admin-demo-lock__title {
+  margin: 0;
+  padding-right: 1.75rem;
+  font-family: var(--font-heading);
+  font-size: clamp(1.35rem, 3.5vw, 1.7rem);
+  line-height: 1.05;
+  letter-spacing: var(--tracking-heading);
+  color: var(--fg);
+}
+
+.admin-demo-lock__body {
+  margin: 0 0 0.4rem;
+  font-size: var(--text-sm);
+  line-height: 1.5;
+  color: var(--muted);
+}
+
+.admin-demo-lock__cta {
+  align-self: start;
+}
+
+@media (max-width: 560px) {
+  .admin-demo-lock {
+    padding: 0.6rem;
+    align-items: flex-start;
+    padding-top: max(0.6rem, env(safe-area-inset-top));
+  }
+
+  .admin-demo-lock__card {
+    gap: 0.3rem;
+    padding: 0.9rem 0.95rem 1rem;
+  }
+
+  .admin-demo-lock__title {
+    font-size: clamp(1.15rem, 5.5vw, 1.4rem);
+  }
+
+  .admin-demo-lock__body {
+    font-size: 0.8rem;
+    line-height: 1.45;
+  }
+
+  .admin-demo-lock__cta {
+    align-self: stretch;
+    text-align: center;
+    min-height: 2.75rem;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .admin-demo-lock {
+    animation: none;
+  }
 }

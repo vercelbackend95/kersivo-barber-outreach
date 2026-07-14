@@ -112,7 +112,7 @@ export function computeClientStats(bookings: ScoredBooking[], nowMs = Date.now()
 }
 
 export const GET: APIRoute = async (ctx) => {
-  const unauthorized = requireAdmin(ctx);
+  const unauthorized = await requireAdmin(ctx);
   if (unauthorized) return unauthorized;
 
   const clientId = ctx.params.clientId;
@@ -155,7 +155,7 @@ export const GET: APIRoute = async (ctx) => {
 };
 
 export const PATCH: APIRoute = async (ctx) => {
-  const unauthorized = requireAdmin(ctx);
+  const unauthorized = await requireAdmin(ctx);
   if (unauthorized) return unauthorized;
 
   const clientId = ctx.params.clientId;

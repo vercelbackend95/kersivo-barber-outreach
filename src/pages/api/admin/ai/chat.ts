@@ -46,7 +46,7 @@ function parseMessages(body: unknown): ChatMessage[] | null {
 }
 
 export const POST: APIRoute = async (ctx) => {
-  const unauthorized = requireAdmin(ctx);
+  const unauthorized = await requireAdmin(ctx);
   if (unauthorized) return unauthorized;
 
   const apiKey = import.meta.env.OPENAI_API_KEY ?? process.env.OPENAI_API_KEY;

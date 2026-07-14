@@ -119,7 +119,7 @@ function isDemoWriteBlocked(method: string, pathname?: string | null): boolean {
   return method !== 'GET' && method !== 'HEAD' && method !== 'OPTIONS';
 }
 
-function dispatchDemoBlockedToast(): void {
+export function notifyAdminDemoBlocked(): void {
   if (typeof window === 'undefined') return;
   window.dispatchEvent(new CustomEvent(ADMIN_DEMO_BLOCKED_EVENT));
 }
@@ -159,7 +159,7 @@ export async function adminFetchJson<T>(input: RequestInfo | URL, options: Admin
       ? String((payload as { error?: unknown }).error || '')
       : '';
     if (response.status === 403 && serverMessage === DEMO_ACTION_BLOCKED_MESSAGE) {
-      dispatchDemoBlockedToast();
+      notifyAdminDemoBlocked();
     }
     const message = serverMessage || (response.status === 401 ? 'Session expired. Please log in again.' : errorMessage);
     throw new AdminFetchError(message, response.status, payload);
@@ -182,7 +182,7 @@ export function installAdminFetchInterceptor(): void {
 
     const method = resolveRequestMethod(input, init);
     if (isDemoWriteBlocked(method, pathname)) {
-      dispatchDemoBlockedToast();
+      notifyAdminDemoBlocked();
       return new Response(JSON.stringify({ error: DEMO_ACTION_BLOCKED_MESSAGE }), {
         status: 403,
         headers: { 'Content-Type': 'application/json' },

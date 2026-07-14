@@ -2,9 +2,8 @@ export const prerender = false;
 
 import type { APIRoute } from 'astro';
 import { z } from 'zod';
-import { requireAdmin } from '../../../../../lib/admin/auth';
+import { requireAdminContext } from '../../../../../lib/admin/auth';
 import { prisma } from '../../../../../lib/db/client';
-import { resolveShopId } from '../../../../../lib/db/shopScope';
 
 const patchSchema = z.object({
   active: z.boolean().optional(),
@@ -14,8 +13,8 @@ const patchSchema = z.object({
 });
 
 export const PATCH: APIRoute = async (ctx) => {
-  const unauthorized = requireAdmin(ctx);
-  if (unauthorized) return unauthorized;
+  const access = await requireAdminContext(ctx);
+  if (access instanceof Response) return access;
 
   const id = ctx.params.id;
   if (!id) {
@@ -28,7 +27,7 @@ export const PATCH: APIRoute = async (ctx) => {
   }
 
   try {
-    const shopId = await resolveShopId();
+    const shopId = access.shopId;
     const existing = await prisma.product.findFirst({ where: { id, shopId } });
     if (!existing) {
       return new Response(JSON.stringify({ error: 'Product not found.' }), { status: 404 });

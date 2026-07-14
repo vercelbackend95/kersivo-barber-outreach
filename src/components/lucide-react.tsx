@@ -256,6 +256,22 @@ const TrendingUp = ({ ...props }: IconProps) => (
   </svg>
 );
 
+const Store = ({ ...props }: IconProps) => (
+  <svg
+    viewBox="0 0 24 24"
+    fill="none"
+    stroke="currentColor"
+    strokeWidth="2"
+    strokeLinecap="round"
+    strokeLinejoin="round"
+    {...props}
+  >
+    <path d="M15 21v-5a1 1 0 0 0-1-1h-4a1 1 0 0 0-1 1v5" />
+    <path d="M17.774 10.31a1.12 1.12 0 0 0-1.549 0 2.5 2.5 0 0 1-3.451 0 1.12 1.12 0 0 0-1.548 0 2.5 2.5 0 0 1-3.452 0 1.12 1.12 0 0 0-1.549 0 2.5 2.5 0 0 1-3.77-1.153 1.47 1.47 0 0 1-.941-2.248l2.467-4.934A2 2 0 0 1 5.91 1h12.18a2 2 0 0 1 1.79 1.094l2.467 4.934a1.47 1.47 0 0 1-.941 2.248 2.5 2.5 0 0 1-3.771 1.153z" />
+    <path d="M4 10.5V19a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-8.5" />
+  </svg>
+);
+
 const LogOut = ({ ...props }: IconProps) => (
   <svg
     viewBox="0 0 24 24"
@@ -604,6 +620,7 @@ export {
   ShoppingBag,
   ShoppingCart,
   Sparkles,
+  Store,
   Tag,
   Ticket,
   TrendingUp,

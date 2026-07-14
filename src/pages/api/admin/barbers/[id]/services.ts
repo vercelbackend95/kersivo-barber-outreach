@@ -8,7 +8,7 @@ import { prisma } from '../../../../../lib/db/client';
 const schema = z.object({ serviceIds: z.array(z.string()) });
 
 export const GET: APIRoute = async (ctx) => {
-  const unauthorized = requireAdmin(ctx);
+  const unauthorized = await requireAdmin(ctx);
   if (unauthorized) return unauthorized;
 
   const barberId = ctx.params.id;
@@ -19,7 +19,7 @@ export const GET: APIRoute = async (ctx) => {
 };
 
 export const PUT: APIRoute = async (ctx) => {
-  const unauthorized = requireAdmin(ctx);
+  const unauthorized = await requireAdmin(ctx);
   if (unauthorized) return unauthorized;
 
   const barberId = ctx.params.id;

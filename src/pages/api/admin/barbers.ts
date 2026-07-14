@@ -2,7 +2,7 @@ export const prerender = false;
 
 import type { APIRoute } from 'astro';
 import { z } from 'zod';
-import { requireAdmin } from '../../../lib/admin/auth';
+import { requireAdminContext } from '../../../lib/admin/auth';
 import { ensureBarberHasAvailabilityRules } from '../../../lib/admin/defaultAvailability';
 import { getTodayInLondon, getTodayScheduleForBarber, getTodayShiftWindowForBarber } from '../../../lib/admin/todayWorkingHours';
 import { prisma } from '../../../lib/db/client';
@@ -46,12 +46,12 @@ function parseServiceIds(rawValue: FormDataEntryValue | null): string[] {
   return [];
 }
 
-async function ensureSelectedServices(tx: Prisma.TransactionClient, selectedServiceIds: string[]) {
+async function ensureSelectedServices(tx: Prisma.TransactionClient, selectedServiceIds: string[], shopId: string) {
   if (selectedServiceIds.length === 0) return [];
 
   const uniqueRequestedIds = Array.from(new Set(selectedServiceIds));
   const existingServices = await tx.service.findMany({
-    where: { id: { in: uniqueRequestedIds } },
+    where: { id: { in: uniqueRequestedIds }, shopId },
     select: { id: true }
   });
   const existingIds = new Set(existingServices.map((service) => service.id));
@@ -81,8 +81,9 @@ async function storeAvatar(file: File, barberId?: string) {
 
 
 export const GET: APIRoute = async (ctx) => {
-  const unauthorized = requireAdmin(ctx);
-  if (unauthorized) return unauthorized;
+  const access = await requireAdminContext(ctx);
+  if (access instanceof Response) return access;
+  const shopId = access.shopId;
 
   type BarberListItem = {
     id: string;
@@ -101,6 +102,7 @@ export const GET: APIRoute = async (ctx) => {
 
   try {
     barbers = await prisma.barber.findMany({
+      where: { shopId },
       orderBy: [{ sortOrder: 'asc' }, { name: 'asc' }, { createdAt: 'asc' }],
       select: { id: true, name: true, email: true, avatarUrl: true, active: true, sortOrder: true, createdAt: true }
     });
@@ -117,13 +119,17 @@ export const GET: APIRoute = async (ctx) => {
     }
 
     const fallbackBarbers = await prisma.barber.findMany({
+      where: { shopId },
       orderBy: [{ name: 'asc' }, { createdAt: 'asc' }],
       select: { id: true, name: true, email: true, avatarUrl: true, active: true, createdAt: true }
     });
 
     barbers = fallbackBarbers.map((barber, index) => ({ ...barber, sortOrder: index }));
   }
-  const links = await prisma.barberService.findMany({ select: { barberId: true, serviceId: true } });
+  const links = await prisma.barberService.findMany({
+    where: { barberId: { in: barbers.map((b) => b.id) } },
+    select: { barberId: true, serviceId: true }
+  });
     const todayInLondon = getTodayInLondon();
   const todayRules = todayInLondon == null
     ? []
@@ -185,8 +191,9 @@ export const GET: APIRoute = async (ctx) => {
 };
 
 export const POST: APIRoute = async (ctx) => {
-  const unauthorized = requireAdmin(ctx);
-  if (unauthorized) return unauthorized;
+  const access = await requireAdminContext(ctx);
+  if (access instanceof Response) return access;
+  const shopId = access.shopId;
 
   const contentType = ctx.request.headers.get('content-type') ?? '';
 
@@ -224,8 +231,10 @@ export const POST: APIRoute = async (ctx) => {
 
     const barber = id
       ? await prisma.$transaction(async (tx) => {
+          const existing = await tx.barber.findFirst({ where: { id, shopId }, select: { id: true } });
+          if (!existing) throw new Error('Barber not found.');
           const updatedBarber = await tx.barber.update({ where: { id }, data: payload });
-          const validServiceIds = await ensureSelectedServices(tx, selectedServiceIds);
+          const validServiceIds = await ensureSelectedServices(tx, selectedServiceIds, shopId);
           await tx.barberService.deleteMany({ where: { barberId: updatedBarber.id } });
           if (validServiceIds.length > 0) {
             await tx.barberService.createMany({
@@ -237,9 +246,11 @@ export const POST: APIRoute = async (ctx) => {
         })
 
       : await prisma.$transaction(async (tx) => {
-          const maxSort = await tx.barber.aggregate({ _max: { sortOrder: true } });
-          const createdBarber = await tx.barber.create({ data: { ...payload, sortOrder: (maxSort._max.sortOrder ?? -1) + 1 } });
-          const validServiceIds = await ensureSelectedServices(tx, selectedServiceIds);
+          const maxSort = await tx.barber.aggregate({ where: { shopId }, _max: { sortOrder: true } });
+          const createdBarber = await tx.barber.create({
+            data: { ...payload, shopId, sortOrder: (maxSort._max.sortOrder ?? -1) + 1 }
+          });
+          const validServiceIds = await ensureSelectedServices(tx, selectedServiceIds, shopId);
           if (validServiceIds.length > 0) {
 
             await tx.barberService.createMany({
@@ -276,9 +287,11 @@ export const POST: APIRoute = async (ctx) => {
 
   const barber = id
     ? await prisma.$transaction(async (tx) => {
+        const existing = await tx.barber.findFirst({ where: { id, shopId }, select: { id: true } });
+        if (!existing) throw new Error('Barber not found.');
         const updatedBarber = await tx.barber.update({ where: { id }, data });
         if (serviceIds.length > 0) {
-          const validServiceIds = await ensureSelectedServices(tx, serviceIds);
+          const validServiceIds = await ensureSelectedServices(tx, serviceIds, shopId);
           await tx.barberService.deleteMany({ where: { barberId: updatedBarber.id } });
           await tx.barberService.createMany({
             data: validServiceIds.map((serviceId) => ({ barberId: updatedBarber.id, serviceId })),
@@ -289,9 +302,10 @@ export const POST: APIRoute = async (ctx) => {
       })
 
     : await prisma.$transaction(async (tx) => {
-        const maxSort = await tx.barber.aggregate({ _max: { sortOrder: true } });
+        const maxSort = await tx.barber.aggregate({ where: { shopId }, _max: { sortOrder: true } });
         const createdBarber = await tx.barber.create({
           data: {
+            shopId,
             name: name ?? 'Barber',
             email: email || null,
             avatarUrl: avatarUrl || null,
@@ -299,7 +313,7 @@ export const POST: APIRoute = async (ctx) => {
             sortOrder: (maxSort._max.sortOrder ?? -1) + 1
           }
         });
-        const validServiceIds = await ensureSelectedServices(tx, serviceIds);
+        const validServiceIds = await ensureSelectedServices(tx, serviceIds, shopId);
         if (validServiceIds.length > 0) {
 
           await tx.barberService.createMany({

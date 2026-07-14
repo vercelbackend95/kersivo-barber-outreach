@@ -3,16 +3,19 @@ import MinimalLayout from '@/layouts/MinimalLayout.astro';
 import BookingFlow from '../../components/booking/BookingFlow';
 import { PAGE_DESCRIPTIONS } from '@/lib/seo/defaults';
 import { prisma } from '../../lib/db/client';
+import { DEMO_SHOP_ID } from '../../lib/db/shopScope';
 import {
   PUBLIC_BOOKING_UNAVAILABLE_MESSAGE,
   PUBLIC_FALLBACK_SHOP_SETTINGS,
   withPrismaQuotaFallback
 } from '../../lib/db/resilience';
 import '../../styles/tokens.css';
+import '../../styles/fonts.css';
 import '../../styles/global.css';
 import '../../styles/components/buttons.css';
 import '../../styles/components/badge.css';
 import '../../styles/components/booking.css';
+import '../../styles/components/booking-flow.css';
 import '../../styles/components/booking-mobile.css';
 import '../../styles/components/booking-review.css';
 import '../../styles/components/empty-state.css';
@@ -22,9 +25,9 @@ const bookingPageData = await withPrismaQuotaFallback(
   'book/index.astro',
   async () => {
     const [services, barbers, shopSettings] = await Promise.all([
-      prisma.service.findMany({ where: { isActive: true }, orderBy: [{ displayOrder: 'asc' }, { createdAt: 'asc' }] }),
+      prisma.service.findMany({ where: { isActive: true, shopId: DEMO_SHOP_ID }, orderBy: [{ displayOrder: 'asc' }, { createdAt: 'asc' }] }),
       prisma.barber.findMany({
-        where: { active: true },
+        where: { active: true, shopId: DEMO_SHOP_ID },
         orderBy: [{ sortOrder: 'asc' }, { createdAt: 'asc' }],
         include: {
           barberServices: {
@@ -36,7 +39,8 @@ const bookingPageData = await withPrismaQuotaFallback(
         }
 
       }),
-      prisma.shopSettings.findFirst({
+      prisma.shopSettings.findUnique({
+        where: { id: DEMO_SHOP_ID },
         select: {
           timezone: true,
           cancellationWindowHours: true,
@@ -72,6 +76,7 @@ const { services, barbers, shopSettings, bookingUnavailable } = bookingPageData;
   description={PAGE_DESCRIPTIONS.book}
   canonicalPath="/book"
   bodyClass="admin-theme-premium-black"
+  showCookieConsent={false}
 >
   <main class="container page-wrap booking-page-wrap">
       {

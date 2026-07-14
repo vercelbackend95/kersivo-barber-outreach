@@ -1,0 +1,207 @@
+.admin-sidebar-profile {
+  display: flex;
+  align-items: center;
+  gap: 0.65rem;
+  width: 100%;
+  padding: 0.45rem 0.55rem;
+  border: 1px solid transparent;
+  border-radius: var(--radius-8, 8px);
+  background: transparent;
+  color: var(--fg);
+  text-align: left;
+  cursor: pointer;
+  transition: background 120ms ease, border-color 120ms ease;
+}
+
+.admin-sidebar-profile:hover,
+.admin-sidebar-profile[aria-expanded='true'] {
+  background: color-mix(in srgb, var(--fg) 6%, transparent);
+  border-color: color-mix(in srgb, var(--border) 80%, transparent);
+}
+
+.admin-sidebar-profile__avatar {
+  flex: 0 0 auto;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 2rem;
+  height: 2rem;
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--accent) 78%, #0f766e);
+  color: #fff;
+  font-size: 0.7rem;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+  overflow: hidden;
+}
+
+.admin-sidebar-profile__avatar img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.admin-sidebar-profile__meta {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  flex: 1 1 auto;
+  gap: 0.05rem;
+}
+
+.admin-sidebar-profile__name {
+  font-size: 0.84rem;
+  font-weight: 600;
+  line-height: 1.2;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.admin-sidebar-profile__plan {
+  font-size: 0.68rem;
+  color: var(--muted);
+  line-height: 1.2;
+}
+
+.admin-sidebar-profile__shop {
+  flex: 0 0 auto;
+  color: var(--muted);
+}
+
+.admin-profile-menu {
+  display: flex;
+  flex-direction: column;
+  padding: 0.35rem;
+  border-radius: var(--radius-12, 12px);
+  border: 1px solid color-mix(in srgb, var(--border) 85%, var(--fg) 8%);
+  background: color-mix(in srgb, var(--surface) 96%, var(--bg));
+  box-shadow: 0 18px 40px color-mix(in srgb, #000 28%, transparent);
+}
+
+.admin-profile-menu__header {
+  display: flex;
+  align-items: center;
+  gap: 0.65rem;
+  padding: 0.55rem 0.55rem 0.45rem;
+}
+
+.admin-profile-menu__divider {
+  height: 1px;
+  margin: 0.25rem 0.35rem;
+  background: color-mix(in srgb, var(--border) 90%, transparent);
+}
+
+.admin-profile-menu__item {
+  display: flex;
+  align-items: center;
+  gap: 0.55rem;
+  width: 100%;
+  padding: 0.55rem 0.65rem;
+  border: none;
+  border-radius: var(--radius-8, 8px);
+  background: transparent;
+  color: var(--fg);
+  font: inherit;
+  font-size: 0.84rem;
+  text-align: left;
+  cursor: pointer;
+}
+
+.admin-profile-menu__item:hover:not(:disabled) {
+  background: color-mix(in srgb, var(--fg) 7%, transparent);
+}
+
+.admin-profile-menu__item:disabled {
+  opacity: 0.55;
+  cursor: default;
+}
+
+.private-demo-auth {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.private-demo-auth__header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 0.75rem;
+}
+
+.private-demo-auth__title {
+  margin: 0;
+  font-family: var(--font-heading);
+  font-size: 1.25rem;
+  line-height: 1.15;
+}
+
+.private-demo-auth__close {
+  border: none;
+  background: transparent;
+  color: var(--muted);
+  font-size: 1.35rem;
+  line-height: 1;
+  cursor: pointer;
+}
+
+.private-demo-auth__tabs {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0.25rem;
+  padding: 0.2rem;
+  border-radius: var(--radius-8, 8px);
+  background: color-mix(in srgb, var(--fg) 6%, transparent);
+}
+
+.private-demo-auth__tab {
+  border: none;
+  border-radius: var(--radius-6, 6px);
+  background: transparent;
+  color: var(--muted);
+  padding: 0.45rem 0.5rem;
+  font: inherit;
+  font-size: 0.82rem;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.private-demo-auth__tab.is-active {
+  background: var(--surface);
+  color: var(--fg);
+  box-shadow: 0 1px 2px color-mix(in srgb, #000 12%, transparent);
+}
+
+.private-demo-auth__google {
+  width: 100%;
+  justify-content: center;
+}
+
+.private-demo-auth__divider {
+  margin: 0;
+  text-align: center;
+  font-size: 0.75rem;
+  color: var(--muted);
+}
+
+.private-demo-auth__form {
+  display: flex;
+  flex-direction: column;
+  gap: 0.65rem;
+}
+
+.private-demo-auth__submit {
+  width: 100%;
+  justify-content: center;
+  margin-top: 0.15rem;
+}
+
+.private-demo-auth-card {
+  max-width: 24rem;
+  width: min(100%, 24rem);
+}
+
+.admin-demo-lock__card:has(.private-demo-auth) {
+  max-width: 26rem;
+}

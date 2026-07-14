@@ -2,15 +2,14 @@ export const prerender = false;
 
 import type { APIRoute } from 'astro';
 import { z } from 'zod';
-import { requireAdmin } from '../../../../../lib/admin/auth';
+import { requireAdminContext } from '../../../../../lib/admin/auth';
 import { runSerializableTransaction } from '../../../../../lib/db/serializableTransaction';
-import { resolveShopId } from '../../../../../lib/db/shopScope';
 import { normalizeProductOrderAfterDeletion } from '../../../../../lib/products/sortOrder';
 const deleteSchema = z.object({ id: z.string().min(1) });
 
 export const POST: APIRoute = async (ctx) => {
-  const unauthorized = requireAdmin(ctx);
-  if (unauthorized) return unauthorized;
+  const access = await requireAdminContext(ctx);
+  if (access instanceof Response) return access;
 
   const parsed = deleteSchema.safeParse(await ctx.request.json());
   if (!parsed.success) {
@@ -18,7 +17,7 @@ export const POST: APIRoute = async (ctx) => {
   }
 
   try {
-    const shopId = await resolveShopId();
+    const shopId = access.shopId;
     const deleted = await runSerializableTransaction(async (tx) => {
       const existing = await tx.product.findFirst({
         where: { id: parsed.data.id, shopId },

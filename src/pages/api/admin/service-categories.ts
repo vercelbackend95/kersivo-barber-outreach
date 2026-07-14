@@ -14,7 +14,7 @@ const createSchema = z.object({
 });
 
 export const POST: APIRoute = async (ctx) => {
-  const unauthorized = requireAdmin(ctx);
+  const unauthorized = await requireAdmin(ctx);
   if (unauthorized) return unauthorized;
 
   const parsed = createSchema.safeParse(await ctx.request.json());
@@ -32,7 +32,7 @@ export const POST: APIRoute = async (ctx) => {
 };
 
 export const GET: APIRoute = async (ctx) => {
-  const unauthorized = requireAdmin(ctx);
+  const unauthorized = await requireAdmin(ctx);
   if (unauthorized) return unauthorized;
 
   const categories = await loadMergedServiceCategories();

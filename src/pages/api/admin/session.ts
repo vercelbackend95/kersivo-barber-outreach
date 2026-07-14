@@ -1,11 +1,25 @@
 export const prerender = false;
 
 import type { APIRoute } from 'astro';
-import { requireAdmin } from '../../../lib/admin/auth';
+import { requireAdminContext } from '../../../lib/admin/auth';
 
 export const GET: APIRoute = async (context) => {
-  const unauthorized = requireAdmin(context);
-  if (unauthorized) return unauthorized;
+  const access = await requireAdminContext(context);
+  if (access instanceof Response) return access;
 
-  return new Response(JSON.stringify({ ok: true }));
+  return new Response(
+    JSON.stringify({
+      ok: true,
+      shopId: access.shopId,
+      user: access.userId
+        ? {
+            id: access.userId,
+            name: access.userName,
+            email: access.userEmail,
+            image: access.userImage,
+          }
+        : null,
+      via: access.via,
+    }),
+  );
 };

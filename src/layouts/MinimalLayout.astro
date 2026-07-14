@@ -11,6 +11,8 @@ interface Props extends PageSeo {
   htmlClass?: string;
   noindex?: boolean;
   viewportContent?: string;
+  /** When false, skip cookie banner/launcher (e.g. /book* sticky CTA). Default true. */
+  showCookieConsent?: boolean;
 }
 
 const {
@@ -26,6 +28,7 @@ const {
   bodyClass,
   htmlClass,
   viewportContent = 'width=device-width, initial-scale=1',
+  showCookieConsent = true,
 } = Astro.props;
 ---
 
@@ -51,6 +54,6 @@ const {
   </head>
   <body class={bodyClass}>
     <slot />
-    <CookieConsentMount />
+    {showCookieConsent ? <CookieConsentMount /> : null}
   </body>
 </html>

@@ -14,17 +14,15 @@ type Props = {
 
 const contentByVariant = {
   booked: {
-    eyebrow: 'Booking confirmed',
-    heading: 'Your appointment is confirmed',
-    body: 'Your booking has been received successfully. A confirmation email is on the way with the appointment details and your reschedule or cancel links.',
-    accent: 'Appointment secured'
+    eyebrow: 'Confirmed',
+    heading: 'You\'re booked',
+    body: 'A confirmation email is on the way with appointment details and links to reschedule or cancel.',
   },
   rescheduled: {
-    eyebrow: 'Booking rescheduled',
-    heading: 'Your booking has been updated',
-    body: 'Your new appointment time is confirmed. A fresh confirmation email is on the way with your updated booking details.',
-    accent: 'Schedule updated'
-  }
+    eyebrow: 'Updated',
+    heading: 'Booking rescheduled',
+    body: 'Your new time is confirmed. A fresh email with the updated details is on the way.',
+  },
 } as const;
 
 function buildSummaryRows(summary?: BookingSummary): Array<{ label: string; value: string }> {
@@ -34,7 +32,7 @@ function buildSummaryRows(summary?: BookingSummary): Array<{ label: string; valu
     { label: 'Service', value: summary.service ?? '' },
     { label: 'Barber', value: summary.barber ?? '' },
     { label: 'Date', value: summary.date ?? '' },
-    { label: 'Time', value: summary.time ?? '' }
+    { label: 'Time', value: summary.time ?? '' },
   ].filter((entry) => entry.value.trim().length > 0);
 }
 
@@ -51,17 +49,10 @@ const BookingConfirmationPanel = forwardRef<HTMLElement, Props>(function Booking
           </svg>
         </div>
         <div className="booking-confirmation__copy">
-          <p className="booking-confirmation__eyebrow">{content.eyebrow.toUpperCase()}</p>
+          <p className="booking-confirmation__eyebrow">{content.eyebrow}</p>
           <h2 className="booking-confirmation__heading">{content.heading}</h2>
           <p className="booking-confirmation__body">{content.body}</p>
         </div>
-      </div>
-
-      <div className="booking-confirmation__status-strip" aria-label="Booking success state">
-        <span className="booking-confirmation__status-label">Status</span>
-        <span className={`badge ${variant === 'booked' ? 'badge--confirmed' : 'badge--rescheduled'}`}>
-          {content.accent}
-        </span>
       </div>
 
       {rows.length > 0 && (

@@ -8,7 +8,7 @@ import { getTimeBlockDelegate } from '../../../../lib/db/timeBlocks';
 const schema = z.object({ id: z.string().min(1) });
 
 export const POST: APIRoute = async (ctx) => {
-  const unauthorized = requireAdmin(ctx);
+  const unauthorized = await requireAdmin(ctx);
   if (unauthorized) return unauthorized;
 
   const parsed = schema.safeParse(await ctx.request.json());

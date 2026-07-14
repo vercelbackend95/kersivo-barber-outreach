@@ -1,7 +1,7 @@
 import type { APIRoute } from 'astro';
 import { fromZonedTime, formatInTimeZone } from 'date-fns-tz';
 import { ADMIN_BOOKING_HISTORY_PAGE_SIZE } from '../../../lib/admin/bookingHistoryPageSize';
-import { requireAdmin } from '../../../lib/admin/auth';
+import { requireAdminContext } from '../../../lib/admin/auth';
 import { prisma } from '../../../lib/db/client';
 import { getEffectiveBookingStatus } from '../../../lib/booking/operationalStatus';
 import { BookingStatus, Prisma } from '@prisma/client';
@@ -121,7 +121,9 @@ async function findBookingsWithFallback(args: Prisma.BookingFindManyArgs) {
 
 
 export const GET: APIRoute = async (ctx) => {
-  const unauthorized = requireAdmin(ctx); if (unauthorized) return unauthorized;
+  const access = await requireAdminContext(ctx);
+  if (access instanceof Response) return access;
+  const shopId = access.shopId;
   const view = ctx.url.searchParams.get('view');
 
   if (view === 'history') {
@@ -143,7 +145,7 @@ export const GET: APIRoute = async (ctx) => {
 
       : undefined;
 
-    const andConditions: Prisma.BookingWhereInput[] = [];
+    const andConditions: Prisma.BookingWhereInput[] = [{ barber: { shopId } }];
     if (barberId && barberId !== 'all') andConditions.push({ barberId });
     if (startAtFilter) andConditions.push({ startAt: startAtFilter });
     if (cursorStartAt && cursorId) {
@@ -196,6 +198,7 @@ export const GET: APIRoute = async (ctx) => {
     const totalBookingsServed = await prisma.booking.count({
       where: {
         barberId,
+        barber: { shopId },
         status: { in: [BookingStatus.BOOKED, BookingStatus.EXPIRED, BookingStatus.RESCHEDULED] }
       }
     });
@@ -219,6 +222,7 @@ export const GET: APIRoute = async (ctx) => {
 
   const bookings = await findBookingsWithFallback({
     where: {
+      barber: { shopId },
       status: status || undefined,
       OR: q ? [{ fullName: { contains: q, mode: 'insensitive' } }, { email: { contains: q, mode: 'insensitive' } }] : undefined,
       startAt: startAtRange

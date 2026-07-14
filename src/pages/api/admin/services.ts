@@ -2,7 +2,7 @@ export const prerender = false;
 
 import type { APIRoute } from 'astro';
 import { z } from 'zod';
-import { requireAdmin } from '../../../lib/admin/auth';
+import { requireAdminContext } from '../../../lib/admin/auth';
 import {
   ensureCustomServiceCategory,
   loadMergedServiceCategories,
@@ -23,12 +23,14 @@ const createSchema = z.object({
 });
 
 export const GET: APIRoute = async (ctx) => {
-  const unauthorized = requireAdmin(ctx);
-  if (unauthorized) return unauthorized;
+  const access = await requireAdminContext(ctx);
+  if (access instanceof Response) return access;
+  const shopId = access.shopId;
 
   try {
     const [services, categories] = await Promise.all([
       prisma.service.findMany({
+        where: { shopId },
         orderBy: [{ displayOrder: 'asc' }, { createdAt: 'asc' }],
         include: {
           barberServices: {
@@ -93,8 +95,9 @@ export const GET: APIRoute = async (ctx) => {
 };
 
 export const POST: APIRoute = async (ctx) => {
-  const unauthorized = requireAdmin(ctx);
-  if (unauthorized) return unauthorized;
+  const access = await requireAdminContext(ctx);
+  if (access instanceof Response) return access;
+  const shopId = access.shopId;
 
   const parsed = createSchema.safeParse(await ctx.request.json());
   if (!parsed.success) {
@@ -111,12 +114,13 @@ export const POST: APIRoute = async (ctx) => {
   const { service, categories } = await prisma.$transaction(async (tx) => {
     const validBarbers =
       uniqueBarberIds.length > 0
-        ? await tx.barber.findMany({ where: { id: { in: uniqueBarberIds } }, select: { id: true } })
+        ? await tx.barber.findMany({ where: { id: { in: uniqueBarberIds }, shopId }, select: { id: true } })
         : [];
     const validBarberIds = validBarbers.map((barber) => barber.id);
 
     const created = await tx.service.create({
       data: {
+        shopId,
         name: payload.name,
         description: payload.description?.trim() || null,
         pricePence: payload.pricePence,

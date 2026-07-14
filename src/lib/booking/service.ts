@@ -1,5 +1,6 @@
 import { BookingStatus, Prisma, type Service, type ShopSettings } from '@prisma/client';
 import { prisma } from '../db/client';
+import { DEMO_SHOP_ID } from '../db/shopScope';
 import { PUBLIC_BOOKING_UNAVAILABLE_MESSAGE, isPrismaQuotaExceededError } from '../db/resilience';
 import { getTimeBlockDelegate } from '../db/timeBlocks';
 import { sendInstantBookingConfirmationEmail, sendRescheduledBookingEmail, sendShopCancelledBookingEmail } from '../email/sender';
@@ -122,6 +123,7 @@ async function listEligibleBarbersForService(serviceId: string) {
   return prisma.barber.findMany({
     where: {
       active: true,
+      shopId: DEMO_SHOP_ID,
       barberServices: {
         some: { serviceId }
       }

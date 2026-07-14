@@ -2,7 +2,7 @@ export const prerender = false;
 
 import type { APIRoute } from 'astro';
 import { z } from 'zod';
-import { requireAdmin } from '../../../../lib/admin/auth';
+import { requireAdminContext } from '../../../../lib/admin/auth';
 import {
   ensureCustomServiceCategory,
   loadMergedServiceCategories,
@@ -23,8 +23,9 @@ const updateSchema = z.object({
 });
 
 export const PATCH: APIRoute = async (ctx) => {
-  const unauthorized = requireAdmin(ctx);
-  if (unauthorized) return unauthorized;
+  const access = await requireAdminContext(ctx);
+  if (access instanceof Response) return access;
+  const shopId = access.shopId;
 
   const id = ctx.params.id;
   if (!id) return new Response(JSON.stringify({ error: 'Missing service id.' }), { status: 400 });
@@ -41,10 +42,13 @@ export const PATCH: APIRoute = async (ctx) => {
     return new Response(JSON.stringify({ error: 'Category is required.' }), { status: 400 });
   }
 
+  const owned = await prisma.service.findFirst({ where: { id, shopId }, select: { id: true } });
+  if (!owned) return new Response(JSON.stringify({ error: 'Service not found.' }), { status: 404 });
+
   const { service, categories } = await prisma.$transaction(async (tx) => {
     const validBarberIds =
       uniqueBarberIds && uniqueBarberIds.length > 0
-        ? (await tx.barber.findMany({ where: { id: { in: uniqueBarberIds } }, select: { id: true } })).map(
+        ? (await tx.barber.findMany({ where: { id: { in: uniqueBarberIds }, shopId }, select: { id: true } })).map(
             (barber) => barber.id
           )
         : [];

@@ -16,7 +16,7 @@ async function assertNoteInClientShop(noteId: string, clientId: string, shopId: 
 }
 
 export const POST: APIRoute = async (ctx) => {
-  const unauthorized = requireAdmin(ctx);
+  const unauthorized = await requireAdmin(ctx);
   if (unauthorized) return unauthorized;
 
   const clientId = ctx.params.clientId;

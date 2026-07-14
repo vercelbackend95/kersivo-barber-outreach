@@ -18,7 +18,12 @@ import {
   X,
 } from '../lucide-react';
 
-import DemoActionToast from './DemoActionToast';
+import DemoActionLock from './DemoActionLock';
+import AdminSidebarProfile, { type AdminProfileUser } from './AdminSidebarProfile';
+import { clearAdminSecret } from './adminAuth';
+import { authClient } from '@/lib/auth-client';
+import '@/styles/components/admin-demo.css';
+import '@/styles/components/admin-profile.css';
 
 type AdminLayoutProps = {
   activeSection: AdminSection;
@@ -26,6 +31,7 @@ type AdminLayoutProps = {
   isTransitioning: boolean;
   showSectionSkeleton: boolean;
   isPublicDemo?: boolean;
+  profileUser?: AdminProfileUser | null;
   /** Always mounted (hidden); keeps effects alive while section skeleton replaces `children`. */
   persistentAdminChrome?: React.ReactNode;
   children: React.ReactNode;
@@ -120,6 +126,7 @@ export default function AdminLayout({
   isTransitioning,
   showSectionSkeleton,
   isPublicDemo = false,
+  profileUser = null,
   persistentAdminChrome,
   children,
 }: AdminLayoutProps) {
@@ -218,9 +225,59 @@ export default function AdminLayout({
       window.location.assign('/');
       return;
     }
+    clearAdminSecret();
+    try {
+      await authClient.signOut();
+    } catch {
+      // ignore
+    }
     await fetch('/api/admin/logout', { method: 'POST', credentials: 'include' });
-    window.location.assign('/admin');
+    window.location.assign('/');
   };
+
+  const accountFooter = isPublicDemo ? (
+    <button
+      type="button"
+      className="btn btn--ghost admin-sidebar-logout"
+      onClick={() => void handleLogout()}
+    >
+      <LogOut width={15} height={15} aria-hidden="true" />
+      Back to site
+    </button>
+  ) : profileUser ? (
+    <AdminSidebarProfile user={profileUser} variant="desktop" />
+  ) : (
+    <button
+      type="button"
+      className="btn btn--ghost admin-sidebar-logout"
+      onClick={() => void handleLogout()}
+    >
+      <LogOut width={15} height={15} aria-hidden="true" />
+      Logout
+    </button>
+  );
+
+  const accountFooterMobile = isPublicDemo ? (
+    <button
+      type="button"
+      className="btn btn--ghost admin-mobile-logout"
+      onClick={() => void handleLogout()}
+    >
+      <LogOut width={15} height={15} aria-hidden="true" />
+      Back to site
+    </button>
+  ) : profileUser ? (
+    <AdminSidebarProfile user={profileUser} variant="mobile" />
+  ) : (
+    <button
+      type="button"
+      className="btn btn--ghost admin-mobile-logout"
+      onClick={() => void handleLogout()}
+    >
+      <LogOut width={15} height={15} aria-hidden="true" />
+      Logout
+    </button>
+  );
 
   const menu = useMemo(() => (
     <nav className="admin-sidebar-nav" aria-label="Admin navigation">
@@ -424,14 +481,7 @@ export default function AdminLayout({
         </div>
         {menu}
         <div className="admin-sidebar-divider" aria-hidden="true" />
-        <button
-          type="button"
-          className="btn btn--ghost admin-mobile-logout"
-          onClick={() => void handleLogout()}
-        >
-          <LogOut width={15} height={15} aria-hidden="true" />
-          {isPublicDemo ? 'Back to site' : 'Logout'}
-        </button>
+        {accountFooterMobile}
       </aside>
     </>
   );
@@ -445,14 +495,7 @@ export default function AdminLayout({
         <div className="admin-sidebar-logout-wrap">
           <SidebarStatus />
           <div className="admin-sidebar-divider" aria-hidden="true" />
-          <button
-            type="button"
-            className="btn btn--ghost admin-sidebar-logout"
-            onClick={() => void handleLogout()}
-          >
-            <LogOut width={15} height={15} aria-hidden="true" />
-            {isPublicDemo ? 'Back to site' : 'Logout'}
-          </button>
+          {accountFooter}
         </div>
       </aside>
 
@@ -495,7 +538,7 @@ export default function AdminLayout({
           ) : null}
         </header>
         <div className="admin-mobile-header-spacer" aria-hidden="true" />
-        {isPublicDemo ? <DemoActionToast /> : null}
+        {isPublicDemo ? <DemoActionLock /> : null}
         {persistentAdminChrome ? (
           <div className="admin-persistent-chrome-host" aria-hidden="true" style={{ display: 'none' }}>
             {persistentAdminChrome}

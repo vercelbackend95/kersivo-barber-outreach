@@ -1,18 +1,16 @@
 export const prerender = false;
 
 import type { APIRoute } from 'astro';
-import { requireAdmin } from '../../../../../lib/admin/auth';
+import { requireAdminContext } from '../../../../../lib/admin/auth';
 import { prisma } from '../../../../../lib/db/client';
-import { resolveShopId } from '../../../../../lib/db/shopScope';
 
 const DEFAULT_ORDERS_LIMIT = 50;
 const MAX_ORDERS_LIMIT = 100;
 
 export const GET: APIRoute = async (ctx) => {
-  const unauthorized = requireAdmin(ctx);
-  if (unauthorized) return unauthorized;
-
-  const shopId = await resolveShopId();
+  const access = await requireAdminContext(ctx);
+  if (access instanceof Response) return access;
+  const shopId = access.shopId;
   const requestedLimit = Number(ctx.url.searchParams.get('limit') ?? DEFAULT_ORDERS_LIMIT);
   const limit = Number.isFinite(requestedLimit)
     ? Math.min(Math.max(Math.floor(requestedLimit), 1), MAX_ORDERS_LIMIT)

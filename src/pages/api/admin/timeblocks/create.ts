@@ -2,7 +2,7 @@ export const prerender = false;
 
 import type { APIRoute } from 'astro';
 import { z } from 'zod';
-import { requireAdmin } from '../../../../lib/admin/auth';
+import { requireAdminContext } from '../../../../lib/admin/auth';
 import { prisma } from '../../../../lib/db/client';
 import { getTimeBlockDelegate } from '../../../../lib/db/timeBlocks';
 
@@ -14,8 +14,8 @@ const schema = z.object({
 });
 
 export const POST: APIRoute = async (ctx) => {
-  const unauthorized = requireAdmin(ctx);
-  if (unauthorized) return unauthorized;
+  const access = await requireAdminContext(ctx);
+  if (access instanceof Response) return access;
 
   const parsed = schema.safeParse(await ctx.request.json());
   if (!parsed.success) return new Response(JSON.stringify({ error: parsed.error.flatten() }), { status: 400 });
@@ -28,10 +28,10 @@ export const POST: APIRoute = async (ctx) => {
     return new Response(JSON.stringify({ error: 'Invalid block range.' }), { status: 400 });
   }
 
-  const shop = await prisma.shopSettings.findFirstOrThrow({ select: { id: true } });
+  const shopId = access.shopId;
 
   if (barberId) {
-    const barber = await prisma.barber.findUnique({ where: { id: barberId }, select: { id: true } });
+    const barber = await prisma.barber.findFirst({ where: { id: barberId, shopId }, select: { id: true } });
     if (!barber) return new Response(JSON.stringify({ error: 'Barber not found.' }), { status: 404 });
   }
 
@@ -43,7 +43,7 @@ export const POST: APIRoute = async (ctx) => {
   const timeBlock = await timeBlockDelegate.create({
 
     data: {
-      shopId: shop.id,
+      shopId,
       barberId: barberId ?? null,
       title,
       startAt: start,

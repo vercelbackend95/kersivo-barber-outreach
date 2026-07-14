@@ -1,15 +1,13 @@
 export const prerender = false;
 
 import type { APIRoute } from 'astro';
-import { requireAdmin } from '../../../../../../lib/admin/auth';
+import { requireAdminContext } from '../../../../../../lib/admin/auth';
 import { prisma } from '../../../../../../lib/db/client';
-import { resolveShopId } from '../../../../../../lib/db/shopScope';
 
 export const GET: APIRoute = async (ctx) => {
-  const unauthorized = requireAdmin(ctx);
-  if (unauthorized) return unauthorized;
-
-  const shopId = await resolveShopId();
+  const access = await requireAdminContext(ctx);
+  if (access instanceof Response) return access;
+  const shopId = access.shopId;
   const orderId = ctx.params.id;
   if (!orderId) return new Response(JSON.stringify({ error: 'Order ID required' }), { status: 400 });
 

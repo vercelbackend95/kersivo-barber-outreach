@@ -39,6 +39,70 @@ enum ProductCategory {
 }
 
 
+model User {
+  id            String    @id
+  name          String
+  email         String
+  emailVerified Boolean   @default(false)
+  image         String?
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+  sessions      Session[]
+  accounts      Account[]
+  ownedShop     ShopSettings?
+
+  @@unique([email])
+  @@map("user")
+}
+
+model Session {
+  id        String   @id
+  expiresAt DateTime
+  token     String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  ipAddress String?
+  userAgent String?
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([token])
+  @@index([userId])
+  @@map("session")
+}
+
+model Account {
+  id                    String    @id
+  accountId             String
+  providerId            String
+  userId                String
+  user                  User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  accessToken           String?
+  refreshToken          String?
+  idToken               String?
+  accessTokenExpiresAt  DateTime?
+  refreshTokenExpiresAt DateTime?
+  scope                 String?
+  password              String?
+  createdAt             DateTime  @default(now())
+  updatedAt             DateTime  @updatedAt
+
+  @@index([userId])
+  @@map("account")
+}
+
+model Verification {
+  id         String   @id
+  identifier String
+  value      String
+  expiresAt  DateTime
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
+  @@index([identifier])
+  @@map("verification")
+}
+
 model ShopSettings {
   id                          String   @id @default(cuid())
   name                        String
@@ -49,12 +113,16 @@ model ShopSettings {
   slotIntervalMinutes         Int      @default(15)
   defaultBufferMinutes        Int      @default(0)
   customServiceCategories     String[] @default([])
+  ownerUserId                 String?  @unique
   createdAt                   DateTime @default(now())
   updatedAt                   DateTime @updatedAt
+  owner                       User?    @relation(fields: [ownerUserId], references: [id], onDelete: SetNull)
   clients                     Client[]
   timeBlocks                  TimeBlock[]
   products                    Product[]
   orders                      Order[]
+  barbers                     Barber[]
+  services                    Service[]
 }
 
 
@@ -120,8 +188,9 @@ model ClientNoteLike {
 
 model Service {
   id              String   @id @default(cuid())
+  shopId          String
   name            String
-    description     String?
+  description     String?
   pricePence      Int
   durationMinutes Int
   bufferMinutes   Int      @default(0)
@@ -130,13 +199,17 @@ model Service {
   isActive        Boolean  @default(true) @map("active")
   createdAt       DateTime @default(now())
   updatedAt       DateTime @updatedAt
+  shop            ShopSettings @relation(fields: [shopId], references: [id], onDelete: Cascade)
   bookings        Booking[]
   barberServices  BarberService[]
-    @@index([isActive, displayOrder])
+
+  @@index([shopId, isActive, displayOrder])
+  @@index([isActive, displayOrder])
 }
 
 model Barber {
   id         String             @id @default(cuid())
+  shopId     String
   name       String
   email      String?
   avatarUrl  String?
@@ -144,6 +217,7 @@ model Barber {
   sortOrder  Int                @default(0)
   createdAt  DateTime           @default(now())
   updatedAt  DateTime           @updatedAt
+  shop       ShopSettings       @relation(fields: [shopId], references: [id], onDelete: Cascade)
   bookings   Booking[]
   rules      AvailabilityRule[]
   timeOff    BarberTimeOff[]
@@ -151,6 +225,8 @@ model Barber {
   barberServices BarberService[]
   clientNotes    ClientNote[]
   noteLikes      ClientNoteLike[]
+
+  @@index([shopId, active, sortOrder])
   @@index([active, sortOrder])
 }
 model BarberService {

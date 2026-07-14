@@ -10,6 +10,7 @@ export const DEMO_SHOP_ID = 'demo-shop';
 const SHOP_SETTINGS_MISSING_MESSAGE =
   'ShopSettings is missing. Run `npx prisma db seed` to create demo shop settings (id: demo-shop).';
 
+/** Resolve marketplace / public demo shop id (demo-shop). Prefer requireAdminContext().shopId in admin APIs. */
 export async function resolveShopId(): Promise<string> {
   try {
     const demoShop = await prisma.shopSettings.findUnique({

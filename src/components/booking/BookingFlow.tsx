@@ -1,5 +1,4 @@
-
-import React, { useCallback, useEffect, useMemo, useRef, useState, type PointerEvent } from 'react';
+import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import BookingConfirmationPanel, { type BookingSummary } from './BookingConfirmationPanel';
 import BookingReviewPanel from './BookingReviewPanel';
 import BookingStepIndicator from './BookingStepIndicator';
@@ -8,6 +7,7 @@ import { ANY_BARBER_ID, ANY_BARBER_NAME } from '../../lib/booking/constants';
 import { groupServicesByCategory } from '../../lib/booking/groupServicesByCategory';
 import EmptyState from '../EmptyState';
 import { Clock } from '../lucide-react';
+
 type Service = {
   id: string;
   name: string;
@@ -43,10 +43,10 @@ type BookingCreatePayload = BookingPayload & {
   phone?: string;
 };
 
-
 type BookingReschedulePayload = BookingPayload & {
   token: string;
 };
+
 type BookingApiResponse = {
   booking?: {
     barberName?: string;
@@ -57,13 +57,12 @@ type BookingApiResponse = {
   error?: string;
 };
 
-
 type Props = {
   services: Service[];
   barbers: Barber[];
   mode?: 'create' | 'reschedule';
   token?: string;
-    shopDetails?: ShopReviewDetails;
+  shopDetails?: ShopReviewDetails;
   /**
    * Landing "live preview" mode: hides the Details step, the sticky action bar
    * and the review/confirm panel, and never submits. Instead, `onComplete` fires
@@ -72,6 +71,7 @@ type Props = {
   previewMode?: boolean;
   onComplete?: () => void;
 };
+
 const DEFAULT_BOOKING_TIMEZONE = 'Europe/London';
 
 /** Fixed free slots for landing preview — no real availability fetch. */
@@ -85,6 +85,8 @@ const PREVIEW_STATIC_SLOTS = [
   '14:00',
   '14:30',
 ] as const;
+
+type WizardStepId = 'service' | 'barber' | 'schedule' | 'details';
 
 function normalizeToIsoDate(input: string): string | null {
   const trimmed = input.trim();
@@ -105,6 +107,7 @@ function normalizeToIsoDate(input: string): string | null {
 
   return `${dmyMatch[3]}-${dmyMatch[2]}-${dmyMatch[1]}`;
 }
+
 function formatDateForSummary(isoDate: string, timezone: string): string {
   const normalizedDate = normalizeToIsoDate(isoDate);
   if (!normalizedDate) return 'Select date';
@@ -120,9 +123,10 @@ function formatDateForSummary(isoDate: string, timezone: string): string {
     weekday: 'short',
     day: '2-digit',
     month: 'short',
-    year: 'numeric'
+    year: 'numeric',
   });
 }
+
 function formatDateForBookingTab(isoDate: string, timezone: string): string {
   const normalizedDate = normalizeToIsoDate(isoDate);
   if (!normalizedDate) {
@@ -138,7 +142,7 @@ function formatDateForBookingTab(isoDate: string, timezone: string): string {
     timeZone: timezone,
     weekday: 'short',
     day: '2-digit',
-    month: 'short'
+    month: 'short',
   });
 }
 
@@ -147,10 +151,9 @@ function getCurrentIsoDateInTimezone(timezone: string, now: Date = new Date()): 
     timeZone: timezone,
     year: 'numeric',
     month: '2-digit',
-    day: '2-digit'
+    day: '2-digit',
   }).format(now);
 }
-
 
 function formatPrice(pricePence: number): string {
   return `£${(pricePence / 100).toFixed(2)}`;
@@ -196,34 +199,22 @@ function calculateEndTime(startTime: string, durationMinutes: number): string | 
   return `${String(nextHours).padStart(2, '0')}:${String(nextMinutes).padStart(2, '0')}`;
 }
 
-const BOOKING_STEP_REVEAL_MS = 520;
+const STEP_COPY: Record<WizardStepId, { title: string; hint: string }> = {
+  service: { title: 'Choose a service', hint: 'Pick what you need' },
+  barber: { title: 'Choose a barber', hint: 'Who should take you' },
+  schedule: { title: 'Pick a time', hint: 'Date and available slots' },
+  details: { title: 'Your details', hint: 'Where we send confirmation' },
+};
 
-type BookingStepId = 'barber' | 'schedule' | 'details';
-
-function openNativeDatePicker(input: HTMLInputElement) {
-  if (typeof input.showPicker === 'function') {
-    try {
-      input.showPicker();
-      return;
-    } catch {
-      // showPicker can throw if not triggered by a user gesture; fall through.
-    }
-  }
-
-  input.focus();
-  input.click();
-}
-
-function scrollToBookingStep(section: HTMLElement, onReveal?: () => void) {
-  const reduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-  section.scrollIntoView({ behavior: reduced ? 'auto' : 'smooth', block: 'start' });
-
-  if (!reduced) {
-    onReveal?.();
-  }
-}
-
-export default function BookingFlow({ services, barbers, mode = 'create', token = '', shopDetails, previewMode = false, onComplete }: Props) {
+export default function BookingFlow({
+  services,
+  barbers,
+  mode = 'create',
+  token = '',
+  shopDetails,
+  previewMode = false,
+  onComplete,
+}: Props) {
   const bookingTimezone = shopDetails?.timezone || DEFAULT_BOOKING_TIMEZONE;
   const [serviceId, setServiceId] = useState('');
   const [barberId, setBarberId] = useState('');
@@ -237,27 +228,16 @@ export default function BookingFlow({ services, barbers, mode = 'create', token 
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isSlotsLoading, setIsSlotsLoading] = useState(false);
   const [brokenAvatarIds, setBrokenAvatarIds] = useState<Record<string, boolean>>({});
+  const [wizardStep, setWizardStep] = useState(1);
+  const [stepKey, setStepKey] = useState(0);
   const confirmationRef = useRef<HTMLElement | null>(null);
-  const dateInputRef = useRef<HTMLInputElement>(null);
-  const barberStepRef = useRef<HTMLElement>(null);
-  const scheduleStepRef = useRef<HTMLElement>(null);
-  const detailsStepRef = useRef<HTMLElement>(null);
-  const prevStepRef = useRef(1);
-  const revealTimeoutRef = useRef<number | null>(null);
-  const [revealingStepId, setRevealingStepId] = useState<BookingStepId | null>(null);
   const [confirmation, setConfirmation] = useState<{ type: 'booked' | 'rescheduled'; summary: BookingSummary } | null>(null);
+
   const isCreateMode = mode === 'create';
+  const maxStep = previewMode || !isCreateMode ? 3 : 4;
   const normalizedFullName = fullName.trim();
   const normalizedEmail = email.trim();
   const normalizedPhone = phone.trim();
-
-  const handleDateCalendarPointerDown = useCallback((event: PointerEvent<HTMLSpanElement>) => {
-    if (event.pointerType === 'keyboard') return;
-    event.preventDefault();
-    const input = dateInputRef.current;
-    if (!input) return;
-    openNativeDatePicker(input);
-  }, []);
 
   const availableBarbers = useMemo(() => {
     if (!serviceId) return [];
@@ -266,12 +246,11 @@ export default function BookingFlow({ services, barbers, mode = 'create', token 
       return barber.serviceIds.includes(serviceId);
     });
   }, [barbers, serviceId]);
-  
+
   const barberOptions = useMemo(() => {
     if (availableBarbers.length === 0) return [];
     return [{ id: ANY_BARBER_ID, name: ANY_BARBER_NAME, avatarUrl: null }, ...availableBarbers];
   }, [availableBarbers]);
-
 
   const selectedService = useMemo(() => services.find((service) => service.id === serviceId), [serviceId, services]);
   const serviceGroups = useMemo(() => groupServicesByCategory(services), [services]);
@@ -282,157 +261,122 @@ export default function BookingFlow({ services, barbers, mode = 'create', token 
   const bookingDateSummary = normalizedDate ? formatDateForSummary(normalizedDate, bookingTimezone) : 'Select date';
   const minBookingDate = getCurrentIsoDateInTimezone(bookingTimezone);
   const estimatedEndTime = selectedService && time ? calculateEndTime(time, selectedService.durationMinutes) : null;
-  const hasSelectedDate = Boolean(normalizedDate);
-  const hasSelectedContactDetails = isCreateMode ? Boolean(normalizedFullName && normalizedEmail) : true;
   const canLoadAvailability = Boolean(serviceId && barberId && normalizedDate);
-
-  const currentStep = useMemo(() => {
-    if (!serviceId) return 1;
-    if (!barberId) return 2;
-    if (!time) return 3;
-    return 4;
-  }, [serviceId, barberId, time]);
 
   const bookingSteps = useMemo(
     () =>
-      isCreateMode
+      isCreateMode && !previewMode
         ? [{ label: 'Service' }, { label: 'Barber' }, { label: 'Schedule' }, { label: 'Details' }]
         : [{ label: 'Service' }, { label: 'Barber' }, { label: 'Schedule' }],
-    [isCreateMode],
+    [isCreateMode, previewMode],
   );
+
+  const activeStepId: WizardStepId =
+    wizardStep === 1 ? 'service' : wizardStep === 2 ? 'barber' : wizardStep === 3 ? 'schedule' : 'details';
+
+  const goToStep = useCallback((next: number) => {
+    const clamped = Math.min(Math.max(next, 1), maxStep);
+    setWizardStep(clamped);
+    setStepKey((key) => key + 1);
+    setMessage('');
+  }, [maxStep]);
+
+  const selectService = useCallback((id: string) => {
+    setServiceId(id);
+    setBarberId('');
+    setTime('');
+    setSlots([]);
+    goToStep(2);
+  }, [goToStep]);
+
+  const selectBarber = useCallback((id: string) => {
+    setBarberId(id);
+    setTime('');
+    goToStep(3);
+  }, [goToStep]);
+
+  const selectTime = useCallback((slot: string) => {
+    setTime(slot);
+  }, []);
+
+  const canContinue = useMemo(() => {
+    if (wizardStep === 1) return Boolean(serviceId);
+    if (wizardStep === 2) return Boolean(barberId);
+    if (wizardStep === 3) return Boolean(normalizedDate && time);
+    if (wizardStep === 4) return Boolean(normalizedFullName && normalizedEmail);
+    return false;
+  }, [wizardStep, serviceId, barberId, normalizedDate, time, normalizedFullName, normalizedEmail]);
 
   const missingItems = useMemo(() => {
     const items: string[] = [];
-
     if (!serviceId) items.push('Select a service');
     if (!barberId) items.push('Choose a barber');
     if (!normalizedDate) items.push('Select a date');
     if (!time) items.push('Select a time');
-
     if (isCreateMode) {
       if (!normalizedFullName) items.push('Add your full name');
       if (!normalizedEmail) items.push('Add your email');
     }
-
     return items;
   }, [barberId, isCreateMode, normalizedDate, normalizedEmail, normalizedFullName, serviceId, time]);
 
   const isReadyToSubmit = missingItems.length === 0;
   const isSubmitDisabled = isSubmitting || !isReadyToSubmit;
+
   const compactBookingSummary = [
-    selectedService?.name ?? 'Choose a service',
-    selectedBarberLabel ?? 'Choose a barber',
+    selectedService?.name,
+    selectedBarberLabel,
     normalizedDate
       ? new Date(`${normalizedDate}T00:00:00`).toLocaleDateString('en-GB', {
           timeZone: bookingTimezone,
           day: 'numeric',
-          month: 'long'
+          month: 'short',
         })
-      : 'Choose a date',
-    time || 'Choose a time'
-  ].join(' • ');
+      : null,
+    time || null,
+  ]
+    .filter(Boolean)
+    .join(' · ');
 
-  const compactStatusMeta = isSubmitting
-    ? (mode === 'reschedule'
-      ? 'Updating your appointment and locking the new slot now.'
-      : 'Securing your appointment and sending confirmation details now.')
-    : missingItems[0] ?? (isCreateMode ? 'Ready to confirm booking.' : 'Ready to confirm reschedule.');
   const slotsHelperText = !serviceId
-    ? 'Choose a service first to see matching availability.'
+    ? 'Choose a service first.'
     : !barberId
-      ? 'Choose a barber to load availability for this service.'
+      ? 'Choose a barber to load times.'
       : !normalizedDate
-        ? 'Choose a date to load available times.'
+        ? 'Choose a date.'
         : previewMode
           ? 'Preview times'
           : slots.length > 0
-            ? 'Select the slot that works best for your schedule.'
-            : 'No slots available for this date.';
-
+            ? 'Select a slot'
+            : 'No slots this day';
 
   const appointmentRows = useMemo(
     () => [
-      { label: 'Service', value: selectedService?.name ?? 'Select a service' },
-      { label: 'Barber', value: selectedBarberLabel ?? 'Choose a barber' },
-      { label: 'Date', value: normalizedDate ? bookingDateSummary : 'Select a date' },
-      { label: 'Time', value: time || 'Select a time' },
-      { label: 'Duration', value: selectedService ? `${selectedService.durationMinutes} min` : 'Select a service' },
-      { label: 'Price', value: selectedService ? formatPrice(selectedService.pricePence) : 'Select a service' },
-      { label: 'Estimated end time', value: estimatedEndTime ?? 'Select a time' }
+      { label: 'Service', value: selectedService?.name ?? '—' },
+      { label: 'Barber', value: selectedBarberLabel ?? '—' },
+      { label: 'Date', value: normalizedDate ? bookingDateSummary : '—' },
+      { label: 'Time', value: time || '—' },
+      { label: 'Duration', value: selectedService ? `${selectedService.durationMinutes} min` : '—' },
+      { label: 'Price', value: selectedService ? formatPrice(selectedService.pricePence) : '—' },
+      ...(estimatedEndTime ? [{ label: 'Ends', value: estimatedEndTime }] : []),
     ],
-    [bookingDateSummary, estimatedEndTime, normalizedDate, selectedBarberLabel, selectedService, time]
+    [bookingDateSummary, estimatedEndTime, normalizedDate, selectedBarberLabel, selectedService, time],
   );
 
   const contactRows = useMemo(
     () => [
-      { label: 'Name', value: normalizedFullName || 'Add your full name' },
-      { label: 'Email', value: normalizedEmail || 'Add your email' },
-      { label: 'Phone', value: normalizedPhone || 'Not provided' }
+      { label: 'Name', value: normalizedFullName || '—' },
+      { label: 'Email', value: normalizedEmail || '—' },
+      { label: 'Phone', value: normalizedPhone || 'Optional' },
     ],
-    [normalizedEmail, normalizedFullName, normalizedPhone]
+    [normalizedEmail, normalizedFullName, normalizedPhone],
   );
-
-  useEffect(() => {
-    if (!confirmation) return;
-
-    confirmationRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
-  }, [confirmation]);
-
-  useEffect(() => {
-    const prev = prevStepRef.current;
-    if (currentStep > prev) {
-      const stepTargets: Record<number, { ref: React.RefObject<HTMLElement | null>; id: BookingStepId } | undefined> = {
-        2: { ref: barberStepRef, id: 'barber' },
-        3: { ref: scheduleStepRef, id: 'schedule' },
-        4: isCreateMode ? { ref: detailsStepRef, id: 'details' } : undefined
-      };
-
-      const target = stepTargets[currentStep];
-      if (target?.ref.current) {
-        if (revealTimeoutRef.current !== null) {
-          window.clearTimeout(revealTimeoutRef.current);
-        }
-
-        const reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-        if (!reducedMotion) {
-          setRevealingStepId(target.id);
-        }
-
-        scrollToBookingStep(target.ref.current, () => {
-          revealTimeoutRef.current = window.setTimeout(() => {
-            setRevealingStepId(null);
-            revealTimeoutRef.current = null;
-          }, BOOKING_STEP_REVEAL_MS);
-        });
-      }
-    }
-
-    prevStepRef.current = currentStep;
-  }, [currentStep, isCreateMode]);
-
-  useEffect(() => {
-    return () => {
-      if (revealTimeoutRef.current !== null) {
-        window.clearTimeout(revealTimeoutRef.current);
-      }
-    };
-  }, []);
-
-  const hasFiredCompleteRef = useRef(false);
-  useEffect(() => {
-    if (!previewMode) return;
-    if (serviceId && barberId && time && !hasFiredCompleteRef.current) {
-      hasFiredCompleteRef.current = true;
-      onComplete?.();
-    }
-  }, [previewMode, serviceId, barberId, time, onComplete]);
-
 
   const trustItems = useMemo(() => {
     const items = [
       { label: 'Instant confirmation by email' },
-      { label: 'Reschedule and cancel links included after booking' },
-      { label: 'All times shown in local shop time', value: formatTimezoneLabel(bookingTimezone) }
+      { label: 'Reschedule and cancel links included' },
+      { label: 'Times in shop local time', value: formatTimezoneLabel(bookingTimezone) },
     ];
 
     const cancellationWindow = formatWindow(shopDetails?.cancellationWindowHours);
@@ -448,6 +392,19 @@ export default function BookingFlow({ services, barbers, mode = 'create', token 
     return items;
   }, [bookingTimezone, shopDetails?.cancellationWindowHours, shopDetails?.rescheduleWindowHours]);
 
+  useEffect(() => {
+    if (!confirmation) return;
+    confirmationRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  }, [confirmation]);
+
+  const hasFiredCompleteRef = useRef(false);
+  useEffect(() => {
+    if (!previewMode) return;
+    if (serviceId && barberId && time && !hasFiredCompleteRef.current) {
+      hasFiredCompleteRef.current = true;
+      onComplete?.();
+    }
+  }, [previewMode, serviceId, barberId, time, onComplete]);
 
   useEffect(() => {
     if (!barberOptions.some((barber) => barber.id === barberId)) {
@@ -456,7 +413,6 @@ export default function BookingFlow({ services, barbers, mode = 'create', token 
       setSlots([]);
     }
   }, [barberOptions, barberId]);
-
 
   useEffect(() => {
     if (!serviceId || !barberId || !date) return;
@@ -468,7 +424,6 @@ export default function BookingFlow({ services, barbers, mode = 'create', token 
       return;
     }
 
-    // Landing preview: skip real availability — always the same 8 free slots.
     if (previewMode) {
       setSlots([...PREVIEW_STATIC_SLOTS]);
       setTime('');
@@ -492,7 +447,6 @@ export default function BookingFlow({ services, barbers, mode = 'create', token 
       });
   }, [serviceId, barberId, date, previewMode]);
 
-
   async function submit() {
     if (isSubmitting) return;
     setMessage('');
@@ -503,7 +457,6 @@ export default function BookingFlow({ services, barbers, mode = 'create', token 
     }
 
     if (!normalizedDate) {
-
       setMessage('Please choose a valid date.');
       return;
     }
@@ -530,13 +483,13 @@ export default function BookingFlow({ services, barbers, mode = 'create', token 
           serviceId,
           barberId,
           date: normalizedDate,
-          time
+          time,
         };
 
         const res = await fetch('/api/bookings/reschedule', {
           method: 'POST',
           headers: { 'content-type': 'application/json' },
-          body: JSON.stringify(payload)
+          body: JSON.stringify(payload),
         });
 
         const data = (await res.json().catch(() => ({}))) as BookingApiResponse;
@@ -551,10 +504,9 @@ export default function BookingFlow({ services, barbers, mode = 'create', token 
             service: data.booking?.serviceName ?? selectedService?.name,
             barber: data.booking?.barberName ?? selectedBarberLabel,
             date: formatDateForSummary(normalizedDate, bookingTimezone),
-            time
-          }
+            time,
+          },
         });
-
 
         return;
       }
@@ -564,7 +516,6 @@ export default function BookingFlow({ services, barbers, mode = 'create', token 
         return;
       }
 
-
       const payload: BookingCreatePayload = {
         serviceId,
         barberId,
@@ -572,14 +523,13 @@ export default function BookingFlow({ services, barbers, mode = 'create', token 
         time,
         fullName: normalizedFullName,
         email: normalizedEmail,
-        ...(normalizedPhone ? { phone: normalizedPhone } : {})
+        ...(normalizedPhone ? { phone: normalizedPhone } : {}),
       };
 
       const res = await fetch('/api/bookings/create', {
-
         method: 'POST',
         headers: { 'content-type': 'application/json' },
-        body: JSON.stringify(payload)
+        body: JSON.stringify(payload),
       });
 
       const data = (await res.json().catch(() => ({}))) as BookingApiResponse;
@@ -593,366 +543,346 @@ export default function BookingFlow({ services, barbers, mode = 'create', token 
         summary: {
           service: data.booking?.serviceName ?? selectedService?.name,
           barber: data.booking?.barberName ?? selectedBarberLabel,
-
           date: formatDateForSummary(normalizedDate, bookingTimezone),
-          time
-        }
+          time,
+        },
       });
-
     } finally {
       setIsSubmitting(false);
-
     }
-
   }
 
-  return (
-    <section className={`surface booking-shell booking-flow${previewMode ? ' booking-flow--preview' : ''}`} aria-live="polite">
-      <div className="booking-form-content">
-        <div className="booking-flow__hero">
-          <div className="booking-flow__hero-copy">
-            <p className="booking-flow__eyebrow">Instant booking</p>
-            <h1>{isCreateMode ? 'Book now' : 'Reschedule your booking'}</h1>
-            <p className="muted">
-              {isCreateMode
-                ? 'Choose your service, barber and time in a clean mobile-first flow built for fast confirmation.'
-                : 'Pick a new service, barber, date and time in a cleaner mobile-first flow. Your appointment updates instantly after submission.'}
+  function handlePrimaryAction() {
+    if (wizardStep < maxStep) {
+      if (!canContinue) return;
+      if (wizardStep === 3 && !isCreateMode && !previewMode) {
+        void submit();
+        return;
+      }
+      goToStep(wizardStep + 1);
+      return;
+    }
+    void submit();
+  }
 
-            </p>
-          </div>
+  const primaryLabel = (() => {
+    if (isSubmitting) {
+      return mode === 'reschedule' ? 'Rescheduling…' : 'Confirming…';
+    }
+    if (wizardStep === 3 && !isCreateMode && !previewMode) {
+      return 'Reschedule booking';
+    }
+    if (wizardStep < maxStep) return 'Continue';
+    return mode === 'reschedule' ? 'Reschedule booking' : 'Confirm booking';
+  })();
 
+  const primaryDisabled =
+    isSubmitting ||
+    (wizardStep < maxStep
+      ? wizardStep === 3 && !isCreateMode && !previewMode
+        ? isSubmitDisabled
+        : !canContinue
+      : isSubmitDisabled);
 
-        </div>
-        {confirmation ? (
+  const showReview = !previewMode && !confirmation && wizardStep >= 3;
+  const stepCopy = STEP_COPY[activeStepId];
+
+  if (confirmation) {
+    return (
+      <section className="surface booking-shell booking-flow booking-flow--wizard" aria-live="polite">
+        <div className="booking-form-content">
           <BookingConfirmationPanel
             ref={confirmationRef}
             variant={confirmation.type}
             summary={confirmation.summary}
           />
-        ) : null}
+        </div>
+      </section>
+    );
+  }
+
+  return (
+    <section
+      className={`surface booking-shell booking-flow booking-flow--wizard${previewMode ? ' booking-flow--preview' : ''}`}
+      aria-live="polite"
+    >
+      <div className="booking-form-content">
+        <header className="booking-flow__hero">
+          <div className="booking-flow__hero-copy">
+            <p className="booking-flow__eyebrow">Instant booking</p>
+            <h1>{isCreateMode ? 'Book now' : 'Reschedule'}</h1>
+          </div>
+          <BookingStepIndicator currentStep={wizardStep} steps={bookingSteps} />
+        </header>
 
         {message ? <p className="admin-inline-error">{message}</p> : null}
 
-
         <div className="booking-flow__layout">
           <div className="booking-flow__left">
-          <div className="booking-flow__main">
-            {!previewMode ? (
-              <BookingStepIndicator currentStep={currentStep} steps={bookingSteps} />
-            ) : null}
-            <section className="booking-step" aria-labelledby="booking-step-service">
-              <div className="booking-step__head">
-                <span className="booking-step__index">01</span>
-                <div className="booking-step__title">
-                  <h2 id="booking-step-service">Choose a service</h2>
+            <div className="booking-flow__main">
+              {compactBookingSummary && wizardStep > 1 ? (
+                <p className="booking-flow__picks" aria-live="polite">
+                  {compactBookingSummary}
+                </p>
+              ) : null}
+
+              <div key={stepKey} className="booking-step booking-step--active is-revealing" data-step={activeStepId}>
+                <div className="booking-step__head">
+                  <div className="booking-step__title">
+                    <h2 id={`booking-step-${activeStepId}`}>{stepCopy.title}</h2>
+                    <p className="muted">{stepCopy.hint}</p>
+                  </div>
                 </div>
-                              </div>
-              <div className="booking-service-catalog" role="radiogroup" aria-label="Services">
-                {serviceGroups.map((group) => (
-                  <section
-                    key={group.category}
-                    className="booking-service-category"
-                    aria-labelledby={`booking-service-category-${group.category}`}
-                  >
-                    <h3
-                      id={`booking-service-category-${group.category}`}
-                      className="booking-service-category__heading"
-                    >
-                      {group.label}
-                    </h3>
-                    <div className="booking-choice-grid booking-choice-grid--services">
-                      {group.services.map((service) => {
-                        const isSelected = service.id === serviceId;
+
+                {activeStepId === 'service' ? (
+                  <div className="booking-service-catalog" role="radiogroup" aria-label="Services">
+                    {serviceGroups.map((group) => (
+                      <section
+                        key={group.category}
+                        className="booking-service-category"
+                        aria-labelledby={`booking-service-category-${group.category}`}
+                      >
+                        <h3
+                          id={`booking-service-category-${group.category}`}
+                          className="booking-service-category__heading"
+                        >
+                          {group.label}
+                        </h3>
+                        <div className="booking-choice-grid booking-choice-grid--services">
+                          {group.services.map((service) => {
+                            const isSelected = service.id === serviceId;
+                            return (
+                              <button
+                                type="button"
+                                key={service.id}
+                                className={`booking-choice-card booking-choice-card--service${isSelected ? ' is-selected' : ''}`}
+                                aria-pressed={isSelected}
+                                onClick={() => selectService(service.id)}
+                              >
+                                <span className="booking-choice-card__title">{service.name}</span>
+                                <span className="booking-choice-card__meta booking-choice-card__meta--service">
+                                  <span className="booking-choice-card__stat">{service.durationMinutes} min</span>
+                                  <span className="booking-choice-card__price">{formatPrice(service.pricePence)}</span>
+                                </span>
+                              </button>
+                            );
+                          })}
+                        </div>
+                      </section>
+                    ))}
+                  </div>
+                ) : null}
+
+                {activeStepId === 'barber' ? (
+                  <>
+                    <div className="booking-choice-grid booking-choice-grid--barbers" role="radiogroup" aria-label="Barbers">
+                      {barberOptions.map((barber) => {
+                        const isSelected = barber.id === barberId;
+                        const isAnyBarber = barber.id === ANY_BARBER_ID;
+                        const hasAvatar = !isAnyBarber && Boolean(barber.avatarUrl) && !brokenAvatarIds[barber.id];
+                        const initials = isAnyBarber ? 'ANY' : getBarberInitials(barber.name);
 
                         return (
                           <button
                             type="button"
-                            key={service.id}
-                            className={`booking-choice-card booking-choice-card--service${isSelected ? ' is-selected' : ''}`}
+                            key={barber.id}
+                            className={`booking-choice-card booking-choice-card--barber${isSelected ? ' is-selected' : ''}${isAnyBarber ? ' booking-choice-card--any' : ''}`}
                             aria-pressed={isSelected}
-                            onClick={() => setServiceId(service.id)}
+                            onClick={() => selectBarber(barber.id)}
                           >
-                            <span className="booking-choice-card__title">{service.name}</span>
-                            <span className="booking-choice-card__meta booking-choice-card__meta--service">
-                              <span className="booking-choice-card__meta-item">
-                                <span className="booking-choice-card__meta-label">Duration</span>
-                                <span className="booking-choice-card__stat">{service.durationMinutes} min</span>
-                              </span>
-                              <span className="booking-choice-card__meta-item booking-choice-card__meta-item--price">
-                                <span className="booking-choice-card__meta-label">Price</span>
-                                <span className="booking-choice-card__price">{formatPrice(service.pricePence)}</span>
-                              </span>
+                            <span className="booking-choice-card__avatar" aria-hidden="true" data-has-image={hasAvatar ? 'true' : 'false'}>
+                              {hasAvatar ? (
+                                <img
+                                  src={barber.avatarUrl ?? undefined}
+                                  alt=""
+                                  loading="lazy"
+                                  decoding="async"
+                                  onError={() => setBrokenAvatarIds((current) => ({ ...current, [barber.id]: true }))}
+                                />
+                              ) : (
+                                <span className="booking-choice-card__avatar-fallback">{initials}</span>
+                              )}
+                            </span>
+                            <span className="booking-choice-card__content">
+                              <span className="booking-choice-card__title">{barber.name}</span>
+                              {isAnyBarber ? <span className="booking-choice-card__helper">Fastest available</span> : null}
                             </span>
                           </button>
                         );
                       })}
                     </div>
-                  </section>
-                ))}
+                    {!serviceId ? (
+                      <p className="muted">Choose a service first.</p>
+                    ) : availableBarbers.length === 0 ? (
+                      <p className="muted">No barbers offer this service right now.</p>
+                    ) : null}
+                  </>
+                ) : null}
+
+                {activeStepId === 'schedule' ? (
+                  <>
+                    <div className="booking-date-panel">
+                      <div className="booking-flow__field booking-flow__field--date">
+                        <label
+                          className="booking-date-tab"
+                          htmlFor="booking-date"
+                          aria-label={`Select date, currently ${bookingDateLabel}`}
+                        >
+                          <span className="booking-date-tab__main">{bookingDateLabel}</span>
+                          <span className="booking-date-tab__calendar" aria-hidden="true">
+                            <svg viewBox="0 0 24 24" focusable="false">
+                              <path d="M7 2a1 1 0 0 1 1 1v1h8V3a1 1 0 1 1 2 0v1h1a3 3 0 0 1 3 3v11a4 4 0 0 1-4 4H6a4 4 0 0 1-4-4V7a3 3 0 0 1 3-3h1V3a1 1 0 0 1 1-1Zm13 8H4v8a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-8ZM5 6a1 1 0 0 0-1 1v1h16V7a1 1 0 0 0-1-1H5Z" />
+                            </svg>
+                          </span>
+                          <input
+                            id="booking-date"
+                            type="date"
+                            className="booking-date-tab__input"
+                            value={date}
+                            min={minBookingDate}
+                            onChange={(event) => setDate(event.target.value)}
+                            aria-label="Select booking date"
+                          />
+                        </label>
+                      </div>
+                    </div>
+
+                    <div className="booking-slots-section">
+                      <div className="booking-slots-section__head">
+                        <label id="booking-time-slots">Available times</label>
+                        <span className="muted">{slotsHelperText}</span>
+                      </div>
+                      <div className="slot-grid" role="radiogroup" aria-labelledby="booking-time-slots" aria-busy={isSlotsLoading}>
+                        {isSlotsLoading ? (
+                          <SkeletonSlotGrid count={8} />
+                        ) : (
+                          <>
+                            {slots.map((slot) => {
+                              const isSelected = time === slot;
+                              return (
+                                <button
+                                  type="button"
+                                  key={slot}
+                                  className={`booking-slot${isSelected ? ' is-selected' : ''}`}
+                                  aria-pressed={isSelected}
+                                  onClick={() => selectTime(slot)}
+                                >
+                                  <span className="booking-slot__label">{slot}</span>
+                                </button>
+                              );
+                            })}
+                            {!canLoadAvailability ? (
+                              <p className="muted booking-slots-section__empty">{slotsHelperText}</p>
+                            ) : slots.length === 0 ? (
+                              <EmptyState
+                                icon={Clock}
+                                title="No available times"
+                                description="Try a different date or barber."
+                              />
+                            ) : null}
+                          </>
+                        )}
+                      </div>
+                    </div>
+                  </>
+                ) : null}
+
+                {activeStepId === 'details' ? (
+                  <form
+                    id="booking-details-form"
+                    className="booking-flow__grid booking-flow__grid--details"
+                    autoComplete="on"
+                    onSubmit={(event) => {
+                      event.preventDefault();
+                      void submit();
+                    }}
+                  >
+                    <label className="booking-flow__field" htmlFor="booking-full-name">
+                      <span>Name</span>
+                      <input
+                        id="booking-full-name"
+                        name="name"
+                        value={fullName}
+                        onChange={(event) => setFullName(event.target.value)}
+                        autoComplete="name"
+                        placeholder="Your full name"
+                      />
+                    </label>
+                    <label className="booking-flow__field" htmlFor="booking-email">
+                      <span>Email</span>
+                      <input
+                        id="booking-email"
+                        name="email"
+                        type="email"
+                        value={email}
+                        onChange={(event) => setEmail(event.target.value)}
+                        autoComplete="email"
+                        placeholder="you@email.com"
+                      />
+                    </label>
+                    <label className="booking-flow__field" htmlFor="booking-phone">
+                      <span>Phone <em>(optional)</em></span>
+                      <input
+                        id="booking-phone"
+                        name="tel"
+                        type="tel"
+                        value={phone}
+                        onChange={(event) => setPhone(event.target.value)}
+                        autoComplete="tel"
+                        placeholder="Mobile number"
+                      />
+                    </label>
+                  </form>
+                ) : null}
               </div>
-            </section>
 
-            <section
-              ref={barberStepRef}
-              className={`booking-step${revealingStepId === 'barber' ? ' is-revealing' : ''}`}
-              aria-labelledby="booking-step-barber"
-            >
-              <div className="booking-step__head">
-                <span className="booking-step__index">02</span>
-                <div className="booking-step__title">
-                  <h2 id="booking-step-barber">Choose a barber</h2>
-
-                </div>
-
-              </div>
-              <div className="booking-choice-grid booking-choice-grid--barbers" role="radiogroup" aria-label="Barbers">
-                {barberOptions.map((barber) => {
-                  const isSelected = barber.id === barberId;
-
-                  const isAnyBarber = barber.id === ANY_BARBER_ID;
-                  const hasAvatar = !isAnyBarber && Boolean(barber.avatarUrl) && !brokenAvatarIds[barber.id];
-                  const initials = isAnyBarber ? 'ANY' : getBarberInitials(barber.name);
-
-
-
-                  return (
+              {!previewMode ? (
+                <div className={`booking-action-bar${isSubmitting ? ' is-submitting' : ''}`} aria-live="polite">
+                  {compactBookingSummary ? (
+                    <div className="booking-action-bar__summary">
+                      <strong>{compactBookingSummary}</strong>
+                    </div>
+                  ) : null}
+                  <div className="booking-action-bar__nav">
+                    {wizardStep > 1 ? (
+                      <button
+                        type="button"
+                        className="btn btn--secondary booking-action-bar__back"
+                        onClick={() => goToStep(wizardStep - 1)}
+                        disabled={isSubmitting}
+                      >
+                        Back
+                      </button>
+                    ) : null}
                     <button
                       type="button"
-                      key={barber.id}
-                      className={`booking-choice-card booking-choice-card--barber${isSelected ? ' is-selected' : ''}`}
-
-                      aria-pressed={isSelected}
-                      onClick={() => setBarberId(barber.id)}
+                      className="btn btn--primary booking-action-bar__button"
+                      disabled={primaryDisabled}
+                      aria-disabled={primaryDisabled}
+                      aria-busy={isSubmitting}
+                      onClick={handlePrimaryAction}
                     >
-                      <span className="booking-choice-card__avatar" aria-hidden="true" data-has-image={hasAvatar ? 'true' : 'false'}>
-                        {hasAvatar ? (
-                          <img
-                            src={barber.avatarUrl ?? undefined}
-                            alt=""
-                            loading="lazy"
-                            decoding="async"
-                            onError={() => setBrokenAvatarIds((current) => ({ ...current, [barber.id]: true }))}
-                          />
-
-                        ) : (
-                          <span className="booking-choice-card__avatar-fallback">{initials}</span>
-                        )}
-
-                      </span>
-
-                      <span className="booking-choice-card__content">
-                        <span className="booking-choice-card__title">{barber.name}</span>
-                                                {isAnyBarber ? <span className="booking-choice-card__helper">Fastest matching barber</span> : null}
-                      </span>
-
+                      {isSubmitting ? <span className="booking-action-bar__spinner" aria-hidden="true" /> : null}
+                      <span>{primaryLabel}</span>
                     </button>
-                  );
-                })}
-              </div>
-              {!serviceId ? (
-                <p className="muted">Choose a service first to see matching barbers.</p>
-              ) : availableBarbers.length === 0 ? (
-                <p className="muted">No active barbers offer this service right now.</p>
-              ) : null}
-
-            </section>
-
-            <section
-              ref={scheduleStepRef}
-              className={`booking-step${revealingStepId === 'schedule' ? ' is-revealing' : ''}`}
-              aria-labelledby="booking-step-date-time"
-            >
-              <div className="booking-step__head">
-                <span className="booking-step__index">03</span>
-                <div className="booking-step__title">
-                  <h2 id="booking-step-date-time">Choose date and time</h2>
-
-                </div>
-              </div>
-
-              <div className="booking-date-panel">
-                <div className="booking-flow__field booking-flow__field--date">
-                  <div className="admin-filter-tab admin-filter-tab--split admin-filter-tab--active booking-date-tab">
-                    <span className="admin-filter-tab-main booking-date-tab__main">{bookingDateLabel}</span>
-                    <span
-                      className="admin-filter-tab-calendar booking-date-tab__calendar"
-                      role="button"
-                      tabIndex={0}
-                      aria-label="Open calendar to select booking date"
-                      onPointerDown={handleDateCalendarPointerDown}
-                      onKeyDown={(event) => {
-                        if (event.key !== 'Enter' && event.key !== ' ') return;
-                        event.preventDefault();
-                        const input = dateInputRef.current;
-                        if (!input) return;
-                        openNativeDatePicker(input);
-                      }}
-                    >
-                      <input
-                        id="booking-date"
-                        ref={dateInputRef}
-                        type="date"
-                        className="admin-filter-tab-calendar-input booking-date-tab__input"
-                        value={date}
-                        min={minBookingDate}
-                        onChange={(event) => setDate(event.target.value)}
-                        tabIndex={-1}
-                        aria-label="Select booking date"
-                      />
-                      <svg viewBox="0 0 24 24" focusable="false" aria-hidden="true">
-                        <path d="M7 2a1 1 0 0 1 1 1v1h8V3a1 1 0 1 1 2 0v1h1a3 3 0 0 1 3 3v11a4 4 0 0 1-4 4H6a4 4 0 0 1-4-4V7a3 3 0 0 1 3-3h1V3a1 1 0 0 1 1-1Zm13 8H4v8a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-8ZM5 6a1 1 0 0 0-1 1v1h16V7a1 1 0 0 0-1-1H5Z" />
-                      </svg>
-                    </span>
                   </div>
                 </div>
-
-              </div>
-              
-              <div className="booking-slots-section">
-                <div className="booking-slots-section__head">
-                  <label id="booking-time-slots">Available times {selectedService ? `for ${selectedService.name}` : ''}</label>
-                  <span className="muted">{slotsHelperText}</span>
-
-                </div>
-                <div className="slot-grid" role="radiogroup" aria-labelledby="booking-time-slots" aria-busy={isSlotsLoading}>
-                  {isSlotsLoading ? (
-                    <SkeletonSlotGrid count={8} />
-                  ) : (
-                    <>
-                      {slots.map((slot) => {
-                        const isSelected = time === slot;
-
-                        return (
-                          <button
-                            type="button"
-                            key={slot}
-                            className={`booking-slot${isSelected ? ' is-selected' : ''}`}
-                            aria-pressed={isSelected}
-                            onClick={() => setTime(slot)}
-                          >
-                            <span className="booking-slot__label">{slot}</span>
-                            <span className="booking-slot__meta">{isSelected ? 'Selected' : 'Available'}</span>
-                          </button>
-                        );
-                      })}
-                      {!canLoadAvailability ? (
-                        <p className="muted booking-slots-section__empty">{slotsHelperText}</p>
-                      ) : slots.length === 0 ? (
-                        <EmptyState
-                          icon={Clock}
-                          title="No available times"
-                          description="No slots are available for this date. Try a different date or barber."
-                        />
-                      ) : null}
-                    </>
-                  )}
-                </div>
-              </div>
-
-            </section>
-            {isCreateMode && !previewMode ? (
-              <section
-                ref={detailsStepRef}
-                className={`booking-step${revealingStepId === 'details' ? ' is-revealing' : ''}`}
-                aria-labelledby="booking-step-details"
-              >
-                <div className="booking-step__head">
-                  <span className="booking-step__index">04</span>
-                  <div className="booking-step__title">
-                    <h2 id="booking-step-details">Your details</h2>
-                  </div>
-                </div>
-                <form
-                  id="booking-details-form"
-                  className="booking-flow__grid booking-flow__grid--details"
-                  autoComplete="on"
-                  onSubmit={(event) => event.preventDefault()}
-                >
-                  <label className="booking-flow__field" htmlFor="booking-full-name">
-                    <span>Name</span>
-                    <input
-                      id="booking-full-name"
-                      name="name"
-                      value={fullName}
-                      onChange={(event) => setFullName(event.target.value)}
-                      autoComplete="name"
-                    />
-                  </label>
-                  <label className="booking-flow__field" htmlFor="booking-email">
-                    <span>Email</span>
-                    <input
-                      id="booking-email"
-                      name="email"
-                      type="email"
-                      value={email}
-                      onChange={(event) => setEmail(event.target.value)}
-                      autoComplete="email"
-                    />
-                  </label>
-                  <label className="booking-flow__field" htmlFor="booking-phone">
-                    <span>Phone (optional)</span>
-                    <input
-                      id="booking-phone"
-                      name="tel"
-                      type="tel"
-                      value={phone}
-                      onChange={(event) => setPhone(event.target.value)}
-                      autoComplete="tel"
-                    />
-                  </label>
-                </form>
-              </section>
-            ) : null}
-
-            {!previewMode ? (
-            <div className={`booking-action-bar${isSubmitting ? ' is-submitting' : ''}`} aria-live="polite">
-
-              <div className="booking-action-bar__summary">
-                <strong>{compactBookingSummary}</strong>
-                <span className="booking-action-bar__meta">{compactStatusMeta}</span>
-
-              </div>
-              <button
-                type="button"
-                className="btn btn--primary booking-action-bar__button"
-                form={isCreateMode ? 'booking-details-form' : undefined}
-                disabled={isSubmitDisabled}
-                aria-disabled={isSubmitDisabled}
-                aria-busy={isSubmitting}
-                onClick={() => void submit()}
-              >
-                {isSubmitting ? <span className="booking-action-bar__spinner" aria-hidden="true" /> : null}
-                <span>{isSubmitting ? (mode === 'reschedule' ? 'Rescheduling…' : 'Confirming…') : mode === 'reschedule' ? 'Reschedule booking' : 'Confirm booking'}</span>
-              </button>
-              {isSubmitting ? (
-                <p className="booking-action-bar__loading-note" role="status">
-                  {mode === 'reschedule'
-                    ? 'Please wait while we update your booking.'
-                    : 'Please wait while we secure your booking.'}
-                </p>
               ) : null}
-
             </div>
-            ) : null}
-          </div>
           </div>
 
-          {!previewMode ? (
-          <div className="booking-flow__right">
-            <BookingReviewPanel
-              mode={mode}
-              appointmentRows={appointmentRows}
-              contactRows={contactRows}
-              contactHelper={isCreateMode ? 'Confirmation will be sent to the provided email address.' : undefined}
-              trustItems={trustItems}
-              alwaysVisible
-              isSubmitting={isSubmitting}
-              isSubmitDisabled={isSubmitDisabled}
-              onSubmit={() => void submit()}
-            />
-          </div>
+          {showReview ? (
+            <div className="booking-flow__right">
+              <BookingReviewPanel
+                mode={mode}
+                appointmentRows={appointmentRows}
+                contactRows={contactRows}
+                contactHelper={isCreateMode ? 'Confirmation goes to your email.' : undefined}
+                trustItems={trustItems}
+                alwaysVisible
+              />
+            </div>
           ) : null}
-
         </div>
       </div>
     </section>

@@ -1,9 +1,8 @@
 export const prerender = false;
 
 import type { APIRoute } from 'astro';
-import { requireAdmin } from '../../../../../lib/admin/auth';
+import { requireAdminContext } from '../../../../../lib/admin/auth';
 import { prisma } from '../../../../../lib/db/client';
-import { resolveShopId } from '../../../../../lib/db/shopScope';
 
 const LEGACY_DEMO_EMAIL_PREFIX = 'demo+shop-sales-';
 const DEMO_EMAIL_TAG = '+demo-';
@@ -28,15 +27,15 @@ function randomInt(min: number, max: number): number {
 }
 
 export const POST: APIRoute = async (ctx) => {
-  const unauthorized = requireAdmin(ctx);
-  if (unauthorized) return unauthorized;
+  const access = await requireAdminContext(ctx);
+  if (access instanceof Response) return access;
 
   if (!import.meta.env.DEV) {
     return new Response(JSON.stringify({ error: 'Demo data generation is available only in DEV.' }), { status: 403 });
   }
 
   try {
-    const shopId = await resolveShopId();
+    const shopId = access.shopId;
     const products = await prisma.product.findMany({
       where: { shopId, active: true },
       orderBy: [{ featured: 'desc' }, { sortOrder: 'asc' }, { updatedAt: 'desc' }],

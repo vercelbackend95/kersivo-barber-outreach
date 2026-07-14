@@ -50,46 +50,36 @@ export default function BookingReviewPanel({
     ? (mode === 'reschedule' ? 'Rescheduling…' : 'Confirming…')
     : (mode === 'reschedule' ? 'Reschedule booking' : 'Confirm booking');
 
+  const showContact = mode === 'create' && contactRows.some((row) => row.value !== '—');
+
   return (
-    <section
+    <aside
       className={`booking-review-panel${alwaysVisible ? ' booking-review-panel--always-visible' : ''}`}
       aria-labelledby="booking-review-panel-title"
     >
       <div className="booking-review-panel__header">
-        <p className="booking-review-panel__eyebrow">Final review</p>
-        <h2 id="booking-review-panel-title">Review before you confirm</h2>
-        <p className="booking-review-panel__intro muted">
-          Check the appointment details, confirm where updates will be sent, and review the booking policies before the final step.
-        </p>
+        <p className="booking-review-panel__eyebrow">Summary</p>
+        <h2 id="booking-review-panel-title">Your booking</h2>
       </div>
 
       <div className="booking-review-panel__grid">
         <section className="booking-review-panel__card" aria-labelledby="booking-review-appointment-title">
-          <div className="booking-review-panel__card-head">
-            <p className="booking-review-panel__card-kicker">Appointment review</p>
-            <h3 id="booking-review-appointment-title">Appointment details</h3>
-          </div>
+          <h3 id="booking-review-appointment-title" className="booking-review-panel__card-title">Appointment</h3>
           <ReviewList rows={appointmentRows} ariaLabel="Appointment review" />
         </section>
 
-        {mode === 'create' ? (
+        {showContact ? (
           <section className="booking-review-panel__card" aria-labelledby="booking-review-contact-title">
-            <div className="booking-review-panel__card-head">
-              <p className="booking-review-panel__card-kicker">Contact review</p>
-              <h3 id="booking-review-contact-title">Contact details</h3>
-            </div>
+            <h3 id="booking-review-contact-title" className="booking-review-panel__card-title">Contact</h3>
             <ReviewList rows={contactRows} ariaLabel="Contact review" />
             {contactHelper ? <p className="booking-review-panel__helper">{contactHelper}</p> : null}
           </section>
         ) : null}
 
-        <section className="booking-review-panel__card" aria-labelledby="booking-review-trust-title">
-          <div className="booking-review-panel__card-head">
-            <p className="booking-review-panel__card-kicker">Trust &amp; reassurance</p>
-            <h3 id="booking-review-trust-title">What happens next</h3>
-          </div>
+        <section className="booking-review-panel__card booking-review-panel__card--trust" aria-labelledby="booking-review-trust-title">
+          <h3 id="booking-review-trust-title" className="booking-review-panel__card-title">Next</h3>
           <ul className="booking-review-panel__trust-list" aria-label="Booking reassurance details">
-            {trustItems.map((item) => (
+            {trustItems.slice(0, 3).map((item) => (
               <li className="booking-review-panel__trust-item" key={`${item.label}-${item.value ?? ''}`}>
                 <span className="booking-review-panel__trust-label">{item.label}</span>
                 {item.value ? <span className="booking-review-panel__trust-value">{item.value}</span> : null}
@@ -114,6 +104,6 @@ export default function BookingReviewPanel({
           </button>
         </div>
       ) : null}
-    </section>
+    </aside>
   );
 }

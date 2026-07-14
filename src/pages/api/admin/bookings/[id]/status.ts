@@ -10,7 +10,7 @@ import {
 } from '../../../../../lib/booking/operationalStatus';
 
 export const PATCH: APIRoute = async (ctx) => {
-  const unauthorized = requireAdmin(ctx);
+  const unauthorized = await requireAdmin(ctx);
   if (unauthorized) return unauthorized;
 
   const bookingId = ctx.params.id;

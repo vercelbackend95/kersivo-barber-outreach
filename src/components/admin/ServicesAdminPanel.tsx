@@ -6,7 +6,7 @@ import { useAdminMobileChromeBreakpoint } from './useAdminMobileNextAppointments
 import EmptyState from '../EmptyState';
 import { SkeletonBookingChoices } from '../skeleton';
 import { ChevronDown, ChevronUp, Scissors, Search, Users, X } from '../lucide-react';
-import { adminFetchJson } from './adminAuth';
+import { adminFetchJson, isPublicAdminDemoMode, notifyAdminDemoBlocked } from './adminAuth';
 import ServiceCategoryPicker from './ServiceCategoryPicker';
 
 type ServiceBarberRow = {
@@ -507,6 +507,10 @@ export default function ServicesAdminPanel() {
   }, [isServiceSheetOpen, resetServiceFormState]);
 
   function openCreateServiceSheet() {
+    if (isPublicAdminDemoMode()) {
+      notifyAdminDemoBlocked();
+      return;
+    }
     setEditingId(null);
     setForm(EMPTY_FORM);
         setSelectedBarberIds([]);

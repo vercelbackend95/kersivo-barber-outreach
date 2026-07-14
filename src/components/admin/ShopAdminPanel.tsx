@@ -16,7 +16,7 @@ import EmptyState from '../EmptyState';
 import { ChevronDown, ChevronUp, Package, Search, Star, X } from '../lucide-react';
 import { formatDelta } from './reportsFormatting';
 import { SkeletonBookingChoices } from '../skeleton';
-import { AdminFetchError, adminFetchJson } from './adminAuth';
+import { AdminFetchError, adminFetchJson, isPublicAdminDemoMode, notifyAdminDemoBlocked } from './adminAuth';
 import { resolveClientIdForBooking } from '../../lib/admin/resolveClientIdForBooking';
 type ShopTab = 'products' | 'orders' | 'sales';
 type SalesRangePreset = '7' | '30' | '90' | 'custom';
@@ -1282,6 +1282,10 @@ export default function ShopAdminPanel({ initialTab = 'products' }: ShopAdminPan
   }
 
   function startCreate() {
+    if (isPublicAdminDemoMode()) {
+      notifyAdminDemoBlocked();
+      return;
+    }
     const nextForm = {
       ...EMPTY_FORM,
       sortOrder: productSortMode === 'manual' ? defaultSortOrder : EMPTY_FORM.sortOrder
