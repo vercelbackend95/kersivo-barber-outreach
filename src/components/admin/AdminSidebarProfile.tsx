@@ -1,8 +1,8 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
-import { LogOut, Store } from '../lucide-react';
+import { AccountCircle, LogOut, Package, Store } from '../lucide-react';
 import { authClient } from '@/lib/auth-client';
-import { clearAdminSecret } from './adminAuth';
+import { ADMIN_DEMO_BLOCKED_EVENT, clearAdminSecret } from './adminAuth';
 
 export type AdminProfileUser = {
   name: string | null;
@@ -20,18 +20,42 @@ function initialsFromUser(user: AdminProfileUser): string {
 }
 
 type AdminSidebarProfileProps = {
-  user: AdminProfileUser;
+  user?: AdminProfileUser | null;
   variant: 'desktop' | 'mobile';
+  mode?: 'authenticated' | 'guest';
 };
 
-export default function AdminSidebarProfile({ user, variant }: AdminSidebarProfileProps) {
+function openDemoAuthLock() {
+  window.dispatchEvent(
+    new CustomEvent(ADMIN_DEMO_BLOCKED_EVENT, {
+      detail: { showAuth: true },
+    }),
+  );
+}
+
+export default function AdminSidebarProfile({
+  user = null,
+  variant,
+  mode = 'authenticated',
+}: AdminSidebarProfileProps) {
+  const isGuest = mode === 'guest';
   const [open, setOpen] = useState(false);
   const triggerRef = useRef<HTMLButtonElement | null>(null);
   const menuRef = useRef<HTMLDivElement | null>(null);
   const [menuPos, setMenuPos] = useState<{ bottom: number; left: number; width: number } | null>(null);
 
-  const displayName = user.name?.trim() || user.email?.trim() || 'Account';
-  const initials = initialsFromUser(user);
+  const displayName = isGuest ? 'Login' : user?.name?.trim() || user?.email?.trim() || 'Account';
+  const planLabel = isGuest ? 'Demo' : 'Plus';
+  const initials = user ? initialsFromUser(user) : '?';
+  const avatarImage = isGuest ? null : user?.image ?? null;
+
+  const avatarContent = isGuest ? (
+    <AccountCircle width={32} height={32} aria-hidden="true" />
+  ) : avatarImage ? (
+    <img src={avatarImage} alt="" />
+  ) : (
+    initials
+  );
 
   useEffect(() => {
     if (!open || !triggerRef.current) return;
@@ -68,6 +92,46 @@ export default function AdminSidebarProfile({ user, variant }: AdminSidebarProfi
     window.location.assign('/');
   };
 
+  const handleLaunch = () => {
+    setOpen(false);
+    if (isGuest) {
+      openDemoAuthLock();
+      return;
+    }
+  };
+
+  const handleWorkspaceSetup = () => {
+    setOpen(false);
+    if (isGuest) {
+      openDemoAuthLock();
+      return;
+    }
+    void (async () => {
+      try {
+        const response = await fetch('/api/admin/onboarding/restart', {
+          method: 'POST',
+          credentials: 'include',
+        });
+        if (!response.ok) {
+          const payload = (await response.json().catch(() => ({}))) as { error?: string };
+          window.alert(payload.error || 'Could not restart workspace setup.');
+        }
+      } catch {
+        window.alert('Could not restart workspace setup.');
+      }
+      window.location.assign('/admin/onboarding');
+    })();
+  };
+
+  const handleRetailOnboarding = () => {
+    setOpen(false);
+    if (isGuest) {
+      openDemoAuthLock();
+      return;
+    }
+    window.location.assign('/admin/retail-onboarding');
+  };
+
   const triggerClass =
     variant === 'desktop' ? 'admin-sidebar-profile' : 'admin-sidebar-profile admin-sidebar-profile--mobile';
 
@@ -81,12 +145,15 @@ export default function AdminSidebarProfile({ user, variant }: AdminSidebarProfi
         aria-expanded={open}
         onClick={() => setOpen((v) => !v)}
       >
-        <span className="admin-sidebar-profile__avatar" aria-hidden="true">
-          {user.image ? <img src={user.image} alt="" /> : initials}
+        <span
+          className={`admin-sidebar-profile__avatar${isGuest ? ' admin-sidebar-profile__avatar--guest' : ''}`}
+          aria-hidden="true"
+        >
+          {avatarContent}
         </span>
         <span className="admin-sidebar-profile__meta">
           <span className="admin-sidebar-profile__name">{displayName}</span>
-          <span className="admin-sidebar-profile__plan">Plus</span>
+          <span className="admin-sidebar-profile__plan">{planLabel}</span>
         </span>
         <Store className="admin-sidebar-profile__shop" width={16} height={16} aria-hidden="true" />
       </button>
@@ -106,12 +173,15 @@ export default function AdminSidebarProfile({ user, variant }: AdminSidebarProfi
               }}
             >
               <div className="admin-profile-menu__header" role="none">
-                <span className="admin-sidebar-profile__avatar" aria-hidden="true">
-                  {user.image ? <img src={user.image} alt="" /> : initials}
+                <span
+                  className={`admin-sidebar-profile__avatar${isGuest ? ' admin-sidebar-profile__avatar--guest' : ''}`}
+                  aria-hidden="true"
+                >
+                  {avatarContent}
                 </span>
                 <span className="admin-sidebar-profile__meta">
                   <span className="admin-sidebar-profile__name">{displayName}</span>
-                  <span className="admin-sidebar-profile__plan">Plus</span>
+                  <span className="admin-sidebar-profile__plan">{planLabel}</span>
                 </span>
               </div>
               <div className="admin-profile-menu__divider" aria-hidden="true" />
@@ -119,7 +189,7 @@ export default function AdminSidebarProfile({ user, variant }: AdminSidebarProfi
                 type="button"
                 className="admin-profile-menu__item"
                 role="menuitem"
-                onClick={() => setOpen(false)}
+                onClick={handleLaunch}
               >
                 <Store width={15} height={15} aria-hidden="true" />
                 Launch My Barbershop
@@ -129,11 +199,46 @@ export default function AdminSidebarProfile({ user, variant }: AdminSidebarProfi
                 type="button"
                 className="admin-profile-menu__item"
                 role="menuitem"
-                onClick={() => void handleLogout()}
+                onClick={handleWorkspaceSetup}
               >
-                <LogOut width={15} height={15} aria-hidden="true" />
-                Log out
+                <Store width={15} height={15} aria-hidden="true" />
+                Workspace setup
               </button>
+              <div className="admin-profile-menu__divider" aria-hidden="true" />
+              <button
+                type="button"
+                className="admin-profile-menu__item"
+                role="menuitem"
+                onClick={handleRetailOnboarding}
+              >
+                <Package width={15} height={15} aria-hidden="true" />
+                Retail onboarding
+              </button>
+              <div className="admin-profile-menu__divider" aria-hidden="true" />
+              {isGuest ? (
+                <button
+                  type="button"
+                  className="admin-profile-menu__item"
+                  role="menuitem"
+                  onClick={() => {
+                    setOpen(false);
+                    window.location.assign('/');
+                  }}
+                >
+                  <LogOut width={15} height={15} aria-hidden="true" />
+                  Back to site
+                </button>
+              ) : (
+                <button
+                  type="button"
+                  className="admin-profile-menu__item"
+                  role="menuitem"
+                  onClick={() => void handleLogout()}
+                >
+                  <LogOut width={15} height={15} aria-hidden="true" />
+                  Log out
+                </button>
+              )}
             </div>,
             document.body,
           )

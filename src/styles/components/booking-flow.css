@@ -783,6 +783,17 @@
   overflow-wrap: break-word;
 }
 
+.booking-flow--wizard .booking-confirmation__cta {
+  margin-top: 1.25rem;
+  display: flex;
+  justify-content: stretch;
+}
+
+.booking-flow--wizard .booking-confirmation__cta .btn {
+  width: 100%;
+  justify-content: center;
+}
+
 /* ── Preview mode (landing) ──────────────────────────────────── */
 
 .booking-flow--wizard.booking-flow--preview .booking-form-content {

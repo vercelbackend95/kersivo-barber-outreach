@@ -18,6 +18,9 @@ import { formatDelta } from './reportsFormatting';
 import { SkeletonBookingChoices } from '../skeleton';
 import { AdminFetchError, adminFetchJson, isPublicAdminDemoMode, notifyAdminDemoBlocked } from './adminAuth';
 import { resolveClientIdForBooking } from '../../lib/admin/resolveClientIdForBooking';
+import RetailOnboardingWelcome, {
+  RETAIL_EMPTY_DISMISSED_KEY,
+} from './retail-onboarding/RetailOnboardingWelcome';
 type ShopTab = 'products' | 'orders' | 'sales';
 type SalesRangePreset = '7' | '30' | '90' | 'custom';
 
@@ -650,6 +653,14 @@ export default function ShopAdminPanel({ initialTab = 'products' }: ShopAdminPan
   const [form, setForm] = useState<ProductFormState>(EMPTY_FORM);
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState<string | null>(null);
+  const [retailPromptDismissed, setRetailPromptDismissed] = useState(() => {
+    if (typeof window === 'undefined') return false;
+    try {
+      return sessionStorage.getItem(RETAIL_EMPTY_DISMISSED_KEY) === '1';
+    } catch {
+      return false;
+    }
+  });
 
   const [orders, setOrders] = useState<OrderListItem[]>([]);
   const [ordersLoading, setOrdersLoading] = useState(false);
@@ -2167,11 +2178,28 @@ export default function ShopAdminPanel({ initialTab = 'products' }: ShopAdminPan
                 </div>
               ) : filteredProducts.length === 0 ? (
                 baseProducts.length === 0 ? (
-                  <EmptyState
-                    icon={Package}
-                    title="No products yet"
-                    description="Add your first product to launch your storefront."
-                  />
+                  retailPromptDismissed ? (
+                    <EmptyState
+                      icon={Package}
+                      title="No products yet"
+                      description="Add your first product to launch your storefront."
+                    />
+                  ) : (
+                    <RetailOnboardingWelcome
+                      layout="panel"
+                      onYes={() => {
+                        window.location.assign('/admin/retail-onboarding?step=1');
+                      }}
+                      onNotNow={() => {
+                        try {
+                          sessionStorage.setItem(RETAIL_EMPTY_DISMISSED_KEY, '1');
+                        } catch {
+                          /* ignore */
+                        }
+                        setRetailPromptDismissed(true);
+                      }}
+                    />
+                  )
                 ) : (
                   <EmptyState
                     icon={Search}

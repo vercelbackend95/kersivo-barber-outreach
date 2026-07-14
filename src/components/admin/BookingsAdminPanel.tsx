@@ -223,6 +223,28 @@ function readInitialBookingDateFromUrl(): string | null {
   const raw = new URLSearchParams(window.location.search).get('bookingDate');
   return raw && /^\d{4}-\d{2}-\d{2}$/.test(raw) ? raw : null;
 }
+
+function readInitialBookingIdFromUrl(): string | null {
+  if (typeof window === 'undefined') return null;
+  const raw = new URLSearchParams(window.location.search).get('bookingId')?.trim();
+  return raw || null;
+}
+
+function clearTimelineDeepLinkParamsFromUrl() {
+  if (typeof window === 'undefined') return;
+  const url = new URL(window.location.href);
+  let changed = false;
+  for (const key of ['bookingId', 'bookingDate'] as const) {
+    if (url.searchParams.has(key)) {
+      url.searchParams.delete(key);
+      changed = true;
+    }
+  }
+  if (!changed) return;
+  const next = `${url.pathname}${url.search}${url.hash}`;
+  window.history.replaceState(window.history.state, '', next);
+}
+
 function formatTimelineDateLabel(date: string) {
   const dateAtLondonMidnight = fromZonedTime(`${date}T00:00:00.000`, ADMIN_TIMEZONE);
   return formatInTimeZone(dateAtLondonMidnight, ADMIN_TIMEZONE, 'EEE dd MMM');
@@ -667,6 +689,8 @@ export default function BookingsAdminPanel({ isActive, mode, onBackToDashboard, 
   const [slideDirection, setSlideDirection] = useState(0);
   const [isTimelineEnterComplete, setIsTimelineEnterComplete] = useState(activeView !== 'timeline');
   const [selectedDate, setSelectedDate] = useState(() => readInitialBookingDateFromUrl() ?? getTodayLondonDate());
+  const [timelineFocusBookingId, setTimelineFocusBookingId] = useState<string | null>(() => readInitialBookingIdFromUrl());
+  const deepLinkBookingIdRef = useRef<string | null>(readInitialBookingIdFromUrl());
   const [historyBarberId, setHistoryBarberId] = useState<string>('all');
   const [historyDateRange, setHistoryDateRange] = useState<HistoryDateRange | null>(null);
   const [isHistoryMoreOpen, setIsHistoryMoreOpen] = useState(false);
@@ -725,7 +749,7 @@ export default function BookingsAdminPanel({ isActive, mode, onBackToDashboard, 
   const searchResultsRef = useRef<HTMLDivElement | null>(null);
   const timelineScrollRestoreRef = useRef<{ left: number; top: number } | null>(null);
   const timelineScrollRafRef = useRef<number | null>(null);
-    const pendingTimelineScrollBookingIdRef = useRef<string | null>(null);
+    const pendingTimelineScrollBookingIdRef = useRef<string | null>(deepLinkBookingIdRef.current);
   const pendingListScrollBookingIdRef = useRef<string | null>(null);
   const captureTimelineScroll = useCallback(() => {
     const container = timelineScrollRef.current;
@@ -1422,6 +1446,8 @@ export default function BookingsAdminPanel({ isActive, mode, onBackToDashboard, 
     const card = document.querySelector(`[data-booking-id="${bookingId}"]`) as HTMLElement | null;
     if (!card) return false;
     card.scrollIntoView({ behavior: 'smooth', block: 'center', inline: 'center' });
+    card.classList.add('admin-booking-hit-flash');
+    window.setTimeout(() => card.classList.remove('admin-booking-hit-flash'), 2200);
     window.setTimeout(() => {
       card.focus({ preventScroll: true });
     }, 220);
@@ -1437,12 +1463,31 @@ export default function BookingsAdminPanel({ isActive, mode, onBackToDashboard, 
     return true;
   }, []);
 
+  useEffect(() => {
+    const deepLinkId = deepLinkBookingIdRef.current;
+    if (!deepLinkId || mode !== 'dashboard') return;
+    setActiveView('timeline');
+    setTimelineFocusBookingId(deepLinkId);
+    pendingTimelineScrollBookingIdRef.current = deepLinkId;
+  }, [mode]);
+
+  const handleTimelineFocusBookingHandled = useCallback((bookingId: string) => {
+    if (deepLinkBookingIdRef.current === bookingId) {
+      deepLinkBookingIdRef.current = null;
+      clearTimelineDeepLinkParamsFromUrl();
+    }
+    pendingTimelineScrollBookingIdRef.current = null;
+    setTimelineFocusBookingId((current) => (current === bookingId ? null : current));
+  }, []);
+
   const jumpToTimelineBooking = useCallback(
     (booking: Booking) => {
       if (mode === 'dashboard') {
         if (activeView === 'timeline') {
+          setTimelineFocusBookingId(booking.id);
+          pendingTimelineScrollBookingIdRef.current = booking.id;
           if (!scrollToTimelineBooking(booking.id)) {
-            pendingTimelineScrollBookingIdRef.current = booking.id;
+            // Expansion/scroll handled via focusBookingId once the slot opens.
           }
         } else {
           pendingListScrollBookingIdRef.current = booking.id;
@@ -1478,6 +1523,11 @@ export default function BookingsAdminPanel({ isActive, mode, onBackToDashboard, 
     if (!pendingBookingId || activeView !== 'timeline') return;
     if (scrollToTimelineBooking(pendingBookingId)) {
       pendingTimelineScrollBookingIdRef.current = null;
+      if (deepLinkBookingIdRef.current === pendingBookingId) {
+        deepLinkBookingIdRef.current = null;
+        clearTimelineDeepLinkParamsFromUrl();
+      }
+      setTimelineFocusBookingId((current) => (current === pendingBookingId ? null : current));
     }
   }, [activeView, scrollToTimelineBooking, visibleBookings]);
 
@@ -2224,7 +2274,9 @@ export default function BookingsAdminPanel({ isActive, mode, onBackToDashboard, 
                       onBookingClick={handleTimelineBookingClick}
                       onGoToNextDay={goToNextTimelineDay}
                       nextDayShortLabel={timelineNextDayLabel}
-                      allowInitialNowScroll={isTimelineEnterComplete}
+                      allowInitialNowScroll={isTimelineEnterComplete && !timelineFocusBookingId}
+                      focusBookingId={timelineFocusBookingId}
+                      onFocusBookingHandled={handleTimelineFocusBookingHandled}
                       floatingTopRight={
                         isMobileViewport ? (
                           <AdminBookingDatePicker

@@ -1,6 +1,5 @@
 import { BookingStatus, Prisma, type Service, type ShopSettings } from '@prisma/client';
 import { prisma } from '../db/client';
-import { DEMO_SHOP_ID } from '../db/shopScope';
 import { PUBLIC_BOOKING_UNAVAILABLE_MESSAGE, isPrismaQuotaExceededError } from '../db/resilience';
 import { getTimeBlockDelegate } from '../db/timeBlocks';
 import { sendInstantBookingConfirmationEmail, sendRescheduledBookingEmail, sendShopCancelledBookingEmail } from '../email/sender';
@@ -80,17 +79,17 @@ export async function getRescheduleTokenStatus(token: string): Promise<{ valid: 
   }
 }
 
-async function getPrimaryShopId(tx?: Prisma.TransactionClient) {
-  const client = tx ?? prisma;
-  const shop = await client.shopSettings.findFirstOrThrow({ select: { id: true } });
-  return shop.id;
+async function loadShopSettingsForService(serviceId: string) {
+  const service = await prisma.service.findUniqueOrThrow({ where: { id: serviceId } });
+  const settings = await prisma.shopSettings.findUniqueOrThrow({ where: { id: service.shopId } });
+  return { service, settings };
 }
 
 async function upsertClientForBooking(
   tx: Prisma.TransactionClient,
-  input: { email: string; fullName?: string | null; phone?: string | null }
+  input: { shopId: string; email: string; fullName?: string | null; phone?: string | null }
 ) {
-  const shopId = await getPrimaryShopId(tx);
+  const { shopId } = input;
   const clientDelegate = (tx as Prisma.TransactionClient & { client?: { upsert?: Function } }).client;
 
   if (!clientDelegate || typeof clientDelegate.upsert !== 'function') {
@@ -104,7 +103,6 @@ async function upsertClientForBooking(
   }
 
   return clientDelegate.upsert({
-
     where: { shopId_email: { shopId, email: input.email } },
     update: {
       fullName: input.fullName ?? undefined,
@@ -119,11 +117,11 @@ async function upsertClientForBooking(
   });
 }
 
-async function listEligibleBarbersForService(serviceId: string) {
+async function listEligibleBarbersForService(serviceId: string, shopId: string) {
   return prisma.barber.findMany({
     where: {
       active: true,
-      shopId: DEMO_SHOP_ID,
+      shopId,
       barberServices: {
         some: { serviceId }
       }
@@ -194,13 +192,12 @@ async function getAvailableSlotsForBarber(input: {
 
 export async function getAvailabilitySlots(input: { serviceId: string; barberId: string; date: string; ignoreBookingId?: string }) {
   try {
-    const settings = await prisma.shopSettings.findFirstOrThrow();
-    const service = await prisma.service.findUniqueOrThrow({ where: { id: input.serviceId } });
+    const { service, settings } = await loadShopSettingsForService(input.serviceId);
     if (!service.isActive) {
       return { slots: [], service, settings };
     }
     if (input.barberId === ANY_BARBER_ID) {
-      const eligibleBarbers = await listEligibleBarbersForService(input.serviceId);
+      const eligibleBarbers = await listEligibleBarbersForService(input.serviceId, service.shopId);
       const slotGroups = await Promise.all(
         eligibleBarbers.map(async (barber) =>
           getAvailableSlotsForBarber({
@@ -291,7 +288,7 @@ async function resolveRequestedBarber(input: {
     const [barber, barberService] = await Promise.all([
       prisma.barber.findUnique({
         where: { id: input.barberId },
-        select: { id: true, active: true, name: true }
+        select: { id: true, active: true, name: true, shopId: true }
       }),
       prisma.barberService.findUnique({
         where: { barberId_serviceId: { barberId: input.barberId, serviceId: input.serviceId } },
@@ -300,6 +297,7 @@ async function resolveRequestedBarber(input: {
     ]);
 
     if (!barber || !barber.active) throw new Error('Selected barber is unavailable for new bookings.');
+    if (barber.shopId !== input.service.shopId) throw new Error('Selected barber is unavailable for new bookings.');
     if (!barberService) throw new Error('Selected barber does not provide this service.');
 
     await ensureRequestedSlotSelectable({
@@ -314,7 +312,7 @@ async function resolveRequestedBarber(input: {
     return barber;
   }
 
-  const eligibleBarbers = await listEligibleBarbersForService(input.serviceId);
+  const eligibleBarbers = await listEligibleBarbersForService(input.serviceId, input.service.shopId);
 
   for (const barber of eligibleBarbers) {
     const availableSlots = await getAvailableSlotsForBarber({
@@ -349,8 +347,7 @@ export async function createInstantBooking(input: {
 
 }) {
   try {
-    const settings = await prisma.shopSettings.findFirstOrThrow();
-    const service = await prisma.service.findUniqueOrThrow({ where: { id: input.serviceId } });
+    const { service, settings } = await loadShopSettingsForService(input.serviceId);
     if (!service.isActive) throw new Error('Selected service is unavailable for new bookings.');
 
     const resolvedBarber = await resolveRequestedBarber({
@@ -374,8 +371,9 @@ export async function createInstantBooking(input: {
         await ensureSlotAvailable(tx, { barberId: resolvedBarber.id, startAt, endAt });
 
         const client = await upsertClientForBooking(tx, {
+          shopId: service.shopId,
           email: input.email,
-                    fullName: input.fullName,
+          fullName: input.fullName,
           phone: input.phone || null
         });
 
@@ -505,12 +503,11 @@ export async function cancelByShop(input: { bookingId: string; reason?: string }
 export async function rescheduleByToken(input: { token: string; serviceId: string; barberId: string; date: string; time: string }) {
   try {
     const existing = await resolveManageTokenBooking(input.token);
-    const settings = await prisma.shopSettings.findFirstOrThrow();
+    const { service, settings } = await loadShopSettingsForService(input.serviceId);
     if (!canCancelOrReschedule(existing.startAt, settings.rescheduleWindowHours)) {
       throw new BookingActionError('Reschedule window has passed.', 409);
     }
 
-    const service = await prisma.service.findUniqueOrThrow({ where: { id: input.serviceId } });
     if (!service.isActive) throw new Error('Selected service is unavailable for new bookings.');
 
     const resolvedBarber = await resolveRequestedBarber({

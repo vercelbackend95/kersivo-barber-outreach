@@ -113,6 +113,11 @@ model ShopSettings {
   slotIntervalMinutes         Int      @default(15)
   defaultBufferMinutes        Int      @default(0)
   customServiceCategories     String[] @default([])
+  townCity                    String?
+  logoUrl                     String?
+  onboardingCompleted         Boolean  @default(false)
+  onboardingCurrentStep       Int      @default(0)
+  onboardingCompletedAt       DateTime?
   ownerUserId                 String?  @unique
   createdAt                   DateTime @default(now())
   updatedAt                   DateTime @updatedAt

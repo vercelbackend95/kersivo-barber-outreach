@@ -74,6 +74,9 @@ type TodayTimelineProps = {
    * and a one-time animated swipe hint. Real admin leaves this undefined.
    */
   previewSwipe?: boolean;
+  /** Deep-link: expand the slot and scroll to this booking once present. */
+  focusBookingId?: string | null;
+  onFocusBookingHandled?: (bookingId: string) => void;
 };
 
 const ADMIN_TIMEZONE = 'Europe/London';
@@ -955,7 +958,7 @@ const BookingExpansionCard = memo(function BookingExpansionCard({
     ) : null;
 
   return (
-    <div className="admin-vtl-swipe-shell">
+    <div className="admin-vtl-swipe-shell" data-booking-id={booking.id} tabIndex={-1}>
       <div className="admin-vtl-panel-segmented" role="group" aria-label="Reveal booking panels">
         <button
           type="button"
@@ -1467,6 +1470,8 @@ const SlotRow = memo(function SlotRow({
     <motion.div
       layout="position"
       className="admin-vtl-slot-group"
+      data-vtl-slot={slotKey}
+      data-expanded={isExpanded ? 'true' : undefined}
       aria-label={`${slot.timeLabel}${hasBookings ? ` — ${slot.bookings.length} booking${slot.bookings.length === 1 ? '' : 's'}` : ''}${hasBlocks ? ` — ${slot.timeBlocks.length} block${slot.timeBlocks.length === 1 ? '' : 's'}` : ''}`}
       role="group"
     >
@@ -1567,12 +1572,15 @@ function TodayTimeline({
   floatingTopRight,
   onClientProfileIntercept,
   previewSwipe = false,
+  focusBookingId = null,
+  onFocusBookingHandled,
 }: TodayTimelineProps) {
   const localScrollRef = useRef<HTMLDivElement | null>(null);
   const activeScrollRef = scrollContainerRef ?? localScrollRef;
   const nowRowRef = useRef<HTMLDivElement | null>(null);
   const hasScrolledToNow = useRef(false);
   const scrollToNowRafRefs = useRef<{ first: number | null; second: number | null }>({ first: null, second: null });
+  const handledFocusBookingIdRef = useRef<string | null>(null);
   const reduceMotion = useReducedMotion();
 
   const [activeBookingId, setActiveBookingId] = useState<string | null>(null);
@@ -1624,6 +1632,45 @@ function TodayTimeline({
     return () => document.removeEventListener('keydown', handler);
   }, []);
 
+  // Deep-link: expand the hour slot and scroll to the booking card.
+  useEffect(() => {
+    if (!focusBookingId || isLoading) return;
+    if (handledFocusBookingIdRef.current === focusBookingId) return;
+
+    const booking = bookings.find((entry) => entry.id === focusBookingId);
+    if (!booking) return;
+
+    const slotKey = formatInTimeZone(new Date(booking.startAt), ADMIN_TIMEZONE, 'HH:mm');
+    handledFocusBookingIdRef.current = focusBookingId;
+    hasScrolledToNow.current = true;
+    setExpandedSlotKey(slotKey);
+    setActiveBookingId(focusBookingId);
+
+    const slotEl = document.querySelector(`[data-vtl-slot="${slotKey}"]`) as HTMLElement | null;
+    slotEl?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+
+    const timeoutId = window.setTimeout(() => {
+      const card = document.querySelector(`[data-booking-id="${focusBookingId}"]`) as HTMLElement | null;
+      if (card) {
+        card.scrollIntoView({ behavior: 'smooth', block: 'center', inline: 'nearest' });
+        card.classList.add('admin-booking-hit-flash');
+        window.setTimeout(() => card.classList.remove('admin-booking-hit-flash'), 2200);
+        window.setTimeout(() => {
+          card.focus?.({ preventScroll: true });
+        }, 220);
+      }
+      onFocusBookingHandled?.(focusBookingId);
+    }, 280);
+
+    return () => window.clearTimeout(timeoutId);
+  }, [bookings, focusBookingId, isLoading, onFocusBookingHandled]);
+
+  useEffect(() => {
+    if (!focusBookingId) {
+      handledFocusBookingIdRef.current = null;
+    }
+  }, [focusBookingId]);
+
   const todayLondon = formatInTimeZone(new Date(), ADMIN_TIMEZONE, 'yyyy-MM-dd');
   const isToday = selectedDate === todayLondon;
 
@@ -1662,7 +1709,7 @@ function TodayTimeline({
   );
 
   useEffect(() => {
-    if (!isToday || !allowInitialNowScroll || hasScrolledToNow.current) return;
+    if (!isToday || !allowInitialNowScroll || hasScrolledToNow.current || focusBookingId) return;
     const el = nowRowRef.current;
     if (!el) return;
     hasScrolledToNow.current = true;
@@ -1683,7 +1730,7 @@ function TodayTimeline({
         scrollToNowRafRefs.current.second = null;
       }
     };
-  }, [allowInitialNowScroll, isToday, items]);
+  }, [allowInitialNowScroll, focusBookingId, isToday, items]);
 
   useEffect(() => {
     hasScrolledToNow.current = false;

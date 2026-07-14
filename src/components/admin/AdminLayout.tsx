@@ -32,6 +32,7 @@ type AdminLayoutProps = {
   showSectionSkeleton: boolean;
   isPublicDemo?: boolean;
   profileUser?: AdminProfileUser | null;
+  shopLogoUrl?: string | null;
   /** Always mounted (hidden); keeps effects alive while section skeleton replaces `children`. */
   persistentAdminChrome?: React.ReactNode;
   children: React.ReactNode;
@@ -84,17 +85,30 @@ const menuGroups: SectionGroup[] = [
   },
 ];
 
-function SidebarBrand() {
+const DEFAULT_SIDEBAR_LOGO = '/images/logo_nobg.png';
+
+function SidebarBrand({ logoUrl = null }: { logoUrl?: string | null }) {
+  const [src, setSrc] = useState(logoUrl || DEFAULT_SIDEBAR_LOGO);
+  const isCustom = Boolean(logoUrl) && src === logoUrl;
+
+  useEffect(() => {
+    setSrc(logoUrl || DEFAULT_SIDEBAR_LOGO);
+  }, [logoUrl]);
+
   return (
     <div className="admin-sidebar-brand">
-      <div className="admin-sidebar-monogram" aria-hidden="true">
+      <div
+        className={`admin-sidebar-monogram${isCustom ? ' admin-sidebar-monogram--custom' : ''}`}
+        aria-hidden="true"
+      >
         <img
           className="admin-sidebar-logo-img"
-          src="/images/logo_nobg.png"
+          src={src}
           alt=""
           width={60}
           height={60}
           decoding="async"
+          onError={() => setSrc(DEFAULT_SIDEBAR_LOGO)}
         />
       </div>
       <div className="admin-sidebar-brand-text">
@@ -127,6 +141,7 @@ export default function AdminLayout({
   showSectionSkeleton,
   isPublicDemo = false,
   profileUser = null,
+  shopLogoUrl = null,
   persistentAdminChrome,
   children,
 }: AdminLayoutProps) {
@@ -236,14 +251,7 @@ export default function AdminLayout({
   };
 
   const accountFooter = isPublicDemo ? (
-    <button
-      type="button"
-      className="btn btn--ghost admin-sidebar-logout"
-      onClick={() => void handleLogout()}
-    >
-      <LogOut width={15} height={15} aria-hidden="true" />
-      Back to site
-    </button>
+    <AdminSidebarProfile mode="guest" variant="desktop" />
   ) : profileUser ? (
     <AdminSidebarProfile user={profileUser} variant="desktop" />
   ) : (
@@ -258,14 +266,7 @@ export default function AdminLayout({
   );
 
   const accountFooterMobile = isPublicDemo ? (
-    <button
-      type="button"
-      className="btn btn--ghost admin-mobile-logout"
-      onClick={() => void handleLogout()}
-    >
-      <LogOut width={15} height={15} aria-hidden="true" />
-      Back to site
-    </button>
+    <AdminSidebarProfile mode="guest" variant="mobile" />
   ) : profileUser ? (
     <AdminSidebarProfile user={profileUser} variant="mobile" />
   ) : (
@@ -467,7 +468,7 @@ export default function AdminLayout({
       >
         <div className="admin-mobile-drawer-head">
           <div className="admin-mobile-drawer-head-top">
-            <SidebarBrand />
+            <SidebarBrand logoUrl={isPublicDemo ? null : shopLogoUrl} />
             <button
               type="button"
               className="admin-mobile-close-button"
@@ -490,7 +491,7 @@ export default function AdminLayout({
     <AdminMobileTopExtensionContext.Provider value={setMobileTopExtension}>
       <div className="admin-shell">
       <aside className="admin-sidebar" aria-label="Admin sections">
-        <SidebarBrand />
+        <SidebarBrand logoUrl={isPublicDemo ? null : shopLogoUrl} />
         {menu}
         <div className="admin-sidebar-logout-wrap">
           <SidebarStatus />
@@ -510,7 +511,7 @@ export default function AdminLayout({
           aria-label="Admin mobile header"
         >
           <div className="admin-mobile-header-bar">
-            <SidebarBrand />
+            <SidebarBrand logoUrl={isPublicDemo ? null : shopLogoUrl} />
             <div className="admin-mobile-header-center">
               {activeSectionLabel && (
                 <span className="admin-mobile-section-name" aria-current="page">

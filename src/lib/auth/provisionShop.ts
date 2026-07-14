@@ -21,6 +21,9 @@ export async function provisionShopForUser(input: {
       name: shopName,
       timezone: 'Europe/London',
       ownerUserId: input.userId,
+      onboardingCompleted: false,
+      onboardingCurrentStep: 0,
+      onboardingCompletedAt: null,
     },
     select: { id: true },
   });

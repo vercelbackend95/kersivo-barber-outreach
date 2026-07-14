@@ -5,7 +5,7 @@ import { rescheduleByToken } from './service';
 const { prismaMock } = vi.hoisted(() => ({
   prismaMock: {
     booking: { findFirst: vi.fn() },
-    shopSettings: { findFirstOrThrow: vi.fn() },
+    shopSettings: { findUniqueOrThrow: vi.fn() },
     service: { findUniqueOrThrow: vi.fn() },
     $transaction: vi.fn()
   }
@@ -35,6 +35,26 @@ function baseBooking(overrides: { startAt: Date }) {
   };
 }
 
+const activeService = {
+  id: 'svc-1',
+  shopId: 'shop-1',
+  name: 'Cut',
+  isActive: true,
+  durationMinutes: 30,
+  bufferMinutes: 0,
+  pricePence: 2000
+};
+
+const shopSettings = {
+  id: 'shop-1',
+  name: 'Shop',
+  rescheduleWindowHours: 24,
+  cancellationWindowHours: 2,
+  defaultBufferMinutes: 0,
+  slotIntervalMinutes: 15,
+  timezone: 'Europe/London'
+};
+
 describe('rescheduleByToken', () => {
   beforeEach(() => {
     vi.useRealTimers();
@@ -50,15 +70,8 @@ describe('rescheduleByToken', () => {
         startAt: new Date('2026-04-08T14:00:00.000Z')
       })
     );
-    prismaMock.shopSettings.findFirstOrThrow.mockResolvedValue({
-      id: 'shop-1',
-      name: 'Shop',
-      rescheduleWindowHours: 24,
-      cancellationWindowHours: 2,
-      defaultBufferMinutes: 0,
-      slotIntervalMinutes: 15,
-      timezone: 'Europe/London'
-    } as never);
+    prismaMock.service.findUniqueOrThrow.mockResolvedValue(activeService as never);
+    prismaMock.shopSettings.findUniqueOrThrow.mockResolvedValue(shopSettings as never);
 
     await expect(
       rescheduleByToken({
@@ -74,7 +87,6 @@ describe('rescheduleByToken', () => {
       statusCode: 409
     });
 
-    expect(prismaMock.service.findUniqueOrThrow).not.toHaveBeenCalled();
     expect(prismaMock.$transaction).not.toHaveBeenCalled();
   });
 
@@ -87,22 +99,13 @@ describe('rescheduleByToken', () => {
         startAt: new Date('2026-04-15T14:00:00.000Z')
       })
     );
-    prismaMock.shopSettings.findFirstOrThrow.mockResolvedValue({
-      id: 'shop-1',
-      name: 'Shop',
-      rescheduleWindowHours: 2,
-      cancellationWindowHours: 2,
-      defaultBufferMinutes: 0,
-      slotIntervalMinutes: 15,
-      timezone: 'Europe/London'
-    } as never);
     prismaMock.service.findUniqueOrThrow.mockResolvedValue({
-      id: 'svc-1',
-      name: 'Cut',
-      isActive: false,
-      durationMinutes: 30,
-      bufferMinutes: 0,
-      pricePence: 2000
+      ...activeService,
+      isActive: false
+    } as never);
+    prismaMock.shopSettings.findUniqueOrThrow.mockResolvedValue({
+      ...shopSettings,
+      rescheduleWindowHours: 2
     } as never);
 
     await expect(

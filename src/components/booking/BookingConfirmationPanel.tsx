@@ -7,15 +7,21 @@ export type BookingSummary = {
   time?: string;
 };
 
+export type BookingPostConfirmCta = {
+  label: string;
+  href: string;
+};
+
 type Props = {
   variant: 'booked' | 'rescheduled';
   summary?: BookingSummary;
+  postConfirmCta?: BookingPostConfirmCta | null;
 };
 
 const contentByVariant = {
   booked: {
     eyebrow: 'Confirmed',
-    heading: 'You\'re booked',
+    heading: "You're booked",
     body: 'A confirmation email is on the way with appointment details and links to reschedule or cancel.',
   },
   rescheduled: {
@@ -36,7 +42,10 @@ function buildSummaryRows(summary?: BookingSummary): Array<{ label: string; valu
   ].filter((entry) => entry.value.trim().length > 0);
 }
 
-const BookingConfirmationPanel = forwardRef<HTMLElement, Props>(function BookingConfirmationPanel({ variant, summary }, ref) {
+const BookingConfirmationPanel = forwardRef<HTMLElement, Props>(function BookingConfirmationPanel(
+  { variant, summary, postConfirmCta = null },
+  ref,
+) {
   const content = contentByVariant[variant];
   const rows = buildSummaryRows(summary);
 
@@ -65,6 +74,14 @@ const BookingConfirmationPanel = forwardRef<HTMLElement, Props>(function Booking
           ))}
         </dl>
       )}
+
+      {postConfirmCta ? (
+        <div className="booking-confirmation__cta">
+          <a className="btn btn--primary btn--lg" href={postConfirmCta.href}>
+            {postConfirmCta.label}
+          </a>
+        </div>
+      ) : null}
     </section>
   );
 });

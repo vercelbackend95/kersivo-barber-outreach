@@ -71,6 +71,7 @@ export default function AdminPanel({ demoMode = false }: AdminPanelProps) {
   const [authReady, setAuthReady] = useState(demoMode);
   const [hasAccess, setHasAccess] = useState(() => demoMode || Boolean(getStoredAdminSecret()));
   const [profileUser, setProfileUser] = useState<AdminProfileUser | null>(null);
+  const [shopLogoUrl, setShopLogoUrl] = useState<string | null>(null);
   const [demoLoadError, setDemoLoadError] = useState(false);
   const transitionTimeoutRef = useRef<number | null>(null);
   const skeletonTimeoutRef = useRef<number | null>(null);
@@ -85,14 +86,32 @@ export default function AdminPanel({ demoMode = false }: AdminPanelProps) {
     } else {
       setPublicAdminDemoMode(false);
       void (async () => {
+        let redirectingToOnboarding = false;
         try {
           const response = await fetch('/api/admin/session', { credentials: 'include' });
           if (response.ok) {
             const payload = (await response.json()) as {
               ok?: boolean;
+              onboardingCompleted?: boolean;
+              via?: string;
+              shop?: { logoUrl?: string | null; name?: string | null } | null;
               user?: { name?: string | null; email?: string | null; image?: string | null } | null;
             };
+            if (payload.via === 'session' && payload.onboardingCompleted === false) {
+              let skipGate = false;
+              try {
+                skipGate = sessionStorage.getItem('kersivo_skip_onboarding_gate') === '1';
+              } catch {
+                skipGate = false;
+              }
+              if (!skipGate) {
+                redirectingToOnboarding = true;
+                window.location.assign('/admin/onboarding');
+                return;
+              }
+            }
             setHasAccess(true);
+            setShopLogoUrl(payload.shop?.logoUrl ?? null);
             if (payload.user) {
               setProfileUser({
                 name: payload.user.name ?? null,
@@ -105,12 +124,16 @@ export default function AdminPanel({ demoMode = false }: AdminPanelProps) {
           } else {
             setHasAccess(Boolean(getStoredAdminSecret()));
             setProfileUser(null);
+            setShopLogoUrl(null);
           }
         } catch {
           setHasAccess(Boolean(getStoredAdminSecret()));
           setProfileUser(null);
+          setShopLogoUrl(null);
         } finally {
-          setAuthReady(true);
+          if (!redirectingToOnboarding) {
+            setAuthReady(true);
+          }
         }
       })();
     }
@@ -243,6 +266,7 @@ export default function AdminPanel({ demoMode = false }: AdminPanelProps) {
         showSectionSkeleton={showSectionSkeleton}
         isPublicDemo={demoMode}
         profileUser={profileUser}
+        shopLogoUrl={demoMode ? null : shopLogoUrl}
         persistentAdminChrome={<AdminGlobalMobileNextStripHost />}
       >
         <BookingsAdminPanel

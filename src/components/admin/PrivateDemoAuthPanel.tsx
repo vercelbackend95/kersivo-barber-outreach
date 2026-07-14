@@ -132,6 +132,7 @@ export default function PrivateDemoAuthPanel({
         const result = await authClient.signIn.email({
           email: email.trim(),
           password,
+          rememberMe: true,
           callbackURL: '/admin',
         });
         if (result.error) {

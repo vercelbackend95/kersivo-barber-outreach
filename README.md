@@ -32,8 +32,18 @@ Astro + React (TypeScript) booking + shop system for barbershops.
    - `STRIPE_SECRET_KEY`: Stripe test secret key used for checkout session creation.
    - `STRIPE_WEBHOOK_SECRET`: Stripe webhook signing secret used to verify `/api/shop/webhook`.
    - `ADMIN_SECRET`: admin panel login secret.
-      - `BLOB_READ_WRITE_TOKEN` (preferred) or `VERCEL_BLOB_READ_WRITE_TOKEN`: Vercel Blob token used for barber avatar + product image uploads.
+   - `BLOB_READ_WRITE_TOKEN` (preferred) or `VERCEL_BLOB_READ_WRITE_TOKEN`: Vercel Blob token used for barber avatar + product image uploads.
             - If Blob storage is not configured, barber avatars still save as inline `data:` URLs, but product uploads still require Blob.
+   - `BETTER_AUTH_SECRET`: secret for Better Auth sessions (use a long random string in production).
+   - `BETTER_AUTH_URL` / `PUBLIC_SITE_URL`: auth base URL (local: `http://localhost:4321`, production: `https://kersivo.co.uk`).
+   - `GOOGLE_CLIENT_ID` / `GOOGLE_CLIENT_SECRET`: Google OAuth for `/admin` sign-in.
+     - These must come from a **Kersivo** Google Cloud project (or a consent screen whose **App name** is Kersivo).
+     - If Google says another app name (e.g. an old project), you are using the wrong Client ID — create a new OAuth client under the Kersivo project and replace both env vars locally and on the host.
+     - OAuth consent screen → App name: **Kersivo**.
+     - Authorized redirect URIs:
+       - `http://localhost:4321/api/auth/callback/google`
+       - `https://kersivo.co.uk/api/auth/callback/google`
+       - `https://www.kersivo.co.uk/api/auth/callback/google` (if www is used)
    - If `RESEND_API_KEY` is missing, the app falls back to console logs for outgoing email contents.
 
 

@@ -1,7 +1,7 @@
 export const prerender = false;
 
 import type { APIRoute } from 'astro';
-import { requireAdmin } from '@/lib/admin/auth';
+import { requireAdminContext } from '@/lib/admin/auth';
 import { prisma } from '@/lib/db/client';
 import { getEffectiveBookingStatus } from '@/lib/booking/operationalStatus';
 
@@ -112,16 +112,14 @@ export function computeClientStats(bookings: ScoredBooking[], nowMs = Date.now()
 }
 
 export const GET: APIRoute = async (ctx) => {
-  const unauthorized = await requireAdmin(ctx);
-  if (unauthorized) return unauthorized;
+  const access = await requireAdminContext(ctx);
+  if (access instanceof Response) return access;
 
   const clientId = ctx.params.clientId;
   if (!clientId) return new Response(JSON.stringify({ error: 'Missing client id.' }), { status: 400 });
 
-  const shop = await prisma.shopSettings.findFirstOrThrow({ select: { id: true } });
-
   const client = await prisma.client.findFirst({
-    where: { id: clientId, shopId: shop.id },
+    where: { id: clientId, shopId: access.shopId },
   });
 
   if (!client) return new Response(JSON.stringify({ error: 'Client not found.' }), { status: 404 });
@@ -155,13 +153,13 @@ export const GET: APIRoute = async (ctx) => {
 };
 
 export const PATCH: APIRoute = async (ctx) => {
-  const unauthorized = await requireAdmin(ctx);
-  if (unauthorized) return unauthorized;
+  const access = await requireAdminContext(ctx);
+  if (access instanceof Response) return access;
 
   const clientId = ctx.params.clientId;
   if (!clientId) return new Response(JSON.stringify({ error: 'Missing client id.' }), { status: 400 });
 
-  const shop = await prisma.shopSettings.findFirstOrThrow({ select: { id: true } });
+  const shopId = access.shopId;
 
   const contentType = ctx.request.headers.get('content-type') ?? '';
 
@@ -185,7 +183,7 @@ export const PATCH: APIRoute = async (ctx) => {
     }
 
     const updated = await prisma.client.updateMany({
-      where: { id: clientId, shopId: shop.id },
+      where: { id: clientId, shopId },
       data: { avatarUrl },
     });
 
@@ -222,7 +220,7 @@ export const PATCH: APIRoute = async (ctx) => {
   }
 
   const updated = await prisma.client.updateMany({
-    where: { id: clientId, shopId: shop.id },
+    where: { id: clientId, shopId },
     data,
   });
 

@@ -1,7 +1,7 @@
 export const prerender = false;
 
 import type { APIRoute } from 'astro';
-import { getSessionBarberId, requireAdmin, resolveNoteAuthorBarberId } from '@/lib/admin/auth';
+import { getSessionBarberId, requireAdminContext, resolveNoteAuthorBarberId } from '@/lib/admin/auth';
 import { prisma } from '@/lib/db/client';
 
 async function assertNoteInClientShop(noteId: string, clientId: string, shopId: string) {
@@ -16,8 +16,8 @@ async function assertNoteInClientShop(noteId: string, clientId: string, shopId: 
 }
 
 export const POST: APIRoute = async (ctx) => {
-  const unauthorized = await requireAdmin(ctx);
-  if (unauthorized) return unauthorized;
+  const access = await requireAdminContext(ctx);
+  if (access instanceof Response) return access;
 
   const clientId = ctx.params.clientId;
   const noteId = ctx.params.noteId;
@@ -30,12 +30,11 @@ export const POST: APIRoute = async (ctx) => {
     return new Response(JSON.stringify({ error: 'Barber session required to like notes.' }), { status: 400 });
   }
 
-  const shop = await prisma.shopSettings.findFirstOrThrow({ select: { id: true } });
-  const note = await assertNoteInClientShop(noteId, clientId, shop.id);
+  const note = await assertNoteInClientShop(noteId, clientId, access.shopId);
   if (!note) return new Response(JSON.stringify({ error: 'Note not found.' }), { status: 404 });
 
   const barber = await prisma.barber.findFirst({
-    where: { id: barberId, active: true },
+    where: { id: barberId, active: true, shopId: access.shopId },
     select: { id: true },
   });
   if (!barber) {

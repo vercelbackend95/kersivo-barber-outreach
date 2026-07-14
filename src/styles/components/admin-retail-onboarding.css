@@ -1,0 +1,128 @@
+/* Retail onboarding: welcome dual CTAs + wider product preview */
+
+.admin-onboarding--retail .admin-onboarding__footer-row--welcome {
+  flex-direction: column;
+  gap: var(--space-sm);
+}
+
+.admin-onboarding--retail .admin-onboarding__footer-row--welcome .btn {
+  width: 100%;
+  flex: none;
+}
+
+.admin-onboarding--retail .admin-onboarding__question {
+  margin-top: var(--space-xl);
+}
+
+.admin-onboarding--retail .admin-onboarding__question-title {
+  margin: 0 0 var(--space-xs);
+  font-size: 1.05rem;
+  font-weight: 600;
+  letter-spacing: -0.01em;
+}
+
+.admin-onboarding--retail.admin-onboarding--preview .admin-onboarding__header,
+.admin-onboarding--retail.admin-onboarding--preview .admin-onboarding__main,
+.admin-onboarding--retail.admin-onboarding--preview .admin-onboarding__footer {
+  max-width: 48rem;
+}
+
+.admin-onboarding--retail .admin-retail-preview {
+  margin-top: var(--space-md);
+  border-radius: var(--radius-md, 12px);
+  overflow: hidden;
+  background: color-mix(in srgb, var(--surface, #111) 92%, transparent);
+}
+
+.admin-onboarding--retail .admin-retail-preview .product-hero {
+  margin: 0;
+}
+
+.admin-onboarding--retail .admin-retail-preview .product-actions {
+  grid-template-columns: 1fr;
+}
+
+.admin-onboarding--retail .admin-retail-preview .product-actions .btn {
+  pointer-events: none;
+  cursor: default;
+}
+
+.admin-onboarding--retail .admin-onboarding__price-wrap {
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
+  border: 1px solid color-mix(in srgb, var(--fg) 18%, transparent);
+  border-radius: var(--radius-sm, 8px);
+  padding: 0 0.85rem;
+  background: color-mix(in srgb, var(--bg) 70%, transparent);
+}
+
+.admin-onboarding--retail .admin-onboarding__price-wrap:focus-within {
+  border-color: color-mix(in srgb, var(--accent) 55%, transparent);
+}
+
+.admin-onboarding--retail .admin-onboarding__price-wrap span {
+  opacity: 0.7;
+  font-weight: 500;
+}
+
+.admin-onboarding--retail .admin-onboarding__price-wrap .input {
+  border: 0;
+  background: transparent;
+  padding-left: 0;
+  box-shadow: none;
+}
+
+.admin-onboarding--retail .admin-onboarding__price-wrap.input--error {
+  border-color: color-mix(in srgb, var(--danger, #e11) 70%, transparent);
+}
+
+/* Inline prompt inside Products empty list */
+.admin-retail-empty-prompt {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-sm);
+  max-width: 28rem;
+  margin: var(--space-lg) auto;
+  padding: var(--space-lg) var(--space-md);
+  text-align: left;
+}
+
+.admin-retail-empty-prompt__title {
+  margin: 0;
+  font-family: var(--font-body);
+  font-size: clamp(1.25rem, 4vw, 1.6rem);
+  font-weight: 700;
+  line-height: 1.25;
+  color: var(--fg);
+}
+
+.admin-retail-empty-prompt__description {
+  margin: 0;
+  font-size: var(--text-md, 0.95rem);
+  line-height: 1.5;
+  color: var(--muted);
+}
+
+.admin-retail-empty-prompt__question {
+  margin-top: var(--space-md);
+}
+
+.admin-retail-empty-prompt__question-title {
+  margin: 0;
+  font-size: 1.05rem;
+  font-weight: 600;
+  letter-spacing: -0.01em;
+  color: var(--fg);
+}
+
+.admin-retail-empty-prompt__actions {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-sm);
+  margin-top: var(--space-md);
+}
+
+.admin-retail-empty-prompt__actions .btn {
+  width: 100%;
+}

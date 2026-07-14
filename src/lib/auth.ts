@@ -26,6 +26,10 @@ export const auth = betterAuth({
     'https://kersivo.co.uk',
     'https://www.kersivo.co.uk',
   ],
+  session: {
+    expiresIn: 60 * 60 * 24 * 30, // 30 days
+    updateAge: 60 * 60 * 24, // refresh once per day while active
+  },
   emailAndPassword: {
     enabled: true,
     minPasswordLength: 8,

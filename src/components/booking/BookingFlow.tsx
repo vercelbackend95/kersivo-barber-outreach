@@ -49,12 +49,19 @@ type BookingReschedulePayload = BookingPayload & {
 
 type BookingApiResponse = {
   booking?: {
+    id?: string;
     barberName?: string;
     serviceName?: string;
     startAt?: string;
     status?: string;
   };
   error?: string;
+};
+
+type PostConfirmCtaConfig = {
+  label: string;
+  /** Private admin timeline deep-link after a test booking. */
+  destination: 'admin-timeline';
 };
 
 type Props = {
@@ -70,6 +77,7 @@ type Props = {
    */
   previewMode?: boolean;
   onComplete?: () => void;
+  postConfirmCta?: PostConfirmCtaConfig | null;
 };
 
 const DEFAULT_BOOKING_TIMEZONE = 'Europe/London';
@@ -214,6 +222,7 @@ export default function BookingFlow({
   shopDetails,
   previewMode = false,
   onComplete,
+  postConfirmCta = null,
 }: Props) {
   const bookingTimezone = shopDetails?.timezone || DEFAULT_BOOKING_TIMEZONE;
   const [serviceId, setServiceId] = useState('');
@@ -231,7 +240,13 @@ export default function BookingFlow({
   const [wizardStep, setWizardStep] = useState(1);
   const [stepKey, setStepKey] = useState(0);
   const confirmationRef = useRef<HTMLElement | null>(null);
-  const [confirmation, setConfirmation] = useState<{ type: 'booked' | 'rescheduled'; summary: BookingSummary } | null>(null);
+  const [confirmation, setConfirmation] = useState<{
+    type: 'booked' | 'rescheduled';
+    summary: BookingSummary;
+    bookingId?: string;
+    startAt?: string;
+    date?: string;
+  } | null>(null);
 
   const isCreateMode = mode === 'create';
   const maxStep = previewMode || !isCreateMode ? 3 : 4;
@@ -506,6 +521,9 @@ export default function BookingFlow({
             date: formatDateForSummary(normalizedDate, bookingTimezone),
             time,
           },
+          bookingId: data.booking?.id,
+          startAt: data.booking?.startAt,
+          date: normalizedDate,
         });
 
         return;
@@ -546,6 +564,9 @@ export default function BookingFlow({
           date: formatDateForSummary(normalizedDate, bookingTimezone),
           time,
         },
+        bookingId: data.booking?.id,
+        startAt: data.booking?.startAt,
+        date: normalizedDate,
       });
     } finally {
       setIsSubmitting(false);
@@ -588,6 +609,14 @@ export default function BookingFlow({
   const stepCopy = STEP_COPY[activeStepId];
 
   if (confirmation) {
+    const cta =
+      postConfirmCta?.destination === 'admin-timeline' && confirmation.bookingId && confirmation.date
+        ? {
+            label: postConfirmCta.label,
+            href: `/admin?section=bookings_dashboard&bookingId=${encodeURIComponent(confirmation.bookingId)}&bookingDate=${encodeURIComponent(confirmation.date)}`,
+          }
+        : null;
+
     return (
       <section className="surface booking-shell booking-flow booking-flow--wizard" aria-live="polite">
         <div className="booking-form-content">
@@ -595,6 +624,7 @@ export default function BookingFlow({
             ref={confirmationRef}
             variant={confirmation.type}
             summary={confirmation.summary}
+            postConfirmCta={cta}
           />
         </div>
       </section>

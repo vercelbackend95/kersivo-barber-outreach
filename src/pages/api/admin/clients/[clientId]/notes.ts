@@ -1,7 +1,7 @@
 export const prerender = false;
 
 import type { APIRoute } from 'astro';
-import { getSessionBarberId, requireAdmin, resolveNoteAuthorBarberId } from '@/lib/admin/auth';
+import { getSessionBarberId, requireAdminContext, resolveNoteAuthorBarberId } from '@/lib/admin/auth';
 import { clientNoteBaseSelect, mapNoteWithLikes } from '@/lib/admin/clientNoteLikes';
 import { prisma } from '@/lib/db/client';
 import { storeNoteImage } from '@/lib/storage/storeNoteImage';
@@ -48,14 +48,13 @@ async function parseNotePostPayload(ctx: Parameters<APIRoute>[0]) {
 }
 
 export const GET: APIRoute = async (ctx) => {
-  const unauthorized = await requireAdmin(ctx);
-  if (unauthorized) return unauthorized;
+  const access = await requireAdminContext(ctx);
+  if (access instanceof Response) return access;
 
   const clientId = ctx.params.clientId;
   if (!clientId) return jsonResponse({ error: 'Missing client id.' }, 400);
 
-  const shop = await prisma.shopSettings.findFirstOrThrow({ select: { id: true } });
-  const client = await assertClientInShop(clientId, shop.id);
+  const client = await assertClientInShop(clientId, access.shopId);
   if (!client) return jsonResponse({ error: 'Client not found.' }, 404);
 
   const sessionBarberId = getSessionBarberId(ctx);
@@ -83,8 +82,8 @@ export const GET: APIRoute = async (ctx) => {
 };
 
 export const POST: APIRoute = async (ctx) => {
-  const unauthorized = await requireAdmin(ctx);
-  if (unauthorized) return unauthorized;
+  const access = await requireAdminContext(ctx);
+  if (access instanceof Response) return access;
 
   const clientId = ctx.params.clientId;
   if (!clientId) return jsonResponse({ error: 'Missing client id.' }, 400);
@@ -108,12 +107,11 @@ export const POST: APIRoute = async (ctx) => {
     return jsonResponse({ error: 'Barber session required to post notes.' }, 400);
   }
 
-  const shop = await prisma.shopSettings.findFirstOrThrow({ select: { id: true } });
-  const client = await assertClientInShop(clientId, shop.id);
+  const client = await assertClientInShop(clientId, access.shopId);
   if (!client) return jsonResponse({ error: 'Client not found.' }, 404);
 
   const barber = await prisma.barber.findFirst({
-    where: { id: barberId, active: true },
+    where: { id: barberId, active: true, shopId: access.shopId },
     select: { id: true },
   });
   if (!barber) {

@@ -8,9 +8,10 @@ export default function DemoActionLock() {
   const [showAuth, setShowAuth] = useState(false);
 
   useEffect(() => {
-    const show = () => {
+    const show = (event: Event) => {
+      const detail = (event as CustomEvent<{ showAuth?: boolean }>).detail;
       setOpen(true);
-      setShowAuth(false);
+      setShowAuth(Boolean(detail?.showAuth));
     };
     window.addEventListener(ADMIN_DEMO_BLOCKED_EVENT, show);
     return () => window.removeEventListener(ADMIN_DEMO_BLOCKED_EVENT, show);

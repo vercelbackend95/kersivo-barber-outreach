@@ -1,0 +1,40 @@
+---
+import MinimalLayout from '@/layouts/MinimalLayout.astro';
+import OnboardingWizard from '@/components/admin/onboarding/OnboardingWizard';
+import '@/styles/tokens.css';
+import '@/styles/fonts-admin.css';
+import '@/styles/global.css';
+import '@/styles/components/booking.css';
+import '@/styles/components/inputs.css';
+import '@/styles/components/buttons.css';
+import '@/styles/components/admin-login.css';
+import '@/styles/components/admin-onboarding.css';
+---
+
+<MinimalLayout
+  title="Setup | Kersivo Admin"
+  description="Set up your KERSIVO barbershop workspace."
+  canonicalPath="/admin/onboarding"
+  noindex={true}
+  htmlClass="admin-app-scroll"
+  bodyClass="admin-theme-premium-black"
+  viewportContent="width=device-width, initial-scale=1, viewport-fit=cover"
+>
+  <link
+    slot="head"
+    rel="preload"
+    href="/fonts/inter-latin-400-normal.woff2"
+    as="font"
+    type="font/woff2"
+    crossorigin
+  />
+  <link
+    slot="head"
+    rel="preload"
+    href="/fonts/inter-latin-600-normal.woff2"
+    as="font"
+    type="font/woff2"
+    crossorigin
+  />
+  <OnboardingWizard client:load />
+</MinimalLayout>

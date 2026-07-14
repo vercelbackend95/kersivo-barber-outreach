@@ -1,0 +1,42 @@
+---
+import MinimalLayout from '@/layouts/MinimalLayout.astro';
+import RetailOnboardingWizard from '@/components/admin/retail-onboarding/RetailOnboardingWizard';
+import '@/styles/tokens.css';
+import '@/styles/fonts-admin.css';
+import '@/styles/global.css';
+import '@/styles/components/booking.css';
+import '@/styles/components/inputs.css';
+import '@/styles/components/buttons.css';
+import '@/styles/components/admin-login.css';
+import '@/styles/components/admin-onboarding.css';
+import '@/styles/components/admin-retail-onboarding.css';
+import '@/styles/components/shop-product.css';
+---
+
+<MinimalLayout
+  title="Retail setup | Kersivo Admin"
+  description="Set up your KERSIVO retail shop with a first product."
+  canonicalPath="/admin/retail-onboarding"
+  noindex={true}
+  htmlClass="admin-app-scroll"
+  bodyClass="admin-theme-premium-black"
+  viewportContent="width=device-width, initial-scale=1, viewport-fit=cover"
+>
+  <link
+    slot="head"
+    rel="preload"
+    href="/fonts/inter-latin-400-normal.woff2"
+    as="font"
+    type="font/woff2"
+    crossorigin
+  />
+  <link
+    slot="head"
+    rel="preload"
+    href="/fonts/inter-latin-600-normal.woff2"
+    as="font"
+    type="font/woff2"
+    crossorigin
+  />
+  <RetailOnboardingWizard client:load />
+</MinimalLayout>
