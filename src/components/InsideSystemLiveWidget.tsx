@@ -4,7 +4,7 @@
  * Embeds the real admin `TodayTimeline` 1:1 (pulsing "now" line, animated
  * avatars, expandable slots) fed by believable demo data anchored to today.
  * Deep actions (client profile, status/service edits) are gated: they open a
- * "View full admin" overlay instead of mutating anything.
+ * preview lock with Build My Preview + View Admin Demo instead of mutating anything.
  *
  * Rendered as a client-only island (time/timezone dependent), so it ships as an
  * interactive React component with no SSR hydration mismatch.
@@ -129,18 +129,26 @@ export function InsideSystemLiveWidget({
                 This is just a preview.
               </p>
               <p className="isw-lock__body">
-                This is a compact widget of your real admin timeline. Open the
-                full admin to manage clients, statuses, services and today&apos;s
-                bookings.
+                This compact timeline is a teaser of the real admin. Build My Preview to start your
+                own shop, or open the full admin demo without signing up.
               </p>
-              <a
-                href={ADMIN_DEMO_HREF}
-                className="btn btn--primary isw-lock__cta"
-                target="_blank"
-                rel="noopener noreferrer"
-              >
-                View Admin Demo
-              </a>
+              <div className="isw-lock__actions">
+                <a
+                  href="/admin/onboarding"
+                  className="btn btn--primary isw-lock__cta"
+                  data-track="plan_my_setup_click"
+                >
+                  Build My Preview
+                </a>
+                <a
+                  href={ADMIN_DEMO_HREF}
+                  className="btn btn--ghost isw-lock__cta isw-lock__cta--ghost"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                >
+                  View Admin Demo
+                </a>
+              </div>
             </div>
           </div>
         )}

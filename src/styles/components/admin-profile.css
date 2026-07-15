@@ -187,7 +187,8 @@ button.admin-profile-menu__header--action:hover {
 .private-demo-auth__title {
   margin: 0;
   font-family: var(--font-heading);
-  font-size: clamp(1.55rem, 4vw, 1.85rem);
+  font-weight: 400;
+  font-size: clamp(1.35rem, 3.5vw, 1.7rem);
   line-height: 1.05;
   letter-spacing: var(--tracking-heading, 0.02em);
   color: var(--fg);
@@ -330,14 +331,4 @@ button.admin-profile-menu__header--action:hover {
   text-underline-offset: 0.12em;
   cursor: pointer;
   padding: 0;
-}
-
-.private-demo-auth-card {
-  max-width: 24rem;
-  width: min(100%, 24rem);
-}
-
-.admin-demo-lock__card:has(.private-demo-auth) {
-  max-width: 26rem;
-  text-align: left;
 }

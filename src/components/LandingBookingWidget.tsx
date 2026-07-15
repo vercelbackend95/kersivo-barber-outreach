@@ -99,17 +99,27 @@ export function LandingBookingWidget({
                 This is just a preview.
               </p>
               <p className="lbw-lock__body">
-                This is a compact widget of your real booking form. Open the full
-                booking flow to complete the details and confirm an appointment.
+                This compact booking form is a teaser of the real flow. Build My Booking
+                Preview to start your own shop, or continue with the example booking flow
+                without signing up.
               </p>
-              <a
-                href={BOOK_HREF}
-                className="btn btn--primary lbw-lock__cta"
-                target="_blank"
-                rel="noopener noreferrer"
-              >
-                View Booking Flow
-              </a>
+              <div className="lbw-lock__actions">
+                <a
+                  href="/admin/onboarding"
+                  className="btn btn--primary lbw-lock__cta"
+                  data-track="plan_my_setup_click"
+                >
+                  Build My Booking Preview
+                </a>
+                <a
+                  href={BOOK_HREF}
+                  className="btn btn--ghost lbw-lock__cta lbw-lock__cta--ghost"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                >
+                  Continue With Example Booking Flow
+                </a>
+              </div>
             </div>
           </div>
         )}

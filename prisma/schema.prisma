@@ -421,6 +421,7 @@ enum SetupPlan {
 }
 
 enum SetupDepositStatus {
+  PENDING
   PAID
 }
 
@@ -437,7 +438,7 @@ model SetupDeposit {
   currentStack          String
   depositPence          Int
   currency              String             @default("gbp")
-  paidAt                DateTime
+  paidAt                DateTime?
   customerEmailSentAt   DateTime?
   internalEmailSentAt   DateTime?
   onboardingSubmittedAt DateTime?
@@ -445,6 +446,7 @@ model SetupDeposit {
   updatedAt             DateTime           @updatedAt
 
   @@index([customerEmail])
+  @@index([customerEmail, status])
   @@index([plan, paidAt])
   @@index([paymentIntentId])
 }

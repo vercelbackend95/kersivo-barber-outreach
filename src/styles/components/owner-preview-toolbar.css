@@ -1,0 +1,173 @@
+/* OwnerPreviewToolbar — private storefront chrome for authenticated owners */
+
+body.has-owner-preview-toolbar {
+  --owner-preview-mobile-bar-height: 4.75rem;
+}
+
+/* ── Desktop / tablet top bar ─────────────────────────────────── */
+
+.owner-preview-toolbar__desktop {
+  display: none;
+  border-bottom: 1px solid var(--border);
+  background: color-mix(in srgb, var(--surface-1, var(--surface)) 92%, var(--accent) 8%);
+}
+
+.owner-preview-toolbar__inner {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-md, 1rem);
+  min-height: 3rem;
+  padding-block: 0.55rem;
+}
+
+.owner-preview-toolbar__copy {
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.1rem;
+}
+
+.owner-preview-toolbar__eyebrow {
+  margin: 0;
+  font-size: 0.7rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--accent);
+  line-height: 1.2;
+}
+
+.owner-preview-toolbar__support {
+  margin: 0;
+  font-size: var(--text-sm, 0.875rem);
+  color: var(--muted);
+  line-height: 1.35;
+}
+
+.owner-preview-toolbar__actions {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  flex-shrink: 0;
+  gap: 0.55rem;
+}
+
+.owner-preview-toolbar__primary-btn {
+  font-weight: 700;
+}
+
+/* ── Mobile sticky bottom bar ─────────────────────────────────── */
+
+.owner-preview-toolbar__mobile {
+  position: fixed;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  z-index: 50;
+  display: flex;
+  flex-direction: column;
+  gap: 0.45rem;
+  padding: 0.65rem 0.85rem calc(0.65rem + env(safe-area-inset-bottom, 0px));
+  border-top: 1px solid var(--border);
+  background: color-mix(in srgb, var(--surface-1, var(--surface)) 94%, transparent);
+  box-shadow: 0 -8px 24px color-mix(in srgb, var(--fg) 8%, transparent);
+}
+
+.owner-preview-toolbar__mobile-label {
+  margin: 0;
+  display: none;
+  font-size: 0.68rem;
+  font-weight: 700;
+  letter-spacing: 0.07em;
+  text-transform: uppercase;
+  color: var(--accent);
+  text-align: center;
+  line-height: 1;
+}
+
+.owner-preview-toolbar__mobile-actions {
+  display: flex;
+  align-items: stretch;
+  gap: 0.55rem;
+  width: 100%;
+}
+
+.owner-preview-toolbar__mobile .owner-preview-toolbar__admin-btn {
+  flex: 0 0 auto;
+  min-width: 5.25rem;
+  min-height: 2.85rem;
+}
+
+.owner-preview-toolbar__mobile .owner-preview-toolbar__primary-btn {
+  flex: 1 1 auto;
+  min-width: 0;
+  min-height: 2.85rem;
+  font-weight: 700;
+  padding-inline: 0.75rem;
+}
+
+/* Reserve space so sticky bar doesn’t cover content or cart UI */
+body.has-owner-preview-toolbar,
+body:has(.owner-preview-toolbar) {
+  padding-bottom: calc(var(--owner-preview-mobile-bar-height) + env(safe-area-inset-bottom, 0px));
+}
+
+/* Show optional label when there’s horizontal room */
+@media (min-width: 380px) {
+  .owner-preview-toolbar__mobile-label {
+    display: block;
+  }
+
+  body.has-owner-preview-toolbar {
+    --owner-preview-mobile-bar-height: 5.5rem;
+  }
+}
+
+/* Stack only on extremely narrow viewports */
+@media (max-width: 340px) {
+  .owner-preview-toolbar__mobile-actions {
+    flex-direction: column;
+  }
+
+  .owner-preview-toolbar__mobile .owner-preview-toolbar__admin-btn,
+  .owner-preview-toolbar__mobile .owner-preview-toolbar__primary-btn {
+    width: 100%;
+    min-width: 0;
+  }
+
+  body.has-owner-preview-toolbar {
+    --owner-preview-mobile-bar-height: 7.5rem;
+  }
+}
+
+/* ── Breakpoint: desktop top bar, hide mobile bar ─────────────── */
+
+@media (min-width: 48rem) {
+  .owner-preview-toolbar__desktop {
+    display: block;
+  }
+
+  .owner-preview-toolbar__mobile {
+    display: none;
+  }
+
+  body.has-owner-preview-toolbar,
+  body:has(.owner-preview-toolbar) {
+    padding-bottom: 0;
+  }
+
+  .owner-preview-toolbar__inner {
+    flex-wrap: wrap;
+  }
+}
+
+@media (min-width: 48rem) and (max-width: 63.99rem) {
+  .owner-preview-toolbar__support {
+    font-size: 0.8rem;
+  }
+
+  .owner-preview-toolbar__actions {
+    gap: 0.45rem;
+  }
+}

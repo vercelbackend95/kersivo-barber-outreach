@@ -5,6 +5,7 @@ import { z } from 'zod';
 import {
   advanceOnboardingStep,
   loadOnboardingState,
+  markOnboardingCompleted,
   ONBOARDING_STEP_REVIEW,
   replaceBarberAvailabilityRules,
   requireOnboardingAccess,
@@ -71,6 +72,7 @@ export const PUT: APIRoute = async (ctx) => {
     }
 
     await advanceOnboardingStep(shopId, ONBOARDING_STEP_REVIEW);
+    await markOnboardingCompleted(shopId);
     const state = await loadOnboardingState(shopId, access);
     return new Response(JSON.stringify(state));
   } catch (error) {

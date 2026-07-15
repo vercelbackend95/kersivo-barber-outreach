@@ -8,7 +8,16 @@ type Feature261MonetizationRowProps = {
 };
 
 function Feature261MonetizationRow({ reverse = false }: Feature261MonetizationRowProps) {
-  const { kicker, heading, description, ctaLabel, ctaHref } = FEATURE261_MONETIZATION_ROW;
+  const {
+    kicker,
+    heading,
+    description,
+    ctaLabel,
+    ctaHref,
+    ctaTrack,
+    ghostCtaLabel,
+    ghostCtaHref,
+  } = FEATURE261_MONETIZATION_ROW;
 
   return (
     <li
@@ -25,14 +34,23 @@ function Feature261MonetizationRow({ reverse = false }: Feature261MonetizationRo
         <p className="feature261__row-body">{description}</p>
       </div>
 
-      <a
-        href={ctaHref}
-        target="_blank"
-        rel="noopener noreferrer"
-        className="btn btn--primary feature261__row-cta"
-      >
-        {ctaLabel}
-      </a>
+      <div className="feature261__row-ctas">
+        <a
+          href={ctaHref}
+          className="btn btn--primary feature261__row-cta"
+          data-track={ctaTrack}
+        >
+          {ctaLabel}
+        </a>
+        <a
+          href={ghostCtaHref}
+          className="btn btn--ghost feature261__row-cta feature261__row-cta--ghost"
+          target="_blank"
+          rel="noopener noreferrer"
+        >
+          {ghostCtaLabel}
+        </a>
+      </div>
     </li>
   );
 }

@@ -1,4 +1,4 @@
-export type Navbar17Variant = 'default' | 'landing';
+export type Navbar17Variant = 'default' | 'landing' | 'shop' | 'testShop';
 
 export type Navbar17Item = {
   name: string;
@@ -71,14 +71,71 @@ const LANDING_NAV_ITEMS: Navbar17Item[] = [
   },
 ];
 
+const SHOP_NAV_ITEMS: Navbar17Item[] = [
+  {
+    name: 'Pricing',
+    link: '/#pricing',
+    sectionId: 'pricing',
+    isPage: false,
+    icon: 'M12 1v22M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6',
+  },
+  {
+    name: 'FAQ',
+    link: '/#faq',
+    sectionId: 'faq',
+    isPage: false,
+    icon: 'M12 17h.01M9.1 9a3 3 0 1 1 4.9 2.3c-.92.62-1.5 1.21-1.5 2.2v.5M22 12a10 10 0 1 1-20 0 10 10 0 0 1 20 0Z',
+  },
+  {
+    name: 'Contact',
+    link: '/#contact',
+    sectionId: 'contact',
+    isPage: false,
+    icon: 'M4 6h16v12H4V6Zm1.5 1.5L12 12l6.5-4.5',
+  },
+];
+
+const TEST_SHOP_NAV_ITEMS: Navbar17Item[] = [
+  {
+    name: 'Shop',
+    link: '/admin/test-shop',
+    sectionId: null,
+    isPage: true,
+    icon: 'M6 7h12l-1 13H7L6 7Zm3-3h6l1 3H8l1-3Z',
+  },
+  {
+    name: 'About',
+    link: '/admin/test-shop#about',
+    sectionId: 'about',
+    isPage: false,
+    icon: 'M12 17h.01M9.1 9a3 3 0 1 1 4.9 2.3c-.92.62-1.5 1.21-1.5 2.2v.5M22 12a10 10 0 1 1-20 0 10 10 0 0 1 20 0Z',
+  },
+  {
+    name: 'Contact',
+    link: '/admin/test-shop#contact',
+    sectionId: 'contact',
+    isPage: false,
+    icon: 'M4 6h16v12H4V6Zm1.5 1.5L12 12l6.5-4.5',
+  },
+];
+
 export function getNavbar17Items(variant: Navbar17Variant = 'default'): Navbar17Item[] {
-  return variant === 'landing' ? LANDING_NAV_ITEMS : DEFAULT_NAV_ITEMS;
+  if (variant === 'landing') return LANDING_NAV_ITEMS;
+  if (variant === 'shop') return SHOP_NAV_ITEMS;
+  if (variant === 'testShop') return TEST_SHOP_NAV_ITEMS;
+  return DEFAULT_NAV_ITEMS;
 }
 
 export function getNavbar17CtaLabel(variant: Navbar17Variant = 'default'): string {
-  return variant === 'landing' ? 'Plan My Setup' : 'Plan my setup';
+  if (variant === 'landing' || variant === 'shop' || variant === 'testShop') return 'Build My Preview';
+  return 'Plan my setup';
+}
+
+export function getNavbar17CtaHref(variant: Navbar17Variant = 'default'): string {
+  if (variant === 'landing' || variant === 'shop' || variant === 'testShop') return '/admin/onboarding';
+  return '/#book-demo';
 }
 
 export function navbar17ShowsCart(variant: Navbar17Variant = 'default'): boolean {
-  return variant !== 'landing';
+  return variant === 'shop' || variant === 'testShop';
 }

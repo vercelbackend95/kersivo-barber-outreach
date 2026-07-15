@@ -222,7 +222,7 @@ export default function AdminPanel({ demoMode = false }: AdminPanelProps) {
   if (demoMode && demoLoadError) {
     return (
       <div className="admin-login-viewport">
-        <div className="admin-login-card">
+        <div className="auth-gate-card">
           <p className="admin-login-brand-sub" style={{ margin: 0, textAlign: 'center' }}>
             Could not load the demo dashboard. Please refresh or try again later.
           </p>
@@ -234,7 +234,7 @@ export default function AdminPanel({ demoMode = false }: AdminPanelProps) {
   if (!demoMode && !authReady) {
     return (
       <div className="admin-login-viewport">
-        <div className="admin-login-card">
+        <div className="auth-gate-card">
           <p className="admin-login-brand-sub" style={{ margin: 0, textAlign: 'center' }}>
             Checking session…
           </p>

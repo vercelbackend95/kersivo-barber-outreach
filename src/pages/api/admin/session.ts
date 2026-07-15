@@ -2,6 +2,7 @@ export const prerender = false;
 
 import type { APIRoute } from 'astro';
 import { requireAdminContext } from '../../../lib/admin/auth';
+import { healOnboardingCompletedIfEligible } from '../../../lib/admin/onboarding';
 import { prisma } from '../../../lib/db/client';
 
 export const GET: APIRoute = async (context) => {
@@ -16,6 +17,8 @@ export const GET: APIRoute = async (context) => {
   let shopName: string | null = null;
 
   if (access.via === 'session') {
+    await healOnboardingCompletedIfEligible(access.shopId);
+
     const shop = await prisma.shopSettings.findUnique({
       where: { id: access.shopId },
       select: {

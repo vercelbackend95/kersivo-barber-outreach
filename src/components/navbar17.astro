@@ -1,26 +1,45 @@
 ---
 import NavbarCartButton from '@/components/shop/NavbarCartButton.astro';
 import {
+  getNavbar17CtaHref,
   getNavbar17CtaLabel,
   getNavbar17Items,
   navbar17ShowsCart,
   type Navbar17Variant,
 } from '@/lib/nav/navbar17Items';
+import { resolveNavbarPreviewCta } from '@/lib/nav/navbarPreviewCta';
 
 interface Props {
   variant?: Navbar17Variant;
+  /** Custom shop logo (e.g. admin test-shop). Falls back to Kersivo wordmark. */
+  brandLogoUrl?: string | null;
+  /** Override brand link aria-label (e.g. shop name when showing custom logo). */
+  brandAriaLabel?: string;
 }
 
-const { variant = 'default' } = Astro.props as Props;
+const {
+  variant = 'default',
+  brandLogoUrl = null,
+  brandAriaLabel: brandAriaLabelProp,
+} = Astro.props as Props;
 
 const navItems = getNavbar17Items(variant);
-const ctaLabel = getNavbar17CtaLabel(variant);
 const showCart = navbar17ShowsCart(variant);
-const brandAriaLabel =
-  variant === 'landing' ? 'KERSIVO – back to top' : 'Kersivo – back to homepage';
-const brandHref = variant === 'landing' ? '#hero' : '/#home';
-const ctaHref = variant === 'landing' ? '#pricing' : '/#book-demo';
 const isLanding = variant === 'landing';
+const isTestShop = variant === 'testShop';
+const usesLandingCta = variant === 'landing' || variant === 'shop' || variant === 'testShop';
+
+const previewCta = usesLandingCta ? await resolveNavbarPreviewCta(Astro) : null;
+const ctaLabel = previewCta?.label ?? getNavbar17CtaLabel(variant);
+const ctaHref = previewCta ? previewCta.href : getNavbar17CtaHref(variant);
+const ctaTrack = previewCta?.track;
+const ctaDemoAttr = usesLandingCta ? undefined : true;
+
+const hasCustomBrandLogo = Boolean(brandLogoUrl);
+const brandAriaLabel =
+  brandAriaLabelProp ??
+  (isLanding ? 'KERSIVO – back to top' : isTestShop ? 'Back to shop' : 'Kersivo – back to homepage');
+const brandHref = isLanding ? '#hero' : isTestShop ? '/admin/test-shop' : '/#home';
 ---
 
 <header class="navbar17" data-navbar17 data-navbar-variant={variant}>
@@ -28,16 +47,30 @@ const isLanding = variant === 'landing';
     <div class="navbar17__bar">
       <div class="container navbar17__wrap">
         <a href={brandHref} class="navbar17__brand" aria-label={brandAriaLabel}>
-          <img
-            class="navbar17__brand-img"
-            src="/images/brand/logo-navbar-228.webp"
-            srcset="/images/brand/logo-navbar-228.webp 1x, /images/brand/logo-navbar-456.webp 2x"
-            alt=""
-            width="228"
-            height="159"
-            decoding="async"
-            {...(!isLanding ? { fetchpriority: 'high' as const } : {})}
-          />
+          {
+            hasCustomBrandLogo ? (
+              <img
+                class="navbar17__brand-img navbar17__brand-img--custom"
+                src={brandLogoUrl!}
+                alt=""
+                width="64"
+                height="64"
+                decoding="async"
+                fetchpriority="high"
+              />
+            ) : (
+              <img
+                class="navbar17__brand-img"
+                src="/images/brand/logo-navbar-228.webp"
+                srcset="/images/brand/logo-navbar-228.webp 1x, /images/brand/logo-navbar-456.webp 2x"
+                alt=""
+                width="228"
+                height="159"
+                decoding="async"
+                {...(!isLanding ? { fetchpriority: 'high' as const } : {})}
+              />
+            )
+          }
         </a>
 
         <nav class="navbar17__desktop" aria-label="Primary navigation">
@@ -63,12 +96,24 @@ const isLanding = variant === 'landing';
           <!-- Desktop actions -->
           <div class="navbar17__actions">
             {showCart ? <NavbarCartButton class="navbar17__cart-btn" /> : null}
-            <a href={ctaHref} class="navbar17__cta-btn" data-demo-cta={isLanding ? undefined : true} data-track={isLanding ? 'plan_my_setup_click' : undefined}>{ctaLabel}</a>
+            {
+              ctaHref ? (
+                <a href={ctaHref} class="navbar17__cta-btn" data-demo-cta={ctaDemoAttr} data-track={ctaTrack}>{ctaLabel}</a>
+              ) : (
+                <button type="button" class="navbar17__cta-btn">{ctaLabel}</button>
+              )
+            }
           </div>
 
           <!-- Mobile controls: hamburger -->
           <div class="navbar17__mobile-controls">
-            <a href={ctaHref} class="navbar17__mobile-bar-cta" data-demo-cta={isLanding ? undefined : true} data-track={isLanding ? 'plan_my_setup_click' : undefined}>{ctaLabel}</a>
+            {
+              ctaHref ? (
+                <a href={ctaHref} class="navbar17__mobile-bar-cta" data-demo-cta={ctaDemoAttr} data-track={ctaTrack}>{ctaLabel}</a>
+              ) : (
+                <button type="button" class="navbar17__mobile-bar-cta">{ctaLabel}</button>
+              )
+            }
             <button
               class="navbar17__toggle"
               type="button"

@@ -156,7 +156,7 @@
   font-weight: 700;
 }
 
-:is(.shop6__carousel, .feature261-retail-carousel) .shop6__grid .shop-card:hover .shop-image {
+.shop6__carousel .shop6__grid .shop-card:hover .shop-image {
   transform: scale(1.03);
 }
 

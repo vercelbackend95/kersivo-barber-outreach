@@ -70,6 +70,63 @@ export async function advanceOnboardingStep(shopId: string, nextStep: number) {
   });
 }
 
+export async function markOnboardingCompleted(shopId: string) {
+  const shop = await prisma.shopSettings.findUnique({
+    where: { id: shopId },
+    select: { onboardingCompleted: true },
+  });
+  if (!shop || shop.onboardingCompleted) return;
+
+  await prisma.shopSettings.update({
+    where: { id: shopId },
+    data: {
+      onboardingCompleted: true,
+      onboardingCompletedAt: new Date(),
+      onboardingCurrentStep: ONBOARDING_STEP_REVIEW,
+    },
+  });
+}
+
+/** True when shop/team/services/hours meet the finish-setup requirements. */
+export async function shopMeetsOnboardingCompletionRequirements(shopId: string) {
+  const shop = await prisma.shopSettings.findUnique({
+    where: { id: shopId },
+    select: { name: true },
+  });
+  if (!shop?.name.trim()) return false;
+
+  const [barberCount, serviceCount, firstBarber] = await Promise.all([
+    prisma.barber.count({ where: { shopId, active: true } }),
+    prisma.service.count({ where: { shopId, isActive: true } }),
+    prisma.barber.findFirst({
+      where: { shopId, active: true },
+      orderBy: [{ sortOrder: 'asc' }, { createdAt: 'asc' }],
+      select: {
+        id: true,
+        rules: {
+          where: { active: true },
+          select: { dayOfWeek: true, startMinutes: true, endMinutes: true },
+        },
+      },
+    }),
+  ]);
+
+  if (barberCount < 1 || serviceCount < 1) return false;
+  if (!firstBarber || firstBarber.rules.length === 0) return false;
+  return firstBarber.rules.every((rule) => rule.startMinutes < rule.endMinutes);
+}
+
+export async function healOnboardingCompletedIfEligible(shopId: string) {
+  const shop = await prisma.shopSettings.findUnique({
+    where: { id: shopId },
+    select: { onboardingCompleted: true, onboardingCurrentStep: true },
+  });
+  if (!shop || shop.onboardingCompleted) return;
+  if (shop.onboardingCurrentStep < ONBOARDING_STEP_REVIEW) return;
+  if (!(await shopMeetsOnboardingCompletionRequirements(shopId))) return;
+  await markOnboardingCompleted(shopId);
+}
+
 export async function serializeBarberRules(barberId: string): Promise<OnboardingWeeklyRule[]> {
   const rules = await prisma.availabilityRule.findMany({
     where: { barberId },
@@ -135,6 +192,8 @@ export async function linkAllServicesToAllBarbers(shopId: string) {
 }
 
 export async function loadOnboardingState(shopId: string, access: AdminAccess) {
+  await healOnboardingCompletedIfEligible(shopId);
+
   const shop = await prisma.shopSettings.findUniqueOrThrow({
     where: { id: shopId },
     select: {

@@ -85,7 +85,7 @@ const jsonLdBlocks = jsonLd
   <body>
     <Navbar17 variant={navbarVariant} />
     <slot />
-    <CartDrawerMount navbarVariant={navbarVariant} />
+    {navbarVariant === 'shop' ? <CartDrawerMount /> : null}
     <CookieConsentMount />
     <script>
       import { initDataTrack } from '@/lib/analytics/initDataTrack';

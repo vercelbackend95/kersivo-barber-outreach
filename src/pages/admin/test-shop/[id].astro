@@ -2,8 +2,11 @@
 export const prerender = false;
 
 import MinimalLayout from '@/layouts/MinimalLayout.astro';
+import Navbar17 from '@/components/navbar17.astro';
+import OwnerPreviewToolbar from '@/components/shop/OwnerPreviewToolbar.astro';
 import CartDrawerMount from '@/components/shop/CartDrawerMount.astro';
 import { resolveAdminAccess } from '@/lib/admin/auth';
+import { resolveOwnerPreviewCta } from '@/lib/admin/ownerPreviewCta';
 import { prisma } from '@/lib/db/client';
 import { formatGbp } from '@/lib/shop/money';
 import {
@@ -17,6 +20,8 @@ import '@/styles/fonts-admin.css';
 import '@/styles/global.css';
 import '@/styles/components/buttons.css';
 import '@/styles/components/badge.css';
+import '@/styles/components/navbar17.css';
+import '@/styles/components/owner-preview-toolbar.css';
 import '@/styles/components/shop.css';
 import '@/styles/components/shop-product.css';
 import '@/styles/components/empty-state.css';
@@ -49,27 +54,39 @@ if (!product || !product.active) {
   return Astro.redirect('/admin/test-shop');
 }
 
-const relatedProducts = await prisma.product.findMany({
-  where: {
-    shopId: access.shopId,
-    active: true,
-    id: { not: product.id },
-    category: product.category,
-  },
-  orderBy: [{ sortOrder: 'asc' }, { createdAt: 'asc' }],
-  take: 3,
-  select: {
-    id: true,
-    name: true,
-    pricePence: true,
-    imageUrl: true,
-    category: true,
-  },
-});
+const [relatedProducts, shop] = await Promise.all([
+  prisma.product.findMany({
+    where: {
+      shopId: access.shopId,
+      active: true,
+      id: { not: product.id },
+      category: product.category,
+    },
+    orderBy: [{ sortOrder: 'asc' }, { createdAt: 'asc' }],
+    take: 3,
+    select: {
+      id: true,
+      name: true,
+      pricePence: true,
+      imageUrl: true,
+      category: true,
+    },
+  }),
+  prisma.shopSettings.findUnique({
+    where: { id: access.shopId },
+    select: { name: true, logoUrl: true, onboardingCompleted: true },
+  }),
+]);
 
 const { intro, details } = splitDescription(product.description);
 const highlights = createHighlights(product.description, product.category);
 const categoryLabel = CATEGORY_LABELS[product.category as ProductCategory] ?? 'Styling';
+const shopTitle = shop?.name?.trim() || 'My shop';
+
+const ownerCta = await resolveOwnerPreviewCta({
+  onboardingCompleted: shop?.onboardingCompleted ?? true,
+  ownerEmail: access.userEmail,
+});
 ---
 
 <MinimalLayout
@@ -78,16 +95,22 @@ const categoryLabel = CATEGORY_LABELS[product.category as ProductCategory] ?? 'S
   canonicalPath={`/admin/test-shop/${product.id}`}
   noindex={true}
   htmlClass="admin-app-scroll"
-  bodyClass="admin-theme-premium-black"
+  bodyClass="admin-theme-premium-black has-owner-preview-toolbar"
   showCookieConsent={false}
 >
+  <OwnerPreviewToolbar
+    primaryLabel={ownerCta.label}
+    primaryHref={ownerCta.href}
+    adminHref="/admin"
+  />
+  <Navbar17
+    variant="testShop"
+    brandLogoUrl={shop?.logoUrl}
+    brandAriaLabel={shopTitle}
+  />
   <main class="container product-page">
     <div class="test-shop-topbar">
       <a href="/admin/test-shop" class="product-back-link">← Back to my shop</a>
-      <button type="button" class="btn btn--secondary btn--sm test-shop-cart-btn" data-navbar-cart-button aria-label="Open cart">
-        Cart
-        <span class="test-shop-cart-badge is-empty" data-navbar-cart-badge>0</span>
-      </button>
     </div>
 
     <section class="retail-demo-banner" aria-label="Test order guidance">
@@ -218,44 +241,7 @@ const categoryLabel = CATEGORY_LABELS[product.category as ProductCategory] ?? 'S
 
 <style>
   .test-shop-topbar {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    gap: var(--space-md);
     margin-top: var(--space-lg);
     margin-bottom: var(--space-md);
   }
-
-  .test-shop-cart-btn {
-    display: inline-flex;
-    align-items: center;
-    gap: 0.45rem;
-  }
-
-  .test-shop-cart-badge {
-    min-width: 1.35rem;
-    height: 1.35rem;
-    padding: 0 0.35rem;
-    border-radius: 999px;
-    display: inline-grid;
-    place-items: center;
-    font-size: 0.72rem;
-    font-weight: 700;
-    background: color-mix(in srgb, var(--accent) 22%, transparent);
-    color: var(--fg);
-  }
-
-  .test-shop-cart-badge.is-empty {
-    opacity: 0.55;
-  }
 </style>
-
-<script>
-  const CART_OPEN_REQUEST_EVENT = 'kersivo:cart-open-request';
-  const cartButton = document.querySelector('[data-navbar-cart-button]');
-  if (cartButton instanceof HTMLButtonElement) {
-    cartButton.addEventListener('click', () => {
-      window.dispatchEvent(new CustomEvent(CART_OPEN_REQUEST_EVENT));
-    });
-  }
-</script>

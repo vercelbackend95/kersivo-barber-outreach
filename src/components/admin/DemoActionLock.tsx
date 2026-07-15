@@ -2,6 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { createPortal } from 'react-dom';
 import { ADMIN_DEMO_BLOCKED_EVENT } from './adminAuth';
 import PrivateDemoAuthPanel from './PrivateDemoAuthPanel';
+import '@/styles/components/admin-login.css';
 
 export default function DemoActionLock() {
   const [open, setOpen] = useState(false);
@@ -33,7 +34,7 @@ export default function DemoActionLock() {
 
   return createPortal(
     <div
-      className="admin-demo-lock"
+      className="admin-demo-lock auth-gate-overlay"
       role="dialog"
       aria-modal="true"
       aria-labelledby={showAuth ? 'private-demo-auth-title' : 'admin-demo-lock-title'}
@@ -42,7 +43,7 @@ export default function DemoActionLock() {
         setShowAuth(false);
       }}
     >
-      <div className="admin-demo-lock__card" onClick={(e) => e.stopPropagation()}>
+      <div className="admin-demo-lock__card auth-gate-card" onClick={(e) => e.stopPropagation()}>
         {showAuth ? (
           <PrivateDemoAuthPanel
             embedded

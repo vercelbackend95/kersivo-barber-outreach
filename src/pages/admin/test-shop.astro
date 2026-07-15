@@ -2,8 +2,11 @@
 export const prerender = false;
 
 import MinimalLayout from '@/layouts/MinimalLayout.astro';
+import Navbar17 from '@/components/navbar17.astro';
+import OwnerPreviewToolbar from '@/components/shop/OwnerPreviewToolbar.astro';
 import CartDrawerMount from '@/components/shop/CartDrawerMount.astro';
 import { resolveAdminAccess } from '@/lib/admin/auth';
+import { resolveOwnerPreviewCta } from '@/lib/admin/ownerPreviewCta';
 import { prisma } from '@/lib/db/client';
 import { formatGbp } from '@/lib/shop/money';
 import {
@@ -15,6 +18,8 @@ import '@/styles/fonts-admin.css';
 import '@/styles/global.css';
 import '@/styles/components/buttons.css';
 import '@/styles/components/badge.css';
+import '@/styles/components/navbar17.css';
+import '@/styles/components/owner-preview-toolbar.css';
 import '@/styles/components/shop.css';
 import '@/styles/components/shop-product.css';
 import '@/styles/components/empty-state.css';
@@ -27,7 +32,12 @@ if (!access || access.via !== 'session') {
 
 const shop = await prisma.shopSettings.findUnique({
   where: { id: access.shopId },
-  select: { name: true },
+  select: {
+    name: true,
+    logoUrl: true,
+    townCity: true,
+    onboardingCompleted: true,
+  },
 });
 
 const products = await prisma.product.findMany({
@@ -57,6 +67,12 @@ const categoryValues = new Set(categoryFilters.map((filter) => filter.value));
 const selectedCategoryParam = Astro.url.searchParams.get('category') || 'ALL';
 const selectedCategory = categoryValues.has(selectedCategoryParam) ? selectedCategoryParam : 'ALL';
 const shopTitle = shop?.name?.trim() || 'My shop';
+const townCity = shop?.townCity?.trim() || null;
+
+const ownerCta = await resolveOwnerPreviewCta({
+  onboardingCompleted: shop?.onboardingCompleted ?? true,
+  ownerEmail: access.userEmail,
+});
 ---
 
 <MinimalLayout
@@ -65,16 +81,22 @@ const shopTitle = shop?.name?.trim() || 'My shop';
   canonicalPath="/admin/test-shop"
   noindex={true}
   htmlClass="admin-app-scroll"
-  bodyClass="admin-theme-premium-black"
+  bodyClass="admin-theme-premium-black has-owner-preview-toolbar"
   showCookieConsent={false}
 >
+  <OwnerPreviewToolbar
+    primaryLabel={ownerCta.label}
+    primaryHref={ownerCta.href}
+    adminHref="/admin"
+  />
+  <Navbar17
+    variant="testShop"
+    brandLogoUrl={shop?.logoUrl}
+    brandAriaLabel={shopTitle}
+  />
   <main class="container shop-page" aria-labelledby="shop-page-title" data-active-category={selectedCategory}>
     <div class="test-shop-topbar">
       <a href="/admin?section=shop_products" class="product-back-link">← Back to products</a>
-      <button type="button" class="btn btn--secondary btn--sm test-shop-cart-btn" data-navbar-cart-button aria-label="Open cart">
-        Cart
-        <span class="test-shop-cart-badge is-empty" data-navbar-cart-badge>0</span>
-      </button>
     </div>
 
     <section class="retail-demo-banner" aria-label="Test order guidance">
@@ -85,7 +107,7 @@ const shopTitle = shop?.name?.trim() || 'My shop';
       </p>
     </section>
 
-    <header class="shop-header-block">
+    <header class="shop-header-block" id="about">
       <p class="shop-eyebrow">Your storefront</p>
       <h1 id="shop-page-title">{shopTitle}</h1>
       <p class="shop-intro">Browse your products, add them to the cart, and complete a test checkout.</p>
@@ -133,7 +155,7 @@ const shopTitle = shop?.name?.trim() || 'My shop';
       }
     </header>
 
-    <section class="shop-layout" aria-label="Products">
+    <section class="shop-layout" id="products" aria-label="Products">
       {
         products.length === 0 ? (
           <article class="shop-promo-card shop-promo-card--empty">
@@ -207,6 +229,19 @@ const shopTitle = shop?.name?.trim() || 'My shop';
         )
       }
     </section>
+
+    <section class="test-shop-contact" id="contact" aria-labelledby="test-shop-contact-title">
+      <h2 id="test-shop-contact-title">Contact</h2>
+      {
+        townCity ? (
+          <p>
+            Visit us in {townCity} — order online and pick up in store.
+          </p>
+        ) : (
+          <p>Visit us in store for pickup.</p>
+        )
+      }
+    </section>
   </main>
 
   <CartDrawerMount />
@@ -214,47 +249,31 @@ const shopTitle = shop?.name?.trim() || 'My shop';
 
 <style>
   .test-shop-topbar {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    gap: var(--space-md);
     margin-top: var(--space-lg);
     margin-bottom: var(--space-md);
   }
 
-  .test-shop-cart-btn {
-    display: inline-flex;
-    align-items: center;
-    gap: 0.45rem;
+  .test-shop-contact {
+    margin-top: var(--space-2xl);
+    margin-bottom: var(--space-xl);
+    padding-top: var(--space-lg);
+    border-top: 1px solid var(--border);
+    max-width: 36rem;
   }
 
-  .test-shop-cart-badge {
-    min-width: 1.35rem;
-    height: 1.35rem;
-    padding: 0 0.35rem;
-    border-radius: 999px;
-    display: inline-grid;
-    place-items: center;
-    font-size: 0.72rem;
-    font-weight: 700;
-    background: color-mix(in srgb, var(--accent) 22%, transparent);
-    color: var(--fg);
+  .test-shop-contact h2 {
+    margin: 0 0 var(--space-sm);
+    font-size: var(--text-xl, 1.25rem);
   }
 
-  .test-shop-cart-badge.is-empty {
-    opacity: 0.55;
+  .test-shop-contact p {
+    margin: 0;
+    color: var(--muted);
+    line-height: 1.5;
   }
 </style>
 
 <script>
-  const CART_OPEN_REQUEST_EVENT = 'kersivo:cart-open-request';
-  const cartButton = document.querySelector('[data-navbar-cart-button]');
-  if (cartButton instanceof HTMLButtonElement) {
-    cartButton.addEventListener('click', () => {
-      window.dispatchEvent(new CustomEvent(CART_OPEN_REQUEST_EVENT));
-    });
-  }
-
   const root = document.querySelector('.shop-page');
 
   if (root) {

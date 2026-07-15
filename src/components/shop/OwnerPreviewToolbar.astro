@@ -1,0 +1,50 @@
+---
+interface Props {
+  primaryLabel: string;
+  primaryHref: string;
+  adminHref?: string;
+}
+
+const {
+  primaryLabel,
+  primaryHref,
+  adminHref = '/admin',
+} = Astro.props;
+---
+
+<div class="owner-preview-toolbar" role="region" aria-label="Private storefront preview">
+  <!-- Desktop / tablet: slim top bar -->
+  <div class="owner-preview-toolbar__desktop">
+    <div class="container owner-preview-toolbar__inner">
+      <div class="owner-preview-toolbar__copy">
+        <p class="owner-preview-toolbar__eyebrow">Private preview</p>
+        <p class="owner-preview-toolbar__support">You’re viewing your shop as a customer.</p>
+      </div>
+      <div class="owner-preview-toolbar__actions">
+        <a href={adminHref} class="btn btn--secondary btn--sm owner-preview-toolbar__admin-btn">
+          Back to Admin
+        </a>
+        <a href={primaryHref} class="btn btn--primary btn--sm owner-preview-toolbar__primary-btn">
+          {primaryLabel}
+        </a>
+      </div>
+    </div>
+  </div>
+
+  <!-- Mobile: sticky bottom action bar -->
+  <div class="owner-preview-toolbar__mobile" role="toolbar" aria-label="Owner preview actions">
+    <p class="owner-preview-toolbar__mobile-label">Private preview</p>
+    <div class="owner-preview-toolbar__mobile-actions">
+      <a
+        href={adminHref}
+        class="btn btn--secondary owner-preview-toolbar__admin-btn"
+        aria-label="Back to Admin"
+      >
+        Admin
+      </a>
+      <a href={primaryHref} class="btn btn--primary owner-preview-toolbar__primary-btn">
+        {primaryLabel}
+      </a>
+    </div>
+  </div>
+</div>

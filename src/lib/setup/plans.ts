@@ -40,6 +40,8 @@ export function buildSetupDepositStripeMetadata(
     shopName: string;
     shopSize: string;
     currentStack: string;
+    townCity?: string | null;
+    barbers?: string | null;
   },
   attribution: Record<string, string> = {},
 ): Record<string, string> {
@@ -58,6 +60,12 @@ export function buildSetupDepositStripeMetadata(
     shopSize: fields.shopSize,
     currentStack: fields.currentStack,
   };
+
+  const townCity = fields.townCity?.trim();
+  if (townCity) metadata.townCity = townCity.slice(0, 200);
+
+  const barbers = fields.barbers?.trim();
+  if (barbers) metadata.barbers = barbers.slice(0, 500);
 
   // Stripe metadata values max 500 chars; keep attribution short.
   for (const [key, raw] of Object.entries(attribution)) {

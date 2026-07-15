@@ -1,6 +1,6 @@
 export const prerender = false;
 
-import { Prisma, SetupPlan } from '@prisma/client';
+import { Prisma, SetupPlan, SetupDepositStatus } from '@prisma/client';
 import type { APIRoute } from 'astro';
 import { prisma } from '../../../lib/db/client';
 import {
@@ -155,6 +155,7 @@ async function handleSetupDepositCheckout(
           stripeSessionId: sessionId,
           paymentIntentId,
           plan: planId === 'priority' ? SetupPlan.PRIORITY : SetupPlan.LAUNCH,
+          status: SetupDepositStatus.PAID,
           customerName,
           customerEmail,
           shopName,
@@ -190,10 +191,25 @@ async function handleSetupDepositCheckout(
     return new Response(JSON.stringify({ error: 'Setup deposit persist failed' }), { status: 500 });
   }
 
-  if (paymentIntentId && !deposit.paymentIntentId) {
+  if (deposit.status !== SetupDepositStatus.PAID || !deposit.paidAt || (paymentIntentId && !deposit.paymentIntentId)) {
     deposit = await prisma.setupDeposit.update({
       where: { id: deposit.id },
-      data: { paymentIntentId },
+      data: {
+        status: SetupDepositStatus.PAID,
+        paidAt: deposit.paidAt ?? paidAt,
+        paymentIntentId: paymentIntentId || deposit.paymentIntentId,
+        depositPence,
+        currency,
+        customerName,
+        customerEmail,
+        shopName,
+        shopSize,
+        currentStack,
+      },
+    });
+    logSetupDepositStage('deposit_marked_paid', {
+      sessionId,
+      depositId: deposit.id,
     });
   }
 

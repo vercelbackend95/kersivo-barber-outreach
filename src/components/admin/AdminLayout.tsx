@@ -19,11 +19,13 @@ import {
 } from '../lucide-react';
 
 import DemoActionLock from './DemoActionLock';
+import AdminSidebarLaunchCta from './AdminSidebarLaunchCta';
 import AdminSidebarProfile, { type AdminProfileUser } from './AdminSidebarProfile';
 import { clearAdminSecret } from './adminAuth';
 import { authClient } from '@/lib/auth-client';
 import '@/styles/components/admin-demo.css';
 import '@/styles/components/admin-profile.css';
+import '@/styles/components/admin-sidebar-launch-cta.css';
 
 type AdminLayoutProps = {
   activeSection: AdminSection;
@@ -298,8 +300,11 @@ export default function AdminLayout({
           ))}
         </div>
       ))}
+      <div className="admin-sidebar-group">
+        <AdminSidebarLaunchCta isPublicDemo={isPublicDemo} />
+      </div>
     </nav>
-  ), [activeSection]);
+  ), [activeSection, isPublicDemo]);
 
   const activeSectionLabel = useMemo(() => {
     for (const group of menuGroups) {

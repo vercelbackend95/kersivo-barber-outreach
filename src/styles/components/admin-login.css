@@ -10,18 +10,70 @@
   z-index: 1;
 }
 
-/* ── Login card ─────────────────────────────────────────────────────────── */
-.admin-login-card {
+/* ── Shared blur overlay (DemoActionLock + onboarding auth gate) ───────── */
+.auth-gate-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 9999;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 1rem;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  background: color-mix(in srgb, var(--bg) 55%, transparent);
+  backdrop-filter: blur(6px);
+  -webkit-backdrop-filter: blur(6px);
+  animation: auth-gate-overlay-fade 160ms ease-out;
+}
+
+@keyframes auth-gate-overlay-fade {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@media (max-width: 560px) {
+  .auth-gate-overlay {
+    padding: 0.6rem;
+    align-items: flex-start;
+    padding-top: max(0.6rem, env(safe-area-inset-top));
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .auth-gate-overlay {
+    animation: none;
+  }
+}
+
+/* ── Shared auth / gate card (DemoActionLock + full-page auth) ─────────── */
+.auth-gate-card {
+  position: relative;
   width: 100%;
-  max-width: 400px;
-  background: var(--surface-1);
-  border: 1px solid var(--border);
-  border-radius: var(--radius-20);
-  box-shadow: var(--shadow-lg);
-  padding: var(--space-xl) clamp(var(--space-lg), 6vw, var(--space-xl));
+  max-width: 26rem;
+  max-height: 100%;
+  overflow-y: auto;
   display: flex;
   flex-direction: column;
-  gap: var(--space-lg);
+  gap: 0.4rem;
+  padding: clamp(1rem, 3vw, 1.5rem);
+  border-radius: var(--radius-16);
+  border: 1px solid color-mix(in srgb, var(--border) 82%, var(--fg) 6%);
+  background:
+    linear-gradient(
+      180deg,
+      color-mix(in srgb, var(--surface-3) 92%, transparent),
+      color-mix(in srgb, var(--surface-2) 96%, transparent)
+    );
+  box-shadow: 0 24px 60px color-mix(in srgb, #000 60%, transparent);
+  text-align: left;
+}
+
+@media (max-width: 560px) {
+  .auth-gate-card {
+    gap: 0.3rem;
+    padding: 0.9rem 0.95rem 1rem;
+  }
 }
 
 /* ── Brand header ───────────────────────────────────────────────────────── */

@@ -103,6 +103,7 @@ export default function AdminSidebarProfile({
       openDemoAuthLock();
       return;
     }
+    window.location.assign('/admin/launch');
   };
 
   const handleWorkspaceSetup = () => {
@@ -111,7 +112,7 @@ export default function AdminSidebarProfile({
       openDemoAuthLock();
       return;
     }
-    window.location.assign('/admin/onboarding');
+    window.location.assign('/admin/onboarding?reopen=1');
   };
 
   const handleRetailOnboarding = () => {

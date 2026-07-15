@@ -98,6 +98,16 @@
   object-position: left center;
 }
 
+/* Square shop logos from onboarding (512×512) — compact monogram-style brand */
+.navbar17__brand-img--custom {
+  width: clamp(2.5rem, 4.5vw, 3.25rem);
+  height: clamp(2.5rem, 4.5vw, 3.25rem);
+  max-width: none;
+  border-radius: var(--radius-8, 0.5rem);
+  object-fit: contain;
+  object-position: center;
+}
+
 /* ── Desktop navigation ───────────────────────────────────────── */
 
 .navbar17__desktop {
@@ -183,37 +193,16 @@
 }
 
 /* Cart button — shared between desktop and mobile instances */
+/* Cart — desktop uses .btn.btn--secondary.btn--sm; badge + mobile sheet overrides below */
 .navbar17__cart-btn {
   display: inline-flex;
   align-items: center;
-  gap: 0.5rem;
-  height: 2.5rem;
-  padding: 0 0.8rem;
-  background: transparent;
-  border: 1px solid var(--border);
-  color: var(--muted);
-  font-size: 0.775rem;
-  font-weight: 600;
-  letter-spacing: 0.06em;
-  text-transform: uppercase;
-  text-decoration: none;
-  cursor: pointer;
-  transition:
-    border-color   160ms ease,
-    color          160ms ease,
-    background     160ms ease;
+  gap: 0.45rem;
   white-space: nowrap;
 }
 
-.navbar17__cart-btn:hover {
-  border-color: color-mix(in srgb, var(--accent) 50%, var(--border));
-  color: var(--fg);
-  background: color-mix(in srgb, var(--surface) 70%, transparent);
-}
-
-.navbar17__cart-btn:focus-visible {
-  outline: 2px solid var(--focus);
-  outline-offset: 2px;
+.navbar17__cart-btn__label {
+  line-height: 1;
 }
 
 /* Cart icon — SVG matches stroke nav icons; desktop size only (.navbar17__mobile-link-icon overrides in sheet) */
@@ -242,22 +231,25 @@
 
 /* Cart item count badge */
 .navbar17__cart-badge {
-  min-width: 1.3rem;
-  height: 1.3rem;
+  min-width: 1.35rem;
+  height: 1.35rem;
   display: inline-grid;
   place-items: center;
   padding: 0 0.15rem;
+  border-radius: 999px;
   background: var(--accent);
   border: 1px solid color-mix(in srgb, var(--accent) 60%, transparent);
   color: #fff;
   font-size: 0.7rem;
   line-height: 1;
+  font-weight: 600;
 }
 
 .navbar17__cart-badge.is-empty {
   background: var(--surface);
   border-color: var(--border);
   color: var(--muted);
+  opacity: 0.55;
 }
 
 /* Primary conversion CTA — "Get the system" */
@@ -288,6 +280,12 @@
 .navbar17__cta-btn:focus-visible {
   outline: 2px solid var(--focus);
   outline-offset: 2px;
+}
+
+button.navbar17__cta-btn {
+  cursor: pointer;
+  font: inherit;
+  appearance: none;
 }
 
 /* ── Mobile controls (hamburger) ───────────────────────────────── */
@@ -326,6 +324,12 @@
 .navbar17__mobile-bar-cta:focus-visible {
   outline: 2px solid var(--focus);
   outline-offset: 2px;
+}
+
+button.navbar17__mobile-bar-cta {
+  cursor: pointer;
+  font: inherit;
+  appearance: none;
 }
 
 /* Hamburger toggle button */
@@ -632,18 +636,23 @@
     color: var(--muted);
     font-size: 0.9rem;
     font-weight: 600;
-    letter-spacing: 0.06em;
-    text-transform: uppercase;
+    letter-spacing: 0.02em;
+    text-transform: none;
 
     background: transparent;
     border: none;
     border-radius: var(--radius-sm);
     border-left: 2px solid transparent;
+    cursor: pointer;
 
     transition:
       color        160ms ease,
       border-color 160ms ease,
       background   160ms ease;
+  }
+
+  .navbar17__cart-btn--mobile-list .navbar17__cart-badge.is-empty {
+    opacity: 1;
   }
 
   .navbar17__cart-btn--mobile-list:hover {

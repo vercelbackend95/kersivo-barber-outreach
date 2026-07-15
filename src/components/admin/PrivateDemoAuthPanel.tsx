@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { authClient } from '@/lib/auth-client';
+import '@/styles/components/admin-profile.css';
 
 type Mode = 'signup' | 'login';
 type Step = 'email' | 'credentials';
@@ -170,7 +171,7 @@ export default function PrivateDemoAuthPanel({
 
   const content = (
     <div className={`private-demo-auth${embedded ? ' private-demo-auth--embedded' : ''}`}>
-      {onClose || embedded ? (
+      {onClose ? (
         <button
           type="button"
           className="private-demo-auth__close"
@@ -360,7 +361,7 @@ export default function PrivateDemoAuthPanel({
 
   return (
     <div className="admin-login-viewport">
-      <div className="admin-login-card private-demo-auth-card">{content}</div>
+      <div className="auth-gate-card">{content}</div>
     </div>
   );
 }

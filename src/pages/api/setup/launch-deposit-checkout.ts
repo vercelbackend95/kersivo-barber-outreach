@@ -1,26 +1,18 @@
 export const prerender = false;
 
 import type { APIRoute } from 'astro';
-import { SetupPlan, SetupDepositStatus } from '@prisma/client';
+import { SetupDepositStatus, SetupPlan } from '@prisma/client';
+import { resolveAdminAccess } from '../../../lib/admin/auth';
 import { prisma } from '../../../lib/db/client';
 import { buildSetupDepositStripeMetadata, getSetupPlan, isSetupPlanId } from '../../../lib/setup/plans';
 import { getPublicSiteUrl } from '../../../lib/setup/siteUrl';
 import { createCheckoutSession } from '../../../lib/shop/stripe';
 
-type DepositCheckoutInput = {
+type LaunchDepositCheckoutInput = {
   plan: string;
-  name: string;
-  email: string;
-  shopName: string;
-  shopSize: string;
-  currentStack: string;
-  townCity?: string | null;
-  barbers?: string | null;
   attribution?: Record<string, string>;
 };
 
-const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-const MAX_META = 120;
 const ATTRIBUTION_KEYS = [
   'gclid',
   'gbraid',
@@ -49,11 +41,27 @@ function pickAttribution(raw: unknown): Record<string, string> {
   return out;
 }
 
-export const POST: APIRoute = async ({ request }) => {
+function shopSizeFromBarberCount(count: number): string {
+  if (count <= 2) return '1-2';
+  if (count <= 4) return '3-4';
+  if (count <= 6) return '5-6';
+  if (count <= 8) return '7-8';
+  return '9+';
+}
+
+/**
+ * Authenticated setup-deposit checkout for Launch Wizard (session owner only).
+ */
+export const POST: APIRoute = async (context) => {
   try {
-    let body: DepositCheckoutInput;
+    const access = await resolveAdminAccess(context);
+    if (!access || access.via !== 'session') {
+      return new Response(JSON.stringify({ error: 'Unauthorized' }), { status: 401 });
+    }
+
+    let body: LaunchDepositCheckoutInput;
     try {
-      body = (await request.json()) as DepositCheckoutInput;
+      body = (await context.request.json()) as LaunchDepositCheckoutInput;
     } catch {
       return badRequest('Invalid request body.');
     }
@@ -64,36 +72,52 @@ export const POST: APIRoute = async ({ request }) => {
     }
     const planId = planRaw;
 
-    const name = body.name?.trim() ?? '';
+    const shop = await prisma.shopSettings.findUnique({
+      where: { id: access.shopId },
+      select: {
+        onboardingCompleted: true,
+        name: true,
+        _count: { select: { barbers: true } },
+      },
+    });
+
+    if (!shop?.onboardingCompleted) {
+      return badRequest('Complete workspace setup before launching.');
+    }
+
+    const name = (access.userName ?? '').trim();
     if (name.length < 2) {
-      return badRequest('Name must be at least 2 characters.');
+      return badRequest('Account name is required.');
     }
 
-    const email = body.email?.trim().toLowerCase() ?? '';
-    if (!email || !EMAIL_REGEX.test(email)) {
-      return badRequest('Valid email is required.');
+    const email = (access.userEmail ?? '').trim().toLowerCase();
+    if (!email) {
+      return badRequest('Account email is required.');
     }
 
-    const shopName = body.shopName?.trim() ?? '';
+    const shopName = shop.name.trim();
     if (shopName.length < 2) {
-      return badRequest('Shop name must be at least 2 characters.');
+      return badRequest('Shop name is required.');
     }
 
-    const shopSize = body.shopSize?.trim() ?? '';
-    if (!shopSize || shopSize.length > MAX_META) {
-      return badRequest('Shop size is required.');
-    }
+    const pendingDeposit = await prisma.setupDeposit.findFirst({
+      where: {
+        customerEmail: { equals: email, mode: 'insensitive' },
+        status: SetupDepositStatus.PENDING,
+      },
+      orderBy: { createdAt: 'desc' },
+      select: {
+        shopSize: true,
+        currentStack: true,
+      },
+    });
 
-    const currentStack = body.currentStack?.trim() ?? '';
-    if (!currentStack || currentStack.length > MAX_META) {
-      return badRequest('Current stack is required.');
-    }
+    const shopSize = pendingDeposit?.shopSize?.trim() || shopSizeFromBarberCount(shop._count.barbers);
+    const currentStack = pendingDeposit?.currentStack?.trim() || 'kersivo-preview';
 
     const planConfig = getSetupPlan(planId);
     const baseUrl = getPublicSiteUrl();
     const attribution = pickAttribution(body.attribution);
-    const townCity = typeof body.townCity === 'string' ? body.townCity.trim().slice(0, 200) : '';
-    const barbers = typeof body.barbers === 'string' ? body.barbers.trim().slice(0, 500) : '';
 
     const session = await createCheckoutSession({
       customerEmail: email,
@@ -115,8 +139,6 @@ export const POST: APIRoute = async ({ request }) => {
           shopName,
           shopSize,
           currentStack,
-          townCity: townCity || null,
-          barbers: barbers || null,
         },
         attribution,
       ),
@@ -138,7 +160,7 @@ export const POST: APIRoute = async ({ request }) => {
         },
       });
     } catch (error) {
-      console.error('Setup deposit PENDING record create failed', {
+      console.error('Launch deposit PENDING record create failed', {
         stripeSessionId: session.id,
         error,
       });
@@ -146,7 +168,7 @@ export const POST: APIRoute = async ({ request }) => {
 
     return new Response(JSON.stringify({ url: session.url }), { status: 200 });
   } catch (error) {
-    console.error('Setup deposit checkout session creation failed', error);
+    console.error('Launch deposit checkout session creation failed', error);
     return new Response(JSON.stringify({ error: 'Unable to create checkout session.' }), { status: 500 });
   }
 };

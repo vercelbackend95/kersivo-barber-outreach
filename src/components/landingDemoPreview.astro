@@ -19,6 +19,10 @@ type PreviewRow = {
   description: string;
   ctaLabel: string;
   ctaHref: string;
+  ctaSameTab?: boolean;
+  ctaTrack?: string;
+  ghostCtaLabel?: string;
+  ghostCtaHref?: string;
   media: 'carousel' | 'widget' | 'booking';
 };
 
@@ -38,24 +42,36 @@ const rows: PreviewRow[] = [
     kicker: 'ADMIN PREVIEW',
     heading: "Chairs, statuses and what's next — all in one view.",
     description: "See today's bookings, chairs and statuses in one admin view.",
-    ctaLabel: 'Open Full Admin Demo',
-    ctaHref: adminDemoHref('timeline'),
+    ctaLabel: 'Build My Preview',
+    ctaHref: '/admin/onboarding',
+    ctaSameTab: true,
+    ctaTrack: 'plan_my_setup_click',
+    ghostCtaLabel: 'Open Full Admin Demo',
+    ghostCtaHref: adminDemoHref('timeline'),
     media: 'widget',
   },
   {
     kicker: 'CLIENT BOOKING PREVIEW',
     heading: 'Service, barber, time — your URL, your brand, not their app.',
     description: 'Clients choose a service, barber and time on your own domain — no app download.',
-    ctaLabel: 'Open full booking flow',
-    ctaHref: '/book',
+    ctaLabel: 'Build My Booking Preview',
+    ctaHref: '/admin/onboarding',
+    ctaSameTab: true,
+    ctaTrack: 'plan_my_setup_click',
+    ghostCtaLabel: 'Try Example Booking Flow',
+    ghostCtaHref: '/book',
     media: 'booking',
   },
   {
     kicker: 'RETAIL PICKUP PREVIEW',
     heading: 'Retail orders, pickup ready — in the same admin.',
     description: 'Clients browse products and reserve items for in-shop pickup.',
-    ctaLabel: 'Open full shop live',
-    ctaHref: '/shop',
+    ctaLabel: 'Build My Shop Preview',
+    ctaHref: '/admin/retail-onboarding',
+    ctaSameTab: true,
+    ctaTrack: 'plan_my_setup_click',
+    ghostCtaLabel: 'Explore Example Shop',
+    ghostCtaHref: '/shop',
     media: 'carousel',
   },
 ];
@@ -114,14 +130,35 @@ const rows: PreviewRow[] = [
             <p class="feature261__row-body">{row.description}</p>
           </div>
 
-          <a
-            href={row.ctaHref}
-            class="btn btn--primary feature261__row-cta"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            {row.ctaLabel}
-          </a>
+          {row.ghostCtaLabel && row.ghostCtaHref ? (
+            <div class="feature261__row-ctas">
+              <a
+                href={row.ctaHref}
+                class="btn btn--primary feature261__row-cta"
+                data-track={row.ctaTrack}
+              >
+                {row.ctaLabel}
+              </a>
+              <a
+                href={row.ghostCtaHref}
+                class="btn btn--ghost feature261__row-cta feature261__row-cta--ghost"
+                target="_blank"
+                rel="noopener noreferrer"
+              >
+                {row.ghostCtaLabel}
+              </a>
+            </div>
+          ) : (
+            <a
+              href={row.ctaHref}
+              class="btn btn--primary feature261__row-cta"
+              target={row.ctaSameTab ? undefined : '_blank'}
+              rel={row.ctaSameTab ? undefined : 'noopener noreferrer'}
+              data-track={row.ctaTrack}
+            >
+              {row.ctaLabel}
+            </a>
+          )}
         </li>
       ))}
       <Feature261MonetizationRow client:visible={{ rootMargin: '200px' }} />

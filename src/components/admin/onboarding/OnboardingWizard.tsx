@@ -137,6 +137,11 @@ export default function OnboardingWizard() {
   const [applyToAllBarbers, setApplyToAllBarbers] = useState(true);
   const [hoursError, setHoursError] = useState('');
 
+  const isReopen = useMemo(() => {
+    if (typeof window === 'undefined') return false;
+    return new URLSearchParams(window.location.search).get('reopen') === '1';
+  }, []);
+
   const applyState = useCallback((next: OnboardingState) => {
     setState(next);
     setStep(next.onboardingCurrentStep);
@@ -167,6 +172,7 @@ export default function OnboardingWizard() {
   const loadOnboarding = useCallback(async () => {
     setLoading(true);
     setError('');
+    let redirectingAway = false;
     try {
       const response = await fetch('/api/admin/onboarding', { credentials: 'include' });
       if (response.status === 401 || response.status === 403) {
@@ -184,14 +190,23 @@ export default function OnboardingWizard() {
       }
       const payload = (await response.json()) as OnboardingState;
       setHasAccess(true);
+
+      if (payload.onboardingCompleted && !isReopen) {
+        redirectingAway = true;
+        window.location.assign('/admin');
+        return;
+      }
+
       applyState(payload);
     } catch {
       setError('Could not load your workspace setup. Please refresh.');
     } finally {
-      setAuthReady(true);
-      setLoading(false);
+      if (!redirectingAway) {
+        setAuthReady(true);
+        setLoading(false);
+      }
     }
-  }, [applyState]);
+  }, [applyState, isReopen]);
 
   useEffect(() => {
     void loadOnboarding();
@@ -493,12 +508,55 @@ export default function OnboardingWizard() {
 
   if (!hasAccess) {
     return (
-      <PrivateDemoAuthPanel
-        initialMode="signup"
-        onSuccess={() => {
-          window.location.assign('/admin/onboarding');
-        }}
-      />
+      <>
+        <div
+          className="admin-onboarding admin-onboarding--auth-preview"
+          aria-hidden="true"
+          inert
+        >
+          <header className="admin-onboarding__header">
+            <div className="admin-onboarding__brand">
+              <img className="admin-onboarding__logo" src="/images/logo_nobg.png" alt="" />
+              <span className="admin-onboarding__brand-name">Kersivo</span>
+            </div>
+          </header>
+          <main className="admin-onboarding__main admin-onboarding__main--welcome">
+            <section>
+              <h1 className="admin-onboarding__title">Let’s build your barbershop setup</h1>
+              <p className="admin-onboarding__description">
+                Add your shop, team and services to create your KERSIVO workspace. It takes around 5
+                minutes.
+              </p>
+            </section>
+          </main>
+          <footer className="admin-onboarding__footer">
+            <div className="admin-onboarding__footer-row">
+              <button type="button" className="btn btn--secondary btn--lg" tabIndex={-1}>
+                Back
+              </button>
+              <button type="button" className="btn btn--primary btn--lg" tabIndex={-1}>
+                Start setup
+              </button>
+            </div>
+          </footer>
+        </div>
+        <div
+          className="auth-gate-overlay"
+          role="dialog"
+          aria-modal="true"
+          aria-labelledby="private-demo-auth-title"
+        >
+          <div className="auth-gate-card">
+            <PrivateDemoAuthPanel
+              embedded
+              initialMode="signup"
+              onSuccess={() => {
+                window.location.assign('/admin/onboarding');
+              }}
+            />
+          </div>
+        </div>
+      </>
     );
   }
 
@@ -1132,7 +1190,7 @@ export default function OnboardingWizard() {
             >
               Back
             </button>
-          ) : (
+          ) : isReopen ? (
             <button
               type="button"
               className="btn btn--secondary btn--lg"
@@ -1148,7 +1206,7 @@ export default function OnboardingWizard() {
             >
               Back
             </button>
-          )}
+          ) : null}
           <button
             type="button"
             className="btn btn--primary btn--lg"
