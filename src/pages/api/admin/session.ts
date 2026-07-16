@@ -13,6 +13,7 @@ export const GET: APIRoute = async (context) => {
   let onboardingCurrentStep = 0;
   let retailOnboardingCompleted = true;
   let retailOnboardingSkipped = false;
+  let retailOnboardingProductId: string | null = null;
   let retailTestOrderId: string | null = null;
   let retailTestOrderCompletedAt: string | null = null;
   let retailPickupWalkthroughCompletedAt: string | null = null;
@@ -20,34 +21,41 @@ export const GET: APIRoute = async (context) => {
   let shopName: string | null = null;
 
   if (access.via === 'session') {
-    await healOnboardingCompletedIfEligible(access.shopId);
+    try {
+      await healOnboardingCompletedIfEligible(access.shopId);
 
-    const shop = await prisma.shopSettings.findUnique({
-      where: { id: access.shopId },
-      select: {
-        onboardingCompleted: true,
-        onboardingCurrentStep: true,
-        retailOnboardingCompleted: true,
-        retailOnboardingSkipped: true,
-        retailOnboardingProductId: true,
-        retailTestOrderId: true,
-        retailTestOrderCompletedAt: true,
-        retailPickupWalkthroughCompletedAt: true,
-        logoUrl: true,
-        name: true,
-      },
-    });
-    onboardingCompleted = shop?.onboardingCompleted ?? true;
-    onboardingCurrentStep = shop?.onboardingCurrentStep ?? 0;
-    retailOnboardingCompleted = shop?.retailOnboardingCompleted ?? false;
-    retailOnboardingSkipped = shop?.retailOnboardingSkipped ?? false;
-    retailTestOrderId = shop?.retailTestOrderId ?? null;
-    retailTestOrderCompletedAt = shop?.retailTestOrderCompletedAt?.toISOString() ?? null;
-    retailPickupWalkthroughCompletedAt =
-      shop?.retailPickupWalkthroughCompletedAt?.toISOString() ?? null;
-    const retailOnboardingProductId = shop?.retailOnboardingProductId ?? null;
-    logoUrl = shop?.logoUrl ?? null;
-    shopName = shop?.name ?? null;
+      const shop = await prisma.shopSettings.findUnique({
+        where: { id: access.shopId },
+        select: {
+          onboardingCompleted: true,
+          onboardingCurrentStep: true,
+          retailOnboardingCompleted: true,
+          retailOnboardingSkipped: true,
+          retailOnboardingProductId: true,
+          retailTestOrderId: true,
+          retailTestOrderCompletedAt: true,
+          retailPickupWalkthroughCompletedAt: true,
+          logoUrl: true,
+          name: true,
+        },
+      });
+      onboardingCompleted = shop?.onboardingCompleted ?? true;
+      onboardingCurrentStep = shop?.onboardingCurrentStep ?? 0;
+      retailOnboardingCompleted = shop?.retailOnboardingCompleted ?? false;
+      retailOnboardingSkipped = shop?.retailOnboardingSkipped ?? false;
+      retailOnboardingProductId = shop?.retailOnboardingProductId ?? null;
+      retailTestOrderId = shop?.retailTestOrderId ?? null;
+      retailTestOrderCompletedAt = shop?.retailTestOrderCompletedAt?.toISOString() ?? null;
+      retailPickupWalkthroughCompletedAt =
+        shop?.retailPickupWalkthroughCompletedAt?.toISOString() ?? null;
+      logoUrl = shop?.logoUrl ?? null;
+      shopName = shop?.name ?? null;
+    } catch (error) {
+      console.error('Failed to load admin session shop settings', error);
+      return new Response(JSON.stringify({ error: 'Could not load admin session.' }), {
+        status: 500,
+      });
+    }
 
     return new Response(
       JSON.stringify({

@@ -10,30 +10,39 @@ const MAX_ORDERS_LIMIT = 100;
 export const GET: APIRoute = async (ctx) => {
   const access = await requireAdminContext(ctx);
   if (access instanceof Response) return access;
-  const shopId = access.shopId;
-  const requestedLimit = Number(ctx.url.searchParams.get('limit') ?? DEFAULT_ORDERS_LIMIT);
-  const limit = Number.isFinite(requestedLimit)
-    ? Math.min(Math.max(Math.floor(requestedLimit), 1), MAX_ORDERS_LIMIT)
-    : DEFAULT_ORDERS_LIMIT;
-  const orders = await prisma.order.findMany({
-    where: { shopId },
-    orderBy: { createdAt: 'desc' },
-    take: limit + 1,
-    select: {
-      id: true,
-      customerEmail: true,
-      status: true,
-      totalPence: true,
-      currency: true,
-      createdAt: true,
-      paidAt: true,
-      isTestOrder: true,
-      _count: { select: { items: true } }
-    }
-  });
 
-  return new Response(JSON.stringify({
-    orders: orders.slice(0, limit),
-    hasMore: orders.length > limit
-  }), { status: 200 });
+  try {
+    const shopId = access.shopId;
+    const requestedLimit = Number(ctx.url.searchParams.get('limit') ?? DEFAULT_ORDERS_LIMIT);
+    const limit = Number.isFinite(requestedLimit)
+      ? Math.min(Math.max(Math.floor(requestedLimit), 1), MAX_ORDERS_LIMIT)
+      : DEFAULT_ORDERS_LIMIT;
+    const orders = await prisma.order.findMany({
+      where: { shopId },
+      orderBy: { createdAt: 'desc' },
+      take: limit + 1,
+      select: {
+        id: true,
+        customerEmail: true,
+        status: true,
+        totalPence: true,
+        currency: true,
+        createdAt: true,
+        paidAt: true,
+        isTestOrder: true,
+        _count: { select: { items: true } },
+      },
+    });
+
+    return new Response(
+      JSON.stringify({
+        orders: orders.slice(0, limit),
+        hasMore: orders.length > limit,
+      }),
+      { status: 200 },
+    );
+  } catch (error) {
+    console.error('Failed to load shop orders', error);
+    return new Response(JSON.stringify({ error: 'Could not load orders.' }), { status: 500 });
+  }
 };

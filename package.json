@@ -5,7 +5,8 @@
   "scripts": {
     "dev": "astro dev",
     "dev:fresh": "npm run prisma:generate && astro dev",
-    "build": "npm run prisma:generate && astro build",
+    "build": "npm run prisma:generate && prisma migrate deploy --schema prisma/schema.prisma && astro build",
+    "prisma:migrate:deploy": "prisma migrate deploy --schema prisma/schema.prisma",
     "preview": "npm run prisma:generate && astro preview",
     "astro": "astro",
     "prisma": "prisma",
