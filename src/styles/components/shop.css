@@ -1313,11 +1313,11 @@
 }
 
 .shop-card {
-  scroll-margin-top: calc(5.5rem + env(safe-area-inset-top, 0px));
+  scroll-margin-top: calc(7.5rem + env(safe-area-inset-top, 0px));
 }
 
 [data-product-item] {
-  scroll-margin-top: calc(5.5rem + env(safe-area-inset-top, 0px));
+  scroll-margin-top: calc(7.5rem + env(safe-area-inset-top, 0px));
 }
 
 .shop-card--onboarding-highlight {

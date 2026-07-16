@@ -65,12 +65,34 @@ function applyCategoryForProduct(category: string) {
   const root = document.querySelector('.shop-page');
   if (!root) return;
 
-  const allBtn = root.querySelector<HTMLButtonElement>('[data-category-filter="ALL"]');
-  const categoryBtn = root.querySelector<HTMLButtonElement>(
-    `[data-category-filter="${CSS.escape(category)}"]`,
+  const filterButtons = Array.from(
+    root.querySelectorAll<HTMLButtonElement>('[data-category-filter]'),
   );
-  const target = categoryBtn ?? allBtn;
-  target?.click();
+  const hasCategoryChip = filterButtons.some(
+    (button) => button.getAttribute('data-category-filter') === category,
+  );
+  const resolvedCategory = hasCategoryChip ? category : 'ALL';
+
+  for (const item of root.querySelectorAll<HTMLElement>('[data-product-item]')) {
+    const productCategory = item.getAttribute('data-product-category') || 'STYLING';
+    item.hidden = !(resolvedCategory === 'ALL' || productCategory === resolvedCategory);
+  }
+
+  for (const button of filterButtons) {
+    const isActive = button.getAttribute('data-category-filter') === resolvedCategory;
+    button.classList.toggle('is-active', isActive);
+    button.setAttribute('aria-pressed', String(isActive));
+  }
+
+  root.setAttribute('data-active-category', resolvedCategory);
+
+  const emptyEl = root.querySelector('.shop-empty-filter');
+  if (emptyEl) {
+    const anyVisible = [...root.querySelectorAll<HTMLElement>('[data-product-item]')].some(
+      (item) => !item.hidden,
+    );
+    emptyEl.classList.toggle('is-visible', !anyVisible);
+  }
 }
 
 function removeProductCoachmarks() {
@@ -387,6 +409,7 @@ export default function RetailOnboardingTaskCard({
         return;
       }
 
+      item.hidden = false;
       clearProductHighlight();
 
       const card = item.querySelector('.shop-card') as HTMLElement | null;
@@ -414,7 +437,10 @@ export default function RetailOnboardingTaskCard({
       }
 
       setAnnounce(`Showing your onboarding product: ${product.name}. Add it to your test basket.`);
-      setMinimized(true);
+      // Keep the card expanded on narrow viewports so the reveal doesn't feel like it "failed".
+      if (!window.matchMedia('(max-width: 48rem)').matches) {
+        setMinimized(true);
+      }
 
       trackConsentedEvent(
         FUNNEL_EVENTS.retail_onboarding_product_revealed,
@@ -431,7 +457,7 @@ export default function RetailOnboardingTaskCard({
         clearProductHighlight();
         highlightTimerRef.current = null;
       }, HIGHLIGHT_MS);
-    }, 80);
+    }, 180);
   }
 
   function onPrimaryClick() {

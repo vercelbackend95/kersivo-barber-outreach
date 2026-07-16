@@ -7,7 +7,6 @@ import OwnerPreviewToolbar from '@/components/shop/OwnerPreviewToolbar.astro';
 import CartDrawerMount from '@/components/shop/CartDrawerMount.astro';
 import RetailOnboardingTaskCard from '@/components/admin/retail-onboarding/RetailOnboardingTaskCard';
 import { resolveAdminAccess } from '@/lib/admin/auth';
-import { resolveOwnerPreviewCta } from '@/lib/admin/ownerPreviewCta';
 import { resolveRetailOnboardingProduct } from '@/lib/admin/retailOnboardingProduct';
 import { prisma } from '@/lib/db/client';
 import { formatGbp } from '@/lib/shop/money';
@@ -37,7 +36,6 @@ const shop = await prisma.shopSettings.findUnique({
   select: {
     name: true,
     logoUrl: true,
-    onboardingCompleted: true,
   },
 });
 
@@ -89,11 +87,6 @@ const categoryValues = new Set(categoryFilters.map((filter) => filter.value));
 const selectedCategoryParam = Astro.url.searchParams.get('category') || 'ALL';
 const selectedCategory = categoryValues.has(selectedCategoryParam) ? selectedCategoryParam : 'ALL';
 const shopTitle = shop?.name?.trim() || 'My shop';
-
-const ownerCta = await resolveOwnerPreviewCta({
-  onboardingCompleted: shop?.onboardingCompleted ?? true,
-  ownerEmail: access.userEmail,
-});
 ---
 
 <MinimalLayout
@@ -105,21 +98,13 @@ const ownerCta = await resolveOwnerPreviewCta({
   bodyClass="admin-theme-premium-black has-owner-preview-toolbar"
   showCookieConsent={false}
 >
-  <OwnerPreviewToolbar
-    primaryLabel={ownerCta.label}
-    primaryHref={ownerCta.href}
-    adminHref="/admin"
-  />
+  <OwnerPreviewToolbar adminHref="/admin" />
   <Navbar17
     variant="testShop"
     brandLogoUrl={shop?.logoUrl}
     brandAriaLabel={shopTitle}
   />
   <main class="container shop-page" aria-labelledby="shop-page-title" data-active-category={selectedCategory}>
-    <div class="test-shop-topbar">
-      <a href="/admin?section=shop_products" class="product-back-link">← Back to products</a>
-    </div>
-
     {
       showRetailTaskCard ? (
         <RetailOnboardingTaskCard
@@ -260,13 +245,6 @@ const ownerCta = await resolveOwnerPreviewCta({
 
   <CartDrawerMount testOrderMode />
 </MinimalLayout>
-
-<style>
-  .test-shop-topbar {
-    margin-top: var(--space-lg);
-    margin-bottom: var(--space-md);
-  }
-</style>
 
 <script>
   const root = document.querySelector('.shop-page');
