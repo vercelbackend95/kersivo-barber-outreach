@@ -71,6 +71,11 @@
   .admin-page-wrap .booking-shell > .admin-section-header {
     margin-bottom: calc(-1 * var(--booking-space-3, 1.35rem));
   }
+
+  /* Retail walkthrough card needs clear gap under Orders header (undo flush pull-up). */
+  .admin-page-wrap .booking-shell:has(> .admin-orders-panel > .retail-task-card) > .admin-section-header {
+    margin-bottom: var(--space-sm);
+  }
 }
 
 @media (min-width: 48.0625rem) {

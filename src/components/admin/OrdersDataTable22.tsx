@@ -133,7 +133,7 @@ const emptyDesc = (msg: string) =>
     ? 'Orders will appear here when customers checkout.'
     : "Try a different search term to find what you're looking for.";
 
-type SortColumn = 'orderNumber' | 'total' | 'status' | 'items';
+type SortColumn = 'orderNumber' | 'total' | 'status';
 type SortDir = 'asc' | 'desc';
 type SortState = SortDir | 'none';
 
@@ -246,8 +246,6 @@ export default function OrdersDataTable22({
         cmp = a.totalPence - b.totalPence;
       } else if (sortColumn === 'status') {
         cmp = (STATUS_SORT_ORDER[a.status] ?? 0) - (STATUS_SORT_ORDER[b.status] ?? 0);
-      } else if (sortColumn === 'items') {
-        cmp = a._count.items - b._count.items;
       }
       return sortDir === 'asc' ? cmp : -cmp;
     });
@@ -318,21 +316,6 @@ export default function OrdersDataTable22({
               >
                 <span className="admin-orders-grid-sort-label">Collection</span>
                 <SortIcon state={getSortAttr('status')} />
-              </button>
-            </span>
-            <span
-              className="admin-orders-grid-header-cell admin-orders-grid-header-cell--items"
-              role="columnheader"
-              aria-sort={getAriaSort('items')}
-            >
-              <button
-                type="button"
-                className="admin-orders-grid-sort"
-                data-sort={getSortAttr('items')}
-                onClick={() => handleSort('items')}
-              >
-                <span className="admin-orders-grid-sort-label">Items</span>
-                <SortIcon state={getSortAttr('items')} />
               </button>
             </span>
             <span className="admin-orders-grid-header-cell admin-orders-grid-header-cell--actions">Actions</span>
@@ -417,8 +400,6 @@ export default function OrdersDataTable22({
                             </span>
                           ) : null}
                           <span className="admin-orders-grid-identity__meta" aria-hidden="true">
-                            <span>{formatItemCount(order._count.items)}</span>
-                            <span aria-hidden="true">·</span>
                             <OrderStatusDot status={order.status} />
                           </span>
                         </span>
@@ -432,17 +413,32 @@ export default function OrdersDataTable22({
                     <span className="admin-orders-grid-status">
                       <OrderStatusDot status={order.status} />
                     </span>
-                    <span className="admin-orders-grid-items">{order._count.items}</span>
                   </button>
 
                   <div className="admin-orders-grid-actions">
-                    {order.status === 'PAID' || order.status === 'READY_FOR_PICKUP' ? (
+                    {order.status === 'PAID' ||
+                    order.status === 'READY_FOR_PICKUP' ||
+                    order.status === 'COLLECTED' ? (
                       <button
                         type="button"
-                        className="btn btn--ghost btn--sm admin-orders-grid-collect-btn"
-                        onClick={(event) => handleCollectClick(event, order.id)}
-                        title="Mark as Collected"
-                        aria-label={`Mark ${orderLabel} as collected`}
+                        className={[
+                          'btn btn--ghost btn--sm admin-orders-grid-collect-btn',
+                          order.status === 'COLLECTED'
+                            ? 'admin-orders-grid-collect-btn--done'
+                            : 'admin-orders-grid-collect-btn--pending',
+                        ].join(' ')}
+                        onClick={
+                          order.status === 'COLLECTED'
+                            ? undefined
+                            : (event) => handleCollectClick(event, order.id)
+                        }
+                        disabled={order.status === 'COLLECTED'}
+                        title={order.status === 'COLLECTED' ? 'Collected' : 'Mark as Collected'}
+                        aria-label={
+                          order.status === 'COLLECTED'
+                            ? `${orderLabel} collected`
+                            : `Mark ${orderLabel} as collected`
+                        }
                       >
                         <CollectedOrderIcon width={24} height={24} strokeWidth={2.25} aria-hidden="true" />
                       </button>

@@ -3050,6 +3050,7 @@ body.admin-theme-premium-black {
   --surface: var(--surface-1);
   --border: #24201c;
   --muted: #c9c1b7;
+  --success: #22c55e;
   --admin-premium-surface-bg: color-mix(in srgb, var(--surface-2) 82%, var(--bg));
   --admin-premium-surface-border: 1px solid color-mix(in srgb, var(--border) 70%, transparent);
   background: var(--bg);
@@ -5919,7 +5920,6 @@ body.admin-theme-premium-black .booking-page-wrap .booking-shell.surface {
     minmax(12rem, 1fr)
     minmax(5.5rem, 7rem)
     1.75rem
-    minmax(2.5rem, 3rem)
     minmax(2.75rem, 3.25rem);
 
   display: grid;
@@ -5969,8 +5969,7 @@ body.admin-theme-premium-black .booking-page-wrap .booking-shell.surface {
   white-space: nowrap;
 }
 
-.admin-orders-grid-header-cell--total,
-.admin-orders-grid-header-cell--items {
+.admin-orders-grid-header-cell--total {
   text-align: right;
 }
 
@@ -6267,12 +6266,13 @@ body.admin-theme-premium-black .booking-page-wrap .booking-shell.surface {
 
 .admin-orders-grid-item--highlight {
   outline: 2px solid color-mix(in srgb, var(--accent) 70%, transparent);
-  outline-offset: 2px;
-  border-radius: var(--radius-12);
+  outline-offset: 0;
+  border-radius: 0;
   animation: admin-order-highlight-fade 8s ease-out forwards;
 }
 
 .admin-orders-grid-item--walkthrough {
+  border-radius: 0;
   box-shadow: 0 0 0 1px color-mix(in srgb, var(--accent) 28%, transparent);
 }
 
@@ -6472,14 +6472,6 @@ body.admin-theme-premium-black .booking-page-wrap .booking-shell.surface {
   }
 }
 
-.admin-orders-grid-items {
-  font-size: 0.77rem;
-  font-weight: 450;
-  color: var(--acl-fg-soft);
-  font-variant-numeric: tabular-nums;
-  text-align: right;
-}
-
 .admin-orders-grid-actions {
   position: absolute;
   top: 0;
@@ -6506,6 +6498,32 @@ body.admin-theme-premium-black .booking-page-wrap .booking-shell.surface {
   border-radius: var(--radius-full);
   justify-content: center;
   color: var(--acl-fg);
+  border: 1.5px solid transparent;
+  box-sizing: border-box;
+}
+
+.admin-orders-grid-collect-btn--pending {
+  color: var(--accent);
+  border-color: color-mix(in srgb, var(--accent) 75%, transparent);
+  outline: 1.5px solid color-mix(in srgb, var(--accent) 55%, transparent);
+  outline-offset: 1px;
+  background: color-mix(in srgb, var(--accent) 10%, transparent);
+}
+
+.admin-orders-grid-collect-btn--done {
+  color: var(--success);
+  border-color: color-mix(in srgb, var(--success) 75%, transparent);
+  outline: 1.5px solid color-mix(in srgb, var(--success) 50%, transparent);
+  outline-offset: 1px;
+  background: color-mix(in srgb, var(--success) 12%, transparent);
+  opacity: 1;
+  cursor: default;
+}
+
+.admin-orders-grid-collect-btn--done:disabled {
+  opacity: 1;
+  cursor: default;
+  color: var(--success);
 }
 
 .admin-orders-grid-collect-btn svg {
@@ -6790,7 +6808,6 @@ body.admin-theme-premium-black .booking-page-wrap .booking-shell.surface {
       minmax(12rem, 2fr)
       minmax(5.5rem, 1fr)
       minmax(5rem, 0.85fr)
-      minmax(2.5rem, 0.6fr)
       minmax(3.25rem, 0.75fr);
   }
 
@@ -6800,7 +6817,7 @@ body.admin-theme-premium-black .booking-page-wrap .booking-shell.surface {
   }
 
   .admin-orders-grid-row {
-    grid-column: 1 / 5;
+    grid-column: 1 / 4;
   }
 
   .admin-orders-grid-header-cell--status .admin-orders-grid-sort-label {
@@ -6815,8 +6832,7 @@ body.admin-theme-premium-black .booking-page-wrap .booking-shell.surface {
     border: 0;
   }
 
-  .admin-orders-grid-header-cell--total .admin-orders-grid-sort,
-  .admin-orders-grid-header-cell--items .admin-orders-grid-sort {
+  .admin-orders-grid-header-cell--total .admin-orders-grid-sort {
     width: 100%;
     flex-direction: row-reverse;
     justify-content: flex-start;
@@ -6834,7 +6850,7 @@ body.admin-theme-premium-black .booking-page-wrap .booking-shell.surface {
   }
 
   .admin-orders-grid-actions {
-    grid-column: 5;
+    grid-column: 4;
     position: static;
     top: auto;
     right: auto;
@@ -6868,7 +6884,6 @@ body.admin-theme-premium-black .booking-page-wrap .booking-shell.surface {
       minmax(10rem, 1fr)
       minmax(5.2rem, 6.4rem)
       1.6rem
-      minmax(2.35rem, 2.75rem)
       minmax(2.55rem, 3rem);
   }
 
@@ -6947,8 +6962,7 @@ body.admin-theme-premium-black .booking-page-wrap .booking-shell.surface {
     font-size: 0.82rem;
   }
 
-  .admin-orders-grid-status,
-  .admin-orders-grid-items {
+  .admin-orders-grid-status {
     display: none;
   }
 
