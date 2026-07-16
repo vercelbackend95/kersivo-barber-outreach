@@ -3,7 +3,7 @@ export const FEATURE261_MORE_INCLUDED_LABEL = 'MORE INCLUDED FROM DAY ONE';
 export const FEATURE261_MORE_INCLUDED_PILLS = [
   'Deposits',
   'No-show protection',
-  'SMS reminders',
+  'Email reminders',
   'Client profiles',
   'Booking history',
   'Barber roster & hours',

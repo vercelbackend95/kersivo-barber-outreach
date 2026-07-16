@@ -1,12 +1,13 @@
 export const prerender = false;
 
 import type { APIRoute } from 'astro';
-import { requireAdmin } from '../../../../../lib/admin/auth';
+import { requireAdminContext } from '../../../../../lib/admin/auth';
+import { bookingWhereForShop, findShopService } from '../../../../../lib/admin/shopScoped';
 import { prisma } from '../../../../../lib/db/client';
 
 export const PATCH: APIRoute = async (ctx) => {
-  const unauthorized = await requireAdmin(ctx);
-  if (unauthorized) return unauthorized;
+  const access = await requireAdminContext(ctx);
+  if (access instanceof Response) return access;
 
   const bookingId = ctx.params.id;
   if (!bookingId) {
@@ -25,19 +26,11 @@ export const PATCH: APIRoute = async (ctx) => {
   const { serviceId } = payload;
 
   const [booking, service] = await Promise.all([
-    prisma.booking.findUnique({
-      where: { id: bookingId },
+    prisma.booking.findFirst({
+      where: bookingWhereForShop(bookingId, access.shopId),
       select: { id: true, startAt: true, status: true },
     }),
-    prisma.service.findUnique({
-      where: { id: serviceId },
-      select: {
-        id: true,
-        name: true,
-        pricePence: true,
-        durationMinutes: true,
-      },
-    }),
+    findShopService(serviceId, access.shopId),
   ]);
 
   if (!booking) {
@@ -52,7 +45,7 @@ export const PATCH: APIRoute = async (ctx) => {
   );
 
   const updated = await prisma.booking.update({
-    where: { id: bookingId },
+    where: { id: booking.id },
     data: {
       serviceId: service.id,
       serviceNameAtBooking: service.name,

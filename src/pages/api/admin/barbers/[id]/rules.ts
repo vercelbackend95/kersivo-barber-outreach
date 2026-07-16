@@ -2,18 +2,19 @@ export const prerender = false;
 
 import type { APIRoute } from 'astro';
 import { z } from 'zod';
-import { requireAdmin } from '../../../../../lib/admin/auth';
+import { requireAdminContext } from '../../../../../lib/admin/auth';
+import { findShopBarber } from '../../../../../lib/admin/shopScoped';
 import { prisma } from '../../../../../lib/db/client';
 
 const rowSchema = z.object({
   dayOfWeek: z.number().int().min(0).max(6),
   active: z.boolean(),
   startTime: z.string().regex(/^([01]\d|2[0-3]):[0-5]\d$/),
-  endTime: z.string().regex(/^([01]\d|2[0-3]):[0-5]\d$/)
+  endTime: z.string().regex(/^([01]\d|2[0-3]):[0-5]\d$/),
 });
 
 const payloadSchema = z.object({
-  rules: z.array(rowSchema).length(7)
+  rules: z.array(rowSchema).length(7),
 });
 
 function minutesToTimeString(minutes: number) {
@@ -31,7 +32,7 @@ async function serializeRules(barberId: string) {
   const rules = await prisma.availabilityRule.findMany({
     where: { barberId },
     orderBy: [{ dayOfWeek: 'asc' }, { startMinutes: 'asc' }],
-    select: { id: true, dayOfWeek: true, active: true, startMinutes: true, endMinutes: true }
+    select: { id: true, dayOfWeek: true, active: true, startMinutes: true, endMinutes: true },
   });
 
   const byDay = new Map(rules.map((rule) => [rule.dayOfWeek, rule]));
@@ -41,28 +42,42 @@ async function serializeRules(barberId: string) {
       dayOfWeek,
       active: rule?.active ?? false,
       startTime: minutesToTimeString(rule?.startMinutes ?? 10 * 60),
-      endTime: minutesToTimeString(rule?.endMinutes ?? 18 * 60)
+      endTime: minutesToTimeString(rule?.endMinutes ?? 18 * 60),
     };
   });
 }
 
 export const GET: APIRoute = async (ctx) => {
-  const unauthorized = await requireAdmin(ctx);
-  if (unauthorized) return unauthorized;
+  const access = await requireAdminContext(ctx);
+  if (access instanceof Response) return access;
 
   const barberId = ctx.params.id;
-  if (!barberId) return new Response(JSON.stringify({ error: 'Missing barber id.' }), { status: 400 });
+  if (!barberId) {
+    return new Response(JSON.stringify({ error: 'Missing barber id.' }), { status: 400 });
+  }
 
-  const rules = await serializeRules(barberId);
+  const barber = await findShopBarber(barberId, access.shopId);
+  if (!barber) {
+    return new Response(JSON.stringify({ error: 'Barber not found.' }), { status: 404 });
+  }
+
+  const rules = await serializeRules(barber.id);
   return new Response(JSON.stringify({ rules }));
 };
 
 export const PUT: APIRoute = async (ctx) => {
-  const unauthorized = await requireAdmin(ctx);
-  if (unauthorized) return unauthorized;
+  const access = await requireAdminContext(ctx);
+  if (access instanceof Response) return access;
 
   const barberId = ctx.params.id;
-  if (!barberId) return new Response(JSON.stringify({ error: 'Missing barber id.' }), { status: 400 });
+  if (!barberId) {
+    return new Response(JSON.stringify({ error: 'Missing barber id.' }), { status: 400 });
+  }
+
+  const barber = await findShopBarber(barberId, access.shopId);
+  if (!barber) {
+    return new Response(JSON.stringify({ error: 'Barber not found.' }), { status: 404 });
+  }
 
   const parsed = payloadSchema.safeParse(await ctx.request.json());
   if (!parsed.success) {
@@ -73,27 +88,30 @@ export const PUT: APIRoute = async (ctx) => {
     const startMinutes = timeStringToMinutes(rule.startTime);
     const endMinutes = timeStringToMinutes(rule.endTime);
     if (rule.active && startMinutes >= endMinutes) {
-      return new Response(JSON.stringify({ error: `Day ${rule.dayOfWeek}: start time must be earlier than end time.` }), { status: 400 });
+      return new Response(
+        JSON.stringify({ error: `Day ${rule.dayOfWeek}: start time must be earlier than end time.` }),
+        { status: 400 },
+      );
     }
   }
 
   await prisma.$transaction(async (tx) => {
-    await tx.availabilityRule.deleteMany({ where: { barberId } });
+    await tx.availabilityRule.deleteMany({ where: { barberId: barber.id } });
     const activeRules = parsed.data.rules.filter((rule) => rule.active);
     if (activeRules.length > 0) {
       await tx.availabilityRule.createMany({
         data: activeRules.map((rule) => ({
-          barberId,
+          barberId: barber.id,
           dayOfWeek: rule.dayOfWeek,
           active: true,
           startMinutes: timeStringToMinutes(rule.startTime),
           endMinutes: timeStringToMinutes(rule.endTime),
           breakStartMin: null,
-          breakEndMin: null
-        }))
+          breakEndMin: null,
+        })),
       });
     }
   });
 
-  return new Response(JSON.stringify({ rules: await serializeRules(barberId) }));
+  return new Response(JSON.stringify({ rules: await serializeRules(barber.id) }));
 };

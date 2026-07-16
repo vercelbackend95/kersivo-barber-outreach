@@ -2,35 +2,35 @@ export const prerender = false;
 
 import type { APIRoute } from 'astro';
 import { z } from 'zod';
-import { requireAdmin } from '../../../../lib/admin/auth';
+import { requireAdminContext } from '../../../../lib/admin/auth';
 import { prisma } from '../../../../lib/db/client';
 
 const reorderSchema = z.object({
-  orderedIds: z.array(z.string().min(1)).min(1)
+  orderedIds: z.array(z.string().min(1)).min(1),
 });
 
 const serviceInclude = {
   barberServices: {
     orderBy: {
       barber: {
-        sortOrder: 'asc' as const
-      }
+        sortOrder: 'asc' as const,
+      },
     },
     select: {
       barber: {
         select: {
           id: true,
           name: true,
-          active: true
-        }
-      }
-    }
-  }
+          active: true,
+        },
+      },
+    },
+  },
 };
 
 export const POST: APIRoute = async (ctx) => {
-  const unauthorized = await requireAdmin(ctx);
-  if (unauthorized) return unauthorized;
+  const access = await requireAdminContext(ctx);
+  if (access instanceof Response) return access;
 
   const parsed = reorderSchema.safeParse(await ctx.request.json());
   if (!parsed.success) {
@@ -40,18 +40,27 @@ export const POST: APIRoute = async (ctx) => {
   try {
     const { orderedIds } = parsed.data;
 
+    const owned = await prisma.service.findMany({
+      where: { shopId: access.shopId, id: { in: orderedIds } },
+      select: { id: true },
+    });
+    if (owned.length !== orderedIds.length) {
+      return new Response(JSON.stringify({ error: 'Invalid service ids.' }), { status: 400 });
+    }
+
     await prisma.$transaction(
       orderedIds.map((id, index) =>
         prisma.service.update({
           where: { id },
-          data: { displayOrder: index }
-        })
-      )
+          data: { displayOrder: index },
+        }),
+      ),
     );
 
     const services = await prisma.service.findMany({
+      where: { shopId: access.shopId },
       orderBy: [{ displayOrder: 'asc' }, { createdAt: 'asc' }],
-      include: serviceInclude
+      include: serviceInclude,
     });
 
     return new Response(JSON.stringify({ ok: true, services }), { status: 200 });

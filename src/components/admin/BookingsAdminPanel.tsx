@@ -27,7 +27,7 @@ import BarberChip from './BarberChip';
 import type { Barber, ServiceOption, TimeBlock, WorkingHourRow } from './barbersTypes';
 import { getDefaultWorkingHourRows } from '../../lib/admin/defaultWorkingHourRows';
 import EmptyState from '../EmptyState';
-import { Clock, ListOrdered, X } from '../lucide-react';
+import { Clock, ListOrdered, Plus, X } from '../lucide-react';
 import { ADMIN_BOOKING_HISTORY_PAGE_SIZE } from '../../lib/admin/bookingHistoryPageSize';
 import { canShopAdminCancelByLeadTime } from '../../lib/booking/policies';
 import { countBookingsByStatusTone, getBookingStatusTone, isCancelledBookingStatus } from './bookingStatus';
@@ -623,7 +623,7 @@ const BOOKINGS_HEADER_KICKER: Record<BookingsAdminMode, string> = {
 
 const BOOKINGS_SECTION_HEADER: Record<BookingsAdminMode, { title: string; description: string }> = {
   dashboard: { title: 'Bookings', description: "Manage today's appointments and upcoming schedule" },
-  blocks: { title: 'Barbers', description: 'Configure your barber roster, schedules, and services' },
+  blocks: { title: 'Barbers', description: 'Roster, schedules, and services' },
   reports: { title: 'Reports', description: 'Business performance analytics' },
   history: { title: 'History', description: 'Complete booking history with filters' },
 };
@@ -2355,8 +2355,14 @@ export default function BookingsAdminPanel({ isActive, mode, onBackToDashboard, 
             metaBadgeVariant={undefined}
             actions={
               mode === 'blocks' ? (
-                <button type="button" className="btn btn--primary" onClick={openAddBarberSheet}>
-                  Add barber
+                <button
+                  type="button"
+                  className="btn btn--primary btn--icon"
+                  aria-label="Add barber"
+                  title="Add barber"
+                  onClick={openAddBarberSheet}
+                >
+                  <Plus aria-hidden />
                 </button>
               ) : undefined
             }

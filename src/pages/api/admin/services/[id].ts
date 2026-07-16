@@ -97,8 +97,8 @@ export const PATCH: APIRoute = async (ctx) => {
 
     const nextCategories =
       normalizedCategory !== undefined
-        ? await ensureCustomServiceCategory(normalizedCategory, tx)
-        : await loadMergedServiceCategories(tx);
+        ? await ensureCustomServiceCategory(shopId, normalizedCategory, tx)
+        : await loadMergedServiceCategories(shopId, tx);
 
     return { service: updated, categories: nextCategories };
   });

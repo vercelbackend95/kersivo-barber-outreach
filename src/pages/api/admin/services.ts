@@ -51,44 +51,11 @@ export const GET: APIRoute = async (ctx) => {
           }
         }
       }),
-      loadMergedServiceCategories()
+      loadMergedServiceCategories(shopId)
     ]);
-
-    // #region agent log
-    fetch('http://127.0.0.1:7636/ingest/cd40da78-1e4e-4e73-9293-9e83626fa943', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json', 'X-Debug-Session-Id': '27ceaf' },
-      body: JSON.stringify({
-        sessionId: '27ceaf',
-        hypothesisId: 'H4',
-        location: 'services.ts:GET',
-        message: 'admin services loaded',
-        data: { serviceCount: services.length, categoryCount: categories.length },
-        timestamp: Date.now()
-      })
-    }).catch(() => {});
-    // #endregion
 
     return new Response(JSON.stringify({ services, categories }));
   } catch (error) {
-    // #region agent log
-    fetch('http://127.0.0.1:7636/ingest/cd40da78-1e4e-4e73-9293-9e83626fa943', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json', 'X-Debug-Session-Id': '27ceaf' },
-      body: JSON.stringify({
-        sessionId: '27ceaf',
-        hypothesisId: 'H1-H4',
-        location: 'services.ts:GET:catch',
-        message: 'admin services failed',
-        data: {
-          name: error instanceof Error ? error.name : typeof error,
-          snippet: error instanceof Error ? error.message.slice(0, 320) : String(error)
-        },
-        timestamp: Date.now()
-      })
-    }).catch(() => {});
-    // #endregion
-
     const message = error instanceof Error ? error.message : 'Unable to load services.';
     return new Response(JSON.stringify({ error: message }), { status: 500 });
   }
@@ -159,7 +126,7 @@ export const POST: APIRoute = async (ctx) => {
       }
     });
 
-    const nextCategories = await ensureCustomServiceCategory(category, tx);
+    const nextCategories = await ensureCustomServiceCategory(shopId, category, tx);
     return { service: created, categories: nextCategories };
   });
 

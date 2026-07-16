@@ -5,7 +5,7 @@ import AdminDesktopDashHeroSlot from './AdminDesktopDashHeroSlot';
 import { useAdminMobileChromeBreakpoint } from './useAdminMobileNextAppointmentsChrome';
 import EmptyState from '../EmptyState';
 import { SkeletonBookingChoices } from '../skeleton';
-import { ChevronDown, ChevronUp, Scissors, Search, Users, X } from '../lucide-react';
+import { ChevronDown, ChevronUp, Plus, Scissors, Search, Users, X } from '../lucide-react';
 import { adminFetchJson, isPublicAdminDemoMode, notifyAdminDemoBlocked } from './adminAuth';
 import ServiceCategoryPicker from './ServiceCategoryPicker';
 
@@ -698,11 +698,17 @@ export default function ServicesAdminPanel() {
     <section className="surface booking-shell admin-services-shell">
       <AdminSectionHeader
         title="Services"
-        description="Configure your service catalogue"
+        description="Service catalogue"
         metaBadge={`${services.length} services`}
         actions={
-          <button type="button" className="btn btn--primary" onClick={openCreateServiceSheet}>
-            Add Service
+          <button
+            type="button"
+            className="btn btn--primary btn--icon"
+            aria-label="Add service"
+            title="Add service"
+            onClick={openCreateServiceSheet}
+          >
+            <Plus aria-hidden />
           </button>
         }
       />

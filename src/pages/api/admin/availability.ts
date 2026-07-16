@@ -2,24 +2,65 @@ export const prerender = false;
 
 import type { APIRoute } from 'astro';
 import { z } from 'zod';
-import { requireAdmin } from '../../../lib/admin/auth';
+import { requireAdminContext } from '../../../lib/admin/auth';
+import { findShopBarber } from '../../../lib/admin/shopScoped';
 import { prisma } from '../../../lib/db/client';
 
-const schema = z.object({ id: z.string().optional(), barberId: z.string(), dayOfWeek: z.number().int().min(0).max(6), startMinutes: z.number().int().min(0).max(1440), endMinutes: z.number().int().min(1).max(1440), breakStartMin: z.number().int().optional().nullable(), breakEndMin: z.number().int().optional().nullable(), active: z.boolean().default(true) });
+const schema = z.object({
+  id: z.string().optional(),
+  barberId: z.string(),
+  dayOfWeek: z.number().int().min(0).max(6),
+  startMinutes: z.number().int().min(0).max(1440),
+  endMinutes: z.number().int().min(1).max(1440),
+  breakStartMin: z.number().int().optional().nullable(),
+  breakEndMin: z.number().int().optional().nullable(),
+  active: z.boolean().default(true),
+});
 
 export const GET: APIRoute = async (ctx) => {
-  const unauthorized = await requireAdmin(ctx);
-  if (unauthorized) return unauthorized;
-  const rows = await prisma.availabilityRule.findMany({ orderBy: [{ barberId: 'asc' }, { dayOfWeek: 'asc' }] });
+  const access = await requireAdminContext(ctx);
+  if (access instanceof Response) return access;
+
+  const rows = await prisma.availabilityRule.findMany({
+    where: { barber: { shopId: access.shopId } },
+    orderBy: [{ barberId: 'asc' }, { dayOfWeek: 'asc' }],
+  });
   return new Response(JSON.stringify({ rules: rows }));
 };
 
 export const POST: APIRoute = async (ctx) => {
-  const unauthorized = await requireAdmin(ctx);
-  if (unauthorized) return unauthorized;
+  const access = await requireAdminContext(ctx);
+  if (access instanceof Response) return access;
+
   const parsed = schema.safeParse(await ctx.request.json());
-  if (!parsed.success) return new Response(JSON.stringify({ error: parsed.error.flatten() }), { status: 400 });
+  if (!parsed.success) {
+    return new Response(JSON.stringify({ error: parsed.error.flatten() }), { status: 400 });
+  }
+
+  const barber = await findShopBarber(parsed.data.barberId, access.shopId);
+  if (!barber) {
+    return new Response(JSON.stringify({ error: 'Barber not found.' }), { status: 404 });
+  }
+
   const { id, ...data } = parsed.data;
-  const rule = id ? await prisma.availabilityRule.update({ where: { id }, data }) : await prisma.availabilityRule.create({ data });
+
+  if (id) {
+    const existing = await prisma.availabilityRule.findFirst({
+      where: { id, barber: { shopId: access.shopId } },
+      select: { id: true },
+    });
+    if (!existing) {
+      return new Response(JSON.stringify({ error: 'Availability rule not found.' }), { status: 404 });
+    }
+    const rule = await prisma.availabilityRule.update({
+      where: { id: existing.id },
+      data: { ...data, barberId: barber.id },
+    });
+    return new Response(JSON.stringify({ rule }));
+  }
+
+  const rule = await prisma.availabilityRule.create({
+    data: { ...data, barberId: barber.id },
+  });
   return new Response(JSON.stringify({ rule }));
 };

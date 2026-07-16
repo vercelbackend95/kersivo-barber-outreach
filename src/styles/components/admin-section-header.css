@@ -52,16 +52,15 @@
 @media (max-width: 48rem) {
   .admin-section-header {
     gap: var(--space-sm);
+    flex-wrap: nowrap;
+    align-items: flex-start;
     /* Tighter top rhythm under mobile chrome; keep bottom separation toward content */
     padding-block: var(--space-xs) var(--space-sm);
   }
 
   .admin-section-header-actions {
-    width: 100%;
-  }
-
-  .admin-section-header-actions > * {
-    width: 100%;
+    flex: 0 0 auto;
+    align-self: flex-start;
   }
 
   /*

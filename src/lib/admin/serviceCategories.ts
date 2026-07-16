@@ -6,7 +6,7 @@ export const DEFAULT_SERVICE_CATEGORIES = [
   'styling',
   'beard styling',
   'shaving',
-  'wellbeing'
+  'wellbeing',
 ] as const;
 
 export const SERVICE_CATEGORY_MAX_LENGTH = 80;
@@ -23,7 +23,8 @@ function isUnknownCustomCategoriesField(error: unknown): boolean {
 
 function isMissingCustomCategoriesColumn(error: unknown): boolean {
   return (
-    (error instanceof Error && error.message.includes('customServiceCategories') &&
+    (error instanceof Error &&
+      error.message.includes('customServiceCategories') &&
       error.message.includes('does not exist')) ||
     (typeof error === 'object' &&
       error !== null &&
@@ -32,38 +33,20 @@ function isMissingCustomCategoriesColumn(error: unknown): boolean {
   );
 }
 
-async function loadShopCustomCategories(db: DbClient): Promise<string[]> {
+async function loadShopCustomCategories(shopId: string, db: DbClient): Promise<string[]> {
   try {
-    const shop = await db.shopSettings.findFirstOrThrow({
-      select: { customServiceCategories: true }
+    const shop = await db.shopSettings.findUniqueOrThrow({
+      where: { id: shopId },
+      select: { customServiceCategories: true },
     });
     return shop.customServiceCategories;
   } catch (error) {
-    // #region agent log
-    fetch('http://127.0.0.1:7636/ingest/cd40da78-1e4e-4e73-9293-9e83626fa943', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json', 'X-Debug-Session-Id': '27ceaf' },
-      body: JSON.stringify({
-        sessionId: '27ceaf',
-        hypothesisId: 'H1-H3',
-        location: 'serviceCategories.ts:loadShopCustomCategories',
-        message: 'loadShopCustomCategories failed',
-        data: {
-          name: error instanceof Error ? error.name : typeof error,
-          code: typeof error === 'object' && error !== null && 'code' in error ? (error as { code?: string }).code : null,
-          snippet: error instanceof Error ? error.message.slice(0, 240) : String(error)
-        },
-        timestamp: Date.now()
-      })
-    }).catch(() => {});
-    // #endregion
-
     if (isMissingCustomCategoriesColumn(error)) {
       return [];
     }
     if (isUnknownCustomCategoriesField(error)) {
       throw new Error(
-        'Prisma client is out of date. Stop the dev server, run npm run prisma:generate, then restart.'
+        'Prisma client is out of date. Stop the dev server, run npm run prisma:generate, then restart.',
       );
     }
     throw error;
@@ -83,7 +66,7 @@ export function isDefaultServiceCategory(category: string): boolean {
 
 export function mergeServiceCategories(
   custom: string[],
-  fromServices: Array<string | null | undefined>
+  fromServices: Array<string | null | undefined>,
 ): string[] {
   const seen = new Map<string, string>();
 
@@ -103,45 +86,51 @@ export function mergeServiceCategories(
   return Array.from(seen.values());
 }
 
-export async function loadMergedServiceCategories(db: DbClient = prisma): Promise<string[]> {
+export async function loadMergedServiceCategories(
+  shopId: string,
+  db: DbClient = prisma,
+): Promise<string[]> {
   const [custom, services] = await Promise.all([
-    loadShopCustomCategories(db),
-    db.service.findMany({ where: { category: { not: null } }, select: { category: true } })
+    loadShopCustomCategories(shopId, db),
+    db.service.findMany({
+      where: { shopId, category: { not: null } },
+      select: { category: true },
+    }),
   ]);
 
   return mergeServiceCategories(
     custom,
-    services.map((service) => service.category)
+    services.map((service) => service.category),
   );
 }
 
 export async function ensureCustomServiceCategory(
+  shopId: string,
   category: string,
-  db: DbClient = prisma
+  db: DbClient = prisma,
 ): Promise<string[]> {
   const normalized = normalizeServiceCategory(category);
   if (!normalized || isDefaultServiceCategory(normalized)) {
-    return loadMergedServiceCategories(db);
+    return loadMergedServiceCategories(shopId, db);
   }
 
-  const existingCustom = await loadShopCustomCategories(db);
+  const existingCustom = await loadShopCustomCategories(shopId, db);
   const key = normalized.toLowerCase();
   if (existingCustom.some((entry) => entry.toLowerCase() === key)) {
-    return loadMergedServiceCategories(db);
+    return loadMergedServiceCategories(shopId, db);
   }
 
   try {
-    const shop = await db.shopSettings.findFirstOrThrow({ select: { id: true } });
     await db.shopSettings.update({
-      where: { id: shop.id },
-      data: { customServiceCategories: [...existingCustom, normalized] }
+      where: { id: shopId },
+      data: { customServiceCategories: [...existingCustom, normalized] },
     });
   } catch (error) {
     if (isMissingCustomCategoriesColumn(error) || isUnknownCustomCategoriesField(error)) {
-      return loadMergedServiceCategories(db);
+      return loadMergedServiceCategories(shopId, db);
     }
     throw error;
   }
 
-  return loadMergedServiceCategories(db);
+  return loadMergedServiceCategories(shopId, db);
 }

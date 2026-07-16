@@ -1,6 +1,6 @@
 /**
  * Shared public-facing pricing / commission claim policy.
- * Confirmed commercial rules — keep marketing, FAQ and Terms aligned.
+ * Keep marketing, FAQ and Terms aligned with what the product actually delivers.
  */
 
 export const PRICE_VAT_DISCLAIMER =
@@ -14,4 +14,17 @@ export const STRIPE_FEES_NOTE = 'Standard Stripe payment-processing fees still a
 
 export const KERSIVO_COMMISSION_WITH_STRIPE = `${KERSIVO_COMMISSION_CLAIM} ${STRIPE_FEES_NOTE}`;
 
-export const SMS_INCLUDED_CLAIM = 'SMS reminders';
+/**
+ * Care includes transactional email reminders today.
+ * Automated SMS is not a live platform feature yet — do not claim "unlimited SMS".
+ */
+export const EMAIL_REMINDERS_CLAIM = 'Email appointment confirmations and reminders';
+
+/** @deprecated Prefer EMAIL_REMINDERS_CLAIM — kept as alias for gradual migration. */
+export const SMS_INCLUDED_CLAIM = EMAIL_REMINDERS_CLAIM;
+
+export const SMS_ROADMAP_NOTE =
+  'Automated SMS reminders are not yet enabled in the live platform; ask at setup if SMS is required for your launch.';
+
+export const STRIPE_ACCOUNT_CLAIM =
+  'Demo and preview checkouts may use KERSIVO Stripe; live shops are connected to your Stripe account during go-live setup.';

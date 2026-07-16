@@ -4,7 +4,8 @@ import type { APIRoute } from 'astro';
 import { BookingStatus, OrderStatus, Prisma } from '@prisma/client';
 import { addMilliseconds, differenceInCalendarDays, differenceInMilliseconds, subDays, subMonths } from 'date-fns';
 import { formatInTimeZone, fromZonedTime, toZonedTime } from 'date-fns-tz';
-import { requireAdmin } from '../../../lib/admin/auth';
+import { requireAdminContext } from '../../../lib/admin/auth';
+import { excludeSandboxBookingsWhere } from '../../../lib/booking/sandboxBookings';
 import {
   ADMIN_REPORTS_DATABASE_UNAVAILABLE_MESSAGE,
   isPrismaDatabaseUnavailableError
@@ -288,9 +289,8 @@ async function computeMetrics(shopId: string, range: RangeBoundaries, selectedBa
   const whereBase = {
     client: { shopId },
     startAt: { gte: range.from, lte: range.to },
-
+    ...excludeSandboxBookingsWhere,
     ...(selectedBarberId ? { barberId: selectedBarberId } : {})
-
   };
 
   const [bookings, orders, busiestBarberRaw, mostPopularServiceRaw, activeBarbers, timeBlocks] = await Promise.all([
@@ -606,8 +606,8 @@ async function computeMetrics(shopId: string, range: RangeBoundaries, selectedBa
 
 
 export const GET: APIRoute = async (ctx) => {
-  const unauthorized = await requireAdmin(ctx);
-  if (unauthorized) return unauthorized;
+  const access = await requireAdminContext(ctx);
+  if (access instanceof Response) return access;
 
   const resolved = resolveReportsRequest(ctx.url.searchParams);
   if ('error' in resolved) {
@@ -618,16 +618,19 @@ export const GET: APIRoute = async (ctx) => {
   const selectedBarberId = ctx.url.searchParams.get('barberId') || null;
 
   try {
-    const shop = await prisma.shopSettings.findFirstOrThrow({ select: { id: true } });
+    const shopId = access.shopId;
     const previousRange = getPreviousRange(range, selectedRange);
 
     const [selectedBarberEntity, recentBarbers, currentMetrics, previousMetrics] = await Promise.all([
       selectedBarberId
-        ? prisma.barber.findUnique({ where: { id: selectedBarberId }, select: { id: true, name: true, avatarUrl: true } })
+        ? prisma.barber.findFirst({
+            where: { id: selectedBarberId, shopId },
+            select: { id: true, name: true, avatarUrl: true },
+          })
         : Promise.resolve(null),
-      getRecentBarbers(shop.id, selectedRange.from, selectedRange.to),
-      computeMetrics(shop.id, selectedRange, selectedBarberId, range),
-      computeMetrics(shop.id, previousRange, selectedBarberId, range)
+      getRecentBarbers(shopId, selectedRange.from, selectedRange.to),
+      computeMetrics(shopId, selectedRange, selectedBarberId, range),
+      computeMetrics(shopId, previousRange, selectedBarberId, range)
     ]);
 
     return new Response(JSON.stringify({

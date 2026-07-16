@@ -112,7 +112,7 @@ const Process2 = ({ className }: Process2Props) => {
       imageMobileWidth: 1600,
       imageMobileHeight: 2400,
       weDo:
-        "Build the booking site on your domain, configure Stripe deposits, automated SMS reminders, win-back, and pay & collect retail \u2014 ready to run on day one.",
+        "Build the booking site on your domain, configure Stripe deposits, email appointment reminders, and pay & collect retail — ready to run on day one.",
       youDo:
         "Stay focused on cutting hair. If you are switching, keep taking bookings on your current platform as normal.",
       deliverable:

@@ -1,10 +1,16 @@
 export const prerender = false;
 
 import type { APIRoute } from 'astro';
+import { resolveAdminAccess } from '../../../lib/admin/auth';
 import { bookingCreateSchema } from '../../../lib/booking/schemas';
-import { createInstantBooking } from '../../../lib/booking/service';
-import { checkBookingRateLimit } from '../../../lib/rate-limit/bookingRateLimit';
+import {
+  OWNER_TEST_BOOKING_NOTES_PREFIX,
+  PUBLIC_DEMO_BOOKING_NOTES_PREFIX,
+} from '../../../lib/booking/sandboxBookings';
+import { BookingActionError, createInstantBooking } from '../../../lib/booking/service';
+import { DEMO_SHOP_ID } from '../../../lib/db/shopScope';
 import { prisma } from '../../../lib/db/client';
+import { checkBookingRateLimit } from '../../../lib/rate-limit/bookingRateLimit';
 
 const getRequestIp = (request: Request): string => {
   const forwardedFor = request.headers.get('x-forwarded-for');
@@ -19,24 +25,34 @@ const getRequestIp = (request: Request): string => {
   return 'local';
 };
 
-export const POST: APIRoute = async ({ request }) => {
+export const POST: APIRoute = async (ctx) => {
+  const { request } = ctx;
   const ip = getRequestIp(request);
+  const access = await resolveAdminAccess(ctx);
+  const isOwnerSession = access?.via === 'session';
 
-  if (!import.meta.env.DEV) {
+  // Always rate-limit public demo; also rate-limit in production for owners.
+  if (!isOwnerSession || !import.meta.env.DEV) {
     const limit = checkBookingRateLimit(ip);
 
     if (!limit.ok) {
-      return new Response(JSON.stringify({ error: 'Too many attempts. Try later.', retryAfter: limit.retryAfterSeconds }), {
-        status: 429
-      });
+      return new Response(
+        JSON.stringify({ error: 'Too many attempts. Try later.', retryAfter: limit.retryAfterSeconds }),
+        { status: 429 },
+      );
     }
 
-    await prisma.rateLimitEvent.create({ data: { ip, action: 'booking_create' } });
+    if (!import.meta.env.DEV) {
+      await prisma.rateLimitEvent.create({ data: { ip, action: 'booking_create' } });
+    }
   }
 
   const rawBody = await request.text();
   if (!rawBody.trim()) {
-    return new Response(JSON.stringify({ error: 'Request body is required and must be valid JSON.' }), { status: 400 });
+    return new Response(
+      JSON.stringify({ error: 'Request body is required and must be valid JSON.' }),
+      { status: 400 },
+    );
   }
 
   let payload: unknown;
@@ -49,11 +65,24 @@ export const POST: APIRoute = async ({ request }) => {
   const parsed = bookingCreateSchema.safeParse(payload);
 
   if (!parsed.success) {
-    return new Response(JSON.stringify({ error: 'Invalid request', issues: parsed.error.flatten() }), { status: 400 });
+    return new Response(
+      JSON.stringify({ error: 'Invalid request', issues: parsed.error.flatten() }),
+      { status: 400 },
+    );
   }
 
+  const requiredShopId = isOwnerSession ? access!.shopId : DEMO_SHOP_ID;
+  const notesPrefix = isOwnerSession
+    ? OWNER_TEST_BOOKING_NOTES_PREFIX
+    : PUBLIC_DEMO_BOOKING_NOTES_PREFIX;
+  const skipConfirmationEmail = !isOwnerSession;
+
   try {
-    const booking = await createInstantBooking(parsed.data);
+    const booking = await createInstantBooking(parsed.data, {
+      requiredShopId,
+      notesPrefix,
+      skipConfirmationEmail,
+    });
     return new Response(
       JSON.stringify({
         booking: {
@@ -61,12 +90,18 @@ export const POST: APIRoute = async ({ request }) => {
           status: booking.status,
           serviceName: booking.serviceNameAtBooking ?? booking.service.name,
           barberName: booking.barber.name,
-          startAt: booking.startAt
-        }
-      })
+          startAt: booking.startAt,
+          sandbox: true,
+        },
+      }),
     );
-
   } catch (error) {
-    return new Response(JSON.stringify({ error: error instanceof Error ? error.message : 'Booking failed.' }), { status: 400 });
+    if (error instanceof BookingActionError) {
+      return new Response(JSON.stringify({ error: error.message }), { status: error.statusCode });
+    }
+    return new Response(
+      JSON.stringify({ error: error instanceof Error ? error.message : 'Booking failed.' }),
+      { status: 400 },
+    );
   }
 };

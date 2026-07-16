@@ -1,12 +1,13 @@
 export const prerender = false;
 
 import type { APIRoute } from 'astro';
-import { requireAdmin } from '../../../../../lib/admin/auth';
+import { requireAdminContext } from '../../../../../lib/admin/auth';
+import { bookingWhereForShop } from '../../../../../lib/admin/shopScoped';
 import { prisma } from '../../../../../lib/db/client';
 
 export const PATCH: APIRoute = async (ctx) => {
-  const unauthorized = await requireAdmin(ctx);
-  if (unauthorized) return unauthorized;
+  const access = await requireAdminContext(ctx);
+  if (access instanceof Response) return access;
 
   const bookingId = ctx.params.id;
   if (!bookingId) {
@@ -18,9 +19,9 @@ export const PATCH: APIRoute = async (ctx) => {
     return new Response(JSON.stringify({ error: 'Invalid notes payload.' }), { status: 400 });
   }
 
-  const booking = await prisma.booking.findUnique({
-    where: { id: bookingId },
-    select: { id: true }
+  const booking = await prisma.booking.findFirst({
+    where: bookingWhereForShop(bookingId, access.shopId),
+    select: { id: true },
   });
 
   if (!booking) {
@@ -28,9 +29,9 @@ export const PATCH: APIRoute = async (ctx) => {
   }
 
   const updated = await prisma.booking.update({
-    where: { id: bookingId },
+    where: { id: booking.id },
     data: { notes: payload.notes },
-    select: { id: true, notes: true, updatedAt: true }
+    select: { id: true, notes: true, updatedAt: true },
   });
 
   return new Response(JSON.stringify({ booking: updated }));

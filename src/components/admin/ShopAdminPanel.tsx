@@ -13,7 +13,7 @@ import AdminLeaderboard from './AdminLeaderboard';
 import { CHART_OVERALL_COLOR, getProductSlotColor } from '@/lib/admin/chartSeriesColors';
 import { SettingsGearIcon } from './SettingsGearIcon';
 import EmptyState from '../EmptyState';
-import { ChevronDown, ChevronUp, Package, Search, Star, X } from '../lucide-react';
+import { ChevronDown, ChevronUp, Package, Plus, Search, Star, X } from '../lucide-react';
 import { formatDelta } from './reportsFormatting';
 import { SkeletonBookingChoices } from '../skeleton';
 import { AdminFetchError, adminFetchJson, isPublicAdminDemoMode, notifyAdminDemoBlocked } from './adminAuth';
@@ -1803,7 +1803,7 @@ export default function ShopAdminPanel({ initialTab = 'products' }: ShopAdminPan
         description={
           activeTab === 'orders' ? 'Customer orders and fulfilment'
           : activeTab === 'sales' ? 'Revenue and sales trends'
-          : 'Manage your retail product catalogue'
+          : 'Retail product catalogue'
         }
         metaBadge={
           activeTab === 'products'
@@ -1816,8 +1816,14 @@ export default function ShopAdminPanel({ initialTab = 'products' }: ShopAdminPan
         ] : undefined}
         metaBadgeVariant="default"
         actions={activeTab === 'products' ? (
-          <button type="button" className="btn btn--primary" onClick={startCreate}>
-            Add Product
+          <button
+            type="button"
+            className="btn btn--primary btn--icon"
+            aria-label="Add product"
+            title="Add product"
+            onClick={startCreate}
+          >
+            <Plus aria-hidden />
           </button>
         ) : undefined}
       />

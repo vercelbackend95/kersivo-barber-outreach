@@ -413,7 +413,7 @@ export async function sendDemoCaptureVisitorEmail(input: { email: string }) {
     <li>branded booking website</li>
     <li>admin dashboard</li>
     <li>retail pickup shop</li>
-    <li>unlimited automated SMS reminders included</li>
+    <li>email appointment confirmations and reminders</li>
     <li>hosting, SSL, domain renewal and support while Care is active</li>
     <li>0% KERSIVO commission. Standard Stripe payment-processing fees still apply.</li>
   </ul>

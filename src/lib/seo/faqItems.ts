@@ -1,6 +1,6 @@
 /**
  * ORPHANED default FAQ set — live homepage uses barbershopBookingFaq.ts instead.
- * Aligned with confirmed commercial rules 13 Jul 2026.
+ * Aligned with product reality (email reminders live; automated SMS not yet standard).
  */
 export type FaqItem = {
   question: string;
@@ -24,7 +24,7 @@ export const FAQ_ITEMS: FaqItem[] = [
   {
     question: 'I have no booking system yet — does this work for me?',
     answer:
-      'Yes. We launch new shops on their own domain in about two weeks, with deposit-protected bookings and unlimited automated SMS reminders from booking #1. Same product, same price, same 0% KERSIVO commission as switchers.',
+      'Yes. We launch new shops on their own domain in about two weeks, with deposit-protected bookings and email appointment confirmations from booking #1. Same product, same price, same 0% KERSIVO commission as switchers.',
     details:
       'We build your booking site on your domain, configure deposits and reminders, set up a Google Business Profile pointer so people find you on Maps, and walk your team through the admin. You start on your own brand from day one — not as a tile in a marketplace.',
   },
@@ -59,13 +59,13 @@ export const FAQ_ITEMS: FaqItem[] = [
   {
     question: 'How does this reduce no-shows?',
     answer:
-      'Booking deposits plus unlimited automated SMS appointment reminders increase commitment before appointment time, which reduces empty-chair losses.',
+      'Booking deposits plus email appointment confirmations and reminders increase commitment before appointment time, which reduces empty-chair losses.',
     details: 'The outcome is fewer dead slots, more paid appointments, and less daily disruption.',
   },
   {
     question: 'What automations are included to recover revenue?',
     answer:
-      'Unlimited automated SMS appointment reminders are included in Ongoing Care, with transactional emails while Care is active.',
+      'Transactional email confirmations and reminders are included in Ongoing Care while Care is active. Automated SMS is available by arrangement at setup if you need it for launch.',
     details:
       'The point is simple: your team spends less time chasing and more time delivering paid services.',
   },
@@ -88,7 +88,7 @@ export const FAQ_ITEMS: FaqItem[] = [
     answer:
       'Your complete cost is: setup fee (£199 or £299, one-time) + Ongoing Care (£39/month) + Stripe’s standard card processing rate on online transactions. Prices shown are final. KERSIVO is not currently VAT registered, so no VAT is added.',
     details:
-      '0% KERSIVO commission on bookings and retail. Unlimited automated SMS reminders included. There are no per-booking platform fees and no volume surcharges as you add barbers.',
+      '0% KERSIVO commission on bookings and retail. Email appointment reminders included. There are no per-booking platform fees and no volume surcharges as you add barbers.',
   },
   {
     question: 'What happens if the setup takes longer than expected, or something goes wrong?',

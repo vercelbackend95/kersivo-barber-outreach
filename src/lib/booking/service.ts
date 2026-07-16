@@ -48,7 +48,10 @@ function rethrowBookingQuotaError(error: unknown): never {
 async function resolveManageTokenBooking(token: string) {
   try {
     const hashed = hashToken(token);
-    const booking = await prisma.booking.findFirst({ where: { manageTokenHash: hashed }, include: { barber: true, service: true } });
+    const booking = await prisma.booking.findFirst({
+      where: { manageTokenHash: hashed },
+      include: { barber: true, service: true },
+    });
     if (!booking) throw new BookingActionError('Invalid token.');
 
     if (isCancelledStatus(booking.status)) {
@@ -336,18 +339,30 @@ async function resolveRequestedBarber(input: {
 }
 
 
-export async function createInstantBooking(input: {
-  serviceId: string;
-  barberId: string;
-  date: string;
-  time: string;
-  fullName: string;
-  email: string;
-  phone?: string;
-
-}) {
+export async function createInstantBooking(
+  input: {
+    serviceId: string;
+    barberId: string;
+    date: string;
+    time: string;
+    fullName: string;
+    email: string;
+    phone?: string;
+  },
+  options: {
+    /** When set, service must belong to this shop. */
+    requiredShopId?: string;
+    /** Prefixed into booking notes (e.g. public demo / owner test). */
+    notesPrefix?: string;
+    /** Skip confirmation email (public demo noise). */
+    skipConfirmationEmail?: boolean;
+  } = {},
+) {
   try {
     const { service, settings } = await loadShopSettingsForService(input.serviceId);
+    if (options.requiredShopId && service.shopId !== options.requiredShopId) {
+      throw new BookingActionError('Selected service is not available for booking.', 403);
+    }
     if (!service.isActive) throw new Error('Selected service is unavailable for new bookings.');
 
     const resolvedBarber = await resolveRequestedBarber({
@@ -359,12 +374,18 @@ export async function createInstantBooking(input: {
       settings
     });
 
+    if (options.requiredShopId && 'shopId' in resolvedBarber && resolvedBarber.shopId !== options.requiredShopId) {
+      throw new BookingActionError('Selected barber is not available for booking.', 403);
+    }
 
     const [h, m] = input.time.split(':').map(Number);
     const startAt = toUtcFromLondon(input.date, h * 60 + m);
     const endAt = addMinutes(startAt, service.durationMinutes + (service.bufferMinutes || settings.defaultBufferMinutes));
     const manageToken = generateToken();
-
+    const notes =
+      options.notesPrefix != null
+        ? `${options.notesPrefix} Sandbox booking — not counted in live reports.`
+        : null;
 
     const booking = await prisma.$transaction(
       async (tx) => {
@@ -389,6 +410,7 @@ export async function createInstantBooking(input: {
             fullName: input.fullName,
             email: input.email,
             phone: input.phone || null,
+            notes,
             startAt,
             endAt,
             status: BookingStatus.BOOKED,
@@ -405,16 +427,18 @@ export async function createInstantBooking(input: {
       { isolationLevel: Prisma.TransactionIsolationLevel.Serializable }
     );
     const baseUrl = resolvePublicSiteUrl();
-    await sendInstantBookingConfirmationEmail({
-      to: booking.email,
-      fullName: booking.fullName,
-      cancelUrl: `${baseUrl}/book/cancel?token=${manageToken}`,
-      rescheduleUrl: `${baseUrl}/book/reschedule?token=${manageToken}`,
-      shopName: settings.name,
-      serviceName: booking.serviceNameAtBooking ?? booking.service.name,
-      barberName: booking.barber.name,
-      startAt: booking.startAt
-    });
+    if (!options.skipConfirmationEmail) {
+      await sendInstantBookingConfirmationEmail({
+        to: booking.email,
+        fullName: booking.fullName,
+        cancelUrl: `${baseUrl}/book/cancel?token=${manageToken}`,
+        rescheduleUrl: `${baseUrl}/book/reschedule?token=${manageToken}`,
+        shopName: settings.name,
+        serviceName: booking.serviceNameAtBooking ?? booking.service.name,
+        barberName: booking.barber.name,
+        startAt: booking.startAt
+      });
+    }
 
     return booking;
   } catch (error) {
@@ -432,7 +456,9 @@ export async function confirmBookingByToken(token: string) {
 export async function cancelByManageToken(token: string) {
   try {
     const booking = await resolveManageTokenBooking(token);
-    const settings = await prisma.shopSettings.findFirstOrThrow();
+    const settings = await prisma.shopSettings.findUniqueOrThrow({
+      where: { id: booking.barber.shopId },
+    });
     if (!canCancelOrReschedule(booking.startAt, settings.cancellationWindowHours)) {
       throw new BookingActionError('Cancellation window has passed.', 409);
     }
@@ -444,9 +470,9 @@ export async function cancelByManageToken(token: string) {
 
 }
 
-export async function cancelByShop(input: { bookingId: string; reason?: string }) {
-  const booking = await prisma.booking.findUnique({
-    where: { id: input.bookingId },
+export async function cancelByShop(input: { bookingId: string; shopId: string; reason?: string }) {
+  const booking = await prisma.booking.findFirst({
+    where: { id: input.bookingId, barber: { shopId: input.shopId } },
     include: { barber: true, service: true }
   });
 
@@ -474,7 +500,10 @@ export async function cancelByShop(input: { bookingId: string; reason?: string }
   });
 
   try {
-    const settings = await prisma.shopSettings.findFirstOrThrow();
+    const settings = await prisma.shopSettings.findUniqueOrThrow({
+      where: { id: input.shopId },
+      select: { name: true },
+    });
     await sendShopCancelledBookingEmail({
       to: updatedBooking.email,
       fullName: updatedBooking.fullName,

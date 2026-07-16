@@ -21,8 +21,8 @@ const DEFAULT_PILLARS: PillarItem[] = [
     body: 'Require a deposit when booking is made. Clients commit financially — empty chairs drop and filled slots are paid.',
   },
   {
-    heading: 'Automations recover revenue',
-    body: 'Automated SMS reminders, old-client win-back campaigns, and post-visit review requests run on schedule — no staff time required.',
+    heading: 'Email reminders protect the diary',
+    body: 'Email appointment confirmations and reminders are included in Care. Automated SMS can be agreed at setup if you need it for launch.',
   },
   {
     heading: 'Switch handled for you',
