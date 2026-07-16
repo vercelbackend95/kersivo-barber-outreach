@@ -1320,6 +1320,12 @@
   scroll-margin-top: calc(7.5rem + env(safe-area-inset-top, 0px));
 }
 
+.shop-card-actions,
+.btn--atc[data-add-to-cart] {
+  scroll-margin-top: calc(7.5rem + env(safe-area-inset-top, 0px));
+  scroll-margin-bottom: calc(1.25rem + env(safe-area-inset-bottom, 0px));
+}
+
 .shop-card--onboarding-highlight {
   position: relative;
   z-index: 2;

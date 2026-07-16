@@ -128,10 +128,24 @@ function getStickyNavbarOffset(): number {
   return height + 12;
 }
 
-function scrollItemBelowNavbar(item: HTMLElement) {
-  const offset = getStickyNavbarOffset();
-  const rect = item.getBoundingClientRect();
-  const top = window.scrollY + rect.top - offset;
+/**
+ * Scroll so Add to cart (or card actions) sits in the viewport below the sticky
+ * navbar. Pin near the bottom so media + YOUR PRODUCT badge stay visible above
+ * when the card is taller than the phone viewport.
+ */
+function scrollRevealTargetIntoView(item: HTMLElement) {
+  const target =
+    item.querySelector<HTMLElement>('[data-add-to-cart]') ??
+    item.querySelector<HTMLElement>('.shop-card-actions') ??
+    item;
+  const navOffset = getStickyNavbarOffset();
+  const rect = target.getBoundingClientRect();
+  const paddingBottom = 20;
+  const desiredTop = Math.max(
+    navOffset + 12,
+    window.innerHeight - rect.height - paddingBottom,
+  );
+  const top = window.scrollY + rect.top - desiredTop;
   window.scrollTo({ top: Math.max(0, top), behavior: 'auto' });
 }
 
@@ -512,7 +526,7 @@ export default function RetailOnboardingTaskCard({
       // Force layout so getBoundingClientRect reflects the unhidden item.
       void item.offsetHeight;
 
-      scrollItemBelowNavbar(item);
+      scrollRevealTargetIntoView(item);
 
       if (revealPaintTimerRef.current !== null) {
         window.clearTimeout(revealPaintTimerRef.current);
