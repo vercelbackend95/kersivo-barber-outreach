@@ -5,6 +5,7 @@
   flex-wrap: wrap;
   gap: var(--space-md);
   padding-block: var(--space-sm);
+  padding-inline: var(--space-md);
   margin-bottom: var(--space-lg);
   background: color-mix(in srgb, var(--surface-1) 92%, transparent);
 }
@@ -75,11 +76,5 @@
   /* Retail walkthrough card needs clear gap under Orders header (undo flush pull-up). */
   .admin-page-wrap .booking-shell:has(> .admin-orders-panel > .retail-task-card) > .admin-section-header {
     margin-bottom: var(--space-sm);
-  }
-}
-
-@media (min-width: 48.0625rem) {
-  .admin-section-header {
-    padding-inline-start: 5px;
   }
 }

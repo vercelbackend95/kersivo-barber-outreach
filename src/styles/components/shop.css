@@ -1063,6 +1063,7 @@
 .cart-test-success {
   display: grid;
   gap: 0.75rem;
+  align-content: start;
   padding: 1rem 1.15rem calc(1.1rem + env(safe-area-inset-bottom, 0px));
   overflow-y: auto;
 }
@@ -1125,9 +1126,23 @@
   display: block;
 }
 
+.cart-test-success__actions {
+  display: grid;
+  gap: 0.55rem;
+  margin-top: 0.15rem;
+}
+
+.cart-test-success .cart-buy-button,
 .cart-test-success__dismiss {
   width: 100%;
-  min-height: 2.5rem;
+  min-height: 2.75rem;
+  height: auto;
+  margin-top: 0;
+  padding: 0.65rem 1.1rem;
+  border-radius: var(--radius-12);
+  font-weight: 600;
+  letter-spacing: 0.02em;
+  align-self: start;
 }
 
 .cart-drawer__backdrop {
@@ -1335,6 +1350,7 @@
   box-shadow:
     0 0 0 2px color-mix(in srgb, var(--accent) 55%, transparent),
     0 10px 28px color-mix(in srgb, var(--accent) 12%, transparent);
+  animation: retail-product-card-pulse 2.8s ease-in-out infinite;
 }
 
 .shop-card--onboarding-highlight .shop-media {
@@ -1342,33 +1358,107 @@
 }
 
 .btn--atc.retail-atc--onboarding-focus {
-  overflow: visible;
+  position: relative;
+  overflow: hidden;
+  isolation: isolate;
   box-shadow:
-    0 0 0 2px color-mix(in srgb, var(--accent) 45%, transparent),
-    0 0 0 5px color-mix(in srgb, var(--accent) 16%, transparent);
+    0 0 0 2px color-mix(in srgb, var(--accent) 50%, transparent),
+    0 0 0 6px color-mix(in srgb, var(--accent) 18%, transparent);
+  filter: drop-shadow(0 0 10px color-mix(in srgb, var(--accent) 35%, transparent));
+  animation: retail-product-atc-glow 1.9s ease-in-out infinite;
 }
 
-@media (prefers-reduced-motion: reduce) {
-  .shop-card--onboarding-highlight {
-    transition: none;
+.btn--atc.retail-atc--onboarding-focus::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  pointer-events: none;
+  background: linear-gradient(
+    105deg,
+    transparent 32%,
+    color-mix(in srgb, var(--accent-contrast) 38%, transparent) 50%,
+    transparent 68%
+  );
+  transform: translateX(-130%);
+  animation: retail-product-atc-shimmer 2.4s ease-in-out infinite;
+}
+
+@keyframes retail-product-card-pulse {
+  0%,
+  100% {
+    border-color: color-mix(in srgb, var(--accent) 50%, var(--border));
+    box-shadow:
+      0 0 0 2px color-mix(in srgb, var(--accent) 42%, transparent),
+      0 10px 28px color-mix(in srgb, var(--accent) 10%, transparent);
+  }
+
+  50% {
+    border-color: color-mix(in srgb, var(--accent) 66%, var(--border));
+    box-shadow:
+      0 0 0 3px color-mix(in srgb, var(--accent) 54%, transparent),
+      0 12px 32px color-mix(in srgb, var(--accent) 16%, transparent);
+  }
+}
+
+@keyframes retail-product-atc-glow {
+  0%,
+  100% {
+    box-shadow:
+      0 0 0 2px color-mix(in srgb, var(--accent) 48%, transparent),
+      0 0 0 6px color-mix(in srgb, var(--accent) 16%, transparent);
+    filter: drop-shadow(0 0 8px color-mix(in srgb, var(--accent) 28%, transparent));
+  }
+
+  50% {
+    box-shadow:
+      0 0 0 3px color-mix(in srgb, var(--accent) 78%, transparent),
+      0 0 0 10px color-mix(in srgb, var(--accent) 28%, transparent);
+    filter: drop-shadow(0 0 16px color-mix(in srgb, var(--accent) 48%, transparent));
+  }
+}
+
+@keyframes retail-product-atc-shimmer {
+  0%,
+  18% {
+    transform: translateX(-130%);
+  }
+
+  48%,
+  100% {
+    transform: translateX(130%);
   }
 }
 
 .retail-your-product-badge {
   position: absolute;
-  top: 0.55rem;
-  right: 0.55rem;
+  top: 0.65rem;
+  right: 0.65rem;
   left: auto;
   z-index: 3;
-  padding: 0.22rem 0.45rem;
-  border-radius: var(--radius-full);
-  font-size: 0.62rem;
-  font-weight: 750;
-  letter-spacing: 0.08em;
+  padding: 0.32rem 0.55rem;
+  border-radius: var(--radius-8);
+  font-size: 0.65rem;
+  font-weight: 800;
+  line-height: 1;
+  letter-spacing: 0.09em;
   text-transform: uppercase;
   color: #fff;
-  background: var(--accent);
-  border: 1px solid color-mix(in srgb, #fff 25%, transparent);
+  background: color-mix(in srgb, var(--accent) 92%, #000);
+  border: 1px solid color-mix(in srgb, #fff 35%, transparent);
+  box-shadow: 0 3px 10px color-mix(in srgb, #000 24%, transparent);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .shop-card--onboarding-highlight,
+  .btn--atc.retail-atc--onboarding-focus {
+    animation: none;
+    filter: none;
+  }
+
+  .btn--atc.retail-atc--onboarding-focus::after {
+    display: none;
+  }
 }
 
 .shop-media {

@@ -131,12 +131,7 @@ export default function RetailOnboardingTaskCard({
     return 'show_product';
   }, [isCollectMode, testOrderId, productInBasket, cartOpen]);
 
-  const currentStep =
-    cardState === 'collect'
-      ? 4
-      : cardState === 'show_product' || cardState === 'basket_ready'
-        ? 2
-        : 3;
+  const currentStep = isCollectMode || cardState === 'collect' ? 2 : 1;
 
   const copy = useMemo(() => {
     switch (cardState) {
@@ -319,9 +314,6 @@ export default function RetailOnboardingTaskCard({
           setAnnounce(
             `Showing your onboarding product: ${productName}. Add it to your test basket.`,
           );
-          if (!window.matchMedia('(max-width: 48rem)').matches) {
-            setMinimized(true);
-          }
           trackConsentedEvent(
             FUNNEL_EVENTS.retail_onboarding_product_revealed,
             { step: currentStep, state: cardState, source, device: deviceType() },

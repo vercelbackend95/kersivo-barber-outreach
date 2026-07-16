@@ -1,4 +1,5 @@
 import React, { forwardRef } from 'react';
+import { ConfirmationStatusIcon } from '@/components/ConfirmationStatusIcon';
 
 export type BookingSummary = {
   service?: string;
@@ -50,13 +51,15 @@ const BookingConfirmationPanel = forwardRef<HTMLElement, Props>(function Booking
   const rows = buildSummaryRows(summary);
 
   return (
-    <section ref={ref} className="booking-confirmation" role="status" aria-live="polite" tabIndex={-1}>
+    <section
+      ref={ref}
+      className="booking-confirmation booking-confirmation--success"
+      role="status"
+      aria-live="polite"
+      tabIndex={-1}
+    >
       <div className="booking-confirmation__header">
-        <div className="booking-confirmation__icon" aria-hidden="true">
-          <svg viewBox="0 0 24 24" focusable="false">
-            <path d="M20.707 5.293a1 1 0 0 1 0 1.414l-10 10a1 1 0 0 1-1.414 0l-4-4a1 1 0 1 1 1.414-1.414L10 14.586l9.293-9.293a1 1 0 0 1 1.414 0Z" />
-          </svg>
-        </div>
+        <ConfirmationStatusIcon variant="success" />
         <div className="booking-confirmation__copy">
           <p className="booking-confirmation__eyebrow">{content.eyebrow}</p>
           <h2 className="booking-confirmation__heading">{content.heading}</h2>

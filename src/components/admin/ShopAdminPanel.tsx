@@ -20,21 +20,18 @@ import { AdminFetchError, adminFetchJson, isPublicAdminDemoMode, notifyAdminDemo
 import { resolveClientIdForBooking } from '../../lib/admin/resolveClientIdForBooking';
 import RetailOnboardingWelcome from './retail-onboarding/RetailOnboardingWelcome';
 import RetailOnboardingTaskCard from './retail-onboarding/RetailOnboardingTaskCard';
+import ProductWizard from './product-wizard/ProductWizard';
+import {
+  EMPTY_PRODUCT_FORM,
+  PRODUCT_CATEGORY_OPTIONS,
+  type ProductCategory,
+  type ProductForm
+} from './product-wizard/productWizardTypes';
+
 type ShopTab = 'products' | 'orders' | 'sales';
 type SalesRangePreset = '7' | '30' | '90' | 'custom';
 
 type SalesMetric = 'revenue' | 'units';
-type ProductCategory = 'POMADES_AND_CLAYS' | 'BEARD_CARE' | 'HAIR_WASH' | 'STYLING' | 'TOOLS' | 'GIFT_SETS';
-
-const PRODUCT_CATEGORY_OPTIONS: Array<{ value: ProductCategory; label: string }> = [
-  { value: 'POMADES_AND_CLAYS', label: 'Pomades & Clays' },
-  { value: 'BEARD_CARE', label: 'Beard Care' },
-  { value: 'HAIR_WASH', label: 'Hair Wash' },
-  { value: 'STYLING', label: 'Styling' },
-  { value: 'TOOLS', label: 'Tools' },
-  { value: 'GIFT_SETS', label: 'Gift Sets' }
-];
-
 
 type Product = {
   id: string;
@@ -107,17 +104,6 @@ type SalesResponse = {
 };
 
 
-type ProductFormState = {
-  id?: string;
-  name: string;
-  description: string;
-  priceGbp: string;
-  imageUrl: string;
-  active: boolean;
-  featured: boolean;
-    category: ProductCategory;
-  sortOrder: number;
-};
 type ProductFilter = 'all' | 'active' | 'inactive' | 'featured';
 type ProductSortMode = 'manual' | 'newest' | 'price' | 'name';
 
@@ -127,8 +113,6 @@ const PRODUCT_SORT_OPTIONS: Array<{ value: ProductSortMode; label: string }> = [
   { value: 'price', label: 'Price' },
   { value: 'name', label: 'Name' },
 ];
-
-
 
 type SalesChartSeries = {
   key: string;
@@ -209,24 +193,10 @@ function useBodyScrollLock(isLocked: boolean): void {
 
 
 
-const EMPTY_FORM: ProductFormState = {
-  name: '',
-  description: '',
-  priceGbp: '',
-  imageUrl: '',
-  active: true,
-  featured: false,
-    category: 'STYLING',
-  sortOrder: 0
-};
 const SORT_ORDER_MIN = 0;
 const SORT_ORDER_MAX = 9999;
-const PRODUCT_IMAGE_MAX_SIZE_BYTES = 5 * 1024 * 1024;
-const PRODUCT_IMAGE_ALLOWED_MIME_PREFIX = 'image/';
-const PRODUCT_IMAGE_ACCEPT = '.jpg,.jpeg,.png,.webp,.gif';
 const MOBILE_PRODUCT_EDITOR_MEDIA_QUERY = '(max-width: 47.99rem)';
 
-type ProductImageUploadStatus = 'idle' | 'uploading' | 'processing' | 'uploaded' | 'failed';
 const DEFAULT_PRODUCT_SERIES_COLOR = 'var(--border)';
 
 const SALES_RANGE_OPTIONS = [
@@ -241,20 +211,6 @@ const SALES_METRIC_OPTIONS = [
   { value: 'revenue' as const, label: 'Revenue £' },
   { value: 'units' as const, label: 'Units' },
 ];
-
-const IS_DEV = import.meta.env.DEV;
-
-function debugUploadLog(message: string, details?: Record<string, unknown>) {
-  if (!IS_DEV) return;
-  if (details) {
-    console.info(`[product-upload] ${message}`, details);
-    return;
-  }
-  console.info(`[product-upload] ${message}`);
-}
-
-
-
 
 function formatPrice(pricePence: number): string {
   return new Intl.NumberFormat('en-GB', { style: 'currency', currency: 'GBP' }).format(pricePence / 100);
@@ -284,14 +240,6 @@ function matchesOrder(order: OrderListItem, query: string): boolean {
   return searchableFields.some((field) => normalize(field).includes(normalizedQuery));
 }
 
-
-function penceFromGbp(value: string): number {
-  const normalized = value.replace(/,/g, '.').trim();
-  if (!normalized) return 0;
-  const numeric = Number.parseFloat(normalized);
-  if (!Number.isFinite(numeric)) return 0;
-  return Math.round(numeric * 100);
-}
 function getCurrentYmdInLondon(): string {
   return new Intl.DateTimeFormat('en-CA', { timeZone: 'Europe/London', year: 'numeric', month: '2-digit', day: '2-digit' }).format(new Date());
 }
@@ -400,98 +348,6 @@ function ProductStatusPill({ on, tone, onLabel, offLabel, disabled, ariaLabel, o
     </button>
   );
 }
-
-type ProductStatusSwitchProps = {
-  label: string;
-  checked: boolean;
-  disabled?: boolean;
-  onLabel: string;
-  offLabel: string;
-  tone: 'active' | 'featured';
-  onChange: (nextValue: boolean) => void;
-  /** Compact single-line treatment for product list cards */
-  variant?: 'default' | 'card';
-};
-
-type EditFooterActionsProps = {
-  canDelete: boolean;
-  disableDelete: boolean;
-  saving: boolean;
-  canSave: boolean;
-  savedNotice: string | null;
-  onCancel: () => void;
-  onDelete: () => void;
-};
-
-
-function ProductStatusSwitch({
-  label,
-  checked,
-  disabled = false,
-  onLabel,
-  offLabel,
-  tone,
-  onChange,
-  variant = 'default'
-}: ProductStatusSwitchProps) {
-  const statusLabel = checked ? onLabel : offLabel;
-  return (
-    <div
-      className={['admin-product-switch', variant === 'card' ? 'admin-product-switch--card' : ''].filter(Boolean).join(' ')}
-      data-tone={tone}
-    >
-      <span className="admin-product-switch__copy">
-        <span className="admin-product-switch__label">{label}</span>
-        <span className="admin-product-switch__status">
-          <span className={`admin-product-switch__dot ${checked ? 'is-on' : ''}`} aria-hidden="true" />
-          {statusLabel}
-        </span>
-      </span>
-      <button
-        type="button"
-        className={`admin-product-switch__control ${checked ? 'is-on' : ''}`}
-        role="switch"
-        aria-checked={checked}
-        aria-label={`${label}: ${statusLabel}`}
-        disabled={disabled}
-        onClick={() => onChange(!checked)}
-      >
-        <span className="admin-product-switch__track" aria-hidden="true">
-          <span className="admin-product-switch__thumb" />
-        </span>
-      </button>
-    </div>
-  );
-}
-function EditFooterActions({
-  canDelete,
-  disableDelete,
-  saving,
-  canSave,
-  savedNotice,
-  onCancel,
-  onDelete
-}: EditFooterActionsProps) {
-  return (
-    <div className="admin-product-sheet-footer" aria-live="polite">
-      <button type="submit" className="btn btn--primary" disabled={saving || !canSave}>{saving ? 'Saving...' : 'Save product'}</button>
-      <button type="button" className="btn btn--secondary" onClick={onCancel}>Cancel</button>
-      {canDelete ? (
-        <button
-          type="button"
-          className="btn btn--destructive"
-          onClick={onDelete}
-          disabled={disableDelete}
-        >
-          Delete
-        </button>
-      ) : null}
-      {savedNotice ? <p className="admin-product-sheet-feedback">{savedNotice}</p> : null}
-    </div>
-  );
-}
-
-
 
 type BulkActionBarProps = {
   count: number;
@@ -649,9 +505,9 @@ export default function ShopAdminPanel({ initialTab = 'products' }: ShopAdminPan
 
   const [products, setProducts] = useState<Product[]>([]);
   const [loading, setLoading] = useState(false);
-  const [saving, setSaving] = useState(false);
   const [formOpen, setFormOpen] = useState(false);
-  const [form, setForm] = useState<ProductFormState>(EMPTY_FORM);
+  const [editingId, setEditingId] = useState<string | null>(null);
+  const [wizardInitialForm, setWizardInitialForm] = useState<ProductForm | undefined>(undefined);
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState<string | null>(null);
   const [retailPromptDismissed, setRetailPromptDismissed] = useState(true); // hide until session loads
@@ -697,18 +553,6 @@ export default function ShopAdminPanel({ initialTab = 'products' }: ShopAdminPan
   const [manualOrderIds, setManualOrderIds] = useState<string[]>([]);
   const [productSavingById, setProductSavingById] = useState<Record<string, boolean>>({});
   const [productStatusById, setProductStatusById] = useState<Record<string, string>>({});
-  const [formInitial, setFormInitial] = useState<ProductFormState>(EMPTY_FORM);
-  const [footerFeedback, setFooterFeedback] = useState<string | null>(null);
-  const [deleteConfirmOpen, setDeleteConfirmOpen] = useState(false);
-  const [imageUploadStatus, setImageUploadStatus] = useState<ProductImageUploadStatus>('idle');
-  const [imageUploadError, setImageUploadError] = useState<string | null>(null);
-  const [imageUploadProgress, setImageUploadProgress] = useState(0);
-  const [localImagePreviewUrl, setLocalImagePreviewUrl] = useState<string | null>(null);
-  const [selectedImageFile, setSelectedImageFile] = useState<File | null>(null);
-    const [hasPendingFileUpload, setHasPendingFileUpload] = useState(false);
-  const [debouncedImageUrlPreview, setDebouncedImageUrlPreview] = useState('');
-  const imageUploadAbortControllerRef = useRef<AbortController | null>(null);
-  const fileInputRef = useRef<HTMLInputElement | null>(null);
   const productFiltersScrollRef = useRef<HTMLDivElement | null>(null);
   const productSearchInputRef = useRef<HTMLInputElement | null>(null);
   const productSortRef = useRef<HTMLDivElement | null>(null);
@@ -727,6 +571,12 @@ export default function ShopAdminPanel({ initialTab = 'products' }: ShopAdminPan
   const handleProductSearchClear = useCallback(() => {
     setProductSearch('');
     productSearchInputRef.current?.focus();
+  }, []);
+
+  const resetForm = useCallback(() => {
+    setEditingId(null);
+    setWizardInitialForm(undefined);
+    setFormOpen(false);
   }, []);
 
   const sortedProducts = useMemo(
@@ -852,23 +702,7 @@ export default function ShopAdminPanel({ initialTab = 'products' }: ShopAdminPan
   const featuredCount = useMemo(() => products.filter((product) => product.featured).length, [products]);
   const canReorder = productSortMode === 'manual' && productFilter === 'all' && productSearch.trim().length === 0;
   const defaultSortOrder = useMemo(() => Math.min(SORT_ORDER_MAX, Math.max(SORT_ORDER_MIN, products.length)), [products.length]);
-  const maxFormSortOrder = useMemo(() => {
-    const highestTakenPosition = Math.max(SORT_ORDER_MIN, products.length - 1);
-    if (form.id) return highestTakenPosition;
-    return Math.min(SORT_ORDER_MAX, highestTakenPosition + 1);
-  }, [form.id, products.length]);
-  const displayListPosition = useMemo(() => Math.max(1, form.sortOrder + 1), [form.sortOrder]);
-  const isFormAtTop = form.sortOrder <= SORT_ORDER_MIN;
-  const isFormAtBottom = form.sortOrder >= maxFormSortOrder;
-
-  const formDirty = useMemo(() => JSON.stringify(form) !== JSON.stringify(formInitial), [form, formInitial]);
-  const formPricePence = useMemo(() => penceFromGbp(form.priceGbp), [form.priceGbp]);
-  const formValid = useMemo(() => form.name.trim().length > 0 && formPricePence > 0, [form.name, formPricePence]);
   const productsInitiallyLoading = loading && products.length === 0;
-  const effectiveImagePreviewUrl = useMemo(() => {
-    if (localImagePreviewUrl) return localImagePreviewUrl;
-    return debouncedImageUrlPreview;
-  }, [debouncedImageUrlPreview, localImagePreviewUrl]);
 
 
 
@@ -884,16 +718,12 @@ export default function ShopAdminPanel({ initialTab = 'products' }: ShopAdminPan
     if (!formOpen) return;
     const onKeyDown = (event: KeyboardEvent) => {
       if (event.key === 'Escape') {
-        if (deleteConfirmOpen) {
-          setDeleteConfirmOpen(false);
-          return;
-        }
         resetForm();
       }
     };
     window.addEventListener('keydown', onKeyDown);
     return () => window.removeEventListener('keydown', onKeyDown);
-  }, [deleteConfirmOpen, formOpen]);
+  }, [formOpen, resetForm]);
 
   useEffect(() => {
     if (!isSalesChartExpanded) return;
@@ -905,30 +735,10 @@ export default function ShopAdminPanel({ initialTab = 'products' }: ShopAdminPan
     window.addEventListener('keydown', onKeyDown);
     return () => window.removeEventListener('keydown', onKeyDown);
   }, [isSalesChartExpanded]);
-  
-  useEffect(() => {
-    if (!footerFeedback) return;
-    const timeoutId = window.setTimeout(() => setFooterFeedback(null), 1200);
-    return () => window.clearTimeout(timeoutId);
-  }, [footerFeedback]);
 
   useEffect(() => {
     bulkClearAll();
   }, [productFilter, productSearch, productSortMode]);
-  useEffect(() => {
-    const timeoutId = window.setTimeout(() => {
-      setDebouncedImageUrlPreview(form.imageUrl.trim());
-    }, 250);
-    return () => window.clearTimeout(timeoutId);
-  }, [form.imageUrl]);
-
-  useEffect(() => {
-    return () => {
-      if (localImagePreviewUrl) {
-        URL.revokeObjectURL(localImagePreviewUrl);
-      }
-    };
-  }, [localImagePreviewUrl]);
 
 
 
@@ -1327,61 +1137,19 @@ export default function ShopAdminPanel({ initialTab = 'products' }: ShopAdminPan
   }, [activeTab, expandedOrderId]);
 
 
-  function resetForm(force = false) {
-    const uploadInFlight = imageUploadStatus === 'uploading' || imageUploadStatus === 'processing';
-    if (uploadInFlight && !force) {
-      const shouldCancel = window.confirm('Image upload is still in progress. Cancel upload and close?');
-      if (!shouldCancel) {
-        return;
-      }
-    }
-
-    if (uploadInFlight && imageUploadAbortControllerRef.current) {
-      imageUploadAbortControllerRef.current.abort();
-      imageUploadAbortControllerRef.current = null;
-
-    }
-    setLocalImagePreviewUrl((previous) => {
-      if (previous) URL.revokeObjectURL(previous);
-      return null;
-    });
-    setSelectedImageFile(null);
-        setHasPendingFileUpload(false);
-    setImageUploadStatus('idle');
-    setImageUploadError(null);
-    setImageUploadProgress(0);
-
-    setForm(EMPTY_FORM);
-    setFormInitial(EMPTY_FORM);
-    setFooterFeedback(null);
-
-
-    setDeleteConfirmOpen(false);
-
-    setFormOpen(false);
-  }
-
   function startCreate() {
     if (isPublicAdminDemoMode()) {
       notifyAdminDemoBlocked();
       return;
     }
-    const nextForm = {
-      ...EMPTY_FORM,
-      sortOrder: productSortMode === 'manual' ? defaultSortOrder : EMPTY_FORM.sortOrder
-    };
-    setForm(nextForm);
-    setFormInitial(nextForm);
+    setEditingId(null);
+    setWizardInitialForm({
+      ...EMPTY_PRODUCT_FORM,
+      sortOrder: productSortMode === 'manual' ? defaultSortOrder : EMPTY_PRODUCT_FORM.sortOrder
+    });
     setFormOpen(true);
     setError(null);
     setSuccess(null);
-    setFooterFeedback(null);
-    setImageUploadStatus('idle');
-    setImageUploadError(null);
-    setImageUploadProgress(0);
-    setSelectedImageFile(null);
-    setHasPendingFileUpload(false);
-
   }
 
   function startEdit(product: Product) {
@@ -1389,312 +1157,22 @@ export default function ShopAdminPanel({ initialTab = 'products' }: ShopAdminPan
       ? Math.min(SORT_ORDER_MAX, Math.max(SORT_ORDER_MIN, product.sortOrder))
       : defaultSortOrder;
 
-    const nextForm = {
-      id: product.id,
+    setEditingId(product.id);
+    setWizardInitialForm({
       name: product.name,
       description: product.description || '',
       priceGbp: (product.pricePence / 100).toFixed(2),
       imageUrl: product.imageUrl || '',
       active: product.active,
       featured: product.featured,
-            category: product.category,
+      category: product.category,
       sortOrder: normalizedSortOrder
-    };
-    setForm(nextForm);
-    setFormInitial(nextForm);
-
+    });
     setFormOpen(true);
     setError(null);
     setSuccess(null);
-    setFooterFeedback(null);
-    setImageUploadStatus('idle');
-
-    setImageUploadError(null);
-    setImageUploadProgress(0);
-    setSelectedImageFile(null);
-        setHasPendingFileUpload(false);
-    setLocalImagePreviewUrl((previous) => {
-      if (previous) URL.revokeObjectURL(previous);
-      return null;
-    });
   }
 
-  async function uploadProductImage(file: File) {
-    const body = new FormData();
-    body.set('file', file);
-
-    const controller = new AbortController();
-    imageUploadAbortControllerRef.current = controller;
-
-    const fallbackProgressTimeoutId = window.setTimeout(() => {
-      setImageUploadProgress((previous) => (previous === 0 ? 15 : previous));
-    }, 250);
-
-    try {
-      const response = await fetch('/api/admin/products/upload-image', {
-        method: 'POST',
-        credentials: 'include',
-        body,
-        signal: controller.signal
-      });
-
-      window.clearTimeout(fallbackProgressTimeoutId);
-      setImageUploadStatus('processing');
-      setImageUploadProgress(90);
-
-      const payload = (await response.json().catch(() => ({}))) as { code?: string; url?: string; error?: string };
-      if (!response.ok) {
-        const nextError = new Error(payload.error || 'Upload failed.');
-        if (payload.code) {
-          nextError.name = payload.code;
-        }
-        throw nextError;
-
-      }
-
-      if (!payload.url) {
-        throw new Error('Upload failed. Invalid response.');
-      }
-
-      return payload.url;
-    } catch (error) {
-      window.clearTimeout(fallbackProgressTimeoutId);
-      if (error instanceof DOMException && error.name === 'AbortError') {
-        throw new Error('Upload was cancelled.');
-      }
-      throw error;
-    } finally {
-      imageUploadAbortControllerRef.current = null;
-    }
-
-  }
-
-  async function handleImageUpload(file: File) {
-    if (!file.type.startsWith(PRODUCT_IMAGE_ALLOWED_MIME_PREFIX)) {
-      setImageUploadStatus('failed');
-      setImageUploadError('Please choose an image file.');
-      return;
-    }
-    if (file.size > PRODUCT_IMAGE_MAX_SIZE_BYTES) {
-      setImageUploadStatus('failed');
-      setImageUploadError('Image is too large. Maximum size is 5MB.');
-      return;
-    }
-    debugUploadLog('upload started', { name: file.name, size: file.size, type: file.type });
-    setSelectedImageFile(file);
-    setHasPendingFileUpload(true);
-    setImageUploadError(null);
-        setForm((previous) => ({ ...previous, imageUrl: '' }));
-    setImageUploadStatus('uploading');
-    setImageUploadProgress(0);
-    setLocalImagePreviewUrl((previous) => {
-      if (previous) URL.revokeObjectURL(previous);
-      return URL.createObjectURL(file);
-    });
-
-    try {
-      const uploadedUrl = await uploadProductImage(file);
-            debugUploadLog('upload done', { url: uploadedUrl });
-      setForm((previous) => ({ ...previous, imageUrl: uploadedUrl }));
-      setImageUploadStatus('uploaded');
-      setImageUploadProgress(100);
-      setImageUploadError(null);
-            setHasPendingFileUpload(false);
-      setSelectedImageFile(null);
-      setLocalImagePreviewUrl((previous) => {
-        if (previous) URL.revokeObjectURL(previous);
-        return null;
-      });
-    } catch (uploadError) {
-      setImageUploadStatus('failed');
-      setHasPendingFileUpload(true);
-      setImageUploadError(uploadError instanceof Error ? uploadError.message : 'Upload failed. Please try again.');
-      debugUploadLog('upload failed', { message: uploadError instanceof Error ? uploadError.message : 'Unknown error' });
-    }
-  }
-
-  async function onImageFileInputChange(event: React.ChangeEvent<HTMLInputElement>) {
-    const file = event.target.files?.[0] ?? null;
-    event.target.value = '';
-    if (!file) return;
-    await handleImageUpload(file);
-  }
-
-  async function retryImageUpload() {
-    if (!selectedImageFile) return;
-    await handleImageUpload(selectedImageFile);
-
-  }
-
-  async function saveProduct(event: React.FormEvent<HTMLFormElement>) {
-    event.preventDefault();
-    setError(null);
-    setSuccess(null);
-
-    const trimmedName = form.name.trim();
-    if (!trimmedName) {
-      setError('Name is required.');
-      return;
-    }
-
-    const pricePence = penceFromGbp(form.priceGbp);
-    if (pricePence <= 0) {
-      setError('Price must be greater than £0.00.');
-      return;
-    }
-        if (imageUploadStatus === 'uploading' || imageUploadStatus === 'processing') {
-      debugUploadLog('save blocked while upload in-flight');
-      setError('Please wait until image upload finishes before saving.');
-      return;
-    }
-
-    if (hasPendingFileUpload && !form.imageUrl.trim()) {
-            debugUploadLog('save blocked until upload done', { hasPendingFileUpload: true });
-      setError('Finish uploading product image or provide Image URL fallback before saving.');
-      return;
-    }
-
-    debugUploadLog('save attempt', { hasImageUrl: Boolean(form.imageUrl.trim()) });
-    setSaving(true);
-    try {
-      const endpoint = form.id ? '/api/admin/shop/products/update' : '/api/admin/shop/products/create';
-      await adminFetchJson<{ product: Product }>(endpoint, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          id: form.id,
-          name: trimmedName,
-          description: form.description.trim(),
-          pricePence,
-          imageUrl: form.imageUrl.trim(),
-          active: form.featured ? true : form.active,
-          featured: form.active ? form.featured : false,
-          category: form.category,
-          sortOrder: Math.min(SORT_ORDER_MAX, Math.max(SORT_ORDER_MIN, form.sortOrder))
-        }),
-        errorMessage: 'Unable to save product.',
-      });
-
-      await fetchProducts();
-      setSuccess(form.id ? 'Product updated.' : 'Product created.');
-      setFooterFeedback('Saved');
-      setFormInitial(form);
-
-    } catch (saveError) {
-      setError(saveError instanceof Error ? saveError.message : 'Unable to save product.');
-    } finally {
-      setSaving(false);
-    }
-  }
-
-  async function patchProductFlags(productId: string, patch: { active?: boolean; featured?: boolean }) {
-    const existing = products.find((product) => product.id === productId);
-    if (!existing) return;
-
-    const nextActive = patch.active ?? existing.active;
-    const nextFeatured = patch.featured ?? existing.featured;
-    const normalized = {
-      active: nextFeatured ? true : nextActive,
-      featured: nextActive ? nextFeatured : false
-    };
-
-    const previousProducts = products;
-    setProductSavingById((previous) => ({ ...previous, [productId]: true }));
-    setProductStatusById((previous) => ({ ...previous, [productId]: 'Saving…' }));
-    setProducts((previous) => previous.map((product) => (
-      product.id === productId ? { ...product, active: normalized.active, featured: normalized.featured } : product
-    )));
-
-
-    try {
-      const payload = await adminFetchJson<{ product: Product }>(`/api/admin/shop/products/${productId}`, {
-        method: 'PATCH',
-
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(normalized),
-        errorMessage: 'Unable to update product.',
-      });
-      setProducts((previous) => previous.map((product) => (product.id === productId ? payload.product as Product : product)));
-      setProductStatusById((previous) => ({ ...previous, [productId]: 'Saved' }));
-      window.setTimeout(() => {
-        setProductStatusById((previous) => {
-          const next = { ...previous };
-          delete next[productId];
-          return next;
-        });
-      }, 900);
-
-    } catch (toggleError) {
-            setProducts(previousProducts);
-      setProductStatusById((previous) => ({ ...previous, [productId]: '' }));
-
-      setError(toggleError instanceof Error ? toggleError.message : 'Unable to update product.');
-          } finally {
-      setProductSavingById((previous) => ({ ...previous, [productId]: false }));
-
-    }
-  }
-
-  async function bulkPatchActive(active: boolean) {
-    if (bulkLoading) return;
-    const ids = Array.from(bulkSelectedIds);
-    if (ids.length === 0) return;
-
-    setBulkLoading(true);
-    setError(null);
-    setSuccess(null);
-
-    try {
-      const results = await Promise.allSettled(
-        ids.map((id) => {
-          const existing = products.find((p) => p.id === id);
-          const body = active
-            ? { active: true, featured: existing?.featured ?? false }
-            : { active: false, featured: false };
-          return adminFetchJson<{ product: Product }>(`/api/admin/shop/products/${id}`, {
-            method: 'PATCH',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify(body),
-            errorMessage: 'Unable to update product.',
-          });
-        })
-      );
-
-      const failedCount = results.filter((r) => r.status === 'rejected').length;
-      await fetchProducts();
-      bulkClearAll();
-
-      if (failedCount > 0) {
-        setError(`${ids.length - failedCount} updated, ${failedCount} failed.`);
-      } else {
-        setSuccess(`${ids.length} product${ids.length !== 1 ? 's' : ''} ${active ? 'activated' : 'deactivated'}.`);
-      }
-    } catch (err) {
-      setError(err instanceof Error ? err.message : 'Bulk operation failed.');
-    } finally {
-      setBulkLoading(false);
-    }
-  }
-
-  async function disableProduct(productId: string) {
-    setError(null);
-    setSuccess(null);
-    try {
-      await adminFetchJson<{ product?: Product }>('/api/admin/shop/products/delete', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ id: productId }),
-        errorMessage: 'Unable to delete product.',
-      });
-      await fetchProducts();
-      setSuccess('Product deleted.');
-      resetForm();
-
-    } catch (deleteError) {
-      setError(deleteError instanceof Error ? deleteError.message : 'Unable to delete product.');
-    }
-  }
-  
   async function saveManualOrder(orderedIds: string[]) {
     if (!canReorder) return;
 
@@ -1863,7 +1341,7 @@ export default function ShopAdminPanel({ initialTab = 'products' }: ShopAdminPan
             : undefined
         }
         metaBadges={activeTab === 'orders' ? [
-          { label: `${paidOrdersCount} paid`, variant: 'info' },
+          { label: `${paidOrdersCount} to collect`, variant: 'info' },
           { label: `${collectedOrdersCount} collected`, variant: 'success' },
         ] : undefined}
         metaBadgeVariant="default"
@@ -2011,229 +1489,27 @@ export default function ShopAdminPanel({ initialTab = 'products' }: ShopAdminPan
 
           {formOpen ? (
             <div
-              className={`admin-product-sheet-backdrop${isMobileProductEditor ? '' : ' admin-product-sheet-backdrop--drawer'}`}
+              className="admin-barber-sheet-layer admin-product-sheet-layer"
+              role="dialog"
+              aria-modal="true"
+              aria-labelledby="admin-product-form-title"
               onMouseDown={(event) => {
                 if (event.target === event.currentTarget) {
                   resetForm();
                 }
               }}
             >
-              <form
-                className="admin-product-sheet"
-                onSubmit={saveProduct}
-                onMouseDown={(event) => event.stopPropagation()}
-                role="dialog"
-                aria-modal="true"
-                aria-labelledby="admin-product-sheet-title"
-              >
-
-                <div className="admin-product-sheet-head">
-                  <div className="admin-sheet-head-copy">
-                    <div className="admin-sheet-head-title-row">
-                      <h3 id="admin-product-sheet-title">{form.id ? 'Edit product' : 'Add product'}</h3>
-                      {form.id ? (
-                        <span
-                          className={`badge badge--sm ${form.active ? 'badge--confirmed' : 'badge--neutral'}`}
-                          aria-label={form.active ? 'Active' : 'Inactive'}
-                        >
-                          {form.active ? 'Active' : 'Inactive'}
-                        </span>
-                      ) : null}
-                    </div>
-                    {form.id ? (
-                      <p className="admin-sheet-entity-name" title={form.name}>{form.name}</p>
-                    ) : null}
-                  </div>
-                  <button
-                    type="button"
-                    className="admin-product-sheet-close"
-                    onClick={() => resetForm()}
-                    aria-label="Close product form"
-                  >
-                    <X width={18} height={18} aria-hidden="true" />
-                  </button>
-                </div>
-
-                <div className="admin-product-sheet-body">
-                  <p className="admin-product-unsaved muted">{formDirty ? 'Unsaved changes' : 'All changes saved'}</p>
-
-                  <div className="admin-product-image-section">
-                    <p className="admin-product-image-section__title">Image</p>
-                    <div className="admin-product-image-controls">
-                      <div className="admin-product-image-upload-wrap">
-                        <input
-                          ref={fileInputRef}
-                          type="file"
-                          accept={PRODUCT_IMAGE_ACCEPT}
-                          onChange={onImageFileInputChange}
-                          className="admin-product-image-file-input"
-                          tabIndex={-1}
-                          aria-hidden="true"
-                          aria-describedby="admin-product-image-upload-help"
-                        />
-                        <button
-                          type="button"
-                          className="btn btn--secondary admin-product-image-upload-btn"
-                          onClick={() => fileInputRef.current?.click()}
-                          disabled={imageUploadStatus === 'uploading' || imageUploadStatus === 'processing'}
-                        >
-                          <span aria-hidden="true">⇪</span>
-                          <span>Upload photo</span>
-                        </button>
-                      </div>
-                      <p id="admin-product-image-upload-help" className="admin-product-image-upload-help muted">Select an image from the phone gallery or device files. Camera capture is disabled.</p>
-                      <label className="admin-product-field admin-product-image-url-field">Image URL (fallback)
-                        <input
-                          type="url"
-                          value={form.imageUrl}
-                          onChange={(event) => {
-                            const nextValue = event.target.value;
-                            setForm((prev) => ({ ...prev, imageUrl: nextValue }));
-                            if (nextValue.trim()) {
-                              setHasPendingFileUpload(false);
-                              setSelectedImageFile(null);
-                              setImageUploadStatus('idle');
-                              setImageUploadError(null);
-                            }
-                          }}
-                          placeholder="https://..."
-                        />
-                      </label>
-                    </div>
-                  </div>
-
-                  <div className="admin-product-image-preview" aria-hidden="true">
-                    {effectiveImagePreviewUrl ? <img src={effectiveImagePreviewUrl} alt="Preview" draggable={false} /> : <span>No image preview</span>}
-                  </div>
-                  <div className="admin-product-image-status" aria-live="polite">
-                    {imageUploadStatus === 'uploading' ? <span>Uploading… {Math.max(1, Math.min(99, imageUploadProgress))}%</span> : null}
-                    {imageUploadStatus === 'processing' ? <span>Processing…</span> : null}
-                    {imageUploadStatus === 'uploaded' ? <span>Done</span> : null}
-                    {imageUploadStatus === 'failed' ? <span>Upload failed</span> : null}
-                    {imageUploadError ? <span className="admin-product-image-status__error">{imageUploadError}</span> : null}
-                    {imageUploadStatus === 'failed' && selectedImageFile ? (
-                      <button type="button" className="btn btn--ghost admin-product-image-retry" onClick={() => { void retryImageUpload(); }}>
-                        Retry upload
-                      </button>
-                    ) : null}
-                  </div>
-
-                  <fieldset className="admin-form-section">
-                    <legend className="admin-form-section-title">Product Details</legend>
-
-                    <label className="admin-product-field">Name
-                      <input value={form.name} onChange={(event) => setForm((prev) => ({ ...prev, name: event.target.value }))} required />
-                    </label>
-                    <label className="admin-product-field">Price (GBP)
-                      <div className="admin-price-input-wrap"><span>£</span><input inputMode="decimal" value={form.priceGbp} onChange={(event) => setForm((prev) => ({ ...prev, priceGbp: event.target.value.replace(/[^0-9.,]/g, '') }))} required /></div>
-                    </label>
-                    <label className="admin-product-field">Description
-                      <textarea value={form.description} onChange={(event) => setForm((prev) => ({ ...prev, description: event.target.value }))} rows={4} />
-                    </label>
-                    <label className="admin-product-field">Category
-                      <select value={form.category} onChange={(event) => setForm((prev) => ({ ...prev, category: event.target.value as ProductCategory }))}>
-                        {PRODUCT_CATEGORY_OPTIONS.map((option) => (
-                          <option key={option.value} value={option.value}>{option.label}</option>
-                        ))}
-                      </select>
-                    </label>
-                  </fieldset>
-
-                  <fieldset className="admin-form-section">
-                    <legend className="admin-form-section-title">Settings</legend>
-
-                    <div className="admin-product-switches">
-                      <ProductStatusSwitch
-                        label="Active"
-                        checked={form.active}
-                        onLabel="Active"
-                        offLabel="Inactive"
-                        tone="active"
-                        onChange={(nextValue) => setForm((prev) => ({ ...prev, active: nextValue, featured: nextValue ? prev.featured : false }))}
-                      />
-                      <ProductStatusSwitch
-                        label="Featured"
-                        checked={form.featured}
-                        onLabel="Featured"
-                        offLabel="Not featured"
-                        tone="featured"
-                        onChange={(nextValue) => setForm((prev) => ({ ...prev, featured: nextValue, active: nextValue ? true : prev.active }))}
-                      />
-                      {productSortMode === 'manual' ? (
-                        <div className="admin-product-sort-inline">
-                          <div className="admin-product-sort-inline__copy">
-                            <p className="admin-product-sort-inline__label">List position</p>
-                            <p className="admin-product-sort-inline__helper muted">1 = first on the list</p>
-                          </div>
-                          <div className="admin-product-sort-inline__control" role="group" aria-label="List position controls">
-                            <span className="admin-product-sort-inline__rank" aria-live="polite">#{displayListPosition}</span>
-                            <button
-                              type="button"
-                              className="admin-product-sort-inline__stepper"
-                              onClick={() => setForm((prev) => ({ ...prev, sortOrder: Math.max(SORT_ORDER_MIN, prev.sortOrder - 1) }))}
-                              aria-label="Move up"
-                              disabled={isFormAtTop}
-                            >
-                              ↑
-                            </button>
-                            <button
-                              type="button"
-                              className="admin-product-sort-inline__stepper"
-                              onClick={() => setForm((prev) => ({ ...prev, sortOrder: Math.min(maxFormSortOrder, prev.sortOrder + 1) }))}
-                              aria-label="Move down"
-                              disabled={isFormAtBottom}
-                            >
-                              ↓
-                            </button>
-                          </div>
-                        </div>
-                      ) : null}
-                    </div>
-                  </fieldset>
-                </div>
-
-                <EditFooterActions
-                  canDelete={Boolean(form.id)}
-                  disableDelete={saving}
-                  saving={saving}
-                  canSave={formValid && formDirty && imageUploadStatus !== 'uploading' && imageUploadStatus !== 'processing' && !hasPendingFileUpload}
-                  savedNotice={footerFeedback}
-                  onCancel={resetForm}
-                  onDelete={() => setDeleteConfirmOpen(true)}
-                />
-
-              </form>
-                            {deleteConfirmOpen && form.id ? (
-                <div className="admin-product-delete-confirm-layer" role="presentation">
-                  <button
-                    type="button"
-                    className="admin-product-delete-confirm-backdrop"
-                    onClick={() => setDeleteConfirmOpen(false)}
-                    aria-label="Close delete confirmation"
-                  />
-                  <div className="admin-product-delete-confirm-dialog" role="dialog" aria-modal="true" aria-labelledby="delete-product-title">
-                    <h4 id="delete-product-title" className="admin-product-delete-confirm-title">Delete product?</h4>
-                    <p className="admin-product-delete-confirm-body">This will permanently remove the product from the shop.</p>
-                    <div className="admin-product-delete-confirm-actions">
-                      <button type="button" className="btn btn--secondary" onClick={() => setDeleteConfirmOpen(false)} disabled={saving}>Cancel</button>
-                      <button
-                        type="button"
-                        className="btn btn--destructive"
-                        onClick={() => {
-                          if (!form.id) return;
-                          void disableProduct(form.id);
-                        }}
-                        disabled={saving}
-                      >
-                        Delete
-                      </button>
-                    </div>
-                  </div>
-                </div>
-              ) : null}
-
+              <ProductWizard
+                key={editingId ?? 'create'}
+                mode={editingId ? 'edit' : 'create'}
+                productId={editingId ?? undefined}
+                initialForm={wizardInitialForm}
+                onCancel={resetForm}
+                onSaved={async () => {
+                  await fetchProducts();
+                }}
+              />
             </div>
-
           ) : null}
 
           <div className="admin-products-scroll" role="region" aria-label="Products list">
@@ -2366,7 +1642,7 @@ export default function ShopAdminPanel({ initialTab = 'products' }: ShopAdminPan
                       />
                     </div>
 
-                    <div className="admin-product-row__controls">
+                    <div className="admin-product-row__featured-col">
                       <button
                         type="button"
                         className={`admin-product-row__featured-btn${product.featured ? ' is-on' : ''}`}
@@ -2379,7 +1655,9 @@ export default function ShopAdminPanel({ initialTab = 'products' }: ShopAdminPan
                       >
                         <Star width={14} height={14} strokeWidth={product.featured ? 0 : 2} style={product.featured ? { fill: 'currentColor' } : undefined} aria-hidden="true" />
                       </button>
+                    </div>
 
+                    <div className="admin-product-row__controls">
                       <button
                         type="button"
                         className="admin-product-row__edit-btn"
@@ -2488,6 +1766,7 @@ export default function ShopAdminPanel({ initialTab = 'products' }: ShopAdminPan
             orderDetailsById={orderDetailsById}
             orderDetailsLoadingId={orderDetailsLoadingId}
             onMarkCollected={(orderId) => void markCollected(orderId)}
+            onLoadOrderDetails={(orderId) => void fetchOrderDetails(orderId)}
             highlightedOrderId={highlightedOrderId}
             walkthroughOrderId={walkthroughOrderId}
             onOpenClientProfile={(contact) => void handleOpenClientProfile(contact)}

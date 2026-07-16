@@ -7,6 +7,38 @@ import { prisma } from '../../../../../lib/db/client';
 const DEFAULT_ORDERS_LIMIT = 50;
 const MAX_ORDERS_LIMIT = 100;
 
+async function resolveCustomerNames(
+  shopId: string,
+  emails: string[],
+): Promise<Map<string, string>> {
+  const uniqueEmails = [...new Set(emails.map((email) => email.trim().toLowerCase()).filter(Boolean))];
+  const namesByEmail = new Map<string, string>();
+  if (uniqueEmails.length === 0) return namesByEmail;
+
+  const [clients, users] = await Promise.all([
+    prisma.client.findMany({
+      where: { shopId, email: { in: uniqueEmails } },
+      select: { email: true, fullName: true },
+    }),
+    prisma.user.findMany({
+      where: { email: { in: uniqueEmails } },
+      select: { email: true, name: true },
+    }),
+  ]);
+
+  for (const user of users) {
+    const name = user.name?.trim();
+    if (name) namesByEmail.set(user.email.toLowerCase(), name);
+  }
+
+  for (const client of clients) {
+    const name = client.fullName?.trim();
+    if (name) namesByEmail.set(client.email.toLowerCase(), name);
+  }
+
+  return namesByEmail;
+}
+
 export const GET: APIRoute = async (ctx) => {
   const access = await requireAdminContext(ctx);
   if (access instanceof Response) return access;
@@ -34,9 +66,18 @@ export const GET: APIRoute = async (ctx) => {
       },
     });
 
+    const page = orders.slice(0, limit);
+    const namesByEmail = await resolveCustomerNames(
+      shopId,
+      page.map((order) => order.customerEmail),
+    );
+
     return new Response(
       JSON.stringify({
-        orders: orders.slice(0, limit),
+        orders: page.map((order) => ({
+          ...order,
+          customerName: namesByEmail.get(order.customerEmail.trim().toLowerCase()) ?? null,
+        })),
         hasMore: orders.length > limit,
       }),
       { status: 200 },

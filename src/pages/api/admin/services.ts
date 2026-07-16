@@ -8,16 +8,19 @@ import {
   loadMergedServiceCategories,
   normalizeServiceCategory
 } from '../../../lib/admin/serviceCategories';
+import { unfeatureOtherServicesInCategory } from '../../../lib/admin/serviceFeatured';
 import { prisma } from '../../../lib/db/client';
 
 const createSchema = z.object({
   name: z.string().trim().min(1, 'Name is required').max(120),
   description: z.string().trim().max(280).optional().nullable(),
+  imageUrl: z.string().trim().url().max(2048).optional().nullable(),
   pricePence: z.number().int().min(0),
   durationMinutes: z.number().int().min(5).max(480),
   bufferMinutes: z.number().int().min(0).max(120).default(0),
   displayOrder: z.number().int().min(0).default(0),
   category: z.string().trim().min(1, 'Category is required').max(80),
+  featured: z.boolean().default(false),
   isActive: z.boolean().default(true),
   barberIds: z.array(z.string().trim().min(1)).optional().default([])
 });
@@ -90,11 +93,13 @@ export const POST: APIRoute = async (ctx) => {
         shopId,
         name: payload.name,
         description: payload.description?.trim() || null,
+        imageUrl: payload.imageUrl?.trim() || null,
         pricePence: payload.pricePence,
         durationMinutes: payload.durationMinutes,
         bufferMinutes: payload.bufferMinutes,
         displayOrder: payload.displayOrder,
         category,
+        featured: payload.featured,
         isActive: payload.isActive,
         barberServices:
           validBarberIds.length > 0
@@ -125,6 +130,10 @@ export const POST: APIRoute = async (ctx) => {
         }
       }
     });
+
+    if (payload.featured) {
+      await unfeatureOtherServicesInCategory(tx, shopId, category, created.id);
+    }
 
     const nextCategories = await ensureCustomServiceCategory(shopId, category, tx);
     return { service: created, categories: nextCategories };

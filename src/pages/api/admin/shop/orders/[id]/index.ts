@@ -4,6 +4,28 @@ import type { APIRoute } from 'astro';
 import { requireAdminContext } from '../../../../../../lib/admin/auth';
 import { prisma } from '../../../../../../lib/db/client';
 
+async function resolveCustomerName(shopId: string, customerEmail: string): Promise<string | null> {
+  const email = customerEmail.trim().toLowerCase();
+  if (!email) return null;
+
+  const [client, user] = await Promise.all([
+    prisma.client.findFirst({
+      where: { shopId, email },
+      select: { fullName: true },
+    }),
+    prisma.user.findFirst({
+      where: { email },
+      select: { name: true },
+    }),
+  ]);
+
+  const clientName = client?.fullName?.trim();
+  if (clientName) return clientName;
+
+  const userName = user?.name?.trim();
+  return userName || null;
+}
+
 export const GET: APIRoute = async (ctx) => {
   const access = await requireAdminContext(ctx);
   if (access instanceof Response) return access;
@@ -21,13 +43,15 @@ export const GET: APIRoute = async (ctx) => {
           nameSnapshot: true,
           unitPricePenceSnapshot: true,
           quantity: true,
-          lineTotalPence: true
-        }
-      }
-    }
+          lineTotalPence: true,
+        },
+      },
+    },
   });
 
   if (!order) return new Response(JSON.stringify({ error: 'Order not found' }), { status: 404 });
 
-  return new Response(JSON.stringify({ order }), { status: 200 });
+  const customerName = await resolveCustomerName(shopId, order.customerEmail);
+
+  return new Response(JSON.stringify({ order: { ...order, customerName } }), { status: 200 });
 };

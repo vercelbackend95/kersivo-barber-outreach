@@ -697,15 +697,25 @@
   align-items: center;
   justify-content: center;
   border-radius: 50%;
-  border: 1px solid color-mix(in srgb, var(--accent) 55%, var(--border));
-  background: color-mix(in srgb, var(--accent) 14%, var(--surface-2, var(--surface)));
-  color: var(--accent);
+  border: 1.5px solid color-mix(in srgb, var(--success) 65%, var(--border));
+  background: color-mix(in srgb, var(--success) 22%, var(--surface-2, var(--surface)));
+  color: var(--success);
+  box-shadow: 0 0 0 4px var(--success-subtle);
 }
 
 .booking-flow--wizard .booking-confirmation__icon svg {
-  width: 1.35rem;
-  height: 1.35rem;
-  fill: currentColor;
+  width: 1.5rem;
+  height: 1.5rem;
+  stroke: currentColor;
+  fill: none;
+  stroke-width: 2.5;
+}
+
+.booking-flow--wizard .booking-confirmation--error .booking-confirmation__icon {
+  border-color: color-mix(in srgb, var(--danger) 65%, var(--border));
+  background: color-mix(in srgb, var(--danger) 22%, var(--surface-2, var(--surface)));
+  color: var(--danger);
+  box-shadow: 0 0 0 4px var(--danger-subtle);
 }
 
 .booking-flow--wizard .booking-confirmation__copy {
@@ -720,7 +730,11 @@
   font-weight: 700;
   letter-spacing: 0.14em;
   text-transform: uppercase;
-  color: var(--accent);
+  color: var(--success);
+}
+
+.booking-flow--wizard .booking-confirmation--error .booking-confirmation__eyebrow {
+  color: var(--danger);
 }
 
 .booking-flow--wizard .booking-confirmation__heading {

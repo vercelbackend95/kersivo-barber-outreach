@@ -204,11 +204,13 @@ model Service {
   shopId          String
   name            String
   description     String?
+  imageUrl        String?
   pricePence      Int
   durationMinutes Int
   bufferMinutes   Int      @default(0)
   displayOrder    Int      @default(0)
   category        String?
+  featured        Boolean  @default(false)
   isActive        Boolean  @default(true) @map("active")
   createdAt       DateTime @default(now())
   updatedAt       DateTime @updatedAt

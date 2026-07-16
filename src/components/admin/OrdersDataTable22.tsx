@@ -1,6 +1,6 @@
-import { type MouseEvent, type ReactNode, type SVGProps, useMemo, useState } from 'react';
+import { type MouseEvent, type ReactNode, useEffect, useMemo, useState } from 'react';
 import EmptyState from '../EmptyState';
-import { ChevronDown, ChevronUp, ShoppingBag } from '../lucide-react';
+import { ChevronDown, ChevronUp, Package, ShoppingBag } from '../lucide-react';
 
 type OrderStatus = 'PAID' | 'READY_FOR_PICKUP' | 'COLLECTED';
 
@@ -47,6 +47,7 @@ type OrdersDataTable22Props = {
   orderDetailsById: Record<string, OrderDetail>;
   orderDetailsLoadingId: string | null;
   onMarkCollected: (orderId: string) => void;
+  onLoadOrderDetails?: (orderId: string) => void;
   highlightedOrderId?: string | null;
   walkthroughOrderId?: string | null;
   onOpenClientProfile?: (contact: { email: string; fullName: string }) => void;
@@ -116,6 +117,11 @@ function getCustomerIdentity(order: Pick<OrderListItem, 'id' | 'customerName' | 
   return { displayName: inferredName || 'Customer', email };
 }
 
+function getCustomerFirstName(displayName: string): string {
+  const first = displayName.trim().split(/\s+/)[0];
+  return first || displayName;
+}
+
 function getCustomerInitials(order: Pick<OrderListItem, 'id' | 'customerName' | 'customerEmail'>): string {
   const source = getCustomerIdentity(order).displayName;
   const parts = source.split(/[\s@._-]+/).filter(Boolean);
@@ -133,11 +139,9 @@ const emptyDesc = (msg: string) =>
     ? 'Orders will appear here when customers checkout.'
     : "Try a different search term to find what you're looking for.";
 
-type SortColumn = 'orderNumber' | 'total' | 'status';
+type SortColumn = 'orderNumber' | 'total';
 type SortDir = 'asc' | 'desc';
 type SortState = SortDir | 'none';
-
-const STATUS_SORT_ORDER: Record<string, number> = { PAID: 0, READY_FOR_PICKUP: 1, COLLECTED: 2 };
 
 function getOrderStatusLabel(status: OrderListItem['status']): string {
   if (status === 'READY_FOR_PICKUP') return 'Ready for pickup';
@@ -146,19 +150,6 @@ function getOrderStatusLabel(status: OrderListItem['status']): string {
 
 function formatItemCount(count: number): string {
   return `${count} item${count === 1 ? '' : 's'}`;
-}
-
-function OrderStatusDot({ status }: { status: OrderListItem['status'] }) {
-  const label = getOrderStatusLabel(status);
-
-  return (
-    <span
-      className={`aog-status-dot aog-status-dot--${status.toLowerCase()}`}
-      role="img"
-      aria-label={label}
-      title={label}
-    />
-  );
 }
 
 function SortIcon({ state }: { state: SortState }) {
@@ -178,26 +169,6 @@ function SortIcon({ state }: { state: SortState }) {
   );
 }
 
-function CollectedOrderIcon(props: SVGProps<SVGSVGElement>) {
-  return (
-    <svg
-      viewBox="0 0 24 24"
-      fill="none"
-      stroke="currentColor"
-      strokeWidth="2"
-      strokeLinecap="round"
-      strokeLinejoin="round"
-      {...props}
-    >
-      <path d="m7.5 4.27 9 5.15" />
-      <path d="M21 8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 1.28.25" />
-      <path d="m3.3 7 8.7 5 8.7-5" />
-      <path d="M12 22V12" />
-      <path d="m15 18 2 2 4-5" />
-    </svg>
-  );
-}
-
 export default function OrdersDataTable22({
   orders,
   expandedOrderId,
@@ -205,6 +176,7 @@ export default function OrdersDataTable22({
   orderDetailsById,
   orderDetailsLoadingId,
   onMarkCollected,
+  onLoadOrderDetails,
   highlightedOrderId = null,
   walkthroughOrderId = null,
   onOpenClientProfile,
@@ -216,6 +188,7 @@ export default function OrdersDataTable22({
 
   const [sortColumn, setSortColumn] = useState<SortColumn | null>(null);
   const [sortDir, setSortDir] = useState<SortDir>('asc');
+  const [confirmOrderId, setConfirmOrderId] = useState<string | null>(null);
 
   function handleSort(col: SortColumn) {
     if (sortColumn === col) {
@@ -237,15 +210,19 @@ export default function OrdersDataTable22({
   }
 
   const sortedOrders = useMemo(() => {
-    if (!sortColumn) return orders;
+    const statusRank = (status: OrderListItem['status']) => (status === 'COLLECTED' ? 1 : 0);
+
     return [...orders].sort((a, b) => {
+      const byStatus = statusRank(a.status) - statusRank(b.status);
+      if (byStatus !== 0) return byStatus;
+
+      if (!sortColumn) return 0;
+
       let cmp = 0;
       if (sortColumn === 'orderNumber') {
         cmp = getOrderNumberLabel(a).localeCompare(getOrderNumberLabel(b));
       } else if (sortColumn === 'total') {
         cmp = a.totalPence - b.totalPence;
-      } else if (sortColumn === 'status') {
-        cmp = (STATUS_SORT_ORDER[a.status] ?? 0) - (STATUS_SORT_ORDER[b.status] ?? 0);
       }
       return sortDir === 'asc' ? cmp : -cmp;
     });
@@ -253,8 +230,43 @@ export default function OrdersDataTable22({
 
   function handleCollectClick(event: MouseEvent<HTMLButtonElement>, orderId: string) {
     event.stopPropagation();
-    onMarkCollected(orderId);
+    setConfirmOrderId(orderId);
+    if (!orderDetailsById[orderId]) {
+      onLoadOrderDetails?.(orderId);
+    }
   }
+
+  function closeCollectConfirm() {
+    setConfirmOrderId(null);
+  }
+
+  function confirmCollect() {
+    if (!confirmOrderId) return;
+    onMarkCollected(confirmOrderId);
+    setConfirmOrderId(null);
+  }
+
+  useEffect(() => {
+    if (!confirmOrderId) return;
+    const onKeyDown = (event: KeyboardEvent) => {
+      if (event.key === 'Escape') {
+        event.preventDefault();
+        setConfirmOrderId(null);
+      }
+    };
+    window.addEventListener('keydown', onKeyDown);
+    return () => window.removeEventListener('keydown', onKeyDown);
+  }, [confirmOrderId]);
+
+  const confirmOrder = useMemo(
+    () => (confirmOrderId ? orders.find((order) => order.id === confirmOrderId) ?? null : null),
+    [confirmOrderId, orders],
+  );
+  const confirmIdentity = confirmOrder ? getCustomerIdentity(confirmOrder) : null;
+  const confirmDetail = confirmOrderId ? orderDetailsById[confirmOrderId] : undefined;
+  const confirmDetailLoading = Boolean(
+    confirmOrderId && orderDetailsLoadingId === confirmOrderId && !confirmDetail,
+  );
 
   function handleAvatarClick(
     event: MouseEvent<HTMLButtonElement>,
@@ -300,22 +312,6 @@ export default function OrdersDataTable22({
               >
                 <span className="admin-orders-grid-sort-label">Total</span>
                 <SortIcon state={getSortAttr('total')} />
-              </button>
-            </span>
-            <span
-              className="admin-orders-grid-header-cell admin-orders-grid-header-cell--status"
-              role="columnheader"
-              aria-sort={getAriaSort('status')}
-            >
-              <button
-                type="button"
-                className="admin-orders-grid-sort"
-                data-sort={getSortAttr('status')}
-                onClick={() => handleSort('status')}
-                aria-label="Sort by collection"
-              >
-                <span className="admin-orders-grid-sort-label">Collection</span>
-                <SortIcon state={getSortAttr('status')} />
               </button>
             </span>
             <span className="admin-orders-grid-header-cell admin-orders-grid-header-cell--actions">Actions</span>
@@ -380,7 +376,12 @@ export default function OrdersDataTable22({
                       <button
                         type="button"
                         className="admin-orders-grid-avatar admin-orders-grid-avatar--btn"
-                        onClick={(event) => handleAvatarClick(event, customerIdentity)}
+                        onClick={(event) =>
+                          handleAvatarClick(event, {
+                            email: customerIdentity.email,
+                            fullName: customerIdentity.displayName,
+                          })
+                        }
                         aria-label={`View profile for ${customerIdentity.displayName}`}
                         title="View client profile"
                       >
@@ -391,7 +392,7 @@ export default function OrdersDataTable22({
                       <div className="admin-orders-grid-identity__text">
                         <span className="admin-orders-grid-identity__title">
                           <span className="admin-orders-grid-customer">
-                            {customerIdentity.displayName}
+                            {getCustomerFirstName(customerIdentity.displayName)}
                           </span>
                           {order.isTestOrder ? (
                             <span className="admin-orders-test-badge">
@@ -399,9 +400,6 @@ export default function OrdersDataTable22({
                               <span className="admin-orders-test-badge__short">TEST</span>
                             </span>
                           ) : null}
-                          <span className="admin-orders-grid-identity__meta" aria-hidden="true">
-                            <OrderStatusDot status={order.status} />
-                          </span>
                         </span>
                         <span className="admin-orders-grid-email">
                           {customerIdentity.email}
@@ -410,9 +408,6 @@ export default function OrdersDataTable22({
                     </div>
 
                     <span className="admin-orders-grid-total">{formatPrice(order.totalPence)}</span>
-                    <span className="admin-orders-grid-status">
-                      <OrderStatusDot status={order.status} />
-                    </span>
                   </button>
 
                   <div className="admin-orders-grid-actions">
@@ -440,7 +435,7 @@ export default function OrdersDataTable22({
                             : `Mark ${orderLabel} as collected`
                         }
                       >
-                        <CollectedOrderIcon width={24} height={24} strokeWidth={2.25} aria-hidden="true" />
+                        <Package width={24} height={24} strokeWidth={2.25} aria-hidden="true" />
                       </button>
                     ) : null}
                     <button
@@ -479,6 +474,81 @@ export default function OrdersDataTable22({
           </ul>
         )}
       </div>
+
+      {confirmOrder && confirmIdentity ? (
+        <div className="admin-product-delete-confirm-layer" role="presentation">
+          <button
+            type="button"
+            className="admin-product-delete-confirm-backdrop"
+            onClick={closeCollectConfirm}
+            aria-label="Close confirmation dialog"
+          />
+          <div
+            className="admin-product-delete-confirm-dialog admin-collect-receipt-dialog"
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="collect-order-confirm-title"
+            aria-describedby="collect-order-confirm-body"
+          >
+            <h4 id="collect-order-confirm-title" className="admin-product-delete-confirm-title">
+              Mark as collected?
+            </h4>
+            <div id="collect-order-confirm-body" className="admin-product-delete-confirm-body">
+              <div className="admin-collect-receipt__customer">
+                <p className="admin-collect-receipt__customer-name">{confirmIdentity.displayName}</p>
+                <p className="admin-collect-receipt__customer-email">{confirmIdentity.email}</p>
+              </div>
+
+              <div className="admin-collect-receipt">
+                <p className="admin-collect-receipt__eyebrow">
+                  Order {getOrderNumberLabel(confirmOrder)}
+                </p>
+
+                {confirmDetailLoading ? (
+                  <p className="admin-collect-receipt__loading">Loading receipt…</p>
+                ) : null}
+
+                {!confirmDetailLoading && confirmDetail ? (
+                  <>
+                    <ul className="admin-collect-receipt__items">
+                      {confirmDetail.items.map((item) => (
+                        <li key={item.id} className="admin-collect-receipt__item">
+                          <span className="admin-collect-receipt__item-name">
+                            {item.nameSnapshot}
+                            <span className="admin-collect-receipt__item-qty"> × {item.quantity}</span>
+                          </span>
+                          <span className="admin-collect-receipt__item-price">
+                            {formatPrice(item.lineTotalPence)}
+                          </span>
+                        </li>
+                      ))}
+                    </ul>
+                    <div className="admin-collect-receipt__total">
+                      <span>Total</span>
+                      <span>{formatPrice(confirmDetail.totalPence)}</span>
+                    </div>
+                  </>
+                ) : null}
+
+                {!confirmDetailLoading && !confirmDetail ? (
+                  <div className="admin-collect-receipt__total">
+                    <span>Total</span>
+                    <span>{formatPrice(confirmOrder.totalPence)}</span>
+                  </div>
+                ) : null}
+              </div>
+            </div>
+            <div className="admin-product-delete-confirm-actions">
+              <button type="button" className="btn btn--secondary" onClick={closeCollectConfirm}>
+                Cancel
+              </button>
+              <button type="button" className="btn btn--primary" onClick={confirmCollect}>
+                Confirm
+              </button>
+            </div>
+          </div>
+        </div>
+      ) : null}
     </section>
   );
 }
@@ -498,12 +568,6 @@ function OrderDetailsPanel({
 
       {!isDetailLoading && detail ? (
         <>
-          {detail.isTestOrder ? (
-            <p className="admin-orders-test-badge admin-orders-test-badge--panel">
-              <span className="admin-orders-test-badge__long">TEST ORDER</span>
-              <span className="admin-orders-test-badge__short">TEST</span>
-            </p>
-          ) : null}
           <div className="admin-orders-table22__meta-grid">
             <p>
               <strong>Created:</strong> {formatDate(detail.createdAt)}

@@ -4567,6 +4567,14 @@ body.admin-theme-premium-black .booking-page-wrap .booking-shell.surface {
 }
 
 /* Featured button */
+.admin-product-row__featured-col {
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 1.75rem;
+}
+
 .admin-product-row__featured-btn {
   display: inline-flex;
   align-items: center;
@@ -4694,7 +4702,6 @@ body.admin-theme-premium-black .booking-page-wrap .booking-shell.surface {
     width: 2.75rem;
     height: 2.75rem;
   }
-  .admin-product-row__featured-btn,
   .admin-product-row__controls .admin-reorder-controls--product {
     display: none;
   }
@@ -5654,7 +5661,7 @@ body.admin-theme-premium-black .booking-page-wrap .booking-shell.surface {
   .admin-page-wrap .booking-shell > .admin-shop-kicker,
   .admin-page-wrap .booking-shell > .admin-section-header,
   .admin-page-wrap .booking-shell [data-feature261-booking-overview-shot] > .admin-section-header {
-    padding-inline: 0.5rem;
+    padding-inline: var(--space-md);
   }
 
   .admin-page-wrap .booking-shell > .admin-services-panel,
@@ -5915,11 +5922,10 @@ body.admin-theme-premium-black .booking-page-wrap .booking-shell.surface {
   --acl-muted: #6b6b70;
   --acl-fg: #e8e8ea;
   --acl-fg-soft: #b4b4ba;
-  --aog-grid-min: 24rem;
+  --aog-grid-min: 22rem;
   --aog-grid-columns:
     minmax(12rem, 1fr)
     minmax(5.5rem, 7rem)
-    1.75rem
     minmax(2.75rem, 3.25rem);
 
   display: grid;
@@ -5928,7 +5934,7 @@ body.admin-theme-premium-black .booking-page-wrap .booking-shell.surface {
   max-width: 100%;
   min-width: 0;
   border: 1px solid var(--acl-row-line);
-  border-radius: 6px;
+  border-radius: var(--admin-premium-surface-r);
   overflow-x: auto;
   overflow-y: hidden;
   background: var(--acl-bg);
@@ -5973,7 +5979,6 @@ body.admin-theme-premium-black .booking-page-wrap .booking-shell.surface {
   text-align: right;
 }
 
-.admin-orders-grid-header-cell--status,
 .admin-orders-grid-header-cell--actions {
   text-align: center;
 }
@@ -6009,18 +6014,6 @@ body.admin-theme-premium-black .booking-page-wrap .booking-shell.surface {
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
-}
-
-.admin-orders-grid-header-cell--status .admin-orders-grid-sort-label {
-  position: absolute;
-  width: 1px;
-  height: 1px;
-  padding: 0;
-  margin: -1px;
-  overflow: hidden;
-  clip: rect(0 0 0 0);
-  white-space: nowrap;
-  border: 0;
 }
 
 .admin-orders-grid-sort-icon {
@@ -6183,11 +6176,6 @@ body.admin-theme-premium-black .booking-page-wrap .booking-shell.surface {
   text-overflow: ellipsis;
 }
 
-.admin-orders-grid-identity__meta {
-  display: none;
-  flex: 0 0 auto;
-}
-
 .admin-orders-grid-total {
   font-size: 0.82rem;
   font-weight: 700;
@@ -6196,38 +6184,6 @@ body.admin-theme-premium-black .booking-page-wrap .booking-shell.surface {
   font-variant-numeric: tabular-nums;
   text-align: right;
   white-space: nowrap;
-}
-
-.admin-orders-grid-status {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  min-width: 0;
-}
-
-.aog-status-dot {
-  display: inline-block;
-  width: 0.44rem;
-  height: 0.44rem;
-  border-radius: var(--radius-full);
-  flex-shrink: 0;
-  box-shadow: 0 0 0 1px color-mix(in srgb, currentColor 32%, transparent);
-}
-
-.aog-status-dot--paid {
-  background: var(--info);
-  color: var(--info);
-  animation: aog-paid-status-pulse 3s ease-in-out infinite;
-}
-
-.aog-status-dot--ready_for_pickup {
-  background: var(--warning, #d4a017);
-  color: var(--warning, #d4a017);
-}
-
-.aog-status-dot--collected {
-  background: var(--success);
-  color: var(--success);
 }
 
 .admin-orders-test-badge {
@@ -6308,6 +6264,122 @@ body.admin-theme-premium-black .booking-page-wrap .booking-shell.surface {
   margin: 0;
   font-size: 1.05rem;
   font-weight: 750;
+}
+
+.admin-collect-receipt-dialog {
+  border-radius: var(--radius-16);
+}
+
+.admin-collect-receipt-dialog .admin-product-delete-confirm-title {
+  font-size: 1.25rem;
+  font-weight: 750;
+  letter-spacing: -0.02em;
+  line-height: 1.25;
+}
+
+.admin-collect-receipt-dialog .admin-product-delete-confirm-body {
+  display: grid;
+  gap: 0.85rem;
+}
+
+.admin-collect-receipt__customer {
+  display: grid;
+  gap: 0.15rem;
+}
+
+.admin-collect-receipt__customer-name {
+  margin: 0;
+  font-size: 1rem;
+  font-weight: 750;
+  letter-spacing: -0.01em;
+  color: var(--fg);
+}
+
+.admin-collect-receipt__customer-email {
+  margin: 0;
+  font-size: 0.82rem;
+  color: var(--muted);
+  word-break: break-word;
+}
+
+.admin-collect-receipt {
+  display: grid;
+  gap: 0.7rem;
+  padding: 0.85rem 0.9rem;
+  border-radius: var(--radius-12);
+  border: 1px solid color-mix(in srgb, var(--border) 80%, transparent);
+  background:
+    linear-gradient(
+      180deg,
+      color-mix(in srgb, var(--surface-2) 70%, transparent) 0%,
+      color-mix(in srgb, var(--surface-1) 88%, var(--bg)) 100%
+    );
+}
+
+.admin-collect-receipt__eyebrow {
+  margin: 0;
+  font-size: 0.68rem;
+  font-weight: 750;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--muted);
+}
+
+.admin-collect-receipt__loading {
+  margin: 0;
+  font-size: 0.88rem;
+  color: var(--muted);
+}
+
+.admin-collect-receipt__items {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  display: grid;
+  gap: 0.45rem;
+}
+
+.admin-collect-receipt__item {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 0.75rem;
+  align-items: baseline;
+  font-size: 0.88rem;
+  line-height: 1.35;
+}
+
+.admin-collect-receipt__item-name {
+  min-width: 0;
+  color: var(--fg);
+}
+
+.admin-collect-receipt__item-qty {
+  color: var(--muted);
+  font-weight: 600;
+}
+
+.admin-collect-receipt__item-price {
+  font-variant-numeric: tabular-nums;
+  font-weight: 650;
+  color: var(--fg);
+  white-space: nowrap;
+}
+
+.admin-collect-receipt__total {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 0.75rem;
+  align-items: baseline;
+  padding-top: 0.7rem;
+  border-top: 1px dashed color-mix(in srgb, var(--border) 75%, transparent);
+  font-size: 1rem;
+  font-weight: 750;
+  letter-spacing: -0.01em;
+  color: var(--fg);
+}
+
+.admin-collect-receipt__total span:last-child {
+  font-variant-numeric: tabular-nums;
 }
 
 /* Retail task card (Orders walkthrough Step 4 — same BEM as test-shop) */
@@ -6457,24 +6529,9 @@ body.admin-theme-premium-black .booking-page-wrap .booking-shell.surface {
   letter-spacing: 0.02em;
 }
 
-@keyframes aog-paid-status-pulse {
-  0%,
-  100% {
-    box-shadow:
-      0 0 0 1px color-mix(in srgb, var(--info) 30%, transparent),
-      0 0 0 0 color-mix(in srgb, var(--info) 0%, transparent);
-  }
-
-  45% {
-    box-shadow:
-      0 0 0 1px color-mix(in srgb, var(--info) 42%, transparent),
-      0 0 0 5px color-mix(in srgb, var(--info) 12%, transparent);
-  }
-}
-
 .admin-orders-grid-actions {
   position: absolute;
-  top: 0;
+  top: 50%;
   right: 2.25rem;
   width: 2.75rem;
   min-height: 3.6rem;
@@ -6483,6 +6540,14 @@ body.admin-theme-premium-black .booking-page-wrap .booking-shell.surface {
   justify-content: center;
   z-index: 2;
   pointer-events: none;
+  transform: translateY(-50%);
+}
+
+.admin-orders-grid-item--expanded .admin-orders-grid-actions {
+  top: 0;
+  transform: none;
+  height: 3.6rem;
+  min-height: 3.6rem;
 }
 
 .admin-orders-grid-actions .btn {
@@ -6503,11 +6568,11 @@ body.admin-theme-premium-black .booking-page-wrap .booking-shell.surface {
 }
 
 .admin-orders-grid-collect-btn--pending {
-  color: var(--accent);
-  border-color: color-mix(in srgb, var(--accent) 75%, transparent);
-  outline: 1.5px solid color-mix(in srgb, var(--accent) 55%, transparent);
+  color: var(--info);
+  border-color: color-mix(in srgb, var(--info) 75%, transparent);
+  outline: 1.5px solid color-mix(in srgb, var(--info) 55%, transparent);
   outline-offset: 1px;
-  background: color-mix(in srgb, var(--accent) 10%, transparent);
+  background: color-mix(in srgb, var(--info) 12%, transparent);
 }
 
 .admin-orders-grid-collect-btn--done {
@@ -6807,7 +6872,6 @@ body.admin-theme-premium-black .booking-page-wrap .booking-shell.surface {
     --aog-grid-columns:
       minmax(12rem, 2fr)
       minmax(5.5rem, 1fr)
-      minmax(5rem, 0.85fr)
       minmax(3.25rem, 0.75fr);
   }
 
@@ -6817,30 +6881,13 @@ body.admin-theme-premium-black .booking-page-wrap .booking-shell.surface {
   }
 
   .admin-orders-grid-row {
-    grid-column: 1 / 4;
-  }
-
-  .admin-orders-grid-header-cell--status .admin-orders-grid-sort-label {
-    position: static;
-    width: auto;
-    height: auto;
-    margin: 0;
-    padding: 0;
-    overflow: visible;
-    clip: auto;
-    white-space: nowrap;
-    border: 0;
+    grid-column: 1 / 3;
   }
 
   .admin-orders-grid-header-cell--total .admin-orders-grid-sort {
     width: 100%;
     flex-direction: row-reverse;
     justify-content: flex-start;
-  }
-
-  .admin-orders-grid-header-cell--status .admin-orders-grid-sort {
-    width: 100%;
-    justify-content: center;
   }
 
   .admin-orders-grid-header,
@@ -6850,11 +6897,12 @@ body.admin-theme-premium-black .booking-page-wrap .booking-shell.surface {
   }
 
   .admin-orders-grid-actions {
-    grid-column: 4;
+    grid-column: 3;
     position: static;
     top: auto;
     right: auto;
     width: auto;
+    height: auto;
     min-height: 3.6rem;
     justify-self: center;
     align-self: center;
@@ -6863,6 +6911,14 @@ body.admin-theme-premium-black .booking-page-wrap .booking-shell.surface {
     justify-content: center;
     gap: 0.2rem;
     pointer-events: auto;
+    transform: none;
+  }
+
+  .admin-orders-grid-item--expanded .admin-orders-grid-actions {
+    top: auto;
+    height: auto;
+    min-height: 3.6rem;
+    transform: none;
   }
 
   .admin-orders-grid-collect-btn {
@@ -6879,11 +6935,10 @@ body.admin-theme-premium-black .booking-page-wrap .booking-shell.surface {
 
 @media (max-width: 64rem) {
   .admin-orders-grid-wrap {
-    --aog-grid-min: 22rem;
+    --aog-grid-min: 20rem;
     --aog-grid-columns:
       minmax(10rem, 1fr)
       minmax(5.2rem, 6.4rem)
-      1.6rem
       minmax(2.55rem, 3rem);
   }
 
@@ -6897,7 +6952,7 @@ body.admin-theme-premium-black .booking-page-wrap .booking-shell.surface {
   .admin-orders-grid-wrap {
     --aog-grid-min: 0;
     --aog-grid-columns: minmax(0, 1fr) auto;
-    border-radius: 6px;
+    border-radius: var(--admin-premium-surface-r-mobile);
     overflow-x: hidden;
   }
 
@@ -6946,35 +7001,28 @@ body.admin-theme-premium-black .booking-page-wrap .booking-shell.surface {
     font-size: 0.64rem;
   }
 
-  .admin-orders-grid-identity__meta {
-    display: inline-flex;
-    align-items: center;
-    gap: 0.35rem;
-    color: var(--acl-muted);
-    font-size: 0.64rem;
-    line-height: 1.25;
-    white-space: nowrap;
-  }
-
   .admin-orders-grid-total {
     grid-area: total;
     align-self: center;
     font-size: 0.82rem;
   }
 
-  .admin-orders-grid-status {
-    display: none;
-  }
-
   .admin-orders-grid-actions {
-    top: 0;
+    top: 50%;
     right: 0.8rem;
     bottom: auto;
     width: 2.55rem;
-    height: 3.45rem;
+    height: auto;
     min-height: 3.45rem;
     justify-content: center;
+    transform: translateY(-50%);
+  }
+
+  .admin-orders-grid-item--expanded .admin-orders-grid-actions {
+    top: 0;
     transform: none;
+    height: 3.45rem;
+    min-height: 3.45rem;
   }
 
   .admin-orders-grid-wrap:has(.admin-orders-grid-collect-btn--coach) {
@@ -7017,8 +7065,7 @@ body.admin-theme-premium-black .booking-page-wrap .booking-shell.surface {
   .admin-orders-grid-row-chevron,
   .admin-orders-grid-expand-chevron,
   .admin-orders-expand-wrap,
-  .admin-orders-grid-details,
-  .aog-status-dot--paid {
+  .admin-orders-grid-details {
     animation: none;
     transition: none;
   }
@@ -9289,7 +9336,8 @@ body.admin-theme-premium-black .booking-page-wrap .booking-shell.surface {
    * so service sheets stay below the Next strip (higher specificity than admin-services.css).
    */
   .admin-main-content:has(.admin-mobile-header--with-next) .admin-barber-sheet-layer,
-  .admin-main-content:has(.admin-mobile-header--with-next) .admin-service-sheet-layer {
+  .admin-main-content:has(.admin-mobile-header--with-next) .admin-service-sheet-layer,
+  .admin-main-content:has(.admin-mobile-header--with-next) .admin-product-sheet-layer {
     --admin-mobile-sheet-top-offset: calc(
       var(--admin-mobile-header-bar-h) + var(--admin-next-block-h, 0px) +
         var(
@@ -9331,12 +9379,13 @@ body.admin-theme-premium-black .booking-page-wrap .booking-shell.surface {
 /* Add barber: full-viewport-width sheet below Next appointments (no floating card inset) */
 @media (max-width: 48rem) {
   /*
-   * Default sheet backdrop is semi-transparent fg (reads as gray). Add barber + Add/edit service
+   * Default sheet backdrop is semi-transparent fg (reads as gray). Add barber, service, and product
    * sheets sit flush under Next appointments — use one continuous wash like .admin-section-header
    * (no dim), so corner seams never read gray.
    */
   .admin-barber-sheet-layer:has(.admin-barber-sheet--add),
-  .admin-barber-sheet-layer:has(.admin-service-sheet) {
+  .admin-barber-sheet-layer:has(.admin-service-sheet),
+  .admin-barber-sheet-layer:has(.admin-product-sheet) {
     align-items: stretch;
     background: color-mix(in srgb, var(--surface-1) 92%, transparent);
   }
@@ -9381,10 +9430,11 @@ body.admin-theme-premium-black .booking-page-wrap .booking-shell.surface {
   }
 
   /*
-   * Add / edit service (+ quick settings section): same flush sheet under Next appointments as
-   * Add barber. Direct-child selector wins over later .admin-service-sheet rules in admin-services.css.
+   * Add / edit service and product sheets: same flush sheet under Next appointments as Add barber.
+   * Direct-child selectors win over the base sheet sizing rules.
    */
-  .admin-barber-sheet-layer > .admin-barber-sheet.admin-service-sheet {
+  .admin-barber-sheet-layer > .admin-barber-sheet.admin-service-sheet,
+  .admin-barber-sheet-layer > .admin-barber-sheet.admin-product-sheet {
     width: 100%;
     max-width: none;
     margin-inline: 0;

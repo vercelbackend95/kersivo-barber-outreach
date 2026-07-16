@@ -1,4 +1,6 @@
 import React, { useEffect, useMemo, useState } from 'react';
+import { ButtonSpinner } from '@/components/ButtonSpinner';
+import { ConfirmationStatusIcon } from '@/components/ConfirmationStatusIcon';
 import { ImagePlus } from '../../lucide-react';
 import PrivateDemoAuthPanel from '../PrivateDemoAuthPanel';
 import RetailOnboardingWelcome from './RetailOnboardingWelcome';
@@ -230,13 +232,14 @@ export default function RetailOnboardingWizard() {
 
         <main className="admin-onboarding__main">
           <div className="booking-flow booking-flow--wizard">
-            <section className="booking-confirmation" role="status" aria-live="polite" tabIndex={-1}>
+            <section
+              className="booking-confirmation booking-confirmation--success"
+              role="status"
+              aria-live="polite"
+              tabIndex={-1}
+            >
               <div className="booking-confirmation__header">
-                <div className="booking-confirmation__icon" aria-hidden="true">
-                  <svg viewBox="0 0 24 24" focusable="false">
-                    <path d="M20.707 5.293a1 1 0 0 1 0 1.414l-10 10a1 1 0 0 1-1.414 0l-4-4a1 1 0 1 1 1.414-1.414L10 14.586l9.293-9.293a1 1 0 0 1 1.414 0Z" />
-                  </svg>
-                </div>
+                <ConfirmationStatusIcon variant="success" />
                 <div className="booking-confirmation__copy">
                   <p className="booking-confirmation__eyebrow">Confirmed</p>
                   <h2 className="booking-confirmation__heading">Product added</h2>
@@ -569,7 +572,8 @@ export default function RetailOnboardingWizard() {
                 disabled={saving}
                 aria-busy={saving}
               >
-                {saving ? 'Adding…' : 'Add product to the shop'}
+                {saving ? <ButtonSpinner /> : null}
+                <span>{saving ? 'Adding…' : 'Add product to the shop'}</span>
               </button>
             )}
           </div>

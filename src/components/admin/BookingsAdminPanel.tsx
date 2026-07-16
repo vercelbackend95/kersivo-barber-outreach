@@ -25,7 +25,6 @@ import {
 } from '../../lib/admin/barberRosterPresentation';
 import BarberChip from './BarberChip';
 import type { Barber, ServiceOption, TimeBlock, WorkingHourRow } from './barbersTypes';
-import { getDefaultWorkingHourRows } from '../../lib/admin/defaultWorkingHourRows';
 import EmptyState from '../EmptyState';
 import { Clock, ListOrdered, Plus, X } from '../lucide-react';
 import { ADMIN_BOOKING_HISTORY_PAGE_SIZE } from '../../lib/admin/bookingHistoryPageSize';
@@ -644,19 +643,14 @@ export default function BookingsAdminPanel({ isActive, mode, onBackToDashboard, 
   const [barbers, setBarbers] = useState<Barber[]>([]);
   const [barbersInitialLoading, setBarbersInitialLoading] = useState(true);
   const [barbersFilter, setBarbersFilter] = useState<'active' | 'all'>('active');
-  const [barberNameDraft, setBarberNameDraft] = useState('');
-  const [barberAvatarFile, setBarberAvatarFile] = useState<File | null>(null);
   const [barberSaveMessage, setBarberSaveMessage] = useState('');
   const [barberSaveError, setBarberSaveError] = useState('');
   const [barberSaving, setBarberSaving] = useState(false);
   const [barberReordering, setBarberReordering] = useState(false);
-  const [barberAvatarPreviewUrl, setBarberAvatarPreviewUrl] = useState<string | null>(null);
-    const [editingBarberAvatarFile, setEditingBarberAvatarFile] = useState<File | null>(null);
+  const [editingBarberAvatarFile, setEditingBarberAvatarFile] = useState<File | null>(null);
   const [editingBarberAvatarPreviewUrl, setEditingBarberAvatarPreviewUrl] = useState<string | null>(null);
 
-    const [isAddBarberSheetOpen, setIsAddBarberSheetOpen] = useState(false);
-  const [addBarberSelectedServiceIds, setAddBarberSelectedServiceIds] = useState<string[]>([]);
-  const [addBarberWorkingHours, setAddBarberWorkingHours] = useState<WorkingHourRow[]>(() => getDefaultWorkingHourRows());
+  const [isAddBarberSheetOpen, setIsAddBarberSheetOpen] = useState(false);
 
   const [selectedBarberId, setSelectedBarberId] = useState<string | null>(null);
   const [barberProfileSource, setBarberProfileSource] = useState<'ops' | 'reports' | null>(null);
@@ -1540,16 +1534,6 @@ export default function BookingsAdminPanel({ isActive, mode, onBackToDashboard, 
   }, [activeView, mode, scrollToListBooking, visibleBookings]);
 
   useEffect(() => {
-    if (!barberAvatarFile) {
-      setBarberAvatarPreviewUrl(null);
-      return;
-    }
-
-    const objectUrl = URL.createObjectURL(barberAvatarFile);
-    setBarberAvatarPreviewUrl(objectUrl);
-    return () => URL.revokeObjectURL(objectUrl);
-  }, [barberAvatarFile]);
-    useEffect(() => {
     if (!editingBarberAvatarFile) {
       setEditingBarberAvatarPreviewUrl(null);
       return;
@@ -1579,16 +1563,6 @@ export default function BookingsAdminPanel({ isActive, mode, onBackToDashboard, 
       window.clearTimeout(t);
     };
   }, [barberProfileContextActive, selectedBarberId]);
-
-  useEffect(() => {
-    if (addBarberServiceOptions.length === 0) return;
-    setAddBarberSelectedServiceIds((current) => {
-      if (current.length > 0) return current;
-      return addBarberServiceOptions.map((service) => service.id);
-    });
-  }, [addBarberServiceOptions]);
-
-
 
   const fetchServices = useCallback(async () => {
     const response = await fetch('/api/admin/services', { credentials: 'include' });
@@ -1811,96 +1785,6 @@ export default function BookingsAdminPanel({ isActive, mode, onBackToDashboard, 
     await Promise.all([fetchBookings(), fetchTimeBlocks()]);
 
   }
-  async function saveBarber(event: React.FormEvent) {
-    event.preventDefault();
-    setBarberSaveMessage('');
-    setBarberSaveError('');
-
-    const trimmedName = barberNameDraft.trim();
-    if (!trimmedName) {
-      setBarberSaveError('Barber name is required.');
-      return;
-    }
-    const uniqueServiceIds = Array.from(new Set(addBarberSelectedServiceIds));
-    if (uniqueServiceIds.length === 0) {
-      setBarberSaveError('Select at least one service.');
-      return;
-    }
-
-    const rulesSorted = [...addBarberWorkingHours].sort((a, b) => a.dayOfWeek - b.dayOfWeek);
-    if (rulesSorted.length !== 7) {
-      setBarberSaveError('Working hours must include every day of the week.');
-      return;
-    }
-    for (const rule of rulesSorted) {
-      if (rule.active && rule.startTime >= rule.endTime) {
-        const dayLabel = WEEK_DAYS[rule.dayOfWeek] ?? `Day ${rule.dayOfWeek}`;
-        setBarberSaveError(`${dayLabel}: start time must be earlier than end time.`);
-        return;
-      }
-    }
-
-    if (barberAvatarFile && barberAvatarFile.size > 5 * 1024 * 1024) {
-      setBarberSaveError('Avatar is too large. Maximum size is 5MB.');
-      return;
-    }
-
-    setBarberSaving(true);
-    const formData = new FormData();
-    formData.set('name', trimmedName);
-    formData.set('isActive', 'true');
-        formData.set('serviceIds', JSON.stringify(uniqueServiceIds));
-    if (barberAvatarFile) formData.set('avatar', barberAvatarFile);
-
-    const response = await fetch('/api/admin/barbers', {
-      method: 'POST',
-      credentials: 'include',
-      body: formData
-    });
-    const payload = await response.json().catch(() => ({ error: 'Could not save barber.' }));
-
-    if (!response.ok) {
-      setBarberSaveError(payload.error || 'Could not save barber.');
-      setBarberSaving(false);
-      return;
-    }
-
-    const newBarberId = (payload as { barber?: { id?: string } }).barber?.id;
-    if (!newBarberId) {
-      setBarberSaveError('Barber was saved but the response was missing an id.');
-      setBarberSaving(false);
-      return;
-    }
-
-    const rulesResponse = await fetch(`/api/admin/barbers/${newBarberId}/rules`, {
-      method: 'PUT',
-      credentials: 'include',
-      headers: { 'content-type': 'application/json' },
-      body: JSON.stringify({ rules: rulesSorted })
-    });
-    const rulesPayload = await rulesResponse.json().catch(() => ({} as { error?: string }));
-
-    setBarberNameDraft('');
-    setBarberAvatarFile(null);
-    setBarberAvatarPreviewUrl(null);
-    setAddBarberSelectedServiceIds(addBarberServiceOptions.map((service) => service.id));
-    setAddBarberWorkingHours(getDefaultWorkingHourRows());
-    setBarberSaving(false);
-    setIsAddBarberSheetOpen(false);
-
-    if (!rulesResponse.ok) {
-      setBarberSaveMessage('Barber saved.');
-      setBarberSaveError(
-        rulesPayload.error ?? 'Working hours could not be saved. Open the barber profile to set their schedule.'
-      );
-      await fetchBarbers();
-      return;
-    }
-
-    setBarberSaveError('');
-    setBarberSaveMessage('Barber saved.');
-    await fetchBarbers();
-  }
   async function saveSelectedBarberAvatar() {
     if (!selectedBarberId || !selectedBarber || !editingBarberAvatarFile) return;
 
@@ -2055,7 +1939,6 @@ export default function BookingsAdminPanel({ isActive, mode, onBackToDashboard, 
     }
     setBarberSaveError('');
     setBarberSaveMessage('');
-    setAddBarberWorkingHours(getDefaultWorkingHourRows());
     setIsAddBarberSheetOpen(true);
   }, [isPublicDemo]);
 
@@ -2383,34 +2266,24 @@ export default function BookingsAdminPanel({ isActive, mode, onBackToDashboard, 
               <BarbersOverview
                 barbers={visibleBarbersForManagement}
                 barbersLoading={barbersInitialLoading}
-                                services={addBarberServiceOptions}
+                services={addBarberServiceOptions}
                 barbersFilter={barbersFilter}
-                barberNameDraft={barberNameDraft}
-                barberAvatarPreviewUrl={barberAvatarPreviewUrl}
-                                selectedServiceIds={addBarberSelectedServiceIds}
-                barberSaving={barberSaving}
                 barberReordering={barberReordering}
                 barberSaveMessage={barberSaveMessage}
                 barberSaveError={barberSaveError}
-                                isAddBarberSheetOpen={isAddBarberSheetOpen}
+                isAddBarberSheetOpen={isAddBarberSheetOpen}
                 globalBlocks={globalBlocks}
-                                bookings={bookings}
+                bookings={bookings}
                 getInitials={getInitials}
-                onBarberNameChange={setBarberNameDraft}
-                onBarberAvatarChange={setBarberAvatarFile}
-                                onSelectedServiceIdsChange={setAddBarberSelectedServiceIds}
-                onSubmitAddBarber={(event) => void saveBarber(event)}
                 onBarbersFilterChange={setBarbersFilter}
                 onOpenBarber={setSelectedBarberId}
                 onMoveBarber={(index, direction) => void moveBarber(index, direction)}
                 onCloseAddBarberSheet={() => {
                   setIsAddBarberSheetOpen(false);
-                  setAddBarberWorkingHours(getDefaultWorkingHourRows());
                 }}
-                addBarberWorkingHours={addBarberWorkingHours}
-                onSetAddBarberWorkingHours={setAddBarberWorkingHours}
-                addBarberWeekDays={WEEK_DAYS}
-
+                onBarberSaved={async () => {
+                  await fetchBarbers();
+                }}
                 formatBlockRange={formatBlockRange}
               />
             )

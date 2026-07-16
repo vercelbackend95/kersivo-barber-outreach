@@ -1,27 +1,21 @@
 import React from 'react';
-import type { Barber, ServiceOption, TimeBlock, WorkingHourRow } from './barbersTypes';
-import BarberWorkingHoursEditor from './BarberWorkingHoursEditor';
+import type { Barber, ServiceOption, TimeBlock } from './barbersTypes';
 import type { BarberBookingPreview } from '../../lib/admin/barberRosterPresentation';
-import { Check, Plus, X } from '../lucide-react';
 import AdminBarberRosterCard from './AdminBarberRosterCard';
 import AdminBarberRosterSearch from './AdminBarberRosterSearch';
 import { BarberRosterOverviewGridSkeleton } from '../skeleton';
+import BarberWizard from './barber-wizard/BarberWizard';
 import {
   getDayFill,
   getNextBookingForBarber,
   getBarberAvailabilityStatus,
   getTodayLine,
-  WORKING_HOURS_PER_DAY,
 } from '../../lib/admin/barberRosterPresentation';
 
 type BarbersOverviewProps = {
   barbers: Barber[];
   services: ServiceOption[];
   barbersFilter: 'active' | 'all';
-  barberNameDraft: string;
-  barberAvatarPreviewUrl: string | null;
-  selectedServiceIds: string[];
-  barberSaving: boolean;
   barbersLoading?: boolean;
   barberReordering: boolean;
   barberSaveMessage: string;
@@ -30,17 +24,11 @@ type BarbersOverviewProps = {
   globalBlocks: TimeBlock[];
   bookings: BarberBookingPreview[];
   getInitials: (name: string) => string;
-  onBarberNameChange: (value: string) => void;
-  onBarberAvatarChange: (file: File | null) => void;
-  onSelectedServiceIdsChange: (serviceIds: string[]) => void;
-  onSubmitAddBarber: (event: React.FormEvent<HTMLFormElement>) => void;
   onBarbersFilterChange: (value: 'active' | 'all') => void;
   onOpenBarber: (barberId: string) => void;
   onMoveBarber: (index: number, direction: 'up' | 'down') => void;
   onCloseAddBarberSheet: () => void;
-  addBarberWorkingHours: WorkingHourRow[];
-  onSetAddBarberWorkingHours: (rules: WorkingHourRow[]) => void;
-  addBarberWeekDays: string[];
+  onBarberSaved: () => void | Promise<void>;
   formatBlockRange: (startAt: string, endAt: string) => string;
 };
 
@@ -67,10 +55,6 @@ export default function BarbersOverview({
   barbers,
   services,
   barbersFilter,
-  barberNameDraft,
-  barberAvatarPreviewUrl,
-  selectedServiceIds,
-  barberSaving,
   barbersLoading = false,
   barberReordering,
   barberSaveMessage,
@@ -79,17 +63,11 @@ export default function BarbersOverview({
   globalBlocks,
   bookings,
   getInitials,
-  onBarberNameChange,
-  onBarberAvatarChange,
-  onSelectedServiceIdsChange,
-  onSubmitAddBarber,
   onBarbersFilterChange,
   onOpenBarber,
   onMoveBarber,
   onCloseAddBarberSheet,
-  addBarberWorkingHours,
-  onSetAddBarberWorkingHours,
-  addBarberWeekDays,
+  onBarberSaved,
   formatBlockRange,
 }: BarbersOverviewProps) {
   const barberFilterLabelId = React.useId();
@@ -310,139 +288,19 @@ export default function BarbersOverview({
           className="admin-barber-sheet-layer"
           role="dialog"
           aria-modal="true"
-          aria-label="Add barber"
+          aria-labelledby="admin-barber-form-title"
           onMouseDown={(event) => {
             if (event.target === event.currentTarget) {
               onCloseAddBarberSheet();
             }
           }}
         >
-          <form
-            className="admin-barber-sheet admin-barber-sheet--add"
-            onSubmit={onSubmitAddBarber}
-            onMouseDown={(event) => event.stopPropagation()}
-          >
-            <div className="admin-barber-sheet-head admin-client-modal-head admin-service-panel-head">
-              <div className="admin-sheet-head-copy">
-                <div className="admin-sheet-head-title-row">
-                  <h3>Add barber</h3>
-                </div>
-              </div>
-              <button
-                type="button"
-                className="btn btn--ghost admin-client-modal-close admin-service-panel-close"
-                onClick={onCloseAddBarberSheet}
-                aria-label="Close add barber form"
-              >
-                <X width={18} height={18} aria-hidden="true" />
-              </button>
-            </div>
-
-            <div className="admin-barber-sheet-content">
-              <fieldset className="admin-form-section">
-                <legend className="admin-form-section-title">Basic information</legend>
-                <div className="field">
-                  <label htmlFor="barber-name" className="field__label">
-                    Barber name
-                  </label>
-                  <input
-                    id="barber-name"
-                    className="input"
-                    value={barberNameDraft}
-                    onChange={(event) => onBarberNameChange(event.target.value)}
-                    onKeyDown={(event) => {
-                      if (event.key === 'Enter') {
-                        event.preventDefault();
-                      }
-                    }}
-                    placeholder="e.g. Marco"
-                    required
-                  />
-                </div>
-              </fieldset>
-
-              <fieldset className="admin-form-section">
-                <legend className="admin-form-section-title">Photo</legend>
-                <div className="admin-add-barber-avatar">
-                  <input
-                    id="barber-avatar"
-                    type="file"
-                    accept="image/jpeg,image/png,image/webp"
-                    className="admin-barber-avatar-input"
-                    onChange={(event) => onBarberAvatarChange(event.target.files?.[0] ?? null)}
-                  />
-                  <div className="admin-barber-roster-avatar-shell">
-                    <label
-                      htmlFor="barber-avatar"
-                      className="admin-barber-avatar admin-barber-avatar--roster admin-add-barber-avatar__trigger"
-                      aria-label={barberAvatarPreviewUrl ? 'Change photo' : 'Add photo'}
-                    >
-                      {barberAvatarPreviewUrl ? (
-                        <>
-                          <img src={barberAvatarPreviewUrl} alt="" className="admin-add-barber-avatar__preview" />
-                          <span className="admin-add-barber-avatar__change">Change</span>
-                        </>
-                      ) : (
-                        <Plus
-                          className="admin-add-barber-avatar__plus"
-                          width={32}
-                          height={32}
-                          strokeWidth={1.65}
-                          aria-hidden="true"
-                        />
-                      )}
-                    </label>
-                  </div>
-                </div>
-              </fieldset>
-
-              <fieldset className="admin-form-section admin-service-select-group">
-                <legend className="admin-form-section-title">Services</legend>
-                <div className="admin-services-grid">
-                  {availableServices.map((service) => {
-                    const selected = selectedServiceIds.includes(service.id);
-                    return (
-                      <button
-                        key={service.id}
-                        type="button"
-                        className={`admin-service-toggle${selected ? ' is-selected' : ''}`}
-                        aria-pressed={selected}
-                        onClick={() => {
-                          if (selected) {
-                            onSelectedServiceIdsChange(selectedServiceIds.filter((serviceId) => serviceId !== service.id));
-                            return;
-                          }
-                          onSelectedServiceIdsChange([...selectedServiceIds, service.id]);
-                        }}
-                      >
-                        <span className="admin-service-toggle-check" aria-hidden="true">
-                          <Check width={11} height={11} strokeWidth={2.5} aria-hidden="true" />
-                        </span>
-                        <span className="admin-service-toggle-label">{service.name}</span>
-                      </button>
-                    );
-                  })}
-                </div>
-              </fieldset>
-
-              <BarberWorkingHoursEditor
-                weekDays={addBarberWeekDays}
-                workingHours={addBarberWorkingHours}
-                loading={false}
-                saving={false}
-                saveError=""
-                persistToServer={false}
-                subtitle="Saved together with this barber when you tap Save barber."
-                helperText="Tap any day to change shift status and hours."
-                onSetWorkingHours={onSetAddBarberWorkingHours}
-                onSave={async () => true}
-              />
-            </div>
-
-            <div className="admin-barber-sheet-footer">
-              <button type="submit" className="btn btn--primary" disabled={barberSaving}>{barberSaving ? 'Saving...' : 'Save barber'}</button>
-            </div>
-          </form>
+          <BarberWizard
+            key="create"
+            services={availableServices}
+            onCancel={onCloseAddBarberSheet}
+            onSaved={onBarberSaved}
+          />
         </div>
       ) : null}
 

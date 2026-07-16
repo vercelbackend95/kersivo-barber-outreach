@@ -37,6 +37,27 @@ a.btn:hover {
   transform: none;
 }
 
+.btn[aria-busy="true"]:disabled {
+  opacity: 1;
+  cursor: wait;
+}
+
+.btn-spinner {
+  width: 1rem;
+  height: 1rem;
+  border: 2px solid color-mix(in srgb, currentColor 32%, transparent);
+  border-top-color: currentColor;
+  border-radius: 50%;
+  animation: btn-spin 0.75s linear infinite;
+  flex-shrink: 0;
+}
+
+@keyframes btn-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
 .btn--primary {
   background: var(--accent);
   border-color: var(--accent);

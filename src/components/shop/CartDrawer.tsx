@@ -285,19 +285,21 @@ export default function CartDrawer({ testOrderMode = false }: CartDrawerProps) {
                 <dd>{statusLabel(testOrderSuccess.status)}</dd>
               </div>
             </dl>
-            <a className="btn btn--primary cart-buy-button" href={adminOrdersHref}>
-              View Order in Admin
-            </a>
-            <button
-              type="button"
-              className="btn btn--ghost cart-test-success__dismiss"
-              onClick={() => {
-                setTestOrderSuccess(null);
-                closeCart();
-              }}
-            >
-              Keep browsing shop
-            </button>
+            <div className="cart-test-success__actions">
+              <a className="btn btn--primary cart-buy-button" href={adminOrdersHref}>
+                View Order in Admin
+              </a>
+              <button
+                type="button"
+                className="btn btn--ghost cart-test-success__dismiss"
+                onClick={() => {
+                  setTestOrderSuccess(null);
+                  closeCart();
+                }}
+              >
+                Keep browsing shop
+              </button>
+            </div>
           </section>
         ) : (
           <>

@@ -10,6 +10,16 @@ function service(partial: Partial<BookableService> & Pick<BookableService, 'id' 
 }
 
 describe('groupServicesByCategory', () => {
+  it('sorts featured services first within a category, then displayOrder', () => {
+    const groups = groupServicesByCategory([
+      service({ id: '1', name: 'Standard cut', category: 'styling', displayOrder: 1 }),
+      service({ id: '2', name: 'Signature cut', category: 'styling', displayOrder: 5, featured: true }),
+      service({ id: '3', name: 'Premium cut', category: 'styling', displayOrder: 2 })
+    ]);
+
+    expect(groups[0]?.services.map((item) => item.name)).toEqual(['Signature cut', 'Standard cut', 'Premium cut']);
+  });
+
   it('groups services in default category order with displayOrder sorting', () => {
     const groups = groupServicesByCategory([
       service({ id: '1', name: 'Hair wash', category: 'styling', displayOrder: 10 }),

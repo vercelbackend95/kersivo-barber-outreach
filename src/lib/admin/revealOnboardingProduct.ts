@@ -1,4 +1,3 @@
-const HIGHLIGHT_MS = 9000;
 const PRODUCT_COACHMARK_TEXT = 'Add this product to your test basket';
 
 export type RevealOnboardingProductInput = {
@@ -16,7 +15,6 @@ export type RevealOnboardingProductCallbacks = {
 };
 
 let pendingRevealTimer: number | null = null;
-let highlightTimer: number | null = null;
 let atcClearHandler: ((event: Event) => void) | null = null;
 let atcClearTarget: HTMLButtonElement | null = null;
 let scrollRafId: number | null = null;
@@ -259,10 +257,6 @@ function paintProductReveal(item: HTMLElement, productName: string) {
 
     const onAtcClick = () => {
       clearOnboardingProductHighlight();
-      if (highlightTimer !== null) {
-        window.clearTimeout(highlightTimer);
-        highlightTimer = null;
-      }
     };
     atcClearHandler = onAtcClick;
     atcClearTarget = atc;
@@ -330,14 +324,6 @@ export function revealOnboardingProduct(
       paintProductReveal(item, input.name);
       callbacks.onPainted?.(input.name);
       clearHighlightQuery();
-
-      if (highlightTimer !== null) {
-        window.clearTimeout(highlightTimer);
-      }
-      highlightTimer = window.setTimeout(() => {
-        clearOnboardingProductHighlight();
-        highlightTimer = null;
-      }, HIGHLIGHT_MS);
     })();
   }, 180);
 }

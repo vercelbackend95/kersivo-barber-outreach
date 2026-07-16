@@ -15,6 +15,7 @@ export type BookableService = {
   pricePence: number;
   category?: string | null;
   displayOrder?: number;
+  featured?: boolean;
 };
 
 export type ServiceCategoryGroup = {
@@ -41,6 +42,13 @@ function compareDisplayOrder(left: BookableService, right: BookableService): num
   const rightOrder = right.displayOrder ?? Number.MAX_SAFE_INTEGER;
   if (leftOrder !== rightOrder) return leftOrder - rightOrder;
   return left.name.localeCompare(right.name, 'en', { sensitivity: 'base' });
+}
+
+function compareServicesInCategory(left: BookableService, right: BookableService): number {
+  const leftFeatured = left.featured ? 1 : 0;
+  const rightFeatured = right.featured ? 1 : 0;
+  if (leftFeatured !== rightFeatured) return rightFeatured - leftFeatured;
+  return compareDisplayOrder(left, right);
 }
 
 export function formatServiceCategoryLabel(category: string): string {
@@ -93,6 +101,6 @@ export function groupServicesByCategory(services: BookableService[]): ServiceCat
   return orderedKeys.map((category) => ({
     category,
     label: formatServiceCategoryLabel(category),
-    services: [...(grouped.get(category) ?? [])].sort(compareDisplayOrder)
+    services: [...(grouped.get(category) ?? [])].sort(compareServicesInCategory)
   }));
 }
