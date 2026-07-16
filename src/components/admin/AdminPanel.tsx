@@ -72,6 +72,45 @@ function PanelChunkFallback() {
   );
 }
 
+type LazyPanelErrorBoundaryState = {
+  hasError: boolean;
+};
+
+/** Catches lazy-chunk / render failures outside panel-internal boundaries (avoids blank black admin). */
+class LazyPanelErrorBoundary extends React.Component<
+  { children: React.ReactNode },
+  LazyPanelErrorBoundaryState
+> {
+  state: LazyPanelErrorBoundaryState = { hasError: false };
+
+  static getDerivedStateFromError(): LazyPanelErrorBoundaryState {
+    return { hasError: true };
+  }
+
+  componentDidCatch(error: Error) {
+    console.error('Admin lazy panel failed to load:', error);
+  }
+
+  handleRetry = () => {
+    this.setState({ hasError: false });
+  };
+
+  render() {
+    if (this.state.hasError) {
+      return (
+        <div className="admin-inline-error" role="alert">
+          <p>This section failed to load.</p>
+          <button type="button" className="btn btn--secondary" onClick={this.handleRetry}>
+            Retry
+          </button>
+        </div>
+      );
+    }
+
+    return this.props.children;
+  }
+}
+
 type AdminPanelProps = {
   demoMode?: boolean;
 };
@@ -282,17 +321,19 @@ export default function AdminPanel({ demoMode = false }: AdminPanelProps) {
           onBackToDashboard={() => handleSectionChange('bookings_dashboard')}
         />
 
-        <Suspense fallback={<PanelChunkFallback />}>
-          {activeSection === 'services' ? <ServicesAdminPanel key="services" /> : null}
+        <LazyPanelErrorBoundary>
+          <Suspense fallback={<PanelChunkFallback />}>
+            {activeSection === 'services' ? <ServicesAdminPanel key="services" /> : null}
 
-          {activeSection === 'bookings_clients' ? <ClientsAdminPanel key="clients" /> : null}
+            {activeSection === 'bookings_clients' ? <ClientsAdminPanel key="clients" /> : null}
 
-          {activeSection === 'shop_products' || activeSection === 'shop_orders' || activeSection === 'shop_sales' ? (
-            <ShopAdminPanel key={activeSection} initialTab={shopTab} />
-          ) : null}
+            {activeSection === 'shop_products' || activeSection === 'shop_orders' || activeSection === 'shop_sales' ? (
+              <ShopAdminPanel key={activeSection} initialTab={shopTab} />
+            ) : null}
 
-          {activeSection === 'assistant' ? <AiAssistantPanel key="assistant" isPublicDemo={demoMode} /> : null}
-        </Suspense>
+            {activeSection === 'assistant' ? <AiAssistantPanel key="assistant" isPublicDemo={demoMode} /> : null}
+          </Suspense>
+        </LazyPanelErrorBoundary>
       </AdminLayout>
     </AdminTodayBookingsLiveProvider>
   );

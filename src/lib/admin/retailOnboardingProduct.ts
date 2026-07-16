@@ -1,6 +1,7 @@
 import { prisma } from '@/lib/db/client';
 
-export const RETAIL_SETUP_TOTAL_STEPS = 4;
+export { RETAIL_SETUP_TOTAL_STEPS } from '@/lib/admin/retailOnboardingConstants';
+
 
 export type RetailOnboardingProductRef = {
   id: string;

@@ -8,7 +8,8 @@ import {
 } from '@/lib/shop/cartStore';
 import { trackConsentedEvent } from '@/lib/consent/events';
 import { FUNNEL_EVENTS } from '@/lib/analytics/funnelEvents';
-import { RETAIL_SETUP_TOTAL_STEPS } from '@/lib/admin/retailOnboardingProduct';
+import { RETAIL_SETUP_TOTAL_STEPS } from '@/lib/admin/retailOnboardingConstants';
+
 import {
   clearOnboardingProductHighlight,
   revealOnboardingProduct,
