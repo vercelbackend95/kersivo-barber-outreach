@@ -411,7 +411,10 @@ export default function OrdersDataTable22({
                             {customerIdentity.displayName}
                           </span>
                           {order.isTestOrder ? (
-                            <span className="admin-orders-test-badge">TEST ORDER</span>
+                            <span className="admin-orders-test-badge">
+                              <span className="admin-orders-test-badge__long">TEST ORDER</span>
+                              <span className="admin-orders-test-badge__short">TEST</span>
+                            </span>
                           ) : null}
                           <span className="admin-orders-grid-identity__meta" aria-hidden="true">
                             <span>{formatItemCount(order._count.items)}</span>
@@ -500,7 +503,10 @@ function OrderDetailsPanel({
       {!isDetailLoading && detail ? (
         <>
           {detail.isTestOrder ? (
-            <p className="admin-orders-test-badge admin-orders-test-badge--panel">TEST ORDER</p>
+            <p className="admin-orders-test-badge admin-orders-test-badge--panel">
+              <span className="admin-orders-test-badge__long">TEST ORDER</span>
+              <span className="admin-orders-test-badge__short">TEST</span>
+            </p>
           ) : null}
           <div className="admin-orders-table22__meta-grid">
             <p>

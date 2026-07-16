@@ -2476,6 +2476,7 @@ export default function ShopAdminPanel({ initialTab = 'products' }: ShopAdminPan
               testOrderId={walkthroughOrder.id}
               mode="collect"
               source="admin-orders"
+              compact
             />
           ) : null}
 

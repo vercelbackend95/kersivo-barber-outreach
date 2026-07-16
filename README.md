@@ -44,6 +44,10 @@ Astro + React (TypeScript) booking + shop system for barbershops.
        - `http://localhost:4321/api/auth/callback/google`
        - `https://kersivo.co.uk/api/auth/callback/google`
        - `https://www.kersivo.co.uk/api/auth/callback/google` (if www is used)
+       - For phone-on-LAN testing (e.g. `http://192.168.1.113:4321`), also add:
+         `http://<your-lan-ip>:4321/api/auth/callback/google`
+         (update when your LAN IP changes; otherwise Google returns `redirect_uri_mismatch`).
+     - Optional: `BETTER_AUTH_TRUSTED_ORIGINS` — comma-separated extra origins for auth CSRF checks.
    - If `RESEND_API_KEY` is missing, the app falls back to console logs for outgoing email contents.
 
 

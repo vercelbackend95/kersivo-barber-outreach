@@ -66,25 +66,34 @@ function placeCollectCoachmark(collectBtn: HTMLElement) {
   removeCollectCoachmarks();
   collectBtn.classList.add('admin-orders-grid-collect-btn--coach');
 
+  const actions = collectBtn.closest('.admin-orders-grid-actions');
+  if (actions) {
+    actions.classList.add('admin-orders-grid-actions--coach-host');
+  }
+
   const mark = document.createElement('div');
   mark.className = 'admin-orders-collect-coachmark';
   mark.setAttribute('role', 'status');
   mark.textContent = COLLECT_COACHMARK_TEXT;
-
-  const host = collectBtn.closest('.admin-orders-grid-actions') ?? collectBtn.parentElement;
-  if (host) {
-    host.classList.add('admin-orders-grid-actions--coach-host');
-    host.appendChild(mark);
-  } else {
-    collectBtn.insertAdjacentElement('afterend', mark);
-  }
+  collectBtn.appendChild(mark);
 
   requestAnimationFrame(() => {
     const rect = mark.getBoundingClientRect();
-    if (rect.left < 12) {
-      mark.classList.add('admin-orders-collect-coachmark--flip');
+    const pad = 12;
+    let shiftX = 0;
+
+    if (rect.left < pad) {
+      shiftX = pad - rect.left;
+    } else if (rect.right > window.innerWidth - pad) {
+      shiftX = window.innerWidth - pad - rect.right;
     }
-    if (rect.top < 12) {
+
+    if (shiftX !== 0) {
+      mark.style.setProperty('--coach-shift-x', `${shiftX}px`);
+      mark.classList.add('admin-orders-collect-coachmark--shifted');
+    }
+
+    if (rect.top < pad) {
       mark.classList.add('admin-orders-collect-coachmark--below');
     }
   });

@@ -6247,8 +6247,22 @@ body.admin-theme-premium-black .booking-page-wrap .booking-shell.surface {
   vertical-align: middle;
 }
 
+.admin-orders-test-badge__short {
+  display: none;
+}
+
 .admin-orders-test-badge--panel {
   margin: 0 0 0.5rem;
+}
+
+@media (max-width: 36rem) {
+  .admin-orders-test-badge__long {
+    display: none;
+  }
+
+  .admin-orders-test-badge__short {
+    display: inline;
+  }
 }
 
 .admin-orders-grid-item--highlight {
@@ -6395,6 +6409,48 @@ body.admin-theme-premium-black .booking-page-wrap .booking-shell.surface {
   justify-content: center;
 }
 
+@media (max-width: 36rem) {
+  .admin-page-wrap .booking-shell > .admin-orders-panel {
+    padding-inline: 0.5rem;
+    box-sizing: border-box;
+  }
+
+  .admin-orders-panel .retail-task-card {
+    margin: 0 0 0.55rem;
+    padding: 0.65rem 0.75rem;
+    gap: 0.4rem;
+    border-radius: var(--radius-12);
+    max-width: 100%;
+    box-sizing: border-box;
+  }
+
+  .admin-orders-panel .retail-task-card__top {
+    gap: 0.5rem;
+  }
+
+  .admin-orders-panel .retail-task-card__icon {
+    width: 1.85rem;
+    height: 1.85rem;
+  }
+
+  .admin-orders-panel .retail-task-card__title {
+    font-size: 0.95rem;
+  }
+
+  .admin-orders-panel .retail-task-card__body {
+    font-size: 0.8rem;
+    line-height: 1.4;
+  }
+
+  .admin-orders-panel .retail-task-card__eyebrow {
+    font-size: 0.62rem;
+  }
+
+  .admin-orders-panel .retail-task-card__progress-label {
+    font-size: 0.72rem;
+  }
+}
+
 .admin-orders-grid-ready-btn {
   font-size: 0.72rem;
   font-weight: 700;
@@ -6459,10 +6515,14 @@ body.admin-theme-premium-black .booking-page-wrap .booking-shell.surface {
 }
 
 .admin-orders-grid-actions--coach-host {
-  position: relative;
+  /* Keep absolute/static positioning from base rules — do not switch to relative (layout shift). */
+  z-index: 5;
+  overflow: visible;
 }
 
 .admin-orders-grid-collect-btn--coach {
+  position: relative;
+  z-index: 3;
   outline: 2px solid var(--accent);
   outline-offset: 3px;
   box-shadow:
@@ -6491,12 +6551,22 @@ body.admin-theme-premium-black .booking-page-wrap .booking-shell.surface {
   }
 }
 
+.admin-orders-grid-wrap:has(.admin-orders-grid-collect-btn--coach),
+.admin-orders-grid-item:has(.admin-orders-grid-collect-btn--coach) {
+  overflow: visible;
+}
+
+.admin-orders-grid-item:has(.admin-orders-grid-collect-btn--coach) {
+  z-index: 4;
+}
+
 .admin-orders-collect-coachmark {
   position: absolute;
   right: 0;
   bottom: calc(100% + 0.5rem);
   z-index: 6;
-  max-width: min(16rem, 70vw);
+  width: max-content;
+  max-width: min(14rem, calc(100vw - 1.5rem));
   padding: 0.45rem 0.6rem;
   border-radius: var(--radius-10);
   font-size: 0.78rem;
@@ -6507,6 +6577,8 @@ body.admin-theme-premium-black .booking-page-wrap .booking-shell.surface {
   border: 1px solid color-mix(in srgb, var(--accent) 45%, var(--border));
   box-shadow: 0 8px 20px color-mix(in srgb, var(--bg) 45%, transparent);
   pointer-events: none;
+  white-space: normal;
+  text-align: left;
 }
 
 .admin-orders-collect-coachmark::after {
@@ -6518,14 +6590,12 @@ body.admin-theme-premium-black .booking-page-wrap .booking-shell.surface {
   border-top-color: color-mix(in srgb, var(--accent) 45%, var(--border));
 }
 
-.admin-orders-collect-coachmark--flip {
-  right: auto;
-  left: 0;
+.admin-orders-collect-coachmark--shifted {
+  transform: translateX(var(--coach-shift-x, 0px));
 }
 
-.admin-orders-collect-coachmark--flip::after {
-  right: auto;
-  left: 1rem;
+.admin-orders-collect-coachmark--shifted::after {
+  transform: translateX(calc(var(--coach-shift-x, 0px) * -1));
 }
 
 .admin-orders-collect-coachmark--below {
@@ -6538,6 +6608,14 @@ body.admin-theme-premium-black .booking-page-wrap .booking-shell.surface {
   bottom: 100%;
   border-top-color: transparent;
   border-bottom-color: color-mix(in srgb, var(--accent) 45%, var(--border));
+}
+
+@media (max-width: 36rem) {
+  .admin-orders-collect-coachmark {
+    max-width: min(12.5rem, calc(100vw - 2rem));
+    font-size: 0.74rem;
+    padding: 0.4rem 0.55rem;
+  }
 }
 
 .admin-orders-grid-row-chevron {
@@ -6875,13 +6953,18 @@ body.admin-theme-premium-black .booking-page-wrap .booking-shell.surface {
   }
 
   .admin-orders-grid-actions {
-    top: 50%;
+    top: 0;
     right: 0.8rem;
     bottom: auto;
     width: 2.55rem;
-    min-height: 2.55rem;
+    height: 3.45rem;
+    min-height: 3.45rem;
     justify-content: center;
-    transform: translateY(-50%);
+    transform: none;
+  }
+
+  .admin-orders-grid-wrap:has(.admin-orders-grid-collect-btn--coach) {
+    overflow: visible;
   }
 
   .admin-orders-grid-collect-btn {
