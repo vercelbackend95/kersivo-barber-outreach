@@ -1035,6 +1035,101 @@
   cursor: not-allowed;
 }
 
+.cart-test-mode {
+  display: grid;
+  gap: 0.35rem;
+  padding: 0.7rem 0.75rem;
+  border-radius: var(--radius-12);
+  border: 1px solid color-mix(in srgb, var(--accent) 40%, transparent);
+  background: color-mix(in srgb, var(--accent) 12%, transparent);
+}
+
+.cart-test-mode__label {
+  margin: 0;
+  font-size: 0.72rem;
+  font-weight: 750;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--accent);
+}
+
+.cart-test-mode__message {
+  margin: 0;
+  font-size: 0.82rem;
+  line-height: 1.45;
+  color: var(--fg);
+}
+
+.cart-test-success {
+  display: grid;
+  gap: 0.75rem;
+  padding: 1rem 1.15rem calc(1.1rem + env(safe-area-inset-bottom, 0px));
+  overflow-y: auto;
+}
+
+.cart-test-success__eyebrow {
+  margin: 0;
+  font-size: 0.72rem;
+  font-weight: 750;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--accent);
+}
+
+.cart-test-success__title {
+  margin: 0;
+  font-size: 1.35rem;
+  font-weight: 750;
+  letter-spacing: -0.02em;
+  color: var(--fg);
+}
+
+.cart-test-success__body {
+  margin: 0;
+  font-size: 0.9rem;
+  line-height: 1.5;
+  color: var(--muted);
+}
+
+.cart-test-success__summary {
+  margin: 0;
+  display: grid;
+  gap: 0.65rem;
+  padding: 0.75rem 0.85rem;
+  border-radius: var(--radius-12);
+  border: 1px solid color-mix(in srgb, var(--border) 70%, transparent);
+  background: color-mix(in srgb, var(--surface-2) 50%, transparent);
+}
+
+.cart-test-success__summary > div {
+  display: grid;
+  gap: 0.15rem;
+}
+
+.cart-test-success__summary dt {
+  margin: 0;
+  font-size: 0.7rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--muted);
+}
+
+.cart-test-success__summary dd {
+  margin: 0;
+  font-size: 0.92rem;
+  color: var(--fg);
+}
+
+.cart-test-success__item {
+  display: block;
+}
+
+.cart-test-success__dismiss {
+  width: 100%;
+  min-height: 2.5rem;
+}
+
 .cart-drawer__backdrop {
   position: fixed;
   inset: 0;
@@ -1085,5 +1180,255 @@
     width: 100vw;
     border-radius: 0;
     border-left: 0;
+  }
+}
+
+/* ── Retail onboarding task card (private test-shop only) ─────────────── */
+.retail-task-card {
+  display: grid;
+  gap: 0.65rem;
+  margin: 0 0 var(--space-lg);
+  padding: 0.9rem 1rem;
+  border-radius: var(--radius-16);
+  border: 1px solid color-mix(in srgb, var(--border) 80%, var(--fg));
+  background:
+    linear-gradient(
+      165deg,
+      color-mix(in srgb, var(--surface-2) 70%, var(--bg)) 0%,
+      var(--surface-1) 100%
+    );
+  box-shadow: inset 3px 0 0 var(--accent);
+}
+
+.retail-task-card--compact {
+  margin-bottom: var(--space-md);
+  padding: 0.75rem 0.85rem;
+}
+
+.retail-task-card--minimized {
+  gap: 0.45rem;
+  padding: 0.7rem 0.85rem;
+}
+
+.retail-task-card__top {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.65rem;
+}
+
+.retail-task-card__icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 2.25rem;
+  height: 2.25rem;
+  border-radius: var(--radius-10);
+  background: color-mix(in srgb, var(--accent) 14%, transparent);
+  color: var(--accent);
+  flex-shrink: 0;
+}
+
+.retail-task-card__heading {
+  flex: 1;
+  min-width: 0;
+  display: grid;
+  gap: 0.25rem;
+}
+
+.retail-task-card__eyebrow {
+  margin: 0;
+  font-size: 0.68rem;
+  font-weight: 750;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--accent);
+}
+
+.retail-task-card__progress {
+  display: grid;
+  gap: 0.3rem;
+}
+
+.retail-task-card__progress-label {
+  font-size: 0.78rem;
+  font-weight: 600;
+  color: var(--muted);
+}
+
+.retail-task-card__progress-track {
+  display: block;
+  height: 0.28rem;
+  border-radius: var(--radius-full);
+  background: color-mix(in srgb, var(--border) 80%, transparent);
+  overflow: hidden;
+}
+
+.retail-task-card__progress-fill {
+  display: block;
+  height: 100%;
+  border-radius: inherit;
+  background: var(--accent);
+}
+
+.retail-task-card__expand {
+  border: 0;
+  background: transparent;
+  color: var(--muted);
+  font: inherit;
+  font-size: 0.78rem;
+  font-weight: 600;
+  cursor: pointer;
+  padding: 0.2rem 0.35rem;
+}
+
+.retail-task-card__expand:focus-visible {
+  outline: 2px solid var(--focus);
+  outline-offset: 2px;
+}
+
+.retail-task-card__title {
+  margin: 0;
+  font-size: 1.1rem;
+  font-weight: 750;
+  letter-spacing: -0.02em;
+  color: var(--fg);
+  line-height: 1.25;
+}
+
+.retail-task-card--compact .retail-task-card__title {
+  font-size: 1rem;
+}
+
+.retail-task-card__body {
+  margin: 0;
+  font-size: 0.88rem;
+  line-height: 1.45;
+  color: var(--muted);
+}
+
+.retail-task-card__cta {
+  width: 100%;
+  min-height: 2.65rem;
+  justify-content: center;
+}
+
+.shop-card {
+  scroll-margin-top: calc(5.5rem + env(safe-area-inset-top, 0px));
+}
+
+[data-product-item] {
+  scroll-margin-top: calc(5.5rem + env(safe-area-inset-top, 0px));
+}
+
+.shop-card--onboarding-highlight {
+  position: relative;
+  z-index: 2;
+  overflow: visible;
+  border-color: color-mix(in srgb, var(--accent) 55%, var(--border));
+  background: color-mix(in srgb, var(--accent) 7%, var(--surface));
+  box-shadow:
+    0 0 0 2px color-mix(in srgb, var(--accent) 55%, transparent),
+    0 10px 28px color-mix(in srgb, var(--accent) 12%, transparent);
+}
+
+.shop-card--onboarding-highlight .shop-media {
+  border-radius: var(--radius-md) var(--radius-md) 0 0;
+}
+
+.btn--atc.retail-atc--onboarding-focus {
+  box-shadow:
+    0 0 0 2px color-mix(in srgb, var(--accent) 45%, transparent),
+    0 0 0 5px color-mix(in srgb, var(--accent) 16%, transparent);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .shop-card--onboarding-highlight {
+    transition: none;
+  }
+}
+
+.retail-your-product-badge {
+  position: absolute;
+  top: 0.55rem;
+  right: 0.55rem;
+  left: auto;
+  z-index: 3;
+  padding: 0.22rem 0.45rem;
+  border-radius: var(--radius-full);
+  font-size: 0.62rem;
+  font-weight: 750;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: #fff;
+  background: var(--accent);
+  border: 1px solid color-mix(in srgb, #fff 25%, transparent);
+}
+
+.shop-media {
+  position: relative;
+}
+
+.shop-card-actions--coachmark-host {
+  position: relative;
+  z-index: 4;
+}
+
+.retail-onboarding-coachmark {
+  position: absolute;
+  left: 0;
+  right: auto;
+  bottom: calc(100% + 0.45rem);
+  z-index: 5;
+  max-width: min(16rem, 80vw);
+  padding: 0.45rem 0.6rem;
+  border-radius: var(--radius-10);
+  font-size: 0.78rem;
+  font-weight: 600;
+  line-height: 1.35;
+  color: var(--fg);
+  background: var(--surface-1);
+  border: 1px solid color-mix(in srgb, var(--accent) 45%, var(--border));
+  box-shadow: 0 8px 20px color-mix(in srgb, var(--bg) 45%, transparent);
+  pointer-events: none;
+}
+
+.retail-onboarding-coachmark::after {
+  content: '';
+  position: absolute;
+  left: 1rem;
+  top: 100%;
+  border: 6px solid transparent;
+  border-top-color: color-mix(in srgb, var(--accent) 45%, var(--border));
+}
+
+.retail-onboarding-coachmark--flip {
+  left: auto;
+  right: 0;
+}
+
+.retail-onboarding-coachmark--flip::after {
+  left: auto;
+  right: 1rem;
+}
+
+.retail-onboarding-coachmark--above {
+  bottom: auto;
+  top: calc(100% + 0.45rem);
+}
+
+.retail-onboarding-coachmark--above::after {
+  top: auto;
+  bottom: 100%;
+  border-top-color: transparent;
+  border-bottom-color: color-mix(in srgb, var(--accent) 45%, var(--border));
+}
+
+@media (max-width: 40rem) {
+  .retail-task-card {
+    margin-bottom: var(--space-md);
+  }
+
+  .retail-onboarding-coachmark {
+    max-width: calc(100vw - 2.5rem);
   }
 }

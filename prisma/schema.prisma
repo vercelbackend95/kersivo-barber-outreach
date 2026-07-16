@@ -27,6 +27,7 @@ enum PaymentStatus {
 
 enum OrderStatus {
   PAID
+  READY_FOR_PICKUP
   COLLECTED
 }
 enum ProductCategory {
@@ -121,6 +122,10 @@ model ShopSettings {
   retailOnboardingCompleted   Boolean  @default(false)
   retailOnboardingSkipped     Boolean  @default(false)
   retailOnboardingCompletedAt DateTime?
+  retailOnboardingProductId          String?
+  retailTestOrderId                  String?
+  retailTestOrderCompletedAt         DateTime?
+  retailPickupWalkthroughCompletedAt DateTime?
   ownerUserId                 String?  @unique
   createdAt                   DateTime @default(now())
   updatedAt                   DateTime @updatedAt
@@ -376,6 +381,7 @@ model Order {
   currency        String      @default("gbp")
   totalPence      Int
   stripeSessionId String?     @unique
+  isTestOrder     Boolean     @default(false)
   paidAt          DateTime?
   collectedAt     DateTime?
   createdAt       DateTime    @default(now())
@@ -386,6 +392,7 @@ model Order {
 
   @@index([shopId, createdAt])
   @@index([shopId, status])
+  @@index([shopId, isTestOrder])
 }
 
 model OrderItem {

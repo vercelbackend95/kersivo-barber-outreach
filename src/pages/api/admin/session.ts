@@ -13,6 +13,9 @@ export const GET: APIRoute = async (context) => {
   let onboardingCurrentStep = 0;
   let retailOnboardingCompleted = true;
   let retailOnboardingSkipped = false;
+  let retailTestOrderId: string | null = null;
+  let retailTestOrderCompletedAt: string | null = null;
+  let retailPickupWalkthroughCompletedAt: string | null = null;
   let logoUrl: string | null = null;
   let shopName: string | null = null;
 
@@ -26,6 +29,10 @@ export const GET: APIRoute = async (context) => {
         onboardingCurrentStep: true,
         retailOnboardingCompleted: true,
         retailOnboardingSkipped: true,
+        retailOnboardingProductId: true,
+        retailTestOrderId: true,
+        retailTestOrderCompletedAt: true,
+        retailPickupWalkthroughCompletedAt: true,
         logoUrl: true,
         name: true,
       },
@@ -34,8 +41,41 @@ export const GET: APIRoute = async (context) => {
     onboardingCurrentStep = shop?.onboardingCurrentStep ?? 0;
     retailOnboardingCompleted = shop?.retailOnboardingCompleted ?? false;
     retailOnboardingSkipped = shop?.retailOnboardingSkipped ?? false;
+    retailTestOrderId = shop?.retailTestOrderId ?? null;
+    retailTestOrderCompletedAt = shop?.retailTestOrderCompletedAt?.toISOString() ?? null;
+    retailPickupWalkthroughCompletedAt =
+      shop?.retailPickupWalkthroughCompletedAt?.toISOString() ?? null;
+    const retailOnboardingProductId = shop?.retailOnboardingProductId ?? null;
     logoUrl = shop?.logoUrl ?? null;
     shopName = shop?.name ?? null;
+
+    return new Response(
+      JSON.stringify({
+        ok: true,
+        shopId: access.shopId,
+        onboardingCompleted,
+        onboardingCurrentStep,
+        retailOnboardingCompleted,
+        retailOnboardingSkipped,
+        retailOnboardingProductId,
+        retailTestOrderId,
+        retailTestOrderCompletedAt,
+        retailPickupWalkthroughCompletedAt,
+        shop: {
+          name: shopName,
+          logoUrl,
+        },
+        user: access.userId
+          ? {
+              id: access.userId,
+              name: access.userName,
+              email: access.userEmail,
+              image: access.userImage,
+            }
+          : null,
+        via: access.via,
+      }),
+    );
   }
 
   return new Response(
@@ -46,6 +86,10 @@ export const GET: APIRoute = async (context) => {
       onboardingCurrentStep,
       retailOnboardingCompleted,
       retailOnboardingSkipped,
+      retailOnboardingProductId: null,
+      retailTestOrderId,
+      retailTestOrderCompletedAt,
+      retailPickupWalkthroughCompletedAt,
       shop: {
         name: shopName,
         logoUrl,

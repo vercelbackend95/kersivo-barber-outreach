@@ -106,13 +106,28 @@ export default function AdminSidebarProfile({
     window.location.assign('/admin/launch');
   };
 
+  const resetRetailJourneyThen = async (href: string) => {
+    try {
+      const response = await fetch('/api/admin/retail-onboarding/reset', {
+        method: 'POST',
+        credentials: 'include',
+      });
+      if (!response.ok) {
+        console.error('[retail-onboarding] Reset failed before reopen.', response.status);
+      }
+    } catch (error) {
+      console.error('[retail-onboarding] Reset failed before reopen.', error);
+    }
+    window.location.assign(href);
+  };
+
   const handleWorkspaceSetup = () => {
     setOpen(false);
     if (isGuest) {
       openDemoAuthLock();
       return;
     }
-    window.location.assign('/admin/onboarding?reopen=1');
+    void resetRetailJourneyThen('/admin/onboarding?reopen=1');
   };
 
   const handleRetailOnboarding = () => {
@@ -121,7 +136,7 @@ export default function AdminSidebarProfile({
       openDemoAuthLock();
       return;
     }
-    window.location.assign('/admin/retail-onboarding');
+    void resetRetailJourneyThen('/admin/retail-onboarding');
   };
 
   const triggerClass =

@@ -2,16 +2,19 @@ import { type MouseEvent, type ReactNode, type SVGProps, useMemo, useState } fro
 import EmptyState from '../EmptyState';
 import { ChevronDown, ChevronUp, ShoppingBag } from '../lucide-react';
 
+type OrderStatus = 'PAID' | 'READY_FOR_PICKUP' | 'COLLECTED';
+
 type OrderListItem = {
   id: string;
   orderNumber?: string | null;
   customerName?: string | null;
   customerEmail: string;
-  status: 'PAID' | 'COLLECTED';
+  status: OrderStatus;
   totalPence: number;
   currency: string;
   createdAt: string;
   paidAt: string | null;
+  isTestOrder?: boolean;
   _count: { items: number };
 };
 
@@ -20,12 +23,13 @@ type OrderDetail = {
   orderNumber?: string | null;
   customerName?: string | null;
   customerEmail: string;
-  status: 'PAID' | 'COLLECTED';
+  status: OrderStatus;
   totalPence: number;
   currency: string;
   createdAt: string;
   paidAt: string | null;
   collectedAt: string | null;
+  isTestOrder?: boolean;
   items: Array<{
     id: string;
     nameSnapshot: string;
@@ -43,6 +47,8 @@ type OrdersDataTable22Props = {
   orderDetailsById: Record<string, OrderDetail>;
   orderDetailsLoadingId: string | null;
   onMarkCollected: (orderId: string) => void;
+  highlightedOrderId?: string | null;
+  walkthroughOrderId?: string | null;
   onOpenClientProfile?: (contact: { email: string; fullName: string }) => void;
   ordersUnauthorized: boolean;
   emptyMessage?: string;
@@ -131,9 +137,10 @@ type SortColumn = 'orderNumber' | 'total' | 'status' | 'items';
 type SortDir = 'asc' | 'desc';
 type SortState = SortDir | 'none';
 
-const STATUS_SORT_ORDER: Record<string, number> = { PAID: 0, COLLECTED: 1 };
+const STATUS_SORT_ORDER: Record<string, number> = { PAID: 0, READY_FOR_PICKUP: 1, COLLECTED: 2 };
 
 function getOrderStatusLabel(status: OrderListItem['status']): string {
+  if (status === 'READY_FOR_PICKUP') return 'Ready for pickup';
   return status === 'PAID' ? 'Paid' : 'Collected';
 }
 
@@ -198,6 +205,8 @@ export default function OrdersDataTable22({
   orderDetailsById,
   orderDetailsLoadingId,
   onMarkCollected,
+  highlightedOrderId = null,
+  walkthroughOrderId = null,
   onOpenClientProfile,
   ordersUnauthorized,
   emptyMessage = 'No orders yet.',
@@ -359,11 +368,16 @@ export default function OrdersDataTable22({
               return (
                 <li
                   key={order.id}
-                  className={
-                    isExpanded
-                      ? 'admin-orders-grid-item admin-orders-grid-item--expanded'
-                      : 'admin-orders-grid-item'
-                  }
+                  id={`admin-order-${order.id}`}
+                  data-order-id={order.id}
+                  className={[
+                    'admin-orders-grid-item',
+                    isExpanded ? 'admin-orders-grid-item--expanded' : '',
+                    highlightedOrderId === order.id ? 'admin-orders-grid-item--highlight' : '',
+                    walkthroughOrderId === order.id ? 'admin-orders-grid-item--walkthrough' : '',
+                  ]
+                    .filter(Boolean)
+                    .join(' ')}
                 >
                   <button
                     type="button"
@@ -396,6 +410,9 @@ export default function OrdersDataTable22({
                           <span className="admin-orders-grid-customer">
                             {customerIdentity.displayName}
                           </span>
+                          {order.isTestOrder ? (
+                            <span className="admin-orders-test-badge">TEST ORDER</span>
+                          ) : null}
                           <span className="admin-orders-grid-identity__meta" aria-hidden="true">
                             <span>{formatItemCount(order._count.items)}</span>
                             <span aria-hidden="true">·</span>
@@ -416,7 +433,7 @@ export default function OrdersDataTable22({
                   </button>
 
                   <div className="admin-orders-grid-actions">
-                    {order.status === 'PAID' ? (
+                    {order.status === 'PAID' || order.status === 'READY_FOR_PICKUP' ? (
                       <button
                         type="button"
                         className="btn btn--ghost btn--sm admin-orders-grid-collect-btn"
@@ -454,7 +471,6 @@ export default function OrdersDataTable22({
                       <OrderDetailsPanel
                         detail={detail}
                         isDetailLoading={isDetailLoading}
-                        onMarkCollected={onMarkCollected}
                       />
                     </div>
                   </div>
@@ -471,22 +487,30 @@ export default function OrdersDataTable22({
 type OrderDetailsPanelProps = {
   detail?: OrderDetail;
   isDetailLoading: boolean;
-  onMarkCollected: (orderId: string) => void;
 };
 
-function OrderDetailsPanel({ detail, isDetailLoading, onMarkCollected }: OrderDetailsPanelProps) {
+function OrderDetailsPanel({
+  detail,
+  isDetailLoading,
+}: OrderDetailsPanelProps) {
   return (
     <div className="admin-orders-table22__details">
       {isDetailLoading ? <p className="muted">Loading order details…</p> : null}
 
       {!isDetailLoading && detail ? (
         <>
+          {detail.isTestOrder ? (
+            <p className="admin-orders-test-badge admin-orders-test-badge--panel">TEST ORDER</p>
+          ) : null}
           <div className="admin-orders-table22__meta-grid">
             <p>
               <strong>Created:</strong> {formatDate(detail.createdAt)}
             </p>
             <p>
               <strong>Paid:</strong> {formatDate(detail.paidAt)}
+            </p>
+            <p>
+              <strong>Status:</strong> {getOrderStatusLabel(detail.status)}
             </p>
             <p>
               <strong>Collected:</strong> {formatDate(detail.collectedAt)}
@@ -515,16 +539,6 @@ function OrderDetailsPanel({ detail, isDetailLoading, onMarkCollected }: OrderDe
               </tbody>
             </table>
           </div>
-
-          {detail.status === 'PAID' ? (
-            <button
-              type="button"
-              className="btn btn--primary"
-              onClick={() => onMarkCollected(detail.id)}
-            >
-              Mark as collected
-            </button>
-          ) : null}
         </>
       ) : null}
     </div>

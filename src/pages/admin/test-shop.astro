@@ -5,8 +5,10 @@ import MinimalLayout from '@/layouts/MinimalLayout.astro';
 import Navbar17 from '@/components/navbar17.astro';
 import OwnerPreviewToolbar from '@/components/shop/OwnerPreviewToolbar.astro';
 import CartDrawerMount from '@/components/shop/CartDrawerMount.astro';
+import RetailOnboardingTaskCard from '@/components/admin/retail-onboarding/RetailOnboardingTaskCard';
 import { resolveAdminAccess } from '@/lib/admin/auth';
 import { resolveOwnerPreviewCta } from '@/lib/admin/ownerPreviewCta';
+import { resolveRetailOnboardingProduct } from '@/lib/admin/retailOnboardingProduct';
 import { prisma } from '@/lib/db/client';
 import { formatGbp } from '@/lib/shop/money';
 import {
@@ -35,14 +37,34 @@ const shop = await prisma.shopSettings.findUnique({
   select: {
     name: true,
     logoUrl: true,
-    townCity: true,
     onboardingCompleted: true,
   },
 });
 
+const retailContext = await resolveRetailOnboardingProduct(access.shopId);
+
+let verifiedTestOrderId: string | null = null;
+if (retailContext.retailTestOrderId) {
+  const testOrder = await prisma.order.findFirst({
+    where: {
+      id: retailContext.retailTestOrderId,
+      shopId: access.shopId,
+      isTestOrder: true,
+    },
+    select: { id: true },
+  });
+  verifiedTestOrderId = testOrder?.id ?? null;
+}
+
+// Hide when skipped or pickup walkthrough done. retailOnboardingCompleted = product stage only, not journey end.
+const showRetailTaskCard =
+  !retailContext.retailOnboardingSkipped &&
+  !retailContext.retailPickupWalkthroughCompleted &&
+  (Boolean(retailContext.product) || retailContext.retailOnboardingCompleted);
+
 const products = await prisma.product.findMany({
   where: { shopId: access.shopId, active: true },
-  orderBy: [{ sortOrder: 'asc' }, { createdAt: 'asc' }],
+  orderBy: [{ featured: 'desc' }, { sortOrder: 'asc' }, { createdAt: 'asc' }],
   select: {
     id: true,
     name: true,
@@ -67,7 +89,6 @@ const categoryValues = new Set(categoryFilters.map((filter) => filter.value));
 const selectedCategoryParam = Astro.url.searchParams.get('category') || 'ALL';
 const selectedCategory = categoryValues.has(selectedCategoryParam) ? selectedCategoryParam : 'ALL';
 const shopTitle = shop?.name?.trim() || 'My shop';
-const townCity = shop?.townCity?.trim() || null;
 
 const ownerCta = await resolveOwnerPreviewCta({
   onboardingCompleted: shop?.onboardingCompleted ?? true,
@@ -99,13 +120,16 @@ const ownerCta = await resolveOwnerPreviewCta({
       <a href="/admin?section=shop_products" class="product-back-link">← Back to products</a>
     </div>
 
-    <section class="retail-demo-banner" aria-label="Test order guidance">
-      <p class="retail-demo-banner__label">Test order</p>
-      <p class="retail-demo-banner__lead">Place your first test order</p>
-      <p class="retail-demo-banner__support">
-        Add your new product to the basket and experience the checkout as your customer would.
-      </p>
-    </section>
+    {
+      showRetailTaskCard ? (
+        <RetailOnboardingTaskCard
+          client:load
+          product={retailContext.product}
+          testOrderId={verifiedTestOrderId}
+          source="test-shop"
+        />
+      ) : null
+    }
 
     <header class="shop-header-block" id="about">
       <p class="shop-eyebrow">Your storefront</p>
@@ -171,8 +195,11 @@ const ownerCta = await resolveOwnerPreviewCta({
           <ul class="shop-grid" aria-label="Products">
             {products.map((product) => (
               <li
+                id={`test-shop-product-${product.id}`}
                 data-product-item
+                data-product-id={product.id}
                 data-product-category={product.category}
+                data-product-featured={product.featured ? '1' : '0'}
                 data-product-sort-price={String(product.pricePence)}
                 data-product-sort-date={product.updatedAt.toISOString()}
                 hidden={selectedCategory !== 'ALL' && product.category !== selectedCategory}
@@ -229,47 +256,15 @@ const ownerCta = await resolveOwnerPreviewCta({
         )
       }
     </section>
-
-    <section class="test-shop-contact" id="contact" aria-labelledby="test-shop-contact-title">
-      <h2 id="test-shop-contact-title">Contact</h2>
-      {
-        townCity ? (
-          <p>
-            Visit us in {townCity} — order online and pick up in store.
-          </p>
-        ) : (
-          <p>Visit us in store for pickup.</p>
-        )
-      }
-    </section>
   </main>
 
-  <CartDrawerMount />
+  <CartDrawerMount testOrderMode />
 </MinimalLayout>
 
 <style>
   .test-shop-topbar {
     margin-top: var(--space-lg);
     margin-bottom: var(--space-md);
-  }
-
-  .test-shop-contact {
-    margin-top: var(--space-2xl);
-    margin-bottom: var(--space-xl);
-    padding-top: var(--space-lg);
-    border-top: 1px solid var(--border);
-    max-width: 36rem;
-  }
-
-  .test-shop-contact h2 {
-    margin: 0 0 var(--space-sm);
-    font-size: var(--text-xl, 1.25rem);
-  }
-
-  .test-shop-contact p {
-    margin: 0;
-    color: var(--muted);
-    line-height: 1.5;
   }
 </style>
 
@@ -373,7 +368,11 @@ const ownerCta = await resolveOwnerPreviewCta({
           const db = new Date(b.dataset.productSortDate ?? 0).getTime();
           return db - da;
         }
-        return 0;
+        // default: Featured first, then original SSR order
+        const featuredDelta =
+          Number(b.dataset.productFeatured ?? 0) - Number(a.dataset.productFeatured ?? 0);
+        if (featuredDelta !== 0) return featuredDelta;
+        return items.indexOf(a) - items.indexOf(b);
       });
 
       const emptyEl = shopGrid.querySelector('.shop-empty-filter');

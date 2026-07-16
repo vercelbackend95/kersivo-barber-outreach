@@ -3,22 +3,21 @@ export const prerender = false;
 import { Prisma, SetupPlan, SetupDepositStatus } from '@prisma/client';
 import type { APIRoute } from 'astro';
 import { prisma } from '../../../lib/db/client';
-import {
-  EmailDeliveryError,
-  getSetupOnboardingFormUrlOrEmpty,
-  sendSetupDepositConfirmationEmail,
-  sendSetupDepositInternalNotificationEmail,
-  sendShopOrderConfirmationEmail,
-} from '../../../lib/email/sender';
-import { getSetupPlan, isSetupPlanId } from '../../../lib/setup/plans';
 import { formatGbp } from '../../../lib/shop/money';
+import { createShopOrder } from '../../../lib/shop/createShopOrder';
 import {
   getCheckoutPaymentIntentId,
   retrieveCheckoutSession,
   type StripeSession,
   verifyStripeWebhookSignature,
 } from '../../../lib/shop/stripe';
-
+import {
+  EmailDeliveryError,
+  getSetupOnboardingFormUrlOrEmpty,
+  sendSetupDepositConfirmationEmail,
+  sendSetupDepositInternalNotificationEmail,
+} from '../../../lib/email/sender';
+import { getSetupPlan, isSetupPlanId } from '../../../lib/setup/plans';
 type CartSnapshotItem = {
   productId: string;
   name: string;
@@ -367,33 +366,15 @@ export const POST: APIRoute = async ({ request }) => {
         : cart.reduce((sum, item) => sum + item.lineTotalPence, 0);
     const paidAt = Number.isFinite(event.created) ? new Date(event.created * 1000) : new Date();
 
-    await prisma.order.create({
-      data: {
-        shopId,
-        customerEmail,
-        status: 'PAID',
-        currency: 'gbp',
-        totalPence,
-        stripeSessionId: sessionId,
-        paidAt,
-        items: {
-          create: cart.map((item) => ({
-            productId: item.productId,
-            nameSnapshot: item.name,
-            unitPricePenceSnapshot: item.unitPricePence,
-            quantity: item.quantity,
-            lineTotalPence: item.lineTotalPence,
-          })),
-        },
-      },
-    });
-
-    await sendShopOrderConfirmationEmail({
-      to: customerEmail,
-      totalFormatted: formatGbp(totalPence),
-      itemLines: cart.map(
-        (item) => `${item.name} × ${item.quantity} — ${formatGbp(item.lineTotalPence)}`,
-      ),
+    await createShopOrder({
+      shopId,
+      customerEmail,
+      cart,
+      totalPence,
+      stripeSessionId: sessionId,
+      isTestOrder: false,
+      sendEmail: true,
+      paidAt,
     });
 
     return new Response(JSON.stringify({ ok: true }), { status: 200 });

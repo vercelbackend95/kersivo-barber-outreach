@@ -27,6 +27,7 @@ export const GET: APIRoute = async (ctx) => {
       currency: true,
       createdAt: true,
       paidAt: true,
+      isTestOrder: true,
       _count: { select: { items: true } }
     }
   });

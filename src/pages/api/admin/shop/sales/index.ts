@@ -8,7 +8,7 @@ import { prisma } from '../../../../../lib/db/client';
 import { toLondonDateBucket } from '../../../../../lib/time/londonDateBucket';
 
 const TZ = 'Europe/London';
-const PAID_STATUSES = ['PAID', 'COLLECTED'] as const;
+const PAID_STATUSES = ['PAID', 'READY_FOR_PICKUP', 'COLLECTED'] as const;
 const DEFAULT_RANGE_DAYS = 30;
 
 type SalesDatePoint = { date: string; revenuePence: number; units: number };
@@ -120,6 +120,7 @@ async function buildSalesResponse(
   const orders = await prisma.order.findMany({
     where: {
       shopId,
+      isTestOrder: false,
       status: { in: [...PAID_STATUSES] },
       paidAt: {
         gte: fromUtc,

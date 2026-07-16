@@ -19,6 +19,7 @@ import { SkeletonBookingChoices } from '../skeleton';
 import { AdminFetchError, adminFetchJson, isPublicAdminDemoMode, notifyAdminDemoBlocked } from './adminAuth';
 import { resolveClientIdForBooking } from '../../lib/admin/resolveClientIdForBooking';
 import RetailOnboardingWelcome from './retail-onboarding/RetailOnboardingWelcome';
+import RetailOnboardingTaskCard from './retail-onboarding/RetailOnboardingTaskCard';
 type ShopTab = 'products' | 'orders' | 'sales';
 type SalesRangePreset = '7' | '30' | '90' | 'custom';
 
@@ -53,11 +54,12 @@ type OrderListItem = {
   customerName?: string | null;
 
   customerEmail: string;
-  status: 'PAID' | 'COLLECTED';
+  status: 'PAID' | 'READY_FOR_PICKUP' | 'COLLECTED';
   totalPence: number;
   currency: string;
   createdAt: string;
   paidAt: string | null;
+  isTestOrder?: boolean;
   _count: { items: number };
 };
 
@@ -67,12 +69,13 @@ type OrderDetail = {
   customerName?: string | null;
 
   customerEmail: string;
-  status: 'PAID' | 'COLLECTED';
+  status: 'PAID' | 'READY_FOR_PICKUP' | 'COLLECTED';
   totalPence: number;
   currency: string;
   createdAt: string;
   paidAt: string | null;
   collectedAt: string | null;
+  isTestOrder?: boolean;
   items: Array<{
     id: string;
     nameSnapshot: string;
@@ -665,6 +668,9 @@ export default function ShopAdminPanel({ initialTab = 'products' }: ShopAdminPan
 
   const [ordersUnauthorized, setOrdersUnauthorized] = useState(false);
   const [openClientId, setOpenClientId] = useState<string | null>(null);
+  const [highlightedOrderId, setHighlightedOrderId] = useState<string | null>(null);
+  const [walkthroughOrderId, setWalkthroughOrderId] = useState<string | null>(null);
+  const [showRetailWalkthroughComplete, setShowRetailWalkthroughComplete] = useState(false);
 
   const [salesPreset, setSalesPreset] = useState<SalesRangePreset>('7');
   const [salesFrom, setSalesFrom] = useState(() => getRangeDates('7').from);
@@ -1082,6 +1088,18 @@ export default function ShopAdminPanel({ initialTab = 'products' }: ShopAdminPan
     () => ordersSafe.filter((order) => order.status === 'COLLECTED').length,
     [ordersSafe],
   );
+
+  const walkthroughOrder = useMemo(
+    () => (walkthroughOrderId ? ordersSafe.find((order) => order.id === walkthroughOrderId) : null),
+    [ordersSafe, walkthroughOrderId],
+  );
+
+  useEffect(() => {
+    if (walkthroughOrder?.status === 'COLLECTED') {
+      setShowRetailWalkthroughComplete(true);
+    }
+  }, [walkthroughOrder?.status]);
+
   const filteredOrders = useMemo(() => {
     const normalizedQuery = normalize(debouncedOrdersSearchQuery);
     if (!normalizedQuery) return ordersSafe;
@@ -1105,6 +1123,37 @@ export default function ShopAdminPanel({ initialTab = 'products' }: ShopAdminPan
       window.clearTimeout(timeoutId);
     };
   }, [ordersSearchQuery]);
+
+  useEffect(() => {
+    if (typeof window === 'undefined' || activeTab !== 'orders') return;
+    const params = new URLSearchParams(window.location.search);
+    const orderId = params.get('order')?.trim() || null;
+    const retailWalkthrough = params.get('retailWalkthrough') === '1';
+    if (!orderId) return;
+
+    setHighlightedOrderId(orderId);
+    if (retailWalkthrough) {
+      setWalkthroughOrderId(orderId);
+    }
+    setExpandedOrderId(orderId);
+    void fetchOrderDetails(orderId);
+
+    const scrollTimer = window.setTimeout(() => {
+      document.getElementById(`admin-order-${orderId}`)?.scrollIntoView({
+        behavior: 'smooth',
+        block: 'center',
+      });
+    }, 350);
+
+    const clearHighlightTimer = window.setTimeout(() => {
+      setHighlightedOrderId((current) => (current === orderId ? null : current));
+    }, 8000);
+
+    return () => {
+      window.clearTimeout(scrollTimer);
+      window.clearTimeout(clearHighlightTimer);
+    };
+  }, [activeTab, ordersLoading]);
 
 
   const handleAddSeriesSelection = (seriesKey: string) => {
@@ -1712,6 +1761,9 @@ export default function ShopAdminPanel({ initialTab = 'products' }: ShopAdminPan
       await fetchOrders();
       await fetchOrderDetails(orderId);
       setSuccess('Order marked as collected.');
+      if (walkthroughOrderId === orderId) {
+        setShowRetailWalkthroughComplete(true);
+      }
     } catch (collectError) {
       if (collectError instanceof AdminFetchError && collectError.status === 401) {
         setOrdersUnauthorized(true);
@@ -2405,6 +2457,28 @@ export default function ShopAdminPanel({ initialTab = 'products' }: ShopAdminPan
             </div>
           ) : null}
 
+          {showRetailWalkthroughComplete ? (
+            <div className="admin-retail-walkthrough-complete" role="status">
+              <h3>Retail setup complete</h3>
+              <p>
+                You’ve completed your first test order and experienced the full in-store pickup
+                workflow.
+              </p>
+              <a className="btn btn--primary" href="/admin">
+                Continue to Admin
+              </a>
+            </div>
+          ) : walkthroughOrder &&
+            (walkthroughOrder.status === 'PAID' ||
+              walkthroughOrder.status === 'READY_FOR_PICKUP') ? (
+            <RetailOnboardingTaskCard
+              product={null}
+              testOrderId={walkthroughOrder.id}
+              mode="collect"
+              source="admin-orders"
+            />
+          ) : null}
+
           <OrdersDataTable22
             orders={filteredOrders}
                         isMobileView={isMobileOrdersView}
@@ -2413,6 +2487,8 @@ export default function ShopAdminPanel({ initialTab = 'products' }: ShopAdminPan
             orderDetailsById={orderDetailsById}
             orderDetailsLoadingId={orderDetailsLoadingId}
             onMarkCollected={(orderId) => void markCollected(orderId)}
+            highlightedOrderId={highlightedOrderId}
+            walkthroughOrderId={walkthroughOrderId}
             onOpenClientProfile={(contact) => void handleOpenClientProfile(contact)}
             ordersUnauthorized={ordersUnauthorized}
                         emptyMessage={debouncedOrdersSearchQuery ? 'No orders match your search.' : 'No orders yet.'}

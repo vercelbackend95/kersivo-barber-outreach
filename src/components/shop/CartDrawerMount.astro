@@ -1,5 +1,11 @@
 ---
 import CartDrawer from './CartDrawer';
+
+type Props = {
+  testOrderMode?: boolean;
+};
+
+const { testOrderMode = false } = Astro.props;
 ---
 
-<CartDrawer client:load />
+<CartDrawer client:load testOrderMode={testOrderMode} />

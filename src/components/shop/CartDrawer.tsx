@@ -1,6 +1,7 @@
-import { useEffect, useState, useSyncExternalStore } from 'react';
+import { useEffect, useId, useRef, useState, useSyncExternalStore } from 'react';
 import {
   addItem,
+  clear,
   closeCart,
   getServerSnapshot,
   getSnapshot,
@@ -15,12 +16,35 @@ import { ShoppingCart, X } from '@/components/lucide-react';
 
 const CART_OPEN_REQUEST_EVENT = 'kersivo:cart-open-request';
 
+type TestOrderResult = {
+  id: string;
+  status: string;
+  totalPence: number;
+  totalFormatted: string;
+  items: Array<{
+    name: string;
+    quantity: number;
+    lineTotalFormatted: string;
+  }>;
+};
+
+type CartDrawerProps = {
+  /** Private /admin/test-shop only — Place Test Order instead of Stripe. */
+  testOrderMode?: boolean;
+};
+
 function useCartSnapshot() {
   return useSyncExternalStore(subscribe, getSnapshot, getServerSnapshot);
 }
 
 function formatGbp(pence: number) {
   return new Intl.NumberFormat('en-GB', { style: 'currency', currency: 'GBP' }).format(pence / 100);
+}
+
+function statusLabel(status: string) {
+  if (status === 'READY_FOR_PICKUP') return 'Ready for pickup';
+  if (status === 'COLLECTED') return 'Collected';
+  return 'Paid';
 }
 
 function getProductFromButton(button: HTMLElement): CartItem | null {
@@ -42,10 +66,20 @@ function getProductFromButton(button: HTMLElement): CartItem | null {
   };
 }
 
-export default function CartDrawer() {
+function makeIdempotencyKey() {
+  if (typeof crypto !== 'undefined' && 'randomUUID' in crypto) {
+    return crypto.randomUUID();
+  }
+  return `test-order-${Date.now()}-${Math.random().toString(36).slice(2)}`;
+}
+
+export default function CartDrawer({ testOrderMode = false }: CartDrawerProps) {
   const { items, subtotalPence, isOpen: open } = useCartSnapshot();
   const [checkoutLoading, setCheckoutLoading] = useState(false);
   const [checkoutError, setCheckoutError] = useState<string | null>(null);
+  const [testOrderSuccess, setTestOrderSuccess] = useState<TestOrderResult | null>(null);
+  const idempotencyKeyRef = useRef<string | null>(null);
+  const successTitleId = useId();
 
   const cartCount = items.reduce((count, item) => count + item.quantity, 0);
 
@@ -114,6 +148,7 @@ export default function CartDrawer() {
       addItem(product);
       openCart();
       setCheckoutError(null);
+      setTestOrderSuccess(null);
     };
 
     document.addEventListener('click', onDocumentClick);
@@ -132,6 +167,40 @@ export default function CartDrawer() {
 
     setCheckoutLoading(true);
     try {
+      if (testOrderMode) {
+        if (!idempotencyKeyRef.current) {
+          idempotencyKeyRef.current = makeIdempotencyKey();
+        }
+
+        const response = await fetch('/api/admin/shop/test-order', {
+          method: 'POST',
+          credentials: 'include',
+          headers: {
+            'Content-Type': 'application/json',
+            'Idempotency-Key': idempotencyKeyRef.current,
+          },
+          body: JSON.stringify({
+            idempotencyKey: idempotencyKeyRef.current,
+            items: items.map((item) => ({ productId: item.productId, quantity: item.quantity })),
+          }),
+        });
+        const payload = await response.json();
+        if (!response.ok) {
+          throw new Error(payload.error || 'Unable to create test order.');
+        }
+
+        const order = payload.order as TestOrderResult | undefined;
+        if (!order?.id) {
+          throw new Error('Test order response was incomplete.');
+        }
+
+        clear();
+        idempotencyKeyRef.current = null;
+        setTestOrderSuccess(order);
+        setCheckoutLoading(false);
+        return;
+      }
+
       const response = await fetch('/api/shop/checkout', {
         method: 'POST',
         credentials: 'include',
@@ -156,6 +225,10 @@ export default function CartDrawer() {
     }
   };
 
+  const adminOrdersHref = testOrderSuccess
+    ? `/admin?section=shop_orders&order=${encodeURIComponent(testOrderSuccess.id)}&retailWalkthrough=1`
+    : '/admin?section=shop_orders';
+
   return (
     <>
       <aside className={`cart-drawer${open ? ' cart-drawer--open' : ''}`} aria-hidden={open ? 'false' : 'true'}>
@@ -172,82 +245,170 @@ export default function CartDrawer() {
           <p className="cart-drawer__intro">Order online, collect in store when it suits you — no shipping.</p>
         </header>
 
-        <div className="cart-items" aria-live="polite">
-          {items.length === 0 ? (
-            <div className="cart-drawer__empty-wrap">
-              <EmptyState
-                icon={ShoppingCart}
-                title="Your bag is empty"
-                description="Add products to build your pickup order."
-              />
-            </div>
-          ) : (
-            items.map((item) => (
-              <article className="cart-row" key={item.productId}>
-                <div className="cart-row__content">
-                  {item.imageUrl ? (
-                    <img src={item.imageUrl} alt="" className="cart-row__image" loading="lazy" />
-                  ) : (
-                    <div className="cart-row__image cart-row__image--placeholder" aria-hidden="true" />
-                  )}
-                  <div className="cart-row__details">
-                    <p className="cart-item-name">{item.name}</p>
-                    <p className="cart-item-price">{formatGbp(item.pricePence)} each</p>
-                    <p className="cart-item-total">{formatGbp(item.pricePence * item.quantity)}</p>
-                  </div>
-                </div>
-
-                <div className="cart-row-actions">
-                  <div className="cart-quantity" role="group" aria-label={`Quantity for ${item.name}`}>
-                    <button
-                      type="button"
-                      className="cart-quantity__btn"
-                      onClick={() => setQuantity(item.productId, item.quantity - 1)}
-                      aria-label={`Decrease quantity of ${item.name}`}
-                    >
-                      −
-                    </button>
-                    <span className="cart-quantity__value">{item.quantity}</span>
-                    <button
-                      type="button"
-                      className="cart-quantity__btn"
-                      onClick={() => setQuantity(item.productId, item.quantity + 1)}
-                      aria-label={`Increase quantity of ${item.name}`}
-                    >
-                      +
-                    </button>
-                  </div>
-                  <button type="button" className="cart-row__remove" onClick={() => removeItem(item.productId)}>
-                    Remove
-                  </button>
-                </div>
-              </article>
-            ))
-          )}
-        </div>
-
-        <section className="cart-summary" aria-label="Pickup summary">
-          <div className="cart-summary__totals">
-            <p className="cart-summary__label">Subtotal</p>
-            <p className="cart-summary__value">{formatGbp(subtotalPence)}</p>
-          </div>
-          <p className="cart-summary__pickup-note">
-            Ready for collection in store during opening hours once staff mark the order.
-          </p>
-          {checkoutError ? <p className="cart-checkout-error">{checkoutError}</p> : null}
-
-          <button
-            type="button"
-            className="btn btn--primary cart-buy-button"
-            onClick={() => void onBuyPickup()}
-            disabled={checkoutLoading || items.length === 0}
+        {testOrderSuccess ? (
+          <section
+            className="cart-test-success"
+            aria-labelledby={successTitleId}
+            aria-live="polite"
           >
-            {checkoutLoading ? 'Opening secure checkout…' : 'Continue to secure checkout'}
-          </button>
-          <p className="cart-checkout-note">
-            Stripe Checkout collects your email for the pickup receipt — it appears on the shop order.
-          </p>
-        </section>
+            <p className="cart-test-success__eyebrow">TEST MODE</p>
+            <h3 id={successTitleId} className="cart-test-success__title">
+              Test order created
+            </h3>
+            <p className="cart-test-success__body">
+              A test order has been added to your workspace so you can experience the complete pickup
+              workflow.
+            </p>
+            <dl className="cart-test-success__summary">
+              <div>
+                <dt>Order</dt>
+                <dd>
+                  <code>{testOrderSuccess.id.slice(-8).toUpperCase()}</code>
+                </dd>
+              </div>
+              <div>
+                <dt>Items</dt>
+                <dd>
+                  {testOrderSuccess.items.map((item) => (
+                    <span key={`${item.name}-${item.quantity}`} className="cart-test-success__item">
+                      {item.name} × {item.quantity}
+                    </span>
+                  ))}
+                </dd>
+              </div>
+              <div>
+                <dt>Total test value</dt>
+                <dd>{testOrderSuccess.totalFormatted}</dd>
+              </div>
+              <div>
+                <dt>Pickup status</dt>
+                <dd>{statusLabel(testOrderSuccess.status)}</dd>
+              </div>
+            </dl>
+            <a className="btn btn--primary cart-buy-button" href={adminOrdersHref}>
+              View Order in Admin
+            </a>
+            <button
+              type="button"
+              className="btn btn--ghost cart-test-success__dismiss"
+              onClick={() => {
+                setTestOrderSuccess(null);
+                closeCart();
+              }}
+            >
+              Keep browsing shop
+            </button>
+          </section>
+        ) : (
+          <>
+            <div className="cart-items" aria-live="polite">
+              {items.length === 0 ? (
+                <div className="cart-drawer__empty-wrap">
+                  <EmptyState
+                    icon={ShoppingCart}
+                    title="Your bag is empty"
+                    description="Add products to build your pickup order."
+                  />
+                </div>
+              ) : (
+                items.map((item) => (
+                  <article className="cart-row" key={item.productId}>
+                    <div className="cart-row__content">
+                      {item.imageUrl ? (
+                        <img src={item.imageUrl} alt="" className="cart-row__image" loading="lazy" />
+                      ) : (
+                        <div className="cart-row__image cart-row__image--placeholder" aria-hidden="true" />
+                      )}
+                      <div className="cart-row__details">
+                        <p className="cart-item-name">{item.name}</p>
+                        <p className="cart-item-price">{formatGbp(item.pricePence)} each</p>
+                        <p className="cart-item-total">{formatGbp(item.pricePence * item.quantity)}</p>
+                      </div>
+                    </div>
+
+                    <div className="cart-row-actions">
+                      <div className="cart-quantity" role="group" aria-label={`Quantity for ${item.name}`}>
+                        <button
+                          type="button"
+                          className="cart-quantity__btn"
+                          onClick={() => setQuantity(item.productId, item.quantity - 1)}
+                          aria-label={`Decrease quantity of ${item.name}`}
+                          disabled={checkoutLoading}
+                        >
+                          −
+                        </button>
+                        <span className="cart-quantity__value">{item.quantity}</span>
+                        <button
+                          type="button"
+                          className="cart-quantity__btn"
+                          onClick={() => setQuantity(item.productId, item.quantity + 1)}
+                          aria-label={`Increase quantity of ${item.name}`}
+                          disabled={checkoutLoading}
+                        >
+                          +
+                        </button>
+                      </div>
+                      <button
+                        type="button"
+                        className="cart-row__remove"
+                        onClick={() => removeItem(item.productId)}
+                        disabled={checkoutLoading}
+                      >
+                        Remove
+                      </button>
+                    </div>
+                  </article>
+                ))
+              )}
+            </div>
+
+            <section className="cart-summary" aria-label="Pickup summary">
+              {testOrderMode ? (
+                <div className="cart-test-mode" role="status">
+                  <p className="cart-test-mode__label">TEST MODE</p>
+                  <p className="cart-test-mode__message">
+                    No payment is required. A test order will be created in your workspace so you can
+                    experience the complete pickup workflow.
+                  </p>
+                </div>
+              ) : null}
+
+              <div className="cart-summary__totals">
+                <p className="cart-summary__label">Subtotal</p>
+                <p className="cart-summary__value">{formatGbp(subtotalPence)}</p>
+              </div>
+              <p className="cart-summary__pickup-note">
+                Ready for collection in store during opening hours once staff mark the order.
+              </p>
+              {checkoutError ? (
+                <p className="cart-checkout-error" role="alert">
+                  {checkoutError}
+                </p>
+              ) : null}
+
+              <button
+                type="button"
+                className="btn btn--primary cart-buy-button"
+                onClick={() => void onBuyPickup()}
+                disabled={checkoutLoading || items.length === 0}
+                aria-busy={checkoutLoading}
+              >
+                {checkoutLoading
+                  ? testOrderMode
+                    ? 'Creating test order…'
+                    : 'Opening secure checkout…'
+                  : testOrderMode
+                    ? 'Place Test Order'
+                    : 'Continue to secure checkout'}
+              </button>
+              <p className="cart-checkout-note">
+                {testOrderMode
+                  ? 'No card details are collected. This order is marked as test data in your admin.'
+                  : 'Stripe Checkout collects your email for the pickup receipt — it appears on the shop order.'}
+              </p>
+            </section>
+          </>
+        )}
       </aside>
 
       {open ? (

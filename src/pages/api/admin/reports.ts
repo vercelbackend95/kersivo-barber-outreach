@@ -53,7 +53,11 @@ type ReportBookingRow = {
 
 const BOOKED_STATUSES = new Set<BookingStatus>([BookingStatus.BOOKED, BookingStatus.RESCHEDULED]);
 // Revenue business rules: only paid-qualified bookings and paid/collected shop orders count as revenue.
-const ORDER_REVENUE_STATUSES = new Set<OrderStatus>([OrderStatus.PAID, OrderStatus.COLLECTED]);
+const ORDER_REVENUE_STATUSES = new Set<OrderStatus>([
+  OrderStatus.PAID,
+  OrderStatus.READY_FOR_PICKUP,
+  OrderStatus.COLLECTED,
+]);
 
 const LEGACY_BOOKING_SELECT = {
   id: true,
@@ -316,6 +320,7 @@ async function computeMetrics(shopId: string, range: RangeBoundaries, selectedBa
     prisma.order.findMany({
       where: {
         shopId,
+        isTestOrder: false,
         createdAt: { gte: range.from, lte: range.to },
         status: { in: [...ORDER_REVENUE_STATUSES] }
       },

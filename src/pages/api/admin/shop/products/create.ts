@@ -65,13 +65,26 @@ async function createProductWithReorder(shopId: string, payload: CreatePayload, 
 }
 
 
-async function markRetailOnboardingCompleted(shopId: string) {
+async function markRetailOnboardingCompleted(shopId: string, productId: string) {
   await prisma.shopSettings.updateMany({
     where: { id: shopId, retailOnboardingCompleted: false },
     data: {
       retailOnboardingCompleted: true,
       retailOnboardingSkipped: false,
       retailOnboardingCompletedAt: new Date(),
+      retailOnboardingProductId: productId,
+    },
+  });
+
+  // If already completed but product id was never stored, backfill once.
+  await prisma.shopSettings.updateMany({
+    where: {
+      id: shopId,
+      retailOnboardingCompleted: true,
+      retailOnboardingProductId: null,
+    },
+    data: {
+      retailOnboardingProductId: productId,
     },
   });
 }
@@ -108,7 +121,7 @@ export const POST: APIRoute = async (ctx) => {
         uploadedImageUrl = await uploadPublicImageToBlob(file, makeBlobPath('products', file));
       }
       const product = await createProductWithReorder(shopId, parsed.data, uploadedImageUrl);
-      await markRetailOnboardingCompleted(shopId);
+      await markRetailOnboardingCompleted(shopId, product.id);
 
       return new Response(JSON.stringify({ product }), { status: 200 });
     }
@@ -118,7 +131,7 @@ export const POST: APIRoute = async (ctx) => {
       return new Response(JSON.stringify({ error: parsed.error.flatten() }), { status: 400 });
     }
     const product = await createProductWithReorder(shopId, parsed.data);
-    await markRetailOnboardingCompleted(shopId);
+    await markRetailOnboardingCompleted(shopId, product.id);
 
     return new Response(JSON.stringify({ product }), { status: 200 });
   } catch (error) {

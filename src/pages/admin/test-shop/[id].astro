@@ -5,8 +5,10 @@ import MinimalLayout from '@/layouts/MinimalLayout.astro';
 import Navbar17 from '@/components/navbar17.astro';
 import OwnerPreviewToolbar from '@/components/shop/OwnerPreviewToolbar.astro';
 import CartDrawerMount from '@/components/shop/CartDrawerMount.astro';
+import RetailOnboardingTaskCard from '@/components/admin/retail-onboarding/RetailOnboardingTaskCard';
 import { resolveAdminAccess } from '@/lib/admin/auth';
 import { resolveOwnerPreviewCta } from '@/lib/admin/ownerPreviewCta';
+import { resolveRetailOnboardingProduct } from '@/lib/admin/retailOnboardingProduct';
 import { prisma } from '@/lib/db/client';
 import { formatGbp } from '@/lib/shop/money';
 import {
@@ -53,6 +55,25 @@ const product = await prisma.product.findFirst({
 if (!product || !product.active) {
   return Astro.redirect('/admin/test-shop');
 }
+
+const retailContext = await resolveRetailOnboardingProduct(access.shopId);
+let verifiedTestOrderId: string | null = null;
+if (retailContext.retailTestOrderId) {
+  const testOrder = await prisma.order.findFirst({
+    where: {
+      id: retailContext.retailTestOrderId,
+      shopId: access.shopId,
+      isTestOrder: true,
+    },
+    select: { id: true },
+  });
+  verifiedTestOrderId = testOrder?.id ?? null;
+}
+// Hide when skipped or pickup walkthrough done. retailOnboardingCompleted = product stage only, not journey end.
+const showRetailTaskCard =
+  !retailContext.retailOnboardingSkipped &&
+  !retailContext.retailPickupWalkthroughCompleted &&
+  (Boolean(retailContext.product) || retailContext.retailOnboardingCompleted);
 
 const [relatedProducts, shop] = await Promise.all([
   prisma.product.findMany({
@@ -113,13 +134,17 @@ const ownerCta = await resolveOwnerPreviewCta({
       <a href="/admin/test-shop" class="product-back-link">← Back to my shop</a>
     </div>
 
-    <section class="retail-demo-banner" aria-label="Test order guidance">
-      <p class="retail-demo-banner__label">Test order</p>
-      <p class="retail-demo-banner__lead">Place your first test order</p>
-      <p class="retail-demo-banner__support">
-        Add your new product to the basket and experience the checkout as your customer would.
-      </p>
-    </section>
+    {
+      showRetailTaskCard ? (
+        <RetailOnboardingTaskCard
+          client:load
+          product={retailContext.product}
+          testOrderId={verifiedTestOrderId}
+          compact
+          source="test-shop-pdp"
+        />
+      ) : null
+    }
 
     <section class="product-hero" aria-label="Product details">
       <div class="product-media">
@@ -236,7 +261,7 @@ const ownerCta = await resolveOwnerPreviewCta({
     }
   </main>
 
-  <CartDrawerMount />
+  <CartDrawerMount testOrderMode />
 </MinimalLayout>
 
 <style>

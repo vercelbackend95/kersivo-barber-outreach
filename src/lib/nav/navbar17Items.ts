@@ -110,13 +110,6 @@ const TEST_SHOP_NAV_ITEMS: Navbar17Item[] = [
     isPage: false,
     icon: 'M12 17h.01M9.1 9a3 3 0 1 1 4.9 2.3c-.92.62-1.5 1.21-1.5 2.2v.5M22 12a10 10 0 1 1-20 0 10 10 0 0 1 20 0Z',
   },
-  {
-    name: 'Contact',
-    link: '/admin/test-shop#contact',
-    sectionId: 'contact',
-    isPage: false,
-    icon: 'M4 6h16v12H4V6Zm1.5 1.5L12 12l6.5-4.5',
-  },
 ];
 
 export function getNavbar17Items(variant: Navbar17Variant = 'default'): Navbar17Item[] {

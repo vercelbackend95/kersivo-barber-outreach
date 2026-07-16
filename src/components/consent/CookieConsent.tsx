@@ -98,29 +98,8 @@ export default function CookieConsent() {
     }
   }
 
-  const showLauncher = panel === 'hidden' && hasValidConsentDecision();
-
   return (
     <div className="cookie-consent" data-panel={panel}>
-      {showLauncher ? (
-        <button
-          type="button"
-          className="cookie-consent__launcher"
-          data-cookie-settings
-          aria-label="Cookie settings"
-          onClick={(event) => openPreferences(event.currentTarget)}
-        >
-          <img
-            src="/images/svg/cookie-svgrepo-com.svg"
-            alt=""
-            aria-hidden="true"
-            className="cookie-consent__launcher-icon"
-            width={24}
-            height={24}
-          />
-        </button>
-      ) : null}
-
       {panel === 'banner' ? (
         <section
           className="cookie-consent__banner"

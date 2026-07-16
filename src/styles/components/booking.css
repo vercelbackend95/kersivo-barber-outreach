@@ -6221,9 +6221,184 @@ body.admin-theme-premium-black .booking-page-wrap .booking-shell.surface {
   animation: aog-paid-status-pulse 3s ease-in-out infinite;
 }
 
+.aog-status-dot--ready_for_pickup {
+  background: var(--warning, #d4a017);
+  color: var(--warning, #d4a017);
+}
+
 .aog-status-dot--collected {
   background: var(--success);
   color: var(--success);
+}
+
+.admin-orders-test-badge {
+  display: inline-flex;
+  align-items: center;
+  margin-left: 0.35rem;
+  padding: 0.12rem 0.4rem;
+  border-radius: var(--radius-full);
+  font-size: 0.62rem;
+  font-weight: 750;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--accent);
+  background: color-mix(in srgb, var(--accent) 14%, transparent);
+  border: 1px solid color-mix(in srgb, var(--accent) 35%, transparent);
+  vertical-align: middle;
+}
+
+.admin-orders-test-badge--panel {
+  margin: 0 0 0.5rem;
+}
+
+.admin-orders-grid-item--highlight {
+  outline: 2px solid color-mix(in srgb, var(--accent) 70%, transparent);
+  outline-offset: 2px;
+  border-radius: var(--radius-12);
+  animation: admin-order-highlight-fade 8s ease-out forwards;
+}
+
+.admin-orders-grid-item--walkthrough {
+  box-shadow: 0 0 0 1px color-mix(in srgb, var(--accent) 28%, transparent);
+}
+
+@keyframes admin-order-highlight-fade {
+  0% {
+    background: color-mix(in srgb, var(--accent) 16%, transparent);
+  }
+  100% {
+    background: transparent;
+  }
+}
+
+.admin-retail-walkthrough-coach,
+.admin-retail-walkthrough-complete {
+  display: grid;
+  gap: 0.55rem;
+  margin: 0 0 0.85rem;
+  padding: 0.85rem 1rem;
+  border-radius: var(--radius-12);
+  border: 1px solid color-mix(in srgb, var(--accent) 35%, transparent);
+  background: color-mix(in srgb, var(--accent) 10%, transparent);
+}
+
+.admin-retail-walkthrough-coach p,
+.admin-retail-walkthrough-complete p {
+  margin: 0;
+  font-size: 0.9rem;
+  line-height: 1.45;
+  color: var(--fg);
+}
+
+.admin-retail-walkthrough-complete h3 {
+  margin: 0;
+  font-size: 1.05rem;
+  font-weight: 750;
+}
+
+/* Retail task card (Orders walkthrough Step 4 — same BEM as test-shop) */
+.admin-orders-panel .retail-task-card {
+  display: grid;
+  gap: 0.65rem;
+  margin: 0 0 0.85rem;
+  padding: 0.9rem 1rem;
+  border-radius: var(--radius-16);
+  border: 1px solid color-mix(in srgb, var(--border) 80%, var(--fg));
+  background:
+    linear-gradient(
+      165deg,
+      color-mix(in srgb, var(--surface-2) 70%, var(--bg)) 0%,
+      var(--surface-1) 100%
+    );
+  box-shadow: inset 3px 0 0 var(--accent);
+}
+
+.admin-orders-panel .retail-task-card__top {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.65rem;
+}
+
+.admin-orders-panel .retail-task-card__icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 2.25rem;
+  height: 2.25rem;
+  border-radius: var(--radius-10);
+  background: color-mix(in srgb, var(--accent) 14%, transparent);
+  color: var(--accent);
+  flex-shrink: 0;
+}
+
+.admin-orders-panel .retail-task-card__heading {
+  flex: 1;
+  min-width: 0;
+  display: grid;
+  gap: 0.25rem;
+}
+
+.admin-orders-panel .retail-task-card__eyebrow {
+  margin: 0;
+  font-size: 0.68rem;
+  font-weight: 750;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--accent);
+}
+
+.admin-orders-panel .retail-task-card__progress {
+  display: grid;
+  gap: 0.3rem;
+}
+
+.admin-orders-panel .retail-task-card__progress-label {
+  font-size: 0.78rem;
+  font-weight: 600;
+  color: var(--muted);
+}
+
+.admin-orders-panel .retail-task-card__progress-track {
+  display: block;
+  height: 0.28rem;
+  border-radius: var(--radius-full);
+  background: color-mix(in srgb, var(--border) 80%, transparent);
+  overflow: hidden;
+}
+
+.admin-orders-panel .retail-task-card__progress-fill {
+  display: block;
+  height: 100%;
+  border-radius: inherit;
+  background: var(--accent);
+}
+
+.admin-orders-panel .retail-task-card__title {
+  margin: 0;
+  font-size: 1.1rem;
+  font-weight: 750;
+  letter-spacing: -0.02em;
+  color: var(--fg);
+  line-height: 1.25;
+}
+
+.admin-orders-panel .retail-task-card__body {
+  margin: 0;
+  font-size: 0.88rem;
+  line-height: 1.45;
+  color: var(--muted);
+}
+
+.admin-orders-panel .retail-task-card__cta {
+  width: 100%;
+  min-height: 2.65rem;
+  justify-content: center;
+}
+
+.admin-orders-grid-ready-btn {
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.02em;
 }
 
 @keyframes aog-paid-status-pulse {
@@ -6281,6 +6456,88 @@ body.admin-theme-premium-black .booking-page-wrap .booking-shell.surface {
   width: 1.5rem;
   height: 1.5rem;
   flex-shrink: 0;
+}
+
+.admin-orders-grid-actions--coach-host {
+  position: relative;
+}
+
+.admin-orders-grid-collect-btn--coach {
+  outline: 2px solid var(--accent);
+  outline-offset: 3px;
+  box-shadow:
+    0 0 0 4px color-mix(in srgb, var(--accent) 22%, transparent),
+    0 0 0 1px color-mix(in srgb, var(--accent) 45%, transparent);
+  animation: admin-orders-collect-pulse 1.8s ease-in-out infinite;
+}
+
+@keyframes admin-orders-collect-pulse {
+  0%,
+  100% {
+    box-shadow:
+      0 0 0 4px color-mix(in srgb, var(--accent) 18%, transparent),
+      0 0 0 1px color-mix(in srgb, var(--accent) 40%, transparent);
+  }
+  50% {
+    box-shadow:
+      0 0 0 7px color-mix(in srgb, var(--accent) 28%, transparent),
+      0 0 0 1px color-mix(in srgb, var(--accent) 55%, transparent);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .admin-orders-grid-collect-btn--coach {
+    animation: none;
+  }
+}
+
+.admin-orders-collect-coachmark {
+  position: absolute;
+  right: 0;
+  bottom: calc(100% + 0.5rem);
+  z-index: 6;
+  max-width: min(16rem, 70vw);
+  padding: 0.45rem 0.6rem;
+  border-radius: var(--radius-10);
+  font-size: 0.78rem;
+  font-weight: 600;
+  line-height: 1.35;
+  color: var(--fg);
+  background: var(--surface-1, var(--bg));
+  border: 1px solid color-mix(in srgb, var(--accent) 45%, var(--border));
+  box-shadow: 0 8px 20px color-mix(in srgb, var(--bg) 45%, transparent);
+  pointer-events: none;
+}
+
+.admin-orders-collect-coachmark::after {
+  content: '';
+  position: absolute;
+  right: 1rem;
+  top: 100%;
+  border: 6px solid transparent;
+  border-top-color: color-mix(in srgb, var(--accent) 45%, var(--border));
+}
+
+.admin-orders-collect-coachmark--flip {
+  right: auto;
+  left: 0;
+}
+
+.admin-orders-collect-coachmark--flip::after {
+  right: auto;
+  left: 1rem;
+}
+
+.admin-orders-collect-coachmark--below {
+  bottom: auto;
+  top: calc(100% + 0.5rem);
+}
+
+.admin-orders-collect-coachmark--below::after {
+  top: auto;
+  bottom: 100%;
+  border-top-color: transparent;
+  border-bottom-color: color-mix(in srgb, var(--accent) 45%, var(--border));
 }
 
 .admin-orders-grid-row-chevron {
