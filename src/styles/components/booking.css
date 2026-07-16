@@ -3457,7 +3457,7 @@ body.admin-theme-premium-black .booking-page-wrap .booking-shell.surface {
 .admin-mobile-drawer {
   --admin-mobile-drawer-width: 70vw;
   display: grid;
-  grid-template-rows: auto 1fr auto auto;
+  grid-template-rows: auto auto 1fr auto auto;
   gap: 0.72rem;
   position: fixed;
   top: 0;
@@ -3530,6 +3530,16 @@ body.admin-theme-premium-black .booking-page-wrap .booking-shell.surface {
   align-items: flex-start;
   gap: 0.15rem;
   min-width: 0;
+}
+
+.admin-mobile-drawer-launch {
+  min-width: 0;
+  margin: 0;
+  padding: 0.1rem 0 0.15rem;
+}
+
+.admin-mobile-drawer-launch .admin-sidebar-launch-cta {
+  margin: 0;
 }
 
 .admin-mobile-header-center {

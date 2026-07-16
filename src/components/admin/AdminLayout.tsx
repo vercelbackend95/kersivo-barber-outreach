@@ -288,7 +288,7 @@ export default function AdminLayout({
     </button>
   );
 
-  const menu = useMemo(() => (
+  const renderMenu = (showLaunchCta: boolean) => (
     <nav className="admin-sidebar-nav" aria-label="Admin navigation">
       {menuGroups.map((group) => (
         <div className="admin-sidebar-group" key={group.title}>
@@ -306,11 +306,13 @@ export default function AdminLayout({
           ))}
         </div>
       ))}
-      <div className="admin-sidebar-group">
-        <AdminSidebarLaunchCta isPublicDemo={isPublicDemo} />
-      </div>
+      {showLaunchCta ? (
+        <div className="admin-sidebar-group">
+          <AdminSidebarLaunchCta isPublicDemo={isPublicDemo} />
+        </div>
+      ) : null}
     </nav>
-  ), [activeSection, isPublicDemo]);
+  );
 
   const activeSectionLabel = useMemo(() => {
     for (const group of menuGroups) {
@@ -493,7 +495,10 @@ export default function AdminLayout({
             </button>
           </div>
         </div>
-        {menu}
+        <div className="admin-mobile-drawer-launch">
+          <AdminSidebarLaunchCta isPublicDemo={isPublicDemo} />
+        </div>
+        {renderMenu(false)}
         <div className="admin-sidebar-divider" aria-hidden="true" />
         {accountFooterMobile}
       </aside>
@@ -505,7 +510,7 @@ export default function AdminLayout({
       <div className="admin-shell">
       <aside className="admin-sidebar" aria-label="Admin sections">
         <SidebarBrand logoUrl={isPublicDemo ? null : shopLogoUrl} />
-        {menu}
+        {renderMenu(true)}
         <div className="admin-sidebar-logout-wrap">
           <SidebarStatus />
           <div className="admin-sidebar-divider" aria-hidden="true" />
