@@ -16,10 +16,13 @@ export type RevealOnboardingProductCallbacks = {
 };
 
 let pendingRevealTimer: number | null = null;
-let paintTimer: number | null = null;
 let highlightTimer: number | null = null;
 let atcClearHandler: ((event: Event) => void) | null = null;
 let atcClearTarget: HTMLButtonElement | null = null;
+let scrollRafId: number | null = null;
+let scrollGeneration = 0;
+/** Bumps when a newer reveal starts so in-flight scroll/paint work is ignored. */
+let revealGeneration = 0;
 
 function findProductItem(productId: string): HTMLElement | null {
   return document.querySelector(
@@ -87,13 +90,72 @@ export function applyCategoryForProduct(category: string) {
   }
 }
 
+function prefersReducedMotion(): boolean {
+  return window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+}
+
+function easeInOutCubic(t: number): number {
+  return t < 0.5 ? 4 * t * t * t : 1 - Math.pow(-2 * t + 2, 3) / 2;
+}
+
+function cancelWindowScrollAnimation() {
+  if (scrollRafId !== null) {
+    window.cancelAnimationFrame(scrollRafId);
+    scrollRafId = null;
+  }
+  scrollGeneration += 1;
+}
+
+/**
+ * Eased window scroll. Resolves when finished or superseded by a newer reveal.
+ * Duration scales with distance: ~420–900ms.
+ */
+function animateWindowScrollTo(targetY: number): Promise<void> {
+  cancelWindowScrollAnimation();
+  const generation = scrollGeneration;
+  const startY = window.scrollY;
+  const delta = targetY - startY;
+
+  if (Math.abs(delta) < 2 || prefersReducedMotion()) {
+    window.scrollTo({ top: targetY, behavior: 'auto' });
+    return Promise.resolve();
+  }
+
+  const durationMs = Math.min(900, Math.max(420, 280 + Math.abs(delta) * 0.35));
+  const startTime = performance.now();
+
+  return new Promise((resolve) => {
+    const step = (now: number) => {
+      if (generation !== scrollGeneration) {
+        resolve();
+        return;
+      }
+
+      const elapsed = now - startTime;
+      const t = Math.min(1, elapsed / durationMs);
+      window.scrollTo({ top: startY + delta * easeInOutCubic(t), behavior: 'auto' });
+
+      if (t < 1) {
+        scrollRafId = window.requestAnimationFrame(step);
+        return;
+      }
+
+      scrollRafId = null;
+      window.scrollTo({ top: targetY, behavior: 'auto' });
+      resolve();
+    };
+
+    scrollRafId = window.requestAnimationFrame(step);
+  });
+}
+
 function getStickyNavbarOffset(): number {
   const nav = document.querySelector('.navbar17') as HTMLElement | null;
   const height = nav?.getBoundingClientRect().height ?? 0;
   return height + 12;
 }
 
-function scrollRevealTargetIntoView(item: HTMLElement) {
+async function scrollRevealTargetIntoView(item: HTMLElement): Promise<void> {
   const target =
     item.querySelector<HTMLElement>('[data-add-to-cart]') ??
     item.querySelector<HTMLElement>('.shop-card-actions') ??
@@ -105,8 +167,8 @@ function scrollRevealTargetIntoView(item: HTMLElement) {
     navOffset + 12,
     window.innerHeight - rect.height - paddingBottom,
   );
-  const top = window.scrollY + rect.top - desiredTop;
-  window.scrollTo({ top: Math.max(0, top), behavior: 'auto' });
+  const top = Math.max(0, window.scrollY + rect.top - desiredTop);
+  await animateWindowScrollTo(top);
 }
 
 function removeProductCoachmarks() {
@@ -210,6 +272,12 @@ function paintProductReveal(item: HTMLElement, productName: string) {
   return productName;
 }
 
+function waitNextFrame(): Promise<void> {
+  return new Promise((resolve) => {
+    requestAnimationFrame(() => resolve());
+  });
+}
+
 /**
  * Reveal the onboarding product in the test-shop grid.
  * Idempotent / single-flight so React + page-script delegation can both call it.
@@ -224,39 +292,41 @@ export function revealOnboardingProduct(
     window.clearTimeout(pendingRevealTimer);
     pendingRevealTimer = null;
   }
-  if (paintTimer !== null) {
-    window.clearTimeout(paintTimer);
-    paintTimer = null;
-  }
+  cancelWindowScrollAnimation();
+  revealGeneration += 1;
+  const generation = revealGeneration;
 
   applyCategoryForProduct(input.category);
 
   pendingRevealTimer = window.setTimeout(() => {
     pendingRevealTimer = null;
-    const item = findProductItem(input.id);
-    if (!item) {
-      if (input.allowNavigateFromPdp || !document.querySelector('.shop-page')) {
-        const params = new URLSearchParams({
-          category: input.category,
-          highlight: '1',
+    void (async () => {
+      const item = findProductItem(input.id);
+      if (!item) {
+        if (input.allowNavigateFromPdp || !document.querySelector('.shop-page')) {
+          const params = new URLSearchParams({
+            category: input.category,
+            highlight: '1',
+          });
+          callbacks.onNavigating?.();
+          window.location.assign(`/admin/test-shop?${params.toString()}`);
+          return;
+        }
+        console.error('[retail-onboarding] Could not locate onboarding product in DOM.', {
+          productId: input.id,
         });
-        callbacks.onNavigating?.();
-        window.location.assign(`/admin/test-shop?${params.toString()}`);
+        callbacks.onMissing?.();
         return;
       }
-      console.error('[retail-onboarding] Could not locate onboarding product in DOM.', {
-        productId: input.id,
-      });
-      callbacks.onMissing?.();
-      return;
-    }
 
-    item.hidden = false;
-    void item.offsetHeight;
-    scrollRevealTargetIntoView(item);
+      item.hidden = false;
+      void item.offsetHeight;
+      await scrollRevealTargetIntoView(item);
+      if (generation !== revealGeneration) return;
 
-    paintTimer = window.setTimeout(() => {
-      paintTimer = null;
+      await waitNextFrame();
+      if (generation !== revealGeneration) return;
+
       paintProductReveal(item, input.name);
       callbacks.onPainted?.(input.name);
       clearHighlightQuery();
@@ -268,7 +338,7 @@ export function revealOnboardingProduct(
         clearOnboardingProductHighlight();
         highlightTimer = null;
       }, HIGHLIGHT_MS);
-    }, 50);
+    })();
   }, 180);
 }
 
