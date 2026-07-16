@@ -254,6 +254,11 @@ const shopTitle = shop?.name?.trim() || 'My shop';
   <CartDrawerMount testOrderMode />
 </MinimalLayout>
 
+<script>
+  import { bindRetailShowProductDelegation } from '@/lib/admin/revealOnboardingProduct';
+  bindRetailShowProductDelegation();
+</script>
+
 <style>
   .test-shop-topbar {
     margin-top: var(--space-lg);

@@ -60,8 +60,14 @@ const showRetailTaskCard =
   !retailContext.retailPickupWalkthroughCompleted &&
   (Boolean(retailContext.product) || retailContext.retailOnboardingCompleted);
 
+const onboardingProductId = retailContext.product?.id ?? null;
 const products = await prisma.product.findMany({
-  where: { shopId: access.shopId, active: true },
+  where: {
+    shopId: access.shopId,
+    OR: onboardingProductId
+      ? [{ active: true }, { id: onboardingProductId }]
+      : [{ active: true }],
+  },
   orderBy: [{ featured: 'desc' }, { sortOrder: 'asc' }, { createdAt: 'asc' }],
   select: {
     id: true,
@@ -374,4 +380,9 @@ const shopTitle = shop?.name?.trim() || 'My shop';
       sorted.forEach((el) => shopGrid.insertBefore(el, emptyEl));
     });
   }
+</script>
+
+<script>
+  import { bindRetailShowProductDelegation } from '@/lib/admin/revealOnboardingProduct';
+  bindRetailShowProductDelegation();
 </script>

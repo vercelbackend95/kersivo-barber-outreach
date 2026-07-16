@@ -11,6 +11,7 @@ export type RetailOnboardingProductRef = {
 /**
  * Resolve the product created during retail onboarding for this shop only.
  * Persists retailOnboardingProductId when recovered via fallback.
+ * Only returns active products (inactive ids are cleared so the walkthrough can recover).
  */
 export async function resolveRetailOnboardingProduct(
   shopId: string,
@@ -50,7 +51,7 @@ export async function resolveRetailOnboardingProduct(
       where: { id: productId, shopId },
       select: { id: true, name: true, category: true, active: true },
     });
-    if (owned) {
+    if (owned?.active) {
       return {
         product: { id: owned.id, name: owned.name, category: owned.category },
         retailTestOrderId: shop.retailTestOrderId,
@@ -59,6 +60,12 @@ export async function resolveRetailOnboardingProduct(
         retailPickupWalkthroughCompleted: Boolean(shop.retailPickupWalkthroughCompletedAt),
       };
     }
+
+    // Stale / inactive id — clear so fallbacks can re-attach an active product.
+    await prisma.shopSettings.updateMany({
+      where: { id: shopId, retailOnboardingProductId: productId },
+      data: { retailOnboardingProductId: null },
+    });
     productId = null;
   }
 
@@ -69,6 +76,7 @@ export async function resolveRetailOnboardingProduct(
         ? await prisma.product.findFirst({
             where: {
               shopId,
+              active: true,
               createdAt: { gte: new Date(completedAt.getTime() - 60_000) },
             },
             orderBy: { createdAt: 'asc' },

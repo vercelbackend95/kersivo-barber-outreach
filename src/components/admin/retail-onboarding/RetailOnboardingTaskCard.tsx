@@ -9,6 +9,10 @@ import {
 import { trackConsentedEvent } from '@/lib/consent/events';
 import { FUNNEL_EVENTS } from '@/lib/analytics/funnelEvents';
 import { RETAIL_SETUP_TOTAL_STEPS } from '@/lib/admin/retailOnboardingProduct';
+import {
+  clearOnboardingProductHighlight,
+  revealOnboardingProduct,
+} from '@/lib/admin/revealOnboardingProduct';
 
 export type RetailTaskCardState =
   | 'show_product'
@@ -31,8 +35,6 @@ type RetailOnboardingTaskCardProps = {
   mode?: 'auto' | 'collect';
 };
 
-const HIGHLIGHT_MS = 9000;
-const PRODUCT_COACHMARK_TEXT = 'Add this product to your test basket';
 const COLLECT_COACHMARK_TEXT = 'Tap Collect to mark this order as collected';
 
 function useCartSnapshot() {
@@ -49,110 +51,6 @@ function prefersReducedMotion(): boolean {
   return window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 }
 
-function clearHighlightQuery() {
-  if (typeof window === 'undefined') return;
-  const url = new URL(window.location.href);
-  if (!url.searchParams.has('highlight')) return;
-  url.searchParams.delete('highlight');
-  window.history.replaceState({}, '', `${url.pathname}${url.search}${url.hash}`);
-}
-
-function findProductItem(productId: string): HTMLElement | null {
-  return document.querySelector(`[data-product-item][data-product-id="${CSS.escape(productId)}"]`);
-}
-
-function resolveShopCategory(category: string): string {
-  const root = document.querySelector('.shop-page');
-  if (!root) return category || 'ALL';
-  const filterButtons = Array.from(
-    root.querySelectorAll<HTMLButtonElement>('[data-category-filter]'),
-  );
-  if (filterButtons.length === 0) return 'ALL';
-  const hasCategoryChip = filterButtons.some(
-    (button) => button.getAttribute('data-category-filter') === category,
-  );
-  return hasCategoryChip ? category : 'ALL';
-}
-
-function applyCategoryFilterDomFallback(resolvedCategory: string) {
-  const root = document.querySelector('.shop-page');
-  if (!root) return;
-
-  const filterButtons = Array.from(
-    root.querySelectorAll<HTMLButtonElement>('[data-category-filter]'),
-  );
-
-  for (const item of root.querySelectorAll<HTMLElement>('[data-product-item]')) {
-    const productCategory = item.getAttribute('data-product-category') || 'STYLING';
-    item.hidden = !(resolvedCategory === 'ALL' || productCategory === resolvedCategory);
-  }
-
-  for (const button of filterButtons) {
-    const isActive = button.getAttribute('data-category-filter') === resolvedCategory;
-    button.classList.toggle('is-active', isActive);
-    button.setAttribute('aria-pressed', String(isActive));
-  }
-
-  root.setAttribute('data-active-category', resolvedCategory);
-
-  const emptyEl = root.querySelector('.shop-empty-filter');
-  if (emptyEl) {
-    const anyVisible = [...root.querySelectorAll<HTMLElement>('[data-product-item]')].some(
-      (item) => !item.hidden,
-    );
-    emptyEl.classList.toggle('is-visible', !anyVisible);
-  }
-}
-
-function applyCategoryForProduct(category: string) {
-  const root = document.querySelector('.shop-page');
-  if (!root) return;
-
-  const resolvedCategory = resolveShopCategory(category);
-
-  if (root.getAttribute('data-shop-filter-ready') === '1') {
-    window.dispatchEvent(
-      new CustomEvent('kersivo:shop-set-category', {
-        detail: { category: resolvedCategory },
-      }),
-    );
-    return;
-  }
-
-  applyCategoryFilterDomFallback(resolvedCategory);
-}
-
-function getStickyNavbarOffset(): number {
-  const nav = document.querySelector('.navbar17') as HTMLElement | null;
-  const height = nav?.getBoundingClientRect().height ?? 0;
-  return height + 12;
-}
-
-/**
- * Scroll so Add to cart (or card actions) sits in the viewport below the sticky
- * navbar. Pin near the bottom so media + YOUR PRODUCT badge stay visible above
- * when the card is taller than the phone viewport.
- */
-function scrollRevealTargetIntoView(item: HTMLElement) {
-  const target =
-    item.querySelector<HTMLElement>('[data-add-to-cart]') ??
-    item.querySelector<HTMLElement>('.shop-card-actions') ??
-    item;
-  const navOffset = getStickyNavbarOffset();
-  const rect = target.getBoundingClientRect();
-  const paddingBottom = 20;
-  const desiredTop = Math.max(
-    navOffset + 12,
-    window.innerHeight - rect.height - paddingBottom,
-  );
-  const top = window.scrollY + rect.top - desiredTop;
-  window.scrollTo({ top: Math.max(0, top), behavior: 'auto' });
-}
-
-function removeProductCoachmarks() {
-  document.querySelectorAll('.retail-onboarding-coachmark').forEach((node) => node.remove());
-}
-
 function removeCollectCoachmarks() {
   document.querySelectorAll('.admin-orders-collect-coachmark').forEach((node) => node.remove());
   document.querySelectorAll('.admin-orders-grid-collect-btn--coach').forEach((el) => {
@@ -161,34 +59,6 @@ function removeCollectCoachmarks() {
   document.querySelectorAll('.admin-orders-grid-actions--coach-host').forEach((el) => {
     el.classList.remove('admin-orders-grid-actions--coach-host');
   });
-}
-
-function placeProductCoachmark(anchor: HTMLElement) {
-  removeProductCoachmarks();
-  const mark = document.createElement('div');
-  mark.className = 'retail-onboarding-coachmark';
-  mark.setAttribute('role', 'status');
-  mark.textContent = PRODUCT_COACHMARK_TEXT;
-
-  const actions = anchor.closest('.shop-card-actions') ?? anchor.parentElement;
-  if (actions) {
-    actions.classList.add('shop-card-actions--coachmark-host');
-    actions.appendChild(mark);
-  } else {
-    anchor.insertAdjacentElement('afterend', mark);
-  }
-
-  requestAnimationFrame(() => {
-    const rect = mark.getBoundingClientRect();
-    if (rect.right > window.innerWidth - 12) {
-      mark.classList.add('retail-onboarding-coachmark--flip');
-    }
-    if (rect.bottom > window.innerHeight - 12) {
-      mark.classList.add('retail-onboarding-coachmark--above');
-    }
-  });
-
-  return mark;
 }
 
 function placeCollectCoachmark(collectBtn: HTMLElement) {
@@ -233,10 +103,6 @@ export default function RetailOnboardingTaskCard({
   const [announce, setAnnounce] = useState('');
   const [missingProductError, setMissingProductError] = useState(false);
   const viewedRef = useRef(false);
-  const highlightTimerRef = useRef<number | null>(null);
-  const revealPaintTimerRef = useRef<number | null>(null);
-  const atcClearHandlerRef = useRef<((event: Event) => void) | null>(null);
-  const atcClearTargetRef = useRef<HTMLButtonElement | null>(null);
   const collectRevealTimerRef = useRef<number | null>(null);
   const titleId = useId();
   const progressId = useId();
@@ -333,19 +199,10 @@ export default function RetailOnboardingTaskCard({
 
   useEffect(() => {
     return () => {
-      if (highlightTimerRef.current !== null) {
-        window.clearTimeout(highlightTimerRef.current);
-      }
-      if (revealPaintTimerRef.current !== null) {
-        window.clearTimeout(revealPaintTimerRef.current);
-      }
       if (collectRevealTimerRef.current !== null) {
         window.clearTimeout(collectRevealTimerRef.current);
       }
-      if (atcClearTargetRef.current && atcClearHandlerRef.current) {
-        atcClearTargetRef.current.removeEventListener('click', atcClearHandlerRef.current);
-      }
-      removeProductCoachmarks();
+      clearOnboardingProductHighlight();
       removeCollectCoachmarks();
     };
   }, []);
@@ -422,69 +279,6 @@ export default function RetailOnboardingTaskCard({
     };
   }, [isCollectMode, testOrderId]);
 
-  function clearProductHighlight() {
-    document.querySelectorAll('.shop-card--onboarding-highlight').forEach((el) => {
-      el.classList.remove('shop-card--onboarding-highlight');
-    });
-    document.querySelectorAll('.retail-atc--onboarding-focus').forEach((el) => {
-      el.classList.remove('retail-atc--onboarding-focus');
-    });
-    document.querySelectorAll('.retail-your-product-badge').forEach((el) => el.remove());
-    document.querySelectorAll('.shop-card-actions--coachmark-host').forEach((el) => {
-      el.classList.remove('shop-card-actions--coachmark-host');
-    });
-    removeProductCoachmarks();
-  }
-
-  function detachAtcClearHandler() {
-    if (atcClearTargetRef.current && atcClearHandlerRef.current) {
-      atcClearTargetRef.current.removeEventListener('click', atcClearHandlerRef.current);
-    }
-    atcClearTargetRef.current = null;
-    atcClearHandlerRef.current = null;
-  }
-
-  function paintProductReveal(item: HTMLElement, productName: string) {
-    clearProductHighlight();
-    detachAtcClearHandler();
-
-    const card = item.querySelector('.shop-card') as HTMLElement | null;
-    const atc = item.querySelector<HTMLButtonElement>('[data-add-to-cart]');
-
-    if (card) {
-      card.classList.add('shop-card--onboarding-highlight');
-      const badge = document.createElement('span');
-      badge.className = 'retail-your-product-badge';
-      badge.textContent = 'YOUR PRODUCT';
-      const media = card.querySelector('.shop-media');
-      if (media) {
-        media.appendChild(badge);
-      } else {
-        card.prepend(badge);
-      }
-    }
-
-    if (atc) {
-      atc.classList.add('retail-atc--onboarding-focus');
-      placeProductCoachmark(atc);
-      atc.focus({ preventScroll: true });
-
-      const onAtcClick = () => {
-        clearProductHighlight();
-        detachAtcClearHandler();
-        if (highlightTimerRef.current !== null) {
-          window.clearTimeout(highlightTimerRef.current);
-          highlightTimerRef.current = null;
-        }
-      };
-      atcClearHandlerRef.current = onAtcClick;
-      atcClearTargetRef.current = atc;
-      atc.addEventListener('click', onAtcClick);
-    }
-
-    setAnnounce(`Showing your onboarding product: ${productName}. Add it to your test basket.`);
-  }
-
   function revealProduct(fromClick: boolean) {
     if (!product) {
       setMissingProductError(true);
@@ -502,71 +296,41 @@ export default function RetailOnboardingTaskCard({
       );
     }
 
-    applyCategoryForProduct(product.category);
-
-    window.setTimeout(() => {
-      const item = findProductItem(product.id);
-      if (!item) {
-        if (source === 'test-shop-pdp' || !document.querySelector('.shop-page')) {
-          const params = new URLSearchParams({
-            category: product.category,
-            highlight: '1',
-          });
-          window.location.assign(`/admin/test-shop?${params.toString()}`);
-          return;
-        }
-        setMissingProductError(true);
-        console.error('[retail-onboarding] Could not locate onboarding product in DOM.', {
-          productId: product.id,
-        });
-        return;
-      }
-
-      item.hidden = false;
-      // Force layout so getBoundingClientRect reflects the unhidden item.
-      void item.offsetHeight;
-
-      scrollRevealTargetIntoView(item);
-
-      if (revealPaintTimerRef.current !== null) {
-        window.clearTimeout(revealPaintTimerRef.current);
-      }
-
-      revealPaintTimerRef.current = window.setTimeout(() => {
-        revealPaintTimerRef.current = null;
-        paintProductReveal(item, product.name);
-
-        // Keep the card expanded on narrow viewports so the reveal doesn't feel like it "failed".
-        if (!window.matchMedia('(max-width: 48rem)').matches) {
-          setMinimized(true);
-        }
-
-        trackConsentedEvent(
-          FUNNEL_EVENTS.retail_onboarding_product_revealed,
-          { step: currentStep, state: cardState, source, device: deviceType() },
-          'analytics',
-        );
-
-        clearHighlightQuery();
-
-        if (highlightTimerRef.current !== null) {
-          window.clearTimeout(highlightTimerRef.current);
-        }
-        highlightTimerRef.current = window.setTimeout(() => {
-          clearProductHighlight();
-          detachAtcClearHandler();
-          highlightTimerRef.current = null;
-        }, HIGHLIGHT_MS);
-      }, 50);
-    }, 180);
+    revealOnboardingProduct(
+      {
+        id: product.id,
+        name: product.name,
+        category: product.category,
+        allowNavigateFromPdp: source === 'test-shop-pdp' || !document.querySelector('.shop-page'),
+      },
+      {
+        onMissing: () => setMissingProductError(true),
+        onPainted: (productName) => {
+          setAnnounce(
+            `Showing your onboarding product: ${productName}. Add it to your test basket.`,
+          );
+          if (!window.matchMedia('(max-width: 48rem)').matches) {
+            setMinimized(true);
+          }
+          trackConsentedEvent(
+            FUNNEL_EVENTS.retail_onboarding_product_revealed,
+            { step: currentStep, state: cardState, source, device: deviceType() },
+            'analytics',
+          );
+        },
+      },
+    );
   }
 
-  function onPrimaryClick() {
+  function onPrimaryClick(event: React.MouseEvent<HTMLButtonElement>) {
     if (cardState === 'show_product') {
+      // Keep page-script delegation from double-running when the island is hydrated.
+      event.stopPropagation();
       revealProduct(true);
       return;
     }
     if (cardState === 'basket_ready') {
+      event.stopPropagation();
       trackConsentedEvent(
         FUNNEL_EVENTS.retail_open_basket_clicked,
         { step: currentStep, state: cardState, source, device: deviceType() },
@@ -576,6 +340,7 @@ export default function RetailOnboardingTaskCard({
       return;
     }
     if (cardState === 'checkout') {
+      event.stopPropagation();
       trackConsentedEvent(
         FUNNEL_EVENTS.retail_continue_checkout_clicked,
         { step: currentStep, state: cardState, source, device: deviceType() },
@@ -585,6 +350,7 @@ export default function RetailOnboardingTaskCard({
       return;
     }
     if (cardState === 'order_ready' && testOrderId) {
+      event.stopPropagation();
       trackConsentedEvent(
         FUNNEL_EVENTS.retail_view_order_clicked,
         { step: currentStep, state: cardState, source, device: deviceType() },
@@ -595,6 +361,15 @@ export default function RetailOnboardingTaskCard({
       );
     }
   }
+
+  const showProductCtaAttrs =
+    cardState === 'show_product' && product
+      ? {
+          'data-retail-show-product': product.id,
+          'data-retail-show-category': product.category,
+          'data-retail-show-name': product.name,
+        }
+      : undefined;
 
   if (!isCollectMode && (missingProductError || !product)) {
     return (
@@ -680,13 +455,19 @@ export default function RetailOnboardingTaskCard({
               type="button"
               className="btn btn--primary retail-task-card__cta"
               onClick={onPrimaryClick}
+              {...showProductCtaAttrs}
             >
               {copy.cta}
             </button>
           ) : null}
         </>
       ) : copy.cta ? (
-        <button type="button" className="btn btn--primary retail-task-card__cta" onClick={onPrimaryClick}>
+        <button
+          type="button"
+          className="btn btn--primary retail-task-card__cta"
+          onClick={onPrimaryClick}
+          {...showProductCtaAttrs}
+        >
           {copy.cta}
         </button>
       ) : null}
