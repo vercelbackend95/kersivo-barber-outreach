@@ -20,10 +20,10 @@ function getPrismaClient(): PrismaClient {
   void globalThis.__prisma?.$disconnect().catch(() => undefined);
   const client = createPrismaClient();
 
-  if (process.env.NODE_ENV !== 'production') {
-    globalThis.__prisma = client;
-    globalThis.__prismaSchemaMarker = SCHEMA_MARKER;
-  }
+  // Always cache on globalThis so serverless warm instances reuse one client
+  // and avoid disconnect/reconnect churn mid-request.
+  globalThis.__prisma = client;
+  globalThis.__prismaSchemaMarker = SCHEMA_MARKER;
 
   return client;
 }

@@ -3,6 +3,8 @@ import { Prisma } from '@prisma/client';
 import { prisma } from './client';
 
 const MAX_TRANSACTION_RETRIES = 3;
+const TRANSACTION_MAX_WAIT_MS = 10_000;
+const TRANSACTION_TIMEOUT_MS = 15_000;
 
 function isRetriableTransactionError(error: unknown): boolean {
   if (typeof error !== 'object' || error === null || !('code' in error)) {
@@ -10,7 +12,7 @@ function isRetriableTransactionError(error: unknown): boolean {
   }
 
   const code = String((error as { code?: string }).code ?? '');
-  return code === 'P2002' || code === 'P2034';
+  return code === 'P2002' || code === 'P2034' || code === 'P2028';
 }
 
 export async function runSerializableTransaction<T>(
@@ -21,7 +23,9 @@ export async function runSerializableTransaction<T>(
   while (attempt < MAX_TRANSACTION_RETRIES) {
     try {
       return await prisma.$transaction(operation, {
-        isolationLevel: Prisma.TransactionIsolationLevel.Serializable
+        isolationLevel: Prisma.TransactionIsolationLevel.Serializable,
+        maxWait: TRANSACTION_MAX_WAIT_MS,
+        timeout: TRANSACTION_TIMEOUT_MS,
       });
     } catch (error) {
       attempt += 1;

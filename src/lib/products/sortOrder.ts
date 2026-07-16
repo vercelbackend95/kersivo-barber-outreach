@@ -2,6 +2,8 @@ import type { Prisma } from '@prisma/client';
 
 const PRODUCT_SORT_ORDER_MIN = 0;
 const PRODUCT_SORT_ORDER_MAX = 9999;
+/** Temp sortOrders outside 0..9999 and create's `-1 - count` range to avoid unique collisions. */
+const PRODUCT_SORT_ORDER_TEMP_BASE = -1_000_000;
 
 type ProductOrderRecord = {
   id: string;
@@ -81,19 +83,25 @@ export async function persistProductOrder(
     throw new Error('Product order payload contains invalid ids.');
   }
 
-  for (const [index, id] of normalizedIds.entries()) {
-    await tx.product.update({
-      where: { id },
-      data: { sortOrder: -1 - index }
-    });
-  }
+  // Two parallel phases keep @@unique([shopId, sortOrder]) without 2N sequential round-trips
+  // (which time out interactive transactions on serverless Postgres).
+  await Promise.all(
+    normalizedIds.map((id, index) =>
+      tx.product.update({
+        where: { id },
+        data: { sortOrder: PRODUCT_SORT_ORDER_TEMP_BASE - index },
+      }),
+    ),
+  );
 
-  for (const [index, id] of normalizedIds.entries()) {
-    await tx.product.update({
-      where: { id },
-      data: { sortOrder: index }
-    });
-  }
+  await Promise.all(
+    normalizedIds.map((id, index) =>
+      tx.product.update({
+        where: { id },
+        data: { sortOrder: index },
+      }),
+    ),
+  );
 }
 
 export async function reorderProductWithinShop(
