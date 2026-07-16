@@ -61,17 +61,26 @@ function findProductItem(productId: string): HTMLElement | null {
   return document.querySelector(`[data-product-item][data-product-id="${CSS.escape(productId)}"]`);
 }
 
-function applyCategoryForProduct(category: string) {
+function resolveShopCategory(category: string): string {
+  const root = document.querySelector('.shop-page');
+  if (!root) return category || 'ALL';
+  const filterButtons = Array.from(
+    root.querySelectorAll<HTMLButtonElement>('[data-category-filter]'),
+  );
+  if (filterButtons.length === 0) return 'ALL';
+  const hasCategoryChip = filterButtons.some(
+    (button) => button.getAttribute('data-category-filter') === category,
+  );
+  return hasCategoryChip ? category : 'ALL';
+}
+
+function applyCategoryFilterDomFallback(resolvedCategory: string) {
   const root = document.querySelector('.shop-page');
   if (!root) return;
 
   const filterButtons = Array.from(
     root.querySelectorAll<HTMLButtonElement>('[data-category-filter]'),
   );
-  const hasCategoryChip = filterButtons.some(
-    (button) => button.getAttribute('data-category-filter') === category,
-  );
-  const resolvedCategory = hasCategoryChip ? category : 'ALL';
 
   for (const item of root.querySelectorAll<HTMLElement>('[data-product-item]')) {
     const productCategory = item.getAttribute('data-product-category') || 'STYLING';
@@ -93,6 +102,37 @@ function applyCategoryForProduct(category: string) {
     );
     emptyEl.classList.toggle('is-visible', !anyVisible);
   }
+}
+
+function applyCategoryForProduct(category: string) {
+  const root = document.querySelector('.shop-page');
+  if (!root) return;
+
+  const resolvedCategory = resolveShopCategory(category);
+
+  if (root.getAttribute('data-shop-filter-ready') === '1') {
+    window.dispatchEvent(
+      new CustomEvent('kersivo:shop-set-category', {
+        detail: { category: resolvedCategory },
+      }),
+    );
+    return;
+  }
+
+  applyCategoryFilterDomFallback(resolvedCategory);
+}
+
+function getStickyNavbarOffset(): number {
+  const nav = document.querySelector('.navbar17') as HTMLElement | null;
+  const height = nav?.getBoundingClientRect().height ?? 0;
+  return height + 12;
+}
+
+function scrollItemBelowNavbar(item: HTMLElement) {
+  const offset = getStickyNavbarOffset();
+  const rect = item.getBoundingClientRect();
+  const top = window.scrollY + rect.top - offset;
+  window.scrollTo({ top: Math.max(0, top), behavior: 'auto' });
 }
 
 function removeProductCoachmarks() {
@@ -180,6 +220,9 @@ export default function RetailOnboardingTaskCard({
   const [missingProductError, setMissingProductError] = useState(false);
   const viewedRef = useRef(false);
   const highlightTimerRef = useRef<number | null>(null);
+  const revealPaintTimerRef = useRef<number | null>(null);
+  const atcClearHandlerRef = useRef<((event: Event) => void) | null>(null);
+  const atcClearTargetRef = useRef<HTMLButtonElement | null>(null);
   const collectRevealTimerRef = useRef<number | null>(null);
   const titleId = useId();
   const progressId = useId();
@@ -279,8 +322,14 @@ export default function RetailOnboardingTaskCard({
       if (highlightTimerRef.current !== null) {
         window.clearTimeout(highlightTimerRef.current);
       }
+      if (revealPaintTimerRef.current !== null) {
+        window.clearTimeout(revealPaintTimerRef.current);
+      }
       if (collectRevealTimerRef.current !== null) {
         window.clearTimeout(collectRevealTimerRef.current);
+      }
+      if (atcClearTargetRef.current && atcClearHandlerRef.current) {
+        atcClearTargetRef.current.removeEventListener('click', atcClearHandlerRef.current);
       }
       removeProductCoachmarks();
       removeCollectCoachmarks();
@@ -373,6 +422,55 @@ export default function RetailOnboardingTaskCard({
     removeProductCoachmarks();
   }
 
+  function detachAtcClearHandler() {
+    if (atcClearTargetRef.current && atcClearHandlerRef.current) {
+      atcClearTargetRef.current.removeEventListener('click', atcClearHandlerRef.current);
+    }
+    atcClearTargetRef.current = null;
+    atcClearHandlerRef.current = null;
+  }
+
+  function paintProductReveal(item: HTMLElement, productName: string) {
+    clearProductHighlight();
+    detachAtcClearHandler();
+
+    const card = item.querySelector('.shop-card') as HTMLElement | null;
+    const atc = item.querySelector<HTMLButtonElement>('[data-add-to-cart]');
+
+    if (card) {
+      card.classList.add('shop-card--onboarding-highlight');
+      const badge = document.createElement('span');
+      badge.className = 'retail-your-product-badge';
+      badge.textContent = 'YOUR PRODUCT';
+      const media = card.querySelector('.shop-media');
+      if (media) {
+        media.appendChild(badge);
+      } else {
+        card.prepend(badge);
+      }
+    }
+
+    if (atc) {
+      atc.classList.add('retail-atc--onboarding-focus');
+      placeProductCoachmark(atc);
+      atc.focus({ preventScroll: true });
+
+      const onAtcClick = () => {
+        clearProductHighlight();
+        detachAtcClearHandler();
+        if (highlightTimerRef.current !== null) {
+          window.clearTimeout(highlightTimerRef.current);
+          highlightTimerRef.current = null;
+        }
+      };
+      atcClearHandlerRef.current = onAtcClick;
+      atcClearTargetRef.current = atc;
+      atc.addEventListener('click', onAtcClick);
+    }
+
+    setAnnounce(`Showing your onboarding product: ${productName}. Add it to your test basket.`);
+  }
+
   function revealProduct(fromClick: boolean) {
     if (!product) {
       setMissingProductError(true);
@@ -382,6 +480,7 @@ export default function RetailOnboardingTaskCard({
 
     setMissingProductError(false);
     if (fromClick) {
+      setMinimized(false);
       trackConsentedEvent(
         FUNNEL_EVENTS.retail_show_product_clicked,
         { step: currentStep, state: cardState, source, device: deviceType() },
@@ -410,53 +509,41 @@ export default function RetailOnboardingTaskCard({
       }
 
       item.hidden = false;
-      clearProductHighlight();
+      // Force layout so getBoundingClientRect reflects the unhidden item.
+      void item.offsetHeight;
 
-      const card = item.querySelector('.shop-card') as HTMLElement | null;
-      const atc = item.querySelector<HTMLButtonElement>('[data-add-to-cart]');
-      if (card) {
-        card.classList.add('shop-card--onboarding-highlight');
-        const badge = document.createElement('span');
-        badge.className = 'retail-your-product-badge';
-        badge.textContent = 'YOUR PRODUCT';
-        const media = card.querySelector('.shop-media');
-        if (media) {
-          media.appendChild(badge);
-        } else {
-          card.prepend(badge);
+      scrollItemBelowNavbar(item);
+
+      if (revealPaintTimerRef.current !== null) {
+        window.clearTimeout(revealPaintTimerRef.current);
+      }
+
+      revealPaintTimerRef.current = window.setTimeout(() => {
+        revealPaintTimerRef.current = null;
+        paintProductReveal(item, product.name);
+
+        // Keep the card expanded on narrow viewports so the reveal doesn't feel like it "failed".
+        if (!window.matchMedia('(max-width: 48rem)').matches) {
+          setMinimized(true);
         }
-      }
 
-      const behavior: ScrollBehavior = prefersReducedMotion() ? 'auto' : 'smooth';
-      item.scrollIntoView({ behavior, block: 'center' });
+        trackConsentedEvent(
+          FUNNEL_EVENTS.retail_onboarding_product_revealed,
+          { step: currentStep, state: cardState, source, device: deviceType() },
+          'analytics',
+        );
 
-      if (atc) {
-        atc.classList.add('retail-atc--onboarding-focus');
-        placeProductCoachmark(atc);
-        atc.focus({ preventScroll: true });
-      }
+        clearHighlightQuery();
 
-      setAnnounce(`Showing your onboarding product: ${product.name}. Add it to your test basket.`);
-      // Keep the card expanded on narrow viewports so the reveal doesn't feel like it "failed".
-      if (!window.matchMedia('(max-width: 48rem)').matches) {
-        setMinimized(true);
-      }
-
-      trackConsentedEvent(
-        FUNNEL_EVENTS.retail_onboarding_product_revealed,
-        { step: currentStep, state: cardState, source, device: deviceType() },
-        'analytics',
-      );
-
-      clearHighlightQuery();
-
-      if (highlightTimerRef.current !== null) {
-        window.clearTimeout(highlightTimerRef.current);
-      }
-      highlightTimerRef.current = window.setTimeout(() => {
-        clearProductHighlight();
-        highlightTimerRef.current = null;
-      }, HIGHLIGHT_MS);
+        if (highlightTimerRef.current !== null) {
+          window.clearTimeout(highlightTimerRef.current);
+        }
+        highlightTimerRef.current = window.setTimeout(() => {
+          clearProductHighlight();
+          detachAtcClearHandler();
+          highlightTimerRef.current = null;
+        }, HIGHLIGHT_MS);
+      }, 50);
     }, 180);
   }
 

@@ -1336,6 +1336,7 @@
 }
 
 .btn--atc.retail-atc--onboarding-focus {
+  overflow: visible;
   box-shadow:
     0 0 0 2px color-mix(in srgb, var(--accent) 45%, transparent),
     0 0 0 5px color-mix(in srgb, var(--accent) 16%, transparent);
@@ -1371,6 +1372,7 @@
 .shop-card-actions--coachmark-host {
   position: relative;
   z-index: 4;
+  overflow: visible;
 }
 
 .retail-onboarding-coachmark {

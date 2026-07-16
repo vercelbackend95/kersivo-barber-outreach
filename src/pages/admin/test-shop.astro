@@ -323,6 +323,23 @@ const shopTitle = shop?.name?.trim() || 'My shop';
       applyCategoryFilter(getCategoryFromUrl());
     });
 
+    // Programmatic category changes (e.g. retail onboarding "Show My Product").
+    window.addEventListener('kersivo:shop-set-category', ((event: Event) => {
+      const detail = (event as CustomEvent<{ category?: string }>).detail;
+      const category = detail?.category ?? 'ALL';
+      applyCategoryFilter(category);
+      const nextUrl = new URL(window.location.href);
+      if (currentCategory === 'ALL') {
+        nextUrl.searchParams.delete('category');
+      } else {
+        nextUrl.searchParams.set('category', currentCategory);
+      }
+      if (`${nextUrl.pathname}${nextUrl.search}` !== `${window.location.pathname}${window.location.search}`) {
+        syncUrlWithCategory(currentCategory);
+      }
+    }) as EventListener);
+
+    root.setAttribute('data-shop-filter-ready', '1');
     applyCategoryFilter(currentCategory);
   }
 
