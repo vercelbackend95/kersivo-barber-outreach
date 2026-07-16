@@ -89,7 +89,13 @@ const menuGroups: SectionGroup[] = [
 
 const DEFAULT_SIDEBAR_LOGO = '/images/logo_nobg.png';
 
-function SidebarBrand({ logoUrl = null }: { logoUrl?: string | null }) {
+function SidebarBrand({
+  logoUrl = null,
+  statusSlot = null,
+}: {
+  logoUrl?: string | null;
+  statusSlot?: React.ReactNode;
+}) {
   const [src, setSrc] = useState(logoUrl || DEFAULT_SIDEBAR_LOGO);
   const isCustom = Boolean(logoUrl) && src === logoUrl;
 
@@ -114,7 +120,7 @@ function SidebarBrand({ logoUrl = null }: { logoUrl?: string | null }) {
         />
       </div>
       <div className="admin-sidebar-brand-text">
-
+        {statusSlot}
         <span className="admin-sidebar-brand-sub">Admin</span>
       </div>
     </div>
@@ -473,8 +479,10 @@ export default function AdminLayout({
       >
         <div className="admin-mobile-drawer-head">
           <div className="admin-mobile-drawer-head-top">
-            <SidebarBrand logoUrl={isPublicDemo ? null : shopLogoUrl} />
-            <SidebarStatus className="admin-sidebar-status--mobile-drawer" />
+            <SidebarBrand
+              logoUrl={isPublicDemo ? null : shopLogoUrl}
+              statusSlot={<SidebarStatus className="admin-sidebar-status--mobile-drawer" />}
+            />
             <button
               type="button"
               className="admin-mobile-close-button"
