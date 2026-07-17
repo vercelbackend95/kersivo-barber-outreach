@@ -872,7 +872,11 @@
     max-height: none;
   }
 
-  .admin-barber-wizard__header,
+  .admin-barber-wizard__header {
+    padding-top: calc(1rem + env(safe-area-inset-top, 0px));
+    padding-inline: max(1rem, env(safe-area-inset-left, 0px)) max(1rem, env(safe-area-inset-right, 0px));
+  }
+
   .admin-barber-wizard__progress,
   .admin-barber-wizard__live-summary,
   .admin-barber-wizard__content {

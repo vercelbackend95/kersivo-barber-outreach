@@ -9376,24 +9376,30 @@ body.admin-theme-premium-black .booking-page-wrap .booking-shell.surface {
   touch-action: manipulation;
 }
 
-/* Add barber: full-viewport-width sheet below Next appointments (no floating card inset) */
+/* Add barber / service / product wizards: true full-screen over mobile chrome */
 @media (max-width: 48rem) {
   /*
-   * Default sheet backdrop is semi-transparent fg (reads as gray). Add barber, service, and product
-   * sheets sit flush under Next appointments — use one continuous wash like .admin-section-header
-   * (no dim), so corner seams never read gray.
+   * Cover fixed .admin-mobile-header (z-app-chrome 260). Use modal-sheet z so the
+   * mobile menu drawer (275) can still stack above if opened.
+   * Include .admin-main-content so these vars beat the --with-next sheet-top-offset calc.
    */
+  .admin-main-content .admin-barber-sheet-layer:has(.admin-barber-sheet--add),
+  .admin-main-content .admin-barber-sheet-layer:has(.admin-service-sheet),
+  .admin-main-content .admin-barber-sheet-layer:has(.admin-product-sheet),
   .admin-barber-sheet-layer:has(.admin-barber-sheet--add),
   .admin-barber-sheet-layer:has(.admin-service-sheet),
   .admin-barber-sheet-layer:has(.admin-product-sheet) {
+    --admin-mobile-sheet-top-offset: 0px;
+    --admin-mobile-sheet-top-inset: 0px;
+    z-index: var(--admin-z-modal-sheet, 270);
     align-items: stretch;
-    background: color-mix(in srgb, var(--surface-1) 92%, transparent);
+    inset: 0;
+    padding-top: 0;
+    background: color-mix(in srgb, var(--admin-premium-surface-bg) 96%, var(--bg));
   }
 
   /*
-   * Flush under .admin-mobile-header--with-next: same top radii as header bottom radii
-   * (--admin-premium-surface-r-mobile) so corners meet with no backdrop “holes”.
-   * No top border — avoids a double seam with the chrome stack above.
+   * Edge-to-edge sheet: no top radius / gap under chrome.
    */
   .admin-barber-sheet--add {
     width: 100%;
@@ -9403,14 +9409,10 @@ body.admin-theme-premium-black .booking-page-wrap .booking-shell.surface {
     min-height: 0;
     max-height: none;
     border: none;
-    border-top: none;
-    border-top-left-radius: var(--admin-premium-surface-r-mobile);
-    border-top-right-radius: var(--admin-premium-surface-r-mobile);
-    border-bottom-left-radius: 0;
-    border-bottom-right-radius: 0;
+    border-radius: 0;
     overflow: hidden;
     background: color-mix(in srgb, var(--admin-premium-surface-bg) 94%, var(--surface));
-    box-shadow: var(--admin-premium-shadow-inset);
+    box-shadow: none;
   }
 
   .admin-barber-sheet--add .admin-barber-sheet-head {
@@ -9430,7 +9432,7 @@ body.admin-theme-premium-black .booking-page-wrap .booking-shell.surface {
   }
 
   /*
-   * Add / edit service and product sheets: same flush sheet under Next appointments as Add barber.
+   * Add / edit service and product sheets: same full-screen treatment as Add barber.
    * Direct-child selectors win over the base sheet sizing rules.
    */
   .admin-barber-sheet-layer > .admin-barber-sheet.admin-service-sheet,
@@ -9442,14 +9444,10 @@ body.admin-theme-premium-black .booking-page-wrap .booking-shell.surface {
     min-height: 0;
     max-height: none;
     border: none;
-    border-top: none;
-    border-top-left-radius: var(--admin-premium-surface-r-mobile);
-    border-top-right-radius: var(--admin-premium-surface-r-mobile);
-    border-bottom-left-radius: 0;
-    border-bottom-right-radius: 0;
+    border-radius: 0;
     overflow: hidden;
     background: color-mix(in srgb, var(--admin-premium-surface-bg) 94%, var(--surface));
-    box-shadow: var(--admin-premium-shadow-inset);
+    box-shadow: none;
   }
 
   .admin-barber-sheet-layer > .admin-barber-sheet.admin-service-sheet .admin-service-sheet-head {

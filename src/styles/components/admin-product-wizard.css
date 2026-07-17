@@ -817,7 +817,11 @@
     max-height: none;
   }
 
-  .admin-product-wizard__header,
+  .admin-product-wizard__header {
+    padding-top: calc(1rem + env(safe-area-inset-top, 0px));
+    padding-inline: max(1rem, env(safe-area-inset-left, 0px)) max(1rem, env(safe-area-inset-right, 0px));
+  }
+
   .admin-product-wizard__progress,
   .admin-product-wizard__live-summary,
   .admin-product-wizard__content {

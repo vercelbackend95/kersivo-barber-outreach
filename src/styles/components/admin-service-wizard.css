@@ -811,17 +811,15 @@
 @media (max-width: 47.99rem) {
   .admin-service-wizard {
     width: 100%;
-    height: calc(
-      var(--admin-mobile-app-h, 100dvh) -
-        var(--admin-mobile-measured-header-bottom, var(--admin-mobile-sheet-top-offset, 0px))
-    );
-    max-height: calc(
-      var(--admin-mobile-app-h, 100dvh) -
-        var(--admin-mobile-measured-header-bottom, var(--admin-mobile-sheet-top-offset, 0px))
-    );
+    height: 100%;
+    max-height: none;
   }
 
-  .admin-service-wizard__header,
+  .admin-service-wizard__header {
+    padding-top: calc(1rem + env(safe-area-inset-top, 0px));
+    padding-inline: max(1rem, env(safe-area-inset-left, 0px)) max(1rem, env(safe-area-inset-right, 0px));
+  }
+
   .admin-service-wizard__progress,
   .admin-service-wizard__live-summary,
   .admin-service-wizard__content {
