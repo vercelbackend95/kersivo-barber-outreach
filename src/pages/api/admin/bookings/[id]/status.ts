@@ -5,8 +5,10 @@ import { requireAdminContext } from '../../../../../lib/admin/auth';
 import { bookingWhereForShop } from '../../../../../lib/admin/shopScoped';
 import { prisma } from '../../../../../lib/db/client';
 import {
+  canCorrectHistoryBooking,
   getAllowedManualBookingActions,
   getEffectiveBookingStatus,
+  isHistoryBookingCorrection,
   isManualBookingAction,
 } from '../../../../../lib/booking/operationalStatus';
 
@@ -27,10 +29,11 @@ export const PATCH: APIRoute = async (ctx) => {
   }
 
   const requestedAction = payload.status.trim().toUpperCase();
-  if (!isManualBookingAction(requestedAction)) {
+  if (!isManualBookingAction(requestedAction) && !isHistoryBookingCorrection(requestedAction)) {
     return new Response(
       JSON.stringify({
-        error: 'Only manual actions are allowed: NO_SHOW, CANCELLED_BY_SHOP, RESCHEDULE.',
+        error:
+          'Only manual actions or history corrections are allowed: COMPLETED, NO_SHOW, CANCELLED_BY_CLIENT, CANCELLED_BY_SHOP, RESCHEDULE.',
       }),
       { status: 422 },
     );
@@ -43,6 +46,38 @@ export const PATCH: APIRoute = async (ctx) => {
 
   if (!booking) {
     return new Response(JSON.stringify({ error: 'Booking not found.' }), { status: 404 });
+  }
+
+  const isHistoryCorrection =
+    isHistoryBookingCorrection(requestedAction) &&
+    canCorrectHistoryBooking({
+      status: booking.status,
+      startAt: booking.startAt,
+      endAt: booking.endAt,
+    });
+
+  if (isHistoryCorrection) {
+    const storedStatus = requestedAction === 'COMPLETED' ? 'BOOKED' : requestedAction;
+    const updated = await prisma.booking.update({
+      where: { id: booking.id },
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      data: { status: storedStatus as any },
+      select: { id: true, status: true, updatedAt: true },
+    });
+
+    return new Response(JSON.stringify({
+      booking: {
+        ...updated,
+        effectiveStatus: requestedAction,
+      },
+    }));
+  }
+
+  if (!isManualBookingAction(requestedAction)) {
+    return new Response(
+      JSON.stringify({ error: 'History status corrections are available only after the appointment has ended.' }),
+      { status: 422 },
+    );
   }
 
   const effectiveStatus = getEffectiveBookingStatus({

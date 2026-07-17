@@ -118,6 +118,18 @@ export const POST: APIRoute = async (context) => {
     const planConfig = getSetupPlan(planId);
     const baseUrl = getPublicSiteUrl();
     const attribution = pickAttribution(body.attribution);
+    const metadata = buildSetupDepositStripeMetadata(
+      planId,
+      {
+        customerName: name,
+        email,
+        shopName,
+        shopSize,
+        currentStack,
+      },
+      attribution,
+    );
+    metadata.shopId = access.shopId;
 
     const session = await createCheckoutSession({
       customerEmail: email,
@@ -131,17 +143,7 @@ export const POST: APIRoute = async (context) => {
           quantity: 1,
         },
       ],
-      metadata: buildSetupDepositStripeMetadata(
-        planId,
-        {
-          customerName: name,
-          email,
-          shopName,
-          shopSize,
-          currentStack,
-        },
-        attribution,
-      ),
+      metadata,
     });
 
     try {

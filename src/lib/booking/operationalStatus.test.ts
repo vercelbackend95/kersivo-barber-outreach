@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import {
+  canCorrectHistoryBooking,
   canCancelBookingByShop,
   canMarkBookingNoShow,
   getAllowedManualBookingActions,
@@ -136,5 +137,43 @@ describe('manual action windows', () => {
         reason: 'Unavailable now: allowed only more than 1 hour before start.',
       },
     ]);
+  });
+});
+
+describe('history status corrections', () => {
+  const startAt = '2026-05-06T15:30:00.000Z';
+  const endAt = '2026-05-06T16:15:00.000Z';
+
+  it('allows corrections once the appointment has ended', () => {
+    expect(canCorrectHistoryBooking({
+      status: 'BOOKED',
+      startAt,
+      endAt,
+      nowMs: Date.parse('2026-05-06T16:15:00.000Z'),
+    })).toBe(true);
+  });
+
+  it('rejects corrections before the appointment has ended', () => {
+    expect(canCorrectHistoryBooking({
+      status: 'BOOKED',
+      startAt,
+      endAt,
+      nowMs: Date.parse('2026-05-06T16:14:59.999Z'),
+    })).toBe(false);
+  });
+
+  it('allows changing an existing terminal correction', () => {
+    expect(canCorrectHistoryBooking({
+      status: 'NO_SHOW',
+      startAt,
+      endAt,
+      nowMs: Date.parse('2026-05-06T15:45:00.000Z'),
+    })).toBe(true);
+    expect(canCorrectHistoryBooking({
+      status: 'CANCELLED_BY_CLIENT',
+      startAt,
+      endAt,
+      nowMs: Date.parse('2026-05-06T15:45:00.000Z'),
+    })).toBe(true);
   });
 });

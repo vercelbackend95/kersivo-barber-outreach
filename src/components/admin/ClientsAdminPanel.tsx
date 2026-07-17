@@ -1,47 +1,7 @@
 import React, { useCallback, useEffect, useRef, useState } from 'react';
-
-function SearchIcon() {
-  return (
-    <svg
-      className="admin-search-bar__icon"
-      xmlns="http://www.w3.org/2000/svg"
-      width="16"
-      height="16"
-      viewBox="0 0 24 24"
-      fill="none"
-      stroke="currentColor"
-      strokeWidth="2"
-      strokeLinecap="round"
-      strokeLinejoin="round"
-      aria-hidden="true"
-    >
-      <circle cx="11" cy="11" r="8" />
-      <line x1="21" y1="21" x2="16.65" y2="16.65" />
-    </svg>
-  );
-}
-
-function ClearIcon() {
-  return (
-    <svg
-      xmlns="http://www.w3.org/2000/svg"
-      width="14"
-      height="14"
-      viewBox="0 0 24 24"
-      fill="none"
-      stroke="currentColor"
-      strokeWidth="2.5"
-      strokeLinecap="round"
-      strokeLinejoin="round"
-      aria-hidden="true"
-    >
-      <line x1="18" y1="6" x2="6" y2="18" />
-      <line x1="6" y1="6" x2="18" y2="18" />
-    </svg>
-  );
-}
 import AdminSectionHeader from './AdminSectionHeader';
 import AdminDesktopDashHeroSlot from './AdminDesktopDashHeroSlot';
+import AdminPremiumSearchBar from './AdminPremiumSearchBar';
 import ClientListAvatar from './ClientListAvatar';
 import ClientProfilePanel from './ClientProfilePanel';
 
@@ -95,13 +55,12 @@ export default function ClientsAdminPanel() {
   const debounceRef = useRef<number | null>(null);
   const inputRef = useRef<HTMLInputElement>(null);
 
-  const handleSearchChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
-    const val = e.target.value;
-    setSearch(val);
+  const handleSearchChange = useCallback((value: string) => {
+    setSearch(value);
     setIsSearching(true);
     if (debounceRef.current !== null) window.clearTimeout(debounceRef.current);
     debounceRef.current = window.setTimeout(() => {
-      setDebouncedSearch(val.trim());
+      setDebouncedSearch(value.trim());
       setIsSearching(false);
       debounceRef.current = null;
     }, DEBOUNCE_MS);
@@ -174,52 +133,24 @@ export default function ClientsAdminPanel() {
 
       <div className="admin-clients-table-wrap">
         <div className="admin-clients-search-row">
-          <div
-            className={`admin-search-bar${isSearching ? ' admin-search-bar--loading' : ''}`}
-            role="search"
-          >
-            <SearchIcon />
-
-            <input
-              ref={inputRef}
-              type="search"
-              className="admin-search-bar__input"
-              placeholder="Search by name, email or phone…"
-              value={search}
-              onChange={handleSearchChange}
-              onKeyDown={(e) => e.key === 'Escape' && handleClear()}
-              aria-label="Search clients"
-              autoComplete="off"
-              spellCheck={false}
-            />
-
-            {isSearching && (
-              <span className="admin-search-bar__spinner" aria-hidden="true" />
-            )}
-
-            {search && !isSearching && (
-              <button
-                type="button"
-                className="admin-search-bar__clear"
-                onClick={handleClear}
-                aria-label="Clear search"
-                tabIndex={0}
-              >
-                <ClearIcon />
-              </button>
-            )}
-
-            {!search && !isSearching && (
-              <kbd className="admin-search-bar__kbd">/</kbd>
-            )}
-          </div>
+          <AdminPremiumSearchBar
+            inputRef={inputRef}
+            value={search}
+            onChange={handleSearchChange}
+            onClear={handleClear}
+            onKeyDown={(e) => e.key === 'Escape' && handleClear()}
+            placeholder="Search by name, email or phone…"
+            aria-label="Search clients"
+            isLoading={isSearching}
+            showKbdHint
+            searchShortcutHint="/"
+          />
         </div>
 
         {/* Column header */}
         <div className="admin-clients-header-row" aria-hidden="true">
           <span />
           <span>Client</span>
-          <span>Phone</span>
           <span>Tags</span>
           <span>Reliability</span>
           <span>Last visit</span>
@@ -232,7 +163,6 @@ export default function ClientsAdminPanel() {
               <div key={i} className="admin-clients-skeleton-row" aria-hidden="true">
                 <span className="admin-clients-skeleton-avatar" />
                 <span className="admin-clients-skeleton-cell admin-clients-skeleton-cell--name" />
-                <span className="admin-clients-skeleton-cell" />
                 <span className="admin-clients-skeleton-cell" />
                 <span className="admin-clients-skeleton-cell admin-clients-skeleton-cell--bar" />
                 <span className="admin-clients-skeleton-cell" />
@@ -274,11 +204,7 @@ export default function ClientsAdminPanel() {
                       fullName={client.fullName || client.email}
                       avatarUrl={client.avatarUrl}
                       className="admin-clients-avatar"
-                      onAvatarChange={(clientId, nextUrl) => {
-                        setClients((previous) => previous.map((row) => (
-                          row.id === clientId ? { ...row, avatarUrl: nextUrl } : row
-                        )));
-                      }}
+                      onClick={() => setOpenClientId(client.id)}
                     />
 
                     {/* Name + email */}
@@ -286,11 +212,6 @@ export default function ClientsAdminPanel() {
                       <span className="admin-clients-name">{displayName}</span>
                       <span className="admin-clients-email">{client.email}</span>
                     </div>
-
-                    {/* Phone */}
-                    <span className="admin-clients-phone">
-                      {client.phone || '—'}
-                    </span>
 
                     {/* Tags */}
                     <div className="admin-clients-tags">
@@ -328,7 +249,7 @@ export default function ClientsAdminPanel() {
 
                     {/* Total spent */}
                     <span className="admin-clients-spent">
-                      {client.totalSpentPence > 0 ? formatPence(client.totalSpentPence) : '—'}
+                      {formatPence(client.totalSpentPence)}
                     </span>
                   </div>
                 </li>

@@ -4,6 +4,8 @@ export const prerender = false;
 import type { APIRoute } from 'astro';
 import { fromZonedTime, formatInTimeZone } from 'date-fns-tz';
 import { requireAdminContext } from '../../../../../lib/admin/auth';
+import { shouldIncludeTestActivityInAnalytics } from '../../../../../lib/admin/analyticsMode';
+import { orderAnalyticsWhere } from '../../../../../lib/booking/sandboxBookings';
 import { prisma } from '../../../../../lib/db/client';
 import { toLondonDateBucket } from '../../../../../lib/time/londonDateBucket';
 
@@ -111,7 +113,8 @@ async function buildSalesResponse(
   fromYmd: string,
   toYmd: string,
   productIds: string[],
-  includeOverall: boolean
+  includeOverall: boolean,
+  includeTestActivity: boolean
 ): Promise<Response> {
   const dayBuckets = listDays(fromYmd, toYmd);
   const { start: fromUtc } = dayRangeUtc(fromYmd);
@@ -120,7 +123,7 @@ async function buildSalesResponse(
   const orders = await prisma.order.findMany({
     where: {
       shopId,
-      isTestOrder: false,
+      ...orderAnalyticsWhere(includeTestActivity),
       status: { in: [...PAID_STATUSES] },
       paidAt: {
         gte: fromUtc,
@@ -260,8 +263,9 @@ export const GET: APIRoute = async (ctx) => {
     const range = getDateRange(ctx.url.searchParams);
     const productIds = parseProductIds(ctx.url.searchParams);
     const includeOverall = ctx.url.searchParams.get('includeOverall') !== 'false';
+    const includeTestActivity = await shouldIncludeTestActivityInAnalytics(shopId);
 
-    return await buildSalesResponse(shopId, range.from, range.to, productIds, includeOverall);
+    return await buildSalesResponse(shopId, range.from, range.to, productIds, includeOverall, includeTestActivity);
   } catch (error) {
     console.error('Failed to load sales analytics', error);
     const isRangeError = error instanceof Error && error.message.startsWith('Invalid date range');

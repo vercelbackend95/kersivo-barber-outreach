@@ -166,7 +166,11 @@ export function getDemoCatalogProducts(options?: { activeOnly?: boolean }): Demo
   const products = activeOnly
     ? DEMO_CATALOG_PRODUCTS.filter((product) => product.active)
     : [...DEMO_CATALOG_PRODUCTS];
-  return products.sort((a, b) => a.sortOrder - b.sortOrder || a.name.localeCompare(b.name));
+  return products.sort((a, b) =>
+    Number(b.featured) - Number(a.featured) ||
+    a.sortOrder - b.sortOrder ||
+    a.name.localeCompare(b.name)
+  );
 }
 
 export function getDemoCatalogProductById(id: string): DemoCatalogProduct | null {

@@ -1,5 +1,6 @@
 import React, { type ReactNode, type RefObject } from 'react';
 import { X } from '../lucide-react';
+import AdminPremiumSearchBar from './AdminPremiumSearchBar';
 
 export type AdminBookingsOpsSearchBooking = {
   id: string;
@@ -177,62 +178,30 @@ export default function AdminBookingsOpsSearch({
     </>
   );
 
-  const compactInner = (
-    <div className={searchWrapClass}>
-      <div
-        className={`admin-search-field admin-search-field--premium admin-search-bar${clientSearchQuery ? ' admin-search-field--has-clear' : ''}${searchResultsLabel ? ' admin-search-field--has-feedback' : ''}`}
-        role="search"
-      >
-        <svg
-          className="admin-search-bar__icon"
-          xmlns="http://www.w3.org/2000/svg"
-          width="16"
-          height="16"
-          viewBox="0 0 24 24"
-          fill="none"
-          stroke="currentColor"
-          strokeWidth="2"
-          strokeLinecap="round"
-          strokeLinejoin="round"
-          aria-hidden="true"
-        >
-          <circle cx="11" cy="11" r="8" />
-          <line x1="21" y1="21" x2="16.65" y2="16.65" />
-        </svg>
-        <input
-          ref={searchInputRef}
-          type="search"
-          className="admin-search-bar__input"
-          value={clientSearchQuery}
-          onChange={(event) => onClientSearchQueryChange(event.target.value)}
-          onKeyDown={handleKeyDown}
-          placeholder={placeholder}
-          {...inputAriaProps}
-        />
-        {searchResultsLabel ? (
-          <span className="admin-search-feedback admin-search-feedback--premium" aria-live="polite">
-            {searchResultsLabel}
-          </span>
-        ) : null}
-        {clientSearchQuery ? (
-          <button type="button" className="admin-search-bar__clear" onClick={onClearSearch} aria-label="Clear search">
-            <X width={14} height={14} aria-hidden="true" />
-          </button>
-        ) : null}
-        {!clientSearchQuery && !searchResultsLabel && showKbdHint ? (
-          <kbd className="admin-search-bar__kbd">
-            <span className="sr-only">Keyboard shortcut to focus search</span>
-            {searchShortcutHint}
-          </kbd>
-        ) : null}
-        {searchResults}
-      </div>
-    </div>
-  );
-
   if (variant === 'standard') {
     return <div className="admin-bookings-ops-search admin-bookings-ops-search--dashboard">{standardInner}</div>;
   }
 
-  return compactInner;
+  return (
+    <AdminPremiumSearchBar
+      inputRef={searchInputRef}
+      value={clientSearchQuery}
+      onChange={onClientSearchQueryChange}
+      onClear={onClearSearch}
+      onKeyDown={handleKeyDown}
+      placeholder={placeholder}
+      aria-label={inputAriaProps['aria-label']}
+      resultsLabel={searchResultsLabel || undefined}
+      showKbdHint={showKbdHint}
+      searchShortcutHint={searchShortcutHint}
+      inputProps={{
+        'aria-controls': inputAriaProps['aria-controls'],
+        'aria-expanded': inputAriaProps['aria-expanded'],
+        'aria-busy': inputAriaProps['aria-busy'],
+        'aria-activedescendant': inputAriaProps['aria-activedescendant'],
+      }}
+    >
+      {searchResults}
+    </AdminPremiumSearchBar>
+  );
 }

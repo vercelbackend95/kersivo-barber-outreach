@@ -16,6 +16,8 @@ type BarberBlocksEditorProps = {
   errorMessage: string;
   onCreate: (payload: CreatePayload) => void;
   onDelete: (blockId: string) => void;
+  /** When `profile`, hide outer panel chrome / duplicate titles (parent provides section header). */
+  layout?: 'default' | 'profile';
 };
 const ADMIN_TIMEZONE = 'Europe/London';
 
@@ -136,7 +138,8 @@ export default function BarberBlocksEditor({
   successMessage,
   errorMessage,
   onCreate,
-  onDelete
+  onDelete,
+  layout = 'default',
 }: BarberBlocksEditorProps) {
   const [activeCreateMode, setActiveCreateMode] = React.useState<'break' | 'vacation'>('break');
   const [breakStartInput, setBreakStartInput] = React.useState(() => toLocalInputValue(roundUpToQuarter(new Date())));
@@ -213,10 +216,16 @@ export default function BarberBlocksEditor({
   }
 
 
+  const isProfileLayout = layout === 'profile';
+
   return (
-    <section className="admin-settings-panel">
-      <h3>TIME OFF</h3>
-      <p className="muted">Manage unavailable time for this barber.</p>
+    <section className={isProfileLayout ? 'admin-timeoff-editor--profile' : 'admin-settings-panel'}>
+      {isProfileLayout ? null : (
+        <>
+          <h3>TIME OFF</h3>
+          <p className="muted">Manage unavailable time for this barber.</p>
+        </>
+      )}
 
       <div className="admin-timeoff-card">
         <header className="admin-timeoff-header-row admin-timeoff-header-shell">

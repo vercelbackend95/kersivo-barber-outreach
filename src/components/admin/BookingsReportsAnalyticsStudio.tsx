@@ -284,6 +284,7 @@ const BookingsReportsAnalyticsStudio = forwardRef<HTMLElement, BookingsReportsAn
     const bookingsDelta = formatDelta({
       value: reports?.trends.bookingsPct ?? null,
       type: 'percent',
+      valueType: 'count',
       tone: 'higher_better',
       currentValue: reports?.bookingsCount,
       previousValue: reports?.previousMetrics.bookingsCount,
@@ -291,6 +292,7 @@ const BookingsReportsAnalyticsStudio = forwardRef<HTMLElement, BookingsReportsAn
     const revenueDelta = formatDelta({
       value: reports?.trends.revenuePct ?? null,
       type: 'percent',
+      valueType: 'currency',
       tone: 'higher_better',
       currentValue: reports?.revenue,
       previousValue: reports?.previousMetrics.revenue,
@@ -298,6 +300,7 @@ const BookingsReportsAnalyticsStudio = forwardRef<HTMLElement, BookingsReportsAn
     const cancelledDelta = formatDelta({
       value: reports?.trends.cancelledRatePp ?? null,
       type: 'pp',
+      valueType: 'pp',
       tone: 'lower_better',
       currentValue: reports?.cancelledRate,
       previousValue: reports?.previousMetrics.cancelledRate,
@@ -339,10 +342,16 @@ const BookingsReportsAnalyticsStudio = forwardRef<HTMLElement, BookingsReportsAn
             className="admin-reports-studio-toolbar__metric"
           />
         )}
-        headlineValue={reportsLoading && !reports ? '—' : reportsHeroValue}
+        headlineValue={
+          reportsLoading && !reports
+            ? <span className="admin-analytics-studio__headline-skeleton" aria-hidden="true" />
+            : reportsHeroValue
+        }
         headlineDelta={
           reports ? (
-            <span className={`admin-kpi-trend ${reportsHeroDelta.className}`}>{reportsHeroDelta.text}</span>
+            <span className={`admin-kpi-trend admin-analytics-studio__headline-delta ${reportsHeroDelta.className}`}>
+              {reportsHeroDelta.text}
+            </span>
           ) : null
         }
         chart={(

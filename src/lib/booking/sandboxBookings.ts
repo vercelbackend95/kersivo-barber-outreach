@@ -21,3 +21,11 @@ export const excludeSandboxBookingsWhere = {
     ],
   },
 } as const;
+
+export function bookingAnalyticsWhere(includeTestActivity: boolean) {
+  return includeTestActivity ? {} : excludeSandboxBookingsWhere;
+}
+
+export function orderAnalyticsWhere(includeTestActivity: boolean) {
+  return includeTestActivity ? {} : { isTestOrder: false };
+}

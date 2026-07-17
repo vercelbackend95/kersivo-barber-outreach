@@ -16,6 +16,8 @@ type BarberWorkingHoursEditorProps = {
   subtitle?: string;
   /** Overrides default helper under the header row. */
   helperText?: string;
+  /** When `profile`, hide outer panel chrome / duplicate titles (parent provides section header). */
+  layout?: 'default' | 'profile';
 };
 
 const AUTO_SAVE_DELAY_MS = 600;
@@ -82,7 +84,8 @@ export default function BarberWorkingHoursEditor({
   onSave,
   persistToServer = true,
   subtitle,
-  helperText
+  helperText,
+  layout = 'default',
 }: BarberWorkingHoursEditorProps) {
   const [expandedDayIndex, setExpandedDayIndex] = React.useState<number | null>(null);
   const [draftDay, setDraftDay] = React.useState<WorkingHourRow | null>(null);
@@ -197,35 +200,48 @@ export default function BarberWorkingHoursEditor({
   }, [saveError, saveStatus]);
 
 
+  const isProfileLayout = layout === 'profile';
+
   return (
-    <section className="admin-settings-panel">
-      <div className="working-hours-shell">
-        <header className="working-hours-header-row">
-          <div className="working-hours-header-row__title">
-            <h3>Working hours</h3>
-            <p className="working-hours-subtitle">
-              {subtitle ?? 'Weekly operating schedule with per-day quick edit.'}
-            </p>
-          </div>
+    <section className={isProfileLayout ? 'working-hours-editor--profile' : 'admin-settings-panel'}>
+      {isProfileLayout ? (
+        <div className="working-hours-shell working-hours-shell--profile">
           <p className="working-hours-weekly-summary" aria-live="polite">
             {weeklySummary}
           </p>
-          <div className="working-hours-metrics" aria-hidden="true">
-            <span className="working-hours-metric">
-              <strong>{weeklyMetrics.onShiftDays}</strong>
-              <span>on-shift days</span>
-            </span>
-            <span className="working-hours-metric">
-              <strong>{weeklyMetrics.hoursPerWeek}</strong>
-              <span>this week</span>
-            </span>
-          </div>
-        </header>
-        <p className="muted working-hours-helper">
-          {helperText ?? 'Tap any day to change shift status and hours.'}
-        </p>
-        <div className="working-hours-divider" aria-hidden="true" />
-      </div>
+          <p className="muted working-hours-helper">
+            {helperText ?? 'Tap any day to change shift status and hours.'}
+          </p>
+        </div>
+      ) : (
+        <div className="working-hours-shell">
+          <header className="working-hours-header-row">
+            <div className="working-hours-header-row__title">
+              <h3>Working hours</h3>
+              <p className="working-hours-subtitle">
+                {subtitle ?? 'Weekly operating schedule with per-day quick edit.'}
+              </p>
+            </div>
+            <p className="working-hours-weekly-summary" aria-live="polite">
+              {weeklySummary}
+            </p>
+            <div className="working-hours-metrics" aria-hidden="true">
+              <span className="working-hours-metric">
+                <strong>{weeklyMetrics.onShiftDays}</strong>
+                <span>on-shift days</span>
+              </span>
+              <span className="working-hours-metric">
+                <strong>{weeklyMetrics.hoursPerWeek}</strong>
+                <span>this week</span>
+              </span>
+            </div>
+          </header>
+          <p className="muted working-hours-helper">
+            {helperText ?? 'Tap any day to change shift status and hours.'}
+          </p>
+          <div className="working-hours-divider" aria-hidden="true" />
+        </div>
+      )}
 
       <WorkingHoursOverview
         weekDays={weekDays}

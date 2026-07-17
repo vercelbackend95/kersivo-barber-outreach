@@ -1,15 +1,19 @@
 import React from 'react';
+import { createPortal } from 'react-dom';
+import { Calendar, Clock, Mail, Scissors, X } from '../lucide-react';
 import BarberServicesEditor from './BarberServicesEditor';
 import BarberWorkingHoursEditor from './BarberWorkingHoursEditor';
 import BarberBlocksEditor from './BarberBlocksEditor';
+import BarberWizard from './barber-wizard/BarberWizard';
+import AdminWizardSheetLayer from './AdminWizardSheetLayer';
 import type { Barber, ServiceOption, TimeBlock, WorkingHourRow } from './barbersTypes';
 import StatusBadge from './StatusBadge';
+import { SettingsGearIcon } from './SettingsGearIcon';
 
 type BarberProfileProps = {
   barber: Barber;
-    barberAvatarPreviewUrl: string | null;
+  barberAvatarPreviewUrl: string | null;
   barberSaving: boolean;
-
   weekDays: string[];
   isActive: boolean;
   totalBookingsServed: number;
@@ -23,11 +27,10 @@ type BarberProfileProps = {
   blockSuccessMessage: string;
   blockErrorMessage: string;
   getInitials: (name: string) => string;
-  onBack: () => void;
-  backAriaLabel?: string;
-    onBarberAvatarChange: (file: File | null) => void;
+  onClose: () => void;
+  onBarberUpdated: () => void | Promise<void>;
+  onBarberAvatarChange: (file: File | null) => void;
   onSaveAvatar: () => void;
-
   onToggleActive: () => void;
   onToggleService: (serviceId: string, enabled: boolean) => void;
   barberSaveMessage: string;
@@ -41,9 +44,8 @@ type BarberProfileProps = {
 
 export default function BarberProfile({
   barber,
-    barberAvatarPreviewUrl,
+  barberAvatarPreviewUrl,
   barberSaving,
-
   weekDays,
   isActive,
   totalBookingsServed,
@@ -57,11 +59,10 @@ export default function BarberProfile({
   blockSuccessMessage,
   blockErrorMessage,
   getInitials,
-  onBack,
-  backAriaLabel = 'Back to list',
-    onBarberAvatarChange,
+  onClose,
+  onBarberUpdated,
+  onBarberAvatarChange,
   onSaveAvatar,
-
   onToggleActive,
   onToggleService,
   barberSaveMessage,
@@ -69,11 +70,12 @@ export default function BarberProfile({
   onSetWorkingHours,
   onSaveWorkingHours,
   onCreateBlock,
-    onDeleteBlock,
-  onDeleteBarber
+  onDeleteBlock,
+  onDeleteBarber,
 }: BarberProfileProps) {
-    const actionsMenuRef = React.useRef<HTMLDivElement | null>(null);
+  const actionsMenuRef = React.useRef<HTMLDivElement | null>(null);
   const [isActionsMenuOpen, setIsActionsMenuOpen] = React.useState(false);
+  const [isEditWizardOpen, setIsEditWizardOpen] = React.useState(false);
   const [confirmAction, setConfirmAction] = React.useState<'toggle' | 'delete' | null>(null);
   const confirmDialogRef = React.useRef<HTMLDivElement | null>(null);
   const cancelButtonRef = React.useRef<HTMLButtonElement | null>(null);
@@ -82,6 +84,7 @@ export default function BarberProfile({
   const selectedServicesCount = enabledServiceIds.size;
   const totalServicesCount = services.length;
   const workingDaysCount = workingHours.filter((hour) => hour.active).length;
+  const barberEmail = barber.email ?? null;
 
   const nextBlockLabel = React.useMemo(() => {
     const now = Date.now();
@@ -90,15 +93,18 @@ export default function BarberProfile({
       .filter((block) => Number.isFinite(block.startMs) && block.startMs >= now)
       .sort((a, b) => a.startMs - b.startMs)[0];
 
-    if (!nextBlock) return 'none';
+    if (!nextBlock) return 'None';
 
     return new Intl.DateTimeFormat('en-GB', {
       weekday: 'short',
       hour: '2-digit',
       minute: '2-digit',
-      hour12: false
-    }).format(new Date(nextBlock.startAt)).replace(',', '');
+      hour12: false,
+    })
+      .format(new Date(nextBlock.startAt))
+      .replace(',', '');
   }, [blocks]);
+
   React.useEffect(() => {
     if (!isActionsMenuOpen) return;
 
@@ -164,16 +170,49 @@ export default function BarberProfile({
       }
     };
 
-    document.body.style.overflow = 'hidden';
     document.addEventListener('keydown', handleKeyDown);
 
     return () => {
       window.clearTimeout(focusCancel);
-      document.body.style.overflow = '';
       document.removeEventListener('keydown', handleKeyDown);
       previouslyFocused?.focus();
     };
   }, [isConfirmDialogOpen]);
+
+  React.useEffect(() => {
+    const previousBodyOverflow = document.body.style.overflow;
+    const previousHtmlOverflow = document.documentElement.style.overflow;
+    document.body.style.overflow = 'hidden';
+    document.documentElement.style.overflow = 'hidden';
+    return () => {
+      document.body.style.overflow = previousBodyOverflow;
+      document.documentElement.style.overflow = previousHtmlOverflow;
+    };
+  }, []);
+
+  React.useEffect(() => {
+    const onKey = (event: KeyboardEvent) => {
+      if (event.key !== 'Escape') return;
+      if (isConfirmDialogOpen) return;
+      if (isActionsMenuOpen) return;
+      if (isEditWizardOpen) {
+        event.preventDefault();
+        setIsEditWizardOpen(false);
+        return;
+      }
+      onClose();
+    };
+    document.addEventListener('keydown', onKey);
+    return () => document.removeEventListener('keydown', onKey);
+  }, [isActionsMenuOpen, isConfirmDialogOpen, isEditWizardOpen, onClose]);
+
+  const closeEditWizard = React.useCallback(() => {
+    setIsEditWizardOpen(false);
+  }, []);
+
+  const handleEditWizardSaved = React.useCallback(async () => {
+    await onBarberUpdated();
+  }, [onBarberUpdated]);
 
   const actionLabel = isActive ? 'Deactivate' : 'Reactivate';
   const hasAvatarPreview = Boolean(barberAvatarPreviewUrl);
@@ -185,54 +224,47 @@ export default function BarberProfile({
       ? 'Deactivate barber?'
       : 'Reactivate barber?';
   const confirmActionLabel = isDeleteConfirm
-    ? (barberSaving ? 'Deleting...' : 'Delete')
+    ? barberSaving
+      ? 'Deleting...'
+      : 'Delete'
     : actionLabel;
+
   const openAvatarPicker = React.useCallback(() => {
     avatarInputRef.current?.click();
   }, []);
 
-
-
-  return (
-    <section className="admin-quick-blocks">
-      <header className="admin-barber-profile-top" aria-label="Barber profile header">
-        <div className="admin-barber-profile-nav">
-          <div className="admin-barber-profile-title-wrap" title={barber.name}>
-            <div className="admin-barber-profile-avatar-wrap">
-              <div className="admin-barber-avatar admin-barber-avatar--tiny">
-                {displayedAvatarUrl ? (
-                  <img src={displayedAvatarUrl} alt={barber.name} loading="lazy" />
-                ) : (
-                  <span>{getInitials(barber.name)}</span>
-                )}
-              </div>
-              <button
-                type="button"
-                className="admin-barber-avatar-overlay-action"
-                aria-label={displayedAvatarUrl ? 'Change avatar' : 'Upload avatar'}
-                title={displayedAvatarUrl ? 'Change avatar' : 'Upload avatar'}
-                onClick={openAvatarPicker}
-                disabled={barberSaving}
-              >
-                <span aria-hidden="true">
-                  <svg viewBox="0 0 24 24" focusable="false">
-                    <path d="M6 7.5A2.5 2.5 0 0 1 8.5 5h1.2a2 2 0 0 0 1.6-.8l.3-.4A2 2 0 0 1 13.2 3h1.3A2.5 2.5 0 0 1 17 5.5V6h.8A2.2 2.2 0 0 1 20 8.2v8.6a2.2 2.2 0 0 1-2.2 2.2H6.2A2.2 2.2 0 0 1 4 16.8V8.2A2.2 2.2 0 0 1 6.2 6H6v1.5Zm6 9.5a4 4 0 1 0 0-8 4 4 0 0 0 0 8Zm0-1.8a2.2 2.2 0 1 1 0-4.4 2.2 2.2 0 0 1 0 4.4Z" />
-                  </svg>
-                </span>
-              </button>
-            </div>
-            <h3 className="admin-barber-profile-title">{barber.name}</h3>
-          </div>
-                    <div className="admin-barber-profile-nav-actions">
-            <button type="button" className="admin-barber-nav-icon-btn" onClick={onBack} aria-label={backAriaLabel}>
-              <span aria-hidden="true">←</span>
+  const panel = (
+    <div
+      className="admin-cp-backdrop"
+      onClick={() => {
+        if (isEditWizardOpen) return;
+        onClose();
+      }}
+      role="dialog"
+      aria-modal="true"
+      aria-labelledby="admin-barber-profile-title"
+    >
+      <div className="admin-cp-panel" onClick={(event) => event.stopPropagation()}>
+        <div className="admin-cp-header">
+          <span id="admin-barber-profile-title" className="admin-cp-header-title">
+            Barber profile
+          </span>
+          <div className="admin-cp-header-actions">
+            <button
+              type="button"
+              className="admin-cp-settings-btn"
+              aria-label="Edit barber"
+              title="Edit barber"
+              onClick={() => setIsEditWizardOpen(true)}
+              disabled={workingHoursLoading}
+            >
+              <SettingsGearIcon className="admin-cp-settings-icon" />
             </button>
-
 
             <div className="admin-barber-actions-menu" ref={actionsMenuRef}>
               <button
                 type="button"
-                className={`admin-barber-nav-icon-btn ${isActionsMenuOpen ? 'is-open' : ''}`}
+                className={`admin-cp-more-btn${isActionsMenuOpen ? ' is-open' : ''}`}
                 onClick={() => setIsActionsMenuOpen((current) => !current)}
                 aria-haspopup="menu"
                 aria-expanded={isActionsMenuOpen}
@@ -241,7 +273,6 @@ export default function BarberProfile({
               >
                 <span aria-hidden="true">⋯</span>
               </button>
-
 
               {isActionsMenuOpen ? (
                 <div className="admin-barber-actions-dropdown" role="menu" aria-label="Barber actions">
@@ -272,55 +303,160 @@ export default function BarberProfile({
                 </div>
               ) : null}
             </div>
-          </div>
-      </div>
-              <p className="admin-barber-status-line">
-          <StatusBadge status={isActive ? 'ACTIVE' : 'INACTIVE'} variant="dot" size="sm" />
-        </p>
-        <div className="admin-barber-avatar-editor">
-          <input
-            ref={avatarInputRef}
-            id="admin-barber-avatar-input"
-            type="file"
-            accept="image/jpeg,image/png,image/webp"
-            className="admin-barber-avatar-input"
-            onChange={(event) => onBarberAvatarChange(event.target.files?.[0] ?? null)}
-          />
-          {hasAvatarPreview ? (
-            <button
-              type="button"
-              className="btn btn--primary"
-              onClick={onSaveAvatar}
-              disabled={barberSaving}
-            >
-              {barberSaving ? 'Saving...' : 'Save avatar'}
+
+            <button type="button" className="admin-cp-close-btn" onClick={onClose} aria-label="Close">
+              <X className="admin-cp-close-icon" aria-hidden />
             </button>
-          ) : null}
+          </div>
         </div>
 
+        <div className="admin-cp-body">
+          {barberSaveMessage ? (
+            <p className="admin-cp-success admin-cp-success--inline" role="status" aria-live="polite">
+              {barberSaveMessage}
+            </p>
+          ) : null}
+          {barberSaveError ? (
+            <p className="admin-cp-error admin-cp-error--inline" role="alert">
+              {barberSaveError}
+            </p>
+          ) : null}
 
-        <p className="admin-barber-status-meta-line">
-          <span aria-hidden="true">•</span>
-          <span>Total served: {totalBookingsServed}</span>
-          <span aria-hidden="true">•</span>
-          <span>Services: {selectedServicesCount}/{totalServicesCount}</span>
-          <span aria-hidden="true">•</span>
-          <span>Working days: {workingDaysCount}/7</span>
-          <span aria-hidden="true">•</span>
-          <span>Next time off: {nextBlockLabel}</span>
-        </p>
-      </header>
+          <div className="admin-cp-identity">
+            <div className="admin-cp-avatar-wrap">
+              <div className="admin-cp-avatar" aria-hidden="true">
+                {displayedAvatarUrl ? (
+                  <img src={displayedAvatarUrl} alt="" className="admin-cp-avatar-img" loading="lazy" />
+                ) : (
+                  <span className="admin-cp-avatar-initials">{getInitials(barber.name)}</span>
+                )}
+              </div>
+              <button
+                type="button"
+                className="admin-cp-avatar-overlay-action"
+                aria-label={displayedAvatarUrl ? 'Change avatar' : 'Upload avatar'}
+                title={displayedAvatarUrl ? 'Change avatar' : 'Upload avatar'}
+                onClick={openAvatarPicker}
+                disabled={barberSaving}
+              >
+                <span aria-hidden="true">
+                  <svg viewBox="0 0 24 24" focusable="false">
+                    <path d="M6 7.5A2.5 2.5 0 0 1 8.5 5h1.2a2 2 0 0 0 1.6-.8l.3-.4A2 2 0 0 1 13.2 3h1.3A2.5 2.5 0 0 1 17 5.5V6h.8A2.2 2.2 0 0 1 20 8.2v8.6a2.2 2.2 0 0 1-2.2 2.2H6.2A2.2 2.2 0 0 1 4 16.8V8.2A2.2 2.2 0 0 1 6.2 6H6v1.5Zm6 9.5a4 4 0 1 0 0-8 4 4 0 0 0 0 8Zm0-1.8a2.2 2.2 0 1 1 0-4.4 2.2 2.2 0 0 1 0 4.4Z" />
+                  </svg>
+                </span>
+              </button>
+              <input
+                ref={avatarInputRef}
+                id="admin-barber-avatar-input"
+                type="file"
+                accept="image/jpeg,image/png,image/webp"
+                className="admin-cp-avatar-input"
+                onChange={(event) => onBarberAvatarChange(event.target.files?.[0] ?? null)}
+                tabIndex={-1}
+                aria-hidden="true"
+              />
+            </div>
 
-      {barberSaveMessage ? (
-        <p className="admin-inline-success" role="status" aria-live="polite">
-          {barberSaveMessage}
-        </p>
-      ) : null}
-      {barberSaveError ? (
-        <p className="admin-inline-error" role="alert">
-          {barberSaveError}
-        </p>
-      ) : null}
+            <div className="admin-cp-identity-info">
+              <p className="admin-cp-full-name">{barber.name}</p>
+              {barberEmail ? (
+                <a className="admin-cp-contact-row" href={`mailto:${barberEmail}`}>
+                  <Mail className="admin-cp-contact-icon" aria-hidden />
+                  {barberEmail}
+                </a>
+              ) : null}
+              <div className="admin-cp-status-pill">
+                <StatusBadge status={isActive ? 'ACTIVE' : 'INACTIVE'} variant="dot" size="sm" />
+              </div>
+              {hasAvatarPreview ? (
+                <button
+                  type="button"
+                  className="btn btn--primary admin-cp-avatar-save-btn"
+                  onClick={onSaveAvatar}
+                  disabled={barberSaving}
+                >
+                  {barberSaving ? 'Saving...' : 'Save avatar'}
+                </button>
+              ) : null}
+            </div>
+          </div>
+
+          <div className="admin-cp-stats-section">
+            <div className="admin-cp-section-header">
+              <span className="admin-cp-section-title">Stats</span>
+            </div>
+            <dl className="admin-cp-stats-grid">
+              <div className="admin-cp-stat">
+                <dt>Total served</dt>
+                <dd>{totalBookingsServed}</dd>
+              </div>
+              <div className="admin-cp-stat">
+                <dt>Services</dt>
+                <dd>
+                  {selectedServicesCount}/{totalServicesCount}
+                </dd>
+              </div>
+              <div className="admin-cp-stat">
+                <dt>Working days</dt>
+                <dd>{workingDaysCount}/7</dd>
+              </div>
+              <div className="admin-cp-stat">
+                <dt>Next time off</dt>
+                <dd>{nextBlockLabel}</dd>
+              </div>
+            </dl>
+          </div>
+
+          <div className="admin-cp-section admin-cp-section--profile-editor">
+            <div className="admin-cp-section-header">
+              <Scissors className="admin-cp-section-icon" aria-hidden />
+              <span className="admin-cp-section-title">Services</span>
+            </div>
+            <p className="admin-cp-section-copy">Choose what clients can book with {barber.name}.</p>
+            <BarberServicesEditor
+              barberName={barber.name}
+              services={services}
+              enabledServiceIds={enabledServiceIds}
+              servicesSaving={servicesSaving}
+              onToggleService={onToggleService}
+              layout="profile"
+            />
+          </div>
+
+          <div className="admin-cp-section admin-cp-section--profile-editor">
+            <div className="admin-cp-section-header">
+              <Clock className="admin-cp-section-icon" aria-hidden />
+              <span className="admin-cp-section-title">Working hours</span>
+            </div>
+            <BarberWorkingHoursEditor
+              weekDays={weekDays}
+              workingHours={workingHours}
+              loading={workingHoursLoading}
+              saving={workingHoursSaving}
+              saveError={barberSaveError}
+              onSetWorkingHours={onSetWorkingHours}
+              onSave={onSaveWorkingHours}
+              layout="profile"
+            />
+          </div>
+
+          <div className="admin-cp-section admin-cp-section--profile-editor">
+            <div className="admin-cp-section-header">
+              <Calendar className="admin-cp-section-icon" aria-hidden />
+              <span className="admin-cp-section-title">Time off</span>
+            </div>
+            <BarberBlocksEditor
+              barberName={barber.name}
+              blocks={blocks}
+              successMessage={blockSuccessMessage}
+              errorMessage={blockErrorMessage}
+              onCreate={onCreateBlock}
+              onDelete={onDeleteBlock}
+              layout="profile"
+            />
+          </div>
+        </div>
+      </div>
 
       {isConfirmDialogOpen ? (
         <div className="admin-barber-confirm-layer" role="presentation">
@@ -337,6 +473,7 @@ export default function BarberProfile({
             aria-modal="true"
             aria-labelledby="barber-confirm-title"
             aria-describedby="barber-confirm-description"
+            onClick={(event) => event.stopPropagation()}
           >
             <h3 id="barber-confirm-title" className="admin-barber-confirm-title">
               {confirmTitle}
@@ -388,34 +525,35 @@ export default function BarberProfile({
           </div>
         </div>
       ) : null}
+    </div>
+  );
 
-
-      <BarberServicesEditor
-        barberName={barber.name}
-        services={services}
-        enabledServiceIds={enabledServiceIds}
-        servicesSaving={servicesSaving}
-        onToggleService={onToggleService}
-      />
-
-      <BarberWorkingHoursEditor
-        weekDays={weekDays}
-        workingHours={workingHours}
-        loading={workingHoursLoading}
-        saving={workingHoursSaving}
-        saveError={barberSaveError}
-        onSetWorkingHours={onSetWorkingHours}
-        onSave={onSaveWorkingHours}
-      />
-
-      <BarberBlocksEditor
-        barberName={barber.name}
-        blocks={blocks}
-        successMessage={blockSuccessMessage}
-        errorMessage={blockErrorMessage}
-        onCreate={onCreateBlock}
-        onDelete={onDeleteBlock}
-      />
-    </section>
+  return (
+    <>
+      {createPortal(panel, document.body)}
+      <AdminWizardSheetLayer
+        open={isEditWizardOpen}
+        onDismiss={closeEditWizard}
+        ariaLabelledBy="admin-barber-form-title"
+        className="admin-barber-sheet-layer--over-profile"
+      >
+        <BarberWizard
+          key={barber.id}
+          mode="edit"
+          barberId={barber.id}
+          services={services}
+          weekDays={weekDays}
+          initialName={barber.name}
+          initialServiceIds={[...enabledServiceIds]}
+          initialAvatarUrl={barber.avatarUrl ?? null}
+          initialIsActive={isActive}
+          initialWorkingHours={workingHours}
+          onCancel={closeEditWizard}
+          onSaved={async () => {
+            await handleEditWizardSaved();
+          }}
+        />
+      </AdminWizardSheetLayer>
+    </>
   );
 }

@@ -108,10 +108,77 @@ describe('buildBarberSeries', () => {
 });
 
 describe('buildOverallSeries', () => {
-  it('converts overall revenue to pence', () => {
+  it('buckets overall revenue from bookings in pence', () => {
     const series = buildOverallSeries(sampleReports, 'revenue');
-    expect(series[0].value).toBe(10000);
-    expect(series[1].value).toBe(5000);
+    expect(series).toEqual([
+      { label: '2026-07-03', value: 10000 },
+      { label: '2026-07-04', value: 5000 },
+      { label: '2026-07-05', value: 2000 },
+    ]);
+  });
+
+  it('ignores inflated API revenueSeries so Overall matches barber sum', () => {
+    const inflated: ReportsChartInput = {
+      ...sampleReports,
+      revenueSeries: [
+        { label: '2026-07-03', value: 7074 },
+        { label: '2026-07-04', value: 100 },
+        { label: '2026-07-05', value: 50 },
+      ],
+    };
+
+    const overall = buildOverallSeries(inflated, 'revenue');
+    const barber1 = buildBarberSeries(inflated, 'b1', 'revenue');
+    const barber2 = buildBarberSeries(inflated, 'b2', 'revenue');
+
+    expect(overall).toEqual([
+      { label: '2026-07-03', value: 10000 },
+      { label: '2026-07-04', value: 5000 },
+      { label: '2026-07-05', value: 2000 },
+    ]);
+
+    for (let i = 0; i < overall.length; i += 1) {
+      expect(overall[i].value).toBe(barber1[i].value + barber2[i].value);
+    }
+  });
+
+  it('excludes EXPIRED from cancel rate so chart matches KPI cancelled rate', () => {
+    const reports: ReportsChartInput = {
+      revenueSeries: [
+        { label: '2026-07-03', value: 0 },
+        { label: '2026-07-04', value: 0 },
+      ],
+      reportBookings: [
+        {
+          startAt: '2026-07-03T10:00:00.000Z',
+          barberId: 'b1',
+          barberName: 'Alex',
+          status: 'CANCELLED_BY_CLIENT',
+          computedValueGbp: null,
+        },
+        {
+          startAt: '2026-07-03T11:00:00.000Z',
+          barberId: 'b1',
+          barberName: 'Alex',
+          status: 'EXPIRED',
+          computedValueGbp: null,
+        },
+        {
+          startAt: '2026-07-04T10:00:00.000Z',
+          barberId: 'b1',
+          barberName: 'Alex',
+          status: 'COMPLETED',
+          computedValueGbp: 20,
+        },
+      ],
+    };
+
+    // 1 cancel of 3 bookings on day1+day2 combined per-day rates:
+    // day1: 1/2 = 50%, day2: 0/1 = 0%
+    expect(buildOverallSeries(reports, 'cancelRate')).toEqual([
+      { label: '2026-07-03', value: 50 },
+      { label: '2026-07-04', value: 0 },
+    ]);
   });
 
   it('builds cumulative bookings for hourly labels', () => {
@@ -153,6 +220,12 @@ describe('buildOverallSeries', () => {
     ]);
 
     expect(buildBarberSeries(hourlyReports, 'b1', 'revenue')).toEqual([
+      { label: '09:00', value: 4000 },
+      { label: '10:00', value: 9000 },
+      { label: '11:00', value: 9000 },
+    ]);
+
+    expect(buildOverallSeries(hourlyReports, 'revenue')).toEqual([
       { label: '09:00', value: 4000 },
       { label: '10:00', value: 9000 },
       { label: '11:00', value: 9000 },

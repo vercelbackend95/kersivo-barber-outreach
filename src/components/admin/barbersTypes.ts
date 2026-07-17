@@ -21,6 +21,7 @@ export type { TodayShiftWindow };
 export type Barber = {
   id: string;
   name: string;
+  email?: string | null;
   avatarUrl?: string | null;
   /** Canonical activity field — always present in /api/admin/barbers responses. */
   isActive: boolean;

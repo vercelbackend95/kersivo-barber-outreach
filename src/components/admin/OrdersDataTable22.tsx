@@ -438,18 +438,6 @@ export default function OrdersDataTable22({
                         <Package width={24} height={24} strokeWidth={2.25} aria-hidden="true" />
                       </button>
                     ) : null}
-                    <button
-                      type="button"
-                      className="admin-orders-grid-expand-chevron"
-                      onClick={(event) => {
-                        event.stopPropagation();
-                        onToggleExpand(order.id);
-                      }}
-                      aria-expanded={isExpanded}
-                      aria-label={`${isExpanded ? 'Collapse' : 'Expand'} order ${orderLabel}`}
-                    >
-                      <ChevronDown width={15} height={15} aria-hidden="true" />
-                    </button>
                   </div>
 
                   <div

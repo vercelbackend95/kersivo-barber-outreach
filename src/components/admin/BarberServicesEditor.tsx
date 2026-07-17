@@ -7,6 +7,8 @@ type BarberServicesEditorProps = {
   enabledServiceIds: Set<string>;
   servicesSaving: boolean;
   onToggleService: (serviceId: string, enabled: boolean) => void;
+  /** When `profile`, hide outer panel chrome / duplicate titles (parent provides section header). */
+  layout?: 'default' | 'profile';
 };
 
 export default function BarberServicesEditor({
@@ -14,7 +16,8 @@ export default function BarberServicesEditor({
   services,
   enabledServiceIds,
   servicesSaving,
-  onToggleService
+  onToggleService,
+  layout = 'default',
 }: BarberServicesEditorProps) {
   const [localEnabledServiceIds, setLocalEnabledServiceIds] = React.useState<Set<string>>(new Set(enabledServiceIds));
   const [selectionHint, setSelectionHint] = React.useState('');
@@ -50,23 +53,14 @@ export default function BarberServicesEditor({
     onToggleService(serviceId, !isEnabled);
   };
 
-  return (
-    <section className="admin-settings-panel">
-      <div className="admin-services-editor">
-        <div className="admin-services-editor-head">
-          <div className="admin-services-editor-title-wrap">
-            <h3 className="admin-services-editor-title">Services</h3>
-            <p className="admin-services-editor-description">Choose what clients can book with {barberName}.</p>
-          </div>
-          <p
-            className={`admin-services-editor-counter ${allSelected ? 'is-complete' : ''}`}
-            aria-label={`${enabledCount} selected out of ${totalCount} total services`}
-          >
-            <strong>{enabledCount}</strong>
-            <span>/ {totalCount}</span>
-          </p>
-        </div>
+  const isProfileLayout = layout === 'profile';
+  const rootClassName = isProfileLayout
+    ? 'admin-services-editor--profile'
+    : 'admin-settings-panel';
 
+  return (
+    <section className={rootClassName}>
+      {isProfileLayout ? (
         <div className="admin-services-editor-meta" id={hintId}>
           <p className={`admin-services-editor-meta-copy ${hasWarning ? 'is-warning' : ''}`}>
             {selectionHint
@@ -75,9 +69,43 @@ export default function BarberServicesEditor({
                 ? 'All services are currently assigned.'
                 : `${totalCount - enabledCount} more service${totalCount - enabledCount === 1 ? '' : 's'} can be enabled.`}
           </p>
+          <p
+            className={`admin-services-editor-counter ${allSelected ? 'is-complete' : ''}`}
+            aria-label={`${enabledCount} selected out of ${totalCount} total services`}
+          >
+            <strong>{enabledCount}</strong>
+            <span>/ {totalCount}</span>
+          </p>
           {servicesSaving ? <span className="admin-services-editor-saving">Updating...</span> : null}
         </div>
-      </div>
+      ) : (
+        <div className="admin-services-editor">
+          <div className="admin-services-editor-head">
+            <div className="admin-services-editor-title-wrap">
+              <h3 className="admin-services-editor-title">Services</h3>
+              <p className="admin-services-editor-description">Choose what clients can book with {barberName}.</p>
+            </div>
+            <p
+              className={`admin-services-editor-counter ${allSelected ? 'is-complete' : ''}`}
+              aria-label={`${enabledCount} selected out of ${totalCount} total services`}
+            >
+              <strong>{enabledCount}</strong>
+              <span>/ {totalCount}</span>
+            </p>
+          </div>
+
+          <div className="admin-services-editor-meta" id={hintId}>
+            <p className={`admin-services-editor-meta-copy ${hasWarning ? 'is-warning' : ''}`}>
+              {selectionHint
+                ? selectionHint
+                : allSelected
+                  ? 'All services are currently assigned.'
+                  : `${totalCount - enabledCount} more service${totalCount - enabledCount === 1 ? '' : 's'} can be enabled.`}
+            </p>
+            {servicesSaving ? <span className="admin-services-editor-saving">Updating...</span> : null}
+          </div>
+        </div>
+      )}
 
       <div className="admin-services-editor-grid" role="group" aria-label={`Services available for ${barberName}`} aria-describedby={hintId}>
         <ul className="admin-service-list" role="list">

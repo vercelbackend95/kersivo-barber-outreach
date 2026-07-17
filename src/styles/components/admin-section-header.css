@@ -65,11 +65,18 @@
   }
 
   /*
-   * Admin mobile: .booking-shell is a grid with gap (--booking-space-3). The section header also
-   * used margin-bottom --space-lg, which stacked with row-gap into a large void under the header.
-   * Cancel one row-gap so the next shell row sits flush under the header border; other rows keep gap.
+   * Admin mobile: section header sits flush above the first content row under the fixed chrome.
+   * Non-grid shells just drop the default margin-bottom.
    */
   .admin-page-wrap .booking-shell > .admin-section-header {
+    margin-bottom: 0;
+  }
+
+  /*
+   * Clients shell is a grid with gap (--booking-space-3). Cancel one row-gap so the table sits
+   * flush under the header border, matching the non-grid shells above.
+   */
+  .admin-page-wrap .booking-shell.admin-clients-section > .admin-section-header {
     margin-bottom: calc(-1 * var(--booking-space-3, 1.35rem));
   }
 

@@ -1,4 +1,4 @@
-import React, { useEffect, useId, useRef, useState } from 'react';
+import React, { useEffect, useId, useLayoutEffect, useRef, useState } from 'react';
 import {
   buildAreaPath,
   buildLinearPath,
@@ -55,6 +55,172 @@ export type AdminLineChartProps = {
 
 const TOOLTIP_MAX_W = 220;
 const GRID_TICK_COUNT = 3;
+const LINE_DRAW_MS = 850;
+const LINE_DRAW_EASING = 'cubic-bezier(0.22, 1, 0.36, 1)';
+
+function usePrefersReducedMotion(): boolean {
+  const [reduced, setReduced] = useState(false);
+
+  useEffect(() => {
+    if (typeof window === 'undefined' || typeof window.matchMedia !== 'function') return undefined;
+    const mq = window.matchMedia('(prefers-reduced-motion: reduce)');
+    const sync = () => setReduced(mq.matches);
+    sync();
+    mq.addEventListener('change', sync);
+    return () => mq.removeEventListener('change', sync);
+  }, []);
+
+  return reduced;
+}
+
+type AnimatedLineSeriesProps = {
+  seriesKey: string;
+  linePath: string;
+  areaPath: string | null;
+  /** Stable data identity (labels+values) — layout-only path changes should not re-draw. */
+  dataFingerprint: string;
+  color: string;
+  strokeWidth: number;
+  isSparkline: boolean;
+  extraClass: string;
+  gradientId: string;
+  activeDot: { cx: number; cy: number } | null;
+};
+
+function AnimatedLineSeries({
+  seriesKey,
+  linePath,
+  areaPath,
+  dataFingerprint,
+  color,
+  strokeWidth,
+  isSparkline,
+  extraClass,
+  gradientId,
+  activeDot,
+}: AnimatedLineSeriesProps) {
+  const lineRef = useRef<SVGPathElement>(null);
+  const areaRef = useRef<SVGPathElement>(null);
+  const reduceMotion = usePrefersReducedMotion();
+  const drawnFingerprintRef = useRef<string | null>(null);
+
+  useLayoutEffect(() => {
+    const line = lineRef.current;
+    if (!line || !linePath) return undefined;
+
+    const alreadyDrawn = drawnFingerprintRef.current === dataFingerprint;
+
+    if (reduceMotion) {
+      line.style.transition = 'none';
+      line.style.strokeDasharray = 'none';
+      line.style.strokeDashoffset = '0';
+      if (areaRef.current) {
+        areaRef.current.style.transition = 'none';
+        areaRef.current.style.opacity = '1';
+      }
+      drawnFingerprintRef.current = dataFingerprint;
+      return undefined;
+    }
+
+    // Resize / reflow only: keep the line fully visible, no re-draw.
+    if (alreadyDrawn) {
+      line.style.transition = 'none';
+      line.style.strokeDasharray = 'none';
+      line.style.strokeDashoffset = '0';
+      if (areaRef.current) {
+        areaRef.current.style.transition = 'none';
+        areaRef.current.style.opacity = '1';
+      }
+      return undefined;
+    }
+
+    let length = 0;
+    try {
+      length = line.getTotalLength();
+    } catch {
+      length = 0;
+    }
+
+    if (!Number.isFinite(length) || length <= 0) {
+      line.style.strokeDasharray = 'none';
+      line.style.strokeDashoffset = '0';
+      if (areaRef.current) areaRef.current.style.opacity = '1';
+      drawnFingerprintRef.current = dataFingerprint;
+      return undefined;
+    }
+
+    line.style.transition = 'none';
+    line.style.strokeDasharray = `${length}`;
+    line.style.strokeDashoffset = `${length}`;
+    if (areaRef.current) {
+      areaRef.current.style.transition = 'none';
+      areaRef.current.style.opacity = '0';
+    }
+
+    // Force layout so the browser commits the "hidden" state before animating.
+    void line.getBoundingClientRect();
+
+    let raf2 = 0;
+    const raf1 = window.requestAnimationFrame(() => {
+      raf2 = window.requestAnimationFrame(() => {
+        line.style.transition = `stroke-dashoffset ${LINE_DRAW_MS}ms ${LINE_DRAW_EASING}`;
+        line.style.strokeDashoffset = '0';
+        if (areaRef.current) {
+          areaRef.current.style.transition = `opacity ${LINE_DRAW_MS}ms ${LINE_DRAW_EASING}`;
+          areaRef.current.style.opacity = '1';
+        }
+        drawnFingerprintRef.current = dataFingerprint;
+      });
+    });
+
+    return () => {
+      window.cancelAnimationFrame(raf1);
+      window.cancelAnimationFrame(raf2);
+    };
+  }, [linePath, dataFingerprint, reduceMotion, seriesKey]);
+
+  return (
+    <g>
+      {areaPath ? (
+        <path
+          ref={areaRef}
+          d={areaPath}
+          fill={isSparkline ? undefined : `url(#${gradientId})`}
+          className={
+            isSparkline
+              ? `admin-revenue-chart-area admin-chart-area--draw ${extraClass}`
+              : `admin-chart-area admin-chart-area--draw ${extraClass}`
+          }
+          stroke="none"
+          style={reduceMotion ? undefined : { opacity: 0 }}
+        />
+      ) : null}
+      <path
+        ref={lineRef}
+        d={linePath}
+        fill="none"
+        stroke={isSparkline ? undefined : color}
+        strokeWidth={isSparkline ? undefined : strokeWidth}
+        strokeLinecap="round"
+        strokeLinejoin="round"
+        className={
+          isSparkline
+            ? `admin-revenue-chart-line admin-chart-line admin-chart-line--draw ${extraClass}`
+            : 'admin-chart-line admin-chart-line--draw'
+        }
+      />
+      {activeDot ? (
+        <circle
+          cx={activeDot.cx}
+          cy={activeDot.cy}
+          r="5"
+          fill={color}
+          className="admin-chart-active-dot"
+        />
+      ) : null}
+    </g>
+  );
+}
 
 function defaultFormatValue(value: number, metric?: 'currency' | 'number'): string {
   if (metric === 'currency') {
@@ -360,44 +526,31 @@ export default function AdminLineChart({
           const firstX = firstLabel ? xPos(firstLabel) : 0;
           const lastX = lastLabel ? xPos(lastLabel) : 0;
           const baseline = yPos(yMin);
+          const areaPath = showSeriesArea
+            ? buildAreaPath(linePath, firstX, lastX, baseline)
+            : null;
+          const activePt = !isSparkline && activeLabel
+            ? s.points.find((pt) => pt.label === activeLabel)
+            : null;
 
           return (
-            <g key={s.key}>
-              {showSeriesArea && (
-                <path
-                  d={buildAreaPath(linePath, firstX, lastX, baseline)}
-                  fill={isSparkline ? undefined : `url(#${gradientId}-${s.key})`}
-                  className={isSparkline ? `admin-revenue-chart-area ${extraClass}` : `admin-chart-area ${extraClass}`}
-                  stroke="none"
-                />
-              )}
-              <path
-                d={linePath}
-                fill="none"
-                stroke={isSparkline ? undefined : color}
-                strokeWidth={isSparkline ? undefined : strokeWidth}
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                className={
-                  isSparkline
-                    ? `admin-revenue-chart-line admin-chart-line ${extraClass}`
-                    : 'admin-chart-line'
-                }
-              />
-              {!isSparkline && activeLabel &&
-                s.points
-                  .filter((pt) => pt.label === activeLabel)
-                  .map((pt) => (
-                    <circle
-                      key={`${s.key}-${pt.label}-active`}
-                      cx={xPos(pt.label)}
-                      cy={yPos(pt.value)}
-                      r="5"
-                      fill={color}
-                      className="admin-chart-active-dot"
-                    />
-                  ))}
-            </g>
+            <AnimatedLineSeries
+              key={s.key}
+              seriesKey={s.key}
+              linePath={linePath}
+              areaPath={areaPath}
+              dataFingerprint={s.points.map((p) => `${p.label}:${p.value}`).join('|')}
+              color={color}
+              strokeWidth={strokeWidth}
+              isSparkline={isSparkline}
+              extraClass={extraClass}
+              gradientId={`${gradientId}-${s.key}`}
+              activeDot={
+                activePt
+                  ? { cx: xPos(activePt.label), cy: yPos(activePt.value) }
+                  : null
+              }
+            />
           );
         })}
 

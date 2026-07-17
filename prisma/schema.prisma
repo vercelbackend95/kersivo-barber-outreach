@@ -126,6 +126,7 @@ model ShopSettings {
   retailTestOrderId                  String?
   retailTestOrderCompletedAt         DateTime?
   retailPickupWalkthroughCompletedAt DateTime?
+  analyticsIncludeTestActivity       Boolean  @default(true)
   ownerUserId                 String?  @unique
   createdAt                   DateTime @default(now())
   updatedAt                   DateTime @updatedAt

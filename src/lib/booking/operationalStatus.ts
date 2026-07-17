@@ -2,6 +2,13 @@ const HOUR_MS = 60 * 60 * 1000;
 
 export const MANUAL_BOOKING_ACTIONS = ['NO_SHOW', 'CANCELLED_BY_SHOP', 'RESCHEDULE'] as const;
 export type ManualBookingAction = (typeof MANUAL_BOOKING_ACTIONS)[number];
+export const HISTORY_BOOKING_CORRECTIONS = [
+  'COMPLETED',
+  'NO_SHOW',
+  'CANCELLED_BY_CLIENT',
+  'CANCELLED_BY_SHOP',
+] as const;
+export type HistoryBookingCorrection = (typeof HISTORY_BOOKING_CORRECTIONS)[number];
 export type ManualBookingActionOption = {
   value: ManualBookingAction;
   label: string;
@@ -67,6 +74,18 @@ export function canRescheduleBooking(input: BookingTimingInput): boolean {
 
 export function isManualBookingAction(value: string): value is ManualBookingAction {
   return (MANUAL_BOOKING_ACTIONS as readonly string[]).includes(value);
+}
+
+export function isHistoryBookingCorrection(value: string): value is HistoryBookingCorrection {
+  return (HISTORY_BOOKING_CORRECTIONS as readonly string[]).includes(value);
+}
+
+export function canCorrectHistoryBooking(input: BookingTimingInput & { status: string }): boolean {
+  const endMs = toMs(input.endAt);
+  const nowMs = input.nowMs ?? Date.now();
+  if (!isFiniteDateMs(endMs)) return false;
+  if (nowMs >= endMs) return true;
+  return input.status === 'NO_SHOW' || input.status.startsWith('CANCELLED_BY_');
 }
 
 export function getAllowedManualBookingActions(input: BookingTimingInput): ManualBookingAction[] {

@@ -1,6 +1,7 @@
 import { formatInTimeZone } from 'date-fns-tz';
 
 import type { ReportsRangeKey } from './reportsRange';
+import { isCancelledChartStatus } from './reportsMetrics';
 import {
   getHourBucketLabel,
   isHourLabel,
@@ -32,13 +33,6 @@ export type BarberTotal = {
 
 const ADMIN_TIMEZONE = 'Europe/London';
 
-const CANCELLED_STATUSES = new Set([
-  'CANCELLED_BY_CLIENT',
-  'CANCELLED_BY_SHOP',
-  'CANCELLED_BY_ADMIN',
-  'EXPIRED',
-]);
-
 export function getBucketLabel(date: Date | string, rangeKey: ReportsRangeKey): string {
   const d = typeof date === 'string' ? new Date(date) : date;
   if (rangeKey === '1d') {
@@ -51,7 +45,7 @@ export function getBucketLabel(date: Date | string, rangeKey: ReportsRangeKey): 
 }
 
 function isCancelledStatus(status: string): boolean {
-  return CANCELLED_STATUSES.has(status);
+  return isCancelledChartStatus(status);
 }
 
 function seedLabels(reports: ReportsChartInput): string[] {
@@ -145,10 +139,17 @@ export function buildOverallSeries(
   const hourly = isHourlyLabels(labels);
 
   if (metric === 'revenue') {
-    return reports.revenueSeries.map((point) => ({
-      label: point.label,
-      value: Math.round(point.value * 100),
-    }));
+    // Derive from bookings so Overall always matches the sum of barber lines
+    // (API revenueSeries is only used for label seeding).
+    const buckets = zeroBuckets(labels);
+    for (const row of reports.reportBookings) {
+      const key = resolveBucketKey(row.startAt, labels);
+      if (!key) continue;
+      buckets.set(key, (buckets.get(key) ?? 0) + (row.computedValueGbp ?? 0));
+    }
+    return hourly
+      ? toCumulativePoints(labels, buckets, metric)
+      : finalizeBuckets(buckets, labels, metric);
   }
 
   if (metric === 'bookings') {

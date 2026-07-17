@@ -1,5 +1,7 @@
 import type { WorkingHourRow } from '../barbersTypes';
 
+export type BarberWizardMode = 'create' | 'edit';
+
 export type BarberWizardStep = 1 | 2 | 3 | 4;
 
 export type BarberWizardService = {

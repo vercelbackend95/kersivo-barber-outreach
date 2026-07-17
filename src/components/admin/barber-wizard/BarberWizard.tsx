@@ -14,13 +14,20 @@ import {
   getWeeklyHoursSummary,
   validateBarberWizardStep,
   type BarberWizardErrors,
+  type BarberWizardMode,
   type BarberWizardService,
   type BarberWizardStep
 } from './barberWizardTypes';
 
 type BarberWizardProps = {
+  mode?: BarberWizardMode;
+  barberId?: string;
   services: BarberWizardService[];
   weekDays?: readonly string[];
+  initialName?: string;
+  initialServiceIds?: string[];
+  initialAvatarUrl?: string | null;
+  initialIsActive?: boolean;
   initialWorkingHours?: WorkingHourRow[];
   onCancel: () => void;
   onSaved: () => void | Promise<void>;
@@ -36,20 +43,34 @@ function FieldError({ id, children }: { id: string; children?: string }) {
 }
 
 export default function BarberWizard({
+  mode = 'create',
+  barberId,
   services,
   weekDays = WEEK_DAY_LABELS,
+  initialName = '',
+  initialServiceIds,
+  initialAvatarUrl = null,
+  initialIsActive = true,
   initialWorkingHours,
   onCancel,
   onSaved
 }: BarberWizardProps) {
+  const isEdit = mode === 'edit';
   const [step, setStep] = useState<BarberWizardStep>(1);
-  const [name, setName] = useState('');
-  const [selectedServiceIds, setSelectedServiceIds] = useState<string[]>(() => services.map((service) => service.id));
+  const [name, setName] = useState(() => (isEdit ? initialName : ''));
+  const [selectedServiceIds, setSelectedServiceIds] = useState<string[]>(() => {
+    if (isEdit && initialServiceIds && initialServiceIds.length > 0) {
+      return [...initialServiceIds];
+    }
+    return services.map((service) => service.id);
+  });
   const [workingHours, setWorkingHours] = useState<WorkingHourRow[]>(
     () => initialWorkingHours ?? getDefaultWorkingHourRows()
   );
   const [avatarFile, setAvatarFile] = useState<File | null>(null);
-  const [avatarPreviewUrl, setAvatarPreviewUrl] = useState('');
+  const [avatarPreviewUrl, setAvatarPreviewUrl] = useState(() =>
+    isEdit && initialAvatarUrl ? initialAvatarUrl : ''
+  );
   const [avatarError, setAvatarError] = useState('');
   const [errors, setErrors] = useState<BarberWizardErrors>({});
   const [submitError, setSubmitError] = useState('');
@@ -73,11 +94,17 @@ export default function BarberWizard({
       if (current.length > 0) {
         const valid = current.filter((id) => services.some((service) => service.id === id));
         if (valid.length === current.length) return current;
-        return valid.length ? valid : services.map((service) => service.id);
+        if (valid.length) return valid;
+        if (isEdit && initialServiceIds?.length) {
+          const fromInitial = initialServiceIds.filter((id) => services.some((service) => service.id === id));
+          if (fromInitial.length) return fromInitial;
+        }
+        return services.map((service) => service.id);
       }
+      if (isEdit) return current;
       return services.map((service) => service.id);
     });
-  }, [services]);
+  }, [services, isEdit, initialServiceIds]);
 
   function clearFieldError(key: keyof BarberWizardErrors) {
     if (key in errors) setErrors((current) => ({ ...current, [key]: undefined }));
@@ -114,7 +141,7 @@ export default function BarberWizard({
 
   function clearAvatar() {
     setAvatarFile(null);
-    setAvatarPreviewUrl('');
+    setAvatarPreviewUrl(isEdit && initialAvatarUrl ? initialAvatarUrl : '');
     setAvatarError('');
   }
 
@@ -135,6 +162,11 @@ export default function BarberWizard({
       }
     }
 
+    if (isEdit && !barberId) {
+      setSubmitError('Missing barber id.');
+      return;
+    }
+
     const trimmedName = name.trim();
     const uniqueServiceIds = Array.from(new Set(selectedServiceIds));
     const rulesSorted = [...workingHours].sort((a, b) => a.dayOfWeek - b.dayOfWeek);
@@ -145,8 +177,9 @@ export default function BarberWizard({
 
     try {
       const formData = new FormData();
+      if (isEdit && barberId) formData.set('id', barberId);
       formData.set('name', trimmedName);
-      formData.set('isActive', 'true');
+      formData.set('isActive', String(isEdit ? initialIsActive : true));
       formData.set('serviceIds', JSON.stringify(uniqueServiceIds));
       if (avatarFile) formData.set('avatar', avatarFile);
 
@@ -161,15 +194,15 @@ export default function BarberWizard({
       };
 
       if (!response.ok) {
-        throw new Error(payload.error || 'Could not save barber.');
+        throw new Error(payload.error || (isEdit ? 'Could not update barber.' : 'Could not save barber.'));
       }
 
-      const newBarberId = payload.barber?.id;
-      if (!newBarberId) {
+      const savedBarberId = isEdit ? barberId : payload.barber?.id;
+      if (!savedBarberId) {
         throw new Error('Barber was saved but the response was missing an id.');
       }
 
-      const rulesResponse = await fetch(`/api/admin/barbers/${newBarberId}/rules`, {
+      const rulesResponse = await fetch(`/api/admin/barbers/${savedBarberId}/rules`, {
         method: 'PUT',
         credentials: 'include',
         headers: { 'content-type': 'application/json' },
@@ -182,13 +215,15 @@ export default function BarberWizard({
       if (!rulesResponse.ok) {
         setScheduleWarning(
           rulesPayload.error ??
-            'Working hours could not be saved. Open the barber profile to set their schedule.'
+            (isEdit
+              ? 'Working hours could not be saved. Try again from the barber profile.'
+              : 'Working hours could not be saved. Open the barber profile to set their schedule.')
         );
       }
 
       setFinished(true);
     } catch (error) {
-      setSubmitError(error instanceof Error ? error.message : 'Could not save barber.');
+      setSubmitError(error instanceof Error ? error.message : (isEdit ? 'Could not update barber.' : 'Could not save barber.'));
     } finally {
       setIsSaving(false);
     }
@@ -219,15 +254,17 @@ export default function BarberWizard({
 
   return (
     <form
-      className="admin-barber-sheet admin-barber-sheet--add admin-barber-wizard"
+      className={`admin-barber-sheet admin-barber-sheet--add admin-barber-wizard${isEdit ? ' admin-barber-wizard--edit' : ''}`}
       onSubmit={handleSubmit}
       onMouseDown={(event) => event.stopPropagation()}
       noValidate
     >
       <header className="admin-barber-wizard__header">
         <div className="admin-barber-wizard__header-copy">
-          <p>ADD BARBER</p>
-          <h2 id="admin-barber-form-title">{finished ? 'Barber ready' : 'Build a team member'}</h2>
+          <p>{isEdit ? 'EDIT BARBER' : 'ADD BARBER'}</p>
+          <h2 id="admin-barber-form-title">
+            {finished ? 'Barber ready' : isEdit ? 'Update team member' : 'Build a team member'}
+          </h2>
         </div>
         <button
           type="button"
@@ -282,12 +319,14 @@ export default function BarberWizard({
         {finished ? (
           <section className="admin-barber-wizard__success" role="status" aria-live="polite">
             <ConfirmationStatusIcon variant="success" />
-            <p className="admin-barber-wizard__eyebrow">Created</p>
+            <p className="admin-barber-wizard__eyebrow">{isEdit ? 'Updated' : 'Created'}</p>
             <h3>{name.trim()} is ready</h3>
             <p>
               {scheduleWarning
                 ? scheduleWarning
-                : 'They are live on the roster and ready to take bookings.'}
+                : isEdit
+                  ? 'Their roster profile has been updated.'
+                  : 'They are live on the roster and ready to take bookings.'}
             </p>
           </section>
         ) : null}
@@ -462,7 +501,11 @@ export default function BarberWizard({
               saving={false}
               saveError=""
               persistToServer={false}
-              subtitle="Saved together with this barber when you create them."
+              subtitle={
+                isEdit
+                  ? 'Saved together with this barber when you update them.'
+                  : 'Saved together with this barber when you create them.'
+              }
               helperText="Tap any day to change shift status and hours."
               onSetWorkingHours={(rules) => {
                 setWorkingHours(rules);
@@ -568,10 +611,10 @@ export default function BarberWizard({
               {isSaving ? (
                 <>
                   <ButtonSpinner />
-                  Creating…
+                  {isEdit ? 'Updating…' : 'Creating…'}
                 </>
               ) : step === 4 ? (
-                'Create barber'
+                isEdit ? 'Update barber' : 'Create barber'
               ) : (
                 'Continue'
               )}

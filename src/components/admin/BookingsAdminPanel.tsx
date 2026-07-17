@@ -5,11 +5,13 @@ import AdminSectionHeader from './AdminSectionHeader';
 import AdminBookingsOpsSearch from './AdminBookingsOpsSearch';
 import AdminDesktopDashHeroSlot from './AdminDesktopDashHeroSlot';
 import AdminBookingsScheduleList from './AdminBookingsScheduleList';
+import HistoryBookingStatusSheet, { type HistoryStatusValue } from './HistoryBookingStatusSheet';
 import AdminBookingDatePicker from './AdminBookingDatePicker';
 const BookingsReportsSection = lazy(() => import('./BookingsReportsSection'));
 import { addDays } from 'date-fns';
 import { formatInTimeZone, fromZonedTime, toZonedTime } from 'date-fns-tz';
 import TodayTimeline from './TodayTimeline';
+import ClientProfilePanel from './ClientProfilePanel';
 import { resolveClientIdForBooking } from '@/lib/admin/resolveClientIdForBooking';
 import AdminErrorBoundary from './AdminErrorBoundary';
 import HistoryDateRangePicker from './HistoryDateRangePicker';
@@ -26,7 +28,7 @@ import {
 import BarberChip from './BarberChip';
 import type { Barber, ServiceOption, TimeBlock, WorkingHourRow } from './barbersTypes';
 import EmptyState from '../EmptyState';
-import { Clock, ListOrdered, Plus, X } from '../lucide-react';
+import { Clock, ListOrdered, Plus } from '../lucide-react';
 import { ADMIN_BOOKING_HISTORY_PAGE_SIZE } from '../../lib/admin/bookingHistoryPageSize';
 import { canShopAdminCancelByLeadTime } from '../../lib/booking/policies';
 import { countBookingsByStatusTone, getBookingStatusTone, isCancelledBookingStatus } from './bookingStatus';
@@ -69,27 +71,6 @@ function scrollDocumentAndAncestorsToTop(scrollOrigin: HTMLElement | null) {
     node = node.parentElement;
   }
 }
-
-
-type ClientProfile = {
-  id: string;
-  fullName?: string | null;
-  email: string;
-  phone?: string | null;
-  notes?: string | null;
-};
-
-type ClientProfileStats = {
-  totalBookings: number;
-  lastBookingAt?: string | null;
-  cancelledCount: number;
-};
-
-type ClientProfilePayload = {
-  client: ClientProfile;
-  stats: ClientProfileStats;
-  recentBookings: Booking[];
-};
 
 
 type AdminBookingView = 'timeline' | 'list';
@@ -642,7 +623,7 @@ export default function BookingsAdminPanel({ isActive, mode, onBackToDashboard, 
   const [bookingsInitialLoading, setBookingsInitialLoading] = useState(true);
   const [barbers, setBarbers] = useState<Barber[]>([]);
   const [barbersInitialLoading, setBarbersInitialLoading] = useState(true);
-  const [barbersFilter, setBarbersFilter] = useState<'active' | 'all'>('active');
+  const [showInactiveBarbers, setShowInactiveBarbers] = useState(false);
   const [barberSaveMessage, setBarberSaveMessage] = useState('');
   const [barberSaveError, setBarberSaveError] = useState('');
   const [barberSaving, setBarberSaving] = useState(false);
@@ -688,6 +669,7 @@ export default function BookingsAdminPanel({ isActive, mode, onBackToDashboard, 
   const [historyBarberId, setHistoryBarberId] = useState<string>('all');
   const [historyDateRange, setHistoryDateRange] = useState<HistoryDateRange | null>(null);
   const [isHistoryMoreOpen, setIsHistoryMoreOpen] = useState(false);
+  const [historyStatusBooking, setHistoryStatusBooking] = useState<Booking | null>(null);
   const historyMoreRef = useRef<HTMLDivElement | null>(null);
 
 
@@ -715,12 +697,7 @@ export default function BookingsAdminPanel({ isActive, mode, onBackToDashboard, 
   const [holidayEndInput, setHolidayEndInput] = useState(() => formatLocalInputValue(new Date(roundUpLondon(new Date(), SLOT_STEP_MINUTES).getTime() + 30 * 60000)));
   const [holidayAllDay, setHolidayAllDay] = useState(false);
 
-  const [selectedClientId, setSelectedClientId] = useState<string | null>(null);
-  const [clientProfile, setClientProfile] = useState<ClientProfilePayload | null>(null);
-  const [isClientLoading, setIsClientLoading] = useState(false);
-  const [clientError, setClientError] = useState('');
-  const [notesDraft, setNotesDraft] = useState('');
-  const [notesSaving, setNotesSaving] = useState(false);
+  const [openClientId, setOpenClientId] = useState<string | null>(null);
   const [isMobileViewport, setIsMobileViewport] = useState(false);
 
   const inFlightRef = useRef(false);
@@ -1208,7 +1185,14 @@ export default function BookingsAdminPanel({ isActive, mode, onBackToDashboard, 
     setReportsProfileBarberMeta(null);
   }, []);
 
-  const visibleBarbersForManagement = useMemo(() => barbersFilter === 'all' ? allBarbersSorted : activeBarbers, [activeBarbers, allBarbersSorted, barbersFilter]);
+  const inactiveBarbers = useMemo(
+    () => allBarbersSorted.filter((barber) => !normalizeBarberStatus(barber)),
+    [allBarbersSorted]
+  );
+  const visibleBarbersForManagement = useMemo(
+    () => (showInactiveBarbers ? [...activeBarbers, ...inactiveBarbers] : activeBarbers),
+    [activeBarbers, inactiveBarbers, showInactiveBarbers]
+  );
   const selectedBarber = useMemo(() => {
     const found = allBarbersSorted.find((barber) => barber.id === selectedBarberId);
     if (found) return found;
@@ -1363,7 +1347,8 @@ export default function BookingsAdminPanel({ isActive, mode, onBackToDashboard, 
   const isAnyOverlayOpen =
     isAddBarberSheetOpen ||
     showHolidayModal ||
-    selectedClientId !== null;
+    openClientId !== null ||
+    (selectedBarberId !== null && barberProfileContextActive);
   useBodyScrollLock(isMobileViewport && isAnyOverlayOpen);
 
   const isTimelineView = mode === 'dashboard' && activeView === 'timeline';
@@ -1391,51 +1376,22 @@ export default function BookingsAdminPanel({ isActive, mode, onBackToDashboard, 
 
 
 
-  const openClientProfileById = useCallback(async (clientId: string) => {
-    setSelectedClientId(clientId);
-    setIsClientLoading(true);
-    setClientError('');
-    const response = await fetch(`/api/admin/clients/${clientId}`, { credentials: 'include' });
-    if (!response.ok) {
-      setClientError('Could not load client profile.');
-      setIsClientLoading(false);
-      return;
-    }
-    const payload = (await response.json()) as ClientProfilePayload;
-    setClientProfile(payload);
-    setNotesDraft(payload.client.notes ?? '');
-    setIsClientLoading(false);
-  }, []);
-
   const openClientProfileForBooking = useCallback(
     async (booking: Pick<Booking, 'clientId' | 'email' | 'fullName' | 'phone'>) => {
-      setClientError('');
       try {
         const clientId = await resolveClientIdForBooking(booking);
         if (!clientId) {
-          setClientError('Could not open client profile.');
+          setError('Could not open client profile.');
           return;
         }
-        await openClientProfileById(clientId);
+        setOpenClientId(clientId);
       } catch {
-        setClientError('Could not open client profile.');
+        setError('Could not open client profile.');
       }
     },
-    [openClientProfileById],
+    [],
   );
 
-  async function saveNotes() {
-    if (!selectedClientId) return;
-    setNotesSaving(true);
-    const response = await fetch(`/api/admin/clients/${selectedClientId}/notes`, {
-      method: 'POST', credentials: 'include', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ notes: notesDraft })
-    });
-    if (response.ok && clientProfile) {
-      setClientProfile({ ...clientProfile, client: { ...clientProfile.client, notes: notesDraft } });
-    }
-    setNotesSaving(false);
-
-  }
   const scrollToTimelineBooking = useCallback((bookingId: string) => {
     const card = document.querySelector(`[data-booking-id="${bookingId}"]`) as HTMLElement | null;
     if (!card) return false;
@@ -1900,7 +1856,7 @@ export default function BookingsAdminPanel({ isActive, mode, onBackToDashboard, 
         method: 'POST',
         credentials: 'include',
         headers: { 'content-type': 'application/json' },
-        body: JSON.stringify({ orderedIds, includeInactive: barbersFilter === 'all' })
+        body: JSON.stringify({ orderedIds, includeInactive: showInactiveBarbers })
       });
       const payload = await response.json().catch(() => ({}));
       if (!response.ok) {
@@ -2093,8 +2049,13 @@ export default function BookingsAdminPanel({ isActive, mode, onBackToDashboard, 
       blockSuccessMessage={blockSuccessMessage}
       blockErrorMessage={blockErrorMessage}
       getInitials={getInitials}
-      onBack={handleBarberProfileBack}
-      backAriaLabel={barberProfileSource === 'reports' ? 'Back to reports' : undefined}
+      onClose={handleBarberProfileBack}
+      onBarberUpdated={async () => {
+        await Promise.all([
+          fetchBarbers(),
+          selectedBarberId ? fetchWorkingHours(selectedBarberId) : Promise.resolve(),
+        ]);
+      }}
       onBarberAvatarChange={setEditingBarberAvatarFile}
       onSaveAvatar={() => void saveSelectedBarberAvatar()}
       onToggleActive={() => void updateBarberStatus(selectedBarber.id, !normalizeBarberStatus(selectedBarber))}
@@ -2115,12 +2076,9 @@ export default function BookingsAdminPanel({ isActive, mode, onBackToDashboard, 
   return (
     <section
       ref={bookingShellRef}
-      className={`surface booking-shell${mode === 'reports' ? ' booking-shell--reports' : ''}${mode === 'reports' && barberProfileSource === 'reports' && selectedBarberId ? ' booking-shell--reports-profile' : ''}${mode === 'blocks' ? ' admin-services-shell' : ''}`}
+      className={`surface booking-shell${mode === 'reports' ? ' booking-shell--reports' : ''}${mode === 'blocks' ? ' admin-services-shell' : ''}`}
     >
       {mode === 'dashboard' ? (
-        barberProfileSource === 'ops' && barberProfileView ? (
-          barberProfileView
-        ) : (
         <div data-feature261-booking-overview-shot="">
           <AdminSectionHeader
             title={BOOKINGS_SECTION_HEADER.dashboard.title}
@@ -2224,7 +2182,6 @@ export default function BookingsAdminPanel({ isActive, mode, onBackToDashboard, 
             </AnimatePresence>
           </div>
         </div>
-        )
       ) : (
         <>
           <AdminSectionHeader
@@ -2260,14 +2217,11 @@ export default function BookingsAdminPanel({ isActive, mode, onBackToDashboard, 
         <>
 
           {mode === 'blocks' ? (
-            barberProfileView ? (
-              barberProfileView
-            ) : (
               <BarbersOverview
-                barbers={visibleBarbersForManagement}
+                barbers={allBarbersSorted}
                 barbersLoading={barbersInitialLoading}
                 services={addBarberServiceOptions}
-                barbersFilter={barbersFilter}
+                showInactiveBarbers={showInactiveBarbers}
                 barberReordering={barberReordering}
                 barberSaveMessage={barberSaveMessage}
                 barberSaveError={barberSaveError}
@@ -2275,7 +2229,7 @@ export default function BookingsAdminPanel({ isActive, mode, onBackToDashboard, 
                 globalBlocks={globalBlocks}
                 bookings={bookings}
                 getInitials={getInitials}
-                onBarbersFilterChange={setBarbersFilter}
+                onShowInactiveChange={setShowInactiveBarbers}
                 onOpenBarber={setSelectedBarberId}
                 onMoveBarber={(index, direction) => void moveBarber(index, direction)}
                 onCloseAddBarberSheet={() => {
@@ -2286,7 +2240,6 @@ export default function BookingsAdminPanel({ isActive, mode, onBackToDashboard, 
                 }}
                 formatBlockRange={formatBlockRange}
               />
-            )
           ) : (
       <>
 
@@ -2305,6 +2258,8 @@ export default function BookingsAdminPanel({ isActive, mode, onBackToDashboard, 
           historyDateFiltered={Boolean(historyDateRange)}
           onClearHistoryDateRange={historyDateRange ? () => setHistoryDateRange(null) : undefined}
           onOpenClient={openClientProfileForBooking}
+          onEditHistoryStatus={setHistoryStatusBooking}
+          statusEditorBookingId={historyStatusBooking?.id ?? null}
           onClientAvatarChange={(clientId, nextUrl) => {
             setBookings((previous) => previous.map((booking) => (
               booking.clientId === clientId
@@ -2456,11 +2411,6 @@ export default function BookingsAdminPanel({ isActive, mode, onBackToDashboard, 
 
 
       {mode === 'reports' ? (
-        barberProfileSource === 'reports' && selectedBarberId && selectedBarber ? (
-          barberProfileView
-        ) : barberProfileSource === 'reports' && selectedBarberId && barbersInitialLoading ? (
-          <p className="muted">Loading barber profile…</p>
-        ) : (
           <Suspense fallback={<p className="muted" aria-busy="true">Loading reports…</p>}>
             <BookingsReportsSection
               isActive={isActive}
@@ -2470,7 +2420,6 @@ export default function BookingsAdminPanel({ isActive, mode, onBackToDashboard, 
               onOpenBarber={openBarberFromReports}
             />
           </Suspense>
-        )
       ) : null}
 
       {showHolidayModal && (
@@ -2487,80 +2436,26 @@ export default function BookingsAdminPanel({ isActive, mode, onBackToDashboard, 
         </div>
       )}
 
-      {selectedClientId && (
-        <div className="admin-client-modal-backdrop admin-client-modal-backdrop--centered" role="presentation" onClick={() => setSelectedClientId(null)}>
-          <div
-            className="admin-client-modal admin-client-modal--profile"
-            role="dialog"
-            aria-modal="true"
-            aria-label="Client profile"
-            onClick={(event) => event.stopPropagation()}
-          >
-            <div className="admin-client-modal-head">
-              <h3>Client profile</h3>
-              <button type="button" className="btn btn--ghost admin-client-modal-close" onClick={() => setSelectedClientId(null)} aria-label="Close client profile">
-                <X width={16} height={16} aria-hidden="true" />
-              </button>
-            </div>
-            {isClientLoading && <p className="muted">Loading...</p>}
-            {clientError && <p className="admin-inline-error">{clientError}</p>}
-            {clientProfile && (
-              <>
-                <section className="admin-client-modal__section" aria-label="Client identity">
-                  <p className="admin-client-modal__identity">
-                    <strong>{clientProfile.client.fullName || 'Unnamed client'}</strong>
-                    <br />
-                    {clientProfile.client.email}
-                    <br />
-                    {clientProfile.client.phone || 'No phone'}
-                  </p>
-                </section>
-                <section className="admin-client-modal__section" aria-label="Visit statistics">
-                  <h4 className="admin-client-modal__section-title">Stats</h4>
-                  <div className="admin-client-stats">
-                    <p>Total visits: {clientProfile.stats.totalBookings}</p>
-                    <p>
-                      Last visit:{' '}
-                      {clientProfile.stats.lastBookingAt
-                        ? new Date(clientProfile.stats.lastBookingAt).toLocaleString('en-GB', { timeZone: ADMIN_TIMEZONE })
-                        : '—'}
-                    </p>
-                    <p>Cancelled: {clientProfile.stats.cancelledCount}</p>
-                  </div>
-                </section>
-                <section className="admin-client-modal__section" aria-labelledby="client-recent-bookings">
-                  <h4 className="admin-client-modal__section-title" id="client-recent-bookings">
-                    Recent bookings
-                  </h4>
-                  <ul className="admin-client-bookings">
-                    {clientProfile.recentBookings.map((item) => (
-                      <li key={item.id}>
-                        {new Date(item.startAt).toLocaleString('en-GB', { timeZone: ADMIN_TIMEZONE })} · {item.status} · {item.service?.name} ·{' '}
-                        {item.barber?.name}
-                      </li>
-                    ))}
-                  </ul>
-                </section>
-                <section className="admin-client-modal__section" aria-labelledby="client-notes-heading">
-                  <h4 className="admin-client-modal__section-title" id="client-notes-heading">
-                    Notes
-                  </h4>
-                  <textarea
-                    id="client-notes"
-                    value={notesDraft}
-                    onChange={(event) => setNotesDraft(event.target.value)}
-                    rows={5}
-                    aria-labelledby="client-notes-heading"
-                  />
-                  <button type="button" className="btn btn--primary" onClick={() => void saveNotes()} disabled={notesSaving}>
-                    {notesSaving ? 'Saving...' : 'Save notes'}
-                  </button>
-                </section>
-              </>
-            )}
-          </div>
-        </div>
+      {openClientId && (
+        <ClientProfilePanel
+          clientId={openClientId}
+          onClose={() => setOpenClientId(null)}
+        />
       )}
+
+      {barberProfileView}
+
+      <HistoryBookingStatusSheet
+        booking={historyStatusBooking}
+        onClose={() => setHistoryStatusBooking(null)}
+        onSaved={async (bookingId: string, status: HistoryStatusValue) => {
+          setBookings((previous) => previous.map((booking) => (
+            booking.id === bookingId ? { ...booking, status } : booking
+          )));
+          setUpdatedBookingIds([bookingId]);
+          await fetchBookings();
+        }}
+      />
     </section>
   );
 }

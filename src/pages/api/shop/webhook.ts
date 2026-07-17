@@ -2,6 +2,7 @@ export const prerender = false;
 
 import { Prisma, SetupPlan, SetupDepositStatus } from '@prisma/client';
 import type { APIRoute } from 'astro';
+import { setShopAnalyticsLive, setShopAnalyticsLiveForOwnerEmail } from '../../../lib/admin/analyticsMode';
 import { prisma } from '../../../lib/db/client';
 import { formatGbp } from '../../../lib/shop/money';
 import { createShopOrder } from '../../../lib/shop/createShopOrder';
@@ -209,6 +210,23 @@ async function handleSetupDepositCheckout(
     logSetupDepositStage('deposit_marked_paid', {
       sessionId,
       depositId: deposit.id,
+    });
+  }
+
+  try {
+    const metadataShopId = metadata.shopId?.trim();
+    const updated = metadataShopId
+      ? await setShopAnalyticsLive(metadataShopId).then(() => true)
+      : await setShopAnalyticsLiveForOwnerEmail(customerEmail);
+    logSetupDepositStage('analytics_live_mode_updated', {
+      sessionId,
+      updated,
+      viaShopId: Boolean(metadataShopId),
+    });
+  } catch (error) {
+    console.error('[webhook] Failed to mark shop analytics as live', {
+      sessionId,
+      error,
     });
   }
 

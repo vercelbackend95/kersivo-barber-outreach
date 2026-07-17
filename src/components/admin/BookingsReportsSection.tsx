@@ -9,6 +9,10 @@ import {
   type ReportsCustomDateRange,
   type ReportsRangeKey,
 } from '@/lib/admin/reportsRange';
+import {
+  getBarberTotals,
+  type ReportsChartMetric,
+} from '@/lib/admin/reportsChartSeries';
 import AdminLeaderboard from './AdminLeaderboard';
 import AdminMetricCard from './AdminMetricCard';
 import { formatDelta } from './reportsFormatting';
@@ -64,6 +68,7 @@ export default function BookingsReportsSection({
   const [reportsError, setReportsError] = useState('');
   const [reportsRangePreset, setReportsRangePreset] = useState<ReportsRangeKey>(() => getDefaultReportsPreset());
   const [reportsCustomRange, setReportsCustomRange] = useState<ReportsCustomDateRange | null>(null);
+  const [chartMetric, setChartMetric] = useState<ReportsChartMetric>('revenue');
   const [isMobileViewport, setIsMobileViewport] = useState(false);
   const reportsStudioRef = useRef<HTMLElement>(null);
   const isContainerCompact = useCompactReportsLayout(reportsStudioRef);
@@ -157,6 +162,7 @@ export default function BookingsReportsSection({
   const bookingsDelta = formatDelta({
     value: reports?.trends.bookingsPct ?? null,
     type: 'percent',
+    valueType: 'count',
     tone: 'higher_better',
     currentValue: reports?.bookingsCount,
     previousValue: reports?.previousMetrics.bookingsCount,
@@ -164,6 +170,7 @@ export default function BookingsReportsSection({
   const utilizationDelta = formatDelta({
     value: reports?.trends.utilizationPp ?? null,
     type: 'pp',
+    valueType: 'pp',
     tone: 'higher_better',
     currentValue: reports?.utilizationPct,
     previousValue: reports?.previousMetrics.utilizationPct,
@@ -171,13 +178,18 @@ export default function BookingsReportsSection({
   const cancelledDelta = formatDelta({
     value: reports?.trends.cancelledRatePp ?? null,
     type: 'pp',
+    valueType: 'pp',
     tone: 'lower_better',
     currentValue: reports?.cancelledRate,
     previousValue: reports?.previousMetrics.cancelledRate,
   });
   const avgBookingValueDelta = formatDelta({
-    value: reports?.trends.avgBookingValueDelta ?? null,
-    type: 'currency',
+    value: reports && reports.previousMetrics.avgBookingValue > 0
+      ? ((reports.avgBookingValue - reports.previousMetrics.avgBookingValue)
+        / reports.previousMetrics.avgBookingValue) * 100
+      : null,
+    type: 'percent',
+    valueType: 'currency',
     tone: 'higher_better',
     currentValue: reports?.avgBookingValue,
     previousValue: reports?.previousMetrics.avgBookingValue,
@@ -185,6 +197,7 @@ export default function BookingsReportsSection({
   const noShowExpiredDelta = formatDelta({
     value: reports?.trends.noShowExpiredRatePp ?? null,
     type: 'pp',
+    valueType: 'pp',
     tone: 'lower_better',
     currentValue: reports?.noShowExpiredRate,
     previousValue: reports?.previousMetrics.noShowExpiredRate,
@@ -195,23 +208,39 @@ export default function BookingsReportsSection({
 
   const reportsLeaderboardRows = useMemo(() => {
     if (!reports) return [];
-    const byBarber = new Map<string, { name: string; revenue: number; bookings: number }>();
+    const chartInput = {
+      revenueSeries: reports.revenueSeries,
+      reportBookings: reports.reportBookings ?? [],
+    };
+    const bookingCounts = new Map<string, number>();
     for (const row of reports.reportBookings ?? []) {
-      const entry = byBarber.get(row.barberId) ?? { name: row.barberName, revenue: 0, bookings: 0 };
-      entry.bookings += 1;
-      entry.revenue += row.computedValueGbp ?? 0;
-      byBarber.set(row.barberId, entry);
+      bookingCounts.set(row.barberId, (bookingCounts.get(row.barberId) ?? 0) + 1);
     }
-    return Array.from(byBarber.entries())
-      .map(([id, entry]) => ({
-        id,
-        name: entry.name,
-        value: entry.revenue > 0 ? entry.revenue : entry.bookings,
-        valueLabel: entry.revenue > 0 ? formatCurrencyGbp(entry.revenue) : `${entry.bookings}`,
-        note: `${entry.bookings} bookings`,
-      }))
+    const totals = getBarberTotals(chartInput, chartMetric);
+
+    return totals
+      .map((entry) => {
+        const bookings = bookingCounts.get(entry.barberId) ?? 0;
+        let valueLabel: string;
+        if (chartMetric === 'revenue') valueLabel = formatCurrencyGbp(entry.total);
+        else if (chartMetric === 'cancelRate') valueLabel = `${entry.total.toFixed(1)}%`;
+        else valueLabel = `${Math.round(entry.total)}`;
+
+        // Lower cancel rate ranks higher — invert for a single descending sort/bar scale.
+        const rankValue = chartMetric === 'cancelRate'
+          ? Math.max(0, 100 - entry.total)
+          : entry.total;
+
+        return {
+          id: entry.barberId,
+          name: entry.barberName,
+          value: rankValue,
+          valueLabel,
+          note: `${bookings} bookings`,
+        };
+      })
       .sort((a, b) => b.value - a.value);
-  }, [reports]);
+  }, [chartMetric, reports]);
 
   return (
     <>
@@ -225,6 +254,8 @@ export default function BookingsReportsSection({
         reportsCustomRange={reportsCustomRange}
         onPresetChange={handlePresetChange}
         onCustomRangeChange={handleCustomRangeChange}
+        chartMetric={chartMetric}
+        onChartMetricChange={setChartMetric}
       />
 
       <div className="admin-reports-body" aria-live="polite">
@@ -258,10 +289,10 @@ export default function BookingsReportsSection({
                 <span style={{ width: `${reportsBreakdownTotal ? ((reports?.breakdown.noShowExpired ?? 0) / reportsBreakdownTotal) * 100 : 0}%` }} className="is-no-show" />
               </div>
               <p className="admin-reports-breakdown-legend">
-                <span><i className="is-completed" /> Completed</span>
+                <span><i className="is-completed" /> Kept</span>
                 <span><i className="is-cancel-client" /> Client</span>
                 <span><i className="is-cancel-shop" /> Shop</span>
-                <span><i className="is-no-show" /> No-show</span>
+                <span><i className="is-no-show" /> No-show / expired</span>
               </p>
             </div>
           )}

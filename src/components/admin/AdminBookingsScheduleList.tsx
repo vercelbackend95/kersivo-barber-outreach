@@ -1,7 +1,9 @@
-import React, { useMemo } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import EmptyState from '../EmptyState';
 import { Calendar } from '../lucide-react';
 import ClientListAvatar from './ClientListAvatar';
+
+const HISTORY_MOBILE_MQ = '(max-width: 47.99rem)';
 
 /** Mirrors dashboard `Booking` rows from the admin API (structural match for handlers). */
 export type ScheduleListBooking = {
@@ -71,7 +73,7 @@ function pastStatusShort(booking: ScheduleListBooking): string {
 }
 
 function historyChipVariant(status: string): 'done' | 'cancelled' | 'expired' | 'rescheduled' | 'default' {
-  if (status === 'BOOKED') return 'done';
+  if (status === 'BOOKED' || status === 'COMPLETED') return 'done';
   if (status.startsWith('CANCELLED')) return 'cancelled';
   if (status === 'EXPIRED') return 'expired';
   if (status === 'RESCHEDULED') return 'rescheduled';
@@ -109,6 +111,8 @@ export type AdminBookingsScheduleHistoryProps = CommonScheduleListProps & {
   historyDateFiltered: boolean;
   onClearHistoryDateRange?: () => void;
   onClientAvatarChange?: (clientId: string, nextUrl: string) => void;
+  onEditHistoryStatus: (booking: ScheduleListBooking) => void;
+  statusEditorBookingId: string | null;
 };
 
 export type AdminBookingsScheduleListProps = AdminBookingsScheduleDayProps | AdminBookingsScheduleHistoryProps;
@@ -140,17 +144,41 @@ export default function AdminBookingsScheduleList(props: AdminBookingsScheduleLi
     return [...bookings].sort((a, b) => new Date(a.startAt).getTime() - new Date(b.startAt).getTime());
   }, [bookings, history]);
 
+  const [isHistoryMobile, setIsHistoryMobile] = useState(() =>
+    typeof window !== 'undefined' && typeof window.matchMedia === 'function'
+      ? window.matchMedia(HISTORY_MOBILE_MQ).matches
+      : false
+  );
+  const [expandedBookingId, setExpandedBookingId] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (!history || typeof window === 'undefined' || typeof window.matchMedia !== 'function') return;
+    const mq = window.matchMedia(HISTORY_MOBILE_MQ);
+    const sync = () => {
+      setIsHistoryMobile(mq.matches);
+      if (!mq.matches) setExpandedBookingId(null);
+    };
+    sync();
+    mq.addEventListener('change', sync);
+    return () => mq.removeEventListener('change', sync);
+  }, [history]);
+
   const rootClass = history ? 'admin-bookings-schedule admin-bookings-schedule--history' : 'admin-bookings-schedule';
 
   const pastLine = (booking: ScheduleListBooking) =>
     history ? props.getHistoryStatusLine(booking) : pastStatusShort(booking);
 
+  const toggleHistoryExpand = (bookingId: string) => {
+    setExpandedBookingId((current) => (current === bookingId ? null : bookingId));
+  };
+
   const historyHeadRow = (
     <div className="admin-bookings-schedule__history-head-row" aria-hidden="true">
       <span>Client</span>
-      <span>Service</span>
-      <span>Date &amp; Time</span>
-      <span>Barber</span>
+      <span className="admin-bookings-schedule__history-head-service">Service</span>
+      <span className="admin-bookings-schedule__history-head-datetime">Date &amp; Time</span>
+      <span className="admin-bookings-schedule__history-head-time">Time</span>
+      <span className="admin-bookings-schedule__history-head-barber">Barber</span>
       <span>Status</span>
     </div>
   );
@@ -186,9 +214,9 @@ export default function AdminBookingsScheduleList(props: AdminBookingsScheduleLi
                       <span className="admin-bookings-schedule__history-skeleton-avatar" />
                       <span className="admin-bookings-schedule__history-skeleton-cell admin-bookings-schedule__history-skeleton-cell--name" />
                     </div>
-                    <span className="admin-bookings-schedule__history-skeleton-cell" />
-                    <span className="admin-bookings-schedule__history-skeleton-cell" />
-                    <span className="admin-bookings-schedule__history-skeleton-cell admin-bookings-schedule__history-skeleton-cell--sm" />
+                    <span className="admin-bookings-schedule__history-skeleton-cell admin-bookings-schedule__history-skeleton-service" />
+                    <span className="admin-bookings-schedule__history-skeleton-cell admin-bookings-schedule__history-skeleton-time" />
+                    <span className="admin-bookings-schedule__history-skeleton-cell admin-bookings-schedule__history-skeleton-cell--sm admin-bookings-schedule__history-skeleton-barber" />
                     <span className="admin-bookings-schedule__history-skeleton-cell admin-bookings-schedule__history-skeleton-cell--chip" />
                   </div>
                 ))}
@@ -222,32 +250,56 @@ export default function AdminBookingsScheduleList(props: AdminBookingsScheduleLi
               <ul className="admin-bookings-schedule__history-list" role="list" aria-live="polite">
                 {displayBookings.map((booking) => {
                   const isUpdated = updatedBookingIds.includes(booking.id);
+                  const isExpanded = expandedBookingId === booking.id;
                   const chipVariant = historyChipVariant(booking.status);
                   const chipLabel = props.getHistoryStatusLine(booking);
                   const serviceName = booking.service?.name ?? '—';
                   const durationLabel = formatDurationLine(bookingDurationMinutes(booking));
                   const emailTrimmed = (booking.email ?? '').trim();
                   const dateTimeStr = props.formatDateTime(booking.startAt);
+                  const timeOnlyStr = formatStartTime(booking.startAt);
                   const barberShort = barberFirstName(booking.barber?.name);
+                  const subtitle = `${serviceName} · ${barberShort}`;
+
+                  const itemClass = [
+                    isUpdated ? 'admin-bookings-schedule__history-item--updated' : '',
+                    isExpanded ? 'admin-bookings-schedule__history-item--expanded' : '',
+                  ]
+                    .filter(Boolean)
+                    .join(' ') || undefined;
+
+                  const handleRowActivate = () => {
+                    if (isHistoryMobile) {
+                      toggleHistoryExpand(booking.id);
+                      return;
+                    }
+                    void onOpenClient(booking);
+                  };
 
                   return (
-                    <li
-                      key={booking.id}
-                      className={isUpdated ? 'admin-bookings-schedule__history-item--updated' : undefined}
-                    >
+                    <li key={booking.id} className={itemClass}>
                       <div
                         role="button"
                         tabIndex={0}
-                        className="admin-bookings-schedule__history-row"
-                        onClick={() => void onOpenClient(booking)}
+                        className={
+                          isExpanded
+                            ? 'admin-bookings-schedule__history-row admin-bookings-schedule__history-row--expanded'
+                            : 'admin-bookings-schedule__history-row'
+                        }
+                        onClick={handleRowActivate}
                         onKeyDown={(event) => {
                           if (event.key === 'Enter' || event.key === ' ') {
                             event.preventDefault();
-                            void onOpenClient(booking);
+                            handleRowActivate();
                           }
                         }}
                         data-booking-id={booking.id}
-                        aria-label={`View booking for ${booking.fullName}`}
+                        aria-expanded={isHistoryMobile ? isExpanded : undefined}
+                        aria-label={
+                          isHistoryMobile
+                            ? `${isExpanded ? 'Collapse' : 'Expand'} booking for ${booking.fullName}`
+                            : `View booking for ${booking.fullName}`
+                        }
                       >
                         <div className="admin-bookings-schedule__history-client">
                           <ClientListAvatar
@@ -256,15 +308,25 @@ export default function AdminBookingsScheduleList(props: AdminBookingsScheduleLi
                             avatarUrl={booking.clientAvatarUrl}
                             className="admin-bookings-schedule__history-avatar"
                             onAvatarChange={props.onClientAvatarChange}
+                            onClick={(event) => {
+                              event.stopPropagation();
+                              void onOpenClient(booking);
+                            }}
                           />
 
                           <div className="admin-bookings-schedule__history-identity">
                             <span className="admin-bookings-schedule__history-name">
                               {highlightMatch(booking.fullName)}
                             </span>
-                            <span className="admin-bookings-schedule__history-email">
-                              {emailTrimmed ? highlightMatch(emailTrimmed) : '—'}
-                            </span>
+                            {isHistoryMobile ? (
+                              <span className="admin-bookings-schedule__history-subtitle">
+                                {highlightMatch(subtitle)}
+                              </span>
+                            ) : (
+                              <span className="admin-bookings-schedule__history-email">
+                                {emailTrimmed ? highlightMatch(emailTrimmed) : '—'}
+                              </span>
+                            )}
                           </div>
                         </div>
 
@@ -276,16 +338,61 @@ export default function AdminBookingsScheduleList(props: AdminBookingsScheduleLi
                         </span>
 
                         <span className="admin-bookings-schedule__history-time">
-                          {dateTimeStr}
+                          {isHistoryMobile ? (
+                            <span className="admin-bookings-schedule__history-time-only">{timeOnlyStr}</span>
+                          ) : (
+                            <span className="admin-bookings-schedule__history-time-full">{dateTimeStr}</span>
+                          )}
                         </span>
 
                         <span className="admin-bookings-schedule__history-barber">
                           {barberShort}
                         </span>
 
-                        <span className={`admin-bookings-schedule__history-chip admin-bookings-schedule__history-chip--${chipVariant}`}>
-                          {chipLabel}
-                        </span>
+                        <button
+                          type="button"
+                          className={`admin-bookings-schedule__history-chip admin-bookings-schedule__history-chip--button admin-bookings-schedule__history-chip--${chipVariant}`}
+                          aria-haspopup="dialog"
+                          aria-expanded={props.statusEditorBookingId === booking.id}
+                          aria-label={`Update status for ${booking.fullName}. Current status: ${chipLabel}`}
+                          onClick={(event) => {
+                            event.stopPropagation();
+                            event.preventDefault();
+                            props.onEditHistoryStatus(booking);
+                          }}
+                          onKeyDown={(event) => event.stopPropagation()}
+                        >
+                          <span>{chipLabel}</span>
+                          <span className="admin-bookings-schedule__history-chip-chevron" aria-hidden="true">▾</span>
+                        </button>
+                      </div>
+
+                      <div
+                        className={
+                          isExpanded
+                            ? 'admin-bookings-schedule__history-expand-wrap admin-bookings-schedule__history-expand-wrap--open'
+                            : 'admin-bookings-schedule__history-expand-wrap'
+                        }
+                        aria-hidden={!isExpanded}
+                        inert={!isExpanded ? true : undefined}
+                      >
+                        <div className="admin-bookings-schedule__history-details">
+                          <div className="admin-bookings-schedule__history-meta-grid">
+                            <p>
+                              <strong>Service:</strong> {serviceName}
+                              {durationLabel !== '—' ? ` · ${durationLabel}` : ''}
+                            </p>
+                            <p>
+                              <strong>Date &amp; time:</strong> {dateTimeStr}
+                            </p>
+                            <p className="admin-bookings-schedule__history-meta-status">
+                              <strong>Status:</strong>{' '}
+                              <span className={`admin-bookings-schedule__history-chip admin-bookings-schedule__history-chip--${chipVariant}`}>
+                                {chipLabel}
+                              </span>
+                            </p>
+                          </div>
+                        </div>
                       </div>
                     </li>
                   );

@@ -5,9 +5,11 @@ import AdminDesktopDashHeroSlot from './AdminDesktopDashHeroSlot';
 import { useAdminMobileChromeBreakpoint } from './useAdminMobileNextAppointmentsChrome';
 import EmptyState from '../EmptyState';
 import { SkeletonBookingChoices } from '../skeleton';
-import { ChevronDown, ChevronUp, Plus, Scissors, Search, Star, X } from '../lucide-react';
+import { ChevronDown, Plus, Scissors, Search, Star, X } from '../lucide-react';
 import { adminFetchJson, isPublicAdminDemoMode, notifyAdminDemoBlocked } from './adminAuth';
 import ServiceWizard from './service-wizard/ServiceWizard';
+import AdminWizardSheetLayer from './AdminWizardSheetLayer';
+import AdminPremiumSearchBar from './AdminPremiumSearchBar';
 
 type ServiceBarberRow = {
   id: string;
@@ -48,10 +50,9 @@ type ServiceRow = {
 };
 
 type ServiceFilter = 'all' | 'active' | 'inactive' | 'featured';
-type ServiceSortMode = 'manual' | 'newest' | 'price' | 'name';
+type ServiceSortMode = 'newest' | 'price' | 'name';
 
 const SERVICE_SORT_OPTIONS: Array<{ value: ServiceSortMode; label: string }> = [
-  { value: 'manual', label: 'Manual' },
   { value: 'newest', label: 'Newest' },
   { value: 'price', label: 'Price' },
   { value: 'name', label: 'Name' }
@@ -124,9 +125,8 @@ export default function ServicesAdminPanel() {
   const [isServiceSheetOpen, setIsServiceSheetOpen] = useState(false);
   const [serviceSearch, setServiceSearch] = useState('');
   const [serviceFilter, setServiceFilter] = useState<ServiceFilter>('all');
-  const [serviceSortMode, setServiceSortMode] = useState<ServiceSortMode>('manual');
+  const [serviceSortMode, setServiceSortMode] = useState<ServiceSortMode>('name');
   const [serviceSortOpen, setServiceSortOpen] = useState(false);
-  const [manualOrderIds, setManualOrderIds] = useState<string[]>([]);
   const [serviceSavingById, setServiceSavingById] = useState<Record<string, boolean>>({});
   const [serviceStatusById, setServiceStatusById] = useState<Record<string, string>>({});
   const serviceSearchInputRef = useRef<HTMLInputElement | null>(null);
@@ -134,23 +134,12 @@ export default function ServicesAdminPanel() {
   const isMobileAdminChrome = useAdminMobileChromeBreakpoint();
   useAdminBodyScrollLock(isMobileAdminChrome && isServiceSheetOpen);
 
-  const serviceMap = useMemo(() => new Map(services.map((service) => [service.id, service])), [services]);
-
   const sortedServices = useMemo(
     () => [...services].sort((a, b) => a.displayOrder - b.displayOrder || a.name.localeCompare(b.name)),
     [services]
   );
 
-  const manualServices = useMemo(() => {
-    const validIds = manualOrderIds.filter((id) => serviceMap.has(id));
-    const missingIds = sortedServices.map((service) => service.id).filter((id) => !validIds.includes(id));
-    return [...validIds, ...missingIds]
-      .map((id) => serviceMap.get(id))
-      .filter((service): service is ServiceRow => Boolean(service));
-  }, [manualOrderIds, serviceMap, sortedServices]);
-
   const baseServices = useMemo(() => {
-    if (serviceSortMode === 'manual') return manualServices;
     const source = [...sortedServices];
     if (serviceSortMode === 'newest') {
       return source.sort(
@@ -163,7 +152,7 @@ export default function ServicesAdminPanel() {
       return source.sort((a, b) => b.pricePence - a.pricePence || a.name.localeCompare(b.name));
     }
     return source.sort((a, b) => a.name.localeCompare(b.name));
-  }, [manualServices, serviceSortMode, sortedServices]);
+  }, [serviceSortMode, sortedServices]);
 
   const filteredServices = useMemo(() => {
     const query = serviceSearch.trim().toLowerCase();
@@ -184,7 +173,6 @@ export default function ServicesAdminPanel() {
     () => services.filter((service) => service.featured ?? false).length,
     [services]
   );
-  const canReorder = serviceSortMode === 'manual' && serviceFilter === 'all' && serviceSearch.trim().length === 0;
   const servicesInitiallyLoading = loading && services.length === 0;
 
   const handleServiceSearchClear = useCallback(() => {
@@ -234,10 +222,6 @@ export default function ServicesAdminPanel() {
   useEffect(() => {
     void fetchServices();
   }, [fetchServices]);
-
-  useEffect(() => {
-    setManualOrderIds(sortedServices.map((service) => service.id));
-  }, [sortedServices]);
 
   useEffect(() => {
     const handleKeyDown = (event: KeyboardEvent) => {
@@ -395,56 +379,6 @@ export default function ServicesAdminPanel() {
     }
   }
 
-  async function saveManualOrder(orderedIds: string[]) {
-    if (!canReorder) return;
-    if (orderedIds.length === 0) return;
-
-    const previous = manualOrderIds;
-    setManualOrderIds(orderedIds);
-    setServices((previousServices) => {
-      const orderLookup = new Map(orderedIds.map((id, index) => [id, index]));
-      return [...previousServices].sort(
-        (a, b) => (orderLookup.get(a.id) ?? Number.MAX_SAFE_INTEGER) - (orderLookup.get(b.id) ?? Number.MAX_SAFE_INTEGER)
-      );
-    });
-
-    try {
-      const payload = await adminFetchJson<{ services?: ServiceRow[] }>('/api/admin/services/reorder', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ orderedIds }),
-        errorMessage: 'Unable to save order.',
-      });
-      if (Array.isArray(payload.services)) {
-        setServices(payload.services);
-      }
-      setMessage('Order updated.');
-      setError('');
-    } catch (reorderError) {
-      setManualOrderIds(previous);
-      await fetchServices();
-      setError(reorderError instanceof Error ? reorderError.message : 'Unable to save order.');
-    }
-  }
-
-  function moveItemUp(index: number) {
-    if (!canReorder || index <= 0) return;
-    const orderedIds = manualServices.map((service) => service.id);
-    const nextOrderedIds = [...orderedIds];
-    const [movedId] = nextOrderedIds.splice(index, 1);
-    nextOrderedIds.splice(index - 1, 0, movedId);
-    void saveManualOrder(nextOrderedIds);
-  }
-
-  function moveItemDown(index: number) {
-    if (!canReorder || index < 0 || index >= manualServices.length - 1) return;
-    const orderedIds = manualServices.map((service) => service.id);
-    const nextOrderedIds = [...orderedIds];
-    const [movedId] = nextOrderedIds.splice(index, 1);
-    nextOrderedIds.splice(index + 1, 0, movedId);
-    void saveManualOrder(nextOrderedIds);
-  }
-
   const editingService = editingId ? services.find((s) => s.id === editingId) ?? null : null;
 
   return (
@@ -483,33 +417,18 @@ export default function ServicesAdminPanel() {
         <div className="admin-reports admin-services-panel">
           <div className="admin-products-toolbar-sticky">
             <div className="admin-products-toolbar">
-              <div className="admin-search-bar admin-products-toolbar-search" role="search">
-                <Search className="admin-search-bar__icon" width={16} height={16} aria-hidden="true" />
-                <input
-                  ref={serviceSearchInputRef}
-                  type="search"
-                  className="admin-search-bar__input"
-                  placeholder="Search services…"
-                  value={serviceSearch}
-                  onChange={(e) => setServiceSearch(e.target.value)}
-                  onKeyDown={(e) => e.key === 'Escape' && handleServiceSearchClear()}
-                  aria-label="Search services"
-                  autoComplete="off"
-                  spellCheck={false}
-                />
-                {serviceSearch ? (
-                  <button
-                    type="button"
-                    className="admin-search-bar__clear"
-                    onClick={handleServiceSearchClear}
-                    aria-label="Clear search"
-                  >
-                    <X width={14} height={14} aria-hidden="true" />
-                  </button>
-                ) : (
-                  <kbd className="admin-search-bar__kbd">/</kbd>
-                )}
-              </div>
+              <AdminPremiumSearchBar
+                className="admin-products-toolbar-search"
+                inputRef={serviceSearchInputRef}
+                value={serviceSearch}
+                onChange={setServiceSearch}
+                onClear={handleServiceSearchClear}
+                onKeyDown={(e) => e.key === 'Escape' && handleServiceSearchClear()}
+                placeholder="Search services…"
+                aria-label="Search services"
+                showKbdHint
+                searchShortcutHint="/"
+              />
 
               <div className="admin-products-toolbar-controls">
                 <div className="admin-filter-scroll-wrap">
@@ -596,12 +515,8 @@ export default function ServicesAdminPanel() {
                   variant="filtered"
                 />
               ) : (
-                filteredServices.map((service, index) => {
+                filteredServices.map((service) => {
                   const isSavingRow = Boolean(serviceSavingById[service.id]);
-                  const manualIndex = manualServices.findIndex((entry) => entry.id === service.id);
-                  const isFirstItem = manualIndex <= 0;
-                  const isLastItem = manualIndex < 0 || manualIndex >= manualServices.length - 1;
-                  const reorderDisabled = serviceSortMode !== 'manual' || !canReorder;
                   const categoryLabel = formatCategoryLabel(service.category);
                   const updatedLabel = service.updatedAt || service.createdAt
                     ? new Date(service.updatedAt ?? service.createdAt ?? '').toLocaleString('en-GB', {
@@ -692,29 +607,6 @@ export default function ServicesAdminPanel() {
                         >
                           <SettingsGearIcon className="admin-control-icon" aria-hidden="true" />
                         </button>
-
-                        <div className="admin-reorder-controls admin-reorder-controls--product" role="group" aria-label={`Reorder ${service.name}`}>
-                          <div className="admin-reorder-arrow-stack admin-reorder-arrow-stack--product">
-                            <button
-                              type="button"
-                              className="admin-reorder-btn admin-reorder-btn--product"
-                              aria-label={`Move ${service.name} up`}
-                              disabled={reorderDisabled || isFirstItem}
-                              onClick={() => moveItemUp(manualIndex >= 0 ? manualIndex : index)}
-                            >
-                              <ChevronUp width={14} height={14} strokeWidth={2.5} aria-hidden="true" />
-                            </button>
-                            <button
-                              type="button"
-                              className="admin-reorder-btn admin-reorder-btn--product"
-                              aria-label={`Move ${service.name} down`}
-                              disabled={reorderDisabled || isLastItem}
-                              onClick={() => moveItemDown(manualIndex >= 0 ? manualIndex : index)}
-                            >
-                              <ChevronDown width={14} height={14} strokeWidth={2.5} aria-hidden="true" />
-                            </button>
-                          </div>
-                        </div>
                       </div>
 
                       {serviceStatusLine ? (
@@ -729,18 +621,12 @@ export default function ServicesAdminPanel() {
         </div>
       ) : null}
 
-      {isServiceSheetOpen ? (
-        <div
-          className="admin-barber-sheet-layer admin-service-sheet-layer"
-          role="dialog"
-          aria-modal="true"
-          aria-labelledby="admin-service-form-title"
-          onMouseDown={(event) => {
-            if (event.target === event.currentTarget) {
-              resetServiceFormState();
-            }
-          }}
-        >
+      <AdminWizardSheetLayer
+        open={isServiceSheetOpen}
+        onDismiss={resetServiceFormState}
+        ariaLabelledBy="admin-service-form-title"
+        className="admin-service-sheet-layer"
+      >
           <ServiceWizard
             key={editingId ?? 'create'}
             mode={editingId ? 'edit' : 'create'}
@@ -772,8 +658,7 @@ export default function ServicesAdminPanel() {
               await fetchServices();
             }}
           />
-        </div>
-      ) : null}
+      </AdminWizardSheetLayer>
 
     </section>
   );

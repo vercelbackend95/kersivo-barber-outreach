@@ -13,7 +13,7 @@ import AdminLeaderboard from './AdminLeaderboard';
 import { CHART_OVERALL_COLOR, getProductSlotColor } from '@/lib/admin/chartSeriesColors';
 import { SettingsGearIcon } from './SettingsGearIcon';
 import EmptyState from '../EmptyState';
-import { ChevronDown, ChevronUp, Package, Plus, Search, Star, X } from '../lucide-react';
+import { ChevronDown, Package, Plus, Search, Star, X } from '../lucide-react';
 import { formatDelta } from './reportsFormatting';
 import { SkeletonBookingChoices } from '../skeleton';
 import { AdminFetchError, adminFetchJson, isPublicAdminDemoMode, notifyAdminDemoBlocked } from './adminAuth';
@@ -21,6 +21,8 @@ import { resolveClientIdForBooking } from '../../lib/admin/resolveClientIdForBoo
 import RetailOnboardingWelcome from './retail-onboarding/RetailOnboardingWelcome';
 import RetailOnboardingTaskCard from './retail-onboarding/RetailOnboardingTaskCard';
 import ProductWizard from './product-wizard/ProductWizard';
+import AdminWizardSheetLayer from './AdminWizardSheetLayer';
+import AdminPremiumSearchBar from './AdminPremiumSearchBar';
 import {
   EMPTY_PRODUCT_FORM,
   PRODUCT_CATEGORY_OPTIONS,
@@ -105,10 +107,9 @@ type SalesResponse = {
 
 
 type ProductFilter = 'all' | 'active' | 'inactive' | 'featured';
-type ProductSortMode = 'manual' | 'newest' | 'price' | 'name';
+type ProductSortMode = 'newest' | 'price' | 'name';
 
 const PRODUCT_SORT_OPTIONS: Array<{ value: ProductSortMode; label: string }> = [
-  { value: 'manual', label: 'Manual' },
   { value: 'newest', label: 'Newest' },
   { value: 'price', label: 'Price' },
   { value: 'name', label: 'Name' },
@@ -540,17 +541,14 @@ export default function ShopAdminPanel({ initialTab = 'products' }: ShopAdminPan
   const [isMobileOrdersView, setIsMobileOrdersView] = useState(false);
   const [isMobileProductEditor, setIsMobileProductEditor] = useState(false);
 
-  const [isSalesChartExpanded, setIsSalesChartExpanded] = useState(false);
   const [expandedProductSearch, setExpandedProductSearch] = useState('');
   const [productAddOpen, setProductAddOpen] = useState(false);
-    useBodyScrollLock((formOpen && isMobileProductEditor) || (isMobileSalesView && isSalesChartExpanded));
+  useBodyScrollLock(formOpen && isMobileProductEditor);
 
-
-    const [productSearch, setProductSearch] = useState('');
+  const [productSearch, setProductSearch] = useState('');
   const [productFilter, setProductFilter] = useState<ProductFilter>('all');
-  const [productSortMode, setProductSortMode] = useState<ProductSortMode>('manual');
+  const [productSortMode, setProductSortMode] = useState<ProductSortMode>('name');
   const [productSortOpen, setProductSortOpen] = useState(false);
-  const [manualOrderIds, setManualOrderIds] = useState<string[]>([]);
   const [productSavingById, setProductSavingById] = useState<Record<string, boolean>>({});
   const [productStatusById, setProductStatusById] = useState<Record<string, string>>({});
   const productFiltersScrollRef = useRef<HTMLDivElement | null>(null);
@@ -585,7 +583,6 @@ export default function ShopAdminPanel({ initialTab = 'products' }: ShopAdminPan
   );
   
 
-  const productMap = useMemo(() => new Map(products.map((product) => [product.id, product])), [products]);
   useEffect(() => {
     if (typeof window === 'undefined') return;
     const mediaQuery = window.matchMedia(MOBILE_PRODUCT_EDITOR_MEDIA_QUERY);
@@ -668,16 +665,7 @@ export default function ShopAdminPanel({ initialTab = 'products' }: ShopAdminPan
     };
   }, [productSortOpen]);
 
-  const manualProducts = useMemo(() => {
-    const validIds = manualOrderIds.filter((id) => productMap.has(id));
-    const missingIds = sortedProducts.map((product) => product.id).filter((id) => !validIds.includes(id));
-    return [...validIds, ...missingIds]
-      .map((id) => productMap.get(id))
-      .filter((product): product is Product => Boolean(product));
-  }, [manualOrderIds, productMap, sortedProducts]);
-
   const baseProducts = useMemo(() => {
-    if (productSortMode === 'manual') return manualProducts;
     const source = [...sortedProducts];
     if (productSortMode === 'newest') {
       return source.sort((a, b) => Date.parse(b.updatedAt) - Date.parse(a.updatedAt));
@@ -686,7 +674,7 @@ export default function ShopAdminPanel({ initialTab = 'products' }: ShopAdminPan
       return source.sort((a, b) => b.pricePence - a.pricePence || a.name.localeCompare(b.name));
     }
     return source.sort((a, b) => a.name.localeCompare(b.name));
-  }, [manualProducts, productSortMode, sortedProducts]);
+  }, [productSortMode, sortedProducts]);
 
   const filteredProducts = useMemo(() => {
     const query = productSearch.trim().toLowerCase();
@@ -700,7 +688,6 @@ export default function ShopAdminPanel({ initialTab = 'products' }: ShopAdminPan
   }, [baseProducts, productFilter, productSearch]);
 
   const featuredCount = useMemo(() => products.filter((product) => product.featured).length, [products]);
-  const canReorder = productSortMode === 'manual' && productFilter === 'all' && productSearch.trim().length === 0;
   const defaultSortOrder = useMemo(() => Math.min(SORT_ORDER_MAX, Math.max(SORT_ORDER_MIN, products.length)), [products.length]);
   const productsInitiallyLoading = loading && products.length === 0;
 
@@ -710,9 +697,6 @@ export default function ShopAdminPanel({ initialTab = 'products' }: ShopAdminPan
   useEffect(() => {
     setActiveTab(initialTab);
   }, [initialTab]);
-  useEffect(() => {
-    setManualOrderIds(sortedProducts.map((product) => product.id));
-  }, [sortedProducts]);
 
   useEffect(() => {
     if (!formOpen) return;
@@ -724,17 +708,6 @@ export default function ShopAdminPanel({ initialTab = 'products' }: ShopAdminPan
     window.addEventListener('keydown', onKeyDown);
     return () => window.removeEventListener('keydown', onKeyDown);
   }, [formOpen, resetForm]);
-
-  useEffect(() => {
-    if (!isSalesChartExpanded) return;
-    const onKeyDown = (event: KeyboardEvent) => {
-      if (event.key === 'Escape') {
-        setIsSalesChartExpanded(false);
-      }
-    };
-    window.addEventListener('keydown', onKeyDown);
-    return () => window.removeEventListener('keydown', onKeyDown);
-  }, [isSalesChartExpanded]);
 
   useEffect(() => {
     bulkClearAll();
@@ -869,10 +842,6 @@ export default function ShopAdminPanel({ initialTab = 'products' }: ShopAdminPan
       : `${salesData?.kpis.ordersCount ?? 0}`),
     [salesData, salesMetric],
   );
-
-  const salesHeroLabel = salesMetric === 'revenue'
-    ? 'Revenue in selected period'
-    : 'Orders in selected period';
 
   const salesLeaderboardRows = useMemo(
     () => (salesData?.leaderboard ?? []).map((row) => ({
@@ -1145,7 +1114,7 @@ export default function ShopAdminPanel({ initialTab = 'products' }: ShopAdminPan
     setEditingId(null);
     setWizardInitialForm({
       ...EMPTY_PRODUCT_FORM,
-      sortOrder: productSortMode === 'manual' ? defaultSortOrder : EMPTY_PRODUCT_FORM.sortOrder
+      sortOrder: defaultSortOrder
     });
     setFormOpen(true);
     setError(null);
@@ -1172,61 +1141,6 @@ export default function ShopAdminPanel({ initialTab = 'products' }: ShopAdminPan
     setError(null);
     setSuccess(null);
   }
-
-  async function saveManualOrder(orderedIds: string[]) {
-    if (!canReorder) return;
-
-    if (orderedIds.length === 0) return;
-
-    const previous = manualOrderIds;
-
-    setManualOrderIds(orderedIds);
-    setProducts((previousProducts) => {
-      const orderLookup = new Map(orderedIds.map((id, index) => [id, index]));
-      return [...previousProducts].sort((a, b) => (orderLookup.get(a.id) ?? Number.MAX_SAFE_INTEGER) - (orderLookup.get(b.id) ?? Number.MAX_SAFE_INTEGER));
-    });
-
-
-    try {
-      const payload = await adminFetchJson<{ products?: Product[] }>('/api/admin/shop/products/reorder', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ orderedIds }),
-        errorMessage: 'Unable to save order.',
-      });
-      if (Array.isArray(payload.products)) {
-        setProducts(payload.products as Product[]);
-      }
-      setSuccess('Order updated.');
-    } catch (reorderError) {
-      setManualOrderIds(previous);
-            setProducts((previousProducts) => {
-        const orderLookup = new Map(previous.map((id, index) => [id, index]));
-        return [...previousProducts].sort((a, b) => (orderLookup.get(a.id) ?? Number.MAX_SAFE_INTEGER) - (orderLookup.get(b.id) ?? Number.MAX_SAFE_INTEGER));
-      });
-
-      setError(reorderError instanceof Error ? reorderError.message : 'Unable to save order.');
-    }
-  }
-  function moveItemUp(index: number) {
-    if (!canReorder || index <= 0) return;
-    const orderedIds = manualProducts.map((product) => product.id);
-    const nextOrderedIds = [...orderedIds];
-    const [movedId] = nextOrderedIds.splice(index, 1);
-    nextOrderedIds.splice(index - 1, 0, movedId);
-    void saveManualOrder(nextOrderedIds);
-  }
-
-  function moveItemDown(index: number) {
-    if (!canReorder || index < 0 || index >= manualProducts.length - 1) return;
-    const orderedIds = manualProducts.map((product) => product.id);
-    const nextOrderedIds = [...orderedIds];
-    const [movedId] = nextOrderedIds.splice(index, 1);
-    nextOrderedIds.splice(index + 1, 0, movedId);
-    void saveManualOrder(nextOrderedIds);
-  }
-
-
 
   async function markCollected(orderId: string) {
     setError(null);
@@ -1364,33 +1278,18 @@ export default function ShopAdminPanel({ initialTab = 'products' }: ShopAdminPan
             <div className="admin-products-toolbar">
 
               {/* Row 1 — Search */}
-              <div className="admin-search-bar admin-products-toolbar-search" role="search">
-                <Search className="admin-search-bar__icon" width={16} height={16} aria-hidden="true" />
-                <input
-                  ref={productSearchInputRef}
-                  type="search"
-                  className="admin-search-bar__input"
-                  placeholder="Search products…"
-                  value={productSearch}
-                  onChange={(e) => setProductSearch(e.target.value)}
-                  onKeyDown={(e) => e.key === 'Escape' && handleProductSearchClear()}
-                  aria-label="Search products"
-                  autoComplete="off"
-                  spellCheck={false}
-                />
-                {productSearch ? (
-                  <button
-                    type="button"
-                    className="admin-search-bar__clear"
-                    onClick={handleProductSearchClear}
-                    aria-label="Clear search"
-                  >
-                    <X width={14} height={14} aria-hidden="true" />
-                  </button>
-                ) : (
-                  <kbd className="admin-search-bar__kbd">/</kbd>
-                )}
-              </div>
+              <AdminPremiumSearchBar
+                className="admin-products-toolbar-search"
+                inputRef={productSearchInputRef}
+                value={productSearch}
+                onChange={setProductSearch}
+                onClear={handleProductSearchClear}
+                onKeyDown={(e) => e.key === 'Escape' && handleProductSearchClear()}
+                placeholder="Search products…"
+                aria-label="Search products"
+                showKbdHint
+                searchShortcutHint="/"
+              />
 
               {/* Row 2 — Controls */}
               <div className="admin-products-toolbar-controls">
@@ -1487,30 +1386,23 @@ export default function ShopAdminPanel({ initialTab = 'products' }: ShopAdminPan
             </div>
           </div>
 
-          {formOpen ? (
-            <div
-              className="admin-barber-sheet-layer admin-product-sheet-layer"
-              role="dialog"
-              aria-modal="true"
-              aria-labelledby="admin-product-form-title"
-              onMouseDown={(event) => {
-                if (event.target === event.currentTarget) {
-                  resetForm();
-                }
+          <AdminWizardSheetLayer
+            open={formOpen}
+            onDismiss={resetForm}
+            ariaLabelledBy="admin-product-form-title"
+            className="admin-product-sheet-layer"
+          >
+            <ProductWizard
+              key={editingId ?? 'create'}
+              mode={editingId ? 'edit' : 'create'}
+              productId={editingId ?? undefined}
+              initialForm={wizardInitialForm}
+              onCancel={resetForm}
+              onSaved={async () => {
+                await fetchProducts();
               }}
-            >
-              <ProductWizard
-                key={editingId ?? 'create'}
-                mode={editingId ? 'edit' : 'create'}
-                productId={editingId ?? undefined}
-                initialForm={wizardInitialForm}
-                onCancel={resetForm}
-                onSaved={async () => {
-                  await fetchProducts();
-                }}
-              />
-            </div>
-          ) : null}
+            />
+          </AdminWizardSheetLayer>
 
           <div className="admin-products-scroll" role="region" aria-label="Products list">
             {error ? (
@@ -1571,12 +1463,9 @@ export default function ShopAdminPanel({ initialTab = 'products' }: ShopAdminPan
                     variant="filtered"
                   />
                 )
-              ) : filteredProducts.map((product, index) => {
+              ) : filteredProducts.map((product) => {
                 const isSavingCard = Boolean(productSavingById[product.id]);
-                const isFirstItem = index === 0;
-                const isLastItem = index === filteredProducts.length - 1;
                 const isCardSelected = bulkIsSelected(product.id);
-                const reorderDisabled = productSortMode !== 'manual' || !canReorder || bulkSelectedCount > 0;
 
                 const categoryLabel = PRODUCT_CATEGORY_OPTIONS.find((option) => option.value === product.category)?.label ?? 'Styling';
                 const updatedLabel = new Date(product.updatedAt).toLocaleString('en-GB', {
@@ -1666,29 +1555,6 @@ export default function ShopAdminPanel({ initialTab = 'products' }: ShopAdminPan
                       >
                         <SettingsGearIcon className="admin-control-icon" aria-hidden="true" />
                       </button>
-
-                      <div className="admin-reorder-controls admin-reorder-controls--product" role="group" aria-label={`Reorder ${product.name}`}>
-                        <div className="admin-reorder-arrow-stack admin-reorder-arrow-stack--product">
-                          <button
-                            type="button"
-                            className="admin-reorder-btn admin-reorder-btn--product"
-                            aria-label={`Move ${product.name} up`}
-                            disabled={reorderDisabled || isFirstItem}
-                            onClick={() => moveItemUp(index)}
-                          >
-                            <ChevronUp width={14} height={14} strokeWidth={2.5} aria-hidden="true" />
-                          </button>
-                          <button
-                            type="button"
-                            className="admin-reorder-btn admin-reorder-btn--product"
-                            aria-label={`Move ${product.name} down`}
-                            disabled={reorderDisabled || isLastItem}
-                            onClick={() => moveItemDown(index)}
-                          >
-                            <ChevronDown width={14} height={14} strokeWidth={2.5} aria-hidden="true" />
-                          </button>
-                        </div>
-                      </div>
                     </div>
 
                     {productStatusLine ? (
@@ -1742,9 +1608,17 @@ export default function ShopAdminPanel({ initialTab = 'products' }: ShopAdminPan
                 You’ve completed your first test order and experienced the full in-store pickup
                 workflow.
               </p>
-              <a className="btn btn--primary" href="/admin">
-                Continue to Admin
-              </a>
+              <p>You can track this sale (and future ones) in the Sales tab.</p>
+              <button
+                type="button"
+                className="btn btn--primary"
+                onClick={() => {
+                  setShowRetailWalkthroughComplete(false);
+                  setActiveTab('sales');
+                }}
+              >
+                Check Sales
+              </button>
             </div>
           ) : walkthroughOrder &&
             (walkthroughOrder.status === 'PAID' ||
@@ -1774,47 +1648,28 @@ export default function ShopAdminPanel({ initialTab = 'products' }: ShopAdminPan
                         emptyMessage={debouncedOrdersSearchQuery ? 'No orders match your search.' : 'No orders yet.'}
             searchSlot={
               <div className="admin-orders-search-row admin-clients-search-row">
-                <div className="admin-search-bar" role="search">
-                  <Search className="admin-search-bar__icon" width={16} height={16} aria-hidden="true" />
-                  <input
-                    type="search"
-                    className="admin-search-bar__input"
-                    value={ordersSearchQuery}
-                    onChange={(event) => setOrdersSearchQuery(event.target.value)}
-                    onKeyDown={(event) => {
-                      if (event.key !== 'Escape') return;
-                      event.preventDefault();
-                      setOrdersSearchQuery('');
-                      setDebouncedOrdersSearchQuery('');
-                    }}
-                    placeholder={ordersLoading ? 'Loading…' : 'Search orders...'}
-                    aria-label="Search orders"
-                    disabled={ordersLoading}
-                    autoComplete="off"
-                    spellCheck={false}
-                  />
-                  {!ordersLoading ? (
-                    <span className="admin-orders-search-count" aria-live="polite">
-                      {filteredOrders.length} / {ordersSafe.length}
-                    </span>
-                  ) : null}
-                  {ordersSearchQuery ? (
-                    <button
-                      type="button"
-                      className="admin-search-bar__clear"
-                      onClick={() => {
-                        setOrdersSearchQuery('');
-                        setDebouncedOrdersSearchQuery('');
-                      }}
-                      aria-label="Clear order search"
-                    >
-                      <X width={14} height={14} aria-hidden="true" />
-                    </button>
-                  ) : null}
-                  {!ordersSearchQuery && !ordersLoading ? (
-                    <kbd className="admin-search-bar__kbd">/</kbd>
-                  ) : null}
-                </div>
+                <AdminPremiumSearchBar
+                  value={ordersSearchQuery}
+                  onChange={setOrdersSearchQuery}
+                  onClear={() => {
+                    setOrdersSearchQuery('');
+                    setDebouncedOrdersSearchQuery('');
+                  }}
+                  onKeyDown={(event) => {
+                    if (event.key !== 'Escape') return;
+                    event.preventDefault();
+                    setOrdersSearchQuery('');
+                    setDebouncedOrdersSearchQuery('');
+                  }}
+                  placeholder={ordersLoading ? 'Loading…' : 'Search orders...'}
+                  aria-label="Search orders"
+                  disabled={ordersLoading}
+                  resultsLabel={
+                    !ordersLoading ? `${filteredOrders.length} / ${ordersSafe.length}` : undefined
+                  }
+                  showKbdHint={!ordersLoading}
+                  searchShortcutHint="/"
+                />
               </div>
             }
           />
@@ -1857,27 +1712,20 @@ export default function ShopAdminPanel({ initialTab = 'products' }: ShopAdminPan
                 size="compact"
               />
             )}
-            headlineValue={salesLoading && !salesData ? '—' : salesHeroValue}
-            headlineLabel={salesHeroLabel}
+            headlineValue={
+              salesLoading && !salesData
+                ? <span className="admin-analytics-studio__headline-skeleton" aria-hidden="true" />
+                : salesHeroValue
+            }
             headlineDelta={
               salesKpiDeltas ? (
-                <span className={`admin-kpi-trend ${salesMetric === 'revenue' ? salesKpiDeltas.revenue.className : salesKpiDeltas.orders.className}`}>
+                <span className={`admin-kpi-trend admin-analytics-studio__headline-delta ${salesMetric === 'revenue' ? salesKpiDeltas.revenue.className : salesKpiDeltas.orders.className}`}>
                   {salesMetric === 'revenue' ? salesKpiDeltas.revenue.text : salesKpiDeltas.orders.text}
                 </span>
               ) : null
             }
             chart={(
               <div className="admin-sales-chart-wrap">
-                {isMobileSalesView ? (
-                  <button
-                    type="button"
-                    className="admin-sales-expand-btn"
-                    onClick={() => setIsSalesChartExpanded(true)}
-                    aria-label="Expand sales chart"
-                  >
-                    Expand
-                  </button>
-                ) : null}
                 <SalesChartErrorBoundary>
                   <AdminLineChart
                     series={adminChartSeries}
@@ -1887,7 +1735,6 @@ export default function ShopAdminPanel({ initialTab = 'products' }: ShopAdminPan
                     formatValue={fmtSalesValue}
                     primarySeriesKey={activeSeriesKeys[0]}
                     showArea={(key) => key === activeSeriesKeys[0]}
-                    onExpand={isMobileSalesView ? () => setIsSalesChartExpanded(true) : undefined}
                     responsive={isMobileSalesView}
                     emptyNode={(
                       <>
@@ -1968,37 +1815,6 @@ export default function ShopAdminPanel({ initialTab = 'products' }: ShopAdminPan
               </>
             ) : null}
           />
-
-          {isMobileSalesView && isSalesChartExpanded ? (
-            <div className="admin-sales-modal" role="dialog" aria-modal="true" aria-labelledby="admin-sales-modal-title">
-              <button type="button" className="admin-sales-modal-backdrop" onClick={() => setIsSalesChartExpanded(false)} aria-label="Close expanded chart" />
-              <div className="admin-sales-modal-panel">
-                <div className="admin-sales-modal-header">
-                  <p id="admin-sales-modal-title">Sales chart</p>
-                  <button type="button" className="btn btn--secondary" onClick={() => setIsSalesChartExpanded(false)}>Close</button>
-                </div>
-                <SalesChartErrorBoundary>
-                  <AdminLineChart
-                    series={adminChartSeries}
-                    metric={salesMetric === 'revenue' ? 'currency' : 'number'}
-                    getColor={getSeriesColor}
-                    getStrokeWidth={getSeriesStrokeWidth}
-                    formatValue={fmtSalesValue}
-                    primarySeriesKey={activeSeriesKeys[0]}
-                    showArea={(key) => key === activeSeriesKeys[0]}
-                    isFullscreen
-                    responsive
-                    emptyNode={(
-                      <>
-                        <p>No products selected</p>
-                        <p>Enable a product below to display data.</p>
-                      </>
-                    )}
-                  />
-                </SalesChartErrorBoundary>
-              </div>
-            </div>
-          ) : null}
 
           <AdminLeaderboard
             title="Product leaderboard"

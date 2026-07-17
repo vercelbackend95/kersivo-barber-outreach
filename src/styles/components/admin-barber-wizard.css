@@ -10,7 +10,7 @@
 }
 
 @media (min-width: 48rem) {
-  .admin-barber-sheet-layer > form.admin-barber-wizard.admin-barber-sheet.admin-barber-sheet--add {
+  .admin-wizard-sheet-layer form.admin-barber-wizard.admin-barber-sheet.admin-barber-sheet--add {
     width: min(100% - 2rem, 46rem);
     max-width: 46rem;
     max-height: min(90dvh, 820px);

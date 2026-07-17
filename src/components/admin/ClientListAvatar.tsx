@@ -8,6 +8,8 @@ type ClientListAvatarProps = {
   avatarUrl?: string | null;
   className?: string;
   onAvatarChange?: (clientId: string, nextUrl: string) => void;
+  /** When set, click opens this action (e.g. client profile) instead of the photo picker. */
+  onClick?: (event: React.MouseEvent<HTMLButtonElement>) => void;
 };
 
 function getInitials(fullName: string | null | undefined): string {
@@ -24,6 +26,7 @@ export default function ClientListAvatar({
   avatarUrl,
   className = '',
   onAvatarChange,
+  onClick,
 }: ClientListAvatarProps) {
   const inputRef = useRef<HTMLInputElement>(null);
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
@@ -32,7 +35,8 @@ export default function ClientListAvatar({
 
   const displayedUrl = previewUrl ?? avatarUrl ?? null;
   const initials = getInitials(fullName);
-  const canUpload = Boolean(clientId);
+  const opensProfile = Boolean(onClick);
+  const canUpload = Boolean(clientId) && !opensProfile;
 
   useEffect(() => {
     setHasImageError(false);
@@ -50,6 +54,16 @@ export default function ClientListAvatar({
     if (!canUpload || uploading) return;
     inputRef.current?.click();
   }, [canUpload, uploading]);
+
+  const handleClick = useCallback((event: React.MouseEvent<HTMLButtonElement>) => {
+    if (onClick) {
+      event.stopPropagation();
+      event.preventDefault();
+      onClick(event);
+      return;
+    }
+    openPicker(event);
+  }, [onClick, openPicker]);
 
   const handleFileChange = useCallback(async (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
@@ -89,16 +103,20 @@ export default function ClientListAvatar({
   }, [clientId, onAvatarChange]);
 
   const showImage = Boolean(displayedUrl) && !hasImageError;
+  const profileLabel = `View profile for ${fullName ?? 'client'}`;
+  const photoLabel = showImage
+    ? `Change photo for ${fullName ?? 'client'}`
+    : `Add photo for ${fullName ?? 'client'}`;
 
   return (
     <>
       <button
         type="button"
         className={`admin-client-list-avatar ${className}`.trim()}
-        onClick={openPicker}
-        disabled={!canUpload || uploading}
-        aria-label={showImage ? `Change photo for ${fullName ?? 'client'}` : `Add photo for ${fullName ?? 'client'}`}
-        title={canUpload ? (showImage ? 'Change photo' : 'Add photo') : undefined}
+        onClick={handleClick}
+        disabled={opensProfile ? false : (!canUpload || uploading)}
+        aria-label={opensProfile ? profileLabel : photoLabel}
+        title={opensProfile ? 'View client profile' : (canUpload ? (showImage ? 'Change photo' : 'Add photo') : undefined)}
         aria-busy={uploading}
       >
         {showImage ? (

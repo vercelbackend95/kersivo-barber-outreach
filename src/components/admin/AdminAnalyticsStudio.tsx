@@ -1,4 +1,4 @@
-import React, { forwardRef } from 'react';
+import React, { forwardRef, isValidElement } from 'react';
 
 type AdminAnalyticsStudioProps = {
   toolbar?: React.ReactNode;
@@ -14,6 +14,18 @@ type AdminAnalyticsStudioProps = {
   className?: string;
   ariaLive?: 'polite' | 'off';
 };
+
+function isHeadlineSkeleton(value: React.ReactNode): boolean {
+  if (!isValidElement(value)) return false;
+  const className = (value.props as { className?: unknown }).className;
+  return typeof className === 'string' && className.includes('admin-analytics-studio__headline-skeleton');
+}
+
+function headlineRevealKey(value: React.ReactNode): string {
+  if (typeof value === 'string' || typeof value === 'number') return String(value);
+  if (isHeadlineSkeleton(value)) return 'skeleton';
+  return 'node';
+}
 
 const AdminAnalyticsStudio = forwardRef<HTMLElement, AdminAnalyticsStudioProps>(function AdminAnalyticsStudio(
   {
@@ -32,6 +44,9 @@ const AdminAnalyticsStudio = forwardRef<HTMLElement, AdminAnalyticsStudioProps>(
   },
   ref,
 ) {
+  const valueKey = headlineRevealKey(headlineValue);
+  const showSkeleton = isHeadlineSkeleton(headlineValue);
+
   return (
     <section
       ref={ref}
@@ -64,9 +79,19 @@ const AdminAnalyticsStudio = forwardRef<HTMLElement, AdminAnalyticsStudioProps>(
         tabIndex={onHeadlineClick ? 0 : undefined}
       >
         <div className="admin-analytics-studio__headline-main">
-          <span className="admin-analytics-studio__headline-value">{headlineValue}</span>
+          <span className="admin-analytics-studio__headline-value">
+            {showSkeleton ? (
+              headlineValue
+            ) : (
+              <span key={valueKey} className="admin-analytics-studio__headline-value-reveal">
+                {headlineValue}
+              </span>
+            )}
+          </span>
           {headlineDelta ? (
-            <span className="admin-analytics-studio__headline-delta">{headlineDelta}</span>
+            <span key={`delta-${valueKey}`} className="admin-analytics-studio__headline-delta-wrap">
+              {headlineDelta}
+            </span>
           ) : null}
         </div>
         {headlineLabel ? (
