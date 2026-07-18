@@ -1,5 +1,6 @@
 ---
 import MainLayout from '@/layouts/MainLayout.astro';
+import LegalFooter from '@/components/LegalFooter.astro';
 import { PAGE_DESCRIPTIONS } from '@/lib/seo/defaults';
 import { CONSENT_COOKIE_NAME, CONSENT_MAX_AGE_SECONDS, CONSENT_VERSION } from '@/lib/consent/config';
 import '@/styles/legal-pages.css';
@@ -189,12 +190,7 @@ const consentDays = Math.round(CONSENT_MAX_AGE_SECONDS / (24 * 60 * 60));
         Questions: <a href="mailto:hello@kersivo.co.uk">hello@kersivo.co.uk</a>. Complaints may be made to the
         <a href="https://ico.org.uk/">ICO</a>.
       </p>
-
-      <p>
-        <a href="/">Back to home</a>
-        &nbsp;·&nbsp;
-        <a href="/privacy">Privacy Policy</a>
-      </p>
     </article>
   </main>
+  <LegalFooter />
 </MainLayout>

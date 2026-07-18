@@ -1,5 +1,6 @@
 ---
 import MainLayout from '@/layouts/MainLayout.astro';
+import LegalFooter from '@/components/LegalFooter.astro';
 import { PAGE_DESCRIPTIONS } from '@/lib/seo/defaults';
 import '@/styles/legal-pages.css';
 ---
@@ -187,14 +188,7 @@ import '@/styles/legal-pages.css';
         notify active clients of any material changes via email. Material changes to cookie purposes may also require a
         new consent choice.
       </p>
-
-      <p>
-        <a href="/">Back to home</a>
-        &nbsp;·&nbsp;
-        <a href="/cookies">Cookie Policy</a>
-        &nbsp;·&nbsp;
-        <a href="/terms">Terms of Service</a>
-      </p>
     </article>
   </main>
+  <LegalFooter />
 </MainLayout>
