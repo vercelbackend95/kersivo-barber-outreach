@@ -91,7 +91,7 @@ const processSteps = [
     }
 
 
-    const setActive = (index) => {
+    const setActive = (index: number) => {
       images.forEach((image, imageIndex) => {
         image.classList.toggle('is-active', imageIndex === index);
       });

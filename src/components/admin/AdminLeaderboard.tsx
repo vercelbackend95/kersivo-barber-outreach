@@ -16,6 +16,11 @@ type AdminLeaderboardProps = {
   onOpenBarber?: (barberId: string, meta: { name: string }) => void;
 };
 
+type LeaderboardBarStyle = React.CSSProperties & {
+  ['--fill']?: string;
+  ['--bar-color']?: string;
+};
+
 function rankTone(index: number): 'gold' | 'silver' | 'bronze' | 'default' {
   if (index === 0) return 'gold';
   if (index === 1) return 'silver';
@@ -113,10 +118,12 @@ export default function AdminLeaderboard({
                   {row.note ? <p className="admin-leaderboard-note">{row.note}</p> : null}
                   <div
                     className={`admin-leaderboard-bar admin-leaderboard-bar--${tone}`}
-                    style={{
-                      ['--fill' as '--fill']: `${fillPercent}%`,
-                      ['--bar-color' as '--bar-color']: barFillColor(tone),
-                    }}
+                    style={
+                      {
+                        ['--fill']: `${fillPercent}%`,
+                        ['--bar-color']: barFillColor(tone),
+                      } as LeaderboardBarStyle
+                    }
                     role="progressbar"
                     aria-label={`${row.name} score`}
                     aria-valuemin={0}

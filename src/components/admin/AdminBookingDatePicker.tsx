@@ -32,7 +32,6 @@ export default function AdminBookingDatePicker({
   const inputRef = useRef<HTMLInputElement>(null);
 
   const handleLabelPointerDown = useCallback((event: PointerEvent<HTMLLabelElement>) => {
-    if (event.pointerType === 'keyboard') return;
     event.preventDefault();
     const input = inputRef.current;
     if (!input) return;
