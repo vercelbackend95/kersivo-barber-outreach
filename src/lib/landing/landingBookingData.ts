@@ -5,6 +5,7 @@ import {
   withPrismaQuotaFallback,
 } from '@/lib/db/resilience';
 import { getLandingDemoBookingFallback } from '@/lib/landing/landingDemoBookingFallback';
+import { enrichLandingBarberAvatar } from '@/lib/landing/landingDemoAssets';
 
 /**
  * Real booking data for the landing "Inside the System" live booking widget.
@@ -60,10 +61,10 @@ function mapDbResult(
     category: service.category,
     displayOrder: service.displayOrder,
   }));
-  const mappedBarbers = barbers.map((barber) => ({
+  const mappedBarbers = barbers.map((barber, index) => ({
     id: barber.id,
     name: barber.name,
-    avatarUrl: barber.avatarUrl,
+    avatarUrl: enrichLandingBarberAvatar(barber.avatarUrl, index),
     serviceIds: barber.barberServices.map((link) => link.serviceId),
   }));
 

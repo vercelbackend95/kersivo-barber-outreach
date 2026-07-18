@@ -118,7 +118,6 @@ export default function BarberWorkingHoursEditor({
     setSaveStatus('idle');
   }, [clearAutoSaveTimeout, clearSavedToastTimeout]);
 
-
   React.useEffect(() => {
     return () => {
       clearAutoSaveTimeout();
@@ -147,6 +146,24 @@ export default function BarberWorkingHoursEditor({
     },
     [closeEditor, expandedDayIndex, openEditor]
   );
+
+  React.useEffect(() => {
+    if (expandedDayIndex === null) return;
+    const sourceDay = orderedHours.find((hour) => hour.dayOfWeek === expandedDayIndex) ?? null;
+    setDraftDay((current) => {
+      if (!sourceDay) return null;
+      if (
+        current &&
+        current.dayOfWeek === sourceDay.dayOfWeek &&
+        current.active === sourceDay.active &&
+        current.startTime === sourceDay.startTime &&
+        current.endTime === sourceDay.endTime
+      ) {
+        return current;
+      }
+      return sourceDay;
+    });
+  }, [expandedDayIndex, orderedHours]);
 
 
   const scheduleAutoSave = React.useCallback(

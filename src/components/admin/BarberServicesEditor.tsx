@@ -11,6 +11,12 @@ type BarberServicesEditorProps = {
   layout?: 'default' | 'profile';
 };
 
+type PendingToggle = {
+  serviceId: string;
+  serviceName: string;
+  enable: boolean;
+};
+
 export default function BarberServicesEditor({
   barberName,
   services,
@@ -21,6 +27,9 @@ export default function BarberServicesEditor({
 }: BarberServicesEditorProps) {
   const [localEnabledServiceIds, setLocalEnabledServiceIds] = React.useState<Set<string>>(new Set(enabledServiceIds));
   const [selectionHint, setSelectionHint] = React.useState('');
+  const [pendingToggle, setPendingToggle] = React.useState<PendingToggle | null>(null);
+  const confirmDialogRef = React.useRef<HTMLDivElement | null>(null);
+  const cancelButtonRef = React.useRef<HTMLButtonElement | null>(null);
 
   React.useEffect(() => {
     setLocalEnabledServiceIds(new Set(enabledServiceIds));
@@ -31,9 +40,72 @@ export default function BarberServicesEditor({
   const allSelected = enabledCount === totalCount && totalCount > 0;
   const hasWarning = Boolean(selectionHint);
   const hintId = `services-hint-${barberName.replace(/\s+/g, '-').toLowerCase()}`;
+  const isConfirmOpen = pendingToggle !== null;
 
-  const toggleSingleService = (serviceId: string) => {
-    const isEnabled = localEnabledServiceIds.has(serviceId);
+  React.useEffect(() => {
+    if (!isConfirmOpen) return;
+
+    const previouslyFocused = document.activeElement as HTMLElement | null;
+    const dialogNode = confirmDialogRef.current;
+
+    const focusCancel = window.setTimeout(() => {
+      cancelButtonRef.current?.focus();
+    }, 0);
+
+    const handleKeyDown = (event: KeyboardEvent) => {
+      if (event.key === 'Escape') {
+        event.preventDefault();
+        setPendingToggle(null);
+        return;
+      }
+
+      if (event.key !== 'Tab' || !dialogNode) return;
+
+      const focusable = Array.from(
+        dialogNode.querySelectorAll<HTMLElement>(
+          'button:not([disabled]), [href], input:not([disabled]), select:not([disabled]), textarea:not([disabled]), [tabindex]:not([tabindex="-1"])'
+        )
+      );
+
+      if (focusable.length === 0) return;
+
+      const first = focusable[0];
+      const last = focusable[focusable.length - 1];
+
+      if (!event.shiftKey && document.activeElement === last) {
+        event.preventDefault();
+        first.focus();
+      } else if (event.shiftKey && document.activeElement === first) {
+        event.preventDefault();
+        last.focus();
+      }
+    };
+
+    document.addEventListener('keydown', handleKeyDown);
+
+    return () => {
+      window.clearTimeout(focusCancel);
+      document.removeEventListener('keydown', handleKeyDown);
+      previouslyFocused?.focus();
+    };
+  }, [isConfirmOpen]);
+
+  const applyToggle = React.useCallback(
+    (serviceId: string, enable: boolean) => {
+      const nextEnabled = new Set(localEnabledServiceIds);
+      if (enable) {
+        nextEnabled.add(serviceId);
+      } else {
+        nextEnabled.delete(serviceId);
+      }
+      setLocalEnabledServiceIds(nextEnabled);
+      onToggleService(serviceId, enable);
+    },
+    [localEnabledServiceIds, onToggleService]
+  );
+
+  const requestToggle = (service: ServiceOption) => {
+    const isEnabled = localEnabledServiceIds.has(service.id);
 
     if (isEnabled && enabledCount <= 1) {
       setSelectionHint('At least one service must remain enabled.');
@@ -41,22 +113,30 @@ export default function BarberServicesEditor({
     }
 
     setSelectionHint('');
+    setPendingToggle({
+      serviceId: service.id,
+      serviceName: service.name,
+      enable: !isEnabled
+    });
+  };
 
-    const nextEnabled = new Set(localEnabledServiceIds);
-    if (isEnabled) {
-      nextEnabled.delete(serviceId);
-    } else {
-      nextEnabled.add(serviceId);
-    }
-
-    setLocalEnabledServiceIds(nextEnabled);
-    onToggleService(serviceId, !isEnabled);
+  const confirmPendingToggle = () => {
+    if (!pendingToggle) return;
+    const next = pendingToggle;
+    setPendingToggle(null);
+    applyToggle(next.serviceId, next.enable);
   };
 
   const isProfileLayout = layout === 'profile';
-  const rootClassName = isProfileLayout
-    ? 'admin-services-editor--profile'
-    : 'admin-settings-panel';
+  const rootClassName = isProfileLayout ? 'admin-services-editor--profile' : 'admin-settings-panel';
+
+  const confirmTitle = pendingToggle?.enable
+    ? `Apply “${pendingToggle.serviceName}”?`
+    : `Cancel “${pendingToggle?.serviceName}”?`;
+  const confirmDescription = pendingToggle?.enable
+    ? `Are you sure you want to apply “${pendingToggle.serviceName}” to ${barberName}?`
+    : `Are you sure you want to cancel “${pendingToggle?.serviceName}” for ${barberName}?`;
+  const confirmActionLabel = pendingToggle?.enable ? 'Apply service' : 'Cancel service';
 
   return (
     <section className={rootClassName}>
@@ -107,38 +187,77 @@ export default function BarberServicesEditor({
         </div>
       )}
 
-      <div className="admin-services-editor-grid" role="group" aria-label={`Services available for ${barberName}`} aria-describedby={hintId}>
-        <ul className="admin-service-list" role="list">
-        {services.map((service) => {
-          const isOn = localEnabledServiceIds.has(service.id);
-          const statusLabel = isOn ? 'Assigned' : 'Not assigned';
-          return (
-            <li key={service.id} className={`admin-service-row ${isOn ? 'is-on' : ''}`}>
-              <div className="admin-service-row-content">
-                <p className="admin-service-row-name">{service.name}</p>
-                <p className="admin-service-row-state">{statusLabel}</p>
-              </div>
+      <div
+        className="admin-services-editor-grid"
+        role="group"
+        aria-label={`Services available for ${barberName}`}
+        aria-describedby={hintId}
+      >
+        <div className="admin-cp-tags-row admin-services-pills-row">
+          {services.map((service) => {
+            const isOn = localEnabledServiceIds.has(service.id);
+            return (
               <button
+                key={service.id}
                 type="button"
-                className={`admin-service-toggle-control ${isOn ? 'is-on' : ''}`}
+                className={`admin-cp-tag admin-services-pill ${isOn ? 'is-on' : 'is-service-off'}`}
                 aria-pressed={isOn}
-                aria-label={`${isOn ? 'Disable' : 'Enable'} ${service.name}`}
-                onClick={() => toggleSingleService(service.id)}
+                aria-label={`${isOn ? 'Cancel' : 'Apply'} ${service.name} for ${barberName}`}
+                onClick={() => requestToggle(service)}
                 disabled={servicesSaving}
               >
-                <span className="admin-service-toggle-track" aria-hidden="true">
-                  <span className="admin-service-toggle-thumb">
-                    <svg viewBox="0 0 12 12" fill="none" xmlns="http://www.w3.org/2000/svg">
-                      <path d="M2.2 6.3 4.8 8.9 9.8 3.9" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
-                    </svg>
-                  </span>
-                </span>
+                {service.name}
               </button>
-            </li>
-          );
-        })}
-        </ul>
+            );
+          })}
+        </div>
       </div>
+
+      {isConfirmOpen && pendingToggle ? (
+        <div className="admin-product-delete-confirm-layer admin-services-confirm-layer" role="presentation">
+          <button
+            type="button"
+            className="admin-product-delete-confirm-backdrop"
+            aria-label="Close confirmation dialog"
+            onClick={() => setPendingToggle(null)}
+          />
+          <div
+            ref={confirmDialogRef}
+            className="admin-product-delete-confirm-dialog admin-collect-receipt-dialog"
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="barber-service-confirm-title"
+            aria-describedby="barber-service-confirm-description"
+            onClick={(event) => event.stopPropagation()}
+          >
+            <h4 id="barber-service-confirm-title" className="admin-product-delete-confirm-title">
+              {confirmTitle}
+            </h4>
+            <div id="barber-service-confirm-description" className="admin-product-delete-confirm-body">
+              <p>{confirmDescription}</p>
+            </div>
+            <div className="admin-product-delete-confirm-actions">
+              <button
+                ref={cancelButtonRef}
+                type="button"
+                className="btn btn--secondary"
+                onClick={() => setPendingToggle(null)}
+                disabled={servicesSaving}
+              >
+                Cancel
+              </button>
+              <button
+                type="button"
+                className={`btn ${pendingToggle.enable ? 'btn--primary' : 'btn--destructive'}`}
+                disabled={servicesSaving}
+                onClick={confirmPendingToggle}
+              >
+                {confirmActionLabel}
+              </button>
+            </div>
+          </div>
+        </div>
+      ) : null}
     </section>
   );
 }

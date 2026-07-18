@@ -12,19 +12,33 @@ type WorkingHoursOverviewProps = {
   saveStatus: 'idle' | 'saving' | 'saved' | 'error';
   onToggleDayEditor: (dayOfWeek: number) => void;
   onChangeDraftDay: (field: 'active' | 'startTime' | 'endTime', value: string | boolean) => void;
-
 };
-function getHeaderChipText(hour: WorkingHourRow) {
-  if (!hour.active) return 'Off shift';
 
+const SHARED_EDITOR_ID = 'working-hours-day-panel';
+const PANEL_CLOSE_MS = 230;
 
-  return `${hour.startTime}–${hour.endTime}`;
+function formatShortTime(time: string) {
+  const [hourPart, minutePart] = time.split(':');
+  const hour = Number(hourPart);
+  if (Number.isNaN(hour)) return time;
+  if (!minutePart || minutePart === '00') return String(hour);
+  return `${hour}:${minutePart}`;
 }
+
+function getTileSummary(hour: WorkingHourRow) {
+  if (!hour.active) return 'OFF';
+  return `${formatShortTime(hour.startTime)}–${formatShortTime(hour.endTime)}`;
+}
+
+function getAriaStatus(hour: WorkingHourRow) {
+  if (!hour.active) return 'off shift';
+  return `on shift ${hour.startTime}–${hour.endTime}`;
+}
+
 function isValidRange(day: WorkingHourRow | null) {
   if (!day || !day.active) return true;
   return day.startTime < day.endTime;
 }
-
 
 export default function WorkingHoursOverview({
   weekDays,
@@ -35,113 +49,146 @@ export default function WorkingHoursOverview({
   saving,
   errorMessage,
   saveStatus,
-
   onToggleDayEditor,
   onChangeDraftDay
-
 }: WorkingHoursOverviewProps) {
-  const hasValidRange = isValidRange(draftDay);
+  const isSelectedOpen = expandedDayIndex !== null && draftDay !== null;
+  const lastAnchorRef = React.useRef(0);
+  const [panelOpen, setPanelOpen] = React.useState(false);
+  const [visibleDay, setVisibleDay] = React.useState<WorkingHourRow | null>(null);
 
+  if (expandedDayIndex !== null) {
+    lastAnchorRef.current = expandedDayIndex;
+  }
+
+  React.useEffect(() => {
+    if (draftDay && expandedDayIndex !== null) {
+      setVisibleDay(draftDay);
+      setPanelOpen(true);
+      return;
+    }
+
+    setPanelOpen(false);
+    const timeoutId = window.setTimeout(() => {
+      setVisibleDay(null);
+    }, PANEL_CLOSE_MS);
+
+    return () => window.clearTimeout(timeoutId);
+  }, [draftDay, expandedDayIndex]);
+
+  const anchorIndex = expandedDayIndex ?? visibleDay?.dayOfWeek ?? lastAnchorRef.current;
+  const selectedDayLabel = weekDays[anchorIndex] ?? `Day ${anchorIndex}`;
+  const editorDay = isSelectedOpen ? draftDay : visibleDay;
+  const hasValidRange = isValidRange(editorDay);
+  const overviewStyle = {
+    ['--wh-anchor' as string]: `${((anchorIndex + 0.5) / 7) * 100}%`
+  };
 
   return (
-    <div className="working-hours-overview" role="list" aria-label="Weekly working hours">
-      {workingHours.map((hour) => {
-        const dayLabel = weekDays[hour.dayOfWeek] ?? `Day ${hour.dayOfWeek}`;
-        const isExpanded = expandedDayIndex === hour.dayOfWeek;
-        const editorDay = isExpanded && draftDay ? draftDay : hour;
-        const editorSectionId = `working-hours-editor-${hour.dayOfWeek}`;
+    <div className="working-hours-overview" style={overviewStyle}>
+      <div className="working-hours-week" role="group" aria-label="Weekly working hours">
+        {workingHours.map((hour) => {
+          const dayLabel = weekDays[hour.dayOfWeek] ?? `Day ${hour.dayOfWeek}`;
+          const isSelected = expandedDayIndex === hour.dayOfWeek;
+          const tileSummary = getTileSummary(hour);
 
-
-        return (
-          <article
-            key={hour.dayOfWeek}
-            className={`working-hours-day-card ${isExpanded ? 'is-expanded' : ''}`}
-            role="listitem"
-          >
+          return (
             <button
+              key={hour.dayOfWeek}
               type="button"
-              className={`working-hours-day-row ${isExpanded ? 'is-expanded' : ''}`}
+              className={[
+                'working-hours-day-tile',
+                hour.active ? 'is-on' : 'is-off',
+                isSelected ? 'is-selected' : ''
+              ]
+                .filter(Boolean)
+                .join(' ')}
               onClick={() => onToggleDayEditor(hour.dayOfWeek)}
               disabled={loading || saving}
-              aria-label={`${isExpanded ? 'Collapse' : 'Edit'} ${dayLabel} working hours, currently ${getHeaderChipText(hour)}`}
-              aria-expanded={isExpanded}
-              aria-controls={editorSectionId}
+              aria-pressed={isSelected}
+              aria-expanded={isSelected}
+              aria-controls={SHARED_EDITOR_ID}
+              aria-label={`${dayLabel}, ${getAriaStatus(hour)}${isSelected ? ', selected' : ''}`}
             >
-              <span className="working-hours-day-row__identity">
-                <span className="working-hours-day-row__label">{dayLabel}</span>
-              </span>
-              <span className={`working-hours-time-chip ${hour.active ? 'is-on' : 'is-off'}`}>
-                <span className="working-hours-time-chip__status">{hour.active ? 'On shift' : 'Off shift'}</span>
-                {hour.active ? <span className="working-hours-time-chip__value">{getHeaderChipText(hour)}</span> : null}
-              </span>
-              <span className="working-hours-day-row__action" aria-hidden="true">
-                <span className="working-hours-day-row__action-label">{isExpanded ? 'Close' : 'Edit'}</span>
-                <span className={`working-hours-day-row__chevron ${isExpanded ? 'is-expanded' : ''}`}>⌄</span>
-              </span>
+              <span className="working-hours-day-tile__label">{dayLabel}</span>
+              <span className="working-hours-day-tile__summary">{tileSummary}</span>
             </button>
+          );
+        })}
+      </div>
 
+      <section
+        id={SHARED_EDITOR_ID}
+        className={`working-hours-day-panel ${panelOpen ? 'is-open' : ''}`}
+        aria-label={`Edit ${selectedDayLabel} shift`}
+        aria-hidden={!panelOpen}
+      >
+        <span className="working-hours-day-panel__caret" aria-hidden="true" />
+        {editorDay ? (
+          <div className="working-hours-day-panel__body">
+            <div className="working-hours-inline-toggle">
+              <span className="working-hours-inline-toggle__label">On shift</span>
+              <button
+                type="button"
+                className={`working-hours-switch ${editorDay.active ? 'is-on' : 'is-off'}`}
+                role="switch"
+                aria-checked={editorDay.active}
+                aria-label={`Toggle ${selectedDayLabel} on shift`}
+                onClick={() => onChangeDraftDay('active', !editorDay.active)}
+                disabled={!isSelectedOpen || loading || saving}
+              >
+                <span className="working-hours-switch__thumb" aria-hidden="true" />
+              </button>
+            </div>
 
-            <section
-              id={editorSectionId}
-              className={`working-hours-day-details ${isExpanded ? 'is-expanded' : 'is-collapsed'}`}
-              aria-label={`Edit ${dayLabel} shift`}
-              aria-hidden={!isExpanded}
-            >
-                <div className="working-hours-inline-toggle">
-                  <span className="working-hours-inline-toggle__label">On shift</span>
-                  <button
-                    type="button"
-                    className={`working-hours-switch ${editorDay.active ? 'is-on' : 'is-off'}`}
-                    role="switch"
-                    aria-checked={editorDay.active}
-                    aria-label={`Toggle ${dayLabel} on shift`}
-                    onClick={() => onChangeDraftDay('active', !editorDay.active)}
-                    disabled={!isExpanded || loading || saving}
-                  >
-                    <span className="working-hours-switch__thumb" aria-hidden="true" />
-                  </button>
+            {editorDay.active ? (
+              <fieldset className="working-hours-range-control" disabled={!isSelectedOpen || loading || saving}>
+                <div className="working-hours-range-control__inputs">
+                  <label className="working-hours-time-field">
+                    <span>Start</span>
+                    <input
+                      type="time"
+                      value={editorDay.startTime}
+                      onChange={(event) => onChangeDraftDay('startTime', event.target.value)}
+                      aria-label="Start time"
+                    />
+                  </label>
+                  <span aria-hidden="true">—</span>
+                  <label className="working-hours-time-field">
+                    <span>End</span>
+                    <input
+                      type="time"
+                      value={editorDay.endTime}
+                      onChange={(event) => onChangeDraftDay('endTime', event.target.value)}
+                      aria-label="End time"
+                    />
+                  </label>
                 </div>
+              </fieldset>
+            ) : (
+              <p className="working-hours-off-helper">This day is off shift and hidden from booking slots.</p>
+            )}
 
-                {editorDay.active ? (
-                  <fieldset className="working-hours-range-control" disabled={!isExpanded || loading || saving}>
-                    <div className="working-hours-range-control__inputs">
-                      <label className="working-hours-time-field">
-                        <span>Start</span>
-                        <input
-                          type="time"
-                          value={editorDay.startTime}
-                          onChange={(event) => onChangeDraftDay('startTime', event.target.value)}
-                          aria-label="Start time"
-                        />
-                      </label>
-                      <span aria-hidden="true">—</span>
-                      <label className="working-hours-time-field">
-                        <span>End</span>
-                        <input
-                          type="time"
-                          value={editorDay.endTime}
-                          onChange={(event) => onChangeDraftDay('endTime', event.target.value)}
-                          aria-label="End time"
-                        />
-                      </label>
-                    </div>
-                  </fieldset>
-                ) : (
-                  <p className="working-hours-off-helper">This day is off shift and hidden from booking slots.</p>
-                )}
-
-
-                {!hasValidRange ? <p className="admin-inline-error">Start time must be earlier than end time.</p> : null}
-                {errorMessage ? <p className="admin-inline-error">{errorMessage}</p> : null}
-                {saveStatus === 'saving' ? <p className="working-hours-save-status" aria-live="polite">Saving…</p> : null}
-                {saveStatus === 'saved' ? <p className="working-hours-save-status is-saved" aria-live="polite">Saved</p> : null}
-                {saveStatus === 'error' ? <p className="working-hours-save-status is-error" aria-live="polite">Failed to save</p> : null}
-
-
-              </section>
-          </article>
-        );
-      })}
+            {!hasValidRange ? <p className="admin-inline-error">Start time must be earlier than end time.</p> : null}
+            {errorMessage ? <p className="admin-inline-error">{errorMessage}</p> : null}
+            {saveStatus === 'saving' ? (
+              <p className="working-hours-save-status" aria-live="polite">
+                Saving…
+              </p>
+            ) : null}
+            {saveStatus === 'saved' ? (
+              <p className="working-hours-save-status is-saved" aria-live="polite">
+                Saved
+              </p>
+            ) : null}
+            {saveStatus === 'error' ? (
+              <p className="working-hours-save-status is-error" aria-live="polite">
+                Failed to save
+              </p>
+            ) : null}
+          </div>
+        ) : null}
+      </section>
     </div>
   );
 }

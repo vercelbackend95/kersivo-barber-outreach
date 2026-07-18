@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import {
+  enrichLandingBarberAvatar,
   landingDemoBarberAvatarByIndex,
   landingDemoClientAvatarForSeed,
   LANDING_DEMO_CLIENT_AVATARS,
@@ -19,5 +20,16 @@ describe('landingDemoAssets', () => {
   it('cycles barber avatars by index', () => {
     expect(landingDemoBarberAvatarByIndex(0)).toMatch(/^\/images\/landing-demo\/barbers\//);
     expect(landingDemoBarberAvatarByIndex(4)).toBe(landingDemoBarberAvatarByIndex(0));
+  });
+
+  it('enrichLandingBarberAvatar replaces blank and data: URLs with static demos', () => {
+    expect(enrichLandingBarberAvatar(null, 0)).toBe(landingDemoBarberAvatarByIndex(0));
+    expect(enrichLandingBarberAvatar('  ', 1)).toBe(landingDemoBarberAvatarByIndex(1));
+    expect(enrichLandingBarberAvatar('data:image/jpeg;base64,AAAA', 2)).toBe(
+      landingDemoBarberAvatarByIndex(2),
+    );
+    expect(enrichLandingBarberAvatar('/images/landing-demo/barbers/jamie.webp', 0)).toBe(
+      '/images/landing-demo/barbers/jamie.webp',
+    );
   });
 });

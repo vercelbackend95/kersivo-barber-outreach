@@ -50,6 +50,9 @@ export function enrichLandingBarberAvatar(
   avatarUrl: string | null | undefined,
   index: number,
 ): string | null {
-  if (avatarUrl?.trim()) return avatarUrl;
-  return landingDemoBarberAvatarByIndex(index);
+  const trimmed = avatarUrl?.trim() ?? '';
+  if (!trimmed || trimmed.startsWith('data:')) {
+    return landingDemoBarberAvatarByIndex(index);
+  }
+  return trimmed;
 }

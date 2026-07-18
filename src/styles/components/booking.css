@@ -5759,6 +5759,11 @@ body.admin-theme-premium-black .booking-page-wrap .booking-shell.surface {
   padding: var(--space-sm);
 }
 
+/* Above client/barber profile overlay (admin-cp-backdrop z-index 600) */
+.admin-services-confirm-layer {
+  z-index: 700;
+}
+
 .admin-product-delete-confirm-backdrop {
   position: absolute;
   inset: 0;
@@ -10025,6 +10030,40 @@ body.admin-theme-premium-black .booking-page-wrap .booking-shell.surface {
   margin-top: 0.08rem;
 }
 
+.admin-services-pills-row {
+  margin-top: 0.15rem;
+}
+
+.admin-cp-tag.admin-services-pill {
+  min-height: 2rem;
+  padding: 0.28rem 0.7rem;
+}
+
+.admin-cp-tag.admin-services-pill:focus-visible {
+  outline: 2px solid var(--focus);
+  outline-offset: 2px;
+}
+
+.admin-cp-tag.admin-services-pill:disabled {
+  opacity: 0.65;
+  cursor: not-allowed;
+}
+
+.admin-cp-tag.admin-services-pill.is-service-off {
+  background: color-mix(in srgb, var(--surface-2) 88%, var(--bg));
+  color: color-mix(in srgb, var(--fg) 62%, var(--muted));
+  border: 1px solid color-mix(in srgb, var(--fg) 10%, var(--border));
+}
+
+.admin-cp-tag.admin-services-pill.is-service-off:hover:not(:disabled) {
+  background: color-mix(in srgb, var(--surface-3, var(--surface-2)) 80%, var(--bg));
+  color: color-mix(in srgb, var(--fg) 78%, var(--muted));
+}
+
+.admin-cp-tag.admin-services-pill.is-on {
+  border: 1px solid transparent;
+}
+
 .admin-service-list {
   margin: 0;
   padding: 0;
@@ -10424,169 +10463,227 @@ body.admin-theme-premium-black .booking-page-wrap .booking-shell.surface {
 
 .working-hours-overview {
   display: grid;
-  gap: 0.55rem;
-  margin-top: 0.72rem;
-}
-
-.working-hours-day-card {
-  border: 1px solid color-mix(in srgb, var(--fg) 8%, var(--border));
-  border-radius: 0.95rem;
-  background: linear-gradient(180deg, color-mix(in srgb, var(--surface) 94%, var(--bg) 6%), color-mix(in srgb, var(--surface) 98%, var(--bg) 2%));
-  color: var(--fg);
-  box-shadow: 0 4px 14px color-mix(in srgb, var(--fg) 4%, transparent);
-  transition: border-color 140ms ease, background-color 140ms ease, box-shadow 140ms ease;
+  gap: 0;
+  margin-top: 0.55rem;
   min-width: 0;
+  --wh-anchor: 50%;
 }
 
-.working-hours-day-card:hover {
-  border-color: color-mix(in srgb, var(--accent) 36%, var(--border));
-  box-shadow: 0 8px 24px color-mix(in srgb, var(--fg) 8%, transparent);
-}
-
-.working-hours-day-card.is-expanded {
-  border-color: color-mix(in srgb, var(--accent) 42%, var(--border));
-  background: linear-gradient(180deg, color-mix(in srgb, var(--surface) 88%, var(--accent) 12%), color-mix(in srgb, var(--surface) 96%, var(--accent) 4%));
-  box-shadow: 0 10px 28px color-mix(in srgb, var(--fg) 11%, transparent);
-}
-
-.working-hours-day-row {
-  width: 100%;
+.working-hours-week {
   display: grid;
-  grid-template-columns: minmax(0, 1fr) auto;
-  grid-template-areas:
-    "identity action"
-    "timechip timechip";
-  align-items: center;
-  gap: 0.52rem 0.48rem;
-  padding: 0.72rem;
+  grid-template-columns: repeat(7, minmax(0, 1fr));
+  gap: 0.22rem;
+  width: 100%;
+  min-width: 0;
+  position: relative;
+  z-index: 1;
+}
+
+.working-hours-day-tile {
+  display: grid;
+  gap: 0.18rem;
+  align-content: center;
+  justify-items: center;
+  min-width: 0;
+  min-height: 2.75rem;
+  padding: 0.32rem 0.12rem 0.3rem;
+  border: var(--admin-premium-surface-border, 1px solid var(--border));
+  border-radius: 0.58rem;
+  background:
+    linear-gradient(180deg, color-mix(in srgb, var(--fg) 3.5%, transparent), transparent 52%),
+    var(--admin-premium-surface-bg, color-mix(in srgb, var(--surface-2) 76%, var(--surface)));
+  color: var(--fg);
+  box-shadow: var(--admin-premium-shadow-inset, none);
   cursor: pointer;
-  text-align: left;
-  min-width: 0;
-  border: 0;
-  border-radius: 0;
-  background: transparent;
-  color: inherit;
+  text-align: center;
+  transition:
+    border-color 160ms ease,
+    background-color 160ms ease,
+    color 160ms ease,
+    box-shadow 160ms ease,
+    border-radius 160ms ease,
+    transform 160ms ease;
 }
 
-.working-hours-day-row:focus-visible {
+.working-hours-day-tile:hover:not(:disabled) {
+  border-color: color-mix(in srgb, var(--accent) 42%, var(--border));
+  transform: translateY(-1px);
+}
+
+.working-hours-day-tile:disabled {
+  opacity: 0.65;
+  cursor: not-allowed;
+}
+
+.working-hours-day-tile:focus-visible {
   outline: 2px solid var(--focus);
-  outline-offset: -2px;
-  border-radius: 0.95rem 0.95rem 0 0;
+  outline-offset: 2px;
 }
 
-.working-hours-day-row__identity {
-  grid-area: identity;
-  min-width: 0;
-  display: inline-flex;
-  align-items: center;
-  gap: 0.35rem;
-}
-
-.working-hours-day-row__label {
-  margin: 0;
-  font-family: 'Inter', sans-serif;
+.working-hours-day-tile__label {
+  font-size: 0.7rem;
   font-weight: 700;
-  font-size: 0.96rem;
-  min-width: 0;
-}
-
-.working-hours-time-chip {
-  grid-area: timechip;
-  margin: 0;
-  border: 1px solid color-mix(in srgb, var(--accent) 34%, var(--border));
-  border-radius: 0.75rem;
-  background: color-mix(in srgb, var(--accent) 10%, var(--bg));
-  color: var(--fg);
-  padding: 0.34rem 0.46rem;
-  display: inline-flex;
-  align-items: center;
-  flex-wrap: wrap;
-  gap: 0.44rem;
-  width: 100%;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  line-height: 1.1;
   max-width: 100%;
-  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
-.working-hours-time-chip__status {
-  font-size: 0.68rem;
-  text-transform: uppercase;
-  letter-spacing: 0.05em;
-  color: color-mix(in srgb, var(--fg) 72%, var(--muted));
-}
-
-.working-hours-time-chip__value {
-  font-size: 0.82rem;
-  font-weight: 700;
-  overflow-wrap: anywhere;
-}
-
-.working-hours-time-chip.is-off {
-  border-color: color-mix(in srgb, var(--fg) 12%, var(--border));
-  background: color-mix(in srgb, var(--surface) 80%, var(--bg) 20%);
-  color: color-mix(in srgb, var(--fg) 72%, var(--muted));
-}
-
-.working-hours-day-row__action {
-  grid-area: action;
-  display: inline-flex;
-  align-items: center;
-  gap: 0.28rem;
-  color: var(--muted);
-  font-size: 0.74rem;
-  text-transform: uppercase;
-  letter-spacing: 0.04em;
-}
-
-.working-hours-day-row__action-label {
+.working-hours-day-tile__summary {
+  font-size: 0.64rem;
   font-weight: 600;
+  line-height: 1.15;
+  letter-spacing: 0.01em;
+  max-width: 100%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  color: color-mix(in srgb, var(--fg) 78%, var(--muted));
 }
 
-.working-hours-day-row__chevron {
-  line-height: 1;
-  color: inherit;
-  font-size: 0.98rem;
-  transition: transform 0.18s ease;
+.working-hours-day-tile.is-on {
+  border-color: color-mix(in srgb, var(--accent) 28%, var(--border));
+  background:
+    linear-gradient(180deg, color-mix(in srgb, var(--accent) 10%, transparent), transparent 46%),
+    var(--admin-premium-surface-bg, color-mix(in srgb, var(--surface-2) 76%, var(--surface)));
+  box-shadow:
+    var(--admin-premium-shadow-inset, none),
+    inset 0 1px 0 color-mix(in srgb, var(--accent) 35%, transparent);
 }
 
-.working-hours-day-row__chevron.is-expanded {
-  transform: rotate(180deg);
+.working-hours-day-tile.is-on .working-hours-day-tile__summary {
+  color: color-mix(in srgb, var(--fg) 92%, var(--accent));
 }
 
-.working-hours-day-details {
+.working-hours-day-tile.is-off {
+  border-color: color-mix(in srgb, var(--fg) 8%, var(--border));
+  background: color-mix(in srgb, var(--surface) 72%, var(--bg) 28%);
+  color: color-mix(in srgb, var(--fg) 55%, var(--muted));
+  box-shadow: none;
+}
+
+.working-hours-day-tile.is-off .working-hours-day-tile__summary {
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  font-size: 0.58rem;
+  color: color-mix(in srgb, var(--fg) 48%, var(--muted));
+}
+
+.working-hours-day-tile.is-selected {
+  border-color: color-mix(in srgb, var(--accent) 72%, var(--border));
+  background:
+    linear-gradient(180deg, color-mix(in srgb, var(--accent) 14%, transparent), transparent 50%),
+    color-mix(in srgb, var(--admin-premium-surface-bg, var(--surface-2)) 88%, var(--accent) 12%);
+  color: var(--fg);
+  box-shadow:
+    var(--admin-premium-shadow-inset, none),
+    inset 0 0 0 1px color-mix(in srgb, var(--accent) 40%, transparent),
+    0 6px 16px color-mix(in srgb, var(--fg) 6%, transparent);
+  border-bottom-left-radius: 0.2rem;
+  border-bottom-right-radius: 0.2rem;
+  z-index: 2;
+}
+
+.working-hours-day-tile.is-selected .working-hours-day-tile__label,
+.working-hours-day-tile.is-selected .working-hours-day-tile__summary {
+  color: var(--fg);
+}
+
+.working-hours-day-tile.is-selected.is-off {
+  border-color: color-mix(in srgb, var(--fg) 28%, var(--border));
+  background:
+    linear-gradient(180deg, color-mix(in srgb, var(--fg) 5%, transparent), transparent 50%),
+    color-mix(in srgb, var(--surface-3, var(--surface-2)) 82%, var(--bg));
+  box-shadow:
+    var(--admin-premium-shadow-inset, none),
+    inset 0 0 0 1px color-mix(in srgb, var(--fg) 12%, transparent);
+}
+
+.working-hours-day-panel {
+  position: relative;
+  z-index: 0;
   width: 100%;
   max-width: 100%;
-  border-top: 1px solid color-mix(in srgb, var(--fg) 10%, var(--border));
-  border-radius: 0 0 0.95rem 0.95rem;
-  background: color-mix(in srgb, var(--surface) 90%, var(--accent) 10%);
-  padding: 0.66rem 0.72rem 0.72rem;
+  min-width: 0;
   display: grid;
-  gap: 0.6rem;
-  overflow-x: clip;
-  overflow-y: clip;
-  transform-origin: top center;
+  gap: 0;
+  margin-top: 0;
+  padding: 0 0.75rem;
+  border: 1px solid transparent;
+  border-top: 0;
+  border-radius: 0 0 calc(var(--admin-premium-surface-r, 0.95rem) * 0.85) calc(var(--admin-premium-surface-r, 0.95rem) * 0.85);
+  background: var(--admin-premium-surface-bg, color-mix(in srgb, var(--surface-2) 76%, var(--surface)));
+  box-shadow: none;
+  overflow: hidden;
+  max-height: 0;
+  opacity: 0;
+  transform: translateY(-8px) scaleY(0.96);
+  transform-origin: var(--wh-anchor) top;
+  pointer-events: none;
+  visibility: hidden;
   transition:
     max-height 220ms cubic-bezier(0.22, 1, 0.36, 1),
     opacity 180ms ease,
     transform 220ms cubic-bezier(0.22, 1, 0.36, 1),
-    padding-top 220ms cubic-bezier(0.22, 1, 0.36, 1),
-    padding-bottom 220ms cubic-bezier(0.22, 1, 0.36, 1),
-    border-top-color 180ms ease;
+    padding 220ms cubic-bezier(0.22, 1, 0.36, 1),
+    margin-top 180ms ease,
+    border-color 180ms ease,
+    box-shadow 180ms ease,
+    visibility 0s linear 220ms;
 }
 
-.working-hours-day-details.is-expanded {
-  max-height: 22rem;
+.working-hours-day-panel.is-open {
+  max-height: 20rem;
   opacity: 1;
+  margin-top: -1px;
+  padding: 0.85rem 0.75rem 0.78rem;
+  pointer-events: auto;
+  visibility: visible;
   transform: translateY(0) scaleY(1);
+  border-color: color-mix(in srgb, var(--accent) 34%, var(--border));
+  box-shadow: var(--admin-premium-shadow-inset, none), var(--admin-premium-shadow-lift-subtle, none);
+  transition:
+    max-height 220ms cubic-bezier(0.22, 1, 0.36, 1),
+    opacity 180ms ease,
+    transform 220ms cubic-bezier(0.22, 1, 0.36, 1),
+    padding 220ms cubic-bezier(0.22, 1, 0.36, 1),
+    margin-top 180ms ease,
+    border-color 180ms ease,
+    box-shadow 180ms ease,
+    visibility 0s linear 0s;
 }
 
-.working-hours-day-details.is-collapsed {
-  max-height: 0;
+.working-hours-day-panel__caret {
+  position: absolute;
+  top: 0;
+  left: var(--wh-anchor);
+  width: 0.72rem;
+  height: 0.72rem;
+  margin-left: -0.36rem;
+  margin-top: -0.38rem;
+  border-left: 1px solid color-mix(in srgb, var(--accent) 34%, var(--border));
+  border-top: 1px solid color-mix(in srgb, var(--accent) 34%, var(--border));
+  background: var(--admin-premium-surface-bg, color-mix(in srgb, var(--surface-2) 76%, var(--surface)));
+  transform: rotate(45deg);
   opacity: 0;
-  transform: translateY(-6px) scaleY(0.98);
-  padding-top: 0;
-  padding-bottom: 0;
-  border-top-color: transparent;
   pointer-events: none;
+  transition:
+    left 180ms ease,
+    opacity 160ms ease,
+    border-color 180ms ease;
+}
+
+.working-hours-day-panel.is-open .working-hours-day-panel__caret {
+  opacity: 1;
+}
+
+.working-hours-day-panel__body {
+  display: grid;
+  gap: 0.6rem;
+  min-width: 0;
 }
 
 .working-hours-inline-toggle {
@@ -10717,8 +10814,17 @@ body.admin-theme-premium-black .booking-page-wrap .booking-shell.surface {
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .working-hours-day-details {
+  .working-hours-day-tile,
+  .working-hours-day-panel,
+  .working-hours-day-panel__caret {
     transition: none;
+  }
+
+  .working-hours-day-tile:hover:not(:disabled) {
+    transform: none;
+  }
+
+  .working-hours-day-panel {
     transform: none;
   }
 }
@@ -10765,22 +10871,31 @@ body.admin-theme-premium-black .booking-page-wrap .booking-shell.surface {
     min-width: 0;
   }
 
-  .working-hours-day-row {
-    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr) auto;
-    grid-template-areas: "identity timechip action";
-    padding: 0.72rem 0.8rem;
-    gap: 0.6rem;
+  .working-hours-week {
+    gap: 0.35rem;
   }
 
-  .working-hours-time-chip {
-    justify-self: stretch;
-    width: 100%;
-    max-width: 100%;
+  .working-hours-day-tile {
+    min-height: 3.15rem;
+    padding: 0.42rem 0.2rem 0.38rem;
+    border-radius: 0.65rem;
   }
 
-  .working-hours-day-details {
-    border-radius: 0 0 1rem 1rem;
-    padding: 0.72rem 0.8rem 0.8rem;
+  .working-hours-day-tile.is-selected {
+    border-bottom-left-radius: 0.22rem;
+    border-bottom-right-radius: 0.22rem;
+  }
+
+  .working-hours-day-tile__label {
+    font-size: 0.74rem;
+  }
+
+  .working-hours-day-tile__summary {
+    font-size: 0.7rem;
+  }
+
+  .working-hours-day-panel.is-open {
+    padding: 0.92rem 0.88rem 0.88rem;
   }
 
   .working-hours-range-control__inputs {
@@ -10806,13 +10921,12 @@ body.admin-theme-premium-black .booking-page-wrap .booking-shell.surface {
 }
 
 @media (min-width: 64rem) {
-  .working-hours-overview {
-    gap: 0.62rem;
+  .working-hours-week {
+    gap: 0.4rem;
   }
 
-  .working-hours-day-row,
-  .working-hours-day-details {
-    padding-inline: 0.88rem;
+  .working-hours-day-tile {
+    min-height: 3.3rem;
   }
 }
 
@@ -14775,13 +14889,20 @@ body.admin-theme-premium-black .booking-page-wrap .booking-shell.surface {
 
 .working-hours-shell--profile {
   display: grid;
-  gap: 0.35rem;
-  margin-bottom: 0.65rem;
+  gap: 0.28rem;
+  margin-bottom: 0.5rem;
 }
 
-.working-hours-shell--profile .working-hours-weekly-summary,
+.working-hours-shell--profile .working-hours-weekly-summary {
+  margin: 0;
+  font-size: 0.86rem;
+  font-weight: 600;
+  color: color-mix(in srgb, var(--fg) 82%, var(--muted));
+}
+
 .working-hours-shell--profile .working-hours-helper {
   margin: 0;
+  font-size: 0.8rem;
 }
 
 .admin-cp-skeleton-wrap {
