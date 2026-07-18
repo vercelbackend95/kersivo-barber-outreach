@@ -4,6 +4,7 @@ import type { APIRoute } from 'astro';
 import { z } from 'zod';
 import { requireAdminContext } from '../../../../../lib/admin/auth';
 import { prisma } from '../../../../../lib/db/client';
+import { normalizeProductFlags } from '../../../../../lib/products/normalizeProductFlags';
 
 const patchSchema = z.object({
   active: z.boolean().optional(),
@@ -33,14 +34,16 @@ export const PATCH: APIRoute = async (ctx) => {
       return new Response(JSON.stringify({ error: 'Product not found.' }), { status: 404 });
     }
 
-    const nextActive = parsed.data.active ?? existing.active;
-    const nextFeatured = parsed.data.featured ?? existing.featured;
+    const flags = normalizeProductFlags(
+      { active: existing.active, featured: existing.featured },
+      parsed.data
+    );
 
     const product = await prisma.product.update({
       where: { id },
       data: {
-        active: nextFeatured ? true : nextActive,
-        featured: nextActive ? nextFeatured : false
+        active: flags.active,
+        featured: flags.featured
       }
     });
 

@@ -23,6 +23,7 @@ import RetailOnboardingTaskCard from './retail-onboarding/RetailOnboardingTaskCa
 import ProductWizard from './product-wizard/ProductWizard';
 import AdminWizardSheetLayer from './AdminWizardSheetLayer';
 import AdminPremiumSearchBar from './AdminPremiumSearchBar';
+import { normalizeProductFlags } from '@/lib/products/normalizeProductFlags';
 import {
   EMPTY_PRODUCT_FORM,
   PRODUCT_CATEGORY_OPTIONS,
@@ -375,19 +376,19 @@ function BulkActionBar({ count, loading, onActivate, onDeactivate, onClear }: Bu
           className="btn btn--primary admin-bulk-bar__btn"
           disabled={loading || count === 0}
           onClick={onActivate}
-          aria-label={`Activate ${count} selected products`}
+          aria-label={`Set live ${count} selected products`}
         >
           {loading ? <span className="admin-bulk-spinner" aria-hidden="true" /> : null}
-          Activate
+          Set live
         </button>
         <button
           type="button"
           className="btn btn--secondary admin-bulk-bar__btn"
           disabled={loading || count === 0}
           onClick={onDeactivate}
-          aria-label={`Deactivate ${count} selected products`}
+          aria-label={`Hide ${count} selected products`}
         >
-          Deactivate
+          Hide
         </button>
         <button
           type="button"
@@ -589,9 +590,6 @@ export default function ShopAdminPanel({ initialTab = 'products' }: ShopAdminPan
     const handleChange = () => {
       setIsMobileSalesView(mediaQuery.matches);
       setIsMobileProductEditor(mediaQuery.matches);
-      if (!mediaQuery.matches) {
-        setIsSalesChartExpanded(false);
-      }
     };
     handleChange();
     mediaQuery.addEventListener('change', handleChange);
@@ -958,6 +956,109 @@ export default function ShopAdminPanel({ initialTab = 'products' }: ShopAdminPan
       setLoading(false);
     }
   }
+
+  async function patchProductFlags(productId: string, patch: { active?: boolean; featured?: boolean }) {
+    const existing = products.find((product) => product.id === productId);
+    if (!existing) return;
+
+    const normalized = normalizeProductFlags(
+      { active: existing.active, featured: existing.featured },
+      patch
+    );
+    const previousProducts = products;
+    setProductSavingById((previous) => ({ ...previous, [productId]: true }));
+    setProductStatusById((previous) => ({ ...previous, [productId]: 'Saving…' }));
+    setProducts((previous) =>
+      previous.map((product) =>
+        product.id === productId
+          ? { ...product, active: normalized.active, featured: normalized.featured }
+          : product
+      )
+    );
+
+    try {
+      const payload = await adminFetchJson<{ product: Product }>(`/api/admin/shop/products/${productId}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(patch),
+        errorMessage: 'Unable to update product.',
+      });
+      setProducts((previous) =>
+        previous.map((product) => (product.id === productId ? (payload.product as Product) : product))
+      );
+      setProductStatusById((previous) => ({ ...previous, [productId]: 'Saved' }));
+      window.setTimeout(() => {
+        setProductStatusById((previous) => {
+          const next = { ...previous };
+          delete next[productId];
+          return next;
+        });
+      }, 900);
+      setError(null);
+    } catch (toggleError) {
+      setProducts(previousProducts);
+      setProductStatusById((previous) => ({ ...previous, [productId]: '' }));
+      setError(toggleError instanceof Error ? toggleError.message : 'Unable to update product.');
+    } finally {
+      setProductSavingById((previous) => ({ ...previous, [productId]: false }));
+    }
+  }
+
+  async function bulkPatchActive(active: boolean) {
+    if (bulkLoading) return;
+    const ids = Array.from(bulkSelectedIds);
+    if (ids.length === 0) return;
+
+    setBulkLoading(true);
+    setError(null);
+    setSuccess(null);
+
+    try {
+      const body = active ? { active: true } : { active: false, featured: false };
+      const results = await Promise.allSettled(
+        ids.map((id) =>
+          adminFetchJson<{ product: Product }>(`/api/admin/shop/products/${id}`, {
+            method: 'PATCH',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(body),
+            errorMessage: 'Unable to update product.',
+          })
+        )
+      );
+
+      const succeeded: Product[] = [];
+      let failedCount = 0;
+      for (const result of results) {
+        if (result.status === 'fulfilled' && result.value.product) {
+          succeeded.push(result.value.product as Product);
+        } else {
+          failedCount += 1;
+        }
+      }
+
+      if (succeeded.length > 0) {
+        const byId = new Map(succeeded.map((product) => [product.id, product]));
+        setProducts((previous) =>
+          previous.map((product) => byId.get(product.id) ?? product)
+        );
+      }
+
+      if (failedCount > 0) {
+        setError(`${succeeded.length} updated, ${failedCount} failed.`);
+        return;
+      }
+
+      bulkClearAll();
+      setSuccess(
+        `${ids.length} product${ids.length !== 1 ? 's' : ''} ${active ? 'set live' : 'hidden'}.`
+      );
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Bulk operation failed.');
+    } finally {
+      setBulkLoading(false);
+    }
+  }
+
   async function fetchOrders() {
     setOrdersLoading(true);
     setError(null);
@@ -1305,7 +1406,7 @@ export default function ShopAdminPanel({ initialTab = 'products' }: ShopAdminPan
                         onClick={() => setProductFilter(filter)}
                         aria-pressed={productFilter === filter}
                       >
-                        {filter === 'all' ? 'All' : filter === 'active' ? 'Active' : filter === 'inactive' ? 'Inactive' : 'Featured'}
+                        {filter === 'all' ? 'All' : filter === 'active' ? 'Live' : filter === 'inactive' ? 'Hidden' : 'Featured'}
                       </button>
                     ))}
                   </div>
@@ -1523,10 +1624,10 @@ export default function ShopAdminPanel({ initialTab = 'products' }: ShopAdminPan
                       <ProductStatusPill
                         on={product.active}
                         tone="active"
-                        onLabel="Active"
-                        offLabel="Inactive"
+                        onLabel="Live"
+                        offLabel="Hidden"
                         disabled={isSavingCard}
-                        ariaLabel={`${product.name}: ${product.active ? 'Active' : 'Inactive'}`}
+                        ariaLabel={`${product.name}: ${product.active ? 'Live' : 'Hidden'}`}
                         onClick={() => void patchProductFlags(product.id, { active: !product.active })}
                       />
                     </div>

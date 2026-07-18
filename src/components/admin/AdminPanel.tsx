@@ -321,7 +321,7 @@ export default function AdminPanel({ demoMode = false }: AdminPanelProps) {
           onBackToDashboard={() => handleSectionChange('bookings_dashboard')}
         />
 
-        <LazyPanelErrorBoundary>
+        <LazyPanelErrorBoundary key={activeSection}>
           <Suspense fallback={<PanelChunkFallback />}>
             {activeSection === 'services' ? <ServicesAdminPanel key="services" /> : null}
 

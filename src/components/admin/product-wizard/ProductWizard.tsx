@@ -263,7 +263,7 @@ export default function ProductWizard({
             <p>
               {form.active
                 ? 'It is live and ready to appear in your shop.'
-                : 'It has been saved as inactive and can be published whenever you are ready.'}
+                : 'It has been saved as hidden and can be published whenever you are ready.'}
             </p>
           </section>
         ) : null}
