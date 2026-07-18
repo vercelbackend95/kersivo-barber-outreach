@@ -14,7 +14,7 @@ export const DEFAULT_OG_IMAGE_ALT =
   'Kersivo — UK barbershop booking on your own domain with 0% KERSIVO commission';
 
 /** ISO date (YYYY-MM-DD) for static marketing/legal pages in sitemap lastmod. */
-export const STATIC_SITEMAP_LASTMOD = '2026-07-13';
+export const STATIC_SITEMAP_LASTMOD = '2026-07-18';
 
 export const ONGOING_CARE_MONTHLY_GBP = 39;
 

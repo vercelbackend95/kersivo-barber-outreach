@@ -21,6 +21,8 @@ export type PageSeo = {
   ogImageAlt?: string;
   ogType?: OgType;
   noindex?: boolean;
+  /** When noindex is true, emit `noindex, follow` instead of `noindex, nofollow`. */
+  robotsFollow?: boolean;
 };
 
 export function buildAbsoluteUrl(path: string): string {
@@ -38,6 +40,13 @@ export function resolveOgImageUrl(ogImagePath: string = DEFAULT_OG_IMAGE_PATH): 
   return buildAbsoluteUrl(ogImagePath);
 }
 
+export type ResolvedPageSeo = ReturnType<typeof resolvePageSeo>;
+
+export function resolveRobotsContent(seo: Pick<PageSeo, 'noindex' | 'robotsFollow'>): string | undefined {
+  if (!seo.noindex) return undefined;
+  return seo.robotsFollow ? 'noindex, follow' : 'noindex, nofollow';
+}
+
 export function resolvePageSeo(seo: PageSeo = {}) {
   const title = seo.title ?? DEFAULT_TITLE;
   const description = seo.description ?? DEFAULT_DESCRIPTION;
@@ -50,6 +59,8 @@ export function resolvePageSeo(seo: PageSeo = {}) {
   const ogImageAlt = seo.ogImageAlt ?? DEFAULT_OG_IMAGE_ALT;
   const ogType = seo.ogType ?? 'website';
   const twitterHandle = getTwitterHandle();
+  const noindex = seo.noindex ?? false;
+  const robotsFollow = seo.robotsFollow ?? false;
 
   return {
     title,
@@ -63,7 +74,9 @@ export function resolvePageSeo(seo: PageSeo = {}) {
     ogImageAlt,
     ogType,
     twitterHandle,
-    noindex: seo.noindex ?? false,
+    noindex,
+    robotsFollow,
+    robotsContent: resolveRobotsContent({ noindex, robotsFollow }),
   };
 }
 
