@@ -1,8 +1,8 @@
 import React, { Suspense, lazy, useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
-import { AnimatePresence, motion } from 'framer-motion';
+import { AnimatePresence, motion, type Variants } from 'framer-motion';
 import { BarberRosterOverviewGridSkeleton } from '../skeleton';
 import AdminSectionHeader from './AdminSectionHeader';
-import AdminBookingsOpsSearch from './AdminBookingsOpsSearch';
+import AdminBookingsOpsSearch, { type AdminBookingsOpsSearchBooking } from './AdminBookingsOpsSearch';
 import AdminDesktopDashHeroSlot from './AdminDesktopDashHeroSlot';
 import AdminBookingsScheduleList from './AdminBookingsScheduleList';
 import HistoryBookingStatusSheet, { type HistoryStatusValue } from './HistoryBookingStatusSheet';
@@ -10,7 +10,7 @@ import AdminBookingDatePicker from './AdminBookingDatePicker';
 const BookingsReportsSection = lazy(() => import('./BookingsReportsSection'));
 import { addDays } from 'date-fns';
 import { formatInTimeZone, fromZonedTime, toZonedTime } from 'date-fns-tz';
-import TodayTimeline from './TodayTimeline';
+import TodayTimeline, { type TimelineBooking } from './TodayTimeline';
 import ClientProfilePanel from './ClientProfilePanel';
 import { resolveClientIdForBooking } from '@/lib/admin/resolveClientIdForBooking';
 import AdminErrorBoundary from './AdminErrorBoundary';
@@ -77,7 +77,7 @@ type AdminBookingView = 'timeline' | 'list';
 
 const VIEW_ORDER: Record<AdminBookingView, number> = { timeline: 0, list: 1 };
 
-const viewSlideVariants = {
+const viewSlideVariants: Variants = {
   enter: (custom: { dir: number; mobile: boolean }) => ({
     x: custom.dir * (custom.mobile ? 28 : 48),
     opacity: 0,
@@ -85,13 +85,18 @@ const viewSlideVariants = {
   center: {
     x: 0,
     opacity: 1,
-    transition: { duration: 0.24, ease: [0.4, 0.0, 0.2, 1] },
+    transition: { duration: 0.24, ease: [0.4, 0.0, 0.2, 1] as const },
   },
   exit: (custom: { dir: number; mobile: boolean }) => ({
     x: custom.dir * (custom.mobile ? -28 : -48),
     opacity: 0,
-    transition: { duration: 0.18, ease: [0.4, 0.0, 1.0, 1] },
+    transition: { duration: 0.18, ease: [0.4, 0.0, 1.0, 1] as const },
   }),
+};
+
+type WorkingHoursResponse = {
+  rules?: WorkingHourRow[];
+  error?: string;
 };
 
 type HistoryDateRange = {
@@ -1431,7 +1436,7 @@ export default function BookingsAdminPanel({ isActive, mode, onBackToDashboard, 
   }, []);
 
   const jumpToTimelineBooking = useCallback(
-    (booking: Booking) => {
+    (booking: AdminBookingsOpsSearchBooking) => {
       if (mode === 'dashboard') {
         if (activeView === 'timeline') {
           setTimelineFocusBookingId(booking.id);
@@ -1462,7 +1467,7 @@ export default function BookingsAdminPanel({ isActive, mode, onBackToDashboard, 
   );
 
   const handleTimelineBookingClick = useCallback(
-    (booking: Booking) => {
+    (booking: TimelineBooking) => {
       void openClientProfileForBooking(booking);
     },
     [openClientProfileForBooking]
@@ -1531,7 +1536,7 @@ export default function BookingsAdminPanel({ isActive, mode, onBackToDashboard, 
     if (!barberId) return;
     setWorkingHoursLoading(true);
     const response = await fetch(`/api/admin/barbers/${barberId}/rules`, { credentials: 'include' });
-    const payload = await response.json().catch(() => ({} as { rules?: WorkingHourRow[] }));
+    const payload: WorkingHoursResponse = await response.json().catch(() => ({}));
     if (response.ok) {
       const rules = payload.rules ?? [];
       setWorkingHours(rules.sort((a, b) => a.dayOfWeek - b.dayOfWeek));
@@ -1587,7 +1592,7 @@ export default function BookingsAdminPanel({ isActive, mode, onBackToDashboard, 
       headers: { 'content-type': 'application/json' },
       body: JSON.stringify({ rules: rulesToSave })
     });
-    const payload = await response.json().catch(() => ({} as { error?: string; rules?: WorkingHourRow[] }));
+    const payload: WorkingHoursResponse = await response.json().catch(() => ({}));
     if (!response.ok) {
       setBarberSaveError(payload.error ?? 'Could not save working hours.');
       setWorkingHoursSaving(false);
@@ -1994,7 +1999,7 @@ export default function BookingsAdminPanel({ isActive, mode, onBackToDashboard, 
               ) : (
                 <div className="admin-barber-list-wrap admin-barbers-overview-list-wrap">
                   <ul className="admin-barber-grid admin-barbers-overview-grid" aria-label="Barbers on shift now">
-                    {onFloorBarbersNow.map((barber) => {
+                    {onFloorBarbersNow.map((barber, orderIndex) => {
                       const now = new Date(nowMs);
                       const nextBookingPreview = getNextBookingForBarber(bookings, barber.id, now);
                       const availStatus = getBarberAvailabilityStatusForDayRange(
@@ -2010,6 +2015,7 @@ export default function BookingsAdminPanel({ isActive, mode, onBackToDashboard, 
                         <AdminBarberRosterCard
                           key={barber.id}
                           barber={barber}
+                          orderIndex={orderIndex}
                           barberIsActive={normalizeBarberStatus(barber)}
                           nextBookingPreview={nextBookingPreview}
                           availStatus={availStatus}
