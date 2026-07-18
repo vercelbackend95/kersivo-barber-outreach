@@ -8,6 +8,19 @@ import { BookingStatus, Prisma } from '@prisma/client';
 
 const ADMIN_TIMEZONE = 'Europe/London';
 
+const BOOKING_STATUS_VALUES = new Set<string>(Object.values(BookingStatus));
+
+function isBookingStatus(value: string): value is BookingStatus {
+  return BOOKING_STATUS_VALUES.has(value);
+}
+
+function parseBookingStatusFilter(
+  raw: string | null,
+): { ok: true; status: BookingStatus | undefined } | { ok: false } {
+  if (raw === null || raw === '') return { ok: true, status: undefined };
+  if (isBookingStatus(raw)) return { ok: true, status: raw };
+  return { ok: false };
+}
 
 function getLondonDayRange(date: string) {
     const startAt = fromZonedTime(`${date}T00:00:00.000`, ADMIN_TIMEZONE);
@@ -43,7 +56,7 @@ function withClientTags<
 
 function withEffectiveBookingStatus<
   T extends { status: string; startAt: Date | string; endAt: Date | string }
->(booking: T): T {
+>(booking: T): Omit<T, 'status'> & { status: string } {
   return {
     ...booking,
     status: getEffectiveBookingStatus({
@@ -99,20 +112,30 @@ const BOOKING_LIST_LEGACY_SELECT = {
   client: { select: { tags: true, avatarUrl: true } }
 } satisfies Prisma.BookingSelect;
 
+type BookingListRow = Prisma.BookingGetPayload<{ select: typeof BOOKING_LIST_SELECT }>;
+type BookingListLegacyRow = Prisma.BookingGetPayload<{ select: typeof BOOKING_LIST_LEGACY_SELECT }>;
+type BookingListQueryRow = BookingListRow | BookingListLegacyRow;
+
 function isMissingHistoricalColumnError(error: unknown) {
   return error instanceof Prisma.PrismaClientKnownRequestError
     && error.code === 'P2022'
     && String(error.meta?.column ?? '').includes('Booking.serviceNameAtBooking');
 }
 
-async function findBookingsWithFallback(args: Prisma.BookingFindManyArgs) {
+async function findBookingsWithFallback(args: {
+  where: Prisma.BookingWhereInput;
+  orderBy?: Prisma.BookingFindManyArgs['orderBy'];
+  take?: number;
+}): Promise<BookingListQueryRow[]> {
   try {
-    return await prisma.booking.findMany(args);
+    return await prisma.booking.findMany({
+      ...args,
+      select: BOOKING_LIST_SELECT
+    });
   } catch (error) {
     if (!isMissingHistoricalColumnError(error)) throw error;
-    const { include, ...rest } = args;
     return prisma.booking.findMany({
-      ...rest,
+      ...args,
       select: BOOKING_LIST_LEGACY_SELECT
     });
   }
@@ -172,7 +195,6 @@ export const GET: APIRoute = async (ctx) => {
 
     const bookings = await findBookingsWithFallback({
       where: andConditions.length ? { AND: andConditions } : {},
-      select: BOOKING_LIST_SELECT,
       orderBy: [{ startAt: 'desc' }, { id: 'desc' }],
       take: limit + 1
     });
@@ -209,9 +231,14 @@ export const GET: APIRoute = async (ctx) => {
 
 
   const q = ctx.url.searchParams.get('q');
-  const status = ctx.url.searchParams.get('status');
+  const statusParam = ctx.url.searchParams.get('status');
   const date = ctx.url.searchParams.get('date');
   const range = ctx.url.searchParams.get('range');
+
+  const parsedStatus = parseBookingStatusFilter(statusParam);
+  if (!parsedStatus.ok) {
+    return new Response(JSON.stringify({ error: 'Invalid booking status.' }), { status: 400 });
+  }
 
   const startAtRange = range === 'today'
     ? getTodayRangeInLondon()
@@ -223,11 +250,10 @@ export const GET: APIRoute = async (ctx) => {
   const bookings = await findBookingsWithFallback({
     where: {
       barber: { shopId },
-      status: status || undefined,
+      status: parsedStatus.status,
       OR: q ? [{ fullName: { contains: q, mode: 'insensitive' } }, { email: { contains: q, mode: 'insensitive' } }] : undefined,
       startAt: startAtRange
     },
-    select: BOOKING_LIST_SELECT,
     orderBy: { startAt: 'asc' }
   });
 

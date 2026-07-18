@@ -41,7 +41,7 @@ export const PATCH: APIRoute = async (ctx) => {
   const normalizedCategory =
     data.category !== undefined ? normalizeServiceCategory(data.category) : undefined;
 
-  if (data.category !== undefined && !normalizedCategory) {
+  if (normalizedCategory === null) {
     return new Response(JSON.stringify({ error: 'Category is required.' }), { status: 400 });
   }
 
