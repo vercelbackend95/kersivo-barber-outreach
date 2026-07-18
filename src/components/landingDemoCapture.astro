@@ -56,7 +56,6 @@ const { className = '' } = Astro.props as Props;
               type="submit"
               class="btn btn--secondary landing-demo-capture__submit"
               data-demo-capture-submit
-              data-track="demo_pricing_capture_submit"
             >
               Send Me The Demo
             </button>
@@ -79,6 +78,9 @@ const { className = '' } = Astro.props as Props;
 </section>
 
 <script>
+  import { trackConsentedEvent } from '@/lib/consent/events';
+  import { FUNNEL_EVENTS } from '@/lib/analytics/funnelEvents';
+
   const trigger = document.querySelector('[data-demo-capture-trigger]');
   const panel = document.querySelector('[data-demo-capture-panel]');
   const emailInput = document.querySelector('[data-demo-capture-email]');
@@ -144,6 +146,7 @@ const { className = '' } = Astro.props as Props;
           return;
         }
 
+        trackConsentedEvent(FUNNEL_EVENTS.demo_pricing_capture_submit, undefined, 'analytics');
         statusEl.textContent = 'Thanks — we’ll send the KERSIVO demo and pricing details to your inbox shortly.';
         statusEl.className = 'landing-demo-capture__status landing-demo-capture__status--success';
         form.reset();

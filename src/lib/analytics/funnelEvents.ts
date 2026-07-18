@@ -42,6 +42,7 @@ export const FUNNEL_EVENTS = {
   launch_stripe_click: 'launch_stripe_click',
   priority_growth_stripe_click: 'priority_growth_stripe_click',
   setup_enquiry_submit: 'setup_enquiry_submit',
+  demo_pricing_capture_submit: 'demo_pricing_capture_submit',
 } as const;
 
 export type FunnelEventName = (typeof FUNNEL_EVENTS)[keyof typeof FUNNEL_EVENTS];
@@ -63,6 +64,7 @@ export const LEAD_EVENTS = new Set<FunnelEventName>([
   FUNNEL_EVENTS.signup_completed,
   FUNNEL_EVENTS.shop_details_completed,
   FUNNEL_EVENTS.setup_enquiry_submit,
+  FUNNEL_EVENTS.demo_pricing_capture_submit,
 ]);
 
 /** Product-qualified lead signals (used product meaningfully). */

@@ -76,7 +76,7 @@ const {
 
         </label>
 
-        <button type="submit" class="btn btn--ghost contact16__submit" data-contact-submit data-track="setup_enquiry_submit">
+        <button type="submit" class="btn btn--ghost contact16__submit" data-contact-submit>
           {submitLabel}
         </button>
       </form>
@@ -85,6 +85,9 @@ const {
 </section>
 
 <script>
+  import { trackConsentedEvent } from '@/lib/consent/events';
+  import { FUNNEL_EVENTS } from '@/lib/analytics/funnelEvents';
+
   const form = document.querySelector('[data-contact-form]');
   const statusEl = document.querySelector('[data-contact-status]');
   const submitBtn = document.querySelector('[data-contact-submit]');
@@ -128,6 +131,7 @@ const {
           return;
         }
 
+        trackConsentedEvent(FUNNEL_EVENTS.setup_enquiry_submit, undefined, 'analytics');
         statusEl.textContent = 'Thanks — we’ve received your message and will be in touch shortly.';
         statusEl.className = 'contact16__status contact16__status--success';
         form.reset();
