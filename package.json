@@ -99,6 +99,8 @@
   },
   "devDependencies": {
     "@astrojs/vercel": "^9.0.4",
+    "@emnapi/core": "1.11.2",
+    "@emnapi/runtime": "1.11.2",
     "@fontsource/caveat": "^5.2.8",
     "@playwright/test": "1.59.1",
     "@tailwindcss/vite": "^4.2.2",
