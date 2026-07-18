@@ -3,12 +3,8 @@ export const prerender = false;
 import type { APIRoute } from 'astro';
 import { resolveAdminAccess } from '../../../lib/admin/auth';
 import { bookingCreateSchema } from '../../../lib/booking/schemas';
-import {
-  OWNER_TEST_BOOKING_NOTES_PREFIX,
-  PUBLIC_DEMO_BOOKING_NOTES_PREFIX,
-} from '../../../lib/booking/sandboxBookings';
+import { OWNER_TEST_BOOKING_NOTES_PREFIX } from '../../../lib/booking/sandboxBookings';
 import { BookingActionError, createInstantBooking } from '../../../lib/booking/service';
-import { DEMO_SHOP_ID } from '../../../lib/db/shopScope';
 import { prisma } from '../../../lib/db/client';
 import { checkBookingRateLimit } from '../../../lib/rate-limit/bookingRateLimit';
 
@@ -31,8 +27,12 @@ export const POST: APIRoute = async (ctx) => {
   const access = await resolveAdminAccess(ctx);
   const isOwnerSession = access?.via === 'session';
 
-  // Always rate-limit public demo; also rate-limit in production for owners.
-  if (!isOwnerSession || !import.meta.env.DEV) {
+  if (!isOwnerSession) {
+    return new Response(JSON.stringify({ error: 'Unauthorized' }), { status: 401 });
+  }
+
+  // Rate-limit in production for owners (DEV owner sessions skip).
+  if (!import.meta.env.DEV) {
     const limit = checkBookingRateLimit(ip);
 
     if (!limit.ok) {
@@ -42,9 +42,7 @@ export const POST: APIRoute = async (ctx) => {
       );
     }
 
-    if (!import.meta.env.DEV) {
-      await prisma.rateLimitEvent.create({ data: { ip, action: 'booking_create' } });
-    }
+    await prisma.rateLimitEvent.create({ data: { ip, action: 'booking_create' } });
   }
 
   const rawBody = await request.text();
@@ -71,17 +69,14 @@ export const POST: APIRoute = async (ctx) => {
     );
   }
 
-  const requiredShopId = isOwnerSession ? access!.shopId : DEMO_SHOP_ID;
-  const notesPrefix = isOwnerSession
-    ? OWNER_TEST_BOOKING_NOTES_PREFIX
-    : PUBLIC_DEMO_BOOKING_NOTES_PREFIX;
-  const skipConfirmationEmail = !isOwnerSession;
+  const requiredShopId = access!.shopId;
+  const notesPrefix = OWNER_TEST_BOOKING_NOTES_PREFIX;
 
   try {
     const booking = await createInstantBooking(parsed.data, {
       requiredShopId,
       notesPrefix,
-      skipConfirmationEmail,
+      skipConfirmationEmail: false,
     });
     return new Response(
       JSON.stringify({

@@ -16,9 +16,12 @@ type Props = {
   contactRows?: ReviewRow[];
   contactHelper?: string;
   trustItems: TrustItem[];
+  /** Caps trust list length (default 3). Public demo passes 4 sandbox points. */
+  maxTrustItems?: number;
   alwaysVisible?: boolean;
   isSubmitting?: boolean;
   isSubmitDisabled?: boolean;
+  submitLabel?: string;
   onSubmit?: () => void;
 };
 
@@ -41,14 +44,16 @@ export default function BookingReviewPanel({
   contactRows = [],
   contactHelper,
   trustItems,
+  maxTrustItems = 3,
   alwaysVisible = false,
   isSubmitting = false,
   isSubmitDisabled = true,
+  submitLabel,
   onSubmit,
 }: Props) {
   const ctaLabel = isSubmitting
     ? (mode === 'reschedule' ? 'Rescheduling…' : 'Confirming…')
-    : (mode === 'reschedule' ? 'Reschedule booking' : 'Confirm booking');
+    : (submitLabel ?? (mode === 'reschedule' ? 'Reschedule booking' : 'Confirm booking'));
 
   const showContact = mode === 'create' && contactRows.some((row) => row.value !== '—');
 
@@ -79,7 +84,7 @@ export default function BookingReviewPanel({
         <section className="booking-review-panel__card booking-review-panel__card--trust" aria-labelledby="booking-review-trust-title">
           <h3 id="booking-review-trust-title" className="booking-review-panel__card-title">Next</h3>
           <ul className="booking-review-panel__trust-list" aria-label="Booking reassurance details">
-            {trustItems.slice(0, 3).map((item) => (
+            {trustItems.slice(0, maxTrustItems).map((item) => (
               <li className="booking-review-panel__trust-item" key={`${item.label}-${item.value ?? ''}`}>
                 <span className="booking-review-panel__trust-label">{item.label}</span>
                 {item.value ? <span className="booking-review-panel__trust-value">{item.value}</span> : null}

@@ -5,6 +5,8 @@ import BookingStepIndicator from './BookingStepIndicator';
 import { SkeletonSlotGrid } from '../skeleton';
 import { ANY_BARBER_ID, ANY_BARBER_NAME } from '../../lib/booking/constants';
 import { groupServicesByCategory } from '../../lib/booking/groupServicesByCategory';
+import { FUNNEL_EVENTS } from '@/lib/analytics/funnelEvents';
+import { trackConsentedEvent } from '@/lib/consent/events';
 import EmptyState from '../EmptyState';
 import { Clock } from '../lucide-react';
 
@@ -76,13 +78,18 @@ type Props = {
    * once service + barber + time are all chosen so the host can gate the preview.
    */
   previewMode?: boolean;
+  /**
+   * Public `/book` sandbox: full 4-step flow with static demo slots, local-only
+   * Details completion (no API), and a demo confirmation screen.
+   */
+  publicDemoMode?: boolean;
   onComplete?: () => void;
   postConfirmCta?: PostConfirmCtaConfig | null;
 };
 
 const DEFAULT_BOOKING_TIMEZONE = 'Europe/London';
 
-/** Fixed free slots for landing preview — no real availability fetch. */
+/** Fixed free slots for landing preview / public sandbox — no real availability fetch. */
 const PREVIEW_STATIC_SLOTS = [
   '09:00',
   '09:30',
@@ -93,6 +100,11 @@ const PREVIEW_STATIC_SLOTS = [
   '14:00',
   '14:30',
 ] as const;
+
+const DEMO_EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+
+const PUBLIC_DEMO_SANDBOX_NOTE =
+  'This is a KERSIVO sandbox. No appointment will be created, no email will be sent, and the details you enter are not stored.';
 
 type WizardStepId = 'service' | 'barber' | 'schedule' | 'details';
 
@@ -214,6 +226,11 @@ const STEP_COPY: Record<WizardStepId, { title: string; hint: string }> = {
   details: { title: 'Your details', hint: 'Where we send confirmation' },
 };
 
+const PUBLIC_DEMO_DETAILS_COPY = {
+  title: 'Your details',
+  hint: 'Demo only — details stay in this browser',
+} as const;
+
 export default function BookingFlow({
   services,
   barbers,
@@ -221,6 +238,7 @@ export default function BookingFlow({
   token = '',
   shopDetails,
   previewMode = false,
+  publicDemoMode = false,
   onComplete,
   postConfirmCta = null,
 }: Props) {
@@ -240,8 +258,9 @@ export default function BookingFlow({
   const [wizardStep, setWizardStep] = useState(1);
   const [stepKey, setStepKey] = useState(0);
   const confirmationRef = useRef<HTMLElement | null>(null);
+  const hasTrackedPublicDemoRef = useRef(false);
   const [confirmation, setConfirmation] = useState<{
-    type: 'booked' | 'rescheduled';
+    type: 'booked' | 'rescheduled' | 'demo';
     summary: BookingSummary;
     bookingId?: string;
     startAt?: string;
@@ -249,10 +268,12 @@ export default function BookingFlow({
   } | null>(null);
 
   const isCreateMode = mode === 'create';
+  const useStaticSlots = previewMode || publicDemoMode;
   const maxStep = previewMode || !isCreateMode ? 3 : 4;
   const normalizedFullName = fullName.trim();
   const normalizedEmail = email.trim();
   const normalizedPhone = phone.trim();
+  const emailLooksValid = DEMO_EMAIL_RE.test(normalizedEmail);
 
   const availableBarbers = useMemo(() => {
     if (!serviceId) return [];
@@ -318,9 +339,23 @@ export default function BookingFlow({
     if (wizardStep === 1) return Boolean(serviceId);
     if (wizardStep === 2) return Boolean(barberId);
     if (wizardStep === 3) return Boolean(normalizedDate && time);
-    if (wizardStep === 4) return Boolean(normalizedFullName && normalizedEmail);
+    if (wizardStep === 4) {
+      if (!normalizedFullName || !normalizedEmail) return false;
+      if (publicDemoMode) return emailLooksValid;
+      return true;
+    }
     return false;
-  }, [wizardStep, serviceId, barberId, normalizedDate, time, normalizedFullName, normalizedEmail]);
+  }, [
+    wizardStep,
+    serviceId,
+    barberId,
+    normalizedDate,
+    time,
+    normalizedFullName,
+    normalizedEmail,
+    publicDemoMode,
+    emailLooksValid,
+  ]);
 
   const missingItems = useMemo(() => {
     const items: string[] = [];
@@ -331,9 +366,20 @@ export default function BookingFlow({
     if (isCreateMode) {
       if (!normalizedFullName) items.push('Add your full name');
       if (!normalizedEmail) items.push('Add your email');
+      else if (publicDemoMode && !emailLooksValid) items.push('Enter a valid email');
     }
     return items;
-  }, [barberId, isCreateMode, normalizedDate, normalizedEmail, normalizedFullName, serviceId, time]);
+  }, [
+    barberId,
+    isCreateMode,
+    normalizedDate,
+    normalizedEmail,
+    normalizedFullName,
+    publicDemoMode,
+    emailLooksValid,
+    serviceId,
+    time,
+  ]);
 
   const isReadyToSubmit = missingItems.length === 0;
   const isSubmitDisabled = isSubmitting || !isReadyToSubmit;
@@ -359,8 +405,10 @@ export default function BookingFlow({
       ? 'Choose a barber to load times.'
       : !normalizedDate
         ? 'Choose a date.'
-        : previewMode
-          ? 'Preview times'
+        : useStaticSlots
+          ? publicDemoMode
+            ? 'Demo times'
+            : 'Preview times'
           : slots.length > 0
             ? 'Select a slot'
             : 'No slots this day';
@@ -388,6 +436,15 @@ export default function BookingFlow({
   );
 
   const trustItems = useMemo(() => {
+    if (publicDemoMode) {
+      return [
+        { label: 'No appointment will be created' },
+        { label: 'No confirmation email will be sent' },
+        { label: 'Your details are not stored' },
+        { label: 'Times shown are for demonstration only' },
+      ];
+    }
+
     const items = [
       { label: 'Instant confirmation by email' },
       { label: 'Reschedule and cancel links included' },
@@ -405,7 +462,7 @@ export default function BookingFlow({
     }
 
     return items;
-  }, [bookingTimezone, shopDetails?.cancellationWindowHours, shopDetails?.rescheduleWindowHours]);
+  }, [bookingTimezone, publicDemoMode, shopDetails?.cancellationWindowHours, shopDetails?.rescheduleWindowHours]);
 
   useEffect(() => {
     if (!confirmation) return;
@@ -439,7 +496,7 @@ export default function BookingFlow({
       return;
     }
 
-    if (previewMode) {
+    if (useStaticSlots) {
       setSlots([...PREVIEW_STATIC_SLOTS]);
       setTime('');
       setIsSlotsLoading(false);
@@ -460,7 +517,7 @@ export default function BookingFlow({
       .finally(() => {
         setIsSlotsLoading(false);
       });
-  }, [serviceId, barberId, date, previewMode]);
+  }, [serviceId, barberId, date, useStaticSlots]);
 
   async function submit() {
     if (isSubmitting) return;
@@ -484,6 +541,39 @@ export default function BookingFlow({
       setMessage('Please select a valid available time.');
       return;
     }
+
+    if (publicDemoMode) {
+      if (!normalizedFullName || !normalizedEmail) {
+        setMessage('Please provide your full name and email.');
+        return;
+      }
+      if (!emailLooksValid) {
+        setMessage('Please enter a valid email address.');
+        return;
+      }
+
+      setIsSubmitting(true);
+      try {
+        setConfirmation({
+          type: 'demo',
+          summary: {
+            service: selectedService?.name,
+            barber: selectedBarberLabel,
+            date: formatDateForSummary(normalizedDate, bookingTimezone),
+            time,
+          },
+          date: normalizedDate,
+        });
+        if (!hasTrackedPublicDemoRef.current) {
+          hasTrackedPublicDemoRef.current = true;
+          trackConsentedEvent(FUNNEL_EVENTS.public_demo_completed, undefined, 'analytics');
+        }
+      } finally {
+        setIsSubmitting(false);
+      }
+      return;
+    }
+
     setIsSubmitting(true);
 
     try {
@@ -588,12 +678,13 @@ export default function BookingFlow({
 
   const primaryLabel = (() => {
     if (isSubmitting) {
-      return mode === 'reschedule' ? 'Rescheduling…' : 'Confirming…';
+      return mode === 'reschedule' ? 'Rescheduling…' : publicDemoMode ? 'Completing…' : 'Confirming…';
     }
     if (wizardStep === 3 && !isCreateMode && !previewMode) {
       return 'Reschedule booking';
     }
     if (wizardStep < maxStep) return 'Continue';
+    if (publicDemoMode) return 'Complete demo booking';
     return mode === 'reschedule' ? 'Reschedule booking' : 'Confirm booking';
   })();
 
@@ -606,11 +697,15 @@ export default function BookingFlow({
       : isSubmitDisabled);
 
   const showReview = !previewMode && !confirmation && wizardStep >= 3;
-  const stepCopy = STEP_COPY[activeStepId];
+  const stepCopy =
+    publicDemoMode && activeStepId === 'details' ? PUBLIC_DEMO_DETAILS_COPY : STEP_COPY[activeStepId];
 
   if (confirmation) {
     const cta =
-      postConfirmCta?.destination === 'admin-timeline' && confirmation.bookingId && confirmation.date
+      confirmation.type !== 'demo' &&
+      postConfirmCta?.destination === 'admin-timeline' &&
+      confirmation.bookingId &&
+      confirmation.date
         ? {
             label: postConfirmCta.label,
             href: `/admin?section=bookings_dashboard&bookingId=${encodeURIComponent(confirmation.bookingId)}&bookingDate=${encodeURIComponent(confirmation.date)}`,
@@ -633,14 +728,15 @@ export default function BookingFlow({
 
   return (
     <section
-      className={`surface booking-shell booking-flow booking-flow--wizard${previewMode ? ' booking-flow--preview' : ''}`}
+      className={`surface booking-shell booking-flow booking-flow--wizard${previewMode ? ' booking-flow--preview' : ''}${publicDemoMode ? ' booking-flow--public-demo' : ''}`}
       aria-live="polite"
     >
       <div className="booking-form-content">
         <header className="booking-flow__hero">
           <div className="booking-flow__hero-copy">
-            <p className="booking-flow__eyebrow">Instant booking</p>
-            <h1>{isCreateMode ? 'Book now' : 'Reschedule'}</h1>
+            <p className="booking-flow__eyebrow">{publicDemoMode ? 'Interactive demo' : 'Instant booking'}</p>
+            <h1>{publicDemoMode ? 'Try the booking flow' : isCreateMode ? 'Book now' : 'Reschedule'}</h1>
+            {publicDemoMode ? <p className="booking-flow__sandbox-note muted">{PUBLIC_DEMO_SANDBOX_NOTE}</p> : null}
           </div>
           <BookingStepIndicator currentStep={wizardStep} steps={bookingSteps} />
         </header>
@@ -907,8 +1003,16 @@ export default function BookingFlow({
                 mode={mode}
                 appointmentRows={appointmentRows}
                 contactRows={contactRows}
-                contactHelper={isCreateMode ? 'Confirmation goes to your email.' : undefined}
+                contactHelper={
+                  publicDemoMode
+                    ? 'Demo only — details stay in this browser'
+                    : isCreateMode
+                      ? 'Confirmation goes to your email.'
+                      : undefined
+                }
                 trustItems={trustItems}
+                maxTrustItems={publicDemoMode ? 4 : 3}
+                submitLabel={publicDemoMode ? 'Complete demo booking' : undefined}
                 alwaysVisible
               />
             </div>

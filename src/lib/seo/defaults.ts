@@ -32,7 +32,7 @@ export const PAGE_DESCRIPTIONS = {
   setupCancel:
     'Kersivo setup checkout was cancelled. No payment was taken.',
   book:
-    'Book a barbershop appointment online — choose service, barber, and time slot. Demo booking flow powered by Kersivo.',
+    'Try the KERSIVO interactive booking demo — choose a service, barber, and time. No appointment is created and nothing you enter is stored.',
   bookConfirm:
     'Your barbershop appointment is confirmed. You will receive a confirmation email with booking details.',
   bookCancel:

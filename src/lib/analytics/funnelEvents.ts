@@ -43,6 +43,7 @@ export const FUNNEL_EVENTS = {
   priority_growth_stripe_click: 'priority_growth_stripe_click',
   setup_enquiry_submit: 'setup_enquiry_submit',
   demo_pricing_capture_submit: 'demo_pricing_capture_submit',
+  public_demo_completed: 'public_demo_completed',
 } as const;
 
 export type FunnelEventName = (typeof FUNNEL_EVENTS)[keyof typeof FUNNEL_EVENTS];
@@ -57,6 +58,7 @@ export const MICRO_CONVERSION_EVENTS = new Set<FunnelEventName>([
   FUNNEL_EVENTS.auth_started,
   FUNNEL_EVENTS.onboarding_started,
   FUNNEL_EVENTS.launch_wizard_started,
+  FUNNEL_EVENTS.public_demo_completed,
 ]);
 
 /** Lead-quality signals. */

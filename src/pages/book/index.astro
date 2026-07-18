@@ -2,6 +2,7 @@
 import MinimalLayout from '@/layouts/MinimalLayout.astro';
 import BookingFlow from '../../components/booking/BookingFlow';
 import { PAGE_DESCRIPTIONS } from '@/lib/seo/defaults';
+import { landingDemoBarberAvatarByIndex } from '@/lib/landing/landingDemoAssets';
 import { prisma } from '../../lib/db/client';
 import { DEMO_SHOP_ID } from '../../lib/db/shopScope';
 import {
@@ -29,15 +30,15 @@ const bookingPageData = await withPrismaQuotaFallback(
       prisma.barber.findMany({
         where: { active: true, shopId: DEMO_SHOP_ID },
         orderBy: [{ sortOrder: 'asc' }, { createdAt: 'asc' }],
-        include: {
+        select: {
+          id: true,
+          name: true,
           barberServices: {
             select: {
               serviceId: true
             }
           }
-
         }
-
       }),
       prisma.shopSettings.findUnique({
         where: { id: DEMO_SHOP_ID },
@@ -72,7 +73,7 @@ const { services, barbers, shopSettings, bookingUnavailable } = bookingPageData;
 ---
 
 <MinimalLayout
-  title="Book appointment | Kersivo"
+  title="Interactive booking demo | KERSIVO"
   description={PAGE_DESCRIPTIONS.book}
   canonicalPath="/book"
   bodyClass="admin-theme-premium-black"
@@ -82,17 +83,18 @@ const { services, barbers, shopSettings, bookingUnavailable } = bookingPageData;
       {
         bookingUnavailable ? (
           <section class="surface booking-shell">
-            <h1>Book appointment</h1>
+            <h1>Try the booking flow</h1>
             <p class="admin-inline-error">{PUBLIC_BOOKING_UNAVAILABLE_MESSAGE}</p>
           </section>
         ) : (
           <BookingFlow
             client:load
+            publicDemoMode
             services={services}
-            barbers={barbers.map((barber) => ({
+            barbers={barbers.map((barber, index) => ({
               id: barber.id,
               name: barber.name,
-              avatarUrl: barber.avatarUrl,
+              avatarUrl: landingDemoBarberAvatarByIndex(index),
               serviceIds: barber.barberServices.map((link) => link.serviceId)
             }))}
             shopDetails={

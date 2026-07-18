@@ -14,7 +14,7 @@ export type BookingPostConfirmCta = {
 };
 
 type Props = {
-  variant: 'booked' | 'rescheduled';
+  variant: 'booked' | 'rescheduled' | 'demo';
   summary?: BookingSummary;
   postConfirmCta?: BookingPostConfirmCta | null;
 };
@@ -30,7 +30,17 @@ const contentByVariant = {
     heading: 'Booking rescheduled',
     body: 'Your new time is confirmed. A fresh email with the updated details is on the way.',
   },
+  demo: {
+    eyebrow: 'Demo complete',
+    heading: 'That’s the KERSIVO booking experience',
+    body: 'No appointment was created and no email was sent. Ready to explore KERSIVO for your barbershop?',
+  },
 } as const;
+
+const DEMO_CTAS = [
+  { label: 'See plans & pricing', href: '/#pricing', primary: true },
+  { label: 'Ask about my setup', href: '/#contact', primary: false },
+] as const;
 
 function buildSummaryRows(summary?: BookingSummary): Array<{ label: string; value: string }> {
   if (!summary) return [];
@@ -49,6 +59,7 @@ const BookingConfirmationPanel = forwardRef<HTMLElement, Props>(function Booking
 ) {
   const content = contentByVariant[variant];
   const rows = buildSummaryRows(summary);
+  const isDemo = variant === 'demo';
 
   return (
     <section
@@ -78,7 +89,19 @@ const BookingConfirmationPanel = forwardRef<HTMLElement, Props>(function Booking
         </dl>
       )}
 
-      {postConfirmCta ? (
+      {isDemo ? (
+        <div className="booking-confirmation__cta booking-confirmation__cta--stack">
+          {DEMO_CTAS.map((cta) => (
+            <a
+              key={cta.href}
+              className={cta.primary ? 'btn btn--primary btn--lg' : 'btn btn--secondary btn--lg'}
+              href={cta.href}
+            >
+              {cta.label}
+            </a>
+          ))}
+        </div>
+      ) : postConfirmCta ? (
         <div className="booking-confirmation__cta">
           <a className="btn btn--primary btn--lg" href={postConfirmCta.href}>
             {postConfirmCta.label}
