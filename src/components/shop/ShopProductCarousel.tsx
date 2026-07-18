@@ -29,7 +29,7 @@ export function ShopProductCarousel({
                 <p className="shop6__category">Preview</p>
                 <h3>The strip appears when products are live</h3>
                 <p className="shop6__price">
-                  The shop page shows the full flow—no commission from us; Stripe for cards
+                  The shop page shows the full demo flow—no commission from us; no payment in the public demo
                 </p>
                 <a className="btn btn--secondary" href="/shop">
                   View shop

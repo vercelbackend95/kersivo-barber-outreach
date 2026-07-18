@@ -3,20 +3,10 @@ export const prerender = false;
 import type { APIRoute } from 'astro';
 import { resolveAdminAccess } from '../../../lib/admin/auth';
 import { prisma } from '../../../lib/db/client';
-import { DEMO_SHOP_ID } from '../../../lib/db/shopScope';
-import { getDemoCatalogProductById } from '../../../lib/shop/demoCatalog';
 import { createCheckoutSession } from '../../../lib/shop/stripe';
 
 type CheckoutInput = {
   items: Array<{ productId: string; quantity: number }>;
-};
-
-type CheckoutProduct = {
-  id: string;
-  name: string;
-  pricePence: number;
-  imageUrl: string | null;
-  active: boolean;
 };
 
 function getPublicSiteUrl() {
@@ -26,6 +16,11 @@ function getPublicSiteUrl() {
 
 export const POST: APIRoute = async (ctx) => {
   try {
+    const access = await resolveAdminAccess(ctx);
+    if (access?.via !== 'session') {
+      return new Response(JSON.stringify({ error: 'Unauthorized' }), { status: 401 });
+    }
+
     const body = (await ctx.request.json()) as CheckoutInput;
 
     const requestedItems = (body.items ?? [])
@@ -45,40 +40,22 @@ export const POST: APIRoute = async (ctx) => {
     }
 
     const productIds = [...quantityByProduct.keys()];
-    const access = await resolveAdminAccess(ctx);
+    const shopId = access.shopId;
 
-    let shopId = DEMO_SHOP_ID;
-    let products: CheckoutProduct[] = [];
-
-    if (access?.via === 'session') {
-      shopId = access.shopId;
-      const rows = await prisma.product.findMany({
-        where: {
-          shopId: access.shopId,
-          id: { in: productIds },
-          active: true,
-        },
-        select: {
-          id: true,
-          name: true,
-          pricePence: true,
-          imageUrl: true,
-          active: true,
-        },
-      });
-      products = rows;
-    } else {
-      products = productIds
-        .map((productId) => getDemoCatalogProductById(productId))
-        .filter((product): product is NonNullable<typeof product> => Boolean(product?.active))
-        .map((product) => ({
-          id: product.id,
-          name: product.name,
-          pricePence: product.pricePence,
-          imageUrl: product.imageUrl,
-          active: product.active,
-        }));
-    }
+    const products = await prisma.product.findMany({
+      where: {
+        shopId,
+        id: { in: productIds },
+        active: true,
+      },
+      select: {
+        id: true,
+        name: true,
+        pricePence: true,
+        imageUrl: true,
+        active: true,
+      },
+    });
 
     if (products.length !== quantityByProduct.size) {
       return new Response(JSON.stringify({ error: 'Some products are unavailable.' }), { status: 400 });

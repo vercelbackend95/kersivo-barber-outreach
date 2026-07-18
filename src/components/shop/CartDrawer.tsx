@@ -11,10 +11,15 @@ import {
   subscribe,
   type CartItem,
 } from '@/lib/shop/cartStore';
+import { FUNNEL_EVENTS } from '@/lib/analytics/funnelEvents';
+import { trackConsentedEvent } from '@/lib/consent/events';
 import EmptyState from '@/components/EmptyState';
 import { ShoppingCart, X } from '@/components/lucide-react';
 
 const CART_OPEN_REQUEST_EVENT = 'kersivo:cart-open-request';
+
+const PUBLIC_DEMO_BANNER =
+  'This is an interactive retail demo. No payment will be taken and no order will be created.';
 
 type TestOrderResult = {
   id: string;
@@ -28,9 +33,21 @@ type TestOrderResult = {
   }>;
 };
 
+type DemoOrderSnapshot = {
+  totalPence: number;
+  totalFormatted: string;
+  items: Array<{
+    name: string;
+    quantity: number;
+    lineTotalFormatted: string;
+  }>;
+};
+
 type CartDrawerProps = {
   /** Private /admin/test-shop only — Place Test Order instead of Stripe. */
   testOrderMode?: boolean;
+  /** Public `/shop` sandbox — local completion only (no Stripe, no Order). */
+  publicDemoMode?: boolean;
 };
 
 function useCartSnapshot() {
@@ -73,12 +90,19 @@ function makeIdempotencyKey() {
   return `test-order-${Date.now()}-${Math.random().toString(36).slice(2)}`;
 }
 
-export default function CartDrawer({ testOrderMode = false }: CartDrawerProps) {
+export default function CartDrawer({
+  testOrderMode = false,
+  publicDemoMode = false,
+}: CartDrawerProps) {
+  // testOrderMode wins if both are ever set (admin mount).
+  const isPublicDemo = publicDemoMode && !testOrderMode;
   const { items, subtotalPence, isOpen: open } = useCartSnapshot();
   const [checkoutLoading, setCheckoutLoading] = useState(false);
   const [checkoutError, setCheckoutError] = useState<string | null>(null);
   const [testOrderSuccess, setTestOrderSuccess] = useState<TestOrderResult | null>(null);
+  const [demoOrderSuccess, setDemoOrderSuccess] = useState<DemoOrderSnapshot | null>(null);
   const idempotencyKeyRef = useRef<string | null>(null);
+  const demoCompleteLockRef = useRef(false);
   const successTitleId = useId();
 
   const cartCount = items.reduce((count, item) => count + item.quantity, 0);
@@ -149,19 +173,46 @@ export default function CartDrawer({ testOrderMode = false }: CartDrawerProps) {
       openCart();
       setCheckoutError(null);
       setTestOrderSuccess(null);
+      setDemoOrderSuccess(null);
+      if (isPublicDemo) {
+        demoCompleteLockRef.current = false;
+      }
     };
 
     document.addEventListener('click', onDocumentClick);
     return () => {
       document.removeEventListener('click', onDocumentClick);
     };
-  }, []);
+  }, [isPublicDemo]);
 
   const onBuyPickup = async () => {
     setCheckoutError(null);
 
     if (items.length === 0) {
-      setCheckoutError('Your bag is empty. Add products before checkout.');
+      setCheckoutError(
+        isPublicDemo
+          ? 'Your bag is empty. Add products before completing the demo.'
+          : 'Your bag is empty. Add products before checkout.',
+      );
+      return;
+    }
+
+    if (isPublicDemo) {
+      if (demoCompleteLockRef.current) return;
+      demoCompleteLockRef.current = true;
+
+      const snapshot: DemoOrderSnapshot = {
+        totalPence: subtotalPence,
+        totalFormatted: formatGbp(subtotalPence),
+        items: items.map((item) => ({
+          name: item.name,
+          quantity: item.quantity,
+          lineTotalFormatted: formatGbp(item.pricePence * item.quantity),
+        })),
+      };
+      clear();
+      setDemoOrderSuccess(snapshot);
+      trackConsentedEvent(FUNNEL_EVENTS.public_shop_demo_completed, undefined, 'analytics');
       return;
     }
 
@@ -235,17 +286,66 @@ export default function CartDrawer({ testOrderMode = false }: CartDrawerProps) {
         <header className="cart-drawer__header">
           <div className="cart-drawer__header-top">
             <div className="cart-drawer__heading">
-              <p className="cart-drawer__eyebrow">Pickup</p>
+              <p className="cart-drawer__eyebrow">{isPublicDemo ? 'Retail demo' : 'Pickup'}</p>
               <h2 className="cart-drawer__title">Your bag</h2>
             </div>
             <button type="button" className="cart-drawer__close" onClick={closeCart} aria-label="Close bag">
               <X aria-hidden="true" width={18} height={18} strokeWidth={2} />
             </button>
           </div>
-          <p className="cart-drawer__intro">Order online, collect in store when it suits you — no shipping.</p>
+          <p className="cart-drawer__intro">
+            {isPublicDemo
+              ? 'Browse the demo catalog, fill your bag, and complete a simulated order — nothing is charged or stored.'
+              : 'Order online, collect in store when it suits you — no shipping.'}
+          </p>
         </header>
 
-        {testOrderSuccess ? (
+        {demoOrderSuccess ? (
+          <section className="cart-test-success" aria-labelledby={successTitleId} aria-live="polite">
+            <p className="cart-test-success__eyebrow">DEMO</p>
+            <h3 id={successTitleId} className="cart-test-success__title">
+              Demo order complete
+            </h3>
+            <p className="cart-test-success__body">
+              This was a demonstration only. No payment was taken and no order was created.
+            </p>
+            <dl className="cart-test-success__summary">
+              <div>
+                <dt>Items</dt>
+                <dd>
+                  {demoOrderSuccess.items.map((item) => (
+                    <span key={`${item.name}-${item.quantity}`} className="cart-test-success__item">
+                      {item.name} × {item.quantity}
+                    </span>
+                  ))}
+                </dd>
+              </div>
+              <div>
+                <dt>Demo total</dt>
+                <dd>{demoOrderSuccess.totalFormatted}</dd>
+              </div>
+            </dl>
+            <div className="cart-test-success__actions cart-test-success__actions--stack">
+              <a className="btn btn--primary cart-buy-button" href="/#pricing">
+                View KERSIVO pricing
+              </a>
+              <a className="btn btn--secondary cart-buy-button" href="/#contact">
+                Talk to KERSIVO
+              </a>
+              <button
+                type="button"
+                className="btn btn--ghost cart-test-success__dismiss"
+                onClick={() => {
+                  demoCompleteLockRef.current = false;
+                  setDemoOrderSuccess(null);
+                  closeCart();
+                }}
+              >
+                Try the demo again
+              </button>
+            </div>
+          </section>
+        ) : testOrderSuccess ? (
           <section
             className="cart-test-success"
             aria-labelledby={successTitleId}
@@ -309,7 +409,11 @@ export default function CartDrawer({ testOrderMode = false }: CartDrawerProps) {
                   <EmptyState
                     icon={ShoppingCart}
                     title="Your bag is empty"
-                    description="Add products to build your pickup order."
+                    description={
+                      isPublicDemo
+                        ? 'Add products to try the demo pickup flow.'
+                        : 'Add products to build your pickup order.'
+                    }
                   />
                 </div>
               ) : (
@@ -375,12 +479,21 @@ export default function CartDrawer({ testOrderMode = false }: CartDrawerProps) {
                 </div>
               ) : null}
 
+              {isPublicDemo ? (
+                <div className="cart-test-mode" role="status">
+                  <p className="cart-test-mode__label">RETAIL DEMO</p>
+                  <p className="cart-test-mode__message">{PUBLIC_DEMO_BANNER}</p>
+                </div>
+              ) : null}
+
               <div className="cart-summary__totals">
-                <p className="cart-summary__label">Subtotal</p>
+                <p className="cart-summary__label">{isPublicDemo ? 'Demo subtotal' : 'Subtotal'}</p>
                 <p className="cart-summary__value">{formatGbp(subtotalPence)}</p>
               </div>
               <p className="cart-summary__pickup-note">
-                Ready for collection in store during opening hours once staff mark the order.
+                {isPublicDemo
+                  ? 'Demo items and totals are examples only.'
+                  : 'Ready for collection in store during opening hours once staff mark the order.'}
               </p>
               {checkoutError ? (
                 <p className="cart-checkout-error" role="alert">
@@ -401,12 +514,16 @@ export default function CartDrawer({ testOrderMode = false }: CartDrawerProps) {
                     : 'Opening secure checkout…'
                   : testOrderMode
                     ? 'Place Test Order'
-                    : 'Continue to secure checkout'}
+                    : isPublicDemo
+                      ? 'Complete demo order'
+                      : 'Continue to secure checkout'}
               </button>
               <p className="cart-checkout-note">
                 {testOrderMode
                   ? 'No card details are collected. This order is marked as test data in your admin.'
-                  : 'Stripe Checkout collects your email for the pickup receipt — it appears on the shop order.'}
+                  : isPublicDemo
+                    ? 'No card details are collected. Completing this demo does not create an order or send email.'
+                    : 'Stripe Checkout collects your email for the pickup receipt — it appears on the shop order.'}
               </p>
             </section>
           </>

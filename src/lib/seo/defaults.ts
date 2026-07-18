@@ -26,7 +26,7 @@ export const PAGE_DESCRIPTIONS = {
   terms:
     'Terms of service for Kersivo barbershop website, booking, and retail pickup software for UK business customers.',
   shop:
-    'Demo grooming retail shop — pomades, beard care and styling products. Order online, collect in shop on your next visit.',
+    'Interactive KERSIVO retail demo — browse grooming products and try the demo bag. No payment is taken and no order is created.',
   setupSuccess:
     'Your Kersivo setup deposit is confirmed. Check your email for the onboarding form and next steps.',
   setupCancel:

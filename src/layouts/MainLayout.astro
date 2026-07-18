@@ -29,6 +29,8 @@ interface Props extends PageSeo {
   jsonLd?: Record<string, unknown> | Record<string, unknown>[];
   /** Navbar variant — `landing` simplifies nav on Google Ads pages. */
   navbarVariant?: Navbar17Variant;
+  /** Public `/shop` sandbox — CartDrawer completes locally (no Stripe). */
+  publicDemoMode?: boolean;
 }
 
 const {
@@ -44,6 +46,7 @@ const {
   barberDemoJsonLd = false,
   jsonLd,
   navbarVariant = 'default',
+  publicDemoMode = false,
 } = Astro.props;
 
 const jsonLdBlocks = jsonLd
@@ -85,7 +88,7 @@ const jsonLdBlocks = jsonLd
   <body>
     <Navbar17 variant={navbarVariant} />
     <slot />
-    {navbarVariant === 'shop' ? <CartDrawerMount /> : null}
+    {navbarVariant === 'shop' ? <CartDrawerMount publicDemoMode={publicDemoMode} /> : null}
     <CookieConsentMount />
     <script>
       import { initDataTrack } from '@/lib/analytics/initDataTrack';

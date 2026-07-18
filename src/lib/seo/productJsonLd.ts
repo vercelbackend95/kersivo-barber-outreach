@@ -30,6 +30,19 @@ export function buildShopBreadcrumbJsonLd(): Record<string, unknown> {
   };
 }
 
+/** Public demo PDP: breadcrumbs only — no Product/Offer (simulation, not a real sale). */
+export function buildDemoProductBreadcrumbJsonLd(productName: string, productPath: string): Record<string, unknown> {
+  return {
+    '@context': 'https://schema.org',
+    '@type': 'BreadcrumbList',
+    itemListElement: [
+      breadcrumbItem(1, 'Home', '/'),
+      breadcrumbItem(2, 'Retail Demo', '/shop'),
+      breadcrumbItem(3, productName, productPath),
+    ],
+  };
+}
+
 export function buildProductPageJsonLd(input: ProductJsonLdInput): Record<string, unknown>[] {
   const productPath = `/shop/${input.id}`;
   const productUrl = buildAbsoluteUrl(productPath);
@@ -68,15 +81,5 @@ export function buildProductPageJsonLd(input: ProductJsonLdInput): Record<string
     product.image = image;
   }
 
-  const breadcrumb: Record<string, unknown> = {
-    '@context': 'https://schema.org',
-    '@type': 'BreadcrumbList',
-    itemListElement: [
-      breadcrumbItem(1, 'Home', '/'),
-      breadcrumbItem(2, 'Retail Demo', '/shop'),
-      breadcrumbItem(3, input.name, productPath),
-    ],
-  };
-
-  return [product, breadcrumb];
+  return [product, buildDemoProductBreadcrumbJsonLd(input.name, productPath)];
 }

@@ -27,4 +27,4 @@ export const SMS_ROADMAP_NOTE =
   'Automated SMS reminders are not yet enabled in the live platform; ask at setup if SMS is required for your launch.';
 
 export const STRIPE_ACCOUNT_CLAIM =
-  'Demo and preview checkouts may use KERSIVO Stripe; live shops are connected to your Stripe account during go-live setup.';
+  'The public retail demo is a simulation (no Stripe payment). Private owner test orders create marked test data without payment. Live shops connect to your Stripe account during go-live setup.';
