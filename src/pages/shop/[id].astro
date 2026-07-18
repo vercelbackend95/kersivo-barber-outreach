@@ -16,9 +16,6 @@ const MOBILE_RELATED_PRODUCT_COUNT = 10;
 const DESKTOP_RELATED_PRODUCT_COUNT = 3;
 
 const product = id ? getDemoCatalogProductById(id) : null;
-const relatedProducts = product
-  ? getDemoCatalogRelatedProducts(product, MOBILE_RELATED_PRODUCT_COUNT)
-  : [];
 
 const CATEGORY_LABELS: Record<string, string> = {
   POMADES_AND_CLAYS: 'Pomades',
@@ -52,16 +49,18 @@ const FOOTER_PROPS = {
   ]
 };
 
-
 if (!product) {
-  return Astro.redirect('/shop');
-
+  Astro.response.status = 404;
 }
+
+const relatedProducts = product
+  ? getDemoCatalogRelatedProducts(product, MOBILE_RELATED_PRODUCT_COUNT)
+  : [];
+
 const relatedProductsForCarousel =
-  relatedProducts.length > 0 && relatedProducts.length < MOBILE_RELATED_PRODUCT_COUNT
+  product && relatedProducts.length > 0 && relatedProducts.length < MOBILE_RELATED_PRODUCT_COUNT
     ? Array.from({ length: MOBILE_RELATED_PRODUCT_COUNT }, (_, index) => relatedProducts[index % relatedProducts.length])
     : relatedProducts;
-
 
 const splitDescription = (rawDescription: string | null) => {
   const cleaned = rawDescription?.replace(/\s+/g, ' ').trim() ?? '';
@@ -127,122 +126,149 @@ const createHighlights = (description: string | null, category: string) => {
   return Array.from(highlights).slice(0, 4);
 };
 
-const { intro, details } = splitDescription(product.description);
-const highlights = createHighlights(product.description, product.category);
-const demoBreadcrumbJsonLd = buildDemoProductBreadcrumbJsonLd(product.name, `/shop/${product.id}`);
+const { intro, details } = product
+  ? splitDescription(product.description)
+  : { intro: '', details: '' };
+const highlights = product ? createHighlights(product.description, product.category) : [];
+const demoBreadcrumbJsonLd = product
+  ? buildDemoProductBreadcrumbJsonLd(product.name, `/shop/${product.id}`)
+  : null;
 ---
 
-<MainLayout
-  title={`${product.name} | Kersivo Retail Demo`}
-  description={intro}
-  canonicalPath={`/shop/${product.id}`}
-  ogImagePath={product.imageUrl?.startsWith('/') ? product.imageUrl : undefined}
-  ogImageAlt={`${product.name} — Kersivo demo grooming shop`}
-  jsonLd={demoBreadcrumbJsonLd}
-  navbarVariant="shop"
-  publicDemoMode
-  noindex
-  robotsFollow
->
-  <main class="container product-page">
-    <a href="/shop" class="product-back-link">← Back to retail demo</a>
-    <DemoNotice />
-
-    <section class="product-hero" aria-label="Product details">
-      <div class="product-media">
-        {product.imageUrl ? <img src={product.imageUrl} alt={product.name} class="product-image" loading="eager" /> : <div class="product-image-placeholder">No image available</div>}
-      </div>
-
-      <div class="product-content">
-        <p class="product-overline">{CATEGORY_LABELS[product.category] ?? 'Styling'}</p>
-        <h1>{product.name}</h1>
-        <p class="product-price">{formatGbp(product.pricePence)}</p>
-        <p class="product-intro">{intro}</p>
-
-        {highlights.length > 0 ? (
-          <ul class="product-highlights" aria-label="Product highlights">
-            {highlights.map((item) => <li>{item}</li>)}
-          </ul>
-        ) : null}
-
-        <div class="product-actions">
-          <button
-            type="button"
-            class="btn btn--primary"
-            data-add-to-cart
-            data-product-id={product.id}
-            data-product-name={product.name}
-            data-product-price-pence={String(product.pricePence)}
-            data-product-image-url={product.imageUrl ?? ''}
-          >
-            Add to cart
-          </button>
-          <a href="/shop" class="btn btn--secondary">Continue shopping</a>
-        </div>
-
-        <aside class="pickup-box" aria-label="Pickup information">
-          <p class="pickup-box-title">Demo pickup</p>
-          <p>Add to the demo bag and complete a simulated order. No payment is taken and no real order is created.</p>
-        </aside>
-      </div>
-    </section>
-
-    {details ? (
-      <section class="product-detail-section" aria-label="Product information">
-        <h2>Details</h2>
-        <p>{details}</p>
-      </section>
-    ) : null}
-
-    {relatedProductsForCarousel.length > 0 ? (
-      <section class="related-products" aria-label="Related products">
-        <header class="related-products-header">
-          <h2>You may also like</h2>
-          <p>More barber-approved essentials from the same curated range.</p>
-        </header>
-
-        <div class="related-products-carousel" data-related-carousel-root>
-          <div class="related-products-grid" data-related-carousel>
-            {relatedProductsForCarousel.map((item, index) => (
-              <article
-                class:list={["shop-card", index >= DESKTOP_RELATED_PRODUCT_COUNT && 'related-card--mobile-only']}
-                data-category={item.category}
-              >
-                <a href={`/shop/${item.id}`} class="shop-media-link" aria-label={`View ${item.name}`}>
-                  <div class="shop-media">
-                    {item.imageUrl ? (
-                      <img src={item.imageUrl} alt={item.name} class="shop-image" loading="lazy" />
-                    ) : (
-                      <div class="shop-image shop-image--placeholder" aria-hidden="true"></div>
-                    )}
-                  </div>
-                </a>
-                <div class="shop-card-body">
-                  <p class="shop-category">{CATEGORY_LABELS[item.category] ?? 'Styling'}</p>
-                  <h3><a href={`/shop/${item.id}`}>{item.name}</a></h3>
-                  <p class="shop-price">{formatGbp(item.pricePence)}</p>
-                  <div class="shop-card-actions">
-                    <button
-                      type="button"
-                      class="btn btn--primary btn--atc"
-                      data-add-to-cart
-                      data-product-id={item.id}
-                      data-product-name={item.name}
-                      data-product-price-pence={String(item.pricePence)}
-                      data-product-image-url={item.imageUrl ?? ''}
-                      data-atc-label="Add to cart"
-                    >
-                      Add to cart
-                    </button>
-                  </div>
-                </div>
-              </article>
-            ))}
+{!product ? (
+  <MainLayout
+    title="Product not found | Kersivo"
+    description="This demo product is not available. Browse the Kersivo retail demo catalog."
+    canonicalPath={id ? `/shop/${id}` : '/shop'}
+    noindex
+  >
+    <main class="container product-page">
+      <a href="/shop" class="product-back-link">← Back to retail demo</a>
+      <section class="product-hero" aria-label="Product not found">
+        <div class="product-content">
+          <h1>Product not found</h1>
+          <p class="product-intro">This product is not in the retail demo catalog.</p>
+          <div class="product-actions">
+            <a href="/shop" class="btn btn--primary">Back to retail demo</a>
           </div>
         </div>
       </section>
-    ) : null}
-  </main>
+    </main>
+    <Footer50 {...FOOTER_PROPS} />
+  </MainLayout>
+) : (
+  <MainLayout
+    title={`${product.name} | Kersivo Retail Demo`}
+    description={intro}
+    canonicalPath={`/shop/${product.id}`}
+    ogImagePath={product.imageUrl?.startsWith('/') ? product.imageUrl : undefined}
+    ogImageAlt={`${product.name} — Kersivo demo grooming shop`}
+    jsonLd={demoBreadcrumbJsonLd!}
+    navbarVariant="shop"
+    publicDemoMode
+    noindex
+    robotsFollow
+  >
+    <main class="container product-page">
+      <a href="/shop" class="product-back-link">← Back to retail demo</a>
+      <DemoNotice />
 
-  <Footer50 {...FOOTER_PROPS} />
-</MainLayout>
+      <section class="product-hero" aria-label="Product details">
+        <div class="product-media">
+          {product.imageUrl ? <img src={product.imageUrl} alt={product.name} class="product-image" loading="eager" /> : <div class="product-image-placeholder">No image available</div>}
+        </div>
+
+        <div class="product-content">
+          <p class="product-overline">{CATEGORY_LABELS[product.category] ?? 'Styling'}</p>
+          <h1>{product.name}</h1>
+          <p class="product-price">{formatGbp(product.pricePence)}</p>
+          <p class="product-intro">{intro}</p>
+
+          {highlights.length > 0 ? (
+            <ul class="product-highlights" aria-label="Product highlights">
+              {highlights.map((item) => <li>{item}</li>)}
+            </ul>
+          ) : null}
+
+          <div class="product-actions">
+            <button
+              type="button"
+              class="btn btn--primary"
+              data-add-to-cart
+              data-product-id={product.id}
+              data-product-name={product.name}
+              data-product-price-pence={String(product.pricePence)}
+              data-product-image-url={product.imageUrl ?? ''}
+            >
+              Add to cart
+            </button>
+            <a href="/shop" class="btn btn--secondary">Continue shopping</a>
+          </div>
+
+          <aside class="pickup-box" aria-label="Pickup information">
+            <p class="pickup-box-title">Demo pickup</p>
+            <p>Add to the demo bag and complete a simulated order. No payment is taken and no real order is created.</p>
+          </aside>
+        </div>
+      </section>
+
+      {details ? (
+        <section class="product-detail-section" aria-label="Product information">
+          <h2>Details</h2>
+          <p>{details}</p>
+        </section>
+      ) : null}
+
+      {relatedProductsForCarousel.length > 0 ? (
+        <section class="related-products" aria-label="Related products">
+          <header class="related-products-header">
+            <h2>You may also like</h2>
+            <p>More barber-approved essentials from the same curated range.</p>
+          </header>
+
+          <div class="related-products-carousel" data-related-carousel-root>
+            <div class="related-products-grid" data-related-carousel>
+              {relatedProductsForCarousel.map((item, index) => (
+                <article
+                  class:list={["shop-card", index >= DESKTOP_RELATED_PRODUCT_COUNT && 'related-card--mobile-only']}
+                  data-category={item.category}
+                >
+                  <a href={`/shop/${item.id}`} class="shop-media-link" aria-label={`View ${item.name}`}>
+                    <div class="shop-media">
+                      {item.imageUrl ? (
+                        <img src={item.imageUrl} alt={item.name} class="shop-image" loading="lazy" />
+                      ) : (
+                        <div class="shop-image shop-image--placeholder" aria-hidden="true"></div>
+                      )}
+                    </div>
+                  </a>
+                  <div class="shop-card-body">
+                    <p class="shop-category">{CATEGORY_LABELS[item.category] ?? 'Styling'}</p>
+                    <h3><a href={`/shop/${item.id}`}>{item.name}</a></h3>
+                    <p class="shop-price">{formatGbp(item.pricePence)}</p>
+                    <div class="shop-card-actions">
+                      <button
+                        type="button"
+                        class="btn btn--primary btn--atc"
+                        data-add-to-cart
+                        data-product-id={item.id}
+                        data-product-name={item.name}
+                        data-product-price-pence={String(item.pricePence)}
+                        data-product-image-url={item.imageUrl ?? ''}
+                        data-atc-label="Add to cart"
+                      >
+                        Add to cart
+                      </button>
+                    </div>
+                  </div>
+                </article>
+              ))}
+            </div>
+          </div>
+        </section>
+      ) : null}
+    </main>
+
+    <Footer50 {...FOOTER_PROPS} />
+  </MainLayout>
+)}
