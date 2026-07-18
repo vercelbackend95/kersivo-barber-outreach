@@ -157,7 +157,7 @@ export function initShop6Carousels(scope: ParentNode = document): void {
   };
 
   const scheduleInit = () => {
-    if ('requestIdleCallback' in window) {
+    if (typeof window.requestIdleCallback === 'function') {
       window.requestIdleCallback(initAll, { timeout: 2000 });
       return;
     }

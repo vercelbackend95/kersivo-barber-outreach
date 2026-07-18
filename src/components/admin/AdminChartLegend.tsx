@@ -20,6 +20,10 @@ type AdminChartLegendProps = {
   addControl?: React.ReactNode;
 };
 
+type PillSeriesStyle = React.CSSProperties & {
+  ['--pill-series-color']?: string;
+};
+
 function LegendSwatch({ item }: { item: ChartLegendItem }) {
   if (item.isOverall) {
     return (
@@ -72,7 +76,11 @@ export default function AdminChartLegend({
             className={`admin-chart-legend__pill${item.isOverall ? ' admin-chart-legend__pill--overall' : ''}${item.isWinner ? ' admin-chart-legend__pill--winner' : ''}`}
             role="listitem"
             aria-label={item.isWinner ? `${item.label}, week leader` : item.label}
-            style={{ ['--pill-series-color' as '--pill-series-color']: item.color }}
+            style={
+              {
+                ['--pill-series-color']: item.color,
+              } as PillSeriesStyle
+            }
           >
             <LegendSwatch item={item} />
             <span className="admin-chart-legend__label">{item.label}</span>
