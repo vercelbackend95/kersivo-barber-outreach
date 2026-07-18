@@ -30,6 +30,7 @@
     "seed:enrich-connor-walsh": "tsx scripts/enrich-client-connor-walsh.ts",
     "seed:client-notes-oliver-reed": "tsx scripts/seed-client-notes-oliver-reed.ts",
     "test": "vitest run",
+    "test:consent": "playwright test --config=scripts/consent-verify.playwright.config.mjs",
     "check:widgets": "node scripts/check-landing-widgets.mjs",
     "assets:landing-demo": "node scripts/fetch-landing-demo-assets.mjs",
     "assets:landing-illustrations-webp": "node scripts/convert-landing-page-illustrations-webp.mjs",
@@ -99,6 +100,7 @@
   "devDependencies": {
     "@astrojs/vercel": "^9.0.4",
     "@fontsource/caveat": "^5.2.8",
+    "@playwright/test": "1.59.1",
     "@tailwindcss/vite": "^4.2.2",
     "@testing-library/dom": "^10.4.1",
     "@testing-library/react": "^16.3.2",
