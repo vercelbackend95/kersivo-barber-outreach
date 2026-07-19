@@ -6,6 +6,7 @@ import {
 } from '@/lib/db/resilience';
 import { getLandingDemoBookingFallback } from '@/lib/landing/landingDemoBookingFallback';
 import { enrichLandingBarberAvatar } from '@/lib/landing/landingDemoAssets';
+import type { Prisma } from '@prisma/client';
 
 /**
  * Real booking data for the landing "Inside the System" live booking widget.
@@ -44,9 +45,20 @@ export type LandingBookingData = {
   available: boolean;
 };
 
+const LANDING_BOOKING_BARBER_SELECT = {
+  id: true,
+  name: true,
+  avatarUrl: true,
+  barberServices: { select: { serviceId: true } },
+} satisfies Prisma.BarberSelect;
+
+type LandingBookingBarberRow = Prisma.BarberGetPayload<{
+  select: typeof LANDING_BOOKING_BARBER_SELECT;
+}>;
+
 function mapDbResult(
   services: Awaited<ReturnType<typeof prisma.service.findMany>>,
-  barbers: Awaited<ReturnType<typeof prisma.barber.findMany>>,
+  barbers: LandingBookingBarberRow[],
   shopSettings: {
     timezone: string;
     cancellationWindowHours: number | null;
@@ -102,9 +114,7 @@ export async function resolveLandingBookingData(): Promise<LandingBookingData> {
         prisma.barber.findMany({
           where: { active: true, shopId: DEMO_SHOP_ID },
           orderBy: [{ sortOrder: 'asc' }, { createdAt: 'asc' }],
-          include: {
-            barberServices: { select: { serviceId: true } },
-          },
+          select: LANDING_BOOKING_BARBER_SELECT,
         }),
         prisma.shopSettings.findUnique({
           where: { id: DEMO_SHOP_ID },
