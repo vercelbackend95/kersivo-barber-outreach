@@ -58,7 +58,8 @@ describe('marketing sitemap', () => {
   });
 
   it('GET returns application/xml with the marketing sitemap body', async () => {
-    const response = GET({} as never);
+    // Empty context is safe: sitemap GET ignores all APIRoute context fields.
+    const response = await GET({} as Parameters<typeof GET>[0]);
     const body = await response.text();
 
     expect(response.status).toBe(200);
