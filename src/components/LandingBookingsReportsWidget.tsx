@@ -22,7 +22,7 @@ import {
 import '@/styles/components/booking.css';
 import '@/styles/components/landingBookingsReportsWidget.css';
 
-const DEMO_BARBERS = landingBookingsReportsBarbers as Barber[];
+const DEMO_BARBERS: Barber[] = landingBookingsReportsBarbers;
 
 export default function LandingBookingsReportsWidget() {
   const [reportsRangePreset, setReportsRangePreset] = useState<ReportsRangeKey>(() => getDefaultReportsPreset());

@@ -27,7 +27,12 @@ export const demoBarbersResponse = {
       isActive: true,
       todayLabel: 'On shift · 09:00–19:00',
       todayIsOnShift: true,
-      todayShiftWindow: { startMinutes: 540, endMinutes: 1140 },
+      todayShiftWindow: {
+        startMinutes: 540,
+        endMinutes: 1140,
+        breakStartMin: null,
+        breakEndMin: null,
+      },
     },
     {
       id: DEMO_BARBER_IDS.alex,
@@ -50,7 +55,12 @@ export const demoBarbersResponse = {
       isActive: true,
       todayLabel: 'On shift · 09:00–19:00',
       todayIsOnShift: true,
-      todayShiftWindow: { startMinutes: 540, endMinutes: 1140 },
+      todayShiftWindow: {
+        startMinutes: 540,
+        endMinutes: 1140,
+        breakStartMin: null,
+        breakEndMin: null,
+      },
     },
     {
       id: DEMO_BARBER_IDS.sam,
@@ -71,7 +81,12 @@ export const demoBarbersResponse = {
       isActive: true,
       todayLabel: 'On shift · 09:00–19:00',
       todayIsOnShift: true,
-      todayShiftWindow: { startMinutes: 540, endMinutes: 1140 },
+      todayShiftWindow: {
+        startMinutes: 540,
+        endMinutes: 1140,
+        breakStartMin: null,
+        breakEndMin: null,
+      },
     },
     {
       id: DEMO_BARBER_IDS.marcus,
@@ -95,7 +110,12 @@ export const demoBarbersResponse = {
       isActive: true,
       todayLabel: 'On shift · 09:00–19:00',
       todayIsOnShift: true,
-      todayShiftWindow: { startMinutes: 540, endMinutes: 1140 },
+      todayShiftWindow: {
+        startMinutes: 540,
+        endMinutes: 1140,
+        breakStartMin: null,
+        breakEndMin: null,
+      },
     },
   ],
 };

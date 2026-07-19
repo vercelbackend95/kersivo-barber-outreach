@@ -128,7 +128,7 @@ const selectedCategory = categoryValues.has(selectedCategoryParam) ? selectedCat
               data-product-item
               data-product-category={product.category}
               data-product-sort-price={String(product.pricePence)}
-              data-product-sort-date={product.updatedAt instanceof Date ? product.updatedAt.toISOString() : String(product.updatedAt)}
+              data-product-sort-date={product.updatedAt}
               hidden={selectedCategory !== 'ALL' && product.category !== selectedCategory}
             >
               <article class="shop-card" data-category={product.category}>
@@ -188,18 +188,18 @@ const selectedCategory = categoryValues.has(selectedCategoryParam) ? selectedCat
 
 <script>
   /* ── Category filter + URL sync (unchanged) ─────────────────── */
-  const root = document.querySelector('.shop-page');
+  const root = document.querySelector<HTMLElement>('.shop-page');
 
   if (root) {
-    const filterButtons = Array.from(root.querySelectorAll('[data-category-filter]'));
-    const productItems = Array.from(root.querySelectorAll('[data-product-item]'));
+    const filterButtons = Array.from(root.querySelectorAll<HTMLButtonElement>('[data-category-filter]'));
+    const productItems = Array.from(root.querySelectorAll<HTMLLIElement>('[data-product-item]'));
     const validCategories = new Set(filterButtons.map((button) => button.getAttribute('data-category-filter') || 'ALL'));
 
     const updateEmptyFilterState = () => {
       const emptyEl = root.querySelector('.shop-empty-filter');
-      const items = root.querySelectorAll('[data-product-item]');
+      const items = root.querySelectorAll<HTMLLIElement>('[data-product-item]');
       if (!emptyEl) return;
-      const anyVisible = [...items].some((item) => !(item as HTMLElement).hidden);
+      const anyVisible = [...items].some((item) => !item.hidden);
       emptyEl.classList.toggle('is-visible', !anyVisible);
     };
 
@@ -222,7 +222,7 @@ const selectedCategory = categoryValues.has(selectedCategoryParam) ? selectedCat
 
     let currentCategory = getInitialCategory();
 
-    const applyCategoryFilter = (category) => {
+    const applyCategoryFilter = (category: string) => {
       const resolvedCategory = validCategories.has(category) ? category : 'ALL';
 
       for (const item of productItems) {
@@ -243,7 +243,7 @@ const selectedCategory = categoryValues.has(selectedCategoryParam) ? selectedCat
       updateEmptyFilterState();
     };
 
-    const syncUrlWithCategory = (category) => {
+    const syncUrlWithCategory = (category: string) => {
       const nextUrl = new URL(window.location.href);
 
       if (category === 'ALL') {
