@@ -73,6 +73,16 @@ export const onRequest = defineMiddleware(async (context, next) => {
   const { request, url } = context;
   const method = request.method.toUpperCase();
 
+  // Resolve navbar CTA on the server only (never imported by components with client scripts).
+  if (SAFE_METHODS.has(method) && !url.pathname.startsWith('/api/')) {
+    try {
+      const { resolveNavbarPreviewCta } = await import('@/lib/nav/navbarPreviewCta.server');
+      context.locals.navbarPreviewCta = await resolveNavbarPreviewCta(context);
+    } catch {
+      context.locals.navbarPreviewCta = null;
+    }
+  }
+
   if (
     !SAFE_METHODS.has(method) &&
     url.pathname.startsWith(ADMIN_API_PREFIX) &&

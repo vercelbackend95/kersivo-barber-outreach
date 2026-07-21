@@ -1,7 +1,7 @@
 import {
   LANDING_DEMO_BARBER_AVATARS,
 } from '../../landing/landingDemoAssets';
-import { minutesToTimeString } from '../onboarding';
+import { minutesToTimeString } from '../timeStrings';
 import { DEMO_BARBER_IDS, DEMO_SERVICE_IDS } from './ids';
 
 const now = new Date().toISOString();

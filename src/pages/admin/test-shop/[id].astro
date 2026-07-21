@@ -3,6 +3,7 @@ export const prerender = false;
 
 import MinimalLayout from '@/layouts/MinimalLayout.astro';
 import Navbar17 from '@/components/navbar17.astro';
+import TestShopProductClientScripts from '@/components/admin/TestShopProductClientScripts.astro';
 import OwnerPreviewToolbar from '@/components/shop/OwnerPreviewToolbar.astro';
 import CartDrawerMount from '@/components/shop/CartDrawerMount.astro';
 import RetailOnboardingTaskCard from '@/components/admin/retail-onboarding/RetailOnboardingTaskCard';
@@ -254,10 +255,7 @@ const shopTitle = shop?.name?.trim() || 'My shop';
   <CartDrawerMount testOrderMode />
 </MinimalLayout>
 
-<script>
-  import { bindRetailShowProductDelegation } from '@/lib/admin/revealOnboardingProduct';
-  bindRetailShowProductDelegation();
-</script>
+
 
 <style>
   .test-shop-topbar {
@@ -265,3 +263,5 @@ const shopTitle = shop?.name?.trim() || 'My shop';
     margin-bottom: var(--space-md);
   }
 </style>
+
+<TestShopProductClientScripts />

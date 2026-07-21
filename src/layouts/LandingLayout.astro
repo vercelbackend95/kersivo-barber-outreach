@@ -4,6 +4,7 @@ import CookieConsentMount from '@/components/consent/CookieConsentMount.astro';
 import FaviconLinks from '@/components/seo/FaviconLinks.astro';
 import SeoHead from '@/components/seo/SeoHead.astro';
 import Navbar17 from '@/components/navbar17.astro';
+import InitDataTrackScript from '@/components/InitDataTrackScript.astro';
 import type { PageSeo } from '@/lib/seo/meta';
 import '@/styles/tokens.css';
 import '@/styles/fonts-landing.css';
@@ -71,9 +72,6 @@ const jsonLdBlocks = jsonLd
     <Navbar17 variant="landing" />
     <slot />
     <CookieConsentMount />
-    <script>
-      import { initDataTrack } from '@/lib/analytics/initDataTrack';
-      initDataTrack();
-    </script>
+    <InitDataTrackScript />
   </body>
 </html>

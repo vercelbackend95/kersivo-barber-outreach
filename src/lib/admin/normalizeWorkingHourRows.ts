@@ -1,5 +1,5 @@
 import type { WorkingHourRow } from '../../components/admin/barbersTypes';
-import { minutesToTimeString } from './onboarding';
+import { minutesToTimeString } from './timeStrings';
 
 type RawWorkingHourRule = {
   dayOfWeek?: unknown;

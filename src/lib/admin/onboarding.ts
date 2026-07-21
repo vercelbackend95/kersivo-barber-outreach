@@ -2,6 +2,9 @@ import type { APIContext } from 'astro';
 import type { AdminAccess } from './auth';
 import { requireAdminContext } from './auth';
 import { prisma } from '@/lib/db/client';
+import { minutesToTimeString, timeStringToMinutes } from './timeStrings';
+
+export { minutesToTimeString, timeStringToMinutes } from './timeStrings';
 
 export const ONBOARDING_STEP_WELCOME = 0;
 export const ONBOARDING_STEP_SHOP = 1;
@@ -16,17 +19,6 @@ export type OnboardingWeeklyRule = {
   startTime: string;
   endTime: string;
 };
-
-export function minutesToTimeString(minutes: number) {
-  const hh = String(Math.floor(minutes / 60)).padStart(2, '0');
-  const mm = String(minutes % 60).padStart(2, '0');
-  return `${hh}:${mm}`;
-}
-
-export function timeStringToMinutes(value: string) {
-  const [hh, mm] = value.split(':').map(Number);
-  return hh * 60 + mm;
-}
 
 export const DEFAULT_ONBOARDING_HOURS: OnboardingWeeklyRule[] = [
   { dayOfWeek: 0, active: false, startTime: '09:00', endTime: '18:00' }, // Sunday

@@ -1,0 +1,11 @@
+---
+/**
+ * Browser-only analytics bootstrap. Keep this file free of server imports
+ * so layouts that resolve CTA/auth do not pull Node builtins into the client graph.
+ */
+---
+
+<script>
+  import { initDataTrack } from '@/lib/analytics/initDataTrack';
+  initDataTrack();
+</script>

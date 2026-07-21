@@ -1,0 +1,515 @@
+<script type="module">
+  const navbar = document.querySelector('[data-navbar17]');
+  const CART_OPEN_REQUEST_EVENT = 'kersivo:cart-open-request';
+  const FOCUSABLE_SELECTOR = 'a[href], button:not([disabled]), [tabindex]:not([tabindex="-1"])';
+  const MOBILE_MENU_TRANSITION_MS = 240;
+  /** Only when bar rect is invalid (~0). Never clamp real measurements or a gap appears under a shorter bar. */
+  const NAVBAR17_FALLBACK_SHEET_TOP_PX = 84;
+  const MOBILE_MENU_STATES = {
+    CLOSED: 'closed',
+    OPENING: 'opening',
+    OPEN: 'open',
+    CLOSING: 'closing',
+  };
+
+  if (!(navbar instanceof HTMLElement) || navbar.dataset.navbar17Bound === 'true') {
+    // no-op
+  } else {
+    navbar.dataset.navbar17Bound = 'true';
+
+    const wrap = navbar.querySelector('.navbar17__wrap');
+    const links = [...navbar.querySelectorAll('[data-nav-item]')];
+    const mobileLinks = [...navbar.querySelectorAll('[data-mobile-item]')];
+    const indicator = navbar.querySelector('[data-nav-indicator]');
+    const navList = navbar.querySelector('[data-nav-list]');
+    const toggle = navbar.querySelector('[data-nav-toggle]');
+    const mobileNav = navbar.querySelector('[data-mobile-nav]');
+    const mobileBackdrop = navbar.querySelector('[data-mobile-nav-backdrop]');
+    const desktopNavMq = window.matchMedia('(min-width: 64rem)');
+      const mobileNavMq = window.matchMedia('(max-width: 63.99rem)');
+
+    if (!(wrap instanceof HTMLElement) || !(toggle instanceof HTMLButtonElement) || !(mobileNav instanceof HTMLElement)) {
+      // no-op
+    } else {
+      let mobileMenuState = MOBILE_MENU_STATES.CLOSED;
+      let mobileAnimTimer = 0;
+      let scrollSpyObserver = null;
+      let preLockOverflow = '';
+      let preLockPaddingRight = '';
+      let preLockRootOverflow = '';
+      let preLockBodyPosition = '';
+      let preLockBodyTop = '';
+      let preLockBodyLeft = '';
+      let preLockBodyRight = '';
+      let preLockBodyWidth = '';
+      let lockScrollY = 0;
+      let viewportSyncRaf = 0;
+      let pendingFocusRestore = false;
+      let barResizeObserver = null;
+      const root = document.documentElement;
+      const barEl = navbar.querySelector('.navbar17__bar');
+      const isMenuOpen = () =>
+        mobileMenuState === MOBILE_MENU_STATES.OPEN || mobileMenuState === MOBILE_MENU_STATES.OPENING;
+      const isMenuAnimating = () =>
+        mobileMenuState === MOBILE_MENU_STATES.OPENING || mobileMenuState === MOBILE_MENU_STATES.CLOSING;
+      const sectionIds = [...new Set(links.map((l) => l.getAttribute('data-nav-section')).filter(Boolean))];
+
+      const moveIndicator = (linkEl) => {
+        if (!(indicator instanceof HTMLElement) || !(navList instanceof HTMLElement)) return;
+        if (!linkEl) {
+          indicator.style.width = '0px';
+          indicator.style.opacity = '0';
+          return;
+        }
+        const listRect = navList.getBoundingClientRect();
+        const activeRect = linkEl.getBoundingClientRect();
+        indicator.style.width = `${activeRect.width}px`;
+        indicator.style.transform = `translateX(${activeRect.left - listRect.left}px)`;
+        indicator.style.opacity = '1';
+      };
+
+      const setActiveById = (sectionId) => {
+        [...links, ...mobileLinks].forEach((link) => {
+          link.classList.toggle('is-active', link.getAttribute('data-nav-section') === sectionId);
+        });
+        moveIndicator(links.find((l) => l.classList.contains('is-active')) ?? null);
+      };
+
+      const setActiveByPage = (pathname, hash = '') => {
+        const normalizedHash = hash.replace('#', '');
+        if (normalizedHash && sectionIds.includes(normalizedHash)) {
+          setActiveById(normalizedHash);
+          return;
+        }
+        [...links, ...mobileLinks].forEach((link) => {
+          const page = link.getAttribute('data-nav-page');
+          link.classList.toggle('is-active', !!page && pathname.startsWith(page));
+        });
+        requestAnimationFrame(() => {
+          moveIndicator(links.find((l) => l.classList.contains('is-active')) ?? null);
+        });
+      };
+
+      const updateScrollState = () => {
+        if (document.body.classList.contains('navbar17-body-lock')) {
+          navbar.toggleAttribute('data-scrolled', lockScrollY > 10);
+          return;
+        }
+        navbar.toggleAttribute('data-scrolled', window.scrollY > 10);
+      };
+
+      const getFocusableNodes = () => {
+        const barEls = [...navbar.querySelectorAll(`.navbar17__bar ${FOCUSABLE_SELECTOR}`)].filter(
+          (el) => el instanceof HTMLElement,
+        );
+        const navEls = [...mobileNav.querySelectorAll(FOCUSABLE_SELECTOR)].filter(
+          (el) => el instanceof HTMLElement,
+        );
+        const seen = new Set();
+        const out = [];
+        for (const el of [...barEls, ...navEls]) {
+          if (seen.has(el)) continue;
+          seen.add(el);
+          out.push(el);
+        }
+        return out;
+      };
+
+      const setMenuButtonLabel = (open) => {
+        const label = toggle.querySelector('.sr-only');
+        if (label) {
+          label.textContent = open ? 'Close navigation menu' : 'Open navigation menu';
+        }
+      };
+
+      const readDocumentScrollY = () =>
+        Math.max(
+          0,
+          window.scrollY ||
+            window.pageYOffset ||
+            document.documentElement.scrollTop ||
+            document.body.scrollTop ||
+            0,
+        );
+
+      /** While body is position:fixed, visual offset is stored in style.top — more reliable than lockScrollY alone. */
+      const readLockedBodyScrollY = () => {
+        const top = document.body.style.top;
+        if (top && top !== 'auto') {
+          const n = parseFloat(top);
+          if (Number.isFinite(n)) return Math.max(0, Math.round(-n));
+        }
+        return lockScrollY;
+      };
+
+      const lockBodyScroll = () => {
+        if (document.body.dataset.mobileNavLock === 'true') return;
+        lockScrollY = readDocumentScrollY();
+        preLockRootOverflow = root.style.overflow;
+        preLockOverflow = document.body.style.overflow;
+        preLockPaddingRight = document.body.style.paddingRight;
+        preLockBodyPosition = document.body.style.position;
+        preLockBodyTop = document.body.style.top;
+        preLockBodyLeft = document.body.style.left;
+        preLockBodyRight = document.body.style.right;
+        preLockBodyWidth = document.body.style.width;
+        const scrollbarComp = Math.max(0, window.innerWidth - document.documentElement.clientWidth);
+        document.body.dataset.mobileNavLock = 'true';
+        document.body.classList.add('navbar17-body-lock');
+        root.style.overflow = 'hidden';
+        document.body.style.overflow = 'hidden';
+        document.body.style.position = 'fixed';
+        document.body.style.top = `-${lockScrollY}px`;
+        document.body.style.left = '0';
+        document.body.style.right = '0';
+        document.body.style.width = '100%';
+        if (scrollbarComp > 0) {
+          document.body.style.paddingRight = `${scrollbarComp}px`;
+        }
+      };
+
+      const unlockBodyScroll = () => {
+        if (document.body.dataset.mobileNavLock !== 'true') return;
+        const restoreY = readLockedBodyScrollY();
+        delete document.body.dataset.mobileNavLock;
+        document.body.classList.remove('navbar17-body-lock');
+        root.style.overflow = preLockRootOverflow;
+        document.body.style.overflow = preLockOverflow;
+        document.body.style.paddingRight = preLockPaddingRight;
+        document.body.style.position = preLockBodyPosition;
+        document.body.style.top = preLockBodyTop;
+        document.body.style.left = preLockBodyLeft;
+        document.body.style.right = preLockBodyRight;
+        document.body.style.width = preLockBodyWidth;
+        lockScrollY = restoreY;
+        window.scrollTo({ top: restoreY, left: 0, behavior: 'auto' });
+      };
+
+      const clearViewportVars = () => {
+        root.style.removeProperty('--navbar17-mobile-sheet-top');
+        root.style.removeProperty('--navbar17-open-chrome-pad');
+      };
+
+      /**
+       * Sheet/backdrop top must use the bar's bottom edge in layout viewport coordinates.
+       * Do NOT add visualViewport.offsetTop to height: on iOS Safari offsetTop tracks scroll
+       * relative to the layout viewport, so vvTop + barHeight wrongly pushes the sheet down
+       * when the user has scrolled — gap above the menu / panel off-screen.
+       */
+      const syncMobileMenuLayoutVars = () => {
+        if (!mobileNavMq.matches) {
+          clearViewportVars();
+          return;
+        }
+        const bar = navbar.querySelector('.navbar17__bar');
+        const el = bar instanceof HTMLElement ? bar : navbar;
+        const br = el.getBoundingClientRect();
+        const sheetTopRaw = Math.max(0, Math.floor(br.bottom));
+        const sheetTop =
+          sheetTopRaw < 4 ? NAVBAR17_FALLBACK_SHEET_TOP_PX : sheetTopRaw;
+        root.style.setProperty('--navbar17-mobile-sheet-top', `${sheetTop}px`);
+      };
+
+      const syncOpenChromePad = () => {
+        if (!mobileNavMq.matches || !isMenuOpen()) return;
+        const h = Math.round(navbar.getBoundingClientRect().height);
+        root.style.setProperty('--navbar17-open-chrome-pad', `${h}px`);
+      };
+
+      const scheduleViewportSync = () => {
+        if (!isMenuOpen() || viewportSyncRaf) return;
+        viewportSyncRaf = window.requestAnimationFrame(() => {
+          viewportSyncRaf = 0;
+          syncMobileMenuLayoutVars();
+          syncOpenChromePad();
+        });
+      };
+
+      const onVisualViewportChange = () => {
+        scheduleViewportSync();
+      };
+
+      const onWindowScrollLayoutSync = () => {
+        if (isMenuOpen()) syncMobileMenuLayoutVars();
+      };
+
+      const startAnimating = (nextState) => {
+        mobileMenuState = nextState;
+        toggle.setAttribute('aria-busy', 'true');
+        navbar.dataset.mobileNavAnimating = 'true';
+        window.clearTimeout(mobileAnimTimer);
+        mobileAnimTimer = window.setTimeout(() => {
+          finalizeAnimation();
+        }, MOBILE_MENU_TRANSITION_MS + 80);
+      };
+
+      const finalizeAnimation = () => {
+        if (mobileMenuState === MOBILE_MENU_STATES.OPENING) {
+          mobileMenuState = MOBILE_MENU_STATES.OPEN;
+        } else if (mobileMenuState === MOBILE_MENU_STATES.CLOSING) {
+          mobileMenuState = MOBILE_MENU_STATES.CLOSED;
+          if (pendingFocusRestore && !desktopNavMq.matches) {
+            toggle.focus();
+          }
+          pendingFocusRestore = false;
+        }
+        toggle.removeAttribute('aria-busy');
+        delete navbar.dataset.mobileNavAnimating;
+      };
+
+      const closeMobileMenu = ({ focusToggle = true } = {}) => {
+        if (!isMenuOpen() || mobileMenuState === MOBILE_MENU_STATES.CLOSING) return;
+        startAnimating(MOBILE_MENU_STATES.CLOSING);
+        pendingFocusRestore = focusToggle;
+
+        toggle.setAttribute('aria-expanded', 'false');
+        navbar.removeAttribute('data-mobile-open');
+        mobileNav.setAttribute('aria-hidden', 'true');
+        mobileNav.setAttribute('inert', '');
+        setMenuButtonLabel(false);
+        window.visualViewport?.removeEventListener('resize', onVisualViewportChange);
+        window.visualViewport?.removeEventListener('scroll', onVisualViewportChange);
+        window.removeEventListener('scroll', onWindowScrollLayoutSync);
+        if (viewportSyncRaf) {
+          window.cancelAnimationFrame(viewportSyncRaf);
+          viewportSyncRaf = 0;
+        }
+        unlockBodyScroll();
+        clearViewportVars();
+        window.requestAnimationFrame(() => {
+          updateScrollState();
+        });
+      };
+
+      const openMobileMenu = () => {
+        if (isMenuOpen() || desktopNavMq.matches || isMenuAnimating()) return;
+        startAnimating(MOBILE_MENU_STATES.OPENING);
+        syncMobileMenuLayoutVars();
+        syncOpenChromePad();
+        lockBodyScroll();
+        updateScrollState();
+        syncMobileMenuLayoutVars();
+        syncOpenChromePad();
+        toggle.setAttribute('aria-expanded', 'true');
+        navbar.setAttribute('data-mobile-open', 'true');
+        mobileNav.removeAttribute('inert');
+        mobileNav.setAttribute('aria-hidden', 'false');
+        setMenuButtonLabel(true);
+        window.visualViewport?.addEventListener('resize', onVisualViewportChange);
+        window.visualViewport?.addEventListener('scroll', onVisualViewportChange);
+        window.addEventListener('scroll', onWindowScrollLayoutSync, { passive: true });
+        window.requestAnimationFrame(() => {
+          syncMobileMenuLayoutVars();
+          syncOpenChromePad();
+          const firstLink = mobileLinks[0];
+          if (firstLink instanceof HTMLElement) {
+            firstLink.focus({ preventScroll: true });
+          } else {
+            getFocusableNodes()[0]?.focus({ preventScroll: true });
+          }
+        });
+      };
+
+      const onDocumentKeydown = (event) => {
+        if (!isMenuOpen()) return;
+
+        if (event.key === 'Escape') {
+          event.preventDefault();
+          closeMobileMenu();
+          return;
+        }
+
+        if (event.key !== 'Tab') return;
+        const focusables = getFocusableNodes();
+        if (!focusables.length) return;
+
+        const first = focusables[0];
+        const last = focusables[focusables.length - 1];
+        const activeEl = document.activeElement;
+
+        if (event.shiftKey && activeEl === first) {
+          event.preventDefault();
+          last.focus();
+        } else if (!event.shiftKey && activeEl === last) {
+          event.preventDefault();
+          first.focus();
+        }
+      };
+
+      const onToggleClick = () => {
+        if (isMenuOpen()) closeMobileMenu();
+        else openMobileMenu();
+      };
+
+      const onDesktopNavBreakpoint = () => {
+        if (desktopNavMq.matches) {
+          closeMobileMenu({ focusToggle: false });
+          clearViewportVars();
+        }
+      };
+
+      const onHashChange = () => {
+        if (isLandingNav) return;
+        const hash = window.location.hash.replace('#', '');
+        if (hash && sectionIds.includes(hash)) {
+          setActiveById(hash);
+          return;
+        }
+        if (window.location.pathname === '/') {
+          setActiveById('home');
+          return;
+        }
+        setActiveByPage(window.location.pathname.replace(/\/$/, '') || '/', window.location.hash);
+      };
+
+      const onResize = () => {
+        const active = links.find((l) => l.classList.contains('is-active'));
+        if (active) moveIndicator(active);
+        syncMobileMenuLayoutVars();
+        if (isMenuOpen()) {
+          syncOpenChromePad();
+          scheduleViewportSync();
+        }
+      };
+
+      const onCartOpenRequest = () => {
+        closeMobileMenu({ focusToggle: false });
+      };
+
+      const initScrollSpy = () => {
+        if (!sectionIds.length) return;
+
+        const visible = new Set();
+        scrollSpyObserver = new IntersectionObserver(
+          (entries) => {
+            entries.forEach((entry) => {
+              if (entry.isIntersecting) visible.add(entry.target.id);
+              else visible.delete(entry.target.id);
+            });
+
+            if (!visible.size) return;
+
+            let closestId = null;
+            let closestDist = Infinity;
+            visible.forEach((id) => {
+              const el = document.getElementById(id);
+              if (!el) return;
+              const dist = Math.abs(el.getBoundingClientRect().top);
+              if (dist < closestDist) {
+                closestDist = dist;
+                closestId = id;
+              }
+            });
+
+            if (closestId) setActiveById(closestId);
+          },
+          { threshold: 0, rootMargin: '-5% 0px -40% 0px' },
+        );
+
+        sectionIds.forEach((id) => {
+          const el = document.getElementById(id);
+          if (el) scrollSpyObserver?.observe(el);
+        });
+      };
+
+      const pathname = window.location.pathname.replace(/\/$/, '') || '/';
+      const isHome = pathname === '/';
+      const isLandingNav = navbar.getAttribute('data-navbar-variant') === 'landing';
+      const useScrollSpy = isHome;
+
+      updateScrollState();
+      window.addEventListener('scroll', updateScrollState, { passive: true });
+      window.addEventListener('resize', onResize);
+      window.addEventListener('hashchange', onHashChange);
+      document.addEventListener('keydown', onDocumentKeydown);
+      window.addEventListener(CART_OPEN_REQUEST_EVENT, onCartOpenRequest);
+      desktopNavMq.addEventListener('change', onDesktopNavBreakpoint);
+      syncMobileMenuLayoutVars();
+
+      if (barEl instanceof HTMLElement && typeof ResizeObserver !== 'undefined') {
+        barResizeObserver = new ResizeObserver(() => {
+          syncMobileMenuLayoutVars();
+          syncOpenChromePad();
+          if (isMenuOpen()) scheduleViewportSync();
+        });
+        barResizeObserver.observe(barEl);
+      }
+
+      const normalizePathname = (p) => p.replace(/\/$/, '') || '/';
+
+      const onMobileNavLinkClick = (event) => {
+        const target = event.currentTarget;
+        if (!(target instanceof HTMLAnchorElement)) return;
+        const hrefAttr = target.getAttribute('href');
+        if (!hrefAttr) {
+          closeMobileMenu({ focusToggle: false });
+          return;
+        }
+        let url;
+        try {
+          url = new URL(target.href, window.location.href);
+        } catch {
+          closeMobileMenu({ focusToggle: false });
+          return;
+        }
+        const samePage =
+          normalizePathname(url.pathname) === normalizePathname(window.location.pathname);
+        const targetHash = (url.hash || '').replace(/^#/, '');
+        const currentHash = (window.location.hash || '').replace(/^#/, '');
+        if (
+          samePage &&
+          targetHash &&
+          sectionIds.includes(targetHash) &&
+          targetHash === currentHash
+        ) {
+          event.preventDefault();
+          closeMobileMenu({ focusToggle: false });
+          return;
+        }
+        closeMobileMenu({ focusToggle: false });
+      };
+
+      toggle.addEventListener('click', onToggleClick);
+      mobileBackdrop?.addEventListener('click', () => closeMobileMenu());
+      mobileLinks.forEach((link) => link.addEventListener('click', onMobileNavLinkClick));
+
+      if (useScrollSpy) {
+        initScrollSpy();
+        onHashChange();
+      } else if (!isLandingNav) {
+        setActiveByPage(pathname, window.location.hash);
+      }
+
+      const cleanup = () => {
+        closeMobileMenu({ focusToggle: false });
+        scrollSpyObserver?.disconnect();
+        window.removeEventListener('scroll', updateScrollState);
+        window.removeEventListener('resize', onResize);
+        window.removeEventListener('hashchange', onHashChange);
+        document.removeEventListener('keydown', onDocumentKeydown);
+        window.removeEventListener(CART_OPEN_REQUEST_EVENT, onCartOpenRequest);
+        desktopNavMq.removeEventListener('change', onDesktopNavBreakpoint);
+        window.visualViewport?.removeEventListener('resize', onVisualViewportChange);
+        window.visualViewport?.removeEventListener('scroll', onVisualViewportChange);
+        window.removeEventListener('scroll', onWindowScrollLayoutSync);
+        toggle.removeEventListener('click', onToggleClick);
+        window.clearTimeout(mobileAnimTimer);
+        if (viewportSyncRaf) {
+          window.cancelAnimationFrame(viewportSyncRaf);
+          viewportSyncRaf = 0;
+        }
+        barResizeObserver?.disconnect();
+        barResizeObserver = null;
+        clearViewportVars();
+      };
+
+      mobileNav.addEventListener('transitionend', (event) => {
+        if (event.target !== mobileNav || event.propertyName !== 'transform' || !isMenuAnimating()) return;
+        finalizeAnimation();
+      });
+
+      document.addEventListener('astro:before-swap', cleanup, { once: true });
+    }
+  }
+</script>
+

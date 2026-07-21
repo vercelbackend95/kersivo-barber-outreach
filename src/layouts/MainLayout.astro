@@ -5,6 +5,7 @@ import CookieConsentMount from '@/components/consent/CookieConsentMount.astro';
 import FaviconLinks from '@/components/seo/FaviconLinks.astro';
 import SeoHead from '@/components/seo/SeoHead.astro';
 import Navbar17 from '@/components/navbar17.astro';
+import InitDataTrackScript from '@/components/InitDataTrackScript.astro';
 import CartDrawerMount from '@/components/shop/CartDrawerMount.astro';
 import type { PageSeo } from '@/lib/seo/meta';
 import '@/styles/tokens.css';
@@ -92,9 +93,6 @@ const jsonLdBlocks = jsonLd
     <slot />
     {navbarVariant === 'shop' ? <CartDrawerMount publicDemoMode={publicDemoMode} /> : null}
     <CookieConsentMount />
-    <script>
-      import { initDataTrack } from '@/lib/analytics/initDataTrack';
-      initDataTrack();
-    </script>
+    <InitDataTrackScript />
   </body>
 </html>
