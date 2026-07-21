@@ -4,6 +4,7 @@ import {
   SMS_INCLUDED_CLAIM,
   STRIPE_FEES_NOTE,
 } from '@/lib/pricing/claimsPolicy';
+import { SAAS_MONTHLY_GBP } from '@/lib/seo/defaults';
 import { getPublicSiteUrl } from '@/lib/setup/siteUrl';
 
 type LandingFaqItem = {
@@ -18,12 +19,12 @@ export const BARBERSHOP_BOOKING_FAQ_ITEMS: LandingFaqItem[] = [
   },
   {
     question: 'What fees do I still pay?',
-    answer: `You pay your selected setup package, then £39/month Ongoing Care from go-live (mandatory, billed automatically). ${KERSIVO_COMMISSION_WITH_STRIPE} Domain purchase, management and renewal are included while Care is active. ${PRICE_VAT_DISCLAIMER}`,
+    answer: `You pay £${SAAS_MONTHLY_GBP}/month for your KERSIVO subscription (billed automatically). ${KERSIVO_COMMISSION_WITH_STRIPE} Domain purchase, management and renewal are included while your subscription is active. ${PRICE_VAT_DISCLAIMER}`,
   },
   {
     question: 'Can I buy without speaking to someone first?',
     answer:
-      'Yes. You can choose a setup package, pay the deposit securely, then complete the onboarding form. Work begins after the deposit, completed onboarding and the start of project delivery.',
+      'Yes. You can start a £39/month subscription securely, then complete the onboarding form. We build your system after onboarding is complete.',
   },
   {
     question: 'Can you migrate us from another booking platform?',
@@ -36,18 +37,18 @@ export const BARBERSHOP_BOOKING_FAQ_ITEMS: LandingFaqItem[] = [
       'No. Clients book through your barbershop’s booking website in the browser. No app download is required.',
   },
   {
-    question: 'What happens after I buy?',
+    question: 'What happens after I subscribe?',
     answer:
-      'You pay a 50% setup deposit, complete onboarding, then KERSIVO prepares your booking website, admin dashboard and retail pickup shop. The remaining 50% is due before go-live. You review the setup before launch.',
+      'You complete onboarding, then KERSIVO prepares your booking website, admin dashboard and retail pickup shop. You review the setup before launch.',
   },
   {
-    question: 'What happens if I cancel Ongoing Care?',
+    question: 'What happens if I cancel my subscription?',
     answer:
-      'There is no minimum term and no notice period. Care stays active until the end of the paid month, then the website, booking system, admin dashboard and retail system are taken offline. You own your domain, brand, content, client relationship and exported business data. KERSIVO owns the platform software — you license it while Care is active. Free CSV export (first name, surname where stored, email, phone, booking history) is available during Care and for 30 days after termination. After cancellation, domain management control is transferred to you.',
+      'There is no minimum term and no notice period. Your subscription stays active until the end of the paid month, then the website, booking system, admin dashboard and retail system are taken offline. You own your domain, brand, content, client relationship and exported business data. KERSIVO owns the platform software — you license it while your subscription is active. Free CSV export (first name, surname where stored, email, phone, booking history) is available during your subscription and for 30 days after termination. After cancellation, domain management control is transferred to you.',
   },
   {
     question: 'What is the full cost breakdown?',
-    answer: `Launch is £199 setup + £39/month Ongoing Care from go-live. Priority Growth is £299 setup + £39/month Ongoing Care from go-live. ${KERSIVO_COMMISSION_WITH_STRIPE} ${SMS_INCLUDED_CLAIM}. ${PRICE_VAT_DISCLAIMER}`,
+    answer: `£${SAAS_MONTHLY_GBP}/month subscription — no setup fee. ${KERSIVO_COMMISSION_WITH_STRIPE} ${SMS_INCLUDED_CLAIM}. ${PRICE_VAT_DISCLAIMER}`,
   },
   {
     question: 'Is KERSIVO new?',

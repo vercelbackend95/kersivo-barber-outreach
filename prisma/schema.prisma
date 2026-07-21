@@ -460,3 +460,32 @@ model SetupDeposit {
   @@index([plan, paidAt])
   @@index([paymentIntentId])
 }
+
+enum SaasSubscriptionStatus {
+  PENDING
+  ACTIVE
+}
+
+model SaasSubscription {
+  id                    String                 @id @default(cuid())
+  stripeSessionId       String                 @unique
+  stripeSubscriptionId  String?
+  status                SaasSubscriptionStatus @default(PENDING)
+  customerName          String
+  customerEmail         String
+  shopName              String
+  shopSize              String
+  currentStack          String
+  monthlyPence          Int
+  currency              String                 @default("gbp")
+  activatedAt           DateTime?
+  customerEmailSentAt   DateTime?
+  internalEmailSentAt   DateTime?
+  onboardingSubmittedAt DateTime?
+  createdAt             DateTime               @default(now())
+  updatedAt             DateTime               @updatedAt
+
+  @@index([customerEmail])
+  @@index([customerEmail, status])
+  @@index([stripeSubscriptionId])
+}

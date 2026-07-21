@@ -514,6 +514,8 @@ export async function cancelByShop(input: { bookingId: string; shopId: string; r
       reason: input.reason
     });
   } catch (error) {
+    // Intentional soft-fail: shop cancellation is the business outcome.
+    // Do not roll back the cancel if the customer notification email fails.
     console.warn('Failed to send shop cancellation email.', {
       bookingId: updatedBooking.id,
       error: error instanceof Error ? error.message : error

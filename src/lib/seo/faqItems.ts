@@ -18,7 +18,7 @@ export const FAQ_ITEMS: FaqItem[] = [
   {
     question: 'What fees do I still pay?',
     answer:
-      'Setup (£199 or £299), Ongoing Care (£39/month from go-live), and standard Stripe payment-processing fees on online cards. Domain renewal is included while Care is active. Prices shown are final. KERSIVO is not currently VAT registered, so no VAT is added.',
+      '£39/month subscription, and standard Stripe payment-processing fees on online cards. Domain renewal is included while your subscription is active. Prices shown are final. KERSIVO is not currently VAT registered, so no VAT is added.',
     details: 'If you take cash in-shop, payment processing fee can be 0% on that payment.',
   },
   {
@@ -45,14 +45,14 @@ export const FAQ_ITEMS: FaqItem[] = [
   {
     question: 'Are you new — do you have other shops using this yet?',
     answer:
-      'We are onboarding founding barbershops in the UK right now while we widen the rollout. Early partners get our full attention and milestone-based pricing (remaining 50% before go-live).',
+      'We are onboarding founding barbershops in the UK right now while we widen the rollout. Early partners get our full attention.',
     details:
       'Open the live admin without signup, inspect the booking flow yourself, compare the pricing page to anything else you evaluate, then decide.',
   },
   {
     question: "What if I don't get more bookings after launching?",
     answer:
-      'If we agree a KPI before go-live (utilisation, no-show £, or owner ops hours), we measure it on your data for 28 days post-launch and share the result. Your monthly Care includes up to one hour of minor development changes we can use to act on what the numbers show.',
+      'If we agree a KPI before go-live (utilisation, no-show £, or owner ops hours), we measure it on your data for 28 days post-launch and share the result. Your subscription includes up to one hour of minor development changes we can use to act on what the numbers show.',
     details:
       'You keep more of every booking with 0% KERSIVO commission and retain your client relationship and domain. The point is your margin per booking, not just booking volume.',
   },
@@ -65,7 +65,7 @@ export const FAQ_ITEMS: FaqItem[] = [
   {
     question: 'What automations are included to recover revenue?',
     answer:
-      'Transactional email confirmations and reminders are included in Ongoing Care while Care is active. Automated SMS is available by arrangement at setup if you need it for launch.',
+      'Transactional email confirmations and reminders are included in your subscription while it is active. Automated SMS is available by arrangement at setup if you need it for launch.',
     details:
       'The point is simple: your team spends less time chasing and more time delivering paid services.',
   },
@@ -74,27 +74,27 @@ export const FAQ_ITEMS: FaqItem[] = [
     answer:
       'You do. You own your domain, brand, content, client relationship and exported business data.',
     details:
-      'You run under your signage and URLs. KERSIVO owns the platform software; you license it while Care is active.',
+      'You run under your signage and URLs. KERSIVO owns the platform software; you license it while your subscription is active.',
   },
   {
     question: 'Can I leave? What happens to my data?',
     answer:
-      'Yes. There is no minimum term and no notice period. Care stays active until the end of the paid month, then the website, booking, admin and retail systems go offline. Free CSV export (first name, surname where stored, email, phone, booking history) is available during Care and for 30 days after termination.',
+      'Yes. There is no minimum term and no notice period. Your subscription stays active until the end of the paid month, then the website, booking, admin and retail systems go offline. Free CSV export (first name, surname where stored, email, phone, booking history) is available during your subscription and for 30 days after termination.',
     details:
       'After cancellation, domain management control is transferred to you. The KERSIVO platform is not transferred with the domain.',
   },
   {
     question: 'What is the full cost breakdown — are there any charges I have not seen?',
     answer:
-      'Your complete cost is: setup fee (£199 or £299, one-time) + Ongoing Care (£39/month) + Stripe’s standard card processing rate on online transactions. Prices shown are final. KERSIVO is not currently VAT registered, so no VAT is added.',
+      'Your complete cost is: £39/month subscription + Stripe’s standard card processing rate on online transactions. No setup fee. Prices shown are final. KERSIVO is not currently VAT registered, so no VAT is added.',
     details:
       '0% KERSIVO commission on bookings and retail. Email appointment reminders included. There are no per-booking platform fees and no volume surcharges as you add barbers.',
   },
   {
     question: 'What happens if the setup takes longer than expected, or something goes wrong?',
     answer:
-      'If you cancel before work begins, we refund the deposit. Once work begins, the deposit is non-refundable. If KERSIVO cannot deliver, we refund the deposit. We do not move you live until you have reviewed and confirmed everything.',
+      'We do not move you live until you have reviewed and confirmed everything. If something goes wrong on our side, we work with you to put it right.',
     details:
-      'Switchers stay active on their current platform throughout the build. If you are unresponsive for 30 days after work begins, we may close the project and retain the deposit.',
+      'Switchers stay active on their current platform throughout the build.',
   },
 ];

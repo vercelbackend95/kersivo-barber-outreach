@@ -1,6 +1,6 @@
 export const prerender = false;
 
-import { Prisma, SetupPlan, SetupDepositStatus } from '@prisma/client';
+import PrismaClientPkg from '@prisma/client';
 import type { APIRoute } from 'astro';
 import { setShopAnalyticsLive, setShopAnalyticsLiveForOwnerEmail } from '../../../lib/admin/analyticsMode';
 import { prisma } from '../../../lib/db/client';
@@ -8,6 +8,7 @@ import { formatGbp } from '../../../lib/shop/money';
 import { createShopOrder } from '../../../lib/shop/createShopOrder';
 import {
   getCheckoutPaymentIntentId,
+  getCheckoutSubscriptionId,
   retrieveCheckoutSession,
   type StripeSession,
   verifyStripeWebhookSignature,
@@ -15,10 +16,16 @@ import {
 import {
   EmailDeliveryError,
   getSetupOnboardingFormUrlOrEmpty,
+  sendSaasSubscriptionConfirmationEmail,
+  sendSaasSubscriptionInternalNotificationEmail,
   sendSetupDepositConfirmationEmail,
   sendSetupDepositInternalNotificationEmail,
 } from '../../../lib/email/sender';
 import { getSetupPlan, isSetupPlanId } from '../../../lib/setup/plans';
+import { SAAS_SUBSCRIPTION_METADATA_TYPE } from '../../../lib/setup/saasSubscription';
+import { SAAS_MONTHLY_PENCE } from '../../../lib/seo/defaults';
+
+const { Prisma, SetupPlan, SetupDepositStatus } = PrismaClientPkg;
 type CartSnapshotItem = {
   productId: string;
   name: string;
@@ -327,6 +334,223 @@ async function handleSetupDepositCheckout(
   );
 }
 
+function logSaasSubscriptionStage(
+  stage: string,
+  details: Record<string, string | number | boolean | null | undefined> = {},
+): void {
+  console.info('[webhook] saas_subscription', { stage, ...details });
+}
+
+async function handleSaasSubscriptionCheckout(
+  sessionId: string,
+  session: StripeSession,
+  metadata: Record<string, string>,
+  eventCreated: number,
+): Promise<Response> {
+  if ((session.payment_status ?? '').toLowerCase() !== 'paid') {
+    console.error('[webhook] SaaS subscription session not paid', {
+      sessionId,
+      paymentStatus: session.payment_status,
+    });
+    return new Response(JSON.stringify({ error: 'Subscription not paid' }), { status: 400 });
+  }
+
+  if ((metadata.type ?? '').trim() !== SAAS_SUBSCRIPTION_METADATA_TYPE) {
+    return new Response(JSON.stringify({ error: 'Invalid subscription type' }), { status: 400 });
+  }
+
+  const customerName = (metadata.customerName ?? '').trim();
+  const customerEmail = (metadata.email ?? session.customer_email ?? '').trim().toLowerCase();
+  const shopName = (metadata.shopName ?? '').trim();
+  const shopSize = (metadata.shopSize ?? '').trim();
+  const currentStack = (metadata.currentStack ?? '').trim();
+
+  if (!customerName || !customerEmail || !shopName || !shopSize || !currentStack) {
+    console.error('[webhook] SaaS subscription missing required metadata', {
+      sessionId,
+      customerName: Boolean(customerName),
+      customerEmail: Boolean(customerEmail),
+      shopName: Boolean(shopName),
+      shopSize: Boolean(shopSize),
+      currentStack: Boolean(currentStack),
+    });
+    return new Response(JSON.stringify({ error: 'Missing subscription metadata' }), { status: 400 });
+  }
+
+  const monthlyPence =
+    typeof session.amount_total === 'number' ? session.amount_total : SAAS_MONTHLY_PENCE;
+  const activatedAt = Number.isFinite(eventCreated) ? new Date(eventCreated * 1000) : new Date();
+  const stripeSubscriptionId = getCheckoutSubscriptionId(session);
+  const currency = (session.currency ?? 'gbp').toLowerCase();
+
+  logSaasSubscriptionStage('subscription_validated', {
+    sessionId,
+    monthlyPence,
+    hasSubscriptionId: Boolean(stripeSubscriptionId),
+  });
+
+  let record = await prisma.saasSubscription.findUnique({
+    where: { stripeSessionId: sessionId },
+  });
+
+  if (!record) {
+    try {
+      record = await prisma.saasSubscription.create({
+        data: {
+          stripeSessionId: sessionId,
+          stripeSubscriptionId,
+          status: 'ACTIVE',
+          customerName,
+          customerEmail,
+          shopName,
+          shopSize,
+          currentStack,
+          monthlyPence,
+          currency,
+          activatedAt,
+        },
+      });
+      logSaasSubscriptionStage('record_created', { sessionId, id: record.id });
+    } catch (error) {
+      if (error instanceof Prisma.PrismaClientKnownRequestError && error.code === 'P2002') {
+        record = await prisma.saasSubscription.findUnique({
+          where: { stripeSessionId: sessionId },
+        });
+      } else {
+        throw error;
+      }
+    }
+  }
+
+  if (!record) {
+    console.error('[webhook] SaaS subscription row missing after create', { sessionId });
+    return new Response(JSON.stringify({ error: 'Subscription persist failed' }), { status: 500 });
+  }
+
+  if (
+    record.status !== 'ACTIVE' ||
+    !record.activatedAt ||
+    (stripeSubscriptionId && !record.stripeSubscriptionId)
+  ) {
+    record = await prisma.saasSubscription.update({
+      where: { id: record.id },
+      data: {
+        status: 'ACTIVE',
+        activatedAt: record.activatedAt ?? activatedAt,
+        stripeSubscriptionId: stripeSubscriptionId || record.stripeSubscriptionId,
+        monthlyPence,
+        currency,
+        customerName,
+        customerEmail,
+        shopName,
+        shopSize,
+        currentStack,
+      },
+    });
+    logSaasSubscriptionStage('marked_active', { sessionId, id: record.id });
+  }
+
+  try {
+    const metadataShopId = metadata.shopId?.trim();
+    const updated = metadataShopId
+      ? await setShopAnalyticsLive(metadataShopId).then(() => true)
+      : await setShopAnalyticsLiveForOwnerEmail(customerEmail);
+    logSaasSubscriptionStage('analytics_live_mode_updated', {
+      sessionId,
+      updated,
+      viaShopId: Boolean(metadataShopId),
+    });
+  } catch (error) {
+    console.error('[webhook] Failed to mark shop analytics as live', {
+      sessionId,
+      error,
+    });
+  }
+
+  const monthlyFormatted = formatGbp(monthlyPence);
+  const onboardingFormUrl = getSetupOnboardingFormUrlOrEmpty();
+  let customerEmailOk = Boolean(record.customerEmailSentAt);
+  let internalEmailOk = Boolean(record.internalEmailSentAt);
+  let emailFailure = false;
+
+  if (!customerEmailOk) {
+    try {
+      await sendSaasSubscriptionConfirmationEmail({
+        to: customerEmail,
+        customerName,
+        shopName,
+        monthlyFormatted,
+        onboardingFormUrl,
+      });
+      record = await prisma.saasSubscription.update({
+        where: { id: record.id },
+        data: { customerEmailSentAt: new Date() },
+      });
+      customerEmailOk = true;
+      logSaasSubscriptionStage('customer_email_sent', { sessionId });
+    } catch (error) {
+      emailFailure = true;
+      console.error('[webhook] SaaS subscription confirmation email failed', {
+        sessionId,
+        error: error instanceof EmailDeliveryError ? error.message : error,
+      });
+    }
+  }
+
+  if (!internalEmailOk) {
+    try {
+      await sendSaasSubscriptionInternalNotificationEmail({
+        customerName,
+        customerEmail,
+        shopName,
+        shopSize,
+        currentStack,
+        monthlyFormatted,
+        currency,
+        stripeSessionId: sessionId,
+        stripeSubscriptionId,
+        paymentStatus: session.payment_status ?? 'paid',
+        attributionSummary: attributionSummary(metadata),
+        onboardingEmailStatus: customerEmailOk ? 'sent' : 'failed_or_pending',
+        activatedAtIso: activatedAt.toISOString(),
+      });
+      record = await prisma.saasSubscription.update({
+        where: { id: record.id },
+        data: { internalEmailSentAt: new Date() },
+      });
+      internalEmailOk = true;
+      logSaasSubscriptionStage('internal_email_sent', { sessionId });
+    } catch (error) {
+      emailFailure = true;
+      console.error('[webhook] SaaS subscription internal notification email failed', {
+        sessionId,
+        error: error instanceof EmailDeliveryError ? error.message : error,
+      });
+    }
+  }
+
+  if (emailFailure || !customerEmailOk || !internalEmailOk) {
+    return new Response(JSON.stringify({ error: 'Subscription email fulfilment incomplete' }), {
+      status: 500,
+    });
+  }
+
+  logSaasSubscriptionStage('fulfilment_completed', {
+    sessionId,
+    id: record.id,
+    customerEmailOk,
+    internalEmailOk,
+  });
+
+  return new Response(
+    JSON.stringify({
+      ok: true,
+      duplicate: Boolean(record.customerEmailSentAt && record.internalEmailSentAt),
+    }),
+    { status: 200 },
+  );
+}
+
 export const POST: APIRoute = async ({ request }) => {
   try {
     const rawBody = await request.text();
@@ -344,6 +568,10 @@ export const POST: APIRoute = async ({ request }) => {
     if (SETUP_FULFILMENT_EVENTS.has(event.type) && metadata.type === 'setup_deposit') {
       // await so try/catch captures async Prisma/email failures (bare return does not)
       return await handleSetupDepositCheckout(sessionId, session, metadata, event.created);
+    }
+
+    if (SETUP_FULFILMENT_EVENTS.has(event.type) && metadata.type === SAAS_SUBSCRIPTION_METADATA_TYPE) {
+      return await handleSaasSubscriptionCheckout(sessionId, session, metadata, event.created);
     }
 
     if (event.type !== 'checkout.session.completed') {

@@ -18,6 +18,11 @@ export const STATIC_SITEMAP_LASTMOD = '2026-07-18';
 
 export const ONGOING_CARE_MONTHLY_GBP = 39;
 
+/** Public SaaS monthly fee (same amount; preferred name in purchase UI). */
+export const SAAS_MONTHLY_GBP = ONGOING_CARE_MONTHLY_GBP;
+
+export const SAAS_MONTHLY_PENCE = SAAS_MONTHLY_GBP * 100;
+
 export const PAGE_DESCRIPTIONS = {
   privacy:
     'Privacy policy for Kersivo barbershop booking and retail software. How we process personal data for UK barbershops and their clients.',
@@ -28,9 +33,9 @@ export const PAGE_DESCRIPTIONS = {
   shop:
     'Interactive KERSIVO retail demo — browse grooming products and try the demo bag. No payment is taken and no order is created.',
   setupSuccess:
-    'Your Kersivo setup deposit is confirmed. Check your email for the onboarding form and next steps.',
+    'Your Kersivo subscription is confirmed. Check your email for the onboarding form and next steps.',
   setupCancel:
-    'Kersivo setup checkout was cancelled. No payment was taken.',
+    'Kersivo subscription checkout was cancelled. No payment was taken.',
   book:
     'Try the KERSIVO interactive booking demo — choose a service, barber, and time. No appointment is created and nothing you enter is stored.',
   bookConfirm:

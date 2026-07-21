@@ -13,6 +13,19 @@ function badRequest(message: string) {
   });
 }
 
+function deliveryFailed() {
+  return new Response(
+    JSON.stringify({
+      ok: false,
+      error: 'Could not send your request. Try again later.',
+    }),
+    {
+      status: 502,
+      headers: { 'Content-Type': 'application/json' },
+    },
+  );
+}
+
 export const POST: APIRoute = async ({ request }) => {
   let body: unknown;
   try {
@@ -40,6 +53,8 @@ export const POST: APIRoute = async ({ request }) => {
     return badRequest('Invalid current system value.');
   }
 
+  // Both emails are part of the promised UX (inbox lead + visitor demo/pricing).
+  // Success and analytics must only fire after both deliveries succeed.
   try {
     await sendDemoCaptureLeadEmail({
       email,
@@ -48,10 +63,8 @@ export const POST: APIRoute = async ({ request }) => {
     });
   } catch (error) {
     if (error instanceof EmailDeliveryError) {
-      return new Response(JSON.stringify({ ok: false, error: 'Could not send your request. Try again later.' }), {
-        status: 502,
-        headers: { 'Content-Type': 'application/json' }
-      });
+      console.error('[EMAIL] Demo capture internal lead failed', { email, error });
+      return deliveryFailed();
     }
     throw error;
   }
@@ -59,10 +72,14 @@ export const POST: APIRoute = async ({ request }) => {
   try {
     await sendDemoCaptureVisitorEmail({ email });
   } catch (visitorError) {
-    console.error('[EMAIL] Visitor demo confirmation failed (internal notification already sent)', {
+    console.error('[EMAIL] Visitor demo confirmation failed after internal lead was sent', {
       email,
       error: visitorError
     });
+    if (visitorError instanceof EmailDeliveryError) {
+      return deliveryFailed();
+    }
+    throw visitorError;
   }
 
   return new Response(JSON.stringify({ ok: true }), {

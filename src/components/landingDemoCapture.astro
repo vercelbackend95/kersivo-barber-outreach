@@ -15,7 +15,7 @@ const { className = '' } = Astro.props as Props;
   <div class="container">
     <div class="landing-demo-capture__soft">
       <p class="landing-demo-capture__soft-line">
-        Not ready to pay the deposit yet?{' '}
+        Not ready to subscribe yet?{' '}
         <button
           type="button"
           class="landing-demo-capture__trigger"
@@ -146,8 +146,9 @@ const { className = '' } = Astro.props as Props;
           return;
         }
 
+        // Track only after the API confirms both lead + visitor emails were delivered.
         trackConsentedEvent(FUNNEL_EVENTS.demo_pricing_capture_submit, undefined, 'analytics');
-        statusEl.textContent = 'Thanks — we’ll send the KERSIVO demo and pricing details to your inbox shortly.';
+        statusEl.textContent = 'Thanks — we’ve sent the KERSIVO demo and pricing details to your inbox.';
         statusEl.className = 'landing-demo-capture__status landing-demo-capture__status--success';
         form.reset();
       } catch {

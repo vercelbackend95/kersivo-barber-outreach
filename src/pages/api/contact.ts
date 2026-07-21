@@ -61,6 +61,7 @@ export const POST: APIRoute = async ({ request }) => {
     });
   } catch (error) {
     if (error instanceof EmailDeliveryError) {
+      console.error('[EMAIL] Contact inquiry failed', { email, error });
       return new Response(JSON.stringify({ ok: false, error: 'Could not send your message. Try again later.' }), {
         status: 502,
         headers: { 'Content-Type': 'application/json' }

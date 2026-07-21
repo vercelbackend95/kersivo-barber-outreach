@@ -2,6 +2,7 @@
 
 import { Pricing36PlanCards } from "@/components/pricing/Pricing36PlanCards";
 import { PRICE_VAT_DISCLAIMER } from "@/lib/pricing/claimsPolicy";
+import { SHOW_SETUP_PLAN_CARDS } from "@/lib/pricing/offerMode";
 import { getPricing36Copy, type Pricing36Variant } from "@/lib/pricing/pricing36Copy";
 import type { SetupPlanId } from "@/lib/setup/plans";
 import { cn } from "@/lib/utils";
@@ -21,26 +22,32 @@ const Pricing36 = ({ className, variant = "default" }: Pricing36Props) => {
     window.location.assign(`/admin/launch?plan=${planId}`);
   };
 
+  const openSubscriptionWizard = () => {
+    window.location.assign("/admin/launch");
+  };
+
   return (
     <section id="pricing" className={cn("pricing36 py-32", variant === "landing" && "pricing36--landing", className)}>
       <div className="container">
         <div className="compare3-block__header">
           <span className="compare3-block__badge">PRICING</span>
-          <h2>ONE SETUP. ONE MONTHLY FEE. ZERO KERSIVO COMMISSION.</h2>
+          <h2>{copy.headline}</h2>
           <p>
-            <strong>Launch: &pound;199 setup + &pound;39/month Care.</strong> {copy.introCommission}
+            <strong>{copy.introLead}</strong> {copy.introCommission}
           </p>
           <p className="pricing36__vat-note text-sm text-muted-foreground">{PRICE_VAT_DISCLAIMER}</p>
         </div>
 
-        <div className="pricing36__guarantee" role="note">
-          <span className="pricing36__guarantee-tag">50 / 50 setup</span>
-          <p className="pricing36__guarantee-body">
-            <strong>Pay 50% deposit to start; remaining 50% before go-live.</strong> Work begins after the deposit,
-            completed onboarding and the start of project delivery. If you cancel before work begins, we refund the
-            deposit. Once work begins, the deposit is non-refundable. If KERSIVO cannot deliver, we refund the deposit.
-          </p>
-        </div>
+        {SHOW_SETUP_PLAN_CARDS ? (
+          <div className="pricing36__guarantee" role="note">
+            <span className="pricing36__guarantee-tag">50 / 50 setup</span>
+            <p className="pricing36__guarantee-body">
+              <strong>Pay 50% deposit to start; remaining 50% before go-live.</strong> Work begins after the deposit,
+              completed onboarding and the start of project delivery. If you cancel before work begins, we refund the
+              deposit. Once work begins, the deposit is non-refundable. If KERSIVO cannot deliver, we refund the deposit.
+            </p>
+          </div>
+        ) : null}
 
         {calendlyUrl ? (
           <p className="pricing36__calendly">
@@ -50,7 +57,11 @@ const Pricing36 = ({ className, variant = "default" }: Pricing36Props) => {
           </p>
         ) : null}
 
-        <Pricing36PlanCards variant={variant} onSelectPlan={openLaunchWizard} />
+        <Pricing36PlanCards
+          variant={variant}
+          onSelectPlan={openLaunchWizard}
+          onStartSubscription={openSubscriptionWizard}
+        />
       </div>
     </section>
   );

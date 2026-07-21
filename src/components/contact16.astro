@@ -131,6 +131,7 @@ const {
           return;
         }
 
+        // Track only after the API confirms real email delivery (not a fake/dev success).
         trackConsentedEvent(FUNNEL_EVENTS.setup_enquiry_submit, undefined, 'analytics');
         statusEl.textContent = 'Thanks — we’ve received your message and will be in touch shortly.';
         statusEl.className = 'contact16__status contact16__status--success';

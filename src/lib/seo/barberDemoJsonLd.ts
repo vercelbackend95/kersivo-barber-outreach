@@ -1,10 +1,9 @@
 import {
   DEFAULT_DESCRIPTION,
-  ONGOING_CARE_MONTHLY_GBP,
+  SAAS_MONTHLY_GBP,
   SITE_NAME,
 } from './defaults';
 import { getSocialProfileUrls } from './socialProfiles';
-import { SETUP_PLANS } from '@/lib/setup/plans';
 import { getPublicSiteUrl } from '@/lib/setup/siteUrl';
 
 /** Stable @id for schema.org cross-references (brand site). */
@@ -19,7 +18,6 @@ export function buildBarberDemoJsonLd(): Record<string, unknown> {
   const softwareId = `${siteUrl}/#software/kersivo-barber-management`;
   const serviceId = `${siteUrl}/#service/barber-booking`;
   const websiteId = `${siteUrl}/#website`;
-  const launchPlan = SETUP_PLANS.launch;
   const socialProfiles = getSocialProfileUrls();
 
   return {
@@ -66,26 +64,17 @@ export function buildBarberDemoJsonLd(): Record<string, unknown> {
         offers: [
           {
             '@type': 'Offer',
-            name: `${launchPlan.name} setup`,
-            price: (launchPlan.setupTotalPence / 100).toFixed(2),
-            priceCurrency: 'GBP',
-            description: `One-time setup from £${launchPlan.setupTotalPence / 100}. 50% deposit to start, 50% on go-live.`,
-            url: `${siteUrl}/#pricing`,
-            availability: 'https://schema.org/InStock',
-          },
-          {
-            '@type': 'Offer',
-            name: 'Ongoing Care',
-            price: ONGOING_CARE_MONTHLY_GBP.toFixed(2),
+            name: 'Monthly subscription',
+            price: SAAS_MONTHLY_GBP.toFixed(2),
             priceCurrency: 'GBP',
             priceSpecification: {
               '@type': 'UnitPriceSpecification',
-              price: ONGOING_CARE_MONTHLY_GBP.toFixed(2),
+              price: SAAS_MONTHLY_GBP.toFixed(2),
               priceCurrency: 'GBP',
               unitText: 'MONTH',
             },
             description:
-              'Hosting, SMS, support, platform updates, and scoped monthly tweaks.',
+              'Custom site, booking, admin, pickup shop, hosting, support, platform updates, and scoped monthly tweaks. No setup fee.',
             url: `${siteUrl}/#pricing`,
             availability: 'https://schema.org/InStock',
           },

@@ -3,6 +3,7 @@ import React from "react";
 import { GlobeLock, LayoutDashboard, MessagesSquare, ShieldCheck, TrendingUp } from "lucide-react";
 import { PRICE_VAT_DISCLAIMER } from "@/lib/pricing/claimsPolicy";
 import { getRateCard1Copy, rateCard1SharedCopy, type RateCard1Variant } from "@/lib/pricing/rateCard1Copy";
+import { SAAS_MONTHLY_GBP } from "@/lib/seo/defaults";
 import { cn } from "@/lib/utils";
 import "@/styles/rateCard1.css";
 
@@ -55,23 +56,24 @@ const RateCard1 = ({ className, variant = "default" }: RateCard1Props) => {
 
   return (
     <section
-      id="ongoing-care"
+      id="pricing"
       className={cn(
         "rate-card1 scroll-mt-24",
         variant === "landing" && "rate-card1--landing",
         className,
       )}
       aria-labelledby="rate-card1-heading"
+      data-section="ongoing-care"
     >
-      <div className="container rate-card1__layout">
+      <div id="ongoing-care" className="container rate-card1__layout">
         <aside className="rate-card1__sidebar">
           <div className="rate-card1__heading-wrap">
-            <p className="rate-card1__eyebrow">ONGOING CARE</p>
+            <p className="rate-card1__eyebrow">WHAT&apos;S INCLUDED</p>
             <h2 id="rate-card1-heading" className="rate-card1__heading">
               WHAT YOUR SUBSCRIPTION BUYS EACH MONTH
             </h2>
             <p className="rate-card1__lead">
-              One flat <strong>£39/month</strong> from go-live, billed automatically. Booking, shop, admin, hosting,
+              One flat <strong>£{SAAS_MONTHLY_GBP}/month</strong>, billed automatically. Booking, shop, admin, hosting,
               SSL, domain renewal, support and platform updates — <strong>{copy.leadCommissionLabel}</strong> on
               bookings and retail. Standard Stripe payment-processing fees still apply.
             </p>
@@ -82,26 +84,34 @@ const RateCard1 = ({ className, variant = "default" }: RateCard1Props) => {
           <div className="rate-card1__price-block">
             <div
               className="rate-card1__plan-block rate-card1__plan-block--solo"
-              aria-label="Ongoing monthly care"
+              aria-label="Monthly subscription"
             >
-              <p className="rate-card1__plan-title">Ongoing Care</p>
+              <p className="rate-card1__plan-title">Monthly subscription</p>
               <p className="rate-card1__price">
-                £39 <span>/ month</span>
+                £{SAAS_MONTHLY_GBP} <span>/ month</span>
               </p>
+              <p className="rate-card1__plan-subtext">{copy.planSubtext}</p>
               <ul className="rate-card1__conditions">
                 {copy.ongoingCareBullets.map((condition) => (
                   <li key={condition}>{condition}</li>
                 ))}
               </ul>
+              <a
+                href="/admin/launch"
+                className="btn btn--primary rate-card1__cta"
+                data-track="saas_subscribe_click"
+              >
+                {copy.ctaLabel}
+              </a>
             </div>
             <p className="rate-card1__plan-note">
-              Your setup fee (£199 or £299) is separate; Care is mandatory from go-live. No minimum term. Cancel anytime
-              — service stays active until the end of the paid month. {PRICE_VAT_DISCLAIMER}
+              No setup fee. No minimum term. Cancel anytime — service stays active until the end of the paid month.{' '}
+              {PRICE_VAT_DISCLAIMER}
             </p>
           </div>
         </aside>
 
-        <ol className="rate-card1__steps" aria-label="What we deliver inside Ongoing Care">
+        <ol className="rate-card1__steps" aria-label="What we deliver with your subscription">
           {careFeatures.map(({ Icon, title, description }) => (
             <li key={title} className="rate-card1__step-item">
               <div className="rate-card1__step-icon" aria-hidden="true">

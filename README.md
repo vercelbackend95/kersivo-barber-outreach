@@ -23,7 +23,7 @@ Astro + React (TypeScript) booking + shop system for barbershops.
    npx prisma generate
    ```
 5. Configure environment:
-   - `RESEND_API_KEY`: required for real email delivery via Resend.
+   - `RESEND_API_KEY`: **required in production** for real email delivery via Resend. Without it, production APIs refuse to report form/mail success (so Ads/lead conversions cannot fire on a fake send). In local development only, missing key falls back to `[DEV EMAIL]` console logs.
    - `FROM_EMAIL`: sender identity used by Resend (must be verified in your Resend account).
    - `CONTACT_INBOX_EMAIL`: inbox that receives landing page contact/setup inquiries (defaults to `FROM_EMAIL` if unset).
    - `SETUP_ONBOARDING_FORM_URL`: Tally (or other) onboarding form URL linked from setup deposit confirmation emails.
@@ -48,7 +48,15 @@ Astro + React (TypeScript) booking + shop system for barbershops.
          `http://<your-lan-ip>:4321/api/auth/callback/google`
          (update when your LAN IP changes; otherwise Google returns `redirect_uri_mismatch`).
      - Optional: `BETTER_AUTH_TRUSTED_ORIGINS` — comma-separated extra origins for auth CSRF checks.
-   - If `RESEND_API_KEY` is missing, the app falls back to console logs for outgoing email contents.
+
+### Pre-Ads email checklist (production)
+Before running Google Ads against the live site, confirm:
+1. `RESEND_API_KEY` is set in the **Production** environment (Vercel).
+2. `FROM_EMAIL` is a Resend-verified sender (not only `onboarding@resend.dev` for real customers).
+3. `CONTACT_INBOX_EMAIL` receives mail (test with your own address).
+4. Submit the homepage **contact** form → expect `200` + inbox message; GA event `setup_enquiry_submit` only after success.
+5. Submit **Send yourself the demo & pricing** → expect inbox lead + visitor email; GA event `demo_pricing_capture_submit` only after both succeed.
+6. With `RESEND_API_KEY` temporarily unset in a production-like deploy, both forms must show an error and must **not** fire lead events.
 
 
 6. Run app:
@@ -64,9 +72,11 @@ Astro + React (TypeScript) booking + shop system for barbershops.
 4. Stripe webhook endpoint (production): `https://kersivo.co.uk/api/shop/webhook` — register this URL in the Stripe Dashboard and set `STRIPE_WEBHOOK_SECRET` in Vercel.
    - **Test mode:** add the same endpoint under Stripe **Test** webhooks (or use `stripe listen`) and use the **test** signing secret with `sk_test_…` keys. Sandbox `cs_test_…` checkouts will not fulfil if only a Live webhook is configured.
    - **Live mode:** separate Live webhook + `whsec_…` + `sk_live_…`. Never mix test events with the live signing secret.
-5. `SETUP_ONBOARDING_FORM_URL`: your Tally onboarding form link (e.g. `https://tally.so/r/XXXXX`). Sent to clients in the setup deposit confirmation email and shown on `/setup/success` after verified payment.
+5. `SETUP_ONBOARDING_FORM_URL`: your Tally onboarding form link (e.g. `https://tally.so/r/XXXXX`). Sent to clients in the subscription confirmation email and shown on `/setup/success` after verified payment.
 
-## Setup deposit flow test
+## Subscription checkout flow test (default offer)
+
+Public pricing is pure SaaS (£39/month) when `SHOW_SETUP_PLAN_CARDS` is `false` in [`src/lib/pricing/offerMode.ts`](src/lib/pricing/offerMode.ts). Setup packages remain in code for a later return.
 
 1. Run the dev server:
    ```bash
@@ -77,11 +87,18 @@ Astro + React (TypeScript) booking + shop system for barbershops.
    stripe listen --forward-to localhost:4321/api/shop/webhook
    ```
    Copy the signing secret into `.env` as `STRIPE_WEBHOOK_SECRET`.
-3. Open the homepage, click **Launch** (or Priority) under Pricing, fill in the setup deposit modal, and pay with Stripe test card `4242 4242 4242 4242`.
+3. Open the homepage, click **Get started — £39/mo** under Pricing, complete Launch Wizard details, and pay with Stripe test card `4242 4242 4242 4242`.
 4. Confirm:
-   - A `SetupDeposit` row exists in the database (correct plan, `depositPence`, `stripeSessionId`).
-   - Customer confirmation + internal notification emails (via Resend, or `[DEV EMAIL]` logs if `RESEND_API_KEY` is unset).
+   - A `SaasSubscription` row exists in the database (`ACTIVE`, `monthlyPence`, `stripeSessionId`).
+   - Customer confirmation + internal notification emails (via Resend in production; `[DEV EMAIL]` console logs only in local development when `RESEND_API_KEY` is unset).
    - Replaying the same webhook returns `{ ok: true, duplicate: true }` without a second DB row.
+
+## Setup deposit flow test (when setup fees re-enabled)
+
+Set `SHOW_SETUP_PLAN_CARDS = true` in `offerMode.ts`, then:
+
+1. Open the homepage, click **Launch** (or Priority) under Pricing, complete the wizard, and pay with Stripe test card `4242 4242 4242 4242`.
+2. Confirm a `SetupDeposit` row exists (correct plan, `depositPence`, `stripeSessionId`).
 
 ## Stripe local webhook testing (end-to-end)
 1. Set `STRIPE_SECRET_KEY` in `.env`.
@@ -138,7 +155,7 @@ Astro + React (TypeScript) booking + shop system for barbershops.
 5. Verify order appears in Admin → Shop → Orders as `PAID`.
 6. Open order details and click **Mark as collected**.
 7. Verify status updates to `COLLECTED`.
-8. Verify customer receives email subject: `Order confirmed — pick up in store` (via Resend, or console log fallback).
+8. Verify customer receives email subject: `Order confirmed — pick up in store` (via Resend in production; console `[DEV EMAIL]` log only in local development when `RESEND_API_KEY` is unset).
 
 ## SSR build on Vercel
 SSR build requires adapter; use Vercel adapter + output: server.

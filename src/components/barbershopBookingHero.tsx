@@ -65,14 +65,14 @@ const BarbershopBookingHero = ({ className }: BarbershopBookingHeroProps) => {
 
             <div className="hero227-mid-band w-full max-w-3xl space-y-3 px-1 sm:px-2">
               <p className="hero227-price-line">
-                Launch from &pound;199 setup + &pound;39/month Care.
+                &pound;39/month. Price shown are final.
               </p>
               <div className="hero227-cta-pill flex flex-wrap items-center justify-center gap-3">
                 <Button
                   className="hero227-cta-system text-md flex h-full items-center justify-center rounded-2xl font-medium"
                   asChild
                 >
-                  <a href="#pricing" data-track="plan_my_setup_click">Plan My Setup</a>
+                  <a href="#pricing" data-track="plan_my_setup_click">Get started</a>
                 </Button>
                 <Button
                   type="button"

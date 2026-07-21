@@ -8,6 +8,16 @@ type StripeCheckoutParams = {
   metadata: Record<string, string>;
 };
 
+type StripeSubscriptionCheckoutParams = {
+  customerEmail?: string;
+  successUrl: string;
+  cancelUrl: string;
+  productId: string;
+  name: string;
+  unitAmount: number;
+  metadata: Record<string, string>;
+};
+
 export type StripeSession = {
   id: string;
   url?: string;
@@ -17,6 +27,7 @@ export type StripeSession = {
   customer_email?: string | null;
   customer_details?: { email?: string | null } | null;
   payment_intent?: string | { id?: string } | null;
+  subscription?: string | { id?: string } | null;
   metadata?: Record<string, string>;
 };
 
@@ -77,6 +88,51 @@ export async function createCheckoutSession(params: StripeCheckoutParams): Promi
   return { id: session.id, url: session.url };
 }
 
+export async function createSubscriptionCheckoutSession(
+  params: StripeSubscriptionCheckoutParams,
+): Promise<{ id: string; url: string }> {
+  const secretKey = getSecretKey();
+  const body = new URLSearchParams();
+  body.set('mode', 'subscription');
+  body.set('success_url', params.successUrl);
+  body.set('cancel_url', params.cancelUrl);
+  body.set('payment_method_types[0]', 'card');
+  const customerEmail = params.customerEmail?.trim();
+  if (customerEmail) {
+    body.set('customer_email', customerEmail);
+  }
+
+  body.set('line_items[0][price_data][currency]', 'gbp');
+  body.set('line_items[0][price_data][unit_amount]', String(params.unitAmount));
+  body.set('line_items[0][price_data][recurring][interval]', 'month');
+  body.set('line_items[0][price_data][product_data][name]', params.name);
+  body.set('line_items[0][price_data][product_data][metadata][productId]', params.productId);
+  body.set('line_items[0][quantity]', '1');
+
+  Object.entries(params.metadata).forEach(([key, value]) => {
+    body.set(`metadata[${key}]`, value);
+  });
+
+  const response = await fetch(`${STRIPE_API_BASE}/checkout/sessions`, {
+    method: 'POST',
+    headers: {
+      Authorization: `Bearer ${secretKey}`,
+      'Content-Type': 'application/x-www-form-urlencoded',
+    },
+    body,
+  });
+
+  if (!response.ok) {
+    const text = await response.text();
+    throw new Error(`Stripe subscription checkout failed (${response.status}): ${text}`);
+  }
+
+  const session = (await response.json()) as StripeSession;
+  if (!session.url) throw new Error('Stripe did not return checkout URL.');
+
+  return { id: session.id, url: session.url };
+}
+
 export async function retrieveCheckoutSession(sessionId: string): Promise<StripeSession> {
   const secretKey = getSecretKey();
   const response = await fetch(
@@ -99,6 +155,13 @@ export function getCheckoutPaymentIntentId(session: StripeSession): string | nul
   const pi = session.payment_intent;
   if (typeof pi === 'string' && pi.trim()) return pi.trim();
   if (pi && typeof pi === 'object' && typeof pi.id === 'string' && pi.id.trim()) return pi.id.trim();
+  return null;
+}
+
+export function getCheckoutSubscriptionId(session: StripeSession): string | null {
+  const sub = session.subscription;
+  if (typeof sub === 'string' && sub.trim()) return sub.trim();
+  if (sub && typeof sub === 'object' && typeof sub.id === 'string' && sub.id.trim()) return sub.id.trim();
   return null;
 }
 

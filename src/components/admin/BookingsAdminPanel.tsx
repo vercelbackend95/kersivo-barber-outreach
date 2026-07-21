@@ -33,6 +33,7 @@ import { ADMIN_BOOKING_HISTORY_PAGE_SIZE } from '../../lib/admin/bookingHistoryP
 import { canShopAdminCancelByLeadTime } from '../../lib/booking/policies';
 import { countBookingsByStatusTone, getBookingStatusTone, isCancelledBookingStatus } from './bookingStatus';
 import { adminFetchJson, notifyAdminDemoBlocked } from './adminAuth';
+import { normalizeWorkingHourRows } from '../../lib/admin/normalizeWorkingHourRows';
 type Booking = {
   id: string;
   barberId: string;
@@ -1538,9 +1539,7 @@ export default function BookingsAdminPanel({ isActive, mode, onBackToDashboard, 
     const response = await fetch(`/api/admin/barbers/${barberId}/rules`, { credentials: 'include' });
     const payload: WorkingHoursResponse = await response.json().catch(() => ({}));
     if (response.ok) {
-      const rules = payload.rules ?? [];
-      setWorkingHours(rules.sort((a, b) => a.dayOfWeek - b.dayOfWeek));
-
+      setWorkingHours(normalizeWorkingHourRows(payload.rules));
     }
     setWorkingHoursLoading(false);
   }, []);
@@ -1599,7 +1598,7 @@ export default function BookingsAdminPanel({ isActive, mode, onBackToDashboard, 
       return false;
     }
         if (payload.rules) {
-      setWorkingHours(payload.rules.sort((a, b) => a.dayOfWeek - b.dayOfWeek));
+      setWorkingHours(normalizeWorkingHourRows(payload.rules));
     }
 
     setBarberSaveMessage('Working hours saved.');
@@ -2449,7 +2448,16 @@ export default function BookingsAdminPanel({ isActive, mode, onBackToDashboard, 
         />
       )}
 
-      {barberProfileView}
+      {barberProfileView ? (
+        <AdminErrorBoundary
+          key={selectedBarberId ?? 'barber-profile'}
+          label="Barber profile"
+          onDismiss={handleBarberProfileBack}
+          dismissLabel="Close profile"
+        >
+          {barberProfileView}
+        </AdminErrorBoundary>
+      ) : null}
 
       <HistoryBookingStatusSheet
         booking={historyStatusBooking}

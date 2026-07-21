@@ -10,8 +10,7 @@ const { className = '' } = Astro.props as Props;
  * Aligned VAT / SMS / deposit with confirmed commercial rules 13 Jul 2026.
  */
 const feeBreakdown = [
-  { label: 'Setup', value: '\u00a3199 or \u00a3299', detail: 'one-time, 50% deposit to start, remaining 50% before go-live' },
-  { label: 'Ongoing Care', value: '\u00a339/month', detail: 'hosting, SSL, domain renewal, email reminders, support, platform updates, 1h minor changes/month' },
+  { label: 'Subscription', value: '\u00a339/month', detail: 'site, booking, admin, shop setup, hosting, SSL, domain renewal, email reminders, support, platform updates, 1h minor changes/month' },
   { label: 'Bookings + retail', value: '0% KERSIVO', detail: '0% KERSIVO commission. Standard Stripe payment-processing fees still apply.' },
   { label: 'Online card payments', value: 'Stripe standard', detail: 'public retail demo is simulation-only; live shop connected to your Stripe at go-live' },
   { label: 'Cash in-shop', value: '0% Stripe', detail: 'no card gateway fee on cash payments' },
@@ -19,9 +18,9 @@ const feeBreakdown = [
 
 const guarantees = [
   {
-    title: 'Pay 50% to start, remaining 50% before go-live',
+    title: 'No setup fee — £39/month',
     body:
-      'Work begins after the deposit, completed onboarding and the start of project delivery. If you cancel before work begins, we refund the deposit. Once work begins, the deposit is non-refundable.',
+      'Subscribe monthly. Cancel anytime; service stays active until the end of the paid month.',
   },
   {
     title: 'Stay on your current system until tested',
@@ -86,7 +85,7 @@ const measureSteps = [
             ))}
           </ul>
           <p class="trust-block__panel-anchor">
-            Setup + monthly Care + Stripe on online cards. Prices shown are final. KERSIVO is not currently VAT registered, so no VAT is added.
+            £39/month + Stripe on online cards. No setup fee. Prices shown are final. KERSIVO is not currently VAT registered, so no VAT is added.
           </p>
         </article>
 

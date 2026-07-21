@@ -22,6 +22,7 @@ import { resolveLandingDemoBarbers } from '@/lib/landing/landingDemoBarbers';
 import { resolveLandingBookingData } from '@/lib/landing/landingBookingData';
 import { Pricing36 } from '../components/pricing36';
 import { RateCard1 } from '../components/rateCard1';
+import { SHOW_SETUP_PLAN_CARDS } from '@/lib/pricing/offerMode';
 import BarbershopBookingHero from '@/components/barbershopBookingHero.astro';
 import '../styles/components/system-chooser.css';
 import '../styles/components/hero227.css';
@@ -59,9 +60,11 @@ const currentYear = new Date().getFullYear();
     <BarbershopBookingHero />
     <LandingValueCards />
     <LandingDemoPreview retailProducts={carouselProducts} barbers={demoBarbers} bookingData={landingBookingData} />
-    <Pricing36 client:visible={{ rootMargin: '200px' }} variant="landing" />
-    <LandingDemoCapture />
+    {SHOW_SETUP_PLAN_CARDS ? (
+      <Pricing36 client:visible={{ rootMargin: '200px' }} variant="landing" />
+    ) : null}
     <RateCard1 variant="landing" />
+    <LandingDemoCapture />
     <LandingPostPurchaseSteps />
     <LandingSwitcherReassurance />
     <LandingDifference />
@@ -71,7 +74,7 @@ const currentYear = new Date().getFullYear();
       subHeading="Clear answers on commission, fees, switching, setup and what happens after purchase."
       supportHeading="Still deciding?"
       supportText="Explore the live demo or go straight to your setup package when you are ready."
-      supportLinkLabel="Plan My Setup"
+      supportLinkLabel="Get started"
       supportLinkHref="#pricing"
       supportSecondaryLinkLabel="View Live Demo"
       supportSecondaryLinkOpensDemo={true}

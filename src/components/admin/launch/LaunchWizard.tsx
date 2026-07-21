@@ -1,7 +1,8 @@
 import { useEffect, useState } from 'react';
 
 import { Pricing36PlanCards } from '@/components/pricing/Pricing36PlanCards';
-import { ONGOING_CARE_MONTHLY_GBP } from '@/lib/seo/defaults';
+import { ENABLE_SETUP_FEES } from '@/lib/pricing/offerMode';
+import { SAAS_MONTHLY_GBP } from '@/lib/seo/defaults';
 import { getSetupPlan, isSetupPlanId, type SetupPlanId } from '@/lib/setup/plans';
 import { formatGbp } from '@/lib/shop/money';
 
@@ -141,12 +142,6 @@ function draftFromWorkspace(workspace: LaunchWorkspace): WorkspaceDraft {
   };
 }
 
-function formatBarbersLine(barbers: LaunchBarber[]): string {
-  const names = barbers.map((barber) => barber.name.trim()).filter(Boolean);
-  if (names.length === 0) return '0';
-  return `${names.length} — ${names.join(', ')}`;
-}
-
 function validateGuestDraft(draft: WorkspaceDraft): string | null {
   if (draft.name.trim().length < 2) return 'Name must be at least 2 characters.';
   const email = draft.email.trim().toLowerCase();
@@ -187,12 +182,15 @@ export default function LaunchWizard() {
         if (response.status === 401) {
           if (cancelled) return;
           setMode('guest');
-          if (queryPlan) {
+          if (ENABLE_SETUP_FEES && queryPlan) {
             setPlanId(queryPlan);
             setGuestPhase('details');
             setStep(1);
-          } else {
+          } else if (ENABLE_SETUP_FEES) {
             setGuestPhase('choose');
+            setStep(1);
+          } else {
+            setGuestPhase('details');
             setStep(1);
           }
           setLoading(false);
@@ -214,7 +212,9 @@ export default function LaunchWizard() {
         setMode('session');
         setWorkspace(workspaceFromPayload(data.shop, data.user));
 
-        if (queryPlan) {
+        if (!ENABLE_SETUP_FEES) {
+          setStep(2);
+        } else if (queryPlan) {
           setPlanId(queryPlan);
           setStep(2);
         } else if (wantStep2 && data.pending?.plan) {
@@ -382,7 +382,8 @@ export default function LaunchWizard() {
   };
 
   const handlePay = async () => {
-    if (!planId || paying || editingWorkspace || !workspace) return;
+    if (paying || editingWorkspace || !workspace) return;
+    if (ENABLE_SETUP_FEES && !planId) return;
     if (!termsAccepted) {
       setError('Please accept the Terms to continue.');
       return;
@@ -392,6 +393,50 @@ export default function LaunchWizard() {
     setError(null);
 
     try {
+      if (!ENABLE_SETUP_FEES) {
+        if (isGuest) {
+          const barberNames = workspace.barbers.map((b) => b.name.trim()).filter(Boolean);
+          const response = await fetch('/api/setup/subscription-checkout', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              name: (workspace.name ?? '').trim(),
+              email: (workspace.email ?? '').trim().toLowerCase(),
+              shopName: workspace.shopName.trim(),
+              shopSize: shopSizeFromBarberCount(barberNames.length),
+              currentStack: 'landing',
+              townCity: workspace.townCity,
+              barbers: barberNames.join(', '),
+              attribution: collectAttribution(),
+            }),
+          });
+
+          const data = (await response.json()) as { url?: string; error?: string };
+          if (!response.ok || !data.url) {
+            throw new Error(data.error || 'Unable to start checkout.');
+          }
+          window.location.href = data.url;
+          return;
+        }
+
+        const response = await fetch('/api/setup/launch-subscription-checkout', {
+          method: 'POST',
+          credentials: 'include',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            attribution: collectAttribution(),
+          }),
+        });
+
+        const data = (await response.json()) as { url?: string; error?: string };
+        if (!response.ok || !data.url) {
+          throw new Error(data.error || 'Unable to start checkout.');
+        }
+
+        window.location.href = data.url;
+        return;
+      }
+
       if (isGuest) {
         const barberNames = workspace.barbers.map((b) => b.name.trim()).filter(Boolean);
         const response = await fetch('/api/setup/deposit-checkout', {
@@ -453,6 +498,11 @@ export default function LaunchWizard() {
       return;
     }
 
+    if (!ENABLE_SETUP_FEES) {
+      window.location.assign('/');
+      return;
+    }
+
     setStep(1);
   };
 
@@ -473,10 +523,11 @@ export default function LaunchWizard() {
   }
 
   const showChoosePlan =
-    (!isGuest && step === 1) || (isGuest && guestPhase === 'choose');
+    ENABLE_SETUP_FEES && ((!isGuest && step === 1) || (isGuest && guestPhase === 'choose'));
   const showGuestDetails = isGuest && guestPhase === 'details';
-  const showReview =
-    (!isGuest && step === 2 && plan) || (isGuest && guestPhase === 'review' && plan && workspace);
+  const showReview = ENABLE_SETUP_FEES
+    ? (!isGuest && step === 2 && plan) || (isGuest && guestPhase === 'review' && plan && workspace)
+    : (!isGuest && step === 2 && workspace) || (isGuest && guestPhase === 'review' && workspace);
 
   return (
     <div className="admin-onboarding admin-launch">
@@ -525,13 +576,17 @@ export default function LaunchWizard() {
               Tell us about your shop
             </h1>
             <p className="admin-onboarding__description">
-              We use these details to prepare your launch and keep your deposit tied to the right
-              shop.
+              We use these details to prepare your KERSIVO system and keep your subscription tied to
+              the right shop.
             </p>
 
-            {plan ? (
+            {ENABLE_SETUP_FEES && plan ? (
               <p className="admin-launch__selected-plan">
                 Selected plan: <strong>{plan.name}</strong>
+              </p>
+            ) : !ENABLE_SETUP_FEES ? (
+              <p className="admin-launch__selected-plan">
+                Subscription: <strong>£{SAAS_MONTHLY_GBP}/month</strong>
               </p>
             ) : null}
 
@@ -656,10 +711,10 @@ export default function LaunchWizard() {
           </section>
         ) : null}
 
-        {showReview && plan && workspace ? (
+        {showReview && workspace ? (
           <section className="admin-launch__step" aria-labelledby="launch-step2-title">
             <h1 id="launch-step2-title" className="admin-onboarding__title">
-              Review your launch
+              {ENABLE_SETUP_FEES ? 'Review your launch' : 'Review your subscription'}
             </h1>
 
             <div className="admin-onboarding__summary-card admin-launch__review admin-launch__workspace">
@@ -864,51 +919,61 @@ export default function LaunchWizard() {
                       <span className="admin-launch__review-value">{workspace.townCity}</span>
                     </div>
                   ) : null}
-                  <div className="admin-launch__review-row">
-                    <span className="admin-launch__review-label">Barbers</span>
-                    <span className="admin-launch__review-value">
-                      {formatBarbersLine(workspace.barbers)}
-                    </span>
-                  </div>
                 </>
               )}
             </div>
 
             <div className="admin-onboarding__summary-card admin-launch__review">
               <p className="admin-launch__card-heading">Your plan</p>
-              <div className="admin-launch__review-row">
-                <span className="admin-launch__review-label">Plan</span>
-                <span className="admin-launch__review-value">{plan.name}</span>
-              </div>
-              <div className="admin-launch__review-row">
-                <span className="admin-launch__review-label">Total setup fee</span>
-                <span className="admin-launch__review-value">{formatGbp(plan.setupTotalPence)}</span>
-              </div>
-              <div className="admin-launch__review-row">
-                <span className="admin-launch__review-label">Deposit due now</span>
-                <span className="admin-launch__review-value">{formatGbp(plan.depositPence)}</span>
-              </div>
-              <div className="admin-launch__review-row">
-                <span className="admin-launch__review-label">Remaining before go-live</span>
-                <span className="admin-launch__review-value">{formatGbp(plan.remainingPence)}</span>
-              </div>
-              <div className="admin-launch__review-row">
-                <span className="admin-launch__review-label">Ongoing Care</span>
-                <span className="admin-launch__review-value">
-                  £{ONGOING_CARE_MONTHLY_GBP}/month from go-live
-                </span>
-              </div>
+              {ENABLE_SETUP_FEES && plan ? (
+                <>
+                  <div className="admin-launch__review-row">
+                    <span className="admin-launch__review-label">Plan</span>
+                    <span className="admin-launch__review-value">{plan.name}</span>
+                  </div>
+                  <div className="admin-launch__review-row">
+                    <span className="admin-launch__review-label">Total setup fee</span>
+                    <span className="admin-launch__review-value">{formatGbp(plan.setupTotalPence)}</span>
+                  </div>
+                  <div className="admin-launch__review-row">
+                    <span className="admin-launch__review-label">Deposit due now</span>
+                    <span className="admin-launch__review-value">{formatGbp(plan.depositPence)}</span>
+                  </div>
+                  <div className="admin-launch__review-row">
+                    <span className="admin-launch__review-label">Remaining before go-live</span>
+                    <span className="admin-launch__review-value">{formatGbp(plan.remainingPence)}</span>
+                  </div>
+                  <div className="admin-launch__review-row">
+                    <span className="admin-launch__review-label">Ongoing Care</span>
+                    <span className="admin-launch__review-value">
+                      £{SAAS_MONTHLY_GBP}/month from go-live
+                    </span>
+                  </div>
+                </>
+              ) : (
+                <>
+                  <div className="admin-launch__review-row">
+                    <span className="admin-launch__review-label">Subscription</span>
+                    <span className="admin-launch__review-value">Monthly</span>
+                  </div>
+                  <div className="admin-launch__review-row">
+                    <span className="admin-launch__review-label">Billed</span>
+                    <span className="admin-launch__review-value">£{SAAS_MONTHLY_GBP}/month</span>
+                  </div>
+                </>
+              )}
             </div>
             <p className="admin-onboarding__description">
-              {formatGbp(plan.depositPence)} today. The remaining {formatGbp(plan.remainingPence)}{' '}
-              is due before launch. Your £{ONGOING_CARE_MONTHLY_GBP}/month Ongoing Care starts only
-              when you go live.
+              {ENABLE_SETUP_FEES && plan
+                ? `${formatGbp(plan.depositPence)} today. The remaining ${formatGbp(plan.remainingPence)} is due before launch. Your £${SAAS_MONTHLY_GBP}/month Ongoing Care starts only when you go live.`
+                : `£${SAAS_MONTHLY_GBP}/month billed today via Stripe. Cancel anytime — service stays active until the end of the paid month.`}
             </p>
             <div className="admin-launch__next">
               <p className="admin-launch__next-heading">What happens next?</p>
               <p className="admin-launch__next-body">
-                We review your saved setup, confirm your launch details and begin preparing your
-                KERSIVO system. Your monthly Care does not start until go-live.
+                {ENABLE_SETUP_FEES
+                  ? 'We review your saved setup, confirm your launch details and begin preparing your KERSIVO system. Your monthly Care does not start until go-live.'
+                  : 'We review your details and begin preparing your booking website, admin dashboard and retail pickup shop. Nothing goes live without your review.'}
               </p>
             </div>
             <label className="admin-launch__terms">
@@ -924,7 +989,9 @@ export default function LaunchWizard() {
                 <a href="/terms" target="_blank" rel="noopener noreferrer">
                   Terms
                 </a>{' '}
-                and understand the deposit starts my setup.
+                {ENABLE_SETUP_FEES
+                  ? 'and understand the deposit starts my setup.'
+                  : 'and understand I am starting a £39/month subscription.'}
               </span>
             </label>
           </section>
@@ -939,7 +1006,7 @@ export default function LaunchWizard() {
 
       <footer className="admin-onboarding__footer">
         <div className="admin-onboarding__footer-row">
-          {showReview && plan ? (
+          {showReview ? (
             <>
               <button
                 type="button"
@@ -947,7 +1014,7 @@ export default function LaunchWizard() {
                 onClick={goBackFromReview}
                 disabled={paying || savingWorkspace}
               >
-                {isGuest ? 'Back' : 'Change plan'}
+                {isGuest ? 'Back' : ENABLE_SETUP_FEES ? 'Change plan' : 'Back to KERSIVO'}
               </button>
               <button
                 type="button"
@@ -956,7 +1023,11 @@ export default function LaunchWizard() {
                 disabled={!termsAccepted || paying || editingWorkspace}
                 aria-busy={paying}
               >
-                {paying ? 'Redirecting…' : `Pay ${formatGbp(plan.depositPence)} Deposit`}
+                {paying
+                  ? 'Redirecting…'
+                  : ENABLE_SETUP_FEES && plan
+                    ? `Pay ${formatGbp(plan.depositPence)} Deposit`
+                    : `Subscribe — £${SAAS_MONTHLY_GBP}/month`}
               </button>
             </>
           ) : null}
@@ -967,7 +1038,7 @@ export default function LaunchWizard() {
                 type="button"
                 className="btn btn--secondary btn--lg"
                 onClick={() => {
-                  if (planFromQuery) {
+                  if (!ENABLE_SETUP_FEES || planFromQuery) {
                     window.location.assign('/#pricing');
                     return;
                   }
@@ -975,13 +1046,13 @@ export default function LaunchWizard() {
                   setWorkspaceError(null);
                 }}
               >
-                {planFromQuery ? 'Change plan' : 'Back'}
+                {!ENABLE_SETUP_FEES || planFromQuery ? 'Back to pricing' : 'Back'}
               </button>
               <button
                 type="button"
                 className="btn btn--primary btn--lg"
                 onClick={continueGuestDetails}
-                disabled={!planId}
+                disabled={ENABLE_SETUP_FEES && !planId}
               >
                 Continue
               </button>
@@ -993,10 +1064,10 @@ export default function LaunchWizard() {
               type="button"
               className="btn btn--secondary btn--lg"
               onClick={() => {
-                window.location.assign(isGuest ? '/' : '/admin');
+                window.location.assign(isGuest || !ENABLE_SETUP_FEES ? '/' : '/admin');
               }}
             >
-              {isGuest ? 'Back to home' : 'Back to admin'}
+              {isGuest || !ENABLE_SETUP_FEES ? 'Back to KERSIVO' : 'Back to admin'}
             </button>
           ) : null}
         </div>

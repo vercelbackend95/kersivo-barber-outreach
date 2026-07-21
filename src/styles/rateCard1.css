@@ -103,6 +103,23 @@
   color: var(--accent);
 }
 
+.rate-card1__plan-subtext {
+  margin: 0.55rem 0 0;
+  font-size: 0.95rem;
+  line-height: 1.5;
+  color: var(--muted);
+}
+
+.rate-card1__cta {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  margin-top: 1.15rem;
+  text-align: center;
+  text-decoration: none;
+}
+
 .rate-card1__price {
   margin: 0.35rem 0 0;
   font-family: "Bebas Neue", sans-serif;

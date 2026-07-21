@@ -18,12 +18,12 @@ const BRAND_FACTS: KnowledgeSection = {
   body: [
     'Kersivo builds branded booking + retail systems for UK barbershops on the shop’s own domain.',
     '0% KERSIVO commission on bookings and retail. Standard Stripe payment-processing fees still apply; cash in-shop can mean 0% processing.',
-    'Pricing: Launch £199 or Priority Growth £299 one-time setup + Ongoing Care £39/month from go-live (mandatory, auto-billed). Prices shown are final. KERSIVO is not currently VAT registered, so no VAT is added.',
-    'Care includes: hosting, SSL, platform/security updates, maintenance, support, domain renewal, transactional emails, booking/admin/retail, up to 1h minor changes/month, email appointment reminders.',
-    'Deposit: 50% to start; remaining 50% before go-live. Work begins after deposit + completed onboarding + delivery start. Refund if cancel before work; non-refundable once work begins; 30-day unresponsive after work begins may close project and retain deposit; refund if KERSIVO cannot deliver.',
+    'Pricing: £39/month subscription (no setup fee), billed automatically. Prices shown are final. KERSIVO is not currently VAT registered, so no VAT is added.',
+    'Subscription includes: custom site + booking + admin + pickup shop setup, hosting, SSL, platform/security updates, maintenance, support, domain renewal, transactional emails, booking/admin/retail, up to 1h minor changes/month, email appointment reminders.',
+    'Cancel anytime — service stays active until the end of the paid month.',
     'Currently onboarding founding UK barbershops with closer setup support; switchers can keep their current booking system live until go-live is confirmed.',
     'Clients book in the browser — no app download, no forced account creation.',
-    'Customer owns domain, brand, content, client relationship and exported data (free CSV: name, email, phone, booking history during Care + 30 days after). KERSIVO owns platform/code/infra; Care is a licence.',
+    'Customer owns domain, brand, content, client relationship and exported data (free CSV: name, email, phone, booking history during subscription + 30 days after). KERSIVO owns platform/code/infra; subscription is a licence.',
     'Do not invent competitor commission rates, monthly cost corridors, or savings figures. Do not claim Booksy takes 30% per booking.',
   ].join('\n'),
 };

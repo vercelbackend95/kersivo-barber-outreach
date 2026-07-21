@@ -121,12 +121,12 @@ export function getNavbar17Items(variant: Navbar17Variant = 'default'): Navbar17
 
 export function getNavbar17CtaLabel(variant: Navbar17Variant = 'default'): string {
   if (variant === 'landing' || variant === 'shop' || variant === 'testShop') return 'Build My Preview';
-  return 'Plan my setup';
+  return 'Get started';
 }
 
 export function getNavbar17CtaHref(variant: Navbar17Variant = 'default'): string {
   if (variant === 'landing' || variant === 'shop' || variant === 'testShop') return '/admin/onboarding';
-  return '/#book-demo';
+  return '/#pricing';
 }
 
 export function navbar17ShowsCart(variant: Navbar17Variant = 'default'): boolean {

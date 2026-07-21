@@ -2,7 +2,7 @@
 import MinimalLayout from '@/layouts/MinimalLayout.astro';
 import { PAGE_DESCRIPTIONS } from '@/lib/seo/defaults';
 import { getSetupOnboardingFormUrlOrEmpty } from '@/lib/email/sender';
-import { resolveSetupDepositSuccessView } from '@/lib/setup/verifySetupDepositSession';
+import { resolveSetupSuccessView } from '@/lib/setup/verifySetupSuccessSession';
 import '@/styles/tokens.css';
 import '@/styles/fonts-landing.css';
 import '@/styles/global.css';
@@ -11,13 +11,18 @@ import '@/styles/components/setup-status.css';
 import '@/styles/components/setup-success.css';
 
 const sessionId = Astro.url.searchParams.get('session_id');
-const view = await resolveSetupDepositSuccessView(sessionId);
+const view = await resolveSetupSuccessView(sessionId);
 const onboardingFormUrl = getSetupOnboardingFormUrlOrEmpty();
 const verified = view.status === 'verified' ? view : null;
+const isSubscription = verified?.kind === 'saas_subscription';
 ---
 
 <MinimalLayout
-  title={verified ? 'Setup deposit confirmed — KERSIVO' : 'Payment verification — KERSIVO'}
+  title={verified
+    ? isSubscription
+      ? 'Subscription confirmed — KERSIVO'
+      : 'Setup deposit confirmed — KERSIVO'
+    : 'Payment verification — KERSIVO'}
   description={PAGE_DESCRIPTIONS.setupSuccess}
   canonicalPath="/setup/success"
   noindex={true}
@@ -35,7 +40,89 @@ const verified = view.status === 'verified' ? view : null;
         />
       </a>
 
-      {verified ? (
+      {verified && isSubscription ? (
+        <>
+          <h1 class="setup-success__title">YOUR SUBSCRIPTION IS CONFIRMED.</h1>
+          <dl class="setup-success__facts">
+            <div>
+              <dt>Plan</dt>
+              <dd>Monthly subscription</dd>
+            </div>
+            <div>
+              <dt>Billed</dt>
+              <dd>{verified.monthlyFormatted}/month</dd>
+            </div>
+          </dl>
+          <p class="setup-success__email">
+            We’ve sent your onboarding form to <strong>{verified.customerEmail}</strong>
+          </p>
+          {onboardingFormUrl ? (
+            <a class="btn btn--primary setup-success__cta" href={onboardingFormUrl} rel="noopener noreferrer">
+              Complete Your Onboarding
+            </a>
+          ) : (
+            <p class="setup-success__note">
+              Contact <a href="mailto:hello@kersivo.co.uk">hello@kersivo.co.uk</a> for your onboarding form link.
+            </p>
+          )}
+          <div class="setup-success__actions">
+            <a class="btn btn--secondary" href="/">Back to KERSIVO</a>
+            <a class="btn btn--ghost" href="mailto:hello@kersivo.co.uk">hello@kersivo.co.uk</a>
+          </div>
+          <p class="setup-success__trust">Nothing goes live without your review.</p>
+          <p class="setup-success__ref">Reference: …{verified.shortReference}</p>
+          <script
+            is:inline
+            define:vars={{
+              transactionId: verified.transactionId,
+              value: verified.monthlyValueGbp,
+            }}
+          >
+            (function () {
+              try {
+                var key = 'saas_subscription_paid:' + transactionId;
+
+                function analyticsGranted() {
+                  try {
+                    var parts = document.cookie.split(';');
+                    for (var i = 0; i < parts.length; i++) {
+                      var part = parts[i].trim();
+                      if (part.indexOf('kersivo_consent=') === 0) {
+                        var parsed = JSON.parse(
+                          decodeURIComponent(part.slice('kersivo_consent='.length)),
+                        );
+                        return parsed && parsed.version === 1 && parsed.analytics === true;
+                      }
+                    }
+                  } catch (e) {}
+                  return false;
+                }
+
+                function fire() {
+                  if (!analyticsGranted()) return false;
+                  if (window.sessionStorage.getItem(key)) return true;
+                  if (typeof window.gtag !== 'function') return false;
+                  window.gtag('event', 'saas_subscription_paid', {
+                    transaction_id: transactionId,
+                    value: value,
+                    currency: 'GBP',
+                    transport_type: 'beacon',
+                  });
+                  window.sessionStorage.setItem(key, '1');
+                  return true;
+                }
+
+                if (fire()) return;
+                var attempts = 0;
+                var timer = window.setInterval(function () {
+                  attempts += 1;
+                  if (fire() || attempts > 20) window.clearInterval(timer);
+                }, 250);
+              } catch (e) {}
+            })();
+          </script>
+        </>
+      ) : verified && verified.kind === 'setup_deposit' ? (
         <>
           <h1 class="setup-success__title">YOUR SETUP DEPOSIT IS CONFIRMED.</h1>
           <dl class="setup-success__facts">
@@ -70,58 +157,6 @@ const verified = view.status === 'verified' ? view : null;
           </div>
           <p class="setup-success__trust">Nothing goes live without your review.</p>
           <p class="setup-success__ref">Reference: …{verified.shortReference}</p>
-          <script
-            is:inline
-            define:vars={{
-              transactionId: verified.transactionId,
-              value: verified.depositValueGbp,
-              packageSlug: verified.packageSlug,
-            }}
-          >
-            (function () {
-              try {
-                var key = 'setup_deposit_paid:' + transactionId;
-
-                function analyticsGranted() {
-                  try {
-                    var parts = document.cookie.split(';');
-                    for (var i = 0; i < parts.length; i++) {
-                      var part = parts[i].trim();
-                      if (part.indexOf('kersivo_consent=') === 0) {
-                        var parsed = JSON.parse(
-                          decodeURIComponent(part.slice('kersivo_consent='.length)),
-                        );
-                        return parsed && parsed.version === 1 && parsed.analytics === true;
-                      }
-                    }
-                  } catch (e) {}
-                  return false;
-                }
-
-                function fire() {
-                  if (!analyticsGranted()) return false;
-                  if (window.sessionStorage.getItem(key)) return true;
-                  if (typeof window.gtag !== 'function') return false;
-                  window.gtag('event', 'setup_deposit_paid', {
-                    transaction_id: transactionId,
-                    value: value,
-                    currency: 'GBP',
-                    package: packageSlug,
-                    transport_type: 'beacon',
-                  });
-                  window.sessionStorage.setItem(key, '1');
-                  return true;
-                }
-
-                if (fire()) return;
-                var attempts = 0;
-                var timer = window.setInterval(function () {
-                  attempts += 1;
-                  if (fire() || attempts > 20) window.clearInterval(timer);
-                }, 250);
-              } catch (e) {}
-            })();
-          </script>
         </>
       ) : (
         <>

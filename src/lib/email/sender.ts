@@ -21,6 +21,24 @@ export class EmailDeliveryError extends Error {
   }
 }
 
+/** True when Resend can deliver mail (API key present). */
+export function isEmailDeliveryConfigured(): boolean {
+  return Boolean(RESEND_API_KEY && String(RESEND_API_KEY).trim());
+}
+
+/**
+ * Production must have Resend configured. Local/dev may log payloads instead.
+ * Astro: import.meta.env.PROD; Node scripts: NODE_ENV === 'production'.
+ */
+function isProductionRuntime(): boolean {
+  return import.meta.env.PROD === true || process.env.NODE_ENV === 'production';
+}
+
+export function assertEmailDeliveryConfigured(): void {
+  if (!isEmailDeliveryConfigured()) {
+    throw new EmailDeliveryError('RESEND_API_KEY is not configured.', null);
+  }
+}
 
 function renderBookingSummary(input: BookingEmailBaseInput): string {
   const londonDateTime = formatInTimeZone(input.startAt, 'Europe/London', "EEEE d MMMM yyyy 'at' HH:mm");
@@ -38,8 +56,17 @@ async function sendEmail(input: {
   devLogLabel: string;
   devPayload: Record<string, string>;
 }): Promise<{ messageId: string | null }> {
+  if (!isEmailDeliveryConfigured()) {
+    // Never fake delivery success in production — forms/Ads conversions depend on real send.
+    if (isProductionRuntime()) {
+      console.error('[EMAIL] RESEND_API_KEY missing in production; refusing to report success.', {
+        to: input.to,
+        subject: input.subject,
+        label: input.devLogLabel,
+      });
+      throw new EmailDeliveryError('RESEND_API_KEY is not configured.', null);
+    }
 
-  if (!RESEND_API_KEY) {
     console.log(input.devLogLabel, input.devPayload);
     return { messageId: null };
   }
@@ -63,15 +90,18 @@ async function sendEmail(input: {
       throw new EmailDeliveryError('Resend returned an error response.', responseWithData.error);
     }
 
+    if (!messageId) {
+      throw new EmailDeliveryError('Resend did not return a message id.', responseWithData);
+    }
+
     console.info('[EMAIL] Sent', { to: input.to, subject: input.subject, messageId });
     return { messageId };
 
   } catch (error) {
-        if (error instanceof EmailDeliveryError) {
+    if (error instanceof EmailDeliveryError) {
       console.error('[EMAIL] Failed to send', { to: input.to, subject: input.subject, error, resendResponse: error.response });
       throw error;
     }
-
 
     console.error('[EMAIL] Failed to send', { to: input.to, subject: input.subject, error });
     throw new EmailDeliveryError('Failed to send email through Resend.', null, { cause: error });
@@ -225,10 +255,6 @@ export async function sendSetupDepositConfirmationEmail(input: {
   remainingFormatted: string;
   onboardingFormUrl?: string;
 }) {
-  if (!RESEND_API_KEY) {
-    throw new EmailDeliveryError('RESEND_API_KEY is not configured.', null);
-  }
-
   const onboardingFormUrl = (input.onboardingFormUrl ?? getSetupOnboardingFormUrl()).trim();
   const onboardingBlock = onboardingFormUrl
     ? `<p><strong>Next step:</strong><br/>Complete your onboarding form:<br/><a href="${escapeHtml(onboardingFormUrl)}">${escapeHtml(onboardingFormUrl)}</a></p>
@@ -283,10 +309,6 @@ export async function sendSetupDepositInternalNotificationEmail(input: {
 }) {
   const inbox = getContactInboxEmail();
 
-  if (!RESEND_API_KEY) {
-    throw new EmailDeliveryError('RESEND_API_KEY is not configured.', null);
-  }
-
   const html = `<p><strong>New KERSIVO setup deposit — ${escapeHtml(input.planName)}</strong></p>
   <p><strong>Customer:</strong> ${escapeHtml(input.customerName)}<br/>
   <strong>Email:</strong> ${escapeHtml(input.customerEmail)}<br/>
@@ -318,6 +340,93 @@ export async function sendSetupDepositInternalNotificationEmail(input: {
       shopName: input.shopName,
       planName: input.planName,
       depositFormatted: input.depositFormatted,
+      stripeSessionId: input.stripeSessionId,
+    },
+  });
+}
+
+export async function sendSaasSubscriptionConfirmationEmail(input: {
+  to: string;
+  customerName: string;
+  shopName: string;
+  monthlyFormatted: string;
+  onboardingFormUrl?: string;
+}) {
+  const onboardingFormUrl = (input.onboardingFormUrl ?? getSetupOnboardingFormUrl()).trim();
+  const onboardingBlock = onboardingFormUrl
+    ? `<p><strong>Next step:</strong><br/>Complete your onboarding form:<br/><a href="${escapeHtml(onboardingFormUrl)}">${escapeHtml(onboardingFormUrl)}</a></p>
+  <p>Please send us your services, prices, barbers, opening hours, branding, domain details and any retail products you want included.</p>`
+    : `<p><strong>Next step:</strong><br/>Reply to this email or contact <a href="mailto:hello@kersivo.co.uk">hello@kersivo.co.uk</a> for your onboarding form link.</p>`;
+
+  const html = `<p>Hi ${escapeHtml(input.customerName)},</p>
+  <p>Your KERSIVO monthly subscription is confirmed.</p>
+  <p><strong>Subscription:</strong> ${escapeHtml(input.monthlyFormatted)}/month<br/>
+  <strong>Shop:</strong> ${escapeHtml(input.shopName)}</p>
+  ${onboardingBlock}
+  <p>We will prepare your booking website, admin dashboard and retail pickup shop. Nothing goes live without your review.</p>
+  <p>Questions? Reply to this email or contact <a href="mailto:hello@kersivo.co.uk">hello@kersivo.co.uk</a>.</p>
+  <p>KERSIVO<br/>Your domain. Your brand. Your client relationship.</p>`;
+
+  return sendEmail({
+    to: input.to,
+    subject: 'Your KERSIVO subscription is confirmed',
+    replyTo: getContactInboxEmail(),
+    html,
+    devLogLabel: '[DEV EMAIL] SaaS subscription confirmation',
+    devPayload: {
+      to: input.to,
+      customerName: input.customerName,
+      shopName: input.shopName,
+      monthlyFormatted: input.monthlyFormatted,
+      onboardingFormUrl: onboardingFormUrl || '(missing SETUP_ONBOARDING_FORM_URL)',
+    },
+  });
+}
+
+export async function sendSaasSubscriptionInternalNotificationEmail(input: {
+  customerName: string;
+  customerEmail: string;
+  shopName: string;
+  shopSize: string;
+  currentStack: string;
+  monthlyFormatted: string;
+  currency: string;
+  stripeSessionId: string;
+  stripeSubscriptionId?: string | null;
+  paymentStatus: string;
+  attributionSummary?: string;
+  onboardingEmailStatus: string;
+  activatedAtIso: string;
+}) {
+  const inbox = getContactInboxEmail();
+
+  const html = `<p><strong>New KERSIVO monthly subscription</strong></p>
+  <p><strong>Customer:</strong> ${escapeHtml(input.customerName)}<br/>
+  <strong>Email:</strong> ${escapeHtml(input.customerEmail)}<br/>
+  <strong>Shop:</strong> ${escapeHtml(input.shopName)}<br/>
+  <strong>Shop size:</strong> ${escapeHtml(input.shopSize)}<br/>
+  <strong>Current stack:</strong> ${escapeHtml(input.currentStack)}</p>
+  <p><strong>Subscription:</strong> ${escapeHtml(input.monthlyFormatted)}/month<br/>
+  <strong>Currency:</strong> ${escapeHtml(input.currency.toUpperCase())}</p>
+  <p><strong>Payment status:</strong> ${escapeHtml(input.paymentStatus)}<br/>
+  <strong>Stripe Checkout Session ID:</strong> ${escapeHtml(input.stripeSessionId)}<br/>
+  <strong>Subscription ID:</strong> ${escapeHtml(input.stripeSubscriptionId || 'n/a')}<br/>
+  <strong>Activated at:</strong> ${escapeHtml(input.activatedAtIso)}</p>
+  <p><strong>Attribution:</strong> ${escapeHtml(input.attributionSummary || 'n/a')}<br/>
+  <strong>Onboarding email status:</strong> ${escapeHtml(input.onboardingEmailStatus)}</p>`;
+
+  return sendEmail({
+    to: inbox,
+    subject: `New KERSIVO subscription — ${input.shopName}`,
+    replyTo: input.customerEmail,
+    html,
+    devLogLabel: '[DEV EMAIL] SaaS subscription internal notification',
+    devPayload: {
+      to: inbox,
+      customerName: input.customerName,
+      customerEmail: input.customerEmail,
+      shopName: input.shopName,
+      monthlyFormatted: input.monthlyFormatted,
       stripeSessionId: input.stripeSessionId,
     },
   });
@@ -404,23 +513,22 @@ export async function sendDemoCaptureVisitorEmail(input: { email: string }) {
   <p>See retail pickup shop:<br/><a href="${retailDemoUrl}">${retailDemoUrl}</a></p>
 
   <p><strong>Pricing:</strong></p>
-  <p><strong>Launch — £199 setup + £39/month Ongoing Care</strong><br/>A complete KERSIVO booking, retail and admin setup on your main site plus pickup shop.</p>
-  <p><strong>Priority Growth — £299 setup + £39/month Ongoing Care</strong><br/>Extra dedicated pages (e.g. gallery) and deeper product-catalogue polish during setup — same Care as Launch.</p>
+  <p><strong>£39/month subscription</strong><br/>A complete KERSIVO booking, retail and admin setup on your main site plus pickup shop — no setup fee.</p>
   <p>Prices shown are final. KERSIVO is not currently VAT registered, so no VAT is added.</p>
 
-  <p><strong>Both setups include:</strong></p>
+  <p><strong>Your subscription includes:</strong></p>
   <ul>
     <li>branded booking website</li>
     <li>admin dashboard</li>
     <li>retail pickup shop</li>
     <li>email appointment confirmations and reminders</li>
-    <li>hosting, SSL, domain renewal and support while Care is active</li>
+    <li>hosting, SSL, domain renewal and support while your subscription is active</li>
     <li>0% KERSIVO commission. Standard Stripe payment-processing fees still apply.</li>
   </ul>
 
-  <p>You can start with a 50% setup deposit. The remaining 50% is due before go-live. If you cancel before work begins, we refund the deposit. Once work begins, the deposit is non-refundable. If KERSIVO cannot deliver, we refund the deposit.</p>
+  <p>Subscribe securely for £39/month. Cancel anytime — service stays active until the end of the paid month.</p>
 
-  <p><strong>Ready to choose a setup?</strong><br/><a href="${pricingUrl}">${pricingUrl}</a></p>
+  <p><strong>Ready to get started?</strong><br/><a href="${pricingUrl}">${pricingUrl}</a></p>
 
   <p>Not sure yet? Reply to this email with what you&rsquo;re trying to improve — switching from a marketplace profile, launching your first system, reducing no-shows or selling retail pickup.</p>
 

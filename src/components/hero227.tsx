@@ -69,7 +69,7 @@ const Hero227 = ({ className }: Hero227Props) => {
                 asChild
               >
                 <a href="#book-demo" data-demo-cta>
-                  Plan My Setup
+                  Get started
                 </a>
               </Button>
               <Button

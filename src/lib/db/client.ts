@@ -5,8 +5,12 @@ declare global {
   var __prismaSchemaMarker: string | undefined;
 }
 
-/** Bumps when generated enums change so a stale singleton is discarded after `prisma generate`. */
-const SCHEMA_MARKER = Object.keys(SetupDepositStatus).sort().join('|');
+/**
+ * Bumps when generated models/enums change so a stale singleton is discarded after `prisma generate`.
+ * Include a version token whenever a new model is added (e.g. SaasSubscription) — do not rely only on
+ * SetupDepositStatus keys, or hot-reload keeps an old client without the new delegate.
+ */
+const SCHEMA_MARKER = `saas-subscription-v1|${Object.keys(SetupDepositStatus).sort().join('|')}`;
 
 function createPrismaClient(): PrismaClient {
   return new PrismaClient();
