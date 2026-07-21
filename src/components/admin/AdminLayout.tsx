@@ -35,6 +35,9 @@ type AdminLayoutProps = {
   isPublicDemo?: boolean;
   profileUser?: AdminProfileUser | null;
   shopLogoUrl?: string | null;
+  shopName?: string | null;
+  /** When set, sidebar items are filtered by permission keys from session. */
+  permissions?: string[] | null;
   /** Always mounted (hidden); keeps effects alive while section skeleton replaces `children`. */
   persistentAdminChrome?: React.ReactNode;
   children: React.ReactNode;
@@ -51,6 +54,8 @@ type SectionItem = {
   section: AdminSection;
   label: string;
   icon: React.ReactElement;
+  /** Any of these permissions unlocks the nav item; omit = always visible when authenticated. */
+  anyOf?: string[];
 };
 type SectionGroup = {
   title: string;
@@ -63,26 +68,32 @@ const menuGroups: SectionGroup[] = [
   {
     title: 'Booking system',
     items: [
-      { section: 'bookings_dashboard', label: 'Bookings', icon: <Calendar {...ICON} /> },
-      { section: 'bookings_blocks', label: 'Barbers', icon: <Users {...ICON} /> },
-      { section: 'bookings_reports', label: 'Reports', icon: <BarChart2 {...ICON} /> },
-      { section: 'bookings_history', label: 'History', icon: <Clock {...ICON} /> },
-      { section: 'bookings_clients', label: 'Clients', icon: <User {...ICON} /> },
-      { section: 'services', label: 'Services', icon: <Scissors {...ICON} /> },
+      { section: 'bookings_dashboard', label: 'Bookings', icon: <Calendar {...ICON} />, anyOf: ['bookings.manage', 'bookings.self'] },
+      { section: 'bookings_blocks', label: 'Barbers', icon: <Users {...ICON} />, anyOf: ['catalog.manage'] },
+      { section: 'bookings_reports', label: 'Reports', icon: <BarChart2 {...ICON} />, anyOf: ['reports.view'] },
+      { section: 'bookings_history', label: 'History', icon: <Clock {...ICON} />, anyOf: ['bookings.manage', 'bookings.self'] },
+      { section: 'bookings_clients', label: 'Clients', icon: <User {...ICON} />, anyOf: ['clients.read'] },
+      { section: 'services', label: 'Services', icon: <Scissors {...ICON} />, anyOf: ['catalog.manage'] },
     ],
   },
   {
     title: 'Shop / Retail',
     items: [
-      { section: 'shop_products', label: 'Products', icon: <Package {...ICON} /> },
-      { section: 'shop_orders', label: 'Orders', icon: <ShoppingBag {...ICON} /> },
-      { section: 'shop_sales', label: 'Sales', icon: <TrendingUp {...ICON} /> },
+      { section: 'shop_products', label: 'Products', icon: <Package {...ICON} />, anyOf: ['retail.manage'] },
+      { section: 'shop_orders', label: 'Orders', icon: <ShoppingBag {...ICON} />, anyOf: ['retail.manage'] },
+      { section: 'shop_sales', label: 'Sales', icon: <TrendingUp {...ICON} />, anyOf: ['reports.view', 'retail.manage'] },
+    ],
+  },
+  {
+    title: 'Team',
+    items: [
+      { section: 'team', label: 'Team', icon: <Users {...ICON} />, anyOf: ['members.manage', 'members.invite_barber'] },
     ],
   },
   {
     title: 'Assistant',
     items: [
-      { section: 'assistant', label: 'Assistant', icon: <Sparkles {...ICON} /> },
+      { section: 'assistant', label: 'Assistant', icon: <Sparkles {...ICON} />, anyOf: ['ai.use'] },
     ],
   },
 ];
@@ -91,13 +102,16 @@ const DEFAULT_SIDEBAR_LOGO = '/images/logo_nobg.png';
 
 function SidebarBrand({
   logoUrl = null,
+  shopName = null,
   statusSlot = null,
 }: {
   logoUrl?: string | null;
+  shopName?: string | null;
   statusSlot?: React.ReactNode;
 }) {
   const [src, setSrc] = useState(logoUrl || DEFAULT_SIDEBAR_LOGO);
   const isCustom = Boolean(logoUrl) && src === logoUrl;
+  const brandLabel = shopName?.trim() || 'Admin';
 
   useEffect(() => {
     setSrc(logoUrl || DEFAULT_SIDEBAR_LOGO);
@@ -121,7 +135,7 @@ function SidebarBrand({
       </div>
       <div className="admin-sidebar-brand-text">
         {statusSlot}
-        <span className="admin-sidebar-brand-sub">Admin</span>
+        <span className="admin-sidebar-brand-name">{brandLabel}</span>
       </div>
     </div>
   );
@@ -150,6 +164,8 @@ export default function AdminLayout({
   isPublicDemo = false,
   profileUser = null,
   shopLogoUrl = null,
+  shopName = null,
+  permissions = null,
   persistentAdminChrome,
   children,
 }: AdminLayoutProps) {
@@ -160,6 +176,19 @@ export default function AdminLayout({
   const mobileOpenButtonRef = useRef<HTMLButtonElement | null>(null);
   const lastPublishedHeaderInsetPxRef = useRef<number | null>(null);
   const [mobileChromeMounted, setMobileChromeMounted] = useState(false);
+
+  const visibleMenuGroups = useMemo(() => {
+    if (!permissions) return menuGroups;
+    const allowed = new Set(permissions);
+    return menuGroups
+      .map((group) => ({
+        ...group,
+        items: group.items.filter(
+          (item) => !item.anyOf || item.anyOf.some((p) => allowed.has(p)),
+        ),
+      }))
+      .filter((group) => group.items.length > 0);
+  }, [permissions]);
 
   useLayoutEffect(() => {
     setMobileChromeMounted(true);
@@ -258,10 +287,13 @@ export default function AdminLayout({
     window.location.assign('/');
   };
 
+  const canManageBilling =
+    isPublicDemo || !permissions || permissions.includes('billing.manage');
+
   const accountFooter = isPublicDemo ? (
     <AdminSidebarProfile mode="guest" variant="desktop" />
   ) : profileUser ? (
-    <AdminSidebarProfile user={profileUser} variant="desktop" />
+    <AdminSidebarProfile user={profileUser} variant="desktop" permissions={permissions} />
   ) : (
     <button
       type="button"
@@ -276,7 +308,7 @@ export default function AdminLayout({
   const accountFooterMobile = isPublicDemo ? (
     <AdminSidebarProfile mode="guest" variant="mobile" />
   ) : profileUser ? (
-    <AdminSidebarProfile user={profileUser} variant="mobile" />
+    <AdminSidebarProfile user={profileUser} variant="mobile" permissions={permissions} />
   ) : (
     <button
       type="button"
@@ -290,7 +322,7 @@ export default function AdminLayout({
 
   const renderMenu = (showLaunchCta: boolean) => (
     <nav className="admin-sidebar-nav" aria-label="Admin navigation">
-      {menuGroups.map((group) => (
+      {visibleMenuGroups.map((group) => (
         <div className="admin-sidebar-group" key={group.title}>
           <p className="admin-sidebar-group-title">{group.title}</p>
           {group.items.map((item) => (
@@ -306,7 +338,7 @@ export default function AdminLayout({
           ))}
         </div>
       ))}
-      {showLaunchCta ? (
+      {showLaunchCta && canManageBilling ? (
         <div className="admin-sidebar-group">
           <AdminSidebarLaunchCta isPublicDemo={isPublicDemo} />
         </div>
@@ -315,12 +347,12 @@ export default function AdminLayout({
   );
 
   const activeSectionLabel = useMemo(() => {
-    for (const group of menuGroups) {
+    for (const group of visibleMenuGroups) {
       const item = group.items.find((i) => i.section === activeSection);
       if (item) return item.label;
     }
     return '';
-  }, [activeSection]);
+  }, [activeSection, visibleMenuGroups]);
 
   const skeletonVariant = useMemo<'kpi' | 'table'>(() => {
     if (activeSection === 'bookings_reports' || activeSection === 'shop_sales') {
@@ -483,6 +515,7 @@ export default function AdminLayout({
           <div className="admin-mobile-drawer-head-top">
             <SidebarBrand
               logoUrl={isPublicDemo ? null : shopLogoUrl}
+              shopName={isPublicDemo ? null : shopName}
               statusSlot={<SidebarStatus className="admin-sidebar-status--mobile-drawer" />}
             />
             <button
@@ -496,7 +529,7 @@ export default function AdminLayout({
           </div>
         </div>
         <div className="admin-mobile-drawer-launch">
-          <AdminSidebarLaunchCta isPublicDemo={isPublicDemo} />
+          {canManageBilling ? <AdminSidebarLaunchCta isPublicDemo={isPublicDemo} /> : null}
         </div>
         {renderMenu(false)}
         <div className="admin-sidebar-divider" aria-hidden="true" />
@@ -509,7 +542,10 @@ export default function AdminLayout({
     <AdminMobileTopExtensionContext.Provider value={setMobileTopExtension}>
       <div className="admin-shell">
       <aside className="admin-sidebar" aria-label="Admin sections">
-        <SidebarBrand logoUrl={isPublicDemo ? null : shopLogoUrl} />
+        <SidebarBrand
+          logoUrl={isPublicDemo ? null : shopLogoUrl}
+          shopName={isPublicDemo ? null : shopName}
+        />
         {renderMenu(true)}
         <div className="admin-sidebar-logout-wrap">
           <SidebarStatus />
@@ -529,7 +565,10 @@ export default function AdminLayout({
           aria-label="Admin mobile header"
         >
           <div className="admin-mobile-header-bar">
-            <SidebarBrand logoUrl={isPublicDemo ? null : shopLogoUrl} />
+            <SidebarBrand
+              logoUrl={isPublicDemo ? null : shopLogoUrl}
+              shopName={isPublicDemo ? null : shopName}
+            />
             <div className="admin-mobile-header-center">
               {activeSectionLabel && (
                 <span className="admin-mobile-section-name" aria-current="page">

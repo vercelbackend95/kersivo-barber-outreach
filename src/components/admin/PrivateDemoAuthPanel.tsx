@@ -10,6 +10,8 @@ type PrivateDemoAuthPanelProps = {
   onSuccess?: () => void;
   embedded?: boolean;
   onClose?: () => void;
+  /** Where to return after Google / email auth. Defaults to `/admin`. */
+  callbackURL?: string;
 };
 
 function GoogleGIcon() {
@@ -40,6 +42,7 @@ export default function PrivateDemoAuthPanel({
   onSuccess,
   embedded = false,
   onClose,
+  callbackURL = '/admin',
 }: PrivateDemoAuthPanelProps) {
   const [step, setStep] = useState<Step>('email');
   const [mode, setMode] = useState<Mode>(initialMode);
@@ -52,7 +55,7 @@ export default function PrivateDemoAuthPanel({
 
   const finish = () => {
     if (onSuccess) onSuccess();
-    else window.location.assign('/admin');
+    else window.location.assign(callbackURL);
   };
 
   const handleGoogle = async () => {
@@ -61,7 +64,7 @@ export default function PrivateDemoAuthPanel({
     try {
       const result = await authClient.signIn.social({
         provider: 'google',
-        callbackURL: '/admin',
+        callbackURL,
         errorCallbackURL: typeof window !== 'undefined' ? window.location.href : '/admin-demo',
       });
 
@@ -134,7 +137,7 @@ export default function PrivateDemoAuthPanel({
           email: email.trim(),
           password,
           rememberMe: true,
-          callbackURL: '/admin',
+          callbackURL,
         });
         if (result.error) {
           setError(result.error.message || 'Could not sign in.');
@@ -149,7 +152,7 @@ export default function PrivateDemoAuthPanel({
         email: email.trim(),
         password,
         name: name.trim(),
-        callbackURL: '/admin',
+        callbackURL,
       });
       if (result.error) {
         const message = result.error.message || 'Could not create account.';

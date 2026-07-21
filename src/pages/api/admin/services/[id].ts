@@ -2,7 +2,7 @@ export const prerender = false;
 
 import type { APIRoute } from 'astro';
 import { z } from 'zod';
-import { requireAdminContext } from '../../../../lib/admin/auth';
+import { requireAdminPermission } from '../../../../lib/admin/auth';
 import {
   ensureCustomServiceCategory,
   loadMergedServiceCategories,
@@ -26,7 +26,7 @@ const updateSchema = z.object({
 });
 
 export const PATCH: APIRoute = async (ctx) => {
-  const access = await requireAdminContext(ctx);
+  const access = await requireAdminPermission(ctx, 'catalog.manage');
   if (access instanceof Response) return access;
   const shopId = access.shopId;
 

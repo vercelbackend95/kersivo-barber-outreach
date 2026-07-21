@@ -2,6 +2,12 @@ import { useEffect, useState } from 'react';
 
 import { Pricing36PlanCards } from '@/components/pricing/Pricing36PlanCards';
 import { ENABLE_SETUP_FEES } from '@/lib/pricing/offerMode';
+import {
+  BILLING_CYCLE_SHORT,
+  NO_PAUSE_SHORT,
+  PLAN_SCOPE_SHORT,
+  PRICE_VAT_DISCLAIMER,
+} from '@/lib/pricing/claimsPolicy';
 import { SAAS_MONTHLY_GBP } from '@/lib/seo/defaults';
 import { getSetupPlan, isSetupPlanId, type SetupPlanId } from '@/lib/setup/plans';
 import { formatGbp } from '@/lib/shop/money';
@@ -586,7 +592,7 @@ export default function LaunchWizard() {
               </p>
             ) : !ENABLE_SETUP_FEES ? (
               <p className="admin-launch__selected-plan">
-                Subscription: <strong>£{SAAS_MONTHLY_GBP}/month</strong>
+                Subscription: <strong>£{SAAS_MONTHLY_GBP}/month</strong> ({PLAN_SCOPE_SHORT})
               </p>
             ) : null}
 
@@ -954,7 +960,7 @@ export default function LaunchWizard() {
                 <>
                   <div className="admin-launch__review-row">
                     <span className="admin-launch__review-label">Subscription</span>
-                    <span className="admin-launch__review-value">Monthly</span>
+                    <span className="admin-launch__review-value">Monthly · one location</span>
                   </div>
                   <div className="admin-launch__review-row">
                     <span className="admin-launch__review-label">Billed</span>
@@ -966,7 +972,7 @@ export default function LaunchWizard() {
             <p className="admin-onboarding__description">
               {ENABLE_SETUP_FEES && plan
                 ? `${formatGbp(plan.depositPence)} today. The remaining ${formatGbp(plan.remainingPence)} is due before launch. Your £${SAAS_MONTHLY_GBP}/month Ongoing Care starts only when you go live.`
-                : `£${SAAS_MONTHLY_GBP}/month billed today via Stripe. Cancel anytime — service stays active until the end of the paid month.`}
+                : `£${SAAS_MONTHLY_GBP}/month per physical location, billed today via Stripe. ${BILLING_CYCLE_SHORT} ${NO_PAUSE_SHORT} ${PRICE_VAT_DISCLAIMER}`}
             </p>
             <div className="admin-launch__next">
               <p className="admin-launch__next-heading">What happens next?</p>
@@ -991,7 +997,7 @@ export default function LaunchWizard() {
                 </a>{' '}
                 {ENABLE_SETUP_FEES
                   ? 'and understand the deposit starts my setup.'
-                  : 'and understand I am starting a £39/month subscription.'}
+                  : `and understand I am starting a £${SAAS_MONTHLY_GBP}/month subscription for one physical location.`}
               </span>
             </label>
           </section>

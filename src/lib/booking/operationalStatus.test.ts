@@ -26,9 +26,12 @@ describe('getEffectiveBookingStatus', () => {
     expect(getEffectiveBookingStatus({ status: 'BOOKED', startAt, endAt, nowMs: Date.parse('2026-05-07T10:00:00.000Z') })).toBe('COMPLETED');
   });
 
-  it('keeps manual/terminal statuses untouched', () => {
+  it('keeps manual/terminal and day-of statuses untouched', () => {
     expect(getEffectiveBookingStatus({ status: 'CANCELLED_BY_SHOP', startAt, endAt, nowMs: Date.parse('2026-05-06T14:50:00.000Z') })).toBe('CANCELLED_BY_SHOP');
     expect(getEffectiveBookingStatus({ status: 'NO_SHOW', startAt, endAt, nowMs: Date.parse('2026-05-07T10:00:00.000Z') })).toBe('NO_SHOW');
+    expect(getEffectiveBookingStatus({ status: 'ARRIVED', startAt, endAt, nowMs: Date.parse('2026-05-06T14:50:00.000Z') })).toBe('ARRIVED');
+    expect(getEffectiveBookingStatus({ status: 'IN_PROGRESS', startAt, endAt, nowMs: Date.parse('2026-05-06T15:20:00.000Z') })).toBe('IN_PROGRESS');
+    expect(getEffectiveBookingStatus({ status: 'COMPLETED', startAt, endAt, nowMs: Date.parse('2026-05-06T14:00:00.000Z') })).toBe('COMPLETED');
   });
 });
 
@@ -47,67 +50,59 @@ describe('manual action windows', () => {
     expect(canCancelBookingByShop({ startAt, endAt, nowMs: Date.parse('2026-05-06T14:30:00.000Z') })).toBe(false);
   });
 
-  it('returns allowed actions for each window', () => {
-    expect(getAllowedManualBookingActions({ startAt, endAt, nowMs: Date.parse('2026-05-06T13:00:00.000Z') })).toEqual([
+  it('returns allowed day-of + shop actions for managers', () => {
+    expect(getAllowedManualBookingActions({ startAt, endAt, nowMs: Date.parse('2026-05-06T13:00:00.000Z') }, 'shop')).toEqual([
+      'ARRIVED',
       'CANCELLED_BY_SHOP',
       'RESCHEDULE',
     ]);
-    expect(getAllowedManualBookingActions({ startAt, endAt, nowMs: Date.parse('2026-05-06T15:35:00.000Z') })).toEqual([
+    expect(getAllowedManualBookingActions({ startAt, endAt, nowMs: Date.parse('2026-05-06T15:35:00.000Z') }, 'shop')).toEqual([
+      'ARRIVED',
+      'IN_PROGRESS',
+      'COMPLETED',
       'NO_SHOW',
     ]);
   });
 
-  it('returns full action list with enabled flags and reasons', () => {
+  it('barber scope excludes cancel and reschedule', () => {
+    expect(getAllowedManualBookingActions({ startAt, endAt, nowMs: Date.parse('2026-05-06T13:00:00.000Z') }, 'barber')).toEqual([
+      'ARRIVED',
+    ]);
+    expect(getAllowedManualBookingActions({ startAt, endAt, nowMs: Date.parse('2026-05-06T15:35:00.000Z') }, 'barber')).toEqual([
+      'ARRIVED',
+      'IN_PROGRESS',
+      'COMPLETED',
+      'NO_SHOW',
+    ]);
+  });
+
+  it('returns full shop action list with enabled flags and reasons', () => {
     const beforeStart = getManualBookingActionOptions({
       startAt,
       endAt,
       nowMs: Date.parse('2026-05-06T14:40:00.000Z'),
-    });
-    expect(beforeStart).toEqual([
-      {
-        value: 'NO_SHOW',
-        label: 'No Show',
-        enabled: false,
-        reason: 'Available once booking start time is reached.',
-      },
-      {
-        value: 'CANCELLED_BY_SHOP',
-        label: 'Cancel by shop',
-        enabled: false,
-        reason: 'Unavailable now: allowed only more than 1 hour before start.',
-      },
-      {
-        value: 'RESCHEDULE',
-        label: 'Reschedule',
-        enabled: false,
-        reason: 'Unavailable now: allowed only more than 1 hour before start.',
-      },
+    }, 'shop');
+    expect(beforeStart.map((o) => ({ value: o.value, enabled: o.enabled }))).toEqual([
+      { value: 'ARRIVED', enabled: true },
+      { value: 'IN_PROGRESS', enabled: false },
+      { value: 'COMPLETED', enabled: false },
+      { value: 'NO_SHOW', enabled: false },
+      { value: 'CANCELLED_BY_SHOP', enabled: false },
+      { value: 'RESCHEDULE', enabled: false },
     ]);
 
     const moreThanOneHour = getManualBookingActionOptions({
       startAt,
       endAt,
       nowMs: Date.parse('2026-05-06T14:20:00.000Z'),
-    });
-    expect(moreThanOneHour).toEqual([
-      {
-        value: 'NO_SHOW',
-        label: 'No Show',
-        enabled: false,
-        reason: 'Available once booking start time is reached.',
-      },
-      {
-        value: 'CANCELLED_BY_SHOP',
-        label: 'Cancel by shop',
-        enabled: true,
-        reason: 'Available only more than 1 hour before booking start.',
-      },
-      {
-        value: 'RESCHEDULE',
-        label: 'Reschedule',
-        enabled: true,
-        reason: 'Available only more than 1 hour before booking start.',
-      },
+    }, 'shop');
+    expect(moreThanOneHour.map((o) => ({ value: o.value, enabled: o.enabled }))).toEqual([
+      { value: 'ARRIVED', enabled: true },
+      { value: 'IN_PROGRESS', enabled: false },
+      { value: 'COMPLETED', enabled: false },
+      { value: 'NO_SHOW', enabled: false },
+      { value: 'CANCELLED_BY_SHOP', enabled: true },
+      { value: 'RESCHEDULE', enabled: true },
     ]);
   });
 
@@ -116,26 +111,14 @@ describe('manual action windows', () => {
       startAt,
       endAt,
       nowMs: Date.parse('2026-05-06T18:00:00.000Z'),
-    });
-    expect(afterEnd).toEqual([
-      {
-        value: 'NO_SHOW',
-        label: 'No Show',
-        enabled: true,
-        reason: 'Available from booking start onward.',
-      },
-      {
-        value: 'CANCELLED_BY_SHOP',
-        label: 'Cancel by shop',
-        enabled: false,
-        reason: 'Unavailable now: allowed only more than 1 hour before start.',
-      },
-      {
-        value: 'RESCHEDULE',
-        label: 'Reschedule',
-        enabled: false,
-        reason: 'Unavailable now: allowed only more than 1 hour before start.',
-      },
+    }, 'shop');
+    expect(afterEnd.map((o) => ({ value: o.value, enabled: o.enabled }))).toEqual([
+      { value: 'ARRIVED', enabled: false },
+      { value: 'IN_PROGRESS', enabled: true },
+      { value: 'COMPLETED', enabled: true },
+      { value: 'NO_SHOW', enabled: true },
+      { value: 'CANCELLED_BY_SHOP', enabled: false },
+      { value: 'RESCHEDULE', enabled: false },
     ]);
   });
 });

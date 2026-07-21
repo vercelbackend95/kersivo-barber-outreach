@@ -2,24 +2,38 @@ export const prerender = false;
 
 import type { APIRoute } from 'astro';
 import { requireAdminContext } from '../../../../../lib/admin/auth';
+import { accessCan, requireAnyPermission } from '@/lib/admin/rbac/can';
+import { assertBookingAccessible } from '@/lib/admin/rbac/scope';
 import { bookingWhereForShop } from '../../../../../lib/admin/shopScoped';
 import { prisma } from '../../../../../lib/db/client';
 import {
   canCorrectHistoryBooking,
   getAllowedManualBookingActions,
   getEffectiveBookingStatus,
+  isDayOfBookingAction,
   isHistoryBookingCorrection,
   isManualBookingAction,
+  isShopBookingAction,
+  type BookingActionRoleScope,
 } from '../../../../../lib/booking/operationalStatus';
+
+function roleScopeForAccess(access: { role: string }): BookingActionRoleScope {
+  return access.role === 'BARBER' ? 'barber' : 'shop';
+}
 
 export const PATCH: APIRoute = async (ctx) => {
   const access = await requireAdminContext(ctx);
   if (access instanceof Response) return access;
+  const denied = requireAnyPermission(access, ['bookings.manage', 'bookings.self']);
+  if (denied) return denied;
 
   const bookingId = ctx.params.id;
   if (!bookingId) {
     return new Response(JSON.stringify({ error: 'Missing booking id.' }), { status: 400 });
   }
+
+  const scoped = await assertBookingAccessible(access, bookingId);
+  if (scoped instanceof Response) return scoped;
 
   const payload = (await ctx.request.json().catch(() => null)) as { status?: unknown } | null;
   if (!payload || typeof payload.status !== 'string') {
@@ -29,11 +43,22 @@ export const PATCH: APIRoute = async (ctx) => {
   }
 
   const requestedAction = payload.status.trim().toUpperCase();
+  const scope = roleScopeForAccess(access);
+
+  if (access.role === 'BARBER' && (isShopBookingAction(requestedAction) || requestedAction === 'CANCELLED_BY_CLIENT')) {
+    return new Response(
+      JSON.stringify({
+        error: 'Barbers can only set Arrived, In progress, Completed, or No-show.',
+      }),
+      { status: 403 },
+    );
+  }
+
   if (!isManualBookingAction(requestedAction) && !isHistoryBookingCorrection(requestedAction)) {
     return new Response(
       JSON.stringify({
         error:
-          'Only manual actions or history corrections are allowed: COMPLETED, NO_SHOW, CANCELLED_BY_CLIENT, CANCELLED_BY_SHOP, RESCHEDULE.',
+          'Only manual actions or history corrections are allowed: ARRIVED, IN_PROGRESS, COMPLETED, NO_SHOW, CANCELLED_BY_CLIENT, CANCELLED_BY_SHOP, RESCHEDULE.',
       }),
       { status: 422 },
     );
@@ -48,16 +73,50 @@ export const PATCH: APIRoute = async (ctx) => {
     return new Response(JSON.stringify({ error: 'Booking not found.' }), { status: 404 });
   }
 
-  const isHistoryCorrection =
+  // Owner/Manager history sheet: cancel corrections after end (not day-of path).
+  const isShopHistoryCorrection =
+    accessCan(access, 'bookings.manage') &&
     isHistoryBookingCorrection(requestedAction) &&
+    !isDayOfBookingAction(requestedAction) &&
     canCorrectHistoryBooking({
       status: booking.status,
       startAt: booking.startAt,
       endAt: booking.endAt,
     });
 
-  if (isHistoryCorrection) {
-    const storedStatus = requestedAction === 'COMPLETED' ? 'BOOKED' : requestedAction;
+  if (isShopHistoryCorrection) {
+    const updated = await prisma.booking.update({
+      where: { id: booking.id },
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      data: { status: requestedAction as any },
+      select: { id: true, status: true, updatedAt: true },
+    });
+
+    return new Response(
+      JSON.stringify({
+        booking: {
+          ...updated,
+          effectiveStatus: requestedAction,
+        },
+      }),
+    );
+  }
+
+  // Owner/Manager history: COMPLETED / NO_SHOW after end (legacy sheet values).
+  if (
+    accessCan(access, 'bookings.manage') &&
+    (requestedAction === 'COMPLETED' || requestedAction === 'NO_SHOW') &&
+    canCorrectHistoryBooking({
+      status: booking.status,
+      startAt: booking.startAt,
+      endAt: booking.endAt,
+    }) &&
+    !getAllowedManualBookingActions(
+      { startAt: booking.startAt, endAt: booking.endAt },
+      scope,
+    ).includes(requestedAction)
+  ) {
+    const storedStatus = requestedAction === 'COMPLETED' ? 'COMPLETED' : requestedAction;
     const updated = await prisma.booking.update({
       where: { id: booking.id },
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -65,12 +124,14 @@ export const PATCH: APIRoute = async (ctx) => {
       select: { id: true, status: true, updatedAt: true },
     });
 
-    return new Response(JSON.stringify({
-      booking: {
-        ...updated,
-        effectiveStatus: requestedAction,
-      },
-    }));
+    return new Response(
+      JSON.stringify({
+        booking: {
+          ...updated,
+          effectiveStatus: requestedAction,
+        },
+      }),
+    );
   }
 
   if (!isManualBookingAction(requestedAction)) {
@@ -100,10 +161,13 @@ export const PATCH: APIRoute = async (ctx) => {
     );
   }
 
-  const allowed = getAllowedManualBookingActions({
-    startAt: booking.startAt,
-    endAt: booking.endAt,
-  });
+  const allowed = getAllowedManualBookingActions(
+    {
+      startAt: booking.startAt,
+      endAt: booking.endAt,
+    },
+    scope,
+  );
   if (!allowed.includes(requestedAction)) {
     return new Response(
       JSON.stringify({

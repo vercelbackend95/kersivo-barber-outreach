@@ -14,7 +14,7 @@ type ClientListRow = {
   avatarUrl?: string | null;
   reliabilityScore: number;
   lastVisitAt: string | null;
-  totalSpentPence: number;
+  totalSpentPence?: number;
   totalBookings: number;
   completedCount: number;
   noShowCount: number;
@@ -47,6 +47,7 @@ export default function ClientsAdminPanel() {
   const [clients, setClients] = useState<ClientListRow[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [showTotalSpent, setShowTotalSpent] = useState(true);
   const [search, setSearch] = useState('');
   const [debouncedSearch, setDebouncedSearch] = useState('');
   const [isSearching, setIsSearching] = useState(false);
@@ -104,15 +105,29 @@ export default function ClientsAdminPanel() {
     fetch(`/api/admin/clients${params.size ? `?${params.toString()}` : ''}`, {
       credentials: 'include',
     })
-      .then((r) => {
-        if (!r.ok) throw new Error('fetch failed');
-        return r.json() as Promise<{ clients: ClientListRow[] }>;
+      .then(async (r) => {
+        if (!r.ok) {
+          const payload = (await r.json().catch(() => null)) as
+            | { error?: string; code?: string }
+            | null;
+          const message =
+            typeof payload?.error === 'string' && payload.error.trim()
+              ? payload.error.trim()
+              : 'Could not load clients.';
+          throw new Error(message);
+        }
+        return r.json() as Promise<{ clients: ClientListRow[]; financialsHidden?: boolean }>;
       })
       .then((data) => {
-        if (!cancelled) setClients(data.clients ?? []);
+        if (!cancelled) {
+          setClients(data.clients ?? []);
+          setShowTotalSpent(data.financialsHidden !== true);
+        }
       })
-      .catch(() => {
-        if (!cancelled) setError('Could not load clients.');
+      .catch((err) => {
+        if (!cancelled) {
+          setError(err instanceof Error ? err.message : 'Could not load clients.');
+        }
       })
       .finally(() => {
         if (!cancelled) setLoading(false);
@@ -131,7 +146,9 @@ export default function ClientsAdminPanel() {
 
       <AdminDesktopDashHeroSlot />
 
-      <div className="admin-clients-table-wrap">
+      <div
+        className={`admin-clients-table-wrap${showTotalSpent ? '' : ' admin-clients-table-wrap--no-spent'}`}
+      >
         <div className="admin-clients-search-row">
           <AdminPremiumSearchBar
             inputRef={inputRef}
@@ -154,7 +171,7 @@ export default function ClientsAdminPanel() {
           <span>Tags</span>
           <span>Reliability</span>
           <span>Last visit</span>
-          <span>Total spent</span>
+          {showTotalSpent ? <span>Total spent</span> : null}
         </div>
 
         {loading ? (
@@ -166,7 +183,7 @@ export default function ClientsAdminPanel() {
                 <span className="admin-clients-skeleton-cell" />
                 <span className="admin-clients-skeleton-cell admin-clients-skeleton-cell--bar" />
                 <span className="admin-clients-skeleton-cell" />
-                <span className="admin-clients-skeleton-cell" />
+                {showTotalSpent ? <span className="admin-clients-skeleton-cell" /> : null}
               </div>
             ))}
           </div>
@@ -247,10 +264,13 @@ export default function ClientsAdminPanel() {
                       {formatDate(client.lastVisitAt)}
                     </span>
 
-                    {/* Total spent */}
-                    <span className="admin-clients-spent">
-                      {formatPence(client.totalSpentPence)}
-                    </span>
+                    {showTotalSpent ? (
+                      <span className="admin-clients-spent">
+                        {typeof client.totalSpentPence === 'number'
+                          ? formatPence(client.totalSpentPence)
+                          : '—'}
+                      </span>
+                    ) : null}
                   </div>
                 </li>
               );

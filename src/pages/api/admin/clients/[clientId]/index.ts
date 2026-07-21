@@ -1,13 +1,17 @@
 export const prerender = false;
 
 import type { APIRoute } from 'astro';
-import { requireAdminContext } from '@/lib/admin/auth';
-import { prisma } from '@/lib/db/client';
+import { requireAdminPermission } from '@/lib/admin/auth';
+import { assertClientAccessible } from '@/lib/admin/rbac/scope';
+import { shouldIncludeTestActivityInAnalytics } from '@/lib/admin/analyticsMode';
+import { orderAnalyticsWhere } from '@/lib/booking/sandboxBookings';
 import { getEffectiveBookingStatus } from '@/lib/booking/operationalStatus';
+import { prisma } from '@/lib/db/client';
 
 const MS_PER_HOUR = 1000 * 60 * 60;
 const MS_PER_DAY = MS_PER_HOUR * 24;
 const MS_PER_WEEK = MS_PER_DAY * 7;
+const PAID_ORDER_STATUSES = ['PAID', 'READY_FOR_PICKUP', 'COLLECTED'] as const;
 
 type ScoredBooking = {
   status: string;
@@ -30,6 +34,59 @@ type ClientStats = {
   avgSpendPence: number;
   favouriteService: string | null;
 };
+
+type RetailOrderItem = {
+  nameSnapshot: string;
+  quantity: number;
+};
+
+type RetailOrderRow = {
+  id: string;
+  status: string;
+  totalPence: number;
+  paidAt: Date | null;
+  createdAt: Date;
+  items: RetailOrderItem[];
+};
+
+type RetailStats = {
+  productsBought: number;
+  avgSpendPence: number;
+};
+
+type LastOrderPreview = {
+  id: string;
+  status: string;
+  totalPence: number;
+  paidAt: string | null;
+  createdAt: string;
+  items: RetailOrderItem[];
+};
+
+export function computeRetailStats(orders: Array<{ totalPence: number; items: RetailOrderItem[] }>): RetailStats {
+  const productsBought = orders.reduce(
+    (sum, order) => sum + order.items.reduce((itemSum, item) => itemSum + item.quantity, 0),
+    0,
+  );
+  const totalSpentPence = orders.reduce((sum, order) => sum + order.totalPence, 0);
+  const avgSpendPence = orders.length > 0 ? Math.round(totalSpentPence / orders.length) : 0;
+  return { productsBought, avgSpendPence };
+}
+
+export function toLastOrderPreview(order: RetailOrderRow | undefined): LastOrderPreview | null {
+  if (!order) return null;
+  return {
+    id: order.id,
+    status: order.status,
+    totalPence: order.totalPence,
+    paidAt: order.paidAt ? order.paidAt.toISOString() : null,
+    createdAt: order.createdAt.toISOString(),
+    items: order.items.map((item) => ({
+      nameSnapshot: item.nameSnapshot,
+      quantity: item.quantity,
+    })),
+  };
+}
 
 function withEffectiveStatus(booking: ScoredBooking, nowMs: number) {
   return {
@@ -112,17 +169,22 @@ export function computeClientStats(bookings: ScoredBooking[], nowMs = Date.now()
 }
 
 export const GET: APIRoute = async (ctx) => {
-  const access = await requireAdminContext(ctx);
+  const access = await requireAdminPermission(ctx, 'clients.read');
   if (access instanceof Response) return access;
 
   const clientId = ctx.params.clientId;
   if (!clientId) return new Response(JSON.stringify({ error: 'Missing client id.' }), { status: 400 });
+
+  const scoped = await assertClientAccessible(access, clientId);
+  if (scoped instanceof Response) return scoped;
 
   const client = await prisma.client.findFirst({
     where: { id: clientId, shopId: access.shopId },
   });
 
   if (!client) return new Response(JSON.stringify({ error: 'Client not found.' }), { status: 404 });
+
+  const isBarber = access.role === 'BARBER';
 
   const allBookings = await prisma.booking.findMany({
     where: { clientId },
@@ -143,21 +205,88 @@ export const GET: APIRoute = async (ctx) => {
   const stats = computeClientStats(allBookings);
   const reliabilityScore = computeReliabilityScore(allBookings);
 
+  const clientPayload = {
+    id: client.id,
+    shopId: client.shopId,
+    fullName: client.fullName,
+    email: client.email,
+    phone: client.phone,
+    avatarUrl: client.avatarUrl,
+    tags: client.tags,
+    notes: isBarber ? null : client.notes,
+    createdAt: client.createdAt,
+    updatedAt: client.updatedAt,
+  };
+
+  if (isBarber) {
+    return new Response(
+      JSON.stringify({
+        client: clientPayload,
+        stats: {
+          totalBookings: stats.totalBookings,
+          completedCount: stats.completedCount,
+          noShowCount: stats.noShowCount,
+          lastVisitAt: stats.lastVisitAt,
+          totalSpentPence: 0,
+          avgSpendPence: 0,
+          favouriteService: stats.favouriteService,
+        },
+        reliabilityScore,
+        retailStats: { productsBought: 0, avgSpendPence: 0 },
+        lastOrder: null,
+        financialsHidden: true,
+      }),
+    );
+  }
+
+  const includeTestActivity = await shouldIncludeTestActivityInAnalytics(access.shopId);
+  const retailOrders = await prisma.order.findMany({
+    where: {
+      shopId: access.shopId,
+      customerEmail: { equals: client.email, mode: 'insensitive' },
+      status: { in: [...PAID_ORDER_STATUSES] },
+      ...orderAnalyticsWhere(includeTestActivity),
+    },
+    orderBy: [{ paidAt: 'desc' }, { createdAt: 'desc' }],
+    select: {
+      id: true,
+      status: true,
+      totalPence: true,
+      paidAt: true,
+      createdAt: true,
+      items: {
+        select: {
+          nameSnapshot: true,
+          quantity: true,
+        },
+      },
+    },
+  });
+
+  const retailStats = computeRetailStats(retailOrders);
+  const lastOrder = toLastOrderPreview(retailOrders[0]);
+
   return new Response(
     JSON.stringify({
-      client,
+      client: clientPayload,
       stats,
       reliabilityScore,
+      retailStats,
+      lastOrder,
+      financialsHidden: false,
     }),
   );
 };
 
 export const PATCH: APIRoute = async (ctx) => {
-  const access = await requireAdminContext(ctx);
+  const access = await requireAdminPermission(ctx, 'clients.write');
   if (access instanceof Response) return access;
 
   const clientId = ctx.params.clientId;
   if (!clientId) return new Response(JSON.stringify({ error: 'Missing client id.' }), { status: 400 });
+
+  const scoped = await assertClientAccessible(access, clientId);
+  if (scoped instanceof Response) return scoped;
 
   const shopId = access.shopId;
 
@@ -209,6 +338,12 @@ export const PATCH: APIRoute = async (ctx) => {
   const data: { tags?: string[]; avatarUrl?: string | null } = {};
 
   if (Array.isArray(payload.tags) && payload.tags.every((t) => typeof t === 'string')) {
+    if (access.role === 'BARBER') {
+      return new Response(
+        JSON.stringify({ error: 'Barbers cannot change client tags.' }),
+        { status: 403 },
+      );
+    }
     data.tags = payload.tags as string[];
   }
   if (typeof payload.avatarUrl === 'string') {

@@ -1,6 +1,6 @@
 import type { APIContext } from 'astro';
 import type { AdminAccess } from './auth';
-import { requireAdminContext } from './auth';
+import { requireAdminPermission } from './auth';
 import { prisma } from '@/lib/db/client';
 import { minutesToTimeString, timeStringToMinutes } from './timeStrings';
 
@@ -33,7 +33,7 @@ export const DEFAULT_ONBOARDING_HOURS: OnboardingWeeklyRule[] = [
 export async function requireOnboardingAccess(
   context: APIContext,
 ): Promise<AdminAccess | Response> {
-  const access = await requireAdminContext(context);
+  const access = await requireAdminPermission(context, 'onboarding.manage');
   if (access instanceof Response) return access;
 
   if (access.via !== 'session' || !access.userId) {

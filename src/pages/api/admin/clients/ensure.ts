@@ -1,11 +1,11 @@
 export const prerender = false;
 
 import type { APIRoute } from 'astro';
-import { requireAdminContext } from '../../../../lib/admin/auth';
+import { requireAdminPermission } from '../../../../lib/admin/auth';
 import { upsertShopClient } from '../../../../lib/admin/clientUpsert';
 
 export const POST: APIRoute = async (ctx) => {
-  const access = await requireAdminContext(ctx);
+  const access = await requireAdminPermission(ctx, 'clients.write');
   if (access instanceof Response) return access;
 
   const payload = (await ctx.request.json().catch(() => null)) as {

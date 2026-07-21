@@ -3,7 +3,7 @@ export const prerender = false;
 
 import type { APIRoute } from 'astro';
 import { fromZonedTime, formatInTimeZone } from 'date-fns-tz';
-import { requireAdminContext } from '../../../../../lib/admin/auth';
+import { requireAdminPermission } from '../../../../../lib/admin/auth';
 import { shouldIncludeTestActivityInAnalytics } from '../../../../../lib/admin/analyticsMode';
 import { orderAnalyticsWhere } from '../../../../../lib/booking/sandboxBookings';
 import { prisma } from '../../../../../lib/db/client';
@@ -256,7 +256,7 @@ async function buildSalesResponse(
 }
 
 export const GET: APIRoute = async (ctx) => {
-  const access = await requireAdminContext(ctx);
+  const access = await requireAdminPermission(ctx, 'retail.manage');
   if (access instanceof Response) return access;
   const shopId = access.shopId;
   try {

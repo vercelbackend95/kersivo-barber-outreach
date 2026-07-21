@@ -77,6 +77,10 @@ type TodayTimelineProps = {
   /** Deep-link: expand the slot and scroll to this booking once present. */
   focusBookingId?: string | null;
   onFocusBookingHandled?: (bookingId: string) => void;
+  /** Linked roster id for BARBER; null for Owner/Manager. */
+  sessionBarberId?: string | null;
+  /** When true, actor can change service and use shop cancel/reschedule. */
+  canManageBookings?: boolean;
 };
 
 const ADMIN_TIMEZONE = 'Europe/London';
@@ -292,6 +296,12 @@ type BookingExpansionCardProps = {
   previewSwipe?: boolean;
   /** Preview embeds: show the one-time animated swipe hint on this card. */
   showSwipeHint?: boolean;
+  /** Can mutate this booking (own seat or shop manager). */
+  canMutateBooking?: boolean;
+  /** Can replace service (Owner/Manager with bookings.manage). */
+  canChangeService?: boolean;
+  /** Status menu scope: barber day-of only, or full shop actions. */
+  actionRoleScope?: 'barber' | 'shop';
 };
 
 const CLIENT_PANEL_W = 120;
@@ -314,7 +324,7 @@ function formatPence(pence: number): string {
 }
 
 type StatusMenuItem = {
-  value: 'NO_SHOW' | 'CANCELLED_BY_SHOP' | 'RESCHEDULE';
+  value: 'ARRIVED' | 'IN_PROGRESS' | 'COMPLETED' | 'NO_SHOW' | 'CANCELLED_BY_SHOP' | 'RESCHEDULE';
   label: string;
   enabled: boolean;
   reason: string;
@@ -330,6 +340,9 @@ const BookingExpansionCard = memo(function BookingExpansionCard({
   isClientProfileLoading = false,
   previewSwipe = false,
   showSwipeHint = false,
+  canMutateBooking = true,
+  canChangeService = true,
+  actionRoleScope = 'shop',
 }: BookingExpansionCardProps) {
   const timeRange = formatTimeRange(booking.startAt, booking.endAt);
   const duration = formatDuration(booking.startAt, booking.endAt);
@@ -715,10 +728,15 @@ const BookingExpansionCard = memo(function BookingExpansionCard({
   });
   const isCancelled = effectiveStatus.startsWith('CANCELLED');
   const isCompleted = effectiveStatus === 'COMPLETED';
-  const statusMenuItems: StatusMenuItem[] = getManualBookingActionOptions({
-    startAt: booking.startAt,
-    endAt: booking.endAt,
-  });
+  const statusMenuItems: StatusMenuItem[] = canMutateBooking
+    ? (getManualBookingActionOptions(
+        {
+          startAt: booking.startAt,
+          endAt: booking.endAt,
+        },
+        actionRoleScope,
+      ) as StatusMenuItem[])
+    : [];
   const localTone = getBookingStatusTone({
     status: effectiveStatus,
     rescheduledAt: booking.rescheduledAt ?? null,
@@ -734,6 +752,7 @@ const BookingExpansionCard = memo(function BookingExpansionCard({
   const openStatusActions = useCallback(
     (e: React.MouseEvent) => {
       e.stopPropagation();
+      if (!canMutateBooking) return;
       if (previewSwipe) {
         window.dispatchEvent(new CustomEvent(ADMIN_DEMO_BLOCKED_EVENT));
         return;
@@ -743,7 +762,7 @@ const BookingExpansionCard = memo(function BookingExpansionCard({
       setIsServiceSheetOpen(false);
       setIsStatusSheetOpen(true);
     },
-    [previewSwipe],
+    [previewSwipe, canMutateBooking],
   );
 
   const setPanelState = useCallback((next: SwipeState) => {
@@ -753,6 +772,7 @@ const BookingExpansionCard = memo(function BookingExpansionCard({
   const openServiceActions = useCallback(
     (e: React.MouseEvent) => {
       e.stopPropagation();
+      if (!canChangeService) return;
       if (previewSwipe) {
         window.dispatchEvent(new CustomEvent(ADMIN_DEMO_BLOCKED_EVENT));
         return;
@@ -763,7 +783,7 @@ const BookingExpansionCard = memo(function BookingExpansionCard({
       setIsServiceSheetOpen(true);
       void openServicePicker();
     },
-    [openServicePicker, previewSwipe],
+    [openServicePicker, previewSwipe, canChangeService],
   );
 
   const statusActionsContent = (
@@ -1117,33 +1137,38 @@ const BookingExpansionCard = memo(function BookingExpansionCard({
 
         {/* ── Right: booking actions panel ── */}
         <div className="admin-vtl-actions-panel" aria-hidden={swipeState !== 'right'}>
-          <button
-            type="button"
-            className={`admin-vtl-ap-circle-btn admin-vtl-ap-circle-btn--status${isStatusSheetOpen ? ' is-active' : ''}`}
-            onClick={openStatusActions}
-            tabIndex={swipeState === 'right' ? 0 : -1}
-            aria-label={`Change status for ${booking.fullName}`}
-            aria-expanded={isStatusSheetOpen}
-          >
-            <span className="admin-vtl-ap-circle-icon-wrap">
-              <ListOrdered className="admin-vtl-ap-circle-icon" aria-hidden />
-            </span>
-            <span className="admin-vtl-ap-circle-label">Status</span>
-          </button>
-
-          <button
-            type="button"
-            className={`admin-vtl-ap-circle-btn admin-vtl-ap-circle-btn--service${isServiceSheetOpen ? ' is-active' : ''}`}
-            onClick={openServiceActions}
-            tabIndex={swipeState === 'right' ? 0 : -1}
-            aria-label={`Change service for ${booking.fullName}`}
-            aria-expanded={isServiceSheetOpen}
-          >
-            <span className="admin-vtl-ap-circle-icon-wrap">
-              <Plus className="admin-vtl-ap-circle-icon" aria-hidden />
-            </span>
-            <span className="admin-vtl-ap-circle-label">Service</span>
-          </button>
+          {canMutateBooking ? (
+            <button
+              type="button"
+              className={`admin-vtl-ap-circle-btn admin-vtl-ap-circle-btn--status${isStatusSheetOpen ? ' is-active' : ''}`}
+              onClick={openStatusActions}
+              tabIndex={swipeState === 'right' ? 0 : -1}
+              aria-label={`Change status for ${booking.fullName}`}
+              aria-expanded={isStatusSheetOpen}
+            >
+              <span className="admin-vtl-ap-circle-icon-wrap">
+                <ListOrdered className="admin-vtl-ap-circle-icon" aria-hidden />
+              </span>
+              <span className="admin-vtl-ap-circle-label">Status</span>
+            </button>
+          ) : (
+            <p className="admin-vtl-ap-readonly muted">View only</p>
+          )}
+          {canChangeService ? (
+            <button
+              type="button"
+              className={`admin-vtl-ap-circle-btn admin-vtl-ap-circle-btn--service${isServiceSheetOpen ? ' is-active' : ''}`}
+              onClick={openServiceActions}
+              tabIndex={swipeState === 'right' ? 0 : -1}
+              aria-label={`Change service for ${booking.fullName}`}
+              aria-expanded={isServiceSheetOpen}
+            >
+              <span className="admin-vtl-ap-circle-icon-wrap">
+                <Plus className="admin-vtl-ap-circle-icon" aria-hidden />
+              </span>
+              <span className="admin-vtl-ap-circle-label">Service</span>
+            </button>
+          ) : null}
 
           {desktopActionPopover}
         </div>
@@ -1419,6 +1444,8 @@ type SlotRowProps = {
   clientProfileLoadingBookingId: string | null;
   isSearchActive: boolean;
   previewSwipe?: boolean;
+  sessionBarberId?: string | null;
+  canManageBookings?: boolean;
 };
 
 const SlotRow = memo(function SlotRow({
@@ -1434,6 +1461,8 @@ const SlotRow = memo(function SlotRow({
   clientProfileLoadingBookingId,
   isSearchActive,
   previewSwipe = false,
+  sessionBarberId = null,
+  canManageBookings = true,
 }: SlotRowProps) {
   const hasBookings = slot.bookings.length > 0;
   const hasBlocks = slot.timeBlocks.length > 0;
@@ -1534,7 +1563,10 @@ const SlotRow = memo(function SlotRow({
             onClick={(e) => e.stopPropagation()}
           >
             <div className="admin-vtl-expansion-list">
-              {slot.bookings.map(({ booking, barber }, bookingIdx) => (
+              {slot.bookings.map(({ booking, barber }, bookingIdx) => {
+                const canMutateBooking =
+                  canManageBookings || Boolean(sessionBarberId && booking.barberId === sessionBarberId);
+                return (
                 <BookingExpansionCard
                   key={booking.id}
                   booking={booking}
@@ -1545,8 +1577,12 @@ const SlotRow = memo(function SlotRow({
                   isClientProfileLoading={clientProfileLoadingBookingId === booking.id}
                   previewSwipe={previewSwipe}
                   showSwipeHint={previewSwipe && bookingIdx === 0}
+                  canMutateBooking={canMutateBooking}
+                  canChangeService={canManageBookings && canMutateBooking}
+                  actionRoleScope={canManageBookings ? 'shop' : 'barber'}
                 />
-              ))}
+                );
+              })}
             </div>
           </motion.div>
         )}
@@ -1574,6 +1610,8 @@ function TodayTimeline({
   previewSwipe = false,
   focusBookingId = null,
   onFocusBookingHandled,
+  sessionBarberId = null,
+  canManageBookings = true,
 }: TodayTimelineProps) {
   const localScrollRef = useRef<HTMLDivElement | null>(null);
   const activeScrollRef = scrollContainerRef ?? localScrollRef;
@@ -1837,6 +1875,8 @@ function TodayTimeline({
               clientProfileLoadingBookingId={clientProfileLoadingBookingId}
               isSearchActive={isSearchActive}
               previewSwipe={previewSwipe}
+              sessionBarberId={sessionBarberId}
+              canManageBookings={canManageBookings}
             />
           );
         })}

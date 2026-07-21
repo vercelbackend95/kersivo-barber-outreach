@@ -2,7 +2,7 @@ export const prerender = false;
 
 import type { APIRoute } from 'astro';
 import { z } from 'zod';
-import { requireAdminContext } from '../../../lib/admin/auth';
+import { requireAdminPermission } from '../../../lib/admin/auth';
 import {
   ensureCustomServiceCategory,
   loadMergedServiceCategories,
@@ -14,7 +14,7 @@ const createSchema = z.object({
 });
 
 export const POST: APIRoute = async (ctx) => {
-  const access = await requireAdminContext(ctx);
+  const access = await requireAdminPermission(ctx, 'catalog.manage');
   if (access instanceof Response) return access;
 
   const parsed = createSchema.safeParse(await ctx.request.json());
@@ -32,7 +32,7 @@ export const POST: APIRoute = async (ctx) => {
 };
 
 export const GET: APIRoute = async (ctx) => {
-  const access = await requireAdminContext(ctx);
+  const access = await requireAdminPermission(ctx, 'catalog.manage');
   if (access instanceof Response) return access;
 
   const categories = await loadMergedServiceCategories(access.shopId);

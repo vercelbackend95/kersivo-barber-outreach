@@ -2,7 +2,7 @@ export const prerender = false;
 
 import type { APIRoute } from 'astro';
 import { Prisma } from '@prisma/client';
-import { requireAdminContext } from '../../../lib/admin/auth';
+import { requireAdminPermission } from '../../../lib/admin/auth';
 import { shouldIncludeTestActivityInAnalytics } from '../../../lib/admin/analyticsMode';
 import { bookingAnalyticsWhere } from '../../../lib/booking/sandboxBookings';
 import {
@@ -278,7 +278,7 @@ async function computeMetrics(
 }
 
 export const GET: APIRoute = async (ctx) => {
-  const access = await requireAdminContext(ctx);
+  const access = await requireAdminPermission(ctx, 'reports.view');
   if (access instanceof Response) return access;
 
   const resolved = resolveReportsRequest(ctx.url.searchParams);

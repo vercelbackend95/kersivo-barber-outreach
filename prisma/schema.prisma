@@ -39,6 +39,13 @@ enum ProductCategory {
   GIFT_SETS
 }
 
+// Dashboard login role within one shop (shopId).
+enum ShopRole {
+  OWNER
+  MANAGER
+  BARBER
+}
+
 
 model User {
   id            String    @id
@@ -51,6 +58,8 @@ model User {
   sessions      Session[]
   accounts      Account[]
   ownedShop     ShopSettings?
+  shopMembers   ShopMember[]
+  barberProfile Barber?
 
   @@unique([email])
   @@map("user")
@@ -131,12 +140,51 @@ model ShopSettings {
   createdAt                   DateTime @default(now())
   updatedAt                   DateTime @updatedAt
   owner                       User?    @relation(fields: [ownerUserId], references: [id], onDelete: SetNull)
+  members                     ShopMember[]
+  invites                     ShopInvite[]
   clients                     Client[]
   timeBlocks                  TimeBlock[]
   products                    Product[]
   orders                      Order[]
   barbers                     Barber[]
   services                    Service[]
+}
+
+// Login membership for one shop — roles never keyed by shop name.
+model ShopMember {
+  id        String   @id @default(cuid())
+  shopId    String
+  userId    String
+  role      ShopRole
+  barberId  String?  @unique
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  shop   ShopSettings @relation(fields: [shopId], references: [id], onDelete: Cascade)
+  user   User         @relation(fields: [userId], references: [id], onDelete: Cascade)
+  barber Barber?      @relation(fields: [barberId], references: [id], onDelete: SetNull)
+
+  @@unique([shopId, userId])
+  @@index([userId])
+  @@index([shopId, role])
+}
+
+model ShopInvite {
+  id              String   @id @default(cuid())
+  shopId          String
+  email           String
+  role            ShopRole
+  tokenHash       String   @unique
+  barberId        String?
+  invitedByUserId String?
+  expiresAt       DateTime
+  acceptedAt      DateTime?
+  createdAt       DateTime @default(now())
+
+  shop ShopSettings @relation(fields: [shopId], references: [id], onDelete: Cascade)
+
+  @@index([shopId, email])
+  @@index([expiresAt])
 }
 
 
@@ -161,11 +209,12 @@ model Client {
 }
 
 model ClientNote {
-  id        String   @id @default(cuid())
-  clientId  String
-  barberId  String?
-  body      String
-  createdAt DateTime @default(now())
+  id         String   @id @default(cuid())
+  clientId   String
+  barberId   String?
+  body       String
+  isInternal Boolean  @default(false)
+  createdAt  DateTime @default(now())
 
   client Client  @relation(fields: [clientId], references: [id], onDelete: Cascade)
   barber Barber? @relation(fields: [barberId], references: [id], onDelete: SetNull)
@@ -226,6 +275,7 @@ model Service {
 model Barber {
   id         String             @id @default(cuid())
   shopId     String
+  userId     String?            @unique
   name       String
   email      String?
   avatarUrl  String?
@@ -234,6 +284,8 @@ model Barber {
   createdAt  DateTime           @default(now())
   updatedAt  DateTime           @updatedAt
   shop       ShopSettings       @relation(fields: [shopId], references: [id], onDelete: Cascade)
+  user       User?              @relation(fields: [userId], references: [id], onDelete: SetNull)
+  membership ShopMember?
   bookings   Booking[]
   rules      AvailabilityRule[]
   timeOff    BarberTimeOff[]

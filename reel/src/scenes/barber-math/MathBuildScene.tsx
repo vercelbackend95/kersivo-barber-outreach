@@ -60,7 +60,7 @@ export const MathBuildScene: React.FC = () => {
           <div style={{ width: '100%', marginTop: 12, display: 'flex', flexDirection: 'column', gap: 10 }}>
             <CostReceiptRow
               label="KERSIVO Care"
-              sublabel="Flat monthly · confirm VAT on invoice"
+              sublabel="Flat monthly · not VAT registered · no VAT added"
               amount={BARBER_MATH_COSTS.kersivoMonthly}
               delay={10}
               direction="left"

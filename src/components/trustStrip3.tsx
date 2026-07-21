@@ -21,8 +21,8 @@ const DEFAULT_PILLARS: PillarItem[] = [
     body: 'Require a deposit when booking is made. Clients commit financially — empty chairs drop and filled slots are paid.',
   },
   {
-    heading: 'Email reminders protect the diary',
-    body: 'Email appointment confirmations and reminders are included in Care. Automated SMS can be agreed at setup if you need it for launch.',
+    heading: 'Email and SMS reminders protect the diary',
+    body: 'Email appointment confirmations and reminders are included in Care, plus unlimited automated SMS appointment reminders while your subscription is active.',
   },
   {
     heading: 'Switch handled for you',

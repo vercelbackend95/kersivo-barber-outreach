@@ -1,4 +1,12 @@
 ---
+import {
+  INCLUDED_SETUP_SHORT,
+  NO_SETUP_FEE_SHORT,
+  ONBOARDING_BILLING_INDEPENDENT_CLAIM,
+  ONBOARDING_TIMELINE_CLAIM,
+  OWNER_SELF_CONFIG_SHORT,
+  PREVIEW_LAUNCH_CLAIM,
+} from '@/lib/pricing/claimsPolicy';
 import '../styles/components/landingPostPurchaseSteps.css';
 
 interface Props {
@@ -15,23 +23,27 @@ const { className = '' } = Astro.props as Props;
 const steps: Step[] = [
   {
     title: 'Start your subscription',
-    body: 'Subscribe for £39/month securely through Stripe — no setup fee.',
+    body: `Subscribe for £39/month per physical location securely through Stripe — billed today. ${NO_SETUP_FEE_SHORT} ${ONBOARDING_BILLING_INDEPENDENT_CLAIM}`,
   },
   {
     title: 'Complete your onboarding form',
-    body: 'Send your services, prices, barbers, opening hours, branding, domain and retail products.',
+    body: 'Share business name, address, contact details, logo, photos, team, hours, social links, salon description and any migration details we need.',
   },
   {
-    title: 'We build your system',
-    body: 'KERSIVO prepares your booking website, admin dashboard and retail pickup shop.',
+    title: 'We prepare your standard setup',
+    body: `${INCLUDED_SETUP_SHORT} ${ONBOARDING_TIMELINE_CLAIM}`,
   },
   {
-    title: 'You review before go-live',
-    body: 'You check the setup and confirm anything that needs adjusting.',
+    title: 'Configure in your dashboard',
+    body: OWNER_SELF_CONFIG_SHORT,
+  },
+  {
+    title: 'Private preview, then Approve and launch',
+    body: PREVIEW_LAUNCH_CLAIM,
   },
   {
     title: 'Your shop goes live',
-    body: 'Your booking website launches on your domain when you are ready.',
+    body: 'After approval, DNS is switched and your booking website launches on your domain when you are ready.',
   },
 ];
 ---
@@ -50,13 +62,13 @@ const steps: Step[] = [
           after you subscribe?
         </h2>
         <p class="landing-post-purchase-steps__lead">
-          From checkout to go-live, KERSIVO guides the setup so you know exactly what happens next.
+          Billing starts when you subscribe. Setup timeline starts after we have your required information.
         </p>
         <p class="landing-post-purchase-steps__support">
-          Subscribe, complete the onboarding form, review the setup and launch when your shop is ready.
+          Subscribe, complete onboarding, review a private preview, approve launch, then go live — with day-to-day control in your dashboard.
         </p>
         <p class="landing-post-purchase-steps__reassurance">
-          Nothing goes live without your review.
+          Nothing goes live without your approval. DNS switches only after you approve.
         </p>
         <div class="landing-post-purchase-steps__illustration" aria-hidden="true">
           <img

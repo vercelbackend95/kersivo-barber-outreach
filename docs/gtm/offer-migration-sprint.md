@@ -1,5 +1,10 @@
 # Kersivo Offer Redesign: Migration Sprint
 
+> **STALE (21 Jul 2026):** This draft predates Commercial Offer v1.0 §2.
+> Live product is pure SaaS £39/month (immediate first payment, no pause, no automatic multi-location discount).
+> Do not use deposit / go-live fee / “pause go-live fee” / first-month discount wording from this file as current commercial truth.
+> Source of truth: `KERSIVO Commercial Offer v1.0.pdf` and `docs/gtm/offer-v1-compliance.md`.
+
 ## Offer name
 `Kersivo Margin Recovery Sprint (30 days)`
 

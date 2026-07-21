@@ -22,7 +22,7 @@ export const FOOTER_LEGAL_LINKS = {
   cookies: { name: 'Cookie Policy', href: '/cookies' },
   cookieSettings: { name: 'Cookie settings', href: '#cookie-settings' },
   terms: { name: 'Terms', href: '/terms' },
-  termsAndCancellation: { name: 'Terms & Cancellation', href: '/terms#setup-deposits' },
+  termsAndCancellation: { name: 'Terms & Cancellation', href: '/terms#subscription' },
 } as const;
 
 export type FooterSocialPlatform = 'instagram' | 'tiktok' | 'facebook';

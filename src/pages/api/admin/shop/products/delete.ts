@@ -2,13 +2,13 @@ export const prerender = false;
 
 import type { APIRoute } from 'astro';
 import { z } from 'zod';
-import { requireAdminContext } from '../../../../../lib/admin/auth';
+import { requireAdminPermission } from '../../../../../lib/admin/auth';
 import { runSerializableTransaction } from '../../../../../lib/db/serializableTransaction';
 import { normalizeProductOrderAfterDeletion } from '../../../../../lib/products/sortOrder';
 const deleteSchema = z.object({ id: z.string().min(1) });
 
 export const POST: APIRoute = async (ctx) => {
-  const access = await requireAdminContext(ctx);
+  const access = await requireAdminPermission(ctx, 'retail.manage');
   if (access instanceof Response) return access;
 
   const parsed = deleteSchema.safeParse(await ctx.request.json());

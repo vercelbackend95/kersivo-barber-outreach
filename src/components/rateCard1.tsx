@@ -1,7 +1,13 @@
 import React from "react";
 
 import { GlobeLock, LayoutDashboard, MessagesSquare, ShieldCheck, TrendingUp } from "lucide-react";
-import { PRICE_VAT_DISCLAIMER } from "@/lib/pricing/claimsPolicy";
+import {
+  NO_PAUSE_SHORT,
+  NO_SETUP_FEE_SHORT,
+  OWNER_SELF_CONFIG_SHORT,
+  PLAN_SCOPE_SHORT,
+  PRICE_VAT_DISCLAIMER,
+} from "@/lib/pricing/claimsPolicy";
 import { getRateCard1Copy, rateCard1SharedCopy, type RateCard1Variant } from "@/lib/pricing/rateCard1Copy";
 import { SAAS_MONTHLY_GBP } from "@/lib/seo/defaults";
 import { cn } from "@/lib/utils";
@@ -73,9 +79,10 @@ const RateCard1 = ({ className, variant = "default" }: RateCard1Props) => {
               WHAT YOUR SUBSCRIPTION BUYS EACH MONTH
             </h2>
             <p className="rate-card1__lead">
-              One flat <strong>£{SAAS_MONTHLY_GBP}/month</strong>, billed automatically. Booking, shop, admin, hosting,
-              SSL, domain renewal, support and platform updates — <strong>{copy.leadCommissionLabel}</strong> on
-              bookings and retail. Standard Stripe payment-processing fees still apply.
+              One flat <strong>£{SAAS_MONTHLY_GBP}/month</strong> per physical location, billed automatically. Booking,
+              shop, admin, hosting, SSL, domain renewal, support and platform updates —{' '}
+              <strong>{copy.leadCommissionLabel}</strong> on bookings and retail. Standard Stripe payment-processing
+              fees still apply.
             </p>
             <Illustration className="rate-card1__mark rate-card1__mark--top" />
             <Illustration className="rate-card1__mark rate-card1__mark--bottom" />
@@ -104,8 +111,13 @@ const RateCard1 = ({ className, variant = "default" }: RateCard1Props) => {
                 {copy.ctaLabel}
               </a>
             </div>
+            <ul className="rate-card1__pills" aria-label="Also included">
+              {copy.planPills.map((pill) => (
+                <li key={pill}>{pill}</li>
+              ))}
+            </ul>
             <p className="rate-card1__plan-note">
-              No setup fee. No minimum term. Cancel anytime — service stays active until the end of the paid month.{' '}
+              {NO_SETUP_FEE_SHORT} No minimum term. {PLAN_SCOPE_SHORT} {OWNER_SELF_CONFIG_SHORT} {NO_PAUSE_SHORT}{' '}
               {PRICE_VAT_DISCLAIMER}
             </p>
           </div>

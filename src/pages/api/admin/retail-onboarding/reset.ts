@@ -1,7 +1,7 @@
 export const prerender = false;
 
 import type { APIRoute } from 'astro';
-import { requireAdminContext } from '@/lib/admin/auth';
+import { requireAdminPermission } from '@/lib/admin/auth';
 import { prisma } from '@/lib/db/client';
 
 /**
@@ -9,7 +9,7 @@ import { prisma } from '@/lib/db/client';
  * Does not delete products or historical orders.
  */
 export const POST: APIRoute = async (ctx) => {
-  const access = await requireAdminContext(ctx);
+  const access = await requireAdminPermission(ctx, 'onboarding.manage');
   if (access instanceof Response) return access;
 
   if (access.via !== 'session') {

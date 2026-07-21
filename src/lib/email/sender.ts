@@ -1,5 +1,16 @@
 import { formatInTimeZone } from 'date-fns-tz';
 
+import {
+  BILLING_CYCLE_SHORT,
+  INCLUDED_SETUP_SHORT,
+  NO_PAUSE_SHORT,
+  NO_SETUP_FEE_SHORT,
+  OWNER_SELF_CONFIG_SHORT,
+  PLAN_SCOPE_SHORT,
+  PRICE_VAT_DISCLAIMER,
+} from '@/lib/pricing/claimsPolicy';
+import { SAAS_MONTHLY_GBP } from '@/lib/seo/defaults';
+
 const RESEND_API_KEY = import.meta.env.RESEND_API_KEY ?? process.env.RESEND_API_KEY;
 const FROM_EMAIL = import.meta.env.FROM_EMAIL ?? process.env.FROM_EMAIL ?? 'onboarding@resend.dev';
 
@@ -513,8 +524,11 @@ export async function sendDemoCaptureVisitorEmail(input: { email: string }) {
   <p>See retail pickup shop:<br/><a href="${retailDemoUrl}">${retailDemoUrl}</a></p>
 
   <p><strong>Pricing:</strong></p>
-  <p><strong>£39/month subscription</strong><br/>A complete KERSIVO booking, retail and admin setup on your main site plus pickup shop — no setup fee.</p>
-  <p>Prices shown are final. KERSIVO is not currently VAT registered, so no VAT is added.</p>
+  <p><strong>£${SAAS_MONTHLY_GBP}/month subscription</strong><br/>A complete KERSIVO booking, retail and admin setup on your main site plus pickup shop. ${NO_SETUP_FEE_SHORT} ${PLAN_SCOPE_SHORT}</p>
+  <p>${INCLUDED_SETUP_SHORT}</p>
+  <p>${OWNER_SELF_CONFIG_SHORT}</p>
+  <p>${PRICE_VAT_DISCLAIMER}</p>
+  <p>${BILLING_CYCLE_SHORT}</p>
 
   <p><strong>Your subscription includes:</strong></p>
   <ul>
@@ -526,7 +540,7 @@ export async function sendDemoCaptureVisitorEmail(input: { email: string }) {
     <li>0% KERSIVO commission. Standard Stripe payment-processing fees still apply.</li>
   </ul>
 
-  <p>Subscribe securely for £39/month. Cancel anytime — service stays active until the end of the paid month.</p>
+  <p>Subscribe securely for £${SAAS_MONTHLY_GBP}/month. ${NO_PAUSE_SHORT}</p>
 
   <p><strong>Ready to get started?</strong><br/><a href="${pricingUrl}">${pricingUrl}</a></p>
 
@@ -569,6 +583,30 @@ export async function sendShopOrderConfirmationEmail(input: {
       totalFormatted: input.totalFormatted,
       items: input.itemLines.join(' | ')
     }
+  });
+}
+
+export async function sendShopTeamInviteEmail(input: {
+  to: string;
+  shopName: string;
+  role: string;
+  acceptUrl: string;
+}) {
+  const html = `<p>You've been invited as <strong>${input.role}</strong> for <strong>${input.shopName}</strong> on KERSIVO.</p>
+  <p><a href="${input.acceptUrl}">Accept invitation</a></p>
+  <p>This link expires in 72 hours. The invitation is tied to a specific shop account (not the shop display name).</p>`;
+
+  return sendEmail({
+    to: input.to,
+    subject: `You're invited to ${input.shopName}`,
+    html,
+    devLogLabel: '[DEV EMAIL] Shop team invite',
+    devPayload: {
+      to: input.to,
+      shopName: input.shopName,
+      role: input.role,
+      acceptUrl: input.acceptUrl,
+    },
   });
 }
 

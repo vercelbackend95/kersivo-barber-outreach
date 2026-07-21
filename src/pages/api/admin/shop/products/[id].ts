@@ -2,7 +2,7 @@ export const prerender = false;
 
 import type { APIRoute } from 'astro';
 import { z } from 'zod';
-import { requireAdminContext } from '../../../../../lib/admin/auth';
+import { requireAdminPermission } from '../../../../../lib/admin/auth';
 import { prisma } from '../../../../../lib/db/client';
 import { normalizeProductFlags } from '../../../../../lib/products/normalizeProductFlags';
 
@@ -14,7 +14,7 @@ const patchSchema = z.object({
 });
 
 export const PATCH: APIRoute = async (ctx) => {
-  const access = await requireAdminContext(ctx);
+  const access = await requireAdminPermission(ctx, 'retail.manage');
   if (access instanceof Response) return access;
 
   const id = ctx.params.id;

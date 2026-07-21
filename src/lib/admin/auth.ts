@@ -1,7 +1,15 @@
 import type { APIContext } from 'astro';
+import type { ShopRole } from '@prisma/client';
 import { auth } from '@/lib/auth';
-import { getShopIdForUser } from '@/lib/auth/provisionShop';
+import {
+  ensureOwnerMembership,
+  getMembershipForUser,
+  getShopIdForUser,
+} from '@/lib/auth/provisionShop';
 import { DEMO_SHOP_ID, resolveShopId } from '@/lib/db/shopScope';
+import { requirePermission as denyUnless } from '@/lib/admin/rbac/can';
+import type { Permission } from '@/lib/admin/rbac/permissions';
+import { permissionsForRole } from '@/lib/admin/rbac/permissions';
 import { getAdminSessionCookieName, getSessionSecret, parseAdminSessionToken } from './session';
 
 export type AdminAccess = {
@@ -11,6 +19,10 @@ export type AdminAccess = {
   userEmail: string | null;
   userImage: string | null;
   via: 'session' | 'secret' | 'legacy-cookie';
+  role: ShopRole;
+  memberId: string | null;
+  barberId: string | null;
+  permissions: readonly Permission[];
 };
 
 export function getSessionBarberId(context: APIContext): string | null {
@@ -36,20 +48,50 @@ function isLegacyCookieAuthorized(context: APIContext): boolean {
   return Boolean(cookieToken && sessionSecret && parseAdminSessionToken(cookieToken, sessionSecret));
 }
 
+function buildAccess(input: {
+  shopId: string;
+  userId: string | null;
+  userName: string | null;
+  userEmail: string | null;
+  userImage: string | null;
+  via: AdminAccess['via'];
+  role: ShopRole;
+  memberId: string | null;
+  barberId: string | null;
+}): AdminAccess {
+  return {
+    ...input,
+    permissions: permissionsForRole(input.role),
+  };
+}
+
 export async function resolveAdminAccess(context: APIContext): Promise<AdminAccess | null> {
   try {
     const session = await auth.api.getSession({ headers: context.request.headers });
     if (session?.user?.id) {
-      const shopId = await getShopIdForUser(session.user.id);
-      if (shopId) {
-        return {
-          shopId,
-          userId: session.user.id,
+      const userId = session.user.id;
+      let membership = await getMembershipForUser(userId);
+
+      if (!membership) {
+        const shopId = await getShopIdForUser(userId);
+        if (shopId) {
+          await ensureOwnerMembership(shopId, userId);
+          membership = await getMembershipForUser(userId, shopId);
+        }
+      }
+
+      if (membership) {
+        return buildAccess({
+          shopId: membership.shopId,
+          userId,
           userName: session.user.name ?? null,
           userEmail: session.user.email ?? null,
           userImage: session.user.image ?? null,
           via: 'session',
-        };
+          role: membership.role,
+          memberId: membership.id,
+          barberId: membership.barberId,
+        });
       }
     }
   } catch {
@@ -57,15 +99,19 @@ export async function resolveAdminAccess(context: APIContext): Promise<AdminAcce
   }
 
   if (isSecretAuthorized(context) || isLegacyCookieAuthorized(context)) {
-    const shopId = await resolveShopId();
-    return {
-      shopId: shopId || DEMO_SHOP_ID,
+    const shopId = (await resolveShopId()) || DEMO_SHOP_ID;
+    const legacyBarberId = getSessionBarberId(context);
+    return buildAccess({
+      shopId,
       userId: null,
       userName: null,
       userEmail: null,
       userImage: null,
       via: isSecretAuthorized(context) ? 'secret' : 'legacy-cookie',
-    };
+      role: 'OWNER',
+      memberId: null,
+      barberId: legacyBarberId,
+    });
   }
 
   return null;
@@ -97,5 +143,17 @@ export async function requireAdminContext(
     });
     return new Response(JSON.stringify({ error: 'Unauthorized' }), { status: 401 });
   }
+  return access;
+}
+
+/** Auth + permission gate in one call. */
+export async function requireAdminPermission(
+  context: APIContext,
+  permission: Permission,
+): Promise<AdminAccess | Response> {
+  const access = await requireAdminContext(context);
+  if (access instanceof Response) return access;
+  const denied = denyUnless(access, permission);
+  if (denied) return denied;
   return access;
 }

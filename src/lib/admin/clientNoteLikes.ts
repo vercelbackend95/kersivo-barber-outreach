@@ -7,6 +7,7 @@ export function mapNoteWithLikes(
   note: {
     id: string;
     body: string;
+    isInternal: boolean;
     createdAt: Date;
     barber: {
       id: string;
@@ -21,6 +22,7 @@ export function mapNoteWithLikes(
 ): {
   id: string;
   body: string;
+  isInternal: boolean;
   createdAt: string;
   barber: {
     id: string;
@@ -34,6 +36,7 @@ export function mapNoteWithLikes(
   return {
     id: note.id,
     body: note.body,
+    isInternal: note.isInternal,
     createdAt: note.createdAt.toISOString(),
     barber: note.barber,
     images: note.images.map((image) => ({ id: image.id, url: image.url })),
@@ -45,6 +48,7 @@ export function mapNoteWithLikes(
 export const clientNoteBaseSelect = {
   id: true,
   body: true,
+  isInternal: true,
   createdAt: true,
   barber: {
     select: {

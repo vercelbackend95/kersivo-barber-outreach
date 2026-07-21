@@ -2,6 +2,8 @@ import type { APIRoute } from 'astro';
 import { fromZonedTime, formatInTimeZone } from 'date-fns-tz';
 import { ADMIN_BOOKING_HISTORY_PAGE_SIZE } from '../../../lib/admin/bookingHistoryPageSize';
 import { requireAdminContext } from '../../../lib/admin/auth';
+import { requireAnyPermission } from '@/lib/admin/rbac/can';
+import { requireLinkedBarber } from '@/lib/admin/rbac/scope';
 import { prisma } from '../../../lib/db/client';
 import { getEffectiveBookingStatus } from '../../../lib/booking/operationalStatus';
 import { BookingStatus, Prisma } from '@prisma/client';
@@ -146,7 +148,13 @@ async function findBookingsWithFallback(args: {
 export const GET: APIRoute = async (ctx) => {
   const access = await requireAdminContext(ctx);
   if (access instanceof Response) return access;
+  const denied = requireAnyPermission(access, ['bookings.manage', 'bookings.self']);
+  if (denied) return denied;
+  const linked = requireLinkedBarber(access);
+  if (linked) return linked;
   const shopId = access.shopId;
+  const selfBarberId =
+    access.role === 'BARBER' && access.barberId ? access.barberId : null;
   const view = ctx.url.searchParams.get('view');
 
   if (view === 'history') {
@@ -169,6 +177,7 @@ export const GET: APIRoute = async (ctx) => {
       : undefined;
 
     const andConditions: Prisma.BookingWhereInput[] = [{ barber: { shopId } }];
+    // Shop-wide for Barber (and Owner/Manager). Optional colleague filter via ?barberId=.
     if (barberId && barberId !== 'all') andConditions.push({ barberId });
     if (startAtFilter) andConditions.push({ startAt: startAtFilter });
     if (cursorStartAt && cursorId) {
@@ -212,7 +221,7 @@ export const GET: APIRoute = async (ctx) => {
     }));
   }
   if (view === 'stats') {
-    const barberId = ctx.url.searchParams.get('barberId');
+    const barberId = selfBarberId ?? ctx.url.searchParams.get('barberId');
     if (!barberId) {
       return new Response(JSON.stringify({ error: 'Missing barberId.' }), { status: 400 });
     }

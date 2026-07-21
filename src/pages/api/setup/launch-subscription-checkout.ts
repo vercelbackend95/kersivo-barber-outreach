@@ -2,6 +2,7 @@ export const prerender = false;
 
 import type { APIRoute } from 'astro';
 import { resolveAdminAccess } from '../../../lib/admin/auth';
+import { requirePermission } from '../../../lib/admin/rbac/can';
 import { prisma } from '../../../lib/db/client';
 import { SAAS_MONTHLY_PENCE } from '../../../lib/seo/defaults';
 import { buildSaasSubscriptionStripeMetadata } from '../../../lib/setup/saasSubscription';
@@ -49,7 +50,7 @@ function shopSizeFromBarberCount(count: number): string {
 }
 
 /**
- * Authenticated subscription checkout for Launch Wizard (session owner only).
+ * Authenticated subscription checkout for Launch Wizard (Owner / billing.manage only).
  */
 export const POST: APIRoute = async (context) => {
   try {
@@ -57,6 +58,8 @@ export const POST: APIRoute = async (context) => {
     if (!access || access.via !== 'session') {
       return new Response(JSON.stringify({ error: 'Unauthorized' }), { status: 401 });
     }
+    const denied = requirePermission(access, 'billing.manage');
+    if (denied) return denied;
 
     let body: LaunchSubscriptionCheckoutInput;
     try {

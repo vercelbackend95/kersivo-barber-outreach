@@ -1,4 +1,5 @@
 import { DEMO_CLIENT_IDS } from './ids';
+import { demoShopOrdersResponse, getDemoShopOrderDetail } from './shop';
 
 const now = new Date().toISOString();
 const lastWeek = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString();
@@ -50,9 +51,58 @@ export const demoClientsResponse = {
   ],
 };
 
+function getDemoRetailForEmail(email: string) {
+  const matchingOrders = demoShopOrdersResponse.orders.filter(
+    (order) => order.customerEmail.toLowerCase() === email.toLowerCase(),
+  );
+
+  if (matchingOrders.length === 0) {
+    return {
+      retailStats: { productsBought: 0, avgSpendPence: 0 },
+      lastOrder: null,
+    };
+  }
+
+  const details = matchingOrders
+    .map((order) => getDemoShopOrderDetail(order.id)?.order)
+    .filter((order): order is NonNullable<typeof order> => Boolean(order));
+
+  const productsBought = details.reduce(
+    (sum, order) => sum + order.items.reduce((itemSum, item) => itemSum + item.quantity, 0),
+    0,
+  );
+  const totalSpentPence = details.reduce((sum, order) => sum + order.totalPence, 0);
+  const avgSpendPence = details.length > 0 ? Math.round(totalSpentPence / details.length) : 0;
+
+  const newest = [...details].sort((a, b) => {
+    const aTime = new Date(a.paidAt ?? a.createdAt).getTime();
+    const bTime = new Date(b.paidAt ?? b.createdAt).getTime();
+    return bTime - aTime;
+  })[0];
+
+  return {
+    retailStats: { productsBought, avgSpendPence },
+    lastOrder: newest
+      ? {
+          id: newest.id,
+          status: newest.status,
+          totalPence: newest.totalPence,
+          paidAt: newest.paidAt,
+          createdAt: newest.createdAt,
+          items: newest.items.map((item) => ({
+            nameSnapshot: item.nameSnapshot,
+            quantity: item.quantity,
+          })),
+        }
+      : null,
+  };
+}
+
 export function getDemoClientDetailResponse(clientId: string) {
   const listItem = demoClientsResponse.clients.find((c) => c.id === clientId);
   if (!listItem) return null;
+
+  const { retailStats, lastOrder } = getDemoRetailForEmail(listItem.email);
 
   return {
     client: {
@@ -74,5 +124,7 @@ export function getDemoClientDetailResponse(clientId: string) {
       favouriteService: 'Skin Fade',
     },
     reliabilityScore: listItem.reliabilityScore,
+    retailStats,
+    lastOrder,
   };
 }

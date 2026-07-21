@@ -1,7 +1,7 @@
 export const prerender = false;
 
 import type { APIRoute } from 'astro';
-import { requireAdminContext } from '../../../../lib/admin/auth';
+import { requireAdminPermission } from '../../../../lib/admin/auth';
 import {
   getBlobReadWriteToken,
   makeBlobPath,
@@ -19,7 +19,7 @@ function jsonResponse(body: Record<string, unknown>, status = 200) {
 }
 
 export const POST: APIRoute = async (ctx) => {
-  const access = await requireAdminContext(ctx);
+  const access = await requireAdminPermission(ctx, 'retail.manage');
   if (access instanceof Response) return access;
 
   if (!getBlobReadWriteToken()) {

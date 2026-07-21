@@ -3,6 +3,8 @@ export const prerender = false;
 import type { APIRoute } from 'astro';
 import { bookingCreateSchema } from '../../../../lib/booking/schemas';
 import { requireAdminContext } from '../../../../lib/admin/auth';
+import { requireAnyPermission } from '@/lib/admin/rbac/can';
+import { requireLinkedBarber } from '@/lib/admin/rbac/scope';
 import { findShopBarber, findShopService } from '../../../../lib/admin/shopScoped';
 import { prisma } from '../../../../lib/db/client';
 import { addMinutes, toUtcFromLondon } from '../../../../lib/booking/time';
@@ -31,10 +33,19 @@ async function upsertClient(
 export const POST: APIRoute = async (ctx) => {
   const access = await requireAdminContext(ctx);
   if (access instanceof Response) return access;
+  const denied = requireAnyPermission(access, ['bookings.manage', 'bookings.self']);
+  if (denied) return denied;
+
+  const linked = requireLinkedBarber(access);
+  if (linked) return linked;
 
   const parsed = bookingCreateSchema.safeParse(await ctx.request.json());
   if (!parsed.success) {
     return new Response(JSON.stringify({ error: parsed.error.flatten() }), { status: 400 });
+  }
+
+  if (access.role === 'BARBER' && access.barberId && parsed.data.barberId !== access.barberId) {
+    return new Response(JSON.stringify({ error: 'Forbidden' }), { status: 403 });
   }
 
   const settings = await prisma.shopSettings.findUniqueOrThrow({

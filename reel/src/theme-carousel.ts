@@ -118,7 +118,7 @@ export const CAROUSEL_SLIDES: CarouselSlide[] = [
       '1h tweaks/month',
     ],
     footnote:
-      '£199 one-time setup · Live in ~2 weeks · 0% KERSIVO commission · VAT confirmed on invoice',
+      'No setup fee · £39/month · Live in ~2 weeks · 0% KERSIVO commission · Not VAT registered · no VAT added',
     photoStrength: 'subtle',
   },
   {

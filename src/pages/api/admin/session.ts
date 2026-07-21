@@ -81,6 +81,9 @@ export const GET: APIRoute = async (context) => {
               image: access.userImage,
             }
           : null,
+        role: access.role,
+        barberId: access.barberId,
+        permissions: access.permissions,
         via: access.via,
       }),
     );
@@ -110,6 +113,9 @@ export const GET: APIRoute = async (context) => {
             image: access.userImage,
           }
         : null,
+      role: access.role,
+      barberId: access.barberId,
+      permissions: access.permissions,
       via: access.via,
     }),
   );

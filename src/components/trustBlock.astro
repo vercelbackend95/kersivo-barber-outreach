@@ -1,4 +1,6 @@
 ---
+import { PRICE_VAT_DISCLAIMER } from '@/lib/pricing/claimsPolicy';
+
 interface Props {
   className?: string;
 }
@@ -7,10 +9,10 @@ const { className = '' } = Astro.props as Props;
 
 /**
  * ORPHANED — not on live homepage. Softened absolute fee / forever / competitor claims (Claims Audit 13 Jul 2026).
- * Aligned VAT / SMS / deposit with confirmed commercial rules 13 Jul 2026.
+ * Aligned VAT / SMS / deposit with confirmed commercial rules 13 Jul 2026; §2 price/VAT refresh 21 Jul 2026.
  */
 const feeBreakdown = [
-  { label: 'Subscription', value: '\u00a339/month', detail: 'site, booking, admin, shop setup, hosting, SSL, domain renewal, email reminders, support, platform updates, 1h minor changes/month' },
+  { label: 'Subscription', value: '\u00a339/month', detail: 'one physical location — site, booking, admin, shop setup, hosting, SSL, domain renewal, email reminders, support, platform updates, 1h minor changes/month' },
   { label: 'Bookings + retail', value: '0% KERSIVO', detail: '0% KERSIVO commission. Standard Stripe payment-processing fees still apply.' },
   { label: 'Online card payments', value: 'Stripe standard', detail: 'public retail demo is simulation-only; live shop connected to your Stripe at go-live' },
   { label: 'Cash in-shop', value: '0% Stripe', detail: 'no card gateway fee on cash payments' },
@@ -85,7 +87,7 @@ const measureSteps = [
             ))}
           </ul>
           <p class="trust-block__panel-anchor">
-            £39/month + Stripe on online cards. No setup fee. Prices shown are final. KERSIVO is not currently VAT registered, so no VAT is added.
+            £39/month per physical location + Stripe on online cards. No setup fee. {PRICE_VAT_DISCLAIMER}
           </p>
         </article>
 

@@ -1,7 +1,16 @@
 /**
  * ORPHANED default FAQ set — live homepage uses barbershopBookingFaq.ts instead.
- * Aligned with product reality (email reminders live; automated SMS not yet standard).
+ * Aligned with commercial claims (email + unlimited SMS appointment reminders included).
  */
+import {
+  BILLING_CYCLE_CLAIM,
+  NO_PAUSE_CLAIM,
+  PLAN_SCOPE_CLAIM,
+  PRICE_VAT_DISCLAIMER,
+  SMS_INCLUDED_CLAIM,
+} from '@/lib/pricing/claimsPolicy';
+import { SAAS_MONTHLY_GBP } from '@/lib/seo/defaults';
+
 export type FaqItem = {
   question: string;
   answer: string;
@@ -17,9 +26,8 @@ export const FAQ_ITEMS: FaqItem[] = [
   },
   {
     question: 'What fees do I still pay?',
-    answer:
-      '£39/month subscription, and standard Stripe payment-processing fees on online cards. Domain renewal is included while your subscription is active. Prices shown are final. KERSIVO is not currently VAT registered, so no VAT is added.',
-    details: 'If you take cash in-shop, payment processing fee can be 0% on that payment.',
+    answer: `£${SAAS_MONTHLY_GBP}/month subscription per physical location, and standard Stripe payment-processing fees on online cards. Domain renewal is included while your subscription is active. ${PRICE_VAT_DISCLAIMER}`,
+    details: `If you take cash in-shop, payment processing fee can be 0% on that payment. ${PLAN_SCOPE_CLAIM} ${BILLING_CYCLE_CLAIM}`,
   },
   {
     question: 'I have no booking system yet — does this work for me?',
@@ -59,13 +67,12 @@ export const FAQ_ITEMS: FaqItem[] = [
   {
     question: 'How does this reduce no-shows?',
     answer:
-      'Booking deposits plus email appointment confirmations and reminders increase commitment before appointment time, which reduces empty-chair losses.',
+      'Booking deposits plus email and SMS appointment confirmations and reminders increase commitment before appointment time, which reduces empty-chair losses.',
     details: 'The outcome is fewer dead slots, more paid appointments, and less daily disruption.',
   },
   {
     question: 'What automations are included to recover revenue?',
-    answer:
-      'Transactional email confirmations and reminders are included in your subscription while it is active. Automated SMS is available by arrangement at setup if you need it for launch.',
+    answer: `Transactional email confirmations and reminders are included while your subscription is active. ${SMS_INCLUDED_CLAIM}.`,
     details:
       'The point is simple: your team spends less time chasing and more time delivering paid services.',
   },
@@ -78,17 +85,15 @@ export const FAQ_ITEMS: FaqItem[] = [
   },
   {
     question: 'Can I leave? What happens to my data?',
-    answer:
-      'Yes. There is no minimum term and no notice period. Your subscription stays active until the end of the paid month, then the website, booking, admin and retail systems go offline. Free CSV export (first name, surname where stored, email, phone, booking history) is available during your subscription and for 30 days after termination.',
+    answer: `Yes. ${NO_PAUSE_CLAIM} Free CSV export (first name, surname where stored, email, phone, booking history) is available during your subscription and for 30 days after termination.`,
     details:
       'After cancellation, domain management control is transferred to you. The KERSIVO platform is not transferred with the domain.',
   },
   {
     question: 'What is the full cost breakdown — are there any charges I have not seen?',
-    answer:
-      'Your complete cost is: £39/month subscription + Stripe’s standard card processing rate on online transactions. No setup fee. Prices shown are final. KERSIVO is not currently VAT registered, so no VAT is added.',
+    answer: `Your complete cost is: £${SAAS_MONTHLY_GBP}/month subscription per physical location + Stripe’s standard card processing rate on online transactions. No setup fee. ${PRICE_VAT_DISCLAIMER}`,
     details:
-      '0% KERSIVO commission on bookings and retail. Email appointment reminders included. There are no per-booking platform fees and no volume surcharges as you add barbers.',
+      '0% KERSIVO commission on bookings and retail. Email appointment reminders included. There are no per-booking platform fees and no volume surcharges as you add barbers. There is no automatic multi-location discount.',
   },
   {
     question: 'What happens if the setup takes longer than expected, or something goes wrong?',

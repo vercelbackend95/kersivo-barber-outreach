@@ -52,13 +52,19 @@ export async function ensureBarberHasAvailabilityRules(barberId: string) {
   });
 }
 
-export async function ensureBarberHasAllServices(barberId: string) {
+export async function ensureBarberHasAllServices(barberId: string, shopId?: string) {
   const existingCount = await prisma.barberService.count({ where: { barberId } });
   if (existingCount > 0) {
     return;
   }
 
-  const services = await prisma.service.findMany({ where: { isActive: true }, select: { id: true } });
+  const services = await prisma.service.findMany({
+    where: {
+      isActive: true,
+      ...(shopId ? { shopId } : {}),
+    },
+    select: { id: true },
+  });
   if (services.length === 0) {
     return;
   }
@@ -66,8 +72,8 @@ export async function ensureBarberHasAllServices(barberId: string) {
   await prisma.barberService.createMany({
     data: services.map((service) => ({
       barberId,
-      serviceId: service.id
+      serviceId: service.id,
     })),
-    skipDuplicates: true
+    skipDuplicates: true,
   });
 }

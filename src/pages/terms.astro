@@ -1,7 +1,39 @@
 ---
 import MainLayout from '@/layouts/MainLayout.astro';
 import LegalFooter from '@/components/LegalFooter.astro';
-import { PAGE_DESCRIPTIONS } from '@/lib/seo/defaults';
+import {
+  BILLING_CYCLE_CLAIM,
+  DOMAIN_AUTH_TEXT,
+  DOMAIN_EXISTING_CLAIM,
+  DOMAIN_INCLUDED_CLAIM,
+  DOMAIN_LIMIT_CLAIM,
+  DOMAIN_NEW_CLAIM,
+  FAIR_USE_IMMEDIATE_RESTRICTION_CLAIM,
+  FAIR_USE_IMMEDIATE_TRIGGERS,
+  FAIR_USE_INTRO,
+  FAIR_USE_ORDINARY_BREACH_CLAIM,
+  FAIR_USE_PROHIBITED_LIST,
+  FAIR_USE_UNLIMITED_LIST,
+  INCLUDED_SETUP_CLAIM,
+  NO_PAUSE_CLAIM,
+  NO_SETUP_FEE_CLAIM,
+  ONBOARDING_BILLING_INDEPENDENT_CLAIM,
+  ONBOARDING_MATERIALS_CLAIM,
+  ONBOARDING_TIMELINE_CLAIM,
+  OWNER_SELF_CONFIG_CLAIM,
+  PLAN_SCOPE_CLAIM,
+  PLAN_SCOPE_FULL_LIST,
+  POWERED_BY_KERSIVO_CLAIM,
+  PREVIEW_LAUNCH_CLAIM,
+  PRICE_CHANGE_NOTICE_CLAIM,
+  PRICE_VAT_DISCLAIMER,
+  MISSING_CRITICAL_MATERIALS_CLAIM,
+  MISSING_OPTIONAL_MATERIALS_CLAIM,
+  NO_FAKE_STOCK_CLAIM,
+  STANDARD_SITE_NOT_BESPOKE_CLAIM,
+  STANDARD_SITE_SCOPE_CLAIM,
+} from '@/lib/pricing/claimsPolicy';
+import { PAGE_DESCRIPTIONS, SAAS_MONTHLY_GBP } from '@/lib/seo/defaults';
 import '@/styles/legal-pages.css';
 ---
 
@@ -13,7 +45,7 @@ import '@/styles/legal-pages.css';
   <main class="legal-page">
     <article class="container legal-page__inner">
       <h1 class="legal-page__title">Terms of Service</h1>
-      <p class="legal-page__updated">Last updated: 14 July 2026</p>
+      <p class="legal-page__updated">Last updated: 21 July 2026</p>
 
       <p>
         These Terms govern the provision of barbershop website, booking, and retail pickup software and related services
@@ -36,7 +68,7 @@ import '@/styles/legal-pages.css';
       <h2>What we provide</h2>
       <p>Depending on your subscription, services may include:</p>
       <ul>
-        <li>a bespoke or brief-led marketing website;</li>
+        <li>a standard branded barbershop website on the KERSIVO platform;</li>
         <li>integrated online booking on your domain;</li>
         <li>an admin panel for team, diary, retail, and reports;</li>
         <li>buy-and-collect retail with checkout through Stripe on <strong>your</strong> Stripe account;</li>
@@ -48,6 +80,11 @@ import '@/styles/legal-pages.css';
         <strong>Standard Stripe payment-processing fees still apply</strong> under your agreement with Stripe.
       </p>
 
+      <h2 id="website">Your barbershop website</h2>
+      <p>{STANDARD_SITE_SCOPE_CLAIM}</p>
+      <p>{STANDARD_SITE_NOT_BESPOKE_CLAIM}</p>
+      <p>{POWERED_BY_KERSIVO_CLAIM}</p>
+
       <h2>Admin access</h2>
       <p>
         When you sign in to the barbershop admin panel, we use necessary first-party session cookies so you can stay
@@ -55,40 +92,63 @@ import '@/styles/legal-pages.css';
         <a href="/cookies">Cookie Policy</a> and <a href="/privacy">Privacy Policy</a>.
       </p>
 
-      <h2>Fees and payment</h2>
+      <h2 id="fees">Fees and payment</h2>
       <p>
-        Fees are as shown on our pricing page: <strong>£39/month subscription</strong>. There is
-        <strong> no setup fee</strong>. Billing starts when you subscribe and renews monthly via Stripe unless we agree
-        otherwise in writing.
+        Fees are as shown on our pricing page: <strong>£{SAAS_MONTHLY_GBP}/month subscription</strong> for one
+        physical barbershop location. {NO_SETUP_FEE_CLAIM} {BILLING_CYCLE_CLAIM} Billing runs via Stripe unless we
+        agree otherwise in writing.
       </p>
       <p>
-        <strong>Prices shown are final. KERSIVO is not currently VAT registered, so no VAT is added.</strong>
+        <strong>{PRICE_VAT_DISCLAIMER}</strong>
       </p>
+      <p>{PLAN_SCOPE_CLAIM}</p>
+      <p>{INCLUDED_SETUP_CLAIM}</p>
+      <p>{OWNER_SELF_CONFIG_CLAIM}</p>
+      <p>{PRICE_CHANGE_NOTICE_CLAIM}</p>
 
       <h2 id="subscription">Monthly subscription</h2>
       <p>
-        The KERSIVO monthly subscription is <strong>£39/month</strong>, billed automatically, unless we agree a
-        different rate in writing. There is <strong>no minimum term</strong> and <strong>no notice period</strong>.
-        You may cancel at any time; the service remains active until the end of the paid month.
+        The KERSIVO monthly subscription is <strong>£{SAAS_MONTHLY_GBP}/month</strong> per physical location, unless we
+        agree a different rate in writing (for example for larger networks). There is <strong>no minimum term</strong>
+        and <strong>no notice period</strong> to cancel. {NO_PAUSE_CLAIM}
       </p>
       <p>While your subscription is active, it includes:</p>
       <ul>
-        <li>custom site, booking, admin and pickup shop setup;</li>
-        <li>hosting;</li>
-        <li>SSL;</li>
-        <li>platform and security updates;</li>
-        <li>maintenance;</li>
-        <li>support;</li>
-        <li>domain purchase, management and renewal;</li>
-        <li>transactional emails;</li>
-        <li>booking, admin and retail systems;</li>
-        <li>up to one hour of minor development changes per month;</li>
-        <li>email appointment confirmations and reminders.</li>
+        {PLAN_SCOPE_FULL_LIST.map((item) => (
+          <li>{item}</li>
+        ))}
       </ul>
       <p>
-        Automated SMS appointment reminders are <strong>not yet enabled</strong> as a standard platform feature.
-        If SMS is required for your launch, agree it with us in writing at setup.
+        You configure day-to-day shop details yourself in the admin dashboard (barbers, services, prices, working hours,
+        retail products and basic shop details such as name, town/city and logo).
       </p>
+      <p>
+        Unlimited automated SMS appointment reminders are included while your subscription is active. There is no
+        fair-use surcharge for standard appointment reminders in the £{SAAS_MONTHLY_GBP}/month plan.
+      </p>
+
+      <h2 id="fair-use">Limits and fair use</h2>
+      <p>{FAIR_USE_INTRO}</p>
+      <p>Within one location, the plan covers unlimited:</p>
+      <ul>
+        {FAIR_USE_UNLIMITED_LIST.map((item) => (
+          <li>{item}</li>
+        ))}
+      </ul>
+      <p>Reasonable fair use applies. Fair use does not allow:</p>
+      <ul>
+        {FAIR_USE_PROHIBITED_LIST.map((item) => (
+          <li>{item}</li>
+        ))}
+      </ul>
+      <p>{FAIR_USE_ORDINARY_BREACH_CLAIM}</p>
+      <p>{FAIR_USE_IMMEDIATE_RESTRICTION_CLAIM}</p>
+      <p>Immediate restriction may follow:</p>
+      <ul>
+        {FAIR_USE_IMMEDIATE_TRIGGERS.map((item) => (
+          <li>{item}</li>
+        ))}
+      </ul>
 
       <h2>If your subscription ends</h2>
       <p>
@@ -97,12 +157,32 @@ import '@/styles/legal-pages.css';
         self-serve way to keep those systems running without an active subscription.
       </p>
 
-      <h2>Domain name</h2>
+      <h2 id="domain">Domain name</h2>
+      <p>{DOMAIN_INCLUDED_CLAIM}</p>
+      <p>{DOMAIN_NEW_CLAIM}</p>
       <p>
-        You are the <strong>registrant and owner</strong> of your domain name. While your subscription is active, KERSIVO
-        purchases, manages and renews the domain on your behalf. After cancellation, we transfer management control to
-        you. The KERSIVO platform is <strong>not</strong> transferred with the domain.
+        Where KERSIVO registers a domain for you, you must confirm authorisation (collected in the post-purchase
+        onboarding form), including agreement to:
       </p>
+      <blockquote>
+        <p>{DOMAIN_AUTH_TEXT}</p>
+      </blockquote>
+      <p>{DOMAIN_EXISTING_CLAIM}</p>
+      <p>{DOMAIN_LIMIT_CLAIM}</p>
+      <p>
+        The KERSIVO platform software is <strong>not</strong> transferred with the domain when the engagement ends.
+      </p>
+
+      <h2 id="onboarding-and-launch">Onboarding, preparation and launch</h2>
+      <p>{ONBOARDING_MATERIALS_CLAIM}</p>
+      <p>{ONBOARDING_BILLING_INDEPENDENT_CLAIM}</p>
+      <p>{ONBOARDING_TIMELINE_CLAIM}</p>
+      <p>{PREVIEW_LAUNCH_CLAIM}</p>
+
+      <h2 id="missing-materials">Missing materials</h2>
+      <p>{MISSING_OPTIONAL_MATERIALS_CLAIM}</p>
+      <p>{MISSING_CRITICAL_MATERIALS_CLAIM}</p>
+      <p>{NO_FAKE_STOCK_CLAIM}</p>
 
       <h2>Stripe and retail</h2>
       <p>

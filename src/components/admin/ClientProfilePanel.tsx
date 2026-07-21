@@ -26,10 +26,32 @@ type StatsData = {
   favouriteService: string | null;
 };
 
+type RetailStatsData = {
+  productsBought: number;
+  avgSpendPence: number;
+};
+
+type LastOrderItem = {
+  nameSnapshot: string;
+  quantity: number;
+};
+
+type LastOrderData = {
+  id: string;
+  status: string;
+  totalPence: number;
+  paidAt: string | null;
+  createdAt: string;
+  items: LastOrderItem[];
+};
+
 type ProfileData = {
   client: ClientData;
   stats: StatsData;
   reliabilityScore: number;
+  retailStats: RetailStatsData;
+  lastOrder: LastOrderData | null;
+  financialsHidden?: boolean;
 };
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
@@ -51,6 +73,13 @@ function formatPence(pence: number): string {
 function formatDate(iso: string | null): string {
   if (!iso) return '—';
   return new Date(iso).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' });
+}
+
+function formatOrderStatus(status: string): string {
+  if (status === 'READY_FOR_PICKUP') return 'Ready for pickup';
+  if (status === 'PAID') return 'Paid';
+  if (status === 'COLLECTED') return 'Collected';
+  return status;
 }
 
 function getScoreLabel(score: number): string {
@@ -213,6 +242,7 @@ type ClientNoteImage = {
 type ClientNotePost = {
   id: string;
   body: string;
+  isInternal?: boolean;
   createdAt: string;
   likeCount: number;
   likedByMe: boolean;
@@ -402,6 +432,9 @@ function NotePost({
         <div className="admin-cp-note-post-meta">
           <div className="admin-cp-note-post-meta-row">
             <span className="admin-cp-note-post-author">{authorName}</span>
+            {note.isInternal ? (
+              <span className="admin-cp-note-post-pinned-badge">Internal</span>
+            ) : null}
             {isFeedPinned ? (
               <span className="admin-cp-note-post-pinned-badge">
                 <Pin className="admin-cp-note-post-pinned-badge-icon" aria-hidden />
@@ -439,6 +472,8 @@ function NotePost({
 function NotesEditor({ clientId }: { clientId: string }) {
   const [notes, setNotes] = useState<ClientNotePost[]>([]);
   const [draft, setDraft] = useState('');
+  const [markInternal, setMarkInternal] = useState(false);
+  const [canMarkInternal, setCanMarkInternal] = useState(false);
   const [loading, setLoading] = useState(true);
   const [loadError, setLoadError] = useState('');
   const [postState, setPostState] = useState<'idle' | 'posting' | 'posted' | 'failed'>('idle');
@@ -510,12 +545,16 @@ function NotesEditor({ clientId }: { clientId: string }) {
     let cancelled = false;
     setLoading(true);
     setLoadError('');
+    setMarkInternal(false);
 
-    adminFetchJson<{ notes: ClientNotePost[] }>(`/api/admin/clients/${clientId}/notes`, {
+    adminFetchJson<{ notes: ClientNotePost[]; canMarkInternal?: boolean }>(`/api/admin/clients/${clientId}/notes`, {
       errorMessage: 'Could not load notes.',
     })
       .then((notesResponse) => {
-        if (!cancelled) setNotes(notesResponse.notes);
+        if (!cancelled) {
+          setNotes(notesResponse.notes);
+          setCanMarkInternal(Boolean(notesResponse.canMarkInternal));
+        }
       })
       .catch((error) => {
         if (!cancelled) {
@@ -546,6 +585,7 @@ function NotesEditor({ clientId }: { clientId: string }) {
       if (pendingImages.length > 0) {
         const formData = new FormData();
         formData.append('body', body);
+        if (canMarkInternal && markInternal) formData.append('isInternal', 'true');
         pendingImages.forEach((image) => {
           formData.append('images', image.file);
         });
@@ -564,7 +604,7 @@ function NotesEditor({ clientId }: { clientId: string }) {
           {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ body }),
+            body: JSON.stringify({ body, isInternal: canMarkInternal && markInternal }),
             errorMessage: 'Could not post note.',
           },
         );
@@ -572,6 +612,7 @@ function NotesEditor({ clientId }: { clientId: string }) {
 
       setNotes((current) => [...current, response.note]);
       setDraft('');
+      setMarkInternal(false);
       clearPendingImages();
       setPostState('posted');
       setTimeout(() => setPostState('idle'), 2000);
@@ -579,7 +620,7 @@ function NotesEditor({ clientId }: { clientId: string }) {
       setPostState('failed');
       setPostError(error instanceof Error ? error.message : 'Could not post note.');
     }
-  }, [clientId, clearPendingImages, draft, pendingImages]);
+  }, [canMarkInternal, clientId, clearPendingImages, draft, markInternal, pendingImages]);
 
   const handleLike = useCallback(async (noteId: string) => {
     let previousNote: ClientNotePost | undefined;
@@ -683,6 +724,18 @@ function NotesEditor({ clientId }: { clientId: string }) {
           rows={2}
           disabled={postState === 'posting'}
         />
+
+        {canMarkInternal ? (
+          <label className="admin-cp-note-compose-internal">
+            <input
+              type="checkbox"
+              checked={markInternal}
+              onChange={(e) => setMarkInternal(e.target.checked)}
+              disabled={postState === 'posting'}
+            />
+            <span>Internal (managers only)</span>
+          </label>
+        ) : null}
 
         <div className="admin-cp-note-compose-actions">
           <button
@@ -914,11 +967,41 @@ function ClientMessageActions({
 export type ClientProfilePanelProps = {
   clientId: string;
   onClose: () => void;
+  /** When false, tags are read-only. Defaults from session (Barber = false). */
+  canEditTags?: boolean;
 };
 
-const ClientProfilePanel = memo(function ClientProfilePanel({ clientId, onClose }: ClientProfilePanelProps) {
+const ClientProfilePanel = memo(function ClientProfilePanel({
+  clientId,
+  onClose,
+  canEditTags: canEditTagsProp,
+}: ClientProfilePanelProps) {
   const [data, setData] = useState<ProfileData | null>(null);
   const [error, setError] = useState('');
+  const [canEditTags, setCanEditTags] = useState(canEditTagsProp ?? true);
+
+  useEffect(() => {
+    if (typeof canEditTagsProp === 'boolean') {
+      setCanEditTags(canEditTagsProp);
+      return;
+    }
+    let cancelled = false;
+    void (async () => {
+      try {
+        const response = await fetch('/api/admin/session', { credentials: 'include' });
+        if (!response.ok || cancelled) return;
+        const payload = (await response.json()) as { role?: string; permissions?: string[] };
+        if (cancelled) return;
+        // Barber: notes/photos only — no tag edits (blocking).
+        setCanEditTags(payload.role !== 'BARBER');
+      } catch {
+        // keep default
+      }
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, [canEditTagsProp]);
 
   const loadProfile = useCallback(async () => {
     setData(null);
@@ -1045,7 +1128,19 @@ const ClientProfilePanel = memo(function ClientProfilePanel({ clientId, onClose 
             </div>
 
             {/* Tags */}
-            <TagsEditor clientId={clientId} initialTags={data.client.tags} />
+            {canEditTags ? (
+              <TagsEditor clientId={clientId} initialTags={data.client.tags} />
+            ) : data.client.tags.length > 0 ? (
+              <div className="admin-cp-tags-wrap" aria-label="Client tags">
+                <div className="admin-cp-tags-row">
+                  {data.client.tags.map((tag) => (
+                    <span key={tag} className="admin-cp-tag">
+                      {tag}
+                    </span>
+                  ))}
+                </div>
+              </div>
+            ) : null}
 
             {/* Reliability score */}
             <div className="admin-cp-score-section">
@@ -1087,14 +1182,18 @@ const ClientProfilePanel = memo(function ClientProfilePanel({ clientId, onClose 
                   <dt>Last visit</dt>
                   <dd>{formatDate(data.stats.lastVisitAt)}</dd>
                 </div>
-                <div className="admin-cp-stat">
-                  <dt>Total spent</dt>
-                  <dd>{data.stats.totalSpentPence > 0 ? formatPence(data.stats.totalSpentPence) : '—'}</dd>
-                </div>
-                <div className="admin-cp-stat">
-                  <dt>Avg per visit</dt>
-                  <dd>{data.stats.avgSpendPence > 0 ? formatPence(data.stats.avgSpendPence) : '—'}</dd>
-                </div>
+                {!data.financialsHidden ? (
+                  <>
+                    <div className="admin-cp-stat">
+                      <dt>Total spent</dt>
+                      <dd>{data.stats.totalSpentPence > 0 ? formatPence(data.stats.totalSpentPence) : '—'}</dd>
+                    </div>
+                    <div className="admin-cp-stat">
+                      <dt>Avg per visit</dt>
+                      <dd>{data.stats.avgSpendPence > 0 ? formatPence(data.stats.avgSpendPence) : '—'}</dd>
+                    </div>
+                  </>
+                ) : null}
                 {data.stats.favouriteService && (
                   <div className="admin-cp-stat admin-cp-stat--full">
                     <dt>Favourite service</dt>
@@ -1103,6 +1202,49 @@ const ClientProfilePanel = memo(function ClientProfilePanel({ clientId, onClose 
                 )}
               </dl>
             </div>
+
+            {/* Retail */}
+            {!data.financialsHidden ? (
+            <div className="admin-cp-stats-section">
+              <div className="admin-cp-section-header">
+                <span className="admin-cp-section-title">Retail</span>
+              </div>
+              <dl className="admin-cp-stats-grid">
+                <div className="admin-cp-stat">
+                  <dt>Products bought</dt>
+                  <dd>{data.retailStats.productsBought > 0 ? data.retailStats.productsBought : '—'}</dd>
+                </div>
+                <div className="admin-cp-stat">
+                  <dt>Avg retail spend</dt>
+                  <dd>{data.retailStats.avgSpendPence > 0 ? formatPence(data.retailStats.avgSpendPence) : '—'}</dd>
+                </div>
+              </dl>
+              {data.lastOrder ? (
+                <div className="admin-cp-last-order">
+                  <div className="admin-cp-last-order-header">
+                    <span className="admin-cp-last-order-label">Last order</span>
+                    <span className="admin-cp-last-order-meta">
+                      {formatDate(data.lastOrder.paidAt ?? data.lastOrder.createdAt)}
+                      {' · '}
+                      {formatOrderStatus(data.lastOrder.status)}
+                      {' · '}
+                      {formatPence(data.lastOrder.totalPence)}
+                    </span>
+                  </div>
+                  <ul className="admin-cp-last-order-items">
+                    {data.lastOrder.items.map((item, index) => (
+                      <li key={`${data.lastOrder!.id}-${item.nameSnapshot}-${index}`}>
+                        {item.nameSnapshot}
+                        {item.quantity > 1 ? ` × ${item.quantity}` : ''}
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              ) : (
+                <p className="admin-cp-last-order-empty">No retail orders yet.</p>
+              )}
+            </div>
+            ) : null}
 
             {/* Notes */}
             <NotesEditor clientId={clientId} />

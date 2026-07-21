@@ -3,6 +3,7 @@ export const prerender = false;
 import type { APIRoute } from 'astro';
 import { SetupDepositStatus, SetupPlan } from '@prisma/client';
 import { resolveAdminAccess } from '../../../lib/admin/auth';
+import { requirePermission } from '../../../lib/admin/rbac/can';
 import { prisma } from '../../../lib/db/client';
 import type { SetupPlanId } from '../../../lib/setup/plans';
 
@@ -11,13 +12,15 @@ function setupPlanToId(plan: SetupPlan): SetupPlanId {
 }
 
 /**
- * Context for Launch Wizard: session gate + optional PENDING deposit for continue_purchase.
+ * Context for Launch Wizard: Owner billing gate + optional PENDING deposit for continue_purchase.
  */
 export const GET: APIRoute = async (context) => {
   const access = await resolveAdminAccess(context);
   if (!access || access.via !== 'session') {
     return new Response(JSON.stringify({ error: 'Unauthorized' }), { status: 401 });
   }
+  const denied = requirePermission(access, 'billing.manage');
+  if (denied) return denied;
 
   const shop = await prisma.shopSettings.findUnique({
     where: { id: access.shopId },

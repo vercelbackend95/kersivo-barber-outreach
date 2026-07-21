@@ -1,7 +1,9 @@
 export const prerender = false;
 
 import type { APIRoute } from 'astro';
-import { getSessionBarberId, requireAdminContext, resolveNoteAuthorBarberId } from '@/lib/admin/auth';
+import { requireAdminPermission } from '@/lib/admin/auth';
+import { resolveActingBarberId } from '@/lib/admin/rbac/actingBarber';
+import { assertClientAccessible } from '@/lib/admin/rbac/scope';
 import { prisma } from '@/lib/db/client';
 
 async function assertNoteInClientShop(noteId: string, clientId: string, shopId: string) {
@@ -11,12 +13,12 @@ async function assertNoteInClientShop(noteId: string, clientId: string, shopId: 
       clientId,
       client: { shopId },
     },
-    select: { id: true },
+    select: { id: true, isInternal: true },
   });
 }
 
 export const POST: APIRoute = async (ctx) => {
-  const access = await requireAdminContext(ctx);
+  const access = await requireAdminPermission(ctx, 'clients.write');
   if (access instanceof Response) return access;
 
   const clientId = ctx.params.clientId;
@@ -25,13 +27,19 @@ export const POST: APIRoute = async (ctx) => {
     return new Response(JSON.stringify({ error: 'Missing client or note id.' }), { status: 400 });
   }
 
-  const barberId = resolveNoteAuthorBarberId(ctx);
+  const scoped = await assertClientAccessible(access, clientId);
+  if (scoped instanceof Response) return scoped;
+
+  const barberId = resolveActingBarberId(access, ctx);
   if (!barberId) {
     return new Response(JSON.stringify({ error: 'Barber session required to like notes.' }), { status: 400 });
   }
 
   const note = await assertNoteInClientShop(noteId, clientId, access.shopId);
   if (!note) return new Response(JSON.stringify({ error: 'Note not found.' }), { status: 404 });
+  if (access.role === 'BARBER' && note.isInternal) {
+    return new Response(JSON.stringify({ error: 'Note not found.' }), { status: 404 });
+  }
 
   const barber = await prisma.barber.findFirst({
     where: { id: barberId, active: true, shopId: access.shopId },
@@ -55,17 +63,16 @@ export const POST: APIRoute = async (ctx) => {
   }
 
   const likeCount = await prisma.clientNoteLike.count({ where: { noteId } });
-  const sessionBarberId = getSessionBarberId(ctx);
 
   return new Response(
     JSON.stringify({
       likeCount,
-      likedByMe: sessionBarberId
-        ? await prisma.clientNoteLike.findFirst({
-            where: { noteId, barberId: sessionBarberId },
-            select: { id: true },
-          }).then(Boolean)
-        : false,
+      likedByMe: Boolean(
+        await prisma.clientNoteLike.findFirst({
+          where: { noteId, barberId },
+          select: { id: true },
+        }),
+      ),
     }),
     { headers: { 'Content-Type': 'application/json' } },
   );

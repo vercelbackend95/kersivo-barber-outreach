@@ -2,7 +2,7 @@ export const prerender = false;
 
 import type { APIRoute } from 'astro';
 import { z } from 'zod';
-import { requireAdminContext } from '../../../../../lib/admin/auth';
+import { requireAdminPermission } from '../../../../../lib/admin/auth';
 import { runSerializableTransaction } from '../../../../../lib/db/serializableTransaction';
 import { insertProductIntoShopOrder, normalizeRequestedProductSortOrder } from '../../../../../lib/products/sortOrder';
 import { makeBlobPath, uploadPublicImageToBlob } from '../../../../../lib/storage/vercelBlob';
@@ -90,7 +90,7 @@ async function markRetailOnboardingCompleted(shopId: string, productId: string) 
 }
 
 export const POST: APIRoute = async (ctx) => {
-  const access = await requireAdminContext(ctx);
+  const access = await requireAdminPermission(ctx, 'retail.manage');
   if (access instanceof Response) return access;
 
   const contentType = ctx.request.headers.get('content-type') ?? '';

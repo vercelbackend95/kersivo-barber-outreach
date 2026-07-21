@@ -2,7 +2,7 @@ export const prerender = false;
 
 import type { APIRoute } from 'astro';
 import { z } from 'zod';
-import { requireAdminContext } from '../../../../../lib/admin/auth';
+import { requireAdminPermission } from '../../../../../lib/admin/auth';
 import { findShopBarber } from '../../../../../lib/admin/shopScoped';
 import { prisma } from '../../../../../lib/db/client';
 
@@ -48,7 +48,7 @@ async function serializeRules(barberId: string) {
 }
 
 export const GET: APIRoute = async (ctx) => {
-  const access = await requireAdminContext(ctx);
+  const access = await requireAdminPermission(ctx, 'catalog.manage');
   if (access instanceof Response) return access;
 
   const barberId = ctx.params.id;
@@ -66,7 +66,7 @@ export const GET: APIRoute = async (ctx) => {
 };
 
 export const PUT: APIRoute = async (ctx) => {
-  const access = await requireAdminContext(ctx);
+  const access = await requireAdminPermission(ctx, 'catalog.manage');
   if (access instanceof Response) return access;
 
   const barberId = ctx.params.id;

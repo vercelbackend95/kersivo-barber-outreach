@@ -1,20 +1,15 @@
 export const prerender = false;
 
 import type { APIRoute } from 'astro';
-import { getSessionBarberId, requireAdminContext, resolveNoteAuthorBarberId } from '@/lib/admin/auth';
+import { requireAdminPermission } from '@/lib/admin/auth';
+import { resolveActingBarberId } from '@/lib/admin/rbac/actingBarber';
+import { assertClientAccessible } from '@/lib/admin/rbac/scope';
 import { clientNoteBaseSelect, mapNoteWithLikes } from '@/lib/admin/clientNoteLikes';
 import { prisma } from '@/lib/db/client';
 import { storeNoteImage } from '@/lib/storage/storeNoteImage';
 
 const MAX_NOTE_LENGTH = 2000;
 const MAX_NOTE_IMAGES = 3;
-
-async function assertClientInShop(clientId: string, shopId: string) {
-  return prisma.client.findFirst({
-    where: { id: clientId, shopId },
-    select: { id: true },
-  });
-}
 
 function jsonResponse(body: unknown, status = 200) {
   return new Response(JSON.stringify(body), {
@@ -36,31 +31,44 @@ async function parseNotePostPayload(ctx: Parameters<APIRoute>[0]) {
     const form = await ctx.request.formData();
     const body = String(form.get('body') ?? '').trim();
     const imageFiles = parseImageFiles(form);
-    return { body, imageFiles };
+    const isInternalRaw = String(form.get('isInternal') ?? '').toLowerCase();
+    const isInternal = isInternalRaw === '1' || isInternalRaw === 'true';
+    return { body, imageFiles, isInternal };
   }
 
-  const payload = (await ctx.request.json().catch(() => null)) as { body?: unknown } | null;
+  const payload = (await ctx.request.json().catch(() => null)) as {
+    body?: unknown;
+    isInternal?: unknown;
+  } | null;
   if (!payload || typeof payload.body !== 'string') {
     return null;
   }
 
-  return { body: payload.body.trim(), imageFiles: [] as File[] };
+  return {
+    body: payload.body.trim(),
+    imageFiles: [] as File[],
+    isInternal: payload.isInternal === true,
+  };
 }
 
 export const GET: APIRoute = async (ctx) => {
-  const access = await requireAdminContext(ctx);
+  const access = await requireAdminPermission(ctx, 'clients.read');
   if (access instanceof Response) return access;
 
   const clientId = ctx.params.clientId;
   if (!clientId) return jsonResponse({ error: 'Missing client id.' }, 400);
 
-  const client = await assertClientInShop(clientId, access.shopId);
-  if (!client) return jsonResponse({ error: 'Client not found.' }, 404);
+  const scoped = await assertClientAccessible(access, clientId);
+  if (scoped instanceof Response) return scoped;
 
-  const sessionBarberId = getSessionBarberId(ctx);
+  const sessionBarberId = resolveActingBarberId(access, ctx);
+  const hideInternal = access.role === 'BARBER';
 
   const notes = await prisma.clientNote.findMany({
-    where: { clientId },
+    where: {
+      clientId,
+      ...(hideInternal ? { isInternal: false } : {}),
+    },
     orderBy: { createdAt: 'asc' },
     select: {
       ...clientNoteBaseSelect,
@@ -78,20 +86,26 @@ export const GET: APIRoute = async (ctx) => {
 
   return jsonResponse({
     notes: notes.map((note) => mapNoteWithLikes(note, sessionBarberId)),
+    canMarkInternal: access.role === 'OWNER' || access.role === 'MANAGER',
   });
 };
 
 export const POST: APIRoute = async (ctx) => {
-  const access = await requireAdminContext(ctx);
+  const access = await requireAdminPermission(ctx, 'clients.write');
   if (access instanceof Response) return access;
 
   const clientId = ctx.params.clientId;
   if (!clientId) return jsonResponse({ error: 'Missing client id.' }, 400);
 
+  const scoped = await assertClientAccessible(access, clientId);
+  if (scoped instanceof Response) return scoped;
+
   const parsed = await parseNotePostPayload(ctx);
   if (!parsed) return jsonResponse({ error: 'Invalid note payload.' }, 400);
 
   const { body, imageFiles } = parsed;
+  const canMarkInternal = access.role === 'OWNER' || access.role === 'MANAGER';
+  const isInternal = canMarkInternal && parsed.isInternal;
   if (!body && imageFiles.length === 0) {
     return jsonResponse({ error: 'Note must include text or at least one image.' }, 400);
   }
@@ -102,13 +116,17 @@ export const POST: APIRoute = async (ctx) => {
     return jsonResponse({ error: `A note can include at most ${MAX_NOTE_IMAGES} images.` }, 400);
   }
 
-  const barberId = resolveNoteAuthorBarberId(ctx);
+  const barberId = resolveActingBarberId(access, ctx);
   if (!barberId) {
-    return jsonResponse({ error: 'Barber session required to post notes.' }, 400);
+    return jsonResponse(
+      {
+        error:
+          'Your account is not linked to a roster seat. Ask the shop owner to link you in Team before posting notes.',
+        code: 'BARBER_NOT_LINKED',
+      },
+      400,
+    );
   }
-
-  const client = await assertClientInShop(clientId, access.shopId);
-  if (!client) return jsonResponse({ error: 'Client not found.' }, 404);
 
   const barber = await prisma.barber.findFirst({
     where: { id: barberId, active: true, shopId: access.shopId },
@@ -123,6 +141,7 @@ export const POST: APIRoute = async (ctx) => {
       clientId,
       barberId,
       body,
+      isInternal,
     },
     select: { id: true },
   });

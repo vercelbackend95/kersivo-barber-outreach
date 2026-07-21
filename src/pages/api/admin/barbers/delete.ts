@@ -2,13 +2,13 @@ export const prerender = false;
 
 import type { APIRoute } from 'astro';
 import { z } from 'zod';
-import { requireAdminContext } from '../../../../lib/admin/auth';
+import { requireAdminPermission } from '../../../../lib/admin/auth';
 import { runSerializableTransaction } from '../../../../lib/db/serializableTransaction';
 
 const deleteSchema = z.object({ id: z.string().min(1) });
 
 export const POST: APIRoute = async (ctx) => {
-  const access = await requireAdminContext(ctx);
+  const access = await requireAdminPermission(ctx, 'catalog.manage');
   if (access instanceof Response) return access;
   const shopId = access.shopId;
 

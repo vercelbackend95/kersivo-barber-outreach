@@ -48,7 +48,7 @@ export const DepositSmsScene: React.FC = () => {
             ...NO_SHOW_VISUAL.text,
           }}
         >
-          We configure it for you. Clients book via your URL — no app.
+          Standard setup included. You run barbers and services in your dashboard. Clients book via your URL — no app.
         </p>
       </AbsoluteFill>
     </AbsoluteFill>

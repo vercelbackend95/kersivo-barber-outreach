@@ -74,7 +74,7 @@ export function buildBarberDemoJsonLd(): Record<string, unknown> {
               unitText: 'MONTH',
             },
             description:
-              'Custom site, booking, admin, pickup shop, hosting, support, platform updates, and scoped monthly tweaks. No setup fee.',
+              'Standard branded website, booking, admin, pickup shop, hosting, support, platform updates, and scoped monthly tweaks. No setup fee.',
             url: `${siteUrl}/#pricing`,
             availability: 'https://schema.org/InStock',
           },

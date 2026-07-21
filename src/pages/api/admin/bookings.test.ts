@@ -37,6 +37,9 @@ const adminAccess = {
   userEmail: 'admin@example.com',
   userImage: null,
   via: 'session' as const,
+  role: 'OWNER' as const,
+  memberId: 'member-1',
+  barberId: null,
 };
 
 function sampleBooking(overrides: Record<string, unknown> = {}) {

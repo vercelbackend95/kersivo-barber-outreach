@@ -19,6 +19,9 @@ type HistoryBookingStatusSheetProps = {
   booking: ScheduleListBooking | null;
   onClose: () => void;
   onSaved: (bookingId: string, status: HistoryStatusValue) => void | Promise<void>;
+  /** When 'barber', only Completed / No-show; when false, sheet won't open for mutations. */
+  actionRoleScope?: 'barber' | 'shop';
+  canEdit?: boolean;
 };
 
 const EASE_OUT_EXPO = [0.16, 1, 0.3, 1] as const;
@@ -50,6 +53,8 @@ export default function HistoryBookingStatusSheet({
   booking,
   onClose,
   onSaved,
+  actionRoleScope = 'shop',
+  canEdit = true,
 }: HistoryBookingStatusSheetProps) {
   const titleId = useId();
   const optionsId = useId();
@@ -59,6 +64,11 @@ export default function HistoryBookingStatusSheet({
   const [error, setError] = useState('');
   const isMobileChrome = useAdminMobileChromeBreakpoint();
   const reduceMotion = useReducedMotion();
+
+  const statusOptions =
+    actionRoleScope === 'barber'
+      ? HISTORY_STATUS_OPTIONS.filter((o) => o.value === 'COMPLETED' || o.value === 'NO_SHOW')
+      : HISTORY_STATUS_OPTIONS;
 
   useEffect(() => {
     setMounted(true);
@@ -72,6 +82,10 @@ export default function HistoryBookingStatusSheet({
 
   useEffect(() => {
     if (!booking) return undefined;
+    if (!canEdit) {
+      onClose();
+      return undefined;
+    }
     const previousOverflow = document.body.style.overflow;
     document.body.style.overflow = 'hidden';
     const onKeyDown = (event: KeyboardEvent) => {
@@ -82,9 +96,9 @@ export default function HistoryBookingStatusSheet({
       document.body.style.overflow = previousOverflow;
       document.removeEventListener('keydown', onKeyDown);
     };
-  }, [booking, onClose, saving]);
+  }, [booking, onClose, saving, canEdit]);
 
-  if (!mounted || typeof document === 'undefined') return null;
+  if (!mounted || typeof document === 'undefined' || !canEdit) return null;
 
   const currentStatus = booking ? toHistoryStatus(booking.status) : null;
   const barberName = booking?.barber?.name?.trim() || '—';
@@ -200,7 +214,7 @@ export default function HistoryBookingStatusSheet({
                 <p id={optionsId} className="sr-only">
                   Select booking status
                 </p>
-                {HISTORY_STATUS_OPTIONS.map((option) => {
+                {statusOptions.map((option) => {
                   const selected = selectedStatus === option.value;
                   return (
                     <button

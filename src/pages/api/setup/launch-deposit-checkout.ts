@@ -3,6 +3,7 @@ export const prerender = false;
 import type { APIRoute } from 'astro';
 import { SetupDepositStatus, SetupPlan } from '@prisma/client';
 import { resolveAdminAccess } from '../../../lib/admin/auth';
+import { requirePermission } from '../../../lib/admin/rbac/can';
 import { prisma } from '../../../lib/db/client';
 import { buildSetupDepositStripeMetadata, getSetupPlan, isSetupPlanId } from '../../../lib/setup/plans';
 import { getPublicSiteUrl } from '../../../lib/setup/siteUrl';
@@ -50,7 +51,7 @@ function shopSizeFromBarberCount(count: number): string {
 }
 
 /**
- * Authenticated setup-deposit checkout for Launch Wizard (session owner only).
+ * Authenticated setup-deposit checkout for Launch Wizard (Owner / billing.manage only).
  */
 export const POST: APIRoute = async (context) => {
   try {
@@ -58,6 +59,8 @@ export const POST: APIRoute = async (context) => {
     if (!access || access.via !== 'session') {
       return new Response(JSON.stringify({ error: 'Unauthorized' }), { status: 401 });
     }
+    const denied = requirePermission(access, 'billing.manage');
+    if (denied) return denied;
 
     let body: LaunchDepositCheckoutInput;
     try {

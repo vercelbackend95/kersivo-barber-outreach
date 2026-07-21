@@ -1,7 +1,7 @@
 export const prerender = false;
 
 import type { APIRoute } from 'astro';
-import { requireAdminContext } from '../../../../../../lib/admin/auth';
+import { requireAdminPermission } from '../../../../../../lib/admin/auth';
 import { prisma } from '../../../../../../lib/db/client';
 
 async function resolveCustomerName(shopId: string, customerEmail: string): Promise<string | null> {
@@ -27,7 +27,7 @@ async function resolveCustomerName(shopId: string, customerEmail: string): Promi
 }
 
 export const GET: APIRoute = async (ctx) => {
-  const access = await requireAdminContext(ctx);
+  const access = await requireAdminPermission(ctx, 'retail.manage');
   if (access instanceof Response) return access;
   const shopId = access.shopId;
   const orderId = ctx.params.id;

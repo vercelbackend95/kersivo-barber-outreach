@@ -3,6 +3,8 @@ import React from "react";
 
 import { HeroHeadlineLines } from "@/components/hero/HeroHeadlineLines";
 import { Button } from "@/components/ui/button";
+import { PLAN_SCOPE_SHORT, PRICE_VAT_DISCLAIMER } from "@/lib/pricing/claimsPolicy";
+import { SAAS_MONTHLY_GBP } from "@/lib/seo/defaults";
 import { cn } from "@/lib/utils";
 
 interface BarbershopBookingHeroProps {
@@ -65,7 +67,7 @@ const BarbershopBookingHero = ({ className }: BarbershopBookingHeroProps) => {
 
             <div className="hero227-mid-band w-full max-w-3xl space-y-3 px-1 sm:px-2">
               <p className="hero227-price-line">
-                &pound;39/month. Price shown are final.
+                &pound;{SAAS_MONTHLY_GBP}/month. {PLAN_SCOPE_SHORT} {PRICE_VAT_DISCLAIMER}
               </p>
               <div className="hero227-cta-pill flex flex-wrap items-center justify-center gap-3">
                 <Button

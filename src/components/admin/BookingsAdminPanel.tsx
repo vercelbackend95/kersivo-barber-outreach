@@ -625,6 +625,8 @@ type BookingsAdminPanelProps = {
 export default function BookingsAdminPanel({ isActive, mode, onBackToDashboard, isPublicDemo = false }: BookingsAdminPanelProps) {
   /* Parent AdminPanel already gated session; avoid a second blocking "Checking session…" flash. */
   const [loggedIn, setLoggedIn] = useState(true);
+  const [sessionBarberId, setSessionBarberId] = useState<string | null>(null);
+  const [canManageBookings, setCanManageBookings] = useState(true);
   const [bookings, setBookings] = useState<Booking[]>([]);
   const [bookingsInitialLoading, setBookingsInitialLoading] = useState(true);
   const [barbers, setBarbers] = useState<Barber[]>([]);
@@ -944,7 +946,18 @@ export default function BookingsAdminPanel({ isActive, mode, onBackToDashboard, 
     void (async () => {
       try {
         const response = await fetch('/api/admin/session', { credentials: 'include' });
-        if (!response.ok) setLoggedIn(false);
+        if (!response.ok) {
+          setLoggedIn(false);
+          return;
+        }
+        const payload = (await response.json()) as {
+          barberId?: string | null;
+          permissions?: string[];
+          role?: string;
+        };
+        setSessionBarberId(payload.barberId ?? null);
+        const perms = payload.permissions ?? [];
+        setCanManageBookings(perms.includes('bookings.manage') || payload.role === 'OWNER' || payload.role === 'MANAGER');
       } catch {
         setLoggedIn(false);
       }
@@ -2122,6 +2135,8 @@ export default function BookingsAdminPanel({ isActive, mode, onBackToDashboard, 
                       allowInitialNowScroll={isTimelineEnterComplete && !timelineFocusBookingId}
                       focusBookingId={timelineFocusBookingId}
                       onFocusBookingHandled={handleTimelineFocusBookingHandled}
+                      sessionBarberId={sessionBarberId}
+                      canManageBookings={canManageBookings}
                       floatingTopRight={
                         isMobileViewport ? (
                           <AdminBookingDatePicker
@@ -2462,6 +2477,12 @@ export default function BookingsAdminPanel({ isActive, mode, onBackToDashboard, 
       <HistoryBookingStatusSheet
         booking={historyStatusBooking}
         onClose={() => setHistoryStatusBooking(null)}
+        actionRoleScope={canManageBookings ? 'shop' : 'barber'}
+        canEdit={
+          Boolean(historyStatusBooking) &&
+          (canManageBookings ||
+            Boolean(sessionBarberId && historyStatusBooking?.barberId === sessionBarberId))
+        }
         onSaved={async (bookingId: string, status: HistoryStatusValue) => {
           setBookings((previous) => previous.map((booking) => (
             booking.id === bookingId ? { ...booking, status } : booking

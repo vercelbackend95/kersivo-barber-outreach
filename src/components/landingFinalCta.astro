@@ -1,4 +1,9 @@
 ---
+import {
+  INCLUDED_SETUP_SHORT,
+  NO_SETUP_FEE_SHORT,
+  OWNER_SELF_CONFIG_SHORT,
+} from '@/lib/pricing/claimsPolicy';
 import '../styles/components/landingFinalCta.css';
 
 interface Props {
@@ -19,7 +24,8 @@ const { className = '' } = Astro.props as Props;
           Ready to run bookings on your own domain?
         </h2>
         <p class="landing-final-cta__subheadline">
-          Start your £39/month subscription, complete onboarding and let KERSIVO build your booking website, retail pickup shop and admin system.
+          Start your £39/month subscription (one physical location). {NO_SETUP_FEE_SHORT}
+          {INCLUDED_SETUP_SHORT} {OWNER_SELF_CONFIG_SHORT}
         </p>
       </div>
 

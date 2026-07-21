@@ -3,6 +3,7 @@ export const prerender = false;
 import type { APIRoute } from 'astro';
 import { z } from 'zod';
 import { resolveAdminAccess } from '../../../lib/admin/auth';
+import { requirePermission } from '../../../lib/admin/rbac/can';
 import { linkAllServicesToAllBarbers } from '../../../lib/admin/onboarding';
 import { prisma } from '../../../lib/db/client';
 
@@ -30,6 +31,8 @@ export const PUT: APIRoute = async (context) => {
     if (!access || access.via !== 'session') {
       return new Response(JSON.stringify({ error: 'Unauthorized' }), { status: 401 });
     }
+    const denied = requirePermission(access, 'billing.manage');
+    if (denied) return denied;
 
     const shop = await prisma.shopSettings.findUnique({
       where: { id: access.shopId },

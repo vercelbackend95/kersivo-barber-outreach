@@ -1,6 +1,13 @@
 import {
+  BILLING_CYCLE_SHORT,
+  CLIENT_COMMS_CLAIM,
+  DOMAIN_INCLUDED_SHORT,
   KERSIVO_COMMISSION_CLAIM,
-  SMS_INCLUDED_CLAIM,
+  KERSIVO_COMMISSION_WITH_STRIPE,
+  NO_SETUP_FEE_SHORT,
+  PLAN_SCOPE_HIGHLIGHTS,
+  PLAN_SCOPE_PILLS,
+  PLAN_SCOPE_SHORT,
   STRIPE_FEES_NOTE,
 } from '@/lib/pricing/claimsPolicy';
 import { SAAS_MONTHLY_GBP } from '@/lib/seo/defaults';
@@ -9,6 +16,7 @@ export type RateCard1Variant = 'default' | 'landing';
 
 export type RateCard1Copy = {
   ongoingCareBullets: string[];
+  planPills: string[];
   planSubtext: string;
   ctaLabel: string;
   leadCommissionLabel: string;
@@ -24,44 +32,23 @@ const SHARED = {
     'We ship platform and security updates so the system stays maintained as your shop grows.',
 } as const;
 
-const SAAS_BULLETS_DEFAULT = [
-  'Custom site + booking + admin + pickup shop setup',
-  'Domain purchase, management and renewal while your subscription is active',
-  `${KERSIVO_COMMISSION_CLAIM} ${STRIPE_FEES_NOTE}`,
-  'Hosting + SSL included while your subscription is active',
-  `${SMS_INCLUDED_CLAIM}. Support, platform updates, 1h minor changes/month`,
-];
-
-const SAAS_BULLETS_LANDING = [
-  'Custom site + booking + admin + pickup shop setup',
-  'Domain purchase, management and renewal while your subscription is active',
-  `${KERSIVO_COMMISSION_CLAIM} ${STRIPE_FEES_NOTE}`,
-  'Hosting + SSL included while your subscription is active',
-  `${SMS_INCLUDED_CLAIM}. Support, platform updates, and 1 hour of minor changes each month`,
-];
+const PLAN_SUBTEXT = `${NO_SETUP_FEE_SHORT} ${PLAN_SCOPE_SHORT} ${DOMAIN_INCLUDED_SHORT} ${BILLING_CYCLE_SHORT} Cancel anytime.`;
 
 const DEFAULT_COPY: RateCard1Copy = {
-  ongoingCareBullets: SAAS_BULLETS_DEFAULT,
-  planSubtext:
-    'Everything you need to run booking, retail and admin on your own domain — billed monthly, cancel anytime.',
+  ongoingCareBullets: [...PLAN_SCOPE_HIGHLIGHTS],
+  planPills: [...PLAN_SCOPE_PILLS],
+  planSubtext: PLAN_SUBTEXT,
   ctaLabel: `Get started — £${SAAS_MONTHLY_GBP}/mo`,
   leadCommissionLabel: KERSIVO_COMMISSION_CLAIM.replace(/\.$/, ''),
-  bookingShopDescription: `Clients book and buy on your domain. ${KERSIVO_COMMISSION_CLAIM} ${STRIPE_FEES_NOTE}`,
+  bookingShopDescription: `Clients book and buy on your domain. ${KERSIVO_COMMISSION_WITH_STRIPE}`,
   alwaysOnDescription:
-    'Hosting, SSL, domain renewal, admin panel and pickup shop stay online while your subscription is active.',
-  clientCommsDescription: `${SMS_INCLUDED_CLAIM} while your subscription is active.`,
+    'Hosting, SSL, domain, admin dashboard and retail pickup shop stay online while your subscription is active.',
+  clientCommsDescription: `${CLIENT_COMMS_CLAIM} Included while your subscription is active.`,
 };
 
 const LANDING_COPY: RateCard1Copy = {
-  ongoingCareBullets: SAAS_BULLETS_LANDING,
-  planSubtext:
-    'Everything you need to run booking, retail and admin on your own domain — billed monthly, cancel anytime.',
-  ctaLabel: `Get started — £${SAAS_MONTHLY_GBP}/mo`,
-  leadCommissionLabel: KERSIVO_COMMISSION_CLAIM.replace(/\.$/, ''),
+  ...DEFAULT_COPY,
   bookingShopDescription: `Clients book and buy on your domain. ${KERSIVO_COMMISSION_CLAIM} ${STRIPE_FEES_NOTE}`,
-  alwaysOnDescription:
-    'Hosting, SSL, domain renewal, admin panel and pickup shop stay online while your subscription is active.',
-  clientCommsDescription: `${SMS_INCLUDED_CLAIM} while your subscription is active.`,
 };
 
 export function getRateCard1Copy(variant: RateCard1Variant = 'default'): RateCard1Copy {

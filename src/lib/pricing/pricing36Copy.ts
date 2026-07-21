@@ -31,7 +31,7 @@ export type Pricing36Copy = {
 };
 
 const SAAS_BULLETS_DEFAULT = [
-  'Custom site + booking + admin + pickup shop setup',
+  'Standard branded website + booking + admin + pickup shop setup',
   'Domain purchase, management and renewal while your subscription is active',
   `${KERSIVO_COMMISSION_CLAIM} ${STRIPE_FEES_NOTE}`,
   'Hosting + SSL included while your subscription is active',
@@ -39,7 +39,7 @@ const SAAS_BULLETS_DEFAULT = [
 ];
 
 const SAAS_BULLETS_LANDING = [
-  'Custom site + booking + admin + pickup shop setup',
+  'Standard branded website + booking + admin + pickup shop setup',
   'Domain purchase, management and renewal while your subscription is active',
   `${KERSIVO_COMMISSION_CLAIM} ${STRIPE_FEES_NOTE}`,
   'Hosting + SSL included while your subscription is active',
@@ -53,7 +53,7 @@ const DEFAULT_COPY: Pricing36Copy = {
   launchSubtext:
     'Hosting, SSL, domain renewal, support, platform updates, and 1h minor changes/month — same Care on every plan.',
   launchBullets: [
-    'Custom site + booking + admin + pickup shop setup',
+    'Standard branded website + booking + admin + pickup shop setup',
     'Domain purchase, management and renewal while Care is active',
     `${KERSIVO_COMMISSION_CLAIM} ${STRIPE_FEES_NOTE}`,
     'Hosting + SSL included while Care is active',
@@ -92,7 +92,7 @@ const LANDING_COPY: Pricing36Copy = {
   launchSubtext:
     'Hosting, SSL, domain renewal, support, platform updates, and 1 hour of minor changes each month — same Care on every plan.',
   launchBullets: [
-    'Custom site + booking + admin + pickup shop setup',
+    'Standard branded website + booking + admin + pickup shop setup',
     'Domain purchase, management and renewal while Care is active',
     `${KERSIVO_COMMISSION_CLAIM} ${STRIPE_FEES_NOTE}`,
     'Hosting + SSL included while Care is active',

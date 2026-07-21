@@ -2,7 +2,7 @@ export const prerender = false;
 
 import type { APIRoute } from 'astro';
 import OpenAI from 'openai';
-import { requireAdmin } from '@/lib/admin/auth';
+import { requireAdminPermission } from '@/lib/admin/auth';
 import { buildSystemPrompt } from '@/lib/admin/ai/systemPrompt';
 import {
   MAX_CHAT_MESSAGES,
@@ -46,8 +46,8 @@ function parseMessages(body: unknown): ChatMessage[] | null {
 }
 
 export const POST: APIRoute = async (ctx) => {
-  const unauthorized = await requireAdmin(ctx);
-  if (unauthorized) return unauthorized;
+  const access = await requireAdminPermission(ctx, 'ai.use');
+  if (access instanceof Response) return access;
 
   const apiKey = import.meta.env.OPENAI_API_KEY ?? process.env.OPENAI_API_KEY;
   if (!apiKey) {

@@ -1,7 +1,7 @@
 export const prerender = false;
 
 import type { APIRoute } from 'astro';
-import { requireAdminContext } from '../../../lib/admin/auth';
+import { requireAdminPermission } from '../../../lib/admin/auth';
 import { prisma } from '../../../lib/db/client';
 import {
   computeClientStats,
@@ -9,8 +9,9 @@ import {
 } from './clients/[clientId]/index';
 
 export const GET: APIRoute = async (ctx) => {
-  const access = await requireAdminContext(ctx);
+  const access = await requireAdminPermission(ctx, 'clients.read');
   if (access instanceof Response) return access;
+
   const query = ctx.url.searchParams.get('query')?.trim();
 
   const clients = await prisma.client.findMany({
@@ -70,16 +71,23 @@ export const GET: APIRoute = async (ctx) => {
       const bookings = bookingsByClientId.get(client.id) ?? [];
       const stats = computeClientStats(bookings, nowMs);
       const reliabilityScore = computeReliabilityScore(bookings, nowMs);
-      return {
+      const base = {
         ...client,
         reliabilityScore,
         lastVisitAt: stats.lastVisitAt?.toISOString() ?? null,
-        totalSpentPence: stats.totalSpentPence,
         totalBookings: stats.totalBookings,
         completedCount: stats.completedCount,
         noShowCount: stats.noShowCount,
       };
+      if (access.role === 'BARBER') return base;
+      return {
+        ...base,
+        totalSpentPence: stats.totalSpentPence,
+      };
     });
 
-  return new Response(JSON.stringify({ clients: clientsWithStats }));
+  return new Response(JSON.stringify({
+    clients: clientsWithStats,
+    financialsHidden: access.role === 'BARBER',
+  }));
 };
