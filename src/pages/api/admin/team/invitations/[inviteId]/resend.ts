@@ -182,19 +182,25 @@ export const POST: APIRoute = async (context) => {
     return json({ error: 'Could not renew invitation.' }, 500);
   }
 
-  const shop = await prisma.shopSettings.findUnique({
-    where: { id: access.shopId },
-    select: { name: true },
-  });
-
   const acceptPath = `/admin/invite?token=${encodeURIComponent(token)}`;
   const acceptUrl = `${getPublicSiteUrl()}${acceptPath}`;
+
+  let shopName = 'your barbershop';
+  try {
+    const shop = await prisma.shopSettings.findUnique({
+      where: { id: access.shopId },
+      select: { name: true },
+    });
+    if (shop?.name) shopName = shop.name;
+  } catch (error) {
+    console.error('[team/invitations/resend] shop lookup failed', error);
+  }
 
   let emailSent = true;
   try {
     await sendShopTeamInviteEmail({
       to: renewed.email,
-      shopName: shop?.name || 'your barbershop',
+      shopName,
       role: renewed.role,
       acceptUrl,
     });

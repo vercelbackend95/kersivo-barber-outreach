@@ -11,14 +11,24 @@ import type { TeamAccountAccess, TeamCardDto } from '../../lib/admin/teamCards';
 import {
   dashboardAccessOnlyLine,
   partitionTeamCards,
-  pendingInvitationsRevealLabel,
   roleLabel,
   rolePillClass,
   roleSortRank,
   teamAccountAccess,
   teamAccountAccessLabel,
   teamCardOnlineBookingsLine,
+  TEAM_INVITE_RESEND_REFRESH_WARNING,
 } from '../../lib/admin/teamCards';
+import {
+  INVITATIONS_SECTION_ARIA_LABEL,
+  INVITATIONS_SECTION_HIDE_LABEL,
+  countInvitationStatuses,
+  inviteResendNetworkFailurePatch,
+  invitationsSectionRevealLabel,
+  passiveInvitationLabel,
+  shouldClearTeamCardsOnRefreshFailure,
+  shouldShowInviteResendAction,
+} from '../../lib/admin/teamInviteResendUi';
 import type { ShopRole } from '@prisma/client';
 import AdminBarberRosterCard from './AdminBarberRosterCard';
 import AdminBarberRosterSearch from './AdminBarberRosterSearch';
@@ -27,7 +37,6 @@ import TeamInviteWizard from './TeamInviteWizard';
 import AdminWizardSheetLayer from './AdminWizardSheetLayer';
 import { combineRefreshResults, buildInvitationUrl } from '@/lib/admin/teamInviteWizardResults';
 import { fetchTeamListRefresh } from '@/lib/admin/teamRefreshFetch';
-import { TEAM_INVITE_RESEND_REFRESH_WARNING } from '../../lib/admin/teamCards';
 import '@/styles/components/admin-team.css';
 
 type InviteResendPhase =
@@ -180,23 +189,37 @@ export default function BarbersOverview({
     });
   }, []);
 
-  const loadTeam = React.useCallback(async (): Promise<boolean> => {
-    setTeamLoading(true);
-    setTeamError('');
-    try {
-      const result = await fetchTeamListRefresh();
-      if (!result.ok) {
-        setTeamError(result.error);
-        setTeamCards([]);
-        return false;
+  const loadTeam = React.useCallback(
+    async (opts?: { preserveExistingCardsOnFailure?: boolean }): Promise<boolean> => {
+      const preserve = Boolean(opts?.preserveExistingCardsOnFailure);
+      setTeamLoading(true);
+      setTeamError('');
+      try {
+        const result = await fetchTeamListRefresh();
+        if (!result.ok) {
+          setTeamError(result.error);
+          setTeamCards((prev) => {
+            if (
+              shouldClearTeamCardsOnRefreshFailure({
+                preserveExistingCardsOnFailure: preserve,
+                hasExistingCards: prev.length > 0,
+              })
+            ) {
+              return [];
+            }
+            return prev;
+          });
+          return false;
+        }
+        setTeamCards(result.cards as TeamCardDto[]);
+        setActorRole(result.actorRole || 'OWNER');
+        return true;
+      } finally {
+        setTeamLoading(false);
       }
-      setTeamCards(result.cards as TeamCardDto[]);
-      setActorRole(result.actorRole || 'OWNER');
-      return true;
-    } finally {
-      setTeamLoading(false);
-    }
-  }, []);
+    },
+    [],
+  );
 
   React.useEffect(() => {
     void loadTeam();
@@ -247,6 +270,10 @@ export default function BarbersOverview({
     () => partitionTeamCards(teamCards).pendingInviteCards.length,
     [teamCards],
   );
+  const invitationStatusCounts = React.useMemo(
+    () => countInvitationStatuses(partitionTeamCards(teamCards).pendingInviteCards),
+    [teamCards],
+  );
 
   async function handleResendInvitation(card: TeamCardDto) {
     if (card.kind !== 'invite' || !card.canResendInvitation) return;
@@ -262,57 +289,64 @@ export default function BarbersOverview({
     setActionError('');
 
     try {
-      const res = await fetch(
-        `/api/admin/team/invitations/${encodeURIComponent(card.id)}/resend`,
-        { method: 'POST', credentials: 'include' },
-      );
-      const data = await res.json().catch(() => ({}));
-
-      if (res.status === 429) {
-        patchInviteResend(card.id, {
-          phase: 'cooldown',
-          message:
-            typeof data.error === 'string'
-              ? data.error
-              : 'This invitation was sent recently. Try again shortly.',
-        });
-        return;
-      }
-
-      if (!res.ok) {
-        patchInviteResend(card.id, {
-          phase: 'error',
-          message: typeof data.error === 'string' ? data.error : 'Could not renew invitation.',
-        });
-        return;
-      }
-
-      const emailSent = data.emailSent !== false;
-      const acceptPath = typeof data.acceptPath === 'string' ? data.acceptPath : '';
-      const email = card.email?.trim() || 'the invitee';
-
-      if (emailSent) {
-        patchInviteResend(card.id, {
-          phase: 'resent',
-          message: `A new invitation link was sent to ${email}. The previous link no longer works.`,
-          acceptPath: '',
-        });
-      } else {
-        patchInviteResend(card.id, {
-          phase: 'email_failed',
-          message:
-            'The invitation is active again, but we could not send the email. Share the invitation link manually.',
-          acceptPath,
-        });
-      }
-
       try {
-        const [teamOk, barbersOk] = await Promise.all([loadTeam(), onBarberSaved()]);
-        if (teamOk === false || barbersOk === false) {
+        const res = await fetch(
+          `/api/admin/team/invitations/${encodeURIComponent(card.id)}/resend`,
+          { method: 'POST', credentials: 'include' },
+        );
+        const data = await res.json().catch(() => ({}));
+
+        if (res.status === 429) {
+          patchInviteResend(card.id, {
+            phase: 'cooldown',
+            message:
+              typeof data.error === 'string'
+                ? data.error
+                : 'This invitation was sent recently. Try again shortly.',
+          });
+          return;
+        }
+
+        if (!res.ok) {
+          patchInviteResend(card.id, {
+            phase: 'error',
+            message: typeof data.error === 'string' ? data.error : 'Could not renew invitation.',
+          });
+          return;
+        }
+
+        const emailSent = data.emailSent !== false;
+        const acceptPath = typeof data.acceptPath === 'string' ? data.acceptPath : '';
+        const email = card.email?.trim() || 'the invitee';
+
+        if (emailSent) {
+          patchInviteResend(card.id, {
+            phase: 'resent',
+            message: `A new invitation link was sent to ${email}. The previous link no longer works.`,
+            acceptPath: '',
+          });
+        } else {
+          patchInviteResend(card.id, {
+            phase: 'email_failed',
+            message:
+              'The invitation is active again, but we could not send the email. Share the invitation link manually.',
+            acceptPath,
+          });
+        }
+
+        try {
+          const [teamOk, barbersOk] = await Promise.all([
+            loadTeam({ preserveExistingCardsOnFailure: true }),
+            onBarberSaved(),
+          ]);
+          if (teamOk === false || barbersOk === false) {
+            patchInviteResend(card.id, { refreshWarning: TEAM_INVITE_RESEND_REFRESH_WARNING });
+          }
+        } catch {
           patchInviteResend(card.id, { refreshWarning: TEAM_INVITE_RESEND_REFRESH_WARNING });
         }
       } catch {
-        patchInviteResend(card.id, { refreshWarning: TEAM_INVITE_RESEND_REFRESH_WARNING });
+        patchInviteResend(card.id, inviteResendNetworkFailurePatch());
       }
     } finally {
       inviteResendInFlightRef.current[card.id] = false;
@@ -399,17 +433,18 @@ export default function BarbersOverview({
       : { text: 'Today: —', title: 'No schedule', isOff: true };
 
     const resendState = inviteResendById[card.id];
+    const showResendAction =
+      card.kind === 'invite' &&
+      card.canResendInvitation &&
+      shouldShowInviteResendAction(resendState?.phase);
     const inviteResend =
       card.kind === 'invite' && card.canResendInvitation
         ? {
             canResend: true,
+            showAction: showResendAction,
             busy: resendState?.phase === 'resending',
             buttonLabel:
-              resendState?.phase === 'resending'
-                ? 'Resending…'
-                : resendState?.phase === 'resent'
-                  ? 'Invitation resent'
-                  : 'Resend invitation',
+              resendState?.phase === 'resending' ? 'Resending…' : 'Resend invitation',
             onResend: () => void handleResendInvitation(card),
             statusHeading:
               resendState?.phase === 'email_failed'
@@ -431,7 +466,21 @@ export default function BarbersOverview({
             onCopyLink: () => void copyInviteAcceptPath(card.id, resendState?.acceptPath || ''),
             copyFeedback: resendState?.copyFeedback || '',
           }
-        : null;
+        : card.kind === 'invite'
+          ? {
+              canResend: false,
+              showAction: false,
+              busy: false,
+              buttonLabel: '',
+              onResend: () => undefined,
+              passiveLabel: passiveInvitationLabel(card.invitationStatus),
+              statusHeading: null,
+              statusMessage: null,
+              statusTone: null,
+              showCopyLink: false,
+              copyFeedback: '',
+            }
+          : null;
 
     return (
       <AdminBarberRosterCard
@@ -450,6 +499,7 @@ export default function BarbersOverview({
         roleLabel={roleLabel(card.role)}
         rolePillClassName={rolePillClass(card.role)}
         cardStatus={card.cardStatus}
+        invitationStatus={card.invitationStatus}
         showSchedule={showSchedule}
         showRosterChrome={showSchedule || hasSeat}
         showProfileCta={showProfileCta}
@@ -506,8 +556,8 @@ export default function BarbersOverview({
                 onClick={() => onShowInactiveChange(!showInactiveBarbers)}
               >
                 {showInactiveBarbers
-                  ? 'Hide pending invitations'
-                  : pendingInvitationsRevealLabel(pendingInviteCount)}
+                  ? INVITATIONS_SECTION_HIDE_LABEL
+                  : invitationsSectionRevealLabel(invitationStatusCounts)}
               </button>
             </div>
           ) : null}
@@ -515,7 +565,7 @@ export default function BarbersOverview({
           {showInactiveBarbers && pendingInviteCards.length > 0 ? (
             <ul
               className="admin-barber-grid admin-barbers-overview-grid admin-barbers-overview-grid--inactive"
-              aria-label="Pending invitations"
+              aria-label={INVITATIONS_SECTION_ARIA_LABEL}
             >
               {pendingInviteCards.map((card, index) => renderCard(card, joinedCards.length + index))}
             </ul>
@@ -534,7 +584,10 @@ export default function BarbersOverview({
           services={availableServices}
           onCancel={onCloseAddBarberSheet}
           onSent={async () => {
-            const [teamOk, barbersOk] = await Promise.all([loadTeam(), onBarberSaved()]);
+            const [teamOk, barbersOk] = await Promise.all([
+              loadTeam({ preserveExistingCardsOnFailure: true }),
+              onBarberSaved(),
+            ]);
             return combineRefreshResults(teamOk, barbersOk);
           }}
         />

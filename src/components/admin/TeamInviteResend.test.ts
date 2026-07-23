@@ -15,6 +15,11 @@ describe('Team invitation resend UI', () => {
     expect(overview).toMatch(/\/api\/admin\/team\/invitations\//);
     expect(overview).toMatch(/TEAM_INVITE_RESEND_REFRESH_WARNING/);
     expect(overview).toMatch(/Copy invitation link|copyInviteAcceptPath/);
+    expect(overview).toMatch(/inviteResendNetworkFailurePatch/);
+    expect(overview).toMatch(/preserveExistingCardsOnFailure:\s*true/);
+    expect(overview).toMatch(/shouldShowInviteResendAction/);
+    expect(overview).toMatch(/invitationsSectionRevealLabel/);
+    expect(overview).toMatch(/passiveInvitationLabel/);
   });
 
   it('roster card exposes inviteResend controls without Activate', () => {
@@ -24,6 +29,8 @@ describe('Team invitation resend UI', () => {
     );
     expect(card).toMatch(/inviteResend/);
     expect(card).toMatch(/Copy invitation link/);
+    expect(card).toMatch(/showAction/);
+    expect(card).toMatch(/passiveLabel|passiveInvitationLabel/);
     expect(card).not.toMatch(/\bActivate\b/);
   });
 

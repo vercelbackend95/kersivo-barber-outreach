@@ -21,7 +21,7 @@ describe('Phase 1C Activate removal', () => {
     expect(src).not.toMatch(/handleActivate|canActivate|onActivate/);
     expect(src).not.toMatch(/\/activate/);
     expect(src).not.toMatch(/awaiting activation/i);
-    expect(src).toMatch(/pendingInvitationsRevealLabel|Hide pending invitations/);
+    expect(src).toMatch(/invitationsSectionRevealLabel|INVITATIONS_SECTION_HIDE_LABEL|Hide invitations/);
     expect(src).toMatch(/partitionTeamCards/);
   });
 

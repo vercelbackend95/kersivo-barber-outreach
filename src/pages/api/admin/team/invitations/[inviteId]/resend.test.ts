@@ -215,6 +215,56 @@ describe('POST /api/admin/team/invitations/[inviteId]/resend', () => {
     expect(body.emailSent).toBe(false);
     expect(body.acceptPath).toBe('/admin/invite?token=new-tok');
     expect(body.warning).toMatch(/could not be sent/i);
+    expect(body).not.toHaveProperty('tokenHash');
+    expect(JSON.stringify(body)).not.toMatch(/new-hash|old-hash/);
+    expect(shopInviteUpdate).toHaveBeenCalled();
+    expect(sendShopTeamInviteEmail).toHaveBeenCalled();
+    expect(shopInviteUpdate.mock.invocationCallOrder[0]).toBeLessThan(
+      sendShopTeamInviteEmail.mock.invocationCallOrder[0],
+    );
+  });
+
+  it('survives post-commit shop lookup failure and still emails with fallback name', async () => {
+    const invite = baseInvite();
+    shopInviteFindFirst.mockResolvedValue(invite);
+    shopInviteUpdate.mockResolvedValue({
+      ...invite,
+      tokenHash: 'new-hash',
+      expiresAt: new Date('2026-08-01T12:00:00.000Z'),
+    });
+    shopSettingsFindUnique.mockRejectedValue(new Error('db blip'));
+
+    const res = await POST(makeContext('inv-1'));
+    expect(res.status).toBe(200);
+    const body = await res.json();
+    expect(body.ok).toBe(true);
+    expect(body.emailSent).toBe(true);
+    expect(body).not.toHaveProperty('tokenHash');
+    expect(sendShopTeamInviteEmail).toHaveBeenCalledWith(
+      expect.objectContaining({
+        to: 'barber@example.com',
+        shopName: 'your barbershop',
+        acceptUrl: 'http://localhost:4321/admin/invite?token=new-tok',
+      }),
+    );
+  });
+
+  it('returns 200 with acceptPath when shop lookup and email both fail after commit', async () => {
+    const invite = baseInvite();
+    shopInviteFindFirst.mockResolvedValue(invite);
+    shopInviteUpdate.mockResolvedValue({
+      ...invite,
+      tokenHash: 'new-hash',
+      expiresAt: new Date('2026-08-01T12:00:00.000Z'),
+    });
+    shopSettingsFindUnique.mockRejectedValue(new Error('db blip'));
+    sendShopTeamInviteEmail.mockRejectedValue(new Error('smtp down'));
+
+    const res = await POST(makeContext('inv-1'));
+    expect(res.status).toBe(200);
+    const body = await res.json();
+    expect(body.emailSent).toBe(false);
+    expect(body.acceptPath).toBe('/admin/invite?token=new-tok');
     expect(shopInviteUpdate).toHaveBeenCalled();
   });
 
