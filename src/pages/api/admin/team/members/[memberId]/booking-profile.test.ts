@@ -375,22 +375,18 @@ describe('POST /api/admin/team/members/[memberId]/booking-profile', () => {
     expect(shopMemberUpdate).toHaveBeenCalledTimes(1);
   });
 
-  it('uses User email rather than any client-supplied email field', async () => {
-    const form = new FormData();
-    form.set('displayName', 'Alex');
-    form.set('serviceIds', JSON.stringify(['svc-1']));
-    form.set('workingHours', workingHours);
-    form.set('email', 'attacker@evil.com');
-    const ctx = {
-      params: { memberId: 'mem-1' },
-      request: new Request('http://localhost/api/admin/team/members/mem-1/booking-profile', {
-        method: 'POST',
-        body: form,
+  it('rejects display names longer than 80 characters without creating a Barber', async () => {
+    const longName = 'A'.repeat(81);
+    const res = await POST(
+      makeMultipart({
+        displayName: longName,
+        serviceIds: JSON.stringify(['svc-1']),
+        workingHours,
       }),
-    } as unknown as APIContext;
-
-    const res = await POST(ctx);
-    expect(res.status).toBe(201);
-    expect(barberCreate.mock.calls[0][0].data.email).toBe('alex@example.com');
+    );
+    expect(res.status).toBe(400);
+    const body = await res.json();
+    expect(body.code).toBe('INVALID_DISPLAY_NAME');
+    expect(barberCreate).not.toHaveBeenCalled();
   });
 });

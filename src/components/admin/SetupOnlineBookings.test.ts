@@ -17,6 +17,9 @@ describe('Set up online bookings wiring', () => {
     );
     expect(overview).toMatch(/canSetUpOnlineBookings:\s*card\.canSetUpOnlineBookings/);
     expect(overview).toMatch(/memberOnly:\s*true/);
+    expect(overview).toMatch(/BarbersOverviewHandle/);
+    expect(overview).toMatch(/applyMemberBookingProfileSetup/);
+    expect(overview).toMatch(/useImperativeHandle/);
     expect(overview).not.toMatch(/\/booking-profile/);
   });
 
@@ -28,16 +31,18 @@ describe('Set up online bookings wiring', () => {
     expect(src).not.toMatch(/coming soon/i);
   });
 
-  it('setup-member wizard uses atomic member booking-profile endpoint only', () => {
+  it('setup-member wizard uses atomic endpoint, honest avatar, setup copy, maxLength 80', () => {
     const wizard = readFileSync(
       resolve(process.cwd(), 'src/components/admin/barber-wizard/BarberWizard.tsx'),
       'utf8',
     );
     expect(wizard).toMatch(/setup-member/);
     expect(wizard).toMatch(/\/api\/admin\/team\/members\/\$\{memberId\}\/booking-profile/);
-    expect(wizard).toMatch(/createSubmissionGate/);
-    expect(wizard).toMatch(/Online bookings ready/);
-    expect(wizard).toMatch(/Setting up…/);
+    expect(wizard).toMatch(/How should clients see them\?/);
+    expect(wizard).toMatch(/Confirm their name and photo for the client booking flow\./);
+    expect(wizard).toMatch(/maxLength=\{isSetupMember \? 80 : 120\}/);
+    expect(wizard).toMatch(/Use account photo/);
+    expect(wizard).toMatch(/SETUP_BOOKING_PROFILE_ALREADY_EXISTS_RECOVERY/);
     expect(wizard).toMatch(/TEAM_SETUP_ONLINE_BOOKINGS_REFRESH_WARNING/);
 
     const setupStart = wizard.indexOf('async function saveSetupMember');
@@ -49,12 +54,17 @@ describe('Set up online bookings wiring', () => {
     expect(setupFn).not.toMatch(/\/rules/);
   });
 
-  it('BookingsAdminPanel transitions memberOnly to false after setup success', () => {
+  it('BookingsAdminPanel combines Team, Barbers, and working-hours refresh results', () => {
     const src = readFileSync(
       resolve(process.cwd(), 'src/components/admin/BookingsAdminPanel.tsx'),
       'utf8',
     );
     expect(src).toMatch(/onSetupOnlineBookingsSaved/);
+    expect(src).toMatch(/combineSetupRefreshResults/);
+    expect(src).toMatch(/applyMemberBookingProfileSetup/);
+    expect(src).toMatch(/refreshTeam/);
+    expect(src).toMatch(/fetchWorkingHours\(result\.barberId\)/);
+    expect(src).toMatch(/Promise<boolean>/);
     expect(src).toMatch(/memberOnly:\s*false/);
     expect(src).toMatch(/bookable:\s*true/);
     expect(src).toMatch(/booking-profiles\/\$\{encodeURIComponent\(barberId\)\}\/online-bookings/);

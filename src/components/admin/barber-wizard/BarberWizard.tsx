@@ -6,6 +6,7 @@ import { Check, ImagePlus, Scissors, Users, X } from '../../lucide-react';
 import { getDefaultWorkingHourRows } from '../../../lib/admin/defaultWorkingHourRows';
 import { TEAM_SETUP_ONLINE_BOOKINGS_REFRESH_WARNING } from '../../../lib/admin/teamCards';
 import { createSubmissionGate } from '../../../lib/admin/teamInviteWizardResults';
+import { SETUP_BOOKING_PROFILE_ALREADY_EXISTS_RECOVERY } from '../../../lib/admin/memberBookingProfileSetup';
 import BarberWorkingHoursEditor from '../BarberWorkingHoursEditor';
 import type { WorkingHourRow } from '../barbersTypes';
 import {
@@ -165,7 +166,24 @@ export default function BarberWizard({
 
   function clearAvatar() {
     setAvatarFile(null);
-    setAvatarPreviewUrl(prefillFromInitial && initialAvatarUrl ? initialAvatarUrl : '');
+    if (isSetupMember) {
+      // Discard upload only — never pretend we deleted the account photo.
+      setAvatarPreviewUrl(initialAvatarUrl ? initialAvatarUrl : '');
+    } else {
+      setAvatarPreviewUrl(prefillFromInitial && initialAvatarUrl ? initialAvatarUrl : '');
+    }
+    setAvatarError('');
+  }
+
+  function discardUploadToAccountPhoto() {
+    setAvatarFile(null);
+    setAvatarPreviewUrl(initialAvatarUrl || '');
+    setAvatarError('');
+  }
+
+  function discardUploadToEmpty() {
+    setAvatarFile(null);
+    setAvatarPreviewUrl('');
     setAvatarError('');
   }
 
@@ -230,6 +248,8 @@ export default function BarberWizard({
       });
       const payload = (await response.json().catch(() => ({}))) as {
         error?: string;
+        code?: string;
+        barberId?: string;
         barber?: {
           id?: string;
           name?: string;
@@ -241,6 +261,12 @@ export default function BarberWizard({
       };
 
       if (!response.ok || response.status !== 201) {
+        if (response.status === 409 && payload.code === 'BOOKING_PROFILE_ALREADY_EXISTS') {
+          submissionGateRef.current.release();
+          submissionInFlightRef.current = false;
+          setSubmitError(SETUP_BOOKING_PROFILE_ALREADY_EXISTS_RECOVERY);
+          return;
+        }
         throw new Error(payload.error || 'Could not set up online bookings.');
       }
 
@@ -449,7 +475,13 @@ export default function BarberWizard({
 
           <div className="admin-barber-wizard__live-summary" aria-live="polite">
             <Users width={16} height={16} aria-hidden="true" />
-            <span>{summaryBits.length ? summaryBits.join(' · ') : 'Your barber will take shape here as you go.'}</span>
+            <span>
+              {summaryBits.length
+                ? summaryBits.join(' · ')
+                : isSetupMember
+                  ? 'Add services and working hours so clients can book this team member online.'
+                  : 'Your barber will take shape here as you go.'}
+            </span>
           </div>
         </>
       ) : null}
@@ -488,14 +520,18 @@ export default function BarberWizard({
             <div className="admin-barber-wizard__intro">
               <p className="admin-barber-wizard__eyebrow">STEP 1 · BASICS</p>
               <h3 id="barber-wizard-basics-title" ref={stepHeadingRef} tabIndex={-1}>
-                Who&apos;s joining the chair?
+                {isSetupMember ? 'How should clients see them?' : "Who's joining the chair?"}
               </h3>
-              <p>Give them a clear name and an optional photo for the roster.</p>
+              <p>
+                {isSetupMember
+                  ? 'Confirm their name and photo for the client booking flow.'
+                  : 'Give them a clear name and an optional photo for the roster.'}
+              </p>
             </div>
 
             <div className={`field${errors.name ? ' field--error' : ''}`}>
               <label className="field__label" htmlFor="barber-wizard-name">
-                Barber name
+                {isSetupMember ? 'Display name' : 'Barber name'}
               </label>
               <input
                 id="barber-wizard-name"
@@ -506,7 +542,7 @@ export default function BarberWizard({
                   clearFieldError('name');
                 }}
                 placeholder="e.g. Marco"
-                maxLength={120}
+                maxLength={isSetupMember ? 80 : 120}
                 autoFocus
                 aria-invalid={Boolean(errors.name)}
                 aria-describedby={errors.name ? 'barber-wizard-name-error' : undefined}
@@ -547,9 +583,21 @@ export default function BarberWizard({
                 {avatarPreviewUrl ? <span className="admin-barber-wizard__image-overlay">Change photo</span> : null}
               </label>
               {avatarPreviewUrl ? (
-                <button type="button" className="admin-barber-wizard__image-remove" onClick={clearAvatar}>
-                  Remove photo
-                </button>
+                isSetupMember ? (
+                  avatarFile ? (
+                    <button
+                      type="button"
+                      className="admin-barber-wizard__image-remove"
+                      onClick={initialAvatarUrl ? discardUploadToAccountPhoto : discardUploadToEmpty}
+                    >
+                      {initialAvatarUrl ? 'Use account photo' : 'Remove photo'}
+                    </button>
+                  ) : null
+                ) : (
+                  <button type="button" className="admin-barber-wizard__image-remove" onClick={clearAvatar}>
+                    Remove photo
+                  </button>
+                )
               ) : null}
               {avatarError ? (
                 <p className="field__error" role="alert">

@@ -92,11 +92,18 @@ export const POST: APIRoute = async (context) => {
 
   const { body, avatar } = parsed;
 
-  const displayName = String(body.displayName || '')
-    .trim()
-    .slice(0, 80);
+  const displayName = String(body.displayName || '').trim();
   if (!displayName) {
     return json({ error: 'Display name is required.' }, 400);
+  }
+  if (displayName.length > 80) {
+    return json(
+      {
+        code: 'INVALID_DISPLAY_NAME',
+        error: 'Display name must be 80 characters or fewer.',
+      },
+      400,
+    );
   }
 
   const rawServiceIds = Array.isArray(body.serviceIds) ? body.serviceIds : [];

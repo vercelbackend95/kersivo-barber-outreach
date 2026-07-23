@@ -40,6 +40,10 @@ import TeamInviteWizard from './TeamInviteWizard';
 import AdminWizardSheetLayer from './AdminWizardSheetLayer';
 import { combineRefreshResults, buildInvitationUrl } from '@/lib/admin/teamInviteWizardResults';
 import { fetchTeamListRefresh } from '@/lib/admin/teamRefreshFetch';
+import {
+  applyMemberBookingProfileSetupToCards,
+  type MemberBookingProfileSetupResult,
+} from '@/lib/admin/memberBookingProfileSetup';
 import '@/styles/components/admin-team.css';
 
 type InviteResendPhase =
@@ -140,23 +144,32 @@ function compareTeamCards(a: TeamCardDto, b: TeamCardDto): number {
   return a.name.localeCompare(b.name, 'en');
 }
 
-export default function BarbersOverview({
-  barbers,
-  services,
-  showInactiveBarbers,
-  barbersLoading = false,
-  barberSaveMessage,
-  barberSaveError,
-  isAddBarberSheetOpen,
-  globalBlocks,
-  bookings,
-  getInitials,
-  onShowInactiveChange,
-  onOpenBarber,
-  onCloseAddBarberSheet,
-  onBarberSaved,
-  formatBlockRange,
-}: BarbersOverviewProps) {
+export type BarbersOverviewHandle = {
+  refreshTeam: (opts?: { preserveExistingCardsOnFailure?: boolean }) => Promise<boolean>;
+  applyMemberBookingProfileSetup: (result: MemberBookingProfileSetupResult) => void;
+};
+
+const BarbersOverview = React.forwardRef<BarbersOverviewHandle, BarbersOverviewProps>(
+  function BarbersOverview(
+    {
+      barbers,
+      services,
+      showInactiveBarbers,
+      barbersLoading = false,
+      barberSaveMessage,
+      barberSaveError,
+      isAddBarberSheetOpen,
+      globalBlocks,
+      bookings,
+      getInitials,
+      onShowInactiveChange,
+      onOpenBarber,
+      onCloseAddBarberSheet,
+      onBarberSaved,
+      formatBlockRange,
+    },
+    ref,
+  ) {
   const availableServices = services.length > 0 ? services : DEFAULT_SERVICE_OPTIONS;
   const [nowTick, setNowTick] = React.useState(() => Date.now());
   const searchInputRef = React.useRef<HTMLInputElement | null>(null);
@@ -223,6 +236,17 @@ export default function BarbersOverview({
       }
     },
     [],
+  );
+
+  React.useImperativeHandle(
+    ref,
+    () => ({
+      refreshTeam: (opts) => loadTeam(opts),
+      applyMemberBookingProfileSetup: (result) => {
+        setTeamCards((prev) => applyMemberBookingProfileSetupToCards(prev, result));
+      },
+    }),
+    [loadTeam],
   );
 
   React.useEffect(() => {
@@ -622,4 +646,7 @@ export default function BarbersOverview({
       ) : null}
     </section>
   );
-}
+},
+);
+
+export default BarbersOverview;

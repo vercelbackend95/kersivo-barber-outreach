@@ -16,7 +16,10 @@ import { resolveClientIdForBooking } from '@/lib/admin/resolveClientIdForBooking
 import AdminErrorBoundary from './AdminErrorBoundary';
 import HistoryDateRangePicker from './HistoryDateRangePicker';
 import BarbersOverview from './BarbersOverview';
-import type { TeamProfileOpenMeta } from './BarbersOverview';
+import type { BarbersOverviewHandle, TeamProfileOpenMeta } from './BarbersOverview';
+import {
+  combineSetupRefreshResults,
+} from '@/lib/admin/memberBookingProfileSetup';
 import AdminBarberRosterCard from './AdminBarberRosterCard';
 import BarberProfile from './BarberProfile';
 import { isWithinShiftNow } from '../../lib/admin/todayWorkingHours';
@@ -646,6 +649,7 @@ export default function BookingsAdminPanel({ isActive, mode, onBackToDashboard, 
   const [barberProfileSource, setBarberProfileSource] = useState<'ops' | 'team' | 'reports' | null>(null);
   const [profileMemberMeta, setProfileMemberMeta] = useState<TeamProfileOpenMeta | null>(null);
   const [reportsProfileBarberMeta, setReportsProfileBarberMeta] = useState<{ id: string; name: string } | null>(null);
+  const barbersOverviewRef = useRef<BarbersOverviewHandle | null>(null);
   const [services, setServices] = useState<ServiceOption[]>([]);
   const [workingHours, setWorkingHours] = useState<WorkingHourRow[]>([]);
   const [workingHoursLoading, setWorkingHoursLoading] = useState(false);
@@ -1613,15 +1617,20 @@ export default function BookingsAdminPanel({ isActive, mode, onBackToDashboard, 
     setServices((data.services ?? []).filter((service) => service.isActive !== false));
   }, []);
 
-  const fetchWorkingHours = useCallback(async (barberId: string) => {
-    if (!barberId) return;
+  const fetchWorkingHours = useCallback(async (barberId: string): Promise<boolean> => {
+    if (!barberId) return false;
     setWorkingHoursLoading(true);
-    const response = await fetch(`/api/admin/barbers/${barberId}/rules`, { credentials: 'include' });
-    const payload: WorkingHoursResponse = await response.json().catch(() => ({}));
-    if (response.ok) {
+    try {
+      const response = await fetch(`/api/admin/barbers/${barberId}/rules`, { credentials: 'include' });
+      if (!response.ok) return false;
+      const payload: WorkingHoursResponse = await response.json().catch(() => ({}));
       setWorkingHours(normalizeWorkingHourRows(payload.rules));
+      return true;
+    } catch {
+      return false;
+    } finally {
+      setWorkingHoursLoading(false);
     }
-    setWorkingHoursLoading(false);
   }, []);
 
   useEffect(() => {
@@ -2137,7 +2146,7 @@ export default function BookingsAdminPanel({ isActive, mode, onBackToDashboard, 
       memberId={profileMemberMeta?.memberId}
       canSetUpOnlineBookings={Boolean(profileMemberMeta?.canSetUpOnlineBookings)}
       onSetupOnlineBookingsSaved={async (result) => {
-        const barbersOk = await fetchBarbers();
+        const memberId = profileMemberMeta?.memberId;
         setSelectedBarberId(result.barberId);
         setProfileMemberMeta((prev) => ({
           name: result.name,
@@ -2154,8 +2163,24 @@ export default function BookingsAdminPanel({ isActive, mode, onBackToDashboard, 
           canSetUpOnlineBookings: false,
           email: result.email ?? prev?.email ?? null,
         }));
-        await fetchWorkingHours(result.barberId);
-        return barbersOk;
+        if (memberId) {
+          barbersOverviewRef.current?.applyMemberBookingProfileSetup({
+            memberId,
+            barberId: result.barberId,
+            name: result.name,
+            email: result.email,
+            avatarUrl: result.avatarUrl,
+            serviceIds: result.serviceIds,
+            active: result.active,
+          });
+        }
+        const [barbersOk, teamOk, workingHoursOk] = await Promise.all([
+          fetchBarbers(),
+          barbersOverviewRef.current?.refreshTeam({ preserveExistingCardsOnFailure: true }) ??
+            Promise.resolve(false),
+          fetchWorkingHours(result.barberId),
+        ]);
+        return combineSetupRefreshResults(barbersOk, teamOk, workingHoursOk);
       }}
       onSaveIdentity={
         profileMemberMeta?.memberOnly ? undefined : (payload) => saveSelectedBarberIdentity(payload)
@@ -2318,6 +2343,7 @@ export default function BookingsAdminPanel({ isActive, mode, onBackToDashboard, 
 
           {mode === 'blocks' ? (
               <BarbersOverview
+                ref={barbersOverviewRef}
                 barbers={allBarbersSorted}
                 barbersLoading={barbersInitialLoading}
                 services={addBarberServiceOptions}
