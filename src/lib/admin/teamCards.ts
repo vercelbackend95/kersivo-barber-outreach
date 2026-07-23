@@ -1,6 +1,6 @@
 import type { ShopRole, TeamMemberStatus } from '@prisma/client';
 
-export type TeamCardStatus = 'pending' | 'new' | 'active';
+export type TeamCardStatus = 'pending' | 'active';
 
 export type TeamCardDto = {
   kind: 'member' | 'invite';
@@ -31,13 +31,46 @@ export type TeamCardDto = {
       breakEndMin: number | null;
     } | null;
   } | null;
-  canActivate: boolean;
   /** Authorised Owner/Manager may manage online bookings when a booking profile exists. */
   canManageOnlineBookings: boolean;
 };
 
-export function memberCardStatus(teamStatus: TeamMemberStatus): TeamCardStatus {
-  return teamStatus === 'ACTIVE' ? 'active' : 'new';
+/**
+ * Legacy NEW is treated as joined (same as ACTIVE). Team GET remains read-only —
+ * it never silently writes NEW → ACTIVE. Acceptance writes ACTIVE going forward.
+ */
+export function isJoinedTeamMemberStatus(teamStatus: TeamMemberStatus): boolean {
+  return teamStatus === 'ACTIVE' || teamStatus === 'NEW';
+}
+
+/** Map ShopMember.teamStatus to roster card status (legacy NEW → active / joined). */
+export function memberCardStatus(_teamStatus: TeamMemberStatus): TeamCardStatus {
+  // ShopMembers (NEW or ACTIVE) always appear in the main/joined list.
+  // Pending is reserved for unaccepted invites (kind === 'invite').
+  return 'active';
+}
+
+/** Main Team list vs pending invitations — Online bookings Off never implies pending. */
+export function isPendingInviteCard(card: Pick<TeamCardDto, 'kind'>): boolean {
+  return card.kind === 'invite';
+}
+
+export function partitionTeamCards<T extends Pick<TeamCardDto, 'kind'>>(cards: T[]): {
+  joinedCards: T[];
+  pendingInviteCards: T[];
+} {
+  const joinedCards: T[] = [];
+  const pendingInviteCards: T[] = [];
+  for (const card of cards) {
+    if (isPendingInviteCard(card)) pendingInviteCards.push(card);
+    else joinedCards.push(card);
+  }
+  return { joinedCards, pendingInviteCards };
+}
+
+export function pendingInvitationsRevealLabel(count: number): string {
+  if (count === 1) return 'Show 1 pending invitation';
+  return `Show ${count} pending invitations`;
 }
 
 /** Owner → Manager → Barber for Team roster ordering */
@@ -63,7 +96,7 @@ export function roleLabel(role: ShopRole | string): string {
   return role;
 }
 
-/** Account access as shown on Team cards / profile — not lifecycle activation. */
+/** Account access as shown on Team cards / profile — not Online bookings. */
 export type TeamAccountAccess = 'invite_pending' | 'joined' | 'no_dashboard';
 
 export function teamAccountAccess(card: Pick<TeamCardDto, 'kind' | 'id'>): TeamAccountAccess {
@@ -73,7 +106,7 @@ export function teamAccountAccess(card: Pick<TeamCardDto, 'kind' | 'id'>): TeamA
 }
 
 export function teamAccountAccessLabel(access: TeamAccountAccess): string {
-  if (access === 'invite_pending') return 'Invite pending';
+  if (access === 'invite_pending') return 'Invitation pending';
   if (access === 'no_dashboard') return 'No dashboard account';
   return 'Joined';
 }

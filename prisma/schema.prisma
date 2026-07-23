@@ -46,7 +46,9 @@ enum ShopRole {
   BARBER
 }
 
-/// Lifecycle for Team cards: NEW after invite accept; ACTIVE after Owner/Manager activates.
+/// Team membership usability. ACTIVE is written on invite acceptance.
+/// NEW is legacy (pre–Phase 1C manual Activate); treat as joined in presentation/RBAC
+/// until a future suspension model exists. Do not migrate away NEW yet.
 enum TeamMemberStatus {
   NEW
   ACTIVE

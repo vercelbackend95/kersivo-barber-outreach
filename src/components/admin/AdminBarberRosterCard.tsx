@@ -18,20 +18,18 @@ export type AdminBarberRosterCardProps = {
   /** Unified Team card extras */
   roleLabel?: string;
   rolePillClassName?: string;
-  cardStatus?: 'pending' | 'new' | 'active';
+  cardStatus?: 'pending' | 'active';
   /** When false, mute schedule chrome (Team: online bookings off / no seat) */
   showSchedule?: boolean;
   /** When false, hide shift/next/CTA/day-fill */
   showRosterChrome?: boolean;
   showProfileCta?: boolean;
-  /** Team account access label (Joined / Invite pending / No dashboard account) */
+  /** Team account access label (Joined / Invitation pending / No dashboard account) */
   accountAccessLabel?: string;
-  /** Online bookings line or pending after-joining copy */
+  /** Online bookings line */
   onlineBookingsLine?: string;
   /** Optional secondary line (e.g. Dashboard access only) */
   secondaryLine?: string | null;
-  canActivate?: boolean;
-  onActivate?: () => void;
 };
 
 export default function AdminBarberRosterCard({
@@ -55,8 +53,6 @@ export default function AdminBarberRosterCard({
   accountAccessLabel,
   onlineBookingsLine,
   secondaryLine = null,
-  canActivate = false,
-  onActivate,
 }: AdminBarberRosterCardProps) {
   const availLabel = AVAIL_STATUS_LABELS[availStatus];
   const bookedHDisplay = Math.round(dayFill.bookedHoursH * 10) / 10;
@@ -152,10 +148,6 @@ export default function AdminBarberRosterCard({
           {cardStatus === 'pending' ? (
             <button type="button" className="btn btn--primary admin-barber-roster-cta" disabled>
               Pending invitation
-            </button>
-          ) : canActivate && onActivate ? (
-            <button type="button" className="btn btn--primary admin-barber-roster-cta" onClick={onActivate}>
-              Activate
             </button>
           ) : null}
 

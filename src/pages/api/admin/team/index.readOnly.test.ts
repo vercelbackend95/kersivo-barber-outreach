@@ -10,5 +10,7 @@ describe('GET /api/admin/team', () => {
     expect(src).not.toMatch(/\.delete\(/);
     expect(src).not.toMatch(/\$transaction/);
     expect(src).toMatch(/findMany/);
+    // Legacy NEW must not be silently written to ACTIVE on GET.
+    expect(src).not.toMatch(/teamStatus:\s*['"]ACTIVE['"]/);
   });
 });

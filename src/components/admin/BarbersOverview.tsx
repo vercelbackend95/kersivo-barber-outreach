@@ -10,6 +10,8 @@ import {
 import type { TeamAccountAccess, TeamCardDto } from '../../lib/admin/teamCards';
 import {
   dashboardAccessOnlyLine,
+  partitionTeamCards,
+  pendingInvitationsRevealLabel,
   roleLabel,
   rolePillClass,
   roleSortRank,
@@ -92,7 +94,7 @@ function cardToBarberStub(card: TeamCardDto): Barber {
   return {
     id: card.barberId || card.id,
     name: card.name,
-    isActive: card.cardStatus === 'active',
+    isActive: card.bookable,
     avatarUrl: card.avatarUrl,
     sortOrder: 0,
     serviceIds: [],
@@ -193,29 +195,17 @@ export default function BarbersOverview({
     );
   }, [teamCards, trimmedSearchQuery]);
 
-  const activeCards = React.useMemo(
-    () => filteredCards.filter((c) => c.cardStatus === 'active').sort(compareTeamCards),
-    [filteredCards],
+  const { joinedCards, pendingInviteCards } = React.useMemo(() => {
+    const partitioned = partitionTeamCards(filteredCards);
+    return {
+      joinedCards: [...partitioned.joinedCards].sort(compareTeamCards),
+      pendingInviteCards: [...partitioned.pendingInviteCards].sort(compareTeamCards),
+    };
+  }, [filteredCards]);
+  const pendingInviteCount = React.useMemo(
+    () => partitionTeamCards(teamCards).pendingInviteCards.length,
+    [teamCards],
   );
-  const inactiveCards = React.useMemo(
-    () => filteredCards.filter((c) => c.cardStatus !== 'active').sort(compareTeamCards),
-    [filteredCards],
-  );
-  const inactiveCount = teamCards.filter((c) => c.cardStatus !== 'active').length;
-
-  async function handleActivate(card: TeamCardDto) {
-    setActionError('');
-    const res = await fetch(`/api/admin/team/members/${encodeURIComponent(card.id)}/activate`, {
-      method: 'POST',
-      credentials: 'include',
-    });
-    const data = await res.json().catch(() => ({}));
-    if (!res.ok) {
-      setActionError(data.error || 'Could not activate.');
-      return;
-    }
-    await Promise.all([loadTeam(), onBarberSaved()]);
-  }
 
   async function handleOpenProfile(card: TeamCardDto) {
     setActionError('');
@@ -304,8 +294,6 @@ export default function BarbersOverview({
         accountAccessLabel={teamAccountAccessLabel(access)}
         onlineBookingsLine={teamCardOnlineBookingsLine(access, card.bookable)}
         secondaryLine={dashboardAccessOnlyLine(access, card.bookable)}
-        canActivate={card.canActivate}
-        onActivate={() => void handleActivate(card)}
       />
     );
   }
@@ -343,10 +331,10 @@ export default function BarbersOverview({
       ) : (
         <div className="admin-barber-list-wrap admin-barbers-overview-list-wrap">
           <ul className="admin-barber-grid admin-barbers-overview-grid" aria-label="Team members">
-            {activeCards.map((card, index) => renderCard(card, index))}
+            {joinedCards.map((card, index) => renderCard(card, index))}
           </ul>
 
-          {inactiveCount > 0 ? (
+          {pendingInviteCount > 0 ? (
             <div className="admin-barbers-inactive-reveal">
               <button
                 type="button"
@@ -355,18 +343,18 @@ export default function BarbersOverview({
                 onClick={() => onShowInactiveChange(!showInactiveBarbers)}
               >
                 {showInactiveBarbers
-                  ? 'Hide pending & awaiting activation'
-                  : `Show ${inactiveCount} pending / awaiting activation`}
+                  ? 'Hide pending invitations'
+                  : pendingInvitationsRevealLabel(pendingInviteCount)}
               </button>
             </div>
           ) : null}
 
-          {showInactiveBarbers && inactiveCards.length > 0 ? (
+          {showInactiveBarbers && pendingInviteCards.length > 0 ? (
             <ul
               className="admin-barber-grid admin-barbers-overview-grid admin-barbers-overview-grid--inactive"
-              aria-label="Pending invitations and team members awaiting activation"
+              aria-label="Pending invitations"
             >
-              {inactiveCards.map((card, index) => renderCard(card, activeCards.length + index))}
+              {pendingInviteCards.map((card, index) => renderCard(card, joinedCards.length + index))}
             </ul>
           ) : null}
         </div>

@@ -75,11 +75,11 @@ describe('acceptInviteForUser', () => {
     expect(runSerializableTransaction).toHaveBeenCalledTimes(1);
     expect(shopMemberFindUnique).toHaveBeenCalledWith({
       where: { shopId_userId: { shopId: 'shop-1', userId: 'user-1' } },
-      select: { id: true, barberId: true },
+      select: { id: true, barberId: true, teamStatus: true },
     });
   });
 
-  it('links existing Barber without changing active or creating a duplicate', async () => {
+  it('creates ShopMember with teamStatus ACTIVE, never NEW', async () => {
     shopMemberFindUnique.mockResolvedValue(null);
     barberFindFirst.mockResolvedValue({ id: 'b1', userId: null });
     barberUpdate.mockResolvedValue({ id: 'b1' });
@@ -104,10 +104,11 @@ describe('acceptInviteForUser', () => {
       expect.objectContaining({
         data: expect.objectContaining({
           barberId: 'b1',
-          teamStatus: 'NEW',
+          teamStatus: 'ACTIVE',
         }),
       }),
     );
+    expect(shopMemberCreate.mock.calls[0][0].data.teamStatus).not.toBe('NEW');
   });
 
   it('does not create a Barber for dashboard-only invites', async () => {
@@ -125,13 +126,13 @@ describe('acceptInviteForUser', () => {
     expect(barberCreate).not.toHaveBeenCalled();
     expect(shopMemberCreate).toHaveBeenCalledWith(
       expect.objectContaining({
-        data: expect.objectContaining({ barberId: null }),
+        data: expect.objectContaining({ barberId: null, teamStatus: 'ACTIVE' }),
       }),
     );
   });
 
-  it('links invite Barber to already-member with no seat', async () => {
-    shopMemberFindUnique.mockResolvedValue({ id: 'm-existing', barberId: null });
+  it('links invite Barber to already-member with no seat and normalises NEW to ACTIVE', async () => {
+    shopMemberFindUnique.mockResolvedValue({ id: 'm-existing', barberId: null, teamStatus: 'NEW' });
     barberFindFirst.mockResolvedValue({ id: 'b1', userId: null });
     barberUpdate.mockResolvedValue({ id: 'b1' });
     shopMemberUpdate.mockResolvedValue({});
@@ -151,9 +152,54 @@ describe('acceptInviteForUser', () => {
     });
     expect(shopMemberUpdate).toHaveBeenCalledWith({
       where: { id: 'm-existing' },
-      data: { barberId: 'b1' },
+      data: { barberId: 'b1', teamStatus: 'ACTIVE' },
     });
     expect(barberCreate).not.toHaveBeenCalled();
+  });
+
+  it('normalises existing NEW member to ACTIVE without changing ACTIVE members further', async () => {
+    shopMemberFindUnique.mockResolvedValue({
+      id: 'm-existing',
+      barberId: 'b1',
+      teamStatus: 'NEW',
+    });
+    barberFindFirst.mockResolvedValue({ id: 'b1', userId: 'user-1' });
+    shopMemberUpdate.mockResolvedValue({});
+    shopInviteUpdate.mockResolvedValue({});
+
+    const result = await acceptInviteForUser(
+      { id: 'inv-new', shopId: 'shop-1', role: 'BARBER', barberId: 'b1' },
+      'user-1',
+    );
+
+    expect(result.ok).toBe(true);
+    expect(shopMemberUpdate).toHaveBeenCalledWith({
+      where: { id: 'm-existing' },
+      data: { teamStatus: 'ACTIVE' },
+    });
+    expect(barberUpdate).not.toHaveBeenCalled();
+  });
+
+  it('is idempotent for existing ACTIVE members', async () => {
+    shopMemberFindUnique.mockResolvedValue({
+      id: 'm-existing',
+      barberId: 'b1',
+      teamStatus: 'ACTIVE',
+    });
+    shopInviteUpdate.mockResolvedValue({});
+
+    const result = await acceptInviteForUser(
+      { id: 'inv-active', shopId: 'shop-1', role: 'BARBER', barberId: 'b1' },
+      'user-1',
+    );
+
+    expect(result.ok).toBe(true);
+    if (!result.ok) return;
+    expect(result.alreadyMember).toBe(true);
+    expect(shopMemberUpdate).not.toHaveBeenCalled();
+    expect(shopMemberCreate).not.toHaveBeenCalled();
+    expect(barberCreate).not.toHaveBeenCalled();
+    expect(shopInviteUpdate).toHaveBeenCalled();
   });
 
   it('refuses a Barber linked to another user', async () => {
@@ -190,7 +236,11 @@ describe('acceptInviteForUser', () => {
   });
 
   it('refuses replacing an existing member different barberId', async () => {
-    shopMemberFindUnique.mockResolvedValue({ id: 'm-existing', barberId: 'b-other' });
+    shopMemberFindUnique.mockResolvedValue({
+      id: 'm-existing',
+      barberId: 'b-other',
+      teamStatus: 'ACTIVE',
+    });
 
     const result = await acceptInviteForUser(
       { id: 'inv-6', shopId: 'shop-1', role: 'BARBER', barberId: 'b1' },

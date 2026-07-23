@@ -160,6 +160,8 @@ export const GET: APIRoute = async (context) => {
     }
   }
 
+  // Read-only Team list: never write teamStatus (legacy NEW stays NEW in DB;
+  // presentation treats NEW as joined via memberCardStatus).
   const memberCards: TeamCardDto[] = members.map((m) => {
     const bookable = Boolean(m.barberId && m.barber?.active);
     const cardStatus = memberCardStatus(m.teamStatus);
@@ -191,7 +193,6 @@ export const GET: APIRoute = async (context) => {
             ...todayRosterFields(rulesByBarberId.get(m.barber.id), holidayBarberIds.has(m.barber.id)),
           }
         : null,
-      canActivate: canManageMembers && cardStatus === 'new',
       canManageOnlineBookings: canManageMembers && Boolean(m.barberId),
     };
   });
@@ -210,7 +211,7 @@ export const GET: APIRoute = async (context) => {
       role: inv.role,
       name,
       email: inv.email,
-      cardStatus: 'pending',
+      cardStatus: 'pending' as const,
       bookable: linked ? Boolean(linked.active) : inv.bookable,
       barberId: inv.barberId,
       avatarUrl: linked?.avatarUrl ?? null,
@@ -226,12 +227,11 @@ export const GET: APIRoute = async (context) => {
             ...todayRosterFields(rulesByBarberId.get(linked.id), holidayBarberIds.has(linked.id)),
           }
         : null,
-      canActivate: false,
       canManageOnlineBookings: canManageMembers && Boolean(inv.barberId),
     };
   });
 
-  // Orphan barbers (calendar-only, no member) — show as bookable roster without role login
+  // Orphan barbers (calendar-only, no member) — stay in main list even when Online bookings Off.
   const linkedBarberIds = new Set(
     [...members.map((m) => m.barberId), ...invites.map((i) => i.barberId)].filter(Boolean),
   );
@@ -243,7 +243,7 @@ export const GET: APIRoute = async (context) => {
       role: 'BARBER' as const,
       name: b.name,
       email: b.email,
-      cardStatus: b.active ? ('active' as const) : ('new' as const),
+      cardStatus: 'active' as const,
       bookable: Boolean(b.active),
       barberId: b.id,
       avatarUrl: b.avatarUrl,
@@ -257,12 +257,12 @@ export const GET: APIRoute = async (context) => {
         serviceIds: b.barberServices.map((s) => s.serviceId),
         ...todayRosterFields(rulesByBarberId.get(b.id), holidayBarberIds.has(b.id)),
       },
-      canActivate: canManageMembers && !b.active,
       canManageOnlineBookings: canManageMembers && Boolean(b.id),
     }));
 
   const cards = [...memberCards, ...inviteCards, ...orphanCards].sort((a, b) => {
-    const order = { pending: 0, new: 1, active: 2 };
+    // Pending invites first in sort payload; UI partitions by kind for display sections.
+    const order = { pending: 0, active: 1 } as const;
     const statusDiff = order[a.cardStatus] - order[b.cardStatus];
     if (statusDiff !== 0) return statusDiff;
     const roleDiff = roleSortRank(a.role) - roleSortRank(b.role);

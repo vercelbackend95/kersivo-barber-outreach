@@ -298,8 +298,10 @@ export type AcceptInviteResult = AcceptInviteSuccess | AcceptInviteFailure;
 /**
  * Create ShopMember from an invite (or mark invite accepted if already a member).
  * Caller must validate email match, expiry, and role !== OWNER.
- * New members start as teamStatus NEW. Linked booking profiles keep Barber.active
- * (and services/hours/avatar) so online bookings do not wait on Activate.
+ * Acceptance is the complete joining action: members are written ACTIVE and are
+ * immediately usable. Linked booking profiles keep Barber.active (and
+ * services/hours/avatar) unchanged — Online bookings is independent of join.
+ * Legacy NEW members are normalised to ACTIVE on re-accept.
  *
  * All membership and Barber ownership decisions use transaction-scoped reads.
  */
@@ -313,7 +315,7 @@ export async function acceptInviteForUser(
         where: {
           shopId_userId: { shopId: invite.shopId, userId },
         },
-        select: { id: true, barberId: true },
+        select: { id: true, barberId: true, teamStatus: true },
       });
 
       if (
@@ -359,10 +361,17 @@ export async function acceptInviteForUser(
       }
 
       if (existing) {
+        const memberPatch: { barberId?: string; teamStatus?: 'ACTIVE' } = {};
         if (!existing.barberId && resolvedBarberId) {
+          memberPatch.barberId = resolvedBarberId;
+        }
+        if (existing.teamStatus !== 'ACTIVE') {
+          memberPatch.teamStatus = 'ACTIVE';
+        }
+        if (Object.keys(memberPatch).length > 0) {
           await tx.shopMember.update({
             where: { id: existing.id },
-            data: { barberId: resolvedBarberId },
+            data: memberPatch,
           });
         }
 
@@ -385,7 +394,7 @@ export async function acceptInviteForUser(
           userId,
           role: invite.role,
           barberId: resolvedBarberId,
-          teamStatus: 'NEW',
+          teamStatus: 'ACTIVE',
         },
       });
 
