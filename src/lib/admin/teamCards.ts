@@ -15,6 +15,25 @@ export function canActorResendInvitation(
   return false;
 }
 
+/**
+ * Pure role gate for setting up online bookings on an existing dashboard member.
+ * Owner may set up any member (including themselves). Manager may set up Barber only.
+ */
+export function canActorSetUpOnlineBookings(
+  actorRole: ShopRole | string,
+  targetMemberRole: ShopRole | string,
+): boolean {
+  if (actorRole === 'OWNER') {
+    return (
+      targetMemberRole === 'OWNER' ||
+      targetMemberRole === 'MANAGER' ||
+      targetMemberRole === 'BARBER'
+    );
+  }
+  if (actorRole === 'MANAGER') return targetMemberRole === 'BARBER';
+  return false;
+}
+
 export type TeamCardDto = {
   kind: 'member' | 'invite';
   id: string;
@@ -46,6 +65,11 @@ export type TeamCardDto = {
   } | null;
   /** Authorised Owner/Manager may manage online bookings when a booking profile exists. */
   canManageOnlineBookings: boolean;
+  /**
+   * Authorised actor may set up online bookings for a joined member with no barberId.
+   * Always false for invites and standalone booking profiles.
+   */
+  canSetUpOnlineBookings: boolean;
   /** Unaccepted invite lifecycle; null for members / standalone barbers. */
   invitationStatus: InvitationLifecycleStatus | null;
   /** ISO expiry for unaccepted invites; null otherwise. */
@@ -234,3 +258,6 @@ export function inviteCreationConflictMessage(code: string | undefined): string 
 
 export const TEAM_INVITE_RESEND_REFRESH_WARNING =
   'The invitation was renewed, but the Team list could not refresh automatically. Close and reopen Team to see the latest information.';
+
+export const TEAM_SETUP_ONLINE_BOOKINGS_REFRESH_WARNING =
+  'Online bookings were set up, but the Team view could not refresh automatically. Close and reopen Team to see the latest information.';

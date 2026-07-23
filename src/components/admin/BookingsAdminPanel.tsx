@@ -2134,6 +2134,29 @@ export default function BookingsAdminPanel({ isActive, mode, onBackToDashboard, 
       role={profileMemberMeta?.role}
       accountAccess={profileMemberMeta?.accountAccess}
       memberOnly={Boolean(profileMemberMeta?.memberOnly)}
+      memberId={profileMemberMeta?.memberId}
+      canSetUpOnlineBookings={Boolean(profileMemberMeta?.canSetUpOnlineBookings)}
+      onSetupOnlineBookingsSaved={async (result) => {
+        const barbersOk = await fetchBarbers();
+        setSelectedBarberId(result.barberId);
+        setProfileMemberMeta((prev) => ({
+          name: result.name,
+          avatarUrl: result.avatarUrl,
+          serviceIds: result.serviceIds,
+          isActive: result.active,
+          role: prev?.role,
+          accountAccess: prev?.accountAccess ?? 'joined',
+          memberId: prev?.memberId,
+          barberId: result.barberId,
+          bookable: true,
+          memberOnly: false,
+          canManageOnlineBookings: true,
+          canSetUpOnlineBookings: false,
+          email: result.email ?? prev?.email ?? null,
+        }));
+        await fetchWorkingHours(result.barberId);
+        return barbersOk;
+      }}
       onSaveIdentity={
         profileMemberMeta?.memberOnly ? undefined : (payload) => saveSelectedBarberIdentity(payload)
       }

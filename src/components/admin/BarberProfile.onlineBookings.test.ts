@@ -22,6 +22,13 @@ describe('Team profile booking availability actions', () => {
     expect(src).toMatch(/canManageOnlineBookings/);
     expect(src).toMatch(/Accept online bookings/);
   });
+
+  it('exposes Set up online bookings for eligible member-only profiles', () => {
+    const src = readFileSync(resolve(process.cwd(), 'src/components/admin/BarberProfile.tsx'), 'utf8');
+    expect(src).toMatch(/canSetUpOnlineBookings/);
+    expect(src).toMatch(/mode="setup-member"/);
+    expect(src).not.toMatch(/coming soon/i);
+  });
 });
 
 describe('BookingsAdminPanel online bookings wiring', () => {

@@ -54,6 +54,11 @@ type BarberProfileProps = {
   onSaveIdentity?: (payload: { name: string; email: string }) => Promise<boolean>;
   /** Dashboard-only member: no booking profile yet. */
   memberOnly?: boolean;
+  memberId?: string;
+  canSetUpOnlineBookings?: boolean;
+  onSetupOnlineBookingsSaved?: (
+    result: import('./barber-wizard/BarberWizard').SetupMemberSavedResult,
+  ) => void | boolean | Promise<void | boolean>;
 };
 
 export default function BarberProfile({
@@ -92,10 +97,14 @@ export default function BarberProfile({
   onToggleBookable,
   onSaveIdentity,
   memberOnly = false,
+  memberId,
+  canSetUpOnlineBookings = false,
+  onSetupOnlineBookingsSaved,
 }: BarberProfileProps) {
   const actionsMenuRef = React.useRef<HTMLDivElement | null>(null);
   const [isActionsMenuOpen, setIsActionsMenuOpen] = React.useState(false);
   const [isEditWizardOpen, setIsEditWizardOpen] = React.useState(false);
+  const [isSetupWizardOpen, setIsSetupWizardOpen] = React.useState(false);
   const [confirmAction, setConfirmAction] = React.useState<'delete' | null>(null);
   const confirmDialogRef = React.useRef<HTMLDivElement | null>(null);
   const cancelButtonRef = React.useRef<HTMLButtonElement | null>(null);
@@ -219,6 +228,11 @@ export default function BarberProfile({
       if (event.key !== 'Escape') return;
       if (isConfirmDialogOpen) return;
       if (isActionsMenuOpen) return;
+      if (isSetupWizardOpen) {
+        event.preventDefault();
+        setIsSetupWizardOpen(false);
+        return;
+      }
       if (isEditWizardOpen) {
         event.preventDefault();
         setIsEditWizardOpen(false);
@@ -228,15 +242,27 @@ export default function BarberProfile({
     };
     document.addEventListener('keydown', onKey);
     return () => document.removeEventListener('keydown', onKey);
-  }, [isActionsMenuOpen, isConfirmDialogOpen, isEditWizardOpen, onClose]);
+  }, [isActionsMenuOpen, isConfirmDialogOpen, isEditWizardOpen, isSetupWizardOpen, onClose]);
 
   const closeEditWizard = React.useCallback(() => {
     setIsEditWizardOpen(false);
   }, []);
 
+  const closeSetupWizard = React.useCallback(() => {
+    setIsSetupWizardOpen(false);
+  }, []);
+
   const handleEditWizardSaved = React.useCallback(async () => {
     await onBarberUpdated();
   }, [onBarberUpdated]);
+
+  const handleSetupWizardSaved = React.useCallback(
+    async (result?: import('./barber-wizard/BarberWizard').SetupMemberSavedResult) => {
+      if (!result || !onSetupOnlineBookingsSaved) return true;
+      return onSetupOnlineBookingsSaved(result);
+    },
+    [onSetupOnlineBookingsSaved],
+  );
 
   const hasAvatarPreview = Boolean(barberAvatarPreviewUrl);
   const displayedAvatarUrl = barberAvatarPreviewUrl ?? barber.avatarUrl ?? null;
@@ -288,7 +314,7 @@ export default function BarberProfile({
     <div
       className="admin-cp-backdrop"
       onClick={() => {
-        if (isEditWizardOpen) return;
+        if (isEditWizardOpen || isSetupWizardOpen) return;
         onClose();
       }}
       role="dialog"
@@ -404,15 +430,20 @@ export default function BarberProfile({
                     Online bookings: Off. Set up services and working hours before clients can book them.
                   </span>
                 </div>
-                <button
-                  type="button"
-                  className="btn btn--secondary"
-                  disabled
-                  title="Coming soon — set up online bookings without creating a profile on open"
-                  aria-label="Set up online bookings (coming soon)"
-                >
-                  Set up online bookings
-                </button>
+                {canSetUpOnlineBookings && memberId ? (
+                  <button
+                    type="button"
+                    className="btn btn--secondary"
+                    onClick={() => setIsSetupWizardOpen(true)}
+                    aria-label="Set up online bookings"
+                  >
+                    Set up online bookings
+                  </button>
+                ) : (
+                  <p className="admin-cp-bookable-toggle__passive muted">
+                    Online bookings stay off until an Owner or Manager sets them up.
+                  </p>
+                )}
               </div>
             ) : null}
 
@@ -715,6 +746,26 @@ export default function BarberProfile({
             await handleEditWizardSaved();
           }}
         />
+      </AdminWizardSheetLayer>
+      <AdminWizardSheetLayer
+        open={isSetupWizardOpen}
+        onDismiss={closeSetupWizard}
+        ariaLabelledBy="admin-barber-form-title"
+        className="admin-barber-sheet-layer--over-profile"
+      >
+        {memberId ? (
+          <BarberWizard
+            key={`setup-${memberId}`}
+            mode="setup-member"
+            memberId={memberId}
+            services={services}
+            weekDays={weekDays}
+            initialName={barber.name}
+            initialAvatarUrl={barber.avatarUrl ?? null}
+            onCancel={closeSetupWizard}
+            onSaved={handleSetupWizardSaved}
+          />
+        ) : null}
       </AdminWizardSheetLayer>
     </>
   );

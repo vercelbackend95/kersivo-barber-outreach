@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import {
+  canActorSetUpOnlineBookings,
   dashboardAccessOnlyLine,
   isJoinedTeamMemberStatus,
   isPendingInviteCard,
@@ -22,6 +23,24 @@ function card(partial: Partial<TeamCardDto> & Pick<TeamCardDto, 'kind' | 'id' | 
 > {
   return partial;
 }
+
+describe('canActorSetUpOnlineBookings', () => {
+  it('allows Owner to set up Owner, Manager, and Barber members', () => {
+    expect(canActorSetUpOnlineBookings('OWNER', 'OWNER')).toBe(true);
+    expect(canActorSetUpOnlineBookings('OWNER', 'MANAGER')).toBe(true);
+    expect(canActorSetUpOnlineBookings('OWNER', 'BARBER')).toBe(true);
+  });
+
+  it('allows Manager to set up Barber members only', () => {
+    expect(canActorSetUpOnlineBookings('MANAGER', 'BARBER')).toBe(true);
+    expect(canActorSetUpOnlineBookings('MANAGER', 'MANAGER')).toBe(false);
+    expect(canActorSetUpOnlineBookings('MANAGER', 'OWNER')).toBe(false);
+  });
+
+  it('blocks Barber actors', () => {
+    expect(canActorSetUpOnlineBookings('BARBER', 'BARBER')).toBe(false);
+  });
+});
 
 describe('isJoinedTeamMemberStatus', () => {
   it('treats NEW and ACTIVE as joined', () => {

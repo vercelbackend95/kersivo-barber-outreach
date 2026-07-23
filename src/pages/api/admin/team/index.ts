@@ -4,6 +4,7 @@ import type { APIRoute } from 'astro';
 import { requireAdminContext } from '@/lib/admin/auth';
 import { requireAnyPermission } from '@/lib/admin/rbac/can';
 import {
+  canActorSetUpOnlineBookings,
   emptyInvitationFields,
   inviteCardInvitationFields,
   memberCardStatus,
@@ -199,6 +200,8 @@ export const GET: APIRoute = async (context) => {
           }
         : null,
       canManageOnlineBookings: canManageMembers && Boolean(m.barberId),
+      canSetUpOnlineBookings:
+        !m.barberId && canActorSetUpOnlineBookings(access.role, m.role),
       ...emptyInvitationFields(),
     };
   });
@@ -234,6 +237,7 @@ export const GET: APIRoute = async (context) => {
           }
         : null,
       canManageOnlineBookings: canManageMembers && Boolean(inv.barberId),
+      canSetUpOnlineBookings: false,
       ...inviteCardInvitationFields({
         expiresAt: inv.expiresAt,
         inviteRole: inv.role,
@@ -269,6 +273,7 @@ export const GET: APIRoute = async (context) => {
         ...todayRosterFields(rulesByBarberId.get(b.id), holidayBarberIds.has(b.id)),
       },
       canManageOnlineBookings: canManageMembers && Boolean(b.id),
+      canSetUpOnlineBookings: false,
       ...emptyInvitationFields(),
     }));
 

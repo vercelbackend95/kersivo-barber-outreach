@@ -2,6 +2,7 @@ import type { Prisma, ShopRole } from '@prisma/client';
 import { prisma } from '@/lib/db/client';
 import { runSerializableTransaction } from '@/lib/db/serializableTransaction';
 import { inviteExpiresAt } from '@/lib/admin/rbac/members';
+import { canActorSetUpOnlineBookings } from '@/lib/admin/teamCards';
 
 export type WorkingHourInput = {
   dayOfWeek: number;
@@ -27,10 +28,10 @@ export type ValidationFailure = {
   error: string;
 };
 
-/** Structured domain failure thrown from Team creation transactions (409 or 422). */
+/** Structured domain failure thrown from Team creation transactions. */
 export type TeamCreationDomainError = {
   ok: false;
-  status: 409 | 422;
+  status: 403 | 404 | 409 | 422;
   code: string;
   error: string;
   inviteId?: string;
@@ -208,6 +209,7 @@ async function createBarberWithSetup(
     shopId: string;
     name: string;
     email?: string | null;
+    userId?: string | null;
     serviceIds: string[];
     hours: ValidatedWorkingHourRow[];
     avatarUrl?: string | null;
@@ -239,6 +241,7 @@ async function createBarberWithSetup(
       active: true,
       sortOrder: (maxSort._max.sortOrder ?? -1) + 1,
       ...(params.email ? { email: params.email } : {}),
+      ...(params.userId ? { userId: params.userId } : {}),
       ...(params.avatarUrl ? { avatarUrl: params.avatarUrl } : {}),
     },
     select: {
@@ -268,7 +271,7 @@ async function createBarberWithSetup(
     })),
   });
 
-  return created;
+  return { ...created, serviceIds: services.serviceIds };
 }
 
 /** Atomic standalone booking profile (no invite / member). */
@@ -288,6 +291,112 @@ export async function createStandaloneBookingProfile(params: {
       avatarUrl: params.avatarUrl,
     }),
   );
+}
+
+/**
+ * Atomic online-bookings setup for an existing dashboard ShopMember (no invite / email).
+ * Creates one Barber linked to the member User and sets ShopMember.barberId only.
+ */
+export async function createBookingProfileForMember(params: {
+  shopId: string;
+  memberId: string;
+  actorRole: ShopRole | string;
+  displayName: string;
+  serviceIds: string[];
+  hours: ValidatedWorkingHourRow[];
+  /** Uploaded avatar URL; when omitted, falls back to User.image inside the transaction. */
+  uploadedAvatarUrl?: string | null;
+}) {
+  return runSerializableTransaction(async (tx) => {
+    const member = await tx.shopMember.findFirst({
+      where: { id: params.memberId, shopId: params.shopId },
+      select: {
+        id: true,
+        userId: true,
+        role: true,
+        barberId: true,
+        teamStatus: true,
+        user: {
+          select: { id: true, name: true, email: true, image: true },
+        },
+      },
+    });
+
+    if (!member) {
+      throw {
+        ok: false as const,
+        status: 404 as const,
+        code: 'TEAM_MEMBER_NOT_FOUND',
+        error: 'Team member not found.',
+      } satisfies TeamCreationDomainError;
+    }
+
+    if (!canActorSetUpOnlineBookings(params.actorRole, member.role)) {
+      throw {
+        ok: false as const,
+        status: 403 as const,
+        code: 'FORBIDDEN',
+        error: 'Forbidden to set up online bookings for this team member.',
+      } satisfies TeamCreationDomainError;
+    }
+
+    if (member.barberId) {
+      throw {
+        ok: false as const,
+        status: 409 as const,
+        code: 'BOOKING_PROFILE_ALREADY_EXISTS',
+        error: 'This team member already has a booking profile.',
+        barberId: member.barberId,
+      } satisfies TeamCreationDomainError;
+    }
+
+    const existingUserBarber = await tx.barber.findFirst({
+      where: { userId: member.userId },
+      select: { id: true },
+    });
+    if (existingUserBarber) {
+      throw {
+        ok: false as const,
+        status: 409 as const,
+        code: 'USER_ALREADY_HAS_BOOKING_PROFILE',
+        error: 'This account is already linked to another booking profile.',
+        barberId: existingUserBarber.id,
+      } satisfies TeamCreationDomainError;
+    }
+
+    const avatarUrl = params.uploadedAvatarUrl ?? member.user.image ?? null;
+
+    const created = await createBarberWithSetup(tx, {
+      shopId: params.shopId,
+      name: params.displayName,
+      email: member.user.email,
+      userId: member.userId,
+      serviceIds: params.serviceIds,
+      hours: params.hours,
+      avatarUrl,
+    });
+
+    await tx.shopMember.update({
+      where: { id: member.id },
+      data: { barberId: created.id },
+      select: { id: true },
+    });
+
+    return {
+      barber: {
+        id: created.id,
+        name: created.name,
+        active: created.active,
+        avatarUrl: created.avatarUrl,
+        email: created.email,
+        userId: created.userId,
+        serviceIds: created.serviceIds,
+      },
+      memberId: member.id,
+      role: member.role,
+      teamStatus: member.teamStatus,
+    };
+  });
 }
 
 export async function findInviteCreationConflict(
@@ -438,7 +547,10 @@ export function isTeamCreationDomainError(error: unknown): error is TeamCreation
   const candidate = error as TeamCreationDomainError;
   return (
     candidate.ok === false &&
-    (candidate.status === 409 || candidate.status === 422) &&
+    (candidate.status === 403 ||
+      candidate.status === 404 ||
+      candidate.status === 409 ||
+      candidate.status === 422) &&
     typeof candidate.code === 'string' &&
     typeof candidate.error === 'string'
   );

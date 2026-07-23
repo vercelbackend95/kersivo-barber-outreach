@@ -68,6 +68,7 @@ export type TeamProfileOpenMeta = {
   memberId?: string;
   barberId?: string | null;
   canManageOnlineBookings?: boolean;
+  canSetUpOnlineBookings?: boolean;
   bookable?: boolean;
   /** Dashboard member with no booking profile — profile open must not create one. */
   memberOnly?: boolean;
@@ -391,6 +392,7 @@ export default function BarbersOverview({
         memberOnly: true,
         bookable: false,
         email: card.email,
+        canSetUpOnlineBookings: card.canSetUpOnlineBookings,
       });
       return;
     }

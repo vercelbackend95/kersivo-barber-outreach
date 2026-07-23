@@ -4,6 +4,8 @@ import { ConfirmationStatusIcon } from '../../ConfirmationStatusIcon';
 import EmptyState from '../../EmptyState';
 import { Check, ImagePlus, Scissors, Users, X } from '../../lucide-react';
 import { getDefaultWorkingHourRows } from '../../../lib/admin/defaultWorkingHourRows';
+import { TEAM_SETUP_ONLINE_BOOKINGS_REFRESH_WARNING } from '../../../lib/admin/teamCards';
+import { createSubmissionGate } from '../../../lib/admin/teamInviteWizardResults';
 import BarberWorkingHoursEditor from '../BarberWorkingHoursEditor';
 import type { WorkingHourRow } from '../barbersTypes';
 import {
@@ -19,9 +21,19 @@ import {
   type BarberWizardStep
 } from './barberWizardTypes';
 
+export type SetupMemberSavedResult = {
+  barberId: string;
+  name: string;
+  avatarUrl: string | null;
+  email: string | null;
+  serviceIds: string[];
+  active: boolean;
+};
+
 type BarberWizardProps = {
   mode?: BarberWizardMode;
   barberId?: string;
+  memberId?: string;
   services: BarberWizardService[];
   weekDays?: readonly string[];
   initialName?: string;
@@ -30,8 +42,13 @@ type BarberWizardProps = {
   initialIsActive?: boolean;
   initialWorkingHours?: WorkingHourRow[];
   onCancel: () => void;
-  onSaved: () => void | Promise<void>;
+  onSaved: (result?: SetupMemberSavedResult) => void | boolean | Promise<void | boolean>;
 };
+
+function timeToMinutes(hhmm: string): number {
+  const [h, m] = hhmm.split(':').map(Number);
+  return h * 60 + m;
+}
 
 function FieldError({ id, children }: { id: string; children?: string }) {
   if (!children) return null;
@@ -45,6 +62,7 @@ function FieldError({ id, children }: { id: string; children?: string }) {
 export default function BarberWizard({
   mode = 'create',
   barberId,
+  memberId,
   services,
   weekDays = WEEK_DAY_LABELS,
   initialName = '',
@@ -56,10 +74,12 @@ export default function BarberWizard({
   onSaved
 }: BarberWizardProps) {
   const isEdit = mode === 'edit';
+  const isSetupMember = mode === 'setup-member';
+  const prefillFromInitial = isEdit || isSetupMember;
   const [step, setStep] = useState<BarberWizardStep>(1);
-  const [name, setName] = useState(() => (isEdit ? initialName : ''));
+  const [name, setName] = useState(() => (prefillFromInitial ? initialName : ''));
   const [selectedServiceIds, setSelectedServiceIds] = useState<string[]>(() => {
-    if (isEdit && initialServiceIds && initialServiceIds.length > 0) {
+    if (prefillFromInitial && initialServiceIds && initialServiceIds.length > 0) {
       return [...initialServiceIds];
     }
     return services.map((service) => service.id);
@@ -69,15 +89,19 @@ export default function BarberWizard({
   );
   const [avatarFile, setAvatarFile] = useState<File | null>(null);
   const [avatarPreviewUrl, setAvatarPreviewUrl] = useState(() =>
-    isEdit && initialAvatarUrl ? initialAvatarUrl : ''
+    prefillFromInitial && initialAvatarUrl ? initialAvatarUrl : ''
   );
   const [avatarError, setAvatarError] = useState('');
   const [errors, setErrors] = useState<BarberWizardErrors>({});
   const [submitError, setSubmitError] = useState('');
   const [scheduleWarning, setScheduleWarning] = useState('');
+  const [refreshWarning, setRefreshWarning] = useState('');
   const [isSaving, setIsSaving] = useState(false);
   const [finished, setFinished] = useState(false);
   const stepHeadingRef = useRef<HTMLHeadingElement>(null);
+  const submissionGateRef = useRef(createSubmissionGate());
+  /** Sync lock mirrors the gate so double-clicks cannot race before React re-renders. */
+  const submissionInFlightRef = useRef(false);
 
   useEffect(() => {
     if (!finished) stepHeadingRef.current?.focus();
@@ -95,7 +119,7 @@ export default function BarberWizard({
         const valid = current.filter((id) => services.some((service) => service.id === id));
         if (valid.length === current.length) return current;
         if (valid.length) return valid;
-        if (isEdit && initialServiceIds?.length) {
+        if (prefillFromInitial && initialServiceIds?.length) {
           const fromInitial = initialServiceIds.filter((id) => services.some((service) => service.id === id));
           if (fromInitial.length) return fromInitial;
         }
@@ -104,7 +128,7 @@ export default function BarberWizard({
       if (isEdit) return current;
       return services.map((service) => service.id);
     });
-  }, [services, isEdit, initialServiceIds]);
+  }, [services, isEdit, prefillFromInitial, initialServiceIds]);
 
   function clearFieldError(key: keyof BarberWizardErrors) {
     if (key in errors) setErrors((current) => ({ ...current, [key]: undefined }));
@@ -141,7 +165,7 @@ export default function BarberWizard({
 
   function clearAvatar() {
     setAvatarFile(null);
-    setAvatarPreviewUrl(isEdit && initialAvatarUrl ? initialAvatarUrl : '');
+    setAvatarPreviewUrl(prefillFromInitial && initialAvatarUrl ? initialAvatarUrl : '');
     setAvatarError('');
   }
 
@@ -150,6 +174,111 @@ export default function BarberWizard({
       current.includes(id) ? current.filter((serviceId) => serviceId !== id) : [...current, id]
     );
     clearFieldError('services');
+  }
+
+  async function saveSetupMember() {
+    if (finished || submissionInFlightRef.current) return;
+    if (!submissionGateRef.current.tryBegin()) return;
+    submissionInFlightRef.current = true;
+
+    for (const validationStep of [1, 2, 3] as BarberWizardStep[]) {
+      const nextErrors = validateBarberWizardStep(validationStep, name, selectedServiceIds, workingHours);
+      if (Object.keys(nextErrors).length) {
+        setErrors(nextErrors);
+        setStep(validationStep);
+        submissionGateRef.current.release();
+        submissionInFlightRef.current = false;
+        return;
+      }
+    }
+
+    if (!memberId) {
+      submissionGateRef.current.release();
+      submissionInFlightRef.current = false;
+      setSubmitError('Missing team member id.');
+      return;
+    }
+
+    const trimmedName = name.trim();
+    const uniqueServiceIds = Array.from(new Set(selectedServiceIds));
+
+    setIsSaving(true);
+    setSubmitError('');
+    setRefreshWarning('');
+
+    try {
+      const formData = new FormData();
+      formData.set('displayName', trimmedName);
+      formData.set('serviceIds', JSON.stringify(uniqueServiceIds));
+      formData.set(
+        'workingHours',
+        JSON.stringify(
+          workingHours.map((row) => ({
+            dayOfWeek: row.dayOfWeek,
+            startMinutes: timeToMinutes(row.startTime),
+            endMinutes: timeToMinutes(row.endTime),
+            active: row.active
+          }))
+        )
+      );
+      if (avatarFile) formData.set('avatar', avatarFile);
+
+      const response = await fetch(`/api/admin/team/members/${memberId}/booking-profile`, {
+        method: 'POST',
+        credentials: 'include',
+        body: formData
+      });
+      const payload = (await response.json().catch(() => ({}))) as {
+        error?: string;
+        barber?: {
+          id?: string;
+          name?: string;
+          avatarUrl?: string | null;
+          email?: string | null;
+          serviceIds?: string[];
+          active?: boolean;
+        };
+      };
+
+      if (!response.ok || response.status !== 201) {
+        throw new Error(payload.error || 'Could not set up online bookings.');
+      }
+
+      const saved = payload.barber;
+      if (!saved?.id) {
+        throw new Error('Online bookings were set up but the response was missing an id.');
+      }
+
+      const result: SetupMemberSavedResult = {
+        barberId: saved.id,
+        name: saved.name ?? trimmedName,
+        avatarUrl: saved.avatarUrl ?? null,
+        email: saved.email ?? null,
+        serviceIds: Array.isArray(saved.serviceIds) ? saved.serviceIds : uniqueServiceIds,
+        active: saved.active ?? true
+      };
+
+      setFinished(true);
+      submissionGateRef.current.markFinished();
+
+      try {
+        const ok = await onSaved(result);
+        if (ok === false) {
+          setRefreshWarning(TEAM_SETUP_ONLINE_BOOKINGS_REFRESH_WARNING);
+        }
+      } catch {
+        setRefreshWarning(TEAM_SETUP_ONLINE_BOOKINGS_REFRESH_WARNING);
+      }
+    } catch (error) {
+      submissionGateRef.current.release();
+      submissionInFlightRef.current = false;
+      setSubmitError(
+        error instanceof Error ? error.message : 'Could not set up online bookings.'
+      );
+    } finally {
+      submissionInFlightRef.current = false;
+      setIsSaving(false);
+    }
   }
 
   async function saveBarber() {
@@ -236,7 +365,12 @@ export default function BarberWizard({
       return;
     }
     if (step === 4) {
-      void saveBarber();
+      if (isSetupMember) {
+        if (submissionInFlightRef.current || submissionGateRef.current.isInFlight()) return;
+        void saveSetupMember();
+      } else {
+        void saveBarber();
+      }
       return;
     }
     validateAndContinue();
@@ -254,17 +388,28 @@ export default function BarberWizard({
 
   return (
     <form
-      className={`admin-barber-sheet admin-barber-sheet--add admin-barber-wizard${isEdit ? ' admin-barber-wizard--edit' : ''}`}
+      className={`admin-barber-sheet admin-barber-sheet--add admin-barber-wizard${isEdit ? ' admin-barber-wizard--edit' : ''}${isSetupMember ? ' admin-barber-wizard--setup-member' : ''}`}
       onSubmit={handleSubmit}
       onMouseDown={(event) => event.stopPropagation()}
       noValidate
     >
       <header className="admin-barber-wizard__header">
         <div className="admin-barber-wizard__header-copy">
-          <p>{isEdit ? 'EDIT BARBER' : 'ADD BARBER'}</p>
+          <p>{isSetupMember ? 'ONLINE BOOKINGS' : isEdit ? 'EDIT BARBER' : 'ADD BARBER'}</p>
           <h2 id="admin-barber-form-title">
-            {finished ? 'Barber ready' : isEdit ? 'Update team member' : 'Build a team member'}
+            {finished
+              ? isSetupMember
+                ? 'Online bookings ready'
+                : 'Barber ready'
+              : isSetupMember
+                ? 'Set up online bookings'
+                : isEdit
+                  ? 'Update team member'
+                  : 'Build a team member'}
           </h2>
+          {isSetupMember && !finished ? (
+            <p>Add services and working hours so clients can book this team member online.</p>
+          ) : null}
         </div>
         <button
           type="button"
@@ -319,14 +464,21 @@ export default function BarberWizard({
         {finished ? (
           <section className="admin-barber-wizard__success" role="status" aria-live="polite">
             <ConfirmationStatusIcon variant="success" />
-            <p className="admin-barber-wizard__eyebrow">{isEdit ? 'Updated' : 'Created'}</p>
-            <h3>{name.trim()} is ready</h3>
+            <p className="admin-barber-wizard__eyebrow">
+              {isSetupMember ? 'Ready' : isEdit ? 'Updated' : 'Created'}
+            </p>
+            <h3>
+              {isSetupMember ? 'Online bookings ready' : `${name.trim()} is ready`}
+            </h3>
             <p>
-              {scheduleWarning
-                ? scheduleWarning
-                : isEdit
-                  ? 'Their roster profile has been updated.'
-                  : 'They are live on the roster and ready to take bookings.'}
+              {isSetupMember
+                ? refreshWarning ||
+                  'This team member is now available in the client booking flow.'
+                : scheduleWarning
+                  ? scheduleWarning
+                  : isEdit
+                    ? 'Their roster profile has been updated.'
+                    : 'They are live on the roster and ready to take bookings.'}
             </p>
           </section>
         ) : null}
@@ -502,9 +654,11 @@ export default function BarberWizard({
               saveError=""
               persistToServer={false}
               subtitle={
-                isEdit
-                  ? 'Saved together with this barber when you update them.'
-                  : 'Saved together with this barber when you create them.'
+                isSetupMember
+                  ? 'Saved when you set up online bookings.'
+                  : isEdit
+                    ? 'Saved together with this barber when you update them.'
+                    : 'Saved together with this barber when you create them.'
               }
               helperText="Tap any day to change shift status and hours."
               onSetWorkingHours={(rules) => {
@@ -522,9 +676,13 @@ export default function BarberWizard({
             <div className="admin-barber-wizard__intro">
               <p className="admin-barber-wizard__eyebrow">STEP 4 · REVIEW</p>
               <h3 id="barber-wizard-review-title" ref={stepHeadingRef} tabIndex={-1}>
-                Ready for the roster
+                {isSetupMember ? 'Ready for online bookings' : 'Ready for the roster'}
               </h3>
-              <p>Take one last look. You can jump back to any section before saving.</p>
+              <p>
+                {isSetupMember
+                  ? 'Take one last look before making this team member bookable online.'
+                  : 'Take one last look. You can jump back to any section before saving.'}
+              </p>
             </div>
 
             <div className="admin-barber-wizard__review">
@@ -611,10 +769,10 @@ export default function BarberWizard({
               {isSaving ? (
                 <>
                   <ButtonSpinner />
-                  {isEdit ? 'Updating…' : 'Creating…'}
+                  {isSetupMember ? 'Setting up…' : isEdit ? 'Updating…' : 'Creating…'}
                 </>
               ) : step === 4 ? (
-                isEdit ? 'Update barber' : 'Create barber'
+                isSetupMember ? 'Set up online bookings' : isEdit ? 'Update barber' : 'Create barber'
               ) : (
                 'Continue'
               )}
