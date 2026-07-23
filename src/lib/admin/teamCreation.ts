@@ -27,14 +27,18 @@ export type ValidationFailure = {
   error: string;
 };
 
-export type InviteConflict = {
+/** Structured domain failure thrown from Team creation transactions (409 or 422). */
+export type TeamCreationDomainError = {
   ok: false;
-  status: 409;
+  status: 409 | 422;
   code: string;
   error: string;
   inviteId?: string;
   barberId?: string;
 };
+
+/** @deprecated Prefer TeamCreationDomainError — kept as alias for 409 invite conflicts. */
+export type InviteConflict = TeamCreationDomainError & { status: 409 };
 
 export function normalizeServiceIds(ids: unknown): string[] {
   if (!Array.isArray(ids)) return [];
@@ -209,6 +213,20 @@ async function createBarberWithSetup(
     avatarUrl?: string | null;
   },
 ) {
+  const services = await assertValidShopServices({
+    shopId: params.shopId,
+    serviceIds: params.serviceIds,
+    db: tx,
+  });
+  if (!services.ok) {
+    throw {
+      ok: false as const,
+      status: 422 as const,
+      code: services.code,
+      error: services.error,
+    } satisfies TeamCreationDomainError;
+  }
+
   const maxSort = await tx.barber.aggregate({
     where: { shopId: params.shopId },
     _max: { sortOrder: true },
@@ -234,7 +252,7 @@ async function createBarberWithSetup(
   });
 
   await tx.barberService.createMany({
-    data: params.serviceIds.map((serviceId) => ({ barberId: created.id, serviceId })),
+    data: services.serviceIds.map((serviceId) => ({ barberId: created.id, serviceId })),
     skipDuplicates: true,
   });
 
@@ -279,7 +297,7 @@ export async function findInviteCreationConflict(
     bookable: boolean;
   },
   db: Prisma.TransactionClient | typeof prisma = prisma,
-): Promise<InviteConflict | null> {
+): Promise<TeamCreationDomainError | null> {
   const existingMember = await db.shopMember.findFirst({
     where: { shopId: params.shopId, user: { email: params.email } },
     select: { id: true },
@@ -415,14 +433,18 @@ export async function createTeamInviteWithOptionalProfile(params: {
   });
 }
 
-export function isInviteConflict(error: unknown): error is InviteConflict {
+export function isTeamCreationDomainError(error: unknown): error is TeamCreationDomainError {
+  if (typeof error !== 'object' || error === null) return false;
+  const candidate = error as TeamCreationDomainError;
   return (
-    typeof error === 'object' &&
-    error !== null &&
-    'ok' in error &&
-    (error as InviteConflict).ok === false &&
-    'status' in error &&
-    (error as InviteConflict).status === 409 &&
-    'code' in error
+    candidate.ok === false &&
+    (candidate.status === 409 || candidate.status === 422) &&
+    typeof candidate.code === 'string' &&
+    typeof candidate.error === 'string'
   );
+}
+
+/** @deprecated Prefer isTeamCreationDomainError */
+export function isInviteConflict(error: unknown): error is InviteConflict {
+  return isTeamCreationDomainError(error) && error.status === 409;
 }

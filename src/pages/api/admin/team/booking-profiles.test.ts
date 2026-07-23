@@ -89,6 +89,7 @@ describe('POST /api/admin/team/booking-profiles', () => {
         },
         barberService: { createMany: (...a: unknown[]) => barberServiceCreateMany(...a) },
         availabilityRule: { createMany: (...a: unknown[]) => availabilityRuleCreateMany(...a) },
+        service: { findMany: (...a: unknown[]) => serviceFindMany(...a) },
       }),
     );
   });
@@ -231,5 +232,22 @@ describe('POST /api/admin/team/booking-profiles', () => {
       }),
     );
     expect(res.status).toBe(500);
+  });
+
+  it('returns 422 when services become invalid inside the transaction', async () => {
+    serviceFindMany
+      .mockResolvedValueOnce([{ id: 'svc-1' }])
+      .mockResolvedValueOnce([]);
+    const res = await POST(
+      ctx({
+        displayName: 'Alex',
+        serviceIds: ['svc-1'],
+        workingHours,
+      }),
+    );
+    expect(res.status).toBe(422);
+    const data = await res.json();
+    expect(data.code).toBe('INVALID_SERVICE_SELECTION');
+    expect(barberCreate).not.toHaveBeenCalled();
   });
 });

@@ -13,7 +13,7 @@ import {
   assertValidWorkingHours,
   createTeamInviteWithOptionalProfile,
   findInviteCreationConflict,
-  isInviteConflict,
+  isTeamCreationDomainError,
   type WorkingHourInput,
 } from '@/lib/admin/teamCreation';
 import { prisma } from '@/lib/db/client';
@@ -218,7 +218,7 @@ export const POST: APIRoute = async (context) => {
     });
     invite = created.invite;
   } catch (error) {
-    if (isInviteConflict(error)) {
+    if (isTeamCreationDomainError(error)) {
       return json(
         {
           error: error.error,
@@ -226,7 +226,7 @@ export const POST: APIRoute = async (context) => {
           ...(error.inviteId ? { inviteId: error.inviteId } : {}),
           ...(error.barberId ? { barberId: error.barberId } : {}),
         },
-        409,
+        error.status,
       );
     }
     if (avatarUrl) {

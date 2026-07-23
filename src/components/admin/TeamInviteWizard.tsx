@@ -63,6 +63,10 @@ export default function TeamInviteWizard({
   const [isSaving, setIsSaving] = useState(false);
   const [finished, setFinished] = useState(false);
   const [finishedMode, setFinishedMode] = useState<'invite' | 'booking'>('invite');
+  const [inviteEmailSent, setInviteEmailSent] = useState(true);
+  const [inviteWarning, setInviteWarning] = useState('');
+  const [inviteAcceptPath, setInviteAcceptPath] = useState('');
+  const [copyFeedback, setCopyFeedback] = useState('');
   const stepHeadingRef = useRef<HTMLHeadingElement>(null);
 
   const needsBookingSetup = bookable;
@@ -288,6 +292,10 @@ export default function TeamInviteWizard({
         const data = await response.json().catch(() => ({}));
         if (!response.ok) throw new Error(data.error || 'Could not send invite.');
         setFinishedMode('invite');
+        setInviteEmailSent(data.emailSent !== false);
+        setInviteWarning(typeof data.warning === 'string' ? data.warning : '');
+        setInviteAcceptPath(typeof data.acceptPath === 'string' ? data.acceptPath : '');
+        setCopyFeedback('');
       } else {
         response = await fetch('/api/admin/team/invite', {
           method: 'POST',
@@ -303,6 +311,10 @@ export default function TeamInviteWizard({
         const data = await response.json().catch(() => ({}));
         if (!response.ok) throw new Error(data.error || 'Could not send invite.');
         setFinishedMode('invite');
+        setInviteEmailSent(data.emailSent !== false);
+        setInviteWarning(typeof data.warning === 'string' ? data.warning : '');
+        setInviteAcceptPath(typeof data.acceptPath === 'string' ? data.acceptPath : '');
+        setCopyFeedback('');
       }
 
       await onSent();
@@ -311,6 +323,21 @@ export default function TeamInviteWizard({
       setSubmitError(err instanceof Error ? err.message : 'Could not complete.');
     } finally {
       setIsSaving(false);
+    }
+  }
+
+  async function copyInvitationLink() {
+    setCopyFeedback('');
+    if (!inviteAcceptPath) {
+      setCopyFeedback('Could not copy the invitation link.');
+      return;
+    }
+    try {
+      const url = new URL(inviteAcceptPath, window.location.origin).href;
+      await navigator.clipboard.writeText(url);
+      setCopyFeedback('Invitation link copied');
+    } catch {
+      setCopyFeedback('Could not copy the invitation link.');
     }
   }
 
@@ -361,7 +388,9 @@ export default function TeamInviteWizard({
             {finished
               ? finishedMode === 'booking'
                 ? 'Added to booking team'
-                : 'Invite sent'
+                : inviteEmailSent
+                  ? 'Invitation sent'
+                  : 'Invitation created — email not sent'
               : 'Add someone to this shop'}
           </h2>
         </div>
@@ -408,21 +437,49 @@ export default function TeamInviteWizard({
         ) : null}
 
         {finished ? (
-          <section className="admin-barber-wizard__success" role="status">
+          <section
+            className={`admin-barber-wizard__success${
+              finishedMode === 'invite' && !inviteEmailSent ? ' admin-barber-wizard__success--warning' : ''
+            }`}
+            role="status"
+          >
             <ConfirmationStatusIcon variant="success" />
             <p className="admin-barber-wizard__eyebrow">
-              {finishedMode === 'booking' ? 'Booking profile' : 'Pending invitation'}
+              {finishedMode === 'booking'
+                ? 'Booking profile'
+                : inviteEmailSent
+                  ? 'Pending invitation'
+                  : 'Invitation saved'}
             </p>
             <h3>
               {finishedMode === 'booking'
                 ? `${name.trim()} can accept online bookings`
-                : `Invite sent to ${email.trim()}`}
+                : inviteEmailSent
+                  ? `Sent to ${email.trim()}`
+                  : 'Invitation created — email not sent'}
             </h3>
             <p>
               {finishedMode === 'booking'
                 ? `${name.trim()} appears on Team with no dashboard account.`
-                : `${name.trim()} appears on Team as invite pending until they accept.`}
+                : inviteEmailSent
+                  ? `The invitation was sent to ${email.trim()}. They will appear as Joined after accepting it.`
+                  : 'The invitation is saved, but we could not send the email. You can share the invitation link manually or resend it later.'}
             </p>
+            {finishedMode === 'invite' && !inviteEmailSent && inviteWarning ? (
+              <p className="admin-barber-wizard__warning-detail">{inviteWarning}</p>
+            ) : null}
+            {finishedMode === 'invite' && !inviteEmailSent && inviteAcceptPath ? (
+              <div className="admin-barber-wizard__invite-actions">
+                <button type="button" className="btn btn--ghost" onClick={() => void copyInvitationLink()}>
+                  Copy invitation link
+                </button>
+                {copyFeedback ? (
+                  <p className="admin-barber-wizard__copy-feedback" role="status">
+                    {copyFeedback}
+                  </p>
+                ) : null}
+              </div>
+            ) : null}
           </section>
         ) : null}
 

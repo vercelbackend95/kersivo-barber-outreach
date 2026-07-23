@@ -167,6 +167,7 @@ describe('createStandaloneBookingProfile', () => {
         },
         barberService: { createMany: (...a: unknown[]) => barberServiceCreateMany(...a) },
         availabilityRule: { createMany: (...a: unknown[]) => availabilityRuleCreateMany(...a) },
+        service: { findMany: (...a: unknown[]) => serviceFindMany(...a) },
       }),
     );
     barberAggregate.mockResolvedValue({ _max: { sortOrder: 0 } });
@@ -183,6 +184,7 @@ describe('createStandaloneBookingProfile', () => {
   });
 
   it('creates Barber, services, and hours inside one transaction', async () => {
+    serviceFindMany.mockResolvedValue([{ id: 'svc-1' }]);
     await createStandaloneBookingProfile({
       shopId: 'shop-1',
       name: 'Alex',
@@ -200,12 +202,40 @@ describe('createStandaloneBookingProfile', () => {
     });
 
     expect(transaction).toHaveBeenCalledTimes(1);
+    expect(serviceFindMany).toHaveBeenCalled();
     expect(barberCreate).toHaveBeenCalledTimes(1);
     expect(barberServiceCreateMany).toHaveBeenCalledTimes(1);
     expect(availabilityRuleCreateMany).toHaveBeenCalledTimes(1);
   });
 
+  it('rolls back when in-transaction service validation fails', async () => {
+    serviceFindMany.mockResolvedValue([]);
+    await expect(
+      createStandaloneBookingProfile({
+        shopId: 'shop-1',
+        name: 'Alex',
+        serviceIds: ['svc-1'],
+        hours: [
+          {
+            dayOfWeek: 1,
+            startMinutes: 540,
+            endMinutes: 1080,
+            breakStartMin: null,
+            breakEndMin: null,
+            active: true,
+          },
+        ],
+      }),
+    ).rejects.toMatchObject({
+      ok: false,
+      status: 422,
+      code: 'INVALID_SERVICE_SELECTION',
+    });
+    expect(barberCreate).not.toHaveBeenCalled();
+  });
+
   it('rolls back when service write fails', async () => {
+    serviceFindMany.mockResolvedValue([{ id: 'svc-1' }]);
     barberServiceCreateMany.mockRejectedValue(new Error('service write failed'));
     await expect(
       createStandaloneBookingProfile({
@@ -227,6 +257,7 @@ describe('createStandaloneBookingProfile', () => {
   });
 
   it('rolls back when working-hours write fails', async () => {
+    serviceFindMany.mockResolvedValue([{ id: 'svc-1' }]);
     availabilityRuleCreateMany.mockRejectedValue(new Error('hours write failed'));
     await expect(
       createStandaloneBookingProfile({

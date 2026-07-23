@@ -813,6 +813,33 @@
   line-height: 1.5;
 }
 
+.admin-barber-wizard__success--warning .booking-confirmation__icon {
+  border-color: color-mix(in srgb, var(--warning, #b8860b) 55%, var(--border));
+  background: color-mix(in srgb, var(--warning, #b8860b) 16%, var(--surface-2, var(--surface)));
+  color: var(--warning, #b8860b);
+  box-shadow: 0 0 0 4px color-mix(in srgb, var(--warning, #b8860b) 12%, transparent);
+}
+
+.admin-barber-wizard__warning-detail {
+  margin: 0.15rem 0 0;
+  max-width: 28rem;
+  font-size: 0.82rem;
+  color: var(--muted);
+}
+
+.admin-barber-wizard__invite-actions {
+  display: grid;
+  justify-items: center;
+  gap: 0.45rem;
+  margin-top: 0.55rem;
+}
+
+.admin-barber-wizard__copy-feedback {
+  margin: 0;
+  font-size: 0.8rem;
+  color: var(--muted);
+}
+
 .admin-barber-wizard__footer {
   flex: 0 0 auto;
   display: grid;

@@ -598,4 +598,28 @@ describe('POST /api/admin/team/invite', () => {
     expect(res.status).toBe(500);
     expect(shopInviteCreate).not.toHaveBeenCalled();
   });
+
+  it('returns 422 and creates nothing when services fail inside the transaction', async () => {
+    serviceFindMany
+      .mockResolvedValueOnce([{ id: 'svc-1' }])
+      .mockResolvedValueOnce([]);
+
+    const res = await POST(
+      ctx({
+        email: 'a@b.com',
+        role: 'BARBER',
+        displayName: 'Alex',
+        bookable: true,
+        serviceIds: ['svc-1'],
+        workingHours,
+      }),
+    );
+
+    expect(res.status).toBe(422);
+    const data = await res.json();
+    expect(data.code).toBe('INVALID_SERVICE_SELECTION');
+    expect(barberCreate).not.toHaveBeenCalled();
+    expect(shopInviteCreate).not.toHaveBeenCalled();
+    expect(sendShopTeamInviteEmail).not.toHaveBeenCalled();
+  });
 });

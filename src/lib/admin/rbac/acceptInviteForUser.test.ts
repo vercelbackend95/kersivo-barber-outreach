@@ -7,7 +7,7 @@ const shopInviteUpdate = vi.fn();
 const barberFindFirst = vi.fn();
 const barberUpdate = vi.fn();
 const barberCreate = vi.fn();
-const transaction = vi.fn();
+const runSerializableTransaction = vi.fn();
 
 vi.mock('@/lib/db/client', () => ({
   prisma: {
@@ -24,8 +24,11 @@ vi.mock('@/lib/db/client', () => ({
       update: (...a: unknown[]) => barberUpdate(...a),
       create: (...a: unknown[]) => barberCreate(...a),
     },
-    $transaction: (...a: unknown[]) => transaction(...a),
   },
+}));
+
+vi.mock('@/lib/db/serializableTransaction', () => ({
+  runSerializableTransaction: (...a: unknown[]) => runSerializableTransaction(...a),
 }));
 
 vi.mock('@/lib/admin/defaultAvailability', () => ({
@@ -38,7 +41,7 @@ import { acceptInviteForUser } from './members';
 describe('acceptInviteForUser', () => {
   beforeEach(() => {
     vi.clearAllMocks();
-    transaction.mockImplementation(async (fn: (tx: unknown) => Promise<unknown>) =>
+    runSerializableTransaction.mockImplementation(async (fn: (tx: unknown) => Promise<unknown>) =>
       fn({
         barber: {
           findFirst: (...a: unknown[]) => barberFindFirst(...a),
@@ -46,6 +49,7 @@ describe('acceptInviteForUser', () => {
           create: (...a: unknown[]) => barberCreate(...a),
         },
         shopMember: {
+          findUnique: (...a: unknown[]) => shopMemberFindUnique(...a),
           create: (...a: unknown[]) => shopMemberCreate(...a),
           update: (...a: unknown[]) => shopMemberUpdate(...a),
         },
@@ -54,6 +58,25 @@ describe('acceptInviteForUser', () => {
         },
       }),
     );
+  });
+
+  it('performs ShopMember lookup inside the transaction', async () => {
+    shopMemberFindUnique.mockResolvedValue(null);
+    barberFindFirst.mockResolvedValue({ id: 'b1', userId: null });
+    barberUpdate.mockResolvedValue({ id: 'b1' });
+    shopMemberCreate.mockResolvedValue({ id: 'm1' });
+    shopInviteUpdate.mockResolvedValue({});
+
+    await acceptInviteForUser(
+      { id: 'inv-1', shopId: 'shop-1', role: 'BARBER', barberId: 'b1' },
+      'user-1',
+    );
+
+    expect(runSerializableTransaction).toHaveBeenCalledTimes(1);
+    expect(shopMemberFindUnique).toHaveBeenCalledWith({
+      where: { shopId_userId: { shopId: 'shop-1', userId: 'user-1' } },
+      select: { id: true, barberId: true },
+    });
   });
 
   it('links existing Barber without changing active or creating a duplicate', async () => {
@@ -178,7 +201,6 @@ describe('acceptInviteForUser', () => {
     if (result.ok) return;
     expect(result.code).toBe('MEMBER_BARBER_LINK_CONFLICT');
     expect(shopInviteUpdate).not.toHaveBeenCalled();
-    expect(transaction).not.toHaveBeenCalled();
   });
 
   it('leaves invite.acceptedAt unchanged on ownership conflict', async () => {

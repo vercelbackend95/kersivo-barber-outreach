@@ -7,6 +7,7 @@ import {
   assertValidShopServices,
   assertValidWorkingHours,
   createStandaloneBookingProfile,
+  isTeamCreationDomainError,
   type WorkingHourInput,
 } from '@/lib/admin/teamCreation';
 import { storeAdminAvatar } from '@/lib/storage/storeAdminAvatar';
@@ -158,6 +159,17 @@ export const POST: APIRoute = async (context) => {
       201,
     );
   } catch (error) {
+    if (isTeamCreationDomainError(error)) {
+      return json(
+        {
+          error: error.error,
+          code: error.code,
+          ...(error.inviteId ? { inviteId: error.inviteId } : {}),
+          ...(error.barberId ? { barberId: error.barberId } : {}),
+        },
+        error.status,
+      );
+    }
     if (avatarUrl) {
       console.error(
         '[team/booking-profiles] DB transaction failed after avatar upload; orphan blob may remain',

@@ -5,6 +5,7 @@ import {
   ensureBarberHasAvailabilityRules,
 } from '@/lib/admin/defaultAvailability';
 import { prisma } from '@/lib/db/client';
+import { runSerializableTransaction } from '@/lib/db/serializableTransaction';
 
 const INVITE_TTL_MS = 1000 * 60 * 60 * 72; // 72h
 
@@ -299,85 +300,38 @@ export type AcceptInviteResult = AcceptInviteSuccess | AcceptInviteFailure;
  * Caller must validate email match, expiry, and role !== OWNER.
  * New members start as teamStatus NEW. Linked booking profiles keep Barber.active
  * (and services/hours/avatar) so online bookings do not wait on Activate.
+ *
+ * All membership and Barber ownership decisions use transaction-scoped reads.
  */
 export async function acceptInviteForUser(
   invite: AcceptableInvite,
   userId: string,
 ): Promise<AcceptInviteResult> {
-  const existing = await prisma.shopMember.findUnique({
-    where: {
-      shopId_userId: { shopId: invite.shopId, userId },
-    },
-    select: { id: true, barberId: true },
-  });
-
   try {
-    if (existing) {
+    return await runSerializableTransaction(async (tx: Prisma.TransactionClient) => {
+      const existing = await tx.shopMember.findUnique({
+        where: {
+          shopId_userId: { shopId: invite.shopId, userId },
+        },
+        select: { id: true, barberId: true },
+      });
+
       if (
-        existing.barberId &&
+        existing?.barberId &&
         invite.barberId &&
         existing.barberId !== invite.barberId
       ) {
-        return {
-          ok: false,
+        throw {
+          ok: false as const,
           code: 'MEMBER_BARBER_LINK_CONFLICT',
           error: 'This account is already linked to a different booking profile.',
-        };
+        } satisfies AcceptInviteFailure;
       }
 
-      await prisma.$transaction(async (tx: Prisma.TransactionClient) => {
-        if (invite.barberId) {
-          const barber = await tx.barber.findFirst({
-            where: { id: invite.barberId, shopId: invite.shopId },
-            select: { id: true, userId: true },
-          });
-          if (!barber) {
-            throw {
-              ok: false as const,
-              code: 'BOOKING_PROFILE_NOT_FOUND',
-              error: 'The linked booking profile could not be found.',
-            };
-          }
-          if (barber.userId && barber.userId !== userId) {
-            throw {
-              ok: false as const,
-              code: 'BOOKING_PROFILE_ALREADY_LINKED',
-              error: 'This booking profile is already linked to another account.',
-            };
-          }
-
-          if (!existing.barberId) {
-            if (!barber.userId) {
-              await tx.barber.update({
-                where: { id: barber.id },
-                data: { userId },
-              });
-            }
-            await tx.shopMember.update({
-              where: { id: existing.id },
-              data: { barberId: barber.id },
-            });
-          } else if (!barber.userId) {
-            await tx.barber.update({
-              where: { id: barber.id },
-              data: { userId },
-            });
-          }
-        }
-
-        await tx.shopInvite.update({
-          where: { id: invite.id },
-          data: { acceptedAt: new Date() },
-        });
-      });
-      return { ok: true, shopId: invite.shopId, role: invite.role, alreadyMember: true };
-    }
-
-    await prisma.$transaction(async (tx: Prisma.TransactionClient) => {
-      let barberId = invite.barberId;
-      if (barberId) {
+      let resolvedBarberId: string | null = invite.barberId;
+      if (invite.barberId) {
         const barber = await tx.barber.findFirst({
-          where: { id: barberId, shopId: invite.shopId },
+          where: { id: invite.barberId, shopId: invite.shopId },
           select: { id: true, userId: true },
         });
         if (!barber) {
@@ -385,22 +339,44 @@ export async function acceptInviteForUser(
             ok: false as const,
             code: 'BOOKING_PROFILE_NOT_FOUND',
             error: 'The linked booking profile could not be found.',
-          };
+          } satisfies AcceptInviteFailure;
         }
         if (barber.userId && barber.userId !== userId) {
           throw {
             ok: false as const,
             code: 'BOOKING_PROFILE_ALREADY_LINKED',
             error: 'This booking profile is already linked to another account.',
-          };
+          } satisfies AcceptInviteFailure;
         }
         if (!barber.userId) {
           // Link login only — do not change active, services, hours, or avatar.
           await tx.barber.update({
-            where: { id: barberId },
+            where: { id: barber.id },
             data: { userId },
           });
         }
+        resolvedBarberId = barber.id;
+      }
+
+      if (existing) {
+        if (!existing.barberId && resolvedBarberId) {
+          await tx.shopMember.update({
+            where: { id: existing.id },
+            data: { barberId: resolvedBarberId },
+          });
+        }
+
+        await tx.shopInvite.update({
+          where: { id: invite.id },
+          data: { acceptedAt: new Date() },
+        });
+
+        return {
+          ok: true as const,
+          shopId: invite.shopId,
+          role: invite.role,
+          alreadyMember: true,
+        };
       }
 
       await tx.shopMember.create({
@@ -408,7 +384,7 @@ export async function acceptInviteForUser(
           shopId: invite.shopId,
           userId,
           role: invite.role,
-          barberId,
+          barberId: resolvedBarberId,
           teamStatus: 'NEW',
         },
       });
@@ -417,9 +393,14 @@ export async function acceptInviteForUser(
         where: { id: invite.id },
         data: { acceptedAt: new Date() },
       });
-    });
 
-    return { ok: true, shopId: invite.shopId, role: invite.role, alreadyMember: false };
+      return {
+        ok: true as const,
+        shopId: invite.shopId,
+        role: invite.role,
+        alreadyMember: false,
+      };
+    });
   } catch (error) {
     if (
       typeof error === 'object' &&
