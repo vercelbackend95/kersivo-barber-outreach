@@ -3,6 +3,19 @@ import { ArrowRight, Calendar, Clock } from '../lucide-react';
 import type { BarberAvailabilityStatus, DayFillData, NextBookingPreview } from '../../lib/admin/barberRosterPresentation';
 import { AVAIL_STATUS_LABELS } from '../../lib/admin/barberRosterPresentation';
 
+export type InviteResendUi = {
+  canResend: boolean;
+  buttonLabel: string;
+  busy: boolean;
+  onResend: () => void;
+  statusHeading?: string | null;
+  statusMessage?: string | null;
+  statusTone?: 'success' | 'warning' | 'neutral' | null;
+  showCopyLink?: boolean;
+  onCopyLink?: () => void;
+  copyFeedback?: string;
+};
+
 export type AdminBarberRosterCardProps = {
   barber: Barber;
   orderIndex: number;
@@ -30,6 +43,8 @@ export type AdminBarberRosterCardProps = {
   onlineBookingsLine?: string;
   /** Optional secondary line (e.g. Dashboard access only) */
   secondaryLine?: string | null;
+  /** Resend invitation controls for unaccepted invite cards */
+  inviteResend?: InviteResendUi | null;
 };
 
 export default function AdminBarberRosterCard({
@@ -53,6 +68,7 @@ export default function AdminBarberRosterCard({
   accountAccessLabel,
   onlineBookingsLine,
   secondaryLine = null,
+  inviteResend = null,
 }: AdminBarberRosterCardProps) {
   const availLabel = AVAIL_STATUS_LABELS[availStatus];
   const bookedHDisplay = Math.round(dayFill.bookedHoursH * 10) / 10;
@@ -145,7 +161,49 @@ export default function AdminBarberRosterCard({
             </div>
           ) : null}
 
-          {cardStatus === 'pending' ? (
+          {inviteResend?.canResend ? (
+            <div className="admin-team-invite-resend">
+              {inviteResend.statusHeading ? (
+                <p
+                  className={`admin-team-invite-resend__heading admin-team-invite-resend__heading--${
+                    inviteResend.statusTone || 'neutral'
+                  }`}
+                  role="status"
+                >
+                  {inviteResend.statusHeading}
+                </p>
+              ) : null}
+              {inviteResend.statusMessage ? (
+                <p className="admin-team-invite-resend__message" role="status">
+                  {inviteResend.statusMessage}
+                </p>
+              ) : null}
+              <button
+                type="button"
+                className="btn btn--primary admin-barber-roster-cta"
+                onClick={inviteResend.onResend}
+                disabled={inviteResend.busy}
+              >
+                {inviteResend.buttonLabel}
+              </button>
+              {inviteResend.showCopyLink && inviteResend.onCopyLink ? (
+                <div className="admin-team-invite-resend__copy">
+                  <button
+                    type="button"
+                    className="btn btn--ghost admin-barber-roster-cta"
+                    onClick={inviteResend.onCopyLink}
+                  >
+                    Copy invitation link
+                  </button>
+                  {inviteResend.copyFeedback ? (
+                    <p className="admin-team-invite-resend__copy-feedback" role="status">
+                      {inviteResend.copyFeedback}
+                    </p>
+                  ) : null}
+                </div>
+              ) : null}
+            </div>
+          ) : cardStatus === 'pending' ? (
             <button type="button" className="btn btn--primary admin-barber-roster-cta" disabled>
               Pending invitation
             </button>

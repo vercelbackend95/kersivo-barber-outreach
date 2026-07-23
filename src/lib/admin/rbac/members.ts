@@ -7,7 +7,8 @@ import {
 import { prisma } from '@/lib/db/client';
 import { runSerializableTransaction } from '@/lib/db/serializableTransaction';
 
-const INVITE_TTL_MS = 1000 * 60 * 60 * 72; // 72h
+export const INVITE_TTL_MS = 1000 * 60 * 60 * 72; // 72h
+export const INVITATION_RESEND_COOLDOWN_MS = 60_000;
 
 export function hashInviteToken(token: string): string {
   return createHash('sha256').update(token).digest('hex');
@@ -20,6 +21,29 @@ export function createInviteToken(): { token: string; tokenHash: string } {
 
 export function inviteExpiresAt(from = new Date()): Date {
   return new Date(from.getTime() + INVITE_TTL_MS);
+}
+
+/** Infer when the current token was issued from expiresAt and the fixed invite TTL. */
+export function inviteIssuedAtFromExpiresAt(expiresAt: Date): Date {
+  return new Date(expiresAt.getTime() - INVITE_TTL_MS);
+}
+
+/**
+ * Server-side resend cooldown inferred from expiresAt (no dedicated column).
+ * Serializable retries re-read the invite so a concurrent second request hits this.
+ */
+export function invitationResendCooldown(
+  expiresAt: Date,
+  now = new Date(),
+  cooldownMs = INVITATION_RESEND_COOLDOWN_MS,
+): { blocked: boolean; retryAfterSeconds: number } {
+  const issuedAt = inviteIssuedAtFromExpiresAt(expiresAt);
+  const elapsed = now.getTime() - issuedAt.getTime();
+  if (elapsed >= cooldownMs) {
+    return { blocked: false, retryAfterSeconds: 0 };
+  }
+  const retryAfterSeconds = Math.max(1, Math.ceil((cooldownMs - elapsed) / 1000));
+  return { blocked: true, retryAfterSeconds };
 }
 
 export async function assertCanInviteRole(

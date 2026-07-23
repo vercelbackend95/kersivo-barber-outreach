@@ -3,7 +3,13 @@ export const prerender = false;
 import type { APIRoute } from 'astro';
 import { requireAdminContext } from '@/lib/admin/auth';
 import { requireAnyPermission } from '@/lib/admin/rbac/can';
-import { memberCardStatus, roleSortRank, type TeamCardDto } from '@/lib/admin/teamCards';
+import {
+  emptyInvitationFields,
+  inviteCardInvitationFields,
+  memberCardStatus,
+  roleSortRank,
+  type TeamCardDto,
+} from '@/lib/admin/teamCards';
 import {
   getTodayInLondon,
   getTodayScheduleForBarber,
@@ -77,7 +83,6 @@ export const GET: APIRoute = async (context) => {
       where: {
         shopId: access.shopId,
         acceptedAt: null,
-        expiresAt: { gt: new Date() },
       },
       select: {
         id: true,
@@ -194,6 +199,7 @@ export const GET: APIRoute = async (context) => {
           }
         : null,
       canManageOnlineBookings: canManageMembers && Boolean(m.barberId),
+      ...emptyInvitationFields(),
     };
   });
 
@@ -228,6 +234,11 @@ export const GET: APIRoute = async (context) => {
           }
         : null,
       canManageOnlineBookings: canManageMembers && Boolean(inv.barberId),
+      ...inviteCardInvitationFields({
+        expiresAt: inv.expiresAt,
+        inviteRole: inv.role,
+        actorRole: access.role,
+      }),
     };
   });
 
@@ -258,6 +269,7 @@ export const GET: APIRoute = async (context) => {
         ...todayRosterFields(rulesByBarberId.get(b.id), holidayBarberIds.has(b.id)),
       },
       canManageOnlineBookings: canManageMembers && Boolean(b.id),
+      ...emptyInvitationFields(),
     }));
 
   const cards = [...memberCards, ...inviteCards, ...orphanCards].sort((a, b) => {

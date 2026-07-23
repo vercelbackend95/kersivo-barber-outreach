@@ -25,9 +25,26 @@ import AdminBarberRosterSearch from './AdminBarberRosterSearch';
 import { BarberRosterOverviewGridSkeleton } from '../skeleton';
 import TeamInviteWizard from './TeamInviteWizard';
 import AdminWizardSheetLayer from './AdminWizardSheetLayer';
-import { combineRefreshResults } from '@/lib/admin/teamInviteWizardResults';
+import { combineRefreshResults, buildInvitationUrl } from '@/lib/admin/teamInviteWizardResults';
 import { fetchTeamListRefresh } from '@/lib/admin/teamRefreshFetch';
+import { TEAM_INVITE_RESEND_REFRESH_WARNING } from '../../lib/admin/teamCards';
 import '@/styles/components/admin-team.css';
+
+type InviteResendPhase =
+  | 'idle'
+  | 'resending'
+  | 'resent'
+  | 'email_failed'
+  | 'cooldown'
+  | 'error';
+
+type InviteResendState = {
+  phase: InviteResendPhase;
+  message: string;
+  acceptPath: string;
+  copyFeedback: string;
+  refreshWarning: string;
+};
 
 export type TeamProfileOpenMeta = {
   name: string;
@@ -138,6 +155,30 @@ export default function BarbersOverview({
   const [teamLoading, setTeamLoading] = React.useState(true);
   const [teamError, setTeamError] = React.useState('');
   const [actionError, setActionError] = React.useState('');
+  const [inviteResendById, setInviteResendById] = React.useState<Record<string, InviteResendState>>(
+    {},
+  );
+  const inviteResendInFlightRef = React.useRef<Record<string, boolean>>({});
+
+  const patchInviteResend = React.useCallback((inviteId: string, patch: Partial<InviteResendState>) => {
+    setInviteResendById((prev) => {
+      const defaults: InviteResendState = {
+        phase: 'idle',
+        message: '',
+        acceptPath: '',
+        copyFeedback: '',
+        refreshWarning: '',
+      };
+      return {
+        ...prev,
+        [inviteId]: {
+          ...defaults,
+          ...prev[inviteId],
+          ...patch,
+        },
+      };
+    });
+  }, []);
 
   const loadTeam = React.useCallback(async (): Promise<boolean> => {
     setTeamLoading(true);
@@ -207,6 +248,92 @@ export default function BarbersOverview({
     [teamCards],
   );
 
+  async function handleResendInvitation(card: TeamCardDto) {
+    if (card.kind !== 'invite' || !card.canResendInvitation) return;
+    if (inviteResendInFlightRef.current[card.id]) return;
+    inviteResendInFlightRef.current[card.id] = true;
+    patchInviteResend(card.id, {
+      phase: 'resending',
+      message: '',
+      acceptPath: '',
+      copyFeedback: '',
+      refreshWarning: '',
+    });
+    setActionError('');
+
+    try {
+      const res = await fetch(
+        `/api/admin/team/invitations/${encodeURIComponent(card.id)}/resend`,
+        { method: 'POST', credentials: 'include' },
+      );
+      const data = await res.json().catch(() => ({}));
+
+      if (res.status === 429) {
+        patchInviteResend(card.id, {
+          phase: 'cooldown',
+          message:
+            typeof data.error === 'string'
+              ? data.error
+              : 'This invitation was sent recently. Try again shortly.',
+        });
+        return;
+      }
+
+      if (!res.ok) {
+        patchInviteResend(card.id, {
+          phase: 'error',
+          message: typeof data.error === 'string' ? data.error : 'Could not renew invitation.',
+        });
+        return;
+      }
+
+      const emailSent = data.emailSent !== false;
+      const acceptPath = typeof data.acceptPath === 'string' ? data.acceptPath : '';
+      const email = card.email?.trim() || 'the invitee';
+
+      if (emailSent) {
+        patchInviteResend(card.id, {
+          phase: 'resent',
+          message: `A new invitation link was sent to ${email}. The previous link no longer works.`,
+          acceptPath: '',
+        });
+      } else {
+        patchInviteResend(card.id, {
+          phase: 'email_failed',
+          message:
+            'The invitation is active again, but we could not send the email. Share the invitation link manually.',
+          acceptPath,
+        });
+      }
+
+      try {
+        const [teamOk, barbersOk] = await Promise.all([loadTeam(), onBarberSaved()]);
+        if (teamOk === false || barbersOk === false) {
+          patchInviteResend(card.id, { refreshWarning: TEAM_INVITE_RESEND_REFRESH_WARNING });
+        }
+      } catch {
+        patchInviteResend(card.id, { refreshWarning: TEAM_INVITE_RESEND_REFRESH_WARNING });
+      }
+    } finally {
+      inviteResendInFlightRef.current[card.id] = false;
+    }
+  }
+
+  async function copyInviteAcceptPath(inviteId: string, acceptPath: string) {
+    patchInviteResend(inviteId, { copyFeedback: '' });
+    if (!acceptPath) {
+      patchInviteResend(inviteId, { copyFeedback: 'Could not copy the invitation link.' });
+      return;
+    }
+    try {
+      const url = buildInvitationUrl(acceptPath, window.location.origin);
+      await navigator.clipboard.writeText(url);
+      patchInviteResend(inviteId, { copyFeedback: 'Invitation link copied' });
+    } catch {
+      patchInviteResend(inviteId, { copyFeedback: 'Could not copy the invitation link.' });
+    }
+  }
+
   async function handleOpenProfile(card: TeamCardDto) {
     setActionError('');
     const access = teamAccountAccess(card);
@@ -271,6 +398,41 @@ export default function BarbersOverview({
       ? getTodayLine(stub)
       : { text: 'Today: —', title: 'No schedule', isOff: true };
 
+    const resendState = inviteResendById[card.id];
+    const inviteResend =
+      card.kind === 'invite' && card.canResendInvitation
+        ? {
+            canResend: true,
+            busy: resendState?.phase === 'resending',
+            buttonLabel:
+              resendState?.phase === 'resending'
+                ? 'Resending…'
+                : resendState?.phase === 'resent'
+                  ? 'Invitation resent'
+                  : 'Resend invitation',
+            onResend: () => void handleResendInvitation(card),
+            statusHeading:
+              resendState?.phase === 'email_failed'
+                ? 'Invitation renewed — email not sent'
+                : resendState?.phase === 'resent'
+                  ? 'Invitation resent'
+                  : null,
+            statusMessage:
+              [resendState?.message, resendState?.refreshWarning].filter(Boolean).join(' ') || null,
+            statusTone:
+              resendState?.phase === 'email_failed'
+                ? ('warning' as const)
+                : resendState?.phase === 'resent'
+                  ? ('success' as const)
+                  : resendState?.phase === 'error'
+                    ? ('warning' as const)
+                    : ('neutral' as const),
+            showCopyLink: resendState?.phase === 'email_failed' && Boolean(resendState.acceptPath),
+            onCopyLink: () => void copyInviteAcceptPath(card.id, resendState?.acceptPath || ''),
+            copyFeedback: resendState?.copyFeedback || '',
+          }
+        : null;
+
     return (
       <AdminBarberRosterCard
         key={`${card.kind}-${card.id}`}
@@ -294,6 +456,7 @@ export default function BarbersOverview({
         accountAccessLabel={teamAccountAccessLabel(access)}
         onlineBookingsLine={teamCardOnlineBookingsLine(access, card.bookable)}
         secondaryLine={dashboardAccessOnlyLine(access, card.bookable)}
+        inviteResend={inviteResend}
       />
     );
   }

@@ -87,17 +87,41 @@ describe('Team card presentation mapping', () => {
   });
 
   it('Barber + pending invitation with online bookings on', () => {
-    const c = card({ kind: 'invite', id: 'inv1', role: 'BARBER', bookable: true });
-    const access = teamAccountAccess(c);
+    const c = card({
+      kind: 'invite',
+      id: 'inv1',
+      role: 'BARBER',
+      bookable: true,
+      invitationStatus: 'pending',
+    });
+    const access = teamAccountAccess(c as TeamCardDto);
     expect(roleLabel(c.role)).toBe('Barber');
     expect(teamAccountAccessLabel(access)).toBe('Invitation pending');
     expect(teamCardOnlineBookingsLine(access, c.bookable)).toBe('Online bookings: On');
     expect(dashboardAccessOnlyLine(access, c.bookable)).toBeNull();
   });
 
+  it('Barber + expired invitation', () => {
+    const c = card({
+      kind: 'invite',
+      id: 'inv-exp',
+      role: 'BARBER',
+      bookable: true,
+      invitationStatus: 'expired',
+    });
+    const access = teamAccountAccess(c as TeamCardDto);
+    expect(teamAccountAccessLabel(access)).toBe('Invitation expired');
+  });
+
   it('Barber + pending invitation with online bookings off', () => {
-    const c = card({ kind: 'invite', id: 'inv2', role: 'BARBER', bookable: false });
-    const access = teamAccountAccess(c);
+    const c = card({
+      kind: 'invite',
+      id: 'inv2',
+      role: 'BARBER',
+      bookable: false,
+      invitationStatus: 'pending',
+    });
+    const access = teamAccountAccess(c as TeamCardDto);
     expect(teamAccountAccessLabel(access)).toBe('Invitation pending');
     expect(teamCardOnlineBookingsLine(access, c.bookable)).toBe('Online bookings: Off');
     expect(dashboardAccessOnlyLine(access, c.bookable)).toBe('Dashboard access only');
@@ -121,6 +145,7 @@ describe('Team card presentation mapping', () => {
       teamCardOnlineBookingsLine('invite_pending', false),
       teamAccountAccessLabel('joined'),
       teamAccountAccessLabel('invite_pending'),
+      teamAccountAccessLabel('invite_expired'),
       teamAccountAccessLabel('no_dashboard'),
       onlineBookingsToggleHint(true, 'joined'),
       onlineBookingsToggleHint(false, 'joined'),
@@ -133,5 +158,6 @@ describe('Team card presentation mapping', () => {
     expect(joined).not.toMatch(/will start after joining|after joining/);
     expect(joined).not.toMatch(/Activate|Reactivate|Awaiting activation|Invite pending/);
     expect(joined).toContain('Invitation pending');
+    expect(joined).toContain('Invitation expired');
   });
 });

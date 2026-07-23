@@ -19,6 +19,7 @@ import {
   ONLINE_BOOKINGS_OFF_HINT_DASHBOARD,
   ONLINE_BOOKINGS_OFF_HINT_INVITE,
   ONLINE_BOOKINGS_ON_HINT,
+  inviteCreationConflictMessage,
 } from '@/lib/admin/teamCards';
 import {
   buildInvitationUrl,
@@ -313,7 +314,12 @@ export default function TeamInviteWizard({
           body: formData,
         });
         const data = await response.json().catch(() => ({}));
-        if (!response.ok) throw new Error(data.error || 'Could not send invite.');
+        if (!response.ok) {
+          const conflict = inviteCreationConflictMessage(
+            typeof data.code === 'string' ? data.code : undefined,
+          );
+          throw new Error(conflict || data.error || 'Could not send invite.');
+        }
         mode = 'invite';
         setFinishedMode('invite');
         const delivery = inviteDeliveryFromResponse(data);
@@ -334,7 +340,12 @@ export default function TeamInviteWizard({
           }),
         });
         const data = await response.json().catch(() => ({}));
-        if (!response.ok) throw new Error(data.error || 'Could not send invite.');
+        if (!response.ok) {
+          const conflict = inviteCreationConflictMessage(
+            typeof data.code === 'string' ? data.code : undefined,
+          );
+          throw new Error(conflict || data.error || 'Could not send invite.');
+        }
         mode = 'invite';
         setFinishedMode('invite');
         const delivery = inviteDeliveryFromResponse(data);
