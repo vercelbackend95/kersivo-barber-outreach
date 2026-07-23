@@ -8,6 +8,7 @@ import {
   assertValidWorkingHours,
   createStandaloneBookingProfile,
   isTeamCreationDomainError,
+  logOrphanedTeamAvatarRisk,
   type WorkingHourInput,
 } from '@/lib/admin/teamCreation';
 import { storeAdminAvatar } from '@/lib/storage/storeAdminAvatar';
@@ -159,6 +160,13 @@ export const POST: APIRoute = async (context) => {
       201,
     );
   } catch (error) {
+    if (avatarUrl) {
+      logOrphanedTeamAvatarRisk({
+        route: 'POST /api/admin/team/booking-profiles',
+        avatarUrl,
+        error,
+      });
+    }
     if (isTeamCreationDomainError(error)) {
       return json(
         {
@@ -168,12 +176,6 @@ export const POST: APIRoute = async (context) => {
           ...(error.barberId ? { barberId: error.barberId } : {}),
         },
         error.status,
-      );
-    }
-    if (avatarUrl) {
-      console.error(
-        '[team/booking-profiles] DB transaction failed after avatar upload; orphan blob may remain',
-        { avatarUrl, error },
       );
     }
     console.error('[team/booking-profiles] create failed', error);

@@ -444,6 +444,28 @@ export function isTeamCreationDomainError(error: unknown): error is TeamCreation
   );
 }
 
+/**
+ * Log orphan blob cleanup risk when a DB transaction fails after avatar upload.
+ * Never logs tokens, acceptPath, passwords, or session data.
+ */
+export function logOrphanedTeamAvatarRisk(params: {
+  route: string;
+  avatarUrl: string;
+  error: unknown;
+}): void {
+  const safeError = isTeamCreationDomainError(params.error)
+    ? { code: params.error.code, status: params.error.status, error: params.error.error }
+    : {
+        message: params.error instanceof Error ? params.error.message : 'Unknown error',
+      };
+
+  console.error('[team] DB transaction failed after avatar upload; orphan blob may remain', {
+    route: params.route,
+    avatarUrl: params.avatarUrl,
+    error: safeError,
+  });
+}
+
 /** @deprecated Prefer isTeamCreationDomainError */
 export function isInviteConflict(error: unknown): error is InviteConflict {
   return isTeamCreationDomainError(error) && error.status === 409;

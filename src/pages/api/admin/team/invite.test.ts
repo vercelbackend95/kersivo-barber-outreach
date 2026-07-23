@@ -622,4 +622,117 @@ describe('POST /api/admin/team/invite', () => {
     expect(shopInviteCreate).not.toHaveBeenCalled();
     expect(sendShopTeamInviteEmail).not.toHaveBeenCalled();
   });
+
+  it('logs orphan avatar risk on transactional 422 after upload', async () => {
+    const consoleSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
+    storeAdminAvatar.mockResolvedValue('https://blob.example/alex.jpg');
+    serviceFindMany.mockResolvedValueOnce([{ id: 'svc-1' }]).mockResolvedValueOnce([]);
+
+    const form = new FormData();
+    form.set('email', 'a@b.com');
+    form.set('role', 'BARBER');
+    form.set('displayName', 'Alex');
+    form.set('bookable', 'true');
+    form.set('serviceIds', JSON.stringify(['svc-1']));
+    form.set('workingHours', JSON.stringify(workingHours));
+    form.set('avatar', new File([new Uint8Array([1, 2, 3])], 'alex.jpg', { type: 'image/jpeg' }));
+
+    const res = await POST({
+      request: new Request('http://localhost/api/admin/team/invite', {
+        method: 'POST',
+        body: form,
+      }),
+    } as unknown as APIContext);
+
+    expect(res.status).toBe(422);
+    expect(consoleSpy).toHaveBeenCalledWith(
+      '[team] DB transaction failed after avatar upload; orphan blob may remain',
+      expect.objectContaining({
+        route: 'POST /api/admin/team/invite',
+        avatarUrl: 'https://blob.example/alex.jpg',
+      }),
+    );
+    consoleSpy.mockRestore();
+  });
+
+  it('logs orphan avatar risk on in-tx 409 after upload', async () => {
+    const consoleSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
+    storeAdminAvatar.mockResolvedValue('https://blob.example/alex.jpg');
+    serviceFindMany.mockResolvedValue([{ id: 'svc-1' }]);
+    shopInviteFindFirst
+      .mockResolvedValueOnce(null)
+      .mockResolvedValueOnce({
+        id: 'inv-open',
+        expiresAt: new Date(Date.now() + 60_000),
+      });
+
+    const form = new FormData();
+    form.set('email', 'a@b.com');
+    form.set('role', 'BARBER');
+    form.set('displayName', 'Alex');
+    form.set('bookable', 'true');
+    form.set('serviceIds', JSON.stringify(['svc-1']));
+    form.set('workingHours', JSON.stringify(workingHours));
+    form.set('avatar', new File([new Uint8Array([1, 2, 3])], 'alex.jpg', { type: 'image/jpeg' }));
+
+    const res = await POST({
+      request: new Request('http://localhost/api/admin/team/invite', {
+        method: 'POST',
+        body: form,
+      }),
+    } as unknown as APIContext);
+
+    expect(res.status).toBe(409);
+    expect(consoleSpy).toHaveBeenCalledWith(
+      '[team] DB transaction failed after avatar upload; orphan blob may remain',
+      expect.objectContaining({
+        avatarUrl: 'https://blob.example/alex.jpg',
+        error: expect.objectContaining({ code: 'INVITATION_ALREADY_PENDING', status: 409 }),
+      }),
+    );
+    consoleSpy.mockRestore();
+  });
+
+  it('does not log orphan avatar risk when only email delivery fails after commit', async () => {
+    const consoleSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
+    storeAdminAvatar.mockResolvedValue('https://blob.example/alex.jpg');
+    serviceFindMany.mockResolvedValue([{ id: 'svc-1' }]);
+    barberAggregate.mockResolvedValue({ _max: { sortOrder: 0 } });
+    barberCreate.mockResolvedValue({
+      id: 'b1',
+      name: 'Alex',
+      active: true,
+      avatarUrl: 'https://blob.example/alex.jpg',
+      email: 'a@b.com',
+      userId: null,
+    });
+    barberServiceCreateMany.mockResolvedValue({ count: 1 });
+    availabilityRuleCreateMany.mockResolvedValue({ count: 1 });
+    sendShopTeamInviteEmail.mockRejectedValue(new Error('smtp down'));
+
+    const form = new FormData();
+    form.set('email', 'a@b.com');
+    form.set('role', 'BARBER');
+    form.set('displayName', 'Alex');
+    form.set('bookable', 'true');
+    form.set('serviceIds', JSON.stringify(['svc-1']));
+    form.set('workingHours', JSON.stringify(workingHours));
+    form.set('avatar', new File([new Uint8Array([1, 2, 3])], 'alex.jpg', { type: 'image/jpeg' }));
+
+    const res = await POST({
+      request: new Request('http://localhost/api/admin/team/invite', {
+        method: 'POST',
+        body: form,
+      }),
+    } as unknown as APIContext);
+
+    expect(res.status).toBe(201);
+    const data = await res.json();
+    expect(data.emailSent).toBe(false);
+    expect(consoleSpy).not.toHaveBeenCalledWith(
+      '[team] DB transaction failed after avatar upload; orphan blob may remain',
+      expect.anything(),
+    );
+    consoleSpy.mockRestore();
+  });
 });

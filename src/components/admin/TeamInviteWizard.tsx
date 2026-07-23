@@ -20,6 +20,12 @@ import {
   ONLINE_BOOKINGS_OFF_HINT_INVITE,
   ONLINE_BOOKINGS_ON_HINT,
 } from '@/lib/admin/teamCards';
+import {
+  buildInvitationUrl,
+  finishAfterSuccessfulMutation,
+  inviteDeliveryFromResponse,
+  type TeamWizardFinishMode,
+} from '@/lib/admin/teamInviteWizardResults';
 
 type TeamInviteWizardProps = {
   actorRole: 'OWNER' | 'MANAGER' | 'BARBER' | string;
@@ -67,6 +73,7 @@ export default function TeamInviteWizard({
   const [inviteWarning, setInviteWarning] = useState('');
   const [inviteAcceptPath, setInviteAcceptPath] = useState('');
   const [copyFeedback, setCopyFeedback] = useState('');
+  const [refreshWarning, setRefreshWarning] = useState('');
   const stepHeadingRef = useRef<HTMLHeadingElement>(null);
 
   const needsBookingSetup = bookable;
@@ -233,9 +240,14 @@ export default function TeamInviteWizard({
   }
 
   async function submitAccess() {
+    if (finished) return;
     if (!validateCurrentStep()) return;
     setIsSaving(true);
     setSubmitError('');
+    setRefreshWarning('');
+
+    let mode: TeamWizardFinishMode = 'invite';
+
     try {
       let response: Response;
 
@@ -263,6 +275,7 @@ export default function TeamInviteWizard({
         });
         const data = await response.json().catch(() => ({}));
         if (!response.ok) throw new Error(data.error || 'Could not add booking profile.');
+        mode = 'booking';
         setFinishedMode('booking');
       } else if (needsBookingSetup) {
         const formData = new FormData();
@@ -291,10 +304,12 @@ export default function TeamInviteWizard({
         });
         const data = await response.json().catch(() => ({}));
         if (!response.ok) throw new Error(data.error || 'Could not send invite.');
+        mode = 'invite';
         setFinishedMode('invite');
-        setInviteEmailSent(data.emailSent !== false);
-        setInviteWarning(typeof data.warning === 'string' ? data.warning : '');
-        setInviteAcceptPath(typeof data.acceptPath === 'string' ? data.acceptPath : '');
+        const delivery = inviteDeliveryFromResponse(data);
+        setInviteEmailSent(delivery.emailSent);
+        setInviteWarning(delivery.warning);
+        setInviteAcceptPath(delivery.acceptPath);
         setCopyFeedback('');
       } else {
         response = await fetch('/api/admin/team/invite', {
@@ -310,17 +325,28 @@ export default function TeamInviteWizard({
         });
         const data = await response.json().catch(() => ({}));
         if (!response.ok) throw new Error(data.error || 'Could not send invite.');
+        mode = 'invite';
         setFinishedMode('invite');
-        setInviteEmailSent(data.emailSent !== false);
-        setInviteWarning(typeof data.warning === 'string' ? data.warning : '');
-        setInviteAcceptPath(typeof data.acceptPath === 'string' ? data.acceptPath : '');
+        const delivery = inviteDeliveryFromResponse(data);
+        setInviteEmailSent(delivery.emailSent);
+        setInviteWarning(delivery.warning);
+        setInviteAcceptPath(delivery.acceptPath);
         setCopyFeedback('');
       }
 
-      await onSent();
       setFinished(true);
     } catch (err) {
       setSubmitError(err instanceof Error ? err.message : 'Could not complete.');
+      setIsSaving(false);
+      return;
+    }
+
+    try {
+      await finishAfterSuccessfulMutation({
+        mode,
+        onRefresh: onSent,
+        onRefreshFailure: setRefreshWarning,
+      });
     } finally {
       setIsSaving(false);
     }
@@ -333,7 +359,7 @@ export default function TeamInviteWizard({
       return;
     }
     try {
-      const url = new URL(inviteAcceptPath, window.location.origin).href;
+      const url = buildInvitationUrl(inviteAcceptPath, window.location.origin);
       await navigator.clipboard.writeText(url);
       setCopyFeedback('Invitation link copied');
     } catch {
@@ -479,6 +505,11 @@ export default function TeamInviteWizard({
                   </p>
                 ) : null}
               </div>
+            ) : null}
+            {refreshWarning ? (
+              <p className="admin-barber-wizard__refresh-warning" role="status">
+                {refreshWarning}
+              </p>
             ) : null}
           </section>
         ) : null}

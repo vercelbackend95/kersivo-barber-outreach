@@ -14,6 +14,7 @@ import {
   createTeamInviteWithOptionalProfile,
   findInviteCreationConflict,
   isTeamCreationDomainError,
+  logOrphanedTeamAvatarRisk,
   type WorkingHourInput,
 } from '@/lib/admin/teamCreation';
 import { prisma } from '@/lib/db/client';
@@ -218,6 +219,13 @@ export const POST: APIRoute = async (context) => {
     });
     invite = created.invite;
   } catch (error) {
+    if (avatarUrl) {
+      logOrphanedTeamAvatarRisk({
+        route: 'POST /api/admin/team/invite',
+        avatarUrl,
+        error,
+      });
+    }
     if (isTeamCreationDomainError(error)) {
       return json(
         {
@@ -227,12 +235,6 @@ export const POST: APIRoute = async (context) => {
           ...(error.barberId ? { barberId: error.barberId } : {}),
         },
         error.status,
-      );
-    }
-    if (avatarUrl) {
-      console.error(
-        '[team/invite] DB transaction failed after avatar upload; orphan blob may remain',
-        { avatarUrl, error },
       );
     }
     console.error('[team/invite] create failed', error);

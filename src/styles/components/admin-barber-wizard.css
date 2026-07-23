@@ -840,6 +840,18 @@
   color: var(--muted);
 }
 
+.admin-barber-wizard__refresh-warning {
+  margin: 0.45rem 0 0;
+  max-width: 28rem;
+  padding: 0.55rem 0.7rem;
+  border-left: 3px solid color-mix(in srgb, var(--warning, #b8860b) 70%, var(--border));
+  background: color-mix(in srgb, var(--warning, #b8860b) 10%, var(--surface));
+  color: var(--fg);
+  font-size: 0.8rem;
+  line-height: 1.4;
+  text-align: left;
+}
+
 .admin-barber-wizard__footer {
   flex: 0 0 auto;
   display: grid;

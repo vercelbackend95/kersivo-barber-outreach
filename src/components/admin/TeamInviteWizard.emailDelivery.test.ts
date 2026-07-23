@@ -15,14 +15,19 @@ describe('TeamInviteWizard email delivery UI', () => {
     expect(src).not.toMatch(/`Invite sent/);
     expect(src).toMatch(/Invitation created — email not sent/);
     expect(src).toMatch(/inviteEmailSent/);
-    expect(src).toMatch(/emailSent !== false/);
   });
 
   it('exposes Copy invitation link for email failure', () => {
     expect(src).toMatch(/Copy invitation link/);
-    expect(src).toMatch(/new URL\(inviteAcceptPath, window\.location\.origin\)/);
+    expect(src).toMatch(/buildInvitationUrl/);
     expect(src).toMatch(/Invitation link copied/);
     expect(src).toMatch(/Could not copy the invitation link\./);
+  });
+
+  it('separates refresh failure from mutation success', () => {
+    expect(src).toMatch(/finishAfterSuccessfulMutation/);
+    expect(src).toMatch(/refreshWarning/);
+    expect(src).toMatch(/setFinished\(true\)/);
   });
 
   it('does not console-log invitation tokens or URLs', () => {

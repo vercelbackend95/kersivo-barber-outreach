@@ -45,6 +45,7 @@ import { POST } from './booking-profiles';
 import type { APIContext } from 'astro';
 import { requireAdminContext as requireAdminContextMock } from '@/lib/admin/auth';
 import { requireAnyPermission as requireAnyPermissionMock } from '@/lib/admin/rbac/can';
+import { storeAdminAvatar } from '@/lib/storage/storeAdminAvatar';
 
 function ctx(body: unknown, role: string = 'OWNER'): APIContext {
   vi.mocked(requireAdminContextMock).mockResolvedValue({
@@ -249,5 +250,63 @@ describe('POST /api/admin/team/booking-profiles', () => {
     const data = await res.json();
     expect(data.code).toBe('INVALID_SERVICE_SELECTION');
     expect(barberCreate).not.toHaveBeenCalled();
+  });
+
+  it('logs orphan avatar risk on transactional 422 after upload', async () => {
+    const consoleSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
+    vi.mocked(storeAdminAvatar).mockResolvedValue('https://blob.example/alex.jpg');
+    serviceFindMany.mockResolvedValueOnce([{ id: 'svc-1' }]).mockResolvedValueOnce([]);
+
+    const form = new FormData();
+    form.set('displayName', 'Alex');
+    form.set('serviceIds', JSON.stringify(['svc-1']));
+    form.set('workingHours', JSON.stringify(workingHours));
+    form.set('avatar', new File([new Uint8Array([1, 2, 3])], 'alex.jpg', { type: 'image/jpeg' }));
+
+    const res = await POST({
+      request: new Request('http://localhost/api/admin/team/booking-profiles', {
+        method: 'POST',
+        body: form,
+      }),
+    } as unknown as APIContext);
+
+    expect(res.status).toBe(422);
+    expect(consoleSpy).toHaveBeenCalledWith(
+      '[team] DB transaction failed after avatar upload; orphan blob may remain',
+      expect.objectContaining({
+        route: 'POST /api/admin/team/booking-profiles',
+        avatarUrl: 'https://blob.example/alex.jpg',
+      }),
+    );
+    consoleSpy.mockRestore();
+  });
+
+  it('logs orphan avatar risk on unexpected transaction failure after upload', async () => {
+    const consoleSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
+    vi.mocked(storeAdminAvatar).mockResolvedValue('https://blob.example/alex.jpg');
+    serviceFindMany.mockResolvedValue([{ id: 'svc-1' }]);
+    barberServiceCreateMany.mockRejectedValue(new Error('service boom'));
+
+    const form = new FormData();
+    form.set('displayName', 'Alex');
+    form.set('serviceIds', JSON.stringify(['svc-1']));
+    form.set('workingHours', JSON.stringify(workingHours));
+    form.set('avatar', new File([new Uint8Array([1, 2, 3])], 'alex.jpg', { type: 'image/jpeg' }));
+
+    const res = await POST({
+      request: new Request('http://localhost/api/admin/team/booking-profiles', {
+        method: 'POST',
+        body: form,
+      }),
+    } as unknown as APIContext);
+
+    expect(res.status).toBe(500);
+    expect(consoleSpy).toHaveBeenCalledWith(
+      '[team] DB transaction failed after avatar upload; orphan blob may remain',
+      expect.objectContaining({
+        avatarUrl: 'https://blob.example/alex.jpg',
+      }),
+    );
+    consoleSpy.mockRestore();
   });
 });
