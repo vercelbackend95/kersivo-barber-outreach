@@ -4,7 +4,9 @@ import {
   getTodayInLondon,
   getTodayScheduleForBarber,
   getTodayShiftWindowForBarber,
-  isWithinShiftNow
+  isHolidayBlockTitle,
+  isWithinShiftNow,
+  withHolidayTodayLabel,
 } from './todayWorkingHours';
 
 describe('getTodayInLondon', () => {
@@ -36,11 +38,34 @@ describe('getTodayScheduleForBarber', () => {
     });
   });
 
-  it('returns em dash when schedule is missing', () => {
+  it('returns off when schedule is missing for the day', () => {
     expect(getTodayScheduleForBarber(undefined)).toEqual({
-      todayLabel: '—',
-      todayIsOnShift: null
+      todayLabel: 'Off',
+      todayIsOnShift: false
     });
+    expect(getTodayScheduleForBarber([])).toEqual({
+      todayLabel: 'Off',
+      todayIsOnShift: false
+    });
+  });
+});
+
+describe('isHolidayBlockTitle', () => {
+  it('detects HOLIDAY and vacation titles', () => {
+    expect(isHolidayBlockTitle('HOLIDAY')).toBe(true);
+    expect(isHolidayBlockTitle('Summer vacation')).toBe(true);
+    expect(isHolidayBlockTitle('BREAK')).toBe(false);
+  });
+});
+
+describe('withHolidayTodayLabel', () => {
+  it('overrides schedule with Holiday', () => {
+    expect(
+      withHolidayTodayLabel({ todayLabel: '10:00–18:00', todayIsOnShift: true }, true),
+    ).toEqual({ todayLabel: 'Holiday', todayIsOnShift: false });
+    expect(
+      withHolidayTodayLabel({ todayLabel: '10:00–18:00', todayIsOnShift: true }, false),
+    ).toEqual({ todayLabel: '10:00–18:00', todayIsOnShift: true });
   });
 });
 

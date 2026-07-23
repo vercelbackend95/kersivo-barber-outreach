@@ -282,6 +282,7 @@ type AcceptableInvite = {
 /**
  * Create ShopMember from an invite (or mark invite accepted if already a member).
  * Caller must validate email match, expiry, and role !== OWNER.
+ * New members start as teamStatus NEW; linked Barber stays inactive until Activate.
  */
 export async function acceptInviteForUser(
   invite: AcceptableInvite,
@@ -303,7 +304,7 @@ export async function acceptInviteForUser(
 
   await prisma.$transaction(async (tx: Prisma.TransactionClient) => {
     let barberId = invite.barberId;
-    if (invite.role === 'BARBER' && barberId) {
+    if (barberId) {
       const barber = await tx.barber.findFirst({
         where: { id: barberId, shopId: invite.shopId },
         select: { id: true },
@@ -312,7 +313,10 @@ export async function acceptInviteForUser(
       else {
         await tx.barber.update({
           where: { id: barberId },
-          data: { userId },
+          data: {
+            userId,
+            active: false,
+          },
         });
       }
     }
@@ -323,6 +327,7 @@ export async function acceptInviteForUser(
         userId,
         role: invite.role,
         barberId,
+        teamStatus: 'NEW',
       },
     });
 

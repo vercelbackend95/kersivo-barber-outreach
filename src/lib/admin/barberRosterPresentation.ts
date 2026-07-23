@@ -119,7 +119,11 @@ export function getBookingsForBarberInRange(
 }
 
 export function getBarberAvailabilityStatus(barber: Barber, bookings: BarberBookingPreview[], now: Date): BarberAvailabilityStatus {
-  if (barber.todayIsOnShift === false || barber.todayLabel?.trim() === 'Off') {
+  if (
+    barber.todayIsOnShift === false ||
+    barber.todayLabel?.trim() === 'Off' ||
+    barber.todayLabel?.trim() === 'Holiday'
+  ) {
     return 'off';
   }
 
@@ -143,7 +147,11 @@ export function getBarberAvailabilityStatusForDayRange(
   dayStartMs: number,
   dayEndMs: number
 ): BarberAvailabilityStatus {
-  if (barber.todayIsOnShift === false || barber.todayLabel?.trim() === 'Off') {
+  if (
+    barber.todayIsOnShift === false ||
+    barber.todayLabel?.trim() === 'Off' ||
+    barber.todayLabel?.trim() === 'Holiday'
+  ) {
     return 'off';
   }
 
@@ -200,8 +208,11 @@ export function getNextBookingForBarber(bookings: BarberBookingPreview[], barber
 
 export function getTodayLine(barber: Barber) {
   const todayLabel = barber.todayLabel?.trim() || '—';
-  if (todayLabel === 'Off') {
-    return { text: 'Today: Off', title: 'Today: Off', isOff: true };
+  if (todayLabel === 'Off' || todayLabel === 'Holiday') {
+    return { text: `Today: ${todayLabel}`, title: `Today: ${todayLabel}`, isOff: true };
+  }
+  if (todayLabel === '—') {
+    return { text: 'Today: —', title: 'Today: —', isOff: true };
   }
   return { text: `Today: ${todayLabel}`, title: `Today: ${todayLabel}`, isOff: false };
 }

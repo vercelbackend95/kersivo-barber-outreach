@@ -35,6 +35,7 @@ export const DEMO_SECTION_ALIASES = {
   kpis: 'shop_sales',
   retail: 'shop_products',
   barbers: 'bookings_blocks',
+  team: 'bookings_blocks',
   reports: 'bookings_reports',
   ai: 'assistant',
 } as const;

@@ -67,7 +67,7 @@ export function getTodayShiftWindowForBarber(rulesForToday?: TodayScheduleRule[]
 
 export function getTodayScheduleForBarber(rulesForToday?: TodayScheduleRule[]): TodayScheduleSummary {
   if (!rulesForToday || rulesForToday.length === 0) {
-    return { todayLabel: '—', todayIsOnShift: null };
+    return { todayLabel: 'Off', todayIsOnShift: false };
   }
 
   const activeRule = rulesForToday.find((rule) => rule.active);
@@ -79,6 +79,25 @@ export function getTodayScheduleForBarber(rulesForToday?: TodayScheduleRule[]): 
     todayLabel: `${formatMinutesAsTime(activeRule.startMinutes)}–${formatMinutesAsTime(activeRule.endMinutes)}`,
     todayIsOnShift: true
   };
+}
+
+/** True when a time-block title represents vacation / holiday (not a short break). */
+export function isHolidayBlockTitle(title: string | null | undefined): boolean {
+  if (!title) return false;
+  const normalized = title.trim().toLowerCase();
+  return (
+    normalized === 'holiday' ||
+    normalized.includes('holiday') ||
+    normalized.includes('vacation')
+  );
+}
+
+export function withHolidayTodayLabel(
+  schedule: TodayScheduleSummary,
+  hasHolidayToday: boolean,
+): TodayScheduleSummary {
+  if (!hasHolidayToday) return schedule;
+  return { todayLabel: 'Holiday', todayIsOnShift: false };
 }
 
 /** Minutes since local midnight in Europe/London for this instant. */

@@ -69,7 +69,7 @@ const menuGroups: SectionGroup[] = [
     title: 'Booking system',
     items: [
       { section: 'bookings_dashboard', label: 'Bookings', icon: <Calendar {...ICON} />, anyOf: ['bookings.manage', 'bookings.self'] },
-      { section: 'bookings_blocks', label: 'Barbers', icon: <Users {...ICON} />, anyOf: ['catalog.manage'] },
+      { section: 'bookings_blocks', label: 'Team', icon: <Users {...ICON} />, anyOf: ['catalog.manage', 'members.manage', 'members.invite_barber'] },
       { section: 'bookings_reports', label: 'Reports', icon: <BarChart2 {...ICON} />, anyOf: ['reports.view'] },
       { section: 'bookings_history', label: 'History', icon: <Clock {...ICON} />, anyOf: ['bookings.manage', 'bookings.self'] },
       { section: 'bookings_clients', label: 'Clients', icon: <User {...ICON} />, anyOf: ['clients.read'] },
@@ -82,12 +82,6 @@ const menuGroups: SectionGroup[] = [
       { section: 'shop_products', label: 'Products', icon: <Package {...ICON} />, anyOf: ['retail.manage'] },
       { section: 'shop_orders', label: 'Orders', icon: <ShoppingBag {...ICON} />, anyOf: ['retail.manage'] },
       { section: 'shop_sales', label: 'Sales', icon: <TrendingUp {...ICON} />, anyOf: ['reports.view', 'retail.manage'] },
-    ],
-  },
-  {
-    title: 'Team',
-    items: [
-      { section: 'team', label: 'Team', icon: <Users {...ICON} />, anyOf: ['members.manage', 'members.invite_barber'] },
     ],
   },
   {

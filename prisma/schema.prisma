@@ -46,6 +46,12 @@ enum ShopRole {
   BARBER
 }
 
+/// Lifecycle for Team cards: NEW after invite accept; ACTIVE after Owner/Manager activates.
+enum TeamMemberStatus {
+  NEW
+  ACTIVE
+}
+
 
 model User {
   id            String    @id
@@ -152,13 +158,14 @@ model ShopSettings {
 
 // Login membership for one shop — roles never keyed by shop name.
 model ShopMember {
-  id        String   @id @default(cuid())
-  shopId    String
-  userId    String
-  role      ShopRole
-  barberId  String?  @unique
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  id         String           @id @default(cuid())
+  shopId     String
+  userId     String
+  role       ShopRole
+  barberId   String?          @unique
+  teamStatus TeamMemberStatus @default(ACTIVE)
+  createdAt  DateTime         @default(now())
+  updatedAt  DateTime         @updatedAt
 
   shop   ShopSettings @relation(fields: [shopId], references: [id], onDelete: Cascade)
   user   User         @relation(fields: [userId], references: [id], onDelete: Cascade)
@@ -176,6 +183,8 @@ model ShopInvite {
   role            ShopRole
   tokenHash       String   @unique
   barberId        String?
+  displayName     String?
+  bookable        Boolean  @default(true)
   invitedByUserId String?
   expiresAt       DateTime
   acceptedAt      DateTime?

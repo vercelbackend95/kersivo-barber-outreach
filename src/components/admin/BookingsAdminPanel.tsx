@@ -16,6 +16,7 @@ import { resolveClientIdForBooking } from '@/lib/admin/resolveClientIdForBooking
 import AdminErrorBoundary from './AdminErrorBoundary';
 import HistoryDateRangePicker from './HistoryDateRangePicker';
 import BarbersOverview from './BarbersOverview';
+import type { TeamProfileOpenMeta } from './BarbersOverview';
 import AdminBarberRosterCard from './AdminBarberRosterCard';
 import BarberProfile from './BarberProfile';
 import { isWithinShiftNow } from '../../lib/admin/todayWorkingHours';
@@ -602,14 +603,14 @@ type BookingsAdminMode = 'dashboard' | 'blocks' | 'reports' | 'history';
 
 const BOOKINGS_HEADER_KICKER: Record<BookingsAdminMode, string> = {
   dashboard: 'SCHEDULE & CALENDAR',
-  blocks: 'BARBERS',
+  blocks: 'TEAM',
   reports: 'REPORTS',
   history: 'HISTORY',
 };
 
 const BOOKINGS_SECTION_HEADER: Record<BookingsAdminMode, { title: string; description: string }> = {
   dashboard: { title: 'Bookings', description: "Manage today's appointments and upcoming schedule" },
-  blocks: { title: 'Barbers', description: 'Roster, schedules, and services' },
+  blocks: { title: 'Team', description: 'Invite people, set roles, schedules, and who is bookable' },
   reports: { title: 'Reports', description: 'Business performance analytics' },
   history: { title: 'History', description: 'Complete booking history with filters' },
 };
@@ -635,14 +636,14 @@ export default function BookingsAdminPanel({ isActive, mode, onBackToDashboard, 
   const [barberSaveMessage, setBarberSaveMessage] = useState('');
   const [barberSaveError, setBarberSaveError] = useState('');
   const [barberSaving, setBarberSaving] = useState(false);
-  const [barberReordering, setBarberReordering] = useState(false);
   const [editingBarberAvatarFile, setEditingBarberAvatarFile] = useState<File | null>(null);
   const [editingBarberAvatarPreviewUrl, setEditingBarberAvatarPreviewUrl] = useState<string | null>(null);
 
   const [isAddBarberSheetOpen, setIsAddBarberSheetOpen] = useState(false);
 
   const [selectedBarberId, setSelectedBarberId] = useState<string | null>(null);
-  const [barberProfileSource, setBarberProfileSource] = useState<'ops' | 'reports' | null>(null);
+  const [barberProfileSource, setBarberProfileSource] = useState<'ops' | 'team' | 'reports' | null>(null);
+  const [profileMemberMeta, setProfileMemberMeta] = useState<TeamProfileOpenMeta | null>(null);
   const [reportsProfileBarberMeta, setReportsProfileBarberMeta] = useState<{ id: string; name: string } | null>(null);
   const [services, setServices] = useState<ServiceOption[]>([]);
   const [workingHours, setWorkingHours] = useState<WorkingHourRow[]>([]);
@@ -1070,10 +1071,18 @@ export default function BookingsAdminPanel({ isActive, mode, onBackToDashboard, 
     if (barberProfileSource === 'ops' && mode !== 'dashboard') {
       setSelectedBarberId(null);
       setBarberProfileSource(null);
+      setProfileMemberMeta(null);
+    }
+    if (barberProfileSource === 'team' && mode !== 'blocks') {
+      setSelectedBarberId(null);
+      setBarberProfileSource(null);
+      setProfileMemberMeta(null);
     }
     if (barberProfileSource === 'reports' && mode !== 'reports') {
       setSelectedBarberId(null);
       setBarberProfileSource(null);
+      setProfileMemberMeta(null);
+      setReportsProfileBarberMeta(null);
     }
   }, [barberProfileSource, mode]);
 
@@ -1188,6 +1197,7 @@ export default function BookingsAdminPanel({ isActive, mode, onBackToDashboard, 
 
   const openBarberFromOpsRoster = useCallback((barberId: string) => {
     setSelectedBarberId(barberId);
+    setProfileMemberMeta(null);
     setStaffRosterOpen(false);
     setBarberProfileSource('ops');
   }, []);
@@ -1195,6 +1205,7 @@ export default function BookingsAdminPanel({ isActive, mode, onBackToDashboard, 
   const openBarberFromReports = useCallback((barberId: string, meta: { name: string }) => {
     setReportsProfileBarberMeta({ id: barberId, name: meta.name });
     setSelectedBarberId(barberId);
+    setProfileMemberMeta(null);
     setBarberProfileSource('reports');
   }, []);
 
@@ -1202,25 +1213,65 @@ export default function BookingsAdminPanel({ isActive, mode, onBackToDashboard, 
     setSelectedBarberId(null);
     setBarberProfileSource(null);
     setReportsProfileBarberMeta(null);
+    setProfileMemberMeta(null);
   }, []);
 
-  const inactiveBarbers = useMemo(
-    () => allBarbersSorted.filter((barber) => !normalizeBarberStatus(barber)),
-    [allBarbersSorted]
+  const handleProfileToggleBookable = useCallback(
+    async (next: boolean) => {
+      if (!profileMemberMeta?.memberId) return;
+      setBarberSaving(true);
+      setBarberSaveError('');
+      try {
+        const res = await fetch(
+          `/api/admin/team/members/${encodeURIComponent(profileMemberMeta.memberId)}/bookable`,
+          {
+            method: 'PATCH',
+            credentials: 'include',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ bookable: next }),
+          },
+        );
+        const data = await res.json().catch(() => ({}));
+        if (!res.ok) {
+          setBarberSaveError(data.error || 'Could not update bookable.');
+          return;
+        }
+        setProfileMemberMeta((current) =>
+          current ? { ...current, bookable: next } : current,
+        );
+        await fetchBarbers();
+      } finally {
+        setBarberSaving(false);
+      }
+    },
+    [profileMemberMeta?.memberId, fetchBarbers],
   );
-  const visibleBarbersForManagement = useMemo(
-    () => (showInactiveBarbers ? [...activeBarbers, ...inactiveBarbers] : activeBarbers),
-    [activeBarbers, inactiveBarbers, showInactiveBarbers]
-  );
+
   const selectedBarber = useMemo(() => {
     const found = allBarbersSorted.find((barber) => barber.id === selectedBarberId);
     if (found) return found;
+    if (selectedBarberId && profileMemberMeta) {
+      return {
+        id: selectedBarberId,
+        name: profileMemberMeta.name,
+        isActive: profileMemberMeta.isActive,
+        active: profileMemberMeta.isActive,
+        avatarUrl: profileMemberMeta.avatarUrl,
+        sortOrder: undefined,
+        serviceIds: profileMemberMeta.serviceIds,
+      } satisfies Barber;
+    }
     if (barberProfileSource === 'reports' && reportsProfileBarberMeta?.id === selectedBarberId) {
       return buildReportsBarberStub(reportsProfileBarberMeta.id, reportsProfileBarberMeta.name);
     }
     return null;
-  }, [allBarbersSorted, selectedBarberId, barberProfileSource, reportsProfileBarberMeta]);
-  const barberProfileContextActive = Boolean(selectedBarberId) && (mode === 'blocks' || mode === 'reports' || barberProfileSource === 'ops');
+  }, [allBarbersSorted, selectedBarberId, barberProfileSource, reportsProfileBarberMeta, profileMemberMeta]);
+  const barberProfileContextActive = Boolean(selectedBarberId) && (
+    mode === 'blocks' ||
+    mode === 'reports' ||
+    barberProfileSource === 'ops' ||
+    barberProfileSource === 'team'
+  );
   const enabledServiceIds = useMemo(() => new Set(selectedBarber?.serviceIds ?? []), [selectedBarber]);
   const selectedBarberBlocks = useMemo(() => timeBlocks.filter((block) => block.barberId === selectedBarberId), [selectedBarberId, timeBlocks]);
   const globalBlocks = useMemo(() => timeBlocks.filter((block) => !block.barberId), [timeBlocks]);
@@ -1525,7 +1576,7 @@ export default function BookingsAdminPanel({ isActive, mode, onBackToDashboard, 
   }, [selectedBarberId]);
 
   useLayoutEffect(() => {
-    if (!barberProfileContextActive) return;
+    if (!barberProfileContextActive || !selectedBarber) return;
     const el = bookingShellRef.current;
     if (!el) return;
 
@@ -1537,7 +1588,7 @@ export default function BookingsAdminPanel({ isActive, mode, onBackToDashboard, 
       cancelAnimationFrame(raf);
       window.clearTimeout(t);
     };
-  }, [barberProfileContextActive, selectedBarberId]);
+  }, [barberProfileContextActive, selectedBarberId, selectedBarber]);
 
   const fetchServices = useCallback(async () => {
     const response = await fetch('/api/admin/services', { credentials: 'include' });
@@ -1758,6 +1809,41 @@ export default function BookingsAdminPanel({ isActive, mode, onBackToDashboard, 
     await Promise.all([fetchBookings(), fetchTimeBlocks()]);
 
   }
+  async function saveSelectedBarberIdentity(payload: { name: string; email: string }) {
+    if (!selectedBarberId) return false;
+
+    setBarberSaveMessage('');
+    setBarberSaveError('');
+    setBarberSaving(true);
+
+    try {
+      const response = await fetch('/api/admin/barbers', {
+        method: 'POST',
+        credentials: 'include',
+        headers: { 'content-type': 'application/json' },
+        body: JSON.stringify({
+          id: selectedBarberId,
+          name: payload.name,
+          email: payload.email,
+        }),
+      });
+      const data = await response.json().catch(() => ({ error: 'Could not save profile details.' }));
+
+      if (!response.ok) {
+        setBarberSaveError(
+          typeof data.error === 'string' ? data.error : 'Could not save profile details.',
+        );
+        return false;
+      }
+
+      setBarberSaveMessage('Profile details updated.');
+      await fetchBarbers();
+      return true;
+    } finally {
+      setBarberSaving(false);
+    }
+  }
+
   async function saveSelectedBarberAvatar() {
     if (!selectedBarberId || !selectedBarber || !editingBarberAvatarFile) return;
 
@@ -1848,6 +1934,7 @@ export default function BookingsAdminPanel({ isActive, mode, onBackToDashboard, 
       }
 
       setSelectedBarberId((current) => current === barberId ? null : current);
+      setProfileMemberMeta(null);
       setHistoryBarberId((current) => current === barberId ? 'all' : current);
       setReportsProfileBarberMeta((current) => (current?.id === barberId ? null : current));
       setBlockScopeBarberId((current) => current === barberId ? 'all' : current);
@@ -1862,47 +1949,6 @@ export default function BookingsAdminPanel({ isActive, mode, onBackToDashboard, 
     } finally {
       setBarberSaving(false);
     }
-  }
-  async function saveBarberOrder(orderedIds: string[]) {
-    setBarberReordering(true);
-    setBarberSaveMessage('');
-    setBarberSaveError('');
-
-    try {
-      const response = await fetch('/api/admin/barbers/reorder', {
-        method: 'POST',
-        credentials: 'include',
-        headers: { 'content-type': 'application/json' },
-        body: JSON.stringify({ orderedIds, includeInactive: showInactiveBarbers })
-      });
-      const payload = await response.json().catch(() => ({}));
-      if (!response.ok) {
-        setBarberSaveError((payload as { error?: string }).error ?? 'Could not reorder barbers.');
-        await fetchBarbers();
-        return;
-      }
-
-      if (Array.isArray((payload as { barbers?: Barber[] }).barbers)) {
-        setBarbers((payload as { barbers: Barber[] }).barbers);
-      }
-      setBarberSaveMessage('Barber order saved.');
-    } catch (orderError) {
-      setBarberSaveError(orderError instanceof Error ? orderError.message : 'Could not reorder barbers.');
-      await fetchBarbers();
-    } finally {
-      setBarberReordering(false);
-    }
-  }
-
-  async function moveBarber(index: number, direction: 'up' | 'down') {
-    const maxIndex = visibleBarbersForManagement.length - 1;
-    const nextIndex = direction === 'up' ? index - 1 : index + 1;
-    if (index < 0 || index > maxIndex || nextIndex < 0 || nextIndex > maxIndex) return;
-
-    const orderedIds = visibleBarbersForManagement.map((barber) => barber.id);
-    const [moved] = orderedIds.splice(index, 1);
-    orderedIds.splice(nextIndex, 0, moved);
-    await saveBarberOrder(orderedIds);
   }
 
   const openAddBarberSheet = useCallback(() => {
@@ -2085,6 +2131,15 @@ export default function BookingsAdminPanel({ isActive, mode, onBackToDashboard, 
       onCreateBlock={(payload) => void createProfileBlock(payload)}
       onDeleteBlock={(blockId) => void deleteTimeBlock(blockId)}
       onDeleteBarber={() => void deleteBarber(selectedBarber.id)}
+      canToggleBookable={Boolean(profileMemberMeta?.canToggleBookable)}
+      bookable={profileMemberMeta?.bookable ?? normalizeBarberStatus(selectedBarber)}
+      role={profileMemberMeta?.role}
+      onSaveIdentity={(payload) => saveSelectedBarberIdentity(payload)}
+      onToggleBookable={
+        profileMemberMeta?.canToggleBookable
+          ? (next) => void handleProfileToggleBookable(next)
+          : undefined
+      }
     />
   ) : null;
 
@@ -2209,7 +2264,7 @@ export default function BookingsAdminPanel({ isActive, mode, onBackToDashboard, 
             description={BOOKINGS_SECTION_HEADER[mode].description}
             metaBadge={
               mode === 'blocks'
-                ? `${barbers.length} barbers`
+                ? `${barbers.length} people`
                 : undefined
             }
             metaBadgeVariant={undefined}
@@ -2218,8 +2273,8 @@ export default function BookingsAdminPanel({ isActive, mode, onBackToDashboard, 
                 <button
                   type="button"
                   className="btn btn--primary btn--icon"
-                  aria-label="Add barber"
-                  title="Add barber"
+                  aria-label="Add team member"
+                  title="Add team member"
                   onClick={openAddBarberSheet}
                 >
                   <Plus aria-hidden />
@@ -2242,7 +2297,6 @@ export default function BookingsAdminPanel({ isActive, mode, onBackToDashboard, 
                 barbersLoading={barbersInitialLoading}
                 services={addBarberServiceOptions}
                 showInactiveBarbers={showInactiveBarbers}
-                barberReordering={barberReordering}
                 barberSaveMessage={barberSaveMessage}
                 barberSaveError={barberSaveError}
                 isAddBarberSheetOpen={isAddBarberSheetOpen}
@@ -2250,8 +2304,11 @@ export default function BookingsAdminPanel({ isActive, mode, onBackToDashboard, 
                 bookings={bookings}
                 getInitials={getInitials}
                 onShowInactiveChange={setShowInactiveBarbers}
-                onOpenBarber={setSelectedBarberId}
-                onMoveBarber={(index, direction) => void moveBarber(index, direction)}
+                onOpenBarber={(barberId, meta) => {
+                  setSelectedBarberId(barberId);
+                  setProfileMemberMeta(meta ?? null);
+                  setBarberProfileSource('team');
+                }}
                 onCloseAddBarberSheet={() => {
                   setIsAddBarberSheetOpen(false);
                 }}

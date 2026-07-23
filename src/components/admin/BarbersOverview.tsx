@@ -2,24 +2,37 @@ import React from 'react';
 import type { Barber, ServiceOption, TimeBlock } from './barbersTypes';
 import type { BarberBookingPreview } from '../../lib/admin/barberRosterPresentation';
 import {
-  WORKING_HOURS_PER_DAY,
   getDayFill,
   getNextBookingForBarber,
   getBarberAvailabilityStatus,
   getTodayLine,
 } from '../../lib/admin/barberRosterPresentation';
+import type { TeamCardDto } from '../../lib/admin/teamCards';
+import { roleLabel, rolePillClass, roleSortRank } from '../../lib/admin/teamCards';
+import type { ShopRole } from '@prisma/client';
 import AdminBarberRosterCard from './AdminBarberRosterCard';
 import AdminBarberRosterSearch from './AdminBarberRosterSearch';
 import { BarberRosterOverviewGridSkeleton } from '../skeleton';
-import BarberWizard from './barber-wizard/BarberWizard';
+import TeamInviteWizard from './TeamInviteWizard';
 import AdminWizardSheetLayer from './AdminWizardSheetLayer';
+import '@/styles/components/admin-team.css';
+
+export type TeamProfileOpenMeta = {
+  name: string;
+  avatarUrl: string | null;
+  serviceIds: string[];
+  isActive: boolean;
+  role?: ShopRole;
+  memberId?: string;
+  canToggleBookable?: boolean;
+  bookable?: boolean;
+};
 
 type BarbersOverviewProps = {
   barbers: Barber[];
   services: ServiceOption[];
   showInactiveBarbers: boolean;
   barbersLoading?: boolean;
-  barberReordering: boolean;
   barberSaveMessage: string;
   barberSaveError: string;
   isAddBarberSheetOpen: boolean;
@@ -27,8 +40,7 @@ type BarbersOverviewProps = {
   bookings: BarberBookingPreview[];
   getInitials: (name: string) => string;
   onShowInactiveChange: (show: boolean) => void;
-  onOpenBarber: (barberId: string) => void;
-  onMoveBarber: (index: number, direction: 'up' | 'down') => void;
+  onOpenBarber: (barberId: string, meta?: TeamProfileOpenMeta) => void;
   onCloseAddBarberSheet: () => void;
   onBarberSaved: () => void | Promise<void>;
   formatBlockRange: (startAt: string, endAt: string) => string;
@@ -41,24 +53,6 @@ const DEFAULT_SERVICE_OPTIONS: ServiceOption[] = [
   { id: 'svc-haircut-beard', name: 'Haircut + Beard' },
 ];
 
-/** Single source of truth for barber activity. Reads the canonical `isActive` field. */
-function normalizeBarberStatus(barber: Barber) {
-  return barber.isActive;
-}
-
-function matchesBarberSearch(
-  barber: Barber,
-  searchQueryLower: string,
-  serviceNameById: Map<string, string>
-) {
-  if (barber.name.toLowerCase().includes(searchQueryLower)) return true;
-  const serviceIds = barber.serviceIds ?? [];
-  return serviceIds.some((serviceId) => {
-    const serviceName = serviceNameById.get(serviceId);
-    return serviceName ? serviceName.toLowerCase().includes(searchQueryLower) : false;
-  });
-}
-
 function isKeyboardEditableTarget(target: EventTarget | null) {
   if (!(target instanceof HTMLElement)) return false;
   const tagName = target.tagName.toLowerCase();
@@ -66,12 +60,44 @@ function isKeyboardEditableTarget(target: EventTarget | null) {
   return target.isContentEditable;
 }
 
+function cardToBarberStub(card: TeamCardDto): Barber {
+  if (card.barber) {
+    return {
+      id: card.barber.id,
+      name: card.barber.name,
+      isActive: card.cardStatus === 'active' && card.barber.isActive,
+      avatarUrl: card.barber.avatarUrl,
+      sortOrder: card.barber.sortOrder,
+      serviceIds: card.barber.serviceIds,
+      todayLabel: card.barber.todayLabel,
+      todayIsOnShift: card.barber.todayIsOnShift,
+      todayShiftWindow: card.barber.todayShiftWindow,
+    };
+  }
+  return {
+    id: card.barberId || card.id,
+    name: card.name,
+    isActive: card.cardStatus === 'active',
+    avatarUrl: card.avatarUrl,
+    sortOrder: 0,
+    serviceIds: [],
+    todayLabel: '—',
+    todayIsOnShift: null,
+    todayShiftWindow: null,
+  };
+}
+
+function compareTeamCards(a: TeamCardDto, b: TeamCardDto): number {
+  const roleDiff = roleSortRank(a.role) - roleSortRank(b.role);
+  if (roleDiff !== 0) return roleDiff;
+  return a.name.localeCompare(b.name, 'en');
+}
+
 export default function BarbersOverview({
   barbers,
   services,
   showInactiveBarbers,
   barbersLoading = false,
-  barberReordering,
   barberSaveMessage,
   barberSaveError,
   isAddBarberSheetOpen,
@@ -80,7 +106,6 @@ export default function BarbersOverview({
   getInitials,
   onShowInactiveChange,
   onOpenBarber,
-  onMoveBarber,
   onCloseAddBarberSheet,
   onBarberSaved,
   formatBlockRange,
@@ -91,176 +116,210 @@ export default function BarbersOverview({
   const [barberSearchQuery, setBarberSearchQuery] = React.useState('');
   const [searchShortcutHint, setSearchShortcutHint] = React.useState('Ctrl+K');
   const [showSearchKbdHint, setShowSearchKbdHint] = React.useState(false);
+  const [teamCards, setTeamCards] = React.useState<TeamCardDto[]>([]);
+  const [actorRole, setActorRole] = React.useState<string>('OWNER');
+  const [teamLoading, setTeamLoading] = React.useState(true);
+  const [teamError, setTeamError] = React.useState('');
+  const [actionError, setActionError] = React.useState('');
 
-  const trimmedSearchQuery = barberSearchQuery.trim();
-  const searchQueryLower = trimmedSearchQuery.toLowerCase();
-  const isSearchActive = searchQueryLower.length > 0;
-
-  const serviceNameById = React.useMemo(() => {
-    const map = new Map<string, string>();
-    for (const service of availableServices) {
-      map.set(service.id, service.name);
+  const loadTeam = React.useCallback(async () => {
+    setTeamLoading(true);
+    setTeamError('');
+    try {
+      const res = await fetch('/api/admin/team', { credentials: 'include' });
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok) throw new Error(data.error || 'Could not load team.');
+      setTeamCards(data.cards || []);
+      setActorRole(data.actorRole || 'OWNER');
+    } catch (err) {
+      setTeamError(err instanceof Error ? err.message : 'Could not load team.');
+      setTeamCards([]);
+    } finally {
+      setTeamLoading(false);
     }
-    return map;
-  }, [availableServices]);
-
-  const activeBarbers = React.useMemo(
-    () => barbers.filter((barber) => normalizeBarberStatus(barber)),
-    [barbers]
-  );
-  const inactiveBarbers = React.useMemo(
-    () => barbers.filter((barber) => !normalizeBarberStatus(barber)),
-    [barbers]
-  );
-  const inactiveCount = inactiveBarbers.length;
-
-  const visibleBarbers = React.useMemo(
-    () => (showInactiveBarbers ? [...activeBarbers, ...inactiveBarbers] : activeBarbers),
-    [activeBarbers, inactiveBarbers, showInactiveBarbers]
-  );
-
-  const filteredActiveBarbers = React.useMemo(() => {
-    if (!searchQueryLower) return activeBarbers;
-    return activeBarbers.filter((barber) => matchesBarberSearch(barber, searchQueryLower, serviceNameById));
-  }, [activeBarbers, searchQueryLower, serviceNameById]);
-
-  const filteredInactiveBarbers = React.useMemo(() => {
-    if (!showInactiveBarbers) return [] as Barber[];
-    if (!searchQueryLower) return inactiveBarbers;
-    return inactiveBarbers.filter((barber) => matchesBarberSearch(barber, searchQueryLower, serviceNameById));
-  }, [inactiveBarbers, searchQueryLower, serviceNameById, showInactiveBarbers]);
-
-  const filteredVisibleCount = filteredActiveBarbers.length + filteredInactiveBarbers.length;
-
-  const searchResultsLabel = React.useMemo(() => {
-    if (!trimmedSearchQuery) return '';
-    if (filteredVisibleCount === 0) return 'No matches';
-    return filteredVisibleCount === 1 ? '1 barber' : `${filteredVisibleCount} barbers`;
-  }, [trimmedSearchQuery, filteredVisibleCount]);
-
-  React.useEffect(() => {
-    const timer = window.setInterval(() => {
-      setNowTick(Date.now());
-    }, 60000);
-
-    return () => {
-      window.clearInterval(timer);
-    };
   }, []);
 
   React.useEffect(() => {
-    if (typeof navigator === 'undefined') return;
-    const platform = navigator.platform ?? '';
-    const isApple = /Mac|iPhone|iPad|iPod/i.test(platform) || /Mac OS/.test(navigator.userAgent);
+    void loadTeam();
+  }, [loadTeam, barbers]);
+
+  React.useEffect(() => {
+    const id = window.setInterval(() => setNowTick(Date.now()), 60_000);
+    return () => window.clearInterval(id);
+  }, []);
+
+  React.useEffect(() => {
+    const isApple = /Mac|iPhone|iPad|iPod/.test(navigator.platform) || navigator.userAgent.includes('Mac');
     setSearchShortcutHint(isApple ? '⌘K' : 'Ctrl+K');
+    setShowSearchKbdHint(true);
   }, []);
 
   React.useEffect(() => {
-    if (typeof window === 'undefined') return;
-    const mq = window.matchMedia('(min-width: 768px) and (pointer: fine)');
-    const sync = () => setShowSearchKbdHint(mq.matches);
-    sync();
-    mq.addEventListener('change', sync);
-    return () => mq.removeEventListener('change', sync);
+    const onKeyDown = (event: KeyboardEvent) => {
+      if (!(event.metaKey || event.ctrlKey) || event.key.toLowerCase() !== 'k') return;
+      if (isKeyboardEditableTarget(event.target)) return;
+      event.preventDefault();
+      searchInputRef.current?.focus();
+    };
+    window.addEventListener('keydown', onKeyDown);
+    return () => window.removeEventListener('keydown', onKeyDown);
   }, []);
 
-  React.useEffect(() => {
-    const onGlobalKeyDown = (event: KeyboardEvent) => {
-      const activeElement = document.activeElement;
-      const isSearchFocused = activeElement === searchInputRef.current;
+  const trimmedSearchQuery = barberSearchQuery.trim().toLowerCase();
 
-      if ((event.ctrlKey || event.metaKey) && event.key.toLowerCase() === 'k') {
-        if (isKeyboardEditableTarget(event.target) || isKeyboardEditableTarget(activeElement)) return;
-        event.preventDefault();
-        searchInputRef.current?.focus();
-        searchInputRef.current?.select();
+  const filteredCards = React.useMemo(() => {
+    if (!trimmedSearchQuery) return teamCards;
+    return teamCards.filter(
+      (card) =>
+        card.name.toLowerCase().includes(trimmedSearchQuery) ||
+        (card.email && card.email.toLowerCase().includes(trimmedSearchQuery)) ||
+        card.role.toLowerCase().includes(trimmedSearchQuery),
+    );
+  }, [teamCards, trimmedSearchQuery]);
+
+  const activeCards = React.useMemo(
+    () => filteredCards.filter((c) => c.cardStatus === 'active').sort(compareTeamCards),
+    [filteredCards],
+  );
+  const inactiveCards = React.useMemo(
+    () => filteredCards.filter((c) => c.cardStatus !== 'active').sort(compareTeamCards),
+    [filteredCards],
+  );
+  const inactiveCount = teamCards.filter((c) => c.cardStatus !== 'active').length;
+
+  const newestNewCardId = React.useMemo(() => {
+    let newestId: string | null = null;
+    let newestTs = -Infinity;
+    for (const card of teamCards) {
+      if (card.cardStatus !== 'new') continue;
+      const ts = Date.parse(card.createdAt || '');
+      if (!Number.isFinite(ts)) continue;
+      if (ts >= newestTs) {
+        newestTs = ts;
+        newestId = card.id;
+      }
+    }
+    return newestId;
+  }, [teamCards]);
+
+  async function handleActivate(card: TeamCardDto) {
+    setActionError('');
+    const res = await fetch(`/api/admin/team/members/${encodeURIComponent(card.id)}/activate`, {
+      method: 'POST',
+      credentials: 'include',
+    });
+    const data = await res.json().catch(() => ({}));
+    if (!res.ok) {
+      setActionError(data.error || 'Could not activate.');
+      return;
+    }
+    await Promise.all([loadTeam(), onBarberSaved()]);
+  }
+
+  async function handleOpenProfile(card: TeamCardDto) {
+    setActionError('');
+    let barberId = card.barberId;
+    if (!barberId && card.canToggleBookable && card.kind === 'member') {
+      const res = await fetch(`/api/admin/team/members/${encodeURIComponent(card.id)}/bookable`, {
+        method: 'PATCH',
+        credentials: 'include',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ bookable: false }),
+      });
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok || !data.barberId) {
+        setActionError(data.error || 'Could not open profile.');
         return;
       }
+      barberId = String(data.barberId);
+      await Promise.all([loadTeam(), onBarberSaved()]);
+    }
+    if (!barberId) return;
 
-      if (event.key !== 'Escape') return;
+    const stub = cardToBarberStub({
+      ...card,
+      barberId,
+      barber: card.barber
+        ? { ...card.barber, id: barberId }
+        : {
+            id: barberId,
+            name: card.name,
+            isActive: false,
+            avatarUrl: card.avatarUrl,
+            sortOrder: 0,
+            serviceIds: [],
+            todayLabel: '—',
+            todayIsOnShift: null,
+            todayShiftWindow: null,
+          },
+    });
 
-      if (isSearchFocused) {
-        if (barberSearchQuery) {
-          event.preventDefault();
-          setBarberSearchQuery('');
-        } else {
-          searchInputRef.current?.blur();
-        }
-      }
+    const meta: TeamProfileOpenMeta = {
+      name: stub.name,
+      avatarUrl: stub.avatarUrl ?? null,
+      serviceIds: stub.serviceIds ?? [],
+      isActive: Boolean(stub.isActive),
+      role: card.role,
+      ...(card.canToggleBookable && card.kind === 'member'
+        ? {
+            memberId: card.id,
+            canToggleBookable: true,
+            bookable: card.bookable || false,
+          }
+        : {}),
     };
+    onOpenBarber(barberId, meta);
+  }
 
-    window.addEventListener('keydown', onGlobalKeyDown);
-    return () => window.removeEventListener('keydown', onGlobalKeyDown);
-  }, [barberSearchQuery]);
-
-  const barberComputedData = React.useMemo(() => {
+  function renderCard(card: TeamCardDto, index: number) {
+    const stub = cardToBarberStub(card);
     const now = new Date(nowTick);
-    return new Map(
-      barbers.map((barber) => [
-        barber.id,
-        {
-          nextBooking: getNextBookingForBarber(bookings, barber.id, now),
-          availStatus: getBarberAvailabilityStatus(barber, bookings, now),
-          dayFill: getDayFill(bookings, barber.id, now),
-        },
-      ])
-    );
-  }, [barbers, bookings, nowTick]);
-
-  React.useEffect(() => {
-    if (!isAddBarberSheetOpen) return undefined;
-    const onKeyDown = (event: KeyboardEvent) => {
-      if (event.key === 'Escape') {
-        onCloseAddBarberSheet();
-      }
-    };
-
-    window.addEventListener('keydown', onKeyDown);
-    return () => {
-      window.removeEventListener('keydown', onKeyDown);
-    };
-  }, [isAddBarberSheetOpen, onCloseAddBarberSheet]);
-
-  function renderBarberCard(barber: Barber, displayIndex: number) {
-    const barberIsActive = normalizeBarberStatus(barber);
-    const computed = barberComputedData.get(barber.id);
-    const nextBookingPreview = computed?.nextBooking ?? null;
-    const availStatus = computed?.availStatus ?? 'free';
-    const dayFill = computed?.dayFill ?? { pct: 0, count: 0, workingH: WORKING_HOURS_PER_DAY, bookedHoursH: 0 };
-    const todayLine = getTodayLine(barber);
-    const fullListIndex = visibleBarbers.findIndex((candidate) => candidate.id === barber.id);
+    const barberIsActive = card.cardStatus === 'active' && (card.barber?.isActive ?? !card.bookable);
+    const hasSeat = Boolean(card.barberId && card.barber);
+    const showSchedule = card.bookable && hasSeat;
+    const showProfileCta = Boolean(card.barberId) || card.canToggleBookable;
+    const nextBookingPreview = showSchedule
+      ? getNextBookingForBarber(bookings, stub.id, now)
+      : null;
+    const availStatus = showSchedule
+      ? getBarberAvailabilityStatus(stub, bookings, now)
+      : 'off';
+    const dayFill = showSchedule
+      ? getDayFill(bookings, stub.id, now)
+      : { count: 0, bookedHoursH: 0, workingH: 0, pct: 0 };
+    const todayLine = hasSeat
+      ? getTodayLine(stub)
+      : { text: 'Today: —', title: 'No schedule', isOff: true };
 
     return (
       <AdminBarberRosterCard
-        key={barber.id}
-        barber={barber}
-        orderIndex={displayIndex}
+        key={`${card.kind}-${card.id}`}
+        barber={stub}
+        orderIndex={index}
         barberIsActive={barberIsActive}
         nextBookingPreview={nextBookingPreview}
         availStatus={availStatus}
         dayFill={dayFill}
         todayLine={todayLine}
         getInitials={getInitials}
-        onOpenBarber={onOpenBarber}
+        onOpenBarber={() => void handleOpenProfile(card)}
         bookingsLength={bookings.length}
         variant="manage"
-        manageControls={
-          isSearchActive
-            ? undefined
-            : {
-                index: fullListIndex,
-                isFirstItem: fullListIndex === 0,
-                isLastItem: fullListIndex === visibleBarbers.length - 1,
-                barberReordering,
-                onMoveBarber,
-              }
-        }
+        roleLabel={roleLabel(card.role)}
+        rolePillClassName={rolePillClass(card.role)}
+        cardStatus={card.cardStatus}
+        showSchedule={showSchedule}
+        showRosterChrome
+        showProfileCta={showProfileCta}
+        showNewBadge={card.id === newestNewCardId}
+        canActivate={card.canActivate}
+        onActivate={() => void handleActivate(card)}
       />
     );
   }
 
-  const showEmptySearch = isSearchActive && filteredVisibleCount === 0;
-  const showList = !(barbersLoading && barbers.length === 0) && !showEmptySearch;
+  const loading = (barbersLoading || teamLoading) && teamCards.length === 0;
+  const showEmptySearch = trimmedSearchQuery.length > 0 && filteredCards.length === 0;
 
   return (
     <section className="admin-quick-blocks">
@@ -270,7 +329,11 @@ export default function BarbersOverview({
           query={barberSearchQuery}
           onQueryChange={setBarberSearchQuery}
           onClear={() => setBarberSearchQuery('')}
-          resultsLabel={searchResultsLabel || undefined}
+          resultsLabel={
+            trimmedSearchQuery
+              ? `${filteredCards.length} result${filteredCards.length === 1 ? '' : 's'}`
+              : undefined
+          }
           showKbdHint={showSearchKbdHint}
           searchShortcutHint={searchShortcutHint}
         />
@@ -278,15 +341,17 @@ export default function BarbersOverview({
 
       {barberSaveMessage ? <p className="admin-inline-success">{barberSaveMessage}</p> : null}
       {barberSaveError ? <p className="admin-inline-error">{barberSaveError}</p> : null}
+      {teamError ? <p className="admin-inline-error">{teamError}</p> : null}
+      {actionError ? <p className="admin-inline-error">{actionError}</p> : null}
 
-      {barbersLoading && barbers.length === 0 ? (
-        <BarberRosterOverviewGridSkeleton ariaLabel="Loading barbers" />
+      {loading ? (
+        <BarberRosterOverviewGridSkeleton ariaLabel="Loading team" />
       ) : showEmptySearch ? (
-        <p className="admin-barbers-roster-search-empty">No barbers match your search.</p>
-      ) : showList ? (
+        <p className="admin-barbers-roster-search-empty">No team members match your search.</p>
+      ) : (
         <div className="admin-barber-list-wrap admin-barbers-overview-list-wrap">
-          <ul className="admin-barber-grid admin-barbers-overview-grid" aria-label="Barbers list">
-            {filteredActiveBarbers.map((barber, index) => renderBarberCard(barber, index))}
+          <ul className="admin-barber-grid admin-barbers-overview-grid" aria-label="Team members">
+            {activeCards.map((card, index) => renderCard(card, index))}
           </ul>
 
           {inactiveCount > 0 ? (
@@ -298,35 +363,36 @@ export default function BarbersOverview({
                 onClick={() => onShowInactiveChange(!showInactiveBarbers)}
               >
                 {showInactiveBarbers
-                  ? 'Hide inactive'
-                  : `Show ${inactiveCount} inactive`}
+                  ? 'Hide inactive & pending'
+                  : `Show ${inactiveCount} inactive / pending`}
               </button>
             </div>
           ) : null}
 
-          {showInactiveBarbers && filteredInactiveBarbers.length > 0 ? (
+          {showInactiveBarbers && inactiveCards.length > 0 ? (
             <ul
               className="admin-barber-grid admin-barbers-overview-grid admin-barbers-overview-grid--inactive"
-              aria-label="Inactive barbers"
+              aria-label="Inactive and pending team members"
             >
-              {filteredInactiveBarbers.map((barber, index) =>
-                renderBarberCard(barber, filteredActiveBarbers.length + index)
-              )}
+              {inactiveCards.map((card, index) => renderCard(card, activeCards.length + index))}
             </ul>
           ) : null}
         </div>
-      ) : null}
+      )}
 
       <AdminWizardSheetLayer
         open={isAddBarberSheetOpen}
         onDismiss={onCloseAddBarberSheet}
         ariaLabelledBy="admin-barber-form-title"
       >
-        <BarberWizard
-          key="create"
+        <TeamInviteWizard
+          key="invite"
+          actorRole={actorRole}
           services={availableServices}
           onCancel={onCloseAddBarberSheet}
-          onSaved={onBarberSaved}
+          onSent={async () => {
+            await Promise.all([loadTeam(), onBarberSaved()]);
+          }}
         />
       </AdminWizardSheetLayer>
 

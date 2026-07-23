@@ -4,13 +4,13 @@ import type { APIRoute } from 'astro';
 import { z } from 'zod';
 import { requireAdminPermission } from '../../../lib/admin/auth';
 import { ensureBarberHasAvailabilityRules } from '../../../lib/admin/defaultAvailability';
-import { getTodayInLondon, getTodayScheduleForBarber, getTodayShiftWindowForBarber } from '../../../lib/admin/todayWorkingHours';
+import { getTodayInLondon, getTodayScheduleForBarber, getTodayShiftWindowForBarber, isHolidayBlockTitle, withHolidayTodayLabel } from '../../../lib/admin/todayWorkingHours';
 import { prisma } from '../../../lib/db/client';
-import { getBlobReadWriteToken, makeBlobPath, uploadPublicImageToBlob } from '../../../lib/storage/vercelBlob';
+import { getTimeBlockDelegate } from '../../../lib/db/timeBlocks';
+import { storeAdminAvatar } from '../../../lib/storage/storeAdminAvatar';
+import { toUtcFromLondon, addMinutes } from '../../../lib/booking/time';
+import { formatInTimeZone } from 'date-fns-tz';
 import type { Prisma } from '@prisma/client';
-
-const MAX_AVATAR_SIZE_BYTES = 5 * 1024 * 1024;
-const ALLOWED_AVATAR_TYPES = new Set(['image/jpeg', 'image/png', 'image/webp']);
 
 const jsonSchema = z.object({
   id: z.string().optional(),
@@ -23,12 +23,6 @@ const jsonSchema = z.object({
 
 });
 
-function getExtensionForType(contentType: string) {
-  if (contentType === 'image/jpeg') return 'jpg';
-  if (contentType === 'image/png') return 'png';
-  if (contentType === 'image/webp') return 'webp';
-  return null;
-}
 function parseServiceIds(rawValue: FormDataEntryValue | null): string[] {
   if (!rawValue) return [];
   const rawText = String(rawValue).trim();
@@ -57,28 +51,6 @@ async function ensureSelectedServices(tx: Prisma.TransactionClient, selectedServ
   const existingIds = new Set(existingServices.map((service) => service.id));
   return uniqueRequestedIds.filter((serviceId) => existingIds.has(serviceId));
 }
-async function storeAvatar(file: File, barberId?: string) {
-  if (!ALLOWED_AVATAR_TYPES.has(file.type)) {
-    throw new Error('Avatar must be a JPG, PNG, or WEBP image.');
-  }
-  if (file.size > MAX_AVATAR_SIZE_BYTES) {
-    throw new Error('Avatar is too large. Maximum size is 5MB.');
-  }
-
-  const extension = getExtensionForType(file.type);
-  if (!extension) {
-    throw new Error('Unsupported avatar format.');
-  }
-  if (!getBlobReadWriteToken()) {
-    throw new Error('Blob storage is not configured. Set BLOB_READ_WRITE_TOKEN before uploading barber avatars.');
-  }
-
-
-  const pathname = makeBlobPath('barbers', file, barberId);
-  return uploadPublicImageToBlob(file, pathname);
-
-}
-
 
 export const GET: APIRoute = async (ctx) => {
   const access = await requireAdminPermission(ctx, 'catalog.manage');
@@ -170,12 +142,36 @@ export const GET: APIRoute = async (ctx) => {
     }
   }
 
+  const holidayBarberIds = new Set<string>();
+  if (barbers.length > 0) {
+    const dayIso = formatInTimeZone(new Date(), 'Europe/London', 'yyyy-MM-dd');
+    const dayStart = toUtcFromLondon(dayIso, 0);
+    const nextDayStart = addMinutes(dayStart, 24 * 60);
+    const timeBlockDelegate = getTimeBlockDelegate();
+    if (timeBlockDelegate) {
+      const todayBlocks = await timeBlockDelegate.findMany({
+        where: {
+          shopId,
+          barberId: { in: barbers.map((barber) => barber.id) },
+          startAt: { lt: nextDayStart },
+          endAt: { gt: dayStart },
+        },
+        select: { barberId: true, title: true },
+      });
+      for (const block of todayBlocks) {
+        if (block.barberId && isHolidayBlockTitle(block.title)) {
+          holidayBarberIds.add(block.barberId);
+        }
+      }
+    }
+  }
 
   return new Response(JSON.stringify({
     barbers: barbers.map((barber) => {
       const rules = rulesByBarberId.get(barber.id);
-      const todaySchedule = getTodayScheduleForBarber(rules);
-      const todayShiftWindow = getTodayShiftWindowForBarber(rules);
+      const hasHoliday = holidayBarberIds.has(barber.id);
+      const todaySchedule = withHolidayTodayLabel(getTodayScheduleForBarber(rules), hasHoliday);
+      const todayShiftWindow = hasHoliday ? null : getTodayShiftWindowForBarber(rules);
       return {
         ...barber,
         serviceIds: serviceIdsByBarber.get(barber.id) ?? [],
@@ -217,7 +213,7 @@ export const POST: APIRoute = async (ctx) => {
     let avatarUrl: string | undefined;
     if (avatar instanceof File && avatar.size > 0) {
       try {
-        avatarUrl = await storeAvatar(avatar, id);
+        avatarUrl = await storeAdminAvatar(avatar, 'barbers', id);
       } catch (error) {
         return new Response(JSON.stringify({ error: error instanceof Error ? error.message : 'Could not upload avatar.' }), { status: 400 });
       }
@@ -282,7 +278,7 @@ export const POST: APIRoute = async (ctx) => {
     ...(typeof active === 'boolean' ? { active } : {}),
     ...(typeof isActive === 'boolean' ? { active: isActive } : {}),
     ...(typeof avatarUrl === 'string' ? { avatarUrl: avatarUrl || null } : {}),
-    email: email || null
+    ...(email !== undefined ? { email: email || null } : {}),
   };
 
   const barber = id

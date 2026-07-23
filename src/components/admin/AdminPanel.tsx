@@ -19,7 +19,6 @@ const ServicesAdminPanel = lazy(() => import('./ServicesAdminPanel'));
 const ClientsAdminPanel = lazy(() => import('./ClientsAdminPanel'));
 const ShopAdminPanel = lazy(() => import('./ShopAdminPanel'));
 const AiAssistantPanel = lazy(() => import('./AiAssistantPanel'));
-const TeamAdminPanel = lazy(() => import('./TeamAdminPanel'));
 
 export type AdminSection =
   | 'bookings_dashboard'
@@ -32,6 +31,7 @@ export type AdminSection =
   | 'shop_orders'
   | 'shop_sales'
   | 'assistant'
+  /** Legacy URL alias → bookings_blocks (Team) */
   | 'team';
 
 function clearTransientAdminViewportState() {
@@ -62,7 +62,8 @@ function getSectionFromUrl(): AdminSection {
   if (section === 'shop_sales') return 'shop_sales';
   if (section === 'shop_products') return 'shop_products';
   if (section === 'assistant') return 'assistant';
-  if (section === 'team') return 'team';
+  // Legacy ?section=team → unified Team surface (bookings_blocks)
+  if (section === 'team') return 'bookings_blocks';
   return 'bookings_dashboard';
 }
 
@@ -373,8 +374,6 @@ export default function AdminPanel({ demoMode = false }: AdminPanelProps) {
             ) : null}
 
             {activeSection === 'assistant' ? <AiAssistantPanel key="assistant" isPublicDemo={demoMode} /> : null}
-
-            {activeSection === 'team' ? <TeamAdminPanel key="team" /> : null}
           </Suspense>
         </LazyPanelErrorBoundary>
       </AdminLayout>

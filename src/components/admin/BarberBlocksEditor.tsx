@@ -276,21 +276,35 @@ export default function BarberBlocksEditor({
 
           {activeCreateMode === 'break' ? (
             <div className="admin-timeoff-form-wrap admin-timeoff-form-surface">
-              <div className="admin-timeoff-fields-grid">
+              <div className="admin-timeoff-fields-grid admin-timeoff-fields-grid--pair">
                 <label className="admin-timeoff-field-card">
-                  <span className="admin-timeoff-label">Start</span>
+                  <span className="admin-timeoff-label">
+                    <span className="admin-timeoff-label__mark" aria-hidden="true" />
+                    Start
+                  </span>
                   <input
                     type="datetime-local"
                     value={breakStartInput}
                     onChange={(event) => setBreakStartInput(event.target.value)}
                     className={breakHasRangeError ? 'has-error' : ''}
                   />
-                  <span className="admin-timeoff-field-help">Pick when the 15-minute break begins.</span>
+                  <span className="admin-timeoff-field-help">When the break begins</span>
                 </label>
-                <label className="admin-timeoff-field-card">
-                  <span className="admin-timeoff-label">End</span>
-                  <input type="datetime-local" value={breakEndInput} readOnly tabIndex={-1} aria-readonly="true" />
-                  <span className="admin-timeoff-field-help">Calculated automatically (+15 min).</span>
+                <label className="admin-timeoff-field-card admin-timeoff-field-card--auto">
+                  <span className="admin-timeoff-label">
+                    <span className="admin-timeoff-label__mark" aria-hidden="true" />
+                    End
+                    <span className="admin-timeoff-auto-badge">Auto +15 min</span>
+                  </span>
+                  <input
+                    type="datetime-local"
+                    value={breakEndInput}
+                    readOnly
+                    tabIndex={-1}
+                    aria-readonly="true"
+                    className="admin-timeoff-input--readonly"
+                  />
+                  <span className="admin-timeoff-field-help">Calculated from start</span>
                 </label>
               </div>
               <p className="admin-timeoff-preview">Preview: {breakPreview}</p>
@@ -304,26 +318,32 @@ export default function BarberBlocksEditor({
             </div>
           ) : (
             <div className="admin-timeoff-form-wrap admin-timeoff-form-surface">
-              <div className="admin-timeoff-fields-grid">
+              <div className="admin-timeoff-fields-grid admin-timeoff-fields-grid--pair">
                 <label className="admin-timeoff-field-card">
-                  <span className="admin-timeoff-label">Start date</span>
+                  <span className="admin-timeoff-label">
+                    <span className="admin-timeoff-label__mark" aria-hidden="true" />
+                    Start date
+                  </span>
                   <input
                     type="date"
                     value={vacationStartDate}
                     onChange={(event) => setVacationStartDate(event.target.value)}
                     className={vacationHasRangeError ? 'has-error' : ''}
                   />
-                  <span className="admin-timeoff-field-help">When vacation starts.</span>
+                  <span className="admin-timeoff-field-help">First day off</span>
                 </label>
                 <label className="admin-timeoff-field-card">
-                  <span className="admin-timeoff-label">End date</span>
+                  <span className="admin-timeoff-label">
+                    <span className="admin-timeoff-label__mark" aria-hidden="true" />
+                    End date
+                  </span>
                   <input
                     type="date"
                     value={vacationEndDate}
                     onChange={(event) => setVacationEndDate(event.target.value)}
                     className={vacationHasRangeError ? 'has-error' : ''}
                   />
-                  <span className="admin-timeoff-field-help">When barber returns.</span>
+                  <span className="admin-timeoff-field-help">Return day</span>
                 </label>
               </div>
 
@@ -346,26 +366,32 @@ export default function BarberBlocksEditor({
 
 
               {!vacationAllDay ? (
-                <div className="admin-timeoff-fields-grid">
+                <div className="admin-timeoff-fields-grid admin-timeoff-fields-grid--pair">
                   <label className="admin-timeoff-field-card">
-                    <span className="admin-timeoff-label">Start time</span>
+                    <span className="admin-timeoff-label">
+                      <span className="admin-timeoff-label__mark" aria-hidden="true" />
+                      Start time
+                    </span>
                     <input
                       type="time"
                       value={vacationStartTime}
                       onChange={(event) => setVacationStartTime(event.target.value)}
                       className={vacationHasRangeError ? 'has-error' : ''}
                     />
-                    <span className="admin-timeoff-field-help">Local time in salon timezone.</span>
+                    <span className="admin-timeoff-field-help">Salon local time</span>
                   </label>
                   <label className="admin-timeoff-field-card">
-                    <span className="admin-timeoff-label">End time</span>
+                    <span className="admin-timeoff-label">
+                      <span className="admin-timeoff-label__mark" aria-hidden="true" />
+                      End time
+                    </span>
                     <input
                       type="time"
                       value={vacationEndTime}
                       onChange={(event) => setVacationEndTime(event.target.value)}
                       className={vacationHasRangeError ? 'has-error' : ''}
                     />
-                    <span className="admin-timeoff-field-help">Must be after start time.</span>
+                    <span className="admin-timeoff-field-help">Must be after start</span>
                   </label>
                 </div>
               ) : null}

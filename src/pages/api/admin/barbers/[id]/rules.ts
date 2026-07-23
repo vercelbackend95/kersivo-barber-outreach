@@ -97,20 +97,17 @@ export const PUT: APIRoute = async (ctx) => {
 
   await prisma.$transaction(async (tx) => {
     await tx.availabilityRule.deleteMany({ where: { barberId: barber.id } });
-    const activeRules = parsed.data.rules.filter((rule) => rule.active);
-    if (activeRules.length > 0) {
-      await tx.availabilityRule.createMany({
-        data: activeRules.map((rule) => ({
-          barberId: barber.id,
-          dayOfWeek: rule.dayOfWeek,
-          active: true,
-          startMinutes: timeStringToMinutes(rule.startTime),
-          endMinutes: timeStringToMinutes(rule.endTime),
-          breakStartMin: null,
-          breakEndMin: null,
-        })),
-      });
-    }
+    await tx.availabilityRule.createMany({
+      data: parsed.data.rules.map((rule) => ({
+        barberId: barber.id,
+        dayOfWeek: rule.dayOfWeek,
+        active: rule.active,
+        startMinutes: timeStringToMinutes(rule.startTime),
+        endMinutes: timeStringToMinutes(rule.endTime),
+        breakStartMin: null,
+        breakEndMin: null,
+      })),
+    });
   });
 
   return new Response(JSON.stringify({ rules: await serializeRules(barber.id) }));

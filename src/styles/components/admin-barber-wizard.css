@@ -78,6 +78,11 @@
   list-style: none;
 }
 
+.admin-barber-wizard__role-segment {
+  width: fit-content;
+  max-width: 100%;
+}
+
 .admin-barber-wizard__progress li {
   position: relative;
   min-width: 0;
@@ -143,6 +148,7 @@
   font-size: 0.67rem;
   font-weight: 600;
   text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .admin-barber-wizard__progress li.is-current button {
@@ -273,6 +279,30 @@
 .admin-barber-wizard__label-row > span {
   color: var(--muted);
   font-size: 0.7rem;
+}
+
+.admin-barber-wizard__bookable-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  margin-top: 0.85rem;
+  padding: 0.75rem 0;
+  border-block: 1px solid color-mix(in srgb, var(--border) 78%, transparent);
+}
+
+.admin-barber-wizard__bookable-title {
+  margin: 0;
+  font-size: 0.92rem;
+  font-weight: 600;
+  color: var(--fg);
+}
+
+.admin-barber-wizard__bookable-hint {
+  margin: 0.2rem 0 0;
+  font-size: 0.78rem;
+  color: var(--muted);
+  line-height: 1.35;
 }
 
 .admin-barber-wizard__image-field {
@@ -883,8 +913,28 @@
     padding-inline: max(1rem, env(safe-area-inset-left, 0px)) max(1rem, env(safe-area-inset-right, 0px));
   }
 
+  .admin-barber-wizard__progress {
+    padding-block: 0.7rem 0.6rem;
+  }
+
+  .admin-barber-wizard__progress button {
+    gap: 0.24rem;
+  }
+
+  .admin-barber-wizard__progress button > span {
+    width: 1.5rem;
+    height: 1.5rem;
+    font-size: 0.66rem;
+  }
+
   .admin-barber-wizard__progress button small {
-    white-space: nowrap;
+    font-size: 0.6rem;
+  }
+
+  .admin-barber-wizard__progress li:not(:last-child)::after {
+    top: 0.74rem;
+    left: calc(50% + 0.9rem);
+    right: calc(-50% + 0.9rem);
   }
 }
 
@@ -897,8 +947,20 @@
     padding-inline: max(0.8rem, env(safe-area-inset-left, 0px)) max(0.8rem, env(safe-area-inset-right, 0px));
   }
 
+  .admin-barber-wizard__progress button > span {
+    width: 1.35rem;
+    height: 1.35rem;
+    font-size: 0.6rem;
+  }
+
   .admin-barber-wizard__progress button small {
-    font-size: 0.61rem;
+    font-size: 0.55rem;
+  }
+
+  .admin-barber-wizard__progress li:not(:last-child)::after {
+    top: 0.66rem;
+    left: calc(50% + 0.8rem);
+    right: calc(-50% + 0.8rem);
   }
 
   .admin-barber-wizard__intro h3 {

@@ -280,7 +280,7 @@ export default function BarberWizard({
       {!finished ? (
         <>
           <nav className="admin-barber-wizard__progress" aria-label="Barber setup progress">
-            <ol>
+            <ol style={{ gridTemplateColumns: `repeat(${BARBER_WIZARD_STEPS.length}, minmax(0, 1fr))` }}>
               {BARBER_WIZARD_STEPS.map((item) => {
                 const complete = item.number < step;
                 const current = item.number === step;

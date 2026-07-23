@@ -1,6 +1,6 @@
 import React from 'react';
 import { createPortal } from 'react-dom';
-import { Calendar, Clock, Mail, Scissors, X } from '../lucide-react';
+import { Calendar, Clock, Mail, NotebookPen, Scissors, X } from '../lucide-react';
 import BarberServicesEditor from './BarberServicesEditor';
 import BarberWorkingHoursEditor from './BarberWorkingHoursEditor';
 import BarberBlocksEditor from './BarberBlocksEditor';
@@ -9,6 +9,9 @@ import AdminWizardSheetLayer from './AdminWizardSheetLayer';
 import type { Barber, ServiceOption, TimeBlock, WorkingHourRow } from './barbersTypes';
 import StatusBadge from './StatusBadge';
 import { SettingsGearIcon } from './SettingsGearIcon';
+import { roleLabel } from '@/lib/admin/teamCards';
+import type { ShopRole } from '@prisma/client';
+import '@/styles/components/admin-team.css';
 
 type BarberProfileProps = {
   barber: Barber;
@@ -40,6 +43,11 @@ type BarberProfileProps = {
   onCreateBlock: (payload: { type: 'BREAK' | 'HOLIDAY'; startAtInput: string; endAtInput: string; allDay?: boolean }) => void;
   onDeleteBlock: (blockId: string) => void;
   onDeleteBarber: () => void;
+  role?: ShopRole;
+  canToggleBookable?: boolean;
+  bookable?: boolean;
+  onToggleBookable?: (next: boolean) => void;
+  onSaveIdentity?: (payload: { name: string; email: string }) => Promise<boolean>;
 };
 
 export default function BarberProfile({
@@ -72,6 +80,11 @@ export default function BarberProfile({
   onCreateBlock,
   onDeleteBlock,
   onDeleteBarber,
+  role,
+  canToggleBookable = false,
+  bookable = true,
+  onToggleBookable,
+  onSaveIdentity,
 }: BarberProfileProps) {
   const actionsMenuRef = React.useRef<HTMLDivElement | null>(null);
   const [isActionsMenuOpen, setIsActionsMenuOpen] = React.useState(false);
@@ -80,6 +93,10 @@ export default function BarberProfile({
   const confirmDialogRef = React.useRef<HTMLDivElement | null>(null);
   const cancelButtonRef = React.useRef<HTMLButtonElement | null>(null);
   const avatarInputRef = React.useRef<HTMLInputElement | null>(null);
+  const [isEditingIdentity, setIsEditingIdentity] = React.useState(false);
+  const [draftName, setDraftName] = React.useState(barber.name);
+  const [draftEmail, setDraftEmail] = React.useState(barber.email ?? '');
+  const [identityError, setIdentityError] = React.useState('');
 
   const selectedServicesCount = enabledServiceIds.size;
   const totalServicesCount = services.length;
@@ -233,6 +250,43 @@ export default function BarberProfile({
     avatarInputRef.current?.click();
   }, []);
 
+  React.useEffect(() => {
+    if (isEditingIdentity) return;
+    setDraftName(barber.name);
+    setDraftEmail(barber.email ?? '');
+  }, [barber.name, barber.email, isEditingIdentity]);
+
+  function startIdentityEdit() {
+    setDraftName(barber.name);
+    setDraftEmail(barber.email ?? '');
+    setIdentityError('');
+    setIsEditingIdentity(true);
+  }
+
+  function cancelIdentityEdit() {
+    setDraftName(barber.name);
+    setDraftEmail(barber.email ?? '');
+    setIdentityError('');
+    setIsEditingIdentity(false);
+  }
+
+  async function saveIdentityEdit() {
+    if (!onSaveIdentity) return;
+    const name = draftName.trim();
+    const email = draftEmail.trim();
+    if (!name) {
+      setIdentityError('Enter a display name.');
+      return;
+    }
+    if (email && !email.includes('@')) {
+      setIdentityError('Enter a valid email.');
+      return;
+    }
+    setIdentityError('');
+    const ok = await onSaveIdentity({ name, email });
+    if (ok) setIsEditingIdentity(false);
+  }
+
   const panel = (
     <div
       className="admin-cp-backdrop"
@@ -247,7 +301,7 @@ export default function BarberProfile({
       <div className="admin-cp-panel" onClick={(event) => event.stopPropagation()}>
         <div className="admin-cp-header">
           <span id="admin-barber-profile-title" className="admin-cp-header-title">
-            Barber profile
+            {role ? `${roleLabel(role)} profile` : 'Barber profile'}
           </span>
           <div className="admin-cp-header-actions">
             <button
@@ -322,7 +376,34 @@ export default function BarberProfile({
             </p>
           ) : null}
 
-          <div className="admin-cp-identity">
+          <div
+            className={`admin-cp-identity${canToggleBookable && onToggleBookable ? ' admin-cp-identity--bookable' : ''}`}
+          >
+            {canToggleBookable && onToggleBookable ? (
+              <div className="admin-cp-bookable-toggle">
+                <div className="admin-cp-bookable-toggle__copy">
+                  <span className="admin-cp-bookable-toggle__title">Bookable</span>
+                  <span className="admin-cp-bookable-toggle__hint">
+                    {bookable ? 'On schedule & booking form' : 'Hidden from booking form'}
+                  </span>
+                </div>
+                <label className="admin-service-switch-wrap" htmlFor="admin-barber-bookable">
+                  <input
+                    id="admin-barber-bookable"
+                    type="checkbox"
+                    className="admin-service-switch-input"
+                    checked={bookable}
+                    onChange={(e) => onToggleBookable(e.target.checked)}
+                    disabled={barberSaving}
+                  />
+                  <span className="admin-service-switch-track" aria-hidden="true">
+                    <span className="admin-service-switch-thumb" />
+                  </span>
+                  <span className="admin-service-switch-label">{bookable ? 'On' : 'Off'}</span>
+                </label>
+              </div>
+            ) : null}
+
             <div className="admin-cp-avatar-wrap">
               <div className="admin-cp-avatar" aria-hidden="true">
                 {displayedAvatarUrl ? (
@@ -358,13 +439,87 @@ export default function BarberProfile({
             </div>
 
             <div className="admin-cp-identity-info">
-              <p className="admin-cp-full-name">{barber.name}</p>
-              {barberEmail ? (
-                <a className="admin-cp-contact-row" href={`mailto:${barberEmail}`}>
-                  <Mail className="admin-cp-contact-icon" aria-hidden />
-                  {barberEmail}
-                </a>
-              ) : null}
+              {isEditingIdentity ? (
+                <div className="admin-cp-identity-edit">
+                  <label className="admin-cp-identity-edit__field" htmlFor="admin-barber-identity-name">
+                    <span className="admin-cp-identity-edit__label">Display name</span>
+                    <input
+                      id="admin-barber-identity-name"
+                      className="input"
+                      value={draftName}
+                      onChange={(e) => {
+                        setDraftName(e.target.value);
+                        if (identityError) setIdentityError('');
+                      }}
+                      disabled={barberSaving}
+                      maxLength={80}
+                      autoFocus
+                    />
+                  </label>
+                  <label className="admin-cp-identity-edit__field" htmlFor="admin-barber-identity-email">
+                    <span className="admin-cp-identity-edit__label">Email</span>
+                    <input
+                      id="admin-barber-identity-email"
+                      className="input"
+                      type="email"
+                      value={draftEmail}
+                      onChange={(e) => {
+                        setDraftEmail(e.target.value);
+                        if (identityError) setIdentityError('');
+                      }}
+                      disabled={barberSaving}
+                      placeholder="optional"
+                    />
+                  </label>
+                  {identityError ? (
+                    <p className="admin-cp-error admin-cp-error--inline" role="alert">
+                      {identityError}
+                    </p>
+                  ) : null}
+                  <div className="admin-cp-identity-edit__actions">
+                    <button
+                      type="button"
+                      className="btn btn--secondary"
+                      onClick={cancelIdentityEdit}
+                      disabled={barberSaving}
+                    >
+                      Cancel
+                    </button>
+                    <button
+                      type="button"
+                      className="btn btn--primary"
+                      onClick={() => void saveIdentityEdit()}
+                      disabled={barberSaving || !onSaveIdentity}
+                    >
+                      {barberSaving ? 'Saving...' : 'Save'}
+                    </button>
+                  </div>
+                </div>
+              ) : (
+                <>
+                  <div className="admin-cp-full-name-row">
+                    <p className="admin-cp-full-name">{barber.name}</p>
+                    {onSaveIdentity ? (
+                      <button
+                        type="button"
+                        className="admin-cp-identity-edit-btn"
+                        aria-label="Edit name and email"
+                        title="Edit name and email"
+                        onClick={startIdentityEdit}
+                        disabled={barberSaving}
+                      >
+                        <NotebookPen width={15} height={15} aria-hidden />
+                      </button>
+                    ) : null}
+                  </div>
+                  {barberEmail ? (
+                    <a className="admin-cp-contact-row" href={`mailto:${barberEmail}`}>
+                      <Mail className="admin-cp-contact-icon" aria-hidden />
+                      {barberEmail}
+                    </a>
+                  ) : null}
+                </>
+              )}
               <div className="admin-cp-status-pill">
                 <StatusBadge status={isActive ? 'ACTIVE' : 'INACTIVE'} variant="dot" size="sm" />
               </div>

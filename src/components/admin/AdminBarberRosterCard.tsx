@@ -1,5 +1,5 @@
 import type { Barber } from './barbersTypes';
-import { ArrowRight, Calendar, ChevronDown, ChevronUp, Clock } from '../lucide-react';
+import { ArrowRight, Calendar, Clock } from '../lucide-react';
 import type { BarberAvailabilityStatus, DayFillData, NextBookingPreview } from '../../lib/admin/barberRosterPresentation';
 import { AVAIL_STATUS_LABELS } from '../../lib/admin/barberRosterPresentation';
 
@@ -15,13 +15,19 @@ export type AdminBarberRosterCardProps = {
   onOpenBarber: (barberId: string) => void;
   bookingsLength: number;
   variant: 'ops' | 'manage';
-  manageControls?: {
-    index: number;
-    isFirstItem: boolean;
-    isLastItem: boolean;
-    barberReordering: boolean;
-    onMoveBarber: (index: number, direction: 'up' | 'down') => void;
-  };
+  /** Unified Team card extras */
+  roleLabel?: string;
+  rolePillClassName?: string;
+  cardStatus?: 'pending' | 'new' | 'active';
+  /** When false, show muted schedule chrome + “Not bookable” status */
+  showSchedule?: boolean;
+  /** When false, hide shift/next/CTA/day-fill */
+  showRosterChrome?: boolean;
+  showProfileCta?: boolean;
+  /** Green New pill — only newest NEW member */
+  showNewBadge?: boolean;
+  canActivate?: boolean;
+  onActivate?: () => void;
 };
 
 export default function AdminBarberRosterCard({
@@ -35,8 +41,16 @@ export default function AdminBarberRosterCard({
   getInitials,
   onOpenBarber,
   bookingsLength,
-  variant,
-  manageControls,
+  variant: _variant,
+  roleLabel,
+  rolePillClassName,
+  cardStatus,
+  showSchedule = true,
+  showRosterChrome = true,
+  showProfileCta = true,
+  showNewBadge = false,
+  canActivate = false,
+  onActivate,
 }: AdminBarberRosterCardProps) {
   const availLabel = AVAIL_STATUS_LABELS[availStatus];
   const bookedHDisplay = Math.round(dayFill.bookedHoursH * 10) / 10;
@@ -68,75 +82,83 @@ export default function AdminBarberRosterCard({
             </span>
             <div className="admin-barber-roster-title-stack">
               <p className="admin-barber-name admin-barber-roster-name">{barber.name}</p>
-              <p className={`admin-barber-roster-status admin-barber-roster-status--${availStatus}`} role="status">
-                {availLabel}
-              </p>
-            </div>
-            {barberIsActive ? null : <span className="admin-barber-roster-inactive-badge">Hidden</span>}
-            {variant === 'manage' && manageControls ? (
-              <div className="admin-barber-actions admin-barber-actions--roster-inline">
-                <div className="admin-reorder-controls admin-reorder-controls--barber" role="group" aria-label={`Reorder ${barber.name}`}>
-                  <div className="admin-reorder-arrow-stack admin-reorder-arrow-stack--barber admin-reorder-arrow-stack--barber-inline">
-                    <button
-                      type="button"
-                      className="admin-reorder-btn admin-reorder-btn--barber admin-reorder-btn--barber-inline"
-                      onClick={() => manageControls.onMoveBarber(manageControls.index, 'up')}
-                      disabled={manageControls.isFirstItem || manageControls.barberReordering}
-                      aria-label={`Move ${barber.name} up`}
-                    >
-                      <ChevronUp width={14} height={14} strokeWidth={2.2} aria-hidden />
-                    </button>
-                    <button
-                      type="button"
-                      className="admin-reorder-btn admin-reorder-btn--barber admin-reorder-btn--barber-inline"
-                      onClick={() => manageControls.onMoveBarber(manageControls.index, 'down')}
-                      disabled={manageControls.isLastItem || manageControls.barberReordering}
-                      aria-label={`Move ${barber.name} down`}
-                    >
-                      <ChevronDown width={14} height={14} strokeWidth={2.2} aria-hidden />
-                    </button>
-                  </div>
-                </div>
-              </div>
-            ) : null}
-          </div>
-
-          <div className="admin-barber-roster-meta">
-            <span className={`admin-barber-roster-shift${todayLine.isOff ? ' is-off' : ''}`} title={todayLine.title}>
-              <Clock className="admin-barber-roster-meta-icon" width={15} height={15} aria-hidden />
-              <span className="admin-barber-roster-shift-text">{todayLine.text}</span>
-            </span>
-
-            <div className={`admin-barber-roster-next${nextBookingPreview ? '' : ' is-muted'}`} title={nextBookingTitle}>
-              <Calendar className="admin-barber-roster-meta-icon" width={15} height={15} aria-hidden />
-              {nextBookingPreview ? (
-                <div className="admin-barber-roster-next-copy">
-                  <span className="admin-barber-roster-next-primary">
-                    {nextBookingPreview.timeLabel} · {nextBookingPreview.serviceLabel}
+              <div className="admin-barber-roster-meta-row">
+                {roleLabel ? (
+                  <span className={rolePillClassName || 'admin-team__role-pill'}>{roleLabel}</span>
+                ) : null}
+                {showNewBadge ? (
+                  <span className="admin-barber-roster-inactive-badge admin-barber-roster-inactive-badge--new">
+                    New
                   </span>
-                  <span className="admin-barber-roster-next-secondary">{nextBookingPreview.relativeLabel}</span>
-                </div>
+                ) : null}
+              </div>
+              {showSchedule ? (
+                <p className={`admin-barber-roster-status admin-barber-roster-status--${availStatus}`} role="status">
+                  {availLabel}
+                </p>
               ) : (
-                <span className="admin-barber-roster-next-empty">
-                  {bookingsLength > 0 ? 'No upcoming bookings' : 'No schedule data'}
-                </span>
+                <p className="admin-barber-roster-status admin-barber-roster-status--off" role="status">
+                  Not bookable
+                </p>
               )}
             </div>
+            {barberIsActive || cardStatus === 'pending' || cardStatus === 'new' ? null : (
+              <span className="admin-barber-roster-inactive-badge">Hidden</span>
+            )}
           </div>
 
-          <button
-            type="button"
-            className="admin-barber-roster-cta"
-            onClick={() => onOpenBarber(barber.id)}
-            aria-label={`Open ${barber.name} profile and settings`}
-          >
-            <span className="admin-barber-roster-cta-label">Profile & settings</span>
-            <ArrowRight className="admin-barber-roster-cta-icon" width={16} height={16} aria-hidden />
-          </button>
+          {showRosterChrome ? (
+            <div className="admin-barber-roster-meta">
+              <span className={`admin-barber-roster-shift${todayLine.isOff ? ' is-off' : ''}`} title={todayLine.title}>
+                <Clock className="admin-barber-roster-meta-icon" width={15} height={15} aria-hidden />
+                <span className="admin-barber-roster-shift-text">{todayLine.text}</span>
+              </span>
 
-          <div className="admin-barber-day-fill-row admin-barber-day-fill-row--roster" aria-label={dayFillAriaLabel}>
-            <div className="admin-barber-day-fill" aria-hidden="true" style={{ width: `${dayFill.pct}%` }} />
-          </div>
+              <div className={`admin-barber-roster-next${nextBookingPreview ? '' : ' is-muted'}`} title={nextBookingTitle}>
+                <Calendar className="admin-barber-roster-meta-icon" width={15} height={15} aria-hidden />
+                {nextBookingPreview ? (
+                  <div className="admin-barber-roster-next-copy">
+                    <span className="admin-barber-roster-next-primary">
+                      {nextBookingPreview.timeLabel} · {nextBookingPreview.serviceLabel}
+                    </span>
+                    <span className="admin-barber-roster-next-secondary">{nextBookingPreview.relativeLabel}</span>
+                  </div>
+                ) : (
+                  <span className="admin-barber-roster-next-empty">
+                    {bookingsLength > 0 ? 'No upcoming bookings' : 'No schedule data'}
+                  </span>
+                )}
+              </div>
+            </div>
+          ) : null}
+
+          {cardStatus === 'pending' ? (
+            <button type="button" className="btn btn--primary admin-barber-roster-cta" disabled>
+              Pending invitation
+            </button>
+          ) : canActivate && onActivate ? (
+            <button type="button" className="btn btn--primary admin-barber-roster-cta" onClick={onActivate}>
+              Activate
+            </button>
+          ) : null}
+
+          {showRosterChrome && showProfileCta && barber.id ? (
+            <button
+              type="button"
+              className="admin-barber-roster-cta"
+              onClick={() => onOpenBarber(barber.id)}
+              aria-label={`Open ${barber.name} profile and settings`}
+            >
+              <span className="admin-barber-roster-cta-label">Profile & settings</span>
+              <ArrowRight className="admin-barber-roster-cta-icon" width={16} height={16} aria-hidden />
+            </button>
+          ) : null}
+
+          {showRosterChrome ? (
+            <div className="admin-barber-day-fill-row admin-barber-day-fill-row--roster" aria-label={dayFillAriaLabel}>
+              <div className="admin-barber-day-fill" aria-hidden="true" style={{ width: `${dayFill.pct}%` }} />
+            </div>
+          ) : null}
         </div>
       </article>
     </li>

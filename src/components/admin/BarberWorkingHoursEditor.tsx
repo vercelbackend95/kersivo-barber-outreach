@@ -18,6 +18,8 @@ type BarberWorkingHoursEditorProps = {
   helperText?: string;
   /** When `profile`, hide outer panel chrome / duplicate titles (parent provides section header). */
   layout?: 'default' | 'profile';
+  /** Hide the default “Working hours” header row (parent provides the title). */
+  hideHeader?: boolean;
 };
 
 const AUTO_SAVE_DELAY_MS = 600;
@@ -86,6 +88,7 @@ export default function BarberWorkingHoursEditor({
   subtitle,
   helperText,
   layout = 'default',
+  hideHeader = false,
 }: BarberWorkingHoursEditorProps) {
   const [expandedDayIndex, setExpandedDayIndex] = React.useState<number | null>(null);
   const [draftDay, setDraftDay] = React.useState<WorkingHourRow | null>(null);
@@ -229,6 +232,16 @@ export default function BarberWorkingHoursEditor({
           <p className="muted working-hours-helper">
             {helperText ?? 'Tap any day to change shift status and hours.'}
           </p>
+        </div>
+      ) : hideHeader ? (
+        <div className="working-hours-shell">
+          <p className="working-hours-weekly-summary" aria-live="polite">
+            {weeklySummary}
+          </p>
+          <p className="muted working-hours-helper">
+            {helperText ?? 'Tap any day to change shift status and hours.'}
+          </p>
+          <div className="working-hours-divider" aria-hidden="true" />
         </div>
       ) : (
         <div className="working-hours-shell">
