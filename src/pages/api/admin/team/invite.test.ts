@@ -7,7 +7,6 @@ const barberCreate = vi.fn();
 const barberAggregate = vi.fn();
 const barberServiceCreateMany = vi.fn();
 const availabilityRuleCreateMany = vi.fn();
-const serviceCount = vi.fn();
 const serviceFindMany = vi.fn();
 const shopSettingsFindUnique = vi.fn();
 const sendShopTeamInviteEmail = vi.fn();
@@ -30,11 +29,6 @@ vi.mock('@/lib/admin/rbac/members', () => ({
   assertCanInviteRole: vi.fn(async () => null),
   createInviteToken: vi.fn(() => ({ token: 'tok', tokenHash: 'hash' })),
   inviteExpiresAt: vi.fn(() => new Date('2026-08-01T00:00:00.000Z')),
-}));
-
-vi.mock('@/lib/admin/defaultAvailability', () => ({
-  ensureBarberHasAllServices: vi.fn(),
-  ensureBarberHasAvailabilityRules: vi.fn(),
 }));
 
 vi.mock('@/lib/setup/siteUrl', () => ({
@@ -63,7 +57,6 @@ vi.mock('@/lib/db/client', () => ({
     barberService: { createMany: (...a: unknown[]) => barberServiceCreateMany(...a) },
     availabilityRule: { createMany: (...a: unknown[]) => availabilityRuleCreateMany(...a) },
     service: {
-      count: (...a: unknown[]) => serviceCount(...a),
       findMany: (...a: unknown[]) => serviceFindMany(...a),
     },
     shopSettings: { findUnique: (...a: unknown[]) => shopSettingsFindUnique(...a) },
@@ -83,6 +76,8 @@ function ctx(body: unknown): APIContext {
   } as unknown as APIContext;
 }
 
+const workingHours = [{ dayOfWeek: 0, startMinutes: 540, endMinutes: 1080, active: true }];
+
 describe('POST /api/admin/team/invite', () => {
   beforeEach(() => {
     vi.clearAllMocks();
@@ -101,29 +96,28 @@ describe('POST /api/admin/team/invite', () => {
     });
   });
 
-  it('creates inactive barber draft + invite for Barber role', async () => {
+  it('creates active Barber + linked invite when Barber has online bookings on', async () => {
     serviceFindMany.mockResolvedValue([{ id: 'svc-1' }]);
     barberAggregate.mockResolvedValue({ _max: { sortOrder: 0 } });
     barberCreate.mockResolvedValue({ id: 'b1' });
     barberServiceCreateMany.mockResolvedValue({ count: 1 });
-    availabilityRuleCreateMany.mockResolvedValue({ count: 7 });
+    availabilityRuleCreateMany.mockResolvedValue({ count: 1 });
 
     const res = await POST(
       ctx({
         email: 'a@b.com',
         role: 'BARBER',
         displayName: 'Alex',
+        bookable: true,
         serviceIds: ['svc-1'],
-        workingHours: [
-          { dayOfWeek: 0, startMinutes: 540, endMinutes: 1080, active: true },
-        ],
+        workingHours,
       }),
     );
 
     expect(res.status).toBe(201);
     expect(barberCreate).toHaveBeenCalledWith(
       expect.objectContaining({
-        data: expect.objectContaining({ name: 'Alex', active: false, email: 'a@b.com' }),
+        data: expect.objectContaining({ name: 'Alex', active: true, email: 'a@b.com' }),
       }),
     );
     expect(shopInviteCreate).toHaveBeenCalledWith(
@@ -138,9 +132,66 @@ describe('POST /api/admin/team/invite', () => {
     );
   });
 
-  it('invites non-bookable Manager without creating a barber', async () => {
+  it('creates invite without Barber when Barber has online bookings off', async () => {
     shopInviteCreate.mockResolvedValue({
       id: 'inv-2',
+      email: 'a@b.com',
+      role: 'BARBER',
+      barberId: null,
+      displayName: 'Alex',
+      bookable: false,
+      expiresAt: new Date(),
+    });
+
+    const res = await POST(
+      ctx({
+        email: 'a@b.com',
+        role: 'BARBER',
+        displayName: 'Alex',
+        bookable: false,
+      }),
+    );
+
+    expect(res.status).toBe(201);
+    expect(barberCreate).not.toHaveBeenCalled();
+    expect(shopInviteCreate).toHaveBeenCalledWith(
+      expect.objectContaining({
+        data: expect.objectContaining({
+          role: 'BARBER',
+          bookable: false,
+          barberId: null,
+        }),
+      }),
+    );
+  });
+
+  it('does not force Barber invitations to be bookable', async () => {
+    shopInviteCreate.mockResolvedValue({
+      id: 'inv-force',
+      email: 'a@b.com',
+      role: 'BARBER',
+      barberId: null,
+      displayName: 'Alex',
+      bookable: false,
+      expiresAt: new Date(),
+    });
+
+    const res = await POST(
+      ctx({
+        email: 'a@b.com',
+        role: 'BARBER',
+        displayName: 'Alex',
+        bookable: false,
+      }),
+    );
+    expect(res.status).toBe(201);
+    const createArg = shopInviteCreate.mock.calls[0][0];
+    expect(createArg.data.bookable).toBe(false);
+  });
+
+  it('invites dashboard-only Manager without creating a Barber', async () => {
+    shopInviteCreate.mockResolvedValue({
+      id: 'inv-3',
       email: 'm@b.com',
       role: 'MANAGER',
       barberId: null,
@@ -171,18 +222,12 @@ describe('POST /api/admin/team/invite', () => {
     );
   });
 
-  it('creates inactive barber seat when non-bookable Manager includes avatar', async () => {
-    const { ensureBarberHasAllServices, ensureBarberHasAvailabilityRules } = await import(
-      '@/lib/admin/defaultAvailability'
-    );
-    barberAggregate.mockResolvedValue({ _max: { sortOrder: 1 } });
-    barberCreate.mockResolvedValue({ id: 'b-photo' });
-    storeAdminAvatar.mockResolvedValue('https://blob.example/morgan.jpg');
+  it('does not create a Barber when non-bookable Manager includes avatar', async () => {
     shopInviteCreate.mockResolvedValue({
-      id: 'inv-3',
+      id: 'inv-4',
       email: 'm@b.com',
       role: 'MANAGER',
-      barberId: 'b-photo',
+      barberId: null,
       displayName: 'Morgan',
       bookable: false,
       expiresAt: new Date(),
@@ -203,40 +248,113 @@ describe('POST /api/admin/team/invite', () => {
     } as unknown as APIContext);
 
     expect(res.status).toBe(201);
-    expect(storeAdminAvatar).toHaveBeenCalled();
-    expect(barberCreate).toHaveBeenCalledWith(
-      expect.objectContaining({
-        data: expect.objectContaining({
-          name: 'Morgan',
-          active: false,
-          avatarUrl: 'https://blob.example/morgan.jpg',
-        }),
-      }),
-    );
-    expect(ensureBarberHasAllServices).toHaveBeenCalledWith('b-photo', 'shop-1');
-    expect(ensureBarberHasAvailabilityRules).toHaveBeenCalledWith('b-photo');
+    expect(barberCreate).not.toHaveBeenCalled();
     expect(shopInviteCreate).toHaveBeenCalledWith(
       expect.objectContaining({
         data: expect.objectContaining({
           role: 'MANAGER',
           bookable: false,
-          barberId: 'b-photo',
+          barberId: null,
         }),
       }),
     );
   });
 
+  it('creates active Barber + linked invite for Manager with online bookings on', async () => {
+    serviceFindMany.mockResolvedValue([{ id: 'svc-1' }]);
+    barberAggregate.mockResolvedValue({ _max: { sortOrder: 0 } });
+    barberCreate.mockResolvedValue({ id: 'b-mgr' });
+    barberServiceCreateMany.mockResolvedValue({ count: 1 });
+    availabilityRuleCreateMany.mockResolvedValue({ count: 1 });
+    shopInviteCreate.mockResolvedValue({
+      id: 'inv-5',
+      email: 'm@b.com',
+      role: 'MANAGER',
+      barberId: 'b-mgr',
+      displayName: 'Morgan',
+      bookable: true,
+      expiresAt: new Date(),
+    });
+
+    const res = await POST(
+      ctx({
+        email: 'm@b.com',
+        role: 'MANAGER',
+        displayName: 'Morgan',
+        bookable: true,
+        serviceIds: ['svc-1'],
+        workingHours,
+      }),
+    );
+
+    expect(res.status).toBe(201);
+    expect(barberCreate).toHaveBeenCalledTimes(1);
+    expect(barberCreate).toHaveBeenCalledWith(
+      expect.objectContaining({
+        data: expect.objectContaining({ name: 'Morgan', active: true }),
+      }),
+    );
+    expect(shopInviteCreate).toHaveBeenCalledWith(
+      expect.objectContaining({
+        data: expect.objectContaining({
+          role: 'MANAGER',
+          bookable: true,
+          barberId: 'b-mgr',
+        }),
+      }),
+    );
+  });
+
+  it('requires email for invitations', async () => {
+    const res = await POST(ctx({ role: 'BARBER', displayName: 'Alex', bookable: false }));
+    expect(res.status).toBe(400);
+    const data = await res.json();
+    expect(data.error).toMatch(/email/i);
+  });
+
+  it('requires services when online bookings on', async () => {
+    const res = await POST(
+      ctx({
+        email: 'a@b.com',
+        role: 'BARBER',
+        displayName: 'Alex',
+        bookable: true,
+        serviceIds: [],
+        workingHours,
+      }),
+    );
+    expect(res.status).toBe(400);
+    const data = await res.json();
+    expect(data.error).toMatch(/service/i);
+  });
+
+  it('requires working days when online bookings on', async () => {
+    const res = await POST(
+      ctx({
+        email: 'a@b.com',
+        role: 'BARBER',
+        displayName: 'Alex',
+        bookable: true,
+        serviceIds: ['svc-1'],
+        workingHours: [],
+      }),
+    );
+    expect(res.status).toBe(400);
+    const data = await res.json();
+    expect(data.error).toMatch(/working day/i);
+  });
+
   it('returns 400 without display name', async () => {
-    const res = await POST(ctx({ email: 'a@b.com', role: 'BARBER' }));
+    const res = await POST(ctx({ email: 'a@b.com', role: 'BARBER', bookable: false }));
     expect(res.status).toBe(400);
   });
 
-  it('accepts multipart with optional avatar for bookable invite', async () => {
+  it('accepts multipart avatar for bookable invite with active Barber', async () => {
     serviceFindMany.mockResolvedValue([{ id: 'svc-1' }]);
     barberAggregate.mockResolvedValue({ _max: { sortOrder: 0 } });
     barberCreate.mockResolvedValue({ id: 'b1' });
     barberServiceCreateMany.mockResolvedValue({ count: 1 });
-    availabilityRuleCreateMany.mockResolvedValue({ count: 7 });
+    availabilityRuleCreateMany.mockResolvedValue({ count: 1 });
     storeAdminAvatar.mockResolvedValue('https://blob.example/alex.jpg');
 
     const form = new FormData();
@@ -245,10 +363,7 @@ describe('POST /api/admin/team/invite', () => {
     form.set('displayName', 'Alex');
     form.set('bookable', 'true');
     form.set('serviceIds', JSON.stringify(['svc-1']));
-    form.set(
-      'workingHours',
-      JSON.stringify([{ dayOfWeek: 0, startMinutes: 540, endMinutes: 1080, active: true }]),
-    );
+    form.set('workingHours', JSON.stringify(workingHours));
     form.set('avatar', new File([new Uint8Array([1, 2, 3])], 'alex.jpg', { type: 'image/jpeg' }));
 
     const res = await POST({
@@ -264,7 +379,7 @@ describe('POST /api/admin/team/invite', () => {
       expect.objectContaining({
         data: expect.objectContaining({
           name: 'Alex',
-          active: false,
+          active: true,
           avatarUrl: 'https://blob.example/alex.jpg',
         }),
       }),

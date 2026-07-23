@@ -282,7 +282,8 @@ type AcceptableInvite = {
 /**
  * Create ShopMember from an invite (or mark invite accepted if already a member).
  * Caller must validate email match, expiry, and role !== OWNER.
- * New members start as teamStatus NEW; linked Barber stays inactive until Activate.
+ * New members start as teamStatus NEW. Linked booking profiles keep Barber.active
+ * (and services/hours/avatar) so online bookings do not wait on Activate.
  */
 export async function acceptInviteForUser(
   invite: AcceptableInvite,
@@ -292,12 +293,30 @@ export async function acceptInviteForUser(
     where: {
       shopId_userId: { shopId: invite.shopId, userId },
     },
-    select: { id: true },
+    select: { id: true, barberId: true },
   });
   if (existing) {
-    await prisma.shopInvite.update({
-      where: { id: invite.id },
-      data: { acceptedAt: new Date() },
+    await prisma.$transaction(async (tx: Prisma.TransactionClient) => {
+      if (!existing.barberId && invite.barberId) {
+        const barber = await tx.barber.findFirst({
+          where: { id: invite.barberId, shopId: invite.shopId },
+          select: { id: true, userId: true },
+        });
+        if (barber && !barber.userId) {
+          await tx.barber.update({
+            where: { id: barber.id },
+            data: { userId },
+          });
+          await tx.shopMember.update({
+            where: { id: existing.id },
+            data: { barberId: barber.id },
+          });
+        }
+      }
+      await tx.shopInvite.update({
+        where: { id: invite.id },
+        data: { acceptedAt: new Date() },
+      });
     });
     return { shopId: invite.shopId, role: invite.role, alreadyMember: true };
   }
@@ -311,12 +330,10 @@ export async function acceptInviteForUser(
       });
       if (!barber) barberId = null;
       else {
+        // Link login only — do not change active, services, hours, or avatar.
         await tx.barber.update({
           where: { id: barberId },
-          data: {
-            userId,
-            active: false,
-          },
+          data: { userId },
         });
       }
     }

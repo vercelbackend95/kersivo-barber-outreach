@@ -16,6 +16,7 @@ import {
   type BarberWizardService,
 } from './barber-wizard/barberWizardTypes';
 import {
+  ONLINE_BOOKINGS_OFF_HINT_DASHBOARD,
   ONLINE_BOOKINGS_OFF_HINT_INVITE,
   ONLINE_BOOKINGS_ON_HINT,
 } from '@/lib/admin/teamCards';
@@ -28,6 +29,9 @@ type TeamInviteWizardProps = {
 };
 
 type InviteRole = 'MANAGER' | 'BARBER';
+
+const DASHBOARD_ACCESS_HINT =
+  'They can sign in, view client history, add shared notes and manage the bookings available to their role.';
 
 function timeToMinutes(hhmm: string): number {
   const [h, m] = hhmm.split(':').map(Number);
@@ -42,7 +46,8 @@ export default function TeamInviteWizard({
 }: TeamInviteWizardProps) {
   const canInviteManager = actorRole === 'OWNER';
   const [role, setRole] = useState<InviteRole>('BARBER');
-  const [bookable, setBookable] = useState(false);
+  const [bookable, setBookable] = useState(true);
+  const [dashboardAccess, setDashboardAccess] = useState(true);
   const [step, setStep] = useState(1);
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
@@ -57,18 +62,34 @@ export default function TeamInviteWizard({
   const [submitError, setSubmitError] = useState('');
   const [isSaving, setIsSaving] = useState(false);
   const [finished, setFinished] = useState(false);
+  const [finishedMode, setFinishedMode] = useState<'invite' | 'booking'>('invite');
   const stepHeadingRef = useRef<HTMLHeadingElement>(null);
 
-  const needsBookingSetup = role === 'BARBER' || (role === 'MANAGER' && bookable);
-  const maxStep = needsBookingSetup ? 5 : 2;
+  const needsBookingSetup = bookable;
+  const maxStep = needsBookingSetup ? 5 : 3;
+  const reviewStep = needsBookingSetup ? 4 : 2;
+  const accessStep = maxStep;
 
   useEffect(() => {
     if (!finished) stepHeadingRef.current?.focus();
   }, [finished, step]);
 
   useEffect(() => {
-    if (role === 'BARBER') setBookable(true);
+    if (role === 'MANAGER') {
+      setDashboardAccess(true);
+      setBookable(false);
+    } else {
+      setBookable(true);
+      setDashboardAccess(true);
+    }
+    setStep(1);
   }, [role]);
+
+  useEffect(() => {
+    if (!dashboardAccess && role === 'BARBER') {
+      setBookable(true);
+    }
+  }, [dashboardAccess, role]);
 
   useEffect(() => {
     return () => {
@@ -110,11 +131,13 @@ export default function TeamInviteWizard({
   );
 
   function clearFieldError(key: string) {
-    if (key in errors) setErrors((current) => {
-      const next = { ...current };
-      delete next[key];
-      return next;
-    });
+    if (key in errors) {
+      setErrors((current) => {
+        const next = { ...current };
+        delete next[key];
+        return next;
+      });
+    }
     if (submitError) setSubmitError('');
   }
 
@@ -152,42 +175,97 @@ export default function TeamInviteWizard({
     clearFieldError('services');
   }
 
+  function setBookableSafe(next: boolean) {
+    if (!next && !dashboardAccess) {
+      setErrors((current) => ({
+        ...current,
+        access: 'Choose online bookings, dashboard access, or both.',
+      }));
+      return;
+    }
+    clearFieldError('access');
+    setBookable(next);
+  }
+
+  function setDashboardAccessSafe(next: boolean) {
+    if (role === 'MANAGER') return;
+    if (!next && !bookable) {
+      setErrors((current) => ({
+        ...current,
+        access: 'Choose online bookings, dashboard access, or both.',
+      }));
+      return;
+    }
+    clearFieldError('access');
+    setDashboardAccess(next);
+    if (!next) setBookable(true);
+  }
+
   function validateCurrentStep(): boolean {
     const next: Record<string, string> = {};
     if (step === 1) {
       if (!name.trim()) next.name = 'Enter a display name.';
       if (role === 'MANAGER' && !canInviteManager) next.role = 'Only the owner can invite managers.';
+      if (!bookable && !dashboardAccess) {
+        next.access = 'Choose online bookings, dashboard access, or both.';
+      }
     }
     if (needsBookingSetup && step === 2) {
       const e = validateBarberWizardStep(2, name, selectedServiceIds, workingHours);
-      if (e.services) next.services = e.services;
+      if (e.services) next.services = e.services || 'Select at least one service for online bookings.';
     }
     if (needsBookingSetup && step === 3) {
       const e = validateBarberWizardStep(3, name, selectedServiceIds, workingHours);
-      if (e.schedule) next.schedule = e.schedule;
+      if (e.schedule) next.schedule = e.schedule || 'Add at least one working day for online bookings.';
     }
-    const emailStep = needsBookingSetup ? 5 : 2;
-    if (step === emailStep) {
+    if (step === accessStep && dashboardAccess) {
       const trimmed = email.trim().toLowerCase();
-      if (!trimmed || !trimmed.includes('@')) next.email = 'Enter a valid email.';
+      if (!trimmed || !trimmed.includes('@')) {
+        next.email = 'Enter a valid email address to send an invitation.';
+      }
     }
     setErrors(next);
     return Object.keys(next).length === 0;
   }
 
-  async function sendInvite() {
+  async function submitAccess() {
     if (!validateCurrentStep()) return;
     setIsSaving(true);
     setSubmitError('');
     try {
       let response: Response;
 
-      if (needsBookingSetup) {
+      if (!dashboardAccess) {
+        const formData = new FormData();
+        formData.set('displayName', name.trim());
+        formData.set('serviceIds', JSON.stringify(selectedServiceIds));
+        formData.set(
+          'workingHours',
+          JSON.stringify(
+            workingHours.map((row) => ({
+              dayOfWeek: row.dayOfWeek,
+              startMinutes: timeToMinutes(row.startTime),
+              endMinutes: timeToMinutes(row.endTime),
+              active: row.active,
+            })),
+          ),
+        );
+        if (avatarFile) formData.set('avatar', avatarFile);
+
+        response = await fetch('/api/admin/team/booking-profiles', {
+          method: 'POST',
+          credentials: 'include',
+          body: formData,
+        });
+        const data = await response.json().catch(() => ({}));
+        if (!response.ok) throw new Error(data.error || 'Could not add booking profile.');
+        setFinishedMode('booking');
+      } else if (needsBookingSetup) {
         const formData = new FormData();
         formData.set('email', email.trim().toLowerCase());
         formData.set('role', role);
         formData.set('displayName', name.trim());
-        formData.set('bookable', 'true');
+        formData.set('bookable', bookable ? 'true' : 'false');
         formData.set('serviceIds', JSON.stringify(selectedServiceIds));
         formData.set(
           'workingHours',
@@ -207,19 +285,9 @@ export default function TeamInviteWizard({
           credentials: 'include',
           body: formData,
         });
-      } else if (avatarFile) {
-        const formData = new FormData();
-        formData.set('email', email.trim().toLowerCase());
-        formData.set('role', role);
-        formData.set('displayName', name.trim());
-        formData.set('bookable', 'false');
-        formData.set('avatar', avatarFile);
-
-        response = await fetch('/api/admin/team/invite', {
-          method: 'POST',
-          credentials: 'include',
-          body: formData,
-        });
+        const data = await response.json().catch(() => ({}));
+        if (!response.ok) throw new Error(data.error || 'Could not send invite.');
+        setFinishedMode('invite');
       } else {
         response = await fetch('/api/admin/team/invite', {
           method: 'POST',
@@ -232,15 +300,15 @@ export default function TeamInviteWizard({
             bookable: false,
           }),
         });
+        const data = await response.json().catch(() => ({}));
+        if (!response.ok) throw new Error(data.error || 'Could not send invite.');
+        setFinishedMode('invite');
       }
-
-      const data = await response.json().catch(() => ({}));
-      if (!response.ok) throw new Error(data.error || 'Could not send invite.');
 
       await onSent();
       setFinished(true);
     } catch (err) {
-      setSubmitError(err instanceof Error ? err.message : 'Could not send invite.');
+      setSubmitError(err instanceof Error ? err.message : 'Could not complete.');
     } finally {
       setIsSaving(false);
     }
@@ -253,7 +321,7 @@ export default function TeamInviteWizard({
       return;
     }
     if (step === maxStep) {
-      void sendInvite();
+      void submitAccess();
       return;
     }
     if (!validateCurrentStep()) return;
@@ -266,12 +334,18 @@ export default function TeamInviteWizard({
         { n: 2, label: 'Services' },
         { n: 3, label: 'Schedule' },
         { n: 4, label: 'Review' },
-        { n: 5, label: 'Invite' },
+        { n: 5, label: 'Access' },
       ]
     : [
         { n: 1, label: 'Role' },
-        { n: 2, label: 'Invite' },
+        { n: 2, label: 'Review' },
+        { n: 3, label: 'Access' },
       ];
+
+  const primaryActionLabel = !dashboardAccess ? 'Add to booking team' : 'Send invitation';
+  const onlineBookingsOffHint = dashboardAccess
+    ? ONLINE_BOOKINGS_OFF_HINT_INVITE
+    : ONLINE_BOOKINGS_OFF_HINT_DASHBOARD;
 
   return (
     <form
@@ -284,7 +358,11 @@ export default function TeamInviteWizard({
         <div className="admin-barber-wizard__header-copy">
           <p>ADD TEAM MEMBER</p>
           <h2 id="admin-barber-form-title">
-            {finished ? 'Invite sent' : 'Invite someone to this shop'}
+            {finished
+              ? finishedMode === 'booking'
+                ? 'Added to booking team'
+                : 'Invite sent'
+              : 'Add someone to this shop'}
           </h2>
         </div>
         <button
@@ -299,7 +377,7 @@ export default function TeamInviteWizard({
       </header>
 
       {!finished ? (
-        <nav className="admin-barber-wizard__progress" aria-label="Invite progress">
+        <nav className="admin-barber-wizard__progress" aria-label="Add team member progress">
           <ol style={{ gridTemplateColumns: `repeat(${progressSteps.length}, minmax(0, 1fr))` }}>
             {progressSteps.map((item) => {
               const complete = item.n < step;
@@ -332,10 +410,18 @@ export default function TeamInviteWizard({
         {finished ? (
           <section className="admin-barber-wizard__success" role="status">
             <ConfirmationStatusIcon variant="success" />
-            <p className="admin-barber-wizard__eyebrow">Pending invitation</p>
-            <h3>Invite sent to {email.trim()}</h3>
+            <p className="admin-barber-wizard__eyebrow">
+              {finishedMode === 'booking' ? 'Booking profile' : 'Pending invitation'}
+            </p>
+            <h3>
+              {finishedMode === 'booking'
+                ? `${name.trim()} can accept online bookings`
+                : `Invite sent to ${email.trim()}`}
+            </h3>
             <p>
-              {name.trim()} appears on Team as invite pending until they accept, then you can activate them.
+              {finishedMode === 'booking'
+                ? `${name.trim()} appears on Team with no dashboard account.`
+                : `${name.trim()} appears on Team as invite pending until they accept.`}
             </p>
           </section>
         ) : null}
@@ -343,7 +429,7 @@ export default function TeamInviteWizard({
         {!finished && step === 1 ? (
           <section className="admin-barber-wizard__step">
             <div className="admin-barber-wizard__intro">
-              <p className="admin-barber-wizard__eyebrow">STEP 1 · ROLE</p>
+              <p className="admin-barber-wizard__eyebrow">STEP 1 · ROLE & ACCESS</p>
               <h3 ref={stepHeadingRef} tabIndex={-1}>
                 Who are you adding?
               </h3>
@@ -359,31 +445,66 @@ export default function TeamInviteWizard({
                   size="compact"
                 />
               </div>
+              {errors.role ? <p className="field__error">{errors.role}</p> : null}
             </div>
-            {role === 'MANAGER' ? (
-              <div className="admin-barber-wizard__bookable-row">
-                <div>
-                  <p className="admin-barber-wizard__bookable-title">Accept online bookings</p>
-                  <p className="admin-barber-wizard__bookable-hint">
-                    {bookable ? ONLINE_BOOKINGS_ON_HINT : ONLINE_BOOKINGS_OFF_HINT_INVITE}
-                  </p>
-                </div>
-                <label className="admin-service-switch-wrap" htmlFor="team-invite-bookable">
-                  <input
-                    id="team-invite-bookable"
-                    type="checkbox"
-                    className="admin-service-switch-input"
-                    checked={bookable}
-                    onChange={(e) => setBookable(e.target.checked)}
-                    aria-label="Accept online bookings"
-                  />
-                  <span className="admin-service-switch-track" aria-hidden="true">
-                    <span className="admin-service-switch-thumb" />
-                  </span>
-                  <span className="admin-service-switch-label">{bookable ? 'On' : 'Off'}</span>
-                </label>
+
+            <div className="admin-barber-wizard__bookable-row">
+              <div>
+                <p className="admin-barber-wizard__bookable-title">Accept online bookings</p>
+                <p className="admin-barber-wizard__bookable-hint">
+                  {bookable ? ONLINE_BOOKINGS_ON_HINT : onlineBookingsOffHint}
+                </p>
               </div>
+              <label className="admin-service-switch-wrap" htmlFor="team-invite-bookable">
+                <input
+                  id="team-invite-bookable"
+                  type="checkbox"
+                  className="admin-service-switch-input"
+                  checked={bookable}
+                  onChange={(e) => setBookableSafe(e.target.checked)}
+                  disabled={!dashboardAccess && role === 'BARBER'}
+                  aria-label="Accept online bookings"
+                />
+                <span className="admin-service-switch-track" aria-hidden="true">
+                  <span className="admin-service-switch-thumb" />
+                </span>
+                <span className="admin-service-switch-label">{bookable ? 'On' : 'Off'}</span>
+              </label>
+            </div>
+
+            <div className="admin-barber-wizard__bookable-row">
+              <div>
+                <p className="admin-barber-wizard__bookable-title">
+                  {role === 'MANAGER' ? 'Dashboard access' : 'Give dashboard access'}
+                </p>
+                <p className="admin-barber-wizard__bookable-hint">
+                  {role === 'MANAGER'
+                    ? 'The Manager role requires a dashboard account.'
+                    : DASHBOARD_ACCESS_HINT}
+                </p>
+              </div>
+              <label className="admin-service-switch-wrap" htmlFor="team-invite-dashboard">
+                <input
+                  id="team-invite-dashboard"
+                  type="checkbox"
+                  className="admin-service-switch-input"
+                  checked={dashboardAccess}
+                  onChange={(e) => setDashboardAccessSafe(e.target.checked)}
+                  disabled={role === 'MANAGER'}
+                  aria-label="Give dashboard access"
+                />
+                <span className="admin-service-switch-track" aria-hidden="true">
+                  <span className="admin-service-switch-thumb" />
+                </span>
+                <span className="admin-service-switch-label">{dashboardAccess ? 'On' : 'Off'}</span>
+              </label>
+            </div>
+            {errors.access ? (
+              <p className="field__error" role="alert">
+                {errors.access}
+              </p>
             ) : null}
+
             <div className={`field${errors.name ? ' field--error' : ''}`} style={{ marginTop: '1rem' }}>
               <label className="field__label" htmlFor="team-invite-name">
                 Display name
@@ -402,51 +523,57 @@ export default function TeamInviteWizard({
               {errors.name ? <p className="field__error">{errors.name}</p> : null}
             </div>
 
-            <div className="field admin-barber-wizard__image-field">
-              <span className="field__label">
-                Photo <span className="field__hint">(optional)</span>
-              </span>
-              <span className="field__hint">JPG, PNG or WEBP · max 5MB</span>
-              <input
-                id="team-invite-avatar"
-                className="sr-only"
-                type="file"
-                accept="image/jpeg,image/png,image/webp"
-                disabled={isSaving}
-                onChange={(event) => {
-                  const file = event.currentTarget.files?.[0];
-                  event.currentTarget.value = '';
-                  if (file) handleAvatarFile(file);
-                }}
-              />
-              <label
-                className={`admin-barber-wizard__image-upload${avatarPreviewUrl ? ' has-preview' : ''}`}
-                htmlFor="team-invite-avatar"
-              >
+            {bookable ? (
+              <div className="field admin-barber-wizard__image-field">
+                <span className="field__label">
+                  Photo <span className="field__hint">(optional)</span>
+                </span>
+                <span className="field__hint">JPG, PNG or WEBP · max 5MB</span>
+                <input
+                  id="team-invite-avatar"
+                  className="sr-only"
+                  type="file"
+                  accept="image/jpeg,image/png,image/webp"
+                  disabled={isSaving}
+                  onChange={(event) => {
+                    const file = event.currentTarget.files?.[0];
+                    event.currentTarget.value = '';
+                    if (file) handleAvatarFile(file);
+                  }}
+                />
+                <label
+                  className={`admin-barber-wizard__image-upload${avatarPreviewUrl ? ' has-preview' : ''}`}
+                  htmlFor="team-invite-avatar"
+                >
+                  {avatarPreviewUrl ? (
+                    <img src={avatarPreviewUrl} alt="" />
+                  ) : (
+                    <span className="admin-barber-wizard__image-empty">
+                      <ImagePlus width={24} height={24} aria-hidden="true" />
+                      <strong>Add a photo</strong>
+                      <small>Optional — helps clients recognise them</small>
+                    </span>
+                  )}
+                  {avatarPreviewUrl ? (
+                    <span className="admin-barber-wizard__image-overlay">Change photo</span>
+                  ) : null}
+                </label>
                 {avatarPreviewUrl ? (
-                  <img src={avatarPreviewUrl} alt="" />
-                ) : (
-                  <span className="admin-barber-wizard__image-empty">
-                    <ImagePlus width={24} height={24} aria-hidden="true" />
-                    <strong>Add a photo</strong>
-                    <small>Optional — helps clients recognise them</small>
-                  </span>
-                )}
-                {avatarPreviewUrl ? (
-                  <span className="admin-barber-wizard__image-overlay">Change photo</span>
+                  <button type="button" className="admin-barber-wizard__image-remove" onClick={clearAvatar}>
+                    Remove photo
+                  </button>
                 ) : null}
-              </label>
-              {avatarPreviewUrl ? (
-                <button type="button" className="admin-barber-wizard__image-remove" onClick={clearAvatar}>
-                  Remove photo
-                </button>
-              ) : null}
-              {avatarError ? (
-                <p className="field__error" role="alert">
-                  {avatarError}
-                </p>
-              ) : null}
-            </div>
+                {avatarError ? (
+                  <p className="field__error" role="alert">
+                    {avatarError}
+                  </p>
+                ) : null}
+              </div>
+            ) : (
+              <p className="admin-barber-wizard__field-hint" style={{ marginTop: '0.75rem' }}>
+                They can add an account photo after joining the dashboard.
+              </p>
+            )}
           </section>
         ) : null}
 
@@ -555,14 +682,16 @@ export default function TeamInviteWizard({
           </section>
         ) : null}
 
-        {!finished && needsBookingSetup && step === 4 ? (
+        {!finished && step === reviewStep ? (
           <section className="admin-barber-wizard__step" aria-labelledby="team-invite-review-title">
             <div className="admin-barber-wizard__intro">
-              <p className="admin-barber-wizard__eyebrow">STEP 4 · REVIEW</p>
+              <p className="admin-barber-wizard__eyebrow">
+                STEP {reviewStep} · REVIEW
+              </p>
               <h3 id="team-invite-review-title" ref={stepHeadingRef} tabIndex={-1}>
-                Check before inviting
+                Check before continuing
               </h3>
-              <p>Take one last look. You can jump back to any section before inviting.</p>
+              <p>Take one last look. You can jump back to any section before finishing.</p>
             </div>
 
             <div className="admin-barber-wizard__review">
@@ -574,16 +703,18 @@ export default function TeamInviteWizard({
                   </button>
                 </div>
                 <dl>
-                  <div>
-                    <dt>Photo</dt>
-                    <dd>
-                      {avatarPreviewUrl ? (
-                        <img className="admin-barber-wizard__review-image" src={avatarPreviewUrl} alt="" />
-                      ) : (
-                        'No photo'
-                      )}
-                    </dd>
-                  </div>
+                  {bookable ? (
+                    <div>
+                      <dt>Photo</dt>
+                      <dd>
+                        {avatarPreviewUrl ? (
+                          <img className="admin-barber-wizard__review-image" src={avatarPreviewUrl} alt="" />
+                        ) : (
+                          'No photo'
+                        )}
+                      </dd>
+                    </div>
+                  ) : null}
                   <div>
                     <dt>Name</dt>
                     <dd>{name.trim()}</dd>
@@ -594,83 +725,96 @@ export default function TeamInviteWizard({
                   </div>
                   <div>
                     <dt>Online bookings</dt>
-                    <dd>{needsBookingSetup ? 'On' : 'Off'}</dd>
+                    <dd>{bookable ? 'On' : 'Off'}</dd>
+                  </div>
+                  <div>
+                    <dt>Dashboard access</dt>
+                    <dd>{dashboardAccess ? 'On' : 'Off'}</dd>
                   </div>
                 </dl>
               </section>
 
-              <section>
-                <div className="admin-barber-wizard__review-head">
-                  <h4>Services</h4>
-                  <button type="button" onClick={() => moveToStep(2)}>
-                    Edit
-                  </button>
-                </div>
-                <dl>
-                  <div>
-                    <dt>Assigned</dt>
-                    <dd>{selectedServiceNames.length ? selectedServiceNames.join(', ') : 'None'}</dd>
-                  </div>
-                </dl>
-              </section>
-
-              <section>
-                <div className="admin-barber-wizard__review-head">
-                  <h4>Schedule</h4>
-                  <button type="button" onClick={() => moveToStep(3)}>
-                    Edit
-                  </button>
-                </div>
-                <dl>
-                  <div>
-                    <dt>On shift</dt>
-                    <dd>
-                      {weeklySummary.onShiftDays} day{weeklySummary.onShiftDays === 1 ? '' : 's'} ·{' '}
-                      {weeklySummary.hoursLabel}/week
-                    </dd>
-                  </div>
-                  {activeScheduleRows.map((row) => (
-                    <div key={row.dayOfWeek}>
-                      <dt>{WEEK_DAY_LABELS[row.dayOfWeek] ?? `Day ${row.dayOfWeek}`}</dt>
-                      <dd>
-                        {row.startTime}–{row.endTime}
-                      </dd>
+              {needsBookingSetup ? (
+                <>
+                  <section>
+                    <div className="admin-barber-wizard__review-head">
+                      <h4>Services</h4>
+                      <button type="button" onClick={() => moveToStep(2)}>
+                        Edit
+                      </button>
                     </div>
-                  ))}
-                </dl>
-              </section>
+                    <dl>
+                      <div>
+                        <dt>Assigned</dt>
+                        <dd>{selectedServiceNames.length ? selectedServiceNames.join(', ') : 'None'}</dd>
+                      </div>
+                    </dl>
+                  </section>
+
+                  <section>
+                    <div className="admin-barber-wizard__review-head">
+                      <h4>Schedule</h4>
+                      <button type="button" onClick={() => moveToStep(3)}>
+                        Edit
+                      </button>
+                    </div>
+                    <dl>
+                      <div>
+                        <dt>On shift</dt>
+                        <dd>
+                          {weeklySummary.onShiftDays} day{weeklySummary.onShiftDays === 1 ? '' : 's'} ·{' '}
+                          {weeklySummary.hoursLabel}/week
+                        </dd>
+                      </div>
+                      {activeScheduleRows.map((row) => (
+                        <div key={row.dayOfWeek}>
+                          <dt>{WEEK_DAY_LABELS[row.dayOfWeek] ?? `Day ${row.dayOfWeek}`}</dt>
+                          <dd>
+                            {row.startTime}–{row.endTime}
+                          </dd>
+                        </div>
+                      ))}
+                    </dl>
+                  </section>
+                </>
+              ) : null}
             </div>
           </section>
         ) : null}
 
-        {!finished && step === maxStep ? (
+        {!finished && step === accessStep ? (
           <section className="admin-barber-wizard__step">
             <div className="admin-barber-wizard__intro">
-              <p className="admin-barber-wizard__eyebrow">INVITE</p>
+              <p className="admin-barber-wizard__eyebrow">ACCESS</p>
               <h3 ref={stepHeadingRef} tabIndex={-1}>
-                Send the invite email
+                {dashboardAccess ? 'Send the invitation' : 'Add to booking team'}
               </h3>
-              <p>They must accept the invite before you can activate them on Team.</p>
+              <p>
+                {dashboardAccess
+                  ? 'They must accept the invitation using this email address before they can sign in.'
+                  : 'They can accept online bookings but will not be able to sign in or access client information.'}
+              </p>
             </div>
-            <div className={`field${errors.email ? ' field--error' : ''}`}>
-              <label className="field__label" htmlFor="team-invite-email">
-                Email
-              </label>
-              <input
-                id="team-invite-email"
-                className="input"
-                type="email"
-                required
-                value={email}
-                onChange={(e) => {
-                  setEmail(e.target.value);
-                  clearFieldError('email');
-                }}
-                placeholder="name@shop.com"
-                autoComplete="email"
-              />
-              {errors.email ? <p className="field__error">{errors.email}</p> : null}
-            </div>
+            {dashboardAccess ? (
+              <div className={`field${errors.email ? ' field--error' : ''}`}>
+                <label className="field__label" htmlFor="team-invite-email">
+                  Email address
+                </label>
+                <input
+                  id="team-invite-email"
+                  className="input"
+                  type="email"
+                  value={email}
+                  onChange={(e) => {
+                    setEmail(e.target.value);
+                    clearFieldError('email');
+                  }}
+                  placeholder="name@shop.com"
+                  autoComplete="email"
+                />
+                {errors.email ? <p className="field__error">{errors.email}</p> : null}
+              </div>
+            ) : null}
           </section>
         ) : null}
       </div>
@@ -696,7 +840,7 @@ export default function TeamInviteWizard({
             )}
             <button type="submit" className="btn btn--primary" disabled={isSaving}>
               {isSaving ? <ButtonSpinner /> : null}
-              {step === maxStep ? 'Send invite' : 'Continue'}
+              {step === maxStep ? primaryActionLabel : 'Continue'}
             </button>
           </>
         )}

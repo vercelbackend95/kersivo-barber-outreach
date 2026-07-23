@@ -77,36 +77,29 @@ export function teamAccountAccessLabel(access: TeamAccountAccess): string {
   return 'Joined';
 }
 
-/** Online booking line for joined / roster cards (not pending invites). */
+/** Online booking line — independent of invite acceptance. */
 export function onlineBookingsStateLabel(bookable: boolean): string {
   return bookable ? 'Online bookings: On' : 'Online bookings: Off';
 }
 
-/** Pending-invite copy about what happens after they join. */
-export function pendingOnlineBookingsLine(bookable: boolean): string {
-  return bookable
-    ? 'Online bookings will start after joining'
-    : 'Dashboard access only after joining';
-}
-
 /**
- * Secondary line under online booking state when a joined member has dashboard access
+ * Secondary line when the person has (or will have) dashboard access
  * but is not accepting online bookings.
  */
 export function dashboardAccessOnlyLine(
   access: TeamAccountAccess,
   bookable: boolean,
 ): string | null {
-  if (access === 'joined' && !bookable) return 'Dashboard access only';
+  if (access === 'no_dashboard') return null;
+  if (!bookable) return 'Dashboard access only';
   return null;
 }
 
-/** Primary online-booking / pending line for a Team card. */
+/** Primary online-booking line for a Team card (invite state is separate). */
 export function teamCardOnlineBookingsLine(
-  access: TeamAccountAccess,
+  _access: TeamAccountAccess,
   bookable: boolean,
 ): string {
-  if (access === 'invite_pending') return pendingOnlineBookingsLine(bookable);
   return onlineBookingsStateLabel(bookable);
 }
 

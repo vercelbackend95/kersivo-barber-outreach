@@ -4,7 +4,6 @@ import {
   memberCardStatus,
   onlineBookingsStateLabel,
   onlineBookingsToggleHint,
-  pendingOnlineBookingsLine,
   roleLabel,
   teamAccountAccess,
   teamAccountAccessLabel,
@@ -48,25 +47,21 @@ describe('Team card presentation mapping', () => {
     expect(teamProfileSummary(c.role, access)).toBe('Manager · Joined');
   });
 
-  it('Barber + pending invitation (bookable)', () => {
+  it('Barber + pending invitation with online bookings on', () => {
     const c = card({ kind: 'invite', id: 'inv1', role: 'BARBER', bookable: true });
     const access = teamAccountAccess(c);
     expect(roleLabel(c.role)).toBe('Barber');
     expect(teamAccountAccessLabel(access)).toBe('Invite pending');
-    expect(teamCardOnlineBookingsLine(access, c.bookable)).toBe(
-      'Online bookings will start after joining',
-    );
-    expect(pendingOnlineBookingsLine(true)).toBe('Online bookings will start after joining');
+    expect(teamCardOnlineBookingsLine(access, c.bookable)).toBe('Online bookings: On');
     expect(dashboardAccessOnlyLine(access, c.bookable)).toBeNull();
   });
 
-  it('Barber + pending invitation (not bookable)', () => {
-    const c = card({ kind: 'invite', id: 'inv2', role: 'MANAGER', bookable: false });
+  it('Barber + pending invitation with online bookings off', () => {
+    const c = card({ kind: 'invite', id: 'inv2', role: 'BARBER', bookable: false });
     const access = teamAccountAccess(c);
     expect(teamAccountAccessLabel(access)).toBe('Invite pending');
-    expect(teamCardOnlineBookingsLine(access, c.bookable)).toBe(
-      'Dashboard access only after joining',
-    );
+    expect(teamCardOnlineBookingsLine(access, c.bookable)).toBe('Online bookings: Off');
+    expect(dashboardAccessOnlyLine(access, c.bookable)).toBe('Dashboard access only');
   });
 
   it('Roster-only Barber without dashboard account', () => {
@@ -79,12 +74,12 @@ describe('Team card presentation mapping', () => {
     expect(teamProfileSummary(c.role, access)).toBe('Barber · No dashboard account');
   });
 
-  it('does not emit Active/Inactive, Bookable, Not bookable, or Hidden labels', () => {
+  it('does not emit Active/Inactive, Bookable, Not bookable, Hidden, or join-coupled booking copy', () => {
     const labels = [
       onlineBookingsStateLabel(true),
       onlineBookingsStateLabel(false),
-      pendingOnlineBookingsLine(true),
-      pendingOnlineBookingsLine(false),
+      teamCardOnlineBookingsLine('invite_pending', true),
+      teamCardOnlineBookingsLine('invite_pending', false),
       teamAccountAccessLabel('joined'),
       teamAccountAccessLabel('invite_pending'),
       teamAccountAccessLabel('no_dashboard'),
@@ -95,5 +90,6 @@ describe('Team card presentation mapping', () => {
     const joined = labels.join('\n');
     expect(joined).not.toMatch(/\bActive\b|\bInactive\b/);
     expect(joined).not.toMatch(/Bookable|Not bookable|Hidden/);
+    expect(joined).not.toMatch(/will start after joining|after joining/);
   });
 });

@@ -35,6 +35,9 @@ export type TeamProfileOpenMeta = {
   memberId?: string;
   canToggleBookable?: boolean;
   bookable?: boolean;
+  /** Dashboard member with no booking profile — profile open must not create one. */
+  memberOnly?: boolean;
+  email?: string | null;
 };
 
 type BarbersOverviewProps = {
@@ -49,7 +52,7 @@ type BarbersOverviewProps = {
   bookings: BarberBookingPreview[];
   getInitials: (name: string) => string;
   onShowInactiveChange: (show: boolean) => void;
-  onOpenBarber: (barberId: string, meta?: TeamProfileOpenMeta) => void;
+  onOpenBarber: (barberId: string | null, meta?: TeamProfileOpenMeta) => void;
   onCloseAddBarberSheet: () => void;
   onBarberSaved: () => void | Promise<void>;
   formatBlockRange: (startAt: string, endAt: string) => string;
@@ -212,43 +215,29 @@ export default function BarbersOverview({
 
   async function handleOpenProfile(card: TeamCardDto) {
     setActionError('');
-    let barberId = card.barberId;
-    if (!barberId && card.canToggleBookable && card.kind === 'member') {
-      const res = await fetch(`/api/admin/team/members/${encodeURIComponent(card.id)}/bookable`, {
-        method: 'PATCH',
-        credentials: 'include',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ bookable: false }),
-      });
-      const data = await res.json().catch(() => ({}));
-      if (!res.ok || !data.barberId) {
-        setActionError(data.error || 'Could not open profile.');
-        return;
-      }
-      barberId = String(data.barberId);
-      await Promise.all([loadTeam(), onBarberSaved()]);
-    }
-    if (!barberId) return;
-
-    const stub = cardToBarberStub({
-      ...card,
-      barberId,
-      barber: card.barber
-        ? { ...card.barber, id: barberId }
-        : {
-            id: barberId,
-            name: card.name,
-            isActive: false,
-            avatarUrl: card.avatarUrl,
-            sortOrder: 0,
-            serviceIds: [],
-            todayLabel: '—',
-            todayIsOnShift: null,
-            todayShiftWindow: null,
-          },
-    });
-
     const access = teamAccountAccess(card);
+
+    // Read-only: never create a Barber seat merely by opening a profile.
+    if (!card.barberId) {
+      if (card.kind !== 'member' || card.id.startsWith('barber:')) return;
+      onOpenBarber(null, {
+        name: card.name,
+        avatarUrl: card.avatarUrl,
+        serviceIds: [],
+        isActive: false,
+        role: card.role,
+        accountAccess: access,
+        memberId: card.id,
+        memberOnly: true,
+        bookable: false,
+        email: card.email,
+      });
+      return;
+    }
+
+    const barberId = card.barberId;
+    const stub = cardToBarberStub(card);
+
     const meta: TeamProfileOpenMeta = {
       name: stub.name,
       avatarUrl: stub.avatarUrl ?? null,
@@ -256,15 +245,13 @@ export default function BarbersOverview({
       isActive: Boolean(stub.isActive),
       role: card.role,
       accountAccess: access,
-      ...(card.canToggleBookable && card.kind === 'member'
+      bookable: card.bookable,
+      ...(card.kind === 'member' && !card.id.startsWith('barber:')
         ? {
             memberId: card.id,
-            canToggleBookable: true,
-            bookable: card.bookable || false,
+            canToggleBookable: card.canToggleBookable,
           }
-        : {
-            bookable: card.bookable,
-          }),
+        : {}),
     };
     onOpenBarber(barberId, meta);
   }
@@ -276,7 +263,8 @@ export default function BarbersOverview({
     const barberIsActive = card.cardStatus === 'active' && (card.barber?.isActive ?? !card.bookable);
     const hasSeat = Boolean(card.barberId && card.barber);
     const showSchedule = card.bookable && hasSeat;
-    const showProfileCta = Boolean(card.barberId) || card.canToggleBookable;
+    const showProfileCta =
+      Boolean(card.barberId) || (card.kind === 'member' && !card.id.startsWith('barber:'));
     const nextBookingPreview = showSchedule
       ? getNextBookingForBarber(bookings, stub.id, now)
       : null;

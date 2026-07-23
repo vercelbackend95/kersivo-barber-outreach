@@ -53,6 +53,8 @@ type BarberProfileProps = {
   bookable?: boolean;
   onToggleBookable?: (next: boolean) => void;
   onSaveIdentity?: (payload: { name: string; email: string }) => Promise<boolean>;
+  /** Dashboard-only member: no booking profile yet. */
+  memberOnly?: boolean;
 };
 
 export default function BarberProfile({
@@ -91,6 +93,7 @@ export default function BarberProfile({
   bookable = true,
   onToggleBookable,
   onSaveIdentity,
+  memberOnly = false,
 }: BarberProfileProps) {
   const actionsMenuRef = React.useRef<HTMLDivElement | null>(null);
   const [isActionsMenuOpen, setIsActionsMenuOpen] = React.useState(false);
@@ -310,17 +313,20 @@ export default function BarberProfile({
             {role ? `${roleLabel(role)} profile` : 'Barber profile'}
           </span>
           <div className="admin-cp-header-actions">
-            <button
-              type="button"
-              className="admin-cp-settings-btn"
-              aria-label="Edit barber"
-              title="Edit barber"
-              onClick={() => setIsEditWizardOpen(true)}
-              disabled={workingHoursLoading}
-            >
-              <SettingsGearIcon className="admin-cp-settings-icon" />
-            </button>
+            {!memberOnly ? (
+              <button
+                type="button"
+                className="admin-cp-settings-btn"
+                aria-label="Edit barber"
+                title="Edit barber"
+                onClick={() => setIsEditWizardOpen(true)}
+                disabled={workingHoursLoading}
+              >
+                <SettingsGearIcon className="admin-cp-settings-icon" />
+              </button>
+            ) : null}
 
+            {!memberOnly ? (
             <div className="admin-barber-actions-menu" ref={actionsMenuRef}>
               <button
                 type="button"
@@ -363,6 +369,7 @@ export default function BarberProfile({
                 </div>
               ) : null}
             </div>
+            ) : null}
 
             <button type="button" className="admin-cp-close-btn" onClick={onClose} aria-label="Close">
               <X className="admin-cp-close-icon" aria-hidden />
@@ -383,9 +390,11 @@ export default function BarberProfile({
           ) : null}
 
           <div
-            className={`admin-cp-identity${canToggleBookable && onToggleBookable ? ' admin-cp-identity--bookable' : ''}`}
+            className={`admin-cp-identity${
+              (canToggleBookable && onToggleBookable) || memberOnly ? ' admin-cp-identity--bookable' : ''
+            }`}
           >
-            {canToggleBookable && onToggleBookable ? (
+            {canToggleBookable && onToggleBookable && !memberOnly ? (
               <div className="admin-cp-bookable-toggle">
                 <div className="admin-cp-bookable-toggle__copy">
                   <span className="admin-cp-bookable-toggle__title">Online bookings</span>
@@ -411,6 +420,26 @@ export default function BarberProfile({
               </div>
             ) : null}
 
+            {memberOnly ? (
+              <div className="admin-cp-bookable-toggle">
+                <div className="admin-cp-bookable-toggle__copy">
+                  <span className="admin-cp-bookable-toggle__title">Online bookings</span>
+                  <span className="admin-cp-bookable-toggle__hint">
+                    Online bookings: Off. Set up services and working hours before clients can book them.
+                  </span>
+                </div>
+                <button
+                  type="button"
+                  className="btn btn--secondary"
+                  disabled
+                  title="Coming soon — set up online bookings without creating a profile on open"
+                  aria-label="Set up online bookings (coming soon)"
+                >
+                  Set up online bookings
+                </button>
+              </div>
+            ) : null}
+
             <div className="admin-cp-avatar-wrap">
               <div className="admin-cp-avatar" aria-hidden="true">
                 {displayedAvatarUrl ? (
@@ -425,7 +454,7 @@ export default function BarberProfile({
                 aria-label={displayedAvatarUrl ? 'Change avatar' : 'Upload avatar'}
                 title={displayedAvatarUrl ? 'Change avatar' : 'Upload avatar'}
                 onClick={openAvatarPicker}
-                disabled={barberSaving}
+                disabled={barberSaving || memberOnly}
               >
                 <span aria-hidden="true">
                   <svg viewBox="0 0 24 24" focusable="false">
@@ -547,6 +576,7 @@ export default function BarberProfile({
             </div>
           </div>
 
+          {!memberOnly ? (
           <div className="admin-cp-stats-section">
             <div className="admin-cp-section-header">
               <span className="admin-cp-section-title">Stats</span>
@@ -572,7 +602,10 @@ export default function BarberProfile({
               </div>
             </dl>
           </div>
+          ) : null}
 
+          {!memberOnly ? (
+          <>
           <div className="admin-cp-section admin-cp-section--profile-editor">
             <div className="admin-cp-section-header">
               <Scissors className="admin-cp-section-icon" aria-hidden />
@@ -621,6 +654,8 @@ export default function BarberProfile({
               layout="profile"
             />
           </div>
+          </>
+          ) : null}
         </div>
       </div>
 

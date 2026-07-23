@@ -1259,6 +1259,19 @@ export default function BookingsAdminPanel({ isActive, mode, onBackToDashboard, 
         avatarUrl: profileMemberMeta.avatarUrl,
         sortOrder: undefined,
         serviceIds: profileMemberMeta.serviceIds,
+        email: profileMemberMeta.email ?? undefined,
+      } satisfies Barber;
+    }
+    if (profileMemberMeta?.memberOnly && barberProfileSource === 'team') {
+      return {
+        id: '',
+        name: profileMemberMeta.name,
+        isActive: false,
+        active: false,
+        avatarUrl: profileMemberMeta.avatarUrl,
+        sortOrder: undefined,
+        serviceIds: [],
+        email: profileMemberMeta.email ?? undefined,
       } satisfies Barber;
     }
     if (barberProfileSource === 'reports' && reportsProfileBarberMeta?.id === selectedBarberId) {
@@ -1266,12 +1279,12 @@ export default function BookingsAdminPanel({ isActive, mode, onBackToDashboard, 
     }
     return null;
   }, [allBarbersSorted, selectedBarberId, barberProfileSource, reportsProfileBarberMeta, profileMemberMeta]);
-  const barberProfileContextActive = Boolean(selectedBarberId) && (
-    mode === 'blocks' ||
-    mode === 'reports' ||
-    barberProfileSource === 'ops' ||
-    barberProfileSource === 'team'
-  );
+  const barberProfileContextActive =
+    (Boolean(selectedBarberId) || Boolean(profileMemberMeta?.memberOnly)) &&
+    (mode === 'blocks' ||
+      mode === 'reports' ||
+      barberProfileSource === 'ops' ||
+      barberProfileSource === 'team');
   const enabledServiceIds = useMemo(() => new Set(selectedBarber?.serviceIds ?? []), [selectedBarber]);
   const selectedBarberBlocks = useMemo(() => timeBlocks.filter((block) => block.barberId === selectedBarberId), [selectedBarberId, timeBlocks]);
   const globalBlocks = useMemo(() => timeBlocks.filter((block) => !block.barberId), [timeBlocks]);
@@ -1418,7 +1431,7 @@ export default function BookingsAdminPanel({ isActive, mode, onBackToDashboard, 
     isAddBarberSheetOpen ||
     showHolidayModal ||
     openClientId !== null ||
-    (selectedBarberId !== null && barberProfileContextActive);
+    (barberProfileContextActive && (selectedBarberId !== null || Boolean(profileMemberMeta?.memberOnly)));
   useBodyScrollLock(isMobileViewport && isAnyOverlayOpen);
 
   const isTimelineView = mode === 'dashboard' && activeView === 'timeline';
@@ -2131,13 +2144,16 @@ export default function BookingsAdminPanel({ isActive, mode, onBackToDashboard, 
       onCreateBlock={(payload) => void createProfileBlock(payload)}
       onDeleteBlock={(blockId) => void deleteTimeBlock(blockId)}
       onDeleteBarber={() => void deleteBarber(selectedBarber.id)}
-      canToggleBookable={Boolean(profileMemberMeta?.canToggleBookable)}
+      canToggleBookable={Boolean(profileMemberMeta?.canToggleBookable) && !profileMemberMeta?.memberOnly}
       bookable={profileMemberMeta?.bookable ?? normalizeBarberStatus(selectedBarber)}
       role={profileMemberMeta?.role}
       accountAccess={profileMemberMeta?.accountAccess}
-      onSaveIdentity={(payload) => saveSelectedBarberIdentity(payload)}
+      memberOnly={Boolean(profileMemberMeta?.memberOnly)}
+      onSaveIdentity={
+        profileMemberMeta?.memberOnly ? undefined : (payload) => saveSelectedBarberIdentity(payload)
+      }
       onToggleBookable={
-        profileMemberMeta?.canToggleBookable
+        profileMemberMeta?.canToggleBookable && !profileMemberMeta?.memberOnly
           ? (next) => void handleProfileToggleBookable(next)
           : undefined
       }

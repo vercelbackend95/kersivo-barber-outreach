@@ -9,10 +9,6 @@ import {
   createInviteToken,
   inviteExpiresAt,
 } from '@/lib/admin/rbac/members';
-import {
-  ensureBarberHasAllServices,
-  ensureBarberHasAvailabilityRules,
-} from '@/lib/admin/defaultAvailability';
 import { prisma } from '@/lib/db/client';
 import { getPublicSiteUrl } from '@/lib/setup/siteUrl';
 import { sendShopTeamInviteEmail } from '@/lib/email/sender';
@@ -59,12 +55,19 @@ function parseJsonArray<T>(raw: FormDataEntryValue | null): T[] {
   }
 }
 
-function parseBookableFlag(raw: FormDataEntryValue | null | undefined, role: string): boolean {
-  if (role === 'BARBER') return true;
+function parseBookableFlag(raw: FormDataEntryValue | null | undefined): boolean {
   if (typeof raw === 'boolean') return raw;
   if (raw == null) return false;
   const text = String(raw).trim().toLowerCase();
   return text === 'true' || text === '1' || text === 'on';
+}
+
+function countActiveWorkingDays(hours: WorkingHourInput[]): number {
+  return hours.filter((row) => {
+    const start = Number(row.startMinutes);
+    const end = Number(row.endMinutes);
+    return row.active !== false && Number.isFinite(start) && Number.isFinite(end) && end > start;
+  }).length;
 }
 
 async function parseInviteRequest(request: Request): Promise<
@@ -90,7 +93,7 @@ async function parseInviteRequest(request: Request): Promise<
         email: String(form.get('email') ?? ''),
         role: String(form.get('role') ?? ''),
         displayName: String(form.get('displayName') ?? ''),
-        bookable: parseBookableFlag(form.get('bookable'), String(form.get('role') ?? '')),
+        bookable: parseBookableFlag(form.get('bookable')),
         serviceIds: parseJsonArray<string>(form.get('serviceIds')).map(String).filter(Boolean),
         workingHours: parseJsonArray<WorkingHourInput>(form.get('workingHours')),
       },
@@ -100,7 +103,14 @@ async function parseInviteRequest(request: Request): Promise<
 
   try {
     const body = (await request.json()) as InviteBody;
-    return { ok: true, body, avatar: null };
+    return {
+      ok: true,
+      body: {
+        ...body,
+        bookable: Boolean(body.bookable),
+      },
+      avatar: null,
+    };
   } catch {
     return { ok: false, response: json({ error: 'Invalid JSON.' }, 400) };
   }
@@ -122,7 +132,7 @@ export const POST: APIRoute = async (context) => {
     .trim()
     .toLowerCase();
   if (!email || !email.includes('@')) {
-    return json({ error: 'Valid email is required.' }, 400);
+    return json({ error: 'Enter a valid email address to send an invitation.' }, 400);
   }
 
   if (!isInviteRole(body.role)) {
@@ -139,14 +149,15 @@ export const POST: APIRoute = async (context) => {
     return json({ error: 'Display name is required.' }, 400);
   }
 
-  const bookable = body.role === 'BARBER' ? true : Boolean(body.bookable);
+  // Dashboard invitation always; respect submitted online-booking choice (no Barber force).
+  const bookable = Boolean(body.bookable);
 
   const existingMember = await prisma.shopMember.findFirst({
     where: { shopId: access.shopId, user: { email } },
     select: { id: true },
   });
   if (existingMember) {
-    return json({ error: 'This user is already a member of this shop.' }, 409);
+    return json({ error: 'This email already belongs to a member of this shop.' }, 409);
   }
 
   const openInvite = await prisma.shopInvite.findFirst({
@@ -159,7 +170,7 @@ export const POST: APIRoute = async (context) => {
     select: { id: true },
   });
   if (openInvite) {
-    return json({ error: 'An open invite already exists for this email.' }, 409);
+    return json({ error: 'An invitation is already pending for this email.' }, 409);
   }
 
   let barberId: string | null = null;
@@ -169,15 +180,20 @@ export const POST: APIRoute = async (context) => {
       ? body.serviceIds.map(String).filter(Boolean)
       : [];
     if (serviceIds.length === 0) {
-      const count = await prisma.service.count({
-        where: { shopId: access.shopId, isActive: true },
-      });
-      if (count === 0) {
-        return json(
-          { error: 'Add at least one active service before inviting a bookable team member.' },
-          400,
-        );
-      }
+      return json({ error: 'Select at least one service for online bookings.' }, 400);
+    }
+
+    const hours = Array.isArray(body.workingHours) ? body.workingHours : [];
+    if (countActiveWorkingDays(hours) === 0) {
+      return json({ error: 'Add at least one working day for online bookings.' }, 400);
+    }
+
+    const validServices = await prisma.service.findMany({
+      where: { shopId: access.shopId, id: { in: serviceIds }, isActive: true },
+      select: { id: true },
+    });
+    if (validServices.length === 0) {
+      return json({ error: 'Select at least one service for online bookings.' }, 400);
     }
 
     const maxSort = await prisma.barber.aggregate({
@@ -202,7 +218,7 @@ export const POST: APIRoute = async (context) => {
         shopId: access.shopId,
         name: displayName,
         email,
-        active: false,
+        active: true,
         sortOrder: (maxSort._max.sortOrder ?? -1) + 1,
         ...(avatarUrl ? { avatarUrl } : {}),
       },
@@ -210,72 +226,24 @@ export const POST: APIRoute = async (context) => {
     });
     barberId = created.id;
 
-    if (serviceIds.length > 0) {
-      const valid = await prisma.service.findMany({
-        where: { shopId: access.shopId, id: { in: serviceIds }, isActive: true },
-        select: { id: true },
-      });
-      if (valid.length > 0) {
-        await prisma.barberService.createMany({
-          data: valid.map((s) => ({ barberId: created.id, serviceId: s.id })),
-          skipDuplicates: true,
-        });
-      } else {
-        await ensureBarberHasAllServices(created.id, access.shopId);
-      }
-    } else {
-      await ensureBarberHasAllServices(created.id, access.shopId);
-    }
-
-    const hours = Array.isArray(body.workingHours) ? body.workingHours : [];
-    if (hours.length > 0) {
-      await prisma.availabilityRule.createMany({
-        data: hours.map((row) => ({
-          barberId: created.id,
-          dayOfWeek: Number(row.dayOfWeek),
-          startMinutes: Number(row.startMinutes),
-          endMinutes: Number(row.endMinutes),
-          breakStartMin: row.breakStartMin ?? null,
-          breakEndMin: row.breakEndMin ?? null,
-          active: row.active !== false,
-        })),
-      });
-    } else {
-      await ensureBarberHasAvailabilityRules(created.id);
-    }
-  } else if (avatar) {
-    // Non-bookable manager with photo: inactive seat for avatar / future profile access
-    const maxSort = await prisma.barber.aggregate({
-      where: { shopId: access.shopId },
-      _max: { sortOrder: true },
+    await prisma.barberService.createMany({
+      data: validServices.map((s) => ({ barberId: created.id, serviceId: s.id })),
+      skipDuplicates: true,
     });
 
-    let avatarUrl: string;
-    try {
-      avatarUrl = await storeAdminAvatar(avatar, 'barbers');
-    } catch (error) {
-      return json(
-        { error: error instanceof Error ? error.message : 'Could not upload avatar.' },
-        400,
-      );
-    }
-
-    const created = await prisma.barber.create({
-      data: {
-        shopId: access.shopId,
-        name: displayName,
-        email,
-        active: false,
-        sortOrder: (maxSort._max.sortOrder ?? -1) + 1,
-        avatarUrl,
-      },
-      select: { id: true },
+    await prisma.availabilityRule.createMany({
+      data: hours.map((row) => ({
+        barberId: created.id,
+        dayOfWeek: Number(row.dayOfWeek),
+        startMinutes: Number(row.startMinutes),
+        endMinutes: Number(row.endMinutes),
+        breakStartMin: row.breakStartMin ?? null,
+        breakEndMin: row.breakEndMin ?? null,
+        active: row.active !== false,
+      })),
     });
-    barberId = created.id;
-
-    await ensureBarberHasAllServices(created.id, access.shopId);
-    await ensureBarberHasAvailabilityRules(created.id);
   }
+  // bookable false: invite only — never create a Barber for avatar/name storage
 
   const { token, tokenHash } = createInviteToken();
   const invite = await prisma.shopInvite.create({

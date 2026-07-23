@@ -245,7 +245,7 @@ export const GET: APIRoute = async (context) => {
       name: b.name,
       email: b.email,
       cardStatus: b.active ? ('active' as const) : ('new' as const),
-      bookable: true,
+      bookable: Boolean(b.active),
       barberId: b.id,
       avatarUrl: b.avatarUrl,
       createdAt: b.createdAt.toISOString(),
