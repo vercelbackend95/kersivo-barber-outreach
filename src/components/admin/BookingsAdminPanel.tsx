@@ -35,6 +35,7 @@ import { canShopAdminCancelByLeadTime } from '../../lib/booking/policies';
 import { countBookingsByStatusTone, getBookingStatusTone, isCancelledBookingStatus } from './bookingStatus';
 import { adminFetchJson, notifyAdminDemoBlocked } from './adminAuth';
 import { normalizeWorkingHourRows } from '../../lib/admin/normalizeWorkingHourRows';
+import { fetchBarbersListRefresh } from '@/lib/admin/teamRefreshFetch';
 type Booking = {
   id: string;
   barberId: string;
@@ -804,13 +805,14 @@ export default function BookingsAdminPanel({ isActive, mode, onBackToDashboard, 
     }
  }, [activeView, captureTimelineScroll, mode, restoreTimelineScroll, selectedDate, timeBlocks]);
 
-  const fetchBarbers = useCallback(async () => {
+  const fetchBarbers = useCallback(async (): Promise<boolean> => {
     try {
-      const response = await fetch('/api/admin/barbers', { credentials: 'include' });
-      if (response.ok) {
-        const data = (await response.json()) as { barbers?: Barber[] };
-        setBarbers(data.barbers ?? []);
+      const result = await fetchBarbersListRefresh();
+      if (!result.ok) {
+        return false;
       }
+      setBarbers((result.barbers as Barber[]) ?? []);
+      return true;
     } finally {
       setBarbersInitialLoading(false);
     }
@@ -2313,7 +2315,7 @@ export default function BookingsAdminPanel({ isActive, mode, onBackToDashboard, 
                   setIsAddBarberSheetOpen(false);
                 }}
                 onBarberSaved={async () => {
-                  await fetchBarbers();
+                  return fetchBarbers();
                 }}
                 formatBlockRange={formatBlockRange}
               />

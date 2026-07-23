@@ -22,6 +22,7 @@ import {
 } from '@/lib/admin/teamCards';
 import {
   buildInvitationUrl,
+  createSubmissionGate,
   finishAfterSuccessfulMutation,
   inviteDeliveryFromResponse,
   type TeamWizardFinishMode,
@@ -31,7 +32,7 @@ type TeamInviteWizardProps = {
   actorRole: 'OWNER' | 'MANAGER' | 'BARBER' | string;
   services: BarberWizardService[];
   onCancel: () => void;
-  onSent: () => void | Promise<void>;
+  onSent: () => Promise<boolean>;
 };
 
 type InviteRole = 'MANAGER' | 'BARBER';
@@ -75,6 +76,9 @@ export default function TeamInviteWizard({
   const [copyFeedback, setCopyFeedback] = useState('');
   const [refreshWarning, setRefreshWarning] = useState('');
   const stepHeadingRef = useRef<HTMLHeadingElement>(null);
+  const submissionGateRef = useRef(createSubmissionGate());
+  /** Sync lock mirrors the gate so double-clicks cannot race before React re-renders. */
+  const submissionInFlightRef = useRef(false);
 
   const needsBookingSetup = bookable;
   const maxStep = needsBookingSetup ? 5 : 3;
@@ -240,8 +244,14 @@ export default function TeamInviteWizard({
   }
 
   async function submitAccess() {
-    if (finished) return;
-    if (!validateCurrentStep()) return;
+    if (finished || submissionInFlightRef.current) return;
+    if (!submissionGateRef.current.tryBegin()) return;
+    submissionInFlightRef.current = true;
+    if (!validateCurrentStep()) {
+      submissionGateRef.current.release();
+      submissionInFlightRef.current = false;
+      return;
+    }
     setIsSaving(true);
     setSubmitError('');
     setRefreshWarning('');
@@ -335,7 +345,10 @@ export default function TeamInviteWizard({
       }
 
       setFinished(true);
+      submissionGateRef.current.markFinished();
     } catch (err) {
+      submissionGateRef.current.release();
+      submissionInFlightRef.current = false;
       setSubmitError(err instanceof Error ? err.message : 'Could not complete.');
       setIsSaving(false);
       return;
@@ -348,6 +361,7 @@ export default function TeamInviteWizard({
         onRefreshFailure: setRefreshWarning,
       });
     } finally {
+      submissionInFlightRef.current = false;
       setIsSaving(false);
     }
   }
@@ -374,6 +388,7 @@ export default function TeamInviteWizard({
       return;
     }
     if (step === maxStep) {
+      if (submissionInFlightRef.current || submissionGateRef.current.isInFlight()) return;
       void submitAccess();
       return;
     }

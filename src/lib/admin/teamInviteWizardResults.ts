@@ -29,16 +29,59 @@ export function teamRefreshWarning(mode: TeamWizardFinishMode): string {
 }
 
 /**
+ * Combine Team + Barber refresh outcomes for the wizard onSent contract.
+ * Undefined/void from a refresh is treated as success (legacy ignore).
+ */
+export function combineRefreshResults(teamOk: boolean | void, barbersOk: boolean | void): boolean {
+  return teamOk !== false && barbersOk !== false;
+}
+
+/**
+ * Synchronous submission gate — not React state.
+ * tryBegin fails when finished or already in flight.
+ */
+export function createSubmissionGate() {
+  let inFlight = false;
+  let finished = false;
+
+  return {
+    tryBegin(): boolean {
+      if (finished || inFlight) return false;
+      inFlight = true;
+      return true;
+    },
+    release(): void {
+      inFlight = false;
+    },
+    markFinished(): void {
+      finished = true;
+      inFlight = false;
+    },
+    isFinished(): boolean {
+      return finished;
+    },
+    isInFlight(): boolean {
+      return inFlight;
+    },
+  };
+}
+
+export type SubmissionGate = ReturnType<typeof createSubmissionGate>;
+
+/**
  * After a successful mutation, the wizard must finish before refresh.
- * Refresh failures must not become mutation errors.
+ * Refresh failures (throw or explicit false) must not become mutation errors.
  */
 export async function finishAfterSuccessfulMutation(params: {
-  onRefresh: () => void | Promise<void>;
+  onRefresh: () => void | boolean | Promise<void | boolean>;
   onRefreshFailure: (warning: string) => void;
   mode: TeamWizardFinishMode;
 }): Promise<void> {
   try {
-    await params.onRefresh();
+    const ok = await params.onRefresh();
+    if (ok === false) {
+      params.onRefreshFailure(teamRefreshWarning(params.mode));
+    }
   } catch {
     params.onRefreshFailure(teamRefreshWarning(params.mode));
   }

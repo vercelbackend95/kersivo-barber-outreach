@@ -23,6 +23,8 @@ import AdminBarberRosterSearch from './AdminBarberRosterSearch';
 import { BarberRosterOverviewGridSkeleton } from '../skeleton';
 import TeamInviteWizard from './TeamInviteWizard';
 import AdminWizardSheetLayer from './AdminWizardSheetLayer';
+import { combineRefreshResults } from '@/lib/admin/teamInviteWizardResults';
+import { fetchTeamListRefresh } from '@/lib/admin/teamRefreshFetch';
 import '@/styles/components/admin-team.css';
 
 export type TeamProfileOpenMeta = {
@@ -55,7 +57,7 @@ type BarbersOverviewProps = {
   onShowInactiveChange: (show: boolean) => void;
   onOpenBarber: (barberId: string | null, meta?: TeamProfileOpenMeta) => void;
   onCloseAddBarberSheet: () => void;
-  onBarberSaved: () => void | Promise<void>;
+  onBarberSaved: () => void | Promise<void | boolean>;
   formatBlockRange: (startAt: string, endAt: string) => string;
 };
 
@@ -135,18 +137,19 @@ export default function BarbersOverview({
   const [teamError, setTeamError] = React.useState('');
   const [actionError, setActionError] = React.useState('');
 
-  const loadTeam = React.useCallback(async () => {
+  const loadTeam = React.useCallback(async (): Promise<boolean> => {
     setTeamLoading(true);
     setTeamError('');
     try {
-      const res = await fetch('/api/admin/team', { credentials: 'include' });
-      const data = await res.json().catch(() => ({}));
-      if (!res.ok) throw new Error(data.error || 'Could not load team.');
-      setTeamCards(data.cards || []);
-      setActorRole(data.actorRole || 'OWNER');
-    } catch (err) {
-      setTeamError(err instanceof Error ? err.message : 'Could not load team.');
-      setTeamCards([]);
+      const result = await fetchTeamListRefresh();
+      if (!result.ok) {
+        setTeamError(result.error);
+        setTeamCards([]);
+        return false;
+      }
+      setTeamCards(result.cards as TeamCardDto[]);
+      setActorRole(result.actorRole || 'OWNER');
+      return true;
     } finally {
       setTeamLoading(false);
     }
@@ -380,7 +383,8 @@ export default function BarbersOverview({
           services={availableServices}
           onCancel={onCloseAddBarberSheet}
           onSent={async () => {
-            await Promise.all([loadTeam(), onBarberSaved()]);
+            const [teamOk, barbersOk] = await Promise.all([loadTeam(), onBarberSaved()]);
+            return combineRefreshResults(teamOk, barbersOk);
           }}
         />
       </AdminWizardSheetLayer>

@@ -30,6 +30,12 @@ describe('TeamInviteWizard email delivery UI', () => {
     expect(src).toMatch(/setFinished\(true\)/);
   });
 
+  it('uses a synchronous submission gate against double-create', () => {
+    expect(src).toMatch(/createSubmissionGate/);
+    expect(src).toMatch(/submissionInFlightRef/);
+    expect(src).toMatch(/tryBegin\(\)/);
+  });
+
   it('does not console-log invitation tokens or URLs', () => {
     expect(src).not.toMatch(/console\.(log|info|debug).*acceptPath/);
     expect(src).not.toMatch(/console\.(log|info|debug).*token/);
