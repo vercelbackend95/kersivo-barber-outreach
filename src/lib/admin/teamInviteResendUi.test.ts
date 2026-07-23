@@ -3,8 +3,11 @@ import {
   INVITATIONS_SECTION_ARIA_LABEL,
   INVITATIONS_SECTION_HIDE_LABEL,
   INVITE_RESEND_NETWORK_ERROR_MESSAGE,
+  barbersDrivenTeamRefreshOpts,
   countInvitationStatuses,
+  inviteCreationPostMutationRefresh,
   inviteResendNetworkFailurePatch,
+  inviteResendPostMutationRefresh,
   invitationsSectionRevealLabel,
   passiveInvitationLabel,
   shouldClearTeamCardsOnRefreshFailure,
@@ -28,6 +31,11 @@ describe('shouldShowInviteResendAction', () => {
     expect(shouldShowInviteResendAction('idle')).toBe(true);
     expect(shouldShowInviteResendAction('cooldown')).toBe(true);
   });
+
+  it('keeps success non-clickable after a later Team refresh failure', () => {
+    expect(shouldShowInviteResendAction('resent')).toBe(false);
+    expect(shouldShowInviteResendAction('email_failed')).toBe(false);
+  });
 });
 
 describe('shouldClearTeamCardsOnRefreshFailure', () => {
@@ -40,13 +48,57 @@ describe('shouldClearTeamCardsOnRefreshFailure', () => {
     ).toBe(false);
   });
 
-  it('clears cards on initial load failure', () => {
+  it('preserves existing cards when barbers-driven Team refresh fails', () => {
+    const opts = barbersDrivenTeamRefreshOpts();
+    expect(
+      shouldClearTeamCardsOnRefreshFailure({
+        ...opts,
+        hasExistingCards: true,
+      }),
+    ).toBe(false);
+  });
+
+  it('clears cards on initial load failure with no existing cards', () => {
+    expect(
+      shouldClearTeamCardsOnRefreshFailure({
+        preserveExistingCardsOnFailure: true,
+        hasExistingCards: false,
+      }),
+    ).toBe(true);
     expect(
       shouldClearTeamCardsOnRefreshFailure({
         preserveExistingCardsOnFailure: false,
         hasExistingCards: false,
       }),
     ).toBe(true);
+  });
+});
+
+describe('inviteResendPostMutationRefresh', () => {
+  it('refreshes Team only with preserve mode', () => {
+    expect(inviteResendPostMutationRefresh()).toEqual({
+      refreshTeam: true,
+      refreshBarbers: false,
+      preserveExistingCardsOnFailure: true,
+    });
+  });
+});
+
+describe('inviteCreationPostMutationRefresh', () => {
+  it('refreshes Team and Barbers with preserve mode', () => {
+    expect(inviteCreationPostMutationRefresh()).toEqual({
+      refreshTeam: true,
+      refreshBarbers: true,
+      preserveExistingCardsOnFailure: true,
+    });
+  });
+});
+
+describe('barbersDrivenTeamRefreshOpts', () => {
+  it('always preserves existing cards on failure', () => {
+    expect(barbersDrivenTeamRefreshOpts()).toEqual({
+      preserveExistingCardsOnFailure: true,
+    });
   });
 });
 

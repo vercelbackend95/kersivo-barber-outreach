@@ -326,6 +326,41 @@ describe('POST /api/admin/team/invitations/[inviteId]/resend', () => {
     expect(sendShopTeamInviteEmail).not.toHaveBeenCalled();
   });
 
+  it('second concurrent resend hits cooldown after first renewal (shared invite state)', async () => {
+    const renewedExpiresAt = new Date('2026-08-01T12:00:00.000Z');
+    inviteExpiresAt.mockReturnValue(renewedExpiresAt);
+
+    let invite = baseInvite({
+      expiresAt: new Date(Date.now() - 5 * 60_000 + INVITE_TTL_MS),
+      tokenHash: 'old-hash',
+    });
+
+    shopInviteFindFirst.mockImplementation(async () => ({ ...invite }));
+    shopInviteUpdate.mockImplementation(async (args: { data: { tokenHash: string; expiresAt: Date } }) => {
+      invite = {
+        ...invite,
+        tokenHash: args.data.tokenHash,
+        expiresAt: args.data.expiresAt,
+      };
+      return { ...invite };
+    });
+
+    const first = await POST(makeContext('inv-1'));
+    expect(first.status).toBe(200);
+    expect(shopInviteUpdate).toHaveBeenCalledTimes(1);
+    expect(sendShopTeamInviteEmail).toHaveBeenCalledTimes(1);
+    expect(invite.tokenHash).toBe('new-hash');
+    expect(invite.expiresAt).toEqual(renewedExpiresAt);
+
+    const second = await POST(makeContext('inv-1'));
+    expect(second.status).toBe(429);
+    const body = await second.json();
+    expect(body.code).toBe('INVITATION_RESEND_COOLDOWN');
+    expect(shopInviteUpdate).toHaveBeenCalledTimes(1);
+    expect(sendShopTeamInviteEmail).toHaveBeenCalledTimes(1);
+    expect(shopInviteFindFirst).toHaveBeenCalledTimes(2);
+  });
+
   it('Owner may resend Manager invitation', async () => {
     const invite = baseInvite({ role: 'MANAGER', email: 'mgr@example.com', barberId: null });
     shopInviteFindFirst.mockResolvedValue(invite);

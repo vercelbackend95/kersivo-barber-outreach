@@ -88,3 +88,34 @@ export function shouldClearTeamCardsOnRefreshFailure(params: {
   if (params.preserveExistingCardsOnFailure && params.hasExistingCards) return false;
   return true;
 }
+
+export type PostMutationRefreshPlan = {
+  refreshTeam: boolean;
+  refreshBarbers: boolean;
+  preserveExistingCardsOnFailure: boolean;
+};
+
+/** After invitation resend: Team only — Barber rows are unchanged. */
+export function inviteResendPostMutationRefresh(): PostMutationRefreshPlan {
+  return {
+    refreshTeam: true,
+    refreshBarbers: false,
+    preserveExistingCardsOnFailure: true,
+  };
+}
+
+/** Background Team reload when the barbers prop changes. */
+export function barbersDrivenTeamRefreshOpts(): {
+  preserveExistingCardsOnFailure: true;
+} {
+  return { preserveExistingCardsOnFailure: true };
+}
+
+/** After invite creation: Team + Barbers (booking profile may have been created). */
+export function inviteCreationPostMutationRefresh(): PostMutationRefreshPlan {
+  return {
+    refreshTeam: true,
+    refreshBarbers: true,
+    preserveExistingCardsOnFailure: true,
+  };
+}

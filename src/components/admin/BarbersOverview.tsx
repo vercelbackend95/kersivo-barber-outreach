@@ -22,8 +22,11 @@ import {
 import {
   INVITATIONS_SECTION_ARIA_LABEL,
   INVITATIONS_SECTION_HIDE_LABEL,
+  barbersDrivenTeamRefreshOpts,
   countInvitationStatuses,
+  inviteCreationPostMutationRefresh,
   inviteResendNetworkFailurePatch,
+  inviteResendPostMutationRefresh,
   invitationsSectionRevealLabel,
   passiveInvitationLabel,
   shouldClearTeamCardsOnRefreshFailure,
@@ -222,7 +225,7 @@ export default function BarbersOverview({
   );
 
   React.useEffect(() => {
-    void loadTeam();
+    void loadTeam(barbersDrivenTeamRefreshOpts());
   }, [loadTeam, barbers]);
 
   React.useEffect(() => {
@@ -335,11 +338,13 @@ export default function BarbersOverview({
         }
 
         try {
-          const [teamOk, barbersOk] = await Promise.all([
-            loadTeam({ preserveExistingCardsOnFailure: true }),
-            onBarberSaved(),
-          ]);
-          if (teamOk === false || barbersOk === false) {
+          const refresh = inviteResendPostMutationRefresh();
+          const teamOk = refresh.refreshTeam
+            ? await loadTeam({
+                preserveExistingCardsOnFailure: refresh.preserveExistingCardsOnFailure,
+              })
+            : true;
+          if (teamOk === false) {
             patchInviteResend(card.id, { refreshWarning: TEAM_INVITE_RESEND_REFRESH_WARNING });
           }
         } catch {
@@ -584,9 +589,14 @@ export default function BarbersOverview({
           services={availableServices}
           onCancel={onCloseAddBarberSheet}
           onSent={async () => {
+            const refresh = inviteCreationPostMutationRefresh();
             const [teamOk, barbersOk] = await Promise.all([
-              loadTeam({ preserveExistingCardsOnFailure: true }),
-              onBarberSaved(),
+              refresh.refreshTeam
+                ? loadTeam({
+                    preserveExistingCardsOnFailure: refresh.preserveExistingCardsOnFailure,
+                  })
+                : true,
+              refresh.refreshBarbers ? onBarberSaved() : true,
             ]);
             return combineRefreshResults(teamOk, barbersOk);
           }}
