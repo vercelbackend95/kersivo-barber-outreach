@@ -59,6 +59,13 @@ export const POST: APIRoute = async (context) => {
   // (acceptedAt may still be set until reopen, or cleared on delete).
   const result = await acceptInviteForUser(invite, session.user.id);
 
+  if (!result.ok) {
+    return new Response(JSON.stringify({ error: result.error, code: result.code }), {
+      status: 409,
+      headers: { 'Content-Type': 'application/json' },
+    });
+  }
+
   if (result.alreadyMember) {
     return new Response(
       JSON.stringify({ ok: true, shopId: result.shopId, alreadyMember: true }),

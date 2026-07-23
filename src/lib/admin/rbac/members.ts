@@ -5,8 +5,10 @@ import {
   ensureBarberHasAvailabilityRules,
 } from '@/lib/admin/defaultAvailability';
 import { prisma } from '@/lib/db/client';
+import { runSerializableTransaction } from '@/lib/db/serializableTransaction';
 
-const INVITE_TTL_MS = 1000 * 60 * 60 * 72; // 72h
+export const INVITE_TTL_MS = 1000 * 60 * 60 * 72; // 72h
+export const INVITATION_RESEND_COOLDOWN_MS = 60_000;
 
 export function hashInviteToken(token: string): string {
   return createHash('sha256').update(token).digest('hex');
@@ -19,6 +21,29 @@ export function createInviteToken(): { token: string; tokenHash: string } {
 
 export function inviteExpiresAt(from = new Date()): Date {
   return new Date(from.getTime() + INVITE_TTL_MS);
+}
+
+/** Infer when the current token was issued from expiresAt and the fixed invite TTL. */
+export function inviteIssuedAtFromExpiresAt(expiresAt: Date): Date {
+  return new Date(expiresAt.getTime() - INVITE_TTL_MS);
+}
+
+/**
+ * Server-side resend cooldown inferred from expiresAt (no dedicated column).
+ * Serializable retries re-read the invite so a concurrent second request hits this.
+ */
+export function invitationResendCooldown(
+  expiresAt: Date,
+  now = new Date(),
+  cooldownMs = INVITATION_RESEND_COOLDOWN_MS,
+): { blocked: boolean; retryAfterSeconds: number } {
+  const issuedAt = inviteIssuedAtFromExpiresAt(expiresAt);
+  const elapsed = now.getTime() - issuedAt.getTime();
+  if (elapsed >= cooldownMs) {
+    return { blocked: false, retryAfterSeconds: 0 };
+  }
+  const retryAfterSeconds = Math.max(1, Math.ceil((cooldownMs - elapsed) / 1000));
+  return { blocked: true, retryAfterSeconds };
 }
 
 export async function assertCanInviteRole(
@@ -279,63 +304,146 @@ type AcceptableInvite = {
   barberId: string | null;
 };
 
+export type AcceptInviteSuccess = {
+  ok: true;
+  shopId: string;
+  role: ShopRole;
+  alreadyMember: boolean;
+};
+
+export type AcceptInviteFailure = {
+  ok: false;
+  code: string;
+  error: string;
+};
+
+export type AcceptInviteResult = AcceptInviteSuccess | AcceptInviteFailure;
+
 /**
  * Create ShopMember from an invite (or mark invite accepted if already a member).
  * Caller must validate email match, expiry, and role !== OWNER.
- * New members start as teamStatus NEW; linked Barber stays inactive until Activate.
+ * Acceptance is the complete joining action: members are written ACTIVE and are
+ * immediately usable. Linked booking profiles keep Barber.active (and
+ * services/hours/avatar) unchanged — Online bookings is independent of join.
+ * Legacy NEW members are normalised to ACTIVE on re-accept.
+ *
+ * All membership and Barber ownership decisions use transaction-scoped reads.
  */
 export async function acceptInviteForUser(
   invite: AcceptableInvite,
   userId: string,
-): Promise<{ shopId: string; role: ShopRole; alreadyMember: boolean }> {
-  const existing = await prisma.shopMember.findUnique({
-    where: {
-      shopId_userId: { shopId: invite.shopId, userId },
-    },
-    select: { id: true },
-  });
-  if (existing) {
-    await prisma.shopInvite.update({
-      where: { id: invite.id },
-      data: { acceptedAt: new Date() },
-    });
-    return { shopId: invite.shopId, role: invite.role, alreadyMember: true };
-  }
-
-  await prisma.$transaction(async (tx: Prisma.TransactionClient) => {
-    let barberId = invite.barberId;
-    if (barberId) {
-      const barber = await tx.barber.findFirst({
-        where: { id: barberId, shopId: invite.shopId },
-        select: { id: true },
+): Promise<AcceptInviteResult> {
+  try {
+    return await runSerializableTransaction(async (tx: Prisma.TransactionClient) => {
+      const existing = await tx.shopMember.findUnique({
+        where: {
+          shopId_userId: { shopId: invite.shopId, userId },
+        },
+        select: { id: true, barberId: true, teamStatus: true },
       });
-      if (!barber) barberId = null;
-      else {
-        await tx.barber.update({
-          where: { id: barberId },
-          data: {
-            userId,
-            active: false,
-          },
-        });
+
+      if (
+        existing?.barberId &&
+        invite.barberId &&
+        existing.barberId !== invite.barberId
+      ) {
+        throw {
+          ok: false as const,
+          code: 'MEMBER_BARBER_LINK_CONFLICT',
+          error: 'This account is already linked to a different booking profile.',
+        } satisfies AcceptInviteFailure;
       }
-    }
 
-    await tx.shopMember.create({
-      data: {
+      let resolvedBarberId: string | null = invite.barberId;
+      if (invite.barberId) {
+        const barber = await tx.barber.findFirst({
+          where: { id: invite.barberId, shopId: invite.shopId },
+          select: { id: true, userId: true },
+        });
+        if (!barber) {
+          throw {
+            ok: false as const,
+            code: 'BOOKING_PROFILE_NOT_FOUND',
+            error: 'The linked booking profile could not be found.',
+          } satisfies AcceptInviteFailure;
+        }
+        if (barber.userId && barber.userId !== userId) {
+          throw {
+            ok: false as const,
+            code: 'BOOKING_PROFILE_ALREADY_LINKED',
+            error: 'This booking profile is already linked to another account.',
+          } satisfies AcceptInviteFailure;
+        }
+        if (!barber.userId) {
+          // Link login only — do not change active, services, hours, or avatar.
+          await tx.barber.update({
+            where: { id: barber.id },
+            data: { userId },
+          });
+        }
+        resolvedBarberId = barber.id;
+      }
+
+      if (existing) {
+        const memberPatch: { barberId?: string; teamStatus?: 'ACTIVE' } = {};
+        if (!existing.barberId && resolvedBarberId) {
+          memberPatch.barberId = resolvedBarberId;
+        }
+        if (existing.teamStatus !== 'ACTIVE') {
+          memberPatch.teamStatus = 'ACTIVE';
+        }
+        if (Object.keys(memberPatch).length > 0) {
+          await tx.shopMember.update({
+            where: { id: existing.id },
+            data: memberPatch,
+          });
+        }
+
+        await tx.shopInvite.update({
+          where: { id: invite.id },
+          data: { acceptedAt: new Date() },
+        });
+
+        return {
+          ok: true as const,
+          shopId: invite.shopId,
+          role: invite.role,
+          alreadyMember: true,
+        };
+      }
+
+      await tx.shopMember.create({
+        data: {
+          shopId: invite.shopId,
+          userId,
+          role: invite.role,
+          barberId: resolvedBarberId,
+          teamStatus: 'ACTIVE',
+        },
+      });
+
+      await tx.shopInvite.update({
+        where: { id: invite.id },
+        data: { acceptedAt: new Date() },
+      });
+
+      return {
+        ok: true as const,
         shopId: invite.shopId,
-        userId,
         role: invite.role,
-        barberId,
-        teamStatus: 'NEW',
-      },
+        alreadyMember: false,
+      };
     });
-
-    await tx.shopInvite.update({
-      where: { id: invite.id },
-      data: { acceptedAt: new Date() },
-    });
-  });
-
-  return { shopId: invite.shopId, role: invite.role, alreadyMember: false };
+  } catch (error) {
+    if (
+      typeof error === 'object' &&
+      error !== null &&
+      'ok' in error &&
+      (error as AcceptInviteFailure).ok === false &&
+      'code' in error
+    ) {
+      return error as AcceptInviteFailure;
+    }
+    throw error;
+  }
 }

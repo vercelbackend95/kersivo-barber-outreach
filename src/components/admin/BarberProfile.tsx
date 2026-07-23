@@ -38,7 +38,6 @@ type BarberProfileProps = {
   onBarberUpdated: () => void | Promise<void>;
   onBarberAvatarChange: (file: File | null) => void;
   onSaveAvatar: () => void;
-  onToggleActive: () => void;
   onToggleService: (serviceId: string, enabled: boolean) => void;
   barberSaveMessage: string;
   barberSaveError: string;
@@ -49,10 +48,17 @@ type BarberProfileProps = {
   onDeleteBarber: () => void;
   role?: ShopRole;
   accountAccess?: TeamAccountAccess;
-  canToggleBookable?: boolean;
+  canManageOnlineBookings?: boolean;
   bookable?: boolean;
   onToggleBookable?: (next: boolean) => void;
   onSaveIdentity?: (payload: { name: string; email: string }) => Promise<boolean>;
+  /** Dashboard-only member: no booking profile yet. */
+  memberOnly?: boolean;
+  memberId?: string;
+  canSetUpOnlineBookings?: boolean;
+  onSetupOnlineBookingsSaved?: (
+    result: import('./barber-wizard/BarberWizard').SetupMemberSavedResult,
+  ) => void | boolean | Promise<void | boolean>;
 };
 
 export default function BarberProfile({
@@ -76,7 +82,6 @@ export default function BarberProfile({
   onBarberUpdated,
   onBarberAvatarChange,
   onSaveAvatar,
-  onToggleActive,
   onToggleService,
   barberSaveMessage,
   barberSaveError,
@@ -87,15 +92,20 @@ export default function BarberProfile({
   onDeleteBarber,
   role,
   accountAccess,
-  canToggleBookable = false,
+  canManageOnlineBookings = false,
   bookable = true,
   onToggleBookable,
   onSaveIdentity,
+  memberOnly = false,
+  memberId,
+  canSetUpOnlineBookings = false,
+  onSetupOnlineBookingsSaved,
 }: BarberProfileProps) {
   const actionsMenuRef = React.useRef<HTMLDivElement | null>(null);
   const [isActionsMenuOpen, setIsActionsMenuOpen] = React.useState(false);
   const [isEditWizardOpen, setIsEditWizardOpen] = React.useState(false);
-  const [confirmAction, setConfirmAction] = React.useState<'toggle' | 'delete' | null>(null);
+  const [isSetupWizardOpen, setIsSetupWizardOpen] = React.useState(false);
+  const [confirmAction, setConfirmAction] = React.useState<'delete' | null>(null);
   const confirmDialogRef = React.useRef<HTMLDivElement | null>(null);
   const cancelButtonRef = React.useRef<HTMLButtonElement | null>(null);
   const avatarInputRef = React.useRef<HTMLInputElement | null>(null);
@@ -218,6 +228,11 @@ export default function BarberProfile({
       if (event.key !== 'Escape') return;
       if (isConfirmDialogOpen) return;
       if (isActionsMenuOpen) return;
+      if (isSetupWizardOpen) {
+        event.preventDefault();
+        setIsSetupWizardOpen(false);
+        return;
+      }
       if (isEditWizardOpen) {
         event.preventDefault();
         setIsEditWizardOpen(false);
@@ -227,30 +242,32 @@ export default function BarberProfile({
     };
     document.addEventListener('keydown', onKey);
     return () => document.removeEventListener('keydown', onKey);
-  }, [isActionsMenuOpen, isConfirmDialogOpen, isEditWizardOpen, onClose]);
+  }, [isActionsMenuOpen, isConfirmDialogOpen, isEditWizardOpen, isSetupWizardOpen, onClose]);
 
   const closeEditWizard = React.useCallback(() => {
     setIsEditWizardOpen(false);
+  }, []);
+
+  const closeSetupWizard = React.useCallback(() => {
+    setIsSetupWizardOpen(false);
   }, []);
 
   const handleEditWizardSaved = React.useCallback(async () => {
     await onBarberUpdated();
   }, [onBarberUpdated]);
 
-  const actionLabel = isActive ? 'Deactivate' : 'Reactivate';
+  const handleSetupWizardSaved = React.useCallback(
+    async (result?: import('./barber-wizard/BarberWizard').SetupMemberSavedResult) => {
+      if (!result || !onSetupOnlineBookingsSaved) return true;
+      return onSetupOnlineBookingsSaved(result);
+    },
+    [onSetupOnlineBookingsSaved],
+  );
+
   const hasAvatarPreview = Boolean(barberAvatarPreviewUrl);
   const displayedAvatarUrl = barberAvatarPreviewUrl ?? barber.avatarUrl ?? null;
-  const isDeleteConfirm = confirmAction === 'delete';
-  const confirmTitle = isDeleteConfirm
-    ? 'Delete barber?'
-    : isActive
-      ? 'Deactivate barber?'
-      : 'Reactivate barber?';
-  const confirmActionLabel = isDeleteConfirm
-    ? barberSaving
-      ? 'Deleting...'
-      : 'Delete'
-    : actionLabel;
+  const confirmTitle = 'Delete barber?';
+  const confirmActionLabel = barberSaving ? 'Deleting...' : 'Delete';
 
   const openAvatarPicker = React.useCallback(() => {
     avatarInputRef.current?.click();
@@ -297,7 +314,7 @@ export default function BarberProfile({
     <div
       className="admin-cp-backdrop"
       onClick={() => {
-        if (isEditWizardOpen) return;
+        if (isEditWizardOpen || isSetupWizardOpen) return;
         onClose();
       }}
       role="dialog"
@@ -310,17 +327,20 @@ export default function BarberProfile({
             {role ? `${roleLabel(role)} profile` : 'Barber profile'}
           </span>
           <div className="admin-cp-header-actions">
-            <button
-              type="button"
-              className="admin-cp-settings-btn"
-              aria-label="Edit barber"
-              title="Edit barber"
-              onClick={() => setIsEditWizardOpen(true)}
-              disabled={workingHoursLoading}
-            >
-              <SettingsGearIcon className="admin-cp-settings-icon" />
-            </button>
+            {!memberOnly ? (
+              <button
+                type="button"
+                className="admin-cp-settings-btn"
+                aria-label="Edit barber"
+                title="Edit barber"
+                onClick={() => setIsEditWizardOpen(true)}
+                disabled={workingHoursLoading}
+              >
+                <SettingsGearIcon className="admin-cp-settings-icon" />
+              </button>
+            ) : null}
 
+            {!memberOnly ? (
             <div className="admin-barber-actions-menu" ref={actionsMenuRef}>
               <button
                 type="button"
@@ -339,18 +359,6 @@ export default function BarberProfile({
                   <button
                     type="button"
                     role="menuitem"
-                    className="admin-barber-actions-dropdown-item"
-                    disabled={barberSaving}
-                    onClick={() => {
-                      setIsActionsMenuOpen(false);
-                      setConfirmAction('toggle');
-                    }}
-                  >
-                    {actionLabel}
-                  </button>
-                  <button
-                    type="button"
-                    role="menuitem"
                     className="admin-barber-actions-dropdown-item admin-barber-actions-dropdown-item--danger"
                     disabled={barberSaving}
                     onClick={() => {
@@ -363,6 +371,7 @@ export default function BarberProfile({
                 </div>
               ) : null}
             </div>
+            ) : null}
 
             <button type="button" className="admin-cp-close-btn" onClick={onClose} aria-label="Close">
               <X className="admin-cp-close-icon" aria-hidden />
@@ -383,9 +392,11 @@ export default function BarberProfile({
           ) : null}
 
           <div
-            className={`admin-cp-identity${canToggleBookable && onToggleBookable ? ' admin-cp-identity--bookable' : ''}`}
+            className={`admin-cp-identity${
+              (canManageOnlineBookings && onToggleBookable) || memberOnly ? ' admin-cp-identity--bookable' : ''
+            }`}
           >
-            {canToggleBookable && onToggleBookable ? (
+            {canManageOnlineBookings && onToggleBookable && !memberOnly ? (
               <div className="admin-cp-bookable-toggle">
                 <div className="admin-cp-bookable-toggle__copy">
                   <span className="admin-cp-bookable-toggle__title">Online bookings</span>
@@ -411,6 +422,31 @@ export default function BarberProfile({
               </div>
             ) : null}
 
+            {memberOnly ? (
+              <div className="admin-cp-bookable-toggle">
+                <div className="admin-cp-bookable-toggle__copy">
+                  <span className="admin-cp-bookable-toggle__title">Online bookings</span>
+                  <span className="admin-cp-bookable-toggle__hint">
+                    Online bookings: Off. Set up services and working hours before clients can book them.
+                  </span>
+                </div>
+                {canSetUpOnlineBookings && memberId ? (
+                  <button
+                    type="button"
+                    className="btn btn--secondary"
+                    onClick={() => setIsSetupWizardOpen(true)}
+                    aria-label="Set up online bookings"
+                  >
+                    Set up online bookings
+                  </button>
+                ) : (
+                  <p className="admin-cp-bookable-toggle__passive muted">
+                    Online bookings stay off until an Owner or Manager sets them up.
+                  </p>
+                )}
+              </div>
+            ) : null}
+
             <div className="admin-cp-avatar-wrap">
               <div className="admin-cp-avatar" aria-hidden="true">
                 {displayedAvatarUrl ? (
@@ -425,7 +461,7 @@ export default function BarberProfile({
                 aria-label={displayedAvatarUrl ? 'Change avatar' : 'Upload avatar'}
                 title={displayedAvatarUrl ? 'Change avatar' : 'Upload avatar'}
                 onClick={openAvatarPicker}
-                disabled={barberSaving}
+                disabled={barberSaving || memberOnly}
               >
                 <span aria-hidden="true">
                   <svg viewBox="0 0 24 24" focusable="false">
@@ -547,6 +583,7 @@ export default function BarberProfile({
             </div>
           </div>
 
+          {!memberOnly ? (
           <div className="admin-cp-stats-section">
             <div className="admin-cp-section-header">
               <span className="admin-cp-section-title">Stats</span>
@@ -572,7 +609,10 @@ export default function BarberProfile({
               </div>
             </dl>
           </div>
+          ) : null}
 
+          {!memberOnly ? (
+          <>
           <div className="admin-cp-section admin-cp-section--profile-editor">
             <div className="admin-cp-section-header">
               <Scissors className="admin-cp-section-icon" aria-hidden />
@@ -621,6 +661,8 @@ export default function BarberProfile({
               layout="profile"
             />
           </div>
+          </>
+          ) : null}
         </div>
       </div>
 
@@ -645,21 +687,11 @@ export default function BarberProfile({
               {confirmTitle}
             </h3>
             <div id="barber-confirm-description" className="admin-barber-confirm-body">
-              {isDeleteConfirm ? (
-                <ul>
-                  <li>This permanently removes the barber profile from the system.</li>
-                  <li>Assigned services, working hours, and time off entries will be removed.</li>
-                  <li>If the barber has any bookings, deletion will be blocked.</li>
-                </ul>
-              ) : isActive ? (
-                <ul>
-                  <li>This will remove the barber from the booking dropdown.</li>
-                  <li>Existing booking history stays intact.</li>
-                  <li>You can reactivate at any time.</li>
-                </ul>
-              ) : (
-                <p>The barber will be available for new bookings again.</p>
-              )}
+              <ul>
+                <li>This permanently removes the barber profile from the system.</li>
+                <li>Assigned services, working hours, and time off entries will be removed.</li>
+                <li>If the barber has any bookings, deletion will be blocked.</li>
+              </ul>
             </div>
             <div className="admin-barber-confirm-actions">
               <button
@@ -673,16 +705,11 @@ export default function BarberProfile({
               </button>
               <button
                 type="button"
-                className={`btn ${isDeleteConfirm ? 'btn--destructive' : 'btn--primary'}`}
+                className="btn btn--destructive"
                 disabled={barberSaving}
                 onClick={() => {
-                  const nextAction = confirmAction;
                   setConfirmAction(null);
-                  if (nextAction === 'delete') {
-                    onDeleteBarber();
-                    return;
-                  }
-                  onToggleActive();
+                  onDeleteBarber();
                 }}
               >
                 {confirmActionLabel}
@@ -719,6 +746,26 @@ export default function BarberProfile({
             await handleEditWizardSaved();
           }}
         />
+      </AdminWizardSheetLayer>
+      <AdminWizardSheetLayer
+        open={isSetupWizardOpen}
+        onDismiss={closeSetupWizard}
+        ariaLabelledBy="admin-barber-form-title"
+        className="admin-barber-sheet-layer--over-profile"
+      >
+        {memberId ? (
+          <BarberWizard
+            key={`setup-${memberId}`}
+            mode="setup-member"
+            memberId={memberId}
+            services={services}
+            weekDays={weekDays}
+            initialName={barber.name}
+            initialAvatarUrl={barber.avatarUrl ?? null}
+            onCancel={closeSetupWizard}
+            onSaved={handleSetupWizardSaved}
+          />
+        ) : null}
       </AdminWizardSheetLayer>
     </>
   );

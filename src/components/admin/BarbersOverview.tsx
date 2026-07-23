@@ -10,20 +10,57 @@ import {
 import type { TeamAccountAccess, TeamCardDto } from '../../lib/admin/teamCards';
 import {
   dashboardAccessOnlyLine,
+  partitionTeamCards,
   roleLabel,
   rolePillClass,
   roleSortRank,
   teamAccountAccess,
   teamAccountAccessLabel,
   teamCardOnlineBookingsLine,
+  TEAM_INVITE_RESEND_REFRESH_WARNING,
 } from '../../lib/admin/teamCards';
+import {
+  INVITATIONS_SECTION_ARIA_LABEL,
+  INVITATIONS_SECTION_HIDE_LABEL,
+  barbersDrivenTeamRefreshOpts,
+  countInvitationStatuses,
+  inviteCreationPostMutationRefresh,
+  inviteResendNetworkFailurePatch,
+  inviteResendPostMutationRefresh,
+  invitationsSectionRevealLabel,
+  passiveInvitationLabel,
+  shouldClearTeamCardsOnRefreshFailure,
+  shouldShowInviteResendAction,
+} from '../../lib/admin/teamInviteResendUi';
 import type { ShopRole } from '@prisma/client';
 import AdminBarberRosterCard from './AdminBarberRosterCard';
 import AdminBarberRosterSearch from './AdminBarberRosterSearch';
 import { BarberRosterOverviewGridSkeleton } from '../skeleton';
 import TeamInviteWizard from './TeamInviteWizard';
 import AdminWizardSheetLayer from './AdminWizardSheetLayer';
+import { combineRefreshResults, buildInvitationUrl } from '@/lib/admin/teamInviteWizardResults';
+import { fetchTeamListRefresh } from '@/lib/admin/teamRefreshFetch';
+import {
+  applyMemberBookingProfileSetupToCards,
+  type MemberBookingProfileSetupResult,
+} from '@/lib/admin/memberBookingProfileSetup';
 import '@/styles/components/admin-team.css';
+
+type InviteResendPhase =
+  | 'idle'
+  | 'resending'
+  | 'resent'
+  | 'email_failed'
+  | 'cooldown'
+  | 'error';
+
+type InviteResendState = {
+  phase: InviteResendPhase;
+  message: string;
+  acceptPath: string;
+  copyFeedback: string;
+  refreshWarning: string;
+};
 
 export type TeamProfileOpenMeta = {
   name: string;
@@ -33,8 +70,13 @@ export type TeamProfileOpenMeta = {
   role?: ShopRole;
   accountAccess?: TeamAccountAccess;
   memberId?: string;
-  canToggleBookable?: boolean;
+  barberId?: string | null;
+  canManageOnlineBookings?: boolean;
+  canSetUpOnlineBookings?: boolean;
   bookable?: boolean;
+  /** Dashboard member with no booking profile — profile open must not create one. */
+  memberOnly?: boolean;
+  email?: string | null;
 };
 
 type BarbersOverviewProps = {
@@ -49,9 +91,9 @@ type BarbersOverviewProps = {
   bookings: BarberBookingPreview[];
   getInitials: (name: string) => string;
   onShowInactiveChange: (show: boolean) => void;
-  onOpenBarber: (barberId: string, meta?: TeamProfileOpenMeta) => void;
+  onOpenBarber: (barberId: string | null, meta?: TeamProfileOpenMeta) => void;
   onCloseAddBarberSheet: () => void;
-  onBarberSaved: () => void | Promise<void>;
+  onBarberSaved: () => void | Promise<void | boolean>;
   formatBlockRange: (startAt: string, endAt: string) => string;
 };
 
@@ -74,7 +116,7 @@ function cardToBarberStub(card: TeamCardDto): Barber {
     return {
       id: card.barber.id,
       name: card.barber.name,
-      isActive: card.cardStatus === 'active' && card.barber.isActive,
+      isActive: card.barber.isActive,
       avatarUrl: card.barber.avatarUrl,
       sortOrder: card.barber.sortOrder,
       serviceIds: card.barber.serviceIds,
@@ -86,7 +128,7 @@ function cardToBarberStub(card: TeamCardDto): Barber {
   return {
     id: card.barberId || card.id,
     name: card.name,
-    isActive: card.cardStatus === 'active',
+    isActive: card.bookable,
     avatarUrl: card.avatarUrl,
     sortOrder: 0,
     serviceIds: [],
@@ -102,23 +144,32 @@ function compareTeamCards(a: TeamCardDto, b: TeamCardDto): number {
   return a.name.localeCompare(b.name, 'en');
 }
 
-export default function BarbersOverview({
-  barbers,
-  services,
-  showInactiveBarbers,
-  barbersLoading = false,
-  barberSaveMessage,
-  barberSaveError,
-  isAddBarberSheetOpen,
-  globalBlocks,
-  bookings,
-  getInitials,
-  onShowInactiveChange,
-  onOpenBarber,
-  onCloseAddBarberSheet,
-  onBarberSaved,
-  formatBlockRange,
-}: BarbersOverviewProps) {
+export type BarbersOverviewHandle = {
+  refreshTeam: (opts?: { preserveExistingCardsOnFailure?: boolean }) => Promise<boolean>;
+  applyMemberBookingProfileSetup: (result: MemberBookingProfileSetupResult) => void;
+};
+
+const BarbersOverview = React.forwardRef<BarbersOverviewHandle, BarbersOverviewProps>(
+  function BarbersOverview(
+    {
+      barbers,
+      services,
+      showInactiveBarbers,
+      barbersLoading = false,
+      barberSaveMessage,
+      barberSaveError,
+      isAddBarberSheetOpen,
+      globalBlocks,
+      bookings,
+      getInitials,
+      onShowInactiveChange,
+      onOpenBarber,
+      onCloseAddBarberSheet,
+      onBarberSaved,
+      formatBlockRange,
+    },
+    ref,
+  ) {
   const availableServices = services.length > 0 ? services : DEFAULT_SERVICE_OPTIONS;
   const [nowTick, setNowTick] = React.useState(() => Date.now());
   const searchInputRef = React.useRef<HTMLInputElement | null>(null);
@@ -130,26 +181,76 @@ export default function BarbersOverview({
   const [teamLoading, setTeamLoading] = React.useState(true);
   const [teamError, setTeamError] = React.useState('');
   const [actionError, setActionError] = React.useState('');
+  const [inviteResendById, setInviteResendById] = React.useState<Record<string, InviteResendState>>(
+    {},
+  );
+  const inviteResendInFlightRef = React.useRef<Record<string, boolean>>({});
 
-  const loadTeam = React.useCallback(async () => {
-    setTeamLoading(true);
-    setTeamError('');
-    try {
-      const res = await fetch('/api/admin/team', { credentials: 'include' });
-      const data = await res.json().catch(() => ({}));
-      if (!res.ok) throw new Error(data.error || 'Could not load team.');
-      setTeamCards(data.cards || []);
-      setActorRole(data.actorRole || 'OWNER');
-    } catch (err) {
-      setTeamError(err instanceof Error ? err.message : 'Could not load team.');
-      setTeamCards([]);
-    } finally {
-      setTeamLoading(false);
-    }
+  const patchInviteResend = React.useCallback((inviteId: string, patch: Partial<InviteResendState>) => {
+    setInviteResendById((prev) => {
+      const defaults: InviteResendState = {
+        phase: 'idle',
+        message: '',
+        acceptPath: '',
+        copyFeedback: '',
+        refreshWarning: '',
+      };
+      return {
+        ...prev,
+        [inviteId]: {
+          ...defaults,
+          ...prev[inviteId],
+          ...patch,
+        },
+      };
+    });
   }, []);
 
+  const loadTeam = React.useCallback(
+    async (opts?: { preserveExistingCardsOnFailure?: boolean }): Promise<boolean> => {
+      const preserve = Boolean(opts?.preserveExistingCardsOnFailure);
+      setTeamLoading(true);
+      setTeamError('');
+      try {
+        const result = await fetchTeamListRefresh();
+        if (!result.ok) {
+          setTeamError(result.error);
+          setTeamCards((prev) => {
+            if (
+              shouldClearTeamCardsOnRefreshFailure({
+                preserveExistingCardsOnFailure: preserve,
+                hasExistingCards: prev.length > 0,
+              })
+            ) {
+              return [];
+            }
+            return prev;
+          });
+          return false;
+        }
+        setTeamCards(result.cards as TeamCardDto[]);
+        setActorRole(result.actorRole || 'OWNER');
+        return true;
+      } finally {
+        setTeamLoading(false);
+      }
+    },
+    [],
+  );
+
+  React.useImperativeHandle(
+    ref,
+    () => ({
+      refreshTeam: (opts) => loadTeam(opts),
+      applyMemberBookingProfileSetup: (result) => {
+        setTeamCards((prev) => applyMemberBookingProfileSetupToCards(prev, result));
+      },
+    }),
+    [loadTeam],
+  );
+
   React.useEffect(() => {
-    void loadTeam();
+    void loadTeam(barbersDrivenTeamRefreshOpts());
   }, [loadTeam, barbers]);
 
   React.useEffect(() => {
@@ -186,85 +287,156 @@ export default function BarbersOverview({
     );
   }, [teamCards, trimmedSearchQuery]);
 
-  const activeCards = React.useMemo(
-    () => filteredCards.filter((c) => c.cardStatus === 'active').sort(compareTeamCards),
-    [filteredCards],
+  const { joinedCards, pendingInviteCards } = React.useMemo(() => {
+    const partitioned = partitionTeamCards(filteredCards);
+    return {
+      joinedCards: [...partitioned.joinedCards].sort(compareTeamCards),
+      pendingInviteCards: [...partitioned.pendingInviteCards].sort(compareTeamCards),
+    };
+  }, [filteredCards]);
+  const pendingInviteCount = React.useMemo(
+    () => partitionTeamCards(teamCards).pendingInviteCards.length,
+    [teamCards],
   );
-  const inactiveCards = React.useMemo(
-    () => filteredCards.filter((c) => c.cardStatus !== 'active').sort(compareTeamCards),
-    [filteredCards],
+  const invitationStatusCounts = React.useMemo(
+    () => countInvitationStatuses(partitionTeamCards(teamCards).pendingInviteCards),
+    [teamCards],
   );
-  const inactiveCount = teamCards.filter((c) => c.cardStatus !== 'active').length;
 
-  async function handleActivate(card: TeamCardDto) {
-    setActionError('');
-    const res = await fetch(`/api/admin/team/members/${encodeURIComponent(card.id)}/activate`, {
-      method: 'POST',
-      credentials: 'include',
+  async function handleResendInvitation(card: TeamCardDto) {
+    if (card.kind !== 'invite' || !card.canResendInvitation) return;
+    if (inviteResendInFlightRef.current[card.id]) return;
+    inviteResendInFlightRef.current[card.id] = true;
+    patchInviteResend(card.id, {
+      phase: 'resending',
+      message: '',
+      acceptPath: '',
+      copyFeedback: '',
+      refreshWarning: '',
     });
-    const data = await res.json().catch(() => ({}));
-    if (!res.ok) {
-      setActionError(data.error || 'Could not activate.');
+    setActionError('');
+
+    try {
+      try {
+        const res = await fetch(
+          `/api/admin/team/invitations/${encodeURIComponent(card.id)}/resend`,
+          { method: 'POST', credentials: 'include' },
+        );
+        const data = await res.json().catch(() => ({}));
+
+        if (res.status === 429) {
+          patchInviteResend(card.id, {
+            phase: 'cooldown',
+            message:
+              typeof data.error === 'string'
+                ? data.error
+                : 'This invitation was sent recently. Try again shortly.',
+          });
+          return;
+        }
+
+        if (!res.ok) {
+          patchInviteResend(card.id, {
+            phase: 'error',
+            message: typeof data.error === 'string' ? data.error : 'Could not renew invitation.',
+          });
+          return;
+        }
+
+        const emailSent = data.emailSent !== false;
+        const acceptPath = typeof data.acceptPath === 'string' ? data.acceptPath : '';
+        const email = card.email?.trim() || 'the invitee';
+
+        if (emailSent) {
+          patchInviteResend(card.id, {
+            phase: 'resent',
+            message: `A new invitation link was sent to ${email}. The previous link no longer works.`,
+            acceptPath: '',
+          });
+        } else {
+          patchInviteResend(card.id, {
+            phase: 'email_failed',
+            message:
+              'The invitation is active again, but we could not send the email. Share the invitation link manually.',
+            acceptPath,
+          });
+        }
+
+        try {
+          const refresh = inviteResendPostMutationRefresh();
+          const teamOk = refresh.refreshTeam
+            ? await loadTeam({
+                preserveExistingCardsOnFailure: refresh.preserveExistingCardsOnFailure,
+              })
+            : true;
+          if (teamOk === false) {
+            patchInviteResend(card.id, { refreshWarning: TEAM_INVITE_RESEND_REFRESH_WARNING });
+          }
+        } catch {
+          patchInviteResend(card.id, { refreshWarning: TEAM_INVITE_RESEND_REFRESH_WARNING });
+        }
+      } catch {
+        patchInviteResend(card.id, inviteResendNetworkFailurePatch());
+      }
+    } finally {
+      inviteResendInFlightRef.current[card.id] = false;
+    }
+  }
+
+  async function copyInviteAcceptPath(inviteId: string, acceptPath: string) {
+    patchInviteResend(inviteId, { copyFeedback: '' });
+    if (!acceptPath) {
+      patchInviteResend(inviteId, { copyFeedback: 'Could not copy the invitation link.' });
       return;
     }
-    await Promise.all([loadTeam(), onBarberSaved()]);
+    try {
+      const url = buildInvitationUrl(acceptPath, window.location.origin);
+      await navigator.clipboard.writeText(url);
+      patchInviteResend(inviteId, { copyFeedback: 'Invitation link copied' });
+    } catch {
+      patchInviteResend(inviteId, { copyFeedback: 'Could not copy the invitation link.' });
+    }
   }
 
   async function handleOpenProfile(card: TeamCardDto) {
     setActionError('');
-    let barberId = card.barberId;
-    if (!barberId && card.canToggleBookable && card.kind === 'member') {
-      const res = await fetch(`/api/admin/team/members/${encodeURIComponent(card.id)}/bookable`, {
-        method: 'PATCH',
-        credentials: 'include',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ bookable: false }),
-      });
-      const data = await res.json().catch(() => ({}));
-      if (!res.ok || !data.barberId) {
-        setActionError(data.error || 'Could not open profile.');
-        return;
-      }
-      barberId = String(data.barberId);
-      await Promise.all([loadTeam(), onBarberSaved()]);
-    }
-    if (!barberId) return;
-
-    const stub = cardToBarberStub({
-      ...card,
-      barberId,
-      barber: card.barber
-        ? { ...card.barber, id: barberId }
-        : {
-            id: barberId,
-            name: card.name,
-            isActive: false,
-            avatarUrl: card.avatarUrl,
-            sortOrder: 0,
-            serviceIds: [],
-            todayLabel: '—',
-            todayIsOnShift: null,
-            todayShiftWindow: null,
-          },
-    });
-
     const access = teamAccountAccess(card);
+
+    // Read-only: never create a Barber seat merely by opening a profile.
+    if (!card.barberId) {
+      if (card.kind !== 'member' || card.id.startsWith('barber:')) return;
+      onOpenBarber(null, {
+        name: card.name,
+        avatarUrl: card.avatarUrl,
+        serviceIds: [],
+        isActive: false,
+        role: card.role,
+        accountAccess: access,
+        memberId: card.id,
+        memberOnly: true,
+        bookable: false,
+        email: card.email,
+        canSetUpOnlineBookings: card.canSetUpOnlineBookings,
+      });
+      return;
+    }
+
+    const barberId = card.barberId;
+    const stub = cardToBarberStub(card);
+
     const meta: TeamProfileOpenMeta = {
       name: stub.name,
       avatarUrl: stub.avatarUrl ?? null,
       serviceIds: stub.serviceIds ?? [],
-      isActive: Boolean(stub.isActive),
+      isActive: Boolean(card.bookable),
       role: card.role,
       accountAccess: access,
-      ...(card.canToggleBookable && card.kind === 'member'
-        ? {
-            memberId: card.id,
-            canToggleBookable: true,
-            bookable: card.bookable || false,
-          }
-        : {
-            bookable: card.bookable,
-          }),
+      barberId,
+      bookable: card.bookable,
+      canManageOnlineBookings: card.canManageOnlineBookings,
+      ...(card.kind === 'member' && !card.id.startsWith('barber:')
+        ? { memberId: card.id }
+        : {}),
     };
     onOpenBarber(barberId, meta);
   }
@@ -273,10 +445,11 @@ export default function BarbersOverview({
     const stub = cardToBarberStub(card);
     const now = new Date(nowTick);
     const access = teamAccountAccess(card);
-    const barberIsActive = card.cardStatus === 'active' && (card.barber?.isActive ?? !card.bookable);
+    const barberIsActive = card.bookable;
     const hasSeat = Boolean(card.barberId && card.barber);
     const showSchedule = card.bookable && hasSeat;
-    const showProfileCta = Boolean(card.barberId) || card.canToggleBookable;
+    const showProfileCta =
+      Boolean(card.barberId) || (card.kind === 'member' && !card.id.startsWith('barber:'));
     const nextBookingPreview = showSchedule
       ? getNextBookingForBarber(bookings, stub.id, now)
       : null;
@@ -289,6 +462,56 @@ export default function BarbersOverview({
     const todayLine = hasSeat
       ? getTodayLine(stub)
       : { text: 'Today: —', title: 'No schedule', isOff: true };
+
+    const resendState = inviteResendById[card.id];
+    const showResendAction =
+      card.kind === 'invite' &&
+      card.canResendInvitation &&
+      shouldShowInviteResendAction(resendState?.phase);
+    const inviteResend =
+      card.kind === 'invite' && card.canResendInvitation
+        ? {
+            canResend: true,
+            showAction: showResendAction,
+            busy: resendState?.phase === 'resending',
+            buttonLabel:
+              resendState?.phase === 'resending' ? 'Resending…' : 'Resend invitation',
+            onResend: () => void handleResendInvitation(card),
+            statusHeading:
+              resendState?.phase === 'email_failed'
+                ? 'Invitation renewed — email not sent'
+                : resendState?.phase === 'resent'
+                  ? 'Invitation resent'
+                  : null,
+            statusMessage:
+              [resendState?.message, resendState?.refreshWarning].filter(Boolean).join(' ') || null,
+            statusTone:
+              resendState?.phase === 'email_failed'
+                ? ('warning' as const)
+                : resendState?.phase === 'resent'
+                  ? ('success' as const)
+                  : resendState?.phase === 'error'
+                    ? ('warning' as const)
+                    : ('neutral' as const),
+            showCopyLink: resendState?.phase === 'email_failed' && Boolean(resendState.acceptPath),
+            onCopyLink: () => void copyInviteAcceptPath(card.id, resendState?.acceptPath || ''),
+            copyFeedback: resendState?.copyFeedback || '',
+          }
+        : card.kind === 'invite'
+          ? {
+              canResend: false,
+              showAction: false,
+              busy: false,
+              buttonLabel: '',
+              onResend: () => undefined,
+              passiveLabel: passiveInvitationLabel(card.invitationStatus),
+              statusHeading: null,
+              statusMessage: null,
+              statusTone: null,
+              showCopyLink: false,
+              copyFeedback: '',
+            }
+          : null;
 
     return (
       <AdminBarberRosterCard
@@ -307,14 +530,14 @@ export default function BarbersOverview({
         roleLabel={roleLabel(card.role)}
         rolePillClassName={rolePillClass(card.role)}
         cardStatus={card.cardStatus}
+        invitationStatus={card.invitationStatus}
         showSchedule={showSchedule}
         showRosterChrome={showSchedule || hasSeat}
         showProfileCta={showProfileCta}
         accountAccessLabel={teamAccountAccessLabel(access)}
         onlineBookingsLine={teamCardOnlineBookingsLine(access, card.bookable)}
         secondaryLine={dashboardAccessOnlyLine(access, card.bookable)}
-        canActivate={card.canActivate}
-        onActivate={() => void handleActivate(card)}
+        inviteResend={inviteResend}
       />
     );
   }
@@ -352,10 +575,10 @@ export default function BarbersOverview({
       ) : (
         <div className="admin-barber-list-wrap admin-barbers-overview-list-wrap">
           <ul className="admin-barber-grid admin-barbers-overview-grid" aria-label="Team members">
-            {activeCards.map((card, index) => renderCard(card, index))}
+            {joinedCards.map((card, index) => renderCard(card, index))}
           </ul>
 
-          {inactiveCount > 0 ? (
+          {pendingInviteCount > 0 ? (
             <div className="admin-barbers-inactive-reveal">
               <button
                 type="button"
@@ -364,18 +587,18 @@ export default function BarbersOverview({
                 onClick={() => onShowInactiveChange(!showInactiveBarbers)}
               >
                 {showInactiveBarbers
-                  ? 'Hide pending & awaiting activation'
-                  : `Show ${inactiveCount} pending / awaiting activation`}
+                  ? INVITATIONS_SECTION_HIDE_LABEL
+                  : invitationsSectionRevealLabel(invitationStatusCounts)}
               </button>
             </div>
           ) : null}
 
-          {showInactiveBarbers && inactiveCards.length > 0 ? (
+          {showInactiveBarbers && pendingInviteCards.length > 0 ? (
             <ul
               className="admin-barber-grid admin-barbers-overview-grid admin-barbers-overview-grid--inactive"
-              aria-label="Pending invitations and team members awaiting activation"
+              aria-label={INVITATIONS_SECTION_ARIA_LABEL}
             >
-              {inactiveCards.map((card, index) => renderCard(card, activeCards.length + index))}
+              {pendingInviteCards.map((card, index) => renderCard(card, joinedCards.length + index))}
             </ul>
           ) : null}
         </div>
@@ -392,7 +615,16 @@ export default function BarbersOverview({
           services={availableServices}
           onCancel={onCloseAddBarberSheet}
           onSent={async () => {
-            await Promise.all([loadTeam(), onBarberSaved()]);
+            const refresh = inviteCreationPostMutationRefresh();
+            const [teamOk, barbersOk] = await Promise.all([
+              refresh.refreshTeam
+                ? loadTeam({
+                    preserveExistingCardsOnFailure: refresh.preserveExistingCardsOnFailure,
+                  })
+                : true,
+              refresh.refreshBarbers ? onBarberSaved() : true,
+            ]);
+            return combineRefreshResults(teamOk, barbersOk);
           }}
         />
       </AdminWizardSheetLayer>
@@ -414,4 +646,7 @@ export default function BarbersOverview({
       ) : null}
     </section>
   );
-}
+},
+);
+
+export default BarbersOverview;

@@ -4,7 +4,6 @@ import type { APIRoute } from 'astro';
 import { requireAdminContext } from '@/lib/admin/auth';
 import { requireAnyPermission } from '@/lib/admin/rbac/can';
 import { setOnlineBookingsEnabled } from '@/lib/admin/setOnlineBookingsEnabled';
-import { prisma } from '@/lib/db/client';
 
 function json(body: unknown, status = 200) {
   return new Response(JSON.stringify(body), {
@@ -13,10 +12,6 @@ function json(body: unknown, status = 200) {
   });
 }
 
-/**
- * Thin compatibility wrapper around setOnlineBookingsEnabled.
- * Never creates a Barber, never changes userId/teamStatus, never seeds defaults.
- */
 export const PATCH: APIRoute = async (context) => {
   const access = await requireAdminContext(context);
   if (access instanceof Response) return access;
@@ -24,40 +19,24 @@ export const PATCH: APIRoute = async (context) => {
   const denied = requireAnyPermission(access, ['members.manage', 'catalog.manage']);
   if (denied) return denied;
 
-  const memberId = context.params.memberId;
-  if (!memberId) return json({ error: 'Missing member id.' }, 400);
+  const barberId = context.params.barberId;
+  if (!barberId) return json({ error: 'Missing booking profile id.' }, 400);
 
-  let body: { bookable?: boolean };
+  let body: { enabled?: boolean };
   try {
     body = await context.request.json();
   } catch {
     return json({ error: 'Invalid JSON.' }, 400);
   }
 
-  if (typeof body.bookable !== 'boolean') {
-    return json({ error: 'bookable must be a boolean.' }, 400);
-  }
-
-  const member = await prisma.shopMember.findFirst({
-    where: { id: memberId, shopId: access.shopId },
-    select: { id: true, barberId: true },
-  });
-  if (!member) return json({ error: 'Member not found.' }, 404);
-
-  if (!member.barberId) {
-    return json(
-      {
-        error: 'Online booking setup is required.',
-        code: 'ONLINE_BOOKING_SETUP_REQUIRED',
-      },
-      422,
-    );
+  if (typeof body.enabled !== 'boolean') {
+    return json({ error: 'enabled must be a boolean.' }, 400);
   }
 
   const result = await setOnlineBookingsEnabled({
     shopId: access.shopId,
-    barberId: member.barberId,
-    enabled: body.bookable,
+    barberId,
+    enabled: body.enabled,
   });
 
   if (!result.ok) {
@@ -71,5 +50,5 @@ export const PATCH: APIRoute = async (context) => {
     );
   }
 
-  return json({ ok: true, bookable: result.active, barberId: member.barberId });
+  return json({ ok: true, enabled: result.active, barberId });
 };

@@ -2,6 +2,25 @@ import type { Barber } from './barbersTypes';
 import { ArrowRight, Calendar, Clock } from '../lucide-react';
 import type { BarberAvailabilityStatus, DayFillData, NextBookingPreview } from '../../lib/admin/barberRosterPresentation';
 import { AVAIL_STATUS_LABELS } from '../../lib/admin/barberRosterPresentation';
+import type { InvitationLifecycleStatus } from '../../lib/admin/teamCards';
+import { passiveInvitationLabel } from '../../lib/admin/teamInviteResendUi';
+
+export type InviteResendUi = {
+  canResend: boolean;
+  /** When false, hide the primary resend button (e.g. after success). */
+  showAction?: boolean;
+  buttonLabel: string;
+  busy: boolean;
+  onResend: () => void;
+  statusHeading?: string | null;
+  statusMessage?: string | null;
+  statusTone?: 'success' | 'warning' | 'neutral' | null;
+  showCopyLink?: boolean;
+  onCopyLink?: () => void;
+  copyFeedback?: string;
+  /** Disabled label when the actor cannot resend. */
+  passiveLabel?: string;
+};
 
 export type AdminBarberRosterCardProps = {
   barber: Barber;
@@ -18,20 +37,21 @@ export type AdminBarberRosterCardProps = {
   /** Unified Team card extras */
   roleLabel?: string;
   rolePillClassName?: string;
-  cardStatus?: 'pending' | 'new' | 'active';
+  cardStatus?: 'pending' | 'active';
+  invitationStatus?: InvitationLifecycleStatus | null;
   /** When false, mute schedule chrome (Team: online bookings off / no seat) */
   showSchedule?: boolean;
   /** When false, hide shift/next/CTA/day-fill */
   showRosterChrome?: boolean;
   showProfileCta?: boolean;
-  /** Team account access label (Joined / Invite pending / No dashboard account) */
+  /** Team account access label (Joined / Invitation pending / No dashboard account) */
   accountAccessLabel?: string;
-  /** Online bookings line or pending after-joining copy */
+  /** Online bookings line */
   onlineBookingsLine?: string;
   /** Optional secondary line (e.g. Dashboard access only) */
   secondaryLine?: string | null;
-  canActivate?: boolean;
-  onActivate?: () => void;
+  /** Resend invitation controls for unaccepted invite cards */
+  inviteResend?: InviteResendUi | null;
 };
 
 export default function AdminBarberRosterCard({
@@ -49,14 +69,14 @@ export default function AdminBarberRosterCard({
   roleLabel,
   rolePillClassName,
   cardStatus,
+  invitationStatus = null,
   showSchedule = true,
   showRosterChrome = true,
   showProfileCta = true,
   accountAccessLabel,
   onlineBookingsLine,
   secondaryLine = null,
-  canActivate = false,
-  onActivate,
+  inviteResend = null,
 }: AdminBarberRosterCardProps) {
   const availLabel = AVAIL_STATUS_LABELS[availStatus];
   const bookedHDisplay = Math.round(dayFill.bookedHoursH * 10) / 10;
@@ -69,6 +89,10 @@ export default function AdminBarberRosterCard({
   const statusAnnouncement = isTeamCard
     ? [accountAccessLabel, onlineBookingsLine, secondaryLine].filter(Boolean).join('. ')
     : availLabel;
+
+  const passiveLabel =
+    inviteResend?.passiveLabel ||
+    (cardStatus === 'pending' ? passiveInvitationLabel(invitationStatus) : null);
 
   return (
     <li className={`admin-barber-card admin-barber-card--roster${barberIsActive ? '' : ' is-inactive'}`}>
@@ -149,13 +173,57 @@ export default function AdminBarberRosterCard({
             </div>
           ) : null}
 
-          {cardStatus === 'pending' ? (
+          {inviteResend ? (
+            <div className="admin-team-invite-resend">
+              {inviteResend.statusHeading ? (
+                <p
+                  className={`admin-team-invite-resend__heading admin-team-invite-resend__heading--${
+                    inviteResend.statusTone || 'neutral'
+                  }`}
+                  role="status"
+                >
+                  {inviteResend.statusHeading}
+                </p>
+              ) : null}
+              {inviteResend.statusMessage ? (
+                <p className="admin-team-invite-resend__message" role="status">
+                  {inviteResend.statusMessage}
+                </p>
+              ) : null}
+              {inviteResend.canResend && inviteResend.showAction !== false ? (
+                <button
+                  type="button"
+                  className="btn btn--primary admin-barber-roster-cta"
+                  onClick={inviteResend.onResend}
+                  disabled={inviteResend.busy}
+                >
+                  {inviteResend.buttonLabel}
+                </button>
+              ) : !inviteResend.canResend && passiveLabel ? (
+                <button type="button" className="btn btn--primary admin-barber-roster-cta" disabled>
+                  {passiveLabel}
+                </button>
+              ) : null}
+              {inviteResend.showCopyLink && inviteResend.onCopyLink ? (
+                <div className="admin-team-invite-resend__copy">
+                  <button
+                    type="button"
+                    className="btn btn--ghost admin-barber-roster-cta"
+                    onClick={inviteResend.onCopyLink}
+                  >
+                    Copy invitation link
+                  </button>
+                  {inviteResend.copyFeedback ? (
+                    <p className="admin-team-invite-resend__copy-feedback" role="status">
+                      {inviteResend.copyFeedback}
+                    </p>
+                  ) : null}
+                </div>
+              ) : null}
+            </div>
+          ) : cardStatus === 'pending' && passiveLabel ? (
             <button type="button" className="btn btn--primary admin-barber-roster-cta" disabled>
-              Pending invitation
-            </button>
-          ) : canActivate && onActivate ? (
-            <button type="button" className="btn btn--primary admin-barber-roster-cta" onClick={onActivate}>
-              Activate
+              {passiveLabel}
             </button>
           ) : null}
 
