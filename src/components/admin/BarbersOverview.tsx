@@ -33,7 +33,8 @@ export type TeamProfileOpenMeta = {
   role?: ShopRole;
   accountAccess?: TeamAccountAccess;
   memberId?: string;
-  canToggleBookable?: boolean;
+  barberId?: string | null;
+  canManageOnlineBookings?: boolean;
   bookable?: boolean;
   /** Dashboard member with no booking profile — profile open must not create one. */
   memberOnly?: boolean;
@@ -77,7 +78,7 @@ function cardToBarberStub(card: TeamCardDto): Barber {
     return {
       id: card.barber.id,
       name: card.barber.name,
-      isActive: card.cardStatus === 'active' && card.barber.isActive,
+      isActive: card.barber.isActive,
       avatarUrl: card.barber.avatarUrl,
       sortOrder: card.barber.sortOrder,
       serviceIds: card.barber.serviceIds,
@@ -242,15 +243,14 @@ export default function BarbersOverview({
       name: stub.name,
       avatarUrl: stub.avatarUrl ?? null,
       serviceIds: stub.serviceIds ?? [],
-      isActive: Boolean(stub.isActive),
+      isActive: Boolean(card.bookable),
       role: card.role,
       accountAccess: access,
+      barberId,
       bookable: card.bookable,
+      canManageOnlineBookings: card.canManageOnlineBookings,
       ...(card.kind === 'member' && !card.id.startsWith('barber:')
-        ? {
-            memberId: card.id,
-            canToggleBookable: card.canToggleBookable,
-          }
+        ? { memberId: card.id }
         : {}),
     };
     onOpenBarber(barberId, meta);
@@ -260,7 +260,7 @@ export default function BarbersOverview({
     const stub = cardToBarberStub(card);
     const now = new Date(nowTick);
     const access = teamAccountAccess(card);
-    const barberIsActive = card.cardStatus === 'active' && (card.barber?.isActive ?? !card.bookable);
+    const barberIsActive = card.bookable;
     const hasSeat = Boolean(card.barberId && card.barber);
     const showSchedule = card.bookable && hasSeat;
     const showProfileCta =

@@ -1218,17 +1218,18 @@ export default function BookingsAdminPanel({ isActive, mode, onBackToDashboard, 
 
   const handleProfileToggleBookable = useCallback(
     async (next: boolean) => {
-      if (!profileMemberMeta?.memberId) return;
+      const barberId = profileMemberMeta?.barberId || selectedBarberId;
+      if (!barberId) return;
       setBarberSaving(true);
       setBarberSaveError('');
       try {
         const res = await fetch(
-          `/api/admin/team/members/${encodeURIComponent(profileMemberMeta.memberId)}/bookable`,
+          `/api/admin/team/booking-profiles/${encodeURIComponent(barberId)}/online-bookings`,
           {
             method: 'PATCH',
             credentials: 'include',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ bookable: next }),
+            body: JSON.stringify({ enabled: next }),
           },
         );
         const data = await res.json().catch(() => ({}));
@@ -1237,14 +1238,14 @@ export default function BookingsAdminPanel({ isActive, mode, onBackToDashboard, 
           return;
         }
         setProfileMemberMeta((current) =>
-          current ? { ...current, bookable: next } : current,
+          current ? { ...current, bookable: next, isActive: next } : current,
         );
         await fetchBarbers();
       } finally {
         setBarberSaving(false);
       }
     },
-    [profileMemberMeta?.memberId, fetchBarbers],
+    [profileMemberMeta?.barberId, selectedBarberId, fetchBarbers],
   );
 
   const selectedBarber = useMemo(() => {
@@ -2135,7 +2136,6 @@ export default function BookingsAdminPanel({ isActive, mode, onBackToDashboard, 
       }}
       onBarberAvatarChange={setEditingBarberAvatarFile}
       onSaveAvatar={() => void saveSelectedBarberAvatar()}
-      onToggleActive={() => void updateBarberStatus(selectedBarber.id, !normalizeBarberStatus(selectedBarber))}
       onToggleService={(serviceId, enabled) => void toggleServiceForBarber(serviceId, enabled)}
       barberSaveMessage={barberSaveMessage}
       barberSaveError={barberSaveError}
@@ -2144,7 +2144,9 @@ export default function BookingsAdminPanel({ isActive, mode, onBackToDashboard, 
       onCreateBlock={(payload) => void createProfileBlock(payload)}
       onDeleteBlock={(blockId) => void deleteTimeBlock(blockId)}
       onDeleteBarber={() => void deleteBarber(selectedBarber.id)}
-      canToggleBookable={Boolean(profileMemberMeta?.canToggleBookable) && !profileMemberMeta?.memberOnly}
+      canManageOnlineBookings={
+        Boolean(profileMemberMeta?.canManageOnlineBookings) && !profileMemberMeta?.memberOnly
+      }
       bookable={profileMemberMeta?.bookable ?? normalizeBarberStatus(selectedBarber)}
       role={profileMemberMeta?.role}
       accountAccess={profileMemberMeta?.accountAccess}
@@ -2152,8 +2154,13 @@ export default function BookingsAdminPanel({ isActive, mode, onBackToDashboard, 
       onSaveIdentity={
         profileMemberMeta?.memberOnly ? undefined : (payload) => saveSelectedBarberIdentity(payload)
       }
+      onToggleActive={
+        barberProfileSource === 'team'
+          ? undefined
+          : () => void updateBarberStatus(selectedBarber.id, !normalizeBarberStatus(selectedBarber))
+      }
       onToggleBookable={
-        profileMemberMeta?.canToggleBookable && !profileMemberMeta?.memberOnly
+        profileMemberMeta?.canManageOnlineBookings && !profileMemberMeta?.memberOnly
           ? (next) => void handleProfileToggleBookable(next)
           : undefined
       }

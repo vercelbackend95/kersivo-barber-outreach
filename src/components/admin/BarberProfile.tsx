@@ -38,7 +38,7 @@ type BarberProfileProps = {
   onBarberUpdated: () => void | Promise<void>;
   onBarberAvatarChange: (file: File | null) => void;
   onSaveAvatar: () => void;
-  onToggleActive: () => void;
+  onToggleActive?: () => void;
   onToggleService: (serviceId: string, enabled: boolean) => void;
   barberSaveMessage: string;
   barberSaveError: string;
@@ -49,7 +49,7 @@ type BarberProfileProps = {
   onDeleteBarber: () => void;
   role?: ShopRole;
   accountAccess?: TeamAccountAccess;
-  canToggleBookable?: boolean;
+  canManageOnlineBookings?: boolean;
   bookable?: boolean;
   onToggleBookable?: (next: boolean) => void;
   onSaveIdentity?: (payload: { name: string; email: string }) => Promise<boolean>;
@@ -89,7 +89,7 @@ export default function BarberProfile({
   onDeleteBarber,
   role,
   accountAccess,
-  canToggleBookable = false,
+  canManageOnlineBookings = false,
   bookable = true,
   onToggleBookable,
   onSaveIdentity,
@@ -98,7 +98,7 @@ export default function BarberProfile({
   const actionsMenuRef = React.useRef<HTMLDivElement | null>(null);
   const [isActionsMenuOpen, setIsActionsMenuOpen] = React.useState(false);
   const [isEditWizardOpen, setIsEditWizardOpen] = React.useState(false);
-  const [confirmAction, setConfirmAction] = React.useState<'toggle' | 'delete' | null>(null);
+  const [confirmAction, setConfirmAction] = React.useState<'delete' | null>(null);
   const confirmDialogRef = React.useRef<HTMLDivElement | null>(null);
   const cancelButtonRef = React.useRef<HTMLButtonElement | null>(null);
   const avatarInputRef = React.useRef<HTMLInputElement | null>(null);
@@ -240,20 +240,10 @@ export default function BarberProfile({
     await onBarberUpdated();
   }, [onBarberUpdated]);
 
-  const actionLabel = isActive ? 'Deactivate' : 'Reactivate';
   const hasAvatarPreview = Boolean(barberAvatarPreviewUrl);
   const displayedAvatarUrl = barberAvatarPreviewUrl ?? barber.avatarUrl ?? null;
-  const isDeleteConfirm = confirmAction === 'delete';
-  const confirmTitle = isDeleteConfirm
-    ? 'Delete barber?'
-    : isActive
-      ? 'Deactivate barber?'
-      : 'Reactivate barber?';
-  const confirmActionLabel = isDeleteConfirm
-    ? barberSaving
-      ? 'Deleting...'
-      : 'Delete'
-    : actionLabel;
+  const confirmTitle = 'Delete barber?';
+  const confirmActionLabel = barberSaving ? 'Deleting...' : 'Delete';
 
   const openAvatarPicker = React.useCallback(() => {
     avatarInputRef.current?.click();
@@ -342,18 +332,20 @@ export default function BarberProfile({
 
               {isActionsMenuOpen ? (
                 <div className="admin-barber-actions-dropdown" role="menu" aria-label="Barber actions">
-                  <button
-                    type="button"
-                    role="menuitem"
-                    className="admin-barber-actions-dropdown-item"
-                    disabled={barberSaving}
-                    onClick={() => {
-                      setIsActionsMenuOpen(false);
-                      setConfirmAction('toggle');
-                    }}
-                  >
-                    {actionLabel}
-                  </button>
+                  {onToggleActive ? (
+                    <button
+                      type="button"
+                      role="menuitem"
+                      className="admin-barber-actions-dropdown-item"
+                      disabled={barberSaving}
+                      onClick={() => {
+                        setIsActionsMenuOpen(false);
+                        onToggleActive();
+                      }}
+                    >
+                      {isActive ? 'Turn offline' : 'Turn online'}
+                    </button>
+                  ) : null}
                   <button
                     type="button"
                     role="menuitem"
@@ -391,10 +383,10 @@ export default function BarberProfile({
 
           <div
             className={`admin-cp-identity${
-              (canToggleBookable && onToggleBookable) || memberOnly ? ' admin-cp-identity--bookable' : ''
+              (canManageOnlineBookings && onToggleBookable) || memberOnly ? ' admin-cp-identity--bookable' : ''
             }`}
           >
-            {canToggleBookable && onToggleBookable && !memberOnly ? (
+            {canManageOnlineBookings && onToggleBookable && !memberOnly ? (
               <div className="admin-cp-bookable-toggle">
                 <div className="admin-cp-bookable-toggle__copy">
                   <span className="admin-cp-bookable-toggle__title">Online bookings</span>
@@ -680,21 +672,11 @@ export default function BarberProfile({
               {confirmTitle}
             </h3>
             <div id="barber-confirm-description" className="admin-barber-confirm-body">
-              {isDeleteConfirm ? (
-                <ul>
-                  <li>This permanently removes the barber profile from the system.</li>
-                  <li>Assigned services, working hours, and time off entries will be removed.</li>
-                  <li>If the barber has any bookings, deletion will be blocked.</li>
-                </ul>
-              ) : isActive ? (
-                <ul>
-                  <li>This will remove the barber from the booking dropdown.</li>
-                  <li>Existing booking history stays intact.</li>
-                  <li>You can reactivate at any time.</li>
-                </ul>
-              ) : (
-                <p>The barber will be available for new bookings again.</p>
-              )}
+              <ul>
+                <li>This permanently removes the barber profile from the system.</li>
+                <li>Assigned services, working hours, and time off entries will be removed.</li>
+                <li>If the barber has any bookings, deletion will be blocked.</li>
+              </ul>
             </div>
             <div className="admin-barber-confirm-actions">
               <button
@@ -708,16 +690,11 @@ export default function BarberProfile({
               </button>
               <button
                 type="button"
-                className={`btn ${isDeleteConfirm ? 'btn--destructive' : 'btn--primary'}`}
+                className="btn btn--destructive"
                 disabled={barberSaving}
                 onClick={() => {
-                  const nextAction = confirmAction;
                   setConfirmAction(null);
-                  if (nextAction === 'delete') {
-                    onDeleteBarber();
-                    return;
-                  }
-                  onToggleActive();
+                  onDeleteBarber();
                 }}
               >
                 {confirmActionLabel}

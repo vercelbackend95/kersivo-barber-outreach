@@ -192,8 +192,7 @@ export const GET: APIRoute = async (context) => {
           }
         : null,
       canActivate: canManageMembers && cardStatus === 'new',
-      canToggleBookable:
-        canManageMembers && (m.role === 'OWNER' || m.role === 'MANAGER') && cardStatus !== 'pending',
+      canManageOnlineBookings: canManageMembers && Boolean(m.barberId),
     };
   });
 
@@ -212,7 +211,7 @@ export const GET: APIRoute = async (context) => {
       name,
       email: inv.email,
       cardStatus: 'pending',
-      bookable: inv.bookable,
+      bookable: linked ? Boolean(linked.active) : inv.bookable,
       barberId: inv.barberId,
       avatarUrl: linked?.avatarUrl ?? null,
       createdAt: inv.createdAt.toISOString(),
@@ -228,7 +227,7 @@ export const GET: APIRoute = async (context) => {
           }
         : null,
       canActivate: false,
-      canToggleBookable: false,
+      canManageOnlineBookings: canManageMembers && Boolean(inv.barberId),
     };
   });
 
@@ -259,7 +258,7 @@ export const GET: APIRoute = async (context) => {
         ...todayRosterFields(rulesByBarberId.get(b.id), holidayBarberIds.has(b.id)),
       },
       canActivate: canManageMembers && !b.active,
-      canToggleBookable: false,
+      canManageOnlineBookings: canManageMembers && Boolean(b.id),
     }));
 
   const cards = [...memberCards, ...inviteCards, ...orphanCards].sort((a, b) => {

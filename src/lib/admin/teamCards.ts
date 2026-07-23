@@ -32,7 +32,8 @@ export type TeamCardDto = {
     } | null;
   } | null;
   canActivate: boolean;
-  canToggleBookable: boolean;
+  /** Authorised Owner/Manager may manage online bookings when a booking profile exists. */
+  canManageOnlineBookings: boolean;
 };
 
 export function memberCardStatus(teamStatus: TeamMemberStatus): TeamCardStatus {
