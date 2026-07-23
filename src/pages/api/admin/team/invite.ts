@@ -7,8 +7,15 @@ import { requireAnyPermission } from '@/lib/admin/rbac/can';
 import {
   assertCanInviteRole,
   createInviteToken,
-  inviteExpiresAt,
 } from '@/lib/admin/rbac/members';
+import {
+  assertValidShopServices,
+  assertValidWorkingHours,
+  createTeamInviteWithOptionalProfile,
+  findInviteCreationConflict,
+  isInviteConflict,
+  type WorkingHourInput,
+} from '@/lib/admin/teamCreation';
 import { prisma } from '@/lib/db/client';
 import { getPublicSiteUrl } from '@/lib/setup/siteUrl';
 import { sendShopTeamInviteEmail } from '@/lib/email/sender';
@@ -24,15 +31,6 @@ function json(body: unknown, status = 200) {
 function isInviteRole(value: unknown): value is 'MANAGER' | 'BARBER' {
   return value === 'MANAGER' || value === 'BARBER';
 }
-
-type WorkingHourInput = {
-  dayOfWeek: number;
-  startMinutes: number;
-  endMinutes: number;
-  breakStartMin?: number | null;
-  breakEndMin?: number | null;
-  active?: boolean;
-};
 
 type InviteBody = {
   email?: string;
@@ -60,14 +58,6 @@ function parseBookableFlag(raw: FormDataEntryValue | null | undefined): boolean 
   if (raw == null) return false;
   const text = String(raw).trim().toLowerCase();
   return text === 'true' || text === '1' || text === 'on';
-}
-
-function countActiveWorkingDays(hours: WorkingHourInput[]): number {
-  return hours.filter((row) => {
-    const start = Number(row.startMinutes);
-    const end = Number(row.endMinutes);
-    return row.active !== false && Number.isFinite(start) && Number.isFinite(end) && end > start;
-  }).length;
 }
 
 async function parseInviteRequest(request: Request): Promise<
@@ -149,125 +139,105 @@ export const POST: APIRoute = async (context) => {
     return json({ error: 'Display name is required.' }, 400);
   }
 
-  // Dashboard invitation always; respect submitted online-booking choice (no Barber force).
   const bookable = Boolean(body.bookable);
 
-  const existingMember = await prisma.shopMember.findFirst({
-    where: { shopId: access.shopId, user: { email } },
-    select: { id: true },
+  const earlyConflict = await findInviteCreationConflict({
+    shopId: access.shopId,
+    email,
+    bookable,
   });
-  if (existingMember) {
-    return json({ error: 'This email already belongs to a member of this shop.' }, 409);
+  if (earlyConflict) {
+    return json(
+      {
+        error: earlyConflict.error,
+        code: earlyConflict.code,
+        ...(earlyConflict.inviteId ? { inviteId: earlyConflict.inviteId } : {}),
+        ...(earlyConflict.barberId ? { barberId: earlyConflict.barberId } : {}),
+      },
+      409,
+    );
   }
 
-  const openInvite = await prisma.shopInvite.findFirst({
-    where: {
-      shopId: access.shopId,
-      email,
-      acceptedAt: null,
-      expiresAt: { gt: new Date() },
-    },
-    select: { id: true },
-  });
-  if (openInvite) {
-    return json({ error: 'An invitation is already pending for this email.' }, 409);
-  }
-
-  let barberId: string | null = null;
+  let serviceIds: string[] | undefined;
+  let hoursValidated: ReturnType<typeof assertValidWorkingHours> | undefined;
 
   if (bookable) {
-    const serviceIds = Array.isArray(body.serviceIds)
-      ? body.serviceIds.map(String).filter(Boolean)
-      : [];
-    if (serviceIds.length === 0) {
+    const rawServiceIds = Array.isArray(body.serviceIds) ? body.serviceIds : [];
+    if (rawServiceIds.length === 0) {
       return json({ error: 'Select at least one service for online bookings.' }, 400);
     }
 
-    const hours = Array.isArray(body.workingHours) ? body.workingHours : [];
-    if (countActiveWorkingDays(hours) === 0) {
+    const rawHours = Array.isArray(body.workingHours) ? body.workingHours : [];
+    if (rawHours.length === 0) {
       return json({ error: 'Add at least one working day for online bookings.' }, 400);
     }
 
-    const validServices = await prisma.service.findMany({
-      where: { shopId: access.shopId, id: { in: serviceIds }, isActive: true },
-      select: { id: true },
+    const services = await assertValidShopServices({
+      shopId: access.shopId,
+      serviceIds: rawServiceIds,
     });
-    if (validServices.length === 0) {
-      return json({ error: 'Select at least one service for online bookings.' }, 400);
+    if (!services.ok) {
+      return json({ error: services.error, code: services.code }, 422);
     }
+    serviceIds = services.serviceIds;
 
-    const maxSort = await prisma.barber.aggregate({
-      where: { shopId: access.shopId },
-      _max: { sortOrder: true },
-    });
-
-    let avatarUrl: string | undefined;
-    if (avatar) {
-      try {
-        avatarUrl = await storeAdminAvatar(avatar, 'barbers');
-      } catch (error) {
-        return json(
-          { error: error instanceof Error ? error.message : 'Could not upload avatar.' },
-          400,
-        );
-      }
+    hoursValidated = assertValidWorkingHours(rawHours, { requireActiveDay: true });
+    if (!hoursValidated.ok) {
+      return json({ error: hoursValidated.error, code: hoursValidated.code }, 422);
     }
-
-    const created = await prisma.barber.create({
-      data: {
-        shopId: access.shopId,
-        name: displayName,
-        email,
-        active: true,
-        sortOrder: (maxSort._max.sortOrder ?? -1) + 1,
-        ...(avatarUrl ? { avatarUrl } : {}),
-      },
-      select: { id: true },
-    });
-    barberId = created.id;
-
-    await prisma.barberService.createMany({
-      data: validServices.map((s) => ({ barberId: created.id, serviceId: s.id })),
-      skipDuplicates: true,
-    });
-
-    await prisma.availabilityRule.createMany({
-      data: hours.map((row) => ({
-        barberId: created.id,
-        dayOfWeek: Number(row.dayOfWeek),
-        startMinutes: Number(row.startMinutes),
-        endMinutes: Number(row.endMinutes),
-        breakStartMin: row.breakStartMin ?? null,
-        breakEndMin: row.breakEndMin ?? null,
-        active: row.active !== false,
-      })),
-    });
   }
-  // bookable false: invite only — never create a Barber for avatar/name storage
+
+  // Dashboard-only: never store an avatar. Bookable: upload only after validation/conflicts.
+  let avatarUrl: string | undefined;
+  if (bookable && avatar) {
+    try {
+      avatarUrl = await storeAdminAvatar(avatar, 'barbers');
+    } catch (error) {
+      return json(
+        { error: error instanceof Error ? error.message : 'Could not upload avatar.' },
+        400,
+      );
+    }
+  }
 
   const { token, tokenHash } = createInviteToken();
-  const invite = await prisma.shopInvite.create({
-    data: {
+
+  let invite;
+  try {
+    const created = await createTeamInviteWithOptionalProfile({
       shopId: access.shopId,
       email,
       role: body.role,
-      tokenHash,
-      barberId,
       displayName,
       bookable,
+      tokenHash,
       invitedByUserId: access.userId,
-      expiresAt: inviteExpiresAt(),
-    },
-    select: {
-      id: true,
-      email: true,
-      role: true,
-      barberId: true,
-      displayName: true,
-      bookable: true,
-      expiresAt: true,
-    },
-  });
+      serviceIds,
+      hours: hoursValidated?.ok ? hoursValidated.hours : undefined,
+      avatarUrl,
+    });
+    invite = created.invite;
+  } catch (error) {
+    if (isInviteConflict(error)) {
+      return json(
+        {
+          error: error.error,
+          code: error.code,
+          ...(error.inviteId ? { inviteId: error.inviteId } : {}),
+          ...(error.barberId ? { barberId: error.barberId } : {}),
+        },
+        409,
+      );
+    }
+    if (avatarUrl) {
+      console.error(
+        '[team/invite] DB transaction failed after avatar upload; orphan blob may remain',
+        { avatarUrl, error },
+      );
+    }
+    console.error('[team/invite] create failed', error);
+    return json({ error: 'Could not create invitation.' }, 500);
+  }
 
   const shop = await prisma.shopSettings.findUnique({
     where: { id: access.shopId },
@@ -275,6 +245,7 @@ export const POST: APIRoute = async (context) => {
   });
 
   const acceptUrl = `${getPublicSiteUrl()}/admin/invite?token=${encodeURIComponent(token)}`;
+  let emailSent = true;
   try {
     await sendShopTeamInviteEmail({
       to: email,
@@ -283,6 +254,7 @@ export const POST: APIRoute = async (context) => {
       acceptUrl,
     });
   } catch (error) {
+    emailSent = false;
     console.error('[team/invite] email failed', error);
   }
 
@@ -291,6 +263,12 @@ export const POST: APIRoute = async (context) => {
       ok: true,
       invite,
       acceptPath: `/admin/invite?token=${encodeURIComponent(token)}`,
+      emailSent,
+      ...(emailSent
+        ? {}
+        : {
+            warning: 'The invitation was created, but the email could not be sent.',
+          }),
     },
     201,
   );

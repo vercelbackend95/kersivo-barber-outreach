@@ -7,6 +7,7 @@ const availabilityRuleCreateMany = vi.fn();
 const serviceFindMany = vi.fn();
 const shopInviteCreate = vi.fn();
 const shopMemberCreate = vi.fn();
+const transaction = vi.fn();
 
 vi.mock('@/lib/admin/auth', () => ({
   requireAdminContext: vi.fn(async () => ({
@@ -36,6 +37,7 @@ vi.mock('@/lib/db/client', () => ({
     service: { findMany: (...a: unknown[]) => serviceFindMany(...a) },
     shopInvite: { create: (...a: unknown[]) => shopInviteCreate(...a) },
     shopMember: { create: (...a: unknown[]) => shopMemberCreate(...a) },
+    $transaction: (...a: unknown[]) => transaction(...a),
   },
 }));
 
@@ -79,6 +81,16 @@ describe('POST /api/admin/team/booking-profiles', () => {
     });
     barberServiceCreateMany.mockResolvedValue({ count: 1 });
     availabilityRuleCreateMany.mockResolvedValue({ count: 1 });
+    transaction.mockImplementation(async (fn: (tx: unknown) => Promise<unknown>) =>
+      fn({
+        barber: {
+          create: (...a: unknown[]) => barberCreate(...a),
+          aggregate: (...a: unknown[]) => barberAggregate(...a),
+        },
+        barberService: { createMany: (...a: unknown[]) => barberServiceCreateMany(...a) },
+        availabilityRule: { createMany: (...a: unknown[]) => availabilityRuleCreateMany(...a) },
+      }),
+    );
   });
 
   it('creates exactly one standalone Barber with no invite or member', async () => {
@@ -91,6 +103,7 @@ describe('POST /api/admin/team/booking-profiles', () => {
     );
 
     expect(res.status).toBe(201);
+    expect(transaction).toHaveBeenCalledTimes(1);
     expect(barberCreate).toHaveBeenCalledTimes(1);
     expect(barberCreate).toHaveBeenCalledWith(
       expect.objectContaining({
@@ -165,5 +178,58 @@ describe('POST /api/admin/team/booking-profiles', () => {
     expect(res.status).toBe(400);
     const data = await res.json();
     expect(data.error).toMatch(/working day/i);
+  });
+
+  it('rejects partially valid service selection', async () => {
+    serviceFindMany.mockResolvedValue([{ id: 'svc-1' }]);
+    const res = await POST(
+      ctx({
+        displayName: 'Alex',
+        serviceIds: ['svc-1', 'svc-missing'],
+        workingHours,
+      }),
+    );
+    expect(res.status).toBe(422);
+    const data = await res.json();
+    expect(data.code).toBe('INVALID_SERVICE_SELECTION');
+    expect(barberCreate).not.toHaveBeenCalled();
+  });
+
+  it('rejects invalid dayOfWeek', async () => {
+    const res = await POST(
+      ctx({
+        displayName: 'Alex',
+        serviceIds: ['svc-1'],
+        workingHours: [{ dayOfWeek: 9, startMinutes: 540, endMinutes: 1080, active: true }],
+      }),
+    );
+    expect(res.status).toBe(422);
+    const data = await res.json();
+    expect(data.code).toBe('INVALID_WORKING_HOURS');
+    expect(barberCreate).not.toHaveBeenCalled();
+  });
+
+  it('rolls back Barber when service write fails', async () => {
+    barberServiceCreateMany.mockRejectedValue(new Error('service boom'));
+    const res = await POST(
+      ctx({
+        displayName: 'Alex',
+        serviceIds: ['svc-1'],
+        workingHours,
+      }),
+    );
+    expect(res.status).toBe(500);
+  });
+
+  it('rolls back Barber when working-hours write fails', async () => {
+    availabilityRuleCreateMany.mockRejectedValue(new Error('hours boom'));
+    const res = await POST(
+      ctx({
+        displayName: 'Alex',
+        serviceIds: ['svc-1'],
+        workingHours,
+      }),
+    );
+    expect(res.status).toBe(500);
   });
 });

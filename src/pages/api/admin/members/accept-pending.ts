@@ -34,6 +34,13 @@ export const POST: APIRoute = async (context) => {
 
   const result = await acceptInviteForUser(invite, session.user.id);
 
+  if (!result.ok) {
+    return new Response(JSON.stringify({ error: result.error, code: result.code }), {
+      status: 409,
+      headers: { 'Content-Type': 'application/json' },
+    });
+  }
+
   return new Response(
     JSON.stringify({
       ok: true,
