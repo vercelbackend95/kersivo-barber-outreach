@@ -7,9 +7,13 @@ import BarberBlocksEditor from './BarberBlocksEditor';
 import BarberWizard from './barber-wizard/BarberWizard';
 import AdminWizardSheetLayer from './AdminWizardSheetLayer';
 import type { Barber, ServiceOption, TimeBlock, WorkingHourRow } from './barbersTypes';
-import StatusBadge from './StatusBadge';
 import { SettingsGearIcon } from './SettingsGearIcon';
-import { roleLabel } from '@/lib/admin/teamCards';
+import {
+  onlineBookingsToggleHint,
+  roleLabel,
+  teamProfileSummary,
+  type TeamAccountAccess,
+} from '@/lib/admin/teamCards';
 import type { ShopRole } from '@prisma/client';
 import '@/styles/components/admin-team.css';
 
@@ -44,6 +48,7 @@ type BarberProfileProps = {
   onDeleteBlock: (blockId: string) => void;
   onDeleteBarber: () => void;
   role?: ShopRole;
+  accountAccess?: TeamAccountAccess;
   canToggleBookable?: boolean;
   bookable?: boolean;
   onToggleBookable?: (next: boolean) => void;
@@ -81,6 +86,7 @@ export default function BarberProfile({
   onDeleteBlock,
   onDeleteBarber,
   role,
+  accountAccess,
   canToggleBookable = false,
   bookable = true,
   onToggleBookable,
@@ -382,9 +388,9 @@ export default function BarberProfile({
             {canToggleBookable && onToggleBookable ? (
               <div className="admin-cp-bookable-toggle">
                 <div className="admin-cp-bookable-toggle__copy">
-                  <span className="admin-cp-bookable-toggle__title">Bookable</span>
+                  <span className="admin-cp-bookable-toggle__title">Online bookings</span>
                   <span className="admin-cp-bookable-toggle__hint">
-                    {bookable ? 'On schedule & booking form' : 'Hidden from booking form'}
+                    {onlineBookingsToggleHint(bookable, accountAccess)}
                   </span>
                 </div>
                 <label className="admin-service-switch-wrap" htmlFor="admin-barber-bookable">
@@ -395,6 +401,7 @@ export default function BarberProfile({
                     checked={bookable}
                     onChange={(e) => onToggleBookable(e.target.checked)}
                     disabled={barberSaving}
+                    aria-label="Accept online bookings"
                   />
                   <span className="admin-service-switch-track" aria-hidden="true">
                     <span className="admin-service-switch-thumb" />
@@ -520,9 +527,13 @@ export default function BarberProfile({
                   ) : null}
                 </>
               )}
-              <div className="admin-cp-status-pill">
-                <StatusBadge status={isActive ? 'ACTIVE' : 'INACTIVE'} variant="dot" size="sm" />
-              </div>
+              {role && accountAccess ? (
+                <div className="admin-cp-status-pill">
+                  <p className="admin-cp-team-summary" role="status">
+                    {teamProfileSummary(role, accountAccess)}
+                  </p>
+                </div>
+              ) : null}
               {hasAvatarPreview ? (
                 <button
                   type="button"

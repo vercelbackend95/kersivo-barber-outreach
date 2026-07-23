@@ -3491,6 +3491,29 @@ body.admin-theme-premium-black .booking-page-wrap .booking-shell.surface {
   margin-top: 0.15rem;
 }
 
+.admin-barber-roster-facts {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 0.2rem;
+  margin-top: 0.28rem;
+  min-width: 0;
+}
+
+.admin-barber-roster-account,
+.admin-barber-roster-secondary {
+  margin: 0;
+  font-size: 0.72rem;
+  font-weight: 500;
+  letter-spacing: 0.01em;
+  line-height: 1.25;
+  color: var(--muted);
+}
+
+.admin-barber-roster-facts .admin-barber-roster-status {
+  margin-top: 0;
+}
+
 
 .admin-sidebar-brand-sub {
   font-size: var(--text-xs);
@@ -14948,6 +14971,15 @@ body.admin-theme-premium-black .booking-page-wrap .booking-shell.surface {
 
 .admin-cp-status-pill {
   margin-top: 0.2rem;
+}
+
+.admin-cp-team-summary {
+  margin: 0;
+  font-size: 0.78rem;
+  font-weight: 600;
+  letter-spacing: 0.01em;
+  line-height: 1.3;
+  color: var(--muted);
 }
 
 .admin-cp-avatar-save-btn {

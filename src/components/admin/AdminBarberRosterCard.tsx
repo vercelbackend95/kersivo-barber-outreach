@@ -19,13 +19,17 @@ export type AdminBarberRosterCardProps = {
   roleLabel?: string;
   rolePillClassName?: string;
   cardStatus?: 'pending' | 'new' | 'active';
-  /** When false, show muted schedule chrome + “Not bookable” status */
+  /** When false, mute schedule chrome (Team: online bookings off / no seat) */
   showSchedule?: boolean;
   /** When false, hide shift/next/CTA/day-fill */
   showRosterChrome?: boolean;
   showProfileCta?: boolean;
-  /** Green New pill — only newest NEW member */
-  showNewBadge?: boolean;
+  /** Team account access label (Joined / Invite pending / No dashboard account) */
+  accountAccessLabel?: string;
+  /** Online bookings line or pending after-joining copy */
+  onlineBookingsLine?: string;
+  /** Optional secondary line (e.g. Dashboard access only) */
+  secondaryLine?: string | null;
   canActivate?: boolean;
   onActivate?: () => void;
 };
@@ -48,7 +52,9 @@ export default function AdminBarberRosterCard({
   showSchedule = true,
   showRosterChrome = true,
   showProfileCta = true,
-  showNewBadge = false,
+  accountAccessLabel,
+  onlineBookingsLine,
+  secondaryLine = null,
   canActivate = false,
   onActivate,
 }: AdminBarberRosterCardProps) {
@@ -58,6 +64,11 @@ export default function AdminBarberRosterCard({
   const nextBookingTitle = nextBookingPreview
     ? `Next: ${nextBookingPreview.timeLabel} · ${nextBookingPreview.serviceLabel} (${nextBookingPreview.relativeLabel})`
     : 'No upcoming bookings';
+  const isTeamCard = Boolean(accountAccessLabel);
+
+  const statusAnnouncement = isTeamCard
+    ? [accountAccessLabel, onlineBookingsLine, secondaryLine].filter(Boolean).join('. ')
+    : availLabel;
 
   return (
     <li className={`admin-barber-card admin-barber-card--roster${barberIsActive ? '' : ' is-inactive'}`}>
@@ -86,25 +97,31 @@ export default function AdminBarberRosterCard({
                 {roleLabel ? (
                   <span className={rolePillClassName || 'admin-team__role-pill'}>{roleLabel}</span>
                 ) : null}
-                {showNewBadge ? (
-                  <span className="admin-barber-roster-inactive-badge admin-barber-roster-inactive-badge--new">
-                    New
-                  </span>
-                ) : null}
               </div>
-              {showSchedule ? (
+              {isTeamCard ? (
+                <div className="admin-barber-roster-facts" role="status" aria-label={statusAnnouncement}>
+                  {accountAccessLabel ? (
+                    <p className="admin-barber-roster-account">{accountAccessLabel}</p>
+                  ) : null}
+                  {onlineBookingsLine ? (
+                    <p
+                      className={`admin-barber-roster-status admin-barber-roster-status--${
+                        showSchedule ? availStatus : 'off'
+                      }`}
+                    >
+                      {onlineBookingsLine}
+                    </p>
+                  ) : null}
+                  {secondaryLine ? (
+                    <p className="admin-barber-roster-secondary">{secondaryLine}</p>
+                  ) : null}
+                </div>
+              ) : (
                 <p className={`admin-barber-roster-status admin-barber-roster-status--${availStatus}`} role="status">
                   {availLabel}
                 </p>
-              ) : (
-                <p className="admin-barber-roster-status admin-barber-roster-status--off" role="status">
-                  Not bookable
-                </p>
               )}
             </div>
-            {barberIsActive || cardStatus === 'pending' || cardStatus === 'new' ? null : (
-              <span className="admin-barber-roster-inactive-badge">Hidden</span>
-            )}
           </div>
 
           {showRosterChrome ? (
@@ -142,7 +159,7 @@ export default function AdminBarberRosterCard({
             </button>
           ) : null}
 
-          {showRosterChrome && showProfileCta && barber.id ? (
+          {showProfileCta && barber.id ? (
             <button
               type="button"
               className="admin-barber-roster-cta"

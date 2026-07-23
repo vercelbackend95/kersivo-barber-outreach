@@ -7,8 +7,16 @@ import {
   getBarberAvailabilityStatus,
   getTodayLine,
 } from '../../lib/admin/barberRosterPresentation';
-import type { TeamCardDto } from '../../lib/admin/teamCards';
-import { roleLabel, rolePillClass, roleSortRank } from '../../lib/admin/teamCards';
+import type { TeamAccountAccess, TeamCardDto } from '../../lib/admin/teamCards';
+import {
+  dashboardAccessOnlyLine,
+  roleLabel,
+  rolePillClass,
+  roleSortRank,
+  teamAccountAccess,
+  teamAccountAccessLabel,
+  teamCardOnlineBookingsLine,
+} from '../../lib/admin/teamCards';
 import type { ShopRole } from '@prisma/client';
 import AdminBarberRosterCard from './AdminBarberRosterCard';
 import AdminBarberRosterSearch from './AdminBarberRosterSearch';
@@ -23,6 +31,7 @@ export type TeamProfileOpenMeta = {
   serviceIds: string[];
   isActive: boolean;
   role?: ShopRole;
+  accountAccess?: TeamAccountAccess;
   memberId?: string;
   canToggleBookable?: boolean;
   bookable?: boolean;
@@ -187,21 +196,6 @@ export default function BarbersOverview({
   );
   const inactiveCount = teamCards.filter((c) => c.cardStatus !== 'active').length;
 
-  const newestNewCardId = React.useMemo(() => {
-    let newestId: string | null = null;
-    let newestTs = -Infinity;
-    for (const card of teamCards) {
-      if (card.cardStatus !== 'new') continue;
-      const ts = Date.parse(card.createdAt || '');
-      if (!Number.isFinite(ts)) continue;
-      if (ts >= newestTs) {
-        newestTs = ts;
-        newestId = card.id;
-      }
-    }
-    return newestId;
-  }, [teamCards]);
-
   async function handleActivate(card: TeamCardDto) {
     setActionError('');
     const res = await fetch(`/api/admin/team/members/${encodeURIComponent(card.id)}/activate`, {
@@ -254,19 +248,23 @@ export default function BarbersOverview({
           },
     });
 
+    const access = teamAccountAccess(card);
     const meta: TeamProfileOpenMeta = {
       name: stub.name,
       avatarUrl: stub.avatarUrl ?? null,
       serviceIds: stub.serviceIds ?? [],
       isActive: Boolean(stub.isActive),
       role: card.role,
+      accountAccess: access,
       ...(card.canToggleBookable && card.kind === 'member'
         ? {
             memberId: card.id,
             canToggleBookable: true,
             bookable: card.bookable || false,
           }
-        : {}),
+        : {
+            bookable: card.bookable,
+          }),
     };
     onOpenBarber(barberId, meta);
   }
@@ -274,6 +272,7 @@ export default function BarbersOverview({
   function renderCard(card: TeamCardDto, index: number) {
     const stub = cardToBarberStub(card);
     const now = new Date(nowTick);
+    const access = teamAccountAccess(card);
     const barberIsActive = card.cardStatus === 'active' && (card.barber?.isActive ?? !card.bookable);
     const hasSeat = Boolean(card.barberId && card.barber);
     const showSchedule = card.bookable && hasSeat;
@@ -309,9 +308,11 @@ export default function BarbersOverview({
         rolePillClassName={rolePillClass(card.role)}
         cardStatus={card.cardStatus}
         showSchedule={showSchedule}
-        showRosterChrome
+        showRosterChrome={showSchedule || hasSeat}
         showProfileCta={showProfileCta}
-        showNewBadge={card.id === newestNewCardId}
+        accountAccessLabel={teamAccountAccessLabel(access)}
+        onlineBookingsLine={teamCardOnlineBookingsLine(access, card.bookable)}
+        secondaryLine={dashboardAccessOnlyLine(access, card.bookable)}
         canActivate={card.canActivate}
         onActivate={() => void handleActivate(card)}
       />
@@ -363,8 +364,8 @@ export default function BarbersOverview({
                 onClick={() => onShowInactiveChange(!showInactiveBarbers)}
               >
                 {showInactiveBarbers
-                  ? 'Hide inactive & pending'
-                  : `Show ${inactiveCount} inactive / pending`}
+                  ? 'Hide pending & awaiting activation'
+                  : `Show ${inactiveCount} pending / awaiting activation`}
               </button>
             </div>
           ) : null}
@@ -372,7 +373,7 @@ export default function BarbersOverview({
           {showInactiveBarbers && inactiveCards.length > 0 ? (
             <ul
               className="admin-barber-grid admin-barbers-overview-grid admin-barbers-overview-grid--inactive"
-              aria-label="Inactive and pending team members"
+              aria-label="Pending invitations and team members awaiting activation"
             >
               {inactiveCards.map((card, index) => renderCard(card, activeCards.length + index))}
             </ul>

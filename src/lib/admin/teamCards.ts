@@ -61,3 +61,79 @@ export function roleLabel(role: ShopRole | string): string {
   if (role === 'BARBER') return 'Barber';
   return role;
 }
+
+/** Account access as shown on Team cards / profile — not lifecycle activation. */
+export type TeamAccountAccess = 'invite_pending' | 'joined' | 'no_dashboard';
+
+export function teamAccountAccess(card: Pick<TeamCardDto, 'kind' | 'id'>): TeamAccountAccess {
+  if (card.kind === 'invite') return 'invite_pending';
+  if (card.id.startsWith('barber:')) return 'no_dashboard';
+  return 'joined';
+}
+
+export function teamAccountAccessLabel(access: TeamAccountAccess): string {
+  if (access === 'invite_pending') return 'Invite pending';
+  if (access === 'no_dashboard') return 'No dashboard account';
+  return 'Joined';
+}
+
+/** Online booking line for joined / roster cards (not pending invites). */
+export function onlineBookingsStateLabel(bookable: boolean): string {
+  return bookable ? 'Online bookings: On' : 'Online bookings: Off';
+}
+
+/** Pending-invite copy about what happens after they join. */
+export function pendingOnlineBookingsLine(bookable: boolean): string {
+  return bookable
+    ? 'Online bookings will start after joining'
+    : 'Dashboard access only after joining';
+}
+
+/**
+ * Secondary line under online booking state when a joined member has dashboard access
+ * but is not accepting online bookings.
+ */
+export function dashboardAccessOnlyLine(
+  access: TeamAccountAccess,
+  bookable: boolean,
+): string | null {
+  if (access === 'joined' && !bookable) return 'Dashboard access only';
+  return null;
+}
+
+/** Primary online-booking / pending line for a Team card. */
+export function teamCardOnlineBookingsLine(
+  access: TeamAccountAccess,
+  bookable: boolean,
+): string {
+  if (access === 'invite_pending') return pendingOnlineBookingsLine(bookable);
+  return onlineBookingsStateLabel(bookable);
+}
+
+export function teamProfileSummary(
+  role: ShopRole | string,
+  access: TeamAccountAccess,
+): string {
+  return `${roleLabel(role)} · ${teamAccountAccessLabel(access)}`;
+}
+
+export const ONLINE_BOOKINGS_ON_HINT =
+  'Clients can choose this person in the booking flow during their working hours.';
+
+export const ONLINE_BOOKINGS_OFF_HINT_DASHBOARD =
+  'They keep their dashboard access but will not appear in the client booking flow.';
+
+export const ONLINE_BOOKINGS_OFF_HINT_NO_DASHBOARD =
+  'They will not appear in the client booking flow.';
+
+export const ONLINE_BOOKINGS_OFF_HINT_INVITE =
+  'They will have dashboard access but will not appear in the client booking flow.';
+
+export function onlineBookingsToggleHint(
+  bookable: boolean,
+  access: TeamAccountAccess | null | undefined,
+): string {
+  if (bookable) return ONLINE_BOOKINGS_ON_HINT;
+  if (access === 'no_dashboard') return ONLINE_BOOKINGS_OFF_HINT_NO_DASHBOARD;
+  return ONLINE_BOOKINGS_OFF_HINT_DASHBOARD;
+}

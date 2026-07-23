@@ -15,6 +15,10 @@ import {
   WEEK_DAY_LABELS,
   type BarberWizardService,
 } from './barber-wizard/barberWizardTypes';
+import {
+  ONLINE_BOOKINGS_OFF_HINT_INVITE,
+  ONLINE_BOOKINGS_ON_HINT,
+} from '@/lib/admin/teamCards';
 
 type TeamInviteWizardProps = {
   actorRole: 'OWNER' | 'MANAGER' | 'BARBER' | string;
@@ -331,7 +335,7 @@ export default function TeamInviteWizard({
             <p className="admin-barber-wizard__eyebrow">Pending invitation</p>
             <h3>Invite sent to {email.trim()}</h3>
             <p>
-              {name.trim()} appears on Team as inactive until they accept, then you can activate them.
+              {name.trim()} appears on Team as invite pending until they accept, then you can activate them.
             </p>
           </section>
         ) : null}
@@ -359,9 +363,9 @@ export default function TeamInviteWizard({
             {role === 'MANAGER' ? (
               <div className="admin-barber-wizard__bookable-row">
                 <div>
-                  <p className="admin-barber-wizard__bookable-title">Also bookable</p>
+                  <p className="admin-barber-wizard__bookable-title">Accept online bookings</p>
                   <p className="admin-barber-wizard__bookable-hint">
-                    Appear on the schedule and booking form
+                    {bookable ? ONLINE_BOOKINGS_ON_HINT : ONLINE_BOOKINGS_OFF_HINT_INVITE}
                   </p>
                 </div>
                 <label className="admin-service-switch-wrap" htmlFor="team-invite-bookable">
@@ -371,11 +375,12 @@ export default function TeamInviteWizard({
                     className="admin-service-switch-input"
                     checked={bookable}
                     onChange={(e) => setBookable(e.target.checked)}
+                    aria-label="Accept online bookings"
                   />
                   <span className="admin-service-switch-track" aria-hidden="true">
                     <span className="admin-service-switch-thumb" />
                   </span>
-                  <span className="admin-service-switch-label">{bookable ? 'Yes' : 'No'}</span>
+                  <span className="admin-service-switch-label">{bookable ? 'On' : 'Off'}</span>
                 </label>
               </div>
             ) : null}
@@ -588,8 +593,8 @@ export default function TeamInviteWizard({
                     <dd>{role === 'MANAGER' ? 'Manager' : 'Barber'}</dd>
                   </div>
                   <div>
-                    <dt>Bookable</dt>
-                    <dd>{needsBookingSetup ? 'Yes' : 'No'}</dd>
+                    <dt>Online bookings</dt>
+                    <dd>{needsBookingSetup ? 'On' : 'Off'}</dd>
                   </div>
                 </dl>
               </section>
@@ -645,7 +650,7 @@ export default function TeamInviteWizard({
               <h3 ref={stepHeadingRef} tabIndex={-1}>
                 Send the invite email
               </h3>
-              <p>They must accept before you can activate them on Team.</p>
+              <p>They must accept the invite before you can activate them on Team.</p>
             </div>
             <div className={`field${errors.email ? ' field--error' : ''}`}>
               <label className="field__label" htmlFor="team-invite-email">

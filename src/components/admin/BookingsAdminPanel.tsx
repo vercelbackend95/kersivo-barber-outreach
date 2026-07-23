@@ -610,7 +610,7 @@ const BOOKINGS_HEADER_KICKER: Record<BookingsAdminMode, string> = {
 
 const BOOKINGS_SECTION_HEADER: Record<BookingsAdminMode, { title: string; description: string }> = {
   dashboard: { title: 'Bookings', description: "Manage today's appointments and upcoming schedule" },
-  blocks: { title: 'Team', description: 'Invite people, set roles, schedules, and who is bookable' },
+  blocks: { title: 'Team', description: 'Invite people, set roles, schedules, and who accepts online bookings' },
   reports: { title: 'Reports', description: 'Business performance analytics' },
   history: { title: 'History', description: 'Complete booking history with filters' },
 };
@@ -1233,7 +1233,7 @@ export default function BookingsAdminPanel({ isActive, mode, onBackToDashboard, 
         );
         const data = await res.json().catch(() => ({}));
         if (!res.ok) {
-          setBarberSaveError(data.error || 'Could not update bookable.');
+          setBarberSaveError(data.error || 'Could not update online bookings.');
           return;
         }
         setProfileMemberMeta((current) =>
@@ -2134,6 +2134,7 @@ export default function BookingsAdminPanel({ isActive, mode, onBackToDashboard, 
       canToggleBookable={Boolean(profileMemberMeta?.canToggleBookable)}
       bookable={profileMemberMeta?.bookable ?? normalizeBarberStatus(selectedBarber)}
       role={profileMemberMeta?.role}
+      accountAccess={profileMemberMeta?.accountAccess}
       onSaveIdentity={(payload) => saveSelectedBarberIdentity(payload)}
       onToggleBookable={
         profileMemberMeta?.canToggleBookable
