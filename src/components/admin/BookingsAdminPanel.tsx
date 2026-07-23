@@ -1903,25 +1903,6 @@ export default function BookingsAdminPanel({ isActive, mode, onBackToDashboard, 
     await fetchBarbers();
   }
 
-
-  async function updateBarberStatus(barberId: string, isActive: boolean) {
-    setBarberSaveMessage('');
-    setBarberSaveError('');
-    const response = await fetch('/api/admin/barbers', {
-      method: 'POST',
-      credentials: 'include',
-      headers: { 'content-type': 'application/json' },
-      body: JSON.stringify({ id: barberId, isActive })
-    });
-
-    if (!response.ok) {
-      setBarberSaveError(isActive ? 'Could not reactivate barber.' : 'Could not deactivate barber.');
-      return;
-    }
-
-    setBarberSaveMessage(isActive ? 'Barber reactivated.' : 'Barber deactivated.');
-    await fetchBarbers();
-  }
   async function deleteBarber(barberId: string) {
     setBarberSaveMessage('');
     setBarberSaveError('');
@@ -2153,11 +2134,6 @@ export default function BookingsAdminPanel({ isActive, mode, onBackToDashboard, 
       memberOnly={Boolean(profileMemberMeta?.memberOnly)}
       onSaveIdentity={
         profileMemberMeta?.memberOnly ? undefined : (payload) => saveSelectedBarberIdentity(payload)
-      }
-      onToggleActive={
-        barberProfileSource === 'team'
-          ? undefined
-          : () => void updateBarberStatus(selectedBarber.id, !normalizeBarberStatus(selectedBarber))
       }
       onToggleBookable={
         profileMemberMeta?.canManageOnlineBookings && !profileMemberMeta?.memberOnly

@@ -38,7 +38,6 @@ type BarberProfileProps = {
   onBarberUpdated: () => void | Promise<void>;
   onBarberAvatarChange: (file: File | null) => void;
   onSaveAvatar: () => void;
-  onToggleActive?: () => void;
   onToggleService: (serviceId: string, enabled: boolean) => void;
   barberSaveMessage: string;
   barberSaveError: string;
@@ -78,7 +77,6 @@ export default function BarberProfile({
   onBarberUpdated,
   onBarberAvatarChange,
   onSaveAvatar,
-  onToggleActive,
   onToggleService,
   barberSaveMessage,
   barberSaveError,
@@ -332,20 +330,6 @@ export default function BarberProfile({
 
               {isActionsMenuOpen ? (
                 <div className="admin-barber-actions-dropdown" role="menu" aria-label="Barber actions">
-                  {onToggleActive ? (
-                    <button
-                      type="button"
-                      role="menuitem"
-                      className="admin-barber-actions-dropdown-item"
-                      disabled={barberSaving}
-                      onClick={() => {
-                        setIsActionsMenuOpen(false);
-                        onToggleActive();
-                      }}
-                    >
-                      {isActive ? 'Turn offline' : 'Turn online'}
-                    </button>
-                  ) : null}
                   <button
                     type="button"
                     role="menuitem"
