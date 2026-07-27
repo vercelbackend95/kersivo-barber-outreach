@@ -175,10 +175,11 @@ export const POST: APIRoute = async (ctx) => {
   }
 
   const base = getPublicSiteUrl();
+  // Settings live as an AdminPanel section — not a standalone /admin/barbershop-settings page.
   const link = await createConnectAccountLink({
     accountId,
-    refreshUrl: `${base}/admin/barbershop-settings?connect=refresh`,
-    returnUrl: `${base}/admin/barbershop-settings?connect=return`,
+    refreshUrl: `${base}/admin?section=barbershop_settings&connect=refresh`,
+    returnUrl: `${base}/admin?section=barbershop_settings&connect=return`,
   });
 
   return json({ url: link.url, accountId });

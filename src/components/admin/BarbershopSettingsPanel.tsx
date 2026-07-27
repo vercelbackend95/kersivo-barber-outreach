@@ -154,7 +154,8 @@ export default function BarbershopSettingsPanel({
       setPauseUntil(nextPause.until ?? '');
       setPauseReason(nextPause.reason ?? '');
       onPauseChanged?.(nextPause.pausedNow);
-      await loadDeposits();
+      // Do not block the settings shell on deposits/Stripe — failures stay in the deposits card.
+      void loadDeposits();
     } catch (error) {
       setLoadError(error instanceof Error ? error.message : 'Could not load barbershop settings.');
     } finally {
@@ -167,6 +168,25 @@ export default function BarbershopSettingsPanel({
   useEffect(() => {
     void load();
   }, [load]);
+
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    const connect = params.get('connect');
+    if (connect !== 'return' && connect !== 'refresh') return;
+    if (connect === 'return') {
+      setDepositsMessage('Returned from Stripe — checking Connect status…');
+      void loadDeposits();
+    } else {
+      setDepositsError('Stripe onboarding was interrupted. Click Connect Stripe to continue.');
+    }
+    params.delete('connect');
+    const next = params.toString();
+    window.history.replaceState(
+      {},
+      '',
+      `${window.location.pathname}${next ? `?${next}` : ''}`,
+    );
+  }, [loadDeposits]);
 
   useEffect(() => {
     return () => {

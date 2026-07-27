@@ -1,0 +1,9 @@
+---
+/**
+ * Stripe Connect used to return here; settings are an /admin section.
+ * Keep this redirect for in-flight Connect sessions and bookmarks.
+ */
+const params = Astro.url.searchParams;
+params.set('section', 'barbershop_settings');
+return Astro.redirect(`/admin?${params.toString()}`);
+---
