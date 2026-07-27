@@ -104,32 +104,36 @@ const createUrl = `/api/public/bookings/${shop.id}/create`;
 >
   {
     bookingUnavailable ? (
-      <p class="muted" style="padding: 2rem;">{PUBLIC_BOOKING_UNAVAILABLE_MESSAGE}</p>
+      <main class="container page-wrap booking-page-wrap">
+        <p class="muted">{PUBLIC_BOOKING_UNAVAILABLE_MESSAGE}</p>
+      </main>
     ) : (
-      <BookingFlow
-        client:load
-        mode="create"
-        publicShopId={shop.id}
-        publicCreateUrl={createUrl}
-        depositRequired={depositRequired}
-        services={services.map((s) => ({
-          id: s.id,
-          name: s.name,
-          durationMinutes: s.durationMinutes,
-          pricePence: s.pricePence,
-          category: s.category,
-        }))}
-        barbers={barbers.map((b) => ({
-          id: b.id,
-          name: b.name,
-          serviceIds: b.barberServices.map((x) => x.serviceId),
-        }))}
-        shopDetails={{
-          timezone: shop.timezone,
-          cancellationWindowHours: shop.cancellationWindowHours,
-          rescheduleWindowHours: shop.rescheduleWindowHours,
-        }}
-      />
+      <main class="container page-wrap booking-page-wrap">
+        <BookingFlow
+          client:load
+          mode="create"
+          publicShopId={shop.id}
+          publicCreateUrl={createUrl}
+          depositRequired={depositRequired}
+          services={services.map((s) => ({
+            id: s.id,
+            name: s.name,
+            durationMinutes: s.durationMinutes,
+            pricePence: s.pricePence,
+            category: s.category,
+          }))}
+          barbers={barbers.map((b) => ({
+            id: b.id,
+            name: b.name,
+            serviceIds: b.barberServices.map((x) => x.serviceId),
+          }))}
+          shopDetails={{
+            timezone: shop.timezone,
+            cancellationWindowHours: shop.cancellationWindowHours,
+            rescheduleWindowHours: shop.rescheduleWindowHours,
+          }}
+        />
+      </main>
     )
   }
 </MinimalLayout>

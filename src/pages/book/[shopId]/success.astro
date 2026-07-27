@@ -1,5 +1,6 @@
 ---
 import MinimalLayout from '@/layouts/MinimalLayout.astro';
+import BookingConfirmationPanel from '@/components/booking/BookingConfirmationPanel';
 import { prisma } from '@/lib/db/client';
 import { retrieveCheckoutSession, getCheckoutPaymentIntentId } from '@/lib/shop/stripe';
 import { BOOKING_DEPOSIT_METADATA_TYPE } from '@/lib/booking/depositGate';
@@ -7,14 +8,31 @@ import { BookingStatus, PaymentStatus } from '@prisma/client';
 import { sendInstantBookingConfirmationEmail } from '@/lib/email/sender';
 import { getPublicSiteUrl } from '@/lib/setup/siteUrl';
 import { generateToken, hashToken } from '@/lib/booking/tokens';
+import { formatInTimeZone } from 'date-fns-tz';
+import '@/styles/tokens.css';
+import '@/styles/fonts.css';
+import '@/styles/global.css';
+import '@/styles/components/buttons.css';
+import '@/styles/components/booking.css';
+import '@/styles/components/booking-flow.css';
+import '@/styles/components/booking-mobile.css';
 
 export const prerender = false;
 
 const shopId = Astro.params.shopId?.trim() ?? '';
 const sessionId = Astro.url.searchParams.get('session_id')?.trim() ?? '';
 
-let message = 'Unable to confirm deposit payment.';
+type ConfirmSummary = {
+  service: string;
+  barber: string;
+  date: string;
+  time: string;
+};
+
 let ok = false;
+let errorMessage = 'Unable to confirm deposit payment.';
+let summary: ConfirmSummary | null = null;
+let shopTimezone = 'Europe/London';
 
 if (shopId && sessionId) {
   try {
@@ -30,54 +48,124 @@ if (shopId && sessionId) {
         where: { id: metadata.bookingId, barber: { shopId } },
         include: { barber: true, service: true },
       });
+
       if (booking) {
-        const pi = getCheckoutPaymentIntentId(session);
-        const manageToken = generateToken();
-        const updated = await prisma.booking.update({
-          where: { id: booking.id },
-          data: {
-            status: BookingStatus.BOOKED,
-            paymentStatus: PaymentStatus.PAID,
-            paidAt: new Date(),
-            stripeCheckoutSessionId: sessionId,
-            stripePaymentIntentId: pi,
-            manageTokenHash: hashToken(manageToken),
-          },
-          include: { barber: true, service: true },
-        });
         const shop = await prisma.shopSettings.findUnique({
           where: { id: shopId },
-          select: { name: true },
+          select: { name: true, timezone: true },
         });
-        const baseUrl = getPublicSiteUrl();
-        try {
-          await sendInstantBookingConfirmationEmail({
-            to: updated.email,
-            fullName: updated.fullName,
-            cancelUrl: `${baseUrl}/book/cancel?token=${manageToken}`,
-            rescheduleUrl: `${baseUrl}/book/reschedule?token=${manageToken}`,
-            shopName: shop?.name ?? 'Barbershop',
-            serviceName: updated.serviceNameAtBooking ?? updated.service.name,
-            barberName: updated.barber.name,
-            startAt: updated.startAt,
+        shopTimezone = shop?.timezone?.trim() || 'Europe/London';
+
+        const alreadyConfirmed =
+          booking.status === BookingStatus.BOOKED &&
+          booking.paymentStatus === PaymentStatus.PAID &&
+          booking.stripeCheckoutSessionId === sessionId;
+
+        let confirmed = booking;
+
+        if (!alreadyConfirmed) {
+          const manageToken = generateToken();
+          confirmed = await prisma.booking.update({
+            where: { id: booking.id },
+            data: {
+              status: BookingStatus.BOOKED,
+              paymentStatus: PaymentStatus.PAID,
+              paidAt: new Date(),
+              stripeCheckoutSessionId: sessionId,
+              stripePaymentIntentId: getCheckoutPaymentIntentId(session),
+              manageTokenHash: hashToken(manageToken),
+            },
+            include: { barber: true, service: true },
           });
-        } catch {
-          // soft-fail email
+
+          const baseUrl = getPublicSiteUrl();
+          try {
+            await sendInstantBookingConfirmationEmail({
+              to: confirmed.email,
+              fullName: confirmed.fullName,
+              cancelUrl: `${baseUrl}/book/cancel?token=${manageToken}`,
+              rescheduleUrl: `${baseUrl}/book/reschedule?token=${manageToken}`,
+              shopName: shop?.name ?? 'Barbershop',
+              serviceName: confirmed.serviceNameAtBooking ?? confirmed.service.name,
+              barberName: confirmed.barber.name,
+              startAt: confirmed.startAt,
+            });
+          } catch {
+            // soft-fail email
+          }
         }
+
+        const serviceName = confirmed.serviceNameAtBooking ?? confirmed.service.name;
+        summary = {
+          service: serviceName,
+          barber: confirmed.barber.name,
+          date: formatInTimeZone(confirmed.startAt, shopTimezone, 'EEE, d MMM yyyy'),
+          time: formatInTimeZone(confirmed.startAt, shopTimezone, 'HH:mm'),
+        };
         ok = true;
-        message = 'Deposit paid — your booking is confirmed.';
+      } else {
+        errorMessage = 'Booking not found for this payment.';
       }
+    } else {
+      errorMessage = 'Payment is not complete yet. If you were charged, contact the barbershop.';
     }
   } catch {
-    message = 'Payment confirmation failed. If you were charged, contact the barbershop.';
+    errorMessage = 'Payment confirmation failed. If you were charged, contact the barbershop.';
   }
+} else {
+  errorMessage = 'Missing payment session. Return from Stripe checkout and try again.';
 }
+
+const calendarHref =
+  ok && shopId && sessionId
+    ? `/book/${encodeURIComponent(shopId)}/calendar.ics?session_id=${encodeURIComponent(sessionId)}`
+    : null;
 ---
 
-<MinimalLayout title="Booking payment" description="Deposit confirmation" showCookieConsent={false}>
-  <main style="padding: 2rem; max-width: 32rem; margin: 0 auto;">
-    <h1>{ok ? 'Booked' : 'Payment'}</h1>
-    <p>{message}</p>
-    {shopId ? <p><a href={`/book/${shopId}`}>Back to booking</a></p> : null}
+<MinimalLayout
+  title={ok ? 'Booking confirmed' : 'Booking payment'}
+  description="Deposit confirmation"
+  canonicalPath={shopId ? `/book/${shopId}/success` : '/book'}
+  bodyClass="admin-theme-premium-black"
+  showCookieConsent={false}
+>
+  <main class="container page-wrap booking-page-wrap">
+    <section class="surface booking-shell booking-flow booking-flow--wizard" aria-live="polite">
+      <div class="booking-form-content">
+        {
+          ok && summary ? (
+            <BookingConfirmationPanel
+              client:load
+              variant="booked"
+              summary={summary}
+              postConfirmCta={
+                calendarHref
+                  ? { label: 'Add to your calendar', href: calendarHref }
+                  : null
+              }
+            />
+          ) : (
+            <section class="booking-confirmation booking-confirmation--error" role="alert">
+              <div class="booking-confirmation__header">
+                <div class="booking-confirmation__copy">
+                  <p class="booking-confirmation__eyebrow">Payment</p>
+                  <h2 class="booking-confirmation__heading">Could not confirm</h2>
+                  <p class="booking-confirmation__body">{errorMessage}</p>
+                </div>
+              </div>
+              {
+                shopId ? (
+                  <div class="booking-confirmation__cta">
+                    <a class="btn btn--secondary btn--lg" href={`/book/${shopId}`}>
+                      Back to booking
+                    </a>
+                  </div>
+                ) : null
+              }
+            </section>
+          )
+        }
+      </div>
+    </section>
   </main>
 </MinimalLayout>
