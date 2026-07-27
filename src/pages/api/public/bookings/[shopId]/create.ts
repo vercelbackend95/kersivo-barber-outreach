@@ -1,13 +1,13 @@
 export const prerender = false;
 
 import type { APIRoute } from 'astro';
-import { bookingCreateSchema } from '../../../../lib/booking/schemas';
-import { BookingActionError, createInstantBooking } from '../../../../lib/booking/service';
-import { DEMO_SHOP_ID } from '../../../../lib/db/shopScope';
-import { prisma } from '../../../../lib/db/client';
-import { checkBookingRateLimit } from '../../../../lib/rate-limit/bookingRateLimit';
-import { createBookingDepositCheckoutSession } from '../../../../lib/shop/stripeConnect';
-import { getPublicSiteUrl } from '../../../../lib/setup/siteUrl';
+import { bookingCreateSchema } from '@/lib/booking/schemas';
+import { BookingActionError, createInstantBooking } from '@/lib/booking/service';
+import { DEMO_SHOP_ID } from '@/lib/db/shopScope';
+import { prisma } from '@/lib/db/client';
+import { checkBookingRateLimit } from '@/lib/rate-limit/bookingRateLimit';
+import { createBookingDepositCheckoutSession } from '@/lib/shop/stripeConnect';
+import { getPublicSiteUrl } from '@/lib/setup/siteUrl';
 
 const getRequestIp = (request: Request): string => {
   const forwardedFor = request.headers.get('x-forwarded-for');
