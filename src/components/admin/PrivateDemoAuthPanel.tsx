@@ -14,8 +14,10 @@ type PrivateDemoAuthPanelProps = {
   callbackURL?: string;
   /** Override default “Log in or sign up” heading. */
   title?: string;
-  /** Override default private-demo subtitle. */
+  /** Override default shop-admin subtitle. */
   subtitle?: string;
+  /** Override default signup submit label (“Create account”). */
+  signupButtonLabel?: string;
 };
 
 function GoogleGIcon() {
@@ -48,7 +50,8 @@ export default function PrivateDemoAuthPanel({
   onClose,
   callbackURL = '/admin',
   title = 'Log in or sign up',
-  subtitle = 'Create a private demo admin for your shop — add barbers, services and bookings.',
+  subtitle = 'Create your shop admin — add barbers, services and bookings.',
+  signupButtonLabel = 'Create account',
 }: PrivateDemoAuthPanelProps) {
   const [step, setStep] = useState<Step>('email');
   const [mode, setMode] = useState<Mode>(initialMode);
@@ -324,7 +327,7 @@ export default function PrivateDemoAuthPanel({
           ) : null}
 
           <button type="submit" className="btn btn--primary private-demo-auth__submit" disabled={busy}>
-            {busy ? 'Please wait…' : mode === 'signup' ? 'Create private demo' : 'Sign in'}
+            {busy ? 'Please wait…' : mode === 'signup' ? signupButtonLabel : 'Sign in'}
           </button>
 
           <p className="private-demo-auth__switch">

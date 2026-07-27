@@ -48,6 +48,9 @@ export default function DemoActionLock() {
           <PrivateDemoAuthPanel
             embedded
             initialMode="signup"
+            title="Log in or sign up"
+            subtitle="Create a private demo admin for your shop — add barbers, services and bookings."
+            signupButtonLabel="Create private demo"
             onClose={() => {
               setOpen(false);
               setShowAuth(false);
