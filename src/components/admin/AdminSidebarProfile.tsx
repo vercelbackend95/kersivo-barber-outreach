@@ -1,6 +1,6 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
-import { AccountCircle, Ban, LogOut, Package, Store } from '../lucide-react';
+import { AccountCircle, Ban, Calendar, LogOut, Package, Store } from '../lucide-react';
 import { authClient } from '@/lib/auth-client';
 import { ADMIN_DEMO_BLOCKED_EVENT, clearAdminSecret } from './adminAuth';
 
@@ -25,6 +25,8 @@ type AdminSidebarProfileProps = {
   mode?: 'authenticated' | 'guest';
   /** Session permissions; used to hide Owner-only menu items (e.g. Launch). */
   permissions?: string[] | null;
+  /** Tenant shop id — opens public /book/{shopId} for deposit smoke tests. */
+  shopId?: string | null;
   onOpenBarbershopSettings?: () => void;
 };
 
@@ -41,6 +43,7 @@ export default function AdminSidebarProfile({
   variant,
   mode = 'authenticated',
   permissions = null,
+  shopId = null,
   onOpenBarbershopSettings,
 }: AdminSidebarProfileProps) {
   const isGuest = mode === 'guest';
@@ -147,6 +150,17 @@ export default function AdminSidebarProfile({
   const handleCreateAccount = () => {
     setOpen(false);
     openDemoAuthLock();
+  };
+
+  const handleTestOnlineBooking = () => {
+    setOpen(false);
+    if (isGuest) {
+      openDemoAuthLock();
+      return;
+    }
+    const id = shopId?.trim();
+    if (!id) return;
+    window.open(`/book/${encodeURIComponent(id)}`, '_blank', 'noopener,noreferrer');
   };
 
   const handleLaunch = () => {
@@ -290,6 +304,20 @@ export default function AdminSidebarProfile({
                   >
                     <Store width={15} height={15} aria-hidden="true" />
                     Barbershop settings
+                  </button>
+                  <div className="admin-profile-menu__divider" aria-hidden="true" />
+                </>
+              ) : null}
+              {!isGuest && shopId?.trim() ? (
+                <>
+                  <button
+                    type="button"
+                    className="admin-profile-menu__item"
+                    role="menuitem"
+                    onClick={handleTestOnlineBooking}
+                  >
+                    <Calendar width={15} height={15} aria-hidden="true" />
+                    Test online booking
                   </button>
                   <div className="admin-profile-menu__divider" aria-hidden="true" />
                 </>

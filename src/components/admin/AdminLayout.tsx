@@ -34,6 +34,7 @@ type AdminLayoutProps = {
   showSectionSkeleton: boolean;
   isPublicDemo?: boolean;
   profileUser?: AdminProfileUser | null;
+  shopId?: string | null;
   shopLogoUrl?: string | null;
   shopName?: string | null;
   publicActivityPaused?: boolean;
@@ -184,6 +185,7 @@ export default function AdminLayout({
   showSectionSkeleton,
   isPublicDemo = false,
   profileUser = null,
+  shopId = null,
   shopLogoUrl = null,
   shopName = null,
   publicActivityPaused = false,
@@ -327,6 +329,7 @@ export default function AdminLayout({
       user={profileUser}
       variant="desktop"
       permissions={permissions}
+      shopId={shopId}
       onOpenBarbershopSettings={canOpenBarbershopSettings ? openBarbershopSettings : undefined}
     />
   ) : (
@@ -347,6 +350,7 @@ export default function AdminLayout({
       user={profileUser}
       variant="mobile"
       permissions={permissions}
+      shopId={shopId}
       onOpenBarbershopSettings={canOpenBarbershopSettings ? openBarbershopSettings : undefined}
     />
   ) : (

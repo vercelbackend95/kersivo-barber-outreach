@@ -131,6 +131,7 @@ export default function AdminPanel({ demoMode = false }: AdminPanelProps) {
   const [profileUser, setProfileUser] = useState<AdminProfileUser | null>(null);
   const [shopLogoUrl, setShopLogoUrl] = useState<string | null>(null);
   const [shopName, setShopName] = useState<string | null>(null);
+  const [shopId, setShopId] = useState<string | null>(null);
   const [publicActivityPaused, setPublicActivityPaused] = useState(false);
   const [permissions, setPermissions] = useState<string[] | null>(null);
   const [demoLoadError, setDemoLoadError] = useState(false);
@@ -158,6 +159,7 @@ export default function AdminPanel({ demoMode = false }: AdminPanelProps) {
             name?: string | null;
             publicActivityPaused?: boolean;
           } | null;
+          shopId?: string | null;
           user?: { name?: string | null; email?: string | null; image?: string | null } | null;
         }) => {
           if (payload.via === 'session' && payload.onboardingCompleted === false) {
@@ -174,6 +176,7 @@ export default function AdminPanel({ demoMode = false }: AdminPanelProps) {
             }
           }
           setHasAccess(true);
+          setShopId(typeof payload.shopId === 'string' ? payload.shopId : null);
           setShopLogoUrl(payload.shop?.logoUrl ?? null);
           setShopName(payload.shop?.name?.trim() || null);
           setPublicActivityPaused(Boolean(payload.shop?.publicActivityPaused));
@@ -220,6 +223,7 @@ export default function AdminPanel({ demoMode = false }: AdminPanelProps) {
             setProfileUser(null);
             setShopLogoUrl(null);
             setShopName(null);
+            setShopId(null);
             setPermissions(null);
           }
         } catch {
@@ -227,6 +231,7 @@ export default function AdminPanel({ demoMode = false }: AdminPanelProps) {
           setProfileUser(null);
           setShopLogoUrl(null);
           setShopName(null);
+          setShopId(null);
           setPermissions(null);
         } finally {
           if (!redirectingToOnboarding) {
@@ -351,6 +356,7 @@ export default function AdminPanel({ demoMode = false }: AdminPanelProps) {
         showSectionSkeleton={false}
         isPublicDemo={demoMode}
         profileUser={profileUser}
+        shopId={demoMode ? null : shopId}
         shopLogoUrl={demoMode ? null : shopLogoUrl}
         shopName={demoMode ? null : shopName}
         publicActivityPaused={demoMode ? false : publicActivityPaused}
