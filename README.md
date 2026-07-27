@@ -146,6 +146,13 @@ Set `SHOW_SETUP_PLAN_CARDS = true` in `offerMode.ts`, then:
 - Reschedule clears `smsReminderSentAt` so a new reminder can fire for the new time.
 - No admin UI in v1; outbound rows land in `SmsOutbound` for ops/debug.
 
+## Online booking deposits (WP-A/B/C)
+- Paid shops only (`shopPaidAt` / SaaS webhook). Demo shop and marketing `/book` sandbox never collect.
+- Owner toggle + Stripe Connect in **Barbershop settings** (`/api/admin/barbershop-settings/deposits`).
+- Live book: `/book/[shopId]` → `POST /api/public/bookings/[shopId]/create` → optional £5 Checkout → webhook `booking_deposit` → `BOOKED`.
+- Policy defaults: 24h cancel/reschedule windows, max 2 client reschedules; refund in-window / shop cancel; forfeit late cancel + no-show.
+- Cron: `GET/POST /api/cron/expire-deposit-holds` every 10 minutes expires unpaid `PENDING_PAYMENT` holds.
+
 
 
 ## Shop flow (GBP, pickup only)

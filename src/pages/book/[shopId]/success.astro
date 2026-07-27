@@ -1,0 +1,83 @@
+---
+import MinimalLayout from '@/layouts/MinimalLayout.astro';
+import { prisma } from '@/lib/db/client';
+import { retrieveCheckoutSession, getCheckoutPaymentIntentId } from '@/lib/shop/stripe';
+import { BOOKING_DEPOSIT_METADATA_TYPE } from '@/lib/booking/depositGate';
+import { BookingStatus, PaymentStatus } from '@prisma/client';
+import { sendInstantBookingConfirmationEmail } from '@/lib/email/sender';
+import { getPublicSiteUrl } from '@/lib/setup/siteUrl';
+import { generateToken, hashToken } from '@/lib/booking/tokens';
+
+export const prerender = false;
+
+const shopId = Astro.params.shopId?.trim() ?? '';
+const sessionId = Astro.url.searchParams.get('session_id')?.trim() ?? '';
+
+let message = 'Unable to confirm deposit payment.';
+let ok = false;
+
+if (shopId && sessionId) {
+  try {
+    const session = await retrieveCheckoutSession(sessionId);
+    const metadata = session.metadata ?? {};
+    if (
+      metadata.type === BOOKING_DEPOSIT_METADATA_TYPE &&
+      metadata.shopId === shopId &&
+      metadata.bookingId &&
+      (session.payment_status ?? '').toLowerCase() === 'paid'
+    ) {
+      const booking = await prisma.booking.findFirst({
+        where: { id: metadata.bookingId, barber: { shopId } },
+        include: { barber: true, service: true },
+      });
+      if (booking) {
+        const pi = getCheckoutPaymentIntentId(session);
+        const manageToken = generateToken();
+        const updated = await prisma.booking.update({
+          where: { id: booking.id },
+          data: {
+            status: BookingStatus.BOOKED,
+            paymentStatus: PaymentStatus.PAID,
+            paidAt: new Date(),
+            stripeCheckoutSessionId: sessionId,
+            stripePaymentIntentId: pi,
+            manageTokenHash: hashToken(manageToken),
+          },
+          include: { barber: true, service: true },
+        });
+        const shop = await prisma.shopSettings.findUnique({
+          where: { id: shopId },
+          select: { name: true },
+        });
+        const baseUrl = getPublicSiteUrl();
+        try {
+          await sendInstantBookingConfirmationEmail({
+            to: updated.email,
+            fullName: updated.fullName,
+            cancelUrl: `${baseUrl}/book/cancel?token=${manageToken}`,
+            rescheduleUrl: `${baseUrl}/book/reschedule?token=${manageToken}`,
+            shopName: shop?.name ?? 'Barbershop',
+            serviceName: updated.serviceNameAtBooking ?? updated.service.name,
+            barberName: updated.barber.name,
+            startAt: updated.startAt,
+          });
+        } catch {
+          // soft-fail email
+        }
+        ok = true;
+        message = 'Deposit paid — your booking is confirmed.';
+      }
+    }
+  } catch {
+    message = 'Payment confirmation failed. If you were charged, contact the barbershop.';
+  }
+}
+---
+
+<MinimalLayout title="Booking payment" description="Deposit confirmation" showCookieConsent={false}>
+  <main style="padding: 2rem; max-width: 32rem; margin: 0 auto;">
+    <h1>{ok ? 'Booked' : 'Payment'}</h1>
+    <p>{message}</p>
+    {shopId ? <p><a href={`/book/${shopId}`}>Back to booking</a></p> : null}
+  </main>
+</MinimalLayout>

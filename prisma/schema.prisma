@@ -9,6 +9,7 @@ datasource db {
 
 enum BookingStatus {
   BOOKED
+  PENDING_PAYMENT
   CANCELLED_BY_CLIENT
   CANCELLED_BY_ADMIN
   CANCELLED_BY_SHOP
@@ -23,6 +24,7 @@ enum BookingStatus {
 enum PaymentStatus {
   UNPAID
   PAID
+  REFUNDED
 }
 
 enum SmsOutboundPurpose {
@@ -135,8 +137,9 @@ model ShopSettings {
   id                          String   @id @default(cuid())
   name                        String
   timezone                    String   @default("Europe/London")
-  cancellationWindowHours     Int      @default(2)
-  rescheduleWindowHours       Int      @default(2)
+  cancellationWindowHours     Int      @default(24)
+  rescheduleWindowHours       Int      @default(24)
+  maxClientReschedules        Int      @default(2)
   pendingConfirmationMins     Int      @default(15)
   slotIntervalMinutes         Int      @default(15)
   defaultBufferMinutes        Int      @default(0)
@@ -161,6 +164,14 @@ model ShopSettings {
   analyticsIncludeTestActivity       Boolean  @default(true)
   /// Set true on paid SaaS subscription webhook; SMS cron skips shops where false.
   smsRemindersEnabled         Boolean  @default(false)
+  /// Shared paid-tenant marker (SaaS webhook). Prefer this over coupling features to SMS flag.
+  shopPaidAt                  DateTime?
+  /// Owner toggle: require £5 deposit on online bookings (paid shops + Connect only).
+  depositsEnabled             Boolean  @default(false)
+  /// Stripe Connect Express account id for booking deposits (and future shop payouts).
+  stripeConnectAccountId      String?
+  stripeConnectChargesEnabled Boolean  @default(false)
+  stripeConnectDetailsSubmitted Boolean @default(false)
   ownerUserId                 String?  @unique
   createdAt                   DateTime @default(now())
   updatedAt                   DateTime @updatedAt
@@ -432,7 +443,12 @@ model Booking {
   depositAmountPence      Int?
   paymentStatus           PaymentStatus?
   stripeCheckoutSessionId String?
+  stripePaymentIntentId   String?
   paidAt                  DateTime?
+  depositRefundedAt       DateTime?
+  depositForfeitedAt      DateTime?
+  clientRescheduleCount   Int           @default(0)
+  paymentExpiresAt        DateTime?
 
   serviceNameAtBooking            String?
   servicePricePenceAtBooking      Int?

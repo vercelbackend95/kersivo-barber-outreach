@@ -56,6 +56,8 @@ type BookingApiResponse = {
     serviceName?: string;
     startAt?: string;
     status?: string;
+    depositRequired?: boolean;
+    checkoutUrl?: string;
   };
   error?: string;
 };
@@ -83,6 +85,10 @@ type Props = {
    * Details completion (no API), and a demo confirmation screen.
    */
   publicDemoMode?: boolean;
+  /** Live tenant book: POST target for public create (never demo-shop). */
+  publicCreateUrl?: string;
+  /** When true, confirm CTA may redirect to Stripe deposit Checkout. */
+  depositRequired?: boolean;
   onComplete?: () => void;
   postConfirmCta?: PostConfirmCtaConfig | null;
 };
@@ -239,6 +245,8 @@ export default function BookingFlow({
   shopDetails,
   previewMode = false,
   publicDemoMode = false,
+  publicCreateUrl,
+  depositRequired = false,
   onComplete,
   postConfirmCta = null,
 }: Props) {
@@ -644,7 +652,8 @@ export default function BookingFlow({
         ...(normalizedPhone ? { phone: normalizedPhone } : {}),
       };
 
-      const res = await fetch('/api/bookings/create', {
+      const createEndpoint = publicCreateUrl?.trim() || '/api/bookings/create';
+      const res = await fetch(createEndpoint, {
         method: 'POST',
         headers: { 'content-type': 'application/json' },
         body: JSON.stringify(payload),
@@ -653,6 +662,11 @@ export default function BookingFlow({
       const data = (await res.json().catch(() => ({}))) as BookingApiResponse;
       if (!res.ok) {
         setMessage(data.error || 'Unable to create booking.');
+        return;
+      }
+
+      if (data.booking?.checkoutUrl) {
+        window.location.assign(data.booking.checkoutUrl);
         return;
       }
 
@@ -695,6 +709,7 @@ export default function BookingFlow({
     }
     if (wizardStep < maxStep) return 'Continue';
     if (publicDemoMode) return 'Complete demo booking';
+    if (depositRequired && publicCreateUrl) return 'Pay £5 deposit & book';
     return mode === 'reschedule' ? 'Reschedule booking' : 'Confirm booking';
   })();
 

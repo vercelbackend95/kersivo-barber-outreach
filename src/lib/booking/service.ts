@@ -1,4 +1,4 @@
-import { BookingStatus, Prisma, type Service, type ShopSettings } from '@prisma/client';
+import { BookingStatus, PaymentStatus, Prisma, type Service, type ShopSettings } from '@prisma/client';
 import { prisma } from '../db/client';
 import { PUBLIC_BOOKING_UNAVAILABLE_MESSAGE, isPrismaQuotaExceededError } from '../db/resilience';
 import { getTimeBlockDelegate } from '../db/timeBlocks';
@@ -15,6 +15,8 @@ import {
   getShopPublicActivityPauseOnDate,
 } from '@/lib/admin/shopPublicActivity';
 import { OWNER_TEST_BOOKING_NOTES_PREFIX } from './sandboxBookings';
+import { BOOKING_DEPOSIT_PENCE, canCollectBookingDeposit } from './depositGate';
+import { forfeitBookingDeposit, refundBookingDepositIfEligible } from './depositMoney';
 const CANCELLED_BOOKING_MESSAGE = 'This booking is already cancelled. Please create a new booking.';
 const BOOKING_DATABASE_UNAVAILABLE_STATUS = 503;
 
@@ -161,7 +163,7 @@ async function getAvailableSlotsForBarber(input: {
       where: {
         barberId: input.barberId,
         id: input.ignoreBookingId ? { not: input.ignoreBookingId } : undefined,
-        status: { in: [BookingStatus.BOOKED] },
+        status: { in: [BookingStatus.BOOKED, BookingStatus.PENDING_PAYMENT] },
         startAt: { lt: dayEndUtc },
         endAt: { gt: dayStartUtc }
       },
@@ -300,7 +302,7 @@ async function ensureSlotAvailable(
     where: {
       barberId: input.barberId,
       id: input.ignoreBookingId ? { not: input.ignoreBookingId } : undefined,
-      status: { in: [BookingStatus.BOOKED] },
+      status: { in: [BookingStatus.BOOKED, BookingStatus.PENDING_PAYMENT] },
       NOT: [{ endAt: { lte: input.startAt } }, { startAt: { gte: input.endAt } }]
     }
   });
@@ -395,6 +397,11 @@ export async function createInstantBooking(
     notesPrefix?: string;
     /** Skip confirmation email (public demo noise). */
     skipConfirmationEmail?: boolean;
+    /**
+     * When true, evaluate deposit gate for the shop and create PENDING_PAYMENT
+     * hold if deposits are required. Sandbox / [TEST] never collects.
+     */
+    allowDepositCollection?: boolean;
   } = {},
 ) {
   try {
@@ -439,6 +446,29 @@ export async function createInstantBooking(
         ? `${options.notesPrefix} Sandbox booking — not counted in live reports.`
         : null;
 
+    const shopForDeposit = await prisma.shopSettings.findUniqueOrThrow({
+      where: { id: service.shopId },
+      select: {
+        id: true,
+        shopPaidAt: true,
+        smsRemindersEnabled: true,
+        depositsEnabled: true,
+        stripeConnectAccountId: true,
+        stripeConnectChargesEnabled: true,
+        pendingConfirmationMins: true,
+        name: true,
+      },
+    });
+
+    const collectDeposit =
+      Boolean(options.allowDepositCollection) &&
+      !isAdminSandbox &&
+      canCollectBookingDeposit(shopForDeposit);
+
+    const paymentExpiresAt = collectDeposit
+      ? new Date(Date.now() + Math.max(5, shopForDeposit.pendingConfirmationMins || 15) * 60 * 1000)
+      : null;
+
     const booking = await prisma.$transaction(
       async (tx) => {
         await ensureSlotAvailable(tx, { barberId: resolvedBarber.id, startAt, endAt });
@@ -465,13 +495,15 @@ export async function createInstantBooking(
             notes,
             startAt,
             endAt,
-            status: BookingStatus.BOOKED,
+            status: collectDeposit ? BookingStatus.PENDING_PAYMENT : BookingStatus.BOOKED,
             confirmTokenHash: null,
             confirmTokenExpiresAt: null,
             manageTokenHash: hashToken(manageToken),
             manageTokenExpiresAt: null,
-            paymentRequired: false,
-            paymentStatus: null
+            paymentRequired: collectDeposit,
+            depositAmountPence: collectDeposit ? BOOKING_DEPOSIT_PENCE : null,
+            paymentStatus: collectDeposit ? PaymentStatus.UNPAID : null,
+            paymentExpiresAt,
           },
           include: { service: true, barber: true }
         });
@@ -479,7 +511,7 @@ export async function createInstantBooking(
       { isolationLevel: Prisma.TransactionIsolationLevel.Serializable }
     );
     const baseUrl = resolvePublicSiteUrl();
-    if (!options.skipConfirmationEmail) {
+    if (!collectDeposit && !options.skipConfirmationEmail) {
       await sendInstantBookingConfirmationEmail({
         to: booking.email,
         fullName: booking.fullName,
@@ -492,7 +524,7 @@ export async function createInstantBooking(
       });
     }
 
-    return booking;
+    return { ...booking, manageToken, depositRequired: collectDeposit, shopName: shopForDeposit.name };
   } catch (error) {
     rethrowBookingQuotaError(error);
   }
@@ -511,8 +543,33 @@ export async function cancelByManageToken(token: string) {
     const settings = await prisma.shopSettings.findUniqueOrThrow({
       where: { id: booking.barber.shopId },
     });
-    if (!canCancelOrReschedule(booking.startAt, settings.cancellationWindowHours)) {
+
+    // Unpaid holds: allow cancel anytime and expire the hold.
+    if (booking.status === BookingStatus.PENDING_PAYMENT) {
+      return prisma.booking.update({
+        where: { id: booking.id },
+        data: { status: BookingStatus.CANCELLED_BY_CLIENT },
+      });
+    }
+
+    const inWindow = canCancelOrReschedule(booking.startAt, settings.cancellationWindowHours);
+    if (!inWindow) {
+      // Outside window with paid deposit → forfeit, still allow cancel record.
+      if (booking.paymentRequired && booking.paymentStatus === PaymentStatus.PAID) {
+        await forfeitBookingDeposit(booking.id);
+        return prisma.booking.update({
+          where: { id: booking.id },
+          data: { status: BookingStatus.CANCELLED_BY_CLIENT },
+        });
+      }
       throw new BookingActionError('Cancellation window has passed.', 409);
+    }
+
+    if (booking.paymentRequired && booking.paymentStatus === PaymentStatus.PAID) {
+      await refundBookingDepositIfEligible({
+        bookingId: booking.id,
+        reason: 'client_cancel_in_window',
+      });
     }
 
     return prisma.booking.update({ where: { id: booking.id }, data: { status: BookingStatus.CANCELLED_BY_CLIENT } });
@@ -551,6 +608,13 @@ export async function cancelByShop(input: { bookingId: string; shopId: string; r
     include: { barber: true, service: true }
   });
 
+  if (booking.paymentRequired && booking.paymentStatus === PaymentStatus.PAID) {
+    await refundBookingDepositIfEligible({
+      bookingId: booking.id,
+      reason: 'shop_cancel',
+    });
+  }
+
   try {
     const settings = await prisma.shopSettings.findUniqueOrThrow({
       where: { id: input.shopId },
@@ -586,9 +650,20 @@ export async function cancelByShop(input: { bookingId: string; shopId: string; r
 export async function rescheduleByToken(input: { token: string; serviceId: string; barberId: string; date: string; time: string }) {
   try {
     const existing = await resolveManageTokenBooking(input.token);
+    if (existing.status === BookingStatus.PENDING_PAYMENT) {
+      throw new BookingActionError('Finish deposit payment before rescheduling.', 409);
+    }
     const { service, settings } = await loadShopSettingsForService(input.serviceId);
+    if (service.shopId !== existing.barber.shopId) {
+      throw new BookingActionError('Selected service is not available for this booking.', 403);
+    }
     if (!canCancelOrReschedule(existing.startAt, settings.rescheduleWindowHours)) {
       throw new BookingActionError('Reschedule window has passed.', 409);
+    }
+
+    const maxReschedules = settings.maxClientReschedules ?? 2;
+    if (existing.clientRescheduleCount >= maxReschedules) {
+      throw new BookingActionError(`You can reschedule this booking at most ${maxReschedules} times.`, 409);
     }
 
     if (!service.isActive) throw new Error('Selected service is unavailable for new bookings.');
@@ -625,6 +700,7 @@ export async function rescheduleByToken(input: { token: string; serviceId: strin
             originalStartAt: existing.originalStartAt ?? existing.startAt,
             originalEndAt: existing.originalEndAt ?? existing.endAt,
             status: BookingStatus.BOOKED,
+            clientRescheduleCount: existing.clientRescheduleCount + 1,
             ...smsReminderClearData,
           },
           include: { service: true, barber: true }

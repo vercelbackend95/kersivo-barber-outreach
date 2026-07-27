@@ -20,8 +20,8 @@ export const PUBLIC_FALLBACK_SHOP_SETTINGS: Pick<
   id: 'demo-shop',
   name: 'Demo Barbershop',
   timezone: 'Europe/London',
-  cancellationWindowHours: 2,
-  rescheduleWindowHours: 2,
+  cancellationWindowHours: 24,
+  rescheduleWindowHours: 24,
   pendingConfirmationMins: 15,
   slotIntervalMinutes: 15,
   defaultBufferMinutes: 0

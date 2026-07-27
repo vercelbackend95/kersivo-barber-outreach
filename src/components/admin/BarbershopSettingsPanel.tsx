@@ -79,6 +79,48 @@ export default function BarbershopSettingsPanel({
   const [pauseError, setPauseError] = useState('');
   const [pauseConfirmOpen, setPauseConfirmOpen] = useState(false);
 
+  const [depositsPaid, setDepositsPaid] = useState(false);
+  const [depositsEnabled, setDepositsEnabled] = useState(false);
+  const [depositsCollectReady, setDepositsCollectReady] = useState(false);
+  const [connectChargesEnabled, setConnectChargesEnabled] = useState(false);
+  const [connectAccountId, setConnectAccountId] = useState<string | null>(null);
+  const [depositsBusy, setDepositsBusy] = useState(false);
+  const [depositsError, setDepositsError] = useState('');
+  const [depositsMessage, setDepositsMessage] = useState('');
+  const [policySummary, setPolicySummary] = useState<{
+    cancellationWindowHours: number;
+    rescheduleWindowHours: number;
+    maxClientReschedules: number;
+  } | null>(null);
+
+  const loadDeposits = useCallback(async () => {
+    setDepositsError('');
+    try {
+      const response = await fetch('/api/admin/barbershop-settings/deposits', { credentials: 'include' });
+      const payload = (await response.json().catch(() => null)) as {
+        error?: string;
+        paid?: boolean;
+        depositsEnabled?: boolean;
+        collectReady?: boolean;
+        connect?: { accountId?: string | null; chargesEnabled?: boolean };
+        policy?: {
+          cancellationWindowHours: number;
+          rescheduleWindowHours: number;
+          maxClientReschedules: number;
+        };
+      } | null;
+      if (!response.ok) throw new Error(payload?.error || 'Could not load deposits settings.');
+      setDepositsPaid(Boolean(payload?.paid));
+      setDepositsEnabled(Boolean(payload?.depositsEnabled));
+      setDepositsCollectReady(Boolean(payload?.collectReady));
+      setConnectChargesEnabled(Boolean(payload?.connect?.chargesEnabled));
+      setConnectAccountId(payload?.connect?.accountId ?? null);
+      setPolicySummary(payload?.policy ?? null);
+    } catch (error) {
+      setDepositsError(error instanceof Error ? error.message : 'Could not load deposits settings.');
+    }
+  }, []);
+
   const load = useCallback(async () => {
     setLoading(true);
     setLoadError('');
@@ -112,6 +154,7 @@ export default function BarbershopSettingsPanel({
       setPauseUntil(nextPause.until ?? '');
       setPauseReason(nextPause.reason ?? '');
       onPauseChanged?.(nextPause.pausedNow);
+      await loadDeposits();
     } catch (error) {
       setLoadError(error instanceof Error ? error.message : 'Could not load barbershop settings.');
     } finally {
@@ -119,7 +162,7 @@ export default function BarbershopSettingsPanel({
     }
     // Intentionally omit onPauseChanged from deps — parent passes setState.
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  }, [loadDeposits]);
 
   useEffect(() => {
     void load();
@@ -529,6 +572,124 @@ export default function BarbershopSettingsPanel({
           {pauseError ? (
             <p className="admin-inline-error" role="alert">
               {pauseError}
+            </p>
+          ) : null}
+        </section>
+
+        <section className="admin-barbershop-settings__card" aria-labelledby="bbs-deposits-title">
+          <h2 id="bbs-deposits-title" className="admin-barbershop-settings__card-title">
+            Booking deposits
+          </h2>
+          <p className="admin-barbershop-settings__card-copy">
+            Optional £5 online booking deposit via your Stripe account. Off for demos and unpaid
+            shops. Refund if the client cancels inside the policy window; forfeit on late cancel /
+            no-show; always refund on shop cancel.
+          </p>
+          {!depositsPaid ? (
+            <p className="admin-barbershop-settings__card-copy" role="status">
+              Available after your KERSIVO subscription is active.
+            </p>
+          ) : (
+            <>
+              <div className="admin-barbershop-settings__actions">
+                <button
+                  type="button"
+                  className="btn btn--secondary"
+                  disabled={depositsBusy}
+                  onClick={async () => {
+                    setDepositsBusy(true);
+                    setDepositsError('');
+                    setDepositsMessage('');
+                    try {
+                      const response = await fetch('/api/admin/barbershop-settings/deposits', {
+                        method: 'POST',
+                        credentials: 'include',
+                      });
+                      const payload = (await response.json().catch(() => null)) as {
+                        error?: string;
+                        url?: string;
+                      } | null;
+                      if (!response.ok || !payload?.url) {
+                        throw new Error(payload?.error || 'Could not start Stripe Connect.');
+                      }
+                      window.location.assign(payload.url);
+                    } catch (error) {
+                      setDepositsError(
+                        error instanceof Error ? error.message : 'Stripe Connect failed.',
+                      );
+                      setDepositsBusy(false);
+                    }
+                  }}
+                >
+                  {connectAccountId ? 'Continue Stripe Connect' : 'Connect Stripe'}
+                </button>
+                <span className="muted">
+                  {connectChargesEnabled
+                    ? 'Stripe ready for deposits'
+                    : connectAccountId
+                      ? 'Finish Stripe onboarding'
+                      : 'Not connected'}
+                </span>
+              </div>
+              <label className="field" style={{ display: 'flex', gap: '0.5rem', alignItems: 'center' }}>
+                <input
+                  type="checkbox"
+                  checked={depositsEnabled}
+                  disabled={depositsBusy || (!connectChargesEnabled && !depositsEnabled)}
+                  onChange={async (event) => {
+                    const next = event.target.checked;
+                    setDepositsBusy(true);
+                    setDepositsError('');
+                    setDepositsMessage('');
+                    try {
+                      const response = await fetch('/api/admin/barbershop-settings/deposits', {
+                        method: 'PATCH',
+                        credentials: 'include',
+                        headers: { 'content-type': 'application/json' },
+                        body: JSON.stringify({ depositsEnabled: next }),
+                      });
+                      const payload = (await response.json().catch(() => null)) as {
+                        error?: string;
+                        depositsEnabled?: boolean;
+                      } | null;
+                      if (!response.ok) {
+                        throw new Error(payload?.error || 'Could not update deposits.');
+                      }
+                      setDepositsEnabled(Boolean(payload?.depositsEnabled));
+                      setDepositsMessage(
+                        payload?.depositsEnabled
+                          ? '£5 deposits required on online bookings.'
+                          : 'Deposits turned off.',
+                      );
+                      await loadDeposits();
+                    } catch (error) {
+                      setDepositsError(
+                        error instanceof Error ? error.message : 'Could not update deposits.',
+                      );
+                    } finally {
+                      setDepositsBusy(false);
+                    }
+                  }}
+                />
+                <span>Require £5 deposit on online bookings</span>
+              </label>
+              {policySummary ? (
+                <p className="admin-barbershop-settings__card-copy">
+                  Policy: cancel/reschedule windows {policySummary.cancellationWindowHours}h /{' '}
+                  {policySummary.rescheduleWindowHours}h · max {policySummary.maxClientReschedules}{' '}
+                  client reschedules · collect ready: {depositsCollectReady ? 'yes' : 'no'}
+                </p>
+              ) : null}
+            </>
+          )}
+          {depositsError ? (
+            <p className="admin-inline-error" role="alert">
+              {depositsError}
+            </p>
+          ) : null}
+          {depositsMessage ? (
+            <p className="muted" role="status">
+              {depositsMessage}
             </p>
           ) : null}
         </section>

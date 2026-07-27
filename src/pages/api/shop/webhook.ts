@@ -4,6 +4,7 @@ import PrismaClientPkg from '@prisma/client';
 import type { APIRoute } from 'astro';
 import { setShopAnalyticsLive, setShopAnalyticsLiveForOwnerEmail } from '../../../lib/admin/analyticsMode';
 import { prisma } from '../../../lib/db/client';
+import { markShopPaid, markShopPaidForOwnerEmail } from '../../../lib/shop/markShopPaid';
 import {
   enableShopSmsReminders,
   enableShopSmsRemindersForOwnerEmail,
@@ -20,6 +21,7 @@ import {
 import {
   EmailDeliveryError,
   getSetupOnboardingFormUrlOrEmpty,
+  sendInstantBookingConfirmationEmail,
   sendSaasSubscriptionConfirmationEmail,
   sendSaasSubscriptionInternalNotificationEmail,
   sendSetupDepositConfirmationEmail,
@@ -28,6 +30,11 @@ import {
 import { getSetupPlan, isSetupPlanId } from '../../../lib/setup/plans';
 import { SAAS_SUBSCRIPTION_METADATA_TYPE } from '../../../lib/setup/saasSubscription';
 import { SAAS_MONTHLY_PENCE } from '../../../lib/seo/defaults';
+import { BOOKING_DEPOSIT_METADATA_TYPE } from '../../../lib/booking/depositGate';
+import { BookingStatus, PaymentStatus } from '@prisma/client';
+import { getPublicSiteUrl } from '../../../lib/setup/siteUrl';
+import { generateToken, hashToken } from '../../../lib/booking/tokens';
+import { DEMO_SHOP_ID } from '../../../lib/db/shopScope';
 
 const { Prisma, SetupPlan, SetupDepositStatus } = PrismaClientPkg;
 type CartSnapshotItem = {
@@ -474,6 +481,23 @@ async function handleSaasSubscriptionCheckout(
   try {
     const metadataShopId = metadata.shopId?.trim();
     const updated = metadataShopId
+      ? await markShopPaid(metadataShopId).then(() => true)
+      : await markShopPaidForOwnerEmail(customerEmail);
+    logSaasSubscriptionStage('shop_marked_paid', {
+      sessionId,
+      updated,
+      viaShopId: Boolean(metadataShopId),
+    });
+  } catch (error) {
+    console.error('[webhook] Failed to mark shop paid', {
+      sessionId,
+      error,
+    });
+  }
+
+  try {
+    const metadataShopId = metadata.shopId?.trim();
+    const updated = metadataShopId
       ? await enableShopSmsReminders(metadataShopId).then(() => true)
       : await enableShopSmsRemindersForOwnerEmail(customerEmail);
     logSaasSubscriptionStage('sms_reminders_enabled', {
@@ -572,6 +596,74 @@ async function handleSaasSubscriptionCheckout(
   );
 }
 
+async function handleBookingDepositCheckout(
+  sessionId: string,
+  session: StripeSession,
+  metadata: Record<string, string>,
+): Promise<Response> {
+  if ((session.payment_status ?? '').toLowerCase() !== 'paid') {
+    return new Response(JSON.stringify({ error: 'Deposit not paid' }), { status: 400 });
+  }
+  const bookingId = metadata.bookingId?.trim();
+  const shopId = metadata.shopId?.trim();
+  if (!bookingId || !shopId || shopId === DEMO_SHOP_ID) {
+    return new Response(JSON.stringify({ error: 'Invalid booking deposit metadata' }), { status: 400 });
+  }
+
+  const booking = await prisma.booking.findFirst({
+    where: { id: bookingId, barber: { shopId } },
+    include: { barber: true, service: true },
+  });
+  if (!booking) {
+    return new Response(JSON.stringify({ error: 'Booking not found' }), { status: 404 });
+  }
+
+  if (booking.status === BookingStatus.BOOKED && booking.paymentStatus === PaymentStatus.PAID) {
+    return new Response(JSON.stringify({ ok: true, duplicate: true }), { status: 200 });
+  }
+
+  const pi = getCheckoutPaymentIntentId(session);
+  const manageToken = generateToken();
+  const updated = await prisma.booking.update({
+    where: { id: booking.id },
+    data: {
+      status: BookingStatus.BOOKED,
+      paymentStatus: PaymentStatus.PAID,
+      paidAt: new Date(),
+      stripeCheckoutSessionId: sessionId,
+      stripePaymentIntentId: pi,
+      manageTokenHash: hashToken(manageToken),
+      paymentExpiresAt: null,
+    },
+    include: { barber: true, service: true },
+  });
+
+  const shop = await prisma.shopSettings.findUnique({
+    where: { id: shopId },
+    select: { name: true },
+  });
+  const baseUrl = getPublicSiteUrl();
+  try {
+    await sendInstantBookingConfirmationEmail({
+      to: updated.email,
+      fullName: updated.fullName,
+      cancelUrl: `${baseUrl}/book/cancel?token=${manageToken}`,
+      rescheduleUrl: `${baseUrl}/book/reschedule?token=${manageToken}`,
+      shopName: shop?.name ?? 'Barbershop',
+      serviceName: updated.serviceNameAtBooking ?? updated.service.name,
+      barberName: updated.barber.name,
+      startAt: updated.startAt,
+    });
+  } catch (error) {
+    console.warn('[webhook] booking deposit confirmation email failed', {
+      bookingId,
+      error: error instanceof Error ? error.message : error,
+    });
+  }
+
+  return new Response(JSON.stringify({ ok: true, bookingId }), { status: 200 });
+}
+
 export const POST: APIRoute = async ({ request }) => {
   try {
     const rawBody = await request.text();
@@ -593,6 +685,10 @@ export const POST: APIRoute = async ({ request }) => {
 
     if (SETUP_FULFILMENT_EVENTS.has(event.type) && metadata.type === SAAS_SUBSCRIPTION_METADATA_TYPE) {
       return await handleSaasSubscriptionCheckout(sessionId, session, metadata, event.created);
+    }
+
+    if (SETUP_FULFILMENT_EVENTS.has(event.type) && metadata.type === BOOKING_DEPOSIT_METADATA_TYPE) {
+      return await handleBookingDepositCheckout(sessionId, session, metadata);
     }
 
     if (event.type !== 'checkout.session.completed') {

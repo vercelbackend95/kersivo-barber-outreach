@@ -193,5 +193,10 @@ export const PATCH: APIRoute = async (ctx) => {
     select: { id: true, status: true, updatedAt: true },
   });
 
+  if (requestedAction === 'NO_SHOW') {
+    const { forfeitBookingDeposit } = await import('../../../../../lib/booking/depositMoney');
+    await forfeitBookingDeposit(booking.id);
+  }
+
   return new Response(JSON.stringify({ booking: updated }));
 };

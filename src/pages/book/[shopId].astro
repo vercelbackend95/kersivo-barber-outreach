@@ -1,0 +1,135 @@
+---
+import MinimalLayout from '@/layouts/MinimalLayout.astro';
+import BookingFlow from '../../components/booking/BookingFlow';
+import { prisma } from '../../lib/db/client';
+import { DEMO_SHOP_ID } from '../../lib/db/shopScope';
+import {
+  PUBLIC_BOOKING_UNAVAILABLE_MESSAGE,
+  withPrismaQuotaFallback,
+} from '../../lib/db/resilience';
+import { canCollectBookingDeposit } from '../../lib/booking/depositGate';
+import '../../styles/tokens.css';
+import '../../styles/fonts.css';
+import '../../styles/global.css';
+import '../../styles/components/buttons.css';
+import '../../styles/components/badge.css';
+import '../../styles/components/booking.css';
+import '../../styles/components/booking-flow.css';
+import '../../styles/components/booking-mobile.css';
+import '../../styles/components/booking-review.css';
+import '../../styles/components/empty-state.css';
+import '../../styles/components/skeleton.css';
+
+export const prerender = false;
+
+const shopId = Astro.params.shopId?.trim() ?? '';
+
+if (!shopId || shopId === DEMO_SHOP_ID) {
+  return Astro.redirect('/book');
+}
+
+const bookingPageData = await withPrismaQuotaFallback(
+  'book/[shopId].astro',
+  async () => {
+    const shop = await prisma.shopSettings.findUnique({
+      where: { id: shopId },
+      select: {
+        id: true,
+        name: true,
+        timezone: true,
+        cancellationWindowHours: true,
+        rescheduleWindowHours: true,
+        shopPaidAt: true,
+        smsRemindersEnabled: true,
+        depositsEnabled: true,
+        stripeConnectAccountId: true,
+        stripeConnectChargesEnabled: true,
+        publicActivityPaused: true,
+      },
+    });
+
+    if (!shop) {
+      return { notFound: true as const };
+    }
+
+    const [services, barbers] = await Promise.all([
+      prisma.service.findMany({
+        where: { isActive: true, shopId },
+        orderBy: [{ displayOrder: 'asc' }, { createdAt: 'asc' }],
+      }),
+      prisma.barber.findMany({
+        where: { active: true, shopId },
+        orderBy: [{ sortOrder: 'asc' }, { createdAt: 'asc' }],
+        select: {
+          id: true,
+          name: true,
+          barberServices: { select: { serviceId: true } },
+        },
+      }),
+    ]);
+
+    return {
+      notFound: false as const,
+      shop,
+      services,
+      barbers,
+      depositRequired: canCollectBookingDeposit(shop),
+      bookingUnavailable: false,
+    };
+  },
+  {
+    notFound: false as const,
+    shop: null,
+    services: [],
+    barbers: [],
+    depositRequired: false,
+    bookingUnavailable: true,
+  },
+);
+
+if (bookingPageData.notFound || !bookingPageData.shop) {
+  return new Response('Shop not found', { status: 404 });
+}
+
+const { shop, services, barbers, depositRequired, bookingUnavailable } = bookingPageData;
+const createUrl = `/api/public/bookings/${shop.id}/create`;
+---
+
+<MinimalLayout
+  title={`Book — ${shop.name}`}
+  description={`Book an appointment at ${shop.name} with KERSIVO.`}
+  canonicalPath={`/book/${shop.id}`}
+  bodyClass="admin-theme-premium-black"
+  showCookieConsent={false}
+>
+  {
+    bookingUnavailable ? (
+      <p class="muted" style="padding: 2rem;">{PUBLIC_BOOKING_UNAVAILABLE_MESSAGE}</p>
+    ) : (
+      <BookingFlow
+        client:load
+        mode="create"
+        publicShopId={shop.id}
+        publicCreateUrl={createUrl}
+        depositRequired={depositRequired}
+        services={services.map((s) => ({
+          id: s.id,
+          name: s.name,
+          durationMinutes: s.durationMinutes,
+          pricePence: s.pricePence,
+          category: s.category,
+        }))}
+        barbers={barbers.map((b) => ({
+          id: b.id,
+          name: b.name,
+          serviceIds: b.barberServices.map((x) => x.serviceId),
+        }))}
+        shopDetails={{
+          timezone: shop.timezone,
+          cancellationWindowHours: shop.cancellationWindowHours,
+          rescheduleWindowHours: shop.rescheduleWindowHours,
+        }}
+      />
+    )
+  }
+</MinimalLayout>
