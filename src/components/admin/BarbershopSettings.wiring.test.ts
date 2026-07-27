@@ -21,3 +21,10 @@ describe('Barbershop settings UI wiring', () => {
     expect(src).toMatch(/Test online booking/);
     expect(src).toMatch(/\/book\/\$\{/);
   });
+
+  it('AdminPanel mounts BarbershopSettingsPanel on barbershop_settings section', () => {
+    const src = readFileSync(resolve(process.cwd(), 'src/components/admin/AdminPanel.tsx'), 'utf8');
+    expect(src).toMatch(/barbershop_settings/);
+    expect(src).toMatch(/BarbershopSettingsPanel/);
+  });
+});
