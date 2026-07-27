@@ -119,9 +119,15 @@ export async function findDueReminders(
         shopId: { not: DEMO_SHOP_ID },
         shop: { smsRemindersEnabled: true },
       },
-      NOT: [
-        { notes: OWNER_TEST_BOOKING_NOTES_PREFIX },
-        { notes: { startsWith: `${OWNER_TEST_BOOKING_NOTES_PREFIX} ` } },
+      // Allow null/empty notes; Prisma `NOT notes = '[TEST]'` would drop NULLs.
+      OR: [
+        { notes: null },
+        {
+          AND: [
+            { NOT: { notes: OWNER_TEST_BOOKING_NOTES_PREFIX } },
+            { NOT: { notes: { startsWith: `${OWNER_TEST_BOOKING_NOTES_PREFIX} ` } } },
+          ],
+        },
       ],
     },
     take: limit,

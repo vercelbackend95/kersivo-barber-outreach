@@ -51,6 +51,7 @@ Astro + React (TypeScript) booking + shop system for barbershops.
      - `SMS_REMINDERS_ENABLED`: set `true` to enable the appointment SMS reminder cron (default off). Per-shop gate also required: `ShopSettings.smsRemindersEnabled` (flipped on by paid SaaS subscription webhook).
      - `CRON_SECRET`: shared secret for `/api/cron/*` (Vercel Cron sends `Authorization: Bearer <CRON_SECRET>`).
      - `TWILIO_ACCOUNT_SID` / `TWILIO_AUTH_TOKEN` / `TWILIO_FROM_NUMBER`: Twilio credentials for SMS (required in production when reminders are enabled). Locally, missing Twilio logs `[DEV SMS]` instead.
+     - Optional `TWILIO_TRIAL_TEMPLATE`: e.g. `sms_appointment_reminders` — trial accounts only allow Twilio template keys as `Body` (remove after upgrading to Pay as you go).
 
 ### Pre-Ads email checklist (production)
 Before running Google Ads against the live site, confirm:
@@ -141,6 +142,7 @@ Set `SHOW_SETUP_PLAN_CARDS = true` in `offerMode.ts`, then:
 - Cron: `GET/POST /api/cron/sms-reminders` every 15 minutes (`vercel.json`), auth via `CRON_SECRET`.
 - Sends one SMS ~24h before `BOOKED` appointments (23–25h window) when `SMS_REMINDERS_ENABLED=true` **and** the shop has `smsRemindersEnabled=true` (set on paid SaaS subscription webhook).
 - Skips: unpaid/demo shops, demo shop id, `[TEST]` bookings, missing/invalid phone, already-sent, bookings created too late for a day-before reminder.
+- Optional trial override: `TWILIO_TRIAL_TEMPLATE=sms_appointment_reminders` (Twilio trial cannot send custom Body text).
 - Reschedule clears `smsReminderSentAt` so a new reminder can fire for the new time.
 - No admin UI in v1; outbound rows land in `SmsOutbound` for ops/debug.
 

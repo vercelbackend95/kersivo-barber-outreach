@@ -15,6 +15,16 @@ export function isTwilioConfigured(): boolean {
   return Boolean(env('TWILIO_ACCOUNT_SID') && env('TWILIO_AUTH_TOKEN') && env('TWILIO_FROM_NUMBER'));
 }
 
+/**
+ * Trial accounts reject custom Body text — Body must be a Twilio template key
+ * (e.g. `sms_appointment_reminders`). Set `TWILIO_TRIAL_TEMPLATE` to opt in.
+ * Clear the env after upgrading to Pay as you go.
+ */
+export function resolveTwilioMessageBody(customBody: string): string {
+  const trialTemplate = env('TWILIO_TRIAL_TEMPLATE');
+  return trialTemplate || customBody;
+}
+
 export function createTwilioSmsProvider(): SmsProvider {
   const accountSid = env('TWILIO_ACCOUNT_SID');
   const authToken = env('TWILIO_AUTH_TOKEN');
@@ -31,7 +41,7 @@ export function createTwilioSmsProvider(): SmsProvider {
       const body = new URLSearchParams({
         To: input.toE164,
         From: from,
-        Body: input.body,
+        Body: resolveTwilioMessageBody(input.body),
       });
 
       const response = await fetch(url, {
