@@ -4,6 +4,7 @@ import {
   buildLaunchProgress,
   demoLaunchProgress,
   emptyLaunchProgress,
+  resolveLaunchBillingFlags,
   resolveLaunchCtaPresentation,
 } from './launchCtaProgress';
 
@@ -47,6 +48,50 @@ describe('buildLaunchProgress', () => {
       retailComplete: true,
     });
     expect(two.steps.find((s) => s.id === 'team')?.done).toBe(true);
+  });
+});
+
+describe('resolveLaunchBillingFlags', () => {
+  const pendingDeposit = { plan: 'launch' as const, shopSize: '1-2', currentStack: 'none' };
+
+  it('marks paid and clears pending when shop is a paying tenant', () => {
+    const result = resolveLaunchBillingFlags({
+      shopPaid: true,
+      pendingDeposit,
+      hasPaidDeposit: false,
+    });
+    expect(result.paid).toBe(true);
+    expect(result.pending).toBeNull();
+  });
+
+  it('keeps pending deposit when shop is unpaid', () => {
+    const result = resolveLaunchBillingFlags({
+      shopPaid: false,
+      pendingDeposit,
+      hasPaidDeposit: false,
+    });
+    expect(result.paid).toBe(false);
+    expect(result.pending).toEqual(pendingDeposit);
+  });
+
+  it('treats legacy SetupDeposit PAID as paid', () => {
+    const result = resolveLaunchBillingFlags({
+      shopPaid: false,
+      pendingDeposit: null,
+      hasPaidDeposit: true,
+    });
+    expect(result.paid).toBe(true);
+    expect(result.pending).toBeNull();
+  });
+
+  it('shop paid wins over stale pending even if legacy paid deposit also exists', () => {
+    const result = resolveLaunchBillingFlags({
+      shopPaid: true,
+      pendingDeposit,
+      hasPaidDeposit: true,
+    });
+    expect(result.paid).toBe(true);
+    expect(result.pending).toBeNull();
   });
 });
 

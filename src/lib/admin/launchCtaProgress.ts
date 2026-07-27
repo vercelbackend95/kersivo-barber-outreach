@@ -76,6 +76,22 @@ export type ResolveLaunchCtaPresentationInput = {
   paidHref?: string | null;
 };
 
+/**
+ * Merge tenant paid gate (shopPaidAt / isPaidShop) with legacy SetupDeposit rows.
+ * Paying shops must not surface Continue Purchase from a stale PENDING deposit.
+ */
+export function resolveLaunchBillingFlags<TPending>(input: {
+  shopPaid: boolean;
+  pendingDeposit: TPending | null;
+  hasPaidDeposit: boolean;
+}): { paid: boolean; pending: TPending | null } {
+  const paid = input.shopPaid || input.hasPaidDeposit;
+  return {
+    paid,
+    pending: input.shopPaid ? null : input.pendingDeposit,
+  };
+}
+
 export function resolveLaunchCtaPresentation(
   input: ResolveLaunchCtaPresentationInput,
 ): LaunchCtaPresentation {

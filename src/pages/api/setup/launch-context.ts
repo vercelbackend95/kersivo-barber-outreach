@@ -4,14 +4,24 @@ import type { APIRoute } from 'astro';
 import { SetupDepositStatus, SetupPlan } from '@prisma/client';
 import { resolveAdminAccess } from '../../../lib/admin/auth';
 import { requirePermission } from '../../../lib/admin/rbac/can';
-import { buildLaunchProgress } from '../../../lib/admin/launchCtaProgress';
+import {
+  buildLaunchProgress,
+  resolveLaunchBillingFlags,
+} from '../../../lib/admin/launchCtaProgress';
 import { prisma } from '../../../lib/db/client';
 import { getSetupOnboardingFormUrlOrEmpty } from '../../../lib/email/sender';
+import { isPaidShop } from '../../../lib/shop/paidShop';
 import type { SetupPlanId } from '../../../lib/setup/plans';
 
 function setupPlanToId(plan: SetupPlan): SetupPlanId {
   return plan === SetupPlan.PRIORITY ? 'priority' : 'launch';
 }
+
+type LaunchPending = {
+  plan: SetupPlanId;
+  shopSize: string;
+  currentStack: string;
+};
 
 /**
  * Context for Launch Wizard + sidebar launch CTA progress checklist.
@@ -27,6 +37,9 @@ export const GET: APIRoute = async (context) => {
   const shop = await prisma.shopSettings.findUnique({
     where: { id: access.shopId },
     select: {
+      id: true,
+      shopPaidAt: true,
+      smsRemindersEnabled: true,
       onboardingCompleted: true,
       retailOnboardingSkipped: true,
       retailPickupWalkthroughCompletedAt: true,
@@ -48,6 +61,8 @@ export const GET: APIRoute = async (context) => {
   if (!shop) {
     return new Response(JSON.stringify({ error: 'Shop not found.' }), { status: 404 });
   }
+
+  const shopPaid = isPaidShop(shop);
 
   const shopPayload = {
     name: shop.name,
@@ -95,13 +110,14 @@ export const GET: APIRoute = async (context) => {
   });
 
   if (!shop.onboardingCompleted) {
+    const paidHref = shopPaid ? getSetupOnboardingFormUrlOrEmpty().trim() || '/admin' : null;
     return new Response(
       JSON.stringify({
         ok: true,
         onboardingCompleted: false,
         pending: null,
-        paid: false,
-        paidHref: null,
+        paid: shopPaid,
+        paidHref,
         progress,
         shop: shopPayload,
         user: userPayload,
@@ -110,15 +126,11 @@ export const GET: APIRoute = async (context) => {
   }
 
   const email = access.userEmail?.trim().toLowerCase() || null;
-  let pending: {
-    plan: SetupPlanId;
-    shopSize: string;
-    currentStack: string;
-  } | null = null;
-  let paid = false;
+  let pendingDeposit: LaunchPending | null = null;
+  let hasPaidDeposit = false;
 
   if (email) {
-    const [pendingDeposit, paidDeposit] = await Promise.all([
+    const [pendingRow, paidDeposit] = await Promise.all([
       prisma.setupDeposit.findFirst({
         where: {
           customerEmail: { equals: email, mode: 'insensitive' },
@@ -140,15 +152,21 @@ export const GET: APIRoute = async (context) => {
       }),
     ]);
 
-    if (pendingDeposit) {
-      pending = {
-        plan: setupPlanToId(pendingDeposit.plan),
-        shopSize: pendingDeposit.shopSize,
-        currentStack: pendingDeposit.currentStack,
+    if (pendingRow) {
+      pendingDeposit = {
+        plan: setupPlanToId(pendingRow.plan),
+        shopSize: pendingRow.shopSize,
+        currentStack: pendingRow.currentStack,
       };
     }
-    paid = Boolean(paidDeposit);
+    hasPaidDeposit = Boolean(paidDeposit);
   }
+
+  const { paid, pending } = resolveLaunchBillingFlags({
+    shopPaid,
+    pendingDeposit,
+    hasPaidDeposit,
+  });
 
   const paidHref = paid ? getSetupOnboardingFormUrlOrEmpty().trim() || '/admin' : null;
 

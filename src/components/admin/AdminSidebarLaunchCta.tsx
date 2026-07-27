@@ -112,6 +112,11 @@ export default function AdminSidebarLaunchCta({ isPublicDemo = false }: AdminSid
     );
   }
 
+  // Paying tenants (shopPaidAt / SaaS) — hide purchase / launch CTA entirely.
+  if (paid && !isPublicDemo) {
+    return null;
+  }
+
   return (
     <button
       type="button"
