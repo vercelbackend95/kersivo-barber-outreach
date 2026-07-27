@@ -81,7 +81,7 @@ export default function WorkingHoursOverview({
   const editorDay = isSelectedOpen ? draftDay : visibleDay;
   const hasValidRange = isValidRange(editorDay);
   const overviewStyle = {
-    ['--wh-anchor' as string]: `${((anchorIndex + 0.5) / 7) * 100}%`
+    ['--wh-anchor' as string]: `${((anchorIndex - 0.5) / 7) * 100}%`
   };
 
   return (

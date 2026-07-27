@@ -118,81 +118,6 @@
   border-color: var(--danger);
   background: color-mix(in srgb, var(--danger) 10%, var(--surface-1));
 }
-.admin-service-switch-wrap {
-  position: relative;
-
-  display: inline-flex;
-  align-items: center;
-  justify-content: flex-start;
-  gap: 0.62rem;
-
-  margin: 0;
-  min-height: 2.5rem;
-  padding: 0.3rem 0.45rem;
-  cursor: pointer;
-  user-select: none;
-
-}
-.admin-service-switch-input {
-  position: absolute;
-  inset: 0;
-  opacity: 0;
-
-  margin: 0;
-    width: 100%;
-  height: 100%;
-  cursor: pointer;
-
-}
-
-.admin-service-switch-track {
-  pointer-events: none;
-  position: relative;
-  width: 2.9rem;
-  height: 1.55rem;
-  border-radius: 0.4rem;
-  border: 1px solid color-mix(in srgb, var(--border) 86%, var(--bg));
-  background: color-mix(in srgb, var(--surface) 70%, var(--bg) 30%);
-  transition: background-color 0.18s ease, border-color 0.18s ease;
-}
-
-.admin-service-switch-thumb {
-  position: absolute;
-  top: 0.14rem;
-  left: 0.14rem;
-  width: 1.1rem;
-  height: 1.1rem;
-  border-radius: 0.26rem;
-  background: color-mix(in srgb, var(--fg) 90%, var(--surface));
-  box-shadow: 0 1px 3px color-mix(in srgb, var(--bg) 64%, transparent);
-  transition: transform 0.18s ease, background-color 0.18s ease;
-}
-
-.admin-service-switch-input:checked + .admin-service-switch-track {
-  border-color: color-mix(in srgb, var(--accent) 58%, var(--border));
-  background: color-mix(in srgb, var(--accent) 34%, var(--bg));
-}
-
-.admin-service-switch-input:checked + .admin-service-switch-track .admin-service-switch-thumb {
-  transform: translateX(1.33rem);
-  background: color-mix(in srgb, var(--accent-contrast) 92%, var(--fg) 8%);
-}
-
-.admin-service-switch-input:focus-visible + .admin-service-switch-track {
-  outline: 2px solid var(--focus);
-  outline-offset: 2px;
-}
-
-.admin-service-switch-label {
-  line-height: 1;
-  font-size: 0.84rem;
-  letter-spacing: 0.045em;
-  text-transform: uppercase;
-  color: color-mix(in srgb, var(--fg) 90%, var(--muted));
-
-
-}
-
 .admin-service-active-row {
   display: flex;
   flex-direction: column;
@@ -520,13 +445,6 @@
     gap: 0.95rem;
 
   }
-  .admin-service-switch-wrap {
-    justify-content: flex-end;
-
-    align-self: center;
-    min-width: 8.75rem;
-  }
-
 
   .admin-service-sheet-foot {
     grid-template-columns: repeat(2, minmax(0, 1fr));
@@ -561,12 +479,6 @@
 
   .admin-service-assignment-subline {
     font-size: 0.78rem;
-  }
-
-
-  .admin-service-switch-wrap {
-    align-self: flex-start;
-    padding-inline: 0;
   }
 }
 

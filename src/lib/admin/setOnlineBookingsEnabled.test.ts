@@ -54,7 +54,15 @@ describe('isValidWorkingHoursRule', () => {
     ).toBe(false);
     expect(
       isValidWorkingHoursRule({
-        dayOfWeek: 7,
+        dayOfWeek: 0,
+        startMinutes: 540,
+        endMinutes: 1080,
+        active: true,
+      }),
+    ).toBe(false);
+    expect(
+      isValidWorkingHoursRule({
+        dayOfWeek: 8,
         startMinutes: 540,
         endMinutes: 1080,
         active: true,

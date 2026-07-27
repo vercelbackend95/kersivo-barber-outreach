@@ -15,7 +15,7 @@ import {
   type OnboardingState,
 } from './onboardingTypes';
 
-const DAY_ORDER = [1, 2, 3, 4, 5, 6, 0]; // Mon–Sun display
+const DAY_ORDER = [1, 2, 3, 4, 5, 6, 7]; // Mon–Sun (dayOfWeek 1–7)
 
 const ALLOWED_LOGO_TYPES = new Set(['image/jpeg', 'image/png', 'image/webp']);
 const MAX_LOGO_SIZE_BYTES = 2 * 1024 * 1024;
@@ -32,8 +32,8 @@ function validateLogoFile(file: File): string | null {
 }
 
 function progressStepNumber(step: number) {
-  // Welcome (0) is intro; setup steps 1–5 map to "Step N of 5"
-  return Math.min(5, Math.max(1, step));
+  // Welcome (0) is intro; setup steps 1–6 map to "Step N of 6"
+  return Math.min(6, Math.max(1, step));
 }
 
 function matchPresetKey(name: string) {
@@ -134,8 +134,10 @@ export default function OnboardingWizard() {
   const [servicesError, setServicesError] = useState('');
 
   const [hours, setHours] = useState<OnboardingHoursRow[]>(DEFAULT_HOURS);
+  const [shopHours, setShopHours] = useState<OnboardingHoursRow[]>(DEFAULT_HOURS);
   const [applyToAllBarbers, setApplyToAllBarbers] = useState(true);
   const [hoursError, setHoursError] = useState('');
+  const [shopHoursError, setShopHoursError] = useState('');
 
   const isReopen = useMemo(() => {
     if (typeof window === 'undefined') return false;
@@ -158,15 +160,27 @@ export default function OnboardingWizard() {
           id: barber.id,
           name: barber.name,
           avatarUrl: barber.avatarUrl,
+          onlineBookings: barber.isActive !== false,
+          intendedRole: barber.intendedRole === 'MANAGER' ? 'MANAGER' : 'BARBER',
         })),
       );
       setTeamMode(next.barbers.length > 1 ? 'team' : 'solo');
     } else if (next.user?.name) {
-      setBarbers([{ name: next.user.name, avatarUrl: next.user.image }]);
+      setBarbers([{ name: next.user.name, avatarUrl: next.user.image, onlineBookings: true }]);
     }
 
     setServices(buildServicesFromState(next));
-    setHours(next.hours?.length === 7 ? next.hours : DEFAULT_HOURS);
+    setShopHours(next.shopHours?.length === 7 ? next.shopHours : DEFAULT_HOURS);
+    // Prefill barber hours from shop hours when barber hours are still defaults / empty of active days.
+    const nextHours = next.hours?.length === 7 ? next.hours : null;
+    const nextShop = next.shopHours?.length === 7 ? next.shopHours : null;
+    if (nextHours && nextHours.some((row) => row.active)) {
+      setHours(nextHours);
+    } else if (nextShop) {
+      setHours(nextShop);
+    } else {
+      setHours(DEFAULT_HOURS);
+    }
   }, []);
 
   const loadOnboarding = useCallback(async () => {
@@ -220,7 +234,7 @@ export default function OnboardingWizard() {
     };
   }, [logoPreview]);
 
-  const setupProgressVisible = step >= 1 && step <= 5 && !finished;
+  const setupProgressVisible = step >= 1 && step <= 6 && !finished;
 
   const validateHours = useCallback((rows: OnboardingHoursRow[]) => {
     for (const row of rows) {
@@ -315,11 +329,21 @@ export default function OnboardingWizard() {
     setError('');
     try {
       const hasFiles = cleaned.some((barber) => barber.avatarFile);
-      const toPayload = (barber: (typeof cleaned)[number]) => {
-        const entry: { id?: string; name: string; avatarUrl?: string | null } = {
+      const toPayload = (barber: (typeof cleaned)[number], index: number) => {
+        const entry: {
+          id?: string;
+          name: string;
+          avatarUrl?: string | null;
+          onlineBookings: boolean;
+          intendedRole?: 'MANAGER' | 'BARBER';
+        } = {
           id: barber.id,
           name: barber.name,
+          onlineBookings: cleaned.length === 1 ? true : barber.onlineBookings !== false,
         };
+        if (index > 0) {
+          entry.intendedRole = barber.intendedRole === 'MANAGER' ? 'MANAGER' : 'BARBER';
+        }
         if (!barber.avatarFile && barber.avatarUrl && !barber.avatarUrl.startsWith('blob:')) {
           entry.avatarUrl = barber.avatarUrl;
         }
@@ -328,7 +352,7 @@ export default function OnboardingWizard() {
       let response: Response;
       if (hasFiles) {
         const form = new FormData();
-        form.set('barbers', JSON.stringify(cleaned.map(toPayload)));
+        form.set('barbers', JSON.stringify(cleaned.map((b, i) => toPayload(b, i))));
         cleaned.forEach((barber, index) => {
           if (barber.avatarFile) form.set(`avatar_${index}`, barber.avatarFile);
         });
@@ -343,7 +367,7 @@ export default function OnboardingWizard() {
           credentials: 'include',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
-            barbers: cleaned.map(toPayload),
+            barbers: cleaned.map((b, i) => toPayload(b, i)),
           }),
         });
       }
@@ -413,11 +437,68 @@ export default function OnboardingWizard() {
     }
   };
 
+  const saveShopHours = async () => {
+    const validation = validateHours(shopHours);
+    if (validation) {
+      setShopHoursError(validation);
+      return;
+    }
+    if (!shopHours.some((row) => row.active)) {
+      setShopHoursError('Open the shop on at least one day.');
+      return;
+    }
+    setShopHoursError('');
+    setSaving(true);
+    setError('');
+    try {
+      const response = await fetch('/api/admin/onboarding/shop-hours', {
+        method: 'PUT',
+        credentials: 'include',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ rules: shopHours }),
+      });
+      if (response.status === 401) {
+        setHasAccess(false);
+        throw new Error('Your session expired. Please sign in again.');
+      }
+      if (!response.ok) throw new Error(await readJsonError(response));
+      const payload = (await response.json()) as OnboardingState;
+      applyState(payload);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Could not save shop opening hours.');
+    } finally {
+      setSaving(false);
+    }
+  };
+
   const saveHours = async () => {
     const validation = validateHours(hours);
     if (validation) {
       setHoursError(validation);
       return;
+    }
+    // Client-side ⊆ shop hours check
+    for (const row of hours) {
+      if (!row.active) continue;
+      const shopRow = shopHours.find((item) => item.dayOfWeek === row.dayOfWeek);
+      if (!shopRow?.active) {
+        setHoursError(`${DAY_LABELS[row.dayOfWeek]}: the shop is closed that day.`);
+        return;
+      }
+      const [sh, sm] = shopRow.startTime.split(':').map(Number);
+      const [eh, em] = shopRow.endTime.split(':').map(Number);
+      const [bh, bm] = row.startTime.split(':').map(Number);
+      const [beH, beM] = row.endTime.split(':').map(Number);
+      const shopStart = sh * 60 + sm;
+      const shopEnd = eh * 60 + em;
+      const barberStart = bh * 60 + bm;
+      const barberEnd = beH * 60 + beM;
+      if (barberStart < shopStart || barberEnd > shopEnd) {
+        setHoursError(
+          `${DAY_LABELS[row.dayOfWeek]}: must be within shop hours (${shopRow.startTime}–${shopRow.endTime}).`,
+        );
+        return;
+      }
     }
     setHoursError('');
     setSaving(true);
@@ -478,10 +559,11 @@ export default function OnboardingWizard() {
       return;
     }
     if (step === 1) return saveShop();
-    if (step === 2) return saveBarbers();
-    if (step === 3) return saveServices();
-    if (step === 4) return saveHours();
-    if (step === 5) return completeOnboarding();
+    if (step === 2) return saveShopHours();
+    if (step === 3) return saveBarbers();
+    if (step === 4) return saveServices();
+    if (step === 5) return saveHours();
+    if (step === 6) return completeOnboarding();
   };
 
   const handleBack = () => {
@@ -492,7 +574,7 @@ export default function OnboardingWizard() {
 
   const primaryLabel = useMemo(() => {
     if (step === 0) return 'Start setup';
-    if (step === 5) return 'Continue to test booking';
+    if (step === 6) return 'Continue to test booking';
     return 'Continue';
   }, [step]);
 
@@ -601,7 +683,7 @@ export default function OnboardingWizard() {
           <div>
             <div className="admin-onboarding__progress-meta">
               <p className="admin-onboarding__progress-text" id="onboarding-progress-label">
-                Step {progressStepNumber(step)} of 5
+                Step {progressStepNumber(step)} of 6
               </p>
             </div>
             <div
@@ -614,7 +696,7 @@ export default function OnboardingWizard() {
             >
               <div
                 className="admin-onboarding__progress-fill"
-                style={{ width: `${(progressStepNumber(step) / 5) * 100}%` }}
+                style={{ width: `${(progressStepNumber(step) / 6) * 100}%` }}
               />
             </div>
           </div>
@@ -741,6 +823,94 @@ export default function OnboardingWizard() {
         ) : null}
 
         {step === 2 ? (
+          <section aria-labelledby="onboarding-shop-hours-title" className="admin-onboarding__stack">
+            <div>
+              <h1 id="onboarding-shop-hours-title" className="admin-onboarding__title">
+                When the shop is open?
+              </h1>
+              <p className="admin-onboarding__description">
+                Set your salon opening hours. Staff working hours cannot go outside these times.
+              </p>
+            </div>
+            {shopHoursError ? (
+              <p className="admin-onboarding__error" role="alert">
+                {shopHoursError}
+              </p>
+            ) : null}
+            {DAY_ORDER.map((dayOfWeek) => {
+              const row =
+                shopHours.find((item) => item.dayOfWeek === dayOfWeek) ??
+                DEFAULT_HOURS.find((item) => item.dayOfWeek === dayOfWeek)!;
+              return (
+                <div
+                  key={dayOfWeek}
+                  className={`admin-onboarding__hours-row${row.active ? '' : ' is-closed'}`}
+                >
+                  <div className="admin-onboarding__hours-top">
+                    <strong>{DAY_LABELS[dayOfWeek]}</strong>
+                    <OnboardingSwitch
+                      checked={row.active}
+                      label={row.active ? 'Open' : 'Closed'}
+                      onCheckedChange={(active) => {
+                        setShopHours((current) =>
+                          current.map((item) =>
+                            item.dayOfWeek === dayOfWeek ? { ...item, active } : item,
+                          ),
+                        );
+                      }}
+                    />
+                  </div>
+                  <div className="admin-onboarding__hours-times">
+                    <div className="field">
+                      <label className="field__label" htmlFor={`shop-hours-start-${dayOfWeek}`}>
+                        Start
+                      </label>
+                      <input
+                        id={`shop-hours-start-${dayOfWeek}`}
+                        className="input"
+                        type="time"
+                        value={row.startTime}
+                        disabled={!row.active}
+                        onChange={(event) => {
+                          setShopHours((current) =>
+                            current.map((item) =>
+                              item.dayOfWeek === dayOfWeek
+                                ? { ...item, startTime: event.target.value }
+                                : item,
+                            ),
+                          );
+                        }}
+                      />
+                    </div>
+                    <div className="field">
+                      <label className="field__label" htmlFor={`shop-hours-end-${dayOfWeek}`}>
+                        End
+                      </label>
+                      <input
+                        id={`shop-hours-end-${dayOfWeek}`}
+                        className="input"
+                        type="time"
+                        value={row.endTime}
+                        disabled={!row.active}
+                        onChange={(event) => {
+                          setShopHours((current) =>
+                            current.map((item) =>
+                              item.dayOfWeek === dayOfWeek
+                                ? { ...item, endTime: event.target.value }
+                                : item,
+                            ),
+                          );
+                        }}
+                      />
+                    </div>
+                  </div>
+                </div>
+              );
+            })}
+          </section>
+        ) : null}
+
+        {step === 3 ? (
           <section aria-labelledby="onboarding-barbers-title" className="admin-onboarding__stack">
             <div>
               <h1 id="onboarding-barbers-title" className="admin-onboarding__title">
@@ -759,6 +929,7 @@ export default function OnboardingWizard() {
                       id: barbers[0]?.id,
                       name: barbers[0]?.name || state?.user?.name || '',
                       avatarUrl: barbers[0]?.avatarUrl || state?.user?.image || null,
+                      onlineBookings: true,
                     },
                   ]);
                 }}
@@ -772,7 +943,27 @@ export default function OnboardingWizard() {
                 aria-pressed={teamMode === 'team'}
                 onClick={() => {
                   setTeamMode('team');
-                  if (barbers.length === 0) setBarbers([{ name: '' }]);
+                  setBarbers((current) => {
+                    if (current.length === 0) {
+                      return [
+                        {
+                          name: state?.user?.name || '',
+                          avatarUrl: state?.user?.image || null,
+                          onlineBookings: true,
+                        },
+                      ];
+                    }
+                    return current.map((item, index) =>
+                      index === 0
+                        ? {
+                            ...item,
+                            name: item.name || state?.user?.name || '',
+                            avatarUrl: item.avatarUrl || state?.user?.image || null,
+                            onlineBookings: item.onlineBookings !== false,
+                          }
+                        : { ...item, onlineBookings: item.onlineBookings !== false },
+                    );
+                  });
                 }}
               >
                 <span className="admin-onboarding__choice-title">I have a team</span>
@@ -784,9 +975,64 @@ export default function OnboardingWizard() {
               <div className="admin-onboarding__stack">
                 {barbers.map((barber, index) => (
                   <div key={barber.id || `barber-${index}`} className="admin-onboarding__barber-card">
+                    <div className="admin-onboarding__barber-card-head">
+                      {index === 0 ? (
+                        <span className="admin-team__role-pill admin-team__role-pill--owner">Owner</span>
+                      ) : (
+                        <div
+                          className="admin-onboarding__role-toggle"
+                          role="group"
+                          aria-label={`Role for ${barber.name || `team member ${index + 1}`}`}
+                        >
+                          <button
+                            type="button"
+                            className={`admin-onboarding__role-option${
+                              (barber.intendedRole ?? 'BARBER') === 'BARBER' ? ' is-selected' : ''
+                            }`}
+                            aria-pressed={(barber.intendedRole ?? 'BARBER') === 'BARBER'}
+                            onClick={() => {
+                              setBarbers((current) =>
+                                current.map((item, itemIndex) =>
+                                  itemIndex === index ? { ...item, intendedRole: 'BARBER' } : item,
+                                ),
+                              );
+                            }}
+                          >
+                            Barber
+                          </button>
+                          <button
+                            type="button"
+                            className={`admin-onboarding__role-option${
+                              barber.intendedRole === 'MANAGER' ? ' is-selected' : ''
+                            }`}
+                            aria-pressed={barber.intendedRole === 'MANAGER'}
+                            onClick={() => {
+                              setBarbers((current) =>
+                                current.map((item, itemIndex) =>
+                                  itemIndex === index ? { ...item, intendedRole: 'MANAGER' } : item,
+                                ),
+                              );
+                            }}
+                          >
+                            Manager
+                          </button>
+                        </div>
+                      )}
+                      {teamMode === 'team' && index > 0 ? (
+                        <button
+                          type="button"
+                          className="btn btn--ghost btn--sm"
+                          onClick={() => {
+                            setBarbers((current) => current.filter((_, itemIndex) => itemIndex !== index));
+                          }}
+                        >
+                          Remove
+                        </button>
+                      ) : null}
+                    </div>
                     <div className="field">
                       <label className="field__label" htmlFor={`onboarding-barber-name-${index}`}>
-                        Barber name
+                        {index === 0 ? 'Your name' : 'Name'}
                       </label>
                       <input
                         id={`onboarding-barber-name-${index}`}
@@ -846,16 +1092,24 @@ export default function OnboardingWizard() {
                         )}
                       </label>
                     </div>
-                    {teamMode === 'team' && barbers.length > 1 ? (
-                      <button
-                        type="button"
-                        className="btn btn--ghost btn--sm"
-                        onClick={() => {
-                          setBarbers((current) => current.filter((_, itemIndex) => itemIndex !== index));
-                        }}
-                      >
-                        Remove
-                      </button>
+                    {barbers.length > 1 ? (
+                      <label className="admin-onboarding__bookings-toggle" htmlFor={`onboarding-barber-bookings-${index}`}>
+                        <input
+                          id={`onboarding-barber-bookings-${index}`}
+                          type="checkbox"
+                          checked={barber.onlineBookings !== false}
+                          onChange={(event) => {
+                            setBarbers((current) =>
+                              current.map((item, itemIndex) =>
+                                itemIndex === index
+                                  ? { ...item, onlineBookings: event.target.checked }
+                                  : item,
+                              ),
+                            );
+                          }}
+                        />
+                        <span>Accept online bookings</span>
+                      </label>
                     ) : null}
                   </div>
                 ))}
@@ -863,7 +1117,12 @@ export default function OnboardingWizard() {
                   <button
                     type="button"
                     className="btn btn--secondary"
-                    onClick={() => setBarbers((current) => [...current, { name: '' }])}
+                    onClick={() =>
+                      setBarbers((current) => [
+                        ...current,
+                        { name: '', onlineBookings: true, intendedRole: 'BARBER' },
+                      ])
+                    }
                   >
                     Add another barber
                   </button>
@@ -873,7 +1132,7 @@ export default function OnboardingWizard() {
           </section>
         ) : null}
 
-        {step === 3 ? (
+        {step === 4 ? (
           <section aria-labelledby="onboarding-services-title" className="admin-onboarding__stack">
             <div>
               <h1 id="onboarding-services-title" className="admin-onboarding__title">
@@ -1002,7 +1261,7 @@ export default function OnboardingWizard() {
           </section>
         ) : null}
 
-        {step === 4 ? (
+        {step === 5 ? (
           <section aria-labelledby="onboarding-hours-title" className="admin-onboarding__stack">
             <div>
               <h1 id="onboarding-hours-title" className="admin-onboarding__title">
@@ -1017,7 +1276,7 @@ export default function OnboardingWizard() {
             ) : null}
             <div className="admin-onboarding__apply-row">
               <span className="admin-onboarding__apply-label" id="onboarding-apply-hours-label">
-                Apply these hours to all barbers
+                Apply these hours to all members
               </span>
               <OnboardingSwitch
                 checked={applyToAllBarbers}
@@ -1026,7 +1285,9 @@ export default function OnboardingWizard() {
               />
             </div>
             {DAY_ORDER.map((dayOfWeek) => {
-              const row = hours.find((item) => item.dayOfWeek === dayOfWeek) ?? DEFAULT_HOURS[dayOfWeek]!;
+              const row =
+                hours.find((item) => item.dayOfWeek === dayOfWeek) ??
+                DEFAULT_HOURS.find((item) => item.dayOfWeek === dayOfWeek)!;
               return (
                 <div
                   key={dayOfWeek}
@@ -1094,7 +1355,7 @@ export default function OnboardingWizard() {
           </section>
         ) : null}
 
-        {step === 5 ? (
+        {step === 6 ? (
           <section aria-labelledby="onboarding-review-title" className="admin-onboarding__stack">
             <div>
               <h1 id="onboarding-review-title" className="admin-onboarding__title">
@@ -1120,8 +1381,29 @@ export default function OnboardingWizard() {
 
             <article className="admin-onboarding__summary-card">
               <div className="admin-onboarding__summary-top">
-                <p className="admin-onboarding__summary-label">Barbers</p>
+                <p className="admin-onboarding__summary-label">Shop opening hours</p>
                 <button type="button" className="btn btn--ghost btn--sm" onClick={() => setStep(2)}>
+                  Edit
+                </button>
+              </div>
+              <div className="admin-onboarding__hours-summary" role="list">
+                {orderedHoursForDisplay(
+                  state?.shopHours?.length === 7 ? state.shopHours : shopHours,
+                ).map((day) => (
+                  <div key={day.dayOfWeek} className="admin-onboarding__hours-summary-row" role="listitem">
+                    <span className="admin-onboarding__hours-summary-day">{day.label}</span>
+                    <span className="admin-onboarding__hours-summary-time">
+                      {day.active ? `${day.startTime}–${day.endTime}` : 'Closed'}
+                    </span>
+                  </div>
+                ))}
+              </div>
+            </article>
+
+            <article className="admin-onboarding__summary-card">
+              <div className="admin-onboarding__summary-top">
+                <p className="admin-onboarding__summary-label">Barbers</p>
+                <button type="button" className="btn btn--ghost btn--sm" onClick={() => setStep(3)}>
                   Edit
                 </button>
               </div>
@@ -1137,7 +1419,7 @@ export default function OnboardingWizard() {
             <article className="admin-onboarding__summary-card">
               <div className="admin-onboarding__summary-top">
                 <p className="admin-onboarding__summary-label">Services</p>
-                <button type="button" className="btn btn--ghost btn--sm" onClick={() => setStep(3)}>
+                <button type="button" className="btn btn--ghost btn--sm" onClick={() => setStep(4)}>
                   Edit
                 </button>
               </div>
@@ -1160,7 +1442,7 @@ export default function OnboardingWizard() {
             <article className="admin-onboarding__summary-card">
               <div className="admin-onboarding__summary-top">
                 <p className="admin-onboarding__summary-label">Working hours</p>
-                <button type="button" className="btn btn--ghost btn--sm" onClick={() => setStep(4)}>
+                <button type="button" className="btn btn--ghost btn--sm" onClick={() => setStep(5)}>
                   Edit
                 </button>
               </div>
@@ -1213,7 +1495,7 @@ export default function OnboardingWizard() {
             onClick={() => {
               void handleContinue();
             }}
-            disabled={saving || (step === 2 && !teamMode)}
+            disabled={saving || (step === 3 && !teamMode)}
             aria-busy={saving}
           >
             {saving ? 'Saving…' : primaryLabel}

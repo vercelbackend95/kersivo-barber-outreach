@@ -206,8 +206,8 @@ describe('getRangeDayKeys', () => {
 });
 
 describe('computeAvailableMinutes', () => {
-  it('uses Monday=0 weekday mapping and subtracts overlapping blocks once', () => {
-    // 2026-07-15 is Wednesday => dayOfWeek 2
+  it('uses Monday=1 weekday mapping and subtracts overlapping blocks once', () => {
+    // 2026-07-15 is Wednesday => dayOfWeek 3
     const dayKey = '2026-07-15';
     const range = {
       from: fromZonedTime(`${dayKey}T00:00:00.000`, ADMIN_REPORTS_TIMEZONE),
@@ -218,7 +218,7 @@ describe('computeAvailableMinutes', () => {
       activeBarberIds: ['b1'],
       availability: [{
         barberId: 'b1',
-        dayOfWeek: 2,
+        dayOfWeek: 3,
         startMinutes: 9 * 60,
         endMinutes: 11 * 60,
         breakStartMin: null,

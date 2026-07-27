@@ -8,30 +8,12 @@ describe('Team invitation resend UI', () => {
     'utf8',
   );
 
-  it('wires Resend invitation action and per-card in-flight lock', () => {
-    expect(overview).toMatch(/Resend invitation/);
-    expect(overview).toMatch(/Resending…/);
-    expect(overview).toMatch(/Invitation resent/);
-    expect(overview).toMatch(/inviteResendInFlightRef/);
-    expect(overview).toMatch(/\/api\/admin\/team\/invitations\//);
-    expect(overview).toMatch(/TEAM_INVITE_RESEND_REFRESH_WARNING/);
-    expect(overview).toMatch(/Copy invitation link|copyInviteAcceptPath/);
-    expect(overview).toMatch(/inviteResendNetworkFailurePatch/);
-    expect(overview).toMatch(/shouldShowInviteResendAction/);
-    expect(overview).toMatch(/invitationsSectionRevealLabel/);
-    expect(overview).toMatch(/passiveInvitationLabel/);
-  });
-
-  it('resend refreshes Team only — never onBarberSaved', () => {
-    expect(overview).toMatch(/inviteResendPostMutationRefresh/);
-    const handlerStart = overview.indexOf('async function handleResendInvitation');
-    expect(handlerStart).toBeGreaterThan(-1);
-    const nextFn = overview.indexOf('\n  async function ', handlerStart + 1);
-    const handler = overview.slice(handlerStart, nextFn === -1 ? undefined : nextFn);
-    expect(handler).toMatch(/inviteResendPostMutationRefresh/);
-    expect(handler).toMatch(/loadTeam/);
-    expect(handler).not.toMatch(/onBarberSaved/);
-    expect(handler).not.toMatch(/Promise\.all/);
+  it('does not wire Resend invitation on roster cards', () => {
+    expect(overview).not.toMatch(/Resend invitation/);
+    expect(overview).not.toMatch(/handleResendInvitation/);
+    expect(overview).not.toMatch(/inviteResend=/);
+    expect(overview).not.toMatch(/copyInviteAcceptPath/);
+    expect(overview).toMatch(/onlineBookingsOffRevealLabel/);
   });
 
   it('barbers-driven Team effect uses preserve mode', () => {
@@ -54,22 +36,25 @@ describe('Team invitation resend UI', () => {
     expect(onSent).toMatch(/Promise\.all/);
   });
 
-  it('email-failure path keeps Copy invitation link wiring', () => {
-    expect(overview).toMatch(/phase === 'email_failed'/);
-    expect(overview).toMatch(/showCopyLink:\s*resendState\?\.phase === 'email_failed'/);
-    expect(overview).toMatch(/Copy invitation link|copyInviteAcceptPath/);
-  });
-
-  it('roster card exposes inviteResend controls without Activate', () => {
+  it('roster card has no inviteResend controls', () => {
     const card = readFileSync(
       resolve(process.cwd(), 'src/components/admin/AdminBarberRosterCard.tsx'),
       'utf8',
     );
-    expect(card).toMatch(/inviteResend/);
-    expect(card).toMatch(/Copy invitation link/);
-    expect(card).toMatch(/showAction/);
-    expect(card).toMatch(/passiveLabel|passiveInvitationLabel/);
+    expect(card).not.toMatch(/inviteResend/);
+    expect(card).not.toMatch(/Resend invitation/);
+    expect(card).not.toMatch(/Copy invitation link/);
+    expect(card).not.toMatch(/passiveInvitationLabel/);
     expect(card).not.toMatch(/\bActivate\b/);
+  });
+
+  it('profile Check the invite sheet still resends', () => {
+    const sheet = readFileSync(
+      resolve(process.cwd(), 'src/components/admin/TeamDashboardAccountSheet.tsx'),
+      'utf8',
+    );
+    expect(sheet).toMatch(/\/resend/);
+    expect(sheet).toMatch(/Resend/);
   });
 
   it('wizard surfaces pending and expired conflict copy', () => {

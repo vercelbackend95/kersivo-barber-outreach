@@ -3,6 +3,7 @@ import { ButtonSpinner } from '../../ButtonSpinner';
 import { ConfirmationStatusIcon } from '../../ConfirmationStatusIcon';
 import { Check, ImagePlus, Package, X } from '../../lucide-react';
 import { adminFetchJson } from '../adminAuth';
+import AdminOnOffPill from '../AdminOnOffPill';
 import {
   EMPTY_PRODUCT_FORM,
   PRODUCT_CATEGORY_OPTIONS,
@@ -455,27 +456,20 @@ export default function ProductWizard({
                     : 'Saved privately until you publish it.'}
                 </p>
               </div>
-              <label className="admin-service-switch-wrap" htmlFor="product-wizard-active">
-                <input
-                  id="product-wizard-active"
-                  type="checkbox"
-                  className="admin-service-switch-input"
-                  checked={form.active}
-                  onChange={(event) => {
-                    const nextActive = event.target.checked;
-                    setForm((current) => ({
-                      ...current,
-                      active: nextActive,
-                      featured: nextActive ? current.featured : false
-                    }));
-                    if (submitError) setSubmitError('');
-                  }}
-                />
-                <span className="admin-service-switch-track" aria-hidden="true">
-                  <span className="admin-service-switch-thumb" />
-                </span>
-                <span className="admin-service-switch-label">{form.active ? 'Live' : 'Hidden'}</span>
-              </label>
+              <AdminOnOffPill
+                value={form.active}
+                onChange={(nextActive) => {
+                  setForm((current) => ({
+                    ...current,
+                    active: nextActive,
+                    featured: nextActive ? current.featured : false,
+                  }));
+                  if (submitError) setSubmitError('');
+                }}
+                ariaLabel="Publish in shop"
+                onLabel="Live"
+                offLabel="Hidden"
+              />
             </div>
 
             <div className="admin-product-wizard__visibility">
@@ -487,27 +481,20 @@ export default function ProductWizard({
                     : 'Pin standout products so they catch the eye.'}
                 </p>
               </div>
-              <label className="admin-service-switch-wrap" htmlFor="product-wizard-featured">
-                <input
-                  id="product-wizard-featured"
-                  type="checkbox"
-                  className="admin-service-switch-input"
-                  checked={form.featured}
-                  onChange={(event) => {
-                    const nextFeatured = event.target.checked;
-                    setForm((current) => ({
-                      ...current,
-                      featured: nextFeatured,
-                      active: nextFeatured ? true : current.active
-                    }));
-                    if (submitError) setSubmitError('');
-                  }}
-                />
-                <span className="admin-service-switch-track" aria-hidden="true">
-                  <span className="admin-service-switch-thumb" />
-                </span>
-                <span className="admin-service-switch-label">{form.featured ? 'Featured' : 'Standard'}</span>
-              </label>
+              <AdminOnOffPill
+                value={form.featured}
+                onChange={(nextFeatured) => {
+                  setForm((current) => ({
+                    ...current,
+                    featured: nextFeatured,
+                    active: nextFeatured ? true : current.active,
+                  }));
+                  if (submitError) setSubmitError('');
+                }}
+                ariaLabel="Featured product"
+                onLabel="Featured"
+                offLabel="Standard"
+              />
             </div>
           </section>
         ) : null}

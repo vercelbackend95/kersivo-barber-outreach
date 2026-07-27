@@ -1,14 +1,6 @@
-const LONDON_TIME_ZONE = 'Europe/London';
+import { WEEKDAY_SHORT_TO_MON1 } from '@/lib/booking/weekdays';
 
-const WEEKDAY_TO_INDEX: Record<string, number> = {
-  Mon: 0,
-  Tue: 1,
-  Wed: 2,
-  Thu: 3,
-  Fri: 4,
-  Sat: 5,
-  Sun: 6
-};
+const LONDON_TIME_ZONE = 'Europe/London';
 
 export type TodayScheduleRule = {
   active: boolean;
@@ -37,7 +29,7 @@ export function getTodayInLondon(now = new Date()): number | null {
     weekday: 'short'
   }).format(now);
 
-  return WEEKDAY_TO_INDEX[weekday] ?? null;
+  return WEEKDAY_SHORT_TO_MON1[weekday] ?? null;
 }
 
 function formatMinutesAsTime(minutes: number): string {

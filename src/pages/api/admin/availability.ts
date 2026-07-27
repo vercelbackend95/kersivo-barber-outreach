@@ -9,7 +9,7 @@ import { prisma } from '../../../lib/db/client';
 const schema = z.object({
   id: z.string().optional(),
   barberId: z.string(),
-  dayOfWeek: z.number().int().min(0).max(6),
+  dayOfWeek: z.number().int().min(1).max(7),
   startMinutes: z.number().int().min(0).max(1440),
   endMinutes: z.number().int().min(1).max(1440),
   breakStartMin: z.number().int().optional().nullable(),

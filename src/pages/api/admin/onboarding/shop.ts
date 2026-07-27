@@ -5,7 +5,7 @@ import { z } from 'zod';
 import {
   advanceOnboardingStep,
   loadOnboardingState,
-  ONBOARDING_STEP_BARBERS,
+  ONBOARDING_STEP_SHOP_HOURS,
   requireOnboardingAccess,
 } from '@/lib/admin/onboarding';
 import { prisma } from '@/lib/db/client';
@@ -72,7 +72,7 @@ export const PUT: APIRoute = async (ctx) => {
       },
     });
 
-    await advanceOnboardingStep(shopId, ONBOARDING_STEP_BARBERS);
+    await advanceOnboardingStep(shopId, ONBOARDING_STEP_SHOP_HOURS);
 
     const state = await loadOnboardingState(shopId, access);
     return new Response(JSON.stringify(state));

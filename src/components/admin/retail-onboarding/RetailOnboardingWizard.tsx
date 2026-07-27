@@ -532,17 +532,7 @@ export default function RetailOnboardingWizard() {
               type="button"
               className="btn btn--secondary btn--lg"
               onClick={() => {
-                void (async () => {
-                  try {
-                    await fetch('/api/admin/retail-onboarding/skip', {
-                      method: 'POST',
-                      credentials: 'include',
-                    });
-                  } catch {
-                    /* ignore */
-                  }
-                  window.location.assign('/admin');
-                })();
+                window.location.assign('/admin');
               }}
             >
               Not right now

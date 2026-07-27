@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
+import React, { createContext, useCallback, useContext, useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
 import type { AdminSection } from './AdminPanel';
 import { SkeletonKPICards, SkeletonTableRows } from '../skeleton';
@@ -36,6 +36,7 @@ type AdminLayoutProps = {
   profileUser?: AdminProfileUser | null;
   shopLogoUrl?: string | null;
   shopName?: string | null;
+  publicActivityPaused?: boolean;
   /** When set, sidebar items are filtered by permission keys from session. */
   permissions?: string[] | null;
   /** Always mounted (hidden); keeps effects alive while section skeleton replaces `children`. */
@@ -98,10 +99,12 @@ function SidebarBrand({
   logoUrl = null,
   shopName = null,
   statusSlot = null,
+  onOpenSettings = null,
 }: {
   logoUrl?: string | null;
   shopName?: string | null;
   statusSlot?: React.ReactNode;
+  onOpenSettings?: (() => void) | null;
 }) {
   const [src, setSrc] = useState(logoUrl || DEFAULT_SIDEBAR_LOGO);
   const isCustom = Boolean(logoUrl) && src === logoUrl;
@@ -111,8 +114,8 @@ function SidebarBrand({
     setSrc(logoUrl || DEFAULT_SIDEBAR_LOGO);
   }, [logoUrl]);
 
-  return (
-    <div className="admin-sidebar-brand">
+  const inner = (
+    <>
       <div
         className={`admin-sidebar-monogram${isCustom ? ' admin-sidebar-monogram--custom' : ''}`}
         aria-hidden="true"
@@ -131,11 +134,32 @@ function SidebarBrand({
         {statusSlot}
         <span className="admin-sidebar-brand-name">{brandLabel}</span>
       </div>
-    </div>
+    </>
   );
+
+  if (onOpenSettings) {
+    return (
+      <button
+        type="button"
+        className="admin-sidebar-brand admin-sidebar-brand--button"
+        onClick={onOpenSettings}
+        aria-label={`Open barbershop settings for ${brandLabel}`}
+      >
+        {inner}
+      </button>
+    );
+  }
+
+  return <div className="admin-sidebar-brand">{inner}</div>;
 }
 
-function SidebarStatus({ className = '' }: { className?: string }) {
+function SidebarStatus({
+  className = '',
+  paused = false,
+}: {
+  className?: string;
+  paused?: boolean;
+}) {
   const dateStr = new Date().toLocaleDateString('en-GB', {
     weekday: 'short',
     day: 'numeric',
@@ -144,8 +168,11 @@ function SidebarStatus({ className = '' }: { className?: string }) {
   return (
     <div className={`admin-sidebar-status ${className}`.trim()} aria-label="System status">
       <span className="admin-sidebar-status-date">{dateStr}</span>
-      <span className="admin-sidebar-status-dot" aria-hidden="true" />
-      <span className="admin-sidebar-status-label">Online</span>
+      <span
+        className={`admin-sidebar-status-dot${paused ? ' admin-sidebar-status-dot--paused' : ''}`}
+        aria-hidden="true"
+      />
+      <span className="admin-sidebar-status-label">{paused ? 'Paused' : 'Online'}</span>
     </div>
   );
 }
@@ -159,6 +186,7 @@ export default function AdminLayout({
   profileUser = null,
   shopLogoUrl = null,
   shopName = null,
+  publicActivityPaused = false,
   permissions = null,
   persistentAdminChrome,
   children,
@@ -170,6 +198,14 @@ export default function AdminLayout({
   const mobileOpenButtonRef = useRef<HTMLButtonElement | null>(null);
   const lastPublishedHeaderInsetPxRef = useRef<number | null>(null);
   const [mobileChromeMounted, setMobileChromeMounted] = useState(false);
+
+  const canOpenBarbershopSettings =
+    !isPublicDemo && Boolean(!permissions || permissions.includes('shop.settings'));
+
+  const openBarbershopSettings = useCallback(() => {
+    onChangeSection('barbershop_settings');
+    setIsMobileMenuOpen(false);
+  }, [onChangeSection]);
 
   const visibleMenuGroups = useMemo(() => {
     if (!permissions) return menuGroups;
@@ -287,7 +323,12 @@ export default function AdminLayout({
   const accountFooter = isPublicDemo ? (
     <AdminSidebarProfile mode="guest" variant="desktop" />
   ) : profileUser ? (
-    <AdminSidebarProfile user={profileUser} variant="desktop" permissions={permissions} />
+    <AdminSidebarProfile
+      user={profileUser}
+      variant="desktop"
+      permissions={permissions}
+      onOpenBarbershopSettings={canOpenBarbershopSettings ? openBarbershopSettings : undefined}
+    />
   ) : (
     <button
       type="button"
@@ -302,7 +343,12 @@ export default function AdminLayout({
   const accountFooterMobile = isPublicDemo ? (
     <AdminSidebarProfile mode="guest" variant="mobile" />
   ) : profileUser ? (
-    <AdminSidebarProfile user={profileUser} variant="mobile" permissions={permissions} />
+    <AdminSidebarProfile
+      user={profileUser}
+      variant="mobile"
+      permissions={permissions}
+      onOpenBarbershopSettings={canOpenBarbershopSettings ? openBarbershopSettings : undefined}
+    />
   ) : (
     <button
       type="button"
@@ -341,6 +387,7 @@ export default function AdminLayout({
   );
 
   const activeSectionLabel = useMemo(() => {
+    if (activeSection === 'barbershop_settings') return 'Barbershop settings';
     for (const group of visibleMenuGroups) {
       const item = group.items.find((i) => i.section === activeSection);
       if (item) return item.label;
@@ -510,7 +557,13 @@ export default function AdminLayout({
             <SidebarBrand
               logoUrl={isPublicDemo ? null : shopLogoUrl}
               shopName={isPublicDemo ? null : shopName}
-              statusSlot={<SidebarStatus className="admin-sidebar-status--mobile-drawer" />}
+              statusSlot={
+                <SidebarStatus
+                  className="admin-sidebar-status--mobile-drawer"
+                  paused={publicActivityPaused}
+                />
+              }
+              onOpenSettings={canOpenBarbershopSettings ? openBarbershopSettings : null}
             />
             <button
               type="button"
@@ -539,10 +592,11 @@ export default function AdminLayout({
         <SidebarBrand
           logoUrl={isPublicDemo ? null : shopLogoUrl}
           shopName={isPublicDemo ? null : shopName}
+          onOpenSettings={canOpenBarbershopSettings ? openBarbershopSettings : null}
         />
         {renderMenu(true)}
         <div className="admin-sidebar-logout-wrap">
-          <SidebarStatus />
+          <SidebarStatus paused={publicActivityPaused} />
           <div className="admin-sidebar-divider" aria-hidden="true" />
           {accountFooter}
         </div>
@@ -554,6 +608,16 @@ export default function AdminLayout({
         aria-busy={isTransitioning}
         data-transitioning={isTransitioning}
       >
+        {publicActivityPaused ? (
+          <div className="admin-barbershop-paused-banner" role="status">
+            Barbershop is paused — public bookings and retail checkout are off.{' '}
+            {canOpenBarbershopSettings ? (
+              <button type="button" className="admin-barbershop-paused-banner__link" onClick={openBarbershopSettings}>
+                Manage in Barbershop settings
+              </button>
+            ) : null}
+          </div>
+        ) : null}
         <header
           className={`admin-mobile-header${mobileTopExtension ? ' admin-mobile-header--with-next' : ''}`}
           aria-label="Admin mobile header"
@@ -562,6 +626,7 @@ export default function AdminLayout({
             <SidebarBrand
               logoUrl={isPublicDemo ? null : shopLogoUrl}
               shopName={isPublicDemo ? null : shopName}
+              onOpenSettings={canOpenBarbershopSettings ? openBarbershopSettings : null}
             />
             <div className="admin-mobile-header-center">
               {activeSectionLabel && (
@@ -569,7 +634,7 @@ export default function AdminLayout({
                   {activeSectionLabel}
                 </span>
               )}
-              <SidebarStatus className="admin-sidebar-status--mobile-header" />
+              <SidebarStatus className="admin-sidebar-status--mobile-header" paused={publicActivityPaused} />
             </div>
             <button
               ref={mobileOpenButtonRef}

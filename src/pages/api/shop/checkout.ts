@@ -4,6 +4,10 @@ import type { APIRoute } from 'astro';
 import { resolveAdminAccess } from '../../../lib/admin/auth';
 import { prisma } from '../../../lib/db/client';
 import { createCheckoutSession } from '../../../lib/shop/stripe';
+import {
+  assertShopAcceptingPublicActivity,
+  ShopPublicActivityPausedError,
+} from '@/lib/admin/shopPublicActivity';
 
 type CheckoutInput = {
   items: Array<{ productId: string; quantity: number }>;
@@ -41,6 +45,17 @@ export const POST: APIRoute = async (ctx) => {
 
     const productIds = [...quantityByProduct.keys()];
     const shopId = access.shopId;
+
+    try {
+      await assertShopAcceptingPublicActivity(shopId);
+    } catch (error) {
+      if (error instanceof ShopPublicActivityPausedError) {
+        return new Response(JSON.stringify({ error: error.message, code: error.code }), {
+          status: error.status,
+        });
+      }
+      throw error;
+    }
 
     const products = await prisma.product.findMany({
       where: {

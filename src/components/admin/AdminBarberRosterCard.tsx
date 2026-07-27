@@ -1,26 +1,34 @@
 import type { Barber } from './barbersTypes';
-import { ArrowRight, Calendar, Clock } from '../lucide-react';
+import {
+  ArrowRight,
+  Calendar,
+  Clock,
+  Crown,
+  LayoutDashboard,
+  Scissors,
+  Shield,
+} from '../lucide-react';
 import type { BarberAvailabilityStatus, DayFillData, NextBookingPreview } from '../../lib/admin/barberRosterPresentation';
 import { AVAIL_STATUS_LABELS } from '../../lib/admin/barberRosterPresentation';
-import type { InvitationLifecycleStatus } from '../../lib/admin/teamCards';
-import { passiveInvitationLabel } from '../../lib/admin/teamInviteResendUi';
 
-export type InviteResendUi = {
-  canResend: boolean;
-  /** When false, hide the primary resend button (e.g. after success). */
-  showAction?: boolean;
-  buttonLabel: string;
-  busy: boolean;
-  onResend: () => void;
-  statusHeading?: string | null;
-  statusMessage?: string | null;
-  statusTone?: 'success' | 'warning' | 'neutral' | null;
-  showCopyLink?: boolean;
-  onCopyLink?: () => void;
-  copyFeedback?: string;
-  /** Disabled label when the actor cannot resend. */
-  passiveLabel?: string;
+const META_ICON = {
+  width: 15,
+  height: 15,
+  className: 'admin-barber-roster-meta-icon',
+  'aria-hidden': true as const,
 };
+
+function rolePillIcon(role: string) {
+  if (role === 'OWNER') return <Crown {...META_ICON} />;
+  if (role === 'MANAGER') return <Shield {...META_ICON} />;
+  return <Scissors {...META_ICON} />;
+}
+
+function resolveRoleFromClassName(className?: string): string {
+  if (className?.includes('--owner')) return 'OWNER';
+  if (className?.includes('--manager')) return 'MANAGER';
+  return 'BARBER';
+}
 
 export type AdminBarberRosterCardProps = {
   barber: Barber;
@@ -37,8 +45,8 @@ export type AdminBarberRosterCardProps = {
   /** Unified Team card extras */
   roleLabel?: string;
   rolePillClassName?: string;
-  cardStatus?: 'pending' | 'active';
-  invitationStatus?: InvitationLifecycleStatus | null;
+  /** Prefer over single roleLabel when Owner/Manager is also bookable. */
+  rolePills?: Array<{ label: string; className: string; role?: string }>;
   /** When false, mute schedule chrome (Team: online bookings off / no seat) */
   showSchedule?: boolean;
   /** When false, hide shift/next/CTA/day-fill */
@@ -46,12 +54,10 @@ export type AdminBarberRosterCardProps = {
   showProfileCta?: boolean;
   /** Team account access label (Joined / Invitation pending / No dashboard account) */
   accountAccessLabel?: string;
+  /** Badge classes for account access pill */
+  accountAccessClassName?: string;
   /** Online bookings line */
   onlineBookingsLine?: string;
-  /** Optional secondary line (e.g. Dashboard access only) */
-  secondaryLine?: string | null;
-  /** Resend invitation controls for unaccepted invite cards */
-  inviteResend?: InviteResendUi | null;
 };
 
 export default function AdminBarberRosterCard({
@@ -68,15 +74,13 @@ export default function AdminBarberRosterCard({
   variant: _variant,
   roleLabel,
   rolePillClassName,
-  cardStatus,
-  invitationStatus = null,
+  rolePills,
   showSchedule = true,
   showRosterChrome = true,
   showProfileCta = true,
   accountAccessLabel,
+  accountAccessClassName,
   onlineBookingsLine,
-  secondaryLine = null,
-  inviteResend = null,
 }: AdminBarberRosterCardProps) {
   const availLabel = AVAIL_STATUS_LABELS[availStatus];
   const bookedHDisplay = Math.round(dayFill.bookedHoursH * 10) / 10;
@@ -87,15 +91,14 @@ export default function AdminBarberRosterCard({
   const isTeamCard = Boolean(accountAccessLabel);
 
   const statusAnnouncement = isTeamCard
-    ? [accountAccessLabel, onlineBookingsLine, secondaryLine].filter(Boolean).join('. ')
+    ? [accountAccessLabel, onlineBookingsLine].filter(Boolean).join('. ')
     : availLabel;
-
-  const passiveLabel =
-    inviteResend?.passiveLabel ||
-    (cardStatus === 'pending' ? passiveInvitationLabel(invitationStatus) : null);
 
   return (
     <li className={`admin-barber-card admin-barber-card--roster${barberIsActive ? '' : ' is-inactive'}`}>
+      <span className="admin-barber-roster-rank" aria-label={`Roster position ${orderIndex + 1}`}>
+        {orderIndex + 1}
+      </span>
       <article className="admin-barber-identity admin-barber-identity--roster" aria-label={`${barber.name} roster card`}>
         <div className="admin-barber-roster-hero">
           <div className="admin-barber-roster-avatar-shell">
@@ -112,32 +115,46 @@ export default function AdminBarberRosterCard({
 
         <div className="admin-barber-roster-body">
           <div className="admin-barber-name-row admin-barber-roster-name-row">
-            <span className="admin-barber-roster-rank" aria-label={`Roster position ${orderIndex + 1}`}>
-              {orderIndex + 1}
-            </span>
             <div className="admin-barber-roster-title-stack">
               <p className="admin-barber-name admin-barber-roster-name">{barber.name}</p>
               <div className="admin-barber-roster-meta-row">
-                {roleLabel ? (
-                  <span className={rolePillClassName || 'admin-team__role-pill'}>{roleLabel}</span>
-                ) : null}
+                {rolePills && rolePills.length > 0
+                  ? rolePills.map((pill) => (
+                      <span key={`${pill.label}-${pill.className}`} className="admin-barber-roster-fact-row">
+                        {rolePillIcon(pill.role || 'BARBER')}
+                        <span className={pill.className || 'admin-team__role-pill'}>{pill.label}</span>
+                      </span>
+                    ))
+                  : roleLabel
+                    ? (
+                        <span className="admin-barber-roster-fact-row">
+                          {rolePillIcon(resolveRoleFromClassName(rolePillClassName))}
+                          <span className={rolePillClassName || 'admin-team__role-pill'}>{roleLabel}</span>
+                        </span>
+                      )
+                    : null}
               </div>
               {isTeamCard ? (
                 <div className="admin-barber-roster-facts" role="status" aria-label={statusAnnouncement}>
                   {accountAccessLabel ? (
-                    <p className="admin-barber-roster-account">{accountAccessLabel}</p>
+                    <span className="admin-barber-roster-fact-row">
+                      <LayoutDashboard {...META_ICON} />
+                      <span className={accountAccessClassName || 'badge badge--neutral'}>
+                        {accountAccessLabel}
+                      </span>
+                    </span>
                   ) : null}
                   {onlineBookingsLine ? (
-                    <p
-                      className={`admin-barber-roster-status admin-barber-roster-status--${
-                        showSchedule ? availStatus : 'off'
-                      }`}
-                    >
-                      {onlineBookingsLine}
-                    </p>
-                  ) : null}
-                  {secondaryLine ? (
-                    <p className="admin-barber-roster-secondary">{secondaryLine}</p>
+                    <span className="admin-barber-roster-fact-row">
+                      <Calendar {...META_ICON} />
+                      <p
+                        className={`admin-barber-roster-status admin-barber-roster-status--${
+                          showSchedule ? availStatus : 'off'
+                        }`}
+                      >
+                        {onlineBookingsLine}
+                      </p>
+                    </span>
                   ) : null}
                 </div>
               ) : (
@@ -171,60 +188,6 @@ export default function AdminBarberRosterCard({
                 )}
               </div>
             </div>
-          ) : null}
-
-          {inviteResend ? (
-            <div className="admin-team-invite-resend">
-              {inviteResend.statusHeading ? (
-                <p
-                  className={`admin-team-invite-resend__heading admin-team-invite-resend__heading--${
-                    inviteResend.statusTone || 'neutral'
-                  }`}
-                  role="status"
-                >
-                  {inviteResend.statusHeading}
-                </p>
-              ) : null}
-              {inviteResend.statusMessage ? (
-                <p className="admin-team-invite-resend__message" role="status">
-                  {inviteResend.statusMessage}
-                </p>
-              ) : null}
-              {inviteResend.canResend && inviteResend.showAction !== false ? (
-                <button
-                  type="button"
-                  className="btn btn--primary admin-barber-roster-cta"
-                  onClick={inviteResend.onResend}
-                  disabled={inviteResend.busy}
-                >
-                  {inviteResend.buttonLabel}
-                </button>
-              ) : !inviteResend.canResend && passiveLabel ? (
-                <button type="button" className="btn btn--primary admin-barber-roster-cta" disabled>
-                  {passiveLabel}
-                </button>
-              ) : null}
-              {inviteResend.showCopyLink && inviteResend.onCopyLink ? (
-                <div className="admin-team-invite-resend__copy">
-                  <button
-                    type="button"
-                    className="btn btn--ghost admin-barber-roster-cta"
-                    onClick={inviteResend.onCopyLink}
-                  >
-                    Copy invitation link
-                  </button>
-                  {inviteResend.copyFeedback ? (
-                    <p className="admin-team-invite-resend__copy-feedback" role="status">
-                      {inviteResend.copyFeedback}
-                    </p>
-                  ) : null}
-                </div>
-              ) : null}
-            </div>
-          ) : cardStatus === 'pending' && passiveLabel ? (
-            <button type="button" className="btn btn--primary admin-barber-roster-cta" disabled>
-              {passiveLabel}
-            </button>
           ) : null}
 
           {showProfileCta && barber.id ? (

@@ -120,7 +120,7 @@ const UPDATED_ROW_HIGHLIGHT_MS = 2000;
 const MOBILE_BREAKPOINT_PX = 768;
 const MOBILE_RECENT_BARBERS_COUNT = 5;
 const DESKTOP_RECENT_BARBERS_COUNT = 11;
-const WEEK_DAYS = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
+const WEEK_DAYS = ['', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
 
 function buildReportsBarberStub(id: string, name: string): Barber {
   return {
@@ -147,13 +147,6 @@ function getInitials(name: string): string {
 
 
 
-
-const DEFAULT_ADD_BARBER_SERVICES: ServiceOption[] = [
-  { id: 'svc-haircut', name: 'Haircut' },
-  { id: 'svc-skin-fade', name: 'Skin Fade' },
-  { id: 'svc-beard-trim', name: 'Beard Trim' },
-  { id: 'svc-haircut-beard', name: 'Haircut + Beard' }
-];
 
 function clearTransientAdminViewportState() {
   if (typeof document === 'undefined') return;
@@ -648,6 +641,7 @@ export default function BookingsAdminPanel({ isActive, mode, onBackToDashboard, 
   const [selectedBarberId, setSelectedBarberId] = useState<string | null>(null);
   const [barberProfileSource, setBarberProfileSource] = useState<'ops' | 'team' | 'reports' | null>(null);
   const [profileMemberMeta, setProfileMemberMeta] = useState<TeamProfileOpenMeta | null>(null);
+  const [teamActorRole, setTeamActorRole] = useState('OWNER');
   const [reportsProfileBarberMeta, setReportsProfileBarberMeta] = useState<{ id: string; name: string } | null>(null);
   const barbersOverviewRef = useRef<BarbersOverviewHandle | null>(null);
   const [services, setServices] = useState<ServiceOption[]>([]);
@@ -1298,10 +1292,6 @@ export default function BookingsAdminPanel({ isActive, mode, onBackToDashboard, 
 
 
 
-  const addBarberServiceOptions = useMemo(() => (services.length > 0 ? services : DEFAULT_ADD_BARBER_SERVICES), [services]);
-
-
-
   const visibleRecentBarberIds = useMemo(() => {
     if (mode !== 'history') return [] as string[];
     const latestByBarber = new Map<string, number>();
@@ -1439,7 +1429,7 @@ export default function BookingsAdminPanel({ isActive, mode, onBackToDashboard, 
     showHolidayModal ||
     openClientId !== null ||
     (barberProfileContextActive && (selectedBarberId !== null || Boolean(profileMemberMeta?.memberOnly)));
-  useBodyScrollLock(isMobileViewport && isAnyOverlayOpen);
+  useBodyScrollLock(isAnyOverlayOpen);
 
   const isTimelineView = mode === 'dashboard' && activeView === 'timeline';
   const selectedDateLabel = useMemo(() => formatTimelineDateLabel(selectedDate), [selectedDate]);
@@ -1635,9 +1625,9 @@ export default function BookingsAdminPanel({ isActive, mode, onBackToDashboard, 
 
   useEffect(() => {
     if (!loggedIn || !isActive) return;
-    if (!barberProfileContextActive) return;
+    if (!barberProfileContextActive && !isAddBarberSheetOpen) return;
     void fetchServices();
-  }, [barberProfileContextActive, fetchServices, isActive, loggedIn]);
+  }, [barberProfileContextActive, fetchServices, isActive, isAddBarberSheetOpen, loggedIn]);
 
   const fetchSelectedBarberStats = useCallback(async (barberId: string) => {
     if (!barberId) {
@@ -2145,6 +2135,29 @@ export default function BookingsAdminPanel({ isActive, mode, onBackToDashboard, 
       memberOnly={Boolean(profileMemberMeta?.memberOnly)}
       memberId={profileMemberMeta?.memberId}
       canSetUpOnlineBookings={Boolean(profileMemberMeta?.canSetUpOnlineBookings)}
+      canSendDashboardInvite={Boolean(profileMemberMeta?.dashboardAccountAction === 'send')}
+      dashboardAccountAction={profileMemberMeta?.dashboardAccountAction ?? null}
+      inviteId={profileMemberMeta?.inviteId}
+      inviteEmail={profileMemberMeta?.inviteEmail}
+      inviteExpiresAt={profileMemberMeta?.inviteExpiresAt}
+      invitationStatus={profileMemberMeta?.invitationStatus}
+      memberEmail={profileMemberMeta?.memberEmail ?? profileMemberMeta?.email}
+      revokeBlockedReason={
+        profileMemberMeta?.role === 'OWNER'
+          ? 'The shop owner always keeps dashboard access.'
+          : null
+      }
+      actorRole={teamActorRole}
+      onDashboardInviteSent={async () => {
+        const refresh = barbersOverviewRef.current?.refreshTeam;
+        if (!refresh) return true;
+        return refresh({ preserveExistingCardsOnFailure: true });
+      }}
+      onDashboardAccountChanged={async () => {
+        const refresh = barbersOverviewRef.current?.refreshTeam;
+        if (!refresh) return true;
+        return refresh({ preserveExistingCardsOnFailure: true });
+      }}
       onSetupOnlineBookingsSaved={async (result) => {
         const memberId = profileMemberMeta?.memberId;
         setSelectedBarberId(result.barberId);
@@ -2188,6 +2201,61 @@ export default function BookingsAdminPanel({ isActive, mode, onBackToDashboard, 
       onToggleBookable={
         profileMemberMeta?.canManageOnlineBookings && !profileMemberMeta?.memberOnly
           ? (next) => void handleProfileToggleBookable(next)
+          : undefined
+      }
+      onChangeRole={
+        teamActorRole === 'OWNER' &&
+        (profileMemberMeta?.memberId || profileMemberMeta?.inviteId) &&
+        (profileMemberMeta?.role === 'BARBER' || profileMemberMeta?.role === 'MANAGER')
+          ? async (next) => {
+              const memberId = profileMemberMeta?.memberId;
+              const inviteId = profileMemberMeta?.inviteId;
+              setBarberSaving(true);
+              setBarberSaveError('');
+              setBarberSaveMessage('');
+              try {
+                const res = memberId
+                  ? await fetch(`/api/admin/members/${encodeURIComponent(memberId)}`, {
+                      method: 'PATCH',
+                      credentials: 'include',
+                      headers: { 'Content-Type': 'application/json' },
+                      body: JSON.stringify({ role: next }),
+                    })
+                  : await fetch(
+                      `/api/admin/team/invitations/${encodeURIComponent(inviteId!)}`,
+                      {
+                        method: 'PATCH',
+                        credentials: 'include',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ role: next }),
+                      },
+                    );
+                const data = await res.json().catch(() => ({}));
+                if (!res.ok) {
+                  throw new Error(
+                    typeof data.error === 'string' ? data.error : 'Could not change role.',
+                  );
+                }
+                setProfileMemberMeta((prev) => (prev ? { ...prev, role: next } : prev));
+                setBarberSaveMessage(
+                  next === 'MANAGER' ? 'Promoted to Manager.' : 'Role set to Barber.',
+                );
+                await Promise.all([
+                  fetchBarbers(),
+                  barbersOverviewRef.current?.refreshTeam({
+                    preserveExistingCardsOnFailure: true,
+                  }) ?? Promise.resolve(false),
+                ]);
+                return true;
+              } catch (err) {
+                setBarberSaveError(
+                  err instanceof Error ? err.message : 'Could not change role.',
+                );
+                return false;
+              } finally {
+                setBarberSaving(false);
+              }
+            }
           : undefined
       }
     />
@@ -2346,7 +2414,7 @@ export default function BookingsAdminPanel({ isActive, mode, onBackToDashboard, 
                 ref={barbersOverviewRef}
                 barbers={allBarbersSorted}
                 barbersLoading={barbersInitialLoading}
-                services={addBarberServiceOptions}
+                services={services}
                 showInactiveBarbers={showInactiveBarbers}
                 barberSaveMessage={barberSaveMessage}
                 barberSaveError={barberSaveError}
@@ -2367,6 +2435,7 @@ export default function BookingsAdminPanel({ isActive, mode, onBackToDashboard, 
                   return fetchBarbers();
                 }}
                 formatBlockRange={formatBlockRange}
+                onActorRoleChange={setTeamActorRole}
               />
           ) : (
       <>

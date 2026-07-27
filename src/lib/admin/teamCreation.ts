@@ -3,6 +3,11 @@ import { prisma } from '@/lib/db/client';
 import { runSerializableTransaction } from '@/lib/db/serializableTransaction';
 import { inviteExpiresAt } from '@/lib/admin/rbac/members';
 import { canActorSetUpOnlineBookings } from '@/lib/admin/teamCards';
+import {
+  findActiveOrphanBarbers,
+  linkMemberToBarber,
+  namesLikelySame,
+} from '@/lib/admin/onboardingOwnerSeat';
 
 export type WorkingHourInput = {
   dayOfWeek: number;
@@ -93,7 +98,7 @@ export function assertValidWorkingHours(
 
     if (
       dayOfWeek === null ||
-      !isIntInRange(dayOfWeek, 0, 6) ||
+      !isIntInRange(dayOfWeek, 1, 7) ||
       startMinutes === null ||
       endMinutes === null ||
       !isIntInRange(startMinutes, 0, 1440) ||
@@ -366,6 +371,90 @@ export async function createBookingProfileForMember(params: {
 
     const avatarUrl = params.uploadedAvatarUrl ?? member.user.image ?? null;
 
+    // Just-me leftover only: reuse the single orphan when it already looks like this person.
+    const orphans = await findActiveOrphanBarbers(params.shopId, tx);
+    const matchingOrphan =
+      orphans.length === 1 &&
+      (namesLikelySame(orphans[0]!.name, params.displayName) ||
+        namesLikelySame(orphans[0]!.name, member.user.name))
+        ? orphans[0]
+        : null;
+
+    if (matchingOrphan) {
+      const orphanId = matchingOrphan.id;
+      const services = await assertValidShopServices({
+        shopId: params.shopId,
+        serviceIds: params.serviceIds,
+        db: tx,
+      });
+      if (!services.ok) {
+        throw {
+          ok: false as const,
+          status: 422 as const,
+          code: services.code,
+          error: services.error,
+        } satisfies TeamCreationDomainError;
+      }
+
+      const updated = await tx.barber.update({
+        where: { id: orphanId },
+        data: {
+          name: params.displayName,
+          active: true,
+          email: member.user.email,
+          userId: member.userId,
+          ...(avatarUrl ? { avatarUrl } : {}),
+        },
+        select: {
+          id: true,
+          name: true,
+          active: true,
+          avatarUrl: true,
+          email: true,
+          userId: true,
+        },
+      });
+
+      await tx.barberService.createMany({
+        data: services.serviceIds.map((serviceId) => ({ barberId: updated.id, serviceId })),
+        skipDuplicates: true,
+      });
+
+      await tx.availabilityRule.deleteMany({ where: { barberId: updated.id } });
+      await tx.availabilityRule.createMany({
+        data: params.hours.map((row) => ({
+          barberId: updated.id,
+          dayOfWeek: row.dayOfWeek,
+          startMinutes: row.startMinutes,
+          endMinutes: row.endMinutes,
+          breakStartMin: row.breakStartMin,
+          breakEndMin: row.breakEndMin,
+          active: row.active,
+        })),
+      });
+
+      await tx.shopMember.update({
+        where: { id: member.id },
+        data: { barberId: updated.id },
+        select: { id: true },
+      });
+
+      return {
+        barber: {
+          id: updated.id,
+          name: updated.name,
+          active: updated.active,
+          avatarUrl: updated.avatarUrl,
+          email: updated.email,
+          userId: updated.userId,
+          serviceIds: services.serviceIds,
+        },
+        memberId: member.id,
+        role: member.role,
+        teamStatus: member.teamStatus,
+      };
+    }
+
     const created = await createBarberWithSetup(tx, {
       shopId: params.shopId,
       name: params.displayName,
@@ -376,10 +465,11 @@ export async function createBookingProfileForMember(params: {
       avatarUrl,
     });
 
-    await tx.shopMember.update({
-      where: { id: member.id },
-      data: { barberId: created.id },
-      select: { id: true },
+    await linkMemberToBarber(tx, {
+      memberId: member.id,
+      barberId: created.id,
+      userId: member.userId,
+      email: member.user.email,
     });
 
     return {
@@ -404,6 +494,8 @@ export async function findInviteCreationConflict(
     shopId: string;
     email: string;
     bookable: boolean;
+    /** When linking an orphan seat, skip BOOKING_PROFILE_ALREADY_EXISTS for this id. */
+    excludeBarberId?: string | null;
   },
   db: Prisma.TransactionClient | typeof prisma = prisma,
 ): Promise<TeamCreationDomainError | null> {
@@ -450,7 +542,11 @@ export async function findInviteCreationConflict(
 
   if (params.bookable) {
     const existingBarber = await db.barber.findFirst({
-      where: { shopId: params.shopId, email: params.email },
+      where: {
+        shopId: params.shopId,
+        email: params.email,
+        ...(params.excludeBarberId ? { id: { not: params.excludeBarberId } } : {}),
+      },
       select: { id: true },
     });
     if (existingBarber) {
@@ -489,10 +585,17 @@ export async function createTeamInviteWithOptionalProfile(params: {
   serviceIds?: string[];
   hours?: ValidatedWorkingHourRow[];
   avatarUrl?: string | null;
+  /** Link invite to an existing orphan Barber seat (no new Barber created). */
+  existingBarberId?: string | null;
 }): Promise<{ invite: CreatedTeamInvite; barberId: string | null }> {
   return runSerializableTransaction(async (tx) => {
     const conflict = await findInviteCreationConflict(
-      { shopId: params.shopId, email: params.email, bookable: params.bookable },
+      {
+        shopId: params.shopId,
+        email: params.email,
+        bookable: params.bookable,
+        excludeBarberId: params.existingBarberId ?? null,
+      },
       tx,
     );
     if (conflict) {
@@ -500,7 +603,67 @@ export async function createTeamInviteWithOptionalProfile(params: {
     }
 
     let barberId: string | null = null;
-    if (params.bookable) {
+
+    if (params.existingBarberId) {
+      const barber = await tx.barber.findFirst({
+        where: { id: params.existingBarberId, shopId: params.shopId },
+        select: { id: true, userId: true, active: true, name: true },
+      });
+      if (!barber) {
+        throw {
+          ok: false as const,
+          status: 404 as const,
+          code: 'BOOKING_PROFILE_NOT_FOUND',
+          error: 'The booking profile could not be found.',
+        } satisfies TeamCreationDomainError;
+      }
+      if (barber.userId) {
+        throw {
+          ok: false as const,
+          status: 409 as const,
+          code: 'BOOKING_PROFILE_ALREADY_LINKED',
+          error: 'This booking profile is already linked to a dashboard account.',
+          barberId: barber.id,
+        } satisfies TeamCreationDomainError;
+      }
+
+      const linkedMember = await tx.shopMember.findFirst({
+        where: { shopId: params.shopId, barberId: barber.id },
+        select: { id: true },
+      });
+      if (linkedMember) {
+        throw {
+          ok: false as const,
+          status: 409 as const,
+          code: 'BOOKING_PROFILE_ALREADY_LINKED',
+          error: 'This booking profile is already linked to a team member.',
+          barberId: barber.id,
+        } satisfies TeamCreationDomainError;
+      }
+
+      const openSeatInvite = await tx.shopInvite.findFirst({
+        where: { shopId: params.shopId, barberId: barber.id, acceptedAt: null },
+        select: { id: true, expiresAt: true },
+        orderBy: { createdAt: 'desc' },
+      });
+      if (openSeatInvite && openSeatInvite.expiresAt.getTime() > Date.now()) {
+        throw {
+          ok: false as const,
+          status: 409 as const,
+          code: 'INVITATION_ALREADY_PENDING',
+          error: 'An invitation is already pending for this booking profile.',
+          inviteId: openSeatInvite.id,
+          barberId: barber.id,
+        } satisfies TeamCreationDomainError;
+      }
+
+      await tx.barber.update({
+        where: { id: barber.id },
+        data: { email: params.email },
+        select: { id: true },
+      });
+      barberId = barber.id;
+    } else if (params.bookable) {
       if (!params.serviceIds?.length || !params.hours?.length) {
         throw new Error('Bookable invite requires services and working hours.');
       }

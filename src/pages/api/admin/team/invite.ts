@@ -18,6 +18,7 @@ import {
   type WorkingHourInput,
 } from '@/lib/admin/teamCreation';
 import { prisma } from '@/lib/db/client';
+import { assertWorkingHoursWithinShopHours } from '@/lib/admin/shopOpeningHours';
 import { getPublicSiteUrl } from '@/lib/setup/siteUrl';
 import { sendShopTeamInviteEmail } from '@/lib/email/sender';
 import { storeAdminAvatar } from '@/lib/storage/storeAdminAvatar';
@@ -40,6 +41,7 @@ type InviteBody = {
   bookable?: boolean;
   serviceIds?: string[];
   workingHours?: WorkingHourInput[];
+  existingBarberId?: string;
 };
 
 function parseJsonArray<T>(raw: FormDataEntryValue | null): T[] {
@@ -87,6 +89,7 @@ async function parseInviteRequest(request: Request): Promise<
         bookable: parseBookableFlag(form.get('bookable')),
         serviceIds: parseJsonArray<string>(form.get('serviceIds')).map(String).filter(Boolean),
         workingHours: parseJsonArray<WorkingHourInput>(form.get('workingHours')),
+        existingBarberId: String(form.get('existingBarberId') ?? '').trim() || undefined,
       },
       avatar,
     };
@@ -97,8 +100,16 @@ async function parseInviteRequest(request: Request): Promise<
     return {
       ok: true,
       body: {
-        ...body,
+        email: String(body.email || ''),
+        role: String(body.role || ''),
+        displayName: String(body.displayName || ''),
         bookable: Boolean(body.bookable),
+        serviceIds: Array.isArray(body.serviceIds) ? body.serviceIds.map(String) : undefined,
+        workingHours: Array.isArray(body.workingHours) ? body.workingHours : undefined,
+        existingBarberId:
+          typeof body.existingBarberId === 'string' && body.existingBarberId.trim()
+            ? body.existingBarberId.trim()
+            : undefined,
       },
       avatar: null,
     };
@@ -140,12 +151,47 @@ export const POST: APIRoute = async (context) => {
     return json({ error: 'Display name is required.' }, 400);
   }
 
-  const bookable = Boolean(body.bookable);
+  const existingBarberId =
+    typeof body.existingBarberId === 'string' && body.existingBarberId.trim()
+      ? body.existingBarberId.trim()
+      : null;
+
+  let bookable = Boolean(body.bookable);
+  let resolvedDisplayName = displayName;
+
+  if (existingBarberId) {
+    const seat = await prisma.barber.findFirst({
+      where: { id: existingBarberId, shopId: access.shopId },
+      select: {
+        id: true,
+        name: true,
+        active: true,
+        userId: true,
+        intendedRole: true,
+      },
+    });
+    if (!seat) {
+      return json({ error: 'The booking profile could not be found.', code: 'BOOKING_PROFILE_NOT_FOUND' }, 404);
+    }
+    if (seat.userId) {
+      return json(
+        {
+          error: 'This booking profile is already linked to a dashboard account.',
+          code: 'BOOKING_PROFILE_ALREADY_LINKED',
+          barberId: seat.id,
+        },
+        409,
+      );
+    }
+    bookable = seat.active;
+    resolvedDisplayName = seat.name.trim().slice(0, 80) || displayName;
+  }
 
   const earlyConflict = await findInviteCreationConflict({
     shopId: access.shopId,
     email,
     bookable,
+    excludeBarberId: existingBarberId,
   });
   if (earlyConflict) {
     return json(
@@ -162,7 +208,8 @@ export const POST: APIRoute = async (context) => {
   let serviceIds: string[] | undefined;
   let hoursValidated: ReturnType<typeof assertValidWorkingHours> | undefined;
 
-  if (bookable) {
+  // Linking an orphan seat: no new Barber / no services+hours payload.
+  if (bookable && !existingBarberId) {
     const rawServiceIds = Array.isArray(body.serviceIds) ? body.serviceIds : [];
     if (rawServiceIds.length === 0) {
       return json({ error: 'Select at least one service for online bookings.' }, 400);
@@ -186,11 +233,19 @@ export const POST: APIRoute = async (context) => {
     if (!hoursValidated.ok) {
       return json({ error: hoursValidated.error, code: hoursValidated.code }, 422);
     }
+
+    const withinShopError = await assertWorkingHoursWithinShopHours(
+      access.shopId,
+      hoursValidated.hours,
+    );
+    if (withinShopError) {
+      return json({ error: withinShopError, code: 'OUTSIDE_SHOP_HOURS' }, 422);
+    }
   }
 
-  // Dashboard-only: never store an avatar. Bookable: upload only after validation/conflicts.
+  // Dashboard-only: never store an avatar. Bookable new seat: upload only after validation.
   let avatarUrl: string | undefined;
-  if (bookable && avatar) {
+  if (bookable && !existingBarberId && avatar) {
     try {
       avatarUrl = await storeAdminAvatar(avatar, 'barbers');
     } catch (error) {
@@ -209,13 +264,14 @@ export const POST: APIRoute = async (context) => {
       shopId: access.shopId,
       email,
       role: body.role,
-      displayName,
+      displayName: resolvedDisplayName,
       bookable,
       tokenHash,
       invitedByUserId: access.userId,
       serviceIds,
       hours: hoursValidated?.ok ? hoursValidated.hours : undefined,
       avatarUrl,
+      existingBarberId,
     });
     invite = created.invite;
   } catch (error) {

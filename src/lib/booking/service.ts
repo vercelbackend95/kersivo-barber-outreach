@@ -9,6 +9,11 @@ import { canCancelOrReschedule, canShopAdminCancelByLeadTime } from './policies'
 import { generateSlots } from './slots';
 import { addMinutes, londonDayOfWeekFromIsoDate, toUtcFromLondon } from './time';
 import { generateToken, hashToken } from './tokens';
+import { intersectMinutesWithShopDay } from '@/lib/admin/shopOpeningHours';
+import {
+  getShopPublicActivityPauseOnDate,
+} from '@/lib/admin/shopPublicActivity';
+import { OWNER_TEST_BOOKING_NOTES_PREFIX } from './sandboxBookings';
 const CANCELLED_BOOKING_MESSAGE = 'This booking is already cancelled. Please create a new booking.';
 const BOOKING_DATABASE_UNAVAILABLE_STATUS = 503;
 
@@ -149,7 +154,7 @@ async function getAvailableSlotsForBarber(input: {
   const dayEndUtc = addMinutes(dayStartUtc, 24 * 60);
   const timeBlockDelegate = getTimeBlockDelegate();
 
-  const [rules, bookings, timeOff, timeBlocks] = await Promise.all([
+  const [rules, bookings, timeOff, timeBlocks, shopHourRows] = await Promise.all([
     prisma.availabilityRule.findMany({ where: { barberId: input.barberId, active: true, dayOfWeek } }),
     prisma.booking.findMany({
       where: {
@@ -179,13 +184,36 @@ async function getAvailableSlotsForBarber(input: {
           },
           select: { startAt: true, endAt: true }
         })
-      : Promise.resolve([])
+      : Promise.resolve([]),
+    prisma.shopOpeningHours.findMany({
+      where: { shopId: input.settings.id },
+      select: { dayOfWeek: true, active: true, startMinutes: true, endMinutes: true },
+    }),
   ]);
+
+  let effectiveRules = rules;
+  if (shopHourRows.length > 0) {
+    const shopDay = shopHourRows.find((row) => row.dayOfWeek === dayOfWeek && row.active);
+    if (!shopDay) {
+      return [];
+    }
+    effectiveRules = [];
+    for (const rule of rules) {
+      const intersected = intersectMinutesWithShopDay(shopDay, rule.startMinutes, rule.endMinutes);
+      if (!intersected) continue;
+      effectiveRules.push({
+        ...rule,
+        startMinutes: intersected.startMinutes,
+        endMinutes: intersected.endMinutes,
+      });
+    }
+    if (effectiveRules.length === 0) return [];
+  }
 
   return generateSlots({
     date: input.date,
     service: input.service,
-    rules,
+    rules: effectiveRules,
     confirmedBookings: bookings,
     timeOff,
     timeBlocks,
@@ -196,6 +224,16 @@ async function getAvailableSlotsForBarber(input: {
 export async function getAvailabilitySlots(input: { serviceId: string; barberId: string; date: string; ignoreBookingId?: string }) {
   try {
     const { service, settings } = await loadShopSettingsForService(input.serviceId);
+    const pauseOnDate = await getShopPublicActivityPauseOnDate(settings.id, input.date);
+    if (pauseOnDate.paused) {
+      return {
+        slots: [] as string[],
+        service,
+        settings,
+        paused: true as const,
+        pauseReason: pauseOnDate.reason,
+      };
+    }
     if (!service.isActive) {
       return { slots: [], service, settings };
     }
@@ -362,6 +400,19 @@ export async function createInstantBooking(
     const { service, settings } = await loadShopSettingsForService(input.serviceId);
     if (options.requiredShopId && service.shopId !== options.requiredShopId) {
       throw new BookingActionError('Selected service is not available for booking.', 403);
+    }
+    const isAdminSandbox =
+      options.notesPrefix === OWNER_TEST_BOOKING_NOTES_PREFIX ||
+      Boolean(options.notesPrefix?.startsWith(`${OWNER_TEST_BOOKING_NOTES_PREFIX} `));
+    if (!isAdminSandbox) {
+      const pauseOnDate = await getShopPublicActivityPauseOnDate(settings.id, input.date);
+      if (pauseOnDate.paused) {
+        throw new BookingActionError(
+          pauseOnDate.reason ||
+            'This barbershop is temporarily closed. Bookings and retail are unavailable.',
+          422,
+        );
+      }
     }
     if (!service.isActive) throw new Error('Selected service is unavailable for new bookings.');
 

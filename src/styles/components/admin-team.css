@@ -374,3 +374,155 @@
   margin: 0;
   font-size: 0.8rem;
 }
+
+.admin-dashboard-account-panel {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  padding: 0;
+  border: none;
+  background: transparent;
+}
+
+.admin-dashboard-account-panel__empty,
+.admin-dashboard-account-panel__note {
+  margin: 0;
+  font-size: 0.9rem;
+  line-height: 1.45;
+  color: var(--muted);
+}
+
+.admin-dashboard-account-row {
+  display: flex;
+  flex-direction: column;
+  gap: 0.85rem;
+  min-width: 0;
+}
+
+.admin-dashboard-account-row__main {
+  display: flex;
+  flex-direction: column;
+  gap: 0.2rem;
+  min-width: 0;
+}
+
+.admin-dashboard-account-row__label {
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--muted);
+}
+
+.admin-dashboard-account-row__email {
+  font-size: 1rem;
+  font-weight: 600;
+  color: var(--fg);
+  word-break: break-word;
+}
+
+.admin-dashboard-account-row__meta {
+  font-size: 0.85rem;
+  color: var(--muted);
+}
+
+.admin-dashboard-account-row__actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  align-items: center;
+}
+
+.admin-dashboard-account-row__actions > .btn {
+  flex: 1 1 auto;
+  min-width: min(100%, 9rem);
+}
+
+.admin-dashboard-account-row__actions > .admin-dashboard-account-row__confirm {
+  flex: 1 1 100%;
+}
+
+.admin-dashboard-account-row__confirm,
+.admin-dashboard-account-row__confirm-block p {
+  margin: 0;
+  font-size: 0.9rem;
+  line-height: 1.45;
+  color: var(--muted);
+}
+
+.admin-dashboard-account-row__confirm-block {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.admin-dashboard-account-row--with-pill {
+  flex-direction: row;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+}
+
+@media (max-width: 36rem) {
+  .admin-dashboard-account-row__actions {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .admin-dashboard-account-row__actions > .btn {
+    width: 100%;
+    min-width: 0;
+  }
+
+  .admin-dashboard-account-row--with-pill {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .admin-dashboard-account-row--with-pill .admin-on-off-pill {
+    align-self: flex-start;
+  }
+}
+
+.admin-on-off-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  flex-shrink: 0;
+}
+
+.admin-on-off-pill__option {
+  margin: 0;
+  min-height: 2rem;
+  padding: 0.35rem 0.85rem;
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--surface) 88%, var(--bg));
+  color: var(--muted);
+  font-size: 0.78rem;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  cursor: pointer;
+}
+
+.admin-on-off-pill__option:hover:not(:disabled) {
+  color: var(--fg);
+  border-color: color-mix(in srgb, var(--fg) 28%, var(--border));
+}
+
+.admin-on-off-pill__option.is-on {
+  border-color: color-mix(in srgb, var(--accent) 55%, var(--border));
+  background: color-mix(in srgb, var(--accent) 22%, var(--bg));
+  color: var(--fg);
+}
+
+.admin-on-off-pill__option:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+}
+
+.admin-on-off-pill__option:focus-visible {
+  outline: 2px solid var(--focus);
+  outline-offset: 2px;
+}

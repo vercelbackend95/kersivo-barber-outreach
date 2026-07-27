@@ -57,16 +57,23 @@ export const GET: APIRoute = async (ctx) => {
   }
 
   try {
-    const { slots } = await getAvailabilitySlots({
+    const { slots, paused, pauseReason } = await getAvailabilitySlots({
       serviceId,
       barberId,
       date,
     });
 
-    return new Response(JSON.stringify({ slots }), {
-      status: 200,
-      headers: AVAILABILITY_CACHE_HEADERS,
-    });
+    return new Response(
+      JSON.stringify({
+        slots,
+        paused: Boolean(paused),
+        pauseReason: paused ? pauseReason ?? null : null,
+      }),
+      {
+        status: 200,
+        headers: AVAILABILITY_CACHE_HEADERS,
+      },
+    );
   } catch (error) {
     if (error instanceof BookingActionError) {
       return new Response(JSON.stringify({ error: error.message }), { status: error.statusCode });

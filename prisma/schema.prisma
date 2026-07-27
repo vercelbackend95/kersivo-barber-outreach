@@ -133,6 +133,11 @@ model ShopSettings {
   customServiceCategories     String[] @default([])
   townCity                    String?
   logoUrl                     String?
+  publicActivityPaused        Boolean  @default(false)
+  publicActivityPausedAt      DateTime?
+  publicActivityPauseFrom     DateTime?
+  publicActivityPauseUntil    DateTime?
+  publicActivityPauseReason   String?
   onboardingCompleted         Boolean  @default(false)
   onboardingCurrentStep       Int      @default(0)
   onboardingCompletedAt       DateTime?
@@ -156,6 +161,7 @@ model ShopSettings {
   orders                      Order[]
   barbers                     Barber[]
   services                    Service[]
+  openingHours                ShopOpeningHours[]
 }
 
 // Login membership for one shop — roles never keyed by shop name.
@@ -284,23 +290,25 @@ model Service {
 }
 
 model Barber {
-  id         String             @id @default(cuid())
-  shopId     String
-  userId     String?            @unique
-  name       String
-  email      String?
-  avatarUrl  String?
-  active     Boolean            @default(true)
-  sortOrder  Int                @default(0)
-  createdAt  DateTime           @default(now())
-  updatedAt  DateTime           @updatedAt
-  shop       ShopSettings       @relation(fields: [shopId], references: [id], onDelete: Cascade)
-  user       User?              @relation(fields: [userId], references: [id], onDelete: SetNull)
-  membership ShopMember?
-  bookings   Booking[]
-  rules      AvailabilityRule[]
-  timeOff    BarberTimeOff[]
-  timeBlocks TimeBlock[]
+  id           String             @id @default(cuid())
+  shopId       String
+  userId       String?            @unique
+  name         String
+  email        String?
+  avatarUrl    String?
+  active       Boolean            @default(true)
+  sortOrder    Int                @default(0)
+  // Intended dashboard role when Owner later invites this seat (MANAGER | BARBER).
+  intendedRole ShopRole           @default(BARBER)
+  createdAt    DateTime           @default(now())
+  updatedAt    DateTime           @updatedAt
+  shop         ShopSettings       @relation(fields: [shopId], references: [id], onDelete: Cascade)
+  user         User?              @relation(fields: [userId], references: [id], onDelete: SetNull)
+  membership   ShopMember?
+  bookings     Booking[]
+  rules        AvailabilityRule[]
+  timeOff      BarberTimeOff[]
+  timeBlocks   TimeBlock[]
   barberServices BarberService[]
   clientNotes    ClientNote[]
   noteLikes      ClientNoteLike[]
@@ -308,6 +316,22 @@ model Barber {
   @@index([shopId, active, sortOrder])
   @@index([active, sortOrder])
 }
+
+model ShopOpeningHours {
+  id           String       @id @default(cuid())
+  shopId       String
+  dayOfWeek    Int
+  startMinutes Int
+  endMinutes   Int
+  active       Boolean      @default(true)
+  createdAt    DateTime     @default(now())
+  updatedAt    DateTime     @updatedAt
+  shop         ShopSettings @relation(fields: [shopId], references: [id], onDelete: Cascade)
+
+  @@unique([shopId, dayOfWeek])
+  @@index([shopId])
+}
+
 model BarberService {
   barberId  String
   serviceId String

@@ -1,19 +1,28 @@
 import { describe, expect, it } from 'vitest';
 import {
+  canActorChangeTeamRole,
   canActorSetUpOnlineBookings,
-  dashboardAccessOnlyLine,
+  dashboardAccountActionFor,
+  dashboardAccountMenuLabel,
   isJoinedTeamMemberStatus,
   isPendingInviteCard,
   memberCardStatus,
+  ONLINE_BOOKINGS_OFF_SECTION_ARIA_LABEL,
+  ONLINE_BOOKINGS_OFF_SECTION_HIDE_LABEL,
+  onlineBookingsOffRevealLabel,
   onlineBookingsStateLabel,
   onlineBookingsToggleHint,
   partitionTeamCards,
+  partitionTeamCardsByOnlineBookings,
   pendingInvitationsRevealLabel,
   roleLabel,
   teamAccountAccess,
   teamAccountAccessLabel,
+  teamAccountAccessPillClass,
   teamCardOnlineBookingsLine,
   teamProfileSummary,
+  teamRolePills,
+  orphanSeatRole,
   type TeamCardDto,
 } from './teamCards';
 
@@ -39,6 +48,71 @@ describe('canActorSetUpOnlineBookings', () => {
 
   it('blocks Barber actors', () => {
     expect(canActorSetUpOnlineBookings('BARBER', 'BARBER')).toBe(false);
+  });
+});
+
+describe('canActorChangeTeamRole', () => {
+  it('allows Owner to change Barber and Manager', () => {
+    expect(canActorChangeTeamRole('OWNER', 'BARBER')).toBe(true);
+    expect(canActorChangeTeamRole('OWNER', 'MANAGER')).toBe(true);
+  });
+
+  it('blocks Owner changing Owner seats', () => {
+    expect(canActorChangeTeamRole('OWNER', 'OWNER')).toBe(false);
+  });
+
+  it('blocks Manager and Barber actors', () => {
+    expect(canActorChangeTeamRole('MANAGER', 'BARBER')).toBe(false);
+    expect(canActorChangeTeamRole('MANAGER', 'MANAGER')).toBe(false);
+    expect(canActorChangeTeamRole('BARBER', 'BARBER')).toBe(false);
+  });
+});
+
+describe('dashboardAccountActionFor', () => {
+  it('maps access to send / check / connected for Owner', () => {
+    expect(dashboardAccountActionFor('no_dashboard', 'OWNER', 'BARBER')).toBe('send');
+    expect(dashboardAccountActionFor('invite_pending', 'OWNER', 'BARBER')).toBe('check');
+    expect(dashboardAccountActionFor('invite_expired', 'OWNER', 'MANAGER')).toBe('check');
+    expect(dashboardAccountActionFor('joined', 'OWNER', 'BARBER')).toBe('connected');
+    expect(dashboardAccountMenuLabel('check')).toBe('Check the invite');
+  });
+
+  it('allows Owner to view Connected for Owner seats', () => {
+    expect(dashboardAccountActionFor('joined', 'OWNER', 'OWNER')).toBe('connected');
+  });
+
+  it('hides Manager actions for Manager targets', () => {
+    expect(dashboardAccountActionFor('no_dashboard', 'MANAGER', 'MANAGER')).toBeNull();
+    expect(dashboardAccountActionFor('joined', 'MANAGER', 'BARBER')).toBe('connected');
+  });
+});
+
+describe('orphanSeatRole', () => {
+  it('maps intendedRole to Team orphan card role', () => {
+    expect(orphanSeatRole('MANAGER')).toBe('MANAGER');
+    expect(orphanSeatRole('BARBER')).toBe('BARBER');
+    expect(orphanSeatRole('OWNER')).toBe('BARBER');
+    expect(orphanSeatRole(undefined)).toBe('BARBER');
+  });
+});
+
+describe('teamRolePills', () => {
+  it('shows Owner + Barber when owner is bookable', () => {
+    const pills = teamRolePills('OWNER', true);
+    expect(pills.map((p) => p.label)).toEqual(['Owner', 'Barber']);
+  });
+
+  it('shows only Owner when owner is not bookable', () => {
+    expect(teamRolePills('OWNER', false).map((p) => p.label)).toEqual(['Owner']);
+  });
+
+  it('shows Manager + Barber when manager is bookable', () => {
+    expect(teamRolePills('MANAGER', true).map((p) => p.label)).toEqual(['Manager', 'Barber']);
+  });
+
+  it('shows only Barber for barber role', () => {
+    expect(teamRolePills('BARBER', true).map((p) => p.label)).toEqual(['Barber']);
+    expect(teamRolePills('BARBER', false).map((p) => p.label)).toEqual(['Barber']);
   });
 });
 
@@ -78,14 +152,38 @@ describe('pendingInvitationsRevealLabel', () => {
   });
 });
 
+describe('partitionTeamCardsByOnlineBookings', () => {
+  it('splits by bookable regardless of invite vs member', () => {
+    const cards = [
+      card({ kind: 'member', id: 'm1', role: 'BARBER', bookable: false }),
+      card({ kind: 'member', id: 'barber:b1', role: 'BARBER', bookable: false }),
+      card({ kind: 'invite', id: 'inv1', role: 'BARBER', bookable: true }),
+      card({ kind: 'member', id: 'm2', role: 'MANAGER', bookable: true }),
+      card({ kind: 'invite', id: 'inv-off', role: 'BARBER', bookable: false }),
+    ];
+    const { onlineOnCards, onlineOffCards } = partitionTeamCardsByOnlineBookings(cards);
+    expect(onlineOnCards.map((c) => c.id)).toEqual(['inv1', 'm2']);
+    expect(onlineOffCards.map((c) => c.id)).toEqual(['m1', 'barber:b1', 'inv-off']);
+  });
+});
+
+describe('onlineBookingsOffRevealLabel', () => {
+  it('uses singular and plural online-off copy', () => {
+    expect(onlineBookingsOffRevealLabel(1)).toBe('Show 1 member with bookings off');
+    expect(onlineBookingsOffRevealLabel(3)).toBe('Show 3 members with bookings off');
+    expect(ONLINE_BOOKINGS_OFF_SECTION_HIDE_LABEL).toBe('Hide online bookings off');
+    expect(ONLINE_BOOKINGS_OFF_SECTION_ARIA_LABEL).toBe('Online bookings off');
+  });
+});
+
 describe('Team card presentation mapping', () => {
   it('Owner + joined + online bookings on', () => {
     const c = card({ kind: 'member', id: 'm1', role: 'OWNER', bookable: true });
     const access = teamAccountAccess(c);
     expect(roleLabel(c.role)).toBe('Owner');
     expect(teamAccountAccessLabel(access)).toBe('Joined');
+    expect(teamAccountAccessPillClass(access)).toBe('badge badge--confirmed');
     expect(teamCardOnlineBookingsLine(access, c.bookable)).toBe('Online bookings: On');
-    expect(dashboardAccessOnlyLine(access, c.bookable)).toBeNull();
     expect(teamProfileSummary(c.role, access)).toBe('Owner · Joined');
   });
 
@@ -100,8 +198,8 @@ describe('Team card presentation mapping', () => {
     const access = teamAccountAccess(c);
     expect(roleLabel(c.role)).toBe('Manager');
     expect(teamAccountAccessLabel(access)).toBe('Joined');
+    expect(teamAccountAccessPillClass(access)).toBe('badge badge--confirmed');
     expect(teamCardOnlineBookingsLine(access, c.bookable)).toBe('Online bookings: Off');
-    expect(dashboardAccessOnlyLine(access, c.bookable)).toBe('Dashboard access only');
     expect(teamProfileSummary(c.role, access)).toBe('Manager · Joined');
   });
 
@@ -116,8 +214,8 @@ describe('Team card presentation mapping', () => {
     const access = teamAccountAccess(c as TeamCardDto);
     expect(roleLabel(c.role)).toBe('Barber');
     expect(teamAccountAccessLabel(access)).toBe('Invitation pending');
+    expect(teamAccountAccessPillClass(access)).toBe('badge badge--pending');
     expect(teamCardOnlineBookingsLine(access, c.bookable)).toBe('Online bookings: On');
-    expect(dashboardAccessOnlyLine(access, c.bookable)).toBeNull();
   });
 
   it('Barber + expired invitation', () => {
@@ -130,6 +228,7 @@ describe('Team card presentation mapping', () => {
     });
     const access = teamAccountAccess(c as TeamCardDto);
     expect(teamAccountAccessLabel(access)).toBe('Invitation expired');
+    expect(teamAccountAccessPillClass(access)).toBe('badge badge--pending');
   });
 
   it('Barber + pending invitation with online bookings off', () => {
@@ -142,8 +241,8 @@ describe('Team card presentation mapping', () => {
     });
     const access = teamAccountAccess(c as TeamCardDto);
     expect(teamAccountAccessLabel(access)).toBe('Invitation pending');
+    expect(teamAccountAccessPillClass(access)).toBe('badge badge--pending');
     expect(teamCardOnlineBookingsLine(access, c.bookable)).toBe('Online bookings: Off');
-    expect(dashboardAccessOnlyLine(access, c.bookable)).toBe('Dashboard access only');
   });
 
   it('Roster-only Barber without dashboard account', () => {
@@ -152,6 +251,7 @@ describe('Team card presentation mapping', () => {
     expect(access).toBe('no_dashboard');
     expect(roleLabel(c.role)).toBe('Barber');
     expect(teamAccountAccessLabel(access)).toBe('No dashboard account');
+    expect(teamAccountAccessPillClass(access)).toBe('badge badge--cancelled');
     expect(teamCardOnlineBookingsLine(access, c.bookable)).toBe('Online bookings: On');
     expect(teamProfileSummary(c.role, access)).toBe('Barber · No dashboard account');
   });

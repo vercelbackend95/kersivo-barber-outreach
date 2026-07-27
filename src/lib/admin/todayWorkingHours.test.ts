@@ -10,16 +10,16 @@ import {
 } from './todayWorkingHours';
 
 describe('getTodayInLondon', () => {
-  it('maps Monday to 0', () => {
-    expect(getTodayInLondon(new Date('2026-03-02T12:00:00.000Z'))).toBe(0);
+  it('maps Monday to 1', () => {
+    expect(getTodayInLondon(new Date('2026-03-02T12:00:00.000Z'))).toBe(1);
   });
 
-  it('maps Tuesday to 1 (no off-by-one)', () => {
-    expect(getTodayInLondon(new Date('2026-03-03T12:00:00.000Z'))).toBe(1);
+  it('maps Tuesday to 2 (no off-by-one)', () => {
+    expect(getTodayInLondon(new Date('2026-03-03T12:00:00.000Z'))).toBe(2);
   });
 
-  it('maps Sunday to 6', () => {
-    expect(getTodayInLondon(new Date('2026-03-08T12:00:00.000Z'))).toBe(6);
+  it('maps Sunday to 7', () => {
+    expect(getTodayInLondon(new Date('2026-03-08T12:00:00.000Z'))).toBe(7);
   });
 });
 

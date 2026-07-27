@@ -4,6 +4,7 @@ import { ConfirmationStatusIcon } from '../../ConfirmationStatusIcon';
 import EmptyState from '../../EmptyState';
 import { Check, Clock, ImagePlus, Scissors, Users, X } from '../../lucide-react';
 import { adminFetchJson } from '../adminAuth';
+import AdminOnOffPill from '../AdminOnOffPill';
 import ServiceCategoryPicker from '../ServiceCategoryPicker';
 import {
   EMPTY_SERVICE_FORM,
@@ -593,19 +594,13 @@ export default function ServiceWizard({
                     : 'Pin one service per category to the top of the booking list.'}
                 </p>
               </div>
-              <label className="admin-service-switch-wrap" htmlFor="service-wizard-featured">
-                <input
-                  id="service-wizard-featured"
-                  type="checkbox"
-                  className="admin-service-switch-input"
-                  checked={form.featured}
-                  onChange={(event) => updateField('featured', event.target.checked)}
-                />
-                <span className="admin-service-switch-track" aria-hidden="true">
-                  <span className="admin-service-switch-thumb" />
-                </span>
-                <span className="admin-service-switch-label">{form.featured ? 'Featured' : 'Standard'}</span>
-              </label>
+              <AdminOnOffPill
+                value={form.featured}
+                onChange={(next) => updateField('featured', next)}
+                ariaLabel="Featured in category"
+                onLabel="Featured"
+                offLabel="Standard"
+              />
             </div>
 
             <div className="admin-service-wizard__visibility">
@@ -615,19 +610,13 @@ export default function ServiceWizard({
                   {form.isActive ? 'Clients can find and book this service.' : 'Saved privately until you publish it.'}
                 </p>
               </div>
-              <label className="admin-service-switch-wrap" htmlFor="service-wizard-active">
-                <input
-                  id="service-wizard-active"
-                  type="checkbox"
-                  className="admin-service-switch-input"
-                  checked={form.isActive}
-                  onChange={(event) => updateField('isActive', event.target.checked)}
-                />
-                <span className="admin-service-switch-track" aria-hidden="true">
-                  <span className="admin-service-switch-thumb" />
-                </span>
-                <span className="admin-service-switch-label">{form.isActive ? 'Live' : 'Hidden'}</span>
-              </label>
+              <AdminOnOffPill
+                value={form.isActive}
+                onChange={(next) => updateField('isActive', next)}
+                ariaLabel="Publish in bookings"
+                onLabel="Live"
+                offLabel="Hidden"
+              />
             </div>
           </section>
         ) : null}

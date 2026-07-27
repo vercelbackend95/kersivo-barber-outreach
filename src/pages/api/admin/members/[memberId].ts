@@ -80,6 +80,12 @@ export const PATCH: APIRoute = async (context) => {
 
   const nextRole = body.role as ShopRole | undefined;
   if (wantsRole) {
+    if (access.role !== 'OWNER') {
+      return new Response(JSON.stringify({ error: 'Only the Owner can change member roles.' }), {
+        status: 403,
+      });
+    }
+
     if (nextRole !== 'MANAGER' && nextRole !== 'BARBER') {
       return new Response(JSON.stringify({ error: 'role must be MANAGER or BARBER.' }), {
         status: 400,
@@ -109,6 +115,13 @@ export const PATCH: APIRoute = async (context) => {
         barber: { select: { id: true, name: true } },
       },
     });
+
+    if (member.barberId) {
+      await prisma.barber.updateMany({
+        where: { id: member.barberId, shopId: access.shopId },
+        data: { intendedRole: nextRole },
+      });
+    }
 
     return new Response(JSON.stringify({ ok: true, member: updated }));
   }

@@ -3,32 +3,23 @@ import type { AdminAccess } from './auth';
 import { requireAdminPermission } from './auth';
 import { prisma } from '@/lib/db/client';
 import { minutesToTimeString, timeStringToMinutes } from './timeStrings';
+import {
+  DEFAULT_ONBOARDING_HOURS,
+  serializeShopOpeningHours,
+  type OnboardingWeeklyRule,
+} from '@/lib/admin/shopOpeningHours';
+import { ALL_WEEKDAYS } from '@/lib/booking/weekdays';
 
 export { minutesToTimeString, timeStringToMinutes } from './timeStrings';
+export { DEFAULT_ONBOARDING_HOURS, type OnboardingWeeklyRule } from '@/lib/admin/shopOpeningHours';
 
 export const ONBOARDING_STEP_WELCOME = 0;
 export const ONBOARDING_STEP_SHOP = 1;
-export const ONBOARDING_STEP_BARBERS = 2;
-export const ONBOARDING_STEP_SERVICES = 3;
-export const ONBOARDING_STEP_HOURS = 4;
-export const ONBOARDING_STEP_REVIEW = 5;
-
-export type OnboardingWeeklyRule = {
-  dayOfWeek: number;
-  active: boolean;
-  startTime: string;
-  endTime: string;
-};
-
-export const DEFAULT_ONBOARDING_HOURS: OnboardingWeeklyRule[] = [
-  { dayOfWeek: 0, active: false, startTime: '09:00', endTime: '18:00' }, // Sunday
-  { dayOfWeek: 1, active: true, startTime: '09:00', endTime: '18:00' },
-  { dayOfWeek: 2, active: true, startTime: '09:00', endTime: '18:00' },
-  { dayOfWeek: 3, active: true, startTime: '09:00', endTime: '18:00' },
-  { dayOfWeek: 4, active: true, startTime: '09:00', endTime: '18:00' },
-  { dayOfWeek: 5, active: true, startTime: '09:00', endTime: '18:00' },
-  { dayOfWeek: 6, active: true, startTime: '09:00', endTime: '16:00' }, // Saturday
-];
+export const ONBOARDING_STEP_SHOP_HOURS = 2;
+export const ONBOARDING_STEP_BARBERS = 3;
+export const ONBOARDING_STEP_SERVICES = 4;
+export const ONBOARDING_STEP_HOURS = 5;
+export const ONBOARDING_STEP_REVIEW = 6;
 
 export async function requireOnboardingAccess(
   context: APIContext,
@@ -53,7 +44,7 @@ export async function advanceOnboardingStep(shopId: string, nextStep: number) {
   });
   if (!shop) return;
 
-  const step = Math.max(shop.onboardingCurrentStep, Math.min(5, Math.max(0, nextStep)));
+  const step = Math.max(shop.onboardingCurrentStep, Math.min(6, Math.max(0, nextStep)));
   if (step === shop.onboardingCurrentStep) return;
 
   await prisma.shopSettings.update({
@@ -87,9 +78,10 @@ export async function shopMeetsOnboardingCompletionRequirements(shopId: string) 
   });
   if (!shop?.name.trim()) return false;
 
-  const [barberCount, serviceCount, firstBarber] = await Promise.all([
+  const [barberCount, serviceCount, shopOpenDays, firstBarber] = await Promise.all([
     prisma.barber.count({ where: { shopId, active: true } }),
     prisma.service.count({ where: { shopId, isActive: true } }),
+    prisma.shopOpeningHours.count({ where: { shopId, active: true } }),
     prisma.barber.findFirst({
       where: { shopId, active: true },
       orderBy: [{ sortOrder: 'asc' }, { createdAt: 'asc' }],
@@ -104,6 +96,7 @@ export async function shopMeetsOnboardingCompletionRequirements(shopId: string) 
   ]);
 
   if (barberCount < 1 || serviceCount < 1) return false;
+  if (shopOpenDays < 1) return false;
   if (!firstBarber || firstBarber.rules.length === 0) return false;
   return firstBarber.rules.every((rule) => rule.startMinutes < rule.endMinutes);
 }
@@ -127,10 +120,11 @@ export async function serializeBarberRules(barberId: string): Promise<Onboarding
   });
 
   const byDay = new Map(rules.map((rule) => [rule.dayOfWeek, rule]));
-  return Array.from({ length: 7 }, (_, dayOfWeek) => {
+  const defaultsByDay = new Map(DEFAULT_ONBOARDING_HOURS.map((row) => [row.dayOfWeek, row]));
+  return ALL_WEEKDAYS.map((dayOfWeek) => {
     const rule = byDay.get(dayOfWeek);
     if (!rule) {
-      return DEFAULT_ONBOARDING_HOURS[dayOfWeek]!;
+      return { ...defaultsByDay.get(dayOfWeek)! };
     }
     return {
       dayOfWeek,
@@ -199,7 +193,7 @@ export async function loadOnboardingState(shopId: string, access: AdminAccess) {
     },
   });
 
-  const [barbers, services] = await Promise.all([
+  const [barbers, services, shopHours] = await Promise.all([
     prisma.barber.findMany({
       where: { shopId, active: true },
       orderBy: [{ sortOrder: 'asc' }, { createdAt: 'asc' }],
@@ -209,6 +203,7 @@ export async function loadOnboardingState(shopId: string, access: AdminAccess) {
         avatarUrl: true,
         active: true,
         sortOrder: true,
+        intendedRole: true,
       },
     }),
     prisma.service.findMany({
@@ -224,12 +219,18 @@ export async function loadOnboardingState(shopId: string, access: AdminAccess) {
         category: true,
       },
     }),
+    serializeShopOpeningHours(shopId),
   ]);
 
   const firstBarber = barbers[0];
-  const hours = firstBarber
-    ? await serializeBarberRules(firstBarber.id)
-    : DEFAULT_ONBOARDING_HOURS;
+  let hours = shopHours;
+  if (firstBarber) {
+    const storedRuleCount = await prisma.availabilityRule.count({
+      where: { barberId: firstBarber.id },
+    });
+    // Prefill client bookable hours from shop hours until barber rules are saved.
+    hours = storedRuleCount > 0 ? await serializeBarberRules(firstBarber.id) : shopHours;
+  }
 
   return {
     shop: {
@@ -247,6 +248,7 @@ export async function loadOnboardingState(shopId: string, access: AdminAccess) {
       avatarUrl: barber.avatarUrl,
       isActive: barber.active,
       sortOrder: barber.sortOrder,
+      intendedRole: barber.intendedRole === 'MANAGER' ? 'MANAGER' : 'BARBER',
     })),
     services: services.map((service) => ({
       id: service.id,
@@ -257,6 +259,7 @@ export async function loadOnboardingState(shopId: string, access: AdminAccess) {
       displayOrder: service.displayOrder,
       category: service.category,
     })),
+    shopHours,
     hours,
     user: access.userId
       ? {

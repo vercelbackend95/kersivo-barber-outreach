@@ -37,6 +37,7 @@ vi.mock('@/lib/db/client', () => ({
     service: { findMany: (...a: unknown[]) => serviceFindMany(...a) },
     shopInvite: { create: (...a: unknown[]) => shopInviteCreate(...a) },
     shopMember: { create: (...a: unknown[]) => shopMemberCreate(...a) },
+    shopOpeningHours: { findMany: vi.fn().mockResolvedValue([]) },
     $transaction: (...a: unknown[]) => transaction(...a),
   },
 }));
@@ -64,7 +65,7 @@ function ctx(body: unknown, role: string = 'OWNER'): APIContext {
   } as unknown as APIContext;
 }
 
-const workingHours = [{ dayOfWeek: 0, startMinutes: 540, endMinutes: 1080, active: true }];
+const workingHours = [{ dayOfWeek: 1, startMinutes: 540, endMinutes: 1080, active: true }];
 
 describe('POST /api/admin/team/booking-profiles', () => {
   beforeEach(() => {

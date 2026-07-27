@@ -3,6 +3,10 @@ export type OnboardingBarber = {
   name: string;
   avatarUrl?: string | null;
   avatarFile?: File | null;
+  /** When false, seat is calendar-off. Solo / single card is always forced on by the API. */
+  onlineBookings?: boolean;
+  /** Roster intent for extra seats (index > 0). Ignored for Owner card. */
+  intendedRole?: 'MANAGER' | 'BARBER';
 };
 
 export type OnboardingService = {
@@ -38,6 +42,7 @@ export type OnboardingState = {
     avatarUrl: string | null;
     isActive: boolean;
     sortOrder: number;
+    intendedRole?: 'MANAGER' | 'BARBER';
   }>;
   services: Array<{
     id: string;
@@ -49,6 +54,7 @@ export type OnboardingState = {
     category: string | null;
   }>;
   hours: OnboardingHoursRow[];
+  shopHours?: OnboardingHoursRow[];
   user: {
     id: string;
     name: string | null;
@@ -70,16 +76,16 @@ export const SERVICE_PRESETS: Array<{
   { key: 'kids-haircut', name: "Kids' Haircut", pricePence: 1800, durationMinutes: 30 },
 ];
 
-export const DAY_LABELS = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
+export const DAY_LABELS = ['', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'];
 
 export const DEFAULT_HOURS: OnboardingHoursRow[] = [
-  { dayOfWeek: 0, active: false, startTime: '09:00', endTime: '18:00' },
-  { dayOfWeek: 1, active: true, startTime: '09:00', endTime: '18:00' },
+  { dayOfWeek: 1, active: true, startTime: '09:00', endTime: '18:00' }, // Monday
   { dayOfWeek: 2, active: true, startTime: '09:00', endTime: '18:00' },
   { dayOfWeek: 3, active: true, startTime: '09:00', endTime: '18:00' },
   { dayOfWeek: 4, active: true, startTime: '09:00', endTime: '18:00' },
   { dayOfWeek: 5, active: true, startTime: '09:00', endTime: '18:00' },
-  { dayOfWeek: 6, active: true, startTime: '09:00', endTime: '16:00' },
+  { dayOfWeek: 6, active: true, startTime: '09:00', endTime: '16:00' }, // Saturday
+  { dayOfWeek: 7, active: false, startTime: '09:00', endTime: '18:00' }, // Sunday
 ];
 
 export function formatGbp(pricePence: number) {
@@ -95,7 +101,7 @@ export function parseGbpToPence(value: string) {
 }
 
 export function orderedHoursForDisplay(hours: OnboardingHoursRow[]) {
-  const dayOrder = [1, 2, 3, 4, 5, 6, 0];
+  const dayOrder = [1, 2, 3, 4, 5, 6, 7];
   return dayOrder.map((dayOfWeek) => {
     const row = hours.find((item) => item.dayOfWeek === dayOfWeek);
     return {

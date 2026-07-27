@@ -1,4 +1,5 @@
 import React from 'react';
+import { AnimatePresence, motion, useReducedMotion } from 'framer-motion';
 import type { Barber, ServiceOption, TimeBlock } from './barbersTypes';
 import type { BarberBookingPreview } from '../../lib/admin/barberRosterPresentation';
 import {
@@ -7,30 +8,24 @@ import {
   getBarberAvailabilityStatus,
   getTodayLine,
 } from '../../lib/admin/barberRosterPresentation';
-import type { TeamAccountAccess, TeamCardDto } from '../../lib/admin/teamCards';
+import type { DashboardAccountAction, TeamAccountAccess, TeamCardDto } from '../../lib/admin/teamCards';
 import {
-  dashboardAccessOnlyLine,
-  partitionTeamCards,
-  roleLabel,
-  rolePillClass,
+  dashboardAccountActionFor,
+  ONLINE_BOOKINGS_OFF_SECTION_ARIA_LABEL,
+  ONLINE_BOOKINGS_OFF_SECTION_HIDE_LABEL,
+  onlineBookingsOffRevealLabel,
+  partitionTeamCardsByOnlineBookings,
   roleSortRank,
   teamAccountAccess,
   teamAccountAccessLabel,
+  teamAccountAccessPillClass,
   teamCardOnlineBookingsLine,
-  TEAM_INVITE_RESEND_REFRESH_WARNING,
+  teamRolePills,
 } from '../../lib/admin/teamCards';
 import {
-  INVITATIONS_SECTION_ARIA_LABEL,
-  INVITATIONS_SECTION_HIDE_LABEL,
   barbersDrivenTeamRefreshOpts,
-  countInvitationStatuses,
   inviteCreationPostMutationRefresh,
-  inviteResendNetworkFailurePatch,
-  inviteResendPostMutationRefresh,
-  invitationsSectionRevealLabel,
-  passiveInvitationLabel,
   shouldClearTeamCardsOnRefreshFailure,
-  shouldShowInviteResendAction,
 } from '../../lib/admin/teamInviteResendUi';
 import type { ShopRole } from '@prisma/client';
 import AdminBarberRosterCard from './AdminBarberRosterCard';
@@ -38,29 +33,13 @@ import AdminBarberRosterSearch from './AdminBarberRosterSearch';
 import { BarberRosterOverviewGridSkeleton } from '../skeleton';
 import TeamInviteWizard from './TeamInviteWizard';
 import AdminWizardSheetLayer from './AdminWizardSheetLayer';
-import { combineRefreshResults, buildInvitationUrl } from '@/lib/admin/teamInviteWizardResults';
+import { combineRefreshResults } from '@/lib/admin/teamInviteWizardResults';
 import { fetchTeamListRefresh } from '@/lib/admin/teamRefreshFetch';
 import {
   applyMemberBookingProfileSetupToCards,
   type MemberBookingProfileSetupResult,
 } from '@/lib/admin/memberBookingProfileSetup';
 import '@/styles/components/admin-team.css';
-
-type InviteResendPhase =
-  | 'idle'
-  | 'resending'
-  | 'resent'
-  | 'email_failed'
-  | 'cooldown'
-  | 'error';
-
-type InviteResendState = {
-  phase: InviteResendPhase;
-  message: string;
-  acceptPath: string;
-  copyFeedback: string;
-  refreshWarning: string;
-};
 
 export type TeamProfileOpenMeta = {
   name: string;
@@ -73,6 +52,13 @@ export type TeamProfileOpenMeta = {
   barberId?: string | null;
   canManageOnlineBookings?: boolean;
   canSetUpOnlineBookings?: boolean;
+  /** Dashboard invite / account menu mode for this profile. */
+  dashboardAccountAction?: DashboardAccountAction | null;
+  inviteId?: string;
+  inviteEmail?: string;
+  inviteExpiresAt?: string | null;
+  invitationStatus?: 'pending' | 'expired' | null;
+  memberEmail?: string | null;
   bookable?: boolean;
   /** Dashboard member with no booking profile — profile open must not create one. */
   memberOnly?: boolean;
@@ -95,14 +81,8 @@ type BarbersOverviewProps = {
   onCloseAddBarberSheet: () => void;
   onBarberSaved: () => void | Promise<void | boolean>;
   formatBlockRange: (startAt: string, endAt: string) => string;
+  onActorRoleChange?: (role: string) => void;
 };
-
-const DEFAULT_SERVICE_OPTIONS: ServiceOption[] = [
-  { id: 'svc-haircut', name: 'Haircut' },
-  { id: 'svc-skin-fade', name: 'Skin Fade' },
-  { id: 'svc-beard-trim', name: 'Beard Trim' },
-  { id: 'svc-haircut-beard', name: 'Haircut + Beard' },
-];
 
 function isKeyboardEditableTarget(target: EventTarget | null) {
   if (!(target instanceof HTMLElement)) return false;
@@ -167,10 +147,10 @@ const BarbersOverview = React.forwardRef<BarbersOverviewHandle, BarbersOverviewP
       onCloseAddBarberSheet,
       onBarberSaved,
       formatBlockRange,
+      onActorRoleChange,
     },
     ref,
   ) {
-  const availableServices = services.length > 0 ? services : DEFAULT_SERVICE_OPTIONS;
   const [nowTick, setNowTick] = React.useState(() => Date.now());
   const searchInputRef = React.useRef<HTMLInputElement | null>(null);
   const [barberSearchQuery, setBarberSearchQuery] = React.useState('');
@@ -181,30 +161,7 @@ const BarbersOverview = React.forwardRef<BarbersOverviewHandle, BarbersOverviewP
   const [teamLoading, setTeamLoading] = React.useState(true);
   const [teamError, setTeamError] = React.useState('');
   const [actionError, setActionError] = React.useState('');
-  const [inviteResendById, setInviteResendById] = React.useState<Record<string, InviteResendState>>(
-    {},
-  );
-  const inviteResendInFlightRef = React.useRef<Record<string, boolean>>({});
-
-  const patchInviteResend = React.useCallback((inviteId: string, patch: Partial<InviteResendState>) => {
-    setInviteResendById((prev) => {
-      const defaults: InviteResendState = {
-        phase: 'idle',
-        message: '',
-        acceptPath: '',
-        copyFeedback: '',
-        refreshWarning: '',
-      };
-      return {
-        ...prev,
-        [inviteId]: {
-          ...defaults,
-          ...prev[inviteId],
-          ...patch,
-        },
-      };
-    });
-  }, []);
+  const reduceMotion = useReducedMotion();
 
   const loadTeam = React.useCallback(
     async (opts?: { preserveExistingCardsOnFailure?: boolean }): Promise<boolean> => {
@@ -229,13 +186,15 @@ const BarbersOverview = React.forwardRef<BarbersOverviewHandle, BarbersOverviewP
           return false;
         }
         setTeamCards(result.cards as TeamCardDto[]);
-        setActorRole(result.actorRole || 'OWNER');
+        const nextRole = result.actorRole || 'OWNER';
+        setActorRole(nextRole);
+        onActorRoleChange?.(nextRole);
         return true;
       } finally {
         setTeamLoading(false);
       }
     },
-    [],
+    [onActorRoleChange],
   );
 
   React.useImperativeHandle(
@@ -287,116 +246,17 @@ const BarbersOverview = React.forwardRef<BarbersOverviewHandle, BarbersOverviewP
     );
   }, [teamCards, trimmedSearchQuery]);
 
-  const { joinedCards, pendingInviteCards } = React.useMemo(() => {
-    const partitioned = partitionTeamCards(filteredCards);
+  const { onlineOnCards, onlineOffCards } = React.useMemo(() => {
+    const partitioned = partitionTeamCardsByOnlineBookings(filteredCards);
     return {
-      joinedCards: [...partitioned.joinedCards].sort(compareTeamCards),
-      pendingInviteCards: [...partitioned.pendingInviteCards].sort(compareTeamCards),
+      onlineOnCards: [...partitioned.onlineOnCards].sort(compareTeamCards),
+      onlineOffCards: [...partitioned.onlineOffCards].sort(compareTeamCards),
     };
   }, [filteredCards]);
-  const pendingInviteCount = React.useMemo(
-    () => partitionTeamCards(teamCards).pendingInviteCards.length,
+  const onlineOffCount = React.useMemo(
+    () => partitionTeamCardsByOnlineBookings(teamCards).onlineOffCards.length,
     [teamCards],
   );
-  const invitationStatusCounts = React.useMemo(
-    () => countInvitationStatuses(partitionTeamCards(teamCards).pendingInviteCards),
-    [teamCards],
-  );
-
-  async function handleResendInvitation(card: TeamCardDto) {
-    if (card.kind !== 'invite' || !card.canResendInvitation) return;
-    if (inviteResendInFlightRef.current[card.id]) return;
-    inviteResendInFlightRef.current[card.id] = true;
-    patchInviteResend(card.id, {
-      phase: 'resending',
-      message: '',
-      acceptPath: '',
-      copyFeedback: '',
-      refreshWarning: '',
-    });
-    setActionError('');
-
-    try {
-      try {
-        const res = await fetch(
-          `/api/admin/team/invitations/${encodeURIComponent(card.id)}/resend`,
-          { method: 'POST', credentials: 'include' },
-        );
-        const data = await res.json().catch(() => ({}));
-
-        if (res.status === 429) {
-          patchInviteResend(card.id, {
-            phase: 'cooldown',
-            message:
-              typeof data.error === 'string'
-                ? data.error
-                : 'This invitation was sent recently. Try again shortly.',
-          });
-          return;
-        }
-
-        if (!res.ok) {
-          patchInviteResend(card.id, {
-            phase: 'error',
-            message: typeof data.error === 'string' ? data.error : 'Could not renew invitation.',
-          });
-          return;
-        }
-
-        const emailSent = data.emailSent !== false;
-        const acceptPath = typeof data.acceptPath === 'string' ? data.acceptPath : '';
-        const email = card.email?.trim() || 'the invitee';
-
-        if (emailSent) {
-          patchInviteResend(card.id, {
-            phase: 'resent',
-            message: `A new invitation link was sent to ${email}. The previous link no longer works.`,
-            acceptPath: '',
-          });
-        } else {
-          patchInviteResend(card.id, {
-            phase: 'email_failed',
-            message:
-              'The invitation is active again, but we could not send the email. Share the invitation link manually.',
-            acceptPath,
-          });
-        }
-
-        try {
-          const refresh = inviteResendPostMutationRefresh();
-          const teamOk = refresh.refreshTeam
-            ? await loadTeam({
-                preserveExistingCardsOnFailure: refresh.preserveExistingCardsOnFailure,
-              })
-            : true;
-          if (teamOk === false) {
-            patchInviteResend(card.id, { refreshWarning: TEAM_INVITE_RESEND_REFRESH_WARNING });
-          }
-        } catch {
-          patchInviteResend(card.id, { refreshWarning: TEAM_INVITE_RESEND_REFRESH_WARNING });
-        }
-      } catch {
-        patchInviteResend(card.id, inviteResendNetworkFailurePatch());
-      }
-    } finally {
-      inviteResendInFlightRef.current[card.id] = false;
-    }
-  }
-
-  async function copyInviteAcceptPath(inviteId: string, acceptPath: string) {
-    patchInviteResend(inviteId, { copyFeedback: '' });
-    if (!acceptPath) {
-      patchInviteResend(inviteId, { copyFeedback: 'Could not copy the invitation link.' });
-      return;
-    }
-    try {
-      const url = buildInvitationUrl(acceptPath, window.location.origin);
-      await navigator.clipboard.writeText(url);
-      patchInviteResend(inviteId, { copyFeedback: 'Invitation link copied' });
-    } catch {
-      patchInviteResend(inviteId, { copyFeedback: 'Could not copy the invitation link.' });
-    }
-  }
 
   async function handleOpenProfile(card: TeamCardDto) {
     setActionError('');
@@ -416,13 +276,16 @@ const BarbersOverview = React.forwardRef<BarbersOverviewHandle, BarbersOverviewP
         memberOnly: true,
         bookable: false,
         email: card.email,
+        memberEmail: card.email,
         canSetUpOnlineBookings: card.canSetUpOnlineBookings,
+        dashboardAccountAction: dashboardAccountActionFor(access, actorRole, card.role),
       });
       return;
     }
 
     const barberId = card.barberId;
     const stub = cardToBarberStub(card);
+    const action = dashboardAccountActionFor(access, actorRole, card.role);
 
     const meta: TeamProfileOpenMeta = {
       name: stub.name,
@@ -434,8 +297,20 @@ const BarbersOverview = React.forwardRef<BarbersOverviewHandle, BarbersOverviewP
       barberId,
       bookable: card.bookable,
       canManageOnlineBookings: card.canManageOnlineBookings,
+      dashboardAccountAction: action,
+      ...(card.kind === 'invite'
+        ? {
+            inviteId: card.id,
+            inviteEmail: card.email,
+            inviteExpiresAt: card.inviteExpiresAt ?? null,
+            invitationStatus: card.invitationStatus,
+          }
+        : {}),
       ...(card.kind === 'member' && !card.id.startsWith('barber:')
-        ? { memberId: card.id }
+        ? { memberId: card.id, memberEmail: card.email, email: card.email }
+        : {}),
+      ...(card.kind === 'member' && card.id.startsWith('barber:')
+        ? { email: card.email }
         : {}),
     };
     onOpenBarber(barberId, meta);
@@ -463,56 +338,6 @@ const BarbersOverview = React.forwardRef<BarbersOverviewHandle, BarbersOverviewP
       ? getTodayLine(stub)
       : { text: 'Today: —', title: 'No schedule', isOff: true };
 
-    const resendState = inviteResendById[card.id];
-    const showResendAction =
-      card.kind === 'invite' &&
-      card.canResendInvitation &&
-      shouldShowInviteResendAction(resendState?.phase);
-    const inviteResend =
-      card.kind === 'invite' && card.canResendInvitation
-        ? {
-            canResend: true,
-            showAction: showResendAction,
-            busy: resendState?.phase === 'resending',
-            buttonLabel:
-              resendState?.phase === 'resending' ? 'Resending…' : 'Resend invitation',
-            onResend: () => void handleResendInvitation(card),
-            statusHeading:
-              resendState?.phase === 'email_failed'
-                ? 'Invitation renewed — email not sent'
-                : resendState?.phase === 'resent'
-                  ? 'Invitation resent'
-                  : null,
-            statusMessage:
-              [resendState?.message, resendState?.refreshWarning].filter(Boolean).join(' ') || null,
-            statusTone:
-              resendState?.phase === 'email_failed'
-                ? ('warning' as const)
-                : resendState?.phase === 'resent'
-                  ? ('success' as const)
-                  : resendState?.phase === 'error'
-                    ? ('warning' as const)
-                    : ('neutral' as const),
-            showCopyLink: resendState?.phase === 'email_failed' && Boolean(resendState.acceptPath),
-            onCopyLink: () => void copyInviteAcceptPath(card.id, resendState?.acceptPath || ''),
-            copyFeedback: resendState?.copyFeedback || '',
-          }
-        : card.kind === 'invite'
-          ? {
-              canResend: false,
-              showAction: false,
-              busy: false,
-              buttonLabel: '',
-              onResend: () => undefined,
-              passiveLabel: passiveInvitationLabel(card.invitationStatus),
-              statusHeading: null,
-              statusMessage: null,
-              statusTone: null,
-              showCopyLink: false,
-              copyFeedback: '',
-            }
-          : null;
-
     return (
       <AdminBarberRosterCard
         key={`${card.kind}-${card.id}`}
@@ -527,17 +352,17 @@ const BarbersOverview = React.forwardRef<BarbersOverviewHandle, BarbersOverviewP
         onOpenBarber={() => void handleOpenProfile(card)}
         bookingsLength={bookings.length}
         variant="manage"
-        roleLabel={roleLabel(card.role)}
-        rolePillClassName={rolePillClass(card.role)}
-        cardStatus={card.cardStatus}
-        invitationStatus={card.invitationStatus}
+        rolePills={teamRolePills(card.role, card.bookable).map((pill) => ({
+          label: pill.label,
+          className: pill.className,
+          role: pill.role,
+        }))}
         showSchedule={showSchedule}
         showRosterChrome={showSchedule || hasSeat}
         showProfileCta={showProfileCta}
         accountAccessLabel={teamAccountAccessLabel(access)}
+        accountAccessClassName={teamAccountAccessPillClass(access)}
         onlineBookingsLine={teamCardOnlineBookingsLine(access, card.bookable)}
-        secondaryLine={dashboardAccessOnlyLine(access, card.bookable)}
-        inviteResend={inviteResend}
       />
     );
   }
@@ -575,10 +400,10 @@ const BarbersOverview = React.forwardRef<BarbersOverviewHandle, BarbersOverviewP
       ) : (
         <div className="admin-barber-list-wrap admin-barbers-overview-list-wrap">
           <ul className="admin-barber-grid admin-barbers-overview-grid" aria-label="Team members">
-            {joinedCards.map((card, index) => renderCard(card, index))}
+            {onlineOnCards.map((card, index) => renderCard(card, index))}
           </ul>
 
-          {pendingInviteCount > 0 ? (
+          {onlineOffCount > 0 ? (
             <div className="admin-barbers-inactive-reveal">
               <button
                 type="button"
@@ -587,20 +412,36 @@ const BarbersOverview = React.forwardRef<BarbersOverviewHandle, BarbersOverviewP
                 onClick={() => onShowInactiveChange(!showInactiveBarbers)}
               >
                 {showInactiveBarbers
-                  ? INVITATIONS_SECTION_HIDE_LABEL
-                  : invitationsSectionRevealLabel(invitationStatusCounts)}
+                  ? ONLINE_BOOKINGS_OFF_SECTION_HIDE_LABEL
+                  : onlineBookingsOffRevealLabel(onlineOffCount)}
               </button>
             </div>
           ) : null}
 
-          {showInactiveBarbers && pendingInviteCards.length > 0 ? (
-            <ul
-              className="admin-barber-grid admin-barbers-overview-grid admin-barbers-overview-grid--inactive"
-              aria-label={INVITATIONS_SECTION_ARIA_LABEL}
-            >
-              {pendingInviteCards.map((card, index) => renderCard(card, joinedCards.length + index))}
-            </ul>
-          ) : null}
+          <AnimatePresence initial={false}>
+            {showInactiveBarbers && onlineOffCards.length > 0 ? (
+              <motion.div
+                key="online-bookings-off"
+                className="admin-barbers-inactive-reveal-panel"
+                initial={reduceMotion ? false : { height: 0, opacity: 0 }}
+                animate={{ height: 'auto', opacity: 1 }}
+                exit={reduceMotion ? undefined : { height: 0, opacity: 0 }}
+                transition={
+                  reduceMotion
+                    ? { duration: 0 }
+                    : { duration: 0.28, ease: [0.4, 0, 0.2, 1] }
+                }
+                style={{ overflow: 'hidden' }}
+              >
+                <ul
+                  className="admin-barber-grid admin-barbers-overview-grid admin-barbers-overview-grid--inactive"
+                  aria-label={ONLINE_BOOKINGS_OFF_SECTION_ARIA_LABEL}
+                >
+                  {onlineOffCards.map((card, index) => renderCard(card, onlineOnCards.length + index))}
+                </ul>
+              </motion.div>
+            ) : null}
+          </AnimatePresence>
         </div>
       )}
 
@@ -612,7 +453,7 @@ const BarbersOverview = React.forwardRef<BarbersOverviewHandle, BarbersOverviewP
         <TeamInviteWizard
           key="invite"
           actorRole={actorRole}
-          services={availableServices}
+          services={services}
           onCancel={onCloseAddBarberSheet}
           onSent={async () => {
             const refresh = inviteCreationPostMutationRefresh();

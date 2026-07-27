@@ -12,6 +12,7 @@ import {
   type WorkingHourInput,
 } from '@/lib/admin/teamCreation';
 import { storeAdminAvatar } from '@/lib/storage/storeAdminAvatar';
+import { assertWorkingHoursWithinShopHours } from '@/lib/admin/shopOpeningHours';
 
 function json(body: unknown, status = 200) {
   return new Response(JSON.stringify(body), {
@@ -127,6 +128,11 @@ export const POST: APIRoute = async (context) => {
   const hours = assertValidWorkingHours(rawHours, { requireActiveDay: true });
   if (!hours.ok) {
     return json({ error: hours.error, code: hours.code }, 422);
+  }
+
+  const withinShopError = await assertWorkingHoursWithinShopHours(access.shopId, hours.hours);
+  if (withinShopError) {
+    return json({ error: withinShopError, code: 'OUTSIDE_SHOP_HOURS' }, 422);
   }
 
   let uploadedAvatarUrl: string | undefined;

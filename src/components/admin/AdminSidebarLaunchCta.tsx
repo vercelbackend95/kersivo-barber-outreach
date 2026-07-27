@@ -1,29 +1,19 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import { Store } from '../lucide-react';
 import { ADMIN_DEMO_BLOCKED_EVENT } from './adminAuth';
+import {
+  demoLaunchProgress,
+  emptyLaunchProgress,
+  resolveLaunchCtaPresentation,
+  type LaunchProgress,
+} from '@/lib/admin/launchCtaProgress';
 import '@/styles/components/admin-sidebar-launch-cta.css';
-
-type LaunchCtaKind = 'launch' | 'continue';
 
 type LaunchContextPayload = {
   pending?: { plan?: string } | null;
-};
-
-const LAUNCH_STATE = {
-  launch: {
-    kind: 'launch' as const,
-    status: 'READY TO LAUNCH',
-    title: 'Launch My Barbershop',
-    support: 'Your setup is ready.',
-    href: '/admin/launch',
-  },
-  continue: {
-    kind: 'continue' as const,
-    status: 'IN PROGRESS',
-    title: 'Continue Purchase',
-    support: 'Complete your launch.',
-    href: '/admin/launch?step=2',
-  },
+  paid?: boolean;
+  paidHref?: string | null;
+  progress?: LaunchProgress;
 };
 
 type AdminSidebarLaunchCtaProps = {
@@ -32,12 +22,20 @@ type AdminSidebarLaunchCtaProps = {
 
 export default function AdminSidebarLaunchCta({ isPublicDemo = false }: AdminSidebarLaunchCtaProps) {
   const [loading, setLoading] = useState(!isPublicDemo);
-  const [kind, setKind] = useState<LaunchCtaKind>('launch');
+  const [progress, setProgress] = useState<LaunchProgress>(() =>
+    isPublicDemo ? demoLaunchProgress() : emptyLaunchProgress(),
+  );
+  const [pending, setPending] = useState(false);
+  const [paid, setPaid] = useState(false);
+  const [paidHref, setPaidHref] = useState<string | null>(null);
 
   useEffect(() => {
     if (isPublicDemo) {
+      setProgress(demoLaunchProgress());
+      setPending(false);
+      setPaid(false);
+      setPaidHref(null);
       setLoading(false);
-      setKind('launch');
       return;
     }
 
@@ -49,14 +47,29 @@ export default function AdminSidebarLaunchCta({ isPublicDemo = false }: AdminSid
         if (cancelled) return;
 
         if (!response.ok) {
-          setKind('launch');
+          setProgress(emptyLaunchProgress());
+          setPending(false);
+          setPaid(false);
+          setPaidHref(null);
           return;
         }
 
         const data = (await response.json()) as LaunchContextPayload;
-        setKind(data.pending ? 'continue' : 'launch');
+        if (data.progress?.steps?.length) {
+          setProgress(data.progress);
+        } else {
+          setProgress(emptyLaunchProgress());
+        }
+        setPending(Boolean(data.pending));
+        setPaid(Boolean(data.paid));
+        setPaidHref(typeof data.paidHref === 'string' ? data.paidHref : null);
       } catch {
-        if (!cancelled) setKind('launch');
+        if (!cancelled) {
+          setProgress(emptyLaunchProgress());
+          setPending(false);
+          setPaid(false);
+          setPaidHref(null);
+        }
       } finally {
         if (!cancelled) setLoading(false);
       }
@@ -67,7 +80,10 @@ export default function AdminSidebarLaunchCta({ isPublicDemo = false }: AdminSid
     };
   }, [isPublicDemo]);
 
-  const state = LAUNCH_STATE[kind];
+  const presentation = useMemo(
+    () => resolveLaunchCtaPresentation({ progress, pending, paid, paidHref }),
+    [progress, pending, paid, paidHref],
+  );
 
   const handleClick = () => {
     if (loading) return;
@@ -79,7 +95,7 @@ export default function AdminSidebarLaunchCta({ isPublicDemo = false }: AdminSid
       );
       return;
     }
-    window.location.assign(state.href);
+    window.location.assign(presentation.href);
   };
 
   if (loading) {
@@ -91,7 +107,7 @@ export default function AdminSidebarLaunchCta({ isPublicDemo = false }: AdminSid
       >
         <span className="admin-sidebar-launch-cta__skeleton admin-sidebar-launch-cta__skeleton--status" />
         <span className="admin-sidebar-launch-cta__skeleton admin-sidebar-launch-cta__skeleton--title" />
-        <span className="admin-sidebar-launch-cta__skeleton admin-sidebar-launch-cta__skeleton--support" />
+        <span className="admin-sidebar-launch-cta__skeleton admin-sidebar-launch-cta__skeleton--checklist" />
       </div>
     );
   }
@@ -101,15 +117,29 @@ export default function AdminSidebarLaunchCta({ isPublicDemo = false }: AdminSid
       type="button"
       className="admin-sidebar-launch-cta"
       onClick={handleClick}
-      aria-label={`${state.status}: ${state.title}. ${state.support}`}
+      aria-label={`${presentation.status}: ${presentation.title}. ${presentation.doneCount} of ${presentation.totalCount} complete.`}
     >
       <span className="admin-sidebar-launch-cta__icon" aria-hidden="true">
         <Store width={18} height={18} />
       </span>
       <span className="admin-sidebar-launch-cta__body">
-        <span className="admin-sidebar-launch-cta__status">{state.status}</span>
-        <span className="admin-sidebar-launch-cta__title">{state.title}</span>
-        <span className="admin-sidebar-launch-cta__support">{state.support}</span>
+        <span className="admin-sidebar-launch-cta__status">{presentation.status}</span>
+        <span className="admin-sidebar-launch-cta__title">{presentation.title}</span>
+        <ul className="admin-sidebar-launch-cta__checklist">
+          {progress.steps.map((step) => (
+            <li
+              key={step.id}
+              className={`admin-sidebar-launch-cta__check${
+                step.done ? ' admin-sidebar-launch-cta__check--done' : ' admin-sidebar-launch-cta__check--todo'
+              }`}
+            >
+              <span className="admin-sidebar-launch-cta__mark" aria-hidden="true">
+                {step.done ? '✓' : '○'}
+              </span>
+              <span className="admin-sidebar-launch-cta__check-label">{step.label}</span>
+            </li>
+          ))}
+        </ul>
       </span>
     </button>
   );

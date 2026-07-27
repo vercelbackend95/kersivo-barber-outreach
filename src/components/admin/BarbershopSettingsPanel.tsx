@@ -1,0 +1,619 @@
+import React, { useCallback, useEffect, useMemo, useState } from 'react';
+import { createPortal } from 'react-dom';
+import type { WorkingHourRow } from './barbersTypes';
+import BarberWorkingHoursEditor from './BarberWorkingHoursEditor';
+import AdminSectionHeader from './AdminSectionHeader';
+import { ImagePlus, X } from '../lucide-react';
+import { SHOP_PAUSE_REASON_MIN_LENGTH } from '@/lib/admin/shopPublicActivity';
+import '@/styles/components/admin-barbershop-settings.css';
+
+const WEEK_DAYS = ['', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
+
+type Identity = {
+  name: string;
+  townCity: string | null;
+  logoUrl: string | null;
+};
+
+type PauseState = {
+  paused: boolean;
+  pausedNow: boolean;
+  pausedAt: string | null;
+  from: string | null;
+  until: string | null;
+  reason: string | null;
+};
+
+const EMPTY_PAUSE: PauseState = {
+  paused: false,
+  pausedNow: false,
+  pausedAt: null,
+  from: null,
+  until: null,
+  reason: null,
+};
+
+export type BarbershopSettingsPanelProps = {
+  onIdentitySaved?: (identity: Identity) => void;
+  onPauseChanged?: (paused: boolean) => void;
+};
+
+function formatPauseDate(iso: string | null): string {
+  if (!iso) return '—';
+  const [y, m, d] = iso.split('-').map(Number);
+  if (!y || !m || !d) return iso;
+  return new Date(Date.UTC(y, m - 1, d, 12)).toLocaleDateString('en-GB', {
+    day: 'numeric',
+    month: 'short',
+    year: 'numeric',
+    timeZone: 'UTC',
+  });
+}
+
+export default function BarbershopSettingsPanel({
+  onIdentitySaved,
+  onPauseChanged,
+}: BarbershopSettingsPanelProps) {
+  const [loading, setLoading] = useState(true);
+  const [loadError, setLoadError] = useState('');
+
+  const [name, setName] = useState('');
+  const [townCity, setTownCity] = useState('');
+  const [logoUrl, setLogoUrl] = useState<string | null>(null);
+  const [logoFile, setLogoFile] = useState<File | null>(null);
+  const [logoPreview, setLogoPreview] = useState<string | null>(null);
+  const [clearLogo, setClearLogo] = useState(false);
+  const [identitySaving, setIdentitySaving] = useState(false);
+  const [identityError, setIdentityError] = useState('');
+  const [identityMessage, setIdentityMessage] = useState('');
+
+  const [hours, setHours] = useState<WorkingHourRow[]>([]);
+  const [hoursSaving, setHoursSaving] = useState(false);
+  const [hoursError, setHoursError] = useState('');
+
+  const [pause, setPause] = useState<PauseState>(EMPTY_PAUSE);
+  const [pauseFrom, setPauseFrom] = useState('');
+  const [pauseUntil, setPauseUntil] = useState('');
+  const [pauseReason, setPauseReason] = useState('');
+  const [pauseSaving, setPauseSaving] = useState(false);
+  const [pauseError, setPauseError] = useState('');
+  const [pauseConfirmOpen, setPauseConfirmOpen] = useState(false);
+
+  const load = useCallback(async () => {
+    setLoading(true);
+    setLoadError('');
+    try {
+      const response = await fetch('/api/admin/barbershop-settings', { credentials: 'include' });
+      const payload = (await response.json().catch(() => null)) as {
+        error?: string;
+        identity?: Identity;
+        hours?: WorkingHourRow[];
+        pause?: PauseState;
+      } | null;
+      if (!response.ok) {
+        throw new Error(payload?.error || 'Could not load barbershop settings.');
+      }
+      setName(payload?.identity?.name ?? '');
+      setTownCity(payload?.identity?.townCity ?? '');
+      setLogoUrl(payload?.identity?.logoUrl ?? null);
+      setLogoPreview(payload?.identity?.logoUrl ?? null);
+      setLogoFile(null);
+      setClearLogo(false);
+      setHours(payload?.hours ?? []);
+      const nextPause = payload?.pause
+        ? {
+            ...EMPTY_PAUSE,
+            ...payload.pause,
+            pausedNow: Boolean(payload.pause.pausedNow),
+          }
+        : EMPTY_PAUSE;
+      setPause(nextPause);
+      setPauseFrom(nextPause.from ?? '');
+      setPauseUntil(nextPause.until ?? '');
+      setPauseReason(nextPause.reason ?? '');
+      onPauseChanged?.(nextPause.pausedNow);
+    } catch (error) {
+      setLoadError(error instanceof Error ? error.message : 'Could not load barbershop settings.');
+    } finally {
+      setLoading(false);
+    }
+    // Intentionally omit onPauseChanged from deps — parent passes setState.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  useEffect(() => {
+    void load();
+  }, [load]);
+
+  useEffect(() => {
+    return () => {
+      if (logoPreview && logoPreview.startsWith('blob:')) {
+        URL.revokeObjectURL(logoPreview);
+      }
+    };
+  }, [logoPreview]);
+
+  const pauseFormValid = useMemo(() => {
+    if (!pauseFrom || !pauseUntil) return false;
+    if (pauseFrom > pauseUntil) return false;
+    return pauseReason.trim().length >= SHOP_PAUSE_REASON_MIN_LENGTH;
+  }, [pauseFrom, pauseUntil, pauseReason]);
+
+  async function saveIdentity() {
+    const trimmedName = name.trim();
+    if (!trimmedName) {
+      setIdentityError('Barbershop name is required.');
+      return;
+    }
+    setIdentitySaving(true);
+    setIdentityError('');
+    setIdentityMessage('');
+    try {
+      let response: Response;
+      if (logoFile) {
+        const form = new FormData();
+        form.set('name', trimmedName);
+        form.set('townCity', townCity.trim());
+        form.set('logo', logoFile);
+        response = await fetch('/api/admin/barbershop-settings/identity', {
+          method: 'PUT',
+          credentials: 'include',
+          body: form,
+        });
+      } else {
+        response = await fetch('/api/admin/barbershop-settings/identity', {
+          method: 'PUT',
+          credentials: 'include',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            name: trimmedName,
+            townCity: townCity.trim() || null,
+            clearLogo,
+          }),
+        });
+      }
+      const payload = (await response.json().catch(() => null)) as {
+        error?: string;
+        identity?: Identity;
+      } | null;
+      if (!response.ok) {
+        throw new Error(
+          typeof payload?.error === 'string' ? payload.error : 'Could not save identity.',
+        );
+      }
+      const next = payload?.identity ?? {
+        name: trimmedName,
+        townCity: townCity.trim() || null,
+        logoUrl: clearLogo ? null : logoUrl,
+      };
+      setName(next.name);
+      setTownCity(next.townCity ?? '');
+      setLogoUrl(next.logoUrl);
+      setLogoPreview(next.logoUrl);
+      setLogoFile(null);
+      setClearLogo(false);
+      setIdentityMessage('Saved.');
+      onIdentitySaved?.(next);
+    } catch (error) {
+      setIdentityError(error instanceof Error ? error.message : 'Could not save identity.');
+    } finally {
+      setIdentitySaving(false);
+    }
+  }
+
+  async function saveHours(rules?: WorkingHourRow[]): Promise<boolean> {
+    const nextRules = rules ?? hours;
+    setHoursSaving(true);
+    setHoursError('');
+    try {
+      const response = await fetch('/api/admin/barbershop-settings/hours', {
+        method: 'PUT',
+        credentials: 'include',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ rules: nextRules }),
+      });
+      const payload = (await response.json().catch(() => null)) as {
+        error?: string;
+        hours?: WorkingHourRow[];
+      } | null;
+      if (!response.ok) {
+        throw new Error(
+          typeof payload?.error === 'string' ? payload.error : 'Could not save opening hours.',
+        );
+      }
+      if (payload?.hours) setHours(payload.hours);
+      return true;
+    } catch (error) {
+      setHoursError(error instanceof Error ? error.message : 'Could not save opening hours.');
+      return false;
+    } finally {
+      setHoursSaving(false);
+    }
+  }
+
+  async function applyPause(body: Record<string, unknown>) {
+    setPauseSaving(true);
+    setPauseError('');
+    try {
+      const response = await fetch('/api/admin/barbershop-settings/pause', {
+        method: 'PATCH',
+        credentials: 'include',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(body),
+      });
+      const payload = (await response.json().catch(() => null)) as {
+        error?: string | { formErrors?: string[] };
+        pause?: PauseState;
+      } | null;
+      if (!response.ok) {
+        const err = payload?.error;
+        throw new Error(
+          typeof err === 'string' ? err : 'Could not update pause.',
+        );
+      }
+      const next = payload?.pause
+        ? { ...EMPTY_PAUSE, ...payload.pause, pausedNow: Boolean(payload.pause.pausedNow) }
+        : EMPTY_PAUSE;
+      setPause(next);
+      setPauseFrom(next.from ?? '');
+      setPauseUntil(next.until ?? '');
+      setPauseReason(next.reason ?? '');
+      onPauseChanged?.(next.pausedNow);
+      setPauseConfirmOpen(false);
+    } catch (error) {
+      setPauseError(error instanceof Error ? error.message : 'Could not update pause.');
+    } finally {
+      setPauseSaving(false);
+    }
+  }
+
+  function openPauseConfirm() {
+    setPauseError('');
+    if (!pauseFormValid) {
+      setPauseError(
+        pauseFrom && pauseUntil && pauseFrom > pauseUntil
+          ? 'Start date must be on or before the end date.'
+          : `Add dates and a customer-facing reason (at least ${SHOP_PAUSE_REASON_MIN_LENGTH} characters).`,
+      );
+      return;
+    }
+    setPauseConfirmOpen(true);
+  }
+
+  if (loading) {
+    return (
+      <section className="admin-barbershop-settings" aria-busy="true">
+        <p className="muted">Loading barbershop settings…</p>
+      </section>
+    );
+  }
+
+  if (loadError) {
+    return (
+      <section className="admin-barbershop-settings">
+        <p className="admin-inline-error" role="alert">
+          {loadError}
+        </p>
+        <button type="button" className="btn btn--secondary" onClick={() => void load()}>
+          Retry
+        </button>
+      </section>
+    );
+  }
+
+  return (
+    <section className="admin-barbershop-settings">
+      <AdminSectionHeader
+        title="Barbershop settings"
+        description="Identity, opening hours, and public availability for your whole barbershop."
+      />
+
+      <div className="admin-barbershop-settings__stack">
+        <section className="admin-barbershop-settings__card" aria-labelledby="bbs-identity-title">
+          <h2 id="bbs-identity-title" className="admin-barbershop-settings__card-title">
+            Identity
+          </h2>
+          <div className="admin-barbershop-settings__fields">
+            <div className="field">
+              <label className="field__label" htmlFor="bbs-name">
+                Barbershop name
+              </label>
+              <input
+                id="bbs-name"
+                className="input"
+                value={name}
+                onChange={(event) => setName(event.target.value)}
+                autoComplete="organization"
+                maxLength={120}
+              />
+            </div>
+            <div className="field">
+              <label className="field__label" htmlFor="bbs-town">
+                Town or city <span className="field__hint">(optional)</span>
+              </label>
+              <input
+                id="bbs-town"
+                className="input"
+                value={townCity}
+                onChange={(event) => setTownCity(event.target.value)}
+                autoComplete="address-level2"
+                maxLength={120}
+              />
+            </div>
+            <div className="field admin-barbershop-settings__logo-field">
+              <span className="field__label" id="bbs-logo-label">
+                Logo
+              </span>
+              <div className="admin-barbershop-settings__logo-row">
+                <div className="admin-barbershop-settings__logo-preview" aria-hidden="true">
+                  {logoPreview ? (
+                    <img src={logoPreview} alt="" width={72} height={72} />
+                  ) : (
+                    <ImagePlus width={28} height={28} />
+                  )}
+                </div>
+                <div className="admin-barbershop-settings__logo-actions">
+                  <label className="btn btn--secondary" htmlFor="bbs-logo-input">
+                    Upload logo
+                  </label>
+                  <input
+                    id="bbs-logo-input"
+                    className="sr-only"
+                    type="file"
+                    accept="image/jpeg,image/png,image/webp"
+                    aria-labelledby="bbs-logo-label"
+                    onChange={(event) => {
+                      const file = event.target.files?.[0] ?? null;
+                      if (!file) return;
+                      if (logoPreview?.startsWith('blob:')) URL.revokeObjectURL(logoPreview);
+                      setLogoFile(file);
+                      setClearLogo(false);
+                      setLogoPreview(URL.createObjectURL(file));
+                      event.target.value = '';
+                    }}
+                  />
+                  {logoPreview || logoUrl ? (
+                    <button
+                      type="button"
+                      className="btn btn--ghost"
+                      onClick={() => {
+                        if (logoPreview?.startsWith('blob:')) URL.revokeObjectURL(logoPreview);
+                        setLogoFile(null);
+                        setLogoPreview(null);
+                        setClearLogo(true);
+                      }}
+                    >
+                      <X width={14} height={14} aria-hidden />
+                      Remove
+                    </button>
+                  ) : null}
+                </div>
+              </div>
+            </div>
+          </div>
+          {identityError ? (
+            <p className="admin-inline-error" role="alert">
+              {identityError}
+            </p>
+          ) : null}
+          {identityMessage ? <p className="admin-inline-success">{identityMessage}</p> : null}
+          <div className="admin-barbershop-settings__actions">
+            <button
+              type="button"
+              className="btn btn--primary"
+              disabled={identitySaving}
+              onClick={() => void saveIdentity()}
+            >
+              {identitySaving ? 'Saving…' : 'Save identity'}
+            </button>
+          </div>
+        </section>
+
+        <section className="admin-barbershop-settings__card" aria-labelledby="bbs-hours-title">
+          <h2 id="bbs-hours-title" className="admin-barbershop-settings__card-title">
+            Opening hours
+          </h2>
+          <p className="admin-barbershop-settings__card-copy">
+            Staff working hours cannot go outside these times. Changes auto-save.
+          </p>
+          <BarberWorkingHoursEditor
+            weekDays={WEEK_DAYS}
+            workingHours={hours}
+            loading={false}
+            saving={hoursSaving}
+            saveError={hoursError}
+            onSetWorkingHours={setHours}
+            onSave={saveHours}
+            persistToServer
+            hideHeader
+            layout="profile"
+            helperText="Tap any day to set open hours or mark closed."
+          />
+        </section>
+
+        <section className="admin-barbershop-settings__card" aria-labelledby="bbs-pause-title">
+          <h2 id="bbs-pause-title" className="admin-barbershop-settings__card-title">
+            Shop pause
+          </h2>
+          <p className="admin-barbershop-settings__card-copy">
+            Temporarily close public bookings and retail for a date range (e.g. renovation). Admin
+            tools stay available.
+          </p>
+
+          {pause.paused ? (
+            <>
+              <p className="admin-barbershop-settings__pause-banner" role="status">
+                {pause.pausedNow
+                  ? 'Public bookings and retail are blocked today.'
+                  : 'A pause is scheduled.'}{' '}
+                Closed {formatPauseDate(pause.from)} – {formatPauseDate(pause.until)}.
+                {pause.reason ? (
+                  <>
+                    {' '}
+                    Customers see: “{pause.reason}”
+                  </>
+                ) : null}
+              </p>
+              <div className="admin-barbershop-settings__actions">
+                <button
+                  type="button"
+                  className="btn btn--secondary"
+                  disabled={pauseSaving}
+                  onClick={() => void applyPause({ paused: false })}
+                >
+                  {pauseSaving ? 'Resuming…' : 'Resume'}
+                </button>
+              </div>
+            </>
+          ) : (
+            <>
+              <div className="admin-barbershop-settings__pause-dates">
+                <div className="field">
+                  <label className="field__label" htmlFor="bbs-pause-from">
+                    From
+                  </label>
+                  <input
+                    id="bbs-pause-from"
+                    className="input"
+                    type="date"
+                    value={pauseFrom}
+                    onChange={(event) => setPauseFrom(event.target.value)}
+                    disabled={pauseSaving}
+                  />
+                </div>
+                <div className="field">
+                  <label className="field__label" htmlFor="bbs-pause-until">
+                    Until
+                  </label>
+                  <input
+                    id="bbs-pause-until"
+                    className="input"
+                    type="date"
+                    value={pauseUntil}
+                    onChange={(event) => setPauseUntil(event.target.value)}
+                    disabled={pauseSaving}
+                  />
+                </div>
+              </div>
+              <div className="field">
+                <label className="field__label" htmlFor="bbs-pause-reason">
+                  Message for customers <span className="field__hint">(required)</span>
+                </label>
+                <textarea
+                  id="bbs-pause-reason"
+                  className="input admin-barbershop-settings__pause-reason"
+                  rows={3}
+                  value={pauseReason}
+                  maxLength={400}
+                  disabled={pauseSaving}
+                  onChange={(event) => setPauseReason(event.target.value)}
+                  placeholder="e.g. Closed for renovation — we’ll reopen on 5 Aug."
+                />
+                <p className="admin-barbershop-settings__card-copy">
+                  Shown on your public booking form as the reason those dates cannot be booked.
+                </p>
+              </div>
+              <div className="admin-barbershop-settings__actions">
+                <button
+                  type="button"
+                  className="btn btn--destructive"
+                  disabled={pauseSaving || !pauseFormValid}
+                  onClick={openPauseConfirm}
+                >
+                  Pause
+                </button>
+              </div>
+            </>
+          )}
+
+          {pauseError ? (
+            <p className="admin-inline-error" role="alert">
+              {pauseError}
+            </p>
+          ) : null}
+        </section>
+
+        <section
+          className="admin-barbershop-settings__card admin-barbershop-settings__card--muted"
+          aria-labelledby="bbs-appearance-title"
+        >
+          <h2 id="bbs-appearance-title" className="admin-barbershop-settings__card-title">
+            Appearance
+          </h2>
+          <p className="admin-barbershop-settings__card-copy">
+            Themes for the Kersivo dashboard — coming soon.
+          </p>
+          <button type="button" className="btn btn--secondary" disabled>
+            Themes
+          </button>
+        </section>
+      </div>
+
+      {pauseConfirmOpen && typeof document !== 'undefined'
+        ? createPortal(
+            <div className="admin-barbershop-settings__confirm-layer" role="presentation">
+              <button
+                type="button"
+                className="admin-barbershop-settings__confirm-backdrop"
+                aria-label="Close pause confirmation"
+                disabled={pauseSaving}
+                onClick={() => {
+                  if (pauseSaving) return;
+                  setPauseConfirmOpen(false);
+                }}
+              />
+              <div
+                className="admin-barbershop-settings__confirm-dialog"
+                role="dialog"
+                aria-modal="true"
+                aria-labelledby="bbs-pause-confirm-title"
+                aria-describedby="bbs-pause-confirm-desc"
+              >
+                <h3 id="bbs-pause-confirm-title" className="admin-barbershop-settings__confirm-title">
+                  Pause public bookings?
+                </h3>
+                <div id="bbs-pause-confirm-desc" className="admin-barbershop-settings__confirm-body">
+                  <p>
+                    From <strong>{formatPauseDate(pauseFrom)}</strong> to{' '}
+                    <strong>{formatPauseDate(pauseUntil)}</strong>, customers cannot book online and
+                    retail checkout is closed on days inside that range. Your admin dashboard stays
+                    available.
+                  </p>
+                  <p>
+                    They will see this message:{' '}
+                    <strong>“{pauseReason.trim()}”</strong>
+                  </p>
+                </div>
+                <div className="admin-barbershop-settings__confirm-actions">
+                  <button
+                    type="button"
+                    className="btn btn--ghost"
+                    disabled={pauseSaving}
+                    onClick={() => setPauseConfirmOpen(false)}
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    type="button"
+                    className="btn btn--destructive"
+                    disabled={pauseSaving}
+                    onClick={() =>
+                      void applyPause({
+                        paused: true,
+                        from: pauseFrom,
+                        until: pauseUntil,
+                        reason: pauseReason.trim(),
+                      })
+                    }
+                  >
+                    {pauseSaving ? 'Pausing…' : 'Confirm Pause'}
+                  </button>
+                </div>
+              </div>
+            </div>,
+            document.body,
+          )
+        : null}
+    </section>
+  );
+}

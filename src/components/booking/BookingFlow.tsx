@@ -247,6 +247,8 @@ export default function BookingFlow({
   const [barberId, setBarberId] = useState('');
   const [date, setDate] = useState(() => getCurrentIsoDateInTimezone(bookingTimezone));
   const [slots, setSlots] = useState<string[]>([]);
+  const [shopPaused, setShopPaused] = useState(false);
+  const [shopPauseReason, setShopPauseReason] = useState<string | null>(null);
   const [time, setTime] = useState('');
   const [fullName, setFullName] = useState('');
   const [email, setEmail] = useState('');
@@ -507,10 +509,18 @@ export default function BookingFlow({
     fetch(`/api/availability?serviceId=${serviceId}&barberId=${barberId}&date=${nextDate}`)
       .then((res) => res.json())
       .then((data) => {
+        setShopPaused(Boolean(data.paused));
+        setShopPauseReason(
+          typeof data.pauseReason === 'string' && data.pauseReason.trim()
+            ? data.pauseReason.trim()
+            : null,
+        );
         setSlots(data.slots ?? []);
         setTime('');
       })
       .catch(() => {
+        setShopPaused(false);
+        setShopPauseReason(null);
         setSlots([]);
         setTime('');
       })
@@ -902,8 +912,13 @@ export default function BookingFlow({
                             ) : slots.length === 0 ? (
                               <EmptyState
                                 icon={Clock}
-                                title="No available times"
-                                description="Try a different date or barber."
+                                title={shopPaused ? 'Barbershop temporarily closed' : 'No available times'}
+                                description={
+                                  shopPaused
+                                    ? shopPauseReason ||
+                                      'Bookings are paused right now. Please check back later.'
+                                    : 'Try a different date or barber.'
+                                }
                               />
                             ) : null}
                           </>

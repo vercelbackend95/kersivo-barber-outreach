@@ -2,6 +2,7 @@ import {
   LANDING_DEMO_BARBER_AVATARS,
 } from '../../landing/landingDemoAssets';
 import { minutesToTimeString } from '../timeStrings';
+import { ALL_WEEKDAYS } from '@/lib/booking/weekdays';
 import { DEMO_BARBER_IDS, DEMO_SERVICE_IDS } from './ids';
 
 const now = new Date().toISOString();
@@ -126,8 +127,8 @@ export const demoBarbersResponse = {
 
 /** Same shape as GET /api/admin/barbers/:id/rules (`startTime`/`endTime` HH:mm). */
 export const demoBarberRulesResponse = {
-  rules: Array.from({ length: 7 }, (_, dayOfWeek) => {
-    const active = dayOfWeek !== 0;
+  rules: ALL_WEEKDAYS.map((dayOfWeek) => {
+    const active = dayOfWeek !== 7;
     return {
       dayOfWeek,
       active,

@@ -12,10 +12,15 @@ import {
   timeStringToMinutes,
   type OnboardingWeeklyRule,
 } from '@/lib/admin/onboarding';
+import {
+  assertBarberHoursWithinShop,
+  loadShopOpeningHoursDays,
+  serializeShopOpeningHours,
+} from '@/lib/admin/shopOpeningHours';
 import { prisma } from '@/lib/db/client';
 
 const rowSchema = z.object({
-  dayOfWeek: z.number().int().min(0).max(6),
+  dayOfWeek: z.number().int().min(1).max(7),
   active: z.boolean(),
   startTime: z.string().regex(/^([01]\d|2[0-3]):[0-5]\d$/),
   endTime: z.string().regex(/^([01]\d|2[0-3]):[0-5]\d$/),
@@ -54,8 +59,21 @@ export const PUT: APIRoute = async (ctx) => {
       return new Response(JSON.stringify({ error: validationError }), { status: 400 });
     }
 
+    const shopOpenDays = await loadShopOpeningHoursDays(shopId);
+    if (shopOpenDays.length === 0) {
+      return new Response(JSON.stringify({ error: 'Set shop opening hours before barber hours.' }), {
+        status: 400,
+      });
+    }
+
+    const shopHours = await serializeShopOpeningHours(shopId);
+    const withinShopError = assertBarberHoursWithinShop(shopHours, parsed.data.rules);
+    if (withinShopError) {
+      return new Response(JSON.stringify({ error: withinShopError }), { status: 400 });
+    }
+
     const barbers = await prisma.barber.findMany({
-      where: { shopId, active: true },
+      where: { shopId },
       orderBy: [{ sortOrder: 'asc' }, { createdAt: 'asc' }],
       select: { id: true },
     });
@@ -66,6 +84,7 @@ export const PUT: APIRoute = async (ctx) => {
       });
     }
 
+    // Include inactive seats (Owner/Manager with bookings off) so they still get shift hours.
     const targets = parsed.data.applyToAllBarbers ? barbers : [barbers[0]!];
     for (const barber of targets) {
       await replaceBarberAvailabilityRules(barber.id, parsed.data.rules);

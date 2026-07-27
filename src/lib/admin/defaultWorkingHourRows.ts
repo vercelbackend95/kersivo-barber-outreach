@@ -1,11 +1,12 @@
 import type { WorkingHourRow } from '../../components/admin/barbersTypes';
+import { ALL_WEEKDAYS } from '@/lib/booking/weekdays';
 
 /**
  * Minute-based defaults for new barbers — must match `DEFAULT_RULES` in
  * `defaultAvailability.ts` (Mon–Sun 09:00–20:00, no breaks).
  */
 const DEFAULT_ACTIVE_RULES_MINUTES: { dayOfWeek: number; startMinutes: number; endMinutes: number }[] =
-  Array.from({ length: 7 }, (_, dayOfWeek) => ({
+  ALL_WEEKDAYS.map((dayOfWeek) => ({
     dayOfWeek,
     startMinutes: 9 * 60,
     endMinutes: 20 * 60
@@ -20,7 +21,7 @@ function minutesToTime(minutes: number): string {
 /** Seven rows (Mon–Sun) matching what `ensureBarberHasAvailabilityRules` seeds before profile edits. */
 export function getDefaultWorkingHourRows(): WorkingHourRow[] {
   const byDay = new Map(DEFAULT_ACTIVE_RULES_MINUTES.map((r) => [r.dayOfWeek, r]));
-  return Array.from({ length: 7 }, (_, dayOfWeek) => {
+  return ALL_WEEKDAYS.map((dayOfWeek) => {
     const rule = byDay.get(dayOfWeek);
     if (rule) {
       return {

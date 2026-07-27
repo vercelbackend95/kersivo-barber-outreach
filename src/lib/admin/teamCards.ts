@@ -34,6 +34,15 @@ export function canActorSetUpOnlineBookings(
   return false;
 }
 
+/** Owner-only: change Barber ↔ Manager on a team profile (never Owner). */
+export function canActorChangeTeamRole(
+  actorRole: ShopRole | string,
+  targetRole: ShopRole | string | undefined,
+): boolean {
+  if (actorRole !== 'OWNER') return false;
+  return targetRole === 'BARBER' || targetRole === 'MANAGER';
+}
+
 export type TeamCardDto = {
   kind: 'member' | 'invite';
   id: string;
@@ -148,6 +157,30 @@ export function pendingInvitationsRevealLabel(count: number): string {
   return `Show ${count} pending invitations`;
 }
 
+/** Main Team list vs Online bookings Off — collapsed behind the reveal control. */
+export function partitionTeamCardsByOnlineBookings<T extends Pick<TeamCardDto, 'bookable'>>(
+  cards: T[],
+): {
+  onlineOnCards: T[];
+  onlineOffCards: T[];
+} {
+  const onlineOnCards: T[] = [];
+  const onlineOffCards: T[] = [];
+  for (const card of cards) {
+    if (card.bookable) onlineOnCards.push(card);
+    else onlineOffCards.push(card);
+  }
+  return { onlineOnCards, onlineOffCards };
+}
+
+export function onlineBookingsOffRevealLabel(count: number): string {
+  if (count === 1) return 'Show 1 member with bookings off';
+  return `Show ${count} members with bookings off`;
+}
+
+export const ONLINE_BOOKINGS_OFF_SECTION_HIDE_LABEL = 'Hide online bookings off';
+export const ONLINE_BOOKINGS_OFF_SECTION_ARIA_LABEL = 'Online bookings off';
+
 /** Owner → Manager → Barber for Team roster ordering */
 export function roleSortRank(role: ShopRole | string): number {
   if (role === 'OWNER') return 0;
@@ -171,8 +204,81 @@ export function roleLabel(role: ShopRole | string): string {
   return role;
 }
 
+/** Map Barber.intendedRole to Team orphan card role (never OWNER). */
+export function orphanSeatRole(intendedRole: string | null | undefined): ShopRole {
+  return intendedRole === 'MANAGER' ? 'MANAGER' : 'BARBER';
+}
+
+export type TeamRolePill = {
+  role: ShopRole | 'BARBER';
+  label: string;
+  className: string;
+};
+
+/**
+ * Role pills for a Team card. Bookable Owner/Manager show a second BARBER pill
+ * (bookable seat) without changing ShopMember.role.
+ */
+export function teamRolePills(
+  role: ShopRole | string,
+  bookable: boolean,
+): TeamRolePill[] {
+  const primary: TeamRolePill = {
+    role: role as ShopRole,
+    label: roleLabel(role),
+    className: rolePillClass(role),
+  };
+
+  if ((role === 'OWNER' || role === 'MANAGER') && bookable) {
+    return [
+      primary,
+      {
+        role: 'BARBER',
+        label: roleLabel('BARBER'),
+        className: rolePillClass('BARBER'),
+      },
+    ];
+  }
+
+  return [primary];
+}
+
 /** Account access as shown on Team cards / profile — not Online bookings. */
 export type TeamAccountAccess = 'invite_pending' | 'invite_expired' | 'joined' | 'no_dashboard';
+
+/** Profile ⋯ menu action for dashboard invite / account management. */
+export type DashboardAccountAction = 'send' | 'check' | 'connected';
+
+/**
+ * Whether the actor may open the dashboard-account menu for this target role.
+ * Owner may view Connected for Owner seats (revoke still blocked in API/UI).
+ */
+export function canActorManageDashboardAccount(
+  actorRole: ShopRole | string,
+  targetRole: ShopRole | string,
+): boolean {
+  if (targetRole === 'OWNER') return actorRole === 'OWNER';
+  return canActorResendInvitation(actorRole, targetRole);
+}
+
+export function dashboardAccountActionFor(
+  access: TeamAccountAccess | null | undefined,
+  actorRole: ShopRole | string,
+  targetRole: ShopRole | string | undefined,
+): DashboardAccountAction | null {
+  if (!access || !targetRole) return null;
+  if (!canActorManageDashboardAccount(actorRole, targetRole)) return null;
+  if (access === 'no_dashboard') return 'send';
+  if (access === 'invite_pending' || access === 'invite_expired') return 'check';
+  if (access === 'joined') return 'connected';
+  return null;
+}
+
+export function dashboardAccountMenuLabel(action: DashboardAccountAction): string {
+  if (action === 'send') return 'Send invite to dashboard';
+  if (action === 'check') return 'Check the invite';
+  return 'Connected account';
+}
 
 export function teamAccountAccess(
   card: Pick<TeamCardDto, 'kind' | 'id'> & { invitationStatus?: InvitationLifecycleStatus | null },
@@ -191,22 +297,16 @@ export function teamAccountAccessLabel(access: TeamAccountAccess): string {
   return 'Joined';
 }
 
+/** Badge classes for Team roster account-access pills. */
+export function teamAccountAccessPillClass(access: TeamAccountAccess): string {
+  if (access === 'joined') return 'badge badge--confirmed';
+  if (access === 'no_dashboard') return 'badge badge--cancelled';
+  return 'badge badge--pending';
+}
+
 /** Online booking line — independent of invite acceptance. */
 export function onlineBookingsStateLabel(bookable: boolean): string {
   return bookable ? 'Online bookings: On' : 'Online bookings: Off';
-}
-
-/**
- * Secondary line when the person has (or will have) dashboard access
- * but is not accepting online bookings.
- */
-export function dashboardAccessOnlyLine(
-  access: TeamAccountAccess,
-  bookable: boolean,
-): string | null {
-  if (access === 'no_dashboard') return null;
-  if (!bookable) return 'Dashboard access only';
-  return null;
 }
 
 /** Primary online-booking line for a Team card (invite state is separate). */

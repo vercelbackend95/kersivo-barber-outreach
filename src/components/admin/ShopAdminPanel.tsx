@@ -502,6 +502,30 @@ type ShopAdminPanelProps = {
   initialTab?: ShopTab;
 };
 
+const RETAIL_WALKTHROUGH_COMPLETE_DISMISSED_KEY = 'kersivo:retail-walkthrough-complete-dismissed';
+
+function retailWalkthroughCompleteDismissedKey(orderId: string) {
+  return `${RETAIL_WALKTHROUGH_COMPLETE_DISMISSED_KEY}:${orderId}`;
+}
+
+function isRetailWalkthroughCompleteDismissed(orderId: string | null | undefined): boolean {
+  if (!orderId || typeof window === 'undefined') return false;
+  try {
+    return window.sessionStorage.getItem(retailWalkthroughCompleteDismissedKey(orderId)) === '1';
+  } catch {
+    return false;
+  }
+}
+
+function markRetailWalkthroughCompleteDismissed(orderId: string) {
+  if (typeof window === 'undefined') return;
+  try {
+    window.sessionStorage.setItem(retailWalkthroughCompleteDismissedKey(orderId), '1');
+  } catch {
+    /* ignore quota / private mode */
+  }
+}
+
 export default function ShopAdminPanel({ initialTab = 'products' }: ShopAdminPanelProps) {
   const [activeTab, setActiveTab] = useState<ShopTab>(initialTab);
 
@@ -872,10 +896,13 @@ export default function ShopAdminPanel({ initialTab = 'products' }: ShopAdminPan
   );
 
   useEffect(() => {
-    if (walkthroughOrder?.status === 'COLLECTED') {
-      setShowRetailWalkthroughComplete(true);
+    if (walkthroughOrder?.status !== 'COLLECTED') return;
+    if (isRetailWalkthroughCompleteDismissed(walkthroughOrder.id)) {
+      setShowRetailWalkthroughComplete(false);
+      return;
     }
-  }, [walkthroughOrder?.status]);
+    setShowRetailWalkthroughComplete(true);
+  }, [walkthroughOrder?.status, walkthroughOrder?.id]);
 
   const filteredOrders = useMemo(() => {
     const normalizedQuery = normalize(debouncedOrdersSearchQuery);
@@ -1157,14 +1184,12 @@ export default function ShopAdminPanel({ initialTab = 'products' }: ShopAdminPan
           return;
         }
         const payload = (await response.json()) as {
-          retailOnboardingCompleted?: boolean;
-          retailOnboardingSkipped?: boolean;
+          retailPickupWalkthroughCompletedAt?: string | null;
           via?: string;
         };
+        // Keep setup prompt until full journey end (pickup walkthrough). Skip/abort must not dismiss it.
         const hidePrompt =
-          payload.via !== 'session' ||
-          Boolean(payload.retailOnboardingCompleted) ||
-          Boolean(payload.retailOnboardingSkipped);
+          payload.via !== 'session' || Boolean(payload.retailPickupWalkthroughCompletedAt);
         setRetailPromptDismissed(hidePrompt);
       } catch {
         setRetailPromptDismissed(false);
@@ -1254,7 +1279,7 @@ export default function ShopAdminPanel({ initialTab = 'products' }: ShopAdminPan
       await fetchOrders();
       await fetchOrderDetails(orderId);
       setSuccess('Order marked as collected.');
-      if (walkthroughOrderId === orderId) {
+      if (walkthroughOrderId === orderId && !isRetailWalkthroughCompleteDismissed(orderId)) {
         setShowRetailWalkthroughComplete(true);
       }
     } catch (collectError) {
@@ -1541,19 +1566,6 @@ export default function ShopAdminPanel({ initialTab = 'products' }: ShopAdminPan
                       onYes={() => {
                         window.location.assign('/admin/retail-onboarding?step=1');
                       }}
-                      onNotNow={() => {
-                        void (async () => {
-                          try {
-                            await fetch('/api/admin/retail-onboarding/skip', {
-                              method: 'POST',
-                              credentials: 'include',
-                            });
-                          } catch {
-                            /* ignore */
-                          }
-                          setRetailPromptDismissed(true);
-                        })();
-                      }}
                     />
                   )
                 ) : (
@@ -1714,6 +1726,9 @@ export default function ShopAdminPanel({ initialTab = 'products' }: ShopAdminPan
                 type="button"
                 className="btn btn--primary"
                 onClick={() => {
+                  if (walkthroughOrderId) {
+                    markRetailWalkthroughCompleteDismissed(walkthroughOrderId);
+                  }
                   setShowRetailWalkthroughComplete(false);
                   setActiveTab('sales');
                 }}

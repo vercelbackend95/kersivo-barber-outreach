@@ -25,6 +25,7 @@ type AdminSidebarProfileProps = {
   mode?: 'authenticated' | 'guest';
   /** Session permissions; used to hide Owner-only menu items (e.g. Launch). */
   permissions?: string[] | null;
+  onOpenBarbershopSettings?: () => void;
 };
 
 function openDemoAuthLock() {
@@ -40,10 +41,12 @@ export default function AdminSidebarProfile({
   variant,
   mode = 'authenticated',
   permissions = null,
+  onOpenBarbershopSettings,
 }: AdminSidebarProfileProps) {
   const isGuest = mode === 'guest';
   const canManageBilling = isGuest || !permissions || permissions.includes('billing.manage');
   const canManageOnboarding = isGuest || !permissions || permissions.includes('onboarding.manage');
+  const canManageShopSettings = isGuest || !permissions || permissions.includes('shop.settings');
   const [open, setOpen] = useState(false);
   const [confirmDelete, setConfirmDelete] = useState(false);
   const [deleteConfirmText, setDeleteConfirmText] = useState('');
@@ -270,6 +273,23 @@ export default function AdminSidebarProfile({
                   >
                     <AccountCircle width={15} height={15} aria-hidden="true" />
                     Create account
+                  </button>
+                  <div className="admin-profile-menu__divider" aria-hidden="true" />
+                </>
+              ) : null}
+              {canManageShopSettings && onOpenBarbershopSettings ? (
+                <>
+                  <button
+                    type="button"
+                    className="admin-profile-menu__item"
+                    role="menuitem"
+                    onClick={() => {
+                      setOpen(false);
+                      onOpenBarbershopSettings();
+                    }}
+                  >
+                    <Store width={15} height={15} aria-hidden="true" />
+                    Barbershop settings
                   </button>
                   <div className="admin-profile-menu__divider" aria-hidden="true" />
                 </>

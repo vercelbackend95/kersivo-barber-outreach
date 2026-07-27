@@ -17,10 +17,11 @@ describe('Team profile booking availability actions', () => {
     expect(src).not.toMatch(/onToggleActive/);
   });
 
-  it('uses canManageOnlineBookings for the Accept online bookings control', () => {
+  it('uses canManageOnlineBookings for the Online bookings sheet control', () => {
     const src = readFileSync(resolve(process.cwd(), 'src/components/admin/BarberProfile.tsx'), 'utf8');
     expect(src).toMatch(/canManageOnlineBookings/);
-    expect(src).toMatch(/Accept online bookings/);
+    expect(src).toMatch(/Online bookings/);
+    expect(src).toMatch(/OnlineBookingsSheet/);
   });
 
   it('exposes Set up online bookings for eligible member-only profiles', () => {

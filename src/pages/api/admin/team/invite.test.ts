@@ -4,6 +4,7 @@ const shopMemberFindFirst = vi.fn();
 const shopInviteFindFirst = vi.fn();
 const shopInviteCreate = vi.fn();
 const barberCreate = vi.fn();
+const barberUpdate = vi.fn();
 const barberAggregate = vi.fn();
 const barberFindFirst = vi.fn();
 const barberServiceCreateMany = vi.fn();
@@ -22,6 +23,7 @@ function txClient() {
     },
     barber: {
       create: (...a: unknown[]) => barberCreate(...a),
+      update: (...a: unknown[]) => barberUpdate(...a),
       aggregate: (...a: unknown[]) => barberAggregate(...a),
       findFirst: (...a: unknown[]) => barberFindFirst(...a),
     },
@@ -75,6 +77,7 @@ vi.mock('@/lib/db/client', () => ({
     },
     barber: {
       create: (...a: unknown[]) => barberCreate(...a),
+      update: (...a: unknown[]) => barberUpdate(...a),
       aggregate: (...a: unknown[]) => barberAggregate(...a),
       findFirst: (...a: unknown[]) => barberFindFirst(...a),
     },
@@ -84,6 +87,7 @@ vi.mock('@/lib/db/client', () => ({
       findMany: (...a: unknown[]) => serviceFindMany(...a),
     },
     shopSettings: { findUnique: (...a: unknown[]) => shopSettingsFindUnique(...a) },
+    shopOpeningHours: { findMany: vi.fn().mockResolvedValue([]) },
   },
 }));
 
@@ -100,7 +104,7 @@ function ctx(body: unknown): APIContext {
   } as unknown as APIContext;
 }
 
-const workingHours = [{ dayOfWeek: 0, startMinutes: 540, endMinutes: 1080, active: true }];
+const workingHours = [{ dayOfWeek: 1, startMinutes: 540, endMinutes: 1080, active: true }];
 
 describe('POST /api/admin/team/invite', () => {
   beforeEach(() => {
@@ -734,5 +738,114 @@ describe('POST /api/admin/team/invite', () => {
       expect.anything(),
     );
     consoleSpy.mockRestore();
+  });
+
+  it('links invite to existing orphan Barber without creating a new seat', async () => {
+    const orphan = {
+      id: 'orphan-1',
+      name: 'Jamie',
+      active: true,
+      userId: null,
+      intendedRole: 'BARBER',
+    };
+    barberFindFirst.mockImplementation(async (args: { where?: { id?: string | { not?: string }; email?: string } }) => {
+      const where = args?.where ?? {};
+      if (typeof where.id === 'string' && where.id === 'orphan-1') return orphan;
+      // Email uniqueness check with excludeBarberId must not hit the same seat.
+      if (where.email && where.id && typeof where.id === 'object' && where.id.not === 'orphan-1') {
+        return null;
+      }
+      if (where.email) return null;
+      return null;
+    });
+    barberUpdate.mockResolvedValue({ id: 'orphan-1' });
+    shopInviteCreate.mockResolvedValue({
+      id: 'inv-link',
+      email: 'jamie@example.com',
+      role: 'BARBER',
+      barberId: 'orphan-1',
+      displayName: 'Jamie',
+      bookable: true,
+      expiresAt: new Date(),
+    });
+
+    const res = await POST(
+      ctx({
+        email: 'jamie@example.com',
+        role: 'BARBER',
+        displayName: 'Jamie',
+        bookable: false,
+        existingBarberId: 'orphan-1',
+      }),
+    );
+
+    expect(res.status).toBe(201);
+    const data = await res.json();
+    expect(data.emailSent).toBe(true);
+    expect(barberCreate).not.toHaveBeenCalled();
+    expect(barberServiceCreateMany).not.toHaveBeenCalled();
+    expect(availabilityRuleCreateMany).not.toHaveBeenCalled();
+    expect(barberUpdate).toHaveBeenCalledWith(
+      expect.objectContaining({
+        where: { id: 'orphan-1' },
+        data: { email: 'jamie@example.com' },
+      }),
+    );
+    expect(shopInviteCreate).toHaveBeenCalledWith(
+      expect.objectContaining({
+        data: expect.objectContaining({
+          barberId: 'orphan-1',
+          bookable: true,
+          displayName: 'Jamie',
+          role: 'BARBER',
+          email: 'jamie@example.com',
+        }),
+      }),
+    );
+  });
+
+  it('rejects linking when Barber seat is already linked to a user', async () => {
+    barberFindFirst.mockResolvedValue({
+      id: 'linked-1',
+      name: 'Sam',
+      active: true,
+      userId: 'user-sam',
+      intendedRole: 'BARBER',
+    });
+
+    const res = await POST(
+      ctx({
+        email: 'sam@example.com',
+        role: 'BARBER',
+        displayName: 'Sam',
+        bookable: true,
+        existingBarberId: 'linked-1',
+      }),
+    );
+
+    expect(res.status).toBe(409);
+    const data = await res.json();
+    expect(data.code).toBe('BOOKING_PROFILE_ALREADY_LINKED');
+    expect(barberCreate).not.toHaveBeenCalled();
+    expect(shopInviteCreate).not.toHaveBeenCalled();
+  });
+
+  it('rejects linking when Barber seat is not in the shop', async () => {
+    barberFindFirst.mockResolvedValue(null);
+
+    const res = await POST(
+      ctx({
+        email: 'x@example.com',
+        role: 'BARBER',
+        displayName: 'X',
+        bookable: true,
+        existingBarberId: 'other-shop-barber',
+      }),
+    );
+
+    expect(res.status).toBe(404);
+    const data = await res.json();
+    expect(data.code).toBe('BOOKING_PROFILE_NOT_FOUND');
+    expect(shopInviteCreate).not.toHaveBeenCalled();
   });
 });

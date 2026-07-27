@@ -4,6 +4,7 @@ import type { APIContext } from 'astro';
 const resolveAdminAccess = vi.fn();
 const createCheckoutSession = vi.fn();
 const productFindMany = vi.fn();
+const shopSettingsFindUnique = vi.fn();
 
 vi.mock('@/lib/admin/auth', () => ({
   resolveAdminAccess: (...args: unknown[]) => resolveAdminAccess(...args),
@@ -17,6 +18,9 @@ vi.mock('@/lib/db/client', () => ({
   prisma: {
     product: {
       findMany: (...args: unknown[]) => productFindMany(...args),
+    },
+    shopSettings: {
+      findUnique: (...args: unknown[]) => shopSettingsFindUnique(...args),
     },
   },
 }));
@@ -51,6 +55,8 @@ describe('POST /api/shop/checkout', () => {
     resolveAdminAccess.mockReset();
     createCheckoutSession.mockReset();
     productFindMany.mockReset();
+    shopSettingsFindUnique.mockReset();
+    shopSettingsFindUnique.mockResolvedValue({ publicActivityPaused: false });
   });
 
   it('returns 401 without an owner session and does not create a Stripe session', async () => {
@@ -95,5 +101,17 @@ describe('POST /api/shop/checkout', () => {
 
     const json = await res.json();
     expect(json.url).toBe('https://checkout.stripe.test/session');
+  });
+
+  it('returns 422 when the barbershop is paused', async () => {
+    resolveAdminAccess.mockResolvedValue({ via: 'session', shopId: 'owner-shop-1' });
+    shopSettingsFindUnique.mockResolvedValue({ publicActivityPaused: true });
+
+    const res = await POST(makeContext(validPayload) as never);
+    expect(res.status).toBe(422);
+    expect(createCheckoutSession).not.toHaveBeenCalled();
+    expect(productFindMany).not.toHaveBeenCalled();
+    const json = await res.json();
+    expect(json.code).toBe('SHOP_PUBLIC_ACTIVITY_PAUSED');
   });
 });

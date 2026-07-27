@@ -1,17 +1,23 @@
 import React from 'react';
 import { createPortal } from 'react-dom';
-import { Calendar, Clock, Mail, NotebookPen, Scissors, X } from '../lucide-react';
+import { Calendar, Clock, Mail, Pencil, Scissors, X } from '../lucide-react';
 import BarberServicesEditor from './BarberServicesEditor';
 import BarberWorkingHoursEditor from './BarberWorkingHoursEditor';
 import BarberBlocksEditor from './BarberBlocksEditor';
 import BarberWizard from './barber-wizard/BarberWizard';
 import AdminWizardSheetLayer from './AdminWizardSheetLayer';
+import TeamInviteWizard from './TeamInviteWizard';
+import TeamDashboardAccountSheet from './TeamDashboardAccountSheet';
+import OnlineBookingsSheet from './OnlineBookingsSheet';
+import TeamChangeRoleSheet from './TeamChangeRoleSheet';
+import TeamDeleteBarberSheet from './TeamDeleteBarberSheet';
 import type { Barber, ServiceOption, TimeBlock, WorkingHourRow } from './barbersTypes';
-import { SettingsGearIcon } from './SettingsGearIcon';
 import {
-  onlineBookingsToggleHint,
+  canActorChangeTeamRole,
+  dashboardAccountMenuLabel,
   roleLabel,
   teamProfileSummary,
+  type DashboardAccountAction,
   type TeamAccountAccess,
 } from '@/lib/admin/teamCards';
 import type { ShopRole } from '@prisma/client';
@@ -59,6 +65,18 @@ type BarberProfileProps = {
   onSetupOnlineBookingsSaved?: (
     result: import('./barber-wizard/BarberWizard').SetupMemberSavedResult,
   ) => void | boolean | Promise<void | boolean>;
+  canSendDashboardInvite?: boolean;
+  actorRole?: string;
+  onDashboardInviteSent?: () => Promise<boolean>;
+  dashboardAccountAction?: import('@/lib/admin/teamCards').DashboardAccountAction | null;
+  inviteId?: string;
+  inviteEmail?: string;
+  inviteExpiresAt?: string | null;
+  invitationStatus?: 'pending' | 'expired' | null;
+  memberEmail?: string | null;
+  revokeBlockedReason?: string | null;
+  onDashboardAccountChanged?: () => Promise<boolean>;
+  onChangeRole?: (next: Extract<ShopRole, 'BARBER' | 'MANAGER'>) => Promise<boolean>;
 };
 
 export default function BarberProfile({
@@ -100,18 +118,33 @@ export default function BarberProfile({
   memberId,
   canSetUpOnlineBookings = false,
   onSetupOnlineBookingsSaved,
+  canSendDashboardInvite = false,
+  actorRole = 'OWNER',
+  onDashboardInviteSent,
+  dashboardAccountAction = null,
+  inviteId,
+  inviteEmail,
+  inviteExpiresAt,
+  invitationStatus,
+  memberEmail,
+  revokeBlockedReason = null,
+  onDashboardAccountChanged,
+  onChangeRole,
 }: BarberProfileProps) {
   const actionsMenuRef = React.useRef<HTMLDivElement | null>(null);
   const [isActionsMenuOpen, setIsActionsMenuOpen] = React.useState(false);
-  const [isEditWizardOpen, setIsEditWizardOpen] = React.useState(false);
   const [isSetupWizardOpen, setIsSetupWizardOpen] = React.useState(false);
-  const [confirmAction, setConfirmAction] = React.useState<'delete' | null>(null);
-  const confirmDialogRef = React.useRef<HTMLDivElement | null>(null);
-  const cancelButtonRef = React.useRef<HTMLButtonElement | null>(null);
+  const [isDashboardInviteOpen, setIsDashboardInviteOpen] = React.useState(false);
+  const [dashboardAccountSheetMode, setDashboardAccountSheetMode] = React.useState<
+    'check' | 'connected' | null
+  >(null);
+  const isDashboardAccountSheetOpen = dashboardAccountSheetMode !== null;
+  const [isOnlineBookingsSheetOpen, setIsOnlineBookingsSheetOpen] = React.useState(false);
+  const [isChangeRoleSheetOpen, setIsChangeRoleSheetOpen] = React.useState(false);
+  const [isDeleteSheetOpen, setIsDeleteSheetOpen] = React.useState(false);
   const avatarInputRef = React.useRef<HTMLInputElement | null>(null);
   const [isEditingIdentity, setIsEditingIdentity] = React.useState(false);
   const [draftName, setDraftName] = React.useState(barber.name);
-  const [draftEmail, setDraftEmail] = React.useState(barber.email ?? '');
   const [identityError, setIdentityError] = React.useState('');
 
   const selectedServicesCount = enabledServiceIds.size;
@@ -162,99 +195,82 @@ export default function BarberProfile({
     };
   }, [isActionsMenuOpen]);
 
-  const isConfirmDialogOpen = confirmAction !== null;
-
-  React.useEffect(() => {
-    if (!isConfirmDialogOpen) return;
-
-    const previouslyFocused = document.activeElement as HTMLElement | null;
-    const dialogNode = confirmDialogRef.current;
-
-    const focusCancel = window.setTimeout(() => {
-      cancelButtonRef.current?.focus();
-    }, 0);
-
-    const handleKeyDown = (event: KeyboardEvent) => {
-      if (event.key === 'Escape') {
-        event.preventDefault();
-        setConfirmAction(null);
-        return;
-      }
-
-      if (event.key !== 'Tab' || !dialogNode) return;
-
-      const focusable = Array.from(
-        dialogNode.querySelectorAll<HTMLElement>(
-          'button:not([disabled]), [href], input:not([disabled]), select:not([disabled]), textarea:not([disabled]), [tabindex]:not([tabindex="-1"])'
-        )
-      );
-
-      if (focusable.length === 0) return;
-
-      const first = focusable[0];
-      const last = focusable[focusable.length - 1];
-
-      if (!event.shiftKey && document.activeElement === last) {
-        event.preventDefault();
-        first.focus();
-      } else if (event.shiftKey && document.activeElement === first) {
-        event.preventDefault();
-        last.focus();
-      }
-    };
-
-    document.addEventListener('keydown', handleKeyDown);
-
-    return () => {
-      window.clearTimeout(focusCancel);
-      document.removeEventListener('keydown', handleKeyDown);
-      previouslyFocused?.focus();
-    };
-  }, [isConfirmDialogOpen]);
-
-  React.useEffect(() => {
-    const previousBodyOverflow = document.body.style.overflow;
-    const previousHtmlOverflow = document.documentElement.style.overflow;
-    document.body.style.overflow = 'hidden';
-    document.documentElement.style.overflow = 'hidden';
-    return () => {
-      document.body.style.overflow = previousBodyOverflow;
-      document.documentElement.style.overflow = previousHtmlOverflow;
-    };
-  }, []);
-
   React.useEffect(() => {
     const onKey = (event: KeyboardEvent) => {
       if (event.key !== 'Escape') return;
-      if (isConfirmDialogOpen) return;
       if (isActionsMenuOpen) return;
+      if (isDeleteSheetOpen) {
+        event.preventDefault();
+        setIsDeleteSheetOpen(false);
+        return;
+      }
+      if (isDashboardInviteOpen) {
+        event.preventDefault();
+        setIsDashboardInviteOpen(false);
+        return;
+      }
+      if (isDashboardAccountSheetOpen) {
+        event.preventDefault();
+        setDashboardAccountSheetMode(null);
+        return;
+      }
+      if (isOnlineBookingsSheetOpen) {
+        event.preventDefault();
+        setIsOnlineBookingsSheetOpen(false);
+        return;
+      }
+      if (isChangeRoleSheetOpen) {
+        event.preventDefault();
+        setIsChangeRoleSheetOpen(false);
+        return;
+      }
       if (isSetupWizardOpen) {
         event.preventDefault();
         setIsSetupWizardOpen(false);
-        return;
-      }
-      if (isEditWizardOpen) {
-        event.preventDefault();
-        setIsEditWizardOpen(false);
         return;
       }
       onClose();
     };
     document.addEventListener('keydown', onKey);
     return () => document.removeEventListener('keydown', onKey);
-  }, [isActionsMenuOpen, isConfirmDialogOpen, isEditWizardOpen, isSetupWizardOpen, onClose]);
-
-  const closeEditWizard = React.useCallback(() => {
-    setIsEditWizardOpen(false);
-  }, []);
+  }, [
+    isActionsMenuOpen,
+    isSetupWizardOpen,
+    isDashboardInviteOpen,
+    isDashboardAccountSheetOpen,
+    isOnlineBookingsSheetOpen,
+    isChangeRoleSheetOpen,
+    isDeleteSheetOpen,
+    onClose,
+  ]);
 
   const closeSetupWizard = React.useCallback(() => {
     setIsSetupWizardOpen(false);
   }, []);
 
-  const handleEditWizardSaved = React.useCallback(async () => {
-    await onBarberUpdated();
-  }, [onBarberUpdated]);
+  const closeDashboardInvite = React.useCallback(() => {
+    setIsDashboardInviteOpen(false);
+  }, []);
+
+  const closeDashboardAccountSheet = React.useCallback(() => {
+    setDashboardAccountSheetMode(null);
+  }, []);
+
+  const closeOnlineBookingsSheet = React.useCallback(() => {
+    setIsOnlineBookingsSheetOpen(false);
+  }, []);
+
+  const closeChangeRoleSheet = React.useCallback(() => {
+    setIsChangeRoleSheetOpen(false);
+  }, []);
+
+  const closeDeleteSheet = React.useCallback(() => {
+    setIsDeleteSheetOpen(false);
+  }, []);
+
+  const effectiveDashboardAction: DashboardAccountAction | null =
+    dashboardAccountAction ??
+    (canSendDashboardInvite && accountAccess === 'no_dashboard' ? 'send' : null);
 
   const handleSetupWizardSaved = React.useCallback(
     async (result?: import('./barber-wizard/BarberWizard').SetupMemberSavedResult) => {
@@ -266,8 +282,13 @@ export default function BarberProfile({
 
   const hasAvatarPreview = Boolean(barberAvatarPreviewUrl);
   const displayedAvatarUrl = barberAvatarPreviewUrl ?? barber.avatarUrl ?? null;
-  const confirmTitle = 'Delete barber?';
-  const confirmActionLabel = barberSaving ? 'Deleting...' : 'Delete';
+  const canShowOnlineBookingsMenu = Boolean(canManageOnlineBookings && onToggleBookable && !memberOnly);
+  const canShowChangeRole = Boolean(
+    onChangeRole &&
+      canActorChangeTeamRole(actorRole, role) &&
+      (memberId || inviteId),
+  );
+  const showActionsMenu = Boolean(!memberOnly || canShowChangeRole || effectiveDashboardAction);
 
   const openAvatarPicker = React.useCallback(() => {
     avatarInputRef.current?.click();
@@ -276,19 +297,16 @@ export default function BarberProfile({
   React.useEffect(() => {
     if (isEditingIdentity) return;
     setDraftName(barber.name);
-    setDraftEmail(barber.email ?? '');
-  }, [barber.name, barber.email, isEditingIdentity]);
+  }, [barber.name, isEditingIdentity]);
 
   function startIdentityEdit() {
     setDraftName(barber.name);
-    setDraftEmail(barber.email ?? '');
     setIdentityError('');
     setIsEditingIdentity(true);
   }
 
   function cancelIdentityEdit() {
     setDraftName(barber.name);
-    setDraftEmail(barber.email ?? '');
     setIdentityError('');
     setIsEditingIdentity(false);
   }
@@ -296,17 +314,12 @@ export default function BarberProfile({
   async function saveIdentityEdit() {
     if (!onSaveIdentity) return;
     const name = draftName.trim();
-    const email = draftEmail.trim();
     if (!name) {
       setIdentityError('Enter a display name.');
       return;
     }
-    if (email && !email.includes('@')) {
-      setIdentityError('Enter a valid email.');
-      return;
-    }
     setIdentityError('');
-    const ok = await onSaveIdentity({ name, email });
+    const ok = await onSaveIdentity({ name, email: (barber.email ?? '').trim() });
     if (ok) setIsEditingIdentity(false);
   }
 
@@ -314,7 +327,16 @@ export default function BarberProfile({
     <div
       className="admin-cp-backdrop"
       onClick={() => {
-        if (isEditWizardOpen || isSetupWizardOpen) return;
+        if (
+          isSetupWizardOpen ||
+          isDashboardInviteOpen ||
+          isDashboardAccountSheetOpen ||
+          isOnlineBookingsSheetOpen ||
+          isChangeRoleSheetOpen ||
+          isDeleteSheetOpen
+        ) {
+          return;
+        }
         onClose();
       }}
       role="dialog"
@@ -327,20 +349,7 @@ export default function BarberProfile({
             {role ? `${roleLabel(role)} profile` : 'Barber profile'}
           </span>
           <div className="admin-cp-header-actions">
-            {!memberOnly ? (
-              <button
-                type="button"
-                className="admin-cp-settings-btn"
-                aria-label="Edit barber"
-                title="Edit barber"
-                onClick={() => setIsEditWizardOpen(true)}
-                disabled={workingHoursLoading}
-              >
-                <SettingsGearIcon className="admin-cp-settings-icon" />
-              </button>
-            ) : null}
-
-            {!memberOnly ? (
+            {showActionsMenu ? (
             <div className="admin-barber-actions-menu" ref={actionsMenuRef}>
               <button
                 type="button"
@@ -356,18 +365,69 @@ export default function BarberProfile({
 
               {isActionsMenuOpen ? (
                 <div className="admin-barber-actions-dropdown" role="menu" aria-label="Barber actions">
-                  <button
-                    type="button"
-                    role="menuitem"
-                    className="admin-barber-actions-dropdown-item admin-barber-actions-dropdown-item--danger"
-                    disabled={barberSaving}
-                    onClick={() => {
-                      setIsActionsMenuOpen(false);
-                      setConfirmAction('delete');
-                    }}
-                  >
-                    Delete
-                  </button>
+                  {effectiveDashboardAction ? (
+                    <button
+                      type="button"
+                      role="menuitem"
+                      className="admin-barber-actions-dropdown-item"
+                      disabled={barberSaving}
+                      onClick={() => {
+                        setIsActionsMenuOpen(false);
+                        if (effectiveDashboardAction === 'send') {
+                          setIsDashboardInviteOpen(true);
+                        } else if (
+                          effectiveDashboardAction === 'check' ||
+                          effectiveDashboardAction === 'connected'
+                        ) {
+                          setDashboardAccountSheetMode(effectiveDashboardAction);
+                        }
+                      }}
+                    >
+                      {dashboardAccountMenuLabel(effectiveDashboardAction)}
+                    </button>
+                  ) : null}
+                  {canShowChangeRole ? (
+                    <button
+                      type="button"
+                      role="menuitem"
+                      className="admin-barber-actions-dropdown-item"
+                      disabled={barberSaving}
+                      onClick={() => {
+                        setIsActionsMenuOpen(false);
+                        setIsChangeRoleSheetOpen(true);
+                      }}
+                    >
+                      Change role
+                    </button>
+                  ) : null}
+                  {canShowOnlineBookingsMenu ? (
+                    <button
+                      type="button"
+                      role="menuitem"
+                      className="admin-barber-actions-dropdown-item"
+                      disabled={barberSaving}
+                      onClick={() => {
+                        setIsActionsMenuOpen(false);
+                        setIsOnlineBookingsSheetOpen(true);
+                      }}
+                    >
+                      Online bookings
+                    </button>
+                  ) : null}
+                  {!memberOnly ? (
+                    <button
+                      type="button"
+                      role="menuitem"
+                      className="admin-barber-actions-dropdown-item admin-barber-actions-dropdown-item--danger"
+                      disabled={barberSaving}
+                      onClick={() => {
+                        setIsActionsMenuOpen(false);
+                        setIsDeleteSheetOpen(true);
+                      }}
+                    >
+                      Delete
+                    </button>
+                  ) : null}
                 </div>
               ) : null}
             </div>
@@ -391,37 +451,7 @@ export default function BarberProfile({
             </p>
           ) : null}
 
-          <div
-            className={`admin-cp-identity${
-              (canManageOnlineBookings && onToggleBookable) || memberOnly ? ' admin-cp-identity--bookable' : ''
-            }`}
-          >
-            {canManageOnlineBookings && onToggleBookable && !memberOnly ? (
-              <div className="admin-cp-bookable-toggle">
-                <div className="admin-cp-bookable-toggle__copy">
-                  <span className="admin-cp-bookable-toggle__title">Online bookings</span>
-                  <span className="admin-cp-bookable-toggle__hint">
-                    {onlineBookingsToggleHint(bookable, accountAccess)}
-                  </span>
-                </div>
-                <label className="admin-service-switch-wrap" htmlFor="admin-barber-bookable">
-                  <input
-                    id="admin-barber-bookable"
-                    type="checkbox"
-                    className="admin-service-switch-input"
-                    checked={bookable}
-                    onChange={(e) => onToggleBookable(e.target.checked)}
-                    disabled={barberSaving}
-                    aria-label="Accept online bookings"
-                  />
-                  <span className="admin-service-switch-track" aria-hidden="true">
-                    <span className="admin-service-switch-thumb" />
-                  </span>
-                  <span className="admin-service-switch-label">{bookable ? 'On' : 'Off'}</span>
-                </label>
-              </div>
-            ) : null}
-
+          <div className={`admin-cp-identity${memberOnly ? ' admin-cp-identity--bookable' : ''}`}>
             {memberOnly ? (
               <div className="admin-cp-bookable-toggle">
                 <div className="admin-cp-bookable-toggle__copy">
@@ -499,21 +529,6 @@ export default function BarberProfile({
                       autoFocus
                     />
                   </label>
-                  <label className="admin-cp-identity-edit__field" htmlFor="admin-barber-identity-email">
-                    <span className="admin-cp-identity-edit__label">Email</span>
-                    <input
-                      id="admin-barber-identity-email"
-                      className="input"
-                      type="email"
-                      value={draftEmail}
-                      onChange={(e) => {
-                        setDraftEmail(e.target.value);
-                        if (identityError) setIdentityError('');
-                      }}
-                      disabled={barberSaving}
-                      placeholder="optional"
-                    />
-                  </label>
                   {identityError ? (
                     <p className="admin-cp-error admin-cp-error--inline" role="alert">
                       {identityError}
@@ -546,12 +561,12 @@ export default function BarberProfile({
                       <button
                         type="button"
                         className="admin-cp-identity-edit-btn"
-                        aria-label="Edit name and email"
-                        title="Edit name and email"
+                        aria-label="Edit name"
+                        title="Edit name"
                         onClick={startIdentityEdit}
                         disabled={barberSaving}
                       >
-                        <NotebookPen width={15} height={15} aria-hidden />
+                        <Pencil width={15} height={15} aria-hidden />
                       </button>
                     ) : null}
                   </div>
@@ -665,88 +680,12 @@ export default function BarberProfile({
           ) : null}
         </div>
       </div>
-
-      {isConfirmDialogOpen ? (
-        <div className="admin-barber-confirm-layer" role="presentation">
-          <button
-            type="button"
-            className="admin-barber-confirm-backdrop"
-            aria-label="Close confirmation dialog"
-            onClick={() => setConfirmAction(null)}
-          />
-          <div
-            ref={confirmDialogRef}
-            className="admin-barber-confirm-dialog"
-            role="dialog"
-            aria-modal="true"
-            aria-labelledby="barber-confirm-title"
-            aria-describedby="barber-confirm-description"
-            onClick={(event) => event.stopPropagation()}
-          >
-            <h3 id="barber-confirm-title" className="admin-barber-confirm-title">
-              {confirmTitle}
-            </h3>
-            <div id="barber-confirm-description" className="admin-barber-confirm-body">
-              <ul>
-                <li>This permanently removes the barber profile from the system.</li>
-                <li>Assigned services, working hours, and time off entries will be removed.</li>
-                <li>If the barber has any bookings, deletion will be blocked.</li>
-              </ul>
-            </div>
-            <div className="admin-barber-confirm-actions">
-              <button
-                ref={cancelButtonRef}
-                type="button"
-                className="btn btn--ghost"
-                onClick={() => setConfirmAction(null)}
-                disabled={barberSaving}
-              >
-                Cancel
-              </button>
-              <button
-                type="button"
-                className="btn btn--destructive"
-                disabled={barberSaving}
-                onClick={() => {
-                  setConfirmAction(null);
-                  onDeleteBarber();
-                }}
-              >
-                {confirmActionLabel}
-              </button>
-            </div>
-          </div>
-        </div>
-      ) : null}
     </div>
   );
 
   return (
     <>
       {createPortal(panel, document.body)}
-      <AdminWizardSheetLayer
-        open={isEditWizardOpen}
-        onDismiss={closeEditWizard}
-        ariaLabelledBy="admin-barber-form-title"
-        className="admin-barber-sheet-layer--over-profile"
-      >
-        <BarberWizard
-          key={barber.id}
-          mode="edit"
-          barberId={barber.id}
-          services={services}
-          weekDays={weekDays}
-          initialName={barber.name}
-          initialServiceIds={[...enabledServiceIds]}
-          initialAvatarUrl={barber.avatarUrl ?? null}
-          initialIsActive={isActive}
-          initialWorkingHours={workingHours}
-          onCancel={closeEditWizard}
-          onSaved={async () => {
-            await handleEditWizardSaved();
-          }}
-        />
-      </AdminWizardSheetLayer>
       <AdminWizardSheetLayer
         open={isSetupWizardOpen}
         onDismiss={closeSetupWizard}
@@ -764,6 +703,116 @@ export default function BarberProfile({
             initialAvatarUrl={barber.avatarUrl ?? null}
             onCancel={closeSetupWizard}
             onSaved={handleSetupWizardSaved}
+          />
+        ) : null}
+      </AdminWizardSheetLayer>
+      <AdminWizardSheetLayer
+        open={isDashboardInviteOpen}
+        onDismiss={closeDashboardInvite}
+        ariaLabelledBy="admin-barber-form-title"
+        className="admin-barber-sheet-layer--over-profile"
+      >
+        {isDashboardInviteOpen ? (
+          <TeamInviteWizard
+            key={`invite-link-${barber.id}`}
+            actorRole={actorRole}
+            services={services.map((s) => ({ id: s.id, name: s.name }))}
+            linkBarber={{
+              id: barber.id,
+              name: barber.name,
+              role: role === 'MANAGER' ? 'MANAGER' : 'BARBER',
+              bookable,
+            }}
+            onCancel={closeDashboardInvite}
+            onSent={async () => {
+              const ok = onDashboardInviteSent ? await onDashboardInviteSent() : true;
+              await onBarberUpdated();
+              return ok;
+            }}
+          />
+        ) : null}
+      </AdminWizardSheetLayer>
+      <AdminWizardSheetLayer
+        open={isOnlineBookingsSheetOpen}
+        onDismiss={closeOnlineBookingsSheet}
+        ariaLabelledBy="admin-barber-online-bookings-title"
+        className="admin-barber-sheet-layer--over-profile"
+      >
+        {isOnlineBookingsSheetOpen && onToggleBookable ? (
+          <OnlineBookingsSheet
+            bookable={bookable}
+            accountAccess={accountAccess}
+            saving={barberSaving}
+            onToggleBookable={onToggleBookable}
+            onCancel={closeOnlineBookingsSheet}
+          />
+        ) : null}
+      </AdminWizardSheetLayer>
+      <AdminWizardSheetLayer
+        open={isDashboardAccountSheetOpen}
+        onDismiss={closeDashboardAccountSheet}
+        ariaLabelledBy="admin-barber-form-title"
+        className="admin-barber-sheet-layer--over-profile"
+      >
+        {dashboardAccountSheetMode ? (
+          <TeamDashboardAccountSheet
+            key={`dashboard-account-${barber.id}-${dashboardAccountSheetMode}`}
+            mode={dashboardAccountSheetMode}
+            displayName={barber.name}
+            role={role}
+            inviteId={inviteId}
+            inviteEmail={inviteEmail}
+            inviteExpiresAt={inviteExpiresAt}
+            invitationStatus={invitationStatus}
+            memberId={memberId}
+            memberEmail={memberEmail ?? barber.email}
+            revokeBlockedReason={revokeBlockedReason}
+            onCancel={closeDashboardAccountSheet}
+            onChanged={async () => {
+              const ok = onDashboardAccountChanged ? await onDashboardAccountChanged() : true;
+              await onBarberUpdated();
+              return ok;
+            }}
+            onRequestSendInvite={() => {
+              closeDashboardAccountSheet();
+              setIsDashboardInviteOpen(true);
+            }}
+          />
+        ) : null}
+      </AdminWizardSheetLayer>
+      <AdminWizardSheetLayer
+        open={isChangeRoleSheetOpen}
+        onDismiss={closeChangeRoleSheet}
+        ariaLabelledBy="admin-barber-change-role-title"
+        className="admin-barber-sheet-layer--over-profile"
+      >
+        {isChangeRoleSheetOpen &&
+        onChangeRole &&
+        (role === 'BARBER' || role === 'MANAGER') ? (
+          <TeamChangeRoleSheet
+            role={role}
+            displayName={barber.name}
+            saving={barberSaving}
+            onChangeRole={onChangeRole}
+            onCancel={closeChangeRoleSheet}
+          />
+        ) : null}
+      </AdminWizardSheetLayer>
+      <AdminWizardSheetLayer
+        open={isDeleteSheetOpen}
+        onDismiss={closeDeleteSheet}
+        ariaLabelledBy="admin-barber-delete-title"
+        className="admin-barber-sheet-layer--over-profile"
+      >
+        {isDeleteSheetOpen ? (
+          <TeamDeleteBarberSheet
+            displayName={barber.name}
+            saving={barberSaving}
+            onCancel={closeDeleteSheet}
+            onConfirm={() => {
+              closeDeleteSheet();
+              onDeleteBarber();
+            }}
           />
         ) : null}
       </AdminWizardSheetLayer>

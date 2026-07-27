@@ -21,7 +21,7 @@ export const BARBER_WIZARD_STEPS: Array<{ number: BarberWizardStep; label: strin
 export const BARBER_AVATAR_MAX_SIZE_BYTES = 5 * 1024 * 1024;
 export const BARBER_AVATAR_TYPES = new Set(['image/jpeg', 'image/png', 'image/webp']);
 
-export const WEEK_DAY_LABELS = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'] as const;
+export const WEEK_DAY_LABELS = ['', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'] as const;
 
 export function getWeeklyHoursSummary(workingHours: WorkingHourRow[]): {
   onShiftDays: number;

@@ -39,6 +39,29 @@ function toDateInputValue(date: Date) {
   return toLocalInputValue(date).slice(0, 10);
 }
 
+function toTimeInputValue(date: Date) {
+  const pad = (value: number) => String(value).padStart(2, '0');
+  return `${pad(date.getHours())}:${pad(date.getMinutes())}`;
+}
+
+function addMinutesToHhmm(hhmm: string, minutes: number): string {
+  const [h, m] = hhmm.split(':').map(Number);
+  const total = (Number.isFinite(h) ? h : 0) * 60 + (Number.isFinite(m) ? m : 0) + minutes;
+  const normalized = ((total % (24 * 60)) + 24 * 60) % (24 * 60);
+  const pad = (value: number) => String(value).padStart(2, '0');
+  return `${pad(Math.floor(normalized / 60))}:${pad(normalized % 60)}`;
+}
+
+function todayWithTime(hhmm: string): string {
+  return `${toDateInputValue(new Date())}T${hhmm}`;
+}
+
+function tomorrowWithTime(hhmm: string): string {
+  const d = new Date();
+  d.setDate(d.getDate() + 1);
+  return `${toDateInputValue(d)}T${hhmm}`;
+}
+
 function formatUpcomingRange(block: TimeBlock) {
   const start = new Date(block.startAt);
   const end = new Date(block.endAt);
@@ -142,7 +165,9 @@ export default function BarberBlocksEditor({
   layout = 'default',
 }: BarberBlocksEditorProps) {
   const [activeCreateMode, setActiveCreateMode] = React.useState<'break' | 'vacation'>('break');
-  const [breakStartInput, setBreakStartInput] = React.useState(() => toLocalInputValue(roundUpToQuarter(new Date())));
+  const [breakStartTime, setBreakStartTime] = React.useState(() =>
+    toTimeInputValue(roundUpToQuarter(new Date())),
+  );
 
   const [vacationStartDate, setVacationStartDate] = React.useState(() => toDateInputValue(new Date()));
   const [vacationEndDate, setVacationEndDate] = React.useState(() => toDateInputValue(new Date()));
@@ -150,13 +175,16 @@ export default function BarberBlocksEditor({
   const [vacationStartTime, setVacationStartTime] = React.useState('09:00');
   const [vacationEndTime, setVacationEndTime] = React.useState('17:00');
   const [localStatus, setLocalStatus] = React.useState('');
+  const breakEndTime = React.useMemo(() => addMinutesToHhmm(breakStartTime, 15), [breakStartTime]);
+  const breakStartInput = React.useMemo(() => todayWithTime(breakStartTime), [breakStartTime]);
   const breakEndInput = React.useMemo(() => {
-    const start = fromZonedTime(new Date(breakStartInput), ADMIN_TIMEZONE);
-    return toLocalInputValue(new Date(start.getTime() + 15 * 60_000));
-  }, [breakStartInput]);
+    // +15 past midnight lands on tomorrow.
+    if (breakEndTime <= breakStartTime) return tomorrowWithTime(breakEndTime);
+    return todayWithTime(breakEndTime);
+  }, [breakEndTime, breakStartTime]);
   const breakHasRangeError = React.useMemo(() => {
-    const startMs = new Date(breakStartInput).getTime();
-    const endMs = new Date(breakEndInput).getTime();
+    const startMs = fromZonedTime(new Date(breakStartInput), ADMIN_TIMEZONE).getTime();
+    const endMs = fromZonedTime(new Date(breakEndInput), ADMIN_TIMEZONE).getTime();
     return Number.isFinite(startMs) && Number.isFinite(endMs) && endMs <= startMs;
   }, [breakEndInput, breakStartInput]);
 
@@ -167,10 +195,6 @@ export default function BarberBlocksEditor({
     const endMs = new Date(endValue).getTime();
     return Number.isFinite(startMs) && Number.isFinite(endMs) && endMs < startMs;
   }, [vacationAllDay, vacationEndDate, vacationEndTime, vacationStartDate, vacationStartTime]);
-
-  const breakPreview = React.useMemo(() => {
-    return `${formatDateTimePreview(breakStartInput)} -> ${formatDateTimePreview(breakEndInput)}`;
-  }, [breakEndInput, breakStartInput]);
 
   const vacationPreview = React.useMemo(() => {
     if (vacationAllDay) {
@@ -269,9 +293,14 @@ export default function BarberBlocksEditor({
           </div>
 
           <div className="admin-timeoff-flow-note" aria-live="polite">
-            {activeCreateMode === 'break'
-              ? 'Break instantly blocks exactly 15 minutes starting from your selected time.'
-              : 'Vacation can be all-day or specific hours across one or more dates.'}
+            {activeCreateMode === 'break' ? (
+              <>
+                <strong className="admin-timeoff-flow-note__title">Take a break</strong>
+                <span>Blocks exactly 15 minutes from the start time you choose today.</span>
+              </>
+            ) : (
+              'Vacation can be all-day or specific hours across one or more dates.'
+            )}
           </div>
 
           {activeCreateMode === 'break' ? (
@@ -283,9 +312,9 @@ export default function BarberBlocksEditor({
                     Start
                   </span>
                   <input
-                    type="datetime-local"
-                    value={breakStartInput}
-                    onChange={(event) => setBreakStartInput(event.target.value)}
+                    type="time"
+                    value={breakStartTime}
+                    onChange={(event) => setBreakStartTime(event.target.value)}
                     className={breakHasRangeError ? 'has-error' : ''}
                   />
                   <span className="admin-timeoff-field-help">When the break begins</span>
@@ -297,8 +326,8 @@ export default function BarberBlocksEditor({
                     <span className="admin-timeoff-auto-badge">Auto +15 min</span>
                   </span>
                   <input
-                    type="datetime-local"
-                    value={breakEndInput}
+                    type="time"
+                    value={breakEndTime}
                     readOnly
                     tabIndex={-1}
                     aria-readonly="true"
@@ -307,7 +336,6 @@ export default function BarberBlocksEditor({
                   <span className="admin-timeoff-field-help">Calculated from start</span>
                 </label>
               </div>
-              <p className="admin-timeoff-preview">Preview: {breakPreview}</p>
               {breakHasRangeError ? <p className="admin-inline-error">End time must be after start time.</p> : null}
               <div className="admin-timeoff-cta-row">
                 <button type="button" className="btn btn--secondary admin-timeoff-submit" onClick={handleCreateBreak} disabled={breakHasRangeError}>

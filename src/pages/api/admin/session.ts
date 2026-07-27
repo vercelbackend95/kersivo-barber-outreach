@@ -3,6 +3,7 @@ export const prerender = false;
 import type { APIRoute } from 'astro';
 import { requireAdminContext } from '../../../lib/admin/auth';
 import { healOnboardingCompletedIfEligible } from '../../../lib/admin/onboarding';
+import { isPauseActiveNow } from '../../../lib/admin/shopPublicActivity';
 import { prisma } from '../../../lib/db/client';
 
 export const GET: APIRoute = async (context) => {
@@ -19,6 +20,7 @@ export const GET: APIRoute = async (context) => {
   let retailPickupWalkthroughCompletedAt: string | null = null;
   let logoUrl: string | null = null;
   let shopName: string | null = null;
+  let publicActivityPaused = false;
 
   if (access.via === 'session') {
     try {
@@ -37,6 +39,11 @@ export const GET: APIRoute = async (context) => {
           retailPickupWalkthroughCompletedAt: true,
           logoUrl: true,
           name: true,
+          timezone: true,
+          publicActivityPaused: true,
+          publicActivityPauseFrom: true,
+          publicActivityPauseUntil: true,
+          publicActivityPauseReason: true,
         },
       });
       onboardingCompleted = shop?.onboardingCompleted ?? true;
@@ -50,6 +57,7 @@ export const GET: APIRoute = async (context) => {
         shop?.retailPickupWalkthroughCompletedAt?.toISOString() ?? null;
       logoUrl = shop?.logoUrl ?? null;
       shopName = shop?.name ?? null;
+      publicActivityPaused = shop ? isPauseActiveNow(shop) : false;
     } catch (error) {
       console.error('Failed to load admin session shop settings', error);
       return new Response(JSON.stringify({ error: 'Could not load admin session.' }), {
@@ -72,6 +80,7 @@ export const GET: APIRoute = async (context) => {
         shop: {
           name: shopName,
           logoUrl,
+          publicActivityPaused,
         },
         user: access.userId
           ? {
@@ -104,6 +113,7 @@ export const GET: APIRoute = async (context) => {
       shop: {
         name: shopName,
         logoUrl,
+        publicActivityPaused,
       },
       user: access.userId
         ? {

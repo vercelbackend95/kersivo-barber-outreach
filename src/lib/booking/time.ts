@@ -1,3 +1,5 @@
+import { WEEKDAY_SHORT_TO_MON1 } from './weekdays';
+
 // src/lib/booking/time.ts
 const LONDON_TZ = 'Europe/London';
 
@@ -51,18 +53,8 @@ export function londonDayOfWeekFromIsoDate(isoDate: string): number | null {
     weekday: 'short'
   }).format(middayUtc);
 
-  const dayMap: Record<string, number> = {
-    // Canonical weekday mapping across UI/API/DB: Mon=0, Tue=1, Wed=2, Thu=3, Fri=4, Sat=5, Sun=6.
-    Mon: 0,
-    Tue: 1,
-    Wed: 2,
-    Thu: 3,
-    Fri: 4,
-    Sat: 5,
-    Sun: 6
-  };
-
-  return dayMap[weekday] ?? null;
+  // Canonical weekday mapping across UI/API/DB: Mon=1 … Sun=7.
+  return WEEKDAY_SHORT_TO_MON1[weekday] ?? null;
 }
 
 export function toUtcFromLondon(date: string, minutes: number): Date {

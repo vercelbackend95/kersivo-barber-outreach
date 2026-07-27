@@ -59,7 +59,7 @@ const CLIENT_NAMES = [
 ];
 
 /** Mon–Sun base bookings for a busy 4-chair shop. */
-const WEEKDAY_BASE_COUNTS = [10, 11, 11, 12, 16, 17, 6];
+const WEEKDAY_BASE_COUNTS = [0, 10, 11, 11, 12, 16, 17, 6];
 
 /** Prefer late morning + late afternoon. */
 const HOUR_POOL = [10, 11, 12, 11, 16, 17, 12, 18, 10, 13, 16, 17, 9, 15, 14, 19];
@@ -113,9 +113,9 @@ export function resolveDemoReportsDayCount(
   return 7;
 }
 
-function londonWeekdayMon0(dayKey: string): number {
+function londonWeekdayMon1(dayKey: string): number {
   const isoDow = Number(formatInTimeZone(fromZonedTime(`${dayKey}T12:00:00.000`, TZ), TZ, 'i'));
-  return Number.isFinite(isoDow) ? isoDow - 1 : 0;
+  return Number.isFinite(isoDow) ? isoDow : 1;
 }
 
 function pickBarber(seed: number): BarberKey {
@@ -152,7 +152,7 @@ function pickStatus(seed: number, cancelBoost = 0): string {
 }
 
 function dailyBookingCountForDayKey(dayKey: string, seed: number): number {
-  const weekday = londonWeekdayMon0(dayKey);
+  const weekday = londonWeekdayMon1(dayKey);
   const base = WEEKDAY_BASE_COUNTS[weekday] ?? 10;
   const noise = ((seed * 17 + weekday * 3) % 5) - 2;
   return Math.max(4, base + noise);

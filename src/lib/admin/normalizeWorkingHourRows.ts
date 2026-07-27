@@ -1,5 +1,6 @@
 import type { WorkingHourRow } from '../../components/admin/barbersTypes';
 import { minutesToTimeString } from './timeStrings';
+import { ALL_WEEKDAYS, isWeekday } from '@/lib/booking/weekdays';
 
 type RawWorkingHourRule = {
   dayOfWeek?: unknown;
@@ -34,7 +35,7 @@ export function normalizeWorkingHourRows(rawRules: unknown): WorkingHourRow[] {
 
   for (const rule of list) {
     const dayOfWeek = typeof rule.dayOfWeek === 'number' ? rule.dayOfWeek : Number(rule.dayOfWeek);
-    if (!Number.isInteger(dayOfWeek) || dayOfWeek < 0 || dayOfWeek > 6) continue;
+    if (!isWeekday(dayOfWeek)) continue;
 
     let startTime: string;
     let endTime: string;
@@ -54,7 +55,7 @@ export function normalizeWorkingHourRows(rawRules: unknown): WorkingHourRow[] {
     });
   }
 
-  return Array.from({ length: 7 }, (_, dayOfWeek) => {
+  return ALL_WEEKDAYS.map((dayOfWeek) => {
     return (
       byDay.get(dayOfWeek) ?? {
         dayOfWeek,

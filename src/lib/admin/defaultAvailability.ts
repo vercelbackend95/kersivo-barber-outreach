@@ -1,6 +1,7 @@
 import { prisma } from '../db/client';
+import { ALL_WEEKDAYS } from '@/lib/booking/weekdays';
 
-const DEFAULT_RULES = Array.from({ length: 7 }, (_, dayOfWeek) => ({
+const DEFAULT_RULES = ALL_WEEKDAYS.map((dayOfWeek) => ({
   dayOfWeek,
   startMinutes: 9 * 60,
   endMinutes: 20 * 60

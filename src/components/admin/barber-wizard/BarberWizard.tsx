@@ -658,7 +658,7 @@ export default function BarberWizard({
                   description="Add services first, then return here to assign them."
                 />
               ) : (
-                <div className="admin-barber-wizard__services-grid" role="list" aria-label="Available services">
+                <div className="admin-cp-tags-row admin-services-pills-row admin-services-pills-row--wizard" role="list" aria-label="Available services">
                   {services.map((service) => {
                     const selected = selectedServiceIds.includes(service.id);
                     return (
@@ -666,14 +666,11 @@ export default function BarberWizard({
                         key={service.id}
                         type="button"
                         role="listitem"
-                        className={`admin-barber-wizard__service${selected ? ' is-selected' : ''}`}
+                        className={`admin-cp-tag admin-services-pill${selected ? ' is-on' : ' is-service-off'}`}
                         aria-pressed={selected}
                         onClick={() => toggleService(service.id)}
                       >
-                        <span className="admin-barber-wizard__service-check" aria-hidden="true">
-                          {selected ? <Check width={12} height={12} strokeWidth={2.5} /> : null}
-                        </span>
-                        <span>{service.name}</span>
+                        {service.name}
                       </button>
                     );
                   })}

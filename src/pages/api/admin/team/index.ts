@@ -8,6 +8,7 @@ import {
   emptyInvitationFields,
   inviteCardInvitationFields,
   memberCardStatus,
+  orphanSeatRole,
   roleSortRank,
   type TeamCardDto,
 } from '@/lib/admin/teamCards';
@@ -107,6 +108,7 @@ export const GET: APIRoute = async (context) => {
         sortOrder: true,
         email: true,
         userId: true,
+        intendedRole: true,
         createdAt: true,
         barberServices: { select: { serviceId: true } },
       },
@@ -255,7 +257,7 @@ export const GET: APIRoute = async (context) => {
     .map((b) => ({
       kind: 'member' as const,
       id: `barber:${b.id}`,
-      role: 'BARBER' as const,
+      role: orphanSeatRole(b.intendedRole),
       name: b.name,
       email: b.email,
       cardStatus: 'active' as const,

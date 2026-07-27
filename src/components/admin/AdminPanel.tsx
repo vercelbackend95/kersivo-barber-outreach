@@ -19,6 +19,7 @@ const ServicesAdminPanel = lazy(() => import('./ServicesAdminPanel'));
 const ClientsAdminPanel = lazy(() => import('./ClientsAdminPanel'));
 const ShopAdminPanel = lazy(() => import('./ShopAdminPanel'));
 const AiAssistantPanel = lazy(() => import('./AiAssistantPanel'));
+const BarbershopSettingsPanel = lazy(() => import('./BarbershopSettingsPanel'));
 
 export type AdminSection =
   | 'bookings_dashboard'
@@ -31,6 +32,7 @@ export type AdminSection =
   | 'shop_orders'
   | 'shop_sales'
   | 'assistant'
+  | 'barbershop_settings'
   /** Legacy URL alias → bookings_blocks (Team) */
   | 'team';
 
@@ -62,6 +64,7 @@ function getSectionFromUrl(): AdminSection {
   if (section === 'shop_sales') return 'shop_sales';
   if (section === 'shop_products') return 'shop_products';
   if (section === 'assistant') return 'assistant';
+  if (section === 'barbershop_settings') return 'barbershop_settings';
   // Legacy ?section=team → unified Team surface (bookings_blocks)
   if (section === 'team') return 'bookings_blocks';
   return 'bookings_dashboard';
@@ -128,6 +131,7 @@ export default function AdminPanel({ demoMode = false }: AdminPanelProps) {
   const [profileUser, setProfileUser] = useState<AdminProfileUser | null>(null);
   const [shopLogoUrl, setShopLogoUrl] = useState<string | null>(null);
   const [shopName, setShopName] = useState<string | null>(null);
+  const [publicActivityPaused, setPublicActivityPaused] = useState(false);
   const [permissions, setPermissions] = useState<string[] | null>(null);
   const [demoLoadError, setDemoLoadError] = useState(false);
   const transitionTimeoutRef = useRef<number | null>(null);
@@ -149,7 +153,11 @@ export default function AdminPanel({ demoMode = false }: AdminPanelProps) {
           onboardingCompleted?: boolean;
           via?: string;
           permissions?: string[];
-          shop?: { logoUrl?: string | null; name?: string | null } | null;
+          shop?: {
+            logoUrl?: string | null;
+            name?: string | null;
+            publicActivityPaused?: boolean;
+          } | null;
           user?: { name?: string | null; email?: string | null; image?: string | null } | null;
         }) => {
           if (payload.via === 'session' && payload.onboardingCompleted === false) {
@@ -168,6 +176,7 @@ export default function AdminPanel({ demoMode = false }: AdminPanelProps) {
           setHasAccess(true);
           setShopLogoUrl(payload.shop?.logoUrl ?? null);
           setShopName(payload.shop?.name?.trim() || null);
+          setPublicActivityPaused(Boolean(payload.shop?.publicActivityPaused));
           setPermissions(payload.permissions ?? null);
           if (payload.user) {
             setProfileUser({
@@ -344,6 +353,7 @@ export default function AdminPanel({ demoMode = false }: AdminPanelProps) {
         profileUser={profileUser}
         shopLogoUrl={demoMode ? null : shopLogoUrl}
         shopName={demoMode ? null : shopName}
+        publicActivityPaused={demoMode ? false : publicActivityPaused}
         permissions={demoMode ? null : permissions}
         persistentAdminChrome={<AdminGlobalMobileNextStripHost />}
       >
@@ -374,6 +384,17 @@ export default function AdminPanel({ demoMode = false }: AdminPanelProps) {
             ) : null}
 
             {activeSection === 'assistant' ? <AiAssistantPanel key="assistant" isPublicDemo={demoMode} /> : null}
+
+            {activeSection === 'barbershop_settings' ? (
+              <BarbershopSettingsPanel
+                key="barbershop-settings"
+                onIdentitySaved={(identity) => {
+                  setShopName(identity.name.trim() || null);
+                  setShopLogoUrl(identity.logoUrl);
+                }}
+                onPauseChanged={setPublicActivityPaused}
+              />
+            ) : null}
           </Suspense>
         </LazyPanelErrorBoundary>
       </AdminLayout>

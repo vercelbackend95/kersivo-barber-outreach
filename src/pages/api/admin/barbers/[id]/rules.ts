@@ -4,10 +4,16 @@ import type { APIRoute } from 'astro';
 import { z } from 'zod';
 import { requireAdminPermission } from '../../../../../lib/admin/auth';
 import { findShopBarber } from '../../../../../lib/admin/shopScoped';
+import {
+  assertBarberHoursWithinShop,
+  loadShopOpeningHoursDays,
+  serializeShopOpeningHours,
+} from '../../../../../lib/admin/shopOpeningHours';
 import { prisma } from '../../../../../lib/db/client';
+import { ALL_WEEKDAYS } from '../../../../../lib/booking/weekdays';
 
 const rowSchema = z.object({
-  dayOfWeek: z.number().int().min(0).max(6),
+  dayOfWeek: z.number().int().min(1).max(7),
   active: z.boolean(),
   startTime: z.string().regex(/^([01]\d|2[0-3]):[0-5]\d$/),
   endTime: z.string().regex(/^([01]\d|2[0-3]):[0-5]\d$/),
@@ -36,7 +42,7 @@ async function serializeRules(barberId: string) {
   });
 
   const byDay = new Map(rules.map((rule) => [rule.dayOfWeek, rule]));
-  return Array.from({ length: 7 }).map((_, dayOfWeek) => {
+  return ALL_WEEKDAYS.map((dayOfWeek) => {
     const rule = byDay.get(dayOfWeek);
     return {
       dayOfWeek,
@@ -92,6 +98,15 @@ export const PUT: APIRoute = async (ctx) => {
         JSON.stringify({ error: `Day ${rule.dayOfWeek}: start time must be earlier than end time.` }),
         { status: 400 },
       );
+    }
+  }
+
+  const shopOpenDays = await loadShopOpeningHoursDays(access.shopId);
+  if (shopOpenDays.length > 0) {
+    const shopHours = await serializeShopOpeningHours(access.shopId);
+    const withinShopError = assertBarberHoursWithinShop(shopHours, parsed.data.rules);
+    if (withinShopError) {
+      return new Response(JSON.stringify({ error: withinShopError }), { status: 400 });
     }
   }
 

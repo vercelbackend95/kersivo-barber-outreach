@@ -3,14 +3,12 @@ import React from 'react';
 type RetailOnboardingWelcomeProps = {
   layout?: 'wizard' | 'panel';
   onYes?: () => void;
-  onNotNow?: () => void;
   titleId?: string;
 };
 
 export default function RetailOnboardingWelcome({
   layout = 'wizard',
   onYes,
-  onNotNow,
   titleId = 'retail-onboarding-welcome-title',
 }: RetailOnboardingWelcomeProps) {
   const isPanel = layout === 'panel';
@@ -39,9 +37,6 @@ export default function RetailOnboardingWelcome({
         <div className="admin-retail-empty-prompt__actions">
           <button type="button" className="btn btn--primary btn--lg" onClick={onYes}>
             Yes, set up my retail shop
-          </button>
-          <button type="button" className="btn btn--secondary btn--lg" onClick={onNotNow}>
-            Not right now
           </button>
         </div>
       ) : null}

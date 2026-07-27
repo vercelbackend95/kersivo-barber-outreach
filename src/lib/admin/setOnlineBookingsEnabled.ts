@@ -19,7 +19,7 @@ export function isValidWorkingHoursRule(row: {
   active: boolean;
 }): boolean {
   if (!row.active) return false;
-  if (!Number.isInteger(row.dayOfWeek) || row.dayOfWeek < 0 || row.dayOfWeek > 6) return false;
+  if (!Number.isInteger(row.dayOfWeek) || row.dayOfWeek < 1 || row.dayOfWeek > 7) return false;
   if (!Number.isFinite(row.startMinutes) || !Number.isFinite(row.endMinutes)) return false;
   return row.startMinutes < row.endMinutes;
 }
