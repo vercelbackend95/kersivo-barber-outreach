@@ -4,7 +4,7 @@ import type { WorkingHourRow } from './barbersTypes';
 import BarberWorkingHoursEditor from './BarberWorkingHoursEditor';
 import AdminSectionHeader from './AdminSectionHeader';
 import { ImagePlus, X } from '../lucide-react';
-import { SHOP_PAUSE_REASON_MIN_LENGTH } from '@/lib/admin/shopPublicActivity';
+import { SHOP_PAUSE_REASON_MIN_LENGTH } from '@/lib/admin/shopPublicActivityConstants';
 import '@/styles/components/admin-barbershop-settings.css';
 
 const WEEK_DAYS = ['', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];

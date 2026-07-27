@@ -1,10 +1,14 @@
 import { formatInTimeZone } from 'date-fns-tz';
 import { prisma } from '@/lib/db/client';
+import {
+  SHOP_PAUSE_REASON_MIN_LENGTH,
+  SHOP_PUBLIC_ACTIVITY_PAUSED_MESSAGE,
+} from '@/lib/admin/shopPublicActivityConstants';
 
-export const SHOP_PUBLIC_ACTIVITY_PAUSED_MESSAGE =
-  'This barbershop is temporarily closed. Bookings and retail are unavailable.';
-
-export const SHOP_PAUSE_REASON_MIN_LENGTH = 8;
+export {
+  SHOP_PAUSE_REASON_MIN_LENGTH,
+  SHOP_PUBLIC_ACTIVITY_PAUSED_MESSAGE,
+} from '@/lib/admin/shopPublicActivityConstants';
 
 export class ShopPublicActivityPausedError extends Error {
   readonly status = 422;
