@@ -4,6 +4,7 @@ import { PERMISSIONS, permissionsForRole, type Permission } from './permissions'
 
 const MANAGER_OPERATIONAL: Permission[] = [
   'members.invite_barber',
+  'team.read',
   'shop.settings',
   'catalog.manage',
   'bookings.manage',
@@ -38,8 +39,9 @@ describe('RBAC matrix', () => {
     expect(can('MANAGER', 'retail.manage')).toBe(true);
   });
 
-  it('BARBER is limited to self bookings and clients', () => {
+  it('BARBER is limited to team read, self bookings and clients', () => {
     expect(permissionsForRole('BARBER')).toEqual([
+      'team.read',
       'bookings.self',
       'clients.read',
       'clients.write',
@@ -47,10 +49,12 @@ describe('RBAC matrix', () => {
     expect(can('BARBER', 'billing.manage')).toBe(false);
     expect(can('BARBER', 'catalog.manage')).toBe(false);
     expect(can('BARBER', 'bookings.manage')).toBe(false);
+    expect(can('BARBER', 'team.read')).toBe(true);
     expect(can('BARBER', 'bookings.self')).toBe(true);
     expect(can('BARBER', 'reports.view')).toBe(false);
     expect(can('BARBER', 'retail.manage')).toBe(false);
     expect(can('BARBER', 'members.manage')).toBe(false);
+    expect(can('BARBER', 'members.invite_barber')).toBe(false);
     expect(can('BARBER', 'onboarding.manage')).toBe(false);
   });
 });

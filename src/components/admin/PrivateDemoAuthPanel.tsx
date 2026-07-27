@@ -12,6 +12,10 @@ type PrivateDemoAuthPanelProps = {
   onClose?: () => void;
   /** Where to return after Google / email auth. Defaults to `/admin`. */
   callbackURL?: string;
+  /** Override default “Log in or sign up” heading. */
+  title?: string;
+  /** Override default private-demo subtitle. */
+  subtitle?: string;
 };
 
 function GoogleGIcon() {
@@ -43,6 +47,8 @@ export default function PrivateDemoAuthPanel({
   embedded = false,
   onClose,
   callbackURL = '/admin',
+  title = 'Log in or sign up',
+  subtitle = 'Create a private demo admin for your shop — add barbers, services and bookings.',
 }: PrivateDemoAuthPanelProps) {
   const [step, setStep] = useState<Step>('email');
   const [mode, setMode] = useState<Mode>(initialMode);
@@ -187,11 +193,9 @@ export default function PrivateDemoAuthPanel({
 
       <div className="private-demo-auth__intro">
         <h2 id="private-demo-auth-title" className="private-demo-auth__title">
-          Log in or sign up
+          {title}
         </h2>
-        <p className="private-demo-auth__subtitle">
-          Create a private demo admin for your shop — add barbers, services and bookings.
-        </p>
+        <p className="private-demo-auth__subtitle">{subtitle}</p>
       </div>
 
       {step === 'email' ? (

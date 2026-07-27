@@ -1,11 +1,14 @@
 ---
 import MainLayout from '@/layouts/MainLayout.astro';
 import InviteAcceptClient from '@/components/admin/InviteAcceptClient';
+import '@/styles/components/admin-login.css';
 ---
 
-<MainLayout title="Accept team invite | Kersivo" description="Accept your KERSIVO shop team invitation." canonicalPath="/admin/invite">
-  <main class="container" style="padding: 3rem 1rem; max-width: 32rem;">
-    <h1>Team invitation</h1>
-    <InviteAcceptClient client:load />
-  </main>
+<MainLayout
+  title="Accept team invite | Kersivo"
+  description="Accept your KERSIVO shop team invitation."
+  canonicalPath="/admin/invite"
+  noindex={true}
+>
+  <InviteAcceptClient client:load />
 </MainLayout>

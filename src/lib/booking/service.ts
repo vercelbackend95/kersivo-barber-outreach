@@ -3,6 +3,7 @@ import { prisma } from '../db/client';
 import { PUBLIC_BOOKING_UNAVAILABLE_MESSAGE, isPrismaQuotaExceededError } from '../db/resilience';
 import { getTimeBlockDelegate } from '../db/timeBlocks';
 import { sendInstantBookingConfirmationEmail, sendRescheduledBookingEmail, sendShopCancelledBookingEmail } from '../email/sender';
+import { smsReminderClearData } from '../sms/reminders';
 
 import { ANY_BARBER_ID } from './constants';
 import { canCancelOrReschedule, canShopAdminCancelByLeadTime } from './policies';
@@ -623,7 +624,8 @@ export async function rescheduleByToken(input: { token: string; serviceId: strin
             rescheduledAt: new Date(),
             originalStartAt: existing.originalStartAt ?? existing.startAt,
             originalEndAt: existing.originalEndAt ?? existing.endAt,
-            status: BookingStatus.BOOKED
+            status: BookingStatus.BOOKED,
+            ...smsReminderClearData,
           },
           include: { service: true, barber: true }
         });

@@ -12,6 +12,8 @@ type WorkingHoursOverviewProps = {
   saveStatus: 'idle' | 'saving' | 'saved' | 'error';
   onToggleDayEditor: (dayOfWeek: number) => void;
   onChangeDraftDay: (field: 'active' | 'startTime' | 'endTime', value: string | boolean) => void;
+  /** View-only: day tiles show schedule without opening the editor. */
+  readOnly?: boolean;
 };
 
 const SHARED_EDITOR_ID = 'working-hours-day-panel';
@@ -50,7 +52,8 @@ export default function WorkingHoursOverview({
   errorMessage,
   saveStatus,
   onToggleDayEditor,
-  onChangeDraftDay
+  onChangeDraftDay,
+  readOnly = false,
 }: WorkingHoursOverviewProps) {
   const isSelectedOpen = expandedDayIndex !== null && draftDay !== null;
   const lastAnchorRef = React.useRef(0);
@@ -103,8 +106,11 @@ export default function WorkingHoursOverview({
               ]
                 .filter(Boolean)
                 .join(' ')}
-              onClick={() => onToggleDayEditor(hour.dayOfWeek)}
-              disabled={loading || saving}
+              onClick={() => {
+                if (readOnly) return;
+                onToggleDayEditor(hour.dayOfWeek);
+              }}
+              disabled={loading || saving || readOnly}
               aria-pressed={isSelected}
               aria-expanded={isSelected}
               aria-controls={SHARED_EDITOR_ID}

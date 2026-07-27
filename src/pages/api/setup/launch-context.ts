@@ -39,7 +39,6 @@ export const GET: APIRoute = async (context) => {
       },
       _count: {
         select: {
-          members: true,
           services: true,
         },
       },
@@ -61,12 +60,36 @@ export const GET: APIRoute = async (context) => {
     email: access.userEmail,
   };
 
+  const [members, invites, allBarbers] = await Promise.all([
+    prisma.shopMember.findMany({
+      where: { shopId: access.shopId },
+      select: { id: true, barberId: true },
+    }),
+    prisma.shopInvite.findMany({
+      where: { shopId: access.shopId, acceptedAt: null },
+      select: { barberId: true },
+    }),
+    prisma.barber.findMany({
+      where: { shopId: access.shopId },
+      select: { id: true, userId: true },
+    }),
+  ]);
+
+  // Match Team roster profile cards: ShopMembers + orphan booking seats (not invites).
+  const linkedBarberIds = new Set(
+    [...members.map((m) => m.barberId), ...invites.map((i) => i.barberId)].filter(
+      (id): id is string => Boolean(id),
+    ),
+  );
+  const orphanBarberCount = allBarbers.filter((b) => !linkedBarberIds.has(b.id) && !b.userId).length;
+  const teamProfileCount = members.length + orphanBarberCount;
+
   const retailComplete =
     Boolean(shop.retailPickupWalkthroughCompletedAt) || Boolean(shop.retailOnboardingSkipped);
 
   const progress = buildLaunchProgress({
     onboardingCompleted: Boolean(shop.onboardingCompleted),
-    memberCount: shop._count.members,
+    teamProfileCount,
     serviceCount: shop._count.services,
     retailComplete,
   });

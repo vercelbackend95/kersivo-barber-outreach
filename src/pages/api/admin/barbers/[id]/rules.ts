@@ -2,7 +2,8 @@ export const prerender = false;
 
 import type { APIRoute } from 'astro';
 import { z } from 'zod';
-import { requireAdminPermission } from '../../../../../lib/admin/auth';
+import { requireAdminContext, requireAdminPermission } from '../../../../../lib/admin/auth';
+import { requireAnyPermission } from '../../../../../lib/admin/rbac/can';
 import { findShopBarber } from '../../../../../lib/admin/shopScoped';
 import {
   assertBarberHoursWithinShop,
@@ -54,8 +55,10 @@ async function serializeRules(barberId: string) {
 }
 
 export const GET: APIRoute = async (ctx) => {
-  const access = await requireAdminPermission(ctx, 'catalog.manage');
+  const access = await requireAdminContext(ctx);
   if (access instanceof Response) return access;
+  const denied = requireAnyPermission(access, ['catalog.manage', 'team.read']);
+  if (denied) return denied;
 
   const barberId = ctx.params.id;
   if (!barberId) {

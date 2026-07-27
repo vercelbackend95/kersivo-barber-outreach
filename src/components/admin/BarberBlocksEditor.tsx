@@ -18,6 +18,8 @@ type BarberBlocksEditorProps = {
   onDelete: (blockId: string) => void;
   /** When `profile`, hide outer panel chrome / duplicate titles (parent provides section header). */
   layout?: 'default' | 'profile';
+  /** View-only: list upcoming time off without create/delete controls. */
+  readOnly?: boolean;
 };
 const ADMIN_TIMEZONE = 'Europe/London';
 
@@ -163,6 +165,7 @@ export default function BarberBlocksEditor({
   onCreate,
   onDelete,
   layout = 'default',
+  readOnly = false,
 }: BarberBlocksEditorProps) {
   const [activeCreateMode, setActiveCreateMode] = React.useState<'break' | 'vacation'>('break');
   const [breakStartTime, setBreakStartTime] = React.useState(() =>
@@ -247,11 +250,15 @@ export default function BarberBlocksEditor({
       {isProfileLayout ? null : (
         <>
           <h3>TIME OFF</h3>
-          <p className="muted">Manage unavailable time for this barber.</p>
+          <p className="muted">
+            {readOnly ? 'Upcoming unavailable time for this barber.' : 'Manage unavailable time for this barber.'}
+          </p>
         </>
       )}
 
       <div className="admin-timeoff-card">
+        {readOnly ? null : (
+        <>
         <header className="admin-timeoff-header-row admin-timeoff-header-shell">
           <div>
             <h4>Create time off</h4>
@@ -438,15 +445,27 @@ export default function BarberBlocksEditor({
           {errorMessage ? <p className="admin-inline-error">{errorMessage}</p> : null}
         </div>
         <hr className="admin-timeoff-divider" />
+        </>
+        )}
         <div className="admin-timeoff-upcoming">
           <h4>Upcoming</h4>
-          {sortedUpcoming.length === 0 ? <div className="admin-timeoff-empty-state"><p>No upcoming time off.</p><span>New entries appear here with quick remove actions.</span></div> : (
+          {sortedUpcoming.length === 0 ? (
+            <div className="admin-timeoff-empty-state">
+              <p>No upcoming time off.</p>
+              <span>
+                {readOnly
+                  ? 'Scheduled breaks and vacations will appear here.'
+                  : 'New entries appear here with quick remove actions.'}
+              </span>
+            </div>
+          ) : (
             <ul className="admin-timeoff-upcoming-list">
               {sortedUpcoming.map((block) => (
                 <li key={block.id} className="admin-timeoff-upcoming-card">
                   <p className={`admin-timeoff-upcoming-type ${getTypeLabel(block).toLowerCase().includes('vacation') ? 'is-vacation' : 'is-break'}`}>{getTypeLabel(block)}</p>
                   <p className="admin-timeoff-upcoming-range">{formatUpcomingRange(block)}</p>
 
+                  {readOnly ? null : (
                   <button
                     type="button"
                     className="btn btn--ghost admin-timeoff-delete"
@@ -460,6 +479,7 @@ export default function BarberBlocksEditor({
                   >
                     🗑
                   </button>
+                  )}
                 </li>
               ))}
             </ul>

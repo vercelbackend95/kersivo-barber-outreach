@@ -9,6 +9,8 @@ type BarberServicesEditorProps = {
   onToggleService: (serviceId: string, enabled: boolean) => void;
   /** When `profile`, hide outer panel chrome / duplicate titles (parent provides section header). */
   layout?: 'default' | 'profile';
+  /** View-only: show assigned services without toggles. */
+  readOnly?: boolean;
 };
 
 type PendingToggle = {
@@ -24,6 +26,7 @@ export default function BarberServicesEditor({
   servicesSaving,
   onToggleService,
   layout = 'default',
+  readOnly = false,
 }: BarberServicesEditorProps) {
   const [localEnabledServiceIds, setLocalEnabledServiceIds] = React.useState<Set<string>>(new Set(enabledServiceIds));
   const [selectionHint, setSelectionHint] = React.useState('');
@@ -105,6 +108,7 @@ export default function BarberServicesEditor({
   );
 
   const requestToggle = (service: ServiceOption) => {
+    if (readOnly) return;
     const isEnabled = localEnabledServiceIds.has(service.id);
 
     if (isEnabled && enabledCount <= 1) {
@@ -145,6 +149,10 @@ export default function BarberServicesEditor({
           <p className={`admin-services-editor-meta-copy ${hasWarning ? 'is-warning' : ''}`}>
             {selectionHint
               ? selectionHint
+              : readOnly
+                ? enabledCount === 0
+                  ? 'No services assigned.'
+                  : `${enabledCount} service${enabledCount === 1 ? '' : 's'} assigned.`
               : allSelected
                 ? 'All services are currently assigned.'
                 : `${totalCount - enabledCount} more service${totalCount - enabledCount === 1 ? '' : 's'} can be enabled.`}
@@ -163,7 +171,11 @@ export default function BarberServicesEditor({
           <div className="admin-services-editor-head">
             <div className="admin-services-editor-title-wrap">
               <h3 className="admin-services-editor-title">Services</h3>
-              <p className="admin-services-editor-description">Choose what clients can book with {barberName}.</p>
+              <p className="admin-services-editor-description">
+                {readOnly
+                  ? `Services clients can book with ${barberName}.`
+                  : `Choose what clients can book with ${barberName}.`}
+              </p>
             </div>
             <p
               className={`admin-services-editor-counter ${allSelected ? 'is-complete' : ''}`}
@@ -178,6 +190,10 @@ export default function BarberServicesEditor({
             <p className={`admin-services-editor-meta-copy ${hasWarning ? 'is-warning' : ''}`}>
               {selectionHint
                 ? selectionHint
+                : readOnly
+                  ? enabledCount === 0
+                    ? 'No services assigned.'
+                    : `${enabledCount} service${enabledCount === 1 ? '' : 's'} assigned.`
                 : allSelected
                   ? 'All services are currently assigned.'
                   : `${totalCount - enabledCount} more service${totalCount - enabledCount === 1 ? '' : 's'} can be enabled.`}
@@ -202,9 +218,13 @@ export default function BarberServicesEditor({
                 type="button"
                 className={`admin-cp-tag admin-services-pill ${isOn ? 'is-on' : 'is-service-off'}`}
                 aria-pressed={isOn}
-                aria-label={`${isOn ? 'Cancel' : 'Apply'} ${service.name} for ${barberName}`}
+                aria-label={
+                  readOnly
+                    ? `${service.name}${isOn ? ', assigned' : ', not assigned'}`
+                    : `${isOn ? 'Cancel' : 'Apply'} ${service.name} for ${barberName}`
+                }
                 onClick={() => requestToggle(service)}
-                disabled={servicesSaving}
+                disabled={servicesSaving || readOnly}
               >
                 {service.name}
               </button>

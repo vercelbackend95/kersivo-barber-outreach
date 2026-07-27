@@ -22,5 +22,11 @@
       "destination": "/",
       "permanent": true
     }
+  ],
+  "crons": [
+    {
+      "path": "/api/cron/sms-reminders",
+      "schedule": "*/15 * * * *"
+    }
   ]
 }

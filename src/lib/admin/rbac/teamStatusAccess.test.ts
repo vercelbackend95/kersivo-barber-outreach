@@ -23,11 +23,13 @@ describe('legacy NEW membership / RBAC compatibility', () => {
   });
 
   it('Barber permissions are available immediately after acceptance (role-based)', () => {
+    expect(can('BARBER', 'team.read')).toBe(true);
     expect(can('BARBER', 'bookings.self')).toBe(true);
     expect(can('BARBER', 'clients.read')).toBe(true);
     expect(can('BARBER', 'clients.write')).toBe(true);
     expect(can('BARBER', 'bookings.manage')).toBe(false);
     expect(permissionsForRole('BARBER')).toEqual([
+      'team.read',
       'bookings.self',
       'clients.read',
       'clients.write',

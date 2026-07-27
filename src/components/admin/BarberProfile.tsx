@@ -77,6 +77,8 @@ type BarberProfileProps = {
   revokeBlockedReason?: string | null;
   onDashboardAccountChanged?: () => Promise<boolean>;
   onChangeRole?: (next: Extract<ShopRole, 'BARBER' | 'MANAGER'>) => Promise<boolean>;
+  /** View-only team profile (e.g. Barber role): no mutations or ⋯ menu. */
+  readOnly?: boolean;
 };
 
 export default function BarberProfile({
@@ -130,6 +132,7 @@ export default function BarberProfile({
   revokeBlockedReason = null,
   onDashboardAccountChanged,
   onChangeRole,
+  readOnly = false,
 }: BarberProfileProps) {
   const actionsMenuRef = React.useRef<HTMLDivElement | null>(null);
   const [isActionsMenuOpen, setIsActionsMenuOpen] = React.useState(false);
@@ -282,13 +285,20 @@ export default function BarberProfile({
 
   const hasAvatarPreview = Boolean(barberAvatarPreviewUrl);
   const displayedAvatarUrl = barberAvatarPreviewUrl ?? barber.avatarUrl ?? null;
-  const canShowOnlineBookingsMenu = Boolean(canManageOnlineBookings && onToggleBookable && !memberOnly);
+  const canShowOnlineBookingsMenu = Boolean(
+    !readOnly && canManageOnlineBookings && onToggleBookable && !memberOnly,
+  );
   const canShowChangeRole = Boolean(
-    onChangeRole &&
+    !readOnly &&
+      onChangeRole &&
       canActorChangeTeamRole(actorRole, role) &&
       (memberId || inviteId),
   );
-  const showActionsMenu = Boolean(!memberOnly || canShowChangeRole || effectiveDashboardAction);
+  const showActionsMenu = Boolean(
+    !readOnly && (!memberOnly || canShowChangeRole || effectiveDashboardAction),
+  );
+  const canEditIdentity = Boolean(!readOnly && onSaveIdentity && !memberOnly);
+  const canEditAvatar = Boolean(!readOnly && !memberOnly);
 
   const openAvatarPicker = React.useCallback(() => {
     avatarInputRef.current?.click();
@@ -460,7 +470,7 @@ export default function BarberProfile({
                     Online bookings: Off. Set up services and working hours before clients can book them.
                   </span>
                 </div>
-                {canSetUpOnlineBookings && memberId ? (
+                {canSetUpOnlineBookings && memberId && !readOnly ? (
                   <button
                     type="button"
                     className="btn btn--secondary"
@@ -485,6 +495,7 @@ export default function BarberProfile({
                   <span className="admin-cp-avatar-initials">{getInitials(barber.name)}</span>
                 )}
               </div>
+              {canEditAvatar ? (
               <button
                 type="button"
                 className="admin-cp-avatar-overlay-action"
@@ -499,6 +510,8 @@ export default function BarberProfile({
                   </svg>
                 </span>
               </button>
+              ) : null}
+              {canEditAvatar ? (
               <input
                 ref={avatarInputRef}
                 id="admin-barber-avatar-input"
@@ -509,10 +522,11 @@ export default function BarberProfile({
                 tabIndex={-1}
                 aria-hidden="true"
               />
+              ) : null}
             </div>
 
             <div className="admin-cp-identity-info">
-              {isEditingIdentity ? (
+              {isEditingIdentity && canEditIdentity ? (
                 <div className="admin-cp-identity-edit">
                   <label className="admin-cp-identity-edit__field" htmlFor="admin-barber-identity-name">
                     <span className="admin-cp-identity-edit__label">Display name</span>
@@ -557,7 +571,7 @@ export default function BarberProfile({
                 <>
                   <div className="admin-cp-full-name-row">
                     <p className="admin-cp-full-name">{barber.name}</p>
-                    {onSaveIdentity ? (
+                    {canEditIdentity ? (
                       <button
                         type="button"
                         className="admin-cp-identity-edit-btn"
@@ -585,7 +599,7 @@ export default function BarberProfile({
                   </p>
                 </div>
               ) : null}
-              {hasAvatarPreview ? (
+              {hasAvatarPreview && canEditAvatar ? (
                 <button
                   type="button"
                   className="btn btn--primary admin-cp-avatar-save-btn"
@@ -633,7 +647,11 @@ export default function BarberProfile({
               <Scissors className="admin-cp-section-icon" aria-hidden />
               <span className="admin-cp-section-title">Services</span>
             </div>
-            <p className="admin-cp-section-copy">Choose what clients can book with {barber.name}.</p>
+            <p className="admin-cp-section-copy">
+              {readOnly
+                ? `Services clients can book with ${barber.name}.`
+                : `Choose what clients can book with ${barber.name}.`}
+            </p>
             <BarberServicesEditor
               barberName={barber.name}
               services={services}
@@ -641,6 +659,7 @@ export default function BarberProfile({
               servicesSaving={servicesSaving}
               onToggleService={onToggleService}
               layout="profile"
+              readOnly={readOnly}
             />
           </div>
 
@@ -658,6 +677,7 @@ export default function BarberProfile({
               onSetWorkingHours={onSetWorkingHours}
               onSave={onSaveWorkingHours}
               layout="profile"
+              readOnly={readOnly}
             />
           </div>
 
@@ -674,6 +694,7 @@ export default function BarberProfile({
               onCreate={onCreateBlock}
               onDelete={onDeleteBlock}
               layout="profile"
+              readOnly={readOnly}
             />
           </div>
           </>

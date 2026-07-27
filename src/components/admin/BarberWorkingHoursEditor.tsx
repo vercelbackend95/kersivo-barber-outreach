@@ -20,6 +20,8 @@ type BarberWorkingHoursEditorProps = {
   layout?: 'default' | 'profile';
   /** Hide the default “Working hours” header row (parent provides the title). */
   hideHeader?: boolean;
+  /** View-only: show weekly schedule without day editors or autosave. */
+  readOnly?: boolean;
 };
 
 const AUTO_SAVE_DELAY_MS = 600;
@@ -89,6 +91,7 @@ export default function BarberWorkingHoursEditor({
   helperText,
   layout = 'default',
   hideHeader = false,
+  readOnly = false,
 }: BarberWorkingHoursEditorProps) {
   const [expandedDayIndex, setExpandedDayIndex] = React.useState<number | null>(null);
   const [draftDay, setDraftDay] = React.useState<WorkingHourRow | null>(null);
@@ -129,6 +132,7 @@ export default function BarberWorkingHoursEditor({
   }, [clearAutoSaveTimeout, clearSavedToastTimeout]);
   const openEditor = React.useCallback(
     (dayOfWeek: number) => {
+      if (readOnly) return;
       clearAutoSaveTimeout();
       clearSavedToastTimeout();
       setSaveStatus('idle');
@@ -137,7 +141,7 @@ export default function BarberWorkingHoursEditor({
       setExpandedDayIndex(dayOfWeek);
       setDraftDay(sourceDay);
     },
-    [clearAutoSaveTimeout, clearSavedToastTimeout, orderedHours]
+    [clearAutoSaveTimeout, clearSavedToastTimeout, orderedHours, readOnly]
   );
   const toggleEditor = React.useCallback(
     (dayOfWeek: number) => {
@@ -221,6 +225,9 @@ export default function BarberWorkingHoursEditor({
 
 
   const isProfileLayout = layout === 'profile';
+  const scheduleHelper =
+    helperText ??
+    (readOnly ? 'Weekly on-shift schedule.' : 'Tap any day to change shift status and hours.');
 
   return (
     <section className={isProfileLayout ? 'working-hours-editor--profile' : 'admin-settings-panel'}>
@@ -229,18 +236,14 @@ export default function BarberWorkingHoursEditor({
           <p className="working-hours-weekly-summary" aria-live="polite">
             {weeklySummary}
           </p>
-          <p className="muted working-hours-helper">
-            {helperText ?? 'Tap any day to change shift status and hours.'}
-          </p>
+          <p className="muted working-hours-helper">{scheduleHelper}</p>
         </div>
       ) : hideHeader ? (
         <div className="working-hours-shell">
           <p className="working-hours-weekly-summary" aria-live="polite">
             {weeklySummary}
           </p>
-          <p className="muted working-hours-helper">
-            {helperText ?? 'Tap any day to change shift status and hours.'}
-          </p>
+          <p className="muted working-hours-helper">{scheduleHelper}</p>
           <div className="working-hours-divider" aria-hidden="true" />
         </div>
       ) : (
@@ -266,9 +269,7 @@ export default function BarberWorkingHoursEditor({
               </span>
             </div>
           </header>
-          <p className="muted working-hours-helper">
-            {helperText ?? 'Tap any day to change shift status and hours.'}
-          </p>
+          <p className="muted working-hours-helper">{scheduleHelper}</p>
           <div className="working-hours-divider" aria-hidden="true" />
         </div>
       )}
@@ -276,14 +277,15 @@ export default function BarberWorkingHoursEditor({
       <WorkingHoursOverview
         weekDays={weekDays}
         workingHours={orderedHours}
-        expandedDayIndex={expandedDayIndex}
-        draftDay={draftDay}
+        expandedDayIndex={readOnly ? null : expandedDayIndex}
+        draftDay={readOnly ? null : draftDay}
         loading={loading}
         saving={saving}
         errorMessage={saveError}
         saveStatus={saveStatus}
         onToggleDayEditor={toggleEditor}
         onChangeDraftDay={applyDraft}
+        readOnly={readOnly}
       />
     </section>
   );

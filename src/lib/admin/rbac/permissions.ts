@@ -5,6 +5,7 @@ export const PERMISSIONS = [
   'billing.manage',
   'members.manage',
   'members.invite_barber',
+  'team.read',
   'shop.settings',
   'catalog.manage',
   'bookings.manage',
@@ -23,6 +24,7 @@ const ALL_OWNER: Permission[] = [...PERMISSIONS];
 
 const MANAGER: Permission[] = [
   'members.invite_barber',
+  'team.read',
   'shop.settings',
   'catalog.manage',
   'bookings.manage',
@@ -36,6 +38,7 @@ const MANAGER: Permission[] = [
 ];
 
 const BARBER: Permission[] = [
+  'team.read',
   'bookings.self',
   'clients.read',
   'clients.write',

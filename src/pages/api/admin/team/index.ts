@@ -49,6 +49,7 @@ export const GET: APIRoute = async (context) => {
     'catalog.manage',
     'members.manage',
     'members.invite_barber',
+    'team.read',
   ]);
   if (denied) return denied;
 

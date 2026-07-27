@@ -8,20 +8,20 @@ import {
 } from './launchCtaProgress';
 
 describe('buildLaunchProgress', () => {
-  it('marks explore only when prior steps are done', () => {
+  it('is complete only when all four setup steps are done', () => {
     const partial = buildLaunchProgress({
       onboardingCompleted: true,
-      memberCount: 2,
+      teamProfileCount: 2,
       serviceCount: 1,
       retailComplete: false,
     });
     expect(partial.complete).toBe(false);
-    expect(partial.steps.map((s) => s.done)).toEqual([true, true, true, false, false]);
+    expect(partial.steps.map((s) => s.done)).toEqual([true, true, true, false]);
     expect(partial.nextHref).toBe('/admin/retail-onboarding');
 
     const full = buildLaunchProgress({
       onboardingCompleted: true,
-      memberCount: 2,
+      teamProfileCount: 2,
       serviceCount: 3,
       retailComplete: true,
     });
@@ -30,22 +30,30 @@ describe('buildLaunchProgress', () => {
     expect(full.nextHref).toBeNull();
   });
 
-  it('requires two members for the team step', () => {
+  it('requires two team profile cards for the team step', () => {
     const one = buildLaunchProgress({
       onboardingCompleted: true,
-      memberCount: 1,
+      teamProfileCount: 1,
       serviceCount: 1,
       retailComplete: true,
     });
     expect(one.steps.find((s) => s.id === 'team')?.done).toBe(false);
     expect(one.nextHref).toBe('/admin?section=bookings_blocks');
+
+    const two = buildLaunchProgress({
+      onboardingCompleted: true,
+      teamProfileCount: 2,
+      serviceCount: 1,
+      retailComplete: true,
+    });
+    expect(two.steps.find((s) => s.id === 'team')?.done).toBe(true);
   });
 });
 
 describe('resolveLaunchCtaPresentation', () => {
   const complete = buildLaunchProgress({
     onboardingCompleted: true,
-    memberCount: 2,
+    teamProfileCount: 2,
     serviceCount: 1,
     retailComplete: true,
   });
@@ -98,6 +106,7 @@ describe('resolveLaunchCtaPresentation', () => {
     expect(result.status).toBe('IN PROGRESS');
     expect(result.title).toBe('Continue Setup');
     expect(result.doneCount).toBe(3);
+    expect(result.totalCount).toBe(4);
     expect(result.href).toBe('/admin/retail-onboarding');
   });
 });

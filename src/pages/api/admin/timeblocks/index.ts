@@ -2,16 +2,18 @@ export const prerender = false;
 
 import type { APIRoute } from 'astro';
 import { formatInTimeZone } from 'date-fns-tz';
-import { requireAdminPermission } from '../../../../lib/admin/auth';
-import { prisma } from '../../../../lib/db/client';
+import { requireAdminContext } from '../../../../lib/admin/auth';
+import { requireAnyPermission } from '../../../../lib/admin/rbac/can';
 import { getTimeBlockDelegate } from '../../../../lib/db/timeBlocks';
 import { toUtcFromLondon, addMinutes } from '../../../../lib/booking/time';
 
 const ADMIN_TIMEZONE = 'Europe/London';
 
 export const GET: APIRoute = async (ctx) => {
-  const access = await requireAdminPermission(ctx, 'catalog.manage');
+  const access = await requireAdminContext(ctx);
   if (access instanceof Response) return access;
+  const denied = requireAnyPermission(access, ['catalog.manage', 'team.read']);
+  if (denied) return denied;
 
   const searchParams = new URL(ctx.request.url).searchParams;
   const range = searchParams.get('range') ?? 'today';

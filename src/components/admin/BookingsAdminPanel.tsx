@@ -625,6 +625,7 @@ export default function BookingsAdminPanel({ isActive, mode, onBackToDashboard, 
   const [loggedIn, setLoggedIn] = useState(true);
   const [sessionBarberId, setSessionBarberId] = useState<string | null>(null);
   const [canManageBookings, setCanManageBookings] = useState(true);
+  const [canEditTeam, setCanEditTeam] = useState(true);
   const [bookings, setBookings] = useState<Booking[]>([]);
   const [bookingsInitialLoading, setBookingsInitialLoading] = useState(true);
   const [barbers, setBarbers] = useState<Barber[]>([]);
@@ -959,6 +960,11 @@ export default function BookingsAdminPanel({ isActive, mode, onBackToDashboard, 
         setSessionBarberId(payload.barberId ?? null);
         const perms = payload.permissions ?? [];
         setCanManageBookings(perms.includes('bookings.manage') || payload.role === 'OWNER' || payload.role === 'MANAGER');
+        setCanEditTeam(
+          perms.includes('catalog.manage') ||
+            perms.includes('members.manage') ||
+            perms.includes('members.invite_barber'),
+        );
       } catch {
         setLoggedIn(false);
       }
@@ -2126,17 +2132,24 @@ export default function BookingsAdminPanel({ isActive, mode, onBackToDashboard, 
       onCreateBlock={(payload) => void createProfileBlock(payload)}
       onDeleteBlock={(blockId) => void deleteTimeBlock(blockId)}
       onDeleteBarber={() => void deleteBarber(selectedBarber.id)}
+      readOnly={!canEditTeam}
       canManageOnlineBookings={
-        Boolean(profileMemberMeta?.canManageOnlineBookings) && !profileMemberMeta?.memberOnly
+        canEditTeam &&
+        Boolean(profileMemberMeta?.canManageOnlineBookings) &&
+        !profileMemberMeta?.memberOnly
       }
       bookable={profileMemberMeta?.bookable ?? normalizeBarberStatus(selectedBarber)}
       role={profileMemberMeta?.role}
       accountAccess={profileMemberMeta?.accountAccess}
       memberOnly={Boolean(profileMemberMeta?.memberOnly)}
       memberId={profileMemberMeta?.memberId}
-      canSetUpOnlineBookings={Boolean(profileMemberMeta?.canSetUpOnlineBookings)}
-      canSendDashboardInvite={Boolean(profileMemberMeta?.dashboardAccountAction === 'send')}
-      dashboardAccountAction={profileMemberMeta?.dashboardAccountAction ?? null}
+      canSetUpOnlineBookings={canEditTeam && Boolean(profileMemberMeta?.canSetUpOnlineBookings)}
+      canSendDashboardInvite={
+        canEditTeam && Boolean(profileMemberMeta?.dashboardAccountAction === 'send')
+      }
+      dashboardAccountAction={
+        canEditTeam ? profileMemberMeta?.dashboardAccountAction ?? null : null
+      }
       inviteId={profileMemberMeta?.inviteId}
       inviteEmail={profileMemberMeta?.inviteEmail}
       inviteExpiresAt={profileMemberMeta?.inviteExpiresAt}
@@ -2196,14 +2209,19 @@ export default function BookingsAdminPanel({ isActive, mode, onBackToDashboard, 
         return combineSetupRefreshResults(barbersOk, teamOk, workingHoursOk);
       }}
       onSaveIdentity={
-        profileMemberMeta?.memberOnly ? undefined : (payload) => saveSelectedBarberIdentity(payload)
+        !canEditTeam || profileMemberMeta?.memberOnly
+          ? undefined
+          : (payload) => saveSelectedBarberIdentity(payload)
       }
       onToggleBookable={
-        profileMemberMeta?.canManageOnlineBookings && !profileMemberMeta?.memberOnly
+        canEditTeam &&
+        profileMemberMeta?.canManageOnlineBookings &&
+        !profileMemberMeta?.memberOnly
           ? (next) => void handleProfileToggleBookable(next)
           : undefined
       }
       onChangeRole={
+        canEditTeam &&
         teamActorRole === 'OWNER' &&
         (profileMemberMeta?.memberId || profileMemberMeta?.inviteId) &&
         (profileMemberMeta?.role === 'BARBER' || profileMemberMeta?.role === 'MANAGER')
@@ -2387,7 +2405,7 @@ export default function BookingsAdminPanel({ isActive, mode, onBackToDashboard, 
             }
             metaBadgeVariant={undefined}
             actions={
-              mode === 'blocks' ? (
+              mode === 'blocks' && canEditTeam ? (
                 <button
                   type="button"
                   className="btn btn--primary btn--icon"
