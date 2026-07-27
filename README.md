@@ -48,7 +48,7 @@ Astro + React (TypeScript) booking + shop system for barbershops.
          `http://<your-lan-ip>:4321/api/auth/callback/google`
          (update when your LAN IP changes; otherwise Google returns `redirect_uri_mismatch`).
      - Optional: `BETTER_AUTH_TRUSTED_ORIGINS` — comma-separated extra origins for auth CSRF checks.
-     - `SMS_REMINDERS_ENABLED`: set `true` to enable the appointment SMS reminder cron (default off).
+     - `SMS_REMINDERS_ENABLED`: set `true` to enable the appointment SMS reminder cron (default off). Per-shop gate also required: `ShopSettings.smsRemindersEnabled` (flipped on by paid SaaS subscription webhook).
      - `CRON_SECRET`: shared secret for `/api/cron/*` (Vercel Cron sends `Authorization: Bearer <CRON_SECRET>`).
      - `TWILIO_ACCOUNT_SID` / `TWILIO_AUTH_TOKEN` / `TWILIO_FROM_NUMBER`: Twilio credentials for SMS (required in production when reminders are enabled). Locally, missing Twilio logs `[DEV SMS]` instead.
 
@@ -139,8 +139,8 @@ Set `SHOW_SETUP_PLAN_CARDS = true` in `offerMode.ts`, then:
 
 ## SMS appointment reminders (backend)
 - Cron: `GET/POST /api/cron/sms-reminders` every 15 minutes (`vercel.json`), auth via `CRON_SECRET`.
-- Sends one SMS ~24h before `BOOKED` appointments (23–25h window) when `SMS_REMINDERS_ENABLED=true`.
-- Skips: demo shop, `[TEST]` bookings, missing/invalid phone, already-sent, bookings created too late for a day-before reminder.
+- Sends one SMS ~24h before `BOOKED` appointments (23–25h window) when `SMS_REMINDERS_ENABLED=true` **and** the shop has `smsRemindersEnabled=true` (set on paid SaaS subscription webhook).
+- Skips: unpaid/demo shops, demo shop id, `[TEST]` bookings, missing/invalid phone, already-sent, bookings created too late for a day-before reminder.
 - Reschedule clears `smsReminderSentAt` so a new reminder can fire for the new time.
 - No admin UI in v1; outbound rows land in `SmsOutbound` for ops/debug.
 

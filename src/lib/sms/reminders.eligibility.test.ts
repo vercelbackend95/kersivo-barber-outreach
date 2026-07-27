@@ -18,6 +18,7 @@ function baseCandidate(now: Date, overrides: Record<string, unknown> = {}) {
     notes: null as string | null,
     smsReminderSentAt: null as Date | null,
     smsReminderForStartAt: null as Date | null,
+    smsRemindersEnabled: true,
     ...overrides,
   };
 }
@@ -42,6 +43,15 @@ describe('evaluateReminderEligibility', () => {
       { enabled: true },
     );
     expect(result).toEqual({ ok: false, reason: 'demo_shop' });
+  });
+
+  it('skips shops without smsRemindersEnabled', () => {
+    const result = evaluateReminderEligibility(
+      baseCandidate(now, { smsRemindersEnabled: false }),
+      now,
+      { enabled: true },
+    );
+    expect(result).toEqual({ ok: false, reason: 'shop_sms_disabled' });
   });
 
   it('skips sandbox test bookings', () => {

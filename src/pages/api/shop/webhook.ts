@@ -4,6 +4,10 @@ import PrismaClientPkg from '@prisma/client';
 import type { APIRoute } from 'astro';
 import { setShopAnalyticsLive, setShopAnalyticsLiveForOwnerEmail } from '../../../lib/admin/analyticsMode';
 import { prisma } from '../../../lib/db/client';
+import {
+  enableShopSmsReminders,
+  enableShopSmsRemindersForOwnerEmail,
+} from '../../../lib/sms/shopSmsGate';
 import { formatGbp } from '../../../lib/shop/money';
 import { createShopOrder } from '../../../lib/shop/createShopOrder';
 import {
@@ -462,6 +466,23 @@ async function handleSaasSubscriptionCheckout(
     });
   } catch (error) {
     console.error('[webhook] Failed to mark shop analytics as live', {
+      sessionId,
+      error,
+    });
+  }
+
+  try {
+    const metadataShopId = metadata.shopId?.trim();
+    const updated = metadataShopId
+      ? await enableShopSmsReminders(metadataShopId).then(() => true)
+      : await enableShopSmsRemindersForOwnerEmail(customerEmail);
+    logSaasSubscriptionStage('sms_reminders_enabled', {
+      sessionId,
+      updated,
+      viaShopId: Boolean(metadataShopId),
+    });
+  } catch (error) {
+    console.error('[webhook] Failed to enable shop SMS reminders', {
       sessionId,
       error,
     });

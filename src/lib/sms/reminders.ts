@@ -26,6 +26,7 @@ export type ReminderCandidate = {
   notes: string | null;
   smsReminderSentAt: Date | null;
   smsReminderForStartAt: Date | null;
+  smsRemindersEnabled: boolean;
   shopName: string;
   shopTimezone: string;
   serviceName: string;
@@ -35,6 +36,7 @@ export type ReminderEligibilityReason =
   | 'ok'
   | 'kill_switch'
   | 'demo_shop'
+  | 'shop_sms_disabled'
   | 'test_booking'
   | 'no_phone'
   | 'invalid_phone'
@@ -68,6 +70,7 @@ export function evaluateReminderEligibility(
     | 'notes'
     | 'smsReminderSentAt'
     | 'smsReminderForStartAt'
+    | 'smsRemindersEnabled'
   >,
   now: Date,
   options?: { enabled?: boolean },
@@ -75,6 +78,7 @@ export function evaluateReminderEligibility(
   const enabled = options?.enabled ?? isSmsRemindersEnabled();
   if (!enabled) return { ok: false, reason: 'kill_switch' };
   if (candidate.shopId === DEMO_SHOP_ID) return { ok: false, reason: 'demo_shop' };
+  if (!candidate.smsRemindersEnabled) return { ok: false, reason: 'shop_sms_disabled' };
   if (isSandboxBookingNotes(candidate.notes)) return { ok: false, reason: 'test_booking' };
 
   if (!candidate.phone?.trim()) return { ok: false, reason: 'no_phone' };
@@ -111,7 +115,10 @@ export async function findDueReminders(
       startAt: { gte: windowStart, lte: windowEnd },
       smsReminderSentAt: null,
       phone: { not: null },
-      barber: { shopId: { not: DEMO_SHOP_ID } },
+      barber: {
+        shopId: { not: DEMO_SHOP_ID },
+        shop: { smsRemindersEnabled: true },
+      },
       NOT: [
         { notes: OWNER_TEST_BOOKING_NOTES_PREFIX },
         { notes: { startsWith: `${OWNER_TEST_BOOKING_NOTES_PREFIX} ` } },
@@ -132,7 +139,7 @@ export async function findDueReminders(
       barber: {
         select: {
           shopId: true,
-          shop: { select: { name: true, timezone: true } },
+          shop: { select: { name: true, timezone: true, smsRemindersEnabled: true } },
         },
       },
       service: { select: { name: true } },
@@ -149,6 +156,7 @@ export async function findDueReminders(
     notes: row.notes,
     smsReminderSentAt: row.smsReminderSentAt,
     smsReminderForStartAt: row.smsReminderForStartAt,
+    smsRemindersEnabled: row.barber.shop.smsRemindersEnabled,
     shopName: row.barber.shop.name,
     shopTimezone: row.barber.shop.timezone || 'Europe/London',
     serviceName: row.serviceNameAtBooking?.trim() || row.service.name,

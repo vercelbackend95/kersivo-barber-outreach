@@ -159,6 +159,8 @@ model ShopSettings {
   retailTestOrderCompletedAt         DateTime?
   retailPickupWalkthroughCompletedAt DateTime?
   analyticsIncludeTestActivity       Boolean  @default(true)
+  /// Set true on paid SaaS subscription webhook; SMS cron skips shops where false.
+  smsRemindersEnabled         Boolean  @default(false)
   ownerUserId                 String?  @unique
   createdAt                   DateTime @default(now())
   updatedAt                   DateTime @updatedAt
