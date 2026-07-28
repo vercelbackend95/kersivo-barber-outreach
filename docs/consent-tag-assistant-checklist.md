@@ -40,11 +40,12 @@ Use a fresh Incognito window on https://kersivo.co.uk/ (or local preview).
 Primary Google Ads conversion = paid £39 SaaS on `/setup/success` (not contact forms).
 
 1. Consent: **Reject optional** → no `saas_subscription_paid` and no Ads `conversion`.
-2. Consent: **Analytics** and/or **Advertising measurement** → after verified subscription success, wait until tags are configured (`__kersivoGa4Configured` / `__kersivoAdsConfigured` as needed), then:
-   - With analytics: GA4 event `saas_subscription_paid` (`transaction_id`, `value`, `currency`).
-   - With advertising measurement **and** `PUBLIC_GOOGLE_ADS_PURCHASE_CONVERSION_LABEL` set: `gtag('event','conversion',{ send_to: 'AW-…/label', … })`.
-3. Refresh success page does **not** double-fire (`sessionStorage` key `saas_subscription_paid:{transactionId}`). Dedup is set only after a successful fire (required tags ready).
-4. Legacy setup-fee event `setup_deposit_paid` is **not** the live purchase signal when setup fees are off.
+2. Consent: **Analytics** and/or **Advertising measurement** → after verified subscription success, wait until tags are configured (`__kersivoGa4Configured` / `__kersivoAdsConfigured` as needed), then **progressive** per channel:
+   - With analytics: GA4 event `saas_subscription_paid` (`transaction_id`, `value`, `currency`) as soon as GA4 is configured (does not wait for Ads).
+   - With advertising measurement **and** `PUBLIC_GOOGLE_ADS_PURCHASE_CONVERSION_LABEL` set: `gtag('event','conversion',{ send_to: 'AW-…/label', … })` when Ads is configured.
+3. If the cookie banner is still open on success, accept preferences **on that page** (Tag Assistant). The success script listens for `kersivo:consent-changed` until `pagehide` — late accept still fires.
+4. Refresh success page does **not** double-fire (per-channel `sessionStorage`: `saas_subscription_paid:ga4:{transactionId}` / `…:ads:…`). Dedup is set only after that channel successfully fires.
+5. Legacy setup-fee event `setup_deposit_paid` is **not** the live purchase signal when setup fees are off.
 
 ### Analytics-only consent (required Ads ops)
 

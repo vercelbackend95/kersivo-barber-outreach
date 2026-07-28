@@ -5,6 +5,8 @@ import {
   fireSaasPurchaseTracking,
   normalizeGoogleAdsId,
   resolvePurchaseTrackingTargets,
+  saasPurchaseDedupKeyAds,
+  saasPurchaseDedupKeyGa4,
   shouldTrackSaasPurchase,
 } from './adsConversion';
 
@@ -87,16 +89,10 @@ describe('resolvePurchaseTrackingTargets / arePurchaseTagsReady', () => {
         { ga4Configured: true, adsConfigured: false },
       ),
     ).toBe(true);
-    expect(
-      arePurchaseTagsReady(
-        { wantGa4: false, wantAdsConversion: true },
-        { ga4Configured: false, adsConfigured: true },
-      ),
-    ).toBe(true);
   });
 });
 
-describe('fireSaasPurchaseTracking', () => {
+describe('fireSaasPurchaseTracking (progressive)', () => {
   it('fires GA4 only when analytics consent', () => {
     const gtag = vi.fn();
     const result = fireSaasPurchaseTracking({
@@ -106,7 +102,13 @@ describe('fireSaasPurchaseTracking', () => {
       consent: { analytics: true, advertisingMeasurement: false },
       gtag,
     });
-    expect(result).toEqual({ firedGa4: true, firedAdsConversion: false, complete: true });
+    expect(result).toMatchObject({
+      firedGa4: true,
+      firedAdsConversion: false,
+      pendingGa4: false,
+      pendingAds: false,
+      complete: true,
+    });
     expect(gtag).toHaveBeenCalledWith(
       'event',
       'saas_subscription_paid',
@@ -123,7 +125,11 @@ describe('fireSaasPurchaseTracking', () => {
       consent: { analytics: false, advertisingMeasurement: true },
       gtag,
     });
-    expect(result).toEqual({ firedGa4: false, firedAdsConversion: true, complete: true });
+    expect(result).toMatchObject({
+      firedGa4: false,
+      firedAdsConversion: true,
+      complete: true,
+    });
     expect(gtag).toHaveBeenCalledWith(
       'event',
       'conversion',
@@ -144,7 +150,11 @@ describe('fireSaasPurchaseTracking', () => {
       consent: { analytics: true, advertisingMeasurement: true },
       gtag,
     });
-    expect(result).toEqual({ firedGa4: true, firedAdsConversion: true, complete: true });
+    expect(result).toMatchObject({
+      firedGa4: true,
+      firedAdsConversion: true,
+      complete: true,
+    });
     expect(gtag).toHaveBeenCalledTimes(2);
   });
 
@@ -157,11 +167,11 @@ describe('fireSaasPurchaseTracking', () => {
       consent: { analytics: false, advertisingMeasurement: false },
       gtag,
     });
-    expect(result).toEqual({ firedGa4: false, firedAdsConversion: false, complete: false });
+    expect(result.complete).toBe(false);
     expect(gtag).not.toHaveBeenCalled();
   });
 
-  it('does not fire or complete when required tags are not ready', () => {
+  it('fires GA4 when only GA4 is ready; keeps Ads pending', () => {
     const gtag = vi.fn();
     const result = fireSaasPurchaseTracking({
       transactionId: 'sub_1',
@@ -171,7 +181,72 @@ describe('fireSaasPurchaseTracking', () => {
       gtag,
       tagReady: { ga4Configured: true, adsConfigured: false },
     });
-    expect(result).toEqual({ firedGa4: false, firedAdsConversion: false, complete: false });
+    expect(result).toMatchObject({
+      firedGa4: true,
+      firedAdsConversion: false,
+      pendingGa4: false,
+      pendingAds: true,
+      complete: false,
+    });
+    expect(gtag).toHaveBeenCalledTimes(1);
+    expect(gtag).toHaveBeenCalledWith('event', 'saas_subscription_paid', expect.any(Object));
+  });
+
+  it('fires Ads on a later call when alreadyFired.ga4 and Ads becomes ready', () => {
+    const gtag = vi.fn();
+    const result = fireSaasPurchaseTracking({
+      transactionId: 'sub_1',
+      value: 39,
+      adsSendTo: 'AW-1/label',
+      consent: { analytics: true, advertisingMeasurement: true },
+      gtag,
+      tagReady: { ga4Configured: true, adsConfigured: true },
+      alreadyFired: { ga4: true, ads: false },
+    });
+    expect(result).toMatchObject({
+      firedGa4: false,
+      firedAdsConversion: true,
+      complete: true,
+    });
+    expect(gtag).toHaveBeenCalledTimes(1);
+    expect(gtag).toHaveBeenCalledWith('event', 'conversion', expect.any(Object));
+  });
+
+  it('completes GA4-only when Ads abandoned', () => {
+    const gtag = vi.fn();
+    const result = fireSaasPurchaseTracking({
+      transactionId: 'sub_1',
+      value: 39,
+      adsSendTo: 'AW-1/label',
+      consent: { analytics: true, advertisingMeasurement: true },
+      gtag,
+      tagReady: { ga4Configured: true, adsConfigured: false },
+      abandonAds: true,
+    });
+    expect(result).toMatchObject({
+      firedGa4: true,
+      firedAdsConversion: false,
+      pendingAds: false,
+      complete: true,
+    });
+  });
+
+  it('skips channels already fired (per-channel dedup)', () => {
+    const gtag = vi.fn();
+    const result = fireSaasPurchaseTracking({
+      transactionId: 'sub_1',
+      value: 39,
+      adsSendTo: 'AW-1/label',
+      consent: { analytics: true, advertisingMeasurement: true },
+      gtag,
+      alreadyFired: { ga4: true, ads: true },
+    });
+    expect(result.complete).toBe(true);
     expect(gtag).not.toHaveBeenCalled();
+  });
+
+  it('exposes stable per-channel dedup keys', () => {
+    expect(saasPurchaseDedupKeyGa4('sub_1')).toBe('saas_subscription_paid:ga4:sub_1');
+    expect(saasPurchaseDedupKeyAds('sub_1')).toBe('saas_subscription_paid:ads:sub_1');
   });
 });

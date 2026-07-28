@@ -81,76 +81,15 @@ const adsPurchaseSendTo = resolveGoogleAdsPurchaseSendToFromProcessEnv();
             data-ads-send-to={adsPurchaseSendTo ?? ''}
           ></div>
           <script>
-            import {
-              fireSaasPurchaseTracking,
-              saasPurchaseDedupKey,
-              shouldTrackSaasPurchase,
-            } from '@/lib/analytics/adsConversion';
-            import { CONSENT_COOKIE_NAME, CONSENT_VERSION } from '@/lib/consent/config';
+            import { startSaasPurchaseTracking } from '@/lib/analytics/saasPurchaseTrackingClient';
 
             try {
               const root = document.getElementById('kersivo-saas-purchase-track');
               const transactionId = root?.dataset.transactionId ?? '';
               const value = Number(root?.dataset.value ?? '');
               const adsSendTo = (root?.dataset.adsSendTo ?? '').trim() || null;
-              if (!root || !transactionId || !Number.isFinite(value)) {
-                /* missing payload */
-              } else {
-                const key = saasPurchaseDedupKey(transactionId);
-
-                function readConsent() {
-                  try {
-                    const parts = document.cookie.split(';');
-                    for (const raw of parts) {
-                      const part = raw.trim();
-                      if (part.startsWith(`${CONSENT_COOKIE_NAME}=`)) {
-                        const parsed = JSON.parse(
-                          decodeURIComponent(part.slice(CONSENT_COOKIE_NAME.length + 1)),
-                        );
-                        if (parsed && parsed.version === CONSENT_VERSION) {
-                          return {
-                            analytics: parsed.analytics === true,
-                            advertisingMeasurement: parsed.advertisingMeasurement === true,
-                          };
-                        }
-                      }
-                    }
-                  } catch {
-                    /* ignore */
-                  }
-                  return { analytics: false, advertisingMeasurement: false };
-                }
-
-                function fire() {
-                  const consent = readConsent();
-                  if (!shouldTrackSaasPurchase(consent)) return false;
-                  if (window.sessionStorage.getItem(key)) return true;
-                  if (typeof window.gtag !== 'function') return false;
-
-                  const result = fireSaasPurchaseTracking({
-                    transactionId,
-                    value,
-                    adsSendTo,
-                    consent,
-                    gtag: window.gtag.bind(window),
-                    tagReady: {
-                      ga4Configured: window.__kersivoGa4Configured === true,
-                      adsConfigured: window.__kersivoAdsConfigured === true,
-                    },
-                  });
-
-                  if (!result.complete) return false;
-                  window.sessionStorage.setItem(key, '1');
-                  return true;
-                }
-
-                if (!fire()) {
-                  let attempts = 0;
-                  const timer = window.setInterval(() => {
-                    attempts += 1;
-                    if (fire() || attempts > 20) window.clearInterval(timer);
-                  }, 250);
-                }
+              if (root && transactionId && Number.isFinite(value)) {
+                startSaasPurchaseTracking({ transactionId, value, adsSendTo });
               }
             } catch {
               /* fail-soft */

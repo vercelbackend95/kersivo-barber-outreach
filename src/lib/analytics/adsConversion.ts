@@ -89,7 +89,7 @@ export type PurchaseTagReadyFlags = {
 
 /**
  * True when every *wanted* channel has its gtag config flag set.
- * Stub `gtag` alone is not enough — wait for `__kersivoGa4Configured` / `__kersivoAdsConfigured`.
+ * Prefer progressive fire via `fireSaasPurchaseTracking` — this is for all-ready checks.
  */
 export function arePurchaseTagsReady(
   targets: { wantGa4: boolean; wantAdsConversion: boolean },
@@ -111,37 +111,64 @@ export type FireSaasPurchaseTrackingInput = {
   gtag: (...args: unknown[]) => void;
   /** When omitted, assumes tags already ready (tests / callers that gated earlier). */
   tagReady?: PurchaseTagReadyFlags;
+  /** Channels already recorded in sessionStorage — skip re-fire. */
+  alreadyFired?: { ga4?: boolean; ads?: boolean };
+  /**
+   * When true, stop waiting for Ads (misconfig / deadline). GA4 can still complete alone.
+   * Has no effect if Ads was never wanted.
+   */
+  abandonAds?: boolean;
+};
+
+export type FireSaasPurchaseTrackingResult = {
+  /** True if GA4 event was sent on this call. */
+  firedGa4: boolean;
+  /** True if Ads conversion was sent on this call. */
+  firedAdsConversion: boolean;
+  /** Still waiting for GA4 tag (wanted, not fired, not abandoned). */
+  pendingGa4: boolean;
+  /** Still waiting for Ads tag (wanted, not fired, not abandoned). */
+  pendingAds: boolean;
+  /** All wanted channels either fired or abandoned — safe to stop orchestrator. */
+  complete: boolean;
 };
 
 /**
- * Fire GA4 purchase event and/or Ads conversion.
- * Returns `complete: true` only when all wanted channels fired (safe to dedupe).
- * If tags are not ready, returns complete:false and fires nothing.
+ * Progressive fire: send each ready channel independently.
+ * Does not block GA4 on Ads readiness. Stub `gtag` alone is not enough —
+ * wait for `__kersivoGa4Configured` / `__kersivoAdsConfigured` per channel.
  */
-export function fireSaasPurchaseTracking(input: FireSaasPurchaseTrackingInput): {
-  firedGa4: boolean;
-  firedAdsConversion: boolean;
-  complete: boolean;
-} {
+export function fireSaasPurchaseTracking(
+  input: FireSaasPurchaseTrackingInput,
+): FireSaasPurchaseTrackingResult {
+  const empty: FireSaasPurchaseTrackingResult = {
+    firedGa4: false,
+    firedAdsConversion: false,
+    pendingGa4: false,
+    pendingAds: false,
+    complete: false,
+  };
+
   if (!shouldTrackSaasPurchase(input.consent)) {
-    return { firedGa4: false, firedAdsConversion: false, complete: false };
+    return empty;
   }
 
   const targets = resolvePurchaseTrackingTargets(input.consent, input.adsSendTo);
   if (!targets.wantGa4 && !targets.wantAdsConversion) {
-    return { firedGa4: false, firedAdsConversion: false, complete: false };
+    return empty;
   }
 
   const tagReady = input.tagReady ?? { ga4Configured: true, adsConfigured: true };
-  if (!arePurchaseTagsReady(targets, tagReady)) {
-    return { firedGa4: false, firedAdsConversion: false, complete: false };
-  }
-
+  const already = input.alreadyFired ?? {};
   const currency = input.currency ?? 'GBP';
+  const abandonAds = Boolean(input.abandonAds);
+
   let firedGa4 = false;
   let firedAdsConversion = false;
+  const ga4Done = Boolean(already.ga4);
+  const adsDone = Boolean(already.ads);
 
-  if (targets.wantGa4) {
+  if (targets.wantGa4 && !ga4Done && tagReady.ga4Configured) {
     input.gtag('event', 'saas_subscription_paid', {
       transaction_id: input.transactionId,
       value: input.value,
@@ -151,7 +178,13 @@ export function fireSaasPurchaseTracking(input: FireSaasPurchaseTrackingInput): 
     firedGa4 = true;
   }
 
-  if (targets.wantAdsConversion && input.adsSendTo) {
+  if (
+    targets.wantAdsConversion &&
+    !adsDone &&
+    !abandonAds &&
+    tagReady.adsConfigured &&
+    input.adsSendTo
+  ) {
     input.gtag('event', 'conversion', {
       send_to: input.adsSendTo,
       value: input.value,
@@ -162,14 +195,29 @@ export function fireSaasPurchaseTracking(input: FireSaasPurchaseTrackingInput): 
     firedAdsConversion = true;
   }
 
+  const ga4Satisfied = !targets.wantGa4 || ga4Done || firedGa4;
+  const adsSatisfied =
+    !targets.wantAdsConversion || adsDone || firedAdsConversion || abandonAds;
+
   return {
     firedGa4,
     firedAdsConversion,
-    complete: (targets.wantGa4 ? firedGa4 : true) && (targets.wantAdsConversion ? firedAdsConversion : true),
+    pendingGa4: targets.wantGa4 && !ga4Satisfied,
+    pendingAds: targets.wantAdsConversion && !adsSatisfied,
+    complete: ga4Satisfied && adsSatisfied,
   };
 }
 
-/** sessionStorage key for purchase dedup on /setup/success. */
+/** Per-channel sessionStorage keys (refresh-safe dedup). */
+export function saasPurchaseDedupKeyGa4(transactionId: string): string {
+  return `saas_subscription_paid:ga4:${transactionId}`;
+}
+
+export function saasPurchaseDedupKeyAds(transactionId: string): string {
+  return `saas_subscription_paid:ads:${transactionId}`;
+}
+
+/** @deprecated Prefer per-channel keys; kept for older sessionStorage entries. */
 export function saasPurchaseDedupKey(transactionId: string): string {
   return `saas_subscription_paid:${transactionId}`;
 }
