@@ -52,6 +52,9 @@ Astro + React (TypeScript) booking + shop system for barbershops.
      - `CRON_SECRET`: shared secret for `/api/cron/*` (Vercel Cron sends `Authorization: Bearer <CRON_SECRET>`).
      - `TWILIO_ACCOUNT_SID` / `TWILIO_AUTH_TOKEN` / `TWILIO_FROM_NUMBER`: Twilio credentials for SMS (required in production when reminders are enabled). Locally, missing Twilio logs `[DEV SMS]` instead.
      - Optional `TWILIO_TRIAL_TEMPLATE`: e.g. `sms_appointment_reminders` — trial accounts only allow Twilio template keys as `Body` (remove after upgrading to Pay as you go).
+   - `PUBLIC_GA4_MEASUREMENT_ID`: GA4 measurement id (`G-…`) for analytics (Consent Mode; loads after analytics consent).
+   - `PUBLIC_GOOGLE_ADS_ID`: Google Ads account id (`AW-…`). Loads Ads config only when the visitor enables **Advertising measurement**.
+   - `PUBLIC_GOOGLE_ADS_PURCHASE_CONVERSION_LABEL`: conversion **label** for the £39 SaaS purchase (from Google Ads → Goals → Conversions). Used on `/setup/success` as `send_to: AW-…/label`. Without this label, GA4 `saas_subscription_paid` still fires; Ads `conversion` does not.
 
 ### Pre-Ads email checklist (production)
 Before running Google Ads against the live site, confirm:
@@ -62,6 +65,14 @@ Before running Google Ads against the live site, confirm:
 5. Submit **Send yourself the demo & pricing** → expect inbox lead + visitor email; GA event `demo_pricing_capture_submit` only after both succeed.
 6. With `RESEND_API_KEY` temporarily unset in a production-like deploy, both forms must show an error and must **not** fire lead events.
 
+### Pre-Ads purchase conversion checklist (F01)
+1. In Google Ads create a **Purchase** website conversion (Primary, Count = One, value from tag) for the `send_to` tag path.
+2. Copy `AW-…` → `PUBLIC_GOOGLE_ADS_ID` and the label → `PUBLIC_GOOGLE_ADS_PURCHASE_CONVERSION_LABEL` on Vercel Production; redeploy.
+3. Mark `saas_subscription_paid` as a **key event** in GA4; link GA4 ↔ Ads.
+4. **Required (covers analytics-only consent):** In Google Ads, **import** the GA4 key event `saas_subscription_paid` as a Purchase conversion. Many UK visitors enable Analytics but not Advertising measurement — without this import those £39 purchases never reach Ads via `send_to`. Use one Primary purchase action (or the same action); both paths send the same `transaction_id` so Google can dedupe.
+5. Soft-launch bidding: **Manual CPC** (or Maximize clicks with cap) — do **not** use Maximize conversions until you have stable purchase volume.
+6. Contact/demo form events stay **Secondary / observe only** in Ads — never Primary (protects a small budget from optimizing for free form fills).
+7. Verify with Tag Assistant + [`docs/consent-tag-assistant-checklist.md`](docs/consent-tag-assistant-checklist.md) (Conversions section).
 
 6. Run app:
    ```bash
