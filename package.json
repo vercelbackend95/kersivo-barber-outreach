@@ -74,7 +74,7 @@
     "reel:mix:no-show": "cd reel && npm run mix:no-show"
   },
   "dependencies": {
-    "@astrojs/react": "5.0.7",
+    "@astrojs/react": "^6.0.2",
     "@fontsource/antonio": "^5.2.8",
     "@fontsource/bebas-neue": "^5.2.7",
     "@fontsource/inter": "^5.2.8",
@@ -82,12 +82,13 @@
     "@radix-ui/react-slot": "^1.2.4",
     "@types/react": "^19.2.14",
     "@types/react-dom": "^19.2.3",
-    "astro": "6.4.8",
+    "astro": "^7.1.6",
     "better-auth": "^1.6.23",
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",
     "date-fns": "^4.1.0",
     "date-fns-tz": "^3.2.0",
+    "dotenv": "^17.4.2",
     "framer-motion": "^12.38.0",
     "lucide-react": "^1.8.0",
     "motion": "^12.38.0",
@@ -100,8 +101,8 @@
     "zod": "^3.24.1"
   },
   "devDependencies": {
-    "@astrojs/check": "0.9.9",
-    "@astrojs/vercel": "10.0.8",
+    "@astrojs/check": "^0.9.10",
+    "@astrojs/vercel": "^11.0.4",
     "@emnapi/core": "1.11.2",
     "@emnapi/runtime": "1.11.2",
     "@fontsource/caveat": "^5.2.8",
@@ -113,14 +114,20 @@
     "jsdom": "^29.1.1",
     "playwright": "^1.59.1",
     "prisma": "^5.22.0",
-    "sharp": "^0.34.5",
+    "sharp": "^0.35.3",
     "tailwindcss": "^4.2.2",
     "tsx": "^4.20.3",
     "typescript": "5.9.3",
-    "vite": "7.3.6",
+    "vite": "^8.1.5",
     "vitest": "3.2.7"
   },
   "prisma": {
     "seed": "tsx prisma/seed.ts"
+  },
+  "overrides": {
+    "@vercel/routing-utils": {
+      "path-to-regexp": "6.3.0"
+    },
+    "path-to-regexp": "6.3.0"
   }
 }

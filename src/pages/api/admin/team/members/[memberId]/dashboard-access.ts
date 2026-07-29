@@ -101,7 +101,7 @@ export const DELETE: APIRoute = async (context) => {
       'ok' in error &&
       (error as { ok: unknown }).ok === false
     ) {
-      const failure = error as { status: number; code: string; error: string };
+      const failure = error as unknown as { status: number; code: string; error: string };
       return json({ code: failure.code, error: failure.error }, failure.status);
     }
     console.error('[team/members/dashboard-access] revoke failed', error);

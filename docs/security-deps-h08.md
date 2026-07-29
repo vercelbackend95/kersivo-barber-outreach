@@ -58,3 +58,49 @@ Do **not** run `npm audit fix --force` on main.
 | `path-to-regexp` (via `@vercel/routing-utils`) | ReDoS | Resolved by `@astrojs/vercel` major in Phase B |
 
 Phase B checklist: separate branch → upgrade → vitest + `astro build` → smoke landing /admin / API / uploads / Stripe webhooks → deploy.
+
+## Before Phase B (baseline)
+
+Captured: 2026-07-29 — branch stacked on Phase A (`chore/h08-phase-a-safe-deps` @ `2b6234c`; PR #8 still open).
+
+### Full tree (`npm audit`)
+
+**6 vulnerabilities** (1 low, 5 high, 0 critical)
+
+Remaining clusters: `astro` XSS, `sharp` &lt;0.35 libvips, `path-to-regexp` via `@astrojs/vercel` / `@vercel/routing-utils` (and related).
+
+## After Phase B (DONE 2026-07-29)
+
+### Actions taken
+
+1. `npx @astrojs/upgrade` → `astro@^7.1.6`, `@astrojs/react@^6.0.2`, `@astrojs/vercel@^11.0.4`, `@astrojs/check@^0.9.10`
+2. `sharp@^0.35.3`, direct `vite@^8.1.5`
+3. `compressHTML: true` in [`astro.config.mjs`](../astro.config.mjs) (Astro 7 default is `'jsx'`)
+4. npm `overrides` for `path-to-regexp@6.3.0` (ReDoS via `@vercel/routing-utils`)
+5. Prisma server client loads `.env` via `dotenv` (Astro 7 / Vite 8 no longer reliably puts secrets in `process.env` for Prisma)
+6. Sharp regression test: [`src/lib/storage/convertImageToWebp.test.ts`](../src/lib/storage/convertImageToWebp.test.ts)
+7. Small typecheck / reschedule-test fixes required for green CI on Astro 7 check
+
+### Audit result
+
+| Scope | Before Phase B | After Phase B |
+|-------|----------------|---------------|
+| Full `npm audit` | 6 (5 high, 1 low) | **1 low** (`esbuild` Windows **dev server** advisory; no non-breaking fix yet) |
+| Critical / Astro XSS / sharp libvips / path-to-regexp | present | **cleared** |
+
+### Residual
+
+- **esbuild** (low): Windows `astro dev` arbitrary file read advisory for versions `0.27.3–0.28.0`. Prod Vercel build path is not the primary exposure. Revisit when a patched esbuild lands without breaking Astro 7.
+
+### Smoke (local Astro 7.1.6)
+
+- `npm run typecheck:app` — pass
+- `npm test` — pass
+- `npx astro build` — pass
+- `npm run generate:favicons` — pass
+- HTTP: `/`, `/admin`, `/book` → 200; `/api/shop/webhook` POST without signature → 400 `Invalid signature` (route alive); sharp unit convert PNG→WebP — pass
+- Manual on Vercel Preview after PR: logo/avatar upload, Stripe Checkout test-mode, click-through admin bookings (checklist in PR)
+
+### Versions pinned by upgrade
+
+- `astro` ^7.1.6 · `@astrojs/react` ^6.0.2 · `@astrojs/vercel` ^11.0.4 · `sharp` ^0.35.3 · `vite` ^8.1.5

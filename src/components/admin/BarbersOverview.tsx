@@ -301,7 +301,7 @@ const BarbersOverview = React.forwardRef<BarbersOverviewHandle, BarbersOverviewP
       ...(card.kind === 'invite'
         ? {
             inviteId: card.id,
-            inviteEmail: card.email,
+            inviteEmail: card.email ?? undefined,
             inviteExpiresAt: card.inviteExpiresAt ?? null,
             invitationStatus: card.invitationStatus,
           }

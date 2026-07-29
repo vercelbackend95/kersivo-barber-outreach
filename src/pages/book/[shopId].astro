@@ -79,7 +79,19 @@ const bookingPageData = await withPrismaQuotaFallback(
   },
   {
     notFound: false as const,
-    shop: null,
+    shop: {
+      id: shopId || 'unavailable',
+      name: 'Unavailable',
+      timezone: 'Europe/London',
+      cancellationWindowHours: 24,
+      rescheduleWindowHours: 24,
+      shopPaidAt: null,
+      smsRemindersEnabled: false,
+      depositsEnabled: false,
+      stripeConnectAccountId: null,
+      stripeConnectChargesEnabled: false,
+      publicActivityPaused: false,
+    },
     services: [],
     barbers: [],
     depositRequired: false,
@@ -112,7 +124,6 @@ const createUrl = `/api/public/bookings/${shop.id}/create`;
         <BookingFlow
           client:load
           mode="create"
-          publicShopId={shop.id}
           publicCreateUrl={createUrl}
           depositRequired={depositRequired}
           services={services.map((s) => ({
