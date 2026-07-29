@@ -1,9 +1,11 @@
 import { config as loadDotenv } from 'dotenv';
 import { PrismaClient, SetupDepositStatus } from '@prisma/client';
 
-// Astro 7 / Vite 8 may not put server secrets into process.env for Prisma.
-// Load `.env` once when this server module initializes.
-loadDotenv({ quiet: true });
+// Astro 7 / Vite 8 may not populate process.env from `.env` for local `astro dev`.
+// On Vercel, DATABASE_URL is already in the environment — skip file load.
+if (!process.env.DATABASE_URL) {
+  loadDotenv({ quiet: true });
+}
 
 declare global {
   var __prisma: PrismaClient | undefined;
@@ -18,7 +20,7 @@ declare global {
 const SCHEMA_MARKER = `saas-subscription-v1|sms-reminders-enabled-v1|booking-deposits-v1|astro7-dotenv-v1|${Object.keys(SetupDepositStatus).sort().join('|')}`;
 
 function createPrismaClient(): PrismaClient {
-  const url = process.env.DATABASE_URL || import.meta.env.DATABASE_URL;
+  const url = process.env.DATABASE_URL;
   return new PrismaClient(
     url
       ? {

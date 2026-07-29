@@ -87,6 +87,8 @@ type Props = {
   publicDemoMode?: boolean;
   /** Live tenant book: POST target for public create (never demo-shop). */
   publicCreateUrl?: string;
+  /** Live tenant id for public availability (never demo-shop). */
+  publicShopId?: string;
   /** When true, confirm CTA may redirect to Stripe deposit Checkout. */
   depositRequired?: boolean;
   onComplete?: () => void;
@@ -246,6 +248,7 @@ export default function BookingFlow({
   previewMode = false,
   publicDemoMode = false,
   publicCreateUrl,
+  publicShopId,
   depositRequired = false,
   onComplete,
   postConfirmCta = null,
@@ -514,7 +517,10 @@ export default function BookingFlow({
     }
 
     setIsSlotsLoading(true);
-    fetch(`/api/availability?serviceId=${serviceId}&barberId=${barberId}&date=${nextDate}`)
+    const availabilityUrl = publicShopId?.trim()
+      ? `/api/public/bookings/${encodeURIComponent(publicShopId.trim())}/availability?serviceId=${serviceId}&barberId=${barberId}&date=${nextDate}`
+      : `/api/availability?serviceId=${serviceId}&barberId=${barberId}&date=${nextDate}`;
+    fetch(availabilityUrl)
       .then((res) => res.json())
       .then((data) => {
         setShopPaused(Boolean(data.paused));
@@ -535,7 +541,7 @@ export default function BookingFlow({
       .finally(() => {
         setIsSlotsLoading(false);
       });
-  }, [serviceId, barberId, date, useStaticSlots]);
+  }, [serviceId, barberId, date, useStaticSlots, publicShopId]);
 
   async function submit() {
     if (isSubmitting) return;

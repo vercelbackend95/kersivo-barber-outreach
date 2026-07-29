@@ -4,7 +4,6 @@ import type { APIRoute } from 'astro';
 import type { ShopRole } from '@prisma/client';
 import { requireAdminContext } from '@/lib/admin/auth';
 import { requireAnyPermission } from '@/lib/admin/rbac/can';
-import { prisma } from '@/lib/db/client';
 import { runSerializableTransaction } from '@/lib/db/serializableTransaction';
 
 function json(body: unknown, status = 200) {

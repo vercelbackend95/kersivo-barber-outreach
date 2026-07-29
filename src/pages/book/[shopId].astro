@@ -108,8 +108,12 @@ const createUrl = `/api/public/bookings/${shop.id}/create`;
 ---
 
 <MinimalLayout
-  title={`Book — ${shop.name}`}
-  description={`Book an appointment at ${shop.name} with KERSIVO.`}
+  title={bookingUnavailable ? 'Online booking temporarily unavailable' : `Book — ${shop.name}`}
+  description={
+    bookingUnavailable
+      ? PUBLIC_BOOKING_UNAVAILABLE_MESSAGE
+      : `Book an appointment at ${shop.name} with KERSIVO.`
+  }
   canonicalPath={`/book/${shop.id}`}
   bodyClass="admin-theme-premium-black"
   showCookieConsent={false}
@@ -124,6 +128,7 @@ const createUrl = `/api/public/bookings/${shop.id}/create`;
         <BookingFlow
           client:load
           mode="create"
+          publicShopId={shop.id}
           publicCreateUrl={createUrl}
           depositRequired={depositRequired}
           services={services.map((s) => ({
