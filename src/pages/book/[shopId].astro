@@ -79,7 +79,19 @@ const bookingPageData = await withPrismaQuotaFallback(
   },
   {
     notFound: false as const,
-    shop: null,
+    shop: {
+      id: shopId || 'unavailable',
+      name: 'Unavailable',
+      timezone: 'Europe/London',
+      cancellationWindowHours: 24,
+      rescheduleWindowHours: 24,
+      shopPaidAt: null,
+      smsRemindersEnabled: false,
+      depositsEnabled: false,
+      stripeConnectAccountId: null,
+      stripeConnectChargesEnabled: false,
+      publicActivityPaused: false,
+    },
     services: [],
     barbers: [],
     depositRequired: false,
@@ -96,8 +108,12 @@ const createUrl = `/api/public/bookings/${shop.id}/create`;
 ---
 
 <MinimalLayout
-  title={`Book — ${shop.name}`}
-  description={`Book an appointment at ${shop.name} with KERSIVO.`}
+  title={bookingUnavailable ? 'Online booking temporarily unavailable' : `Book — ${shop.name}`}
+  description={
+    bookingUnavailable
+      ? PUBLIC_BOOKING_UNAVAILABLE_MESSAGE
+      : `Book an appointment at ${shop.name} with KERSIVO.`
+  }
   canonicalPath={`/book/${shop.id}`}
   bodyClass="admin-theme-premium-black"
   showCookieConsent={false}
