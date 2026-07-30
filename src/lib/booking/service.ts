@@ -16,7 +16,7 @@ import {
   getShopPublicActivityPauseOnDate,
 } from '@/lib/admin/shopPublicActivity';
 import { OWNER_TEST_BOOKING_NOTES_PREFIX } from './sandboxBookings';
-import { BOOKING_DEPOSIT_PENCE, canCollectBookingDeposit } from './depositGate';
+import { canCollectBookingDeposit, resolveBookingDepositPence } from './depositGate';
 import { forfeitBookingDeposit, refundBookingDepositIfEligible } from './depositMoney';
 const CANCELLED_BOOKING_MESSAGE = 'This booking is already cancelled. Please create a new booking.';
 const BOOKING_DATABASE_UNAVAILABLE_STATUS = 503;
@@ -461,10 +461,12 @@ export async function createInstantBooking(
       },
     });
 
+    const depositPence = resolveBookingDepositPence(service.pricePence);
     const collectDeposit =
       Boolean(options.allowDepositCollection) &&
       !isAdminSandbox &&
-      canCollectBookingDeposit(shopForDeposit);
+      canCollectBookingDeposit(shopForDeposit) &&
+      depositPence > 0;
 
     const paymentExpiresAt = collectDeposit
       ? new Date(Date.now() + Math.max(5, shopForDeposit.pendingConfirmationMins || 15) * 60 * 1000)
@@ -502,7 +504,7 @@ export async function createInstantBooking(
             manageTokenHash: hashToken(manageToken),
             manageTokenExpiresAt: null,
             paymentRequired: collectDeposit,
-            depositAmountPence: collectDeposit ? BOOKING_DEPOSIT_PENCE : null,
+            depositAmountPence: collectDeposit ? depositPence : null,
             paymentStatus: collectDeposit ? PaymentStatus.UNPAID : null,
             paymentExpiresAt,
           },

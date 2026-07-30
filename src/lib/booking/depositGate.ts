@@ -1,9 +1,18 @@
 import { DEMO_SHOP_ID } from '../db/shopScope';
 import { isPaidShop, type PaidShopFields } from '../shop/paidShop';
 
-/** Fixed online booking deposit (WP-B). */
+/** Cap for online booking deposit (WP-B / H04). Actual charge = min(service price, this). */
 export const BOOKING_DEPOSIT_PENCE = 500;
 export const BOOKING_DEPOSIT_METADATA_TYPE = 'booking_deposit';
+
+/**
+ * Deposit to collect for a service price snapshot.
+ * Below £5 → full service value; at/above £5 → £5; £0 → 0 (skip Checkout).
+ */
+export function resolveBookingDepositPence(servicePricePence: number): number {
+  const price = Math.max(0, Math.trunc(servicePricePence));
+  return Math.min(price, BOOKING_DEPOSIT_PENCE);
+}
 
 export type DepositShopFields = PaidShopFields & {
   depositsEnabled: boolean;
