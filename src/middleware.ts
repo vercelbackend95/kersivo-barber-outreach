@@ -95,7 +95,19 @@ export const onRequest = defineMiddleware(async (context, next) => {
   }
 
   if (SAFE_METHODS.has(method) || !url.pathname.startsWith(ADMIN_API_PREFIX)) {
-    return next();
+    const response = await next();
+    if (response.status >= 500 && url.pathname.startsWith('/api/')) {
+      try {
+        const { captureOpsException } = await import('@/lib/ops/sentry');
+        captureOpsException(new Error(`HTTP ${response.status} ${url.pathname}`), {
+          route: url.pathname,
+          tags: { status: String(response.status), method },
+        });
+      } catch {
+        /* Sentry optional */
+      }
+    }
+    return response;
   }
 
   const allowlist = parseAllowedOrigins();
@@ -124,5 +136,17 @@ export const onRequest = defineMiddleware(async (context, next) => {
     return new Response('Cross-site POST form submissions are forbidden', { status: 403 });
   }
 
-  return next();
+  const response = await next();
+  if (response.status >= 500 && url.pathname.startsWith('/api/')) {
+    try {
+      const { captureOpsException } = await import('@/lib/ops/sentry');
+      captureOpsException(new Error(`HTTP ${response.status} ${url.pathname}`), {
+        route: url.pathname,
+        tags: { status: String(response.status), method },
+      });
+    } catch {
+      /* Sentry optional */
+    }
+  }
+  return response;
 });

@@ -35,6 +35,13 @@ import { BookingStatus, PaymentStatus } from '@prisma/client';
 import { getPublicSiteUrl } from '../../../lib/setup/siteUrl';
 import { generateToken, hashToken } from '../../../lib/booking/tokens';
 import { DEMO_SHOP_ID } from '../../../lib/db/shopScope';
+import { captureOpsException } from '../../../lib/ops/sentry';
+import {
+  alertStripeWebhookFailure,
+  markStripeWebhookStatus,
+  recordStripeWebhookReceived,
+} from '../../../lib/ops/stripeWebhookLedger';
+import { opsLog } from '../../../lib/ops/opsLog';
 
 const { Prisma, SetupPlan, SetupDepositStatus } = PrismaClientPkg;
 type CartSnapshotItem = {
@@ -46,8 +53,10 @@ type CartSnapshotItem = {
 };
 
 type StripeEvent = {
+  id?: string;
   type: string;
   created: number;
+  livemode?: boolean;
   data: {
     object: {
       id: string;
@@ -59,6 +68,43 @@ type StripeEvent = {
     };
   };
 };
+
+async function finalizeWebhookResponse(
+  eventId: string | undefined,
+  response: Response,
+  options: { ignored?: boolean; eventType?: string } = {},
+): Promise<Response> {
+  if (!eventId) return response;
+  try {
+    if (response.status >= 500) {
+      const bodyText = await response.clone().text().catch(() => '');
+      const error = bodyText.slice(0, 500) || 'HTTP 5xx';
+      await markStripeWebhookStatus(eventId, 'FAILED', {
+        httpStatus: response.status,
+        error,
+      });
+      await alertStripeWebhookFailure({
+        eventId,
+        type: options.eventType ?? 'unknown',
+        error,
+        httpStatus: response.status,
+      });
+    } else if (response.status >= 400) {
+      const bodyText = await response.clone().text().catch(() => '');
+      await markStripeWebhookStatus(eventId, 'FAILED', {
+        httpStatus: response.status,
+        error: bodyText.slice(0, 500) || 'HTTP 4xx',
+      });
+    } else if (options.ignored) {
+      await markStripeWebhookStatus(eventId, 'IGNORED', { httpStatus: response.status });
+    } else {
+      await markStripeWebhookStatus(eventId, 'PROCESSED', { httpStatus: response.status });
+    }
+  } catch (error) {
+    console.error('[webhook] ledger update failed', error);
+  }
+  return response;
+}
 
 const ATTRIBUTION_META_KEYS = [
   'gclid',
@@ -665,6 +711,8 @@ async function handleBookingDepositCheckout(
 }
 
 export const POST: APIRoute = async ({ request }) => {
+  let eventId: string | undefined;
+  let eventType = 'unknown';
   try {
     const rawBody = await request.text();
     const signature = request.headers.get('stripe-signature');
@@ -674,25 +722,41 @@ export const POST: APIRoute = async ({ request }) => {
     logSetupDepositStage('signature_verified');
 
     const event = JSON.parse(rawBody) as StripeEvent;
+    eventId = typeof event.id === 'string' ? event.id : undefined;
+    eventType = event.type;
+
+    if (eventId) {
+      await recordStripeWebhookReceived({
+        id: eventId,
+        type: event.type,
+        livemode: Boolean(event.livemode),
+      });
+      opsLog('stripe.webhook', 'received', { eventId, type: event.type });
+    }
+
+    const finalize = (response: Response, opts?: { ignored?: boolean }) =>
+      finalizeWebhookResponse(eventId, response, { ...opts, eventType: event.type });
+
     const sessionId = event.data.object.id;
     const session = await retrieveCheckoutSession(sessionId);
     const metadata = session.metadata ?? event.data.object.metadata ?? {};
 
     if (SETUP_FULFILMENT_EVENTS.has(event.type) && metadata.type === 'setup_deposit') {
-      // await so try/catch captures async Prisma/email failures (bare return does not)
-      return await handleSetupDepositCheckout(sessionId, session, metadata, event.created);
+      return await finalize(await handleSetupDepositCheckout(sessionId, session, metadata, event.created));
     }
 
     if (SETUP_FULFILMENT_EVENTS.has(event.type) && metadata.type === SAAS_SUBSCRIPTION_METADATA_TYPE) {
-      return await handleSaasSubscriptionCheckout(sessionId, session, metadata, event.created);
+      return await finalize(await handleSaasSubscriptionCheckout(sessionId, session, metadata, event.created));
     }
 
     if (SETUP_FULFILMENT_EVENTS.has(event.type) && metadata.type === BOOKING_DEPOSIT_METADATA_TYPE) {
-      return await handleBookingDepositCheckout(sessionId, session, metadata);
+      return await finalize(await handleBookingDepositCheckout(sessionId, session, metadata));
     }
 
     if (event.type !== 'checkout.session.completed') {
-      return new Response(JSON.stringify({ ok: true }), { status: 200 });
+      return await finalize(new Response(JSON.stringify({ ok: true }), { status: 200 }), {
+        ignored: !SETUP_FULFILMENT_EVENTS.has(event.type),
+      });
     }
 
     const existing = await prisma.order.findUnique({
@@ -700,7 +764,7 @@ export const POST: APIRoute = async ({ request }) => {
       select: { id: true },
     });
     if (existing) {
-      return new Response(JSON.stringify({ ok: true, duplicate: true }), { status: 200 });
+      return await finalize(new Response(JSON.stringify({ ok: true, duplicate: true }), { status: 200 }));
     }
 
     const customerEmail = (
@@ -715,12 +779,16 @@ export const POST: APIRoute = async ({ request }) => {
     const shopId = metadata.shopId;
 
     if (!shopId || !customerEmail) {
-      return new Response(JSON.stringify({ error: 'Missing shop or customer email' }), { status: 400 });
+      return await finalize(
+        new Response(JSON.stringify({ error: 'Missing shop or customer email' }), { status: 400 }),
+      );
     }
 
     const cart = JSON.parse(metadata.cart ?? '[]') as CartSnapshotItem[];
     if (!Array.isArray(cart) || cart.length === 0) {
-      return new Response(JSON.stringify({ error: 'Missing cart metadata' }), { status: 400 });
+      return await finalize(
+        new Response(JSON.stringify({ error: 'Missing cart metadata' }), { status: 400 }),
+      );
     }
 
     const totalPence =
@@ -740,9 +808,23 @@ export const POST: APIRoute = async ({ request }) => {
       paidAt,
     });
 
-    return new Response(JSON.stringify({ ok: true }), { status: 200 });
+    return await finalize(new Response(JSON.stringify({ ok: true }), { status: 200 }));
   } catch (error) {
     console.error('Stripe webhook failed', error);
+    captureOpsException(error, { route: '/api/shop/webhook', tags: { eventType } });
+    if (eventId) {
+      const message = error instanceof Error ? error.message : 'Webhook handling failed';
+      await markStripeWebhookStatus(eventId, 'FAILED', {
+        httpStatus: 500,
+        error: message.slice(0, 500),
+      });
+      await alertStripeWebhookFailure({
+        eventId,
+        type: eventType,
+        error: message,
+        httpStatus: 500,
+      });
+    }
     return new Response(JSON.stringify({ error: 'Webhook handling failed' }), { status: 500 });
   }
 };
