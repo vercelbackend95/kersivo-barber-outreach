@@ -77,7 +77,7 @@ Egzekucja idzie **po WP**, nie po pojedynczym „najciekawszym” lukowym punkci
 | 10 | Role: Owner / Manager / Barber | `PARTIAL` | product | WP-E | P0 | **Fazy 1–3 code (21 Jul 2026):** ShopMember/Invite, matrix + API gates, Team UI, sidebar filter, **booking mutations + clients scoped for BARBER**, null-barberId blocked. Pozostaje: szersze E2E 403 tests, multi-shop switcher, polish Team CSS. | |
 | 11 | Booking flow klienta | `DONE` | product | WP-A | P0 | Marketing `/book` sandbox; live tenant `/book/[shopId]` + `POST /api/public/bookings/[shopId]/create` (27 Jul 2026). | |
 | 12 | Depozyty £5 fixed | `DONE` | product | WP-B | P0 | Toggle + Connect Express + £5 Checkout + PENDING_PAYMENT → BOOKED webhook; demo/unpaid hard-off (27 Jul 2026). | |
-| 13 | Email + SMS reminders + allowance UI | `PARTIAL` / `MISSING` | product, copy | WP-D, WP-F | P0 | **Copy:** SMS included (`SMS_INCLUDED_CLAIM`). **Produkt:** confirm e-mail jest; brak cron email; SMS provider/job/usage UI = WP-F (w toku) | |
+| 13 | Email + SMS reminders + allowance UI | `PARTIAL` | product, copy | WP-D, WP-F | P0 | **Copy:** SMS included (`SMS_INCLUDED_CLAIM`). **Produkt:** confirm e-mail + scheduled email reminder cron WP-D. SMS provider/job/usage UI = WP-F (w toku) | |
 | 14 | Zmiana terminu (client + shop-forced) | `DONE` | product | WP-C | P0 | Defaults 24h; maxClientReschedules=2; shop-forced `POST .../force-reschedule` (27 Jul 2026). | |
 | 15 | Anulowanie / no-show / refundy depozytu | `DONE` | product | WP-C | P0 | Refund in-window / shop cancel; forfeit outside window + NO_SHOW; expire unpaid holds cron (27 Jul 2026). | |
 | 16 | Retail pickup shop | `PARTIAL` | product | WP-H | P1 | Checkout działa; `READY_FOR_PICKUP` vs oferta; reminder dzień 7; numer KRV | |
@@ -98,7 +98,7 @@ Egzekucja idzie **po WP**, nie po pojedynczym „najciekawszym” lukowym punkci
 | 31 | Retencja 60 dni + 1× CSV export | `MISSING` | product, ops | WP-I | P1 | Brak self-serve / ops export flow po churn | |
 | 32 | Ownership po zakończeniu | `COPY_ONLY` | legal | WP-L | P3 | Terms | |
 | 33 | Refund pierwszej £39 | `OPS` | ops, legal | WP-M, WP-L | P3 | Polityka goodwill — nie auto w kodzie | |
-| 34 | Dozwolone claimy marketingowe | `PARTIAL` | copy | WP-L | P0* | SMS included claim włączony (owner). Reszta §34 (booking deposits, RBAC unlimited users, scheduled email cron) nadal zależy od WP-A/B/D/E | |
+| 34 | Dozwolone claimy marketingowe | `PARTIAL` | copy | WP-L | P0* | SMS included claim włączony (owner). Scheduled email reminder cron = WP-D DONE. Reszta §34 (booking deposits claim parity, RBAC unlimited users) nadal zależy od WP-B/E / copy | |
 | 35 | Niedozwolone claimy | `PARTIAL` | copy | WP-L | P1 | Część już unikana; audyt landing/AI/docs | |
 | 36 | Główna obietnica oferty | `COPY_ONLY` | copy | WP-L | P2 | Po produktowych DONE | |
 | 37 | Status dokumentu / proces dalszy | `DONE` | ops | — | — | Ten tracker = wykonanie §37 | |
@@ -114,7 +114,7 @@ Używaj jako „czy wiemy, gdzie jesteśmy?”:
 - [x] WP-A Public booking — `DONE`
 - [x] WP-B Deposits — `DONE`
 - [x] WP-C Policy 24h — `DONE`
-- [ ] WP-D Email reminders — `DONE`
+- [x] WP-D Email reminders — `DONE`
 - [ ] WP-E RBAC — `DONE`
 - [ ] WP-F SMS + allowance — `DONE`
 - [ ] WP-G Client CRM — `DONE`
@@ -151,7 +151,7 @@ Jeśli whitelabelowalibyśmy landing pod pełną ofertę v1.0 **teraz**, te clai
 | Online booking deposits | WP-B |
 | SMS appointment reminders included | WP-F (copy DONE; engineering open) |
 | Unlimited … users (dashboard) | WP-E |
-| Email reminders (jako scheduled, nie tylko confirm) | WP-D |
+| Email reminders (jako scheduled, nie tylko confirm) | WP-D — `DONE` |
 | Cancel anytime (pełny lifecycle) | WP-I (częściowo już OK) |
 
 Reszta §34 (website, domain, 0% commission, retail pickup, hosting/SSL, migration assistance, £39) jest bliżej prawdy operacyjnej / częściowo produktowej — nadal wymaga WP-L do precyzji disclaimerów.

@@ -4,6 +4,7 @@ import { PUBLIC_BOOKING_UNAVAILABLE_MESSAGE, isPrismaQuotaExceededError } from '
 import { getTimeBlockDelegate } from '../db/timeBlocks';
 import { sendInstantBookingConfirmationEmail, sendRescheduledBookingEmail, sendShopCancelledBookingEmail } from '../email/sender';
 import { smsReminderClearData } from '../sms/reminders';
+import { emailReminderClearData } from '../email/reminders';
 
 import { ANY_BARBER_ID } from './constants';
 import { canCancelOrReschedule, canShopAdminCancelByLeadTime } from './policies';
@@ -702,6 +703,7 @@ export async function rescheduleByToken(input: { token: string; serviceId: strin
             status: BookingStatus.BOOKED,
             clientRescheduleCount: existing.clientRescheduleCount + 1,
             ...smsReminderClearData,
+            ...emailReminderClearData,
           },
           include: { service: true, barber: true }
         });

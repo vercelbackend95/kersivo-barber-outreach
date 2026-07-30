@@ -10,6 +10,7 @@ import { prisma } from '@/lib/db/client';
 import { findShopBarber, findShopService } from '@/lib/admin/shopScoped';
 import { addMinutes, toUtcFromLondon } from '@/lib/booking/time';
 import { smsReminderClearData } from '@/lib/sms/reminders';
+import { emailReminderClearData } from '@/lib/email/reminders';
 
 function json(body: unknown, status = 200) {
   return new Response(JSON.stringify(body), {
@@ -86,6 +87,7 @@ export const POST: APIRoute = async (ctx) => {
             originalEndAt: existing.originalEndAt ?? existing.endAt,
             status: BookingStatus.BOOKED,
             ...smsReminderClearData,
+            ...emailReminderClearData,
           },
           include: { service: true, barber: true },
         });

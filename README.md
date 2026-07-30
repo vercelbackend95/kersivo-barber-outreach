@@ -49,6 +49,7 @@ Astro + React (TypeScript) booking + shop system for barbershops.
          (update when your LAN IP changes; otherwise Google returns `redirect_uri_mismatch`).
      - Optional: `BETTER_AUTH_TRUSTED_ORIGINS` — comma-separated extra origins for auth CSRF checks.
      - `SMS_REMINDERS_ENABLED`: set `true` to enable the appointment SMS reminder cron (default off). Per-shop gate also required: `ShopSettings.smsRemindersEnabled` (flipped on by paid SaaS subscription webhook).
+     - `EMAIL_REMINDERS_ENABLED`: appointment email reminder cron is **on by default**. Set `false` for emergency off. Requires `RESEND_API_KEY` in production; per-shop gate is `ShopSettings.shopPaidAt` (paid SaaS).
      - `CRON_SECRET`: shared secret for `/api/cron/*` and `/api/ops/*` (Vercel Cron sends `Authorization: Bearer <CRON_SECRET>`).
      - Ops monitoring (M02): `OPS_SLACK_WEBHOOK_URL` (AlertSink), `SENTRY_DSN` / optional `SENTRY_ENVIRONMENT`, `OPS_CANARY_SHOP_ID` (paid canary shop for synthetic booking). See [`docs/ops/README.md`](docs/ops/README.md).
      - `TWILIO_ACCOUNT_SID` / `TWILIO_AUTH_TOKEN` / `TWILIO_FROM_NUMBER`: Twilio credentials for SMS (required in production when reminders are enabled). Locally, missing Twilio logs `[DEV SMS]` instead.
@@ -159,6 +160,15 @@ Set `SHOW_SETUP_PLAN_CARDS = true` in `offerMode.ts`, then:
 - Optional trial override: `TWILIO_TRIAL_TEMPLATE=sms_appointment_reminders` (Twilio trial cannot send custom Body text).
 - Reschedule clears `smsReminderSentAt` so a new reminder can fire for the new time.
 - No admin UI in v1; outbound rows land in `SmsOutbound` for ops/debug.
+
+## Email appointment reminders (WP-D)
+- Cron: `GET/POST /api/cron/email-reminders` every 15 minutes (`vercel.json`), auth via `CRON_SECRET`.
+- Sends one email ~24h before `BOOKED` appointments (23–25h window) when `EMAIL_REMINDERS_ENABLED` is not `false` **and** the shop has `shopPaidAt` set (paid SaaS).
+- Skips: unpaid/demo shops, demo shop id, `[TEST]` bookings, missing/invalid email, already-sent, bookings created too late for a day-before reminder.
+- Reminder body points clients to manage links in their confirmation email (manage token is hash-only in DB).
+- Reschedule (client or shop-forced) clears `emailReminderSentAt` so a new reminder can fire for the new time.
+- No admin UI in v1; outbound rows land in `EmailOutbound` for ops/debug.
+- Distinct from instant booking confirmation / reschedule / cancel emails in `src/lib/email/sender.ts`.
 
 ## Online booking deposits (WP-A/B/C)
 - Paid shops only (`shopPaidAt` / SaaS webhook). Demo shop and marketing `/book` sandbox never collect.
