@@ -1,4 +1,5 @@
 import { BOOKING_DEPOSIT_METADATA_TYPE } from '../booking/depositGate';
+import { retrieveCheckoutSession, type StripeSession } from './stripe';
 
 const STRIPE_API_BASE = 'https://api.stripe.com/v1';
 
@@ -6,6 +7,25 @@ function getSecretKey(): string {
   const key = import.meta.env.STRIPE_SECRET_KEY ?? process.env.STRIPE_SECRET_KEY;
   if (!key) throw new Error('STRIPE_SECRET_KEY is not configured.');
   return key;
+}
+
+export class StripeConnectApiError extends Error {
+  readonly status: number;
+  readonly code: string | null;
+
+  constructor(message: string, status: number, code: string | null = null) {
+    super(message);
+    this.name = 'StripeConnectApiError';
+    this.status = status;
+    this.code = code;
+  }
+}
+
+function isMissingPaymentIntentError(error: unknown): boolean {
+  if (!(error instanceof StripeConnectApiError)) return false;
+  if (error.code === 'resource_missing') return true;
+  const msg = error.message.toLowerCase();
+  return msg.includes('no such payment_intent') || msg.includes('no such payment intent');
 }
 
 async function stripeForm(
@@ -29,11 +49,10 @@ async function stripeForm(
   });
   const json = (await response.json()) as Record<string, unknown>;
   if (!response.ok) {
-    const message =
-      typeof json.error === 'object' && json.error && 'message' in json.error
-        ? String((json.error as { message?: string }).message)
-        : `Stripe error ${response.status}`;
-    throw new Error(message);
+    const errObj =
+      typeof json.error === 'object' && json.error ? (json.error as { message?: string; code?: string }) : null;
+    const message = errObj?.message?.trim() || `Stripe error ${response.status}`;
+    throw new StripeConnectApiError(message, response.status, errObj?.code?.trim() || null);
   }
   return json;
 }
@@ -51,7 +70,10 @@ async function stripeGet(
   const response = await fetch(`${STRIPE_API_BASE}${path}`, { headers });
   const json = (await response.json()) as Record<string, unknown>;
   if (!response.ok) {
-    throw new Error(`Stripe GET failed (${response.status})`);
+    const errObj =
+      typeof json.error === 'object' && json.error ? (json.error as { message?: string; code?: string }) : null;
+    const message = errObj?.message?.trim() || `Stripe GET failed (${response.status})`;
+    throw new StripeConnectApiError(message, response.status, errObj?.code?.trim() || null);
   }
   return json;
 }
@@ -102,6 +124,10 @@ export async function retrieveConnectAccount(accountId: string): Promise<{
   };
 }
 
+/**
+ * Direct charge on the connected account (shop is MoR).
+ * KERSIVO application fee is £0 today; hook kept for a future SaaS fee.
+ */
 export async function createBookingDepositCheckoutSession(input: {
   shopConnectAccountId: string;
   bookingId: string;
@@ -113,6 +139,8 @@ export async function createBookingDepositCheckoutSession(input: {
   successUrl: string;
   cancelUrl: string;
 }): Promise<{ id: string; url: string }> {
+  const connectAccountId = input.shopConnectAccountId.trim();
+  if (!connectAccountId) throw new Error('shopConnectAccountId is required for deposit checkout.');
   const amountPence = Math.trunc(input.amountPence);
   if (!Number.isFinite(amountPence) || amountPence <= 0) {
     throw new Error('amountPence must be a positive integer for deposit checkout.');
@@ -134,15 +162,14 @@ export async function createBookingDepositCheckoutSession(input: {
   body.set(`metadata[type]`, BOOKING_DEPOSIT_METADATA_TYPE);
   body.set(`metadata[bookingId]`, input.bookingId);
   body.set(`metadata[shopId]`, input.shopId);
-  // Direct charge on connected account (shop receives funds; KERSIVO takes 0%).
   body.set('payment_intent_data[application_fee_amount]', '0');
-  body.set('payment_intent_data[transfer_data][destination]', input.shopConnectAccountId);
 
   const response = await fetch(`${STRIPE_API_BASE}/checkout/sessions`, {
     method: 'POST',
     headers: {
       Authorization: `Bearer ${getSecretKey()}`,
       'Content-Type': 'application/x-www-form-urlencoded',
+      'Stripe-Account': connectAccountId,
     },
     body,
   });
@@ -154,16 +181,51 @@ export async function createBookingDepositCheckoutSession(input: {
   return { id: session.id, url: session.url };
 }
 
+export async function retrieveBookingDepositSession(
+  sessionId: string,
+  shopConnectAccountId: string,
+): Promise<StripeSession> {
+  return retrieveCheckoutSession(sessionId, { stripeAccount: shopConnectAccountId });
+}
+
 export async function refundPaymentIntent(
   paymentIntentId: string,
-  options?: { stripeAccount?: string },
-): Promise<{ id: string }> {
-  const refund = await stripeForm(
-    '/refunds',
-    { payment_intent: paymentIntentId },
-    options?.stripeAccount ? { stripeAccount: options.stripeAccount } : undefined,
-  );
+  options?: {
+    stripeAccount?: string;
+    reverseTransfer?: boolean;
+    amount?: number;
+  },
+): Promise<{ id: string; mode: 'direct' | 'platform_legacy' }> {
+  const params: Record<string, string> = {
+    payment_intent: paymentIntentId,
+  };
+  if (typeof options?.amount === 'number' && Number.isFinite(options.amount) && options.amount > 0) {
+    params.amount = String(Math.trunc(options.amount));
+  }
+
+  const connectAccountId = options?.stripeAccount?.trim();
+  if (connectAccountId) {
+    try {
+      const refund = await stripeForm('/refunds', params, { stripeAccount: connectAccountId });
+      const id = typeof refund.id === 'string' ? refund.id : '';
+      if (!id) throw new Error('Stripe refund id missing.');
+      return { id, mode: 'direct' };
+    } catch (error) {
+      if (!isMissingPaymentIntentError(error)) throw error;
+      // Legacy destination charges lived on the platform account.
+    }
+  }
+
+  const legacyParams: Record<string, string> = {
+    ...params,
+    reverse_transfer: 'true',
+  };
+  if (options?.reverseTransfer === false) {
+    delete legacyParams.reverse_transfer;
+  }
+
+  const refund = await stripeForm('/refunds', legacyParams);
   const id = typeof refund.id === 'string' ? refund.id : '';
   if (!id) throw new Error('Stripe refund id missing.');
-  return { id };
+  return { id, mode: 'platform_legacy' };
 }
