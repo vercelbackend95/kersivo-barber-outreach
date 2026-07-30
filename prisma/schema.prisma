@@ -37,6 +37,16 @@ enum SmsOutboundStatus {
   FAILED
 }
 
+enum EmailOutboundPurpose {
+  APPOINTMENT_REMINDER
+}
+
+enum EmailOutboundStatus {
+  QUEUED
+  SENT
+  FAILED
+}
+
 enum OrderStatus {
   PAID
   READY_FOR_PICKUP
@@ -472,13 +482,19 @@ model Booking {
   /// `startAt` value the reminder SMS was sent for (reschedule clears / re-arms).
   smsReminderForStartAt   DateTime?
 
+  /// When the appointment reminder email was successfully sent.
+  emailReminderSentAt     DateTime?
+  /// `startAt` value the reminder email was sent for (reschedule clears / re-arms).
+  emailReminderForStartAt DateTime?
+
   createdAt               DateTime      @default(now())
   updatedAt               DateTime      @updatedAt
 
   service Service @relation(fields: [serviceId], references: [id])
   barber  Barber  @relation(fields: [barberId], references: [id])
   client  Client? @relation(fields: [clientId], references: [id], onDelete: SetNull)
-  smsOutbound SmsOutbound[]
+  smsOutbound   SmsOutbound[]
+  emailOutbound EmailOutbound[]
 
   @@index([barberId, startAt, endAt])
   @@index([status])
@@ -500,6 +516,26 @@ model SmsOutbound {
   status            SmsOutboundStatus  @default(QUEUED)
   error             String?
   createdAt         DateTime           @default(now())
+
+  booking Booking? @relation(fields: [bookingId], references: [id], onDelete: SetNull)
+
+  @@index([bookingId])
+  @@index([shopId, createdAt])
+}
+
+/// Internal email send log for scheduled reminders (ops/debug — no admin UI in v1).
+model EmailOutbound {
+  id                String               @id @default(cuid())
+  shopId            String
+  bookingId         String?
+  toEmail           String
+  subject           String
+  purpose           EmailOutboundPurpose
+  provider          String
+  providerMessageId String?
+  status            EmailOutboundStatus  @default(QUEUED)
+  error             String?
+  createdAt         DateTime             @default(now())
 
   booking Booking? @relation(fields: [bookingId], references: [id], onDelete: SetNull)
 

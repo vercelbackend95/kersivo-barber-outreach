@@ -149,6 +149,52 @@ export async function sendInstantBookingConfirmationEmail(input: BookingEmailBas
   });
 }
 
+export type AppointmentReminderEmailInput = BookingEmailBaseInput & {
+  timezone?: string;
+};
+
+/** Pure builder for scheduled ~24h appointment reminder emails (WP-D). */
+export function buildAppointmentReminderEmail(input: AppointmentReminderEmailInput): {
+  subject: string;
+  html: string;
+} {
+  const tz = input.timezone?.trim() || 'Europe/London';
+  const when = formatInTimeZone(input.startAt, tz, "EEEE d MMMM yyyy 'at' HH:mm");
+  const shop = input.shopName.trim() || 'your barbershop';
+
+  const subject = `Reminder: your appointment tomorrow at ${shop}`;
+  const html = `<p>Hi ${input.fullName},</p>
+  <h2>Appointment reminder</h2>
+  <p>This is a reminder that you have an appointment coming up.</p>
+  <p><strong>Shop:</strong> ${shop}</p>
+  <p><strong>Service:</strong> ${input.serviceName}</p>
+  <p><strong>Barber:</strong> ${input.barberName}</p>
+  <p><strong>Date &amp; time (${tz}):</strong> ${when}</p>
+  <p>To reschedule or cancel, use the links in your confirmation email.</p>`;
+
+  return { subject, html };
+}
+
+export async function sendAppointmentReminderEmail(input: AppointmentReminderEmailInput) {
+  const { subject, html } = buildAppointmentReminderEmail(input);
+
+  return sendEmail({
+    to: input.to,
+    subject,
+    html,
+    devLogLabel: '[DEV EMAIL] Appointment reminder',
+    devPayload: {
+      to: input.to,
+      fullName: input.fullName,
+      shopName: input.shopName,
+      serviceName: input.serviceName,
+      barberName: input.barberName,
+      startAt: input.startAt.toISOString(),
+      timezone: input.timezone?.trim() || 'Europe/London',
+    },
+  });
+}
+
 export async function sendRescheduledBookingEmail(
   input: BookingEmailBaseInput & {
     cancelUrl: string;
