@@ -154,7 +154,7 @@ export const NO_FAKE_STOCK_CLAIM =
 
 /**
  * §8 — full plan scope for Terms / AI (commercial offer list).
- * SMS appointment reminders are included (owner-confirmed).
+ * SMS appointment reminders are included (landing: plain claim; Terms: monthly allowance, no figure).
  */
 export const PLAN_SCOPE_FULL_LIST = [
   'professional barbershop website',
@@ -219,20 +219,26 @@ export const PLAN_SCOPE_COMMISSION_FOOTNOTE = KERSIVO_COMMISSION_WITH_STRIPE;
 export const EMAIL_REMINDERS_CLAIM = 'Email appointment confirmations and reminders';
 
 /**
- * Unlimited automated SMS appointment reminders — owner-confirmed for public copy.
- * No fair-use, surcharges or customer-facing limits in marketing.
+ * Public / landing SMS claim — plain feature name only.
+ * Do not say Unlimited, limited, allowance, or any £/message figure in marketing.
  */
-export const SMS_INCLUDED_CLAIM = 'Unlimited automated SMS appointment reminders';
+export const SMS_INCLUDED_CLAIM = 'SMS appointment reminders';
 
 /** Combined client communications claim for pricing / feature cards. */
 export const CLIENT_COMMS_CLAIM = `${EMAIL_REMINDERS_CLAIM}. ${SMS_INCLUDED_CLAIM}.`;
 
 /**
- * @deprecated Do not use in public copy — SMS is included per SMS_INCLUDED_CLAIM.
- * Kept only so old imports fail loudly if reintroduced without review.
+ * Terms-only: monthly SMS allowance exists, but no published amount or message count.
+ * Do not reuse on landing / pricing / FAQ marketing surfaces.
+ */
+export const SMS_MONTHLY_ALLOWANCE_TERMS =
+  'Automated SMS appointment reminders are included while your subscription is active and are subject to a monthly allowance. We do not publish a fixed monetary amount or message count in these Terms.';
+
+/**
+ * @deprecated Do not use in public copy — use SMS_INCLUDED_CLAIM (landing) or SMS_MONTHLY_ALLOWANCE_TERMS (Terms).
  */
 export const SMS_ROADMAP_NOTE =
-  'Automated SMS appointment reminders are included in the subscription while it is active.';
+  'SMS appointment reminders are included in the subscription while it is active.';
 
 export const STRIPE_ACCOUNT_CLAIM =
   'The public retail demo is a simulation (no Stripe payment). Private owner test orders create marked test data without payment. Live shops connect to your Stripe account during go-live setup.';
