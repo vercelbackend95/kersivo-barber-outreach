@@ -4,6 +4,7 @@ import { defineConfig } from 'astro/config';
 
 import react from '@astrojs/react';
 import vercel from '@astrojs/vercel';
+import sentry from '@sentry/astro';
 import tailwindcss from '@tailwindcss/vite';
 
 // https://astro.build/config
@@ -11,7 +12,17 @@ export default defineConfig({
   site: 'https://kersivo.co.uk',
   output: 'server',
   adapter: vercel(),
-  integrations: [react()],
+  integrations: [
+    react(),
+    sentry({
+      sourceMapsUploadOptions: {
+        enabled: false,
+      },
+      autoInstrumentation: {
+        requestHandler: true,
+      },
+    }),
+  ],
   build: {
     inlineStylesheets: 'auto',
   },

@@ -49,7 +49,8 @@ Astro + React (TypeScript) booking + shop system for barbershops.
          (update when your LAN IP changes; otherwise Google returns `redirect_uri_mismatch`).
      - Optional: `BETTER_AUTH_TRUSTED_ORIGINS` — comma-separated extra origins for auth CSRF checks.
      - `SMS_REMINDERS_ENABLED`: set `true` to enable the appointment SMS reminder cron (default off). Per-shop gate also required: `ShopSettings.smsRemindersEnabled` (flipped on by paid SaaS subscription webhook).
-     - `CRON_SECRET`: shared secret for `/api/cron/*` (Vercel Cron sends `Authorization: Bearer <CRON_SECRET>`).
+     - `CRON_SECRET`: shared secret for `/api/cron/*` and `/api/ops/*` (Vercel Cron sends `Authorization: Bearer <CRON_SECRET>`).
+     - Ops monitoring (M02): `OPS_SLACK_WEBHOOK_URL` (AlertSink), `SENTRY_DSN` / optional `SENTRY_ENVIRONMENT`, `OPS_CANARY_SHOP_ID` (paid canary shop for synthetic booking). See [`docs/ops/README.md`](docs/ops/README.md).
      - `TWILIO_ACCOUNT_SID` / `TWILIO_AUTH_TOKEN` / `TWILIO_FROM_NUMBER`: Twilio credentials for SMS (required in production when reminders are enabled). Locally, missing Twilio logs `[DEV SMS]` instead.
      - Optional `TWILIO_TRIAL_TEMPLATE`: e.g. `sms_appointment_reminders` — trial accounts only allow Twilio template keys as `Body` (remove after upgrading to Pay as you go).
    - `PUBLIC_GA4_MEASUREMENT_ID`: GA4 measurement id (`G-…`) for analytics (Consent Mode; loads after analytics consent).
@@ -151,6 +152,8 @@ Set `SHOW_SETUP_PLAN_CARDS = true` in `offerMode.ts`, then:
 
 ## SMS appointment reminders (backend)
 - Cron: `GET/POST /api/cron/sms-reminders` every 15 minutes (`vercel.json`), auth via `CRON_SECRET`.
+- Ops health: `GET/POST /api/cron/ops-health` every 15 minutes — Stripe webhook FAILED ledger + SMS fail-rate alerts ([`docs/ops/README.md`](docs/ops/README.md)).
+- Synthetic booking: `GET/POST /api/ops/synthetic-booking` every 15 minutes — homepage + canary availability (`OPS_CANARY_SHOP_ID`).
 - Sends one SMS ~24h before `BOOKED` appointments (23–25h window) when `SMS_REMINDERS_ENABLED=true` **and** the shop has `smsRemindersEnabled=true` (set on paid SaaS subscription webhook).
 - Skips: unpaid/demo shops, demo shop id, `[TEST]` bookings, missing/invalid phone, already-sent, bookings created too late for a day-before reminder.
 - Optional trial override: `TWILIO_TRIAL_TEMPLATE=sms_appointment_reminders` (Twilio trial cannot send custom Body text).
