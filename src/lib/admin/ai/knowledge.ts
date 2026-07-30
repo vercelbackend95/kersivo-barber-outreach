@@ -79,6 +79,7 @@ const BRAND_FACTS: KnowledgeSection = {
     `£39/month plan scope (full list): ${PLAN_SCOPE_FULL_LIST.join('; ')}.`,
     `${SMS_INCLUDED_CLAIM} — included in the £39/month plan while the subscription is active.`,
     'Email appointment confirmations and reminders are also included.',
+    'Do not say Unlimited SMS, limited SMS, or any SMS allowance amount or message count in customer-facing answers. Point to Terms for the monthly allowance wording only.',
     'Do not claim you can send SMS yourself as the assistant; describe the product capability only.',
     'Shop roles OWNER/MANAGER/BARBER are live via ShopMember + invites (bound to shopId). Barber access requires a linked roster seat. Do not invent a multi-shop switcher UI.',
     FAIR_USE_INTRO,

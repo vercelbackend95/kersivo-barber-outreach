@@ -22,7 +22,7 @@ const DEFAULT_PILLARS: PillarItem[] = [
   },
   {
     heading: 'Email and SMS reminders protect the diary',
-    body: 'Email appointment confirmations and reminders are included in Care, plus unlimited automated SMS appointment reminders while your subscription is active.',
+    body: 'Email appointment confirmations and reminders are included in Care, plus SMS appointment reminders while your subscription is active.',
   },
   {
     heading: 'Switch handled for you',

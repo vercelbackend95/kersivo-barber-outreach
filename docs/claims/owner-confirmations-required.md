@@ -14,11 +14,13 @@ Public wording (source of truth):
 
 Source: [`src/lib/pricing/claimsPolicy.ts`](../src/lib/pricing/claimsPolicy.ts)
 
-## 2. SMS under Ongoing Care (OWNER) — CONFIRMED
+## 2. SMS under Ongoing Care (OWNER) — UPDATED 29 Jul 2026
 
-**Unlimited automated SMS appointment reminders included.** No fair-use, surcharges or customer-facing limits in public copy.
+**Landing / marketing:** plain `SMS appointment reminders` only (`SMS_INCLUDED_CLAIM`). Do **not** say Unlimited, limited, allowance, or any £/message figure on public surfaces.
 
-Public wording (source of truth): `SMS_INCLUDED_CLAIM` in [`src/lib/pricing/claimsPolicy.ts`](../src/lib/pricing/claimsPolicy.ts). Wired on RateCard1 highlights, Terms, FAQ and AI (21 Jul 2026). Product integration remains WP-F.
+**Terms:** monthly allowance exists (`SMS_MONTHLY_ALLOWANCE_TERMS`) — no published monetary amount or message count.
+
+Public wording (source of truth): [`src/lib/pricing/claimsPolicy.ts`](../src/lib/pricing/claimsPolicy.ts). Wired on RateCard1, Terms, FAQ and AI. Product integration remains WP-F.
 
 ## 3. Care from go-live — LEGACY (setup-fee path)
 
@@ -52,5 +54,6 @@ While Ads run: re-verify official Booksy UK pricing **monthly** before any compe
 | Owner (VAT / SMS / Care) | Confirmed | 13 Jul 2026 | Commercial rules applied in copy |
 | §2 SaaS / VAT copy refresh | | 21 Jul 2026 | claimsPolicy + Terms/FAQ/landing alignment |
 | SMS public claim restored | | 21 Jul 2026 | `SMS_INCLUDED_CLAIM` on pricing/Terms/FAQ/AI |
+| SMS de-unlimited + Terms allowance | | 29 Jul 2026 | Plain landing claim; Terms monthly allowance, no £/count |
 | Legal / CAP review | | | Still open |
 | Ads launch allowed | | | After legal row if required |

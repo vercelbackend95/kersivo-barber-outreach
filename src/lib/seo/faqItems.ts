@@ -1,6 +1,6 @@
 /**
  * ORPHANED default FAQ set — live homepage uses barbershopBookingFaq.ts instead.
- * Aligned with commercial claims (email + unlimited SMS appointment reminders included).
+ * Aligned with commercial claims (email + SMS appointment reminders included).
  */
 import {
   BILLING_CYCLE_CLAIM,

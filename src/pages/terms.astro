@@ -30,6 +30,7 @@ import {
   MISSING_CRITICAL_MATERIALS_CLAIM,
   MISSING_OPTIONAL_MATERIALS_CLAIM,
   NO_FAKE_STOCK_CLAIM,
+  SMS_MONTHLY_ALLOWANCE_TERMS,
   STANDARD_SITE_NOT_BESPOKE_CLAIM,
   STANDARD_SITE_SCOPE_CLAIM,
 } from '@/lib/pricing/claimsPolicy';
@@ -123,10 +124,7 @@ import '@/styles/legal-pages.css';
         You configure day-to-day shop details yourself in the admin dashboard (barbers, services, prices, working hours,
         retail products and basic shop details such as name, town/city and logo).
       </p>
-      <p>
-        Unlimited automated SMS appointment reminders are included while your subscription is active. There is no
-        fair-use surcharge for standard appointment reminders in the £{SAAS_MONTHLY_GBP}/month plan.
-      </p>
+      <p>{SMS_MONTHLY_ALLOWANCE_TERMS}</p>
 
       <h2 id="fair-use">Limits and fair use</h2>
       <p>{FAIR_USE_INTRO}</p>

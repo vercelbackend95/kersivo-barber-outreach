@@ -112,7 +112,7 @@ export const CAROUSEL_SLIDES: CarouselSlide[] = [
     pricingLabel: 'ONGOING CARE',
     pricingBullets: [
       'Hosting',
-      'Unlimited SMS reminders',
+      'SMS reminders',
       'Support',
       'Platform updates',
       '1h tweaks/month',
