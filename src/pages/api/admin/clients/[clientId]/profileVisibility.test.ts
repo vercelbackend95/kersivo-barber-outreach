@@ -96,8 +96,11 @@ describe('GET /api/admin/clients/[clientId] financial visibility', () => {
     const body = await res.json();
 
     expect(body.financialsHidden).toBe(true);
+    expect(body.emailHidden).toBe(true);
+    expect(body.client.email).toBeNull();
     expect(body.client.notes).toBeNull();
     expect(body.client.tags).toEqual(['vip']);
+    expect(body.client.phone).toBe('07000000000');
     expect(body.stats.totalSpentPence).toBe(0);
     expect(body.stats.avgSpendPence).toBe(0);
     expect(body.stats.totalBookings).toBe(1);
@@ -107,7 +110,7 @@ describe('GET /api/admin/clients/[clientId] financial visibility', () => {
     expect(orderFindMany).not.toHaveBeenCalled();
   });
 
-  it('returns LTV, retail, and legacy notes for MANAGER', async () => {
+  it('returns LTV, retail, legacy notes, and email for MANAGER', async () => {
     requireAdminPermission.mockResolvedValue({
       shopId: 'shop-1',
       userId: 'user-m',
@@ -137,6 +140,8 @@ describe('GET /api/admin/clients/[clientId] financial visibility', () => {
     const body = await res.json();
 
     expect(body.financialsHidden).toBe(false);
+    expect(body.emailHidden).toBe(false);
+    expect(body.client.email).toBe('jamie@example.com');
     expect(body.client.notes).toBe('Legacy private note');
     expect(body.stats.totalSpentPence).toBe(4500);
     expect(body.stats.avgSpendPence).toBe(4500);

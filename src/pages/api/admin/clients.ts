@@ -2,6 +2,7 @@ export const prerender = false;
 
 import type { APIRoute } from 'astro';
 import { requireAdminPermission } from '../../../lib/admin/auth';
+import { canViewClientEmail } from '../../../lib/admin/rbac/scope';
 import { prisma } from '../../../lib/db/client';
 import {
   computeClientStats,
@@ -13,17 +14,20 @@ export const GET: APIRoute = async (ctx) => {
   if (access instanceof Response) return access;
 
   const query = ctx.url.searchParams.get('query')?.trim();
+  const showEmail = canViewClientEmail(access);
 
   const clients = await prisma.client.findMany({
     where: {
       shopId: access.shopId,
-      ...(query ? {
-        OR: [
-          { email: { contains: query, mode: 'insensitive' } },
-          { fullName: { contains: query, mode: 'insensitive' } },
-          { phone: { contains: query, mode: 'insensitive' } },
-        ],
-      } : {}),
+      ...(query
+        ? {
+            OR: [
+              ...(showEmail ? [{ email: { contains: query, mode: 'insensitive' as const } }] : []),
+              { fullName: { contains: query, mode: 'insensitive' } },
+              { phone: { contains: query, mode: 'insensitive' } },
+            ],
+          }
+        : {}),
     },
     orderBy: { updatedAt: 'desc' },
     take: 50,
@@ -73,6 +77,7 @@ export const GET: APIRoute = async (ctx) => {
       const reliabilityScore = computeReliabilityScore(bookings, nowMs);
       const base = {
         ...client,
+        email: showEmail ? client.email : null,
         reliabilityScore,
         lastVisitAt: stats.lastVisitAt?.toISOString() ?? null,
         totalBookings: stats.totalBookings,
@@ -89,5 +94,6 @@ export const GET: APIRoute = async (ctx) => {
   return new Response(JSON.stringify({
     clients: clientsWithStats,
     financialsHidden: access.role === 'BARBER',
+    emailHidden: !showEmail,
   }));
 };

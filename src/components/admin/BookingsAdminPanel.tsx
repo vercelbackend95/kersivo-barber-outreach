@@ -46,7 +46,7 @@ type Booking = {
   clientTags?: string[];
   clientAvatarUrl?: string | null;
   fullName: string;
-  email: string;
+  email: string | null;
   phone?: string | null;
   status: string;
   startAt: string;

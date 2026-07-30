@@ -3,7 +3,7 @@ import { fromZonedTime, formatInTimeZone } from 'date-fns-tz';
 import { ADMIN_BOOKING_HISTORY_PAGE_SIZE } from '../../../lib/admin/bookingHistoryPageSize';
 import { requireAdminContext } from '../../../lib/admin/auth';
 import { requireAnyPermission } from '@/lib/admin/rbac/can';
-import { requireLinkedBarber } from '@/lib/admin/rbac/scope';
+import { requireLinkedBarber, canViewClientEmail } from '@/lib/admin/rbac/scope';
 import { prisma } from '../../../lib/db/client';
 import { getEffectiveBookingStatus } from '../../../lib/booking/operationalStatus';
 import { BookingStatus, Prisma } from '@prisma/client';
@@ -56,6 +56,14 @@ function withClientTags<
   };
 }
 
+function withClientEmailVisibility<T extends { email?: string | null }>(
+  booking: T,
+  showEmail: boolean,
+): T {
+  if (showEmail) return booking;
+  return { ...booking, email: null };
+}
+
 function withEffectiveBookingStatus<
   T extends { status: string; startAt: Date | string; endAt: Date | string }
 >(booking: T): Omit<T, 'status'> & { status: string } {
@@ -68,6 +76,7 @@ function withEffectiveBookingStatus<
     }),
   };
 }
+
 const BOOKING_LIST_SELECT = {
   id: true,
   serviceId: true,
@@ -155,6 +164,7 @@ export const GET: APIRoute = async (ctx) => {
   const shopId = access.shopId;
   const selfBarberId =
     access.role === 'BARBER' && access.barberId ? access.barberId : null;
+  const showEmail = canViewClientEmail(access);
   const view = ctx.url.searchParams.get('view');
 
   if (view === 'history') {
@@ -192,7 +202,7 @@ export const GET: APIRoute = async (ctx) => {
       andConditions.push({
         OR: [
           { fullName: { contains: searchQ, mode: 'insensitive' } },
-          { email: { contains: searchQ, mode: 'insensitive' } },
+          ...(showEmail ? [{ email: { contains: searchQ, mode: 'insensitive' as const } }] : []),
           { phone: { contains: searchQ, mode: 'insensitive' } },
           { id: { contains: searchQ, mode: 'insensitive' } },
           { notes: { contains: searchQ, mode: 'insensitive' } },
@@ -215,9 +225,14 @@ export const GET: APIRoute = async (ctx) => {
       : null;
 
     return new Response(JSON.stringify({
-      bookings: page.map(withHistoricalServiceName).map(withEffectiveBookingStatus).map(withClientTags),
+      bookings: page
+        .map(withHistoricalServiceName)
+        .map(withEffectiveBookingStatus)
+        .map(withClientTags)
+        .map((b) => withClientEmailVisibility(b, showEmail)),
       hasMore,
       cursor: nextCursor,
+      emailHidden: !showEmail,
     }));
   }
   if (view === 'stats') {
@@ -260,11 +275,26 @@ export const GET: APIRoute = async (ctx) => {
     where: {
       barber: { shopId },
       status: parsedStatus.status,
-      OR: q ? [{ fullName: { contains: q, mode: 'insensitive' } }, { email: { contains: q, mode: 'insensitive' } }] : undefined,
+      OR: q
+        ? [
+            { fullName: { contains: q, mode: 'insensitive' } },
+            ...(showEmail ? [{ email: { contains: q, mode: 'insensitive' as const } }] : []),
+            { phone: { contains: q, mode: 'insensitive' } },
+          ]
+        : undefined,
       startAt: startAtRange
     },
     orderBy: { startAt: 'asc' }
   });
 
-  return new Response(JSON.stringify({ bookings: bookings.map(withHistoricalServiceName).map(withEffectiveBookingStatus).map(withClientTags) }));
+  return new Response(
+    JSON.stringify({
+      bookings: bookings
+        .map(withHistoricalServiceName)
+        .map(withEffectiveBookingStatus)
+        .map(withClientTags)
+        .map((b) => withClientEmailVisibility(b, showEmail)),
+      emailHidden: !showEmail,
+    }),
+  );
 };

@@ -8,7 +8,7 @@ import ClientProfilePanel from './ClientProfilePanel';
 type ClientListRow = {
   id: string;
   fullName: string | null;
-  email: string;
+  email: string | null;
   phone: string | null;
   tags: string[];
   avatarUrl?: string | null;
@@ -199,7 +199,7 @@ export default function ClientsAdminPanel() {
               const tone = reliabilityTone(client.reliabilityScore);
               const visibleTags = client.tags.slice(0, MAX_VISIBLE_TAGS);
               const hiddenTagCount = client.tags.length - visibleTags.length;
-              const displayName = client.fullName || client.email;
+              const displayName = client.fullName || client.phone || client.email || 'Client';
 
               return (
                 <li key={client.id}>
@@ -218,7 +218,7 @@ export default function ClientsAdminPanel() {
                   >
                     <ClientListAvatar
                       clientId={client.id}
-                      fullName={client.fullName || client.email}
+                      fullName={client.fullName || client.phone || client.email || 'Client'}
                       avatarUrl={client.avatarUrl}
                       className="admin-clients-avatar"
                       onClick={() => setOpenClientId(client.id)}
@@ -227,7 +227,9 @@ export default function ClientsAdminPanel() {
                     {/* Name + email */}
                     <div className="admin-clients-identity">
                       <span className="admin-clients-name">{displayName}</span>
-                      <span className="admin-clients-email">{client.email}</span>
+                      {client.email ? (
+                        <span className="admin-clients-email">{client.email}</span>
+                      ) : null}
                     </div>
 
                     {/* Tags */}

@@ -207,4 +207,34 @@ describe('GET /api/admin/bookings', () => {
     expect(body.bookings[0]?.clientAvatarUrl).toBe('/avatars/jamie.webp');
     expect(body.bookings[0]?.status).toBe('COMPLETED');
   });
+
+  it('strips booking email for BARBER and omits email from search', async () => {
+    requireAdminContext.mockResolvedValue({
+      ...adminAccess,
+      role: 'BARBER' as const,
+      barberId: 'barber-1',
+      userId: 'user-b',
+      memberId: 'm-b',
+    });
+    bookingFindMany.mockResolvedValue([sampleBooking()]);
+
+    const res = await GET(
+      makeContext('http://localhost/api/admin/bookings?date=2020-01-01&q=jamie@example.com'),
+    );
+    const body = (await res.json()) as {
+      bookings: Array<{ email: string | null }>;
+      emailHidden?: boolean;
+    };
+
+    expect(res.status).toBe(200);
+    expect(body.emailHidden).toBe(true);
+    expect(body.bookings[0]?.email).toBeNull();
+
+    const args = bookingFindMany.mock.calls[0]?.[0] as {
+      where: { OR?: Array<Record<string, unknown>> };
+    };
+    const or = args.where.OR ?? [];
+    expect(or.some((clause) => 'email' in clause)).toBe(false);
+    expect(or.some((clause) => 'fullName' in clause)).toBe(true);
+  });
 });

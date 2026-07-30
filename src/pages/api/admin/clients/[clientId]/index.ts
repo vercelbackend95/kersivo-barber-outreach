@@ -2,7 +2,7 @@ export const prerender = false;
 
 import type { APIRoute } from 'astro';
 import { requireAdminPermission } from '@/lib/admin/auth';
-import { assertClientAccessible } from '@/lib/admin/rbac/scope';
+import { assertClientAccessible, canViewClientEmail } from '@/lib/admin/rbac/scope';
 import { shouldIncludeTestActivityInAnalytics } from '@/lib/admin/analyticsMode';
 import { orderAnalyticsWhere } from '@/lib/booking/sandboxBookings';
 import { getEffectiveBookingStatus } from '@/lib/booking/operationalStatus';
@@ -185,6 +185,7 @@ export const GET: APIRoute = async (ctx) => {
   if (!client) return new Response(JSON.stringify({ error: 'Client not found.' }), { status: 404 });
 
   const isBarber = access.role === 'BARBER';
+  const showEmail = canViewClientEmail(access);
 
   const allBookings = await prisma.booking.findMany({
     where: { clientId },
@@ -209,7 +210,7 @@ export const GET: APIRoute = async (ctx) => {
     id: client.id,
     shopId: client.shopId,
     fullName: client.fullName,
-    email: client.email,
+    email: showEmail ? client.email : null,
     phone: client.phone,
     avatarUrl: client.avatarUrl,
     tags: client.tags,
@@ -235,6 +236,7 @@ export const GET: APIRoute = async (ctx) => {
         retailStats: { productsBought: 0, avgSpendPence: 0 },
         lastOrder: null,
         financialsHidden: true,
+        emailHidden: true,
       }),
     );
   }
@@ -274,6 +276,7 @@ export const GET: APIRoute = async (ctx) => {
       retailStats,
       lastOrder,
       financialsHidden: false,
+      emailHidden: false,
     }),
   );
 };
@@ -325,7 +328,20 @@ export const PATCH: APIRoute = async (ctx) => {
       select: { id: true, fullName: true, email: true, phone: true, notes: true, tags: true, avatarUrl: true, updatedAt: true },
     });
 
-    return new Response(JSON.stringify({ client }));
+    if (!client) {
+      return new Response(JSON.stringify({ error: 'Client not found.' }), { status: 404 });
+    }
+
+    return new Response(
+      JSON.stringify({
+        client: {
+          ...client,
+          email: canViewClientEmail(access) ? client.email : null,
+          notes: access.role === 'BARBER' ? null : client.notes,
+        },
+        emailHidden: !canViewClientEmail(access),
+      }),
+    );
   }
 
   const payload = (await ctx.request.json().catch(() => null)) as {
