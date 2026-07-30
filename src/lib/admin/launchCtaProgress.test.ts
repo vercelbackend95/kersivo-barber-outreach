@@ -145,13 +145,13 @@ describe('resolveLaunchCtaPresentation', () => {
     expect(result.href).toBe('/admin/launch');
   });
 
-  it('demo progress is mid-checklist Continue Setup', () => {
+  it('demo progress is complete READY TO LAUNCH', () => {
     const progress = demoLaunchProgress();
     const result = resolveLaunchCtaPresentation({ progress, pending: false, paid: false });
-    expect(result.status).toBe('IN PROGRESS');
-    expect(result.title).toBe('Continue Setup');
-    expect(result.doneCount).toBe(3);
+    expect(result.status).toBe('READY TO LAUNCH');
+    expect(result.title).toBe('Launch My Barbershop');
+    expect(result.doneCount).toBe(4);
     expect(result.totalCount).toBe(4);
-    expect(result.href).toBe('/admin/retail-onboarding');
+    expect(result.href).toBe('/admin/launch');
   });
 });

@@ -1,6 +1,7 @@
 import {
   LANDING_DEMO_BARBER_AVATARS,
 } from '../../landing/landingDemoAssets';
+import { emptyInvitationFields, type TeamCardDto } from '@/lib/admin/teamCards';
 import { minutesToTimeString } from '../timeStrings';
 import { ALL_WEEKDAYS } from '@/lib/booking/weekdays';
 import { DEMO_BARBER_IDS, DEMO_SERVICE_IDS } from './ids';
@@ -141,3 +142,47 @@ export const demoBarberRulesResponse = {
 export const demoBarberServicesResponse = {
   serviceIds: [DEMO_SERVICE_IDS.skinFadeWithHaircut, DEMO_SERVICE_IDS.qualityHaircut],
 };
+
+const teamCreatedAt = new Date().toISOString();
+
+/**
+ * Team cards for public admin demo — one joined member card per demo barber.
+ * Matches GET /api/admin/team shape (`{ ok, actorRole, cards }`).
+ */
+export function getDemoTeamResponse() {
+  const cards: TeamCardDto[] = demoBarbersResponse.barbers.map((barber, index) => {
+    const role = index === 0 ? 'OWNER' : index === 1 ? 'MANAGER' : 'BARBER';
+    return {
+      kind: 'member',
+      id: `demo-member-${barber.id}`,
+      role,
+      name: barber.name,
+      email: barber.email,
+      cardStatus: 'active',
+      bookable: true,
+      barberId: barber.id,
+      avatarUrl: barber.avatarUrl,
+      createdAt: teamCreatedAt,
+      barber: {
+        id: barber.id,
+        name: barber.name,
+        isActive: Boolean(barber.isActive),
+        avatarUrl: barber.avatarUrl,
+        sortOrder: barber.sortOrder,
+        serviceIds: barber.serviceIds,
+        todayLabel: barber.todayLabel,
+        todayIsOnShift: barber.todayIsOnShift,
+        todayShiftWindow: barber.todayShiftWindow,
+      },
+      canManageOnlineBookings: true,
+      canSetUpOnlineBookings: false,
+      ...emptyInvitationFields(),
+    };
+  });
+
+  return {
+    ok: true as const,
+    actorRole: 'OWNER' as const,
+    cards,
+  };
+}

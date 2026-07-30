@@ -9,6 +9,7 @@ import {
   demoTimeblocksResponse,
   getDemoBookingsHistoryResponse,
   getDemoBookingsResponse,
+  getDemoBookingsStatsResponse,
   getDemoClientDetailResponse,
   getDemoClientNotesResponse,
   toggleDemoClientNoteLike,
@@ -16,9 +17,10 @@ import {
   getDemoReportsResponse,
   getDemoShopOrderDetail,
   getDemoShopProductDetail,
-  demoShopOrdersResponse,
+  getDemoShopOrdersList,
   demoShopProductsResponse,
   getDemoShopSalesResponse,
+  getDemoTeamResponse,
 } from './demoFixtures';
 
 type DemoFixtureResult = { status: number; body: unknown };
@@ -39,14 +41,18 @@ export async function resolveDemoFixture(
     return { status: 200, body: demoSessionResponse };
   }
 
+  if (subPath === 'team') {
+    return { status: 200, body: getDemoTeamResponse() };
+  }
+
   if (subPath === 'bookings') {
     if (searchParams.get('view') === 'history') {
-      return { status: 200, body: getDemoBookingsHistoryResponse() };
+      return { status: 200, body: getDemoBookingsHistoryResponse(searchParams) };
     }
     if (searchParams.get('view') === 'stats') {
-      return { status: 200, body: { totalBookingsServed: 248 } };
+      return { status: 200, body: getDemoBookingsStatsResponse(searchParams) };
     }
-    return { status: 200, body: getDemoBookingsResponse() };
+    return { status: 200, body: getDemoBookingsResponse(searchParams) };
   }
 
   if (subPath === 'barbers') {
@@ -154,7 +160,7 @@ export async function resolveDemoFixture(
   }
 
   if (subPath === 'shop/orders') {
-    return { status: 200, body: demoShopOrdersResponse };
+    return { status: 200, body: getDemoShopOrdersList() };
   }
 
   const shopOrderMatch = subPath.match(/^shop\/orders\/([^/]+)$/);

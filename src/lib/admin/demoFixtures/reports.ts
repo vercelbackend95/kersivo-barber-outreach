@@ -19,6 +19,7 @@ import {
   toCumulativeSeries,
 } from '../reportsHourlySeries';
 import { DEMO_BARBER_IDS } from './ids';
+import { dayKeyDaysAgo, getDemoBookingsForDayKey } from './bookingCalendar';
 
 const TZ = 'Europe/London';
 
@@ -31,58 +32,9 @@ const BARBERS = {
 
 type BarberKey = keyof typeof BARBERS;
 
-type ServiceTemplate = {
-  name: string;
-  valueGbp: number;
-};
-
-const SERVICES: ServiceTemplate[] = [
-  { name: 'Skin fade with haircut', valueGbp: 40 },
-  { name: 'Quality haircut', valueGbp: 35 },
-  { name: 'Premium haircut', valueGbp: 45 },
-  { name: 'Quality beard trim', valueGbp: 15 },
-  { name: 'Premium beard trim', valueGbp: 30 },
-  { name: 'Luxury wet shave', valueGbp: 40 },
-  { name: 'Longer haircut', valueGbp: 65 },
-  { name: 'Express shave', valueGbp: 25 },
-];
-
-/** Service pick weights — haircuts dominate, premium / beard less often. */
-const SERVICE_WEIGHTS = [22, 20, 14, 10, 8, 6, 5, 15];
-
-const CLIENT_NAMES = [
-  'Oliver Reed', 'Amelia Clarke', 'Noah Bennett', 'Harry Watson', 'Daniel Price',
-  'Ethan Walsh', 'Leo Carter', 'Freya Hughes', 'Jack Turner', 'Maya Brooks',
-  'Theo Hughes', 'Grace Turner', 'Charlie Evans', 'Sophie Lane', 'James Foster',
-  'Ruby Shaw', 'Louis Grant', 'Nathan Cole', 'Dylan Reid', 'Aaron Webb',
-  'Connor Walsh', 'Mason Field', 'Rory Ellis', 'Isla Morgan', 'Ella Price',
-];
-
-/** Mon–Sun base bookings for a busy 4-chair shop. */
-const WEEKDAY_BASE_COUNTS = [0, 10, 11, 11, 12, 16, 17, 6];
-
-/** Prefer late morning + late afternoon. */
-const HOUR_POOL = [10, 11, 12, 11, 16, 17, 12, 18, 10, 13, 16, 17, 9, 15, 14, 19];
-
-/** Barber share weights (Jamie leads). */
-const BARBER_WEIGHTS: Record<BarberKey, number> = {
-  jamie: 0.34,
-  alex: 0.28,
-  sam: 0.22,
-  marcus: 0.16,
-};
-
 const BARBER_KEYS: BarberKey[] = ['jamie', 'alex', 'sam', 'marcus'];
 
 const CACHE = new Map<string, BookingsReportsPayload>();
-
-function dayKeyDaysAgo(daysAgo: number, now = new Date()): string {
-  const anchor = fromZonedTime(
-    `${formatInTimeZone(now, TZ, 'yyyy-MM-dd')}T12:00:00.000`,
-    TZ,
-  );
-  return formatInTimeZone(addMilliseconds(anchor, -daysAgo * 24 * 60 * 60 * 1000), TZ, 'yyyy-MM-dd');
-}
 
 function startAtOnDayKey(dayKey: string, hour: number, minute = 0): string {
   return fromZonedTime(
@@ -113,59 +65,6 @@ export function resolveDemoReportsDayCount(
   return 7;
 }
 
-function londonWeekdayMon1(dayKey: string): number {
-  const isoDow = Number(formatInTimeZone(fromZonedTime(`${dayKey}T12:00:00.000`, TZ), TZ, 'i'));
-  return Number.isFinite(isoDow) ? isoDow : 1;
-}
-
-function pickBarber(seed: number): BarberKey {
-  const roll = (seed % 100) / 100;
-  let cumulative = 0;
-  for (const key of BARBER_KEYS) {
-    cumulative += BARBER_WEIGHTS[key];
-    if (roll < cumulative) return key;
-  }
-  return 'marcus';
-}
-
-function pickService(seed: number): ServiceTemplate {
-  const total = SERVICE_WEIGHTS.reduce((sum, weight) => sum + weight, 0);
-  let roll = seed % total;
-  for (let index = 0; index < SERVICES.length; index += 1) {
-    roll -= SERVICE_WEIGHTS[index] ?? 0;
-    if (roll < 0) return SERVICES[index]!;
-  }
-  return SERVICES[0]!;
-}
-
-function pickClient(seed: number): string {
-  return CLIENT_NAMES[seed % CLIENT_NAMES.length]!;
-}
-
-/** ~4–5% client cancel, ~1% shop, ~2% no-show → completes ~92–95%. */
-function pickStatus(seed: number, cancelBoost = 0): string {
-  const roll = seed % 100;
-  if (roll < 4 + cancelBoost) return 'CANCELLED_BY_CLIENT';
-  if (roll < 5 + cancelBoost) return 'CANCELLED_BY_SHOP';
-  if (roll < 7 + cancelBoost) return 'EXPIRED';
-  return 'COMPLETED';
-}
-
-function dailyBookingCountForDayKey(dayKey: string, seed: number): number {
-  const weekday = londonWeekdayMon1(dayKey);
-  const base = WEEKDAY_BASE_COUNTS[weekday] ?? 10;
-  const noise = ((seed * 17 + weekday * 3) % 5) - 2;
-  return Math.max(4, base + noise);
-}
-
-function pickHour(seed: number): number {
-  return HOUR_POOL[seed % HOUR_POOL.length]!;
-}
-
-function pickMinute(seed: number): number {
-  return [0, 15, 30, 45][seed % 4]!;
-}
-
 type GeneratedBooking = BookingsReportsPayload['reportBookings'][number];
 
 function generateBookingsForRange(
@@ -174,42 +73,42 @@ function generateBookingsForRange(
   volumeScale: number,
   options: { cancelBoost?: number; idPrefix?: string; now?: Date; maxHourInclusive?: number } = {},
 ): GeneratedBooking[] {
-  const { cancelBoost = 0, idPrefix = 'demo-rpt', now = new Date(), maxHourInclusive } = options;
+  const { now = new Date(), maxHourInclusive } = options;
   const bookings: GeneratedBooking[] = [];
-  let seedCounter = dayOffsetBase * 1000;
 
   for (let dayIndex = 0; dayIndex < dayCount; dayIndex += 1) {
     const daysAgo = dayCount - 1 - dayIndex + dayOffsetBase;
     const dayKey = dayKeyDaysAgo(daysAgo, now);
-    const count = Math.max(
-      1,
-      Math.round(dailyBookingCountForDayKey(dayKey, seedCounter + dayIndex) * volumeScale),
-    );
+    const forHistory = daysAgo > 0;
+    let dayRows = getDemoBookingsForDayKey(dayKey, { forHistory });
+    if (volumeScale < 1) {
+      const keep = Math.max(1, Math.round(dayRows.length * volumeScale));
+      dayRows = dayRows.slice(0, keep);
+    }
+    if (maxHourInclusive != null) {
+      dayRows = dayRows.filter(
+        (row) => Number(formatInTimeZone(new Date(row.startAt), TZ, 'H')) <= maxHourInclusive,
+      );
+    }
 
-    for (let slot = 0; slot < count; slot += 1) {
-      seedCounter += 1;
-      const barberKey = pickBarber(seedCounter + dayIndex * 17);
-      const barber = BARBERS[barberKey];
-      const service = pickService(seedCounter + slot * 3);
-      const clientName = pickClient(seedCounter + slot);
-      const status = pickStatus(seedCounter + slot * 7, cancelBoost);
-      let hour = pickHour(seedCounter + slot * 5);
-      if (maxHourInclusive != null && hour > maxHourInclusive) {
-        hour = Math.max(9, maxHourInclusive - ((seedCounter + slot) % Math.max(1, maxHourInclusive - 8)));
-      }
-      const minute = pickMinute(seedCounter + slot);
-      const email = `${clientName.toLowerCase().replace(/[^a-z]+/g, '.')}@example.com`;
-
+    for (const row of dayRows) {
+      const status =
+        row.status === 'CANCELLED_BY_CLIENT'
+          ? 'CANCELLED_BY_CLIENT'
+          : row.status === 'CANCELLED_BY_SHOP'
+            ? 'CANCELLED_BY_SHOP'
+            : 'COMPLETED';
+      const valueGbp = row.totalPricePence / 100;
       bookings.push({
-        id: `${idPrefix}-${dayOffsetBase}-${seedCounter}`,
-        startAt: startAtOnDayKey(dayKey, hour, minute),
-        barberId: barber.id,
-        barberName: barber.name,
-        serviceName: service.name,
+        id: row.id,
+        startAt: row.startAt,
+        barberId: row.barberId,
+        barberName: row.barber.name,
+        serviceName: row.serviceNameAtBooking,
         status,
-        clientName,
-        clientEmail: email,
-        computedValueGbp: status === 'COMPLETED' ? service.valueGbp : null,
+        clientName: row.fullName,
+        clientEmail: row.email,
+        computedValueGbp: status === 'COMPLETED' ? valueGbp : null,
       });
     }
   }
