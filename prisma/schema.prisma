@@ -172,6 +172,18 @@ model ShopSettings {
   stripeConnectAccountId      String?
   stripeConnectChargesEnabled Boolean  @default(false)
   stripeConnectDetailsSubmitted Boolean @default(false)
+  /// Private preview URL set by OPS when tenant site is ready for owner review.
+  sitePreviewUrl              String?
+  /// Canonical site version label (e.g. "2026-07-29a") set alongside preview URL.
+  sitePreviewVersion          String?
+  sitePreviewReadyAt          DateTime?
+  /// Set when Owner clicks Approve & launch for the current sitePreviewVersion.
+  launchApprovedAt            DateTime?
+  launchApprovedByUserId      String?
+  launchApprovedByEmail       String?
+  launchApprovedVersion       String?
+  /// Recorded at approve time; physical DNS switch = OPS.
+  goLiveAt                    DateTime?
   ownerUserId                 String?  @unique
   createdAt                   DateTime @default(now())
   updatedAt                   DateTime @updatedAt
@@ -629,6 +641,44 @@ model SaasSubscription {
   @@index([customerEmail])
   @@index([customerEmail, status])
   @@index([stripeSubscriptionId])
+}
+
+/// Proof of Terms acceptance at checkout (H05). No FK cascade — audit survives deletes.
+model LegalAcceptance {
+  id              String   @id @default(cuid())
+  purpose         String
+  termsVersion    String
+  acceptedAt      DateTime @default(now())
+  userId          String?
+  email           String
+  shopId          String?
+  stripeSessionId String?
+  ip              String?
+  userAgent       String?
+  meta            Json?
+  createdAt       DateTime @default(now())
+
+  @@index([email, createdAt])
+  @@index([stripeSessionId])
+  @@index([purpose, createdAt])
+}
+
+/// Audit trail for site preview delivery and Approve & launch (H05 cz.2). No FK cascade.
+model SiteLaunchEvent {
+  id          String   @id @default(cuid())
+  shopId      String
+  action      String   // PREVIEW_READY | APPROVED | PREVIEW_UPDATED
+  siteVersion String?
+  previewUrl  String?
+  userId      String?
+  email       String?
+  ip          String?
+  userAgent   String?
+  meta        Json?
+  createdAt   DateTime @default(now())
+
+  @@index([shopId, createdAt])
+  @@index([action, createdAt])
 }
 
 enum StripeWebhookEventStatus {

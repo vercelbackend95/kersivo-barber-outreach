@@ -2,6 +2,13 @@ export const prerender = false;
 
 import type { APIRoute } from 'astro';
 import { prisma } from '../../../lib/db/client';
+import {
+  parseTermsAccepted,
+  recordTermsAcceptance,
+  termsAcceptanceStripeMetadata,
+  termsAcceptedErrorResponse,
+} from '../../../lib/legal/requireTermsAcceptance';
+import { TERMS_ACCEPTANCE_PURPOSES } from '../../../lib/legal/termsVersion';
 import { SAAS_MONTHLY_PENCE } from '../../../lib/seo/defaults';
 import { buildSaasSubscriptionStripeMetadata } from '../../../lib/setup/saasSubscription';
 import { getPublicSiteUrl } from '../../../lib/setup/siteUrl';
@@ -16,6 +23,7 @@ type SubscriptionCheckoutInput = {
   townCity?: string | null;
   barbers?: string | null;
   attribution?: Record<string, string>;
+  termsAccepted?: boolean;
 };
 
 const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
@@ -50,11 +58,16 @@ function pickAttribution(raw: unknown): Record<string, string> {
 
 export const POST: APIRoute = async ({ request }) => {
   try {
+
     let body: SubscriptionCheckoutInput;
     try {
       body = (await request.json()) as SubscriptionCheckoutInput;
     } catch {
       return badRequest('Invalid request body.');
+    }
+
+    if (!parseTermsAccepted(body)) {
+      return termsAcceptedErrorResponse();
     }
 
     const name = body.name?.trim() ?? '';
@@ -94,18 +107,21 @@ export const POST: APIRoute = async ({ request }) => {
       productId: 'saas-subscription',
       name: 'Kersivo — monthly subscription',
       unitAmount: SAAS_MONTHLY_PENCE,
-      metadata: buildSaasSubscriptionStripeMetadata(
-        {
-          customerName: name,
-          email,
-          shopName,
-          shopSize,
-          currentStack,
-          townCity: townCity || null,
-          barbers: barbers || null,
-        },
-        attribution,
-      ),
+      metadata: {
+        ...buildSaasSubscriptionStripeMetadata(
+          {
+            customerName: name,
+            email,
+            shopName,
+            shopSize,
+            currentStack,
+            townCity: townCity || null,
+            barbers: barbers || null,
+          },
+          attribution,
+        ),
+        ...termsAcceptanceStripeMetadata(),
+      },
     });
 
     try {
@@ -128,6 +144,13 @@ export const POST: APIRoute = async ({ request }) => {
         error,
       });
     }
+
+    await recordTermsAcceptance({
+      purpose: TERMS_ACCEPTANCE_PURPOSES.SAAS_CHECKOUT,
+      email,
+      stripeSessionId: session.id,
+      request,
+    });
 
     return new Response(JSON.stringify({ url: session.url }), { status: 200 });
   } catch (error) {

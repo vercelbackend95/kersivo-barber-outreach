@@ -22,9 +22,26 @@ describe('Barbershop settings UI wiring', () => {
     expect(src).toMatch(/\/book\/\$\{/);
   });
 
+  it('profile menu exposes Preview website for billing.manage', () => {
+    const src = readFileSync(
+      resolve(process.cwd(), 'src/components/admin/AdminSidebarProfile.tsx'),
+      'utf8',
+    );
+    expect(src).toMatch(/Preview website/);
+    expect(src).toMatch(/handlePreviewWebsite/);
+    expect(src).toMatch(/\/admin\/site-preview/);
+    expect(src).toMatch(/canManageBilling/);
+  });
+
   it('AdminPanel mounts BarbershopSettingsPanel on barbershop_settings section', () => {
     const src = readFileSync(resolve(process.cwd(), 'src/components/admin/AdminPanel.tsx'), 'utf8');
     expect(src).toMatch(/barbershop_settings/);
     expect(src).toMatch(/BarbershopSettingsPanel/);
+  });
+
+  it('AdminPanel mounts SiteLaunchHubPanel on site_launch section', () => {
+    const src = readFileSync(resolve(process.cwd(), 'src/components/admin/AdminPanel.tsx'), 'utf8');
+    expect(src).toMatch(/site_launch/);
+    expect(src).toMatch(/SiteLaunchHubPanel/);
   });
 });

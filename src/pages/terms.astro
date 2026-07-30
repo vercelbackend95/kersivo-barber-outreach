@@ -33,6 +33,7 @@ import {
   STANDARD_SITE_NOT_BESPOKE_CLAIM,
   STANDARD_SITE_SCOPE_CLAIM,
 } from '@/lib/pricing/claimsPolicy';
+import { CURRENT_TERMS_VERSION, formatTermsLastUpdated } from '@/lib/legal/termsVersion';
 import { PAGE_DESCRIPTIONS, SAAS_MONTHLY_GBP } from '@/lib/seo/defaults';
 import '@/styles/legal-pages.css';
 ---
@@ -45,7 +46,7 @@ import '@/styles/legal-pages.css';
   <main class="legal-page">
     <article class="container legal-page__inner">
       <h1 class="legal-page__title">Terms of Service</h1>
-      <p class="legal-page__updated">Last updated: 21 July 2026</p>
+      <p class="legal-page__updated">Last updated: {formatTermsLastUpdated(CURRENT_TERMS_VERSION)}</p>
 
       <p>
         These Terms govern the provision of barbershop website, booking, and retail pickup software and related services

@@ -20,6 +20,7 @@ const ClientsAdminPanel = lazy(() => import('./ClientsAdminPanel'));
 const ShopAdminPanel = lazy(() => import('./ShopAdminPanel'));
 const AiAssistantPanel = lazy(() => import('./AiAssistantPanel'));
 const BarbershopSettingsPanel = lazy(() => import('./BarbershopSettingsPanel'));
+const SiteLaunchHubPanel = lazy(() => import('./SiteLaunchHubPanel'));
 
 export type AdminSection =
   | 'bookings_dashboard'
@@ -33,6 +34,7 @@ export type AdminSection =
   | 'shop_sales'
   | 'assistant'
   | 'barbershop_settings'
+  | 'site_launch'
   /** Legacy URL alias → bookings_blocks (Team) */
   | 'team';
 
@@ -65,6 +67,7 @@ function getSectionFromUrl(): AdminSection {
   if (section === 'shop_products') return 'shop_products';
   if (section === 'assistant') return 'assistant';
   if (section === 'barbershop_settings') return 'barbershop_settings';
+  if (section === 'site_launch') return 'site_launch';
   // Legacy ?section=team → unified Team surface (bookings_blocks)
   if (section === 'team') return 'bookings_blocks';
   return 'bookings_dashboard';
@@ -401,6 +404,8 @@ export default function AdminPanel({ demoMode = false }: AdminPanelProps) {
                 onPauseChanged={setPublicActivityPaused}
               />
             ) : null}
+
+            {activeSection === 'site_launch' ? <SiteLaunchHubPanel key="site-launch" /> : null}
           </Suspense>
         </LazyPanelErrorBoundary>
       </AdminLayout>

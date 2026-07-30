@@ -1,0 +1,115 @@
+.site-launch-hub {
+  display: grid;
+  gap: 1.25rem;
+  width: 100%;
+  max-width: 44rem;
+  margin: 0 auto;
+  padding: 0.25rem 0 2rem;
+}
+
+.site-launch-hub__title {
+  margin: 0;
+  font-size: 1.25rem;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+}
+
+.site-launch-hub__status {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.65rem;
+}
+
+.site-launch-hub__badge {
+  display: inline-flex;
+  align-items: center;
+  padding: 0.2rem 0.65rem;
+  border-radius: 999px;
+  font-size: 0.75rem;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+}
+
+.site-launch-hub__badge--pending {
+  background: rgba(148, 163, 184, 0.18);
+  color: #cbd5e1;
+}
+
+.site-launch-hub__badge--review {
+  background: rgba(251, 191, 36, 0.18);
+  color: #fbbf24;
+}
+
+.site-launch-hub__badge--approved {
+  background: rgba(74, 222, 128, 0.16);
+  color: #4ade80;
+}
+
+.site-launch-hub__version {
+  font-size: 0.85rem;
+  color: var(--muted, #aaa);
+}
+
+.site-launch-hub__note {
+  margin: 0;
+  color: var(--muted, #aaa);
+  line-height: 1.45;
+}
+
+.site-launch-hub__checklist,
+.site-launch-hub__approval {
+  display: grid;
+  gap: 0.75rem;
+  padding: 1rem 1.05rem 1.1rem;
+  border: var(--admin-premium-surface-border, 1px solid var(--border));
+  border-radius: var(--admin-premium-surface-r, 0.85rem);
+  background: var(--admin-premium-surface-bg, var(--surface));
+}
+
+.site-launch-hub__checklist h3,
+.site-launch-hub__approval h3 {
+  margin: 0;
+  font-size: 1rem;
+  font-weight: 700;
+}
+
+.site-launch-hub__checklist ul {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  display: grid;
+  gap: 0.45rem;
+}
+
+.site-launch-hub__checklist label {
+  display: flex;
+  align-items: center;
+  gap: 0.55rem;
+  font-size: 0.92rem;
+  cursor: pointer;
+}
+
+.site-launch-hub__actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.55rem;
+}
+
+.site-launch-hub__approval dl {
+  margin: 0;
+  display: grid;
+  grid-template-columns: 8.5rem 1fr;
+  gap: 0.45rem 0.75rem;
+}
+
+.site-launch-hub__approval dt {
+  margin: 0;
+  color: var(--muted, #aaa);
+  font-size: 0.85rem;
+}
+
+.site-launch-hub__approval dd {
+  margin: 0;
+  font-size: 0.92rem;
+}

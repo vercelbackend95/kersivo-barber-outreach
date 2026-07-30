@@ -1,6 +1,6 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
-import { AccountCircle, Ban, Calendar, LogOut, Package, Store } from '../lucide-react';
+import { AccountCircle, Ban, Calendar, Globe, LogOut, Package, Store } from '../lucide-react';
 import { authClient } from '@/lib/auth-client';
 import { ADMIN_DEMO_BLOCKED_EVENT, clearAdminSecret } from './adminAuth';
 
@@ -161,6 +161,15 @@ export default function AdminSidebarProfile({
     const id = shopId?.trim();
     if (!id) return;
     window.open(`/book/${encodeURIComponent(id)}`, '_blank', 'noopener,noreferrer');
+  };
+
+  const handlePreviewWebsite = () => {
+    setOpen(false);
+    if (isGuest) {
+      openDemoAuthLock();
+      return;
+    }
+    window.location.assign('/admin/site-preview');
   };
 
   const handleLaunch = () => {
@@ -324,6 +333,15 @@ export default function AdminSidebarProfile({
               ) : null}
               {canManageBilling ? (
                 <>
+                  <button
+                    type="button"
+                    className="admin-profile-menu__item"
+                    role="menuitem"
+                    onClick={handlePreviewWebsite}
+                  >
+                    <Globe width={15} height={15} aria-hidden="true" />
+                    Preview website
+                  </button>
                   <button
                     type="button"
                     className="admin-profile-menu__item"

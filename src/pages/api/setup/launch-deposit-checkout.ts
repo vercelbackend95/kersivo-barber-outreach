@@ -5,6 +5,13 @@ import { SetupDepositStatus, SetupPlan } from '@prisma/client';
 import { resolveAdminAccess } from '../../../lib/admin/auth';
 import { requirePermission } from '../../../lib/admin/rbac/can';
 import { prisma } from '../../../lib/db/client';
+import {
+  parseTermsAccepted,
+  recordTermsAcceptance,
+  termsAcceptanceStripeMetadata,
+  termsAcceptedErrorResponse,
+} from '../../../lib/legal/requireTermsAcceptance';
+import { TERMS_ACCEPTANCE_PURPOSES } from '../../../lib/legal/termsVersion';
 import { buildSetupDepositStripeMetadata, getSetupPlan, isSetupPlanId } from '../../../lib/setup/plans';
 import { getPublicSiteUrl } from '../../../lib/setup/siteUrl';
 import { createCheckoutSession } from '../../../lib/shop/stripe';
@@ -12,6 +19,7 @@ import { createCheckoutSession } from '../../../lib/shop/stripe';
 type LaunchDepositCheckoutInput = {
   plan: string;
   attribution?: Record<string, string>;
+  termsAccepted?: boolean;
 };
 
 const ATTRIBUTION_KEYS = [
@@ -55,6 +63,7 @@ function shopSizeFromBarberCount(count: number): string {
  */
 export const POST: APIRoute = async (context) => {
   try {
+
     const access = await resolveAdminAccess(context);
     if (!access || access.via !== 'session') {
       return new Response(JSON.stringify({ error: 'Unauthorized' }), { status: 401 });
@@ -67,6 +76,10 @@ export const POST: APIRoute = async (context) => {
       body = (await context.request.json()) as LaunchDepositCheckoutInput;
     } catch {
       return badRequest('Invalid request body.');
+    }
+
+    if (!parseTermsAccepted(body)) {
+      return termsAcceptedErrorResponse();
     }
 
     const planRaw = String(body.plan ?? '').trim();
@@ -121,17 +134,20 @@ export const POST: APIRoute = async (context) => {
     const planConfig = getSetupPlan(planId);
     const baseUrl = getPublicSiteUrl();
     const attribution = pickAttribution(body.attribution);
-    const metadata = buildSetupDepositStripeMetadata(
-      planId,
-      {
-        customerName: name,
-        email,
-        shopName,
-        shopSize,
-        currentStack,
-      },
-      attribution,
-    );
+    const metadata = {
+      ...buildSetupDepositStripeMetadata(
+        planId,
+        {
+          customerName: name,
+          email,
+          shopName,
+          shopSize,
+          currentStack,
+        },
+        attribution,
+      ),
+      ...termsAcceptanceStripeMetadata(),
+    };
     metadata.shopId = access.shopId;
 
     const session = await createCheckoutSession({
@@ -170,6 +186,15 @@ export const POST: APIRoute = async (context) => {
         error,
       });
     }
+
+    await recordTermsAcceptance({
+      purpose: TERMS_ACCEPTANCE_PURPOSES.SETUP_DEPOSIT_CHECKOUT,
+      email,
+      userId: access.userId,
+      shopId: access.shopId,
+      stripeSessionId: session.id,
+      request: context.request,
+    });
 
     return new Response(JSON.stringify({ url: session.url }), { status: 200 });
   } catch (error) {

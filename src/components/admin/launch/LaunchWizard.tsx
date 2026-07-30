@@ -414,6 +414,7 @@ export default function LaunchWizard() {
               townCity: workspace.townCity,
               barbers: barberNames.join(', '),
               attribution: collectAttribution(),
+              termsAccepted: true,
             }),
           });
 
@@ -431,6 +432,7 @@ export default function LaunchWizard() {
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
             attribution: collectAttribution(),
+            termsAccepted: true,
           }),
         });
 
@@ -458,6 +460,7 @@ export default function LaunchWizard() {
             townCity: workspace.townCity,
             barbers: barberNames.join(', '),
             attribution: collectAttribution(),
+            termsAccepted: true,
           }),
         });
 
@@ -476,6 +479,7 @@ export default function LaunchWizard() {
         body: JSON.stringify({
           plan: planId,
           attribution: collectAttribution(),
+          termsAccepted: true,
         }),
       });
 
