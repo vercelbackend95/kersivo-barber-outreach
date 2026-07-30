@@ -23,6 +23,8 @@ export default defineConfig({
       },
     }),
   ],
+  // Keep HTML-aware whitespace (Astro 7 default is 'jsx') to reduce landing layout regressions.
+  compressHTML: true,
   build: {
     inlineStylesheets: 'auto',
   },

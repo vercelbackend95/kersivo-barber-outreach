@@ -29,7 +29,8 @@ function baseBooking(overrides: { startAt: Date }) {
     fullName: 'Client',
     originalStartAt: null,
     originalEndAt: null,
-    barber: { id: 'barber-1', name: 'Barber' },
+    clientRescheduleCount: 0,
+    barber: { id: 'barber-1', name: 'Barber', shopId: 'shop-1' },
     service: { id: 'svc-1', name: 'Cut' },
     ...overrides
   };
