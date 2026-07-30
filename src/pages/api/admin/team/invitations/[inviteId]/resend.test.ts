@@ -327,7 +327,8 @@ describe('POST /api/admin/team/invitations/[inviteId]/resend', () => {
   });
 
   it('second concurrent resend hits cooldown after first renewal (shared invite state)', async () => {
-    const renewedExpiresAt = new Date('2026-08-01T12:00:00.000Z');
+    // Relative TTL so issuedAt ≈ now after renewal (fixed calendar dates flake vs wall clock).
+    const renewedExpiresAt = new Date(Date.now() + INVITE_TTL_MS);
     inviteExpiresAt.mockReturnValue(renewedExpiresAt);
 
     let invite = baseInvite({
