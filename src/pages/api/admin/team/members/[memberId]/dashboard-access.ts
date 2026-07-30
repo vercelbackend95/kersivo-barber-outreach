@@ -4,7 +4,6 @@ import type { APIRoute } from 'astro';
 import type { ShopRole } from '@prisma/client';
 import { requireAdminContext } from '@/lib/admin/auth';
 import { requireAnyPermission } from '@/lib/admin/rbac/can';
-import { prisma } from '@/lib/db/client';
 import { runSerializableTransaction } from '@/lib/db/serializableTransaction';
 
 function json(body: unknown, status = 200) {
@@ -101,7 +100,7 @@ export const DELETE: APIRoute = async (context) => {
       'ok' in error &&
       (error as { ok: unknown }).ok === false
     ) {
-      const failure = error as { status: number; code: string; error: string };
+      const failure = error as unknown as { status: number; code: string; error: string };
       return json({ code: failure.code, error: failure.error }, failure.status);
     }
     console.error('[team/members/dashboard-access] revoke failed', error);
