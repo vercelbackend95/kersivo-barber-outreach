@@ -54,11 +54,6 @@ export const GET: APIRoute = async (ctx) => {
       return new Response('Booking not found.', { status: 404 });
     }
 
-    const shop = await prisma.shopSettings.findUnique({
-      where: { id: shopId },
-      select: { name: true },
-    });
-
     const serviceName = booking.serviceNameAtBooking ?? booking.service.name;
     const shopName = shop?.name?.trim() || 'Barbershop';
     const baseUrl = getPublicSiteUrl();
