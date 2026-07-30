@@ -5,82 +5,40 @@ import {
   createAdminSessionToken,
   getAdminSessionCookieName,
   getAdminSessionCookieOptions,
-  getSessionSecret
+  getSessionSecret,
 } from '../../../lib/admin/session';
-
-type FailedLoginAttempt = {
-  count: number;
-  expiresAt: number;
-};
+import {
+  clientIpFromRequest,
+  countDurableRateLimitHits,
+  consumeRateLimitSlot,
+} from '@/lib/rate-limit/durableRateLimit';
 
 const MAX_FAILED_ATTEMPTS = 5;
 const FAILED_ATTEMPT_WINDOW_MS = 10 * 60 * 1000;
-const MAX_TRACKED_IPS = 10_000;
-const failedAttemptsByIp = new Map<string, FailedLoginAttempt>();
-
-function normalizeIp(rawIp: string | undefined | null) {
-  const trimmed = (rawIp ?? '').trim();
-  if (!trimmed) return 'unknown';
-  return trimmed.toLowerCase();
-}
-
-function getClientIp(clientAddress: string | undefined, request: Request) {
-  if (clientAddress) return normalizeIp(clientAddress);
-
-  const realIp = request.headers.get('x-real-ip');
-  if (realIp) return normalizeIp(realIp);
-
-  const forwardedFor = request.headers.get('x-forwarded-for') ?? '';
-  const firstForwardedIp = forwardedFor.split(',')[0];
-  return normalizeIp(firstForwardedIp);
-}
-
-function cleanupExpiredAttempts(now: number) {
-  for (const [ip, attempt] of failedAttemptsByIp.entries()) {
-    if (now > attempt.expiresAt) {
-      failedAttemptsByIp.delete(ip);
-    }
-  }
-}
-
-function hasExceededFailedAttempts(ip: string, now: number) {
-  const attempt = failedAttemptsByIp.get(ip);
-  if (!attempt) return false;
-  if (now > attempt.expiresAt) {
-    failedAttemptsByIp.delete(ip);
-    return false;
-  }
-  return attempt.count >= MAX_FAILED_ATTEMPTS;
-}
-
-function registerFailedAttempt(ip: string, now: number) {
-  const current = failedAttemptsByIp.get(ip);
-  if (!current || now > current.expiresAt) {
-    failedAttemptsByIp.set(ip, { count: 1, expiresAt: now + FAILED_ATTEMPT_WINDOW_MS });
-    return;
-  }
-
-  failedAttemptsByIp.set(ip, {
-    count: current.count + 1,
-    expiresAt: current.expiresAt
-  });
-}
+const LOGIN_FAIL_ACTION = 'admin_login_fail';
 
 export const POST: APIRoute = async ({ request, cookies, clientAddress }) => {
-  const now = Date.now();
-  cleanupExpiredAttempts(now);
+  const ip = (clientAddress?.trim() || clientIpFromRequest(request)).toLowerCase();
 
-  if (failedAttemptsByIp.size > MAX_TRACKED_IPS) {
-    return new Response(JSON.stringify({ error: 'Rate limiter is busy. Try again shortly.' }), {
-      status: 429
-    });
-  }
+  const { count, oldestAt } = await countDurableRateLimitHits({
+    key: ip,
+    action: LOGIN_FAIL_ACTION,
+    windowMs: FAILED_ATTEMPT_WINDOW_MS,
+  });
 
-  const ip = getClientIp(clientAddress, request);
-
-  if (hasExceededFailedAttempts(ip, now)) {
+  if (count >= MAX_FAILED_ATTEMPTS) {
+    const now = Date.now();
+    const oldestMs = oldestAt?.getTime() ?? now;
+    const retryAfterSeconds = Math.max(
+      1,
+      Math.ceil((FAILED_ATTEMPT_WINDOW_MS - (now - oldestMs)) / 1000),
+    );
     return new Response(JSON.stringify({ error: 'Too many login attempts. Try again later.' }), {
-      status: 429
+      status: 429,
+      headers: {
+        'Content-Type': 'application/json',
+        'Retry-After': String(retryAfterSeconds),
+      },
     });
   }
 
@@ -96,18 +54,33 @@ export const POST: APIRoute = async ({ request, cookies, clientAddress }) => {
   const submittedSecret = typeof data?.secret === 'string' ? data.secret : '';
 
   if (!adminSecret || !sessionSecret || submittedSecret !== adminSecret) {
-    registerFailedAttempt(ip, now);
-
+    // Locked consume so concurrent failures cannot exceed the window limit.
+    const slot = await consumeRateLimitSlot({
+      key: ip,
+      action: LOGIN_FAIL_ACTION,
+      limit: MAX_FAILED_ATTEMPTS,
+      windowMs: FAILED_ATTEMPT_WINDOW_MS,
+    });
+    if (!slot.ok) {
+      return new Response(JSON.stringify({ error: 'Too many login attempts. Try again later.' }), {
+        status: 429,
+        headers: {
+          'Content-Type': 'application/json',
+          ...(slot.retryAfterSeconds
+            ? { 'Retry-After': String(slot.retryAfterSeconds) }
+            : {}),
+        },
+      });
+    }
     return new Response(JSON.stringify({ error: 'Invalid secret' }), { status: 401 });
   }
-  failedAttemptsByIp.delete(ip);
+
   const token = createAdminSessionToken(sessionSecret);
   cookies.set(
     getAdminSessionCookieName(),
     token,
-    getAdminSessionCookieOptions(import.meta.env.PROD)
+    getAdminSessionCookieOptions(import.meta.env.PROD),
   );
 
   return new Response(JSON.stringify({ ok: true }));
-  
 };

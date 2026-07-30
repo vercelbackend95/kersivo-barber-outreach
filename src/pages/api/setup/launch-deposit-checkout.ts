@@ -15,6 +15,7 @@ import { TERMS_ACCEPTANCE_PURPOSES } from '../../../lib/legal/termsVersion';
 import { buildSetupDepositStripeMetadata, getSetupPlan, isSetupPlanId } from '../../../lib/setup/plans';
 import { getPublicSiteUrl } from '../../../lib/setup/siteUrl';
 import { createCheckoutSession } from '../../../lib/shop/stripe';
+import { enforceIpRateLimit } from '@/lib/rate-limit/enforceIpRateLimit';
 
 type LaunchDepositCheckoutInput = {
   plan: string;
@@ -63,6 +64,8 @@ function shopSizeFromBarberCount(count: number): string {
  */
 export const POST: APIRoute = async (context) => {
   try {
+    const limited = await enforceIpRateLimit(context.request, 'setup_checkout', 10, 15 * 60 * 1000);
+    if (limited) return limited;
 
     const access = await resolveAdminAccess(context);
     if (!access || access.via !== 'session') {

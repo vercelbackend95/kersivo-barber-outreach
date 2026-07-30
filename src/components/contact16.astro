@@ -33,6 +33,17 @@ const {
       <form class="contact16__form" data-contact-form novalidate>
         <p class="contact16__status contact16__status--idle" data-contact-status role="status" aria-live="polite"></p>
         <input type="hidden" name="intent" value="" data-demo-intent />
+        <div class="hp-field" aria-hidden="true">
+          <label>
+            Company website
+            <input
+              type="text"
+              name="companyWebsite"
+              tabindex="-1"
+              autocomplete="off"
+            />
+          </label>
+        </div>
         <label>
           <span class="sr-only">Name</span>
           <input type="text" name="name" placeholder="Name*" required />
@@ -97,6 +108,7 @@ const {
       event.preventDefault();
 
       const fd = new FormData(form);
+      const companyWebsite = String(fd.get('companyWebsite') ?? '').trim();
       const name = String(fd.get('name') ?? '').trim();
       const email = String(fd.get('email') ?? '').trim();
       const message = String(fd.get('message') ?? '').trim();
@@ -121,7 +133,7 @@ const {
         const response = await fetch('/api/contact', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ name, email, message, intent, shopSize, currentStack }),
+          body: JSON.stringify({ name, email, message, intent, shopSize, currentStack, companyWebsite }),
         });
         const data = (await response.json().catch(() => ({}))) as { ok?: boolean; error?: string };
 

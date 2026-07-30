@@ -11,6 +11,11 @@ import {
   type ChatMessage,
   type ChatRequestBody,
 } from '@/lib/admin/ai/types';
+import {
+  checkDurableRateLimit,
+  clientIpFromRequest,
+  rateLimitExceededResponse,
+} from '@/lib/rate-limit/durableRateLimit';
 
 function jsonError(message: string, status: number): Response {
   return new Response(JSON.stringify({ error: message }), {
@@ -48,6 +53,15 @@ function parseMessages(body: unknown): ChatMessage[] | null {
 export const POST: APIRoute = async (ctx) => {
   const access = await requireAdminPermission(ctx, 'ai.use');
   if (access instanceof Response) return access;
+
+  const rateKey = access.userId ? `user:${access.userId}` : clientIpFromRequest(ctx.request);
+  const limited = await checkDurableRateLimit({
+    key: rateKey,
+    action: 'admin_ai_chat',
+    limit: 30,
+    windowMs: 10 * 60 * 1000,
+  });
+  if (!limited.ok) return rateLimitExceededResponse(limited.retryAfterSeconds);
 
   const apiKey = import.meta.env.OPENAI_API_KEY ?? process.env.OPENAI_API_KEY;
   if (!apiKey) {

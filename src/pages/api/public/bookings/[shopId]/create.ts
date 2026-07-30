@@ -49,11 +49,15 @@ export const POST: APIRoute = async ({ request, params }) => {
 
   const ip = getRequestIp(request);
   if (!import.meta.env.DEV) {
-    const limit = checkBookingRateLimit(ip);
+    const limit = await checkBookingRateLimit(ip, 'public_booking_create');
     if (!limit.ok) {
-      return json({ error: 'Too many attempts. Try later.', retryAfter: limit.retryAfterSeconds }, 429);
+      const headers: Record<string, string> = { 'Content-Type': 'application/json' };
+      if (limit.retryAfterSeconds) headers['Retry-After'] = String(limit.retryAfterSeconds);
+      return new Response(
+        JSON.stringify({ error: 'Too many attempts. Try later.', retryAfter: limit.retryAfterSeconds }),
+        { status: 429, headers },
+      );
     }
-    await prisma.rateLimitEvent.create({ data: { ip, action: 'public_booking_create' } });
   }
 
   const rawBody = await request.text();

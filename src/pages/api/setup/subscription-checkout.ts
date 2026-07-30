@@ -13,6 +13,7 @@ import { SAAS_MONTHLY_PENCE } from '../../../lib/seo/defaults';
 import { buildSaasSubscriptionStripeMetadata } from '../../../lib/setup/saasSubscription';
 import { getPublicSiteUrl } from '../../../lib/setup/siteUrl';
 import { createSubscriptionCheckoutSession } from '../../../lib/shop/stripe';
+import { enforceIpRateLimit } from '@/lib/rate-limit/enforceIpRateLimit';
 
 type SubscriptionCheckoutInput = {
   name: string;
@@ -58,6 +59,8 @@ function pickAttribution(raw: unknown): Record<string, string> {
 
 export const POST: APIRoute = async ({ request }) => {
   try {
+    const limited = await enforceIpRateLimit(request, 'setup_checkout', 10, 15 * 60 * 1000);
+    if (limited) return limited;
 
     let body: SubscriptionCheckoutInput;
     try {
