@@ -17,7 +17,16 @@ export const GET: APIRoute = async (ctx) => {
   }
 
   try {
-    const session = await retrieveCheckoutSession(sessionId);
+    const shop = await prisma.shopSettings.findUnique({
+      where: { id: shopId },
+      select: { name: true, stripeConnectAccountId: true },
+    });
+    const connectAccountId = shop?.stripeConnectAccountId?.trim();
+    if (!connectAccountId) {
+      return new Response('Shop Connect account missing.', { status: 404 });
+    }
+
+    const session = await retrieveCheckoutSession(sessionId, { stripeAccount: connectAccountId });
     const metadata = session.metadata ?? {};
     if (
       metadata.type !== BOOKING_DEPOSIT_METADATA_TYPE ||

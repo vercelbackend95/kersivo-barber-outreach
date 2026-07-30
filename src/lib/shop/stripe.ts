@@ -144,15 +144,21 @@ export async function createSubscriptionCheckoutSession(
   return { id: session.id, url: session.url };
 }
 
-export async function retrieveCheckoutSession(sessionId: string): Promise<StripeSession> {
+export async function retrieveCheckoutSession(
+  sessionId: string,
+  options?: { stripeAccount?: string },
+): Promise<StripeSession> {
   const secretKey = getSecretKey();
+  const headers: Record<string, string> = { Authorization: `Bearer ${secretKey}` };
+  const stripeAccount = options?.stripeAccount?.trim();
+  if (stripeAccount) {
+    headers['Stripe-Account'] = stripeAccount;
+  }
+
   const response = await fetch(
     `${STRIPE_API_BASE}/checkout/sessions/${encodeURIComponent(sessionId)}?expand[]=line_items.data.price.product`,
-    {
-      headers: { Authorization: `Bearer ${secretKey}` }
-    }
+    { headers },
   );
-
 
   if (!response.ok) {
     const text = await response.text();
@@ -272,10 +278,7 @@ export async function createBillingPortalSession(input: {
   return { id: session.id, url: session.url };
 }
 
-export function verifyStripeWebhookSignature(payload: string, signatureHeader: string): boolean {
-  const webhookSecret = import.meta.env.STRIPE_WEBHOOK_SECRET ?? process.env.STRIPE_WEBHOOK_SECRET;
-  if (!webhookSecret) throw new Error('STRIPE_WEBHOOK_SECRET is not configured.');
-
+function verifyWithSecret(payload: string, signatureHeader: string, webhookSecret: string): boolean {
   const elements = signatureHeader.split(',').map((part) => part.trim());
   const timestamp = elements.find((part) => part.startsWith('t='))?.slice(2);
   const signature = elements.find((part) => part.startsWith('v1='))?.slice(3);
@@ -290,4 +293,33 @@ export function verifyStripeWebhookSignature(payload: string, signatureHeader: s
   } catch {
     return false;
   }
+}
+
+/**
+ * Accepts platform webhook secret and optional Connect (connected-accounts) secret.
+ * Direct-charge deposit events arrive on the Connect endpoint.
+ */
+export function verifyStripeWebhookSignature(payload: string, signatureHeader: string): boolean {
+  const platformSecret = (
+    import.meta.env.STRIPE_WEBHOOK_SECRET ??
+    process.env.STRIPE_WEBHOOK_SECRET ??
+    ''
+  )
+    .toString()
+    .trim();
+  const connectSecret = (
+    import.meta.env.STRIPE_CONNECT_WEBHOOK_SECRET ??
+    process.env.STRIPE_CONNECT_WEBHOOK_SECRET ??
+    ''
+  )
+    .toString()
+    .trim();
+
+  if (!platformSecret && !connectSecret) {
+    throw new Error('STRIPE_WEBHOOK_SECRET is not configured.');
+  }
+
+  if (platformSecret && verifyWithSecret(payload, signatureHeader, platformSecret)) return true;
+  if (connectSecret && verifyWithSecret(payload, signatureHeader, connectSecret)) return true;
+  return false;
 }

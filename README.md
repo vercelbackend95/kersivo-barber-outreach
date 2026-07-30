@@ -30,7 +30,8 @@ Astro + React (TypeScript) booking + shop system for barbershops.
    - `PUBLIC_CALENDLY_URL`: optional Calendly link shown under pricing (e.g. scorecard call).
    - `PUBLIC_SITE_URL`: public base URL used by booking + shop links and Stripe success/cancel links (for local dev: `http://localhost:4321`). For production, set to `https://kersivo.co.uk`.
    - `STRIPE_SECRET_KEY`: Stripe test secret key used for checkout session creation.
-   - `STRIPE_WEBHOOK_SECRET`: Stripe webhook signing secret used to verify `/api/shop/webhook`.
+   - `STRIPE_WEBHOOK_SECRET`: Stripe webhook signing secret used to verify `/api/shop/webhook` (platform events: SaaS, retail, setup).
+   - `STRIPE_CONNECT_WEBHOOK_SECRET`: signing secret for a **second** Stripe webhook endpoint on the same URL that listens to **events on Connected accounts** (required for booking deposit direct charges).
    - `ADMIN_SECRET`: admin panel login secret.
    - `BLOB_READ_WRITE_TOKEN` (preferred) or `VERCEL_BLOB_READ_WRITE_TOKEN`: Vercel Blob token used for barber avatar + product image uploads.
             - If Blob storage is not configured, barber avatars still save as inline `data:` URLs, but product uploads still require Blob.
@@ -86,7 +87,11 @@ Before running Google Ads against the live site, confirm:
 1. Set `PUBLIC_SITE_URL=https://kersivo.co.uk` in Vercel (Production environment) and in local `.env` when testing production-like URLs.
 2. Add `kersivo.co.uk` as the production domain in the Vercel project (Settings → Domains).
 3. Legacy redirect: `barberdemo.kersivo.co.uk` → `https://kersivo.co.uk` is configured in [`vercel.json`](vercel.json) (permanent redirect, all paths).
-4. Stripe webhook endpoint (production): `https://kersivo.co.uk/api/shop/webhook` — register this URL in the Stripe Dashboard and set `STRIPE_WEBHOOK_SECRET` in Vercel.
+4. Stripe webhook endpoints (production), both pointing at `https://kersivo.co.uk/api/shop/webhook`:
+   - **Platform** endpoint → set `STRIPE_WEBHOOK_SECRET` in Vercel (SaaS subscription, retail shop, setup).
+   - **Connect** endpoint with “Listen to events on Connected accounts” → set `STRIPE_CONNECT_WEBHOOK_SECRET` (booking deposits + `account.updated`).
+   Events to include on Connect: `checkout.session.completed`, `checkout.session.async_payment_succeeded`, `account.updated`.
+
    - **Test mode:** add the same endpoint under Stripe **Test** webhooks (or use `stripe listen`) and use the **test** signing secret with `sk_test_…` keys. Sandbox `cs_test_…` checkouts will not fulfil if only a Live webhook is configured.
    - **Live mode:** separate Live webhook + `whsec_…` + `sk_live_…`. Never mix test events with the live signing secret.
 5. `SETUP_ONBOARDING_FORM_URL`: your Tally onboarding form link (e.g. `https://tally.so/r/XXXXX`). Sent to clients in the subscription confirmation email and shown on `/setup/success` after verified payment.
@@ -170,12 +175,16 @@ Set `SHOW_SETUP_PLAN_CARDS = true` in `offerMode.ts`, then:
 - No admin UI in v1; outbound rows land in `EmailOutbound` for ops/debug.
 - Distinct from instant booking confirmation / reschedule / cancel emails in `src/lib/email/sender.ts`.
 
-## Online booking deposits (WP-A/B/C)
+## Online booking deposits (WP-A/B/C + B05 direct charges)
 - Paid shops only (`shopPaidAt` / SaaS webhook). Demo shop and marketing `/book` sandbox never collect.
 - Owner toggle + Stripe Connect in **Barbershop settings** (`/api/admin/barbershop-settings/deposits`).
-- Live book: `/book/[shopId]` → `POST /api/public/bookings/[shopId]/create` → optional £5 Checkout → webhook `booking_deposit` → `BOOKED`.
+- **Charge model:** Checkout is a **direct charge** on the shop’s connected account (`Stripe-Account`). KERSIVO `application_fee_amount` is `0` today.
+- Live book: `/book/[shopId]` → deposit Checkout on Connect → webhook `booking_deposit` (Connect endpoint) → `BOOKED`.
+- Success / calendar.ics retrieve the Checkout Session with the shop’s Connect account id.
+- Refunds: connected account first; legacy destination charges fall back to platform refund with `reverse_transfer=true`.
 - Policy defaults: 24h cancel/reschedule windows, max 2 client reschedules; refund in-window / shop cancel; forfeit late cancel + no-show.
 - Cron: `GET/POST /api/cron/expire-deposit-holds` every 10 minutes expires unpaid `PENDING_PAYMENT` holds.
+- `account.updated` (Connect webhook) syncs `stripeConnectChargesEnabled` / `detailsSubmitted`.
 
 
 

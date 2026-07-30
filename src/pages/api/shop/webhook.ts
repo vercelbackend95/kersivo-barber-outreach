@@ -67,6 +67,8 @@ type StripeEvent = {
   type: string;
   created: number;
   livemode?: boolean;
+  /** Set on Connect webhooks listening to connected accounts. */
+  account?: string | null;
   data: {
     object: {
       id: string;
@@ -83,6 +85,8 @@ type StripeEvent = {
       canceled_at?: number | null;
       subscription?: string | { id?: string } | null;
       lines?: { data?: Array<{ period?: { end?: number | null } | null }> };
+      charges_enabled?: boolean;
+      details_submitted?: boolean;
     };
   };
 };
@@ -688,6 +692,52 @@ async function handleSaasSubscriptionCheckout(
   );
 }
 
+async function handleConnectAccountUpdated(event: StripeEvent): Promise<Response> {
+  const accountId = (event.account?.trim() || event.data.object.id?.trim() || '').trim();
+  if (!accountId || !accountId.startsWith('acct_')) {
+    return new Response(JSON.stringify({ ok: true, ignored: true }), { status: 200 });
+  }
+
+  const chargesEnabled = Boolean(event.data.object.charges_enabled);
+  const detailsSubmitted = Boolean(event.data.object.details_submitted);
+
+  const result = await prisma.shopSettings.updateMany({
+    where: { stripeConnectAccountId: accountId },
+    data: {
+      stripeConnectChargesEnabled: chargesEnabled,
+      stripeConnectDetailsSubmitted: detailsSubmitted,
+    },
+  });
+
+  console.info('[webhook] account.updated', {
+    accountId,
+    chargesEnabled,
+    detailsSubmitted,
+    shopsUpdated: result.count,
+  });
+
+  return new Response(
+    JSON.stringify({ ok: true, accountId, shopsUpdated: result.count }),
+    { status: 200 },
+  );
+}
+
+async function resolveBookingDepositStripeAccount(
+  event: StripeEvent,
+  metadata: Record<string, string>,
+): Promise<string | null> {
+  const fromEvent = event.account?.trim() || null;
+  if (fromEvent) return fromEvent;
+
+  const shopId = metadata.shopId?.trim();
+  if (!shopId) return null;
+  const shop = await prisma.shopSettings.findUnique({
+    where: { id: shopId },
+    select: { stripeConnectAccountId: true },
+  });
+  return shop?.stripeConnectAccountId?.trim() || null;
+}
+
 async function handleBookingDepositCheckout(
   sessionId: string,
   session: StripeSession,
@@ -874,6 +924,10 @@ export const POST: APIRoute = async ({ request }) => {
     const finalize = (response: Response, opts?: { ignored?: boolean }) =>
       finalizeWebhookResponse(eventId, response, { ...opts, eventType: event.type });
 
+    if (event.type === 'account.updated') {
+      return await finalize(await handleConnectAccountUpdated(event));
+    }
+
     if (
       event.type === 'customer.subscription.updated' ||
       event.type === 'customer.subscription.deleted' ||
@@ -890,8 +944,29 @@ export const POST: APIRoute = async ({ request }) => {
     }
 
     const sessionId = event.data.object.id;
-    const session = await retrieveCheckoutSession(sessionId);
-    const metadata = session.metadata ?? event.data.object.metadata ?? {};
+    const eventMetadata = event.data.object.metadata ?? {};
+    let stripeAccount: string | undefined;
+
+    if ((eventMetadata.type ?? '').trim() === BOOKING_DEPOSIT_METADATA_TYPE) {
+      const resolved = await resolveBookingDepositStripeAccount(event, eventMetadata);
+      if (!resolved) {
+        return await finalize(
+          new Response(
+            JSON.stringify({ error: 'Missing connected account for booking deposit session' }),
+            { status: 400 },
+          ),
+        );
+      }
+      stripeAccount = resolved;
+    } else if (event.account?.trim()) {
+      stripeAccount = event.account.trim();
+    }
+
+    const session = await retrieveCheckoutSession(
+      sessionId,
+      stripeAccount ? { stripeAccount } : undefined,
+    );
+    const metadata = session.metadata ?? eventMetadata;
 
     if (SETUP_FULFILMENT_EVENTS.has(event.type) && metadata.type === 'setup_deposit') {
       return await finalize(await handleSetupDepositCheckout(sessionId, session, metadata, event.created));

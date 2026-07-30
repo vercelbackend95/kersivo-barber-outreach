@@ -8,15 +8,27 @@ export async function refundBookingDepositIfEligible(input: {
 }): Promise<'refunded' | 'skipped_unpaid' | 'skipped_already' | 'failed'> {
   const booking = await prisma.booking.findUnique({
     where: { id: input.bookingId },
-    include: { barber: { select: { shopId: true, shop: { select: { stripeConnectAccountId: true } } } } },
+    include: {
+      barber: {
+        select: {
+          shopId: true,
+          shop: { select: { stripeConnectAccountId: true } },
+        },
+      },
+    },
   });
   if (!booking) return 'skipped_unpaid';
   if (!booking.paymentRequired || booking.paymentStatus !== PaymentStatus.PAID) return 'skipped_unpaid';
   if (booking.depositRefundedAt || booking.depositForfeitedAt) return 'skipped_already';
   if (!booking.stripePaymentIntentId) return 'failed';
 
+  const connectAccountId = booking.barber.shop.stripeConnectAccountId?.trim() || null;
+
   try {
-    await refundPaymentIntent(booking.stripePaymentIntentId);
+    const result = await refundPaymentIntent(booking.stripePaymentIntentId, {
+      stripeAccount: connectAccountId ?? undefined,
+      reverseTransfer: true,
+    });
     await prisma.booking.update({
       where: { id: booking.id },
       data: {
@@ -24,11 +36,19 @@ export async function refundBookingDepositIfEligible(input: {
         depositRefundedAt: new Date(),
       },
     });
+    console.info('[deposit] refund ok', {
+      bookingId: booking.id,
+      reason: input.reason,
+      mode: result.mode,
+      connectAccountId,
+      refundId: result.id,
+    });
     return 'refunded';
   } catch (error) {
     console.error('[deposit] refund failed', {
       bookingId: booking.id,
       reason: input.reason,
+      connectAccountId,
       error: error instanceof Error ? error.message : error,
     });
     return 'failed';

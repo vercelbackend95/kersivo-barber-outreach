@@ -2,7 +2,8 @@
 import MinimalLayout from '@/layouts/MinimalLayout.astro';
 import BookingConfirmationPanel from '@/components/booking/BookingConfirmationPanel';
 import { prisma } from '@/lib/db/client';
-import { retrieveCheckoutSession, getCheckoutPaymentIntentId } from '@/lib/shop/stripe';
+import { retrieveBookingDepositSession } from '@/lib/shop/stripeConnect';
+import { getCheckoutPaymentIntentId } from '@/lib/shop/stripe';
 import { BOOKING_DEPOSIT_METADATA_TYPE } from '@/lib/booking/depositGate';
 import { BookingStatus, PaymentStatus } from '@prisma/client';
 import { sendInstantBookingConfirmationEmail } from '@/lib/email/sender';
@@ -36,8 +37,16 @@ let shopTimezone = 'Europe/London';
 
 if (shopId && sessionId) {
   try {
-    const session = await retrieveCheckoutSession(sessionId);
-    const metadata = session.metadata ?? {};
+    const shopForConnect = await prisma.shopSettings.findUnique({
+      where: { id: shopId },
+      select: { name: true, timezone: true, stripeConnectAccountId: true },
+    });
+    const connectAccountId = shopForConnect?.stripeConnectAccountId?.trim();
+    if (!connectAccountId) {
+      errorMessage = 'This shop is not ready to confirm deposit payments.';
+    } else {
+      const session = await retrieveBookingDepositSession(sessionId, connectAccountId);
+      const metadata = session.metadata ?? {};
     if (
       metadata.type === BOOKING_DEPOSIT_METADATA_TYPE &&
       metadata.shopId === shopId &&
@@ -108,6 +117,7 @@ if (shopId && sessionId) {
       }
     } else {
       errorMessage = 'Payment is not complete yet. If you were charged, contact the barbershop.';
+    }
     }
   } catch {
     errorMessage = 'Payment confirmation failed. If you were charged, contact the barbershop.';
