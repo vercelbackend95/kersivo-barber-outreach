@@ -12,6 +12,17 @@ export async function markShopPaid(shopId: string, paidAt: Date = new Date()): P
   });
 }
 
+/** Clear paid-tenant marker after subscription entitlement ends. */
+export async function markShopUnpaid(shopId: string): Promise<void> {
+  await prisma.shopSettings.update({
+    where: { id: shopId },
+    data: {
+      shopPaidAt: null,
+      smsRemindersEnabled: false,
+    },
+  });
+}
+
 export async function markShopPaidForOwnerEmail(
   email: string,
   paidAt: Date = new Date(),

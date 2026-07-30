@@ -93,6 +93,106 @@ export default function BarbershopSettingsPanel({
     maxClientReschedules: number;
   } | null>(null);
 
+  const [billingPhase, setBillingPhase] = useState<string | null>(null);
+  const [billingLabel, setBillingLabel] = useState<string | null>(null);
+  const [hasBillingPortal, setHasBillingPortal] = useState(false);
+  const [allowsDataExport, setAllowsDataExport] = useState(false);
+  const [exportConsumed, setExportConsumed] = useState(false);
+  const [hasSubscription, setHasSubscription] = useState(false);
+  const [canCancelSubscription, setCanCancelSubscription] = useState(false);
+  const [cancelAtPeriodEnd, setCancelAtPeriodEnd] = useState(false);
+  const [billingBusy, setBillingBusy] = useState(false);
+  const [cancelSubBusy, setCancelSubBusy] = useState(false);
+  const [exportBusy, setExportBusy] = useState(false);
+  const [billingError, setBillingError] = useState('');
+  const [billingMessage, setBillingMessage] = useState('');
+
+  const loadBilling = useCallback(async () => {
+    setBillingError('');
+    try {
+      const response = await fetch('/api/setup/billing-status', { credentials: 'include' });
+      if (response.status === 401 || response.status === 403) {
+        setHasSubscription(false);
+        setHasBillingPortal(false);
+        setAllowsDataExport(false);
+        setExportConsumed(false);
+        setCanCancelSubscription(false);
+        setCancelAtPeriodEnd(false);
+        setBillingPhase(null);
+        setBillingLabel(null);
+        return;
+      }
+      const data = (await response.json().catch(() => null)) as {
+        hasSubscription?: boolean;
+        hasPortalAccess?: boolean;
+        allowsExport?: boolean;
+        exportConsumed?: boolean;
+        phase?: string | null;
+        cancelAtPeriodEnd?: boolean;
+        currentPeriodEnd?: string | null;
+        graceEndsAt?: string | null;
+        retentionEndsAt?: string | null;
+        grantsAccess?: boolean;
+        canCancelSubscription?: boolean;
+        error?: string;
+      } | null;
+      if (!response.ok) {
+        throw new Error(data?.error || 'Could not load billing status.');
+      }
+
+      setHasSubscription(Boolean(data?.hasSubscription));
+      setHasBillingPortal(Boolean(data?.hasPortalAccess));
+      setAllowsDataExport(Boolean(data?.allowsExport));
+      setExportConsumed(Boolean(data?.exportConsumed));
+      setCanCancelSubscription(Boolean(data?.canCancelSubscription));
+      setCancelAtPeriodEnd(Boolean(data?.cancelAtPeriodEnd));
+      setBillingPhase(data?.phase ?? null);
+
+      const formatDate = (iso: string) => {
+        const end = new Date(iso);
+        if (Number.isNaN(end.getTime())) return null;
+        return end.toLocaleDateString('en-GB', {
+          day: '2-digit',
+          month: 'short',
+          year: 'numeric',
+        });
+      };
+
+      if (!data?.hasSubscription) {
+        setBillingLabel(null);
+        return;
+      }
+      if (data.phase === 'canceled' && data.retentionEndsAt) {
+        const formatted = formatDate(data.retentionEndsAt);
+        setBillingLabel(formatted ? `Canceled — export until ${formatted}` : 'Canceled');
+        return;
+      }
+      if (data.phase === 'suspended') {
+        setBillingLabel('Suspended — update billing');
+        return;
+      }
+      if (data.phase === 'grace' && data.graceEndsAt) {
+        const formatted = formatDate(data.graceEndsAt);
+        setBillingLabel(formatted ? `Past due — grace until ${formatted}` : 'Past due');
+        return;
+      }
+      if (data.cancelAtPeriodEnd && data.currentPeriodEnd) {
+        const formatted = formatDate(data.currentPeriodEnd);
+        if (formatted) {
+          setBillingLabel(`Cancels on ${formatted}`);
+          return;
+        }
+      }
+      if (data.grantsAccess || data.phase === 'active') {
+        setBillingLabel('Active');
+        return;
+      }
+      setBillingLabel(null);
+    } catch (error) {
+      setBillingError(error instanceof Error ? error.message : 'Could not load billing status.');
+    }
+  }, []);
+
   const loadDeposits = useCallback(async () => {
     setDepositsError('');
     try {
@@ -156,6 +256,7 @@ export default function BarbershopSettingsPanel({
       onPauseChanged?.(nextPause.pausedNow);
       // Do not block the settings shell on deposits/Stripe — failures stay in the deposits card.
       void loadDeposits();
+      void loadBilling();
     } catch (error) {
       setLoadError(error instanceof Error ? error.message : 'Could not load barbershop settings.');
     } finally {
@@ -163,7 +264,7 @@ export default function BarbershopSettingsPanel({
     }
     // Intentionally omit onPauseChanged from deps — parent passes setState.
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [loadDeposits]);
+  }, [loadDeposits, loadBilling]);
 
   useEffect(() => {
     void load();
@@ -710,6 +811,180 @@ export default function BarbershopSettingsPanel({
           {depositsMessage ? (
             <p className="muted" role="status">
               {depositsMessage}
+            </p>
+          ) : null}
+        </section>
+
+        <section className="admin-barbershop-settings__card" aria-labelledby="bbs-billing-title">
+          <h2 id="bbs-billing-title" className="admin-barbershop-settings__card-title">
+            Subscription &amp; data
+          </h2>
+          <p className="admin-barbershop-settings__card-copy">
+            Manage your KERSIVO subscription in Stripe (cancel at period end, payment method,
+            invoices). Download a one-time CSV of clients and booking history while subscribed, or
+            for 30 days after cancellation. Account deletion is blocked until the subscription is
+            canceled and no longer billable.
+          </p>
+          {hasSubscription ? (
+            <p className="admin-barbershop-settings__card-copy" role="status">
+              Status: <strong>{billingLabel || billingPhase || 'Unknown'}</strong>
+            </p>
+          ) : (
+            <p className="admin-barbershop-settings__card-copy" role="status">
+              No active KERSIVO subscription on file for this shop.
+            </p>
+          )}
+          <div className="admin-barbershop-settings__actions">
+            <button
+              type="button"
+              className="btn btn--secondary"
+              disabled={!hasBillingPortal || billingBusy}
+              onClick={async () => {
+                if (!hasBillingPortal || billingBusy) return;
+                setBillingBusy(true);
+                setBillingError('');
+                setBillingMessage('');
+                try {
+                  const response = await fetch('/api/setup/billing-portal', {
+                    method: 'POST',
+                    credentials: 'include',
+                  });
+                  const payload = (await response.json().catch(() => null)) as {
+                    url?: string;
+                    error?: string;
+                  } | null;
+                  if (!response.ok || !payload?.url) {
+                    throw new Error(payload?.error || 'Unable to open billing portal.');
+                  }
+                  window.location.assign(payload.url);
+                } catch (error) {
+                  setBillingError(
+                    error instanceof Error ? error.message : 'Unable to open billing portal.',
+                  );
+                  setBillingBusy(false);
+                }
+              }}
+            >
+              {billingBusy ? 'Opening billing…' : 'Manage billing'}
+            </button>
+            <button
+              type="button"
+              className="btn btn--secondary"
+              disabled={!canCancelSubscription || cancelSubBusy || cancelAtPeriodEnd}
+              onClick={async () => {
+                if (!canCancelSubscription || cancelSubBusy || cancelAtPeriodEnd) return;
+                setCancelSubBusy(true);
+                setBillingError('');
+                setBillingMessage('');
+                try {
+                  const response = await fetch('/api/setup/cancel-subscription', {
+                    method: 'POST',
+                    credentials: 'include',
+                  });
+                  const payload = (await response.json().catch(() => null)) as {
+                    error?: string;
+                    currentPeriodEnd?: string | null;
+                    alreadyScheduled?: boolean;
+                  } | null;
+                  if (!response.ok) {
+                    throw new Error(payload?.error || 'Unable to cancel subscription.');
+                  }
+                  setCanCancelSubscription(false);
+                  setCancelAtPeriodEnd(true);
+                  const end = payload?.currentPeriodEnd
+                    ? new Date(payload.currentPeriodEnd).toLocaleDateString('en-GB', {
+                        day: '2-digit',
+                        month: 'short',
+                        year: 'numeric',
+                      })
+                    : null;
+                  setBillingMessage(
+                    end
+                      ? `Subscription will cancel at period end (${end}).`
+                      : 'Subscription will cancel at period end.',
+                  );
+                  await loadBilling();
+                } catch (error) {
+                  setBillingError(
+                    error instanceof Error ? error.message : 'Unable to cancel subscription.',
+                  );
+                } finally {
+                  setCancelSubBusy(false);
+                }
+              }}
+            >
+              {cancelSubBusy
+                ? 'Canceling…'
+                : cancelAtPeriodEnd
+                  ? 'Cancellation scheduled'
+                  : 'Cancel subscription'}
+            </button>
+            <button
+              type="button"
+              className="btn btn--secondary"
+              disabled={!allowsDataExport || exportBusy || exportConsumed}
+              onClick={async () => {
+                if (!allowsDataExport || exportBusy || exportConsumed) return;
+                setExportBusy(true);
+                setBillingError('');
+                setBillingMessage('');
+                try {
+                  const response = await fetch('/api/setup/data-export', { credentials: 'include' });
+                  if (response.status === 409) {
+                    setExportConsumed(true);
+                    setAllowsDataExport(false);
+                    setBillingMessage('CSV export was already downloaded for this subscription.');
+                    return;
+                  }
+                  if (!response.ok) {
+                    const payload = (await response.json().catch(() => null)) as { error?: string } | null;
+                    throw new Error(payload?.error || 'Could not download CSV.');
+                  }
+                  const blob = await response.blob();
+                  const url = URL.createObjectURL(blob);
+                  const anchor = document.createElement('a');
+                  anchor.href = url;
+                  anchor.download = `kersivo-clients-${new Date().toISOString().slice(0, 10)}.csv`;
+                  document.body.appendChild(anchor);
+                  anchor.click();
+                  anchor.remove();
+                  URL.revokeObjectURL(url);
+                  setExportConsumed(true);
+                  setAllowsDataExport(false);
+                  setBillingMessage('CSV downloaded. This one-time export is now marked as used.');
+                  await loadBilling();
+                } catch (error) {
+                  setBillingError(error instanceof Error ? error.message : 'Could not download CSV.');
+                } finally {
+                  setExportBusy(false);
+                }
+              }}
+            >
+              {exportBusy
+                ? 'Preparing CSV…'
+                : exportConsumed
+                  ? 'CSV already downloaded'
+                  : 'Download client CSV'}
+            </button>
+          </div>
+          {!hasBillingPortal && hasSubscription ? (
+            <p className="muted" role="status">
+              Billing portal is unavailable until a Stripe customer is linked to this subscription.
+            </p>
+          ) : null}
+          {exportConsumed ? (
+            <p className="muted" role="status">
+              The free one-time CSV export has already been used for this subscription.
+            </p>
+          ) : null}
+          {billingError ? (
+            <p className="admin-inline-error" role="alert">
+              {billingError}
+            </p>
+          ) : null}
+          {billingMessage ? (
+            <p className="muted" role="status">
+              {billingMessage}
             </p>
           ) : null}
         </section>

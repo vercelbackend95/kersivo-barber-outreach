@@ -8,6 +8,7 @@ import {
   withPrismaQuotaFallback,
 } from '../../lib/db/resilience';
 import { canCollectBookingDeposit } from '../../lib/booking/depositGate';
+import { shopAcceptsPublicBookings } from '../../lib/setup/shopPublicBookingGate';
 import '../../styles/tokens.css';
 import '../../styles/fonts.css';
 import '../../styles/global.css';
@@ -50,6 +51,18 @@ const bookingPageData = await withPrismaQuotaFallback(
 
     if (!shop) {
       return { notFound: true as const };
+    }
+
+    const acceptsPublic = await shopAcceptsPublicBookings(shopId);
+    if (!acceptsPublic) {
+      return {
+        notFound: false as const,
+        shop,
+        services: [],
+        barbers: [],
+        depositRequired: false,
+        bookingUnavailable: true,
+      };
     }
 
     const [services, barbers] = await Promise.all([

@@ -53,15 +53,28 @@ export default function AdminSidebarProfile({
   const [open, setOpen] = useState(false);
   const [confirmDelete, setConfirmDelete] = useState(false);
   const [deleteConfirmText, setDeleteConfirmText] = useState('');
+  const [deletePassword, setDeletePassword] = useState('');
+  const [deleteEmailConfirm, setDeleteEmailConfirm] = useState('');
   const [deleteBusy, setDeleteBusy] = useState(false);
+  const [cancelSubBusy, setCancelSubBusy] = useState(false);
   const [deleteError, setDeleteError] = useState<string | null>(null);
+  const [deletionBlocked, setDeletionBlocked] = useState(false);
+  const [hasPasswordCredential, setHasPasswordCredential] = useState(true);
+  const [blockingPeriodEnd, setBlockingPeriodEnd] = useState<string | null>(null);
+  const [cancelAlreadyScheduled, setCancelAlreadyScheduled] = useState(false);
+  const [accountPreviewLoaded, setAccountPreviewLoaded] = useState(false);
+  const [billingLabel, setBillingLabel] = useState<string | null>(null);
   const triggerRef = useRef<HTMLButtonElement | null>(null);
   const menuRef = useRef<HTMLDivElement | null>(null);
   const deleteInputRef = useRef<HTMLInputElement | null>(null);
   const [menuPos, setMenuPos] = useState<{ bottom: number; left: number; width: number } | null>(null);
 
   const displayName = isGuest ? 'Login' : user?.name?.trim() || user?.email?.trim() || 'Account';
-  const planLabel = isGuest ? 'Demo' : 'Plus';
+  const planLabel = isGuest
+    ? 'Demo'
+    : billingLabel
+      ? billingLabel
+      : 'Plus';
   const initials = user ? initialsFromUser(user) : '?';
   const avatarImage = isGuest ? null : user?.image ?? null;
 
@@ -105,15 +118,50 @@ export default function AdminSidebarProfile({
     if (!confirmDelete) return;
     deleteInputRef.current?.focus();
     const onKey = (e: KeyboardEvent) => {
-      if (e.key === 'Escape' && !deleteBusy) {
+      if (e.key === 'Escape' && !deleteBusy && !cancelSubBusy) {
         setConfirmDelete(false);
         setDeleteConfirmText('');
+        setDeletePassword('');
+        setDeleteEmailConfirm('');
         setDeleteError(null);
       }
     };
     window.addEventListener('keydown', onKey);
     return () => window.removeEventListener('keydown', onKey);
-  }, [confirmDelete, deleteBusy]);
+  }, [confirmDelete, deleteBusy, cancelSubBusy]);
+
+  useEffect(() => {
+    if (!confirmDelete || isGuest) return;
+    let cancelled = false;
+    setAccountPreviewLoaded(false);
+    void (async () => {
+      try {
+        const response = await fetch('/api/admin/account', { credentials: 'include' });
+        if (!response.ok) return;
+        const data = (await response.json()) as {
+          hasPasswordCredential?: boolean;
+          deletionBlocked?: boolean;
+          blockingShops?: Array<{
+            cancelAtPeriodEnd?: boolean;
+            currentPeriodEnd?: string | null;
+          }>;
+        };
+        if (cancelled) return;
+        setHasPasswordCredential(Boolean(data.hasPasswordCredential));
+        setDeletionBlocked(Boolean(data.deletionBlocked));
+        const first = data.blockingShops?.[0];
+        setCancelAlreadyScheduled(Boolean(first?.cancelAtPeriodEnd));
+        setBlockingPeriodEnd(first?.currentPeriodEnd ?? null);
+      } catch {
+        // Keep defaults; DELETE will still enforce server-side.
+      } finally {
+        if (!cancelled) setAccountPreviewLoaded(true);
+      }
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, [confirmDelete, isGuest]);
 
   const handleLogout = async () => {
     clearAdminSecret();
@@ -122,17 +170,75 @@ export default function AdminSidebarProfile({
     window.location.assign('/');
   };
 
+  const resetDeleteDialog = () => {
+    setConfirmDelete(false);
+    setDeleteConfirmText('');
+    setDeletePassword('');
+    setDeleteEmailConfirm('');
+    setDeleteError(null);
+    setAccountPreviewLoaded(false);
+  };
+
+  const handleCancelSubscription = async () => {
+    if (cancelSubBusy || deleteBusy) return;
+    setCancelSubBusy(true);
+    setDeleteError(null);
+    try {
+      const response = await fetch('/api/setup/cancel-subscription', {
+        method: 'POST',
+        credentials: 'include',
+      });
+      const payload = (await response.json().catch(() => null)) as {
+        error?: string;
+        cancelAtPeriodEnd?: boolean;
+        currentPeriodEnd?: string | null;
+        alreadyScheduled?: boolean;
+      } | null;
+      if (!response.ok) {
+        setDeleteError(payload?.error || 'Unable to cancel subscription.');
+        setCancelSubBusy(false);
+        return;
+      }
+      setCancelAlreadyScheduled(true);
+      setBlockingPeriodEnd(payload?.currentPeriodEnd ?? blockingPeriodEnd);
+      setDeletionBlocked(true);
+      setDeleteError(null);
+    } catch {
+      setDeleteError('Unable to cancel subscription.');
+    } finally {
+      setCancelSubBusy(false);
+    }
+  };
+
   const handleDeleteAccount = async () => {
-    if (deleteConfirmText !== 'DELETE' || deleteBusy) return;
+    if (deleteConfirmText !== 'DELETE' || deleteBusy || deletionBlocked) return;
+    if (hasPasswordCredential && !deletePassword) return;
+    if (!hasPasswordCredential && !deleteEmailConfirm.trim()) return;
     setDeleteBusy(true);
     setDeleteError(null);
     try {
       const response = await fetch('/api/admin/account', {
         method: 'DELETE',
         credentials: 'include',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          confirm: 'DELETE',
+          password: hasPasswordCredential ? deletePassword : undefined,
+          emailConfirm: hasPasswordCredential ? undefined : deleteEmailConfirm,
+        }),
       });
       if (!response.ok) {
-        const payload = (await response.json().catch(() => null)) as { error?: string } | null;
+        const payload = (await response.json().catch(() => null)) as {
+          error?: string;
+          code?: string;
+          shops?: Array<{ currentPeriodEnd?: string | null; cancelAtPeriodEnd?: boolean }>;
+        } | null;
+        if (response.status === 409 || payload?.code === 'SUBSCRIPTION_BLOCKS_DELETE') {
+          setDeletionBlocked(true);
+          const first = payload?.shops?.[0];
+          setCancelAlreadyScheduled(Boolean(first?.cancelAtPeriodEnd));
+          setBlockingPeriodEnd(first?.currentPeriodEnd ?? null);
+        }
         setDeleteError(payload?.error || 'Unable to delete account.');
         setDeleteBusy(false);
         return;
@@ -146,6 +252,78 @@ export default function AdminSidebarProfile({
       setDeleteBusy(false);
     }
   };
+
+  useEffect(() => {
+    if (isGuest || !canManageBilling) {
+      setBillingLabel(null);
+      return;
+    }
+
+    let cancelled = false;
+    void (async () => {
+      try {
+        const response = await fetch('/api/setup/billing-status', { credentials: 'include' });
+        if (!response.ok) return;
+        const data = (await response.json()) as {
+          hasSubscription?: boolean;
+          grantsAccess?: boolean;
+          cancelAtPeriodEnd?: boolean;
+          currentPeriodEnd?: string | null;
+          graceEndsAt?: string | null;
+          retentionEndsAt?: string | null;
+          phase?: string | null;
+        };
+        if (cancelled) return;
+        if (!data.hasSubscription) {
+          setBillingLabel(null);
+          return;
+        }
+
+        const formatDate = (iso: string) => {
+          const end = new Date(iso);
+          if (Number.isNaN(end.getTime())) return null;
+          return end.toLocaleDateString('en-GB', {
+            day: '2-digit',
+            month: 'short',
+            year: 'numeric',
+          });
+        };
+
+        if (data.phase === 'canceled' && data.retentionEndsAt) {
+          const formatted = formatDate(data.retentionEndsAt);
+          setBillingLabel(formatted ? `Canceled — export until ${formatted}` : 'Canceled');
+          return;
+        }
+        if (data.phase === 'suspended') {
+          setBillingLabel('Suspended — update billing');
+          return;
+        }
+        if (data.phase === 'grace' && data.graceEndsAt) {
+          const formatted = formatDate(data.graceEndsAt);
+          setBillingLabel(formatted ? `Past due — grace until ${formatted}` : 'Past due');
+          return;
+        }
+        if (data.cancelAtPeriodEnd && data.currentPeriodEnd) {
+          const formatted = formatDate(data.currentPeriodEnd);
+          if (formatted) {
+            setBillingLabel(`Cancels on ${formatted}`);
+            return;
+          }
+        }
+        if (data.grantsAccess || data.phase === 'active') {
+          setBillingLabel('Active');
+          return;
+        }
+        setBillingLabel(null);
+      } catch {
+        if (!cancelled) setBillingLabel(null);
+      }
+    })();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [isGuest, canManageBilling]);
 
   const handleCreateAccount = () => {
     setOpen(false);
@@ -217,7 +395,22 @@ export default function AdminSidebarProfile({
   const triggerClass =
     variant === 'desktop' ? 'admin-sidebar-profile' : 'admin-sidebar-profile admin-sidebar-profile--mobile';
 
-  const canConfirmDelete = deleteConfirmText === 'DELETE' && !deleteBusy;
+  const formatIsoDate = (iso: string | null) => {
+    if (!iso) return null;
+    const end = new Date(iso);
+    if (Number.isNaN(end.getTime())) return null;
+    return end.toLocaleDateString('en-GB', {
+      day: '2-digit',
+      month: 'short',
+      year: 'numeric',
+    });
+  };
+
+  const canConfirmDelete =
+    !deletionBlocked &&
+    deleteConfirmText === 'DELETE' &&
+    !deleteBusy &&
+    (hasPasswordCredential ? deletePassword.length > 0 : deleteEmailConfirm.trim().length > 0);
 
   return (
     <>
@@ -328,7 +521,6 @@ export default function AdminSidebarProfile({
                     <Calendar width={15} height={15} aria-hidden="true" />
                     Test online booking
                   </button>
-                  <div className="admin-profile-menu__divider" aria-hidden="true" />
                 </>
               ) : null}
               {canManageBilling ? (
@@ -401,7 +593,13 @@ export default function AdminSidebarProfile({
                       setOpen(false);
                       setConfirmDelete(true);
                       setDeleteConfirmText('');
+                      setDeletePassword('');
+                      setDeleteEmailConfirm('');
                       setDeleteError(null);
+                      setDeletionBlocked(false);
+                      setCancelAlreadyScheduled(false);
+                      setBlockingPeriodEnd(null);
+                      setAccountPreviewLoaded(false);
                     }}
                   >
                     <Ban width={15} height={15} aria-hidden="true" />
@@ -431,12 +629,10 @@ export default function AdminSidebarProfile({
                 type="button"
                 className="admin-account-delete-backdrop"
                 aria-label="Close delete account dialog"
-                disabled={deleteBusy}
+                disabled={deleteBusy || cancelSubBusy}
                 onClick={() => {
-                  if (deleteBusy) return;
-                  setConfirmDelete(false);
-                  setDeleteConfirmText('');
-                  setDeleteError(null);
+                  if (deleteBusy || cancelSubBusy) return;
+                  resetDeleteDialog();
                 }}
               />
               <div
@@ -447,60 +643,162 @@ export default function AdminSidebarProfile({
                 aria-describedby="admin-account-delete-desc"
               >
                 <h3 id="admin-account-delete-title" className="admin-account-delete-title">
-                  Delete account?
+                  {deletionBlocked ? 'Close account' : 'Delete account?'}
                 </h3>
                 <div id="admin-account-delete-desc" className="admin-account-delete-body">
-                  <p>
-                    This permanently deletes your Kersivo account
-                    {user?.email ? (
-                      <>
-                        {' '}
-                        (<strong>{user.email}</strong>)
-                      </>
-                    ) : null}
-                    . Shops where you are the only owner will be removed. This cannot be undone.
-                  </p>
-                  <label className="admin-account-delete-label" htmlFor="admin-account-delete-confirm">
-                    Type <strong>DELETE</strong> to confirm
-                  </label>
-                  <input
-                    ref={deleteInputRef}
-                    id="admin-account-delete-confirm"
-                    type="text"
-                    className="admin-account-delete-input"
-                    autoComplete="off"
-                    value={deleteConfirmText}
-                    disabled={deleteBusy}
-                    onChange={(e) => setDeleteConfirmText(e.target.value)}
-                    onKeyDown={(e) => {
-                      if (e.key === 'Enter' && canConfirmDelete) {
-                        void handleDeleteAccount();
-                      }
-                    }}
-                  />
+                  {!accountPreviewLoaded ? (
+                    <p role="status">Checking subscription status…</p>
+                  ) : deletionBlocked ? (
+                    <>
+                      <p>
+                        Your KERSIVO subscription is still billable
+                        {user?.email ? (
+                          <>
+                            {' '}
+                            for <strong>{user.email}</strong>
+                          </>
+                        ) : null}
+                        . Cancel the subscription first. You keep access until the period ends, then
+                        a 30-day export window, then you can permanently delete the account.
+                      </p>
+                      {cancelAlreadyScheduled ? (
+                        <p role="status">
+                          Cancellation is scheduled
+                          {formatIsoDate(blockingPeriodEnd)
+                            ? ` — access until ${formatIsoDate(blockingPeriodEnd)}`
+                            : ''}
+                          . After the subscription ends and retention completes, return here to
+                          delete your account.
+                        </p>
+                      ) : (
+                        <p>
+                          Cancel now to stop future renewals. Billing continues until the current
+                          period ends.
+                        </p>
+                      )}
+                    </>
+                  ) : (
+                    <p>
+                      This permanently deletes your Kersivo account
+                      {user?.email ? (
+                        <>
+                          {' '}
+                          (<strong>{user.email}</strong>)
+                        </>
+                      ) : null}
+                      . Shops where you are the only owner will be removed. This cannot be undone.
+                    </p>
+                  )}
+
+                  {accountPreviewLoaded && !deletionBlocked ? (
+                    <>
+                      {hasPasswordCredential ? (
+                        <>
+                          <label
+                            className="admin-account-delete-label"
+                            htmlFor="admin-account-delete-password"
+                          >
+                            Current password
+                          </label>
+                          <input
+                            id="admin-account-delete-password"
+                            type="password"
+                            className="admin-account-delete-input"
+                            autoComplete="current-password"
+                            value={deletePassword}
+                            disabled={deleteBusy}
+                            onChange={(e) => setDeletePassword(e.target.value)}
+                          />
+                        </>
+                      ) : (
+                        <>
+                          <label
+                            className="admin-account-delete-label"
+                            htmlFor="admin-account-delete-email"
+                          >
+                            Type your email to confirm
+                          </label>
+                          <input
+                            id="admin-account-delete-email"
+                            type="email"
+                            className="admin-account-delete-input"
+                            autoComplete="off"
+                            value={deleteEmailConfirm}
+                            disabled={deleteBusy}
+                            onChange={(e) => setDeleteEmailConfirm(e.target.value)}
+                          />
+                        </>
+                      )}
+                      <label
+                        className="admin-account-delete-label"
+                        htmlFor="admin-account-delete-confirm"
+                      >
+                        Type <strong>DELETE</strong> to confirm
+                      </label>
+                      <input
+                        ref={deleteInputRef}
+                        id="admin-account-delete-confirm"
+                        type="text"
+                        className="admin-account-delete-input"
+                        autoComplete="off"
+                        value={deleteConfirmText}
+                        disabled={deleteBusy}
+                        onChange={(e) => setDeleteConfirmText(e.target.value)}
+                        onKeyDown={(e) => {
+                          if (e.key === 'Enter' && canConfirmDelete) {
+                            void handleDeleteAccount();
+                          }
+                        }}
+                      />
+                    </>
+                  ) : null}
+
                   {deleteError ? <p className="admin-account-delete-error">{deleteError}</p> : null}
                 </div>
                 <div className="admin-account-delete-actions">
                   <button
                     type="button"
                     className="btn btn--ghost"
-                    disabled={deleteBusy}
+                    disabled={deleteBusy || cancelSubBusy}
                     onClick={() => {
-                      setConfirmDelete(false);
-                      setDeleteConfirmText('');
-                      setDeleteError(null);
+                      resetDeleteDialog();
                     }}
                   >
                     Cancel
                   </button>
-                  <button
-                    type="button"
-                    className="btn btn--destructive"
-                    disabled={!canConfirmDelete}
-                    onClick={() => void handleDeleteAccount()}
-                  >
-                    {deleteBusy ? 'Deleting…' : 'Delete account'}
-                  </button>
+                  {accountPreviewLoaded && deletionBlocked && !cancelAlreadyScheduled ? (
+                    <button
+                      type="button"
+                      className="btn btn--destructive"
+                      disabled={cancelSubBusy}
+                      onClick={() => void handleCancelSubscription()}
+                    >
+                      {cancelSubBusy ? 'Canceling…' : 'Cancel subscription'}
+                    </button>
+                  ) : null}
+                  {accountPreviewLoaded && deletionBlocked && cancelAlreadyScheduled ? (
+                    <button
+                      type="button"
+                      className="btn btn--secondary"
+                      disabled={cancelSubBusy}
+                      onClick={() => {
+                        resetDeleteDialog();
+                        if (onOpenBarbershopSettings) onOpenBarbershopSettings();
+                      }}
+                    >
+                      Open settings
+                    </button>
+                  ) : null}
+                  {accountPreviewLoaded && !deletionBlocked ? (
+                    <button
+                      type="button"
+                      className="btn btn--destructive"
+                      disabled={!canConfirmDelete}
+                      onClick={() => void handleDeleteAccount()}
+                    >
+                      {deleteBusy ? 'Deleting…' : 'Delete account'}
+                    </button>
+                  ) : null}
                 </div>
               </div>
             </div>,
