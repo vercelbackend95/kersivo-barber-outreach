@@ -15,6 +15,7 @@ import { SAAS_MONTHLY_PENCE } from '../../../lib/seo/defaults';
 import { buildSaasSubscriptionStripeMetadata } from '../../../lib/setup/saasSubscription';
 import { getPublicSiteUrl } from '../../../lib/setup/siteUrl';
 import { createSubscriptionCheckoutSession } from '../../../lib/shop/stripe';
+import { enforceIpRateLimit } from '@/lib/rate-limit/enforceIpRateLimit';
 
 type LaunchSubscriptionCheckoutInput = {
   attribution?: Record<string, string>;
@@ -62,6 +63,8 @@ function shopSizeFromBarberCount(count: number): string {
  */
 export const POST: APIRoute = async (context) => {
   try {
+    const limited = await enforceIpRateLimit(context.request, 'setup_checkout', 10, 15 * 60 * 1000);
+    if (limited) return limited;
 
     const access = await resolveAdminAccess(context);
     if (!access || access.via !== 'session') {

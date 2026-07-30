@@ -5,7 +5,6 @@ import { resolveAdminAccess } from '../../../lib/admin/auth';
 import { bookingCreateSchema } from '../../../lib/booking/schemas';
 import { OWNER_TEST_BOOKING_NOTES_PREFIX } from '../../../lib/booking/sandboxBookings';
 import { BookingActionError, createInstantBooking } from '../../../lib/booking/service';
-import { prisma } from '../../../lib/db/client';
 import { checkBookingRateLimit } from '../../../lib/rate-limit/bookingRateLimit';
 
 const getRequestIp = (request: Request): string => {
@@ -33,16 +32,16 @@ export const POST: APIRoute = async (ctx) => {
 
   // Rate-limit in production for owners (DEV owner sessions skip).
   if (!import.meta.env.DEV) {
-    const limit = checkBookingRateLimit(ip);
+    const limit = await checkBookingRateLimit(ip);
 
     if (!limit.ok) {
+      const headers: Record<string, string> = { 'Content-Type': 'application/json' };
+      if (limit.retryAfterSeconds) headers['Retry-After'] = String(limit.retryAfterSeconds);
       return new Response(
         JSON.stringify({ error: 'Too many attempts. Try later.', retryAfter: limit.retryAfterSeconds }),
-        { status: 429 },
+        { status: 429, headers },
       );
     }
-
-    await prisma.rateLimitEvent.create({ data: { ip, action: 'booking_create' } });
   }
 
   const rawBody = await request.text();

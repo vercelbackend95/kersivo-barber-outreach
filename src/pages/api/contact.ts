@@ -2,6 +2,7 @@ export const prerender = false;
 
 import type { APIRoute } from 'astro';
 import { EmailDeliveryError, sendContactInquiryEmail } from '../../lib/email/sender';
+import { enforceIpRateLimit } from '@/lib/rate-limit/enforceIpRateLimit';
 
 const MAX_MESSAGE = 8000;
 const MAX_NAME = 200;
@@ -10,7 +11,14 @@ const MAX_META = 120;
 function badRequest(message: string) {
   return new Response(JSON.stringify({ ok: false, error: message }), {
     status: 400,
-    headers: { 'Content-Type': 'application/json' }
+    headers: { 'Content-Type': 'application/json' },
+  });
+}
+
+function okSilent() {
+  return new Response(JSON.stringify({ ok: true }), {
+    status: 200,
+    headers: { 'Content-Type': 'application/json' },
   });
 }
 
@@ -27,6 +35,22 @@ export const POST: APIRoute = async ({ request }) => {
   }
 
   const record = body as Record<string, unknown>;
+
+  // Honeypot first — bots fill hidden fields; silent accept without burning rate limit or sending mail.
+  const companyWebsite =
+    typeof record.companyWebsite === 'string' ? record.companyWebsite.trim() : '';
+  if (companyWebsite) {
+    return okSilent();
+  }
+
+  const limited = await enforceIpRateLimit(request, 'contact_form', 5, 15 * 60 * 1000);
+  if (limited) {
+    return new Response(JSON.stringify({ ok: false, error: 'Too many requests. Please try again later.' }), {
+      status: 429,
+      headers: limited.headers,
+    });
+  }
+
   const name = typeof record.name === 'string' ? record.name.trim() : '';
   const email = typeof record.email === 'string' ? record.email.trim() : '';
   const message = typeof record.message === 'string' ? record.message.trim() : '';
@@ -57,21 +81,21 @@ export const POST: APIRoute = async ({ request }) => {
       message,
       intent: intent || undefined,
       shopSize,
-      currentStack
+      currentStack,
     });
   } catch (error) {
     if (error instanceof EmailDeliveryError) {
       console.error('[EMAIL] Contact inquiry failed', { email, error });
-      return new Response(JSON.stringify({ ok: false, error: 'Could not send your message. Try again later.' }), {
-        status: 502,
-        headers: { 'Content-Type': 'application/json' }
-      });
+      return new Response(
+        JSON.stringify({ ok: false, error: 'Could not send your message. Try again later.' }),
+        {
+          status: 502,
+          headers: { 'Content-Type': 'application/json' },
+        },
+      );
     }
     throw error;
   }
 
-  return new Response(JSON.stringify({ ok: true }), {
-    status: 200,
-    headers: { 'Content-Type': 'application/json' }
-  });
+  return okSilent();
 };

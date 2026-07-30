@@ -8,6 +8,7 @@ import {
   assertShopAcceptingPublicActivity,
   ShopPublicActivityPausedError,
 } from '@/lib/admin/shopPublicActivity';
+import { enforceIpRateLimit } from '@/lib/rate-limit/enforceIpRateLimit';
 
 type CheckoutInput = {
   items: Array<{ productId: string; quantity: number }>;
@@ -20,6 +21,9 @@ function getPublicSiteUrl() {
 
 export const POST: APIRoute = async (ctx) => {
   try {
+    const limited = await enforceIpRateLimit(ctx.request, 'shop_checkout', 10, 15 * 60 * 1000);
+    if (limited) return limited;
+
     const access = await resolveAdminAccess(ctx);
     if (access?.via !== 'session') {
       return new Response(JSON.stringify({ error: 'Unauthorized' }), { status: 401 });

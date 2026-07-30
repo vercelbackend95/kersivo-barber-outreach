@@ -176,6 +176,16 @@ ol {
   border: 0;
 }
 
+/* Honeypot: hidden from users, still in DOM for bots */
+.hp-field {
+  position: absolute;
+  left: -10000px;
+  top: auto;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+}
+
 @media (prefers-reduced-motion: reduce) {
   html {
     scroll-behavior: auto;

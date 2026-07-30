@@ -34,6 +34,10 @@ vi.mock('@/lib/shop/demoCatalog', () => ({
   }),
 }));
 
+vi.mock('@/lib/rate-limit/enforceIpRateLimit', () => ({
+  enforceIpRateLimit: vi.fn(async () => null),
+}));
+
 import { POST } from './checkout';
 
 function makeContext(body: unknown): APIContext {

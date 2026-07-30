@@ -1,7 +1,12 @@
 export const prerender = false;
 
 import type { APIRoute } from 'astro';
-import { EmailDeliveryError, sendDemoCaptureLeadEmail, sendDemoCaptureVisitorEmail } from '../../lib/email/sender';
+import {
+  EmailDeliveryError,
+  sendDemoCaptureLeadEmail,
+  sendDemoCaptureVisitorEmail,
+} from '../../lib/email/sender';
+import { enforceIpRateLimit } from '@/lib/rate-limit/enforceIpRateLimit';
 
 const MAX_NAME = 200;
 const MAX_META = 120;
@@ -9,7 +14,14 @@ const MAX_META = 120;
 function badRequest(message: string) {
   return new Response(JSON.stringify({ ok: false, error: message }), {
     status: 400,
-    headers: { 'Content-Type': 'application/json' }
+    headers: { 'Content-Type': 'application/json' },
+  });
+}
+
+function okSilent() {
+  return new Response(JSON.stringify({ ok: true }), {
+    status: 200,
+    headers: { 'Content-Type': 'application/json' },
   });
 }
 
@@ -39,9 +51,25 @@ export const POST: APIRoute = async ({ request }) => {
   }
 
   const record = body as Record<string, unknown>;
+
+  const companyWebsite =
+    typeof record.companyWebsite === 'string' ? record.companyWebsite.trim() : '';
+  if (companyWebsite) {
+    return okSilent();
+  }
+
+  const limited = await enforceIpRateLimit(request, 'lead_form', 5, 15 * 60 * 1000);
+  if (limited) {
+    return new Response(JSON.stringify({ ok: false, error: 'Too many requests. Please try again later.' }), {
+      status: 429,
+      headers: limited.headers,
+    });
+  }
+
   const email = typeof record.email === 'string' ? record.email.trim() : '';
   const shopName = typeof record.shopName === 'string' ? record.shopName.trim() : '';
-  const currentSystem = typeof record.currentSystem === 'string' ? record.currentSystem.trim() : '';
+  const currentSystem =
+    typeof record.currentSystem === 'string' ? record.currentSystem.trim() : '';
 
   if (!email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
     return badRequest('Please enter a valid email address.');
@@ -53,13 +81,11 @@ export const POST: APIRoute = async ({ request }) => {
     return badRequest('Invalid current system value.');
   }
 
-  // Both emails are part of the promised UX (inbox lead + visitor demo/pricing).
-  // Success and analytics must only fire after both deliveries succeed.
   try {
     await sendDemoCaptureLeadEmail({
       email,
       shopName: shopName || undefined,
-      currentSystem: currentSystem || undefined
+      currentSystem: currentSystem || undefined,
     });
   } catch (error) {
     if (error instanceof EmailDeliveryError) {
@@ -74,7 +100,7 @@ export const POST: APIRoute = async ({ request }) => {
   } catch (visitorError) {
     console.error('[EMAIL] Visitor demo confirmation failed after internal lead was sent', {
       email,
-      error: visitorError
+      error: visitorError,
     });
     if (visitorError instanceof EmailDeliveryError) {
       return deliveryFailed();
@@ -82,8 +108,5 @@ export const POST: APIRoute = async ({ request }) => {
     throw visitorError;
   }
 
-  return new Response(JSON.stringify({ ok: true }), {
-    status: 200,
-    headers: { 'Content-Type': 'application/json' }
-  });
+  return okSilent();
 };

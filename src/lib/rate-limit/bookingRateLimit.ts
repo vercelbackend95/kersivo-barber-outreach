@@ -1,18 +1,23 @@
-const bucket = new Map<string, number[]>();
+import {
+  checkDurableRateLimit,
+  clientIpFromRequest,
+  rateLimitExceededResponse,
+} from '@/lib/rate-limit/durableRateLimit';
 
 const WINDOW_MS = 10 * 60 * 1000;
 const LIMIT = 5;
 
-export function checkBookingRateLimit(ip: string): { ok: boolean; retryAfterSeconds?: number } {
-  const now = Date.now();
-  const entries = (bucket.get(ip) ?? []).filter((stamp) => now - stamp < WINDOW_MS);
-
-  if (entries.length >= LIMIT) {
-    const oldest = entries[0] ?? now;
-    return { ok: false, retryAfterSeconds: Math.ceil((WINDOW_MS - (now - oldest)) / 1000) };
-  }
-
-  entries.push(now);
-  bucket.set(ip, entries);
-  return { ok: true };
+/** Booking create rate limit (IP, durable Postgres). */
+export async function checkBookingRateLimit(
+  ip: string,
+  action: 'booking_create' | 'public_booking_create' = 'booking_create',
+): Promise<{ ok: boolean; retryAfterSeconds?: number }> {
+  return checkDurableRateLimit({
+    key: ip,
+    action,
+    limit: LIMIT,
+    windowMs: WINDOW_MS,
+  });
 }
+
+export { clientIpFromRequest, rateLimitExceededResponse };

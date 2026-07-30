@@ -44,6 +44,17 @@ const { className = '' } = Astro.props as Props;
           </h2>
 
           <form class="landing-demo-capture__form" data-demo-capture-form novalidate>
+            <div class="hp-field" aria-hidden="true">
+              <label>
+                Company website
+                <input
+                  type="text"
+                  name="companyWebsite"
+                  tabindex="-1"
+                  autocomplete="off"
+                />
+              </label>
+            </div>
             <label class="landing-demo-capture__field">
               <span class="sr-only">Email</span>
               <input type="email" name="email" placeholder="Email*" required data-demo-capture-email />
@@ -112,6 +123,7 @@ const { className = '' } = Astro.props as Props;
       const fd = new FormData(form);
       const email = String(fd.get('email') ?? '').trim();
       const shopName = String(fd.get('shopName') ?? '').trim();
+      const companyWebsite = String(fd.get('companyWebsite') ?? '').trim();
 
       statusEl.textContent = '';
       statusEl.className = 'landing-demo-capture__status landing-demo-capture__status--idle';
@@ -136,7 +148,7 @@ const { className = '' } = Astro.props as Props;
         const response = await fetch('/api/lead', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ email, shopName }),
+          body: JSON.stringify({ email, shopName, companyWebsite }),
         });
         const data = (await response.json().catch(() => ({}))) as { ok?: boolean; error?: string };
 
