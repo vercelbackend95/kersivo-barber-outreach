@@ -1,16 +1,15 @@
 /**
  * Landing "Inside the System" live timeline data.
  *
- * Uses the shared admin-demo day schedule (35 BOOKED slots, Europe/London,
- * no Neon). Recomputed from the current date on every call so the schedule
- * repeats daily.
+ * Uses the shared admin-demo day schedule (deterministic 28-day cycle + weekday
+ * density, Europe/London, no Neon). Recomputed from the current date on every call.
  */
 import type { TimelineBooking } from '@/components/admin/TodayTimeline';
+import { getSharedDemoDayBookings } from '@/lib/admin/demoFixtures/bookingCalendar';
 import {
   DEMO_DAY_BARBERS,
   DEMO_DAY_TZ,
   demoDaySelectedDate,
-  getSharedDemoDayBookings,
   type DemoDayBarber,
 } from '@/lib/admin/demoFixtures/daySchedule';
 import { landingDemoClientAvatarForSeed } from '@/lib/landing/landingDemoAssets';

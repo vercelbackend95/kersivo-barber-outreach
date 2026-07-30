@@ -81,7 +81,7 @@ export type BookingsReportsPayload = {
 };
 
 const REPORTS_CHART_METRIC_OPTIONS = [
-  { value: 'revenue' as const, label: 'Revenue' },
+  { value: 'revenue' as const, label: 'Sales' },
   { value: 'bookings' as const, label: 'Bookings' },
   { value: 'cancelRate' as const, label: 'Cancel %' },
 ];

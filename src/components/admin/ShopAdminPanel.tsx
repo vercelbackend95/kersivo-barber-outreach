@@ -210,7 +210,7 @@ const SALES_RANGE_OPTIONS = [
 const SALES_TIMEZONE = 'Europe/London';
 
 const SALES_METRIC_OPTIONS = [
-  { value: 'revenue' as const, label: 'Revenue £' },
+  { value: 'revenue' as const, label: 'Sales £' },
   { value: 'units' as const, label: 'Units' },
 ];
 
@@ -1372,7 +1372,7 @@ export default function ShopAdminPanel({ initialTab = 'products' }: ShopAdminPan
         }
         description={
           activeTab === 'orders' ? 'Customer orders and fulfilment'
-          : activeTab === 'sales' ? 'Revenue and sales trends'
+          : activeTab === 'sales' ? 'Sales trends'
           : 'Retail product catalogue'
         }
         metaBadge={

@@ -55,6 +55,6 @@ export const DEMO_PRODUCT_IDS = {
 } as const;
 
 export const DEMO_ORDER_IDS = {
-  order1: 'demo-order-001',
-  order2: 'demo-order-002',
+  order1: 'ORD-38K21',
+  order2: 'ORD-41M72',
 } as const;

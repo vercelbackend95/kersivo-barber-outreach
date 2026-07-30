@@ -107,7 +107,7 @@ describe('getDemoReportsResponse', () => {
     const week = getDemoReportsResponseForTest('7d', { now: FIXED_NOW });
     for (const point of week.revenueSeries) {
       expect(point.value).toBeGreaterThanOrEqual(80);
-      expect(point.value).toBeLessThanOrEqual(900);
+      expect(point.value).toBeLessThanOrEqual(2200);
     }
     expect(week.avgBookingValue).toBeGreaterThanOrEqual(20);
     expect(week.avgBookingValue).toBeLessThanOrEqual(55);

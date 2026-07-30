@@ -150,12 +150,12 @@ export function emptyLaunchProgress(): LaunchProgress {
   });
 }
 
-/** Static mid-progress checklist for public admin demo. */
+/** Static complete checklist for public admin demo (finished shop look). */
 export function demoLaunchProgress(): LaunchProgress {
   return buildLaunchProgress({
     onboardingCompleted: true,
     teamProfileCount: 2,
     serviceCount: 1,
-    retailComplete: false,
+    retailComplete: true,
   });
 }

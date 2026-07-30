@@ -33,6 +33,12 @@ export type DemoDaySeed = {
   tags?: string[];
 };
 
+export type DemoDayBookingStatus =
+  | 'BOOKED'
+  | 'COMPLETED'
+  | 'CANCELLED_BY_CLIENT'
+  | 'CANCELLED_BY_SHOP';
+
 export type DemoDayBooking = {
   id: string;
   serviceId: string;
@@ -43,7 +49,7 @@ export type DemoDayBooking = {
   clientId: null;
   startAt: string;
   endAt: string;
-  status: 'BOOKED';
+  status: DemoDayBookingStatus;
   notes: null;
   rescheduledAt: null;
   paymentRequired: false;
@@ -156,8 +162,8 @@ function seedToBooking(seed: DemoDaySeed, now = new Date()): DemoDayBooking {
   };
 }
 
-/** 35 BOOKED bookings for today (Europe/London). Same pattern every calendar day. */
-export function getSharedDemoDayBookings(now = new Date()): DemoDayBooking[] {
+/** @internal static 35-slot map with no day-cycle variance (tests / baselines). */
+export function getLegacyStaticDemoDayBookings(now = new Date()): DemoDayBooking[] {
   if (DEMO_DAY_SEEDS.length !== 35) {
     throw new Error(`Demo day schedule must have exactly 35 seeds (got ${DEMO_DAY_SEEDS.length})`);
   }

@@ -24,8 +24,14 @@ function isTodayInLondon(value: string, todayLondonDate: string) {
   return formatInTimeZone(new Date(value), ADMIN_TIMEZONE, 'yyyy-MM-dd') === todayLondonDate;
 }
 
-function getUpcomingBookings(bookings: AdminLiveBookingRow[]) {
-  const nowMs = Date.now();
+function addLondonDays(dayKey: string, days: number): string {
+  const [y, m, d] = dayKey.split('-').map(Number);
+  const utc = Date.UTC(y!, m! - 1, d! + days, 12, 0, 0);
+  return formatInTimeZone(new Date(utc), ADMIN_TIMEZONE, 'yyyy-MM-dd');
+}
+
+/** Upcoming BOOKED rows still in progress or later — used by Next appointments strip. */
+export function getUpcomingBookings(bookings: AdminLiveBookingRow[], nowMs = Date.now()) {
   return bookings
     .filter((b) => b.status === 'BOOKED')
     .filter((b) => new Date(b.endAt).getTime() > nowMs)
@@ -110,21 +116,36 @@ export function AdminTodayBookingsLiveProvider({
       }
       if (!response.ok) return;
       const data = (await response.json()) as { bookings?: AdminLiveBookingRow[] };
-      setBookings(data.bookings ?? []);
+      let rows = data.bookings ?? [];
+
+      // Public demo: after the last slot ends, still show Next appointments from tomorrow.
+      if (isPublicDemo && getUpcomingBookings(rows).length === 0) {
+        const tomorrow = addLondonDays(today, 1);
+        const tomorrowResponse = await fetch(
+          `/api/admin/bookings?date=${encodeURIComponent(tomorrow)}&mode=day`,
+          { credentials: 'include' },
+        );
+        if (tomorrowResponse.ok) {
+          const tomorrowData = (await tomorrowResponse.json()) as { bookings?: AdminLiveBookingRow[] };
+          rows = [...rows, ...(tomorrowData.bookings ?? [])];
+        }
+      }
+
+      setBookings(rows);
       setLastSuccessAt(Date.now());
     } finally {
       inFlightRef.current = false;
     }
-  }, [loggedIn]);
+  }, [isPublicDemo, loggedIn]);
 
   useEffect(() => {
-    if (!loggedIn || isPublicDemo) return undefined;
+    if (!loggedIn) return undefined;
     void fetchToday();
     const id = window.setInterval(() => {
       void fetchToday();
     }, ADMIN_TODAY_BOOKINGS_POLL_MS);
     return () => window.clearInterval(id);
-  }, [fetchToday, isPublicDemo, loggedIn]);
+  }, [fetchToday, loggedIn]);
 
   useEffect(() => {
     if (!loggedIn) return undefined;
@@ -133,11 +154,12 @@ export function AdminTodayBookingsLiveProvider({
   }, [loggedIn]);
 
   const todayLondonDate = useMemo(() => getTodayLondonDate(), [nowMs]);
-  const todayBookings = useMemo(
-    () => bookings.filter((booking) => isTodayInLondon(booking.startAt, todayLondonDate)),
-    [bookings, todayLondonDate],
-  );
-  const upcomingBookings = useMemo(() => getUpcomingBookings(todayBookings), [todayBookings]);
+  const upcomingBookings = useMemo(() => {
+    const todayRows = bookings.filter((booking) => isTodayInLondon(booking.startAt, todayLondonDate));
+    const fromToday = getUpcomingBookings(todayRows, nowMs);
+    if (fromToday.length > 0 || !isPublicDemo) return fromToday;
+    return getUpcomingBookings(bookings, nowMs);
+  }, [bookings, isPublicDemo, nowMs, todayLondonDate]);
 
   const hasRecentConnectionAttempt = nowMs - initialMountMsRef.current > CONNECTING_GRACE_MS;
   const isLive = lastSuccessAt ? nowMs - lastSuccessAt <= LIVE_THRESHOLD_MS : false;
