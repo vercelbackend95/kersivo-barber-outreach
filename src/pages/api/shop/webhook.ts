@@ -12,12 +12,21 @@ import {
 import { formatGbp } from '../../../lib/shop/money';
 import { createShopOrder } from '../../../lib/shop/createShopOrder';
 import {
+  getCheckoutCustomerId,
   getCheckoutPaymentIntentId,
   getCheckoutSubscriptionId,
   retrieveCheckoutSession,
+  retrieveSubscription,
   type StripeSession,
+  type StripeSubscription,
   verifyStripeWebhookSignature,
 } from '../../../lib/shop/stripe';
+import {
+  applyInvoicePaid,
+  applyInvoicePaymentFailed,
+  applyStripeSubscriptionToSaasRecord,
+} from '../../../lib/setup/saasSubscriptionLifecycle';
+import { periodEndFromUnixSeconds } from '../../../lib/setup/saasEntitlement';
 import {
   EmailDeliveryError,
   getSetupOnboardingFormUrlOrEmpty,
@@ -37,6 +46,7 @@ import { generateToken, hashToken } from '../../../lib/booking/tokens';
 import { DEMO_SHOP_ID } from '../../../lib/db/shopScope';
 import { captureOpsException } from '../../../lib/ops/sentry';
 import {
+  alertLifecycleNotFound,
   alertStripeWebhookFailure,
   markStripeWebhookStatus,
   recordStripeWebhookReceived,
@@ -60,11 +70,19 @@ type StripeEvent = {
   data: {
     object: {
       id: string;
+      object?: string;
       metadata?: Record<string, string>;
       customer_email?: string | null;
+      customer?: string | { id?: string } | null;
       amount_total?: number | null;
       currency?: string | null;
       payment_status?: string | null;
+      status?: string;
+      cancel_at_period_end?: boolean;
+      current_period_end?: number | null;
+      canceled_at?: number | null;
+      subscription?: string | { id?: string } | null;
+      lines?: { data?: Array<{ period?: { end?: number | null } | null }> };
     };
   };
 };
@@ -438,12 +456,32 @@ async function handleSaasSubscriptionCheckout(
     typeof session.amount_total === 'number' ? session.amount_total : SAAS_MONTHLY_PENCE;
   const activatedAt = Number.isFinite(eventCreated) ? new Date(eventCreated * 1000) : new Date();
   const stripeSubscriptionId = getCheckoutSubscriptionId(session);
+  const stripeCustomerId = getCheckoutCustomerId(session);
+  const metadataShopId = metadata.shopId?.trim() || null;
   const currency = (session.currency ?? 'gbp').toLowerCase();
+
+  let currentPeriodEnd: Date | null = null;
+  let cancelAtPeriodEnd = false;
+  if (stripeSubscriptionId) {
+    try {
+      const stripeSub = await retrieveSubscription(stripeSubscriptionId);
+      currentPeriodEnd = periodEndFromUnixSeconds(stripeSub.current_period_end ?? null);
+      cancelAtPeriodEnd = Boolean(stripeSub.cancel_at_period_end);
+    } catch (error) {
+      console.warn('[webhook] SaaS subscription period lookup failed', {
+        sessionId,
+        stripeSubscriptionId,
+        error: error instanceof Error ? error.message : error,
+      });
+    }
+  }
 
   logSaasSubscriptionStage('subscription_validated', {
     sessionId,
     monthlyPence,
     hasSubscriptionId: Boolean(stripeSubscriptionId),
+    hasCustomerId: Boolean(stripeCustomerId),
+    hasShopId: Boolean(metadataShopId),
   });
 
   let record = await prisma.saasSubscription.findUnique({
@@ -456,7 +494,11 @@ async function handleSaasSubscriptionCheckout(
         data: {
           stripeSessionId: sessionId,
           stripeSubscriptionId,
+          stripeCustomerId,
+          shopId: metadataShopId,
           status: 'ACTIVE',
+          cancelAtPeriodEnd,
+          currentPeriodEnd,
           customerName,
           customerEmail,
           shopName,
@@ -487,7 +529,10 @@ async function handleSaasSubscriptionCheckout(
   if (
     record.status !== 'ACTIVE' ||
     !record.activatedAt ||
-    (stripeSubscriptionId && !record.stripeSubscriptionId)
+    (stripeSubscriptionId && !record.stripeSubscriptionId) ||
+    (stripeCustomerId && !record.stripeCustomerId) ||
+    (metadataShopId && !record.shopId) ||
+    (currentPeriodEnd && !record.currentPeriodEnd)
   ) {
     record = await prisma.saasSubscription.update({
       where: { id: record.id },
@@ -495,6 +540,10 @@ async function handleSaasSubscriptionCheckout(
         status: 'ACTIVE',
         activatedAt: record.activatedAt ?? activatedAt,
         stripeSubscriptionId: stripeSubscriptionId || record.stripeSubscriptionId,
+        stripeCustomerId: stripeCustomerId || record.stripeCustomerId,
+        shopId: record.shopId || metadataShopId,
+        cancelAtPeriodEnd,
+        currentPeriodEnd: currentPeriodEnd ?? record.currentPeriodEnd,
         monthlyPence,
         currency,
         customerName,
@@ -508,7 +557,6 @@ async function handleSaasSubscriptionCheckout(
   }
 
   try {
-    const metadataShopId = metadata.shopId?.trim();
     const updated = metadataShopId
       ? await setShopAnalyticsLive(metadataShopId).then(() => true)
       : await setShopAnalyticsLiveForOwnerEmail(customerEmail);
@@ -525,7 +573,6 @@ async function handleSaasSubscriptionCheckout(
   }
 
   try {
-    const metadataShopId = metadata.shopId?.trim();
     const updated = metadataShopId
       ? await markShopPaid(metadataShopId).then(() => true)
       : await markShopPaidForOwnerEmail(customerEmail);
@@ -542,7 +589,6 @@ async function handleSaasSubscriptionCheckout(
   }
 
   try {
-    const metadataShopId = metadata.shopId?.trim();
     const updated = metadataShopId
       ? await enableShopSmsReminders(metadataShopId).then(() => true)
       : await enableShopSmsRemindersForOwnerEmail(customerEmail);
@@ -710,6 +756,97 @@ async function handleBookingDepositCheckout(
   return new Response(JSON.stringify({ ok: true, bookingId }), { status: 200 });
 }
 
+function getEventCustomerId(object: StripeEvent['data']['object']): string | null {
+  const customer = object.customer;
+  if (typeof customer === 'string' && customer.trim()) return customer.trim();
+  if (customer && typeof customer === 'object' && typeof customer.id === 'string' && customer.id.trim()) {
+    return customer.id.trim();
+  }
+  return null;
+}
+
+function getEventSubscriptionId(object: StripeEvent['data']['object']): string | null {
+  if ((object.object === 'subscription' || object.id.startsWith('sub_')) && object.id) {
+    return object.id;
+  }
+  const sub = object.subscription;
+  if (typeof sub === 'string' && sub.trim()) return sub.trim();
+  if (sub && typeof sub === 'object' && typeof sub.id === 'string' && sub.id.trim()) return sub.id.trim();
+  return null;
+}
+
+function toStripeSubscriptionFromEvent(object: StripeEvent['data']['object']): StripeSubscription {
+  return {
+    id: object.id,
+    status: object.status ?? 'canceled',
+    cancel_at_period_end: object.cancel_at_period_end,
+    current_period_end: object.current_period_end,
+    canceled_at: object.canceled_at,
+    customer: object.customer,
+    metadata: object.metadata,
+  };
+}
+
+async function handleSaasSubscriptionLifecycleEvent(event: StripeEvent): Promise<Response> {
+  if (
+    event.type === 'customer.subscription.updated' ||
+    event.type === 'customer.subscription.deleted'
+  ) {
+    const result = await applyStripeSubscriptionToSaasRecord(toStripeSubscriptionFromEvent(event.data.object), {
+      forceCanceled: event.type === 'customer.subscription.deleted',
+    });
+    logSaasSubscriptionStage('lifecycle_subscription_synced', {
+      eventType: event.type,
+      found: Boolean(result.record),
+      shopId: result.shopId,
+      grantedAccess: result.grantedAccess,
+      status: result.record?.status,
+    });
+    if (!result.record) {
+      await alertLifecycleNotFound({ eventType: event.type, eventId: event.id });
+    }
+    return new Response(JSON.stringify({ ok: true, found: Boolean(result.record) }), { status: 200 });
+  }
+
+  if (event.type === 'invoice.payment_failed') {
+    const result = await applyInvoicePaymentFailed({
+      stripeSubscriptionId: getEventSubscriptionId(event.data.object),
+      stripeCustomerId: getEventCustomerId(event.data.object),
+    });
+    logSaasSubscriptionStage('lifecycle_invoice_payment_failed', {
+      found: Boolean(result.record),
+      shopId: result.shopId,
+      grantedAccess: result.grantedAccess,
+    });
+    if (!result.record) {
+      await alertLifecycleNotFound({ eventType: event.type, eventId: event.id });
+    }
+    return new Response(JSON.stringify({ ok: true, found: Boolean(result.record) }), { status: 200 });
+  }
+
+  if (event.type === 'invoice.paid') {
+    const periodEnd =
+      periodEndFromUnixSeconds(event.data.object.lines?.data?.[0]?.period?.end ?? null) ??
+      periodEndFromUnixSeconds(event.data.object.current_period_end ?? null);
+    const result = await applyInvoicePaid({
+      stripeSubscriptionId: getEventSubscriptionId(event.data.object),
+      stripeCustomerId: getEventCustomerId(event.data.object),
+      currentPeriodEnd: periodEnd,
+    });
+    logSaasSubscriptionStage('lifecycle_invoice_paid', {
+      found: Boolean(result.record),
+      shopId: result.shopId,
+      grantedAccess: result.grantedAccess,
+    });
+    if (!result.record) {
+      await alertLifecycleNotFound({ eventType: event.type, eventId: event.id });
+    }
+    return new Response(JSON.stringify({ ok: true, found: Boolean(result.record) }), { status: 200 });
+  }
+
+  return new Response(JSON.stringify({ ok: true, ignored: true }), { status: 200 });
+}
+
 export const POST: APIRoute = async ({ request }) => {
   let eventId: string | undefined;
   let eventType = 'unknown';
@@ -737,6 +874,21 @@ export const POST: APIRoute = async ({ request }) => {
     const finalize = (response: Response, opts?: { ignored?: boolean }) =>
       finalizeWebhookResponse(eventId, response, { ...opts, eventType: event.type });
 
+    if (
+      event.type === 'customer.subscription.updated' ||
+      event.type === 'customer.subscription.deleted' ||
+      event.type === 'invoice.paid' ||
+      event.type === 'invoice.payment_failed'
+    ) {
+      return await finalize(await handleSaasSubscriptionLifecycleEvent(event));
+    }
+
+    if (!SETUP_FULFILMENT_EVENTS.has(event.type) && event.type !== 'checkout.session.completed') {
+      return await finalize(new Response(JSON.stringify({ ok: true }), { status: 200 }), {
+        ignored: !SETUP_FULFILMENT_EVENTS.has(event.type),
+      });
+    }
+
     const sessionId = event.data.object.id;
     const session = await retrieveCheckoutSession(sessionId);
     const metadata = session.metadata ?? event.data.object.metadata ?? {};
@@ -754,9 +906,7 @@ export const POST: APIRoute = async ({ request }) => {
     }
 
     if (event.type !== 'checkout.session.completed') {
-      return await finalize(new Response(JSON.stringify({ ok: true }), { status: 200 }), {
-        ignored: !SETUP_FULFILMENT_EVENTS.has(event.type),
-      });
+      return await finalize(new Response(JSON.stringify({ ok: true }), { status: 200 }));
     }
 
     const existing = await prisma.order.findUnique({

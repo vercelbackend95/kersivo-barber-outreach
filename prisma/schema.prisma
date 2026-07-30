@@ -653,30 +653,62 @@ model SetupDeposit {
 enum SaasSubscriptionStatus {
   PENDING
   ACTIVE
+  PAST_DUE
+  SUSPENDED
+  CANCELED
 }
 
 model SaasSubscription {
-  id                    String                 @id @default(cuid())
-  stripeSessionId       String                 @unique
-  stripeSubscriptionId  String?
-  status                SaasSubscriptionStatus @default(PENDING)
-  customerName          String
-  customerEmail         String
-  shopName              String
-  shopSize              String
-  currentStack          String
-  monthlyPence          Int
-  currency              String                 @default("gbp")
-  activatedAt           DateTime?
-  customerEmailSentAt   DateTime?
-  internalEmailSentAt   DateTime?
-  onboardingSubmittedAt DateTime?
-  createdAt             DateTime               @default(now())
-  updatedAt             DateTime               @updatedAt
+  id                       String                 @id @default(cuid())
+  stripeSessionId          String                 @unique
+  stripeSubscriptionId     String?
+  stripeCustomerId         String?
+  shopId                   String?
+  status                   SaasSubscriptionStatus @default(PENDING)
+  cancelAtPeriodEnd        Boolean                @default(false)
+  currentPeriodEnd         DateTime?
+  canceledAt               DateTime?
+  pastDueSince             DateTime?
+  suspendedAt              DateTime?
+  retentionEndsAt          DateTime?
+  dataExportDownloadedAt   DateTime?
+  customerName             String
+  customerEmail            String
+  shopName                 String
+  shopSize                 String
+  currentStack             String
+  monthlyPence             Int
+  currency                 String                 @default("gbp")
+  activatedAt              DateTime?
+  customerEmailSentAt      DateTime?
+  internalEmailSentAt      DateTime?
+  onboardingSubmittedAt    DateTime?
+  createdAt                DateTime               @default(now())
+  updatedAt                DateTime               @updatedAt
 
   @@index([customerEmail])
   @@index([customerEmail, status])
   @@index([stripeSubscriptionId])
+  @@index([stripeCustomerId])
+  @@index([shopId])
+  @@index([status, pastDueSince])
+  @@index([status, retentionEndsAt])
+}
+
+/// Survives user/shop deletion (snapshot fields only — no FK cascade).
+model AccountLifecycleEvent {
+  id        String   @id @default(cuid())
+  action    String
+  userId    String?
+  email     String?
+  shopId    String?
+  meta      Json?
+  createdAt DateTime @default(now())
+
+  @@index([action, createdAt])
+  @@index([userId])
+  @@index([shopId])
+  @@index([email])
 }
 
 /// Proof of Terms acceptance at checkout (H05). No FK cascade — audit survives deletes.

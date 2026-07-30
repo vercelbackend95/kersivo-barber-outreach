@@ -1,4 +1,6 @@
 // src/pages/api/availability.ts
+// Session/admin + demo-reschedule slot lookup. Live tenant public booking uses
+// /api/public/bookings/[shopId]/availability (no admin session, no DEMO fallback).
 import type { APIRoute } from 'astro';
 import { resolveAdminAccess } from '../../lib/admin/auth';
 import { BookingActionError } from '../../lib/booking/service';
@@ -11,7 +13,8 @@ export const prerender = false;
 
 const AVAILABILITY_CACHE_HEADERS = {
   'Content-Type': 'application/json',
-  'Cache-Control': 'public, max-age=30, s-maxage=60, stale-while-revalidate=60',
+  // Session-scoped responses must not be shared via CDN/shared caches.
+  'Cache-Control': 'private, max-age=30',
 };
 
 export const GET: APIRoute = async (ctx) => {

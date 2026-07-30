@@ -8,6 +8,7 @@ import { prisma } from '@/lib/db/client';
 import { checkBookingRateLimit } from '@/lib/rate-limit/bookingRateLimit';
 import { createBookingDepositCheckoutSession } from '@/lib/shop/stripeConnect';
 import { getPublicSiteUrl } from '@/lib/setup/siteUrl';
+import { shopAcceptsPublicBookings } from '@/lib/setup/shopPublicBookingGate';
 
 const getRequestIp = (request: Request): string => {
   const forwardedFor = request.headers.get('x-forwarded-for');
@@ -46,6 +47,10 @@ export const POST: APIRoute = async ({ request, params }) => {
     },
   });
   if (!shop) return json({ error: 'Shop not found.' }, 404);
+
+  if (!(await shopAcceptsPublicBookings(shopId))) {
+    return json({ error: 'Online booking is not available for this shop.' }, 403);
+  }
 
   const ip = getRequestIp(request);
   if (!import.meta.env.DEV) {

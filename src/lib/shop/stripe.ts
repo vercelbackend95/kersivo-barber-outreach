@@ -24,10 +24,21 @@ export type StripeSession = {
   amount_total: number | null;
   currency: string | null;
   payment_status?: string | null;
+  customer?: string | { id?: string } | null;
   customer_email?: string | null;
   customer_details?: { email?: string | null } | null;
   payment_intent?: string | { id?: string } | null;
   subscription?: string | { id?: string } | null;
+  metadata?: Record<string, string>;
+};
+
+export type StripeSubscription = {
+  id: string;
+  status: string;
+  cancel_at_period_end?: boolean;
+  current_period_end?: number | null;
+  canceled_at?: number | null;
+  customer?: string | { id?: string } | null;
   metadata?: Record<string, string>;
 };
 
@@ -163,6 +174,102 @@ export function getCheckoutSubscriptionId(session: StripeSession): string | null
   if (typeof sub === 'string' && sub.trim()) return sub.trim();
   if (sub && typeof sub === 'object' && typeof sub.id === 'string' && sub.id.trim()) return sub.id.trim();
   return null;
+}
+
+export function getCheckoutCustomerId(session: StripeSession): string | null {
+  const customer = session.customer;
+  if (typeof customer === 'string' && customer.trim()) return customer.trim();
+  if (customer && typeof customer === 'object' && typeof customer.id === 'string' && customer.id.trim()) {
+    return customer.id.trim();
+  }
+  return null;
+}
+
+export function getStripeCustomerId(
+  customer: string | { id?: string } | null | undefined,
+): string | null {
+  if (typeof customer === 'string' && customer.trim()) return customer.trim();
+  if (customer && typeof customer === 'object' && typeof customer.id === 'string' && customer.id.trim()) {
+    return customer.id.trim();
+  }
+  return null;
+}
+
+export async function retrieveSubscription(subscriptionId: string): Promise<StripeSubscription> {
+  const secretKey = getSecretKey();
+  const response = await fetch(
+    `${STRIPE_API_BASE}/subscriptions/${encodeURIComponent(subscriptionId)}`,
+    {
+      headers: { Authorization: `Bearer ${secretKey}` },
+    },
+  );
+
+  if (!response.ok) {
+    const text = await response.text();
+    throw new Error(`Stripe subscription lookup failed (${response.status}): ${text}`);
+  }
+
+  return (await response.json()) as StripeSubscription;
+}
+
+/** Schedule cancel at period end. Local DB must be synced only after this succeeds. */
+export async function cancelSubscriptionAtPeriodEnd(
+  subscriptionId: string,
+): Promise<StripeSubscription> {
+  const secretKey = getSecretKey();
+  const body = new URLSearchParams();
+  body.set('cancel_at_period_end', 'true');
+
+  const response = await fetch(
+    `${STRIPE_API_BASE}/subscriptions/${encodeURIComponent(subscriptionId)}`,
+    {
+      method: 'POST',
+      headers: {
+        Authorization: `Bearer ${secretKey}`,
+        'Content-Type': 'application/x-www-form-urlencoded',
+      },
+      body,
+    },
+  );
+
+  if (!response.ok) {
+    const text = await response.text();
+    throw new Error(`Stripe subscription cancel failed (${response.status}): ${text}`);
+  }
+
+  return (await response.json()) as StripeSubscription;
+}
+
+/**
+ * Stripe Customer Portal session for cancel-at-period-end, payment method, and invoices.
+ * Requires Customer Portal to be enabled in the Stripe Dashboard (Settings → Billing → Customer portal).
+ */
+export async function createBillingPortalSession(input: {
+  customerId: string;
+  returnUrl: string;
+}): Promise<{ id: string; url: string }> {
+  const secretKey = getSecretKey();
+  const body = new URLSearchParams();
+  body.set('customer', input.customerId);
+  body.set('return_url', input.returnUrl);
+
+  const response = await fetch(`${STRIPE_API_BASE}/billing_portal/sessions`, {
+    method: 'POST',
+    headers: {
+      Authorization: `Bearer ${secretKey}`,
+      'Content-Type': 'application/x-www-form-urlencoded',
+    },
+    body,
+  });
+
+  if (!response.ok) {
+    const text = await response.text();
+    throw new Error(`Stripe billing portal session failed (${response.status}): ${text}`);
+  }
+
+  const session = (await response.json()) as { id?: string; url?: string };
+  if (!session.url || !session.id) throw new Error('Stripe did not return a billing portal URL.');
+  return { id: session.id, url: session.url };
 }
 
 export function verifyStripeWebhookSignature(payload: string, signatureHeader: string): boolean {
