@@ -76,6 +76,7 @@ Before running Google Ads against the live site, confirm:
 5. Soft-launch bidding: **Manual CPC** (or Maximize clicks with cap) — do **not** use Maximize conversions until you have stable purchase volume.
 6. Contact/demo form events stay **Secondary / observe only** in Ads — never Primary (protects a small budget from optimizing for free form fills).
 7. Verify with Tag Assistant + [`docs/consent-tag-assistant-checklist.md`](docs/consent-tag-assistant-checklist.md) (Conversions section).
+8. Keywords / soft-launch Search build: [`docs/google-ads-keyword-strategy.md`](docs/google-ads-keyword-strategy.md) (Tier A only in the wizard; Pause AI campaign; Manual CPC + negatives before spend).
 
 6. Run app:
    ```bash
