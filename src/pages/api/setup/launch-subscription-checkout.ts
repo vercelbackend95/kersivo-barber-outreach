@@ -4,6 +4,13 @@ import type { APIRoute } from 'astro';
 import { resolveAdminAccess } from '../../../lib/admin/auth';
 import { requirePermission } from '../../../lib/admin/rbac/can';
 import { prisma } from '../../../lib/db/client';
+import {
+  parseTermsAccepted,
+  recordTermsAcceptance,
+  termsAcceptanceStripeMetadata,
+  termsAcceptedErrorResponse,
+} from '../../../lib/legal/requireTermsAcceptance';
+import { TERMS_ACCEPTANCE_PURPOSES } from '../../../lib/legal/termsVersion';
 import { SAAS_MONTHLY_PENCE } from '../../../lib/seo/defaults';
 import { buildSaasSubscriptionStripeMetadata } from '../../../lib/setup/saasSubscription';
 import { getPublicSiteUrl } from '../../../lib/setup/siteUrl';
@@ -11,6 +18,7 @@ import { createSubscriptionCheckoutSession } from '../../../lib/shop/stripe';
 
 type LaunchSubscriptionCheckoutInput = {
   attribution?: Record<string, string>;
+  termsAccepted?: boolean;
 };
 
 const ATTRIBUTION_KEYS = [
@@ -54,6 +62,7 @@ function shopSizeFromBarberCount(count: number): string {
  */
 export const POST: APIRoute = async (context) => {
   try {
+
     const access = await resolveAdminAccess(context);
     if (!access || access.via !== 'session') {
       return new Response(JSON.stringify({ error: 'Unauthorized' }), { status: 401 });
@@ -66,6 +75,10 @@ export const POST: APIRoute = async (context) => {
       body = (await context.request.json()) as LaunchSubscriptionCheckoutInput;
     } catch {
       return badRequest('Invalid request body.');
+    }
+
+    if (!parseTermsAccepted(body)) {
+      return termsAcceptedErrorResponse();
     }
 
     const shop = await prisma.shopSettings.findUnique({
@@ -113,17 +126,20 @@ export const POST: APIRoute = async (context) => {
 
     const baseUrl = getPublicSiteUrl();
     const attribution = pickAttribution(body.attribution);
-    const metadata = buildSaasSubscriptionStripeMetadata(
-      {
-        customerName: name,
-        email,
-        shopName,
-        shopSize,
-        currentStack,
-        shopId: access.shopId,
-      },
-      attribution,
-    );
+    const metadata = {
+      ...buildSaasSubscriptionStripeMetadata(
+        {
+          customerName: name,
+          email,
+          shopName,
+          shopSize,
+          currentStack,
+          shopId: access.shopId,
+        },
+        attribution,
+      ),
+      ...termsAcceptanceStripeMetadata(),
+    };
 
     const session = await createSubscriptionCheckoutSession({
       customerEmail: email,
@@ -155,6 +171,15 @@ export const POST: APIRoute = async (context) => {
         error,
       });
     }
+
+    await recordTermsAcceptance({
+      purpose: TERMS_ACCEPTANCE_PURPOSES.SAAS_CHECKOUT,
+      email,
+      userId: access.userId,
+      shopId: access.shopId,
+      stripeSessionId: session.id,
+      request: context.request,
+    });
 
     return new Response(JSON.stringify({ url: session.url }), { status: 200 });
   } catch (error) {

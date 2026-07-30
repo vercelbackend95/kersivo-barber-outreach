@@ -3,6 +3,13 @@ export const prerender = false;
 import type { APIRoute } from 'astro';
 import { SetupPlan, SetupDepositStatus } from '@prisma/client';
 import { prisma } from '../../../lib/db/client';
+import {
+  parseTermsAccepted,
+  recordTermsAcceptance,
+  termsAcceptanceStripeMetadata,
+  termsAcceptedErrorResponse,
+} from '../../../lib/legal/requireTermsAcceptance';
+import { TERMS_ACCEPTANCE_PURPOSES } from '../../../lib/legal/termsVersion';
 import { buildSetupDepositStripeMetadata, getSetupPlan, isSetupPlanId } from '../../../lib/setup/plans';
 import { getPublicSiteUrl } from '../../../lib/setup/siteUrl';
 import { createCheckoutSession } from '../../../lib/shop/stripe';
@@ -17,6 +24,7 @@ type DepositCheckoutInput = {
   townCity?: string | null;
   barbers?: string | null;
   attribution?: Record<string, string>;
+  termsAccepted?: boolean;
 };
 
 const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
@@ -51,11 +59,16 @@ function pickAttribution(raw: unknown): Record<string, string> {
 
 export const POST: APIRoute = async ({ request }) => {
   try {
+
     let body: DepositCheckoutInput;
     try {
       body = (await request.json()) as DepositCheckoutInput;
     } catch {
       return badRequest('Invalid request body.');
+    }
+
+    if (!parseTermsAccepted(body)) {
+      return termsAcceptedErrorResponse();
     }
 
     const planRaw = String(body.plan ?? '').trim();
@@ -107,19 +120,22 @@ export const POST: APIRoute = async ({ request }) => {
           quantity: 1,
         },
       ],
-      metadata: buildSetupDepositStripeMetadata(
-        planId,
-        {
-          customerName: name,
-          email,
-          shopName,
-          shopSize,
-          currentStack,
-          townCity: townCity || null,
-          barbers: barbers || null,
-        },
-        attribution,
-      ),
+      metadata: {
+        ...buildSetupDepositStripeMetadata(
+          planId,
+          {
+            customerName: name,
+            email,
+            shopName,
+            shopSize,
+            currentStack,
+            townCity: townCity || null,
+            barbers: barbers || null,
+          },
+          attribution,
+        ),
+        ...termsAcceptanceStripeMetadata(),
+      },
     });
 
     try {
@@ -143,6 +159,13 @@ export const POST: APIRoute = async ({ request }) => {
         error,
       });
     }
+
+    await recordTermsAcceptance({
+      purpose: TERMS_ACCEPTANCE_PURPOSES.SETUP_DEPOSIT_CHECKOUT,
+      email,
+      stripeSessionId: session.id,
+      request,
+    });
 
     return new Response(JSON.stringify({ url: session.url }), { status: 200 });
   } catch (error) {

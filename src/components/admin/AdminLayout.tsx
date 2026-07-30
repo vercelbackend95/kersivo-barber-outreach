@@ -392,6 +392,7 @@ export default function AdminLayout({
 
   const activeSectionLabel = useMemo(() => {
     if (activeSection === 'barbershop_settings') return 'Barbershop settings';
+    if (activeSection === 'site_launch') return 'Site launch';
     for (const group of visibleMenuGroups) {
       const item = group.items.find((i) => i.section === activeSection);
       if (item) return item.label;

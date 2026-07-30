@@ -1,0 +1,58 @@
+---
+export const prerender = false;
+
+import MinimalLayout from '@/layouts/MinimalLayout.astro';
+import SitePreviewShell from '@/components/admin/SitePreviewShell';
+import { resolveAdminAccess } from '@/lib/admin/auth';
+import { accessCan } from '@/lib/admin/rbac/can';
+import { prisma } from '@/lib/db/client';
+import { getSiteLaunchStatus } from '@/lib/setup/siteLaunch';
+import '@/styles/tokens.css';
+import '@/styles/fonts-admin.css';
+import '@/styles/global.css';
+import '@/styles/components/buttons.css';
+import '@/styles/components/admin-site-preview.css';
+
+const access = await resolveAdminAccess(Astro);
+if (!access || access.via !== 'session') {
+  return Astro.redirect('/admin');
+}
+if (!accessCan(access, 'billing.manage')) {
+  return Astro.redirect('/admin');
+}
+
+const shop = await prisma.shopSettings.findUnique({
+  where: { id: access.shopId },
+  select: {
+    sitePreviewUrl: true,
+    sitePreviewVersion: true,
+    launchApprovedAt: true,
+    launchApprovedVersion: true,
+    launchApprovedByEmail: true,
+    goLiveAt: true,
+  },
+});
+
+const status = shop ? getSiteLaunchStatus(shop) : 'not_ready';
+const previewUrl = shop?.sitePreviewUrl ?? null;
+const siteVersion = shop?.sitePreviewVersion ?? null;
+const approvedAt = shop?.launchApprovedAt?.toISOString() ?? null;
+const approvedByEmail = shop?.launchApprovedByEmail ?? null;
+---
+
+<MinimalLayout
+  title="Preview website — Kersivo"
+  noindex={true}
+  htmlClass="admin-app-scroll"
+  bodyClass="admin-theme-premium-black site-preview-body"
+  viewportContent="width=device-width, initial-scale=1, viewport-fit=cover"
+>
+  <SitePreviewShell
+    client:load
+    status={status}
+    previewUrl={previewUrl}
+    siteVersion={siteVersion}
+    approvedAt={approvedAt}
+    approvedBy={approvedByEmail}
+  />
+</MinimalLayout>
