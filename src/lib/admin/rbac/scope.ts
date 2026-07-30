@@ -1,6 +1,12 @@
 import type { AdminAccess } from '@/lib/admin/auth';
+import type { ShopRole } from '@prisma/client';
 import { accessCan } from '@/lib/admin/rbac/can';
 import { prisma } from '@/lib/db/client';
+
+/** Owner/Manager see client email; Barber does not (phone + shop-wide CRM remain). */
+export function canViewClientEmail(access: { role: ShopRole | string }): boolean {
+  return access.role === 'OWNER' || access.role === 'MANAGER';
+}
 
 /** Barber role without linked roster row cannot use booking/client data APIs. */
 export function requireLinkedBarber(access: AdminAccess): Response | null {
@@ -77,6 +83,6 @@ export async function assertClientAccessible(
     return new Response(JSON.stringify({ error: 'Client not found.' }), { status: 404 });
   }
 
-  // Barber may open any client in their shop (financial fields stripped at profile API).
+  // Barber may open any client in their shop (email + financials stripped at profile API).
   return client;
 }

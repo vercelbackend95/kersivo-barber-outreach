@@ -9,7 +9,7 @@ import { adminFetchJson } from './adminAuth';
 type ClientData = {
   id: string;
   fullName: string | null;
-  email: string;
+  email: string | null;
   phone: string | null;
   notes: string | null;
   avatarUrl?: string | null;
@@ -1098,17 +1098,21 @@ const ClientProfilePanel = memo(function ClientProfilePanel({
                 onAvatarChange={handleAvatarChange}
               />
               <div className="admin-cp-identity-info">
-                <p className="admin-cp-full-name">{data.client.fullName ?? data.client.email}</p>
+                <p className="admin-cp-full-name">
+                  {data.client.fullName || data.client.phone || data.client.email || 'Client'}
+                </p>
                 {data.client.phone && (
                   <a className="admin-cp-contact-row" href={`tel:${data.client.phone}`}>
                     <Phone className="admin-cp-contact-icon" aria-hidden />
                     {data.client.phone}
                   </a>
                 )}
-                <a className="admin-cp-contact-row" href={`mailto:${data.client.email}`}>
-                  <Mail className="admin-cp-contact-icon" aria-hidden />
-                  {data.client.email}
-                </a>
+                {data.client.email ? (
+                  <a className="admin-cp-contact-row" href={`mailto:${data.client.email}`}>
+                    <Mail className="admin-cp-contact-icon" aria-hidden />
+                    {data.client.email}
+                  </a>
+                ) : null}
                 <ClientMessageActions
                   phone={data.client.phone}
                   fullName={data.client.fullName}
