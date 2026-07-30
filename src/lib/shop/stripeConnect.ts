@@ -1,4 +1,4 @@
-import { BOOKING_DEPOSIT_METADATA_TYPE, BOOKING_DEPOSIT_PENCE } from '../booking/depositGate';
+import { BOOKING_DEPOSIT_METADATA_TYPE } from '../booking/depositGate';
 
 const STRIPE_API_BASE = 'https://api.stripe.com/v1';
 
@@ -108,9 +108,16 @@ export async function createBookingDepositCheckoutSession(input: {
   shopId: string;
   customerEmail: string;
   shopName: string;
+  /** Snapshot deposit in pence; must be > 0 (H04: min(service price, £5)). */
+  amountPence: number;
   successUrl: string;
   cancelUrl: string;
 }): Promise<{ id: string; url: string }> {
+  const amountPence = Math.trunc(input.amountPence);
+  if (!Number.isFinite(amountPence) || amountPence <= 0) {
+    throw new Error('amountPence must be a positive integer for deposit checkout.');
+  }
+
   const body = new URLSearchParams();
   body.set('mode', 'payment');
   body.set('success_url', input.successUrl);
@@ -118,7 +125,7 @@ export async function createBookingDepositCheckoutSession(input: {
   body.set('customer_email', input.customerEmail);
   body.set('payment_method_types[0]', 'card');
   body.set('line_items[0][price_data][currency]', 'gbp');
-  body.set('line_items[0][price_data][unit_amount]', String(BOOKING_DEPOSIT_PENCE));
+  body.set('line_items[0][price_data][unit_amount]', String(amountPence));
   body.set(
     'line_items[0][price_data][product_data][name]',
     `Booking deposit — ${input.shopName}`.slice(0, 120),

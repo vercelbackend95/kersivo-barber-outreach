@@ -4,6 +4,7 @@ import {
   BOOKING_DEPOSIT_PENCE,
   canCollectBookingDeposit,
   evaluateDepositCollection,
+  resolveBookingDepositPence,
 } from './depositGate';
 
 const readyShop = {
@@ -16,8 +17,17 @@ const readyShop = {
 };
 
 describe('depositGate', () => {
-  it('uses fixed £5 deposit', () => {
+  it('caps deposit at £5', () => {
     expect(BOOKING_DEPOSIT_PENCE).toBe(500);
+  });
+
+  it('resolves deposit as min(service price, £5)', () => {
+    expect(resolveBookingDepositPence(0)).toBe(0);
+    expect(resolveBookingDepositPence(300)).toBe(300);
+    expect(resolveBookingDepositPence(500)).toBe(500);
+    expect(resolveBookingDepositPence(2500)).toBe(500);
+    expect(resolveBookingDepositPence(-100)).toBe(0);
+    expect(resolveBookingDepositPence(399.9)).toBe(399);
   });
 
   it('allows collection when paid + toggle + Connect ready', () => {

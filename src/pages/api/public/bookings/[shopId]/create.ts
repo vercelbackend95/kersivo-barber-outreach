@@ -83,6 +83,10 @@ export const POST: APIRoute = async ({ request, params }) => {
       if (!shop.stripeConnectAccountId) {
         return json({ error: 'Deposit checkout is not configured for this shop.' }, 503);
       }
+      const amountPence = created.depositAmountPence;
+      if (typeof amountPence !== 'number' || amountPence <= 0) {
+        return json({ error: 'Invalid deposit amount for this booking.' }, 500);
+      }
       const baseUrl = getPublicSiteUrl();
       const session = await createBookingDepositCheckoutSession({
         shopConnectAccountId: shop.stripeConnectAccountId,
@@ -90,6 +94,7 @@ export const POST: APIRoute = async ({ request, params }) => {
         shopId,
         customerEmail: created.email,
         shopName: created.shopName || shop.name,
+        amountPence,
         successUrl: `${baseUrl}/book/${shopId}/success?session_id={CHECKOUT_SESSION_ID}`,
         cancelUrl: `${baseUrl}/book/${shopId}?deposit=cancelled`,
       });
