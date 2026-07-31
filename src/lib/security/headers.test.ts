@@ -29,4 +29,12 @@ describe('applySecurityHeaders', () => {
     expect(csp).toContain('https://stats.g.doubleclick.net');
     expect(csp).toContain('https://ad.doubleclick.net');
   });
+
+  it('CSP allows Google Ads remarketing scripts', () => {
+    const csp = buildContentSecurityPolicy();
+    expect(csp).toMatch(
+      /script-src[^;]*https:\/\/googleads\.g\.doubleclick\.net/,
+    );
+    expect(csp).toMatch(/script-src[^;]*https:\/\/www\.googleadservices\.com/);
+  });
 });
