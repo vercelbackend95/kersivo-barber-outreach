@@ -19,6 +19,7 @@ function fakeAccess(partial: Partial<AdminAccess> & Pick<AdminAccess, 'role'>): 
     userId: 'user_1',
     userName: 'Test',
     userEmail: 't@example.com',
+    emailVerified: true,
     userImage: null,
     via: 'session',
     memberId: 'm1',

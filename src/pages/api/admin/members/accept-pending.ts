@@ -2,17 +2,29 @@ export const prerender = false;
 
 import type { APIRoute } from 'astro';
 import { auth } from '@/lib/auth';
+import { EMAIL_VERIFICATION_REQUIRED_MESSAGE } from '@/lib/admin/auth';
 import { acceptInviteForUser } from '@/lib/admin/rbac/members';
 import { prisma } from '@/lib/db/client';
 
 /**
  * Accept the newest open invite for the signed-in user's email.
  * Safety net when OAuth landed on /admin before the invite token page ran accept.
+ * Requires a verified email so registering on someone else's address cannot steal the invite.
  */
 export const POST: APIRoute = async (context) => {
   const session = await auth.api.getSession({ headers: context.request.headers });
   if (!session?.user?.id || !session.user.email) {
     return new Response(JSON.stringify({ error: 'Sign in required.' }), { status: 401 });
+  }
+
+  if (!session.user.emailVerified) {
+    return new Response(
+      JSON.stringify({
+        error: EMAIL_VERIFICATION_REQUIRED_MESSAGE,
+        code: 'EMAIL_NOT_VERIFIED',
+      }),
+      { status: 403, headers: { 'Content-Type': 'application/json' } },
+    );
   }
 
   const email = session.user.email.trim().toLowerCase();

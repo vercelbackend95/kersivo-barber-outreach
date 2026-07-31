@@ -656,3 +656,44 @@ export async function sendShopTeamInviteEmail(input: {
   });
 }
 
+/** Better Auth email-verification link (accept invites / billing gates). */
+export async function sendEmailVerificationEmail(input: {
+  to: string;
+  name?: string | null;
+  url: string;
+}) {
+  if (!isEmailDeliveryConfigured()) {
+    console.error('[EMAIL] RESEND_API_KEY missing; verification email was not sent.', {
+      to: input.to,
+      url: input.url,
+    });
+    if (isProductionRuntime()) {
+      throw new EmailDeliveryError('RESEND_API_KEY is not configured.', null);
+    }
+    console.warn('[DEV EMAIL] Email verification (not sent — Resend not configured)', {
+      to: input.to,
+      url: input.url,
+    });
+    return { messageId: null };
+  }
+
+  const name = (input.name ?? '').trim() || 'there';
+  const html = `<p>Hi ${escapeHtml(name)},</p>
+  <h2>Verify your email</h2>
+  <p>Confirm this email address to accept shop invitations and manage billing on KERSIVO.</p>
+  <p><strong><a href="${escapeHtml(input.url)}">Verify email address</a></strong></p>
+  <p>If you did not create a KERSIVO account, you can ignore this message.</p>`;
+
+  return sendEmail({
+    to: input.to,
+    subject: 'Verify your KERSIVO email',
+    html,
+    devLogLabel: '[DEV EMAIL] Email verification',
+    devPayload: {
+      to: input.to,
+      name,
+      url: input.url,
+    },
+  });
+}
+

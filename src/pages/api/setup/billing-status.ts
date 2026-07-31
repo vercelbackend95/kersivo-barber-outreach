@@ -1,7 +1,7 @@
 export const prerender = false;
 
 import type { APIRoute } from 'astro';
-import { resolveAdminAccess } from '@/lib/admin/auth';
+import { resolveAdminAccess, requireVerifiedEmail } from '@/lib/admin/auth';
 import { requirePermission } from '@/lib/admin/rbac/can';
 import { prisma } from '@/lib/db/client';
 import {
@@ -34,6 +34,8 @@ export const GET: APIRoute = async (context) => {
   }
   const denied = requirePermission(access, 'billing.manage');
   if (denied) return denied;
+  const unverified = requireVerifiedEmail(access);
+  if (unverified) return unverified;
 
   let subscription = await prisma.saasSubscription.findFirst({
     where: {
@@ -53,6 +55,7 @@ export const GET: APIRoute = async (context) => {
     if (ownerEmail) {
       subscription = await prisma.saasSubscription.findFirst({
         where: {
+          shopId: null,
           customerEmail: { equals: ownerEmail, mode: 'insensitive' },
           status: { not: 'PENDING' },
         },
