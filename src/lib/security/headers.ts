@@ -14,7 +14,7 @@ export function buildContentSecurityPolicy(): string {
     "style-src 'self' 'unsafe-inline'",
     "script-src 'self' 'unsafe-inline' https://js.stripe.com https://www.googletagmanager.com https://www.google-analytics.com",
     "frame-src 'self' https://js.stripe.com https://hooks.stripe.com https://www.google.com",
-    "connect-src 'self' https://api.stripe.com https://*.openai.com https://www.google-analytics.com https://region1.google-analytics.com https://www.googletagmanager.com https://*.google-analytics.com https://*.analytics.google.com https://www.google.com https://googleads.g.doubleclick.net https://stats.g.doubleclick.net https://www.googleadservices.com https://pagead2.googlesyndication.com",
+    "connect-src 'self' https://api.stripe.com https://*.openai.com https://www.google-analytics.com https://region1.google-analytics.com https://www.googletagmanager.com https://*.google-analytics.com https://*.analytics.google.com https://www.google.com https://googleads.g.doubleclick.net https://stats.g.doubleclick.net https://ad.doubleclick.net https://www.googleadservices.com https://pagead2.googlesyndication.com",
   ].join('; ');
 }
 
