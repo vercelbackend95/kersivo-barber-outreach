@@ -12,7 +12,8 @@ export type ScheduleListBooking = {
   clientId?: string | null;
   clientAvatarUrl?: string | null;
   fullName: string;
-  email: string;
+  /** Null when the viewer is not allowed to see the client's email. */
+  email: string | null;
   status: string;
   startAt: string;
   endAt: string;

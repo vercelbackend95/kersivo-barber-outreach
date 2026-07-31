@@ -136,7 +136,6 @@ async function loadSlotCandidates(date: string): Promise<{
     bookingsByBarber.set(booking.barberId, list);
   }
 
-  const timeBlockDelegate = (prisma as { timeBlock?: { findMany: typeof prisma.booking.findMany } }).timeBlock;
   const candidates: SlotCandidate[] = [];
 
   for (const barber of barbers) {
@@ -154,17 +153,15 @@ async function loadSlotCandidates(date: string): Promise<{
         },
         select: { startsAt: true, endsAt: true }
       }),
-      timeBlockDelegate
-        ? timeBlockDelegate.findMany({
-            where: {
-              shopId: settings.id,
-              OR: [{ barberId: barber.id }, { barberId: null }],
-              startAt: { lt: dayEndUtc },
-              endAt: { gt: dayStartUtc }
-            },
-            select: { startAt: true, endAt: true }
-          })
-        : Promise.resolve([])
+      prisma.timeBlock.findMany({
+        where: {
+          shopId: settings.id,
+          OR: [{ barberId: barber.id }, { barberId: null }],
+          startAt: { lt: dayEndUtc },
+          endAt: { gt: dayStartUtc }
+        },
+        select: { startAt: true, endAt: true }
+      })
     ]);
 
     for (const link of barber.barberServices) {

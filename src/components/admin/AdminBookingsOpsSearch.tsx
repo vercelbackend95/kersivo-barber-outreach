@@ -5,7 +5,8 @@ import AdminPremiumSearchBar from './AdminPremiumSearchBar';
 export type AdminBookingsOpsSearchBooking = {
   id: string;
   fullName: string;
-  email: string;
+  /** Null when the viewer is not allowed to see the client's email. */
+  email: string | null;
   startAt: string;
   service?: { name: string } | null;
   barber?: { name: string } | null;
@@ -112,7 +113,7 @@ export default function AdminBookingsOpsSearch({
           >
             <span className="admin-search-result-main">{highlightMatch(booking.fullName)}</span>
             <span className="admin-search-result-meta">
-              {highlightMatch(booking.email)} · {highlightMatch(booking.service?.name ?? '')} ·{' '}
+              {highlightMatch(booking.email ?? '')} · {highlightMatch(booking.service?.name ?? '')} ·{' '}
               {highlightMatch(booking.barber?.name ?? '')} · {formatStartTime(booking.startAt)}
             </span>
           </button>

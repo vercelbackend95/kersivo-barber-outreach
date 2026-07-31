@@ -1,4 +1,4 @@
-import { beforeEach, describe, expect, it, vi } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 const shopSettingsFindUnique = vi.fn();
 
@@ -26,6 +26,10 @@ import {
 describe('shopPublicActivity', () => {
   beforeEach(() => {
     shopSettingsFindUnique.mockReset();
+  });
+
+  afterEach(() => {
+    vi.useRealTimers();
   });
 
   it('treats armed pause without dates as full block (legacy)', () => {
@@ -79,6 +83,9 @@ describe('shopPublicActivity', () => {
   });
 
   it('throws assert for now with owner reason', async () => {
+    // "Now" decides this one, so pin it inside the armed window.
+    vi.useFakeTimers({ toFake: ['Date'] });
+    vi.setSystemTime(new Date('2026-07-25T12:00:00.000Z'));
     shopSettingsFindUnique.mockResolvedValue({
       publicActivityPaused: true,
       publicActivityPauseFrom: isoDateToStoredPauseDate('2026-07-20'),
@@ -91,6 +98,9 @@ describe('shopPublicActivity', () => {
       message: 'Holiday closure — see you soon.',
       code: 'SHOP_PUBLIC_ACTIVITY_PAUSED',
     });
+
+    vi.setSystemTime(new Date('2026-07-31T12:00:00.000Z'));
+    await expect(assertShopAcceptingPublicActivity('shop-1')).resolves.toBeUndefined();
   });
 
   it('throws booking assert only for paused dates', async () => {
