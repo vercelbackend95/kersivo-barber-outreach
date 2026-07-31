@@ -1,7 +1,7 @@
 import type { SaasSubscription, SaasSubscriptionStatus } from '@prisma/client';
 import { prisma } from '@/lib/db/client';
 import { markShopPaid, markShopUnpaid } from '@/lib/shop/markShopPaid';
-import type { StripeSubscription } from '@/lib/shop/stripe';
+import { getSubscriptionCurrentPeriodEnd, type StripeSubscription } from '@/lib/shop/stripe';
 import {
   ACCOUNT_LIFECYCLE_ACTIONS,
   recordAccountLifecycleEvent,
@@ -88,7 +88,7 @@ export async function applyStripeSubscriptionToSaasRecord(
     status = 'SUSPENDED';
   }
 
-  const currentPeriodEnd = periodEndFromUnixSeconds(stripeSub.current_period_end ?? null);
+  const currentPeriodEnd = periodEndFromUnixSeconds(getSubscriptionCurrentPeriodEnd(stripeSub));
   const canceledAt = options.forceCanceled
     ? periodEndFromUnixSeconds(stripeSub.canceled_at ?? null) ?? new Date()
     : status === 'CANCELED'

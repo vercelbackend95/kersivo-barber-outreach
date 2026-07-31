@@ -148,6 +148,27 @@ describe('saasSubscriptionLifecycle WP-I', () => {
     expect(markShopUnpaid).toHaveBeenCalled();
   });
 
+  it('reads the renewal date from subscription items on clover payloads', async () => {
+    findFirst.mockResolvedValue(baseRecord);
+    update.mockResolvedValue({ ...baseRecord, currentPeriodEnd: new Date('2026-09-01T00:00:00.000Z') });
+
+    await applyStripeSubscriptionToSaasRecord({
+      id: 'sub_1',
+      status: 'active',
+      cancel_at_period_end: false,
+      items: {
+        data: [{ current_period_end: Math.floor(new Date('2026-09-01T00:00:00.000Z').getTime() / 1000) }],
+      },
+      customer: 'cus_1',
+    });
+
+    expect(update).toHaveBeenCalledWith(
+      expect.objectContaining({
+        data: expect.objectContaining({ currentPeriodEnd: new Date('2026-09-01T00:00:00.000Z') }),
+      }),
+    );
+  });
+
   it('suspends PAST_DUE past grace', async () => {
     const now = new Date('2026-07-20T12:00:00.000Z');
     findMany.mockResolvedValue([

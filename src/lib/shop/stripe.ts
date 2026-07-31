@@ -36,7 +36,10 @@ export type StripeSubscription = {
   id: string;
   status: string;
   cancel_at_period_end?: boolean;
+  /** Removed from the subscription root in API 2025-03-31.basil; kept for older payloads. */
   current_period_end?: number | null;
+  /** Basil and later expose the billing period per subscription item. */
+  items?: { data?: Array<{ current_period_end?: number | null }> } | null;
   canceled_at?: number | null;
   customer?: string | { id?: string } | null;
   metadata?: Record<string, string>;
@@ -199,6 +202,24 @@ export function getStripeCustomerId(
     return customer.id.trim();
   }
   return null;
+}
+
+/**
+ * Billing period end in unix seconds, tolerating both payload shapes.
+ * API 2025-03-31.basil moved `current_period_end` from the subscription root onto its items.
+ * Takes the latest item period so entitlement is never cut short on multi-item subscriptions.
+ */
+export function getSubscriptionCurrentPeriodEnd(
+  subscription: Pick<StripeSubscription, 'current_period_end' | 'items'>,
+): number | null {
+  const root = subscription.current_period_end;
+  if (typeof root === 'number' && Number.isFinite(root)) return root;
+
+  const itemEnds = (subscription.items?.data ?? [])
+    .map((item) => item?.current_period_end)
+    .filter((value): value is number => typeof value === 'number' && Number.isFinite(value));
+
+  return itemEnds.length ? Math.max(...itemEnds) : null;
 }
 
 export async function retrieveSubscription(subscriptionId: string): Promise<StripeSubscription> {

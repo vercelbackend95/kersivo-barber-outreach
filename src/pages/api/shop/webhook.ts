@@ -15,6 +15,7 @@ import {
   getCheckoutCustomerId,
   getCheckoutPaymentIntentId,
   getCheckoutSubscriptionId,
+  getSubscriptionCurrentPeriodEnd,
   retrieveCheckoutSession,
   retrieveSubscription,
   type StripeSession,
@@ -82,8 +83,13 @@ type StripeEvent = {
       status?: string;
       cancel_at_period_end?: boolean;
       current_period_end?: number | null;
+      items?: { data?: Array<{ current_period_end?: number | null }> } | null;
       canceled_at?: number | null;
       subscription?: string | { id?: string } | null;
+      /** Basil and later nest the invoice's subscription here instead of `subscription`. */
+      parent?: {
+        subscription_details?: { subscription?: string | { id?: string } | null } | null;
+      } | null;
       lines?: { data?: Array<{ period?: { end?: number | null } | null }> };
       charges_enabled?: boolean;
       details_submitted?: boolean;
@@ -469,7 +475,7 @@ async function handleSaasSubscriptionCheckout(
   if (stripeSubscriptionId) {
     try {
       const stripeSub = await retrieveSubscription(stripeSubscriptionId);
-      currentPeriodEnd = periodEndFromUnixSeconds(stripeSub.current_period_end ?? null);
+      currentPeriodEnd = periodEndFromUnixSeconds(getSubscriptionCurrentPeriodEnd(stripeSub));
       cancelAtPeriodEnd = Boolean(stripeSub.cancel_at_period_end);
     } catch (error) {
       console.warn('[webhook] SaaS subscription period lookup failed', {
@@ -806,23 +812,23 @@ async function handleBookingDepositCheckout(
   return new Response(JSON.stringify({ ok: true, bookingId }), { status: 200 });
 }
 
-function getEventCustomerId(object: StripeEvent['data']['object']): string | null {
-  const customer = object.customer;
-  if (typeof customer === 'string' && customer.trim()) return customer.trim();
-  if (customer && typeof customer === 'object' && typeof customer.id === 'string' && customer.id.trim()) {
-    return customer.id.trim();
+function toRefId(value: string | { id?: string } | null | undefined): string | null {
+  if (typeof value === 'string' && value.trim()) return value.trim();
+  if (value && typeof value === 'object' && typeof value.id === 'string' && value.id.trim()) {
+    return value.id.trim();
   }
   return null;
+}
+
+function getEventCustomerId(object: StripeEvent['data']['object']): string | null {
+  return toRefId(object.customer);
 }
 
 function getEventSubscriptionId(object: StripeEvent['data']['object']): string | null {
   if ((object.object === 'subscription' || object.id.startsWith('sub_')) && object.id) {
     return object.id;
   }
-  const sub = object.subscription;
-  if (typeof sub === 'string' && sub.trim()) return sub.trim();
-  if (sub && typeof sub === 'object' && typeof sub.id === 'string' && sub.id.trim()) return sub.id.trim();
-  return null;
+  return toRefId(object.subscription) ?? toRefId(object.parent?.subscription_details?.subscription);
 }
 
 function toStripeSubscriptionFromEvent(object: StripeEvent['data']['object']): StripeSubscription {
@@ -831,6 +837,7 @@ function toStripeSubscriptionFromEvent(object: StripeEvent['data']['object']): S
     status: object.status ?? 'canceled',
     cancel_at_period_end: object.cancel_at_period_end,
     current_period_end: object.current_period_end,
+    items: object.items,
     canceled_at: object.canceled_at,
     customer: object.customer,
     metadata: object.metadata,
