@@ -29,6 +29,24 @@ if (!shopId || shopId === DEMO_SHOP_ID) {
   return Astro.redirect('/book');
 }
 
+/**
+ * Stand-in shop for database outages: keeps the "temporarily unavailable" page reachable
+ * instead of 404ing a shop that does exist. Booking is off on every flag.
+ */
+const outageShop = {
+  id: shopId,
+  name: 'Barbershop',
+  timezone: 'Europe/London',
+  cancellationWindowHours: 24,
+  rescheduleWindowHours: 24,
+  shopPaidAt: null,
+  smsRemindersEnabled: false,
+  depositsEnabled: false,
+  stripeConnectAccountId: null,
+  stripeConnectChargesEnabled: false,
+  publicActivityPaused: true,
+};
+
 const bookingPageData = await withPrismaQuotaFallback(
   'book/[shopId].astro',
   async () => {
@@ -92,7 +110,7 @@ const bookingPageData = await withPrismaQuotaFallback(
   },
   {
     notFound: false as const,
-    shop: null,
+    shop: outageShop,
     services: [],
     barbers: [],
     depositRequired: false,

@@ -21,7 +21,8 @@ type TimelineBarber = {
 export type TimelineBooking = {
   id: string;
   fullName: string;
-  email: string;
+  /** Null when the viewer is not allowed to see the client's email. */
+  email: string | null;
   phone?: string | null;
   clientTags?: string[];
   clientAvatarUrl?: string | null;

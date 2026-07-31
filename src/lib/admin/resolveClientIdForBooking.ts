@@ -2,7 +2,8 @@ import { adminFetchJson } from '../../components/admin/adminAuth';
 
 export type BookingClientLookup = {
   clientId?: string | null;
-  email: string;
+  /** Null when the viewer is not allowed to see the client's email. */
+  email: string | null;
   fullName: string;
   phone?: string | null;
 };
@@ -18,7 +19,7 @@ type EnsureClientResponse = {
 export async function resolveClientIdForBooking(booking: BookingClientLookup): Promise<string | null> {
   if (booking.clientId) return booking.clientId;
 
-  const email = booking.email.trim();
+  const email = (booking.email ?? '').trim();
   if (!email) return null;
 
   const lookup = await adminFetchJson<ClientsListResponse>(
