@@ -1,5 +1,5 @@
 /** Increment when purposes or policy materially change — forces re-consent. */
-export const CONSENT_VERSION = 1;
+export const CONSENT_VERSION = 2;
 
 export const CONSENT_COOKIE_NAME = 'kersivo_consent';
 
@@ -12,7 +12,7 @@ export const CONSENT_CHANGED_EVENT = 'kersivo:consent-changed';
 
 export const BANNER_COPY = {
   title: 'Your privacy choices',
-  body: 'We use necessary cookies to keep KERSIVO working. With your permission, we also use analytics to understand website performance and advertising technologies to measure our Google Ads campaigns. You can accept all optional technologies, reject them, or choose your preferences.',
+  body: 'We use necessary cookies to keep KERSIVO working. With your permission, we also use analytics to understand website performance, advertising technologies to measure our Google Ads campaigns, and personalised advertising to show you our ads after you leave. You can accept all optional technologies, reject them, or choose your preferences.',
   acceptAll: 'Accept all',
   rejectOptional: 'Reject optional',
   managePreferences: 'Manage preferences',
@@ -30,7 +30,10 @@ export const PREFS_COPY = {
     'Helps us understand how visitors use KERSIVO so we can improve website performance and usability. Provider: Google Analytics 4 (when enabled).',
   adsTitle: 'Advertising measurement',
   adsBody:
-    'Helps us understand whether our Google Ads lead to enquiries or setup purchases. We do not currently use this setting for personalised advertising. Provider: Google Ads (when a measurement ID is configured).',
+    'Helps us understand whether our Google Ads lead to enquiries or subscriptions. This setting only measures results — it does not add you to advertising audiences. Provider: Google Ads (when a measurement ID is configured).',
+  personalisedTitle: 'Personalised advertising',
+  personalisedBody:
+    'Lets Google add you to our remarketing audiences, so we can show KERSIVO ads to people who already visited this site. Provider: Google Ads (when a measurement ID is configured).',
   save: 'Save choices',
   acceptAll: 'Accept all',
   rejectOptional: 'Reject optional',

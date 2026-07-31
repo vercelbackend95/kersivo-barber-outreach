@@ -30,6 +30,13 @@ Use a fresh Incognito window on https://kersivo.co.uk/ (or local preview).
 2. Expect `ad_storage` + `ad_user_data` granted; `ad_personalization` denied.
 3. If Ads ID unset: preference may be saved but **no** Ads network request (expected launch blocker).
 
+## Personalised advertising (remarketing)
+
+1. Enable Personalised advertising only, leaving measurement off.
+2. Expect `ad_personalization` granted, plus `ad_storage` + `ad_user_data` granted (Google needs both to build audiences).
+3. The Ads tag loads on this consent alone, but purchase `conversion` hits stay gated behind advertising **measurement**.
+4. Withdraw it → `ad_personalization` denied on the next consent update; audiences already built expire per their Google membership duration.
+
 ## Accept all / withdraw
 
 1. Accept all → GA4 (+ Ads if configured) once; no duplicate `config` on SPA-less full navigations beyond single flags.
@@ -49,11 +56,13 @@ Primary Google Ads conversion = paid £39 SaaS on `/setup/success` (not contact 
 
 ### Analytics-only consent (required Ads ops)
 
-Many visitors enable **Analytics** but not **Advertising measurement**. In that case:
-- Site fires GA4 `saas_subscription_paid` only (no Ads `send_to`).
-- Ads still needs those purchases: **import** GA4 key event `saas_subscription_paid` into Google Ads as Purchase (same `transaction_id` as the website `send_to` tag for dedupe when both fire).
+Many visitors enable **Analytics** but not **Advertising measurement**. In that case the site fires GA4
+`saas_subscription_paid` only (no Ads `send_to`), so those purchases are invisible to Ads.
 
-Without this import, analytics-only paid subscriptions are invisible to Ads.
+Do **not** close that gap by importing the GA4 key event as a second primary Purchase action. Google Ads does not
+dedupe across separate conversion actions, so a tag conversion plus a GA4 import counts one £39 subscription twice and
+inflates ROAS. Keep exactly one primary Purchase action (the tag one) and leave any GA4-sourced action **secondary**.
+Consent Mode modelling already recovers part of the unmeasured traffic.
 
 ### Env required for Ads `send_to`
 - `PUBLIC_GOOGLE_ADS_ID` = `AW-XXXXXXXX` (loads Ads tag when advertising measurement is on).

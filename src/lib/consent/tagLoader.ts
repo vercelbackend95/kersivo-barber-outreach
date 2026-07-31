@@ -52,6 +52,22 @@ function loadGtagScript(primaryId: string): Promise<void> {
 }
 
 /**
+ * Which Google tags this consent record and env allow. The Ads tag is needed both for measuring
+ * conversions and for building remarketing audiences, so either advertising purpose loads it.
+ */
+export function resolveTagTargets(
+  prefs: ConsentPreferences | null,
+  ids: TagLoaderIds,
+): { wantAnalytics: boolean; wantAds: boolean } {
+  return {
+    wantAnalytics: Boolean(prefs?.analytics && ids.gaMeasurementId),
+    wantAds: Boolean(
+      (prefs?.advertisingMeasurement || prefs?.personalisedAdvertising) && ids.googleAdsId,
+    ),
+  };
+}
+
+/**
  * Loads GA4 and/or Google Ads config at most once, only when consent + IDs allow it.
  * Basic Consent Mode: script is not requested until at least one optional purpose is granted.
  */
@@ -61,8 +77,7 @@ export async function syncTagsForConsent(
 ): Promise<void> {
   if (typeof window === 'undefined') return;
 
-  const wantAnalytics = Boolean(prefs?.analytics && ids.gaMeasurementId);
-  const wantAds = Boolean(prefs?.advertisingMeasurement && ids.googleAdsId);
+  const { wantAnalytics, wantAds } = resolveTagTargets(prefs, ids);
 
   if (!wantAnalytics && !wantAds) return;
 

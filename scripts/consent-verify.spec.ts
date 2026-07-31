@@ -136,6 +136,7 @@ test('2 reject optional + persistence', async () => {
   const switches = page.locator('.cookie-consent__switch input');
   await expect(switches.nth(0)).not.toBeChecked();
   await expect(switches.nth(1)).not.toBeChecked();
+  await expect(switches.nth(2)).not.toBeChecked();
 
   log('reject_persistence', { tracking, prefs: await snapshotStorage(page) });
   await browser.close();
@@ -159,6 +160,7 @@ test('3 analytics-only', async () => {
   const switches = page.locator('.cookie-consent__switch input');
   await switches.nth(0).check();
   await expect(switches.nth(1)).not.toBeChecked();
+  await expect(switches.nth(2)).not.toBeChecked();
   await page.getByRole('button', { name: 'Save choices' }).click();
   await page.waitForTimeout(4000);
 
@@ -235,7 +237,7 @@ test('5 accept all', async () => {
   log('accept_all', { prefs, gtagLoads: [...new Set(gtagLoads)] });
   expect(prefs.analytics).toBe(true);
   expect(prefs.advertisingMeasurement).toBe(true);
-  expect(prefs.personalisedAdvertising).toBe(false);
+  expect(prefs.personalisedAdvertising).toBe(true);
   expect(gtagLoads.filter((u) => u.includes('AW-')).length).toBe(0);
   expect(gtagLoads.some((u) => u.includes('G-6QEN5JL0L1'))).toBe(true);
   await browser.close();
@@ -260,6 +262,7 @@ test('6 withdraw consent', async () => {
   const switches = page.locator('.cookie-consent__switch input');
   if (await switches.nth(0).isChecked()) await switches.nth(0).uncheck();
   if (await switches.nth(1).isChecked()) await switches.nth(1).uncheck();
+  if (await switches.nth(2).isChecked()) await switches.nth(2).uncheck();
   await page.getByRole('button', { name: 'Save choices' }).click();
   await page.waitForTimeout(2000);
 
@@ -273,6 +276,7 @@ test('6 withdraw consent', async () => {
   log('withdraw', { prefs, optionalCookiesLeft: optional, cartKept, sessionKeys: snap.sessionStorageKeys });
   expect(prefs.analytics).toBe(false);
   expect(prefs.advertisingMeasurement).toBe(false);
+  expect(prefs.personalisedAdvertising).toBe(false);
   expect(cartKept).toBe(true);
   // Google may leave third-party domain cookies; first-party optional should be cleared when possible
   await browser.close();

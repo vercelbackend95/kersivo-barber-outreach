@@ -4,15 +4,29 @@ import { preferencesToGoogleConsent } from './googleConsent';
 import { OPTIONAL_COOKIE_PREFIXES } from './cleanup';
 import { createPreferences, parseConsentCookieValue } from './storage';
 
+const NONE = {
+  analytics: false,
+  advertisingMeasurement: false,
+  personalisedAdvertising: false,
+} as const;
+
 describe('consent preferences', () => {
-  it('creates versioned preferences with personalisedAdvertising always false', () => {
-    const prefs = createPreferences({ analytics: true, advertisingMeasurement: true });
+  it('creates versioned preferences from the three optional purposes', () => {
+    const prefs = createPreferences({
+      analytics: true,
+      advertisingMeasurement: true,
+      personalisedAdvertising: true,
+    });
     expect(prefs.version).toBe(CONSENT_VERSION);
     expect(prefs.necessary).toBe(true);
     expect(prefs.analytics).toBe(true);
     expect(prefs.advertisingMeasurement).toBe(true);
-    expect(prefs.personalisedAdvertising).toBe(false);
+    expect(prefs.personalisedAdvertising).toBe(true);
     expect(prefs.timestamp).toMatch(/^\d{4}-\d{2}-\d{2}T/);
+  });
+
+  it('defaults personalised advertising to false when not granted', () => {
+    expect(createPreferences({ ...NONE, analytics: true }).personalisedAdvertising).toBe(false);
   });
 
   it('rejects outdated or invalid cookie payloads', () => {
@@ -36,20 +50,24 @@ describe('consent preferences', () => {
           necessary: true,
           analytics: true,
           advertisingMeasurement: false,
-          personalisedAdvertising: true,
           timestamp: new Date().toISOString(),
         }),
       ),
     ).toBeNull();
   });
 
-  it('parses a valid consent record', () => {
+  it('parses a valid consent record including personalised advertising', () => {
     const raw = JSON.stringify(
-      createPreferences({ analytics: false, advertisingMeasurement: true }),
+      createPreferences({
+        analytics: false,
+        advertisingMeasurement: true,
+        personalisedAdvertising: true,
+      }),
     );
     const parsed = parseConsentCookieValue(raw);
     expect(parsed?.analytics).toBe(false);
     expect(parsed?.advertisingMeasurement).toBe(true);
+    expect(parsed?.personalisedAdvertising).toBe(true);
   });
 });
 
@@ -64,7 +82,7 @@ describe('Google consent mapping', () => {
   });
 
   it('grants analytics only when analytics is true', () => {
-    const prefs = createPreferences({ analytics: true, advertisingMeasurement: false });
+    const prefs = createPreferences({ ...NONE, analytics: true });
     expect(preferencesToGoogleConsent(prefs)).toEqual({
       analytics_storage: 'granted',
       ad_storage: 'denied',
@@ -73,8 +91,8 @@ describe('Google consent mapping', () => {
     });
   });
 
-  it('grants ad_storage and ad_user_data together for advertising measurement', () => {
-    const prefs = createPreferences({ analytics: false, advertisingMeasurement: true });
+  it('grants ad_storage and ad_user_data without personalisation for measurement only', () => {
+    const prefs = createPreferences({ ...NONE, advertisingMeasurement: true });
     expect(preferencesToGoogleConsent(prefs)).toEqual({
       analytics_storage: 'denied',
       ad_storage: 'granted',
@@ -83,9 +101,28 @@ describe('Google consent mapping', () => {
     });
   });
 
-  it('never grants ad_personalization', () => {
-    const prefs = createPreferences({ analytics: true, advertisingMeasurement: true });
-    expect(preferencesToGoogleConsent(prefs).ad_personalization).toBe('denied');
+  it('grants ad_personalization plus ad storage for personalised advertising alone', () => {
+    const prefs = createPreferences({ ...NONE, personalisedAdvertising: true });
+    expect(preferencesToGoogleConsent(prefs)).toEqual({
+      analytics_storage: 'denied',
+      ad_storage: 'granted',
+      ad_user_data: 'granted',
+      ad_personalization: 'granted',
+    });
+  });
+
+  it('grants every purpose on accept all', () => {
+    const prefs = createPreferences({
+      analytics: true,
+      advertisingMeasurement: true,
+      personalisedAdvertising: true,
+    });
+    expect(preferencesToGoogleConsent(prefs)).toEqual({
+      analytics_storage: 'granted',
+      ad_storage: 'granted',
+      ad_user_data: 'granted',
+      ad_personalization: 'granted',
+    });
   });
 });
 

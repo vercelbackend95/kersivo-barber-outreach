@@ -16,7 +16,7 @@ const consentDays = Math.round(CONSENT_MAX_AGE_SECONDS / (24 * 60 * 60));
   <main class="legal-page">
     <article class="container legal-page__inner">
       <h1 class="legal-page__title">Cookie Policy</h1>
-      <p class="legal-page__updated">Last updated: 21 July 2026</p>
+      <p class="legal-page__updated">Last updated: 31 July 2026</p>
 
       <p>
         This Cookie Policy explains how KERSIVO uses cookies and similar technologies on
@@ -41,9 +41,9 @@ const consentDays = Math.round(CONSENT_MAX_AGE_SECONDS / (24 * 60 * 60));
         {consentDays} days). You can reopen preferences at any time via <strong>Cookie settings</strong> in the footer.
       </p>
       <p>
-        We use Google Consent Mode v2 with a privacy-first approach: analytics and advertising measurement tags are not
-        loaded until you grant the relevant permission. Personalised advertising / remarketing is not enabled, and
-        <code>ad_personalization</code> remains denied.
+        We use Google Consent Mode v2 with a privacy-first approach: analytics and advertising tags are not loaded until
+        you grant the relevant permission. <code>ad_personalization</code> is granted only if you switch on personalised
+        advertising, and remains denied for every other combination of choices.
       </p>
 
       <h2>Categories we use</h2>
@@ -63,8 +63,15 @@ const consentDays = Math.round(CONSENT_MAX_AGE_SECONDS / (24 * 60 * 60));
       <h3>Advertising measurement</h3>
       <p>
         Off by default. When accepted and a Google Ads measurement ID is configured, Google Ads tags help us understand
-        whether ads lead to enquiries or setup purchases. We do not currently use this for personalised advertising or
-        Enhanced Conversions.
+        whether ads lead to enquiries or subscriptions. This category measures results only; on its own it does not add
+        you to advertising audiences. We do not use Google Ads Enhanced Conversions.
+      </p>
+      <h3>Personalised advertising</h3>
+      <p>
+        Off by default and asked for separately from measurement. When accepted, Google may add you to our remarketing
+        audiences so that we can show KERSIVO ads to people who have already visited this site. Provider: Google Ads.
+        Switching this off stops future audience collection; audiences you were already added to are managed by Google
+        and expire according to their membership duration.
       </p>
 
       <h2>Technology inventory</h2>
@@ -157,8 +164,8 @@ const consentDays = Math.round(CONSENT_MAX_AGE_SECONDS / (24 * 60 * 60));
             <tr>
               <td><code>_gcl_*</code> / Ads cookies (if Ads ID configured)</td>
               <td>Google Ads</td>
-              <td>Advertising measurement (when consented)</td>
-              <td>Measure ad-driven conversions</td>
+              <td>Advertising measurement and/or personalised advertising (when consented)</td>
+              <td>Measure ad-driven conversions and, with personalised advertising, build remarketing audiences</td>
               <td>Unresolved — verify in browser after consent</td>
               <td>First-party cookies set via Google</td>
             </tr>

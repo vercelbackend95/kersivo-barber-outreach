@@ -59,7 +59,7 @@ const googleAdsId = (
               parsed.necessary === true &&
               typeof parsed.analytics === 'boolean' &&
               typeof parsed.advertisingMeasurement === 'boolean' &&
-              parsed.personalisedAdvertising === false
+              typeof parsed.personalisedAdvertising === 'boolean'
             ) {
               return parsed;
             }
@@ -91,15 +91,16 @@ const googleAdsId = (
     }
 
     function syncTags(prefs) {
+      var adsGranted = prefs.advertisingMeasurement || prefs.personalisedAdvertising;
       var wantAnalytics = prefs.analytics && gaMeasurementId;
-      var wantAds = prefs.advertisingMeasurement && googleAdsId;
+      var wantAds = adsGranted && googleAdsId;
       if (!wantAnalytics && !wantAds) return;
 
       gtag('consent', 'update', {
         analytics_storage: prefs.analytics ? 'granted' : 'denied',
-        ad_storage: prefs.advertisingMeasurement ? 'granted' : 'denied',
-        ad_user_data: prefs.advertisingMeasurement ? 'granted' : 'denied',
-        ad_personalization: 'denied',
+        ad_storage: adsGranted ? 'granted' : 'denied',
+        ad_user_data: adsGranted ? 'granted' : 'denied',
+        ad_personalization: prefs.personalisedAdvertising ? 'granted' : 'denied',
       });
 
       var primaryId = wantAnalytics ? gaMeasurementId : googleAdsId;
