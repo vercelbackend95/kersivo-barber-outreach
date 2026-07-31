@@ -147,8 +147,10 @@ const CATALOG_SERVICES: CatalogService[] = [
 ];
 
 async function main() {
+  const shop = await prisma.shopSettings.findFirstOrThrow({ select: { id: true } });
+
   const barbers = await prisma.barber.findMany({
-    where: { active: true },
+    where: { active: true, shopId: shop.id },
     orderBy: [{ sortOrder: 'asc' }, { createdAt: 'asc' }],
     select: { id: true, name: true }
   });
@@ -164,6 +166,7 @@ async function main() {
       where: { id: service.id },
       create: {
         id: service.id,
+        shopId: shop.id,
         name: service.name,
         category: service.category,
         pricePence: service.pricePence,

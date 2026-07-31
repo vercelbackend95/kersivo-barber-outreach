@@ -156,7 +156,6 @@ async function loadSlotCandidates(
     throw new Error('No active services linked to barbers. Configure services before seeding bookings.');
   }
 
-  const timeBlockDelegate = (prisma as { timeBlock?: { findMany: typeof prisma.booking.findMany } }).timeBlock;
   const candidates: SlotCandidate[] = [];
 
   for (const barber of barbers) {
@@ -172,17 +171,15 @@ async function loadSlotCandidates(
         },
         select: { startsAt: true, endsAt: true }
       }),
-      timeBlockDelegate
-        ? timeBlockDelegate.findMany({
-            where: {
-              shopId: settings.id,
-              OR: [{ barberId: barber.id }, { barberId: null }],
-              startAt: { lt: dayEndUtc },
-              endAt: { gt: dayStartUtc }
-            },
-            select: { startAt: true, endAt: true }
-          })
-        : Promise.resolve([])
+      prisma.timeBlock.findMany({
+        where: {
+          shopId: settings.id,
+          OR: [{ barberId: barber.id }, { barberId: null }],
+          startAt: { lt: dayEndUtc },
+          endAt: { gt: dayStartUtc }
+        },
+        select: { startAt: true, endAt: true }
+      })
     ]);
 
     for (const link of barber.barberServices) {

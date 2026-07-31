@@ -1,4 +1,5 @@
 import { describe, expect, it } from 'vitest';
+import { formatInTimeZone } from 'date-fns-tz';
 
 import {
   getDemoBookingsForDayKey,
@@ -9,6 +10,31 @@ import {
 function overlaps(aStart: number, aEnd: number, bStart: number, bEnd: number): boolean {
   return aStart < bEnd && bStart < aEnd;
 }
+
+/** Minutes past midnight Europe/London, so DST never skews the comparison. */
+function londonDayMinute(iso: string): number {
+  const [hh, mm] = formatInTimeZone(new Date(iso), 'Europe/London', 'HH:mm').split(':');
+  return Number(hh) * 60 + Number(mm);
+}
+
+/** Every weekday plus both DST sides, since density varies per weekday. */
+const SAMPLE_DAY_KEYS = [
+  '2026-01-12',
+  '2026-02-24',
+  '2026-03-28',
+  '2026-03-29',
+  '2026-06-15',
+  '2026-07-27',
+  '2026-07-28',
+  '2026-07-29',
+  '2026-07-30',
+  '2026-07-31',
+  '2026-08-01',
+  '2026-08-02',
+  '2026-10-24',
+  '2026-10-25',
+  '2026-12-31',
+];
 
 describe('getDemoBookingsForDayKey', () => {
   it('is deterministic for the same dayKey', () => {
@@ -47,6 +73,33 @@ describe('getDemoBookingsForDayKey', () => {
           ).toBe(false);
         }
       }
+    }
+  });
+
+  it('keeps every appointment inside 09:00-19:00 London', () => {
+    for (const dayKey of SAMPLE_DAY_KEYS) {
+      const rows = getDemoBookingsForDayKey(dayKey);
+      expect(rows.length).toBeGreaterThan(0);
+      for (const row of rows) {
+        const startMinute = londonDayMinute(row.startAt);
+        const endMinute = londonDayMinute(row.endAt);
+        expect(
+          startMinute,
+          `${row.id} starts at ${formatInTimeZone(new Date(row.startAt), 'Europe/London', 'HH:mm')}`,
+        ).toBeGreaterThanOrEqual(9 * 60);
+        expect(
+          endMinute,
+          `${row.id} ends at ${formatInTimeZone(new Date(row.endAt), 'Europe/London', 'HH:mm')}`,
+        ).toBeLessThanOrEqual(19 * 60);
+        expect(endMinute).toBeGreaterThan(startMinute);
+      }
+    }
+  });
+
+  it('staggers chair starts so no two appointments begin at the same time', () => {
+    for (const dayKey of SAMPLE_DAY_KEYS) {
+      const starts = getDemoBookingsForDayKey(dayKey).map((row) => row.startAt);
+      expect(new Set(starts).size).toBe(starts.length);
     }
   });
 });

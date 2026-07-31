@@ -60,8 +60,54 @@ function atDayKey(dayKey: string, hour: number, minute: number): string {
   return fromZonedTime(`${dayKey}T${hh}:${mm}:00`, DEMO_DAY_TZ).toISOString();
 }
 
-function overlaps(aStart: number, aEnd: number, bStart: number, bEnd: number): boolean {
-  return aStart < bEnd && bStart < aEnd;
+function atDayMinute(dayKey: string, dayMinute: number): string {
+  return atDayKey(dayKey, Math.floor(dayMinute / 60), dayMinute % 60);
+}
+
+/** Trading window (Europe/London) every generated booking has to fit inside. */
+const DEMO_DAY_OPEN_MINUTE = 9 * 60;
+const DEMO_DAY_CLOSE_MINUTE = 19 * 60;
+const DEMO_SLOT_STEP_MINUTES = 5;
+
+type BusyInterval = { startMinute: number; endMinute: number };
+
+function slotIsFree(
+  busy: BusyInterval[],
+  usedStartMinutes: Set<number>,
+  startMinute: number,
+  durationMin: number,
+): boolean {
+  const endMinute = startMinute + durationMin;
+  if (startMinute < DEMO_DAY_OPEN_MINUTE || endMinute > DEMO_DAY_CLOSE_MINUTE) return false;
+  // Staggered chair starts, so a day never shows two appointments beginning at once.
+  if (usedStartMinutes.has(startMinute)) return false;
+  return busy.every(
+    (interval) => startMinute >= interval.endMinute || endMinute <= interval.startMinute,
+  );
+}
+
+/** Earliest free slot at or after the seed's own time, wrapping to the start of the day. */
+function findFreeSlot(
+  busy: BusyInterval[],
+  usedStartMinutes: Set<number>,
+  desiredMinute: number,
+  durationMin: number,
+): number | null {
+  const latestStart = DEMO_DAY_CLOSE_MINUTE - durationMin;
+  const alignedDesired =
+    Math.ceil(desiredMinute / DEMO_SLOT_STEP_MINUTES) * DEMO_SLOT_STEP_MINUTES;
+
+  for (let start = alignedDesired; start <= latestStart; start += DEMO_SLOT_STEP_MINUTES) {
+    if (slotIsFree(busy, usedStartMinutes, start, durationMin)) return start;
+  }
+  for (
+    let start = DEMO_DAY_OPEN_MINUTE;
+    start < alignedDesired && start <= latestStart;
+    start += DEMO_SLOT_STEP_MINUTES
+  ) {
+    if (slotIsFree(busy, usedStartMinutes, start, durationMin)) return start;
+  }
+  return null;
 }
 
 function rotateSeeds(seeds: DemoDaySeed[], offset: number): DemoDaySeed[] {
@@ -96,31 +142,26 @@ export function getDemoBookingsForDayKey(
   }
 
   const placed: DemoCalendarBooking[] = [];
-  const barberEnds = new Map<string, number>();
+  const barberBusy = new Map<string, BusyInterval[]>();
+  const usedStartMinutes = new Set<number>();
 
   shuffled.forEach((seed, index) => {
     const minuteJitter = [0, 5, 10, -5][Math.floor(prng() * 4)]!;
-    let hour = seed.hour;
-    let minute = seed.minute + minuteJitter;
-    while (minute < 0) {
-      minute += 60;
-      hour -= 1;
-    }
-    while (minute >= 60) {
-      minute -= 60;
-      hour += 1;
-    }
-    if (hour < 9) hour = 9;
-    if (hour > 18) hour = 18;
+    const desiredMinute = Math.min(
+      Math.max(seed.hour * 60 + seed.minute + minuteJitter, DEMO_DAY_OPEN_MINUTE),
+      DEMO_DAY_CLOSE_MINUTE - seed.durationMin,
+    );
 
-    let startMs = new Date(atDayKey(dayKey, hour, minute)).getTime();
-    let endMs = startMs + seed.durationMin * 60_000;
-    const prevEnd = barberEnds.get(seed.barberId) ?? 0;
-    if (startMs < prevEnd) {
-      startMs = prevEnd + 5 * 60_000;
-      endMs = startMs + seed.durationMin * 60_000;
-    }
-    barberEnds.set(seed.barberId, endMs);
+    const busy = barberBusy.get(seed.barberId) ?? [];
+    const startMinute = findFreeSlot(busy, usedStartMinutes, desiredMinute, seed.durationMin);
+    // Seeds are shuffled, so a chair can already be booked solid; drop the seed rather
+    // than trade past closing time.
+    if (startMinute === null) return;
+
+    const endMinute = startMinute + seed.durationMin;
+    busy.push({ startMinute, endMinute });
+    barberBusy.set(seed.barberId, busy);
+    usedStartMinutes.add(startMinute);
 
     const clientSeed = DEMO_DAY_SEEDS[(index + cycle * 5) % DEMO_DAY_SEEDS.length]!;
     const fullName = cycle % 2 === 0 ? seed.fullName : clientSeed.fullName;
@@ -142,8 +183,8 @@ export function getDemoBookingsForDayKey(
       email,
       phone: null,
       clientId: null,
-      startAt: new Date(startMs).toISOString(),
-      endAt: new Date(endMs).toISOString(),
+      startAt: atDayMinute(dayKey, startMinute),
+      endAt: atDayMinute(dayKey, endMinute),
       status,
       notes: null,
       rescheduledAt: null,
@@ -158,23 +199,6 @@ export function getDemoBookingsForDayKey(
       clientTags: seed.tags ?? [],
     });
   });
-
-  for (let i = 0; i < placed.length; i += 1) {
-    for (let j = i + 1; j < placed.length; j += 1) {
-      const a = placed[i]!;
-      const b = placed[j]!;
-      if (a.barberId !== b.barberId) continue;
-      const a0 = new Date(a.startAt).getTime();
-      const a1 = new Date(a.endAt).getTime();
-      const b0 = new Date(b.startAt).getTime();
-      const b1 = new Date(b.endAt).getTime();
-      if (overlaps(a0, a1, b0, b1)) {
-        const duration = a1 - a0;
-        a.startAt = new Date(b1 + 5 * 60_000).toISOString();
-        a.endAt = new Date(new Date(a.startAt).getTime() + duration).toISOString();
-      }
-    }
-  }
 
   return placed.sort((a, b) => new Date(a.startAt).getTime() - new Date(b.startAt).getTime());
 }

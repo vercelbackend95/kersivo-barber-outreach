@@ -2,18 +2,28 @@
  * Ephemeral production consent verification for https://kersivo.co.uk/
  * Run: npx playwright test --config=scripts/consent-verify.playwright.config.mjs
  */
-import { test, expect, chromium } from '@playwright/test';
+import { test, expect, chromium, type Page } from '@playwright/test';
 import fs from 'node:fs';
 
 const BASE = 'https://kersivo.co.uk';
-const REPORT = [];
 
-function log(section, data) {
+type ReportEntry = { section: string; at: string } & Record<string, unknown>;
+
+const REPORT: ReportEntry[] = [];
+
+/** Shape asserted against the kersivo_consent cookie. */
+type ConsentCookiePrefs = {
+  analytics?: boolean;
+  advertisingMeasurement?: boolean;
+  personalisedAdvertising?: boolean;
+};
+
+function log(section: string, data: Record<string, unknown>) {
   REPORT.push({ section, ...data, at: new Date().toISOString() });
   console.log(JSON.stringify({ section, ...data }));
 }
 
-function isGoogleTracking(url) {
+function isGoogleTracking(url: string) {
   const u = url.toLowerCase();
   return (
     u.includes('googletagmanager.com/gtag/js') ||
@@ -24,23 +34,29 @@ function isGoogleTracking(url) {
   );
 }
 
-async function snapshotStorage(page) {
+async function snapshotStorage(page: Page) {
   const cookies = await page.context().cookies();
   const storage = await page.evaluate(() => ({
     localStorage: { ...localStorage },
     sessionStorage: { ...sessionStorage },
   }));
+  const consentCookie = cookies.find((c) => c.name === 'kersivo_consent');
   return {
     cookies: cookies.map((c) => ({ name: c.name, domain: c.domain, expires: c.expires })),
     localStorageKeys: Object.keys(storage.localStorage),
     sessionStorageKeys: Object.keys(storage.sessionStorage),
-    consentCookie: cookies.find((c) => c.name === 'kersivo_consent')?.value
-      ? decodeURIComponent(cookies.find((c) => c.name === 'kersivo_consent').value)
-      : null,
+    consentCookie: consentCookie?.value ? decodeURIComponent(consentCookie.value) : null,
   };
 }
 
-async function waitForBanner(page) {
+function readConsentPrefs(snapshot: { consentCookie: string | null }): ConsentCookiePrefs {
+  if (!snapshot.consentCookie) {
+    throw new Error('Expected the kersivo_consent cookie to be set by this point.');
+  }
+  return JSON.parse(snapshot.consentCookie) as ConsentCookiePrefs;
+}
+
+async function waitForBanner(page: Page) {
   await expect(page.getByRole('heading', { name: 'Your privacy choices' })).toBeVisible({
     timeout: 15000,
   });
@@ -58,7 +74,7 @@ test('1 fresh visit before consent', async () => {
     viewport: { width: 1280, height: 800 },
   });
   const page = await context.newPage();
-  const tracking = [];
+  const tracking: string[] = [];
   page.on('request', (req) => {
     if (isGoogleTracking(req.url())) tracking.push(req.url());
   });
@@ -99,7 +115,7 @@ test('2 reject optional + persistence', async () => {
   const browser = await chromium.launch();
   const context = await browser.newContext({ viewport: { width: 1280, height: 800 } });
   const page = await context.newPage();
-  const tracking = [];
+  const tracking: string[] = [];
   page.on('request', (req) => {
     if (isGoogleTracking(req.url())) tracking.push(req.url());
   });
@@ -112,8 +128,10 @@ test('2 reject optional + persistence', async () => {
   });
   await page.waitForTimeout(2000);
 
-  let snap = await snapshotStorage(page);
-  const prefs = snap.consentCookie ? JSON.parse(snap.consentCookie) : null;
+  const snap = await snapshotStorage(page);
+  const prefs: ConsentCookiePrefs | null = snap.consentCookie
+    ? (JSON.parse(snap.consentCookie) as ConsentCookiePrefs)
+    : null;
   log('reject', { prefs, trackingAfterReject: [...tracking], storage: snap });
   expect(prefs?.analytics).toBe(false);
   expect(prefs?.advertisingMeasurement).toBe(false);
@@ -130,9 +148,6 @@ test('2 reject optional + persistence', async () => {
 
   await page.getByRole('button', { name: 'Cookie settings' }).click();
   await expect(page.getByRole('heading', { name: 'Cookie preferences' })).toBeVisible();
-  const analyticsSwitch = page.locator('#cookie-analytics-label').locator('..').locator('input');
-  const adsSwitch = page.locator('#cookie-ads-label').locator('..').locator('input');
-  // switches are siblings under category-head
   const switches = page.locator('.cookie-consent__switch input');
   await expect(switches.nth(0)).not.toBeChecked();
   await expect(switches.nth(1)).not.toBeChecked();
@@ -146,7 +161,7 @@ test('3 analytics-only', async () => {
   const browser = await chromium.launch();
   const context = await browser.newContext({ viewport: { width: 1280, height: 800 } });
   const page = await context.newPage();
-  const gtagLoads = [];
+  const gtagLoads: string[] = [];
   page.on('request', (req) => {
     const u = req.url();
     if (u.includes('googletagmanager.com/gtag/js')) gtagLoads.push(u);
@@ -165,7 +180,7 @@ test('3 analytics-only', async () => {
   await page.waitForTimeout(4000);
 
   const snap = await snapshotStorage(page);
-  const prefs = JSON.parse(snap.consentCookie);
+  const prefs = readConsentPrefs(snap);
   const gaCookies = snap.cookies.filter((c) => c.name === '_ga' || c.name.startsWith('_ga') || c.name === '_gid');
   const gcl = snap.cookies.filter((c) => c.name.startsWith('_gcl'));
 
@@ -195,7 +210,7 @@ test('4 advertising measurement without Ads ID', async () => {
   const browser = await chromium.launch();
   const context = await browser.newContext({ viewport: { width: 1280, height: 800 } });
   const page = await context.newPage();
-  const adsRequests = [];
+  const adsRequests: string[] = [];
   page.on('request', (req) => {
     const u = req.url();
     if (u.includes('AW-') || (u.includes('googletagmanager.com/gtag/js') && u.includes('AW-'))) {
@@ -211,7 +226,7 @@ test('4 advertising measurement without Ads ID', async () => {
   await page.getByRole('button', { name: 'Save choices' }).click();
   await page.waitForTimeout(3000);
 
-  const prefs = JSON.parse((await snapshotStorage(page)).consentCookie);
+  const prefs = readConsentPrefs(await snapshotStorage(page));
   log('ads_measurement_no_id', { prefs, adsRequests });
   expect(prefs.advertisingMeasurement).toBe(true);
   expect(prefs.personalisedAdvertising).toBe(false);
@@ -223,7 +238,7 @@ test('5 accept all', async () => {
   const browser = await chromium.launch();
   const context = await browser.newContext({ viewport: { width: 1280, height: 800 } });
   const page = await context.newPage();
-  const gtagLoads = [];
+  const gtagLoads: string[] = [];
   page.on('request', (req) => {
     if (req.url().includes('googletagmanager.com/gtag/js')) gtagLoads.push(req.url());
   });
@@ -233,7 +248,7 @@ test('5 accept all', async () => {
   await page.getByRole('button', { name: 'Accept all' }).click();
   await page.waitForTimeout(4000);
 
-  const prefs = JSON.parse((await snapshotStorage(page)).consentCookie);
+  const prefs = readConsentPrefs(await snapshotStorage(page));
   log('accept_all', { prefs, gtagLoads: [...new Set(gtagLoads)] });
   expect(prefs.analytics).toBe(true);
   expect(prefs.advertisingMeasurement).toBe(true);
@@ -267,7 +282,7 @@ test('6 withdraw consent', async () => {
   await page.waitForTimeout(2000);
 
   const snap = await snapshotStorage(page);
-  const prefs = JSON.parse(snap.consentCookie);
+  const prefs = readConsentPrefs(snap);
   const optional = snap.cookies.filter((c) =>
     ['_ga', '_gid', '_gcl'].some((p) => c.name === p || c.name.startsWith(p + '_') || c.name.startsWith(p)),
   );
@@ -309,7 +324,7 @@ test('8 soft regressions', async () => {
   const browser = await chromium.launch();
   const context = await browser.newContext({ viewport: { width: 1280, height: 800 } });
   const page = await context.newPage();
-  const tracking = [];
+  const tracking: string[] = [];
   page.on('request', (req) => {
     if (isGoogleTracking(req.url())) tracking.push(req.url());
   });
