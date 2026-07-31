@@ -22,4 +22,11 @@ describe('applySecurityHeaders', () => {
     expect(csp).toContain('https://js.stripe.com');
     expect(csp).toContain('frame-ancestors');
   });
+
+  it('CSP allows Google Ads doubleclick collect endpoints', () => {
+    const csp = buildContentSecurityPolicy();
+    expect(csp).toContain('https://googleads.g.doubleclick.net');
+    expect(csp).toContain('https://stats.g.doubleclick.net');
+    expect(csp).toContain('https://ad.doubleclick.net');
+  });
 });
