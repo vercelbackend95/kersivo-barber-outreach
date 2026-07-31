@@ -21,12 +21,12 @@ export function ensureGtagStub(): void {
 export function preferencesToGoogleConsent(prefs: ConsentPreferences | null): GoogleConsentState {
   const analytics = prefs?.analytics === true;
   const ads = prefs?.advertisingMeasurement === true;
+  const personalised = prefs?.personalisedAdvertising === true;
   return {
     analytics_storage: analytics ? 'granted' : 'denied',
-    ad_storage: ads ? 'granted' : 'denied',
-    ad_user_data: ads ? 'granted' : 'denied',
-    // Personalised advertising is not offered in the current consent UI.
-    ad_personalization: 'denied',
+    ad_storage: ads || personalised ? 'granted' : 'denied',
+    ad_user_data: ads || personalised ? 'granted' : 'denied',
+    ad_personalization: personalised ? 'granted' : 'denied',
   };
 }
 

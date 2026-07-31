@@ -64,7 +64,9 @@ export async function applyConsentChoice(
 
   const withdrawingAnalytics = previous?.analytics && !prefs.analytics;
   const withdrawingAds = previous?.advertisingMeasurement && !prefs.advertisingMeasurement;
-  if (withdrawingAnalytics || withdrawingAds) {
+  const withdrawingPersonalised =
+    previous?.personalisedAdvertising && !prefs.personalisedAdvertising;
+  if (withdrawingAnalytics || withdrawingAds || withdrawingPersonalised) {
     clearOptionalStorageOnWithdraw();
   }
 

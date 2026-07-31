@@ -3,14 +3,15 @@ export type ConsentPreferences = {
   necessary: true;
   analytics: boolean;
   advertisingMeasurement: boolean;
-  /** Always false for the current launch — personalised advertising is not offered. */
-  personalisedAdvertising: false;
+  /** Drives `ad_personalization`, i.e. Google Ads remarketing audiences. */
+  personalisedAdvertising: boolean;
   timestamp: string;
 };
 
 export type ConsentChoiceInput = {
   analytics: boolean;
   advertisingMeasurement: boolean;
+  personalisedAdvertising: boolean;
 };
 
 export type GoogleConsentState = {

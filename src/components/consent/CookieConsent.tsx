@@ -7,15 +7,29 @@ import {
   PREFS_COPY,
   readConsentPreferences,
   resolvePublicTagIds,
+  type ConsentChoiceInput,
   type ConsentPreferences,
 } from '@/lib/consent';
 
 type Panel = 'banner' | 'preferences' | 'hidden';
 
+const ALL_OPTIONAL_GRANTED = {
+  analytics: true,
+  advertisingMeasurement: true,
+  personalisedAdvertising: true,
+} as const;
+
+const ALL_OPTIONAL_DENIED = {
+  analytics: false,
+  advertisingMeasurement: false,
+  personalisedAdvertising: false,
+} as const;
+
 function prefsToDraft(prefs: ConsentPreferences | null) {
   return {
     analytics: prefs?.analytics === true,
     advertisingMeasurement: prefs?.advertisingMeasurement === true,
+    personalisedAdvertising: prefs?.personalisedAdvertising === true,
   };
 }
 
@@ -25,6 +39,7 @@ export default function CookieConsent() {
   const [panel, setPanel] = useState<Panel>('hidden');
   const [analytics, setAnalytics] = useState(false);
   const [advertisingMeasurement, setAdvertisingMeasurement] = useState(false);
+  const [personalisedAdvertising, setPersonalisedAdvertising] = useState(false);
   const [busy, setBusy] = useState(false);
   const triggerRef = useRef<HTMLElement | null>(null);
   const dialogRef = useRef<HTMLDivElement | null>(null);
@@ -36,6 +51,7 @@ export default function CookieConsent() {
     const draft = prefsToDraft(current);
     setAnalytics(draft.analytics);
     setAdvertisingMeasurement(draft.advertisingMeasurement);
+    setPersonalisedAdvertising(draft.personalisedAdvertising);
     setPanel('preferences');
   }, []);
 
@@ -86,7 +102,7 @@ export default function CookieConsent() {
     return () => document.removeEventListener('keydown', onKeyDown);
   }, [panel]);
 
-  async function saveChoice(next: { analytics: boolean; advertisingMeasurement: boolean }) {
+  async function saveChoice(next: ConsentChoiceInput) {
     if (busy) return;
     setBusy(true);
     try {
@@ -121,7 +137,7 @@ export default function CookieConsent() {
                 className="btn btn--primary cookie-consent__btn"
                 disabled={busy}
                 onClick={() =>
-                  void saveChoice({ analytics: true, advertisingMeasurement: true })
+                  void saveChoice(ALL_OPTIONAL_GRANTED)
                 }
               >
                 {BANNER_COPY.acceptAll}
@@ -131,7 +147,7 @@ export default function CookieConsent() {
                 className="btn btn--secondary cookie-consent__btn"
                 disabled={busy}
                 onClick={() =>
-                  void saveChoice({ analytics: false, advertisingMeasurement: false })
+                  void saveChoice(ALL_OPTIONAL_DENIED)
                 }
               >
                 {BANNER_COPY.rejectOptional}
@@ -221,6 +237,26 @@ export default function CookieConsent() {
               <p>{PREFS_COPY.adsBody}</p>
             </div>
 
+            <div className="cookie-consent__category">
+              <div className="cookie-consent__category-head">
+                <h3 id="cookie-personalised-label">{PREFS_COPY.personalisedTitle}</h3>
+                <label className="cookie-consent__switch">
+                  <input
+                    type="checkbox"
+                    role="switch"
+                    aria-labelledby="cookie-personalised-label"
+                    checked={personalisedAdvertising}
+                    onChange={(event) => setPersonalisedAdvertising(event.target.checked)}
+                  />
+                  <span className="cookie-consent__switch-ui" aria-hidden="true" />
+                  <span className="visually-hidden">
+                    {personalisedAdvertising ? 'On' : 'Off'}
+                  </span>
+                </label>
+              </div>
+              <p>{PREFS_COPY.personalisedBody}</p>
+            </div>
+
             <p className="cookie-consent__policy">
               <a href="/cookies">{BANNER_COPY.cookiePolicy}</a>
             </p>
@@ -230,7 +266,9 @@ export default function CookieConsent() {
                 type="button"
                 className="btn btn--primary cookie-consent__btn"
                 disabled={busy}
-                onClick={() => void saveChoice({ analytics, advertisingMeasurement })}
+                onClick={() =>
+                  void saveChoice({ analytics, advertisingMeasurement, personalisedAdvertising })
+                }
               >
                 {PREFS_COPY.save}
               </button>
@@ -239,7 +277,7 @@ export default function CookieConsent() {
                 className="btn btn--secondary cookie-consent__btn"
                 disabled={busy}
                 onClick={() =>
-                  void saveChoice({ analytics: true, advertisingMeasurement: true })
+                  void saveChoice(ALL_OPTIONAL_GRANTED)
                 }
               >
                 {PREFS_COPY.acceptAll}
@@ -249,7 +287,7 @@ export default function CookieConsent() {
                 className="btn btn--ghost cookie-consent__btn"
                 disabled={busy}
                 onClick={() =>
-                  void saveChoice({ analytics: false, advertisingMeasurement: false })
+                  void saveChoice(ALL_OPTIONAL_DENIED)
                 }
               >
                 {PREFS_COPY.rejectOptional}

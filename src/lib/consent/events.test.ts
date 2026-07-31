@@ -1,4 +1,5 @@
 import { describe, expect, it, vi, beforeEach, afterEach } from 'vitest';
+import { CONSENT_VERSION } from './config';
 import { trackConsentedEvent } from './events';
 
 function stubDocumentCookie(value: string) {
@@ -33,7 +34,7 @@ describe('trackConsentedEvent', () => {
 
   it('fires analytics events when analytics consent is granted', () => {
     const prefs = {
-      version: 1,
+      version: CONSENT_VERSION,
       necessary: true,
       analytics: true,
       advertisingMeasurement: false,
@@ -53,7 +54,7 @@ describe('trackConsentedEvent', () => {
 
   it('blocks analytics events when only advertising measurement is granted', () => {
     const prefs = {
-      version: 1,
+      version: CONSENT_VERSION,
       necessary: true,
       analytics: false,
       advertisingMeasurement: true,

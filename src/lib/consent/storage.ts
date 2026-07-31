@@ -15,7 +15,7 @@ export function createPreferences(input: ConsentChoiceInput): ConsentPreferences
     necessary: true,
     analytics: Boolean(input.analytics),
     advertisingMeasurement: Boolean(input.advertisingMeasurement),
-    personalisedAdvertising: false,
+    personalisedAdvertising: Boolean(input.personalisedAdvertising),
     timestamp: new Date().toISOString(),
   };
 }
@@ -29,14 +29,14 @@ export function parseConsentCookieValue(raw: string | null | undefined): Consent
     if (parsed.necessary !== true) return null;
     if (typeof parsed.analytics !== 'boolean') return null;
     if (typeof parsed.advertisingMeasurement !== 'boolean') return null;
-    if (parsed.personalisedAdvertising !== false) return null;
+    if (typeof parsed.personalisedAdvertising !== 'boolean') return null;
     if (typeof parsed.timestamp !== 'string' || !parsed.timestamp) return null;
     return {
       version: CONSENT_VERSION,
       necessary: true,
       analytics: parsed.analytics,
       advertisingMeasurement: parsed.advertisingMeasurement,
-      personalisedAdvertising: false,
+      personalisedAdvertising: parsed.personalisedAdvertising,
       timestamp: parsed.timestamp,
     };
   } catch {
