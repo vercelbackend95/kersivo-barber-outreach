@@ -2,6 +2,10 @@ import { betterAuth } from 'better-auth';
 import { prismaAdapter } from 'better-auth/adapters/prisma';
 import { prisma } from '@/lib/db/client';
 import { provisionShopForUser } from '@/lib/auth/provisionShop';
+import {
+  isEmailDeliveryConfigured,
+  sendEmailVerificationEmail,
+} from '@/lib/email/sender';
 
 function resolveAuthBaseUrl(): string {
   const fromEnv =
@@ -126,6 +130,25 @@ export const auth = betterAuth({
   emailAndPassword: {
     enabled: true,
     minPasswordLength: 8,
+    // Soft gate: sign-in works without verification; invites + billing require it.
+    requireEmailVerification: false,
+  },
+  emailVerification: {
+    sendOnSignUp: true,
+    autoSignInAfterVerification: true,
+    sendVerificationEmail: async ({ user, url }) => {
+      if (!isEmailDeliveryConfigured()) {
+        console.error('[auth] RESEND_API_KEY missing; verification email not sent.', {
+          userId: user.id,
+          email: user.email,
+        });
+      }
+      await sendEmailVerificationEmail({
+        to: user.email,
+        name: user.name,
+        url,
+      });
+    },
   },
   socialProviders:
     googleClientId && googleClientSecret

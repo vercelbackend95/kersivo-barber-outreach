@@ -1,7 +1,7 @@
 export const prerender = false;
 
 import type { APIRoute } from 'astro';
-import { resolveAdminAccess } from '@/lib/admin/auth';
+import { resolveAdminAccess, requireVerifiedEmail } from '@/lib/admin/auth';
 import { requirePermission } from '@/lib/admin/rbac/can';
 import { prisma } from '@/lib/db/client';
 import { getPublicSiteUrl } from '@/lib/setup/siteUrl';
@@ -18,6 +18,8 @@ export const POST: APIRoute = async (context) => {
   }
   const denied = requirePermission(access, 'billing.manage');
   if (denied) return denied;
+  const unverified = requireVerifiedEmail(access);
+  if (unverified) return unverified;
 
   const subscription = await prisma.saasSubscription.findFirst({
     where: {
@@ -40,8 +42,10 @@ export const POST: APIRoute = async (context) => {
     });
     const ownerEmail = shop?.owner?.email?.trim().toLowerCase();
     if (ownerEmail) {
+      // Orphan rows from anonymous /setup checkout only — never another shop's sub.
       const byEmail = await prisma.saasSubscription.findFirst({
         where: {
+          shopId: null,
           customerEmail: { equals: ownerEmail, mode: 'insensitive' },
           status: { in: ['ACTIVE', 'PAST_DUE', 'SUSPENDED', 'CANCELED'] },
           stripeCustomerId: { not: null },

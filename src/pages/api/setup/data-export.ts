@@ -1,7 +1,7 @@
 export const prerender = false;
 
 import type { APIRoute } from 'astro';
-import { resolveAdminAccess } from '@/lib/admin/auth';
+import { resolveAdminAccess, requireVerifiedEmail } from '@/lib/admin/auth';
 import { requirePermission } from '@/lib/admin/rbac/can';
 import { prisma } from '@/lib/db/client';
 import { saasSubscriptionAllowsDataExport } from '@/lib/setup/saasEntitlement';
@@ -20,8 +20,10 @@ async function findShopSubscription(shopId: string) {
     });
     const ownerEmail = shop?.owner?.email?.trim().toLowerCase();
     if (ownerEmail) {
+      // Anonymous checkout orphans only — never stamp/consume another shop's sub.
       subscription = await prisma.saasSubscription.findFirst({
         where: {
+          shopId: null,
           customerEmail: { equals: ownerEmail, mode: 'insensitive' },
           status: { not: 'PENDING' },
         },
@@ -40,9 +42,15 @@ export const GET: APIRoute = async (context) => {
   }
   const denied = requirePermission(access, 'billing.manage');
   if (denied) return denied;
+  const unverified = requireVerifiedEmail(access);
+  if (unverified) return unverified;
 
   const subscription = await findShopSubscription(access.shopId);
   if (!subscription) {
+    return new Response(JSON.stringify({ error: 'No subscription found for this shop.' }), { status: 404 });
+  }
+
+  if (subscription.shopId && subscription.shopId !== access.shopId) {
     return new Response(JSON.stringify({ error: 'No subscription found for this shop.' }), { status: 404 });
   }
 
@@ -60,9 +68,13 @@ export const GET: APIRoute = async (context) => {
   const csv = await buildShopClientBookingCsv(access.shopId);
   const stamp = new Date().toISOString().slice(0, 10);
 
+  // Stamp only after claiming the orphan for this shop — never burn another shop's export right.
   await prisma.saasSubscription.update({
     where: { id: subscription.id },
-    data: { dataExportDownloadedAt: new Date() },
+    data: {
+      shopId: access.shopId,
+      dataExportDownloadedAt: new Date(),
+    },
   });
 
   return new Response(csv, {

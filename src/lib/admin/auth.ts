@@ -17,6 +17,8 @@ export type AdminAccess = {
   userId: string | null;
   userName: string | null;
   userEmail: string | null;
+  /** Session users: from Better Auth. Secret / legacy-cookie paths are treated as verified. */
+  emailVerified: boolean;
   userImage: string | null;
   via: 'session' | 'secret' | 'legacy-cookie';
   role: ShopRole;
@@ -24,6 +26,22 @@ export type AdminAccess = {
   barberId: string | null;
   permissions: readonly Permission[];
 };
+
+export const EMAIL_VERIFICATION_REQUIRED_MESSAGE =
+  'Verify your email address before continuing. Check your inbox for a verification link.';
+
+/** Soft gate: invite accept + billing require a verified session email. */
+export function requireVerifiedEmail(access: AdminAccess): Response | null {
+  if (access.via !== 'session') return null;
+  if (access.emailVerified) return null;
+  return new Response(
+    JSON.stringify({
+      error: EMAIL_VERIFICATION_REQUIRED_MESSAGE,
+      code: 'EMAIL_NOT_VERIFIED',
+    }),
+    { status: 403, headers: { 'Content-Type': 'application/json' } },
+  );
+}
 
 export function getSessionBarberId(context: APIContext): string | null {
   const sessionSecret = getSessionSecret();
@@ -53,6 +71,7 @@ function buildAccess(input: {
   userId: string | null;
   userName: string | null;
   userEmail: string | null;
+  emailVerified: boolean;
   userImage: string | null;
   via: AdminAccess['via'];
   role: ShopRole;
@@ -86,6 +105,7 @@ export async function resolveAdminAccess(context: APIContext): Promise<AdminAcce
           userId,
           userName: session.user.name ?? null,
           userEmail: session.user.email ?? null,
+          emailVerified: Boolean(session.user.emailVerified),
           userImage: session.user.image ?? null,
           via: 'session',
           role: membership.role,
@@ -106,6 +126,7 @@ export async function resolveAdminAccess(context: APIContext): Promise<AdminAcce
       userId: null,
       userName: null,
       userEmail: null,
+      emailVerified: true,
       userImage: null,
       via: isSecretAuthorized(context) ? 'secret' : 'legacy-cookie',
       role: 'OWNER',

@@ -8,8 +8,25 @@ const findUniqueShop = vi.fn();
 const updateSub = vi.fn();
 const buildCsv = vi.fn();
 
+const { EMAIL_VERIFICATION_REQUIRED_MESSAGE } = vi.hoisted(() => ({
+  EMAIL_VERIFICATION_REQUIRED_MESSAGE:
+    'Verify your email address before continuing. Check your inbox for a verification link.',
+}));
+
 vi.mock('@/lib/admin/auth', () => ({
+  EMAIL_VERIFICATION_REQUIRED_MESSAGE,
   resolveAdminAccess: (...args: unknown[]) => resolveAdminAccess(...args),
+  requireVerifiedEmail: (access: { via: string; emailVerified?: boolean }) => {
+    if (access.via !== 'session') return null;
+    if (access.emailVerified) return null;
+    return new Response(
+      JSON.stringify({
+        error: EMAIL_VERIFICATION_REQUIRED_MESSAGE,
+        code: 'EMAIL_NOT_VERIFIED',
+      }),
+      { status: 403, headers: { 'Content-Type': 'application/json' } },
+    );
+  },
 }));
 
 vi.mock('@/lib/admin/rbac/can', () => ({
@@ -42,6 +59,7 @@ function makeContext(): APIContext {
 
 const activeSub = {
   id: 'saas-1',
+  shopId: 'shop-1',
   status: 'ACTIVE',
   currentPeriodEnd: new Date('2026-08-01T00:00:00.000Z'),
   pastDueSince: null,
@@ -69,8 +87,29 @@ describe('GET /api/setup/data-export', () => {
     expect(res.status).toBe(401);
   });
 
+  it('returns 403 when the session email is not verified', async () => {
+    resolveAdminAccess.mockResolvedValue({
+      via: 'session',
+      shopId: 'shop-1',
+      role: 'OWNER',
+      emailVerified: false,
+    });
+
+    const res = await GET(makeContext() as never);
+    const body = await res.json();
+    expect(res.status).toBe(403);
+    expect(body.code).toBe('EMAIL_NOT_VERIFIED');
+    expect(body.error).toBe(EMAIL_VERIFICATION_REQUIRED_MESSAGE);
+    expect(findFirst).not.toHaveBeenCalled();
+  });
+
   it('returns 409 when export already consumed', async () => {
-    resolveAdminAccess.mockResolvedValue({ via: 'session', shopId: 'shop-1', role: 'OWNER' });
+    resolveAdminAccess.mockResolvedValue({
+      via: 'session',
+      shopId: 'shop-1',
+      role: 'OWNER',
+      emailVerified: true,
+    });
     findFirst.mockResolvedValue({
       ...activeSub,
       dataExportDownloadedAt: new Date('2026-07-01T00:00:00.000Z'),
@@ -81,8 +120,13 @@ describe('GET /api/setup/data-export', () => {
     expect(buildCsv).not.toHaveBeenCalled();
   });
 
-  it('returns CSV and marks export consumed', async () => {
-    resolveAdminAccess.mockResolvedValue({ via: 'session', shopId: 'shop-1', role: 'OWNER' });
+  it('returns CSV and marks export consumed for this shop', async () => {
+    resolveAdminAccess.mockResolvedValue({
+      via: 'session',
+      shopId: 'shop-1',
+      role: 'OWNER',
+      emailVerified: true,
+    });
     findFirst.mockResolvedValue(activeSub);
     updateSub.mockResolvedValue({ ...activeSub, dataExportDownloadedAt: new Date() });
 
@@ -92,13 +136,64 @@ describe('GET /api/setup/data-export', () => {
     expect(buildCsv).toHaveBeenCalledWith('shop-1');
     expect(updateSub).toHaveBeenCalledWith(
       expect.objectContaining({
-        data: expect.objectContaining({ dataExportDownloadedAt: expect.any(Date) }),
+        data: expect.objectContaining({
+          shopId: 'shop-1',
+          dataExportDownloadedAt: expect.any(Date),
+        }),
       }),
     );
   });
 
+  it('email fallback only matches orphan subscriptions and never stamps another shop', async () => {
+    resolveAdminAccess.mockResolvedValue({
+      via: 'session',
+      shopId: 'shop-attacker',
+      role: 'OWNER',
+      emailVerified: true,
+    });
+    findFirst.mockResolvedValueOnce(null).mockResolvedValueOnce(null);
+    findUniqueShop.mockResolvedValue({ owner: { email: 'victim@example.com' } });
+
+    const res = await GET(makeContext() as never);
+    expect(res.status).toBe(404);
+    expect(findFirst).toHaveBeenNthCalledWith(
+      2,
+      expect.objectContaining({
+        where: expect.objectContaining({
+          shopId: null,
+          customerEmail: { equals: 'victim@example.com', mode: 'insensitive' },
+        }),
+      }),
+    );
+    expect(updateSub).not.toHaveBeenCalled();
+  });
+
+  it('refuses to stamp a subscription that belongs to another shop', async () => {
+    resolveAdminAccess.mockResolvedValue({
+      via: 'session',
+      shopId: 'shop-attacker',
+      role: 'OWNER',
+      emailVerified: true,
+    });
+    findFirst.mockResolvedValue({
+      ...activeSub,
+      id: 'saas-victim',
+      shopId: 'shop-victim',
+    });
+
+    const res = await GET(makeContext() as never);
+    expect(res.status).toBe(404);
+    expect(updateSub).not.toHaveBeenCalled();
+    expect(buildCsv).not.toHaveBeenCalled();
+  });
+
   it('returns 403 when export not allowed', async () => {
-    resolveAdminAccess.mockResolvedValue({ via: 'session', shopId: 'shop-1', role: 'OWNER' });
+    resolveAdminAccess.mockResolvedValue({
+      via: 'session',
+      shopId: 'shop-1',
+      role: 'OWNER',
+      emailVerified: true,
+    });
     findFirst.mockResolvedValue({
       ...activeSub,
       status: 'CANCELED',
