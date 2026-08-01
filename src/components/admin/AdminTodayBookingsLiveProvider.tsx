@@ -65,6 +65,8 @@ export type AdminTodayBookingsLiveValue = {
   sessionChecked: boolean;
   loggedIn: boolean;
   isPublicDemo: boolean;
+  /** False until the first successful bookings load (or seeded payload is promoted after mount). */
+  hasLoadedOnce: boolean;
   upcomingBookings: AdminLiveBookingRow[];
   connectionStateLabel: string;
   hasLivePulse: boolean;
@@ -77,17 +79,24 @@ const AdminTodayBookingsLiveContext = createContext<AdminTodayBookingsLiveValue 
 export function AdminTodayBookingsLiveProvider({
   children,
   isPublicDemo = false,
+  initialBookings,
 }: {
   children: React.ReactNode;
   isPublicDemo?: boolean;
+  /** SSR-seeded demo (or other) payload — avoids a cold empty flash after hydration. */
+  initialBookings?: AdminLiveBookingRow[];
 }) {
+  const seeded = initialBookings != null;
   const [loggedIn, setLoggedIn] = useState(isPublicDemo);
   const [sessionChecked, setSessionChecked] = useState(isPublicDemo);
-  const [bookings, setBookings] = useState<AdminLiveBookingRow[]>([]);
+  const [bookings, setBookings] = useState<AdminLiveBookingRow[]>(() => initialBookings ?? []);
+  // Start false even when seeded so SSR HTML stays a skeleton (relative times depend on Date.now()).
+  const [hasLoadedOnce, setHasLoadedOnce] = useState(false);
   const [lastSuccessAt, setLastSuccessAt] = useState<number | null>(null);
   const [nowMs, setNowMs] = useState(() => Date.now());
   const initialMountMsRef = useRef(Date.now());
   const inFlightRef = useRef(false);
+  const skipInitialFetchRef = useRef(seeded);
 
   useEffect(() => {
     if (isPublicDemo) return;
@@ -133,6 +142,7 @@ export function AdminTodayBookingsLiveProvider({
 
       setBookings(rows);
       setLastSuccessAt(Date.now());
+      setHasLoadedOnce(true);
     } finally {
       inFlightRef.current = false;
     }
@@ -140,7 +150,16 @@ export function AdminTodayBookingsLiveProvider({
 
   useEffect(() => {
     if (!loggedIn) return undefined;
-    void fetchToday();
+
+    if (skipInitialFetchRef.current) {
+      skipInitialFetchRef.current = false;
+      // Promote seeded payload after mount — client Date.now() for relative labels.
+      setHasLoadedOnce(true);
+      setLastSuccessAt(Date.now());
+    } else {
+      void fetchToday();
+    }
+
     const id = window.setInterval(() => {
       void fetchToday();
     }, ADMIN_TODAY_BOOKINGS_POLL_MS);
@@ -164,7 +183,9 @@ export function AdminTodayBookingsLiveProvider({
   const hasRecentConnectionAttempt = nowMs - initialMountMsRef.current > CONNECTING_GRACE_MS;
   const isLive = lastSuccessAt ? nowMs - lastSuccessAt <= LIVE_THRESHOLD_MS : false;
   const connectionStateLabel = isPublicDemo
-    ? 'LIVE'
+    ? hasLoadedOnce
+      ? 'LIVE'
+      : 'CONNECTING…'
     : !lastSuccessAt && !hasRecentConnectionAttempt
       ? 'CONNECTING…'
       : isLive
@@ -183,6 +204,7 @@ export function AdminTodayBookingsLiveProvider({
       sessionChecked,
       loggedIn,
       isPublicDemo,
+      hasLoadedOnce,
       upcomingBookings,
       connectionStateLabel,
       hasLivePulse,
@@ -193,6 +215,7 @@ export function AdminTodayBookingsLiveProvider({
       sessionChecked,
       loggedIn,
       isPublicDemo,
+      hasLoadedOnce,
       upcomingBookings,
       connectionStateLabel,
       hasLivePulse,

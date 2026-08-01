@@ -45,6 +45,18 @@ describe('getDemoBookingsForDayKey', () => {
     );
   });
 
+  it('returns an isolated copy so callers cannot poison the cache', () => {
+    const a = getDemoBookingsForDayKey('2026-08-03');
+    expect(a.length).toBeGreaterThan(0);
+    const originalStart = a[0]!.startAt;
+    a[0]!.startAt = '1970-01-01T00:00:00.000Z';
+    a[0]!.barber.name = 'MUTATED';
+
+    const b = getDemoBookingsForDayKey('2026-08-03');
+    expect(b[0]!.startAt).toBe(originalStart);
+    expect(b[0]!.barber.name).not.toBe('MUTATED');
+  });
+
   it('varies ids/times across different dayKeys', () => {
     const a = getDemoBookingsForDayKey('2026-07-15');
     const b = getDemoBookingsForDayKey('2026-07-16');

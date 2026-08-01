@@ -5,6 +5,7 @@ import BookingsAdminPanel from './BookingsAdminPanel';
 import PrivateDemoAuthPanel from './PrivateDemoAuthPanel';
 import { AdminTodayBookingsLiveProvider } from './useAdminTodayBookingsLive';
 import { resolveDemoSectionAlias } from '@/lib/admin/demoConfig';
+import type { DemoDayBooking } from '@/lib/admin/demoFixtures/daySchedule';
 import {
   enablePublicAdminDemo,
   getStoredAdminSecret,
@@ -124,9 +125,11 @@ class LazyPanelErrorBoundary extends React.Component<
 
 type AdminPanelProps = {
   demoMode?: boolean;
+  /** SSR-seeded demo bookings for the dashboard (avoids empty flash after hydration). */
+  initialBookings?: DemoDayBooking[];
 };
 
-export default function AdminPanel({ demoMode = false }: AdminPanelProps) {
+export default function AdminPanel({ demoMode = false, initialBookings }: AdminPanelProps) {
   const [activeSection, setActiveSection] = useState<AdminSection>('bookings_dashboard');
   const [isTransitioning, setIsTransitioning] = useState(false);
   const [authReady, setAuthReady] = useState(demoMode);
@@ -351,7 +354,7 @@ export default function AdminPanel({ demoMode = false }: AdminPanelProps) {
   }
 
   return (
-    <AdminTodayBookingsLiveProvider isPublicDemo={demoMode}>
+    <AdminTodayBookingsLiveProvider isPublicDemo={demoMode} initialBookings={initialBookings}>
       <AdminLayout
         activeSection={activeSection}
         onChangeSection={handleSectionChange}
@@ -370,6 +373,7 @@ export default function AdminPanel({ demoMode = false }: AdminPanelProps) {
           key="bookings"
           isActive={isBookingsSection}
           isPublicDemo={demoMode}
+          initialBookings={initialBookings as never}
           mode={
             activeSection === 'bookings_blocks'
               ? 'blocks'

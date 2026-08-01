@@ -629,16 +629,30 @@ type BookingsAdminPanelProps = {
   mode: BookingsAdminMode;
   onBackToDashboard?: () => void;
   isPublicDemo?: boolean;
+  /**
+   * SSR-seeded demo dashboard bookings — skips the cold empty flash.
+   * DemoDayBooking is a structural superset of Booking (extra snapshot fields ignored).
+   */
+  initialBookings?: Booking[];
 };
 
-export default function BookingsAdminPanel({ isActive, mode, onBackToDashboard, isPublicDemo = false }: BookingsAdminPanelProps) {
+export default function BookingsAdminPanel({
+  isActive,
+  mode,
+  onBackToDashboard,
+  isPublicDemo = false,
+  initialBookings,
+}: BookingsAdminPanelProps) {
   /* Parent AdminPanel already gated session; avoid a second blocking "Checking session…" flash. */
   const [loggedIn, setLoggedIn] = useState(true);
   const [sessionBarberId, setSessionBarberId] = useState<string | null>(null);
   const [canManageBookings, setCanManageBookings] = useState(true);
   const [canEditTeam, setCanEditTeam] = useState(true);
-  const [bookings, setBookings] = useState<Booking[]>([]);
-  const [bookingsInitialLoading, setBookingsInitialLoading] = useState(true);
+  const [bookings, setBookings] = useState<Booking[]>(() => initialBookings ?? []);
+  const [bookingsInitialLoading, setBookingsInitialLoading] = useState(() => initialBookings == null);
+  /** True only after a successful fetch (or seeded payload promoted after mount) — never show 0 TODAY on failure. */
+  const [bookingsLoadedOnce, setBookingsLoadedOnce] = useState(false);
+  const skipInitialBookingsFetchRef = useRef(initialBookings != null);
   const [barbers, setBarbers] = useState<Barber[]>([]);
   const [barbersInitialLoading, setBarbersInitialLoading] = useState(true);
   const [showInactiveBarbers, setShowInactiveBarbers] = useState(false);
@@ -920,6 +934,7 @@ export default function BookingsAdminPanel({ isActive, mode, onBackToDashboard, 
         setBookings(mergedBookings);
         if (activeView === 'timeline') restoreTimelineScroll();
       }
+      setBookingsLoadedOnce(true);
 
       if (mode === 'history') {
         setHistoryHasMore(Boolean(data.hasMore));
@@ -996,7 +1011,13 @@ export default function BookingsAdminPanel({ isActive, mode, onBackToDashboard, 
     void fetchBarbers();
 
     if (mode !== 'reports') {
-      void fetchBookings();
+      if (skipInitialBookingsFetchRef.current && mode === 'dashboard') {
+        skipInitialBookingsFetchRef.current = false;
+        setBookingsLoadedOnce(true);
+        setBookingsInitialLoading(false);
+      } else {
+        void fetchBookings();
+      }
       void fetchTimeBlocks();
     } else {
       setBookingsInitialLoading(false);
@@ -2056,7 +2077,7 @@ export default function BookingsAdminPanel({ isActive, mode, onBackToDashboard, 
           </div>
 
           <div className="admin-bookings-ops-operations-stack">
-            {!bookingsInitialLoading ? (
+            {bookingsLoadedOnce ? (
               <DaySummaryBar
                 bookings={bookings}
                 staffOnFloorCount={onFloorBarbersNow.length}

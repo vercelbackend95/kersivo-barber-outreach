@@ -6,6 +6,10 @@ import { getDemoBookingsResponse } from '@/lib/admin/demoFixtures/bookings';
 
 const TZ = 'Europe/London';
 
+/**
+ * hasLoadedOnce React behaviour (seed promote / fetch gate) lives in
+ * AdminTodayBookingsLiveProvider.loading.test.tsx — this file stays pure-helper.
+ */
 describe('AdminTodayBookingsLiveProvider demo strip', () => {
   it('yields upcoming appointments from demo bookings fixture (morning pin)', () => {
     const dayKey = formatInTimeZone(new Date(), TZ, 'yyyy-MM-dd');

@@ -1,5 +1,6 @@
 import React, { useId, useLayoutEffect, useMemo, useRef, useState } from 'react';
 import { ChevronDown } from '../lucide-react';
+import { SkeletonNextAppointmentsStrip } from '../skeleton';
 import AdminDemoPill from './AdminDemoPill';
 
 export type MobileNextAppointmentItem = {
@@ -17,6 +18,8 @@ type AdminMobileNextAppointmentsStripProps = {
   formatStartTime: (iso: string) => string;
   connectionStateLabel: string;
   isDemo?: boolean;
+  /** True until the first successful bookings load — never show empty state while loading. */
+  isLoading?: boolean;
 };
 
 export default function AdminMobileNextAppointmentsStrip({
@@ -26,6 +29,7 @@ export default function AdminMobileNextAppointmentsStrip({
   formatStartTime,
   connectionStateLabel,
   isDemo = false,
+  isLoading = false,
 }: AdminMobileNextAppointmentsStripProps) {
   const listDomId = `admin-mobile-next-strip-list-${useId().replace(/:/g, '')}`;
   const MAX_VISIBLE_APPOINTMENTS = 4;
@@ -124,6 +128,9 @@ export default function AdminMobileNextAppointmentsStrip({
         </span>
       </div>
 
+      {isLoading ? (
+        <SkeletonNextAppointmentsStrip rows={2} />
+      ) : (
       <ul className="admin-mobile-next-strip-list" id={listDomId} ref={listRef}>
         {visibleAppointments.length > 0 ? (
           visibleAppointments.map((appointment, index) => {
@@ -170,6 +177,7 @@ export default function AdminMobileNextAppointmentsStrip({
           </li>
         ) : null}
       </ul>
+      )}
     </section>
   );
 }

@@ -2,6 +2,8 @@
 import MinimalLayout from '@/layouts/MinimalLayout.astro';
 import AdminPanel from '../components/admin/AdminPanel';
 import { PAGE_DESCRIPTIONS } from '@/lib/seo/defaults';
+import { getDemoBookingsResponse } from '@/lib/admin/demoFixtures/bookings';
+import { demoDaySelectedDate } from '@/lib/admin/demoFixtures/daySchedule';
 import '../styles/tokens.css';
 import '@/styles/fonts-admin.css';
 import '../styles/global.css';
@@ -20,6 +22,11 @@ import '../styles/components/shop-products-polish.css';
 import '../styles/components/admin-retail-onboarding.css';
 import '../styles/components/table.css';
 import '../styles/components/admin-ai.css';
+
+const todayKey = demoDaySelectedDate();
+const { bookings: initialBookings } = getDemoBookingsResponse(
+  new URLSearchParams({ date: todayKey, mode: 'day' }),
+);
 ---
 
 <MinimalLayout
@@ -49,6 +56,6 @@ import '../styles/components/admin-ai.css';
   />
   <main class="container page-wrap admin-page-wrap">
     <h1 class="sr-only">Kersivo Admin Demo</h1>
-    <AdminPanel client:load demoMode={true} />
+    <AdminPanel client:load demoMode={true} initialBookings={initialBookings} />
   </main>
 </MinimalLayout>
