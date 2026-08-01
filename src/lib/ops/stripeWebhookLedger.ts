@@ -3,11 +3,25 @@ import { prisma } from '@/lib/db/client';
 import { notifyOps, type OpsAlertInput, type OpsAlertResult } from '@/lib/ops/alertSink';
 import { opsLog, opsLogError } from '@/lib/ops/opsLog';
 
+export type WebhookIngestResult = {
+  alreadyFinalized: boolean;
+  previousStatus: StripeWebhookEventStatus | null;
+};
+
 export async function recordStripeWebhookReceived(input: {
   id: string;
   type: string;
   livemode?: boolean;
-}): Promise<void> {
+  eventCreatedAt?: Date | null;
+}): Promise<WebhookIngestResult> {
+  const existing = await prisma.stripeWebhookEvent.findUnique({
+    where: { id: input.id },
+    select: { status: true },
+  });
+
+  const previousStatus = existing?.status ?? null;
+  const alreadyFinalized = previousStatus === 'PROCESSED' || previousStatus === 'IGNORED';
+
   await prisma.stripeWebhookEvent.upsert({
     where: { id: input.id },
     create: {
@@ -15,12 +29,16 @@ export async function recordStripeWebhookReceived(input: {
       type: input.type,
       livemode: Boolean(input.livemode),
       status: 'RECEIVED',
+      eventCreatedAt: input.eventCreatedAt ?? null,
     },
     update: {
       type: input.type,
       livemode: Boolean(input.livemode),
+      ...(input.eventCreatedAt ? { eventCreatedAt: input.eventCreatedAt } : {}),
     },
   });
+
+  return { alreadyFinalized, previousStatus };
 }
 
 export async function markStripeWebhookStatus(

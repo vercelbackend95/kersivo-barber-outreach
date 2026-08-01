@@ -301,18 +301,33 @@ export async function createBillingPortalSession(input: {
   return { id: session.id, url: session.url };
 }
 
-function verifyWithSecret(payload: string, signatureHeader: string, webhookSecret: string): boolean {
-  const elements = signatureHeader.split(',').map((part) => part.trim());
-  const timestamp = elements.find((part) => part.startsWith('t='))?.slice(2);
-  const signature = elements.find((part) => part.startsWith('v1='))?.slice(3);
+/** Stripe default webhook signature timestamp tolerance (seconds). */
+export const STRIPE_WEBHOOK_TOLERANCE_SECONDS = 300;
 
-  if (!timestamp || !signature) return false;
+export type WebhookVerifyResult =
+  | { ok: true }
+  | { ok: false; reason: 'malformed_header' | 'timestamp_out_of_tolerance' | 'signature_mismatch' };
 
-  const signedPayload = `${timestamp}.${payload}`;
+function parseStripeSignatureHeader(signatureHeader: string): {
+  timestamp: string | null;
+  signatures: string[];
+} {
+  const elements = signatureHeader.split(',').map((part) => part.trim()).filter(Boolean);
+  const timestamp = elements.find((part) => part.startsWith('t='))?.slice(2) ?? null;
+  const signatures = elements
+    .filter((part) => part.startsWith('v1='))
+    .map((part) => part.slice(3))
+    .filter(Boolean);
+  return { timestamp, signatures };
+}
+
+function signatureMatches(signedPayload: string, signature: string, webhookSecret: string): boolean {
   const expected = crypto.createHmac('sha256', webhookSecret).update(signedPayload, 'utf8').digest('hex');
-
   try {
-    return crypto.timingSafeEqual(Buffer.from(signature), Buffer.from(expected));
+    const a = Buffer.from(signature);
+    const b = Buffer.from(expected);
+    if (a.length !== b.length) return false;
+    return crypto.timingSafeEqual(a, b);
   } catch {
     return false;
   }
@@ -321,8 +336,13 @@ function verifyWithSecret(payload: string, signatureHeader: string, webhookSecre
 /**
  * Accepts platform webhook secret and optional Connect (connected-accounts) secret.
  * Direct-charge deposit events arrive on the Connect endpoint.
+ * Rejects timestamps outside ±tolerance (default 300s) to block indefinite replay.
  */
-export function verifyStripeWebhookSignature(payload: string, signatureHeader: string): boolean {
+export function verifyStripeWebhookSignature(
+  payload: string,
+  signatureHeader: string,
+  options: { nowMs?: number; toleranceSeconds?: number } = {},
+): WebhookVerifyResult {
   const platformSecret = (
     import.meta.env.STRIPE_WEBHOOK_SECRET ??
     process.env.STRIPE_WEBHOOK_SECRET ??
@@ -342,7 +362,32 @@ export function verifyStripeWebhookSignature(payload: string, signatureHeader: s
     throw new Error('STRIPE_WEBHOOK_SECRET is not configured.');
   }
 
-  if (platformSecret && verifyWithSecret(payload, signatureHeader, platformSecret)) return true;
-  if (connectSecret && verifyWithSecret(payload, signatureHeader, connectSecret)) return true;
-  return false;
+  const { timestamp, signatures } = parseStripeSignatureHeader(signatureHeader);
+  if (!timestamp || signatures.length === 0) {
+    return { ok: false, reason: 'malformed_header' };
+  }
+
+  const timestampSec = Number(timestamp);
+  if (!Number.isFinite(timestampSec)) {
+    return { ok: false, reason: 'malformed_header' };
+  }
+
+  const nowMs = options.nowMs ?? Date.now();
+  const tolerance = options.toleranceSeconds ?? STRIPE_WEBHOOK_TOLERANCE_SECONDS;
+  const ageSeconds = Math.abs(nowMs / 1000 - timestampSec);
+  if (ageSeconds > tolerance) {
+    return { ok: false, reason: 'timestamp_out_of_tolerance' };
+  }
+
+  const signedPayload = `${timestamp}.${payload}`;
+  const secrets = [platformSecret, connectSecret].filter(Boolean);
+  for (const secret of secrets) {
+    for (const signature of signatures) {
+      if (signatureMatches(signedPayload, signature, secret)) {
+        return { ok: true };
+      }
+    }
+  }
+
+  return { ok: false, reason: 'signature_mismatch' };
 }

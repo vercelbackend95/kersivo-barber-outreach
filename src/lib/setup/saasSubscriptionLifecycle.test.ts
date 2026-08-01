@@ -76,6 +76,8 @@ const baseRecord = {
   customerEmailSentAt: null,
   internalEmailSentAt: null,
   onboardingSubmittedAt: null,
+  lastStripeEventAt: null as Date | null,
+  lastStripeEventId: null as string | null,
   createdAt: new Date(),
   updatedAt: new Date(),
 };
@@ -226,5 +228,118 @@ describe('saasSubscriptionLifecycle WP-I', () => {
     const result = await purgeShopsAfterRetentionEnds(now);
     expect(result.purged).toBe(0);
     expect(purgeShopData).not.toHaveBeenCalled();
+  });
+
+  it('skips stale invoice.payment_failed without markShopUnpaid', async () => {
+    const newer = new Date('2026-07-20T12:00:00.000Z');
+    const older = new Date('2026-07-19T12:00:00.000Z');
+    findFirst.mockResolvedValue({
+      ...baseRecord,
+      lastStripeEventAt: newer,
+      lastStripeEventId: 'evt_newer',
+    });
+
+    const result = await applyInvoicePaymentFailed({
+      stripeSubscriptionId: 'sub_1',
+      eventCreatedAt: older,
+      eventId: 'evt_old_fail',
+    });
+
+    expect(result.skipped).toBe('stale_event');
+    expect(result.record?.status).toBe('ACTIVE');
+    expect(update).not.toHaveBeenCalled();
+    expect(markShopUnpaid).not.toHaveBeenCalled();
+    expect(markShopPaid).not.toHaveBeenCalled();
+  });
+
+  it('applies in-order invoice.payment_failed and stamps lastStripeEventAt', async () => {
+    const now = new Date('2026-07-15T12:00:00.000Z');
+    const eventAt = new Date('2026-07-15T11:00:00.000Z');
+    findFirst.mockResolvedValue({
+      ...baseRecord,
+      lastStripeEventAt: new Date('2026-07-14T00:00:00.000Z'),
+    });
+    update.mockResolvedValue({
+      ...baseRecord,
+      status: 'PAST_DUE',
+      pastDueSince: now,
+      lastStripeEventAt: eventAt,
+      lastStripeEventId: 'evt_fail',
+    });
+
+    const result = await applyInvoicePaymentFailed({
+      stripeSubscriptionId: 'sub_1',
+      now,
+      eventCreatedAt: eventAt,
+      eventId: 'evt_fail',
+    });
+
+    expect(result.skipped).toBeUndefined();
+    expect(result.record?.status).toBe('PAST_DUE');
+    expect(update).toHaveBeenCalledWith(
+      expect.objectContaining({
+        data: expect.objectContaining({
+          lastStripeEventAt: eventAt,
+          lastStripeEventId: 'evt_fail',
+        }),
+      }),
+    );
+  });
+
+  it('allows equal-timestamp lifecycle events through', async () => {
+    const sameSecond = new Date('2026-07-15T12:00:00.000Z');
+    findFirst.mockResolvedValue({
+      ...baseRecord,
+      status: 'PAST_DUE',
+      pastDueSince: new Date('2026-07-10T12:00:00.000Z'),
+      lastStripeEventAt: sameSecond,
+      lastStripeEventId: 'evt_a',
+    });
+    update.mockResolvedValue({
+      ...baseRecord,
+      status: 'ACTIVE',
+      pastDueSince: null,
+      lastStripeEventAt: sameSecond,
+      lastStripeEventId: 'evt_b',
+    });
+
+    const result = await applyInvoicePaid({
+      stripeSubscriptionId: 'sub_1',
+      eventCreatedAt: sameSecond,
+      eventId: 'evt_b',
+    });
+
+    expect(result.skipped).toBeUndefined();
+    expect(result.record?.status).toBe('ACTIVE');
+    expect(update).toHaveBeenCalled();
+  });
+
+  it('keeps API-driven sync without eventCreatedAt unstamped', async () => {
+    findFirst.mockResolvedValue({
+      ...baseRecord,
+      lastStripeEventAt: new Date('2026-07-20T00:00:00.000Z'),
+    });
+    update.mockResolvedValue({
+      ...baseRecord,
+      status: 'CANCELED',
+      canceledAt: new Date('2026-07-20T00:00:00.000Z'),
+      retentionEndsAt: new Date('2026-08-19T00:00:00.000Z'),
+    });
+
+    await applyStripeSubscriptionToSaasRecord({
+      id: 'sub_1',
+      status: 'canceled',
+      cancel_at_period_end: false,
+      canceled_at: Math.floor(new Date('2026-07-20T00:00:00.000Z').getTime() / 1000),
+      customer: 'cus_1',
+    });
+
+    expect(update).toHaveBeenCalledWith(
+      expect.objectContaining({
+        data: expect.not.objectContaining({
+          lastStripeEventAt: expect.anything(),
+        }),
+      }),
+    );
   });
 });

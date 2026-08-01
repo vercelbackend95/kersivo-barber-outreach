@@ -19,6 +19,7 @@ export type SaasLifecycleSyncResult = {
   record: SaasSubscription | null;
   grantedAccess: boolean;
   shopId: string | null;
+  skipped?: 'stale_event';
 };
 
 export async function findSaasSubscriptionForLifecycle(input: {
@@ -61,9 +62,45 @@ export async function applyShopAccessFromSubscription(
   return granted;
 }
 
+/**
+ * Strict `<` so events sharing the same second (Stripe event.created resolution)
+ * both apply. Missing eventCreatedAt disables the guard (API-driven sync).
+ */
+function isStaleLifecycleEvent(
+  existing: SaasSubscription,
+  eventCreatedAt?: Date | null,
+): boolean {
+  if (!eventCreatedAt || !existing.lastStripeEventAt) return false;
+  return eventCreatedAt.getTime() < existing.lastStripeEventAt.getTime();
+}
+
+function lifecycleStamp(
+  eventCreatedAt?: Date | null,
+  eventId?: string | null,
+): { lastStripeEventAt?: Date; lastStripeEventId?: string | null } {
+  if (!eventCreatedAt) return {};
+  return {
+    lastStripeEventAt: eventCreatedAt,
+    lastStripeEventId: eventId?.trim() || null,
+  };
+}
+
+function staleSkipResult(existing: SaasSubscription, now: Date = new Date()): SaasLifecycleSyncResult {
+  return {
+    record: existing,
+    grantedAccess: saasSubscriptionGrantsAccess(existing, now),
+    shopId: existing.shopId?.trim() || null,
+    skipped: 'stale_event',
+  };
+}
+
 export async function applyStripeSubscriptionToSaasRecord(
   stripeSub: StripeSubscription,
-  options: { forceCanceled?: boolean } = {},
+  options: {
+    forceCanceled?: boolean;
+    eventCreatedAt?: Date | null;
+    eventId?: string | null;
+  } = {},
 ): Promise<SaasLifecycleSyncResult> {
   const customerId =
     typeof stripeSub.customer === 'string'
@@ -77,6 +114,10 @@ export async function applyStripeSubscriptionToSaasRecord(
 
   if (!existing) {
     return { record: null, grantedAccess: false, shopId: null };
+  }
+
+  if (isStaleLifecycleEvent(existing, options.eventCreatedAt)) {
+    return staleSkipResult(existing);
   }
 
   let status: SaasSubscriptionStatus = options.forceCanceled
@@ -119,6 +160,7 @@ export async function applyStripeSubscriptionToSaasRecord(
             ? null
             : existing.pastDueSince,
       suspendedAt: status === 'SUSPENDED' ? existing.suspendedAt : status === 'ACTIVE' ? null : existing.suspendedAt,
+      ...lifecycleStamp(options.eventCreatedAt, options.eventId),
     },
   });
 
@@ -132,10 +174,16 @@ export async function applyInvoicePaymentFailed(input: {
   stripeSubscriptionId?: string | null;
   stripeCustomerId?: string | null;
   now?: Date;
+  eventCreatedAt?: Date | null;
+  eventId?: string | null;
 }): Promise<SaasLifecycleSyncResult> {
   const now = input.now ?? new Date();
   const existing = await findSaasSubscriptionForLifecycle(input);
   if (!existing) return { record: null, grantedAccess: false, shopId: null };
+
+  if (isStaleLifecycleEvent(existing, input.eventCreatedAt)) {
+    return staleSkipResult(existing, now);
+  }
 
   if (existing.status === 'CANCELED') {
     return {
@@ -150,6 +198,7 @@ export async function applyInvoicePaymentFailed(input: {
     data: {
       status: existing.status === 'SUSPENDED' ? 'SUSPENDED' : 'PAST_DUE',
       pastDueSince: existing.pastDueSince ?? now,
+      ...lifecycleStamp(input.eventCreatedAt, input.eventId),
     },
   });
 
@@ -163,9 +212,15 @@ export async function applyInvoicePaid(input: {
   stripeSubscriptionId?: string | null;
   stripeCustomerId?: string | null;
   currentPeriodEnd?: Date | null;
+  eventCreatedAt?: Date | null;
+  eventId?: string | null;
 }): Promise<SaasLifecycleSyncResult> {
   const existing = await findSaasSubscriptionForLifecycle(input);
   if (!existing) return { record: null, grantedAccess: false, shopId: null };
+
+  if (isStaleLifecycleEvent(existing, input.eventCreatedAt)) {
+    return staleSkipResult(existing);
+  }
 
   if (existing.status === 'CANCELED') {
     return {
@@ -183,6 +238,7 @@ export async function applyInvoicePaid(input: {
       pastDueSince: null,
       suspendedAt: null,
       canceledAt: null,
+      ...lifecycleStamp(input.eventCreatedAt, input.eventId),
     },
   });
 
@@ -192,7 +248,7 @@ export async function applyInvoicePaid(input: {
   return { record, grantedAccess, shopId };
 }
 
-/** Cron: PAST_DUE past grace Ôćĺ SUSPENDED + unpaid. */
+/** Cron: PAST_DUE past grace → SUSPENDED + unpaid. */
 export async function suspendPastDueSubscriptionsPastGrace(now: Date = new Date()): Promise<{
   suspended: number;
 }> {
