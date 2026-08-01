@@ -109,10 +109,11 @@ export const GET: APIRoute = async (ctx) => {
   });
 };
 
+/** Toggle depositsEnabled. Owner / billing.manage only — same financial class as Connect. */
 export const PATCH: APIRoute = async (ctx) => {
   const access = await requireAdminContext(ctx);
   if (access instanceof Response) return access;
-  const denied = requireAnyPermission(access, ['shop.settings', 'billing.manage']);
+  const denied = requirePermission(access, 'billing.manage');
   if (denied) return denied;
 
   const body = (await ctx.request.json().catch(() => null)) as { depositsEnabled?: unknown } | null;
