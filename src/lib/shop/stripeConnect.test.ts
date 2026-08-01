@@ -10,6 +10,7 @@ vi.mock('./stripe', () => ({
 
 import {
   createBookingDepositCheckoutSession,
+  createRetailCheckoutSession,
   expireBookingDepositSession,
   refundPaymentIntent,
   resolveDepositSessionExpiresAt,
@@ -91,6 +92,42 @@ describe('stripeConnect direct charges', () => {
     const [, init] = fetchMock.mock.calls[0] as [string, RequestInit];
     const headers = init.headers as Record<string, string>;
     expect(headers['Idempotency-Key']).toBe('booking_deposit_checkout_book_42');
+  });
+
+  it('creates retail checkout with N line items, shop_order metadata, and stable key', async () => {
+    fetchMock.mockResolvedValue({
+      ok: true,
+      json: async () => ({ id: 'cs_retail', url: 'https://checkout.stripe.test/retail' }),
+    });
+
+    const orderCreatedAt = new Date('2026-08-01T12:00:00.000Z');
+    const result = await createRetailCheckoutSession({
+      shopConnectAccountId: 'acct_shop',
+      orderId: 'ord_9',
+      shopId: 'shop_1',
+      orderCreatedAt,
+      successUrl: 'https://kersivo.test/shop/shop_1/success',
+      cancelUrl: 'https://kersivo.test/shop/shop_1',
+      lineItems: [
+        { name: 'Clay', unitAmountPence: 1500, quantity: 2 },
+        { name: 'Oil', unitAmountPence: 900, quantity: 1 },
+      ],
+    });
+
+    expect(result.id).toBe('cs_retail');
+    const [url, init] = fetchMock.mock.calls[0] as [string, RequestInit];
+    expect(url).toContain('/checkout/sessions');
+    const headers = init.headers as Record<string, string>;
+    expect(headers['Stripe-Account']).toBe('acct_shop');
+    expect(headers['Idempotency-Key']).toBe('shop_order_checkout_ord_9');
+    const body = String(init.body);
+    expect(body).toContain('shop_order');
+    expect(body).toContain('payment_intent_data%5Bapplication_fee_amount%5D=0');
+    expect(body).not.toContain('transfer_data');
+    expect(body).toContain('line_items%5B0%5D');
+    expect(body).toContain('line_items%5B1%5D');
+    expect(body).toContain('1500');
+    expect(body).toContain('900');
   });
 
   it('resolveDepositSessionExpiresAt is deterministic for the same anchor', () => {

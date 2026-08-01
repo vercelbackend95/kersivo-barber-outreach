@@ -132,7 +132,7 @@ const selectedCategory = categoryValues.has(selectedCategoryParam) ? selectedCat
               hidden={selectedCategory !== 'ALL' && product.category !== selectedCategory}
             >
               <article class="shop-card" data-category={product.category}>
-                <a href={`/shop/${product.id}`} class="shop-media-link" aria-label={`View ${product.name}`}>
+                <a href={`/shop/demo/${product.id}`} class="shop-media-link" aria-label={`View ${product.name}`}>
                   <div class="shop-media">
                     {product.featured ? <span class="shop-badge">Featured</span> : null}
                     {product.imageUrl ? <img src={product.imageUrl} alt={product.name} class="shop-image" loading="lazy" /> : <div class="shop-image--placeholder" aria-hidden="true"></div>}
@@ -141,7 +141,7 @@ const selectedCategory = categoryValues.has(selectedCategoryParam) ? selectedCat
 
                 <div class="shop-card-body">
                   <span class="badge badge--neutral">{CATEGORY_LABELS[product.category] ?? 'Styling'}</span>
-                  <h3><a href={`/shop/${product.id}`}>{product.name}</a></h3>
+                  <h3><a href={`/shop/demo/${product.id}`}>{product.name}</a></h3>
                   <p class="shop-price">{formatGbp(product.pricePence)}</p>
 
                   <div class="shop-card-actions">

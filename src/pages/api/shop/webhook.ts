@@ -10,7 +10,6 @@ import {
   enableShopSmsRemindersForOwnerEmail,
 } from '../../../lib/sms/shopSmsGate';
 import { formatGbp } from '../../../lib/shop/money';
-import { createShopOrder } from '../../../lib/shop/createShopOrder';
 import {
   getCheckoutCustomerId,
   getCheckoutPaymentIntentId,
@@ -22,12 +21,8 @@ import {
   type StripeSubscription,
   verifyStripeWebhookSignature,
 } from '../../../lib/shop/stripe';
-import {
-  applyInvoicePaid,
-  applyInvoicePaymentFailed,
-  applyStripeSubscriptionToSaasRecord,
-} from '../../../lib/setup/saasSubscriptionLifecycle';
-import { periodEndFromUnixSeconds } from '../../../lib/setup/saasEntitlement';
+import { SHOP_ORDER_METADATA_TYPE } from '../../../lib/shop/cardPaymentsGate';
+import { finalizeRetailOrderFromCheckout } from '../../../lib/shop/finalizeRetailOrder';
 import {
   EmailDeliveryError,
   getSetupOnboardingFormUrlOrEmpty,
@@ -36,6 +31,12 @@ import {
   sendSetupDepositConfirmationEmail,
   sendSetupDepositInternalNotificationEmail,
 } from '../../../lib/email/sender';
+import {
+  applyInvoicePaid,
+  applyInvoicePaymentFailed,
+  applyStripeSubscriptionToSaasRecord,
+} from '../../../lib/setup/saasSubscriptionLifecycle';
+import { periodEndFromUnixSeconds } from '../../../lib/setup/saasEntitlement';
 import { getSetupPlan, isSetupPlanId } from '../../../lib/setup/plans';
 import { SAAS_SUBSCRIPTION_METADATA_TYPE } from '../../../lib/setup/saasSubscription';
 import { SAAS_MONTHLY_PENCE } from '../../../lib/seo/defaults';
@@ -53,13 +54,6 @@ import {
 import { opsLog } from '../../../lib/ops/opsLog';
 
 const { Prisma, SetupPlan, SetupDepositStatus } = PrismaClientPkg;
-type CartSnapshotItem = {
-  productId: string;
-  name: string;
-  unitPricePence: number;
-  quantity: number;
-  lineTotalPence: number;
-};
 
 type StripeEvent = {
   id?: string;
@@ -827,6 +821,57 @@ async function resolveBookingDepositStripeAccount(
   return shop?.stripeConnectAccountId?.trim() || null;
 }
 
+async function handleRetailOrderCheckout(
+  sessionId: string,
+  session: StripeSession,
+  metadata: Record<string, string>,
+  eventCreated: number,
+): Promise<Response> {
+  if ((session.payment_status ?? '').toLowerCase() !== 'paid') {
+    return new Response(JSON.stringify({ error: 'Order not paid' }), { status: 400 });
+  }
+
+  const orderId = metadata.orderId?.trim() ?? '';
+  const shopId = metadata.shopId?.trim() ?? '';
+  const customerEmail = (
+    session.customer_details?.email ??
+    session.customer_email ??
+    ''
+  ).trim();
+  const paidAt = Number.isFinite(eventCreated) ? new Date(eventCreated * 1000) : new Date();
+  const amountTotal =
+    typeof session.amount_total === 'number' && Number.isFinite(session.amount_total)
+      ? session.amount_total
+      : null;
+
+  const result = await finalizeRetailOrderFromCheckout({
+    orderId,
+    shopId,
+    sessionId,
+    paymentIntentId: getCheckoutPaymentIntentId(session),
+    amountTotal,
+    customerEmail,
+    paidAt,
+  });
+
+  if (result.outcome === 'confirmed') {
+    return new Response(JSON.stringify({ ok: true, orderId: result.orderId }), { status: 200 });
+  }
+  if (result.outcome === 'duplicate') {
+    return new Response(JSON.stringify({ ok: true, duplicate: true }), { status: 200 });
+  }
+  if (result.outcome === 'not_found') {
+    return new Response(JSON.stringify({ error: 'Order not found' }), { status: 404 });
+  }
+  if (result.outcome === 'amount_mismatch') {
+    return new Response(JSON.stringify({ error: 'Amount mismatch' }), { status: 400 });
+  }
+  if (result.outcome === 'missing_email') {
+    return new Response(JSON.stringify({ error: 'Missing customer email' }), { status: 400 });
+  }
+  return new Response(JSON.stringify({ error: 'Invalid shop order metadata' }), { status: 400 });
+}
+
 async function handleBookingDepositCheckout(
   sessionId: string,
   session: StripeSession,
@@ -1110,60 +1155,17 @@ export const POST: APIRoute = async ({ request }) => {
       );
     }
 
-    if (event.type !== 'checkout.session.completed') {
-      return await finalize(new Response(JSON.stringify({ ok: true }), { status: 200 }));
-    }
-
-    const existing = await prisma.order.findUnique({
-      where: { stripeSessionId: sessionId },
-      select: { id: true },
-    });
-    if (existing) {
-      return await finalize(new Response(JSON.stringify({ ok: true, duplicate: true }), { status: 200 }));
-    }
-
-    const customerEmail = (
-      session.customer_details?.email ??
-      session.customer_email ??
-      event.data.object.customer_email ??
-      metadata.email ??
-      ''
-    )
-      .trim()
-      .toLowerCase();
-    const shopId = metadata.shopId;
-
-    if (!shopId || !customerEmail) {
+    if (SETUP_FULFILMENT_EVENTS.has(event.type) && metadata.type === SHOP_ORDER_METADATA_TYPE) {
       return await finalize(
-        new Response(JSON.stringify({ error: 'Missing shop or customer email' }), { status: 400 }),
+        await handleRetailOrderCheckout(sessionId, session, metadata, event.created),
       );
     }
 
-    const cart = JSON.parse(metadata.cart ?? '[]') as CartSnapshotItem[];
-    if (!Array.isArray(cart) || cart.length === 0) {
-      return await finalize(
-        new Response(JSON.stringify({ error: 'Missing cart metadata' }), { status: 400 }),
-      );
-    }
-
-    const totalPence =
-      typeof session.amount_total === 'number'
-        ? session.amount_total
-        : cart.reduce((sum, item) => sum + item.lineTotalPence, 0);
-    const paidAt = Number.isFinite(event.created) ? new Date(event.created * 1000) : new Date();
-
-    await createShopOrder({
-      shopId,
-      customerEmail,
-      cart,
-      totalPence,
-      stripeSessionId: sessionId,
-      isTestOrder: false,
-      sendEmail: true,
-      paidAt,
-    });
-
-    return await finalize(new Response(JSON.stringify({ ok: true }), { status: 200 }));
+    // Untyped checkout sessions are no longer auto-materialised into Orders.
+    return await finalize(
+      new Response(JSON.stringify({ ok: true, ignored: true }), { status: 200 }),
+      { ignored: true },
+    );
   } catch (error) {
     console.error('Stripe webhook failed', error);
     captureOpsException(error, { route: '/api/shop/webhook', tags: { eventType } });

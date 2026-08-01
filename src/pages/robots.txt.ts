@@ -15,6 +15,8 @@ export const GET: APIRoute = () => {
     'Disallow: /setup/',
     'Disallow: /shop/success',
     'Disallow: /shop/cancelled',
+    'Disallow: /shop/*/success',
+    'Disallow: /shop/*/cancelled',
     `Sitemap: ${siteUrl}/sitemap.xml`,
     '',
   ].join('\n');

@@ -39,7 +39,7 @@ export function ShopProductCarousel({
           </li>
         ) : (
           (previewMode ? products.slice(0, 10) : products).map((product, index) => {
-            const href = productHref ?? `/shop/${product.id}`;
+            const href = productHref ?? `/shop/demo/${product.id}`;
 
             return (
             <li

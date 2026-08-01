@@ -59,6 +59,7 @@ enum EmailOutboundStatus {
 }
 
 enum OrderStatus {
+  PENDING_PAYMENT
   PAID
   READY_FOR_PICKUP
   COLLECTED
@@ -189,6 +190,8 @@ model ShopSettings {
   shopPaidAt                  DateTime?
   /// Owner toggle: require £5 deposit on online bookings (paid shops + Connect only).
   depositsEnabled             Boolean  @default(false)
+  /// Owner toggle: accept public retail checkout on Connect (paid shops + Connect only).
+  retailEnabled               Boolean  @default(false)
   /// Stripe Connect Express account id for booking deposits (and future shop payouts).
   stripeConnectAccountId      String?
   stripeConnectChargesEnabled Boolean  @default(false)
@@ -619,18 +622,22 @@ model Product {
     @@unique([shopId, sortOrder])
 }
 model Order {
-  id              String      @id @default(cuid())
-  shopId          String
-  customerEmail   String
-  status          OrderStatus @default(PAID)
-  currency        String      @default("gbp")
-  totalPence      Int
-  stripeSessionId String?     @unique
-  isTestOrder     Boolean     @default(false)
-  paidAt          DateTime?
-  collectedAt     DateTime?
-  createdAt       DateTime    @default(now())
-  updatedAt       DateTime    @updatedAt
+  id                      String      @id @default(cuid())
+  shopId                  String
+  customerEmail           String
+  status                  OrderStatus @default(PAID)
+  currency                String      @default("gbp")
+  totalPence              Int
+  /// Human pickup reference shown at the chair (e.g. KRV-A1B2).
+  reference               String?     @unique
+  stripeSessionId         String?     @unique
+  stripePaymentIntentId   String?
+  stripeConnectAccountId  String?
+  isTestOrder             Boolean     @default(false)
+  paidAt                  DateTime?
+  collectedAt             DateTime?
+  createdAt               DateTime    @default(now())
+  updatedAt               DateTime    @updatedAt
 
   shop  ShopSettings @relation(fields: [shopId], references: [id], onDelete: Cascade)
   items OrderItem[]

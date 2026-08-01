@@ -48,6 +48,8 @@ type CartDrawerProps = {
   testOrderMode?: boolean;
   /** Public `/shop` sandbox — local completion only (no Stripe, no Order). */
   publicDemoMode?: boolean;
+  /** Live tenant shop — POST to public Connect checkout (salon is MoR). */
+  shopId?: string;
 };
 
 function useCartSnapshot() {
@@ -93,9 +95,12 @@ function makeIdempotencyKey() {
 export default function CartDrawer({
   testOrderMode = false,
   publicDemoMode = false,
+  shopId,
 }: CartDrawerProps) {
   // testOrderMode wins if both are ever set (admin mount).
-  const isPublicDemo = publicDemoMode && !testOrderMode;
+  const liveShopId = typeof shopId === 'string' ? shopId.trim() : '';
+  const isLiveRetail = Boolean(liveShopId) && !testOrderMode;
+  const isPublicDemo = publicDemoMode && !testOrderMode && !isLiveRetail;
   const { items, subtotalPence, isOpen: open } = useCartSnapshot();
   const [checkoutLoading, setCheckoutLoading] = useState(false);
   const [checkoutError, setCheckoutError] = useState<string | null>(null);
@@ -252,9 +257,12 @@ export default function CartDrawer({
         return;
       }
 
-      const response = await fetch('/api/shop/checkout', {
+      if (!isLiveRetail) {
+        throw new Error('Live retail checkout is only available on a shop page.');
+      }
+
+      const response = await fetch(`/api/public/shop/${encodeURIComponent(liveShopId)}/checkout`, {
         method: 'POST',
-        credentials: 'include',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           items: items.map((item) => ({ productId: item.productId, quantity: item.quantity })),

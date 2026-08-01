@@ -55,6 +55,9 @@ describe('marketing sitemap', () => {
     expect(xml).not.toContain('/setup');
     expect(xml).not.toContain('/shop/success');
     expect(xml).not.toContain('/shop/cancelled');
+    expect(xml).not.toContain('/shop/demo/');
+    expect(xml).not.toMatch(/\/shop\/[^/<]+\/success/);
+    expect(xml).not.toMatch(/\/shop\/[^/<]+\/cancelled/);
   });
 
   it('GET returns application/xml with the marketing sitemap body', async () => {
