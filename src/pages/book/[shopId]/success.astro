@@ -5,10 +5,7 @@ import { prisma } from '@/lib/db/client';
 import { retrieveBookingDepositSession } from '@/lib/shop/stripeConnect';
 import { getCheckoutPaymentIntentId } from '@/lib/shop/stripe';
 import { BOOKING_DEPOSIT_METADATA_TYPE } from '@/lib/booking/depositGate';
-import { BookingStatus, PaymentStatus } from '@prisma/client';
-import { sendInstantBookingConfirmationEmail } from '@/lib/email/sender';
-import { getPublicSiteUrl } from '@/lib/setup/siteUrl';
-import { generateToken, hashToken } from '@/lib/booking/tokens';
+import { confirmPaidDeposit } from '@/lib/booking/confirmPaidDeposit';
 import { formatInTimeZone } from 'date-fns-tz';
 import '@/styles/tokens.css';
 import '@/styles/fonts.css';
@@ -47,77 +44,40 @@ if (shopId && sessionId) {
     } else {
       const session = await retrieveBookingDepositSession(sessionId, connectAccountId);
       const metadata = session.metadata ?? {};
-    if (
-      metadata.type === BOOKING_DEPOSIT_METADATA_TYPE &&
-      metadata.shopId === shopId &&
-      metadata.bookingId &&
-      (session.payment_status ?? '').toLowerCase() === 'paid'
-    ) {
-      const booking = await prisma.booking.findFirst({
-        where: { id: metadata.bookingId, barber: { shopId } },
-        include: { barber: true, service: true },
-      });
+      if (
+        metadata.type === BOOKING_DEPOSIT_METADATA_TYPE &&
+        metadata.shopId === shopId &&
+        metadata.bookingId &&
+        (session.payment_status ?? '').toLowerCase() === 'paid'
+      ) {
+        shopTimezone = shopForConnect?.timezone?.trim() || 'Europe/London';
 
-      if (booking) {
-        const shop = await prisma.shopSettings.findUnique({
-          where: { id: shopId },
-          select: { name: true, timezone: true },
+        const result = await confirmPaidDeposit({
+          bookingId: metadata.bookingId,
+          shopId,
+          sessionId,
+          paymentIntentId: getCheckoutPaymentIntentId(session),
         });
-        shopTimezone = shop?.timezone?.trim() || 'Europe/London';
 
-        const alreadyConfirmed =
-          booking.status === BookingStatus.BOOKED &&
-          booking.paymentStatus === PaymentStatus.PAID &&
-          booking.stripeCheckoutSessionId === sessionId;
-
-        let confirmed = booking;
-
-        if (!alreadyConfirmed) {
-          const manageToken = generateToken();
-          confirmed = await prisma.booking.update({
-            where: { id: booking.id },
-            data: {
-              status: BookingStatus.BOOKED,
-              paymentStatus: PaymentStatus.PAID,
-              paidAt: new Date(),
-              stripeCheckoutSessionId: sessionId,
-              stripePaymentIntentId: getCheckoutPaymentIntentId(session),
-              manageTokenHash: hashToken(manageToken),
-            },
-            include: { barber: true, service: true },
-          });
-
-          const baseUrl = getPublicSiteUrl();
-          try {
-            await sendInstantBookingConfirmationEmail({
-              to: confirmed.email,
-              fullName: confirmed.fullName,
-              cancelUrl: `${baseUrl}/book/cancel?token=${manageToken}`,
-              rescheduleUrl: `${baseUrl}/book/reschedule?token=${manageToken}`,
-              shopName: shop?.name ?? 'Barbershop',
-              serviceName: confirmed.serviceNameAtBooking ?? confirmed.service.name,
-              barberName: confirmed.barber.name,
-              startAt: confirmed.startAt,
-            });
-          } catch {
-            // soft-fail email
-          }
+        if (result.outcome === 'confirmed' || result.outcome === 'duplicate') {
+          const confirmed = result.booking;
+          const serviceName = confirmed.serviceNameAtBooking ?? confirmed.service.name;
+          summary = {
+            service: serviceName,
+            barber: confirmed.barber.name,
+            date: formatInTimeZone(confirmed.startAt, shopTimezone, 'EEE, d MMM yyyy'),
+            time: formatInTimeZone(confirmed.startAt, shopTimezone, 'HH:mm'),
+          };
+          ok = true;
+        } else if (result.outcome === 'not_found') {
+          errorMessage = 'Booking not found for this payment.';
+        } else {
+          errorMessage =
+            'Payment is already recorded for this booking. If you were charged twice, contact the barbershop.';
         }
-
-        const serviceName = confirmed.serviceNameAtBooking ?? confirmed.service.name;
-        summary = {
-          service: serviceName,
-          barber: confirmed.barber.name,
-          date: formatInTimeZone(confirmed.startAt, shopTimezone, 'EEE, d MMM yyyy'),
-          time: formatInTimeZone(confirmed.startAt, shopTimezone, 'HH:mm'),
-        };
-        ok = true;
       } else {
-        errorMessage = 'Booking not found for this payment.';
+        errorMessage = 'Payment is not complete yet. If you were charged, contact the barbershop.';
       }
-    } else {
-      errorMessage = 'Payment is not complete yet. If you were charged, contact the barbershop.';
-    }
     }
   } catch {
     errorMessage = 'Payment confirmation failed. If you were charged, contact the barbershop.';

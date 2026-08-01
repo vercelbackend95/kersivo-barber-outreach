@@ -21,6 +21,8 @@ type StripeSubscriptionCheckoutParams = {
 export type StripeSession = {
   id: string;
   url?: string;
+  /** Checkout Session lifecycle: open | complete | expired. */
+  status?: string | null;
   amount_total: number | null;
   currency: string | null;
   payment_status?: string | null;

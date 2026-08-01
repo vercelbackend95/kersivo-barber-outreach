@@ -56,6 +56,29 @@ describe('stripeConnect direct charges', () => {
     expect(body).toContain('unit_amount');
     expect(body).toContain('300');
     expect(body).not.toContain('unit_amount%5D=500');
+    expect(headers['Idempotency-Key']).toBe('booking_deposit_checkout_book_1');
+  });
+
+  it('uses a stable Idempotency-Key derived from bookingId', async () => {
+    fetchMock.mockResolvedValue({
+      ok: true,
+      json: async () => ({ id: 'cs_idem', url: 'https://checkout.stripe.test/cs' }),
+    });
+
+    await createBookingDepositCheckoutSession({
+      shopConnectAccountId: 'acct_shop',
+      bookingId: 'book_42',
+      shopId: 'shop_1',
+      customerEmail: 'client@example.com',
+      shopName: 'Test Shop',
+      amountPence: 500,
+      successUrl: 'https://kersivo.test/success',
+      cancelUrl: 'https://kersivo.test/cancel',
+    });
+
+    const [, init] = fetchMock.mock.calls[0] as [string, RequestInit];
+    const headers = init.headers as Record<string, string>;
+    expect(headers['Idempotency-Key']).toBe('booking_deposit_checkout_book_42');
   });
 
   it('refunds on connected account for direct charges', async () => {
