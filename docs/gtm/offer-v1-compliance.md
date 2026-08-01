@@ -132,7 +132,7 @@ Używaj jako „czy wiemy, gdzie jesteśmy?”:
 1. **Nie startujemy kodu**, dopóki ta macierz jest zaakceptowana i wybrany jest pierwszy WP.
 2. **Jeden WP naraz** (lub jasno równoległe WP bez wspólnych plików auth/billing).
 3. **Każdy PR** musi wymieniać `§X` + `WP-Y` w opisie i aktualizować ten plik.
-4. **Manual booking** (§11): oferta mówi „nie posiadamy jako zatwierdzonego elementu” — admin manual booking może zostać wewnętrznie, ale **nie wchodzi do customer-facing claims**.
+4. **Manual booking** (§11): oferta mówi „nie posiadamy jako zatwierdzonego elementu”. Endpoint `POST /api/admin/bookings/manual` usunięty w P0-4 (omijał availability). Funkcji manual booking nie ma ani wewnętrznie, ani w customer-facing claims.
 5. **SMS w claimsPolicy:** public copy uses plain `SMS_INCLUDED_CLAIM` (`SMS appointment reminders`) — never Unlimited / £ figure / message count. Terms use `SMS_MONTHLY_ALLOWANCE_TERMS` (monthly allowance, no published amount). Engineering WP-F (provider, job, usage UI) nadal TODO — nie mylić copy z DONE produktu.
 6. Punkty `OPS` / `COPY_ONLY` nie znikają — mają osobne checklisty w WP-M / WP-L.
 7. **§4 Powered by KERSIVO (OPS):** przy go-live każdej strony salonu ręcznie wstaw subtelne „Powered by KERSIVO” z linkiem do `https://kersivo.co.uk`; nieusuwalne w planie £39; bez innych reklam/banerów KERSIVO na stronie klienta. **Nigdy** nie umieszczaj tego badge na marketing site kersivo.co.uk.
