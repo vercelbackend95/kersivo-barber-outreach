@@ -57,11 +57,14 @@ function makeContext(): APIContext {
   } as unknown as APIContext;
 }
 
+/** Rolling future date: a fixed literal silently expires and turns the export 403. */
+const FUTURE_PERIOD_END = new Date(Date.now() + 30 * 24 * 60 * 60 * 1000);
+
 const activeSub = {
   id: 'saas-1',
   shopId: 'shop-1',
   status: 'ACTIVE',
-  currentPeriodEnd: new Date('2026-08-01T00:00:00.000Z'),
+  currentPeriodEnd: FUTURE_PERIOD_END,
   pastDueSince: null,
   cancelAtPeriodEnd: false,
   retentionEndsAt: null,

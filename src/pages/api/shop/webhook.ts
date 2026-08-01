@@ -41,6 +41,7 @@ import { getSetupPlan, isSetupPlanId } from '../../../lib/setup/plans';
 import { SAAS_SUBSCRIPTION_METADATA_TYPE } from '../../../lib/setup/saasSubscription';
 import { SAAS_MONTHLY_PENCE } from '../../../lib/seo/defaults';
 import { BOOKING_DEPOSIT_METADATA_TYPE } from '../../../lib/booking/depositGate';
+import { confirmDepositRefundFromWebhook } from '../../../lib/booking/depositMoney';
 import { BookingStatus, PaymentStatus } from '@prisma/client';
 import { getPublicSiteUrl } from '../../../lib/setup/siteUrl';
 import { generateToken, hashToken } from '../../../lib/booking/tokens';
@@ -93,6 +94,13 @@ type StripeEvent = {
       lines?: { data?: Array<{ period?: { end?: number | null } | null }> };
       charges_enabled?: boolean;
       details_submitted?: boolean;
+      /** Refund / charge.refunded payload fields. */
+      payment_intent?: string | { id?: string } | null;
+      amount_refunded?: number | null;
+      amount?: number | null;
+      refunds?: {
+        data?: Array<{ id?: string; status?: string; amount?: number | null }>;
+      } | null;
     };
   };
 };
@@ -698,6 +706,84 @@ async function handleSaasSubscriptionCheckout(
   );
 }
 
+function paymentIntentIdFromObject(
+  value: string | { id?: string } | null | undefined,
+): string | null {
+  if (typeof value === 'string' && value.trim()) return value.trim();
+  if (value && typeof value === 'object' && typeof value.id === 'string' && value.id.trim()) {
+    return value.id.trim();
+  }
+  return null;
+}
+
+async function handleDepositRefundEvent(event: StripeEvent): Promise<Response> {
+  const obj = event.data.object;
+  const objectType = (obj.object ?? '').trim();
+
+  let stripeRefundId: string | null = null;
+  let paymentIntentId: string | null = paymentIntentIdFromObject(obj.payment_intent);
+  let status: 'succeeded' | 'failed' | 'pending' | 'canceled' = 'pending';
+  let amountPence: number | null =
+    typeof obj.amount === 'number' && Number.isFinite(obj.amount)
+      ? Math.trunc(obj.amount)
+      : typeof obj.amount_refunded === 'number' && Number.isFinite(obj.amount_refunded)
+        ? Math.trunc(obj.amount_refunded)
+        : null;
+
+  if (event.type === 'refund.failed') {
+    status = 'failed';
+    stripeRefundId = obj.id?.startsWith('re_') ? obj.id : null;
+  } else if (event.type === 'refund.updated' || objectType === 'refund') {
+    stripeRefundId = obj.id?.startsWith('re_') ? obj.id : null;
+    const raw = (obj.status ?? '').toLowerCase();
+    if (raw === 'succeeded') status = 'succeeded';
+    else if (raw === 'failed') status = 'failed';
+    else if (raw === 'canceled' || raw === 'cancelled') status = 'canceled';
+    else status = 'pending';
+  } else if (event.type === 'charge.refunded') {
+    // Charge object: prefer the latest refund entry.
+    const latest = obj.refunds?.data?.[0];
+    stripeRefundId = typeof latest?.id === 'string' ? latest.id : null;
+    const raw = (latest?.status ?? 'succeeded').toLowerCase();
+    if (raw === 'failed') status = 'failed';
+    else if (raw === 'canceled' || raw === 'cancelled') status = 'canceled';
+    else if (raw === 'pending') status = 'pending';
+    else status = 'succeeded';
+    if (typeof latest?.amount === 'number' && Number.isFinite(latest.amount)) {
+      amountPence = Math.trunc(latest.amount);
+    }
+    // Charge.payment_intent is the PI id for Connect deposits.
+    paymentIntentId = paymentIntentId ?? paymentIntentIdFromObject(obj.payment_intent);
+  }
+
+  const result = await confirmDepositRefundFromWebhook({
+    stripeRefundId,
+    paymentIntentId,
+    status,
+    amountPence,
+  });
+
+  opsLog('stripe.webhook', 'deposit_refund_event', {
+    eventType: event.type,
+    matched: result.matched,
+    refundLedgerId: result.refund?.id ?? null,
+    bookingId: result.refund?.bookingId ?? null,
+    ledgerStatus: result.refund?.status ?? null,
+    stripeRefundId,
+    paymentIntentId,
+  });
+
+  // Unmatched is OK (retail / SaaS / manual Stripe refunds) — acknowledge so Stripe stops retrying.
+  return new Response(
+    JSON.stringify({
+      ok: true,
+      matched: result.matched,
+      status: result.refund?.status ?? null,
+    }),
+    { status: 200 },
+  );
+}
+
 async function handleConnectAccountUpdated(event: StripeEvent): Promise<Response> {
   const accountId = (event.account?.trim() || event.data.object.id?.trim() || '').trim();
   if (!accountId || !accountId.startsWith('acct_')) {
@@ -933,6 +1019,14 @@ export const POST: APIRoute = async ({ request }) => {
 
     if (event.type === 'account.updated') {
       return await finalize(await handleConnectAccountUpdated(event));
+    }
+
+    if (
+      event.type === 'charge.refunded' ||
+      event.type === 'refund.updated' ||
+      event.type === 'refund.failed'
+    ) {
+      return await finalize(await handleDepositRefundEvent(event));
     }
 
     if (

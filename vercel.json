@@ -37,6 +37,10 @@
       "schedule": "*/10 * * * *"
     },
     {
+      "path": "/api/cron/retry-deposit-refunds",
+      "schedule": "*/10 * * * *"
+    },
+    {
       "path": "/api/cron/saas-lifecycle",
       "schedule": "0 6 * * *"
     },

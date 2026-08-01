@@ -22,15 +22,22 @@ export const POST: APIRoute = async (ctx) => {
   if (scoped instanceof Response) return scoped;
 
   try {
-    const booking = await cancelByShop({
+    const result = await cancelByShop({
       bookingId: parsed.data.bookingId,
       shopId: access.shopId,
       reason: parsed.data.reason || undefined,
     });
 
-    return new Response(JSON.stringify({ booking, message: 'Booking cancelled successfully.' }), {
-      status: 200,
-    });
+    return new Response(
+      JSON.stringify({
+        booking: result.booking,
+        refundOutcome: result.refundOutcome,
+        message: result.message,
+      }),
+      {
+        status: 200,
+      },
+    );
   } catch (error) {
     if (error instanceof BookingActionError) {
       return new Response(

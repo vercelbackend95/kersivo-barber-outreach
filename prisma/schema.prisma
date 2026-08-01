@@ -27,6 +27,12 @@ enum PaymentStatus {
   REFUNDED
 }
 
+enum DepositRefundStatus {
+  REFUND_PENDING
+  REFUNDED
+  REFUND_FAILED
+}
+
 enum SmsOutboundPurpose {
   APPOINTMENT_REMINDER
 }
@@ -495,12 +501,40 @@ model Booking {
   client  Client? @relation(fields: [clientId], references: [id], onDelete: SetNull)
   smsOutbound   SmsOutbound[]
   emailOutbound EmailOutbound[]
+  depositRefund BookingDepositRefund?
 
   @@index([barberId, startAt, endAt])
   @@index([status])
   @@index([email])
   @@index([clientId])
   @@index([status, startAt])
+}
+
+/// Durable ledger for booking-deposit refunds (retry, webhook confirm, ops repair).
+model BookingDepositRefund {
+  id                    String              @id @default(cuid())
+  bookingId             String              @unique
+  shopId                String
+  status                DepositRefundStatus @default(REFUND_PENDING)
+  amountPence           Int
+  reason                String
+  idempotencyKey        String              @unique
+  stripeRefundId        String?             @unique
+  stripePaymentIntentId String
+  connectAccountId      String?
+  attempts              Int                 @default(0)
+  maxAttempts           Int                 @default(6)
+  nextAttemptAt         DateTime?
+  lastAttemptAt         DateTime?
+  lastError             String?
+  confirmedAt           DateTime?
+  createdAt             DateTime            @default(now())
+  updatedAt             DateTime            @updatedAt
+
+  booking Booking @relation(fields: [bookingId], references: [id], onDelete: Cascade)
+
+  @@index([status, nextAttemptAt])
+  @@index([shopId, createdAt])
 }
 
 /// Internal SMS send log (ops/debug — no admin UI in v1).

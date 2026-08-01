@@ -1,3 +1,4 @@
+import { DepositRefundStatus } from '@prisma/client';
 import { prisma } from '@/lib/db/client';
 import { notifyOpsDurable } from '@/lib/ops/stripeWebhookLedger';
 import { opsLog } from '@/lib/ops/opsLog';
@@ -99,15 +100,57 @@ export async function collectStuckWebhookFailures(now = new Date()): Promise<
   });
 }
 
+export async function collectStuckRefunds(now = new Date()): Promise<
+  Array<{
+    id: string;
+    bookingId: string;
+    shopId: string;
+    status: DepositRefundStatus;
+    attempts: number;
+    createdAt: Date;
+    lastError: string | null;
+  }>
+> {
+  const olderThan = new Date(now.getTime() - 15 * 60 * 1000);
+  return prisma.bookingDepositRefund.findMany({
+    where: {
+      OR: [
+        {
+          status: DepositRefundStatus.REFUND_FAILED,
+          updatedAt: { lte: olderThan },
+        },
+        {
+          status: DepositRefundStatus.REFUND_PENDING,
+          createdAt: { lte: olderThan },
+          attempts: { gte: 2 },
+        },
+      ],
+    },
+    orderBy: { createdAt: 'asc' },
+    take: 20,
+    select: {
+      id: true,
+      bookingId: true,
+      shopId: true,
+      status: true,
+      attempts: true,
+      createdAt: true,
+      lastError: true,
+    },
+  });
+}
+
 export async function runOpsHealthChecks(now = new Date()): Promise<{
   emailFailRate: number;
   smsFailRate: number;
   webhookFailedCount: number;
+  stuckRefundCount: number;
   alertsFired: string[];
 }> {
   const alertsFired: string[] = [];
   const messaging = await collectMessagingFailRates(now);
   const stuck = await collectStuckWebhookFailures(now);
+  const stuckRefunds = await collectStuckRefunds(now);
 
   if (messaging.email.shouldAlert) {
     const key = 'messaging:email-fail-rate';
@@ -157,10 +200,32 @@ export async function runOpsHealthChecks(now = new Date()): Promise<{
     if (result.sent) alertsFired.push(key);
   }
 
+  for (const row of stuckRefunds) {
+    const key = `refund:stuck:${row.bookingId}`;
+    const result = await notifyOpsDurable({
+      severity: 'critical',
+      title: 'Deposit refund stuck',
+      body:
+        row.lastError?.slice(0, 500) ||
+        `Refund ${row.status} after ${row.attempts} attempt(s) — check Retry refund in admin.`,
+      dedupeKey: key,
+      fields: {
+        bookingId: row.bookingId,
+        shopId: row.shopId,
+        refundLedgerId: row.id,
+        status: row.status,
+        attempts: row.attempts,
+        createdAt: row.createdAt.toISOString(),
+      },
+    });
+    if (result.sent) alertsFired.push(key);
+  }
+
   opsLog('ops.health', 'check_complete', {
     emailFailRate: Number(messaging.email.failRate.toFixed(4)),
     smsFailRate: Number(messaging.sms.failRate.toFixed(4)),
     webhookFailedCount: stuck.length,
+    stuckRefundCount: stuckRefunds.length,
     alertsFired: alertsFired.length,
   });
 
@@ -168,6 +233,7 @@ export async function runOpsHealthChecks(now = new Date()): Promise<{
     emailFailRate: messaging.email.failRate,
     smsFailRate: messaging.sms.failRate,
     webhookFailedCount: stuck.length,
+    stuckRefundCount: stuckRefunds.length,
     alertsFired,
   };
 }
