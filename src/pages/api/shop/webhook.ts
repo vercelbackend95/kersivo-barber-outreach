@@ -1,6 +1,6 @@
 export const prerender = false;
 
-import PrismaClientPkg from '@prisma/client';
+import PrismaClientPkg, { BookingStatus, PaymentStatus } from '@prisma/client';
 import type { APIRoute } from 'astro';
 import { setShopAnalyticsLive, setShopAnalyticsLiveForOwnerEmail } from '../../../lib/admin/analyticsMode';
 import { prisma } from '../../../lib/db/client';
@@ -857,8 +857,68 @@ async function handleBookingDepositCheckout(
   if (result.outcome === 'duplicate') {
     return new Response(JSON.stringify({ ok: true, duplicate: true }), { status: 200 });
   }
-  // confirmed and conflicting_payment both ack Stripe (alert already fired for conflict).
-  return new Response(JSON.stringify({ ok: true, bookingId }), { status: 200 });
+  // confirmed / reinstated / late_refunded / conflicting_payment all ack Stripe
+  // (alerts already fired for conflict and late-paid paths).
+  return new Response(JSON.stringify({ ok: true, bookingId, outcome: result.outcome }), {
+    status: 200,
+  });
+}
+
+/**
+ * Safety net: when Stripe expires the Checkout Session, release the local hold
+ * if it is still PENDING_PAYMENT and past paymentExpiresAt.
+ */
+async function handleBookingDepositSessionExpired(event: StripeEvent): Promise<Response> {
+  const sessionId =
+    typeof event.data.object.id === 'string' ? event.data.object.id.trim() : '';
+  const metadata = event.data.object.metadata ?? {};
+  if ((metadata.type ?? '').trim() !== BOOKING_DEPOSIT_METADATA_TYPE) {
+    return new Response(JSON.stringify({ ok: true, ignored: true }), { status: 200 });
+  }
+  const bookingId = metadata.bookingId?.trim();
+  const shopId = metadata.shopId?.trim();
+  if (!bookingId || !shopId || shopId === DEMO_SHOP_ID) {
+    return new Response(JSON.stringify({ ok: true, ignored: true }), { status: 200 });
+  }
+
+  const now = new Date();
+  const booking = await prisma.booking.findFirst({
+    where: {
+      id: bookingId,
+      barber: { shopId },
+      status: BookingStatus.PENDING_PAYMENT,
+      paymentStatus: PaymentStatus.UNPAID,
+    },
+    select: { id: true, paymentExpiresAt: true, stripeCheckoutSessionId: true },
+  });
+
+  if (!booking) {
+    return new Response(JSON.stringify({ ok: true, alreadyReleased: true }), { status: 200 });
+  }
+
+  const storedSessionId = booking.stripeCheckoutSessionId?.trim() || '';
+  if (storedSessionId && sessionId && storedSessionId !== sessionId) {
+    return new Response(JSON.stringify({ ok: true, ignored: true }), { status: 200 });
+  }
+
+  if (booking.paymentExpiresAt && booking.paymentExpiresAt.getTime() > now.getTime()) {
+    // Hold still within window — leave PENDING_PAYMENT; cron will expire the session first.
+    return new Response(JSON.stringify({ ok: true, holdStillActive: true }), { status: 200 });
+  }
+
+  const released = await prisma.booking.updateMany({
+    where: {
+      id: booking.id,
+      status: BookingStatus.PENDING_PAYMENT,
+      paymentStatus: PaymentStatus.UNPAID,
+    },
+    data: { status: BookingStatus.EXPIRED },
+  });
+
+  return new Response(
+    JSON.stringify({ ok: true, released: released.count > 0, bookingId }),
+    { status: 200 },
+  );
 }
 
 function toRefId(value: string | { id?: string } | null | undefined): string | null {
@@ -982,6 +1042,10 @@ export const POST: APIRoute = async ({ request }) => {
 
     if (event.type === 'account.updated') {
       return await finalize(await handleConnectAccountUpdated(event));
+    }
+
+    if (event.type === 'checkout.session.expired') {
+      return await finalize(await handleBookingDepositSessionExpired(event));
     }
 
     if (

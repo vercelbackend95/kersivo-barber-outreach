@@ -4,17 +4,25 @@ import { BookingStatus, EmailOutboundPurpose, PaymentStatus } from '@prisma/clie
 const findFirstBooking = vi.fn();
 const findFirstOrThrowBooking = vi.fn();
 const updateManyBooking = vi.fn();
+const findFirstOverlap = vi.fn();
+const findFirstTimeOff = vi.fn();
 const findUniqueShop = vi.fn();
 const transaction = vi.fn();
 const enqueueEmail = vi.fn();
 const tryDeliverOutboxEmail = vi.fn();
 const notifyOpsDurable = vi.fn();
 const captureOpsException = vi.fn();
+const requestDepositRefund = vi.fn();
+const attemptDepositRefund = vi.fn();
 const generateToken = vi.fn(() => 'plain-manage-token');
 const hashToken = vi.fn((token: string) => `hash:${token}`);
 const buildInstantBookingConfirmationEmail = vi.fn((..._args: unknown[]) => ({
   subject: 'Your booking is confirmed',
   html: '<p>confirmed</p><a href="https://kersivo.co.uk/book/cancel?token=plain-manage-token">cancel</a>',
+}));
+const buildLateDepositRefundEmail = vi.fn((..._args: unknown[]) => ({
+  subject: 'Your deposit is being refunded',
+  html: '<p>refund</p>',
 }));
 const getPublicSiteUrl = vi.fn(() => 'https://kersivo.co.uk');
 
@@ -40,6 +48,7 @@ vi.mock('../email/outbox', () => ({
 vi.mock('../email/sender', () => ({
   buildInstantBookingConfirmationEmail: (...args: unknown[]) =>
     buildInstantBookingConfirmationEmail(...args),
+  buildLateDepositRefundEmail: (...args: unknown[]) => buildLateDepositRefundEmail(...args),
 }));
 
 vi.mock('../ops/stripeWebhookLedger', () => ({
@@ -54,6 +63,11 @@ vi.mock('../setup/siteUrl', () => ({
   getPublicSiteUrl: () => getPublicSiteUrl(),
 }));
 
+vi.mock('./depositMoney', () => ({
+  requestDepositRefund: (...args: unknown[]) => requestDepositRefund(...args),
+  attemptDepositRefund: (...args: unknown[]) => attemptDepositRefund(...args),
+}));
+
 vi.mock('./tokens', () => ({
   generateToken: () => generateToken(),
   hashToken: (token: string) => hashToken(token),
@@ -64,6 +78,7 @@ import { confirmPaidDeposit } from './confirmPaidDeposit';
 function pendingBooking(overrides: Record<string, unknown> = {}) {
   return {
     id: 'book_1',
+    barberId: 'barber_1',
     status: BookingStatus.PENDING_PAYMENT,
     paymentStatus: PaymentStatus.UNPAID,
     stripeCheckoutSessionId: 'cs_existing',
@@ -72,6 +87,8 @@ function pendingBooking(overrides: Record<string, unknown> = {}) {
     email: 'client@example.com',
     fullName: 'Client One',
     startAt: new Date('2026-08-10T10:00:00.000Z'),
+    endAt: new Date('2026-08-10T10:30:00.000Z'),
+    depositAmountPence: 500,
     serviceNameAtBooking: 'Fade',
     barber: { id: 'barber_1', name: 'Alex', shopId: 'shop_1' },
     service: { id: 'svc_1', name: 'Fade' },
@@ -107,6 +124,10 @@ describe('confirmPaidDeposit', () => {
         booking: {
           updateMany: (...args: unknown[]) => updateManyBooking(...args),
           findFirstOrThrow: (...args: unknown[]) => findFirstOrThrowBooking(...args),
+          findFirst: (...args: unknown[]) => findFirstOverlap(...args),
+        },
+        barberTimeOff: {
+          findFirst: (...args: unknown[]) => findFirstTimeOff(...args),
         },
         shopSettings: {
           findUnique: (...args: unknown[]) => findUniqueShop(...args),
@@ -280,5 +301,116 @@ describe('confirmPaidDeposit', () => {
 
     expect(result).toEqual({ outcome: 'not_found' });
     expect(transaction).not.toHaveBeenCalled();
+  });
+
+  it('reinstates an expired booking when the slot is still free', async () => {
+    const expired = pendingBooking({ status: BookingStatus.EXPIRED });
+    const reinstated = paidBooking({
+      status: BookingStatus.BOOKED,
+      stripeCheckoutSessionId: 'cs_late',
+      stripePaymentIntentId: 'pi_late',
+    });
+
+    // 1) initial load → EXPIRED; 2) after first CAS miss re-read → EXPIRED; late path uses tx
+    findFirstBooking.mockResolvedValue(expired);
+    findFirstOrThrowBooking.mockResolvedValue(reinstated);
+    findFirstOverlap.mockResolvedValue(null);
+    findFirstTimeOff.mockResolvedValue(null);
+    updateManyBooking
+      .mockResolvedValueOnce({ count: 0 }) // PENDING_PAYMENT CAS miss
+      .mockResolvedValueOnce({ count: 1 }); // EXPIRED reinstate CAS win
+    mockWinningTransaction();
+
+    const result = await confirmPaidDeposit({
+      bookingId: 'book_1',
+      shopId: 'shop_1',
+      sessionId: 'cs_late',
+      paymentIntentId: 'pi_late',
+    });
+
+    expect(result.outcome).toBe('reinstated');
+    expect(enqueueEmail).toHaveBeenCalledWith(
+      expect.anything(),
+      expect.objectContaining({
+        purpose: EmailOutboundPurpose.BOOKING_CONFIRMATION,
+      }),
+    );
+    expect(tryDeliverOutboxEmail).toHaveBeenCalledWith('out_1');
+    expect(requestDepositRefund).not.toHaveBeenCalled();
+    expect(notifyOpsDurable).not.toHaveBeenCalled();
+  });
+
+  it('late payment with taken slot stamps PI, refunds, and alerts under late-paid title', async () => {
+    const expired = pendingBooking({ status: BookingStatus.EXPIRED });
+    const stamped = pendingBooking({
+      status: BookingStatus.EXPIRED,
+      paymentStatus: PaymentStatus.PAID,
+      stripeCheckoutSessionId: 'cs_late',
+      stripePaymentIntentId: 'pi_late',
+      paidAt: new Date('2026-08-01T12:30:00.000Z'),
+      paymentExpiresAt: null,
+    });
+
+    findFirstBooking.mockResolvedValue(expired);
+    findFirstOrThrowBooking.mockResolvedValue(stamped);
+    findFirstOverlap.mockResolvedValue({ id: 'book_other' });
+    findFirstTimeOff.mockResolvedValue(null);
+    updateManyBooking
+      .mockResolvedValueOnce({ count: 0 }) // PENDING_PAYMENT CAS miss
+      .mockResolvedValueOnce({ count: 1 }); // EXPIRED stamp PAID
+    mockWinningTransaction();
+    requestDepositRefund.mockResolvedValue({
+      outcome: 'pending',
+      refund: { id: 'refund_1' },
+    });
+    attemptDepositRefund.mockResolvedValue({ outcome: 'refunded', refund: { id: 'refund_1' } });
+
+    const result = await confirmPaidDeposit({
+      bookingId: 'book_1',
+      shopId: 'shop_1',
+      sessionId: 'cs_late',
+      paymentIntentId: 'pi_late',
+    });
+
+    expect(result.outcome).toBe('late_refunded');
+    expect(updateManyBooking).toHaveBeenCalledWith(
+      expect.objectContaining({
+        where: {
+          id: 'book_1',
+          status: BookingStatus.EXPIRED,
+          paymentStatus: PaymentStatus.UNPAID,
+        },
+        data: expect.objectContaining({
+          paymentStatus: PaymentStatus.PAID,
+          stripePaymentIntentId: 'pi_late',
+          stripeCheckoutSessionId: 'cs_late',
+        }),
+      }),
+    );
+    // Must NOT flip status away from EXPIRED on the stamp path.
+    const stampCall = updateManyBooking.mock.calls.find(
+      (call) =>
+        (call[0] as { where?: { status?: BookingStatus } })?.where?.status ===
+        BookingStatus.EXPIRED,
+    );
+    expect((stampCall?.[0] as { data: { status?: BookingStatus } }).data.status).toBeUndefined();
+
+    expect(enqueueEmail).toHaveBeenCalledWith(
+      expect.anything(),
+      expect.objectContaining({
+        purpose: EmailOutboundPurpose.DEPOSIT_REFUNDED_SLOT_LOST,
+      }),
+    );
+    expect(requestDepositRefund).toHaveBeenCalledWith({
+      bookingId: 'book_1',
+      reason: 'late_payment_slot_lost',
+    });
+    expect(attemptDepositRefund).toHaveBeenCalledWith('refund_1');
+    expect(notifyOpsDurable).toHaveBeenCalledWith(
+      expect.objectContaining({
+        dedupeKey: 'deposit:late-paid:book_1',
+        title: 'Late deposit payment — slot lost, refund queued',
+      }),
+    );
   });
 });

@@ -31,6 +31,7 @@ describe('createBookingDepositCheckoutSession amountPence (H04)', () => {
       customerEmail: 'client@example.com',
       shopName: 'Test Shop',
       amountPence: 300,
+      bookingCreatedAt: new Date('2026-08-01T12:00:00.000Z'),
       successUrl: 'https://kersivo.test/success',
       cancelUrl: 'https://kersivo.test/cancel',
     });
@@ -51,6 +52,7 @@ describe('createBookingDepositCheckoutSession amountPence (H04)', () => {
         customerEmail: 'client@example.com',
         shopName: 'Test Shop',
         amountPence: 0,
+        bookingCreatedAt: new Date('2026-08-01T12:00:00.000Z'),
         successUrl: 'https://kersivo.test/success',
         cancelUrl: 'https://kersivo.test/cancel',
       }),

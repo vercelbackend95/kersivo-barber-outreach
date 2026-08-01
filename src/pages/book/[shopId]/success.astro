@@ -59,7 +59,11 @@ if (shopId && sessionId) {
           paymentIntentId: getCheckoutPaymentIntentId(session),
         });
 
-        if (result.outcome === 'confirmed' || result.outcome === 'duplicate') {
+        if (
+          result.outcome === 'confirmed' ||
+          result.outcome === 'duplicate' ||
+          result.outcome === 'reinstated'
+        ) {
           const confirmed = result.booking;
           const serviceName = confirmed.serviceNameAtBooking ?? confirmed.service.name;
           summary = {
@@ -69,6 +73,9 @@ if (shopId && sessionId) {
             time: formatInTimeZone(confirmed.startAt, shopTimezone, 'HH:mm'),
           };
           ok = true;
+        } else if (result.outcome === 'late_refunded') {
+          errorMessage =
+            'Your payment was received, but this appointment slot was released after the payment window closed and is no longer available. Your deposit is being refunded to the original payment method.';
         } else if (result.outcome === 'not_found') {
           errorMessage = 'Booking not found for this payment.';
         } else {

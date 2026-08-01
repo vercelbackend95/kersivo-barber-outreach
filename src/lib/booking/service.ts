@@ -525,8 +525,11 @@ export async function createInstantBooking(
       canCollectBookingDeposit(shopForDeposit) &&
       depositPence > 0;
 
+    // Hold window: floor 5m, default 15m, cap 120m so a DB-only value cannot outlive
+    // Stripe's 24h session max in a way that leaves a payable session after release.
+    const holdMins = Math.min(120, Math.max(5, shopForDeposit.pendingConfirmationMins || 15));
     const paymentExpiresAt = collectDeposit
-      ? new Date(Date.now() + Math.max(5, shopForDeposit.pendingConfirmationMins || 15) * 60 * 1000)
+      ? new Date(Date.now() + holdMins * 60 * 1000)
       : null;
 
     const baseUrl = resolvePublicSiteUrl();
