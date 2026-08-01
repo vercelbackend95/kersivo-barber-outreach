@@ -2,7 +2,7 @@ export const prerender = false;
 
 import type { APIRoute } from 'astro';
 import { requireAdminContext } from '@/lib/admin/auth';
-import { requireAnyPermission } from '@/lib/admin/rbac/can';
+import { accessCan, requireAnyPermission, requirePermission } from '@/lib/admin/rbac/can';
 import { prisma } from '@/lib/db/client';
 import { canCollectBookingDeposit, BOOKING_DEPOSIT_PENCE } from '@/lib/booking/depositGate';
 import { isPaidShop } from '@/lib/shop/paidShop';
@@ -25,6 +25,8 @@ export const GET: APIRoute = async (ctx) => {
   if (access instanceof Response) return access;
   const denied = requireAnyPermission(access, ['shop.settings', 'billing.manage']);
   if (denied) return denied;
+
+  const canManagePayouts = accessCan(access, 'billing.manage');
 
   const shop = await prisma.shopSettings.findUnique({
     where: { id: access.shopId },
@@ -89,7 +91,13 @@ export const GET: APIRoute = async (ctx) => {
     depositsEnabled: shop.depositsEnabled,
     depositAmountPence: BOOKING_DEPOSIT_PENCE,
     collectReady,
-    connect,
+    canManagePayouts,
+    connect: {
+      accountId: canManagePayouts ? connect.accountId : null,
+      accountLinked: Boolean(connect.accountId),
+      chargesEnabled: connect.chargesEnabled,
+      detailsSubmitted: connect.detailsSubmitted,
+    },
     policy: {
       cancellationWindowHours: shop.cancellationWindowHours,
       rescheduleWindowHours: shop.rescheduleWindowHours,
@@ -139,11 +147,11 @@ export const PATCH: APIRoute = async (ctx) => {
   return json({ depositsEnabled: updated.depositsEnabled });
 };
 
-/** Start or continue Stripe Connect Express onboarding. */
+/** Start or continue Stripe Connect Express onboarding. Owner / billing.manage only. */
 export const POST: APIRoute = async (ctx) => {
   const access = await requireAdminContext(ctx);
   if (access instanceof Response) return access;
-  const denied = requireAnyPermission(access, ['billing.manage', 'shop.settings']);
+  const denied = requirePermission(access, 'billing.manage');
   if (denied) return denied;
 
   const shop = await prisma.shopSettings.findUnique({
