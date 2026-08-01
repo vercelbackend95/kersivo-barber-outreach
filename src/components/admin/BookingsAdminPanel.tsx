@@ -39,6 +39,14 @@ import { countBookingsByStatusTone, getBookingStatusTone, isCancelledBookingStat
 import { adminFetchJson, notifyAdminDemoBlocked } from './adminAuth';
 import { normalizeWorkingHourRows } from '../../lib/admin/normalizeWorkingHourRows';
 import { fetchBarbersListRefresh } from '@/lib/admin/teamRefreshFetch';
+type DepositRefundSummary = {
+  status: 'REFUND_PENDING' | 'REFUNDED' | 'REFUND_FAILED';
+  amountPence: number;
+  stripeRefundId?: string | null;
+  attempts: number;
+  lastError?: string | null;
+};
+
 type Booking = {
   id: string;
   barberId: string;
@@ -53,6 +61,9 @@ type Booking = {
   endAt: string;
    notes?: string | null;
   rescheduledAt?: string | null;
+  paymentRequired?: boolean;
+  paymentStatus?: string | null;
+  depositRefund?: DepositRefundSummary | null;
   barber: { name: string };
   service: { name: string };
 };
@@ -690,6 +701,7 @@ export default function BookingsAdminPanel({ isActive, mode, onBackToDashboard, 
   const [cancelSuccessMessage, setCancelSuccessMessage] = useState('');
   const [cancelErrorMessage, setCancelErrorMessage] = useState('');
   const [cancelLoadingBookingId, setCancelLoadingBookingId] = useState<string | null>(null);
+  const [refundRetryLoadingBookingId, setRefundRetryLoadingBookingId] = useState<string | null>(null);
   const [blockScopeBarberId, setBlockScopeBarberId] = useState<string>('all');
   const [selectedBarberStatsCount, setSelectedBarberStatsCount] = useState(0);
 
@@ -697,6 +709,14 @@ export default function BookingsAdminPanel({ isActive, mode, onBackToDashboard, 
     (booking: Booking) =>
       booking.status === 'BOOKED' && canShopAdminCancelByLeadTime(new Date(booking.startAt), nowMs),
     [nowMs]
+  );
+
+  const canRetryDepositRefund = useCallback(
+    (booking: Booking) =>
+      canManageBookings &&
+      (booking.depositRefund?.status === 'REFUND_FAILED' ||
+        booking.depositRefund?.status === 'REFUND_PENDING'),
+    [canManageBookings],
   );
 
   const [blockSuccessMessage, setBlockSuccessMessage] = useState('');
@@ -1730,13 +1750,13 @@ export default function BookingsAdminPanel({ isActive, mode, onBackToDashboard, 
     setCancelLoadingBookingId(booking.id);
     setCancelErrorMessage('');
     try {
-      await adminFetchJson('/api/admin/bookings/cancel', {
+      const payload = await adminFetchJson<{ message?: string }>('/api/admin/bookings/cancel', {
         method: 'POST',
         headers: { 'content-type': 'application/json' },
         body: JSON.stringify({ bookingId: booking.id }),
         errorMessage: 'Could not cancel booking right now.',
       });
-      setCancelSuccessMessage('Booking cancelled successfully.');
+      setCancelSuccessMessage(payload?.message ?? 'Booking cancelled successfully.');
       await fetchBookings();
     } catch (cancelError) {
       setCancelErrorMessage(cancelError instanceof Error ? cancelError.message : 'Could not cancel booking right now.');
@@ -1744,6 +1764,29 @@ export default function BookingsAdminPanel({ isActive, mode, onBackToDashboard, 
       setCancelLoadingBookingId(null);
     }
 }
+
+  async function retryDepositRefund(booking: Booking) {
+    setRefundRetryLoadingBookingId(booking.id);
+    setCancelErrorMessage('');
+    try {
+      const payload = await adminFetchJson<{ message?: string }>(
+        `/api/admin/bookings/${encodeURIComponent(booking.id)}/refund-retry`,
+        {
+          method: 'POST',
+          headers: { 'content-type': 'application/json' },
+          errorMessage: 'Could not retry deposit refund right now.',
+        },
+      );
+      setCancelSuccessMessage(payload?.message ?? 'Deposit refund retry completed.');
+      await fetchBookings();
+    } catch (retryError) {
+      setCancelErrorMessage(
+        retryError instanceof Error ? retryError.message : 'Could not retry deposit refund right now.',
+      );
+    } finally {
+      setRefundRetryLoadingBookingId(null);
+    }
+  }
 
   async function createTimeBlock(title: string, startAt: Date, endAt: Date) {
     setBlockErrorMessage('');
@@ -2387,6 +2430,9 @@ export default function BookingsAdminPanel({ isActive, mode, onBackToDashboard, 
                     onCancelBooking={cancelBookingByShop}
                     cancelLoadingBookingId={cancelLoadingBookingId}
                     canCancelBooking={canCancelBookingAsShop}
+                    onRetryDepositRefund={retryDepositRefund}
+                    refundRetryLoadingBookingId={refundRetryLoadingBookingId}
+                    canRetryDepositRefund={canRetryDepositRefund}
                   />
                 </motion.div>
               )}
@@ -2475,6 +2521,9 @@ export default function BookingsAdminPanel({ isActive, mode, onBackToDashboard, 
           onOpenClient={openClientProfileForBooking}
           onEditHistoryStatus={setHistoryStatusBooking}
           statusEditorBookingId={historyStatusBooking?.id ?? null}
+          onRetryDepositRefund={retryDepositRefund}
+          refundRetryLoadingBookingId={refundRetryLoadingBookingId}
+          canRetryDepositRefund={canRetryDepositRefund}
           onClientAvatarChange={(clientId, nextUrl) => {
             setBookings((previous) => previous.map((booking) => (
               booking.clientId === clientId

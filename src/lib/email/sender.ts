@@ -242,15 +242,26 @@ export async function sendRescheduledBookingEmail(
 export async function sendShopCancelledBookingEmail(
   input: BookingEmailBaseInput & {
     reason?: string;
+    /** When set, only mention a refund if Stripe has confirmed it. */
+    depositRefundStatus?: 'refunded' | 'pending' | 'failed' | 'skipped_unpaid' | 'skipped_already' | 'skipped_forfeited' | null;
   }
 ) {
   const summaryHtml = renderBookingSummary(input);
   const reasonHtml = input.reason ? `<p><strong>Reason:</strong> ${input.reason}</p>` : '';
+  const refundHtml =
+    input.depositRefundStatus === 'refunded'
+      ? '<p>Your booking deposit refund has been confirmed.</p>'
+      : input.depositRefundStatus === 'pending'
+        ? '<p>Your booking deposit refund is being processed. You will see it on your card statement shortly.</p>'
+        : input.depositRefundStatus === 'failed'
+          ? '<p>We could not complete your deposit refund automatically. The shop will resolve this shortly.</p>'
+          : '';
 
   const html = `<p>Hi ${input.fullName},</p>
   <p>Your booking has been cancelled by the shop.</p>
   ${summaryHtml}
-  ${reasonHtml}`;
+  ${reasonHtml}
+  ${refundHtml}`;
 
   await sendEmail({
     to: input.to,
@@ -261,6 +272,7 @@ export async function sendShopCancelledBookingEmail(
       to: input.to,
       fullName: input.fullName,
       reason: input.reason ?? '',
+      depositRefundStatus: input.depositRefundStatus ?? '',
       shopName: input.shopName,
       serviceName: input.serviceName,
       barberName: input.barberName,

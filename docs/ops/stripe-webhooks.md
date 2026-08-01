@@ -7,12 +7,23 @@ Two Stripe Dashboard endpoints hit the same app URL `POST /api/shop/webhook`:
 | Endpoint | Secret env | Typical events |
 |----------|------------|----------------|
 | Platform | `STRIPE_WEBHOOK_SECRET` | SaaS checkout, retail, setup deposit, subscription lifecycle |
-| Connect | `STRIPE_CONNECT_WEBHOOK_SECRET` | Booking deposits, `account.updated` |
+| Connect | `STRIPE_CONNECT_WEBHOOK_SECRET` | Booking deposits, `account.updated`, deposit refunds |
 
 **OPS checklist (do once per environment):**
 1. Both endpoints point at production URL.
 2. Enable **failed delivery** notifications (email / Slack) in Stripe Dashboard.
-3. Confirm events include: `checkout.session.completed`, `checkout.session.async_payment_succeeded`, `customer.subscription.*`, `invoice.paid`, `invoice.payment_failed`, `account.updated`.
+3. Confirm platform events include: `checkout.session.completed`, `checkout.session.async_payment_succeeded`, `customer.subscription.*`, `invoice.paid`, `invoice.payment_failed`.
+4. Confirm Connect events include: `checkout.session.completed`, `account.updated`, **`charge.refunded`**, **`refund.updated`**, **`refund.failed`**.
+
+### Post-deploy: add refund events on Connect endpoint
+
+In Stripe Dashboard → Developers → Webhooks → **kersivo Connect** endpoint → Add events:
+
+- `charge.refunded`
+- `refund.updated`
+- `refund.failed`
+
+These drive confirmation of `BookingDepositRefund` (see [`docs/ops/refunds.md`](./refunds.md)). Unmatched refund events (retail / manual) still return 200.
 
 ## App ledger
 

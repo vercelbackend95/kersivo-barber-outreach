@@ -31,7 +31,7 @@ function isMissingPaymentIntentError(error: unknown): boolean {
 async function stripeForm(
   path: string,
   params: Record<string, string>,
-  options?: { stripeAccount?: string },
+  options?: { stripeAccount?: string; idempotencyKey?: string },
 ): Promise<Record<string, unknown>> {
   const body = new URLSearchParams(params);
   const headers: Record<string, string> = {
@@ -40,6 +40,10 @@ async function stripeForm(
   };
   if (options?.stripeAccount) {
     headers['Stripe-Account'] = options.stripeAccount;
+  }
+  const idempotencyKey = options?.idempotencyKey?.trim();
+  if (idempotencyKey) {
+    headers['Idempotency-Key'] = idempotencyKey;
   }
 
   const response = await fetch(`${STRIPE_API_BASE}${path}`, {
@@ -188,14 +192,37 @@ export async function retrieveBookingDepositSession(
   return retrieveCheckoutSession(sessionId, { stripeAccount: shopConnectAccountId });
 }
 
+export type StripeRefundResult = {
+  id: string;
+  mode: 'direct' | 'platform_legacy';
+  status: string;
+  amount: number | null;
+};
+
+function parseRefundResult(
+  refund: Record<string, unknown>,
+  mode: 'direct' | 'platform_legacy',
+): StripeRefundResult {
+  const id = typeof refund.id === 'string' ? refund.id : '';
+  if (!id) throw new Error('Stripe refund id missing.');
+  const status = typeof refund.status === 'string' ? refund.status : 'succeeded';
+  const amount =
+    typeof refund.amount === 'number' && Number.isFinite(refund.amount)
+      ? Math.trunc(refund.amount)
+      : null;
+  return { id, mode, status, amount };
+}
+
 export async function refundPaymentIntent(
   paymentIntentId: string,
   options?: {
     stripeAccount?: string;
     reverseTransfer?: boolean;
     amount?: number;
+    /** Base key; `:direct` / `:legacy` suffixes are appended so paths stay distinct. */
+    idempotencyKey?: string;
   },
-): Promise<{ id: string; mode: 'direct' | 'platform_legacy' }> {
+): Promise<StripeRefundResult> {
   const params: Record<string, string> = {
     payment_intent: paymentIntentId,
   };
@@ -203,13 +230,15 @@ export async function refundPaymentIntent(
     params.amount = String(Math.trunc(options.amount));
   }
 
+  const baseKey = options?.idempotencyKey?.trim() || '';
   const connectAccountId = options?.stripeAccount?.trim();
   if (connectAccountId) {
     try {
-      const refund = await stripeForm('/refunds', params, { stripeAccount: connectAccountId });
-      const id = typeof refund.id === 'string' ? refund.id : '';
-      if (!id) throw new Error('Stripe refund id missing.');
-      return { id, mode: 'direct' };
+      const refund = await stripeForm('/refunds', params, {
+        stripeAccount: connectAccountId,
+        idempotencyKey: baseKey ? `${baseKey}:direct` : undefined,
+      });
+      return parseRefundResult(refund, 'direct');
     } catch (error) {
       if (!isMissingPaymentIntentError(error)) throw error;
       // Legacy destination charges lived on the platform account.
@@ -224,8 +253,8 @@ export async function refundPaymentIntent(
     delete legacyParams.reverse_transfer;
   }
 
-  const refund = await stripeForm('/refunds', legacyParams);
-  const id = typeof refund.id === 'string' ? refund.id : '';
-  if (!id) throw new Error('Stripe refund id missing.');
-  return { id, mode: 'platform_legacy' };
+  const refund = await stripeForm('/refunds', legacyParams, {
+    idempotencyKey: baseKey ? `${baseKey}:legacy` : undefined,
+  });
+  return parseRefundResult(refund, 'platform_legacy');
 }

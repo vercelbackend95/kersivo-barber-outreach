@@ -17,7 +17,13 @@ import {
 } from '@/lib/admin/shopPublicActivity';
 import { OWNER_TEST_BOOKING_NOTES_PREFIX } from './sandboxBookings';
 import { canCollectBookingDeposit, resolveBookingDepositPence } from './depositGate';
-import { forfeitBookingDeposit, refundBookingDepositIfEligible } from './depositMoney';
+import {
+  depositRefundClientMessage,
+  forfeitBookingDeposit,
+  requestDepositRefund,
+  attemptDepositRefund,
+  type DepositRefundOutcome,
+} from './depositMoney';
 const CANCELLED_BOOKING_MESSAGE = 'This booking is already cancelled. Please create a new booking.';
 const BOOKING_DATABASE_UNAVAILABLE_STATUS = 503;
 
@@ -540,7 +546,11 @@ export async function confirmBookingByToken(token: string) {
 
 }
 
-export async function cancelByManageToken(token: string) {
+export async function cancelByManageToken(token: string): Promise<{
+  booking: Awaited<ReturnType<typeof prisma.booking.update>>;
+  refundOutcome: DepositRefundOutcome | null;
+  message: string;
+}> {
   try {
     const booking = await resolveManageTokenBooking(token);
     const settings = await prisma.shopSettings.findUniqueOrThrow({
@@ -549,10 +559,15 @@ export async function cancelByManageToken(token: string) {
 
     // Unpaid holds: allow cancel anytime and expire the hold.
     if (booking.status === BookingStatus.PENDING_PAYMENT) {
-      return prisma.booking.update({
+      const updated = await prisma.booking.update({
         where: { id: booking.id },
         data: { status: BookingStatus.CANCELLED_BY_CLIENT },
       });
+      return {
+        booking: updated,
+        refundOutcome: null,
+        message: depositRefundClientMessage(null),
+      };
     }
 
     const inWindow = canCancelOrReschedule(booking.startAt, settings.cancellationWindowHours);
@@ -560,22 +575,43 @@ export async function cancelByManageToken(token: string) {
       // Outside window with paid deposit → forfeit, still allow cancel record.
       if (booking.paymentRequired && booking.paymentStatus === PaymentStatus.PAID) {
         await forfeitBookingDeposit(booking.id);
-        return prisma.booking.update({
+        const updated = await prisma.booking.update({
           where: { id: booking.id },
           data: { status: BookingStatus.CANCELLED_BY_CLIENT },
         });
+        return {
+          booking: updated,
+          refundOutcome: 'skipped_forfeited',
+          message: depositRefundClientMessage('skipped_forfeited'),
+        };
       }
       throw new BookingActionError('Cancellation window has passed.', 409);
     }
 
+    let refundOutcome: DepositRefundOutcome | null = null;
     if (booking.paymentRequired && booking.paymentStatus === PaymentStatus.PAID) {
-      await refundBookingDepositIfEligible({
+      // Write-ahead ledger before status change so a crash mid-cancel still retries.
+      const requested = await requestDepositRefund({
         bookingId: booking.id,
         reason: 'client_cancel_in_window',
       });
+      if (requested.refund) {
+        const attempted = await attemptDepositRefund(requested.refund.id);
+        refundOutcome = attempted.outcome;
+      } else {
+        refundOutcome = requested.outcome;
+      }
     }
 
-    return prisma.booking.update({ where: { id: booking.id }, data: { status: BookingStatus.CANCELLED_BY_CLIENT } });
+    const updated = await prisma.booking.update({
+      where: { id: booking.id },
+      data: { status: BookingStatus.CANCELLED_BY_CLIENT },
+    });
+    return {
+      booking: updated,
+      refundOutcome,
+      message: depositRefundClientMessage(refundOutcome),
+    };
   } catch (error) {
     rethrowBookingQuotaError(error);
   }
@@ -603,6 +639,75 @@ export async function cancelByShop(input: { bookingId: string; shopId: string; r
     );
   }
 
+  let refundOutcome: DepositRefundOutcome | null = null;
+  if (booking.paymentRequired && booking.paymentStatus === PaymentStatus.PAID) {
+    // Write-ahead ledger BEFORE status change so money path is durable even if cancel crashes.
+    const requested = await requestDepositRefund({
+      bookingId: booking.id,
+      reason: 'shop_cancel',
+    });
+    if (requested.refund) {
+      // Status update between request and attempt is intentional: cancel is the business outcome.
+      // Attempt after cancel so a Stripe hang never blocks the appointment release.
+    } else {
+      refundOutcome = requested.outcome;
+    }
+
+    const updatedBooking = await prisma.booking.update({
+      where: { id: booking.id },
+      data: {
+        status: BookingStatus.CANCELLED_BY_SHOP
+      },
+      include: { barber: true, service: true }
+    });
+
+    if (requested.refund) {
+      const attempted = await attemptDepositRefund(requested.refund.id);
+      refundOutcome = attempted.outcome;
+    }
+
+    try {
+      const settings = await prisma.shopSettings.findUniqueOrThrow({
+        where: { id: input.shopId },
+        select: { name: true },
+      });
+      await sendShopCancelledBookingEmail({
+        to: updatedBooking.email,
+        fullName: updatedBooking.fullName,
+        shopName: settings.name,
+        serviceName: updatedBooking.serviceNameAtBooking ?? updatedBooking.service.name,
+        barberName: updatedBooking.barber.name,
+        startAt: updatedBooking.startAt,
+        reason: input.reason,
+        depositRefundStatus: refundOutcome,
+      });
+    } catch (error) {
+      // Intentional soft-fail: shop cancellation is the business outcome.
+      // Do not roll back the cancel if the customer notification email fails.
+      console.warn('Failed to send shop cancellation email.', {
+        bookingId: updatedBooking.id,
+        error: error instanceof Error ? error.message : error
+      });
+
+      if (error instanceof Error && error.stack) {
+        console.warn(error.stack);
+      }
+    }
+
+    return {
+      booking: updatedBooking,
+      refundOutcome,
+      message:
+        refundOutcome === 'refunded'
+          ? 'Booking cancelled. Deposit refund confirmed.'
+          : refundOutcome === 'pending'
+            ? 'Booking cancelled. Deposit refund is being processed.'
+            : refundOutcome === 'failed'
+              ? 'Booking cancelled. Deposit refund failed — use Retry refund.'
+              : 'Booking cancelled successfully.',
+    };
+  }
+
   const updatedBooking = await prisma.booking.update({
     where: { id: booking.id },
     data: {
@@ -610,13 +715,6 @@ export async function cancelByShop(input: { bookingId: string; shopId: string; r
     },
     include: { barber: true, service: true }
   });
-
-  if (booking.paymentRequired && booking.paymentStatus === PaymentStatus.PAID) {
-    await refundBookingDepositIfEligible({
-      bookingId: booking.id,
-      reason: 'shop_cancel',
-    });
-  }
 
   try {
     const settings = await prisma.shopSettings.findUniqueOrThrow({
@@ -630,7 +728,8 @@ export async function cancelByShop(input: { bookingId: string; shopId: string; r
       serviceName: updatedBooking.serviceNameAtBooking ?? updatedBooking.service.name,
       barberName: updatedBooking.barber.name,
       startAt: updatedBooking.startAt,
-      reason: input.reason
+      reason: input.reason,
+      depositRefundStatus: null,
     });
   } catch (error) {
     // Intentional soft-fail: shop cancellation is the business outcome.
@@ -646,7 +745,11 @@ export async function cancelByShop(input: { bookingId: string; shopId: string; r
   }
 
 
-  return updatedBooking;
+  return {
+    booking: updatedBooking,
+    refundOutcome: null,
+    message: 'Booking cancelled successfully.',
+  };
 }
 
 

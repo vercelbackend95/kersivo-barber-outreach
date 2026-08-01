@@ -77,7 +77,84 @@ function withEffectiveBookingStatus<
   };
 }
 
+const DEPOSIT_REFUND_SELECT = {
+  status: true,
+  amountPence: true,
+  stripeRefundId: true,
+  attempts: true,
+  lastError: true,
+} as const;
+
 const BOOKING_LIST_SELECT = {
+  id: true,
+  serviceId: true,
+  barberId: true,
+  fullName: true,
+  email: true,
+  phone: true,
+  clientId: true,
+  startAt: true,
+  endAt: true,
+  status: true,
+  notes: true,
+  rescheduledAt: true,
+  paymentRequired: true,
+  depositAmountPence: true,
+  paymentStatus: true,
+  depositRefundedAt: true,
+  depositForfeitedAt: true,
+  totalPricePence: true,
+  serviceNameAtBooking: true,
+  servicePricePenceAtBooking: true,
+  barber: { select: { name: true } },
+  service: { select: { name: true } },
+  client: { select: { tags: true, avatarUrl: true } },
+  depositRefund: { select: DEPOSIT_REFUND_SELECT },
+} satisfies Prisma.BookingSelect;
+
+const BOOKING_LIST_LEGACY_SELECT = {
+  id: true,
+  serviceId: true,
+  barberId: true,
+  fullName: true,
+  email: true,
+  phone: true,
+  clientId: true,
+  startAt: true,
+  endAt: true,
+  status: true,
+  notes: true,
+  rescheduledAt: true,
+  paymentRequired: true,
+  depositAmountPence: true,
+  paymentStatus: true,
+  depositRefundedAt: true,
+  depositForfeitedAt: true,
+  totalPricePence: true,
+  barber: { select: { name: true } },
+  service: { select: { name: true } },
+  client: { select: { tags: true, avatarUrl: true } },
+  depositRefund: { select: DEPOSIT_REFUND_SELECT },
+} satisfies Prisma.BookingSelect;
+
+type BookingListRow = Prisma.BookingGetPayload<{ select: typeof BOOKING_LIST_SELECT }>;
+type BookingListLegacyRow = Prisma.BookingGetPayload<{ select: typeof BOOKING_LIST_LEGACY_SELECT }>;
+type BookingListQueryRow = BookingListRow | BookingListLegacyRow;
+
+function isMissingHistoricalColumnError(error: unknown) {
+  return error instanceof Prisma.PrismaClientKnownRequestError
+    && error.code === 'P2022'
+    && String(error.meta?.column ?? '').includes('Booking.serviceNameAtBooking');
+}
+
+function isMissingDepositRefundRelationError(error: unknown) {
+  if (!(error instanceof Prisma.PrismaClientKnownRequestError)) return false;
+  if (error.code !== 'P2021' && error.code !== 'P2022') return false;
+  const haystack = `${error.message} ${String(error.meta?.table ?? '')} ${String(error.meta?.column ?? '')}`;
+  return /BookingDepositRefund|depositRefund/i.test(haystack);
+}
+
+const BOOKING_LIST_SELECT_WITHOUT_REFUND = {
   id: true,
   serviceId: true,
   barberId: true,
@@ -98,40 +175,8 @@ const BOOKING_LIST_SELECT = {
   servicePricePenceAtBooking: true,
   barber: { select: { name: true } },
   service: { select: { name: true } },
-  client: { select: { tags: true, avatarUrl: true } }
+  client: { select: { tags: true, avatarUrl: true } },
 } satisfies Prisma.BookingSelect;
-
-const BOOKING_LIST_LEGACY_SELECT = {
-  id: true,
-  serviceId: true,
-  barberId: true,
-  fullName: true,
-  email: true,
-  phone: true,
-  clientId: true,
-  startAt: true,
-  endAt: true,
-  status: true,
-  notes: true,
-  rescheduledAt: true,
-  paymentRequired: true,
-  depositAmountPence: true,
-  paymentStatus: true,
-  totalPricePence: true,
-  barber: { select: { name: true } },
-  service: { select: { name: true } },
-  client: { select: { tags: true, avatarUrl: true } }
-} satisfies Prisma.BookingSelect;
-
-type BookingListRow = Prisma.BookingGetPayload<{ select: typeof BOOKING_LIST_SELECT }>;
-type BookingListLegacyRow = Prisma.BookingGetPayload<{ select: typeof BOOKING_LIST_LEGACY_SELECT }>;
-type BookingListQueryRow = BookingListRow | BookingListLegacyRow;
-
-function isMissingHistoricalColumnError(error: unknown) {
-  return error instanceof Prisma.PrismaClientKnownRequestError
-    && error.code === 'P2022'
-    && String(error.meta?.column ?? '').includes('Booking.serviceNameAtBooking');
-}
 
 async function findBookingsWithFallback(args: {
   where: Prisma.BookingWhereInput;
@@ -144,11 +189,28 @@ async function findBookingsWithFallback(args: {
       select: BOOKING_LIST_SELECT
     });
   } catch (error) {
+    if (isMissingDepositRefundRelationError(error)) {
+      // Pre-migration DBs: omit refund relation; UI treats null as "no refund state".
+      const rows = await prisma.booking.findMany({
+        ...args,
+        select: BOOKING_LIST_SELECT_WITHOUT_REFUND,
+      });
+      return rows as unknown as BookingListQueryRow[];
+    }
     if (!isMissingHistoricalColumnError(error)) throw error;
-    return prisma.booking.findMany({
-      ...args,
-      select: BOOKING_LIST_LEGACY_SELECT
-    });
+    try {
+      return await prisma.booking.findMany({
+        ...args,
+        select: BOOKING_LIST_LEGACY_SELECT
+      });
+    } catch (legacyError) {
+      if (!isMissingDepositRefundRelationError(legacyError)) throw legacyError;
+      const rows = await prisma.booking.findMany({
+        ...args,
+        select: BOOKING_LIST_SELECT_WITHOUT_REFUND,
+      });
+      return rows as unknown as BookingListQueryRow[];
+    }
   }
 }
 

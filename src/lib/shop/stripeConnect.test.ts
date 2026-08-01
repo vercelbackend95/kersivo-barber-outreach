@@ -61,15 +61,24 @@ describe('stripeConnect direct charges', () => {
   it('refunds on connected account for direct charges', async () => {
     fetchMock.mockResolvedValue({
       ok: true,
-      json: async () => ({ id: 're_direct' }),
+      json: async () => ({ id: 're_direct', status: 'succeeded', amount: 500 }),
     });
 
-    const result = await refundPaymentIntent('pi_direct', { stripeAccount: 'acct_shop' });
-    expect(result).toEqual({ id: 're_direct', mode: 'direct' });
+    const result = await refundPaymentIntent('pi_direct', {
+      stripeAccount: 'acct_shop',
+      idempotencyKey: 'refund_book_1',
+    });
+    expect(result).toEqual({
+      id: 're_direct',
+      mode: 'direct',
+      status: 'succeeded',
+      amount: 500,
+    });
 
     const [, init] = fetchMock.mock.calls[0] as [string, RequestInit];
     const headers = init.headers as Record<string, string>;
     expect(headers['Stripe-Account']).toBe('acct_shop');
+    expect(headers['Idempotency-Key']).toBe('refund_book_1:direct');
     expect(String(init.body)).toContain('payment_intent=pi_direct');
     expect(String(init.body)).not.toContain('reverse_transfer');
   });
@@ -84,16 +93,25 @@ describe('stripeConnect direct charges', () => {
       })
       .mockResolvedValueOnce({
         ok: true,
-        json: async () => ({ id: 're_legacy' }),
+        json: async () => ({ id: 're_legacy', status: 'succeeded', amount: 500 }),
       });
 
-    const result = await refundPaymentIntent('pi_legacy', { stripeAccount: 'acct_shop' });
-    expect(result).toEqual({ id: 're_legacy', mode: 'platform_legacy' });
+    const result = await refundPaymentIntent('pi_legacy', {
+      stripeAccount: 'acct_shop',
+      idempotencyKey: 'refund_book_legacy',
+    });
+    expect(result).toEqual({
+      id: 're_legacy',
+      mode: 'platform_legacy',
+      status: 'succeeded',
+      amount: 500,
+    });
     expect(fetchMock).toHaveBeenCalledTimes(2);
 
     const [, legacyInit] = fetchMock.mock.calls[1] as [string, RequestInit];
     const headers = legacyInit.headers as Record<string, string>;
     expect(headers['Stripe-Account']).toBeUndefined();
+    expect(headers['Idempotency-Key']).toBe('refund_book_legacy:legacy');
     expect(String(legacyInit.body)).toContain('reverse_transfer=true');
   });
 

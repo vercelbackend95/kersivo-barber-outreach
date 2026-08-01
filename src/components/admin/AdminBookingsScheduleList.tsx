@@ -19,9 +19,26 @@ export type ScheduleListBooking = {
   endAt: string;
   notes?: string | null;
   rescheduledAt?: string | null;
+  paymentRequired?: boolean;
+  paymentStatus?: string | null;
+  depositRefund?: {
+    status: 'REFUND_PENDING' | 'REFUNDED' | 'REFUND_FAILED';
+    amountPence: number;
+    stripeRefundId?: string | null;
+    attempts: number;
+    lastError?: string | null;
+  } | null;
   barber: { name: string };
   service: { name: string };
 };
+
+function depositRefundBadgeLabel(
+  refund: NonNullable<ScheduleListBooking['depositRefund']>,
+): string {
+  if (refund.status === 'REFUNDED') return 'Refunded';
+  if (refund.status === 'REFUND_FAILED') return 'Refund failed';
+  return 'Refund pending';
+}
 
 type TemporalGroup = 'past' | 'now' | 'upcoming';
 
@@ -91,30 +108,38 @@ type CommonScheduleListProps = {
   onOpenClient: (booking: ScheduleListBooking) => void | Promise<void>;
 };
 
-export type AdminBookingsScheduleDayProps = CommonScheduleListProps & {
-  variant?: 'day' | undefined;
-  selectedDate: string;
-  todayLondonDate: string;
-  selectedDateLabel: string;
-  onCancelBooking: (booking: ScheduleListBooking) => void | Promise<void>;
-  cancelLoadingBookingId: string | null;
-  canCancelBooking: (booking: ScheduleListBooking) => boolean;
+type RefundRetryProps = {
+  onRetryDepositRefund?: (booking: ScheduleListBooking) => void | Promise<void>;
+  refundRetryLoadingBookingId?: string | null;
+  canRetryDepositRefund?: (booking: ScheduleListBooking) => boolean;
 };
 
-export type AdminBookingsScheduleHistoryProps = CommonScheduleListProps & {
-  variant: 'history';
-  heading: string;
-  historyFilters?: React.ReactNode;
-  historyToolbar?: React.ReactNode;
-  formatDateTime: (startAt: string) => string;
-  /** Human-readable status line for the row (e.g. Done, Cancelled by client). */
-  getHistoryStatusLine: (booking: ScheduleListBooking) => string;
-  historyDateFiltered: boolean;
-  onClearHistoryDateRange?: () => void;
-  onClientAvatarChange?: (clientId: string, nextUrl: string) => void;
-  onEditHistoryStatus: (booking: ScheduleListBooking) => void;
-  statusEditorBookingId: string | null;
-};
+export type AdminBookingsScheduleDayProps = CommonScheduleListProps &
+  RefundRetryProps & {
+    variant?: 'day' | undefined;
+    selectedDate: string;
+    todayLondonDate: string;
+    selectedDateLabel: string;
+    onCancelBooking: (booking: ScheduleListBooking) => void | Promise<void>;
+    cancelLoadingBookingId: string | null;
+    canCancelBooking: (booking: ScheduleListBooking) => boolean;
+  };
+
+export type AdminBookingsScheduleHistoryProps = CommonScheduleListProps &
+  RefundRetryProps & {
+    variant: 'history';
+    heading: string;
+    historyFilters?: React.ReactNode;
+    historyToolbar?: React.ReactNode;
+    formatDateTime: (startAt: string) => string;
+    /** Human-readable status line for the row (e.g. Done, Cancelled by client). */
+    getHistoryStatusLine: (booking: ScheduleListBooking) => string;
+    historyDateFiltered: boolean;
+    onClearHistoryDateRange?: () => void;
+    onClientAvatarChange?: (clientId: string, nextUrl: string) => void;
+    onEditHistoryStatus: (booking: ScheduleListBooking) => void;
+    statusEditorBookingId: string | null;
+  };
 
 export type AdminBookingsScheduleListProps = AdminBookingsScheduleDayProps | AdminBookingsScheduleHistoryProps;
 
@@ -392,7 +417,34 @@ export default function AdminBookingsScheduleList(props: AdminBookingsScheduleLi
                                 {chipLabel}
                               </span>
                             </p>
+                            {booking.depositRefund ? (
+                              <p>
+                                <strong>Deposit:</strong>{' '}
+                                <span
+                                  className={`admin-bookings-schedule__refund-badge admin-bookings-schedule__refund-badge--${booking.depositRefund.status.toLowerCase()}`}
+                                >
+                                  {depositRefundBadgeLabel(booking.depositRefund)}
+                                </span>
+                              </p>
+                            ) : null}
                           </div>
+                          {props.canRetryDepositRefund?.(booking) && props.onRetryDepositRefund ? (
+                            <div className="admin-bookings-schedule__actions">
+                              <button
+                                type="button"
+                                className="admin-bookings-schedule__cancel"
+                                onClick={(event) => {
+                                  event.stopPropagation();
+                                  void props.onRetryDepositRefund?.(booking);
+                                }}
+                                disabled={props.refundRetryLoadingBookingId === booking.id}
+                              >
+                                {props.refundRetryLoadingBookingId === booking.id
+                                  ? 'Retrying refund…'
+                                  : 'Retry refund'}
+                              </button>
+                            </div>
+                          ) : null}
                         </div>
                       </div>
                     </li>
@@ -509,17 +561,41 @@ export default function AdminBookingsScheduleList(props: AdminBookingsScheduleLi
                   </button>
                   <p className="admin-bookings-schedule__subline">{subline}</p>
                 </div>
-                <div className="admin-bookings-schedule__right">{right}</div>
-                {canCancel && 'onCancelBooking' in props ? (
-                  <div className="admin-bookings-schedule__actions">
-                    <button
-                      type="button"
-                      className="admin-bookings-schedule__cancel"
-                      onClick={() => void props.onCancelBooking(booking)}
-                      disabled={props.cancelLoadingBookingId === booking.id}
+                <div className="admin-bookings-schedule__right">
+                  {right}
+                  {booking.depositRefund ? (
+                    <span
+                      className={`admin-bookings-schedule__refund-badge admin-bookings-schedule__refund-badge--${booking.depositRefund.status.toLowerCase()}`}
                     >
-                      {props.cancelLoadingBookingId === booking.id ? 'Cancelling…' : 'Cancel'}
-                    </button>
+                      {depositRefundBadgeLabel(booking.depositRefund)}
+                    </span>
+                  ) : null}
+                </div>
+                {(canCancel && 'onCancelBooking' in props) ||
+                (props.canRetryDepositRefund?.(booking) && props.onRetryDepositRefund) ? (
+                  <div className="admin-bookings-schedule__actions">
+                    {canCancel && 'onCancelBooking' in props ? (
+                      <button
+                        type="button"
+                        className="admin-bookings-schedule__cancel"
+                        onClick={() => void props.onCancelBooking(booking)}
+                        disabled={props.cancelLoadingBookingId === booking.id}
+                      >
+                        {props.cancelLoadingBookingId === booking.id ? 'Cancelling…' : 'Cancel'}
+                      </button>
+                    ) : null}
+                    {props.canRetryDepositRefund?.(booking) && props.onRetryDepositRefund ? (
+                      <button
+                        type="button"
+                        className="admin-bookings-schedule__cancel"
+                        onClick={() => void props.onRetryDepositRefund?.(booking)}
+                        disabled={props.refundRetryLoadingBookingId === booking.id}
+                      >
+                        {props.refundRetryLoadingBookingId === booking.id
+                          ? 'Retrying refund…'
+                          : 'Retry refund'}
+                      </button>
+                    ) : null}
                   </div>
                 ) : null}
               </div>
