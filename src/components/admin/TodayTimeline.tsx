@@ -283,7 +283,12 @@ type ServiceOption = {
   name: string;
   durationMinutes: number;
   pricePence: number;
+  bufferMinutes?: number;
+  isActive?: boolean;
+  barberServices?: Array<{ barber: { id: string; name?: string; active?: boolean } }>;
 };
+
+const SERVICE_EDITABLE_STATUSES = new Set(['BOOKED', 'ARRIVED', 'IN_PROGRESS']);
 
 type BookingExpansionCardProps = {
   booking: TimelineBooking;
@@ -729,6 +734,24 @@ const BookingExpansionCard = memo(function BookingExpansionCard({
   });
   const isCancelled = effectiveStatus.startsWith('CANCELLED');
   const isCompleted = effectiveStatus === 'COMPLETED';
+  const showServiceChange =
+    canChangeService &&
+    SERVICE_EDITABLE_STATUSES.has(localStatus) &&
+    effectiveStatus !== 'COMPLETED';
+  const assignedBarberId = booking.barberId ?? barber.id;
+  const eligibleServices = services.filter(
+    (svc) =>
+      svc.isActive !== false &&
+      (svc.barberServices ?? []).some((link) => link.barber.id === assignedBarberId),
+  );
+  const pendingServiceEndLabel = pendingService
+    ? formatEndTime(
+        new Date(
+          new Date(booking.startAt).getTime() +
+            (pendingService.durationMinutes + (pendingService.bufferMinutes || 0)) * 60 * 1000,
+        ).toISOString(),
+      )
+    : null;
   const statusMenuItems: StatusMenuItem[] = canMutateBooking
     ? (getManualBookingActionOptions(
         {
@@ -773,7 +796,7 @@ const BookingExpansionCard = memo(function BookingExpansionCard({
   const openServiceActions = useCallback(
     (e: React.MouseEvent) => {
       e.stopPropagation();
-      if (!canChangeService) return;
+      if (!showServiceChange) return;
       if (previewSwipe) {
         window.dispatchEvent(new CustomEvent(ADMIN_DEMO_BLOCKED_EVENT));
         return;
@@ -784,7 +807,7 @@ const BookingExpansionCard = memo(function BookingExpansionCard({
       setIsServiceSheetOpen(true);
       void openServicePicker();
     },
-    [openServicePicker, previewSwipe, canChangeService],
+    [openServicePicker, previewSwipe, showServiceChange],
   );
 
   const statusActionsContent = (
@@ -845,6 +868,9 @@ const BookingExpansionCard = memo(function BookingExpansionCard({
             </span>
           </div>
           <p className="admin-vtl-service-confirm-price">New price: {formatPence(pendingService.pricePence)}</p>
+          {pendingServiceEndLabel ? (
+            <p className="admin-vtl-service-confirm-price">New end time: {pendingServiceEndLabel}</p>
+          ) : null}
           {serviceError ? <p className="admin-vtl-message-chooser-error" role="alert">{serviceError}</p> : null}
           <div className="admin-vtl-service-confirm-actions">
             <button
@@ -870,14 +896,14 @@ const BookingExpansionCard = memo(function BookingExpansionCard({
         </div>
       ) : serviceLoading ? (
         <p className="admin-vtl-ap-service-loading">Loading…</p>
-      ) : serviceError && services.length === 0 ? (
+      ) : serviceError && eligibleServices.length === 0 ? (
         <p className="admin-vtl-message-chooser-error" role="alert">{serviceError}</p>
-      ) : !serviceError && services.length === 0 ? (
-        <p className="admin-vtl-ap-service-loading">No services available.</p>
+      ) : !serviceError && eligibleServices.length === 0 ? (
+        <p className="admin-vtl-ap-service-loading">No services available for this barber.</p>
       ) : (
         <>
           {serviceError ? <p className="admin-vtl-message-chooser-error" role="alert">{serviceError}</p> : null}
-          {services.map((svc) => (
+          {eligibleServices.map((svc) => (
             <button
               key={svc.id}
               type="button"
@@ -1155,7 +1181,7 @@ const BookingExpansionCard = memo(function BookingExpansionCard({
           ) : (
             <p className="admin-vtl-ap-readonly muted">View only</p>
           )}
-          {canChangeService ? (
+          {showServiceChange ? (
             <button
               type="button"
               className={`admin-vtl-ap-circle-btn admin-vtl-ap-circle-btn--service${isServiceSheetOpen ? ' is-active' : ''}`}

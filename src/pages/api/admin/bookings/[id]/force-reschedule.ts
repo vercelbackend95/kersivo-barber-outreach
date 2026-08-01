@@ -6,6 +6,7 @@ import { requireAdminContext } from '@/lib/admin/auth';
 import { requireAnyPermission } from '@/lib/admin/rbac/can';
 import { bookingCreateSchema } from '@/lib/booking/schemas';
 import { BookingActionError } from '@/lib/booking/service';
+import { ensureSlotAvailable, SlotUnavailableError } from '@/lib/booking/slotGuard';
 import { prisma } from '@/lib/db/client';
 import { findShopBarber, findShopService } from '@/lib/admin/shopScoped';
 import { addMinutes, toUtcFromLondon } from '@/lib/booking/time';
@@ -61,15 +62,12 @@ export const POST: APIRoute = async (ctx) => {
   try {
     const updated = await prisma.$transaction(
       async (tx) => {
-        const overlapping = await tx.booking.findFirst({
-          where: {
-            barberId: barber.id,
-            id: { not: existing.id },
-            status: { in: [BookingStatus.BOOKED, BookingStatus.PENDING_PAYMENT] },
-            NOT: [{ endAt: { lte: startAt } }, { startAt: { gte: endAt } }],
-          },
+        await ensureSlotAvailable(tx, {
+          barberId: barber.id,
+          startAt,
+          endAt,
+          ignoreBookingId: existing.id,
         });
-        if (overlapping) throw new BookingActionError('This slot is no longer available.', 409);
 
         return tx.booking.update({
           where: { id: existing.id },
@@ -97,6 +95,7 @@ export const POST: APIRoute = async (ctx) => {
 
     return json({ booking: { id: updated.id, startAt: updated.startAt, status: updated.status } });
   } catch (error) {
+    if (error instanceof SlotUnavailableError) return json({ error: error.message }, 409);
     if (error instanceof BookingActionError) return json({ error: error.message }, error.statusCode);
     return json({ error: error instanceof Error ? error.message : 'Reschedule failed.' }, 400);
   }
