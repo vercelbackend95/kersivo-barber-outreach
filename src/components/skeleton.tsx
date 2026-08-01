@@ -286,6 +286,23 @@ export function SkeletonVerticalTimeline() {
   );
 }
 
+/** Next-appointments strip shell — used while live bookings have not loaded once. */
+export function SkeletonNextAppointmentsStrip({ rows = 2 }: { rows?: number }) {
+  return (
+    <ul className="admin-mobile-next-strip-list admin-mobile-next-strip-list--skeleton" aria-busy="true" aria-hidden="true">
+      {Array.from({ length: rows }, (_, i) => (
+        <li
+          key={i}
+          className={`admin-mobile-next-strip-item admin-mobile-next-strip-item--skeleton${i === 0 ? ' admin-mobile-next-strip-item--primary' : ''}`}
+        >
+          <span className="skeleton skeleton--text admin-mobile-next-strip-skeleton-main" />
+          <span className="skeleton skeleton--text-sm admin-mobile-next-strip-skeleton-meta" />
+        </li>
+      ))}
+    </ul>
+  );
+}
+
 /** Barber roster grid loading shell — matches Admin → Barbers (manage skeleton × 6). */
 export function BarberRosterOverviewGridSkeleton({ ariaLabel }: { ariaLabel: string }) {
   return (

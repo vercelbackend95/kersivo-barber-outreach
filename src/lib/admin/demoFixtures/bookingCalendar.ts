@@ -116,15 +116,28 @@ function rotateSeeds(seeds: DemoDaySeed[], offset: number): DemoDaySeed[] {
   return [...seeds.slice(n), ...seeds.slice(0, n)];
 }
 
+const DAY_KEY_CACHE_MAX = 64;
+const dayKeyCache = new Map<string, DemoCalendarBooking[]>();
+
+function cloneDemoCalendarBookings(rows: DemoCalendarBooking[]): DemoCalendarBooking[] {
+  // Shallow row clones — history builder mutates startAt/endAt on returned rows.
+  return rows.map((row) => ({ ...row, barber: { ...row.barber }, service: { ...row.service } }));
+}
+
 /**
  * Build bookings for one calendar day (Europe/London dayKey).
  * `forHistory` marks past days with COMPLETED / cancel mix instead of all BOOKED.
+ * Results are memoized by dayKey+forHistory; callers always receive a fresh copy.
  */
 export function getDemoBookingsForDayKey(
   dayKey: string,
   options: { forHistory?: boolean } = {},
 ): DemoCalendarBooking[] {
   const { forHistory = false } = options;
+  const cacheKey = `${dayKey}|${forHistory ? 'h' : 'd'}`;
+  const cached = dayKeyCache.get(cacheKey);
+  if (cached) return cloneDemoCalendarBookings(cached);
+
   const prng = createDemoPrng(hashString(`kersivo-demo|${dayKey}`));
   const cycle = demoCycleDayIndex(dayKey);
   const weekday = londonWeekdayMon1(dayKey);
@@ -200,7 +213,13 @@ export function getDemoBookingsForDayKey(
     });
   });
 
-  return placed.sort((a, b) => new Date(a.startAt).getTime() - new Date(b.startAt).getTime());
+  const sorted = placed.sort((a, b) => new Date(a.startAt).getTime() - new Date(b.startAt).getTime());
+  if (dayKeyCache.size >= DAY_KEY_CACHE_MAX) {
+    const oldest = dayKeyCache.keys().next().value;
+    if (oldest != null) dayKeyCache.delete(oldest);
+  }
+  dayKeyCache.set(cacheKey, sorted);
+  return cloneDemoCalendarBookings(sorted);
 }
 
 /** Today’s schedule for timeline / landing (all BOOKED for a live feel). */

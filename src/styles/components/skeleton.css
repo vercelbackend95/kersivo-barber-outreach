@@ -151,3 +151,25 @@
   display: grid;
   gap: 0.5rem;
 }
+
+/* ── Next-appointments strip skeleton ── */
+
+.admin-mobile-next-strip-list--skeleton {
+  pointer-events: none;
+}
+
+.admin-mobile-next-strip-item--skeleton {
+  display: grid;
+  gap: 0.35rem;
+  padding-block: 0.35rem;
+}
+
+.admin-mobile-next-strip-skeleton-main {
+  width: 72%;
+  max-width: 14rem;
+}
+
+.admin-mobile-next-strip-skeleton-meta {
+  width: 42%;
+  max-width: 8rem;
+}

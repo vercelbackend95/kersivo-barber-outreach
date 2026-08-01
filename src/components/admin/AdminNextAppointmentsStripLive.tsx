@@ -15,6 +15,7 @@ export default function AdminNextAppointmentsStripLive() {
     sessionChecked,
     loggedIn,
     isPublicDemo,
+    hasLoadedOnce,
     upcomingBookings,
     connectionStateLabel,
     formatStartTime,
@@ -75,6 +76,7 @@ export default function AdminNextAppointmentsStripLive() {
       formatStartTime={formatStartTime}
       connectionStateLabel={connectionStateLabel}
       isDemo={isPublicDemo}
+      isLoading={!hasLoadedOnce}
     />
   );
 }
