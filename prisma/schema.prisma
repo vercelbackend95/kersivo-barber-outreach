@@ -473,7 +473,8 @@ model Booking {
   paymentRequired         Boolean       @default(false)
   depositAmountPence      Int?
   paymentStatus           PaymentStatus?
-  stripeCheckoutSessionId String?
+  /// Stripe Checkout Session for the deposit; unique so one session maps to one booking.
+  stripeCheckoutSessionId String?       @unique
   stripePaymentIntentId   String?
   paidAt                  DateTime?
   depositRefundedAt       DateTime?

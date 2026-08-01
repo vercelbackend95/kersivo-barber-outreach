@@ -1,12 +1,16 @@
 export const prerender = false;
 
 import type { APIRoute } from 'astro';
+import { BookingStatus } from '@prisma/client';
 import { bookingCreateSchema } from '@/lib/booking/schemas';
 import { BookingActionError, createInstantBooking } from '@/lib/booking/service';
 import { DEMO_SHOP_ID } from '@/lib/db/shopScope';
 import { prisma } from '@/lib/db/client';
 import { checkBookingRateLimit } from '@/lib/rate-limit/bookingRateLimit';
-import { createBookingDepositCheckoutSession } from '@/lib/shop/stripeConnect';
+import {
+  createBookingDepositCheckoutSession,
+  retrieveBookingDepositSession,
+} from '@/lib/shop/stripeConnect';
 import { getPublicSiteUrl } from '@/lib/setup/siteUrl';
 import { shopAcceptsPublicBookings } from '@/lib/setup/shopPublicBookingGate';
 
@@ -24,6 +28,30 @@ function json(body: unknown, status = 200) {
     status,
     headers: { 'Content-Type': 'application/json' },
   });
+}
+
+async function resolveOpenDepositCheckoutUrl(input: {
+  bookingId: string;
+  shopId: string;
+  connectAccountId: string;
+  existingSessionId: string | null | undefined;
+}): Promise<string | null> {
+  const sessionId = input.existingSessionId?.trim();
+  if (!sessionId) return null;
+  try {
+    const session = await retrieveBookingDepositSession(sessionId, input.connectAccountId);
+    if ((session.status ?? '').toLowerCase() === 'open' && session.url) {
+      return session.url;
+    }
+  } catch (error) {
+    console.warn('[public booking] existing deposit session unusable', {
+      bookingId: input.bookingId,
+      shopId: input.shopId,
+      sessionId,
+      error: error instanceof Error ? error.message : error,
+    });
+  }
+  return null;
 }
 
 export const POST: APIRoute = async ({ request, params }) => {
@@ -98,6 +126,27 @@ export const POST: APIRoute = async ({ request, params }) => {
       if (typeof amountPence !== 'number' || amountPence <= 0) {
         return json({ error: 'Invalid deposit amount for this booking.' }, 500);
       }
+
+      if (created.status === BookingStatus.PENDING_PAYMENT) {
+        const reusedUrl = await resolveOpenDepositCheckoutUrl({
+          bookingId: created.id,
+          shopId,
+          connectAccountId: shop.stripeConnectAccountId,
+          existingSessionId: created.stripeCheckoutSessionId,
+        });
+        if (reusedUrl) {
+          return json({
+            booking: {
+              id: created.id,
+              status: created.status,
+              depositRequired: true,
+              checkoutUrl: reusedUrl,
+              replayed: created.replayed,
+            },
+          });
+        }
+      }
+
       const baseUrl = getPublicSiteUrl();
       const session = await createBookingDepositCheckoutSession({
         shopConnectAccountId: shop.stripeConnectAccountId,
@@ -121,6 +170,7 @@ export const POST: APIRoute = async ({ request, params }) => {
           status: created.status,
           depositRequired: true,
           checkoutUrl: session.url,
+          replayed: created.replayed,
         },
       });
     }
@@ -133,6 +183,7 @@ export const POST: APIRoute = async ({ request, params }) => {
         barberName: created.barber.name,
         startAt: created.startAt,
         depositRequired: false,
+        replayed: created.replayed,
       },
     });
   } catch (error) {

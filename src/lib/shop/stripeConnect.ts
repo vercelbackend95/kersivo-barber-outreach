@@ -132,6 +132,10 @@ export async function retrieveConnectAccount(accountId: string): Promise<{
  * Direct charge on the connected account (shop is MoR).
  * KERSIVO application fee is £0 today; hook kept for a future SaaS fee.
  */
+export function bookingDepositCheckoutIdempotencyKey(bookingId: string): string {
+  return `booking_deposit_checkout_${bookingId.trim()}`;
+}
+
 export async function createBookingDepositCheckoutSession(input: {
   shopConnectAccountId: string;
   bookingId: string;
@@ -150,39 +154,36 @@ export async function createBookingDepositCheckoutSession(input: {
     throw new Error('amountPence must be a positive integer for deposit checkout.');
   }
 
-  const body = new URLSearchParams();
-  body.set('mode', 'payment');
-  body.set('success_url', input.successUrl);
-  body.set('cancel_url', input.cancelUrl);
-  body.set('customer_email', input.customerEmail);
-  body.set('payment_method_types[0]', 'card');
-  body.set('line_items[0][price_data][currency]', 'gbp');
-  body.set('line_items[0][price_data][unit_amount]', String(amountPence));
-  body.set(
-    'line_items[0][price_data][product_data][name]',
-    `Booking deposit — ${input.shopName}`.slice(0, 120),
-  );
-  body.set('line_items[0][quantity]', '1');
-  body.set(`metadata[type]`, BOOKING_DEPOSIT_METADATA_TYPE);
-  body.set(`metadata[bookingId]`, input.bookingId);
-  body.set(`metadata[shopId]`, input.shopId);
-  body.set('payment_intent_data[application_fee_amount]', '0');
-
-  const response = await fetch(`${STRIPE_API_BASE}/checkout/sessions`, {
-    method: 'POST',
-    headers: {
-      Authorization: `Bearer ${getSecretKey()}`,
-      'Content-Type': 'application/x-www-form-urlencoded',
-      'Stripe-Account': connectAccountId,
+  const session = await stripeForm(
+    '/checkout/sessions',
+    {
+      mode: 'payment',
+      success_url: input.successUrl,
+      cancel_url: input.cancelUrl,
+      customer_email: input.customerEmail,
+      'payment_method_types[0]': 'card',
+      'line_items[0][price_data][currency]': 'gbp',
+      'line_items[0][price_data][unit_amount]': String(amountPence),
+      'line_items[0][price_data][product_data][name]': `Booking deposit — ${input.shopName}`.slice(
+        0,
+        120,
+      ),
+      'line_items[0][quantity]': '1',
+      'metadata[type]': BOOKING_DEPOSIT_METADATA_TYPE,
+      'metadata[bookingId]': input.bookingId,
+      'metadata[shopId]': input.shopId,
+      'payment_intent_data[application_fee_amount]': '0',
     },
-    body,
-  });
-  const session = (await response.json()) as { id?: string; url?: string; error?: { message?: string } };
-  if (!response.ok) {
-    throw new Error(session.error?.message || `Deposit checkout failed (${response.status})`);
-  }
-  if (!session.id || !session.url) throw new Error('Stripe deposit session incomplete.');
-  return { id: session.id, url: session.url };
+    {
+      stripeAccount: connectAccountId,
+      idempotencyKey: bookingDepositCheckoutIdempotencyKey(input.bookingId),
+    },
+  );
+
+  const id = typeof session.id === 'string' ? session.id : '';
+  const url = typeof session.url === 'string' ? session.url : '';
+  if (!id || !url) throw new Error('Stripe deposit session incomplete.');
+  return { id, url };
 }
 
 export async function retrieveBookingDepositSession(

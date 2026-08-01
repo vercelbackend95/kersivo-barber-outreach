@@ -31,7 +31,6 @@ import { periodEndFromUnixSeconds } from '../../../lib/setup/saasEntitlement';
 import {
   EmailDeliveryError,
   getSetupOnboardingFormUrlOrEmpty,
-  sendInstantBookingConfirmationEmail,
   sendSaasSubscriptionConfirmationEmail,
   sendSaasSubscriptionInternalNotificationEmail,
   sendSetupDepositConfirmationEmail,
@@ -41,10 +40,8 @@ import { getSetupPlan, isSetupPlanId } from '../../../lib/setup/plans';
 import { SAAS_SUBSCRIPTION_METADATA_TYPE } from '../../../lib/setup/saasSubscription';
 import { SAAS_MONTHLY_PENCE } from '../../../lib/seo/defaults';
 import { BOOKING_DEPOSIT_METADATA_TYPE } from '../../../lib/booking/depositGate';
+import { confirmPaidDeposit } from '../../../lib/booking/confirmPaidDeposit';
 import { confirmDepositRefundFromWebhook } from '../../../lib/booking/depositMoney';
-import { BookingStatus, PaymentStatus } from '@prisma/client';
-import { getPublicSiteUrl } from '../../../lib/setup/siteUrl';
-import { generateToken, hashToken } from '../../../lib/booking/tokens';
 import { DEMO_SHOP_ID } from '../../../lib/db/shopScope';
 import { captureOpsException } from '../../../lib/ops/sentry';
 import {
@@ -834,6 +831,7 @@ async function handleBookingDepositCheckout(
   sessionId: string,
   session: StripeSession,
   metadata: Record<string, string>,
+  eventCreated: number,
 ): Promise<Response> {
   if ((session.payment_status ?? '').toLowerCase() !== 'paid') {
     return new Response(JSON.stringify({ error: 'Deposit not paid' }), { status: 400 });
@@ -844,57 +842,22 @@ async function handleBookingDepositCheckout(
     return new Response(JSON.stringify({ error: 'Invalid booking deposit metadata' }), { status: 400 });
   }
 
-  const booking = await prisma.booking.findFirst({
-    where: { id: bookingId, barber: { shopId } },
-    include: { barber: true, service: true },
+  const paidAt = Number.isFinite(eventCreated) ? new Date(eventCreated * 1000) : new Date();
+  const result = await confirmPaidDeposit({
+    bookingId,
+    shopId,
+    sessionId,
+    paymentIntentId: getCheckoutPaymentIntentId(session),
+    paidAt,
   });
-  if (!booking) {
+
+  if (result.outcome === 'not_found') {
     return new Response(JSON.stringify({ error: 'Booking not found' }), { status: 404 });
   }
-
-  if (booking.status === BookingStatus.BOOKED && booking.paymentStatus === PaymentStatus.PAID) {
+  if (result.outcome === 'duplicate') {
     return new Response(JSON.stringify({ ok: true, duplicate: true }), { status: 200 });
   }
-
-  const pi = getCheckoutPaymentIntentId(session);
-  const manageToken = generateToken();
-  const updated = await prisma.booking.update({
-    where: { id: booking.id },
-    data: {
-      status: BookingStatus.BOOKED,
-      paymentStatus: PaymentStatus.PAID,
-      paidAt: new Date(),
-      stripeCheckoutSessionId: sessionId,
-      stripePaymentIntentId: pi,
-      manageTokenHash: hashToken(manageToken),
-      paymentExpiresAt: null,
-    },
-    include: { barber: true, service: true },
-  });
-
-  const shop = await prisma.shopSettings.findUnique({
-    where: { id: shopId },
-    select: { name: true },
-  });
-  const baseUrl = getPublicSiteUrl();
-  try {
-    await sendInstantBookingConfirmationEmail({
-      to: updated.email,
-      fullName: updated.fullName,
-      cancelUrl: `${baseUrl}/book/cancel?token=${manageToken}`,
-      rescheduleUrl: `${baseUrl}/book/reschedule?token=${manageToken}`,
-      shopName: shop?.name ?? 'Barbershop',
-      serviceName: updated.serviceNameAtBooking ?? updated.service.name,
-      barberName: updated.barber.name,
-      startAt: updated.startAt,
-    });
-  } catch (error) {
-    console.warn('[webhook] booking deposit confirmation email failed', {
-      bookingId,
-      error: error instanceof Error ? error.message : error,
-    });
-  }
-
+  // confirmed and conflicting_payment both ack Stripe (alert already fired for conflict).
   return new Response(JSON.stringify({ ok: true, bookingId }), { status: 200 });
 }
 
@@ -1078,7 +1041,9 @@ export const POST: APIRoute = async ({ request }) => {
     }
 
     if (SETUP_FULFILMENT_EVENTS.has(event.type) && metadata.type === BOOKING_DEPOSIT_METADATA_TYPE) {
-      return await finalize(await handleBookingDepositCheckout(sessionId, session, metadata));
+      return await finalize(
+        await handleBookingDepositCheckout(sessionId, session, metadata, event.created),
+      );
     }
 
     if (event.type !== 'checkout.session.completed') {
