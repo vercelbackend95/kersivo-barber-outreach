@@ -49,9 +49,10 @@ import {
   alertLifecycleNotFound,
   alertStripeWebhookFailure,
   markStripeWebhookStatus,
+  notifyOpsDurable,
   recordStripeWebhookReceived,
 } from '../../../lib/ops/stripeWebhookLedger';
-import { opsLog } from '../../../lib/ops/opsLog';
+import { opsLog, opsLogError } from '../../../lib/ops/opsLog';
 
 const { Prisma, SetupPlan, SetupDepositStatus } = PrismaClientPkg;
 
@@ -783,14 +784,44 @@ async function handleConnectAccountUpdated(event: StripeEvent): Promise<Response
 
   const chargesEnabled = Boolean(event.data.object.charges_enabled);
   const detailsSubmitted = Boolean(event.data.object.details_submitted);
+  const eventAt =
+    Number.isFinite(event.created) && event.created > 0
+      ? new Date(event.created * 1000)
+      : new Date();
 
   const result = await prisma.shopSettings.updateMany({
-    where: { stripeConnectAccountId: accountId },
+    where: {
+      stripeConnectAccountId: accountId,
+      OR: [{ connectStatusEventAt: null }, { connectStatusEventAt: { lte: eventAt } }],
+    },
     data: {
       stripeConnectChargesEnabled: chargesEnabled,
       stripeConnectDetailsSubmitted: detailsSubmitted,
+      connectStatusEventAt: eventAt,
     },
   });
+
+  if (result.count === 0) {
+    const known = await prisma.shopSettings.count({
+      where: { stripeConnectAccountId: accountId },
+    });
+    console.info('[webhook] account.updated', {
+      accountId,
+      chargesEnabled,
+      detailsSubmitted,
+      shopsUpdated: 0,
+      reason: known > 0 ? 'stale_ignored' : 'unknown_account',
+    });
+    return new Response(
+      JSON.stringify({
+        ok: true,
+        accountId,
+        shopsUpdated: 0,
+        ignored: known > 0 ? 'stale_event' : 'unknown_account',
+      }),
+      { status: 200 },
+    );
+  }
 
   console.info('[webhook] account.updated', {
     accountId,
@@ -999,12 +1030,17 @@ function toStripeSubscriptionFromEvent(object: StripeEvent['data']['object']): S
 }
 
 async function handleSaasSubscriptionLifecycleEvent(event: StripeEvent): Promise<Response> {
+  const eventCreatedAt = periodEndFromUnixSeconds(event.created);
+  const eventId = typeof event.id === 'string' ? event.id : null;
+
   if (
     event.type === 'customer.subscription.updated' ||
     event.type === 'customer.subscription.deleted'
   ) {
     const result = await applyStripeSubscriptionToSaasRecord(toStripeSubscriptionFromEvent(event.data.object), {
       forceCanceled: event.type === 'customer.subscription.deleted',
+      eventCreatedAt,
+      eventId,
     });
     logSaasSubscriptionStage('lifecycle_subscription_synced', {
       eventType: event.type,
@@ -1012,27 +1048,45 @@ async function handleSaasSubscriptionLifecycleEvent(event: StripeEvent): Promise
       shopId: result.shopId,
       grantedAccess: result.grantedAccess,
       status: result.record?.status,
+      skipped: result.skipped ?? null,
     });
     if (!result.record) {
       await alertLifecycleNotFound({ eventType: event.type, eventId: event.id });
     }
-    return new Response(JSON.stringify({ ok: true, found: Boolean(result.record) }), { status: 200 });
+    return new Response(
+      JSON.stringify({
+        ok: true,
+        found: Boolean(result.record),
+        skipped: result.skipped ?? null,
+      }),
+      { status: 200 },
+    );
   }
 
   if (event.type === 'invoice.payment_failed') {
     const result = await applyInvoicePaymentFailed({
       stripeSubscriptionId: getEventSubscriptionId(event.data.object),
       stripeCustomerId: getEventCustomerId(event.data.object),
+      eventCreatedAt,
+      eventId,
     });
     logSaasSubscriptionStage('lifecycle_invoice_payment_failed', {
       found: Boolean(result.record),
       shopId: result.shopId,
       grantedAccess: result.grantedAccess,
+      skipped: result.skipped ?? null,
     });
     if (!result.record) {
       await alertLifecycleNotFound({ eventType: event.type, eventId: event.id });
     }
-    return new Response(JSON.stringify({ ok: true, found: Boolean(result.record) }), { status: 200 });
+    return new Response(
+      JSON.stringify({
+        ok: true,
+        found: Boolean(result.record),
+        skipped: result.skipped ?? null,
+      }),
+      { status: 200 },
+    );
   }
 
   if (event.type === 'invoice.paid') {
@@ -1043,16 +1097,26 @@ async function handleSaasSubscriptionLifecycleEvent(event: StripeEvent): Promise
       stripeSubscriptionId: getEventSubscriptionId(event.data.object),
       stripeCustomerId: getEventCustomerId(event.data.object),
       currentPeriodEnd: periodEnd,
+      eventCreatedAt,
+      eventId,
     });
     logSaasSubscriptionStage('lifecycle_invoice_paid', {
       found: Boolean(result.record),
       shopId: result.shopId,
       grantedAccess: result.grantedAccess,
+      skipped: result.skipped ?? null,
     });
     if (!result.record) {
       await alertLifecycleNotFound({ eventType: event.type, eventId: event.id });
     }
-    return new Response(JSON.stringify({ ok: true, found: Boolean(result.record) }), { status: 200 });
+    return new Response(
+      JSON.stringify({
+        ok: true,
+        found: Boolean(result.record),
+        skipped: result.skipped ?? null,
+      }),
+      { status: 200 },
+    );
   }
 
   return new Response(JSON.stringify({ ok: true, ignored: true }), { status: 200 });
@@ -1064,7 +1128,23 @@ export const POST: APIRoute = async ({ request }) => {
   try {
     const rawBody = await request.text();
     const signature = request.headers.get('stripe-signature');
-    if (!signature || !verifyStripeWebhookSignature(rawBody, signature)) {
+    const verifyResult = signature
+      ? verifyStripeWebhookSignature(rawBody, signature)
+      : ({ ok: false, reason: 'malformed_header' } as const);
+    if (!verifyResult.ok) {
+      opsLogError('stripe.webhook', 'signature_rejected', verifyResult.reason, {
+        reason: verifyResult.reason,
+      });
+      if (verifyResult.reason === 'timestamp_out_of_tolerance') {
+        await notifyOpsDurable({
+          severity: 'warning',
+          title: 'Stripe webhook replay rejected',
+          body: 'Webhook signature timestamp outside ±300s tolerance.',
+          dedupeKey: 'webhook:replay-rejected',
+          cooldownMs: 15 * 60 * 1000,
+          fields: { reason: verifyResult.reason },
+        });
+      }
       return new Response(JSON.stringify({ error: 'Invalid signature' }), { status: 400 });
     }
     logSetupDepositStage('signature_verified');
@@ -1072,14 +1152,28 @@ export const POST: APIRoute = async ({ request }) => {
     const event = JSON.parse(rawBody) as StripeEvent;
     eventId = typeof event.id === 'string' ? event.id : undefined;
     eventType = event.type;
+    const eventCreatedAt = periodEndFromUnixSeconds(event.created);
 
     if (eventId) {
-      await recordStripeWebhookReceived({
+      const ingest = await recordStripeWebhookReceived({
         id: eventId,
         type: event.type,
         livemode: Boolean(event.livemode),
+        eventCreatedAt,
       });
-      opsLog('stripe.webhook', 'received', { eventId, type: event.type });
+      opsLog('stripe.webhook', 'received', {
+        eventId,
+        type: event.type,
+        previousStatus: ingest.previousStatus,
+      });
+      if (ingest.alreadyFinalized) {
+        opsLog('stripe.webhook', 'duplicate_skipped', {
+          eventId,
+          type: event.type,
+          previousStatus: ingest.previousStatus,
+        });
+        return new Response(JSON.stringify({ ok: true, duplicate: true }), { status: 200 });
+      }
     }
 
     const finalize = (response: Response, opts?: { ignored?: boolean }) =>

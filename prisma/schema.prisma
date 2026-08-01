@@ -196,6 +196,8 @@ model ShopSettings {
   stripeConnectAccountId      String?
   stripeConnectChargesEnabled Boolean  @default(false)
   stripeConnectDetailsSubmitted Boolean @default(false)
+  /// Stripe event.created of the last applied account.updated (ordering guard).
+  connectStatusEventAt        DateTime?
   /// Private preview URL set by OPS when tenant site is ready for owner review.
   sitePreviewUrl              String?
   /// Canonical site version label (e.g. "2026-07-29a") set alongside preview URL.
@@ -743,6 +745,9 @@ model SaasSubscription {
   customerEmailSentAt      DateTime?
   internalEmailSentAt      DateTime?
   onboardingSubmittedAt    DateTime?
+  /// Stripe event.created of the last applied lifecycle webhook (ordering guard).
+  lastStripeEventAt        DateTime?
+  lastStripeEventId        String?
   createdAt                DateTime               @default(now())
   updatedAt                DateTime               @updatedAt
 
@@ -818,14 +823,16 @@ enum StripeWebhookEventStatus {
 
 /// Ledger of Stripe webhook events (evt_…) for ops alerting / replay triage (M02).
 model StripeWebhookEvent {
-  id          String                   @id // evt_…
-  type        String
-  livemode    Boolean                  @default(false)
-  status      StripeWebhookEventStatus @default(RECEIVED)
-  error       String?
-  httpStatus  Int?
-  createdAt   DateTime                 @default(now())
-  processedAt DateTime?
+  id             String                   @id // evt_…
+  type           String
+  livemode       Boolean                  @default(false)
+  status         StripeWebhookEventStatus @default(RECEIVED)
+  error          String?
+  httpStatus     Int?
+  /// Stripe event.created (for replay/triage); distinct from local createdAt.
+  eventCreatedAt DateTime?
+  createdAt      DateTime                 @default(now())
+  processedAt    DateTime?
 
   @@index([status, createdAt])
   @@index([type, createdAt])
