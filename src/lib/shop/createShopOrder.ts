@@ -1,6 +1,8 @@
+import { EmailOutboundPurpose } from '@prisma/client';
 import { prisma } from '@/lib/db/client';
 import { formatGbp } from '@/lib/shop/money';
-import { sendShopOrderConfirmationEmail } from '@/lib/email/sender';
+import { buildShopOrderConfirmationEmail } from '@/lib/email/sender';
+import { enqueueEmail, tryDeliverOutboxEmail } from '@/lib/email/outbox';
 
 export type ShopOrderCartItem = {
   productId: string;
@@ -40,6 +42,8 @@ export type CreatedShopOrder = {
 
 /**
  * Shared shop order creation used by Stripe webhook and private test-order API.
+ * Confirmation email is enqueued atomically with the order; delivery is best-effort
+ * after commit so Resend failures never fail a paid webhook.
  */
 export async function createShopOrder(input: CreateShopOrderInput): Promise<CreatedShopOrder> {
   const customerEmail = input.customerEmail.trim().toLowerCase();
@@ -52,49 +56,66 @@ export async function createShopOrder(input: CreateShopOrderInput): Promise<Crea
 
   const paidAt = input.paidAt ?? new Date();
   const isTestOrder = Boolean(input.isTestOrder);
+  const shouldEnqueueEmail = input.sendEmail !== false && !isTestOrder;
+  let outboxId: string | null = null;
 
-  const order = await prisma.order.create({
-    data: {
-      shopId: input.shopId,
-      customerEmail,
-      status: 'PAID',
-      currency: 'gbp',
-      totalPence: input.totalPence,
-      stripeSessionId: input.stripeSessionId ?? null,
-      isTestOrder,
-      paidAt,
-      items: {
-        create: input.cart.map((item) => ({
-          productId: item.productId,
-          nameSnapshot: item.name,
-          unitPricePenceSnapshot: item.unitPricePence,
-          quantity: item.quantity,
-          lineTotalPence: item.lineTotalPence,
-        })),
-      },
-    },
-    include: {
-      items: {
-        select: {
-          productId: true,
-          nameSnapshot: true,
-          unitPricePenceSnapshot: true,
-          quantity: true,
-          lineTotalPence: true,
+  const order = await prisma.$transaction(async (tx) => {
+    const created = await tx.order.create({
+      data: {
+        shopId: input.shopId,
+        customerEmail,
+        status: 'PAID',
+        currency: 'gbp',
+        totalPence: input.totalPence,
+        stripeSessionId: input.stripeSessionId ?? null,
+        isTestOrder,
+        paidAt,
+        items: {
+          create: input.cart.map((item) => ({
+            productId: item.productId,
+            nameSnapshot: item.name,
+            unitPricePenceSnapshot: item.unitPricePence,
+            quantity: item.quantity,
+            lineTotalPence: item.lineTotalPence,
+          })),
         },
       },
-    },
+      include: {
+        items: {
+          select: {
+            productId: true,
+            nameSnapshot: true,
+            unitPricePenceSnapshot: true,
+            quantity: true,
+            lineTotalPence: true,
+          },
+        },
+      },
+    });
+
+    if (shouldEnqueueEmail) {
+      const rendered = buildShopOrderConfirmationEmail({
+        to: customerEmail,
+        totalFormatted: formatGbp(input.totalPence),
+        itemLines: input.cart.map(
+          (item) => `${item.name} × ${item.quantity} — ${formatGbp(item.lineTotalPence)}`,
+        ),
+      });
+      const outbound = await enqueueEmail(tx, {
+        shopId: input.shopId,
+        bookingId: null,
+        purpose: EmailOutboundPurpose.SHOP_ORDER_CONFIRMATION,
+        to: customerEmail,
+        subject: rendered.subject,
+        html: rendered.html,
+      });
+      outboxId = outbound.id;
+    }
+
+    return created;
   });
 
-  if (input.sendEmail !== false && !isTestOrder) {
-    await sendShopOrderConfirmationEmail({
-      to: customerEmail,
-      totalFormatted: formatGbp(input.totalPence),
-      itemLines: input.cart.map(
-        (item) => `${item.name} × ${item.quantity} — ${formatGbp(item.lineTotalPence)}`,
-      ),
-    });
-  }
+  await tryDeliverOutboxEmail(outboxId);
 
   return {
     id: order.id,

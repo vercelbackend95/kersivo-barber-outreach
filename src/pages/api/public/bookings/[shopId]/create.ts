@@ -78,11 +78,17 @@ export const POST: APIRoute = async ({ request, params }) => {
     return json({ error: 'Invalid request', issues: parsed.error.flatten() }, 400);
   }
 
+  const headerIdempotencyKey = request.headers.get('Idempotency-Key')?.trim() || '';
+  const idempotencyKey = parsed.data.idempotencyKey?.trim() || headerIdempotencyKey || undefined;
+
   try {
-    const created = await createInstantBooking(parsed.data, {
-      requiredShopId: shopId,
-      allowDepositCollection: true,
-    });
+    const created = await createInstantBooking(
+      { ...parsed.data, idempotencyKey },
+      {
+        requiredShopId: shopId,
+        allowDepositCollection: true,
+      },
+    );
 
     if (created.depositRequired) {
       if (!shop.stripeConnectAccountId) {

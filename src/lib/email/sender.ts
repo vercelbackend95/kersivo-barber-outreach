@@ -119,8 +119,18 @@ async function sendEmail(input: {
   }
 }
 
-export async function sendInstantBookingConfirmationEmail(input: BookingEmailBaseInput & { cancelUrl: string; rescheduleUrl: string }) {
+export type InstantBookingConfirmationEmailInput = BookingEmailBaseInput & {
+  cancelUrl: string;
+  rescheduleUrl: string;
+};
+
+/** Pure builder for instant booking confirmation (manage-token links in HTML). */
+export function buildInstantBookingConfirmationEmail(input: InstantBookingConfirmationEmailInput): {
+  subject: string;
+  html: string;
+} {
   const summaryHtml = renderBookingSummary(input);
+  const subject = 'Your booking is confirmed';
   const html = `<p>Hi ${input.fullName},</p>
   <h2>Your booking is confirmed</h2>
   <p>Your appointment has been booked successfully.</p>
@@ -130,10 +140,36 @@ export async function sendInstantBookingConfirmationEmail(input: BookingEmailBas
   <p><strong><a href="${input.rescheduleUrl}">Reschedule booking</a></strong></p>
   <p><strong><a href="${input.cancelUrl}">Cancel booking</a></strong></p>`;
 
+  return { subject, html };
+}
+
+/** Send a pre-rendered email (used by the durable outbox). */
+export async function sendRenderedEmail(input: {
+  to: string;
+  subject: string;
+  html: string;
+  replyTo?: string;
+  devLogLabel?: string;
+}): Promise<{ messageId: string | null }> {
+  return sendEmail({
+    to: input.to,
+    subject: input.subject,
+    html: input.html,
+    replyTo: input.replyTo,
+    devLogLabel: input.devLogLabel ?? '[DEV EMAIL] Rendered outbox send',
+    devPayload: {
+      to: input.to,
+      subject: input.subject,
+    },
+  });
+}
+
+export async function sendInstantBookingConfirmationEmail(input: InstantBookingConfirmationEmailInput) {
+  const { subject, html } = buildInstantBookingConfirmationEmail(input);
 
   return sendEmail({
     to: input.to,
-    subject: 'Your booking is confirmed',
+    subject,
     html,
     devLogLabel: '[DEV EMAIL] Instant booking confirmation',
     devPayload: {
@@ -195,22 +231,29 @@ export async function sendAppointmentReminderEmail(input: AppointmentReminderEma
   });
 }
 
-export async function sendRescheduledBookingEmail(
-  input: BookingEmailBaseInput & {
-    cancelUrl: string;
-    rescheduleUrl: string;
-    previousStartAt?: Date | null;
-    previousEndAt?: Date | null;
-  }
-) {
+export type RescheduledBookingEmailInput = BookingEmailBaseInput & {
+  cancelUrl: string;
+  rescheduleUrl: string;
+  previousStartAt?: Date | null;
+  previousEndAt?: Date | null;
+};
+
+/** Pure builder for reschedule confirmation emails. */
+export function buildRescheduledBookingEmail(input: RescheduledBookingEmailInput): {
+  subject: string;
+  html: string;
+} {
   const summaryHtml = renderBookingSummary(input);
   const previousDateTime =
     input.previousStartAt && input.previousEndAt
       ? formatInTimeZone(input.previousStartAt, 'Europe/London', "EEEE d MMMM yyyy 'at' HH:mm")
       : null;
 
-  const previousSummaryHtml = previousDateTime ? `<p><strong>Previous:</strong> ${previousDateTime} (Europe/London)</p>` : '';
+  const previousSummaryHtml = previousDateTime
+    ? `<p><strong>Previous:</strong> ${previousDateTime} (Europe/London)</p>`
+    : '';
 
+  const subject = 'Your booking has been rescheduled';
   const html = `<p>Hi ${input.fullName},</p>
   <p>Your booking has been rescheduled.</p>
   <ul>
@@ -220,9 +263,15 @@ export async function sendRescheduledBookingEmail(
   ${summaryHtml}
   ${previousSummaryHtml}`;
 
+  return { subject, html };
+}
+
+export async function sendRescheduledBookingEmail(input: RescheduledBookingEmailInput) {
+  const { subject, html } = buildRescheduledBookingEmail(input);
+
   await sendEmail({
     to: input.to,
-    subject: 'Your booking has been rescheduled',
+    subject,
     html,
     devLogLabel: '[DEV EMAIL] Rescheduled booking',
     devPayload: {
@@ -619,21 +668,34 @@ export async function sendDemoCaptureVisitorEmail(input: { email: string }) {
   });
 }
 
-export async function sendShopOrderConfirmationEmail(input: {
+export type ShopOrderConfirmationEmailInput = {
   to: string;
   itemLines: string[];
   totalFormatted: string;
-}) {
+};
+
+/** Pure builder for retail order confirmation emails. */
+export function buildShopOrderConfirmationEmail(input: ShopOrderConfirmationEmailInput): {
+  subject: string;
+  html: string;
+} {
   const listHtml = input.itemLines.map((line) => `<li>${line}</li>`).join('');
+  const subject = 'Order confirmed — pick up in store';
   const html = `<p>Thank you for your order.</p>
   <p>Your payment was successful and your order is ready for in-store pickup.</p>
   <ul>${listHtml}</ul>
   <p><strong>Total paid:</strong> ${input.totalFormatted}</p>
   <p>Please bring your confirmation email when collecting.</p>`;
 
+  return { subject, html };
+}
+
+export async function sendShopOrderConfirmationEmail(input: ShopOrderConfirmationEmailInput) {
+  const { subject, html } = buildShopOrderConfirmationEmail(input);
+
   await sendEmail({
     to: input.to,
-    subject: 'Order confirmed — pick up in store',
+    subject,
     html,
     devLogLabel: '[DEV EMAIL] Shop order confirmation',
     devPayload: {

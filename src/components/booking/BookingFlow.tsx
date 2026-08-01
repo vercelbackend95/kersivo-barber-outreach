@@ -43,7 +43,15 @@ type BookingCreatePayload = BookingPayload & {
   fullName: string;
   email: string;
   phone?: string;
+  idempotencyKey?: string;
 };
+
+function makeBookingIdempotencyKey() {
+  if (typeof crypto !== 'undefined' && 'randomUUID' in crypto) {
+    return crypto.randomUUID();
+  }
+  return `booking-${Date.now()}-${Math.random().toString(36).slice(2)}`;
+}
 
 type BookingReschedulePayload = BookingPayload & {
   token: string;
@@ -272,6 +280,7 @@ export default function BookingFlow({
   const [stepKey, setStepKey] = useState(0);
   const confirmationRef = useRef<HTMLElement | null>(null);
   const hasTrackedPublicDemoRef = useRef(false);
+  const idempotencyKeyRef = useRef<string | null>(null);
   const [confirmation, setConfirmation] = useState<{
     type: 'booked' | 'rescheduled' | 'demo';
     summary: BookingSummary;
@@ -648,6 +657,10 @@ export default function BookingFlow({
         return;
       }
 
+      if (!idempotencyKeyRef.current) {
+        idempotencyKeyRef.current = makeBookingIdempotencyKey();
+      }
+
       const payload: BookingCreatePayload = {
         serviceId,
         barberId,
@@ -655,13 +668,17 @@ export default function BookingFlow({
         time,
         fullName: normalizedFullName,
         email: normalizedEmail,
+        idempotencyKey: idempotencyKeyRef.current,
         ...(normalizedPhone ? { phone: normalizedPhone } : {}),
       };
 
       const createEndpoint = publicCreateUrl?.trim() || '/api/bookings/create';
       const res = await fetch(createEndpoint, {
         method: 'POST',
-        headers: { 'content-type': 'application/json' },
+        headers: {
+          'content-type': 'application/json',
+          'Idempotency-Key': idempotencyKeyRef.current,
+        },
         body: JSON.stringify(payload),
       });
 
@@ -670,6 +687,8 @@ export default function BookingFlow({
         setMessage(data.error || 'Unable to create booking.');
         return;
       }
+
+      idempotencyKeyRef.current = null;
 
       if (data.booking?.checkoutUrl) {
         window.location.assign(data.booking.checkoutUrl);

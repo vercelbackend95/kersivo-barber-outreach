@@ -7,7 +7,9 @@ export const bookingCreateSchema = z.object({
   time: z.string().regex(/^\d{2}:\d{2}$/),
   fullName: z.string().min(2),
   email: z.string().email(),
-  phone: z.string().optional().or(z.literal(''))
+  phone: z.string().optional().or(z.literal('')),
+  /** Client-generated key; scoped server-side as `${shopId}:${key}`. */
+  idempotencyKey: z.string().min(8).max(200).optional(),
 });
 
 export const tokenSchema = z.object({ token: z.string().min(8) });
