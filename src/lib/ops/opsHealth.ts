@@ -1,4 +1,4 @@
-import { DepositRefundStatus } from '@prisma/client';
+import { DepositRefundStatus, EmailOutboundStatus } from '@prisma/client';
 import { prisma } from '@/lib/db/client';
 import { notifyOpsDurable } from '@/lib/ops/stripeWebhookLedger';
 import { opsLog } from '@/lib/ops/opsLog';
@@ -140,17 +140,62 @@ export async function collectStuckRefunds(now = new Date()): Promise<
   });
 }
 
+export async function collectStuckEmails(now = new Date()): Promise<
+  Array<{
+    id: string;
+    shopId: string;
+    bookingId: string | null;
+    purpose: string;
+    status: EmailOutboundStatus;
+    attempts: number;
+    createdAt: Date;
+    error: string | null;
+  }>
+> {
+  const olderThan = new Date(now.getTime() - 30 * 60 * 1000);
+  return prisma.emailOutbound.findMany({
+    where: {
+      OR: [
+        {
+          status: EmailOutboundStatus.FAILED,
+          updatedAt: { lte: olderThan },
+        },
+        {
+          status: EmailOutboundStatus.QUEUED,
+          createdAt: { lte: olderThan },
+          // Only durable outbox rows (reminders without nextAttemptAt are excluded).
+          nextAttemptAt: { not: null },
+        },
+      ],
+    },
+    orderBy: { createdAt: 'asc' },
+    take: 20,
+    select: {
+      id: true,
+      shopId: true,
+      bookingId: true,
+      purpose: true,
+      status: true,
+      attempts: true,
+      createdAt: true,
+      error: true,
+    },
+  });
+}
+
 export async function runOpsHealthChecks(now = new Date()): Promise<{
   emailFailRate: number;
   smsFailRate: number;
   webhookFailedCount: number;
   stuckRefundCount: number;
+  stuckEmailCount: number;
   alertsFired: string[];
 }> {
   const alertsFired: string[] = [];
   const messaging = await collectMessagingFailRates(now);
   const stuck = await collectStuckWebhookFailures(now);
   const stuckRefunds = await collectStuckRefunds(now);
+  const stuckEmails = await collectStuckEmails(now);
 
   if (messaging.email.shouldAlert) {
     const key = 'messaging:email-fail-rate';
@@ -221,11 +266,34 @@ export async function runOpsHealthChecks(now = new Date()): Promise<{
     if (result.sent) alertsFired.push(key);
   }
 
+  for (const row of stuckEmails) {
+    const key = `email:stuck:${row.id}`;
+    const result = await notifyOpsDurable({
+      severity: 'critical',
+      title: 'Transactional email stuck',
+      body:
+        row.error?.slice(0, 500) ||
+        `Email ${row.status} (${row.purpose}) after ${row.attempts} attempt(s).`,
+      dedupeKey: key,
+      fields: {
+        emailOutboundId: row.id,
+        shopId: row.shopId,
+        bookingId: row.bookingId ?? '',
+        purpose: row.purpose,
+        status: row.status,
+        attempts: row.attempts,
+        createdAt: row.createdAt.toISOString(),
+      },
+    });
+    if (result.sent) alertsFired.push(key);
+  }
+
   opsLog('ops.health', 'check_complete', {
     emailFailRate: Number(messaging.email.failRate.toFixed(4)),
     smsFailRate: Number(messaging.sms.failRate.toFixed(4)),
     webhookFailedCount: stuck.length,
     stuckRefundCount: stuckRefunds.length,
+    stuckEmailCount: stuckEmails.length,
     alertsFired: alertsFired.length,
   });
 
@@ -234,6 +302,7 @@ export async function runOpsHealthChecks(now = new Date()): Promise<{
     smsFailRate: messaging.sms.failRate,
     webhookFailedCount: stuck.length,
     stuckRefundCount: stuckRefunds.length,
+    stuckEmailCount: stuckEmails.length,
     alertsFired,
   };
 }

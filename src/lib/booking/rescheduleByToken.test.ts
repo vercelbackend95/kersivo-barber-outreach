@@ -16,9 +16,16 @@ vi.mock('../db/client', () => ({
 }));
 
 vi.mock('../email/sender', () => ({
+  buildInstantBookingConfirmationEmail: vi.fn(() => ({ subject: 'ok', html: '<p>ok</p>' })),
+  buildRescheduledBookingEmail: vi.fn(() => ({ subject: 'ok', html: '<p>ok</p>' })),
   sendRescheduledBookingEmail: vi.fn().mockResolvedValue(undefined),
   sendInstantBookingConfirmationEmail: vi.fn(),
   sendShopCancelledBookingEmail: vi.fn()
+}));
+
+vi.mock('../email/outbox', () => ({
+  enqueueEmail: vi.fn().mockResolvedValue({ id: 'out_1' }),
+  tryDeliverOutboxEmail: vi.fn().mockResolvedValue(undefined),
 }));
 
 function baseBooking(overrides: { startAt: Date }) {

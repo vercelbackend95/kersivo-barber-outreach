@@ -100,4 +100,34 @@ describe('POST /api/bookings/create', () => {
     expect(json.booking.id).toBe('booking-1');
     expect(json.booking.sandbox).toBe(true);
   });
+
+  it('forwards Idempotency-Key from header when body omits it', async () => {
+    resolveAdminAccess.mockResolvedValue({ via: 'session', shopId: 'owner-shop-1' });
+    createInstantBooking.mockResolvedValue({
+      id: 'booking-2',
+      status: 'BOOKED',
+      serviceNameAtBooking: 'Fade',
+      service: { name: 'Fade' },
+      barber: { name: 'Jamie' },
+      startAt: new Date('2026-07-20T09:00:00.000Z'),
+    });
+
+    const ctx = {
+      request: new Request('http://localhost/api/bookings/create', {
+        method: 'POST',
+        headers: {
+          'content-type': 'application/json',
+          'Idempotency-Key': 'header-key-abcdef',
+        },
+        body: JSON.stringify(validPayload),
+      }),
+    } as unknown as APIContext;
+
+    const res = await POST(ctx as never);
+    expect(res.status).toBe(200);
+    expect(createInstantBooking).toHaveBeenCalledWith(
+      expect.objectContaining({ idempotencyKey: 'header-key-abcdef' }),
+      expect.any(Object),
+    );
+  });
 });

@@ -45,6 +45,9 @@ enum SmsOutboundStatus {
 
 enum EmailOutboundPurpose {
   APPOINTMENT_REMINDER
+  BOOKING_CONFIRMATION
+  BOOKING_RESCHEDULED
+  SHOP_ORDER_CONFIRMATION
 }
 
 enum EmailOutboundStatus {
@@ -493,6 +496,9 @@ model Booking {
   /// `startAt` value the reminder email was sent for (reschedule clears / re-arms).
   emailReminderForStartAt DateTime?
 
+  /// Client-supplied key scoped as `${shopId}:${key}` — prevents duplicate bookings on retry.
+  idempotencyKey          String?       @unique
+
   createdAt               DateTime      @default(now())
   updatedAt               DateTime      @updatedAt
 
@@ -557,7 +563,7 @@ model SmsOutbound {
   @@index([shopId, createdAt])
 }
 
-/// Internal email send log for scheduled reminders (ops/debug — no admin UI in v1).
+/// Durable email outbox (transactional + reminders). Payload cleared on SENT.
 model EmailOutbound {
   id                String               @id @default(cuid())
   shopId            String
@@ -569,12 +575,21 @@ model EmailOutbound {
   providerMessageId String?
   status            EmailOutboundStatus  @default(QUEUED)
   error             String?
+  /// Replayable send payload: { to, subject, html, replyTo? }. Cleared when SENT.
+  payload           Json?
+  attempts          Int                  @default(0)
+  maxAttempts       Int                  @default(6)
+  nextAttemptAt     DateTime?
+  lastAttemptAt     DateTime?
+  sentAt            DateTime?
   createdAt         DateTime             @default(now())
+  updatedAt         DateTime             @updatedAt
 
   booking Booking? @relation(fields: [bookingId], references: [id], onDelete: SetNull)
 
   @@index([bookingId])
   @@index([shopId, createdAt])
+  @@index([status, nextAttemptAt])
 }
 
 

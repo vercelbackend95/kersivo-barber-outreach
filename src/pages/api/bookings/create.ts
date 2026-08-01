@@ -68,15 +68,21 @@ export const POST: APIRoute = async (ctx) => {
     );
   }
 
+  const headerIdempotencyKey = request.headers.get('Idempotency-Key')?.trim() || '';
+  const idempotencyKey = parsed.data.idempotencyKey?.trim() || headerIdempotencyKey || undefined;
+
   const requiredShopId = access!.shopId;
   const notesPrefix = OWNER_TEST_BOOKING_NOTES_PREFIX;
 
   try {
-    const booking = await createInstantBooking(parsed.data, {
-      requiredShopId,
-      notesPrefix,
-      skipConfirmationEmail: false,
-    });
+    const booking = await createInstantBooking(
+      { ...parsed.data, idempotencyKey },
+      {
+        requiredShopId,
+        notesPrefix,
+        skipConfirmationEmail: false,
+      },
+    );
     return new Response(
       JSON.stringify({
         booking: {
