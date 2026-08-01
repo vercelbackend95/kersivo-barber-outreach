@@ -18,6 +18,20 @@ function collectProductionSourceFiles(dir: string, out: string[] = []): string[]
 }
 
 const BOOKING_CREATE_CALL = /\.booking\.create\s*\(/;
+const BOOKING_UPDATE_CALL = /\.booking\.update\s*\(/;
+
+/** Known surfaces that call booking.update (occupancy-affecting ones must validate). */
+const BOOKING_UPDATE_ALLOWED = new Set([
+  'lib/booking/service.ts',
+  'lib/booking/depositMoney.ts',
+  'lib/sms/reminders.ts',
+  'lib/email/reminders.ts',
+  'pages/api/admin/bookings/[id]/service.ts',
+  'pages/api/admin/bookings/[id]/force-reschedule.ts',
+  'pages/api/admin/bookings/[id]/status.ts',
+  'pages/api/admin/bookings/[id]/notes.ts',
+  'pages/api/public/bookings/[shopId]/create.ts',
+]);
 
 describe('booking write surface', () => {
   it('allows booking.create only in createInstantBooking (service.ts)', () => {
@@ -50,6 +64,23 @@ describe('booking write surface', () => {
     }
 
     expect(offenders).toEqual([]);
+  });
+
+  it('restricts booking.update call sites to known validated surfaces', () => {
+    const root = resolve(process.cwd(), 'src');
+    const offenders: string[] = [];
+
+    for (const file of collectProductionSourceFiles(root)) {
+      const rel = relative(root, file).replace(/\\/g, '/');
+      if (BOOKING_UPDATE_ALLOWED.has(rel)) continue;
+      const src = readFileSync(file, 'utf8');
+      if (BOOKING_UPDATE_CALL.test(src)) offenders.push(rel);
+    }
+
+    expect(
+      offenders,
+      'unexpected booking.update outside allowlisted validated surfaces',
+    ).toEqual([]);
   });
 
   it('does not ship the unvalidated admin manual booking route', () => {

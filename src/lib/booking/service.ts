@@ -21,6 +21,7 @@ import { emailReminderClearData } from '../email/reminders';
 import { ANY_BARBER_ID } from './constants';
 import { canCancelOrReschedule, canShopAdminCancelByLeadTime } from './policies';
 import { generateSlots } from './slots';
+import { ensureSlotAvailable } from './slotGuard';
 import { addMinutes, londonDayOfWeekFromIsoDate, toUtcFromLondon } from './time';
 import { generateToken, hashToken } from './tokens';
 import { intersectMinutesWithShopDay } from '@/lib/admin/shopOpeningHours';
@@ -306,36 +307,6 @@ async function ensureRequestedSlotSelectable(input: {
   if (!availableSlots.includes(input.time)) {
     throw new Error('Selected time is no longer available.');
   }
-}
-
-async function ensureSlotAvailable(
-  tx: Prisma.TransactionClient,
-  input: {
-    barberId: string;
-    startAt: Date;
-    endAt: Date;
-    ignoreBookingId?: string;
-  }
-) {
-  const overlapping = await tx.booking.findFirst({
-    where: {
-      barberId: input.barberId,
-      id: input.ignoreBookingId ? { not: input.ignoreBookingId } : undefined,
-      status: { in: [BookingStatus.BOOKED, BookingStatus.PENDING_PAYMENT] },
-      NOT: [{ endAt: { lte: input.startAt } }, { startAt: { gte: input.endAt } }]
-    }
-  });
-
-  if (overlapping) throw new Error('This slot is no longer available.');
-
-  const block = await tx.barberTimeOff.findFirst({
-    where: {
-      barberId: input.barberId,
-      NOT: [{ endsAt: { lte: input.startAt } }, { startsAt: { gte: input.endAt } }]
-    }
-  });
-
-  if (block) throw new Error('Selected time is blocked.');
 }
 
 async function resolveRequestedBarber(input: {
