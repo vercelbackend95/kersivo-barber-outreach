@@ -754,8 +754,8 @@ export default function BarbershopSettingsPanel({
                   </button>
                 ) : (
                   <p className="admin-barbershop-settings__card-copy" role="status">
-                    The shop owner connects the Stripe payouts account. You can turn deposits on or
-                    off once Stripe is ready.
+                    The shop owner connects Stripe and manages deposit settings. You can see the
+                    current status below.
                   </p>
                 )}
                 <span className="muted">
@@ -770,7 +770,11 @@ export default function BarbershopSettingsPanel({
                 <input
                   type="checkbox"
                   checked={depositsEnabled}
-                  disabled={depositsBusy || (!connectChargesEnabled && !depositsEnabled)}
+                  disabled={
+                    depositsBusy ||
+                    !canManagePayouts ||
+                    (!connectChargesEnabled && !depositsEnabled)
+                  }
                   onChange={async (event) => {
                     const next = event.target.checked;
                     setDepositsBusy(true);
@@ -806,7 +810,10 @@ export default function BarbershopSettingsPanel({
                     }
                   }}
                 />
-                <span>Require £5 deposit on online bookings</span>
+                <span>
+                  Require £5 deposit on online bookings
+                  {!canManagePayouts ? ' (owner only)' : ''}
+                </span>
               </label>
               {policySummary ? (
                 <p className="admin-barbershop-settings__card-copy">

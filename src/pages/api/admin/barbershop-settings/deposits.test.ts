@@ -129,8 +129,27 @@ describe('barbershop-settings/deposits', () => {
   });
 
   describe('PATCH depositsEnabled', () => {
-    it('allows MANAGER to toggle deposits when Connect is ready', async () => {
+    it('rejects MANAGER with 403 and does not update deposits', async () => {
       requireAdminContext.mockResolvedValue(accessFor('MANAGER'));
+
+      const res = await PATCH(jsonCtx('PATCH', { depositsEnabled: true }));
+      expect(res.status).toBe(403);
+      const body = await res.json();
+      expect(body.permission).toBe('billing.manage');
+      expect(shopSettingsFindUnique).not.toHaveBeenCalled();
+      expect(shopSettingsUpdate).not.toHaveBeenCalled();
+    });
+
+    it('rejects BARBER with 403', async () => {
+      requireAdminContext.mockResolvedValue(accessFor('BARBER'));
+
+      const res = await PATCH(jsonCtx('PATCH', { depositsEnabled: true }));
+      expect(res.status).toBe(403);
+      expect(shopSettingsUpdate).not.toHaveBeenCalled();
+    });
+
+    it('allows OWNER to toggle deposits when Connect is ready', async () => {
+      requireAdminContext.mockResolvedValue(accessFor('OWNER'));
       shopSettingsFindUnique.mockResolvedValue(paidShop);
       shopSettingsUpdate.mockResolvedValue({ depositsEnabled: true });
 
