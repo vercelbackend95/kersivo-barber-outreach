@@ -11,7 +11,7 @@ export const GET: APIRoute = async ({ request }) => {
     where: { stripeSessionId: sessionId },
     select: {
       id: true,
-      customerEmail: true,
+      reference: true,
       totalPence: true,
       currency: true,
       status: true,
@@ -20,12 +20,14 @@ export const GET: APIRoute = async ({ request }) => {
           id: true,
           nameSnapshot: true,
           quantity: true,
-          lineTotalPence: true
-        }
-      }
-    }
+          lineTotalPence: true,
+        },
+      },
+    },
   });
 
   if (!order) return new Response(JSON.stringify({ error: 'Order not found' }), { status: 404 });
+
+  // Never expose customerEmail — session_id alone must not leak PII.
   return new Response(JSON.stringify({ order }), { status: 200 });
 };

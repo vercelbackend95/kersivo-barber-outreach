@@ -88,6 +88,13 @@ export default function BarbershopSettingsPanel({
   const [depositsBusy, setDepositsBusy] = useState(false);
   const [depositsError, setDepositsError] = useState('');
   const [depositsMessage, setDepositsMessage] = useState('');
+  const [retailEnabled, setRetailEnabled] = useState(false);
+  const [retailSellReady, setRetailSellReady] = useState(false);
+  const [retailGateReason, setRetailGateReason] = useState<string | null>(null);
+  const [publicShopUrl, setPublicShopUrl] = useState<string | null>(null);
+  const [retailBusy, setRetailBusy] = useState(false);
+  const [retailError, setRetailError] = useState('');
+  const [retailMessage, setRetailMessage] = useState('');
   const [policySummary, setPolicySummary] = useState<{
     cancellationWindowHours: number;
     rescheduleWindowHours: number;
@@ -196,9 +203,13 @@ export default function BarbershopSettingsPanel({
 
   const loadDeposits = useCallback(async () => {
     setDepositsError('');
+    setRetailError('');
     try {
-      const response = await fetch('/api/admin/barbershop-settings/deposits', { credentials: 'include' });
-      const payload = (await response.json().catch(() => null)) as {
+      const [depositsResponse, retailResponse] = await Promise.all([
+        fetch('/api/admin/barbershop-settings/deposits', { credentials: 'include' }),
+        fetch('/api/admin/barbershop-settings/retail', { credentials: 'include' }),
+      ]);
+      const payload = (await depositsResponse.json().catch(() => null)) as {
         error?: string;
         paid?: boolean;
         depositsEnabled?: boolean;
@@ -215,7 +226,7 @@ export default function BarbershopSettingsPanel({
           maxClientReschedules: number;
         };
       } | null;
-      if (!response.ok) throw new Error(payload?.error || 'Could not load deposits settings.');
+      if (!depositsResponse.ok) throw new Error(payload?.error || 'Could not load deposits settings.');
       setDepositsPaid(Boolean(payload?.paid));
       setDepositsEnabled(Boolean(payload?.depositsEnabled));
       setDepositsCollectReady(Boolean(payload?.collectReady));
@@ -223,6 +234,24 @@ export default function BarbershopSettingsPanel({
       setConnectAccountLinked(Boolean(payload?.connect?.accountLinked));
       setCanManagePayouts(Boolean(payload?.canManagePayouts));
       setPolicySummary(payload?.policy ?? null);
+
+      const retailPayload = (await retailResponse.json().catch(() => null)) as {
+        error?: string;
+        retailEnabled?: boolean;
+        sellReady?: boolean;
+        publicShopUrl?: string;
+        gate?: { ok?: boolean; reason?: string };
+      } | null;
+      if (retailResponse.ok) {
+        setRetailEnabled(Boolean(retailPayload?.retailEnabled));
+        setRetailSellReady(Boolean(retailPayload?.sellReady));
+        setPublicShopUrl(
+          typeof retailPayload?.publicShopUrl === 'string' ? retailPayload.publicShopUrl : null,
+        );
+        setRetailGateReason(
+          retailPayload?.gate?.ok ? null : retailPayload?.gate?.reason ?? null,
+        );
+      }
     } catch (error) {
       setDepositsError(error instanceof Error ? error.message : 'Could not load deposits settings.');
     }
@@ -815,15 +844,98 @@ export default function BarbershopSettingsPanel({
                   {!canManagePayouts ? ' (owner only)' : ''}
                 </span>
               </label>
+              <label className="field" style={{ display: 'flex', gap: '0.5rem', alignItems: 'center' }}>
+                <input
+                  type="checkbox"
+                  checked={retailEnabled}
+                  disabled={
+                    retailBusy ||
+                    depositsBusy ||
+                    !canManagePayouts ||
+                    (!connectChargesEnabled && !retailEnabled) ||
+                    !depositsPaid
+                  }
+                  onChange={async (event) => {
+                    const next = event.target.checked;
+                    setRetailBusy(true);
+                    setRetailError('');
+                    setRetailMessage('');
+                    try {
+                      const response = await fetch('/api/admin/barbershop-settings/retail', {
+                        method: 'PATCH',
+                        credentials: 'include',
+                        headers: { 'content-type': 'application/json' },
+                        body: JSON.stringify({ retailEnabled: next }),
+                      });
+                      const payload = (await response.json().catch(() => null)) as {
+                        error?: string;
+                        retailEnabled?: boolean;
+                        sellReady?: boolean;
+                        publicShopUrl?: string;
+                        gate?: { ok?: boolean; reason?: string };
+                      } | null;
+                      if (!response.ok) {
+                        throw new Error(payload?.error || 'Could not update retail checkout.');
+                      }
+                      setRetailEnabled(Boolean(payload?.retailEnabled));
+                      setRetailSellReady(Boolean(payload?.sellReady));
+                      setPublicShopUrl(
+                        typeof payload?.publicShopUrl === 'string' ? payload.publicShopUrl : null,
+                      );
+                      setRetailGateReason(payload?.gate?.ok ? null : payload?.gate?.reason ?? null);
+                      setRetailMessage(
+                        payload?.retailEnabled
+                          ? 'Public retail checkout is on — customers pay your Stripe account.'
+                          : 'Public retail checkout turned off.',
+                      );
+                      await loadDeposits();
+                    } catch (error) {
+                      setRetailError(
+                        error instanceof Error ? error.message : 'Could not update retail checkout.',
+                      );
+                    } finally {
+                      setRetailBusy(false);
+                    }
+                  }}
+                />
+                <span>
+                  Accept online retail checkout (pickup)
+                  {!canManagePayouts ? ' (owner only)' : ''}
+                </span>
+              </label>
+              {retailGateReason && !retailSellReady ? (
+                <p className="admin-barbershop-settings__card-copy" role="status">
+                  Retail blocked: {retailGateReason.replaceAll('_', ' ')}
+                </p>
+              ) : null}
+              {publicShopUrl ? (
+                <p className="admin-barbershop-settings__card-copy">
+                  Public shop link:{' '}
+                  <a href={publicShopUrl} target="_blank" rel="noreferrer">
+                    {publicShopUrl}
+                  </a>
+                </p>
+              ) : null}
               {policySummary ? (
                 <p className="admin-barbershop-settings__card-copy">
                   Policy: cancel/reschedule windows {policySummary.cancellationWindowHours}h /{' '}
                   {policySummary.rescheduleWindowHours}h · max {policySummary.maxClientReschedules}{' '}
-                  client reschedules · collect ready: {depositsCollectReady ? 'yes' : 'no'}
+                  client reschedules · collect ready: {depositsCollectReady ? 'yes' : 'no'} · retail
+                  ready: {retailSellReady ? 'yes' : 'no'}
                 </p>
               ) : null}
             </>
           )}
+          {retailMessage ? (
+            <p className="admin-inline-success" role="status">
+              {retailMessage}
+            </p>
+          ) : null}
+          {retailError ? (
+            <p className="admin-inline-error" role="alert">
+              {retailError}
+            </p>
+          ) : null}
           {depositsError ? (
             <p className="admin-inline-error" role="alert">
               {depositsError}

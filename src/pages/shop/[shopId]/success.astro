@@ -1,0 +1,130 @@
+---
+import MinimalLayout from '@/layouts/MinimalLayout.astro';
+import { prisma } from '@/lib/db/client';
+import { DEMO_SHOP_ID } from '@/lib/db/shopScope';
+import { SHOP_ORDER_METADATA_TYPE } from '@/lib/shop/cardPaymentsGate';
+import { retrieveCheckoutSession } from '@/lib/shop/stripe';
+import { formatGbp } from '@/lib/shop/money';
+import '@/styles/tokens.css';
+import '@/styles/global.css';
+import '@/styles/components/buttons.css';
+import '@/styles/components/shop.css';
+
+export const prerender = false;
+
+const shopId = Astro.params.shopId?.trim() ?? '';
+const sessionId = Astro.url.searchParams.get('session_id')?.trim() ?? '';
+
+if (!shopId || shopId === DEMO_SHOP_ID) {
+  return Astro.redirect('/shop');
+}
+
+let ok = false;
+let errorMessage = 'Unable to confirm your order.';
+let shopName = 'the shop';
+let reference: string | null = null;
+let totalFormatted: string | null = null;
+let itemLines: string[] = [];
+
+if (shopId && sessionId) {
+  try {
+    const shop = await prisma.shopSettings.findUnique({
+      where: { id: shopId },
+      select: { name: true, stripeConnectAccountId: true },
+    });
+    shopName = shop?.name?.trim() || shopName;
+    const connectAccountId = shop?.stripeConnectAccountId?.trim();
+    if (!connectAccountId) {
+      errorMessage = 'This shop is not ready to confirm retail payments.';
+    } else {
+      const session = await retrieveCheckoutSession(sessionId, { stripeAccount: connectAccountId });
+      const metadata = session.metadata ?? {};
+      if (
+        metadata.type === SHOP_ORDER_METADATA_TYPE &&
+        metadata.shopId === shopId &&
+        metadata.orderId &&
+        (session.payment_status ?? '').toLowerCase() === 'paid'
+      ) {
+        const order = await prisma.order.findFirst({
+          where: { id: metadata.orderId, shopId },
+          select: {
+            status: true,
+            reference: true,
+            totalPence: true,
+            items: {
+              select: { nameSnapshot: true, quantity: true },
+            },
+          },
+        });
+        if (order && order.status !== 'PENDING_PAYMENT') {
+          ok = true;
+          reference = order.reference;
+          totalFormatted = formatGbp(order.totalPence);
+          itemLines = order.items.map((item) => `${item.nameSnapshot} × ${item.quantity}`);
+        } else if (order) {
+          // Payment succeeded in Stripe; webhook may still be catching up.
+          ok = true;
+          reference = order.reference;
+          totalFormatted =
+            typeof session.amount_total === 'number' ? formatGbp(session.amount_total) : formatGbp(order.totalPence);
+          itemLines = order.items.map((item) => `${item.nameSnapshot} × ${item.quantity}`);
+        } else {
+          errorMessage = 'Order not found for this payment.';
+        }
+      } else {
+        errorMessage = 'Payment is not complete yet. If you were charged, contact the barbershop.';
+      }
+    }
+  } catch {
+    errorMessage = 'Payment confirmation failed. If you were charged, contact the barbershop.';
+  }
+} else {
+  errorMessage = 'Missing payment session. Return from Stripe checkout and try again.';
+}
+---
+
+<MinimalLayout
+  title={ok ? `Order confirmed | ${shopName}` : 'Order confirmation | Kersivo'}
+  description={ok ? `Your pickup order at ${shopName} is confirmed.` : 'Confirm your retail pickup order.'}
+  canonicalPath={`/shop/${shopId}/success`}
+  noindex
+>
+  <main class="container shop-page">
+    <section class="shop-card shop-success-card">
+      <div class="shop-card-body">
+        {ok ? (
+          <>
+            <h1>Pickup order confirmed</h1>
+            <p class="muted">
+              Thank you — your payment to <strong>{shopName}</strong> is confirmed. Collect in store when it
+              suits you.
+            </p>
+            {reference ? <p><strong>Pickup reference:</strong> {reference}</p> : null}
+            {totalFormatted ? <p class="muted">Total paid: {totalFormatted}</p> : null}
+            {itemLines.length > 0 ? (
+              <ul>
+                {itemLines.map((line) => (
+                  <li>{line}</li>
+                ))}
+              </ul>
+            ) : null}
+            <a class="btn btn--primary" href={`/shop/${shopId}`}>Back to shop</a>
+          </>
+        ) : (
+          <>
+            <h1>We could not confirm this order</h1>
+            <p class="muted">{errorMessage}</p>
+            <a class="btn btn--primary" href={`/shop/${shopId}`}>Return to shop</a>
+          </>
+        )}
+      </div>
+    </section>
+  </main>
+  <script is:inline>
+    try {
+      localStorage.removeItem('kersivo_shop_cart_v2');
+    } catch {
+      // ignore
+    }
+  </script>
+</MinimalLayout>

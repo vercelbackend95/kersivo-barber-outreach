@@ -27,7 +27,7 @@ export type CreatedShopOrder = {
   id: string;
   shopId: string;
   customerEmail: string;
-  status: 'PAID' | 'READY_FOR_PICKUP' | 'COLLECTED';
+  status: 'PENDING_PAYMENT' | 'PAID' | 'READY_FOR_PICKUP' | 'COLLECTED';
   totalPence: number;
   isTestOrder: boolean;
   paidAt: Date | null;

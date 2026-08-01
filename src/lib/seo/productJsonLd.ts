@@ -44,7 +44,7 @@ export function buildDemoProductBreadcrumbJsonLd(productName: string, productPat
 }
 
 export function buildProductPageJsonLd(input: ProductJsonLdInput): Record<string, unknown>[] {
-  const productPath = `/shop/${input.id}`;
+  const productPath = `/shop/demo/${input.id}`;
   const productUrl = buildAbsoluteUrl(productPath);
   const image =
     input.imageUrl && /^https?:\/\//.test(input.imageUrl)

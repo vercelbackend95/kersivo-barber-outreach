@@ -131,7 +131,7 @@ const { intro, details } = product
   : { intro: '', details: '' };
 const highlights = product ? createHighlights(product.description, product.category) : [];
 const demoBreadcrumbJsonLd = product
-  ? buildDemoProductBreadcrumbJsonLd(product.name, `/shop/${product.id}`)
+  ? buildDemoProductBreadcrumbJsonLd(product.name, `/shop/demo/${product.id}`)
   : null;
 ---
 
@@ -139,7 +139,7 @@ const demoBreadcrumbJsonLd = product
   <MainLayout
     title="Product not found | Kersivo"
     description="This demo product is not available. Browse the Kersivo retail demo catalog."
-    canonicalPath={id ? `/shop/${id}` : '/shop'}
+    canonicalPath={id ? `/shop/demo/${id}` : '/shop'}
     noindex
   >
     <main class="container product-page">
@@ -160,7 +160,7 @@ const demoBreadcrumbJsonLd = product
   <MainLayout
     title={`${product.name} | Kersivo Retail Demo`}
     description={intro}
-    canonicalPath={`/shop/${product.id}`}
+    canonicalPath={`/shop/demo/${product.id}`}
     ogImagePath={product.imageUrl?.startsWith('/') ? product.imageUrl : undefined}
     ogImageAlt={`${product.name} — Kersivo demo grooming shop`}
     jsonLd={demoBreadcrumbJsonLd!}
@@ -233,7 +233,7 @@ const demoBreadcrumbJsonLd = product
                   class:list={["shop-card", index >= DESKTOP_RELATED_PRODUCT_COUNT && 'related-card--mobile-only']}
                   data-category={item.category}
                 >
-                  <a href={`/shop/${item.id}`} class="shop-media-link" aria-label={`View ${item.name}`}>
+                  <a href={`/shop/demo/${item.id}`} class="shop-media-link" aria-label={`View ${item.name}`}>
                     <div class="shop-media">
                       {item.imageUrl ? (
                         <img src={item.imageUrl} alt={item.name} class="shop-image" loading="lazy" />
@@ -244,7 +244,7 @@ const demoBreadcrumbJsonLd = product
                   </a>
                   <div class="shop-card-body">
                     <p class="shop-category">{CATEGORY_LABELS[item.category] ?? 'Styling'}</p>
-                    <h3><a href={`/shop/${item.id}`}>{item.name}</a></h3>
+                    <h3><a href={`/shop/demo/${item.id}`}>{item.name}</a></h3>
                     <p class="shop-price">{formatGbp(item.pricePence)}</p>
                     <div class="shop-card-actions">
                       <button

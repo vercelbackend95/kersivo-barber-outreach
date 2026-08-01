@@ -32,6 +32,8 @@ interface Props extends PageSeo {
   navbarVariant?: Navbar17Variant;
   /** Public `/shop` sandbox — CartDrawer completes locally (no Stripe). */
   publicDemoMode?: boolean;
+  /** Live tenant shop id — CartDrawer posts to public Connect checkout. */
+  shopId?: string;
 }
 
 const {
@@ -49,6 +51,7 @@ const {
   jsonLd,
   navbarVariant = 'default',
   publicDemoMode = false,
+  shopId,
 } = Astro.props;
 
 const jsonLdBlocks = jsonLd
@@ -91,7 +94,11 @@ const jsonLdBlocks = jsonLd
   <body>
     <Navbar17 variant={navbarVariant} />
     <slot />
-    {navbarVariant === 'shop' ? <CartDrawerMount publicDemoMode={publicDemoMode} /> : null}
+    {
+      navbarVariant === 'shop' ? (
+        <CartDrawerMount publicDemoMode={publicDemoMode} shopId={shopId} />
+      ) : null
+    }
     <CookieConsentMount />
     <InitDataTrackScript />
   </body>

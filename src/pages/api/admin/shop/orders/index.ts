@@ -50,7 +50,11 @@ export const GET: APIRoute = async (ctx) => {
       ? Math.min(Math.max(Math.floor(requestedLimit), 1), MAX_ORDERS_LIMIT)
       : DEFAULT_ORDERS_LIMIT;
     const orders = await prisma.order.findMany({
-      where: { shopId },
+      where: {
+        shopId,
+        // Abandoned checkouts stay PENDING_PAYMENT until paid — hide from the ops list.
+        status: { not: 'PENDING_PAYMENT' },
+      },
       orderBy: { createdAt: 'desc' },
       take: limit + 1,
       select: {
@@ -62,6 +66,7 @@ export const GET: APIRoute = async (ctx) => {
         createdAt: true,
         paidAt: true,
         isTestOrder: true,
+        reference: true,
         _count: { select: { items: true } },
       },
     });

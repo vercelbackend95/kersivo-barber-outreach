@@ -4,9 +4,15 @@ import CartDrawer from './CartDrawer';
 type Props = {
   testOrderMode?: boolean;
   publicDemoMode?: boolean;
+  shopId?: string;
 };
 
-const { testOrderMode = false, publicDemoMode = false } = Astro.props;
+const { testOrderMode = false, publicDemoMode = false, shopId } = Astro.props;
 ---
 
-<CartDrawer client:load testOrderMode={testOrderMode} publicDemoMode={publicDemoMode} />
+<CartDrawer
+  client:load
+  testOrderMode={testOrderMode}
+  publicDemoMode={publicDemoMode}
+  shopId={shopId}
+/>

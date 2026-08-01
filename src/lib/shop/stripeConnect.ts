@@ -1,4 +1,5 @@
 import { BOOKING_DEPOSIT_METADATA_TYPE } from '../booking/depositGate';
+import { SHOP_ORDER_METADATA_TYPE } from './cardPaymentsGate';
 import { retrieveCheckoutSession, type StripeSession } from './stripe';
 
 const STRIPE_API_BASE = 'https://api.stripe.com/v1';
@@ -244,6 +245,88 @@ export async function retrieveBookingDepositSession(
   shopConnectAccountId: string,
 ): Promise<StripeSession> {
   return retrieveCheckoutSession(sessionId, { stripeAccount: shopConnectAccountId });
+}
+
+/**
+ * Direct charge on the connected account for retail pickup orders (shop is MoR).
+ * KERSIVO application fee is £0 today; hook kept for a future SaaS fee.
+ */
+export function retailCheckoutIdempotencyKey(orderId: string): string {
+  return `shop_order_checkout_${orderId.trim()}`;
+}
+
+export type RetailCheckoutLineItem = {
+  name: string;
+  unitAmountPence: number;
+  quantity: number;
+  imageUrl?: string;
+};
+
+export async function createRetailCheckoutSession(input: {
+  shopConnectAccountId: string;
+  orderId: string;
+  shopId: string;
+  customerEmail?: string;
+  lineItems: RetailCheckoutLineItem[];
+  successUrl: string;
+  cancelUrl: string;
+  /** Order.createdAt — anchors deterministic expires_at for Idempotency-Key stability. */
+  orderCreatedAt: Date;
+}): Promise<{ id: string; url: string }> {
+  const connectAccountId = input.shopConnectAccountId.trim();
+  if (!connectAccountId) throw new Error('shopConnectAccountId is required for retail checkout.');
+  if (!input.lineItems.length) throw new Error('lineItems are required for retail checkout.');
+
+  const expiresAt = resolveDepositSessionExpiresAt({
+    anchor: input.orderCreatedAt,
+    holdExpiresAt: null,
+  });
+
+  const params: Record<string, string> = {
+    mode: 'payment',
+    success_url: input.successUrl,
+    cancel_url: input.cancelUrl,
+    'payment_method_types[0]': 'card',
+    expires_at: String(Math.floor(expiresAt.getTime() / 1000)),
+    'metadata[type]': SHOP_ORDER_METADATA_TYPE,
+    'metadata[orderId]': input.orderId,
+    'metadata[shopId]': input.shopId,
+    'payment_intent_data[application_fee_amount]': '0',
+  };
+
+  const customerEmail = input.customerEmail?.trim().toLowerCase();
+  if (customerEmail) {
+    params.customer_email = customerEmail;
+  }
+
+  input.lineItems.forEach((item, index) => {
+    const unitAmount = Math.trunc(item.unitAmountPence);
+    const quantity = Math.trunc(item.quantity);
+    if (!Number.isFinite(unitAmount) || unitAmount <= 0) {
+      throw new Error(`lineItems[${index}].unitAmountPence must be a positive integer.`);
+    }
+    if (!Number.isFinite(quantity) || quantity <= 0) {
+      throw new Error(`lineItems[${index}].quantity must be a positive integer.`);
+    }
+    params[`line_items[${index}][price_data][currency]`] = 'gbp';
+    params[`line_items[${index}][price_data][unit_amount]`] = String(unitAmount);
+    params[`line_items[${index}][price_data][product_data][name]`] = item.name.slice(0, 120);
+    params[`line_items[${index}][quantity]`] = String(quantity);
+    const imageUrl = item.imageUrl?.trim();
+    if (imageUrl) {
+      params[`line_items[${index}][price_data][product_data][images][0]`] = imageUrl.slice(0, 2048);
+    }
+  });
+
+  const session = await stripeForm('/checkout/sessions', params, {
+    stripeAccount: connectAccountId,
+    idempotencyKey: retailCheckoutIdempotencyKey(input.orderId),
+  });
+
+  const id = typeof session.id === 'string' ? session.id : '';
+  const url = typeof session.url === 'string' ? session.url : '';
+  if (!id || !url) throw new Error('Stripe retail session incomplete.');
+  return { id, url };
 }
 
 export type ExpireSessionOutcome = 'expired' | 'already_completed' | 'already_expired';

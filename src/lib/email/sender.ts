@@ -694,6 +694,8 @@ export type ShopOrderConfirmationEmailInput = {
   to: string;
   itemLines: string[];
   totalFormatted: string;
+  shopName?: string | null;
+  reference?: string | null;
 };
 
 /** Pure builder for retail order confirmation emails. */
@@ -702,12 +704,20 @@ export function buildShopOrderConfirmationEmail(input: ShopOrderConfirmationEmai
   html: string;
 } {
   const listHtml = input.itemLines.map((line) => `<li>${line}</li>`).join('');
-  const subject = 'Order confirmed — pick up in store';
-  const html = `<p>Thank you for your order.</p>
+  const shopName = input.shopName?.trim() || 'the shop';
+  const reference = input.reference?.trim() || '';
+  const subject = reference
+    ? `Order ${reference} confirmed — pick up at ${shopName}`
+    : `Order confirmed — pick up at ${shopName}`;
+  const referenceHtml = reference
+    ? `<p><strong>Pickup reference:</strong> ${reference}</p>`
+    : '';
+  const html = `<p>Thank you for your order from <strong>${shopName}</strong>.</p>
   <p>Your payment was successful and your order is ready for in-store pickup.</p>
+  ${referenceHtml}
   <ul>${listHtml}</ul>
   <p><strong>Total paid:</strong> ${input.totalFormatted}</p>
-  <p>Please bring your confirmation email when collecting.</p>`;
+  <p>Please bring your confirmation email (and reference) when collecting.</p>`;
 
   return { subject, html };
 }
