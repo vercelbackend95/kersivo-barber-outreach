@@ -142,6 +142,7 @@ describe('public booking create — deposit checkout reuse', () => {
   });
 
   it('creates a new session when the existing one is no longer open', async () => {
+    const createdAt = new Date();
     createInstantBooking.mockResolvedValue({
       id: 'book_1',
       status: BookingStatus.PENDING_PAYMENT,
@@ -155,6 +156,8 @@ describe('public booking create — deposit checkout reuse', () => {
       barber: { name: 'Alex' },
       serviceNameAtBooking: 'Fade',
       startAt: new Date(),
+      createdAt,
+      paymentExpiresAt: new Date(createdAt.getTime() + 15 * 60 * 1000),
     });
     retrieveBookingDepositSession.mockResolvedValue({
       id: 'cs_expired',

@@ -10,9 +10,14 @@ vi.mock('./stripe', () => ({
 
 import {
   createBookingDepositCheckoutSession,
+  expireBookingDepositSession,
   refundPaymentIntent,
+  resolveDepositSessionExpiresAt,
+  STRIPE_SESSION_MIN_TTL_MS,
   StripeConnectApiError,
 } from './stripeConnect';
+
+const BOOKING_CREATED_AT = new Date('2026-08-01T12:00:00.000Z');
 
 describe('stripeConnect direct charges', () => {
   const prevKey = process.env.STRIPE_SECRET_KEY;
@@ -39,6 +44,8 @@ describe('stripeConnect direct charges', () => {
       customerEmail: 'client@example.com',
       shopName: 'Test Shop',
       amountPence: 300,
+      bookingCreatedAt: BOOKING_CREATED_AT,
+      holdExpiresAt: new Date(BOOKING_CREATED_AT.getTime() + 15 * 60 * 1000),
       successUrl: 'https://kersivo.test/success',
       cancelUrl: 'https://kersivo.test/cancel',
     });
@@ -57,6 +64,10 @@ describe('stripeConnect direct charges', () => {
     expect(body).toContain('300');
     expect(body).not.toContain('unit_amount%5D=500');
     expect(headers['Idempotency-Key']).toBe('booking_deposit_checkout_book_1');
+    const expectedExpires = Math.floor(
+      (BOOKING_CREATED_AT.getTime() + STRIPE_SESSION_MIN_TTL_MS) / 1000,
+    );
+    expect(body).toContain(`expires_at=${expectedExpires}`);
   });
 
   it('uses a stable Idempotency-Key derived from bookingId', async () => {
@@ -72,6 +83,7 @@ describe('stripeConnect direct charges', () => {
       customerEmail: 'client@example.com',
       shopName: 'Test Shop',
       amountPence: 500,
+      bookingCreatedAt: BOOKING_CREATED_AT,
       successUrl: 'https://kersivo.test/success',
       cancelUrl: 'https://kersivo.test/cancel',
     });
@@ -79,6 +91,51 @@ describe('stripeConnect direct charges', () => {
     const [, init] = fetchMock.mock.calls[0] as [string, RequestInit];
     const headers = init.headers as Record<string, string>;
     expect(headers['Idempotency-Key']).toBe('booking_deposit_checkout_book_42');
+  });
+
+  it('resolveDepositSessionExpiresAt is deterministic for the same anchor', () => {
+    const a = resolveDepositSessionExpiresAt({
+      anchor: BOOKING_CREATED_AT,
+      holdExpiresAt: new Date(BOOKING_CREATED_AT.getTime() + 15 * 60 * 1000),
+    });
+    const b = resolveDepositSessionExpiresAt({
+      anchor: BOOKING_CREATED_AT,
+      holdExpiresAt: new Date(BOOKING_CREATED_AT.getTime() + 15 * 60 * 1000),
+    });
+    expect(a.getTime()).toBe(b.getTime());
+    expect(a.getTime()).toBe(BOOKING_CREATED_AT.getTime() + STRIPE_SESSION_MIN_TTL_MS);
+  });
+
+  it('expireBookingDepositSession posts /expire with Stripe-Account', async () => {
+    fetchMock.mockResolvedValue({
+      ok: true,
+      json: async () => ({ id: 'cs_1', status: 'expired' }),
+    });
+
+    const outcome = await expireBookingDepositSession('cs_1', 'acct_shop');
+    expect(outcome).toBe('expired');
+    expect(fetchMock).toHaveBeenCalledTimes(1);
+    const [url, init] = fetchMock.mock.calls[0] as [string, RequestInit];
+    expect(url).toContain('/checkout/sessions/cs_1/expire');
+    const headers = init.headers as Record<string, string>;
+    expect(headers['Stripe-Account']).toBe('acct_shop');
+    expect(headers['Idempotency-Key']).toBe('booking_deposit_expire_cs_1');
+  });
+
+  it('expireBookingDepositSession maps already-completed errors to outcome', async () => {
+    fetchMock.mockResolvedValue({
+      ok: false,
+      json: async () => ({
+        error: {
+          message: 'This Checkout Session has already been completed.',
+          code: 'session_already_completed',
+        },
+      }),
+    });
+
+    await expect(expireBookingDepositSession('cs_done', 'acct_shop')).resolves.toBe(
+      'already_completed',
+    );
   });
 
   it('refunds on connected account for direct charges', async () => {

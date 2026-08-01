@@ -48,6 +48,8 @@ enum EmailOutboundPurpose {
   BOOKING_CONFIRMATION
   BOOKING_RESCHEDULED
   SHOP_ORDER_CONFIRMATION
+  /// Late deposit payment after hold release when the slot was taken — refund notice.
+  DEPOSIT_REFUNDED_SLOT_LOST
 }
 
 enum EmailOutboundStatus {
@@ -515,6 +517,7 @@ model Booking {
   @@index([email])
   @@index([clientId])
   @@index([status, startAt])
+  @@index([status, paymentExpiresAt])
 }
 
 /// Durable ledger for booking-deposit refunds (retry, webhook confirm, ops repair).

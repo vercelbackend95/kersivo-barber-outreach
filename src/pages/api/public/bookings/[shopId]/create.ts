@@ -147,6 +147,19 @@ export const POST: APIRoute = async ({ request, params }) => {
         }
       }
 
+      // Never open a new payable session after the local hold has already expired.
+      const holdExpiresAt =
+        created.paymentExpiresAt instanceof Date ? created.paymentExpiresAt : null;
+      if (holdExpiresAt && holdExpiresAt.getTime() <= Date.now()) {
+        return json(
+          {
+            error:
+              'This booking deposit hold has expired. Please choose a new time and try again.',
+          },
+          409,
+        );
+      }
+
       const baseUrl = getPublicSiteUrl();
       const session = await createBookingDepositCheckoutSession({
         shopConnectAccountId: shop.stripeConnectAccountId,
@@ -155,6 +168,9 @@ export const POST: APIRoute = async ({ request, params }) => {
         customerEmail: created.email,
         shopName: created.shopName || shop.name,
         amountPence,
+        bookingCreatedAt:
+          created.createdAt instanceof Date ? created.createdAt : new Date(),
+        holdExpiresAt,
         successUrl: `${baseUrl}/book/${shopId}/success?session_id={CHECKOUT_SESSION_ID}`,
         cancelUrl: `${baseUrl}/book/${shopId}?deposit=cancelled`,
       });

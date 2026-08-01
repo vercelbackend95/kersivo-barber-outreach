@@ -136,6 +136,49 @@ export function bookingDepositCheckoutIdempotencyKey(bookingId: string): string 
   return `booking_deposit_checkout_${bookingId.trim()}`;
 }
 
+/** Stripe Checkout Session `expires_at` must be at least 30 minutes from creation. */
+export const STRIPE_SESSION_MIN_TTL_MS = 30 * 60 * 1000;
+/** Stripe Checkout Session `expires_at` max is 24 hours from creation. */
+export const STRIPE_SESSION_MAX_TTL_MS = 24 * 60 * 60 * 1000;
+
+/**
+ * Deterministic session expiry anchored to booking.createdAt so the stable
+ * Idempotency-Key (`booking_deposit_checkout_<id>`) always sees the same params.
+ * Acts as a hard backstop (≥30m); the local hold may be shorter (typically 15m).
+ */
+export function resolveDepositSessionExpiresAt(input: {
+  anchor: Date;
+  holdExpiresAt?: Date | null;
+}): Date {
+  const anchorMs = input.anchor.getTime();
+  if (!Number.isFinite(anchorMs)) {
+    throw new Error('bookingCreatedAt must be a valid Date.');
+  }
+  const minBackstop = new Date(anchorMs + STRIPE_SESSION_MIN_TTL_MS);
+  const maxBackstop = new Date(anchorMs + STRIPE_SESSION_MAX_TTL_MS);
+  const hold = input.holdExpiresAt;
+  const holdMs = hold instanceof Date ? hold.getTime() : NaN;
+  const candidate =
+    Number.isFinite(holdMs) && holdMs > minBackstop.getTime() ? new Date(holdMs) : minBackstop;
+  return candidate.getTime() > maxBackstop.getTime() ? maxBackstop : candidate;
+}
+
+function isSessionAlreadyTerminalError(error: unknown): 'already_completed' | 'already_expired' | null {
+  if (!(error instanceof StripeConnectApiError)) return null;
+  const msg = error.message.toLowerCase();
+  if (msg.includes('already been completed') || msg.includes('already complete')) {
+    return 'already_completed';
+  }
+  if (msg.includes('already been expired') || msg.includes('already expired') || msg.includes('has expired')) {
+    return 'already_expired';
+  }
+  // Stripe often returns resource_missing / invalid_request for terminal sessions.
+  if (error.code === 'resource_missing' && msg.includes('checkout session')) {
+    return 'already_expired';
+  }
+  return null;
+}
+
 export async function createBookingDepositCheckoutSession(input: {
   shopConnectAccountId: string;
   bookingId: string;
@@ -146,6 +189,10 @@ export async function createBookingDepositCheckoutSession(input: {
   amountPence: number;
   successUrl: string;
   cancelUrl: string;
+  /** Booking.createdAt — anchors deterministic expires_at for Idempotency-Key stability. */
+  bookingCreatedAt: Date;
+  /** Local hold deadline; session backstop is at least 30 minutes from bookingCreatedAt. */
+  holdExpiresAt?: Date | null;
 }): Promise<{ id: string; url: string }> {
   const connectAccountId = input.shopConnectAccountId.trim();
   if (!connectAccountId) throw new Error('shopConnectAccountId is required for deposit checkout.');
@@ -153,6 +200,11 @@ export async function createBookingDepositCheckoutSession(input: {
   if (!Number.isFinite(amountPence) || amountPence <= 0) {
     throw new Error('amountPence must be a positive integer for deposit checkout.');
   }
+
+  const expiresAt = resolveDepositSessionExpiresAt({
+    anchor: input.bookingCreatedAt,
+    holdExpiresAt: input.holdExpiresAt ?? null,
+  });
 
   const session = await stripeForm(
     '/checkout/sessions',
@@ -169,6 +221,7 @@ export async function createBookingDepositCheckoutSession(input: {
         120,
       ),
       'line_items[0][quantity]': '1',
+      expires_at: String(Math.floor(expiresAt.getTime() / 1000)),
       'metadata[type]': BOOKING_DEPOSIT_METADATA_TYPE,
       'metadata[bookingId]': input.bookingId,
       'metadata[shopId]': input.shopId,
@@ -191,6 +244,42 @@ export async function retrieveBookingDepositSession(
   shopConnectAccountId: string,
 ): Promise<StripeSession> {
   return retrieveCheckoutSession(sessionId, { stripeAccount: shopConnectAccountId });
+}
+
+export type ExpireSessionOutcome = 'expired' | 'already_completed' | 'already_expired';
+
+/**
+ * Actively invalidate an open Checkout Session on the connected account before
+ * releasing a shorter local deposit hold. Maps terminal-session errors to outcomes
+ * so the caller can re-fetch / recover without treating them as hard failures.
+ */
+export async function expireBookingDepositSession(
+  sessionId: string,
+  shopConnectAccountId: string,
+): Promise<ExpireSessionOutcome> {
+  const id = sessionId.trim();
+  const connectAccountId = shopConnectAccountId.trim();
+  if (!id) throw new Error('sessionId is required to expire a deposit checkout.');
+  if (!connectAccountId) throw new Error('shopConnectAccountId is required to expire a deposit checkout.');
+
+  try {
+    const session = await stripeForm(
+      `/checkout/sessions/${encodeURIComponent(id)}/expire`,
+      {},
+      {
+        stripeAccount: connectAccountId,
+        idempotencyKey: `booking_deposit_expire_${id}`,
+      },
+    );
+    const status = typeof session.status === 'string' ? session.status.toLowerCase() : '';
+    if (status === 'complete') return 'already_completed';
+    if (status === 'expired') return 'expired';
+    return 'expired';
+  } catch (error) {
+    const terminal = isSessionAlreadyTerminalError(error);
+    if (terminal) return terminal;
+    throw error;
+  }
 }
 
 export type StripeRefundResult = {

@@ -238,6 +238,28 @@ export type RescheduledBookingEmailInput = BookingEmailBaseInput & {
   previousEndAt?: Date | null;
 };
 
+export type LateDepositRefundEmailInput = BookingEmailBaseInput & {
+  depositAmountPence: number;
+};
+
+/** Pure builder: late payment after hold release when the slot was taken. */
+export function buildLateDepositRefundEmail(input: LateDepositRefundEmailInput): {
+  subject: string;
+  html: string;
+} {
+  const summaryHtml = renderBookingSummary(input);
+  const pounds = (Math.max(0, Math.trunc(input.depositAmountPence)) / 100).toFixed(2);
+  const subject = 'Your deposit is being refunded';
+  const html = `<p>Hi ${input.fullName},</p>
+  <h2>Deposit refund</h2>
+  <p>We received your deposit payment, but the appointment slot was released after the payment window closed and is no longer available.</p>
+  <p>Your £${pounds} deposit is being refunded to the original payment method. This usually appears within a few business days.</p>
+  ${summaryHtml}
+  <p>Please book a new appointment if you still need one.</p>`;
+
+  return { subject, html };
+}
+
 /** Pure builder for reschedule confirmation emails. */
 export function buildRescheduledBookingEmail(input: RescheduledBookingEmailInput): {
   subject: string;

@@ -12,7 +12,8 @@ import { refundPaymentIntent } from '../shop/stripeConnect';
 export type DepositRefundReason =
   | 'client_cancel_in_window'
   | 'shop_cancel'
-  | 'manual_retry';
+  | 'manual_retry'
+  | 'late_payment_slot_lost';
 
 export type DepositRefundOutcome =
   | 'refunded'
