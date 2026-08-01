@@ -83,7 +83,8 @@ export default function BarbershopSettingsPanel({
   const [depositsEnabled, setDepositsEnabled] = useState(false);
   const [depositsCollectReady, setDepositsCollectReady] = useState(false);
   const [connectChargesEnabled, setConnectChargesEnabled] = useState(false);
-  const [connectAccountId, setConnectAccountId] = useState<string | null>(null);
+  const [connectAccountLinked, setConnectAccountLinked] = useState(false);
+  const [canManagePayouts, setCanManagePayouts] = useState(false);
   const [depositsBusy, setDepositsBusy] = useState(false);
   const [depositsError, setDepositsError] = useState('');
   const [depositsMessage, setDepositsMessage] = useState('');
@@ -202,7 +203,12 @@ export default function BarbershopSettingsPanel({
         paid?: boolean;
         depositsEnabled?: boolean;
         collectReady?: boolean;
-        connect?: { accountId?: string | null; chargesEnabled?: boolean };
+        canManagePayouts?: boolean;
+        connect?: {
+          accountId?: string | null;
+          accountLinked?: boolean;
+          chargesEnabled?: boolean;
+        };
         policy?: {
           cancellationWindowHours: number;
           rescheduleWindowHours: number;
@@ -214,7 +220,8 @@ export default function BarbershopSettingsPanel({
       setDepositsEnabled(Boolean(payload?.depositsEnabled));
       setDepositsCollectReady(Boolean(payload?.collectReady));
       setConnectChargesEnabled(Boolean(payload?.connect?.chargesEnabled));
-      setConnectAccountId(payload?.connect?.accountId ?? null);
+      setConnectAccountLinked(Boolean(payload?.connect?.accountLinked));
+      setCanManagePayouts(Boolean(payload?.canManagePayouts));
       setPolicySummary(payload?.policy ?? null);
     } catch (error) {
       setDepositsError(error instanceof Error ? error.message : 'Could not load deposits settings.');
@@ -713,41 +720,48 @@ export default function BarbershopSettingsPanel({
           ) : (
             <>
               <div className="admin-barbershop-settings__actions">
-                <button
-                  type="button"
-                  className="btn btn--secondary"
-                  disabled={depositsBusy}
-                  onClick={async () => {
-                    setDepositsBusy(true);
-                    setDepositsError('');
-                    setDepositsMessage('');
-                    try {
-                      const response = await fetch('/api/admin/barbershop-settings/deposits', {
-                        method: 'POST',
-                        credentials: 'include',
-                      });
-                      const payload = (await response.json().catch(() => null)) as {
-                        error?: string;
-                        url?: string;
-                      } | null;
-                      if (!response.ok || !payload?.url) {
-                        throw new Error(payload?.error || 'Could not start Stripe Connect.');
+                {canManagePayouts ? (
+                  <button
+                    type="button"
+                    className="btn btn--secondary"
+                    disabled={depositsBusy}
+                    onClick={async () => {
+                      setDepositsBusy(true);
+                      setDepositsError('');
+                      setDepositsMessage('');
+                      try {
+                        const response = await fetch('/api/admin/barbershop-settings/deposits', {
+                          method: 'POST',
+                          credentials: 'include',
+                        });
+                        const payload = (await response.json().catch(() => null)) as {
+                          error?: string;
+                          url?: string;
+                        } | null;
+                        if (!response.ok || !payload?.url) {
+                          throw new Error(payload?.error || 'Could not start Stripe Connect.');
+                        }
+                        window.location.assign(payload.url);
+                      } catch (error) {
+                        setDepositsError(
+                          error instanceof Error ? error.message : 'Stripe Connect failed.',
+                        );
+                        setDepositsBusy(false);
                       }
-                      window.location.assign(payload.url);
-                    } catch (error) {
-                      setDepositsError(
-                        error instanceof Error ? error.message : 'Stripe Connect failed.',
-                      );
-                      setDepositsBusy(false);
-                    }
-                  }}
-                >
-                  {connectAccountId ? 'Continue Stripe Connect' : 'Connect Stripe'}
-                </button>
+                    }}
+                  >
+                    {connectAccountLinked ? 'Continue Stripe Connect' : 'Connect Stripe'}
+                  </button>
+                ) : (
+                  <p className="admin-barbershop-settings__card-copy" role="status">
+                    The shop owner connects the Stripe payouts account. You can turn deposits on or
+                    off once Stripe is ready.
+                  </p>
+                )}
                 <span className="muted">
                   {connectChargesEnabled
                     ? 'Stripe ready for deposits'
-                    : connectAccountId
+                    : connectAccountLinked
                       ? 'Finish Stripe onboarding'
                       : 'Not connected'}
                 </span>
