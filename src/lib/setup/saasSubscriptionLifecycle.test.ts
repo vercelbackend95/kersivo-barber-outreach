@@ -48,6 +48,9 @@ import {
   suspendPastDueSubscriptionsPastGrace,
 } from './saasSubscriptionLifecycle';
 
+/** Rolling future date: a fixed literal silently expires and breaks entitlement assertions. */
+const FUTURE_PERIOD_END = new Date(Date.now() + 30 * 24 * 60 * 60 * 1000);
+
 const baseRecord = {
   id: 'saas-1',
   stripeSessionId: 'cs_1',
@@ -56,7 +59,7 @@ const baseRecord = {
   shopId: 'shop-1',
   status: 'ACTIVE' as const,
   cancelAtPeriodEnd: false,
-  currentPeriodEnd: new Date('2026-08-01T00:00:00.000Z'),
+  currentPeriodEnd: FUTURE_PERIOD_END,
   canceledAt: null,
   pastDueSince: null,
   suspendedAt: null,
