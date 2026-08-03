@@ -160,3 +160,41 @@
 .landing-demo-preview--compact .feature261__more-included {
   margin-top: clamp(1.5rem, 3vw, 2.25rem);
 }
+
+.landing-demo-preview__footer {
+  display: grid;
+  gap: 0.55rem;
+  justify-items: center;
+  margin-top: clamp(1.25rem, 3vw, 1.75rem);
+  text-align: center;
+}
+
+.landing-demo-preview__footer-note {
+  margin: 0;
+  max-width: 40ch;
+  font-family: var(--font-body);
+  font-size: 0.875rem;
+  font-weight: 400;
+  line-height: 1.5;
+  color: var(--muted);
+  text-wrap: pretty;
+}
+
+.landing-demo-preview__pricing-link {
+  color: var(--accent);
+  font-family: var(--font-body);
+  font-size: 0.9375rem;
+  font-weight: 600;
+  text-decoration: underline;
+  text-underline-offset: 0.18em;
+}
+
+.landing-demo-preview__pricing-link:hover {
+  color: var(--accent-hover);
+}
+
+.landing-demo-preview__pricing-link:focus-visible {
+  outline: 0;
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--focus) 45%, transparent);
+  border-radius: 2px;
+}

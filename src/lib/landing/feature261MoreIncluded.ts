@@ -1,16 +1,9 @@
 export const FEATURE261_MORE_INCLUDED_LABEL = 'MORE INCLUDED FROM DAY ONE';
 
 export const FEATURE261_MORE_INCLUDED_PILLS = [
-  'Deposits',
-  'No-show protection',
-  'Email reminders',
-  'Client profiles',
   'Booking history',
-  'Barber roster & hours',
-  'Service editing',
-  'Booking reports',
+  'Barber roster & working hours',
+  'Service management',
   'Stripe payouts',
-  'Your branded website',
-  'Domain setup',
-  'Hosting & SSL',
+  'Hosting, SSL & platform updates',
 ] as const;

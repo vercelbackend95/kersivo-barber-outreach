@@ -21,8 +21,6 @@ type PreviewRow = {
   ctaHref: string;
   ctaSameTab?: boolean;
   ctaTrack?: string;
-  ghostCtaLabel?: string;
-  ghostCtaHref?: string;
   media: 'carousel' | 'widget' | 'booking';
 };
 
@@ -128,39 +126,32 @@ const rows: PreviewRow[] = [
             <p class="feature261__row-body">{row.description}</p>
           </div>
 
-          {row.ghostCtaLabel && row.ghostCtaHref ? (
-            <div class="feature261__row-ctas">
-              <a
-                href={row.ctaHref}
-                class="btn btn--primary feature261__row-cta"
-                data-track={row.ctaTrack}
-              >
-                {row.ctaLabel}
-              </a>
-              <a
-                href={row.ghostCtaHref}
-                class="btn btn--ghost feature261__row-cta feature261__row-cta--ghost"
-                target="_blank"
-                rel="noopener noreferrer"
-              >
-                {row.ghostCtaLabel}
-              </a>
-            </div>
-          ) : (
-            <a
-              href={row.ctaHref}
-              class="btn btn--ghost feature261__row-cta feature261__row-cta--ghost"
-              target={row.ctaSameTab ? undefined : '_blank'}
-              rel={row.ctaSameTab ? undefined : 'noopener noreferrer'}
-              data-track={row.ctaTrack}
-            >
-              {row.ctaLabel}
-            </a>
-          )}
+          <a
+            href={row.ctaHref}
+            class="btn btn--ghost feature261__row-cta feature261__row-cta--ghost"
+            target={row.ctaSameTab ? undefined : '_blank'}
+            rel={row.ctaSameTab ? undefined : 'noopener noreferrer'}
+            data-track={row.ctaTrack}
+          >
+            {row.ctaLabel}
+          </a>
         </li>
       ))}
       <Feature261MonetizationRow client:visible={{ rootMargin: '200px' }} />
     </ul>
     <Feature261MoreIncluded client:visible={{ rootMargin: '200px' }} />
+
+    <div class="landing-demo-preview__footer">
+      <p class="landing-demo-preview__footer-note">
+        Previews use example barbershop data. No signup required.
+      </p>
+      <a
+        href="#pricing"
+        class="landing-demo-preview__pricing-link"
+        data-track="plan_my_setup_click"
+      >
+        See the £39 plan
+      </a>
+    </div>
   </div>
 </section>
