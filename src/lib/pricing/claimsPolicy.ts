@@ -178,7 +178,7 @@ export const PLAN_SCOPE_FULL_LIST = [
   'platform updates',
   'support',
   'migration help',
-  'minor site changes',
+  'website update support',
 ] as const;
 
 /** §8 — pricing card highlight bullets (~7; SMS in highlight, not only a pill). */
@@ -201,7 +201,7 @@ export const PLAN_SCOPE_PILLS = [
   'Booking reports',
   'Product sales reports',
   'Migration help',
-  'Minor site changes',
+  'Website update support',
 ] as const;
 
 /** Preferred short commission framing. */

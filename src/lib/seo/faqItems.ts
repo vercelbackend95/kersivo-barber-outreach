@@ -60,7 +60,7 @@ export const FAQ_ITEMS: FaqItem[] = [
   {
     question: "What if I don't get more bookings after launching?",
     answer:
-      'If we agree a KPI before go-live (utilisation, no-show £, or owner ops hours), we measure it on your data for 28 days post-launch and share the result. Your subscription includes up to one hour of minor development changes we can use to act on what the numbers show.',
+      'If we agree a KPI before go-live (utilisation, no-show £, or owner ops hours), we measure it on your data for 28 days post-launch and share the result. Your subscription includes website update support we can use to act on what the numbers show.',
     details:
       'You keep more of every booking with 0% KERSIVO commission and retain your client relationship and domain. The point is your margin per booking, not just booking volume.',
   },

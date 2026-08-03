@@ -35,7 +35,7 @@ const SAAS_BULLETS_DEFAULT = [
   'Domain purchase, management and renewal while your subscription is active',
   `${KERSIVO_COMMISSION_CLAIM} ${STRIPE_FEES_NOTE}`,
   'Hosting + SSL included while your subscription is active',
-  `${SMS_INCLUDED_CLAIM}. Support, platform updates, 1h minor changes/month`,
+  `${SMS_INCLUDED_CLAIM}. Support, platform updates, and website update support`,
 ];
 
 const SAAS_BULLETS_LANDING = [
@@ -43,7 +43,7 @@ const SAAS_BULLETS_LANDING = [
   'Domain purchase, management and renewal while your subscription is active',
   `${KERSIVO_COMMISSION_CLAIM} ${STRIPE_FEES_NOTE}`,
   'Hosting + SSL included while your subscription is active',
-  `${SMS_INCLUDED_CLAIM}. Support, platform updates, and 1 hour of minor changes each month`,
+  `${SMS_INCLUDED_CLAIM}. Support, platform updates, and website update support`,
 ];
 
 const DEFAULT_COPY: Pricing36Copy = {
@@ -51,13 +51,13 @@ const DEFAULT_COPY: Pricing36Copy = {
   headline: 'ONE MONTHLY FEE. ZERO KERSIVO COMMISSION.',
   introLead: `KERSIVO — £${SAAS_MONTHLY_GBP}/month.`,
   launchSubtext:
-    'Hosting, SSL, domain renewal, support, platform updates, and 1h minor changes/month — same Care on every plan.',
+    'Hosting, SSL, domain renewal, support, platform updates, and website update support — same Care on every plan.',
   launchBullets: [
     'Standard branded website + booking + admin + pickup shop setup',
     'Domain purchase, management and renewal while Care is active',
     `${KERSIVO_COMMISSION_CLAIM} ${STRIPE_FEES_NOTE}`,
     'Hosting + SSL included while Care is active',
-    `Ongoing Care (£${SAAS_MONTHLY_GBP}/mo): ${SMS_INCLUDED_CLAIM}. Support, platform updates, 1h minor changes/month`,
+    `Ongoing Care (£${SAAS_MONTHLY_GBP}/mo): ${SMS_INCLUDED_CLAIM}. Support, platform updates, and website update support`,
   ],
   launchNewcomerAnchor: `Live booking on your own domain in about two weeks. ${KERSIVO_COMMISSION_CLAIM}`,
   launchSwitcherAnchor:
@@ -90,13 +90,13 @@ const LANDING_COPY: Pricing36Copy = {
   headline: 'ONE MONTHLY FEE. ZERO KERSIVO COMMISSION.',
   introLead: `KERSIVO — £${SAAS_MONTHLY_GBP}/month.`,
   launchSubtext:
-    'Hosting, SSL, domain renewal, support, platform updates, and 1 hour of minor changes each month — same Care on every plan.',
+    'Hosting, SSL, domain renewal, support, platform updates, and website update support — same Care on every plan.',
   launchBullets: [
     'Standard branded website + booking + admin + pickup shop setup',
     'Domain purchase, management and renewal while Care is active',
     `${KERSIVO_COMMISSION_CLAIM} ${STRIPE_FEES_NOTE}`,
     'Hosting + SSL included while Care is active',
-    `Ongoing Care (£${SAAS_MONTHLY_GBP}/mo): ${SMS_INCLUDED_CLAIM}. Support, platform updates, and 1 hour of minor changes each month`,
+    `Ongoing Care (£${SAAS_MONTHLY_GBP}/mo): ${SMS_INCLUDED_CLAIM}. Support, platform updates, and website update support`,
   ],
   launchNewcomerAnchor: `Typical go-live: around two weeks after onboarding. ${KERSIVO_COMMISSION_CLAIM}`,
   launchSwitcherAnchor:

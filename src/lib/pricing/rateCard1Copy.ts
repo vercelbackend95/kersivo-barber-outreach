@@ -61,7 +61,7 @@ export type RateCard1LandingLayout = {
 
 const SHARED = {
   humansOnCallDescription:
-    'Support inbox for day-to-day questions, plus up to one hour of minor development changes each month.',
+    'Use the support inbox for day-to-day questions and help with straightforward website updates.',
   keepsScalingDescription:
     'We ship platform and security updates so the system stays maintained as your shop grows.',
 } as const;
@@ -138,8 +138,8 @@ const LANDING_LAYOUT: RateCard1LandingLayout = {
   supportItems: [
     'Migration help included',
     'Support inbox included',
-    'Up to one hour of minor site changes each month',
-    '0% KERSIVO commission',
+    'Website update support included',
+    '0% KERSIVO commission on bookings and retail',
   ],
   conditionsLine1: 'Standard Stripe payment-processing fees apply.',
   conditionsLine2:
