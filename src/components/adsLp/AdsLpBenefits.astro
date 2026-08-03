@@ -22,18 +22,17 @@ function benefitResponsiveSrc(image: string): string {
   return `${dir}/${base}-480w.webp`;
 }
 
-function benefitSrcset(image: string): string {
+function benefitSrcset(image: string, imageWidth: number): string {
   const match = image.match(/\/([^/]+)\.webp$/);
   if (!match) return image;
   const base = match[1];
   const dir = image.replace(/\/[^/]+$/, '');
-  return [
-    `${dir}/${base}-320w.webp 320w`,
-    `${dir}/${base}-480w.webp 480w`,
-    `${dir}/${base}-768w.webp 768w`,
-    `${dir}/${base}-1024w.webp 1024w`,
-    `${image} 1536w`,
-  ].join(', ');
+  const variantWidths = [320, 480, 768, 1024] as const;
+  const entries = variantWidths
+    .filter((width) => width < imageWidth)
+    .map((width) => `${dir}/${base}-${width}w.webp ${width}w`);
+  entries.push(`${image} ${imageWidth}w`);
+  return entries.join(', ');
 }
 
 const blocks: BenefitBlock[] = [
@@ -112,7 +111,7 @@ const includedItems: IncludedItem[] = [
               <img
                 class="ads-lp-benefits__image"
                 src={benefitResponsiveSrc(block.image)}
-                srcset={benefitSrcset(block.image)}
+                srcset={benefitSrcset(block.image, block.imageWidth)}
                 sizes="(max-width: 640px) min(90vw, 280px), (max-width: 1024px) 45vw, 403px"
                 alt={block.imageAlt}
                 width={block.imageWidth}
