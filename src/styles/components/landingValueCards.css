@@ -244,6 +244,17 @@
   white-space: nowrap;
 }
 
+.landing-value-cards__included-note {
+  margin: 0.15rem 0 0;
+  max-width: 42ch;
+  font-family: var(--font-body);
+  font-size: 0.75rem;
+  font-weight: 400;
+  line-height: 1.45;
+  color: var(--muted);
+  text-wrap: pretty;
+}
+
 @media (max-width: 767px) {
   .landing-value-cards {
     --lvc-illus-max-h: clamp(11.55rem, 33.6vw, 16.8rem);
