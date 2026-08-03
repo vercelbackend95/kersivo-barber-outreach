@@ -45,13 +45,16 @@ const {
       <p>{subHeading}</p>
     </div>
 
-    <div class="faq4__list" role="list">
+    <div class="faq4__list">
       {
         faqs.map((faq) => (
-          <details class="faq4__item" name="faq4-group" role="listitem">
+          <details class="faq4__item" name="faq4-group">
             <summary>
               <span>{faq.question}</span>
-              <span class="faq4__icon" aria-hidden="true">→</span>
+              <span class="faq4__icon" aria-hidden="true">
+                <span class="faq4__icon-plus">+</span>
+                <span class="faq4__icon-minus">−</span>
+              </span>
             </summary>
             <div class="faq4__answer">
               <p>{faq.answer}</p>
