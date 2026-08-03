@@ -7,23 +7,10 @@ interface Props {
 
 const { className = '' } = Astro.props as Props;
 
-const trustPills = [
-  {
-    full: 'Keep your current system live during setup',
-    short: 'Keep current system live',
-  },
-  {
-    full: 'We help map your services, barbers and hours',
-    short: 'Map services, barbers and hours',
-  },
-  {
-    full: 'Move your public booking link when ready',
-    short: 'Move link when ready',
-  },
-  {
-    full: '0% KERSIVO commission on bookings and retail',
-    short: '0% KERSIVO commission',
-  },
+const trustPoints = [
+  'Migration help for usable exported data',
+  'Private preview before launch',
+  '0% KERSIVO commission on bookings and retail',
 ];
 ---
 
@@ -36,22 +23,17 @@ const trustPills = [
 
   <div class="container">
     <header class="landing-switcher-reassurance__intro">
-      <span class="landing-switcher-reassurance__eyebrow">FOR SWITCHERS</span>
+      <span class="landing-switcher-reassurance__eyebrow">SWITCHING TO KERSIVO</span>
       <h2 id="landing-switcher-reassurance-title" class="landing-switcher-reassurance__heading">
-        Before.<br />
-        After.
+        Switch without interrupting bookings
       </h2>
       <p class="landing-switcher-reassurance__lead">
-        Already on a marketplace booking profile or another booking platform? Keep your current system live
-        while we prepare your KERSIVO booking setup on your own domain.
+        Already using Booksy, Fresha or another booking platform? Keep taking bookings through your
+        current system while we prepare your branded KERSIVO setup, where technically possible.
       </p>
     </header>
 
-    <div
-      class="landing-switcher-reassurance__story"
-      role="img"
-      aria-label="Switcher story: keep your current system live, then move bookings onto your own domain when ready"
-    >
+    <div class="landing-switcher-reassurance__story">
       <div class="landing-switcher-reassurance__panel landing-switcher-reassurance__panel--before">
         <div class="landing-switcher-reassurance__panel-fig">
           <img
@@ -67,18 +49,21 @@ const trustPills = [
         </div>
         <div class="landing-switcher-reassurance__panel-body">
           <span class="landing-switcher-reassurance__panel-tag landing-switcher-reassurance__panel-tag--before">
-            Before
+            CURRENT SYSTEM
           </span>
-          <h3 class="landing-switcher-reassurance__panel-title">Keep your current system live</h3>
+          <h3 class="landing-switcher-reassurance__panel-title">
+            Keep taking bookings through your current system
+          </h3>
           <p class="landing-switcher-reassurance__panel-line">
-            Keep taking bookings as normal while your KERSIVO setup is prepared.
+            Continue using your existing booking link while your KERSIVO website and system are being
+            prepared.
           </p>
         </div>
       </div>
 
       <div class="landing-switcher-reassurance__connector" aria-hidden="true">
         <div class="landing-switcher-reassurance__connector-line"></div>
-        <span class="landing-switcher-reassurance__connector-badge">NO RUSH</span>
+        <span class="landing-switcher-reassurance__connector-badge">MOVE WHEN READY</span>
         <div class="landing-switcher-reassurance__connector-arrow">&#8594;</div>
       </div>
 
@@ -97,35 +82,34 @@ const trustPills = [
         </div>
         <div class="landing-switcher-reassurance__panel-body">
           <span class="landing-switcher-reassurance__panel-tag landing-switcher-reassurance__panel-tag--after">
-            After
+            KERSIVO READY
           </span>
-          <h3 class="landing-switcher-reassurance__panel-title">Move bookings onto your own domain</h3>
+          <h3 class="landing-switcher-reassurance__panel-title">Move over when you approve</h3>
           <p class="landing-switcher-reassurance__panel-line">
-            When you are ready, we help move your public booking link to your branded KERSIVO booking website.
+            Review your private preview first. Once everything is approved, publish your KERSIVO
+            website and update your public booking links.
           </p>
         </div>
       </div>
     </div>
 
     <ul class="landing-switcher-reassurance__chips" role="list" aria-label="Switcher reassurances">
-      {trustPills.map((pill) => (
+      {trustPoints.map((point) => (
         <li class="landing-switcher-reassurance__chip">
           <span class="landing-switcher-reassurance__chip-check" aria-hidden="true">&#10003;</span>
-          <span class="landing-switcher-reassurance__chip-label landing-switcher-reassurance__chip-label--full">
-            {pill.full}
-          </span>
-          <span class="landing-switcher-reassurance__chip-label landing-switcher-reassurance__chip-label--short">
-            {pill.short}
-          </span>
+          <span class="landing-switcher-reassurance__chip-label">{point}</span>
         </li>
       ))}
     </ul>
 
     <div class="landing-switcher-reassurance__ctas">
-      <a href="#pricing" class="btn btn--primary btn--lg" data-track="plan_my_setup_click">Get started</a>
-      <button type="button" class="btn btn--secondary btn--lg" data-system-chooser-open data-track="view_live_demo_click">
-        View Live Demo
-      </button>
+      <a
+        href="/admin/launch"
+        class="btn btn--primary btn--lg landing-switcher-reassurance__cta"
+        data-track="saas_subscribe_click"
+      >
+        Start my KERSIVO subscription
+      </a>
     </div>
   </div>
 </section>
