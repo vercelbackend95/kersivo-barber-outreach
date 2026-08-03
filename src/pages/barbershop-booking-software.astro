@@ -1,7 +1,11 @@
 ---
 import LandingLayout from '@/layouts/LandingLayout.astro';
 import SystemChooser from '@/components/SystemChooser.astro';
+import AdsLpHero from '@/components/adsLp/AdsLpHero.astro';
+import AdsLpBenefits from '@/components/adsLp/AdsLpBenefits.astro';
 import '../styles/components/system-chooser.css';
+import '../styles/components/ads-lp-hero.css';
+import '../styles/components/ads-lp-benefits.css';
 
 const title = 'Barbershop Booking Software UK | Own Domain | KERSIVO';
 const description =
@@ -14,20 +18,19 @@ const description =
   canonicalPath="/barbershop-booking-software"
   navbarVariant="adsLp"
 >
+  <link
+    slot="head"
+    rel="preload"
+    as="image"
+    href="/images/hero/phone-5.webp"
+    fetchpriority="high"
+  />
+
   <main class="landing-overflow-guard ads-lp">
     <SystemChooser />
 
-    <section id="hero" class="ads-lp-section" aria-labelledby="ads-lp-hero-heading">
-      <div class="container">
-        <h1 id="ads-lp-hero-heading">Hero (placeholder)</h1>
-      </div>
-    </section>
-
-    <section id="benefits" class="ads-lp-section" aria-labelledby="ads-lp-benefits-heading">
-      <div class="container">
-        <h2 id="ads-lp-benefits-heading">Benefits (placeholder)</h2>
-      </div>
-    </section>
+    <AdsLpHero />
+    <AdsLpBenefits />
 
     <section id="demo" class="ads-lp-section" aria-labelledby="ads-lp-demo-heading">
       <div class="container">
@@ -99,17 +102,17 @@ const description =
     overflow-x: clip;
   }
 
+  :global(.ads-lp-section[id]) {
+    scroll-margin-top: 6rem;
+  }
+
   .ads-lp-section {
     padding-block: 3rem;
   }
 
-  .ads-lp-section[id] {
-    scroll-margin-top: 6rem;
-  }
-
   .ads-lp-footer {
     padding-block: 2rem 3rem;
-    border-top: 1px solid color-mix(in srgb, var(--foreground) 12%, transparent);
+    border-top: 1px solid color-mix(in srgb, var(--fg) 12%, transparent);
   }
 
   .ads-lp-footer__nav {
@@ -122,6 +125,6 @@ const description =
   .ads-lp-footer__contact {
     margin: 0;
     font-size: 0.95rem;
-    color: color-mix(in srgb, var(--foreground) 72%, transparent);
+    color: color-mix(in srgb, var(--fg) 72%, transparent);
   }
 </style>
