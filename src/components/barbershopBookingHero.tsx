@@ -3,7 +3,6 @@ import React from "react";
 
 import { HeroHeadlineLines } from "@/components/hero/HeroHeadlineLines";
 import { Button } from "@/components/ui/button";
-import { PLAN_SCOPE_SHORT, PRICE_VAT_DISCLAIMER } from "@/lib/pricing/claimsPolicy";
 import { SAAS_MONTHLY_GBP } from "@/lib/seo/defaults";
 import { cn } from "@/lib/utils";
 
@@ -60,21 +59,23 @@ const BarbershopBookingHero = ({ className }: BarbershopBookingHeroProps) => {
                 />
               </div>
               <p className="mx-auto mt-1 max-w-2xl md:max-w-3xl text-pretty text-sm leading-relaxed text-muted-foreground/85 sm:text-base sm:leading-relaxed">
-                Booking, retail pickup and admin for UK barbershops &mdash; with 0%
-                KERSIVO commission on bookings and retail.
+                Your branded website, online bookings, deposits, client management and
+                retail pickup &mdash; all in one simple &pound;39 monthly plan.
               </p>
             </div>
 
             <div className="hero227-mid-band w-full max-w-3xl space-y-3 px-1 sm:px-2">
               <p className="hero227-price-line">
-                &pound;{SAAS_MONTHLY_GBP}/month. {PLAN_SCOPE_SHORT} {PRICE_VAT_DISCLAIMER}
+                &pound;{SAAS_MONTHLY_GBP}/month. No setup fee. Cancel anytime.
               </p>
               <div className="hero227-cta-pill flex flex-wrap items-center justify-center gap-3">
                 <Button
                   className="hero227-cta-system text-md flex h-full items-center justify-center rounded-2xl font-medium"
                   asChild
                 >
-                  <a href="#pricing" data-track="plan_my_setup_click">Get started</a>
+                  <a href="#pricing" data-track="plan_my_setup_click">
+                    Get started — £{SAAS_MONTHLY_GBP}/month
+                  </a>
                 </Button>
                 <Button
                   type="button"
@@ -83,7 +84,7 @@ const BarbershopBookingHero = ({ className }: BarbershopBookingHeroProps) => {
                   data-system-chooser-open
                   data-track="view_live_demo_click"
                 >
-                  View Live Demo
+                  See KERSIVO in action
                 </Button>
               </div>
               <p className="hero227-trust-line hero227-trust-line--landing" role="list">

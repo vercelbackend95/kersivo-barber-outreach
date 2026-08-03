@@ -39,23 +39,23 @@ function valueCardSrcset(image: string): string {
 const blocks: ValueBlock[] = [
   {
     heading: 'Easy booking for clients',
-    body: 'Service, barber, time \u2014 clients book on your domain in a few taps. No app-store detour. No marketplace maze.',
+    body: 'Clients choose a service, barber and available time through your own branded website \u2014 no app download and no marketplace detour.',
     image: '/images/Ilustracje/8.webp',
     imageWidth: 1536,
     imageHeight: 1024,
     imageAlt: 'Client in the barber chair on their phone \u2014 easy booking in a few taps',
   },
   {
-    heading: 'Your shop online',
-    body: 'Your domain, your brand, your booking flow. Clients book and reserve retail products through your barbershop\u2019s own branded website.',
+    heading: 'Run your shop from one system',
+    body: 'Manage bookings, clients, barbers, services and working hours from one clear admin dashboard.',
     image: '/images/Ilustracje/shoppyonline.webp',
     imageWidth: 1536,
     imageHeight: 1024,
     imageAlt: 'Barber in the chair on his laptop \u2014 running his shop online from the chair',
   },
   {
-    heading: 'SMS reminders + no-show protection',
-    body: 'Email and SMS appointment reminders plus optional deposit rules help protect your schedule and reduce awkward chase-ups.',
+    heading: 'Deposits and reminders that protect your time',
+    body: 'Take optional booking deposits, send booking confirmations by email and appointment reminders by SMS to help reduce missed appointments and protect valuable chair time.',
     image: '/images/Ilustracje/reminder.webp',
     imageWidth: 928,
     imageHeight: 1152,
@@ -64,11 +64,11 @@ const blocks: ValueBlock[] = [
 ];
 
 const includedItems = [
-  'Booking website',
+  'Branded booking website',
+  'Your own domain included',
   'Admin dashboard',
+  'Client management',
   'Retail pickup shop',
-  'Email and SMS reminders',
-  'Deposits',
   '0% KERSIVO commission',
 ];
 ---
@@ -81,10 +81,11 @@ const includedItems = [
     <header class="landing-value-cards__intro">
       <p class="landing-value-cards__eyebrow">WHAT KERSIVO INCLUDES</p>
       <h2 id="landing-value-cards-title" class="landing-value-cards__heading">
-        Everything your barbershop needs &mdash; day one.
+        Everything your barbershop needs to run bookings professionally.
       </h2>
       <p class="landing-value-cards__lead">
-        A branded booking website, retail pickup shop and admin system under your own brand.
+        A branded booking website, admin system and retail pickup shop &mdash; all built around your
+        own domain and brand.
       </p>
     </header>
 
@@ -105,7 +106,7 @@ const includedItems = [
               alt={block.imageAlt}
               width={block.imageWidth}
               height={block.imageHeight}
-              loading={index === 0 ? 'eager' : 'lazy'}
+              loading="lazy"
               decoding="async"
             />
           </div>
