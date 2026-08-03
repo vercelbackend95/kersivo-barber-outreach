@@ -71,8 +71,15 @@ const LANDING_NAV_ITEMS: Navbar17Item[] = [
   },
 ];
 
-/** Google Ads Core LP — same anchors as landing, Contact escapes to homepage form. */
+/** Google Ads Core LP — in-page anchors only; contact stays in footer. */
 const ADS_LP_NAV_ITEMS: Navbar17Item[] = [
+  {
+    name: 'Demo',
+    link: '#demo',
+    sectionId: 'demo',
+    isPage: false,
+    icon: 'M6 7h12l-1 13H7L6 7Zm3-3h6l1 3H8l1-3Z',
+  },
   {
     name: 'Pricing',
     link: '#pricing',
@@ -86,13 +93,6 @@ const ADS_LP_NAV_ITEMS: Navbar17Item[] = [
     sectionId: 'faq',
     isPage: false,
     icon: 'M12 17h.01M9.1 9a3 3 0 1 1 4.9 2.3c-.92.62-1.5 1.21-1.5 2.2v.5M22 12a10 10 0 1 1-20 0 10 10 0 0 1 20 0Z',
-  },
-  {
-    name: 'Contact',
-    link: '/#contact',
-    sectionId: null,
-    isPage: true,
-    icon: 'M4 6h16v12H4V6Zm1.5 1.5L12 12l6.5-4.5',
   },
 ];
 

@@ -13,7 +13,6 @@ const description =
   description={description}
   canonicalPath="/barbershop-booking-software"
   navbarVariant="adsLp"
-  previewCta={{ label: 'Get started', href: '#pricing' }}
 >
   <main class="landing-overflow-guard ads-lp">
     <SystemChooser />
@@ -48,7 +47,7 @@ const description =
       </div>
     </section>
 
-    <section id="pricing" class="ads-lp-section scroll-mt-24" aria-labelledby="ads-lp-pricing-heading">
+    <section id="pricing" class="ads-lp-section" aria-labelledby="ads-lp-pricing-heading">
       <div class="container">
         <h2 id="ads-lp-pricing-heading">Pricing (placeholder)</h2>
       </div>
@@ -102,6 +101,10 @@ const description =
 
   .ads-lp-section {
     padding-block: 3rem;
+  }
+
+  .ads-lp-section[id] {
+    scroll-margin-top: 6rem;
   }
 
   .ads-lp-footer {
