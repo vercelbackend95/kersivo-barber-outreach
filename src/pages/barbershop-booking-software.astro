@@ -3,15 +3,23 @@ import LandingLayout from '@/layouts/LandingLayout.astro';
 import SystemChooser from '@/components/SystemChooser.astro';
 import AdsLpHero from '@/components/adsLp/AdsLpHero.astro';
 import AdsLpBenefits from '@/components/adsLp/AdsLpBenefits.astro';
-import AdsLpDemo from '@/components/adsLp/AdsLpDemo.astro';
+import LandingDemoPreview from '@/components/landingDemoPreview.astro';
+import { resolveLandingDemoCarouselProducts } from '@/lib/shop/landingDemoCarouselProducts';
+import { resolveLandingDemoBarbers } from '@/lib/landing/landingDemoBarbers';
+import { resolveLandingBookingData } from '@/lib/landing/landingBookingData';
 import '../styles/components/system-chooser.css';
 import '../styles/components/ads-lp-hero.css';
 import '../styles/components/ads-lp-benefits.css';
-import '../styles/components/ads-lp-demo.css';
 
 const title = 'Barbershop Booking Software UK | Own Domain | KERSIVO';
 const description =
   'Barbershop booking software for independent UK barbershops. Get your own branded website and domain, 0% KERSIVO commission and one simple £39 monthly plan.';
+
+const [carouselProducts, demoBarbers, landingBookingData] = await Promise.all([
+  resolveLandingDemoCarouselProducts(),
+  resolveLandingDemoBarbers(),
+  resolveLandingBookingData(),
+]);
 ---
 
 <LandingLayout
@@ -33,7 +41,12 @@ const description =
 
     <AdsLpHero />
     <AdsLpBenefits />
-    <AdsLpDemo />
+    <LandingDemoPreview
+      variant="adsLp"
+      retailProducts={carouselProducts}
+      barbers={demoBarbers}
+      bookingData={landingBookingData}
+    />
 
     <section id="why-kersivo" class="ads-lp-section" aria-labelledby="ads-lp-why-heading">
       <div class="container">
@@ -94,15 +107,37 @@ const description =
   }
 </script>
 
+<script>
+  import { initFeature261StaggerReveal } from '@/lib/landing/initFeature261StaggerReveal';
+
+  const scheduleInit = () => {
+    requestAnimationFrame(() => initFeature261StaggerReveal());
+  };
+
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', scheduleInit, { once: true });
+  } else {
+    scheduleInit();
+  }
+</script>
+
+<script>
+  import { initShop6Carousels } from '@/lib/shop/initShop6Carousel';
+
+  initShop6Carousels();
+</script>
+
 <style>
   .landing-overflow-guard {
     overflow-x: clip;
   }
 
-  :global(.ads-lp-section[id]) {
+  :global(.ads-lp-section[id]),
+  :global(#demo) {
     scroll-margin-top: 6rem;
   }
 
+  /* Demo section uses feature261 padding; keep placeholders spaced. */
   .ads-lp-section {
     padding-block: 3rem;
   }

@@ -1,5 +1,4 @@
 ---
-import { adminDemoHref } from '@/lib/admin/demoConfig';
 import { ShopProductCarousel } from '@/components/shop/ShopProductCarousel';
 import { InsideSystemLiveWidget } from '@/components/InsideSystemLiveWidget';
 import { LandingBookingWidget } from '@/components/LandingBookingWidget';
@@ -7,90 +6,51 @@ import type { CarouselProduct } from '@/lib/shop/carouselProducts';
 import type { LandingBarber } from '@/lib/landing/liveTimelineData';
 import type { LandingBookingData } from '@/lib/landing/landingBookingData';
 import { getLandingDemoBookingFallback } from '@/lib/landing/landingDemoBookingFallback';
+import {
+  getLandingDemoPreviewConfig,
+  type LandingDemoPreviewVariant,
+} from '@/lib/landing/landingDemoPreviewConfig';
 import { Feature261MonetizationRow } from '@/components/feature261/Feature261MonetizationRow';
 import { Feature261MoreIncluded } from '@/components/feature261/Feature261MoreIncluded';
 import '../styles/components/feature261.css';
 import '../styles/components/landingDemoPreview.css';
 import '../styles/components/shopProductCards6.css';
 
-type PreviewRow = {
-  kicker: string;
-  heading: string;
-  description: string;
-  ctaLabel: string;
-  ctaHref: string;
-  ctaSameTab?: boolean;
-  ctaTrack?: string;
-  ghostCtaLabel?: string;
-  ghostCtaHref?: string;
-  media: 'carousel' | 'widget' | 'booking';
-};
-
 interface Props {
   className?: string;
+  variant?: LandingDemoPreviewVariant;
   retailProducts?: CarouselProduct[];
   barbers?: LandingBarber[];
   bookingData?: LandingBookingData;
 }
 
-const { className = '', retailProducts = [], barbers = [], bookingData } = Astro.props as Props;
+const {
+  className = '',
+  variant = 'landing',
+  retailProducts = [],
+  barbers = [],
+  bookingData,
+} = Astro.props as Props;
 
 const resolvedBookingData = bookingData ?? getLandingDemoBookingFallback();
-
-const rows: PreviewRow[] = [
-  {
-    kicker: 'ADMIN PREVIEW',
-    heading: "Chairs, statuses and what's next — all in one view.",
-    description: "See today's bookings, chairs and statuses in one admin view.",
-    ctaLabel: 'Build My Preview',
-    ctaHref: '/admin/onboarding',
-    ctaSameTab: true,
-    ctaTrack: 'plan_my_setup_click',
-    ghostCtaLabel: 'Open Full Admin Demo',
-    ghostCtaHref: adminDemoHref('timeline'),
-    media: 'widget',
-  },
-  {
-    kicker: 'CLIENT BOOKING PREVIEW',
-    heading: 'Service, barber, time — your URL, your brand, not their app.',
-    description: 'Clients choose a service, barber and time on your own domain — no app download.',
-    ctaLabel: 'Build My Booking Preview',
-    ctaHref: '/admin/onboarding',
-    ctaSameTab: true,
-    ctaTrack: 'plan_my_setup_click',
-    ghostCtaLabel: 'Try Example Booking Flow',
-    ghostCtaHref: '/book',
-    media: 'booking',
-  },
-  {
-    kicker: 'RETAIL PICKUP PREVIEW',
-    heading: 'Retail orders, pickup ready — in the same admin.',
-    description: 'Clients browse products and reserve items for in-shop pickup.',
-    ctaLabel: 'Build My Shop Preview',
-    ctaHref: '/admin/retail-onboarding',
-    ctaSameTab: true,
-    ctaTrack: 'plan_my_setup_click',
-    ghostCtaLabel: 'Explore Example Shop',
-    ghostCtaHref: '/shop',
-    media: 'carousel',
-  },
-];
+const config = getLandingDemoPreviewConfig(variant);
+const { intro, rows } = config;
 ---
 
 <section
-  id="live-demo"
-  class={`feature261 landing-demo-preview landing-demo-preview--compact ${className}`.trim()}
-  aria-labelledby="landing-demo-preview-title"
+  id={config.sectionId}
+  class={`feature261 landing-demo-preview landing-demo-preview--compact ${config.sectionClassExtra} ${className}`.trim()}
+  aria-labelledby={config.ariaLabelledBy}
 >
   <div class="feature261__glow" aria-hidden="true"></div>
   <div class="container">
     <header class="feature261__intro">
-      <p class="feature261__kicker">INSIDE THE SYSTEM</p>
-      <h2 id="landing-demo-preview-title" class="feature261__heading">
-        The same screens you'll use to run your shop.
+      <p class="feature261__kicker">{intro.kicker}</p>
+      <h2 id={config.headingId} class="feature261__heading">
+        {intro.heading}
       </h2>
       <p class="feature261__description">
-        Preview the booking, admin and retail screens before you choose your setup.
+        {intro.description}
       </p>
     </header>
 
@@ -161,8 +121,23 @@ const rows: PreviewRow[] = [
           )}
         </li>
       ))}
-      <Feature261MonetizationRow client:visible={{ rootMargin: '200px' }} />
+      {config.showMonetization ? (
+        <Feature261MonetizationRow client:visible={{ rootMargin: '200px' }} />
+      ) : null}
     </ul>
-    <Feature261MoreIncluded client:visible={{ rootMargin: '200px' }} />
+    {config.showMoreIncluded ? (
+      <Feature261MoreIncluded client:visible={{ rootMargin: '200px' }} />
+    ) : null}
+
+    {config.showAdsFooter ? (
+      <div class="landing-demo-preview__ads-footer">
+        <p class="landing-demo-preview__ads-note">
+          No signup required. Demos open in a new tab.
+        </p>
+        <p class="landing-demo-preview__ads-soft-cta">
+          <a href="#pricing">See the £39 plan</a>
+        </p>
+      </div>
+    ) : null}
   </div>
 </section>
