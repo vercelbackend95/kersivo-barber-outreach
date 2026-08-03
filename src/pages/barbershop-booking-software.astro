@@ -3,9 +3,11 @@ import LandingLayout from '@/layouts/LandingLayout.astro';
 import SystemChooser from '@/components/SystemChooser.astro';
 import AdsLpHero from '@/components/adsLp/AdsLpHero.astro';
 import AdsLpBenefits from '@/components/adsLp/AdsLpBenefits.astro';
+import AdsLpDemo from '@/components/adsLp/AdsLpDemo.astro';
 import '../styles/components/system-chooser.css';
 import '../styles/components/ads-lp-hero.css';
 import '../styles/components/ads-lp-benefits.css';
+import '../styles/components/ads-lp-demo.css';
 
 const title = 'Barbershop Booking Software UK | Own Domain | KERSIVO';
 const description =
@@ -31,12 +33,7 @@ const description =
 
     <AdsLpHero />
     <AdsLpBenefits />
-
-    <section id="demo" class="ads-lp-section" aria-labelledby="ads-lp-demo-heading">
-      <div class="container">
-        <h2 id="ads-lp-demo-heading">Demo (placeholder)</h2>
-      </div>
-    </section>
+    <AdsLpDemo />
 
     <section id="why-kersivo" class="ads-lp-section" aria-labelledby="ads-lp-why-heading">
       <div class="container">
