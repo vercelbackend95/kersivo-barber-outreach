@@ -1,0 +1,124 @@
+---
+import LandingLayout from '@/layouts/LandingLayout.astro';
+import SystemChooser from '@/components/SystemChooser.astro';
+import '../styles/components/system-chooser.css';
+
+const title = 'Barbershop Booking Software UK | Own Domain | KERSIVO';
+const description =
+  'Barbershop booking software for independent UK barbershops. Get your own branded website and domain, 0% KERSIVO commission and one simple £39 monthly plan.';
+---
+
+<LandingLayout
+  title={title}
+  description={description}
+  canonicalPath="/barbershop-booking-software"
+  navbarVariant="adsLp"
+  previewCta={{ label: 'Get started', href: '#pricing' }}
+>
+  <main class="landing-overflow-guard ads-lp">
+    <SystemChooser />
+
+    <section id="hero" class="ads-lp-section" aria-labelledby="ads-lp-hero-heading">
+      <div class="container">
+        <h1 id="ads-lp-hero-heading">Hero (placeholder)</h1>
+      </div>
+    </section>
+
+    <section id="benefits" class="ads-lp-section" aria-labelledby="ads-lp-benefits-heading">
+      <div class="container">
+        <h2 id="ads-lp-benefits-heading">Benefits (placeholder)</h2>
+      </div>
+    </section>
+
+    <section id="demo" class="ads-lp-section" aria-labelledby="ads-lp-demo-heading">
+      <div class="container">
+        <h2 id="ads-lp-demo-heading">Demo (placeholder)</h2>
+      </div>
+    </section>
+
+    <section id="why-kersivo" class="ads-lp-section" aria-labelledby="ads-lp-why-heading">
+      <div class="container">
+        <h2 id="ads-lp-why-heading">Why independent barbershops choose KERSIVO (placeholder)</h2>
+      </div>
+    </section>
+
+    <section id="how-setup-works" class="ads-lp-section" aria-labelledby="ads-lp-setup-heading">
+      <div class="container">
+        <h2 id="ads-lp-setup-heading">How setup works (placeholder)</h2>
+      </div>
+    </section>
+
+    <section id="pricing" class="ads-lp-section scroll-mt-24" aria-labelledby="ads-lp-pricing-heading">
+      <div class="container">
+        <h2 id="ads-lp-pricing-heading">Pricing (placeholder)</h2>
+      </div>
+    </section>
+
+    <section id="faq" class="ads-lp-section" aria-labelledby="ads-lp-faq-heading">
+      <div class="container">
+        <h2 id="ads-lp-faq-heading">FAQ (placeholder)</h2>
+      </div>
+    </section>
+
+    <section id="final-cta" class="ads-lp-section" aria-labelledby="ads-lp-final-heading">
+      <div class="container">
+        <h2 id="ads-lp-final-heading">Final CTA (placeholder)</h2>
+      </div>
+    </section>
+
+    <footer class="ads-lp-footer">
+      <div class="container">
+        <nav class="ads-lp-footer__nav" aria-label="Ads landing footer">
+          <a href="#pricing">Pricing</a>
+          <a href="#faq">FAQ</a>
+        </nav>
+        <p class="ads-lp-footer__contact">
+          Have a question before getting started?
+          <a href="/#contact">Contact KERSIVO</a>.
+        </p>
+      </div>
+    </footer>
+  </main>
+</LandingLayout>
+
+<script>
+  import { initSystemChooser } from '@/lib/initSystemChooser';
+
+  const scheduleInit = () => {
+    requestAnimationFrame(() => initSystemChooser());
+  };
+
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', scheduleInit, { once: true });
+  } else {
+    scheduleInit();
+  }
+</script>
+
+<style>
+  .landing-overflow-guard {
+    overflow-x: clip;
+  }
+
+  .ads-lp-section {
+    padding-block: 3rem;
+  }
+
+  .ads-lp-footer {
+    padding-block: 2rem 3rem;
+    border-top: 1px solid color-mix(in srgb, var(--foreground) 12%, transparent);
+  }
+
+  .ads-lp-footer__nav {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 1rem 1.5rem;
+    margin-bottom: 0.75rem;
+  }
+
+  .ads-lp-footer__contact {
+    margin: 0;
+    font-size: 0.95rem;
+    color: color-mix(in srgb, var(--foreground) 72%, transparent);
+  }
+</style>

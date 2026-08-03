@@ -13,6 +13,7 @@ export type MarketingSitemapEntry = {
 
 export const MARKETING_SITEMAP_ENTRIES: readonly MarketingSitemapEntry[] = [
   { path: '/', lastmod: STATIC_SITEMAP_LASTMOD },
+  { path: '/barbershop-booking-software', lastmod: STATIC_SITEMAP_LASTMOD },
   { path: '/privacy', lastmod: STATIC_SITEMAP_LASTMOD },
   { path: '/cookies', lastmod: STATIC_SITEMAP_LASTMOD },
   { path: '/terms', lastmod: STATIC_SITEMAP_LASTMOD },

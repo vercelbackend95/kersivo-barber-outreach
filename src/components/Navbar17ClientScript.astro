@@ -414,7 +414,8 @@
 
       const pathname = window.location.pathname.replace(/\/$/, '') || '/';
       const isHome = pathname === '/';
-      const isLandingNav = navbar.getAttribute('data-navbar-variant') === 'landing';
+      const navbarVariant = navbar.getAttribute('data-navbar-variant');
+      const isLandingNav = navbarVariant === 'landing' || navbarVariant === 'adsLp';
       const useScrollSpy = isHome;
 
       updateScrollState();

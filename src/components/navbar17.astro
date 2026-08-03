@@ -38,12 +38,15 @@ const {
 
 const navItems = getNavbar17Items(variant);
 const showCart = navbar17ShowsCart(variant);
-const isLanding = variant === 'landing';
+const isLanding = variant === 'landing' || variant === 'adsLp';
 const isTestShop = variant === 'testShop';
-const usesLandingCta = variant === 'landing' || variant === 'shop' || variant === 'testShop';
+const usesLandingCta =
+  variant === 'landing' || variant === 'adsLp' || variant === 'shop' || variant === 'testShop';
+/** Ads LP uses explicit page CTA; do not inherit homepage middleware preview CTA. */
+const useMiddlewarePreviewCta = usesLandingCta && variant !== 'adsLp';
 
 const previewCta =
-  previewCtaProp ?? (usesLandingCta ? (Astro.locals.navbarPreviewCta ?? null) : null);
+  previewCtaProp ?? (useMiddlewarePreviewCta ? (Astro.locals.navbarPreviewCta ?? null) : null);
 
 const ctaLabel = previewCta?.label ?? getNavbar17CtaLabel(variant);
 const ctaHref = previewCta ? previewCta.href : getNavbar17CtaHref(variant);
