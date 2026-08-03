@@ -5,9 +5,8 @@ export const FEATURE261_MONETIZATION_ROW = {
   heading: 'See bookings, revenue and barber performance in one place.',
   description:
     'Track daily revenue, booking totals, cancellations and barber performance from the same admin.',
-  ctaLabel: 'Build My KERSIVO Workspace',
-  ctaHref: '/admin/onboarding',
-  ctaTrack: 'plan_my_setup_click',
-  ghostCtaLabel: 'See Reports in Action',
-  ghostCtaHref: adminDemoHref('reports'),
+  ctaLabel: 'Explore reports',
+  ctaHref: adminDemoHref('reports'),
+  ctaTrack: 'view_live_demo_click',
+  ctaSameTab: false,
 } as const;

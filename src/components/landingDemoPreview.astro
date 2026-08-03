@@ -39,39 +39,36 @@ const resolvedBookingData = bookingData ?? getLandingDemoBookingFallback();
 
 const rows: PreviewRow[] = [
   {
-    kicker: 'ADMIN PREVIEW',
-    heading: "Chairs, statuses and what's next — all in one view.",
-    description: "See today's bookings, chairs and statuses in one admin view.",
-    ctaLabel: 'Build My Preview',
-    ctaHref: '/admin/onboarding',
-    ctaSameTab: true,
-    ctaTrack: 'plan_my_setup_click',
-    ghostCtaLabel: 'Open Full Admin Demo',
-    ghostCtaHref: adminDemoHref('timeline'),
+    kicker: 'ADMIN SYSTEM',
+    heading: 'Run your day from one clear admin view',
+    description:
+      'Manage bookings, clients, barbers, services and daily activity from one central dashboard.',
+    ctaLabel: 'Explore the admin system',
+    ctaHref: adminDemoHref('timeline'),
+    ctaSameTab: false,
+    ctaTrack: 'view_live_demo_click',
     media: 'widget',
   },
   {
-    kicker: 'CLIENT BOOKING PREVIEW',
+    kicker: 'CLIENT BOOKING EXPERIENCE',
     heading: 'Service, barber, time — your URL, your brand, not their app.',
-    description: 'Clients choose a service, barber and time on your own domain — no app download.',
-    ctaLabel: 'Build My Booking Preview',
-    ctaHref: '/admin/onboarding',
-    ctaSameTab: true,
-    ctaTrack: 'plan_my_setup_click',
-    ghostCtaLabel: 'Try Example Booking Flow',
-    ghostCtaHref: '/book',
+    description:
+      'Clients choose a service, barber and available time through your own branded website — with no app download.',
+    ctaLabel: 'Try the booking experience',
+    ctaHref: '/book',
+    ctaSameTab: false,
+    ctaTrack: 'view_live_demo_click',
     media: 'booking',
   },
   {
-    kicker: 'RETAIL PICKUP PREVIEW',
-    heading: 'Retail orders, pickup ready — in the same admin.',
-    description: 'Clients browse products and reserve items for in-shop pickup.',
-    ctaLabel: 'Build My Shop Preview',
-    ctaHref: '/admin/retail-onboarding',
-    ctaSameTab: true,
-    ctaTrack: 'plan_my_setup_click',
-    ghostCtaLabel: 'Explore Example Shop',
-    ghostCtaHref: '/shop',
+    kicker: 'RETAIL PICKUP SHOP',
+    heading: 'Sell retail products through your own website',
+    description:
+      'Let clients browse products online, place pickup orders and collect them from your barbershop.',
+    ctaLabel: 'Explore the retail shop',
+    ctaHref: '/shop',
+    ctaSameTab: false,
+    ctaTrack: 'view_live_demo_click',
     media: 'carousel',
   },
 ];
@@ -87,10 +84,11 @@ const rows: PreviewRow[] = [
     <header class="feature261__intro">
       <p class="feature261__kicker">INSIDE THE SYSTEM</p>
       <h2 id="landing-demo-preview-title" class="feature261__heading">
-        The same screens you'll use to run your shop.
+        See the system your barbershop will actually use
       </h2>
       <p class="feature261__description">
-        Preview the booking, admin and retail screens before you choose your setup.
+        Explore the admin, client booking experience, retail pickup shop and reports before you
+        subscribe.
       </p>
     </header>
 
@@ -151,7 +149,7 @@ const rows: PreviewRow[] = [
           ) : (
             <a
               href={row.ctaHref}
-              class="btn btn--primary feature261__row-cta"
+              class="btn btn--ghost feature261__row-cta feature261__row-cta--ghost"
               target={row.ctaSameTab ? undefined : '_blank'}
               rel={row.ctaSameTab ? undefined : 'noopener noreferrer'}
               data-track={row.ctaTrack}
