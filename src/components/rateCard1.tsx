@@ -1,6 +1,19 @@
 import React from "react";
 
-import { Check, GlobeLock, LayoutDashboard, MessagesSquare, ShieldCheck, TrendingUp } from "lucide-react";
+import {
+  ChartNoAxesCombined,
+  Check,
+  Globe,
+  GlobeLock,
+  LayoutDashboard,
+  MessagesSquare,
+  Scissors,
+  ShieldCheck,
+  ShoppingBag,
+  TrendingUp,
+  Users,
+  type LucideIcon,
+} from "lucide-react";
 import {
   NO_PAUSE_SHORT,
   NO_SETUP_FEE_SHORT,
@@ -12,6 +25,7 @@ import {
   getRateCard1Copy,
   getRateCard1LandingLayout,
   rateCard1SharedCopy,
+  type RateCard1LandingIcon,
   type RateCard1Variant,
 } from "@/lib/pricing/rateCard1Copy";
 import { SAAS_MONTHLY_GBP } from "@/lib/seo/defaults";
@@ -28,6 +42,15 @@ interface RateCard1Props {
   className?: string;
   variant?: RateCard1Variant;
 }
+
+const LANDING_ICONS: Record<RateCard1LandingIcon, LucideIcon> = {
+  globe: Globe,
+  dashboard: LayoutDashboard,
+  users: Users,
+  shoppingBag: ShoppingBag,
+  scissors: Scissors,
+  chart: ChartNoAxesCombined,
+};
 
 function buildCareFeatures(variant: RateCard1Variant): CareFeature[] {
   const copy = getRateCard1Copy(variant);
@@ -75,55 +98,73 @@ function RateCard1Landing({ className }: { className?: string }) {
         <header className="rate-card1__landing-intro">
           <p className="rate-card1__eyebrow">{layout.eyebrow}</p>
           <h2 id="rate-card1-heading" className="rate-card1__landing-heading">
-            {layout.heading}
+            {layout.headingBeforePrice}
+            {SAAS_MONTHLY_GBP}
+            {layout.headingAfterPrice}
           </h2>
-          <p className="rate-card1__landing-lead">
-            {layout.leadBeforePrice}
-            <strong>£{SAAS_MONTHLY_GBP}</strong>
-            {layout.leadAfterPrice}
-          </p>
+          <p className="rate-card1__landing-lead">{layout.lead}</p>
         </header>
 
-        <div className="rate-card1__landing-main">
-          <div className="rate-card1__landing-plan" aria-label="Monthly subscription">
-            <p className="rate-card1__plan-title">{layout.planLabel}</p>
-            <p className="rate-card1__price">
-              £{SAAS_MONTHLY_GBP} <span>/month</span>
-            </p>
-            <p className="rate-card1__plan-subtext">{layout.planShortDesc}</p>
-            <a
-              href="/admin/launch"
-              className="btn btn--primary rate-card1__cta"
-              data-track="saas_subscribe_click"
-            >
-              {layout.ctaLabel}
-            </a>
-            <p className="rate-card1__landing-checkout-note">{layout.checkoutNote}</p>
-            <p className="rate-card1__landing-billing-note">{layout.billingNote}</p>
+        <div className="rate-card1__offer">
+          <div className="rate-card1__offer-body">
+            <div className="rate-card1__offer-decision" aria-label="Monthly subscription">
+              <p className="rate-card1__plan-title">{layout.planLabel}</p>
+              <p className="rate-card1__price">
+                £{SAAS_MONTHLY_GBP} <span>/ month</span>
+              </p>
+              <p className="rate-card1__offer-value">{layout.planValueLine}</p>
+              <ul className="rate-card1__offer-trust">
+                {layout.trustPoints.map((point) => (
+                  <li key={point}>
+                    <span className="rate-card1__offer-trust-icon" aria-hidden="true">
+                      <Check strokeWidth={2.5} />
+                    </span>
+                    {point}
+                  </li>
+                ))}
+              </ul>
+              <a
+                href="/admin/launch"
+                className="btn btn--primary rate-card1__cta"
+                data-track="saas_subscribe_click"
+              >
+                {layout.ctaLabel}
+              </a>
+              <p className="rate-card1__offer-checkout">{layout.checkoutNote}</p>
+              <p className="rate-card1__offer-billing">{layout.billingNote}</p>
+            </div>
+
+            <div className="rate-card1__offer-included">
+              <h3 className="rate-card1__offer-included-heading">{layout.includedHeading}</h3>
+              <ul className="rate-card1__offer-included-list">
+                {layout.includedItems.map((item) => {
+                  const Icon = LANDING_ICONS[item.icon];
+                  return (
+                    <li key={item.heading} className="rate-card1__offer-included-item">
+                      <span className="rate-card1__offer-icon" aria-hidden="true">
+                        <Icon strokeWidth={1.85} />
+                      </span>
+                      <div>
+                        <h4 className="rate-card1__offer-included-title">{item.heading}</h4>
+                        <p className="rate-card1__offer-included-desc">{item.description}</p>
+                      </div>
+                    </li>
+                  );
+                })}
+              </ul>
+            </div>
           </div>
 
-          <div className="rate-card1__landing-included">
-            <h3 className="rate-card1__landing-included-heading">{layout.includedHeading}</h3>
-            <ul className="rate-card1__landing-included-list">
-              {layout.includedItems.map((item) => (
-                <li key={item.heading} className="rate-card1__landing-included-item">
-                  <span className="rate-card1__landing-check" aria-hidden="true">
-                    <Check strokeWidth={2.25} />
-                  </span>
-                  <div>
-                    <p className="rate-card1__landing-included-title">{item.heading}</p>
-                    <p className="rate-card1__landing-included-desc">{item.description}</p>
-                  </div>
-                </li>
-              ))}
-            </ul>
-
-            <ul className="rate-card1__landing-support" aria-label="Additional support">
-              {layout.supportItems.map((item) => (
-                <li key={item}>{item}</li>
-              ))}
-            </ul>
-          </div>
+          <ul className="rate-card1__offer-foot" aria-label="Also included with your plan">
+            {layout.supportItems.map((item) => (
+              <li key={item}>
+                <span className="rate-card1__offer-foot-check" aria-hidden="true">
+                  <Check strokeWidth={2.5} />
+                </span>
+                {item}
+              </li>
+            ))}
+          </ul>
         </div>
 
         <div className="rate-card1__landing-conditions">

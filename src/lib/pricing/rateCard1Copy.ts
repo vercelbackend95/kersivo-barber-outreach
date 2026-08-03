@@ -25,19 +25,30 @@ export type RateCard1Copy = {
   clientCommsDescription: string;
 };
 
+export type RateCard1LandingIcon =
+  | 'globe'
+  | 'dashboard'
+  | 'users'
+  | 'shoppingBag'
+  | 'scissors'
+  | 'chart';
+
 export type RateCard1LandingIncludedItem = {
   heading: string;
   description: string;
+  icon: RateCard1LandingIcon;
 };
 
 export type RateCard1LandingLayout = {
   eyebrow: string;
-  heading: string;
-  /** Lead before the dynamic £/month fragment and after it. */
-  leadBeforePrice: string;
-  leadAfterPrice: string;
+  /** Heading before dynamic £price/month */
+  headingBeforePrice: string;
+  /** Heading after dynamic £price (e.g. "/month") */
+  headingAfterPrice: string;
+  lead: string;
   planLabel: string;
-  planShortDesc: string;
+  planValueLine: string;
+  trustPoints: string[];
   ctaLabel: string;
   checkoutNote: string;
   billingNote: string;
@@ -76,12 +87,16 @@ const LANDING_COPY: RateCard1Copy = {
 
 const LANDING_LAYOUT: RateCard1LandingLayout = {
   eyebrow: 'SIMPLE PRICING',
-  heading: 'Everything your barbershop needs. One simple monthly plan.',
-  leadBeforePrice:
-    'Your branded website, booking system, admin, deposits, retail and support — ',
-  leadAfterPrice: '/month for one physical location.',
+  headingBeforePrice: 'Everything included for £',
+  headingAfterPrice: '/month',
+  lead: 'Your branded website, booking system, admin, deposits, retail and support — all in one monthly plan for one physical location.',
   planLabel: 'MONTHLY SUBSCRIPTION',
-  planShortDesc: 'No setup fee. One physical location. Cancel anytime.',
+  planValueLine: 'Everything included. No setup fee.',
+  trustPoints: [
+    'One physical location',
+    'Cancel anytime',
+    'Your own domain included',
+  ],
   ctaLabel: 'Start my KERSIVO subscription',
   checkoutNote: 'Secure checkout through Stripe',
   billingNote: BILLING_CYCLE_SHORT,
@@ -89,46 +104,46 @@ const LANDING_LAYOUT: RateCard1LandingLayout = {
   includedItems: [
     {
       heading: 'Branded website + your own domain',
-      description: 'A professional barbershop website built around your shop and brand.',
+      description: 'A professional website built around your barbershop and brand.',
+      icon: 'globe',
     },
     {
       heading: 'Booking flow + admin dashboard',
-      description: 'Manage bookings and daily activity from one central system.',
+      description: 'Manage bookings, clients and daily activity from one central system.',
+      icon: 'dashboard',
     },
     {
-      heading: 'Clients, booking history + deposits',
-      description: 'Keep client records and take optional booking deposits.',
-    },
-    {
-      heading: 'Email confirmations + SMS reminders',
-      description: 'Keep clients informed before their appointments.',
+      heading: 'Clients, deposits + reminders',
+      description:
+        'Keep client records, take optional deposits and send email confirmations and SMS appointment reminders.',
+      icon: 'users',
     },
     {
       heading: 'Retail pickup + order management',
       description: 'Let clients order products online for collection in your shop.',
+      icon: 'shoppingBag',
     },
     {
       heading: 'Barbers, services + working hours',
       description: 'Manage your team, prices, services and availability.',
+      icon: 'scissors',
     },
     {
-      heading: 'Booking + product sales reports',
-      description: 'Track bookings, revenue and retail performance.',
-    },
-    {
-      heading: 'Hosting, SSL, updates + support',
-      description: 'The platform stays hosted, secure, maintained and supported.',
+      heading: 'Reports, hosting + support',
+      description:
+        'Track performance while KERSIVO keeps the platform hosted, secure and maintained.',
+      icon: 'chart',
     },
   ],
   supportItems: [
     'Migration help included',
     'Support inbox included',
     'Up to one hour of minor site changes each month',
+    '0% KERSIVO commission',
   ],
-  conditionsLine1:
-    '0% KERSIVO commission on bookings and retail. Standard Stripe payment-processing fees apply.',
+  conditionsLine1: 'Standard Stripe payment-processing fees apply.',
   conditionsLine2:
-    'No setup fee. Billed today, then monthly. Cancel anytime. KERSIVO is not currently VAT registered, so no VAT is added.',
+    'Billed today, then monthly. Cancel anytime. KERSIVO is not currently VAT registered, so no VAT is added.',
 };
 
 export function getRateCard1Copy(variant: RateCard1Variant = 'default'): RateCard1Copy {
