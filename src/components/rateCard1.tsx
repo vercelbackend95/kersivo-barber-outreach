@@ -1,6 +1,6 @@
 import React from "react";
 
-import { GlobeLock, LayoutDashboard, MessagesSquare, ShieldCheck, TrendingUp } from "lucide-react";
+import { Check, GlobeLock, LayoutDashboard, MessagesSquare, ShieldCheck, TrendingUp } from "lucide-react";
 import {
   NO_PAUSE_SHORT,
   NO_SETUP_FEE_SHORT,
@@ -8,7 +8,12 @@ import {
   PLAN_SCOPE_SHORT,
   PRICE_VAT_DISCLAIMER,
 } from "@/lib/pricing/claimsPolicy";
-import { getRateCard1Copy, rateCard1SharedCopy, type RateCard1Variant } from "@/lib/pricing/rateCard1Copy";
+import {
+  getRateCard1Copy,
+  getRateCard1LandingLayout,
+  rateCard1SharedCopy,
+  type RateCard1Variant,
+} from "@/lib/pricing/rateCard1Copy";
 import { SAAS_MONTHLY_GBP } from "@/lib/seo/defaults";
 import { cn } from "@/lib/utils";
 import "@/styles/rateCard1.css";
@@ -56,18 +61,89 @@ function buildCareFeatures(variant: RateCard1Variant): CareFeature[] {
   ];
 }
 
-const RateCard1 = ({ className, variant = "default" }: RateCard1Props) => {
+function RateCard1Landing({ className }: { className?: string }) {
+  const layout = getRateCard1LandingLayout();
+
+  return (
+    <section
+      id="pricing"
+      className={cn("rate-card1 rate-card1--landing scroll-mt-24", className)}
+      aria-labelledby="rate-card1-heading"
+      data-section="ongoing-care"
+    >
+      <div id="ongoing-care" className="container rate-card1__landing">
+        <header className="rate-card1__landing-intro">
+          <p className="rate-card1__eyebrow">{layout.eyebrow}</p>
+          <h2 id="rate-card1-heading" className="rate-card1__landing-heading">
+            {layout.heading}
+          </h2>
+          <p className="rate-card1__landing-lead">
+            {layout.leadBeforePrice}
+            <strong>£{SAAS_MONTHLY_GBP}</strong>
+            {layout.leadAfterPrice}
+          </p>
+        </header>
+
+        <div className="rate-card1__landing-main">
+          <div className="rate-card1__landing-plan" aria-label="Monthly subscription">
+            <p className="rate-card1__plan-title">{layout.planLabel}</p>
+            <p className="rate-card1__price">
+              £{SAAS_MONTHLY_GBP} <span>/month</span>
+            </p>
+            <p className="rate-card1__plan-subtext">{layout.planShortDesc}</p>
+            <a
+              href="/admin/launch"
+              className="btn btn--primary rate-card1__cta"
+              data-track="saas_subscribe_click"
+            >
+              {layout.ctaLabel}
+            </a>
+            <p className="rate-card1__landing-checkout-note">{layout.checkoutNote}</p>
+            <p className="rate-card1__landing-billing-note">{layout.billingNote}</p>
+          </div>
+
+          <div className="rate-card1__landing-included">
+            <h3 className="rate-card1__landing-included-heading">{layout.includedHeading}</h3>
+            <ul className="rate-card1__landing-included-list">
+              {layout.includedItems.map((item) => (
+                <li key={item.heading} className="rate-card1__landing-included-item">
+                  <span className="rate-card1__landing-check" aria-hidden="true">
+                    <Check strokeWidth={2.25} />
+                  </span>
+                  <div>
+                    <p className="rate-card1__landing-included-title">{item.heading}</p>
+                    <p className="rate-card1__landing-included-desc">{item.description}</p>
+                  </div>
+                </li>
+              ))}
+            </ul>
+
+            <ul className="rate-card1__landing-support" aria-label="Additional support">
+              {layout.supportItems.map((item) => (
+                <li key={item}>{item}</li>
+              ))}
+            </ul>
+          </div>
+        </div>
+
+        <div className="rate-card1__landing-conditions">
+          <p>{layout.conditionsLine1}</p>
+          <p>{layout.conditionsLine2}</p>
+        </div>
+      </div>
+    </section>
+  );
+}
+
+function RateCard1Default({ className }: { className?: string }) {
+  const variant: RateCard1Variant = "default";
   const copy = getRateCard1Copy(variant);
   const careFeatures = buildCareFeatures(variant);
 
   return (
     <section
       id="pricing"
-      className={cn(
-        "rate-card1 scroll-mt-24",
-        variant === "landing" && "rate-card1--landing",
-        className,
-      )}
+      className={cn("rate-card1 scroll-mt-24", className)}
       aria-labelledby="rate-card1-heading"
       data-section="ongoing-care"
     >
@@ -139,6 +215,13 @@ const RateCard1 = ({ className, variant = "default" }: RateCard1Props) => {
       </div>
     </section>
   );
+}
+
+const RateCard1 = ({ className, variant = "default" }: RateCard1Props) => {
+  if (variant === "landing") {
+    return <RateCard1Landing className={className} />;
+  }
+  return <RateCard1Default className={className} />;
 };
 
 export { RateCard1 };
