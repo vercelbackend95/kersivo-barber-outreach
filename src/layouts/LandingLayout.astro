@@ -22,9 +22,9 @@ type LandingNavbarPreviewCta = {
 interface Props extends PageSeo {
   title: string;
   jsonLd?: Record<string, unknown> | Record<string, unknown>[];
-  /** Defaults to `landing` (homepage). Use `adsLp` for the Google Ads Core LP. */
+  /** Defaults to `landing` (homepage). Also used for shop marketing pages. */
   navbarVariant?: Navbar17Variant;
-  /** When set, overrides middleware-resolved navbar CTA (required for adsLp). */
+  /** When set, overrides middleware-resolved navbar CTA. */
   previewCta?: LandingNavbarPreviewCta | null;
 }
 

@@ -12,7 +12,6 @@ import { GET } from '../../pages/sitemap.xml';
 
 const EXPECTED_LOCS = [
   'https://kersivo.co.uk/',
-  'https://kersivo.co.uk/barbershop-booking-software',
   'https://kersivo.co.uk/privacy',
   'https://kersivo.co.uk/cookies',
   'https://kersivo.co.uk/terms',
@@ -20,18 +19,17 @@ const EXPECTED_LOCS = [
 ] as const;
 
 describe('marketing sitemap', () => {
-  it('builds exactly six canonical marketing URLs with expected lastmod values', () => {
+  it('builds exactly five canonical marketing URLs with expected lastmod values', () => {
     const entries = buildMarketingSitemapEntries();
     const locs = entries.map((entry) => entry.loc);
 
-    expect(entries).toHaveLength(6);
+    expect(entries).toHaveLength(5);
     expect(locs).toEqual([...EXPECTED_LOCS]);
-    expect(new Set(locs).size).toBe(6);
+    expect(new Set(locs).size).toBe(5);
     expect(STATIC_SITEMAP_LASTMOD).toBe('2026-07-18');
 
     const byLoc = Object.fromEntries(entries.map((entry) => [entry.loc, entry.lastmod]));
-    expect(byLoc['https://kersivo.co.uk/barbershop-booking-software']).toBe('2026-08-03');
-    for (const loc of EXPECTED_LOCS.filter((l) => !l.endsWith('/barbershop-booking-software'))) {
+    for (const loc of EXPECTED_LOCS) {
       expect(byLoc[loc]).toBe('2026-07-18');
     }
 
@@ -48,10 +46,9 @@ describe('marketing sitemap', () => {
 
     expect(xml.startsWith('<?xml version="1.0" encoding="UTF-8"?>')).toBe(true);
     expect(xml).toContain('<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">');
-    expect(urlMatches).toHaveLength(6);
+    expect(urlMatches).toHaveLength(5);
     expect(locMatches).toEqual([...EXPECTED_LOCS]);
     expect(xml.match(/<lastmod>2026-07-18<\/lastmod>/g)).toHaveLength(5);
-    expect(xml.match(/<lastmod>2026-08-03<\/lastmod>/g)).toHaveLength(1);
 
     expect(xml).not.toContain('demo-product-');
     expect(xml).not.toContain('cmmj3fcis0005l1kt8ii5itvd');

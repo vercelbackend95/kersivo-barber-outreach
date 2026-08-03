@@ -8,10 +8,6 @@ export const FUNNEL_EVENTS = {
   /** Hero / preview path — not purchase. */
   build_preview_click: 'build_preview_click',
   view_live_demo_click: 'view_live_demo_click',
-  /** Ads LP Demo section — open live demos. */
-  ads_lp_client_demo_click: 'ads_lp_client_demo_click',
-  ads_lp_admin_demo_click: 'ads_lp_admin_demo_click',
-  ads_lp_retail_demo_click: 'ads_lp_retail_demo_click',
   /** Pricing / purchase intent. */
   plan_my_setup_click: 'plan_my_setup_click',
   auth_started: 'auth_started',
@@ -59,9 +55,6 @@ export const MICRO_CONVERSION_EVENTS = new Set<FunnelEventName>([
   FUNNEL_EVENTS.primary_cta_clicked,
   FUNNEL_EVENTS.build_preview_click,
   FUNNEL_EVENTS.view_live_demo_click,
-  FUNNEL_EVENTS.ads_lp_client_demo_click,
-  FUNNEL_EVENTS.ads_lp_admin_demo_click,
-  FUNNEL_EVENTS.ads_lp_retail_demo_click,
   FUNNEL_EVENTS.plan_my_setup_click,
   FUNNEL_EVENTS.auth_started,
   FUNNEL_EVENTS.onboarding_started,
