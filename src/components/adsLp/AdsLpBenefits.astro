@@ -1,36 +1,85 @@
 ---
-type Benefit = {
+type BenefitBlock = {
   title: string;
-  note?: string;
-  icon: 'globe' | 'domain' | 'commission' | 'deposit' | 'sms' | 'clients' | 'retail' | 'hosting';
+  description: string;
+  detail: string;
+  image: string;
+  imageWidth: number;
+  imageHeight: number;
+  imageAlt: string;
 };
 
-const benefits: Benefit[] = [
-  { title: 'Your own branded barbershop website', icon: 'globe' },
-  { title: 'Your own domain included', icon: 'domain' },
+type IncludedItem = {
+  label: string;
+  note?: string;
+};
+
+function benefitResponsiveSrc(image: string): string {
+  const match = image.match(/\/([^/]+)\.webp$/);
+  if (!match) return image;
+  const base = match[1];
+  const dir = image.replace(/\/[^/]+$/, '');
+  return `${dir}/${base}-480w.webp`;
+}
+
+function benefitSrcset(image: string): string {
+  const match = image.match(/\/([^/]+)\.webp$/);
+  if (!match) return image;
+  const base = match[1];
+  const dir = image.replace(/\/[^/]+$/, '');
+  return [
+    `${dir}/${base}-320w.webp 320w`,
+    `${dir}/${base}-480w.webp 480w`,
+    `${dir}/${base}-768w.webp 768w`,
+    `${dir}/${base}-1024w.webp 1024w`,
+    `${image} 1536w`,
+  ].join(', ');
+}
+
+const blocks: BenefitBlock[] = [
   {
-    title: '0% KERSIVO commission on bookings and retail sales',
-    note: 'Stripe processing fees apply.',
-    icon: 'commission',
+    title: 'Your branded booking experience',
+    description:
+      'Give clients a professional booking experience built around your barbershop — with your branding, services, team and availability.',
+    detail: 'Your website · Your domain · Online deposits',
+    image: '/images/Ilustracje/8.webp',
+    imageWidth: 1536,
+    imageHeight: 1024,
+    imageAlt: 'Client in the barber chair on their phone — booking through a branded experience',
   },
-  { title: 'Online booking deposits', icon: 'deposit' },
-  { title: 'SMS appointment reminders included', icon: 'sms' },
-  { title: 'Client management', icon: 'clients' },
-  { title: 'Retail pickup shop', icon: 'retail' },
-  { title: 'Hosting, SSL and platform updates included', icon: 'hosting' },
+  {
+    title: 'Your barbershop system',
+    description:
+      'Manage bookings, clients, barbers, services and working hours from one central dashboard.',
+    detail: 'Bookings · Clients · Team management',
+    image: '/images/Ilustracje/shoppyonline.webp',
+    imageWidth: 1536,
+    imageHeight: 1024,
+    imageAlt: 'Barber managing the shop on a laptop from the chair',
+  },
+  {
+    title: 'Deposits and reminders that protect your time',
+    description:
+      'Take booking deposits and send appointment reminders to reduce missed appointments and protect valuable chair time.',
+    detail: 'Online deposits · SMS reminders · No-show protection',
+    image: '/images/Ilustracje/reminder.webp',
+    imageWidth: 928,
+    imageHeight: 1152,
+    imageAlt: 'Person with phone showing an SMS appointment reminder',
+  },
 ];
 
-const ICON_PATHS: Record<Benefit['icon'], string> = {
-  globe:
-    'M12 21a9 9 0 1 0 0-18 9 9 0 0 0 0 18Zm0 0c2.5 0 4.5-4 4.5-9S14.5 3 12 3 7.5 7 7.5 12s2 9 4.5 9ZM3 12h18',
-  domain: 'M4 7h16v11H4V7Zm2 0V5h12v2M8 11h8M8 15h5',
-  commission: 'M12 3v18M17 7H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6',
-  deposit: 'M12 3v18M7 8h7a3 3 0 0 1 0 6H9m0 0h6a3 3 0 0 1 0 6H7',
-  sms: 'M4 5h16v10H8l-4 4V5Zm4 4h8M8 12h5',
-  clients: 'M16 19v-1.5A3.5 3.5 0 0 0 12.5 14h-1A3.5 3.5 0 0 0 8 17.5V19M12 11a3 3 0 1 0 0-6 3 3 0 0 0 0 6Z',
-  retail: 'M6 7h12l-1 13H7L6 7Zm3-3h6l1 3H8l1-3Z',
-  hosting: 'M4 7h16v4H4V7Zm0 6h16v4H4v-4Zm3 2h.01M7 9h.01',
-};
+const includedItems: IncludedItem[] = [
+  { label: 'Retail pickup shop' },
+  { label: 'Client management' },
+  { label: 'Your own domain included' },
+  { label: 'Hosting and SSL' },
+  { label: 'Platform updates' },
+  {
+    label: '0% KERSIVO commission on bookings and retail sales',
+    note: 'Stripe processing fees apply.',
+  },
+];
 ---
 
 <section
@@ -40,38 +89,75 @@ const ICON_PATHS: Record<Benefit['icon'], string> = {
 >
   <div class="container">
     <header class="ads-lp-benefits__intro">
+      <p class="ads-lp-benefits__kicker">What KERSIVO includes</p>
       <h2 id="ads-lp-benefits-heading" class="ads-lp-benefits__heading">
         Everything your barbershop needs to run bookings professionally
       </h2>
       <p class="ads-lp-benefits__lead">
-        One platform for your website, bookings, clients, deposits and retail — built specifically
-        for independent barbershops.
+        Your branded booking experience, barbershop management tools and no-show protection — all
+        included in one simple £39 monthly plan.
       </p>
     </header>
 
-    <ul class="ads-lp-benefits__grid" role="list">
+    <ul class="ads-lp-benefits__blocks" role="list">
       {
-        benefits.map((benefit) => (
-          <li class="ads-lp-benefits__item">
-            <span class="ads-lp-benefits__icon" aria-hidden="true">
-              <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                <path
-                  d={ICON_PATHS[benefit.icon]}
-                  stroke="currentColor"
-                  stroke-width="1.75"
-                  stroke-linecap="round"
-                  stroke-linejoin="round"
-                />
-              </svg>
-            </span>
-            <div class="ads-lp-benefits__body">
-              <p class="ads-lp-benefits__title">{benefit.title}</p>
-              {benefit.note ? <p class="ads-lp-benefits__note">{benefit.note}</p> : null}
+        blocks.map((block, index) => (
+          <li
+            class:list={[
+              'ads-lp-benefits__row',
+              { 'ads-lp-benefits__row--reverse': index % 2 === 1 },
+            ]}
+          >
+            <div class="ads-lp-benefits__visual">
+              <img
+                class="ads-lp-benefits__image"
+                src={benefitResponsiveSrc(block.image)}
+                srcset={benefitSrcset(block.image)}
+                sizes="(max-width: 640px) min(90vw, 280px), (max-width: 1024px) 45vw, 403px"
+                alt={block.imageAlt}
+                width={block.imageWidth}
+                height={block.imageHeight}
+                loading="lazy"
+                decoding="async"
+              />
+            </div>
+
+            <div class="ads-lp-benefits__content">
+              <h3 class="ads-lp-benefits__title">{block.title}</h3>
+              <p class="ads-lp-benefits__desc">{block.description}</p>
+              <p class="ads-lp-benefits__detail">{block.detail}</p>
             </div>
           </li>
         ))
       }
     </ul>
+
+    <div class="ads-lp-benefits__included">
+      <h3 class="ads-lp-benefits__included-heading">Also included in your £39 monthly plan</h3>
+      <ul class="ads-lp-benefits__included-list">
+        {
+          includedItems.map((item) => (
+            <li class="ads-lp-benefits__included-item">
+              <span class="ads-lp-benefits__check" aria-hidden="true">
+                <svg viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
+                  <path
+                    d="M3.5 8.5 6.5 11.5 12.5 4.5"
+                    stroke="currentColor"
+                    stroke-width="1.75"
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                  />
+                </svg>
+              </span>
+              <span class="ads-lp-benefits__included-body">
+                <span class="ads-lp-benefits__included-label">{item.label}</span>
+                {item.note ? <span class="ads-lp-benefits__included-note">{item.note}</span> : null}
+              </span>
+            </li>
+          ))
+        }
+      </ul>
+    </div>
 
     <p class="ads-lp-benefits__soft-cta">
       <a href="#pricing">See the £39 plan</a>
