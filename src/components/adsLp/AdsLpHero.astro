@@ -13,9 +13,9 @@ const MOCK_SCREEN_HEIGHT = 2556;
 >
   <div class="container ads-lp-hero__grid">
     <div class="ads-lp-hero__copy">
-      <p class="ads-lp-hero__kicker">Built specifically for independent UK barbershops</p>
+      <p class="ads-lp-hero__kicker">Own your brand. Own your bookings.</p>
       <h1 id="ads-lp-hero-heading" class="ads-lp-hero__heading">
-        Barbershop Booking Software Built for Independent UK Barbershops
+        Barbershop Booking Software for Independent UK Barbershops
       </h1>
       <p class="ads-lp-hero__sub">
         Get your own branded website and domain, online bookings, deposits, client management and
@@ -41,18 +41,15 @@ const MOCK_SCREEN_HEIGHT = 2556;
         </button>
       </div>
 
-      <p class="ads-lp-hero__trust" role="list">
-        <span class="ads-lp-hero__trust-item" role="listitem">Your own domain included</span>
-        <span class="ads-lp-hero__trust-sep" aria-hidden="true">·</span>
-        <span class="ads-lp-hero__trust-item" role="listitem">0% KERSIVO commission</span>
-        <span class="ads-lp-hero__trust-sep" aria-hidden="true">·</span>
-        <span class="ads-lp-hero__trust-item" role="listitem">One location</span>
-        <span class="ads-lp-hero__trust-sep" aria-hidden="true">·</span>
-        <span class="ads-lp-hero__trust-item" role="listitem">Cancel anytime</span>
-      </p>
+      <ul class="ads-lp-hero__trust" aria-label="Plan highlights">
+        <li>Your own domain included</li>
+        <li>0% KERSIVO commission</li>
+        <li>Booking deposits included</li>
+        <li>Cancel anytime</li>
+      </ul>
     </div>
 
-    <div class="ads-lp-hero__visual" aria-hidden="false">
+    <div class="ads-lp-hero__visual">
       <div class="ads-lp-hero__mock">
         <div class="ads-lp-hero__mock-screen-wrap">
           <img
@@ -61,6 +58,7 @@ const MOCK_SCREEN_HEIGHT = 2556;
             alt="KERSIVO booking preview on an iPhone screen"
             width={MOCK_SCREEN_WIDTH}
             height={MOCK_SCREEN_HEIGHT}
+            fetchpriority="high"
             decoding="async"
           />
         </div>
@@ -70,8 +68,7 @@ const MOCK_SCREEN_HEIGHT = 2556;
           alt=""
           width={PHONE_FRAME_WIDTH}
           height={PHONE_FRAME_HEIGHT}
-          fetchpriority="high"
-          decoding="sync"
+          decoding="async"
         />
       </div>
     </div>
