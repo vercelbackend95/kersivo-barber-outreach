@@ -1,9 +1,13 @@
 ---
 import '../styles/components/landingDifference.css';
 
+type PillarIcon = 'storefront' | 'users' | 'dashboard';
+
 interface Pillar {
+  label: string;
   title: string;
   body: string;
+  icon: PillarIcon;
 }
 
 interface Props {
@@ -14,16 +18,22 @@ const { className = '' } = Astro.props as Props;
 
 const pillars: Pillar[] = [
   {
-    title: 'Not a marketplace',
-    body: 'KERSIVO does not list your clients next to competing shops inside a consumer marketplace.',
+    label: 'YOUR BRAND',
+    title: 'Your shop stays front and centre',
+    body: 'Clients book through a professional website built around your barbershop, on your own domain.',
+    icon: 'storefront',
   },
   {
-    title: 'Your own domain',
-    body: 'Clients book through your barbershop\u2019s own branded booking website.',
+    label: 'YOUR CLIENT RELATIONSHIPS',
+    title: 'A direct booking experience',
+    body: 'Your clients interact with your business and brand — not a marketplace page surrounded by competing shops.',
+    icon: 'users',
   },
   {
-    title: 'Bookings + retail + admin',
-    body: 'Your shop gets more than a booking link \u2014 it gets a connected system for daily operations.',
+    label: 'YOUR BUSINESS SYSTEM',
+    title: 'More than a booking link',
+    body: 'Manage bookings, deposits, clients, retail and daily operations through one connected KERSIVO platform.',
+    icon: 'dashboard',
   },
 ];
 ---
@@ -37,35 +47,93 @@ const pillars: Pillar[] = [
 
   <div class="container">
     <header class="landing-difference__intro">
-      <p class="landing-difference__eyebrow">WHY KERSIVO IS DIFFERENT</p>
+      <p class="landing-difference__eyebrow">WHY KERSIVO</p>
       <h2 id="landing-difference-title" class="landing-difference__heading">
-        Built for barbershops that want control &mdash; not another marketplace.
+        Built around your barbershop — not a marketplace profile
       </h2>
       <p class="landing-difference__lead">
-        KERSIVO is designed for independent shops that want their bookings, clients and customer experience
-        under their own brand.
+        Your website, booking experience and client relationships stay centred on your own business and
+        brand.
       </p>
     </header>
 
     <div class="landing-difference__panel">
-      <ol class="landing-difference__pillars" role="list">
-        {pillars.map((pillar, index) => (
+      <ul class="landing-difference__pillars">
+        {pillars.map((pillar) => (
           <li class="landing-difference__pillar">
-            <article aria-label={`Pillar ${index + 1}: ${pillar.title}`}>
-              <div class="landing-difference__number" aria-hidden="true">
-                0{index + 1}
-              </div>
-              <div class="landing-difference__content">
-                <h3 class="landing-difference__pillar-title">
-                  <span class="sr-only">Pillar {index + 1} of {pillars.length}: </span>
-                  {pillar.title}
-                </h3>
-                <p class="landing-difference__pillar-body">{pillar.body}</p>
-              </div>
+            <article>
+              <span class="landing-difference__icon" aria-hidden="true">
+                {pillar.icon === 'storefront' && (
+                  <svg
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    stroke-width="1.85"
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                  >
+                    <path d="m2 7 4.41-4.41A2 2 0 0 1 7.83 2h8.34a2 2 0 0 1 1.42.59L22 7"></path>
+                    <path d="M4 12v8a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-8"></path>
+                    <path d="M10 22V12h4v10"></path>
+                    <path d="M2 7h20"></path>
+                    <path d="M15 7v.01"></path>
+                    <path d="M9 7v.01"></path>
+                  </svg>
+                )}
+                {pillar.icon === 'users' && (
+                  <svg
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    stroke-width="1.85"
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                  >
+                    <path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"></path>
+                    <circle cx="9" cy="7" r="4"></circle>
+                    <path d="M22 21v-2a4 4 0 0 0-3-3.87"></path>
+                    <path d="M16 3.13a4 4 0 0 1 0 7.75"></path>
+                  </svg>
+                )}
+                {pillar.icon === 'dashboard' && (
+                  <svg
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    stroke-width="1.85"
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                  >
+                    <rect width="7" height="9" x="3" y="3" rx="1"></rect>
+                    <rect width="7" height="5" x="14" y="3" rx="1"></rect>
+                    <rect width="7" height="9" x="14" y="12" rx="1"></rect>
+                    <rect width="7" height="5" x="3" y="16" rx="1"></rect>
+                  </svg>
+                )}
+              </span>
+              <p class="landing-difference__pillar-label">{pillar.label}</p>
+              <h3 class="landing-difference__pillar-title">{pillar.title}</h3>
+              <p class="landing-difference__pillar-body">{pillar.body}</p>
             </article>
           </li>
         ))}
-      </ol>
+      </ul>
+
+      <p class="landing-difference__close">
+        <span class="landing-difference__close-icon" aria-hidden="true">
+          <svg
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="2.25"
+            stroke-linecap="round"
+            stroke-linejoin="round"
+          >
+            <path d="M20 6 9 17l-5-5"></path>
+          </svg>
+        </span>
+        Your own website. Your own domain. Your client relationships.
+      </p>
     </div>
   </div>
 </section>
