@@ -1,12 +1,5 @@
 ---
-import {
-  INCLUDED_SETUP_SHORT,
-  NO_SETUP_FEE_SHORT,
-  ONBOARDING_BILLING_INDEPENDENT_CLAIM,
-  ONBOARDING_TIMELINE_CLAIM,
-  OWNER_SELF_CONFIG_SHORT,
-  PREVIEW_LAUNCH_CLAIM,
-} from '@/lib/pricing/claimsPolicy';
+import { SAAS_MONTHLY_GBP } from '@/lib/seo/defaults';
 import '../styles/components/landingPostPurchaseSteps.css';
 
 interface Props {
@@ -23,27 +16,19 @@ const { className = '' } = Astro.props as Props;
 const steps: Step[] = [
   {
     title: 'Start your subscription',
-    body: `Subscribe for £39/month per physical location securely through Stripe — billed today. ${NO_SETUP_FEE_SHORT} ${ONBOARDING_BILLING_INDEPENDENT_CLAIM}`,
+    body: `Subscribe for £${SAAS_MONTHLY_GBP}/month securely through Stripe. No setup fee.`,
   },
   {
-    title: 'Complete your onboarding form',
-    body: 'Share business name, address, contact details, logo, photos, team, hours, social links, salon description and any migration details we need.',
+    title: 'Tell us about your shop',
+    body: 'Complete the onboarding form with your business details, branding, team, services, opening hours, photos and any migration information.',
   },
   {
-    title: 'We prepare your standard setup',
-    body: `${INCLUDED_SETUP_SHORT} ${ONBOARDING_TIMELINE_CLAIM}`,
+    title: 'We prepare your KERSIVO setup',
+    body: 'We configure your branded website, booking flow, admin dashboard, domain and retail pickup shop. Your current website can stay live while we work, where technically possible.',
   },
   {
-    title: 'Configure in your dashboard',
-    body: OWNER_SELF_CONFIG_SHORT,
-  },
-  {
-    title: 'Private preview, then Approve and launch',
-    body: PREVIEW_LAUNCH_CLAIM,
-  },
-  {
-    title: 'Your shop goes live',
-    body: 'After approval, DNS is switched and your booking website launches on your domain when you are ready.',
+    title: 'Review, approve and launch',
+    body: 'Check your private preview and confirm the details. When you are ready, approve the launch and we switch your domain.',
   },
 ];
 ---
@@ -58,22 +43,20 @@ const steps: Step[] = [
       <header class="landing-post-purchase-steps__intro">
         <p class="landing-post-purchase-steps__eyebrow">GETTING STARTED</p>
         <h2 id="landing-post-purchase-steps-title" class="landing-post-purchase-steps__heading">
-          What happens<br />
-          after you subscribe?
+          From subscription to launch
         </h2>
         <p class="landing-post-purchase-steps__lead">
-          Billing starts when you subscribe. Setup timeline starts after we have your required information.
-        </p>
-        <p class="landing-post-purchase-steps__support">
-          Subscribe, complete onboarding, review a private preview, approve launch, then go live — with day-to-day control in your dashboard.
+          We prepare your branded KERSIVO setup after you send us the information we need. Most
+          standard setups are ready for review roughly 1–2 weeks after we receive all required
+          information.
         </p>
         <p class="landing-post-purchase-steps__reassurance">
-          Nothing goes live without your approval. DNS switches only after you approve.
+          Nothing goes live until you approve it.
         </p>
         <div class="landing-post-purchase-steps__illustration" aria-hidden="true">
           <img
             src="/images/Ilustracje/shoppyonline.webp"
-            alt="Barber running his shop online from the chair — KERSIVO setup"
+            alt=""
             width="1536"
             height="1024"
             loading="lazy"
@@ -83,24 +66,54 @@ const steps: Step[] = [
         </div>
       </header>
 
-      <ol class="landing-post-purchase-steps__timeline">
-        {steps.map((step, index) => (
-          <li class="landing-post-purchase-steps__step">
-            <article aria-label={`Step ${index + 1}: ${step.title}`}>
-              <div class="landing-post-purchase-steps__number" aria-hidden="true">
-                0{index + 1}
-              </div>
-              <div class="landing-post-purchase-steps__content">
-                <h3 class="landing-post-purchase-steps__title">
-                  <span class="sr-only">Step {index + 1} of {steps.length}: </span>
-                  {step.title}
-                </h3>
-                <p class="landing-post-purchase-steps__body">{step.body}</p>
-              </div>
-            </article>
-          </li>
-        ))}
-      </ol>
+      <div class="landing-post-purchase-steps__process">
+        <ol class="landing-post-purchase-steps__timeline">
+          {steps.map((step, index) => (
+            <li class="landing-post-purchase-steps__step">
+              <article aria-label={`Step ${index + 1}: ${step.title}`}>
+                <div class="landing-post-purchase-steps__number" aria-hidden="true">
+                  0{index + 1}
+                </div>
+                <div class="landing-post-purchase-steps__content">
+                  <h3 class="landing-post-purchase-steps__title">
+                    <span class="sr-only">Step {index + 1} of {steps.length}: </span>
+                    {step.title}
+                  </h3>
+                  <p class="landing-post-purchase-steps__body">{step.body}</p>
+                </div>
+              </article>
+            </li>
+          ))}
+        </ol>
+
+        <p class="landing-post-purchase-steps__after-note">
+          <span class="landing-post-purchase-steps__after-icon" aria-hidden="true">
+            <svg
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="1.85"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+            >
+              <rect width="7" height="9" x="3" y="3" rx="1"></rect>
+              <rect width="7" height="5" x="14" y="3" rx="1"></rect>
+              <rect width="7" height="9" x="14" y="12" rx="1"></rect>
+              <rect width="7" height="5" x="3" y="16" rx="1"></rect>
+            </svg>
+          </span>
+          After launch, manage barbers, services, prices, working hours and products from your
+          dashboard.
+        </p>
+
+        <a
+          href="/admin/launch"
+          class="btn btn--primary landing-post-purchase-steps__cta"
+          data-track="saas_subscribe_click"
+        >
+          Start my KERSIVO subscription
+        </a>
+      </div>
     </div>
   </div>
 </section>
