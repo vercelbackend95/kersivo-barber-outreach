@@ -1,9 +1,5 @@
 ---
-import {
-  INCLUDED_SETUP_SHORT,
-  NO_SETUP_FEE_SHORT,
-  OWNER_SELF_CONFIG_SHORT,
-} from '@/lib/pricing/claimsPolicy';
+import { SAAS_MONTHLY_GBP } from '@/lib/seo/defaults';
 import '../styles/components/landingFinalCta.css';
 
 interface Props {
@@ -11,6 +7,7 @@ interface Props {
 }
 
 const { className = '' } = Astro.props as Props;
+const monthlyPriceLabel = `£${SAAS_MONTHLY_GBP}/month`;
 ---
 
 <section
@@ -20,25 +17,32 @@ const { className = '' } = Astro.props as Props;
   <div class="container">
     <div class="landing-final-cta__panel">
       <div class="landing-final-cta__content">
+        <p class="landing-final-cta__eyebrow">READY WHEN YOU ARE</p>
+
         <h2 id="landing-final-cta-title" class="landing-final-cta__heading">
-          Ready to run bookings on your own domain?
+          Ready to run bookings under your own brand?
         </h2>
+
         <p class="landing-final-cta__subheadline">
-          Start your £39/month subscription (one physical location). {NO_SETUP_FEE_SHORT}
-          {INCLUDED_SETUP_SHORT} {OWNER_SELF_CONFIG_SHORT}
+          Start your {monthlyPriceLabel} KERSIVO subscription and get a branded website, online
+          bookings, an admin dashboard and retail pickup — all built around your barbershop and your
+          own domain.
         </p>
       </div>
 
-      <div class="landing-final-cta__actions">
-        <a href="#pricing" class="btn btn--primary btn--lg" data-track="plan_my_setup_click">Get started</a>
-        <button type="button" class="btn btn--secondary btn--lg" data-system-chooser-open data-track="view_live_demo_click">
-          View Live Demo
-        </button>
-      </div>
+      <div class="landing-final-cta__conversion">
+        <a
+          href="/admin/launch"
+          class="btn btn--primary btn--lg landing-final-cta__button"
+          data-track="saas_subscribe_click"
+        >
+          Start my KERSIVO subscription
+        </a>
 
-      <p class="landing-final-cta__note">
-        Questions first? Email <a href="mailto:hello@kersivo.co.uk">hello@kersivo.co.uk</a>
-      </p>
+        <p class="landing-final-cta__reassurance">
+          No setup fee. Cancel anytime. One physical location per subscription.
+        </p>
+      </div>
     </div>
   </div>
 </section>

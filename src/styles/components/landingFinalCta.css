@@ -1,93 +1,137 @@
 /* ============================================================
-   landing-final-cta — compact closing CTA for landing page.
-   Premium panel inspired by cta10, with dual CTAs and email.
+   landing-final-cta — final conversion panel after FAQ.
    BEM: .landing-final-cta__*
    ============================================================ */
 
 .landing-final-cta {
-  padding-block: clamp(3.5rem, 7vw, 6rem);
+  position: relative;
+  padding-block: clamp(2.35rem, 5vw, 3.5rem);
   background: var(--bg);
+  border-top: 1px solid var(--border);
+  overflow: hidden;
+}
+
+.landing-final-cta::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(
+    ellipse 70% 55% at 70% 40%,
+    color-mix(in srgb, var(--accent) 8%, transparent) 0%,
+    transparent 68%
+  );
+  pointer-events: none;
+  z-index: 0;
+}
+
+.landing-final-cta .container {
+  position: relative;
+  z-index: 1;
 }
 
 .landing-final-cta__panel {
   display: grid;
-  gap: clamp(1rem, 2.5vw, 1.5rem);
-  border: 1px solid var(--border);
-  border-radius: var(--radius-md);
-  background: var(--surface);
-  padding: clamp(1.35rem, 4vw, 2.75rem);
-  text-align: center;
+  gap: clamp(1.35rem, 3vw, 1.85rem);
+  border: 1px solid color-mix(in srgb, var(--accent) 22%, var(--border));
+  border-radius: var(--radius-16);
+  background: linear-gradient(
+    180deg,
+    color-mix(in srgb, var(--surface-2) 55%, var(--bg)) 0%,
+    var(--surface-1) 100%
+  );
+  box-shadow:
+    0 0 0 1px color-mix(in srgb, var(--accent) 6%, transparent),
+    0 18px 40px color-mix(in srgb, var(--bg) 55%, transparent);
+  padding: clamp(1.35rem, 3.5vw, 2.35rem);
+  text-align: start;
 }
 
 .landing-final-cta__content {
   display: grid;
-  gap: 0.75rem;
-  justify-items: center;
+  gap: 0.7rem;
+  justify-items: start;
+  min-width: 0;
+}
+
+.landing-final-cta__eyebrow {
+  margin: 0;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: fit-content;
+  padding: 0.28rem 0.72rem;
+  border: 1px solid color-mix(in srgb, var(--accent) 40%, transparent);
+  border-radius: var(--radius-4);
+  font-size: var(--text-xs);
+  font-weight: 700;
+  line-height: 1;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--accent);
 }
 
 .landing-final-cta__heading {
   margin: 0;
   width: 100%;
-  text-align: center;
-  font-size: clamp(1.85rem, 4.8vw, 3rem);
+  font-family: var(--font-heading);
+  font-size: clamp(1.85rem, 3.6vw, 2.75rem);
+  font-weight: 400;
   line-height: 1.08;
+  letter-spacing: var(--tracking-heading);
+  text-transform: uppercase;
+  color: var(--fg);
   text-wrap: balance;
-}
-
-.landing-final-cta__note {
-  margin: 0 auto;
-  max-width: 42rem;
-  width: 100%;
-  text-align: center;
-  justify-self: center;
-  color: var(--muted);
-  font-size: 0.95rem;
-  line-height: 1.6;
 }
 
 .landing-final-cta__subheadline {
   margin: 0;
-  max-width: 42rem;
+  max-width: 54ch;
   width: 100%;
-  text-align: center;
+  font-size: var(--text-md);
+  line-height: 1.6;
   color: var(--muted);
-  line-height: 1.65;
   text-wrap: pretty;
 }
 
-.landing-final-cta__actions {
-  display: flex;
-  flex-direction: column;
-  gap: var(--space-sm);
-  justify-content: center;
-  align-items: center;
+.landing-final-cta__conversion {
+  display: grid;
+  gap: 0.75rem;
+  justify-items: stretch;
+  align-content: center;
+  min-width: 0;
 }
 
-.landing-final-cta__actions .btn {
+.landing-final-cta__button {
   width: 100%;
-  max-width: 18rem;
+  min-height: 48px;
+  text-align: center;
 }
 
-.landing-final-cta__note a {
-  color: var(--fg);
-  text-decoration: none;
-  font-weight: 600;
+.landing-final-cta__reassurance {
+  margin: 0;
+  max-width: 36ch;
+  font-size: 0.875rem;
+  font-weight: 500;
+  line-height: 1.5;
+  color: color-mix(in srgb, var(--fg) 62%, transparent);
+  text-wrap: pretty;
 }
 
-.landing-final-cta__note a:hover {
-  text-decoration: underline;
-}
-
-@media (min-width: 48rem) {
-  .landing-final-cta__actions {
-    flex-direction: row;
-    flex-wrap: wrap;
+@media (min-width: 56.25rem) {
+  .landing-final-cta__panel {
+    grid-template-columns: minmax(0, 1.4fr) minmax(18rem, 0.8fr);
+    gap: clamp(2rem, 4vw, 3.25rem);
     align-items: center;
-    justify-content: center;
+    padding: clamp(1.75rem, 3vw, 2.65rem) clamp(1.75rem, 3.5vw, 2.85rem);
   }
 
-  .landing-final-cta__actions .btn {
+  .landing-final-cta__conversion {
+    justify-items: start;
+  }
+
+  .landing-final-cta__button {
     width: auto;
-    min-width: 12rem;
+    min-width: 18rem;
+    padding-inline: 1.75rem;
   }
 }
