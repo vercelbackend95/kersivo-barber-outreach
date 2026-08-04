@@ -29,3 +29,6 @@ public/videos/
 .vercel/
 .vercel
 .env*
+
+# local QA / agent scratch
+tmp/
