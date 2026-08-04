@@ -53,8 +53,9 @@ Primary Google Ads conversion = paid £39 SaaS on `/setup/success` (not contact 
    - With analytics: GA4 event `saas_subscription_paid` (`transaction_id`, `value`, `currency`) as soon as GA4 is configured (does not wait for Ads).
    - With advertising measurement **and** `PUBLIC_GOOGLE_ADS_PURCHASE_CONVERSION_LABEL` set: `gtag('event','conversion',{ send_to: 'AW-…/label', … })` when Ads is configured.
 3. If the cookie banner is still open on success, accept preferences **on that page** (Tag Assistant). The success script listens for `kersivo:consent-changed` until `pagehide` — late accept still fires.
-4. Refresh success page does **not** double-fire (per-channel `sessionStorage`: `saas_subscription_paid:ga4:{transactionId}` / `…:ads:…`). Dedup is set only after that channel successfully fires. That client dedup is separate from Ads conversion-action counting.
-5. Legacy setup-fee event `setup_deposit_paid` is **not** the live purchase signal when setup fees are off.
+4. Refresh or a second tab on the same device does **not** double-fire (per-channel keys in `sessionStorage` **and** `localStorage`: `saas_subscription_paid:ga4:{transactionId}` / `…:ads:…`). Dedup is set only after that channel successfully fires. That client dedup is separate from Ads conversion-action counting. A new browser profile / device / cleared storage can still fire again; Ads `transaction_id` helps within the Website Purchase action.
+5. Ads tag wait budget is about **20s** (then Ads is abandoned so GA4 can still complete). Closing the tab before `/setup/success` loads means the Website tag may never fire for that visit — fulfilment still runs via Stripe webhook. Revisit `/setup/success?session_id=…` while the session is paid to recover measurement when possible.
+6. Legacy setup-fee event `setup_deposit_paid` is **not** the live purchase signal when setup fees are off.
 
 ### Analytics-only consent (Ads ops)
 

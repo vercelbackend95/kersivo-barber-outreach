@@ -31,6 +31,15 @@ export type StartSaasPurchaseTrackingHandle = {
   stop: () => void;
 };
 
+/** Default poll interval (ms). */
+export const SAAS_PURCHASE_POLL_MS = 250;
+
+/**
+ * Default Ads wait budget: 80 × 250ms ≈ 20s before abandoning Ads so GA4 can finish alone.
+ * Consent change resets the counter.
+ */
+export const SAAS_PURCHASE_ADS_ABANDON_AFTER_ATTEMPTS = 80;
+
 function consentFromPrefs(): PurchaseTrackingConsent | null {
   const prefs = readConsentPreferences();
   if (!prefs) return null;
@@ -40,32 +49,48 @@ function consentFromPrefs(): PurchaseTrackingConsent | null {
   };
 }
 
-function readAlreadyFired(transactionId: string): { ga4: boolean; ads: boolean } {
+/** True if key is marked in sessionStorage or localStorage (same-device multi-tab). */
+function storageHasFired(key: string): boolean {
   try {
-    const legacy = window.sessionStorage.getItem(saasPurchaseDedupKey(transactionId)) === '1';
-    return {
-      ga4:
-        legacy ||
-        window.sessionStorage.getItem(saasPurchaseDedupKeyGa4(transactionId)) === '1',
-      ads:
-        legacy ||
-        window.sessionStorage.getItem(saasPurchaseDedupKeyAds(transactionId)) === '1',
-    };
+    if (window.sessionStorage.getItem(key) === '1') return true;
   } catch {
-    return { ga4: false, ads: false };
+    /* private mode */
+  }
+  try {
+    if (window.localStorage.getItem(key) === '1') return true;
+  } catch {
+    /* private mode / quota */
+  }
+  return false;
+}
+
+function storageMarkFired(key: string): void {
+  try {
+    window.sessionStorage.setItem(key, '1');
+  } catch {
+    /* fail-soft */
+  }
+  try {
+    window.localStorage.setItem(key, '1');
+  } catch {
+    /* fail-soft */
   }
 }
 
+function readAlreadyFired(transactionId: string): { ga4: boolean; ads: boolean } {
+  const legacy = storageHasFired(saasPurchaseDedupKey(transactionId));
+  return {
+    ga4: legacy || storageHasFired(saasPurchaseDedupKeyGa4(transactionId)),
+    ads: legacy || storageHasFired(saasPurchaseDedupKeyAds(transactionId)),
+  };
+}
+
 function markFired(transactionId: string, channel: 'ga4' | 'ads'): void {
-  try {
-    const key =
-      channel === 'ga4'
-        ? saasPurchaseDedupKeyGa4(transactionId)
-        : saasPurchaseDedupKeyAds(transactionId);
-    window.sessionStorage.setItem(key, '1');
-  } catch {
-    /* private mode / quota — still fail-soft */
-  }
+  const key =
+    channel === 'ga4'
+      ? saasPurchaseDedupKeyGa4(transactionId)
+      : saasPurchaseDedupKeyAds(transactionId);
+  storageMarkFired(key);
 }
 
 /**
@@ -75,8 +100,9 @@ function markFired(transactionId: string, channel: 'ga4' | 'ads'): void {
 export function startSaasPurchaseTracking(
   input: StartSaasPurchaseTrackingInput,
 ): StartSaasPurchaseTrackingHandle {
-  const pollMs = input.pollMs ?? 250;
-  const adsAbandonAfterAttempts = input.adsAbandonAfterAttempts ?? 20;
+  const pollMs = input.pollMs ?? SAAS_PURCHASE_POLL_MS;
+  const adsAbandonAfterAttempts =
+    input.adsAbandonAfterAttempts ?? SAAS_PURCHASE_ADS_ABANDON_AFTER_ATTEMPTS;
   let stopped = false;
   let timer: ReturnType<typeof setInterval> | null = null;
   let adsWaitAttempts = 0;

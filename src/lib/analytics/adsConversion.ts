@@ -208,7 +208,7 @@ export function fireSaasPurchaseTracking(
   };
 }
 
-/** Per-channel sessionStorage keys (refresh-safe dedup). */
+/** Per-channel browser storage keys (sessionStorage + localStorage for same-device multi-tab). */
 export function saasPurchaseDedupKeyGa4(transactionId: string): string {
   return `saas_subscription_paid:ga4:${transactionId}`;
 }
@@ -217,7 +217,7 @@ export function saasPurchaseDedupKeyAds(transactionId: string): string {
   return `saas_subscription_paid:ads:${transactionId}`;
 }
 
-/** @deprecated Prefer per-channel keys; kept for older sessionStorage entries. */
+/** @deprecated Prefer per-channel keys; kept for older storage entries. */
 export function saasPurchaseDedupKey(transactionId: string): string {
   return `saas_subscription_paid:${transactionId}`;
 }
