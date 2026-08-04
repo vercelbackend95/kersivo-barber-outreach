@@ -745,7 +745,7 @@ button.navbar17__mobile-bar-cta {
   .navbar17__mobile-bar-cta {
     display: inline-flex;
     min-height: 44px;
-    font-size: 0.7rem;
+    font-size: 0.75rem;
     padding-inline: 0.65rem;
     flex: 0 1 auto;
   }
@@ -773,21 +773,22 @@ body.navbar17-body-lock {
   }
 
   .navbar17__mobile-controls {
-    gap: 0.28rem;
+    gap: 0.25rem;
   }
 
   .navbar17__mobile-bar-cta {
-    padding-inline: 0.55rem;
-    font-size: 0.65rem;
+    padding-inline: 0.5rem;
+    font-size: 0.75rem;
     letter-spacing: 0.01em;
   }
 
   .navbar17__brand-img {
-    max-width: min(9.5rem, 36vw);
+    max-width: min(8.75rem, 33vw);
   }
 
   .navbar17__toggle {
-    width: 2.5rem;
+    width: 2.75rem;
+    height: 2.75rem;
     flex-shrink: 0;
   }
 }
