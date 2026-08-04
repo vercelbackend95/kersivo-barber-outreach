@@ -46,22 +46,25 @@ Use a fresh Incognito window on https://kersivo.co.uk/ (or local preview).
 
 Primary Google Ads conversion = paid £39 SaaS on `/setup/success` (not contact forms).
 
+**Google Ads Website conversion (canonical):** Category Purchase; Action optimisation **Primary**; **Count = Every**; value = different values for each conversion (tag sends verified monthly amount + **GBP**); tag includes `transaction_id` (Stripe id) so repeats are not recounted **within this action**. Exactly **one** Primary Purchase — the Website/`send_to` tag.
+
 1. Consent: **Reject optional** → no `saas_subscription_paid` and no Ads `conversion`.
 2. Consent: **Analytics** and/or **Advertising measurement** → after verified subscription success, wait until tags are configured (`__kersivoGa4Configured` / `__kersivoAdsConfigured` as needed), then **progressive** per channel:
    - With analytics: GA4 event `saas_subscription_paid` (`transaction_id`, `value`, `currency`) as soon as GA4 is configured (does not wait for Ads).
    - With advertising measurement **and** `PUBLIC_GOOGLE_ADS_PURCHASE_CONVERSION_LABEL` set: `gtag('event','conversion',{ send_to: 'AW-…/label', … })` when Ads is configured.
 3. If the cookie banner is still open on success, accept preferences **on that page** (Tag Assistant). The success script listens for `kersivo:consent-changed` until `pagehide` — late accept still fires.
-4. Refresh success page does **not** double-fire (per-channel `sessionStorage`: `saas_subscription_paid:ga4:{transactionId}` / `…:ads:…`). Dedup is set only after that channel successfully fires.
+4. Refresh success page does **not** double-fire (per-channel `sessionStorage`: `saas_subscription_paid:ga4:{transactionId}` / `…:ads:…`). Dedup is set only after that channel successfully fires. That client dedup is separate from Ads conversion-action counting.
 5. Legacy setup-fee event `setup_deposit_paid` is **not** the live purchase signal when setup fees are off.
 
-### Analytics-only consent (required Ads ops)
+### Analytics-only consent (Ads ops)
 
 Many visitors enable **Analytics** but not **Advertising measurement**. In that case the site fires GA4
-`saas_subscription_paid` only (no Ads `send_to`), so those purchases are invisible to Ads.
+`saas_subscription_paid` only (no Ads `send_to`), so those purchases are invisible to the Website tag path.
 
-Do **not** close that gap by importing the GA4 key event as a second primary Purchase action. Google Ads does not
-dedupe across separate conversion actions, so a tag conversion plus a GA4 import counts one £39 subscription twice and
-inflates ROAS. Keep exactly one primary Purchase action (the tag one) and leave any GA4-sourced action **secondary**.
+A GA4 import into Ads is **optional**. Do **not** close the analytics-only gap by importing the GA4 key event as a second **Primary** Purchase action. Google Ads does not
+dedupe across separate conversion actions, so a tag conversion plus a GA4 import both marked Primary counts one £39 subscription twice and
+inflates ROAS. Keep exactly one Primary Purchase action (the Website tag) and leave any GA4-sourced action **Secondary / observe only**.
+`transaction_id` helps within a single conversion action; it is **not** a guarantee of cross-action deduplication.
 Consent Mode modelling already recovers part of the unmeasured traffic.
 
 ### Env required for Ads `send_to`

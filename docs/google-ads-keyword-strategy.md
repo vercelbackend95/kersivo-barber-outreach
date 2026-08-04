@@ -4,7 +4,7 @@ High-intent **B2B** Search only: UK barbershop **owners** looking for booking **
 
 Buyer fit = KERSIVO hero: *Barbershop Booking System Built On Your Own Domain* + 0% commission.
 
-**Do not turn on spend** until [F01 purchase measurement](../README.md#pre-ads-purchase-conversion-checklist-f01) is live (Purchase tag + Vercel env + GA4 import).
+**Do not turn on spend** until [F01 purchase measurement](../README.md#pre-ads-purchase-conversion-checklist-f01) is live (Website Purchase tag + Vercel env; GA4 key event; optional Secondary GA4 import only).
 
 ---
 
@@ -51,11 +51,11 @@ Follow README **Pre-Ads purchase conversion checklist (F01)** + [consent-tag-ass
 
 Minimum gate:
 
-1. Ads: website **Purchase** conversion (Primary, Count = One, value from tag).
+1. Ads: one **Website Purchase** conversion — **Primary**, **Count = Every**, value/currency from tag (GBP; dynamic £39). Tag sends `transaction_id` for repeat protection **within that action** (not cross-action dedupe).
 2. Vercel Production: `PUBLIC_GOOGLE_ADS_ID` + `PUBLIC_GOOGLE_ADS_PURCHASE_CONVERSION_LABEL` → **redeploy**.
-3. GA4: `saas_subscription_paid` key event; Ads ↔ GA4 linked.
-4. Ads: **import** GA4 `saas_subscription_paid` as Purchase (covers analytics-only consent).
-5. Forms (contact / demo) = **Secondary** only — never Primary.
+3. GA4: keep `saas_subscription_paid` as a key event; link GA4 ↔ Ads if needed.
+4. Ads: GA4 import of `saas_subscription_paid` is **optional** and must stay **Secondary** if used — never a second Primary Purchase.
+5. Exactly **one** Primary Purchase (the Website tag). Forms (contact / demo) = **Secondary** only — never Primary.
 6. Tag Assistant: one real `/setup/success` hit with consent.
 
 ---

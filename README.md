@@ -69,14 +69,17 @@ Before running Google Ads against the live site, confirm:
 6. With `RESEND_API_KEY` temporarily unset in a production-like deploy, both forms must show an error and must **not** fire lead events.
 
 ### Pre-Ads purchase conversion checklist (F01)
-1. In Google Ads create a **Purchase** website conversion (Primary, Count = One, value from tag) for the `send_to` tag path.
-2. Copy `AW-…` → `PUBLIC_GOOGLE_ADS_ID` and the label → `PUBLIC_GOOGLE_ADS_PURCHASE_CONVERSION_LABEL` on Vercel Production; redeploy.
-3. Mark `saas_subscription_paid` as a **key event** in GA4; link GA4 ↔ Ads.
-4. **Required (covers analytics-only consent):** In Google Ads, **import** the GA4 key event `saas_subscription_paid` as a Purchase conversion. Many UK visitors enable Analytics but not Advertising measurement — without this import those £39 purchases never reach Ads via `send_to`. Use one Primary purchase action (or the same action); both paths send the same `transaction_id` so Google can dedupe.
-5. Soft-launch bidding: **Manual CPC** (or Maximize clicks with cap) — do **not** use Maximize conversions until you have stable purchase volume.
-6. Contact/demo form events stay **Secondary / observe only** in Ads — never Primary (protects a small budget from optimizing for free form fills).
-7. Verify with Tag Assistant + [`docs/consent-tag-assistant-checklist.md`](docs/consent-tag-assistant-checklist.md) (Conversions section).
-8. Keywords / soft-launch Search build: [`docs/google-ads-keyword-strategy.md`](docs/google-ads-keyword-strategy.md) (Tier A only in the wizard; Pause AI campaign; Manual CPC + negatives before spend).
+1. In Google Ads create **one Website** conversion for the £39 SaaS subscription (`send_to` tag path on `/setup/success`).
+2. Category: **Purchase**. Action optimisation: **Primary**. Count: **Every**.
+3. Value: **Use different values for each conversion** (the tag sends the verified monthly value and **GBP**). Include `transaction_id` from the tag (Stripe subscription or session id) so the **same** conversion action does not recount repeats on refresh — this is **not** cross-action deduplication.
+4. Copy `AW-…` → `PUBLIC_GOOGLE_ADS_ID` and the conversion **label** → `PUBLIC_GOOGLE_ADS_PURCHASE_CONVERSION_LABEL` on Vercel Production; redeploy.
+5. Keep `saas_subscription_paid` as a **GA4 key event** for analytics (and optional Ads reporting). Link GA4 ↔ Ads if you use GA4 in Ads.
+6. A GA4 import of `saas_subscription_paid` into Ads is **optional**. If you import it, set it to **Secondary / observe only** — never a second Primary Purchase, and never add it as an extra Primary campaign goal.
+7. Never configure the native Ads Website Purchase and a GA4-imported Purchase as **two Primary** actions. Exactly **one** Primary Purchase (the Website tag).
+8. Soft-launch bidding: **Manual CPC** (or Maximize clicks with cap) — do **not** use Maximize conversions until you have stable purchase volume.
+9. Contact/demo form events stay **Secondary / observe only** in Ads — never Primary (protects a small budget from optimizing for free form fills).
+10. Verify with Tag Assistant + [`docs/consent-tag-assistant-checklist.md`](docs/consent-tag-assistant-checklist.md) (Conversions section).
+11. Keywords / soft-launch Search build: [`docs/google-ads-keyword-strategy.md`](docs/google-ads-keyword-strategy.md) (Tier A only in the wizard; Pause AI campaign; Manual CPC + negatives before spend).
 
 6. Run app:
    ```bash
