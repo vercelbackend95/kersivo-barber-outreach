@@ -12,6 +12,7 @@ vi.mock('@/lib/rate-limit/enforceIpRateLimit', () => ({
   enforceIpRateLimit: (...args: unknown[]) => enforceIpRateLimit(...args),
 }));
 
+import { EmailDeliveryError } from '../../lib/email/sender';
 import { POST } from './contact';
 
 function makeRequest(body: unknown) {
@@ -29,7 +30,7 @@ const validBody = {
   name: 'Alex',
   email: 'alex@example.com',
   message: 'Need a booking system',
-  shopSize: '1-2',
+  shopName: 'Alex Barbers',
   currentStack: 'none',
 };
 
@@ -70,5 +71,61 @@ describe('POST /api/contact', () => {
     expect(res.status).toBe(200);
     expect(data.ok).toBe(true);
     expect(sendContactInquiryEmail).toHaveBeenCalledOnce();
+    expect(sendContactInquiryEmail).toHaveBeenCalledWith({
+      name: 'Alex',
+      email: 'alex@example.com',
+      shopName: 'Alex Barbers',
+      message: 'Need a booking system',
+      intent: undefined,
+      currentStack: 'none',
+    });
+  });
+
+  it('returns 400 when shopName is missing', async () => {
+    const { shopName: _shopName, ...body } = validBody;
+    const res = await POST({ request: makeRequest(body) } as never);
+    const data = await res.json();
+    expect(res.status).toBe(400);
+    expect(data.ok).toBe(false);
+    expect(sendContactInquiryEmail).not.toHaveBeenCalled();
+  });
+
+  it('returns 400 for invalid currentStack', async () => {
+    const res = await POST({
+      request: makeRequest({ ...validBody, currentStack: 'not-a-real-stack' }),
+    } as never);
+    const data = await res.json();
+    expect(res.status).toBe(400);
+    expect(data.ok).toBe(false);
+    expect(sendContactInquiryEmail).not.toHaveBeenCalled();
+  });
+
+  it('rejects legacy shopSize without shopName', async () => {
+    const { shopName: _shopName, ...rest } = validBody;
+    const res = await POST({
+      request: makeRequest({ ...rest, shopSize: '1-2' }),
+    } as never);
+    const data = await res.json();
+    expect(res.status).toBe(400);
+    expect(data.ok).toBe(false);
+    expect(sendContactInquiryEmail).not.toHaveBeenCalled();
+  });
+
+  it('returns 400 for invalid email', async () => {
+    const res = await POST({
+      request: makeRequest({ ...validBody, email: 'not-an-email' }),
+    } as never);
+    const data = await res.json();
+    expect(res.status).toBe(400);
+    expect(data.ok).toBe(false);
+    expect(sendContactInquiryEmail).not.toHaveBeenCalled();
+  });
+
+  it('returns 502 when email delivery fails', async () => {
+    sendContactInquiryEmail.mockRejectedValue(new EmailDeliveryError('boom', null));
+    const res = await POST({ request: makeRequest(validBody) } as never);
+    const data = await res.json();
+    expect(res.status).toBe(502);
+    expect(data.ok).toBe(false);
   });
 });

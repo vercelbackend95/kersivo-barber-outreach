@@ -3,6 +3,7 @@ import '../styles/components/contact16.css';
 
 interface Contact16Props {
   className?: string;
+  eyebrow?: string;
   submitLabel?: string;
   title?: string;
   description?: string;
@@ -11,10 +12,11 @@ interface Contact16Props {
 
 const {
   className = "",
-  submitLabel = "↳ PLAN MY SETUP",
-  title = "PLAN YOUR SETUP — ON US.",
-  description = "Tell us about your shop — size, current booking stack (or none yet), and what you want to fix or build. Whether you are switching from a marketplace profile or launching your first system, we map a setup path that fits your shop.",
-  note = "We reply within 24 hours with a one-page setup plan for your shop — yours to keep, no obligation. Works for switchers and new shops alike.",
+  eyebrow = "CONTACT KERSIVO",
+  submitLabel = "Send my question",
+  title = "Have a question before you subscribe?",
+  description = "Tell us what you use today and what you want to improve. We’ll reply with a clear, practical answer for your barbershop.",
+  note = "We’ll reply by email — no sales call required.",
 } = Astro.props as Contact16Props;
 ---
 
@@ -22,10 +24,10 @@ const {
   <span id="book-demo" aria-hidden="true"></span>
 
   <div class="container">
-    <h2 id="contact16-title" class="contact16__title">{title}</h2>
-
     <div class="contact16__layout">
       <div class="contact16__info">
+        <p class="contact16__eyebrow">{eyebrow}</p>
+        <h2 id="contact16-title" class="contact16__title">{title}</h2>
         <p class="contact16__description">{description}</p>
         <p class="contact16__note">{note}</p>
       </div>
@@ -44,47 +46,69 @@ const {
             />
           </label>
         </div>
+
+        <div class="contact16__field-grid">
+          <label>
+            <span class="contact16__field-label">Your name</span>
+            <input
+              type="text"
+              name="name"
+              required
+              autocomplete="name"
+              maxlength="200"
+              placeholder="Alex Smith"
+            />
+          </label>
+          <label>
+            <span class="contact16__field-label">Email address</span>
+            <input
+              type="email"
+              name="email"
+              required
+              autocomplete="email"
+              maxlength="254"
+              inputmode="email"
+              placeholder="alex@barbershop.co.uk"
+            />
+          </label>
+        </div>
+
+        <div class="contact16__field-grid">
+          <label>
+            <span class="contact16__field-label">Barbershop name</span>
+            <input
+              type="text"
+              name="shopName"
+              required
+              autocomplete="organization"
+              maxlength="160"
+              placeholder="Your barbershop name"
+            />
+          </label>
+          <label>
+            <span class="contact16__field-label">Current booking system</span>
+            <select name="currentStack" required>
+              <option value="">Select your current system</option>
+              <option value="booksy">Booksy</option>
+              <option value="fresha">Fresha</option>
+              <option value="nearcut">Nearcut</option>
+              <option value="other-platform">Other booking platform</option>
+              <option value="mixed-manual">Manual bookings / mixed tools</option>
+              <option value="none">No booking system</option>
+            </select>
+          </label>
+        </div>
+
         <label>
-          <span class="sr-only">Name</span>
-          <input type="text" name="name" placeholder="Name*" required />
-        </label>
-        <label>
-          <span class="sr-only">Email</span>
-          <input type="email" name="email" placeholder="Email*" required />
-        </label>
-        <label>
-          <span class="contact16__field-label">Shop size (chairs)</span>
-          <select name="shopSize" required>
-            <option value="">Select shop size*</option>
-            <option value="1-2">1-2 chairs</option>
-            <option value="3-4">3-4 chairs</option>
-            <option value="5-6">5-6 chairs</option>
-            <option value="7-8">7-8 chairs</option>
-            <option value="9+">9+ chairs</option>
-          </select>
-        </label>
-        <label>
-          <span class="contact16__field-label">Current booking stack</span>
-          <select name="currentStack" required>
-            <option value="">Select current stack*</option>
-            <option value="booksy">Booksy</option>
-            <option value="fresha">Fresha</option>
-            <option value="other-app">Other app</option>
-            <option value="mixed-manual">Mixed tools/manual</option>
-            <option value="none">No booking system</option>
-          </select>
-        </label>
-        <label>
-          <span class="contact16__field-label">Tell us about your shop</span>
+          <span class="contact16__field-label">What would you like help with?</span>
           <textarea
             name="message"
-            placeholder="Tell us what your barbershop needs"
-            rows="4"
-
             required
+            rows="5"
+            maxlength="8000"
             data-demo-message
+            placeholder="For example: switching from Booksy, setting up deposits, moving client data or launching a new booking website."
           ></textarea>
-
         </label>
 
         <button type="submit" class="btn btn--ghost contact16__submit" data-contact-submit>
@@ -107,33 +131,52 @@ const {
     form.addEventListener('submit', async (event) => {
       event.preventDefault();
 
-      const fd = new FormData(form);
-      const companyWebsite = String(fd.get('companyWebsite') ?? '').trim();
-      const name = String(fd.get('name') ?? '').trim();
-      const email = String(fd.get('email') ?? '').trim();
-      const message = String(fd.get('message') ?? '').trim();
-      const intent = String(fd.get('intent') ?? '').trim();
-      const shopSize = String(fd.get('shopSize') ?? '').trim();
-      const currentStack = String(fd.get('currentStack') ?? '').trim();
+      if (submitBtn instanceof HTMLButtonElement && submitBtn.disabled) {
+        return;
+      }
 
       statusEl.textContent = '';
       statusEl.className = 'contact16__status contact16__status--idle';
 
-      if (!name || !email || !shopSize || !currentStack || !message) {
-        statusEl.textContent = 'Please fill in name, email, shop details and your message.';
-        statusEl.classList.add('contact16__status--error');
+      if (!form.checkValidity()) {
+        form.reportValidity();
+        statusEl.textContent =
+          'Please complete all required fields and enter a valid email address.';
+        statusEl.className = 'contact16__status contact16__status--error';
         return;
       }
 
+      const fd = new FormData(form);
+      const companyWebsite = String(fd.get('companyWebsite') ?? '').trim();
+      const name = String(fd.get('name') ?? '').trim();
+      const email = String(fd.get('email') ?? '').trim();
+      const shopName = String(fd.get('shopName') ?? '').trim();
+      const currentStack = String(fd.get('currentStack') ?? '').trim();
+      const message = String(fd.get('message') ?? '').trim();
+      const intent = String(fd.get('intent') ?? '').trim();
+
+      const originalLabel =
+        submitBtn instanceof HTMLButtonElement ? submitBtn.textContent : null;
+
       if (submitBtn instanceof HTMLButtonElement) {
         submitBtn.disabled = true;
+        submitBtn.textContent = 'Sending…';
       }
+      form.setAttribute('aria-busy', 'true');
 
       try {
         const response = await fetch('/api/contact', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ name, email, message, intent, shopSize, currentStack, companyWebsite }),
+          body: JSON.stringify({
+            name,
+            email,
+            shopName,
+            currentStack,
+            message,
+            intent,
+            companyWebsite,
+          }),
         });
         const data = (await response.json().catch(() => ({}))) as { ok?: boolean; error?: string };
 
@@ -145,15 +188,20 @@ const {
 
         // Track only after the API confirms real email delivery (not a fake/dev success).
         trackConsentedEvent(FUNNEL_EVENTS.setup_enquiry_submit, undefined, 'analytics');
-        statusEl.textContent = 'Thanks — we’ve received your message and will be in touch shortly.';
+        statusEl.textContent =
+          'Thanks — we’ve received your message. We’ll reply by email shortly.';
         statusEl.className = 'contact16__status contact16__status--success';
         form.reset();
       } catch {
         statusEl.textContent = 'Network error. Check your connection and try again.';
         statusEl.className = 'contact16__status contact16__status--error';
       } finally {
+        form.setAttribute('aria-busy', 'false');
         if (submitBtn instanceof HTMLButtonElement) {
           submitBtn.disabled = false;
+          if (originalLabel != null) {
+            submitBtn.textContent = originalLabel;
+          }
         }
       }
     });

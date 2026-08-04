@@ -577,33 +577,44 @@ export async function sendContactInquiryEmail(input: {
   email: string;
   message: string;
   intent?: string;
-  shopSize: string;
+  shopName: string;
   currentStack: string;
 }) {
   const inbox = getContactInboxEmail();
 
-  const html = `<p><strong>New landing page inquiry</strong></p>
+  const stackLabels: Record<string, string> = {
+    booksy: 'Booksy',
+    fresha: 'Fresha',
+    nearcut: 'Nearcut',
+    'other-platform': 'Other booking platform',
+    'mixed-manual': 'Manual bookings / mixed tools',
+    none: 'No booking system',
+  };
+  const currentStackLabel = stackLabels[input.currentStack] ?? input.currentStack;
+
+  const html = `<p><strong>New landing page enquiry</strong></p>
   <p><strong>Name:</strong> ${escapeHtml(input.name)}</p>
   <p><strong>Email:</strong> ${escapeHtml(input.email)}</p>
-  <p><strong>Shop size:</strong> ${escapeHtml(input.shopSize)}</p>
-  <p><strong>Current stack:</strong> ${escapeHtml(input.currentStack)}</p>
+  <p><strong>Barbershop:</strong> ${escapeHtml(input.shopName)}</p>
+  <p><strong>Current booking system:</strong> ${escapeHtml(currentStackLabel)}</p>
   ${input.intent ? `<p><strong>Intent:</strong> ${escapeHtml(input.intent)}</p>` : ''}
   <p><strong>Message:</strong></p><p>${escapeHtml(input.message).replace(/\n/g, '<br/>')}</p>`;
 
   return sendEmail({
     to: inbox,
-    subject: `Kersivo setup inquiry — ${input.name}`,
+    subject: `New KERSIVO enquiry — ${input.shopName}`,
     html,
+    replyTo: input.email,
     devLogLabel: '[DEV EMAIL] Contact inquiry',
     devPayload: {
       to: inbox,
       name: input.name,
       email: input.email,
-      shopSize: input.shopSize,
+      shopName: input.shopName,
       currentStack: input.currentStack,
       intent: input.intent ?? '',
-      message: input.message
-    }
+      message: input.message,
+    },
   });
 }
 
