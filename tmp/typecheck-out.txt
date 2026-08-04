@@ -1,0 +1,424 @@
+﻿
+> kersivo-barber-outreach@0.0.1 typecheck
+> npm run typecheck:app
+
+
+> kersivo-barber-outreach@0.0.1 typecheck:app
+> astro check --tsconfig tsconfig.app.json --minimumFailingSeverity error
+
+12:04:02 [types] Generated 111ms
+12:04:02 [check] Getting diagnostics for Astro files in C:\dev\kersivo-barber-outreach...
+[96msrc/components/ButtonSpinner.tsx[0m:[93m1[0m:[93m1[0m - [93mwarning[0m[90m ts(6133): [0m'React' is declared but its value is never read.
+
+[7m1[0m import React from 'react';
+[7m [0m [93m~~~~~~~~~~~~~~~~~~~~~~~~~~[0m
+
+[96msrc/components/ConfirmationStatusIcon.tsx[0m:[93m1[0m:[93m1[0m - [93mwarning[0m[90m ts(6133): [0m'React' is declared but its value is never read.
+
+[7m1[0m import React from 'react';
+[7m [0m [93m~~~~~~~~~~~~~~~~~~~~~~~~~~[0m
+
+[96msrc/components/Navbar17ClientScript.astro[0m:[93m1[0m:[93m9[0m - [93mwarning[0m[90m astro(4000): [0mThis script will be treated as if it has the `is:inline` directive because it contains an attribute. Therefore, features that require processing (e.g. using TypeScript or npm packages in the script) are unavailable.
+
+See docs for more details: https://docs.astro.build/en/guides/client-side-scripts/#script-processing.
+
+Add the `is:inline` directive explicitly to silence this hint.
+
+[7m1[0m <script type="module">
+[7m [0m [93m        ~~~~[0m
+
+[96msrc/components/process2.tsx[0m:[93m4[0m:[93m8[0m - [93mwarning[0m[90m ts(6133): [0m'React' is declared but its value is never read.
+
+[7m4[0m import React, { useEffect, useRef, useState } from "react";
+[7m [0m [93m       ~~~~~[0m
+
+[96msrc/components/admin/AdminBarberRosterSearch.tsx[0m:[93m1[0m:[93m8[0m - [93mwarning[0m[90m ts(6133): [0m'React' is declared but its value is never read.
+
+[7m1[0m import React, { type RefObject } from 'react';
+[7m [0m [93m       ~~~~~[0m
+
+[96msrc/components/admin/AdminDesktopDashHeroSlot.tsx[0m:[93m1[0m:[93m8[0m - [93mwarning[0m[90m ts(6133): [0m'React' is declared but its value is never read.
+
+[7m1[0m import React, { useCallback, useEffect, useRef } from 'react';
+[7m [0m [93m       ~~~~~[0m
+
+[96msrc/components/admin/AdminGlobalMobileNextStripHost.tsx[0m:[93m1[0m:[93m8[0m - [93mwarning[0m[90m ts(6133): [0m'React' is declared but its value is never read.
+
+[7m1[0m import React, { useEffect, useMemo, useState } from 'react';
+[7m [0m [93m       ~~~~~[0m
+
+[96msrc/components/admin/AdminMobileNextAppointmentsLive.tsx[0m:[93m16[0m:[93m17[0m - [93mwarning[0m[90m ts(6385): [0m'MutableRefObject' is deprecated.
+
+[7m16[0m     (r as React.MutableRefObject<T | null>).current = value;
+[7m  [0m [93m                ~~~~~~~~~~~~~~~~[0m
+
+[96msrc/components/admin/AdminMobileNextAppointmentsStrip.loading.test.tsx[0m:[93m4[0m:[93m1[0m - [93mwarning[0m[90m ts(6133): [0m'React' is declared but its value is never read.
+
+[7m4[0m import React from 'react';
+[7m [0m [93m~~~~~~~~~~~~~~~~~~~~~~~~~~[0m
+
+[96msrc/components/admin/AdminMobileNextAppointmentsStrip.tsx[0m:[93m1[0m:[93m8[0m - [93mwarning[0m[90m ts(6133): [0m'React' is declared but its value is never read.
+
+[7m1[0m import React, { useId, useLayoutEffect, useMemo, useRef, useState } from 'react';
+[7m [0m [93m       ~~~~~[0m
+
+[96msrc/components/admin/AdminNextAppointmentsStripLive.tsx[0m:[93m1[0m:[93m8[0m - [93mwarning[0m[90m ts(6133): [0m'React' is declared but its value is never read.
+
+[7m1[0m import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+[7m [0m [93m       ~~~~~[0m
+
+[96msrc/components/admin/AdminOnOffPill.tsx[0m:[93m1[0m:[93m1[0m - [93mwarning[0m[90m ts(6133): [0m'React' is declared but its value is never read.
+
+[7m1[0m import React from 'react';
+[7m [0m [93m~~~~~~~~~~~~~~~~~~~~~~~~~~[0m
+
+[96msrc/components/admin/AdminPremiumSearchBar.tsx[0m:[93m1[0m:[93m8[0m - [93mwarning[0m[90m ts(6133): [0m'React' is declared but its value is never read.
+
+[7m1[0m import React, { type InputHTMLAttributes, type KeyboardEvent, type ReactNode, type RefObject } from 'react';
+[7m [0m [93m       ~~~~~[0m
+
+[96msrc/components/admin/AdminSegmentedRangeControl.tsx[0m:[93m1[0m:[93m8[0m - [93mwarning[0m[90m ts(6133): [0m'React' is declared but its value is never read.
+
+[7m1[0m import React, { useMemo } from 'react';
+[7m [0m [93m       ~~~~~[0m
+
+[96msrc/components/admin/AdminSidebarLaunchCta.tsx[0m:[93m1[0m:[93m8[0m - [93mwarning[0m[90m ts(6133): [0m'React' is declared but its value is never read.
+
+[7m1[0m import React, { useEffect, useMemo, useState } from 'react';
+[7m [0m [93m       ~~~~~[0m
+
+[96msrc/components/admin/AdminSidebarProfile.tsx[0m:[93m1[0m:[93m8[0m - [93mwarning[0m[90m ts(6133): [0m'React' is declared but its value is never read.
+
+[7m1[0m import React, { useEffect, useRef, useState } from 'react';
+[7m [0m [93m       ~~~~~[0m
+
+[96msrc/components/admin/AdminTodayBookingsLiveProvider.loading.test.tsx[0m:[93m4[0m:[93m1[0m - [93mwarning[0m[90m ts(6133): [0m'React' is declared but its value is never read.
+
+[7m4[0m import React from 'react';
+[7m [0m [93m~~~~~~~~~~~~~~~~~~~~~~~~~~[0m
+
+[96msrc/components/admin/AiAssistantPanel.tsx[0m:[93m224[0m:[93m38[0m - [93mwarning[0m[90m ts(6385): [0m'FormEvent' is deprecated.
+
+[7m224[0m   const handleSubmit = (event: React.FormEvent) => {
+[7m   [0m [93m                                     ~~~~~~~~~[0m
+
+[96msrc/components/admin/BarberChip.tsx[0m:[93m1[0m:[93m8[0m - [93mwarning[0m[90m ts(6133): [0m'React' is declared but its value is never read.
+
+[7m1[0m import React, { useEffect, useMemo, useState } from 'react';
+[7m [0m [93m       ~~~~~[0m
+
+[96msrc/components/admin/BarberProfile.tsx[0m:[93m89[0m:[93m3[0m - [93mwarning[0m[90m ts(6133): [0m'isActive' is declared but its value is never read.
+
+[7m89[0m   isActive,
+[7m  [0m [93m  ~~~~~~~~[0m
+
+[96msrc/components/admin/BarbersOverview.tsx[0m:[93m221[0m:[93m59[0m - [93mwarning[0m[90m ts(6385): [0m'platform' is deprecated.
+
+[7m221[0m     const isApple = /Mac|iPhone|iPad|iPod/.test(navigator.platform) || navigator.userAgent.includes('Mac');
+[7m   [0m [93m                                                          ~~~~~~~~[0m
+
+[96msrc/components/admin/BarbershopSettingsPanel.tsx[0m:[93m1[0m:[93m8[0m - [93mwarning[0m[90m ts(6133): [0m'React' is declared but its value is never read.
+
+[7m1[0m import React, { useCallback, useEffect, useMemo, useState } from 'react';
+[7m [0m [93m       ~~~~~[0m
+
+[96msrc/components/admin/BookingsAdminPanel.tsx[0m:[93m1871[0m:[93m45[0m - [93mwarning[0m[90m ts(6385): [0m'FormEvent' is deprecated.
+
+[7m1871[0m   async function submitHoliday(event: React.FormEvent) {
+[7m    [0m [93m                                            ~~~~~~~~~[0m
+[96msrc/components/admin/BookingsAdminPanel.tsx[0m:[93m1866[0m:[93m18[0m - [93mwarning[0m[90m ts(6133): [0m'handleQuickLunch' is declared but its value is never read.
+
+[7m1866[0m   async function handleQuickLunch() {
+[7m    [0m [93m                 ~~~~~~~~~~~~~~~~[0m
+[96msrc/components/admin/BookingsAdminPanel.tsx[0m:[93m1860[0m:[93m18[0m - [93mwarning[0m[90m ts(6133): [0m'handleQuickBlock30' is declared but its value is never read.
+
+[7m1860[0m   async function handleQuickBlock30() {
+[7m    [0m [93m                 ~~~~~~~~~~~~~~~~~~[0m
+[96msrc/components/admin/BookingsAdminPanel.tsx[0m:[93m1481[0m:[93m9[0m - [93mwarning[0m[90m ts(6133): [0m'isTimelineView' is declared but its value is never read.
+
+[7m1481[0m   const isTimelineView = mode === 'dashboard' && activeView === 'timeline';
+[7m    [0m [93m        ~~~~~~~~~~~~~~[0m
+[96msrc/components/admin/BookingsAdminPanel.tsx[0m:[93m1095[0m:[93m32[0m - [93mwarning[0m[90m ts(6385): [0m'platform' is deprecated.
+
+[7m1095[0m     const platform = navigator.platform ?? '';
+[7m    [0m [93m                               ~~~~~~~~[0m
+[96msrc/components/admin/BookingsAdminPanel.tsx[0m:[93m642[0m:[93m3[0m - [93mwarning[0m[90m ts(6133): [0m'onBackToDashboard' is declared but its value is never read.
+
+[7m642[0m   onBackToDashboard,
+[7m   [0m [93m  ~~~~~~~~~~~~~~~~~[0m
+[96msrc/components/admin/BookingsAdminPanel.tsx[0m:[93m612[0m:[93m7[0m - [93mwarning[0m[90m ts(6133): [0m'BOOKINGS_HEADER_KICKER' is declared but its value is never read.
+
+[7m612[0m const BOOKINGS_HEADER_KICKER: Record<BookingsAdminMode, string> = {
+[7m   [0m [93m      ~~~~~~~~~~~~~~~~~~~~~~[0m
+[96msrc/components/admin/BookingsAdminPanel.tsx[0m:[93m253[0m:[93m10[0m - [93mwarning[0m[90m ts(6133): [0m'formatRelativeTime' is declared but its value is never read.
+
+[7m253[0m function formatRelativeTime(startAt: string, endAt: string) {
+[7m   [0m [93m         ~~~~~~~~~~~~~~~~~~[0m
+[96msrc/components/admin/BookingsAdminPanel.tsx[0m:[93m34[0m:[93m1[0m - [93mwarning[0m[90m ts(6133): [0m'EmptyState' is declared but its value is never read.
+
+[7m34[0m import EmptyState from '../EmptyState';
+[7m  [0m [93m~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~[0m
+
+[96msrc/components/admin/BookingsReportsAnalyticsStudio.tsx[0m:[93m1[0m:[93m8[0m - [93mwarning[0m[90m ts(6133): [0m'React' is declared but its value is never read.
+
+[7m1[0m import React, { forwardRef, useCallback, useEffect, useMemo, useState } from 'react';
+[7m [0m [93m       ~~~~~[0m
+
+[96msrc/components/admin/BookingsReportsSection.tsx[0m:[93m1[0m:[93m8[0m - [93mwarning[0m[90m ts(6133): [0m'React' is declared but its value is never read.
+
+[7m1[0m import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+[7m [0m [93m       ~~~~~[0m
+
+[96msrc/components/admin/ClientsAdminPanel.tsx[0m:[93m1[0m:[93m8[0m - [93mwarning[0m[90m ts(6133): [0m'React' is declared but its value is never read.
+
+[7m1[0m import React, { useCallback, useEffect, useRef, useState } from 'react';
+[7m [0m [93m       ~~~~~[0m
+
+[96msrc/components/admin/DemoActionLock.tsx[0m:[93m1[0m:[93m8[0m - [93mwarning[0m[90m ts(6133): [0m'React' is declared but its value is never read.
+
+[7m1[0m import React, { useEffect, useState } from 'react';
+[7m [0m [93m       ~~~~~[0m
+
+[96msrc/components/admin/HistoryBookingStatusSheet.tsx[0m:[93m131[0m:[93m42[0m - [93mwarning[0m[90m ts(6385): [0m'FormEvent' is deprecated.
+
+[7m131[0m   const saveStatus = async (event: React.FormEvent) => {
+[7m   [0m [93m                                         ~~~~~~~~~[0m
+
+[96msrc/components/admin/HistoryDateRangePicker.tsx[0m:[93m1[0m:[93m8[0m - [93mwarning[0m[90m ts(6133): [0m'React' is declared but its value is never read.
+
+[7m1[0m import React, { useCallback, useEffect, useRef, useState } from 'react';
+[7m [0m [93m       ~~~~~[0m
+
+[96msrc/components/admin/PrivateDemoAuthPanel.tsx[0m:[93m118[0m:[93m55[0m - [93mwarning[0m[90m ts(6385): [0m'FormEvent' is deprecated.
+
+[7m118[0m   const handleCredentialsSubmit = async (event: React.FormEvent) => {
+[7m   [0m [93m                                                      ~~~~~~~~~[0m
+[96msrc/components/admin/PrivateDemoAuthPanel.tsx[0m:[93m108[0m:[93m45[0m - [93mwarning[0m[90m ts(6385): [0m'FormEvent' is deprecated.
+
+[7m108[0m   const handleEmailContinue = (event: React.FormEvent) => {
+[7m   [0m [93m                                            ~~~~~~~~~[0m
+
+[96msrc/components/admin/ReportsRangeToolbar.tsx[0m:[93m1[0m:[93m1[0m - [93mwarning[0m[90m ts(6133): [0m'React' is declared but its value is never read.
+
+[7m1[0m import React from 'react';
+[7m [0m [93m~~~~~~~~~~~~~~~~~~~~~~~~~~[0m
+
+[96msrc/components/admin/ServicesAdminPanel.tsx[0m:[93m8[0m:[93m53[0m - [93mwarning[0m[90m ts(6133): [0m'X' is declared but its value is never read.
+
+[7m8[0m import { ChevronDown, Plus, Scissors, Search, Star, X } from '../lucide-react';
+[7m [0m [93m                                                    ~[0m
+[96msrc/components/admin/ServicesAdminPanel.tsx[0m:[93m1[0m:[93m8[0m - [93mwarning[0m[90m ts(6133): [0m'React' is declared but its value is never read.
+
+[7m1[0m import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+[7m [0m [93m       ~~~~~[0m
+
+[96msrc/components/admin/ShopAdminPanel.tsx[0m:[93m740[0m:[93m11[0m - [93mwarning[0m[90m ts(6133): [0m'activeSectionLabel' is declared but its value is never read.
+
+[7m740[0m     const activeSectionLabel = useMemo(() => {
+[7m   [0m [93m          ~~~~~~~~~~~~~~~~~~[0m
+[96msrc/components/admin/ShopAdminPanel.tsx[0m:[93m245[0m:[93m10[0m - [93mwarning[0m[90m ts(6133): [0m'getCurrentYmdInLondon' is declared but its value is never read.
+
+[7m245[0m function getCurrentYmdInLondon(): string {
+[7m   [0m [93m         ~~~~~~~~~~~~~~~~~~~~~[0m
+
+[96msrc/components/admin/StatusBadge.tsx[0m:[93m1[0m:[93m1[0m - [93mwarning[0m[90m ts(6133): [0m'React' is declared but its value is never read.
+
+[7m1[0m import React from 'react';
+[7m [0m [93m~~~~~~~~~~~~~~~~~~~~~~~~~~[0m
+
+[96msrc/components/admin/TeamDashboardAccountSheet.tsx[0m:[93m1[0m:[93m8[0m - [93mwarning[0m[90m ts(6133): [0m'React' is declared but its value is never read.
+
+[7m1[0m import React, { useState } from 'react';
+[7m [0m [93m       ~~~~~[0m
+
+[96msrc/components/admin/TeamDeleteBarberSheet.tsx[0m:[93m1[0m:[93m1[0m - [93mwarning[0m[90m ts(6133): [0m'React' is declared but its value is never read.
+
+[7m1[0m import React from 'react';
+[7m [0m [93m~~~~~~~~~~~~~~~~~~~~~~~~~~[0m
+
+[96msrc/components/admin/TeamInviteWizard.tsx[0m:[93m431[0m:[93m38[0m - [93mwarning[0m[90m ts(6385): [0m'FormEvent' is deprecated.
+
+[7m431[0m   function handleSubmit(event: React.FormEvent) {
+[7m   [0m [93m                                     ~~~~~~~~~[0m
+
+[96msrc/components/admin/TodayTimeline.tsx[0m:[93m545[0m:[93m9[0m - [93mwarning[0m[90m ts(6133): [0m'handleQuickActionClick' is declared but its value is never read.
+
+[7m545[0m   const handleQuickActionClick = useCallback((e: React.MouseEvent) => {
+[7m   [0m [93m        ~~~~~~~~~~~~~~~~~~~~~~[0m
+
+[96msrc/components/admin/adminAuth.ts[0m:[93m30[0m:[93m54[0m - [93mwarning[0m[90m ts(6133): [0m'init' is declared but its value is never read.
+
+[7m30[0m function resolveRequestUrl(input: RequestInfo | URL, init?: RequestInit): URL | null {
+[7m  [0m [93m                                                     ~~~~[0m
+
+[96msrc/components/admin/barber-wizard/BarberWizard.tsx[0m:[93m387[0m:[93m38[0m - [93mwarning[0m[90m ts(6385): [0m'FormEvent' is deprecated.
+
+[7m387[0m   function handleSubmit(event: React.FormEvent<HTMLFormElement>) {
+[7m   [0m [93m                                     ~~~~~~~~~[0m
+
+[96msrc/components/admin/onboarding/OnboardingWizard.tsx[0m:[93m116[0m:[93m20[0m - [93mwarning[0m[90m ts(6133): [0m'setFinished' is declared but its value is never read.
+
+[7m116[0m   const [finished, setFinished] = useState(false);
+[7m   [0m [93m                   ~~~~~~~~~~~[0m
+[96msrc/components/admin/onboarding/OnboardingWizard.tsx[0m:[93m1[0m:[93m8[0m - [93mwarning[0m[90m ts(6133): [0m'React' is declared but its value is never read.
+
+[7m1[0m import React, { useCallback, useEffect, useMemo, useState } from 'react';
+[7m [0m [93m       ~~~~~[0m
+
+[96msrc/components/admin/product-wizard/ProductWizard.tsx[0m:[93m175[0m:[93m38[0m - [93mwarning[0m[90m ts(6385): [0m'FormEvent' is deprecated.
+
+[7m175[0m   function handleSubmit(event: React.FormEvent<HTMLFormElement>) {
+[7m   [0m [93m                                     ~~~~~~~~~[0m
+
+[96msrc/components/admin/retail-onboarding/RetailOnboardingWelcome.tsx[0m:[93m1[0m:[93m1[0m - [93mwarning[0m[90m ts(6133): [0m'React' is declared but its value is never read.
+
+[7m1[0m import React from 'react';
+[7m [0m [93m~~~~~~~~~~~~~~~~~~~~~~~~~~[0m
+
+[96msrc/components/admin/retail-onboarding/RetailOnboardingWizard.tsx[0m:[93m1[0m:[93m8[0m - [93mwarning[0m[90m ts(6133): [0m'React' is declared but its value is never read.
+
+[7m1[0m import React, { useEffect, useMemo, useState } from 'react';
+[7m [0m [93m       ~~~~~[0m
+
+[96msrc/components/admin/service-wizard/ServiceWizard.tsx[0m:[93m280[0m:[93m38[0m - [93mwarning[0m[90m ts(6385): [0m'FormEvent' is deprecated.
+
+[7m280[0m   function handleSubmit(event: React.FormEvent<HTMLFormElement>) {
+[7m   [0m [93m                                     ~~~~~~~~~[0m
+
+[96msrc/components/booking/BookingConfirmationPanel.test.tsx[0m:[93m4[0m:[93m1[0m - [93mwarning[0m[90m ts(6133): [0m'React' is declared but its value is never read.
+
+[7m4[0m import React from 'react';
+[7m [0m [93m~~~~~~~~~~~~~~~~~~~~~~~~~~[0m
+
+[96msrc/components/booking/BookingConfirmationPanel.tsx[0m:[93m1[0m:[93m8[0m - [93mwarning[0m[90m ts(6133): [0m'React' is declared but its value is never read.
+
+[7m1[0m import React, { forwardRef } from 'react';
+[7m [0m [93m       ~~~~~[0m
+
+[96msrc/components/booking/BookingFlow.publicDemo.test.tsx[0m:[93m4[0m:[93m1[0m - [93mwarning[0m[90m ts(6133): [0m'React' is declared but its value is never read.
+
+[7m4[0m import React from 'react';
+[7m [0m [93m~~~~~~~~~~~~~~~~~~~~~~~~~~[0m
+
+[96msrc/components/booking/BookingFlow.publicShopId.test.tsx[0m:[93m4[0m:[93m1[0m - [93mwarning[0m[90m ts(6133): [0m'React' is declared but its value is never read.
+
+[7m4[0m import React from 'react';
+[7m [0m [93m~~~~~~~~~~~~~~~~~~~~~~~~~~[0m
+
+[96msrc/components/booking/BookingFlow.tsx[0m:[93m1[0m:[93m8[0m - [93mwarning[0m[90m ts(6133): [0m'React' is declared but its value is never read.
+
+[7m1[0m import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+[7m [0m [93m       ~~~~~[0m
+
+[96msrc/components/booking/BookingReviewPanel.tsx[0m:[93m1[0m:[93m1[0m - [93mwarning[0m[90m ts(6133): [0m'React' is declared but its value is never read.
+
+[7m1[0m import React from 'react';
+[7m [0m [93m~~~~~~~~~~~~~~~~~~~~~~~~~~[0m
+
+[96msrc/components/setup/SetupDepositModal.tsx[0m:[93m122[0m:[93m44[0m - [93mwarning[0m[90m ts(6385): [0m'FormEvent' is deprecated.
+
+[7m122[0m   const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
+[7m   [0m [93m                                           ~~~~~~~~~[0m
+
+[96msrc/components/shop/CartDrawer.publicDemo.test.tsx[0m:[93m4[0m:[93m1[0m - [93mwarning[0m[90m ts(6133): [0m'React' is declared but its value is never read.
+
+[7m4[0m import React from 'react';
+[7m [0m [93m~~~~~~~~~~~~~~~~~~~~~~~~~~[0m
+
+[96msrc/components/shop/NavbarCartButton.astro[0m:[93m43[0m:[93m9[0m - [93mwarning[0m[90m astro(4000): [0mThis script will be treated as if it has the `is:inline` directive because it contains an attribute. Therefore, features that require processing (e.g. using TypeScript or npm packages in the script) are unavailable.
+
+See docs for more details: https://docs.astro.build/en/guides/client-side-scripts/#script-processing.
+
+Add the `is:inline` directive explicitly to silence this hint.
+
+[7m43[0m <script type="module">
+[7m  [0m [93m        ~~~~[0m
+
+[96msrc/layouts/LandingLayout.astro[0m:[93m79[0m:[93m17[0m - [93mwarning[0m[90m astro(4000): [0mThis script will be treated as if it has the `is:inline` directive because it contains an attribute. Therefore, features that require processing (e.g. using TypeScript or npm packages in the script) are unavailable.
+
+See docs for more details: https://docs.astro.build/en/guides/client-side-scripts/#script-processing.
+
+Add the `is:inline` directive explicitly to silence this hint.
+
+[7m79[0m         <script type="application/ld+json" set:html={JSON.stringify(block)} />
+[7m  [0m [93m                ~~~~[0m
+
+[96msrc/layouts/MainLayout.astro[0m:[93m89[0m:[93m17[0m - [93mwarning[0m[90m astro(4000): [0mThis script will be treated as if it has the `is:inline` directive because it contains an attribute. Therefore, features that require processing (e.g. using TypeScript or npm packages in the script) are unavailable.
+
+See docs for more details: https://docs.astro.build/en/guides/client-side-scripts/#script-processing.
+
+Add the `is:inline` directive explicitly to silence this hint.
+
+[7m89[0m         <script type="application/ld+json" set:html={JSON.stringify(block)} />
+[7m  [0m [93m                ~~~~[0m
+
+[96msrc/lib/admin/shopPublicActivity.test.ts[0m:[93m128[0m:[93m18[0m - [93mwarning[0m[90m ts(6387): [0mThe signature '(shopId: string): Promise<boolean>' of 'isShopPublicActivityPaused' is deprecated.
+
+[7m128[0m     expect(await isShopPublicActivityPaused('shop-1')).toBe(true);
+[7m   [0m [93m                 ~~~~~~~~~~~~~~~~~~~~~~~~~~[0m
+[96msrc/lib/admin/shopPublicActivity.test.ts[0m:[93m19[0m:[93m3[0m - [93mwarning[0m[90m ts(6385): [0m'isShopPublicActivityPaused' is deprecated.
+
+[7m19[0m   isShopPublicActivityPaused,
+[7m  [0m [93m  ~~~~~~~~~~~~~~~~~~~~~~~~~~[0m
+
+[96msrc/lib/admin/shopPublicActivity.ts[0m:[93m4[0m:[93m3[0m - [93mwarning[0m[90m ts(6133): [0m'SHOP_PAUSE_REASON_MIN_LENGTH' is declared but its value is never read.
+
+[7m4[0m   SHOP_PAUSE_REASON_MIN_LENGTH,
+[7m [0m [93m  ~~~~~~~~~~~~~~~~~~~~~~~~~~~~[0m
+
+[96msrc/lib/admin/teamCreation.ts[0m:[93m745[0m:[93m60[0m - [93mwarning[0m[90m ts(6385): [0m'InviteConflict' is deprecated.
+
+[7m745[0m export function isInviteConflict(error: unknown): error is InviteConflict {
+[7m   [0m [93m                                                           ~~~~~~~~~~~~~~[0m
+
+[96msrc/lib/admin/demoFixtures/reports.ts[0m:[93m6[0m:[93m1[0m - [93mwarning[0m[90m ts(6133): [0m'addMilliseconds' is declared but its value is never read.
+
+[7m6[0m import { addMilliseconds } from 'date-fns';
+[7m [0m [93m~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~[0m
+
+[96msrc/lib/analytics/saasPurchaseTrackingClient.ts[0m:[93m45[0m:[93m50[0m - [93mwarning[0m[90m ts(6387): [0mThe signature '(transactionId: string): string' of 'saasPurchaseDedupKey' is deprecated.
+
+[7m45[0m     const legacy = window.sessionStorage.getItem(saasPurchaseDedupKey(transactionId)) === '1';
+[7m  [0m [93m                                                 ~~~~~~~~~~~~~~~~~~~~[0m
+[96msrc/lib/analytics/saasPurchaseTrackingClient.ts[0m:[93m8[0m:[93m3[0m - [93mwarning[0m[90m ts(6385): [0m'saasPurchaseDedupKey' is deprecated.
+
+[7m8[0m   saasPurchaseDedupKey,
+[7m [0m [93m  ~~~~~~~~~~~~~~~~~~~~[0m
+
+[96msrc/lib/consent/index.ts[0m:[93m9[0m:[93m3[0m - [93mwarning[0m[90m ts(6133): [0m'hasValidConsentDecision' is declared but its value is never read.
+
+[7m9[0m   hasValidConsentDecision,
+[7m [0m [93m  ~~~~~~~~~~~~~~~~~~~~~~~[0m
+[96msrc/lib/consent/index.ts[0m:[93m6[0m:[93m1[0m - [93mwarning[0m[90m ts(6133): [0m'trackConsentedEvent' is declared but its value is never read.
+
+[7m6[0m import { trackConsentedEvent } from './events';
+[7m [0m [93m~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~[0m
+
+[96msrc/pages/robots.txt.ts[0m:[93m2[0m:[93m1[0m - [93mwarning[0m[90m ts(6192): [0mAll imports in import declaration are unused.
+
+[7m2[0m import { DEMO_ACTION_BLOCKED_MESSAGE, DEMO_ADMIN_MODE_HEADER } from '@/lib/admin/demoConfig';
+[7m [0m [93m~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~[0m
+
+[96msrc/pages/api/contact.test.ts[0m:[93m125[0m:[93m47[0m - [91merror[0m[90m ts(2554): [0mExpected 2-3 arguments, but got 1.
+
+[7m125[0m     sendContactInquiryEmail.mockRejectedValue(new EmailDeliveryError('boom'));
+[7m   [0m [91m                                              ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~[0m
+
+[96msrc/pages/api/bookings/create.test.ts[0m:[93m35[0m:[93m37[0m - [93mwarning[0m[90m ts(6133): [0m'access' is declared but its value is never read.
+
+[7m35[0m function makeContext(body: unknown, access: unknown = null): APIContext {
+[7m  [0m [93m                                    ~~~~~~[0m
+
+[96msrc/pages/shop/[shopId].astro[0m:[93m91[0m:[93m5[0m - [91merror[0m[90m ts(2322): [0mType '{ id: string; name: string; pricePence: number; imageUrl: string | null; category: string; featured: boolean; }[]' is not assignable to type '{ id: string; name: string; imageUrl: string | null; featured: boolean; category: ProductCategory; pricePence: number; }[]'.
+  Type '{ id: string; name: string; pricePence: number; imageUrl: string | null; category: string; featured: boolean; }' is not assignable to type '{ id: string; name: string; imageUrl: string | null; featured: boolean; category: ProductCategory; pricePence: number; }'.
+    Types of property 'category' are incompatible.
+      Type 'string' is not assignable to type 'ProductCategory'.
+
+[7m91[0m     products: [] as Array<{
+[7m  [0m [91m    ~~~~~~~~[0m
+
+Result (671 files): 
+- 2 errors
+- 0 warnings
+- 79 hints
+

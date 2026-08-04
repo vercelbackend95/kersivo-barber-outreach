@@ -54,7 +54,17 @@
 
 .lbrw .admin-sales-chart-canvas {
   overflow: visible;
-  height: clamp(200px, 30vh, 320px);
+  height: clamp(280px, 42vh, 400px);
+  min-height: 280px;
+  cursor: crosshair;
+}
+
+/* Fill the canvas hit-area — height:auto from booking.css shrinks the SVG and skews hover. */
+.lbrw .admin-sales-chart-svg {
+  width: 100%;
+  height: 100%;
+  max-width: none;
+  display: block;
 }
 
 .lbrw .admin-segmented-control {
@@ -68,23 +78,37 @@
 }
 
 .feature261 .lbrw .admin-sales-chart-canvas {
-  height: clamp(200px, 30vh, 320px);
+  height: clamp(280px, 42vh, 400px);
+  min-height: 280px;
+}
+
+/* Half-column / compact overlay: leave room under the floating headline inset. */
+.feature261 .lbrw .admin-analytics-studio--bookings-reports[data-reports-compact] .admin-sales-chart-canvas {
+  height: clamp(340px, 48vh, 480px);
+  min-height: 340px;
 }
 
 @media (min-width: 480px) and (max-width: 899px) {
   .feature261 .lbrw .admin-sales-chart-canvas {
-    height: clamp(200px, 32vh, 300px);
+    height: clamp(300px, 44vh, 420px);
+    min-height: 300px;
   }
 }
 
 @media (min-width: 900px) {
   .feature261 .lbrw {
-    min-height: clamp(22rem, 38vh, 28rem);
+    min-height: clamp(26rem, 48vh, 34rem);
     align-content: start;
   }
 
   .feature261 .lbrw .admin-sales-chart-canvas {
-    height: clamp(220px, 34vh, 360px);
+    height: clamp(320px, 44vh, 440px);
+    min-height: 320px;
+  }
+
+  .feature261 .lbrw .admin-analytics-studio--bookings-reports[data-reports-compact] .admin-sales-chart-canvas {
+    height: clamp(360px, 50vh, 500px);
+    min-height: 360px;
   }
 }
 
