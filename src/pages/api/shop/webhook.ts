@@ -550,6 +550,18 @@ async function handleSaasSubscriptionCheckout(
   }
 
   if (
+    record.checkoutAttemptId &&
+    checkoutAttemptId &&
+    record.checkoutAttemptId !== checkoutAttemptId
+  ) {
+    console.warn('[webhook] saas_subscription checkoutAttemptId mismatch; keeping existing', {
+      sessionId,
+      existing: record.checkoutAttemptId,
+      metadata: checkoutAttemptId,
+    });
+  }
+
+  if (
     record.status !== 'ACTIVE' ||
     !record.activatedAt ||
     (stripeSubscriptionId && !record.stripeSubscriptionId) ||

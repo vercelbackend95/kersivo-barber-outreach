@@ -33,7 +33,9 @@ function clientIp(request: Request): string | null {
 }
 
 /**
- * Persist Terms acceptance proof. Failures are logged only — Checkout session may already exist.
+ * Persist Terms acceptance proof.
+ * Without `db`, failures are logged only (Checkout session may already exist).
+ * With `db` (e.g. transaction client), failures are rethrown so the caller can roll back.
  */
 export async function recordTermsAcceptance(input: {
   purpose: TermsAcceptancePurpose;
@@ -43,6 +45,8 @@ export async function recordTermsAcceptance(input: {
   stripeSessionId?: string | null;
   request: Request;
   meta?: Prisma.InputJsonValue;
+  /** Optional Prisma client / transaction client. Defaults to global prisma. */
+  db?: Prisma.TransactionClient | typeof prisma;
 }): Promise<void> {
   const email = input.email.trim().toLowerCase();
   if (!email) {
@@ -50,8 +54,11 @@ export async function recordTermsAcceptance(input: {
     return;
   }
 
+  const db = input.db ?? prisma;
+  const failClosed = Boolean(input.db);
+
   try {
-    await prisma.legalAcceptance.create({
+    await db.legalAcceptance.create({
       data: {
         purpose: input.purpose,
         termsVersion: CURRENT_TERMS_VERSION,
@@ -71,6 +78,7 @@ export async function recordTermsAcceptance(input: {
       stripeSessionId: input.stripeSessionId,
       error,
     });
+    if (failClosed) throw error;
   }
 }
 

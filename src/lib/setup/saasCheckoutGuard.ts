@@ -1,4 +1,4 @@
-import type { SaasSubscriptionStatus } from '@prisma/client';
+import type { Prisma, SaasSubscriptionStatus } from '@prisma/client';
 import { prisma } from '@/lib/db/client';
 import type { StripeSession } from '@/lib/shop/stripe';
 
@@ -29,8 +29,8 @@ export type ResolveExistingCheckoutOutcome =
 
 const SHOP_CHECKOUT_LOCK_ACTION = 'saas-subscription-checkout';
 /** Allow one Stripe round-trip inside the advisory lock. */
-const SHOP_CHECKOUT_TX_TIMEOUT_MS = 25_000;
-const SHOP_CHECKOUT_TX_MAX_WAIT_MS = 10_000;
+export const SHOP_CHECKOUT_TX_TIMEOUT_MS = 25_000;
+export const SHOP_CHECKOUT_TX_MAX_WAIT_MS = 10_000;
 
 export function isBlockingSaasStatus(
   status: SaasSubscriptionStatus | string | null | undefined,
@@ -122,7 +122,7 @@ export async function resolveExistingCheckoutOutcome(input: {
 
 export async function withSaasShopCheckoutLock<T>(
   shopId: string,
-  fn: () => Promise<T>,
+  fn: (tx: Prisma.TransactionClient) => Promise<T>,
 ): Promise<T> {
   const id = shopId.trim();
   if (!id) throw new Error('shopId is required for SaaS checkout lock');
@@ -131,7 +131,7 @@ export async function withSaasShopCheckoutLock<T>(
   return prisma.$transaction(
     async (tx) => {
       await tx.$executeRaw`SELECT pg_advisory_xact_lock(${lockId})`;
-      return fn();
+      return fn(tx);
     },
     {
       maxWait: SHOP_CHECKOUT_TX_MAX_WAIT_MS,

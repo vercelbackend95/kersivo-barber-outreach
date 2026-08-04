@@ -1,4 +1,14 @@
-import { describe, expect, it, vi } from 'vitest';
+import { beforeEach, describe, expect, it, vi } from 'vitest';
+
+const executeRaw = vi.fn(async () => undefined);
+const transaction = vi.fn();
+
+vi.mock('@/lib/db/client', () => ({
+  prisma: {
+    $transaction: (...args: unknown[]) => transaction(...args),
+  },
+}));
+
 import {
   classifyStripeCheckoutSession,
   isBlockingSaasStatus,
@@ -8,6 +18,9 @@ import {
   saasCheckoutIdempotencyKey,
   saasCheckoutSuccess,
   saasShopCheckoutAdvisoryLockKey,
+  SHOP_CHECKOUT_TX_MAX_WAIT_MS,
+  SHOP_CHECKOUT_TX_TIMEOUT_MS,
+  withSaasShopCheckoutLock,
 } from './saasCheckoutGuard';
 
 describe('parseCheckoutAttemptId', () => {
@@ -58,7 +71,13 @@ describe('resolveExistingCheckoutOutcome', () => {
   it('returns open with url', async () => {
     const outcome = await resolveExistingCheckoutOutcome({
       sessionId: 'cs_1',
-      retrieve: async () => ({ id: 'cs_1', status: 'open', url: 'https://checkout.test/cs_1', amount_total: 3900, currency: 'gbp' }),
+      retrieve: async () => ({
+        id: 'cs_1',
+        status: 'open',
+        url: 'https://checkout.test/cs_1',
+        amount_total: 3900,
+        currency: 'gbp',
+      }),
     });
     expect(outcome).toEqual({ kind: 'open', url: 'https://checkout.test/cs_1', sessionId: 'cs_1' });
   });
@@ -66,7 +85,13 @@ describe('resolveExistingCheckoutOutcome', () => {
   it('returns complete success url', async () => {
     const outcome = await resolveExistingCheckoutOutcome({
       sessionId: 'cs_2',
-      retrieve: async () => ({ id: 'cs_2', status: 'complete', payment_status: 'paid', amount_total: 3900, currency: 'gbp' }),
+      retrieve: async () => ({
+        id: 'cs_2',
+        status: 'complete',
+        payment_status: 'paid',
+        amount_total: 3900,
+        currency: 'gbp',
+      }),
     });
     expect(outcome).toEqual({
       kind: 'complete',
@@ -120,5 +145,53 @@ describe('isPrismaUniqueConflict', () => {
   it('detects P2002', () => {
     expect(isPrismaUniqueConflict({ code: 'P2002' })).toBe(true);
     expect(isPrismaUniqueConflict(new Error('nope'))).toBe(false);
+  });
+});
+
+describe('withSaasShopCheckoutLock', () => {
+  beforeEach(() => {
+    executeRaw.mockReset();
+    executeRaw.mockResolvedValue(undefined);
+    transaction.mockReset();
+    transaction.mockImplementation(async (fn: (tx: unknown) => Promise<unknown>, _opts?: unknown) => {
+      const tx = { $executeRaw: executeRaw };
+      return fn(tx);
+    });
+  });
+
+  it('acquires advisory lock on tx before invoking callback with the same tx', async () => {
+    const order: string[] = [];
+    executeRaw.mockImplementation(async () => {
+      order.push('lock');
+    });
+
+    const result = await withSaasShopCheckoutLock('shop-1', async (tx) => {
+      order.push('callback');
+      expect(tx.$executeRaw).toBe(executeRaw);
+      return 'ok';
+    });
+
+    expect(result).toBe('ok');
+    expect(order).toEqual(['lock', 'callback']);
+    expect(transaction).toHaveBeenCalledOnce();
+    expect(transaction.mock.calls[0][1]).toEqual({
+      maxWait: SHOP_CHECKOUT_TX_MAX_WAIT_MS,
+      timeout: SHOP_CHECKOUT_TX_TIMEOUT_MS,
+    });
+  });
+
+  it('propagates callback errors', async () => {
+    await expect(
+      withSaasShopCheckoutLock('shop-1', async () => {
+        throw new Error('boom');
+      }),
+    ).rejects.toThrow('boom');
+  });
+
+  it('rejects empty shopId', async () => {
+    await expect(withSaasShopCheckoutLock('  ', async () => null)).rejects.toThrow(
+      'shopId is required',
+    );
+    expect(transaction).not.toHaveBeenCalled();
   });
 });

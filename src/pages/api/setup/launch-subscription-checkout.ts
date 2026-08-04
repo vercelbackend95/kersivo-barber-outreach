@@ -177,8 +177,8 @@ export const POST: APIRoute = async (context) => {
     const baseUrl = getPublicSiteUrl();
     const attribution = pickAttribution(body.attribution);
 
-    return await withSaasShopCheckoutLock(access.shopId, async () => {
-      const openSub = await prisma.saasSubscription.findFirst({
+    return await withSaasShopCheckoutLock(access.shopId, async (tx) => {
+      const openSub = await tx.saasSubscription.findFirst({
         where: {
           shopId: access.shopId,
           status: { in: [...BLOCKING_SAAS_STATUSES, 'PENDING'] },
@@ -216,13 +216,22 @@ export const POST: APIRoute = async (context) => {
           return responseForExistingOutcome(outcome);
         }
 
-        // Expired PENDING: remove unpaid row only.
-        await prisma.saasSubscription.delete({ where: { id: openSub.id } }).catch((error) => {
+        // Expired PENDING: remove unpaid row only — fail closed on delete errors.
+        try {
+          await tx.saasSubscription.delete({ where: { id: openSub.id } });
+        } catch (error) {
           console.error('Failed to delete expired PENDING SaaS subscription', {
             id: openSub.id,
             error,
           });
-        });
+          return jsonResponse(
+            {
+              error: 'Unable to release the expired checkout. Please try again shortly.',
+              code: 'CHECKOUT_RELEASE_FAILED',
+            },
+            503,
+          );
+        }
 
         if (
           openSub.checkoutAttemptId &&
@@ -241,7 +250,7 @@ export const POST: APIRoute = async (context) => {
       }
 
       // Same attempt may already exist (e.g. guest→auth race or prior partial write).
-      const byAttempt = await prisma.saasSubscription.findUnique({
+      const byAttempt = await tx.saasSubscription.findUnique({
         where: { checkoutAttemptId },
         select: { stripeSessionId: true, shopId: true, status: true },
       });
@@ -284,7 +293,7 @@ export const POST: APIRoute = async (context) => {
       });
 
       try {
-        await prisma.saasSubscription.create({
+        await tx.saasSubscription.create({
           data: {
             stripeSessionId: session.id,
             checkoutAttemptId,
@@ -301,13 +310,13 @@ export const POST: APIRoute = async (context) => {
         });
       } catch (error) {
         if (isPrismaUniqueConflict(error)) {
-          const byAttempt = await prisma.saasSubscription.findUnique({
+          const winnerAttempt = await tx.saasSubscription.findUnique({
             where: { checkoutAttemptId },
             select: { stripeSessionId: true, status: true },
           });
           const byShop =
-            byAttempt ??
-            (await prisma.saasSubscription.findFirst({
+            winnerAttempt ??
+            (await tx.saasSubscription.findFirst({
               where: {
                 shopId: access.shopId,
                 status: { in: [...BLOCKING_SAAS_STATUSES, 'PENDING'] },
@@ -351,6 +360,7 @@ export const POST: APIRoute = async (context) => {
         shopId: access.shopId,
         stripeSessionId: session.id,
         request: context.request,
+        db: tx,
       });
 
       return jsonResponse(

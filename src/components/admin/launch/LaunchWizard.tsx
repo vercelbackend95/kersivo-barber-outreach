@@ -13,6 +13,10 @@ import {
   getOrCreateSaasCheckoutAttemptId,
   rotateSaasCheckoutAttemptId,
 } from '@/lib/setup/saasCheckoutAttempt.client';
+import {
+  runSaasCheckoutWithSingleRotate,
+  type SaasCheckoutApiResponse,
+} from '@/lib/setup/saasCheckoutPayFlow.client';
 import { getSetupPlan, isSetupPlanId, type SetupPlanId } from '@/lib/setup/plans';
 import { formatGbp } from '@/lib/shop/money';
 
@@ -67,16 +71,7 @@ type LaunchContextResponse = {
   error?: string;
 };
 
-type SaasCheckoutResponse = {
-  ok?: boolean;
-  url?: string;
-  reused?: boolean;
-  state?: string;
-  error?: string;
-  code?: string;
-  redirectTo?: string;
-  rotateAttempt?: boolean;
-};
+type SaasCheckoutResponse = SaasCheckoutApiResponse;
 
 const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
@@ -458,19 +453,11 @@ export default function LaunchWizard() {
           });
         };
 
-        let attemptId = getOrCreateSaasCheckoutAttemptId();
-        let response = await startSaasCheckout(attemptId);
-        let data = (await response.json()) as SaasCheckoutResponse;
-
-        if (
-          response.status === 409 &&
-          data.code === 'CHECKOUT_ATTEMPT_EXPIRED' &&
-          data.rotateAttempt
-        ) {
-          attemptId = rotateSaasCheckoutAttemptId();
-          response = await startSaasCheckout(attemptId);
-          data = (await response.json()) as SaasCheckoutResponse;
-        }
+        const { response, data } = await runSaasCheckoutWithSingleRotate({
+          start: startSaasCheckout,
+          getAttemptId: getOrCreateSaasCheckoutAttemptId,
+          rotateAttemptId: rotateSaasCheckoutAttemptId,
+        });
 
         if (response.status === 409 && data.code === 'SUBSCRIPTION_ALREADY_EXISTS') {
           window.location.assign(data.redirectTo || '/admin');
