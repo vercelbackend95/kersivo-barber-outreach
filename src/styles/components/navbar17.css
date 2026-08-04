@@ -252,11 +252,12 @@
   opacity: 0.55;
 }
 
-/* Primary conversion CTA — "Get the system" */
+/* Primary conversion CTA — subscribe */
 .navbar17__cta-btn {
   display: inline-flex;
   align-items: center;
-  height: 2.5rem;
+  min-height: 44px;
+  height: auto;
   padding: 0 1.15rem;
   background: var(--accent);
   color: #fff;
@@ -300,14 +301,14 @@ button.navbar17__cta-btn {
   display: none;
   align-items: center;
   justify-content: center;
-  min-height: 2.75rem;
-  padding: 0 0.9rem;
+  min-height: 44px;
+  padding: 0 0.85rem;
   background: var(--accent);
   border: 1px solid transparent;
   color: #fff;
   font-size: 0.72rem;
   font-weight: 700;
-  letter-spacing: 0.02em;
+  letter-spacing: 0.01em;
   text-transform: none;
   text-decoration: none;
   white-space: nowrap;
@@ -735,15 +736,18 @@ button.navbar17__mobile-bar-cta {
 
   .navbar17__mobile-controls {
     display: flex;
-    gap: 0.45rem;
+    gap: 0.35rem;
     justify-content: flex-end;
     min-width: 0;
+    flex-shrink: 0;
   }
 
   .navbar17__mobile-bar-cta {
     display: inline-flex;
-    min-height: 2.8rem;
-    font-size: 0.75rem;
+    min-height: 44px;
+    font-size: 0.7rem;
+    padding-inline: 0.65rem;
+    flex: 0 1 auto;
   }
 
   .navbar17__brand {
@@ -751,8 +755,8 @@ button.navbar17__mobile-bar-cta {
   }
 
   .navbar17__brand-img {
-    height: clamp(2.5rem, 11vw, 3.15rem);
-    max-width: min(13rem, 56vw);
+    height: clamp(2.35rem, 10vw, 3rem);
+    max-width: min(11.5rem, 42vw);
   }
 }
 
@@ -769,17 +773,22 @@ body.navbar17-body-lock {
   }
 
   .navbar17__mobile-controls {
-    gap: 0.35rem;
+    gap: 0.28rem;
   }
 
   .navbar17__mobile-bar-cta {
-    padding-inline: 0.7rem;
-    font-size: 0.72rem;
-    letter-spacing: 0.02em;
+    padding-inline: 0.55rem;
+    font-size: 0.65rem;
+    letter-spacing: 0.01em;
+  }
+
+  .navbar17__brand-img {
+    max-width: min(9.5rem, 36vw);
   }
 
   .navbar17__toggle {
-    width: 2.65rem;
+    width: 2.5rem;
+    flex-shrink: 0;
   }
 }
 

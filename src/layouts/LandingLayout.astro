@@ -5,7 +5,7 @@ import FaviconLinks from '@/components/seo/FaviconLinks.astro';
 import SeoHead from '@/components/seo/SeoHead.astro';
 import Navbar17 from '@/components/navbar17.astro';
 import InitDataTrackScript from '@/components/InitDataTrackScript.astro';
-import type { Navbar17Variant } from '@/lib/nav/navbar17Items';
+import type { Navbar17CtaTrack, Navbar17Variant } from '@/lib/nav/navbar17Items';
 import type { PageSeo } from '@/lib/seo/meta';
 import '@/styles/tokens.css';
 import '@/styles/fonts-landing.css';
@@ -16,7 +16,7 @@ import '@/styles/components/navbar17.css';
 type LandingNavbarPreviewCta = {
   label: string;
   href: string | null;
-  track?: 'plan_my_setup_click';
+  track?: Navbar17CtaTrack;
 };
 
 interface Props extends PageSeo {

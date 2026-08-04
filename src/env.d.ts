@@ -3,7 +3,7 @@
 type NavbarPreviewCtaLocals = {
   label: string;
   href: string | null;
-  track?: 'plan_my_setup_click';
+  track?: 'plan_my_setup_click' | 'saas_subscribe_click';
 };
 
 declare namespace App {

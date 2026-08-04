@@ -1,4 +1,11 @@
+import { SAAS_MONTHLY_GBP } from '@/lib/seo/defaults';
+
 export type Navbar17Variant = 'default' | 'landing' | 'shop' | 'testShop';
+
+export type Navbar17CtaTrack = 'plan_my_setup_click' | 'saas_subscribe_click';
+
+export const NAVBAR_SUBSCRIBE_CTA_LABEL =
+  `Get started — £${SAAS_MONTHLY_GBP}/month`;
 
 export type Navbar17Item = {
   name: string;
@@ -120,12 +127,16 @@ export function getNavbar17Items(variant: Navbar17Variant = 'default'): Navbar17
 }
 
 export function getNavbar17CtaLabel(variant: Navbar17Variant = 'default'): string {
-  if (variant === 'landing' || variant === 'shop' || variant === 'testShop') return 'Build My Preview';
+  if (variant === 'landing' || variant === 'shop' || variant === 'testShop') {
+    return NAVBAR_SUBSCRIBE_CTA_LABEL;
+  }
   return 'Get started';
 }
 
 export function getNavbar17CtaHref(variant: Navbar17Variant = 'default'): string {
-  if (variant === 'landing' || variant === 'shop' || variant === 'testShop') return '/admin/onboarding';
+  if (variant === 'landing' || variant === 'shop' || variant === 'testShop') {
+    return '/admin/launch';
+  }
   return '/#pricing';
 }
 

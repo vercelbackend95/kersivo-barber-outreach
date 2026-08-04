@@ -6,6 +6,7 @@ import {
   getNavbar17CtaLabel,
   getNavbar17Items,
   navbar17ShowsCart,
+  type Navbar17CtaTrack,
   type Navbar17Variant,
 } from '@/lib/nav/navbar17Items';
 
@@ -13,7 +14,7 @@ import {
 type Navbar17PreviewCtaProp = {
   label: string;
   href: string | null;
-  track?: 'plan_my_setup_click';
+  track?: Navbar17CtaTrack;
 };
 
 interface Props {

@@ -2,9 +2,13 @@ import type { APIContext } from 'astro';
 import { SetupDepositStatus } from '@prisma/client';
 import { resolveAdminAccess } from '@/lib/admin/auth';
 import { prisma } from '@/lib/db/client';
+import {
+  NAVBAR_SUBSCRIBE_CTA_LABEL,
+  type Navbar17CtaTrack,
+} from '@/lib/nav/navbar17Items';
 
 export type NavbarPreviewCtaState =
-  | 'build_preview'
+  | 'get_started'
   | 'continue_setup'
   | 'continue_purchase'
   | 'launch_barbershop';
@@ -14,14 +18,14 @@ export type NavbarPreviewCta = {
   label: string;
   /** Null means render an inert button (no navigation). */
   href: string | null;
-  track?: 'plan_my_setup_click';
+  track?: Navbar17CtaTrack;
 };
 
-const BUILD_PREVIEW: NavbarPreviewCta = {
-  state: 'build_preview',
-  label: 'Build My Preview',
-  href: '/admin/onboarding',
-  track: 'plan_my_setup_click',
+const GET_STARTED: NavbarPreviewCta = {
+  state: 'get_started',
+  label: NAVBAR_SUBSCRIBE_CTA_LABEL,
+  href: '/admin/launch',
+  track: 'saas_subscribe_click',
 };
 
 const CONTINUE_SETUP: NavbarPreviewCta = {
@@ -51,7 +55,7 @@ export async function resolveNavbarPreviewCta(
 ): Promise<NavbarPreviewCta> {
   const access = await resolveAdminAccess(context);
   if (!access || access.via !== 'session') {
-    return BUILD_PREVIEW;
+    return GET_STARTED;
   }
 
   const shop = await prisma.shopSettings.findUnique({
