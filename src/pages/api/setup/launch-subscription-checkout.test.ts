@@ -370,8 +370,76 @@ describe('POST /api/setup/launch-subscription-checkout', () => {
     await POST(makeContext({ termsAccepted: true, checkoutAttemptId: ATTEMPT }) as never);
     expect(withLock).toHaveBeenCalledWith('shop-1', expect.any(Function));
     expect(withLock.mock.invocationCallOrder[0]).toBeLessThan(
+      txShopSettingsFindUnique.mock.invocationCallOrder[0] ?? Number.MAX_SAFE_INTEGER,
+    );
+  });
+
+  it('checks shopPaidAt before openSub lookup when unpaid', async () => {
+    await POST(makeContext({ termsAccepted: true, checkoutAttemptId: ATTEMPT }) as never);
+    expect(txShopSettingsFindUnique.mock.invocationCallOrder[0]).toBeLessThan(
       txFindFirst.mock.invocationCallOrder[0] ?? Number.MAX_SAFE_INTEGER,
     );
+  });
+
+  describe('early shopPaidAt gate', () => {
+    it('blocks linked PENDING without SaaS or Stripe ops', async () => {
+      txShopSettingsFindUnique.mockResolvedValue({ shopPaidAt: new Date() });
+      txFindFirst.mockResolvedValue({
+        id: 'sub_p',
+        status: 'PENDING',
+        stripeSessionId: 'cs_pending',
+        checkoutAttemptId: ATTEMPT,
+      });
+
+      const res = await POST(
+        makeContext({ termsAccepted: true, checkoutAttemptId: ATTEMPT }) as never,
+      );
+      const body = await res.json();
+
+      expect(res.status).toBe(409);
+      expect(body.code).toBe('SUBSCRIPTION_ALREADY_EXISTS');
+      expect(body.redirectTo).toBe('/admin');
+      expect(txFindFirst).not.toHaveBeenCalled();
+      expect(txFindUnique).not.toHaveBeenCalled();
+      expect(txUpdateMany).not.toHaveBeenCalled();
+      expect(retrieveCheckoutSession).not.toHaveBeenCalled();
+      expect(createSubscriptionCheckoutSession).not.toHaveBeenCalled();
+      expect(txCreate).not.toHaveBeenCalled();
+      expect(recordTermsAcceptance).not.toHaveBeenCalled();
+    });
+
+    it('blocks guest PENDING byAttempt without linking or Stripe', async () => {
+      txShopSettingsFindUnique.mockResolvedValue({ shopPaidAt: new Date() });
+      txFindUnique.mockResolvedValue(guestAttempt());
+
+      const res = await POST(
+        makeContext({ termsAccepted: true, checkoutAttemptId: ATTEMPT }) as never,
+      );
+      const body = await res.json();
+
+      expect(res.status).toBe(409);
+      expect(body.code).toBe('SUBSCRIPTION_ALREADY_EXISTS');
+      expect(txFindUnique).not.toHaveBeenCalled();
+      expect(txUpdateMany).not.toHaveBeenCalled();
+      expect(retrieveCheckoutSession).not.toHaveBeenCalled();
+      expect(createSubscriptionCheckoutSession).not.toHaveBeenCalled();
+    });
+
+    it('returns 404 when shop is missing inside tx', async () => {
+      txShopSettingsFindUnique.mockResolvedValue(null);
+
+      const res = await POST(
+        makeContext({ termsAccepted: true, checkoutAttemptId: ATTEMPT }) as never,
+      );
+      const body = await res.json();
+
+      expect(res.status).toBe(404);
+      expect(body.error).toBe('Shop not found.');
+      expect(txFindFirst).not.toHaveBeenCalled();
+      expect(txFindUnique).not.toHaveBeenCalled();
+      expect(createSubscriptionCheckoutSession).not.toHaveBeenCalled();
+      expect(txCreate).not.toHaveBeenCalled();
+    });
   });
 
   describe('guest→auth linking by checkoutAttemptId', () => {
@@ -595,7 +663,7 @@ describe('POST /api/setup/launch-subscription-checkout', () => {
       expect(createSubscriptionCheckoutSession).not.toHaveBeenCalled();
     });
 
-    it('shopPaidAt without SaasSubscription blocks create', async () => {
+    it('shopPaidAt without SaasSubscription blocks create early', async () => {
       txShopSettingsFindUnique.mockResolvedValue({ shopPaidAt: new Date() });
 
       const res = await POST(
@@ -606,8 +674,11 @@ describe('POST /api/setup/launch-subscription-checkout', () => {
       expect(res.status).toBe(409);
       expect(body.code).toBe('SUBSCRIPTION_ALREADY_EXISTS');
       expect(body.redirectTo).toBe('/admin');
+      expect(txFindFirst).not.toHaveBeenCalled();
+      expect(txFindUnique).not.toHaveBeenCalled();
       expect(createSubscriptionCheckoutSession).not.toHaveBeenCalled();
       expect(txCreate).not.toHaveBeenCalled();
+      expect(recordTermsAcceptance).not.toHaveBeenCalled();
     });
 
     it('shopPaidAt null allows normal new checkout', async () => {
@@ -618,6 +689,7 @@ describe('POST /api/setup/launch-subscription-checkout', () => {
       );
 
       expect(res.status).toBe(200);
+      expect(txFindFirst).toHaveBeenCalled();
       expect(createSubscriptionCheckoutSession).toHaveBeenCalledOnce();
       expect(txCreate).toHaveBeenCalled();
     });

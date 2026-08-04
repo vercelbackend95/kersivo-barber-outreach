@@ -317,6 +317,27 @@ export const POST: APIRoute = async (context) => {
     const attribution = pickAttribution(body.attribution);
 
     return await withSaasShopCheckoutLock(access.shopId, async (tx) => {
+      const paidMarker = await tx.shopSettings.findUnique({
+        where: { id: access.shopId },
+        select: { shopPaidAt: true },
+      });
+      if (!paidMarker) {
+        return jsonResponse({ error: 'Shop not found.' }, 404);
+      }
+      if (paidMarker.shopPaidAt != null) {
+        console.warn('[launch-subscription-checkout] shopPaidAt set; blocking checkout', {
+          shopId: access.shopId,
+        });
+        return jsonResponse(
+          {
+            error: 'This barbershop already has an active KERSIVO account.',
+            code: 'SUBSCRIPTION_ALREADY_EXISTS',
+            redirectTo: '/admin',
+          },
+          409,
+        );
+      }
+
       const openSub = await tx.saasSubscription.findFirst({
         where: {
           shopId: access.shopId,
@@ -471,25 +492,6 @@ export const POST: APIRoute = async (context) => {
         }
 
         return respondForOwnedAttemptRecord(tx, owned);
-      }
-
-      const paidMarker = await tx.shopSettings.findUnique({
-        where: { id: access.shopId },
-        select: { shopPaidAt: true },
-      });
-      if (paidMarker?.shopPaidAt != null) {
-        console.warn(
-          '[launch-subscription-checkout] shopPaidAt set without matching open SaasSubscription',
-          { shopId: access.shopId },
-        );
-        return jsonResponse(
-          {
-            error: 'This barbershop already has an active KERSIVO account.',
-            code: 'SUBSCRIPTION_ALREADY_EXISTS',
-            redirectTo: '/admin',
-          },
-          409,
-        );
       }
 
       const shopSize =
