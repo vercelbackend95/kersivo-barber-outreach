@@ -1,5 +1,7 @@
 ---
 import {
+  FOOTER_LEGAL_LINKS,
+  KERSIVO_CONTACT_EMAIL,
   getFooterSocialLinks,
   type FooterSocialLink,
   type FooterSocialPlatform,
@@ -32,31 +34,32 @@ interface Footer50Props {
 const currentYear = new Date().getFullYear();
 
 const {
-  heading = "Start your free trial today",
-  description = "The fit-for-purpose tool for planning and building modern software products.",
-  ctaText = "Get started",
-  ctaHref = "#",
+  heading = 'Ready to run bookings under your own brand?',
+  description = 'A branded website, online bookings and business tools built around your barbershop.',
+  ctaText = 'Start my KERSIVO subscription',
+  ctaHref = '/admin/launch',
   ctaIsDemo = false,
-  ctaTrack,
-  showIntro = true,
-  brandLine = "",
-  contactEmail = "",
-  copyright = `© ${currentYear} Kersivo`,
+  ctaTrack = 'saas_subscribe_click',
+  showIntro = false,
+  brandLine = 'Own your brand. Own your bookings.',
+  contactEmail = KERSIVO_CONTACT_EMAIL,
+  copyright = `© ${currentYear} KERSIVO`,
   navigation = [
-    { name: "Product", href: "#" },
-    { name: "About Us", href: "/about" },
-    { name: "Pricing", href: "/pricing" },
-    { name: "FAQ", href: "/faq" },
-    { name: "Contact", href: "/contact" },
+    { name: 'Inside the system', href: '/#live-demo' },
+    { name: 'Pricing', href: '/#pricing' },
+    { name: 'FAQ', href: '/#faq' },
+    { name: 'Contact', href: '/#contact' },
+    { name: 'Start subscription', href: '/admin/launch' },
   ],
   social = getFooterSocialLinks(),
   legal = [
-    { name: 'Privacy Policy', href: '/privacy' },
-    { name: 'Cookie Policy', href: '/cookies' },
-    { name: 'Cookie settings', href: '#cookie-settings' },
+    FOOTER_LEGAL_LINKS.privacy,
+    FOOTER_LEGAL_LINKS.cookies,
+    FOOTER_LEGAL_LINKS.cookieSettings,
+    FOOTER_LEGAL_LINKS.termsAndCancellation,
   ],
-  brandName = "mainline",
-  className = "",
+  brandName = 'KERSIVO',
+  className = '',
 } = Astro.props as Footer50Props;
 
 const footerClassName = [
@@ -67,6 +70,10 @@ const footerClassName = [
 
 function isExternalHref(href: string): boolean {
   return /^https?:\/\//i.test(href);
+}
+
+function isSubscribeNavItem(item: NavItem): boolean {
+  return /subscription/i.test(item.name) || item.href.includes('/admin/launch');
 }
 
 function socialIconPath(id: Exclude<FooterSocialPlatform, 'instagram'>): string {
@@ -85,65 +92,92 @@ function socialIconPath(id: Exclude<FooterSocialPlatform, 'instagram'>): string 
       <h2>{heading}</h2>
       <p>{description}</p>
       <div>
-        <a class="btn btn--primary footer50__cta" href={ctaHref} data-demo-cta={ctaIsDemo ? true : undefined} data-track={ctaTrack || undefined}>{ctaText}</a>
+        <a
+          class="btn btn--primary footer50__cta"
+          href={ctaHref}
+          data-demo-cta={ctaIsDemo ? true : undefined}
+          data-track={ctaTrack || undefined}
+        >
+          {ctaText}
+        </a>
       </div>
-    </div>
-  ) : brandLine ? (
-    <div class="container footer50__brand-line-wrap">
-      <p class="footer50__brand-line">{brandLine}</p>
     </div>
   ) : null}
 
-  <nav class="container footer50__nav" aria-label="Footer navigation">
-    <ul class="footer50__menu">
-      {navigation.map((item) => (
-        <li>
-          <a href={item.href}>{item.name}</a>
-        </li>
-      ))}
-    </ul>
+  <div class="container footer50__main">
+    <div class="footer50__identity">
+      {brandLine ? <p class="footer50__brand-line">{brandLine}</p> : null}
+      {contactEmail ? (
+        <p class="footer50__contact">
+          <span class="footer50__contact-label">Contact</span>
+          <a class="footer50__email" href={`mailto:${contactEmail}`}>{contactEmail}</a>
+        </p>
+      ) : null}
+    </div>
 
-    <ul class="footer50__legal">
-      {legal.map((item) => (
-        <li>
-          {item.href === '#cookie-settings' ? (
-            <button
-              type="button"
-              class="footer50__cookie-settings"
-              data-cookie-settings
-            >
-              {item.name}
-            </button>
-          ) : (
-            <a
-              href={item.href}
-              {...(isExternalHref(item.href) ? { target: '_blank', rel: 'noopener noreferrer' } : {})}
-            >
-              {item.name}
-            </a>
-          )}
-        </li>
-      ))}
-    </ul>
-    <script>
-      import { CONSENT_OPEN_EVENT } from '@/lib/consent/config';
-      document.querySelectorAll('[data-cookie-settings]').forEach((el) => {
-        el.addEventListener('click', () => {
-          window.dispatchEvent(
-            new CustomEvent(CONSENT_OPEN_EVENT, {
-              detail: { trigger: el instanceof HTMLElement ? el : undefined },
-            }),
-          );
-        });
+    <nav class="footer50__navigation" aria-label="Footer navigation">
+      <div class="footer50__group">
+        <p class="footer50__group-title">Explore</p>
+        <ul class="footer50__menu">
+          {navigation.map((item) => (
+            <li>
+              <a
+                class:list={[
+                  'footer50__nav-link',
+                  isSubscribeNavItem(item) && 'footer50__nav-link--accent',
+                ]}
+                href={item.href}
+              >
+                {item.name}
+              </a>
+            </li>
+          ))}
+        </ul>
+      </div>
+
+      <div class="footer50__group">
+        <p class="footer50__group-title">Legal</p>
+        <ul class="footer50__legal">
+          {legal.map((item) => (
+            <li>
+              {item.href === '#cookie-settings' ? (
+                <button
+                  type="button"
+                  class="footer50__cookie-settings"
+                  data-cookie-settings
+                >
+                  {item.name}
+                </button>
+              ) : (
+                <a
+                  class="footer50__nav-link"
+                  href={item.href}
+                  {...(isExternalHref(item.href)
+                    ? { target: '_blank', rel: 'noopener noreferrer' }
+                    : {})}
+                >
+                  {item.name}
+                </a>
+              )}
+            </li>
+          ))}
+        </ul>
+      </div>
+    </nav>
+  </div>
+
+  <script>
+    import { CONSENT_OPEN_EVENT } from '@/lib/consent/config';
+    document.querySelectorAll('[data-cookie-settings]').forEach((el) => {
+      el.addEventListener('click', () => {
+        window.dispatchEvent(
+          new CustomEvent(CONSENT_OPEN_EVENT, {
+            detail: { trigger: el instanceof HTMLElement ? el : undefined },
+          }),
+        );
       });
-    </script>
-
-    {contactEmail ? (
-      <p class="footer50__contact">
-        <a href={`mailto:${contactEmail}`}>{contactEmail}</a>
-      </p>
-    ) : null}
-  </nav>
+    });
+  </script>
 
   <div class="footer50__brand" aria-label={brandName}>
     <span class="footer50__brand-name">{brandName}</span>

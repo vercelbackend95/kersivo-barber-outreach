@@ -16,7 +16,11 @@ import {
   BARBERSHOP_BOOKING_FAQ_ITEMS,
   buildBarbershopBookingFaqJsonLd,
 } from '@/lib/seo/barbershopBookingFaq';
-import { getFooterSocialLinks } from '@/lib/seo/footerSocialLinks';
+import {
+  FOOTER_LEGAL_LINKS,
+  KERSIVO_CONTACT_EMAIL,
+  getFooterSocialLinks,
+} from '@/lib/seo/footerSocialLinks';
 import { resolveLandingDemoCarouselProducts } from '@/lib/shop/landingDemoCarouselProducts';
 import { resolveLandingDemoBarbers } from '@/lib/landing/landingDemoBarbers';
 import { resolveLandingBookingData } from '@/lib/landing/landingBookingData';
@@ -87,25 +91,24 @@ const currentYear = new Date().getFullYear();
       note="We’ll reply by email — no sales call required."
     />
     <Footer50
-      heading="Your booking. Your brand. Zero KERSIVO commission."
-      description="Whether you are switching from a marketplace profile or starting your first system, we set you up in about two weeks — with 0% KERSIVO commission on bookings and retail."
-      ctaText="PLAN MY SETUP"
-      ctaHref="#pricing"
-      ctaIsDemo={false}
-      ctaTrack="plan_my_setup_click"
+      showIntro={false}
+      brandLine="Own your brand. Own your bookings."
+      contactEmail={KERSIVO_CONTACT_EMAIL}
       brandName="KERSIVO"
       copyright={`© ${currentYear} KERSIVO`}
       navigation={[
+        { name: 'Inside the system', href: '#live-demo' },
         { name: 'Pricing', href: '#pricing' },
         { name: 'FAQ', href: '#faq' },
         { name: 'Contact', href: '#contact' },
+        { name: 'Start subscription', href: '/admin/launch' },
       ]}
       social={getFooterSocialLinks()}
       legal={[
-        { name: 'Privacy Policy', href: '/privacy' },
-        { name: 'Cookie Policy', href: '/cookies' },
-        { name: 'Cookie settings', href: '#cookie-settings' },
-        { name: 'Terms', href: '/terms' },
+        FOOTER_LEGAL_LINKS.privacy,
+        FOOTER_LEGAL_LINKS.cookies,
+        FOOTER_LEGAL_LINKS.cookieSettings,
+        FOOTER_LEGAL_LINKS.termsAndCancellation,
       ]}
     />
   </main>
