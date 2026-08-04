@@ -11,8 +11,10 @@ vi.mock('@/lib/db/client', () => ({
 
 import {
   classifyStripeCheckoutSession,
+  guestCheckoutMatchesWorkspace,
   isBlockingSaasStatus,
   isPrismaUniqueConflict,
+  normalizeSaasCheckoutIdentity,
   parseCheckoutAttemptId,
   resolveExistingCheckoutOutcome,
   saasCheckoutIdempotencyKey,
@@ -52,6 +54,70 @@ describe('isBlockingSaasStatus', () => {
     expect(isBlockingSaasStatus('SUSPENDED')).toBe(true);
     expect(isBlockingSaasStatus('PENDING')).toBe(false);
     expect(isBlockingSaasStatus('CANCELED')).toBe(false);
+  });
+});
+
+describe('normalizeSaasCheckoutIdentity', () => {
+  it('trims and collapses whitespace then lowercases', () => {
+    expect(normalizeSaasCheckoutIdentity('  Fade   Studio ')).toBe('fade studio');
+    expect(normalizeSaasCheckoutIdentity('Owner@Example.COM')).toBe('owner@example.com');
+  });
+});
+
+describe('guestCheckoutMatchesWorkspace', () => {
+  it('matches normalized email and shopName', () => {
+    expect(
+      guestCheckoutMatchesWorkspace({
+        recordEmail: '  Owner@Example.COM ',
+        accessEmail: 'owner@example.com',
+        recordShopName: '  Fade   Studio ',
+        workspaceShopName: 'fade studio',
+      }),
+    ).toBe(true);
+  });
+
+  it('rejects mismatched email', () => {
+    expect(
+      guestCheckoutMatchesWorkspace({
+        recordEmail: 'other@example.com',
+        accessEmail: 'owner@example.com',
+        recordShopName: 'Fade Studio',
+        workspaceShopName: 'Fade Studio',
+      }),
+    ).toBe(false);
+  });
+
+  it('rejects mismatched shopName', () => {
+    expect(
+      guestCheckoutMatchesWorkspace({
+        recordEmail: 'owner@example.com',
+        accessEmail: 'owner@example.com',
+        recordShopName: 'Other Shop',
+        workspaceShopName: 'Fade Studio',
+      }),
+    ).toBe(false);
+  });
+
+  it('rejects empty email', () => {
+    expect(
+      guestCheckoutMatchesWorkspace({
+        recordEmail: '   ',
+        accessEmail: 'owner@example.com',
+        recordShopName: 'Fade Studio',
+        workspaceShopName: 'Fade Studio',
+      }),
+    ).toBe(false);
+  });
+
+  it('rejects empty shopName', () => {
+    expect(
+      guestCheckoutMatchesWorkspace({
+        recordEmail: 'owner@example.com',
+        accessEmail: 'owner@example.com',
+        recordShopName: '',
+        workspaceShopName: 'Fade Studio',
+      }),
+    ).toBe(false);
   });
 });
 

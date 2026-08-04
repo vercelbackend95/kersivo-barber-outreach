@@ -14,6 +14,8 @@ const txFindFirst = vi.fn();
 const txFindUnique = vi.fn();
 const txCreate = vi.fn();
 const txDelete = vi.fn();
+const txUpdateMany = vi.fn();
+const txShopSettingsFindUnique = vi.fn();
 
 const globalFindFirst = vi.fn();
 const globalFindUnique = vi.fn();
@@ -29,6 +31,10 @@ const tx = {
     findUnique: (...args: unknown[]) => txFindUnique(...args),
     create: (...args: unknown[]) => txCreate(...args),
     delete: (...args: unknown[]) => txDelete(...args),
+    updateMany: (...args: unknown[]) => txUpdateMany(...args),
+  },
+  shopSettings: {
+    findUnique: (...args: unknown[]) => txShopSettingsFindUnique(...args),
   },
 };
 
@@ -105,6 +111,21 @@ function makeContext(body: unknown): APIContext {
   } as unknown as APIContext;
 }
 
+function guestAttempt(overrides: Record<string, unknown> = {}) {
+  return {
+    id: 'sub_guest',
+    shopId: null,
+    status: 'PENDING',
+    stripeSessionId: 'cs_guest',
+    checkoutAttemptId: ATTEMPT,
+    customerEmail: 'owner@example.com',
+    shopName: 'Fade Studio',
+    shopSize: '1-2',
+    currentStack: 'kersivo-preview',
+    ...overrides,
+  };
+}
+
 describe('POST /api/setup/launch-subscription-checkout', () => {
   beforeEach(() => {
     resolveAdminAccess.mockReset();
@@ -114,6 +135,8 @@ describe('POST /api/setup/launch-subscription-checkout', () => {
     txFindUnique.mockReset();
     txCreate.mockReset();
     txDelete.mockReset();
+    txUpdateMany.mockReset();
+    txShopSettingsFindUnique.mockReset();
     globalFindFirst.mockReset();
     globalFindUnique.mockReset();
     globalCreate.mockReset();
@@ -143,6 +166,8 @@ describe('POST /api/setup/launch-subscription-checkout', () => {
     txFindUnique.mockResolvedValue(null);
     txCreate.mockResolvedValue({});
     txDelete.mockResolvedValue({});
+    txUpdateMany.mockResolvedValue({ count: 1 });
+    txShopSettingsFindUnique.mockResolvedValue({ shopPaidAt: null });
     recordTermsAcceptance.mockResolvedValue(undefined);
     createSubscriptionCheckoutSession.mockResolvedValue({
       id: 'cs_launch_1',
@@ -201,6 +226,7 @@ describe('POST /api/setup/launch-subscription-checkout', () => {
       makeContext({ termsAccepted: true, checkoutAttemptId: ATTEMPT }) as never,
     );
     expect(res.status).toBe(200);
+    expect(txShopSettingsFindUnique).toHaveBeenCalled();
     expect(txCreate).toHaveBeenCalledWith({
       data: expect.objectContaining({
         shopId: 'shop-1',
@@ -346,5 +372,254 @@ describe('POST /api/setup/launch-subscription-checkout', () => {
     expect(withLock.mock.invocationCallOrder[0]).toBeLessThan(
       txFindFirst.mock.invocationCallOrder[0] ?? Number.MAX_SAFE_INTEGER,
     );
+  });
+
+  describe('guest→auth linking by checkoutAttemptId', () => {
+    it('links guest PENDING and reuses Stripe session without new create', async () => {
+      txFindUnique.mockResolvedValue(guestAttempt());
+      retrieveCheckoutSession.mockResolvedValue({
+        id: 'cs_guest',
+        status: 'open',
+        url: 'https://checkout.stripe.test/cs_guest',
+      });
+
+      const res = await POST(
+        makeContext({ termsAccepted: true, checkoutAttemptId: ATTEMPT }) as never,
+      );
+      const body = await res.json();
+
+      expect(res.status).toBe(200);
+      expect(body.reused).toBe(true);
+      expect(body.url).toBe('https://checkout.stripe.test/cs_guest');
+      expect(txUpdateMany).toHaveBeenCalledWith({
+        where: { id: 'sub_guest', shopId: null },
+        data: { shopId: 'shop-1' },
+      });
+      expect(createSubscriptionCheckoutSession).not.toHaveBeenCalled();
+      expect(txCreate).not.toHaveBeenCalled();
+      expect(globalCreate).not.toHaveBeenCalled();
+    });
+
+    it('links guest PENDING complete/paid and returns success URL', async () => {
+      txFindUnique.mockResolvedValue(guestAttempt());
+      retrieveCheckoutSession.mockResolvedValue({
+        id: 'cs_guest',
+        status: 'complete',
+        payment_status: 'paid',
+      });
+
+      const res = await POST(
+        makeContext({ termsAccepted: true, checkoutAttemptId: ATTEMPT }) as never,
+      );
+      const body = await res.json();
+
+      expect(res.status).toBe(200);
+      expect(body.state).toBe('complete');
+      expect(body.url).toContain('/setup/success?session_id=cs_guest');
+      expect(txUpdateMany).toHaveBeenCalled();
+      expect(createSubscriptionCheckoutSession).not.toHaveBeenCalled();
+    });
+
+    it.each(['ACTIVE', 'PAST_DUE', 'SUSPENDED'] as const)(
+      'links guest %s then returns SUBSCRIPTION_ALREADY_EXISTS',
+      async (status) => {
+        txFindUnique.mockResolvedValue(guestAttempt({ status }));
+
+        const res = await POST(
+          makeContext({ termsAccepted: true, checkoutAttemptId: ATTEMPT }) as never,
+        );
+        const body = await res.json();
+
+        expect(res.status).toBe(409);
+        expect(body.code).toBe('SUBSCRIPTION_ALREADY_EXISTS');
+        expect(body.redirectTo).toBe('/admin');
+        expect(txUpdateMany).toHaveBeenCalledWith({
+          where: { id: 'sub_guest', shopId: null },
+          data: { shopId: 'shop-1' },
+        });
+        expect(createSubscriptionCheckoutSession).not.toHaveBeenCalled();
+        expect(retrieveCheckoutSession).not.toHaveBeenCalled();
+      },
+    );
+
+    it('rejects mismatched email without update or Stripe create', async () => {
+      txFindUnique.mockResolvedValue(guestAttempt({ customerEmail: 'other@example.com' }));
+
+      const res = await POST(
+        makeContext({ termsAccepted: true, checkoutAttemptId: ATTEMPT }) as never,
+      );
+      const body = await res.json();
+
+      expect(res.status).toBe(409);
+      expect(body.code).toBe('CHECKOUT_ATTEMPT_OWNERSHIP_MISMATCH');
+      expect(txUpdateMany).not.toHaveBeenCalled();
+      expect(createSubscriptionCheckoutSession).not.toHaveBeenCalled();
+    });
+
+    it('rejects mismatched shopName without update or Stripe create', async () => {
+      txFindUnique.mockResolvedValue(guestAttempt({ shopName: 'Other Shop' }));
+
+      const res = await POST(
+        makeContext({ termsAccepted: true, checkoutAttemptId: ATTEMPT }) as never,
+      );
+      const body = await res.json();
+
+      expect(res.status).toBe(409);
+      expect(body.code).toBe('CHECKOUT_ATTEMPT_OWNERSHIP_MISMATCH');
+      expect(txUpdateMany).not.toHaveBeenCalled();
+      expect(createSubscriptionCheckoutSession).not.toHaveBeenCalled();
+    });
+
+    it('rejects attempt already linked to another shop', async () => {
+      txFindUnique.mockResolvedValue(guestAttempt({ shopId: 'shop-other' }));
+
+      const res = await POST(
+        makeContext({ termsAccepted: true, checkoutAttemptId: ATTEMPT }) as never,
+      );
+      const body = await res.json();
+
+      expect(res.status).toBe(409);
+      expect(body.code).toBe('CHECKOUT_ATTEMPT_ALREADY_LINKED');
+      expect(txUpdateMany).not.toHaveBeenCalled();
+      expect(createSubscriptionCheckoutSession).not.toHaveBeenCalled();
+    });
+
+    it('race: updateMany count 0 then same shop continues', async () => {
+      txUpdateMany.mockResolvedValueOnce({ count: 0 });
+      txFindUnique
+        .mockResolvedValueOnce(guestAttempt())
+        .mockResolvedValueOnce(guestAttempt({ shopId: 'shop-1' }));
+      retrieveCheckoutSession.mockResolvedValue({
+        id: 'cs_guest',
+        status: 'open',
+        url: 'https://checkout.stripe.test/cs_guest',
+      });
+
+      const res = await POST(
+        makeContext({ termsAccepted: true, checkoutAttemptId: ATTEMPT }) as never,
+      );
+      const body = await res.json();
+
+      expect(res.status).toBe(200);
+      expect(body.reused).toBe(true);
+      expect(createSubscriptionCheckoutSession).not.toHaveBeenCalled();
+    });
+
+    it('race: updateMany count 0 then other shop rejects', async () => {
+      txUpdateMany.mockResolvedValueOnce({ count: 0 });
+      txFindUnique
+        .mockResolvedValueOnce(guestAttempt())
+        .mockResolvedValueOnce(guestAttempt({ shopId: 'shop-other' }));
+
+      const res = await POST(
+        makeContext({ termsAccepted: true, checkoutAttemptId: ATTEMPT }) as never,
+      );
+      const body = await res.json();
+
+      expect(res.status).toBe(409);
+      expect(body.code).toBe('CHECKOUT_ATTEMPT_ALREADY_LINKED');
+      expect(createSubscriptionCheckoutSession).not.toHaveBeenCalled();
+    });
+
+    it('P2002 on link with shop ACTIVE → SUBSCRIPTION_ALREADY_EXISTS', async () => {
+      txFindUnique.mockResolvedValue(guestAttempt());
+      txUpdateMany.mockRejectedValueOnce(
+        new Prisma.PrismaClientKnownRequestError('Unique', {
+          code: 'P2002',
+          clientVersion: 'test',
+        }),
+      );
+      txFindFirst
+        .mockResolvedValueOnce(null) // initial openSub
+        .mockResolvedValueOnce({
+          id: 'sub_shop',
+          status: 'ACTIVE',
+          stripeSessionId: 'cs_active',
+        });
+
+      const res = await POST(
+        makeContext({ termsAccepted: true, checkoutAttemptId: ATTEMPT }) as never,
+      );
+      const body = await res.json();
+
+      expect(res.status).toBe(409);
+      expect(body.code).toBe('SUBSCRIPTION_ALREADY_EXISTS');
+      expect(createSubscriptionCheckoutSession).not.toHaveBeenCalled();
+    });
+
+    it('P2002 on link with shop PENDING → reuse that session', async () => {
+      txFindUnique.mockResolvedValue(guestAttempt());
+      txUpdateMany.mockRejectedValueOnce(
+        new Prisma.PrismaClientKnownRequestError('Unique', {
+          code: 'P2002',
+          clientVersion: 'test',
+        }),
+      );
+      txFindFirst
+        .mockResolvedValueOnce(null)
+        .mockResolvedValueOnce({
+          id: 'sub_shop',
+          status: 'PENDING',
+          stripeSessionId: 'cs_shop_pending',
+        });
+      retrieveCheckoutSession.mockResolvedValue({
+        id: 'cs_shop_pending',
+        status: 'open',
+        url: 'https://checkout.stripe.test/cs_shop_pending',
+      });
+
+      const res = await POST(
+        makeContext({ termsAccepted: true, checkoutAttemptId: ATTEMPT }) as never,
+      );
+      const body = await res.json();
+
+      expect(res.status).toBe(200);
+      expect(body.reused).toBe(true);
+      expect(body.url).toBe('https://checkout.stripe.test/cs_shop_pending');
+      expect(createSubscriptionCheckoutSession).not.toHaveBeenCalled();
+    });
+
+    it('links CANCELED guest historically then rotates without delete or Stripe create', async () => {
+      txFindUnique.mockResolvedValue(guestAttempt({ status: 'CANCELED' }));
+
+      const res = await POST(
+        makeContext({ termsAccepted: true, checkoutAttemptId: ATTEMPT }) as never,
+      );
+      const body = await res.json();
+
+      expect(res.status).toBe(409);
+      expect(body.code).toBe('CHECKOUT_ATTEMPT_EXPIRED');
+      expect(body.rotateAttempt).toBe(true);
+      expect(txUpdateMany).toHaveBeenCalled();
+      expect(txDelete).not.toHaveBeenCalled();
+      expect(createSubscriptionCheckoutSession).not.toHaveBeenCalled();
+    });
+
+    it('shopPaidAt without SaasSubscription blocks create', async () => {
+      txShopSettingsFindUnique.mockResolvedValue({ shopPaidAt: new Date() });
+
+      const res = await POST(
+        makeContext({ termsAccepted: true, checkoutAttemptId: ATTEMPT }) as never,
+      );
+      const body = await res.json();
+
+      expect(res.status).toBe(409);
+      expect(body.code).toBe('SUBSCRIPTION_ALREADY_EXISTS');
+      expect(body.redirectTo).toBe('/admin');
+      expect(createSubscriptionCheckoutSession).not.toHaveBeenCalled();
+      expect(txCreate).not.toHaveBeenCalled();
+    });
+
+    it('shopPaidAt null allows normal new checkout', async () => {
+      txShopSettingsFindUnique.mockResolvedValue({ shopPaidAt: null });
+
+      const res = await POST(
+        makeContext({ termsAccepted: true, checkoutAttemptId: ATTEMPT }) as never,
+      );
+
+      expect(res.status).toBe(200);
+      expect(createSubscriptionCheckoutSession).toHaveBeenCalledOnce();
+      expect(txCreate).toHaveBeenCalled();
+    });
   });
 });

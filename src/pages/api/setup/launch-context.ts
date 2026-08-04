@@ -104,7 +104,11 @@ export const GET: APIRoute = async (context) => {
 
   const shopPaid = isPaidShop(shop, saasSub);
   const subscriptionState = mapSubscriptionState(saasSub?.status);
-  const subscriptionBlocked = Boolean(saasSub && isBlockingSaasStatus(saasSub.status));
+  const subscriptionBlocked = ENABLE_SETUP_FEES
+    ? Boolean(saasSub && isBlockingSaasStatus(saasSub.status))
+    : Boolean(
+        (saasSub && isBlockingSaasStatus(saasSub.status)) || shop.shopPaidAt != null,
+      );
   const subscriptionRedirectTo = subscriptionBlocked ? '/admin' : null;
 
   const shopPayload = {
@@ -220,10 +224,10 @@ export const GET: APIRoute = async (context) => {
     paid = flags.paid;
     pending = flags.pending;
   } else {
-    // SaaS path: PENDING continues purchase; blocking statuses are paid/blocked.
+    // SaaS path: PENDING continues purchase; blocking statuses / shopPaidAt block repurchase.
     paid = shopPaid || subscriptionBlocked;
     pending =
-      subscriptionState === 'pending'
+      !subscriptionBlocked && subscriptionState === 'pending'
         ? {
             plan: 'launch',
             shopSize: '1-2',

@@ -1,6 +1,7 @@
 export const prerender = false;
 
 import type { APIRoute } from 'astro';
+import type { Prisma, SaasSubscriptionStatus } from '@prisma/client';
 import { resolveAdminAccess } from '../../../lib/admin/auth';
 import { requirePermission } from '../../../lib/admin/rbac/can';
 import { prisma } from '../../../lib/db/client';
@@ -14,6 +15,7 @@ import { TERMS_ACCEPTANCE_PURPOSES } from '../../../lib/legal/termsVersion';
 import { SAAS_MONTHLY_PENCE } from '../../../lib/seo/defaults';
 import {
   BLOCKING_SAAS_STATUSES,
+  guestCheckoutMatchesWorkspace,
   isBlockingSaasStatus,
   isPrismaUniqueConflict,
   parseCheckoutAttemptId,
@@ -35,6 +37,30 @@ type LaunchSubscriptionCheckoutInput = {
   termsAccepted?: boolean;
   checkoutAttemptId?: string;
 };
+
+type AttemptRecord = {
+  id: string;
+  shopId: string | null;
+  status: SaasSubscriptionStatus;
+  stripeSessionId: string;
+  checkoutAttemptId: string | null;
+  customerEmail: string;
+  shopName: string;
+  shopSize: string;
+  currentStack: string;
+};
+
+const ATTEMPT_RECORD_SELECT = {
+  id: true,
+  shopId: true,
+  status: true,
+  stripeSessionId: true,
+  checkoutAttemptId: true,
+  customerEmail: true,
+  shopName: true,
+  shopSize: true,
+  currentStack: true,
+} as const;
 
 const ATTRIBUTION_KEYS = [
   'gclid',
@@ -111,6 +137,119 @@ function responseForExistingOutcome(
   console.error('Launch subscription checkout Stripe session lookup failed', outcome.error);
   return jsonResponse(
     { error: 'Unable to verify existing checkout session. Please try again shortly.' },
+    503,
+  );
+}
+
+function subscriptionAlreadyExistsResponse() {
+  return jsonResponse(
+    {
+      error: 'This barbershop already has a KERSIVO subscription.',
+      code: 'SUBSCRIPTION_ALREADY_EXISTS',
+      redirectTo: '/admin',
+    },
+    409,
+  );
+}
+
+function checkoutAttemptExpiredRotateResponse() {
+  return jsonResponse(
+    {
+      error: 'This checkout attempt is no longer active.',
+      code: 'CHECKOUT_ATTEMPT_EXPIRED',
+      rotateAttempt: true,
+    },
+    409,
+  );
+}
+
+async function respondForOwnedAttemptRecord(
+  tx: Prisma.TransactionClient,
+  record: Pick<AttemptRecord, 'id' | 'status' | 'stripeSessionId'>,
+) {
+  if (isBlockingSaasStatus(record.status)) {
+    return subscriptionAlreadyExistsResponse();
+  }
+
+  if (record.status === 'CANCELED') {
+    return checkoutAttemptExpiredRotateResponse();
+  }
+
+  if (record.status !== 'PENDING') {
+    return jsonResponse(
+      {
+        error: 'Unable to verify the existing subscription.',
+        code: 'SUBSCRIPTION_STATE_UNAVAILABLE',
+      },
+      503,
+    );
+  }
+
+  const outcome = await outcomeForExistingSession(record.stripeSessionId);
+  if (outcome.kind === 'open' || outcome.kind === 'complete') {
+    return responseForExistingOutcome(outcome);
+  }
+  if (outcome.kind === 'lookup_failed') {
+    return responseForExistingOutcome(outcome);
+  }
+
+  // Expired PENDING: delete unpaid row only, then rotate.
+  try {
+    await tx.saasSubscription.delete({ where: { id: record.id } });
+  } catch (error) {
+    console.error('Failed to delete expired PENDING SaaS subscription', {
+      id: record.id,
+      error,
+    });
+    return jsonResponse(
+      {
+        error: 'Unable to release the expired checkout. Please try again shortly.',
+        code: 'CHECKOUT_RELEASE_FAILED',
+      },
+      503,
+    );
+  }
+
+  return jsonResponse(
+    {
+      error: 'This checkout attempt has expired.',
+      code: 'CHECKOUT_ATTEMPT_EXPIRED',
+      rotateAttempt: true,
+    },
+    409,
+  );
+}
+
+async function resolveP2002OnGuestLink(
+  tx: Prisma.TransactionClient,
+  shopId: string,
+): Promise<Response> {
+  const openSub = await tx.saasSubscription.findFirst({
+    where: {
+      shopId,
+      status: { in: [...BLOCKING_SAAS_STATUSES, 'PENDING'] },
+    },
+    orderBy: { createdAt: 'desc' },
+    select: {
+      id: true,
+      status: true,
+      stripeSessionId: true,
+    },
+  });
+
+  if (openSub && isBlockingSaasStatus(openSub.status)) {
+    return subscriptionAlreadyExistsResponse();
+  }
+
+  if (openSub?.status === 'PENDING') {
+    return respondForOwnedAttemptRecord(tx, openSub);
+  }
+
+  return jsonResponse(
+    {
+      error: 'Unable to link this checkout to the workspace. Please try again shortly.',
+      code: 'CHECKOUT_LINK_FAILED',
+    },
     503,
   );
 }
@@ -195,14 +334,7 @@ export const POST: APIRoute = async (context) => {
       });
 
       if (openSub && isBlockingSaasStatus(openSub.status)) {
-        return jsonResponse(
-          {
-            error: 'This barbershop already has a KERSIVO subscription.',
-            code: 'SUBSCRIPTION_ALREADY_EXISTS',
-            redirectTo: '/admin',
-          },
-          409,
-        );
+        return subscriptionAlreadyExistsResponse();
       }
 
       if (openSub?.status === 'PENDING') {
@@ -249,16 +381,115 @@ export const POST: APIRoute = async (context) => {
         // Fresh attempt id after expired PENDING → fall through to create below.
       }
 
-      // Same attempt may already exist (e.g. guest→auth race or prior partial write).
+      // Guest→auth or prior attempt: claim/reuse by checkoutAttemptId only (never email lookup).
       const byAttempt = await tx.saasSubscription.findUnique({
         where: { checkoutAttemptId },
-        select: { stripeSessionId: true, shopId: true, status: true },
+        select: ATTEMPT_RECORD_SELECT,
       });
+
       if (byAttempt) {
-        if (byAttempt.shopId && byAttempt.shopId !== access.shopId) {
-          return badRequest('checkoutAttemptId does not match this shop.');
+        if (byAttempt.shopId === access.shopId) {
+          return respondForOwnedAttemptRecord(tx, byAttempt);
         }
-        return responseForExistingOutcome(await outcomeForExistingSession(byAttempt.stripeSessionId));
+
+        if (byAttempt.shopId != null && byAttempt.shopId !== access.shopId) {
+          return jsonResponse(
+            {
+              error: 'This checkout attempt is already linked to another workspace.',
+              code: 'CHECKOUT_ATTEMPT_ALREADY_LINKED',
+            },
+            409,
+          );
+        }
+
+        // shopId === null — guest record; ownership checks then atomic claim.
+        if (
+          !guestCheckoutMatchesWorkspace({
+            recordEmail: byAttempt.customerEmail,
+            accessEmail: email,
+            recordShopName: byAttempt.shopName,
+            workspaceShopName: shopName,
+          })
+        ) {
+          return jsonResponse(
+            {
+              error: 'This checkout attempt does not match this workspace.',
+              code: 'CHECKOUT_ATTEMPT_OWNERSHIP_MISMATCH',
+            },
+            409,
+          );
+        }
+
+        let owned: AttemptRecord = byAttempt;
+        try {
+          const linked = await tx.saasSubscription.updateMany({
+            where: { id: byAttempt.id, shopId: null },
+            data: { shopId: access.shopId },
+          });
+
+          if (linked.count === 1) {
+            owned = { ...byAttempt, shopId: access.shopId };
+          } else {
+            const again = await tx.saasSubscription.findUnique({
+              where: { id: byAttempt.id },
+              select: ATTEMPT_RECORD_SELECT,
+            });
+            if (!again) {
+              return jsonResponse(
+                {
+                  error: 'Unable to link this checkout to the workspace. Please try again shortly.',
+                  code: 'CHECKOUT_LINK_FAILED',
+                },
+                503,
+              );
+            }
+            if (again.shopId === access.shopId) {
+              owned = again;
+            } else if (again.shopId != null) {
+              return jsonResponse(
+                {
+                  error: 'This checkout attempt is already linked to another workspace.',
+                  code: 'CHECKOUT_ATTEMPT_ALREADY_LINKED',
+                },
+                409,
+              );
+            } else {
+              return jsonResponse(
+                {
+                  error: 'Unable to link this checkout to the workspace. Please try again shortly.',
+                  code: 'CHECKOUT_LINK_FAILED',
+                },
+                503,
+              );
+            }
+          }
+        } catch (error) {
+          if (isPrismaUniqueConflict(error)) {
+            return resolveP2002OnGuestLink(tx, access.shopId);
+          }
+          throw error;
+        }
+
+        return respondForOwnedAttemptRecord(tx, owned);
+      }
+
+      const paidMarker = await tx.shopSettings.findUnique({
+        where: { id: access.shopId },
+        select: { shopPaidAt: true },
+      });
+      if (paidMarker?.shopPaidAt != null) {
+        console.warn(
+          '[launch-subscription-checkout] shopPaidAt set without matching open SaasSubscription',
+          { shopId: access.shopId },
+        );
+        return jsonResponse(
+          {
+            error: 'This barbershop already has an active KERSIVO account.',
+            code: 'SUBSCRIPTION_ALREADY_EXISTS',
+            redirectTo: '/admin',
+          },
+          409,
+        );
       }
 
       const shopSize =
@@ -326,14 +557,7 @@ export const POST: APIRoute = async (context) => {
             }));
 
           if (byShop && isBlockingSaasStatus(byShop.status)) {
-            return jsonResponse(
-              {
-                error: 'This barbershop already has a KERSIVO subscription.',
-                code: 'SUBSCRIPTION_ALREADY_EXISTS',
-                redirectTo: '/admin',
-              },
-              409,
-            );
+            return subscriptionAlreadyExistsResponse();
           }
 
           if (byShop?.stripeSessionId) {

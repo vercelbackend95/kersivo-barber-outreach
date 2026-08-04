@@ -38,6 +38,29 @@ export function isBlockingSaasStatus(
   return BLOCKING_SAAS_STATUSES.includes(String(status) as BlockingSaasStatus);
 }
 
+/** Trim, collapse internal whitespace, lowercase — for email/shopName ownership checks. */
+export function normalizeSaasCheckoutIdentity(value: string): string {
+  return value.trim().replace(/\s+/g, ' ').toLowerCase();
+}
+
+/**
+ * Guest→auth ownership: same checkoutAttemptId already verified by caller;
+ * email + shopName must match after normalization. Empty either side fails.
+ */
+export function guestCheckoutMatchesWorkspace(input: {
+  recordEmail: string;
+  accessEmail: string;
+  recordShopName: string;
+  workspaceShopName: string;
+}): boolean {
+  const email = normalizeSaasCheckoutIdentity(input.recordEmail);
+  const accessEmail = normalizeSaasCheckoutIdentity(input.accessEmail);
+  const shopName = normalizeSaasCheckoutIdentity(input.recordShopName);
+  const workspaceShopName = normalizeSaasCheckoutIdentity(input.workspaceShopName);
+  if (!email || !accessEmail || !shopName || !workspaceShopName) return false;
+  return email === accessEmail && shopName === workspaceShopName;
+}
+
 export function classifyStripeCheckoutSession(
   session: Pick<StripeSession, 'status' | 'payment_status' | 'url'>,
 ): SaasCheckoutSessionState {

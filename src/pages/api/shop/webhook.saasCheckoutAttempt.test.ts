@@ -396,4 +396,39 @@ describe('POST /api/shop/webhook SaaS checkoutAttemptId', () => {
     expect(createSaas).toHaveBeenCalledTimes(1);
     expect(updateSaas).toHaveBeenCalled();
   });
+
+  it('preserves existing shopId when metadata has no shopId', async () => {
+    findUniqueSaas.mockResolvedValue({
+      id: 'saas_1',
+      status: 'PENDING',
+      checkoutAttemptId: ATTEMPT,
+      stripeSessionId: 'cs_saas_1',
+      stripeSubscriptionId: null,
+      stripeCustomerId: null,
+      shopId: 'shop-linked',
+      activatedAt: null,
+      currentPeriodEnd: null,
+      customerEmailSentAt: null,
+      internalEmailSentAt: null,
+    });
+    updateSaas.mockResolvedValue({
+      id: 'saas_1',
+      status: 'ACTIVE',
+      checkoutAttemptId: ATTEMPT,
+      shopId: 'shop-linked',
+      customerEmailSentAt: new Date(),
+      internalEmailSentAt: new Date(),
+    });
+
+    // baseMeta has no shopId — guest Stripe metadata style
+    await POST(signedRequest(saasCheckoutEvent(baseMeta)) as never);
+
+    expect(updateSaas).toHaveBeenCalledWith({
+      where: { id: 'saas_1' },
+      data: expect.objectContaining({
+        shopId: 'shop-linked',
+        status: 'ACTIVE',
+      }),
+    });
+  });
 });

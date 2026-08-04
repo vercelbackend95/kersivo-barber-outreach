@@ -70,7 +70,7 @@ export async function resolveNavbarPreviewCta(
 
   const shop = await prisma.shopSettings.findUnique({
     where: { id: access.shopId },
-    select: { onboardingCompleted: true },
+    select: { onboardingCompleted: true, shopPaidAt: true },
   });
 
   if (!shop || !shop.onboardingCompleted) {
@@ -98,6 +98,10 @@ export async function resolveNavbarPreviewCta(
       }
     }
     return LAUNCH_BARBERSHOP;
+  }
+
+  if (shop.shopPaidAt != null) {
+    return OPEN_ADMIN;
   }
 
   const saasSub = await prisma.saasSubscription.findFirst({
