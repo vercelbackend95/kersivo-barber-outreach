@@ -12,11 +12,11 @@ export const CONSENT_CHANGED_EVENT = 'kersivo:consent-changed';
 
 export const BANNER_COPY = {
   title: 'Your privacy choices',
-  body: 'We use necessary cookies to keep KERSIVO working. With your permission, we also use analytics to understand website performance, advertising technologies to measure our Google Ads campaigns, and personalised advertising to show you our ads after you leave. You can accept all optional technologies, reject them, or choose your preferences.',
+  body: 'We use necessary cookies to run KERSIVO. With your permission we also use analytics and advertising cookies for site performance and Google Ads. Accept all, reject optional, or manage preferences.',
   acceptAll: 'Accept all',
   rejectOptional: 'Reject optional',
   managePreferences: 'Manage preferences',
-  cookiePolicy: 'Read our Cookie Policy',
+  cookiePolicy: 'Cookie Policy',
 } as const;
 
 export const PREFS_COPY = {
