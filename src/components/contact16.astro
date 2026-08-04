@@ -138,6 +138,17 @@ const {
       statusEl.textContent = '';
       statusEl.className = 'contact16__status contact16__status--idle';
 
+      const honeypotInput = form.elements.namedItem('companyWebsite');
+      if (
+        honeypotInput instanceof HTMLInputElement &&
+        honeypotInput.value.trim()
+      ) {
+        form.reset();
+        statusEl.textContent = '';
+        statusEl.className = 'contact16__status contact16__status--idle';
+        return;
+      }
+
       if (!form.checkValidity()) {
         form.reportValidity();
         statusEl.textContent =
@@ -178,7 +189,11 @@ const {
             companyWebsite,
           }),
         });
-        const data = (await response.json().catch(() => ({}))) as { ok?: boolean; error?: string };
+        const data = (await response.json().catch(() => ({}))) as {
+          ok?: boolean;
+          delivered?: boolean;
+          error?: string;
+        };
 
         if (!response.ok || !data.ok) {
           statusEl.textContent = data.error ?? 'Something went wrong. Please try again.';
@@ -186,7 +201,14 @@ const {
           return;
         }
 
-        // Track only after the API confirms real email delivery (not a fake/dev success).
+        if (data.delivered !== true) {
+          form.reset();
+          statusEl.textContent = '';
+          statusEl.className = 'contact16__status contact16__status--idle';
+          return;
+        }
+
+        // Track only when the API explicitly confirms that the enquiry email was delivered.
         trackConsentedEvent(FUNNEL_EVENTS.setup_enquiry_submit, undefined, 'analytics');
         statusEl.textContent =
           'Thanks — we’ve received your message. We’ll reply by email shortly.';

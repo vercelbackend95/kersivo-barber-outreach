@@ -24,8 +24,8 @@ function badRequest(message: string) {
   });
 }
 
-function okSilent() {
-  return new Response(JSON.stringify({ ok: true }), {
+function okResponse(delivered: boolean) {
+  return new Response(JSON.stringify({ ok: true, delivered }), {
     status: 200,
     headers: { 'Content-Type': 'application/json' },
   });
@@ -49,7 +49,7 @@ export const POST: APIRoute = async ({ request }) => {
   const companyWebsite =
     typeof record.companyWebsite === 'string' ? record.companyWebsite.trim() : '';
   if (companyWebsite) {
-    return okSilent();
+    return okResponse(false);
   }
 
   const limited = await enforceIpRateLimit(request, 'contact_form', 5, 15 * 60 * 1000);
@@ -107,5 +107,5 @@ export const POST: APIRoute = async ({ request }) => {
     throw error;
   }
 
-  return okSilent();
+  return okResponse(true);
 };

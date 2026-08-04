@@ -48,7 +48,10 @@ describe('POST /api/contact', () => {
     } as never);
     const data = await res.json();
     expect(res.status).toBe(200);
-    expect(data.ok).toBe(true);
+    expect(data).toEqual({
+      ok: true,
+      delivered: false,
+    });
     expect(sendContactInquiryEmail).not.toHaveBeenCalled();
     expect(enforceIpRateLimit).not.toHaveBeenCalled();
   });
@@ -61,7 +64,9 @@ describe('POST /api/contact', () => {
       }),
     );
     const res = await POST({ request: makeRequest(validBody) } as never);
+    const data = await res.json();
     expect(res.status).toBe(429);
+    expect(data.delivered).not.toBe(true);
     expect(sendContactInquiryEmail).not.toHaveBeenCalled();
   });
 
@@ -69,7 +74,10 @@ describe('POST /api/contact', () => {
     const res = await POST({ request: makeRequest(validBody) } as never);
     const data = await res.json();
     expect(res.status).toBe(200);
-    expect(data.ok).toBe(true);
+    expect(data).toEqual({
+      ok: true,
+      delivered: true,
+    });
     expect(sendContactInquiryEmail).toHaveBeenCalledOnce();
     expect(sendContactInquiryEmail).toHaveBeenCalledWith({
       name: 'Alex',
@@ -87,6 +95,7 @@ describe('POST /api/contact', () => {
     const data = await res.json();
     expect(res.status).toBe(400);
     expect(data.ok).toBe(false);
+    expect(data.delivered).not.toBe(true);
     expect(sendContactInquiryEmail).not.toHaveBeenCalled();
   });
 
@@ -97,6 +106,7 @@ describe('POST /api/contact', () => {
     const data = await res.json();
     expect(res.status).toBe(400);
     expect(data.ok).toBe(false);
+    expect(data.delivered).not.toBe(true);
     expect(sendContactInquiryEmail).not.toHaveBeenCalled();
   });
 
@@ -108,6 +118,7 @@ describe('POST /api/contact', () => {
     const data = await res.json();
     expect(res.status).toBe(400);
     expect(data.ok).toBe(false);
+    expect(data.delivered).not.toBe(true);
     expect(sendContactInquiryEmail).not.toHaveBeenCalled();
   });
 
@@ -118,6 +129,7 @@ describe('POST /api/contact', () => {
     const data = await res.json();
     expect(res.status).toBe(400);
     expect(data.ok).toBe(false);
+    expect(data.delivered).not.toBe(true);
     expect(sendContactInquiryEmail).not.toHaveBeenCalled();
   });
 
@@ -127,5 +139,6 @@ describe('POST /api/contact', () => {
     const data = await res.json();
     expect(res.status).toBe(502);
     expect(data.ok).toBe(false);
+    expect(data.delivered).not.toBe(true);
   });
 });
