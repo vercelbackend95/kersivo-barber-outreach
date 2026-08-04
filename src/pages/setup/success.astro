@@ -82,6 +82,13 @@ const adsPurchaseSendTo = resolveGoogleAdsPurchaseSendToFromProcessEnv();
           ></div>
           <script>
             import { startSaasPurchaseTracking } from '@/lib/analytics/saasPurchaseTrackingClient';
+            import { clearSaasCheckoutAttemptId } from '@/lib/setup/saasCheckoutAttempt.client';
+
+            try {
+              clearSaasCheckoutAttemptId();
+            } catch {
+              /* fail-soft */
+            }
 
             try {
               const root = document.getElementById('kersivo-saas-purchase-track');

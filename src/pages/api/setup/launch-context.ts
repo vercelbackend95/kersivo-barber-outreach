@@ -10,6 +10,10 @@ import {
 } from '../../../lib/admin/launchCtaProgress';
 import { prisma } from '../../../lib/db/client';
 import { getSetupOnboardingFormUrlOrEmpty } from '../../../lib/email/sender';
+import { ENABLE_SETUP_FEES } from '../../../lib/pricing/offerMode';
+import {
+  isBlockingSaasStatus,
+} from '../../../lib/setup/saasCheckoutGuard';
 import { isPaidShop } from '../../../lib/shop/paidShop';
 import type { SetupPlanId } from '../../../lib/setup/plans';
 
@@ -22,6 +26,31 @@ type LaunchPending = {
   shopSize: string;
   currentStack: string;
 };
+
+export type LaunchSubscriptionState =
+  | 'none'
+  | 'pending'
+  | 'active'
+  | 'past_due'
+  | 'suspended'
+  | 'canceled';
+
+function mapSubscriptionState(status: string | null | undefined): LaunchSubscriptionState {
+  switch (String(status ?? '').toUpperCase()) {
+    case 'PENDING':
+      return 'pending';
+    case 'ACTIVE':
+      return 'active';
+    case 'PAST_DUE':
+      return 'past_due';
+    case 'SUSPENDED':
+      return 'suspended';
+    case 'CANCELED':
+      return 'canceled';
+    default:
+      return 'none';
+  }
+}
 
 /**
  * Context for Launch Wizard + sidebar launch CTA progress checklist.
@@ -62,7 +91,21 @@ export const GET: APIRoute = async (context) => {
     return new Response(JSON.stringify({ error: 'Shop not found.' }), { status: 404 });
   }
 
-  const shopPaid = isPaidShop(shop);
+  const saasSub = await prisma.saasSubscription.findFirst({
+    where: { shopId: access.shopId },
+    orderBy: { createdAt: 'desc' },
+    select: {
+      status: true,
+      currentPeriodEnd: true,
+      pastDueSince: true,
+      activatedAt: true,
+    },
+  });
+
+  const shopPaid = isPaidShop(shop, saasSub);
+  const subscriptionState = mapSubscriptionState(saasSub?.status);
+  const subscriptionBlocked = Boolean(saasSub && isBlockingSaasStatus(saasSub.status));
+  const subscriptionRedirectTo = subscriptionBlocked ? '/admin' : null;
 
   const shopPayload = {
     name: shop.name,
@@ -121,6 +164,9 @@ export const GET: APIRoute = async (context) => {
         progress,
         shop: shopPayload,
         user: userPayload,
+        subscriptionState,
+        subscriptionBlocked,
+        redirectTo: subscriptionRedirectTo,
       }),
     );
   }
@@ -129,7 +175,7 @@ export const GET: APIRoute = async (context) => {
   let pendingDeposit: LaunchPending | null = null;
   let hasPaidDeposit = false;
 
-  if (email) {
+  if (ENABLE_SETUP_FEES && email) {
     const [pendingRow, paidDeposit] = await Promise.all([
       prisma.setupDeposit.findFirst({
         where: {
@@ -162,11 +208,29 @@ export const GET: APIRoute = async (context) => {
     hasPaidDeposit = Boolean(paidDeposit);
   }
 
-  const { paid, pending } = resolveLaunchBillingFlags({
-    shopPaid,
-    pendingDeposit,
-    hasPaidDeposit,
-  });
+  let pending: LaunchPending | null = null;
+  let paid = shopPaid;
+
+  if (ENABLE_SETUP_FEES) {
+    const flags = resolveLaunchBillingFlags({
+      shopPaid,
+      pendingDeposit,
+      hasPaidDeposit,
+    });
+    paid = flags.paid;
+    pending = flags.pending;
+  } else {
+    // SaaS path: PENDING continues purchase; blocking statuses are paid/blocked.
+    paid = shopPaid || subscriptionBlocked;
+    pending =
+      subscriptionState === 'pending'
+        ? {
+            plan: 'launch',
+            shopSize: '1-2',
+            currentStack: 'kersivo-preview',
+          }
+        : null;
+  }
 
   const paidHref = paid ? getSetupOnboardingFormUrlOrEmpty().trim() || '/admin' : null;
 
@@ -180,6 +244,9 @@ export const GET: APIRoute = async (context) => {
       progress,
       shop: shopPayload,
       user: userPayload,
+      subscriptionState,
+      subscriptionBlocked,
+      redirectTo: subscriptionRedirectTo,
     }),
   );
 };

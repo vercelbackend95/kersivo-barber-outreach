@@ -1,5 +1,6 @@
 ---
 import MainLayout from '@/layouts/MainLayout.astro';
+import type { ProductCategory } from '@prisma/client';
 import { prisma } from '@/lib/db/client';
 import { DEMO_SHOP_ID } from '@/lib/db/shopScope';
 import {
@@ -93,7 +94,7 @@ const pageData = await withPrismaQuotaFallback(
       name: string;
       pricePence: number;
       imageUrl: string | null;
-      category: string;
+      category: ProductCategory;
       featured: boolean;
     }>,
     retailReady: false,

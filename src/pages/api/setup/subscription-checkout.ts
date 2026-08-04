@@ -10,9 +10,19 @@ import {
 } from '../../../lib/legal/requireTermsAcceptance';
 import { TERMS_ACCEPTANCE_PURPOSES } from '../../../lib/legal/termsVersion';
 import { SAAS_MONTHLY_PENCE } from '../../../lib/seo/defaults';
+import {
+  isPrismaUniqueConflict,
+  parseCheckoutAttemptId,
+  resolveExistingCheckoutOutcome,
+  saasCheckoutIdempotencyKey,
+  saasCheckoutSuccess,
+} from '../../../lib/setup/saasCheckoutGuard';
 import { buildSaasSubscriptionStripeMetadata } from '../../../lib/setup/saasSubscription';
 import { getPublicSiteUrl } from '../../../lib/setup/siteUrl';
-import { createSubscriptionCheckoutSession } from '../../../lib/shop/stripe';
+import {
+  createSubscriptionCheckoutSession,
+  retrieveCheckoutSession,
+} from '../../../lib/shop/stripe';
 import { enforceIpRateLimit } from '@/lib/rate-limit/enforceIpRateLimit';
 
 type SubscriptionCheckoutInput = {
@@ -25,6 +35,7 @@ type SubscriptionCheckoutInput = {
   barbers?: string | null;
   attribution?: Record<string, string>;
   termsAccepted?: boolean;
+  checkoutAttemptId?: string;
 };
 
 const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
@@ -44,6 +55,10 @@ function badRequest(message: string) {
   return new Response(JSON.stringify({ error: message }), { status: 400 });
 }
 
+function jsonResponse(body: unknown, status: number) {
+  return new Response(JSON.stringify(body), { status });
+}
+
 function pickAttribution(raw: unknown): Record<string, string> {
   if (!raw || typeof raw !== 'object') return {};
   const record = raw as Record<string, unknown>;
@@ -55,6 +70,45 @@ function pickAttribution(raw: unknown): Record<string, string> {
     if (trimmed) out[key] = trimmed;
   }
   return out;
+}
+
+async function outcomeForExistingSession(sessionId: string) {
+  return resolveExistingCheckoutOutcome({
+    sessionId,
+    retrieve: retrieveCheckoutSession,
+  });
+}
+
+function responseForExistingOutcome(
+  outcome: Awaited<ReturnType<typeof outcomeForExistingSession>>,
+) {
+  if (outcome.kind === 'open') {
+    return jsonResponse(
+      saasCheckoutSuccess({ url: outcome.url, reused: true, state: 'open' }),
+      200,
+    );
+  }
+  if (outcome.kind === 'complete') {
+    return jsonResponse(
+      saasCheckoutSuccess({ url: outcome.url, reused: true, state: 'complete' }),
+      200,
+    );
+  }
+  if (outcome.kind === 'expired') {
+    return jsonResponse(
+      {
+        error: 'This checkout attempt has expired.',
+        code: 'CHECKOUT_ATTEMPT_EXPIRED',
+        rotateAttempt: true,
+      },
+      409,
+    );
+  }
+  console.error('SaaS guest checkout Stripe session lookup failed', outcome.error);
+  return jsonResponse(
+    { error: 'Unable to verify existing checkout session. Please try again shortly.' },
+    503,
+  );
 }
 
 export const POST: APIRoute = async ({ request }) => {
@@ -71,6 +125,11 @@ export const POST: APIRoute = async ({ request }) => {
 
     if (!parseTermsAccepted(body)) {
       return termsAcceptedErrorResponse();
+    }
+
+    const checkoutAttemptId = parseCheckoutAttemptId(body.checkoutAttemptId);
+    if (!checkoutAttemptId) {
+      return badRequest('Valid checkoutAttemptId is required.');
     }
 
     const name = body.name?.trim() ?? '';
@@ -98,6 +157,28 @@ export const POST: APIRoute = async ({ request }) => {
       return badRequest('Current stack is required.');
     }
 
+    const existingByAttempt = await prisma.saasSubscription.findUnique({
+      where: { checkoutAttemptId },
+      select: {
+        id: true,
+        stripeSessionId: true,
+        customerEmail: true,
+        shopName: true,
+        status: true,
+      },
+    });
+
+    if (existingByAttempt) {
+      if (
+        existingByAttempt.customerEmail.trim().toLowerCase() !== email ||
+        existingByAttempt.shopName.trim() !== shopName
+      ) {
+        return badRequest('checkoutAttemptId does not match this checkout.');
+      }
+
+      return responseForExistingOutcome(await outcomeForExistingSession(existingByAttempt.stripeSessionId));
+    }
+
     const baseUrl = getPublicSiteUrl();
     const attribution = pickAttribution(body.attribution);
     const townCity = typeof body.townCity === 'string' ? body.townCity.trim().slice(0, 200) : '';
@@ -110,6 +191,7 @@ export const POST: APIRoute = async ({ request }) => {
       productId: 'saas-subscription',
       name: 'Kersivo — monthly subscription',
       unitAmount: SAAS_MONTHLY_PENCE,
+      idempotencyKey: saasCheckoutIdempotencyKey(checkoutAttemptId),
       metadata: {
         ...buildSaasSubscriptionStripeMetadata(
           {
@@ -118,6 +200,7 @@ export const POST: APIRoute = async ({ request }) => {
             shopName,
             shopSize,
             currentStack,
+            checkoutAttemptId,
             townCity: townCity || null,
             barbers: barbers || null,
           },
@@ -131,6 +214,7 @@ export const POST: APIRoute = async ({ request }) => {
       await prisma.saasSubscription.create({
         data: {
           stripeSessionId: session.id,
+          checkoutAttemptId,
           status: 'PENDING',
           customerName: name,
           customerEmail: email,
@@ -142,10 +226,31 @@ export const POST: APIRoute = async ({ request }) => {
         },
       });
     } catch (error) {
+      if (isPrismaUniqueConflict(error)) {
+        const winner =
+          (await prisma.saasSubscription.findUnique({
+            where: { checkoutAttemptId },
+            select: { stripeSessionId: true },
+          })) ??
+          (await prisma.saasSubscription.findUnique({
+            where: { stripeSessionId: session.id },
+            select: { stripeSessionId: true },
+          }));
+
+        if (winner?.stripeSessionId) {
+          return responseForExistingOutcome(await outcomeForExistingSession(winner.stripeSessionId));
+        }
+      }
+
       console.error('SaaS subscription PENDING record create failed', {
         stripeSessionId: session.id,
+        checkoutAttemptId,
         error,
       });
+      return jsonResponse(
+        { error: 'Unable to persist checkout. Please try again shortly.' },
+        500,
+      );
     }
 
     await recordTermsAcceptance({
@@ -155,11 +260,14 @@ export const POST: APIRoute = async ({ request }) => {
       request,
     });
 
-    return new Response(JSON.stringify({ url: session.url }), { status: 200 });
+    return jsonResponse(
+      saasCheckoutSuccess({ url: session.url, reused: false, state: 'open' }),
+      200,
+    );
   } catch (error) {
     console.error('SaaS subscription checkout session creation failed', error);
     const detail =
       import.meta.env.DEV && error instanceof Error ? error.message : 'Unable to create checkout session.';
-    return new Response(JSON.stringify({ error: detail }), { status: 500 });
+    return jsonResponse({ error: detail }, 500);
   }
 };

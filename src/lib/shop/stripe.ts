@@ -16,6 +16,8 @@ type StripeSubscriptionCheckoutParams = {
   name: string;
   unitAmount: number;
   metadata: Record<string, string>;
+  /** Stable Stripe Idempotency-Key; must not change across retries of the same attempt. */
+  idempotencyKey?: string;
 };
 
 export type StripeSession = {
@@ -129,12 +131,18 @@ export async function createSubscriptionCheckoutSession(
     body.set(`metadata[${key}]`, value);
   });
 
+  const headers: Record<string, string> = {
+    Authorization: `Bearer ${secretKey}`,
+    'Content-Type': 'application/x-www-form-urlencoded',
+  };
+  const idempotencyKey = params.idempotencyKey?.trim();
+  if (idempotencyKey) {
+    headers['Idempotency-Key'] = idempotencyKey;
+  }
+
   const response = await fetch(`${STRIPE_API_BASE}/checkout/sessions`, {
     method: 'POST',
-    headers: {
-      Authorization: `Bearer ${secretKey}`,
-      'Content-Type': 'application/x-www-form-urlencoded',
-    },
+    headers,
     body,
   });
 

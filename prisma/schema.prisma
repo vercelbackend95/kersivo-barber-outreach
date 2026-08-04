@@ -64,6 +64,7 @@ enum OrderStatus {
   READY_FOR_PICKUP
   COLLECTED
 }
+
 enum ProductCategory {
   POMADES_AND_CLAYS
   BEARD_CARE
@@ -88,15 +89,14 @@ enum TeamMemberStatus {
   ACTIVE
 }
 
-
 model User {
-  id            String    @id
+  id            String        @id
   name          String
   email         String
-  emailVerified Boolean   @default(false)
+  emailVerified Boolean       @default(false)
   image         String?
-  createdAt     DateTime  @default(now())
-  updatedAt     DateTime  @updatedAt
+  createdAt     DateTime      @default(now())
+  updatedAt     DateTime      @updatedAt
   sessions      Session[]
   accounts      Account[]
   ownedShop     ShopSettings?
@@ -156,73 +156,73 @@ model Verification {
 }
 
 model ShopSettings {
-  id                          String   @id @default(cuid())
-  name                        String
-  timezone                    String   @default("Europe/London")
-  cancellationWindowHours     Int      @default(24)
-  rescheduleWindowHours       Int      @default(24)
-  maxClientReschedules        Int      @default(2)
-  pendingConfirmationMins     Int      @default(15)
-  slotIntervalMinutes         Int      @default(15)
-  defaultBufferMinutes        Int      @default(0)
-  customServiceCategories     String[] @default([])
-  townCity                    String?
-  logoUrl                     String?
-  publicActivityPaused        Boolean  @default(false)
-  publicActivityPausedAt      DateTime?
-  publicActivityPauseFrom     DateTime?
-  publicActivityPauseUntil    DateTime?
-  publicActivityPauseReason   String?
-  onboardingCompleted         Boolean  @default(false)
-  onboardingCurrentStep       Int      @default(0)
-  onboardingCompletedAt       DateTime?
-  retailOnboardingCompleted   Boolean  @default(false)
-  retailOnboardingSkipped     Boolean  @default(false)
-  retailOnboardingCompletedAt DateTime?
+  id                                 String             @id @default(cuid())
+  name                               String
+  timezone                           String             @default("Europe/London")
+  cancellationWindowHours            Int                @default(24)
+  rescheduleWindowHours              Int                @default(24)
+  maxClientReschedules               Int                @default(2)
+  pendingConfirmationMins            Int                @default(15)
+  slotIntervalMinutes                Int                @default(15)
+  defaultBufferMinutes               Int                @default(0)
+  customServiceCategories            String[]           @default([])
+  townCity                           String?
+  logoUrl                            String?
+  publicActivityPaused               Boolean            @default(false)
+  publicActivityPausedAt             DateTime?
+  publicActivityPauseFrom            DateTime?
+  publicActivityPauseUntil           DateTime?
+  publicActivityPauseReason          String?
+  onboardingCompleted                Boolean            @default(false)
+  onboardingCurrentStep              Int                @default(0)
+  onboardingCompletedAt              DateTime?
+  retailOnboardingCompleted          Boolean            @default(false)
+  retailOnboardingSkipped            Boolean            @default(false)
+  retailOnboardingCompletedAt        DateTime?
   retailOnboardingProductId          String?
   retailTestOrderId                  String?
   retailTestOrderCompletedAt         DateTime?
   retailPickupWalkthroughCompletedAt DateTime?
-  analyticsIncludeTestActivity       Boolean  @default(true)
+  analyticsIncludeTestActivity       Boolean            @default(true)
   /// Set true on paid SaaS subscription webhook; SMS cron skips shops where false.
-  smsRemindersEnabled         Boolean  @default(false)
+  smsRemindersEnabled                Boolean            @default(false)
   /// Shared paid-tenant marker (SaaS webhook). Prefer this over coupling features to SMS flag.
-  shopPaidAt                  DateTime?
+  shopPaidAt                         DateTime?
   /// Owner toggle: require £5 deposit on online bookings (paid shops + Connect only).
-  depositsEnabled             Boolean  @default(false)
+  depositsEnabled                    Boolean            @default(false)
   /// Owner toggle: accept public retail checkout on Connect (paid shops + Connect only).
-  retailEnabled               Boolean  @default(false)
+  retailEnabled                      Boolean            @default(false)
   /// Stripe Connect Express account id for booking deposits (and future shop payouts).
-  stripeConnectAccountId      String?
-  stripeConnectChargesEnabled Boolean  @default(false)
-  stripeConnectDetailsSubmitted Boolean @default(false)
+  stripeConnectAccountId             String?
+  stripeConnectChargesEnabled        Boolean            @default(false)
+  stripeConnectDetailsSubmitted      Boolean            @default(false)
   /// Stripe event.created of the last applied account.updated (ordering guard).
-  connectStatusEventAt        DateTime?
+  connectStatusEventAt               DateTime?
   /// Private preview URL set by OPS when tenant site is ready for owner review.
-  sitePreviewUrl              String?
+  sitePreviewUrl                     String?
   /// Canonical site version label (e.g. "2026-07-29a") set alongside preview URL.
-  sitePreviewVersion          String?
-  sitePreviewReadyAt          DateTime?
+  sitePreviewVersion                 String?
+  sitePreviewReadyAt                 DateTime?
   /// Set when Owner clicks Approve & launch for the current sitePreviewVersion.
-  launchApprovedAt            DateTime?
-  launchApprovedByUserId      String?
-  launchApprovedByEmail       String?
-  launchApprovedVersion       String?
+  launchApprovedAt                   DateTime?
+  launchApprovedByUserId             String?
+  launchApprovedByEmail              String?
+  launchApprovedVersion              String?
   /// Recorded at approve time; physical DNS switch = OPS.
-  goLiveAt                    DateTime?
-  ownerUserId                 String?  @unique
-  createdAt                   DateTime @default(now())
-  updatedAt                   DateTime @updatedAt
-  owner                       User?    @relation(fields: [ownerUserId], references: [id], onDelete: SetNull)
-  members                     ShopMember[]
-  invites                     ShopInvite[]
-  clients                     Client[]
-  timeBlocks                  TimeBlock[]
-  products                    Product[]
-  orders                      Order[]
-  barbers                     Barber[]
-  services                    Service[]
-  openingHours                ShopOpeningHours[]
+  goLiveAt                           DateTime?
+  ownerUserId                        String?            @unique
+  createdAt                          DateTime           @default(now())
+  updatedAt                          DateTime           @updatedAt
+  owner                              User?              @relation(fields: [ownerUserId], references: [id], onDelete: SetNull)
+  members                            ShopMember[]
+  invites                            ShopInvite[]
+  clients                            Client[]
+  timeBlocks                         TimeBlock[]
+  products                           Product[]
+  orders                             Order[]
+  barbers                            Barber[]
+  services                           Service[]
+  openingHours                       ShopOpeningHours[]
 }
 
 // Login membership for one shop — roles never keyed by shop name.
@@ -246,25 +246,24 @@ model ShopMember {
 }
 
 model ShopInvite {
-  id              String   @id @default(cuid())
+  id              String    @id @default(cuid())
   shopId          String
   email           String
   role            ShopRole
-  tokenHash       String   @unique
+  tokenHash       String    @unique
   barberId        String?
   displayName     String?
-  bookable        Boolean  @default(true)
+  bookable        Boolean   @default(true)
   invitedByUserId String?
   expiresAt       DateTime
   acceptedAt      DateTime?
-  createdAt       DateTime @default(now())
+  createdAt       DateTime  @default(now())
 
   shop ShopSettings @relation(fields: [shopId], references: [id], onDelete: Cascade)
 
   @@index([shopId, email])
   @@index([expiresAt])
 }
-
 
 model Client {
   id        String   @id @default(cuid())
@@ -294,8 +293,8 @@ model ClientNote {
   isInternal Boolean  @default(false)
   createdAt  DateTime @default(now())
 
-  client Client  @relation(fields: [clientId], references: [id], onDelete: Cascade)
-  barber Barber? @relation(fields: [barberId], references: [id], onDelete: SetNull)
+  client Client            @relation(fields: [clientId], references: [id], onDelete: Cascade)
+  barber Barber?           @relation(fields: [barberId], references: [id], onDelete: SetNull)
   likes  ClientNoteLike[]
   images ClientNoteImage[]
 
@@ -328,21 +327,21 @@ model ClientNoteLike {
 }
 
 model Service {
-  id              String   @id @default(cuid())
+  id              String          @id @default(cuid())
   shopId          String
   name            String
   description     String?
   imageUrl        String?
   pricePence      Int
   durationMinutes Int
-  bufferMinutes   Int      @default(0)
-  displayOrder    Int      @default(0)
+  bufferMinutes   Int             @default(0)
+  displayOrder    Int             @default(0)
   category        String?
-  featured        Boolean  @default(false)
-  isActive        Boolean  @default(true) @map("active")
-  createdAt       DateTime @default(now())
-  updatedAt       DateTime @updatedAt
-  shop            ShopSettings @relation(fields: [shopId], references: [id], onDelete: Cascade)
+  featured        Boolean         @default(false)
+  isActive        Boolean         @default(true) @map("active")
+  createdAt       DateTime        @default(now())
+  updatedAt       DateTime        @updatedAt
+  shop            ShopSettings    @relation(fields: [shopId], references: [id], onDelete: Cascade)
   bookings        Booking[]
   barberServices  BarberService[]
 
@@ -351,25 +350,25 @@ model Service {
 }
 
 model Barber {
-  id           String             @id @default(cuid())
-  shopId       String
-  userId       String?            @unique
-  name         String
-  email        String?
-  avatarUrl    String?
-  active       Boolean            @default(true)
-  sortOrder    Int                @default(0)
+  id             String             @id @default(cuid())
+  shopId         String
+  userId         String?            @unique
+  name           String
+  email          String?
+  avatarUrl      String?
+  active         Boolean            @default(true)
+  sortOrder      Int                @default(0)
   // Intended dashboard role when Owner later invites this seat (MANAGER | BARBER).
-  intendedRole ShopRole           @default(BARBER)
-  createdAt    DateTime           @default(now())
-  updatedAt    DateTime           @updatedAt
-  shop         ShopSettings       @relation(fields: [shopId], references: [id], onDelete: Cascade)
-  user         User?              @relation(fields: [userId], references: [id], onDelete: SetNull)
-  membership   ShopMember?
-  bookings     Booking[]
-  rules        AvailabilityRule[]
-  timeOff      BarberTimeOff[]
-  timeBlocks   TimeBlock[]
+  intendedRole   ShopRole           @default(BARBER)
+  createdAt      DateTime           @default(now())
+  updatedAt      DateTime           @updatedAt
+  shop           ShopSettings       @relation(fields: [shopId], references: [id], onDelete: Cascade)
+  user           User?              @relation(fields: [userId], references: [id], onDelete: SetNull)
+  membership     ShopMember?
+  bookings       Booking[]
+  rules          AvailabilityRule[]
+  timeOff        BarberTimeOff[]
+  timeBlocks     TimeBlock[]
   barberServices BarberService[]
   clientNotes    ClientNote[]
   noteLikes      ClientNoteLike[]
@@ -404,7 +403,6 @@ model BarberService {
   @@id([barberId, serviceId])
   @@index([serviceId])
 }
-
 
 model AvailabilityRule {
   id            String   @id @default(cuid())
@@ -453,40 +451,39 @@ model TimeBlock {
   @@index([shopId, startAt])
 }
 
-
 model Booking {
-  id                      String        @id @default(cuid())
-  serviceId               String
-  barberId                String
-  fullName                String
-  email                   String
-  phone                   String?
-  clientId                String?
-  startAt                 DateTime
-  endAt                   DateTime
-  originalStartAt         DateTime?
-  originalEndAt           DateTime?
-  rescheduledAt           DateTime?
-  status                  BookingStatus @default(BOOKED)
-  notes                   String?
-  parentBookingId         String?
-  newBookingId            String?
+  id              String        @id @default(cuid())
+  serviceId       String
+  barberId        String
+  fullName        String
+  email           String
+  phone           String?
+  clientId        String?
+  startAt         DateTime
+  endAt           DateTime
+  originalStartAt DateTime?
+  originalEndAt   DateTime?
+  rescheduledAt   DateTime?
+  status          BookingStatus @default(BOOKED)
+  notes           String?
+  parentBookingId String?
+  newBookingId    String?
 
-  confirmTokenHash        String?
-  confirmTokenExpiresAt   DateTime?
-  manageTokenHash         String?
-  manageTokenExpiresAt    DateTime?
+  confirmTokenHash      String?
+  confirmTokenExpiresAt DateTime?
+  manageTokenHash       String?
+  manageTokenExpiresAt  DateTime?
 
-  paymentRequired         Boolean       @default(false)
+  paymentRequired         Boolean        @default(false)
   depositAmountPence      Int?
   paymentStatus           PaymentStatus?
   /// Stripe Checkout Session for the deposit; unique so one session maps to one booking.
-  stripeCheckoutSessionId String?       @unique
+  stripeCheckoutSessionId String?        @unique
   stripePaymentIntentId   String?
   paidAt                  DateTime?
   depositRefundedAt       DateTime?
   depositForfeitedAt      DateTime?
-  clientRescheduleCount   Int           @default(0)
+  clientRescheduleCount   Int            @default(0)
   paymentExpiresAt        DateTime?
 
   serviceNameAtBooking            String?
@@ -495,9 +492,9 @@ model Booking {
   totalPricePence                 Int?
 
   /// When the appointment reminder SMS was successfully sent.
-  smsReminderSentAt       DateTime?
+  smsReminderSentAt     DateTime?
   /// `startAt` value the reminder SMS was sent for (reschedule clears / re-arms).
-  smsReminderForStartAt   DateTime?
+  smsReminderForStartAt DateTime?
 
   /// When the appointment reminder email was successfully sent.
   emailReminderSentAt     DateTime?
@@ -505,14 +502,14 @@ model Booking {
   emailReminderForStartAt DateTime?
 
   /// Client-supplied key scoped as `${shopId}:${key}` — prevents duplicate bookings on retry.
-  idempotencyKey          String?       @unique
+  idempotencyKey String? @unique
 
-  createdAt               DateTime      @default(now())
-  updatedAt               DateTime      @updatedAt
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 
-  service Service @relation(fields: [serviceId], references: [id])
-  barber  Barber  @relation(fields: [barberId], references: [id])
-  client  Client? @relation(fields: [clientId], references: [id], onDelete: SetNull)
+  service       Service               @relation(fields: [serviceId], references: [id])
+  barber        Barber                @relation(fields: [barberId], references: [id])
+  client        Client?               @relation(fields: [clientId], references: [id], onDelete: SetNull)
   smsOutbound   SmsOutbound[]
   emailOutbound EmailOutbound[]
   depositRefund BookingDepositRefund?
@@ -601,45 +598,45 @@ model EmailOutbound {
   @@index([status, nextAttemptAt])
 }
 
-
 model Product {
-  id          String   @id @default(cuid())
+  id          String          @id @default(cuid())
   shopId      String
   name        String
   description String?
   pricePence  Int
   imageUrl    String?
-  active      Boolean  @default(true)
-  featured    Boolean  @default(false)
-    category    ProductCategory @default(STYLING)
-  sortOrder   Int      @default(0)
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
+  active      Boolean         @default(true)
+  featured    Boolean         @default(false)
+  category    ProductCategory @default(STYLING)
+  sortOrder   Int             @default(0)
+  createdAt   DateTime        @default(now())
+  updatedAt   DateTime        @updatedAt
 
-  shop ShopSettings @relation(fields: [shopId], references: [id], onDelete: Cascade)
+  shop       ShopSettings @relation(fields: [shopId], references: [id], onDelete: Cascade)
   orderItems OrderItem[]
 
+  @@unique([shopId, sortOrder])
   @@index([shopId, active])
   @@index([shopId, sortOrder])
-    @@unique([shopId, sortOrder])
 }
+
 model Order {
-  id                      String      @id @default(cuid())
-  shopId                  String
-  customerEmail           String
-  status                  OrderStatus @default(PAID)
-  currency                String      @default("gbp")
-  totalPence              Int
+  id                     String      @id @default(cuid())
+  shopId                 String
+  customerEmail          String
+  status                 OrderStatus @default(PAID)
+  currency               String      @default("gbp")
+  totalPence             Int
   /// Human pickup reference shown at the chair (e.g. KRV-A1B2).
-  reference               String?     @unique
-  stripeSessionId         String?     @unique
-  stripePaymentIntentId   String?
-  stripeConnectAccountId  String?
-  isTestOrder             Boolean     @default(false)
-  paidAt                  DateTime?
-  collectedAt             DateTime?
-  createdAt               DateTime    @default(now())
-  updatedAt               DateTime    @updatedAt
+  reference              String?     @unique
+  stripeSessionId        String?     @unique
+  stripePaymentIntentId  String?
+  stripeConnectAccountId String?
+  isTestOrder            Boolean     @default(false)
+  paidAt                 DateTime?
+  collectedAt            DateTime?
+  createdAt              DateTime    @default(now())
+  updatedAt              DateTime    @updatedAt
 
   shop  ShopSettings @relation(fields: [shopId], references: [id], onDelete: Cascade)
   items OrderItem[]
@@ -664,8 +661,6 @@ model OrderItem {
   @@index([orderId])
   @@index([productId])
 }
-
-
 
 model RateLimitEvent {
   id        String   @id @default(cuid())
@@ -721,39 +716,40 @@ enum SaasSubscriptionStatus {
 }
 
 model SaasSubscription {
-  id                       String                 @id @default(cuid())
-  stripeSessionId          String                 @unique
-  stripeSubscriptionId     String?
-  stripeCustomerId         String?
-  shopId                   String?
-  status                   SaasSubscriptionStatus @default(PENDING)
-  cancelAtPeriodEnd        Boolean                @default(false)
-  currentPeriodEnd         DateTime?
-  canceledAt               DateTime?
-  pastDueSince             DateTime?
-  suspendedAt              DateTime?
-  retentionEndsAt          DateTime?
-  dataExportDownloadedAt   DateTime?
-  customerName             String
-  customerEmail            String
-  shopName                 String
-  shopSize                 String
-  currentStack             String
-  monthlyPence             Int
-  currency                 String                 @default("gbp")
-  activatedAt              DateTime?
-  customerEmailSentAt      DateTime?
-  internalEmailSentAt      DateTime?
-  onboardingSubmittedAt    DateTime?
+  id                     String                 @id @default(cuid())
+  stripeSessionId        String                 @unique
+  stripeSubscriptionId   String?                @unique
+  /// Stable client checkout attempt id (UUID) for session reuse / Stripe Idempotency-Key.
+  checkoutAttemptId      String?                @unique
+  stripeCustomerId       String?
+  shopId                 String?
+  status                 SaasSubscriptionStatus @default(PENDING)
+  cancelAtPeriodEnd      Boolean                @default(false)
+  currentPeriodEnd       DateTime?
+  canceledAt             DateTime?
+  pastDueSince           DateTime?
+  suspendedAt            DateTime?
+  retentionEndsAt        DateTime?
+  dataExportDownloadedAt DateTime?
+  customerName           String
+  customerEmail          String
+  shopName               String
+  shopSize               String
+  currentStack           String
+  monthlyPence           Int
+  currency               String                 @default("gbp")
+  activatedAt            DateTime?
+  customerEmailSentAt    DateTime?
+  internalEmailSentAt    DateTime?
+  onboardingSubmittedAt  DateTime?
   /// Stripe event.created of the last applied lifecycle webhook (ordering guard).
-  lastStripeEventAt        DateTime?
-  lastStripeEventId        String?
-  createdAt                DateTime               @default(now())
-  updatedAt                DateTime               @updatedAt
+  lastStripeEventAt      DateTime?
+  lastStripeEventId      String?
+  createdAt              DateTime               @default(now())
+  updatedAt              DateTime               @updatedAt
 
   @@index([customerEmail])
   @@index([customerEmail, status])
-  @@index([stripeSubscriptionId])
   @@index([stripeCustomerId])
   @@index([shopId])
   @@index([status, pastDueSince])
@@ -800,7 +796,7 @@ model LegalAcceptance {
 model SiteLaunchEvent {
   id          String   @id @default(cuid())
   shopId      String
-  action      String   // PREVIEW_READY | APPROVED | PREVIEW_UPDATED
+  action      String // PREVIEW_READY | APPROVED | PREVIEW_UPDATED
   siteVersion String?
   previewUrl  String?
   userId      String?

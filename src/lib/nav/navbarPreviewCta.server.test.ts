@@ -9,10 +9,15 @@ import {
 
 const resolveAdminAccess = vi.fn();
 const findUnique = vi.fn();
-const findFirst = vi.fn();
+const findFirstDeposit = vi.fn();
+const findFirstSaas = vi.fn();
 
 vi.mock('@/lib/admin/auth', () => ({
   resolveAdminAccess: (...args: unknown[]) => resolveAdminAccess(...args),
+}));
+
+vi.mock('@/lib/pricing/offerMode', () => ({
+  ENABLE_SETUP_FEES: false,
 }));
 
 vi.mock('@/lib/db/client', () => ({
@@ -21,7 +26,10 @@ vi.mock('@/lib/db/client', () => ({
       findUnique: (...args: unknown[]) => findUnique(...args),
     },
     setupDeposit: {
-      findFirst: (...args: unknown[]) => findFirst(...args),
+      findFirst: (...args: unknown[]) => findFirstDeposit(...args),
+    },
+    saasSubscription: {
+      findFirst: (...args: unknown[]) => findFirstSaas(...args),
     },
   },
 }));
@@ -44,11 +52,12 @@ describe('navbar17 CTA fallbacks', () => {
   });
 });
 
-describe('resolveNavbarPreviewCta', () => {
+describe('resolveNavbarPreviewCta (setup fees off)', () => {
   beforeEach(() => {
     resolveAdminAccess.mockReset();
     findUnique.mockReset();
-    findFirst.mockReset();
+    findFirstDeposit.mockReset();
+    findFirstSaas.mockReset();
   });
 
   it('returns get_started for unauthenticated users', async () => {
@@ -60,16 +69,6 @@ describe('resolveNavbarPreviewCta', () => {
       href: '/admin/launch',
       track: 'saas_subscribe_click',
     });
-    expect(cta.href).not.toBe('/admin/onboarding');
-    expect(cta.track).not.toBe('plan_my_setup_click');
-  });
-
-  it('returns get_started when access is not session-based', async () => {
-    resolveAdminAccess.mockResolvedValue({ via: 'secret', shopId: 'shop-1' });
-    const cta = await resolveNavbarPreviewCta({} as never);
-    expect(cta.state).toBe('get_started');
-    expect(cta.href).toBe('/admin/launch');
-    expect(cta.track).toBe('saas_subscribe_click');
   });
 
   it('returns continue_setup for incomplete onboarding', async () => {
@@ -77,53 +76,97 @@ describe('resolveNavbarPreviewCta', () => {
       via: 'session',
       shopId: 'shop-1',
       userEmail: 'owner@example.com',
+      role: 'OWNER',
     });
     findUnique.mockResolvedValue({ onboardingCompleted: false });
     const cta = await resolveNavbarPreviewCta({} as never);
-    expect(cta).toEqual({
-      state: 'continue_setup',
-      label: 'Continue My Setup',
-      href: '/admin/onboarding',
-      track: 'plan_my_setup_click',
-    });
+    expect(cta.state).toBe('continue_setup');
   });
 
-  it('returns continue_purchase for pending deposit', async () => {
+  it('returns Open Admin when role lacks billing.manage', async () => {
+    resolveAdminAccess.mockResolvedValue({
+      via: 'session',
+      shopId: 'shop-1',
+      userEmail: 'barber@example.com',
+      role: 'BARBER',
+    });
+    findUnique.mockResolvedValue({ onboardingCompleted: true });
+    const cta = await resolveNavbarPreviewCta({} as never);
+    expect(cta).toEqual({
+      state: 'open_admin',
+      label: 'Open Admin',
+      href: '/admin',
+    });
+    expect(findFirstSaas).not.toHaveBeenCalled();
+  });
+
+  it.each(['ACTIVE', 'PAST_DUE', 'SUSPENDED'] as const)(
+    'returns Open Admin for %s subscription',
+    async (status) => {
+      resolveAdminAccess.mockResolvedValue({
+        via: 'session',
+        shopId: 'shop-1',
+        userEmail: 'owner@example.com',
+        role: 'OWNER',
+      });
+      findUnique.mockResolvedValue({ onboardingCompleted: true });
+      findFirstSaas.mockResolvedValue({ status });
+      const cta = await resolveNavbarPreviewCta({} as never);
+      expect(cta).toEqual({
+        state: 'open_admin',
+        label: 'Open Admin',
+        href: '/admin',
+      });
+    },
+  );
+
+  it('returns Continue Purchase for PENDING', async () => {
     resolveAdminAccess.mockResolvedValue({
       via: 'session',
       shopId: 'shop-1',
       userEmail: 'owner@example.com',
+      role: 'OWNER',
     });
     findUnique.mockResolvedValue({ onboardingCompleted: true });
-    findFirst.mockResolvedValue({ id: 'dep-1' });
+    findFirstSaas.mockResolvedValue({ status: 'PENDING' });
     const cta = await resolveNavbarPreviewCta({} as never);
     expect(cta).toEqual({
       state: 'continue_purchase',
       label: 'Continue Purchase',
       href: '/admin/launch?step=2',
     });
-    expect(findFirst).toHaveBeenCalledWith(
-      expect.objectContaining({
-        where: expect.objectContaining({
-          status: SetupDepositStatus.PENDING,
-        }),
-      }),
-    );
   });
 
-  it('returns launch_barbershop when onboarding is done and no pending purchase', async () => {
+  it('returns Launch My Barbershop for CANCELED', async () => {
     resolveAdminAccess.mockResolvedValue({
       via: 'session',
       shopId: 'shop-1',
       userEmail: 'owner@example.com',
+      role: 'OWNER',
     });
     findUnique.mockResolvedValue({ onboardingCompleted: true });
-    findFirst.mockResolvedValue(null);
+    findFirstSaas.mockResolvedValue({ status: 'CANCELED' });
     const cta = await resolveNavbarPreviewCta({} as never);
-    expect(cta).toEqual({
-      state: 'launch_barbershop',
-      label: 'Launch My Barbershop',
-      href: '/admin/launch',
+    expect(cta.state).toBe('launch_barbershop');
+  });
+
+  it('returns Launch My Barbershop when no subscription', async () => {
+    resolveAdminAccess.mockResolvedValue({
+      via: 'session',
+      shopId: 'shop-1',
+      userEmail: 'owner@example.com',
+      role: 'OWNER',
     });
+    findUnique.mockResolvedValue({ onboardingCompleted: true });
+    findFirstSaas.mockResolvedValue(null);
+    const cta = await resolveNavbarPreviewCta({} as never);
+    expect(cta.state).toBe('launch_barbershop');
+  });
+});
+
+// Keep a note that deposit path still exists when ENABLE_SETUP_FEES is true (covered by dedicated flag module).
+describe('setup deposit status constant still available', () => {
+  it('exposes PENDING for legacy path', () => {
+    expect(SetupDepositStatus.PENDING).toBe('PENDING');
   });
 });

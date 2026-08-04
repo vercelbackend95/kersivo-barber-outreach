@@ -9,6 +9,10 @@ import {
   PRICE_VAT_DISCLAIMER,
 } from '@/lib/pricing/claimsPolicy';
 import { SAAS_MONTHLY_GBP } from '@/lib/seo/defaults';
+import {
+  getOrCreateSaasCheckoutAttemptId,
+  rotateSaasCheckoutAttemptId,
+} from '@/lib/setup/saasCheckoutAttempt.client';
 import { getSetupPlan, isSetupPlanId, type SetupPlanId } from '@/lib/setup/plans';
 import { formatGbp } from '@/lib/shop/money';
 
@@ -49,6 +53,11 @@ type LaunchContextResponse = {
     shopSize: string;
     currentStack: string;
   } | null;
+  paid?: boolean;
+  paidHref?: string | null;
+  subscriptionState?: string;
+  subscriptionBlocked?: boolean;
+  redirectTo?: string | null;
   shop?: {
     name: string | null;
     townCity?: string | null;
@@ -56,6 +65,17 @@ type LaunchContextResponse = {
   };
   user?: { name: string | null; email: string | null };
   error?: string;
+};
+
+type SaasCheckoutResponse = {
+  ok?: boolean;
+  url?: string;
+  reused?: boolean;
+  state?: string;
+  error?: string;
+  code?: string;
+  redirectTo?: string;
+  rotateAttempt?: boolean;
 };
 
 const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
@@ -210,6 +230,11 @@ export default function LaunchWizard() {
 
         if (!data.onboardingCompleted) {
           window.location.assign('/admin/onboarding');
+          return;
+        }
+
+        if (data.subscriptionBlocked) {
+          window.location.assign(data.redirectTo || data.paidHref || '/admin');
           return;
         }
 
@@ -400,43 +425,58 @@ export default function LaunchWizard() {
 
     try {
       if (!ENABLE_SETUP_FEES) {
-        if (isGuest) {
-          const barberNames = workspace.barbers.map((b) => b.name.trim()).filter(Boolean);
-          const response = await fetch('/api/setup/subscription-checkout', {
+        const startSaasCheckout = async (checkoutAttemptId: string) => {
+          if (isGuest) {
+            const barberNames = workspace.barbers.map((b) => b.name.trim()).filter(Boolean);
+            return fetch('/api/setup/subscription-checkout', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({
+                name: (workspace.name ?? '').trim(),
+                email: (workspace.email ?? '').trim().toLowerCase(),
+                shopName: workspace.shopName.trim(),
+                shopSize: shopSizeFromBarberCount(barberNames.length),
+                currentStack: 'landing',
+                townCity: workspace.townCity,
+                barbers: barberNames.join(', '),
+                attribution: collectAttribution(),
+                termsAccepted: true,
+                checkoutAttemptId,
+              }),
+            });
+          }
+
+          return fetch('/api/setup/launch-subscription-checkout', {
             method: 'POST',
+            credentials: 'include',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({
-              name: (workspace.name ?? '').trim(),
-              email: (workspace.email ?? '').trim().toLowerCase(),
-              shopName: workspace.shopName.trim(),
-              shopSize: shopSizeFromBarberCount(barberNames.length),
-              currentStack: 'landing',
-              townCity: workspace.townCity,
-              barbers: barberNames.join(', '),
               attribution: collectAttribution(),
               termsAccepted: true,
+              checkoutAttemptId,
             }),
           });
+        };
 
-          const data = (await response.json()) as { url?: string; error?: string };
-          if (!response.ok || !data.url) {
-            throw new Error(data.error || 'Unable to start checkout.');
-          }
-          window.location.href = data.url;
+        let attemptId = getOrCreateSaasCheckoutAttemptId();
+        let response = await startSaasCheckout(attemptId);
+        let data = (await response.json()) as SaasCheckoutResponse;
+
+        if (
+          response.status === 409 &&
+          data.code === 'CHECKOUT_ATTEMPT_EXPIRED' &&
+          data.rotateAttempt
+        ) {
+          attemptId = rotateSaasCheckoutAttemptId();
+          response = await startSaasCheckout(attemptId);
+          data = (await response.json()) as SaasCheckoutResponse;
+        }
+
+        if (response.status === 409 && data.code === 'SUBSCRIPTION_ALREADY_EXISTS') {
+          window.location.assign(data.redirectTo || '/admin');
           return;
         }
 
-        const response = await fetch('/api/setup/launch-subscription-checkout', {
-          method: 'POST',
-          credentials: 'include',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            attribution: collectAttribution(),
-            termsAccepted: true,
-          }),
-        });
-
-        const data = (await response.json()) as { url?: string; error?: string };
         if (!response.ok || !data.url) {
           throw new Error(data.error || 'Unable to start checkout.');
         }

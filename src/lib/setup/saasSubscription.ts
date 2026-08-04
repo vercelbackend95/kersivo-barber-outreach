@@ -9,6 +9,7 @@ export function buildSaasSubscriptionStripeMetadata(
     shopName: string;
     shopSize: string;
     currentStack: string;
+    checkoutAttemptId: string;
     townCity?: string | null;
     barbers?: string | null;
     shopId?: string | null;
@@ -23,6 +24,7 @@ export function buildSaasSubscriptionStripeMetadata(
     shopSize: input.shopSize.slice(0, 120),
     currentStack: input.currentStack.slice(0, 120),
     monthly_amount: String(SAAS_MONTHLY_PENCE),
+    checkoutAttemptId: input.checkoutAttemptId.slice(0, 120),
   };
 
   if (input.townCity?.trim()) metadata.townCity = input.townCity.trim().slice(0, 200);

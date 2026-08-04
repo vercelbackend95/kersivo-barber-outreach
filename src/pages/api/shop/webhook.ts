@@ -468,6 +468,7 @@ async function handleSaasSubscriptionCheckout(
   const stripeSubscriptionId = getCheckoutSubscriptionId(session);
   const stripeCustomerId = getCheckoutCustomerId(session);
   const metadataShopId = metadata.shopId?.trim() || null;
+  const checkoutAttemptId = metadata.checkoutAttemptId?.trim() || null;
   const currency = (session.currency ?? 'gbp').toLowerCase();
 
   let currentPeriodEnd: Date | null = null;
@@ -506,6 +507,7 @@ async function handleSaasSubscriptionCheckout(
           stripeSubscriptionId,
           stripeCustomerId,
           shopId: metadataShopId,
+          checkoutAttemptId,
           status: 'ACTIVE',
           cancelAtPeriodEnd,
           currentPeriodEnd,
@@ -522,9 +524,20 @@ async function handleSaasSubscriptionCheckout(
       logSaasSubscriptionStage('record_created', { sessionId, id: record.id });
     } catch (error) {
       if (error instanceof Prisma.PrismaClientKnownRequestError && error.code === 'P2002') {
-        record = await prisma.saasSubscription.findUnique({
-          where: { stripeSessionId: sessionId },
-        });
+        record =
+          (await prisma.saasSubscription.findUnique({
+            where: { stripeSessionId: sessionId },
+          })) ??
+          (stripeSubscriptionId
+            ? await prisma.saasSubscription.findUnique({
+                where: { stripeSubscriptionId },
+              })
+            : null) ??
+          (checkoutAttemptId
+            ? await prisma.saasSubscription.findUnique({
+                where: { checkoutAttemptId },
+              })
+            : null);
       } else {
         throw error;
       }
@@ -542,6 +555,7 @@ async function handleSaasSubscriptionCheckout(
     (stripeSubscriptionId && !record.stripeSubscriptionId) ||
     (stripeCustomerId && !record.stripeCustomerId) ||
     (metadataShopId && !record.shopId) ||
+    (checkoutAttemptId && !record.checkoutAttemptId) ||
     (currentPeriodEnd && !record.currentPeriodEnd)
   ) {
     record = await prisma.saasSubscription.update({
@@ -552,6 +566,7 @@ async function handleSaasSubscriptionCheckout(
         stripeSubscriptionId: stripeSubscriptionId || record.stripeSubscriptionId,
         stripeCustomerId: stripeCustomerId || record.stripeCustomerId,
         shopId: record.shopId || metadataShopId,
+        checkoutAttemptId: record.checkoutAttemptId || checkoutAttemptId,
         cancelAtPeriodEnd,
         currentPeriodEnd: currentPeriodEnd ?? record.currentPeriodEnd,
         monthlyPence,
