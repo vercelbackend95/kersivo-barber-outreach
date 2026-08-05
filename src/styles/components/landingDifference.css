@@ -177,10 +177,8 @@
 
 .landing-difference__close {
   margin: 0;
-  display: flex;
-  align-items: flex-start;
-  justify-content: center;
-  gap: 0.6rem;
+  display: block;
+  width: 100%;
   padding: 1rem 0.75rem 0.15rem;
   border-top: 1px solid color-mix(in srgb, var(--border) 90%, transparent);
   background: linear-gradient(
@@ -199,13 +197,13 @@
 }
 
 .landing-difference__close-icon {
-  flex-shrink: 0;
   display: inline-flex;
   align-items: center;
   justify-content: center;
   width: 1.2rem;
   height: 1.2rem;
-  margin-top: 0.15rem;
+  margin-inline-end: 0.5rem;
+  vertical-align: -0.12em;
   color: var(--accent);
 }
 
