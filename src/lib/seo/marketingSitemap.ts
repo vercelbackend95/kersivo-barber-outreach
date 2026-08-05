@@ -16,7 +16,6 @@ export const MARKETING_SITEMAP_ENTRIES: readonly MarketingSitemapEntry[] = [
   { path: '/privacy', lastmod: STATIC_SITEMAP_LASTMOD },
   { path: '/cookies', lastmod: STATIC_SITEMAP_LASTMOD },
   { path: '/terms', lastmod: STATIC_SITEMAP_LASTMOD },
-  { path: '/shop', lastmod: STATIC_SITEMAP_LASTMOD },
 ] as const;
 
 export const SITEMAP_CONTENT_TYPE = 'application/xml; charset=utf-8';
