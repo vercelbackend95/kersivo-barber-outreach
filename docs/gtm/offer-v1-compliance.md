@@ -51,7 +51,7 @@ Egzekucja idzie **po WP**, nie po pojedynczym „najciekawszym” lukowym punkci
 | **WP-F** | SMS + allowance | Provider, job, monthly allowance (no public £ figure), usage UI, critical SMS | SMS appointment reminders included |
 | **WP-G** | Client CRM parity | Block, merge/undo, archive, anonymise, duplicate hint | — |
 | **WP-H** | Retail parity | Statusy, KRV number, day-7 reminder, full/partial refund | Retail pickup shop (pełna prawda) |
-| **WP-I** | Billing lifecycle | Cancel anytime semantics, grace 7/8/30, suspend, 60d retention/export | Cancel anytime (pełna prawda) |
+| **WP-I** | Billing lifecycle | Cancel anytime semantics, grace 7/8/30, suspend, 30d retention/export | Cancel anytime (pełna prawda) |
 | **WP-J** | Launch & support ops | Onboarding form audit, Approve & launch log, support form, email From/Reply-To | — |
 | **WP-K** | Reports naming | Booked/Completed service value — nie „revenue” | — |
 | **WP-L** | GTM alignment | claimsPolicy, FAQ, Terms, landing, AI knowledge | Wszystkie §34 po DONE produktowym |
@@ -95,7 +95,7 @@ Egzekucja idzie **po WP**, nie po pojedynczym „najciekawszym” lukowym punkci
 | 28 | Infrastruktura e-mail (From / Reply-To) | `PARTIAL` | product | WP-J | P2 | Resend jest; sprawdzić/ustawić From `[Shop] via KERSIVO` + Reply-To salonu | |
 | 29 | Anulowanie subskrypcji (no pause) | `PARTIAL` | product, copy | WP-I | P1 | Stripe cancel; dopiąć UX „active do końca okresu” | |
 | 30 | Nieudane płatności / grace / suspend | `PARTIAL` | product | WP-I | P1 | Grace 7d + SUSPENDED od dnia 8 (cron); public booking off; admin billing+CSV. | |
-| 31 | Retencja 60 dni + 1× CSV export | `PARTIAL` | product, ops | WP-I | P1 | **Produkt:** retencja self-serve CSV = **30 dni** (align Terms/FAQ). 1× download w dashboardzie. | |
+| 31 | Retencja 30 dni + 1× CSV export | `PARTIAL` | product, ops | WP-I | P1 | **Produkt:** retencja self-serve CSV = **30 dni** (align Terms/FAQ). 1× download w dashboardzie. | |
 | 32 | Ownership po zakończeniu | `COPY_ONLY` | legal | WP-L | P3 | Terms | |
 | 33 | Refund pierwszej £39 | `OPS` | ops, legal | WP-M, WP-L | P3 | Polityka goodwill — nie auto w kodzie | |
 | 34 | Dozwolone claimy marketingowe | `PARTIAL` | copy | WP-L | P0* | SMS included claim włączony (owner). Scheduled email reminder cron = WP-D DONE (29 Jul 2026). Reszta §34 (booking deposits claim parity, RBAC unlimited users) nadal zależy od WP-B/E / copy | |

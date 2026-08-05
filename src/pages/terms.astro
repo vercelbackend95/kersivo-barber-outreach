@@ -3,11 +3,13 @@ import MainLayout from '@/layouts/MainLayout.astro';
 import LegalFooter from '@/components/LegalFooter.astro';
 import {
   BILLING_CYCLE_CLAIM,
+  DATA_EXPORT_RETENTION_CLAIM,
   DOMAIN_AUTH_TEXT,
   DOMAIN_EXISTING_CLAIM,
   DOMAIN_INCLUDED_CLAIM,
   DOMAIN_LIMIT_CLAIM,
   DOMAIN_NEW_CLAIM,
+  FAILED_PAYMENT_CLAIM,
   FAIR_USE_IMMEDIATE_RESTRICTION_CLAIM,
   FAIR_USE_IMMEDIATE_TRIGGERS,
   FAIR_USE_INTRO,
@@ -30,9 +32,12 @@ import {
   MISSING_CRITICAL_MATERIALS_CLAIM,
   MISSING_OPTIONAL_MATERIALS_CLAIM,
   NO_FAKE_STOCK_CLAIM,
+  REFUND_CLAIM,
   SMS_MONTHLY_ALLOWANCE_TERMS,
   STANDARD_SITE_NOT_BESPOKE_CLAIM,
   STANDARD_SITE_SCOPE_CLAIM,
+  SUPPORT_RESPONSE_CLAIM,
+  WEBSITE_UPDATE_SUPPORT_CLAIM,
 } from '@/lib/pricing/claimsPolicy';
 import { CURRENT_TERMS_VERSION, formatTermsLastUpdated } from '@/lib/legal/termsVersion';
 import { PAGE_DESCRIPTIONS, SAAS_MONTHLY_GBP } from '@/lib/seo/defaults';
@@ -51,8 +56,7 @@ import '@/styles/legal-pages.css';
 
       <p>
         These Terms govern the provision of barbershop website, booking, and retail pickup software and related services
-        offered under the Kersivo name. They are intended for business customers (barbershops) in the UK. They do not
-        constitute legal advice; have them reviewed for your situation.
+        offered under the KERSIVO name. They are intended for business customers (barbershops) in the UK.
       </p>
 
       <h2>Parties</h2>
@@ -63,12 +67,17 @@ import '@/styles/legal-pages.css';
         <a href="mailto:hello@kersivo.co.uk">hello@kersivo.co.uk</a>.
       </p>
       <p>
-        <strong>Client</strong> means the barbershop or business that orders the work. By using the service after we
-        confirm your order or give you access, you agree to these Terms.
+        <strong>Client</strong> means the barbershop or business that orders the work. By ticking the Terms acceptance
+        box and completing the subscription purchase, you agree to these Terms on behalf of the Client. If you act for a
+        business, you confirm that you have authority to bind that business. Continued use of the service after access
+        is granted remains subject to the Terms version you accepted.
       </p>
 
       <h2>What we provide</h2>
-      <p>Depending on your subscription, services may include:</p>
+      <p>
+        The standard KERSIVO subscription may include the following components, subject to the scope described in these
+        Terms:
+      </p>
       <ul>
         <li>a standard branded barbershop website on the KERSIVO platform;</li>
         <li>integrated online booking on your domain;</li>
@@ -86,6 +95,9 @@ import '@/styles/legal-pages.css';
       <p>{STANDARD_SITE_SCOPE_CLAIM}</p>
       <p>{STANDARD_SITE_NOT_BESPOKE_CLAIM}</p>
       <p>{POWERED_BY_KERSIVO_CLAIM}</p>
+
+      <h2 id="website-update-support">Website update support</h2>
+      <p>{WEBSITE_UPDATE_SUPPORT_CLAIM}</p>
 
       <h2>Admin access</h2>
       <p>
@@ -107,6 +119,9 @@ import '@/styles/legal-pages.css';
       <p>{INCLUDED_SETUP_CLAIM}</p>
       <p>{OWNER_SELF_CONFIG_CLAIM}</p>
       <p>{PRICE_CHANGE_NOTICE_CLAIM}</p>
+
+      <h2 id="refunds">Refunds</h2>
+      <p>{REFUND_CLAIM}</p>
 
       <h2 id="subscription">Monthly subscription</h2>
       <p>
@@ -151,10 +166,13 @@ import '@/styles/legal-pages.css';
 
       <h2>If your subscription ends</h2>
       <p>
-        After the end of the paid month following cancellation, the
+        At the end of the current paid billing period following cancellation, the
         <strong>website, booking system, admin dashboard and retail system are taken offline</strong>. There is no
         self-serve way to keep those systems running without an active subscription.
       </p>
+
+      <h2 id="failed-payments">Failed or overdue payments</h2>
+      <p>{FAILED_PAYMENT_CLAIM}</p>
 
       <h2 id="domain">Domain name</h2>
       <p>{DOMAIN_INCLUDED_CLAIM}</p>
@@ -201,14 +219,10 @@ import '@/styles/legal-pages.css';
         You own your domain, brand, content, client relationship and exported business data. KERSIVO does not sell your
         client data.
       </p>
-      <p>
-        You may request a <strong>free CSV export</strong> containing first name, surname where stored, email, phone
-        number and booking history. Export is available while your subscription is active and for
-        <strong>30 days after termination</strong>.
-      </p>
+      <p>{DATA_EXPORT_RETENTION_CLAIM}</p>
       <p>
         There is <strong>no lock-in</strong>: you may cancel your subscription at any time (service continues to the end of
-        the paid month). How we handle personal data (including your clients&rsquo; data) is described in our
+        the paid billing period). How we handle personal data (including your clients&rsquo; data) is described in our
         <a href="/privacy">Privacy Policy</a>.
       </p>
 
@@ -218,8 +232,8 @@ import '@/styles/legal-pages.css';
         host, display, and use them solely to deliver the project and run the service for you.
       </p>
       <p>
-        KERSIVO owns the source code, platform, admin software, retail software and infrastructure. Your subscription to
-        Your subscription gives you a <strong>licence</strong> to use the platform while it is active; it does
+        KERSIVO owns the source code, platform, admin software, retail software and infrastructure. Your subscription
+        gives you a <strong>licence</strong> to use the platform while it is active; it does
         <strong>not</strong> transfer ownership of the underlying software to you.
       </p>
 
@@ -231,8 +245,8 @@ import '@/styles/legal-pages.css';
 
       <h2>Availability and support</h2>
       <p>
-        We aim to keep the service reasonably available but do not guarantee uninterrupted access. Support response
-        times for subscribed clients are within one business day as described on our website.
+        We aim to keep the service reasonably available but do not guarantee uninterrupted access.
+        {' '}{SUPPORT_RESPONSE_CLAIM}
       </p>
 
       <h2>Limitation of liability</h2>

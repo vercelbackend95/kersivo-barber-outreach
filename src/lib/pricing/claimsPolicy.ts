@@ -9,6 +9,11 @@
  * - fully bespoke / fully custom-built / built entirely from scratch / unlimited design / unlimited redesigns
  */
 
+import {
+  SAAS_EXPORT_RETENTION_DAYS,
+  SAAS_GRACE_DAYS,
+} from '@/lib/setup/saasEntitlement';
+
 /** Amount charged today — not a forever price lock. */
 export const PRICE_VAT_DISCLAIMER =
   'You pay exactly the price shown. KERSIVO is not currently VAT registered, so no VAT is added.';
@@ -285,3 +290,31 @@ export const FAIR_USE_IMMEDIATE_TRIGGERS = [
 
 export const FAIR_USE_IMMEDIATE_RESTRICTION_CLAIM =
   'KERSIVO may restrict access immediately in cases of fraud, spam, a security threat, illegal use, or serious risk to the platform or other customers.';
+
+/**
+ * Failed / overdue subscription payments — aligned with saasEntitlement grace + lifecycle cron.
+ * Do not claim a fixed termination day; CANCELED comes from Stripe cancel/delete.
+ */
+export const FAILED_PAYMENT_CLAIM = `Stripe may retry a failed subscription payment in accordance with its billing process. After a failed renewal, the subscription may be marked past due. For ${SAAS_GRACE_DAYS} days after the failed payment, paid features may remain available. After that grace period, KERSIVO may restrict or suspend access to the website, booking system and retail system. The admin dashboard may remain available for billing management and data export. If payment remains outstanding, KERSIVO may terminate the subscription. Restoring the service may require payment of all outstanding charges.`;
+
+/**
+ * First subscription payment / refunds — goodwill when KERSIVO cannot deliver; not a change-of-mind refund.
+ */
+export const REFUND_CLAIM =
+  'Except where required by law, the first subscription payment is not automatically refundable because onboarding and configuration work may begin immediately after purchase. If KERSIVO is wholly unable to begin or provide the service for reasons solely within KERSIVO’s control, KERSIVO will refund the first subscription payment. Nothing in these Terms excludes rights or remedies that cannot lawfully be excluded.';
+
+/** Support response target — not a guaranteed resolution time. */
+export const SUPPORT_RESPONSE_CLAIM =
+  'Our target is to provide an initial response to subscribed clients within one business day. This is a response target, not a guaranteed resolution time. Standard support does not include 24/7 telephone support unless separately agreed in writing.';
+
+/**
+ * Website update support scope (ops support, not a claim that every field is self-serve in the CMS).
+ */
+export const WEBSITE_UPDATE_SUPPORT_CLAIM =
+  'Website update support covers reasonable minor changes to the standard KERSIVO website, such as updating supplied text, opening hours, contact details, team information, prices and replacing images supplied by the Client. It does not include new software features, a full redesign, unlimited revisions, bespoke pages, custom integrations or an open-ended allocation of development hours. Larger changes may require a separate written quotation.';
+
+/**
+ * CSV export availability + post-termination retention window (matches SAAS_EXPORT_RETENTION_DAYS + purge cron).
+ * Do not claim automatic anonymisation; the system may hard-delete shop data after the window.
+ */
+export const DATA_EXPORT_RETENTION_CLAIM = `You may request a free CSV export containing first name, surname where stored, email, phone number and booking history. Export is available while your subscription is active and for ${SAAS_EXPORT_RETENTION_DAYS} days after the subscription ends. After that period, shop data may be deleted in accordance with our Privacy Policy.`;

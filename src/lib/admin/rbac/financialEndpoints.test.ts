@@ -98,9 +98,13 @@ vi.mock('@/lib/setup/saasDataExport', () => ({
   buildShopClientBookingCsv: vi.fn(() => 'csv'),
 }));
 
-vi.mock('@/lib/setup/saasEntitlement', () => ({
-  saasSubscriptionAllowsDataExport: vi.fn(() => true),
-}));
+vi.mock('@/lib/setup/saasEntitlement', async (importOriginal) => {
+  const actual = await importOriginal<typeof import('@/lib/setup/saasEntitlement')>();
+  return {
+    ...actual,
+    saasSubscriptionAllowsDataExport: vi.fn(() => true),
+  };
+});
 
 vi.mock('@/lib/admin/onboarding', () => ({
   linkAllServicesToAllBarbers: vi.fn(),
