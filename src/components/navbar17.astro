@@ -121,8 +121,9 @@ const brandHref = isLanding ? '#hero' : isTestShop ? '/admin/test-shop' : '/#hom
             }
           </div>
 
-          <!-- Mobile controls: hamburger -->
+          <!-- Mobile: CTA (+ cart when shop) — no hamburger sheet -->
           <div class="navbar17__mobile-controls">
+            {showCart ? <NavbarCartButton class="navbar17__cart-btn navbar17__cart-btn--mobile-bar" /> : null}
             {
               ctaHref ? (
                 <a href={ctaHref} class="navbar17__mobile-bar-cta" data-demo-cta={ctaDemoAttr} data-track={ctaTrack}>{ctaLabel}</a>
@@ -130,63 +131,11 @@ const brandHref = isLanding ? '#hero' : isTestShop ? '/admin/test-shop' : '/#hom
                 <button type="button" class="navbar17__mobile-bar-cta">{ctaLabel}</button>
               )
             }
-            <button
-              class="navbar17__toggle"
-              type="button"
-              aria-expanded="false"
-              aria-haspopup="dialog"
-              aria-controls="mobile-menu"
-              data-nav-toggle
-            >
-              <span class="navbar17__toggle-icon" aria-hidden="true"></span>
-              <span class="sr-only">Open navigation menu</span>
-            </button>
           </div>
         </div>
       </div>
     </div>
-
-    <nav
-      id="mobile-menu"
-      class="navbar17__mobile"
-      aria-label="Mobile navigation"
-      data-mobile-nav
-      aria-hidden="true"
-      inert
-    >
-      <ul class="navbar17__mobile-list" role="list">
-        {navItems.map((item) => (
-          <li>
-            <a
-              href={item.link}
-              class="navbar17__mobile-link"
-              data-mobile-item
-              data-nav-section={item.sectionId || undefined}
-              data-nav-page={item.isPage ? item.link : undefined}
-            >
-              <span class="navbar17__mobile-link-icon" aria-hidden="true">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
-                  <path d={item.icon}></path>
-                </svg>
-              </span>
-              {item.name}
-            </a>
-          </li>
-        ))}
-        {showCart ? (
-          <li class="navbar17__mobile-cart-item">
-            <NavbarCartButton class="navbar17__cart-btn navbar17__cart-btn--mobile-list" mobileSheet />
-          </li>
-        ) : null}
-      </ul>
-    </nav>
   </div>
-
-  <div
-    class="navbar17__mobile-backdrop"
-    data-mobile-nav-backdrop
-    aria-hidden="true"
-  ></div>
 </header>
 
 <Navbar17ClientScript />

@@ -51,6 +51,11 @@ export type AdminLineChartProps = {
   hideAxisTitles?: boolean;
   /** Extra top padding (px) to reserve space for an HTML overlay headline */
   contentInsetTop?: number;
+  /**
+   * When true, hold the stroke-draw until the chart root intersects the viewport
+   * (landing LP). Admin defaults to immediate draw on mount.
+   */
+  drawWhenVisible?: boolean;
 };
 
 const TOOLTIP_MAX_W = 220;
@@ -85,6 +90,8 @@ type AnimatedLineSeriesProps = {
   extraClass: string;
   gradientId: string;
   activeDot: { cx: number; cy: number } | null;
+  /** When false, keep the line hidden until the parent allows draw. */
+  allowDraw: boolean;
 };
 
 function AnimatedLineSeries({
@@ -98,6 +105,7 @@ function AnimatedLineSeries({
   extraClass,
   gradientId,
   activeDot,
+  allowDraw,
 }: AnimatedLineSeriesProps) {
   const lineRef = useRef<SVGPathElement>(null);
   const areaRef = useRef<SVGPathElement>(null);
@@ -157,6 +165,11 @@ function AnimatedLineSeries({
       areaRef.current.style.opacity = '0';
     }
 
+    // Wait until the chart is allowed to draw (viewport gate on landing).
+    if (!allowDraw) {
+      return undefined;
+    }
+
     // Force layout so the browser commits the "hidden" state before animating.
     void line.getBoundingClientRect();
 
@@ -177,7 +190,7 @@ function AnimatedLineSeries({
       window.cancelAnimationFrame(raf1);
       window.cancelAnimationFrame(raf2);
     };
-  }, [linePath, dataFingerprint, reduceMotion, seriesKey]);
+  }, [linePath, dataFingerprint, reduceMotion, seriesKey, allowDraw]);
 
   return (
     <g>
@@ -305,6 +318,7 @@ export default function AdminLineChart({
   primarySeriesKey,
   hideAxisTitles = true,
   contentInsetTop,
+  drawWhenVisible = false,
 }: AdminLineChartProps) {
   const isSparkline = variant === 'sparkline';
   const useCurve = curve ?? (isSparkline ? 'linear' : 'smooth');
@@ -312,6 +326,33 @@ export default function AdminLineChart({
   const containerRef = useRef<HTMLDivElement>(null);
   const [dims, setDims] = useState({ width: 900, height: isSparkline ? 88 : 320 });
   const [tooltip, setTooltip] = useState<TooltipState>(null);
+  const [allowDraw, setAllowDraw] = useState(!drawWhenVisible);
+
+  useEffect(() => {
+    if (!drawWhenVisible) {
+      setAllowDraw(true);
+      return undefined;
+    }
+    if (allowDraw) return undefined;
+
+    const el = containerRef.current;
+    if (!el || typeof IntersectionObserver === 'undefined') {
+      setAllowDraw(true);
+      return undefined;
+    }
+
+    const io = new IntersectionObserver(
+      (entries) => {
+        if (entries.some((entry) => entry.isIntersecting)) {
+          setAllowDraw(true);
+          io.disconnect();
+        }
+      },
+      { threshold: 0.35, rootMargin: '0px 0px -8% 0px' },
+    );
+    io.observe(el);
+    return () => io.disconnect();
+  }, [allowDraw, drawWhenVisible]);
 
   useEffect(() => {
     const el = containerRef.current;
@@ -545,6 +586,7 @@ export default function AdminLineChart({
               isSparkline={isSparkline}
               extraClass={extraClass}
               gradientId={`${gradientId}-${s.key}`}
+              allowDraw={allowDraw}
               activeDot={
                 activePt
                   ? { cx: xPos(activePt.label), cy: yPos(activePt.value) }

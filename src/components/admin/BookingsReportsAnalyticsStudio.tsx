@@ -128,6 +128,8 @@ type BookingsReportsAnalyticsStudioProps = {
   onChartMetricChange?: (metric: ReportsChartMetric) => void;
   selectedBarberIds?: string[];
   onSelectedBarberIdsChange?: (ids: string[]) => void;
+  /** Landing: defer chart stroke-draw until the studio is in view. */
+  drawChartWhenVisible?: boolean;
 };
 
 const BookingsReportsAnalyticsStudio = forwardRef<HTMLElement, BookingsReportsAnalyticsStudioProps>(
@@ -148,6 +150,7 @@ const BookingsReportsAnalyticsStudio = forwardRef<HTMLElement, BookingsReportsAn
       onChartMetricChange,
       selectedBarberIds: controlledSelectedBarberIds,
       onSelectedBarberIdsChange,
+      drawChartWhenVisible = false,
     },
     ref,
   ) {
@@ -368,6 +371,7 @@ const BookingsReportsAnalyticsStudio = forwardRef<HTMLElement, BookingsReportsAn
               contentInsetTop={isCompactLayout ? 84 : undefined}
               emptyLabel="No data for this range"
               ariaLabel={`${chartMetric} trend chart`}
+              drawWhenVisible={drawChartWhenVisible}
             />
           </div>
         )}

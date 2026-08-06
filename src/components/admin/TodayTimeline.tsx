@@ -7,7 +7,8 @@ import { getEffectiveBookingStatus, getManualBookingActionOptions } from '../../
 import { getBookingPaymentChipState } from '../../lib/booking/paymentReporting';
 import { getBookingStatusTone, getStatusLabel } from './bookingStatus';
 import { SkeletonVerticalTimeline } from '../skeleton';
-import { ArrowRight, ListOrdered, MessageCircle, Plus, User, X } from '../lucide-react';
+import { ArrowRight, Sparkles, User, X } from '../lucide-react';
+import BookingStatusActionGlyph, { getStatusActionVisual } from './BookingStatusActionGlyph';
 import ClientProfilePanel from './ClientProfilePanel';
 import { adminFetchJson, ADMIN_DEMO_BLOCKED_EVENT } from './adminAuth';
 import { resolveClientIdForBooking } from '../../lib/admin/resolveClientIdForBooking';
@@ -765,6 +766,10 @@ const BookingExpansionCard = memo(function BookingExpansionCard({
     status: effectiveStatus,
     rescheduledAt: booking.rescheduledAt ?? null,
   });
+  const statusActionVisual = getStatusActionVisual(
+    effectiveStatus,
+    booking.rescheduledAt ?? null,
+  );
 
   const closeActionSheets = useCallback(() => {
     setIsStatusSheetOpen(false);
@@ -1072,7 +1077,7 @@ const BookingExpansionCard = memo(function BookingExpansionCard({
               <span className="admin-vtl-client-panel-avatar-initials">{clientInitials}</span>
             )}
             <span className="admin-vtl-client-panel-avatar-badge" aria-hidden="true">
-              <MessageCircle className="admin-vtl-client-panel-avatar-badge-icon" aria-hidden />
+              <User className="admin-vtl-client-panel-avatar-badge-icon" aria-hidden />
             </span>
           </button>
           <p className="admin-vtl-client-panel-name">{booking.fullName.split(' ')[0]}</p>
@@ -1167,16 +1172,25 @@ const BookingExpansionCard = memo(function BookingExpansionCard({
           {canMutateBooking ? (
             <button
               type="button"
-              className={`admin-vtl-ap-circle-btn admin-vtl-ap-circle-btn--status${isStatusSheetOpen ? ' is-active' : ''}`}
+              className={`admin-vtl-ap-circle-btn admin-vtl-ap-circle-btn--status-primary admin-vtl-ap-circle-btn--tone-${statusActionVisual.tone}${isStatusSheetOpen ? ' is-active' : ''}`}
               onClick={openStatusActions}
               tabIndex={swipeState === 'right' ? 0 : -1}
-              aria-label={`Change status for ${booking.fullName}`}
+              aria-label={`Change status for ${booking.fullName} (currently ${statusActionVisual.label})`}
               aria-expanded={isStatusSheetOpen}
+              title="Tap to update status"
             >
-              <span className="admin-vtl-ap-circle-icon-wrap">
-                <ListOrdered className="admin-vtl-ap-circle-icon" aria-hidden />
-              </span>
-              <span className="admin-vtl-ap-circle-label">Status</span>
+              <BookingStatusActionGlyph
+                status={effectiveStatus}
+                rescheduledAt={booking.rescheduledAt ?? null}
+                startAt={booking.startAt}
+                endAt={booking.endAt}
+                active={isStatusSheetOpen}
+                live={swipeState === 'right'}
+              />
+              <span className="admin-vtl-ap-circle-label">{statusActionVisual.label}</span>
+              {!isStatusSheetOpen && !previewSwipe ? (
+                <span className="admin-vtl-ap-circle-hint">Tap to update</span>
+              ) : null}
             </button>
           ) : (
             <p className="admin-vtl-ap-readonly muted">View only</p>
@@ -1191,7 +1205,7 @@ const BookingExpansionCard = memo(function BookingExpansionCard({
               aria-expanded={isServiceSheetOpen}
             >
               <span className="admin-vtl-ap-circle-icon-wrap">
-                <Plus className="admin-vtl-ap-circle-icon" aria-hidden />
+                <Sparkles className="admin-vtl-ap-circle-icon" aria-hidden />
               </span>
               <span className="admin-vtl-ap-circle-label">Service</span>
             </button>

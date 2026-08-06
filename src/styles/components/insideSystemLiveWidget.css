@@ -18,6 +18,15 @@
   --border: #24201c;
   --fg: #fff8ee;
   --muted: #c9c1b7;
+  /* Status / action tokens — keep glyph + service colors correct on landing */
+  --status-confirmed: #22c55e;
+  --status-pending: #eab308;
+  --status-rescheduled: #a855f7;
+  --status-cancelled: #d72638;
+  --info: #38bdf8;
+  --focus: #6366f1;
+  --admin-premium-surface-bg: color-mix(in srgb, var(--surface-2) 76%, var(--surface));
+  --admin-premium-surface-border: 1px solid color-mix(in srgb, var(--border) 58%, transparent);
 
   position: relative;
   display: block;
@@ -73,6 +82,22 @@
 
 .isw .admin-vtl-swipe-dots {
   display: flex !important;
+}
+
+/* Preview lock flow — no “tap to update” microcopy (action opens preview gate). */
+.isw .admin-vtl-ap-circle-hint {
+  display: none;
+}
+
+/* Keep the flagship status glyph readable in the compact landing stage. */
+.isw .admin-vtl-ap-status-glyph {
+  width: 52px;
+  height: 52px;
+}
+
+.isw .admin-vtl-ap-circle-btn--service .admin-vtl-ap-circle-icon-wrap {
+  width: 40px;
+  height: 40px;
 }
 
 /* ── Swipe hint (preview only) — sits directly above the swipe dots ── */

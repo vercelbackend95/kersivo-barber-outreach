@@ -13450,6 +13450,7 @@ button.admin-sidebar-brand--button:focus-visible {
 
 /* ── Client panel (revealed on swipe right) ──────────────────────────────── */
 .admin-vtl-client-panel {
+  position: relative;
   min-width: var(--client-panel-w, 120px);
   width: var(--client-panel-w, 120px);
   flex-shrink: 0;
@@ -13457,10 +13458,11 @@ button.admin-sidebar-brand--button:focus-visible {
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  gap: 0.45rem;
+  gap: 0.5rem;
   padding: 0.75rem 0.5rem;
-  background: color-mix(in srgb, var(--accent) 7%, var(--surface-1, var(--surface)));
-  border-right: 1px solid color-mix(in srgb, var(--border) 60%, transparent);
+  background: var(--admin-premium-surface-bg, color-mix(in srgb, var(--surface-2, var(--surface)) 92%, var(--bg)));
+  border-right: var(--admin-premium-surface-border, 1px solid color-mix(in srgb, var(--border) 70%, transparent));
+  box-shadow: var(--admin-premium-shadow-inset, none);
 }
 
 .admin-vtl-client-panel[aria-hidden='true'] {
@@ -13469,17 +13471,20 @@ button.admin-sidebar-brand--button:focus-visible {
 
 /* Client avatar circle */
 .admin-vtl-client-panel-avatar {
-  width: 44px;
-  height: 44px;
+  width: 46px;
+  height: 46px;
   border-radius: 999px;
-  border: 2px solid color-mix(in srgb, var(--accent) 40%, var(--border));
-  background: color-mix(in srgb, var(--accent) 18%, var(--surface-2, var(--surface)));
+  border: 1.5px solid color-mix(in srgb, var(--border) 80%, var(--surface-3, var(--surface)));
+  background: color-mix(in srgb, var(--surface-3, var(--surface)) 70%, var(--bg));
   display: flex;
   align-items: center;
   justify-content: center;
   flex-shrink: 0;
   overflow: visible;
   position: relative;
+  box-shadow:
+    var(--admin-premium-shadow-inset, inset 0 1px 0 color-mix(in srgb, #fff 6%, transparent)),
+    0 2px 8px color-mix(in srgb, var(--bg) 55%, transparent);
 }
 
 .admin-vtl-client-panel-avatar-img {
@@ -13493,18 +13498,19 @@ button.admin-sidebar-brand--button:focus-visible {
 .admin-vtl-client-panel-avatar-initials {
   font-size: 0.75rem;
   font-weight: 700;
-  letter-spacing: 0.02em;
-  color: color-mix(in srgb, var(--fg) 90%, var(--accent));
+  letter-spacing: 0.03em;
+  color: color-mix(in srgb, var(--fg) 88%, var(--muted));
   line-height: 1;
   text-transform: uppercase;
 }
 
 /* Client first name label */
 .admin-vtl-client-panel-name {
-  font-size: 0.68rem;
-  font-weight: 600;
-  color: color-mix(in srgb, var(--fg) 80%, var(--muted));
-  letter-spacing: 0.02em;
+  font-size: 0.66rem;
+  font-weight: 650;
+  color: color-mix(in srgb, var(--fg) 82%, var(--muted));
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
   margin: 0;
   max-width: 100%;
   overflow: hidden;
@@ -13528,13 +13534,13 @@ button.admin-sidebar-brand--button:focus-visible {
   letter-spacing: 0.03em;
   padding: 2px 7px;
   border-radius: 999px;
-  border: 1px solid color-mix(in srgb, var(--accent) 38%, var(--border));
-  background: color-mix(in srgb, var(--accent) 14%, var(--surface-2, var(--surface)));
-  color: color-mix(in srgb, var(--accent) 80%, var(--fg));
+  border: 1px solid color-mix(in srgb, var(--border) 70%, transparent);
+  background: color-mix(in srgb, var(--surface-2, var(--surface)) 80%, var(--bg));
+  color: color-mix(in srgb, var(--muted) 70%, var(--fg));
   white-space: nowrap;
 }
 
-/* ── Booking actions panel (revealed on swipe right) ─────────────────────── */
+/* ── Booking actions panel (revealed on swipe left) ─────────────────────── */
 .admin-vtl-actions-panel {
   position: relative;
   min-width: var(--actions-panel-w, 200px);
@@ -13543,12 +13549,11 @@ button.admin-sidebar-brand--button:focus-visible {
   display: flex;
   align-items: center;
   justify-content: center;
-  gap: 0.85rem;
+  gap: 0.9rem;
   padding: 0.75rem 0.55rem;
-  background:
-    linear-gradient(180deg, color-mix(in srgb, var(--accent) 5%, transparent), transparent 58%),
-    color-mix(in srgb, var(--accent) 7%, var(--surface-1, var(--surface)));
-  border-left: 1px solid color-mix(in srgb, var(--border) 60%, transparent);
+  background: var(--admin-premium-surface-bg, color-mix(in srgb, var(--surface-2, var(--surface)) 92%, var(--bg)));
+  border-left: var(--admin-premium-surface-border, 1px solid color-mix(in srgb, var(--border) 70%, transparent));
+  box-shadow: var(--admin-premium-shadow-inset, none);
 }
 
 .admin-vtl-actions-panel[aria-hidden='true'] {
@@ -13561,10 +13566,10 @@ button.admin-sidebar-brand--button:focus-visible {
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 0.4rem;
+  gap: 0.42rem;
   cursor: pointer;
   padding: 0;
-  transition: transform 0.12s ease;
+  transition: transform 0.14s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
 .admin-vtl-ap-circle-btn:hover:not(:disabled) {
@@ -13582,59 +13587,254 @@ button.admin-sidebar-brand--button:focus-visible {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  border: 1px solid color-mix(in srgb, var(--border) 66%, transparent);
-  background: color-mix(in srgb, var(--surface-2, var(--surface)) 88%, var(--bg));
-  box-shadow: 0 2px 8px color-mix(in srgb, var(--bg) 72%, transparent);
-  transition: border-color 0.12s ease, box-shadow 0.12s ease, background 0.12s ease;
+  border: 1px solid color-mix(in srgb, var(--border) 72%, transparent);
+  background: color-mix(in srgb, var(--surface-2, var(--surface)) 90%, var(--bg));
+  box-shadow:
+    var(--admin-premium-shadow-inset, inset 0 1px 0 color-mix(in srgb, #fff 5%, transparent)),
+    var(--admin-premium-shadow-lift-subtle, 0 2px 8px color-mix(in srgb, var(--bg) 55%, transparent));
+  color: color-mix(in srgb, var(--fg) 78%, var(--muted));
+  transition:
+    border-color 0.14s ease,
+    box-shadow 0.14s ease,
+    background 0.14s ease,
+    color 0.14s ease;
 }
 
-.admin-vtl-ap-circle-btn--status .admin-vtl-ap-circle-icon-wrap {
-  border-color: color-mix(in srgb, var(--status-rescheduled, var(--info)) 44%, var(--border));
-  color: color-mix(in srgb, var(--status-rescheduled, var(--info)) 88%, var(--fg));
+/* Flagship Status glyph (primary day-of control) */
+.admin-vtl-ap-status-glyph {
+  --ap-status-tone: var(--status-confirmed);
+  position: relative;
+  width: 56px;
+  height: 56px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  border-radius: 999px;
+  border: 1px solid color-mix(in srgb, var(--ap-status-tone) 42%, var(--border));
+  background:
+    radial-gradient(
+      circle at 50% 38%,
+      color-mix(in srgb, var(--ap-status-tone) 14%, transparent),
+      transparent 62%
+    ),
+    color-mix(in srgb, var(--ap-status-tone) 10%, var(--surface-2, var(--surface)));
+  color: color-mix(in srgb, var(--ap-status-tone) 88%, var(--fg));
+  box-shadow:
+    var(--admin-premium-shadow-inset, inset 0 1px 0 color-mix(in srgb, #fff 6%, transparent)),
+    var(--admin-premium-shadow-lift-subtle, 0 2px 10px color-mix(in srgb, var(--bg) 50%, transparent));
+  transition:
+    border-color 0.14s ease,
+    box-shadow 0.14s ease,
+    background 0.14s ease,
+    color 0.14s ease;
 }
 
+.admin-vtl-ap-status-glyph--confirmed {
+  --ap-status-tone: var(--status-confirmed);
+}
+
+.admin-vtl-ap-status-glyph--pending {
+  --ap-status-tone: var(--status-pending);
+}
+
+.admin-vtl-ap-status-glyph--cancelled {
+  --ap-status-tone: var(--status-cancelled);
+}
+
+.admin-vtl-ap-status-glyph--rescheduled {
+  --ap-status-tone: var(--status-rescheduled);
+}
+
+.admin-vtl-ap-circle-btn--status-primary:hover:not(:disabled) .admin-vtl-ap-status-glyph {
+  border-color: color-mix(in srgb, var(--ap-status-tone) 62%, var(--border));
+  box-shadow:
+    var(--admin-premium-shadow-inset, inset 0 1px 0 color-mix(in srgb, #fff 6%, transparent)),
+    0 4px 16px color-mix(in srgb, var(--ap-status-tone) 18%, transparent);
+}
+
+.admin-vtl-ap-circle-btn--status-primary.is-active .admin-vtl-ap-status-glyph,
+.admin-vtl-ap-status-glyph.is-active {
+  border-color: color-mix(in srgb, var(--ap-status-tone) 72%, var(--border));
+  background:
+    radial-gradient(
+      circle at 50% 38%,
+      color-mix(in srgb, var(--ap-status-tone) 20%, transparent),
+      transparent 64%
+    ),
+    color-mix(in srgb, var(--ap-status-tone) 16%, var(--surface-2, var(--surface)));
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--ap-status-tone) 22%, transparent);
+}
+
+.admin-vtl-ap-status-glyph__ring {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+}
+
+.admin-vtl-ap-status-glyph__ring-track {
+  stroke: color-mix(in srgb, var(--border) 55%, transparent);
+}
+
+.admin-vtl-ap-status-glyph__ring-progress {
+  stroke: color-mix(in srgb, var(--ap-status-tone) 88%, var(--fg));
+}
+
+.admin-vtl-ap-status-glyph--muted-ring .admin-vtl-ap-status-glyph__ring-progress {
+  stroke: color-mix(in srgb, var(--ap-status-tone) 28%, var(--border));
+  opacity: 0.45;
+}
+
+.admin-vtl-ap-status-glyph--muted-ring .admin-vtl-ap-status-glyph__ring-track {
+  stroke: color-mix(in srgb, var(--border) 40%, transparent);
+}
+
+.admin-vtl-ap-status-glyph__icon-slot {
+  position: relative;
+  z-index: 1;
+  width: 22px;
+  height: 22px;
+  display: grid;
+  place-items: center;
+}
+
+.admin-vtl-ap-status-glyph__icon-motion {
+  display: grid;
+  place-items: center;
+  width: 22px;
+  height: 22px;
+}
+
+.admin-vtl-ap-status-glyph__icon {
+  width: 22px;
+  height: 22px;
+  display: block;
+}
+
+@keyframes admin-vtl-ap-status-breathe {
+  0%,
+  100% {
+    transform: scale(1);
+  }
+  50% {
+    transform: scale(1.03);
+  }
+}
+
+.admin-vtl-ap-status-glyph--breathe {
+  animation: admin-vtl-ap-status-breathe 2.4s ease-in-out infinite;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .admin-vtl-ap-status-glyph--breathe {
+    animation: none;
+  }
+
+  .admin-vtl-ap-status-glyph__ring-progress {
+    transition: none !important;
+  }
+}
+
+/* Tone modifiers still apply to Service wrap via --status / legacy status class paths */
+.admin-vtl-ap-circle-btn--tone-confirmed .admin-vtl-ap-circle-icon-wrap {
+  border-color: color-mix(in srgb, var(--status-confirmed) 42%, var(--border));
+  color: color-mix(in srgb, var(--status-confirmed) 86%, var(--fg));
+  background: color-mix(in srgb, var(--status-confirmed) 10%, var(--surface-2, var(--surface)));
+}
+
+.admin-vtl-ap-circle-btn--tone-pending .admin-vtl-ap-circle-icon-wrap {
+  border-color: color-mix(in srgb, var(--status-pending) 42%, var(--border));
+  color: color-mix(in srgb, var(--status-pending) 86%, var(--fg));
+  background: color-mix(in srgb, var(--status-pending) 10%, var(--surface-2, var(--surface)));
+}
+
+.admin-vtl-ap-circle-btn--tone-cancelled .admin-vtl-ap-circle-icon-wrap {
+  border-color: color-mix(in srgb, var(--status-cancelled) 40%, var(--border));
+  color: color-mix(in srgb, var(--status-cancelled) 84%, var(--fg));
+  background: color-mix(in srgb, var(--status-cancelled) 9%, var(--surface-2, var(--surface)));
+}
+
+.admin-vtl-ap-circle-btn--tone-rescheduled .admin-vtl-ap-circle-icon-wrap {
+  border-color: color-mix(in srgb, var(--status-rescheduled) 42%, var(--border));
+  color: color-mix(in srgb, var(--status-rescheduled) 86%, var(--fg));
+  background: color-mix(in srgb, var(--status-rescheduled) 10%, var(--surface-2, var(--surface)));
+}
+
+/* Service launcher — secondary size + calm info tone */
 .admin-vtl-ap-circle-btn--service .admin-vtl-ap-circle-icon-wrap {
-  border-color: color-mix(in srgb, var(--accent) 48%, var(--border));
-  color: color-mix(in srgb, var(--accent) 88%, var(--fg));
-}
-
-.admin-vtl-ap-circle-btn--status:hover:not(:disabled) .admin-vtl-ap-circle-icon-wrap {
-  border-color: color-mix(in srgb, var(--status-rescheduled, var(--info)) 68%, var(--border));
-  box-shadow: 0 4px 12px color-mix(in srgb, var(--status-rescheduled, var(--info)) 18%, transparent);
+  width: 44px;
+  height: 44px;
+  border-color: color-mix(in srgb, var(--info) 40%, var(--border));
+  color: color-mix(in srgb, var(--info) 82%, var(--fg));
+  background: color-mix(in srgb, var(--info) 9%, var(--surface-2, var(--surface)));
 }
 
 .admin-vtl-ap-circle-btn--service:hover:not(:disabled) .admin-vtl-ap-circle-icon-wrap {
-  border-color: color-mix(in srgb, var(--accent) 68%, var(--border));
-  box-shadow: 0 4px 12px color-mix(in srgb, var(--accent) 18%, transparent);
-}
-
-.admin-vtl-ap-circle-btn--status.is-active .admin-vtl-ap-circle-icon-wrap {
-  border-color: color-mix(in srgb, var(--status-rescheduled, var(--info)) 72%, var(--border));
-  background: color-mix(in srgb, var(--status-rescheduled, var(--info)) 16%, var(--surface-2, var(--surface)));
-  box-shadow: 0 0 0 3px color-mix(in srgb, var(--status-rescheduled, var(--info)) 24%, transparent);
+  border-color: color-mix(in srgb, var(--info) 60%, var(--border));
+  box-shadow:
+    var(--admin-premium-shadow-inset, inset 0 1px 0 color-mix(in srgb, #fff 5%, transparent)),
+    0 4px 14px color-mix(in srgb, var(--info) 14%, transparent);
 }
 
 .admin-vtl-ap-circle-btn--service.is-active .admin-vtl-ap-circle-icon-wrap {
-  border-color: color-mix(in srgb, var(--accent) 72%, var(--border));
-  background: color-mix(in srgb, var(--accent) 14%, var(--surface-2, var(--surface)));
-  box-shadow: 0 0 0 3px color-mix(in srgb, var(--accent) 22%, transparent);
+  border-color: color-mix(in srgb, var(--info) 68%, var(--border));
+  background: color-mix(in srgb, var(--info) 14%, var(--surface-2, var(--surface)));
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--info) 20%, transparent);
 }
 
 .admin-vtl-ap-circle-icon {
-  width: 19px;
-  height: 19px;
+  width: 18px;
+  height: 18px;
+  stroke-width: 1.75;
 }
 
 .admin-vtl-ap-circle-label {
-  font-size: 0.68rem;
-  font-weight: 650;
-  color: color-mix(in srgb, var(--fg) 78%, var(--muted));
-  letter-spacing: 0.02em;
+  font-size: 0.62rem;
+  font-weight: 700;
+  color: color-mix(in srgb, var(--fg) 72%, var(--muted));
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  max-width: 5rem;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  text-align: center;
 }
 
-.admin-vtl-ap-circle-btn:focus-visible .admin-vtl-ap-circle-icon-wrap {
+.admin-vtl-ap-circle-btn--status-primary .admin-vtl-ap-circle-label {
+  font-size: 0.64rem;
+  max-width: 5.4rem;
+}
+
+.admin-vtl-ap-circle-hint {
+  font-size: 0.52rem;
+  font-weight: 600;
+  letter-spacing: 0.03em;
+  text-transform: uppercase;
+  color: color-mix(in srgb, var(--muted) 78%, var(--fg));
+  margin-top: -0.18rem;
+  max-width: 5.4rem;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.admin-vtl-ap-circle-btn--status-primary {
+  gap: 0.34rem;
+}
+
+.admin-vtl-ap-circle-btn:focus-visible .admin-vtl-ap-circle-icon-wrap,
+.admin-vtl-ap-circle-btn:focus-visible .admin-vtl-ap-status-glyph {
   outline: 2px solid var(--focus);
   outline-offset: 2px;
+}
+
+@media (max-width: 360px) {
+  .admin-vtl-ap-circle-hint {
+    display: none;
+  }
 }
 
 .admin-vtl-action-popover {
@@ -14025,10 +14225,6 @@ button.admin-sidebar-brand--button:focus-visible {
   margin: 0;
   font-size: 0.72rem;
   color: var(--danger);
-}
-
-.admin-vtl-client-panel {
-  position: relative;
 }
 
 .admin-vtl-message-popover {
@@ -16370,35 +16566,41 @@ button.admin-sidebar-brand--button:focus-visible {
   padding: 0;
   font: inherit;
   color: inherit;
-  transition: transform 0.12s, box-shadow 0.12s;
+  transition: transform 0.14s cubic-bezier(0.4, 0, 0.2, 1), box-shadow 0.14s ease;
 }
 
 .admin-vtl-client-panel-avatar-badge {
   position: absolute;
-  right: -4px;
-  bottom: -4px;
+  right: -3px;
+  bottom: -3px;
   width: 18px;
   height: 18px;
   display: inline-flex;
   align-items: center;
   justify-content: center;
   border-radius: 999px;
-  border: 1.5px solid color-mix(in srgb, var(--status-confirmed, var(--success)) 68%, var(--border));
-  background: color-mix(in srgb, var(--status-confirmed, var(--success)) 22%, var(--surface-2, var(--surface)));
-  color: color-mix(in srgb, var(--status-confirmed, var(--success)) 88%, var(--fg));
+  border: 1.5px solid color-mix(in srgb, var(--border) 75%, var(--surface-3, var(--surface)));
+  background: color-mix(in srgb, var(--surface-2, var(--surface)) 88%, var(--bg));
+  color: color-mix(in srgb, var(--muted) 55%, var(--fg));
   pointer-events: none;
   z-index: 2;
-  box-shadow: 0 2px 6px color-mix(in srgb, var(--bg) 60%, transparent);
+  box-shadow: 0 1px 4px color-mix(in srgb, var(--bg) 50%, transparent);
 }
 
 .admin-vtl-client-panel-avatar-badge-icon {
-  width: 11px;
-  height: 11px;
+  width: 10px;
+  height: 10px;
+  stroke-width: 2;
 }
 
 .admin-vtl-client-panel-avatar--btn:hover:not(:disabled) {
-  transform: scale(1.06);
-  box-shadow: 0 0 0 3px color-mix(in srgb, var(--accent) 60%, transparent);
+  transform: scale(1.05);
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--focus, var(--info)) 28%, transparent);
+}
+
+.admin-vtl-client-panel-avatar--btn:focus-visible {
+  outline: 2px solid var(--focus);
+  outline-offset: 2px;
 }
 
 .admin-vtl-client-panel-avatar--btn:disabled {

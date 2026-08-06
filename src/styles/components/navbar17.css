@@ -6,29 +6,12 @@
 
 .navbar17 {
   --navbar17-z-header: 40;
-  --navbar17-z-header-mobile-open: 100;
-  /* Backdrop (fixed) sits under .navbar17__stack so chrome + panel always paint above */
-  --navbar17-z-backdrop-layer: 1;
-  --navbar17-z-stack-layer: 2;
-  /* Inside .navbar17__stack: bar must paint above fixed mobile panel */
   --navbar17-z-chrome: 12;
-  --navbar17-z-panel: 6;
   position: sticky;
   top: 0;
   z-index: var(--navbar17-z-header);
 }
 
-/* Entire header + chrome above page content and above fixed drawer/backdrop layers */
-.navbar17[data-mobile-open] {
-  z-index: var(--navbar17-z-header-mobile-open);
-  /* Ensure fixed sheet/backdrop are not clipped by any accidental overflow on header */
-  overflow: visible;
-}
-
-/*
- * Blur lives only on .navbar17__bar. Mobile panel uses position:fixed + --navbar17-mobile-sheet-top
- * so it stays viewport-anchored at any scroll position (not clipped by document flow).
- */
 .navbar17__stack {
   position: relative;
   width: 100%;
@@ -124,8 +107,7 @@
   list-style: none;
 }
 
-.navbar17__list > li,
-.navbar17__mobile-list > li {
+.navbar17__list > li {
   max-width: none;
 }
 
@@ -177,6 +159,12 @@
   will-change: transform, width;
 }
 
+@media (prefers-reduced-motion: reduce) {
+  .navbar17__indicator {
+    transition-duration: 0.01ms;
+  }
+}
+
 /* ── Right column: desktop actions + mobile controls ─────────── */
 
 .navbar17__right {
@@ -192,8 +180,6 @@
   gap: 0.55rem;
 }
 
-/* Cart button — shared between desktop and mobile instances */
-/* Cart — desktop uses .btn.btn--secondary.btn--sm; badge + mobile sheet overrides below */
 .navbar17__cart-btn {
   display: inline-flex;
   align-items: center;
@@ -205,7 +191,6 @@
   line-height: 1;
 }
 
-/* Cart icon — SVG matches stroke nav icons; desktop size only (.navbar17__mobile-link-icon overrides in sheet) */
 .navbar17__cart-btn__icon {
   display: inline-flex;
   flex-shrink: 0;
@@ -229,7 +214,6 @@
   justify-content: flex-start;
 }
 
-/* Cart item count badge */
 .navbar17__cart-badge {
   min-width: 1.35rem;
   height: 1.35rem;
@@ -252,7 +236,6 @@
   opacity: 0.55;
 }
 
-/* Primary conversion CTA — subscribe */
 .navbar17__cta-btn {
   display: inline-flex;
   align-items: center;
@@ -289,7 +272,7 @@ button.navbar17__cta-btn {
   appearance: none;
 }
 
-/* ── Mobile controls (hamburger) ───────────────────────────────── */
+/* ── Mobile controls (CTA + optional cart; no hamburger sheet) ─ */
 
 .navbar17__mobile-controls {
   display: none;
@@ -333,343 +316,8 @@ button.navbar17__mobile-bar-cta {
   appearance: none;
 }
 
-/* Hamburger toggle button */
-.navbar17__toggle {
-  display: grid;
-  place-items: center;
-  width: 2.75rem;
-  height: 2.75rem;
-  background: transparent;
-  border: 1px solid var(--border);
-  color: var(--fg);
-  cursor: pointer;
+.navbar17__cart-btn--mobile-bar {
   flex-shrink: 0;
-  transition: border-color 160ms ease;
-}
-
-.navbar17__toggle:hover {
-  border-color: color-mix(in srgb, var(--accent) 55%, var(--border));
-}
-
-.navbar17__toggle:focus-visible {
-  outline: 2px solid var(--focus);
-  outline-offset: 2px;
-}
-
-.navbar17__toggle[aria-busy='true'] {
-  pointer-events: none;
-  cursor: progress;
-}
-
-/* 3-line hamburger — animates to × on open */
-.navbar17__toggle-icon,
-.navbar17__toggle-icon::before,
-.navbar17__toggle-icon::after {
-  display: block;
-  width: 1.1rem;
-  height: 1.5px;
-  background: currentColor;
-  transition: transform 200ms ease, opacity 200ms ease;
-}
-
-.navbar17__toggle-icon {
-  position: relative;
-}
-
-.navbar17__toggle-icon::before,
-.navbar17__toggle-icon::after {
-  content: '';
-  position: absolute;
-  left: 0;
-}
-
-.navbar17__toggle-icon::before { top: -0.34rem; }
-.navbar17__toggle-icon::after  { top:  0.34rem; }
-
-.navbar17__toggle[aria-expanded='true'] .navbar17__toggle-icon {
-  background: transparent;
-}
-
-.navbar17__toggle[aria-expanded='true'] .navbar17__toggle-icon::before {
-  transform: translateY(0.34rem) rotate(45deg);
-}
-
-.navbar17__toggle[aria-expanded='true'] .navbar17__toggle-icon::after {
-  transform: translateY(-0.34rem) rotate(-45deg);
-}
-
-/* Static × (e.g. cart drawer close) — same geometry as open-menu state */
-.navbar17__toggle--as-close .navbar17__toggle-icon {
-  background: transparent;
-}
-
-.navbar17__toggle--as-close .navbar17__toggle-icon::before {
-  transform: translateY(0.34rem) rotate(45deg);
-}
-
-.navbar17__toggle--as-close .navbar17__toggle-icon::after {
-  transform: translateY(-0.34rem) rotate(-45deg);
-}
-
-/* ── Mobile navigation: premium top-down sheet + backdrop ─────── */
-
-.navbar17__mobile-backdrop {
-  display: block;
-  position: fixed;
-  inset: unset;
-  top: var(--navbar17-mobile-sheet-top, 5.25rem);
-  left: 0;
-  right: 0;
-  bottom: 0;
-  width: 100%;
-  height: auto;
-  min-height: 0;
-  z-index: var(--navbar17-z-backdrop-layer);
-  /* Dark dim — matches black page, not a milky gray wash */
-  background: rgb(0 0 0 / 0.72);
-  opacity: 0;
-  pointer-events: none;
-  visibility: hidden;
-  transition:
-    opacity 220ms ease,
-    visibility 0s linear 220ms;
-}
-
-.navbar17[data-mobile-open] .navbar17__mobile-backdrop {
-  opacity: 1;
-  pointer-events: auto;
-  visibility: visible;
-  transition:
-    opacity 220ms ease,
-    visibility 0s linear 0s;
-}
-
-.navbar17__mobile {
-  position: fixed;
-  top: var(--navbar17-mobile-sheet-top, 5.25rem);
-  left: 0;
-  right: 0;
-  z-index: var(--navbar17-z-panel);
-  width: auto;
-  max-width: none;
-  height: auto;
-  min-height: min(18rem, 56dvh);
-  max-height: min(
-    76dvh,
-    calc(100dvh - var(--navbar17-mobile-sheet-top, 5.25rem))
-  );
-  box-sizing: border-box;
-  display: flex;
-  flex-direction: column;
-  /* Same foundation as page body — not lifted gray “card” */
-  background: var(--bg);
-  border: 1px solid color-mix(in srgb, var(--border) 55%, transparent);
-  border-top: none;
-  border-radius: 0 0 var(--radius-lg) var(--radius-lg);
-  box-shadow:
-    0 1px 0 color-mix(in srgb, var(--border) 35%, transparent) inset,
-    0 20px 50px rgb(0 0 0 / 0.55);
-  padding: 0.35rem
-    max(0.82rem, env(safe-area-inset-right, 0px))
-    calc(0.88rem + env(safe-area-inset-bottom, 0px))
-    max(0.74rem, env(safe-area-inset-left, 0px));
-  overflow-x: hidden;
-  overflow-y: hidden;
-  transform: translate3d(0, -0.85rem, 0);
-  transform-origin: top center;
-  opacity: 0;
-  visibility: hidden;
-  pointer-events: none;
-  will-change: transform, opacity;
-  backface-visibility: hidden;
-  /* layout only — paint containment clipped the sheet against the viewport on some mobile engines */
-  contain: layout;
-  transition:
-    transform 220ms cubic-bezier(0.22, 1, 0.36, 1),
-    opacity 180ms ease,
-    visibility 0s linear 220ms;
-}
-
-.navbar17[data-mobile-open] .navbar17__mobile {
-  transform: translate3d(0, 0, 0);
-  opacity: 1;
-  visibility: visible;
-  pointer-events: auto;
-  /* Flush with bar bottom — no top border seam */
-  border-top: 0;
-  transition:
-    transform 220ms cubic-bezier(0.22, 1, 0.36, 1),
-    opacity 180ms ease,
-    visibility 0s linear 0s;
-}
-
-@media (prefers-reduced-motion: reduce) {
-  .navbar17__mobile-backdrop,
-  .navbar17__mobile,
-  .navbar17__mobile-list,
-  .navbar17__indicator,
-  .navbar17__toggle-icon,
-  .navbar17__toggle-icon::before,
-  .navbar17__toggle-icon::after {
-    transition-duration: 0.01ms;
-  }
-
-  .navbar17__mobile-backdrop {
-    transition-property: opacity, visibility;
-  }
-}
-
-.navbar17__mobile-list {
-  margin: 0;
-  padding: 0.25rem 0 0.35rem;
-  list-style: none;
-  display: flex;
-  flex-direction: column;
-  gap: 0;
-  flex: 1;
-  min-height: 0;
-  overflow-y: auto;
-  overscroll-behavior: contain;
-  -webkit-overflow-scrolling: touch;
-  /* body.navbar17-body-lock uses touch-action:none — keep list scrollable */
-  touch-action: pan-y;
-  transform: translate3d(0, -0.7rem, 0);
-  opacity: 0;
-  will-change: transform, opacity;
-  transition:
-    transform 210ms cubic-bezier(0.22, 1, 0.36, 1) 25ms,
-    opacity 160ms ease 25ms;
-}
-
-/* Hairline dividers between rows (incl. before cart) */
-.navbar17__mobile-list > li:not(:last-child) {
-  border-bottom: 1px solid color-mix(in srgb, var(--border) 42%, transparent);
-}
-
-.navbar17[data-mobile-open] .navbar17__mobile-list {
-  transform: translate3d(0, 0, 0);
-  opacity: 1;
-}
-
-.navbar17__mobile-link {
-  position: relative;
-  display: flex;
-  align-items: center;
-  gap: 0.72rem;
-  min-height: 3.1rem;
-  padding: 0.72rem 0.35rem 0.72rem 0.2rem;
-  margin-inline: -0.1rem;
-  color: var(--muted);
-  font-size: 0.9rem;
-  font-weight: 600;
-  letter-spacing: 0.06em;
-  text-transform: uppercase;
-  text-decoration: none;
-  border: none;
-  border-radius: var(--radius-sm);
-  border-left: 2px solid transparent;
-  transition:
-    color        160ms ease,
-    border-color 160ms ease,
-    background   160ms ease;
-}
-
-.navbar17__mobile-link-icon {
-  width: 0.9rem;
-  height: 0.9rem;
-  flex-shrink: 0;
-  color: color-mix(in srgb, var(--muted) 92%, var(--fg));
-  opacity: 0.92;
-}
-
-.navbar17__mobile-link-icon svg {
-  width: 100%;
-  height: 100%;
-  display: block;
-}
-
-.navbar17__mobile-link:hover {
-  color: var(--fg);
-  background: color-mix(in srgb, var(--fg) 4%, transparent);
-  text-decoration: none;
-}
-
-.navbar17__mobile-link.is-active {
-  color: var(--fg);
-  border-left-color: color-mix(in srgb, var(--fg) 42%, transparent);
-  background: color-mix(in srgb, var(--fg) 3%, transparent);
-  font-weight: 650;
-}
-
-.navbar17__mobile-link:hover .navbar17__mobile-link-icon,
-.navbar17__mobile-link.is-active .navbar17__mobile-link-icon {
-  color: var(--fg);
-  opacity: 0.88;
-}
-
-.navbar17__mobile-link:focus-visible {
-  outline: 2px solid var(--focus);
-  outline-offset: 1px;
-}
-
-/* Mobile sheet: cart row — match .navbar17__mobile-link (icon + label + badge) */
-.navbar17__mobile-cart-item {
-  margin-top: 0.2rem;
-  padding-top: 0.35rem;
-  list-style: none;
-}
-
-@media (max-width: 63.99rem) {
-  .navbar17__cart-btn--mobile-list {
-    position: relative;
-    width: 100%;
-    display: flex;
-    align-items: center;
-    gap: 0.72rem;
-    min-height: 3.1rem;
-    height: auto;
-    padding: 0.72rem 0.35rem 0.72rem 0.2rem;
-    margin-inline: -0.1rem;
-    justify-content: flex-start;
-    box-sizing: border-box;
-    text-align: left;
-
-    color: var(--muted);
-    font-size: 0.9rem;
-    font-weight: 600;
-    letter-spacing: 0.02em;
-    text-transform: none;
-
-    background: transparent;
-    border: none;
-    border-radius: var(--radius-sm);
-    border-left: 2px solid transparent;
-    cursor: pointer;
-
-    transition:
-      color        160ms ease,
-      border-color 160ms ease,
-      background   160ms ease;
-  }
-
-  .navbar17__cart-btn--mobile-list .navbar17__cart-badge.is-empty {
-    opacity: 1;
-  }
-
-  .navbar17__cart-btn--mobile-list:hover {
-    color: var(--fg);
-    background: color-mix(in srgb, var(--fg) 4%, transparent);
-  }
-
-  .navbar17__cart-btn--mobile-list:hover .navbar17__mobile-link-icon {
-    color: var(--fg);
-    opacity: 0.88;
-  }
-
-  .navbar17__cart-btn--mobile-list:focus-visible {
-    outline: 2px solid var(--focus);
-    outline-offset: 1px;
-  }
 }
 
 /* ── Utilities ────────────────────────────────────────────────── */
@@ -689,38 +337,6 @@ button.navbar17__mobile-bar-cta {
 /* ── Responsive breakpoints ───────────────────────────────────── */
 
 @media (max-width: 63.99rem) {
-  /*
-   * Safe default before/without JS; overwritten by syncMobileMenuLayoutVars on :root.
-   * ~4.25rem min bar + vertical padding — avoids full-viewport sheet flash at 0px.
-   */
-  :root {
-    --navbar17-mobile-sheet-top: 4.35rem;
-  }
-
-  /*
-   * Pin the header as soon as scroll lock applies. overflow:hidden on body breaks
-   * position:sticky before the panel opens; fixed chrome avoids that flicker.
-   * Panel/backdrop still use .navbar17[data-mobile-open] for visibility only.
-   */
-  body.navbar17-body-lock > header.navbar17 {
-    position: fixed;
-    top: 0;
-    left: 0;
-    right: 0;
-    width: 100%;
-    z-index: var(--navbar17-z-header-mobile-open);
-    overflow: visible;
-  }
-
-  .navbar17[data-mobile-open] .navbar17__bar {
-    touch-action: manipulation;
-  }
-
-  .navbar17__stack {
-    isolation: isolate;
-    z-index: var(--navbar17-z-stack-layer);
-  }
-
   .navbar17__wrap {
     position: relative;
     min-height: 3.85rem;
@@ -760,18 +376,7 @@ button.navbar17__mobile-bar-cta {
   }
 }
 
-body.navbar17-body-lock {
-  overscroll-behavior: none;
-  overflow: hidden;
-  touch-action: none;
-  padding-top: var(--navbar17-open-chrome-pad, 0px);
-}
-
 @media (max-width: 26rem) {
-  .navbar17__mobile {
-    min-height: min(21rem, 58dvh);
-  }
-
   .navbar17__mobile-controls {
     gap: 0.25rem;
   }
@@ -785,21 +390,9 @@ body.navbar17-body-lock {
   .navbar17__brand-img {
     max-width: min(8.75rem, 33vw);
   }
-
-  .navbar17__toggle {
-    width: 2.75rem;
-    height: 2.75rem;
-    flex-shrink: 0;
-  }
 }
 
-/* Desktop: off-canvas nodes are not used (avoids wrong state / focus) */
 @media (min-width: 64rem) {
-  .navbar17__mobile-backdrop,
-  .navbar17__mobile {
-    display: none;
-  }
-
   .navbar17__brand-img {
     height: clamp(2.5rem, 4vw, 3.25rem);
     max-width: min(14rem, 28vw);

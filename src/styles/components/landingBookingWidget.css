@@ -201,6 +201,24 @@
     );
   box-shadow: 0 24px 60px color-mix(in srgb, #000 60%, transparent);
   text-align: left;
+  animation: lbw-card-swap 220ms ease-out;
+}
+
+.lbw-lock__card--success {
+  align-items: flex-start;
+  min-height: 8.5rem;
+  justify-content: center;
+}
+
+@keyframes lbw-card-swap {
+  from {
+    opacity: 0;
+    transform: translateY(6px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }
 
 .lbw-lock__close {
@@ -293,7 +311,8 @@
 
 @media (prefers-reduced-motion: reduce) {
   .lbw__scroll,
-  .lbw-lock {
+  .lbw-lock,
+  .lbw-lock__card {
     transition: none;
     animation: none;
   }
