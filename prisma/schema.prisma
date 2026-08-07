@@ -50,6 +50,8 @@ enum EmailOutboundPurpose {
   SHOP_ORDER_CONFIRMATION
   /// Late deposit payment after hold release when the slot was taken — refund notice.
   DEPOSIT_REFUNDED_SLOT_LOST
+  CLIENT_ONBOARDING_INTERNAL
+  CLIENT_ONBOARDING_CUSTOMER_CONFIRMATION
 }
 
 enum EmailOutboundStatus {
@@ -223,6 +225,9 @@ model ShopSettings {
   barbers                            Barber[]
   services                           Service[]
   openingHours                       ShopOpeningHours[]
+  clientOnboarding                   ClientOnboarding?
+  clientOnboardingBarberProfiles     ClientOnboardingBarberProfile[]
+  clientOnboardingAssets             ClientOnboardingAsset[]
 }
 
 // Login membership for one shop — roles never keyed by shop name.
@@ -372,6 +377,7 @@ model Barber {
   barberServices BarberService[]
   clientNotes    ClientNote[]
   noteLikes      ClientNoteLike[]
+  clientOnboardingProfile ClientOnboardingBarberProfile?
 
   @@index([shopId, active, sortOrder])
   @@index([active, sortOrder])
@@ -583,6 +589,8 @@ model EmailOutbound {
   error             String?
   /// Replayable send payload: { to, subject, html, replyTo? }. Cleared when SENT.
   payload           Json?
+  /// Optional idempotency key (e.g. client-onboarding:internal:{onboardingId}).
+  dedupeKey         String?              @unique
   attempts          Int                  @default(0)
   maxAttempts       Int                  @default(6)
   nextAttemptAt     DateTime?
@@ -838,4 +846,146 @@ model StripeWebhookEvent {
 model OpsAlertDedupe {
   dedupeKey  String   @id
   lastSentAt DateTime @default(now())
+}
+
+/// Post-purchase delivery onboarding (replaces Tally materials form). Distinct from workspace `/admin/onboarding`.
+enum ClientOnboardingStatus {
+  DRAFT
+  SUBMITTED
+  NEEDS_CHANGES
+  READY_FOR_BUILD
+}
+
+enum ClientOnboardingDomainMode {
+  EXISTING
+  KERSIVO_REGISTER
+  UNDECIDED
+}
+
+enum ClientOnboardingAssetKind {
+  BRAND_LOGO
+  GALLERY_IMAGE
+  BRAND_GUIDELINES
+  MIGRATION_CSV
+  OTHER
+}
+
+model ClientOnboarding {
+  id     String @id @default(cuid())
+  shopId String @unique
+
+  status      ClientOnboardingStatus @default(DRAFT)
+  currentStep Int                    @default(0)
+  submittedAt DateTime?
+  createdAt   DateTime               @default(now())
+  updatedAt   DateTime               @updatedAt
+
+  /// Business / contact (delivery snapshot — not a second ShopSettings)
+  legalBusinessName  String?
+  businessType       String?
+  companyNumber      String?
+  addressLine1       String?
+  addressLine2       String?
+  townCity           String?
+  postcode           String?
+  publicEmail        String?
+  publicPhone        String?
+  primaryContactName String?
+  primaryContactEmail String?
+
+  /// Website / brand
+  tagline                 String?
+  shopDescription         String? @db.Text
+  websiteNotes            String? @db.Text
+  currentWebsiteUrl       String?
+  instagramUrl            String?
+  facebookUrl             String?
+  tiktokUrl               String?
+  otherSocialUrl          String?
+  brandNotes              String? @db.Text
+  preferredPrimaryColour  String?
+  preferredSecondaryColour String?
+
+  /// Domain
+  domainMode                       ClientOnboardingDomainMode @default(UNDECIDED)
+  existingDomain                   String?
+  domainRegistrar                  String?
+  preferredDomain1                 String?
+  preferredDomain2                 String?
+  preferredDomain3                 String?
+  domainRegistrationAuthorised     Boolean                   @default(false)
+  domainRegistrationAuthorisedAt   DateTime?
+
+  /// Migration intake (no automated import in this foundation)
+  /// Tri-state: null = unanswered, false = explicit No, true = Yes (requires lawful confirmation).
+  migrationRequested            Boolean?
+  migrationSource               String?
+  migrationSourceOther          String?
+  migrationNotes                String? @db.Text
+  migrationDataConfirmedLawful  Boolean @default(false)
+  migrationDataConfirmedAt      DateTime?
+
+  /// Launch preferences
+  launchRetail             Boolean?
+  launchDeposits           Boolean?
+  retailProductsDeferred   Boolean  @default(false)
+  notificationReplyToEmail String?
+  additionalNotes          String?  @db.Text
+
+  /// Optional marketing / portfolio permissions — never default true
+  portfolioConsent           Boolean   @default(false)
+  socialMediaConsent         Boolean   @default(false)
+  advertisingConsent         Boolean   @default(false)
+  caseStudyConsent           Boolean   @default(false)
+  marketingConsentUpdatedAt  DateTime?
+
+  /// Final declarations
+  contentRightsConfirmed       Boolean   @default(false)
+  informationAccuracyConfirmed Boolean   @default(false)
+  declarationsConfirmedAt      DateTime?
+
+  shop           ShopSettings                   @relation(fields: [shopId], references: [id], onDelete: Cascade)
+  barberProfiles ClientOnboardingBarberProfile[]
+  assets         ClientOnboardingAsset[]
+
+  @@index([status, submittedAt])
+}
+
+/// Delivery-only website profile for a workspace Barber (bio / showOnWebsite). Avatar stays on Barber.
+model ClientOnboardingBarberProfile {
+  id             String   @id @default(cuid())
+  shopId         String
+  onboardingId   String
+  barberId       String   @unique
+  bio            String?  @db.Text
+  showOnWebsite  Boolean  @default(true)
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+
+  shop       ShopSettings     @relation(fields: [shopId], references: [id], onDelete: Cascade)
+  onboarding ClientOnboarding @relation(fields: [onboardingId], references: [id], onDelete: Cascade)
+  barber     Barber           @relation(fields: [barberId], references: [id], onDelete: Cascade)
+
+  @@index([shopId])
+  @@index([onboardingId])
+}
+
+/// Private Blob metadata for post-purchase onboarding files (never store file bytes / base64 here).
+model ClientOnboardingAsset {
+  id               String                    @id @default(cuid())
+  shopId           String
+  onboardingId     String
+  kind             ClientOnboardingAssetKind
+  storagePath      String
+  originalFileName String
+  contentType      String
+  sizeBytes        Int
+  createdAt        DateTime                  @default(now())
+
+  shop       ShopSettings     @relation(fields: [shopId], references: [id], onDelete: Cascade)
+  onboarding ClientOnboarding @relation(fields: [onboardingId], references: [id], onDelete: Cascade)
+
+  @@index([shopId, kind])
+  @@index([onboardingId])
+  @@unique([onboardingId, storagePath])
 }

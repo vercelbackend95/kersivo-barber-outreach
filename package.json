@@ -83,6 +83,7 @@
     "@sentry/astro": "^10.69.0",
     "@types/react": "^19.2.14",
     "@types/react-dom": "^19.2.3",
+    "@vercel/blob": "^2.7.0",
     "astro": "^7.1.6",
     "better-auth": "^1.6.23",
     "class-variance-authority": "^0.7.1",

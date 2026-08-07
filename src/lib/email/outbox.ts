@@ -59,6 +59,7 @@ async function alertEmailFailed(row: EmailOutbound, errorMessage: string): Promi
 /**
  * Write-ahead: enqueue a transactional email inside an existing Prisma transaction.
  * Caller must commit the transaction before calling deliverOutboxEmail.
+ * Optional dedupeKey makes concurrent/retry enqueues idempotent via upsert (no P2002-in-tx).
  */
 export async function enqueueEmail(
   tx: Prisma.TransactionClient,
@@ -70,10 +71,12 @@ export async function enqueueEmail(
     subject: string;
     html: string;
     replyTo?: string;
+    dedupeKey?: string | null;
   },
 ): Promise<EmailOutbound> {
   const now = new Date();
   const to = input.to.trim().toLowerCase();
+  const dedupeKey = input.dedupeKey?.trim() || null;
   const payload: EmailOutboxPayload = {
     to,
     subject: input.subject,
@@ -81,22 +84,31 @@ export async function enqueueEmail(
     ...(input.replyTo?.trim() ? { replyTo: input.replyTo.trim() } : {}),
   };
 
-  return tx.emailOutbound.create({
-    data: {
-      shopId: input.shopId,
-      bookingId: input.bookingId ?? null,
-      toEmail: to,
-      subject: input.subject,
-      purpose: input.purpose,
-      provider: isEmailDeliveryConfigured() ? 'resend' : 'dev-log',
-      status: EmailOutboundStatus.QUEUED,
-      payload,
-      attempts: 0,
-      maxAttempts: DEFAULT_MAX_ATTEMPTS,
-      nextAttemptAt: now,
-      error: null,
-    },
-  });
+  const data = {
+    shopId: input.shopId,
+    bookingId: input.bookingId ?? null,
+    toEmail: to,
+    subject: input.subject,
+    purpose: input.purpose,
+    provider: isEmailDeliveryConfigured() ? 'resend' : 'dev-log',
+    status: EmailOutboundStatus.QUEUED,
+    payload,
+    dedupeKey,
+    attempts: 0,
+    maxAttempts: DEFAULT_MAX_ATTEMPTS,
+    nextAttemptAt: now,
+    error: null,
+  };
+
+  if (dedupeKey) {
+    return tx.emailOutbound.upsert({
+      where: { dedupeKey },
+      create: data,
+      update: {},
+    });
+  }
+
+  return tx.emailOutbound.create({ data });
 }
 
 export type DeliverOutboxResult = {

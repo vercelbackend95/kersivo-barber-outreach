@@ -111,6 +111,82 @@ describe('enqueueEmail', () => {
       }),
     );
   });
+
+  it('upserts by dedupeKey and returns the same row on repeat', async () => {
+    const existing = queuedRow({
+      id: 'out_existing',
+      dedupeKey: 'client-onboarding:internal:onb_1:2026-08-07T12:00:00.000Z',
+    });
+    const upsertOutbound = vi.fn(async () => existing);
+    const tx = {
+      emailOutbound: {
+        upsert: (...args: unknown[]) =>
+          (upsertOutbound as (...a: unknown[]) => unknown)(...args),
+        create: (...args: unknown[]) => createOutbound(...args),
+      },
+    };
+
+    const first = await enqueueEmail(tx as never, {
+      shopId: 'shop_1',
+      purpose: EmailOutboundPurpose.CLIENT_ONBOARDING_INTERNAL,
+      to: 'ops@example.com',
+      subject: 'Onboarding',
+      html: '<p>x</p>',
+      dedupeKey: 'client-onboarding:internal:onb_1:2026-08-07T12:00:00.000Z',
+    });
+    const second = await enqueueEmail(tx as never, {
+      shopId: 'shop_1',
+      purpose: EmailOutboundPurpose.CLIENT_ONBOARDING_INTERNAL,
+      to: 'ops@example.com',
+      subject: 'Onboarding',
+      html: '<p>x</p>',
+      dedupeKey: 'client-onboarding:internal:onb_1:2026-08-07T12:00:00.000Z',
+    });
+
+    expect(first.id).toBe('out_existing');
+    expect(second.id).toBe('out_existing');
+    expect(upsertOutbound).toHaveBeenCalledTimes(2);
+    expect(createOutbound).not.toHaveBeenCalled();
+    expect(upsertOutbound).toHaveBeenCalledWith(
+      expect.objectContaining({
+        where: { dedupeKey: 'client-onboarding:internal:onb_1:2026-08-07T12:00:00.000Z' },
+        update: {},
+      }),
+    );
+  });
+
+  it('creates a new row for a different submission dedupeKey', async () => {
+    const upsertOutbound = vi
+      .fn()
+      .mockResolvedValueOnce(queuedRow({ id: 'out_a', dedupeKey: 'k:a' }))
+      .mockResolvedValueOnce(queuedRow({ id: 'out_b', dedupeKey: 'k:b' }));
+    const tx = {
+      emailOutbound: {
+        upsert: (...args: unknown[]) =>
+          (upsertOutbound as (...a: unknown[]) => unknown)(...args),
+      },
+    };
+
+    const a = await enqueueEmail(tx as never, {
+      shopId: 'shop_1',
+      purpose: EmailOutboundPurpose.CLIENT_ONBOARDING_INTERNAL,
+      to: 'ops@example.com',
+      subject: 'One',
+      html: '<p>1</p>',
+      dedupeKey: 'client-onboarding:internal:onb_1:t1',
+    });
+    const b = await enqueueEmail(tx as never, {
+      shopId: 'shop_1',
+      purpose: EmailOutboundPurpose.CLIENT_ONBOARDING_INTERNAL,
+      to: 'ops@example.com',
+      subject: 'Two',
+      html: '<p>2</p>',
+      dedupeKey: 'client-onboarding:internal:onb_1:t2',
+    });
+
+    expect(a.id).not.toBe(b.id);
+    expect(upsertOutbound).toHaveBeenCalledTimes(2);
+  });
 });
 
 describe('deliverOutboxEmail', () => {
