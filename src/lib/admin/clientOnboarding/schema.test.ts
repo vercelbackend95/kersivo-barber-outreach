@@ -2,7 +2,10 @@ import { describe, it, expect } from 'vitest';
 import {
   ClientOnboardingDomainMode,
   MARKETING_CONSENT_DEFAULTS,
+  clientOnboardingDraftSchema,
   isAllowedHttpUrl,
+  isValidPublicHostname,
+  normalizeAndValidateDomainInput,
   normalizeDomainInput,
   validateClientOnboardingSubmit,
   type SubmitValidationContext,
@@ -225,5 +228,46 @@ describe('normalizeDomainInput', () => {
   it('strips protocol and trailing slash', () => {
     expect(normalizeDomainInput('https://Example.COM/')).toBe('example.com');
     expect(normalizeDomainInput('  ')).toBeNull();
+  });
+});
+
+describe('isValidPublicHostname / normalizeAndValidateDomainInput', () => {
+  it('accepts example.com and https://example.com', () => {
+    expect(isValidPublicHostname('example.com')).toBe(true);
+    expect(normalizeAndValidateDomainInput('https://example.com')).toEqual({
+      ok: true,
+      value: 'example.com',
+    });
+    expect(normalizeAndValidateDomainInput('example.com')).toEqual({
+      ok: true,
+      value: 'example.com',
+    });
+  });
+
+  it('accepts punycode labels', () => {
+    expect(isValidPublicHostname('xn--bcher-kva.example')).toBe(true);
+  });
+
+  it('rejects bare words, spaces, javascript, localhost, IPs', () => {
+    expect(normalizeAndValidateDomainInput('hello').ok).toBe(false);
+    expect(normalizeAndValidateDomainInput('hello world').ok).toBe(false);
+    expect(normalizeAndValidateDomainInput('javascript:alert(1)').ok).toBe(false);
+    expect(normalizeAndValidateDomainInput('localhost').ok).toBe(false);
+    expect(normalizeAndValidateDomainInput('127.0.0.1').ok).toBe(false);
+    expect(normalizeAndValidateDomainInput('http://').ok).toBe(false);
+  });
+
+  it('rejects non-ASCII IDN that is not punycode', () => {
+    expect(isValidPublicHostname('bücher.de')).toBe(false);
+  });
+
+  it('draft schema rejects invalid domains', () => {
+    const bad = clientOnboardingDraftSchema.safeParse({ existingDomain: 'hello' });
+    expect(bad.success).toBe(false);
+    const good = clientOnboardingDraftSchema.safeParse({
+      existingDomain: 'https://example.com',
+    });
+    expect(good.success).toBe(true);
+    if (good.success) expect(good.data.existingDomain).toBe('example.com');
   });
 });

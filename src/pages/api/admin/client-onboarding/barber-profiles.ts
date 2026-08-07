@@ -7,14 +7,11 @@ import {
   requireClientOnboardingAccess,
 } from '@/lib/admin/clientOnboarding/service';
 import { clientOnboardingBarberProfilesPayloadSchema } from '@/lib/admin/clientOnboarding/schema';
-import { prisma } from '@/lib/db/client';
+import { withClientOnboardingWriteLock } from '@/lib/admin/clientOnboarding/writeLock';
 
 export const PUT: APIRoute = async (ctx) => {
   const accessOrErr = await requireClientOnboardingAccess(await resolveAdminAccess(ctx));
   if (accessOrErr instanceof Response) return accessOrErr;
-
-  const writable = await assertWritableClientOnboarding(accessOrErr.shopId);
-  if (writable instanceof Response) return writable;
 
   let body: unknown;
   try {
@@ -32,29 +29,35 @@ export const PUT: APIRoute = async (ctx) => {
   }
 
   const shopId = accessOrErr.shopId;
-  const onboarding = writable;
   const barberIds = parsed.data.profiles.map((p) => p.barberId);
-  const owned = await prisma.barber.findMany({
-    where: { shopId, id: { in: barberIds } },
-    select: { id: true },
-  });
-  const ownedSet = new Set(owned.map((b) => b.id));
-  const missing = barberIds.filter((id) => !ownedSet.has(id));
-  if (missing.length) {
-    return new Response(
-      JSON.stringify({ error: 'One or more barbers do not belong to this shop.', missing }),
-      { status: 400 },
-    );
-  }
 
   try {
-    await prisma.$transaction(
-      parsed.data.profiles.map((profile) =>
-        prisma.clientOnboardingBarberProfile.upsert({
+    const result = await withClientOnboardingWriteLock(shopId, async (tx) => {
+      const writable = await assertWritableClientOnboarding(shopId, tx);
+      if (writable instanceof Response) return writable;
+
+      const owned = await tx.barber.findMany({
+        where: { shopId, id: { in: barberIds } },
+        select: { id: true },
+      });
+      const ownedSet = new Set(owned.map((b) => b.id));
+      const missing = barberIds.filter((id) => !ownedSet.has(id));
+      if (missing.length) {
+        return new Response(
+          JSON.stringify({
+            error: 'One or more barbers do not belong to this shop.',
+            missing,
+          }),
+          { status: 400 },
+        );
+      }
+
+      for (const profile of parsed.data.profiles) {
+        await tx.clientOnboardingBarberProfile.upsert({
           where: { barberId: profile.barberId },
           create: {
             shopId,
-            onboardingId: onboarding.id,
+            onboardingId: writable.id,
             barberId: profile.barberId,
             bio: profile.bio ?? null,
             showOnWebsite: profile.showOnWebsite ?? true,
@@ -65,16 +68,20 @@ export const PUT: APIRoute = async (ctx) => {
               ? { showOnWebsite: profile.showOnWebsite }
               : {}),
           },
-        }),
-      ),
-    );
+        });
+      }
 
-    const profiles = await prisma.clientOnboardingBarberProfile.findMany({
-      where: { onboardingId: onboarding.id },
-      select: { barberId: true, bio: true, showOnWebsite: true },
+      const profiles = await tx.clientOnboardingBarberProfile.findMany({
+        where: { onboardingId: writable.id },
+        select: { barberId: true, bio: true, showOnWebsite: true },
+      });
+
+      return { ok: true as const, profiles };
     });
 
-    return new Response(JSON.stringify({ ok: true, profiles }), {
+    if (result instanceof Response) return result;
+
+    return new Response(JSON.stringify(result), {
       headers: { 'Content-Type': 'application/json' },
     });
   } catch (error) {

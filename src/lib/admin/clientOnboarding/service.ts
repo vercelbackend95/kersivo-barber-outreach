@@ -11,18 +11,24 @@ import {
   type WorkspaceCompletionSnapshot,
   validateClientOnboardingSubmit,
 } from '@/lib/admin/clientOnboarding/schema';
+import { withClientOnboardingWriteLock } from '@/lib/admin/clientOnboarding/writeLock';
 import { isPaidShop } from '@/lib/shop/paidShop';
 import {
   ClientOnboardingDomainMode,
   ClientOnboardingStatus,
+  EmailOutboundPurpose,
   type ClientOnboarding,
   type Prisma,
 } from '@prisma/client';
 import {
-  sendClientOnboardingCustomerConfirmationEmail,
-  sendClientOnboardingInternalNotificationEmail,
+  buildClientOnboardingCustomerConfirmationEmail,
+  buildClientOnboardingInternalNotificationEmail,
+  getClientOnboardingContactInboxEmail,
 } from '@/lib/email/clientOnboardingEmails';
+import { enqueueEmail, tryDeliverOutboxEmail } from '@/lib/email/outbox';
 import { isPrismaUniqueConflict } from '@/lib/setup/saasCheckoutGuard';
+
+type DbClient = Prisma.TransactionClient | typeof prisma;
 
 export async function requireClientOnboardingAccess(
   access: AdminAccess | null,
@@ -64,16 +70,19 @@ export async function requireClientOnboardingAccess(
 }
 
 /** Race-safe ensure: upsert on unique shopId, with P2002 recovery fallback. */
-export async function ensureClientOnboarding(shopId: string): Promise<ClientOnboarding> {
+export async function ensureClientOnboarding(
+  shopId: string,
+  db: DbClient = prisma,
+): Promise<ClientOnboarding> {
   try {
-    return await prisma.clientOnboarding.upsert({
+    return await db.clientOnboarding.upsert({
       where: { shopId },
       create: { shopId },
       update: {},
     });
   } catch (error) {
     if (isPrismaUniqueConflict(error)) {
-      const existing = await prisma.clientOnboarding.findUnique({ where: { shopId } });
+      const existing = await db.clientOnboarding.findUnique({ where: { shopId } });
       if (existing) return existing;
     }
     throw error;
@@ -82,8 +91,9 @@ export async function ensureClientOnboarding(shopId: string): Promise<ClientOnbo
 
 export async function assertWritableClientOnboarding(
   shopId: string,
+  db: DbClient = prisma,
 ): Promise<ClientOnboarding | Response> {
-  const onboarding = await ensureClientOnboarding(shopId);
+  const onboarding = await ensureClientOnboarding(shopId, db);
   if (isClientOnboardingWriteLocked(onboarding.status)) {
     return clientOnboardingLockedResponse();
   }
@@ -401,7 +411,7 @@ function buildUpdateData(input: ClientOnboardingDraftInput): Prisma.ClientOnboar
 
   for (const key of keys) assign(key);
 
-  // Normalize domain fields when present
+  // Normalize domain fields when present (schema already validates; keep defensive normalize)
   if (input.existingDomain !== undefined) {
     data.existingDomain = normalizeDomainInput(input.existingDomain);
   }
@@ -452,49 +462,136 @@ export async function saveClientOnboardingDraft(
   shopId: string,
   input: ClientOnboardingDraftInput,
 ): Promise<{ ok: true; onboarding: ReturnType<typeof serializeOnboarding> } | Response> {
-  const writable = await assertWritableClientOnboarding(shopId);
-  if (writable instanceof Response) return writable;
+  return withClientOnboardingWriteLock(shopId, async (tx) => {
+    const writable = await assertWritableClientOnboarding(shopId, tx);
+    if (writable instanceof Response) return writable;
 
-  const updated = await prisma.clientOnboarding.update({
-    where: { id: writable.id },
-    data: buildUpdateData(input),
+    const updated = await tx.clientOnboarding.update({
+      where: { id: writable.id },
+      data: buildUpdateData(input),
+    });
+    return { ok: true as const, onboarding: serializeOnboarding(updated) };
   });
-  return { ok: true, onboarding: serializeOnboarding(updated) };
+}
+
+async function enqueueSubmitNotifications(
+  tx: Prisma.TransactionClient,
+  input: {
+    shopId: string;
+    onboarding: ClientOnboarding;
+    now: Date;
+    workspace: WorkspaceCompletionSnapshot;
+    access: AdminAccess;
+    shopName: string;
+    barbers: Array<{ name: string }>;
+    services: Array<{ name: string; pricePence: number; durationMinutes: number }>;
+    openingHours: Array<{ dayOfWeek: number; startMinutes: number; endMinutes: number }>;
+    assets: Array<{ kind: string; originalFileName: string; storagePath: string }>;
+  },
+): Promise<string[]> {
+  const outboxIds: string[] = [];
+  const internal = buildClientOnboardingInternalNotificationEmail({
+    shopName: input.shopName,
+    shopId: input.shopId,
+    onboardingId: input.onboarding.id,
+    submittedAtIso: input.now.toISOString(),
+    onboarding: input.onboarding,
+    barbers: input.barbers,
+    services: input.services,
+    openingHours: input.openingHours,
+    assets: input.assets,
+    workspace: input.workspace,
+    ownerEmail: input.access.userEmail,
+    ownerName: input.access.userName,
+  });
+
+  const internalRow = await enqueueEmail(tx, {
+    shopId: input.shopId,
+    purpose: EmailOutboundPurpose.CLIENT_ONBOARDING_INTERNAL,
+    to: internal.to || getClientOnboardingContactInboxEmail(),
+    subject: internal.subject,
+    html: internal.html,
+    replyTo: internal.replyTo,
+    dedupeKey: `client-onboarding:internal:${input.onboarding.id}`,
+  });
+  outboxIds.push(internalRow.id);
+
+  const customerEmail =
+    input.onboarding.primaryContactEmail?.trim() ||
+    input.access.userEmail?.trim() ||
+    null;
+  if (customerEmail) {
+    const customer = buildClientOnboardingCustomerConfirmationEmail({
+      contactName:
+        input.onboarding.primaryContactName || input.access.userName || 'there',
+    });
+    const customerRow = await enqueueEmail(tx, {
+      shopId: input.shopId,
+      purpose: EmailOutboundPurpose.CLIENT_ONBOARDING_CUSTOMER_CONFIRMATION,
+      to: customerEmail,
+      subject: customer.subject,
+      html: customer.html,
+      replyTo: customer.replyTo,
+      dedupeKey: `client-onboarding:customer:${input.onboarding.id}`,
+    });
+    outboxIds.push(customerRow.id);
+  }
+
+  return outboxIds;
 }
 
 export async function submitClientOnboarding(shopId: string, access: AdminAccess) {
-  const onboarding = await ensureClientOnboarding(shopId);
-
-  if (
-    onboarding.status === ClientOnboardingStatus.SUBMITTED &&
-    onboarding.submittedAt
-  ) {
-    return {
-      ok: true as const,
-      idempotent: true,
-      onboarding: serializeOnboarding(onboarding),
-    };
-  }
-
-  if (onboarding.status === ClientOnboardingStatus.READY_FOR_BUILD) {
-    return {
-      ok: true as const,
-      idempotent: true,
-      onboarding: serializeOnboarding(onboarding),
-    };
-  }
-
   const workspace = await loadWorkspaceCompletionSnapshot(shopId);
-  const errors = validateClientOnboardingSubmit({
-    draft: mergeDraftFromRecord(onboarding),
-    workspace,
-  });
-  if (errors.length) {
-    return { ok: false as const, errors };
-  }
 
-  const now = new Date();
-  const updated = await prisma.$transaction(async (tx) => {
+  // Prefetch email context outside the advisory lock (reads only).
+  const [barbers, services, openingHours, shop] = await Promise.all([
+    prisma.barber.findMany({
+      where: { shopId, active: true },
+      select: { name: true },
+      orderBy: { sortOrder: 'asc' },
+    }),
+    prisma.service.findMany({
+      where: { shopId, isActive: true },
+      select: { name: true, pricePence: true, durationMinutes: true },
+      orderBy: { displayOrder: 'asc' },
+    }),
+    prisma.shopOpeningHours.findMany({
+      where: { shopId, active: true },
+      select: { dayOfWeek: true, startMinutes: true, endMinutes: true },
+      orderBy: { dayOfWeek: 'asc' },
+    }),
+    prisma.shopSettings.findUnique({
+      where: { id: shopId },
+      select: { name: true },
+    }),
+  ]);
+  const shopName = shop?.name?.trim() || 'Shop';
+
+  type SubmitLockResult =
+    | { kind: 'idempotent'; onboarding: ClientOnboarding }
+    | { kind: 'validation'; errors: string[] }
+    | { kind: 'submitted'; onboarding: ClientOnboarding; outboxIds: string[] }
+    | { kind: 'error'; errors: string[] };
+
+  const locked = await withClientOnboardingWriteLock(shopId, async (tx): Promise<SubmitLockResult> => {
+    const onboarding = await ensureClientOnboarding(shopId, tx);
+
+    if (
+      onboarding.status === ClientOnboardingStatus.SUBMITTED ||
+      onboarding.status === ClientOnboardingStatus.READY_FOR_BUILD
+    ) {
+      return { kind: 'idempotent', onboarding };
+    }
+
+    const errors = validateClientOnboardingSubmit({
+      draft: mergeDraftFromRecord(onboarding),
+      workspace,
+    });
+    if (errors.length) {
+      return { kind: 'validation', errors };
+    }
+
+    const now = new Date();
     const claimed = await tx.clientOnboarding.updateMany({
       where: {
         id: onboarding.id,
@@ -523,10 +620,18 @@ export async function submitClientOnboarding(shopId: string, access: AdminAccess
     });
 
     if (claimed.count === 0) {
-      return null;
+      const again = await tx.clientOnboarding.findUnique({ where: { id: onboarding.id } });
+      if (
+        again &&
+        (again.status === ClientOnboardingStatus.SUBMITTED ||
+          again.status === ClientOnboardingStatus.READY_FOR_BUILD)
+      ) {
+        return { kind: 'idempotent', onboarding: again };
+      }
+      return { kind: 'error', errors: ['Unable to submit onboarding. Please retry.'] };
     }
 
-    const row = await tx.clientOnboarding.findUniqueOrThrow({
+    const updated = await tx.clientOnboarding.findUniqueOrThrow({
       where: { id: onboarding.id },
     });
 
@@ -539,64 +644,18 @@ export async function submitClientOnboarding(shopId: string, access: AdminAccess
       data: { onboardingSubmittedAt: now },
     });
 
-    return row;
-  });
-
-  if (!updated) {
-    const again = await prisma.clientOnboarding.findUnique({ where: { id: onboarding.id } });
-    if (
-      again &&
-      (again.status === ClientOnboardingStatus.SUBMITTED ||
-        again.status === ClientOnboardingStatus.READY_FOR_BUILD)
-    ) {
-      return {
-        ok: true as const,
-        idempotent: true,
-        onboarding: serializeOnboarding(again),
-      };
-    }
-    return { ok: false as const, errors: ['Unable to submit onboarding. Please retry.'] };
-  }
-
-  const [assets, barbers, services, openingHours, shop] = await Promise.all([
-    prisma.clientOnboardingAsset.findMany({
+    const assets = await tx.clientOnboardingAsset.findMany({
       where: { onboardingId: updated.id },
       orderBy: { createdAt: 'asc' },
-    }),
-    prisma.barber.findMany({
-      where: { shopId, active: true },
-      select: { name: true },
-      orderBy: { sortOrder: 'asc' },
-    }),
-    prisma.service.findMany({
-      where: { shopId, isActive: true },
-      select: { name: true, pricePence: true, durationMinutes: true },
-      orderBy: { displayOrder: 'asc' },
-    }),
-    prisma.shopOpeningHours.findMany({
-      where: { shopId, active: true },
-      select: { dayOfWeek: true, startMinutes: true, endMinutes: true },
-      orderBy: { dayOfWeek: 'asc' },
-    }),
-    prisma.shopSettings.findUnique({
-      where: { id: shopId },
-      select: { name: true },
-    }),
-  ]);
+    });
 
-  const shopName = shop?.name?.trim() || 'Shop';
-  const customerEmail =
-    updated.primaryContactEmail?.trim() ||
-    access.userEmail?.trim() ||
-    null;
-
-  try {
-    await sendClientOnboardingInternalNotificationEmail({
-      shopName,
+    const outboxIds = await enqueueSubmitNotifications(tx, {
       shopId,
-      onboardingId: updated.id,
-      submittedAtIso: now.toISOString(),
       onboarding: updated,
+      now,
+      workspace,
+      access,
+      shopName,
       barbers,
       services,
       openingHours,
@@ -605,29 +664,30 @@ export async function submitClientOnboarding(shopId: string, access: AdminAccess
         originalFileName: a.originalFileName,
         storagePath: a.storagePath,
       })),
-      workspace,
-      ownerEmail: access.userEmail,
-      ownerName: access.userName,
     });
-  } catch (error) {
-    console.error('[client-onboarding] internal email failed', error);
+
+    return { kind: 'submitted', onboarding: updated, outboxIds };
+  });
+
+  if (locked.kind === 'validation' || locked.kind === 'error') {
+    return { ok: false as const, errors: locked.errors };
   }
 
-  if (customerEmail) {
-    try {
-      await sendClientOnboardingCustomerConfirmationEmail({
-        to: customerEmail,
-        shopName,
-        contactName: updated.primaryContactName || access.userName || 'there',
-      });
-    } catch (error) {
-      console.error('[client-onboarding] customer email failed', error);
-    }
+  if (locked.kind === 'idempotent') {
+    return {
+      ok: true as const,
+      idempotent: true,
+      onboarding: serializeOnboarding(locked.onboarding),
+    };
+  }
+
+  for (const id of locked.outboxIds) {
+    await tryDeliverOutboxEmail(id);
   }
 
   return {
     ok: true as const,
     idempotent: false,
-    onboarding: serializeOnboarding(updated),
+    onboarding: serializeOnboarding(locked.onboarding),
   };
 }

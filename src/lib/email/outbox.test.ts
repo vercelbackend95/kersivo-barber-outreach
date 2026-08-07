@@ -111,6 +111,32 @@ describe('enqueueEmail', () => {
       }),
     );
   });
+
+  it('returns existing row on dedupeKey unique conflict', async () => {
+    const existing = queuedRow({ id: 'out_existing' });
+    createOutbound.mockRejectedValue({ code: 'P2002' });
+    const findUnique = vi.fn(async () => existing);
+    const tx = {
+      emailOutbound: {
+        create: (...args: unknown[]) => createOutbound(...args),
+        findUnique: (...a: unknown[]) => (findUnique as (...a: unknown[]) => unknown)(...a),
+      },
+    };
+
+    const row = await enqueueEmail(tx as never, {
+      shopId: 'shop_1',
+      purpose: EmailOutboundPurpose.CLIENT_ONBOARDING_INTERNAL,
+      to: 'ops@example.com',
+      subject: 'Onboarding',
+      html: '<p>x</p>',
+      dedupeKey: 'client-onboarding:internal:onb_1',
+    });
+
+    expect(row.id).toBe('out_existing');
+    expect(findUnique).toHaveBeenCalledWith({
+      where: { dedupeKey: 'client-onboarding:internal:onb_1' },
+    });
+  });
 });
 
 describe('deliverOutboxEmail', () => {

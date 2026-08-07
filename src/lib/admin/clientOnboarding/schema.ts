@@ -90,8 +90,82 @@ export function normalizeDomainInput(value: string | null | undefined): string |
   t = t.replace(/\/+$/, '');
   t = t.split('/')[0] ?? t;
   t = t.split('?')[0] ?? t;
+  t = t.split('#')[0] ?? t;
+  // Strip credentials / ports from host:port
+  t = t.replace(/:\d+$/, '');
   return t.length ? t : null;
 }
+
+const DNS_LABEL = /^(?:[a-z0-9]|[a-z0-9][a-z0-9-]{0,61}[a-z0-9])$/i;
+
+/**
+ * Public hostname validation after normalizeDomainInput.
+ * Accepts ASCII DNS labels and already-punycode (xn--) labels only.
+ */
+export function isValidPublicHostname(host: string | null | undefined): boolean {
+  if (!host) return false;
+  const h = host.trim().toLowerCase();
+  if (!h || h.length > 253) return false;
+  if (h.includes(' ') || h.includes('/') || h.includes(':')) return false;
+  if (!h.includes('.')) return false;
+  if (h.startsWith('.') || h.endsWith('.')) return false;
+  if (h === 'localhost' || h.endsWith('.localhost')) return false;
+  // Reject IPv4
+  if (/^\d{1,3}(?:\.\d{1,3}){3}$/.test(h)) return false;
+
+  const labels = h.split('.');
+  if (labels.length < 2) return false;
+  for (const label of labels) {
+    if (!label || label.length > 63) return false;
+    if (label.includes('_')) return false;
+    // Allow punycode labels; reject other non-ASCII
+    if (/[^\x00-\x7f]/.test(label)) return false;
+    if (label.startsWith('xn--')) {
+      if (!/^xn--[a-z0-9-]{1,59}$/i.test(label)) return false;
+      continue;
+    }
+    if (!DNS_LABEL.test(label)) return false;
+  }
+  const tld = labels[labels.length - 1] ?? '';
+  if (tld.length < 2) return false;
+  return true;
+}
+
+export function normalizeAndValidateDomainInput(
+  value: string | null | undefined,
+): { ok: true; value: string | null } | { ok: false; error: string } {
+  if (value == null || (typeof value === 'string' && !value.trim())) {
+    return { ok: true, value: null };
+  }
+  const normalized = normalizeDomainInput(value);
+  if (!normalized || !isValidPublicHostname(normalized)) {
+    return { ok: false, error: 'Enter a valid domain name (e.g. example.com).' };
+  }
+  return { ok: true, value: normalized };
+}
+
+const optionalDomain = z
+  .string()
+  .trim()
+  .max(253)
+  .optional()
+  .nullable()
+  .transform((v) => {
+    if (v == null) return null;
+    const t = v.trim();
+    return t.length ? t : null;
+  })
+  .superRefine((v, ctx) => {
+    if (v == null) return;
+    const checked = normalizeAndValidateDomainInput(v);
+    if (!checked.ok) {
+      ctx.addIssue({ code: z.ZodIssueCode.custom, message: checked.error });
+    }
+  })
+  .transform((v) => {
+    if (v == null) return null;
+    return normalizeDomainInput(v);
+  });
 
 export const clientOnboardingDraftSchema = z
   .object({
@@ -122,11 +196,11 @@ export const clientOnboardingDraftSchema = z
     preferredSecondaryColour: optionalColour,
 
     domainMode: z.nativeEnum(ClientOnboardingDomainMode).optional(),
-    existingDomain: optionalTrimmed,
+    existingDomain: optionalDomain,
     domainRegistrar: optionalTrimmed,
-    preferredDomain1: optionalTrimmed,
-    preferredDomain2: optionalTrimmed,
-    preferredDomain3: optionalTrimmed,
+    preferredDomain1: optionalDomain,
+    preferredDomain2: optionalDomain,
+    preferredDomain3: optionalDomain,
     domainRegistrationAuthorised: z.boolean().optional(),
 
     migrationRequested: z.boolean().nullable().optional(),
@@ -247,8 +321,8 @@ export function validateClientOnboardingSubmit(
   ) {
     errors.push('Choose a domain option before submitting.');
   } else if (draft.domainMode === ClientOnboardingDomainMode.EXISTING) {
-    if (!normalizeDomainInput(draft.existingDomain)) {
-      errors.push('Enter your existing domain before submitting.');
+    if (!isValidPublicHostname(normalizeDomainInput(draft.existingDomain))) {
+      errors.push('Enter a valid existing domain before submitting.');
     }
   } else if (draft.domainMode === ClientOnboardingDomainMode.KERSIVO_REGISTER) {
     if (!draft.domainRegistrationAuthorised) {
@@ -257,11 +331,14 @@ export function validateClientOnboardingSubmit(
       );
     }
     const preferred =
-      normalizeDomainInput(draft.preferredDomain1) ||
-      normalizeDomainInput(draft.preferredDomain2) ||
-      normalizeDomainInput(draft.preferredDomain3);
+      (isValidPublicHostname(normalizeDomainInput(draft.preferredDomain1)) &&
+        normalizeDomainInput(draft.preferredDomain1)) ||
+      (isValidPublicHostname(normalizeDomainInput(draft.preferredDomain2)) &&
+        normalizeDomainInput(draft.preferredDomain2)) ||
+      (isValidPublicHostname(normalizeDomainInput(draft.preferredDomain3)) &&
+        normalizeDomainInput(draft.preferredDomain3));
     if (!preferred) {
-      errors.push('Provide at least one preferred domain name.');
+      errors.push('Provide at least one valid preferred domain name.');
     }
   }
 

@@ -50,6 +50,8 @@ enum EmailOutboundPurpose {
   SHOP_ORDER_CONFIRMATION
   /// Late deposit payment after hold release when the slot was taken — refund notice.
   DEPOSIT_REFUNDED_SLOT_LOST
+  CLIENT_ONBOARDING_INTERNAL
+  CLIENT_ONBOARDING_CUSTOMER_CONFIRMATION
 }
 
 enum EmailOutboundStatus {
@@ -587,6 +589,8 @@ model EmailOutbound {
   error             String?
   /// Replayable send payload: { to, subject, html, replyTo? }. Cleared when SENT.
   payload           Json?
+  /// Optional idempotency key (e.g. client-onboarding:internal:{onboardingId}).
+  dedupeKey         String?              @unique
   attempts          Int                  @default(0)
   maxAttempts       Int                  @default(6)
   nextAttemptAt     DateTime?

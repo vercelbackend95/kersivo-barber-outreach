@@ -7,9 +7,13 @@ import { prisma } from '@/lib/db/client';
 import {
   normalizeSaasCheckoutIdentity,
 } from '@/lib/setup/saasCheckoutGuard';
+import {
+  assertClaimEntitlement,
+  SUBSCRIPTION_NOT_ACTIVE_CODE,
+} from '@/lib/setup/claimPaidSubscriptionEntitlement';
 import { SAAS_SUBSCRIPTION_METADATA_TYPE } from '@/lib/setup/saasSubscription';
 import { markShopPaid } from '@/lib/shop/markShopPaid';
-import { retrieveCheckoutSession } from '@/lib/shop/stripe';
+import { retrieveCheckoutSession, retrieveSubscription } from '@/lib/shop/stripe';
 import { enforceIpRateLimit } from '@/lib/rate-limit/enforceIpRateLimit';
 
 function json(body: unknown, status = 200) {
@@ -47,6 +51,35 @@ async function ensurePaidMarker(shopId: string): Promise<Response | null> {
       503,
     );
   }
+}
+
+async function denyUnlessEntitled(
+  record: Parameters<typeof assertClaimEntitlement>[0]['record'],
+  session: Parameters<typeof assertClaimEntitlement>[0]['session'],
+): Promise<Response | null> {
+  const result = await assertClaimEntitlement({
+    record,
+    session,
+    retrieveSubscriptionFn: retrieveSubscription,
+  });
+  if (result.ok) return null;
+  if (result.code === 'STRIPE_SUBSCRIPTION_LOOKUP_FAILED') {
+    return json(
+      {
+        error: 'Unable to verify current Stripe subscription status.',
+        code: result.code,
+      },
+      502,
+    );
+  }
+  return json(
+    {
+      error: 'This subscription is not currently active.',
+      code: SUBSCRIPTION_NOT_ACTIVE_CODE,
+      reason: result.reason,
+    },
+    403,
+  );
 }
 
 /**
@@ -130,19 +163,6 @@ export const POST: APIRoute = async (ctx) => {
     return json({ error: 'Subscription record not found for this session.' }, 404);
   }
 
-  // Already owned by this shop — heal paid marker then idempotent success.
-  if (record.shopId != null && record.shopId === access.shopId) {
-    const healError = await ensurePaidMarker(access.shopId);
-    if (healError) return healError;
-    return json({
-      ok: true,
-      claimed: false,
-      idempotent: true,
-      shopId: access.shopId,
-      subscriptionId: record.id,
-    });
-  }
-
   // Belonging to another shop — never steal.
   if (record.shopId != null && record.shopId !== access.shopId) {
     return json(
@@ -154,7 +174,25 @@ export const POST: APIRoute = async (ctx) => {
     );
   }
 
-  // shopId === null — atomic claim.
+  // Already owned by this shop — entitlement then heal paid marker.
+  if (record.shopId != null && record.shopId === access.shopId) {
+    const entitlementError = await denyUnlessEntitled(record, session);
+    if (entitlementError) return entitlementError;
+    const healError = await ensurePaidMarker(access.shopId);
+    if (healError) return healError;
+    return json({
+      ok: true,
+      claimed: false,
+      idempotent: true,
+      shopId: access.shopId,
+      subscriptionId: record.id,
+    });
+  }
+
+  // shopId === null — check entitlement before linking + markShopPaid.
+  const entitlementError = await denyUnlessEntitled(record, session);
+  if (entitlementError) return entitlementError;
+
   const claimed = await prisma.saasSubscription.updateMany({
     where: { id: record.id, shopId: null },
     data: { shopId: access.shopId },
@@ -163,9 +201,10 @@ export const POST: APIRoute = async (ctx) => {
   if (claimed.count === 0) {
     const again = await prisma.saasSubscription.findUnique({
       where: { id: record.id },
-      select: { shopId: true },
     });
     if (again?.shopId === access.shopId) {
+      const againEntitlement = await denyUnlessEntitled(again, session);
+      if (againEntitlement) return againEntitlement;
       const healError = await ensurePaidMarker(access.shopId);
       if (healError) return healError;
       return json({

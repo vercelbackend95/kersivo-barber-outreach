@@ -10,7 +10,7 @@ function escapeHtml(value: string) {
     .replace(/"/g, '&quot;');
 }
 
-function getContactInboxEmail(): string {
+export function getClientOnboardingContactInboxEmail(): string {
   return (
     import.meta.env.CONTACT_INBOX_EMAIL ??
     process.env.CONTACT_INBOX_EMAIL ??
@@ -40,25 +40,19 @@ function formatMinutes(m: number) {
   return `${String(h).padStart(2, '0')}:${String(min).padStart(2, '0')}`;
 }
 
-export async function sendClientOnboardingCustomerConfirmationEmail(input: {
-  to: string;
-  shopName: string;
+export function buildClientOnboardingCustomerConfirmationEmail(input: {
   contactName: string;
-}) {
-  const html = `<p>Hi ${escapeHtml(input.contactName)},</p>
-<p>Thanks — we’ve received the information for your KERSIVO setup. We’ll review it and contact you if anything is missing. Nothing goes live without your approval.</p>
-<p>KERSIVO<br/>Your domain. Your brand. Your client relationship.</p>`;
-
-  return sendRenderedEmail({
-    to: input.to,
+}): { subject: string; html: string; replyTo: string } {
+  return {
     subject: 'We’ve received your KERSIVO onboarding',
-    replyTo: getContactInboxEmail(),
-    html,
-    devLogLabel: '[DEV EMAIL] Client onboarding customer confirmation',
-  });
+    replyTo: getClientOnboardingContactInboxEmail(),
+    html: `<p>Hi ${escapeHtml(input.contactName)},</p>
+<p>Thanks — we’ve received the information for your KERSIVO setup. We’ll review it and contact you if anything is missing. Nothing goes live without your approval.</p>
+<p>KERSIVO<br/>Your domain. Your brand. Your client relationship.</p>`,
+  };
 }
 
-export async function sendClientOnboardingInternalNotificationEmail(input: {
+export function buildClientOnboardingInternalNotificationEmail(input: {
   shopName: string;
   shopId: string;
   onboardingId: string;
@@ -71,9 +65,9 @@ export async function sendClientOnboardingInternalNotificationEmail(input: {
   workspace: WorkspaceCompletionSnapshot;
   ownerEmail: string | null;
   ownerName: string | null;
-}) {
+}): { subject: string; html: string; replyTo?: string; to: string } {
   const o = input.onboarding;
-  const inbox = getContactInboxEmail();
+  const inbox = getClientOnboardingContactInboxEmail();
 
   const html = [
     `<p>Client onboarding submitted for <strong>${escapeHtml(input.shopName)}</strong>.</p>`,
@@ -185,11 +179,40 @@ export async function sendClientOnboardingInternalNotificationEmail(input: {
     ]),
   ].join('\n');
 
-  return sendRenderedEmail({
+  return {
     to: inbox,
     subject: `KERSIVO onboarding submitted — ${input.shopName}`,
     replyTo: o.primaryContactEmail || input.ownerEmail || undefined,
     html,
+  };
+}
+
+/** @deprecated Prefer durable outbox enqueue; kept for direct/dev use. */
+export async function sendClientOnboardingCustomerConfirmationEmail(input: {
+  to: string;
+  shopName: string;
+  contactName: string;
+}) {
+  const built = buildClientOnboardingCustomerConfirmationEmail(input);
+  return sendRenderedEmail({
+    to: input.to,
+    subject: built.subject,
+    replyTo: built.replyTo,
+    html: built.html,
+    devLogLabel: '[DEV EMAIL] Client onboarding customer confirmation',
+  });
+}
+
+/** @deprecated Prefer durable outbox enqueue; kept for direct/dev use. */
+export async function sendClientOnboardingInternalNotificationEmail(
+  input: Parameters<typeof buildClientOnboardingInternalNotificationEmail>[0],
+) {
+  const built = buildClientOnboardingInternalNotificationEmail(input);
+  return sendRenderedEmail({
+    to: built.to,
+    subject: built.subject,
+    replyTo: built.replyTo,
+    html: built.html,
     devLogLabel: '[DEV EMAIL] Client onboarding internal notification',
   });
 }

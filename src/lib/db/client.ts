@@ -17,7 +17,7 @@ declare global {
  * Include a version token whenever a new model is added (e.g. SaasSubscription) — do not rely only on
  * SetupDepositStatus keys, or hot-reload keeps an old client without the new delegate.
  */
-const SCHEMA_MARKER = `saas-subscription-v3-grace-suspend|sms-reminders-enabled-v1|booking-deposits-v1|legal-acceptance-v1|site-launch-preview-v1|email-reminders-v1|astro7-dotenv-v1|deposit-refund-ledger-v1|email-outbox-v1|client-onboarding-v1|client-onboarding-migration-nullable-v1|${Object.keys(SetupDepositStatus).sort().join('|')}`;
+const SCHEMA_MARKER = `saas-subscription-v3-grace-suspend|sms-reminders-enabled-v1|booking-deposits-v1|legal-acceptance-v1|site-launch-preview-v1|email-reminders-v1|astro7-dotenv-v1|deposit-refund-ledger-v1|email-outbox-v1|client-onboarding-v1|client-onboarding-migration-nullable-v1|client-onboarding-outbox-dedupe-v1|${Object.keys(SetupDepositStatus).sort().join('|')}`;
 
 function createPrismaClient(): PrismaClient {
   const url = process.env.DATABASE_URL;

@@ -13,6 +13,7 @@ const uploadPrivate = vi.fn();
 const deletePrivate = vi.fn();
 const shopSettingsFindUnique = vi.fn();
 const saasFindFirst = vi.fn();
+const transaction = vi.fn();
 
 vi.mock('@/lib/admin/auth', () => ({
   resolveAdminAccess: (...args: unknown[]) => resolveAdminAccess(...args),
@@ -43,6 +44,7 @@ vi.mock('@/lib/db/client', () => ({
       findFirst: (...args: unknown[]) => assetFindFirst(...args),
       delete: (...args: unknown[]) => assetDelete(...args),
     },
+    $transaction: (...args: unknown[]) => transaction(...args),
   },
 }));
 
@@ -117,6 +119,21 @@ describe('POST/DELETE /api/admin/client-onboarding/assets', () => {
       pastDueSince: null,
     });
     ensureUpsert.mockResolvedValue(draftOnboarding());
+    transaction.mockImplementation(async (fn: (tx: unknown) => Promise<unknown>) => {
+      const tx = {
+        $executeRaw: vi.fn(async () => undefined),
+        clientOnboarding: {
+          upsert: (...args: unknown[]) => ensureUpsert(...args),
+          findUnique: (...args: unknown[]) => ensureUpsert(...args),
+        },
+        clientOnboardingAsset: {
+          create: (...args: unknown[]) => assetCreate(...args),
+          findFirst: (...args: unknown[]) => assetFindFirst(...args),
+          delete: (...args: unknown[]) => assetDelete(...args),
+        },
+      };
+      return fn(tx);
+    });
   });
 
   it('rejects image uploads for migration CSV', async () => {
@@ -164,6 +181,7 @@ describe('POST/DELETE /api/admin/client-onboarding/assets', () => {
     expect(res.status).toBe(200);
     const body = await res.json();
     expect(looksLikePublicBlobUrl(body.asset.storagePath)).toBe(false);
+    expect(transaction).toHaveBeenCalled();
   });
 
   it('cleans up orphan blob when DB create fails', async () => {
@@ -183,6 +201,29 @@ describe('POST/DELETE /api/admin/client-onboarding/assets', () => {
     expect(deletePrivate).toHaveBeenCalledWith(
       'client-onboarding/shop_1/migration_csv/orphan.csv',
     );
+  });
+
+  it('cleans up blob and returns 409 when locked after upload', async () => {
+    const file = new File(['a,b\n1,2\n'], 'clients.csv', { type: 'text/csv' });
+    uploadPrivate.mockResolvedValue({
+      pathname: 'client-onboarding/shop_1/migration_csv/late.csv',
+      contentType: 'text/csv',
+      sizeBytes: file.size,
+    });
+    // Early check DRAFT, then under lock SUBMITTED
+    ensureUpsert
+      .mockResolvedValueOnce(draftOnboarding(ClientOnboardingStatus.DRAFT))
+      .mockResolvedValue(draftOnboarding(ClientOnboardingStatus.SUBMITTED));
+    deletePrivate.mockResolvedValue(undefined);
+
+    const res = await POST(
+      makeFormContext(file, ClientOnboardingAssetKind.MIGRATION_CSV) as never,
+    );
+    expect(res.status).toBe(409);
+    expect(deletePrivate).toHaveBeenCalledWith(
+      'client-onboarding/shop_1/migration_csv/late.csv',
+    );
+    expect(assetCreate).not.toHaveBeenCalled();
   });
 
   it('does not delete DB row when blob delete fails', async () => {
@@ -216,5 +257,6 @@ describe('POST/DELETE /api/admin/client-onboarding/assets', () => {
     expect(res.status).toBe(409);
     const body = await res.json();
     expect(body.code).toBe('CLIENT_ONBOARDING_LOCKED');
+    expect(uploadPrivate).not.toHaveBeenCalled();
   });
 });

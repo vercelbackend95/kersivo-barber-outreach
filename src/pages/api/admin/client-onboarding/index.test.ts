@@ -25,7 +25,9 @@ const assetFindMany = vi.fn();
 const profileFindMany = vi.fn();
 const userFindUnique = vi.fn();
 const txSaasUpdateMany = vi.fn();
+const emailOutboundCreate = vi.fn();
 const transaction = vi.fn();
+const tryDeliverOutboxEmail = vi.fn();
 
 vi.mock('@/lib/admin/auth', () => ({
   resolveAdminAccess: (...args: unknown[]) => resolveAdminAccess(...args),
@@ -43,6 +45,18 @@ vi.mock('@/lib/admin/rbac/can', async () => {
 
 vi.mock('@/lib/shop/paidShop', () => ({
   isPaidShop: (...args: unknown[]) => isPaidShop(...args),
+}));
+
+vi.mock('@/lib/email/outbox', () => ({
+  enqueueEmail: async (
+    tx: { emailOutbound: { create: (...args: unknown[]) => unknown } },
+    input: { dedupeKey?: string | null; purpose: string },
+  ) =>
+    tx.emailOutbound.create({
+      data: { id: `out_${input.purpose}`, dedupeKey: input.dedupeKey },
+    }),
+  tryDeliverOutboxEmail: (...args: unknown[]) => tryDeliverOutboxEmail(...args),
+  deliverOutboxEmail: vi.fn(),
 }));
 
 vi.mock('@/lib/db/client', () => ({
@@ -88,21 +102,15 @@ vi.mock('@/lib/db/client', () => ({
     user: {
       findUnique: (...args: unknown[]) => userFindUnique(...args),
     },
+    emailOutbound: {
+      create: (...args: unknown[]) => emailOutboundCreate(...args),
+    },
     $transaction: (...args: unknown[]) => transaction(...args),
   },
 }));
 
-vi.mock('@/lib/email/clientOnboardingEmails', () => ({
-  sendClientOnboardingInternalNotificationEmail: vi.fn(async () => undefined),
-  sendClientOnboardingCustomerConfirmationEmail: vi.fn(async () => undefined),
-}));
-
 import { GET, PUT } from './index';
 import { POST as SUBMIT } from './submit';
-import {
-  sendClientOnboardingCustomerConfirmationEmail,
-  sendClientOnboardingInternalNotificationEmail,
-} from '@/lib/email/clientOnboardingEmails';
 import { looksLikePublicBlobUrl } from '@/lib/storage/privateOnboardingBlob';
 import { CLIENT_ONBOARDING_REQUIRES_PAID_CODE } from '@/lib/admin/clientOnboarding/schema';
 
@@ -279,14 +287,30 @@ describe('/api/admin/client-onboarding', () => {
     clientOnboardingUpdate.mockImplementation(async ({ data }: { data: Record<string, unknown> }) =>
       draftRow(data),
     );
+    emailOutboundCreate.mockImplementation(async ({ data }: { data: { id?: string; purpose?: string } }) => ({
+      id: data.id ?? `out_${data.purpose ?? 'x'}`,
+      ...data,
+    }));
+    tryDeliverOutboxEmail.mockResolvedValue(undefined);
     transaction.mockImplementation(async (fn: (tx: unknown) => Promise<unknown>) => {
       const tx = {
+        $executeRaw: vi.fn(async () => undefined),
         clientOnboarding: {
+          upsert: (...args: unknown[]) => clientOnboardingUpsert(...args),
+          findUnique: (...args: unknown[]) => clientOnboardingFindUnique(...args),
+          update: (...args: unknown[]) => clientOnboardingUpdate(...args),
           updateMany: (...args: unknown[]) => clientOnboardingUpdateMany(...args),
           findUniqueOrThrow: (...args: unknown[]) => clientOnboardingFindUniqueOrThrow(...args),
         },
         saasSubscription: {
           updateMany: (...args: unknown[]) => txSaasUpdateMany(...args),
+        },
+        clientOnboardingAsset: {
+          findMany: (...args: unknown[]) => assetFindMany(...args),
+        },
+        emailOutbound: {
+          create: (...args: unknown[]) => emailOutboundCreate(...args),
+          findUnique: vi.fn(),
         },
       };
       return fn(tx);
@@ -373,15 +397,21 @@ describe('/api/admin/client-onboarding', () => {
     expect(body.ok).toBe(true);
     expect(body.idempotent).toBe(false);
     expect(txSaasUpdateMany).toHaveBeenCalled();
-    expect(sendClientOnboardingInternalNotificationEmail).toHaveBeenCalled();
-    expect(sendClientOnboardingCustomerConfirmationEmail).toHaveBeenCalled();
+    expect(emailOutboundCreate).toHaveBeenCalled();
+    expect(tryDeliverOutboxEmail).toHaveBeenCalled();
+    const dedupeKeys = emailOutboundCreate.mock.calls.map((c) => {
+      const arg = c[0] as { data?: { dedupeKey?: string } };
+      return arg?.data?.dedupeKey;
+    });
+    expect(dedupeKeys).toContain('client-onboarding:internal:onb_1');
+    expect(dedupeKeys).toContain('client-onboarding:customer:onb_1');
   });
 
   it('POST submit loser path is idempotent without emails', async () => {
     resolveAdminAccess.mockResolvedValue(accessFor('OWNER'));
     mockWorkspaceReady();
-    clientOnboardingUpdateMany.mockResolvedValue({ count: 0 });
-    clientOnboardingFindUnique.mockResolvedValue(
+    // First ensure inside lock returns already submitted
+    clientOnboardingUpsert.mockResolvedValue(
       draftRow({
         status: ClientOnboardingStatus.SUBMITTED,
         submittedAt: new Date('2026-08-01T00:00:00.000Z'),
@@ -392,7 +422,30 @@ describe('/api/admin/client-onboarding', () => {
     expect(res.status).toBe(200);
     const body = await res.json();
     expect(body.idempotent).toBe(true);
-    expect(sendClientOnboardingInternalNotificationEmail).not.toHaveBeenCalled();
+    expect(emailOutboundCreate).not.toHaveBeenCalled();
+    expect(tryDeliverOutboxEmail).not.toHaveBeenCalled();
+  });
+
+  it('POST submit enqueues durable emails and remains SUBMITTED after deliver attempt', async () => {
+    resolveAdminAccess.mockResolvedValue(accessFor('OWNER'));
+    mockWorkspaceReady();
+    const submitted = draftRow({
+      status: ClientOnboardingStatus.SUBMITTED,
+      submittedAt: new Date('2026-08-07T12:00:00.000Z'),
+    });
+    clientOnboardingUpdateMany.mockResolvedValue({ count: 1 });
+    clientOnboardingFindUniqueOrThrow.mockResolvedValue(submitted);
+    txSaasUpdateMany.mockResolvedValue({ count: 1 });
+    // Real tryDeliverOutboxEmail swallows delivery failures; submit must not roll back.
+    tryDeliverOutboxEmail.mockResolvedValue(undefined);
+
+    const res = await SUBMIT(makeContext('POST') as never);
+    expect(res.status).toBe(200);
+    const body = await res.json();
+    expect(body.ok).toBe(true);
+    expect(body.onboarding.status).toBe(ClientOnboardingStatus.SUBMITTED);
+    expect(emailOutboundCreate).toHaveBeenCalled();
+    expect(tryDeliverOutboxEmail).toHaveBeenCalled();
   });
 
   it('POST submit fails when migrationRequested is null', async () => {

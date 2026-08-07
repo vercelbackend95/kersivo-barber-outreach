@@ -59,6 +59,7 @@ async function alertEmailFailed(row: EmailOutbound, errorMessage: string): Promi
 /**
  * Write-ahead: enqueue a transactional email inside an existing Prisma transaction.
  * Caller must commit the transaction before calling deliverOutboxEmail.
+ * Optional dedupeKey makes concurrent/retry enqueues idempotent (unique constraint).
  */
 export async function enqueueEmail(
   tx: Prisma.TransactionClient,
@@ -70,10 +71,12 @@ export async function enqueueEmail(
     subject: string;
     html: string;
     replyTo?: string;
+    dedupeKey?: string | null;
   },
 ): Promise<EmailOutbound> {
   const now = new Date();
   const to = input.to.trim().toLowerCase();
+  const dedupeKey = input.dedupeKey?.trim() || null;
   const payload: EmailOutboxPayload = {
     to,
     subject: input.subject,
@@ -81,22 +84,37 @@ export async function enqueueEmail(
     ...(input.replyTo?.trim() ? { replyTo: input.replyTo.trim() } : {}),
   };
 
-  return tx.emailOutbound.create({
-    data: {
-      shopId: input.shopId,
-      bookingId: input.bookingId ?? null,
-      toEmail: to,
-      subject: input.subject,
-      purpose: input.purpose,
-      provider: isEmailDeliveryConfigured() ? 'resend' : 'dev-log',
-      status: EmailOutboundStatus.QUEUED,
-      payload,
-      attempts: 0,
-      maxAttempts: DEFAULT_MAX_ATTEMPTS,
-      nextAttemptAt: now,
-      error: null,
-    },
-  });
+  try {
+    return await tx.emailOutbound.create({
+      data: {
+        shopId: input.shopId,
+        bookingId: input.bookingId ?? null,
+        toEmail: to,
+        subject: input.subject,
+        purpose: input.purpose,
+        provider: isEmailDeliveryConfigured() ? 'resend' : 'dev-log',
+        status: EmailOutboundStatus.QUEUED,
+        payload,
+        dedupeKey,
+        attempts: 0,
+        maxAttempts: DEFAULT_MAX_ATTEMPTS,
+        nextAttemptAt: now,
+        error: null,
+      },
+    });
+  } catch (error) {
+    if (
+      dedupeKey &&
+      typeof error === 'object' &&
+      error !== null &&
+      'code' in error &&
+      (error as { code?: string }).code === 'P2002'
+    ) {
+      const existing = await tx.emailOutbound.findUnique({ where: { dedupeKey } });
+      if (existing) return existing;
+    }
+    throw error;
+  }
 }
 
 export type DeliverOutboxResult = {

@@ -8,7 +8,11 @@ import {
   ensureClientOnboarding,
   requireClientOnboardingAccess,
 } from '@/lib/admin/clientOnboarding/service';
-import { prisma } from '@/lib/db/client';
+import {
+  clientOnboardingLockedResponse,
+  isClientOnboardingWriteLocked,
+} from '@/lib/admin/clientOnboarding/schema';
+import { withClientOnboardingWriteLock } from '@/lib/admin/clientOnboarding/writeLock';
 import {
   assetValidationMessage,
   deletePrivateOnboardingFile,
@@ -29,8 +33,9 @@ export const POST: APIRoute = async (ctx) => {
   const accessOrErr = await requireClientOnboardingAccess(await resolveAdminAccess(ctx));
   if (accessOrErr instanceof Response) return accessOrErr;
 
-  const writable = await assertWritableClientOnboarding(accessOrErr.shopId);
-  if (writable instanceof Response) return writable;
+  // Fast reject before upload when already locked (still re-checked under write lock).
+  const earlyWritable = await assertWritableClientOnboarding(accessOrErr.shopId);
+  if (earlyWritable instanceof Response) return earlyWritable;
 
   let form: FormData;
   try {
@@ -76,19 +81,58 @@ export const POST: APIRoute = async (ctx) => {
     );
     uploadedPathname = uploaded.pathname;
 
-    const onboarding = await ensureClientOnboarding(accessOrErr.shopId);
-    const asset = await prisma.clientOnboardingAsset.create({
-      data: {
-        shopId: accessOrErr.shopId,
-        onboardingId: onboarding.id,
-        kind,
-        storagePath: uploaded.pathname,
-        originalFileName: filePart.name.trim(),
-        contentType: uploaded.contentType,
-        sizeBytes: uploaded.sizeBytes,
-      },
-    });
+    type FinalizeResult =
+      | { kind: 'locked' }
+      | {
+          kind: 'created';
+          asset: {
+            id: string;
+            kind: string;
+            storagePath: string;
+            originalFileName: string;
+            contentType: string;
+            sizeBytes: number;
+            createdAt: Date;
+          };
+        };
 
+    const finalized = await withClientOnboardingWriteLock(
+      accessOrErr.shopId,
+      async (tx): Promise<FinalizeResult> => {
+        const onboarding = await ensureClientOnboarding(accessOrErr.shopId, tx);
+        if (isClientOnboardingWriteLocked(onboarding.status)) {
+          return { kind: 'locked' };
+        }
+
+        const asset = await tx.clientOnboardingAsset.create({
+          data: {
+            shopId: accessOrErr.shopId,
+            onboardingId: onboarding.id,
+            kind,
+            storagePath: uploaded.pathname,
+            originalFileName: filePart.name.trim(),
+            contentType: uploaded.contentType,
+            sizeBytes: uploaded.sizeBytes,
+          },
+        });
+        return { kind: 'created', asset };
+      },
+    );
+
+    if (finalized.kind === 'locked') {
+      try {
+        await deletePrivateOnboardingFile(uploaded.pathname);
+      } catch (cleanupError) {
+        console.error('[client-onboarding] locked-upload blob cleanup failed', {
+          pathname: uploaded.pathname,
+          error:
+            cleanupError instanceof Error ? cleanupError.message : String(cleanupError),
+        });
+      }
+      return clientOnboardingLockedResponse();
+    }
+
+    const asset = finalized.asset;
     return new Response(
       JSON.stringify({
         ok: true,
@@ -125,9 +169,6 @@ export const DELETE: APIRoute = async (ctx) => {
   const accessOrErr = await requireClientOnboardingAccess(await resolveAdminAccess(ctx));
   if (accessOrErr instanceof Response) return accessOrErr;
 
-  const writable = await assertWritableClientOnboarding(accessOrErr.shopId);
-  if (writable instanceof Response) return writable;
-
   let body: { id?: string };
   try {
     body = (await ctx.request.json()) as { id?: string };
@@ -140,32 +181,54 @@ export const DELETE: APIRoute = async (ctx) => {
     return new Response(JSON.stringify({ error: 'Asset id is required.' }), { status: 400 });
   }
 
-  const asset = await prisma.clientOnboardingAsset.findFirst({
-    where: { id, shopId: accessOrErr.shopId },
-  });
-  if (!asset) {
-    return new Response(JSON.stringify({ error: 'Asset not found.' }), { status: 404 });
-  }
-
   try {
-    await deletePrivateOnboardingFile(asset.storagePath);
-  } catch (error) {
-    console.error('[client-onboarding] private blob delete failed; keeping DB row', {
-      assetId: asset.id,
-      pathname: asset.storagePath,
-      error: error instanceof Error ? error.message : String(error),
-    });
-    return new Response(
-      JSON.stringify({
-        error: 'Unable to delete private file. Metadata retained for retry.',
-        code: 'PRIVATE_BLOB_DELETE_FAILED',
-      }),
-      { status: 503 },
+    type DeleteResult =
+      | { kind: 'locked' }
+      | { kind: 'not_found' }
+      | { kind: 'blob_failed' }
+      | { kind: 'ok' };
+
+    const result = await withClientOnboardingWriteLock(
+      accessOrErr.shopId,
+      async (tx): Promise<DeleteResult> => {
+        const writable = await assertWritableClientOnboarding(accessOrErr.shopId, tx);
+        if (writable instanceof Response) return { kind: 'locked' };
+
+        const asset = await tx.clientOnboardingAsset.findFirst({
+          where: { id, shopId: accessOrErr.shopId },
+        });
+        if (!asset) return { kind: 'not_found' };
+
+        try {
+          await deletePrivateOnboardingFile(asset.storagePath);
+        } catch (error) {
+          console.error('[client-onboarding] private blob delete failed; keeping DB row', {
+            assetId: asset.id,
+            pathname: asset.storagePath,
+            error: error instanceof Error ? error.message : String(error),
+          });
+          return { kind: 'blob_failed' };
+        }
+
+        await tx.clientOnboardingAsset.delete({ where: { id: asset.id } });
+        return { kind: 'ok' };
+      },
     );
-  }
 
-  try {
-    await prisma.clientOnboardingAsset.delete({ where: { id: asset.id } });
+    if (result.kind === 'locked') return clientOnboardingLockedResponse();
+    if (result.kind === 'not_found') {
+      return new Response(JSON.stringify({ error: 'Asset not found.' }), { status: 404 });
+    }
+    if (result.kind === 'blob_failed') {
+      return new Response(
+        JSON.stringify({
+          error: 'Unable to delete private file. Metadata retained for retry.',
+          code: 'PRIVATE_BLOB_DELETE_FAILED',
+        }),
+        { status: 503 },
+      );
+    }
+
     return new Response(JSON.stringify({ ok: true }), {
       headers: { 'Content-Type': 'application/json' },
     });
