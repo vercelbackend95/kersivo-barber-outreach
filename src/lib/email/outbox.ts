@@ -59,7 +59,7 @@ async function alertEmailFailed(row: EmailOutbound, errorMessage: string): Promi
 /**
  * Write-ahead: enqueue a transactional email inside an existing Prisma transaction.
  * Caller must commit the transaction before calling deliverOutboxEmail.
- * Optional dedupeKey makes concurrent/retry enqueues idempotent (unique constraint).
+ * Optional dedupeKey makes concurrent/retry enqueues idempotent via upsert (no P2002-in-tx).
  */
 export async function enqueueEmail(
   tx: Prisma.TransactionClient,
@@ -84,37 +84,31 @@ export async function enqueueEmail(
     ...(input.replyTo?.trim() ? { replyTo: input.replyTo.trim() } : {}),
   };
 
-  try {
-    return await tx.emailOutbound.create({
-      data: {
-        shopId: input.shopId,
-        bookingId: input.bookingId ?? null,
-        toEmail: to,
-        subject: input.subject,
-        purpose: input.purpose,
-        provider: isEmailDeliveryConfigured() ? 'resend' : 'dev-log',
-        status: EmailOutboundStatus.QUEUED,
-        payload,
-        dedupeKey,
-        attempts: 0,
-        maxAttempts: DEFAULT_MAX_ATTEMPTS,
-        nextAttemptAt: now,
-        error: null,
-      },
+  const data = {
+    shopId: input.shopId,
+    bookingId: input.bookingId ?? null,
+    toEmail: to,
+    subject: input.subject,
+    purpose: input.purpose,
+    provider: isEmailDeliveryConfigured() ? 'resend' : 'dev-log',
+    status: EmailOutboundStatus.QUEUED,
+    payload,
+    dedupeKey,
+    attempts: 0,
+    maxAttempts: DEFAULT_MAX_ATTEMPTS,
+    nextAttemptAt: now,
+    error: null,
+  };
+
+  if (dedupeKey) {
+    return tx.emailOutbound.upsert({
+      where: { dedupeKey },
+      create: data,
+      update: {},
     });
-  } catch (error) {
-    if (
-      dedupeKey &&
-      typeof error === 'object' &&
-      error !== null &&
-      'code' in error &&
-      (error as { code?: string }).code === 'P2002'
-    ) {
-      const existing = await tx.emailOutbound.findUnique({ where: { dedupeKey } });
-      if (existing) return existing;
-    }
-    throw error;
   }
+
+  return tx.emailOutbound.create({ data });
 }
 
 export type DeliverOutboxResult = {

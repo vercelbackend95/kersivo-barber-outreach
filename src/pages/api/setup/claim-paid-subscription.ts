@@ -10,6 +10,7 @@ import {
 import {
   assertClaimEntitlement,
   SUBSCRIPTION_NOT_ACTIVE_CODE,
+  type VerifiedLiveClaimSnapshot,
 } from '@/lib/setup/claimPaidSubscriptionEntitlement';
 import { SAAS_SUBSCRIPTION_METADATA_TYPE } from '@/lib/setup/saasSubscription';
 import { markShopPaid } from '@/lib/shop/markShopPaid';
@@ -53,33 +54,80 @@ async function ensurePaidMarker(shopId: string): Promise<Response | null> {
   }
 }
 
-async function denyUnlessEntitled(
+type EntitlementGate =
+  | { error: Response }
+  | { verifiedLive?: VerifiedLiveClaimSnapshot };
+
+async function checkClaimEntitlement(
   record: Parameters<typeof assertClaimEntitlement>[0]['record'],
   session: Parameters<typeof assertClaimEntitlement>[0]['session'],
-): Promise<Response | null> {
+): Promise<EntitlementGate> {
   const result = await assertClaimEntitlement({
     record,
     session,
     retrieveSubscriptionFn: retrieveSubscription,
   });
-  if (result.ok) return null;
-  if (result.code === 'STRIPE_SUBSCRIPTION_LOOKUP_FAILED') {
-    return json(
-      {
-        error: 'Unable to verify current Stripe subscription status.',
-        code: result.code,
-      },
-      502,
-    );
+  if (!result.ok) {
+    if (result.code === 'STRIPE_SUBSCRIPTION_LOOKUP_FAILED') {
+      return {
+        error: json(
+          {
+            error: 'Unable to verify current Stripe subscription status.',
+            code: result.code,
+          },
+          502,
+        ),
+      };
+    }
+    return {
+      error: json(
+        {
+          error: 'This subscription is not currently active.',
+          code: SUBSCRIPTION_NOT_ACTIVE_CODE,
+          reason: result.reason,
+        },
+        403,
+      ),
+    };
   }
-  return json(
-    {
-      error: 'This subscription is not currently active.',
-      code: SUBSCRIPTION_NOT_ACTIVE_CODE,
-      reason: result.reason,
-    },
-    403,
-  );
+  return { verifiedLive: result.verifiedLive };
+}
+
+function verifiedLiveUpdateData(snapshot: VerifiedLiveClaimSnapshot, now: Date) {
+  return {
+    stripeSubscriptionId: snapshot.stripeSubscriptionId,
+    status: snapshot.status,
+    currentPeriodEnd: snapshot.currentPeriodEnd,
+    cancelAtPeriodEnd: snapshot.cancelAtPeriodEnd,
+    pastDueSince: null,
+    activatedAt: now,
+  };
+}
+
+/**
+ * Persist live ACTIVE snapshot only while the row is still PENDING (race-safe).
+ * Returns false when another writer already moved status (e.g. CANCELED) — caller must re-read.
+ */
+async function persistVerifiedLiveWhilePending(input: {
+  id: string;
+  shopId: string;
+  shopIdWasNull: boolean;
+  verifiedLive: VerifiedLiveClaimSnapshot;
+}): Promise<boolean> {
+  const now = new Date();
+  const data = {
+    ...verifiedLiveUpdateData(input.verifiedLive, now),
+    shopId: input.shopId,
+  };
+  const where = input.shopIdWasNull
+    ? { id: input.id, shopId: null as string | null, status: 'PENDING' as const }
+    : { id: input.id, shopId: input.shopId, status: 'PENDING' as const };
+
+  const updated = await prisma.saasSubscription.updateMany({
+    where,
+    data,
+  });
+  return updated.count > 0;
 }
 
 /**
@@ -174,10 +222,35 @@ export const POST: APIRoute = async (ctx) => {
     );
   }
 
-  // Already owned by this shop — entitlement then heal paid marker.
+  // Already owned by this shop — entitlement, persist PENDING→ACTIVE snapshot, then heal paid.
   if (record.shopId != null && record.shopId === access.shopId) {
-    const entitlementError = await denyUnlessEntitled(record, session);
-    if (entitlementError) return entitlementError;
+    const gate = await checkClaimEntitlement(record, session);
+    if ('error' in gate) return gate.error;
+
+    if (gate.verifiedLive) {
+      const persisted = await persistVerifiedLiveWhilePending({
+        id: record.id,
+        shopId: access.shopId,
+        shopIdWasNull: false,
+        verifiedLive: gate.verifiedLive,
+      });
+      if (!persisted) {
+        const again = await prisma.saasSubscription.findUnique({ where: { id: record.id } });
+        if (!again || again.shopId !== access.shopId) {
+          return json(
+            {
+              error: 'This subscription is already linked to another shop.',
+              code: 'ALREADY_OWNED',
+            },
+            409,
+          );
+        }
+        const againGate = await checkClaimEntitlement(again, session);
+        if ('error' in againGate) return againGate.error;
+        // Do not overwrite non-PENDING (e.g. CANCELED) with ACTIVE.
+      }
+    }
+
     const healError = await ensurePaidMarker(access.shopId);
     if (healError) return healError;
     return json({
@@ -189,39 +262,80 @@ export const POST: APIRoute = async (ctx) => {
     });
   }
 
-  // shopId === null — check entitlement before linking + markShopPaid.
-  const entitlementError = await denyUnlessEntitled(record, session);
-  if (entitlementError) return entitlementError;
+  // shopId === null — entitlement then atomic link (+ ACTIVE snapshot when PENDING).
+  const gate = await checkClaimEntitlement(record, session);
+  if ('error' in gate) return gate.error;
 
-  const claimed = await prisma.saasSubscription.updateMany({
-    where: { id: record.id, shopId: null },
-    data: { shopId: access.shopId },
-  });
-
-  if (claimed.count === 0) {
-    const again = await prisma.saasSubscription.findUnique({
-      where: { id: record.id },
+  if (gate.verifiedLive) {
+    const persisted = await persistVerifiedLiveWhilePending({
+      id: record.id,
+      shopId: access.shopId,
+      shopIdWasNull: true,
+      verifiedLive: gate.verifiedLive,
     });
-    if (again?.shopId === access.shopId) {
-      const againEntitlement = await denyUnlessEntitled(again, session);
-      if (againEntitlement) return againEntitlement;
-      const healError = await ensurePaidMarker(access.shopId);
-      if (healError) return healError;
-      return json({
-        ok: true,
-        claimed: false,
-        idempotent: true,
-        shopId: access.shopId,
-        subscriptionId: record.id,
-      });
+    if (!persisted) {
+      const again = await prisma.saasSubscription.findUnique({ where: { id: record.id } });
+      if (again?.shopId === access.shopId) {
+        const againGate = await checkClaimEntitlement(again, session);
+        if ('error' in againGate) return againGate.error;
+        if (againGate.verifiedLive) {
+          await persistVerifiedLiveWhilePending({
+            id: record.id,
+            shopId: access.shopId,
+            shopIdWasNull: false,
+            verifiedLive: againGate.verifiedLive,
+          });
+        }
+        const healError = await ensurePaidMarker(access.shopId);
+        if (healError) return healError;
+        return json({
+          ok: true,
+          claimed: false,
+          idempotent: true,
+          shopId: access.shopId,
+          subscriptionId: record.id,
+        });
+      }
+      return json(
+        {
+          error: 'This subscription was claimed by another shop.',
+          code: 'CLAIM_RACE',
+        },
+        409,
+      );
     }
-    return json(
-      {
-        error: 'This subscription was claimed by another shop.',
-        code: 'CLAIM_RACE',
-      },
-      409,
-    );
+  } else {
+    // Non-PENDING entitled guest row: link shopId only (race-safe).
+    const claimed = await prisma.saasSubscription.updateMany({
+      where: { id: record.id, shopId: null },
+      data: { shopId: access.shopId },
+    });
+
+    if (claimed.count === 0) {
+      const again = await prisma.saasSubscription.findUnique({
+        where: { id: record.id },
+      });
+      if (again?.shopId === access.shopId) {
+        const againGate = await checkClaimEntitlement(again, session);
+        if ('error' in againGate) return againGate.error;
+        const healError = await ensurePaidMarker(access.shopId);
+        if (healError) return healError;
+        return json({
+          ok: true,
+          claimed: false,
+          idempotent: true,
+          shopId: access.shopId,
+          subscriptionId: record.id,
+        });
+      }
+      return json(
+        {
+          error: 'This subscription was claimed by another shop.',
+          code: 'CLAIM_RACE',
+        },
+        409,
+      );
+    }
   }
 
   const paidError = await ensurePaidMarker(access.shopId);

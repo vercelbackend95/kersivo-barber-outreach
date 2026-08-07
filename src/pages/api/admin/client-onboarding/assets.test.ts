@@ -59,6 +59,11 @@ vi.mock('@/lib/storage/privateOnboardingBlob', async () => {
   };
 });
 
+const notifyOpsDurable = vi.fn();
+vi.mock('@/lib/ops/stripeWebhookLedger', () => ({
+  notifyOpsDurable: (...args: unknown[]) => notifyOpsDurable(...args),
+}));
+
 import { POST, DELETE } from './assets';
 import { looksLikePublicBlobUrl } from '@/lib/storage/privateOnboardingBlob';
 
@@ -119,6 +124,7 @@ describe('POST/DELETE /api/admin/client-onboarding/assets', () => {
       pastDueSince: null,
     });
     ensureUpsert.mockResolvedValue(draftOnboarding());
+    notifyOpsDurable.mockResolvedValue({ sent: true });
     transaction.mockImplementation(async (fn: (tx: unknown) => Promise<unknown>) => {
       const tx = {
         $executeRaw: vi.fn(async () => undefined),
@@ -203,6 +209,35 @@ describe('POST/DELETE /api/admin/client-onboarding/assets', () => {
     );
   });
 
+  it('alerts ops when orphan blob cleanup fails after DB finalize failure', async () => {
+    const file = new File(['a,b\n1,2\n'], 'clients.csv', { type: 'text/csv' });
+    uploadPrivate.mockResolvedValue({
+      pathname: 'client-onboarding/shop_1/migration_csv/orphan.csv',
+      contentType: 'text/csv',
+      sizeBytes: file.size,
+    });
+    assetCreate.mockRejectedValue(new Error('unique conflict'));
+    deletePrivate.mockRejectedValue(new Error('blob cleanup down'));
+
+    const res = await POST(
+      makeFormContext(file, ClientOnboardingAssetKind.MIGRATION_CSV) as never,
+    );
+    expect(res.status).toBe(500);
+    expect(notifyOpsDurable).toHaveBeenCalledWith(
+      expect.objectContaining({
+        severity: 'critical',
+        dedupeKey: 'client-onboarding:blob-cleanup:client-onboarding/shop_1/migration_csv/orphan.csv',
+        fields: expect.objectContaining({
+          shopId: 'shop_1',
+          pathname: 'client-onboarding/shop_1/migration_csv/orphan.csv',
+          kind: ClientOnboardingAssetKind.MIGRATION_CSV,
+          filename: 'clients.csv',
+          reason: 'db_finalize_failed',
+        }),
+      }),
+    );
+  });
+
   it('cleans up blob and returns 409 when locked after upload', async () => {
     const file = new File(['a,b\n1,2\n'], 'clients.csv', { type: 'text/csv' });
     uploadPrivate.mockResolvedValue({
@@ -224,6 +259,30 @@ describe('POST/DELETE /api/admin/client-onboarding/assets', () => {
       'client-onboarding/shop_1/migration_csv/late.csv',
     );
     expect(assetCreate).not.toHaveBeenCalled();
+  });
+
+  it('alerts ops when cleanup fails after lock-before-finalize', async () => {
+    const file = new File(['a,b\n1,2\n'], 'clients.csv', { type: 'text/csv' });
+    uploadPrivate.mockResolvedValue({
+      pathname: 'client-onboarding/shop_1/migration_csv/late.csv',
+      contentType: 'text/csv',
+      sizeBytes: file.size,
+    });
+    ensureUpsert
+      .mockResolvedValueOnce(draftOnboarding(ClientOnboardingStatus.DRAFT))
+      .mockResolvedValue(draftOnboarding(ClientOnboardingStatus.SUBMITTED));
+    deletePrivate.mockRejectedValue(new Error('cleanup failed'));
+
+    const res = await POST(
+      makeFormContext(file, ClientOnboardingAssetKind.MIGRATION_CSV) as never,
+    );
+    expect(res.status).toBe(409);
+    expect(notifyOpsDurable).toHaveBeenCalledWith(
+      expect.objectContaining({
+        dedupeKey: 'client-onboarding:blob-cleanup:client-onboarding/shop_1/migration_csv/late.csv',
+        fields: expect.objectContaining({ reason: 'locked_before_finalize' }),
+      }),
+    );
   });
 
   it('does not delete DB row when blob delete fails', async () => {

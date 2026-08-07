@@ -2,6 +2,7 @@ import { describe, it, expect, vi } from 'vitest';
 import type { SaasSubscriptionStatus } from '@prisma/client';
 import {
   assertClaimEntitlement,
+  assertStrictLiveActiveForPendingClaim,
   SUBSCRIPTION_NOT_ACTIVE_CODE,
 } from './claimPaidSubscriptionEntitlement';
 import type { StripeSession, StripeSubscription } from '@/lib/shop/stripe';
@@ -34,6 +35,18 @@ function activeRecord(
     stripeSubscriptionId: 'sub_live_1' as string | null,
     ...overrides,
   };
+}
+
+function liveSub(
+  overrides: Record<string, unknown> = {},
+): StripeSubscription {
+  return {
+    id: 'sub_live_1',
+    status: 'active',
+    cancel_at_period_end: false,
+    current_period_end: Math.floor(Date.now() / 1000) + 86400,
+    ...overrides,
+  } as unknown as StripeSubscription;
 }
 
 describe('assertClaimEntitlement', () => {
@@ -100,40 +113,70 @@ describe('assertClaimEntitlement', () => {
     expect(result.ok).toBe(false);
   });
 
-  it('PENDING with live active Stripe subscription is allowed', async () => {
-    const retrieve = vi.fn(async () =>
-      ({
-        id: 'sub_live_1',
-        status: 'active',
-        cancel_at_period_end: false,
-        items: { data: [{ current_period_end: Math.floor(Date.now() / 1000) + 86400 }] },
-      }) as unknown as StripeSubscription,
-    );
+  it('PENDING with live active + future period returns verifiedLive snapshot', async () => {
+    const periodEnd = Math.floor(Date.now() / 1000) + 86400;
+    const retrieve = vi.fn(async () => liveSub({ current_period_end: periodEnd }));
     const result = await assertClaimEntitlement({
       record: activeRecord({ status: 'PENDING', stripeSubscriptionId: null }),
       session: session({ subscription: 'sub_live_1' }),
       retrieveSubscriptionFn: retrieve,
     });
-    expect(result).toEqual({ ok: true });
+    expect(result.ok).toBe(true);
+    if (result.ok) {
+      expect(result.verifiedLive).toEqual({
+        stripeSubscriptionId: 'sub_live_1',
+        status: 'ACTIVE',
+        currentPeriodEnd: new Date(periodEnd * 1000),
+        cancelAtPeriodEnd: false,
+      });
+    }
     expect(retrieve).toHaveBeenCalledWith('sub_live_1');
   });
 
-  it('PENDING with canceled live Stripe subscription is denied', async () => {
-    const retrieve = vi.fn(async () =>
-      ({
-        id: 'sub_live_1',
-        status: 'canceled',
-        cancel_at_period_end: false,
-        items: { data: [] },
-      }) as unknown as StripeSubscription,
-    );
+  it.each([
+    'incomplete',
+    'incomplete_expired',
+    'unpaid',
+    'past_due',
+    'paused',
+    'trialing',
+    'canceled',
+    '',
+    'unknown_status',
+  ])('PENDING + live %s is denied', async (stripeStatus) => {
+    const retrieve = vi.fn(async () => liveSub({ status: stripeStatus }));
     const result = await assertClaimEntitlement({
-      record: activeRecord({ status: 'PENDING', stripeSubscriptionId: 'sub_live_1' }),
+      record: activeRecord({ status: 'PENDING' }),
       session: session(),
       retrieveSubscriptionFn: retrieve,
     });
     expect(result.ok).toBe(false);
     if (!result.ok) expect(result.code).toBe(SUBSCRIPTION_NOT_ACTIVE_CODE);
+  });
+
+  it('PENDING + active but missing period end is denied', async () => {
+    const retrieve = vi.fn(async () =>
+      liveSub({ current_period_end: undefined, items: { data: [] } }),
+    );
+    const result = await assertClaimEntitlement({
+      record: activeRecord({ status: 'PENDING' }),
+      session: session(),
+      retrieveSubscriptionFn: retrieve,
+    });
+    expect(result.ok).toBe(false);
+  });
+
+  it('PENDING + active but expired period is denied', async () => {
+    const retrieve = vi.fn(async () =>
+      liveSub({ current_period_end: Math.floor(Date.now() / 1000) - 60 }),
+    );
+    const result = await assertClaimEntitlement({
+      record: activeRecord({ status: 'PENDING' }),
+      session: session(),
+      retrieveSubscriptionFn: retrieve,
+      now: new Date(),
+    });
+    expect(result.ok).toBe(false);
   });
 
   it('PENDING without subscription id is denied', async () => {
@@ -155,5 +198,12 @@ describe('assertClaimEntitlement', () => {
     });
     expect(result.ok).toBe(false);
     if (!result.ok) expect(result.code).toBe('STRIPE_SUBSCRIPTION_LOOKUP_FAILED');
+  });
+});
+
+describe('assertStrictLiveActiveForPendingClaim', () => {
+  it('does not treat unpaid as PAST_DUE-allowed', () => {
+    const result = assertStrictLiveActiveForPendingClaim(liveSub({ status: 'unpaid' }));
+    expect(result.ok).toBe(false);
   });
 });

@@ -251,21 +251,60 @@ describe('POST /api/setup/claim-paid-subscription', () => {
     expect(markShopPaid).not.toHaveBeenCalled();
   });
 
-  it('PENDING with live active Stripe sub is allowed', async () => {
+  it('PENDING with live active Stripe sub persists ACTIVE snapshot then marks paid', async () => {
     retrieveCheckoutSession.mockResolvedValue(paidSession());
     findUnique.mockResolvedValue(activeSub({ status: 'PENDING' }));
+    const periodEnd = Math.floor(Date.now() / 1000) + 86400;
     retrieveSubscription.mockResolvedValue({
       id: 'sub_live_1',
       status: 'active',
       cancel_at_period_end: false,
-      current_period_end: Math.floor(Date.now() / 1000) + 86400,
+      current_period_end: periodEnd,
     });
     updateMany.mockResolvedValue({ count: 1 });
 
     const res = await POST(makeContext({ stripeSessionId: 'cs_test_1' }) as never);
     expect(res.status).toBe(200);
     expect(retrieveSubscription).toHaveBeenCalledWith('sub_live_1');
+    expect(updateMany).toHaveBeenCalledWith(
+      expect.objectContaining({
+        where: { id: 'sub_1', shopId: null, status: 'PENDING' },
+        data: expect.objectContaining({
+          shopId: 'shop_owner',
+          status: 'ACTIVE',
+          stripeSubscriptionId: 'sub_live_1',
+          currentPeriodEnd: new Date(periodEnd * 1000),
+          cancelAtPeriodEnd: false,
+        }),
+      }),
+    );
     expect(markShopPaid).toHaveBeenCalled();
+  });
+
+  it('already-owned PENDING persists ACTIVE snapshot before markShopPaid', async () => {
+    retrieveCheckoutSession.mockResolvedValue(paidSession());
+    findUnique.mockResolvedValue(activeSub({ shopId: 'shop_owner', status: 'PENDING' }));
+    const periodEnd = Math.floor(Date.now() / 1000) + 86400;
+    retrieveSubscription.mockResolvedValue({
+      id: 'sub_live_1',
+      status: 'active',
+      cancel_at_period_end: true,
+      current_period_end: periodEnd,
+    });
+    updateMany.mockResolvedValue({ count: 1 });
+
+    const res = await POST(makeContext({ stripeSessionId: 'cs_test_1' }) as never);
+    expect(res.status).toBe(200);
+    expect(updateMany).toHaveBeenCalledWith(
+      expect.objectContaining({
+        where: { id: 'sub_1', shopId: 'shop_owner', status: 'PENDING' },
+        data: expect.objectContaining({
+          status: 'ACTIVE',
+          cancelAtPeriodEnd: true,
+        }),
+      }),
+    );
+    expect(markShopPaid).toHaveBeenCalledWith('shop_owner');
   });
 
   it('PENDING with canceled live Stripe sub is denied', async () => {
@@ -282,6 +321,51 @@ describe('POST /api/setup/claim-paid-subscription', () => {
     const body = await res.json();
     expect(body.code).toBe('SUBSCRIPTION_NOT_ACTIVE');
     expect(markShopPaid).not.toHaveBeenCalled();
+  });
+
+  it.each(['incomplete', 'unpaid', 'past_due', 'paused', 'trialing'])(
+    'PENDING + live %s is denied without markShopPaid',
+    async (stripeStatus) => {
+      retrieveCheckoutSession.mockResolvedValue(paidSession());
+      findUnique.mockResolvedValue(activeSub({ status: 'PENDING' }));
+      retrieveSubscription.mockResolvedValue({
+        id: 'sub_live_1',
+        status: stripeStatus,
+        cancel_at_period_end: false,
+        current_period_end: Math.floor(Date.now() / 1000) + 86400,
+      });
+
+      const res = await POST(makeContext({ stripeSessionId: 'cs_test_1' }) as never);
+      expect(res.status).toBe(403);
+      expect(markShopPaid).not.toHaveBeenCalled();
+      expect(updateMany).not.toHaveBeenCalled();
+    },
+  );
+
+  it('race: local becomes CANCELED before PENDING recovery update — does not overwrite', async () => {
+    retrieveCheckoutSession.mockResolvedValue(paidSession());
+    findUnique
+      .mockResolvedValueOnce(activeSub({ status: 'PENDING' }))
+      .mockResolvedValueOnce(
+        activeSub({ shopId: 'shop_owner', status: 'CANCELED' }),
+      );
+    retrieveSubscription.mockResolvedValue({
+      id: 'sub_live_1',
+      status: 'active',
+      cancel_at_period_end: false,
+      current_period_end: Math.floor(Date.now() / 1000) + 86400,
+    });
+    // PENDING update loses the race
+    updateMany.mockResolvedValue({ count: 0 });
+
+    const res = await POST(makeContext({ stripeSessionId: 'cs_test_1' }) as never);
+    expect(res.status).toBe(403);
+    const body = await res.json();
+    expect(body.code).toBe('SUBSCRIPTION_NOT_ACTIVE');
+    expect(markShopPaid).not.toHaveBeenCalled();
+    // Only one updateMany attempted (PENDING condition); no ACTIVE overwrite of CANCELED
+    expect(updateMany).toHaveBeenCalledTimes(1);
+    expect(updateMany.mock.calls[0][0].where.status).toBe('PENDING');
   });
 
   it('denies stealing a subscription owned by another shop', async () => {

@@ -1,6 +1,5 @@
 import type { SaasSubscription, SaasSubscriptionStatus } from '@prisma/client';
 import {
-  mapStripeSubscriptionStatus,
   periodEndFromUnixSeconds,
   saasSubscriptionGrantsAccess,
   type SaasSubscriptionAccessFields,
@@ -14,8 +13,15 @@ import {
 
 export const SUBSCRIPTION_NOT_ACTIVE_CODE = 'SUBSCRIPTION_NOT_ACTIVE' as const;
 
+export type VerifiedLiveClaimSnapshot = {
+  stripeSubscriptionId: string;
+  status: 'ACTIVE';
+  currentPeriodEnd: Date;
+  cancelAtPeriodEnd: boolean;
+};
+
 export type ClaimEntitlementResult =
-  | { ok: true }
+  | { ok: true; verifiedLive?: VerifiedLiveClaimSnapshot }
   | { ok: false; code: typeof SUBSCRIPTION_NOT_ACTIVE_CODE; reason: string }
   | { ok: false; code: 'STRIPE_SUBSCRIPTION_LOOKUP_FAILED'; reason: string };
 
@@ -42,22 +48,58 @@ export function entitlementFieldsFromRecord(
   };
 }
 
-export function entitlementFieldsFromStripeSubscription(
+/**
+ * Claim-recovery allowlist for LOCAL PENDING rows only.
+ * Does NOT use mapStripeSubscriptionStatus (too liberal for unpaid→PAST_DUE / unknown→ACTIVE).
+ * KERSIVO SaaS checkout does not configure trials — only Stripe `active` with a future period end.
+ */
+export function assertStrictLiveActiveForPendingClaim(
   stripeSub: StripeSubscription,
-): SaasSubscriptionAccessFields {
-  const status = mapStripeSubscriptionStatus(stripeSub.status);
+  now: Date = new Date(),
+): ClaimEntitlementResult {
+  const rawStatus = (stripeSub.status ?? '').trim().toLowerCase();
+  if (rawStatus !== 'active') {
+    return {
+      ok: false,
+      code: SUBSCRIPTION_NOT_ACTIVE_CODE,
+      reason: `Live Stripe subscription status ${stripeSub.status || 'empty'} is not active.`,
+    };
+  }
+
   const periodEndUnix = getSubscriptionCurrentPeriodEnd(stripeSub);
+  const currentPeriodEnd = periodEndFromUnixSeconds(periodEndUnix);
+  if (!currentPeriodEnd || currentPeriodEnd.getTime() <= now.getTime()) {
+    return {
+      ok: false,
+      code: SUBSCRIPTION_NOT_ACTIVE_CODE,
+      reason: 'Live Stripe subscription has no valid future current period end.',
+    };
+  }
+
+  const stripeSubscriptionId =
+    typeof stripeSub.id === 'string' && stripeSub.id.trim() ? stripeSub.id.trim() : '';
+  if (!stripeSubscriptionId) {
+    return {
+      ok: false,
+      code: SUBSCRIPTION_NOT_ACTIVE_CODE,
+      reason: 'Live Stripe subscription is missing an id.',
+    };
+  }
+
   return {
-    status,
-    currentPeriodEnd: periodEndFromUnixSeconds(periodEndUnix),
-    pastDueSince: status === 'PAST_DUE' ? new Date() : null,
-    cancelAtPeriodEnd: Boolean(stripeSub.cancel_at_period_end),
+    ok: true,
+    verifiedLive: {
+      stripeSubscriptionId,
+      status: 'ACTIVE',
+      currentPeriodEnd,
+      cancelAtPeriodEnd: Boolean(stripeSub.cancel_at_period_end),
+    },
   };
 }
 
 /**
  * Whether a SaasSubscription row currently grants paid access for claim/rehydrate.
- * PENDING requires a live Stripe Subscription retrieve (caller supplies retrieve fn).
+ * PENDING requires a live Stripe Subscription retrieve with a strict active-only allowlist.
  */
 export async function assertClaimEntitlement(input: {
   record: Pick<
@@ -110,13 +152,5 @@ export async function assertClaimEntitlement(input: {
     };
   }
 
-  const fields = entitlementFieldsFromStripeSubscription(stripeSub);
-  if (!saasSubscriptionGrantsAccess(fields, now)) {
-    return {
-      ok: false,
-      code: SUBSCRIPTION_NOT_ACTIVE_CODE,
-      reason: `Live Stripe subscription status ${stripeSub.status} does not grant access.`,
-    };
-  }
-  return { ok: true };
+  return assertStrictLiveActiveForPendingClaim(stripeSub, now);
 }

@@ -403,8 +403,12 @@ describe('/api/admin/client-onboarding', () => {
       const arg = c[0] as { data?: { dedupeKey?: string } };
       return arg?.data?.dedupeKey;
     });
-    expect(dedupeKeys).toContain('client-onboarding:internal:onb_1');
-    expect(dedupeKeys).toContain('client-onboarding:customer:onb_1');
+    expect(
+      dedupeKeys.some((k) => k?.startsWith('client-onboarding:internal:onb_1:')),
+    ).toBe(true);
+    expect(
+      dedupeKeys.some((k) => k?.startsWith('client-onboarding:customer:onb_1:')),
+    ).toBe(true);
   });
 
   it('POST submit loser path is idempotent without emails', async () => {
@@ -424,6 +428,69 @@ describe('/api/admin/client-onboarding', () => {
     expect(body.idempotent).toBe(true);
     expect(emailOutboundCreate).not.toHaveBeenCalled();
     expect(tryDeliverOutboxEmail).not.toHaveBeenCalled();
+  });
+
+  it('NEEDS_CHANGES resubmit enqueues distinct per-submission dedupeKeys', async () => {
+    resolveAdminAccess.mockResolvedValue(accessFor('OWNER'));
+    mockWorkspaceReady();
+
+    const firstSubmittedAt = new Date('2026-08-07T12:00:00.000Z');
+    const secondSubmittedAt = new Date('2026-08-08T15:30:00.000Z');
+
+    vi.useFakeTimers();
+    vi.setSystemTime(firstSubmittedAt);
+
+    // First submit
+    clientOnboardingUpsert.mockResolvedValue(draftRow());
+    clientOnboardingUpdateMany.mockResolvedValue({ count: 1 });
+    clientOnboardingFindUniqueOrThrow.mockResolvedValue(
+      draftRow({
+        status: ClientOnboardingStatus.SUBMITTED,
+        submittedAt: firstSubmittedAt,
+      }),
+    );
+    txSaasUpdateMany.mockResolvedValue({ count: 1 });
+
+    const res1 = await SUBMIT(makeContext('POST') as never);
+    expect(res1.status).toBe(200);
+
+    const keysAfterFirst = emailOutboundCreate.mock.calls.map((c) => {
+      const arg = c[0] as { data?: { dedupeKey?: string } };
+      return arg?.data?.dedupeKey;
+    });
+
+    // Reset to NEEDS_CHANGES and submit again with a later clock
+    emailOutboundCreate.mockClear();
+    tryDeliverOutboxEmail.mockClear();
+    clientOnboardingUpsert.mockResolvedValue(
+      draftRow({ status: ClientOnboardingStatus.NEEDS_CHANGES, submittedAt: firstSubmittedAt }),
+    );
+    clientOnboardingUpdateMany.mockResolvedValue({ count: 1 });
+    clientOnboardingFindUniqueOrThrow.mockResolvedValue(
+      draftRow({
+        status: ClientOnboardingStatus.SUBMITTED,
+        submittedAt: secondSubmittedAt,
+      }),
+    );
+
+    vi.setSystemTime(secondSubmittedAt);
+    const res2 = await SUBMIT(makeContext('POST') as never);
+    expect(res2.status).toBe(200);
+
+    const keysAfterSecond = emailOutboundCreate.mock.calls.map((c) => {
+      const arg = c[0] as { data?: { dedupeKey?: string } };
+      return arg?.data?.dedupeKey;
+    });
+
+    vi.useRealTimers();
+
+    const allKeys = [...keysAfterFirst, ...keysAfterSecond].filter(Boolean) as string[];
+    const internalKeys = allKeys.filter((k) => k.startsWith('client-onboarding:internal:'));
+    const customerKeys = allKeys.filter((k) => k.startsWith('client-onboarding:customer:'));
+    expect(new Set(internalKeys).size).toBe(2);
+    expect(new Set(customerKeys).size).toBe(2);
+    expect(internalKeys[0]).not.toBe(internalKeys[1]);
+    expect(customerKeys[0]).not.toBe(customerKeys[1]);
   });
 
   it('POST submit enqueues durable emails and remains SUBMITTED after deliver attempt', async () => {

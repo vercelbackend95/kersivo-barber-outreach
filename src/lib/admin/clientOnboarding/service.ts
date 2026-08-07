@@ -512,7 +512,7 @@ async function enqueueSubmitNotifications(
     subject: internal.subject,
     html: internal.html,
     replyTo: internal.replyTo,
-    dedupeKey: `client-onboarding:internal:${input.onboarding.id}`,
+    dedupeKey: `client-onboarding:internal:${input.onboarding.id}:${input.now.toISOString()}`,
   });
   outboxIds.push(internalRow.id);
 
@@ -532,7 +532,7 @@ async function enqueueSubmitNotifications(
       subject: customer.subject,
       html: customer.html,
       replyTo: customer.replyTo,
-      dedupeKey: `client-onboarding:customer:${input.onboarding.id}`,
+      dedupeKey: `client-onboarding:customer:${input.onboarding.id}:${input.now.toISOString()}`,
     });
     outboxIds.push(customerRow.id);
   }

@@ -20,6 +20,7 @@ import {
   uploadPrivateOnboardingFile,
   validateOnboardingAssetFile,
 } from '@/lib/storage/privateOnboardingBlob';
+import { notifyOpsDurable } from '@/lib/ops/stripeWebhookLedger';
 
 const KIND_VALUES = new Set(Object.values(ClientOnboardingAssetKind));
 
@@ -27,6 +28,45 @@ function parseKind(raw: FormDataEntryValue | null): ClientOnboardingAssetKind | 
   if (typeof raw !== 'string') return null;
   const value = raw.trim() as ClientOnboardingAssetKind;
   return KIND_VALUES.has(value) ? value : null;
+}
+
+async function alertPrivateBlobCleanupFailed(input: {
+  shopId: string;
+  pathname: string;
+  kind: string;
+  filename: string;
+  reason: 'db_finalize_failed' | 'locked_before_finalize';
+  error: unknown;
+}): Promise<void> {
+  const errorMessage =
+    input.error instanceof Error ? input.error.message : String(input.error);
+  console.error('[client-onboarding] private blob cleanup failed', {
+    shopId: input.shopId,
+    pathname: input.pathname,
+    kind: input.kind,
+    reason: input.reason,
+    error: errorMessage,
+  });
+  try {
+    await notifyOpsDurable({
+      severity: 'critical',
+      title: 'Client onboarding private blob cleanup failed',
+      body: errorMessage.slice(0, 500),
+      dedupeKey: `client-onboarding:blob-cleanup:${input.pathname}`,
+      fields: {
+        shopId: input.shopId,
+        pathname: input.pathname,
+        kind: input.kind,
+        filename: input.filename,
+        reason: input.reason,
+      },
+    });
+  } catch (alertError) {
+    console.error('[client-onboarding] ops alert for blob cleanup failed', {
+      pathname: input.pathname,
+      error: alertError instanceof Error ? alertError.message : String(alertError),
+    });
+  }
 }
 
 export const POST: APIRoute = async (ctx) => {
@@ -123,10 +163,13 @@ export const POST: APIRoute = async (ctx) => {
       try {
         await deletePrivateOnboardingFile(uploaded.pathname);
       } catch (cleanupError) {
-        console.error('[client-onboarding] locked-upload blob cleanup failed', {
+        await alertPrivateBlobCleanupFailed({
+          shopId: accessOrErr.shopId,
           pathname: uploaded.pathname,
-          error:
-            cleanupError instanceof Error ? cleanupError.message : String(cleanupError),
+          kind,
+          filename: filePart.name.trim(),
+          reason: 'locked_before_finalize',
+          error: cleanupError,
         });
       }
       return clientOnboardingLockedResponse();
@@ -153,9 +196,13 @@ export const POST: APIRoute = async (ctx) => {
       try {
         await deletePrivateOnboardingFile(uploadedPathname);
       } catch (cleanupError) {
-        console.error('[client-onboarding] orphan private blob cleanup failed', {
+        await alertPrivateBlobCleanupFailed({
+          shopId: accessOrErr.shopId,
           pathname: uploadedPathname,
-          error: cleanupError instanceof Error ? cleanupError.message : String(cleanupError),
+          kind,
+          filename: filePart.name.trim(),
+          reason: 'db_finalize_failed',
+          error: cleanupError,
         });
       }
     }
