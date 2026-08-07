@@ -407,8 +407,14 @@ export function ReviewStep({
 
       <ReviewBlock title="Availability" step={7} onEditStep={onEditStep} disabled={disabled}>
         <li>
-          {state.workspace.activeBarberAvailabilityDayCount} barber availability day
-          {state.workspace.activeBarberAvailabilityDayCount === 1 ? '' : 's'} set
+          {(() => {
+            const active = state.barbers.filter((b) => b.active);
+            if (active.length === 0) return 'No active team members yet — edit to set availability.';
+            if (active.length <= 3) {
+              return `Availability set for ${active.map((b) => b.name).join(', ')} — edit to review times.`;
+            }
+            return `Availability set for ${active.length} team members — edit to review times.`;
+          })()}
         </li>
       </ReviewBlock>
 

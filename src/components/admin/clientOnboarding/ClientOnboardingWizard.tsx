@@ -60,10 +60,10 @@ export default function ClientOnboardingWizard() {
   const [submitBusy, setSubmitBusy] = useState(false);
   const [actionError, setActionError] = useState('');
   const [missing, setMissing] = useState<string[]>([]);
-  const beforeContinueRef = useRef<(() => Promise<boolean>) | null>(null);
+  const beforeLeaveRef = useRef<(() => Promise<boolean>) | null>(null);
 
-  const registerBeforeContinue = useCallback((fn: (() => Promise<boolean>) | null) => {
-    beforeContinueRef.current = fn;
+  const registerBeforeLeave = useCallback((fn: (() => Promise<boolean>) | null) => {
+    beforeLeaveRef.current = fn;
   }, []);
 
   const status = state?.onboarding.status;
@@ -83,7 +83,7 @@ export default function ClientOnboardingWizard() {
       upsertAsset,
       removeAssetLocal,
       mergeCanonical,
-      registerBeforeContinue,
+      registerBeforeLeave,
     };
   }, [
     draft,
@@ -95,7 +95,7 @@ export default function ClientOnboardingWizard() {
     upsertAsset,
     removeAssetLocal,
     mergeCanonical,
-    registerBeforeContinue,
+    registerBeforeLeave,
   ]);
 
   const continueDisabled =
@@ -104,12 +104,36 @@ export default function ClientOnboardingWizard() {
     saveStatus === 'saving' ||
     (dirty && saveStatus === 'error');
 
+  const leaveToStep = useCallback(
+    async (nextStep: number) => {
+      const flushed = await flushSave();
+      if (!flushed && dirty) {
+        setActionError(saveError || 'Could not save. Please try again.');
+        return false;
+      }
+      if (beforeLeaveRef.current) {
+        const stepOk = await beforeLeaveRef.current();
+        if (!stepOk) {
+          setActionError('Could not save this step. Please fix the issue and try again.');
+          return false;
+        }
+      }
+      const ok = await goToStep(nextStep);
+      if (!ok) {
+        setActionError(saveError || 'Could not save. Please try again.');
+        return false;
+      }
+      return true;
+    },
+    [flushSave, dirty, saveError, goToStep],
+  );
+
   const handleBack = async () => {
     if (step <= 0 || navBusy) return;
     setNavBusy(true);
     setActionError('');
     try {
-      await goToStep(step - 1);
+      await leaveToStep(step - 1);
     } finally {
       setNavBusy(false);
     }
@@ -120,26 +144,12 @@ export default function ClientOnboardingWizard() {
     setNavBusy(true);
     setActionError('');
     try {
-      const flushed = await flushSave();
-      if (!flushed && dirty) {
-        setActionError(saveError || 'Could not save. Please try again.');
-        return;
-      }
-      if (beforeContinueRef.current) {
-        const stepOk = await beforeContinueRef.current();
-        if (!stepOk) {
-          setActionError('Could not save this step. Please fix the issue and try again.');
-          return;
-        }
-      }
       if (step === 0) {
-        const ok = await goToStep(1);
-        if (!ok) setActionError(saveError || 'Could not save. Please try again.');
+        await leaveToStep(1);
         return;
       }
       if (step < 11) {
-        const ok = await goToStep(step + 1);
-        if (!ok) setActionError(saveError || 'Could not save. Please try again.');
+        await leaveToStep(step + 1);
       }
     } finally {
       setNavBusy(false);
@@ -172,7 +182,7 @@ export default function ClientOnboardingWizard() {
         setActionError(body.error || 'Please fix the highlighted details before submitting.');
         const firstStep = list.map(missingToStep).find((s) => s != null);
         if (typeof firstStep === 'number') {
-          await goToStep(firstStep);
+          await leaveToStep(firstStep);
         }
         return;
       }
@@ -358,7 +368,15 @@ export default function ClientOnboardingWizard() {
           <ReviewStep
             {...common}
             onEditStep={(s) => {
-              void goToStep(s);
+              void (async () => {
+                setNavBusy(true);
+                setActionError('');
+                try {
+                  await leaveToStep(s);
+                } finally {
+                  setNavBusy(false);
+                }
+              })();
             }}
           />
         ) : null}

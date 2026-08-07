@@ -20,7 +20,7 @@ export type StepCommon = {
   mergeCanonical: (
     slice: Partial<Pick<ClientOnboardingState, 'barbers' | 'services' | 'openingHours' | 'workspace'>>,
   ) => void;
-  registerBeforeContinue: (fn: (() => Promise<boolean>) | null) => void;
+  registerBeforeLeave: (fn: (() => Promise<boolean>) | null) => void;
 };
 
 export function WelcomeStep({

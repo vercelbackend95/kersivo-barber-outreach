@@ -123,13 +123,41 @@ type ServiceEdit = {
   barberIds: string[];
 };
 
+function sameIdList(a: string[], b: string[]) {
+  if (a.length !== b.length) return false;
+  const sa = [...a].sort();
+  const sb = [...b].sort();
+  return sa.every((id, i) => id === sb[i]);
+}
+
+function barberEditEqual(a: BarberEdit, b: BarberEdit) {
+  return (
+    a.name === b.name &&
+    a.active === b.active &&
+    a.bio === b.bio &&
+    a.showOnWebsite === b.showOnWebsite &&
+    sameIdList(a.serviceIds, b.serviceIds)
+  );
+}
+
+function serviceEditEqual(a: ServiceEdit, b: ServiceEdit) {
+  return (
+    a.name === b.name &&
+    a.price === b.price &&
+    a.duration === b.duration &&
+    a.isActive === b.isActive &&
+    sameIdList(a.barberIds, b.barberIds)
+  );
+}
+
 export function TeamStep({
   state,
   disabled,
   mergeCanonical,
-  registerBeforeContinue,
+  registerBeforeLeave,
 }: StepCommon) {
   const [edits, setEdits] = useState<Record<string, BarberEdit>>({});
+  const [baseline, setBaseline] = useState<Record<string, BarberEdit>>({});
   const [catalogServices, setCatalogServices] = useState<
     { id: string; name: string; isActive: boolean }[]
   >([]);
@@ -138,7 +166,9 @@ export function TeamStep({
   const [error, setError] = useState('');
   const [busy, setBusy] = useState(false);
   const editsRef = useRef(edits);
+  const baselineRef = useRef(baseline);
   editsRef.current = edits;
+  baselineRef.current = baseline;
 
   useEffect(() => {
     let cancelled = false;
@@ -166,17 +196,39 @@ export function TeamStep({
         );
         setEdits((prev) => {
           const next: Record<string, BarberEdit> = { ...prev };
+          const nextBaseline: Record<string, BarberEdit> = { ...baselineRef.current };
           for (const b of state.barbers) {
+            const fromServer: BarberEdit = {
+              name: b.name,
+              active: b.active,
+              serviceIds: serviceIdsByBarber.get(b.id) ?? [],
+              bio: b.bio ?? '',
+              showOnWebsite: b.showOnWebsite,
+            };
             if (!next[b.id]) {
               next[b.id] = {
-                name: b.name,
-                active: b.active,
-                serviceIds: serviceIdsByBarber.get(b.id) ?? [],
-                bio: b.bio ?? '',
-                showOnWebsite: b.showOnWebsite,
+                ...fromServer,
+                serviceIds: [...fromServer.serviceIds],
+              };
+            } else if (
+              next[b.id].serviceIds.length === 0 &&
+              fromServer.serviceIds.length > 0
+            ) {
+              // Hydrate links if the card was edited before catalog/serviceIds loaded.
+              next[b.id] = {
+                ...next[b.id],
+                serviceIds: [...fromServer.serviceIds],
+              };
+            }
+            if (!nextBaseline[b.id]) {
+              nextBaseline[b.id] = {
+                ...fromServer,
+                serviceIds: [...fromServer.serviceIds],
               };
             }
           }
+          setBaseline(nextBaseline);
+          baselineRef.current = nextBaseline;
           return next;
         });
       } catch {
@@ -188,77 +240,31 @@ export function TeamStep({
     };
   }, [state.barbers]);
 
-  const saveProfilesIfNeeded = async (): Promise<boolean> => {
-    const profiles = state.barbers.map((b) => {
-      const edit = editsRef.current[b.id];
-      return {
-        barberId: b.id,
-        bio: edit?.bio?.trim() ? edit.bio : null,
-        showOnWebsite: edit?.showOnWebsite ?? b.showOnWebsite,
-      };
-    });
-    const dirty = profiles.some((p) => {
-      const original = state.barbers.find((b) => b.id === p.barberId);
-      if (!original) return false;
-      return (
-        (original.bio ?? null) !== p.bio || original.showOnWebsite !== p.showOnWebsite
-      );
-    });
-    if (!dirty) return true;
-    const response = await fetch('/api/admin/client-onboarding/barber-profiles', {
-      method: 'PUT',
-      credentials: 'include',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ profiles }),
-    });
-    if (!response.ok) {
-      const body = await readJsonError(response);
-      setError(body.error || 'Could not save team profiles.');
-      return false;
-    }
-    mergeCanonical({
-      barbers: state.barbers.map((b) => {
-        const p = profiles.find((x) => x.barberId === b.id);
-        return p
-          ? { ...b, bio: p.bio, showOnWebsite: p.showOnWebsite }
-          : b;
-      }),
-    });
-    return true;
-  };
+  const saveDirtyBarbersOnLeave = async (): Promise<boolean> => {
+    const dirtyIds = state.barbers
+      .map((b) => b.id)
+      .filter((id) => {
+        const edit = editsRef.current[id];
+        const base = baselineRef.current[id];
+        if (!edit || !base) return false;
+        return !barberEditEqual(edit, base);
+      });
 
-  useEffect(() => {
-    registerBeforeContinue(async () => {
-      setBusy(true);
-      setError('');
-      try {
-        return await saveProfilesIfNeeded();
-      } catch {
-        setError('Could not save team profiles.');
+    if (dirtyIds.length === 0) return true;
+
+    const activeServicesExist = catalogServices.some((s) => s.isActive);
+    for (const barberId of dirtyIds) {
+      const edit = editsRef.current[barberId];
+      if (!edit) continue;
+      const trimmed = edit.name.trim();
+      if (!trimmed) {
+        setError('Enter a name for each team member.');
         return false;
-      } finally {
-        setBusy(false);
       }
-    });
-    return () => registerBeforeContinue(null);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [state.barbers, registerBeforeContinue]);
-
-  const saveBarberCard = async (barberId: string) => {
-    const edit = editsRef.current[barberId];
-    if (!edit) return;
-    const trimmed = edit.name.trim();
-    if (!trimmed) {
-      setError('Enter a name.');
-      return;
-    }
-    if (catalogServices.some((s) => s.isActive) && edit.serviceIds.length === 0) {
-      setError('Select at least one service for this team member.');
-      return;
-    }
-    setBusy(true);
-    setError('');
-    try {
+      if (activeServicesExist && edit.serviceIds.length === 0) {
+        setError('Select at least one service for each team member.');
+        return false;
+      }
       const response = await fetch('/api/admin/barbers', {
         method: 'POST',
         credentials: 'include',
@@ -272,14 +278,145 @@ export function TeamStep({
       });
       if (!response.ok) {
         const body = await readJsonError(response);
-        setError(
-          typeof body.error === 'string' ? body.error : 'Could not update barber.',
-        );
+        setError(typeof body.error === 'string' ? body.error : 'Could not update barber.');
+        return false;
+      }
+    }
+
+    const profiles = state.barbers.map((b) => {
+      const edit = editsRef.current[b.id];
+      return {
+        barberId: b.id,
+        bio: edit?.bio?.trim() ? edit.bio.trim() : null,
+        showOnWebsite: edit?.showOnWebsite ?? b.showOnWebsite,
+      };
+    });
+    const response = await fetch('/api/admin/client-onboarding/barber-profiles', {
+      method: 'PUT',
+      credentials: 'include',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ profiles }),
+    });
+    if (!response.ok) {
+      const body = await readJsonError(response);
+      setError(body.error || 'Could not save team profiles.');
+      return false;
+    }
+
+    const nextBaseline: Record<string, BarberEdit> = { ...baselineRef.current };
+    for (const id of dirtyIds) {
+      const edit = editsRef.current[id];
+      if (edit) {
+        nextBaseline[id] = {
+          ...edit,
+          name: edit.name.trim(),
+          bio: edit.bio,
+          serviceIds: [...edit.serviceIds],
+        };
+      }
+    }
+    setBaseline(nextBaseline);
+    baselineRef.current = nextBaseline;
+
+    mergeCanonical({
+      barbers: state.barbers.map((b) => {
+        const edit = editsRef.current[b.id];
+        if (!edit) return b;
+        return {
+          ...b,
+          name: edit.name.trim(),
+          active: edit.active,
+          bio: edit.bio.trim() ? edit.bio.trim() : null,
+          showOnWebsite: edit.showOnWebsite,
+        };
+      }),
+    });
+    return true;
+  };
+
+  useEffect(() => {
+    registerBeforeLeave(async () => {
+      setBusy(true);
+      setError('');
+      try {
+        return await saveDirtyBarbersOnLeave();
+      } catch {
+        setError('Could not save team details.');
+        return false;
+      } finally {
+        setBusy(false);
+      }
+    });
+    return () => registerBeforeLeave(null);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [state.barbers, catalogServices, registerBeforeLeave]);
+
+  const saveBarberCard = async (barberId: string) => {
+    setBusy(true);
+    setError('');
+    try {
+      // Temporarily treat only this card as needing save by using leave saver after
+      // ensuring other cards aren't considered — save just this one via dirty path:
+      const edit = editsRef.current[barberId];
+      const base = baselineRef.current[barberId];
+      if (!edit) return;
+      if (base && barberEditEqual(edit, base)) return;
+
+      const trimmed = edit.name.trim();
+      if (!trimmed) {
+        setError('Enter a name.');
+        return;
+      }
+      if (catalogServices.some((s) => s.isActive) && edit.serviceIds.length === 0) {
+        setError('Select at least one service for this team member.');
+        return;
+      }
+      const response = await fetch('/api/admin/barbers', {
+        method: 'POST',
+        credentials: 'include',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          id: barberId,
+          name: trimmed,
+          isActive: edit.active,
+          serviceIds: edit.serviceIds,
+        }),
+      });
+      if (!response.ok) {
+        const body = await readJsonError(response);
+        setError(typeof body.error === 'string' ? body.error : 'Could not update barber.');
         return;
       }
       const body = (await response.json()) as { barber: OnboardingBarber & { isActive?: boolean } };
-      const profilesOk = await saveProfilesIfNeeded();
-      if (!profilesOk) return;
+      const profiles = state.barbers.map((b) => {
+        const e = editsRef.current[b.id];
+        return {
+          barberId: b.id,
+          bio: e?.bio?.trim() ? e.bio.trim() : null,
+          showOnWebsite: e?.showOnWebsite ?? b.showOnWebsite,
+        };
+      });
+      const profilesRes = await fetch('/api/admin/client-onboarding/barber-profiles', {
+        method: 'PUT',
+        credentials: 'include',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ profiles }),
+      });
+      if (!profilesRes.ok) {
+        const errBody = await readJsonError(profilesRes);
+        setError(errBody.error || 'Could not save team profiles.');
+        return;
+      }
+      const saved: BarberEdit = {
+        ...edit,
+        name: trimmed,
+        serviceIds: [...edit.serviceIds],
+      };
+      setBaseline((prev) => {
+        const next = { ...prev, [barberId]: saved };
+        baselineRef.current = next;
+        return next;
+      });
       mergeCanonical({
         barbers: state.barbers.map((b) =>
           b.id === barberId
@@ -339,17 +476,20 @@ export function TeamStep({
         bio: null,
         showOnWebsite: true,
       };
+      const row: BarberEdit = {
+        name: created.name,
+        active: true,
+        serviceIds: [...newServiceIds],
+        bio: '',
+        showOnWebsite: true,
+      };
       mergeCanonical({ barbers: [...state.barbers, created] });
-      setEdits((prev) => ({
-        ...prev,
-        [created.id]: {
-          name: created.name,
-          active: true,
-          serviceIds: newServiceIds,
-          bio: '',
-          showOnWebsite: true,
-        },
-      }));
+      setEdits((prev) => ({ ...prev, [created.id]: row }));
+      setBaseline((prev) => {
+        const next = { ...prev, [created.id]: { ...row, serviceIds: [...row.serviceIds] } };
+        baselineRef.current = next;
+        return next;
+      });
       setNewName('');
     } catch {
       setError('Could not add barber.');
@@ -506,14 +646,20 @@ export function ServicesStep({
   state,
   disabled,
   mergeCanonical,
+  registerBeforeLeave,
 }: StepCommon) {
   const [edits, setEdits] = useState<Record<string, ServiceEdit>>({});
+  const [baseline, setBaseline] = useState<Record<string, ServiceEdit>>({});
   const [name, setName] = useState('');
   const [price, setPrice] = useState('25');
   const [duration, setDuration] = useState('30');
   const [newBarberIds, setNewBarberIds] = useState<string[]>([]);
   const [error, setError] = useState('');
   const [busy, setBusy] = useState(false);
+  const editsRef = useRef(edits);
+  const baselineRef = useRef(baseline);
+  editsRef.current = edits;
+  baselineRef.current = baseline;
 
   useEffect(() => {
     let cancelled = false;
@@ -534,17 +680,38 @@ export function ServicesStep({
         if (cancelled) return;
         setEdits((prev) => {
           const next = { ...prev };
+          const nextBaseline: Record<string, ServiceEdit> = { ...baselineRef.current };
           for (const s of body.services) {
+            const fromServer: ServiceEdit = {
+              name: s.name,
+              price: String(s.pricePence / 100),
+              duration: String(s.durationMinutes),
+              isActive: s.isActive,
+              barberIds: (s.barberServices ?? []).map((link) => link.barber.id),
+            };
             if (!next[s.id]) {
               next[s.id] = {
-                name: s.name,
-                price: String(s.pricePence / 100),
-                duration: String(s.durationMinutes),
-                isActive: s.isActive,
-                barberIds: (s.barberServices ?? []).map((link) => link.barber.id),
+                ...fromServer,
+                barberIds: [...fromServer.barberIds],
+              };
+            } else if (
+              next[s.id].barberIds.length === 0 &&
+              fromServer.barberIds.length > 0
+            ) {
+              next[s.id] = {
+                ...next[s.id],
+                barberIds: [...fromServer.barberIds],
+              };
+            }
+            if (!nextBaseline[s.id]) {
+              nextBaseline[s.id] = {
+                ...fromServer,
+                barberIds: [...fromServer.barberIds],
               };
             }
           }
+          setBaseline(nextBaseline);
+          baselineRef.current = nextBaseline;
           return next;
         });
       } catch {
@@ -560,22 +727,115 @@ export function ServicesStep({
     setNewBarberIds(state.barbers.filter((b) => b.active).map((b) => b.id));
   }, [state.barbers]);
 
-  const saveServiceCard = async (serviceId: string) => {
-    const edit = edits[serviceId];
-    if (!edit) return;
+  const parseServiceEdit = (
+    edit: ServiceEdit,
+  ):
+    | { ok: true; trimmed: string; pricePence: number; durationMinutes: number }
+    | { ok: false; error: string } => {
     const trimmed = edit.name.trim();
     const pricePence = Math.round(Number(edit.price) * 100);
     const durationMinutes = Number(edit.duration);
-    if (!trimmed) {
-      setError('Enter a service name.');
-      return;
-    }
+    if (!trimmed) return { ok: false, error: 'Enter a service name.' };
     if (!Number.isFinite(pricePence) || pricePence < 0) {
-      setError('Enter a valid price.');
-      return;
+      return { ok: false, error: 'Enter a valid price.' };
     }
     if (!Number.isFinite(durationMinutes) || durationMinutes < 5) {
-      setError('Enter a valid duration.');
+      return { ok: false, error: 'Enter a valid duration.' };
+    }
+    return { ok: true, trimmed, pricePence, durationMinutes };
+  };
+
+  const saveDirtyServicesOnLeave = async (): Promise<boolean> => {
+    const dirtyIds = state.services
+      .map((s) => s.id)
+      .filter((id) => {
+        const edit = editsRef.current[id];
+        const base = baselineRef.current[id];
+        if (!edit || !base) return false;
+        return !serviceEditEqual(edit, base);
+      });
+
+    if (dirtyIds.length === 0) return true;
+
+    for (const serviceId of dirtyIds) {
+      const edit = editsRef.current[serviceId];
+      if (!edit) continue;
+      const parsed = parseServiceEdit(edit);
+      if (!parsed.ok) {
+        setError(parsed.error);
+        return false;
+      }
+      const response = await fetch(`/api/admin/services/${serviceId}`, {
+        method: 'PATCH',
+        credentials: 'include',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          name: parsed.trimmed,
+          pricePence: parsed.pricePence,
+          durationMinutes: parsed.durationMinutes,
+          isActive: edit.isActive,
+          barberIds: edit.barberIds,
+        }),
+      });
+      if (!response.ok) {
+        const body = await readJsonError(response);
+        setError(typeof body.error === 'string' ? body.error : 'Could not update service.');
+        return false;
+      }
+    }
+
+    const nextBaseline: Record<string, ServiceEdit> = { ...baselineRef.current };
+    const nextServices = state.services.map((s) => {
+      if (!dirtyIds.includes(s.id)) return s;
+      const edit = editsRef.current[s.id];
+      if (!edit) return s;
+      const parsed = parseServiceEdit(edit);
+      if (!parsed.ok) return s;
+      const saved: ServiceEdit = {
+        ...edit,
+        name: parsed.trimmed,
+        barberIds: [...edit.barberIds],
+      };
+      nextBaseline[s.id] = saved;
+      return {
+        ...s,
+        name: parsed.trimmed,
+        pricePence: parsed.pricePence,
+        durationMinutes: parsed.durationMinutes,
+        isActive: edit.isActive,
+      };
+    });
+    setBaseline(nextBaseline);
+    baselineRef.current = nextBaseline;
+    mergeCanonical({ services: nextServices });
+    return true;
+  };
+
+  useEffect(() => {
+    registerBeforeLeave(async () => {
+      setBusy(true);
+      setError('');
+      try {
+        return await saveDirtyServicesOnLeave();
+      } catch {
+        setError('Could not save services.');
+        return false;
+      } finally {
+        setBusy(false);
+      }
+    });
+    return () => registerBeforeLeave(null);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [state.services, registerBeforeLeave]);
+
+  const saveServiceCard = async (serviceId: string) => {
+    const edit = editsRef.current[serviceId];
+    if (!edit) return;
+    const base = baselineRef.current[serviceId];
+    if (base && serviceEditEqual(edit, base)) return;
+    const parsed = parseServiceEdit(edit);
+    if (!parsed.ok) {
+      setError(parsed.error);
       return;
     }
     setBusy(true);
@@ -586,9 +846,9 @@ export function ServicesStep({
         credentials: 'include',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          name: trimmed,
-          pricePence,
-          durationMinutes,
+          name: parsed.trimmed,
+          pricePence: parsed.pricePence,
+          durationMinutes: parsed.durationMinutes,
           isActive: edit.isActive,
           barberIds: edit.barberIds,
         }),
@@ -598,14 +858,24 @@ export function ServicesStep({
         setError(typeof body.error === 'string' ? body.error : 'Could not update service.');
         return;
       }
+      const saved: ServiceEdit = {
+        ...edit,
+        name: parsed.trimmed,
+        barberIds: [...edit.barberIds],
+      };
+      setBaseline((prev) => {
+        const next = { ...prev, [serviceId]: saved };
+        baselineRef.current = next;
+        return next;
+      });
       mergeCanonical({
         services: state.services.map((s) =>
           s.id === serviceId
             ? {
                 ...s,
-                name: trimmed,
-                pricePence,
-                durationMinutes,
+                name: parsed.trimmed,
+                pricePence: parsed.pricePence,
+                durationMinutes: parsed.durationMinutes,
                 isActive: edit.isActive,
               }
             : s,
@@ -671,17 +941,20 @@ export function ServicesStep({
         pricePence: body.service.pricePence,
         durationMinutes: body.service.durationMinutes,
       };
+      const row: ServiceEdit = {
+        name: service.name,
+        price: String(service.pricePence / 100),
+        duration: String(service.durationMinutes),
+        isActive: true,
+        barberIds: [...newBarberIds],
+      };
       mergeCanonical({ services: [...state.services, service] });
-      setEdits((prev) => ({
-        ...prev,
-        [service.id]: {
-          name: service.name,
-          price: String(service.pricePence / 100),
-          duration: String(service.durationMinutes),
-          isActive: true,
-          barberIds: newBarberIds,
-        },
-      }));
+      setEdits((prev) => ({ ...prev, [service.id]: row }));
+      setBaseline((prev) => {
+        const next = { ...prev, [service.id]: { ...row, barberIds: [...row.barberIds] } };
+        baselineRef.current = next;
+        return next;
+      });
       setName('');
     } catch {
       setError('Could not add service.');
@@ -844,7 +1117,7 @@ export function OpeningHoursStep({
   state,
   disabled,
   mergeCanonical,
-  registerBeforeContinue,
+  registerBeforeLeave,
 }: StepCommon) {
   const [rules, setRules] = useState<WeeklyRule[]>(() =>
     openingHoursToRules(state.openingHours),
@@ -886,7 +1159,7 @@ export function OpeningHoursStep({
   };
 
   useEffect(() => {
-    registerBeforeContinue(async () => {
+    registerBeforeLeave(async () => {
       setBusy(true);
       setError('');
       try {
@@ -898,9 +1171,9 @@ export function OpeningHoursStep({
         setBusy(false);
       }
     });
-    return () => registerBeforeContinue(null);
+    return () => registerBeforeLeave(null);
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [state.openingHours, registerBeforeContinue]);
+  }, [state.openingHours, registerBeforeLeave]);
 
   return (
     <section className="client-onboarding__section">
@@ -942,7 +1215,7 @@ export function OpeningHoursStep({
   );
 }
 
-export function AvailabilityStep({ state, disabled, registerBeforeContinue }: StepCommon) {
+export function AvailabilityStep({ state, disabled, registerBeforeLeave }: StepCommon) {
   const activeBarbers = state.barbers.filter((b) => b.active);
   const [selectedId, setSelectedId] = useState(activeBarbers[0]?.id ?? '');
   const [rules, setRules] = useState<WeeklyRule[]>([]);
@@ -1011,7 +1284,7 @@ export function AvailabilityStep({ state, disabled, registerBeforeContinue }: St
   };
 
   useEffect(() => {
-    registerBeforeContinue(async () => {
+    registerBeforeLeave(async () => {
       setBusy(true);
       setError('');
       try {
@@ -1023,9 +1296,9 @@ export function AvailabilityStep({ state, disabled, registerBeforeContinue }: St
         setBusy(false);
       }
     });
-    return () => registerBeforeContinue(null);
+    return () => registerBeforeLeave(null);
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [registerBeforeContinue]);
+  }, [registerBeforeLeave]);
 
   const switchBarber = async (nextId: string) => {
     if (nextId === selectedId) return;

@@ -183,6 +183,8 @@ describe('ClientOnboardingWizard hardening', () => {
     profilesFail?: boolean;
     rulesFail?: boolean;
     deleteFail?: boolean;
+    barbersFail?: boolean;
+    servicesFail?: boolean;
   }) {
     let live = structuredClone(state);
     fetchSpy.mockImplementation(async (input: RequestInfo | URL, init?: RequestInit) => {
@@ -228,6 +230,7 @@ describe('ClientOnboardingWizard hardening', () => {
         });
       }
       if (url.endsWith('/api/admin/barbers') && method === 'POST') {
+        if (opts?.barbersFail) return jsonResponse({ error: 'Barber save failed.' }, 500);
         const body = init?.body ? JSON.parse(String(init.body)) : {};
         return jsonResponse({
           barber: {
@@ -240,6 +243,7 @@ describe('ClientOnboardingWizard hardening', () => {
         });
       }
       if (url.includes('/api/admin/services/') && method === 'PATCH') {
+        if (opts?.servicesFail) return jsonResponse({ error: 'Service save failed.' }, 500);
         const body = init?.body ? JSON.parse(String(init.body)) : {};
         return jsonResponse({ service: { id: 'svc_1', ...body } });
       }
@@ -823,6 +827,7 @@ describe('ClientOnboardingWizard hardening', () => {
     );
     render(<ClientOnboardingWizard />);
     const nameInput = await screen.findByLabelText((_, el) => el?.id === 'barber-name-barber_1');
+    await screen.findByLabelText((_, el) => el?.id === 'barber-svc-barber_1-svc_1');
     fireEvent.change(nameInput, { target: { value: 'Jamie Updated' } });
     fireEvent.click(screen.getByRole('button', { name: /Save team member/i }));
     await waitFor(() => {
@@ -865,6 +870,326 @@ describe('ClientOnboardingWizard hardening', () => {
         }),
       ).toBe(true);
     });
+  });
+
+  it('Team leave saves dirty name on Continue and serviceIds on Back; POST fail stays', async () => {
+    mockApis(
+      mockState({
+        onboarding: {
+          currentStep: 4,
+          townCity: 'London',
+          primaryContactName: 'Alex',
+          primaryContactEmail: 'a@b.c',
+        },
+      }),
+    );
+    render(<ClientOnboardingWizard />);
+    await screen.findByRole('heading', { name: /Your team/i });
+    await screen.findByLabelText((_, el) => el?.id === 'barber-svc-barber_1-svc_1');
+    const nameInput = await screen.findByLabelText((_, el) => el?.id === 'barber-name-barber_1');
+    fireEvent.change(nameInput, { target: { value: 'Jamie Leave' } });
+    fireEvent.click(screen.getByRole('button', { name: /Continue/i }));
+    await waitFor(() => {
+      expect(
+        fetchSpy.mock.calls.some(([url, init]) => {
+          if (!String(url).endsWith('/api/admin/barbers')) return false;
+          if (String((init as RequestInit)?.method).toUpperCase() !== 'POST') return false;
+          const body = JSON.parse(String((init as RequestInit).body));
+          return body.id === 'barber_1' && body.name === 'Jamie Leave';
+        }),
+      ).toBe(true);
+    });
+    expect(await screen.findByRole('heading', { name: /Your services/i })).toBeTruthy();
+
+    cleanup();
+    fetchSpy.mockClear();
+    mockApis(
+      mockState({
+        onboarding: {
+          currentStep: 4,
+          townCity: 'London',
+          primaryContactName: 'Alex',
+          primaryContactEmail: 'a@b.c',
+        },
+        services: [
+          {
+            id: 'svc_1',
+            name: 'Skin Fade',
+            isActive: true,
+            pricePence: 2500,
+            durationMinutes: 30,
+          },
+          {
+            id: 'svc_2',
+            name: 'Beard Trim',
+            isActive: true,
+            pricePence: 1500,
+            durationMinutes: 20,
+          },
+        ],
+      }),
+    );
+    render(<ClientOnboardingWizard />);
+    await screen.findByRole('heading', { name: /Your team/i });
+    await screen.findByLabelText((_, el) => el?.id === 'barber-svc-barber_1-svc_2');
+    // Mock GET barbers only returns svc_1 linked; uncheck svc_1 and check svc_2
+    const svc1 = await screen.findByLabelText((_, el) => el?.id === 'barber-svc-barber_1-svc_1');
+    const svc2 = await screen.findByLabelText((_, el) => el?.id === 'barber-svc-barber_1-svc_2');
+    fireEvent.click(svc1);
+    fireEvent.click(svc2);
+    fireEvent.click(screen.getByRole('button', { name: /Back/i }));
+    await waitFor(() => {
+      expect(
+        fetchSpy.mock.calls.some(([url, init]) => {
+          if (!String(url).endsWith('/api/admin/barbers')) return false;
+          if (String((init as RequestInit)?.method).toUpperCase() !== 'POST') return false;
+          const body = JSON.parse(String((init as RequestInit).body));
+          return (
+            body.id === 'barber_1' &&
+            Array.isArray(body.serviceIds) &&
+            body.serviceIds.length === 1 &&
+            body.serviceIds[0] === 'svc_2'
+          );
+        }),
+      ).toBe(true);
+    });
+
+    cleanup();
+    mockApis(
+      mockState({
+        onboarding: {
+          currentStep: 4,
+          townCity: 'London',
+          primaryContactName: 'Alex',
+          primaryContactEmail: 'a@b.c',
+        },
+      }),
+      { barbersFail: true },
+    );
+    render(<ClientOnboardingWizard />);
+    await screen.findByRole('heading', { name: /Your team/i });
+    await screen.findByLabelText((_, el) => el?.id === 'barber-svc-barber_1-svc_1');
+    fireEvent.change(await screen.findByLabelText((_, el) => el?.id === 'barber-name-barber_1'), {
+      target: { value: 'Will Fail' },
+    });
+    fireEvent.click(screen.getByRole('button', { name: /Continue/i }));
+    expect(await screen.findAllByText(/Barber save failed|Could not save/i)).toBeTruthy();
+    expect(screen.getByRole('heading', { name: /Your team/i })).toBeTruthy();
+  });
+
+  it('Services leave saves dirty price on Continue and barberIds on Back; PATCH fail stays', async () => {
+    mockApis(
+      mockState({
+        onboarding: {
+          currentStep: 5,
+          townCity: 'London',
+          primaryContactName: 'Alex',
+          primaryContactEmail: 'a@b.c',
+        },
+      }),
+    );
+    render(<ClientOnboardingWizard />);
+    await screen.findByRole('heading', { name: /Your services/i });
+    await screen.findByLabelText((_, el) => el?.id === 'svc-barber-svc_1-barber_1');
+    fireEvent.change(document.getElementById('svc-price-svc_1') as HTMLInputElement, {
+      target: { value: '40' },
+    });
+    fireEvent.click(screen.getByRole('button', { name: /Continue/i }));
+    await waitFor(() => {
+      expect(
+        fetchSpy.mock.calls.some(([url, init]) => {
+          if (!String(url).includes('/api/admin/services/svc_1')) return false;
+          if (String((init as RequestInit)?.method).toUpperCase() !== 'PATCH') return false;
+          const body = JSON.parse(String((init as RequestInit).body));
+          return body.pricePence === 4000;
+        }),
+      ).toBe(true);
+    });
+    expect(await screen.findByRole('heading', { name: /Opening hours/i })).toBeTruthy();
+
+    cleanup();
+    fetchSpy.mockClear();
+    mockApis(
+      mockState({
+        onboarding: {
+          currentStep: 5,
+          townCity: 'London',
+          primaryContactName: 'Alex',
+          primaryContactEmail: 'a@b.c',
+        },
+      }),
+    );
+    render(<ClientOnboardingWizard />);
+    await screen.findByRole('heading', { name: /Your services/i });
+    const barberBox = await screen.findByLabelText((_, el) => el?.id === 'svc-barber-svc_1-barber_1');
+    fireEvent.click(barberBox);
+    fireEvent.click(screen.getByRole('button', { name: /Back/i }));
+    await waitFor(() => {
+      expect(
+        fetchSpy.mock.calls.some(([url, init]) => {
+          if (!String(url).includes('/api/admin/services/svc_1')) return false;
+          if (String((init as RequestInit)?.method).toUpperCase() !== 'PATCH') return false;
+          const body = JSON.parse(String((init as RequestInit).body));
+          return Array.isArray(body.barberIds) && body.barberIds.length === 0;
+        }),
+      ).toBe(true);
+    });
+
+    cleanup();
+    mockApis(
+      mockState({
+        onboarding: {
+          currentStep: 5,
+          townCity: 'London',
+          primaryContactName: 'Alex',
+          primaryContactEmail: 'a@b.c',
+        },
+      }),
+      { servicesFail: true },
+    );
+    render(<ClientOnboardingWizard />);
+    await screen.findByRole('heading', { name: /Your services/i });
+    await screen.findByLabelText((_, el) => el?.id === 'svc-barber-svc_1-barber_1');
+    fireEvent.change(document.getElementById('svc-price-svc_1') as HTMLInputElement, {
+      target: { value: '55' },
+    });
+    fireEvent.click(screen.getByRole('button', { name: /Continue/i }));
+    expect(await screen.findAllByText(/Service save failed|Could not save/i)).toBeTruthy();
+    expect(screen.getByRole('heading', { name: /Your services/i })).toBeTruthy();
+  });
+
+  it('Hours and Availability Back persist dirty edits', async () => {
+    mockApis(
+      mockState({
+        onboarding: {
+          currentStep: 6,
+          townCity: 'London',
+          primaryContactName: 'Alex',
+          primaryContactEmail: 'a@b.c',
+        },
+      }),
+    );
+    render(<ClientOnboardingWizard />);
+    await screen.findByRole('heading', { name: /Opening hours/i });
+    fireEvent.click(screen.getByRole('switch', { name: /Thu/i }));
+    fireEvent.click(screen.getByRole('button', { name: /Back/i }));
+    await waitFor(() => {
+      expect(
+        fetchSpy.mock.calls.some(
+          ([url, init]) =>
+            String(url).includes('/barbershop-settings/hours') &&
+            String((init as RequestInit)?.method).toUpperCase() === 'PUT',
+        ),
+      ).toBe(true);
+    });
+
+    cleanup();
+    fetchSpy.mockClear();
+    mockApis(
+      mockState({
+        onboarding: {
+          currentStep: 7,
+          townCity: 'London',
+          primaryContactName: 'Alex',
+          primaryContactEmail: 'a@b.c',
+        },
+      }),
+    );
+    render(<ClientOnboardingWizard />);
+    await screen.findByRole('heading', { name: /Barber availability/i });
+    await waitFor(() => expect(screen.getByLabelText(/Barber/i)).toBeTruthy());
+    fireEvent.click(screen.getByRole('switch', { name: /Sat/i }));
+    fireEvent.click(screen.getByRole('button', { name: /Back/i }));
+    await waitFor(() => {
+      expect(
+        fetchSpy.mock.calls.some(
+          ([url, init]) =>
+            String(url).includes('/barbers/barber_1/rules') &&
+            String((init as RequestInit)?.method).toUpperCase() === 'PUT',
+        ),
+      ).toBe(true);
+    });
+  });
+
+  it('unfinished Add barber / Add service fields do not auto-create on leave', async () => {
+    mockApis(
+      mockState({
+        onboarding: {
+          currentStep: 4,
+          townCity: 'London',
+          primaryContactName: 'Alex',
+          primaryContactEmail: 'a@b.c',
+        },
+      }),
+    );
+    render(<ClientOnboardingWizard />);
+    await screen.findByRole('heading', { name: /Your team/i });
+    await screen.findByLabelText((_, el) => el?.id === 'barber-svc-barber_1-svc_1');
+    fireEvent.change(screen.getByLabelText((_, el) => el?.id === 'newBarberName'), {
+      target: { value: 'Unfinished Barber' },
+    });
+    fireEvent.click(screen.getByRole('button', { name: /Continue/i }));
+    await screen.findByRole('heading', { name: /Your services/i });
+    expect(
+      fetchSpy.mock.calls.some(([url, init]) => {
+        if (!String(url).endsWith('/api/admin/barbers')) return false;
+        if (String((init as RequestInit)?.method).toUpperCase() !== 'POST') return false;
+        const body = JSON.parse(String((init as RequestInit).body));
+        return body.name === 'Unfinished Barber' && !body.id;
+      }),
+    ).toBe(false);
+
+    cleanup();
+    fetchSpy.mockClear();
+    mockApis(
+      mockState({
+        onboarding: {
+          currentStep: 5,
+          townCity: 'London',
+          primaryContactName: 'Alex',
+          primaryContactEmail: 'a@b.c',
+        },
+      }),
+    );
+    render(<ClientOnboardingWizard />);
+    await screen.findByRole('heading', { name: /Your services/i });
+    fireEvent.change(document.getElementById('newServiceName') as HTMLInputElement, {
+      target: { value: 'Unfinished Service' },
+    });
+    fireEvent.click(screen.getByRole('button', { name: /Continue/i }));
+    await screen.findByRole('heading', { name: /Opening hours/i });
+    expect(
+      fetchSpy.mock.calls.some(([url, init]) => {
+        if (!String(url).endsWith('/api/admin/services')) return false;
+        if (String((init as RequestInit)?.method).toUpperCase() !== 'POST') return false;
+        const body = JSON.parse(String((init as RequestInit).body));
+        return body.name === 'Unfinished Service';
+      }),
+    ).toBe(false);
+  });
+
+  it('Review shows neutral availability summary without stale day count', async () => {
+    mockApis(
+      mockState({
+        onboarding: {
+          currentStep: 11,
+          townCity: 'London',
+          primaryContactName: 'Alex',
+          primaryContactEmail: 'a@b.c',
+        },
+        workspace: {
+          shopName: 'Sharp Cuts',
+          activeBarberCount: 1,
+          activeServiceCount: 1,
+          activeShopOpenDayCount: 5,
+          activeBarberAvailabilityDayCount: 99,
+          productCount: 0,
+        },
+      }),
+    );
+    render(<ClientOnboardingWizard />);
+    expect(await screen.findByText(/Availability set for Jamie/i)).toBeTruthy();
+    expect(screen.queryByText(/99 barber availability/i)).toBeNull();
   });
 
   it('handles unpaid and SUBMITTED gates', async () => {
