@@ -31,6 +31,8 @@ import {
   sendSetupDepositConfirmationEmail,
   sendSetupDepositInternalNotificationEmail,
 } from '../../../lib/email/sender';
+import { getPublicSiteUrl } from '../../../lib/setup/siteUrl';
+import { buildSetupSuccessRecoveryUrl } from '../../../lib/setup/saasSetupSuccessRecovery';
 import {
   applyInvoicePaid,
   applyInvoicePaymentFailed,
@@ -642,7 +644,7 @@ async function handleSaasSubscriptionCheckout(
   }
 
   const monthlyFormatted = formatGbp(monthlyPence);
-  const onboardingFormUrl = getSetupOnboardingFormUrlOrEmpty();
+  const setupSuccessUrl = buildSetupSuccessRecoveryUrl(getPublicSiteUrl(), sessionId);
   let customerEmailOk = Boolean(record.customerEmailSentAt);
   let internalEmailOk = Boolean(record.internalEmailSentAt);
   let emailFailure = false;
@@ -654,7 +656,7 @@ async function handleSaasSubscriptionCheckout(
         customerName,
         shopName,
         monthlyFormatted,
-        onboardingFormUrl,
+        setupSuccessUrl,
       });
       record = await prisma.saasSubscription.update({
         where: { id: record.id },

@@ -17,6 +17,14 @@ import {
 import { isPaidShop } from '../../../lib/shop/paidShop';
 import type { SetupPlanId } from '../../../lib/setup/plans';
 
+function resolveSaasOrLegacyPaidHref(shopPaid: boolean): string | null {
+  if (!shopPaid) return null;
+  // Current £39 SaaS journey → in-app client onboarding (not Tally).
+  if (!ENABLE_SETUP_FEES) return '/admin/client-onboarding';
+  // Legacy setup-deposit mode keeps the external onboarding form URL.
+  return getSetupOnboardingFormUrlOrEmpty().trim() || '/admin';
+}
+
 function setupPlanToId(plan: SetupPlan): SetupPlanId {
   return plan === SetupPlan.PRIORITY ? 'priority' : 'launch';
 }
@@ -157,7 +165,7 @@ export const GET: APIRoute = async (context) => {
   });
 
   if (!shop.onboardingCompleted) {
-    const paidHref = shopPaid ? getSetupOnboardingFormUrlOrEmpty().trim() || '/admin' : null;
+    const paidHref = resolveSaasOrLegacyPaidHref(shopPaid);
     return new Response(
       JSON.stringify({
         ok: true,
@@ -236,7 +244,7 @@ export const GET: APIRoute = async (context) => {
         : null;
   }
 
-  const paidHref = paid ? getSetupOnboardingFormUrlOrEmpty().trim() || '/admin' : null;
+  const paidHref = resolveSaasOrLegacyPaidHref(paid);
 
   return new Response(
     JSON.stringify({
