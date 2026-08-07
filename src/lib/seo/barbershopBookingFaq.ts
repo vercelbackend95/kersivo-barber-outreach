@@ -39,7 +39,7 @@ export const BARBERSHOP_BOOKING_FAQ_ITEMS: LandingFaqItem[] = [
   {
     question: 'What happens after I subscribe?',
     answer:
-      'After subscribing, you complete the onboarding form, we prepare your KERSIVO setup, and you review a private preview. Nothing goes live until you approve it. Billing starts when you subscribe and continues while we wait for any required materials.',
+      'After subscribing, you complete your KERSIVO client onboarding, we prepare your KERSIVO setup, and you review a private preview. Nothing goes live until you approve it. Billing starts when you subscribe and continues while we wait for any required materials.',
   },
   {
     question: 'Can you migrate me from Booksy, Fresha or another booking platform?',

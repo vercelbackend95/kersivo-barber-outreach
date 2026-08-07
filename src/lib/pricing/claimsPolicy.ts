@@ -106,8 +106,8 @@ export const DOMAIN_NEW_CLAIM =
   'If you do not already have a domain, KERSIVO may register one on behalf of your business. Legal ownership of the domain remains with the salon or its legal owner. While your subscription is active, KERSIVO manages the registrar, DNS and SSL technically. When the engagement ends, the domain can be transferred to you.';
 
 /**
- * Exact Tally onboarding checkbox text (post-purchase) when registering a new domain.
- * Ops: paste into the Tally form — not rendered on kersivo.co.uk marketing UI in this WP.
+ * Exact domain-authorisation checkbox text (post-purchase) when registering a new domain.
+ * Collected in KERSIVO client onboarding — not rendered on kersivo.co.uk marketing UI.
  */
 export const DOMAIN_AUTH_TEXT =
   'I authorise KERSIVO to register and manage the selected domain name on behalf of my business using the details provided.';
@@ -123,10 +123,10 @@ export const DOMAIN_LIMIT_CLAIM =
   'The internal standard domain allowance is £30 per year, including mandatory registrar fees. Premium domains, aftermarket listings, auctions, expensive extensions and names above that allowance are not included in the standard package. In those cases KERSIVO will propose an alternative domain or agree a top-up for the difference with you.';
 
 /**
- * §6 — post-purchase onboarding materials (Tally / similar form).
+ * §6 — post-purchase onboarding materials (KERSIVO client onboarding).
  */
 export const ONBOARDING_MATERIALS_CLAIM =
-  'After purchase you receive an onboarding form. Your salon should provide details such as business name, address, contact details, logo, photos, team information, opening hours, social media, a salon description and any information needed for migration.';
+  'After purchase you complete KERSIVO client onboarding. Your salon should provide details such as business name, address, contact details, logo, photos, team information, opening hours, social media, a salon description and any information needed for migration.';
 
 /** §6 — billing continues even if materials are late. */
 export const ONBOARDING_BILLING_INDEPENDENT_CLAIM =

@@ -33,7 +33,7 @@ export const PAGE_DESCRIPTIONS = {
   shop:
     'Interactive KERSIVO retail demo — browse grooming products and try the demo bag. No payment is taken and no order is created.',
   setupSuccess:
-    'Your Kersivo subscription is confirmed. Check your email for the onboarding form and next steps.',
+    'Your Kersivo subscription is confirmed. Continue your setup to prepare your barbershop for launch.',
   setupCancel:
     'Kersivo subscription checkout was cancelled. No payment was taken.',
   book:

@@ -26,7 +26,7 @@ Astro + React (TypeScript) booking + shop system for barbershops.
    - `RESEND_API_KEY`: **required in production** for real email delivery via Resend. Without it, production APIs refuse to report form/mail success (so Ads/lead conversions cannot fire on a fake send). In local development only, missing key falls back to `[DEV EMAIL]` console logs.
    - `FROM_EMAIL`: sender identity used by Resend (must be verified in your Resend account).
    - `CONTACT_INBOX_EMAIL`: inbox that receives landing page contact/setup inquiries (defaults to `FROM_EMAIL` if unset).
-   - `SETUP_ONBOARDING_FORM_URL`: Tally (or other) onboarding form URL linked from setup deposit confirmation emails.
+   - `SETUP_ONBOARDING_FORM_URL`: legacy setup-deposit only — external onboarding form URL linked from setup deposit confirmation emails when setup fees are enabled. Not used by the current £39 SaaS journey.
    - `PUBLIC_CALENDLY_URL`: optional Calendly link shown under pricing (e.g. scorecard call).
    - `PUBLIC_SITE_URL`: public base URL used by booking + shop links and Stripe success/cancel links (for local dev: `http://localhost:4321`). For production, set to `https://kersivo.co.uk`.
    - `STRIPE_SECRET_KEY`: Stripe test secret key used for checkout session creation.
@@ -98,7 +98,7 @@ Before running Google Ads against the live site, confirm:
 
    - **Test mode:** add the same endpoint under Stripe **Test** webhooks (or use `stripe listen`) and use the **test** signing secret with `sk_test_…` keys. Sandbox `cs_test_…` checkouts will not fulfil if only a Live webhook is configured.
    - **Live mode:** separate Live webhook + `whsec_…` + `sk_live_…`. Never mix test events with the live signing secret.
-5. `SETUP_ONBOARDING_FORM_URL`: your Tally onboarding form link (e.g. `https://tally.so/r/XXXXX`). Sent to clients in the subscription confirmation email and shown on `/setup/success` after verified payment.
+5. `SETUP_ONBOARDING_FORM_URL`: legacy setup-deposit only (e.g. an external form URL). The current £39 SaaS journey does **not** use this: confirmation email and `/setup/success` recover into KERSIVO client onboarding at `/admin/client-onboarding`.
 
 ## Subscription checkout flow test (default offer)
 

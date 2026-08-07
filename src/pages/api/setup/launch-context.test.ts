@@ -116,6 +116,7 @@ describe('GET /api/setup/launch-context (setup fees off)', () => {
     expect(body.subscriptionBlocked).toBe(true);
     expect(body.redirectTo).toBe('/admin');
     expect(body.paid).toBe(true);
+    expect(body.paidHref).toBe('/admin/client-onboarding');
   });
 
   it('marks PENDING as continue-purchase pending', async () => {
@@ -256,5 +257,6 @@ describe('GET /api/setup/launch-context (setup fees on)', () => {
     const body = await res.json();
     expect(body.subscriptionBlocked).toBe(false);
     expect(body.redirectTo).toBeNull();
+    expect(body.paidHref).toBe('https://forms.test/onboarding');
   });
 });

@@ -235,7 +235,10 @@ export default function ClientOnboardingWizard() {
             Your session has expired. Sign in again to continue your setup.
           </p>
         </div>
-        <PrivateDemoAuthPanel onSuccess={() => void reload()} />
+        <PrivateDemoAuthPanel
+          callbackURL="/admin/client-onboarding"
+          onSuccess={() => void reload()}
+        />
       </div>
     );
   }

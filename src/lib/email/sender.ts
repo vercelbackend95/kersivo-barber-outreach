@@ -485,31 +485,50 @@ export async function sendSetupDepositInternalNotificationEmail(input: {
   });
 }
 
+export function buildSaasSubscriptionConfirmationEmail(input: {
+  customerName: string;
+  shopName: string;
+  monthlyFormatted: string;
+  setupSuccessUrl: string;
+}): { subject: string; html: string } {
+  const setupSuccessUrl = input.setupSuccessUrl.trim();
+  const nextStepBlock = setupSuccessUrl
+    ? `<p><strong>Next step:</strong><br/>Complete your setup so we can prepare your barbershop.</p>
+  <p><a href="${escapeHtml(setupSuccessUrl)}">Complete Your KERSIVO Setup</a></p>`
+    : `<p><strong>Next step:</strong><br/>Reply to this email or contact <a href="mailto:hello@kersivo.co.uk">hello@kersivo.co.uk</a> to continue your setup.</p>`;
+
+  const subject = 'Your KERSIVO subscription is confirmed';
+  const html = `<p>Hi ${escapeHtml(input.customerName)},</p>
+  <p>Your KERSIVO subscription is confirmed.</p>
+  <p><strong>Subscription:</strong> ${escapeHtml(input.monthlyFormatted)}/month<br/>
+  <strong>Shop:</strong> ${escapeHtml(input.shopName)}</p>
+  ${nextStepBlock}
+  <p>We will prepare your booking website, admin dashboard and retail pickup shop. Nothing goes live without your review.</p>
+  <p>Questions? Reply to this email or contact <a href="mailto:hello@kersivo.co.uk">hello@kersivo.co.uk</a>.</p>
+  <p>KERSIVO<br/>Your domain. Your brand. Your client relationship.</p>`;
+
+  return { subject, html };
+}
+
 export async function sendSaasSubscriptionConfirmationEmail(input: {
   to: string;
   customerName: string;
   shopName: string;
   monthlyFormatted: string;
-  onboardingFormUrl?: string;
+  /** Canonical recovery URL: /setup/success?session_id=cs_… */
+  setupSuccessUrl: string;
 }) {
-  const onboardingFormUrl = (input.onboardingFormUrl ?? getSetupOnboardingFormUrl()).trim();
-  const onboardingBlock = onboardingFormUrl
-    ? `<p><strong>Next step:</strong><br/>Complete your onboarding form:<br/><a href="${escapeHtml(onboardingFormUrl)}">${escapeHtml(onboardingFormUrl)}</a></p>
-  <p>Please send us your services, prices, barbers, opening hours, branding, domain details and any retail products you want included.</p>`
-    : `<p><strong>Next step:</strong><br/>Reply to this email or contact <a href="mailto:hello@kersivo.co.uk">hello@kersivo.co.uk</a> for your onboarding form link.</p>`;
-
-  const html = `<p>Hi ${escapeHtml(input.customerName)},</p>
-  <p>Your KERSIVO monthly subscription is confirmed.</p>
-  <p><strong>Subscription:</strong> ${escapeHtml(input.monthlyFormatted)}/month<br/>
-  <strong>Shop:</strong> ${escapeHtml(input.shopName)}</p>
-  ${onboardingBlock}
-  <p>We will prepare your booking website, admin dashboard and retail pickup shop. Nothing goes live without your review.</p>
-  <p>Questions? Reply to this email or contact <a href="mailto:hello@kersivo.co.uk">hello@kersivo.co.uk</a>.</p>
-  <p>KERSIVO<br/>Your domain. Your brand. Your client relationship.</p>`;
+  const setupSuccessUrl = input.setupSuccessUrl.trim();
+  const { subject, html } = buildSaasSubscriptionConfirmationEmail({
+    customerName: input.customerName,
+    shopName: input.shopName,
+    monthlyFormatted: input.monthlyFormatted,
+    setupSuccessUrl,
+  });
 
   return sendEmail({
     to: input.to,
-    subject: 'Your KERSIVO subscription is confirmed',
+    subject,
     replyTo: getContactInboxEmail(),
     html,
     devLogLabel: '[DEV EMAIL] SaaS subscription confirmation',
@@ -518,7 +537,7 @@ export async function sendSaasSubscriptionConfirmationEmail(input: {
       customerName: input.customerName,
       shopName: input.shopName,
       monthlyFormatted: input.monthlyFormatted,
-      onboardingFormUrl: onboardingFormUrl || '(missing SETUP_ONBOARDING_FORM_URL)',
+      setupSuccessUrl: setupSuccessUrl || '(missing setup success URL)',
     },
   });
 }
