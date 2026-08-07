@@ -64,7 +64,7 @@ const BRAND_FACTS: KnowledgeSection = {
     DOMAIN_NEW_CLAIM,
     DOMAIN_EXISTING_CLAIM,
     DOMAIN_LIMIT_CLAIM,
-    `Post-purchase Tally (new domain): require checkbox — “${DOMAIN_AUTH_TEXT}”`,
+    `Post-purchase KERSIVO client onboarding (new domain): require checkbox — “${DOMAIN_AUTH_TEXT}”`,
     'Never ask customers to send domain-registrar passwords by ordinary email; prefer DNS records or secure handoff.',
     'Do not advertise the £30/year domain allowance on hero marketing; it belongs in Terms/ops.',
     ONBOARDING_MATERIALS_CLAIM,
