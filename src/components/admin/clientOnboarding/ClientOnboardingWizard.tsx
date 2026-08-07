@@ -1,4 +1,4 @@
-import React, { useMemo, useState } from 'react';
+import React, { useCallback, useMemo, useRef, useState } from 'react';
 import { ClientOnboardingStatus } from '@prisma/client';
 import { ButtonSpinner } from '@/components/ButtonSpinner';
 import PrivateDemoAuthPanel from '@/components/admin/PrivateDemoAuthPanel';
@@ -46,16 +46,25 @@ export default function ClientOnboardingWizard() {
     saveError,
     gateError,
     dirty,
+    prefillKind,
     reload,
     updateDraft,
     flushSave,
     goToStep,
+    upsertAsset,
+    removeAssetLocal,
+    mergeCanonical,
   } = useClientOnboardingDraft();
 
   const [navBusy, setNavBusy] = useState(false);
   const [submitBusy, setSubmitBusy] = useState(false);
   const [actionError, setActionError] = useState('');
   const [missing, setMissing] = useState<string[]>([]);
+  const beforeContinueRef = useRef<(() => Promise<boolean>) | null>(null);
+
+  const registerBeforeContinue = useCallback((fn: (() => Promise<boolean>) | null) => {
+    beforeContinueRef.current = fn;
+  }, []);
 
   const status = state?.onboarding.status;
   const readOnly =
@@ -71,9 +80,23 @@ export default function ClientOnboardingWizard() {
       state,
       disabled: readOnly || navBusy || submitBusy,
       updateDraft,
-      reload,
+      upsertAsset,
+      removeAssetLocal,
+      mergeCanonical,
+      registerBeforeContinue,
     };
-  }, [draft, state, readOnly, navBusy, submitBusy, updateDraft, reload]);
+  }, [
+    draft,
+    state,
+    readOnly,
+    navBusy,
+    submitBusy,
+    updateDraft,
+    upsertAsset,
+    removeAssetLocal,
+    mergeCanonical,
+    registerBeforeContinue,
+  ]);
 
   const continueDisabled =
     navBusy ||
@@ -97,6 +120,18 @@ export default function ClientOnboardingWizard() {
     setNavBusy(true);
     setActionError('');
     try {
+      const flushed = await flushSave();
+      if (!flushed && dirty) {
+        setActionError(saveError || 'Could not save. Please try again.');
+        return;
+      }
+      if (beforeContinueRef.current) {
+        const stepOk = await beforeContinueRef.current();
+        if (!stepOk) {
+          setActionError('Could not save this step. Please fix the issue and try again.');
+          return;
+        }
+      }
       if (step === 0) {
         const ok = await goToStep(1);
         if (!ok) setActionError(saveError || 'Could not save. Please try again.');
@@ -307,7 +342,7 @@ export default function ClientOnboardingWizard() {
         ) : null}
 
         {step === 0 ? (
-          <WelcomeStep state={state} onStart={() => void handleContinue()} />
+          <WelcomeStep prefillKind={prefillKind} onStart={() => void handleContinue()} />
         ) : null}
         {step === 1 ? <BusinessStep {...common} /> : null}
         {step === 2 ? <BrandStep {...common} /> : null}
@@ -341,7 +376,6 @@ export default function ClientOnboardingWizard() {
           </ul>
         ) : null}
 
-        {/* Visually expose title for a11y when not welcome — progress already shows step */}
         <span className="sr-only">{title}</span>
       </main>
 

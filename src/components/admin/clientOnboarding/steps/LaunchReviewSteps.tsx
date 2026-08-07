@@ -1,25 +1,74 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { TextArea, TextInput } from '../fields';
 import { PrivateAssetUploader } from '../PrivateAssetUploader';
+import type { StepCommon } from './BusinessBrandDomain';
 import {
   DAY_LABELS,
   domainModeLabel,
   formatGbp,
   minutesToTime,
-  type ClientOnboardingState,
-  type DraftFields,
+  readJsonError,
 } from '../types';
 
-type Common = {
-  draft: DraftFields;
-  state: ClientOnboardingState;
-  disabled?: boolean;
-  updateDraft: (patch: Partial<DraftFields>) => void;
-  reload: () => Promise<void>;
-  onEditStep?: (step: number) => void;
-};
+export function MigrationStep({
+  draft,
+  state,
+  disabled,
+  updateDraft,
+  upsertAsset,
+  removeAssetLocal,
+}: StepCommon) {
+  const [busy, setBusy] = useState(false);
+  const [error, setError] = useState('');
 
-export function MigrationStep({ draft, state, disabled, updateDraft, reload }: Common) {
+  const clearMigrationFields = () => {
+    updateDraft({
+      migrationRequested: false,
+      migrationDataConfirmedLawful: false,
+      migrationSource: null,
+      migrationSourceOther: null,
+      migrationNotes: null,
+    });
+  };
+
+  const chooseNo = async () => {
+    const csvAssets = state.assets.filter((a) => a.kind === 'MIGRATION_CSV');
+    if (csvAssets.length === 0) {
+      clearMigrationFields();
+      setError('');
+      return;
+    }
+
+    const confirmed = window.confirm(
+      'Switching to No will remove the customer export you uploaded.',
+    );
+    if (!confirmed) return;
+
+    setBusy(true);
+    setError('');
+    try {
+      for (const asset of csvAssets) {
+        const response = await fetch('/api/admin/client-onboarding/assets', {
+          method: 'DELETE',
+          credentials: 'include',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ id: asset.id }),
+        });
+        if (!response.ok) {
+          const body = await readJsonError(response);
+          setError(body.error || 'Could not remove the customer export. Please try again.');
+          return;
+        }
+        removeAssetLocal(asset.id);
+      }
+      clearMigrationFields();
+    } catch {
+      setError('Could not remove the customer export. Please try again.');
+    } finally {
+      setBusy(false);
+    }
+  };
+
   return (
     <section className="client-onboarding__section">
       <h1 className="admin-onboarding__title">Moving from another system</h1>
@@ -32,7 +81,7 @@ export function MigrationStep({ draft, state, disabled, updateDraft, reload }: C
           role="radio"
           aria-checked={draft.migrationRequested === true}
           className={`client-onboarding__choice${draft.migrationRequested === true ? ' is-selected' : ''}`}
-          disabled={disabled}
+          disabled={disabled || busy}
           onClick={() => updateDraft({ migrationRequested: true })}
         >
           <div>
@@ -47,13 +96,8 @@ export function MigrationStep({ draft, state, disabled, updateDraft, reload }: C
           role="radio"
           aria-checked={draft.migrationRequested === false}
           className={`client-onboarding__choice${draft.migrationRequested === false ? ' is-selected' : ''}`}
-          disabled={disabled}
-          onClick={() =>
-            updateDraft({
-              migrationRequested: false,
-              migrationDataConfirmedLawful: false,
-            })
-          }
+          disabled={disabled || busy}
+          onClick={() => void chooseNo()}
         >
           <div>
             <p className="client-onboarding__choice-title">No</p>
@@ -69,45 +113,40 @@ export function MigrationStep({ draft, state, disabled, updateDraft, reload }: C
             label="Current system"
             optional
             hint="e.g. Booksy, Fresha, Timely"
-            disabled={disabled}
+            disabled={disabled || busy}
             value={draft.migrationSource ?? ''}
-            onChange={(v) =>
-              updateDraft({ migrationSource: v.trim() ? v.trim() : null })
-            }
+            onChange={(v) => updateDraft({ migrationSource: v.trim() ? v : null })}
           />
           <TextInput
             id="migrationSourceOther"
             label="Other system name"
             optional
-            disabled={disabled}
+            disabled={disabled || busy}
             value={draft.migrationSourceOther ?? ''}
-            onChange={(v) =>
-              updateDraft({ migrationSourceOther: v.trim() ? v.trim() : null })
-            }
+            onChange={(v) => updateDraft({ migrationSourceOther: v.trim() ? v : null })}
           />
           <TextArea
             id="migrationNotes"
             label="Migration notes"
             optional
-            disabled={disabled}
+            disabled={disabled || busy}
             value={draft.migrationNotes ?? ''}
-            onChange={(v) =>
-              updateDraft({ migrationNotes: v.trim() ? v.trim() : null })
-            }
+            onChange={(v) => updateDraft({ migrationNotes: v.trim() ? v : null })}
           />
           <PrivateAssetUploader
             kind="MIGRATION_CSV"
             accept=".csv,text/csv"
             assets={state.assets}
-            disabled={disabled}
+            disabled={disabled || busy}
             hint="Upload an export from your current system if you have one. The file is stored privately and is only used for your setup and migration."
-            onChanged={reload}
+            onUploaded={upsertAsset}
+            onRemoved={removeAssetLocal}
           />
           <label className="client-onboarding__check-row">
             <input
               type="checkbox"
               checked={draft.migrationDataConfirmedLawful}
-              disabled={disabled}
+              disabled={disabled || busy}
               onChange={(e) =>
                 updateDraft({ migrationDataConfirmedLawful: e.target.checked })
               }
@@ -119,11 +158,16 @@ export function MigrationStep({ draft, state, disabled, updateDraft, reload }: C
           </label>
         </div>
       ) : null}
+      {error ? (
+        <p className="field__error" role="alert">
+          {error}
+        </p>
+      ) : null}
     </section>
   );
 }
 
-export function LaunchPreferencesStep({ draft, state, disabled, updateDraft }: Common) {
+export function LaunchPreferencesStep({ draft, state, disabled, updateDraft }: StepCommon) {
   return (
     <section className="client-onboarding__section">
       <h1 className="admin-onboarding__title">Retail & deposits</h1>
@@ -218,7 +262,7 @@ export function LaunchPreferencesStep({ draft, state, disabled, updateDraft }: C
   );
 }
 
-export function FinalDetailsStep({ draft, disabled, updateDraft }: Common) {
+export function FinalDetailsStep({ draft, disabled, updateDraft }: StepCommon) {
   return (
     <section className="client-onboarding__section">
       <h1 className="admin-onboarding__title">Final details</h1>
@@ -242,9 +286,7 @@ export function FinalDetailsStep({ draft, disabled, updateDraft }: Common) {
         optional
         disabled={disabled}
         value={draft.additionalNotes ?? ''}
-        onChange={(v) =>
-          updateDraft({ additionalNotes: v.trim() ? v.trim() : null })
-        }
+        onChange={(v) => updateDraft({ additionalNotes: v.trim() ? v : null })}
       />
 
       <h2 className="client-onboarding__section-title">Optional permissions</h2>
@@ -285,7 +327,7 @@ export function ReviewStep({
   disabled,
   updateDraft,
   onEditStep,
-}: Common) {
+}: StepCommon & { onEditStep?: (step: number) => void }) {
   const csvCount = state.assets.filter((a) => a.kind === 'MIGRATION_CSV').length;
   const openDays = state.openingHours.filter((h) => h.active);
 

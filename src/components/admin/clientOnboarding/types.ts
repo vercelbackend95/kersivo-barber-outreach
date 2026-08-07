@@ -213,6 +213,37 @@ export function draftFromOnboarding(
   };
 }
 
+export function isBlankField(value: string | null | undefined) {
+  return value == null || !String(value).trim();
+}
+
+/** Seed only empty ClientOnboarding fields from shop/owner. Never invents public contact or legal name. */
+export function buildEmptyFieldPrefill(
+  state: ClientOnboardingState,
+): Partial<DraftFields> {
+  const seed: Partial<DraftFields> = {};
+  if (isBlankField(state.onboarding.townCity) && state.shop?.townCity?.trim()) {
+    seed.townCity = state.shop.townCity.trim();
+  }
+  if (isBlankField(state.onboarding.primaryContactName) && state.owner?.name?.trim()) {
+    seed.primaryContactName = state.owner.name.trim();
+  }
+  if (isBlankField(state.onboarding.primaryContactEmail) && state.owner?.email?.trim()) {
+    seed.primaryContactEmail = state.owner.email.trim();
+  }
+  return seed;
+}
+
+export type PrefillKind = 'none' | 'fields' | 'canonical';
+
+export function hasCanonicalPrefill(state: ClientOnboardingState): boolean {
+  return (
+    state.barbers.some((b) => b.active) ||
+    state.services.some((s) => s.isActive) ||
+    state.openingHours.some((h) => h.active)
+  );
+}
+
 export function hasPrefillSignal(state: ClientOnboardingState): boolean {
   const o = state.onboarding;
   const shop = state.shop;
@@ -222,9 +253,7 @@ export function hasPrefillSignal(state: ClientOnboardingState): boolean {
       o.primaryContactName?.trim() ||
       o.primaryContactEmail?.trim() ||
       o.addressLine1?.trim() ||
-      state.barbers.some((b) => b.active) ||
-      state.services.some((s) => s.isActive) ||
-      state.openingHours.some((h) => h.active),
+      hasCanonicalPrefill(state),
   );
 }
 

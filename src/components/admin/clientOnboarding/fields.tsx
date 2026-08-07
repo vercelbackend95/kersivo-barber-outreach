@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { cloneElement, isValidElement, type ReactElement, type ReactNode } from 'react';
 
 export function Field({
   id,
@@ -13,18 +13,34 @@ export function Field({
   hint?: string;
   error?: string;
   optional?: boolean;
-  children: React.ReactNode;
+  children: ReactNode;
 }) {
+  const errorId = `${id}-error`;
+  const describedBy = [hint ? `${id}-hint` : null, error ? errorId : null]
+    .filter(Boolean)
+    .join(' ') || undefined;
+
+  const control = isValidElement(children)
+    ? cloneElement(children as ReactElement<Record<string, unknown>>, {
+        'aria-invalid': error ? true : undefined,
+        'aria-describedby': describedBy,
+      })
+    : children;
+
   return (
     <div className="field">
       <label className="field__label" htmlFor={id}>
         {label}
         {optional ? <span className="client-onboarding__optional-label"> · Optional</span> : null}
       </label>
-      {children}
-      {hint ? <p className="field__hint">{hint}</p> : null}
+      {control}
+      {hint ? (
+        <p className="field__hint" id={`${id}-hint`}>
+          {hint}
+        </p>
+      ) : null}
       {error ? (
-        <p className="field__error" id={`${id}-error`} role="alert">
+        <p className="field__error" id={errorId} role="alert">
           {error}
         </p>
       ) : null}
@@ -41,6 +57,7 @@ export function TextInput({
   optional,
   label,
   hint,
+  error,
   autoComplete,
 }: {
   id: string;
@@ -51,10 +68,11 @@ export function TextInput({
   optional?: boolean;
   label: string;
   hint?: string;
+  error?: string;
   autoComplete?: string;
 }) {
   return (
-    <Field id={id} label={label} optional={optional} hint={hint}>
+    <Field id={id} label={label} optional={optional} hint={hint} error={error}>
       <input
         id={id}
         className="input"
@@ -76,6 +94,7 @@ export function TextArea({
   optional,
   label,
   rows = 4,
+  error,
 }: {
   id: string;
   value: string;
@@ -84,9 +103,10 @@ export function TextArea({
   optional?: boolean;
   label: string;
   rows?: number;
+  error?: string;
 }) {
   return (
-    <Field id={id} label={label} optional={optional}>
+    <Field id={id} label={label} optional={optional} error={error}>
       <textarea
         id={id}
         className="textarea"

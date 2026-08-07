@@ -4,27 +4,32 @@ import { TextArea, TextInput } from '../fields';
 import { PrivateAssetUploader } from '../PrivateAssetUploader';
 import {
   domainModeLabel,
-  hasPrefillSignal,
   type ClientOnboardingState,
   type DraftFields,
+  type OnboardingAsset,
+  type PrefillKind,
 } from '../types';
 
-type Common = {
+export type StepCommon = {
   draft: DraftFields;
   state: ClientOnboardingState;
   disabled?: boolean;
   updateDraft: (patch: Partial<DraftFields>) => void;
-  reload: () => Promise<void>;
+  upsertAsset: (asset: OnboardingAsset) => void;
+  removeAssetLocal: (id: string) => void;
+  mergeCanonical: (
+    slice: Partial<Pick<ClientOnboardingState, 'barbers' | 'services' | 'openingHours' | 'workspace'>>,
+  ) => void;
+  registerBeforeContinue: (fn: (() => Promise<boolean>) | null) => void;
 };
 
 export function WelcomeStep({
-  state,
+  prefillKind,
   onStart,
 }: {
-  state: ClientOnboardingState;
+  prefillKind: PrefillKind;
   onStart: () => void;
 }) {
-  const prefill = hasPrefillSignal(state);
   return (
     <section className="admin-onboarding__card-block">
       <h1 className="admin-onboarding__title">Let’s get your KERSIVO setup ready</h1>
@@ -32,12 +37,21 @@ export function WelcomeStep({
         We’ll use these details to prepare your booking website and account for launch. You can
         save your progress and come back at any time.
       </p>
-      {prefill ? (
+      {prefillKind === 'fields' ? (
         <div className="client-onboarding__banner" role="status">
           <h2>We’ve brought across your details</h2>
           <p>
             We’ve brought across the information you already added. Review it and make any changes
             before continuing.
+          </p>
+        </div>
+      ) : null}
+      {prefillKind === 'canonical' ? (
+        <div className="client-onboarding__banner" role="status">
+          <h2>We’ve brought across your shop setup</h2>
+          <p>
+            We’ve brought across the team, services and opening hours you already added. Review
+            them and make any changes before continuing.
           </p>
         </div>
       ) : null}
@@ -48,7 +62,7 @@ export function WelcomeStep({
   );
 }
 
-export function BusinessStep({ draft, disabled, updateDraft }: Common) {
+export function BusinessStep({ draft, disabled, updateDraft }: StepCommon) {
   const set = (key: keyof DraftFields, value: string) =>
     updateDraft({ [key]: value.trim() ? value : null });
 
@@ -184,7 +198,7 @@ export function BusinessStep({ draft, disabled, updateDraft }: Common) {
   );
 }
 
-export function BrandStep({ draft, state, disabled, updateDraft, reload }: Common) {
+export function BrandStep({ draft, state, disabled, updateDraft, upsertAsset, removeAssetLocal }: StepCommon) {
   const set = (key: keyof DraftFields, value: string) =>
     updateDraft({ [key]: value.trim() ? value : null });
 
@@ -296,7 +310,8 @@ export function BrandStep({ draft, state, disabled, updateDraft, reload }: Commo
         assets={state.assets}
         disabled={disabled}
         hint="JPG, PNG or WEBP"
-        onChanged={reload}
+        onUploaded={upsertAsset}
+        onRemoved={removeAssetLocal}
       />
       <PrivateAssetUploader
         kind="GALLERY_IMAGE"
@@ -304,7 +319,8 @@ export function BrandStep({ draft, state, disabled, updateDraft, reload }: Commo
         assets={state.assets}
         disabled={disabled}
         hint="Add photos that represent your shop"
-        onChanged={reload}
+        onUploaded={upsertAsset}
+        onRemoved={removeAssetLocal}
       />
       <PrivateAssetUploader
         kind="BRAND_GUIDELINES"
@@ -312,13 +328,14 @@ export function BrandStep({ draft, state, disabled, updateDraft, reload }: Commo
         assets={state.assets}
         disabled={disabled}
         hint="Optional PDF or image guidelines"
-        onChanged={reload}
+        onUploaded={upsertAsset}
+        onRemoved={removeAssetLocal}
       />
     </section>
   );
 }
 
-export function DomainStep({ draft, disabled, updateDraft }: Common) {
+export function DomainStep({ draft, disabled, updateDraft }: StepCommon) {
   const modes: ClientOnboardingDomainMode[] = [
     ClientOnboardingDomainMode.EXISTING,
     ClientOnboardingDomainMode.KERSIVO_REGISTER,

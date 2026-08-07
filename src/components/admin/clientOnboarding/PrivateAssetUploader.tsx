@@ -15,14 +15,16 @@ export function PrivateAssetUploader({
   accept,
   assets,
   disabled,
-  onChanged,
+  onUploaded,
+  onRemoved,
   hint,
 }: {
   kind: string;
   accept: string;
   assets: OnboardingAsset[];
   disabled?: boolean;
-  onChanged: () => Promise<void> | void;
+  onUploaded: (asset: OnboardingAsset) => void;
+  onRemoved: (id: string) => void;
   hint?: string;
 }) {
   const inputRef = useRef<HTMLInputElement>(null);
@@ -50,7 +52,8 @@ export function PrivateAssetUploader({
         setError(body.error || 'Upload failed.');
         return;
       }
-      await onChanged();
+      const body = (await response.json()) as { ok: true; asset: OnboardingAsset };
+      onUploaded(body.asset);
     } catch {
       setError('Upload failed. Please try again.');
     } finally {
@@ -75,7 +78,7 @@ export function PrivateAssetUploader({
         setError(body.error || 'Could not remove file.');
         return;
       }
-      await onChanged();
+      onRemoved(id);
     } catch {
       setError('Could not remove file.');
     } finally {

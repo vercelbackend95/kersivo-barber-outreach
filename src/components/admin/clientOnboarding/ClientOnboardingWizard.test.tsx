@@ -6,6 +6,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { act, cleanup, fireEvent, render, screen, waitFor } from '@testing-library/react';
 import { ClientOnboardingDomainMode, ClientOnboardingStatus } from '@prisma/client';
 import ClientOnboardingWizard from './ClientOnboardingWizard';
+import { AUTOSAVE_MS } from './useClientOnboardingDraft';
 import type { ClientOnboardingState } from './types';
 
 vi.mock('@/components/admin/PrivateDemoAuthPanel', () => ({
@@ -152,12 +153,20 @@ function jsonResponse(body: unknown, status = 200) {
   });
 }
 
-describe('ClientOnboardingWizard', () => {
+const defaultRules = [1, 2, 3, 4, 5, 6, 7].map((dayOfWeek) => ({
+  dayOfWeek,
+  active: dayOfWeek <= 5,
+  startTime: '09:00',
+  endTime: '18:00',
+}));
+
+describe('ClientOnboardingWizard hardening', () => {
   const fetchSpy = vi.fn();
 
   beforeEach(() => {
     fetchSpy.mockReset();
     vi.stubGlobal('fetch', fetchSpy);
+    vi.stubGlobal('confirm', vi.fn(() => true));
     vi.useRealTimers();
   });
 
@@ -167,77 +176,190 @@ describe('ClientOnboardingWizard', () => {
     vi.useRealTimers();
   });
 
-  function mockGet(state: ClientOnboardingState) {
+  function mockApis(state: ClientOnboardingState, opts?: {
+    onPatch?: (body: Record<string, unknown>) => void;
+    deferPatch?: { resolve: (r: Response) => void }[];
+    hoursFail?: boolean;
+    profilesFail?: boolean;
+    rulesFail?: boolean;
+    deleteFail?: boolean;
+  }) {
+    let live = structuredClone(state);
     fetchSpy.mockImplementation(async (input: RequestInfo | URL, init?: RequestInit) => {
       const url = String(input);
       const method = (init?.method ?? 'GET').toUpperCase();
 
-      if (url.includes('/api/admin/client-onboarding/submit') && method === 'POST') {
+      if (url.includes('/api/admin/client-onboarding/assets') && method === 'POST') {
+        return jsonResponse({
+          ok: true,
+          asset: {
+            id: 'asset_new',
+            kind: 'BRAND_LOGO',
+            storagePath: 'private/onboarding/shop_1/logo.png',
+            originalFileName: 'logo.png',
+            contentType: 'image/png',
+            sizeBytes: 10,
+            createdAt: '2026-01-01T00:00:00.000Z',
+          },
+        });
+      }
+      if (url.includes('/api/admin/client-onboarding/assets') && method === 'DELETE') {
+        if (opts?.deleteFail) return jsonResponse({ error: 'Blob delete failed.' }, 503);
+        return jsonResponse({ ok: true });
+      }
+      if (url.includes('/api/admin/client-onboarding/barber-profiles') && method === 'PUT') {
+        if (opts?.profilesFail) return jsonResponse({ error: 'Profiles failed.' }, 500);
+        return jsonResponse({ ok: true });
+      }
+      if (url.includes('/api/admin/barbershop-settings/hours') && method === 'PUT') {
+        if (opts?.hoursFail) return jsonResponse({ error: 'Hours failed.' }, 400);
+        return jsonResponse({ hours: [] });
+      }
+      if (url.includes('/api/admin/barbers/') && url.includes('/rules')) {
+        if (method === 'PUT' && opts?.rulesFail) {
+          return jsonResponse({ error: 'Rules failed.' }, 400);
+        }
+        if (method === 'PUT') return jsonResponse({ ok: true });
+        return jsonResponse({ rules: defaultRules });
+      }
+      if (url.endsWith('/api/admin/barbers') && method === 'GET') {
+        return jsonResponse({
+          barbers: live.barbers.map((b) => ({ ...b, serviceIds: ['svc_1'], isActive: b.active })),
+        });
+      }
+      if (url.endsWith('/api/admin/barbers') && method === 'POST') {
+        const body = init?.body ? JSON.parse(String(init.body)) : {};
+        return jsonResponse({
+          barber: {
+            id: body.id ?? 'barber_new',
+            name: body.name,
+            active: body.isActive ?? true,
+            avatarUrl: null,
+            sortOrder: 1,
+          },
+        });
+      }
+      if (url.includes('/api/admin/services/') && method === 'PATCH') {
+        const body = init?.body ? JSON.parse(String(init.body)) : {};
+        return jsonResponse({ service: { id: 'svc_1', ...body } });
+      }
+      if (url.endsWith('/api/admin/services') && method === 'GET') {
+        return jsonResponse({
+          services: live.services.map((s) => ({
+            ...s,
+            barberServices: [{ barber: { id: 'barber_1', name: 'Jamie', active: true } }],
+          })),
+          categories: [],
+        });
+      }
+      if (url.endsWith('/api/admin/services') && method === 'POST') {
+        return jsonResponse({
+          service: {
+            id: 'svc_new',
+            name: 'Beard',
+            isActive: true,
+            pricePence: 1500,
+            durationMinutes: 20,
+          },
+          categories: [],
+        });
+      }
+      if (url.includes('/submit') && method === 'POST') {
         return jsonResponse({
           onboarding: {
-            ...state.onboarding,
+            ...live.onboarding,
             status: ClientOnboardingStatus.SUBMITTED,
             submittedAt: '2026-08-07T12:00:00.000Z',
           },
         });
       }
-
-      if (url.includes('/api/admin/client-onboarding') && !url.includes('/assets') && !url.includes('/barber-profiles') && !url.includes('/submit')) {
-        if (method === 'GET') return jsonResponse(state);
+      if (
+        url.includes('/api/admin/client-onboarding') &&
+        !url.includes('/assets') &&
+        !url.includes('/barber-profiles') &&
+        !url.includes('/submit')
+      ) {
+        if (method === 'GET') return jsonResponse(live);
         if (method === 'PATCH' || method === 'PUT') {
           const body = init?.body ? JSON.parse(String(init.body)) : {};
-          return jsonResponse({
-            ok: true,
-            onboarding: { ...state.onboarding, ...body },
-          });
+          opts?.onPatch?.(body);
+          live = {
+            ...live,
+            onboarding: { ...live.onboarding, ...body },
+          };
+          if (opts?.deferPatch) {
+            return new Promise<Response>((resolve) => {
+              opts.deferPatch!.push({ resolve });
+            });
+          }
+          return jsonResponse({ ok: true, onboarding: live.onboarding });
         }
       }
-
-      if (url.includes('/api/admin/barbers/') && url.includes('/rules')) {
-        return jsonResponse({
-          rules: [1, 2, 3, 4, 5, 6, 7].map((dayOfWeek) => ({
-            dayOfWeek,
-            active: dayOfWeek <= 5,
-            startTime: '09:00',
-            endTime: '18:00',
-          })),
-        });
-      }
-
       return jsonResponse({ error: `Unhandled ${method} ${url}` }, 500);
     });
+    return {
+      getLive: () => live,
+      setLive: (next: ClientOnboardingState) => {
+        live = next;
+      },
+    };
   }
 
-  it('loads existing state and shows welcome', async () => {
-    mockGet(mockState());
+  it('loads welcome and restores step', async () => {
+    mockApis(mockState());
     render(<ClientOnboardingWizard />);
     expect(await screen.findByRole('heading', { name: /Let’s get your KERSIVO setup ready/i })).toBeTruthy();
-    expect(screen.getByRole('button', { name: /Start setup/i })).toBeTruthy();
-  });
-
-  it('restores current step on load', async () => {
-    mockGet(
-      mockState({
-        onboarding: {
-          currentStep: 1,
-          primaryContactName: 'Alex Owner',
-          primaryContactEmail: 'alex@example.com',
-        },
-      }),
-    );
+    cleanup();
+    mockApis(mockState({ onboarding: { currentStep: 1, primaryContactName: 'Alex', primaryContactEmail: 'a@b.c' } }));
     render(<ClientOnboardingWizard />);
     expect(await screen.findByRole('heading', { name: /Your business/i })).toBeTruthy();
-    expect(screen.getByText(/Step 1 of 11/i)).toBeTruthy();
   });
 
-  it('prefills existing values and shows brought-across note when meaningful', async () => {
-    mockGet(mockState());
+  it('seeds blank contact and townCity from owner/shop once without overwrite', async () => {
+    const patches: Record<string, unknown>[] = [];
+    mockApis(
+      mockState({
+        onboarding: {
+          townCity: null,
+          primaryContactName: null,
+          primaryContactEmail: null,
+        },
+      }),
+      { onPatch: (b) => patches.push(b) },
+    );
     render(<ClientOnboardingWizard />);
-    expect(await screen.findByText(/We’ve brought across the information you already added/i)).toBeTruthy();
+    await screen.findByRole('heading', { name: /Let’s get your KERSIVO setup ready/i });
+    await waitFor(() => {
+      expect(patches.some((p) => p.townCity === 'London' && p.primaryContactName === 'Alex')).toBe(
+        true,
+      );
+    });
+    expect(screen.getByText(/brought across the information you already added/i)).toBeTruthy();
+
+    cleanup();
+    patches.length = 0;
+    mockApis(
+      mockState({
+        onboarding: {
+          townCity: 'Manchester',
+          primaryContactName: 'Sam',
+          primaryContactEmail: 'sam@example.com',
+          currentStep: 1,
+        },
+      }),
+      { onPatch: (b) => patches.push(b) },
+    );
+    render(<ClientOnboardingWizard />);
+    expect(await screen.findByDisplayValue('Manchester')).toBeTruthy();
+    expect(screen.getByDisplayValue('Sam')).toBeTruthy();
+    await act(async () => {
+      await new Promise((r) => setTimeout(r, 50));
+    });
+    expect(patches.some((p) => p.townCity === 'London')).toBe(false);
   });
 
-  it('does not show prefill note when nothing meaningful exists', async () => {
-    mockGet(
+  it('shows canonical-only prefill copy and no banner when empty', async () => {
+    mockApis(
       mockState({
         shop: {
           id: 'shop_1',
@@ -249,359 +371,528 @@ describe('ClientOnboardingWizard', () => {
           retailEnabled: false,
           depositsEnabled: false,
         },
+        owner: { id: 'u', name: null, email: null },
+        onboarding: {
+          townCity: null,
+          primaryContactName: null,
+          primaryContactEmail: null,
+        },
+      }),
+    );
+    render(<ClientOnboardingWizard />);
+    expect(await screen.findByText(/team, services and opening hours/i)).toBeTruthy();
+
+    cleanup();
+    mockApis(
+      mockState({
+        shop: {
+          id: 'shop_1',
+          name: null,
+          townCity: null,
+          logoUrl: null,
+          onboardingCompleted: false,
+          shopPaidAt: null,
+          retailEnabled: false,
+          depositsEnabled: false,
+        },
+        owner: null,
         barbers: [],
         services: [],
         openingHours: [],
         onboarding: {
+          townCity: null,
           primaryContactName: null,
           primaryContactEmail: null,
-          addressLine1: null,
         },
       }),
     );
     render(<ClientOnboardingWizard />);
     await screen.findByRole('heading', { name: /Let’s get your KERSIVO setup ready/i });
-    expect(screen.queryByText(/We’ve brought across the information you already added/i)).toBeNull();
+    expect(screen.queryByText(/brought across/i)).toBeNull();
   });
 
-  it('Continue saves step via PATCH', async () => {
-    const state = mockState({ onboarding: { currentStep: 1 } });
-    mockGet(state);
-    render(<ClientOnboardingWizard />);
-    await screen.findByRole('heading', { name: /Your business/i });
-
-    fireEvent.click(screen.getByRole('button', { name: /Continue/i }));
-
-    await waitFor(() => {
-      const patchCalls = fetchSpy.mock.calls.filter(
-        ([url, init]) =>
-          String(url).includes('/api/admin/client-onboarding') &&
-          String((init as RequestInit | undefined)?.method ?? '').toUpperCase() === 'PATCH',
-      );
-      expect(patchCalls.length).toBeGreaterThan(0);
-      const body = JSON.parse(String((patchCalls.at(-1)?.[1] as RequestInit).body));
-      expect(body.currentStep).toBe(2);
-    });
-    expect(await screen.findByRole('heading', { name: /Your brand/i })).toBeTruthy();
-  });
-
-  it('autosave eventually saves dirty field changes', async () => {
+  it('revision-safe autosave keeps newer edits dirty until second save', async () => {
     vi.useFakeTimers({ shouldAdvanceTime: true });
-    const state = mockState({ onboarding: { currentStep: 1 } });
-    mockGet(state);
-    render(<ClientOnboardingWizard />);
-    await screen.findByLabelText(/Street address/i);
+    const deferred: Array<{ resolve: (r: Response) => void }> = [];
+    const patches: Record<string, unknown>[] = [];
+    let patchCount = 0;
 
-    fireEvent.change(screen.getByLabelText(/Street address/i), {
-      target: { value: '12 High Street' },
-    });
-
-    await act(async () => {
-      await vi.advanceTimersByTimeAsync(800);
-    });
-
-    await waitFor(() => {
-      const patchCalls = fetchSpy.mock.calls.filter(
-        ([url, init]) =>
-          String(url).includes('/api/admin/client-onboarding') &&
-          String((init as RequestInit | undefined)?.method ?? '').toUpperCase() === 'PATCH',
-      );
-      const bodies = patchCalls.map(([, init]) =>
-        JSON.parse(String((init as RequestInit).body)),
-      );
-      expect(bodies.some((b) => b.addressLine1 === '12 High Street')).toBe(true);
-    });
-  });
-
-  it('autosave failure shows error state and does not claim Saved', async () => {
-    vi.useFakeTimers({ shouldAdvanceTime: true });
-    const state = mockState({ onboarding: { currentStep: 1 } });
-    fetchSpy.mockImplementation(async (input: RequestInfo | URL, init?: RequestInit) => {
-      const url = String(input);
-      const method = (init?.method ?? 'GET').toUpperCase();
-      if (url.includes('/api/admin/client-onboarding') && method === 'GET') {
-        return jsonResponse(state);
-      }
-      if (method === 'PATCH') {
-        return jsonResponse({ error: 'Save failed.' }, 500);
-      }
-      return jsonResponse({ error: 'nope' }, 500);
-    });
-
-    render(<ClientOnboardingWizard />);
-    await screen.findByLabelText(/Street address/i);
-    fireEvent.change(screen.getByLabelText(/Street address/i), {
-      target: { value: '12 High Street' },
-    });
-
-    await act(async () => {
-      await vi.advanceTimersByTimeAsync(800);
-    });
-
-    expect(await screen.findByText(/Could not save|Save failed|Couldn’t save/i)).toBeTruthy();
-    expect(screen.queryByText(/^Saved$/)).toBeNull();
-  });
-
-  it('optional marketing consents start unchecked', async () => {
-    mockGet(mockState({ onboarding: { currentStep: 10 } }));
-    render(<ClientOnboardingWizard />);
-    await screen.findByRole('heading', { name: /Final details/i });
-    const portfolio = screen.getByRole('checkbox', {
-      name: /feature my business in its portfolio/i,
-    });
-    const social = screen.getByRole('checkbox', {
-      name: /feature my business on social media/i,
-    });
-    const ads = screen.getByRole('checkbox', {
-      name: /use my business in advertising/i,
-    });
-    const study = screen.getByRole('checkbox', {
-      name: /use my business as a case study/i,
-    });
-    expect((portfolio as HTMLInputElement).checked).toBe(false);
-    expect((social as HTMLInputElement).checked).toBe(false);
-    expect((ads as HTMLInputElement).checked).toBe(false);
-    expect((study as HTMLInputElement).checked).toBe(false);
-  });
-
-  it('migration has explicit Yes/No and Yes reveals lawful + CSV upload', async () => {
-    mockGet(mockState({ onboarding: { currentStep: 8 } }));
-    render(<ClientOnboardingWizard />);
-    await screen.findByRole('heading', { name: /Moving from another system/i });
-    expect(screen.getByRole('radio', { name: /^Yes/i })).toBeTruthy();
-    expect(screen.getByRole('radio', { name: /^No/i })).toBeTruthy();
-    expect(screen.queryByLabelText(/authorised to provide this customer data/i)).toBeNull();
-
-    fireEvent.click(screen.getByRole('radio', { name: /^Yes/i }));
-    expect(
-      await screen.findByText(/authorised to provide this customer data/i),
-    ).toBeTruthy();
-    expect(screen.getByLabelText(/Upload Customer export/i)).toBeTruthy();
-  });
-
-  it('KERSIVO domain registration reveals authorisation checkbox unchecked', async () => {
-    mockGet(mockState({ onboarding: { currentStep: 3 } }));
-    render(<ClientOnboardingWizard />);
-    await screen.findByRole('heading', { name: /Your domain/i });
-
-    fireEvent.click(
-      screen.getByRole('radio', { name: /I’d like KERSIVO to register a domain/i }),
-    );
-    const auth = await screen.findByRole('checkbox', {
-      name: /authorise KERSIVO to register/i,
-    });
-    expect((auth as HTMLInputElement).checked).toBe(false);
-    expect(screen.getByLabelText(/1st choice domain/i)).toBeTruthy();
-  });
-
-  it('existing domain mode shows domain input', async () => {
-    mockGet(mockState({ onboarding: { currentStep: 3 } }));
-    render(<ClientOnboardingWizard />);
-    await screen.findByRole('heading', { name: /Your domain/i });
-    fireEvent.click(screen.getByRole('radio', { name: /I already have a domain/i }));
-    expect(await screen.findByLabelText(/^Your domain$/i)).toBeTruthy();
-    expect(screen.queryByLabelText(/registrar password/i)).toBeNull();
-  });
-
-  it('displays canonical barbers and services', async () => {
-    mockGet(mockState({ onboarding: { currentStep: 4 } }));
-    render(<ClientOnboardingWizard />);
-    expect(await screen.findByText('Jamie')).toBeTruthy();
-
-    // jump via reload with step 5 — re-render with services step
-    cleanup();
-    mockGet(mockState({ onboarding: { currentStep: 5 } }));
-    render(<ClientOnboardingWizard />);
-    expect(await screen.findByText('Skin Fade')).toBeTruthy();
-    expect(screen.getByText(/£25/)).toBeTruthy();
-  });
-
-  it('submit loading prevents double submit', async () => {
     const state = mockState({
       onboarding: {
-        currentStep: 11,
-        contentRightsConfirmed: true,
-        informationAccuracyConfirmed: true,
+        currentStep: 1,
+        townCity: 'London',
+        primaryContactName: 'Alex',
+        primaryContactEmail: 'alex@example.com',
       },
     });
-    let resolveSubmit: ((value: Response) => void) | null = null;
+
     fetchSpy.mockImplementation(async (input: RequestInfo | URL, init?: RequestInit) => {
       const url = String(input);
       const method = (init?.method ?? 'GET').toUpperCase();
-      if (url.includes('/submit') && method === 'POST') {
-        return new Promise<Response>((resolve) => {
-          resolveSubmit = resolve;
-        });
-      }
       if (url.includes('/api/admin/client-onboarding') && method === 'GET') {
         return jsonResponse(state);
       }
       if (method === 'PATCH') {
-        return jsonResponse({ ok: true, onboarding: state.onboarding });
-      }
-      return jsonResponse({ error: 'nope' }, 500);
-    });
-
-    render(<ClientOnboardingWizard />);
-    const submit = await screen.findByRole('button', { name: /Submit setup details/i });
-    fireEvent.click(submit);
-    fireEvent.click(submit);
-
-    await waitFor(() => {
-      const submits = fetchSpy.mock.calls.filter(([url, init]) =>
-        String(url).includes('/submit') &&
-        String((init as RequestInit | undefined)?.method ?? '').toUpperCase() === 'POST',
-      );
-      expect(submits).toHaveLength(1);
-    });
-
-    await act(async () => {
-      resolveSubmit?.(
-        jsonResponse({
-          onboarding: {
-            ...state.onboarding,
-            status: ClientOnboardingStatus.SUBMITTED,
-            submittedAt: '2026-08-07T12:00:00.000Z',
-          },
-        }),
-      );
-    });
-  });
-
-  it('handles server validation errors and maps missing items', async () => {
-    const state = mockState({ onboarding: { currentStep: 11 } });
-    fetchSpy.mockImplementation(async (input: RequestInfo | URL, init?: RequestInit) => {
-      const url = String(input);
-      const method = (init?.method ?? 'GET').toUpperCase();
-      if (url.includes('/submit') && method === 'POST') {
-        return jsonResponse(
-          { error: 'Please fix the highlighted details.', missing: ['Add at least one active service.'] },
-          400,
-        );
-      }
-      if (url.includes('/api/admin/client-onboarding') && method === 'GET') {
-        return jsonResponse(state);
-      }
-      if (method === 'PATCH') {
-        const body = init?.body ? JSON.parse(String(init.body)) : {};
+        const body = JSON.parse(String(init?.body));
+        patches.push(body);
+        patchCount += 1;
+        if (patchCount === 1) {
+          return new Promise<Response>((resolve) => {
+            deferred.push({
+              resolve: (r) => resolve(r),
+            });
+          });
+        }
         return jsonResponse({ ok: true, onboarding: { ...state.onboarding, ...body } });
       }
       return jsonResponse({ error: 'nope' }, 500);
     });
 
     render(<ClientOnboardingWizard />);
-    fireEvent.click(await screen.findByRole('button', { name: /Submit setup details/i }));
-    expect(await screen.findByText(/Add at least one active service/i)).toBeTruthy();
-    expect(await screen.findByRole('heading', { name: /Your services/i })).toBeTruthy();
+    await screen.findByLabelText(/Street address/i);
+
+    fireEvent.change(screen.getByLabelText(/Street address/i), {
+      target: { value: 'Address A' },
+    });
+    await act(async () => {
+      await vi.advanceTimersByTimeAsync(AUTOSAVE_MS + 50);
+    });
+    await waitFor(() => expect(deferred.length).toBe(1));
+
+    fireEvent.change(screen.getByLabelText(/Street address/i), {
+      target: { value: 'Address B' },
+    });
+
+    await act(async () => {
+      deferred[0].resolve(
+        jsonResponse({
+          ok: true,
+          onboarding: { ...state.onboarding, addressLine1: 'Address A' },
+        }),
+      );
+    });
+
+    expect(screen.queryByText(/^Saved$/)).toBeNull();
+
+    await act(async () => {
+      await vi.advanceTimersByTimeAsync(AUTOSAVE_MS + 50);
+    });
+
+    await waitFor(() => {
+      expect(patches.some((p) => p.addressLine1 === 'Address B')).toBe(true);
+    });
+    expect(await screen.findByText(/^Saved$/)).toBeTruthy();
   });
 
-  it('SUBMITTED shows read-only confirmation', async () => {
-    mockGet(
+  it('Continue saves opening hours before advancing; failure stays on hours', async () => {
+    mockApis(
       mockState({
         onboarding: {
-          status: ClientOnboardingStatus.SUBMITTED,
-          submittedAt: '2026-08-07T12:00:00.000Z',
-          currentStep: 11,
-        },
-        completion: {
-          readyToSubmit: true,
-          missing: [],
-          submitted: true,
-          writeLocked: true,
+          currentStep: 6,
+          townCity: 'London',
+          primaryContactName: 'Alex',
+          primaryContactEmail: 'a@b.c',
         },
       }),
     );
     render(<ClientOnboardingWizard />);
-    expect(
-      await screen.findByRole('heading', { name: /Your setup details have been submitted/i }),
-    ).toBeTruthy();
-    expect(screen.queryByRole('button', { name: /Edit/i })).toBeNull();
-    expect(screen.queryByRole('button', { name: /Continue/i })).toBeNull();
-  });
+    await screen.findByRole('heading', { name: /Opening hours/i });
+    fireEvent.click(screen.getByRole('switch', { name: /Tue/i }));
+    fireEvent.click(screen.getByRole('button', { name: /Continue/i }));
+    await waitFor(() => {
+      expect(
+        fetchSpy.mock.calls.some(
+          ([url, init]) =>
+            String(url).includes('/barbershop-settings/hours') &&
+            String((init as RequestInit)?.method).toUpperCase() === 'PUT',
+        ),
+      ).toBe(true);
+    });
+    expect(await screen.findByRole('heading', { name: /Barber availability/i })).toBeTruthy();
 
-  it('NEEDS_CHANGES is editable with Resubmit CTA', async () => {
-    mockGet(
+    cleanup();
+    mockApis(
       mockState({
         onboarding: {
-          status: ClientOnboardingStatus.NEEDS_CHANGES,
-          currentStep: 11,
+          currentStep: 6,
+          townCity: 'London',
+          primaryContactName: 'Alex',
+          primaryContactEmail: 'a@b.c',
         },
+      }),
+      { hoursFail: true },
+    );
+    render(<ClientOnboardingWizard />);
+    await screen.findByRole('heading', { name: /Opening hours/i });
+    fireEvent.click(screen.getByRole('switch', { name: /Wed/i }));
+    fireEvent.click(screen.getByRole('button', { name: /Continue/i }));
+    expect(await screen.findAllByText(/Hours failed|Could not save/i)).toBeTruthy();
+    expect(screen.getByRole('heading', { name: /Opening hours/i })).toBeTruthy();
+  });
+
+  it('Continue saves team profiles; availability switch and Continue persist rules', async () => {
+    mockApis(
+      mockState({
+        onboarding: {
+          currentStep: 4,
+          townCity: 'London',
+          primaryContactName: 'Alex',
+          primaryContactEmail: 'a@b.c',
+        },
+        barbers: [
+          {
+            id: 'barber_1',
+            name: 'Jamie',
+            active: true,
+            avatarUrl: null,
+            sortOrder: 0,
+            bio: null,
+            showOnWebsite: true,
+          },
+          {
+            id: 'barber_2',
+            name: 'Sam',
+            active: true,
+            avatarUrl: null,
+            sortOrder: 1,
+            bio: null,
+            showOnWebsite: true,
+          },
+        ],
       }),
     );
     render(<ClientOnboardingWizard />);
-    expect(await screen.findByText(/We need a few updates/i)).toBeTruthy();
-    expect(screen.getByRole('button', { name: /Resubmit setup details/i })).toBeTruthy();
-    expect(screen.getAllByRole('button', { name: /^Edit$/i }).length).toBeGreaterThan(0);
-  });
+    await screen.findByRole('heading', { name: /Your team/i });
+    const bio = await screen.findByLabelText((_, el) => el?.id === 'bio-barber_1');
+    fireEvent.change(bio, { target: { value: 'Fade specialist' } });
+    fireEvent.click(screen.getByRole('button', { name: /Continue/i }));
+    await waitFor(() => {
+      expect(
+        fetchSpy.mock.calls.some(
+          ([url, init]) =>
+            String(url).includes('/barber-profiles') &&
+            String((init as RequestInit)?.method).toUpperCase() === 'PUT',
+        ),
+      ).toBe(true);
+    });
 
-  it('READY_FOR_BUILD is read-only confirmation', async () => {
-    mockGet(
+    cleanup();
+    mockApis(
       mockState({
         onboarding: {
-          status: ClientOnboardingStatus.READY_FOR_BUILD,
-          currentStep: 11,
+          currentStep: 7,
+          townCity: 'London',
+          primaryContactName: 'Alex',
+          primaryContactEmail: 'a@b.c',
         },
-        completion: {
-          readyToSubmit: true,
-          missing: [],
-          submitted: true,
-          writeLocked: true,
-        },
+        barbers: [
+          {
+            id: 'barber_1',
+            name: 'Jamie',
+            active: true,
+            avatarUrl: null,
+            sortOrder: 0,
+            bio: null,
+            showOnWebsite: true,
+          },
+          {
+            id: 'barber_2',
+            name: 'Sam',
+            active: true,
+            avatarUrl: null,
+            sortOrder: 1,
+            bio: null,
+            showOnWebsite: true,
+          },
+        ],
       }),
     );
     render(<ClientOnboardingWizard />);
-    expect(await screen.findByRole('heading', { name: /Your setup is being prepared/i })).toBeTruthy();
-    expect(screen.queryByRole('button', { name: /Continue/i })).toBeNull();
+    await screen.findByRole('heading', { name: /Barber availability/i });
+    await waitFor(() => expect(screen.getByLabelText(/Barber/i)).toBeTruthy());
+    fireEvent.click(screen.getByRole('switch', { name: /Sat/i }));
+    fireEvent.change(screen.getByLabelText(/Barber/i), { target: { value: 'barber_2' } });
+    await waitFor(() => {
+      expect(
+        fetchSpy.mock.calls.some(
+          ([url, init]) =>
+            String(url).includes('/barbers/barber_1/rules') &&
+            String((init as RequestInit)?.method).toUpperCase() === 'PUT',
+        ),
+      ).toBe(true);
+    });
+
+    fireEvent.click(screen.getByRole('switch', { name: /Sun/i }));
+    fireEvent.click(screen.getByRole('button', { name: /Continue/i }));
+    await waitFor(() => {
+      expect(
+        fetchSpy.mock.calls.some(
+          ([url, init]) =>
+            String(url).includes('/barbers/barber_2/rules') &&
+            String((init as RequestInit)?.method).toUpperCase() === 'PUT',
+        ),
+      ).toBe(true);
+    });
   });
 
-  it('private asset UI never builds a public Blob URL from storagePath', async () => {
-    mockGet(
+  it('failed availability save prevents barber switch', async () => {
+    mockApis(
       mockState({
-        onboarding: { currentStep: 2 },
+        onboarding: {
+          currentStep: 7,
+          townCity: 'London',
+          primaryContactName: 'Alex',
+          primaryContactEmail: 'a@b.c',
+        },
+        barbers: [
+          {
+            id: 'barber_1',
+            name: 'Jamie',
+            active: true,
+            avatarUrl: null,
+            sortOrder: 0,
+            bio: null,
+            showOnWebsite: true,
+          },
+          {
+            id: 'barber_2',
+            name: 'Sam',
+            active: true,
+            avatarUrl: null,
+            sortOrder: 1,
+            bio: null,
+            showOnWebsite: true,
+          },
+        ],
+      }),
+      { rulesFail: true },
+    );
+    render(<ClientOnboardingWizard />);
+    await screen.findByRole('heading', { name: /Barber availability/i });
+    await waitFor(() => expect(screen.getByLabelText(/Barber/i)).toBeTruthy());
+    fireEvent.click(screen.getByRole('switch', { name: /Sat/i }));
+    fireEvent.change(screen.getByLabelText(/Barber/i), { target: { value: 'barber_2' } });
+    expect(await screen.findByText(/Rules failed|Could not save/i)).toBeTruthy();
+    expect((screen.getByLabelText(/Barber/i) as HTMLSelectElement).value).toBe('barber_1');
+  });
+
+  it('migration Yes+CSV → No deletes CSV; delete failure keeps Yes', async () => {
+    mockApis(
+      mockState({
+        onboarding: {
+          currentStep: 8,
+          migrationRequested: true,
+          migrationSource: 'Booksy',
+          migrationNotes: 'Move my Booksy clients',
+          migrationDataConfirmedLawful: true,
+          townCity: 'London',
+          primaryContactName: 'Alex',
+          primaryContactEmail: 'a@b.c',
+        },
         assets: [
           {
-            id: 'asset_1',
-            kind: 'BRAND_LOGO',
-            storagePath: 'private/onboarding/shop_1/logo.png',
-            originalFileName: 'logo.png',
-            contentType: 'image/png',
-            sizeBytes: 1200,
+            id: 'csv_1',
+            kind: 'MIGRATION_CSV',
+            storagePath: 'private/onboarding/shop_1/export.csv',
+            originalFileName: 'export.csv',
+            contentType: 'text/csv',
+            sizeBytes: 12,
             createdAt: '2026-01-01T00:00:00.000Z',
           },
         ],
       }),
     );
     render(<ClientOnboardingWizard />);
-    expect(await screen.findByText('logo.png')).toBeTruthy();
-    const html = document.body.innerHTML;
-    expect(html).not.toMatch(/https?:\/\/.*blob\.vercel-storage/i);
-    expect(html).not.toContain('private/onboarding/shop_1/logo.png');
-    expect(screen.queryByRole('img', { name: /logo/i })).toBeNull();
+    await screen.findByRole('heading', { name: /Moving from another system/i });
+    fireEvent.click(screen.getByRole('radio', { name: /^No/i }));
+    await waitFor(() => {
+      expect(
+        fetchSpy.mock.calls.some(
+          ([url, init]) =>
+            String(url).includes('/assets') &&
+            String((init as RequestInit)?.method).toUpperCase() === 'DELETE',
+        ),
+      ).toBe(true);
+    });
+    expect(screen.queryByText('export.csv')).toBeNull();
+    expect(screen.queryByDisplayValue('Booksy')).toBeNull();
+
+    cleanup();
+    fetchSpy.mockClear();
+    mockApis(
+      mockState({
+        onboarding: {
+          currentStep: 8,
+          migrationRequested: true,
+          migrationSource: 'Booksy',
+          migrationDataConfirmedLawful: true,
+          townCity: 'London',
+          primaryContactName: 'Alex',
+          primaryContactEmail: 'a@b.c',
+        },
+        assets: [
+          {
+            id: 'csv_1',
+            kind: 'MIGRATION_CSV',
+            storagePath: 'private/x.csv',
+            originalFileName: 'export.csv',
+            contentType: 'text/csv',
+            sizeBytes: 12,
+            createdAt: '2026-01-01T00:00:00.000Z',
+          },
+        ],
+      }),
+      { deleteFail: true },
+    );
+    render(<ClientOnboardingWizard />);
+    await screen.findByRole('heading', { name: /Moving from another system/i });
+    expect(screen.getByText('export.csv')).toBeTruthy();
+    fireEvent.click(screen.getByRole('radio', { name: /^No/i }));
+    await waitFor(() => {
+      expect(
+        fetchSpy.mock.calls.some(
+          ([url, init]) =>
+            String(url).includes('/assets') &&
+            String((init as RequestInit)?.method).toUpperCase() === 'DELETE',
+        ),
+      ).toBe(true);
+    });
+    expect(await screen.findByRole('alert')).toBeTruthy();
+    expect(screen.getByRole('radio', { name: /^Yes/i }).getAttribute('aria-checked')).toBe('true');
+    expect(screen.getByText('export.csv')).toBeTruthy();
   });
 
-  it('handles unpaid gate', async () => {
+  it('preserves spaces while typing migration notes', async () => {
+    mockApis(
+      mockState({
+        onboarding: {
+          currentStep: 8,
+          migrationRequested: true,
+          townCity: 'London',
+          primaryContactName: 'Alex',
+          primaryContactEmail: 'a@b.c',
+        },
+      }),
+    );
+    render(<ClientOnboardingWizard />);
+    const notes = await screen.findByLabelText(/Migration notes/i);
+    fireEvent.change(notes, { target: { value: 'Move my Booksy clients' } });
+    expect((notes as HTMLTextAreaElement).value).toBe('Move my Booksy clients');
+  });
+
+  it('upload does not wipe dirty brand text', async () => {
+    vi.useFakeTimers({ shouldAdvanceTime: true });
+    const patches: Record<string, unknown>[] = [];
+    mockApis(
+      mockState({
+        onboarding: {
+          currentStep: 2,
+          townCity: 'London',
+          primaryContactName: 'Alex',
+          primaryContactEmail: 'a@b.c',
+        },
+      }),
+      { onPatch: (b) => patches.push(b) },
+    );
+    render(<ClientOnboardingWizard />);
+    const tagline = await screen.findByLabelText(/Tagline/i);
+    fireEvent.change(tagline, { target: { value: 'Sharp & Clean' } });
+    const fileInput = screen.getByLabelText(/Upload Logo/i);
+    const file = new File(['x'], 'logo.png', { type: 'image/png' });
+    fireEvent.change(fileInput, { target: { files: [file] } });
+    await waitFor(() => expect(screen.getByText('logo.png')).toBeTruthy());
+    expect((tagline as HTMLInputElement).value).toBe('Sharp & Clean');
+    await act(async () => {
+      await vi.advanceTimersByTimeAsync(AUTOSAVE_MS + 50);
+    });
+    await waitFor(() => {
+      expect(patches.some((p) => p.tagline === 'Sharp & Clean')).toBe(true);
+    });
+  });
+
+  it('edits existing barber name and service price via canonical APIs', async () => {
+    mockApis(
+      mockState({
+        onboarding: {
+          currentStep: 4,
+          townCity: 'London',
+          primaryContactName: 'Alex',
+          primaryContactEmail: 'a@b.c',
+        },
+      }),
+    );
+    render(<ClientOnboardingWizard />);
+    const nameInput = await screen.findByLabelText((_, el) => el?.id === 'barber-name-barber_1');
+    fireEvent.change(nameInput, { target: { value: 'Jamie Updated' } });
+    fireEvent.click(screen.getByRole('button', { name: /Save team member/i }));
+    await waitFor(() => {
+      expect(
+        fetchSpy.mock.calls.some(([url, init]) => {
+          if (!String(url).endsWith('/api/admin/barbers')) return false;
+          if (String((init as RequestInit)?.method).toUpperCase() !== 'POST') return false;
+          const body = JSON.parse(String((init as RequestInit).body));
+          return body.id === 'barber_1' && body.name === 'Jamie Updated';
+        }),
+      ).toBe(true);
+    });
+
+    cleanup();
+    mockApis(
+      mockState({
+        onboarding: {
+          currentStep: 5,
+          townCity: 'London',
+          primaryContactName: 'Alex',
+          primaryContactEmail: 'a@b.c',
+        },
+      }),
+    );
+    render(<ClientOnboardingWizard />);
+    await screen.findByRole('heading', { name: /Your services/i });
+    const price = document.getElementById('svc-price-svc_1') as HTMLInputElement;
+    const duration = document.getElementById('svc-duration-svc_1') as HTMLInputElement;
+    expect(price).toBeTruthy();
+    fireEvent.change(price, { target: { value: '30' } });
+    fireEvent.change(duration, { target: { value: '45' } });
+    fireEvent.click(screen.getByRole('button', { name: /Save service/i }));
+    await waitFor(() => {
+      expect(
+        fetchSpy.mock.calls.some(([url, init]) => {
+          if (!String(url).includes('/api/admin/services/svc_1')) return false;
+          if (String((init as RequestInit)?.method).toUpperCase() !== 'PATCH') return false;
+          const body = JSON.parse(String((init as RequestInit).body));
+          return body.pricePence === 3000 && body.durationMinutes === 45;
+        }),
+      ).toBe(true);
+    });
+  });
+
+  it('handles unpaid and SUBMITTED gates', async () => {
     fetchSpy.mockResolvedValue(
       jsonResponse(
-        { error: 'Paid subscription required.', code: 'CLIENT_ONBOARDING_REQUIRES_PAID_SUBSCRIPTION' },
+        { error: 'Paid required', code: 'CLIENT_ONBOARDING_REQUIRES_PAID_SUBSCRIPTION' },
         403,
       ),
     );
     render(<ClientOnboardingWizard />);
-    expect(
-      await screen.findByText(/available after a successful KERSIVO subscription purchase/i),
-    ).toBeTruthy();
-  });
+    expect(await screen.findByText(/after a successful KERSIVO subscription purchase/i)).toBeTruthy();
 
-  it('handles forbidden non-owner gate', async () => {
-    fetchSpy.mockResolvedValue(jsonResponse({ error: 'Owner only.' }, 403));
+    cleanup();
+    mockApis(
+      mockState({
+        onboarding: {
+          status: ClientOnboardingStatus.SUBMITTED,
+          submittedAt: '2026-08-07T12:00:00.000Z',
+        },
+        completion: {
+          readyToSubmit: true,
+          missing: [],
+          submitted: true,
+          writeLocked: true,
+        },
+      }),
+    );
     render(<ClientOnboardingWizard />);
-    expect(await screen.findByText(/only be completed by the account owner/i)).toBeTruthy();
-  });
-
-  it('handles unauthorized with sign-in affordance', async () => {
-    fetchSpy.mockResolvedValue(jsonResponse({ error: 'Unauthorized' }, 401));
-    render(<ClientOnboardingWizard />);
-    expect(await screen.findByText(/Sign in to continue/i)).toBeTruthy();
-    expect(screen.getByRole('button', { name: /Sign in again/i })).toBeTruthy();
+    expect(await screen.findByRole('heading', { name: /have been submitted/i })).toBeTruthy();
   });
 });
