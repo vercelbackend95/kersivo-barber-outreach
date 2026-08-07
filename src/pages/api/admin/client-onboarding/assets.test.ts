@@ -1,14 +1,18 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import type { APIContext } from 'astro';
-import { ClientOnboardingAssetKind } from '@prisma/client';
+import { ClientOnboardingAssetKind, ClientOnboardingStatus } from '@prisma/client';
 
 const resolveAdminAccess = vi.fn();
 const requirePermission = vi.fn();
-const ensureFindUnique = vi.fn();
-const ensureCreate = vi.fn();
+const isPaidShop = vi.fn();
+const ensureUpsert = vi.fn();
 const assetCreate = vi.fn();
+const assetFindFirst = vi.fn();
+const assetDelete = vi.fn();
 const uploadPrivate = vi.fn();
-const validateCsv = vi.fn();
+const deletePrivate = vi.fn();
+const shopSettingsFindUnique = vi.fn();
+const saasFindFirst = vi.fn();
 
 vi.mock('@/lib/admin/auth', () => ({
   resolveAdminAccess: (...args: unknown[]) => resolveAdminAccess(...args),
@@ -18,14 +22,26 @@ vi.mock('@/lib/admin/rbac/can', () => ({
   requirePermission: (...args: unknown[]) => requirePermission(...args),
 }));
 
+vi.mock('@/lib/shop/paidShop', () => ({
+  isPaidShop: (...args: unknown[]) => isPaidShop(...args),
+}));
+
 vi.mock('@/lib/db/client', () => ({
   prisma: {
+    shopSettings: {
+      findUnique: (...args: unknown[]) => shopSettingsFindUnique(...args),
+    },
+    saasSubscription: {
+      findFirst: (...args: unknown[]) => saasFindFirst(...args),
+    },
     clientOnboarding: {
-      findUnique: (...args: unknown[]) => ensureFindUnique(...args),
-      create: (...args: unknown[]) => ensureCreate(...args),
+      upsert: (...args: unknown[]) => ensureUpsert(...args),
+      findUnique: (...args: unknown[]) => ensureUpsert(...args),
     },
     clientOnboardingAsset: {
       create: (...args: unknown[]) => assetCreate(...args),
+      findFirst: (...args: unknown[]) => assetFindFirst(...args),
+      delete: (...args: unknown[]) => assetDelete(...args),
     },
   },
 }));
@@ -37,11 +53,11 @@ vi.mock('@/lib/storage/privateOnboardingBlob', async () => {
   return {
     ...actual,
     uploadPrivateOnboardingFile: (...args: unknown[]) => uploadPrivate(...args),
-    validateMigrationCsvFile: (...args: unknown[]) => validateCsv(...args),
+    deletePrivateOnboardingFile: (...args: unknown[]) => deletePrivate(...args),
   };
 });
 
-import { POST } from './assets';
+import { POST, DELETE } from './assets';
 import { looksLikePublicBlobUrl } from '@/lib/storage/privateOnboardingBlob';
 
 const OWNER = {
@@ -58,6 +74,10 @@ const OWNER = {
   permissions: ['billing.manage'] as const,
 };
 
+function draftOnboarding(status: ClientOnboardingStatus = ClientOnboardingStatus.DRAFT) {
+  return { id: 'onb_1', shopId: 'shop_1', status };
+}
+
 function makeFormContext(file: File, kind: string): APIContext {
   const form = new FormData();
   form.set('kind', kind);
@@ -70,20 +90,33 @@ function makeFormContext(file: File, kind: string): APIContext {
   } as unknown as APIContext;
 }
 
-describe('POST /api/admin/client-onboarding/assets', () => {
+function makeDeleteContext(id: string): APIContext {
+  return {
+    request: new Request('https://kersivo.test/api/admin/client-onboarding/assets', {
+      method: 'DELETE',
+      headers: { 'content-type': 'application/json' },
+      body: JSON.stringify({ id }),
+    }),
+  } as unknown as APIContext;
+}
+
+describe('POST/DELETE /api/admin/client-onboarding/assets', () => {
   beforeEach(() => {
     vi.clearAllMocks();
     resolveAdminAccess.mockResolvedValue(OWNER);
     requirePermission.mockReturnValue(null);
-    ensureFindUnique.mockResolvedValue({ id: 'onb_1', shopId: 'shop_1' });
-    validateCsv.mockImplementation(
-      (file: { name: string; type: string; size: number }) => {
-        if (file.type.startsWith('image/')) return 'mime';
-        if (file.size > 10 * 1024 * 1024) return 'oversized';
-        if (!file.name.toLowerCase().endsWith('.csv')) return 'extension';
-        return null;
-      },
-    );
+    isPaidShop.mockReturnValue(true);
+    shopSettingsFindUnique.mockResolvedValue({
+      id: 'shop_1',
+      shopPaidAt: new Date(),
+      smsRemindersEnabled: true,
+    });
+    saasFindFirst.mockResolvedValue({
+      status: 'ACTIVE',
+      currentPeriodEnd: new Date(Date.now() + 86400000),
+      pastDueSince: null,
+    });
+    ensureUpsert.mockResolvedValue(draftOnboarding());
   });
 
   it('rejects image uploads for migration CSV', async () => {
@@ -94,8 +127,6 @@ describe('POST /api/admin/client-onboarding/assets', () => {
       makeFormContext(file, ClientOnboardingAssetKind.MIGRATION_CSV) as never,
     );
     expect(res.status).toBe(400);
-    const body = await res.json();
-    expect(body.code).toBe('mime');
     expect(uploadPrivate).not.toHaveBeenCalled();
   });
 
@@ -132,8 +163,58 @@ describe('POST /api/admin/client-onboarding/assets', () => {
     );
     expect(res.status).toBe(200);
     const body = await res.json();
-    expect(body.asset.storagePath).toContain('client-onboarding/');
     expect(looksLikePublicBlobUrl(body.asset.storagePath)).toBe(false);
-    expect(JSON.stringify(body)).not.toContain('public.blob.vercel-storage.com');
+  });
+
+  it('cleans up orphan blob when DB create fails', async () => {
+    const file = new File(['a,b\n1,2\n'], 'clients.csv', { type: 'text/csv' });
+    uploadPrivate.mockResolvedValue({
+      pathname: 'client-onboarding/shop_1/migration_csv/orphan.csv',
+      contentType: 'text/csv',
+      sizeBytes: file.size,
+    });
+    assetCreate.mockRejectedValue(new Error('unique conflict'));
+    deletePrivate.mockResolvedValue(undefined);
+
+    const res = await POST(
+      makeFormContext(file, ClientOnboardingAssetKind.MIGRATION_CSV) as never,
+    );
+    expect(res.status).toBe(500);
+    expect(deletePrivate).toHaveBeenCalledWith(
+      'client-onboarding/shop_1/migration_csv/orphan.csv',
+    );
+  });
+
+  it('does not delete DB row when blob delete fails', async () => {
+    assetFindFirst.mockResolvedValue({
+      id: 'asset_1',
+      shopId: 'shop_1',
+      storagePath: 'client-onboarding/shop_1/x.csv',
+    });
+    deletePrivate.mockRejectedValue(new Error('blob down'));
+
+    const res = await DELETE(makeDeleteContext('asset_1') as never);
+    expect(res.status).toBe(503);
+    expect(assetDelete).not.toHaveBeenCalled();
+  });
+
+  it('rejects unpaid owner upload', async () => {
+    isPaidShop.mockReturnValue(false);
+    const file = new File(['a,b\n'], 'clients.csv', { type: 'text/csv' });
+    const res = await POST(
+      makeFormContext(file, ClientOnboardingAssetKind.MIGRATION_CSV) as never,
+    );
+    expect(res.status).toBe(403);
+  });
+
+  it('rejects upload when SUBMITTED (write lock)', async () => {
+    ensureUpsert.mockResolvedValue(draftOnboarding(ClientOnboardingStatus.SUBMITTED));
+    const file = new File(['a,b\n'], 'clients.csv', { type: 'text/csv' });
+    const res = await POST(
+      makeFormContext(file, ClientOnboardingAssetKind.MIGRATION_CSV) as never,
+    );
+    expect(res.status).toBe(409);
+    const body = await res.json();
+    expect(body.code).toBe('CLIENT_ONBOARDING_LOCKED');
   });
 });

@@ -1,7 +1,7 @@
 import type { ReportsChartMetric } from '@/lib/admin/reportsChartSeries';
 import type { ReportsRangeKey } from '@/lib/admin/reportsRange';
 
-const STORAGE_KEY = 'feature261-reports-widget-v2';
+const STORAGE_KEY = 'feature261-reports-widget-v1';
 
 export type LandingReportsWidgetPrefs = {
   rangePreset?: ReportsRangeKey;

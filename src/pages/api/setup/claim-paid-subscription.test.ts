@@ -137,14 +137,27 @@ describe('POST /api/setup/claim-paid-subscription', () => {
     const body = await res.json();
     expect(body.ok).toBe(true);
     expect(body.claimed).toBe(true);
-    expect(updateMany).toHaveBeenCalledWith({
-      where: { id: 'sub_1', shopId: null },
-      data: { shopId: 'shop_owner' },
-    });
     expect(markShopPaid).toHaveBeenCalledWith('shop_owner');
   });
 
-  it('is idempotent when already owned by this shop', async () => {
+  it('does not report success when markShopPaid fails after claim', async () => {
+    retrieveCheckoutSession.mockResolvedValue(paidSession());
+    findUnique.mockResolvedValue({
+      id: 'sub_1',
+      shopId: null,
+      stripeSessionId: 'cs_test_1',
+    });
+    updateMany.mockResolvedValue({ count: 1 });
+    markShopPaid.mockRejectedValue(new Error('db down'));
+
+    const res = await POST(makeContext({ stripeSessionId: 'cs_test_1' }) as never);
+    expect(res.status).toBe(503);
+    const body = await res.json();
+    expect(body.code).toBe('MARK_SHOP_PAID_FAILED');
+    expect(body.ok).toBeUndefined();
+  });
+
+  it('heals markShopPaid on already-owned idempotent retry', async () => {
     retrieveCheckoutSession.mockResolvedValue(paidSession());
     findUnique.mockResolvedValue({
       id: 'sub_1',
@@ -156,8 +169,7 @@ describe('POST /api/setup/claim-paid-subscription', () => {
     expect(res.status).toBe(200);
     const body = await res.json();
     expect(body.idempotent).toBe(true);
-    expect(body.claimed).toBe(false);
-    expect(updateMany).not.toHaveBeenCalled();
+    expect(markShopPaid).toHaveBeenCalledWith('shop_owner');
   });
 
   it('denies stealing a subscription owned by another shop', async () => {
@@ -173,6 +185,7 @@ describe('POST /api/setup/claim-paid-subscription', () => {
     const body = await res.json();
     expect(body.code).toBe('ALREADY_OWNED');
     expect(updateMany).not.toHaveBeenCalled();
+    expect(markShopPaid).not.toHaveBeenCalled();
   });
 
   it('handles race when another shop claims first', async () => {

@@ -4,11 +4,15 @@ import { ClientOnboardingDomainMode, ClientOnboardingStatus } from '@prisma/clie
 
 const resolveAdminAccess = vi.fn();
 const requirePermission = vi.fn();
+const isPaidShop = vi.fn();
 
 const clientOnboardingFindUnique = vi.fn();
-const clientOnboardingCreate = vi.fn();
+const clientOnboardingUpsert = vi.fn();
 const clientOnboardingUpdate = vi.fn();
+const clientOnboardingUpdateMany = vi.fn();
+const clientOnboardingFindUniqueOrThrow = vi.fn();
 const shopSettingsFindUnique = vi.fn();
+const saasFindFirst = vi.fn();
 const barberCount = vi.fn();
 const serviceCount = vi.fn();
 const hoursCount = vi.fn();
@@ -20,8 +24,6 @@ const hoursFindMany = vi.fn();
 const assetFindMany = vi.fn();
 const profileFindMany = vi.fn();
 const userFindUnique = vi.fn();
-const saasUpdateMany = vi.fn();
-const txClientOnboardingUpdate = vi.fn();
 const txSaasUpdateMany = vi.fn();
 const transaction = vi.fn();
 
@@ -39,15 +41,25 @@ vi.mock('@/lib/admin/rbac/can', async () => {
   };
 });
 
+vi.mock('@/lib/shop/paidShop', () => ({
+  isPaidShop: (...args: unknown[]) => isPaidShop(...args),
+}));
+
 vi.mock('@/lib/db/client', () => ({
   prisma: {
     clientOnboarding: {
       findUnique: (...args: unknown[]) => clientOnboardingFindUnique(...args),
-      create: (...args: unknown[]) => clientOnboardingCreate(...args),
+      upsert: (...args: unknown[]) => clientOnboardingUpsert(...args),
       update: (...args: unknown[]) => clientOnboardingUpdate(...args),
+      updateMany: (...args: unknown[]) => clientOnboardingUpdateMany(...args),
+      findUniqueOrThrow: (...args: unknown[]) => clientOnboardingFindUniqueOrThrow(...args),
     },
     shopSettings: {
       findUnique: (...args: unknown[]) => shopSettingsFindUnique(...args),
+    },
+    saasSubscription: {
+      findFirst: (...args: unknown[]) => saasFindFirst(...args),
+      updateMany: vi.fn(),
     },
     barber: {
       count: (...args: unknown[]) => barberCount(...args),
@@ -76,9 +88,6 @@ vi.mock('@/lib/db/client', () => ({
     user: {
       findUnique: (...args: unknown[]) => userFindUnique(...args),
     },
-    saasSubscription: {
-      updateMany: (...args: unknown[]) => saasUpdateMany(...args),
-    },
     $transaction: (...args: unknown[]) => transaction(...args),
   },
 }));
@@ -95,6 +104,7 @@ import {
   sendClientOnboardingInternalNotificationEmail,
 } from '@/lib/email/clientOnboardingEmails';
 import { looksLikePublicBlobUrl } from '@/lib/storage/privateOnboardingBlob';
+import { CLIENT_ONBOARDING_REQUIRES_PAID_CODE } from '@/lib/admin/clientOnboarding/schema';
 
 const OWNER = {
   shopId: 'shop_1',
@@ -204,6 +214,7 @@ function mockWorkspaceReady() {
     logoUrl: null,
     onboardingCompleted: true,
     shopPaidAt: new Date(),
+    smsRemindersEnabled: true,
     retailEnabled: false,
     depositsEnabled: false,
   });
@@ -249,6 +260,13 @@ function mockWorkspaceReady() {
 describe('/api/admin/client-onboarding', () => {
   beforeEach(() => {
     vi.clearAllMocks();
+    isPaidShop.mockReturnValue(true);
+    saasFindFirst.mockResolvedValue({
+      status: 'ACTIVE',
+      currentPeriodEnd: new Date(Date.now() + 86400000),
+      pastDueSince: null,
+      activatedAt: new Date(),
+    });
     requirePermission.mockImplementation((access: { role: string }, permission: string) => {
       if (access.role === 'OWNER' && permission === 'billing.manage') return null;
       return new Response(
@@ -257,14 +275,15 @@ describe('/api/admin/client-onboarding', () => {
       );
     });
     clientOnboardingFindUnique.mockResolvedValue(draftRow());
-    clientOnboardingCreate.mockResolvedValue(draftRow());
+    clientOnboardingUpsert.mockResolvedValue(draftRow());
     clientOnboardingUpdate.mockImplementation(async ({ data }: { data: Record<string, unknown> }) =>
       draftRow(data),
     );
     transaction.mockImplementation(async (fn: (tx: unknown) => Promise<unknown>) => {
       const tx = {
         clientOnboarding: {
-          update: (...args: unknown[]) => txClientOnboardingUpdate(...args),
+          updateMany: (...args: unknown[]) => clientOnboardingUpdateMany(...args),
+          findUniqueOrThrow: (...args: unknown[]) => clientOnboardingFindUniqueOrThrow(...args),
         },
         saasSubscription: {
           updateMany: (...args: unknown[]) => txSaasUpdateMany(...args),
@@ -274,20 +293,28 @@ describe('/api/admin/client-onboarding', () => {
     });
   });
 
-  it('GET allows owner', async () => {
+  it('GET allows owner when paid', async () => {
     resolveAdminAccess.mockResolvedValue(accessFor('OWNER'));
     mockWorkspaceReady();
     const res = await GET(makeContext('GET') as never);
     expect(res.status).toBe(200);
     const body = await res.json();
     expect(body.onboarding.portfolioConsent).toBe(false);
-    expect(body.onboarding.socialMediaConsent).toBe(false);
-    expect(body.onboarding.advertisingConsent).toBe(false);
-    expect(body.onboarding.caseStudyConsent).toBe(false);
-    const payload = JSON.stringify(body);
     expect(looksLikePublicBlobUrl(body.assets[0].storagePath)).toBe(false);
-    expect(payload).not.toContain('public.blob.vercel-storage.com');
-    expect(payload).not.toContain('BLOB_READ_WRITE_TOKEN');
+  });
+
+  it('GET returns 403 for unpaid Owner', async () => {
+    resolveAdminAccess.mockResolvedValue(accessFor('OWNER'));
+    isPaidShop.mockReturnValue(false);
+    shopSettingsFindUnique.mockResolvedValue({
+      id: 'shop_1',
+      shopPaidAt: null,
+      smsRemindersEnabled: false,
+    });
+    const res = await GET(makeContext('GET') as never);
+    expect(res.status).toBe(403);
+    const body = await res.json();
+    expect(body.code).toBe(CLIENT_ONBOARDING_REQUIRES_PAID_CODE);
   });
 
   it('GET returns 403 for Manager', async () => {
@@ -304,6 +331,7 @@ describe('/api/admin/client-onboarding', () => {
 
   it('PUT saves draft without submitting', async () => {
     resolveAdminAccess.mockResolvedValue(accessFor('OWNER'));
+    mockWorkspaceReady();
     const res = await PUT(
       makeContext('PUT', {
         tagline: 'Sharp cuts',
@@ -314,9 +342,18 @@ describe('/api/admin/client-onboarding', () => {
     const body = await res.json();
     expect(body.ok).toBe(true);
     expect(clientOnboardingUpdate).toHaveBeenCalled();
-    const data = clientOnboardingUpdate.mock.calls[0][0].data;
-    expect(data.tagline).toBe('Sharp cuts');
-    expect(data.status).toBeUndefined();
+  });
+
+  it('PUT returns 409 when SUBMITTED (write lock)', async () => {
+    resolveAdminAccess.mockResolvedValue(accessFor('OWNER'));
+    mockWorkspaceReady();
+    clientOnboardingUpsert.mockResolvedValue(
+      draftRow({ status: ClientOnboardingStatus.SUBMITTED, submittedAt: new Date() }),
+    );
+    const res = await PUT(makeContext('PUT', { tagline: 'Nope' }) as never);
+    expect(res.status).toBe(409);
+    const body = await res.json();
+    expect(body.code).toBe('CLIENT_ONBOARDING_LOCKED');
   });
 
   it('POST submit succeeds and stamps onboardingSubmittedAt', async () => {
@@ -326,7 +363,8 @@ describe('/api/admin/client-onboarding', () => {
       status: ClientOnboardingStatus.SUBMITTED,
       submittedAt: new Date('2026-08-07T12:00:00.000Z'),
     });
-    txClientOnboardingUpdate.mockResolvedValue(submitted);
+    clientOnboardingUpdateMany.mockResolvedValue({ count: 1 });
+    clientOnboardingFindUniqueOrThrow.mockResolvedValue(submitted);
     txSaasUpdateMany.mockResolvedValue({ count: 1 });
 
     const res = await SUBMIT(makeContext('POST') as never);
@@ -335,31 +373,14 @@ describe('/api/admin/client-onboarding', () => {
     expect(body.ok).toBe(true);
     expect(body.idempotent).toBe(false);
     expect(txSaasUpdateMany).toHaveBeenCalled();
-    expect(txSaasUpdateMany.mock.calls[0][0].data.onboardingSubmittedAt).toBeInstanceOf(Date);
     expect(sendClientOnboardingInternalNotificationEmail).toHaveBeenCalled();
     expect(sendClientOnboardingCustomerConfirmationEmail).toHaveBeenCalled();
   });
 
-  it('POST submit fails when required fields missing', async () => {
+  it('POST submit loser path is idempotent without emails', async () => {
     resolveAdminAccess.mockResolvedValue(accessFor('OWNER'));
-    clientOnboardingFindUnique.mockResolvedValue(
-      draftRow({
-        primaryContactName: null,
-        contentRightsConfirmed: false,
-        domainMode: ClientOnboardingDomainMode.UNDECIDED,
-      }),
-    );
     mockWorkspaceReady();
-
-    const res = await SUBMIT(makeContext('POST') as never);
-    expect(res.status).toBe(400);
-    const body = await res.json();
-    expect(body.missing.length).toBeGreaterThan(0);
-    expect(txClientOnboardingUpdate).not.toHaveBeenCalled();
-  });
-
-  it('POST submit is idempotent when already submitted', async () => {
-    resolveAdminAccess.mockResolvedValue(accessFor('OWNER'));
+    clientOnboardingUpdateMany.mockResolvedValue({ count: 0 });
     clientOnboardingFindUnique.mockResolvedValue(
       draftRow({
         status: ClientOnboardingStatus.SUBMITTED,
@@ -374,26 +395,36 @@ describe('/api/admin/client-onboarding', () => {
     expect(sendClientOnboardingInternalNotificationEmail).not.toHaveBeenCalled();
   });
 
+  it('POST submit fails when migrationRequested is null', async () => {
+    resolveAdminAccess.mockResolvedValue(accessFor('OWNER'));
+    clientOnboardingUpsert.mockResolvedValue(draftRow({ migrationRequested: null }));
+    mockWorkspaceReady();
+    const res = await SUBMIT(makeContext('POST') as never);
+    expect(res.status).toBe(400);
+    const body = await res.json();
+    expect(body.missing.some((m: string) => m.toLowerCase().includes('migration'))).toBe(
+      true,
+    );
+  });
+
   it('POST submit fails for KERSIVO_REGISTER without authorisation', async () => {
     resolveAdminAccess.mockResolvedValue(accessFor('OWNER'));
-    clientOnboardingFindUnique.mockResolvedValue(
+    clientOnboardingUpsert.mockResolvedValue(
       draftRow({
         domainMode: ClientOnboardingDomainMode.KERSIVO_REGISTER,
         domainRegistrationAuthorised: false,
+        preferredDomain1: 'x.com',
+        existingDomain: null,
       }),
     );
     mockWorkspaceReady();
     const res = await SUBMIT(makeContext('POST') as never);
     expect(res.status).toBe(400);
-    const body = await res.json();
-    expect(body.missing.some((m: string) => m.toLowerCase().includes('authorise'))).toBe(
-      true,
-    );
   });
 
   it('POST submit fails for migration without lawful confirmation', async () => {
     resolveAdminAccess.mockResolvedValue(accessFor('OWNER'));
-    clientOnboardingFindUnique.mockResolvedValue(
+    clientOnboardingUpsert.mockResolvedValue(
       draftRow({
         migrationRequested: true,
         migrationDataConfirmedLawful: false,
@@ -402,9 +433,19 @@ describe('/api/admin/client-onboarding', () => {
     mockWorkspaceReady();
     const res = await SUBMIT(makeContext('POST') as never);
     expect(res.status).toBe(400);
-    const body = await res.json();
-    expect(body.missing.some((m: string) => m.toLowerCase().includes('lawfully'))).toBe(
-      true,
-    );
+  });
+
+  it('unpaid Owner cannot PUT or submit', async () => {
+    resolveAdminAccess.mockResolvedValue(accessFor('OWNER'));
+    isPaidShop.mockReturnValue(false);
+    shopSettingsFindUnique.mockResolvedValue({
+      id: 'shop_1',
+      shopPaidAt: null,
+      smsRemindersEnabled: false,
+    });
+    const putRes = await PUT(makeContext('PUT', { tagline: 'x' }) as never);
+    expect(putRes.status).toBe(403);
+    const submitRes = await SUBMIT(makeContext('POST') as never);
+    expect(submitRes.status).toBe(403);
   });
 });

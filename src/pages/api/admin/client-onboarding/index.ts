@@ -45,8 +45,9 @@ async function saveDraft(ctx: Parameters<APIRoute>[0]) {
   }
 
   try {
-    const onboarding = await saveClientOnboardingDraft(accessOrErr.shopId, parsed.data);
-    return new Response(JSON.stringify({ ok: true, onboarding }), {
+    const result = await saveClientOnboardingDraft(accessOrErr.shopId, parsed.data);
+    if (result instanceof Response) return result;
+    return new Response(JSON.stringify({ ok: true, onboarding: result.onboarding }), {
       headers: { 'Content-Type': 'application/json' },
     });
   } catch (error) {

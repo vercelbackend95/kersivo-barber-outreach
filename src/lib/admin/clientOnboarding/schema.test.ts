@@ -2,6 +2,8 @@ import { describe, it, expect } from 'vitest';
 import {
   ClientOnboardingDomainMode,
   MARKETING_CONSENT_DEFAULTS,
+  isAllowedHttpUrl,
+  normalizeDomainInput,
   validateClientOnboardingSubmit,
   type SubmitValidationContext,
 } from './schema';
@@ -14,6 +16,10 @@ function baseCtx(
     draft: {
       domainMode: ClientOnboardingDomainMode.EXISTING,
       domainRegistrationAuthorised: false,
+      existingDomain: 'example.com',
+      preferredDomain1: null,
+      preferredDomain2: null,
+      preferredDomain3: null,
       migrationRequested: false,
       migrationDataConfirmedLawful: false,
       launchRetail: false,
@@ -97,25 +103,60 @@ describe('validateClientOnboardingSubmit', () => {
     expect(errors.some((e) => e.toLowerCase().includes('domain'))).toBe(true);
   });
 
+  it('requires existingDomain for EXISTING mode', () => {
+    const errors = validateClientOnboardingSubmit(
+      baseCtx({
+        domainMode: ClientOnboardingDomainMode.EXISTING,
+        existingDomain: null,
+      }),
+    );
+    expect(errors.some((e) => e.toLowerCase().includes('existing domain'))).toBe(true);
+  });
+
   it('rejects KERSIVO_REGISTER without domain authorisation', () => {
     const errors = validateClientOnboardingSubmit(
       baseCtx({
         domainMode: ClientOnboardingDomainMode.KERSIVO_REGISTER,
         domainRegistrationAuthorised: false,
+        preferredDomain1: 'myshop.co.uk',
+        existingDomain: null,
       }),
     );
     expect(errors.some((e) => e.toLowerCase().includes('authorise'))).toBe(true);
   });
 
-  it('allows KERSIVO_REGISTER with authorisation', () => {
+  it('requires preferred domain for KERSIVO_REGISTER', () => {
+    const errors = validateClientOnboardingSubmit(
+      baseCtx({
+        domainMode: ClientOnboardingDomainMode.KERSIVO_REGISTER,
+        domainRegistrationAuthorised: true,
+        preferredDomain1: null,
+        preferredDomain2: null,
+        preferredDomain3: null,
+        existingDomain: null,
+      }),
+    );
+    expect(errors.some((e) => e.toLowerCase().includes('preferred domain'))).toBe(true);
+  });
+
+  it('allows KERSIVO_REGISTER with authorisation and preferred domain', () => {
     expect(
       validateClientOnboardingSubmit(
         baseCtx({
           domainMode: ClientOnboardingDomainMode.KERSIVO_REGISTER,
           domainRegistrationAuthorised: true,
+          preferredDomain1: 'myshop.co.uk',
+          existingDomain: null,
         }),
       ),
     ).toEqual([]);
+  });
+
+  it('rejects migrationRequested=null (unanswered)', () => {
+    const errors = validateClientOnboardingSubmit(
+      baseCtx({ migrationRequested: null }),
+    );
+    expect(errors.some((e) => e.toLowerCase().includes('migration'))).toBe(true);
   });
 
   it('rejects migration requested without lawful confirmation', () => {
@@ -163,5 +204,26 @@ describe('validateClientOnboardingSubmit', () => {
     expect(MARKETING_CONSENT_DEFAULTS.socialMediaConsent).toBe(false);
     expect(MARKETING_CONSENT_DEFAULTS.advertisingConsent).toBe(false);
     expect(MARKETING_CONSENT_DEFAULTS.caseStudyConsent).toBe(false);
+  });
+});
+
+describe('isAllowedHttpUrl', () => {
+  it('accepts http and https', () => {
+    expect(isAllowedHttpUrl('https://example.com')).toBe(true);
+    expect(isAllowedHttpUrl('http://example.com/path')).toBe(true);
+  });
+
+  it('rejects javascript/data/file and non-urls', () => {
+    expect(isAllowedHttpUrl('javascript:alert(1)')).toBe(false);
+    expect(isAllowedHttpUrl('data:text/html,hi')).toBe(false);
+    expect(isAllowedHttpUrl('file:///etc/passwd')).toBe(false);
+    expect(isAllowedHttpUrl('not-a-url')).toBe(false);
+  });
+});
+
+describe('normalizeDomainInput', () => {
+  it('strips protocol and trailing slash', () => {
+    expect(normalizeDomainInput('https://Example.COM/')).toBe('example.com');
+    expect(normalizeDomainInput('  ')).toBeNull();
   });
 });

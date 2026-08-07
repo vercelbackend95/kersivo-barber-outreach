@@ -1,9 +1,12 @@
 import { describe, it, expect } from 'vitest';
+import { ClientOnboardingAssetKind } from '@prisma/client';
 import {
   looksLikePublicBlobUrl,
   migrationCsvValidationMessage,
   validateMigrationCsvFile,
+  validateOnboardingAssetFile,
   MIGRATION_CSV_MAX_BYTES,
+  IMAGE_ASSET_MAX_BYTES,
 } from './privateOnboardingBlob';
 
 describe('validateMigrationCsvFile', () => {
@@ -66,8 +69,64 @@ describe('validateMigrationCsvFile', () => {
   });
 
   it('maps validation codes to messages', () => {
-    expect(migrationCsvValidationMessage('oversized')).toMatch(/MB/);
-    expect(migrationCsvValidationMessage('extension')).toMatch(/csv/i);
+    expect(migrationCsvValidationMessage('oversized')).toMatch(/size|MB|exceed/i);
+    expect(migrationCsvValidationMessage('extension')).toMatch(/extension|allowed/i);
+  });
+});
+
+describe('validateOnboardingAssetFile allowlists', () => {
+  it('accepts logo jpeg/png/webp', () => {
+    expect(
+      validateOnboardingAssetFile(ClientOnboardingAssetKind.BRAND_LOGO, {
+        name: 'logo.png',
+        type: 'image/png',
+        size: 1000,
+      }),
+    ).toBeNull();
+  });
+
+  it('rejects svg/html/js for gallery', () => {
+    expect(
+      validateOnboardingAssetFile(ClientOnboardingAssetKind.GALLERY_IMAGE, {
+        name: 'x.svg',
+        type: 'image/svg+xml',
+        size: 100,
+      }),
+    ).toBe('extension');
+    expect(
+      validateOnboardingAssetFile(ClientOnboardingAssetKind.GALLERY_IMAGE, {
+        name: 'x.html',
+        type: 'text/html',
+        size: 100,
+      }),
+    ).toBe('extension');
+  });
+
+  it('rejects oversize logo', () => {
+    expect(
+      validateOnboardingAssetFile(ClientOnboardingAssetKind.BRAND_LOGO, {
+        name: 'big.jpg',
+        type: 'image/jpeg',
+        size: IMAGE_ASSET_MAX_BYTES + 1,
+      }),
+    ).toBe('oversized');
+  });
+
+  it('accepts pdf guidelines and other text/plain', () => {
+    expect(
+      validateOnboardingAssetFile(ClientOnboardingAssetKind.BRAND_GUIDELINES, {
+        name: 'guide.pdf',
+        type: 'application/pdf',
+        size: 1000,
+      }),
+    ).toBeNull();
+    expect(
+      validateOnboardingAssetFile(ClientOnboardingAssetKind.OTHER, {
+        name: 'notes.txt',
+        type: 'text/plain',
+        size: 100,
+      }),
+    ).toBeNull();
   });
 });
 

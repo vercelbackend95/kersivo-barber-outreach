@@ -3,10 +3,15 @@ import { requirePermission } from '@/lib/admin/rbac/can';
 import { prisma } from '@/lib/db/client';
 import {
   clientOnboardingDraftSchema,
+  CLIENT_ONBOARDING_REQUIRES_PAID_CODE,
+  clientOnboardingLockedResponse,
+  isClientOnboardingWriteLocked,
+  normalizeDomainInput,
   type ClientOnboardingDraftInput,
   type WorkspaceCompletionSnapshot,
   validateClientOnboardingSubmit,
 } from '@/lib/admin/clientOnboarding/schema';
+import { isPaidShop } from '@/lib/shop/paidShop';
 import {
   ClientOnboardingDomainMode,
   ClientOnboardingStatus,
@@ -17,6 +22,7 @@ import {
   sendClientOnboardingCustomerConfirmationEmail,
   sendClientOnboardingInternalNotificationEmail,
 } from '@/lib/email/clientOnboardingEmails';
+import { isPrismaUniqueConflict } from '@/lib/setup/saasCheckoutGuard';
 
 export async function requireClientOnboardingAccess(
   access: AdminAccess | null,
@@ -26,15 +32,62 @@ export async function requireClientOnboardingAccess(
   }
   const denied = requirePermission(access, 'billing.manage');
   if (denied) return denied;
+
+  const [shop, saasSub] = await Promise.all([
+    prisma.shopSettings.findUnique({
+      where: { id: access.shopId },
+      select: { id: true, shopPaidAt: true, smsRemindersEnabled: true },
+    }),
+    prisma.saasSubscription.findFirst({
+      where: { shopId: access.shopId },
+      orderBy: { createdAt: 'desc' },
+      select: {
+        status: true,
+        currentPeriodEnd: true,
+        pastDueSince: true,
+        activatedAt: true,
+      },
+    }),
+  ]);
+
+  if (!shop || !isPaidShop(shop, saasSub)) {
+    return new Response(
+      JSON.stringify({
+        error: 'Client onboarding requires an active paid subscription.',
+        code: CLIENT_ONBOARDING_REQUIRES_PAID_CODE,
+      }),
+      { status: 403, headers: { 'Content-Type': 'application/json' } },
+    );
+  }
+
   return access;
 }
 
+/** Race-safe ensure: upsert on unique shopId, with P2002 recovery fallback. */
 export async function ensureClientOnboarding(shopId: string): Promise<ClientOnboarding> {
-  const existing = await prisma.clientOnboarding.findUnique({ where: { shopId } });
-  if (existing) return existing;
-  return prisma.clientOnboarding.create({
-    data: { shopId },
-  });
+  try {
+    return await prisma.clientOnboarding.upsert({
+      where: { shopId },
+      create: { shopId },
+      update: {},
+    });
+  } catch (error) {
+    if (isPrismaUniqueConflict(error)) {
+      const existing = await prisma.clientOnboarding.findUnique({ where: { shopId } });
+      if (existing) return existing;
+    }
+    throw error;
+  }
+}
+
+export async function assertWritableClientOnboarding(
+  shopId: string,
+): Promise<ClientOnboarding | Response> {
+  const onboarding = await ensureClientOnboarding(shopId);
+  if (isClientOnboardingWriteLocked(onboarding.status)) {
+    return clientOnboardingLockedResponse();
+  }
+  return onboarding;
 }
 
 export async function loadWorkspaceCompletionSnapshot(
@@ -187,6 +240,7 @@ export async function loadClientOnboardingState(shopId: string, access: AdminAcc
       readyToSubmit: submitErrors.length === 0,
       missing: submitErrors,
       submitted: onboarding.status === ClientOnboardingStatus.SUBMITTED,
+      writeLocked: isClientOnboardingWriteLocked(onboarding.status),
     },
   };
 }
@@ -195,6 +249,10 @@ function mergeDraftFromRecord(row: ClientOnboarding) {
   return {
     domainMode: row.domainMode,
     domainRegistrationAuthorised: row.domainRegistrationAuthorised,
+    existingDomain: row.existingDomain,
+    preferredDomain1: row.preferredDomain1,
+    preferredDomain2: row.preferredDomain2,
+    preferredDomain3: row.preferredDomain3,
     migrationRequested: row.migrationRequested,
     migrationDataConfirmedLawful: row.migrationDataConfirmedLawful,
     launchRetail: row.launchRetail,
@@ -343,6 +401,20 @@ function buildUpdateData(input: ClientOnboardingDraftInput): Prisma.ClientOnboar
 
   for (const key of keys) assign(key);
 
+  // Normalize domain fields when present
+  if (input.existingDomain !== undefined) {
+    data.existingDomain = normalizeDomainInput(input.existingDomain);
+  }
+  if (input.preferredDomain1 !== undefined) {
+    data.preferredDomain1 = normalizeDomainInput(input.preferredDomain1);
+  }
+  if (input.preferredDomain2 !== undefined) {
+    data.preferredDomain2 = normalizeDomainInput(input.preferredDomain2);
+  }
+  if (input.preferredDomain3 !== undefined) {
+    data.preferredDomain3 = normalizeDomainInput(input.preferredDomain3);
+  }
+
   if (input.domainRegistrationAuthorised === true) {
     data.domainRegistrationAuthorisedAt = new Date();
   } else if (input.domainRegistrationAuthorised === false) {
@@ -373,20 +445,21 @@ function buildUpdateData(input: ClientOnboardingDraftInput): Prisma.ClientOnboar
     }
   }
 
-  // Never allow draft save to flip status to SUBMITTED
   return data;
 }
 
 export async function saveClientOnboardingDraft(
   shopId: string,
   input: ClientOnboardingDraftInput,
-) {
-  const onboarding = await ensureClientOnboarding(shopId);
+): Promise<{ ok: true; onboarding: ReturnType<typeof serializeOnboarding> } | Response> {
+  const writable = await assertWritableClientOnboarding(shopId);
+  if (writable instanceof Response) return writable;
+
   const updated = await prisma.clientOnboarding.update({
-    where: { id: onboarding.id },
+    where: { id: writable.id },
     data: buildUpdateData(input),
   });
-  return serializeOnboarding(updated);
+  return { ok: true, onboarding: serializeOnboarding(updated) };
 }
 
 export async function submitClientOnboarding(shopId: string, access: AdminAccess) {
@@ -396,6 +469,14 @@ export async function submitClientOnboarding(shopId: string, access: AdminAccess
     onboarding.status === ClientOnboardingStatus.SUBMITTED &&
     onboarding.submittedAt
   ) {
+    return {
+      ok: true as const,
+      idempotent: true,
+      onboarding: serializeOnboarding(onboarding),
+    };
+  }
+
+  if (onboarding.status === ClientOnboardingStatus.READY_FOR_BUILD) {
     return {
       ok: true as const,
       idempotent: true,
@@ -414,8 +495,13 @@ export async function submitClientOnboarding(shopId: string, access: AdminAccess
 
   const now = new Date();
   const updated = await prisma.$transaction(async (tx) => {
-    const row = await tx.clientOnboarding.update({
-      where: { id: onboarding.id },
+    const claimed = await tx.clientOnboarding.updateMany({
+      where: {
+        id: onboarding.id,
+        status: {
+          in: [ClientOnboardingStatus.DRAFT, ClientOnboardingStatus.NEEDS_CHANGES],
+        },
+      },
       data: {
         status: ClientOnboardingStatus.SUBMITTED,
         submittedAt: now,
@@ -436,6 +522,14 @@ export async function submitClientOnboarding(shopId: string, access: AdminAccess
       },
     });
 
+    if (claimed.count === 0) {
+      return null;
+    }
+
+    const row = await tx.clientOnboarding.findUniqueOrThrow({
+      where: { id: onboarding.id },
+    });
+
     await tx.saasSubscription.updateMany({
       where: {
         shopId,
@@ -447,6 +541,22 @@ export async function submitClientOnboarding(shopId: string, access: AdminAccess
 
     return row;
   });
+
+  if (!updated) {
+    const again = await prisma.clientOnboarding.findUnique({ where: { id: onboarding.id } });
+    if (
+      again &&
+      (again.status === ClientOnboardingStatus.SUBMITTED ||
+        again.status === ClientOnboardingStatus.READY_FOR_BUILD)
+    ) {
+      return {
+        ok: true as const,
+        idempotent: true,
+        onboarding: serializeOnboarding(again),
+      };
+    }
+    return { ok: false as const, errors: ['Unable to submit onboarding. Please retry.'] };
+  }
 
   const [assets, barbers, services, openingHours, shop] = await Promise.all([
     prisma.clientOnboardingAsset.findMany({

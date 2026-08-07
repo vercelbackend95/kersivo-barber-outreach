@@ -3,7 +3,7 @@ export const prerender = false;
 import type { APIRoute } from 'astro';
 import { resolveAdminAccess } from '@/lib/admin/auth';
 import {
-  ensureClientOnboarding,
+  assertWritableClientOnboarding,
   requireClientOnboardingAccess,
 } from '@/lib/admin/clientOnboarding/service';
 import { clientOnboardingBarberProfilesPayloadSchema } from '@/lib/admin/clientOnboarding/schema';
@@ -12,6 +12,9 @@ import { prisma } from '@/lib/db/client';
 export const PUT: APIRoute = async (ctx) => {
   const accessOrErr = await requireClientOnboardingAccess(await resolveAdminAccess(ctx));
   if (accessOrErr instanceof Response) return accessOrErr;
+
+  const writable = await assertWritableClientOnboarding(accessOrErr.shopId);
+  if (writable instanceof Response) return writable;
 
   let body: unknown;
   try {
@@ -29,7 +32,7 @@ export const PUT: APIRoute = async (ctx) => {
   }
 
   const shopId = accessOrErr.shopId;
-  const onboarding = await ensureClientOnboarding(shopId);
+  const onboarding = writable;
   const barberIds = parsed.data.profiles.map((p) => p.barberId);
   const owned = await prisma.barber.findMany({
     where: { shopId, id: { in: barberIds } },

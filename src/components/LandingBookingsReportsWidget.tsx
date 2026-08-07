@@ -14,6 +14,7 @@ import {
 import { getWinnerBarberId, type ReportsChartMetric } from '@/lib/admin/reportsChartSeries';
 import {
   customRangeToYmd,
+  getDefaultReportsPreset,
   isCustomRangeComplete,
   type ReportsCustomDateRange,
   type ReportsRangeKey,
@@ -23,11 +24,8 @@ import '@/styles/components/landingBookingsReportsWidget.css';
 
 const DEMO_BARBERS: Barber[] = landingBookingsReportsBarbers;
 
-/** Landing demo chart default: 1 Week (toolbar label 1W / 1 Week). */
-const LANDING_DEFAULT_RANGE: Exclude<ReportsRangeKey, 'custom'> = '7d';
-
 export default function LandingBookingsReportsWidget() {
-  const [reportsRangePreset, setReportsRangePreset] = useState<ReportsRangeKey>(LANDING_DEFAULT_RANGE);
+  const [reportsRangePreset, setReportsRangePreset] = useState<ReportsRangeKey>(() => getDefaultReportsPreset());
   const [reportsCustomRange, setReportsCustomRange] = useState<ReportsCustomDateRange | null>(null);
   const [chartMetric, setChartMetric] = useState<ReportsChartMetric>('revenue');
   const [selectedBarberIds, setSelectedBarberIds] = useState<string[]>([]);
@@ -47,7 +45,7 @@ export default function LandingBookingsReportsWidget() {
     } else if (prefs.rangePreset) {
       setReportsRangePreset(prefs.rangePreset);
     } else {
-      setReportsRangePreset(LANDING_DEFAULT_RANGE);
+      setReportsRangePreset(getDefaultReportsPreset());
     }
     if (prefs.chartMetric) {
       setChartMetric(prefs.chartMetric);
@@ -116,7 +114,7 @@ export default function LandingBookingsReportsWidget() {
   const handleCustomRangeChange = useCallback((range: ReportsCustomDateRange | null) => {
     if (!range?.from && !range?.to) {
       setReportsCustomRange(null);
-      setReportsRangePreset(LANDING_DEFAULT_RANGE);
+      setReportsRangePreset(getDefaultReportsPreset());
       return;
     }
     setReportsCustomRange(range);

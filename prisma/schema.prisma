@@ -913,7 +913,8 @@ model ClientOnboarding {
   domainRegistrationAuthorisedAt   DateTime?
 
   /// Migration intake (no automated import in this foundation)
-  migrationRequested            Boolean @default(false)
+  /// Tri-state: null = unanswered, false = explicit No, true = Yes (requires lawful confirmation).
+  migrationRequested            Boolean?
   migrationSource               String?
   migrationSourceOther          String?
   migrationNotes                String? @db.Text

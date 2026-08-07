@@ -30,6 +30,25 @@ function checkoutEmailFromSession(session: {
   return fromDetails || fromCustomer || fromMeta;
 }
 
+async function ensurePaidMarker(shopId: string): Promise<Response | null> {
+  try {
+    await markShopPaid(shopId);
+    return null;
+  } catch (error) {
+    console.error('[claim-paid-subscription] markShopPaid failed', {
+      shopId,
+      error,
+    });
+    return json(
+      {
+        error: 'Subscription linked but paid marker could not be set. Please retry.',
+        code: 'MARK_SHOP_PAID_FAILED',
+      },
+      503,
+    );
+  }
+}
+
 /**
  * After guest SaaS checkout, an authenticated Owner claims the paid subscription
  * onto their shop (email must match Stripe checkout exactly).
@@ -111,8 +130,10 @@ export const POST: APIRoute = async (ctx) => {
     return json({ error: 'Subscription record not found for this session.' }, 404);
   }
 
-  // Already owned by this shop — idempotent success.
+  // Already owned by this shop — heal paid marker then idempotent success.
   if (record.shopId != null && record.shopId === access.shopId) {
+    const healError = await ensurePaidMarker(access.shopId);
+    if (healError) return healError;
     return json({
       ok: true,
       claimed: false,
@@ -145,6 +166,8 @@ export const POST: APIRoute = async (ctx) => {
       select: { shopId: true },
     });
     if (again?.shopId === access.shopId) {
+      const healError = await ensurePaidMarker(access.shopId);
+      if (healError) return healError;
       return json({
         ok: true,
         claimed: false,
@@ -162,14 +185,8 @@ export const POST: APIRoute = async (ctx) => {
     );
   }
 
-  try {
-    await markShopPaid(access.shopId);
-  } catch (error) {
-    console.error('[claim-paid-subscription] markShopPaid failed', {
-      shopId: access.shopId,
-      error,
-    });
-  }
+  const paidError = await ensurePaidMarker(access.shopId);
+  if (paidError) return paidError;
 
   return json({
     ok: true,

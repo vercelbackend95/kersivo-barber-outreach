@@ -43,7 +43,18 @@ const optionalEmail = z
     message: 'Invalid email address.',
   });
 
-const optionalUrl = z
+/** Optional http(s) URL only — rejects javascript:/data:/file: and non-URLs. */
+export function isAllowedHttpUrl(value: string): boolean {
+  let parsed: URL;
+  try {
+    parsed = new URL(value);
+  } catch {
+    return false;
+  }
+  return parsed.protocol === 'http:' || parsed.protocol === 'https:';
+}
+
+const optionalHttpUrl = z
   .string()
   .trim()
   .max(2048)
@@ -53,6 +64,9 @@ const optionalUrl = z
     if (v == null) return null;
     const t = v.trim();
     return t.length ? t : null;
+  })
+  .refine((v) => v == null || isAllowedHttpUrl(v), {
+    message: 'URL must be a valid http:// or https:// address.',
   });
 
 const optionalColour = z
@@ -66,6 +80,18 @@ const optionalColour = z
     const t = v.trim();
     return t.length ? t : null;
   });
+
+/** Normalize domain-ish input for storage / comparison (no registrar passwords). */
+export function normalizeDomainInput(value: string | null | undefined): string | null {
+  if (value == null) return null;
+  let t = value.trim().toLowerCase();
+  if (!t) return null;
+  t = t.replace(/^https?:\/\//, '');
+  t = t.replace(/\/+$/, '');
+  t = t.split('/')[0] ?? t;
+  t = t.split('?')[0] ?? t;
+  return t.length ? t : null;
+}
 
 export const clientOnboardingDraftSchema = z
   .object({
@@ -86,11 +112,11 @@ export const clientOnboardingDraftSchema = z
     tagline: optionalTrimmed,
     shopDescription: optionalLongText,
     websiteNotes: optionalLongText,
-    currentWebsiteUrl: optionalUrl,
-    instagramUrl: optionalUrl,
-    facebookUrl: optionalUrl,
-    tiktokUrl: optionalUrl,
-    otherSocialUrl: optionalUrl,
+    currentWebsiteUrl: optionalHttpUrl,
+    instagramUrl: optionalHttpUrl,
+    facebookUrl: optionalHttpUrl,
+    tiktokUrl: optionalHttpUrl,
+    otherSocialUrl: optionalHttpUrl,
     brandNotes: optionalLongText,
     preferredPrimaryColour: optionalColour,
     preferredSecondaryColour: optionalColour,
@@ -103,7 +129,7 @@ export const clientOnboardingDraftSchema = z
     preferredDomain3: optionalTrimmed,
     domainRegistrationAuthorised: z.boolean().optional(),
 
-    migrationRequested: z.boolean().optional(),
+    migrationRequested: z.boolean().nullable().optional(),
     migrationSource: optionalTrimmed,
     migrationSourceOther: optionalTrimmed,
     migrationNotes: optionalLongText,
@@ -150,7 +176,12 @@ export type WorkspaceCompletionSnapshot = {
 export type SubmitValidationDraft = {
   domainMode: ClientOnboardingDomainMode;
   domainRegistrationAuthorised: boolean;
-  migrationRequested: boolean;
+  existingDomain: string | null;
+  preferredDomain1: string | null;
+  preferredDomain2: string | null;
+  preferredDomain3: string | null;
+  /** Tri-state: null unanswered, false explicit No, true Yes. */
+  migrationRequested: boolean | null;
   migrationDataConfirmedLawful: boolean;
   launchRetail: boolean | null;
   retailProductsDeferred: boolean;
@@ -215,18 +246,26 @@ export function validateClientOnboardingSubmit(
     draft.domainMode == null
   ) {
     errors.push('Choose a domain option before submitting.');
-  }
-  if (
-    draft.domainMode === ClientOnboardingDomainMode.KERSIVO_REGISTER &&
-    !draft.domainRegistrationAuthorised
-  ) {
-    errors.push(
-      'Authorise KERSIVO to register and manage the selected domain before submitting.',
-    );
+  } else if (draft.domainMode === ClientOnboardingDomainMode.EXISTING) {
+    if (!normalizeDomainInput(draft.existingDomain)) {
+      errors.push('Enter your existing domain before submitting.');
+    }
+  } else if (draft.domainMode === ClientOnboardingDomainMode.KERSIVO_REGISTER) {
+    if (!draft.domainRegistrationAuthorised) {
+      errors.push(
+        'Authorise KERSIVO to register and manage the selected domain before submitting.',
+      );
+    }
+    const preferred =
+      normalizeDomainInput(draft.preferredDomain1) ||
+      normalizeDomainInput(draft.preferredDomain2) ||
+      normalizeDomainInput(draft.preferredDomain3);
+    if (!preferred) {
+      errors.push('Provide at least one preferred domain name.');
+    }
   }
 
-  // migrationRequested is boolean on the model; treat missing as invalid only if undefined in merged draft
-  if (typeof draft.migrationRequested !== 'boolean') {
+  if (draft.migrationRequested == null) {
     errors.push('Confirm whether you need data migration.');
   } else if (draft.migrationRequested && !draft.migrationDataConfirmedLawful) {
     errors.push(
@@ -250,6 +289,29 @@ export function validateClientOnboardingSubmit(
   }
 
   return errors;
+}
+
+export const CLIENT_ONBOARDING_REQUIRES_PAID_CODE =
+  'CLIENT_ONBOARDING_REQUIRES_PAID_SUBSCRIPTION' as const;
+export const CLIENT_ONBOARDING_LOCKED_CODE = 'CLIENT_ONBOARDING_LOCKED' as const;
+
+export function isClientOnboardingWriteLocked(
+  status: ClientOnboardingStatus | string,
+): boolean {
+  return (
+    status === ClientOnboardingStatus.SUBMITTED ||
+    status === ClientOnboardingStatus.READY_FOR_BUILD
+  );
+}
+
+export function clientOnboardingLockedResponse(): Response {
+  return new Response(
+    JSON.stringify({
+      error: 'Client onboarding is locked after submission.',
+      code: CLIENT_ONBOARDING_LOCKED_CODE,
+    }),
+    { status: 409, headers: { 'Content-Type': 'application/json' } },
+  );
 }
 
 export const MARKETING_CONSENT_DEFAULTS = {
