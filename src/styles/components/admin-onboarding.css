@@ -320,14 +320,34 @@
 
 .admin-onboarding__hours-times {
   display: grid;
-  grid-template-columns: 1fr 1fr;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
   gap: var(--space-sm);
+  width: 100%;
+  min-width: 0;
+}
+
+.admin-onboarding__hours-times .field {
+  min-width: 0;
+}
+
+.admin-onboarding__hours-times input[type='time'] {
+  width: 100%;
+  min-width: 0;
+  max-width: 100%;
+  box-sizing: border-box;
 }
 
 .admin-onboarding__hours-times:disabled,
 .admin-onboarding__hours-row.is-closed .admin-onboarding__hours-times {
   opacity: 0.45;
   pointer-events: none;
+}
+
+@media (max-width: 480px) {
+  .admin-onboarding__hours-times input[type='time'] {
+    padding-inline: 0.55rem;
+    font-size: 1rem; /* avoid iOS zoom; keep compact horizontal padding */
+  }
 }
 
 .admin-onboarding__apply-row {
