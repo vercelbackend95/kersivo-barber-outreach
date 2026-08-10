@@ -38,7 +38,7 @@ const contentByVariant = {
 } as const;
 
 const DEMO_CTAS = [
-  { label: 'See plans & pricing', href: '/#pricing', primary: true },
+  { label: 'See pricing', href: '/#pricing', primary: true },
   { label: 'Ask about my setup', href: '/#contact', primary: false },
 ] as const;
 

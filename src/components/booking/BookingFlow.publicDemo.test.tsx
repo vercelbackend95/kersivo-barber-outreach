@@ -110,7 +110,7 @@ describe('BookingFlow publicDemoMode', () => {
       expect(screen.getByText('That’s the KERSIVO booking experience')).toBeTruthy();
     });
 
-    expect(screen.getByRole('link', { name: 'See plans & pricing' }).getAttribute('href')).toBe('/#pricing');
+    expect(screen.getByRole('link', { name: 'See pricing' }).getAttribute('href')).toBe('/#pricing');
     expect(screen.getByRole('link', { name: 'Ask about my setup' }).getAttribute('href')).toBe('/#contact');
 
     expect(fetchSpy).not.toHaveBeenCalled();
