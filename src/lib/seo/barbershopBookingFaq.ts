@@ -34,7 +34,7 @@ export const BARBERSHOP_BOOKING_FAQ_ITEMS: LandingFaqItem[] = [
   {
     question: 'How long does setup take?',
     answer:
-      'Most standard setups are ready for private review roughly 1–2 weeks after we receive all required information. The exact timing depends on the completeness of your materials and any migration work.',
+      'Once we have your required information, we prepare your private preview. Timing depends on the completeness of your materials and any migration work — and nothing goes live until you approve it.',
   },
   {
     question: 'What happens after I subscribe?',
