@@ -24,6 +24,7 @@ import {
   retrieveCheckoutSession,
 } from '../../../lib/shop/stripe';
 import { enforceIpRateLimit } from '@/lib/rate-limit/enforceIpRateLimit';
+import { resolvePreviewShopIdFromRequest } from '@/lib/preview/shopPreviewSession';
 
 type SubscriptionCheckoutInput = {
   name: string;
@@ -183,6 +184,7 @@ export const POST: APIRoute = async ({ request }) => {
     const attribution = pickAttribution(body.attribution);
     const townCity = typeof body.townCity === 'string' ? body.townCity.trim().slice(0, 200) : '';
     const barbers = typeof body.barbers === 'string' ? body.barbers.trim().slice(0, 500) : '';
+    const previewShopId = await resolvePreviewShopIdFromRequest(request);
 
     const session = await createSubscriptionCheckoutSession({
       customerEmail: email,
@@ -203,6 +205,7 @@ export const POST: APIRoute = async ({ request }) => {
             checkoutAttemptId,
             townCity: townCity || null,
             barbers: barbers || null,
+            shopId: previewShopId,
           },
           attribution,
         ),
@@ -223,6 +226,7 @@ export const POST: APIRoute = async ({ request }) => {
           currentStack,
           monthlyPence: SAAS_MONTHLY_PENCE,
           activatedAt: null,
+          ...(previewShopId ? { shopId: previewShopId } : {}),
         },
       });
     } catch (error) {

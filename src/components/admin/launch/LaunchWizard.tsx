@@ -203,6 +203,29 @@ export default function LaunchWizard() {
         if (response.status === 401) {
           if (cancelled) return;
           setMode('guest');
+          try {
+            const previewRes = await fetch('/api/preview/onboarding', { credentials: 'include' });
+            if (previewRes.ok) {
+              const preview = (await previewRes.json()) as {
+                shop?: { name?: string | null; townCity?: string | null };
+              };
+              const previewName = preview.shop?.name?.trim() || '';
+              if (previewName && previewName !== 'My Barbershop') {
+                setGuestDraft((prev) => ({
+                  ...prev,
+                  shopName: previewName,
+                  townCity: preview.shop?.townCity?.trim() || prev.townCity,
+                }));
+              } else if (preview.shop?.townCity?.trim()) {
+                setGuestDraft((prev) => ({
+                  ...prev,
+                  townCity: preview.shop?.townCity?.trim() || '',
+                }));
+              }
+            }
+          } catch {
+            // Prefill is best-effort; guest can still enter details.
+          }
           if (ENABLE_SETUP_FEES && queryPlan) {
             setPlanId(queryPlan);
             setGuestPhase('details');

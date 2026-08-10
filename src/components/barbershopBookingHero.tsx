@@ -78,13 +78,13 @@ const BarbershopBookingHero = ({ className }: BarbershopBookingHeroProps) => {
                   </a>
                 </Button>
                 <Button
-                  type="button"
                   variant="outline"
                   className="hero227-cta-demo text-md rounded-2xl font-medium"
-                  data-system-chooser-open
-                  data-track="view_live_demo_click"
+                  asChild
                 >
-                  See KERSIVO in action
+                  <a href="/preview/onboarding" data-track="view_live_demo_click">
+                    See KERSIVO in action
+                  </a>
                 </Button>
               </div>
               <p className="hero227-trust-line hero227-trust-line--landing" role="list">

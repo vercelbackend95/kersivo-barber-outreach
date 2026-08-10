@@ -36,6 +36,14 @@ vi.mock('@/lib/rate-limit/enforceIpRateLimit', () => ({
   enforceIpRateLimit: vi.fn(async () => null),
 }));
 
+const resolvePreviewShopIdFromRequest = vi.fn<(...args: unknown[]) => Promise<string | null>>(
+  async () => null,
+);
+
+vi.mock('@/lib/preview/shopPreviewSession', () => ({
+  resolvePreviewShopIdFromRequest: (...args: unknown[]) => resolvePreviewShopIdFromRequest(...args),
+}));
+
 import { POST } from './subscription-checkout';
 import { CURRENT_TERMS_VERSION } from '@/lib/legal/termsVersion';
 import { TERMS_ACCEPTANCE_REQUIRED_MESSAGE } from '@/lib/legal/requireTermsAcceptance';
@@ -71,6 +79,8 @@ describe('POST /api/setup/subscription-checkout', () => {
     createLegalAcceptance.mockReset();
     createSubscriptionCheckoutSession.mockReset();
     retrieveCheckoutSession.mockReset();
+    resolvePreviewShopIdFromRequest.mockReset();
+    resolvePreviewShopIdFromRequest.mockResolvedValue(null);
     findUniqueSaas.mockResolvedValue(null);
     createSaas.mockResolvedValue({});
     createLegalAcceptance.mockResolvedValue({});
@@ -131,6 +141,20 @@ describe('POST /api/setup/subscription-checkout', () => {
         status: 'PENDING',
         customerEmail: 'alex@example.com',
         shopName: 'Fade Studio',
+      }),
+    });
+  });
+
+  it('attaches preview shopId from cookie into Stripe metadata and PENDING row', async () => {
+    resolvePreviewShopIdFromRequest.mockResolvedValue('shop_preview_99');
+    const res = await POST(makeContext(validBody) as never);
+    expect(res.status).toBe(200);
+    expect(createSubscriptionCheckoutSession.mock.calls[0][0].metadata).toMatchObject({
+      shopId: 'shop_preview_99',
+    });
+    expect(createSaas).toHaveBeenCalledWith({
+      data: expect.objectContaining({
+        shopId: 'shop_preview_99',
       }),
     });
   });

@@ -107,7 +107,15 @@ function buildServicesFromState(state: OnboardingState | null): OnboardingServic
   return [...presets, ...customs];
 }
 
-export default function OnboardingWizard() {
+type OnboardingWizardProps = {
+  /** `guest` = no Better Auth; cookie-bound `/api/preview/onboarding/*`. */
+  mode?: 'session' | 'guest';
+};
+
+export default function OnboardingWizard({ mode = 'session' }: OnboardingWizardProps) {
+  const isGuest = mode === 'guest';
+  const apiBase = isGuest ? '/api/preview/onboarding' : '/api/admin/onboarding';
+
   const [authReady, setAuthReady] = useState(false);
   const [hasAccess, setHasAccess] = useState(false);
   const [loading, setLoading] = useState(true);
@@ -188,7 +196,15 @@ export default function OnboardingWizard() {
     setError('');
     let redirectingAway = false;
     try {
-      const response = await fetch('/api/admin/onboarding', { credentials: 'include' });
+      let response = await fetch(apiBase, { credentials: 'include' });
+
+      if (isGuest && (response.status === 401 || response.status === 403)) {
+        response = await fetch(`${apiBase}/start`, {
+          method: 'POST',
+          credentials: 'include',
+        });
+      }
+
       if (response.status === 401 || response.status === 403) {
         setHasAccess(false);
         setAuthReady(true);
@@ -197,7 +213,7 @@ export default function OnboardingWizard() {
       }
       if (!response.ok) {
         setError(await readJsonError(response));
-        setHasAccess(true);
+        setHasAccess(isGuest);
         setAuthReady(true);
         setLoading(false);
         return;
@@ -207,7 +223,7 @@ export default function OnboardingWizard() {
 
       if (payload.onboardingCompleted && !isReopen) {
         redirectingAway = true;
-        window.location.assign('/admin');
+        window.location.assign(isGuest ? '/admin/launch' : '/admin');
         return;
       }
 
@@ -220,7 +236,7 @@ export default function OnboardingWizard() {
         setLoading(false);
       }
     }
-  }, [applyState, isReopen]);
+  }, [apiBase, applyState, isGuest, isReopen]);
 
   useEffect(() => {
     void loadOnboarding();
@@ -248,8 +264,12 @@ export default function OnboardingWizard() {
     return '';
   }, []);
 
+  const sessionExpiredMessage = isGuest
+    ? 'Your preview session expired. Please refresh to start again.'
+    : 'Your session expired. Please sign in again.';
+
   const persistStepOnly = async (nextStep: number) => {
-    const response = await fetch('/api/admin/onboarding', {
+    const response = await fetch(apiBase, {
       method: 'PUT',
       credentials: 'include',
       headers: { 'Content-Type': 'application/json' },
@@ -257,7 +277,7 @@ export default function OnboardingWizard() {
     });
     if (response.status === 401) {
       setHasAccess(false);
-      throw new Error('Your session expired. Please sign in again.');
+      throw new Error(sessionExpiredMessage);
     }
     if (!response.ok) throw new Error(await readJsonError(response));
     const payload = (await response.json()) as OnboardingState;
@@ -281,13 +301,13 @@ export default function OnboardingWizard() {
         form.set('name', name);
         form.set('townCity', townCity.trim());
         form.set('logo', logoFile);
-        response = await fetch('/api/admin/onboarding/shop', {
+        response = await fetch(`${apiBase}/shop`, {
           method: 'PUT',
           credentials: 'include',
           body: form,
         });
       } else {
-        response = await fetch('/api/admin/onboarding/shop', {
+        response = await fetch(`${apiBase}/shop`, {
           method: 'PUT',
           credentials: 'include',
           headers: { 'Content-Type': 'application/json' },
@@ -300,7 +320,7 @@ export default function OnboardingWizard() {
       }
       if (response.status === 401) {
         setHasAccess(false);
-        throw new Error('Your session expired. Please sign in again.');
+        throw new Error(sessionExpiredMessage);
       }
       if (!response.ok) throw new Error(await readJsonError(response));
       const payload = (await response.json()) as OnboardingState;
@@ -356,13 +376,13 @@ export default function OnboardingWizard() {
         cleaned.forEach((barber, index) => {
           if (barber.avatarFile) form.set(`avatar_${index}`, barber.avatarFile);
         });
-        response = await fetch('/api/admin/onboarding/barbers', {
+        response = await fetch(`${apiBase}/barbers`, {
           method: 'PUT',
           credentials: 'include',
           body: form,
         });
       } else {
-        response = await fetch('/api/admin/onboarding/barbers', {
+        response = await fetch(`${apiBase}/barbers`, {
           method: 'PUT',
           credentials: 'include',
           headers: { 'Content-Type': 'application/json' },
@@ -373,7 +393,7 @@ export default function OnboardingWizard() {
       }
       if (response.status === 401) {
         setHasAccess(false);
-        throw new Error('Your session expired. Please sign in again.');
+        throw new Error(sessionExpiredMessage);
       }
       if (!response.ok) throw new Error(await readJsonError(response));
       const payload = (await response.json()) as OnboardingState;
@@ -409,7 +429,7 @@ export default function OnboardingWizard() {
     setSaving(true);
     setError('');
     try {
-      const response = await fetch('/api/admin/onboarding/services', {
+      const response = await fetch(`${apiBase}/services`, {
         method: 'PUT',
         credentials: 'include',
         headers: { 'Content-Type': 'application/json' },
@@ -425,7 +445,7 @@ export default function OnboardingWizard() {
       });
       if (response.status === 401) {
         setHasAccess(false);
-        throw new Error('Your session expired. Please sign in again.');
+        throw new Error(sessionExpiredMessage);
       }
       if (!response.ok) throw new Error(await readJsonError(response));
       const payload = (await response.json()) as OnboardingState;
@@ -451,7 +471,7 @@ export default function OnboardingWizard() {
     setSaving(true);
     setError('');
     try {
-      const response = await fetch('/api/admin/onboarding/shop-hours', {
+      const response = await fetch(`${apiBase}/shop-hours`, {
         method: 'PUT',
         credentials: 'include',
         headers: { 'Content-Type': 'application/json' },
@@ -459,7 +479,7 @@ export default function OnboardingWizard() {
       });
       if (response.status === 401) {
         setHasAccess(false);
-        throw new Error('Your session expired. Please sign in again.');
+        throw new Error(sessionExpiredMessage);
       }
       if (!response.ok) throw new Error(await readJsonError(response));
       const payload = (await response.json()) as OnboardingState;
@@ -504,7 +524,7 @@ export default function OnboardingWizard() {
     setSaving(true);
     setError('');
     try {
-      const response = await fetch('/api/admin/onboarding/hours', {
+      const response = await fetch(`${apiBase}/hours`, {
         method: 'PUT',
         credentials: 'include',
         headers: { 'Content-Type': 'application/json' },
@@ -512,7 +532,7 @@ export default function OnboardingWizard() {
       });
       if (response.status === 401) {
         setHasAccess(false);
-        throw new Error('Your session expired. Please sign in again.');
+        throw new Error(sessionExpiredMessage);
       }
       if (!response.ok) throw new Error(await readJsonError(response));
       const payload = (await response.json()) as OnboardingState;
@@ -528,16 +548,16 @@ export default function OnboardingWizard() {
     setSaving(true);
     setError('');
     try {
-      const response = await fetch('/api/admin/onboarding/complete', {
+      const response = await fetch(`${apiBase}/complete`, {
         method: 'POST',
         credentials: 'include',
       });
       if (response.status === 401) {
         setHasAccess(false);
-        throw new Error('Your session expired. Please sign in again.');
+        throw new Error(sessionExpiredMessage);
       }
       if (!response.ok) throw new Error(await readJsonError(response));
-      window.location.assign('/admin/test-book');
+      window.location.assign(isGuest ? '/admin/launch' : '/admin/test-book');
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Could not finish setup.');
       setSaving(false);
@@ -574,9 +594,9 @@ export default function OnboardingWizard() {
 
   const primaryLabel = useMemo(() => {
     if (step === 0) return 'Start setup';
-    if (step === 6) return 'Continue to test booking';
+    if (step === 6) return isGuest ? 'Continue to subscribe' : 'Continue to test booking';
     return 'Continue';
-  }, [step]);
+  }, [isGuest, step]);
 
   if (!authReady || loading) {
     return (
@@ -589,6 +609,36 @@ export default function OnboardingWizard() {
   }
 
   if (!hasAccess) {
+    if (isGuest) {
+      return (
+        <div className="admin-onboarding">
+          <header className="admin-onboarding__header">
+            <div className="admin-onboarding__brand">
+              <img className="admin-onboarding__logo" src="/images/logo_nobg.png" alt="" />
+              <span className="admin-onboarding__brand-name">Kersivo</span>
+            </div>
+          </header>
+          <main className="admin-onboarding__main admin-onboarding__main--welcome">
+            <section>
+              <h1 className="admin-onboarding__title">Couldn’t start your preview</h1>
+              <p className="admin-onboarding__description">
+                {error || 'Please refresh the page and try again.'}
+              </p>
+              <button
+                type="button"
+                className="btn btn--primary btn--lg"
+                onClick={() => {
+                  void loadOnboarding();
+                }}
+              >
+                Try again
+              </button>
+            </section>
+          </main>
+        </div>
+      );
+    }
+
     return (
       <>
         <div
@@ -654,17 +704,21 @@ export default function OnboardingWizard() {
         <main className="admin-onboarding__main admin-onboarding__success">
           <h1 className="admin-onboarding__title">Your workspace is ready</h1>
           <p className="admin-onboarding__description">
-            You can now explore your dashboard and continue building your KERSIVO setup.
+            {isGuest
+              ? 'Next, subscribe to keep your barbershop and go live with KERSIVO.'
+              : 'You can now explore your dashboard and continue building your KERSIVO setup.'}
           </p>
           <div className="admin-onboarding__footer" style={{ position: 'static', background: 'none' }}>
             <button
               type="button"
               className="btn btn--primary btn--lg"
               onClick={() => {
-                window.location.assign('/admin?section=bookings_dashboard');
+                window.location.assign(
+                  isGuest ? '/admin/launch' : '/admin?section=bookings_dashboard',
+                );
               }}
             >
-              Go to dashboard
+              {isGuest ? 'Get started — £39/month' : 'Go to dashboard'}
             </button>
           </div>
         </main>

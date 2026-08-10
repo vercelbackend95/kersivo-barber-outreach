@@ -228,6 +228,7 @@ model ShopSettings {
   clientOnboarding                   ClientOnboarding?
   clientOnboardingBarberProfiles     ClientOnboardingBarberProfile[]
   clientOnboardingAssets             ClientOnboardingAsset[]
+  previewSessions                    ShopPreviewSession[]
 }
 
 // Login membership for one shop — roles never keyed by shop name.
@@ -988,4 +989,19 @@ model ClientOnboardingAsset {
   @@index([shopId, kind])
   @@index([onboardingId])
   @@unique([onboardingId, storagePath])
+}
+
+/// Guest (no-login) workspace onboarding — opaque cookie binds to provisional shop.
+model ShopPreviewSession {
+  id        String   @id @default(cuid())
+  shopId    String
+  tokenHash String   @unique
+  expiresAt DateTime
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  shop ShopSettings @relation(fields: [shopId], references: [id], onDelete: Cascade)
+
+  @@index([shopId])
+  @@index([expiresAt])
 }
