@@ -3,7 +3,7 @@ export const prerender = false;
 
 import MinimalLayout from '@/layouts/MinimalLayout.astro';
 import BookingFlow from '@/components/booking/BookingFlow';
-import { resolveAdminAccess } from '@/lib/admin/auth';
+import { isTenantAdminAccess, resolveAdminAccess } from '@/lib/admin/auth';
 import { prisma } from '@/lib/db/client';
 import {
   PUBLIC_BOOKING_UNAVAILABLE_MESSAGE,
@@ -22,7 +22,7 @@ import '@/styles/components/empty-state.css';
 import '@/styles/components/skeleton.css';
 
 const access = await resolveAdminAccess(Astro);
-if (!access || access.via !== 'session') {
+if (!isTenantAdminAccess(access)) {
   return Astro.redirect('/admin');
 }
 
@@ -37,7 +37,7 @@ const shop = await prisma.shopSettings.findUnique({
 });
 
 if (shop && shop.onboardingCompleted === false) {
-  return Astro.redirect('/admin/onboarding');
+  return Astro.redirect(access.via === 'preview' ? '/preview/onboarding' : '/admin/onboarding');
 }
 
 const [services, barbers] = await Promise.all([
