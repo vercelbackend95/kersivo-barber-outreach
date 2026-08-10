@@ -140,6 +140,9 @@ export default function OnboardingWizard({ mode = 'session' }: OnboardingWizardP
 
   const [services, setServices] = useState<OnboardingService[]>(() => buildServicesFromState(null));
   const [servicesError, setServicesError] = useState('');
+  /** String drafts while price/duration fields are focused — avoids toFixed/number snap on each keystroke. */
+  const [priceDrafts, setPriceDrafts] = useState<Record<string, string>>({});
+  const [durationDrafts, setDurationDrafts] = useState<Record<string, string>>({});
 
   const [hours, setHours] = useState<OnboardingHoursRow[]>(DEFAULT_HOURS);
   const [shopHours, setShopHours] = useState<OnboardingHoursRow[]>(DEFAULT_HOURS);
@@ -405,8 +408,31 @@ export default function OnboardingWizard({ mode = 'session' }: OnboardingWizardP
     }
   };
 
+  const commitServicePriceDraft = useCallback((draft: string | undefined, fallbackPence: number) => {
+    if (draft === undefined) return fallbackPence;
+    const pence = parseGbpToPence(draft);
+    return Number.isNaN(pence) ? fallbackPence : pence;
+  }, []);
+
+  const commitServiceDurationDraft = useCallback((draft: string | undefined, fallbackMinutes: number) => {
+    if (draft === undefined) return fallbackMinutes;
+    if (draft.trim() === '') return fallbackMinutes;
+    const next = Number(draft);
+    if (!Number.isFinite(next)) return fallbackMinutes;
+    return Math.min(480, Math.max(5, Math.round(next)));
+  }, []);
+
   const saveServices = async () => {
-    const selected = services.filter((service) => service.selected);
+    const withDrafts = services.map((service) => ({
+      ...service,
+      pricePence: commitServicePriceDraft(priceDrafts[service.key], service.pricePence),
+      durationMinutes: commitServiceDurationDraft(durationDrafts[service.key], service.durationMinutes),
+    }));
+    setServices(withDrafts);
+    setPriceDrafts({});
+    setDurationDrafts({});
+
+    const selected = withDrafts.filter((service) => service.selected);
     if (selected.length === 0) {
       setServicesError('Select at least one service.');
       return;
@@ -1248,16 +1274,32 @@ export default function OnboardingWizard({ mode = 'session' }: OnboardingWizardP
                         id={`service-price-${service.key}`}
                         className="input"
                         inputMode="decimal"
-                        value={(service.pricePence / 100).toFixed(2)}
+                        value={
+                          priceDrafts[service.key] ?? (service.pricePence / 100).toFixed(2)
+                        }
+                        onFocus={() => {
+                          setPriceDrafts((current) =>
+                            current[service.key] !== undefined
+                              ? current
+                              : { ...current, [service.key]: (service.pricePence / 100).toFixed(2) },
+                          );
+                        }}
                         onChange={(event) => {
-                          const pence = parseGbpToPence(event.target.value);
+                          const next = event.target.value;
+                          setPriceDrafts((current) => ({ ...current, [service.key]: next }));
+                        }}
+                        onBlur={() => {
+                          const draft = priceDrafts[service.key];
+                          const pence = commitServicePriceDraft(draft, service.pricePence);
                           setServices((current) =>
                             current.map((item) =>
-                              item.key === service.key
-                                ? { ...item, pricePence: Number.isNaN(pence) ? item.pricePence : pence }
-                                : item,
+                              item.key === service.key ? { ...item, pricePence: pence } : item,
                             ),
                           );
+                          setPriceDrafts((current) => {
+                            const { [service.key]: _removed, ...rest } = current;
+                            return rest;
+                          });
                         }}
                       />
                     </div>
@@ -1272,16 +1314,35 @@ export default function OnboardingWizard({ mode = 'session' }: OnboardingWizardP
                         min={5}
                         max={480}
                         step={5}
-                        value={service.durationMinutes}
+                        inputMode="numeric"
+                        value={
+                          durationDrafts[service.key] ?? String(service.durationMinutes)
+                        }
+                        onFocus={() => {
+                          setDurationDrafts((current) =>
+                            current[service.key] !== undefined
+                              ? current
+                              : { ...current, [service.key]: String(service.durationMinutes) },
+                          );
+                        }}
                         onChange={(event) => {
-                          const next = Number(event.target.value);
+                          setDurationDrafts((current) => ({
+                            ...current,
+                            [service.key]: event.target.value,
+                          }));
+                        }}
+                        onBlur={() => {
+                          const draft = durationDrafts[service.key];
+                          const minutes = commitServiceDurationDraft(draft, service.durationMinutes);
                           setServices((current) =>
                             current.map((item) =>
-                              item.key === service.key
-                                ? { ...item, durationMinutes: Number.isFinite(next) ? next : item.durationMinutes }
-                                : item,
+                              item.key === service.key ? { ...item, durationMinutes: minutes } : item,
                             ),
                           );
+                          setDurationDrafts((current) => {
+                            const { [service.key]: _removed, ...rest } = current;
+                            return rest;
+                          });
                         }}
                       />
                     </div>
