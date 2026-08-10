@@ -61,10 +61,14 @@ describe('barbershop-settings APIs', () => {
       shopId: 'shop-1',
       userId: 'u1',
       role: 'OWNER',
+      via: 'session',
       permissions: ['shop.settings'],
     });
     requireAnyPermission.mockReturnValue(null);
     serializeShopOpeningHours.mockResolvedValue(DEFAULT_ONBOARDING_HOURS);
+    shopSettingsFindUnique.mockResolvedValue({
+      publicActivityPauseReason: null,
+    });
   });
 
   it('GET returns identity, hours, and pause', async () => {
@@ -87,10 +91,38 @@ describe('barbershop-settings APIs', () => {
     expect(data.pause.paused).toBe(false);
     expect(data.pause.pausedNow).toBe(false);
     expect(data.pause.from).toBeNull();
+    expect(data.pause.locked).toBe(false);
+    expect(data.pause.lockedMessage).toBeNull();
     expect(requireAnyPermission).toHaveBeenCalledWith(
       expect.anything(),
       expect.arrayContaining(['shop.settings']),
     );
+  });
+
+  it('GET marks pause locked for preview via', async () => {
+    requireAdminContext.mockResolvedValue({
+      shopId: 'shop-1',
+      userId: null,
+      role: 'OWNER',
+      via: 'preview',
+      permissions: ['shop.settings'],
+    });
+    shopSettingsFindUnique.mockResolvedValue({
+      name: 'Ace Cuts',
+      townCity: 'London',
+      logoUrl: null,
+      timezone: 'Europe/London',
+      publicActivityPaused: true,
+      publicActivityPausedAt: new Date(),
+      publicActivityPauseFrom: null,
+      publicActivityPauseUntil: null,
+      publicActivityPauseReason: 'Shop under construction — goes live after subscription.',
+    });
+    const res = await GET(jsonCtx('/api/admin/barbershop-settings', 'GET'));
+    const data = await res.json();
+    expect(res.status).toBe(200);
+    expect(data.pause.locked).toBe(true);
+    expect(data.pause.lockedMessage).toMatch(/preview shop/i);
   });
 
   it('GET rejects without shop.settings', async () => {
@@ -200,6 +232,7 @@ describe('barbershop-settings APIs', () => {
   });
 
   it('PATCH pause clears fields on resume', async () => {
+    shopSettingsFindUnique.mockResolvedValue({ publicActivityPauseReason: null });
     shopSettingsUpdate.mockResolvedValue({
       publicActivityPaused: false,
       publicActivityPausedAt: null,
@@ -225,5 +258,25 @@ describe('barbershop-settings APIs', () => {
         }),
       }),
     );
+  });
+
+  it('PATCH pause rejects resume for preview shops', async () => {
+    requireAdminContext.mockResolvedValue({
+      shopId: 'shop-1',
+      userId: null,
+      role: 'OWNER',
+      via: 'preview',
+      permissions: ['shop.settings'],
+    });
+    shopSettingsFindUnique.mockResolvedValue({
+      publicActivityPauseReason: 'Shop under construction — goes live after subscription.',
+    });
+    const res = await patchPause(
+      jsonCtx('/api/admin/barbershop-settings/pause', 'PATCH', { paused: false }),
+    );
+    expect(res.status).toBe(403);
+    const data = await res.json();
+    expect(data.code).toBe('PREVIEW_PAUSE_LOCKED');
+    expect(shopSettingsUpdate).not.toHaveBeenCalled();
   });
 });

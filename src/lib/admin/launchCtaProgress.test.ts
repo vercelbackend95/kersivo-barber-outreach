@@ -12,7 +12,7 @@ describe('buildLaunchProgress', () => {
   it('is complete only when all four setup steps are done', () => {
     const partial = buildLaunchProgress({
       onboardingCompleted: true,
-      teamProfileCount: 2,
+      teamProfileCount: 1,
       serviceCount: 1,
       retailComplete: false,
     });
@@ -22,7 +22,7 @@ describe('buildLaunchProgress', () => {
 
     const full = buildLaunchProgress({
       onboardingCompleted: true,
-      teamProfileCount: 2,
+      teamProfileCount: 1,
       serviceCount: 3,
       retailComplete: true,
     });
@@ -31,26 +31,25 @@ describe('buildLaunchProgress', () => {
     expect(full.nextHref).toBeNull();
   });
 
-  it('requires two team profile cards for the team step', () => {
+  it('marks first barber when at least one team profile exists', () => {
+    const none = buildLaunchProgress({
+      onboardingCompleted: true,
+      teamProfileCount: 0,
+      serviceCount: 1,
+      retailComplete: true,
+    });
+    expect(none.steps.find((s) => s.id === 'team')?.done).toBe(false);
+    expect(none.nextHref).toBe('/admin?section=bookings_blocks');
+
     const one = buildLaunchProgress({
       onboardingCompleted: true,
       teamProfileCount: 1,
       serviceCount: 1,
       retailComplete: true,
     });
-    expect(one.steps.find((s) => s.id === 'team')?.done).toBe(false);
-    expect(one.nextHref).toBe('/admin?section=bookings_blocks');
-
-    const two = buildLaunchProgress({
-      onboardingCompleted: true,
-      teamProfileCount: 2,
-      serviceCount: 1,
-      retailComplete: true,
-    });
-    expect(two.steps.find((s) => s.id === 'team')?.done).toBe(true);
+    expect(one.steps.find((s) => s.id === 'team')?.done).toBe(true);
   });
 });
-
 describe('resolveLaunchBillingFlags', () => {
   const pendingDeposit = { plan: 'launch' as const, shopSize: '1-2', currentStack: 'none' };
 

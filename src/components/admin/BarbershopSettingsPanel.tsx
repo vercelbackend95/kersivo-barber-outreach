@@ -22,6 +22,8 @@ type PauseState = {
   from: string | null;
   until: string | null;
   reason: string | null;
+  locked?: boolean;
+  lockedMessage?: string | null;
 };
 
 const EMPTY_PAUSE: PauseState = {
@@ -31,6 +33,8 @@ const EMPTY_PAUSE: PauseState = {
   from: null,
   until: null,
   reason: null,
+  locked: false,
+  lockedMessage: null,
 };
 
 export type BarbershopSettingsPanelProps = {
@@ -635,94 +639,108 @@ export default function BarbershopSettingsPanel({
           <h2 id="bbs-pause-title" className="admin-barbershop-settings__card-title">
             Shop pause
           </h2>
-          <p className="admin-barbershop-settings__card-copy">
-            Temporarily close public bookings and retail for a date range (e.g. renovation). Admin
-            tools stay available.
-          </p>
-
-          {pause.paused ? (
+          {pause.locked ? (
             <>
-              <p className="admin-barbershop-settings__pause-banner" role="status">
-                {pause.pausedNow
-                  ? 'Public bookings and retail are blocked today.'
-                  : 'A pause is scheduled.'}{' '}
-                Closed {formatPauseDate(pause.from)} – {formatPauseDate(pause.until)}.
-                {pause.reason ? (
-                  <>
-                    {' '}
-                    Customers see: “{pause.reason}”
-                  </>
-                ) : null}
+              <p className="admin-barbershop-settings__card-copy">
+                {pause.lockedMessage ||
+                  'Public booking stays off for this preview shop. Subscribe to launch and go live.'}
               </p>
-              <div className="admin-barbershop-settings__actions">
-                <button
-                  type="button"
-                  className="btn btn--secondary"
-                  disabled={pauseSaving}
-                  onClick={() => void applyPause({ paused: false })}
-                >
-                  {pauseSaving ? 'Resuming…' : 'Resume'}
-                </button>
-              </div>
+              <p className="admin-barbershop-settings__pause-banner" role="status">
+                Public bookings and retail stay off until you subscribe.
+              </p>
             </>
           ) : (
             <>
-              <div className="admin-barbershop-settings__pause-dates">
-                <div className="field">
-                  <label className="field__label" htmlFor="bbs-pause-from">
-                    From
-                  </label>
-                  <input
-                    id="bbs-pause-from"
-                    className="input"
-                    type="date"
-                    value={pauseFrom}
-                    onChange={(event) => setPauseFrom(event.target.value)}
-                    disabled={pauseSaving}
-                  />
-                </div>
-                <div className="field">
-                  <label className="field__label" htmlFor="bbs-pause-until">
-                    Until
-                  </label>
-                  <input
-                    id="bbs-pause-until"
-                    className="input"
-                    type="date"
-                    value={pauseUntil}
-                    onChange={(event) => setPauseUntil(event.target.value)}
-                    disabled={pauseSaving}
-                  />
-                </div>
-              </div>
-              <div className="field">
-                <label className="field__label" htmlFor="bbs-pause-reason">
-                  Message for customers <span className="field__hint">(required)</span>
-                </label>
-                <textarea
-                  id="bbs-pause-reason"
-                  className="input admin-barbershop-settings__pause-reason"
-                  rows={3}
-                  value={pauseReason}
-                  maxLength={400}
-                  disabled={pauseSaving}
-                  onChange={(event) => setPauseReason(event.target.value)}
-                  placeholder="e.g. Closed for renovation — we’ll reopen on 5 Aug."
-                />
-                <p className="admin-barbershop-settings__card-copy">
-                  Shown on your public booking form as the reason those dates cannot be booked.
-                </p>
-              </div>
-              <div className="admin-barbershop-settings__actions">
-                <button
-                  type="button"
-                  className="btn btn--destructive"
-                  disabled={pauseSaving || !pauseFormValid}
-                  onClick={openPauseConfirm}
-                >
-                  Pause
-                </button>
-              </div>
+              <p className="admin-barbershop-settings__card-copy">
+                Temporarily close public bookings and retail for a date range (e.g. renovation). Admin
+                tools stay available.
+              </p>
+
+              {pause.paused ? (
+                <>
+                  <p className="admin-barbershop-settings__pause-banner" role="status">
+                    {pause.pausedNow
+                      ? 'Public bookings and retail are blocked today.'
+                      : 'A pause is scheduled.'}{' '}
+                    Closed {formatPauseDate(pause.from)} – {formatPauseDate(pause.until)}.
+                    {pause.reason ? (
+                      <>
+                        {' '}
+                        Customers see: “{pause.reason}”
+                      </>
+                    ) : null}
+                  </p>
+                  <div className="admin-barbershop-settings__actions">
+                    <button
+                      type="button"
+                      className="btn btn--secondary"
+                      disabled={pauseSaving}
+                      onClick={() => void applyPause({ paused: false })}
+                    >
+                      {pauseSaving ? 'Resuming…' : 'Resume'}
+                    </button>
+                  </div>
+                </>
+              ) : (
+                <>
+                  <div className="admin-barbershop-settings__pause-dates">
+                    <div className="field">
+                      <label className="field__label" htmlFor="bbs-pause-from">
+                        From
+                      </label>
+                      <input
+                        id="bbs-pause-from"
+                        className="input"
+                        type="date"
+                        value={pauseFrom}
+                        onChange={(event) => setPauseFrom(event.target.value)}
+                        disabled={pauseSaving}
+                      />
+                    </div>
+                    <div className="field">
+                      <label className="field__label" htmlFor="bbs-pause-until">
+                        Until
+                      </label>
+                      <input
+                        id="bbs-pause-until"
+                        className="input"
+                        type="date"
+                        value={pauseUntil}
+                        onChange={(event) => setPauseUntil(event.target.value)}
+                        disabled={pauseSaving}
+                      />
+                    </div>
+                  </div>
+                  <div className="field">
+                    <label className="field__label" htmlFor="bbs-pause-reason">
+                      Message for customers <span className="field__hint">(required)</span>
+                    </label>
+                    <textarea
+                      id="bbs-pause-reason"
+                      className="input admin-barbershop-settings__pause-reason"
+                      rows={3}
+                      value={pauseReason}
+                      maxLength={400}
+                      disabled={pauseSaving}
+                      onChange={(event) => setPauseReason(event.target.value)}
+                      placeholder="e.g. Closed for renovation — we’ll reopen on 5 Aug."
+                    />
+                    <p className="admin-barbershop-settings__card-copy">
+                      Shown on your public booking form as the reason those dates cannot be booked.
+                    </p>
+                  </div>
+                  <div className="admin-barbershop-settings__actions">
+                    <button
+                      type="button"
+                      className="btn btn--destructive"
+                      disabled={pauseSaving || !pauseFormValid}
+                      onClick={openPauseConfirm}
+                    >
+                      Pause
+                    </button>
+                  </div>
+                </>
+              )}
             </>
           )}
 

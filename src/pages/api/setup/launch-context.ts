@@ -2,7 +2,7 @@ export const prerender = false;
 
 import type { APIRoute } from 'astro';
 import { SetupDepositStatus, SetupPlan } from '@prisma/client';
-import { resolveAdminAccess } from '../../../lib/admin/auth';
+import { isTenantAdminAccess, resolveAdminAccess } from '../../../lib/admin/auth';
 import { requirePermission } from '../../../lib/admin/rbac/can';
 import {
   buildLaunchProgress,
@@ -65,7 +65,7 @@ function mapSubscriptionState(status: string | null | undefined): LaunchSubscrip
  */
 export const GET: APIRoute = async (context) => {
   const access = await resolveAdminAccess(context);
-  if (!access || access.via !== 'session') {
+  if (!isTenantAdminAccess(access)) {
     return new Response(JSON.stringify({ error: 'Unauthorized' }), { status: 401 });
   }
   const denied = requirePermission(access, 'billing.manage');
@@ -78,6 +78,7 @@ export const GET: APIRoute = async (context) => {
       shopPaidAt: true,
       smsRemindersEnabled: true,
       onboardingCompleted: true,
+      retailOnboardingCompleted: true,
       retailOnboardingSkipped: true,
       retailPickupWalkthroughCompletedAt: true,
       name: true,
@@ -155,7 +156,9 @@ export const GET: APIRoute = async (context) => {
   const teamProfileCount = members.length + orphanBarberCount;
 
   const retailComplete =
-    Boolean(shop.retailPickupWalkthroughCompletedAt) || Boolean(shop.retailOnboardingSkipped);
+    Boolean(shop.retailOnboardingCompleted) ||
+    Boolean(shop.retailPickupWalkthroughCompletedAt) ||
+    Boolean(shop.retailOnboardingSkipped);
 
   const progress = buildLaunchProgress({
     onboardingCompleted: Boolean(shop.onboardingCompleted),
@@ -169,6 +172,7 @@ export const GET: APIRoute = async (context) => {
     return new Response(
       JSON.stringify({
         ok: true,
+        via: access.via,
         onboardingCompleted: false,
         pending: null,
         paid: shopPaid,
@@ -249,6 +253,7 @@ export const GET: APIRoute = async (context) => {
   return new Response(
     JSON.stringify({
       ok: true,
+      via: access.via,
       onboardingCompleted: true,
       pending,
       paid,

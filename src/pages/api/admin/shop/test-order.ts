@@ -1,7 +1,7 @@
 export const prerender = false;
 
 import type { APIRoute } from 'astro';
-import { requireAdminPermission } from '../../../../lib/admin/auth';
+import { isTenantAdminAccess, requireAdminPermission } from '../../../../lib/admin/auth';
 import { prisma } from '../../../../lib/db/client';
 import { formatGbp } from '../../../../lib/shop/money';
 
@@ -9,6 +9,11 @@ type TestOrderInput = {
   items?: Array<{ productId?: string; quantity?: number }>;
   idempotencyKey?: string;
 };
+
+/** Stable placeholder for guest-preview test orders (no real mailbox). */
+export function previewTestOrderCustomerEmail(shopId: string): string {
+  return `preview-test+${shopId}@kersivo.invalid`;
+}
 
 function serializeOrder(order: {
   id: string;
@@ -46,20 +51,23 @@ function serializeOrder(order: {
 
 /**
  * Private retail onboarding / test-shop: create a real Order without Stripe.
- * Session owners only — never available for public storefront or secret/demo access.
+ * Tenant access only (session or guest preview) — never public storefront or secret/demo.
  */
 export const POST: APIRoute = async (ctx) => {
   const access = await requireAdminPermission(ctx, 'retail.manage');
   if (access instanceof Response) return access;
 
-  if (access.via !== 'session') {
+  if (!isTenantAdminAccess(access)) {
     return new Response(JSON.stringify({ error: 'Test orders require an authenticated shop owner.' }), {
       status: 403,
     });
   }
 
   const shopId = access.shopId;
-  const customerEmail = access.userEmail?.trim().toLowerCase();
+  const customerEmail =
+    access.via === 'preview'
+      ? previewTestOrderCustomerEmail(shopId)
+      : access.userEmail?.trim().toLowerCase() || null;
   if (!customerEmail) {
     return new Response(JSON.stringify({ error: 'Account email is required to place a test order.' }), {
       status: 400,

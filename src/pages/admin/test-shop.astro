@@ -7,7 +7,7 @@ import TestShopClientScripts from '@/components/admin/TestShopClientScripts.astr
 import OwnerPreviewToolbar from '@/components/shop/OwnerPreviewToolbar.astro';
 import CartDrawerMount from '@/components/shop/CartDrawerMount.astro';
 import RetailOnboardingTaskCard from '@/components/admin/retail-onboarding/RetailOnboardingTaskCard';
-import { resolveAdminAccess } from '@/lib/admin/auth';
+import { isTenantAdminAccess, resolveAdminAccess } from '@/lib/admin/auth';
 import { resolveRetailOnboardingProduct } from '@/lib/admin/retailOnboardingProduct';
 import { prisma } from '@/lib/db/client';
 import { formatGbp } from '@/lib/shop/money';
@@ -28,7 +28,7 @@ import '@/styles/components/empty-state.css';
 import '@/styles/components/inputs.css';
 
 const access = await resolveAdminAccess(Astro);
-if (!access || access.via !== 'session') {
+if (!isTenantAdminAccess(access)) {
   return Astro.redirect('/admin');
 }
 

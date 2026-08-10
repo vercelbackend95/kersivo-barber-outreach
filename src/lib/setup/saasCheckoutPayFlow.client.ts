@@ -24,8 +24,14 @@ async function readCheckoutJson(response: Response): Promise<SaasCheckoutApiResp
 }
 
 /**
- * Run SaaS checkout with at most one rotate-and-retry on CHECKOUT_ATTEMPT_EXPIRED.
+ * Run SaaS checkout with at most one rotate-and-retry on expired/mismatched attempt.
  */
+const ROTATE_ATTEMPT_CODES = new Set([
+  'CHECKOUT_ATTEMPT_EXPIRED',
+  'CHECKOUT_ATTEMPT_MISMATCH',
+  'CHECKOUT_ATTEMPT_OWNERSHIP_MISMATCH',
+]);
+
 export async function runSaasCheckoutWithSingleRotate(input: {
   start: (checkoutAttemptId: string) => Promise<Response>;
   getAttemptId: () => string;
@@ -38,8 +44,9 @@ export async function runSaasCheckoutWithSingleRotate(input: {
 
   if (
     response.status === 409 &&
-    data.code === 'CHECKOUT_ATTEMPT_EXPIRED' &&
-    data.rotateAttempt
+    Boolean(data.rotateAttempt) &&
+    typeof data.code === 'string' &&
+    ROTATE_ATTEMPT_CODES.has(data.code)
   ) {
     attemptId = input.rotateAttemptId();
     response = await input.start(attemptId);

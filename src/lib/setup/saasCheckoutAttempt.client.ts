@@ -28,7 +28,7 @@ export function getOrCreateSaasCheckoutAttemptId(): string {
   return next;
 }
 
-/** Replace the stored attempt after CHECKOUT_ATTEMPT_EXPIRED. */
+/** Replace the stored attempt after CHECKOUT_ATTEMPT_EXPIRED / MISMATCH. */
 export function rotateSaasCheckoutAttemptId(): string {
   const next = crypto.randomUUID();
   writeStoredAttemptId(next);

@@ -51,6 +51,7 @@ type WorkspaceDraft = {
 
 type LaunchContextResponse = {
   ok?: boolean;
+  via?: 'session' | 'preview' | 'secret' | 'legacy-cookie';
   onboardingCompleted?: boolean;
   pending?: {
     plan: SetupPlanId;
@@ -90,6 +91,36 @@ function readWantStep2(): boolean {
   } catch {
     return false;
   }
+}
+
+function applyGuestPhaseFromQuery(queryPlan: SetupPlanId | null): {
+  planId: SetupPlanId | null;
+  guestPhase: GuestPhase;
+  step: LaunchStep;
+} {
+  if (ENABLE_SETUP_FEES && queryPlan) {
+    return { planId: queryPlan, guestPhase: 'details', step: 1 };
+  }
+  if (ENABLE_SETUP_FEES) {
+    return { planId: null, guestPhase: 'choose', step: 1 };
+  }
+  return { planId: null, guestPhase: 'details', step: 1 };
+}
+
+function prefillGuestDraftFromShop(shop?: {
+  name?: string | null;
+  townCity?: string | null;
+}): Partial<WorkspaceDraft> {
+  const previewName = shop?.name?.trim() || '';
+  const townCity = shop?.townCity?.trim() || '';
+  const next: Partial<WorkspaceDraft> = {};
+  if (previewName && previewName !== 'My Barbershop') {
+    next.shopName = previewName;
+  }
+  if (townCity) {
+    next.townCity = townCity;
+  }
+  return next;
 }
 
 function collectAttribution(): Record<string, string> {
@@ -209,34 +240,18 @@ export default function LaunchWizard() {
               const preview = (await previewRes.json()) as {
                 shop?: { name?: string | null; townCity?: string | null };
               };
-              const previewName = preview.shop?.name?.trim() || '';
-              if (previewName && previewName !== 'My Barbershop') {
-                setGuestDraft((prev) => ({
-                  ...prev,
-                  shopName: previewName,
-                  townCity: preview.shop?.townCity?.trim() || prev.townCity,
-                }));
-              } else if (preview.shop?.townCity?.trim()) {
-                setGuestDraft((prev) => ({
-                  ...prev,
-                  townCity: preview.shop?.townCity?.trim() || '',
-                }));
+              const prefill = prefillGuestDraftFromShop(preview.shop);
+              if (Object.keys(prefill).length > 0) {
+                setGuestDraft((prev) => ({ ...prev, ...prefill }));
               }
             }
           } catch {
             // Prefill is best-effort; guest can still enter details.
           }
-          if (ENABLE_SETUP_FEES && queryPlan) {
-            setPlanId(queryPlan);
-            setGuestPhase('details');
-            setStep(1);
-          } else if (ENABLE_SETUP_FEES) {
-            setGuestPhase('choose');
-            setStep(1);
-          } else {
-            setGuestPhase('details');
-            setStep(1);
-          }
+          const guestEntry = applyGuestPhaseFromQuery(queryPlan);
+          if (guestEntry.planId) setPlanId(guestEntry.planId);
+          setGuestPhase(guestEntry.guestPhase);
+          setStep(guestEntry.step);
           setLoading(false);
           return;
         }
@@ -244,6 +259,22 @@ export default function LaunchWizard() {
         const data = (await response.json()) as LaunchContextResponse;
         if (!response.ok) {
           throw new Error(data.error || 'Unable to load launch context.');
+        }
+
+        // Preview cookie unlocks progress for the sidebar; purchase stays guest checkout.
+        if (data.via === 'preview') {
+          if (cancelled) return;
+          setMode('guest');
+          const prefill = prefillGuestDraftFromShop(data.shop);
+          if (Object.keys(prefill).length > 0) {
+            setGuestDraft((prev) => ({ ...prev, ...prefill }));
+          }
+          const guestEntry = applyGuestPhaseFromQuery(queryPlan);
+          if (guestEntry.planId) setPlanId(guestEntry.planId);
+          setGuestPhase(guestEntry.guestPhase);
+          setStep(guestEntry.step);
+          setLoading(false);
+          return;
         }
 
         if (!data.onboardingCompleted) {

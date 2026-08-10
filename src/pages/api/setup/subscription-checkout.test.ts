@@ -187,6 +187,48 @@ describe('POST /api/setup/subscription-checkout', () => {
     expect(createSaas).not.toHaveBeenCalled();
   });
 
+  it('reuses session when shopName differs only by case', async () => {
+    findUniqueSaas.mockResolvedValue({
+      id: 'sub_1',
+      stripeSessionId: 'cs_existing',
+      customerEmail: 'alex@example.com',
+      shopName: 'fade studio',
+      status: 'PENDING',
+    });
+    retrieveCheckoutSession.mockResolvedValue({
+      id: 'cs_existing',
+      status: 'open',
+      url: 'https://checkout.stripe.test/cs_existing',
+    });
+
+    const res = await POST(makeContext({ ...validBody, shopName: 'Fade Studio' }) as never);
+    expect(res.status).toBe(200);
+    expect(createSubscriptionCheckoutSession).not.toHaveBeenCalled();
+  });
+
+  it('returns CHECKOUT_ATTEMPT_MISMATCH with rotateAttempt when email/shopName differ', async () => {
+    findUniqueSaas.mockResolvedValue({
+      id: 'sub_1',
+      stripeSessionId: 'cs_existing',
+      customerEmail: 'alex@example.com',
+      shopName: 'Fade Studio',
+      status: 'PENDING',
+    });
+
+    const res = await POST(
+      makeContext({ ...validBody, shopName: 'Other Shop', email: 'other@example.com' }) as never,
+    );
+    const body = await res.json();
+
+    expect(res.status).toBe(409);
+    expect(body).toMatchObject({
+      code: 'CHECKOUT_ATTEMPT_MISMATCH',
+      rotateAttempt: true,
+    });
+    expect(createSubscriptionCheckoutSession).not.toHaveBeenCalled();
+    expect(retrieveCheckoutSession).not.toHaveBeenCalled();
+  });
+
   it('returns success url for complete/paid session', async () => {
     findUniqueSaas.mockResolvedValue({
       id: 'sub_1',

@@ -54,6 +54,50 @@ describe('runSaasCheckoutWithSingleRotate', () => {
     expect(result.response.status).toBe(200);
   });
 
+  it('rotates exactly once on CHECKOUT_ATTEMPT_MISMATCH', async () => {
+    const start = vi
+      .fn()
+      .mockResolvedValueOnce(
+        jsonResponse(409, { code: 'CHECKOUT_ATTEMPT_MISMATCH', rotateAttempt: true }),
+      )
+      .mockResolvedValueOnce(
+        jsonResponse(200, { ok: true, url: 'https://checkout.test/cs3', reused: false, state: 'open' }),
+      );
+
+    const result = await runSaasCheckoutWithSingleRotate({
+      start,
+      getAttemptId: () => 'attempt-1',
+      rotateAttemptId: () => 'attempt-2',
+    });
+
+    expect(result.attempts).toBe(2);
+    expect(start).toHaveBeenCalledTimes(2);
+    expect(result.data.url).toBe('https://checkout.test/cs3');
+  });
+
+  it('rotates on CHECKOUT_ATTEMPT_OWNERSHIP_MISMATCH', async () => {
+    const start = vi
+      .fn()
+      .mockResolvedValueOnce(
+        jsonResponse(409, {
+          code: 'CHECKOUT_ATTEMPT_OWNERSHIP_MISMATCH',
+          rotateAttempt: true,
+        }),
+      )
+      .mockResolvedValueOnce(
+        jsonResponse(200, { ok: true, url: 'https://checkout.test/cs4', reused: false, state: 'open' }),
+      );
+
+    const result = await runSaasCheckoutWithSingleRotate({
+      start,
+      getAttemptId: () => 'attempt-1',
+      rotateAttemptId: () => 'attempt-2',
+    });
+
+    expect(result.attempts).toBe(2);
+    expect(result.data.url).toBe('https://checkout.test/cs4');
+  });
+
   it('does not attempt a third request when second is also expired', async () => {
     const start = vi.fn().mockResolvedValue(
       jsonResponse(409, { code: 'CHECKOUT_ATTEMPT_EXPIRED', rotateAttempt: true }),

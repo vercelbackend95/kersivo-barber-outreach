@@ -172,9 +172,16 @@ export const POST: APIRoute = async ({ request }) => {
     if (existingByAttempt) {
       if (
         existingByAttempt.customerEmail.trim().toLowerCase() !== email ||
-        existingByAttempt.shopName.trim() !== shopName
+        existingByAttempt.shopName.trim().toLowerCase() !== shopName.toLowerCase()
       ) {
-        return badRequest('checkoutAttemptId does not match this checkout.');
+        return jsonResponse(
+          {
+            error: 'This checkout attempt does not match this checkout.',
+            code: 'CHECKOUT_ATTEMPT_MISMATCH',
+            rotateAttempt: true,
+          },
+          409,
+        );
       }
 
       return responseForExistingOutcome(await outcomeForExistingSession(existingByAttempt.stripeSessionId));

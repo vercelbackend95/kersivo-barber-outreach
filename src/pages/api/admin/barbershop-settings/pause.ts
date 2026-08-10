@@ -11,6 +11,10 @@ import {
   storedPauseDateToIso,
 } from '@/lib/admin/shopPublicActivity';
 import { normalizeToIsoDate } from '@/lib/booking/time';
+import {
+  isPreviewPublicActivityLocked,
+  PREVIEW_PAUSE_LOCKED_MESSAGE,
+} from '@/lib/preview/guestPreviewConstruction';
 import { prisma } from '@/lib/db/client';
 
 const armSchema = z.object({
@@ -59,6 +63,19 @@ export const PATCH: APIRoute = async (ctx) => {
   if (denied) return denied;
 
   try {
+    const existing = await prisma.shopSettings.findUnique({
+      where: { id: access.shopId },
+      select: { publicActivityPauseReason: true },
+    });
+    if (
+      isPreviewPublicActivityLocked({
+        via: access.via,
+        pauseReason: existing?.publicActivityPauseReason,
+      })
+    ) {
+      return json({ error: PREVIEW_PAUSE_LOCKED_MESSAGE, code: 'PREVIEW_PAUSE_LOCKED' }, 403);
+    }
+
     const parsed = payloadSchema.safeParse(await ctx.request.json());
     if (!parsed.success) {
       return json({ error: parsed.error.flatten() }, 400);

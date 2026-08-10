@@ -520,6 +520,7 @@ describe('POST /api/setup/launch-subscription-checkout', () => {
 
       expect(res.status).toBe(409);
       expect(body.code).toBe('CHECKOUT_ATTEMPT_OWNERSHIP_MISMATCH');
+      expect(body.rotateAttempt).toBe(true);
       expect(txUpdateMany).not.toHaveBeenCalled();
       expect(createSubscriptionCheckoutSession).not.toHaveBeenCalled();
     });
@@ -534,6 +535,7 @@ describe('POST /api/setup/launch-subscription-checkout', () => {
 
       expect(res.status).toBe(409);
       expect(body.code).toBe('CHECKOUT_ATTEMPT_OWNERSHIP_MISMATCH');
+      expect(body.rotateAttempt).toBe(true);
       expect(txUpdateMany).not.toHaveBeenCalled();
       expect(createSubscriptionCheckoutSession).not.toHaveBeenCalled();
     });
