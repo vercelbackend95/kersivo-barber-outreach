@@ -244,18 +244,27 @@ async function getAvailableSlotsForBarber(input: {
   });
 }
 
-export async function getAvailabilitySlots(input: { serviceId: string; barberId: string; date: string; ignoreBookingId?: string }) {
+export async function getAvailabilitySlots(input: {
+  serviceId: string;
+  barberId: string;
+  date: string;
+  ignoreBookingId?: string;
+  /** Owner/preview test booking — still show slots while public activity is paused. */
+  ignorePublicActivityPause?: boolean;
+}) {
   try {
     const { service, settings } = await loadShopSettingsForService(input.serviceId);
-    const pauseOnDate = await getShopPublicActivityPauseOnDate(settings.id, input.date);
-    if (pauseOnDate.paused) {
-      return {
-        slots: [] as string[],
-        service,
-        settings,
-        paused: true as const,
-        pauseReason: pauseOnDate.reason,
-      };
+    if (!input.ignorePublicActivityPause) {
+      const pauseOnDate = await getShopPublicActivityPauseOnDate(settings.id, input.date);
+      if (pauseOnDate.paused) {
+        return {
+          slots: [] as string[],
+          service,
+          settings,
+          paused: true as const,
+          pauseReason: pauseOnDate.reason,
+        };
+      }
     }
     if (!service.isActive) {
       return { slots: [], service, settings };

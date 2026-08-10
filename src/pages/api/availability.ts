@@ -64,6 +64,8 @@ export const GET: APIRoute = async (ctx) => {
       serviceId,
       barberId,
       date,
+      // Tenant admin (session or guest preview) test-booking must work while public pause is on.
+      ignorePublicActivityPause: isTenantAdminAccess(access),
     });
 
     return new Response(
