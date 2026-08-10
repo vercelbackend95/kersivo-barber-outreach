@@ -22,7 +22,7 @@ function initialsFromUser(user: AdminProfileUser): string {
 type AdminSidebarProfileProps = {
   user?: AdminProfileUser | null;
   variant: 'desktop' | 'mobile';
-  mode?: 'authenticated' | 'guest';
+  mode?: 'authenticated' | 'guest' | 'preview';
   /** Session permissions; used to hide Owner-only menu items (e.g. Launch). */
   permissions?: string[] | null;
   /** Tenant shop id — opens public /book/{shopId} for deposit smoke tests. */
@@ -47,9 +47,12 @@ export default function AdminSidebarProfile({
   onOpenBarbershopSettings,
 }: AdminSidebarProfileProps) {
   const isGuest = mode === 'guest';
-  const canManageBilling = isGuest || !permissions || permissions.includes('billing.manage');
-  const canManageOnboarding = isGuest || !permissions || permissions.includes('onboarding.manage');
-  const canManageShopSettings = isGuest || !permissions || permissions.includes('shop.settings');
+  const isPreview = mode === 'preview';
+  const canManageBilling = isGuest || isPreview || !permissions || permissions.includes('billing.manage');
+  const canManageOnboarding =
+    isGuest || isPreview || !permissions || permissions.includes('onboarding.manage');
+  const canManageShopSettings =
+    isGuest || isPreview || !permissions || permissions.includes('shop.settings');
   const [open, setOpen] = useState(false);
   const [confirmDelete, setConfirmDelete] = useState(false);
   const [deleteConfirmText, setDeleteConfirmText] = useState('');
@@ -69,14 +72,12 @@ export default function AdminSidebarProfile({
   const deleteInputRef = useRef<HTMLInputElement | null>(null);
   const [menuPos, setMenuPos] = useState<{ bottom: number; left: number; width: number } | null>(null);
 
-  const displayName = isGuest ? 'Login' : user?.name?.trim() || user?.email?.trim() || 'Account';
-  const planLabel = isGuest
-    ? 'Demo'
-    : billingLabel
-      ? billingLabel
-      : 'Plus';
-  const initials = user ? initialsFromUser(user) : '?';
-  const avatarImage = isGuest ? null : user?.image ?? null;
+  const displayName = isGuest
+    ? 'Login'
+    : user?.name?.trim() || user?.email?.trim() || (isPreview ? 'My Barbershop' : 'Account');
+  const planLabel = isGuest ? 'Demo' : isPreview ? 'Preview' : billingLabel ? billingLabel : 'Plus';
+  const initials = user ? initialsFromUser(user) : isPreview ? initialsFromUser({ name: displayName, email: null, image: null }) : '?';
+  const avatarImage = isGuest || isPreview ? null : user?.image ?? null;
 
   const avatarContent = isGuest ? (
     <AccountCircle width={32} height={32} aria-hidden="true" />
@@ -254,7 +255,7 @@ export default function AdminSidebarProfile({
   };
 
   useEffect(() => {
-    if (isGuest || !canManageBilling) {
+    if (isGuest || isPreview || !canManageBilling) {
       setBillingLabel(null);
       return;
     }
@@ -323,7 +324,7 @@ export default function AdminSidebarProfile({
     return () => {
       cancelled = true;
     };
-  }, [isGuest, canManageBilling]);
+  }, [isGuest, isPreview, canManageBilling]);
 
   const handleCreateAccount = () => {
     setOpen(false);
@@ -510,7 +511,7 @@ export default function AdminSidebarProfile({
                   <div className="admin-profile-menu__divider" aria-hidden="true" />
                 </>
               ) : null}
-              {!isGuest && shopId?.trim() ? (
+              {!isGuest && !isPreview && shopId?.trim() ? (
                 <>
                   <button
                     type="button"
@@ -525,15 +526,17 @@ export default function AdminSidebarProfile({
               ) : null}
               {canManageBilling ? (
                 <>
-                  <button
-                    type="button"
-                    className="admin-profile-menu__item"
-                    role="menuitem"
-                    onClick={handlePreviewWebsite}
-                  >
-                    <Globe width={15} height={15} aria-hidden="true" />
-                    Preview website
-                  </button>
+                  {!isPreview ? (
+                    <button
+                      type="button"
+                      className="admin-profile-menu__item"
+                      role="menuitem"
+                      onClick={handlePreviewWebsite}
+                    >
+                      <Globe width={15} height={15} aria-hidden="true" />
+                      Preview website
+                    </button>
+                  ) : null}
                   <button
                     type="button"
                     className="admin-profile-menu__item"
@@ -585,27 +588,31 @@ export default function AdminSidebarProfile({
                 </button>
               ) : (
                 <>
-                  <button
-                    type="button"
-                    className="admin-profile-menu__item admin-profile-menu__item--danger"
-                    role="menuitem"
-                    onClick={() => {
-                      setOpen(false);
-                      setConfirmDelete(true);
-                      setDeleteConfirmText('');
-                      setDeletePassword('');
-                      setDeleteEmailConfirm('');
-                      setDeleteError(null);
-                      setDeletionBlocked(false);
-                      setCancelAlreadyScheduled(false);
-                      setBlockingPeriodEnd(null);
-                      setAccountPreviewLoaded(false);
-                    }}
-                  >
-                    <Ban width={15} height={15} aria-hidden="true" />
-                    Delete account
-                  </button>
-                  <div className="admin-profile-menu__divider" aria-hidden="true" />
+                  {!isPreview ? (
+                    <>
+                      <button
+                        type="button"
+                        className="admin-profile-menu__item admin-profile-menu__item--danger"
+                        role="menuitem"
+                        onClick={() => {
+                          setOpen(false);
+                          setConfirmDelete(true);
+                          setDeleteConfirmText('');
+                          setDeletePassword('');
+                          setDeleteEmailConfirm('');
+                          setDeleteError(null);
+                          setDeletionBlocked(false);
+                          setCancelAlreadyScheduled(false);
+                          setBlockingPeriodEnd(null);
+                          setAccountPreviewLoaded(false);
+                        }}
+                      >
+                        <Ban width={15} height={15} aria-hidden="true" />
+                        Delete account
+                      </button>
+                      <div className="admin-profile-menu__divider" aria-hidden="true" />
+                    </>
+                  ) : null}
                   <button
                     type="button"
                     className="admin-profile-menu__item"

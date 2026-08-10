@@ -38,7 +38,7 @@ export type BuildLaunchProgressInput = {
 
 export function buildLaunchProgress(input: BuildLaunchProgressInput): LaunchProgress {
   const barbershop = Boolean(input.onboardingCompleted);
-  const team = input.teamProfileCount >= 2;
+  const team = input.teamProfileCount >= 1;
   const services = input.serviceCount >= 1;
   const retail = Boolean(input.retailComplete);
   const complete = barbershop && team && services && retail;

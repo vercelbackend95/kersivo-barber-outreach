@@ -5,8 +5,10 @@ import {
   getAdminSessionCookieName,
   getAdminSessionCookieOptions
 } from '../../../lib/admin/session';
+import { clearPreviewCookie } from '../../../lib/preview/shopPreviewSession';
 
-export const POST: APIRoute = async ({ cookies }) => {
+export const POST: APIRoute = async (ctx) => {
+  const { cookies } = ctx;
   cookies.set(
     getAdminSessionCookieName(),
     '',
@@ -15,6 +17,7 @@ export const POST: APIRoute = async ({ cookies }) => {
       maxAge: 0
     }
   );
+  clearPreviewCookie(ctx);
 
   return new Response(JSON.stringify({ ok: true }));
 };

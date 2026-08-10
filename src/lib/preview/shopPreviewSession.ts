@@ -1,6 +1,15 @@
 import { createHash, randomBytes } from 'node:crypto';
 import type { APIContext } from 'astro';
 import { prisma } from '@/lib/db/client';
+import {
+  GUEST_PREVIEW_PAUSE_REASON,
+} from './guestPreviewConstruction';
+
+export {
+  GUEST_PREVIEW_PAUSE_REASON,
+  GUEST_PREVIEW_PAUSE_REASON_LEGACY,
+  isGuestPreviewConstructionPause,
+} from './guestPreviewConstruction';
 
 export const SHOP_PREVIEW_COOKIE = 'kersivo_shop_preview';
 export const PREVIEW_TTL_MS = 7 * 24 * 60 * 60 * 1000;
@@ -90,7 +99,7 @@ export async function createPreviewShopSession(): Promise<{
       onboardingCurrentStep: 0,
       publicActivityPaused: true,
       publicActivityPausedAt: new Date(),
-      publicActivityPauseReason: 'Guest preview — not public until subscribed.',
+      publicActivityPauseReason: GUEST_PREVIEW_PAUSE_REASON,
     },
     select: { id: true },
   });

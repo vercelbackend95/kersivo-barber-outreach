@@ -12,9 +12,13 @@ const findFirstDeposit = vi.fn();
 
 let enableSetupFees = false;
 
-vi.mock('@/lib/admin/auth', () => ({
-  resolveAdminAccess: (...args: unknown[]) => resolveAdminAccess(...args),
-}));
+vi.mock('@/lib/admin/auth', async (importOriginal) => {
+  const actual = await importOriginal<typeof import('@/lib/admin/auth')>();
+  return {
+    ...actual,
+    resolveAdminAccess: (...args: unknown[]) => resolveAdminAccess(...args),
+  };
+});
 
 vi.mock('@/lib/admin/rbac/can', () => ({
   requirePermission: (...args: unknown[]) => requirePermission(...args),
@@ -86,6 +90,7 @@ describe('GET /api/setup/launch-context (setup fees off)', () => {
       shopPaidAt: null,
       smsRemindersEnabled: false,
       onboardingCompleted: true,
+      retailOnboardingCompleted: false,
       retailOnboardingSkipped: true,
       retailPickupWalkthroughCompletedAt: null,
       name: 'Fade Studio',
@@ -155,6 +160,7 @@ describe('GET /api/setup/launch-context (setup fees off)', () => {
       shopPaidAt: new Date(),
       smsRemindersEnabled: false,
       onboardingCompleted: true,
+      retailOnboardingCompleted: false,
       retailOnboardingSkipped: true,
       retailPickupWalkthroughCompletedAt: null,
       name: 'Fade Studio',
@@ -191,6 +197,7 @@ describe('GET /api/setup/launch-context (setup fees off)', () => {
       shopPaidAt: new Date(),
       smsRemindersEnabled: false,
       onboardingCompleted: true,
+      retailOnboardingCompleted: false,
       retailOnboardingSkipped: true,
       retailPickupWalkthroughCompletedAt: null,
       name: 'Fade Studio',
@@ -238,6 +245,7 @@ describe('GET /api/setup/launch-context (setup fees on)', () => {
       shopPaidAt: new Date(),
       smsRemindersEnabled: false,
       onboardingCompleted: true,
+      retailOnboardingCompleted: false,
       retailOnboardingSkipped: true,
       retailPickupWalkthroughCompletedAt: null,
       name: 'Fade Studio',
@@ -258,5 +266,90 @@ describe('GET /api/setup/launch-context (setup fees on)', () => {
     expect(body.subscriptionBlocked).toBe(false);
     expect(body.redirectTo).toBeNull();
     expect(body.paidHref).toBe('https://forms.test/onboarding');
+  });
+});
+
+describe('GET /api/setup/launch-context preview via', () => {
+  beforeEach(() => {
+    enableSetupFees = false;
+    resolveAdminAccess.mockReset();
+    requirePermission.mockReset();
+    findUniqueShop.mockReset();
+    findFirstSaas.mockReset();
+    findManyMembers.mockReset();
+    findManyInvites.mockReset();
+    findManyBarbers.mockReset();
+    findFirstDeposit.mockReset();
+    requirePermission.mockReturnValue(null);
+    resolveAdminAccess.mockResolvedValue({
+      via: 'preview',
+      shopId: 'shop-preview',
+      userId: null,
+      userEmail: null,
+      userName: null,
+      role: 'OWNER',
+      permissions: ['billing.manage'],
+    });
+    findUniqueShop.mockResolvedValue({
+      id: 'shop-preview',
+      shopPaidAt: null,
+      smsRemindersEnabled: false,
+      onboardingCompleted: true,
+      retailOnboardingCompleted: false,
+      retailOnboardingSkipped: false,
+      retailPickupWalkthroughCompletedAt: null,
+      name: 'Fade Lab',
+      townCity: 'Leeds',
+      barbers: [{ id: 'b1', name: 'Alex' }],
+      _count: { services: 2 },
+    });
+    findFirstSaas.mockResolvedValue(null);
+    findManyMembers.mockResolvedValue([]);
+    findManyInvites.mockResolvedValue([]);
+    findManyBarbers.mockResolvedValue([{ id: 'b1', userId: null }]);
+  });
+
+  it('returns progress with Barbershop created done for completed preview shop', async () => {
+    const res = await GET(makeContext() as never);
+    const body = await res.json();
+    expect(res.status).toBe(200);
+    expect(body.via).toBe('preview');
+    expect(body.onboardingCompleted).toBe(true);
+    expect(body.progress.steps.find((s: { id: string }) => s.id === 'barbershop')?.done).toBe(true);
+    expect(body.progress.steps.find((s: { id: string }) => s.id === 'services')?.done).toBe(true);
+    expect(body.progress.steps.find((s: { id: string }) => s.id === 'retail')?.done).toBe(false);
+  });
+
+  it('marks retail done when product onboarding completed without skip or pickup', async () => {
+    findUniqueShop.mockResolvedValue({
+      id: 'shop-preview',
+      shopPaidAt: null,
+      smsRemindersEnabled: false,
+      onboardingCompleted: true,
+      retailOnboardingCompleted: true,
+      retailOnboardingSkipped: false,
+      retailPickupWalkthroughCompletedAt: null,
+      name: 'Fade Lab',
+      townCity: 'Leeds',
+      barbers: [{ id: 'b1', name: 'Alex' }],
+      _count: { services: 2 },
+    });
+
+    const res = await GET(makeContext() as never);
+    const body = await res.json();
+    expect(res.status).toBe(200);
+    expect(body.progress.steps.find((s: { id: string }) => s.id === 'retail')?.done).toBe(true);
+    expect(body.progress.complete).toBe(true);
+  });
+
+  it('rejects secret via (non-tenant)', async () => {
+    resolveAdminAccess.mockResolvedValue({
+      via: 'secret',
+      shopId: 'demo-shop',
+      userId: null,
+      role: 'OWNER',
+    });
+    const res = await GET(makeContext() as never);
+    expect(res.status).toBe(401);
   });
 });

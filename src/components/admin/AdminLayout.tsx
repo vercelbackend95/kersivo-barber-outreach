@@ -38,6 +38,10 @@ type AdminLayoutProps = {
   shopLogoUrl?: string | null;
   shopName?: string | null;
   publicActivityPaused?: boolean;
+  /** Guest preview construction (not an owner-initiated pause). */
+  previewUnderConstruction?: boolean;
+  /** Guest preview cookie access (via === 'preview') — profile menu, not bare Logout. */
+  isPreviewAccess?: boolean;
   /** When set, sidebar items are filtered by permission keys from session. */
   permissions?: string[] | null;
   /** Always mounted (hidden); keeps effects alive while section skeleton replaces `children`. */
@@ -157,23 +161,27 @@ function SidebarBrand({
 function SidebarStatus({
   className = '',
   paused = false,
+  underConstruction = false,
 }: {
   className?: string;
   paused?: boolean;
+  underConstruction?: boolean;
 }) {
   const dateStr = new Date().toLocaleDateString('en-GB', {
     weekday: 'short',
     day: 'numeric',
     month: 'short',
   });
+  const label = underConstruction ? 'Building' : paused ? 'Paused' : 'Online';
+  const showDotAlert = paused || underConstruction;
   return (
     <div className={`admin-sidebar-status ${className}`.trim()} aria-label="System status">
       <span className="admin-sidebar-status-date">{dateStr}</span>
       <span
-        className={`admin-sidebar-status-dot${paused ? ' admin-sidebar-status-dot--paused' : ''}`}
+        className={`admin-sidebar-status-dot${showDotAlert ? ' admin-sidebar-status-dot--paused' : ''}`}
         aria-hidden="true"
       />
-      <span className="admin-sidebar-status-label">{paused ? 'Paused' : 'Online'}</span>
+      <span className="admin-sidebar-status-label">{label}</span>
     </div>
   );
 }
@@ -189,6 +197,8 @@ export default function AdminLayout({
   shopLogoUrl = null,
   shopName = null,
   publicActivityPaused = false,
+  previewUnderConstruction = false,
+  isPreviewAccess = false,
   permissions = null,
   persistentAdminChrome,
   children,
@@ -322,8 +332,23 @@ export default function AdminLayout({
   const canManageBilling =
     isPublicDemo || !permissions || permissions.includes('billing.manage');
 
+  const previewProfileUser: AdminProfileUser = {
+    name: shopName?.trim() || 'My Barbershop',
+    email: null,
+    image: null,
+  };
+
   const accountFooter = isPublicDemo ? (
     <AdminSidebarProfile mode="guest" variant="desktop" />
+  ) : isPreviewAccess ? (
+    <AdminSidebarProfile
+      mode="preview"
+      user={previewProfileUser}
+      variant="desktop"
+      permissions={permissions}
+      shopId={shopId}
+      onOpenBarbershopSettings={canOpenBarbershopSettings ? openBarbershopSettings : undefined}
+    />
   ) : profileUser ? (
     <AdminSidebarProfile
       user={profileUser}
@@ -345,6 +370,15 @@ export default function AdminLayout({
 
   const accountFooterMobile = isPublicDemo ? (
     <AdminSidebarProfile mode="guest" variant="mobile" />
+  ) : isPreviewAccess ? (
+    <AdminSidebarProfile
+      mode="preview"
+      user={previewProfileUser}
+      variant="mobile"
+      permissions={permissions}
+      shopId={shopId}
+      onOpenBarbershopSettings={canOpenBarbershopSettings ? openBarbershopSettings : undefined}
+    />
   ) : profileUser ? (
     <AdminSidebarProfile
       user={profileUser}
@@ -565,7 +599,8 @@ export default function AdminLayout({
               statusSlot={
                 <SidebarStatus
                   className="admin-sidebar-status--mobile-drawer"
-                  paused={publicActivityPaused}
+                  paused={publicActivityPaused && !previewUnderConstruction}
+                  underConstruction={previewUnderConstruction}
                 />
               }
               onOpenSettings={canOpenBarbershopSettings ? openBarbershopSettings : null}
@@ -601,7 +636,10 @@ export default function AdminLayout({
         />
         {renderMenu(true)}
         <div className="admin-sidebar-logout-wrap">
-          <SidebarStatus paused={publicActivityPaused} />
+          <SidebarStatus
+            paused={publicActivityPaused && !previewUnderConstruction}
+            underConstruction={previewUnderConstruction}
+          />
           <div className="admin-sidebar-divider" aria-hidden="true" />
           {accountFooter}
         </div>
@@ -613,7 +651,15 @@ export default function AdminLayout({
         aria-busy={isTransitioning}
         data-transitioning={isTransitioning}
       >
-        {publicActivityPaused ? (
+        {previewUnderConstruction ? (
+          <div className="admin-barbershop-paused-banner" role="status">
+            This is how your dashboard will look. Subscribe and we&apos;ll build your website around
+            it.{' '}
+            <a className="admin-barbershop-paused-banner__link" href="/admin/launch">
+              Get started — £39/month
+            </a>
+          </div>
+        ) : publicActivityPaused ? (
           <div className="admin-barbershop-paused-banner" role="status">
             Barbershop is paused — public bookings and retail checkout are off.{' '}
             {canOpenBarbershopSettings ? (
@@ -639,7 +685,11 @@ export default function AdminLayout({
                   {activeSectionLabel}
                 </span>
               )}
-              <SidebarStatus className="admin-sidebar-status--mobile-header" paused={publicActivityPaused} />
+              <SidebarStatus
+                className="admin-sidebar-status--mobile-header"
+                paused={publicActivityPaused && !previewUnderConstruction}
+                underConstruction={previewUnderConstruction}
+              />
             </div>
             <button
               ref={mobileOpenButtonRef}

@@ -15,6 +15,7 @@ import {
 import type { AdminProfileUser } from './AdminSidebarProfile';
 import { SkeletonKPICards } from '../skeleton';
 import { authClient } from '@/lib/auth-client';
+import { isGuestPreviewConstructionPause } from '@/lib/preview/guestPreviewConstruction';
 
 const ServicesAdminPanel = lazy(() => import('./ServicesAdminPanel'));
 const ClientsAdminPanel = lazy(() => import('./ClientsAdminPanel'));
@@ -139,6 +140,8 @@ export default function AdminPanel({ demoMode = false, initialBookings }: AdminP
   const [shopName, setShopName] = useState<string | null>(null);
   const [shopId, setShopId] = useState<string | null>(null);
   const [publicActivityPaused, setPublicActivityPaused] = useState(false);
+  const [previewUnderConstruction, setPreviewUnderConstruction] = useState(false);
+  const [isPreviewAccess, setIsPreviewAccess] = useState(false);
   const [permissions, setPermissions] = useState<string[] | null>(null);
   const [demoLoadError, setDemoLoadError] = useState(false);
   const transitionTimeoutRef = useRef<number | null>(null);
@@ -164,6 +167,7 @@ export default function AdminPanel({ demoMode = false, initialBookings }: AdminP
             logoUrl?: string | null;
             name?: string | null;
             publicActivityPaused?: boolean;
+            pauseReason?: string | null;
           } | null;
           shopId?: string | null;
           user?: { name?: string | null; email?: string | null; image?: string | null } | null;
@@ -186,6 +190,11 @@ export default function AdminPanel({ demoMode = false, initialBookings }: AdminP
           setShopLogoUrl(payload.shop?.logoUrl ?? null);
           setShopName(payload.shop?.name?.trim() || null);
           setPublicActivityPaused(Boolean(payload.shop?.publicActivityPaused));
+          setIsPreviewAccess(payload.via === 'preview');
+          setPreviewUnderConstruction(
+            payload.via === 'preview' ||
+              isGuestPreviewConstructionPause(payload.shop?.pauseReason),
+          );
           setPermissions(payload.permissions ?? null);
           if (payload.user) {
             setProfileUser({
@@ -366,6 +375,8 @@ export default function AdminPanel({ demoMode = false, initialBookings }: AdminP
         shopLogoUrl={demoMode ? null : shopLogoUrl}
         shopName={demoMode ? null : shopName}
         publicActivityPaused={demoMode ? false : publicActivityPaused}
+        previewUnderConstruction={demoMode ? false : previewUnderConstruction}
+        isPreviewAccess={demoMode ? false : isPreviewAccess}
         permissions={demoMode ? null : permissions}
         persistentAdminChrome={<AdminGlobalMobileNextStripHost />}
       >

@@ -5,6 +5,10 @@ import { requireAdminContext } from '@/lib/admin/auth';
 import { requireAnyPermission } from '@/lib/admin/rbac/can';
 import { serializeShopOpeningHours } from '@/lib/admin/shopOpeningHours';
 import { isPauseActiveNow, storedPauseDateToIso } from '@/lib/admin/shopPublicActivity';
+import {
+  isPreviewPublicActivityLocked,
+  PREVIEW_PAUSE_LOCKED_MESSAGE,
+} from '@/lib/preview/guestPreviewConstruction';
 import { prisma } from '@/lib/db/client';
 
 function json(body: unknown, status = 200) {
@@ -41,6 +45,10 @@ export const GET: APIRoute = async (context) => {
   }
 
   const hours = await serializeShopOpeningHours(access.shopId);
+  const pauseLocked = isPreviewPublicActivityLocked({
+    via: access.via,
+    pauseReason: shop.publicActivityPauseReason,
+  });
 
   return json({
     identity: {
@@ -56,6 +64,8 @@ export const GET: APIRoute = async (context) => {
       from: shop.publicActivityPauseFrom ? storedPauseDateToIso(shop.publicActivityPauseFrom) : null,
       until: shop.publicActivityPauseUntil ? storedPauseDateToIso(shop.publicActivityPauseUntil) : null,
       reason: shop.publicActivityPauseReason,
+      locked: pauseLocked,
+      lockedMessage: pauseLocked ? PREVIEW_PAUSE_LOCKED_MESSAGE : null,
     },
   });
 };

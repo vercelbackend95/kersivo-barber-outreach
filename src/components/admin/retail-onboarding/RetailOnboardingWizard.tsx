@@ -265,7 +265,10 @@ export default function RetailOnboardingWizard() {
               </dl>
 
               <div className="booking-confirmation__cta">
-                <a className="btn btn--primary btn--lg" href="/admin/test-shop">
+                <a
+                  className="btn btn--primary btn--lg"
+                  href={`/admin/test-shop?category=${encodeURIComponent(addedSummary.category)}&highlight=1`}
+                >
                   View in my shop
                 </a>
               </div>

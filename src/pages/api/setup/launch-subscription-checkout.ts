@@ -436,6 +436,7 @@ export const POST: APIRoute = async (context) => {
             {
               error: 'This checkout attempt does not match this workspace.',
               code: 'CHECKOUT_ATTEMPT_OWNERSHIP_MISMATCH',
+              rotateAttempt: true,
             },
             409,
           );

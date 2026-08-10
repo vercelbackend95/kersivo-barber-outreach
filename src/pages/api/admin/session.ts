@@ -21,6 +21,7 @@ export const GET: APIRoute = async (context) => {
   let logoUrl: string | null = null;
   let shopName: string | null = null;
   let publicActivityPaused = false;
+  let publicActivityPauseReason: string | null = null;
 
   if (isTenantAdminAccess(access)) {
     try {
@@ -58,6 +59,7 @@ export const GET: APIRoute = async (context) => {
       logoUrl = shop?.logoUrl ?? null;
       shopName = shop?.name ?? null;
       publicActivityPaused = shop ? isPauseActiveNow(shop) : false;
+      publicActivityPauseReason = shop?.publicActivityPauseReason?.trim() || null;
     } catch (error) {
       console.error('Failed to load admin session shop settings', error);
       return new Response(JSON.stringify({ error: 'Could not load admin session.' }), {
@@ -82,6 +84,7 @@ export const GET: APIRoute = async (context) => {
         name: shopName,
         logoUrl,
         publicActivityPaused,
+        pauseReason: publicActivityPauseReason,
       },
       user: access.userId
         ? {
