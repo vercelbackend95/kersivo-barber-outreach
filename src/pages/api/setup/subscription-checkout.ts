@@ -11,6 +11,8 @@ import {
 import { TERMS_ACCEPTANCE_PURPOSES } from '../../../lib/legal/termsVersion';
 import { SAAS_MONTHLY_PENCE } from '../../../lib/seo/defaults';
 import {
+  BLOCKING_SAAS_STATUSES,
+  isBlockingSaasStatus,
   isPrismaUniqueConflict,
   parseCheckoutAttemptId,
   resolveExistingCheckoutOutcome,
@@ -112,6 +114,62 @@ function responseForExistingOutcome(
   );
 }
 
+async function deletePendingOrFail(id: string): Promise<Response | null> {
+  try {
+    await prisma.saasSubscription.delete({ where: { id } });
+    return null;
+  } catch (error) {
+    console.error('Failed to delete expired/mismatched PENDING SaaS subscription', {
+      id,
+      error,
+    });
+    return jsonResponse(
+      {
+        error: 'Unable to release the expired checkout. Please try again shortly.',
+        code: 'CHECKOUT_RELEASE_FAILED',
+      },
+      503,
+    );
+  }
+}
+
+function rotateMismatchResponse() {
+  return jsonResponse(
+    {
+      error: 'This checkout attempt does not match this checkout.',
+      code: 'CHECKOUT_ATTEMPT_MISMATCH',
+      rotateAttempt: true,
+    },
+    409,
+  );
+}
+
+function rotateExpiredResponse() {
+  return jsonResponse(
+    {
+      error: 'This checkout attempt has expired.',
+      code: 'CHECKOUT_ATTEMPT_EXPIRED',
+      rotateAttempt: true,
+    },
+    409,
+  );
+}
+
+function subscriptionAlreadyExistsResponse() {
+  return jsonResponse(
+    {
+      error: 'This barbershop already has a KERSIVO subscription.',
+      code: 'SUBSCRIPTION_ALREADY_EXISTS',
+      redirectTo: '/admin',
+    },
+    409,
+  );
+}
+
+/**
+ * Guest SaaS checkout. When a preview shopId is bound, at most one PENDING/open
+ * row may exist (partial unique index) — reuse or release before creating again.
+ */
 export const POST: APIRoute = async ({ request }) => {
   try {
     const limited = await enforceIpRateLimit(request, 'setup_checkout', 10, 15 * 60 * 1000);
@@ -158,6 +216,8 @@ export const POST: APIRoute = async ({ request }) => {
       return badRequest('Current stack is required.');
     }
 
+    const previewShopId = await resolvePreviewShopIdFromRequest(request);
+
     const existingByAttempt = await prisma.saasSubscription.findUnique({
       where: { checkoutAttemptId },
       select: {
@@ -174,24 +234,71 @@ export const POST: APIRoute = async ({ request }) => {
         existingByAttempt.customerEmail.trim().toLowerCase() !== email ||
         existingByAttempt.shopName.trim().toLowerCase() !== shopName.toLowerCase()
       ) {
-        return jsonResponse(
-          {
-            error: 'This checkout attempt does not match this checkout.',
-            code: 'CHECKOUT_ATTEMPT_MISMATCH',
-            rotateAttempt: true,
-          },
-          409,
-        );
+        // Release unpaid PENDING so a rotated attempt can insert under one_open_per_shop.
+        if (existingByAttempt.status === 'PENDING') {
+          const releaseError = await deletePendingOrFail(existingByAttempt.id);
+          if (releaseError) return releaseError;
+        }
+        return rotateMismatchResponse();
       }
 
-      return responseForExistingOutcome(await outcomeForExistingSession(existingByAttempt.stripeSessionId));
+      if (isBlockingSaasStatus(existingByAttempt.status)) {
+        return subscriptionAlreadyExistsResponse();
+      }
+
+      if (existingByAttempt.status === 'PENDING') {
+        const outcome = await outcomeForExistingSession(existingByAttempt.stripeSessionId);
+        if (outcome.kind === 'open' || outcome.kind === 'complete') {
+          return responseForExistingOutcome(outcome);
+        }
+        if (outcome.kind === 'lookup_failed') {
+          return responseForExistingOutcome(outcome);
+        }
+        // Expired Stripe session: free the shop slot, then rotate.
+        const releaseError = await deletePendingOrFail(existingByAttempt.id);
+        if (releaseError) return releaseError;
+        return rotateExpiredResponse();
+      }
+    }
+
+    // Preview shop already has an open PENDING from a prior cancel — reuse it even if
+    // the browser rotated checkoutAttemptId (one_open_per_shop blocks a second insert).
+    if (previewShopId) {
+      const openByShop = await prisma.saasSubscription.findFirst({
+        where: {
+          shopId: previewShopId,
+          status: { in: [...BLOCKING_SAAS_STATUSES, 'PENDING'] },
+        },
+        orderBy: { createdAt: 'desc' },
+        select: {
+          id: true,
+          status: true,
+          stripeSessionId: true,
+        },
+      });
+
+      if (openByShop && isBlockingSaasStatus(openByShop.status)) {
+        return subscriptionAlreadyExistsResponse();
+      }
+
+      if (openByShop?.status === 'PENDING') {
+        const outcome = await outcomeForExistingSession(openByShop.stripeSessionId);
+        if (outcome.kind === 'open' || outcome.kind === 'complete') {
+          return responseForExistingOutcome(outcome);
+        }
+        if (outcome.kind === 'lookup_failed') {
+          return responseForExistingOutcome(outcome);
+        }
+        const releaseError = await deletePendingOrFail(openByShop.id);
+        if (releaseError) return releaseError;
+        // Fall through to create a fresh checkout with the current attempt id.
+      }
     }
 
     const baseUrl = getPublicSiteUrl();
     const attribution = pickAttribution(body.attribution);
     const townCity = typeof body.townCity === 'string' ? body.townCity.trim().slice(0, 200) : '';
     const barbers = typeof body.barbers === 'string' ? body.barbers.trim().slice(0, 500) : '';
-    const previewShopId = await resolvePreviewShopIdFromRequest(request);
 
     const session = await createSubscriptionCheckoutSession({
       customerEmail: email,
@@ -238,15 +345,35 @@ export const POST: APIRoute = async ({ request }) => {
       });
     } catch (error) {
       if (isPrismaUniqueConflict(error)) {
-        const winner =
-          (await prisma.saasSubscription.findUnique({
-            where: { checkoutAttemptId },
-            select: { stripeSessionId: true },
-          })) ??
-          (await prisma.saasSubscription.findUnique({
-            where: { stripeSessionId: session.id },
-            select: { stripeSessionId: true },
-          }));
+        const winnerAttempt = await prisma.saasSubscription.findUnique({
+          where: { checkoutAttemptId },
+          select: { stripeSessionId: true, status: true },
+        });
+        const winnerSession = winnerAttempt
+          ? null
+          : await prisma.saasSubscription.findUnique({
+              where: { stripeSessionId: session.id },
+              select: { stripeSessionId: true, status: true },
+            });
+        const winnerShop =
+          winnerAttempt || winnerSession
+            ? null
+            : previewShopId
+              ? await prisma.saasSubscription.findFirst({
+                  where: {
+                    shopId: previewShopId,
+                    status: { in: [...BLOCKING_SAAS_STATUSES, 'PENDING'] },
+                  },
+                  orderBy: { createdAt: 'desc' },
+                  select: { stripeSessionId: true, status: true },
+                })
+              : null;
+
+        const winner = winnerAttempt ?? winnerSession ?? winnerShop;
+
+        if (winner && isBlockingSaasStatus(winner.status)) {
+          return subscriptionAlreadyExistsResponse();
+        }
 
         if (winner?.stripeSessionId) {
           return responseForExistingOutcome(await outcomeForExistingSession(winner.stripeSessionId));

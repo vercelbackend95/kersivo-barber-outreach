@@ -4,17 +4,22 @@ import { Prisma } from '@prisma/client';
 
 const createSaas = vi.fn();
 const findUniqueSaas = vi.fn();
+const findFirstSaas = vi.fn();
+const deleteSaas = vi.fn();
 const createLegalAcceptance = vi.fn();
 const createSubscriptionCheckoutSession = vi.fn();
 const retrieveCheckoutSession = vi.fn();
 
 const ATTEMPT = '550e8400-e29b-41d4-a716-446655440000';
+const FRESH_ATTEMPT = '660e8400-e29b-41d4-a716-446655440099';
 
 vi.mock('@/lib/db/client', () => ({
   prisma: {
     saasSubscription: {
       create: (...args: unknown[]) => createSaas(...args),
       findUnique: (...args: unknown[]) => findUniqueSaas(...args),
+      findFirst: (...args: unknown[]) => findFirstSaas(...args),
+      delete: (...args: unknown[]) => deleteSaas(...args),
     },
     legalAcceptance: {
       create: (...args: unknown[]) => createLegalAcceptance(...args),
@@ -76,12 +81,16 @@ describe('POST /api/setup/subscription-checkout', () => {
   beforeEach(() => {
     createSaas.mockReset();
     findUniqueSaas.mockReset();
+    findFirstSaas.mockReset();
+    deleteSaas.mockReset();
     createLegalAcceptance.mockReset();
     createSubscriptionCheckoutSession.mockReset();
     retrieveCheckoutSession.mockReset();
     resolvePreviewShopIdFromRequest.mockReset();
     resolvePreviewShopIdFromRequest.mockResolvedValue(null);
     findUniqueSaas.mockResolvedValue(null);
+    findFirstSaas.mockResolvedValue(null);
+    deleteSaas.mockResolvedValue({});
     createSaas.mockResolvedValue({});
     createLegalAcceptance.mockResolvedValue({});
     createSubscriptionCheckoutSession.mockResolvedValue({
@@ -225,8 +234,101 @@ describe('POST /api/setup/subscription-checkout', () => {
       code: 'CHECKOUT_ATTEMPT_MISMATCH',
       rotateAttempt: true,
     });
+    expect(deleteSaas).toHaveBeenCalledWith({ where: { id: 'sub_1' } });
     expect(createSubscriptionCheckoutSession).not.toHaveBeenCalled();
     expect(retrieveCheckoutSession).not.toHaveBeenCalled();
+  });
+
+  it('reuses open PENDING for preview shop even with a different attempt id', async () => {
+    resolvePreviewShopIdFromRequest.mockResolvedValue('shop_preview_99');
+    findUniqueSaas.mockResolvedValue(null);
+    findFirstSaas.mockResolvedValue({
+      id: 'sub_shop',
+      status: 'PENDING',
+      stripeSessionId: 'cs_shop_pending',
+    });
+    retrieveCheckoutSession.mockResolvedValue({
+      id: 'cs_shop_pending',
+      status: 'open',
+      url: 'https://checkout.stripe.test/cs_shop_pending',
+    });
+
+    const res = await POST(
+      makeContext({ ...validBody, checkoutAttemptId: FRESH_ATTEMPT }) as never,
+    );
+    const body = await res.json();
+
+    expect(res.status).toBe(200);
+    expect(body).toMatchObject({
+      ok: true,
+      reused: true,
+      url: 'https://checkout.stripe.test/cs_shop_pending',
+    });
+    expect(createSubscriptionCheckoutSession).not.toHaveBeenCalled();
+    expect(createSaas).not.toHaveBeenCalled();
+  });
+
+  it('releases expired shop PENDING then creates a fresh checkout', async () => {
+    resolvePreviewShopIdFromRequest.mockResolvedValue('shop_preview_99');
+    findUniqueSaas.mockResolvedValue(null);
+    findFirstSaas.mockResolvedValue({
+      id: 'sub_expired',
+      status: 'PENDING',
+      stripeSessionId: 'cs_expired',
+    });
+    retrieveCheckoutSession.mockResolvedValue({
+      id: 'cs_expired',
+      status: 'expired',
+    });
+
+    const res = await POST(
+      makeContext({ ...validBody, checkoutAttemptId: FRESH_ATTEMPT }) as never,
+    );
+    const body = await res.json();
+
+    expect(deleteSaas).toHaveBeenCalledWith({ where: { id: 'sub_expired' } });
+    expect(createSubscriptionCheckoutSession).toHaveBeenCalledOnce();
+    expect(createSaas).toHaveBeenCalledWith({
+      data: expect.objectContaining({
+        checkoutAttemptId: FRESH_ATTEMPT,
+        shopId: 'shop_preview_99',
+      }),
+    });
+    expect(res.status).toBe(200);
+    expect(body.url).toBe('https://checkout.stripe.test/cs_test_1');
+  });
+
+  it('on one_open_per_shop P2002 reuses existing shop PENDING session', async () => {
+    resolvePreviewShopIdFromRequest.mockResolvedValue('shop_preview_99');
+    findUniqueSaas.mockResolvedValue(null);
+    findFirstSaas
+      .mockResolvedValueOnce(null) // early shop lookup — none (race)
+      .mockResolvedValueOnce({
+        stripeSessionId: 'cs_winner',
+        status: 'PENDING',
+      });
+    createSaas.mockRejectedValueOnce(
+      new Prisma.PrismaClientKnownRequestError('Unique', {
+        code: 'P2002',
+        clientVersion: 'test',
+      }),
+    );
+    retrieveCheckoutSession.mockResolvedValue({
+      id: 'cs_winner',
+      status: 'open',
+      url: 'https://checkout.stripe.test/cs_winner',
+    });
+
+    const res = await POST(
+      makeContext({ ...validBody, checkoutAttemptId: FRESH_ATTEMPT }) as never,
+    );
+    const body = await res.json();
+
+    expect(res.status).toBe(200);
+    expect(body).toMatchObject({
+      reused: true,
+      url: 'https://checkout.stripe.test/cs_winner',
+    });
   });
 
   it('returns success url for complete/paid session', async () => {
@@ -277,6 +379,7 @@ describe('POST /api/setup/subscription-checkout', () => {
       code: 'CHECKOUT_ATTEMPT_EXPIRED',
       rotateAttempt: true,
     });
+    expect(deleteSaas).toHaveBeenCalledWith({ where: { id: 'sub_1' } });
     expect(createSubscriptionCheckoutSession).not.toHaveBeenCalled();
   });
 
