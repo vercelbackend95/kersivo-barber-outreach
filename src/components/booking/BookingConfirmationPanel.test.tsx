@@ -44,7 +44,7 @@ describe('BookingConfirmationPanel', () => {
     expect(screen.getByText(/No appointment was created and no email was sent/i)).toBeTruthy();
     expect(screen.queryByText(/confirmation email is on the way/i)).toBeNull();
     expect(screen.queryByText("You're booked")).toBeNull();
-    expect(screen.getByRole('link', { name: 'See plans & pricing' })).toBeTruthy();
+    expect(screen.getByRole('link', { name: 'See pricing' })).toBeTruthy();
     expect(screen.getByRole('link', { name: 'Ask about my setup' })).toBeTruthy();
   });
 });

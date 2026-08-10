@@ -34,6 +34,7 @@
   max-width: 100%;
   margin-inline: auto;
   min-width: 0;
+  overflow-x: hidden;
   font-family: var(--font-body);
   color: var(--fg);
 }
@@ -43,6 +44,7 @@
   position: relative;
   min-width: 0;
   max-width: 100%;
+  overflow-x: hidden;
 }
 
 /* Un-frame the timeline so it floats over the landing background instead of
@@ -62,15 +64,77 @@
   -ms-overflow-style: none;
 }
 
-/* Reserve horizontal touch for the swipe gesture; vertical still scrolls. */
-.isw .admin-vtl-swipe-root {
-  touch-action: pan-y;
-}
-
 .isw .admin-vtl-scroll::-webkit-scrollbar {
   width: 0;
   height: 0;
   display: none;
+}
+
+/* Reserve horizontal touch for the swipe gesture; vertical still scrolls. */
+.isw .admin-vtl-swipe-root {
+  touch-action: pan-y;
+  min-width: 0;
+  max-width: 100%;
+  overflow: hidden;
+}
+
+/*
+ * Narrow feature261 column can be tight even on desktop — always use the flow
+ * meta row so status/price never clip under absolute positioning.
+ */
+.isw .admin-vtl-expansion-layout {
+  grid-template-columns: 36px minmax(0, 1fr);
+  gap: 0.5rem 0.55rem;
+}
+
+.isw .admin-vtl-expansion-avatars {
+  grid-column: 1;
+  grid-row: 1 / span 2;
+}
+
+.isw .admin-vtl-expansion-main {
+  grid-column: 2;
+  grid-row: 1;
+  padding-right: 0;
+}
+
+.isw .admin-vtl-expansion-status-wrap {
+  position: static;
+  grid-column: 2;
+  grid-row: 2;
+  justify-self: start;
+  align-self: center;
+  flex-direction: row;
+  align-items: center;
+  gap: 0.3rem;
+}
+
+.isw .admin-vtl-expansion-payments {
+  position: static;
+  grid-column: 2;
+  grid-row: 2;
+  justify-self: end;
+  align-self: center;
+  justify-items: end;
+  gap: 1px;
+}
+
+.isw .admin-vtl-expansion-status-pill {
+  font-size: 0.54rem;
+  padding: 2px 6px;
+}
+
+.isw .admin-vtl-expansion-payment-amount {
+  font-size: 0.74rem;
+}
+
+.isw .admin-vtl-expansion-payment-meta {
+  font-size: 0.58rem;
+}
+
+.isw .admin-vtl-expansion-payment-chip {
+  font-size: 0.52rem;
+  padding: 1px 6px;
 }
 
 /* ── Force mobile form on every viewport ─────────────────────────
