@@ -177,7 +177,13 @@ export async function linkAllServicesToAllBarbers(shopId: string) {
   });
 }
 
-export async function loadOnboardingState(shopId: string, access: AdminAccess) {
+/** Session admin access or guest preview (no user). */
+export type OnboardingStateViewer = Pick<
+  AdminAccess,
+  'userId' | 'userName' | 'userEmail' | 'userImage'
+>;
+
+export async function loadOnboardingState(shopId: string, access: OnboardingStateViewer) {
   await healOnboardingCompletedIfEligible(shopId);
 
   const shop = await prisma.shopSettings.findUniqueOrThrow({
@@ -271,3 +277,10 @@ export async function loadOnboardingState(shopId: string, access: AdminAccess) {
       : null,
   };
 }
+
+export const GUEST_ONBOARDING_VIEWER: OnboardingStateViewer = {
+  userId: null,
+  userName: null,
+  userEmail: null,
+  userImage: null,
+};
