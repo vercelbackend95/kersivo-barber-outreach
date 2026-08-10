@@ -3487,6 +3487,9 @@ button.admin-sidebar-brand--button:focus-visible {
 }
 
 .admin-barbershop-paused-banner {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.65rem;
   margin: 0 0 0.75rem;
   padding: 0.7rem 0.9rem;
   border-radius: 0.65rem;
@@ -3495,6 +3498,15 @@ button.admin-sidebar-brand--button:focus-visible {
   color: color-mix(in srgb, var(--warning, #b45309) 72%, var(--fg));
   font-size: 0.88rem;
   line-height: 1.4;
+}
+
+.admin-barbershop-paused-banner__body {
+  flex: 1;
+  min-width: 0;
+}
+
+.admin-barbershop-paused-banner__mobile-copy {
+  display: none;
 }
 
 .admin-barbershop-paused-banner__link {
@@ -3506,6 +3518,35 @@ button.admin-sidebar-brand--button:focus-visible {
   font-weight: 700;
   text-decoration: underline;
   cursor: pointer;
+}
+
+.admin-barbershop-paused-banner__dismiss {
+  flex-shrink: 0;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 1.85rem;
+  height: 1.85rem;
+  margin: -0.2rem -0.35rem 0 0;
+  border: 0;
+  border-radius: 0.45rem;
+  padding: 0;
+  background: transparent;
+  color: inherit;
+  cursor: pointer;
+  opacity: 0.7;
+}
+
+.admin-barbershop-paused-banner__dismiss:hover,
+.admin-barbershop-paused-banner__dismiss:focus-visible {
+  opacity: 1;
+  outline: 2px solid color-mix(in srgb, currentColor 45%, transparent);
+  outline-offset: 1px;
+}
+
+/* Desktop: banner + sticky header share normal column flow. Mobile: see max-width 48rem. */
+.admin-mobile-top-chrome {
+  display: contents;
 }
 
 .admin-sidebar-monogram {
@@ -4100,7 +4141,7 @@ button.admin-sidebar-brand--button:focus-visible {
 
   /*
    * One horizontal rhythm for the whole column: padding on .admin-mobile-edge matches
-   * fixed .admin-mobile-header insets so cards (e.g. .admin-bookings-ops--dash-hero) align edge-to-edge with the bar.
+   * fixed .admin-mobile-top-chrome insets so cards (e.g. .admin-bookings-ops--dash-hero) align edge-to-edge with the bar.
    */
   .admin-mobile-edge {
     --admin-mobile-inline-pad-left: max(12px, env(safe-area-inset-left, 0px));
@@ -4131,14 +4172,63 @@ button.admin-sidebar-brand--button:focus-visible {
     }
   }
 
-  .admin-mobile-header {
+  /* Fixed stack: subscribe/paused banner + mobile header (+ next strip) as one measured chrome unit */
+  .admin-mobile-top-chrome {
+    display: flex;
+    flex-direction: column;
+    align-items: stretch;
+    gap: 0;
     position: fixed;
-    left: var(--admin-mobile-inline-pad-left);
-    right: var(--admin-mobile-inline-pad-right);
+    left: 0;
+    right: 0;
     top: 0;
     width: auto;
-    margin-bottom: 0;
     z-index: var(--admin-z-app-chrome, 260);
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+  }
+
+  .admin-mobile-top-chrome .admin-barbershop-paused-banner {
+    display: flex;
+    align-items: flex-start;
+    gap: 0.5rem;
+    margin: 0;
+    border-radius: 0;
+    border-left: none;
+    border-right: none;
+    border-top: none;
+    padding: calc(0.4rem + env(safe-area-inset-top, 0px))
+      calc(var(--admin-mobile-inline-pad-right) + 0.5rem)
+      0.45rem
+      calc(var(--admin-mobile-inline-pad-left) + 0.5rem);
+    font-size: 0.78rem;
+    line-height: 1.3;
+    word-break: break-word;
+  }
+
+  .admin-mobile-top-chrome .admin-barbershop-paused-banner__desktop-copy {
+    display: none;
+  }
+
+  .admin-mobile-top-chrome .admin-barbershop-paused-banner__mobile-copy {
+    display: inline;
+  }
+
+  .admin-mobile-top-chrome:has(.admin-barbershop-paused-banner) .admin-mobile-header {
+    /* Safe-area already applied on the banner above */
+    padding-top: 0.35rem;
+  }
+
+  .admin-mobile-header {
+    position: relative;
+    left: auto;
+    right: auto;
+    top: auto;
+    width: auto;
+    margin-inline: var(--admin-mobile-inline-pad-left) var(--admin-mobile-inline-pad-right);
+    margin-bottom: 0;
+    z-index: auto;
     gap: 0.5rem;
     padding: calc(0.2rem + env(safe-area-inset-top, 0px)) 0.5rem 0.25rem;
     border-radius: var(--admin-premium-surface-r-mobile);
@@ -4166,10 +4256,9 @@ button.admin-sidebar-brand--button:focus-visible {
     padding-bottom: 0.4rem;
   }
 
-  /* Full-bleed top chrome: viewport width, content rhythm matches .admin-mobile-edge via inherited pad vars */
+  /* Full-bleed top chrome: padding on the header, not the stack */
   .admin-mobile-header.admin-mobile-header--with-next {
-    left: 0;
-    right: 0;
+    margin-inline: 0;
     padding-inline: calc(var(--admin-mobile-inline-pad-left) + 0.5rem)
       calc(var(--admin-mobile-inline-pad-right) + 0.5rem);
     border-top-left-radius: 0;
@@ -4212,12 +4301,14 @@ button.admin-sidebar-brand--button:focus-visible {
   }
 
   /*
-   * Measured node is the inner slot (strip content). Add chrome outside that box but inside the
-   * fixed header: flex gap under the bar, extension padding-top, header padding-bottom (--with-next).
-   * Use --admin-mobile-header-bar-h (not --admin-mobile-header-h): the strip is part of the same
-   * fixed header as the bar, so --admin-mobile-header-gap must not be added again here.
+   * Spacer sibling is .admin-mobile-top-chrome (banner + header). Prefer measured stack height.
+   * Fallback matches previous --with-next chrome math when measure has not published yet.
    */
-  .admin-mobile-header--with-next + .admin-mobile-header-spacer {
+  .admin-mobile-top-chrome + .admin-mobile-header-spacer {
+    height: var(--admin-mobile-measured-header-bottom, var(--admin-mobile-header-h));
+  }
+
+  .admin-mobile-top-chrome:has(.admin-mobile-header--with-next) + .admin-mobile-header-spacer {
     height: var(
       --admin-mobile-measured-header-bottom,
       calc(

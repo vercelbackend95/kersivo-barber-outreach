@@ -23,6 +23,11 @@ import AdminSidebarLaunchCta from './AdminSidebarLaunchCta';
 import AdminSidebarProfile, { type AdminProfileUser } from './AdminSidebarProfile';
 import { clearAdminSecret } from './adminAuth';
 import { authClient } from '@/lib/auth-client';
+import {
+  dismissPreviewSubscribeBanner,
+  isPreviewSubscribeBannerVisible,
+  notePreviewSubscribeBannerSectionChange,
+} from '@/lib/admin/previewSubscribeBanner';
 import '@/styles/components/admin-demo.css';
 import '@/styles/components/admin-profile.css';
 import '@/styles/components/admin-sidebar-launch-cta.css';
@@ -205,10 +210,14 @@ export default function AdminLayout({
 }: AdminLayoutProps) {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [mobileTopExtension, setMobileTopExtension] = useState<React.ReactNode | null>(null);
+  const [showPreviewSubscribeBanner, setShowPreviewSubscribeBanner] = useState(() =>
+    typeof window === 'undefined' ? true : isPreviewSubscribeBannerVisible(),
+  );
   const mainContentRef = useRef<HTMLElement | null>(null);
   const mobileDrawerRef = useRef<HTMLDivElement | null>(null);
   const mobileOpenButtonRef = useRef<HTMLButtonElement | null>(null);
   const lastPublishedHeaderInsetPxRef = useRef<number | null>(null);
+  const prevActiveSectionRef = useRef(activeSection);
   const [mobileChromeMounted, setMobileChromeMounted] = useState(false);
 
   const canOpenBarbershopSettings =
@@ -509,15 +518,15 @@ export default function AdminLayout({
         document.documentElement.style.removeProperty('--admin-mobile-measured-header-bottom');
         return;
       }
-      const headerEl = mainEl.querySelector<HTMLElement>('.admin-mobile-header');
-      if (!headerEl) {
+      const chromeEl = mainEl.querySelector<HTMLElement>('.admin-mobile-top-chrome');
+      if (!chromeEl) {
         lastPublishedHeaderInsetPxRef.current = null;
         mainEl.style.removeProperty('--admin-mobile-measured-header-bottom');
         document.documentElement.style.removeProperty('--admin-mobile-measured-header-bottom');
         return;
       }
-      /* Fixed header at top: spacer height == header height; height is stabler than rect.bottom during vv jitter. */
-      const insetPx = Math.ceil(headerEl.getBoundingClientRect().height);
+      /* Fixed top chrome: spacer height == banner + header (+ next strip); height is stabler than rect.bottom during vv jitter. */
+      const insetPx = Math.ceil(chromeEl.getBoundingClientRect().height);
       if (lastPublishedHeaderInsetPxRef.current === insetPx) {
         return;
       }
@@ -548,8 +557,8 @@ export default function AdminLayout({
         return;
       }
 
-      const headerEl = mainEl.querySelector<HTMLElement>('.admin-mobile-header');
-      if (!headerEl) {
+      const chromeEl = mainEl.querySelector<HTMLElement>('.admin-mobile-top-chrome');
+      if (!chromeEl) {
         lastPublishedHeaderInsetPxRef.current = null;
         mainEl.style.removeProperty('--admin-mobile-measured-header-bottom');
         document.documentElement.style.removeProperty('--admin-mobile-measured-header-bottom');
@@ -558,7 +567,7 @@ export default function AdminLayout({
 
       publish();
       ro = new ResizeObserver(schedulePublish);
-      ro.observe(headerEl);
+      ro.observe(chromeEl);
       window.addEventListener('resize', schedulePublish);
       window.visualViewport?.addEventListener('resize', schedulePublish);
     };
@@ -575,7 +584,19 @@ export default function AdminLayout({
       mainEl.style.removeProperty('--admin-mobile-measured-header-bottom');
       document.documentElement.style.removeProperty('--admin-mobile-measured-header-bottom');
     };
-  }, [mobileTopExtension, activeSectionLabel]);
+  }, [mobileTopExtension, activeSectionLabel, previewUnderConstruction, publicActivityPaused, showPreviewSubscribeBanner]);
+
+  useEffect(() => {
+    if (!previewUnderConstruction) return;
+    if (prevActiveSectionRef.current === activeSection) return;
+    prevActiveSectionRef.current = activeSection;
+    setShowPreviewSubscribeBanner(notePreviewSubscribeBannerSectionChange());
+  }, [activeSection, previewUnderConstruction]);
+
+  const handleDismissPreviewSubscribeBanner = useCallback(() => {
+    dismissPreviewSubscribeBanner();
+    setShowPreviewSubscribeBanner(false);
+  }, []);
 
   const mobileMenuLayer = (
     <>
@@ -651,64 +672,83 @@ export default function AdminLayout({
         aria-busy={isTransitioning}
         data-transitioning={isTransitioning}
       >
-        {previewUnderConstruction ? (
-          <div className="admin-barbershop-paused-banner" role="status">
-            This is how your dashboard will look. Subscribe and we&apos;ll build your website around
-            it.{' '}
-            <a className="admin-barbershop-paused-banner__link" href="/admin/launch">
-              Get started — £39/month
-            </a>
-          </div>
-        ) : publicActivityPaused ? (
-          <div className="admin-barbershop-paused-banner" role="status">
-            Barbershop is paused — public bookings and retail checkout are off.{' '}
-            {canOpenBarbershopSettings ? (
-              <button type="button" className="admin-barbershop-paused-banner__link" onClick={openBarbershopSettings}>
-                Manage in Barbershop settings
-              </button>
-            ) : null}
-          </div>
-        ) : null}
-        <header
-          className={`admin-mobile-header${mobileTopExtension ? ' admin-mobile-header--with-next' : ''}`}
-          aria-label="Admin mobile header"
-        >
-          <div className="admin-mobile-header-bar">
-            <SidebarBrand
-              logoUrl={isPublicDemo ? null : shopLogoUrl}
-              shopName={isPublicDemo ? null : shopName}
-              onOpenSettings={canOpenBarbershopSettings ? openBarbershopSettings : null}
-            />
-            <div className="admin-mobile-header-center">
-              {activeSectionLabel && (
-                <span className="admin-mobile-section-name" aria-current="page">
-                  {activeSectionLabel}
+        <div className="admin-mobile-top-chrome">
+          {previewUnderConstruction && showPreviewSubscribeBanner ? (
+            <div className="admin-barbershop-paused-banner" role="status">
+              <div className="admin-barbershop-paused-banner__body">
+                <span className="admin-barbershop-paused-banner__desktop-copy">
+                  This is how your dashboard will look. Subscribe and we&apos;ll build your website
+                  around it.{' '}
                 </span>
-              )}
-              <SidebarStatus
-                className="admin-sidebar-status--mobile-header"
-                paused={publicActivityPaused && !previewUnderConstruction}
-                underConstruction={previewUnderConstruction}
-              />
+                <span className="admin-barbershop-paused-banner__mobile-copy">
+                  Preview of your dashboard.{' '}
+                </span>
+                <a className="admin-barbershop-paused-banner__link" href="/admin/launch">
+                  Get started — £39/month
+                </a>
+              </div>
+              <button
+                type="button"
+                className="admin-barbershop-paused-banner__dismiss"
+                aria-label="Dismiss"
+                onClick={handleDismissPreviewSubscribeBanner}
+              >
+                <X width={16} height={16} aria-hidden="true" />
+              </button>
             </div>
-            <button
-              ref={mobileOpenButtonRef}
-              type="button"
-              className="admin-mobile-menu-button"
-              onClick={() => setIsMobileMenuOpen(true)}
-              aria-label="Open admin menu"
-              aria-expanded={isMobileMenuOpen}
-              aria-controls="admin-mobile-drawer"
-            >
-              <Menu width={20} height={20} aria-hidden="true" />
-            </button>
-          </div>
-          {mobileTopExtension ? (
-            <div className="admin-mobile-header-extension" aria-label="Upcoming appointments">
-              {mobileTopExtension}
+          ) : publicActivityPaused && !previewUnderConstruction ? (
+            <div className="admin-barbershop-paused-banner" role="status">
+              <div className="admin-barbershop-paused-banner__body">
+                Barbershop is paused — public bookings and retail checkout are off.{' '}
+                {canOpenBarbershopSettings ? (
+                  <button type="button" className="admin-barbershop-paused-banner__link" onClick={openBarbershopSettings}>
+                    Manage in Barbershop settings
+                  </button>
+                ) : null}
+              </div>
             </div>
           ) : null}
-        </header>
+          <header
+            className={`admin-mobile-header${mobileTopExtension ? ' admin-mobile-header--with-next' : ''}`}
+            aria-label="Admin mobile header"
+          >
+            <div className="admin-mobile-header-bar">
+              <SidebarBrand
+                logoUrl={isPublicDemo ? null : shopLogoUrl}
+                shopName={isPublicDemo ? null : shopName}
+                onOpenSettings={canOpenBarbershopSettings ? openBarbershopSettings : null}
+              />
+              <div className="admin-mobile-header-center">
+                {activeSectionLabel && (
+                  <span className="admin-mobile-section-name" aria-current="page">
+                    {activeSectionLabel}
+                  </span>
+                )}
+                <SidebarStatus
+                  className="admin-sidebar-status--mobile-header"
+                  paused={publicActivityPaused && !previewUnderConstruction}
+                  underConstruction={previewUnderConstruction}
+                />
+              </div>
+              <button
+                ref={mobileOpenButtonRef}
+                type="button"
+                className="admin-mobile-menu-button"
+                onClick={() => setIsMobileMenuOpen(true)}
+                aria-label="Open admin menu"
+                aria-expanded={isMobileMenuOpen}
+                aria-controls="admin-mobile-drawer"
+              >
+                <Menu width={20} height={20} aria-hidden="true" />
+              </button>
+            </div>
+            {mobileTopExtension ? (
+              <div className="admin-mobile-header-extension" aria-label="Upcoming appointments">
+                {mobileTopExtension}
+              </div>
+            ) : null}
+          </header>
+        </div>
         <div className="admin-mobile-header-spacer" aria-hidden="true" />
         {isPublicDemo ? <DemoActionLock /> : null}
         {persistentAdminChrome ? (
