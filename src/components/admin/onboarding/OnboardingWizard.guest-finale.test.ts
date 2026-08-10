@@ -7,16 +7,22 @@ describe('guest onboarding finale CTA', () => {
     resolve(process.cwd(), 'src/components/admin/onboarding/OnboardingWizard.tsx'),
     'utf8',
   );
+  const testBook = readFileSync(resolve(process.cwd(), 'src/pages/admin/test-book.astro'), 'utf8');
 
-  it('points guest complete to /preview/dashboard with See your dashboard label', () => {
-    expect(wizard).toContain("isGuest ? 'See your dashboard' : 'Continue to test booking'");
-    expect(wizard).toContain("isGuest ? '/preview/dashboard' : '/admin/test-book'");
-    expect(wizard).toContain("isGuest ? '/preview/dashboard' : '/admin'");
-    expect(wizard).not.toContain("isGuest ? 'Continue to subscribe'");
-    expect(wizard).not.toContain("isGuest ? '/admin/launch' : '/admin/test-book'");
+  it('uses Continue to test booking → /admin/test-book for guests', () => {
+    expect(wizard).toContain("if (step === 6) return 'Continue to test booking'");
+    expect(wizard).toContain("window.location.assign('/admin/test-book')");
+    expect(wizard).not.toContain("isGuest ? 'See your dashboard'");
+    expect(wizard).not.toContain("isGuest ? '/preview/dashboard' : '/admin/test-book'");
   });
 
   it('keeps session complete on test-book path', () => {
-    expect(wizard).toContain("isGuest ? '/preview/dashboard' : '/admin/test-book'");
+    expect(wizard).toContain("window.location.assign('/admin/test-book')");
+  });
+
+  it('allows preview cookie on test-book page', () => {
+    expect(testBook).toContain('isTenantAdminAccess');
+    expect(testBook).toContain("access.via === 'preview' ? '/preview/onboarding'");
+    expect(testBook).not.toContain("access.via !== 'session'");
   });
 });
