@@ -1,4 +1,4 @@
-import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useRef, useState, type PointerEvent } from 'react';
 import BookingConfirmationPanel, { type BookingSummary } from './BookingConfirmationPanel';
 import BookingReviewPanel from './BookingReviewPanel';
 import BookingStepIndicator from './BookingStepIndicator';
@@ -235,6 +235,20 @@ function calculateEndTime(startTime: string, durationMinutes: number): string | 
   return `${String(nextHours).padStart(2, '0')}:${String(nextMinutes).padStart(2, '0')}`;
 }
 
+function openNativeDatePicker(input: HTMLInputElement) {
+  if (typeof input.showPicker === 'function') {
+    try {
+      input.showPicker();
+      return;
+    } catch {
+      // showPicker can throw if not triggered by a user gesture; fall through.
+    }
+  }
+
+  input.focus();
+  input.click();
+}
+
 const STEP_COPY: Record<WizardStepId, { title: string; hint: string }> = {
   service: { title: 'Choose a service', hint: 'Pick what you need' },
   barber: { title: 'Choose a barber', hint: 'Who should take you' },
@@ -281,6 +295,14 @@ export default function BookingFlow({
   const confirmationRef = useRef<HTMLElement | null>(null);
   const hasTrackedPublicDemoRef = useRef(false);
   const idempotencyKeyRef = useRef<string | null>(null);
+  const dateInputRef = useRef<HTMLInputElement | null>(null);
+
+  const handleDateTabPointerDown = useCallback((event: PointerEvent<HTMLLabelElement>) => {
+    event.preventDefault();
+    const input = dateInputRef.current;
+    if (!input) return;
+    openNativeDatePicker(input);
+  }, []);
   const [confirmation, setConfirmation] = useState<{
     type: 'booked' | 'rescheduled' | 'demo';
     summary: BookingSummary;
@@ -903,6 +925,7 @@ export default function BookingFlow({
                           className="booking-date-tab"
                           htmlFor="booking-date"
                           aria-label={`Select date, currently ${bookingDateLabel}`}
+                          onPointerDown={handleDateTabPointerDown}
                         >
                           <span className="booking-date-tab__main">{bookingDateLabel}</span>
                           <span className="booking-date-tab__calendar" aria-hidden="true">
@@ -911,6 +934,7 @@ export default function BookingFlow({
                             </svg>
                           </span>
                           <input
+                            ref={dateInputRef}
                             id="booking-date"
                             type="date"
                             className="booking-date-tab__input"
