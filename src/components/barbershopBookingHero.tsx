@@ -73,7 +73,7 @@ const BarbershopBookingHero = ({ className }: BarbershopBookingHeroProps) => {
                   className="hero227-cta-system text-md flex h-full items-center justify-center rounded-2xl font-medium"
                   asChild
                 >
-                  <a href="#pricing" data-track="plan_my_setup_click">
+                  <a href="/admin/launch" data-track="saas_subscribe_click">
                     Get started — £{SAAS_MONTHLY_GBP}/month
                   </a>
                 </Button>
