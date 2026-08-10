@@ -22,6 +22,10 @@ import {
   setPublicAdminDemoMode,
 } from '@/components/admin/adminAuth';
 import { getLandingTimelineData, type LandingBarber } from '@/lib/landing/liveTimelineData';
+import {
+  LANDING_TIMELINE_SCROLL_FOCUS,
+  pickClosestTimeLabel,
+} from '@/lib/landing/liveTimelineScroll';
 import { adminDemoHref } from '@/lib/admin/demoConfig';
 
 const ADMIN_DEMO_HREF = adminDemoHref('timeline');
@@ -48,20 +52,30 @@ export function InsideSystemLiveWidget({
   }, []);
 
   useEffect(() => {
-    // Center the "now" line inside the widget's own scroll container only —
+    // Center mid-afternoon demo activity inside the widget's own scroll container —
     // never scrollIntoView (which would jump the whole landing page here).
-    // Runs once, when the widget first becomes visible, so the current time is
-    // always centered (and therefore the largest in the odometer) by default.
+    // Evening visitors would otherwise land on an empty "now" row (~22:00).
     const container = scrollRef.current;
     if (!container) return undefined;
 
     let done = false;
-    const centerNow = () => {
-      const nowRow = container.querySelector<HTMLElement>('.admin-vtl-now-row');
-      if (!nowRow) return;
+    const centerFocusTime = () => {
+      const timeNodes = Array.from(
+        container.querySelectorAll<HTMLElement>('[data-vtl-time]'),
+      );
+      const labels = timeNodes.map((node) => node.getAttribute('data-vtl-time') ?? '');
+      const targetLabel = pickClosestTimeLabel(labels, LANDING_TIMELINE_SCROLL_FOCUS);
+      if (!targetLabel) return;
+      const target = timeNodes.find(
+        (node) => node.getAttribute('data-vtl-time') === targetLabel,
+      );
+      if (!target) return;
+      // Prefer the slot/now row wrapper when available so centering uses full row height.
+      const row =
+        target.closest<HTMLElement>('.admin-vtl-slot, .admin-vtl-now-row') ?? target;
       container.scrollTop = Math.max(
         0,
-        nowRow.offsetTop - container.clientHeight / 2 + nowRow.offsetHeight / 2,
+        row.offsetTop - container.clientHeight / 2 + row.offsetHeight / 2,
       );
     };
 
@@ -72,7 +86,7 @@ export function InsideSystemLiveWidget({
         observer.disconnect();
         // rAF x2 so layout (and any expansion) is settled before measuring.
         window.requestAnimationFrame(() =>
-          window.requestAnimationFrame(centerNow),
+          window.requestAnimationFrame(centerFocusTime),
         );
       },
       { threshold: 0.25 },

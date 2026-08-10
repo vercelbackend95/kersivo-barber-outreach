@@ -14,7 +14,11 @@
     );
     --admin-mobile-header-gap: var(--space-sm);
     --admin-mobile-header-h: calc(var(--admin-mobile-header-bar-h) + var(--admin-mobile-header-gap));
-    --admin-mobile-sticky-stack-top: var(--admin-mobile-header-bar-h);
+    /* Prefer measured top chrome (banner + header + next strip) when published by AdminLayout */
+    --admin-mobile-sticky-stack-top: var(
+      --admin-mobile-measured-header-bottom,
+      var(--admin-mobile-header-bar-h)
+    );
   }
 
   .admin-main-content,
