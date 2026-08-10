@@ -42,7 +42,7 @@ describe('GET /api/availability preview shop scope', () => {
     getAvailabilitySlots.mockResolvedValue([]);
   });
 
-  it('scopes to preview shopId', async () => {
+  it('scopes to preview shopId and ignores public pause for test booking', async () => {
     resolveAdminAccess.mockResolvedValue({
       shopId: 'shop_preview',
       via: 'preview',
@@ -51,15 +51,26 @@ describe('GET /api/availability preview shop scope', () => {
       permissions: [],
     });
     serviceFindFirst.mockResolvedValue({ id: 'svc_1' });
+    getAvailabilitySlots.mockResolvedValue({ slots: ['10:00'], paused: false });
 
     const url =
       'http://localhost/api/availability?serviceId=svc_1&barberId=b1&date=2026-08-10';
-    await GET({ request: new Request(url) } as unknown as APIContext);
+    const res = await GET({ request: new Request(url) } as unknown as APIContext);
 
     expect(serviceFindFirst).toHaveBeenCalledWith(
       expect.objectContaining({
         where: { id: 'svc_1', shopId: 'shop_preview' },
       }),
     );
+    expect(getAvailabilitySlots).toHaveBeenCalledWith(
+      expect.objectContaining({
+        serviceId: 'svc_1',
+        barberId: 'b1',
+        date: '2026-08-10',
+        ignorePublicActivityPause: true,
+      }),
+    );
+    expect(res.status).toBe(200);
+    await expect(res.json()).resolves.toMatchObject({ slots: ['10:00'], paused: false });
   });
 });
