@@ -1319,9 +1319,11 @@ export default function OnboardingWizard({ mode = 'session' }: OnboardingWizardP
           <section aria-labelledby="onboarding-hours-title" className="admin-onboarding__stack">
             <div>
               <h1 id="onboarding-hours-title" className="admin-onboarding__title">
-                When can clients book?
+                Barber working hours
               </h1>
-              <p className="admin-onboarding__description">Set a simple weekly schedule. You can refine this later.</p>
+              <p className="admin-onboarding__description">
+                Set when barbers can take bookings. Times must stay within shop opening hours.
+              </p>
             </div>
             {hoursError ? (
               <p className="admin-onboarding__error" role="alert">
@@ -1495,7 +1497,7 @@ export default function OnboardingWizard({ mode = 'session' }: OnboardingWizardP
 
             <article className="admin-onboarding__summary-card">
               <div className="admin-onboarding__summary-top">
-                <p className="admin-onboarding__summary-label">Working hours</p>
+                <p className="admin-onboarding__summary-label">Barber working hours</p>
                 <button type="button" className="btn btn--ghost btn--sm" onClick={() => setStep(5)}>
                   Edit
                 </button>
