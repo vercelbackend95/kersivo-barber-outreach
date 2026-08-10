@@ -2,7 +2,7 @@
 // Session/admin + demo-reschedule slot lookup. Live tenant public booking uses
 // /api/public/bookings/[shopId]/availability (no admin session, no DEMO fallback).
 import type { APIRoute } from 'astro';
-import { resolveAdminAccess } from '../../lib/admin/auth';
+import { isTenantAdminAccess, resolveAdminAccess } from '../../lib/admin/auth';
 import { BookingActionError } from '../../lib/booking/service';
 import { normalizeToIsoDate } from '../../lib/booking/time';
 import { getAvailabilitySlots } from '../../lib/booking/service';
@@ -45,7 +45,7 @@ export const GET: APIRoute = async (ctx) => {
   }
 
   const access = await resolveAdminAccess(ctx);
-  const allowedShopId = access?.via === 'session' ? access.shopId : DEMO_SHOP_ID;
+  const allowedShopId = isTenantAdminAccess(access) ? access.shopId : DEMO_SHOP_ID;
 
   const service = await prisma.service.findFirst({
     where: { id: serviceId, shopId: allowedShopId },

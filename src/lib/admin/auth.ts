@@ -10,6 +10,7 @@ import { DEMO_SHOP_ID, resolveShopId } from '@/lib/db/shopScope';
 import { requirePermission as denyUnless } from '@/lib/admin/rbac/can';
 import type { Permission } from '@/lib/admin/rbac/permissions';
 import { permissionsForRole } from '@/lib/admin/rbac/permissions';
+import { resolvePreviewAccess } from '@/lib/preview/shopPreviewSession';
 import { getAdminSessionCookieName, getSessionSecret, parseAdminSessionToken } from './session';
 
 export type AdminAccess = {
@@ -20,12 +21,17 @@ export type AdminAccess = {
   /** Session users: from Better Auth. Secret / legacy-cookie paths are treated as verified. */
   emailVerified: boolean;
   userImage: string | null;
-  via: 'session' | 'secret' | 'legacy-cookie';
+  via: 'session' | 'secret' | 'legacy-cookie' | 'preview';
   role: ShopRole;
   memberId: string | null;
   barberId: string | null;
   permissions: readonly Permission[];
 };
+
+/** Tenant shop-scoped access (Better Auth owner/member or guest preview cookie). */
+export function isTenantAdminAccess(access: AdminAccess | null | undefined): access is AdminAccess {
+  return Boolean(access && (access.via === 'session' || access.via === 'preview'));
+}
 
 export const EMAIL_VERIFICATION_REQUIRED_MESSAGE =
   'Verify your email address before continuing. Check your inbox for a verification link.';
@@ -115,7 +121,23 @@ export async function resolveAdminAccess(context: APIContext): Promise<AdminAcce
       }
     }
   } catch {
-    // Fall through to legacy admin auth.
+    // Fall through to preview / legacy admin auth.
+  }
+
+  const preview = await resolvePreviewAccess(context);
+  if (preview) {
+    return buildAccess({
+      shopId: preview.shopId,
+      userId: null,
+      userName: null,
+      userEmail: null,
+      emailVerified: true,
+      userImage: null,
+      via: 'preview',
+      role: 'OWNER',
+      memberId: null,
+      barberId: null,
+    });
   }
 
   if (isSecretAuthorized(context) || isLegacyCookieAuthorized(context)) {
