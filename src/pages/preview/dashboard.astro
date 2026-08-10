@@ -1,21 +1,33 @@
 ---
 import MinimalLayout from '@/layouts/MinimalLayout.astro';
-import PreviewDashboard from '@/components/preview/PreviewDashboard';
+import PreviewAdminShell from '@/components/preview/PreviewAdminShell';
+import { PAGE_DESCRIPTIONS } from '@/lib/seo/defaults';
 import '@/styles/tokens.css';
 import '@/styles/fonts-admin.css';
 import '@/styles/global.css';
 import '@/styles/components/booking.css';
+import '@/styles/components/admin-mobile-sticky-overrides.css';
 import '@/styles/components/inputs.css';
 import '@/styles/components/buttons.css';
+import '@/styles/components/badge.css';
 import '@/styles/components/admin-login.css';
 import '@/styles/components/admin-section-header.css';
 import '@/styles/components/empty-state.css';
-import '@/styles/components/preview-dashboard.css';
+import '@/styles/components/skeleton.css';
+import '@/styles/components/admin-services.css';
+import '@/styles/components/admin-service-wizard.css';
+import '@/styles/components/admin-product-wizard.css';
+import '@/styles/components/admin-barber-wizard.css';
+import '@/styles/components/shop-products-polish.css';
+import '@/styles/components/admin-retail-onboarding.css';
+import '@/styles/components/table.css';
+import '@/styles/components/admin-ai.css';
+import '@/styles/components/preview-admin-shell.css';
 ---
 
 <MinimalLayout
-  title="Your barbershop dashboard | Kersivo"
-  description="Preview dashboard for the barbershop you just built — no account required."
+  title="Your barbershop admin | Kersivo"
+  description={PAGE_DESCRIPTIONS.admin}
   canonicalPath="/preview/dashboard"
   noindex={true}
   htmlClass="admin-app-scroll"
@@ -39,7 +51,7 @@ import '@/styles/components/preview-dashboard.css';
     crossorigin
   />
   <main class="container page-wrap admin-page-wrap">
-    <h1 class="sr-only">Your barbershop preview dashboard</h1>
-    <PreviewDashboard client:load />
+    <h1 class="sr-only">Your barbershop preview admin</h1>
+    <PreviewAdminShell client:load />
   </main>
 </MinimalLayout>

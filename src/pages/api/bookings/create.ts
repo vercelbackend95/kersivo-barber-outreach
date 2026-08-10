@@ -1,7 +1,7 @@
 export const prerender = false;
 
 import type { APIRoute } from 'astro';
-import { resolveAdminAccess } from '../../../lib/admin/auth';
+import { isTenantAdminAccess, resolveAdminAccess } from '../../../lib/admin/auth';
 import { bookingCreateSchema } from '../../../lib/booking/schemas';
 import { OWNER_TEST_BOOKING_NOTES_PREFIX } from '../../../lib/booking/sandboxBookings';
 import { BookingActionError, createInstantBooking } from '../../../lib/booking/service';
@@ -24,9 +24,8 @@ export const POST: APIRoute = async (ctx) => {
   const { request } = ctx;
   const ip = getRequestIp(request);
   const access = await resolveAdminAccess(ctx);
-  const isOwnerSession = access?.via === 'session';
 
-  if (!isOwnerSession) {
+  if (!isTenantAdminAccess(access)) {
     return new Response(JSON.stringify({ error: 'Unauthorized' }), { status: 401 });
   }
 
@@ -71,7 +70,7 @@ export const POST: APIRoute = async (ctx) => {
   const headerIdempotencyKey = request.headers.get('Idempotency-Key')?.trim() || '';
   const idempotencyKey = parsed.data.idempotencyKey?.trim() || headerIdempotencyKey || undefined;
 
-  const requiredShopId = access!.shopId;
+  const requiredShopId = access.shopId;
   const notesPrefix = OWNER_TEST_BOOKING_NOTES_PREFIX;
 
   try {

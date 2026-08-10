@@ -1,7 +1,7 @@
 export const prerender = false;
 
 import type { APIRoute } from 'astro';
-import { requireAdminContext } from '../../../lib/admin/auth';
+import { isTenantAdminAccess, requireAdminContext } from '../../../lib/admin/auth';
 import { healOnboardingCompletedIfEligible } from '../../../lib/admin/onboarding';
 import { isPauseActiveNow } from '../../../lib/admin/shopPublicActivity';
 import { prisma } from '../../../lib/db/client';
@@ -22,7 +22,7 @@ export const GET: APIRoute = async (context) => {
   let shopName: string | null = null;
   let publicActivityPaused = false;
 
-  if (access.via === 'session') {
+  if (isTenantAdminAccess(access)) {
     try {
       await healOnboardingCompletedIfEligible(access.shopId);
 
@@ -64,38 +64,6 @@ export const GET: APIRoute = async (context) => {
         status: 500,
       });
     }
-
-    return new Response(
-      JSON.stringify({
-        ok: true,
-        shopId: access.shopId,
-        onboardingCompleted,
-        onboardingCurrentStep,
-        retailOnboardingCompleted,
-        retailOnboardingSkipped,
-        retailOnboardingProductId,
-        retailTestOrderId,
-        retailTestOrderCompletedAt,
-        retailPickupWalkthroughCompletedAt,
-        shop: {
-          name: shopName,
-          logoUrl,
-          publicActivityPaused,
-        },
-        user: access.userId
-          ? {
-              id: access.userId,
-              name: access.userName,
-              email: access.userEmail,
-              image: access.userImage,
-            }
-          : null,
-        role: access.role,
-        barberId: access.barberId,
-        permissions: access.permissions,
-        via: access.via,
-      }),
-    );
   }
 
   return new Response(
@@ -106,7 +74,7 @@ export const GET: APIRoute = async (context) => {
       onboardingCurrentStep,
       retailOnboardingCompleted,
       retailOnboardingSkipped,
-      retailOnboardingProductId: null,
+      retailOnboardingProductId: isTenantAdminAccess(access) ? retailOnboardingProductId : null,
       retailTestOrderId,
       retailTestOrderCompletedAt,
       retailPickupWalkthroughCompletedAt,
