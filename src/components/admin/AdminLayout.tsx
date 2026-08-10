@@ -246,9 +246,9 @@ export default function AdminLayout({
   }, []);
 
   /*
-   * iOS Safari: fixed layers use the layout viewport; *dvh* / bottom:0 often end above the visible
-   * bottom (URL bar). Publish a pixel height from innerHeight + visualViewport so the menu backdrop
-   * reaches the same vertical extent as scrolled admin content under the browser chrome.
+   * iOS Safari: fixed overlays/drawers need a measured visual viewport height.
+   * Only sync on resize/orientation — never on visualViewport scroll. Writing CSS
+   * height vars during scroll fights rubber-band inertia (spring jump on all tabs).
    */
   useLayoutEffect(() => {
     if (!mobileChromeMounted) return undefined;
@@ -257,7 +257,8 @@ export default function AdminLayout({
     const mq = window.matchMedia('(max-width: 48rem)');
     let rafId = 0;
     let settleTimeoutId = 0;
-    let lastPublishedHeightPx: string | null = null;
+    let lastPublishedHeightPx: number | null = null;
+    const HEIGHT_JITTER_PX = 2;
 
     const clearVvVars = () => {
       lastPublishedHeightPx = null;
@@ -273,15 +274,20 @@ export default function AdminLayout({
       }
       const vv = window.visualViewport;
       /*
-       * Cover the same vertical band as in-flow admin content under iOS Safari:
-       * - innerHeight tracks chrome show/hide
-       * - vv.height + offsetTop is the visual viewport span inside the layout box (extends past *dvh)
+       * Overlay/drawer coverage only (not document min-height):
+       * prefer the larger of innerHeight and visualViewport height.
+       * Skip offsetTop — it jitter during rubber-band and is unnecessary for resize-only sync.
        */
-      const fromVv = vv ? vv.offsetTop + vv.height : 0;
-      const h = Math.max(window.innerHeight, fromVv);
-      const hPx = `${Math.ceil(h)}px`;
-      if (lastPublishedHeightPx === hPx) return;
-      lastPublishedHeightPx = hPx;
+      const fromVv = vv ? vv.height : 0;
+      const h = Math.ceil(Math.max(window.innerHeight, fromVv));
+      if (
+        lastPublishedHeightPx !== null &&
+        Math.abs(lastPublishedHeightPx - h) <= HEIGHT_JITTER_PX
+      ) {
+        return;
+      }
+      lastPublishedHeightPx = h;
+      const hPx = `${h}px`;
       root.style.setProperty('--admin-mobile-vv-top', '0px');
       root.style.setProperty('--admin-mobile-vv-h', hPx);
       root.style.setProperty('--admin-mobile-app-h', hPx);
@@ -301,7 +307,6 @@ export default function AdminLayout({
 
     const vv = window.visualViewport;
     vv?.addEventListener('resize', scheduleVisualViewportSync);
-    vv?.addEventListener('scroll', scheduleVisualViewportSync, { passive: true });
     mq.addEventListener('change', scheduleVisualViewportSync);
     window.addEventListener('resize', scheduleVisualViewportSync);
     window.addEventListener('orientationchange', scheduleVisualViewportSync);
@@ -311,12 +316,11 @@ export default function AdminLayout({
       if (settleTimeoutId !== 0) window.clearTimeout(settleTimeoutId);
       clearVvVars();
       vv?.removeEventListener('resize', scheduleVisualViewportSync);
-      vv?.removeEventListener('scroll', scheduleVisualViewportSync);
       mq.removeEventListener('change', scheduleVisualViewportSync);
       window.removeEventListener('resize', scheduleVisualViewportSync);
       window.removeEventListener('orientationchange', scheduleVisualViewportSync);
     };
-  }, [mobileChromeMounted, activeSection, showSectionSkeleton]);
+  }, [mobileChromeMounted]);
 
   const onSelectSection = (section: AdminSection) => {
     onChangeSection(section);
@@ -527,7 +531,11 @@ export default function AdminLayout({
       }
       /* Fixed top chrome: spacer height == banner + header (+ next strip); height is stabler than rect.bottom during vv jitter. */
       const insetPx = Math.ceil(chromeEl.getBoundingClientRect().height);
-      if (lastPublishedHeaderInsetPxRef.current === insetPx) {
+      const previous = lastPublishedHeaderInsetPxRef.current;
+      if (previous !== null && Math.abs(previous - insetPx) < 2) {
+        return;
+      }
+      if (previous === insetPx) {
         return;
       }
       lastPublishedHeaderInsetPxRef.current = insetPx;

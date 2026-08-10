@@ -4130,13 +4130,18 @@ button.admin-sidebar-brand--button:focus-visible {
 
 
 @media (max-width: 48rem) {
-  /* iOS Safari: use the measured visual viewport so the admin fills the area behind dynamic bottom chrome. */
+  /*
+   * Stable document height — do NOT bind min-height to live --admin-mobile-app-h.
+   * That var still drives overlays/drawers/sheets; using it here caused iOS scroll spring.
+   */
   .admin-shell {
-    min-height: var(--admin-mobile-app-h, var(--admin-mobile-vv-h, 100dvh));
+    min-height: 100svh;
+    min-height: 100dvh;
   }
 
   .admin-main-content {
-    min-height: var(--admin-mobile-app-h, var(--admin-mobile-vv-h, 100dvh));
+    min-height: 100svh;
+    min-height: 100dvh;
   }
 
   /*
