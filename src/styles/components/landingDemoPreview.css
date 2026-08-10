@@ -179,22 +179,3 @@
   color: var(--muted);
   text-wrap: pretty;
 }
-
-.landing-demo-preview__pricing-link {
-  color: var(--accent);
-  font-family: var(--font-body);
-  font-size: 0.9375rem;
-  font-weight: 600;
-  text-decoration: underline;
-  text-underline-offset: 0.18em;
-}
-
-.landing-demo-preview__pricing-link:hover {
-  color: var(--accent-hover);
-}
-
-.landing-demo-preview__pricing-link:focus-visible {
-  outline: 0;
-  box-shadow: 0 0 0 3px color-mix(in srgb, var(--focus) 45%, transparent);
-  border-radius: 2px;
-}
