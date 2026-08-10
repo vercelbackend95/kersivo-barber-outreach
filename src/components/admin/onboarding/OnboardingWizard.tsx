@@ -223,7 +223,7 @@ export default function OnboardingWizard({ mode = 'session' }: OnboardingWizardP
 
       if (payload.onboardingCompleted && !isReopen) {
         redirectingAway = true;
-        window.location.assign(isGuest ? '/admin/launch' : '/admin');
+        window.location.assign(isGuest ? '/preview/dashboard' : '/admin');
         return;
       }
 
@@ -557,7 +557,7 @@ export default function OnboardingWizard({ mode = 'session' }: OnboardingWizardP
         throw new Error(sessionExpiredMessage);
       }
       if (!response.ok) throw new Error(await readJsonError(response));
-      window.location.assign(isGuest ? '/admin/launch' : '/admin/test-book');
+      window.location.assign(isGuest ? '/preview/dashboard' : '/admin/test-book');
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Could not finish setup.');
       setSaving(false);
@@ -594,7 +594,7 @@ export default function OnboardingWizard({ mode = 'session' }: OnboardingWizardP
 
   const primaryLabel = useMemo(() => {
     if (step === 0) return 'Start setup';
-    if (step === 6) return isGuest ? 'Continue to subscribe' : 'Continue to test booking';
+    if (step === 6) return isGuest ? 'See your dashboard' : 'Continue to test booking';
     return 'Continue';
   }, [isGuest, step]);
 
@@ -705,7 +705,7 @@ export default function OnboardingWizard({ mode = 'session' }: OnboardingWizardP
           <h1 className="admin-onboarding__title">Your workspace is ready</h1>
           <p className="admin-onboarding__description">
             {isGuest
-              ? 'Next, subscribe to keep your barbershop and go live with KERSIVO.'
+              ? 'Your barbershop preview is ready. Open the dashboard to see your shop, team and services.'
               : 'You can now explore your dashboard and continue building your KERSIVO setup.'}
           </p>
           <div className="admin-onboarding__footer" style={{ position: 'static', background: 'none' }}>
@@ -714,11 +714,11 @@ export default function OnboardingWizard({ mode = 'session' }: OnboardingWizardP
               className="btn btn--primary btn--lg"
               onClick={() => {
                 window.location.assign(
-                  isGuest ? '/admin/launch' : '/admin?section=bookings_dashboard',
+                  isGuest ? '/preview/dashboard' : '/admin?section=bookings_dashboard',
                 );
               }}
             >
-              {isGuest ? 'Get started — £39/month' : 'Go to dashboard'}
+              {isGuest ? 'See your dashboard' : 'Go to dashboard'}
             </button>
           </div>
         </main>
