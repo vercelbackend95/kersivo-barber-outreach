@@ -321,7 +321,9 @@
   width: 52px;
   height: auto;
   transform-origin: 100% 100%;
-  animation: isw-tap-hint-point 1.4s ease-in-out infinite;
+  /* linear + eased keyframes = continuous sine-like bob, no mid-cycle snaps */
+  animation: isw-tap-hint-point 2.1s linear infinite;
+  will-change: transform;
   user-select: none;
   -webkit-user-drag: none;
 }
@@ -338,15 +340,32 @@
 }
 
 @keyframes isw-tap-hint-point {
-  0%,
+  0% {
+    transform: translate3d(0, 0, 0);
+  }
+  12.5% {
+    transform: translate3d(0, 0.7px, 0);
+  }
+  25% {
+    transform: translate3d(0, 2px, 0);
+  }
+  37.5% {
+    transform: translate3d(0, 3.3px, 0);
+  }
+  50% {
+    transform: translate3d(0, 4px, 0);
+  }
+  62.5% {
+    transform: translate3d(0, 3.3px, 0);
+  }
+  75% {
+    transform: translate3d(0, 2px, 0);
+  }
+  87.5% {
+    transform: translate3d(0, 0.7px, 0);
+  }
   100% {
-    transform: translateY(0);
-  }
-  45% {
-    transform: translateY(3px);
-  }
-  62% {
-    transform: translateY(1px);
+    transform: translate3d(0, 0, 0);
   }
 }
 
