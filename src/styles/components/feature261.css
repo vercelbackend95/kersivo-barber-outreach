@@ -107,9 +107,12 @@
 
 .feature261 .feature261__media--widget {
   align-self: center;
-  overflow: visible;
+  overflow-x: clip;
+  overflow-y: visible;
+  min-width: 0;
   min-height: clamp(22rem, 42vh, 32rem);
   width: 100%;
+  max-width: 100%;
 }
 
 .feature261 .feature261__media--carousel {

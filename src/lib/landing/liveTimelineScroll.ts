@@ -30,3 +30,17 @@ export function pickClosestTimeLabel(
 
   return best;
 }
+
+/** Center a row inside a scroll container (same math as the landing widget). */
+export function computeCenteredScrollTop(
+  containerClientHeight: number,
+  rowOffsetTop: number,
+  rowOffsetHeight: number,
+): number {
+  return Math.max(0, rowOffsetTop - containerClientHeight / 2 + rowOffsetHeight / 2);
+}
+
+export function prefersReducedMotion(): boolean {
+  if (typeof window === 'undefined' || typeof window.matchMedia !== 'function') return false;
+  return window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+}
