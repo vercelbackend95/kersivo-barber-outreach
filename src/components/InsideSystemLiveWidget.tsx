@@ -31,7 +31,6 @@ import {
 import { adminDemoHref } from '@/lib/admin/demoConfig';
 
 const ADMIN_DEMO_HREF = adminDemoHref('timeline');
-const TAP_HINT_TIMEOUT_MS = 6500;
 const SCROLL_END_FALLBACK_MS = 700;
 
 type TapHintPos = { top: number; left: number };
@@ -82,14 +81,12 @@ export function InsideSystemLiveWidget({
 
     let done = false;
     let scrollEndTimer: number | undefined;
-    let hintTimeout: number | undefined;
     let retryTimer: number | undefined;
 
     const dismissTapHint = () => {
       if (tapHintDismissedRef.current) return;
       tapHintDismissedRef.current = true;
       setTapHintVisible(false);
-      if (hintTimeout !== undefined) window.clearTimeout(hintTimeout);
     };
 
     const getScrollContainer = () => scrollRef.current;
@@ -120,7 +117,6 @@ export function InsideSystemLiveWidget({
       setTapHintPos({ top, left });
       tapHintShownRef.current = true;
       setTapHintVisible(true);
-      hintTimeout = window.setTimeout(dismissTapHint, TAP_HINT_TIMEOUT_MS);
     };
 
     const afterScrollSettled = (container: HTMLElement) => {
@@ -187,12 +183,15 @@ export function InsideSystemLiveWidget({
       afterScrollSettled(container);
     };
 
-    const onSlotInteract = (event: Event) => {
+    const onFocusSlotClick = (event: Event) => {
       const target = event.target as Element | null;
-      if (!target?.closest?.('.admin-vtl-slot--interactive, .admin-vtl-expansion')) return;
+      const slot = target?.closest?.('.admin-vtl-slot--interactive');
+      if (!slot) return;
+      const timeNode = slot.querySelector<HTMLElement>('[data-vtl-time]');
+      if (!timeNode || readTimeLabel(timeNode) !== LANDING_TIMELINE_SCROLL_FOCUS) return;
       dismissTapHint();
     };
-    root.addEventListener('click', onSlotInteract);
+    root.addEventListener('click', onFocusSlotClick);
 
     const observer = new IntersectionObserver(
       (entries) => {
@@ -209,17 +208,14 @@ export function InsideSystemLiveWidget({
 
     return () => {
       observer.disconnect();
-      root.removeEventListener('click', onSlotInteract);
+      root.removeEventListener('click', onFocusSlotClick);
       if (scrollEndTimer !== undefined) window.clearTimeout(scrollEndTimer);
-      if (hintTimeout !== undefined) window.clearTimeout(hintTimeout);
       if (retryTimer !== undefined) window.clearTimeout(retryTimer);
     };
   }, []);
 
   useEffect(() => {
     if (!lockOpen) return;
-    setTapHintVisible(false);
-    tapHintDismissedRef.current = true;
     const onKey = (e: KeyboardEvent) => {
       if (e.key === 'Escape') setLockOpen(false);
     };
