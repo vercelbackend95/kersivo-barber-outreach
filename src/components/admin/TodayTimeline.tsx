@@ -316,6 +316,23 @@ const ACTIONS_PANEL_W = 200;
 
 const SWIPE_THRESHOLD = 60;
 
+/** Prefer CSS `--client-panel-w` / `--actions-panel-w` so embeds (ISW) can compact panels. */
+function readSwipePanelWidths(el: HTMLElement | null): { client: number; actions: number } {
+  if (!el || typeof window === 'undefined') {
+    return { client: CLIENT_PANEL_W, actions: ACTIONS_PANEL_W };
+  }
+  const styles = window.getComputedStyle(el);
+  const parse = (name: string, fallback: number) => {
+    const raw = styles.getPropertyValue(name).trim();
+    const n = Number.parseFloat(raw);
+    return Number.isFinite(n) && n > 0 ? n : fallback;
+  };
+  return {
+    client: parse('--client-panel-w', CLIENT_PANEL_W),
+    actions: parse('--actions-panel-w', ACTIONS_PANEL_W),
+  };
+}
+
 // Step one panel at a time relative to the current state so the center ("Main")
 // card stays reachable from either side. Panel order (left→right of revealed
 // content): client panel ('left') · main ('closed') · actions ('right').
@@ -553,14 +570,19 @@ const BookingExpansionCard = memo(function BookingExpansionCard({
     }
   }, []);
 
-  const snapForState = useCallback(
-    (state: SwipeState) =>
-      state === 'left'
-        ? 0
-        : state === 'right'
-          ? -(CLIENT_PANEL_W + ACTIONS_PANEL_W)
-          : -CLIENT_PANEL_W,
+  const panelWidths = useCallback(
+    () => readSwipePanelWidths(swipeRootRef.current),
     [],
+  );
+
+  const snapForState = useCallback(
+    (state: SwipeState) => {
+      const { client, actions } = panelWidths();
+      if (state === 'left') return 0;
+      if (state === 'right') return -(client + actions);
+      return -client;
+    },
+    [panelWidths],
   );
 
   const handleTouchStart = useCallback((e: React.TouchEvent) => {
@@ -601,14 +623,15 @@ const BookingExpansionCard = memo(function BookingExpansionCard({
 
       e.preventDefault();
       if (Math.abs(dx) > 6) didDragRef.current = true;
+      const { client, actions } = panelWidths();
       const base = snapForState(swipeStateRef.current);
-      const clamped = Math.min(0, Math.max(-(CLIENT_PANEL_W + ACTIONS_PANEL_W), base + dx));
+      const clamped = Math.min(0, Math.max(-(client + actions), base + dx));
       applyTrackTransform(clamped);
     };
 
     root.addEventListener('touchmove', onTouchMove, { passive: false });
     return () => root.removeEventListener('touchmove', onTouchMove);
-  }, [applyTrackTransform, snapForState]);
+  }, [applyTrackTransform, panelWidths, snapForState]);
 
   const handleTouchEnd = useCallback(
     (e: React.TouchEvent) => {
@@ -665,13 +688,14 @@ const BookingExpansionCard = memo(function BookingExpansionCard({
       if (!previewSwipe || !isDragging.current || e.pointerType === 'touch') return;
       const delta = e.clientX - touchStartX.current;
       if (Math.abs(delta) > 6) didDragRef.current = true;
+      const { client, actions } = panelWidths();
       const clamped = Math.min(
         0,
-        Math.max(-(CLIENT_PANEL_W + ACTIONS_PANEL_W), snapForState(swipeState) + delta),
+        Math.max(-(client + actions), snapForState(swipeState) + delta),
       );
       applyTrackTransform(clamped);
     },
-    [previewSwipe, swipeState, applyTrackTransform, snapForState],
+    [previewSwipe, swipeState, applyTrackTransform, panelWidths, snapForState],
   );
 
   const finishPointerDrag = useCallback(
@@ -1461,7 +1485,7 @@ type NowRowProps = { timeLabel: string };
 const NowRow = memo(function NowRow({ timeLabel }: NowRowProps) {
   return (
     <div className="admin-vtl-now-row" aria-hidden="true">
-      <span className="admin-vtl-now-time" data-vtl-time>{timeLabel}</span>
+      <span className="admin-vtl-now-time" data-vtl-time={timeLabel}>{timeLabel}</span>
       <div className="admin-vtl-now-track">
         <span className="admin-vtl-now-dot" />
         <div className="admin-vtl-now-line" />
@@ -1554,7 +1578,7 @@ const SlotRow = memo(function SlotRow({
         onClick={handleSlotToggle}
         onKeyDown={handleSlotKeyDown}
       >
-        <time className="admin-vtl-slot-time" dateTime={slot.timeLabel} data-vtl-time>
+        <time className="admin-vtl-slot-time" dateTime={slot.timeLabel} data-vtl-time={slot.timeLabel}>
           {slot.timeLabel}
         </time>
         <div className="admin-vtl-slot-body">

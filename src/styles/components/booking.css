@@ -13367,21 +13367,24 @@ button.admin-sidebar-brand--button:focus-visible {
     padding-bottom: calc(var(--admin-vtl-slot-pad-y) * 1.6);
   }
 
+  /* 3-col: avatars | status … payments — avoid status+price sharing one cell. */
   .admin-vtl-expansion-layout {
-    grid-template-columns: 36px minmax(0, 1fr);
-    gap: 0.55rem 0.55rem;
+    grid-template-columns: 34px minmax(0, 1fr) auto;
+    gap: 0.4rem 0.5rem;
+    align-items: start;
   }
 
-  /* Flow status + price under the copy — absolute + 10rem padding clips on narrow phones. */
   .admin-vtl-expansion-main {
     padding-right: 0;
-    grid-column: 2;
+    grid-column: 2 / -1;
     grid-row: 1;
+    min-width: 0;
   }
 
   .admin-vtl-expansion-avatars {
     grid-column: 1;
     grid-row: 1 / span 2;
+    width: 34px;
   }
 
   .admin-vtl-expansion-status-wrap {
@@ -13393,15 +13396,27 @@ button.admin-sidebar-brand--button:focus-visible {
     flex-direction: row;
     align-items: center;
     gap: 0.35rem;
+    max-width: 100%;
   }
 
   .admin-vtl-expansion-payments {
     position: static;
-    grid-column: 2;
+    grid-column: 3;
     grid-row: 2;
     justify-self: end;
     align-self: center;
-    justify-items: end;
+    display: flex;
+    flex-flow: row wrap;
+    align-items: center;
+    justify-content: flex-end;
+    gap: 0.15rem 0.35rem;
+    text-align: right;
+    max-width: 100%;
+  }
+
+  .admin-vtl-expansion-client {
+    margin-bottom: 0;
+    font-size: 0.82rem;
   }
 
   .admin-vtl-expansion-status-pill {
@@ -13411,6 +13426,10 @@ button.admin-sidebar-brand--button:focus-visible {
 
   .admin-vtl-expansion-payment-amount {
     font-size: 0.76rem;
+  }
+
+  .admin-vtl-expansion-payment-meta {
+    font-size: 0.58rem;
   }
 
   .admin-vtl-expansion-payment-chip {
@@ -13426,10 +13445,6 @@ button.admin-sidebar-brand--button:focus-visible {
     font-size: 0.9rem;
   }
 
-  .admin-vtl-expansion-client {
-    font-size: 0.82rem;
-  }
-
   .admin-vtl-expansion-more {
     padding: 4px 2px;
     font-size: 0.78rem;
@@ -13441,11 +13456,68 @@ button.admin-sidebar-brand--button:focus-visible {
   }
 }
 
+@media (max-width: 380px) {
+  .admin-vtl-expansion-layout {
+    grid-template-columns: 32px minmax(0, 1fr);
+  }
+
+  .admin-vtl-expansion-main {
+    grid-column: 2;
+  }
+
+  .admin-vtl-expansion-avatars {
+    grid-row: 1;
+    width: 32px;
+  }
+
+  .admin-vtl-expansion-status-wrap {
+    grid-column: 1 / -1;
+    grid-row: 2;
+  }
+
+  .admin-vtl-expansion-payments {
+    grid-column: 1 / -1;
+    grid-row: 3;
+    justify-content: flex-start;
+  }
+}
+
+/* Prefer container width over viewport — landing widget column can be narrow on desktop. */
+@container admin-vtl-swipe (max-width: 300px) {
+  .admin-vtl-expansion-layout {
+    grid-template-columns: 28px minmax(0, 1fr);
+  }
+
+  .admin-vtl-expansion-main {
+    grid-column: 2;
+  }
+
+  .admin-vtl-expansion-avatars {
+    grid-row: 1;
+    width: 28px;
+  }
+
+  .admin-vtl-expansion-status-wrap {
+    grid-column: 1 / -1;
+    grid-row: 2;
+  }
+
+  .admin-vtl-expansion-payments {
+    grid-column: 1 / -1;
+    grid-row: 3;
+    justify-content: flex-start;
+  }
+}
+
 /* ── Swipe-reveal wrapper ────────────────────────────────────────────────── */
 .admin-vtl-swipe-root {
   overflow: hidden;
   position: relative;
   width: 100%;
+  max-width: 100%;
+  min-width: 0;
+  container-type: inline-size;
+  container-name: admin-vtl-swipe;
   /* Allow vertical scroll on parent; horizontal swipe is claimed via JS axis-lock. */
   touch-action: pan-y;
 }
@@ -13567,12 +13639,12 @@ button.admin-sidebar-brand--button:focus-visible {
   transition: none;
 }
 
-/* Card inside track must stay full-width of the root (not the wider track) */
+/* Card width = visible swipe viewport (not the wider track). */
 .admin-vtl-swipe-track > .admin-vtl-expansion-card {
-  min-width: 100%;
-  max-width: 100%;
-  width: 100%;
-  flex-shrink: 0;
+  flex: 0 0 100cqw;
+  width: 100cqw;
+  min-width: 100cqw;
+  max-width: 100cqw;
   overflow: hidden;
   box-sizing: border-box;
 }

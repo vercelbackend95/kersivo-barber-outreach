@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import {
   LANDING_TIMELINE_SCROLL_FOCUS,
+  computeCenteredScrollTop,
   pickClosestTimeLabel,
 } from './liveTimelineScroll';
 
@@ -23,5 +24,15 @@ describe('pickClosestTimeLabel', () => {
     expect(pickClosestTimeLabel([], '14:10')).toBeNull();
     expect(pickClosestTimeLabel(['nope'], '14:10')).toBeNull();
     expect(pickClosestTimeLabel(['14:00'], 'bad')).toBeNull();
+  });
+});
+
+describe('computeCenteredScrollTop', () => {
+  it('centers the row in the container', () => {
+    expect(computeCenteredScrollTop(400, 800, 40)).toBe(620);
+  });
+
+  it('clamps at zero', () => {
+    expect(computeCenteredScrollTop(400, 10, 40)).toBe(0);
   });
 });
