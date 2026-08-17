@@ -1,9 +1,13 @@
 ---
+import { ClientRouter } from 'astro:transitions';
 import GoogleAnalytics from '@/components/seo/GoogleAnalytics.astro';
 import CookieConsentMount from '@/components/consent/CookieConsentMount.astro';
 import FaviconLinks from '@/components/seo/FaviconLinks.astro';
 import SeoHead from '@/components/seo/SeoHead.astro';
+import RouteTransitionRoot from '@/components/navigation/RouteTransitionRoot.astro';
 import type { PageSeo } from '@/lib/seo/meta';
+import '@/styles/motion.css';
+import '@/styles/components/route-transition.css';
 
 interface Props extends PageSeo {
   title: string;
@@ -31,9 +35,14 @@ const {
   viewportContent = 'width=device-width, initial-scale=1',
   showCookieConsent = true,
 } = Astro.props;
+
+const path = Astro.url.pathname;
+const isAdminSurface =
+  path === '/admin' || path === '/admin-demo' || path.startsWith('/admin/');
+const app = isAdminSurface ? 'admin' : 'flow';
 ---
 
-<html lang="en-GB" class={htmlClass}>
+<html lang="en-GB" class={htmlClass} data-app={app} transition:animate="none">
   <head>
     <GoogleAnalytics />
     <meta charset="utf-8" />
@@ -52,10 +61,25 @@ const {
       noindex={noindex}
       robotsFollow={robotsFollow}
     />
+    <style is:inline>
+      html[data-app='admin'],
+      html[data-app='admin'] body,
+      html[data-app='flow'],
+      html[data-app='flow'] body {
+        background: #030303;
+      }
+    </style>
+    <ClientRouter fallback="swap" />
     <slot name="head" />
   </head>
   <body class={bodyClass}>
-    <slot />
-    {showCookieConsent ? <CookieConsentMount /> : null}
+    <RouteTransitionRoot variant="flow">
+      <slot />
+    </RouteTransitionRoot>
+    {showCookieConsent ? (
+      <div transition:persist="ks-cookie">
+        <CookieConsentMount />
+      </div>
+    ) : null}
   </body>
 </html>

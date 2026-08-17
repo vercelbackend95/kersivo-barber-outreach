@@ -1,0 +1,57 @@
+---
+import {
+  DEMO_HOURS,
+  DEMO_LOCATION,
+  DEMO_LOCATION_NOTE,
+  DEMO_PHONE,
+  DEMO_PHONE_NOTE,
+} from '@/lib/demo/site';
+---
+
+<section class="bl-rail" aria-label="Blackline Barbers information">
+  <div class="bl-container bl-rail-grid">
+    <div class="bl-rail-cell">
+      <span class="bl-rail-mark" aria-hidden="true"></span>
+      <div class="bl-rail-body">
+        <h2 class="bl-rail-label">
+          <span class="bl-rail-index">01</span>
+          Visit
+        </h2>
+        <address class="bl-rail-value">{DEMO_LOCATION}</address>
+        <p class="bl-rail-note">{DEMO_LOCATION_NOTE}</p>
+      </div>
+    </div>
+
+    <div class="bl-rail-cell">
+      <span class="bl-rail-mark" aria-hidden="true"></span>
+      <div class="bl-rail-body">
+        <h2 class="bl-rail-label">
+          <span class="bl-rail-index">02</span>
+          Hours
+        </h2>
+        <dl class="bl-rail-hours">
+          {
+            DEMO_HOURS.map((row) => (
+              <div class="bl-rail-hours-row">
+                <dt>{row.days}</dt>
+                <dd class={row.hours === 'Closed' ? 'bl-rail-hours-closed' : undefined}>{row.hours}</dd>
+              </div>
+            ))
+          }
+        </dl>
+      </div>
+    </div>
+
+    <div class="bl-rail-cell">
+      <span class="bl-rail-mark" aria-hidden="true"></span>
+      <div class="bl-rail-body">
+        <h2 class="bl-rail-label">
+          <span class="bl-rail-index">03</span>
+          Call
+        </h2>
+        <p class="bl-rail-value bl-rail-phone">{DEMO_PHONE}</p>
+        <p class="bl-rail-note">{DEMO_PHONE_NOTE}</p>
+      </div>
+    </div>
+  </div>
+</section>

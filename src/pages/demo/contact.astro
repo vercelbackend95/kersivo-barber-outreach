@@ -1,0 +1,179 @@
+---
+import DemoContactEnquiry from '@/components/demo/DemoContactEnquiry.astro';
+import DemoContactHero from '@/components/demo/DemoContactHero.astro';
+import DemoContactHours from '@/components/demo/DemoContactHours.astro';
+import DemoContactIndex from '@/components/demo/DemoContactIndex.astro';
+import DemoLayout from '@/layouts/DemoLayout.astro';
+import { DEMO_SHOP_NAME } from '@/lib/demo/site';
+---
+
+<DemoLayout
+  title={`Contact | ${DEMO_SHOP_NAME}`}
+  description="Find the fictional Blackline Barbers demonstration shop — phone, hours, and a local-only demo enquiry."
+  canonicalPath="/demo/contact"
+>
+  <script is:inline slot="head">
+    try {
+      if (!window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
+        document.documentElement.setAttribute('data-bl-contact-motion', '');
+      }
+    } catch (error) {
+      /* Keep server-rendered content visible if matchMedia is unavailable. */
+    }
+  </script>
+
+  <div class="bl-contact-page" data-bl-contact>
+    <DemoContactHero />
+    <DemoContactIndex />
+    <section
+      class="bl-contact-desk"
+      data-surface="dark"
+      data-tone="graphite"
+      aria-label="Opening hours and demo enquiry"
+    >
+      <div class="bl-container bl-contact-desk-grid">
+        <DemoContactHours />
+        <DemoContactEnquiry />
+      </div>
+    </section>
+  </div>
+</DemoLayout>
+
+<script>
+  import { validateDemoContact, type DemoContactField } from '@/lib/demo/contact';
+
+  function prefersReducedMotion() {
+    return window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  }
+
+  function isInViewport(el: Element) {
+    const rect = el.getBoundingClientRect();
+    return rect.bottom > 0 && rect.top < window.innerHeight;
+  }
+
+  function revealBlock(el: Element, instant: boolean) {
+    el.classList.add('is-inview');
+    if (instant) el.classList.add('is-settled');
+  }
+
+  function bindContactEnquiry(root: Element) {
+    const form = root.querySelector('[data-contact-form]');
+    if (!(form instanceof HTMLFormElement) || form.dataset.blFormBound === 'true') return;
+    form.dataset.blFormBound = 'true';
+
+    const success = root.querySelector('[data-contact-success]');
+    const fields: DemoContactField[] = ['name', 'email', 'message'];
+
+    const setError = (name: DemoContactField, message: string | undefined) => {
+      const control = form.elements.namedItem(name);
+      const error = form.querySelector(`[data-contact-error="${name}"]`);
+      if (!(control instanceof HTMLElement) || !(error instanceof HTMLElement)) return;
+      if (message) {
+        control.setAttribute('aria-invalid', 'true');
+        error.hidden = false;
+        error.textContent = message;
+      } else {
+        control.removeAttribute('aria-invalid');
+        error.hidden = true;
+        error.textContent = '';
+      }
+    };
+
+    form.addEventListener('submit', (event) => {
+      event.preventDefault();
+      const data = new FormData(form);
+      const values = {
+        name: String(data.get('name') ?? ''),
+        email: String(data.get('email') ?? ''),
+        message: String(data.get('message') ?? ''),
+      };
+      const errors = validateDemoContact(values);
+      fields.forEach((name) => setError(name, errors[name]));
+
+      const firstInvalid = fields.find((name) => errors[name]);
+      if (firstInvalid) {
+        const control = form.elements.namedItem(firstInvalid);
+        if (control instanceof HTMLElement) control.focus();
+        return;
+      }
+
+      form.reset();
+      fields.forEach((name) => setError(name, undefined));
+      if (success instanceof HTMLElement) {
+        success.hidden = false;
+      }
+    });
+  }
+
+  function bindBlacklineContactMotion(root: Element) {
+    if (!(root instanceof HTMLElement) || root.dataset.blContactBound === 'true') return;
+    root.dataset.blContactBound = 'true';
+
+    bindContactEnquiry(root);
+
+    if (prefersReducedMotion() || typeof IntersectionObserver === 'undefined') {
+      document.documentElement.removeAttribute('data-bl-contact-motion');
+      return;
+    }
+
+    const blocks = [...root.querySelectorAll('[data-bl-reveal]')];
+    const hero = root.querySelector('.bl-page-hero');
+    const scrolledPastHero =
+      window.scrollY >
+      (hero instanceof HTMLElement ? Math.min(hero.offsetHeight * 0.35, 240) : 80);
+
+    if (scrolledPastHero) {
+      document.documentElement.setAttribute('data-bl-contact-instant', '');
+      blocks.forEach((block) => revealBlock(block, true));
+      return;
+    }
+
+    let remaining = blocks.length;
+    let observerFired = false;
+
+    const observer = new IntersectionObserver(
+      (entries) => {
+        observerFired = true;
+        for (const entry of entries) {
+          if (!entry.isIntersecting) continue;
+          revealBlock(entry.target, false);
+          observer.unobserve(entry.target);
+          remaining -= 1;
+        }
+        if (remaining <= 0) observer.disconnect();
+      },
+      { threshold: 0.16, rootMargin: '0px 0px -8% 0px' },
+    );
+
+    blocks.forEach((block) => observer.observe(block));
+
+    window.setTimeout(() => {
+      if (!observerFired) {
+        blocks.forEach((block) => revealBlock(block, true));
+        observer.disconnect();
+        return;
+      }
+      blocks.forEach((block) => {
+        if (!block.classList.contains('is-inview') && isInViewport(block)) {
+          revealBlock(block, true);
+          observer.unobserve(block);
+          remaining -= 1;
+        }
+      });
+      if (remaining <= 0) observer.disconnect();
+    }, 1000);
+
+    window.addEventListener('pageshow', (event) => {
+      if (!event.persisted) return;
+      if (window.scrollY <= 80) return;
+      document.documentElement.setAttribute('data-bl-contact-instant', '');
+      blocks.forEach((block) => revealBlock(block, true));
+      observer.disconnect();
+    });
+  }
+
+  document.querySelectorAll('[data-bl-contact]').forEach(bindBlacklineContactMotion);
+  document.addEventListener('astro:page-load', () => {
+    document.querySelectorAll('[data-bl-contact]').forEach(bindBlacklineContactMotion);
+  });
+</script>

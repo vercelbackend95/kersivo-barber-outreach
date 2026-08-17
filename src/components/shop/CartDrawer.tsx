@@ -1,6 +1,7 @@
 import { useEffect, useId, useRef, useState, useSyncExternalStore } from 'react';
 import {
   addItem,
+  bindCartNamespace,
   clear,
   closeCart,
   getServerSnapshot,
@@ -111,6 +112,12 @@ export default function CartDrawer({
   const successTitleId = useId();
 
   const cartCount = items.reduce((count, item) => count + item.quantity, 0);
+
+  useEffect(() => {
+    if (liveShopId) {
+      bindCartNamespace({ shopId: liveShopId });
+    }
+  }, [liveShopId]);
 
   useEffect(() => {
     const badges = Array.from(document.querySelectorAll('[data-navbar-cart-badge]'));

@@ -1,0 +1,80 @@
+---
+import { demoProductHref, type DemoProduct } from '@/lib/demo/products';
+import { getBlacklineProductLayout } from '@/lib/demo/shopPresentation';
+import { formatDemoPriceGbp } from '@/lib/demo/services';
+import { CATEGORY_LABELS } from '@/lib/shop/productPresentation';
+
+interface Props {
+  products: DemoProduct[];
+}
+
+const { products } = Astro.props;
+---
+
+<section
+  class="bl-edit-shelf"
+  data-surface="light"
+  data-bl-reveal
+  aria-labelledby="blackline-collection-heading"
+>
+  <div class="bl-container">
+    <header class="bl-edit-intro">
+      <p class="bl-edit-intro-eyebrow">The Collection</p>
+      <h2 class="bl-edit-intro-heading" id="blackline-collection-heading">Shop the shelf.</h2>
+      <p class="bl-edit-intro-lede">Order online and collect from the shop.</p>
+    </header>
+
+    <ul class="bl-edit-wall">
+      {
+        products.map((product, index) => {
+          const layout = getBlacklineProductLayout(product.id);
+          return (
+            <li
+              class={`bl-edit-item bl-edit-item--${product.slug} bl-edit-item--span-${layout.span}${layout.editorial ? ' bl-edit-item--editorial' : ''}`}
+              style={`--bl-shop-scale: ${layout.scale}`}
+              data-stage={layout.stage}
+              data-bl-reveal
+            >
+              <article class="bl-edit-card" aria-labelledby={`blackline-product-${product.slug}`}>
+                <a class="bl-edit-stage" href={demoProductHref(product.id)}>
+                  <img
+                    src={product.image.src}
+                    alt={product.image.alt}
+                    width={product.image.width}
+                    height={product.image.height}
+                    sizes={product.image.sizes}
+                    loading={index < 2 ? 'eager' : 'lazy'}
+                    decoding="async"
+                  />
+                </a>
+                <p class="bl-edit-category">{CATEGORY_LABELS[product.category]}</p>
+                <h3 class="bl-edit-name" id={`blackline-product-${product.slug}`}>
+                  <a href={demoProductHref(product.id)}>{product.name}</a>
+                </h3>
+                <p class="bl-edit-price">{formatDemoPriceGbp(product.pricePence)}</p>
+                <p class="bl-edit-desc">{product.description}</p>
+                <div class="bl-edit-actions">
+                  <a class="bl-edit-link" href={demoProductHref(product.id)}>
+                    VIEW PRODUCT →
+                  </a>
+                  <button
+                    type="button"
+                    class="bl-edit-add"
+                    data-add-to-cart
+                    data-product-id={product.id}
+                    data-product-name={product.name}
+                    data-product-price-pence={String(product.pricePence)}
+                    data-product-image-url={product.image.src}
+                    data-product-quantity="1"
+                  >
+                    ADD TO BAG →
+                  </button>
+                </div>
+              </article>
+            </li>
+          );
+        })
+      }
+    </ul>
+  </div>
+</section>

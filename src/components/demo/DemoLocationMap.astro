@@ -1,0 +1,76 @@
+---
+import { DEMO_CONTACT_MAP_LABEL, DEMO_CONTACT_MAP_WARNING } from '@/lib/demo/contact';
+
+interface Props {
+  variant?: 'compact' | 'expanded';
+}
+
+const { variant = 'compact' } = Astro.props;
+const expanded = variant === 'expanded';
+---
+
+<figure
+  class={expanded ? 'bl-contact-map' : 'bl-visit-figure'}
+  data-bl-map={variant}
+  aria-label={DEMO_CONTACT_MAP_LABEL}
+>
+  <svg
+    class={expanded ? 'bl-contact-map-svg' : 'bl-visit-map'}
+    viewBox="0 0 800 640"
+    preserveAspectRatio="xMidYMid meet"
+    aria-hidden="true"
+    focusable="false"
+  >
+    <rect class="bl-visit-map-surface" x="0" y="0" width="800" height="640"></rect>
+
+    <g class="bl-visit-map-grid">
+      <path d="M80 0 V640 M160 0 V640 M240 0 V640 M320 0 V640 M400 0 V640 M480 0 V640 M560 0 V640 M640 0 V640 M720 0 V640"></path>
+      <path d="M0 80 H800 M0 160 H800 M0 240 H800 M0 320 H800 M0 400 H800 M0 480 H800 M0 560 H800"></path>
+    </g>
+
+    <g class="bl-visit-map-streets" data-map-streets>
+      <path d="M0 168 H800"></path>
+      <path d="M0 312 H800"></path>
+      <path d="M0 464 H800"></path>
+      <path d="M148 0 V640"></path>
+      <path d="M336 0 V640"></path>
+      <path d="M528 48 V592"></path>
+      <path d="M672 0 V640"></path>
+    </g>
+
+    <g class="bl-visit-map-blocks" data-map-blocks>
+      <rect x="48" y="48" width="84" height="96"></rect>
+      <rect x="172" y="40" width="128" height="104"></rect>
+      <rect x="360" y="56" width="140" height="88"></rect>
+      <rect x="556" y="36" width="96" height="108"></rect>
+      <rect x="40" y="192" width="88" height="96"></rect>
+      <rect x="176" y="188" width="132" height="100"></rect>
+      <rect x="548" y="192" width="104" height="92"></rect>
+      <rect x="680" y="200" width="80" height="84"></rect>
+      <rect x="56" y="488" width="160" height="88"></rect>
+      <rect x="360" y="496" width="140" height="80"></rect>
+      <rect x="548" y="488" width="112" height="96"></rect>
+      <rect x="688" y="504" width="72" height="72"></rect>
+    </g>
+
+    <g class="bl-visit-map-marker" data-map-marker transform="translate(430 338)">
+      <rect x="-11" y="-11" width="22" height="22"></rect>
+      <rect class="bl-visit-map-marker-core" x="-4" y="-4" width="8" height="8"></rect>
+    </g>
+
+    <g data-map-labels>
+      <text class="bl-visit-map-label bl-visit-map-label--city" x="40" y="32">Manchester</text>
+      <text class="bl-visit-map-label bl-visit-map-label--secondary" x="40" y="186">City centre</text>
+      <text class="bl-visit-map-label" x="360" y="300">Northern Quarter</text>
+      <text class="bl-visit-map-label bl-visit-map-label--mark" x="450" y="344">Blackline</text>
+      {
+        expanded ? (
+          <text class="bl-visit-map-label bl-visit-map-label--demo" x="450" y="378">Demo location</text>
+        ) : null
+      }
+    </g>
+  </svg>
+  <figcaption class={expanded ? 'bl-contact-map-note' : 'bl-visit-map-note'}>
+    {DEMO_CONTACT_MAP_WARNING}
+  </figcaption>
+</figure>

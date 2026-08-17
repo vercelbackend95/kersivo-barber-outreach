@@ -4,7 +4,8 @@ import AdminGlobalMobileNextStripHost from './AdminGlobalMobileNextStripHost';
 import BookingsAdminPanel from './BookingsAdminPanel';
 import PrivateDemoAuthPanel from './PrivateDemoAuthPanel';
 import { AdminTodayBookingsLiveProvider } from './useAdminTodayBookingsLive';
-import { resolveDemoSectionAlias } from '@/lib/admin/demoConfig';
+import { resolveAdminSpaSection } from '@/lib/admin/sectionUrl';
+import { ADMIN_SESSION_EXPIRED_EVENT } from './adminAuth';
 import type { DemoDayBooking } from '@/lib/admin/demoFixtures/daySchedule';
 import {
   enablePublicAdminDemo,
@@ -56,23 +57,7 @@ function clearTransientAdminViewportState() {
 
 function getSectionFromUrl(): AdminSection {
   if (typeof window === 'undefined') return 'bookings_dashboard';
-
-  const rawSection = new URLSearchParams(window.location.search).get('section');
-  const section = resolveDemoSectionAlias(rawSection) ?? rawSection;
-  if (section === 'bookings_blocks') return 'bookings_blocks';
-  if (section === 'bookings_reports') return 'bookings_reports';
-  if (section === 'bookings_history') return 'bookings_history';
-  if (section === 'bookings_clients') return 'bookings_clients';
-  if (section === 'services') return 'services';
-  if (section === 'shop_orders') return 'shop_orders';
-  if (section === 'shop_sales') return 'shop_sales';
-  if (section === 'shop_products') return 'shop_products';
-  if (section === 'assistant') return 'assistant';
-  if (section === 'barbershop_settings') return 'barbershop_settings';
-  if (section === 'site_launch') return 'site_launch';
-  // Legacy ?section=team → unified Team surface (bookings_blocks)
-  if (section === 'team') return 'bookings_blocks';
-  return 'bookings_dashboard';
+  return resolveAdminSpaSection(new URLSearchParams(window.location.search).get('section'));
 }
 
 function PanelChunkFallback() {
@@ -128,11 +113,23 @@ type AdminPanelProps = {
   demoMode?: boolean;
   /** SSR-seeded demo bookings for the dashboard (avoids empty flash after hydration). */
   initialBookings?: DemoDayBooking[];
+  /** URL `?section=` from the Astro host so the first paint matches the deep link. */
+  initialSection?: string | null;
 };
 
-export default function AdminPanel({ demoMode = false, initialBookings }: AdminPanelProps) {
-  const [activeSection, setActiveSection] = useState<AdminSection>('bookings_dashboard');
-  const [isTransitioning, setIsTransitioning] = useState(false);
+export default function AdminPanel({
+  demoMode = false,
+  initialBookings,
+  initialSection = null,
+}: AdminPanelProps) {
+  const [activeSection, setActiveSection] = useState<AdminSection>(() =>
+    resolveAdminSpaSection(
+      initialSection ??
+        (typeof window !== 'undefined' ? new URLSearchParams(window.location.search).get('section') : null),
+    ),
+  );
+  const [isEntering, setIsEntering] = useState(false);
+  const [showPending, setShowPending] = useState(false);
   const [authReady, setAuthReady] = useState(demoMode);
   const [hasAccess, setHasAccess] = useState(() => demoMode || Boolean(getStoredAdminSecret()));
   const [profileUser, setProfileUser] = useState<AdminProfileUser | null>(null);
@@ -145,6 +142,7 @@ export default function AdminPanel({ demoMode = false, initialBookings }: AdminP
   const [permissions, setPermissions] = useState<string[] | null>(null);
   const [demoLoadError, setDemoLoadError] = useState(false);
   const transitionTimeoutRef = useRef<number | null>(null);
+  const pendingTimeoutRef = useRef<number | null>(null);
 
   useEffect(() => {
     installAdminFetchInterceptor();
@@ -259,10 +257,22 @@ export default function AdminPanel({ demoMode = false, initialBookings }: AdminP
     setActiveSection(getSectionFromUrl());
     const handlePopState = () => {
       setActiveSection(getSectionFromUrl());
+      setIsEntering(false);
+      setShowPending(false);
+    };
+    const handleSessionExpired = () => {
+      setHasAccess(false);
+      setProfileUser(null);
+      setShopLogoUrl(null);
+      setShopName(null);
+      setShopId(null);
+      setPermissions(null);
     };
     window.addEventListener('popstate', handlePopState);
+    window.addEventListener(ADMIN_SESSION_EXPIRED_EVENT, handleSessionExpired);
     return () => {
       window.removeEventListener('popstate', handlePopState);
+      window.removeEventListener(ADMIN_SESSION_EXPIRED_EVENT, handleSessionExpired);
       if (demoMode) {
         setPublicAdminDemoMode(false);
       }
@@ -288,19 +298,37 @@ export default function AdminPanel({ demoMode = false, initialBookings }: AdminP
       window.clearTimeout(transitionTimeoutRef.current);
       transitionTimeoutRef.current = null;
     }
+    if (pendingTimeoutRef.current !== null) {
+      window.clearTimeout(pendingTimeoutRef.current);
+      pendingTimeoutRef.current = null;
+    }
 
-    setIsTransitioning(true);
     setActiveSection(section);
+    setIsEntering(true);
+    setShowPending(false);
     const params = new URLSearchParams(window.location.search);
     params.set('section', section);
     const nextSearch = params.toString();
     const nextUrl = `${window.location.pathname}${nextSearch ? `?${nextSearch}` : ''}`;
-    window.history.replaceState({}, '', nextUrl);
+    const currentUrl = `${window.location.pathname}${window.location.search}`;
+    if (nextUrl !== currentUrl) {
+      window.history.pushState({ adminSection: section }, '', nextUrl);
+    }
+
+    pendingTimeoutRef.current = window.setTimeout(() => {
+      setShowPending(true);
+      pendingTimeoutRef.current = null;
+    }, 250);
 
     transitionTimeoutRef.current = window.setTimeout(() => {
-      setIsTransitioning(false);
+      setIsEntering(false);
+      setShowPending(false);
+      if (pendingTimeoutRef.current !== null) {
+        window.clearTimeout(pendingTimeoutRef.current);
+        pendingTimeoutRef.current = null;
+      }
       transitionTimeoutRef.current = null;
-    }, 100);
+    }, 180);
   }, [activeSection]);
 
   const shopTab = useMemo(() => {
@@ -324,6 +352,9 @@ export default function AdminPanel({ demoMode = false, initialBookings }: AdminP
       if (transitionTimeoutRef.current !== null) {
         window.clearTimeout(transitionTimeoutRef.current);
       }
+      if (pendingTimeoutRef.current !== null) {
+        window.clearTimeout(pendingTimeoutRef.current);
+      }
     };
   }, []);
 
@@ -339,19 +370,7 @@ export default function AdminPanel({ demoMode = false, initialBookings }: AdminP
     );
   }
 
-  if (!demoMode && !authReady) {
-    return (
-      <div className="admin-login-viewport">
-        <div className="auth-gate-card">
-          <p className="admin-login-brand-sub" style={{ margin: 0, textAlign: 'center' }}>
-            Checking session…
-          </p>
-        </div>
-      </div>
-    );
-  }
-
-  if (!demoMode && !hasAccess) {
+  if (!demoMode && authReady && !hasAccess) {
     return (
       <PrivateDemoAuthPanel
         initialMode="signup"
@@ -362,12 +381,16 @@ export default function AdminPanel({ demoMode = false, initialBookings }: AdminP
     );
   }
 
+  const sessionPending = !demoMode && !authReady;
+
   return (
     <AdminTodayBookingsLiveProvider isPublicDemo={demoMode} initialBookings={initialBookings}>
       <AdminLayout
         activeSection={activeSection}
         onChangeSection={handleSectionChange}
-        isTransitioning={isTransitioning}
+        isTransitioning={showPending || sessionPending}
+        isEntering={isEntering}
+        showPending={showPending || sessionPending}
         showSectionSkeleton={false}
         isPublicDemo={demoMode}
         profileUser={profileUser}
@@ -380,6 +403,8 @@ export default function AdminPanel({ demoMode = false, initialBookings }: AdminP
         permissions={demoMode ? null : permissions}
         persistentAdminChrome={<AdminGlobalMobileNextStripHost />}
       >
+        {sessionPending ? null : (
+          <>
         <BookingsAdminPanel
           key="bookings"
           isActive={isBookingsSection}
@@ -397,14 +422,14 @@ export default function AdminPanel({ demoMode = false, initialBookings }: AdminP
           onBackToDashboard={() => handleSectionChange('bookings_dashboard')}
         />
 
-        <LazyPanelErrorBoundary key={activeSection}>
+        <LazyPanelErrorBoundary>
           <Suspense fallback={<PanelChunkFallback />}>
             {activeSection === 'services' ? <ServicesAdminPanel key="services" /> : null}
 
             {activeSection === 'bookings_clients' ? <ClientsAdminPanel key="clients" /> : null}
 
             {activeSection === 'shop_products' || activeSection === 'shop_orders' || activeSection === 'shop_sales' ? (
-              <ShopAdminPanel key={activeSection} initialTab={shopTab} />
+              <ShopAdminPanel key="shop" initialTab={shopTab} />
             ) : null}
 
             {activeSection === 'assistant' ? <AiAssistantPanel key="assistant" isPublicDemo={demoMode} /> : null}
@@ -423,6 +448,8 @@ export default function AdminPanel({ demoMode = false, initialBookings }: AdminP
             {activeSection === 'site_launch' ? <SiteLaunchHubPanel key="site-launch" /> : null}
           </Suspense>
         </LazyPanelErrorBoundary>
+          </>
+        )}
       </AdminLayout>
     </AdminTodayBookingsLiveProvider>
   );

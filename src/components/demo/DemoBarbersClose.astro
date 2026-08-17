@@ -1,0 +1,24 @@
+---
+import { DEMO_BOOK_HREF } from '@/lib/demo/nav';
+---
+
+<section
+  class="bl-barbers-close"
+  data-surface="dark"
+  data-tone="graphite"
+  data-bl-reveal
+  aria-labelledby="blackline-barbers-close-heading"
+>
+  <div class="bl-container bl-barbers-close-inner">
+    <p class="bl-barbers-close-eyebrow">Not sure who to choose?</p>
+    <h2 class="bl-barbers-close-heading" id="blackline-barbers-close-heading">
+      <span>Start with</span>
+      <span>the service.</span>
+    </h2>
+    <p class="bl-barbers-close-lede">Choose what you need and see who is available.</p>
+    <a class="bl-btn bl-btn--primary bl-barbers-close-cta" href={DEMO_BOOK_HREF}>
+      <span>View all availability</span>
+      <span class="bl-barbers-close-arrow" aria-hidden="true"></span>
+    </a>
+  </div>
+</section>

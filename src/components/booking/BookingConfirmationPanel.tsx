@@ -1,11 +1,13 @@
 import React, { forwardRef } from 'react';
 import { ConfirmationStatusIcon } from '@/components/ConfirmationStatusIcon';
+import type { BookingDemoConfirmCta } from './bookingPresentation';
 
 export type BookingSummary = {
   service?: string;
   barber?: string;
   date?: string;
   time?: string;
+  reference?: string;
 };
 
 export type BookingPostConfirmCta = {
@@ -13,10 +15,18 @@ export type BookingPostConfirmCta = {
   href: string;
 };
 
+export type BookingDemoCopy = {
+  eyebrow?: string;
+  heading?: string;
+  body?: string;
+  ctas?: readonly BookingDemoConfirmCta[];
+};
+
 type Props = {
   variant: 'booked' | 'rescheduled' | 'demo';
   summary?: BookingSummary;
   postConfirmCta?: BookingPostConfirmCta | null;
+  demoCopy?: BookingDemoCopy | null;
 };
 
 const contentByVariant = {
@@ -50,16 +60,26 @@ function buildSummaryRows(summary?: BookingSummary): Array<{ label: string; valu
     { label: 'Barber', value: summary.barber ?? '' },
     { label: 'Date', value: summary.date ?? '' },
     { label: 'Time', value: summary.time ?? '' },
+    { label: 'Reference', value: summary.reference ?? '' },
   ].filter((entry) => entry.value.trim().length > 0);
 }
 
 const BookingConfirmationPanel = forwardRef<HTMLElement, Props>(function BookingConfirmationPanel(
-  { variant, summary, postConfirmCta = null },
+  { variant, summary, postConfirmCta = null, demoCopy = null },
   ref,
 ) {
-  const content = contentByVariant[variant];
+  const defaults = contentByVariant[variant];
+  const content =
+    variant === 'demo' && demoCopy
+      ? {
+          eyebrow: demoCopy.eyebrow ?? defaults.eyebrow,
+          heading: demoCopy.heading ?? defaults.heading,
+          body: demoCopy.body ?? defaults.body,
+        }
+      : defaults;
   const rows = buildSummaryRows(summary);
   const isDemo = variant === 'demo';
+  const demoCtas = demoCopy?.ctas?.length ? demoCopy.ctas : DEMO_CTAS;
 
   return (
     <section
@@ -91,7 +111,7 @@ const BookingConfirmationPanel = forwardRef<HTMLElement, Props>(function Booking
 
       {isDemo ? (
         <div className="booking-confirmation__cta booking-confirmation__cta--stack">
-          {DEMO_CTAS.map((cta) => (
+          {demoCtas.map((cta) => (
             <a
               key={cta.href}
               className={cta.primary ? 'btn btn--primary btn--lg' : 'btn btn--secondary btn--lg'}

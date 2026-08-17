@@ -7,6 +7,7 @@ import {
 const ADMIN_SECRET_STORAGE_KEY = 'kersivo.admin.secret';
 const ADMIN_SECRET_HEADER = 'x-admin-secret';
 export const ADMIN_DEMO_BLOCKED_EVENT = 'kersivo-admin-demo-blocked';
+export const ADMIN_SESSION_EXPIRED_EVENT = 'kersivo-admin-session-expired';
 
 let memoryAdminSecret = '';
 let publicAdminDemoMode = false;
@@ -160,6 +161,9 @@ export async function adminFetchJson<T>(input: RequestInfo | URL, options: Admin
       : '';
     if (response.status === 403 && serverMessage === DEMO_ACTION_BLOCKED_MESSAGE) {
       notifyAdminDemoBlocked();
+    }
+    if (response.status === 401 && typeof window !== 'undefined') {
+      window.dispatchEvent(new CustomEvent(ADMIN_SESSION_EXPIRED_EVENT));
     }
     const message = serverMessage || (response.status === 401 ? 'Session expired. Please log in again.' : errorMessage);
     throw new AdminFetchError(message, response.status, payload);

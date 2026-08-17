@@ -3765,12 +3765,7 @@ button.admin-sidebar-brand--button:focus-visible {
   background:
     radial-gradient(circle at 92% 0%, color-mix(in srgb, var(--surface-3) 28%, transparent), transparent 30rem),
     linear-gradient(180deg, color-mix(in srgb, var(--surface-1) 96%, var(--bg)) 0%, var(--surface-1) 100%);
-  transition: opacity 120ms ease;
   overflow-x: clip;
-}
-
-.admin-main-content[data-transitioning="true"] {
-  opacity: 0.92;
 }
 
 .admin-transition-skeleton {

@@ -1,0 +1,94 @@
+---
+import {
+  DEMO_DEFAULT_SERVICE_SLUG,
+  DEMO_SERVICES,
+  demoBookingHref,
+  demoServiceAccessibleName,
+  demoServiceDurationRatio,
+  demoServiceIndex,
+  demoServicesMeta,
+  formatDemoPriceGbp,
+} from '@/lib/demo/services';
+
+const meta = demoServicesMeta();
+const maxDuration = meta.maxDurationMinutes;
+---
+
+<section
+  class="bl-services-menu"
+  data-surface="light"
+  data-bl-reveal
+  data-bl-service-menu
+  data-active={DEMO_DEFAULT_SERVICE_SLUG}
+  aria-labelledby="blackline-service-menu-heading"
+>
+  <div class="bl-container bl-services-menu-shell">
+    <header class="bl-services-menu-intro">
+      <p class="bl-services-menu-eyebrow">The Menu</p>
+      <h2 class="bl-services-menu-heading" id="blackline-service-menu-heading">The Blackline Menu.</h2>
+      <p class="bl-services-menu-lede">Choose a service to begin your booking.</p>
+    </header>
+
+    <div class="bl-services-menu-layout">
+      <div class="bl-services-stage" aria-hidden="true">
+        {
+          DEMO_SERVICES.map((service, index) => (
+            <div
+              class:list={['bl-services-stage-panel', service.slug === DEMO_DEFAULT_SERVICE_SLUG && 'is-active']}
+              data-service={service.slug}
+              style={`--bl-service-duration-ratio: ${demoServiceDurationRatio(service.durationMinutes, maxDuration)}`}
+            >
+              <p class="bl-services-stage-label">Selected service</p>
+              <p class="bl-services-stage-index">
+                {demoServiceIndex(index)} / {meta.countPadded}
+              </p>
+              <p class="bl-services-stage-name">{service.name}</p>
+              <div class="bl-services-stage-facts">
+                <span>{service.durationMinutes} min</span>
+                <span>{formatDemoPriceGbp(service.pricePence)}</span>
+              </div>
+              <span class="bl-service-duration-track">
+                <span class="bl-service-duration-fill"></span>
+              </span>
+            </div>
+          ))
+        }
+      </div>
+
+      <ol class="bl-services-list">
+        {
+          DEMO_SERVICES.map((service, index) => (
+            <li
+              class="bl-service-item"
+              data-service-slug={service.slug}
+              style={`--bl-service-duration-ratio: ${demoServiceDurationRatio(service.durationMinutes, maxDuration)}`}
+            >
+              <article class="bl-service-row" aria-labelledby={`blackline-service-${service.slug}`}>
+                <p class="bl-service-index">{demoServiceIndex(index)}</p>
+                <div class="bl-service-copy">
+                  <h3 class="bl-service-name" id={`blackline-service-${service.slug}`}>
+                    {service.name}
+                  </h3>
+                  <p class="bl-service-desc">{service.description}</p>
+                </div>
+                <p class="bl-service-duration">{service.durationMinutes} min</p>
+                <p class="bl-service-price">{formatDemoPriceGbp(service.pricePence)}</p>
+                <span class="bl-service-duration-track" aria-hidden="true">
+                  <span class="bl-service-duration-fill"></span>
+                </span>
+                <a
+                  class="bl-service-book"
+                  href={demoBookingHref(service.slug)}
+                  aria-label={demoServiceAccessibleName(service)}
+                >
+                  <span>Book this service</span>
+                  <span class="bl-service-arrow" aria-hidden="true"></span>
+                </a>
+              </article>
+            </li>
+          ))
+        }
+      </ol>
+    </div>
+  </div>
+</section>

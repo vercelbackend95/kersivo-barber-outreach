@@ -1,5 +1,6 @@
 import React, { useCallback, useEffect, useMemo, useRef, useState, type PointerEvent } from 'react';
 import BookingConfirmationPanel, { type BookingSummary } from './BookingConfirmationPanel';
+import type { BookingFlowPresentation } from './bookingPresentation';
 import BookingReviewPanel from './BookingReviewPanel';
 import BookingStepIndicator from './BookingStepIndicator';
 import { SkeletonSlotGrid } from '../skeleton';
@@ -101,6 +102,12 @@ type Props = {
   depositRequired?: boolean;
   onComplete?: () => void;
   postConfirmCta?: PostConfirmCtaConfig | null;
+  /** Preselect a service from the provided catalogue. Ignored if it does not match. */
+  initialServiceId?: string;
+  /** Preselect a barber from the provided catalogue. Ignored if it does not match. */
+  initialBarberId?: string;
+  /** Host-specific copy and confirmation CTAs. Defaults keep the Kersivo `/book` sandbox. */
+  presentation?: BookingFlowPresentation;
 };
 
 const DEFAULT_BOOKING_TIMEZONE = 'Europe/London';
@@ -191,8 +198,40 @@ function getCurrentIsoDateInTimezone(timezone: string, now: Date = new Date()): 
   }).format(now);
 }
 
-function formatPrice(pricePence: number): string {
+function formatPrice(pricePence: number, wholePounds = false): string {
+  if (wholePounds && pricePence % 100 === 0) {
+    return `£${pricePence / 100}`;
+  }
   return `£${(pricePence / 100).toFixed(2)}`;
+}
+
+function resolveInitialServiceId(services: Service[], initialServiceId?: string): string {
+  if (!initialServiceId) return '';
+  return services.some((service) => service.id === initialServiceId) ? initialServiceId : '';
+}
+
+function barberOffersService(barber: Barber, serviceId: string): boolean {
+  if (!barber.serviceIds || barber.serviceIds.length === 0) return true;
+  return barber.serviceIds.includes(serviceId);
+}
+
+function resolveInitialBarberId(barbers: Barber[], initialBarberId?: string, serviceId = ''): string {
+  if (!initialBarberId) return '';
+  const barber = barbers.find((item) => item.id === initialBarberId);
+  if (!barber) return '';
+  if (serviceId && !barberOffersService(barber, serviceId)) return '';
+  return barber.id;
+}
+
+function resolveInitialWizardStep(serviceId: string, barberId: string): number {
+  if (serviceId && barberId) return 3;
+  if (serviceId) return 2;
+  return 1;
+}
+
+function makeDemoReference(prefix: string): string {
+  const n = Math.floor(1000 + Math.random() * 9000);
+  return `${prefix}-${n}`;
 }
 
 function getBarberInitials(name: string): string {
@@ -274,10 +313,15 @@ export default function BookingFlow({
   depositRequired = false,
   onComplete,
   postConfirmCta = null,
+  initialServiceId,
+  initialBarberId,
+  presentation,
 }: Props) {
   const bookingTimezone = shopDetails?.timezone || DEFAULT_BOOKING_TIMEZONE;
-  const [serviceId, setServiceId] = useState('');
-  const [barberId, setBarberId] = useState('');
+  const resolvedInitialServiceId = resolveInitialServiceId(services, initialServiceId);
+  const resolvedInitialBarberId = resolveInitialBarberId(barbers, initialBarberId, resolvedInitialServiceId);
+  const [serviceId, setServiceId] = useState(resolvedInitialServiceId);
+  const [barberId, setBarberId] = useState(resolvedInitialBarberId);
   const [date, setDate] = useState(() => getCurrentIsoDateInTimezone(bookingTimezone));
   const [slots, setSlots] = useState<string[]>([]);
   const [shopPaused, setShopPaused] = useState(false);
@@ -290,7 +334,9 @@ export default function BookingFlow({
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isSlotsLoading, setIsSlotsLoading] = useState(false);
   const [brokenAvatarIds, setBrokenAvatarIds] = useState<Record<string, boolean>>({});
-  const [wizardStep, setWizardStep] = useState(1);
+  const [wizardStep, setWizardStep] = useState(
+    resolveInitialWizardStep(resolvedInitialServiceId, resolvedInitialBarberId),
+  );
   const [stepKey, setStepKey] = useState(0);
   const confirmationRef = useRef<HTMLElement | null>(null);
   const hasTrackedPublicDemoRef = useRef(false);
@@ -363,11 +409,19 @@ export default function BookingFlow({
 
   const selectService = useCallback((id: string) => {
     setServiceId(id);
-    setBarberId('');
     setTime('');
     setSlots([]);
+    const keepBarber = Boolean(
+      barberId &&
+        barbers.some((barber) => barber.id === barberId && barberOffersService(barber, id)),
+    );
+    if (keepBarber) {
+      goToStep(3);
+      return;
+    }
+    setBarberId('');
     goToStep(2);
-  }, [goToStep]);
+  }, [barberId, barbers, goToStep]);
 
   const selectBarber = useCallback((id: string) => {
     setBarberId(id);
@@ -464,10 +518,10 @@ export default function BookingFlow({
       { label: 'Date', value: normalizedDate ? bookingDateSummary : '—' },
       { label: 'Time', value: time || '—' },
       { label: 'Duration', value: selectedService ? `${selectedService.durationMinutes} min` : '—' },
-      { label: 'Price', value: selectedService ? formatPrice(selectedService.pricePence) : '—' },
+      { label: 'Price', value: selectedService ? formatPrice(selectedService.pricePence, presentation?.wholePoundPrices) : '—' },
       ...(estimatedEndTime ? [{ label: 'Ends', value: estimatedEndTime }] : []),
     ],
-    [bookingDateSummary, estimatedEndTime, normalizedDate, selectedBarberLabel, selectedService, time],
+    [bookingDateSummary, estimatedEndTime, normalizedDate, presentation?.wholePoundPrices, selectedBarberLabel, selectedService, time],
   );
 
   const contactRows = useMemo(
@@ -523,12 +577,14 @@ export default function BookingFlow({
   }, [previewMode, serviceId, barberId, time, onComplete]);
 
   useEffect(() => {
+    if (!barberId) return;
+    if (!serviceId) return;
     if (!barberOptions.some((barber) => barber.id === barberId)) {
       setBarberId('');
       setTime('');
       setSlots([]);
     }
-  }, [barberOptions, barberId]);
+  }, [barberOptions, barberId, serviceId]);
 
   useEffect(() => {
     if (!serviceId || !barberId || !date) return;
@@ -616,10 +672,13 @@ export default function BookingFlow({
             barber: selectedBarberLabel,
             date: formatDateForSummary(normalizedDate, bookingTimezone),
             time,
+            reference: presentation?.demoReferencePrefix
+              ? makeDemoReference(presentation.demoReferencePrefix)
+              : undefined,
           },
           date: normalizedDate,
         });
-        if (!hasTrackedPublicDemoRef.current) {
+        if (!presentation?.skipCompletionAnalytics && !hasTrackedPublicDemoRef.current) {
           hasTrackedPublicDemoRef.current = true;
           trackConsentedEvent(FUNNEL_EVENTS.public_demo_completed, undefined, 'analytics');
         }
@@ -792,6 +851,16 @@ export default function BookingFlow({
             variant={confirmation.type}
             summary={confirmation.summary}
             postConfirmCta={cta}
+            demoCopy={
+              publicDemoMode
+                ? {
+                    eyebrow: presentation?.confirmEyebrow,
+                    heading: presentation?.confirmHeading,
+                    body: presentation?.confirmBody,
+                    ctas: presentation?.confirmCtas,
+                  }
+                : null
+            }
           />
         </div>
       </section>
@@ -806,9 +875,17 @@ export default function BookingFlow({
       <div className="booking-form-content">
         <header className="booking-flow__hero">
           <div className="booking-flow__hero-copy">
-            <p className="booking-flow__eyebrow">{publicDemoMode ? 'Interactive demo' : 'Instant booking'}</p>
-            <h1>{publicDemoMode ? 'Try the booking flow' : isCreateMode ? 'Book now' : 'Reschedule'}</h1>
-            {publicDemoMode ? <p className="booking-flow__sandbox-note muted">{PUBLIC_DEMO_SANDBOX_NOTE}</p> : null}
+            <p className="booking-flow__eyebrow">
+              {presentation?.eyebrow ?? (publicDemoMode ? 'Interactive demo' : 'Instant booking')}
+            </p>
+            <h1>
+              {presentation?.title ?? (publicDemoMode ? 'Try the booking flow' : isCreateMode ? 'Book now' : 'Reschedule')}
+            </h1>
+            {publicDemoMode ? (
+              <p className="booking-flow__sandbox-note muted">
+                {presentation?.sandboxNote ?? PUBLIC_DEMO_SANDBOX_NOTE}
+              </p>
+            ) : null}
           </div>
           <BookingStepIndicator currentStep={wizardStep} steps={bookingSteps} />
         </header>
@@ -860,7 +937,7 @@ export default function BookingFlow({
                                 <span className="booking-choice-card__title">{service.name}</span>
                                 <span className="booking-choice-card__meta booking-choice-card__meta--service">
                                   <span className="booking-choice-card__stat">{service.durationMinutes} min</span>
-                                  <span className="booking-choice-card__price">{formatPrice(service.pricePence)}</span>
+                                  <span className="booking-choice-card__price">{formatPrice(service.pricePence, presentation?.wholePoundPrices)}</span>
                                 </span>
                               </button>
                             );

@@ -1,17 +1,21 @@
 ---
+import { ClientRouter } from 'astro:transitions';
 import GoogleAnalytics from '@/components/seo/GoogleAnalytics.astro';
 import CookieConsentMount from '@/components/consent/CookieConsentMount.astro';
 import FaviconLinks from '@/components/seo/FaviconLinks.astro';
 import SeoHead from '@/components/seo/SeoHead.astro';
 import Navbar17 from '@/components/navbar17.astro';
 import InitDataTrackScript from '@/components/InitDataTrackScript.astro';
+import RouteTransitionRoot from '@/components/navigation/RouteTransitionRoot.astro';
 import type { Navbar17CtaTrack, Navbar17Variant } from '@/lib/nav/navbar17Items';
 import type { PageSeo } from '@/lib/seo/meta';
+import '@/styles/motion.css';
 import '@/styles/tokens.css';
 import '@/styles/fonts-landing.css';
 import '@/styles/global.css';
 import '@/styles/components/buttons.css';
 import '@/styles/components/navbar17.css';
+import '@/styles/components/route-transition.css';
 
 type LandingNavbarPreviewCta = {
   label: string;
@@ -51,7 +55,7 @@ const jsonLdBlocks = jsonLd
   : [];
 ---
 
-<html lang="en-GB">
+<html lang="en-GB" data-app="marketing" transition:animate="none">
   <head>
     <GoogleAnalytics />
     <meta charset="utf-8" />
@@ -79,12 +83,23 @@ const jsonLdBlocks = jsonLd
         <script type="application/ld+json" set:html={JSON.stringify(block)} />
       ))
     }
+    <style is:inline>
+      html[data-app='marketing'],
+      html[data-app='marketing'] body {
+        background: #0b0d10;
+      }
+    </style>
+    <ClientRouter fallback="swap" />
     <slot name="head" />
   </head>
   <body>
     <Navbar17 variant={navbarVariant} previewCta={previewCta} />
-    <slot />
-    <CookieConsentMount />
+    <RouteTransitionRoot variant="marketing">
+      <slot />
+    </RouteTransitionRoot>
+    <div transition:persist="ks-cookie">
+      <CookieConsentMount />
+    </div>
     <InitDataTrackScript />
   </body>
 </html>

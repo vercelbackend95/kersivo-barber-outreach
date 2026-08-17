@@ -1,0 +1,24 @@
+---
+description: BLACKLINE BARBERS demo theme — tokens, isolation, and UI rules for /demo only
+globs: src/pages/demo/**,src/layouts/DemoLayout.astro,src/components/demo/**,src/styles/demo/**,src/lib/demo/**,docs/design/BLACKLINE_DESIGN_SYSTEM.md
+alwaysApply: false
+---
+
+# BLACKLINE demo
+
+Follow [docs/design/BLACKLINE_DESIGN_SYSTEM.md](docs/design/BLACKLINE_DESIGN_SYSTEM.md). Inspect `src/styles/demo/blackline.css` before adding styles.
+
+- Colours, spacing, type, radii, borders, and motion use theme tokens (`--theme-*`, `--bl-*`). Do not scatter raw hex in components.
+- New pages wrap `DemoLayout` so `<html data-theme="blackline">` is inherited. Import theme CSS only from that layout.
+- Scope styles under `[data-theme="blackline"]`. Never leak into Kersivo landing, admin, or other shops.
+- Alternate `data-surface="dark"` / `"light"`. Interactive pieces need hover, focus, disabled, and `prefers-reduced-motion`.
+- Do not introduce Kersivo red, gold, neon, gradients, glassmorphism, or barber clichés.
+- Keep WCAG AA contrast, visible focus (`--theme-focus`), and ≥44px targets.
+
+```css
+/* BAD */
+.hero { color: #f4f1ea; background: #0b0c0e; }
+
+/* GOOD */
+.bl-section { color: var(--theme-text); background: var(--theme-background); }
+```

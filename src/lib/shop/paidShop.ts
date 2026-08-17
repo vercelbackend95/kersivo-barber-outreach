@@ -1,3 +1,4 @@
+import { BLACKLINE_SHOP_ID } from '../demo/products';
 import { DEMO_SHOP_ID } from '../db/shopScope';
 import {
   saasSubscriptionGrantsAccess,
@@ -21,7 +22,7 @@ export function isPaidShop(
   subscription?: SaasSubscriptionAccessFields | null,
   now: Date = new Date(),
 ): boolean {
-  if (shop.id === DEMO_SHOP_ID) return false;
+  if (shop.id === DEMO_SHOP_ID || shop.id === BLACKLINE_SHOP_ID) return false;
   if (subscription && String(subscription.status) !== 'PENDING') {
     return saasSubscriptionGrantsAccess(subscription, now);
   }

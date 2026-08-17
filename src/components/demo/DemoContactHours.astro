@@ -1,0 +1,18 @@
+---
+import { DEMO_HOURS } from '@/lib/demo/site';
+---
+
+<div class="bl-contact-hours" data-bl-reveal>
+  <p class="bl-contact-hours-eyebrow">Opening Hours</p>
+  <h2 class="bl-contact-hours-heading" id="blackline-contact-hours-heading">Plan your visit.</h2>
+  <dl class="bl-contact-hours-list">
+    {
+      DEMO_HOURS.map((row) => (
+        <div class="bl-contact-hours-row">
+          <dt>{row.days}</dt>
+          <dd class={row.hours === 'Closed' ? 'is-closed' : undefined}>{row.hours}</dd>
+        </div>
+      ))
+    }
+  </dl>
+</div>

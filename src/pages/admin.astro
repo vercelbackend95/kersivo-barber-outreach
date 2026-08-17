@@ -50,6 +50,6 @@ import '../styles/components/admin-ai.css';
   />
   <main class="container page-wrap admin-page-wrap">
     <h1 class="sr-only">Kersivo Admin Panel</h1>
-    <AdminPanel client:load />
+    <AdminPanel client:load initialSection={Astro.url.searchParams.get('section')} />
   </main>
 </MinimalLayout>

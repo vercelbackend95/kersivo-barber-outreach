@@ -2,7 +2,8 @@
 import MainLayout from '@/layouts/MainLayout.astro';
 import type { ProductCategory } from '@prisma/client';
 import { prisma } from '@/lib/db/client';
-import { DEMO_SHOP_ID } from '@/lib/db/shopScope';
+import { BLACKLINE_SHOP_ID } from '@/lib/demo/products';
+import { isDemoShopId } from '@/lib/shop/cardPaymentsGate';
 import {
   PUBLIC_BOOKING_UNAVAILABLE_MESSAGE,
   withPrismaQuotaFallback,
@@ -18,8 +19,8 @@ export const prerender = false;
 const shopId = Astro.params.shopId?.trim() ?? '';
 const checkoutCancelled = Astro.url.searchParams.get('checkout') === 'cancelled';
 
-if (!shopId || shopId === DEMO_SHOP_ID) {
-  return Astro.redirect('/shop');
+if (!shopId || isDemoShopId(shopId)) {
+  return Astro.redirect(shopId === BLACKLINE_SHOP_ID ? '/demo/shop' : '/shop');
 }
 
 const outageShop = {

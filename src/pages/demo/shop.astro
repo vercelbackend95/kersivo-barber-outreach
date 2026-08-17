@@ -1,0 +1,76 @@
+---
+import DemoLayout from '@/layouts/DemoLayout.astro';
+import DemoShopCollection from '@/components/demo/DemoShopCollection.astro';
+import DemoShopHero from '@/components/demo/DemoShopHero.astro';
+import { getBlacklineRetailProducts } from '@/lib/demo/blacklineShop';
+import { DEMO_SHOP_NAME } from '@/lib/demo/site';
+
+export const prerender = false;
+
+const products = await getBlacklineRetailProducts();
+---
+
+<DemoLayout
+  title={`Shop | ${DEMO_SHOP_NAME}`}
+  description="The Blackline Edit — a curated grooming selection. Demo shop, no payment is taken."
+  canonicalPath="/demo/shop"
+>
+  <script is:inline slot="head">
+    try {
+      if (!window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
+        document.documentElement.setAttribute('data-bl-shop-motion', '');
+      }
+    } catch (error) {
+      /* Keep server-rendered content visible if matchMedia is unavailable. */
+    }
+  </script>
+
+  <div class="bl-shop-page" data-bl-shop>
+    <DemoShopHero products={products} />
+    <DemoShopCollection products={products} />
+  </div>
+</DemoLayout>
+
+<script>
+  function prefersReducedMotion() {
+    return window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  }
+
+  function isInViewport(el: Element) {
+    const rect = el.getBoundingClientRect();
+    return rect.bottom > 0 && rect.top < window.innerHeight;
+  }
+
+  function revealBlock(el: Element, instant: boolean) {
+    el.classList.add('is-inview');
+    if (instant) el.classList.add('is-settled');
+  }
+
+  function bindShopReveal(root: Element) {
+    const blocks = [...root.querySelectorAll('[data-bl-reveal]')];
+    if (blocks.length === 0) return;
+    const instant = prefersReducedMotion();
+    if (instant) {
+      blocks.forEach((block) => revealBlock(block, true));
+      return;
+    }
+
+    const observer = new IntersectionObserver(
+      (entries) => {
+        for (const entry of entries) {
+          if (!entry.isIntersecting) continue;
+          revealBlock(entry.target, false);
+          observer.unobserve(entry.target);
+        }
+      },
+      { threshold: 0.16, rootMargin: '0px 0px -8% 0px' },
+    );
+
+    for (const block of blocks) {
+      if (isInViewport(block)) revealBlock(block, false);
+      else observer.observe(block);
+    }
+  }
+
+  document.querySelectorAll('[data-bl-shop]').forEach(bindShopReveal);
+</script>

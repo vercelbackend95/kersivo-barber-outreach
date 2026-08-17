@@ -1,0 +1,282 @@
+---
+import DemoGalleryClose from '@/components/demo/DemoGalleryClose.astro';
+import DemoGalleryHero from '@/components/demo/DemoGalleryHero.astro';
+import DemoGalleryIndex from '@/components/demo/DemoGalleryIndex.astro';
+import DemoLayout from '@/layouts/DemoLayout.astro';
+import { DEMO_SHOP_NAME } from '@/lib/demo/site';
+---
+
+<DemoLayout
+  title={`Gallery | ${DEMO_SHOP_NAME}`}
+  description="Cuts, details and shop atmosphere from the Blackline chairs."
+  canonicalPath="/demo/gallery"
+>
+  <script is:inline slot="head">
+    try {
+      if (!window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
+        document.documentElement.setAttribute('data-bl-gallery-motion', '');
+      }
+    } catch (error) {
+      /* Keep server-rendered content visible if matchMedia is unavailable. */
+    }
+  </script>
+
+  <div class="bl-gallery-page" data-bl-gallery>
+    <DemoGalleryHero />
+    <DemoGalleryIndex />
+    <DemoGalleryClose />
+  </div>
+</DemoLayout>
+
+<script>
+  import {
+    demoGalleryNextIndex,
+    demoGalleryPrevIndex,
+  } from '@/lib/demo/gallery';
+
+  type ViewerFrame = {
+    id: string;
+    src: string;
+    width: number;
+    height: number;
+    caption: string;
+    counter: string;
+  };
+
+  function prefersReducedMotion() {
+    return window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  }
+
+  function isInViewport(el: Element) {
+    const rect = el.getBoundingClientRect();
+    return rect.bottom > 0 && rect.top < window.innerHeight;
+  }
+
+  function revealBlock(el: Element, instant: boolean) {
+    el.classList.add('is-inview');
+    if (instant) el.classList.add('is-settled');
+  }
+
+  function readFrames(root: Element): ViewerFrame[] {
+    return [...root.querySelectorAll('[data-work-open]')].flatMap((button) => {
+      const item = button.closest('.bl-work-item');
+      const img = item?.querySelector('.bl-work-stage img');
+      const caption = item?.querySelector('.bl-work-caption');
+      const counter = item?.querySelector('.bl-work-index-label');
+      if (!(img instanceof HTMLImageElement) || !caption || !counter) return [];
+      return [
+        {
+          id: item instanceof HTMLElement ? item.className : '',
+          src: img.getAttribute('src') ?? img.src,
+          width: img.width,
+          height: img.height,
+          caption: caption.textContent?.trim() ?? '',
+          counter: counter.textContent?.trim() ?? '',
+        },
+      ];
+    });
+  }
+
+  function bindGalleryViewer(root: Element) {
+    const dialog = root.querySelector('dialog.bl-work-dialog');
+    if (!(dialog instanceof HTMLDialogElement) || dialog.dataset.blViewerBound === 'true') return;
+    dialog.dataset.blViewerBound = 'true';
+
+    const frames = readFrames(root);
+    if (!frames.length) return;
+
+    const image = dialog.querySelector('[data-work-image]');
+    const caption = dialog.querySelector('[data-work-caption]');
+    const count = dialog.querySelector('[data-work-count]');
+    const closeBtn = dialog.querySelector('[data-work-close]');
+    const prevBtn = dialog.querySelector('[data-work-prev]');
+    const nextBtn = dialog.querySelector('[data-work-next]');
+    const html = document.documentElement;
+    const body = document.body;
+    let active = 0;
+    let opener: HTMLElement | null = null;
+    let previousHtmlOverflow = '';
+    let previousBodyOverflow = '';
+    let changeTimer = 0;
+
+    const applyFrame = (index: number) => {
+      const frame = frames[index];
+      if (!frame || !(image instanceof HTMLImageElement)) return;
+      active = index;
+      image.src = frame.src;
+      image.width = frame.width;
+      image.height = frame.height;
+      if (caption) caption.textContent = frame.caption;
+      if (count) count.textContent = frame.counter;
+    };
+
+    const render = (index: number, animate: boolean) => {
+      if (!animate || prefersReducedMotion()) {
+        window.clearTimeout(changeTimer);
+        dialog.classList.remove('is-changing');
+        applyFrame(index);
+        return;
+      }
+      window.clearTimeout(changeTimer);
+      dialog.classList.add('is-changing');
+      changeTimer = window.setTimeout(() => {
+        applyFrame(index);
+        window.requestAnimationFrame(() => dialog.classList.remove('is-changing'));
+      }, 80);
+    };
+
+    const preloadAdjacent = (index: number) => {
+      const next = frames[demoGalleryNextIndex(index, frames.length)];
+      const prev = frames[demoGalleryPrevIndex(index, frames.length)];
+      for (const frame of [next, prev]) {
+        if (!frame) continue;
+        const preload = new Image();
+        preload.src = frame.src;
+      }
+    };
+
+    const lockScroll = () => {
+      previousHtmlOverflow = html.style.overflow;
+      previousBodyOverflow = body.style.overflow;
+      html.style.overflow = 'hidden';
+      body.style.overflow = 'hidden';
+    };
+
+    const unlockScroll = () => {
+      html.style.overflow = previousHtmlOverflow;
+      body.style.overflow = previousBodyOverflow;
+    };
+
+    const onKeydown = (event: KeyboardEvent) => {
+      if (event.key === 'ArrowRight') {
+        event.preventDefault();
+        render(demoGalleryNextIndex(active, frames.length), true);
+        preloadAdjacent(active);
+      }
+      if (event.key === 'ArrowLeft') {
+        event.preventDefault();
+        render(demoGalleryPrevIndex(active, frames.length), true);
+        preloadAdjacent(active);
+      }
+    };
+
+    const openAt = (index: number, trigger: HTMLElement) => {
+      opener = trigger;
+      applyFrame(index);
+      lockScroll();
+      dialog.showModal();
+      dialog.addEventListener('keydown', onKeydown);
+      preloadAdjacent(index);
+      if (closeBtn instanceof HTMLElement) closeBtn.focus();
+    };
+
+    const closeViewer = () => {
+      if (!dialog.open) return;
+      dialog.close();
+    };
+
+    const onClosed = () => {
+      window.clearTimeout(changeTimer);
+      dialog.classList.remove('is-changing');
+      dialog.removeEventListener('keydown', onKeydown);
+      unlockScroll();
+      opener?.focus();
+      opener = null;
+    };
+
+    root.querySelectorAll('[data-work-open]').forEach((button) => {
+      button.addEventListener('click', () => {
+        if (!(button instanceof HTMLElement)) return;
+        const index = Number(button.dataset.workOpen);
+        if (!Number.isFinite(index)) return;
+        openAt(index, button);
+      });
+    });
+
+    closeBtn?.addEventListener('click', closeViewer);
+    prevBtn?.addEventListener('click', () => {
+      render(demoGalleryPrevIndex(active, frames.length), true);
+      preloadAdjacent(active);
+    });
+    nextBtn?.addEventListener('click', () => {
+      render(demoGalleryNextIndex(active, frames.length), true);
+      preloadAdjacent(active);
+    });
+    dialog.addEventListener('click', (event) => {
+      if (event.target === dialog) closeViewer();
+    });
+    dialog.addEventListener('close', onClosed);
+  }
+
+  function bindBlacklineGalleryMotion(root: Element) {
+    if (!(root instanceof HTMLElement) || root.dataset.blGalleryBound === 'true') return;
+    root.dataset.blGalleryBound = 'true';
+
+    bindGalleryViewer(root);
+
+    if (prefersReducedMotion() || typeof IntersectionObserver === 'undefined') {
+      document.documentElement.removeAttribute('data-bl-gallery-motion');
+      return;
+    }
+
+    const blocks = [...root.querySelectorAll('[data-bl-reveal]')];
+    const hero = root.querySelector('.bl-page-hero');
+    const scrolledPastHero =
+      window.scrollY >
+      (hero instanceof HTMLElement ? Math.min(hero.offsetHeight * 0.35, 240) : 80);
+
+    if (scrolledPastHero) {
+      document.documentElement.setAttribute('data-bl-gallery-instant', '');
+      blocks.forEach((block) => revealBlock(block, true));
+      return;
+    }
+
+    let remaining = blocks.length;
+    let observerFired = false;
+
+    const observer = new IntersectionObserver(
+      (entries) => {
+        observerFired = true;
+        for (const entry of entries) {
+          if (!entry.isIntersecting) continue;
+          revealBlock(entry.target, false);
+          observer.unobserve(entry.target);
+          remaining -= 1;
+        }
+        if (remaining <= 0) observer.disconnect();
+      },
+      { threshold: 0.16, rootMargin: '0px 0px -8% 0px' },
+    );
+
+    blocks.forEach((block) => observer.observe(block));
+
+    window.setTimeout(() => {
+      if (!observerFired) {
+        blocks.forEach((block) => revealBlock(block, true));
+        observer.disconnect();
+        return;
+      }
+      blocks.forEach((block) => {
+        if (!block.classList.contains('is-inview') && isInViewport(block)) {
+          revealBlock(block, true);
+          observer.unobserve(block);
+          remaining -= 1;
+        }
+      });
+      if (remaining <= 0) observer.disconnect();
+    }, 1000);
+
+    window.addEventListener('pageshow', (event) => {
+      if (!event.persisted) return;
+      if (window.scrollY <= 80) return;
+      document.documentElement.setAttribute('data-bl-gallery-instant', '');
+      blocks.forEach((block) => revealBlock(block, true));
+      observer.disconnect();
+    });
+  }
+
+  document.querySelectorAll('[data-bl-gallery]').forEach(bindBlacklineGalleryMotion);
+  document.addEventListener('astro:page-load', () => {
+    document.querySelectorAll('[data-bl-gallery]').forEach(bindBlacklineGalleryMotion);
+  });
+</script>

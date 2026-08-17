@@ -1,0 +1,53 @@
+---
+import {
+  DEMO_BARBERS,
+  demoBarberBookingHref,
+  demoBarberFirstName,
+} from '@/lib/demo/barbers';
+---
+
+<section class="bl-team" data-surface="light" aria-labelledby="blackline-team-heading">
+  <div class="bl-container">
+    <header class="bl-team-header">
+      <p class="bl-team-eyebrow">
+        <span class="bl-team-eyebrow-index">03</span>
+        <span aria-hidden="true"> · </span>
+        The Team
+      </p>
+      <h2 class="bl-team-heading" id="blackline-team-heading">Choose your barber.</h2>
+    </header>
+
+    <ul class="bl-team-grid">
+      {
+        DEMO_BARBERS.map((barber) => {
+          const firstName = demoBarberFirstName(barber.name);
+          return (
+            <li class="bl-team-card" style={`--bl-team-object-position: ${barber.objectPosition}`}>
+              <div class="bl-team-portrait">
+                <img
+                  src={barber.image.src}
+                  alt={barber.image.alt}
+                  width={barber.image.width}
+                  height={barber.image.height}
+                  sizes="(max-width: 639px) 100vw, (max-width: 1100px) 33vw, 420px"
+                  loading="lazy"
+                  decoding="async"
+                />
+              </div>
+              <h3 class="bl-team-name">{barber.name}</h3>
+              <p class="bl-team-spec">{barber.specialisation}</p>
+              <a class="bl-team-book" href={demoBarberBookingHref(barber.slug)}>
+                <span>Book with {firstName}</span>
+                <span class="bl-team-arrow" aria-hidden="true"></span>
+              </a>
+            </li>
+          );
+        })
+      }
+    </ul>
+
+    <div class="bl-team-cta">
+      <a class="bl-btn bl-btn--secondary" href="/demo/barbers">Meet the team</a>
+    </div>
+  </div>
+</section>

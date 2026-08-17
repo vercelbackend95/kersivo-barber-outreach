@@ -1,0 +1,161 @@
+html[data-app='marketing']::view-transition-old(root),
+html[data-app='marketing']::view-transition-new(root),
+html[data-app='flow']::view-transition-old(root),
+html[data-app='flow']::view-transition-new(root),
+html[data-app='admin']::view-transition-old(root),
+html[data-app='admin']::view-transition-new(root) {
+  animation: none;
+  mix-blend-mode: normal;
+}
+
+.ks-route-stage {
+  position: relative;
+  min-width: 0;
+  background: var(--route-surface);
+}
+
+.ks-main {
+  min-width: 0;
+}
+
+.ks-route-veil {
+  position: absolute;
+  inset: 0;
+  z-index: 12;
+  background: var(--route-surface);
+  pointer-events: none;
+  opacity: 0;
+  visibility: hidden;
+}
+
+.ks-route-veil[data-ks-route-phase='covering'],
+.ks-route-veil[data-ks-route-phase='navigating'] {
+  visibility: visible;
+  opacity: 1;
+  pointer-events: auto;
+  transition: opacity var(--motion-duration-interaction) var(--motion-ease-standard);
+}
+
+.ks-route-veil[data-ks-route-phase='revealing'] {
+  visibility: visible;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity var(--motion-duration-flow) var(--motion-ease-out);
+}
+
+[data-ks-route-variant='marketing'] .ks-route-veil[data-ks-route-phase='covering'],
+[data-ks-route-variant='marketing'] .ks-route-veil[data-ks-route-phase='navigating'] {
+  transition-duration: 160ms;
+}
+
+[data-ks-route-variant='marketing'] .ks-route-veil[data-ks-route-phase='revealing'] {
+  transition-duration: 220ms;
+}
+
+.ks-route-stage:has(.ks-route-veil[data-ks-route-phase='covering']) .ks-main,
+.ks-route-stage:has(.ks-route-veil[data-ks-route-phase='navigating']) .ks-main {
+  opacity: 0.92;
+  transform: translateY(-6px);
+  transition:
+    opacity var(--motion-duration-interaction) var(--motion-ease-standard),
+    transform var(--motion-duration-interaction) var(--motion-ease-standard);
+}
+
+.ks-route-stage:has(.ks-route-veil[data-ks-route-phase='revealing']) .ks-main {
+  animation: ks-route-in var(--motion-duration-flow) var(--motion-ease-out);
+}
+
+@keyframes ks-route-in {
+  from {
+    opacity: 0.92;
+    transform: translateY(8px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+.ks-route-pending {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  z-index: 14;
+  height: 2px;
+  pointer-events: none;
+  background: var(--route-accent);
+  transform: scaleX(0);
+  transform-origin: left center;
+  opacity: 0;
+}
+
+.ks-route-pending[data-active] {
+  opacity: 1;
+  animation: ks-route-pending-in 800ms var(--motion-ease-standard) forwards;
+}
+
+@keyframes ks-route-pending-in {
+  from {
+    transform: scaleX(0.12);
+  }
+  to {
+    transform: scaleX(0.72);
+  }
+}
+
+.admin-main-content {
+  position: relative;
+}
+
+.admin-route-pending {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  z-index: 6;
+  height: 2px;
+  pointer-events: none;
+  background: var(--route-accent, #ff1717);
+  transform: scaleX(0);
+  transform-origin: left center;
+  opacity: 0;
+}
+
+.admin-route-pending[data-active] {
+  opacity: 1;
+  animation: ks-route-pending-in 800ms var(--motion-ease-standard) forwards;
+}
+
+.admin-main-panel[data-entering='true'] {
+  animation: admin-panel-in var(--motion-duration-dashboard) var(--motion-ease-out);
+}
+
+@keyframes admin-panel-in {
+  from {
+    opacity: 0.96;
+    transform: translateY(5px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .ks-route-veil {
+    display: none;
+  }
+
+  .ks-route-pending,
+  .admin-route-pending,
+  .ks-route-stage:has(.ks-route-veil[data-ks-route-phase='covering']) .ks-main,
+  .ks-route-stage:has(.ks-route-veil[data-ks-route-phase='navigating']) .ks-main,
+  .ks-route-stage:has(.ks-route-veil[data-ks-route-phase='revealing']) .ks-main,
+  .admin-main-panel[data-entering='true'] {
+    opacity: 1;
+    transform: none;
+    animation: none;
+    transition: none;
+  }
+}

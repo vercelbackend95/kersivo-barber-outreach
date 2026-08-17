@@ -1,0 +1,78 @@
+---
+import DemoFinalCta from '@/components/demo/DemoFinalCta.astro';
+import DemoGalleryPreview from '@/components/demo/DemoGalleryPreview.astro';
+import DemoInfoRail from '@/components/demo/DemoInfoRail.astro';
+import DemoQuickBook from '@/components/demo/DemoQuickBook.astro';
+import DemoShopPreview from '@/components/demo/DemoShopPreview.astro';
+import DemoStory from '@/components/demo/DemoStory.astro';
+import DemoTeamPreview from '@/components/demo/DemoTeamPreview.astro';
+import DemoVisit from '@/components/demo/DemoVisit.astro';
+import DemoLayout from '@/layouts/DemoLayout.astro';
+import { getBlacklineRetailProducts } from '@/lib/demo/blacklineShop';
+import { DEMO_SHOP_NAME, DEMO_SHOP_TAGLINE } from '@/lib/demo/site';
+
+export const prerender = false;
+
+const featuredProducts = (await getBlacklineRetailProducts()).filter((product) => product.featured);
+
+---
+
+<DemoLayout
+  title={`${DEMO_SHOP_NAME} | Manchester`}
+  description={DEMO_SHOP_TAGLINE}
+  canonicalPath="/demo"
+>
+  <link slot="head" rel="preload" as="image" href="/demo/heroimg.webp" fetchpriority="high" />
+  <script is:inline slot="head">
+    try {
+      if (!window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
+        document.documentElement.setAttribute('data-bl-quick-motion', '');
+      }
+    } catch {
+      /* Keep server-rendered Quick Book content visible if matchMedia is unavailable. */
+    }
+  </script>
+
+  <section class="bl-hero" data-surface="dark" aria-label="Blackline Barbers">
+    <div class="bl-hero-grid">
+      <div class="bl-hero-copy">
+        <p class="bl-eyebrow">Manchester · Appointments & walk-ins</p>
+        <h1 class="bl-h1">Blackline Barbers</h1>
+        <p class="bl-display">Precision in every detail.</p>
+        <p class="bl-lede">Modern cuts, sharp fades and proper attention to every line.</p>
+        <div class="bl-hero-actions">
+          <a class="bl-btn bl-btn--primary" href="/demo/book">Book an appointment</a>
+          <a class="bl-btn bl-btn--secondary" href="/demo/services">Explore services</a>
+        </div>
+      </div>
+      <div class="bl-hero-split" aria-hidden="true"></div>
+      <div class="bl-hero-media">
+        <img
+          src="/demo/heroimg.webp"
+          alt="Barber using clippers and a comb to shape a client’s haircut."
+          width="1800"
+          height="2700"
+          sizes="(max-width: 767px) 100vw, 55vw"
+          fetchpriority="high"
+          decoding="async"
+        />
+      </div>
+    </div>
+  </section>
+
+  <DemoInfoRail />
+
+  <DemoQuickBook />
+
+  <DemoStory />
+
+  <DemoTeamPreview />
+
+  <DemoGalleryPreview />
+
+  <DemoShopPreview products={featuredProducts} />
+
+  <DemoVisit />
+
+  <DemoFinalCta />
+</DemoLayout>

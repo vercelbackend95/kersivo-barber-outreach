@@ -1,0 +1,50 @@
+---
+import { DEMO_GALLERY } from '@/lib/demo/gallery';
+import { DEMO_GALLERY_HREF } from '@/lib/demo/nav';
+---
+
+<section
+  class="bl-gallery"
+  data-surface="dark"
+  aria-labelledby="blackline-gallery-preview-heading"
+>
+  <div class="bl-container bl-gallery-layout">
+    <header class="bl-gallery-header">
+      <p class="bl-gallery-eyebrow">
+        <span class="bl-gallery-eyebrow-index">04</span>
+        <span aria-hidden="true"> · </span>
+        Recent Work
+      </p>
+      <h2 class="bl-gallery-heading" id="blackline-gallery-preview-heading">
+        <span>Cut clean.</span>
+        <span>Finished right.</span>
+      </h2>
+    </header>
+
+    <ul class="bl-gallery-mosaic">
+      {
+        DEMO_GALLERY.map((image) => (
+          <li
+            class={`bl-gallery-item bl-gallery-item--${image.id}`}
+            style={`--bl-gallery-pos: ${image.objectPosition.desktop}; --bl-gallery-pos-mobile: ${image.objectPosition.mobile}`}
+          >
+            <img
+              src={image.src}
+              alt={image.alt}
+              width={image.width}
+              height={image.height}
+              sizes={image.sizes}
+              loading="lazy"
+              decoding="async"
+            />
+          </li>
+        ))
+      }
+    </ul>
+
+    <a class="bl-gallery-cta" href={DEMO_GALLERY_HREF}>
+      <span>View the gallery</span>
+      <span class="bl-gallery-arrow" aria-hidden="true"></span>
+    </a>
+  </div>
+</section>

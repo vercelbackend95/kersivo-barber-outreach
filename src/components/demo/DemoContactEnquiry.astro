@@ -1,0 +1,72 @@
+---
+import {
+  DEMO_CONTACT_EMAIL_MAX,
+  DEMO_CONTACT_MESSAGE_MAX,
+  DEMO_CONTACT_NAME_MAX,
+  DEMO_CONTACT_SAFETY_LABEL,
+  DEMO_CONTACT_SUCCESS,
+} from '@/lib/demo/contact';
+---
+
+<div class="bl-contact-enquiry" data-bl-reveal>
+  <p class="bl-contact-enquiry-eyebrow">Demo Enquiry</p>
+  <h2 class="bl-contact-enquiry-heading" id="blackline-contact-enquiry-heading">Send a note.</h2>
+  <p class="bl-contact-enquiry-lede">Try the contact experience. Nothing entered here is sent or stored.</p>
+  <p class="bl-contact-enquiry-safety">{DEMO_CONTACT_SAFETY_LABEL}</p>
+
+  <form class="bl-contact-form" data-contact-form novalidate>
+    <div class="bl-contact-field">
+      <label class="bl-contact-label" for="bl-contact-name">Your name</label>
+      <input
+        class="bl-contact-input"
+        id="bl-contact-name"
+        name="name"
+        type="text"
+        autocomplete="name"
+        maxlength={DEMO_CONTACT_NAME_MAX}
+        required
+        aria-describedby="bl-contact-name-error"
+      />
+      <p class="bl-contact-error" id="bl-contact-name-error" data-contact-error="name" hidden></p>
+    </div>
+
+    <div class="bl-contact-field">
+      <label class="bl-contact-label" for="bl-contact-email">Your email</label>
+      <input
+        class="bl-contact-input"
+        id="bl-contact-email"
+        name="email"
+        type="email"
+        autocomplete="email"
+        inputmode="email"
+        maxlength={DEMO_CONTACT_EMAIL_MAX}
+        required
+        aria-describedby="bl-contact-email-error"
+      />
+      <p class="bl-contact-error" id="bl-contact-email-error" data-contact-error="email" hidden></p>
+    </div>
+
+    <div class="bl-contact-field">
+      <label class="bl-contact-label" for="bl-contact-message">What can we help with?</label>
+      <textarea
+        class="bl-contact-textarea"
+        id="bl-contact-message"
+        name="message"
+        maxlength={DEMO_CONTACT_MESSAGE_MAX}
+        rows="6"
+        required
+        aria-describedby="bl-contact-message-error"
+      ></textarea>
+      <p class="bl-contact-error" id="bl-contact-message-error" data-contact-error="message" hidden></p>
+    </div>
+
+    <button class="bl-btn bl-btn--primary bl-contact-submit" type="submit">
+      <span>Send enquiry</span>
+      <span class="bl-contact-submit-arrow" aria-hidden="true"></span>
+    </button>
+  </form>
+
+  <p class="bl-contact-success" data-contact-success role="status" aria-live="polite" hidden>
+    {DEMO_CONTACT_SUCCESS}
+  </p>
+</div>

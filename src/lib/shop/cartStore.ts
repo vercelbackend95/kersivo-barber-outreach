@@ -1,6 +1,12 @@
 // src/lib/shop/cartStore.ts
 export const CART_STORAGE_KEY = 'kersivo_shop_cart_v2';
 
+export function cartStorageKeyForShop(shopId?: string | null): string {
+  const id = shopId?.trim();
+  if (!id) return CART_STORAGE_KEY;
+  return `${CART_STORAGE_KEY}:${id}`;
+}
+
 export type CartItem = {
   productId: string;
   name: string;
@@ -34,11 +40,19 @@ type CartStoreSingleton = {
   listeners: Set<() => void>;
   isHydrated: boolean;
   storageListenerBound: boolean;
+  storageKey: string;
+  allowedProductIds: Set<string> | null;
 };
 
 declare global {
   // eslint-disable-next-line no-var
   var __KERSIVO_CART_STORE__: CartStoreSingleton | undefined;
+  interface Window {
+    __KERSIVO_CART_NAMESPACE__?: {
+      shopId?: string | null;
+      allowedProductIds?: readonly string[];
+    };
+  }
 }
 
 const SERVER_SNAPSHOT: CartSnapshot = Object.freeze({
@@ -58,7 +72,12 @@ const store: CartStoreSingleton =
     listeners: new Set<() => void>(),
     isHydrated: false,
     storageListenerBound: false,
+    storageKey: CART_STORAGE_KEY,
+    allowedProductIds: null,
   };
+
+store.storageKey ??= CART_STORAGE_KEY;
+store.allowedProductIds ??= null;
 
 globalThis.__KERSIVO_CART_STORE__ = store;
 
@@ -93,18 +112,23 @@ function toSafeItem(item: Partial<CartItem>): CartItem | null {
   };
 }
 
+function filterAllowed(items: CartItem[]): CartItem[] {
+  if (!store.allowedProductIds) return items;
+  return items.filter((item) => store.allowedProductIds?.has(item.productId));
+}
+
 function readFromStorage(): CartItem[] {
   if (typeof window === 'undefined') {
     return [];
   }
 
   try {
-    const parsed = JSON.parse(window.localStorage.getItem(CART_STORAGE_KEY) ?? '[]') as Partial<CartItem>[];
+    const parsed = JSON.parse(window.localStorage.getItem(store.storageKey) ?? '[]') as Partial<CartItem>[];
     if (!Array.isArray(parsed)) {
       return [];
     }
 
-    return parsed.map((item) => toSafeItem(item)).filter((item): item is CartItem => Boolean(item));
+    return filterAllowed(parsed.map((item) => toSafeItem(item)).filter((item): item is CartItem => Boolean(item)));
   } catch {
     return [];
   }
@@ -115,7 +139,21 @@ function writeToStorage(items: CartItem[]) {
     return;
   }
 
-  window.localStorage.setItem(CART_STORAGE_KEY, JSON.stringify(items));
+  window.localStorage.setItem(store.storageKey, JSON.stringify(items));
+}
+
+function applyDocumentNamespace() {
+  if (typeof window === 'undefined') {
+    return;
+  }
+
+  const pending = window.__KERSIVO_CART_NAMESPACE__;
+  if (!pending?.shopId) {
+    return;
+  }
+
+  store.storageKey = cartStorageKeyForShop(pending.shopId);
+  store.allowedProductIds = pending.allowedProductIds ? new Set(pending.allowedProductIds) : null;
 }
 
 function ensureHydrated() {
@@ -123,6 +161,7 @@ function ensureHydrated() {
     return;
   }
 
+  applyDocumentNamespace();
   store.state.items = readFromStorage();
   store.isHydrated = true;
 
@@ -130,7 +169,7 @@ function ensureHydrated() {
 
   if (!store.storageListenerBound) {
     window.addEventListener('storage', (event) => {
-      if (event.key !== CART_STORAGE_KEY) {
+      if (event.key !== store.storageKey) {
         return;
       }
       store.state.items = readFromStorage();
@@ -145,6 +184,37 @@ function updateItems(nextItems: CartItem[]) {
   writeToStorage(store.state.items);
 
   emitChange();
+}
+
+export function bindCartNamespace(options?: {
+  shopId?: string | null;
+  allowedProductIds?: readonly string[];
+}) {
+  const nextKey = cartStorageKeyForShop(options?.shopId);
+  const nextAllowed = options?.allowedProductIds ? new Set(options.allowedProductIds) : null;
+  const keyChanged = store.storageKey !== nextKey;
+  store.storageKey = nextKey;
+  store.allowedProductIds = nextAllowed;
+
+  if (typeof window === 'undefined') {
+    return;
+  }
+
+  if (!store.isHydrated) {
+    return;
+  }
+
+  if (keyChanged) {
+    store.state.items = readFromStorage();
+    writeToStorage(store.state.items);
+    emitChange();
+    return;
+  }
+
+  const filtered = filterAllowed(store.state.items);
+  if (filtered.length !== store.state.items.length) {
+    updateItems(filtered);
+  }
 }
 
 export function subscribe(listener: () => void) {
@@ -183,6 +253,10 @@ export function addItem(input: AddCartItemInput) {
   const quantity = Math.max(1, Math.floor(Number(input.quantity ?? 1)));
 
   if (!safeProductId || !safeName) {
+    return;
+  }
+
+  if (store.allowedProductIds && !store.allowedProductIds.has(safeProductId)) {
     return;
   }
 

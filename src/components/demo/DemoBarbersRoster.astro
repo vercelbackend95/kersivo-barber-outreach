@@ -1,0 +1,63 @@
+---
+import {
+  DEMO_BARBERS,
+  demoBarberBookingHref,
+  demoBarberFirstName,
+  demoBarberRosterIndex,
+} from '@/lib/demo/barbers';
+---
+
+<section
+  class="bl-roster"
+  data-surface="light"
+  aria-labelledby="blackline-roster-heading"
+>
+  <div class="bl-container">
+    <h2 class="bl-roster-heading" id="blackline-roster-heading">Choose your chair.</h2>
+    <ol class="bl-roster-list">
+      {
+        DEMO_BARBERS.map((barber, index) => {
+          const firstName = demoBarberFirstName(barber.name);
+          const inverted = index % 2 === 1;
+          return (
+            <li
+              class:list={[
+                'bl-roster-item',
+                inverted && 'bl-roster-item--invert',
+                index === 1 && 'bl-roster-item--alt',
+              ]}
+              data-bl-reveal
+              style={`--bl-roster-object-position: ${barber.rosterObjectPosition}`}
+            >
+              <article class="bl-roster-profile" aria-labelledby={`blackline-barber-${barber.slug}`}>
+                <p class="bl-roster-index">{demoBarberRosterIndex(index)}</p>
+                <figure class="bl-roster-figure">
+                  <img
+                    src={barber.image.src}
+                    alt={barber.image.alt}
+                    width={barber.image.width}
+                    height={barber.image.height}
+                    sizes="(max-width: 1023px) min(100vw, 40rem), 58vw"
+                    loading={index === 0 ? 'eager' : 'lazy'}
+                    decoding="async"
+                  />
+                </figure>
+                <div class="bl-roster-copy">
+                  <h3 class="bl-roster-name" id={`blackline-barber-${barber.slug}`}>
+                    {barber.name}
+                  </h3>
+                  <p class="bl-roster-spec">{barber.specialisation}</p>
+                  <p class="bl-roster-selection">{barber.selectionCopy}</p>
+                  <a class="bl-roster-book" href={demoBarberBookingHref(barber.slug)}>
+                    <span>Book with {firstName}</span>
+                    <span class="bl-roster-arrow" aria-hidden="true"></span>
+                  </a>
+                </div>
+              </article>
+            </li>
+          );
+        })
+      }
+    </ol>
+  </div>
+</section>

@@ -1,0 +1,22 @@
+---
+import DemoPageHero from '@/components/demo/DemoPageHero.astro';
+import { DEMO_LOCATION, DEMO_LOCATION_NOTE } from '@/lib/demo/site';
+
+const [place = DEMO_LOCATION, city = ''] = DEMO_LOCATION.split(',').map((part) => part.trim());
+---
+
+<DemoPageHero
+  headingId="blackline-contact-heading"
+  eyebrow="<span>Contact</span>"
+  intro="Everything you need before you take the chair."
+>
+  <Fragment slot="title">
+    Come<br />through.
+  </Fragment>
+  <p slot="meta" class="bl-page-hero-rail">
+    <span>{place}</span>
+    <span>{city}</span>
+    <span>{DEMO_LOCATION_NOTE}</span>
+  </p>
+  <span class="bl-page-hero-rule" aria-hidden="true"></span>
+</DemoPageHero>

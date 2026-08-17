@@ -102,10 +102,12 @@ describe('POST /api/public/shop/[shopId]/checkout', () => {
     orderUpdate.mockResolvedValue({});
   });
 
-  it('returns 404 for unknown shop', async () => {
-    findUniqueShop.mockResolvedValue(null);
-    const res = await POST(ctx('missing', { items: [{ productId: 'p', quantity: 1 }] }) as never);
+  it('returns 404 for the BLACKLINE demo tenant', async () => {
+    const res = await POST(
+      ctx('blackline-barbers-demo', { items: [{ productId: 'prod_1', quantity: 1 }] }) as never,
+    );
     expect(res.status).toBe(404);
+    expect(createRetailCheckoutSession).not.toHaveBeenCalled();
   });
 
   it('returns 403 when subscription entitlement is missing', async () => {

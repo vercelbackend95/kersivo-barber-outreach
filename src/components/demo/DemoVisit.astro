@@ -1,0 +1,83 @@
+---
+import DemoLocationMap from '@/components/demo/DemoLocationMap.astro';
+import { DEMO_BOOK_HREF } from '@/lib/demo/nav';
+import {
+  DEMO_HOURS,
+  DEMO_LOCATION,
+  DEMO_LOCATION_NOTE,
+  DEMO_PHONE,
+  DEMO_PHONE_ACCESSIBLE_NAME,
+  DEMO_PHONE_TEL,
+  DEMO_WALK_INS,
+} from '@/lib/demo/site';
+---
+
+<section class="bl-visit" data-surface="dark" aria-labelledby="blackline-visit-heading">
+  <div class="bl-container bl-visit-layout">
+    <div class="bl-visit-copy">
+      <p class="bl-visit-eyebrow">
+        <span class="bl-visit-eyebrow-index">06</span>
+        <span aria-hidden="true"> · </span>
+        Visit
+      </p>
+      <h2 class="bl-visit-heading" id="blackline-visit-heading">
+        <span>Visit</span>
+        <span>Blackline.</span>
+      </h2>
+
+      <dl class="bl-visit-facts">
+        <div class="bl-visit-fact">
+          <dt>Location</dt>
+          <dd>
+            <p class="bl-visit-value">{DEMO_LOCATION}</p>
+            <p class="bl-visit-note">{DEMO_LOCATION_NOTE}</p>
+          </dd>
+        </div>
+
+        <div class="bl-visit-fact">
+          <dt>Opening hours</dt>
+          <dd>
+            <ul class="bl-visit-hours">
+              {
+                DEMO_HOURS.map((row) => (
+                  <li>
+                    <span>{row.days}</span>
+                    <span class={row.hours === 'Closed' ? 'bl-visit-hours-closed' : undefined}>
+                      {row.hours}
+                    </span>
+                  </li>
+                ))
+              }
+            </ul>
+          </dd>
+        </div>
+
+        <div class="bl-visit-fact">
+          <dt>Phone</dt>
+          <dd>
+            <a
+              class="bl-visit-phone"
+              href={DEMO_PHONE_TEL}
+              aria-label={DEMO_PHONE_ACCESSIBLE_NAME}
+            >
+              {DEMO_PHONE}
+            </a>
+          </dd>
+        </div>
+
+        <div class="bl-visit-fact">
+          <dt>Walk-ins</dt>
+          <dd>
+            <p class="bl-visit-value">{DEMO_WALK_INS}</p>
+          </dd>
+        </div>
+      </dl>
+
+      <a class="bl-btn bl-btn--primary bl-visit-cta" href={DEMO_BOOK_HREF}>
+        Book an appointment
+      </a>
+    </div>
+
+    <DemoLocationMap variant="compact" />
+  </div>
+</section>

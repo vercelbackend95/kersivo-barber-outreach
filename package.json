@@ -33,6 +33,7 @@
     "typecheck:app": "astro check --tsconfig tsconfig.app.json --minimumFailingSeverity error",
     "typecheck": "npm run typecheck:app",
     "test:consent": "playwright test --config=scripts/consent-verify.playwright.config.mjs",
+    "test:demo-heroes": "playwright test --config=scripts/demo-page-hero.playwright.config.mjs",
     "check:widgets": "node scripts/check-landing-widgets.mjs",
     "assets:landing-demo": "node scripts/fetch-landing-demo-assets.mjs",
     "assets:landing-illustrations-webp": "node scripts/convert-landing-page-illustrations-webp.mjs",
@@ -76,8 +77,10 @@
   "dependencies": {
     "@astrojs/react": "^6.0.2",
     "@fontsource/antonio": "^5.2.8",
+    "@fontsource/barlow-condensed": "^5.3.0",
     "@fontsource/bebas-neue": "^5.2.7",
     "@fontsource/inter": "^5.2.8",
+    "@fontsource/manrope": "^5.3.0",
     "@prisma/client": "^5.22.0",
     "@radix-ui/react-slot": "^1.2.4",
     "@sentry/astro": "^10.69.0",

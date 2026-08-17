@@ -1,0 +1,59 @@
+---
+import { DEMO_SHOP_HREF } from '@/lib/demo/nav';
+import { demoProductHref, type DemoProduct } from '@/lib/demo/products';
+import { formatDemoPriceGbp } from '@/lib/demo/services';
+
+interface Props {
+  products: DemoProduct[];
+}
+
+const { products } = Astro.props;
+---
+
+<section
+  class="bl-shop"
+  data-surface="light"
+  aria-labelledby="blackline-shop-preview-heading"
+>
+  <div class="bl-container bl-shop-layout">
+    <p class="bl-shop-eyebrow">
+      <span class="bl-shop-eyebrow-index">05</span>
+      <span aria-hidden="true"> · </span>
+      The Shop
+    </p>
+    <h2 class="bl-shop-heading" id="blackline-shop-preview-heading">
+      <span>THE PRODUCTS WE USE.</span>
+      <span>READY TO COLLECT.</span>
+    </h2>
+    <p class="bl-shop-lede">Order online and collect from the shop.</p>
+
+    <ul class="bl-shop-runway">
+      {
+        products.map((product) => (
+          <li class={`bl-shop-item bl-shop-item--${product.slug}`}>
+            <a class="bl-shop-stage" href={demoProductHref(product.id)}>
+              <img
+                src={product.image.src}
+                alt={product.image.alt}
+                width={product.image.width}
+                height={product.image.height}
+                sizes={product.image.sizes}
+                loading="lazy"
+                decoding="async"
+              />
+            </a>
+            <h3 class="bl-shop-name">
+              <a href={demoProductHref(product.id)}>{product.name}</a>
+            </h3>
+            <p class="bl-shop-price">{formatDemoPriceGbp(product.pricePence)}</p>
+          </li>
+        ))
+      }
+    </ul>
+
+    <a class="bl-shop-cta" href={DEMO_SHOP_HREF}>
+      <span>Shop products</span>
+      <span class="bl-shop-arrow" aria-hidden="true"></span>
+    </a>
+  </div>
+</section>

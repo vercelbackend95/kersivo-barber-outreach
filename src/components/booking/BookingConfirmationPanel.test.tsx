@@ -47,4 +47,33 @@ describe('BookingConfirmationPanel', () => {
     expect(screen.getByRole('link', { name: 'See pricing' })).toBeTruthy();
     expect(screen.getByRole('link', { name: 'Ask about my setup' })).toBeTruthy();
   });
+
+  it('uses host demo copy, CTAs, and a demo reference when provided', () => {
+    render(
+      <BookingConfirmationPanel
+        variant="demo"
+        summary={{
+          service: 'Skin Fade',
+          barber: 'Ellis Ward',
+          date: '18 Jul 2026',
+          time: '09:00',
+          reference: 'BL-4821',
+        }}
+        demoCopy={{
+          heading: 'That’s the Blackline booking experience',
+          body: 'No appointment was created and no email was sent. This walkthrough stays inside the Blackline demo.',
+          ctas: [
+            { label: 'Back to Blackline', href: '/demo', primary: true },
+            { label: 'View services', href: '/demo/services', primary: false },
+          ],
+        }}
+      />,
+    );
+
+    expect(screen.getByText('That’s the Blackline booking experience')).toBeTruthy();
+    expect(screen.getByText('BL-4821')).toBeTruthy();
+    expect(screen.getByRole('link', { name: 'Back to Blackline' }).getAttribute('href')).toBe('/demo');
+    expect(screen.getByRole('link', { name: 'View services' }).getAttribute('href')).toBe('/demo/services');
+    expect(screen.queryByRole('link', { name: 'See pricing' })).toBeNull();
+  });
 });
