@@ -49,8 +49,8 @@ vi.mock('@/lib/db/client', () => ({
 
 import { PATCH } from './service';
 
-const startAt = new Date('2026-08-10T09:00:00.000Z'); // 10:00 London (BST)
-const endAt30 = new Date('2026-08-10T09:30:00.000Z');
+const startAt = new Date('2027-06-15T09:00:00.000Z'); // 10:00 London (BST)
+const endAt30 = new Date('2027-06-15T09:30:00.000Z');
 
 function bookingRow(overrides: Record<string, unknown> = {}) {
   return {
@@ -97,8 +97,8 @@ function mockHappyTransaction() {
       servicePricePenceAtBooking: 3500,
       serviceDurationMinutesAtBooking: 60,
       totalPricePence: 3500,
-      endAt: new Date('2026-08-10T10:05:00.000Z'),
-      updatedAt: new Date('2026-08-10T08:00:00.000Z'),
+      endAt: new Date('2027-06-15T10:05:00.000Z'),
+      updatedAt: new Date('2027-06-15T08:00:00.000Z'),
     });
     const tx = {
       booking: {
@@ -149,7 +149,7 @@ describe('PATCH /api/admin/bookings/[id]/service', () => {
           serviceDurationMinutesAtBooking: 60,
           totalPricePence: 3500,
           // 60 duration + 5 buffer = 65 minutes from 09:00Z
-          endAt: new Date('2026-08-10T10:05:00.000Z'),
+          endAt: new Date('2027-06-15T10:05:00.000Z'),
         }),
       }),
     );
@@ -165,7 +165,7 @@ describe('PATCH /api/admin/bookings/[id]/service', () => {
     expect(bookingUpdate).toHaveBeenCalledWith(
       expect.objectContaining({
         data: expect.objectContaining({
-          endAt: new Date('2026-08-10T10:10:00.000Z'),
+          endAt: new Date('2027-06-15T10:10:00.000Z'),
         }),
       }),
     );

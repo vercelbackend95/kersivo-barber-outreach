@@ -5,9 +5,13 @@ import { OWNER_TEST_BOOKING_NOTES_PREFIX } from '@/lib/booking/sandboxBookings';
 const resolveAdminAccess = vi.fn();
 const createInstantBooking = vi.fn();
 
-vi.mock('@/lib/admin/auth', () => ({
-  resolveAdminAccess: (...args: unknown[]) => resolveAdminAccess(...args),
-}));
+vi.mock('@/lib/admin/auth', async (importOriginal) => {
+  const actual = await importOriginal<typeof import('@/lib/admin/auth')>();
+  return {
+    ...actual,
+    resolveAdminAccess: (...args: unknown[]) => resolveAdminAccess(...args),
+  };
+});
 
 vi.mock('@/lib/booking/service', () => ({
   BookingActionError: class BookingActionError extends Error {

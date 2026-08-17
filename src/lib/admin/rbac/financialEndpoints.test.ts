@@ -36,7 +36,9 @@ function accessFor(role: ShopRole): AdminAccess {
 
 vi.mock('@/lib/admin/auth', async () => {
   const canMod = await vi.importActual<typeof import('./can')>('./can');
+  const authMod = await vi.importActual<typeof import('@/lib/admin/auth')>('@/lib/admin/auth');
   return {
+    ...authMod,
     requireAdminContext: async () => currentAccess,
     resolveAdminAccess: async () => currentAccess,
     requireAdminPermission: async (_ctx: unknown, permission: Permission) =>
