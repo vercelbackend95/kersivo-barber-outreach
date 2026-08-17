@@ -1,0 +1,157 @@
+---
+import DemoLayout from '@/layouts/DemoLayout.astro';
+import DemoServicesClose from '@/components/demo/DemoServicesClose.astro';
+import DemoServicesHero from '@/components/demo/DemoServicesHero.astro';
+import DemoServicesMenu from '@/components/demo/DemoServicesMenu.astro';
+import { DEMO_SHOP_NAME } from '@/lib/demo/site';
+---
+
+<DemoLayout
+  title={`Services | ${DEMO_SHOP_NAME}`}
+  description="Cuts, fades, and finishes at Blackline Barbers."
+  canonicalPath="/demo/services"
+>
+  <script is:inline slot="head">
+    try {
+      if (!window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
+        document.documentElement.setAttribute('data-bl-services-motion', '');
+      }
+    } catch (error) {
+      /* Keep server-rendered content visible if matchMedia is unavailable. */
+    }
+  </script>
+
+  <div class="bl-services" data-bl-services>
+    <DemoServicesHero />
+    <DemoServicesMenu />
+    <DemoServicesClose />
+  </div>
+</DemoLayout>
+
+<script>
+  function prefersReducedMotion() {
+    return window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  }
+
+  function isInViewport(el: Element) {
+    const rect = el.getBoundingClientRect();
+    return rect.bottom > 0 && rect.top < window.innerHeight;
+  }
+
+  function revealBlock(el: Element, instant: boolean) {
+    el.classList.add('is-inview');
+    if (instant) el.classList.add('is-settled');
+  }
+
+  function bindActiveServiceMenu(root: Element) {
+    const menu = root.querySelector('[data-bl-service-menu]');
+    if (!(menu instanceof HTMLElement) || menu.dataset.blMenuBound === 'true') return;
+    menu.dataset.blMenuBound = 'true';
+
+    const setActive = (slug: string) => {
+      menu.dataset.active = slug;
+      menu.querySelectorAll('.bl-services-stage-panel').forEach((panel) => {
+        panel.classList.toggle('is-active', panel.getAttribute('data-service') === slug);
+      });
+    };
+
+    const rows = [...menu.querySelectorAll('[data-service-slug]')];
+    rows.forEach((row) => {
+      row.addEventListener('focusin', () => {
+        const slug = row instanceof HTMLElement ? row.dataset.serviceSlug : undefined;
+        if (slug) setActive(slug);
+      });
+    });
+
+    const finePointer = window.matchMedia('(hover: hover) and (pointer: fine)');
+    const onPointerEnter = (event: Event) => {
+      const target = event.currentTarget;
+      const slug = target instanceof HTMLElement ? target.dataset.serviceSlug : undefined;
+      if (slug) setActive(slug);
+    };
+
+    const bindHover = () => {
+      rows.forEach((row) => {
+        row.removeEventListener('pointerenter', onPointerEnter);
+        if (finePointer.matches) row.addEventListener('pointerenter', onPointerEnter);
+      });
+    };
+
+    bindHover();
+    if (typeof finePointer.addEventListener === 'function') {
+      finePointer.addEventListener('change', bindHover);
+    }
+  }
+
+  function bindBlacklineServicesMotion(root: Element) {
+    if (!(root instanceof HTMLElement) || root.dataset.blServicesBound === 'true') return;
+    root.dataset.blServicesBound = 'true';
+
+    bindActiveServiceMenu(root);
+
+    if (prefersReducedMotion() || typeof IntersectionObserver === 'undefined') {
+      document.documentElement.removeAttribute('data-bl-services-motion');
+      return;
+    }
+
+    const blocks = [...root.querySelectorAll('[data-bl-reveal]')];
+    const hero = root.querySelector('.bl-page-hero');
+    const scrolledPastHero =
+      window.scrollY >
+      (hero instanceof HTMLElement ? Math.min(hero.offsetHeight * 0.35, 240) : 80);
+
+    if (scrolledPastHero) {
+      document.documentElement.setAttribute('data-bl-services-instant', '');
+      blocks.forEach((block) => revealBlock(block, true));
+      return;
+    }
+
+    let remaining = blocks.length;
+    let observerFired = false;
+
+    const observer = new IntersectionObserver(
+      (entries) => {
+        observerFired = true;
+        for (const entry of entries) {
+          if (!entry.isIntersecting) continue;
+          revealBlock(entry.target, false);
+          observer.unobserve(entry.target);
+          remaining -= 1;
+        }
+        if (remaining <= 0) observer.disconnect();
+      },
+      { threshold: 0.16, rootMargin: '0px 0px -10% 0px' },
+    );
+
+    blocks.forEach((block) => observer.observe(block));
+
+    window.setTimeout(() => {
+      if (!observerFired) {
+        blocks.forEach((block) => revealBlock(block, true));
+        observer.disconnect();
+        return;
+      }
+      blocks.forEach((block) => {
+        if (!block.classList.contains('is-inview') && isInViewport(block)) {
+          revealBlock(block, true);
+          observer.unobserve(block);
+          remaining -= 1;
+        }
+      });
+      if (remaining <= 0) observer.disconnect();
+    }, 1000);
+
+    window.addEventListener('pageshow', (event) => {
+      if (!event.persisted) return;
+      if (window.scrollY <= 80) return;
+      document.documentElement.setAttribute('data-bl-services-instant', '');
+      blocks.forEach((block) => revealBlock(block, true));
+      observer.disconnect();
+    });
+  }
+
+  document.querySelectorAll('[data-bl-services]').forEach(bindBlacklineServicesMotion);
+  document.addEventListener('astro:page-load', () => {
+    document.querySelectorAll('[data-bl-services]').forEach(bindBlacklineServicesMotion);
+  });
+</script>

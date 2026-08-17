@@ -1,0 +1,45 @@
+---
+import BookingFlow from '@/components/booking/BookingFlow';
+import DemoLayout from '@/layouts/DemoLayout.astro';
+import { DEMO_BARBERS, resolveDemoBarberSlug, toDemoBookingBarber } from '@/lib/demo/barbers';
+import { BLACKLINE_BOOKING_PRESENTATION } from '@/lib/demo/booking';
+import { DEMO_SERVICES, resolveDemoServiceSlug } from '@/lib/demo/services';
+import { DEMO_SHOP_NAME } from '@/lib/demo/site';
+import '@/styles/components/buttons.css';
+import '@/styles/components/empty-state.css';
+import '@/styles/components/skeleton.css';
+import '@/styles/components/booking-flow.css';
+import '@/styles/components/booking-mobile.css';
+import '@/styles/components/booking-review.css';
+
+const selectedService = resolveDemoServiceSlug(Astro.url.searchParams.get('service'));
+const selectedBarber = resolveDemoBarberSlug(Astro.url.searchParams.get('barber'));
+---
+
+<DemoLayout
+  title={`Book | ${DEMO_SHOP_NAME}`}
+  description="Book a cut at Blackline Barbers. Demo booking page — no appointment is created."
+  canonicalPath="/demo/book"
+>
+  <section class="bl-section bl-booking" data-surface="light">
+    <div class="bl-container">
+      <BookingFlow
+        client:load
+        publicDemoMode
+        initialServiceId={selectedService?.id}
+        initialBarberId={selectedBarber?.id}
+        services={DEMO_SERVICES.map((service) => ({
+          id: service.id,
+          name: service.name,
+          durationMinutes: service.durationMinutes,
+          pricePence: service.pricePence,
+          category: service.category,
+          displayOrder: service.displayOrder,
+        }))}
+        barbers={DEMO_BARBERS.map(toDemoBookingBarber)}
+        shopDetails={{ timezone: 'Europe/London' }}
+        presentation={BLACKLINE_BOOKING_PRESENTATION}
+      />
+    </div>
+  </section>
+</DemoLayout>

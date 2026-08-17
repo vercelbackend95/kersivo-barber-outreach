@@ -1,0 +1,30 @@
+---
+import DemoPageHero from '@/components/demo/DemoPageHero.astro';
+import { demoProductsMeta, type DemoProduct } from '@/lib/demo/products';
+
+interface Props {
+  products: DemoProduct[];
+}
+
+const { products } = Astro.props;
+const meta = demoProductsMeta(products);
+---
+
+<DemoPageHero
+  headingId="blackline-shop-heading"
+  eyebrow="<span>The</span> Shop"
+  intro="A curated selection for styling, care and the finish."
+>
+  <Fragment slot="title">
+    The Blackline<br />Edit.
+  </Fragment>
+  <Fragment slot="meta">
+    <ul class="bl-page-hero-stats">
+      <li>{meta.countLabel}</li>
+      <li>COLLECT IN SHOP</li>
+      <li>DEMO CHECKOUT</li>
+    </ul>
+    <p class="bl-page-safety">No real payment or fulfilment is created.</p>
+  </Fragment>
+  <span class="bl-page-hero-rule" aria-hidden="true"></span>
+</DemoPageHero>

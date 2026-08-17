@@ -1,0 +1,43 @@
+/* Shared motion + route-surface tokens. Safe for BLACKLINE (no KERSIVO chrome). */
+
+:root {
+  --motion-duration-fast: 120ms;
+  --motion-duration-interaction: 160ms;
+  --motion-duration-dashboard: 180ms;
+  --motion-duration-flow: 220ms;
+  --motion-duration-page: 320ms;
+  --motion-duration-page-max: 420ms;
+  --motion-ease-standard: cubic-bezier(0.4, 0, 0.2, 1);
+  --motion-ease-out: cubic-bezier(0.22, 1, 0.36, 1);
+  --route-surface: #0b0d10;
+  --route-surface-secondary: #11151b;
+  --route-accent: #ff1717;
+}
+
+[data-app='admin'],
+[data-app='flow'],
+body.admin-theme-premium-black {
+  --route-surface: #030303;
+  --route-surface-secondary: #111111;
+}
+
+[data-theme='blackline'] {
+  --route-surface: #0b0c0e;
+  --route-surface-secondary: #14161a;
+  --route-accent: #315ef5;
+  --motion-duration-fast: var(--bl-duration-route-cover, 140ms);
+  --motion-duration-flow: var(--bl-duration-route-reveal, 220ms);
+  --motion-ease-standard: var(--bl-ease-standard, cubic-bezier(0.4, 0, 0.2, 1));
+  --motion-ease-out: var(--bl-ease-out, cubic-bezier(0.22, 1, 0.36, 1));
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .ks-route-veil,
+  .ks-route-pending,
+  .ks-main,
+  .admin-main-panel {
+    transition: none !important;
+    animation: none !important;
+    transform: none !important;
+  }
+}

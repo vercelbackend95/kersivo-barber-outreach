@@ -1,0 +1,19 @@
+---
+interface Props {
+  headingId: string;
+  eyebrow: string;
+  intro: string;
+}
+
+const { headingId, eyebrow, intro } = Astro.props;
+---
+
+<section class="bl-page-hero" data-surface="dark" data-bl-reveal aria-labelledby={headingId}>
+  <div class="bl-container bl-page-hero-inner">
+    <p class="bl-page-hero-eyebrow" set:html={eyebrow} />
+    <h1 class="bl-page-hero-title" id={headingId}><slot name="title" /></h1>
+    <p class="bl-page-hero-intro">{intro}</p>
+    <div class="bl-page-hero-meta"><slot name="meta" /></div>
+    <slot />
+  </div>
+</section>

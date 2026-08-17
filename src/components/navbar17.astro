@@ -9,6 +9,7 @@ import {
   type Navbar17CtaTrack,
   type Navbar17Variant,
 } from '@/lib/nav/navbar17Items';
+import { getRouteFamily } from '@/lib/navigation/routeFamilies';
 
 /** Browser-safe CTA shape — resolved on the server and passed in as a prop. */
 type Navbar17PreviewCtaProp = {
@@ -56,13 +57,36 @@ const brandAriaLabel =
   brandAriaLabelProp ??
   (isLanding ? 'KERSIVO – back to top' : isTestShop ? 'Back to shop' : 'Kersivo – back to homepage');
 const brandHref = isLanding ? '#hero' : isTestShop ? '/admin/test-shop' : '/#home';
+const currentFamily = getRouteFamily(Astro.url.pathname);
+
+function hrefLeavesFamily(href: string | null | undefined): boolean {
+  if (!href || href.startsWith('#') || href.startsWith('mailto:') || href.startsWith('tel:')) return false;
+  try {
+    return getRouteFamily(new URL(href, Astro.url).pathname) !== currentFamily;
+  } catch {
+    return false;
+  }
+}
+
+const ctaLeavesFamily = hrefLeavesFamily(ctaHref);
+const brandLeavesFamily = hrefLeavesFamily(brandHref);
 ---
 
-<header class="navbar17" data-navbar17 data-navbar-variant={variant}>
+<header
+  class="navbar17"
+  data-navbar17
+  data-navbar-variant={variant}
+  transition:persist={`ks-nav-${variant}`}
+>
   <div class="navbar17__stack" data-navbar17-stack>
     <div class="navbar17__bar">
       <div class="container navbar17__wrap">
-        <a href={brandHref} class="navbar17__brand" aria-label={brandAriaLabel}>
+        <a
+          href={brandHref}
+          class="navbar17__brand"
+          aria-label={brandAriaLabel}
+          data-astro-reload={brandLeavesFamily ? '' : undefined}
+        >
           {
             hasCustomBrandLogo ? (
               <img
@@ -99,6 +123,7 @@ const brandHref = isLanding ? '#hero' : isTestShop ? '/admin/test-shop' : '/#hom
                   data-nav-item
                   data-nav-section={item.sectionId || undefined}
                   data-nav-page={item.isPage ? item.link : undefined}
+                  data-astro-reload={hrefLeavesFamily(item.link) ? '' : undefined}
                 >
                   {item.name}
                 </a>
@@ -114,7 +139,13 @@ const brandHref = isLanding ? '#hero' : isTestShop ? '/admin/test-shop' : '/#hom
             {showCart ? <NavbarCartButton class="navbar17__cart-btn" /> : null}
             {
               ctaHref ? (
-                <a href={ctaHref} class="navbar17__cta-btn" data-demo-cta={ctaDemoAttr} data-track={ctaTrack}>{ctaLabel}</a>
+                <a
+                  href={ctaHref}
+                  class="navbar17__cta-btn"
+                  data-demo-cta={ctaDemoAttr}
+                  data-track={ctaTrack}
+                  data-astro-reload={ctaLeavesFamily ? '' : undefined}
+                >{ctaLabel}</a>
               ) : (
                 <button type="button" class="navbar17__cta-btn">{ctaLabel}</button>
               )
@@ -126,7 +157,13 @@ const brandHref = isLanding ? '#hero' : isTestShop ? '/admin/test-shop' : '/#hom
             {showCart ? <NavbarCartButton class="navbar17__cart-btn navbar17__cart-btn--mobile-bar" /> : null}
             {
               ctaHref ? (
-                <a href={ctaHref} class="navbar17__mobile-bar-cta" data-demo-cta={ctaDemoAttr} data-track={ctaTrack}>{ctaLabel}</a>
+                <a
+                  href={ctaHref}
+                  class="navbar17__mobile-bar-cta"
+                  data-demo-cta={ctaDemoAttr}
+                  data-track={ctaTrack}
+                  data-astro-reload={ctaLeavesFamily ? '' : undefined}
+                >{ctaLabel}</a>
               ) : (
                 <button type="button" class="navbar17__mobile-bar-cta">{ctaLabel}</button>
               )

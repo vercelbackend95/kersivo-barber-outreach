@@ -1,0 +1,73 @@
+---
+import {
+  DEMO_FOOTER_NAV,
+  DEMO_HOME_HREF,
+  DEMO_KERSIVO_HREF,
+} from '@/lib/demo/nav';
+import {
+  DEMO_LOCATION,
+  DEMO_LOCATION_NOTE,
+  DEMO_PHONE,
+  DEMO_PHONE_ACCESSIBLE_NAME,
+  DEMO_PHONE_TEL,
+} from '@/lib/demo/site';
+
+const currentYear = new Date().getFullYear();
+---
+
+<footer class="bl-footer" aria-label="BLACKLINE site footer" transition:persist="bl-footer">
+  <div class="bl-footer-layout">
+    <a class="bl-footer-wordmark" href={DEMO_HOME_HREF} aria-label="BLACKLINE demo home">
+      BLACKLINE
+    </a>
+
+    <div class="bl-footer-meta">
+      <nav class="bl-footer-explore" aria-label="Footer navigation">
+        <p class="bl-footer-label">Explore</p>
+        <ul>
+          {
+            DEMO_FOOTER_NAV.map((item) => (
+              <li>
+                <a href={item.href}>{item.label}</a>
+              </li>
+            ))
+          }
+        </ul>
+      </nav>
+
+      <div class="bl-footer-visit">
+        <p class="bl-footer-label">Visit</p>
+        <address>
+          <p class="bl-footer-location">{DEMO_LOCATION}</p>
+          <p class="bl-footer-location-note">{DEMO_LOCATION_NOTE}</p>
+          <a
+            class="bl-footer-phone"
+            href={DEMO_PHONE_TEL}
+            aria-label={DEMO_PHONE_ACCESSIBLE_NAME}
+          >
+            {DEMO_PHONE}
+          </a>
+        </address>
+      </div>
+    </div>
+
+    <div class="bl-footer-disclosure">
+      <p>BLACKLINE is a fictional barbershop created to demonstrate KERSIVO.</p>
+      <p>No real appointment, order or payment is created.</p>
+    </div>
+
+    <div class="bl-footer-base">
+      <p class="bl-footer-copy">© {currentYear} KERSIVO</p>
+      <a
+        class="bl-footer-credit"
+        href={DEMO_KERSIVO_HREF}
+        target="_blank"
+        rel="noopener noreferrer"
+        aria-label="KERSIVO website (opens in a new tab)"
+      >
+        Demo experience by Kersivo
+        <span aria-hidden="true">↗</span>
+      </a>
+    </div>
+  </div>
+</footer>

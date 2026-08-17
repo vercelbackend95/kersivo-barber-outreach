@@ -1,0 +1,18 @@
+---
+import DemoPageHero from '@/components/demo/DemoPageHero.astro';
+import { demoGalleryCountLabel } from '@/lib/demo/gallery';
+
+const countLabel = demoGalleryCountLabel();
+---
+
+<DemoPageHero
+  headingId="blackline-gallery-heading"
+  eyebrow="<span>The</span> Work"
+  intro="A visual study of cuts, details and moments around the chair."
+>
+  <Fragment slot="title">
+    The work,<br />up close.
+  </Fragment>
+  <p slot="meta" class="bl-page-hero-count">{countLabel}</p>
+  <span class="bl-page-hero-rule" aria-hidden="true"></span>
+</DemoPageHero>

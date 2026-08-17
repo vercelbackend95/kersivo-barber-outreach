@@ -1,0 +1,22 @@
+---
+import DemoPageHero from '@/components/demo/DemoPageHero.astro';
+import { demoServicesMeta } from '@/lib/demo/services';
+
+const meta = demoServicesMeta();
+---
+
+<DemoPageHero
+  headingId="blackline-services-heading"
+  eyebrow="<span>The</span> Services"
+  intro="Clear timing. Straightforward pricing. Choose what fits."
+>
+  <Fragment slot="title">
+    Cut.<br />Shape.<br />Finish.
+  </Fragment>
+  <ul slot="meta" class="bl-page-hero-stats">
+    <li>{meta.countLabel}</li>
+    <li>{meta.durationRangeLabel}</li>
+    <li>{meta.fromPriceLabel}</li>
+  </ul>
+  <span class="bl-page-hero-rule" aria-hidden="true"></span>
+</DemoPageHero>

@@ -7,6 +7,7 @@ import {
   resolveLaunchCtaPresentation,
   type LaunchProgress,
 } from '@/lib/admin/launchCtaProgress';
+import { parseAdminSpaHref } from '@/lib/admin/sectionUrl';
 import '@/styles/components/admin-sidebar-launch-cta.css';
 
 type LaunchContextPayload = {
@@ -18,9 +19,13 @@ type LaunchContextPayload = {
 
 type AdminSidebarLaunchCtaProps = {
   isPublicDemo?: boolean;
+  onSpaSection?: (section: import('./AdminPanel').AdminSection) => void;
 };
 
-export default function AdminSidebarLaunchCta({ isPublicDemo = false }: AdminSidebarLaunchCtaProps) {
+export default function AdminSidebarLaunchCta({
+  isPublicDemo = false,
+  onSpaSection,
+}: AdminSidebarLaunchCtaProps) {
   const [loading, setLoading] = useState(!isPublicDemo);
   const [progress, setProgress] = useState<LaunchProgress>(() =>
     isPublicDemo ? demoLaunchProgress() : emptyLaunchProgress(),
@@ -93,6 +98,13 @@ export default function AdminSidebarLaunchCta({ isPublicDemo = false }: AdminSid
           detail: { showAuth: true },
         }),
       );
+      return;
+    }
+    const spaSection = parseAdminSpaHref(presentation.href);
+    const onAdminSpa =
+      window.location.pathname === '/admin' || window.location.pathname === '/admin-demo';
+    if (spaSection && onAdminSpa && onSpaSection) {
+      onSpaSection(spaSection);
       return;
     }
     window.location.assign(presentation.href);

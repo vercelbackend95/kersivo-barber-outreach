@@ -1,0 +1,64 @@
+---
+import DemoLocationMap from '@/components/demo/DemoLocationMap.astro';
+import { DEMO_BOOK_HREF } from '@/lib/demo/nav';
+import {
+  DEMO_LOCATION,
+  DEMO_LOCATION_NOTE,
+  DEMO_PHONE,
+  DEMO_PHONE_ACCESSIBLE_NAME,
+  DEMO_PHONE_FICTION_NOTE,
+  DEMO_PHONE_TEL,
+  DEMO_WALK_INS,
+} from '@/lib/demo/site';
+---
+
+<section
+  class="bl-contact-index"
+  data-surface="light"
+  aria-labelledby="blackline-contact-index-heading"
+>
+  <div class="bl-container bl-contact-index-layout">
+    <div class="bl-contact-index-copy">
+      <header class="bl-contact-index-intro" data-bl-reveal>
+        <p class="bl-contact-index-eyebrow">Contact Index</p>
+        <h2 class="bl-contact-index-heading" id="blackline-contact-index-heading">Find Blackline.</h2>
+        <p class="bl-contact-index-lede">The details below belong to the fictional BLACKLINE demonstration shop.</p>
+      </header>
+
+      <ul class="bl-contact-list">
+        <li class="bl-contact-row" data-bl-reveal>
+          <p class="bl-contact-row-label">Book</p>
+          <p class="bl-contact-row-value">Choose your barber, service and time.</p>
+          <a class="bl-contact-book" href={DEMO_BOOK_HREF}>
+            <span>Book an appointment</span>
+            <span class="bl-contact-book-arrow" aria-hidden="true"></span>
+          </a>
+        </li>
+        <li class="bl-contact-row" data-bl-reveal>
+          <p class="bl-contact-row-label">Call</p>
+          <p class="bl-contact-row-value">
+            <a class="bl-contact-phone" href={DEMO_PHONE_TEL} aria-label={DEMO_PHONE_ACCESSIBLE_NAME}>
+              {DEMO_PHONE}
+            </a>
+          </p>
+          <p class="bl-contact-row-note">{DEMO_PHONE_FICTION_NOTE}</p>
+        </li>
+        <li class="bl-contact-row" data-bl-reveal>
+          <p class="bl-contact-row-label">Visit</p>
+          <address class="bl-contact-address">
+            <p class="bl-contact-row-value">{DEMO_LOCATION}</p>
+            <p class="bl-contact-row-note">{DEMO_LOCATION_NOTE}</p>
+          </address>
+        </li>
+        <li class="bl-contact-row" data-bl-reveal>
+          <p class="bl-contact-row-label">Walk-ins</p>
+          <p class="bl-contact-row-value">{DEMO_WALK_INS}</p>
+        </li>
+      </ul>
+    </div>
+
+    <div class="bl-contact-index-map" data-bl-reveal>
+      <DemoLocationMap variant="expanded" />
+    </div>
+  </div>
+</section>

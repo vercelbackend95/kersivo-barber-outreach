@@ -1,0 +1,97 @@
+---
+import { ClientRouter } from 'astro:transitions';
+import DemoBanner from '@/components/demo/DemoBanner.astro';
+import DemoBagDrawer from '@/components/demo/DemoBagDrawer';
+import DemoFooter from '@/components/demo/DemoFooter.astro';
+import DemoNav from '@/components/demo/DemoNav.astro';
+import { BLACKLINE_SHOP_ID, DEMO_PRODUCT_IDS } from '@/lib/demo/products';
+import { DEMO_DEFAULT_DESCRIPTION, DEMO_SHOP_NAME } from '@/lib/demo/site';
+import { getPublicSiteUrl } from '@/lib/setup/siteUrl';
+import '@/styles/motion.css';
+import '@/styles/demo/fonts-blackline.css';
+import '@/styles/demo/blackline.css';
+
+const cartNamespace = {
+  shopId: BLACKLINE_SHOP_ID,
+  allowedProductIds: [...DEMO_PRODUCT_IDS],
+};
+
+interface Props {
+  title: string;
+  description?: string;
+  canonicalPath: string;
+}
+
+const {
+  title,
+  description = DEMO_DEFAULT_DESCRIPTION,
+  canonicalPath,
+} = Astro.props;
+
+const siteUrl = getPublicSiteUrl();
+const path = canonicalPath.startsWith('/') ? canonicalPath : `/${canonicalPath}`;
+const canonical = `${siteUrl}${path}`;
+const currentPath = Astro.url.pathname;
+---
+
+<!doctype html>
+<html lang="en-GB" data-theme="blackline" transition:animate="none">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+    <title>{title}</title>
+    <meta name="description" content={description} />
+    <meta name="robots" content="noindex, nofollow" />
+    <link rel="canonical" href={canonical} />
+    <link rel="preload" href="/fonts/barlow-condensed-latin-800-normal.woff2" as="font" type="font/woff2" crossorigin />
+    <link rel="preload" href="/fonts/manrope-latin-400-normal.woff2" as="font" type="font/woff2" crossorigin />
+    <meta property="og:type" content="website" />
+    <meta property="og:url" content={canonical} />
+    <meta property="og:title" content={title} />
+    <meta property="og:description" content={description} />
+    <meta property="og:locale" content="en_GB" />
+    <meta property="og:site_name" content={DEMO_SHOP_NAME} />
+    <meta name="twitter:card" content="summary" />
+    <meta name="twitter:title" content={title} />
+    <meta name="twitter:description" content={description} />
+    <style is:inline>
+      html[data-theme='blackline'],
+      html[data-theme='blackline'] body {
+        background: #0b0c0e;
+      }
+    </style>
+    <ClientRouter fallback="swap" />
+    <script is:inline define:vars={{ cartNamespace }}>
+      window.__KERSIVO_CART_NAMESPACE__ = cartNamespace;
+    </script>
+    <slot name="head" />
+  </head>
+  <body>
+    <div class="bl-root">
+      <DemoBanner />
+      <DemoNav currentPath={currentPath} />
+      <div class="bl-route-stage">
+        <main class="bl-main" tabindex="-1">
+          <slot />
+        </main>
+        <div
+          class="bl-route-veil"
+          data-bl-route-veil
+          data-bl-route-phase="idle"
+          transition:persist="bl-veil"
+          aria-hidden="true"
+        ></div>
+      </div>
+      <DemoFooter />
+      <div transition:persist="bl-bag">
+        <DemoBagDrawer client:load />
+      </div>
+    </div>
+    <script>
+      import { bindRouteTransition } from '@/lib/demo/routeTransition';
+
+      const veil = document.querySelector('[data-bl-route-veil]');
+      if (veil instanceof HTMLElement) bindRouteTransition({ veil });
+    </script>
+  </body>
+</html>

@@ -1,4 +1,5 @@
 import { PrismaClient } from '@prisma/client';
+import { seedBlacklineDemoCatalog } from '../src/lib/demo/blacklineShop';
 
 const prisma = new PrismaClient();
 
@@ -53,6 +54,8 @@ async function main() {
       });
     }
   }
+
+  await seedBlacklineDemoCatalog(prisma);
 }
 
 main()

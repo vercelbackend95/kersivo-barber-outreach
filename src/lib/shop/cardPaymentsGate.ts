@@ -1,3 +1,4 @@
+import { BLACKLINE_SHOP_ID } from '../demo/products';
 import { DEMO_SHOP_ID } from '../db/shopScope';
 import { isPaidShop, type PaidShopFields } from './paidShop';
 
@@ -14,7 +15,7 @@ export type CardPaymentsGateReason =
   | 'connect_not_ready';
 
 export function isDemoShopId(shopId: string): boolean {
-  return shopId === DEMO_SHOP_ID;
+  return shopId === DEMO_SHOP_ID || shopId === BLACKLINE_SHOP_ID;
 }
 
 /**

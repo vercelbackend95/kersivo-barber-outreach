@@ -56,6 +56,11 @@ const { bookings: initialBookings } = getDemoBookingsResponse(
   />
   <main class="container page-wrap admin-page-wrap">
     <h1 class="sr-only">Kersivo Admin Demo</h1>
-    <AdminPanel client:load demoMode={true} initialBookings={initialBookings} />
+    <AdminPanel
+      client:load
+      demoMode={true}
+      initialBookings={initialBookings}
+      initialSection={Astro.url.searchParams.get('section')}
+    />
   </main>
 </MinimalLayout>

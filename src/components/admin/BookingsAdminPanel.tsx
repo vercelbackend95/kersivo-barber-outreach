@@ -1,5 +1,5 @@
 import React, { Suspense, lazy, useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
-import { AnimatePresence, motion, type Variants } from 'framer-motion';
+import { AnimatePresence, motion, useReducedMotion, type Variants } from 'framer-motion';
 import { BarberRosterOverviewGridSkeleton } from '../skeleton';
 import AdminSectionHeader from './AdminSectionHeader';
 import AdminBookingsOpsSearch, { type AdminBookingsOpsSearchBooking } from './AdminBookingsOpsSearch';
@@ -92,23 +92,27 @@ function scrollDocumentAndAncestorsToTop(scrollOrigin: HTMLElement | null) {
 
 type AdminBookingView = 'timeline' | 'list';
 
-const VIEW_ORDER: Record<AdminBookingView, number> = { timeline: 0, list: 1 };
-
 const viewSlideVariants: Variants = {
-  enter: (custom: { dir: number; mobile: boolean }) => ({
-    x: custom.dir * (custom.mobile ? 28 : 48),
-    opacity: 0,
-  }),
-  center: {
-    x: 0,
-    opacity: 1,
-    transition: { duration: 0.24, ease: [0.4, 0.0, 0.2, 1] as const },
+  enter: {
+    y: 4,
+    opacity: 0.96,
   },
-  exit: (custom: { dir: number; mobile: boolean }) => ({
-    x: custom.dir * (custom.mobile ? -28 : -48),
-    opacity: 0,
-    transition: { duration: 0.18, ease: [0.4, 0.0, 1.0, 1] as const },
-  }),
+  center: {
+    y: 0,
+    opacity: 1,
+    transition: { duration: 0.16, ease: [0.4, 0.0, 0.2, 1] as const },
+  },
+  exit: {
+    y: -3,
+    opacity: 0.96,
+    transition: { duration: 0.12, ease: [0.4, 0.0, 1.0, 1] as const },
+  },
+};
+
+const viewSlideVariantsReduced: Variants = {
+  enter: { y: 0, opacity: 1 },
+  center: { y: 0, opacity: 1, transition: { duration: 0 } },
+  exit: { y: 0, opacity: 1, transition: { duration: 0 } },
 };
 
 type WorkingHoursResponse = {
@@ -695,7 +699,6 @@ export default function BookingsAdminPanel({
   const [showSearchKbdHint, setShowSearchKbdHint] = useState(false);
   const [activeView, setActiveView] = useState<AdminBookingView>('timeline');
   const prevViewRef = useRef<AdminBookingView>('timeline');
-  const [slideDirection, setSlideDirection] = useState(0);
   const [isTimelineEnterComplete, setIsTimelineEnterComplete] = useState(activeView !== 'timeline');
   const [selectedDate, setSelectedDate] = useState(() => readInitialBookingDateFromUrl() ?? getTodayLondonDate());
   const [timelineFocusBookingId, setTimelineFocusBookingId] = useState<string | null>(() => readInitialBookingIdFromUrl());
@@ -742,6 +745,8 @@ export default function BookingsAdminPanel({
 
   const [openClientId, setOpenClientId] = useState<string | null>(null);
   const [isMobileViewport, setIsMobileViewport] = useState(false);
+  const reduceMotion = useReducedMotion();
+  const tabMotionVariants = reduceMotion ? viewSlideVariantsReduced : viewSlideVariants;
 
   const inFlightRef = useRef(false);
   /** History "Load more" uses its own lock so it is not blocked by the main bookings fetch / polling. */
@@ -798,7 +803,6 @@ export default function BookingsAdminPanel({
 
   useEffect(() => {
     if (prevViewRef.current !== activeView) {
-      setSlideDirection(VIEW_ORDER[activeView] > VIEW_ORDER[prevViewRef.current] ? 1 : -1);
       prevViewRef.current = activeView;
     }
     if (activeView === 'timeline') {
@@ -2042,7 +2046,16 @@ export default function BookingsAdminPanel({
               <div className="admin-bookings-ops-toolbar">
                 <div className="admin-bookings-ops-controls">
                   <div className="admin-dashboard-controls admin-dashboard-controls--ops-dash">
-                    <div className="admin-view-toggle" role="tablist" aria-label="Booking view">
+                    <div
+                      className="admin-view-toggle"
+                      role="tablist"
+                      aria-label="Booking view"
+                      onKeyDown={(event) => {
+                        if (event.key !== 'ArrowRight' && event.key !== 'ArrowLeft') return;
+                        event.preventDefault();
+                        setActiveView((current) => (current === 'timeline' ? 'list' : 'timeline'));
+                      }}
+                    >
                       {(['timeline', 'list'] as const).map((view) => {
                         const isActiveTab = activeView === view;
                         const label = view === 'timeline' ? 'Timeline' : 'List';
@@ -2362,13 +2375,12 @@ export default function BookingsAdminPanel({
           />
           {dashboardOpsDashCluster}
           <div className="admin-view-transition-container">
-            <AnimatePresence initial={false} custom={{ dir: slideDirection, mobile: isMobileViewport }} mode="wait">
+            <AnimatePresence initial={false} mode="wait">
               {activeView === 'timeline' ? (
                 <motion.div
                   key="timeline"
                   className="admin-view-motion-wrap admin-view-motion-wrap--timeline"
-                  custom={{ dir: slideDirection, mobile: isMobileViewport }}
-                  variants={viewSlideVariants}
+                  variants={tabMotionVariants}
                   initial="enter"
                   animate="center"
                   exit="exit"
@@ -2410,8 +2422,7 @@ export default function BookingsAdminPanel({
                 <motion.div
                   key="list"
                   className="admin-view-motion-wrap admin-view-motion-wrap--list"
-                  custom={{ dir: slideDirection, mobile: isMobileViewport }}
-                  variants={viewSlideVariants}
+                  variants={tabMotionVariants}
                   initial="enter"
                   animate="center"
                   exit="exit"

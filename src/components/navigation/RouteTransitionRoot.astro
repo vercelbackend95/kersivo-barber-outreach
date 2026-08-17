@@ -1,0 +1,46 @@
+---
+import type { RouteTransitionVariant } from '@/lib/navigation/routeFamilies';
+
+interface Props {
+  variant: Extract<RouteTransitionVariant, 'marketing' | 'flow'>;
+}
+
+const { variant } = Astro.props;
+const persistPrefix = variant === 'marketing' ? 'ks-mkt' : 'ks-flow';
+---
+
+<div class="ks-route-stage" data-ks-route-variant={variant}>
+  <div class="ks-main" tabindex="-1">
+    <slot />
+  </div>
+  <div
+    class="ks-route-veil"
+    data-ks-route-veil
+    data-ks-route-phase="idle"
+    transition:persist={`${persistPrefix}-veil`}
+    aria-hidden="true"
+  ></div>
+  <div
+    class="ks-route-pending"
+    data-ks-route-pending
+    hidden
+    transition:persist={`${persistPrefix}-pending`}
+    aria-hidden="true"
+  ></div>
+</div>
+
+<script>
+  import { bindRouteTransition } from '@/lib/navigation/routeTransition';
+
+  const stage = document.querySelector('[data-ks-route-variant]');
+  const veil = document.querySelector('[data-ks-route-veil]');
+  const pending = document.querySelector('[data-ks-route-pending]');
+  const variant = stage instanceof HTMLElement ? stage.dataset.ksRouteVariant : '';
+  if (veil instanceof HTMLElement && (variant === 'marketing' || variant === 'flow')) {
+    bindRouteTransition({
+      veil,
+      pending: pending instanceof HTMLElement ? pending : null,
+      variant,
+    });
+  }
+</script>

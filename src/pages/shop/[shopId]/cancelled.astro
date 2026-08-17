@@ -1,6 +1,7 @@
 ---
 import MinimalLayout from '@/layouts/MinimalLayout.astro';
-import { DEMO_SHOP_ID } from '@/lib/db/shopScope';
+import { BLACKLINE_SHOP_ID } from '@/lib/demo/products';
+import { isDemoShopId } from '@/lib/shop/cardPaymentsGate';
 import '@/styles/tokens.css';
 import '@/styles/global.css';
 import '@/styles/components/buttons.css';
@@ -9,8 +10,8 @@ import '@/styles/components/shop.css';
 export const prerender = false;
 
 const shopId = Astro.params.shopId?.trim() ?? '';
-if (!shopId || shopId === DEMO_SHOP_ID) {
-  return Astro.redirect('/shop');
+if (!shopId || isDemoShopId(shopId)) {
+  return Astro.redirect(shopId === BLACKLINE_SHOP_ID ? '/demo/shop' : '/shop');
 }
 ---
 

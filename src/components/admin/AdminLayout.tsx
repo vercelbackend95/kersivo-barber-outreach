@@ -36,6 +36,8 @@ type AdminLayoutProps = {
   activeSection: AdminSection;
   onChangeSection: (section: AdminSection) => void;
   isTransitioning: boolean;
+  isEntering?: boolean;
+  showPending?: boolean;
   showSectionSkeleton: boolean;
   isPublicDemo?: boolean;
   profileUser?: AdminProfileUser | null;
@@ -195,6 +197,8 @@ export default function AdminLayout({
   activeSection,
   onChangeSection,
   isTransitioning,
+  isEntering = false,
+  showPending = false,
   showSectionSkeleton,
   isPublicDemo = false,
   profileUser = null,
@@ -323,9 +327,15 @@ export default function AdminLayout({
   }, [mobileChromeMounted]);
 
   const onSelectSection = (section: AdminSection) => {
-    onChangeSection(section);
     setIsMobileMenuOpen(false);
+    onChangeSection(section);
   };
+
+  useEffect(() => {
+    const panel = mainContentRef.current;
+    if (!panel) return;
+    panel.scrollTop = 0;
+  }, [activeSection]);
 
   const handleLogout = async () => {
     if (isPublicDemo) {
@@ -431,7 +441,7 @@ export default function AdminLayout({
       ))}
       {showLaunchCta && canManageBilling ? (
         <div className="admin-sidebar-group">
-          <AdminSidebarLaunchCta isPublicDemo={isPublicDemo} />
+          <AdminSidebarLaunchCta isPublicDemo={isPublicDemo} onSpaSection={onChangeSection} />
         </div>
       ) : null}
     </nav>
@@ -645,7 +655,7 @@ export default function AdminLayout({
           </div>
         </div>
         <div className="admin-mobile-drawer-launch">
-          {canManageBilling ? <AdminSidebarLaunchCta isPublicDemo={isPublicDemo} /> : null}
+          {canManageBilling ? <AdminSidebarLaunchCta isPublicDemo={isPublicDemo} onSpaSection={onChangeSection} /> : null}
         </div>
         {renderMenu(false)}
         <div className="admin-sidebar-divider" aria-hidden="true" />
@@ -677,9 +687,15 @@ export default function AdminLayout({
       <section
         ref={mainContentRef}
         className="admin-main-content admin-mobile-edge"
-        aria-busy={isTransitioning}
-        data-transitioning={isTransitioning}
+        aria-busy={isTransitioning || showPending || undefined}
+        data-transitioning={showPending || isEntering ? 'true' : undefined}
       >
+        <div
+          className="admin-route-pending"
+          hidden={!showPending}
+          data-active={showPending ? '' : undefined}
+          aria-hidden="true"
+        />
         <div className="admin-mobile-top-chrome">
           {previewUnderConstruction && showPreviewSubscribeBanner ? (
             <div className="admin-barbershop-paused-banner" role="status">
@@ -781,7 +797,9 @@ export default function AdminLayout({
             )}
           </div>
         ) : (
-          children
+          <div className="admin-main-panel" data-entering={isEntering ? 'true' : undefined}>
+            {children}
+          </div>
         )}
       </section>
 

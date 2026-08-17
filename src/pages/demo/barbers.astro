@@ -1,0 +1,115 @@
+---
+import DemoBarbersClose from '@/components/demo/DemoBarbersClose.astro';
+import DemoBarbersHero from '@/components/demo/DemoBarbersHero.astro';
+import DemoBarbersRoster from '@/components/demo/DemoBarbersRoster.astro';
+import DemoLayout from '@/layouts/DemoLayout.astro';
+import { DEMO_SHOP_NAME } from '@/lib/demo/site';
+---
+
+<DemoLayout
+  title={`Our Barbers | ${DEMO_SHOP_NAME}`}
+  description="Meet Ellis Ward, Noah Reid and Marcus Bell at Blackline Barbers."
+  canonicalPath="/demo/barbers"
+>
+  <script is:inline slot="head">
+    try {
+      if (!window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
+        document.documentElement.setAttribute('data-bl-barbers-motion', '');
+      }
+    } catch (error) {
+      /* Keep server-rendered content visible if matchMedia is unavailable. */
+    }
+  </script>
+
+  <div class="bl-barbers" data-bl-barbers>
+    <DemoBarbersHero />
+    <DemoBarbersRoster />
+    <DemoBarbersClose />
+  </div>
+</DemoLayout>
+
+<script>
+  function prefersReducedMotion() {
+    return window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  }
+
+  function isInViewport(el: Element) {
+    const rect = el.getBoundingClientRect();
+    return rect.bottom > 0 && rect.top < window.innerHeight;
+  }
+
+  function revealBlock(el: Element, instant: boolean) {
+    el.classList.add('is-inview');
+    if (instant) el.classList.add('is-settled');
+  }
+
+  function bindBlacklineRosterMotion(root: Element) {
+    if (!(root instanceof HTMLElement) || root.dataset.blRosterBound === 'true') return;
+    root.dataset.blRosterBound = 'true';
+
+    if (prefersReducedMotion() || typeof IntersectionObserver === 'undefined') {
+      document.documentElement.removeAttribute('data-bl-barbers-motion');
+      return;
+    }
+
+    const blocks = [...root.querySelectorAll('[data-bl-reveal]')];
+    const hero = root.querySelector('.bl-page-hero');
+    const scrolledPastHero =
+      window.scrollY >
+      (hero instanceof HTMLElement ? Math.min(hero.offsetHeight * 0.35, 240) : 80);
+
+    if (scrolledPastHero) {
+      document.documentElement.setAttribute('data-bl-barbers-instant', '');
+      blocks.forEach((block) => revealBlock(block, true));
+      return;
+    }
+
+    let remaining = blocks.length;
+    let observerFired = false;
+
+    const observer = new IntersectionObserver(
+      (entries) => {
+        observerFired = true;
+        for (const entry of entries) {
+          if (!entry.isIntersecting) continue;
+          revealBlock(entry.target, false);
+          observer.unobserve(entry.target);
+          remaining -= 1;
+        }
+        if (remaining <= 0) observer.disconnect();
+      },
+      { threshold: 0.16, rootMargin: '0px 0px -10% 0px' },
+    );
+
+    blocks.forEach((block) => observer.observe(block));
+
+    window.setTimeout(() => {
+      if (!observerFired) {
+        blocks.forEach((block) => revealBlock(block, true));
+        observer.disconnect();
+        return;
+      }
+      blocks.forEach((block) => {
+        if (!block.classList.contains('is-inview') && isInViewport(block)) {
+          revealBlock(block, true);
+          observer.unobserve(block);
+          remaining -= 1;
+        }
+      });
+      if (remaining <= 0) observer.disconnect();
+    }, 1000);
+
+    window.addEventListener('pageshow', (event) => {
+      if (!event.persisted) return;
+      if (window.scrollY <= 80) return;
+      document.documentElement.setAttribute('data-bl-barbers-instant', '');
+      blocks.forEach((block) => revealBlock(block, true));
+      observer.disconnect();
+    });
+  }
+
+  document.querySelectorAll('[data-bl-barbers]').forEach(bindBlacklineRosterMotion);
+  document.addEventListener('astro:page-load', () => {
+    document.querySelectorAll('[data-bl-barbers]').forEach(bindBlacklineRosterMotion);
+  });
+</script>

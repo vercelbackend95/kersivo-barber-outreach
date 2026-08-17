@@ -11,10 +11,14 @@ import { shopAcceptsPublicBookings } from '@/lib/setup/shopPublicBookingGate';
 import {
   canSellRetail,
   evaluateRetailSelling,
+  isDemoShopId,
 } from '@/lib/shop/cardPaymentsGate';
 import { createRetailCheckoutSession } from '@/lib/shop/stripeConnect';
 import { generateOrderReference } from '@/lib/shop/orderReference';
-import { DEMO_SHOP_ID } from '@/lib/db/shopScope';
+import {
+  normalizeRetailCartItems,
+  resolveRetailCartFromProducts,
+} from '@/lib/shop/resolveRetailCart';
 
 type CheckoutInput = {
   items?: Array<{ productId?: unknown; quantity?: unknown }>;
@@ -61,7 +65,7 @@ export const POST: APIRoute = async (ctx) => {
     if (limited) return limited;
 
     const shopId = ctx.params.shopId?.trim() ?? '';
-    if (!shopId || shopId === DEMO_SHOP_ID) {
+    if (!shopId || isDemoShopId(shopId)) {
       return json({ error: 'Shop not found.' }, 404);
     }
 
@@ -103,51 +107,25 @@ export const POST: APIRoute = async (ctx) => {
     const connectAccountId = shop.stripeConnectAccountId!.trim();
 
     const body = (await ctx.request.json().catch(() => null)) as CheckoutInput | null;
-    const requestedItems = (body?.items ?? [])
-      .map((item) => ({
-        productId: String(item.productId ?? '').trim(),
-        quantity: Math.floor(Number(item.quantity ?? 0)),
-      }))
-      .filter((item) => item.productId && item.quantity >= 1);
+    const requestedItems = normalizeRetailCartItems(body?.items);
+    const productIds = [...new Set(requestedItems.map((item) => item.productId))];
+    const products = productIds.length
+      ? await prisma.product.findMany({
+          where: {
+            shopId,
+            id: { in: productIds },
+            active: true,
+          },
+          select: { id: true, name: true, pricePence: true, imageUrl: true },
+        })
+      : [];
 
-    if (requestedItems.length === 0) {
-      return json({ error: 'Cart is empty.' }, 400);
+    const resolved = resolveRetailCartFromProducts(products, requestedItems);
+    if (!resolved.ok) {
+      return json({ error: resolved.error }, 400);
     }
-
-    const quantityByProduct = new Map<string, number>();
-    for (const item of requestedItems) {
-      quantityByProduct.set(item.productId, (quantityByProduct.get(item.productId) ?? 0) + item.quantity);
-    }
-
-    const productIds = [...quantityByProduct.keys()];
-    const products = await prisma.product.findMany({
-      where: {
-        shopId,
-        id: { in: productIds },
-        active: true,
-      },
-      select: { id: true, name: true, pricePence: true, imageUrl: true },
-    });
-
-    if (products.length !== quantityByProduct.size) {
-      return json({ error: 'Some products are unavailable.' }, 400);
-    }
-
-    const snapshot = products.map((product) => {
-      const quantity = quantityByProduct.get(product.id) ?? 0;
-      return {
-        productId: product.id,
-        name: product.name,
-        unitPricePence: product.pricePence,
-        quantity,
-        lineTotalPence: product.pricePence * quantity,
-        imageUrl: product.imageUrl ?? '',
-      };
-    });
-    const totalPence = snapshot.reduce((sum, item) => sum + item.lineTotalPence, 0);
-    if (totalPence <= 0) {
-      return json({ error: 'Cart total must be greater than zero.' }, 400);
-    }
+    const snapshot = resolved.cart.items;
+    const totalPence = resolved.cart.totalPence;
 
     const rawEmail = typeof body?.customerEmail === 'string' ? body.customerEmail.trim().toLowerCase() : '';
     const customerEmail = rawEmail && rawEmail.includes('@') ? rawEmail : 'pending@checkout.kersivo.local';

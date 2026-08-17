@@ -10,6 +10,7 @@ export const GET: APIRoute = () => {
     'Allow: /',
     'Disallow: /admin',
     'Disallow: /admin-demo',
+    'Disallow: /demo',
     'Disallow: /book',
     'Disallow: /api/',
     'Disallow: /setup/',

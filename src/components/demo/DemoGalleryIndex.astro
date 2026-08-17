@@ -1,0 +1,91 @@
+---
+import {
+  demoGalleryEditorialSizes,
+  demoGalleryIndexLabel,
+  demoGalleryOpenLabel,
+  demoGallerySequence,
+} from '@/lib/demo/gallery';
+
+const frames = demoGallerySequence();
+const total = frames.length;
+const firstFrame = frames[0];
+---
+
+<section
+  class="bl-work-index"
+  data-surface="light"
+  aria-labelledby="blackline-gallery-index-heading"
+>
+  <div class="bl-container">
+    <header class="bl-work-intro" data-bl-reveal>
+      <p class="bl-work-intro-eyebrow">Visual Index</p>
+      <h2 class="bl-work-intro-heading" id="blackline-gallery-index-heading">Cuts, details, atmosphere.</h2>
+      <p class="bl-work-intro-lede">A curated sequence from the fictional BLACKLINE world.</p>
+    </header>
+
+    <ol class="bl-work-grid">
+      {
+        frames.map((image, index) => (
+          <li
+            class={`bl-work-item bl-work-item--${image.role}`}
+            data-bl-reveal
+            style={`--bl-work-pos: ${image.objectPosition.desktop}; --bl-work-pos-mobile: ${image.objectPosition.mobile}`}
+          >
+            <figure class="bl-work-frame">
+              <button
+                class="bl-work-open"
+                type="button"
+                data-work-open={String(index)}
+                aria-label={demoGalleryOpenLabel(image, index, total)}
+              >
+                <span class="bl-work-stage">
+                  <img
+                    src={image.src}
+                    alt=""
+                    width={image.width}
+                    height={image.height}
+                    sizes={demoGalleryEditorialSizes(image.role)}
+                    loading={index === 0 ? 'eager' : 'lazy'}
+                    decoding="async"
+                  />
+                </span>
+              </button>
+              <figcaption class="bl-work-meta">
+                <p class="bl-work-index-label">{demoGalleryIndexLabel(index, total)}</p>
+                <p class="bl-work-caption">{image.caption}</p>
+              </figcaption>
+            </figure>
+          </li>
+        ))
+      }
+    </ol>
+  </div>
+
+  <dialog class="bl-work-dialog" aria-labelledby="bl-work-dialog-caption">
+    <div class="bl-work-dialog-inner">
+      <button class="bl-work-dialog-close" type="button" data-work-close>Close</button>
+      <figure class="bl-work-dialog-figure">
+        <img
+          class="bl-work-dialog-image"
+          src={firstFrame?.src}
+          alt=""
+          width={firstFrame?.width}
+          height={firstFrame?.height}
+          data-work-image
+        />
+        <figcaption class="bl-work-dialog-meta">
+          <p class="bl-work-dialog-count" data-work-count>
+            {firstFrame ? demoGalleryIndexLabel(0, total) : ''}
+          </p>
+          <p class="bl-work-dialog-caption" id="bl-work-dialog-caption" data-work-caption>
+            {firstFrame?.caption}
+          </p>
+        </figcaption>
+      </figure>
+      <div class="bl-work-dialog-nav">
+        <button class="bl-work-dialog-prev" type="button" data-work-prev>Previous</button>
+        <button class="bl-work-dialog-next" type="button" data-work-next>Next</button>
+      </div>
+    </div>
+  </dialog>
+</section>

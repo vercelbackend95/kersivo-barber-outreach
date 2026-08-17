@@ -1,0 +1,41 @@
+---
+const STORY_IMAGE = {
+  src: '/demo/storyimg.webp',
+  width: 2000,
+  height: 3000,
+  alt: 'Barber chair and workstation in an industrial-style barbershop interior.',
+};
+---
+
+<section class="bl-story" data-surface="dark" aria-labelledby="blackline-story-heading">
+  <div class="bl-container bl-story-grid">
+    <div class="bl-story-copy">
+      <span class="bl-story-rule" aria-hidden="true"></span>
+      <p class="bl-story-eyebrow">
+        <span class="bl-story-eyebrow-index">02</span>
+        <span aria-hidden="true"> · </span>
+        Blackline
+      </p>
+      <h2 class="bl-story-heading" id="blackline-story-heading">
+        <span>A proper barbershop.</span>
+        <span>Built for<br />modern Manchester.</span>
+      </h2>
+      <p class="bl-story-body">
+        BLACKLINE combines modern barbering with proper attention to detail. From sharp skin fades
+        to classic scissor cuts, every appointment starts with a consultation and finishes with
+        precision.
+      </p>
+    </div>
+    <figure class="bl-story-media">
+      <img
+        src={STORY_IMAGE.src}
+        alt={STORY_IMAGE.alt}
+        width={STORY_IMAGE.width}
+        height={STORY_IMAGE.height}
+        sizes="(max-width: 767px) 100vw, (max-width: 1100px) 52vw, 58vw"
+        loading="lazy"
+        decoding="async"
+      />
+    </figure>
+  </div>
+</section>

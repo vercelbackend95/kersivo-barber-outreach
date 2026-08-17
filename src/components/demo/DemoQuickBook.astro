@@ -1,0 +1,130 @@
+---
+import {
+  demoBookingHref,
+  demoServiceAccessibleName,
+  demoServiceDurationRatio,
+  demoServiceIndex,
+  demoServicesMeta,
+  formatDemoPriceGbp,
+  getDemoFeaturedServices,
+} from '@/lib/demo/services';
+
+const featured = getDemoFeaturedServices();
+const meta = demoServicesMeta(featured);
+const maxDuration = meta.maxDurationMinutes;
+---
+
+<section
+  class="bl-quick"
+  data-surface="dark"
+  data-bl-quick
+  aria-labelledby="popular-services-heading"
+>
+  <div class="bl-container">
+    <header class="bl-quick-header">
+      <p class="bl-quick-eyebrow" data-bl-reveal>
+        <span class="bl-quick-eyebrow-index">01</span>
+        <span aria-hidden="true"> · </span>
+        Quick Book
+      </p>
+      <h2 class="bl-quick-heading" id="popular-services-heading" data-bl-reveal>
+        <span class="bl-quick-heading-line">Choose</span>
+        <span class="bl-quick-heading-line">your cut.</span>
+      </h2>
+      <div class="bl-quick-aside" data-bl-reveal>
+        <p class="bl-quick-lede">Select a featured service and continue straight into booking.</p>
+        <p class="bl-quick-meta">{meta.countPadded} featured services</p>
+      </div>
+    </header>
+
+    <ul class="bl-quick-list">
+      {
+        featured.map((service, index) => (
+          <li class="bl-quick-item" data-bl-reveal>
+            <a
+              class="bl-quick-card"
+              href={demoBookingHref(service.slug)}
+              aria-label={demoServiceAccessibleName(service)}
+              style={`--bl-quick-duration-ratio: ${demoServiceDurationRatio(service.durationMinutes, maxDuration)}`}
+            >
+              <article class="bl-quick-article">
+                <p class="bl-quick-index">
+                  {demoServiceIndex(index)}
+                  <span aria-hidden="true"> / </span>
+                  {meta.countPadded}
+                </p>
+                <p class="bl-quick-kicker">Featured service</p>
+                <h3 class="bl-quick-name">{service.name}</h3>
+                <p class="bl-quick-desc">{service.description}</p>
+                <div class="bl-quick-facts">
+                  <span class="bl-quick-duration">{service.durationMinutes} min</span>
+                  <span class="bl-quick-price">{formatDemoPriceGbp(service.pricePence)}</span>
+                </div>
+                <span class="bl-quick-duration-track" aria-hidden="true">
+                  <span class="bl-quick-duration-fill"></span>
+                </span>
+                <span class="bl-quick-action">
+                  Book this service
+                  <span class="bl-quick-arrow" aria-hidden="true">→</span>
+                </span>
+              </article>
+            </a>
+          </li>
+        ))
+      }
+    </ul>
+
+    <p class="bl-quick-more" data-bl-reveal>
+      <a class="bl-quick-all" href="/demo/services">
+        View all services
+        <span aria-hidden="true"> →</span>
+      </a>
+    </p>
+  </div>
+</section>
+
+<script>
+  function prefersReducedMotion() {
+    return window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  }
+
+  function isInViewport(el: Element) {
+    const rect = el.getBoundingClientRect();
+    return rect.bottom > 0 && rect.top < window.innerHeight;
+  }
+
+  function revealBlock(el: Element, instant: boolean) {
+    el.classList.add('is-inview');
+    if (instant) el.classList.add('is-settled');
+  }
+
+  function bindQuickReveal(root: Element) {
+    if (!(root instanceof HTMLElement) || root.dataset.blQuickBound === 'true') return;
+    root.dataset.blQuickBound = 'true';
+    const blocks = [...root.querySelectorAll('[data-bl-reveal]')];
+    if (blocks.length === 0) return;
+    const instant = prefersReducedMotion();
+    if (instant) {
+      blocks.forEach((block) => revealBlock(block, true));
+      return;
+    }
+
+    const observer = new IntersectionObserver(
+      (entries) => {
+        for (const entry of entries) {
+          if (!entry.isIntersecting) continue;
+          revealBlock(entry.target, false);
+          observer.unobserve(entry.target);
+        }
+      },
+      { threshold: 0.16, rootMargin: '0px 0px -8% 0px' },
+    );
+
+    for (const block of blocks) {
+      if (isInViewport(block)) revealBlock(block, false);
+      else observer.observe(block);
+    }
+  }
+
+  document.querySelectorAll('[data-bl-quick]').forEach(bindQuickReveal);
+</script>

@@ -115,6 +115,13 @@ describe('isPaidShop with subscription entitlement', () => {
         now,
       ),
     ).toBe(false);
+    expect(
+      isPaidShop(
+        { id: 'blackline-barbers-demo', shopPaidAt: new Date() },
+        { status: 'ACTIVE', currentPeriodEnd: null },
+        now,
+      ),
+    ).toBe(false);
   });
 
   it('uses subscription entitlement over sticky shopPaidAt', () => {

@@ -1,4 +1,5 @@
 import { describe, expect, it } from 'vitest';
+import { BLACKLINE_SHOP_ID } from '../demo/products';
 import { DEMO_SHOP_ID } from '../db/shopScope';
 import {
   canSellRetail,
@@ -22,6 +23,7 @@ describe('cardPaymentsGate', () => {
 
   it('blocks demo / unpaid / connect gaps', () => {
     expect(canShopTakeCardPayments({ ...readyBase, id: DEMO_SHOP_ID })).toBe(false);
+    expect(canShopTakeCardPayments({ ...readyBase, id: BLACKLINE_SHOP_ID })).toBe(false);
     expect(
       canShopTakeCardPayments({
         ...readyBase,

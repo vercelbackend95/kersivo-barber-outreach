@@ -1,0 +1,15 @@
+---
+import DemoPageHero from '@/components/demo/DemoPageHero.astro';
+---
+
+<DemoPageHero
+  headingId="blackline-barbers-heading"
+  eyebrow="<span>The</span> Team"
+  intro="Three barbers. Three approaches. One standard."
+>
+  <Fragment slot="title">
+    The hands behind<br />Blackline.
+  </Fragment>
+  <p slot="meta" class="bl-page-hero-count">03 Barbers</p>
+  <span class="bl-page-hero-rule" aria-hidden="true"></span>
+</DemoPageHero>

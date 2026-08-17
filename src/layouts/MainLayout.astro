@@ -1,4 +1,5 @@
 ---
+import { ClientRouter } from 'astro:transitions';
 import BarberDemoJsonLd from '@/components/seo/BarberDemoJsonLd.astro';
 import GoogleAnalytics from '@/components/seo/GoogleAnalytics.astro';
 import CookieConsentMount from '@/components/consent/CookieConsentMount.astro';
@@ -7,7 +8,9 @@ import SeoHead from '@/components/seo/SeoHead.astro';
 import Navbar17 from '@/components/navbar17.astro';
 import InitDataTrackScript from '@/components/InitDataTrackScript.astro';
 import CartDrawerMount from '@/components/shop/CartDrawerMount.astro';
+import RouteTransitionRoot from '@/components/navigation/RouteTransitionRoot.astro';
 import type { PageSeo } from '@/lib/seo/meta';
+import '@/styles/motion.css';
 import '@/styles/tokens.css';
 import '@/styles/fonts.css';
 import '@/styles/global.css';
@@ -18,6 +21,7 @@ import '@/styles/components/navbar17.css';
 import '@/styles/components/shop.css';
 import '@/styles/components/empty-state.css';
 import '@/styles/components/shop-product.css';
+import '@/styles/components/route-transition.css';
 
 import type { Navbar17Variant } from '@/lib/nav/navbar17Items';
 import '@/styles/components/shop-product.css';
@@ -59,9 +63,11 @@ const jsonLdBlocks = jsonLd
     ? jsonLd
     : [jsonLd]
   : [];
+
+const cartNamespace = shopId ? { shopId } : null;
 ---
 
-<html lang="en-GB">
+<html lang="en-GB" data-app="marketing" transition:animate="none">
   <head>
     <GoogleAnalytics />
     <meta charset="utf-8" />
@@ -89,17 +95,37 @@ const jsonLdBlocks = jsonLd
         <script type="application/ld+json" set:html={JSON.stringify(block)} />
       ))
     }
+    <style is:inline>
+      html[data-app='marketing'],
+      html[data-app='marketing'] body {
+        background: #0b0d10;
+      }
+    </style>
+    <ClientRouter fallback="swap" />
+    {
+      cartNamespace ? (
+        <script is:inline define:vars={{ cartNamespace }}>
+          window.__KERSIVO_CART_NAMESPACE__ = cartNamespace;
+        </script>
+      ) : null
+    }
     <slot name="head" />
   </head>
   <body>
     <Navbar17 variant={navbarVariant} />
-    <slot />
+    <RouteTransitionRoot variant="marketing">
+      <slot />
+    </RouteTransitionRoot>
     {
       navbarVariant === 'shop' ? (
-        <CartDrawerMount publicDemoMode={publicDemoMode} shopId={shopId} />
+        <div transition:persist="ks-cart">
+          <CartDrawerMount publicDemoMode={publicDemoMode} shopId={shopId} />
+        </div>
       ) : null
     }
-    <CookieConsentMount />
+    <div transition:persist="ks-cookie">
+      <CookieConsentMount />
+    </div>
     <InitDataTrackScript />
   </body>
 </html>
