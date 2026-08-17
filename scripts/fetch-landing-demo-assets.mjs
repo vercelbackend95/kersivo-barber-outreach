@@ -47,7 +47,7 @@ const ASSETS = [
   },
   {
     output: 'clients/02.webp',
-    source: 'https://images.unsplash.com/photo-1494790108377-be9c29b29330?auto=format&fit=crop&w=400&h=400&q=80',
+    source: 'https://images.unsplash.com/photo-1568602471122-7832951cc4c5?auto=format&fit=crop&w=400&h=400&q=80',
     author: 'Unsplash',
     description: 'Client portrait',
   },
@@ -59,13 +59,13 @@ const ASSETS = [
   },
   {
     output: 'clients/04.webp',
-    source: 'https://images.unsplash.com/photo-1438761681033-6461ffad8d80?auto=format&fit=crop&w=400&h=400&q=80',
+    source: 'https://images.unsplash.com/photo-1463453091185-61582044d556?auto=format&fit=crop&w=400&h=400&q=80',
     author: 'Unsplash',
     description: 'Client portrait',
   },
   {
     output: 'clients/05.webp',
-    source: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=400&h=400&q=80',
+    source: 'https://images.unsplash.com/photo-1600486913747-55e5470d6f40?auto=format&fit=crop&w=400&h=400&q=80',
     author: 'Unsplash',
     description: 'Client portrait',
   },
@@ -77,13 +77,13 @@ const ASSETS = [
   },
   {
     output: 'clients/07.webp',
-    source: 'https://images.unsplash.com/photo-1524504388940-b1c1722653e1?auto=format&fit=crop&w=400&h=400&q=80',
+    source: 'https://images.unsplash.com/photo-1560250097-0b93528c311a?auto=format&fit=crop&w=400&h=400&q=80',
     author: 'Unsplash',
     description: 'Client portrait',
   },
   {
     output: 'clients/08.webp',
-    source: 'https://images.unsplash.com/photo-1544005313-94ddf0286df2?auto=format&fit=crop&w=400&h=400&q=80',
+    source: 'https://images.unsplash.com/photo-1615109398623-88346a601842?auto=format&fit=crop&w=400&h=400&q=80',
     author: 'Unsplash',
     description: 'Client portrait',
   },
