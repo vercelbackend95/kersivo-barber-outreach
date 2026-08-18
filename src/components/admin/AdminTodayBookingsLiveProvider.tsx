@@ -70,6 +70,7 @@ export type AdminTodayBookingsLiveValue = {
   upcomingBookings: AdminLiveBookingRow[];
   connectionStateLabel: string;
   hasLivePulse: boolean;
+  showDemoModePills: boolean;
   formatStartTime: (iso: string) => string;
   formatRelativeTime: (startAt: string, endAt: string) => string;
 };
@@ -79,14 +80,18 @@ const AdminTodayBookingsLiveContext = createContext<AdminTodayBookingsLiveValue 
 export function AdminTodayBookingsLiveProvider({
   children,
   isPublicDemo = false,
+  showDemoModePills,
   initialBookings,
 }: {
   children: React.ReactNode;
   isPublicDemo?: boolean;
+  /** Generic public demo shows DEMO MODE; BLACKLINE already has banner + sidebar status. */
+  showDemoModePills?: boolean;
   /** SSR-seeded demo (or other) payload — avoids a cold empty flash after hydration. */
   initialBookings?: AdminLiveBookingRow[];
 }) {
   const seeded = initialBookings != null;
+  const demoPills = showDemoModePills ?? isPublicDemo;
   const [loggedIn, setLoggedIn] = useState(isPublicDemo);
   const [sessionChecked, setSessionChecked] = useState(isPublicDemo);
   const [bookings, setBookings] = useState<AdminLiveBookingRow[]>(() => initialBookings ?? []);
@@ -208,6 +213,7 @@ export function AdminTodayBookingsLiveProvider({
       upcomingBookings,
       connectionStateLabel,
       hasLivePulse,
+      showDemoModePills: demoPills,
       formatStartTime,
       formatRelativeTime,
     }),
@@ -219,6 +225,7 @@ export function AdminTodayBookingsLiveProvider({
       upcomingBookings,
       connectionStateLabel,
       hasLivePulse,
+      demoPills,
       formatStartTime,
       formatRelativeTime,
     ],

@@ -1,11 +1,13 @@
 import { readFileSync } from 'node:fs';
 import { describe, expect, it } from 'vitest';
-import { BLACKLINE_ADMIN_DEMO_PATH, blacklineAdminHref } from '@/lib/admin/demoConfig';
+import { BLACKLINE_ADMIN_DEMO_PATH, CREATE_OWN_BARBERSHOP_HREF, blacklineAdminHref } from '@/lib/admin/demoConfig';
 import { DEMO_NAV } from '@/lib/demo/nav';
 
 const pageSource = readFileSync(new URL('../../pages/demo/admin.astro', import.meta.url), 'utf8');
 const bannerSource = readFileSync(new URL('../../components/demo/DemoBanner.astro', import.meta.url), 'utf8');
 const layoutSource = readFileSync(new URL('../../layouts/DemoLayout.astro', import.meta.url), 'utf8');
+const adminLayoutSource = readFileSync(new URL('../../components/admin/AdminLayout.tsx', import.meta.url), 'utf8');
+const profileSource = readFileSync(new URL('../../components/admin/AdminSidebarProfile.tsx', import.meta.url), 'utf8');
 const adminDemoSource = readFileSync(new URL('../../pages/admin-demo.astro', import.meta.url), 'utf8');
 const genericRouter = readFileSync(new URL('../admin/demoFixtureRouter.ts', import.meta.url), 'utf8');
 const blacklineRouter = readFileSync(
@@ -34,6 +36,18 @@ describe('BLACKLINE owner dashboard page', () => {
     expect(genericRouter).not.toContain('blacklineDemoFixtures');
     expect(blacklineRouter).toContain('/api/demo/admin');
     expect(blacklineRouter).not.toContain('Jamie Reed');
+  });
+
+  it('keeps one conversion path and does not repeat the owner-demo notice', () => {
+    expect(pageSource).toContain('view="admin"');
+    expect(adminLayoutSource).not.toContain('admin-blackline-notice');
+    expect(adminLayoutSource).not.toContain('BLACKLINE OWNER DEMO');
+    expect(adminLayoutSource).toContain('BlacklineDemoStatusCard');
+    expect(profileSource).toContain('Create your own barbershop');
+    expect(profileSource).toContain('Preview BLACKLINE website');
+    expect(profileSource).toContain('Back to Kersivo');
+    expect(profileSource).toContain('href={createShopHref}');
+    expect(CREATE_OWN_BARBERSHOP_HREF).toBe('/admin/onboarding');
   });
 
   it('wires banner navigation between customer and owner views', () => {

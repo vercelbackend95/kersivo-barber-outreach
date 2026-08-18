@@ -30,6 +30,11 @@ type AdminSidebarProfileProps = {
   onOpenBarbershopSettings?: () => void;
   /** BLACKLINE owner demo: never open the login / signup gate. */
   suppressAuthLock?: boolean;
+  /** BLACKLINE owner demo: conversion links instead of lock-gated setup items. */
+  conversionAccountMenu?: boolean;
+  createShopHref?: string;
+  previewWebsiteHref?: string;
+  kersivoHomeHref?: string;
 };
 
 function openDemoAuthLock(showAuth = true) {
@@ -48,6 +53,10 @@ export default function AdminSidebarProfile({
   shopId = null,
   onOpenBarbershopSettings,
   suppressAuthLock = false,
+  conversionAccountMenu = false,
+  createShopHref = '/admin/onboarding',
+  previewWebsiteHref = '/demo',
+  kersivoHomeHref = '/',
 }: AdminSidebarProfileProps) {
   const isGuest = mode === 'guest';
   const isPreview = mode === 'preview';
@@ -455,7 +464,7 @@ export default function AdminSidebarProfile({
                 zIndex: 10000,
               }}
             >
-              {isGuest ? (
+              {isGuest && !conversionAccountMenu ? (
                 <button
                   type="button"
                   className="admin-profile-menu__header admin-profile-menu__header--action"
@@ -475,7 +484,10 @@ export default function AdminSidebarProfile({
                 </button>
               ) : (
                 <div className="admin-profile-menu__header" role="none">
-                  <span className="admin-sidebar-profile__avatar" aria-hidden="true">
+                  <span
+                    className={`admin-sidebar-profile__avatar${isGuest ? ' admin-sidebar-profile__avatar--guest' : ''}`}
+                    aria-hidden="true"
+                  >
                     {avatarContent}
                   </span>
                   <span className="admin-sidebar-profile__meta">
@@ -485,6 +497,27 @@ export default function AdminSidebarProfile({
                 </div>
               )}
               <div className="admin-profile-menu__divider" aria-hidden="true" />
+              {conversionAccountMenu ? (
+                <>
+                  <a
+                    className="admin-profile-menu__item admin-profile-menu__item--cta"
+                    role="menuitem"
+                    href={createShopHref}
+                  >
+                    <Store width={15} height={15} aria-hidden="true" />
+                    Create your own barbershop
+                  </a>
+                  <a className="admin-profile-menu__item" role="menuitem" href={previewWebsiteHref}>
+                    <Globe width={15} height={15} aria-hidden="true" />
+                    Preview BLACKLINE website
+                  </a>
+                  <a className="admin-profile-menu__item" role="menuitem" href={kersivoHomeHref}>
+                    <LogOut width={15} height={15} aria-hidden="true" />
+                    Back to Kersivo
+                  </a>
+                </>
+              ) : (
+                <>
               {isGuest ? (
                 <>
                   <button
@@ -627,6 +660,8 @@ export default function AdminSidebarProfile({
                     <LogOut width={15} height={15} aria-hidden="true" />
                     Log out
                   </button>
+                </>
+              )}
                 </>
               )}
             </div>,

@@ -23,6 +23,7 @@ import AdminSidebarLaunchCta from './AdminSidebarLaunchCta';
 import AdminSidebarProfile, { type AdminProfileUser } from './AdminSidebarProfile';
 import { clearAdminSecret } from './adminAuth';
 import { authClient } from '@/lib/auth-client';
+import { getPublicAdminDemoCapabilities, type PublicAdminDemoTenant } from '@/lib/admin/demoConfig';
 import {
   dismissPreviewSubscribeBanner,
   isPreviewSubscribeBannerVisible,
@@ -40,7 +41,7 @@ type AdminLayoutProps = {
   showPending?: boolean;
   showSectionSkeleton: boolean;
   isPublicDemo?: boolean;
-  demoTenant?: 'generic' | 'blackline';
+  demoTenant?: PublicAdminDemoTenant;
   profileUser?: AdminProfileUser | null;
   shopId?: string | null;
   shopLogoUrl?: string | null;
@@ -236,6 +237,7 @@ export default function AdminLayout({
   const prevActiveSectionRef = useRef(activeSection);
   const [mobileChromeMounted, setMobileChromeMounted] = useState(false);
   const isBlacklineDemo = demoTenant === 'blackline';
+  const demoCapabilities = getPublicAdminDemoCapabilities(demoTenant);
   const brandShopName = isBlacklineDemo ? shopName : isPublicDemo ? null : shopName;
 
   const canOpenBarbershopSettings =
@@ -380,6 +382,10 @@ export default function AdminLayout({
       mode="guest"
       variant="desktop"
       suppressAuthLock={isBlacklineDemo}
+      conversionAccountMenu={demoCapabilities.conversionAccountMenu}
+      createShopHref={demoCapabilities.createShopHref}
+      previewWebsiteHref={demoCapabilities.previewWebsiteHref}
+      kersivoHomeHref={demoCapabilities.kersivoHomeHref}
       user={isBlacklineDemo ? { name: shopName, email: null, image: null } : null}
     />
   ) : isPreviewAccess ? (
@@ -415,6 +421,10 @@ export default function AdminLayout({
       mode="guest"
       variant="mobile"
       suppressAuthLock={isBlacklineDemo}
+      conversionAccountMenu={demoCapabilities.conversionAccountMenu}
+      createShopHref={demoCapabilities.createShopHref}
+      previewWebsiteHref={demoCapabilities.previewWebsiteHref}
+      kersivoHomeHref={demoCapabilities.kersivoHomeHref}
       user={isBlacklineDemo ? { name: shopName, email: null, image: null } : null}
     />
   ) : isPreviewAccess ? (
@@ -807,14 +817,6 @@ export default function AdminLayout({
           </header>
         </div>
         <div className="admin-mobile-header-spacer" aria-hidden="true" />
-        {isBlacklineDemo ? (
-          <div className="admin-blackline-notice" role="status">
-            <p className="admin-blackline-notice__kicker">BLACKLINE OWNER DEMO</p>
-            <p className="admin-blackline-notice__copy">
-              This dashboard uses fictional sample data. No real appointments, orders, messages or payments are created.
-            </p>
-          </div>
-        ) : null}
         {isPublicDemo ? <DemoActionLock variant={isBlacklineDemo ? 'blackline' : 'generic'} /> : null}
         {persistentAdminChrome ? (
           <div className="admin-persistent-chrome-host" aria-hidden="true" style={{ display: 'none' }}>

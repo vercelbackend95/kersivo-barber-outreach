@@ -27,6 +27,11 @@ describe('preview sidebar account menu', () => {
     expect(source).toContain('!isPreview && shopId');
     expect(source).toContain('{!isPreview ? (');
     expect(source).toContain('Launch My Barbershop');
+    expect(source).toContain('Create your own barbershop');
+    expect(source).toContain('Preview BLACKLINE website');
+    expect(source).toContain('Workspace setup');
+    expect(source).toContain('Retail onboarding');
+    expect(source).toContain('Create account');
     expect(source).toContain('Log out');
     expect(source).toContain('Delete account');
   });

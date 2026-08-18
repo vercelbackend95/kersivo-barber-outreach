@@ -4,11 +4,12 @@ import { ALL_WEEKDAYS } from '@/lib/booking/weekdays';
 import { BOOKING_SERVICE_CATEGORY_ORDER } from '@/lib/booking/groupServicesByCategory';
 import { DEMO_BARBERS } from '@/lib/demo/barbers';
 import { DEMO_PRODUCTS } from '@/lib/demo/products';
-import { DEMO_SERVICES } from '@/lib/demo/services';
+import { DEMO_FEATURED_SERVICE_IDS, DEMO_SERVICES } from '@/lib/demo/services';
 import { DEMO_SHOP_NAME } from '@/lib/demo/site';
 import { SATURDAY_CLOSE_MINUTE, WEEKDAY_CLOSE_MINUTE, WEEKDAY_OPEN_MINUTE, blacklineDayKey, londonWeekdayMon1 } from './time';
 
 const STABLE_CREATED_AT = '2026-01-12T09:00:00.000Z';
+const FEATURED_SERVICE_ID_SET = new Set<string>(DEMO_FEATURED_SERVICE_IDS);
 
 export const BLACKLINE_SHOP_DISPLAY_NAME = DEMO_SHOP_NAME;
 
@@ -161,6 +162,7 @@ export const blacklineServicesResponse = {
     bufferMinutes: 5,
     displayOrder: service.displayOrder,
     category: service.category,
+    featured: FEATURED_SERVICE_ID_SET.has(service.id),
     isActive: true,
     barberServices: DEMO_BARBERS.map((barber) => ({
       barber: { id: barber.id, name: barber.name, active: true },

@@ -114,7 +114,7 @@ function useAdminBodyScrollLock(isLocked: boolean): void {
   }, [isLocked]);
 }
 
-export default function ServicesAdminPanel() {
+export default function ServicesAdminPanel({ isBlacklineDemo = false }: { isBlacklineDemo?: boolean }) {
   const [services, setServices] = useState<ServiceRow[]>([]);
   const [availableCategories, setAvailableCategories] = useState<string[]>([]);
   const [loading, setLoading] = useState(true);
@@ -518,13 +518,17 @@ export default function ServicesAdminPanel() {
                 filteredServices.map((service) => {
                   const isSavingRow = Boolean(serviceSavingById[service.id]);
                   const categoryLabel = formatCategoryLabel(service.category);
-                  const updatedLabel = service.updatedAt || service.createdAt
+                  const hasTimestamp = Boolean(service.updatedAt || service.createdAt);
+                  const updatedLabel = hasTimestamp
                     ? new Date(service.updatedAt ?? service.createdAt ?? '').toLocaleString('en-GB', {
                         day: 'numeric',
                         month: 'short',
                         year: 'numeric'
                       })
                     : '—';
+                  const showMetaRow = isBlacklineDemo
+                    ? hasTimestamp
+                    : true;
                   const serviceStatusLine = isSavingRow ? 'Saving…' : (serviceStatusById[service.id] || '');
 
                   return (
@@ -547,11 +551,13 @@ export default function ServicesAdminPanel() {
 
                       <div className="admin-product-row__identity">
                         <p className="admin-product-row__name">{service.name}</p>
-                        <p className="admin-product-row__meta">
-                          <span>{categoryLabel}</span>
-                          <span className="admin-product-row__meta-sep" aria-hidden="true"> · </span>
-                          <span title={`Updated ${updatedLabel}`}>{updatedLabel}</span>
-                        </p>
+                        {showMetaRow ? (
+                          <p className="admin-product-row__meta">
+                            <span>{categoryLabel}</span>
+                            <span className="admin-product-row__meta-sep" aria-hidden="true"> · </span>
+                            <span title={`Updated ${updatedLabel}`}>{updatedLabel}</span>
+                          </p>
+                        ) : null}
                       </div>
 
                       <div className="admin-service-row__duration-col">

@@ -17,6 +17,25 @@ export const DEMO_PILL_TOOLTIP = 'This preview uses example barbershop data.';
 
 export const DEMO_ADMIN_MODE_HEADER = 'x-admin-demo-mode';
 
+export type PublicAdminDemoTenant = 'generic' | 'blackline';
+
+/** Canonical create-shop entry — existing onboarding wizard, not launch or retail. */
+export const CREATE_OWN_BARBERSHOP_HREF = '/admin/onboarding' as const;
+
+export function getPublicAdminDemoCapabilities(tenant: PublicAdminDemoTenant = 'generic') {
+  const isBlackline = tenant === 'blackline';
+  return {
+    isBlackline,
+    showLaunchCta: !isBlackline,
+    showDuplicateOwnerNotice: false,
+    showDemoModePills: !isBlackline,
+    conversionAccountMenu: isBlackline,
+    createShopHref: CREATE_OWN_BARBERSHOP_HREF,
+    previewWebsiteHref: '/demo',
+    kersivoHomeHref: '/',
+  } as const;
+}
+
 export function adminDemoHref(section?: string): string {
   if (!section) return PUBLIC_ADMIN_DEMO_PATH;
   return `${PUBLIC_ADMIN_DEMO_PATH}?section=${section}`;
@@ -60,6 +79,7 @@ export const DEMO_SECTION_ALIASES = {
   barbers: 'bookings_blocks',
   team: 'bookings_blocks',
   reports: 'bookings_reports',
+  bookings_services: 'services',
   ai: 'assistant',
 } as const;
 

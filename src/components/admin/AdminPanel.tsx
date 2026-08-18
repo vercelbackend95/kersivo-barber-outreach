@@ -15,6 +15,7 @@ import {
   setPublicAdminDemoMode,
 } from './adminAuth';
 import type { AdminProfileUser } from './AdminSidebarProfile';
+import { getPublicAdminDemoCapabilities, type PublicAdminDemoTenant } from '@/lib/admin/demoConfig';
 import { SkeletonKPICards } from '../skeleton';
 import { authClient } from '@/lib/auth-client';
 import { isGuestPreviewConstructionPause } from '@/lib/preview/guestPreviewConstruction';
@@ -112,7 +113,7 @@ class LazyPanelErrorBoundary extends React.Component<
 
 type AdminPanelProps = {
   demoMode?: boolean;
-  demoTenant?: 'generic' | 'blackline';
+  demoTenant?: PublicAdminDemoTenant;
   /** SSR-seeded demo bookings for the dashboard (avoids empty flash after hydration). */
   initialBookings?: DemoDayBooking[];
   /** URL `?section=` from the Astro host so the first paint matches the deep link. */
@@ -389,7 +390,11 @@ export default function AdminPanel({
   const sessionPending = !demoMode && !authReady;
 
   return (
-    <AdminTodayBookingsLiveProvider isPublicDemo={demoMode} initialBookings={initialBookings}>
+    <AdminTodayBookingsLiveProvider
+      isPublicDemo={demoMode}
+      showDemoModePills={demoMode && getPublicAdminDemoCapabilities(demoTenant).showDemoModePills}
+      initialBookings={initialBookings}
+    >
       <AdminLayout
         activeSection={activeSection}
         onChangeSection={handleSectionChange}
@@ -431,7 +436,9 @@ export default function AdminPanel({
 
         <LazyPanelErrorBoundary>
           <Suspense fallback={<PanelChunkFallback />}>
-            {activeSection === 'services' ? <ServicesAdminPanel key="services" /> : null}
+            {activeSection === 'services' ? (
+              <ServicesAdminPanel key="services" isBlacklineDemo={demoTenant === 'blackline'} />
+            ) : null}
 
             {activeSection === 'bookings_clients' ? <ClientsAdminPanel key="clients" /> : null}
 

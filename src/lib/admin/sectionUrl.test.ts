@@ -3,7 +3,7 @@ import { parseAdminSpaHref, resolveAdminSpaSection } from './sectionUrl';
 
 describe('admin SPA section URLs', () => {
   it('resolves aliases and missing values to canonical sections', () => {
-    expect(resolveAdminSpaSection('services')).toBe('services');
+    expect(resolveAdminSpaSection('bookings_services')).toBe('services');
     expect(resolveAdminSpaSection('team')).toBe('bookings_blocks');
     expect(resolveAdminSpaSection('timeline')).toBe('bookings_dashboard');
     expect(resolveAdminSpaSection(null)).toBe('bookings_dashboard');

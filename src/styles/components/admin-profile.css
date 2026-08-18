@@ -133,6 +133,23 @@ button.admin-profile-menu__header--action:hover {
   font-size: 0.84rem;
   text-align: left;
   cursor: pointer;
+  text-decoration: none;
+  box-sizing: border-box;
+}
+
+a.admin-profile-menu__item:focus-visible,
+.admin-profile-menu__item:focus-visible {
+  outline: 2px solid color-mix(in srgb, var(--accent) 70%, transparent);
+  outline-offset: 2px;
+}
+
+.admin-profile-menu__item--cta {
+  font-weight: 650;
+  background: color-mix(in srgb, var(--fg) 8%, transparent);
+}
+
+.admin-profile-menu__item--cta:hover:not(:disabled) {
+  background: color-mix(in srgb, var(--fg) 12%, transparent);
 }
 
 .admin-profile-menu__item:hover:not(:disabled) {

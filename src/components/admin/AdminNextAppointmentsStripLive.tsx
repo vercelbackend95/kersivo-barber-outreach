@@ -20,6 +20,7 @@ export default function AdminNextAppointmentsStripLive() {
     connectionStateLabel,
     formatStartTime,
     formatRelativeTime,
+    showDemoModePills,
   } = useAdminTodayBookingsLive();
 
   const [isNextExpanded, setIsNextExpanded] = useState(false);
@@ -76,6 +77,7 @@ export default function AdminNextAppointmentsStripLive() {
       formatStartTime={formatStartTime}
       connectionStateLabel={connectionStateLabel}
       isDemo={isPublicDemo}
+      showDemoPill={showDemoModePills}
       isLoading={!hasLoadedOnce}
     />
   );

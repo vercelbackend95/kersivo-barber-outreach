@@ -29,6 +29,19 @@ describe('BLACKLINE admin fixtures', () => {
     expect(blacklineServicesResponse.services.map((row) => row.id)).toEqual(
       DEMO_SERVICES.map((row) => row.id),
     );
+    expect(blacklineServicesResponse.services).toHaveLength(4);
+    expect(blacklineServicesResponse.services.map((row) => row.featured)).toEqual([
+      true,
+      true,
+      true,
+      false,
+    ]);
+    expect(
+      blacklineServicesResponse.services.filter((row) => row.featured).map((row) => row.name),
+    ).toEqual(['Skin Fade', 'Haircut & Finish', 'Haircut & Beard']);
+    expect(blacklineServicesResponse.services.find((row) => row.name === 'Hot Towel Shave')?.featured).toBe(
+      false,
+    );
     expect(blacklineShopProductsResponse.products.map((row) => row.id)).toEqual(
       DEMO_PRODUCTS.map((row) => row.id),
     );

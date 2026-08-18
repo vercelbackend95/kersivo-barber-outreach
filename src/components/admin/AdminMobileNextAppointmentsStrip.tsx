@@ -18,6 +18,8 @@ type AdminMobileNextAppointmentsStripProps = {
   formatStartTime: (iso: string) => string;
   connectionStateLabel: string;
   isDemo?: boolean;
+  /** Generic public demo only — BLACKLINE uses the owner banner + sidebar status instead. */
+  showDemoPill?: boolean;
   /** True until the first successful bookings load — never show empty state while loading. */
   isLoading?: boolean;
 };
@@ -29,6 +31,7 @@ export default function AdminMobileNextAppointmentsStrip({
   formatStartTime,
   connectionStateLabel,
   isDemo = false,
+  showDemoPill,
   isLoading = false,
 }: AdminMobileNextAppointmentsStripProps) {
   const listDomId = `admin-mobile-next-strip-list-${useId().replace(/:/g, '')}`;
@@ -117,7 +120,7 @@ export default function AdminMobileNextAppointmentsStrip({
       <div className="admin-mobile-next-strip-head">
         <p className="admin-mobile-next-strip-kicker">Next appointments</p>
         <span className="admin-mobile-next-strip-status">
-          {isDemo ? <AdminDemoPill /> : null}
+          {(showDemoPill ?? isDemo) ? <AdminDemoPill /> : null}
           <span className={`admin-mobile-next-strip-live admin-mobile-next-strip-live--${liveModifier}`}>
             <span
               className={`admin-mobile-next-strip-live-dot${liveModifier === 'live' ? ' admin-mobile-next-strip-live-dot--pulse' : ''}`}

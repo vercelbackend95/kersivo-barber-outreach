@@ -41,4 +41,38 @@ describe('AdminMobileNextAppointmentsStrip loading state', () => {
 
     expect(screen.getByText('No upcoming bookings')).toBeTruthy();
   });
+
+  it('shows DEMO MODE when showDemoPill is true', () => {
+    render(
+      <AdminMobileNextAppointmentsStrip
+        appointments={[]}
+        isExpanded={false}
+        onToggleExpanded={() => undefined}
+        formatStartTime={() => '10:00'}
+        connectionStateLabel="LIVE"
+        isDemo
+        showDemoPill
+        isLoading={false}
+      />,
+    );
+
+    expect(screen.getByLabelText(/DEMO MODE/)).toBeTruthy();
+  });
+
+  it('hides DEMO MODE when showDemoPill is false', () => {
+    render(
+      <AdminMobileNextAppointmentsStrip
+        appointments={[]}
+        isExpanded={false}
+        onToggleExpanded={() => undefined}
+        formatStartTime={() => '10:00'}
+        connectionStateLabel="LIVE"
+        isDemo
+        showDemoPill={false}
+        isLoading={false}
+      />,
+    );
+
+    expect(screen.queryByLabelText(/DEMO MODE/)).toBeNull();
+  });
 });
