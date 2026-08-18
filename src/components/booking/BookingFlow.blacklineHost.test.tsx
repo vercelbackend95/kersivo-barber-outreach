@@ -5,9 +5,13 @@ import React from 'react';
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import { render, screen, fireEvent, waitFor, cleanup } from '@testing-library/react';
 import BookingFlow from './BookingFlow';
-import { BLACKLINE_BOOKING_PRESENTATION } from '@/lib/demo/booking';
+import { BLACKLINE_BOOKING_PRESENTATION, BLACKLINE_TIMELINE_CTA_LABEL } from '@/lib/demo/booking';
 import { DEMO_BARBERS } from '@/lib/demo/barbers';
 import { DEMO_SERVICES } from '@/lib/demo/services';
+import {
+  BLACKLINE_SESSION_BOOKINGS_KEY,
+  listBlacklineSessionBookings,
+} from '@/lib/demo/blacklineSessionBookings';
 
 vi.mock('@/lib/consent/events', () => ({
   trackConsentedEvent: vi.fn(),
@@ -16,6 +20,8 @@ vi.mock('@/lib/consent/events', () => ({
 import { trackConsentedEvent } from '@/lib/consent/events';
 
 const trackSpy = vi.mocked(trackConsentedEvent);
+
+const WEDNESDAY = '2026-08-12';
 
 const services = DEMO_SERVICES.map((service) => ({
   id: service.id,
@@ -32,6 +38,53 @@ const barbers = DEMO_BARBERS.map((barber) => ({
   serviceIds: [...barber.serviceIds],
 }));
 
+function blacklineFlowProps() {
+  return {
+    publicDemoMode: true as const,
+    persistDemoSessionBooking: true as const,
+    services,
+    barbers,
+    presentation: BLACKLINE_BOOKING_PRESENTATION,
+    postConfirmCta: {
+      label: BLACKLINE_TIMELINE_CTA_LABEL,
+      destination: 'admin-timeline' as const,
+      adminBasePath: '/demo/admin',
+      availableForDemo: true,
+    },
+  };
+}
+
+async function chooseDate(dayKey: string) {
+  fireEvent.change(screen.getByLabelText('Select booking date'), { target: { value: dayKey } });
+}
+
+async function completeNoahHaircut() {
+  fireEvent.click(screen.getByRole('button', { name: /^Noah Reid$/i }));
+  await chooseDate(WEDNESDAY);
+  await waitFor(() => {
+    const slotButtons = screen
+      .getAllByRole('button')
+      .filter((button) => /^\d{2}:\d{2}$/.test(button.textContent ?? ''));
+    expect(slotButtons.length).toBeGreaterThan(0);
+  });
+  const slotButton = screen
+    .getAllByRole('button')
+    .find((button) => /^\d{2}:\d{2}$/.test(button.textContent ?? ''))!;
+  const slot = slotButton.textContent!.trim();
+  fireEvent.click(slotButton);
+  fireEvent.click(screen.getByRole('button', { name: 'Continue' }));
+  await waitFor(() => {
+    expect(screen.getByLabelText(/^Name$/i)).toBeTruthy();
+  });
+  fireEvent.change(screen.getByLabelText(/^Name$/i), { target: { value: 'Alex Demo' } });
+  fireEvent.change(screen.getByLabelText(/^Email$/i), { target: { value: 'alex@example.com' } });
+  fireEvent.click(screen.getByRole('button', { name: 'Complete demo booking' }));
+  await waitFor(() => {
+    expect(screen.getByText('That’s the Blackline booking experience')).toBeTruthy();
+  });
+  return slot;
+}
+
 describe('BookingFlow BLACKLINE host', () => {
   const fetchSpy = vi.fn();
 
@@ -39,12 +92,14 @@ describe('BookingFlow BLACKLINE host', () => {
     trackSpy.mockClear();
     fetchSpy.mockReset();
     vi.stubGlobal('fetch', fetchSpy);
+    window.sessionStorage.removeItem(BLACKLINE_SESSION_BOOKINGS_KEY);
     Element.prototype.scrollIntoView = vi.fn();
   });
 
   afterEach(() => {
     cleanup();
     vi.unstubAllGlobals();
+    window.sessionStorage.removeItem(BLACKLINE_SESSION_BOOKINGS_KEY);
   });
 
   it('preselects a valid service and starts on the barber step', () => {
@@ -81,44 +136,68 @@ describe('BookingFlow BLACKLINE host', () => {
     expect(screen.queryByRole('button', { name: /^Ellis Ward$/i })).toBeNull();
   });
 
-  it('shows whole-pound prices and Blackline confirmation CTAs without tracking or fetching', async () => {
-    render(
-      <BookingFlow
-        publicDemoMode
-        initialServiceId="bl-svc-haircut-finish"
-        services={services}
-        barbers={barbers}
-        presentation={BLACKLINE_BOOKING_PRESENTATION}
-      />,
-    );
+  it('creates one session booking and a /demo/admin timeline CTA', async () => {
+    render(<BookingFlow {...blacklineFlowProps()} initialServiceId="bl-svc-haircut-finish" />);
 
-    fireEvent.click(screen.getByRole('button', { name: /^Noah Reid$/i }));
+    const slot = await completeNoahHaircut();
+    const stored = listBlacklineSessionBookings();
+    expect(stored).toHaveLength(1);
+    expect(stored[0]?.fullName).toBe('Alex Demo');
+    expect(stored[0]?.barberName).toBe('Noah Reid');
+    expect(stored[0]?.serviceName).toBe('Haircut & Finish');
+    expect(stored[0]?.date).toBe(WEDNESDAY);
+    expect(stored[0]?.startTime).toBe(slot);
 
+    const reference = screen.getByText(/^BL-\d{4}$/).textContent;
+    expect(reference).toBe(stored[0]?.reference);
+
+    const timeline = screen.getByRole('link', { name: BLACKLINE_TIMELINE_CTA_LABEL });
+    const href = timeline.getAttribute('href') ?? '';
+    expect(href.startsWith('/demo/admin?')).toBe(true);
+    expect(href.startsWith('/admin?')).toBe(false);
+    expect(href).toContain(`bookingId=${encodeURIComponent(stored[0]!.id)}`);
+    expect(href).toContain(`bookingDate=${WEDNESDAY}`);
+    expect(href).toContain('demoJourney=booking');
+    expect(href).toContain('section=bookings_dashboard');
+
+    expect(screen.getByRole('link', { name: 'Back to Blackline' }).getAttribute('href')).toBe('/demo');
+    expect(screen.queryByRole('link', { name: 'View services' })).toBeNull();
+    expect(screen.queryByRole('link', { name: 'See pricing' })).toBeNull();
+    expect(fetchSpy).not.toHaveBeenCalled();
+    expect(trackSpy).not.toHaveBeenCalled();
+  });
+
+  it('resolves Any barber to a concrete BLACKLINE barber on confirm', async () => {
+    render(<BookingFlow {...blacklineFlowProps()} initialServiceId="bl-svc-haircut-finish" />);
+
+    fireEvent.click(screen.getByRole('button', { name: /Any barber/i }));
+    await chooseDate(WEDNESDAY);
     await waitFor(() => {
-      expect(screen.getByRole('button', { name: '09:00' })).toBeTruthy();
+      const slotButtons = screen
+        .getAllByRole('button')
+        .filter((button) => /^\d{2}:\d{2}$/.test(button.textContent ?? ''));
+      expect(slotButtons.length).toBeGreaterThan(0);
     });
-
-    fireEvent.click(screen.getByRole('button', { name: '09:00' }));
+    const slotButton = screen
+      .getAllByRole('button')
+      .find((button) => /^\d{2}:\d{2}$/.test(button.textContent ?? ''))!;
+    fireEvent.click(slotButton);
     fireEvent.click(screen.getByRole('button', { name: 'Continue' }));
-
     await waitFor(() => {
       expect(screen.getByLabelText(/^Name$/i)).toBeTruthy();
     });
-
     fireEvent.change(screen.getByLabelText(/^Name$/i), { target: { value: 'Alex Demo' } });
     fireEvent.change(screen.getByLabelText(/^Email$/i), { target: { value: 'alex@example.com' } });
     fireEvent.click(screen.getByRole('button', { name: 'Complete demo booking' }));
-
     await waitFor(() => {
       expect(screen.getByText('That’s the Blackline booking experience')).toBeTruthy();
     });
 
-    expect(screen.getByRole('link', { name: 'Back to Blackline' }).getAttribute('href')).toBe('/demo');
-    expect(screen.getByRole('link', { name: 'View services' }).getAttribute('href')).toBe('/demo/services');
-    expect(screen.queryByRole('link', { name: 'See pricing' })).toBeNull();
-    expect(screen.getByText(/^BL-\d{4}$/)).toBeTruthy();
-    expect(fetchSpy).not.toHaveBeenCalled();
-    expect(trackSpy).not.toHaveBeenCalled();
+    const stored = listBlacklineSessionBookings();
+    expect(stored).toHaveLength(1);
+    expect(DEMO_BARBERS.some((barber) => barber.id === stored[0]?.barberId)).toBe(true);
+    expect(stored[0]?.barberName).not.toBe('Any barber');
+    expect(screen.getByText(stored[0]!.barberName)).toBeTruthy();
   });
 
   it('keeps a valid initialBarberId and skips the barber step after a service is chosen', async () => {

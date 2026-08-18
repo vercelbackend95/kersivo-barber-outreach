@@ -1,5 +1,6 @@
 import React, { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState } from 'react';
 import { formatInTimeZone } from 'date-fns-tz';
+import { mergeBlacklineSessionBookings } from '@/lib/demo/blacklineSessionBookings';
 
 const ADMIN_TIMEZONE = 'Europe/London';
 export const ADMIN_TODAY_BOOKINGS_POLL_MS = 120000;
@@ -80,11 +81,13 @@ const AdminTodayBookingsLiveContext = createContext<AdminTodayBookingsLiveValue 
 export function AdminTodayBookingsLiveProvider({
   children,
   isPublicDemo = false,
+  isBlacklineDemo = false,
   showDemoModePills,
   initialBookings,
 }: {
   children: React.ReactNode;
   isPublicDemo?: boolean;
+  isBlacklineDemo?: boolean;
   /** Generic public demo shows DEMO MODE; BLACKLINE already has banner + sidebar status. */
   showDemoModePills?: boolean;
   /** SSR-seeded demo (or other) payload — avoids a cold empty flash after hydration. */
@@ -145,13 +148,29 @@ export function AdminTodayBookingsLiveProvider({
         }
       }
 
+      if (isBlacklineDemo) {
+        rows = mergeBlacklineSessionBookings(rows, today) as AdminLiveBookingRow[];
+        const tomorrow = addLondonDays(today, 1);
+        rows = mergeBlacklineSessionBookings(rows, tomorrow) as AdminLiveBookingRow[];
+      }
+
       setBookings(rows);
       setLastSuccessAt(Date.now());
       setHasLoadedOnce(true);
     } finally {
       inFlightRef.current = false;
     }
-  }, [isPublicDemo, loggedIn]);
+  }, [isBlacklineDemo, isPublicDemo, loggedIn]);
+
+  useEffect(() => {
+    if (!isBlacklineDemo) return;
+    const today = getTodayLondonDate();
+    const tomorrow = addLondonDays(today, 1);
+    setBookings((previous) => {
+      const withToday = mergeBlacklineSessionBookings(previous, today);
+      return mergeBlacklineSessionBookings(withToday, tomorrow) as AdminLiveBookingRow[];
+    });
+  }, [isBlacklineDemo]);
 
   useEffect(() => {
     if (!loggedIn) return undefined;

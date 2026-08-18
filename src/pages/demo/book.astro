@@ -2,7 +2,7 @@
 import BookingFlow from '@/components/booking/BookingFlow';
 import DemoLayout from '@/layouts/DemoLayout.astro';
 import { DEMO_BARBERS, resolveDemoBarberSlug, toDemoBookingBarber } from '@/lib/demo/barbers';
-import { BLACKLINE_BOOKING_PRESENTATION } from '@/lib/demo/booking';
+import { BLACKLINE_BOOKING_PRESENTATION, BLACKLINE_TIMELINE_CTA_LABEL } from '@/lib/demo/booking';
 import { DEMO_SERVICES, resolveDemoServiceSlug } from '@/lib/demo/services';
 import { DEMO_SHOP_NAME } from '@/lib/demo/site';
 import '@/styles/components/buttons.css';
@@ -18,7 +18,7 @@ const selectedBarber = resolveDemoBarberSlug(Astro.url.searchParams.get('barber'
 
 <DemoLayout
   title={`Book | ${DEMO_SHOP_NAME}`}
-  description="Book a cut at Blackline Barbers. Demo booking page — no appointment is created."
+  description="Book a cut at Blackline Barbers. Demo booking — details stay in this browser session."
   canonicalPath="/demo/book"
 >
   <section class="bl-section bl-booking" data-surface="light">
@@ -39,6 +39,13 @@ const selectedBarber = resolveDemoBarberSlug(Astro.url.searchParams.get('barber'
         barbers={DEMO_BARBERS.map(toDemoBookingBarber)}
         shopDetails={{ timezone: 'Europe/London' }}
         presentation={BLACKLINE_BOOKING_PRESENTATION}
+        persistDemoSessionBooking
+        postConfirmCta={{
+          label: BLACKLINE_TIMELINE_CTA_LABEL,
+          destination: 'admin-timeline',
+          adminBasePath: '/demo/admin',
+          availableForDemo: true,
+        }}
       />
     </div>
   </section>

@@ -392,6 +392,7 @@ export default function AdminPanel({
   return (
     <AdminTodayBookingsLiveProvider
       isPublicDemo={demoMode}
+      isBlacklineDemo={demoTenant === 'blackline'}
       showDemoModePills={demoMode && getPublicAdminDemoCapabilities(demoTenant).showDemoModePills}
       initialBookings={initialBookings}
     >

@@ -1,6 +1,10 @@
 import React, { useCallback, useEffect, useMemo, useRef, useState, type PointerEvent } from 'react';
 import BookingConfirmationPanel, { type BookingSummary } from './BookingConfirmationPanel';
-import type { BookingFlowPresentation } from './bookingPresentation';
+import {
+  buildAdminTimelineHref,
+  type BookingFlowPresentation,
+  type PostConfirmCtaConfig,
+} from './bookingPresentation';
 import BookingReviewPanel from './BookingReviewPanel';
 import BookingStepIndicator from './BookingStepIndicator';
 import { SkeletonSlotGrid } from '../skeleton';
@@ -10,6 +14,11 @@ import { FUNNEL_EVENTS } from '@/lib/analytics/funnelEvents';
 import { trackConsentedEvent } from '@/lib/consent/events';
 import EmptyState from '../EmptyState';
 import { Clock } from '../lucide-react';
+import { addBlacklineSessionBooking } from '@/lib/demo/blacklineSessionBookings';
+import {
+  listBlacklineAvailableSlots,
+  resolveBlacklineBarberForSlot,
+} from '@/lib/demo/blacklineAvailability';
 
 type Service = {
   id: string;
@@ -71,12 +80,6 @@ type BookingApiResponse = {
   error?: string;
 };
 
-type PostConfirmCtaConfig = {
-  label: string;
-  /** Private admin timeline deep-link after a test booking. */
-  destination: 'admin-timeline';
-};
-
 type Props = {
   services: Service[];
   barbers: Barber[];
@@ -94,6 +97,11 @@ type Props = {
    * Details completion (no API), and a demo confirmation screen.
    */
   publicDemoMode?: boolean;
+  /**
+   * BLACKLINE `/demo/book` only: persist a session booking and offer fixture-backed slots.
+   * Must not be set on the generic `/book` sandbox.
+   */
+  persistDemoSessionBooking?: boolean;
   /** Live tenant book: POST target for public create (never demo-shop). */
   publicCreateUrl?: string;
   /** Live tenant book: scopes availability to this shop (no admin session / demo fallback). */
@@ -308,6 +316,7 @@ export default function BookingFlow({
   shopDetails,
   previewMode = false,
   publicDemoMode = false,
+  persistDemoSessionBooking = false,
   publicCreateUrl,
   publicShopId,
   depositRequired = false,
@@ -358,7 +367,8 @@ export default function BookingFlow({
   } | null>(null);
 
   const isCreateMode = mode === 'create';
-  const useStaticSlots = previewMode || publicDemoMode;
+  const useBlacklineSessionSlots = persistDemoSessionBooking && publicDemoMode && !previewMode;
+  const useStaticSlots = (previewMode || publicDemoMode) && !useBlacklineSessionSlots;
   const maxStep = previewMode || !isCreateMode ? 3 : 4;
   const normalizedFullName = fullName.trim();
   const normalizedEmail = email.trim();
@@ -535,6 +545,14 @@ export default function BookingFlow({
 
   const trustItems = useMemo(() => {
     if (publicDemoMode) {
+      if (persistDemoSessionBooking) {
+        return [
+          { label: 'No real appointment will be created' },
+          { label: 'No confirmation email will be sent' },
+          { label: 'Your demo details stay in this browser session and are cleared automatically' },
+          { label: 'Times shown follow the Blackline owner timeline' },
+        ];
+      }
       return [
         { label: 'No appointment will be created' },
         { label: 'No confirmation email will be sent' },
@@ -560,7 +578,7 @@ export default function BookingFlow({
     }
 
     return items;
-  }, [bookingTimezone, publicDemoMode, shopDetails?.cancellationWindowHours, shopDetails?.rescheduleWindowHours]);
+  }, [bookingTimezone, persistDemoSessionBooking, publicDemoMode, shopDetails?.cancellationWindowHours, shopDetails?.rescheduleWindowHours]);
 
   useEffect(() => {
     if (!confirmation) return;
@@ -603,6 +621,20 @@ export default function BookingFlow({
       return;
     }
 
+    if (useBlacklineSessionSlots) {
+      const durationMinutes = services.find((service) => service.id === serviceId)?.durationMinutes ?? 0;
+      setSlots(
+        listBlacklineAvailableSlots({
+          date: nextDate,
+          barberId,
+          durationMinutes,
+        }),
+      );
+      setTime('');
+      setIsSlotsLoading(false);
+      return;
+    }
+
     setIsSlotsLoading(true);
     const availabilityUrl = publicShopId?.trim()
       ? `/api/public/bookings/${encodeURIComponent(publicShopId.trim())}/availability?serviceId=${serviceId}&barberId=${barberId}&date=${nextDate}`
@@ -628,7 +660,7 @@ export default function BookingFlow({
       .finally(() => {
         setIsSlotsLoading(false);
       });
-  }, [serviceId, barberId, date, useStaticSlots, publicShopId]);
+  }, [serviceId, barberId, date, useStaticSlots, useBlacklineSessionSlots, publicShopId, services]);
 
   async function submit() {
     if (isSubmitting) return;
@@ -665,17 +697,55 @@ export default function BookingFlow({
 
       setIsSubmitting(true);
       try {
+        let assignedBarberId = barberId;
+        let assignedBarberName = selectedBarberLabel;
+        let sessionBookingId: string | undefined;
+        let sessionReference: string | undefined =
+          presentation?.demoReferencePrefix
+            ? makeDemoReference(presentation.demoReferencePrefix)
+            : undefined;
+
+        if (persistDemoSessionBooking && selectedService) {
+          const assigned = resolveBlacklineBarberForSlot({
+            date: normalizedDate,
+            time,
+            durationMinutes: selectedService.durationMinutes,
+            preferredBarberId: barberId,
+          });
+          if (!assigned) {
+            setMessage('That time is no longer available. Please pick another slot.');
+            return;
+          }
+          assignedBarberId = assigned.id;
+          assignedBarberName = assigned.name;
+          const record = addBlacklineSessionBooking({
+            serviceId: selectedService.id,
+            serviceName: selectedService.name,
+            durationMinutes: selectedService.durationMinutes,
+            pricePence: selectedService.pricePence,
+            barberId: assignedBarberId,
+            barberName: assignedBarberName,
+            fullName: normalizedFullName,
+            email: normalizedEmail,
+            phone: normalizedPhone || null,
+            date: normalizedDate,
+            startTime: time,
+            referencePrefix: presentation?.demoReferencePrefix,
+          });
+          sessionBookingId = record.id;
+          sessionReference = record.reference;
+        }
+
         setConfirmation({
           type: 'demo',
           summary: {
             service: selectedService?.name,
-            barber: selectedBarberLabel,
+            barber: assignedBarberName,
             date: formatDateForSummary(normalizedDate, bookingTimezone),
             time,
-            reference: presentation?.demoReferencePrefix
-              ? makeDemoReference(presentation.demoReferencePrefix)
-              : undefined,
+            reference: sessionReference,
           },
+          bookingId: sessionBookingId,
           date: normalizedDate,
         });
         if (!presentation?.skipCompletionAnalytics && !hasTrackedPublicDemoRef.current) {
@@ -832,14 +902,20 @@ export default function BookingFlow({
     publicDemoMode && activeStepId === 'details' ? PUBLIC_DEMO_DETAILS_COPY : STEP_COPY[activeStepId];
 
   if (confirmation) {
+    const allowDemoCta = confirmation.type !== 'demo' || Boolean(postConfirmCta?.availableForDemo);
     const cta =
-      confirmation.type !== 'demo' &&
+      allowDemoCta &&
       postConfirmCta?.destination === 'admin-timeline' &&
       confirmation.bookingId &&
       confirmation.date
         ? {
             label: postConfirmCta.label,
-            href: `/admin?section=bookings_dashboard&bookingId=${encodeURIComponent(confirmation.bookingId)}&bookingDate=${encodeURIComponent(confirmation.date)}`,
+            href: buildAdminTimelineHref({
+              adminBasePath: postConfirmCta.adminBasePath,
+              bookingId: confirmation.bookingId,
+              bookingDate: confirmation.date,
+              demoJourney: Boolean(postConfirmCta.availableForDemo),
+            }),
           }
         : null;
 

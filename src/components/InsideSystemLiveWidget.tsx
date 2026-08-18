@@ -12,6 +12,8 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 
 import TodayTimeline from '@/components/admin/TodayTimeline';
+import TapHandHint from '@/components/TapHandHint';
+import { positionTapHand, waitForScrollSettled, type TapHandPosition } from '@/lib/ui/tapHandHint';
 import '@/styles/components/admin-demo.css';
 import '@/styles/components/booking.css';
 import '@/styles/components/insideSystemLiveWidget.css';
@@ -33,10 +35,6 @@ import { adminDemoHref } from '@/lib/admin/demoConfig';
 const ADMIN_DEMO_HREF = adminDemoHref('timeline');
 const SCROLL_END_FALLBACK_MS = 700;
 
-type TapHintPos = { top: number; left: number };
-
-const TAP_HINT_HAND_SRC = '/images/Ilustracje/raczka.png';
-
 function readTimeLabel(node: HTMLElement): string {
   const fromData = node.getAttribute('data-vtl-time')?.trim();
   if (fromData) return fromData;
@@ -52,7 +50,7 @@ export function InsideSystemLiveWidget({
 } = {}) {
   const [lockOpen, setLockOpen] = useState(false);
   const [tapHintVisible, setTapHintVisible] = useState(false);
-  const [tapHintPos, setTapHintPos] = useState<TapHintPos | null>(null);
+  const [tapHintPos, setTapHintPos] = useState<TapHandPosition | null>(null);
   const scrollRef = useRef<HTMLDivElement | null>(null);
   const stageRef = useRef<HTMLDivElement | null>(null);
   const rootRef = useRef<HTMLDivElement | null>(null);
@@ -80,7 +78,7 @@ export function InsideSystemLiveWidget({
     if (!root) return undefined;
 
     let done = false;
-    let scrollEndTimer: number | undefined;
+    let scrollEndCleanup: (() => void) | undefined;
     let retryTimer: number | undefined;
 
     const dismissTapHint = () => {
@@ -107,37 +105,22 @@ export function InsideSystemLiveWidget({
         slot.querySelector<HTMLElement>('.admin-vtl-progress-track .admin-vtl-slot-line') ??
         slot.querySelector<HTMLElement>('.admin-vtl-slot-line');
       const anchor = line ?? slot;
-      const stageRect = stage.getBoundingClientRect();
-      const anchorRect = anchor.getBoundingClientRect();
 
       // Anchor = tip of the finger sits just above the slot line center.
-      const top = anchorRect.top - stageRect.top + anchorRect.height / 2;
-      const left = anchorRect.left - stageRect.left + anchorRect.width * 0.5;
-
-      setTapHintPos({ top, left });
+      setTapHintPos(positionTapHand(stage, anchor));
       tapHintShownRef.current = true;
       setTapHintVisible(true);
     };
 
     const afterScrollSettled = (container: HTMLElement) => {
-      if (scrollEndTimer !== undefined) window.clearTimeout(scrollEndTimer);
+      scrollEndCleanup?.();
       const show = () => {
         window.requestAnimationFrame(positionTapHint);
       };
-      if (prefersReducedMotion()) {
-        show();
-        return;
-      }
-      const onScrollEnd = () => {
-        container.removeEventListener('scrollend', onScrollEnd);
-        if (scrollEndTimer !== undefined) window.clearTimeout(scrollEndTimer);
-        show();
-      };
-      container.addEventListener('scrollend', onScrollEnd, { once: true });
-      scrollEndTimer = window.setTimeout(() => {
-        container.removeEventListener('scrollend', onScrollEnd);
-        show();
-      }, SCROLL_END_FALLBACK_MS);
+      scrollEndCleanup = waitForScrollSettled(container, show, {
+        reducedMotion: prefersReducedMotion(),
+        fallbackMs: SCROLL_END_FALLBACK_MS,
+      });
     };
 
     const centerFocusTime = (attempt = 0) => {
@@ -209,7 +192,7 @@ export function InsideSystemLiveWidget({
     return () => {
       observer.disconnect();
       root.removeEventListener('click', onFocusSlotClick);
-      if (scrollEndTimer !== undefined) window.clearTimeout(scrollEndTimer);
+      scrollEndCleanup?.();
       if (retryTimer !== undefined) window.clearTimeout(retryTimer);
     };
   }, []);
@@ -240,21 +223,7 @@ export function InsideSystemLiveWidget({
           />
         </div>
 
-        {tapHintVisible && tapHintPos ? (
-          <div
-            className="isw-tap-hint"
-            style={{ top: tapHintPos.top, left: tapHintPos.left }}
-            aria-hidden="true"
-          >
-            <img
-              className="isw-tap-hint__hand"
-              src={TAP_HINT_HAND_SRC}
-              alt=""
-              aria-hidden="true"
-              draggable={false}
-            />
-          </div>
-        ) : null}
+        <TapHandHint visible={tapHintVisible} position={tapHintPos} />
 
         {lockOpen && (
           <div

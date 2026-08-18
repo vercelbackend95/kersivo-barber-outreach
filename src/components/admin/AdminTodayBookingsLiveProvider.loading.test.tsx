@@ -79,3 +79,70 @@ describe('AdminTodayBookingsLiveProvider hasLoadedOnce', () => {
     });
   });
 });
+
+describe('AdminTodayBookingsLiveProvider BLACKLINE session overlay', () => {
+  const fetchSpy = vi.fn();
+
+  beforeEach(() => {
+    fetchSpy.mockReset();
+    vi.stubGlobal('fetch', fetchSpy);
+    window.sessionStorage.clear();
+  });
+
+  afterEach(() => {
+    cleanup();
+    vi.unstubAllGlobals();
+    window.sessionStorage.clear();
+  });
+
+  it('merges a session booking into upcoming rows without duplicating on re-render', async () => {
+    const { addBlacklineSessionBooking, mergeBlacklineSessionBookings } = await import(
+      '@/lib/demo/blacklineSessionBookings'
+    );
+    const { formatInTimeZone } = await import('date-fns-tz');
+    const start = new Date(Date.now() + 90 * 60 * 1000);
+    const dayKey = formatInTimeZone(start, 'Europe/London', 'yyyy-MM-dd');
+    const startTime = formatInTimeZone(start, 'Europe/London', 'HH:mm');
+    const created = addBlacklineSessionBooking({
+      serviceId: 'bl-svc-haircut-finish',
+      serviceName: 'Haircut & Finish',
+      durationMinutes: 35,
+      pricePence: 2200,
+      barberId: 'bl-barber-ellis',
+      barberName: 'Ellis Ward',
+      fullName: 'Alex Demo',
+      email: 'alex@example.com',
+      date: dayKey,
+      startTime,
+    });
+    const latest: { current: AdminTodayBookingsLiveValue | null } = { current: null };
+
+    const { rerender } = render(
+      <AdminTodayBookingsLiveProvider isPublicDemo isBlacklineDemo initialBookings={seed}>
+        <Probe
+          onValue={(v) => {
+            latest.current = v;
+          }}
+        />
+      </AdminTodayBookingsLiveProvider>,
+    );
+
+    await waitFor(() => {
+      expect(latest.current?.upcomingBookings.some((row) => row.id === created.id)).toBe(true);
+    });
+
+    rerender(
+      <AdminTodayBookingsLiveProvider isPublicDemo isBlacklineDemo initialBookings={seed}>
+        <Probe
+          onValue={(v) => {
+            latest.current = v;
+          }}
+        />
+      </AdminTodayBookingsLiveProvider>,
+    );
+
+    expect(latest.current?.upcomingBookings.filter((row) => row.id === created.id)).toHaveLength(1);
+    expect(mergeBlacklineSessionBookings(seed, dayKey).filter((row) => row.id === created.id)).toHaveLength(1);
+    expect(fetchSpy).not.toHaveBeenCalled();
+  });
+});

@@ -46,7 +46,7 @@ export type DemoDayBooking = {
   barberId: string;
   fullName: string;
   email: string;
-  phone: null;
+  phone: string | null;
   clientId: string | null;
   startAt: string;
   endAt: string;

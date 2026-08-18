@@ -61,19 +61,23 @@ describe('BookingConfirmationPanel', () => {
         }}
         demoCopy={{
           heading: 'That’s the Blackline booking experience',
-          body: 'No appointment was created and no email was sent. This walkthrough stays inside the Blackline demo.',
-          ctas: [
-            { label: 'Back to Blackline', href: '/demo', primary: true },
-            { label: 'View services', href: '/demo/services', primary: false },
-          ],
+          body: 'Your demo appointment has been added to this browser session. No real appointment was created and no email was sent.',
+          ctas: [{ label: 'Back to Blackline', href: '/demo', primary: false }],
+        }}
+        postConfirmCta={{
+          label: 'See your booking on the timeline',
+          href: '/demo/admin?section=bookings_dashboard&bookingId=abc&bookingDate=2026-08-12&demoJourney=booking',
         }}
       />,
     );
 
     expect(screen.getByText('That’s the Blackline booking experience')).toBeTruthy();
     expect(screen.getByText('BL-4821')).toBeTruthy();
+    expect(screen.getByRole('link', { name: 'See your booking on the timeline' }).getAttribute('href')).toContain(
+      '/demo/admin',
+    );
     expect(screen.getByRole('link', { name: 'Back to Blackline' }).getAttribute('href')).toBe('/demo');
-    expect(screen.getByRole('link', { name: 'View services' }).getAttribute('href')).toBe('/demo/services');
+    expect(screen.queryByRole('link', { name: 'View services' })).toBeNull();
     expect(screen.queryByRole('link', { name: 'See pricing' })).toBeNull();
   });
 });

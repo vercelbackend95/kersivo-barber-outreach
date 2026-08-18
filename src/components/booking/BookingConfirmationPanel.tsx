@@ -80,6 +80,7 @@ const BookingConfirmationPanel = forwardRef<HTMLElement, Props>(function Booking
   const rows = buildSummaryRows(summary);
   const isDemo = variant === 'demo';
   const demoCtas = demoCopy?.ctas?.length ? demoCopy.ctas : DEMO_CTAS;
+  const showDemoTimelineCta = isDemo && Boolean(postConfirmCta);
 
   return (
     <section
@@ -111,10 +112,19 @@ const BookingConfirmationPanel = forwardRef<HTMLElement, Props>(function Booking
 
       {isDemo ? (
         <div className="booking-confirmation__cta booking-confirmation__cta--stack">
+          {postConfirmCta ? (
+            <a className="btn btn--primary btn--lg" href={postConfirmCta.href}>
+              {postConfirmCta.label}
+            </a>
+          ) : null}
           {demoCtas.map((cta) => (
             <a
               key={cta.href}
-              className={cta.primary ? 'btn btn--primary btn--lg' : 'btn btn--secondary btn--lg'}
+              className={
+                !showDemoTimelineCta && cta.primary
+                  ? 'btn btn--primary btn--lg'
+                  : 'btn btn--secondary btn--lg'
+              }
               href={cta.href}
             >
               {cta.label}

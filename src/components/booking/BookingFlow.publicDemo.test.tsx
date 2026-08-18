@@ -6,6 +6,7 @@ import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import { render, screen, fireEvent, waitFor, cleanup } from '@testing-library/react';
 import BookingFlow from './BookingFlow';
 import { FUNNEL_EVENTS } from '@/lib/analytics/funnelEvents';
+import { BLACKLINE_SESSION_BOOKINGS_KEY } from '@/lib/demo/blacklineSessionBookings';
 
 vi.mock('@/lib/consent/events', () => ({
   trackConsentedEvent: vi.fn(),
@@ -125,6 +126,7 @@ describe('BookingFlow publicDemoMode', () => {
 
     expect(screen.queryByText(/confirmation email is on the way/i)).toBeNull();
     expect(screen.queryByText(/You're booked/i)).toBeNull();
+    expect(window.sessionStorage.getItem(BLACKLINE_SESSION_BOOKINGS_KEY)).toBeNull();
   });
 
   it('shows sandbox copy instead of email confirmation promises', () => {
