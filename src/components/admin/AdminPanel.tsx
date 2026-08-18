@@ -7,6 +7,7 @@ import { AdminTodayBookingsLiveProvider } from './useAdminTodayBookingsLive';
 import { resolveAdminSpaSection } from '@/lib/admin/sectionUrl';
 import { ADMIN_SESSION_EXPIRED_EVENT } from './adminAuth';
 import type { DemoDayBooking } from '@/lib/admin/demoFixtures/daySchedule';
+import { DEMO_SHOP_NAME } from '@/lib/demo/site';
 import {
   enablePublicAdminDemo,
   getStoredAdminSecret,
@@ -111,6 +112,7 @@ class LazyPanelErrorBoundary extends React.Component<
 
 type AdminPanelProps = {
   demoMode?: boolean;
+  demoTenant?: 'generic' | 'blackline';
   /** SSR-seeded demo bookings for the dashboard (avoids empty flash after hydration). */
   initialBookings?: DemoDayBooking[];
   /** URL `?section=` from the Astro host so the first paint matches the deep link. */
@@ -119,6 +121,7 @@ type AdminPanelProps = {
 
 export default function AdminPanel({
   demoMode = false,
+  demoTenant = 'generic',
   initialBookings,
   initialSection = null,
 }: AdminPanelProps) {
@@ -134,7 +137,9 @@ export default function AdminPanel({
   const [hasAccess, setHasAccess] = useState(() => demoMode || Boolean(getStoredAdminSecret()));
   const [profileUser, setProfileUser] = useState<AdminProfileUser | null>(null);
   const [shopLogoUrl, setShopLogoUrl] = useState<string | null>(null);
-  const [shopName, setShopName] = useState<string | null>(null);
+  const [shopName, setShopName] = useState<string | null>(
+    demoTenant === 'blackline' ? DEMO_SHOP_NAME : null,
+  );
   const [shopId, setShopId] = useState<string | null>(null);
   const [publicActivityPaused, setPublicActivityPaused] = useState(false);
   const [previewUnderConstruction, setPreviewUnderConstruction] = useState(false);
@@ -393,10 +398,11 @@ export default function AdminPanel({
         showPending={showPending || sessionPending}
         showSectionSkeleton={false}
         isPublicDemo={demoMode}
+        demoTenant={demoTenant}
         profileUser={profileUser}
         shopId={demoMode ? null : shopId}
         shopLogoUrl={demoMode ? null : shopLogoUrl}
-        shopName={demoMode ? null : shopName}
+        shopName={demoTenant === 'blackline' ? shopName : demoMode ? null : shopName}
         publicActivityPaused={demoMode ? false : publicActivityPaused}
         previewUnderConstruction={demoMode ? false : previewUnderConstruction}
         isPreviewAccess={demoMode ? false : isPreviewAccess}
@@ -409,6 +415,7 @@ export default function AdminPanel({
           key="bookings"
           isActive={isBookingsSection}
           isPublicDemo={demoMode}
+          isBlacklineDemo={demoTenant === 'blackline'}
           initialBookings={initialBookings as never}
           mode={
             activeSection === 'bookings_blocks'

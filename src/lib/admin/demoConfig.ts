@@ -1,6 +1,11 @@
 /** Public admin preview route — instant access, read-only demo data. */
 export const PUBLIC_ADMIN_DEMO_PATH = '/admin-demo' as const;
 
+/** BLACKLINE owner dashboard — same AdminPanel, dedicated tenant fixtures. */
+export const BLACKLINE_ADMIN_DEMO_PATH = '/demo/admin' as const;
+
+export const BLACKLINE_ADMIN_API_PREFIX = '/api/demo/admin' as const;
+
 export const DEMO_ACTION_BLOCKED_MESSAGE =
   'This action is disabled in the public demo.';
 
@@ -17,12 +22,33 @@ export function adminDemoHref(section?: string): string {
   return `${PUBLIC_ADMIN_DEMO_PATH}?section=${section}`;
 }
 
+function normalizeDemoPathname(pathname: string): string {
+  return pathname.replace(/\/$/, '') || '/';
+}
+
 export function isPublicAdminDemoPathname(pathname: string): boolean {
-  const normalized = pathname.replace(/\/$/, '') || '/';
+  const normalized = normalizeDemoPathname(pathname);
   return (
     normalized === PUBLIC_ADMIN_DEMO_PATH ||
     normalized.startsWith(`${PUBLIC_ADMIN_DEMO_PATH}/`)
   );
+}
+
+export function isBlacklineAdminDemoPathname(pathname: string): boolean {
+  const normalized = normalizeDemoPathname(pathname);
+  return (
+    normalized === BLACKLINE_ADMIN_DEMO_PATH ||
+    normalized.startsWith(`${BLACKLINE_ADMIN_DEMO_PATH}/`)
+  );
+}
+
+export function isAnyPublicAdminDemoPathname(pathname: string): boolean {
+  return isPublicAdminDemoPathname(pathname) || isBlacklineAdminDemoPathname(pathname);
+}
+
+export function blacklineAdminHref(section?: string): string {
+  if (!section) return BLACKLINE_ADMIN_DEMO_PATH;
+  return `${BLACKLINE_ADMIN_DEMO_PATH}?section=${section}`;
 }
 
 /** Marketing-friendly URL section params → canonical AdminSection values. */

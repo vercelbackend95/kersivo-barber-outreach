@@ -1,7 +1,8 @@
 import {
   DEMO_ACTION_BLOCKED_MESSAGE,
   DEMO_ADMIN_MODE_HEADER,
-  isPublicAdminDemoPathname,
+  isAnyPublicAdminDemoPathname,
+  isBlacklineAdminDemoPathname,
 } from '@/lib/admin/demoConfig';
 
 const ADMIN_SECRET_STORAGE_KEY = 'kersivo.admin.secret';
@@ -53,12 +54,14 @@ function rewriteAdminUrlForDemo(input: RequestInfo | URL, init?: RequestInit): s
   const parsed = resolveRequestUrl(input, init);
   if (!parsed?.pathname.startsWith('/api/admin/')) return null;
   const rest = parsed.pathname.slice('/api/admin/'.length);
-  parsed.pathname = `/api/admin-demo/${rest}`;
+  const onBlackline =
+    typeof window !== 'undefined' && isBlacklineAdminDemoPathname(window.location.pathname);
+  parsed.pathname = onBlackline ? `/api/demo/admin/${rest}` : `/api/admin-demo/${rest}`;
   return parsed.toString();
 }
 
 export function isPublicAdminDemoMode(): boolean {
-  if (typeof window !== 'undefined' && isPublicAdminDemoPathname(window.location.pathname)) {
+  if (typeof window !== 'undefined' && isAnyPublicAdminDemoPathname(window.location.pathname)) {
     return true;
   }
   return publicAdminDemoMode;
@@ -215,10 +218,10 @@ export function installAdminFetchInterceptor(): void {
   patchedWindow.__kersivoAdminFetchPatched = true;
 }
 
-/** Install demo interceptor before React effects — avoids 401 on first /admin-demo load. */
+/** Install demo interceptor before React effects — avoids 401 on first public-demo load. */
 export function bootstrapPublicAdminDemoIfNeeded(): void {
   if (typeof window === 'undefined') return;
-  if (!isPublicAdminDemoPathname(window.location.pathname)) return;
+  if (!isAnyPublicAdminDemoPathname(window.location.pathname)) return;
   enablePublicAdminDemo();
   installAdminFetchInterceptor();
 }

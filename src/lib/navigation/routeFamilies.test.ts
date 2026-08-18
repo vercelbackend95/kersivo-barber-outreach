@@ -20,6 +20,7 @@ describe('route families', () => {
     expect(getRouteFamily('/privacy')).toBe('marketing');
     expect(getRouteFamily('/demo')).toBe('demo');
     expect(getRouteFamily('/demo/shop')).toBe('demo');
+    expect(getRouteFamily('/demo/admin')).toBe('minimal');
     expect(getRouteFamily('/admin')).toBe('minimal');
     expect(getRouteFamily('/admin/onboarding')).toBe('minimal');
     expect(getRouteFamily('/book/abc')).toBe('minimal');

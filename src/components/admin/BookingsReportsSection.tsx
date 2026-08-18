@@ -52,6 +52,7 @@ type BookingsReportsSectionProps = {
   isActive: boolean;
   loggedIn: boolean;
   barbers: Barber[];
+  isBlacklineDemo?: boolean;
   onUnauthorized: () => void;
   onOpenBarber?: (barberId: string, meta: { name: string }) => void;
 };
@@ -60,6 +61,7 @@ export default function BookingsReportsSection({
   isActive,
   loggedIn,
   barbers,
+  isBlacklineDemo = false,
   onUnauthorized,
   onOpenBarber,
 }: BookingsReportsSectionProps) {
@@ -256,6 +258,7 @@ export default function BookingsReportsSection({
         onCustomRangeChange={handleCustomRangeChange}
         chartMetric={chartMetric}
         onChartMetricChange={setChartMetric}
+        isBlacklineDemo={isBlacklineDemo}
       />
 
       <div className="admin-reports-body" aria-live="polite">
@@ -312,6 +315,38 @@ export default function BookingsReportsSection({
           value={formatCurrencyGbp(reports?.avgBookingValue ?? 0)}
           delta={avgBookingValueDelta}
         />
+
+        {isBlacklineDemo ? (
+          <>
+            <AdminMetricCard
+              label="Booked service value"
+              icon={Tag}
+              value={formatCurrencyGbp(
+                'bookedServiceValueGbp' in (reports ?? {})
+                  ? Number((reports as { bookedServiceValueGbp?: number }).bookedServiceValueGbp ?? 0)
+                  : 0,
+              )}
+            />
+            <AdminMetricCard
+              label="Completed service value"
+              icon={Tag}
+              value={formatCurrencyGbp(
+                'completedServiceValueGbp' in (reports ?? {})
+                  ? Number((reports as { completedServiceValueGbp?: number }).completedServiceValueGbp ?? reports?.revenue ?? 0)
+                  : reports?.revenue ?? 0,
+              )}
+            />
+            <AdminMetricCard
+              label="Deposits collected"
+              icon={Tag}
+              value={formatCurrencyGbp(
+                'depositsCollectedGbp' in (reports ?? {})
+                  ? Number((reports as { depositsCollectedGbp?: number }).depositsCollectedGbp ?? 0)
+                  : 0,
+              )}
+            />
+          </>
+        ) : null}
 
         <AdminMetricCard
           label="No-show"

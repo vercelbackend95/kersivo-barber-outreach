@@ -38,7 +38,11 @@ const {
 
 const path = Astro.url.pathname;
 const isAdminSurface =
-  path === '/admin' || path === '/admin-demo' || path.startsWith('/admin/');
+  path === '/admin' ||
+  path === '/admin-demo' ||
+  path.startsWith('/admin/') ||
+  path === '/demo/admin' ||
+  path.startsWith('/demo/admin/');
 const app = isAdminSurface ? 'admin' : 'flow';
 ---
 

@@ -40,6 +40,7 @@ type AdminLayoutProps = {
   showPending?: boolean;
   showSectionSkeleton: boolean;
   isPublicDemo?: boolean;
+  demoTenant?: 'generic' | 'blackline';
   profileUser?: AdminProfileUser | null;
   shopId?: string | null;
   shopLogoUrl?: string | null;
@@ -106,6 +107,16 @@ const menuGroups: SectionGroup[] = [
 ];
 
 const DEFAULT_SIDEBAR_LOGO = '/images/logo_nobg.png';
+
+function BlacklineDemoStatusCard() {
+  return (
+    <div className="admin-blackline-status-card" aria-label="BLACKLINE demo status">
+      <p className="admin-blackline-status-card__kicker">BLACKLINE DEMO</p>
+      <p className="admin-blackline-status-card__title">Sample data</p>
+      <p className="admin-blackline-status-card__note">Changes reset automatically</p>
+    </div>
+  );
+}
 
 function SidebarBrand({
   logoUrl = null,
@@ -201,6 +212,7 @@ export default function AdminLayout({
   showPending = false,
   showSectionSkeleton,
   isPublicDemo = false,
+  demoTenant = 'generic',
   profileUser = null,
   shopId = null,
   shopLogoUrl = null,
@@ -223,6 +235,8 @@ export default function AdminLayout({
   const lastPublishedHeaderInsetPxRef = useRef<number | null>(null);
   const prevActiveSectionRef = useRef(activeSection);
   const [mobileChromeMounted, setMobileChromeMounted] = useState(false);
+  const isBlacklineDemo = demoTenant === 'blackline';
+  const brandShopName = isBlacklineDemo ? shopName : isPublicDemo ? null : shopName;
 
   const canOpenBarbershopSettings =
     !isPublicDemo && Boolean(!permissions || permissions.includes('shop.settings'));
@@ -362,7 +376,12 @@ export default function AdminLayout({
   };
 
   const accountFooter = isPublicDemo ? (
-    <AdminSidebarProfile mode="guest" variant="desktop" />
+    <AdminSidebarProfile
+      mode="guest"
+      variant="desktop"
+      suppressAuthLock={isBlacklineDemo}
+      user={isBlacklineDemo ? { name: shopName, email: null, image: null } : null}
+    />
   ) : isPreviewAccess ? (
     <AdminSidebarProfile
       mode="preview"
@@ -392,7 +411,12 @@ export default function AdminLayout({
   );
 
   const accountFooterMobile = isPublicDemo ? (
-    <AdminSidebarProfile mode="guest" variant="mobile" />
+    <AdminSidebarProfile
+      mode="guest"
+      variant="mobile"
+      suppressAuthLock={isBlacklineDemo}
+      user={isBlacklineDemo ? { name: shopName, email: null, image: null } : null}
+    />
   ) : isPreviewAccess ? (
     <AdminSidebarProfile
       mode="preview"
@@ -431,6 +455,7 @@ export default function AdminLayout({
               key={item.section}
               type="button"
               className={`admin-sidebar-link ${activeSection === item.section ? 'admin-sidebar-link--active' : ''}`}
+              aria-current={activeSection === item.section ? 'page' : undefined}
               onClick={() => onSelectSection(item.section)}
             >
               <span className="admin-sidebar-link-icon">{item.icon}</span>
@@ -439,7 +464,11 @@ export default function AdminLayout({
           ))}
         </div>
       ))}
-      {showLaunchCta && canManageBilling ? (
+      {showLaunchCta && isBlacklineDemo ? (
+        <div className="admin-sidebar-group">
+          <BlacklineDemoStatusCard />
+        </div>
+      ) : showLaunchCta && canManageBilling ? (
         <div className="admin-sidebar-group">
           <AdminSidebarLaunchCta isPublicDemo={isPublicDemo} onSpaSection={onChangeSection} />
         </div>
@@ -634,7 +663,7 @@ export default function AdminLayout({
           <div className="admin-mobile-drawer-head-top">
             <SidebarBrand
               logoUrl={isPublicDemo ? null : shopLogoUrl}
-              shopName={isPublicDemo ? null : shopName}
+              shopName={brandShopName}
               statusSlot={
                 <SidebarStatus
                   className="admin-sidebar-status--mobile-drawer"
@@ -655,7 +684,11 @@ export default function AdminLayout({
           </div>
         </div>
         <div className="admin-mobile-drawer-launch">
-          {canManageBilling ? <AdminSidebarLaunchCta isPublicDemo={isPublicDemo} onSpaSection={onChangeSection} /> : null}
+          {isBlacklineDemo ? (
+            <BlacklineDemoStatusCard />
+          ) : canManageBilling ? (
+            <AdminSidebarLaunchCta isPublicDemo={isPublicDemo} onSpaSection={onChangeSection} />
+          ) : null}
         </div>
         {renderMenu(false)}
         <div className="admin-sidebar-divider" aria-hidden="true" />
@@ -670,7 +703,7 @@ export default function AdminLayout({
       <aside className="admin-sidebar" aria-label="Admin sections">
         <SidebarBrand
           logoUrl={isPublicDemo ? null : shopLogoUrl}
-          shopName={isPublicDemo ? null : shopName}
+          shopName={brandShopName}
           onOpenSettings={canOpenBarbershopSettings ? openBarbershopSettings : null}
         />
         {renderMenu(true)}
@@ -739,7 +772,7 @@ export default function AdminLayout({
             <div className="admin-mobile-header-bar">
               <SidebarBrand
                 logoUrl={isPublicDemo ? null : shopLogoUrl}
-                shopName={isPublicDemo ? null : shopName}
+                shopName={brandShopName}
                 onOpenSettings={canOpenBarbershopSettings ? openBarbershopSettings : null}
               />
               <div className="admin-mobile-header-center">
@@ -774,7 +807,15 @@ export default function AdminLayout({
           </header>
         </div>
         <div className="admin-mobile-header-spacer" aria-hidden="true" />
-        {isPublicDemo ? <DemoActionLock /> : null}
+        {isBlacklineDemo ? (
+          <div className="admin-blackline-notice" role="status">
+            <p className="admin-blackline-notice__kicker">BLACKLINE OWNER DEMO</p>
+            <p className="admin-blackline-notice__copy">
+              This dashboard uses fictional sample data. No real appointments, orders, messages or payments are created.
+            </p>
+          </div>
+        ) : null}
+        {isPublicDemo ? <DemoActionLock variant={isBlacklineDemo ? 'blackline' : 'generic'} /> : null}
         {persistentAdminChrome ? (
           <div className="admin-persistent-chrome-host" aria-hidden="true" style={{ display: 'none' }}>
             {persistentAdminChrome}

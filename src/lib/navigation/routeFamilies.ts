@@ -11,6 +11,8 @@ export function normalizePathname(pathname: string): string {
 export function getRouteFamily(pathname: string): RouteFamily {
   const path = normalizePathname(pathname);
 
+  if (path === '/demo/admin' || path.startsWith('/demo/admin/')) return 'minimal';
+
   if (path === '/demo' || path.startsWith('/demo/')) return 'demo';
 
   if (

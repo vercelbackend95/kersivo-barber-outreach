@@ -4,19 +4,24 @@ import { ADMIN_DEMO_BLOCKED_EVENT } from './adminAuth';
 import PrivateDemoAuthPanel from './PrivateDemoAuthPanel';
 import '@/styles/components/admin-login.css';
 
-export default function DemoActionLock() {
+type DemoActionLockProps = {
+  variant?: 'generic' | 'blackline';
+};
+
+export default function DemoActionLock({ variant = 'generic' }: DemoActionLockProps) {
   const [open, setOpen] = useState(false);
   const [showAuth, setShowAuth] = useState(false);
+  const isBlackline = variant === 'blackline';
 
   useEffect(() => {
     const show = (event: Event) => {
       const detail = (event as CustomEvent<{ showAuth?: boolean }>).detail;
       setOpen(true);
-      setShowAuth(Boolean(detail?.showAuth));
+      setShowAuth(!isBlackline && Boolean(detail?.showAuth));
     };
     window.addEventListener(ADMIN_DEMO_BLOCKED_EVENT, show);
     return () => window.removeEventListener(ADMIN_DEMO_BLOCKED_EVENT, show);
-  }, []);
+  }, [isBlackline]);
 
   useEffect(() => {
     if (!open) return;
@@ -70,18 +75,22 @@ export default function DemoActionLock() {
               ×
             </button>
             <p id="admin-demo-lock-title" className="admin-demo-lock__title">
-              Want to try this with your own shop?
+              {isBlackline ? 'Sample data' : 'Want to try this with your own shop?'}
             </p>
             <p className="admin-demo-lock__body">
-              Create a private demo and add your barbers, services and bookings.
+              {isBlackline
+                ? 'This BLACKLINE owner dashboard is read-only. Changes reset automatically and no real appointments, orders or payments are created.'
+                : 'Create a private demo and add your barbers, services and bookings.'}
             </p>
-            <button
-              type="button"
-              className="btn btn--primary admin-demo-lock__cta"
-              onClick={() => setShowAuth(true)}
-            >
-              Build My Demo
-            </button>
+            {isBlackline ? null : (
+              <button
+                type="button"
+                className="btn btn--primary admin-demo-lock__cta"
+                onClick={() => setShowAuth(true)}
+              >
+                Build My Demo
+              </button>
+            )}
           </>
         )}
       </div>

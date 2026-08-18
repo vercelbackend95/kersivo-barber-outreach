@@ -1,11 +1,51 @@
-<aside class="bl-demo-banner" aria-label="Kersivo live demo notice" transition:persist="bl-banner">
+---
+import { blacklineAdminHref } from '@/lib/admin/demoConfig';
+import { DEMO_HOME_HREF } from '@/lib/demo/nav';
+
+interface Props {
+  view?: 'customer' | 'admin';
+}
+
+const { view = 'customer' } = Astro.props;
+const isAdmin = view === 'admin';
+const ownerHref = blacklineAdminHref('bookings_dashboard');
+---
+
+<aside
+  class:list={['bl-demo-banner', isAdmin && 'bl-demo-banner--admin']}
+  aria-label={isAdmin ? 'BLACKLINE owner demo notice' : 'Kersivo live demo notice'}
+  transition:persist={isAdmin ? undefined : 'bl-banner'}
+>
   <div class="bl-container bl-demo-banner-inner">
     <p class="bl-demo-banner-copy">
-      <span class="bl-eyebrow">Kersivo live demo</span>
+      <span class="bl-eyebrow">{isAdmin ? 'BLACKLINE owner demo' : 'Kersivo live demo'}</span>
       <span class="bl-demo-banner-text">
-        This is a fictional barbershop using stock demo imagery. No real appointment or payment will be created.
+        {
+          isAdmin
+            ? 'This dashboard uses fictional sample data. No real appointments, orders, messages or payments are created.'
+            : 'This is a fictional barbershop using stock demo imagery. No real appointment or payment will be created.'
+        }
       </span>
     </p>
-    <a class="bl-demo-banner-back" href="/" data-astro-reload>Back to Kersivo</a>
+    <div class="bl-demo-banner-actions">
+      {
+        isAdmin ? (
+          <a class="bl-demo-banner-switch" href={DEMO_HOME_HREF} aria-label="Open BLACKLINE customer website">
+            <span class="bl-demo-banner-switch-full">Customer website</span>
+            <span class="bl-demo-banner-switch-short">Customer</span>
+          </a>
+        ) : (
+          <a
+            class="bl-demo-banner-switch"
+            href={ownerHref}
+            aria-label="Open BLACKLINE owner dashboard"
+          >
+            <span class="bl-demo-banner-switch-full">Owner dashboard</span>
+            <span class="bl-demo-banner-switch-short">Owner view</span>
+          </a>
+        )
+      }
+      <a class="bl-demo-banner-back" href="/" data-astro-reload>Back to Kersivo</a>
+    </div>
   </div>
 </aside>

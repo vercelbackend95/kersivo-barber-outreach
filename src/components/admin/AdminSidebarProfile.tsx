@@ -28,12 +28,14 @@ type AdminSidebarProfileProps = {
   /** Tenant shop id — opens public /book/{shopId} for deposit smoke tests. */
   shopId?: string | null;
   onOpenBarbershopSettings?: () => void;
+  /** BLACKLINE owner demo: never open the login / signup gate. */
+  suppressAuthLock?: boolean;
 };
 
-function openDemoAuthLock() {
+function openDemoAuthLock(showAuth = true) {
   window.dispatchEvent(
     new CustomEvent(ADMIN_DEMO_BLOCKED_EVENT, {
-      detail: { showAuth: true },
+      detail: { showAuth },
     }),
   );
 }
@@ -45,6 +47,7 @@ export default function AdminSidebarProfile({
   permissions = null,
   shopId = null,
   onOpenBarbershopSettings,
+  suppressAuthLock = false,
 }: AdminSidebarProfileProps) {
   const isGuest = mode === 'guest';
   const isPreview = mode === 'preview';
@@ -73,7 +76,9 @@ export default function AdminSidebarProfile({
   const [menuPos, setMenuPos] = useState<{ bottom: number; left: number; width: number } | null>(null);
 
   const displayName = isGuest
-    ? 'Login'
+    ? suppressAuthLock
+      ? user?.name?.trim() || 'Owner demo'
+      : 'Login'
     : user?.name?.trim() || user?.email?.trim() || (isPreview ? 'My Barbershop' : 'Account');
   const planLabel = isGuest ? 'Demo' : isPreview ? 'Preview' : billingLabel ? billingLabel : 'Plus';
   const initials = user ? initialsFromUser(user) : isPreview ? initialsFromUser({ name: displayName, email: null, image: null }) : '?';
@@ -328,13 +333,13 @@ export default function AdminSidebarProfile({
 
   const handleCreateAccount = () => {
     setOpen(false);
-    openDemoAuthLock();
+    openDemoAuthLock(!suppressAuthLock);
   };
 
   const handleTestOnlineBooking = () => {
     setOpen(false);
     if (isGuest) {
-      openDemoAuthLock();
+      openDemoAuthLock(!suppressAuthLock);
       return;
     }
     const id = shopId?.trim();
@@ -345,7 +350,7 @@ export default function AdminSidebarProfile({
   const handlePreviewWebsite = () => {
     setOpen(false);
     if (isGuest) {
-      openDemoAuthLock();
+      openDemoAuthLock(!suppressAuthLock);
       return;
     }
     window.location.assign('/admin/site-preview');
@@ -354,7 +359,7 @@ export default function AdminSidebarProfile({
   const handleLaunch = () => {
     setOpen(false);
     if (isGuest) {
-      openDemoAuthLock();
+      openDemoAuthLock(!suppressAuthLock);
       return;
     }
     window.location.assign('/admin/launch');
@@ -378,7 +383,7 @@ export default function AdminSidebarProfile({
   const handleWorkspaceSetup = () => {
     setOpen(false);
     if (isGuest) {
-      openDemoAuthLock();
+      openDemoAuthLock(!suppressAuthLock);
       return;
     }
     void resetRetailJourneyThen('/admin/onboarding?reopen=1');
@@ -387,7 +392,7 @@ export default function AdminSidebarProfile({
   const handleRetailOnboarding = () => {
     setOpen(false);
     if (isGuest) {
-      openDemoAuthLock();
+      openDemoAuthLock(!suppressAuthLock);
       return;
     }
     void resetRetailJourneyThen('/admin/retail-onboarding');

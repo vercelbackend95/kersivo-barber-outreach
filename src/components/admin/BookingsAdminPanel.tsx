@@ -633,6 +633,7 @@ type BookingsAdminPanelProps = {
   mode: BookingsAdminMode;
   onBackToDashboard?: () => void;
   isPublicDemo?: boolean;
+  isBlacklineDemo?: boolean;
   /**
    * SSR-seeded demo dashboard bookings — skips the cold empty flash.
    * DemoDayBooking is a structural superset of Booking (extra snapshot fields ignored).
@@ -645,6 +646,7 @@ export default function BookingsAdminPanel({
   mode,
   onBackToDashboard,
   isPublicDemo = false,
+  isBlacklineDemo = false,
   initialBookings,
 }: BookingsAdminPanelProps) {
   /* Parent AdminPanel already gated session; avoid a second blocking "Checking session…" flash. */
@@ -2712,6 +2714,7 @@ export default function BookingsAdminPanel({
               isActive={isActive}
               loggedIn={loggedIn}
               barbers={barbers}
+              isBlacklineDemo={isBlacklineDemo}
               onUnauthorized={handleReportsUnauthorized}
               onOpenBarber={openBarberFromReports}
             />

@@ -63,16 +63,50 @@ const firstFrame = frames[0];
 
   <dialog class="bl-work-dialog" aria-labelledby="bl-work-dialog-caption">
     <div class="bl-work-dialog-inner">
-      <button class="bl-work-dialog-close" type="button" data-work-close>Close</button>
+      <button
+        class="bl-work-dialog-control bl-work-dialog-close"
+        type="button"
+        data-work-close
+        aria-label="Close gallery"
+        title="Close"
+      >
+        <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+          <path d="M6.5 6.5 17.5 17.5M17.5 6.5 6.5 17.5" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round"></path>
+        </svg>
+      </button>
       <figure class="bl-work-dialog-figure">
-        <img
-          class="bl-work-dialog-image"
-          src={firstFrame?.src}
-          alt=""
-          width={firstFrame?.width}
-          height={firstFrame?.height}
-          data-work-image
-        />
+        <div class="bl-work-dialog-stage">
+          <img
+            class="bl-work-dialog-image"
+            src={firstFrame?.src}
+            alt=""
+            width={firstFrame?.width}
+            height={firstFrame?.height}
+            data-work-image
+          />
+          <button
+            class="bl-work-dialog-control bl-work-dialog-prev"
+            type="button"
+            data-work-prev
+            aria-label="Previous image"
+            title="Previous"
+          >
+            <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+              <path d="M14.5 6.5 8.5 12l6 5.5" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"></path>
+            </svg>
+          </button>
+          <button
+            class="bl-work-dialog-control bl-work-dialog-next"
+            type="button"
+            data-work-next
+            aria-label="Next image"
+            title="Next"
+          >
+            <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+              <path d="M9.5 6.5 15.5 12l-6 5.5" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"></path>
+            </svg>
+          </button>
+        </div>
         <figcaption class="bl-work-dialog-meta">
           <p class="bl-work-dialog-count" data-work-count>
             {firstFrame ? demoGalleryIndexLabel(0, total) : ''}
@@ -82,10 +116,6 @@ const firstFrame = frames[0];
           </p>
         </figcaption>
       </figure>
-      <div class="bl-work-dialog-nav">
-        <button class="bl-work-dialog-prev" type="button" data-work-prev>Previous</button>
-        <button class="bl-work-dialog-next" type="button" data-work-next>Next</button>
-      </div>
     </div>
   </dialog>
 </section>

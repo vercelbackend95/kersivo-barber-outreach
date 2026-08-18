@@ -37,7 +37,8 @@ export type DemoDayBookingStatus =
   | 'BOOKED'
   | 'COMPLETED'
   | 'CANCELLED_BY_CLIENT'
-  | 'CANCELLED_BY_SHOP';
+  | 'CANCELLED_BY_SHOP'
+  | 'NO_SHOW';
 
 export type DemoDayBooking = {
   id: string;
@@ -46,15 +47,15 @@ export type DemoDayBooking = {
   fullName: string;
   email: string;
   phone: null;
-  clientId: null;
+  clientId: string | null;
   startAt: string;
   endAt: string;
   status: DemoDayBookingStatus;
   notes: null;
   rescheduledAt: null;
-  paymentRequired: false;
-  depositAmountPence: null;
-  paymentStatus: 'NOT_REQUIRED';
+  paymentRequired: boolean;
+  depositAmountPence: number | null;
+  paymentStatus: 'NOT_REQUIRED' | 'UNPAID' | 'PAID';
   totalPricePence: number;
   serviceNameAtBooking: string;
   servicePricePenceAtBooking: number;

@@ -130,6 +130,7 @@ type BookingsReportsAnalyticsStudioProps = {
   onSelectedBarberIdsChange?: (ids: string[]) => void;
   /** Landing: defer chart stroke-draw until the studio is in view. */
   drawChartWhenVisible?: boolean;
+  isBlacklineDemo?: boolean;
 };
 
 const BookingsReportsAnalyticsStudio = forwardRef<HTMLElement, BookingsReportsAnalyticsStudioProps>(
@@ -151,6 +152,7 @@ const BookingsReportsAnalyticsStudio = forwardRef<HTMLElement, BookingsReportsAn
       selectedBarberIds: controlledSelectedBarberIds,
       onSelectedBarberIdsChange,
       drawChartWhenVisible = false,
+      isBlacklineDemo = false,
     },
     ref,
   ) {
@@ -337,7 +339,13 @@ const BookingsReportsAnalyticsStudio = forwardRef<HTMLElement, BookingsReportsAn
         )}
         toolbarSecondary={(
           <AdminSegmentedControl
-            options={REPORTS_CHART_METRIC_OPTIONS}
+            options={
+              isBlacklineDemo
+                ? REPORTS_CHART_METRIC_OPTIONS.map((option) =>
+                    option.value === 'revenue' ? { ...option, label: 'Completed value' } : option,
+                  )
+                : REPORTS_CHART_METRIC_OPTIONS
+            }
             value={chartMetric}
             onChange={setChartMetric}
             ariaLabel="Chart metric"

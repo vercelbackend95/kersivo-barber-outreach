@@ -23,7 +23,7 @@ describe('BLACKLINE route transition layout', () => {
   });
 
   it('persists chrome and the bag island without keying the layout by pathname', () => {
-    expect(banner).toContain('transition:persist="bl-banner"');
+    expect(banner).toContain("transition:persist={isAdmin ? undefined : 'bl-banner'}");
     expect(nav).toContain('transition:persist="bl-header"');
     expect(footer).toContain('transition:persist="bl-footer"');
     expect(layout).toContain('transition:persist="bl-bag"');
