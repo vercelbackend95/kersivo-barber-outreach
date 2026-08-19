@@ -1752,8 +1752,14 @@ function TodayTimeline({
     const slotEl = document.querySelector(`[data-vtl-slot="${slotKey}"]`) as HTMLElement | null;
     slotEl?.scrollIntoView({ behavior: 'smooth', block: 'center' });
 
-    const timeoutId = window.setTimeout(() => {
+    let attempts = 0;
+    const timeoutId = window.setTimeout(function revealFocusedCard() {
       const card = document.querySelector(`[data-booking-id="${focusBookingId}"]`) as HTMLElement | null;
+      if (!card && attempts < 20) {
+        attempts += 1;
+        window.setTimeout(revealFocusedCard, 150);
+        return;
+      }
       if (card) {
         card.scrollIntoView({ behavior: 'smooth', block: 'center', inline: 'nearest' });
         card.classList.add('admin-booking-hit-flash');
@@ -1761,8 +1767,10 @@ function TodayTimeline({
         window.setTimeout(() => {
           card.focus?.({ preventScroll: true });
         }, 220);
+        onFocusBookingHandled?.(focusBookingId);
+        return;
       }
-      onFocusBookingHandled?.(focusBookingId);
+      handledFocusBookingIdRef.current = null;
     }, 280);
 
     return () => window.clearTimeout(timeoutId);

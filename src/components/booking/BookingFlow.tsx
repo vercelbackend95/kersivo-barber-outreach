@@ -28,6 +28,7 @@ type Service = {
   category?: string | null;
   displayOrder?: number;
   featured?: boolean;
+  description?: string | null;
 };
 
 type Barber = {
@@ -120,6 +121,23 @@ type Props = {
   /** Preferred category order for the service picker. Unknown keys follow default then alpha. */
   categoryOrder?: readonly string[];
 };
+
+function BookingChoiceMark({ compact = false }: { compact?: boolean }) {
+  return (
+    <span className={`booking-choice__mark${compact ? ' booking-choice__mark--compact' : ''}`} aria-hidden="true">
+      <svg viewBox="0 0 16 16" focusable="false">
+        <path
+          d="M3.5 8.2 6.4 11l6.1-6.4"
+          fill="none"
+          stroke="currentColor"
+          strokeWidth="1.75"
+          strokeLinecap="round"
+          strokeLinejoin="round"
+        />
+      </svg>
+    </span>
+  );
+}
 
 const DEFAULT_BOOKING_TIMEZONE = 'Europe/London';
 
@@ -1009,18 +1027,26 @@ export default function BookingFlow({
                         <div className="booking-choice-grid booking-choice-grid--services">
                           {group.services.map((service) => {
                             const isSelected = service.id === serviceId;
+                            const description = service.description?.trim();
                             return (
                               <button
                                 type="button"
                                 key={service.id}
-                                className={`booking-choice-card booking-choice-card--service${isSelected ? ' is-selected' : ''}`}
-                                aria-pressed={isSelected}
+                                role="radio"
+                                className={`booking-choice booking-choice-card booking-choice-card--service${isSelected ? ' is-selected' : ''}`}
+                                aria-checked={isSelected}
                                 onClick={() => selectService(service.id)}
                               >
-                                <span className="booking-choice-card__title">{service.name}</span>
+                                <span className="booking-choice-card__copy">
+                                  <span className="booking-choice-card__title">{service.name}</span>
+                                  {description ? (
+                                    <span className="booking-choice-card__description">{description}</span>
+                                  ) : null}
+                                </span>
                                 <span className="booking-choice-card__meta booking-choice-card__meta--service">
-                                  <span className="booking-choice-card__stat">{service.durationMinutes} min</span>
                                   <span className="booking-choice-card__price">{formatPrice(service.pricePence, presentation?.wholePoundPrices)}</span>
+                                  <span className="booking-choice-card__stat">{service.durationMinutes} min</span>
+                                  <BookingChoiceMark />
                                 </span>
                               </button>
                             );
@@ -1044,8 +1070,9 @@ export default function BookingFlow({
                           <button
                             type="button"
                             key={barber.id}
-                            className={`booking-choice-card booking-choice-card--barber${isSelected ? ' is-selected' : ''}${isAnyBarber ? ' booking-choice-card--any' : ''}`}
-                            aria-pressed={isSelected}
+                            role="radio"
+                            className={`booking-choice booking-choice-card booking-choice-card--barber${isSelected ? ' is-selected' : ''}${isAnyBarber ? ' booking-choice-card--any' : ''}`}
+                            aria-checked={isSelected}
                             onClick={() => selectBarber(barber.id)}
                           >
                             <span className="booking-choice-card__avatar" aria-hidden="true" data-has-image={hasAvatar ? 'true' : 'false'}>
@@ -1065,6 +1092,7 @@ export default function BookingFlow({
                               <span className="booking-choice-card__title">{barber.name}</span>
                               {isAnyBarber ? <span className="booking-choice-card__helper">Fastest available</span> : null}
                             </span>
+                            <BookingChoiceMark />
                           </button>
                         );
                       })}
@@ -1123,11 +1151,13 @@ export default function BookingFlow({
                                 <button
                                   type="button"
                                   key={slot}
-                                  className={`booking-slot${isSelected ? ' is-selected' : ''}`}
-                                  aria-pressed={isSelected}
+                                  role="radio"
+                                  className={`booking-choice booking-slot${isSelected ? ' is-selected' : ''}`}
+                                  aria-checked={isSelected}
                                   onClick={() => selectTime(slot)}
                                 >
                                   <span className="booking-slot__label">{slot}</span>
+                                  <BookingChoiceMark compact />
                                 </button>
                               );
                             })}

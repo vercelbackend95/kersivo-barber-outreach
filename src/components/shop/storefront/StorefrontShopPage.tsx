@@ -46,6 +46,7 @@ export type StorefrontShopPageProps = {
   collectionHeading?: string;
   collectionLede?: string;
   copy?: Partial<StorefrontCopy>;
+  featuredAddedLabel?: string;
   highlightProductId?: string | null;
   itemIdPrefix?: string;
   showPoweredBy?: boolean;
@@ -74,6 +75,7 @@ export default function StorefrontShopPage({
   intro,
   collectionHeading,
   copy: copyOverrides,
+  featuredAddedLabel,
   highlightProductId = null,
   itemIdPrefix,
   showPoweredBy = false,
@@ -120,12 +122,12 @@ export default function StorefrontShopPage({
         return next;
       });
       setLoadedCount(STOREFRONT_PAGE_SIZE);
-      if (scrollCollection && collectionRef.current) {
+      if (scrollCollection && themeId !== 'blackline' && collectionRef.current) {
         const reduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
         collectionRef.current.scrollIntoView({ block: 'start', behavior: reduced ? 'auto' : 'smooth' });
       }
     },
-    [validCategories],
+    [themeId, validCategories],
   );
 
   useEffect(() => {
@@ -196,6 +198,8 @@ export default function StorefrontShopPage({
           imageFallback={imageFallback}
           shopName={shopName}
           copy={copy}
+          themeId={themeId}
+          featuredAddedLabel={featuredAddedLabel}
         />
       ) : null}
 
@@ -213,6 +217,8 @@ export default function StorefrontShopPage({
             count={page.visible.length}
             total={matched.length}
             heading={collectionHeading}
+            searchPlaceholder={themeId === 'blackline' ? 'Search products' : 'Search'}
+            clearLabel={themeId === 'blackline' ? 'Clear filters' : 'Clear'}
             onClear={() =>
               applyQuery(
                 { category: STOREFRONT_ALL_CATEGORY, q: '', sort: 'recommended', availability: 'all' },
@@ -223,9 +229,18 @@ export default function StorefrontShopPage({
             showClear={filtersActive}
           />
           {matched.length === 0 ? (
-            <p className="sf-empty-filter shop-empty-filter is-visible" aria-live="polite" role="status">
-              No products match. Try another filter or view all products.
-            </p>
+            <ShopEmptyState
+              title="No products found"
+              description="Try a different search or browse all products."
+              actionLabel="Clear filters"
+              onAction={() =>
+                applyQuery(
+                  { category: STOREFRONT_ALL_CATEGORY, q: '', sort: 'recommended', availability: 'all' },
+                  true,
+                  false,
+                )
+              }
+            />
           ) : (
             <>
               <ProductGrid
@@ -237,9 +252,13 @@ export default function StorefrontShopPage({
                 copy={copy}
                 highlightProductId={highlightProductId}
                 itemIdPrefix={itemIdPrefix}
+                filterKey={`${query.category}:${query.q}:${query.sort}`}
+                showAtcIcon={themeId === 'blackline'}
               />
               <p className="sf-showing">
-                Showing {page.loadedCount} of {page.total}
+                {themeId === 'blackline'
+                  ? `${page.loadedCount} of ${page.total} products`
+                  : `Showing ${page.loadedCount} of ${page.total}`}
               </p>
               {page.hasMore ? (
                 <button
@@ -247,7 +266,7 @@ export default function StorefrontShopPage({
                   className="sf-load-more"
                   onClick={() => setLoadedCount((count) => count + STOREFRONT_PAGE_SIZE)}
                 >
-                  Load more
+                  {themeId === 'blackline' ? 'Show more products' : 'Load more'}
                 </button>
               ) : null}
             </>

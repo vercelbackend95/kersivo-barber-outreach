@@ -10,6 +10,7 @@ import {
   DEMO_SHOP_KEY,
   demoBookingHref,
   demoServiceAccessibleName,
+  demoServiceCategoryAnchorId,
   demoServiceCategorySummaries,
   demoServiceDurationRatio,
   demoServiceFilterAnnouncement,
@@ -94,11 +95,11 @@ describe('BLACKLINE demo catalogue', () => {
 
   it('groups the navigator in fixture order with featured services first in their category', () => {
     const groups = demoServiceNavigatorGroups();
-    expect(groups.map((group) => group.slug)).toEqual([
-      'cuts-fades',
-      'beard-shave',
-      'hair-beard-combos',
-      'grooming-care',
+    expect(groups.map((group) => demoServiceCategoryAnchorId(group.slug))).toEqual([
+      'cuts-and-fades',
+      'beard-and-shave',
+      'hair-and-beard-combos',
+      'grooming-and-care',
     ]);
     expect(groups[0]?.services.map((service) => service.slug).slice(0, 2)).toEqual([
       'haircut-finish',

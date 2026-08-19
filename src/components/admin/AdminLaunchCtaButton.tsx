@@ -1,11 +1,12 @@
 import React from 'react';
-import { Store } from '../lucide-react';
+import { ArrowRight, Store } from '../lucide-react';
 import '@/styles/components/admin-sidebar-launch-cta.css';
 
 type AdminLaunchCtaButtonProps = {
   title: string;
   ariaLabel: string;
   status?: string;
+  supporting?: string;
   children?: React.ReactNode;
   conversion?: boolean;
   className?: string;
@@ -18,6 +19,7 @@ export default function AdminLaunchCtaButton({
   title,
   ariaLabel,
   status,
+  supporting,
   children,
   conversion = false,
   className,
@@ -41,8 +43,14 @@ export default function AdminLaunchCtaButton({
       <span className="admin-sidebar-launch-cta__body">
         {status ? <span className="admin-sidebar-launch-cta__status">{status}</span> : null}
         <span className="admin-sidebar-launch-cta__title">{title}</span>
+        {supporting ? <span className="admin-sidebar-launch-cta__supporting">{supporting}</span> : null}
         {children}
       </span>
+      {conversion ? (
+        <span className="admin-sidebar-launch-cta__arrow" aria-hidden="true">
+          <ArrowRight width={16} height={16} />
+        </span>
+      ) : null}
     </>
   );
 

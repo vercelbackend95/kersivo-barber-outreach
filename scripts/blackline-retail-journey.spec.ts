@@ -45,6 +45,7 @@ test.describe('BLACKLINE shop purchase to Orders and Sales', () => {
     await page.setViewportSize({ width: 1440, height: 900 });
     await page.goto('/demo/shop', { waitUntil: 'domcontentloaded' });
     await waitForCartIsland(page);
+    await expect(page.locator('.sf-grid [data-add-to-cart][data-product-id="bl-product-ironclad-pomade"]')).toBeVisible();
 
     await page.locator('.sf-grid [data-add-to-cart][data-product-id="bl-product-ironclad-pomade"]').click();
     await expect(page.locator('[data-sf-cart-toast]')).toContainText('Ironclad Pomade added to bag');
@@ -62,7 +63,7 @@ test.describe('BLACKLINE shop purchase to Orders and Sales', () => {
     const checkoutCta = page.getByRole('link', { name: /CONTINUE TO CHECKOUT/i });
     await expect(checkoutCta).toBeVisible();
     const ctaColor = await checkoutCta.evaluate((node) => getComputedStyle(node).backgroundColor);
-    expect(ctaColor).toBe('rgb(255, 23, 23)');
+    expect(ctaColor).toBe('rgb(49, 94, 245)');
     await checkoutCta.click();
 
     await expect(page.getByRole('button', { name: /COMPLETE DEMO ORDER/i })).toBeVisible();
@@ -204,9 +205,42 @@ test.describe('BLACKLINE shop purchase to Orders and Sales', () => {
   test('load more reveals the rest of the filtered catalog', async ({ page }) => {
     await page.setViewportSize({ width: 1440, height: 900 });
     await page.goto('/demo/shop', { waitUntil: 'domcontentloaded' });
-    await expect(page.getByText(/Showing 24 of 30/i)).toBeVisible();
-    await page.getByRole('button', { name: 'Load more' }).click();
-    await expect(page.getByText(/Showing 30 of 30/i)).toBeVisible();
+    await expect(page.getByText(/24 of 30 products/i)).toBeVisible();
+    await page.getByRole('button', { name: 'Show more products' }).click();
+    await expect(page.getByText(/30 of 30 products/i)).toBeVisible();
+  });
+
+  test('lists 30 Live products, six derived categories, and untitled PDP placeholders', async ({ page }) => {
+    await page.setViewportSize({ width: 1440, height: 900 });
+    await page.goto('/demo/shop', { waitUntil: 'domcontentloaded' });
+    await expect(page.getByRole('tab', { name: 'All products' })).toBeVisible();
+    await expect(page.getByRole('tab', { name: 'All products' }).locator('.sf-rail-count')).toHaveText('30');
+    await expect(page.getByRole('tab', { name: 'Styling' })).toBeVisible();
+    await expect(page.getByRole('tab', { name: 'Hair & Scalp' })).toBeVisible();
+    await expect(page.getByRole('tab', { name: 'Beard Care' })).toBeVisible();
+    await expect(page.getByRole('tab', { name: 'Shave & Skin' })).toBeVisible();
+    await expect(page.getByRole('tab', { name: 'Tools & Accessories' })).toBeVisible();
+    await expect(page.getByRole('tab', { name: 'Sets & Gifts' })).toBeVisible();
+
+    await page.getByRole('button', { name: 'Show more products' }).click();
+    await expect(page.locator('.sf-grid [data-product-item]')).toHaveCount(30);
+
+    await page.getByPlaceholder('Search products').fill('Fibre Paste');
+    await expect(page.locator('.sf-grid [data-product-item]')).toHaveCount(1);
+    await expect(page.getByRole('heading', { name: 'Fibre Paste' })).toBeVisible();
+    await expect(page.locator('.sf-grid .sf-media--fallback')).toHaveCount(1);
+
+    await page.goto('/demo/shop/bl-product-ironclad-pomade', { waitUntil: 'domcontentloaded' });
+    await expect(page.getByRole('heading', { name: /ironclad pomade/i })).toBeVisible();
+    await expect(page.locator('.sf-pdp-hero img.sf-media-img')).toBeVisible();
+
+    await page.goto('/demo/shop/bl-product-shave-cream', { waitUntil: 'domcontentloaded' });
+    await waitForCartIsland(page);
+    await expect(page.getByRole('heading', { name: /shave cream/i })).toBeVisible();
+    await expect(page.locator('.sf-pdp-hero .sf-media--fallback')).toBeVisible();
+    await expect(page.locator('.sf-pdp-hero img')).toHaveCount(0);
+    await page.getByRole('button', { name: 'Add to bag: Shave Cream' }).click();
+    await expect(page.locator('[data-sf-cart-toast]')).toContainText('Shave Cream added to bag');
   });
 
   test('kersivo marketing shop uses a separate catalog from BLACKLINE', async ({ page }) => {

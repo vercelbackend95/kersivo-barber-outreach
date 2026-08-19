@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest';
-import { seedBlacklineDemoCatalog } from './blacklineShop';
+import { overlayBlacklineRetailProducts, seedBlacklineDemoCatalog } from './blacklineShop';
+import { blacklineShopProductsResponse } from '@/lib/admin/blacklineDemoFixtures/catalog';
 import { BLACKLINE_SHOP_ID, DEMO_PRODUCTS } from './products';
 
 function createMemoryClient() {
@@ -80,5 +81,68 @@ describe('BLACKLINE product seed', () => {
       'https://cdn.example/custom-ironclad.jpg',
     );
     expect(client.products.get('bl-product-shave-cream')?.imageUrl).toBeNull();
+  });
+});
+
+describe('overlayBlacklineRetailProducts', () => {
+  const packshotRow = {
+    id: 'bl-product-ironclad-pomade',
+    name: 'Ironclad Pomade',
+    description: 'Firm hold.',
+    pricePence: 1900,
+    imageUrl: '/demo/products/ironclad-pomade.webp',
+    active: true,
+    featured: true,
+    category: 'STYLING' as const,
+    sortOrder: 0,
+  };
+
+  it('keeps all Live fixture products when Prisma only has the seven packshots', () => {
+    const seven = DEMO_PRODUCTS.filter((product) => product.image.src).map((product) => ({
+      id: product.id,
+      name: product.name,
+      description: product.description,
+      pricePence: product.pricePence,
+      imageUrl: product.image.src,
+      active: true,
+      featured: product.featured,
+      category: product.category,
+      sortOrder: product.sortOrder,
+    }));
+    expect(seven).toHaveLength(7);
+
+    const products = overlayBlacklineRetailProducts(seven);
+    expect(products).toHaveLength(30);
+    expect(products.map((product) => product.id).sort()).toEqual(
+      DEMO_PRODUCTS.filter((product) => product.active)
+        .map((product) => product.id)
+        .sort(),
+    );
+    expect(products.map((product) => product.id).sort()).toEqual(
+      blacklineShopProductsResponse.products.map((row) => row.id).sort(),
+    );
+  });
+
+  it('overlays a later uploaded image and leaves untitled src empty', () => {
+    const products = overlayBlacklineRetailProducts([
+      { ...packshotRow, imageUrl: 'https://cdn.example/custom-ironclad.jpg' },
+      {
+        id: 'bl-product-shave-cream',
+        name: 'Shave Cream',
+        description: '',
+        pricePence: 1400,
+        imageUrl: null,
+        active: true,
+        featured: false,
+        category: 'SHAVE_AND_SKIN',
+        sortOrder: 17,
+      },
+    ]);
+
+    expect(products.find((product) => product.id === 'bl-product-ironclad-pomade')?.image.src).toBe(
+      'https://cdn.example/custom-ironclad.jpg',
+    );
+    expect(products.find((product) => product.id === 'bl-product-shave-cream')?.image.src).toBe('');
+    expect(products.every((product) => !product.image.src.startsWith('http://placehold'))).toBe(true);
   });
 });

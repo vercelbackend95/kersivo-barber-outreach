@@ -16,6 +16,7 @@ import {
   type CartItem,
 } from '@/lib/shop/cartStore';
 import { formatStorefrontPrice, type StorefrontPriceFormat } from '@/lib/shop/storefrontCatalog';
+import ProductMediaFallback from '@/components/shop/storefront/ProductMediaFallback';
 import {
   emptyBagCheckoutMessage,
   isHrefCheckout,
@@ -580,11 +581,14 @@ export default function StorefrontCartDrawer({
                           data-sf-cart-line
                           key={item.productId}
                         >
-                          {item.imageUrl ? (
-                            <img src={item.imageUrl} alt="" width={96} height={96} className="sf-cart-line-media" />
-                          ) : (
-                            <div className="sf-cart-line-media sf-cart-line-media--placeholder" aria-hidden="true" />
-                          )}
+                          <ProductMediaFallback
+                            className="sf-cart-line-media"
+                            image={{ src: item.imageUrl ?? '', alt: item.name }}
+                            name={item.name}
+                            shopName={shopName}
+                            fallback={themeId === 'blackline' ? 'wordmark' : 'initial'}
+                            decorative
+                          />
                           <div className="sf-cart-line-copy">
                             <p className="sf-cart-line-name">{item.name}</p>
                             <p className="sf-cart-line-unit">{price(item.pricePence)} each</p>

@@ -28,9 +28,9 @@ export type StorefrontCardSharedProps = {
 
 export function cardImageSizes(featured = false): string {
   if (featured) {
-    return '(max-width: 767px) 92vw, (max-width: 1199px) 46vw, 560px';
+    return '(max-width: 767px) 92vw, (max-width: 1199px) 55vw, 640px';
   }
-  return '(max-width: 359px) 92vw, (max-width: 1023px) 46vw, (max-width: 1439px) 30vw, 280px';
+  return '(max-width: 359px) 92vw, (max-width: 767px) 46vw, (max-width: 1023px) 31vw, 25vw';
 }
 
 export type { StorefrontProduct };

@@ -61,8 +61,8 @@ describe('BLACKLINE mobile navigation markup', () => {
   it('scopes the overlay and desktop protection in storefront-header tokens', () => {
     expect(css).toContain('.sf-nav-layer');
     expect(css).toContain('@media (min-width: 70rem)');
-    expect(css).toContain('--sf-header-accent: #ff1717');
-    expect(css).not.toContain('--bl-cobalt');
+    expect(css).toContain('--sf-header-accent: var(--theme-accent, var(--bl-cobalt, #315ef5))');
+    expect(css).toContain('--bl-cobalt');
     expect(css).toContain('prefers-reduced-motion: reduce');
     expect(css).toContain('env(safe-area-inset-bottom');
     expect(css).toContain('max-width: 359px');

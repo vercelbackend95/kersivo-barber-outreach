@@ -28,7 +28,12 @@ export default function ShopIntro({
       {description ? <p className="sf-intro-desc">{description}</p> : null}
       {meta.length > 0 || fulfilmentLabel ? (
         <ul className="sf-intro-meta">
-          {fulfilmentLabel ? <li>{fulfilmentLabel}</li> : null}
+          {fulfilmentLabel ? (
+            <li>
+              <span className="sf-intro-dot" aria-hidden="true" />
+              {fulfilmentLabel}
+            </li>
+          ) : null}
           {meta.map((item) => (
             <li key={item}>{item}</li>
           ))}

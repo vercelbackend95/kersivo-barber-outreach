@@ -1482,6 +1482,10 @@ export default function ShopAdminPanel({ initialTab = 'products', isBlacklineDem
   }
 
   function startEdit(product: Product) {
+    if (isPublicAdminDemoMode()) {
+      notifyAdminDemoBlocked();
+      return;
+    }
     const normalizedSortOrder = Number.isFinite(product.sortOrder)
       ? Math.min(SORT_ORDER_MAX, Math.max(SORT_ORDER_MIN, product.sortOrder))
       : defaultSortOrder;
@@ -1901,7 +1905,16 @@ export default function ShopAdminPanel({ initialTab = 'products', isBlacklineDem
                       <button
                         type="button"
                         className="admin-product-row__edit-btn"
-                        aria-label={`Edit ${product.name}`}
+                        aria-label={
+                          isPublicAdminDemoMode()
+                            ? 'Product settings — sample data is read-only'
+                            : `Edit ${product.name}`
+                        }
+                        title={
+                          isPublicAdminDemoMode()
+                            ? 'Product settings — sample data is read-only'
+                            : `Edit ${product.name}`
+                        }
                         onClick={() => startEdit(product)}
                       >
                         <SettingsGearIcon className="admin-control-icon" aria-hidden="true" />

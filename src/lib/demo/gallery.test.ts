@@ -7,7 +7,9 @@ import {
   demoGalleryOpenLabel,
   demoGalleryPrevIndex,
   demoGallerySequence,
+  type DemoGalleryImage,
 } from './gallery';
+import { demoGalleryBentoClassName, demoGalleryBentoSizes, demoGalleryBentoTiles } from './galleryBento';
 
 describe('BLACKLINE demo gallery', () => {
   it('exposes six unique local WebP frames', () => {
@@ -87,5 +89,72 @@ describe('BLACKLINE demo gallery', () => {
     expect(demoGalleryOpenLabel(demoGallerySequence()[0]!, 0)).toBe(
       'View frame 01 / 06, Work at the chair.',
     );
+  });
+});
+
+describe('BLACKLINE gallery bento assignment', () => {
+  const prototype = DEMO_GALLERY[0]!;
+
+  function frames(count: number): DemoGalleryImage[] {
+    return Array.from({ length: count }, (_, index) => ({
+      ...prototype,
+      src: `/demo/gallery/frame-${index}.webp`,
+      sequence: index + 1,
+    }));
+  }
+
+  it('maps six frames to a left feature group and one remainder', () => {
+    const tiles = demoGalleryBentoTiles();
+    expect(tiles.map((tile) => tile.image.src)).toEqual(demoGallerySequence().map((image) => image.src));
+    expect(new Set(tiles.map((tile) => tile.image.src)).size).toBe(6);
+    expect(tiles).toHaveLength(6);
+    expect(tiles.slice(0, 5).map((tile) => tile.size)).toEqual([
+      'feature',
+      'standard',
+      'standard',
+      'standard',
+      'standard',
+    ]);
+    expect(tiles.slice(0, 5).every((tile) => tile.side === 'left' && !tile.remainder)).toBe(true);
+    expect(tiles[5]).toMatchObject({
+      size: 'standard',
+      remainder: true,
+      remainderKind: 'one',
+    });
+  });
+
+  it('assigns feature side by group and remainder layouts without duplicating sources', () => {
+    const five = demoGalleryBentoTiles(frames(5));
+    expect(five).toHaveLength(5);
+    expect(five[0]).toMatchObject({ size: 'feature', side: 'left', remainder: false });
+    expect(five.every((tile) => !tile.remainder)).toBe(true);
+
+    const seven = demoGalleryBentoTiles(frames(7));
+    expect(seven).toHaveLength(7);
+    expect(seven.slice(5).map((tile) => tile.remainderKind)).toEqual(['pair', 'pair']);
+    expect(seven.slice(5).every((tile) => tile.size === 'standard')).toBe(true);
+
+    const eight = demoGalleryBentoTiles(frames(8));
+    expect(eight).toHaveLength(8);
+    expect(eight[5]).toMatchObject({ size: 'feature', remainder: true, remainderKind: 'partial' });
+    expect(eight.slice(6).every((tile) => tile.size === 'standard' && tile.remainderKind === 'partial')).toBe(true);
+
+    const nine = demoGalleryBentoTiles(frames(9));
+    expect(nine).toHaveLength(9);
+    expect(nine.slice(5).every((tile) => tile.size === 'standard' && tile.remainderKind === 'four')).toBe(true);
+
+    const ten = demoGalleryBentoTiles(frames(10));
+    expect(ten).toHaveLength(10);
+    expect(ten[5]).toMatchObject({ size: 'feature', side: 'right', remainder: false });
+    expect(new Set(ten.map((tile) => tile.image.src)).size).toBe(10);
+  });
+
+  it('keeps reading order identical to sequence and never asks CSS for masonry', () => {
+    const tiles = demoGalleryBentoTiles();
+    expect(tiles.map((tile) => tile.image.id)).toEqual(demoGallerySequence().map((image) => image.id));
+    expect(demoGalleryBentoClassName(tiles[0]!)).toContain('bl-work-tile--feature');
+    expect(demoGalleryBentoClassName(tiles[0]!)).toContain('bl-work-tile--left');
+    expect(demoGalleryBentoClassName(tiles[5]!)).toContain('bl-work-tile--remainder-one');
+    expect(demoGalleryBentoSizes(tiles[0]!)).toContain('50vw');
   });
 });

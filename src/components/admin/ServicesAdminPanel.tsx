@@ -282,6 +282,10 @@ export default function ServicesAdminPanel({ isBlacklineDemo = false }: { isBlac
   }
 
   function startEdit(service: ServiceRow) {
+    if (isPublicAdminDemoMode()) {
+      notifyAdminDemoBlocked();
+      return;
+    }
     setEditingId(service.id);
     setMessage('');
     setError('');
@@ -608,7 +612,16 @@ export default function ServicesAdminPanel({ isBlacklineDemo = false }: { isBlac
                         <button
                           type="button"
                           className="admin-product-row__edit-btn"
-                          aria-label={`Edit ${service.name}`}
+                          aria-label={
+                            isPublicAdminDemoMode()
+                              ? 'Service settings — sample data is read-only'
+                              : `Edit ${service.name}`
+                          }
+                          title={
+                            isPublicAdminDemoMode()
+                              ? 'Service settings — sample data is read-only'
+                              : `Edit ${service.name}`
+                          }
                           onClick={() => startEdit(service)}
                         >
                           <SettingsGearIcon className="admin-control-icon" aria-hidden="true" />

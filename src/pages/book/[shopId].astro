@@ -45,6 +45,7 @@ const outageShop = {
   stripeConnectAccountId: null,
   stripeConnectChargesEnabled: false,
   publicActivityPaused: true,
+  logoUrl: null,
 };
 
 const bookingPageData = await withPrismaQuotaFallback(
@@ -55,6 +56,7 @@ const bookingPageData = await withPrismaQuotaFallback(
       select: {
         id: true,
         name: true,
+        logoUrl: true,
         timezone: true,
         cancellationWindowHours: true,
         rescheduleWindowHours: true,
@@ -146,12 +148,15 @@ const createUrl = `/api/public/bookings/${shop.id}/create`;
           publicShopId={shop.id}
           publicCreateUrl={createUrl}
           depositRequired={depositRequired}
+          themePreset="kersivo"
+          theme={{ shopName: shop.name, logoUrl: shop.logoUrl }}
           services={services.map((s) => ({
             id: s.id,
             name: s.name,
             durationMinutes: s.durationMinutes,
             pricePence: s.pricePence,
             category: s.category,
+            description: s.description,
           }))}
           barbers={barbers.map((b) => ({
             id: b.id,

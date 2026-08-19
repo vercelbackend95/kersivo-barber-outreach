@@ -34,12 +34,17 @@ function collectApplicationErrors(page: Page) {
 
 async function dismissCookieBanner(page: Page) {
   const accept = page.getByRole('button', { name: 'Accept all' });
-  await expect(accept).toBeVisible();
+  try {
+    await expect(accept).toBeVisible({ timeout: 4000 });
+  } catch {
+    return;
+  }
   await accept.click();
   await expect(accept).toHaveCount(0);
 }
 
 async function openBlacklineAccountMenu(page: Page) {
+  await dismissCookieBanner(page);
   const desktopProfile = page.locator('aside.admin-sidebar button.admin-sidebar-profile');
   if (await desktopProfile.isVisible()) {
     await desktopProfile.scrollIntoViewIfNeeded();
@@ -61,8 +66,13 @@ test.describe('BLACKLINE owner dashboard', () => {
     const conversionCta = page.locator('aside.admin-sidebar a.admin-sidebar-launch-cta');
     await expect(conversionCta).toBeVisible();
     await expect(conversionCta).toHaveAttribute('href', '/admin/launch');
-    await expect(conversionCta).toHaveAttribute('aria-label', 'Launch my barbershop');
-    await expect(conversionCta).toContainText('LAUNCH MY BARBERSHOP');
+    await expect(conversionCta).toHaveAttribute(
+      'aria-label',
+      'Launch my barbershop. Review setup and choose your plan',
+    );
+    await expect(conversionCta).toContainText('Launch my barbershop');
+    await expect(conversionCta).toContainText('YOUR SHOP IS READY');
+    await expect(conversionCta).toContainText('Review setup & choose your plan');
     await expect(conversionCta.locator('.admin-sidebar-launch-cta__icon svg')).toHaveCount(1);
     await expect(conversionCta.locator('.admin-sidebar-launch-cta__checklist')).toHaveCount(0);
     await expect(page.getByText('MAKE IT YOURS')).toHaveCount(0);
@@ -111,8 +121,12 @@ test.describe('BLACKLINE owner dashboard', () => {
     const drawerCta = drawer.locator('a.admin-sidebar-launch-cta');
     await expect(drawerCta).toBeVisible();
     await expect(drawerCta).toHaveAttribute('href', '/admin/launch');
-    await expect(drawerCta).toHaveAttribute('aria-label', 'Launch my barbershop');
-    await expect(drawerCta).toContainText('LAUNCH MY BARBERSHOP');
+    await expect(drawerCta).toHaveAttribute(
+      'aria-label',
+      'Launch my barbershop. Review setup and choose your plan',
+    );
+    await expect(drawerCta).toContainText('Launch my barbershop');
+    await expect(drawerCta).toContainText('Review setup & choose your plan');
     await expect(drawerCta.getByText('Sample data')).toHaveCount(0);
     await expect(drawerCta.getByText(/next task|% complete|checklist/i)).toHaveCount(0);
     await expect(drawerCta.locator('.admin-sidebar-launch-cta__checklist')).toHaveCount(0);
@@ -214,6 +228,95 @@ test.describe('BLACKLINE owner dashboard', () => {
     await expect(page.getByText('18 services · 3 featured')).toBeVisible();
     await page.getByRole('switch', { name: 'Skin Fade: Featured' }).click();
     await expect(page.getByRole('dialog', { name: /Sample data/i })).toBeVisible();
+  });
+
+  test('service settings open the sample-data lock instead of the editor', async ({ page }) => {
+    const writes: string[] = [];
+    page.on('request', (request) => {
+      const method = request.method();
+      if (method === 'GET' || method === 'HEAD' || method === 'OPTIONS') return;
+      writes.push(`${method} ${request.url()}`);
+    });
+
+    await page.goto('/demo/admin?section=services', { waitUntil: 'domcontentloaded' });
+    await expect(page.getByText('18 services · 3 featured')).toBeVisible();
+    const urlBefore = page.url();
+    const gear = page.locator('.admin-product-row__edit-btn').first();
+    await expect(gear).toHaveAttribute('aria-label', 'Service settings — sample data is read-only');
+    await gear.click();
+    const dialog = page.getByRole('dialog', { name: /Sample data/i });
+    await expect(dialog).toBeVisible();
+    await expect(dialog.getByText(/This BLACKLINE owner dashboard is read-only/i)).toBeVisible();
+    await expect(dialog.getByText('Ready to make it yours?')).toBeVisible();
+    await expect(page.getByRole('link', { name: /create my barbershop/i })).toHaveAttribute(
+      'href',
+      '/admin/launch',
+    );
+    await expect(page.locator('.admin-demo-lock__card.auth-gate-card')).toHaveCount(1);
+    await expect(page.locator('#admin-service-form-title')).toHaveCount(0);
+    expect(page.url()).toBe(urlBefore);
+    expect(writes.filter((entry) => /\/api\/(admin|demo\/admin)\//.test(entry))).toEqual([]);
+
+    await page.getByRole('button', { name: 'Continue exploring' }).click();
+    await expect(dialog).toHaveCount(0);
+    await expect(gear).toBeFocused();
+    expect(page.url()).toBe(urlBefore);
+    await gear.click();
+
+    await page.keyboard.press('Escape');
+    await expect(page.getByRole('dialog', { name: /Sample data/i })).toHaveCount(0);
+    await expect(gear).toBeFocused();
+
+    await gear.press('Enter');
+    await expect(page.getByRole('dialog', { name: /Sample data/i })).toBeVisible();
+    await page.keyboard.press('Escape');
+    await expect(gear).toBeFocused();
+    await gear.press('Space');
+    await expect(page.getByRole('dialog', { name: /Sample data/i })).toBeVisible();
+    await expect(page.locator('#admin-service-form-title')).toHaveCount(0);
+  });
+
+  test('product settings open the sample-data lock instead of the editor', async ({ page }) => {
+    const writes: string[] = [];
+    page.on('request', (request) => {
+      const method = request.method();
+      if (method === 'GET' || method === 'HEAD' || method === 'OPTIONS') return;
+      writes.push(`${method} ${request.url()}`);
+    });
+
+    await page.goto('/demo/admin?section=shop_products', { waitUntil: 'domcontentloaded' });
+    const gear = page.locator('.admin-product-row__edit-btn').first();
+    await expect(gear).toBeVisible();
+    await expect(gear).toHaveAttribute('aria-label', 'Product settings — sample data is read-only');
+    const urlBefore = page.url();
+    await gear.click();
+    const dialog = page.getByRole('dialog', { name: /Sample data/i });
+    await expect(dialog).toBeVisible();
+    await expect(dialog.getByText(/This BLACKLINE owner dashboard is read-only/i)).toBeVisible();
+    await expect(dialog.getByText('Ready to make it yours?')).toBeVisible();
+    await expect(page.getByRole('link', { name: /create my barbershop/i })).toHaveAttribute(
+      'href',
+      '/admin/launch',
+    );
+    await expect(page.locator('.admin-demo-lock__card.auth-gate-card')).toHaveCount(1);
+    await expect(page.locator('#admin-product-form-title')).toHaveCount(0);
+    expect(page.url()).toBe(urlBefore);
+    expect(writes.filter((entry) => /\/api\/(admin|demo\/admin)\//.test(entry))).toEqual([]);
+
+    await page.getByRole('button', { name: 'Continue exploring' }).click();
+    await expect(dialog).toHaveCount(0);
+    await expect(gear).toBeFocused();
+    expect(page.url()).toBe(urlBefore);
+    await gear.click();
+
+    await page.keyboard.press('Escape');
+    await expect(gear).toBeFocused();
+    await gear.press('Enter');
+    await expect(page.getByRole('dialog', { name: /Sample data/i })).toBeVisible();
+    await page.keyboard.press('Escape');
+    await gear.press('Space');
+    await expect(page.getByRole('dialog', { name: /Sample data/i })).toBeVisible();
+    await expect(page.locator('#admin-product-form-title')).toHaveCount(0);
   });
 
   for (const viewport of VIEWPORTS) {

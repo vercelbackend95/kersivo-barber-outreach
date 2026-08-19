@@ -39,6 +39,7 @@ import { DEMO_SHOP_NAME } from '@/lib/demo/site';
     src: string;
     width: number;
     height: number;
+    alt: string;
     caption: string;
     counter: string;
   };
@@ -64,12 +65,15 @@ import { DEMO_SHOP_NAME } from '@/lib/demo/site';
       const caption = item?.querySelector('.bl-work-caption');
       const counter = item?.querySelector('.bl-work-index-label');
       if (!(img instanceof HTMLImageElement) || !caption || !counter) return [];
+      const alt =
+        button instanceof HTMLElement ? (button.dataset.workAlt ?? '').trim() : '';
       return [
         {
           id: item instanceof HTMLElement ? item.className : '',
           src: img.getAttribute('src') ?? img.src,
           width: img.width,
           height: img.height,
+          alt,
           caption: caption.textContent?.trim() ?? '',
           counter: counter.textContent?.trim() ?? '',
         },
@@ -106,6 +110,7 @@ import { DEMO_SHOP_NAME } from '@/lib/demo/site';
       image.src = frame.src;
       image.width = frame.width;
       image.height = frame.height;
+      image.alt = frame.alt;
       if (caption) caption.textContent = frame.caption;
       if (count) count.textContent = frame.counter;
     };
@@ -135,16 +140,32 @@ import { DEMO_SHOP_NAME } from '@/lib/demo/site';
       }
     };
 
+    const setPageInert = (on: boolean) => {
+      [...root.children].forEach((child) => {
+        if (child.contains(dialog)) {
+          [...child.children].forEach((nested) => {
+            if (nested !== dialog) {
+              nested.toggleAttribute('inert', on);
+            }
+          });
+          return;
+        }
+        child.toggleAttribute('inert', on);
+      });
+    };
+
     const lockScroll = () => {
       previousHtmlOverflow = html.style.overflow;
       previousBodyOverflow = body.style.overflow;
       html.style.overflow = 'hidden';
       body.style.overflow = 'hidden';
+      setPageInert(true);
     };
 
     const unlockScroll = () => {
       html.style.overflow = previousHtmlOverflow;
       body.style.overflow = previousBodyOverflow;
+      setPageInert(false);
     };
 
     const onKeydown = (event: KeyboardEvent) => {
@@ -202,6 +223,33 @@ import { DEMO_SHOP_NAME } from '@/lib/demo/site';
       render(demoGalleryNextIndex(active, frames.length), true);
       preloadAdjacent(active);
     });
+
+    const stage = dialog.querySelector('[data-work-stage]');
+    if (stage instanceof HTMLElement) {
+      let swipeStartX = 0;
+      stage.addEventListener(
+        'touchstart',
+        (event) => {
+          swipeStartX = event.changedTouches[0]?.clientX ?? 0;
+        },
+        { passive: true },
+      );
+      stage.addEventListener(
+        'touchend',
+        (event) => {
+          const endX = event.changedTouches[0]?.clientX ?? swipeStartX;
+          const delta = endX - swipeStartX;
+          if (Math.abs(delta) < 56) return;
+          if (delta < 0) {
+            render(demoGalleryNextIndex(active, frames.length), true);
+          } else {
+            render(demoGalleryPrevIndex(active, frames.length), true);
+          }
+          preloadAdjacent(active);
+        },
+        { passive: true },
+      );
+    }
     dialog.addEventListener('click', (event) => {
       if (event.target === dialog) closeViewer();
     });
@@ -220,7 +268,7 @@ import { DEMO_SHOP_NAME } from '@/lib/demo/site';
     }
 
     const blocks = [...root.querySelectorAll('[data-bl-reveal]')];
-    const hero = root.querySelector('.bl-page-hero');
+    const hero = root.querySelector('.bl-gallery-intro');
     const scrolledPastHero =
       window.scrollY >
       (hero instanceof HTMLElement ? Math.min(hero.offsetHeight * 0.35, 240) : 80);

@@ -29,6 +29,8 @@ import {
   toStorefrontProduct,
   visibleCategories,
   visibleProducts,
+  productInitials,
+  shopInitial,
   type StorefrontProduct,
 } from './storefrontCatalog';
 
@@ -100,6 +102,32 @@ describe('storefrontCatalog', () => {
     ];
     expect(filterByCategory(list, STOREFRONT_ALL_CATEGORY).map((item) => item.id)).toEqual(['feat', 'plain']);
     expect(featuredProducts(list).map((item) => item.id)).toEqual(['feat']);
+  });
+
+  it('derives product initials for untitled media', () => {
+    expect(productInitials('Shave Cream')).toBe('SC');
+    expect(productInitials('Ironclad Pomade')).toBe('IP');
+    expect(shopInitial('BLACKLINE')).toBe('B');
+  });
+
+  it('keeps the Live BLACKLINE catalog at 30 SKUs with four featured items and six shop categories', () => {
+    const list = DEMO_PRODUCTS.filter((item) => item.active).map(storefrontProductFromDemo);
+    expect(list).toHaveLength(30);
+    expect(featuredProducts(list).map((item) => item.name)).toEqual([
+      'Ironclad Pomade',
+      'Beard Balm',
+      'Barber Wash',
+      'Essential Styling Set',
+    ]);
+    expect(storefrontCategoryOptions(list).map((option) => option.label)).toEqual([
+      'All products',
+      'Styling',
+      'Hair & Scalp',
+      'Beard Care',
+      'Shave & Skin',
+      'Tools & Accessories',
+      'Sets & Gifts',
+    ]);
   });
 
   it('omits empty categories and keeps admin category order', () => {

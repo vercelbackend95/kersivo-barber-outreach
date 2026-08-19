@@ -35,9 +35,9 @@
   --sf-header-text: var(--bl-ivory, #f4f1ea);
   --sf-header-muted: var(--bl-silver, #a7abb2);
   --sf-header-divider: var(--bl-line-dark, rgba(244, 241, 234, 0.16));
-  --sf-header-accent: #ff1717;
-  --sf-header-accent-hover: #ff3a3a;
-  --sf-header-on-accent: #ffffff;
+  --sf-header-accent: var(--theme-accent, var(--bl-cobalt, #315ef5));
+  --sf-header-accent-hover: var(--theme-accent-hover, var(--bl-cobalt-hover, #2449cb));
+  --sf-header-on-accent: var(--theme-on-accent, var(--bl-on-accent, #ffffff));
   --sf-header-focus: var(--bl-focus, #91aeff);
   --sf-header-max: var(--bl-container-max, 80rem);
   --sf-header-gutter: var(--bl-gutter, 1.25rem);
@@ -289,6 +289,7 @@
   background: var(--sf-header-accent-hover);
   color: var(--sf-header-on-accent);
   transform: translateY(-1px);
+  box-shadow: 0 10px 22px -14px var(--sf-header-accent);
 }
 
 .sf-header-cta:hover .sf-header-cta-arrow {
@@ -659,6 +660,7 @@
   .sf-header-cta:hover,
   .sf-header-cta:hover .sf-header-cta-arrow {
     transform: none;
+    box-shadow: none;
   }
 
   .sf-header[data-sf-nav-state='opening'] .sf-nav-layer,

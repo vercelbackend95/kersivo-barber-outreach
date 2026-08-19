@@ -36,14 +36,14 @@ const barbers = [
 ];
 
 async function completeThroughSchedule() {
-  fireEvent.click(screen.getByRole('button', { name: /Skin Fade/i }));
-  fireEvent.click(screen.getByRole('button', { name: /^Jamie$/i }));
+  fireEvent.click(screen.getByRole('radio', { name: /Skin Fade/i }));
+  fireEvent.click(screen.getByRole('radio', { name: /^Jamie$/i }));
 
   await waitFor(() => {
-    expect(screen.getByRole('button', { name: '09:00' })).toBeTruthy();
+    expect(screen.getByRole('radio', { name: '09:00' })).toBeTruthy();
   });
 
-  fireEvent.click(screen.getByRole('button', { name: '09:00' }));
+  fireEvent.click(screen.getByRole('radio', { name: '09:00' }));
   fireEvent.click(screen.getByRole('button', { name: 'Continue' }));
 
   await waitFor(() => {
@@ -66,15 +66,31 @@ describe('BookingFlow publicDemoMode', () => {
     vi.unstubAllGlobals();
   });
 
+  it('uses radio semantics and shows an existing service description', () => {
+    render(
+      <BookingFlow
+        publicDemoMode
+        services={[{ ...services[0]!, description: 'A seamless fade taken down to skin.' }]}
+        barbers={barbers}
+      />,
+    );
+
+    const option = screen.getByRole('radio', { name: /Skin Fade/i });
+    expect(option.getAttribute('aria-checked')).toBe('false');
+    expect(screen.getByText('A seamless fade taken down to skin.')).toBeTruthy();
+    fireEvent.click(option);
+    expect(screen.getByRole('heading', { name: 'Choose a barber' })).toBeTruthy();
+  });
+
   it('uses static slots and never calls availability, create, or lead APIs', async () => {
     render(<BookingFlow publicDemoMode services={services} barbers={barbers} />);
 
-    fireEvent.click(screen.getByRole('button', { name: /Skin Fade/i }));
-    fireEvent.click(screen.getByRole('button', { name: /^Jamie$/i }));
+    fireEvent.click(screen.getByRole('radio', { name: /Skin Fade/i }));
+    fireEvent.click(screen.getByRole('radio', { name: /^Jamie$/i }));
 
     await waitFor(() => {
-      expect(screen.getByRole('button', { name: '09:00' })).toBeTruthy();
-      expect(screen.getByRole('button', { name: '14:30' })).toBeTruthy();
+      expect(screen.getByRole('radio', { name: '09:00' })).toBeTruthy();
+      expect(screen.getByRole('radio', { name: '14:30' })).toBeTruthy();
     });
 
     expect(fetchSpy).not.toHaveBeenCalled();

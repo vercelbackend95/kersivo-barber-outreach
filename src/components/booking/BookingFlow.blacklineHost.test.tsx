@@ -31,6 +31,7 @@ const services = DEMO_SERVICES.map((service) => ({
   category: service.category,
   displayOrder: service.displayOrder,
   featured: service.featured,
+  description: service.description,
 }));
 
 const barbers = DEMO_BARBERS.map((barber) => ({
@@ -65,16 +66,16 @@ async function chooseDate(dayKey: string) {
 }
 
 async function completeNoahHaircut() {
-  fireEvent.click(screen.getByRole('button', { name: /^Noah Reid$/i }));
+  fireEvent.click(screen.getByRole('radio', { name: /^Noah Reid$/i }));
   await chooseDate(WEDNESDAY);
   await waitFor(() => {
     const slotButtons = screen
-      .getAllByRole('button')
+      .getAllByRole('radio')
       .filter((button) => /^\d{2}:\d{2}$/.test(button.textContent ?? ''));
     expect(slotButtons.length).toBeGreaterThan(0);
   });
   const slotButton = screen
-    .getAllByRole('button')
+    .getAllByRole('radio')
     .find((button) => /^\d{2}:\d{2}$/.test(button.textContent ?? ''))!;
   const slot = slotButton.textContent!.trim();
   fireEvent.click(slotButton);
@@ -122,8 +123,8 @@ describe('BookingFlow BLACKLINE host', () => {
     expect(screen.getByRole('heading', { name: 'Book a chair' })).toBeTruthy();
     expect(screen.getByRole('heading', { name: 'Choose a barber' })).toBeTruthy();
     expect(screen.getAllByText(/Skin Fade/).length).toBeGreaterThan(0);
-    expect(screen.getByRole('button', { name: /^Ellis Ward$/i })).toBeTruthy();
-    expect(screen.queryByRole('button', { name: /Hot Towel Shave/i })).toBeNull();
+    expect(screen.getByRole('radio', { name: /^Ellis Ward$/i })).toBeTruthy();
+    expect(screen.queryByRole('radio', { name: /Hot Towel Shave/i })).toBeNull();
   });
 
   it('ignores an invalid initialServiceId and stays on service selection', () => {
@@ -137,9 +138,9 @@ describe('BookingFlow BLACKLINE host', () => {
       />,
     );
 
-    expect(screen.getByRole('button', { name: skinFadeButtonName })).toBeTruthy();
-    expect(screen.getByRole('button', { name: /Hot Towel Wet Shave/i })).toBeTruthy();
-    expect(screen.queryByRole('button', { name: /^Ellis Ward$/i })).toBeNull();
+    expect(screen.getByRole('radio', { name: skinFadeButtonName })).toBeTruthy();
+    expect(screen.getByRole('radio', { name: /Hot Towel Wet Shave/i })).toBeTruthy();
+    expect(screen.queryByRole('radio', { name: /^Ellis Ward$/i })).toBeNull();
   });
 
   it('creates one session booking and a /demo/admin timeline CTA', async () => {
@@ -176,16 +177,16 @@ describe('BookingFlow BLACKLINE host', () => {
   it('resolves Any barber to a concrete BLACKLINE barber on confirm', async () => {
     render(<BookingFlow {...blacklineFlowProps()} initialServiceId="bl-svc-haircut-finish" />);
 
-    fireEvent.click(screen.getByRole('button', { name: /Any barber/i }));
+    fireEvent.click(screen.getByRole('radio', { name: /Any barber/i }));
     await chooseDate(WEDNESDAY);
     await waitFor(() => {
       const slotButtons = screen
-        .getAllByRole('button')
+        .getAllByRole('radio')
         .filter((button) => /^\d{2}:\d{2}$/.test(button.textContent ?? ''));
       expect(slotButtons.length).toBeGreaterThan(0);
     });
     const slotButton = screen
-      .getAllByRole('button')
+      .getAllByRole('radio')
       .find((button) => /^\d{2}:\d{2}$/.test(button.textContent ?? ''))!;
     fireEvent.click(slotButton);
     fireEvent.click(screen.getByRole('button', { name: 'Continue' }));
@@ -218,13 +219,13 @@ describe('BookingFlow BLACKLINE host', () => {
     );
 
     expect(screen.getByRole('heading', { name: 'Choose a service' })).toBeTruthy();
-    expect(screen.queryByRole('button', { name: /^Ellis Ward$/i })).toBeNull();
+    expect(screen.queryByRole('radio', { name: /^Ellis Ward$/i })).toBeNull();
 
-    fireEvent.click(screen.getByRole('button', { name: skinFadeButtonName }));
+    fireEvent.click(screen.getByRole('radio', { name: skinFadeButtonName }));
 
     await waitFor(() => {
       expect(screen.getByRole('heading', { name: 'Pick a time' })).toBeTruthy();
-      expect(screen.getByRole('button', { name: '09:00' })).toBeTruthy();
+      expect(screen.getByRole('radio', { name: '09:00' })).toBeTruthy();
     });
 
     expect(screen.getAllByText('Ellis Ward').length).toBeGreaterThan(0);
@@ -242,10 +243,10 @@ describe('BookingFlow BLACKLINE host', () => {
       />,
     );
 
-    fireEvent.click(screen.getByRole('button', { name: skinFadeButtonName }));
+    fireEvent.click(screen.getByRole('radio', { name: skinFadeButtonName }));
 
     expect(screen.getByRole('heading', { name: 'Choose a barber' })).toBeTruthy();
-    expect(screen.getByRole('button', { name: /^Ellis Ward$/i })).toBeTruthy();
+    expect(screen.getByRole('radio', { name: /^Ellis Ward$/i })).toBeTruthy();
     expect(screen.queryByRole('heading', { name: 'Pick a time' })).toBeNull();
   });
 
@@ -266,7 +267,7 @@ describe('BookingFlow BLACKLINE host', () => {
     expect(screen.getAllByText(/Skin Fade/).length).toBeGreaterThan(0);
 
     await waitFor(() => {
-      expect(screen.getByRole('button', { name: '09:00' })).toBeTruthy();
+      expect(screen.getByRole('radio', { name: '09:00' })).toBeTruthy();
     });
 
     expect(fetchSpy).not.toHaveBeenCalled();

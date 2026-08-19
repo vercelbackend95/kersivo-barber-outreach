@@ -34,12 +34,18 @@ test.describe('BLACKLINE booking confirmation to owner timeline', () => {
   test('creates a session booking and focuses it on the owner timeline', async ({ page }) => {
     await page.setViewportSize({ width: 1440, height: 900 });
     await page.goto('/demo/book', { waitUntil: 'domcontentloaded' });
+    const bookingSection = page.locator('.bl-booking');
+    await expect(bookingSection).toHaveCSS('background-color', 'rgb(11, 12, 14)');
+    await expect(page.getByRole('heading', { name: /Choose a service/i })).toHaveCSS(
+      'color',
+      'rgb(244, 241, 234)',
+    );
     await expect(page.getByRole('heading', { name: /Choose a service/i })).toBeVisible();
     await expect(page.locator('.booking-choice-card--service')).toHaveCount(18);
 
-    await page.getByRole('button', { name: /Skin Fade 45 min/i }).click();
+    await page.getByRole('radio', { name: /Skin Fade A seamless fade/i }).click();
     await expect(page.getByRole('heading', { name: /Choose a barber/i })).toBeVisible();
-    await page.getByRole('button', { name: /^Ellis Ward$/i }).click();
+    await page.getByRole('radio', { name: /^Ellis Ward$/i }).click();
     const time = await pickFirstAvailableSlot(page);
     await page.getByRole('button', { name: 'Continue' }).click();
 

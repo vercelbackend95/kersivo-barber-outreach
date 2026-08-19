@@ -11,6 +11,18 @@
 }
 
 .booking-flow--wizard.booking-shell {
+  --booking-choice-surface: var(--booking-surface, var(--surface-2, var(--surface)));
+  --booking-choice-surface-hover: var(--booking-surface-hover, var(--surface-3, var(--surface)));
+  --booking-choice-border: var(--booking-border, var(--border));
+  --booking-choice-text: var(--booking-text, var(--fg));
+  --booking-choice-text-muted: var(--booking-text-muted, var(--muted));
+  --booking-choice-accent: var(--booking-accent, var(--accent));
+  --booking-choice-accent-soft: var(
+    --booking-accent-soft,
+    color-mix(in srgb, var(--booking-choice-accent) 14%, var(--booking-choice-surface))
+  );
+  --booking-choice-accent-contrast: var(--booking-accent-contrast, var(--accent-contrast, #ffffff));
+  --booking-choice-focus-ring: var(--booking-focus-ring, var(--focus, var(--booking-choice-accent)));
   padding: 0;
   display: grid;
   gap: 0;
@@ -196,73 +208,148 @@
   grid-template-columns: minmax(0, 1fr);
 }
 
-/* Service = interactive row, not a dense card wall */
-.booking-flow--wizard .booking-choice-card {
+.booking-flow--wizard .booking-choice {
   appearance: none;
+  -webkit-appearance: none;
+  position: relative;
   cursor: pointer;
-  border: 1px solid color-mix(in srgb, var(--border) 75%, transparent);
-  border-radius: var(--radius-12, 12px);
-  background: color-mix(in srgb, var(--surface-2, var(--surface)) 88%, var(--bg));
-  color: var(--fg);
+  font: inherit;
+  color: var(--booking-choice-text);
   text-align: left;
+  border: 1px solid color-mix(in srgb, var(--booking-choice-border) 82%, transparent);
+  background: var(--booking-choice-surface);
+  box-shadow: 0 1px 2px rgb(0 0 0 / 0.12);
   transition:
     border-color 160ms ease,
-    background 160ms ease,
+    background-color 160ms ease,
+    box-shadow 160ms ease,
     transform 160ms ease,
-    box-shadow 160ms ease;
+    color 160ms ease;
 }
 
-.booking-flow--wizard .booking-choice-card:hover {
-  border-color: color-mix(in srgb, var(--accent) 45%, var(--border));
-  background: color-mix(in srgb, var(--surface-3, var(--surface)) 70%, var(--bg));
+.booking-flow--wizard .booking-choice-card.booking-choice {
+  border-radius: 16px;
 }
 
-.booking-flow--wizard .booking-choice-card:focus-visible {
-  outline: 2px solid var(--focus, #6366f1);
-  outline-offset: 2px;
+.booking-flow--wizard .booking-slot.booking-choice {
+  border-radius: 13px;
 }
 
-.booking-flow--wizard .booking-choice-card.is-selected {
-  border-color: var(--accent);
-  background: color-mix(in srgb, var(--accent) 12%, var(--surface-2, var(--surface)));
-  box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--accent) 35%, transparent);
+.booking-flow--wizard .booking-choice:focus-visible {
+  outline: 2px solid var(--booking-choice-focus-ring);
+  outline-offset: 3px;
 }
 
-@media (prefers-reduced-motion: no-preference) {
-  .booking-flow--wizard .booking-choice-card.is-selected {
-    animation: booking-select-settle 220ms ease;
+.booking-flow--wizard .booking-choice.is-selected {
+  border-color: var(--booking-choice-accent);
+  background: var(--booking-choice-accent-soft);
+  box-shadow:
+    0 0 0 1px color-mix(in srgb, var(--booking-choice-accent) 28%, transparent),
+    0 0 14px color-mix(in srgb, var(--booking-choice-accent) 18%, transparent);
+}
+
+.booking-flow--wizard .booking-choice:disabled,
+.booking-flow--wizard .booking-choice[aria-disabled='true'] {
+  cursor: not-allowed;
+  opacity: 0.58;
+  box-shadow: none;
+  transform: none;
+}
+
+.booking-flow--wizard .booking-choice__mark {
+  display: inline-grid;
+  place-items: center;
+  width: 1.25rem;
+  height: 1.25rem;
+  flex-shrink: 0;
+  border-radius: 999px;
+  background: var(--booking-choice-accent);
+  color: var(--booking-choice-accent-contrast);
+  opacity: 0;
+  transform: scale(0.8);
+  pointer-events: none;
+}
+
+.booking-flow--wizard .booking-choice.is-selected .booking-choice__mark {
+  opacity: 1;
+  transform: scale(1);
+  transition:
+    opacity 180ms ease,
+    transform 180ms ease;
+}
+
+.booking-flow--wizard .booking-choice__mark svg {
+  width: 0.72rem;
+  height: 0.72rem;
+}
+
+.booking-flow--wizard .booking-choice__mark--compact {
+  position: absolute;
+  top: 0.28rem;
+  right: 0.28rem;
+  width: 0.9rem;
+  height: 0.9rem;
+}
+
+.booking-flow--wizard .booking-choice__mark--compact svg {
+  width: 0.55rem;
+  height: 0.55rem;
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .booking-flow--wizard .booking-choice:hover:not(:disabled):not(.is-selected) {
+    border-color: color-mix(in srgb, var(--booking-choice-accent) 38%, var(--booking-choice-border));
+    background: var(--booking-choice-surface-hover);
+    box-shadow: 0 4px 10px rgb(0 0 0 / 0.16);
+    transform: translateY(-1px);
   }
 }
 
-@keyframes booking-select-settle {
-  from { transform: scale(0.985); }
-  to { transform: scale(1); }
+.booking-flow--wizard .booking-choice:active:not(:disabled) {
+  transform: scale(0.985);
+  box-shadow: 0 0 0 rgb(0 0 0 / 0);
+  transition-duration: 100ms;
 }
 
 .booking-flow--wizard .booking-choice-card--service {
   display: grid;
   grid-template-columns: minmax(0, 1fr) auto;
-  align-items: center;
-  gap: 0.75rem 1rem;
-  min-height: 3.75rem;
-  padding: 0.95rem 1.05rem;
+  align-items: start;
+  gap: 0.65rem 1rem;
+  min-height: 44px;
+  padding: 0.9rem 1rem;
+}
+
+.booking-flow--wizard .booking-choice-card__copy {
+  display: grid;
+  gap: 0.28rem;
+  min-width: 0;
 }
 
 .booking-flow--wizard .booking-choice-card__title {
   display: block;
   font-family: var(--font-body);
   font-size: var(--booking-text-base, 1rem);
-  font-weight: 600;
+  font-weight: 650;
   line-height: 1.25;
   letter-spacing: 0;
   text-transform: none;
+  color: var(--booking-choice-text);
+}
+
+.booking-flow--wizard .booking-choice-card__description {
+  display: block;
+  font-size: 0.8125rem;
+  font-weight: 500;
+  line-height: 1.4;
+  color: var(--booking-choice-text-muted);
 }
 
 .booking-flow--wizard .booking-choice-card__meta--service {
-  display: flex;
-  flex-direction: column;
-  align-items: flex-end;
-  gap: 0.15rem;
+  display: grid;
+  justify-items: end;
+  align-content: start;
+  gap: 0.2rem;
   white-space: nowrap;
 }
 
@@ -271,14 +358,14 @@
   font-weight: 600;
   letter-spacing: 0.06em;
   text-transform: uppercase;
-  color: var(--muted);
+  color: var(--booking-choice-text-muted);
 }
 
 .booking-flow--wizard .booking-choice-card__price {
   font-size: 0.95rem;
   font-weight: 700;
   letter-spacing: 0.02em;
-  color: color-mix(in srgb, var(--accent) 82%, var(--fg));
+  color: var(--booking-choice-text);
 }
 
 /* ── Barbers ─────────────────────────────────────────────────── */
@@ -290,7 +377,7 @@
 
 .booking-flow--wizard .booking-choice-card--barber {
   display: grid;
-  grid-template-columns: auto minmax(0, 1fr);
+  grid-template-columns: auto minmax(0, 1fr) auto;
   align-items: center;
   gap: 0.75rem;
   min-height: 4.25rem;
@@ -307,11 +394,12 @@
 .booking-flow--wizard .booking-choice-card--barber .booking-choice-card__title {
   font-size: 0.95rem;
   text-align: left;
+  overflow-wrap: anywhere;
 }
 
 .booking-flow--wizard .booking-choice-card__helper {
   font-size: 0.72rem;
-  color: var(--muted);
+  color: var(--booking-choice-text-muted);
   letter-spacing: 0.02em;
 }
 
@@ -324,17 +412,17 @@
   justify-content: center;
   overflow: hidden;
   flex-shrink: 0;
-  border: 1px solid color-mix(in srgb, var(--border) 70%, var(--accent));
+  border: 1px solid color-mix(in srgb, var(--booking-choice-border) 70%, var(--booking-choice-accent));
   background: linear-gradient(
     180deg,
-    color-mix(in srgb, var(--surface-3, var(--surface)) 80%, var(--bg)),
-    color-mix(in srgb, var(--accent) 10%, var(--bg))
+    color-mix(in srgb, var(--booking-choice-surface-hover) 80%, var(--booking-choice-surface)),
+    color-mix(in srgb, var(--booking-choice-accent) 10%, var(--booking-choice-surface))
   );
-  color: color-mix(in srgb, var(--accent) 80%, var(--fg));
+  color: color-mix(in srgb, var(--booking-choice-accent) 80%, var(--booking-choice-text));
 }
 
-.booking-flow--wizard .booking-choice-card.is-selected .booking-choice-card__avatar {
-  border-color: var(--accent);
+.booking-flow--wizard .booking-choice.is-selected .booking-choice-card__avatar {
+  border-color: var(--booking-choice-accent);
 }
 
 .booking-flow--wizard .booking-choice-card__avatar img {
@@ -468,34 +556,11 @@
   gap: 0.5rem;
 }
 
-.booking-flow--wizard .booking-slot {
-  appearance: none;
-  cursor: pointer;
-  min-height: 3rem;
+.booking-flow--wizard .booking-slot.booking-choice {
+  min-height: 46px;
   padding: 0.65rem 0.4rem;
-  border: 1px solid color-mix(in srgb, var(--border) 75%, transparent);
-  border-radius: var(--radius-12, 12px);
-  background: color-mix(in srgb, var(--surface-2, var(--surface)) 88%, var(--bg));
-  color: var(--fg);
   display: grid;
   place-items: center;
-  transition: border-color 140ms ease, background 140ms ease, color 140ms ease;
-}
-
-.booking-flow--wizard .booking-slot:hover {
-  border-color: color-mix(in srgb, var(--accent) 40%, var(--border));
-}
-
-.booking-flow--wizard .booking-slot:focus-visible {
-  outline: 2px solid var(--focus, #6366f1);
-  outline-offset: 2px;
-}
-
-.booking-flow--wizard .booking-slot.is-selected {
-  border-color: var(--accent);
-  background: var(--accent);
-  color: var(--accent-contrast, #0b0d10);
-  box-shadow: none;
 }
 
 .booking-flow--wizard .booking-slot__label {
@@ -837,26 +902,6 @@
 /* ── Tablet+ ─────────────────────────────────────────────────── */
 
 @media (min-width: 640px) {
-  .booking-flow--wizard .booking-choice-grid--services {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-  }
-
-  .booking-flow--wizard .booking-choice-card--service {
-    grid-template-columns: minmax(0, 1fr);
-    grid-template-rows: auto auto;
-    align-content: space-between;
-    gap: 1rem;
-    min-height: 7.5rem;
-    padding: 1.1rem 1.15rem;
-  }
-
-  .booking-flow--wizard .booking-choice-card__meta--service {
-    flex-direction: row;
-    align-items: center;
-    justify-content: space-between;
-    width: 100%;
-  }
-
   .booking-flow--wizard .slot-grid {
     grid-template-columns: repeat(4, minmax(0, 1fr));
   }
@@ -936,9 +981,17 @@
 
 @media (prefers-reduced-motion: reduce) {
   .booking-flow--wizard .booking-step.is-revealing,
-  .booking-flow--wizard .booking-choice-card.is-selected,
+  .booking-flow--wizard .booking-choice,
+  .booking-flow--wizard .booking-choice.is-selected,
+  .booking-flow--wizard .booking-choice.is-selected .booking-choice__mark,
   .booking-flow--wizard .booking-confirmation,
   .booking-flow--wizard .booking-action-bar__spinner {
     animation: none;
+    transition: none;
+    transform: none;
+  }
+
+  .booking-flow--wizard .booking-choice.is-selected .booking-choice__mark {
+    opacity: 1;
   }
 }

@@ -1,27 +1,20 @@
 ---
 import {
-  DEMO_ALL_CATEGORY_SLUG,
-  DEMO_DEFAULT_SERVICE_SLUG,
   demoBookingHref,
   demoServiceAccessibleName,
-  demoServiceCategorySummaries,
+  demoServiceCategoryAnchorId,
   demoServiceDurationRatio,
-  demoServiceFilterAnnouncement,
   demoServiceIndex,
   demoServiceNavigatorGroups,
   demoServicesMeta,
   formatDemoPriceGbp,
   isDemoFeaturedService,
-  parseDemoServiceCategoryParam,
 } from '@/lib/demo/services';
 
 const groups = demoServiceNavigatorGroups();
-const categories = demoServiceCategorySummaries();
-const allMeta = demoServicesMeta();
-const maxDuration = allMeta.maxDurationMinutes;
-const initialCategory = parseDemoServiceCategoryParam(Astro.url.searchParams.get('category'));
-const initialAnnouncement = demoServiceFilterAnnouncement(initialCategory, groups);
-const allSummaryLabel = `${allMeta.count} services · ${allMeta.durationRangeLabel.toLowerCase()} · ${allMeta.fromPriceLabel.toLowerCase()}`;
+const maxDuration = demoServicesMeta().maxDurationMinutes;
+const initial = groups[0]!;
+const categoryCount = groups.length;
 ---
 
 <section
@@ -29,105 +22,64 @@ const allSummaryLabel = `${allMeta.count} services · ${allMeta.durationRangeLab
   data-surface="light"
   data-bl-reveal
   data-bl-service-menu
-  data-active-category={initialCategory}
-  data-default-service={DEMO_DEFAULT_SERVICE_SLUG}
-  data-all-facts={allSummaryLabel}
+  data-active-category={initial.slug}
   aria-labelledby="blackline-service-menu-heading"
 >
   <div class="bl-container bl-services-menu-shell">
     <div class="bl-services-menu-layout">
-      <div class="bl-services-nav">
+      <aside class="bl-services-viewing" aria-label="Current service category" data-bl-services-viewing>
+        <p class="bl-services-viewing-eyebrow">Now viewing</p>
+        <div class="bl-services-viewing-copy" data-bl-viewing-copy>
+          <p class="bl-services-viewing-index" data-bl-viewing-index>
+            {initial.indexLabel} / {demoServiceIndex(categoryCount - 1)}
+          </p>
+          <p class="bl-services-viewing-name" data-bl-viewing-name>{initial.label}</p>
+          <p class="bl-services-viewing-meta" data-bl-viewing-meta>
+            {initial.countLabel} · {initial.fromPriceLabel}
+          </p>
+        </div>
+        <p class="bl-services-viewing-hint">Scroll to explore</p>
+        <div class="bl-services-viewing-progress" aria-hidden="true">
+          <span
+            class="bl-services-viewing-progress-fill"
+            data-bl-viewing-progress
+            style={`transform: scaleX(${1 / categoryCount})`}
+          ></span>
+        </div>
+      </aside>
+
+      <div class="bl-services-results">
         <header class="bl-services-menu-intro">
           <p class="bl-services-menu-eyebrow">Find your service</p>
           <h2 class="bl-services-menu-heading" id="blackline-service-menu-heading">Choose your finish.</h2>
           <p class="bl-services-menu-lede">
-            Browse by category, compare the details and book the service that fits.
+            The complete Blackline menu is on this page. Scroll to explore every cut, beard and grooming option.
           </p>
         </header>
 
-        <div class="bl-services-cats" role="toolbar" aria-label="Filter services by category">
-          <button
-            type="button"
-            class="bl-services-cat"
-            data-category-slug={DEMO_ALL_CATEGORY_SLUG}
-            aria-pressed={initialCategory === DEMO_ALL_CATEGORY_SLUG}
-          >
-            <span class="bl-services-cat-index" aria-hidden="true">00</span>
-            <span class="bl-services-cat-copy">
-              <span class="bl-services-cat-name">All services</span>
-              <span class="bl-services-cat-short">All</span>
-              <span class="bl-services-cat-meta">{allMeta.count} services · {allMeta.fromPriceLabel.toLowerCase()}</span>
-            </span>
-            <span class="bl-services-cat-arrow" aria-hidden="true"></span>
-          </button>
-          {
-            categories.map((category, index) => (
-              <button
-                type="button"
-                class="bl-services-cat"
-                data-category-slug={category.slug}
-                aria-pressed={initialCategory === category.slug}
-              >
-                <span class="bl-services-cat-index">{demoServiceIndex(index)}</span>
-                <span class="bl-services-cat-copy">
-                  <span class="bl-services-cat-name">{category.label}</span>
-                  <span class="bl-services-cat-short">{category.shortLabel}</span>
-                  <span class="bl-services-cat-meta">
-                    {category.countLabel} · {category.fromPriceLabel}
-                  </span>
-                </span>
-                <span class="bl-services-cat-arrow" aria-hidden="true"></span>
-              </button>
-            ))
-          }
-        </div>
-
-        <div class="bl-services-quick" data-bl-quick-view>
-          <div class="bl-services-quick-panel is-active" data-bl-quick-mode="summary">
-            <p class="bl-services-quick-kicker" data-bl-quick-kicker>All services</p>
-            <p class="bl-services-quick-name" data-bl-quick-name>The Blackline menu</p>
-            <p class="bl-services-quick-facts" data-bl-quick-facts>{allSummaryLabel}</p>
-          </div>
-          <div class="bl-services-quick-panel" data-bl-quick-mode="service">
-            <p class="bl-services-quick-kicker" data-bl-quick-service-category></p>
-            <p class="bl-services-quick-name" data-bl-quick-service-name></p>
-            <p class="bl-services-quick-facts">
-              <span data-bl-quick-service-duration></span>
-              <span data-bl-quick-service-price></span>
-            </p>
-            <a class="bl-services-quick-book" data-bl-quick-book href={demoBookingHref(DEMO_DEFAULT_SERVICE_SLUG)}>
-              <span>Book now</span>
-              <span class="bl-service-arrow" aria-hidden="true"></span>
-            </a>
-          </div>
-        </div>
-      </div>
-
-      <div class="bl-services-results">
-        <p class="bl-services-summary" data-bl-results-summary>{initialAnnouncement}</p>
-        <div class="bl-services-live" data-bl-filter-live aria-live="polite">{initialAnnouncement}</div>
-
         {
-          groups.map((group) => (
+          groups.map((group, groupIndex) => (
             <section
               class="bl-service-group"
+              id={demoServiceCategoryAnchorId(group.slug)}
               data-category-slug={group.slug}
+              data-category-anchor={demoServiceCategoryAnchorId(group.slug)}
               data-category-label={group.label}
               data-count-label={group.countLabel}
               data-from-price={group.fromPriceLabel}
-              data-duration-range={group.durationRangeLabel}
-              hidden={initialCategory !== DEMO_ALL_CATEGORY_SLUG && initialCategory !== group.slug}
+              data-index-label={group.indexLabel}
+              data-category-index={String(groupIndex)}
+              data-category-total={String(categoryCount)}
               aria-labelledby={`blackline-category-${group.slug}`}
             >
               <header class="bl-service-group-head">
-                <p class="bl-service-group-index">{group.indexLabel}</p>
-                <div class="bl-service-group-copy">
-                  <h3 class="bl-service-group-name" id={`blackline-category-${group.slug}`}>
-                    {group.label}
-                  </h3>
-                  <p class="bl-service-group-desc">{group.description}</p>
-                </div>
+                <h3 class="bl-service-group-name" id={`blackline-category-${group.slug}`}>
+                  <span class="bl-service-group-index">{group.indexLabel}</span>
+                  <span aria-hidden="true"> · </span>
+                  {group.label}
+                </h3>
                 <p class="bl-service-group-count">{group.countLabel}</p>
+                <p class="bl-service-group-desc">{group.description}</p>
               </header>
 
               <ol class="bl-services-list">

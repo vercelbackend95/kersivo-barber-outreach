@@ -87,23 +87,27 @@ export async function ensureBlacklineDemoCatalog(client: ProductClient): Promise
   await seedBlacklineDemoCatalog(client);
 }
 
-function toDemoProducts(
-  rows: Array<{
-    id: string;
-    name: string;
-    description: string | null;
-    pricePence: number;
-    imageUrl: string | null;
-    active: boolean;
-    featured: boolean;
-    category: DemoProduct['category'];
-    sortOrder: number;
-  }>,
-): DemoProduct[] {
-  return rows
-    .map((row) => mergeBlacklineProductRow(row))
-    .filter((product): product is DemoProduct => Boolean(product))
-    .filter((product) => product.active)
+type BlacklineProductRow = {
+  id: string;
+  name: string;
+  description: string | null;
+  pricePence: number;
+  imageUrl: string | null;
+  active: boolean;
+  featured: boolean;
+  category: DemoProduct['category'];
+  sortOrder: number;
+};
+
+/** Fixture is canonical. Prisma only overlays matching ids (uploaded images). Incomplete DB never shrinks the list. */
+export function overlayBlacklineRetailProducts(rows: readonly BlacklineProductRow[]): DemoProduct[] {
+  const byId = new Map(rows.map((row) => [row.id, row]));
+  return DEMO_PRODUCTS.filter((product) => product.active)
+    .map((product) => {
+      const row = byId.get(product.id);
+      const merged = row ? mergeBlacklineProductRow(row) ?? product : product;
+      return { ...merged, active: product.active };
+    })
     .sort((a, b) => a.sortOrder - b.sortOrder || a.name.localeCompare(b.name));
 }
 
@@ -112,7 +116,7 @@ export async function getBlacklineRetailProducts(): Promise<DemoProduct[]> {
     const { prisma } = await import('@/lib/db/client');
     await ensureBlacklineDemoCatalog(prisma);
     const rows = await prisma.product.findMany({
-      where: { shopId: BLACKLINE_SHOP_ID, active: true },
+      where: { shopId: BLACKLINE_SHOP_ID },
       orderBy: [{ sortOrder: 'asc' }, { createdAt: 'asc' }],
       select: {
         id: true,
@@ -126,15 +130,14 @@ export async function getBlacklineRetailProducts(): Promise<DemoProduct[]> {
         sortOrder: true,
       },
     });
-    const products = toDemoProducts(rows);
-    if (products.length >= 3) return products;
+    return overlayBlacklineRetailProducts(rows);
   } catch (error) {
     if (isPrismaQuotaExceededError(error) || isPrismaDatabaseUnavailableError(error)) {
       logPrismaQuotaFallback('getBlacklineRetailProducts', error);
     }
   }
 
-  return DEMO_PRODUCTS.filter((product) => product.active);
+  return overlayBlacklineRetailProducts([]);
 }
 
 export async function getBlacklineRetailProductById(id: string): Promise<DemoProduct | null> {

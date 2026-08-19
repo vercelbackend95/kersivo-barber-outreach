@@ -28,7 +28,8 @@ describe('BLACKLINE shop pages', () => {
     expect(shopPage).toContain('DEMO CHECKOUT');
     expect(shopPage).not.toContain('safetyNote');
     expect(shopPage).toContain('Shop the shelf.');
-    expect(shopPage).toContain("addToBagLabel: 'Add'");
+    expect(shopPage).toContain("addToBagLabel: 'Add to bag'");
+    expect(shopPage).toContain('featuredAddedLabel="Added to bag"');
     expect(shopPage).not.toContain('ADD TO BAG');
     expect(shopPage).not.toContain('DemoShopHero');
     expect(shopPage).not.toContain('DemoShopCollection');
@@ -52,7 +53,7 @@ describe('BLACKLINE shop pages', () => {
     expect(layout).not.toContain('@/styles/components/shop.css');
     expect(shopPage).toContain("@/styles/components/storefront.css");
     expect(readFileSync(new URL('../../styles/components/storefront.css', import.meta.url), 'utf8')).toContain(
-      '--sf-accent: #ff1717;',
+      '--sf-accent: var(--theme-accent, var(--bl-cobalt, #315ef5));',
     );
   });
 

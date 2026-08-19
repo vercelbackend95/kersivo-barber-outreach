@@ -66,3 +66,20 @@ export function parseDemoServiceCategoryParam(raw: string | null | undefined): s
   if (!slug || slug === DEMO_ALL_CATEGORY_SLUG) return DEMO_ALL_CATEGORY_SLUG;
   return getDemoServiceCategoryBySlug(slug) ? slug : DEMO_ALL_CATEGORY_SLUG;
 }
+
+const CATEGORY_ANCHOR_BY_SLUG: Record<string, string> = {
+  'cuts-fades': 'cuts-and-fades',
+  'beard-shave': 'beard-and-shave',
+  'hair-beard-combos': 'hair-and-beard-combos',
+  'grooming-care': 'grooming-and-care',
+};
+
+export function demoServiceCategoryAnchorId(slug: string): string {
+  return CATEGORY_ANCHOR_BY_SLUG[slug] ?? slug;
+}
+
+export function getDemoServiceCategoryByAnchorId(anchorId: string): DemoServiceCategory | undefined {
+  const normalized = anchorId.trim().toLowerCase().replace(/^#/, '');
+  const slug = Object.entries(CATEGORY_ANCHOR_BY_SLUG).find(([, id]) => id === normalized)?.[0];
+  return slug ? getDemoServiceCategoryBySlug(slug) : getDemoServiceCategoryBySlug(normalized);
+}

@@ -23,6 +23,7 @@ export type LandingBookingService = {
   pricePence: number;
   category?: string | null;
   displayOrder?: number;
+  description?: string | null;
 };
 
 export type LandingBookingBarber = {
@@ -72,6 +73,7 @@ function mapDbResult(
     pricePence: service.pricePence,
     category: service.category,
     displayOrder: service.displayOrder,
+    description: service.description,
   }));
   const mappedBarbers = barbers.map((barber, index) => ({
     id: barber.id,

@@ -8,6 +8,7 @@ import { cardImageSizes, type StorefrontCardSharedProps, type StorefrontProduct 
 type StorefrontProductCardProps = StorefrontCardSharedProps & {
   product: StorefrontProduct;
   highlight?: boolean;
+  showAtcIcon?: boolean;
 };
 
 export default function StorefrontProductCard({
@@ -19,6 +20,7 @@ export default function StorefrontProductCard({
   copy,
   priority = false,
   highlight = false,
+  showAtcIcon = false,
 }: StorefrontProductCardProps) {
   const soldOut = !product.available;
   const classes = [
@@ -40,7 +42,6 @@ export default function StorefrontProductCard({
           fallback={imageFallback}
           sizes={cardImageSizes(false)}
           priority={priority}
-          decorative
         />
       </div>
       <div className="sf-card-body">
@@ -48,16 +49,19 @@ export default function StorefrontProductCard({
         <h3 className="sf-card-name" id={`sf-card-${product.id}`}>
           {product.name}
         </h3>
-        <p className="sf-card-price">{formatStorefrontPrice(product.pricePence, priceFormat)}</p>
-        <div className="sf-card-actions shop-card-actions">
-          <StorefrontAddToBagButton
-            product={product}
-            href={href}
-            addToBagLabel={copy.addToBagLabel}
-            addedLabel={copy.addedLabel}
-            chooseOptionsLabel={copy.chooseOptionsLabel}
-            soldOutLabel={copy.soldOutLabel}
-          />
+        <div className="sf-card-footer">
+          <p className="sf-card-price">{formatStorefrontPrice(product.pricePence, priceFormat)}</p>
+          <div className="sf-card-actions shop-card-actions">
+            <StorefrontAddToBagButton
+              product={product}
+              href={href}
+              addToBagLabel={copy.addToBagLabel}
+              addedLabel={copy.addedLabel}
+              chooseOptionsLabel={copy.chooseOptionsLabel}
+              soldOutLabel={copy.soldOutLabel}
+              showIcon={showAtcIcon}
+            />
+          </div>
         </div>
       </div>
     </article>

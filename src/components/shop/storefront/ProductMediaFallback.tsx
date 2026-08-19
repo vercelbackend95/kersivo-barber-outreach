@@ -1,6 +1,5 @@
 import { useState } from 'react';
-import BlacklineWordmark from '@/components/demo/BlacklineWordmark';
-import { shopInitial, type StorefrontImage } from '@/lib/shop/storefrontCatalog';
+import { productInitials, shopInitial, type StorefrontImage } from '@/lib/shop/storefrontCatalog';
 import type { StorefrontImageFallback } from '@/lib/shop/storefrontTheme';
 
 type ProductMediaFallbackProps = {
@@ -28,14 +27,34 @@ export default function ProductMediaFallback({
   const [failed, setFailed] = useState(false);
   const classes = ['sf-media', className].filter(Boolean).join(' ');
   const showFallback = !src || failed;
+  const label = image.alt?.trim() || name;
+  const initials = fallback === 'wordmark' ? productInitials(name) : shopInitial(shopName);
 
   if (showFallback) {
     return (
-      <div className={`${classes} sf-media--fallback`} aria-hidden="true">
+      <div
+        className={`${classes} sf-media--fallback${fallback === 'wordmark' ? ' sf-media--wordmark' : ''}`}
+        role={decorative ? undefined : 'img'}
+        aria-hidden={decorative || undefined}
+        aria-label={decorative ? undefined : label}
+      >
         {fallback === 'wordmark' ? (
-          <BlacklineWordmark size="compact" />
+          <>
+            <span className="sf-media-stage" aria-hidden="true" />
+            <span className="sf-media-mark" aria-hidden="true">
+              BL
+            </span>
+            <span className="sf-media-initial" aria-hidden="true">
+              {initials}
+            </span>
+            <span className="sf-media-soon" aria-hidden="true">
+              Image coming soon
+            </span>
+          </>
         ) : (
-          <span className="sf-media-initial">{shopInitial(shopName)}</span>
+          <span className="sf-media-initial" aria-hidden="true">
+            {initials}
+          </span>
         )}
       </div>
     );
@@ -46,7 +65,7 @@ export default function ProductMediaFallback({
       <img
         className="sf-media-img"
         src={src}
-        alt={decorative ? '' : image.alt || name}
+        alt={decorative ? '' : label}
         width={image.width ?? 800}
         height={image.height ?? 800}
         sizes={sizes || image.sizes || '(max-width: 767px) 92vw, 280px'}

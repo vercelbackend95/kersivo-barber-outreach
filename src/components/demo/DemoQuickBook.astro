@@ -25,14 +25,16 @@ const maxDuration = meta.maxDurationMinutes;
       <p class="bl-quick-eyebrow" data-bl-reveal>
         <span class="bl-quick-eyebrow-index">01</span>
         <span aria-hidden="true"> · </span>
-        Quick Book
+        Featured services
       </p>
       <h2 class="bl-quick-heading" id="popular-services-heading" data-bl-reveal>
-        <span class="bl-quick-heading-line">Choose</span>
-        <span class="bl-quick-heading-line">your cut.</span>
+        <span class="bl-quick-heading-line">Featured services.</span>
       </h2>
       <div class="bl-quick-aside" data-bl-reveal>
-        <p class="bl-quick-lede">Select a featured service and continue straight into booking.</p>
+        <p class="bl-quick-lede">
+          A selection of our most-booked appointments. Explore the full service menu for every cut,
+          beard and grooming option.
+        </p>
         <p class="bl-quick-meta">{meta.countPadded} featured services</p>
       </div>
     </header>
@@ -56,13 +58,15 @@ const maxDuration = meta.maxDurationMinutes;
                 <p class="bl-quick-kicker">Featured service</p>
                 <h3 class="bl-quick-name">{service.name}</h3>
                 <p class="bl-quick-desc">{service.description}</p>
-                <div class="bl-quick-facts">
-                  <span class="bl-quick-duration">{service.durationMinutes} min</span>
-                  <span class="bl-quick-price">{formatDemoPriceGbp(service.pricePence)}</span>
+                <div class="bl-quick-booking">
+                  <div class="bl-quick-facts">
+                    <span class="bl-quick-duration">{service.durationMinutes} min</span>
+                    <span class="bl-quick-price">{formatDemoPriceGbp(service.pricePence)}</span>
+                  </div>
+                  <span class="bl-quick-duration-track" aria-hidden="true">
+                    <span class="bl-quick-duration-fill"></span>
+                  </span>
                 </div>
-                <span class="bl-quick-duration-track" aria-hidden="true">
-                  <span class="bl-quick-duration-fill"></span>
-                </span>
                 <span class="bl-quick-action">
                   Book this service
                   <span class="bl-quick-arrow" aria-hidden="true">→</span>

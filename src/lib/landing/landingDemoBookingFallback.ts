@@ -16,6 +16,7 @@ export function getLandingDemoBookingFallback(): LandingBookingData {
       pricePence: service.pricePence,
       category: service.category,
       displayOrder: service.displayOrder,
+      description: service.description,
     })),
     barbers: demoBarbersResponse.barbers.map((barber) => ({
       id: barber.id,

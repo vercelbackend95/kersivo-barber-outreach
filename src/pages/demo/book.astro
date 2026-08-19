@@ -21,7 +21,7 @@ const selectedBarber = resolveDemoBarberSlug(Astro.url.searchParams.get('barber'
   description="Book a cut at Blackline Barbers. Demo booking — details stay in this browser session."
   canonicalPath="/demo/book"
 >
-  <section class="bl-section bl-booking" data-surface="light">
+  <section class="bl-section bl-booking" data-surface="dark">
     <div class="bl-container">
       <BookingFlow
         client:load
@@ -37,6 +37,7 @@ const selectedBarber = resolveDemoBarberSlug(Astro.url.searchParams.get('barber'
           category: service.category,
           displayOrder: service.displayOrder,
           featured: service.featured,
+          description: service.description,
         }))}
         barbers={DEMO_BARBERS.map(toDemoBookingBarber)}
         shopDetails={{ timezone: 'Europe/London' }}

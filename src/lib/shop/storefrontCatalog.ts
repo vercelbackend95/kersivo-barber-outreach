@@ -335,3 +335,13 @@ export function shopInitial(shopName: string | null | undefined): string {
   const trimmed = shopName?.trim() ?? '';
   return (trimmed.charAt(0) || 'S').toUpperCase();
 }
+
+export function productInitials(name: string | null | undefined): string {
+  const words = (name?.trim() ?? '').split(/\s+/).filter(Boolean);
+  if (words.length >= 2) {
+    return `${words[0]!.charAt(0)}${words[1]!.charAt(0)}`.toUpperCase();
+  }
+  const compact = words[0] ?? '';
+  if (compact.length >= 2) return compact.slice(0, 2).toUpperCase();
+  return (compact.charAt(0) || 'BL').toUpperCase();
+}

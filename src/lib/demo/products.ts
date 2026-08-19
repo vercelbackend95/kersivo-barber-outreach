@@ -499,9 +499,7 @@ export function mergeBlacklineProductRow(row: {
   const fixture = getDemoProductById(row.id);
   if (!fixture) return null;
   const dbImage = row.imageUrl?.trim() || '';
-  const src = dbImage.startsWith('/demo/products/')
-    ? dbImage
-    : fixture.image.src || dbImage;
+  const src = dbImage || fixture.image.src;
   return {
     ...fixture,
     name: row.name,

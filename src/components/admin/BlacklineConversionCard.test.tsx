@@ -16,16 +16,27 @@ describe('BlacklineConversionCard', () => {
   it('renders the static launch CTA, not a promotional card or setup checklist', () => {
     const { container } = render(<BlacklineConversionCard />);
 
-    const cta = screen.getByRole('link', { name: 'Launch my barbershop' });
+    const cta = screen.getByRole('link', {
+      name: 'Launch my barbershop. Review setup and choose your plan',
+    });
     expect(cta.getAttribute('href')).toBe(OWNER_LAUNCH_HREF);
     expect(cta.getAttribute('href')).toBe('/admin/launch');
-    expect(cta.getAttribute('aria-label')).toBe('Launch my barbershop');
+    expect(cta.getAttribute('aria-label')).toBe(
+      'Launch my barbershop. Review setup and choose your plan',
+    );
     expect(cta.className).toContain('admin-sidebar-launch-cta');
     expect(cta.className).toContain('admin-sidebar-launch-cta--conversion');
     expect(cta.getAttribute('data-track')).toBe(FUNNEL_EVENTS.blackline_admin_create_system_click);
     expect(cta.querySelector('.admin-sidebar-launch-cta__icon svg')).toBeTruthy();
+    expect(cta.querySelector('.admin-sidebar-launch-cta__arrow svg')).toBeTruthy();
+    expect(cta.querySelector('.admin-sidebar-launch-cta__status')?.textContent).toBe(
+      'YOUR SHOP IS READY',
+    );
     expect(cta.querySelector('.admin-sidebar-launch-cta__title')?.textContent).toBe(
-      'LAUNCH MY BARBERSHOP',
+      'Launch my barbershop',
+    );
+    expect(cta.querySelector('.admin-sidebar-launch-cta__supporting')?.textContent).toBe(
+      'Review setup & choose your plan',
     );
 
     expect(screen.queryByText('MAKE IT YOURS')).toBeNull();

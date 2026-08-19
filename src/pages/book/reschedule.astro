@@ -84,6 +84,7 @@ const tokenStatus = bookingUnavailable ? { valid: false as const, message: PUBLI
             client:load
             mode="reschedule"
             token={token}
+            themePreset="kersivo"
             services={services}
             barbers={barbers.map((barber) => ({
               id: barber.id,

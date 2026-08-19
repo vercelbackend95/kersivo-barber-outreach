@@ -12,19 +12,25 @@ const source = readFileSync(new URL('../../components/demo/DemoQuickBook.astro',
 const css = readFileSync(new URL('../../styles/demo/blackline.css', import.meta.url), 'utf8');
 const featured = getDemoFeaturedServices();
 
-describe('BLACKLINE homepage Quick Book', () => {
+describe('BLACKLINE homepage featured services', () => {
   it('keeps section 01 copy, heading id and a three-launcher deck', () => {
     expect(pageSource).toContain('DemoQuickBook');
     expect(source).toContain('01');
-    expect(source).toContain('Quick Book');
+    expect(source).toContain('Featured services');
+    expect(source).toContain('Featured services.');
     expect(source).toContain('id="popular-services-heading"');
-    expect(source).toContain('Choose');
-    expect(source).toContain('your cut.');
-    expect(source).toContain('Select a featured service and continue straight into booking.');
+    expect(source).toContain(
+      'A selection of our most-booked appointments. Explore the full service menu for every cut,',
+    );
     expect(source).toContain('featured services');
     expect(source).toContain('Book this service');
     expect(source).toContain('View all services');
     expect(source).toContain('href="/demo/services"');
+    expect(source).toContain('class="bl-quick-booking"');
+    expect(source).not.toContain('Quick Book');
+    expect(source).not.toContain('your cut.');
+    expect(source).not.toContain('Choose');
+    expect(source).not.toContain('Select a featured service and continue straight into booking.');
     expect(source).not.toContain('Built around the details');
     expect(source).not.toContain('MOST POPULAR');
     expect(source).not.toContain('BEST SELLER');
@@ -48,7 +54,7 @@ describe('BLACKLINE homepage Quick Book', () => {
     expect(demoServiceAccessibleName(featured[2]!)).toBe('Book Haircut and Beard, 60 minutes, £36');
   });
 
-  it('scopes the Quick Book deck under the BLACKLINE theme and stacks below desktop', () => {
+  it('scopes the featured deck under the BLACKLINE theme and stacks below desktop', () => {
     expect(css).toContain("[data-theme='blackline'] .bl-quick");
     expect(css).toContain('padding-block: clamp(96px, 11vw, 176px)');
     expect(css).toContain('@media (min-width: 1024px)');
@@ -59,5 +65,10 @@ describe('BLACKLINE homepage Quick Book', () => {
     expect(css).not.toContain('.bl-popular');
     expect(source).toContain('--bl-quick-duration-ratio');
     expect(pageSource).toContain("setAttribute('data-bl-quick-motion'");
+
+    const desktopBlock = css.slice(css.indexOf('@media (min-width: 1024px)'));
+    expect(desktopBlock).toContain('.bl-quick-booking');
+    expect(desktopBlock).toContain('margin-top: auto');
+    expect(css).not.toMatch(/\.bl-quick-(facts|duration-track|booking)[^{]*\{[^}]*position:\s*absolute/);
   });
 });

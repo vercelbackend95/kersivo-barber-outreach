@@ -1,12 +1,17 @@
 ---
 import {
-  demoGalleryEditorialSizes,
   demoGalleryIndexLabel,
   demoGalleryOpenLabel,
   demoGallerySequence,
 } from '@/lib/demo/gallery';
+import {
+  demoGalleryBentoClassName,
+  demoGalleryBentoSizes,
+  demoGalleryBentoTiles,
+} from '@/lib/demo/galleryBento';
 
 const frames = demoGallerySequence();
+const tiles = demoGalleryBentoTiles(frames);
 const total = frames.length;
 const firstFrame = frames[0];
 ---
@@ -14,45 +19,41 @@ const firstFrame = frames[0];
 <section
   class="bl-work-index"
   data-surface="light"
-  aria-labelledby="blackline-gallery-index-heading"
+  aria-labelledby="blackline-gallery-heading"
 >
   <div class="bl-container">
-    <header class="bl-work-intro" data-bl-reveal>
-      <p class="bl-work-intro-eyebrow">Visual Index</p>
-      <h2 class="bl-work-intro-heading" id="blackline-gallery-index-heading">Cuts, details, atmosphere.</h2>
-      <p class="bl-work-intro-lede">A curated sequence from the fictional BLACKLINE world.</p>
-    </header>
-
     <ol class="bl-work-grid">
       {
-        frames.map((image, index) => (
+        tiles.map((tile) => (
           <li
-            class={`bl-work-item bl-work-item--${image.role}`}
+            class={demoGalleryBentoClassName(tile)}
             data-bl-reveal
-            style={`--bl-work-pos: ${image.objectPosition.desktop}; --bl-work-pos-mobile: ${image.objectPosition.mobile}`}
+            style={`--bl-work-pos: ${tile.image.objectPosition.desktop}; --bl-work-pos-mobile: ${tile.image.objectPosition.mobile}`}
           >
             <figure class="bl-work-frame">
               <button
                 class="bl-work-open"
                 type="button"
-                data-work-open={String(index)}
-                aria-label={demoGalleryOpenLabel(image, index, total)}
+                data-work-open={String(tile.index)}
+                data-work-alt={tile.image.alt}
+                aria-label={demoGalleryOpenLabel(tile.image, tile.index, total)}
               >
                 <span class="bl-work-stage">
                   <img
-                    src={image.src}
+                    src={tile.image.src}
                     alt=""
-                    width={image.width}
-                    height={image.height}
-                    sizes={demoGalleryEditorialSizes(image.role)}
-                    loading={index === 0 ? 'eager' : 'lazy'}
+                    width={tile.image.width}
+                    height={tile.image.height}
+                    sizes={demoGalleryBentoSizes(tile)}
+                    loading={tile.index < 2 ? 'eager' : 'lazy'}
                     decoding="async"
                   />
+                  <span class="bl-work-view" aria-hidden="true">View image</span>
                 </span>
               </button>
               <figcaption class="bl-work-meta">
-                <p class="bl-work-index-label">{demoGalleryIndexLabel(index, total)}</p>
-                <p class="bl-work-caption">{image.caption}</p>
+                <p class="bl-work-index-label">{demoGalleryIndexLabel(tile.index, total)}</p>
+                <p class="bl-work-caption">{tile.image.caption}</p>
               </figcaption>
             </figure>
           </li>
@@ -61,7 +62,12 @@ const firstFrame = frames[0];
     </ol>
   </div>
 
-  <dialog class="bl-work-dialog" aria-labelledby="bl-work-dialog-caption">
+  <dialog
+    class="bl-work-dialog"
+    role="dialog"
+    aria-modal="true"
+    aria-labelledby="bl-work-dialog-caption"
+  >
     <div class="bl-work-dialog-inner">
       <button
         class="bl-work-dialog-control bl-work-dialog-close"
@@ -75,11 +81,11 @@ const firstFrame = frames[0];
         </svg>
       </button>
       <figure class="bl-work-dialog-figure">
-        <div class="bl-work-dialog-stage">
+        <div class="bl-work-dialog-stage" data-work-stage>
           <img
             class="bl-work-dialog-image"
             src={firstFrame?.src}
-            alt=""
+            alt={firstFrame?.alt ?? ''}
             width={firstFrame?.width}
             height={firstFrame?.height}
             data-work-image

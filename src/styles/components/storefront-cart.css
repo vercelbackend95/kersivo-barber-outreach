@@ -32,8 +32,8 @@
 }
 
 .sf-cart-root[data-sf-cart-theme='blackline'] {
-  --sf-cart-accent: #ff1717;
-  --sf-cart-accent-hover: #d72638;
+  --sf-cart-accent: var(--theme-accent, var(--bl-cobalt, #315ef5));
+  --sf-cart-accent-hover: var(--theme-accent-hover, var(--bl-cobalt-hover, #2449cb));
   --sf-cart-on-accent: #ffffff;
   --sf-cart-bg: var(--bl-carbon, #0b0c0e);
   --sf-cart-surface: var(--bl-graphite, #14161a);
@@ -246,6 +246,17 @@
   background: var(--sf-cart-surface);
 }
 
+.sf-cart-line .sf-media {
+  width: 6rem;
+  height: 6rem;
+  flex: 0 0 6rem;
+  aspect-ratio: 1 / 1;
+}
+
+.sf-cart-line .sf-media-initial {
+  font-size: 1.35rem;
+}
+
 .sf-cart-line-media--placeholder {
   background:
     linear-gradient(145deg, color-mix(in srgb, var(--sf-cart-surface) 70%, transparent), transparent),
@@ -413,8 +424,8 @@
   gap: 0.45rem;
   margin: 0;
   padding: 0.7rem 0.75rem;
-  border: 1px solid color-mix(in srgb, var(--sf-cart-accent) 40%, transparent);
-  background: color-mix(in srgb, var(--sf-cart-accent) 10%, transparent);
+  border: 1px solid color-mix(in srgb, var(--danger, #ef4444) 40%, transparent);
+  background: color-mix(in srgb, var(--danger, #ef4444) 10%, transparent);
   color: var(--sf-cart-text);
   font-size: 0.8125rem;
 }
@@ -426,7 +437,7 @@
   padding: 0;
   border: 0;
   background: transparent;
-  color: var(--sf-cart-accent);
+  color: var(--danger, #ef4444);
   font-family: inherit;
   font-size: 0.75rem;
   font-weight: 700;

@@ -8,8 +8,10 @@ export default function BlacklineConversionCard() {
     <AdminLaunchCtaButton
       conversion
       href={OWNER_LAUNCH_HREF}
-      ariaLabel="Launch my barbershop"
-      title="LAUNCH MY BARBERSHOP"
+      ariaLabel="Launch my barbershop. Review setup and choose your plan"
+      status="YOUR SHOP IS READY"
+      title="Launch my barbershop"
+      supporting="Review setup & choose your plan"
       dataTrack={FUNNEL_EVENTS.blackline_admin_create_system_click}
     />
   );

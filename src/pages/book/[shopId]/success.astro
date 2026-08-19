@@ -1,6 +1,7 @@
 ---
 import MinimalLayout from '@/layouts/MinimalLayout.astro';
 import BookingConfirmationPanel from '@/components/booking/BookingConfirmationPanel';
+import BookingThemeRoot from '@/components/booking/BookingThemeRoot';
 import { prisma } from '@/lib/db/client';
 import { retrieveBookingDepositSession } from '@/lib/shop/stripeConnect';
 import { getCheckoutPaymentIntentId } from '@/lib/shop/stripe';
@@ -107,6 +108,7 @@ const calendarHref =
   showCookieConsent={false}
 >
   <main class="container page-wrap booking-page-wrap">
+    <BookingThemeRoot client:load preset="kersivo">
     <section class="surface booking-shell booking-flow booking-flow--wizard" aria-live="polite">
       <div class="booking-form-content">
         {
@@ -144,5 +146,6 @@ const calendarHref =
         }
       </div>
     </section>
+    </BookingThemeRoot>
   </main>
 </MinimalLayout>

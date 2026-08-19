@@ -16,6 +16,7 @@ export type BookableService = {
   category?: string | null;
   displayOrder?: number;
   featured?: boolean;
+  description?: string | null;
 };
 
 export type ServiceCategoryGroup = {

@@ -83,6 +83,125 @@
   align-self: start;
 }
 
+.admin-demo-lock .admin-demo-lock__card--blackline {
+  max-width: min(32rem, 100%);
+  gap: 0.65rem;
+}
+
+.admin-demo-lock__eyebrow {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  margin: 0;
+  padding-right: 1.75rem;
+  font-size: 0.68rem;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--muted);
+}
+
+.admin-demo-lock__rule {
+  width: 100%;
+  height: 1px;
+  margin: 0.35rem 0 0.15rem;
+  border: 0;
+  background: color-mix(in srgb, var(--border) 88%, transparent);
+}
+
+.admin-demo-lock__convert-title {
+  margin: 0;
+  font-family: var(--font-heading);
+  font-size: 1.15rem;
+  font-weight: 500;
+  line-height: 1.2;
+  color: var(--fg);
+}
+
+.admin-demo-lock__convert-body {
+  margin: 0;
+  font-size: var(--text-sm);
+  line-height: 1.45;
+  color: var(--muted);
+}
+
+.admin-demo-lock__create {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  width: 100%;
+  min-height: 2.75rem;
+  margin-top: 0.15rem;
+  padding: 0.7rem 1rem;
+  border: 0;
+  border-radius: 10px;
+  background: var(--accent);
+  color: #fff;
+  font: inherit;
+  font-size: 0.82rem;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-decoration: none;
+  text-transform: uppercase;
+  box-shadow:
+    inset 0 1px 0 color-mix(in srgb, #fff 18%, transparent),
+    0 8px 16px color-mix(in srgb, var(--accent) 28%, transparent);
+  transition:
+    background-color 160ms ease,
+    transform 160ms ease,
+    box-shadow 160ms ease;
+}
+
+.admin-demo-lock__create:hover {
+  background: var(--accent-hover);
+  transform: translateY(-1px);
+}
+
+.admin-demo-lock__create:active {
+  transform: translateY(0);
+}
+
+.admin-demo-lock__create:focus-visible {
+  outline: 2px solid #fff;
+  outline-offset: 2px;
+  box-shadow: 0 0 0 4px color-mix(in srgb, var(--accent) 45%, transparent);
+}
+
+.admin-demo-lock__explore {
+  appearance: none;
+  align-self: center;
+  min-height: 2.75rem;
+  padding: 0.4rem 0.8rem;
+  border: 0;
+  background: transparent;
+  color: var(--muted);
+  font: inherit;
+  font-size: 0.9rem;
+  font-weight: 600;
+  text-decoration: underline;
+  text-underline-offset: 0.18em;
+  cursor: pointer;
+}
+
+.admin-demo-lock__explore:hover {
+  color: var(--fg);
+}
+
+.admin-demo-lock__explore:focus-visible {
+  outline: 2px solid var(--focus, #fff);
+  outline-offset: 2px;
+  border-radius: 6px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .admin-demo-lock__create,
+  .admin-demo-lock__create:hover {
+    transition: none;
+    transform: none;
+  }
+}
+
 @media (max-width: 560px) {
   .admin-demo-lock__title {
     font-size: clamp(1.15rem, 5.5vw, 1.4rem);

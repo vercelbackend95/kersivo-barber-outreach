@@ -1,40 +1,24 @@
 /*
- * LandingBookingWidget — embeds the real booking wizard in preview mode.
- * Look matches /book; only stage height + lock overlay are widget-specific.
+ * LandingBookingWidget — stage height and lock overlay only.
+ * Booking visuals come from the shared booking theme contract.
  */
 
 .lbw {
-  --bg: #030303;
-  --surface-1: #070707;
-  --surface-2: #0d0d0d;
-  --surface-3: #141414;
-  --surface: var(--surface-1);
-  --border: #24201c;
-  --fg: #fff8ee;
-  --muted: #c9c1b7;
-
   position: relative;
   display: block;
   width: 100%;
   margin-inline: auto;
   min-width: 0;
   max-width: 100%;
-  font-family: var(--font-body);
-  color: var(--fg);
 }
 
 .lbw__stage {
   position: relative;
   min-width: 0;
   max-width: 100%;
-  border: none;
-  background: transparent;
-  box-shadow: none;
 }
 
 .lbw__scroll {
-  container-type: inline-size;
-  container-name: lbw;
   min-width: 0;
   max-width: 100%;
   max-height: clamp(26rem, 64vh, 36rem);
@@ -42,8 +26,6 @@
   overflow-y: auto;
   overscroll-behavior: contain;
   scrollbar-width: none;
-  -ms-overflow-style: none;
-  transition: filter 180ms ease, opacity 180ms ease;
 }
 
 .lbw__scroll::-webkit-scrollbar {
@@ -52,114 +34,12 @@
   display: none;
 }
 
-/* Same wizard UI as /book — no layout hacks that diverge from the real form */
-.lbw .booking-shell.booking-flow {
-  width: 100% !important;
-  max-width: 100% !important;
-  margin-inline: 0 !important;
-  overflow: visible;
-  border: none;
-  border-radius: 0;
-  box-shadow: none;
-  background: transparent;
-}
-
-.lbw .booking-form-content {
-  max-width: none;
-  gap: 1rem;
-}
-
-.lbw .booking-flow__layout {
-  grid-template-columns: minmax(0, 1fr) !important;
-  max-width: none !important;
-  margin-inline: 0 !important;
-}
-
-.lbw .booking-flow__right {
-  display: none !important;
-}
-
-.lbw .booking-flow__hero {
-  gap: 0.85rem;
-}
-
-.lbw .booking-flow__hero-copy h1 {
-  font-size: clamp(1.55rem, 4.5cqi, 1.9rem);
-}
-
-.lbw .booking-step__title h2 {
-  font-size: clamp(1.25rem, 4cqi, 1.55rem);
-}
-
-.lbw .booking-flow__picks {
-  font-size: 0.78rem;
-  padding: 0.45rem 0.7rem;
-}
-
-/* Keep services as compact list/tiles matching wizard breakpoints via container */
-.lbw .booking-choice-grid--services {
-  grid-template-columns: minmax(0, 1fr);
-}
-
-@container lbw (min-width: 360px) {
-  .lbw .booking-choice-grid--services {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-  }
-
-  .lbw .booking-choice-card--service {
-    grid-template-columns: minmax(0, 1fr);
-    grid-template-rows: auto auto;
-    align-content: space-between;
-    gap: 0.75rem;
-    min-height: 6.5rem;
-    padding: 0.95rem;
-  }
-
-  .lbw .booking-choice-card__meta--service {
-    flex-direction: row;
-    align-items: center;
-    justify-content: space-between;
-    width: 100%;
-  }
-}
-
-.lbw .booking-choice-grid--barbers {
-  grid-template-columns: minmax(0, 1fr);
-}
-
-@container lbw (min-width: 320px) {
-  .lbw .booking-choice-grid--barbers {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-  }
-}
-
-.lbw .slot-grid {
-  grid-template-columns: repeat(3, minmax(0, 1fr));
-  gap: 0.45rem;
-}
-
-@container lbw (min-width: 400px) {
-  .lbw .slot-grid {
-    grid-template-columns: repeat(4, minmax(0, 1fr));
-  }
-}
-
-.lbw .booking-step-indicator__list {
-  max-width: 18rem;
-}
-
-.lbw .booking-action-bar {
-  display: none !important;
-}
-
-/* Dim / mute once the preview is complete */
 .lbw.is-dimmed .lbw__scroll {
   filter: blur(2px);
   opacity: 0.5;
   pointer-events: none;
 }
 
-/* Lock overlay */
 .lbw-lock {
   position: absolute;
   inset: 0;
@@ -169,17 +49,8 @@
   justify-content: center;
   padding: 0.85rem;
   overflow-y: auto;
-  overscroll-behavior: contain;
   border-radius: var(--radius-16);
-  background: color-mix(in srgb, var(--bg) 55%, transparent);
-  backdrop-filter: blur(6px);
-  -webkit-backdrop-filter: blur(6px);
-  animation: lbw-fade 160ms ease-out;
-}
-
-@keyframes lbw-fade {
-  from { opacity: 0; }
-  to { opacity: 1; }
+  background: color-mix(in srgb, #030303 55%, transparent);
 }
 
 .lbw-lock__card {
@@ -192,16 +63,10 @@
   gap: 0.4rem;
   padding: clamp(1rem, 3vw, 1.5rem);
   border-radius: var(--radius-16);
-  border: 1px solid color-mix(in srgb, var(--border) 82%, var(--fg) 6%);
-  background:
-    linear-gradient(
-      180deg,
-      color-mix(in srgb, var(--surface-3) 92%, transparent),
-      color-mix(in srgb, var(--surface-2) 96%, transparent)
-    );
-  box-shadow: 0 24px 60px color-mix(in srgb, #000 60%, transparent);
-  text-align: left;
-  animation: lbw-card-swap 220ms ease-out;
+  border: 1px solid #24201c;
+  background: #141414;
+  color: #fff8ee;
+  box-shadow: 0 24px 60px rgb(0 0 0 / 0.6);
 }
 
 .lbw-lock__card--success {
@@ -210,39 +75,18 @@
   justify-content: center;
 }
 
-@keyframes lbw-card-swap {
-  from {
-    opacity: 0;
-    transform: translateY(6px);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
-}
-
 .lbw-lock__close {
   position: absolute;
   top: 0.5rem;
   right: 0.6rem;
-  display: flex;
-  align-items: center;
-  justify-content: center;
   width: 1.75rem;
   height: 1.75rem;
   border: none;
-  border-radius: var(--radius-full);
+  border-radius: 999px;
   background: transparent;
-  color: var(--muted);
+  color: #c9c1b7;
   font-size: 1.35rem;
-  line-height: 1;
   cursor: pointer;
-  transition: color 120ms ease, background 120ms ease;
-}
-
-.lbw-lock__close:hover {
-  color: var(--fg);
-  background: color-mix(in srgb, var(--fg) 8%, transparent);
 }
 
 .lbw-lock__eyebrow {
@@ -251,35 +95,27 @@
   font-weight: 700;
   letter-spacing: 0.14em;
   text-transform: uppercase;
-  color: color-mix(in srgb, var(--accent-hover) 82%, var(--fg));
+  color: #d72638;
 }
 
 .lbw-lock__title {
   margin: 0;
   font-family: var(--font-heading);
   font-size: clamp(1.35rem, 3.5vw, 1.7rem);
-  line-height: 1.05;
-  letter-spacing: var(--tracking-heading);
-  color: var(--fg);
 }
 
 .lbw-lock__body {
   margin: 0 0 0.4rem;
-  font-size: var(--text-sm);
-  line-height: 1.5;
-  color: var(--muted);
+  color: #c9c1b7;
 }
 
 .lbw-lock__actions {
   display: flex;
   flex-direction: column;
-  align-items: stretch;
   gap: 0.45rem;
-  margin-top: 0.15rem;
 }
 
 .lbw-lock__cta {
-  align-self: stretch;
   text-align: center;
   min-height: 2.75rem;
 }
@@ -287,25 +123,6 @@
 @media (max-width: 560px) {
   .lbw__scroll {
     max-height: clamp(18rem, 52vh, 26rem);
-  }
-
-  .lbw-lock {
-    padding: 0.6rem;
-    align-items: flex-start;
-  }
-
-  .lbw-lock__card {
-    gap: 0.3rem;
-    padding: 0.9rem 0.95rem 1rem;
-  }
-
-  .lbw-lock__title {
-    font-size: clamp(1.15rem, 5.5vw, 1.4rem);
-  }
-
-  .lbw-lock__body {
-    font-size: 0.8rem;
-    line-height: 1.45;
   }
 }
 
@@ -315,5 +132,6 @@
   .lbw-lock__card {
     transition: none;
     animation: none;
+    filter: none;
   }
 }
