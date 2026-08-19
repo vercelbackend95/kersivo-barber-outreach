@@ -1,22 +1,22 @@
 ---
 import DemoLayout from '@/layouts/DemoLayout.astro';
-import DemoProductAdd from '@/components/demo/DemoProductAdd';
-import { getBlacklineRetailProductById } from '@/lib/demo/blacklineShop';
-import { getBlacklineProductLayout } from '@/lib/demo/shopPresentation';
-import { formatDemoPriceGbp } from '@/lib/demo/services';
+import StorefrontProductDetail from '@/components/shop/storefront/StorefrontProductDetail';
+import { getBlacklineRetailProducts } from '@/lib/demo/blacklineShop';
 import { DEMO_HOURS, DEMO_LOCATION, DEMO_SHOP_NAME } from '@/lib/demo/site';
-import { CATEGORY_LABELS } from '@/lib/shop/productPresentation';
+import { relatedStorefrontProducts, storefrontProductFromDemo } from '@/lib/shop/storefrontCatalog';
+import '@/styles/components/storefront.css';
 
 export const prerender = false;
 
 const id = Astro.params.id?.trim() ?? '';
-const product = id ? await getBlacklineRetailProductById(id) : null;
+const products = (await getBlacklineRetailProducts()).map(storefrontProductFromDemo);
+const product = id ? products.find((item) => item.id === id) ?? null : null;
 
 if (!product) {
   return Astro.redirect('/demo/shop');
 }
 
-const layout = getBlacklineProductLayout(product.id);
+const related = relatedStorefrontProducts(products, product.id);
 ---
 
 <DemoLayout
@@ -24,29 +24,18 @@ const layout = getBlacklineProductLayout(product.id);
   description={`${product.name} at Blackline Barbers. Demo product — no payment is taken.`}
   canonicalPath={`/demo/shop/${product.id}`}
 >
-  <section class="bl-pdp" data-surface="light" aria-labelledby="blackline-pdp-heading">
-    <div class="bl-container bl-pdp-grid">
-      <a class="bl-pdp-back" href="/demo/shop">← Back to the shop</a>
-      <div class="bl-pdp-stage" data-stage={layout.stage} style={`--bl-shop-scale: ${layout.scale}`}>
-        <img
-          src={product.image.src}
-          alt={product.image.alt}
-          width={product.image.width}
-          height={product.image.height}
-          sizes="(max-width: 767px) 92vw, 48vw"
-        />
-      </div>
-      <div class="bl-pdp-copy">
-        <p class="bl-edit-category">{CATEGORY_LABELS[product.category]}</p>
-        <h1 class="bl-pdp-heading" id="blackline-pdp-heading">{product.name}</h1>
-        <p class="bl-pdp-price">{formatDemoPriceGbp(product.pricePence)}</p>
-        <p class="bl-pdp-desc">{product.description}</p>
-        <p class="bl-pdp-collect">
-          Collect in shop at {DEMO_LOCATION}. Opening hours {DEMO_HOURS[0].days} {DEMO_HOURS[0].hours}.
-        </p>
-        <p class="bl-page-safety">No real payment or fulfilment is created.</p>
-        <DemoProductAdd client:load product={product} />
-      </div>
-    </div>
-  </section>
+  <StorefrontProductDetail
+    client:load
+    product={product}
+    related={related}
+    themeId="blackline"
+    shopName={DEMO_SHOP_NAME}
+    backHref="/demo/shop"
+    productHrefPrefix="/demo/shop"
+    priceFormat="demo"
+    imageFallback="wordmark"
+    fulfilmentLabel={`Collect in shop at ${DEMO_LOCATION}. Opening hours ${DEMO_HOURS[0].days} ${DEMO_HOURS[0].hours}.`}
+    safetyNote="No real payment or fulfilment is created."
+    addToBagLabel="Add to bag"
+  />
 </DemoLayout>

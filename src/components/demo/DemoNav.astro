@@ -1,165 +1,27 @@
 ---
-import { DEMO_BOOK_HREF, DEMO_HOME_HREF, DEMO_NAV, formatNavIndex, isDemoNavActive } from '@/lib/demo/nav';
-import { DEMO_LOCATION, DEMO_LOCATION_NOTE } from '@/lib/demo/site';
+import StorefrontHeader from '@/components/shop/storefront/StorefrontHeader.astro';
+import BlacklineWordmark from '@/components/demo/BlacklineWordmark';
+import { DEMO_BOOK_HREF, DEMO_HOME_HREF, DEMO_NAV } from '@/lib/demo/nav';
+import { DEMO_LOCATION, DEMO_LOCATION_NOTE, DEMO_SHOP_NAME } from '@/lib/demo/site';
 
 interface Props {
   currentPath: string;
 }
 
 const { currentPath } = Astro.props;
-const panelId = 'bl-mobile-nav';
-const bookIsCurrent = isDemoNavActive(currentPath, DEMO_BOOK_HREF);
 ---
 
-<header class="bl-header" data-bl-header data-bl-nav-state="closed" transition:persist="bl-header">
-  <div class="bl-container bl-header-inner">
-    <a class="bl-wordmark" href={DEMO_HOME_HREF} aria-label="BLACKLINE demo home">
-      Blackline
-      <span class="bl-wordmark-sub">Barbers</span>
-    </a>
-    <nav class="bl-nav" aria-label="Primary">
-      {
-        DEMO_NAV.map((item) => (
-          <a
-            class="bl-nav-link"
-            href={item.href}
-            aria-current={isDemoNavActive(currentPath, item.href) ? 'page' : undefined}
-          >
-            {item.label}
-          </a>
-        ))
-      }
-    </nav>
-    <button
-      type="button"
-      class="bl-bag-button"
-      data-bl-bag-button
-      aria-label="Shopping bag, 0 items"
-    >
-      <span class="bl-bag-button-label">Bag</span>
-      <span class="bl-bag-count is-empty" data-bl-bag-count>0</span>
-    </button>
-    <a
-      class="bl-btn bl-btn--primary bl-header-cta"
-      href={DEMO_BOOK_HREF}
-      aria-current={bookIsCurrent ? 'page' : undefined}
-    >
-      Book now
-    </a>
-    <a
-      class="bl-header-book"
-      href={DEMO_BOOK_HREF}
-      data-bl-header-book
-      aria-current={bookIsCurrent ? 'page' : undefined}
-    >
-      Book
-    </a>
-    <button
-      class="bl-nav-toggle"
-      type="button"
-      data-bl-nav-toggle
-      aria-controls={panelId}
-      aria-expanded="false"
-    >
-      <span class="bl-sr-only">Open navigation menu</span>
-      <span class="bl-nav-toggle-icon" aria-hidden="true">
-        <span class="bl-nav-toggle-line"></span>
-        <span class="bl-nav-toggle-line"></span>
-      </span>
-    </button>
-  </div>
-
-  <div class="bl-nav-layer" id={panelId} data-bl-nav-panel hidden>
-    <nav class="bl-nav-index" aria-label="Mobile navigation">
-      <ul class="bl-nav-index-list">
-        {
-          DEMO_NAV.map((item, index) => {
-            const current = isDemoNavActive(currentPath, item.href);
-            return (
-              <li class="bl-nav-index-item">
-                <a
-                  class="bl-nav-index-link"
-                  href={item.href}
-                  aria-current={current ? 'page' : undefined}
-                >
-                  <span class="bl-nav-index-num">{formatNavIndex(index)}</span>
-                  <span class="bl-nav-index-copy">
-                    <span class="bl-nav-index-label">{item.label}</span>
-                    {current ? <span class="bl-nav-index-current">Current</span> : null}
-                  </span>
-                  <span class="bl-nav-index-mark" aria-hidden="true"></span>
-                </a>
-              </li>
-            );
-          })
-        }
-      </ul>
-    </nav>
-
-    <div class="bl-nav-dock">
-      <a
-        class="bl-nav-book"
-        href={DEMO_BOOK_HREF}
-        data-bl-nav-book
-        aria-current={bookIsCurrent ? 'page' : undefined}
-      >
-        Book an appointment <span class="bl-nav-book-arrow" aria-hidden="true">→</span>
-      </a>
-      <button
-        type="button"
-        class="bl-nav-bag"
-        data-bl-nav-bag
-        aria-label="Shopping bag, 0 items"
-      >
-        Bag (<span data-bl-bag-count>0</span>)
-      </button>
-      <p class="bl-nav-place">
-        <span>{DEMO_LOCATION}</span>
-        <span>{DEMO_LOCATION_NOTE}</span>
-      </p>
-    </div>
-  </div>
-</header>
-
-<noscript>
-  <nav class="bl-nav-noscript" aria-label="Mobile navigation">
-    <ul>
-      {
-        DEMO_NAV.map((item) => (
-          <li>
-            <a href={item.href}>{item.label}</a>
-          </li>
-        ))
-      }
-    </ul>
-    <a href={DEMO_BOOK_HREF}>Book an appointment</a>
-  </nav>
-</noscript>
-
-<script>
-  import { bindMobileNav } from '@/lib/demo/mobileNav';
-
-  function bindBlacklineNav(header: Element) {
-    if (!(header instanceof HTMLElement) || header.dataset.blNavBound === 'true') return;
-    const toggle = header.querySelector('[data-bl-nav-toggle]');
-    const overlay = header.querySelector('[data-bl-nav-panel]');
-    if (!(toggle instanceof HTMLButtonElement) || !(overlay instanceof HTMLElement)) return;
-    header.dataset.blNavBound = 'true';
-    bindMobileNav({ header, toggle, overlay });
-  }
-
-  function bindBlacklineBag(header: Element) {
-    if (!(header instanceof HTMLElement) || header.dataset.blBagBound === 'true') return;
-    header.dataset.blBagBound = 'true';
-    const button = header.querySelector('[data-bl-bag-button]');
-    if (!(button instanceof HTMLButtonElement)) return;
-    button.addEventListener('click', () => {
-      window.dispatchEvent(new CustomEvent('kersivo:cart-open-request'));
-    });
-  }
-
-  document.querySelectorAll('[data-bl-header]').forEach((header) => {
-    bindBlacklineNav(header);
-    bindBlacklineBag(header);
-  });
-</script>
+<StorefrontHeader
+  themeId="blackline"
+  currentPath={currentPath}
+  homeHref={DEMO_HOME_HREF}
+  homeLabel="BLACKLINE demo home"
+  items={[...DEMO_NAV]}
+  bookHref={DEMO_BOOK_HREF}
+  shopName={DEMO_SHOP_NAME}
+  showBag
+  placeLabel={DEMO_LOCATION}
+  placeNote={DEMO_LOCATION_NOTE}
+>
+  <BlacklineWordmark slot="logo" size="default" />
+</StorefrontHeader>

@@ -9,6 +9,10 @@ import { formatDemoPriceGbp } from '@/lib/demo/services';
 import { DEMO_HOURS, DEMO_LOCATION } from '@/lib/demo/site';
 import { navigateDemoPath } from '@/lib/demo/clientNavigate';
 import {
+  addBlacklineSessionOrder,
+  toConfirmationSnapshot,
+} from '@/lib/demo/blacklineSessionOrders';
+import {
   bindCartNamespace,
   clear,
   getServerSnapshot,
@@ -61,7 +65,35 @@ export default function DemoCheckout() {
         throw new Error(payload?.error || 'Unable to complete the demo order.');
       }
 
-      window.sessionStorage.setItem(BLACKLINE_CONFIRMATION_STORAGE_KEY, JSON.stringify(payload.order));
+      const priced = payload.order as {
+        items?: Array<{
+          productId?: string;
+          name?: string;
+          unitPricePence?: number;
+          quantity?: number;
+          lineTotalPence?: number;
+          imageUrl?: string;
+        }>;
+        totalPence?: number;
+        createdAt?: string;
+      };
+      const sessionOrder = addBlacklineSessionOrder({
+        items: (priced.items ?? []).map((item) => ({
+          productId: String(item.productId ?? ''),
+          name: String(item.name ?? ''),
+          unitPricePence: Number(item.unitPricePence ?? 0),
+          quantity: Number(item.quantity ?? 0),
+          lineTotalPence: Number(item.lineTotalPence ?? 0),
+          imageUrl: String(item.imageUrl ?? ''),
+        })),
+        totalPence: Number(priced.totalPence ?? 0),
+        createdAt: typeof priced.createdAt === 'string' ? priced.createdAt : undefined,
+      });
+
+      window.sessionStorage.setItem(
+        BLACKLINE_CONFIRMATION_STORAGE_KEY,
+        JSON.stringify(toConfirmationSnapshot(sessionOrder)),
+      );
       clear();
       await navigateDemoPath('/demo/shop/confirmation');
     } catch (err) {

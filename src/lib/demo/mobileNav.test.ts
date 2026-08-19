@@ -38,7 +38,7 @@ function mountNav(options?: { current?: boolean; matchDesktop?: boolean; reduced
     matches:
       query.includes('prefers-reduced-motion')
         ? Boolean(options?.reducedMotion)
-        : query.includes('min-width: 1024px')
+        : query.includes('min-width: 70rem')
           ? Boolean(options?.matchDesktop)
           : false,
     media: query,
@@ -149,7 +149,7 @@ describe('bindMobileNav', () => {
 
     toggle.click();
     window.matchMedia = vi.fn().mockImplementation((query: string) => ({
-      matches: String(query).includes('min-width: 1024px'),
+      matches: String(query).includes('min-width: 70rem'),
       media: query,
       addEventListener: vi.fn(),
       removeEventListener: vi.fn(),

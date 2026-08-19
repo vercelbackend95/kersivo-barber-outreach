@@ -6,6 +6,7 @@ import CookieConsentMount from '@/components/consent/CookieConsentMount.astro';
 import FaviconLinks from '@/components/seo/FaviconLinks.astro';
 import SeoHead from '@/components/seo/SeoHead.astro';
 import Navbar17 from '@/components/navbar17.astro';
+import StorefrontHeader from '@/components/shop/storefront/StorefrontHeader.astro';
 import InitDataTrackScript from '@/components/InitDataTrackScript.astro';
 import CartDrawerMount from '@/components/shop/CartDrawerMount.astro';
 import RouteTransitionRoot from '@/components/navigation/RouteTransitionRoot.astro';
@@ -19,6 +20,7 @@ import '@/styles/components/badge.css';
 import '@/styles/components/inputs.css';
 import '@/styles/components/navbar17.css';
 import '@/styles/components/shop.css';
+import '@/styles/components/storefront-cart.css';
 import '@/styles/components/empty-state.css';
 import '@/styles/components/shop-product.css';
 import '@/styles/components/route-transition.css';
@@ -34,10 +36,16 @@ interface Props extends PageSeo {
   jsonLd?: Record<string, unknown> | Record<string, unknown>[];
   /** Navbar variant — `landing` simplifies nav on Google Ads pages. */
   navbarVariant?: Navbar17Variant;
-  /** Public `/shop` sandbox — CartDrawer completes locally (no Stripe). */
+  /** Public `/shop` sandbox — cart completes locally (no Stripe). */
   publicDemoMode?: boolean;
-  /** Live tenant shop id — CartDrawer posts to public Connect checkout. */
+  /** Live tenant shop id — cart posts to public Connect checkout. */
   shopId?: string;
+  /** Display name in the cart collection line. */
+  shopName?: string;
+  /** Tenant shop logo for the storefront header. */
+  brandLogoUrl?: string | null;
+  /** Empty-bag explore link. */
+  exploreHref?: string;
 }
 
 const {
@@ -56,6 +64,9 @@ const {
   navbarVariant = 'default',
   publicDemoMode = false,
   shopId,
+  shopName,
+  brandLogoUrl = null,
+  exploreHref,
 } = Astro.props;
 
 const jsonLdBlocks = jsonLd
@@ -65,6 +76,11 @@ const jsonLdBlocks = jsonLd
   : [];
 
 const cartNamespace = shopId ? { shopId } : null;
+const cartShopName = shopName?.trim() || (publicDemoMode ? 'KERSIVO' : 'Shop');
+const cartExploreHref = exploreHref ?? (shopId ? `/shop/${shopId}` : '/shop');
+const cartCheckout = publicDemoMode ? { type: 'publicDemo' as const } : { type: 'live' as const };
+const currentPath = Astro.url.pathname;
+const useTenantStorefrontHeader = Boolean(shopId) && navbarVariant === 'shop' && !publicDemoMode;
 ---
 
 <html lang="en-GB" data-app="marketing" transition:animate="none">
@@ -112,14 +128,51 @@ const cartNamespace = shopId ? { shopId } : null;
     <slot name="head" />
   </head>
   <body>
-    <Navbar17 variant={navbarVariant} />
-    <RouteTransitionRoot variant="marketing">
-      <slot />
-    </RouteTransitionRoot>
+    <div data-sf-page-shell>
+      {
+        useTenantStorefrontHeader ? (
+          <StorefrontHeader
+            themeId="kersivo"
+            currentPath={currentPath}
+            homeHref={`/shop/${shopId}`}
+            navHomeHref="/"
+            homeLabel={`${cartShopName} shop`}
+            items={[{ href: `/shop/${shopId}`, label: 'Shop' }]}
+            bookHref={`/book/${shopId}`}
+            shopName={cartShopName}
+            logoUrl={brandLogoUrl}
+            showBag
+          />
+        ) : (
+          <Navbar17 variant={navbarVariant} />
+        )
+      }
+      {
+        useTenantStorefrontHeader ? (
+          <div data-sf-header-inert>
+            <RouteTransitionRoot variant="marketing">
+              <slot />
+            </RouteTransitionRoot>
+          </div>
+        ) : (
+          <RouteTransitionRoot variant="marketing">
+            <slot />
+          </RouteTransitionRoot>
+        )
+      }
+    </div>
     {
       navbarVariant === 'shop' ? (
         <div transition:persist="ks-cart">
-          <CartDrawerMount publicDemoMode={publicDemoMode} shopId={shopId} />
+          <CartDrawerMount
+            mode={publicDemoMode ? 'publicDemo' : 'production'}
+            shopId={shopId ?? ''}
+            shopName={cartShopName}
+            themeId="kersivo"
+            priceFormat="gbp"
+            exploreHref={cartExploreHref}
+            checkout={cartCheckout}
+          />
         </div>
       ) : null
     }

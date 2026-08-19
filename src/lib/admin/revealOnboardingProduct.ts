@@ -148,7 +148,7 @@ function animateWindowScrollTo(targetY: number): Promise<void> {
 }
 
 function getStickyNavbarOffset(): number {
-  const nav = document.querySelector('.navbar17') as HTMLElement | null;
+  const nav = document.querySelector('[data-sf-header], .navbar17') as HTMLElement | null;
   const height = nav?.getBoundingClientRect().height ?? 0;
   return height + 12;
 }
@@ -234,7 +234,9 @@ function clearHighlightQuery() {
 function paintProductReveal(item: HTMLElement, productName: string) {
   clearOnboardingProductHighlight();
 
-  const card = item.querySelector('.shop-card') as HTMLElement | null;
+  const card =
+    (item.querySelector('.shop-card') as HTMLElement | null) ??
+    (item.querySelector('.sf-card') as HTMLElement | null);
   const atc = item.querySelector<HTMLButtonElement>('[data-add-to-cart]');
 
   if (card) {
@@ -242,7 +244,7 @@ function paintProductReveal(item: HTMLElement, productName: string) {
     const badge = document.createElement('span');
     badge.className = 'retail-your-product-badge';
     badge.textContent = 'YOUR PRODUCT';
-    const media = card.querySelector('.shop-media');
+    const media = card.querySelector('.shop-media, .sf-card-media, .sf-media');
     if (media) {
       media.appendChild(badge);
     } else {

@@ -1,0 +1,370 @@
+import { expect, test, type Page } from '@playwright/test';
+
+const DASHBOARD_CTA = 'See your order in the dashboard';
+const PRODUCT = 'Ironclad Pomade';
+
+async function assertNoHorizontalOverflow(page: Page) {
+  const metrics = await page.evaluate(() => ({
+    scrollWidth: document.documentElement.scrollWidth,
+    clientWidth: document.documentElement.clientWidth,
+  }));
+  expect(metrics.scrollWidth).toBeLessThanOrEqual(metrics.clientWidth + 1);
+}
+
+async function waitForCartIsland(page: Page) {
+  await expect(page.locator('[data-sf-cart]')).toBeAttached();
+}
+
+async function openBag(page: Page) {
+  await waitForCartIsland(page);
+  await expect(async () => {
+    await page.evaluate(() => window.dispatchEvent(new CustomEvent('kersivo:cart-open-request')));
+    await expect(page.locator('.sf-cart.is-open')).toBeVisible({ timeout: 400 });
+  }).toPass();
+}
+
+test.describe('BLACKLINE shop purchase to Orders and Sales', () => {
+  test('creates a session order, collects it, and focuses the derived sale', async ({ page }) => {
+    const pageErrors: string[] = [];
+    const isBenignPageNoise = (text: string) =>
+      /favicon|ResizeObserver|net::ERR_|Outdated Optimize Dep|cannot be a descendant|cannot contain a nested|Suspense boundary/i.test(
+        text,
+      );
+    page.on('pageerror', (error) => {
+      if (isBenignPageNoise(error.message)) return;
+      pageErrors.push(error.message);
+    });
+    page.on('console', (message) => {
+      if (message.type() === 'error') {
+        const text = message.text();
+        if (isBenignPageNoise(text)) return;
+        pageErrors.push(text);
+      }
+    });
+
+    await page.setViewportSize({ width: 1440, height: 900 });
+    await page.goto('/demo/shop', { waitUntil: 'domcontentloaded' });
+    await waitForCartIsland(page);
+
+    await page.locator('.sf-grid [data-add-to-cart][data-product-id="bl-product-ironclad-pomade"]').click();
+    await expect(page.locator('[data-sf-cart-toast]')).toContainText('Ironclad Pomade added to bag');
+    await expect(page.getByRole('link', { name: /CONTINUE TO CHECKOUT/i })).toHaveCount(0);
+
+    await page.locator('.sf-grid [data-add-to-cart][data-product-id="bl-product-matte-pomade"]').click();
+    await expect(page.locator('[data-sf-cart-toast]')).toContainText('Matte Pomade added to bag');
+
+    await page.locator('[data-bl-bag-button]').click();
+    await expect(page.locator('.sf-cart.is-open')).toBeVisible();
+    await expect(page.getByRole('dialog', { name: /COLLECT IN SHOP/i })).toBeVisible();
+    await page.getByRole('button', { name: /Increase quantity of Ironclad Pomade/i }).click();
+    await expect(page.getByText('£56')).toBeVisible();
+
+    const checkoutCta = page.getByRole('link', { name: /CONTINUE TO CHECKOUT/i });
+    await expect(checkoutCta).toBeVisible();
+    const ctaColor = await checkoutCta.evaluate((node) => getComputedStyle(node).backgroundColor);
+    expect(ctaColor).toBe('rgb(255, 23, 23)');
+    await checkoutCta.click();
+
+    await expect(page.getByRole('button', { name: /COMPLETE DEMO ORDER/i })).toBeVisible();
+    await page.getByRole('button', { name: /COMPLETE DEMO ORDER/i }).click();
+
+    await expect(page.getByRole('heading', { name: /Ready for collection/i })).toBeVisible();
+    await expect(page.getByText(PRODUCT, { exact: true })).toBeVisible();
+    const reference = (await page.locator('.bl-confirm-reference span').innerText()).trim();
+    expect(reference).toMatch(/^BL-\d{4}$/);
+    await expect(page.getByText(/no real payment, order or email/i)).toBeVisible();
+
+    const dashboardLink = page.getByRole('link', { name: DASHBOARD_CTA });
+    const href = await dashboardLink.getAttribute('href');
+    expect(href).toBeTruthy();
+    expect(href?.startsWith('/demo/admin?')).toBe(true);
+    expect(href?.startsWith('/admin?')).toBe(false);
+
+    const deepLink = new URL(href!, 'http://127.0.0.1:4321');
+    expect(deepLink.searchParams.get('section')).toBe('shop_orders');
+    expect(deepLink.searchParams.get('demoJourney')).toBe('retail');
+    const orderId = deepLink.searchParams.get('order');
+    expect(orderId).toBeTruthy();
+
+    await dashboardLink.click();
+    await expect(page).toHaveURL(/\/demo\/admin/);
+    await expect(page.getByRole('heading', { name: 'BLACKLINE owner dashboard' })).toBeAttached();
+    await expect(page.getByRole('heading', { name: 'Orders' })).toBeVisible({ timeout: 15000 });
+
+    const row = page.locator(`[data-order-id="${orderId}"]`);
+    await expect(row).toBeVisible({ timeout: 15000 });
+    await expect(row).toContainText('YOUR DEMO ORDER');
+    await expect(row).toContainText(PRODUCT === 'Ironclad Pomade' ? 'Demo' : PRODUCT);
+    await expect(page.getByText('A customer has paid online')).toBeVisible();
+
+    await expect
+      .poll(async () =>
+        row.evaluate((node) => {
+          const rect = node.getBoundingClientRect();
+          const viewH = window.innerHeight;
+          return rect.top >= -80 && rect.bottom <= viewH + 80;
+        }),
+      )
+      .toBe(true);
+
+    const collectBtn = row.locator('.admin-orders-grid-collect-btn');
+    await expect(collectBtn).toBeVisible();
+    const hand = page.locator('[data-tap-hand-hint]');
+    await expect(hand).toBeVisible();
+    const handBox = await hand.boundingBox();
+    const collectBox = await collectBtn.boundingBox();
+    expect(handBox).toBeTruthy();
+    expect(collectBox).toBeTruthy();
+    expect(Math.abs((handBox!.x + handBox!.width / 2) - (collectBox!.x + collectBox!.width / 2))).toBeLessThan(180);
+
+    const toCollectBefore = await page.getByText(/\d+ to collect/).innerText();
+    await collectBtn.click();
+    await page.getByRole('button', { name: 'Confirm', exact: true }).click();
+    await expect(page.getByText('Order marked as collected.')).toBeVisible();
+    await expect(page.getByText('ORDER COLLECTED')).toBeVisible();
+    await expect(page.getByText('Now see the sale')).toBeVisible();
+    await expect(page.getByText(/\d+ to collect/)).not.toHaveText(toCollectBefore);
+
+    await expect.poll(async () => page.url()).not.toContain('demoJourney=');
+    await expect.poll(async () => page.url()).not.toContain('order=');
+    expect(new URL(page.url()).pathname).toBe('/demo/admin');
+
+    const salesCta = page.getByRole('link', { name: 'View in Sales' });
+    const salesHref = await salesCta.getAttribute('href');
+    expect(salesHref).toContain('section=shop_sales');
+    expect(salesHref).toContain(`order=${orderId}`);
+    expect(salesHref).toContain('demoJourney=retail');
+    await salesCta.click();
+
+    await expect(page.getByRole('heading', { name: 'Sales Analytics' })).toBeVisible({ timeout: 15000 });
+    const saleCard = page.locator(`[data-demo-sale-id="${orderId}"]`);
+    await expect(saleCard).toBeVisible();
+    await expect(saleCard).toContainText('YOUR DEMO SALE');
+    await expect(saleCard).toContainText(reference);
+    await expect(saleCard).toContainText(PRODUCT);
+
+    const revenueLocator = page.locator('[data-blackline-sales-revenue]').filter({ hasNotText: '£0.00' }).first();
+    await expect(revenueLocator).toBeVisible();
+    const revenue = await revenueLocator.getAttribute('data-blackline-sales-revenue');
+    expect(Number(revenue)).toBeGreaterThan(0);
+
+    await expect.poll(async () => page.url()).not.toContain('demoJourney=');
+    await expect.poll(async () => page.url()).not.toContain('order=');
+
+    await page.reload({ waitUntil: 'domcontentloaded' });
+    await expect(page.getByRole('heading', { name: 'Sales Analytics' })).toBeVisible({ timeout: 15000 });
+    const revenueAfterLocator = page.locator('[data-blackline-sales-revenue]').filter({ hasNotText: '£0.00' }).first();
+    await expect(revenueAfterLocator).toBeVisible();
+    const revenueAfter = await revenueAfterLocator.getAttribute('data-blackline-sales-revenue');
+    expect(revenueAfter).toBe(revenue);
+
+    await page.goto(`/demo/admin?section=shop_orders`, { waitUntil: 'domcontentloaded' });
+    await expect(page.locator(`[data-order-id="${orderId}"]`)).toBeVisible({ timeout: 15000 });
+    await expect(page.locator(`[data-order-id="${orderId}"] .admin-orders-grid-collect-btn`)).toBeDisabled();
+
+    expect(pageErrors).toEqual([]);
+    await assertNoHorizontalOverflow(page);
+
+    await page.setViewportSize({ width: 768, height: 1024 });
+    await assertNoHorizontalOverflow(page);
+
+    await page.setViewportSize({ width: 390, height: 844 });
+    await expect(page.locator(`[data-order-id="${orderId}"]`)).toBeVisible();
+    await assertNoHorizontalOverflow(page);
+  });
+
+  for (const width of [320, 375, 390, 430, 768, 1024, 1440, 1918] as const) {
+    test(`listing does not overflow at ${width}px`, async ({ page }) => {
+      await page.setViewportSize({ width, height: width < 768 ? 844 : 900 });
+      await page.goto('/demo/shop', { waitUntil: 'domcontentloaded' });
+      await expect(page.getByRole('heading', { name: /the blackline edit/i })).toBeVisible();
+      await assertNoHorizontalOverflow(page);
+    });
+  }
+
+  test('discovery updates the URL, keeps Featured mounted, and restores on back/forward', async ({ page }) => {
+    await page.setViewportSize({ width: 1440, height: 900 });
+    await page.goto('/demo/shop', { waitUntil: 'domcontentloaded' });
+    await expect(page.locator('.sf-spotlight')).toBeVisible();
+
+    await page.getByRole('tab', { name: /beard care/i }).click();
+    await expect(page).toHaveURL(/category=BEARD_CARE/);
+    await expect(page.locator('.sf-spotlight')).toBeVisible();
+    await expect(page.locator('.sf-grid [data-product-category="BEARD_CARE"]').first()).toBeVisible();
+
+    await page.goBack();
+    await expect(page).not.toHaveURL(/category=/);
+    await expect(page.locator('.sf-spotlight')).toBeVisible();
+
+    await page.goForward();
+    await expect(page).toHaveURL(/category=BEARD_CARE/);
+    await expect(page.locator('.sf-spotlight')).toBeVisible();
+  });
+
+  test('load more reveals the rest of the filtered catalog', async ({ page }) => {
+    await page.setViewportSize({ width: 1440, height: 900 });
+    await page.goto('/demo/shop', { waitUntil: 'domcontentloaded' });
+    await expect(page.getByText(/Showing 24 of 30/i)).toBeVisible();
+    await page.getByRole('button', { name: 'Load more' }).click();
+    await expect(page.getByText(/Showing 30 of 30/i)).toBeVisible();
+  });
+
+  test('kersivo marketing shop uses a separate catalog from BLACKLINE', async ({ page }) => {
+    await page.setViewportSize({ width: 1440, height: 900 });
+    await page.goto('/shop', { waitUntil: 'domcontentloaded' });
+    await expect(page.locator('.sf-shop--kersivo')).toBeVisible();
+    await expect(page.locator('.sf-shop--blackline')).toHaveCount(0);
+    await expect(page.locator('[data-product-id^="bl-product-"]')).toHaveCount(0);
+    await expect(page.locator('[data-product-id^="demo-product-"]').first()).toBeVisible();
+  });
+
+  test('category rail is keyboard reachable', async ({ page }) => {
+    await page.setViewportSize({ width: 1440, height: 900 });
+    await page.goto('/demo/shop', { waitUntil: 'domcontentloaded' });
+    const tab = page.getByRole('tab', { name: /all products/i });
+    await expect(tab).toBeVisible();
+    await tab.focus();
+    await expect(tab).toBeFocused();
+    await page.keyboard.press('Tab');
+    const selected = page.locator('[role="tab"][aria-selected="true"]');
+    await expect(selected).toHaveCount(1);
+  });
+
+  test('bag opens from the trigger, closes on Escape and backdrop, and restores focus', async ({ page }) => {
+    await page.setViewportSize({ width: 1440, height: 900 });
+    await page.goto('/demo/shop', { waitUntil: 'domcontentloaded' });
+    await waitForCartIsland(page);
+
+    const bagButton = page.locator('[data-bl-bag-button]');
+    await bagButton.click();
+    const dialog = page.getByRole('dialog', { name: /COLLECT IN SHOP/i });
+    await expect(page.locator('.sf-cart.is-open')).toBeVisible();
+    await expect(dialog).toBeVisible();
+    await expect(page.locator('.sf-cart-close')).toBeFocused();
+    await expect(page.getByText('YOUR BAG IS EMPTY')).toBeVisible();
+
+    await page.keyboard.press('Escape');
+    await expect(dialog).toHaveCount(0);
+    await expect(bagButton).toBeFocused();
+
+    await bagButton.click();
+    await expect(page.locator('.sf-cart.is-open')).toBeVisible();
+    await page.locator('.sf-cart-backdrop').dispatchEvent('click');
+    await expect(dialog).toHaveCount(0);
+  });
+
+  test('captures empty, one-item and multi-item bag screenshots', async ({ page }, testInfo) => {
+    const capture = async (name: string) => {
+      await page.screenshot({
+        path: testInfo.outputPath(`${name}.png`),
+        animations: 'disabled',
+      });
+    };
+
+    for (const viewport of [
+      { name: 'desktop', width: 1440, height: 900 },
+      { name: 'mobile', width: 390, height: 844 },
+    ] as const) {
+      await page.setViewportSize({ width: viewport.width, height: viewport.height });
+      await page.goto('/demo/shop', { waitUntil: 'domcontentloaded' });
+      await page.evaluate(() => {
+        for (const key of Object.keys(window.localStorage)) {
+          if (key.includes('kersivo_shop_cart')) window.localStorage.removeItem(key);
+        }
+      });
+      await page.reload({ waitUntil: 'domcontentloaded' });
+      await openBag(page);
+      await capture(`cart-empty-${viewport.name}`);
+      await page.keyboard.press('Escape');
+      await expect(page.getByRole('dialog', { name: /COLLECT IN SHOP/i })).toHaveCount(0);
+
+      await page.locator('.sf-grid [data-add-to-cart][data-product-id="bl-product-ironclad-pomade"]').click();
+      await openBag(page);
+      await expect(page.locator('[data-sf-cart-line] .sf-cart-line-name').filter({ hasText: 'Ironclad Pomade' })).toBeVisible();
+      await capture(`cart-one-${viewport.name}`);
+      await page.keyboard.press('Escape');
+      await expect(page.getByRole('dialog', { name: /COLLECT IN SHOP/i })).toHaveCount(0);
+
+      await page.locator('.sf-grid [data-add-to-cart][data-product-id="bl-product-matte-pomade"]').click();
+      await openBag(page);
+      await expect(page.getByRole('dialog', { name: /COLLECT IN SHOP/i })).toBeVisible();
+      await expect(page.locator('[data-sf-cart-line] .sf-cart-line-name').filter({ hasText: 'Matte Pomade' })).toBeVisible();
+      await capture(`cart-multi-${viewport.name}`);
+    }
+  });
+
+  for (const width of [320, 375, 390, 430, 768, 1440] as const) {
+    test(`open bag does not overflow at ${width}px`, async ({ page }) => {
+      await page.setViewportSize({ width, height: width < 768 ? 844 : 900 });
+      await page.goto('/demo/shop', { waitUntil: 'domcontentloaded' });
+      await waitForCartIsland(page);
+      await page.locator('.sf-grid [data-add-to-cart][data-product-id="bl-product-ironclad-pomade"]').click();
+      await openBag(page);
+      await expect(page.getByRole('dialog', { name: /COLLECT IN SHOP/i })).toBeVisible();
+      await assertNoHorizontalOverflow(page);
+    });
+  }
+
+  test('reduced motion keeps the bag usable without transform travel', async ({ page }) => {
+    await page.emulateMedia({ reducedMotion: 'reduce' });
+    await page.setViewportSize({ width: 1440, height: 900 });
+    await page.goto('/demo/shop', { waitUntil: 'domcontentloaded' });
+    await openBag(page);
+    const dialog = page.locator('.sf-cart.is-open');
+    await expect(dialog).toBeVisible();
+    const transform = await dialog.evaluate((node) => getComputedStyle(node).transform);
+    expect(transform === 'none' || transform === 'matrix(1, 0, 0, 1, 0, 0)').toBe(true);
+  });
+
+  test('header keeps Shop current on PDP, books /demo/book, and opens the bag', async ({ page }) => {
+    await page.setViewportSize({ width: 1440, height: 900 });
+    await page.goto('/demo/shop', { waitUntil: 'domcontentloaded' });
+    const header = page.locator('[data-sf-header]');
+    await expect(header).toBeVisible();
+    await expect(header.locator('.sf-nav a', { hasText: 'Shop' })).toHaveAttribute('aria-current', 'page');
+    const book = header.locator('.sf-header-cta');
+    await expect(book).toHaveAttribute('href', '/demo/book');
+    await expect(book).toContainText('BOOK NOW');
+    await page.screenshot({ path: 'test-results/storefront-header-desktop.png', animations: 'disabled' });
+
+    await page.evaluate(() => window.scrollTo(0, 480));
+    await expect(header).toHaveAttribute('data-scrolled', '');
+    await page.screenshot({ path: 'test-results/storefront-header-desktop-scrolled.png', animations: 'disabled' });
+
+    await page.goto('/demo/shop/bl-product-ironclad-pomade', { waitUntil: 'domcontentloaded' });
+    await expect(page.locator('[data-sf-header] .sf-nav a', { hasText: 'Shop' })).toHaveAttribute(
+      'aria-current',
+      'page',
+    );
+    await page.locator('[data-bl-bag-button]').click();
+    await expect(page.locator('.sf-cart.is-open')).toBeVisible();
+  });
+
+  test('mobile header shows bag, hides BOOK at 320px, and keeps booking in the menu', async ({ page }) => {
+    await page.setViewportSize({ width: 390, height: 844 });
+    await page.goto('/demo/shop', { waitUntil: 'domcontentloaded' });
+    const header = page.locator('[data-sf-header]');
+    await expect(header.locator('[data-bl-bag-button]')).toBeVisible();
+    await expect(header.locator('.sf-header-cta-short')).toBeVisible();
+    await expect(header.locator('.sf-nav-toggle')).toBeVisible();
+    await page.screenshot({ path: 'test-results/storefront-header-mobile.png', animations: 'disabled' });
+
+    await page.setViewportSize({ width: 320, height: 568 });
+    await expect(header.locator('.sf-header-cta')).toBeHidden();
+    await expect(header.locator('[data-bl-bag-button]')).toBeVisible();
+    await header.locator('.sf-nav-toggle').click();
+    await expect(page.locator('[data-bl-nav-book]')).toBeVisible();
+    await expect(page.locator('[data-bl-nav-book]')).toHaveAttribute('href', '/demo/book');
+  });
+
+  test('reduced motion opens the overlay without clip travel', async ({ page }) => {
+    await page.emulateMedia({ reducedMotion: 'reduce' });
+    await page.setViewportSize({ width: 390, height: 844 });
+    await page.goto('/demo/shop', { waitUntil: 'domcontentloaded' });
+    await page.locator('[data-sf-nav-toggle]').click();
+    const overlay = page.locator('[data-sf-nav-panel]');
+    await expect(overlay).toBeVisible();
+    const clip = await overlay.evaluate((node) => getComputedStyle(node).clipPath);
+    expect(clip === 'none' || clip === 'inset(0px)').toBe(true);
+  });
+});

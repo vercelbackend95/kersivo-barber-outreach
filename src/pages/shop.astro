@@ -2,24 +2,26 @@
 import MainLayout from '@/layouts/MainLayout.astro';
 import DemoNotice from '@/components/shop/DemoNotice.astro';
 import RetailDemoBanner from '@/components/shop/RetailDemoBanner.astro';
+import StorefrontShopPage from '@/components/shop/storefront/StorefrontShopPage';
 import { PAGE_DESCRIPTIONS } from '@/lib/seo/defaults';
 import { buildShopBreadcrumbJsonLd } from '@/lib/seo/productJsonLd';
 import Footer50 from '../components/footer50.astro';
 import '../styles/components/footer50.css';
+import '@/styles/components/storefront.css';
 import { getFooterSocialLinks } from '@/lib/seo/footerSocialLinks';
 import { getDemoCatalogProducts } from '../lib/shop/demoCatalog';
-import { formatGbp } from '../lib/shop/money';
+import {
+  parseStorefrontCategoryParam,
+  storefrontCategoryOptions,
+  storefrontProductFromCatalog,
+} from '../lib/shop/storefrontCatalog';
 
-const products = getDemoCatalogProducts();
+const products = getDemoCatalogProducts().map(storefrontProductFromCatalog);
+const selectedCategory = parseStorefrontCategoryParam(
+  Astro.url.searchParams.get('category'),
+  storefrontCategoryOptions(products).map((option) => option.value),
+);
 
-const CATEGORY_LABELS: Record<string, string> = {
-  POMADES_AND_CLAYS: 'Pomades',
-  BEARD_CARE: 'Beard',
-  HAIR_WASH: 'Wash',
-  STYLING: 'Styling',
-  TOOLS: 'Tools',
-  GIFT_SETS: 'Sets'
-};
 const FOOTER_PROPS = {
   showIntro: true,
   heading: 'Ready to launch a better website system for your barbershop?',
@@ -31,14 +33,12 @@ const FOOTER_PROPS = {
   navigation: [
     { name: 'Home', href: '/#home' },
     { name: 'Paths', href: '/#paths' },
-
     { name: 'Pricing', href: '/#pricing' },
     { name: 'FAQ', href: '/#faq' },
     { name: 'Contact', href: '/#contact' },
     { name: 'Retail Demo', href: '/shop' }
-
   ],
-    social: getFooterSocialLinks(),
+  social: getFooterSocialLinks(),
   legal: [
     { name: 'Privacy Policy', href: '/privacy' },
     { name: 'Cookie Policy', href: '/cookies' },
@@ -46,21 +46,6 @@ const FOOTER_PROPS = {
     { name: 'Terms', href: '/terms' }
   ]
 };
-
-
-const categoryFilters = [
-  { value: 'ALL', label: 'All products', count: products.length },
-  ...Object.entries(CATEGORY_LABELS).map(([value, label]) => ({
-    value,
-    label,
-    count: products.filter((product) => product.category === value).length
-  }))
-].filter((filter, index, allFilters) => filter.value === 'ALL' || allFilters[index]?.count > 0);
-
-const categoryValues = new Set(categoryFilters.map((filter) => filter.value));
-const selectedCategoryParam = Astro.url.searchParams.get('category') || 'ALL';
-const selectedCategory = categoryValues.has(selectedCategoryParam) ? selectedCategoryParam : 'ALL';
-
 ---
 
 <MainLayout
@@ -73,290 +58,31 @@ const selectedCategory = categoryValues.has(selectedCategoryParam) ? selectedCat
   noindex
   robotsFollow
 >
-  <main class="container shop-page" aria-labelledby="shop-page-title" data-active-category={selectedCategory}>
+  <main class="container shop-page" aria-labelledby="storefront-heading" data-active-category={selectedCategory}>
     <RetailDemoBanner />
     <DemoNotice />
-    <header class="shop-header-block">
-      <p class="shop-eyebrow">Pick up in shop</p>
-      <h1 id="shop-page-title">Grooming essentials</h1>
-      <p class="shop-intro">Pomades, beard care and styling — try the demo bag. No payment is taken and no real order is created.</p>
-
-      <div class="shop-header-toolbar">
-        <div class="shop-category-filters" role="group" aria-label="Filter by category">
-          {categoryFilters.map((filter) => {
-            const isActive = filter.value === selectedCategory;
-
-            return (
-              <button
-                type="button"
-                class:list={["filter-chip", isActive && 'is-active']}
-                data-category-filter={filter.value}
-                aria-pressed={isActive ? 'true' : 'false'}
-              >
-                <span>{filter.label}</span>
-                <span class="filter-chip__count" aria-hidden="true">{filter.count}</span>
-              </button>
-            );
-          })}
-        </div>
-
-        {products.length > 0 && (
-          <div class="shop-sort-wrap">
-            <select class="shop-sort-select" aria-label="Sort products" data-shop-sort>
-              <option value="default">Sort: Featured</option>
-              <option value="price-asc">Price: Low → High</option>
-              <option value="price-desc">Price: High → Low</option>
-              <option value="newest">Newest</option>
-            </select>
-            <svg class="shop-sort-icon" viewBox="0 0 16 16" fill="none" aria-hidden="true">
-              <path d="M4 5.5l4 4 4-4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
-            </svg>
-          </div>
-        )}
-      </div>
-    </header>
-
-    <section class="shop-layout" aria-label="Products">
-      {products.length === 0 ? (
-        <article class="shop-promo-card shop-promo-card--empty">
-          <p class="shop-promo-kicker">Retail built in</p>
-          <h2>No products in this category</h2>
-          <p>Try another filter or browse all products.</p>
-          <a class="btn btn--primary" href="/shop">View retail demo</a>
-        </article>
-      ) : (
-        <ul class="shop-grid" aria-label="Products">
-          {products.map((product) => (
-            <li
-              data-product-item
-              data-product-category={product.category}
-              data-product-sort-price={String(product.pricePence)}
-              data-product-sort-date={product.updatedAt}
-              hidden={selectedCategory !== 'ALL' && product.category !== selectedCategory}
-            >
-              <article class="shop-card" data-category={product.category}>
-                <a href={`/shop/demo/${product.id}`} class="shop-media-link" aria-label={`View ${product.name}`}>
-                  <div class="shop-media">
-                    {product.featured ? <span class="shop-badge">Featured</span> : null}
-                    {product.imageUrl ? <img src={product.imageUrl} alt={product.name} class="shop-image" loading="lazy" /> : <div class="shop-image--placeholder" aria-hidden="true"></div>}
-                  </div>
-                </a>
-
-                <div class="shop-card-body">
-                  <span class="badge badge--neutral">{CATEGORY_LABELS[product.category] ?? 'Styling'}</span>
-                  <h3><a href={`/shop/demo/${product.id}`}>{product.name}</a></h3>
-                  <p class="shop-price">{formatGbp(product.pricePence)}</p>
-
-                  <div class="shop-card-actions">
-                    <button
-                      type="button"
-                      class="btn btn--primary btn--atc"
-                      data-add-to-cart
-                      data-product-id={product.id}
-                      data-product-name={product.name}
-                      data-product-price-pence={String(product.pricePence)}
-                      data-product-image-url={product.imageUrl ?? ''}
-                      data-atc-label="Add to cart"
-                    >
-                      Add to cart
-                    </button>
-                  </div>
-                </div>
-              </article>
-            </li>
-          ))}
-
-          <li class="shop-empty-filter" aria-live="polite" role="status">
-            <svg class="shop-empty-filter__icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true">
-              <path stroke-linecap="round" stroke-linejoin="round" d="M3.75 9.776c.112-.017.227-.026.344-.026h15.812c.117 0 .232.009.344.026m-16.5 0a2.25 2.25 0 0 0-1.883 2.542l.857 6a2.25 2.25 0 0 0 2.227 1.932H19.05a2.25 2.25 0 0 0 2.227-1.932l.857-6a2.25 2.25 0 0 0-1.883-2.542m-16.5 0V6A2.25 2.25 0 0 1 6 3.75h3.879a1.5 1.5 0 0 1 1.06.44l2.122 2.12a1.5 1.5 0 0 0 1.06.44H18A2.25 2.25 0 0 1 20.25 9v.776" />
-            </svg>
-            <p class="shop-empty-filter__title">No products in this category</p>
-            <p class="shop-empty-filter__desc">Try selecting a different category or view all products.</p>
-          </li>
-        </ul>
-      )}
-    </section>
+    <StorefrontShopPage
+      client:load
+      products={products}
+      themeId="kersivo"
+      shopName="KERSIVO"
+      productHrefPrefix="/shop/demo"
+      priceFormat="gbp"
+      imageFallback="initial"
+      selectedCategory={selectedCategory}
+      intro={{
+        eyebrow: 'Pick up in shop',
+        heading: 'Grooming essentials',
+        headingId: 'storefront-heading',
+        description: 'Pomades, beard care and styling — try the demo bag. No payment is taken and no real order is created.',
+        fulfilmentLabel: 'Collect in shop',
+      }}
+      emptyTitle="No products in this category"
+      emptyDescription="Try another filter or browse all products."
+      emptyActionHref="/shop"
+      emptyActionLabel="View retail demo"
+    />
   </main>
-
-  <!-- Mini toast -->
-  <div class="shop-toast" role="status" aria-live="polite" aria-atomic="true" id="shop-atc-toast">
-    <svg class="shop-toast__icon" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
-      <path fill-rule="evenodd" d="M16.704 4.153a.75.75 0 0 1 .143 1.052l-8 10.5a.75.75 0 0 1-1.127.075l-4.5-4.5a.75.75 0 0 1 1.06-1.06l3.894 3.893 7.48-9.817a.75.75 0 0 1 1.05-.143Z" clip-rule="evenodd" />
-    </svg>
-    <span id="shop-atc-toast-msg">Added to cart</span>
-  </div>
 
   <Footer50 {...FOOTER_PROPS} />
 </MainLayout>
-
-<script>
-  /* ── Category filter + URL sync (unchanged) ─────────────────── */
-  const root = document.querySelector<HTMLElement>('.shop-page');
-
-  if (root) {
-    const filterButtons = Array.from(root.querySelectorAll<HTMLButtonElement>('[data-category-filter]'));
-    const productItems = Array.from(root.querySelectorAll<HTMLLIElement>('[data-product-item]'));
-    const validCategories = new Set(filterButtons.map((button) => button.getAttribute('data-category-filter') || 'ALL'));
-
-    const updateEmptyFilterState = () => {
-      const emptyEl = root.querySelector('.shop-empty-filter');
-      const items = root.querySelectorAll<HTMLLIElement>('[data-product-item]');
-      if (!emptyEl) return;
-      const anyVisible = [...items].some((item) => !item.hidden);
-      emptyEl.classList.toggle('is-visible', !anyVisible);
-    };
-
-    const getCategoryFromUrl = () => {
-      const searchParams = new URLSearchParams(window.location.search);
-      const categoryParam = searchParams.get('category') || 'ALL';
-      return validCategories.has(categoryParam) ? categoryParam : 'ALL';
-    };
-
-    const getInitialCategory = () => {
-      const initialFromUrl = getCategoryFromUrl();
-      const initialFromMarkup = root.getAttribute('data-active-category') || 'ALL';
-
-      if (validCategories.has(initialFromUrl)) {
-        return initialFromUrl;
-      }
-
-      return validCategories.has(initialFromMarkup) ? initialFromMarkup : 'ALL';
-    };
-
-    let currentCategory = getInitialCategory();
-
-    const applyCategoryFilter = (category: string) => {
-      const resolvedCategory = validCategories.has(category) ? category : 'ALL';
-
-      for (const item of productItems) {
-        const productCategory = item.getAttribute('data-product-category') || 'STYLING';
-        item.hidden = !(resolvedCategory === 'ALL' || productCategory === resolvedCategory);
-      }
-
-      for (const button of filterButtons) {
-        const isActive = button.getAttribute('data-category-filter') === resolvedCategory;
-        button.classList.toggle('is-active', isActive);
-        button.setAttribute('aria-pressed', String(isActive));
-      }
-
-      currentCategory = resolvedCategory;
-      root.setAttribute('data-active-category', resolvedCategory);
-
-      /* Update empty-filter state after applying */
-      updateEmptyFilterState();
-    };
-
-    const syncUrlWithCategory = (category: string) => {
-      const nextUrl = new URL(window.location.href);
-
-      if (category === 'ALL') {
-        nextUrl.searchParams.delete('category');
-      } else {
-        nextUrl.searchParams.set('category', category);
-      }
-
-      window.history.pushState({ category }, '', nextUrl);
-    };
-
-    for (const button of filterButtons) {
-      button.addEventListener('click', () => {
-        const category = button.getAttribute('data-category-filter') || 'ALL';
-
-        if (category === currentCategory) {
-          return;
-        }
-
-        applyCategoryFilter(category);
-        syncUrlWithCategory(category);
-      });
-    }
-
-    window.addEventListener('popstate', () => {
-      applyCategoryFilter(getCategoryFromUrl());
-    });
-
-    applyCategoryFilter(currentCategory);
-  }
-
-  /* ── Sort ────────────────────────────────────────────────────── */
-  const sortSelect = document.querySelector('[data-shop-sort]') as HTMLSelectElement | null;
-  const shopGrid = document.querySelector('.shop-grid');
-
-  if (sortSelect && shopGrid) {
-    sortSelect.addEventListener('change', () => {
-      const value = sortSelect.value;
-      const items = Array.from(shopGrid.querySelectorAll('[data-product-item]')) as HTMLElement[];
-
-      const sorted = [...items].sort((a, b) => {
-        if (value === 'price-asc') {
-          return Number(a.dataset.productSortPrice ?? 0) - Number(b.dataset.productSortPrice ?? 0);
-        }
-        if (value === 'price-desc') {
-          return Number(b.dataset.productSortPrice ?? 0) - Number(a.dataset.productSortPrice ?? 0);
-        }
-        if (value === 'newest') {
-          const da = new Date(a.dataset.productSortDate ?? 0).getTime();
-          const db = new Date(b.dataset.productSortDate ?? 0).getTime();
-          return db - da;
-        }
-        return 0;
-      });
-
-      /* Preserve the empty-filter sentinel at the end */
-      const emptyEl = shopGrid.querySelector('.shop-empty-filter');
-      sorted.forEach((el) => shopGrid.insertBefore(el, emptyEl));
-    });
-  }
-
-  /* ── Add-to-cart button states ──────────────────────────────── */
-  const SUCCESS_DURATION_MS = 1500;
-
-  document.addEventListener('click', (event) => {
-    const target = (event.target as Element).closest('[data-add-to-cart]') as HTMLButtonElement | null;
-    if (!target) return;
-
-    /* Already animating */
-    if (target.classList.contains('is-loading') || target.classList.contains('is-success')) return;
-
-    const label = target.dataset.atcLabel ?? 'Add to cart';
-    const productName = target.dataset.productName ?? 'Item';
-
-    /* Loading state */
-    target.classList.add('is-loading');
-    target.setAttribute('aria-busy', 'true');
-
-    /* After brief loading period → success */
-    setTimeout(() => {
-      target.classList.remove('is-loading');
-      target.classList.add('is-success');
-      target.removeAttribute('aria-busy');
-      target.textContent = '✓ Added';
-
-      /* Show toast */
-      showToast(`${productName} added to cart`);
-
-      /* Revert to default after SUCCESS_DURATION_MS */
-      setTimeout(() => {
-        target.classList.remove('is-success');
-        target.textContent = label;
-      }, SUCCESS_DURATION_MS);
-    }, 300);
-  }, true);
-
-  /* ── Mini toast ─────────────────────────────────────────────── */
-  let toastTimer: ReturnType<typeof setTimeout> | null = null;
-
-  function showToast(message: string) {
-    const toast = document.getElementById('shop-atc-toast');
-    const msgEl = document.getElementById('shop-atc-toast-msg');
-    if (!toast || !msgEl) return;
-
-    msgEl.textContent = message;
-    toast.classList.add('is-visible');
-
-    if (toastTimer) clearTimeout(toastTimer);
-    toastTimer = setTimeout(() => {
-      toast.classList.remove('is-visible');
-    }, 3000);
-  }
-</script>

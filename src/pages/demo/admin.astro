@@ -2,12 +2,15 @@
 import MinimalLayout from '@/layouts/MinimalLayout.astro';
 import DemoBanner from '@/components/demo/DemoBanner.astro';
 import AdminPanel from '@/components/admin/AdminPanel';
+import InitDataTrackScript from '@/components/InitDataTrackScript.astro';
 import { getBlacklineBookingsResponse } from '@/lib/admin/blacklineDemoFixtures/schedule';
 import { blacklineDayKey } from '@/lib/admin/blacklineDemoFixtures/time';
 import { BLACKLINE_ADMIN_DEMO_PATH } from '@/lib/admin/demoConfig';
 import { DEMO_SHOP_NAME } from '@/lib/demo/site';
 import '@/styles/tokens.css';
 import '@/styles/fonts-admin.css';
+import '@/styles/demo/fonts-blackline.css';
+import '@/styles/demo/blackline-wordmark.css';
 import '@/styles/global.css';
 import '@/styles/components/booking.css';
 import '@/styles/components/admin-mobile-sticky-overrides.css';
@@ -56,6 +59,14 @@ const { bookings: initialBookings } = getBlacklineBookingsResponse(
     type="font/woff2"
     crossorigin
   />
+  <link
+    slot="head"
+    rel="preload"
+    href="/fonts/barlow-condensed-latin-800-normal.woff2"
+    as="font"
+    type="font/woff2"
+    crossorigin
+  />
   <DemoBanner view="admin" />
   <main class="container page-wrap admin-page-wrap" data-demo-tenant="blackline">
     <h1 class="sr-only">BLACKLINE owner dashboard</h1>
@@ -67,4 +78,5 @@ const { bookings: initialBookings } = getBlacklineBookingsResponse(
       initialSection={Astro.url.searchParams.get('section')}
     />
   </main>
+  <InitDataTrackScript />
 </MinimalLayout>

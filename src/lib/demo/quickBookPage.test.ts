@@ -39,13 +39,13 @@ describe('BLACKLINE homepage Quick Book', () => {
     expect(source).toContain('demoBookingHref(service.slug)');
     expect(source).toContain('demoServiceAccessibleName(service)');
     expect(source).not.toMatch(/\?barber=/);
-    expect(source).not.toMatch(/£25|£22|£32/);
+    expect(source).not.toMatch(/£28|£24|£36/);
     expect(demoBookingHref('skin-fade')).toBe('/demo/book?service=skin-fade');
     expect(demoBookingHref('haircut-finish')).toBe('/demo/book?service=haircut-finish');
     expect(demoBookingHref('haircut-beard')).toBe('/demo/book?service=haircut-beard');
-    expect(demoServiceAccessibleName(featured[0]!)).toBe('Book Skin Fade, 45 minutes, £25');
-    expect(demoServiceAccessibleName(featured[1]!)).toBe('Book Haircut and Finish, 35 minutes, £22');
-    expect(demoServiceAccessibleName(featured[2]!)).toBe('Book Haircut and Beard, 60 minutes, £32');
+    expect(demoServiceAccessibleName(featured[0]!)).toBe('Book Skin Fade, 45 minutes, £28');
+    expect(demoServiceAccessibleName(featured[1]!)).toBe('Book Classic Cut and Finish, 35 minutes, £24');
+    expect(demoServiceAccessibleName(featured[2]!)).toBe('Book Haircut and Beard, 60 minutes, £36');
   });
 
   it('scopes the Quick Book deck under the BLACKLINE theme and stacks below desktop', () => {

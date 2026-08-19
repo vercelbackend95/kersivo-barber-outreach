@@ -3,7 +3,7 @@ import { describe, expect, it } from 'vitest';
 
 const layout = readFileSync(new URL('../../layouts/DemoLayout.astro', import.meta.url), 'utf8');
 const banner = readFileSync(new URL('../../components/demo/DemoBanner.astro', import.meta.url), 'utf8');
-const nav = readFileSync(new URL('../../components/demo/DemoNav.astro', import.meta.url), 'utf8');
+const nav = readFileSync(new URL('../../components/shop/storefront/StorefrontHeader.astro', import.meta.url), 'utf8');
 const footer = readFileSync(new URL('../../components/demo/DemoFooter.astro', import.meta.url), 'utf8');
 const css = readFileSync(new URL('../../styles/demo/blackline.css', import.meta.url), 'utf8');
 const astroConfig = readFileSync(new URL('../../../astro.config.mjs', import.meta.url), 'utf8');
@@ -24,7 +24,8 @@ describe('BLACKLINE route transition layout', () => {
 
   it('persists chrome and the bag island without keying the layout by pathname', () => {
     expect(banner).toContain("transition:persist={isAdmin ? undefined : 'bl-banner'}");
-    expect(nav).toContain('transition:persist="bl-header"');
+    expect(nav).toContain("transition:persist={persistKey}");
+    expect(nav).toContain("themeId === 'blackline' ? 'bl-header'");
     expect(footer).toContain('transition:persist="bl-footer"');
     expect(layout).toContain('transition:persist="bl-bag"');
     expect(layout).toContain('transition:persist="bl-veil"');

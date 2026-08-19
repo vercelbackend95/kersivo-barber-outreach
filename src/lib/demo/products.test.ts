@@ -10,6 +10,7 @@ import {
   demoProductHref,
   demoProductsMeta,
   getDemoProductById,
+  resolveBlacklineSeedImageUrl,
 } from './products';
 import { DEMO_SHOP_KEY, formatDemoPriceGbp } from './services';
 
@@ -20,44 +21,43 @@ describe('BLACKLINE demo products', () => {
     expect(BLACKLINE_CART_STORAGE_KEY).toBe('kersivo_shop_cart_v2:blackline-barbers-demo');
   });
 
-  it('exposes at least three database-shaped products with local WebP images', () => {
-    expect(DEMO_PRODUCTS.length).toBeGreaterThanOrEqual(3);
-    expect(DEMO_PRODUCTS).toHaveLength(7);
+  it('exposes thirty database-shaped products with stable ids', () => {
+    expect(DEMO_PRODUCTS).toHaveLength(30);
     expect(DEMO_PRODUCTS.every((product) => product.id.startsWith('bl-product-'))).toBe(true);
     expect(DEMO_PRODUCTS.every((product) => !product.id.startsWith('demo-product-'))).toBe(true);
-    expect(DEMO_PRODUCTS.every((product) => product.image.src.startsWith('/demo/products/'))).toBe(true);
-    expect(DEMO_PRODUCTS.every((product) => product.image.src.endsWith('.webp'))).toBe(true);
-    expect(DEMO_PRODUCTS.map((product) => product.image.src)).not.toContain('/demo/products/matte-clay.webp');
+    expect(new Set(DEMO_PRODUCTS.map((product) => product.sortOrder)).size).toBe(30);
+    expect(DEMO_PRODUCTS.some((product) => product.category === 'SHAVE_AND_SKIN')).toBe(true);
+    expect(DEMO_PRODUCTS.filter((product) => product.category === 'POMADES_AND_CLAYS')).toHaveLength(0);
   });
 
-  it('uses demo-catalog prices in pence and the shared GBP helper', () => {
-    expect(DEMO_PRODUCTS.map((product) => product.pricePence)).toEqual([
-      1900, 1800, 1600, 1400, 2200, 1500, 1200,
-    ]);
-    expect(DEMO_PRODUCTS.map((product) => formatDemoPriceGbp(product.pricePence))).toEqual([
-      '£19',
-      '£18',
-      '£16',
-      '£14',
-      '£22',
-      '£15',
-      '£12',
-    ]);
+  it('keeps original packshot prices and leaves untitled SKUs without fake image paths', () => {
+    expect(getDemoProductById('bl-product-ironclad-pomade')?.pricePence).toBe(1900);
+    expect(getDemoProductById('bl-product-matte-pomade')?.pricePence).toBe(1800);
+    expect(getDemoProductById('bl-product-beard-balm')?.pricePence).toBe(1600);
+    expect(getDemoProductById('bl-product-sea-salt-texture-spray')?.pricePence).toBe(1400);
+    expect(getDemoProductById('bl-product-beard-oil')?.pricePence).toBe(2200);
+    expect(getDemoProductById('bl-product-barber-wash')?.pricePence).toBe(1500);
+    expect(getDemoProductById('bl-product-forge-styling-powder')?.pricePence).toBe(1200);
+    expect(formatDemoPriceGbp(1500)).toBe('£15');
+    expect(DEMO_PRODUCTS.filter((product) => product.image.src).every((product) => product.image.src.endsWith('.webp'))).toBe(true);
+    expect(DEMO_PRODUCTS.filter((product) => !product.image.src).length).toBe(23);
   });
 
-  it('keeps three featured homepage products from the same catalog', () => {
-    expect(DEMO_FEATURED_PRODUCTS.map((product) => product.id)).toEqual([
-      'bl-product-ironclad-pomade',
-      'bl-product-beard-balm',
-      'bl-product-barber-wash',
+  it('keeps four featured products in canonical order', () => {
+    expect(DEMO_FEATURED_PRODUCTS.map((product) => product.name)).toEqual([
+      'Ironclad Pomade',
+      'Beard Balm',
+      'Barber Wash',
+      'Essential Styling Set',
     ]);
-    expect(demoProductsMeta().countLabel).toBe('07 PRODUCTS');
+    expect(demoProductsMeta().countLabel).toBe('30 PRODUCTS');
     expect(demoProductHref('bl-product-ironclad-pomade')).toBe('/demo/shop/bl-product-ironclad-pomade');
     expect(getDemoProductById('demo-product-matte-pomade')).toBeNull();
   });
 
-  it('points at existing local packshots whose dimensions match the fixture', () => {
+  it('points at existing local packshots only when a fixture src is set', () => {
     for (const product of DEMO_PRODUCTS) {
+      if (!product.image.src) continue;
       const fileName = product.image.src.replace('/demo/products/', '');
       expect(existsSync(resolve(process.cwd(), 'public/demo/products', fileName))).toBe(true);
       expect(product.image.width).toBeGreaterThan(0);
@@ -77,5 +77,14 @@ describe('BLACKLINE demo products', () => {
       expect(product.image.alt.toLowerCase()).not.toContain('award');
     }
     expect(DEMO_PRODUCT_IDS).toEqual(DEMO_PRODUCTS.map((product) => product.id));
+  });
+
+  it('preserves uploaded seed images and does not invent empty paths', () => {
+    expect(resolveBlacklineSeedImageUrl('https://cdn.example/custom.jpg', '')).toBe('https://cdn.example/custom.jpg');
+    expect(resolveBlacklineSeedImageUrl('/demo/products/ironclad-pomade.webp', '/demo/products/ironclad-pomade.webp')).toBe(
+      '/demo/products/ironclad-pomade.webp',
+    );
+    expect(resolveBlacklineSeedImageUrl('/demo/products/old.webp', '')).toBe('/demo/products/old.webp');
+    expect(resolveBlacklineSeedImageUrl(null, '')).toBeNull();
   });
 });

@@ -50,6 +50,7 @@ type OrdersDataTable22Props = {
   onLoadOrderDetails?: (orderId: string) => void;
   highlightedOrderId?: string | null;
   walkthroughOrderId?: string | null;
+  sessionOrderIds?: ReadonlySet<string>;
   onOpenClientProfile?: (contact: { email: string; fullName: string }) => void;
   ordersUnauthorized: boolean;
   emptyMessage?: string;
@@ -179,6 +180,7 @@ export default function OrdersDataTable22({
   onLoadOrderDetails,
   highlightedOrderId = null,
   walkthroughOrderId = null,
+  sessionOrderIds,
   onOpenClientProfile,
   ordersUnauthorized,
   emptyMessage = 'No orders yet.',
@@ -333,6 +335,7 @@ export default function OrdersDataTable22({
               const isExpanded = expandedOrderId === order.id;
               const detail = orderDetailsById[order.id];
               const isDetailLoading = orderDetailsLoadingId === order.id && !detail;
+              const isSessionOrder = Boolean(sessionOrderIds?.has(order.id));
               const orderLabel = getOrderNumberLabel(order);
               const customerIdentity = getCustomerIdentity(order);
               const rowLabel = [
@@ -349,6 +352,7 @@ export default function OrdersDataTable22({
                   key={order.id}
                   id={`admin-order-${order.id}`}
                   data-order-id={order.id}
+                  data-session-order={isSessionOrder ? 'true' : undefined}
                   className={[
                     'admin-orders-grid-item',
                     isExpanded ? 'admin-orders-grid-item--expanded' : '',
@@ -394,7 +398,12 @@ export default function OrdersDataTable22({
                           <span className="admin-orders-grid-customer">
                             {getCustomerFirstName(customerIdentity.displayName)}
                           </span>
-                          {order.isTestOrder ? (
+                          {isSessionOrder ? (
+                            <span className="admin-orders-test-badge">
+                              <span className="admin-orders-test-badge__long">YOUR DEMO ORDER</span>
+                              <span className="admin-orders-test-badge__short">YOURS</span>
+                            </span>
+                          ) : order.isTestOrder ? (
                             <span className="admin-orders-test-badge">
                               <span className="admin-orders-test-badge__long">TEST ORDER</span>
                               <span className="admin-orders-test-badge__short">TEST</span>

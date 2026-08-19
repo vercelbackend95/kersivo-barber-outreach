@@ -12,17 +12,15 @@ const wrappers = {
   services: readFileSync(new URL('../../components/demo/DemoServicesHero.astro', import.meta.url), 'utf8'),
   barbers: readFileSync(new URL('../../components/demo/DemoBarbersHero.astro', import.meta.url), 'utf8'),
   gallery: readFileSync(new URL('../../components/demo/DemoGalleryHero.astro', import.meta.url), 'utf8'),
-  shop: readFileSync(new URL('../../components/demo/DemoShopHero.astro', import.meta.url), 'utf8'),
   contact: readFileSync(new URL('../../components/demo/DemoContactHero.astro', import.meta.url), 'utf8'),
 };
 
 describe('BLACKLINE shared page hero', () => {
-  it('lists the five primary subpages once', () => {
+  it('lists the four primary subpages that still use DemoPageHero', () => {
     expect(DEMO_PAGE_HERO_ROUTES.map((route) => route.path)).toEqual([
       '/demo/services',
       '/demo/barbers',
       '/demo/gallery',
-      '/demo/shop',
       '/demo/contact',
     ]);
   });

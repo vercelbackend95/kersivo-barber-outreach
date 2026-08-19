@@ -32,14 +32,24 @@ function collectApplicationErrors(page: Page) {
   return errors;
 }
 
+async function dismissCookieBanner(page: Page) {
+  const accept = page.getByRole('button', { name: 'Accept all' });
+  await expect(accept).toBeVisible();
+  await accept.click();
+  await expect(accept).toHaveCount(0);
+}
+
 async function openBlacklineAccountMenu(page: Page) {
   const desktopProfile = page.locator('aside.admin-sidebar button.admin-sidebar-profile');
   if (await desktopProfile.isVisible()) {
+    await desktopProfile.scrollIntoViewIfNeeded();
     await desktopProfile.click();
+    await expect(page.getByRole('menu')).toBeVisible();
     return;
   }
   await page.getByRole('button', { name: 'Open admin menu' }).click();
   await page.locator('#admin-mobile-drawer button.admin-sidebar-profile').click();
+  await expect(page.getByRole('menu')).toBeVisible();
 }
 
 test.describe('BLACKLINE owner dashboard', () => {
@@ -48,7 +58,17 @@ test.describe('BLACKLINE owner dashboard', () => {
     await page.goto('/demo/admin?section=bookings_dashboard', { waitUntil: 'domcontentloaded' });
     await expect(page.getByRole('heading', { name: 'BLACKLINE owner dashboard' })).toBeAttached();
     await expect(page.getByText('BLACKLINE owner demo', { exact: true })).toBeVisible();
-    await expect(page.getByLabel('BLACKLINE demo status').first()).toContainText('Sample data');
+    const conversionCta = page.locator('aside.admin-sidebar a.admin-sidebar-launch-cta');
+    await expect(conversionCta).toBeVisible();
+    await expect(conversionCta).toHaveAttribute('href', '/admin/launch');
+    await expect(conversionCta).toHaveAttribute('aria-label', 'Launch my barbershop');
+    await expect(conversionCta).toContainText('LAUNCH MY BARBERSHOP');
+    await expect(conversionCta.locator('.admin-sidebar-launch-cta__icon svg')).toHaveCount(1);
+    await expect(conversionCta.locator('.admin-sidebar-launch-cta__checklist')).toHaveCount(0);
+    await expect(page.getByText('MAKE IT YOURS')).toHaveCount(0);
+    await expect(page.getByText('CREATE MY SYSTEM')).toHaveCount(0);
+    await expect(page.getByRole('link', { name: 'VIEW PLANS' })).toHaveCount(0);
+    await expect(conversionCta.locator('form, input, progress, [type="checkbox"]')).toHaveCount(0);
     await expect(page.getByText('BLACKLINE OWNER DEMO', { exact: true })).toHaveCount(0);
     await expect(page.getByText('DEMO MODE')).toHaveCount(0);
     await expect(page.locator('.admin-demo-pill')).toHaveCount(0);
@@ -58,6 +78,63 @@ test.describe('BLACKLINE owner dashboard', () => {
     await expect(page.getByRole('link', { name: 'Back to Kersivo' })).toBeVisible();
     await expect(page.getByRole('textbox', { name: /email/i })).toHaveCount(0);
     expect(errors).toEqual([]);
+  });
+
+  test('uses the BLACKLINE wordmark as tenant identity, not KERSIVO logos', async ({ page }) => {
+    await page.setViewportSize({ width: 1440, height: 900 });
+    await page.goto('/demo/admin?section=bookings_dashboard', { waitUntil: 'domcontentloaded' });
+
+    const desktopBrand = page.locator('aside.admin-sidebar .admin-sidebar-brand--blackline');
+    await expect(desktopBrand.getByRole('img', { name: 'BLACKLINE BARBERS' })).toBeVisible();
+    await expect(desktopBrand.getByText('Powered by KERSIVO')).toBeVisible();
+    await expect(desktopBrand.locator('img[src*="logo_nobg"]')).toHaveCount(0);
+    await expect(page.locator('aside.admin-sidebar .admin-sidebar-brand img')).toHaveCount(0);
+
+    await page.setViewportSize({ width: 375, height: 812 });
+    await page.goto('/demo/admin?section=bookings_dashboard', { waitUntil: 'domcontentloaded' });
+    const mobileBrand = page.locator('.admin-mobile-header .admin-sidebar-brand--blackline');
+    await expect(mobileBrand.getByRole('img', { name: 'BLACKLINE BARBERS' })).toBeVisible();
+    await expect(mobileBrand.locator('img[src*="logo_nobg"]')).toHaveCount(0);
+
+    await dismissCookieBanner(page);
+
+    await page.getByRole('button', { name: 'Open admin menu' }).click();
+    const drawer = page.locator('#admin-mobile-drawer');
+    await expect(page.getByRole('button', { name: 'Open admin menu' })).toHaveAttribute(
+      'aria-expanded',
+      'true',
+    );
+    await expect(drawer).toHaveClass(/admin-mobile-drawer--open/);
+    const drawerBrand = drawer.locator('.admin-sidebar-brand--blackline');
+    await expect(drawerBrand.getByRole('img', { name: 'BLACKLINE BARBERS' })).toBeVisible();
+    await expect(drawerBrand.getByText('Powered by KERSIVO')).toBeVisible();
+    const drawerCta = drawer.locator('a.admin-sidebar-launch-cta');
+    await expect(drawerCta).toBeVisible();
+    await expect(drawerCta).toHaveAttribute('href', '/admin/launch');
+    await expect(drawerCta).toHaveAttribute('aria-label', 'Launch my barbershop');
+    await expect(drawerCta).toContainText('LAUNCH MY BARBERSHOP');
+    await expect(drawerCta.getByText('Sample data')).toHaveCount(0);
+    await expect(drawerCta.getByText(/next task|% complete|checklist/i)).toHaveCount(0);
+    await expect(drawerCta.locator('.admin-sidebar-launch-cta__checklist')).toHaveCount(0);
+  });
+
+  test('customer demo header and footer use the BLACKLINE wordmark', async ({ page }) => {
+    const viewports = [
+      { width: 375, height: 812 },
+      { width: 768, height: 1024 },
+      { width: 1440, height: 900 },
+    ] as const;
+
+    for (const viewport of viewports) {
+      await page.setViewportSize(viewport);
+      await page.goto('/demo', { waitUntil: 'domcontentloaded' });
+      const headerMark = page.locator('.bl-header .bl-wordmark').getByRole('img', { name: 'BLACKLINE BARBERS' });
+      await expect(headerMark).toBeVisible();
+      await expect(page.locator('.bl-header img[src*="logo_nobg"]')).toHaveCount(0);
+      await expect(page.locator('footer.bl-footer').getByRole('img', { name: 'BLACKLINE BARBERS' })).toBeVisible();
+      await expect(page.getByText('Demo experience by Kersivo')).toBeVisible();
+      await assertNoHorizontalOverflow(page);
+    }
   });
 
   test('banner round-trips between customer and owner views', async ({ page }) => {
@@ -70,12 +147,12 @@ test.describe('BLACKLINE owner dashboard', () => {
 
   test('shows three canonical featured services', async ({ page }) => {
     await page.goto('/demo/admin?section=services', { waitUntil: 'domcontentloaded' });
-    await expect(page.getByText('4 services · 3 featured')).toBeVisible();
+    await expect(page.getByText('18 services · 3 featured')).toBeVisible();
     await expect(page.getByRole('switch', { name: 'Skin Fade: Featured' })).toHaveAttribute(
       'aria-checked',
       'true',
     );
-    await expect(page.getByRole('switch', { name: 'Haircut & Finish: Featured' })).toHaveAttribute(
+    await expect(page.getByRole('switch', { name: 'Classic Cut & Finish: Featured' })).toHaveAttribute(
       'aria-checked',
       'true',
     );
@@ -83,7 +160,7 @@ test.describe('BLACKLINE owner dashboard', () => {
       'aria-checked',
       'true',
     );
-    await expect(page.getByRole('switch', { name: 'Hot Towel Shave: Not featured' })).toHaveAttribute(
+    await expect(page.getByRole('switch', { name: 'Hot Towel Wet Shave: Not featured' })).toHaveAttribute(
       'aria-checked',
       'false',
     );
@@ -92,7 +169,7 @@ test.describe('BLACKLINE owner dashboard', () => {
 
   test('bookings_services alias opens the services section', async ({ page }) => {
     await page.goto('/demo/admin?section=bookings_services', { waitUntil: 'domcontentloaded' });
-    await expect(page.getByText('4 services · 3 featured')).toBeVisible();
+    await expect(page.getByText('18 services · 3 featured')).toBeVisible();
   });
 
   test('account menu has one create-shop CTA and no setup clutter', async ({ page }) => {
@@ -114,6 +191,14 @@ test.describe('BLACKLINE owner dashboard', () => {
     await expect(page.getByRole('menuitem', { name: 'Retail onboarding' })).toHaveCount(0);
   });
 
+  test('sidebar launch CTA leaves the demo for /admin/launch', async ({ page }) => {
+    await page.setViewportSize({ width: 1440, height: 900 });
+    await page.goto('/demo/admin?section=bookings_dashboard', { waitUntil: 'domcontentloaded' });
+    await page.locator('aside.admin-sidebar a.admin-sidebar-launch-cta').click();
+    await expect(page).toHaveURL(/\/admin\/launch/);
+    await expect(page.getByText('Sample data', { exact: true })).toHaveCount(0);
+  });
+
   test('create-shop CTA leaves the demo without opening the sample-data lock', async ({ page }) => {
     await page.setViewportSize({ width: 1440, height: 900 });
     await page.goto('/demo/admin?section=bookings_dashboard', { waitUntil: 'domcontentloaded' });
@@ -126,7 +211,7 @@ test.describe('BLACKLINE owner dashboard', () => {
 
   test('blocked mutations still explain sample data', async ({ page }) => {
     await page.goto('/demo/admin?section=services', { waitUntil: 'domcontentloaded' });
-    await expect(page.getByText('4 services · 3 featured')).toBeVisible();
+    await expect(page.getByText('18 services · 3 featured')).toBeVisible();
     await page.getByRole('switch', { name: 'Skin Fade: Featured' }).click();
     await expect(page.getByRole('dialog', { name: /Sample data/i })).toBeVisible();
   });

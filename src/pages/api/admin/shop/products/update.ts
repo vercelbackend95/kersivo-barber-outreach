@@ -6,8 +6,8 @@ import { requireAdminPermission } from '../../../../../lib/admin/auth';
 import { runSerializableTransaction } from '../../../../../lib/db/serializableTransaction';
 import { normalizeRequestedProductSortOrder, reorderProductWithinShop } from '../../../../../lib/products/sortOrder';
 import { makeBlobPath, uploadPublicImageToBlob } from '../../../../../lib/storage/vercelBlob';
+import { PRODUCT_CATEGORY_VALUES } from '../../../../../lib/shop/productPresentation';
 const PRODUCT_DESCRIPTION_MAX_LENGTH = 2000;
-const PRODUCT_CATEGORY_VALUES = ['POMADES_AND_CLAYS', 'BEARD_CARE', 'HAIR_WASH', 'STYLING', 'TOOLS', 'GIFT_SETS'] as const;
 const imageUrlSchema = z.string().trim().refine((value) => {
   if (!value) return true;
   return z.string().url().safeParse(value).success;

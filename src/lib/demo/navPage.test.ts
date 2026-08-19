@@ -10,19 +10,23 @@ import {
   isDemoNavActive,
 } from './nav';
 
-const source = readFileSync(new URL('../../components/demo/DemoNav.astro', import.meta.url), 'utf8');
+const wrapper = readFileSync(new URL('../../components/demo/DemoNav.astro', import.meta.url), 'utf8');
+const header = readFileSync(new URL('../../components/shop/storefront/StorefrontHeader.astro', import.meta.url), 'utf8');
 const layout = readFileSync(new URL('../../layouts/DemoLayout.astro', import.meta.url), 'utf8');
-const css = readFileSync(new URL('../../styles/demo/blackline.css', import.meta.url), 'utf8');
+const css = readFileSync(new URL('../../styles/components/storefront-header.css', import.meta.url), 'utf8');
 
 describe('BLACKLINE mobile navigation markup', () => {
   it('starts closed with a real toggle and accessible names', () => {
-    expect(source).toContain('data-bl-nav-state="closed"');
-    expect(source).toContain('aria-label="BLACKLINE demo home"');
-    expect(source).toContain('Open navigation menu');
-    expect(source).toContain('aria-controls={panelId}');
-    expect(source).toContain('aria-expanded="false"');
-    expect(source).toContain('data-bl-nav-panel hidden');
-    expect(source).toContain('aria-label="Mobile navigation"');
+    expect(header).toContain('data-bl-nav-state="closed"');
+    expect(wrapper).toContain('homeLabel="BLACKLINE demo home"');
+    expect(wrapper).toContain('BlacklineWordmark');
+    expect(wrapper).toContain('size="default"');
+    expect(wrapper).not.toContain('bl-wordmark-sub');
+    expect(header).toContain('Open navigation menu');
+    expect(header).toContain('aria-controls={panelId}');
+    expect(header).toContain('aria-expanded="false"');
+    expect(header).toContain('data-bl-nav-panel hidden');
+    expect(header).toContain('aria-label="Mobile navigation"');
   });
 
   it('uses established routes and a booking href without preselect queries', () => {
@@ -34,32 +38,35 @@ describe('BLACKLINE mobile navigation markup', () => {
       DEMO_SHOP_HREF,
       DEMO_CONTACT_HREF,
     ]);
-    expect(source).toContain('DEMO_BOOK_HREF');
-    expect(source).not.toContain('?service=');
-    expect(source).not.toContain('?barber=');
-    expect(source).not.toContain('href="#"');
+    expect(wrapper).toContain('DEMO_BOOK_HREF');
+    expect(wrapper).not.toContain('?service=');
+    expect(wrapper).not.toContain('?barber=');
+    expect(wrapper).not.toContain('href="#"');
     expect(DEMO_BOOK_HREF).toBe('/demo/book');
     expect(isDemoNavActive('/demo/shop/bl-product-ironclad-pomade', DEMO_SHOP_HREF)).toBe(true);
     expect(isDemoNavActive('/demo/shop', DEMO_HOME_HREF)).toBe(false);
   });
 
-  it('keeps one overlay booking CTA and a compact closed-header Book control', () => {
-    expect(source).toContain('data-bl-header-book');
-    expect(source).toContain('data-bl-nav-book');
-    expect(source).toContain('Book an appointment');
-    expect(source.match(/data-bl-nav-book/g)).toHaveLength(1);
-    expect(source).toContain('Book now');
-    expect(source).toContain('data-bl-nav-bag');
-    expect(source).toContain('data-bl-bag-count');
+  it('keeps overlay booking plus a compact header BOOK control', () => {
+    expect(header).toContain('data-bl-nav-book');
+    expect(header).toContain('Book an appointment');
+    expect(header.match(/data-bl-nav-book/g)).toHaveLength(1);
+    expect(header).toContain('BOOK NOW');
+    expect(header).toContain('data-bl-nav-bag');
+    expect(header).toContain('data-bl-bag-count');
+    expect(header).toContain('data-bl-bag-button');
     expect(formatNavIndex(0)).toBe('01');
   });
 
-  it('scopes the overlay and desktop protection in the BLACKLINE theme', () => {
-    expect(css).toContain('.bl-nav-layer');
-    expect(css).toContain('@media (min-width: 1024px)');
-    expect(css).toContain('.bl-header-book');
+  it('scopes the overlay and desktop protection in storefront-header tokens', () => {
+    expect(css).toContain('.sf-nav-layer');
+    expect(css).toContain('@media (min-width: 70rem)');
+    expect(css).toContain('--sf-header-accent: #ff1717');
+    expect(css).not.toContain('--bl-cobalt');
     expect(css).toContain('prefers-reduced-motion: reduce');
     expect(css).toContain('env(safe-area-inset-bottom');
+    expect(css).toContain('max-width: 359px');
     expect(layout).toContain('viewport-fit=cover');
+    expect(layout).toContain('blackline-wordmark.css');
   });
 });

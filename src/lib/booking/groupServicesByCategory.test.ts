@@ -40,4 +40,34 @@ describe('groupServicesByCategory', () => {
 
     expect(groups.at(-1)).toMatchObject({ label: 'Other', services: [{ name: 'Mystery' }] });
   });
+
+  it('honours a preferred custom category order and omits empty groups', () => {
+    const groups = groupServicesByCategory(
+      [
+        service({ id: '1', name: 'Fade', category: 'cuts & fades', displayOrder: 1 }),
+        service({ id: '2', name: 'Shave', category: 'beard & shave', displayOrder: 1 }),
+        service({ id: '3', name: 'Combo', category: 'hair & beard combos', displayOrder: 1 }),
+      ],
+      { categoryOrder: ['hair & beard combos', 'cuts & fades', 'beard & shave', 'grooming & care'] },
+    );
+
+    expect(groups.map((group) => group.category)).toEqual([
+      'hair & beard combos',
+      'cuts & fades',
+      'beard & shave',
+    ]);
+  });
+
+  it('places unknown categories after the preferred order, then Other', () => {
+    const groups = groupServicesByCategory(
+      [
+        service({ id: '1', name: 'Mystery', category: null }),
+        service({ id: '2', name: 'Wax', category: 'extras' }),
+        service({ id: '3', name: 'Fade', category: 'cuts & fades' }),
+      ],
+      { categoryOrder: ['cuts & fades'] },
+    );
+
+    expect(groups.map((group) => group.label)).toEqual(['Cuts & Fades', 'Extras', 'Other']);
+  });
 });

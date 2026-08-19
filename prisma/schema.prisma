@@ -74,6 +74,7 @@ enum ProductCategory {
   STYLING
   TOOLS
   GIFT_SETS
+  SHAVE_AND_SKIN
 }
 
 // Dashboard login role within one shop (shopId).

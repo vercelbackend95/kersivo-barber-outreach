@@ -1,8 +1,8 @@
 export type MobileNavState = 'closed' | 'opening' | 'open' | 'closing';
 
-export const DESKTOP_NAV_QUERY = '(min-width: 1024px)';
-export const NAV_OPEN_MS = 720;
-export const NAV_CLOSE_MS = 320;
+export const DESKTOP_NAV_QUERY = '(min-width: 70rem)';
+export const NAV_OPEN_MS = 280;
+export const NAV_CLOSE_MS = 240;
 export const CART_OPEN_REQUEST_EVENT = 'kersivo:cart-open-request';
 
 const FOCUSABLE =
@@ -108,7 +108,7 @@ export function bindMobileNav(options: BindMobileNavOptions): () => void {
 
   const doc = header.ownerDocument;
   const win = doc.defaultView ?? window;
-  const label = toggle.querySelector('.bl-sr-only');
+  const label = toggle.querySelector('.sf-sr-only, .bl-sr-only');
   const lock = createScrollLock(doc, win);
   let state: MobileNavState = 'closed';
   let timer: ReturnType<typeof setTimeout> | null = null;
@@ -116,6 +116,7 @@ export function bindMobileNav(options: BindMobileNavOptions): () => void {
 
   const setState = (next: MobileNavState) => {
     state = next;
+    header.dataset.sfNavState = next;
     header.dataset.blNavState = next;
   };
 
@@ -125,14 +126,16 @@ export function bindMobileNav(options: BindMobileNavOptions): () => void {
   };
 
   const setBackgroundInert = (inert: boolean) => {
-    for (const selector of ['.bl-main', '.bl-footer']) {
+    for (const selector of ['.bl-main', '.bl-footer', '[data-sf-header-inert]']) {
       const el = doc.querySelector(selector);
       if (el instanceof HTMLElement && 'inert' in el) el.inert = inert;
     }
   };
 
   const syncOverlayTop = () => {
-    overlay.style.setProperty('--bl-nav-layer-top', `${overlayTopFromHeader(header)}px`);
+    const top = `${overlayTopFromHeader(header)}px`;
+    overlay.style.setProperty('--sf-nav-layer-top', top);
+    overlay.style.setProperty('--bl-nav-layer-top', top);
   };
 
   const clearTimer = () => {
@@ -237,7 +240,7 @@ export function bindMobileNav(options: BindMobileNavOptions): () => void {
     const target = event.target;
     if (!(target instanceof Element)) return;
 
-    const bag = target.closest('[data-bl-nav-bag]');
+    const bag = target.closest('[data-sf-nav-bag], [data-bl-nav-bag]');
     if (bag) {
       event.preventDefault();
       close('immediate', false);

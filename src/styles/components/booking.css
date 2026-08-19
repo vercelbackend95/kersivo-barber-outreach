@@ -6673,6 +6673,14 @@ button.admin-sidebar-brand--button:focus-visible {
   outline-offset: 0;
   border-radius: 0;
   animation: admin-order-highlight-fade 8s ease-out forwards;
+  scroll-margin-top: 6.5rem;
+  scroll-margin-bottom: 2rem;
+}
+
+.admin-orders-grid-item[data-session-order='true'] .admin-orders-grid-collect-btn {
+  width: 44px;
+  min-width: 44px;
+  min-height: 44px;
 }
 
 .admin-orders-grid-item--walkthrough {
@@ -6687,6 +6695,45 @@ button.admin-sidebar-brand--button:focus-visible {
   100% {
     background: transparent;
   }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .admin-orders-grid-item--highlight {
+    animation: none;
+    background: color-mix(in srgb, var(--accent) 12%, transparent);
+  }
+}
+
+.blackline-demo-sale-card {
+  display: grid;
+  gap: 0.35rem;
+  margin: 0 0 1rem;
+  padding: 0.85rem 1rem;
+  border: 1px solid color-mix(in srgb, var(--accent) 35%, transparent);
+  background: color-mix(in srgb, var(--accent) 8%, transparent);
+  scroll-margin-top: 6.5rem;
+}
+
+.blackline-demo-sale-card__eyebrow {
+  margin: 0;
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.blackline-demo-sale-card__title,
+.blackline-demo-sale-card__meta,
+.blackline-demo-sale-card__items {
+  margin: 0;
+}
+
+.blackline-demo-sale-card__items {
+  padding-left: 1.1rem;
+}
+
+.retail-task-card[data-blackline-retail-task] .retail-task-card__cta {
+  min-height: 44px;
 }
 
 .admin-retail-walkthrough-coach,

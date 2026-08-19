@@ -1,18 +1,44 @@
 ---
-import CartDrawer from './CartDrawer';
+import StorefrontCartDrawer from './storefront/StorefrontCartDrawer';
+import type { StorefrontCartMode, StorefrontCartThemeId } from './storefront/StorefrontCartDrawer';
+import type { StorefrontPriceFormat } from '@/lib/shop/storefrontCatalog';
+import type { StorefrontCheckoutConfig } from '@/lib/shop/storefrontCheckout';
+import '@/styles/components/storefront-cart.css';
 
 type Props = {
-  testOrderMode?: boolean;
-  publicDemoMode?: boolean;
-  shopId?: string;
+  mode: StorefrontCartMode;
+  shopId: string;
+  shopName: string;
+  themeId: StorefrontCartThemeId;
+  priceFormat?: StorefrontPriceFormat;
+  exploreHref: string;
+  maxQuantity?: number;
+  checkout: StorefrontCheckoutConfig;
+  allowedProductIds?: string[];
 };
 
-const { testOrderMode = false, publicDemoMode = false, shopId } = Astro.props;
+const {
+  mode,
+  shopId,
+  shopName,
+  themeId,
+  priceFormat = 'gbp',
+  exploreHref,
+  maxQuantity,
+  checkout,
+  allowedProductIds,
+} = Astro.props;
 ---
 
-<CartDrawer
+<StorefrontCartDrawer
   client:load
-  testOrderMode={testOrderMode}
-  publicDemoMode={publicDemoMode}
+  mode={mode}
   shopId={shopId}
+  shopName={shopName}
+  themeId={themeId}
+  priceFormat={priceFormat}
+  exploreHref={exploreHref}
+  maxQuantity={maxQuantity}
+  checkout={checkout}
+  allowedProductIds={allowedProductIds}
 />

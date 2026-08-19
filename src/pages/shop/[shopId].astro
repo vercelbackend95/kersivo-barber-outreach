@@ -1,6 +1,6 @@
 ---
 import MainLayout from '@/layouts/MainLayout.astro';
-import type { ProductCategory } from '@prisma/client';
+import StorefrontShopPage from '@/components/shop/storefront/StorefrontShopPage';
 import { prisma } from '@/lib/db/client';
 import { BLACKLINE_SHOP_ID } from '@/lib/demo/products';
 import { isDemoShopId } from '@/lib/shop/cardPaymentsGate';
@@ -10,9 +10,16 @@ import {
 } from '@/lib/db/resilience';
 import { canSellRetail } from '@/lib/shop/cardPaymentsGate';
 import { shopAcceptsPublicBookings } from '@/lib/setup/shopPublicBookingGate';
-import { formatGbp } from '@/lib/shop/money';
+import {
+  parseStorefrontCategoryParam,
+  storefrontCategoryOptions,
+  storefrontProductFromPrisma,
+  type StorefrontProduct,
+} from '@/lib/shop/storefrontCatalog';
+import { buildTenantShopItemListJsonLd } from '@/lib/seo/productJsonLd';
 import '@/styles/components/shop.css';
 import '@/styles/components/badge.css';
+import '@/styles/components/storefront.css';
 
 export const prerender = false;
 
@@ -26,6 +33,7 @@ if (!shopId || isDemoShopId(shopId)) {
 const outageShop = {
   id: shopId,
   name: 'Barbershop',
+  logoUrl: null as string | null,
   shopPaidAt: null as Date | null,
   smsRemindersEnabled: false,
   retailEnabled: false,
@@ -42,6 +50,7 @@ const pageData = await withPrismaQuotaFallback(
       select: {
         id: true,
         name: true,
+        logoUrl: true,
         shopPaidAt: true,
         smsRemindersEnabled: true,
         retailEnabled: true,
@@ -60,29 +69,32 @@ const pageData = await withPrismaQuotaFallback(
       return {
         notFound: false as const,
         shop,
-        products: [],
+        products: [] as StorefrontProduct[],
         retailReady: false,
         shopUnavailable: true,
       };
     }
 
-    const products = await prisma.product.findMany({
+    const rows = await prisma.product.findMany({
       where: { shopId, active: true },
       orderBy: [{ sortOrder: 'asc' }, { createdAt: 'asc' }],
       select: {
         id: true,
         name: true,
+        description: true,
         pricePence: true,
         imageUrl: true,
         category: true,
         featured: true,
+        sortOrder: true,
+        active: true,
       },
     });
 
     return {
       notFound: false as const,
       shop,
-      products,
+      products: rows.map(storefrontProductFromPrisma),
       retailReady: canSellRetail(shop) && !shop.publicActivityPaused,
       shopUnavailable: false,
     };
@@ -90,14 +102,7 @@ const pageData = await withPrismaQuotaFallback(
   {
     notFound: false as const,
     shop: outageShop,
-    products: [] as Array<{
-      id: string;
-      name: string;
-      pricePence: number;
-      imageUrl: string | null;
-      category: ProductCategory;
-      featured: boolean;
-    }>,
+    products: [] as StorefrontProduct[],
     retailReady: false,
     shopUnavailable: true,
   },
@@ -108,8 +113,20 @@ if (pageData.notFound) {
 }
 
 const { shop, products, retailReady, shopUnavailable } = pageData;
+const selectedCategory = parseStorefrontCategoryParam(
+  Astro.url.searchParams.get('category'),
+  storefrontCategoryOptions(products).map((option) => option.value),
+);
 const title = `${shop.name} — Shop | Kersivo`;
 const description = `Order products for pickup at ${shop.name}.`;
+const listingJsonLd =
+  !shopUnavailable && retailReady && products.length > 0
+    ? buildTenantShopItemListJsonLd({
+        shopId,
+        shopName: shop.name,
+        products,
+      })
+    : undefined;
 ---
 
 <MainLayout
@@ -119,16 +136,14 @@ const description = `Order products for pickup at ${shop.name}.`;
   noindex
   navbarVariant="shop"
   shopId={shopId}
+  shopName={shop.name}
+  brandLogoUrl={shop.logoUrl}
+  jsonLd={listingJsonLd}
 >
-  <main class="container shop-page">
-    <header class="shop-header">
-      <p class="shop-kicker">Pickup only</p>
-      <h1>{shop.name}</h1>
-      <p class="muted">Order online and collect in store. No shipping.</p>
-      {checkoutCancelled ? (
-        <p class="admin-inline-error" role="status">Checkout was cancelled. Your bag is unchanged.</p>
-      ) : null}
-    </header>
+  <main class="container shop-page" data-active-category={selectedCategory}>
+    {checkoutCancelled ? (
+      <p class="admin-inline-error" role="status">Checkout was cancelled. Your bag is unchanged.</p>
+    ) : null}
 
     {shopUnavailable || !retailReady ? (
       <article class="shop-promo-card shop-promo-card--empty">
@@ -136,49 +151,27 @@ const description = `Order products for pickup at ${shop.name}.`;
         <h2>Online shop is not available right now</h2>
         <p>{PUBLIC_BOOKING_UNAVAILABLE_MESSAGE}</p>
       </article>
-    ) : products.length === 0 ? (
-      <article class="shop-promo-card shop-promo-card--empty">
-        <p class="shop-promo-kicker">Coming soon</p>
-        <h2>No products listed yet</h2>
-        <p>Check back soon or ask the barbershop in person.</p>
-      </article>
     ) : (
-      <section class="shop-layout" aria-label="Products">
-        <ul class="shop-grid" aria-label="Products">
-          {products.map((product) => (
-            <li>
-              <article class="shop-card">
-                <div class="shop-media">
-                  {product.featured ? <span class="shop-badge">Featured</span> : null}
-                  {product.imageUrl ? (
-                    <img src={product.imageUrl} alt={product.name} class="shop-image" loading="lazy" />
-                  ) : (
-                    <div class="shop-image--placeholder" aria-hidden="true"></div>
-                  )}
-                </div>
-                <div class="shop-card-body">
-                  <h3>{product.name}</h3>
-                  <p class="shop-price">{formatGbp(product.pricePence)}</p>
-                  <div class="shop-card-actions">
-                    <button
-                      type="button"
-                      class="btn btn--primary btn--atc"
-                      data-add-to-cart
-                      data-product-id={product.id}
-                      data-product-name={product.name}
-                      data-product-price-pence={String(product.pricePence)}
-                      data-product-image-url={product.imageUrl ?? ''}
-                      data-atc-label="Add to cart"
-                    >
-                      Add to cart
-                    </button>
-                  </div>
-                </div>
-              </article>
-            </li>
-          ))}
-        </ul>
-      </section>
+      <StorefrontShopPage
+        client:load
+        products={products}
+        themeId="kersivo"
+        shopName={shop.name}
+        productHrefPrefix={`/shop/${shopId}`}
+        priceFormat="gbp"
+        imageFallback="initial"
+        selectedCategory={selectedCategory}
+        intro={{
+          eyebrow: 'Pickup only',
+          heading: shop.name,
+          headingId: 'storefront-heading',
+          description: 'Order online and collect in store. No shipping.',
+          fulfilmentLabel: 'Collect in shop',
+        }}
+        showPoweredBy
+        emptyTitle="No products listed yet"
+        emptyDescription="Check back soon or ask the barbershop in person."
+      />
     )}
   </main>
 </MainLayout>

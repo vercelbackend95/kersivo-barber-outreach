@@ -1,0 +1,103 @@
+/* Code-native BLACKLINE BARBERS lockup. Import from DemoLayout and /demo/admin only.
+   Visual reference: /public/demo/logo.png — do not render that raster in the UI. */
+
+.bl-lockup {
+  --bl-lockup-ink: #f4f1ea;
+  --bl-lockup-rule: #d72638;
+  --bl-lockup-name-size: 1.5rem;
+  --bl-lockup-barbers-size: 0.4rem;
+  --bl-lockup-barbers-tracking: 0.42em;
+  --bl-lockup-rule-height: 1px;
+  --bl-lockup-rule-gap: 0.4rem;
+  --bl-lockup-sub-gap: 0.28rem;
+  --bl-lockup-min-height: 2.5rem;
+
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  justify-content: center;
+  box-sizing: border-box;
+  width: max-content;
+  max-width: 100%;
+  min-height: var(--bl-lockup-min-height);
+  color: var(--bl-ivory, var(--bl-lockup-ink));
+  font-family: var(--bl-font-display, 'Barlow Condensed', 'Arial Narrow', sans-serif);
+  line-height: 1;
+  text-align: center;
+  text-decoration: none;
+  user-select: none;
+}
+
+.bl-lockup--compact {
+  --bl-lockup-name-size: 1.05rem;
+  --bl-lockup-barbers-size: 0.28rem;
+  --bl-lockup-barbers-tracking: 0.34em;
+  --bl-lockup-rule-height: 1px;
+  --bl-lockup-rule-gap: 0.28rem;
+  --bl-lockup-sub-gap: 0.18rem;
+  --bl-lockup-min-height: 1.75rem;
+}
+
+.bl-lockup--default {
+  --bl-lockup-name-size: 1.5rem;
+  --bl-lockup-barbers-size: 0.4rem;
+  --bl-lockup-barbers-tracking: 0.42em;
+  --bl-lockup-rule-gap: 0.4rem;
+  --bl-lockup-sub-gap: 0.28rem;
+  --bl-lockup-min-height: 2.5rem;
+}
+
+.bl-lockup--display {
+  --bl-lockup-name-size: clamp(2.75rem, 10vw, 4.5rem);
+  --bl-lockup-barbers-size: clamp(0.7rem, 2.4vw, 1.1rem);
+  --bl-lockup-barbers-tracking: 0.46em;
+  --bl-lockup-rule-height: 2px;
+  --bl-lockup-rule-gap: 0.7rem;
+  --bl-lockup-sub-gap: 0.45rem;
+  --bl-lockup-min-height: clamp(3.5rem, 13vw, 5.75rem);
+}
+
+.bl-lockup__name {
+  display: block;
+  font-size: var(--bl-lockup-name-size);
+  font-weight: 800;
+  letter-spacing: 0.02em;
+  line-height: 0.86;
+  text-transform: uppercase;
+  white-space: nowrap;
+  color: inherit;
+}
+
+.bl-lockup__sub {
+  display: flex;
+  align-items: center;
+  gap: var(--bl-lockup-rule-gap);
+  margin-top: var(--bl-lockup-sub-gap);
+  min-width: 0;
+}
+
+.bl-lockup__barbers {
+  flex: 0 0 auto;
+  font-size: var(--bl-lockup-barbers-size);
+  font-weight: 700;
+  letter-spacing: var(--bl-lockup-barbers-tracking);
+  line-height: 1;
+  text-transform: uppercase;
+  white-space: nowrap;
+  color: inherit;
+  margin-inline-end: calc(var(--bl-lockup-barbers-tracking) * -1);
+}
+
+.bl-lockup__rule {
+  flex: 1 1 0;
+  height: var(--bl-lockup-rule-height);
+  min-width: 0.35rem;
+  background: var(--bl-lockup-rule);
+  border-radius: 1px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .bl-lockup {
+    transition: none;
+  }
+}

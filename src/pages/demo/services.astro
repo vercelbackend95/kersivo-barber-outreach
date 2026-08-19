@@ -43,44 +43,159 @@ import { DEMO_SHOP_NAME } from '@/lib/demo/site';
     if (instant) el.classList.add('is-settled');
   }
 
+  function parseCategorySlug(raw: string | null | undefined) {
+    const slug = raw?.trim().toLowerCase() ?? '';
+    if (!slug || slug === 'all') return 'all';
+    const known = [...document.querySelectorAll('[data-bl-service-menu] [data-category-slug]')]
+      .map((node) => (node instanceof HTMLElement ? node.dataset.categorySlug : undefined))
+      .filter((value): value is string => Boolean(value && value !== 'all'));
+    return known.includes(slug) ? slug : 'all';
+  }
+
   function bindActiveServiceMenu(root: Element) {
     const menu = root.querySelector('[data-bl-service-menu]');
     if (!(menu instanceof HTMLElement) || menu.dataset.blMenuBound === 'true') return;
     menu.dataset.blMenuBound = 'true';
 
-    const setActive = (slug: string) => {
-      menu.dataset.active = slug;
-      menu.querySelectorAll('.bl-services-stage-panel').forEach((panel) => {
-        panel.classList.toggle('is-active', panel.getAttribute('data-service') === slug);
-      });
+    const buttons = [...menu.querySelectorAll<HTMLButtonElement>('.bl-services-cat[data-category-slug]')];
+    const groups = [...menu.querySelectorAll<HTMLElement>('.bl-service-group[data-category-slug]')];
+    const rows = [...menu.querySelectorAll<HTMLElement>('[data-service-slug]')];
+    const live = menu.querySelector('[data-bl-filter-live]');
+    const summary = menu.querySelector('[data-bl-results-summary]');
+    const quickSummary = menu.querySelector('[data-bl-quick-mode="summary"]');
+    const quickService = menu.querySelector('[data-bl-quick-mode="service"]');
+    const quickKicker = menu.querySelector('[data-bl-quick-kicker]');
+    const quickName = menu.querySelector('[data-bl-quick-name]');
+    const quickFacts = menu.querySelector('[data-bl-quick-facts]');
+    const serviceCategory = menu.querySelector('[data-bl-quick-service-category]');
+    const serviceName = menu.querySelector('[data-bl-quick-service-name]');
+    const serviceDuration = menu.querySelector('[data-bl-quick-service-duration]');
+    const servicePrice = menu.querySelector('[data-bl-quick-service-price]');
+    const quickBook = menu.querySelector<HTMLAnchorElement>('[data-bl-quick-book]');
+    const allMeta = buttons.find((button) => button.dataset.categorySlug === 'all');
+    const reduceMotion = prefersReducedMotion();
+
+    const allSummary = {
+      kicker: 'All services',
+      name: 'The Blackline menu',
+      facts: menu.dataset.allFacts?.trim() || allMeta?.querySelector('.bl-services-cat-meta')?.textContent?.trim() || '',
     };
 
-    const rows = [...menu.querySelectorAll('[data-service-slug]')];
+    const setQuickSummary = (slug: string) => {
+      const group = groups.find((entry) => entry.dataset.categorySlug === slug);
+      if (quickKicker) quickKicker.textContent = group?.dataset.categoryLabel ?? allSummary.kicker;
+      if (quickName) quickName.textContent = group ? group.dataset.categoryLabel ?? allSummary.name : allSummary.name;
+      if (quickFacts) {
+        quickFacts.textContent = group
+          ? `${group.dataset.countLabel ?? ''} · ${group.dataset.durationRange ?? ''} · ${group.dataset.fromPrice ?? ''}`.replace(
+              /^\s·\s|\s·\s$/g,
+              '',
+            )
+          : allSummary.facts;
+      }
+      if (quickSummary instanceof HTMLElement) {
+        quickSummary.classList.add('is-active');
+      }
+      if (quickService instanceof HTMLElement) {
+        quickService.classList.remove('is-active');
+      }
+    };
+
+    const setQuickService = (row: HTMLElement) => {
+      if (serviceCategory) serviceCategory.textContent = row.dataset.categoryLabel ?? '';
+      if (serviceName) serviceName.textContent = row.dataset.serviceName ?? '';
+      if (serviceDuration) serviceDuration.textContent = row.dataset.duration ?? '';
+      if (servicePrice) servicePrice.textContent = row.dataset.price ?? '';
+      if (quickBook && row.dataset.bookHref) quickBook.href = row.dataset.bookHref;
+      if (quickSummary instanceof HTMLElement) {
+        quickSummary.classList.remove('is-active');
+      }
+      if (quickService instanceof HTMLElement) {
+        quickService.classList.add('is-active');
+      }
+    };
+
+    const announce = (slug: string) => {
+      const visible = groups.filter((group) => !group.hidden);
+      const count = visible.reduce(
+        (total, group) => total + group.querySelectorAll('.bl-service-item').length,
+        0,
+      );
+      const group = groups.find((entry) => entry.dataset.categorySlug === slug);
+      const message =
+        slug === 'all'
+          ? `Showing ${count} services.`
+          : `Showing ${group?.dataset.countLabel ?? `${count} services`} in ${group?.dataset.categoryLabel ?? 'this category'}.`;
+      if (live) live.textContent = message;
+      if (summary) summary.textContent = message;
+    };
+
+    const applyCategory = (slug: string, options: { persist?: boolean } = {}) => {
+      const next = parseCategorySlug(slug);
+      menu.dataset.activeCategory = next;
+      buttons.forEach((button) => {
+        button.setAttribute('aria-pressed', String(button.dataset.categorySlug === next));
+      });
+      groups.forEach((group) => {
+        const visible = next === 'all' || group.dataset.categorySlug === next;
+        group.hidden = !visible;
+        group.classList.toggle('is-entering', visible && !reduceMotion);
+      });
+      announce(next);
+      setQuickSummary(next);
+      if (options.persist === false) return;
+      const url = new URL(window.location.href);
+      if (next === 'all') url.searchParams.delete('category');
+      else url.searchParams.set('category', next);
+      if (`${url.pathname}${url.search}` !== `${window.location.pathname}${window.location.search}`) {
+        window.history.pushState({ category: next }, '', `${url.pathname}${url.search}${url.hash}`);
+      }
+    };
+
+    buttons.forEach((button) => {
+      button.addEventListener('click', () => {
+        applyCategory(button.dataset.categorySlug ?? 'all');
+      });
+    });
+
     rows.forEach((row) => {
-      row.addEventListener('focusin', () => {
-        const slug = row instanceof HTMLElement ? row.dataset.serviceSlug : undefined;
-        if (slug) setActive(slug);
+      row.addEventListener('focusin', () => setQuickService(row));
+      row.addEventListener('focusout', (event) => {
+        const next = event.relatedTarget;
+        if (next instanceof Node && row.contains(next)) return;
+        setQuickSummary(menu.dataset.activeCategory ?? 'all');
       });
     });
 
     const finePointer = window.matchMedia('(hover: hover) and (pointer: fine)');
     const onPointerEnter = (event: Event) => {
       const target = event.currentTarget;
-      const slug = target instanceof HTMLElement ? target.dataset.serviceSlug : undefined;
-      if (slug) setActive(slug);
+      if (target instanceof HTMLElement) setQuickService(target);
     };
-
+    const onPointerLeave = () => setQuickSummary(menu.dataset.activeCategory ?? 'all');
     const bindHover = () => {
       rows.forEach((row) => {
         row.removeEventListener('pointerenter', onPointerEnter);
-        if (finePointer.matches) row.addEventListener('pointerenter', onPointerEnter);
+        row.removeEventListener('pointerleave', onPointerLeave);
+        if (finePointer.matches) {
+          row.addEventListener('pointerenter', onPointerEnter);
+          row.addEventListener('pointerleave', onPointerLeave);
+        }
       });
     };
-
     bindHover();
     if (typeof finePointer.addEventListener === 'function') {
       finePointer.addEventListener('change', bindHover);
     }
+
+    window.addEventListener('popstate', () => {
+      if (!menu.isConnected) return;
+      applyCategory(new URL(window.location.href).searchParams.get('category'), { persist: false });
+    });
+
+    applyCategory(menu.dataset.activeCategory ?? new URL(window.location.href).searchParams.get('category'), {
+      persist: false,
+    });
   }
 
   function bindBlacklineServicesMotion(root: Element) {

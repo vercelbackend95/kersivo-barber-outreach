@@ -1,10 +1,9 @@
 import { emptyInvitationFields, type TeamCardDto } from '@/lib/admin/teamCards';
 import { minutesToTimeString } from '@/lib/admin/timeStrings';
 import { ALL_WEEKDAYS } from '@/lib/booking/weekdays';
-import { BOOKING_SERVICE_CATEGORY_ORDER } from '@/lib/booking/groupServicesByCategory';
 import { DEMO_BARBERS } from '@/lib/demo/barbers';
 import { DEMO_PRODUCTS } from '@/lib/demo/products';
-import { DEMO_FEATURED_SERVICE_IDS, DEMO_SERVICES } from '@/lib/demo/services';
+import { DEMO_FEATURED_SERVICE_IDS, DEMO_SERVICE_CATEGORY_ORDER, DEMO_SERVICES } from '@/lib/demo/services';
 import { DEMO_SHOP_NAME } from '@/lib/demo/site';
 import { SATURDAY_CLOSE_MINUTE, WEEKDAY_CLOSE_MINUTE, WEEKDAY_OPEN_MINUTE, blacklineDayKey, londonWeekdayMon1 } from './time';
 
@@ -168,11 +167,11 @@ export const blacklineServicesResponse = {
       barber: { id: barber.id, name: barber.name, active: true },
     })),
   })),
-  categories: [...BOOKING_SERVICE_CATEGORY_ORDER],
+  categories: [...DEMO_SERVICE_CATEGORY_ORDER],
 };
 
 export const blacklineServiceCategoriesResponse = {
-  categories: [...BOOKING_SERVICE_CATEGORY_ORDER],
+  categories: [...DEMO_SERVICE_CATEGORY_ORDER],
 };
 
 export const blacklineShopProductsResponse = {

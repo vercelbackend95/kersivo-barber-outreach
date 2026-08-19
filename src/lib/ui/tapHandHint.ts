@@ -55,14 +55,22 @@ function readSeenIds(): string[] {
   }
 }
 
-export function hasSeenBlacklineTapHint(bookingId: string): boolean {
-  return readSeenIds().includes(bookingId);
+export function blacklineRetailCollectHintKey(orderId: string): string {
+  return `retail:collect:${orderId}`;
 }
 
-export function markBlacklineTapHintSeen(bookingId: string): void {
+export function blacklineRetailSaleHintKey(orderId: string): string {
+  return `retail:sale:${orderId}`;
+}
+
+export function hasSeenBlacklineTapHint(hintKey: string): boolean {
+  return readSeenIds().includes(hintKey);
+}
+
+export function markBlacklineTapHintSeen(hintKey: string): void {
   try {
     if (typeof globalThis === 'undefined' || !('sessionStorage' in globalThis)) return;
-    const next = Array.from(new Set([...readSeenIds(), bookingId]));
+    const next = Array.from(new Set([...readSeenIds(), hintKey]));
     globalThis.sessionStorage.setItem(BLACKLINE_TAP_HINT_SEEN_KEY, JSON.stringify(next));
   } catch {
     // ignore

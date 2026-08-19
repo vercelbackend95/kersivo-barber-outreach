@@ -7,7 +7,7 @@ import { render, screen, fireEvent, waitFor, cleanup } from '@testing-library/re
 import BookingFlow from './BookingFlow';
 import { BLACKLINE_BOOKING_PRESENTATION, BLACKLINE_TIMELINE_CTA_LABEL } from '@/lib/demo/booking';
 import { DEMO_BARBERS } from '@/lib/demo/barbers';
-import { DEMO_SERVICES } from '@/lib/demo/services';
+import { DEMO_SERVICE_CATEGORY_ORDER, DEMO_SERVICES } from '@/lib/demo/services';
 import {
   BLACKLINE_SESSION_BOOKINGS_KEY,
   listBlacklineSessionBookings,
@@ -30,6 +30,7 @@ const services = DEMO_SERVICES.map((service) => ({
   pricePence: service.pricePence,
   category: service.category,
   displayOrder: service.displayOrder,
+  featured: service.featured,
 }));
 
 const barbers = DEMO_BARBERS.map((barber) => ({
@@ -44,6 +45,7 @@ function blacklineFlowProps() {
     persistDemoSessionBooking: true as const,
     services,
     barbers,
+    categoryOrder: DEMO_SERVICE_CATEGORY_ORDER,
     presentation: BLACKLINE_BOOKING_PRESENTATION,
     postConfirmCta: {
       label: BLACKLINE_TIMELINE_CTA_LABEL,
@@ -52,6 +54,10 @@ function blacklineFlowProps() {
       availableForDemo: true,
     },
   };
+}
+
+function skinFadeButtonName(name: string) {
+  return /skin fade/i.test(name) && !/beard/i.test(name);
 }
 
 async function chooseDate(dayKey: string) {
@@ -131,8 +137,8 @@ describe('BookingFlow BLACKLINE host', () => {
       />,
     );
 
-    expect(screen.getByRole('button', { name: /Skin Fade/i })).toBeTruthy();
-    expect(screen.getByRole('button', { name: /Hot Towel Shave/i })).toBeTruthy();
+    expect(screen.getByRole('button', { name: skinFadeButtonName })).toBeTruthy();
+    expect(screen.getByRole('button', { name: /Hot Towel Wet Shave/i })).toBeTruthy();
     expect(screen.queryByRole('button', { name: /^Ellis Ward$/i })).toBeNull();
   });
 
@@ -144,7 +150,7 @@ describe('BookingFlow BLACKLINE host', () => {
     expect(stored).toHaveLength(1);
     expect(stored[0]?.fullName).toBe('Alex Demo');
     expect(stored[0]?.barberName).toBe('Noah Reid');
-    expect(stored[0]?.serviceName).toBe('Haircut & Finish');
+    expect(stored[0]?.serviceName).toBe('Classic Cut & Finish');
     expect(stored[0]?.date).toBe(WEDNESDAY);
     expect(stored[0]?.startTime).toBe(slot);
 
@@ -214,7 +220,7 @@ describe('BookingFlow BLACKLINE host', () => {
     expect(screen.getByRole('heading', { name: 'Choose a service' })).toBeTruthy();
     expect(screen.queryByRole('button', { name: /^Ellis Ward$/i })).toBeNull();
 
-    fireEvent.click(screen.getByRole('button', { name: /Skin Fade/i }));
+    fireEvent.click(screen.getByRole('button', { name: skinFadeButtonName }));
 
     await waitFor(() => {
       expect(screen.getByRole('heading', { name: 'Pick a time' })).toBeTruthy();
@@ -236,7 +242,7 @@ describe('BookingFlow BLACKLINE host', () => {
       />,
     );
 
-    fireEvent.click(screen.getByRole('button', { name: /Skin Fade/i }));
+    fireEvent.click(screen.getByRole('button', { name: skinFadeButtonName }));
 
     expect(screen.getByRole('heading', { name: 'Choose a barber' })).toBeTruthy();
     expect(screen.getByRole('button', { name: /^Ellis Ward$/i })).toBeTruthy();

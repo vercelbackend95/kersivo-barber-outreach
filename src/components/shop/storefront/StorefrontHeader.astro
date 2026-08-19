@@ -1,0 +1,266 @@
+---
+import { formatNavIndex, isStorefrontNavActive, type StorefrontHeaderThemeId, type StorefrontNavItem } from '@/lib/shop/storefrontNav';
+import '@/styles/components/storefront-header.css';
+
+interface Props {
+  themeId: StorefrontHeaderThemeId;
+  currentPath: string;
+  homeHref: string;
+  homeLabel: string;
+  items: StorefrontNavItem[];
+  bookHref: string;
+  shopName: string;
+  showBag?: boolean;
+  logoUrl?: string | null;
+  /** Path that uses exact-match active state (defaults to homeHref). */
+  navHomeHref?: string;
+  placeLabel?: string;
+  placeNote?: string;
+}
+
+const {
+  themeId,
+  currentPath,
+  homeHref,
+  homeLabel,
+  items,
+  bookHref,
+  shopName,
+  showBag = true,
+  logoUrl = null,
+  navHomeHref = homeHref,
+  placeLabel,
+  placeNote,
+} = Astro.props;
+
+const panelId = `sf-mobile-nav-${themeId}`;
+const persistKey = themeId === 'blackline' ? 'bl-header' : `sf-header-${themeId}`;
+const bookIsCurrent = isStorefrontNavActive(currentPath, bookHref, navHomeHref);
+const hasCustomLogo = Boolean(logoUrl);
+---
+
+<header
+  class:list={['sf-header', `sf-header--${themeId}`, themeId === 'blackline' && 'bl-header']}
+  data-sf-header
+  data-sf-theme={themeId}
+  data-bl-header
+  data-sf-nav-state="closed"
+  data-bl-nav-state="closed"
+  transition:persist={persistKey}
+>
+  <div class="sf-header-inner bl-header-inner">
+    <a class="sf-header-brand bl-wordmark" href={homeHref} aria-label={homeLabel}>
+      <slot name="logo">
+        {
+          hasCustomLogo ? (
+            <img class="sf-header-logo" src={logoUrl!} alt="" />
+          ) : (
+            <span class="sf-header-shop-name">{shopName}</span>
+          )
+        }
+      </slot>
+    </a>
+
+    <nav class="sf-nav bl-nav" aria-label="Primary">
+      {
+        items.map((item) => (
+          <a
+            class="sf-nav-link bl-nav-link"
+            href={item.href}
+            aria-current={isStorefrontNavActive(currentPath, item.href, navHomeHref) ? 'page' : undefined}
+          >
+            {item.label}
+          </a>
+        ))
+      }
+    </nav>
+
+    <div class="sf-header-actions">
+      {
+        showBag ? (
+          <button
+            type="button"
+            class="sf-bag-button bl-bag-button"
+            data-sf-bag-button
+            data-bl-bag-button
+            aria-label="Open bag, 0 items"
+          >
+            <svg class="sf-bag-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+              <path d="M2.05 2.05h2l2.66 12.42a2 2 0 0 0 2 1.58h9.78a2 2 0 0 0 1.95-1.57l1.65-7.43H5.12"></path>
+              <circle cx="8" cy="21" r="1" fill="none"></circle>
+              <circle cx="19" cy="21" r="1" fill="none"></circle>
+            </svg>
+            <span class="sf-bag-label bl-bag-button-label">Bag</span>
+            <span class="sf-bag-count bl-bag-count is-empty" data-sf-bag-count data-bl-bag-count>0</span>
+          </button>
+        ) : null
+      }
+
+      <a
+        class="sf-header-cta bl-header-cta"
+        href={bookHref}
+        aria-label="Book an appointment"
+        aria-current={bookIsCurrent ? 'page' : undefined}
+      >
+        <span class="sf-header-cta-full">BOOK NOW</span>
+        <span class="sf-header-cta-short">BOOK</span>
+        <span class="sf-header-cta-arrow" aria-hidden="true">
+          <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M3 8h10M9 4l4 4-4 4" />
+          </svg>
+        </span>
+      </a>
+
+      <button
+        class="sf-nav-toggle bl-nav-toggle"
+        type="button"
+        data-sf-nav-toggle
+        data-bl-nav-toggle
+        aria-controls={panelId}
+        aria-expanded="false"
+      >
+        <span class="sf-sr-only bl-sr-only">Open navigation menu</span>
+        <span class="sf-nav-toggle-icon bl-nav-toggle-icon" aria-hidden="true">
+          <span class="sf-nav-toggle-line bl-nav-toggle-line"></span>
+          <span class="sf-nav-toggle-line bl-nav-toggle-line"></span>
+        </span>
+      </button>
+    </div>
+  </div>
+
+  <div class="sf-nav-layer bl-nav-layer" id={panelId} data-sf-nav-panel data-bl-nav-panel hidden>
+    <nav class="sf-nav-index bl-nav-index" aria-label="Mobile navigation">
+      <ul class="sf-nav-index-list bl-nav-index-list">
+        {
+          items.map((item, index) => {
+            const current = isStorefrontNavActive(currentPath, item.href, navHomeHref);
+            return (
+              <li class="sf-nav-index-item bl-nav-index-item">
+                <a
+                  class="sf-nav-index-link bl-nav-index-link"
+                  href={item.href}
+                  aria-current={current ? 'page' : undefined}
+                >
+                  <span class="sf-nav-index-num bl-nav-index-num">{formatNavIndex(index)}</span>
+                  <span class="sf-nav-index-copy bl-nav-index-copy">
+                    <span class="sf-nav-index-label bl-nav-index-label">{item.label}</span>
+                    {current ? <span class="sf-nav-index-current bl-nav-index-current">Current</span> : null}
+                  </span>
+                  <span class="sf-nav-index-mark bl-nav-index-mark" aria-hidden="true"></span>
+                </a>
+              </li>
+            );
+          })
+        }
+      </ul>
+    </nav>
+
+    <div class="sf-nav-dock bl-nav-dock">
+      <a
+        class="sf-nav-book bl-nav-book"
+        href={bookHref}
+        data-sf-nav-book
+        data-bl-nav-book
+        aria-current={bookIsCurrent ? 'page' : undefined}
+      >
+        Book an appointment <span class="sf-nav-book-arrow bl-nav-book-arrow" aria-hidden="true">→</span>
+      </a>
+      {
+        showBag ? (
+          <button
+            type="button"
+            class="sf-nav-bag bl-nav-bag"
+            data-sf-nav-bag
+            data-bl-nav-bag
+            aria-label="Open bag, 0 items"
+          >
+            Bag (<span data-sf-bag-count data-bl-bag-count>0</span>)
+          </button>
+        ) : null
+      }
+      {
+        placeLabel ? (
+          <p class="sf-nav-place bl-nav-place">
+            <span>{placeLabel}</span>
+            {placeNote ? <span>{placeNote}</span> : null}
+          </p>
+        ) : null
+      }
+    </div>
+  </div>
+</header>
+
+<noscript>
+  <nav class="sf-nav-noscript bl-nav-noscript" aria-label="Mobile navigation">
+    <ul>
+      {
+        items.map((item) => (
+          <li>
+            <a href={item.href}>{item.label}</a>
+          </li>
+        ))
+      }
+    </ul>
+    <a href={bookHref}>Book an appointment</a>
+  </nav>
+</noscript>
+
+<script>
+  import { bindMobileNav } from '@/lib/demo/mobileNav';
+
+  const SCROLLED_PX = 8;
+
+  function bindHeader(header: Element) {
+    if (!(header instanceof HTMLElement) || header.dataset.sfHeaderBound === 'true') return;
+    const toggle = header.querySelector('[data-sf-nav-toggle], [data-bl-nav-toggle]');
+    const overlay = header.querySelector('[data-sf-nav-panel], [data-bl-nav-panel]');
+    if (!(toggle instanceof HTMLButtonElement) || !(overlay instanceof HTMLElement)) return;
+    header.dataset.sfHeaderBound = 'true';
+    bindMobileNav({ header, toggle, overlay });
+
+    const bagButtons = header.querySelectorAll('[data-sf-bag-button], [data-bl-bag-button]');
+    bagButtons.forEach((button) => {
+      if (!(button instanceof HTMLButtonElement)) return;
+      button.addEventListener('click', () => {
+        window.dispatchEvent(new CustomEvent('kersivo:cart-open-request'));
+      });
+    });
+
+    const root = document.documentElement;
+    const syncHeight = () => {
+      const height = Math.round(header.getBoundingClientRect().height);
+      if (height > 0) {
+        root.style.setProperty('--sf-header-height', `${height}px`);
+        root.style.setProperty('--bl-header-height', `${height}px`);
+      }
+    };
+
+    let scrolled = false;
+    let frame = 0;
+    const syncScrolled = () => {
+      frame = 0;
+      const next =
+        window.scrollY > SCROLLED_PX ||
+        (header.getBoundingClientRect().top <= 1 && window.scrollY > 0);
+      if (next === scrolled) return;
+      scrolled = next;
+      header.toggleAttribute('data-scrolled', scrolled);
+    };
+    const onScroll = () => {
+      if (frame) return;
+      frame = window.requestAnimationFrame(syncScrolled);
+    };
+
+    syncHeight();
+    syncScrolled();
+    const resize = new ResizeObserver(syncHeight);
+    resize.observe(header);
+    window.addEventListener('scroll', onScroll, { passive: true });
+    window.addEventListener('resize', syncHeight);
+  }
+
+  document.querySelectorAll('[data-sf-header], [data-bl-header]').forEach(bindHeader);
+  document.addEventListener('astro:page-load', () => {
+    document.querySelectorAll('[data-sf-header], [data-bl-header]').forEach(bindHeader);
+  });
+</script>

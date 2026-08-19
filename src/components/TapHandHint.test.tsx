@@ -37,6 +37,13 @@ describe('TapHandHint', () => {
     expect(hasSeenBlacklineTapHint('booking-2')).toBe(false);
   });
 
+  it('tracks retail collect and sale hint keys independently', () => {
+    markBlacklineTapHintSeen('retail:collect:order-1');
+    expect(hasSeenBlacklineTapHint('retail:collect:order-1')).toBe(true);
+    expect(hasSeenBlacklineTapHint('retail:sale:order-1')).toBe(false);
+    expect(hasSeenBlacklineTapHint('order-1')).toBe(false);
+  });
+
   it('disables motion under prefers-reduced-motion', () => {
     const css = readFileSync(resolve('src/styles/components/tap-hand-hint.css'), 'utf8');
     expect(css).toContain('@media (prefers-reduced-motion: reduce)');

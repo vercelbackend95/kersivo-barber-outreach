@@ -72,7 +72,10 @@ function resolveCategoryKey(category: string | null | undefined): string {
   return KNOWN_CATEGORY_KEYS.get(trimmed.toLowerCase()) ?? trimmed.toLowerCase();
 }
 
-export function groupServicesByCategory(services: BookableService[]): ServiceCategoryGroup[] {
+export function groupServicesByCategory(
+  services: BookableService[],
+  options?: { categoryOrder?: readonly string[] },
+): ServiceCategoryGroup[] {
   const grouped = new Map<string, BookableService[]>();
 
   for (const service of services) {
@@ -83,14 +86,25 @@ export function groupServicesByCategory(services: BookableService[]): ServiceCat
   }
 
   const orderedKeys: string[] = [];
+  const preferred = (options?.categoryOrder?.length ? options.categoryOrder : BOOKING_SERVICE_CATEGORY_ORDER)
+    .map((category) => resolveCategoryKey(category))
+    .filter((key) => key !== BOOKING_SERVICE_CATEGORY_OTHER);
+
+  for (const category of preferred) {
+    if (grouped.has(category) && !orderedKeys.includes(category)) orderedKeys.push(category);
+  }
 
   for (const category of BOOKING_SERVICE_CATEGORY_ORDER) {
-    if (grouped.has(category)) orderedKeys.push(category);
+    if (grouped.has(category) && !orderedKeys.includes(category)) orderedKeys.push(category);
   }
 
   const unknownKeys = [...grouped.keys()]
     .filter((key) => key !== BOOKING_SERVICE_CATEGORY_OTHER && !orderedKeys.includes(key))
-    .sort((left, right) => formatServiceCategoryLabel(left).localeCompare(formatServiceCategoryLabel(right), 'en', { sensitivity: 'base' }));
+    .sort((left, right) =>
+      formatServiceCategoryLabel(left).localeCompare(formatServiceCategoryLabel(right), 'en', {
+        sensitivity: 'base',
+      }),
+    );
 
   orderedKeys.push(...unknownKeys);
 
@@ -101,6 +115,6 @@ export function groupServicesByCategory(services: BookableService[]): ServiceCat
   return orderedKeys.map((category) => ({
     category,
     label: formatServiceCategoryLabel(category),
-    services: [...(grouped.get(category) ?? [])].sort(compareServicesInCategory)
+    services: [...(grouped.get(category) ?? [])].sort(compareServicesInCategory),
   }));
 }

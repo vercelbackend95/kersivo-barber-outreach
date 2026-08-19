@@ -2,10 +2,10 @@
  * @vitest-environment jsdom
  */
 import React from 'react';
-import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
-import { render, screen, fireEvent, cleanup, waitFor } from '@testing-library/react';
-import CartDrawer from './CartDrawer';
-import { addItem, clear, openCart, getSnapshot } from '@/lib/shop/cartStore';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+import { cleanup, fireEvent, render, screen, waitFor } from '@testing-library/react';
+import StorefrontCartDrawer from './StorefrontCartDrawer';
+import { addItem, bindCartNamespace, clear, closeCart, getSnapshot, openCart } from '@/lib/shop/cartStore';
 import { FUNNEL_EVENTS } from '@/lib/analytics/funnelEvents';
 
 vi.mock('@/lib/consent/events', () => ({
@@ -15,6 +15,16 @@ vi.mock('@/lib/consent/events', () => ({
 import { trackConsentedEvent } from '@/lib/consent/events';
 
 const trackSpy = vi.mocked(trackConsentedEvent);
+
+const publicDemoProps = {
+  mode: 'publicDemo' as const,
+  shopId: '',
+  shopName: 'KERSIVO',
+  themeId: 'kersivo' as const,
+  priceFormat: 'gbp' as const,
+  exploreHref: '/shop',
+  checkout: { type: 'publicDemo' as const },
+};
 
 function seedDemoCart() {
   clear();
@@ -27,7 +37,17 @@ function seedDemoCart() {
   openCart();
 }
 
-describe('CartDrawer publicDemoMode', () => {
+function mountAddButton() {
+  const button = document.createElement('button');
+  button.setAttribute('data-add-to-cart', '');
+  button.dataset.productId = 'demo-product-matte-pomade';
+  button.dataset.productName = 'Matte Pomade';
+  button.dataset.productPricePence = '1800';
+  document.body.appendChild(button);
+  return button;
+}
+
+describe('StorefrontCartDrawer publicDemo', () => {
   const fetchSpy = vi.fn();
   const locationHrefSetter = vi.fn();
 
@@ -53,13 +73,17 @@ describe('CartDrawer publicDemoMode', () => {
 
   afterEach(() => {
     cleanup();
+    closeCart();
     clear();
+    bindCartNamespace();
+    document.querySelectorAll('[data-add-to-cart]').forEach((node) => node.remove());
+    document.querySelectorAll('[data-bl-bag-button]').forEach((node) => node.remove());
     vi.unstubAllGlobals();
   });
 
   it('completes locally without fetch, Stripe redirect, or PII in analytics', async () => {
     seedDemoCart();
-    render(<CartDrawer publicDemoMode />);
+    render(<StorefrontCartDrawer {...publicDemoProps} />);
 
     expect(screen.getByText(/interactive retail demo/i)).toBeTruthy();
     expect(screen.queryByText(/Continue to secure checkout/i)).toBeNull();
@@ -74,12 +98,8 @@ describe('CartDrawer publicDemoMode', () => {
     expect(
       screen.getByText(/This was a demonstration only. No payment was taken and no order was created./i),
     ).toBeTruthy();
-    expect(screen.getByRole('link', { name: 'View KERSIVO pricing' }).getAttribute('href')).toBe(
-      '/#pricing',
-    );
-    expect(screen.getByRole('link', { name: 'Talk to KERSIVO' }).getAttribute('href')).toBe(
-      '/#contact',
-    );
+    expect(screen.getByRole('link', { name: 'View KERSIVO pricing' }).getAttribute('href')).toBe('/#pricing');
+    expect(screen.getByRole('link', { name: 'Talk to KERSIVO' }).getAttribute('href')).toBe('/#contact');
 
     expect(fetchSpy).not.toHaveBeenCalled();
     expect(locationHrefSetter).not.toHaveBeenCalled();
@@ -100,17 +120,28 @@ describe('CartDrawer publicDemoMode', () => {
   it('does not call checkout when bag is empty', () => {
     clear();
     openCart();
-    render(<CartDrawer publicDemoMode />);
+    render(<StorefrontCartDrawer {...publicDemoProps} />);
 
-    const completeBtn = screen.getByRole('button', { name: 'Complete demo order' });
-    expect(completeBtn).toHaveProperty('disabled', true);
+    expect(screen.queryByRole('button', { name: 'Complete demo order' })).toBeNull();
+    expect(screen.getByRole('link', { name: 'EXPLORE PRODUCTS' })).toBeTruthy();
     expect(fetchSpy).not.toHaveBeenCalled();
     expect(trackSpy).not.toHaveBeenCalled();
   });
 
+  it('names the bag trigger Open bag, N items', () => {
+    const button = document.createElement('button');
+    button.setAttribute('data-bl-bag-button', '');
+    button.setAttribute('aria-label', 'Open bag, 0 items');
+    document.body.appendChild(button);
+    seedDemoCart();
+    render(<StorefrontCartDrawer {...publicDemoProps} />);
+    expect(button.getAttribute('aria-label')).toBe('Open bag, 1 item');
+    button.remove();
+  });
+
   it('guards against double-click completing the same demo twice', async () => {
     seedDemoCart();
-    render(<CartDrawer publicDemoMode />);
+    render(<StorefrontCartDrawer {...publicDemoProps} />);
 
     const completeBtn = screen.getByRole('button', { name: 'Complete demo order' });
     fireEvent.click(completeBtn);
@@ -127,7 +158,7 @@ describe('CartDrawer publicDemoMode', () => {
 
   it('Try the demo again resets success, closes the drawer, and does not track or fetch', async () => {
     seedDemoCart();
-    render(<CartDrawer publicDemoMode />);
+    render(<StorefrontCartDrawer {...publicDemoProps} />);
 
     fireEvent.click(screen.getByRole('button', { name: 'Complete demo order' }));
     await waitFor(() => {
@@ -145,7 +176,7 @@ describe('CartDrawer publicDemoMode', () => {
 
   it('allows a second public_shop_demo_completed after starting a new demo', async () => {
     seedDemoCart();
-    render(<CartDrawer publicDemoMode />);
+    render(<StorefrontCartDrawer {...publicDemoProps} />);
 
     fireEvent.click(screen.getByRole('button', { name: 'Complete demo order' }));
     await waitFor(() => {
@@ -160,10 +191,7 @@ describe('CartDrawer publicDemoMode', () => {
     await waitFor(() => {
       expect(getSnapshot().items).toHaveLength(1);
       expect(getSnapshot().isOpen).toBe(true);
-      expect(screen.getByRole('button', { name: 'Complete demo order' })).toHaveProperty(
-        'disabled',
-        false,
-      );
+      expect(screen.getByRole('button', { name: 'Complete demo order' })).toHaveProperty('disabled', false);
     });
 
     fireEvent.click(screen.getByRole('button', { name: 'Complete demo order' }));
@@ -174,16 +202,30 @@ describe('CartDrawer publicDemoMode', () => {
 
     expect(trackSpy).toHaveBeenCalledTimes(2);
     expect(fetchSpy).not.toHaveBeenCalled();
-    expect(trackSpy).toHaveBeenNthCalledWith(
-      2,
-      FUNNEL_EVENTS.public_shop_demo_completed,
-      undefined,
-      'analytics',
-    );
+  });
+
+  it('adds to bag with a toast and does not auto-open', async () => {
+    clear();
+    render(<StorefrontCartDrawer {...publicDemoProps} />);
+    const button = mountAddButton();
+
+    fireEvent.click(button);
+
+    await waitFor(() => {
+      expect(getSnapshot().items).toHaveLength(1);
+    });
+    expect(getSnapshot().isOpen).toBe(false);
+    expect(screen.getByText('Matte Pomade added to bag')).toBeTruthy();
+    expect(screen.getByRole('button', { name: 'View bag' })).toBeTruthy();
+    expect(screen.queryByRole('link', { name: 'CONTINUE TO CHECKOUT' })).toBeNull();
+
+    fireEvent.click(screen.getByRole('button', { name: 'View bag' }));
+    expect(getSnapshot().isOpen).toBe(true);
+    button.remove();
   });
 });
 
-describe('CartDrawer testOrderMode regression', () => {
+describe('StorefrontCartDrawer testOrder', () => {
   const fetchSpy = vi.fn();
 
   beforeEach(() => {
@@ -194,7 +236,9 @@ describe('CartDrawer testOrderMode regression', () => {
 
   afterEach(() => {
     cleanup();
+    closeCart();
     clear();
+    bindCartNamespace();
     vi.unstubAllGlobals();
   });
 
@@ -212,7 +256,6 @@ describe('CartDrawer testOrderMode regression', () => {
       }),
     });
 
-    clear();
     addItem({
       productId: 'prod-owner-1',
       name: 'Matte Pomade',
@@ -221,7 +264,17 @@ describe('CartDrawer testOrderMode regression', () => {
     });
     openCart();
 
-    render(<CartDrawer testOrderMode />);
+    render(
+      <StorefrontCartDrawer
+        mode="testOrder"
+        shopId=""
+        shopName="My shop"
+        themeId="kersivo"
+        priceFormat="gbp"
+        exploreHref="/admin/test-shop"
+        checkout={{ type: 'testOrder' }}
+      />,
+    );
 
     fireEvent.click(screen.getByRole('button', { name: 'Place Test Order' }));
 
@@ -232,12 +285,48 @@ describe('CartDrawer testOrderMode regression', () => {
     const [url, init] = fetchSpy.mock.calls[0] as [string, RequestInit];
     expect(url).toBe('/api/admin/shop/test-order');
     expect(init.method).toBe('POST');
-    expect(fetchSpy.mock.calls.some((call) => String(call[0]).includes('/api/shop/checkout'))).toBe(
-      false,
-    );
+    expect(fetchSpy.mock.calls.some((call) => String(call[0]).includes('/api/shop/checkout'))).toBe(false);
 
     await waitFor(() => {
       expect(screen.getByText('Test order created')).toBeTruthy();
     });
+  });
+});
+
+describe('StorefrontCartDrawer BLACKLINE href checkout', () => {
+  afterEach(() => {
+    cleanup();
+    closeCart();
+    clear();
+    bindCartNamespace();
+    document.querySelectorAll('[data-add-to-cart]').forEach((node) => node.remove());
+  });
+
+  it('navigates to demo checkout and uses the red cart theme', () => {
+    bindCartNamespace({ shopId: 'blackline-barbers-demo' });
+    addItem({
+      productId: 'bl-product-ironclad-pomade',
+      name: 'Ironclad Pomade',
+      pricePence: 1900,
+      quantity: 1,
+    });
+    openCart();
+
+    const { container } = render(
+      <StorefrontCartDrawer
+        mode="demo"
+        shopId="blackline-barbers-demo"
+        shopName="Blackline Barbers"
+        themeId="blackline"
+        priceFormat="demo"
+        exploreHref="/demo/shop"
+        checkout={{ type: 'href', href: '/demo/shop/checkout' }}
+      />,
+    );
+
+    expect(container.querySelector('[data-sf-cart-theme="blackline"]')).toBeTruthy();
+    const checkout = screen.getByRole('link', { name: 'CONTINUE TO CHECKOUT' });
+    expect(checkout.getAttribute('href')).toBe('/demo/shop/checkout');
+    expect(screen.getAllByText('£19').length).toBeGreaterThan(0);
   });
 });

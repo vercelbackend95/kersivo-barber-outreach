@@ -1,0 +1,141 @@
+---
+export const prerender = false;
+
+import MainLayout from '@/layouts/MainLayout.astro';
+import StorefrontProductDetail from '@/components/shop/storefront/StorefrontProductDetail';
+import { prisma } from '@/lib/db/client';
+import { BLACKLINE_SHOP_ID } from '@/lib/demo/products';
+import { isDemoShopId, canSellRetail } from '@/lib/shop/cardPaymentsGate';
+import { shopAcceptsPublicBookings } from '@/lib/setup/shopPublicBookingGate';
+import { withPrismaQuotaFallback } from '@/lib/db/resilience';
+import {
+  relatedStorefrontProducts,
+  storefrontProductFromPrisma,
+  type StorefrontProduct,
+} from '@/lib/shop/storefrontCatalog';
+import { buildTenantProductPageJsonLd } from '@/lib/seo/productJsonLd';
+import '@/styles/components/storefront.css';
+
+const shopId = Astro.params.shopId?.trim() ?? '';
+const productId = Astro.params.productId?.trim() ?? '';
+
+if (!shopId || isDemoShopId(shopId)) {
+  return Astro.redirect(shopId === BLACKLINE_SHOP_ID ? '/demo/shop' : '/shop');
+}
+
+if (!productId || productId === 'success' || productId === 'cancelled') {
+  return Astro.redirect(`/shop/${shopId}`);
+}
+
+const pageData = await withPrismaQuotaFallback(
+  'shop/[shopId]/[productId].astro',
+  async () => {
+    const shop = await prisma.shopSettings.findUnique({
+      where: { id: shopId },
+      select: {
+        id: true,
+        name: true,
+        logoUrl: true,
+        shopPaidAt: true,
+        smsRemindersEnabled: true,
+        retailEnabled: true,
+        stripeConnectAccountId: true,
+        stripeConnectChargesEnabled: true,
+        publicActivityPaused: true,
+      },
+    });
+
+    if (!shop) return { notFound: true as const };
+
+    const acceptsPublic = await shopAcceptsPublicBookings(shopId);
+    const retailReady = acceptsPublic && canSellRetail(shop) && !shop.publicActivityPaused;
+    if (!retailReady) {
+      return { notFound: false as const, shop, product: null, catalog: [] as StorefrontProduct[], shopUnavailable: true };
+    }
+
+    const rows = await prisma.product.findMany({
+      where: { shopId, active: true },
+      orderBy: [{ featured: 'desc' }, { sortOrder: 'asc' }],
+      select: {
+        id: true,
+        name: true,
+        description: true,
+        pricePence: true,
+        imageUrl: true,
+        category: true,
+        featured: true,
+        sortOrder: true,
+        active: true,
+      },
+    });
+
+    const catalog = rows.map(storefrontProductFromPrisma);
+    const product = catalog.find((item) => item.id === productId) ?? null;
+    if (!product) {
+      return { notFound: true as const };
+    }
+
+    return {
+      notFound: false as const,
+      shop,
+      product,
+      catalog,
+      shopUnavailable: false,
+    };
+  },
+  { notFound: false as const, shop: { name: 'Barbershop', logoUrl: null as string | null }, product: null, catalog: [] as StorefrontProduct[], shopUnavailable: true },
+);
+
+if (pageData.notFound) {
+  return new Response(null, { status: 404, statusText: 'Not Found' });
+}
+
+if (pageData.shopUnavailable || !pageData.product) {
+  return Astro.redirect(`/shop/${shopId}`);
+}
+
+const product = pageData.product;
+const related = relatedStorefrontProducts(pageData.catalog, product.id);
+const shopName = pageData.shop.name?.trim() || 'Barbershop';
+const jsonLd = buildTenantProductPageJsonLd({
+  id: product.id,
+  name: product.name,
+  description: product.description,
+  imageUrl: product.image.src || null,
+  pricePence: product.pricePence,
+  inStock: product.available,
+  shopId,
+  shopName,
+});
+---
+
+<MainLayout
+  title={`${product.name} | ${shopName}`}
+  description={product.description || `${product.name} at ${shopName}`}
+  canonicalPath={`/shop/${shopId}/${product.id}`}
+  noindex
+  navbarVariant="shop"
+  shopId={shopId}
+  shopName={shopName}
+  brandLogoUrl={pageData.shop.logoUrl}
+  jsonLd={jsonLd}
+  ogImagePath={product.image.src.startsWith('/') ? product.image.src : undefined}
+  ogImageAlt={`${product.name} at ${shopName}`}
+>
+  <main class="container shop-page">
+    <StorefrontProductDetail
+      client:load
+      product={product}
+      related={related}
+      themeId="kersivo"
+      shopName={shopName}
+      backHref={`/shop/${shopId}`}
+      productHrefPrefix={`/shop/${shopId}`}
+      priceFormat="gbp"
+      imageFallback="initial"
+      fulfilmentLabel="Collect in shop"
+      addToBagLabel="Add to bag"
+      showPoweredBy
+    />
+  </main>
+</MainLayout>

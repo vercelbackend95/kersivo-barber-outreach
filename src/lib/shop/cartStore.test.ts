@@ -3,12 +3,14 @@
  */
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 import {
+  CART_MAX_QUANTITY,
   CART_STORAGE_KEY,
   addItem,
   bindCartNamespace,
   cartStorageKeyForShop,
   clear,
   getItems,
+  setQuantity,
 } from './cartStore';
 
 describe('cartStore namespace', () => {
@@ -49,5 +51,17 @@ describe('cartStore namespace', () => {
 
     expect(getItems().map((item) => item.productId)).toEqual(['bl-product-ironclad-pomade']);
     expect(JSON.parse(window.localStorage.getItem(CART_STORAGE_KEY) ?? 'null')).toEqual([]);
+  });
+
+  it('clamps add and setQuantity to the storefront max', () => {
+    addItem({ productId: 'prod-1', name: 'Pomade', pricePence: 1900, quantity: 8 });
+    addItem({ productId: 'prod-1', name: 'Pomade', pricePence: 1900, quantity: 8 });
+    expect(getItems()[0]?.quantity).toBe(CART_MAX_QUANTITY);
+
+    setQuantity('prod-1', 99);
+    expect(getItems()[0]?.quantity).toBe(CART_MAX_QUANTITY);
+
+    setQuantity('prod-1', 0);
+    expect(getItems()).toHaveLength(0);
   });
 });

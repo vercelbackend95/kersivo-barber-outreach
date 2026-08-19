@@ -1,15 +1,11 @@
+import type { ProductCategory } from '@/lib/shop/productPresentation';
+
 /**
  * Static demo retail catalog for /shop, landing RETAIL PREVIEW, and admin-demo.
  * Images live under /public/images/demoshop — no Neon product reads.
  */
 
-export type DemoProductCategory =
-  | 'POMADES_AND_CLAYS'
-  | 'BEARD_CARE'
-  | 'HAIR_WASH'
-  | 'STYLING'
-  | 'TOOLS'
-  | 'GIFT_SETS';
+export type DemoProductCategory = ProductCategory;
 
 export type DemoCatalogProduct = {
   id: string;

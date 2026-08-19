@@ -19,6 +19,8 @@ describe('BLACKLINE demo footer', () => {
     expect(source).toContain('aria-label="BLACKLINE site footer"');
     expect(source).toContain('aria-label="Footer navigation"');
     expect(source).toContain('aria-label="BLACKLINE demo home"');
+    expect(source).toContain('BlacklineWordmark');
+    expect(source).toContain('size="display"');
   });
 
   it('states that BLACKLINE is fictional and creates no real transaction', () => {

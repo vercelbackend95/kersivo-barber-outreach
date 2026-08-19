@@ -45,6 +45,9 @@ export const FUNNEL_EVENTS = {
   demo_pricing_capture_submit: 'demo_pricing_capture_submit',
   public_demo_completed: 'public_demo_completed',
   public_shop_demo_completed: 'public_shop_demo_completed',
+  blackline_admin_conversion_card_viewed: 'blackline_admin_conversion_card_viewed',
+  blackline_admin_create_system_click: 'blackline_admin_create_system_click',
+  blackline_admin_view_plans_click: 'blackline_admin_view_plans_click',
 } as const;
 
 export type FunnelEventName = (typeof FUNNEL_EVENTS)[keyof typeof FUNNEL_EVENTS];
@@ -61,6 +64,8 @@ export const MICRO_CONVERSION_EVENTS = new Set<FunnelEventName>([
   FUNNEL_EVENTS.launch_wizard_started,
   FUNNEL_EVENTS.public_demo_completed,
   FUNNEL_EVENTS.public_shop_demo_completed,
+  FUNNEL_EVENTS.blackline_admin_conversion_card_viewed,
+  FUNNEL_EVENTS.blackline_admin_create_system_click,
 ]);
 
 /** Lead-quality signals. */

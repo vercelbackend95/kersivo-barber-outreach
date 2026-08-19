@@ -2,28 +2,30 @@
 export const prerender = false;
 
 import MinimalLayout from '@/layouts/MinimalLayout.astro';
-import Navbar17 from '@/components/navbar17.astro';
+import StorefrontHeader from '@/components/shop/storefront/StorefrontHeader.astro';
 import TestShopClientScripts from '@/components/admin/TestShopClientScripts.astro';
 import OwnerPreviewToolbar from '@/components/shop/OwnerPreviewToolbar.astro';
 import CartDrawerMount from '@/components/shop/CartDrawerMount.astro';
 import RetailOnboardingTaskCard from '@/components/admin/retail-onboarding/RetailOnboardingTaskCard';
+import StorefrontShopPage from '@/components/shop/storefront/StorefrontShopPage';
 import { isTenantAdminAccess, resolveAdminAccess } from '@/lib/admin/auth';
 import { resolveRetailOnboardingProduct } from '@/lib/admin/retailOnboardingProduct';
 import { prisma } from '@/lib/db/client';
-import { formatGbp } from '@/lib/shop/money';
 import {
-  SHOP_FILTER_LABELS,
-  type ProductCategory,
-} from '@/lib/shop/productPresentation';
+  parseStorefrontCategoryParam,
+  storefrontCategoryOptions,
+  storefrontProductFromPrisma,
+} from '@/lib/shop/storefrontCatalog';
 import '@/styles/tokens.css';
 import '@/styles/fonts-admin.css';
 import '@/styles/global.css';
 import '@/styles/components/buttons.css';
 import '@/styles/components/badge.css';
-import '@/styles/components/navbar17.css';
 import '@/styles/components/owner-preview-toolbar.css';
 import '@/styles/components/shop.css';
 import '@/styles/components/shop-product.css';
+import '@/styles/components/storefront.css';
+import '@/styles/components/storefront-cart.css';
 import '@/styles/components/empty-state.css';
 import '@/styles/components/inputs.css';
 
@@ -55,45 +57,44 @@ if (retailContext.retailTestOrderId) {
   verifiedTestOrderId = testOrder?.id ?? null;
 }
 
-// Hide when skipped or pickup walkthrough done. retailOnboardingCompleted = product stage only, not journey end.
 const showRetailTaskCard =
   !retailContext.retailOnboardingSkipped &&
   !retailContext.retailPickupWalkthroughCompleted &&
   (Boolean(retailContext.product) || retailContext.retailOnboardingCompleted);
 
 const onboardingProductId = retailContext.product?.id ?? null;
-const products = await prisma.product.findMany({
+const highlightRequested = Astro.url.searchParams.get('highlight') === '1';
+const rows = await prisma.product.findMany({
   where: {
     shopId: access.shopId,
     OR: onboardingProductId
       ? [{ active: true }, { id: onboardingProductId }]
       : [{ active: true }],
   },
-  orderBy: [{ featured: 'desc' }, { sortOrder: 'asc' }, { createdAt: 'asc' }],
+  orderBy: [{ sortOrder: 'asc' }, { createdAt: 'asc' }],
   select: {
     id: true,
     name: true,
+    description: true,
     pricePence: true,
     imageUrl: true,
     featured: true,
     category: true,
-    updatedAt: true,
+    sortOrder: true,
+    active: true,
   },
 });
 
-const categoryFilters = [
-  { value: 'ALL', label: 'All products', count: products.length },
-  ...Object.entries(SHOP_FILTER_LABELS).map(([value, label]) => ({
-    value,
-    label,
-    count: products.filter((product) => product.category === value).length,
-  })),
-].filter((filter) => filter.value === 'ALL' || filter.count > 0);
-
-const categoryValues = new Set(categoryFilters.map((filter) => filter.value));
-const selectedCategoryParam = Astro.url.searchParams.get('category') || 'ALL';
-const selectedCategory = categoryValues.has(selectedCategoryParam) ? selectedCategoryParam : 'ALL';
+const products = rows.map((row) => storefrontProductFromPrisma({
+  ...row,
+  active: row.active || row.id === onboardingProductId,
+}));
+const selectedCategory = parseStorefrontCategoryParam(
+  Astro.url.searchParams.get('category'),
+  storefrontCategoryOptions(products).map((option) => option.value),
+);
 const shopTitle = shop?.name?.trim() || 'My shop';
+const currentPath = Astro.url.pathname;
 ---
 
 <MinimalLayout
@@ -105,13 +106,21 @@ const shopTitle = shop?.name?.trim() || 'My shop';
   bodyClass="admin-theme-premium-black has-owner-preview-toolbar"
   showCookieConsent={false}
 >
+  <div data-sf-page-shell>
   <OwnerPreviewToolbar adminHref="/admin" />
-  <Navbar17
-    variant="testShop"
-    brandLogoUrl={shop?.logoUrl}
-    brandAriaLabel={shopTitle}
+  <StorefrontHeader
+    themeId="kersivo"
+    currentPath={currentPath}
+    homeHref="/admin/test-shop"
+    navHomeHref="/"
+    homeLabel={`${shopTitle} shop`}
+    items={[{ href: '/admin/test-shop', label: 'Shop' }]}
+    bookHref="/admin/test-book"
+    shopName={shopTitle}
+    logoUrl={shop?.logoUrl}
+    showBag
   />
-  <main class="container shop-page" aria-labelledby="shop-page-title" data-active-category={selectedCategory}>
+  <main class="container shop-page" aria-labelledby="storefront-heading" data-active-category={selectedCategory} data-sf-header-inert>
     {
       showRetailTaskCard ? (
         <RetailOnboardingTaskCard
@@ -123,134 +132,42 @@ const shopTitle = shop?.name?.trim() || 'My shop';
       ) : null
     }
 
-    <header class="shop-header-block" id="about">
-      <p class="shop-eyebrow">Your storefront</p>
-      <h1 id="shop-page-title">{shopTitle}</h1>
-      <p class="shop-intro">Browse your products, add them to the cart, and complete a test checkout.</p>
-
-      {
-        products.length > 0 ? (
-          <div class="shop-header-toolbar">
-            <div class="shop-category-filters" role="group" aria-label="Filter by category">
-              {categoryFilters.map((filter) => {
-                const isActive = filter.value === selectedCategory;
-                return (
-                  <button
-                    type="button"
-                    class:list={['filter-chip', isActive && 'is-active']}
-                    data-category-filter={filter.value}
-                    aria-pressed={isActive ? 'true' : 'false'}
-                  >
-                    <span>{filter.label}</span>
-                    <span class="filter-chip__count" aria-hidden="true">
-                      {filter.count}
-                    </span>
-                  </button>
-                );
-              })}
-            </div>
-
-            <div class="shop-sort-wrap">
-              <select class="shop-sort-select" aria-label="Sort products" data-shop-sort>
-                <option value="default">Sort: Featured</option>
-                <option value="price-asc">Price: Low → High</option>
-                <option value="price-desc">Price: High → Low</option>
-                <option value="newest">Newest</option>
-              </select>
-              <svg class="shop-sort-icon" viewBox="0 0 16 16" fill="none" aria-hidden="true">
-                <path
-                  d="M4 5.5l4 4 4-4"
-                  stroke="currentColor"
-                  stroke-width="1.5"
-                  stroke-linecap="round"
-                  stroke-linejoin="round"></path>
-              </svg>
-            </div>
-          </div>
-        ) : null
-      }
-    </header>
-
-    <section class="shop-layout" id="products" aria-label="Products">
-      {
-        products.length === 0 ? (
-          <article class="shop-promo-card shop-promo-card--empty">
-            <p class="shop-promo-kicker">Retail setup</p>
-            <h2>No products yet</h2>
-            <p>Add your first product to preview your storefront.</p>
-            <div style="display:flex;flex-direction:column;gap:0.75rem;margin-top:1rem;max-width:20rem;">
-              <a class="btn btn--primary" href="/admin/retail-onboarding?step=1">Add a product</a>
-              <a class="btn btn--secondary" href="/admin?section=shop_products">Manage products</a>
-            </div>
-          </article>
-        ) : (
-          <ul class="shop-grid" aria-label="Products">
-            {products.map((product) => (
-              <li
-                id={`test-shop-product-${product.id}`}
-                data-product-item
-                data-product-id={product.id}
-                data-product-category={product.category}
-                data-product-featured={product.featured ? '1' : '0'}
-                data-product-sort-price={String(product.pricePence)}
-                data-product-sort-date={product.updatedAt.toISOString()}
-                hidden={selectedCategory !== 'ALL' && product.category !== selectedCategory}
-              >
-                <article class="shop-card" data-category={product.category}>
-                  <a
-                    href={`/admin/test-shop/${product.id}`}
-                    class="shop-media-link"
-                    aria-label={`View ${product.name}`}
-                  >
-                    <div class="shop-media">
-                      {product.featured ? <span class="shop-badge">Featured</span> : null}
-                      {product.imageUrl ? (
-                        <img src={product.imageUrl} alt={product.name} class="shop-image" loading="lazy" />
-                      ) : (
-                        <div class="shop-image--placeholder" aria-hidden="true" />
-                      )}
-                    </div>
-                  </a>
-
-                  <div class="shop-card-body">
-                    <span class="badge badge--neutral">
-                      {SHOP_FILTER_LABELS[product.category as ProductCategory] ?? 'Styling'}
-                    </span>
-                    <h3>
-                      <a href={`/admin/test-shop/${product.id}`}>{product.name}</a>
-                    </h3>
-                    <p class="shop-price">{formatGbp(product.pricePence)}</p>
-
-                    <div class="shop-card-actions">
-                      <button
-                        type="button"
-                        class="btn btn--primary btn--atc"
-                        data-add-to-cart
-                        data-product-id={product.id}
-                        data-product-name={product.name}
-                        data-product-price-pence={String(product.pricePence)}
-                        data-product-image-url={product.imageUrl ?? ''}
-                        data-atc-label="Add to cart"
-                      >
-                        Add to cart
-                      </button>
-                    </div>
-                  </div>
-                </article>
-              </li>
-            ))}
-
-            <li class="shop-empty-filter" aria-live="polite" role="status">
-              <p class="shop-empty-filter__title">No products in this category</p>
-              <p class="shop-empty-filter__desc">Try selecting a different category or view all products.</p>
-            </li>
-          </ul>
-        )
-      }
-    </section>
+    <StorefrontShopPage
+      client:load
+      products={products}
+      themeId="kersivo"
+      shopName={shopTitle}
+      productHrefPrefix="/admin/test-shop"
+      priceFormat="gbp"
+      imageFallback="initial"
+      selectedCategory={selectedCategory}
+      intro={{
+        eyebrow: 'Your storefront',
+        heading: shopTitle,
+        headingId: 'storefront-heading',
+        description: 'Browse your products, add them to the cart, and complete a test checkout.',
+        fulfilmentLabel: 'Collect in shop',
+      }}
+      highlightProductId={highlightRequested ? onboardingProductId : null}
+      itemIdPrefix="test-shop-product-"
+      showPoweredBy
+      emptyTitle="No products yet"
+      emptyDescription="Add your first product to preview your storefront."
+      emptyActionHref="/admin/retail-onboarding?step=1"
+      emptyActionLabel="Add a product"
+    />
   </main>
+  </div>
 
-  <CartDrawerMount testOrderMode />
+  <CartDrawerMount
+    mode="testOrder"
+    shopId=""
+    shopName={shopTitle}
+    themeId="kersivo"
+    priceFormat="gbp"
+    exploreHref="/admin/test-shop"
+    checkout={{ type: 'testOrder' }}
+  />
 </MinimalLayout>
 
 <TestShopClientScripts />

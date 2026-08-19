@@ -1,15 +1,18 @@
 ---
 import { ClientRouter } from 'astro:transitions';
 import DemoBanner from '@/components/demo/DemoBanner.astro';
-import DemoBagDrawer from '@/components/demo/DemoBagDrawer';
 import DemoFooter from '@/components/demo/DemoFooter.astro';
 import DemoNav from '@/components/demo/DemoNav.astro';
+import CartDrawerMount from '@/components/shop/CartDrawerMount.astro';
 import { BLACKLINE_SHOP_ID, DEMO_PRODUCT_IDS } from '@/lib/demo/products';
 import { DEMO_DEFAULT_DESCRIPTION, DEMO_SHOP_NAME } from '@/lib/demo/site';
 import { getPublicSiteUrl } from '@/lib/setup/siteUrl';
 import '@/styles/motion.css';
 import '@/styles/demo/fonts-blackline.css';
+import '@/styles/demo/blackline-wordmark.css';
 import '@/styles/demo/blackline.css';
+import '@/styles/components/storefront-header.css';
+import '@/styles/components/storefront-cart.css';
 
 const cartNamespace = {
   shopId: BLACKLINE_SHOP_ID,
@@ -68,23 +71,34 @@ const currentPath = Astro.url.pathname;
   </head>
   <body>
     <div class="bl-root">
-      <DemoBanner view="customer" />
-      <DemoNav currentPath={currentPath} />
-      <div class="bl-route-stage">
-        <main class="bl-main" tabindex="-1">
-          <slot />
-        </main>
-        <div
-          class="bl-route-veil"
-          data-bl-route-veil
-          data-bl-route-phase="idle"
-          transition:persist="bl-veil"
-          aria-hidden="true"
-        ></div>
+      <div data-sf-page-shell>
+        <DemoBanner view="customer" />
+        <DemoNav currentPath={currentPath} />
+        <div class="bl-route-stage">
+          <main class="bl-main" tabindex="-1" data-sf-header-inert>
+            <slot />
+          </main>
+          <div
+            class="bl-route-veil"
+            data-bl-route-veil
+            data-bl-route-phase="idle"
+            transition:persist="bl-veil"
+            aria-hidden="true"
+          ></div>
+        </div>
+        <DemoFooter />
       </div>
-      <DemoFooter />
       <div transition:persist="bl-bag">
-        <DemoBagDrawer client:load />
+        <CartDrawerMount
+          mode="demo"
+          shopId={BLACKLINE_SHOP_ID}
+          shopName={DEMO_SHOP_NAME}
+          themeId="blackline"
+          priceFormat="demo"
+          exploreHref="/demo/shop"
+          checkout={{ type: 'href', href: '/demo/shop/checkout' }}
+          allowedProductIds={[...DEMO_PRODUCT_IDS]}
+        />
       </div>
     </div>
     <script>

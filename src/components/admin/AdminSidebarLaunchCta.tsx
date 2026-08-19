@@ -1,6 +1,6 @@
 import React, { useEffect, useMemo, useState } from 'react';
-import { Store } from '../lucide-react';
 import { ADMIN_DEMO_BLOCKED_EVENT } from './adminAuth';
+import AdminLaunchCtaButton from './AdminLaunchCtaButton';
 import {
   demoLaunchProgress,
   emptyLaunchProgress,
@@ -130,34 +130,27 @@ export default function AdminSidebarLaunchCta({
   }
 
   return (
-    <button
-      type="button"
-      className="admin-sidebar-launch-cta"
+    <AdminLaunchCtaButton
+      title={presentation.title}
+      status={presentation.status}
+      ariaLabel={`${presentation.status}: ${presentation.title}. ${presentation.doneCount} of ${presentation.totalCount} complete.`}
       onClick={handleClick}
-      aria-label={`${presentation.status}: ${presentation.title}. ${presentation.doneCount} of ${presentation.totalCount} complete.`}
     >
-      <span className="admin-sidebar-launch-cta__icon" aria-hidden="true">
-        <Store width={18} height={18} />
-      </span>
-      <span className="admin-sidebar-launch-cta__body">
-        <span className="admin-sidebar-launch-cta__status">{presentation.status}</span>
-        <span className="admin-sidebar-launch-cta__title">{presentation.title}</span>
-        <ul className="admin-sidebar-launch-cta__checklist">
-          {progress.steps.map((step) => (
-            <li
-              key={step.id}
-              className={`admin-sidebar-launch-cta__check${
-                step.done ? ' admin-sidebar-launch-cta__check--done' : ' admin-sidebar-launch-cta__check--todo'
-              }`}
-            >
-              <span className="admin-sidebar-launch-cta__mark" aria-hidden="true">
-                {step.done ? '✓' : '○'}
-              </span>
-              <span className="admin-sidebar-launch-cta__check-label">{step.label}</span>
-            </li>
-          ))}
-        </ul>
-      </span>
-    </button>
+      <ul className="admin-sidebar-launch-cta__checklist">
+        {progress.steps.map((step) => (
+          <li
+            key={step.id}
+            className={`admin-sidebar-launch-cta__check${
+              step.done ? ' admin-sidebar-launch-cta__check--done' : ' admin-sidebar-launch-cta__check--todo'
+            }`}
+          >
+            <span className="admin-sidebar-launch-cta__mark" aria-hidden="true">
+              {step.done ? '✓' : '○'}
+            </span>
+            <span className="admin-sidebar-launch-cta__check-label">{step.label}</span>
+          </li>
+        ))}
+      </ul>
+    </AdminLaunchCtaButton>
   );
 }

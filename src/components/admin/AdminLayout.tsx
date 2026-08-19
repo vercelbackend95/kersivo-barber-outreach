@@ -21,6 +21,8 @@ import {
 import DemoActionLock from './DemoActionLock';
 import AdminSidebarLaunchCta from './AdminSidebarLaunchCta';
 import AdminSidebarProfile, { type AdminProfileUser } from './AdminSidebarProfile';
+import BlacklineConversionCard from './BlacklineConversionCard';
+import BlacklineWordmark, { type BlacklineWordmarkSize } from '@/components/demo/BlacklineWordmark';
 import { clearAdminSecret } from './adminAuth';
 import { authClient } from '@/lib/auth-client';
 import { getPublicAdminDemoCapabilities, type PublicAdminDemoTenant } from '@/lib/admin/demoConfig';
@@ -109,26 +111,22 @@ const menuGroups: SectionGroup[] = [
 
 const DEFAULT_SIDEBAR_LOGO = '/images/logo_nobg.png';
 
-function BlacklineDemoStatusCard() {
-  return (
-    <div className="admin-blackline-status-card" aria-label="BLACKLINE demo status">
-      <p className="admin-blackline-status-card__kicker">BLACKLINE DEMO</p>
-      <p className="admin-blackline-status-card__title">Sample data</p>
-      <p className="admin-blackline-status-card__note">Changes reset automatically</p>
-    </div>
-  );
-}
-
 function SidebarBrand({
   logoUrl = null,
   shopName = null,
   statusSlot = null,
   onOpenSettings = null,
+  blackline = false,
+  wordmarkSize = 'default',
+  showPlatformAttribution = false,
 }: {
   logoUrl?: string | null;
   shopName?: string | null;
   statusSlot?: React.ReactNode;
   onOpenSettings?: (() => void) | null;
+  blackline?: boolean;
+  wordmarkSize?: BlacklineWordmarkSize;
+  showPlatformAttribution?: boolean;
 }) {
   const [src, setSrc] = useState(logoUrl || DEFAULT_SIDEBAR_LOGO);
   const isCustom = Boolean(logoUrl) && src === logoUrl;
@@ -138,7 +136,19 @@ function SidebarBrand({
     setSrc(logoUrl || DEFAULT_SIDEBAR_LOGO);
   }, [logoUrl]);
 
-  const inner = (
+  const inner = blackline ? (
+    <>
+      <BlacklineWordmark size={wordmarkSize} />
+      {showPlatformAttribution || statusSlot ? (
+        <div className="admin-sidebar-brand-text">
+          {statusSlot}
+          {showPlatformAttribution ? (
+            <span className="admin-sidebar-brand-powered">Powered by KERSIVO</span>
+          ) : null}
+        </div>
+      ) : null}
+    </>
+  ) : (
     <>
       <div
         className={`admin-sidebar-monogram${isCustom ? ' admin-sidebar-monogram--custom' : ''}`}
@@ -161,11 +171,13 @@ function SidebarBrand({
     </>
   );
 
+  const brandClassName = `admin-sidebar-brand${blackline ? ' admin-sidebar-brand--blackline' : ''}`;
+
   if (onOpenSettings) {
     return (
       <button
         type="button"
-        className="admin-sidebar-brand admin-sidebar-brand--button"
+        className={`${brandClassName} admin-sidebar-brand--button`}
         onClick={onOpenSettings}
         aria-label={`Open barbershop settings for ${brandLabel}`}
       >
@@ -174,7 +186,7 @@ function SidebarBrand({
     );
   }
 
-  return <div className="admin-sidebar-brand">{inner}</div>;
+  return <div className={brandClassName}>{inner}</div>;
 }
 
 function SidebarStatus({
@@ -474,9 +486,9 @@ export default function AdminLayout({
           ))}
         </div>
       ))}
-      {showLaunchCta && isBlacklineDemo ? (
+      {isBlacklineDemo && showLaunchCta ? (
         <div className="admin-sidebar-group">
-          <BlacklineDemoStatusCard />
+          <BlacklineConversionCard />
         </div>
       ) : showLaunchCta && canManageBilling ? (
         <div className="admin-sidebar-group">
@@ -674,6 +686,9 @@ export default function AdminLayout({
             <SidebarBrand
               logoUrl={isPublicDemo ? null : shopLogoUrl}
               shopName={brandShopName}
+              blackline={isBlacklineDemo}
+              wordmarkSize="compact"
+              showPlatformAttribution={isBlacklineDemo}
               statusSlot={
                 <SidebarStatus
                   className="admin-sidebar-status--mobile-drawer"
@@ -695,7 +710,7 @@ export default function AdminLayout({
         </div>
         <div className="admin-mobile-drawer-launch">
           {isBlacklineDemo ? (
-            <BlacklineDemoStatusCard />
+            <BlacklineConversionCard />
           ) : canManageBilling ? (
             <AdminSidebarLaunchCta isPublicDemo={isPublicDemo} onSpaSection={onChangeSection} />
           ) : null}
@@ -714,6 +729,9 @@ export default function AdminLayout({
         <SidebarBrand
           logoUrl={isPublicDemo ? null : shopLogoUrl}
           shopName={brandShopName}
+          blackline={isBlacklineDemo}
+          wordmarkSize="default"
+          showPlatformAttribution={isBlacklineDemo}
           onOpenSettings={canOpenBarbershopSettings ? openBarbershopSettings : null}
         />
         {renderMenu(true)}
@@ -783,6 +801,8 @@ export default function AdminLayout({
               <SidebarBrand
                 logoUrl={isPublicDemo ? null : shopLogoUrl}
                 shopName={brandShopName}
+                blackline={isBlacklineDemo}
+                wordmarkSize="compact"
                 onOpenSettings={canOpenBarbershopSettings ? openBarbershopSettings : null}
               />
               <div className="admin-mobile-header-center">

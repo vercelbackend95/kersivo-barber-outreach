@@ -1,14 +1,14 @@
+import {
+  CATEGORY_LABELS,
+  PRODUCT_CATEGORY_VALUES,
+  type ProductCategory,
+} from '@/lib/shop/productPresentation';
+
 export type ProductWizardMode = 'create' | 'edit';
 
 export type ProductWizardStep = 1 | 2 | 3 | 4;
 
-export type ProductCategory =
-  | 'POMADES_AND_CLAYS'
-  | 'BEARD_CARE'
-  | 'HAIR_WASH'
-  | 'STYLING'
-  | 'TOOLS'
-  | 'GIFT_SETS';
+export type { ProductCategory };
 
 export type ProductForm = {
   name: string;
@@ -28,14 +28,10 @@ export type ProductCategoryOption = {
 
 export type ProductWizardErrors = Partial<Record<'name' | 'description' | 'category' | 'priceGbp', string>>;
 
-export const PRODUCT_CATEGORY_OPTIONS: ProductCategoryOption[] = [
-  { value: 'POMADES_AND_CLAYS', label: 'Pomades & Clays' },
-  { value: 'BEARD_CARE', label: 'Beard Care' },
-  { value: 'HAIR_WASH', label: 'Hair Wash' },
-  { value: 'STYLING', label: 'Styling' },
-  { value: 'TOOLS', label: 'Tools' },
-  { value: 'GIFT_SETS', label: 'Gift Sets' }
-];
+export const PRODUCT_CATEGORY_OPTIONS: ProductCategoryOption[] = PRODUCT_CATEGORY_VALUES.map((value) => ({
+  value,
+  label: CATEGORY_LABELS[value],
+}));
 
 export const EMPTY_PRODUCT_FORM: ProductForm = {
   name: '',

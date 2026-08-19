@@ -444,7 +444,7 @@ export default function AdminPanel({
             {activeSection === 'bookings_clients' ? <ClientsAdminPanel key="clients" /> : null}
 
             {activeSection === 'shop_products' || activeSection === 'shop_orders' || activeSection === 'shop_sales' ? (
-              <ShopAdminPanel key="shop" initialTab={shopTab} />
+              <ShopAdminPanel key="shop" initialTab={shopTab} isBlacklineDemo={demoTenant === 'blackline'} />
             ) : null}
 
             {activeSection === 'assistant' ? <AiAssistantPanel key="assistant" isPublicDemo={demoMode} /> : null}

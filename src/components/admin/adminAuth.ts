@@ -4,6 +4,12 @@ import {
   isAnyPublicAdminDemoPathname,
   isBlacklineAdminDemoPathname,
 } from '@/lib/admin/demoConfig';
+import {
+  collectBlacklineSessionOrder,
+  isPermittedBlacklineSessionOrderCollect,
+  parseBlacklineSessionOrderCollectPath,
+  toAdminOrderDetail,
+} from '@/lib/demo/blacklineSessionOrders';
 
 const ADMIN_SECRET_STORAGE_KEY = 'kersivo.admin.secret';
 const ADMIN_SECRET_HEADER = 'x-admin-secret';
@@ -120,6 +126,7 @@ function isDemoWriteBlocked(method: string, pathname?: string | null): boolean {
   if (!isPublicAdminDemoMode()) return false;
   if (isDemoNoteLikeRequest(pathname ?? null, method)) return false;
   if (isDemoNotePostRequest(pathname ?? null, method)) return false;
+  if (isPermittedBlacklineSessionOrderCollect(pathname ?? null, method)) return false;
   return method !== 'GET' && method !== 'HEAD' && method !== 'OPTIONS';
 }
 
@@ -188,6 +195,20 @@ export function installAdminFetchInterceptor(): void {
     if (!pathname?.startsWith('/api/admin/')) return nativeFetch(input, init);
 
     const method = resolveRequestMethod(input, init);
+    const sessionCollectId = parseBlacklineSessionOrderCollectPath(pathname, method);
+    if (sessionCollectId && isPermittedBlacklineSessionOrderCollect(pathname, method)) {
+      const updated = collectBlacklineSessionOrder(sessionCollectId);
+      if (!updated) {
+        return new Response(JSON.stringify({ error: 'Order not found.' }), {
+          status: 404,
+          headers: { 'Content-Type': 'application/json' },
+        });
+      }
+      return new Response(JSON.stringify({ order: toAdminOrderDetail(updated) }), {
+        status: 200,
+        headers: { 'Content-Type': 'application/json' },
+      });
+    }
     if (isDemoWriteBlocked(method, pathname)) {
       notifyAdminDemoBlocked();
       return new Response(JSON.stringify({ error: DEMO_ACTION_BLOCKED_MESSAGE }), {

@@ -2,30 +2,27 @@
 export const prerender = false;
 
 import MinimalLayout from '@/layouts/MinimalLayout.astro';
-import Navbar17 from '@/components/navbar17.astro';
+import StorefrontHeader from '@/components/shop/storefront/StorefrontHeader.astro';
 import TestShopProductClientScripts from '@/components/admin/TestShopProductClientScripts.astro';
 import OwnerPreviewToolbar from '@/components/shop/OwnerPreviewToolbar.astro';
 import CartDrawerMount from '@/components/shop/CartDrawerMount.astro';
 import RetailOnboardingTaskCard from '@/components/admin/retail-onboarding/RetailOnboardingTaskCard';
+import StorefrontProductDetail from '@/components/shop/storefront/StorefrontProductDetail';
 import { isTenantAdminAccess, resolveAdminAccess } from '@/lib/admin/auth';
 import { resolveRetailOnboardingProduct } from '@/lib/admin/retailOnboardingProduct';
 import { prisma } from '@/lib/db/client';
-import { formatGbp } from '@/lib/shop/money';
 import {
-  CATEGORY_LABELS,
-  createHighlights,
-  splitDescription,
-  type ProductCategory,
-} from '@/lib/shop/productPresentation';
+  relatedStorefrontProducts,
+  storefrontProductFromPrisma,
+} from '@/lib/shop/storefrontCatalog';
 import '@/styles/tokens.css';
 import '@/styles/fonts-admin.css';
 import '@/styles/global.css';
 import '@/styles/components/buttons.css';
 import '@/styles/components/badge.css';
-import '@/styles/components/navbar17.css';
 import '@/styles/components/owner-preview-toolbar.css';
-import '@/styles/components/shop.css';
-import '@/styles/components/shop-product.css';
+import '@/styles/components/storefront.css';
+import '@/styles/components/storefront-cart.css';
 import '@/styles/components/empty-state.css';
 import '@/styles/components/inputs.css';
 
@@ -39,8 +36,9 @@ if (!id) {
   return Astro.redirect('/admin/test-shop');
 }
 
-const product = await prisma.product.findFirst({
-  where: { id, shopId: access.shopId },
+const rows = await prisma.product.findMany({
+  where: { shopId: access.shopId, active: true },
+  orderBy: [{ sortOrder: 'asc' }, { createdAt: 'asc' }],
   select: {
     id: true,
     name: true,
@@ -48,13 +46,20 @@ const product = await prisma.product.findFirst({
     pricePence: true,
     imageUrl: true,
     category: true,
+    featured: true,
+    sortOrder: true,
     active: true,
   },
 });
 
-if (!product || !product.active) {
+const catalog = rows.map(storefrontProductFromPrisma);
+const product = catalog.find((item) => item.id === id) ?? null;
+
+if (!product) {
   return Astro.redirect('/admin/test-shop');
 }
+
+const related = relatedStorefrontProducts(catalog, product.id);
 
 const retailContext = await resolveRetailOnboardingProduct(access.shopId);
 let verifiedTestOrderId: string | null = null;
@@ -69,60 +74,45 @@ if (retailContext.retailTestOrderId) {
   });
   verifiedTestOrderId = testOrder?.id ?? null;
 }
-// Hide when skipped or pickup walkthrough done. retailOnboardingCompleted = product stage only, not journey end.
 const showRetailTaskCard =
   !retailContext.retailOnboardingSkipped &&
   !retailContext.retailPickupWalkthroughCompleted &&
   (Boolean(retailContext.product) || retailContext.retailOnboardingCompleted);
 
-const [relatedProducts, shop] = await Promise.all([
-  prisma.product.findMany({
-    where: {
-      shopId: access.shopId,
-      active: true,
-      id: { not: product.id },
-      category: product.category,
-    },
-    orderBy: [{ sortOrder: 'asc' }, { createdAt: 'asc' }],
-    take: 3,
-    select: {
-      id: true,
-      name: true,
-      pricePence: true,
-      imageUrl: true,
-      category: true,
-    },
-  }),
-  prisma.shopSettings.findUnique({
-    where: { id: access.shopId },
-    select: { name: true, logoUrl: true },
-  }),
-]);
-
-const { intro, details } = splitDescription(product.description);
-const highlights = createHighlights(product.description, product.category);
-const categoryLabel = CATEGORY_LABELS[product.category as ProductCategory] ?? 'Styling';
+const shop = await prisma.shopSettings.findUnique({
+  where: { id: access.shopId },
+  select: { name: true, logoUrl: true },
+});
 const shopTitle = shop?.name?.trim() || 'My shop';
+const currentPath = Astro.url.pathname;
 ---
 
 <MinimalLayout
   title={`${product.name} | Kersivo Admin`}
-  description={intro}
+  description={product.description || `${product.name} at ${shopTitle}`}
   canonicalPath={`/admin/test-shop/${product.id}`}
   noindex={true}
   htmlClass="admin-app-scroll"
   bodyClass="admin-theme-premium-black has-owner-preview-toolbar"
   showCookieConsent={false}
 >
+  <div data-sf-page-shell>
   <OwnerPreviewToolbar adminHref="/admin" />
-  <Navbar17
-    variant="testShop"
-    brandLogoUrl={shop?.logoUrl}
-    brandAriaLabel={shopTitle}
+  <StorefrontHeader
+    themeId="kersivo"
+    currentPath={currentPath}
+    homeHref="/admin/test-shop"
+    navHomeHref="/"
+    homeLabel={`${shopTitle} shop`}
+    items={[{ href: '/admin/test-shop', label: 'Shop' }]}
+    bookHref="/admin/test-book"
+    shopName={shopTitle}
+    logoUrl={shop?.logoUrl}
+    showBag
   />
-  <main class="container product-page">
+  <main class="container shop-page" data-sf-header-inert>
     <div class="test-shop-topbar">
-      <a href="/admin/test-shop" class="product-back-link">← Back to my shop</a>
+      <a href="/admin/test-shop" class="sf-pdp-back product-back-link">← Back to my shop</a>
     </div>
 
     {
@@ -137,125 +127,32 @@ const shopTitle = shop?.name?.trim() || 'My shop';
       ) : null
     }
 
-    <section class="product-hero" aria-label="Product details">
-      <div class="product-media">
-        {
-          product.imageUrl ? (
-            <img src={product.imageUrl} alt={product.name} class="product-image" loading="eager" />
-          ) : (
-            <div class="product-image-placeholder">No image available</div>
-          )
-        }
-      </div>
-
-      <div class="product-content">
-        <p class="product-overline">{categoryLabel}</p>
-        <h1>{product.name}</h1>
-        <p class="product-price">{formatGbp(product.pricePence)}</p>
-        <p class="product-intro">{intro}</p>
-
-        {
-          highlights.length > 0 ? (
-            <ul class="product-highlights" aria-label="Product highlights">
-              {highlights.map((item) => (
-                <li>{item}</li>
-              ))}
-            </ul>
-          ) : null
-        }
-
-        <div class="product-actions">
-          <button
-            type="button"
-            class="btn btn--primary"
-            data-add-to-cart
-            data-product-id={product.id}
-            data-product-name={product.name}
-            data-product-price-pence={String(product.pricePence)}
-            data-product-image-url={product.imageUrl ?? ''}
-          >
-            Add to cart
-          </button>
-          <a href="/admin/test-shop" class="btn btn--secondary">Continue shopping</a>
-        </div>
-
-        <aside class="pickup-box" aria-label="Pickup information">
-          <p class="pickup-box-title">Ready for pickup</p>
-          <p>Order online in seconds and collect in the shop when it suits your day.</p>
-        </aside>
-      </div>
-    </section>
-
-    {
-      details ? (
-        <section class="product-detail-section" aria-label="Product information">
-          <h2>Details</h2>
-          <p>{details}</p>
-        </section>
-      ) : null
-    }
-
-    {
-      relatedProducts.length > 0 ? (
-        <section class="related-products" aria-label="Related products">
-          <header class="related-products-header">
-            <h2>You may also like</h2>
-            <p>More products from your shop in the same category.</p>
-          </header>
-
-          <div class="related-products-carousel">
-            <div class="related-products-grid">
-              {relatedProducts.map((item) => (
-                <article class="shop-card" data-category={item.category}>
-                  <a
-                    href={`/admin/test-shop/${item.id}`}
-                    class="shop-media-link"
-                    aria-label={`View ${item.name}`}
-                  >
-                    <div class="shop-media">
-                      {item.imageUrl ? (
-                        <img src={item.imageUrl} alt={item.name} class="shop-image" loading="lazy" />
-                      ) : (
-                        <div class="shop-image shop-image--placeholder" aria-hidden="true" />
-                      )}
-                    </div>
-                  </a>
-                  <div class="shop-card-body">
-                    <p class="shop-category">
-                      {CATEGORY_LABELS[item.category as ProductCategory] ?? 'Styling'}
-                    </p>
-                    <h3>
-                      <a href={`/admin/test-shop/${item.id}`}>{item.name}</a>
-                    </h3>
-                    <p class="shop-price">{formatGbp(item.pricePence)}</p>
-                    <div class="shop-card-actions">
-                      <button
-                        type="button"
-                        class="btn btn--primary btn--atc"
-                        data-add-to-cart
-                        data-product-id={item.id}
-                        data-product-name={item.name}
-                        data-product-price-pence={String(item.pricePence)}
-                        data-product-image-url={item.imageUrl ?? ''}
-                        data-atc-label="Add to cart"
-                      >
-                        Add to cart
-                      </button>
-                    </div>
-                  </div>
-                </article>
-              ))}
-            </div>
-          </div>
-        </section>
-      ) : null
-    }
+    <StorefrontProductDetail
+      client:load
+      product={product}
+      related={related}
+      themeId="kersivo"
+      shopName={shopTitle}
+      backHref="/admin/test-shop"
+      productHrefPrefix="/admin/test-shop"
+      priceFormat="gbp"
+      imageFallback="initial"
+      fulfilmentLabel="Ready for pickup"
+      addToBagLabel="Add to bag"
+    />
   </main>
+  </div>
 
-  <CartDrawerMount testOrderMode />
+  <CartDrawerMount
+    mode="testOrder"
+    shopId=""
+    shopName={shopTitle}
+    themeId="kersivo"
+    priceFormat="gbp"
+    exploreHref="/admin/test-shop"
+    checkout={{ type: 'testOrder' }}
+  />
 </MinimalLayout>
-
-
 
 <style>
   .test-shop-topbar {

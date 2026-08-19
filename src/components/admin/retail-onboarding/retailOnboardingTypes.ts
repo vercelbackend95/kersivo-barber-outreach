@@ -9,12 +9,13 @@ export type { ProductCategory };
 export { CATEGORY_LABELS, createHighlights, splitDescription };
 
 export const PRODUCT_CATEGORY_OPTIONS: Array<{ value: ProductCategory; label: string }> = [
-  { value: 'POMADES_AND_CLAYS', label: 'Pomades & Clays' },
-  { value: 'BEARD_CARE', label: 'Beard Care' },
-  { value: 'HAIR_WASH', label: 'Hair Wash' },
   { value: 'STYLING', label: 'Styling' },
-  { value: 'TOOLS', label: 'Tools' },
-  { value: 'GIFT_SETS', label: 'Gift Sets' },
+  { value: 'HAIR_WASH', label: 'Hair & Scalp' },
+  { value: 'BEARD_CARE', label: 'Beard Care' },
+  { value: 'SHAVE_AND_SKIN', label: 'Shave & Skin' },
+  { value: 'TOOLS', label: 'Tools & Accessories' },
+  { value: 'GIFT_SETS', label: 'Sets & Gifts' },
+  { value: 'POMADES_AND_CLAYS', label: 'Pomades & Clays' },
 ];
 
 export function formatGbp(pricePence: number) {

@@ -11,7 +11,7 @@ async function assertNoHorizontalOverflow(page: Page) {
 }
 
 async function pickFirstAvailableSlot(page: Page): Promise<string> {
-  for (let attempt = 0; attempt < 10; attempt += 1) {
+  for (let attempt = 0; attempt < 14; attempt += 1) {
     const slots = page.locator('button.booking-slot');
     if ((await slots.count()) > 0) {
       const first = slots.first();
@@ -19,14 +19,12 @@ async function pickFirstAvailableSlot(page: Page): Promise<string> {
       await first.click();
       return label;
     }
-    await page.locator('#booking-date').evaluate((input: HTMLInputElement) => {
-      const [year, month, day] = input.value.split('-').map(Number);
-      const next = new Date(Date.UTC(year, month - 1, day + 1));
-      const nextValue = next.toISOString().slice(0, 10);
-      input.value = nextValue;
-      input.dispatchEvent(new Event('input', { bubbles: true }));
-      input.dispatchEvent(new Event('change', { bubbles: true }));
-    });
+    const dateInput = page.locator('#booking-date');
+    const current = await dateInput.inputValue();
+    const [year, month, day] = current.split('-').map(Number);
+    const next = new Date(Date.UTC(year, month - 1, day + 1));
+    const nextValue = next.toISOString().slice(0, 10);
+    await dateInput.fill(nextValue);
     await page.waitForTimeout(250);
   }
   throw new Error('No available BLACKLINE demo slot');
@@ -36,8 +34,11 @@ test.describe('BLACKLINE booking confirmation to owner timeline', () => {
   test('creates a session booking and focuses it on the owner timeline', async ({ page }) => {
     await page.setViewportSize({ width: 1440, height: 900 });
     await page.goto('/demo/book', { waitUntil: 'domcontentloaded' });
+    await expect(page.getByRole('heading', { name: /Choose a service/i })).toBeVisible();
+    await expect(page.locator('.booking-choice-card--service')).toHaveCount(18);
 
-    await page.getByRole('button', { name: /Skin Fade/i }).click();
+    await page.getByRole('button', { name: /Skin Fade 45 min/i }).click();
+    await expect(page.getByRole('heading', { name: /Choose a barber/i })).toBeVisible();
     await page.getByRole('button', { name: /^Ellis Ward$/i }).click();
     const time = await pickFirstAvailableSlot(page);
     await page.getByRole('button', { name: 'Continue' }).click();

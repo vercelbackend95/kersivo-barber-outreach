@@ -22,6 +22,9 @@ export type PublicAdminDemoTenant = 'generic' | 'blackline';
 /** Canonical create-shop entry — existing onboarding wizard, not launch or retail. */
 export const CREATE_OWN_BARBERSHOP_HREF = '/admin/onboarding' as const;
 
+/** Canonical pricing destination on the marketing site. */
+export const KERSIVO_PLANS_HREF = '/#pricing' as const;
+
 export function getPublicAdminDemoCapabilities(tenant: PublicAdminDemoTenant = 'generic') {
   const isBlackline = tenant === 'blackline';
   return {
@@ -68,6 +71,54 @@ export function isAnyPublicAdminDemoPathname(pathname: string): boolean {
 export function blacklineAdminHref(section?: string): string {
   if (!section) return BLACKLINE_ADMIN_DEMO_PATH;
   return `${BLACKLINE_ADMIN_DEMO_PATH}?section=${section}`;
+}
+
+export type BlacklineRetailAdminSection = 'shop_orders' | 'shop_sales';
+
+/** Deep link into BLACKLINE Orders or Sales with a transient session-order focus. */
+export function buildBlacklineRetailHref(options: {
+  section: BlacklineRetailAdminSection;
+  orderId: string;
+  demoJourney?: boolean;
+}): string {
+  const params = new URLSearchParams({
+    section: options.section,
+    order: options.orderId,
+  });
+  if (options.demoJourney) params.set('demoJourney', 'retail');
+  return `${BLACKLINE_ADMIN_DEMO_PATH}?${params.toString()}`;
+}
+
+export function parseBlacklineRetailFocusSearch(search: string): {
+  section: string | null;
+  orderId: string | null;
+  demoJourney: string | null;
+} {
+  const params = new URLSearchParams(search.startsWith('?') ? search.slice(1) : search);
+  return {
+    section: params.get('section'),
+    orderId: params.get('order')?.trim() || null,
+    demoJourney: params.get('demoJourney')?.trim() || null,
+  };
+}
+
+/** Strip transient focus params while preserving the canonical section URL. */
+export function stripBlacklineRetailFocusSearch(search: string): string {
+  const params = new URLSearchParams(search.startsWith('?') ? search.slice(1) : search);
+  params.delete('order');
+  params.delete('demoJourney');
+  const qs = params.toString();
+  return qs ? `?${qs}` : '';
+}
+
+export function applyBlacklineRetailFocusCleanup(href: string): string {
+  try {
+    const url = new URL(href, 'https://kersivo.local');
+    url.search = stripBlacklineRetailFocusSearch(url.search);
+    return `${url.pathname}${url.search}${url.hash}`;
+  } catch {
+    return href;
+  }
 }
 
 /** Marketing-friendly URL section params → canonical AdminSection values. */

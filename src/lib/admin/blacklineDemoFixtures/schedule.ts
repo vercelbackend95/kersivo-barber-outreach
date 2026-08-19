@@ -1,7 +1,7 @@
 import type { DemoDayBooking } from '@/lib/admin/demoFixtures/daySchedule';
 import { ADMIN_BOOKING_HISTORY_PAGE_SIZE } from '@/lib/admin/bookingHistoryPageSize';
 import { DEMO_BARBERS } from '@/lib/demo/barbers';
-import { DEMO_SERVICES } from '@/lib/demo/services';
+import { getDemoServiceById } from '@/lib/demo/services';
 import { BLACKLINE_PEOPLE } from './catalog';
 import {
   atDayMinute,
@@ -20,39 +20,45 @@ export type BlacklineBooking = DemoDayBooking;
 
 type SlotTemplate = {
   barberIndex: number;
-  serviceIndex: number;
+  serviceId: string;
   startMinute: number;
 };
+
+const SKIN_FADE_ID = 'bl-svc-skin-fade';
+const CLASSIC_CUT_ID = 'bl-svc-haircut-finish';
+const HAIRCUT_BEARD_ID = 'bl-svc-haircut-beard';
+const HOT_TOWEL_ID = 'bl-svc-hot-towel-shave';
 
 /**
  * 24 candidate chairs across the three BLACKLINE barbers.
  * Gaps are deliberate so the timeline is not a solid block.
+ * Service IDs stay on the original four so catalogue expansion cannot desync the day.
  */
 const SLOT_TEMPLATES: readonly SlotTemplate[] = [
-  { barberIndex: 0, serviceIndex: 0, startMinute: 9 * 60 },
-  { barberIndex: 0, serviceIndex: 1, startMinute: 10 * 60 },
-  { barberIndex: 0, serviceIndex: 2, startMinute: 11 * 60 },
-  { barberIndex: 0, serviceIndex: 0, startMinute: 13 * 60 },
-  { barberIndex: 0, serviceIndex: 1, startMinute: 14 * 60 + 15 },
-  { barberIndex: 0, serviceIndex: 3, startMinute: 15 * 60 + 15 },
-  { barberIndex: 0, serviceIndex: 0, startMinute: 16 * 60 + 15 },
-  { barberIndex: 0, serviceIndex: 1, startMinute: 17 * 60 + 15 },
-  { barberIndex: 1, serviceIndex: 1, startMinute: 9 * 60 + 15 },
-  { barberIndex: 1, serviceIndex: 2, startMinute: 10 * 60 + 15 },
-  { barberIndex: 1, serviceIndex: 0, startMinute: 11 * 60 + 30 },
-  { barberIndex: 1, serviceIndex: 3, startMinute: 13 * 60 + 15 },
-  { barberIndex: 1, serviceIndex: 1, startMinute: 14 * 60 + 15 },
-  { barberIndex: 1, serviceIndex: 0, startMinute: 15 * 60 + 15 },
-  { barberIndex: 1, serviceIndex: 2, startMinute: 16 * 60 + 15 },
-  { barberIndex: 1, serviceIndex: 3, startMinute: 17 * 60 + 30 },
-  { barberIndex: 2, serviceIndex: 2, startMinute: 9 * 60 },
-  { barberIndex: 2, serviceIndex: 0, startMinute: 10 * 60 + 15 },
-  { barberIndex: 2, serviceIndex: 1, startMinute: 11 * 60 + 15 },
-  { barberIndex: 2, serviceIndex: 3, startMinute: 13 * 60 },
-  { barberIndex: 2, serviceIndex: 2, startMinute: 14 * 60 },
-  { barberIndex: 2, serviceIndex: 1, startMinute: 15 * 60 + 15 },
-  { barberIndex: 2, serviceIndex: 0, startMinute: 16 * 60 + 15 },
-  { barberIndex: 2, serviceIndex: 1, startMinute: 17 * 60 + 15 },
+  { barberIndex: 0, serviceId: SKIN_FADE_ID, startMinute: 9 * 60 },
+  { barberIndex: 0, serviceId: CLASSIC_CUT_ID, startMinute: 10 * 60 },
+  { barberIndex: 0, serviceId: HAIRCUT_BEARD_ID, startMinute: 11 * 60 },
+  { barberIndex: 0, serviceId: SKIN_FADE_ID, startMinute: 13 * 60 },
+  { barberIndex: 0, serviceId: CLASSIC_CUT_ID, startMinute: 14 * 60 + 15 },
+  { barberIndex: 0, serviceId: HOT_TOWEL_ID, startMinute: 15 * 60 + 15 },
+  { barberIndex: 0, serviceId: SKIN_FADE_ID, startMinute: 16 * 60 + 15 },
+  { barberIndex: 0, serviceId: CLASSIC_CUT_ID, startMinute: 17 * 60 + 15 },
+  { barberIndex: 1, serviceId: CLASSIC_CUT_ID, startMinute: 9 * 60 + 15 },
+  { barberIndex: 1, serviceId: HAIRCUT_BEARD_ID, startMinute: 10 * 60 + 15 },
+  { barberIndex: 1, serviceId: SKIN_FADE_ID, startMinute: 11 * 60 + 30 },
+  { barberIndex: 1, serviceId: HOT_TOWEL_ID, startMinute: 13 * 60 + 15 },
+  { barberIndex: 1, serviceId: CLASSIC_CUT_ID, startMinute: 14 * 60 + 15 },
+  { barberIndex: 1, serviceId: SKIN_FADE_ID, startMinute: 15 * 60 + 15 },
+  { barberIndex: 1, serviceId: HAIRCUT_BEARD_ID, startMinute: 16 * 60 + 15 },
+  { barberIndex: 1, serviceId: HOT_TOWEL_ID, startMinute: 17 * 60 + 30 },
+  { barberIndex: 2, serviceId: HAIRCUT_BEARD_ID, startMinute: 9 * 60 },
+  { barberIndex: 2, serviceId: SKIN_FADE_ID, startMinute: 10 * 60 + 15 },
+  { barberIndex: 2, serviceId: CLASSIC_CUT_ID, startMinute: 11 * 60 + 15 },
+  { barberIndex: 2, serviceId: HOT_TOWEL_ID, startMinute: 13 * 60 },
+  { barberIndex: 2, serviceId: HAIRCUT_BEARD_ID, startMinute: 14 * 60 },
+  { barberIndex: 2, serviceId: CLASSIC_CUT_ID, startMinute: 15 * 60 + 15 },
+  { barberIndex: 2, serviceId: SKIN_FADE_ID, startMinute: 16 * 60 + 15 },
+  { barberIndex: 2, serviceId: CLASSIC_CUT_ID, startMinute: 17 * 60 + 15 },
 ];
 
 const TARGET_BY_WEEKDAY = [0, 19, 21, 20, 22, 21, 18, 0] as const;
@@ -79,7 +85,7 @@ function placeDay(dayKey: string): BlacklineBooking[] {
   const rotated = [...SLOT_TEMPLATES.slice(rotation), ...SLOT_TEMPLATES.slice(0, rotation)];
 
   const fitting = rotated.filter((slot) => {
-    const service = DEMO_SERVICES[slot.serviceIndex];
+    const service = getDemoServiceById(slot.serviceId);
     if (!service) return false;
     const end = slot.startMinute + service.durationMinutes;
     return slot.startMinute >= window.openMinute && end <= window.closeMinute;
@@ -91,7 +97,7 @@ function placeDay(dayKey: string): BlacklineBooking[] {
 
   keep.forEach((slot, index) => {
     const barber = DEMO_BARBERS[slot.barberIndex];
-    const service = DEMO_SERVICES[slot.serviceIndex];
+    const service = getDemoServiceById(slot.serviceId);
     if (!barber || !service) return;
     const startMinute = slot.startMinute;
     const endMinute = startMinute + service.durationMinutes;
@@ -206,7 +212,7 @@ function ensureInProgress(
   nowMinute: number,
   closeMinute: number,
 ): void {
-  const service = DEMO_SERVICES[0];
+  const service = getDemoServiceById(SKIN_FADE_ID);
   if (!service) return;
   const startMinute = Math.floor(nowMinute / 5) * 5;
   const endMinute = startMinute + service.durationMinutes;

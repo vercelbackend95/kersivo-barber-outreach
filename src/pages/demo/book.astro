@@ -3,7 +3,7 @@ import BookingFlow from '@/components/booking/BookingFlow';
 import DemoLayout from '@/layouts/DemoLayout.astro';
 import { DEMO_BARBERS, resolveDemoBarberSlug, toDemoBookingBarber } from '@/lib/demo/barbers';
 import { BLACKLINE_BOOKING_PRESENTATION, BLACKLINE_TIMELINE_CTA_LABEL } from '@/lib/demo/booking';
-import { DEMO_SERVICES, resolveDemoServiceSlug } from '@/lib/demo/services';
+import { DEMO_SERVICE_CATEGORY_ORDER, DEMO_SERVICES, resolveDemoServiceSlug } from '@/lib/demo/services';
 import { DEMO_SHOP_NAME } from '@/lib/demo/site';
 import '@/styles/components/buttons.css';
 import '@/styles/components/empty-state.css';
@@ -28,6 +28,7 @@ const selectedBarber = resolveDemoBarberSlug(Astro.url.searchParams.get('barber'
         publicDemoMode
         initialServiceId={selectedService?.id}
         initialBarberId={selectedBarber?.id}
+        categoryOrder={DEMO_SERVICE_CATEGORY_ORDER}
         services={DEMO_SERVICES.map((service) => ({
           id: service.id,
           name: service.name,
@@ -35,6 +36,7 @@ const selectedBarber = resolveDemoBarberSlug(Astro.url.searchParams.get('barber'
           pricePence: service.pricePence,
           category: service.category,
           displayOrder: service.displayOrder,
+          featured: service.featured,
         }))}
         barbers={DEMO_BARBERS.map(toDemoBookingBarber)}
         shopDetails={{ timezone: 'Europe/London' }}

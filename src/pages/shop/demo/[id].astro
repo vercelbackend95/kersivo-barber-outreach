@@ -1,30 +1,24 @@
 ---
 import MainLayout from '@/layouts/MainLayout.astro';
 import DemoNotice from '@/components/shop/DemoNotice.astro';
+import StorefrontProductDetail from '@/components/shop/storefront/StorefrontProductDetail';
 import Footer50 from '@/components/footer50.astro';
 import '@/styles/components/footer50.css';
+import '@/styles/components/storefront.css';
 import { getFooterSocialLinks } from '@/lib/seo/footerSocialLinks';
 import {
   getDemoCatalogProductById,
-  getDemoCatalogRelatedProducts,
+  getDemoCatalogProducts,
 } from '@/lib/shop/demoCatalog';
 import { buildDemoProductBreadcrumbJsonLd } from '@/lib/seo/productJsonLd';
-import { formatGbp } from '@/lib/shop/money';
+import { relatedStorefrontProducts, storefrontProductFromCatalog } from '@/lib/shop/storefrontCatalog';
 
 const { id } = Astro.params;
-const MOBILE_RELATED_PRODUCT_COUNT = 10;
-const DESKTOP_RELATED_PRODUCT_COUNT = 3;
+const catalog = getDemoCatalogProducts().map(storefrontProductFromCatalog);
+const product = id ? catalog.find((item) => item.id === id) ?? null : null;
+const related = product ? relatedStorefrontProducts(catalog, product.id) : [];
+const source = id ? getDemoCatalogProductById(id) : null;
 
-const product = id ? getDemoCatalogProductById(id) : null;
-
-const CATEGORY_LABELS: Record<string, string> = {
-  POMADES_AND_CLAYS: 'Pomades',
-  BEARD_CARE: 'Beard care',
-  HAIR_WASH: 'Hair wash',
-  STYLING: 'Styling',
-  TOOLS: 'Tools',
-  GIFT_SETS: 'Gift sets'
-};
 const FOOTER_PROPS = {
   showIntro: true,
   heading: 'Ready to launch a better website system for your barbershop?',
@@ -41,7 +35,7 @@ const FOOTER_PROPS = {
     { name: 'Contact', href: '/#contact' },
     { name: 'Retail Demo', href: '/shop' }
   ],
-    social: getFooterSocialLinks(),
+  social: getFooterSocialLinks(),
   legal: [
     { name: 'Privacy Policy', href: '/privacy' },
     { name: 'Cookie Policy', href: '/cookies' },
@@ -54,83 +48,6 @@ if (!product) {
   Astro.response.status = 404;
 }
 
-const relatedProducts = product
-  ? getDemoCatalogRelatedProducts(product, MOBILE_RELATED_PRODUCT_COUNT)
-  : [];
-
-const relatedProductsForCarousel =
-  product && relatedProducts.length > 0 && relatedProducts.length < MOBILE_RELATED_PRODUCT_COUNT
-    ? Array.from({ length: MOBILE_RELATED_PRODUCT_COUNT }, (_, index) => relatedProducts[index % relatedProducts.length])
-    : relatedProducts;
-
-const splitDescription = (rawDescription: string | null) => {
-  const cleaned = rawDescription?.replace(/\s+/g, ' ').trim() ?? '';
-  if (!cleaned) {
-    return {
-      intro: 'Barber-curated product selected for reliable daily performance and clean in-shop pickup.',
-      details: ''
-    };
-  }
-
-  if (cleaned.length <= 150) {
-    return {
-      intro: cleaned,
-      details: ''
-    };
-  }
-
-  const firstSentence = cleaned.match(/^.*?[.!?](\s|$)/)?.[0]?.trim();
-  if (firstSentence && firstSentence.length >= 70 && firstSentence.length <= 190) {
-    return {
-      intro: firstSentence,
-      details: cleaned.slice(firstSentence.length).trim()
-    };
-  }
-
-  const cutoff = cleaned.lastIndexOf(' ', 150);
-  const splitPoint = cutoff > 90 ? cutoff : 150;
-
-  return {
-    intro: `${cleaned.slice(0, splitPoint).trim()}…`,
-    details: cleaned
-  };
-};
-
-const DESCRIPTION_HIGHLIGHTS = [
-  { label: 'Strong hold', keywords: ['strong hold', 'firm hold', 'high hold'] },
-  { label: 'Matte finish', keywords: ['matte', 'natural finish'] },
-  { label: 'Beard care', keywords: ['beard', 'facial hair'] },
-  { label: 'Daily use', keywords: ['daily', 'everyday'] },
-  { label: 'Water-based', keywords: ['water-based', 'water based'] }
-];
-
-const createHighlights = (description: string | null, category: string) => {
-  const text = (description ?? '').toLowerCase();
-  const highlights = new Set<string>();
-
-  for (const entry of DESCRIPTION_HIGHLIGHTS) {
-    if (entry.keywords.some((keyword) => text.includes(keyword))) {
-      highlights.add(entry.label);
-    }
-  }
-
-  if (category === 'BEARD_CARE') {
-    highlights.add('Beard care');
-  }
-
-  if (category === 'POMADES_AND_CLAYS' || category === 'STYLING') {
-    highlights.add('Daily styling');
-  }
-
-  highlights.add('Ready for pickup');
-
-  return Array.from(highlights).slice(0, 4);
-};
-
-const { intro, details } = product
-  ? splitDescription(product.description)
-  : { intro: '', details: '' };
-const highlights = product ? createHighlights(product.description, product.category) : [];
 const demoBreadcrumbJsonLd = product
   ? buildDemoProductBreadcrumbJsonLd(product.name, `/shop/demo/${product.id}`)
   : null;
@@ -143,16 +60,12 @@ const demoBreadcrumbJsonLd = product
     canonicalPath={id ? `/shop/demo/${id}` : '/shop'}
     noindex
   >
-    <main class="container product-page">
-      <a href="/shop" class="product-back-link">← Back to retail demo</a>
-      <section class="product-hero" aria-label="Product not found">
-        <div class="product-content">
-          <h1>Product not found</h1>
-          <p class="product-intro">This product is not in the retail demo catalog.</p>
-          <div class="product-actions">
-            <a href="/shop" class="btn btn--primary">Back to retail demo</a>
-          </div>
-        </div>
+    <main class="container shop-page">
+      <a href="/shop" class="sf-pdp-back product-back-link">← Back to retail demo</a>
+      <section class="sf-pdp-copy" aria-label="Product not found">
+        <h1 class="sf-pdp-name">Product not found</h1>
+        <p class="sf-pdp-desc">This product is not in the retail demo catalog.</p>
+        <a href="/shop" class="sf-atc">Back to retail demo</a>
       </section>
     </main>
     <Footer50 {...FOOTER_PROPS} />
@@ -160,9 +73,9 @@ const demoBreadcrumbJsonLd = product
 ) : (
   <MainLayout
     title={`${product.name} | Kersivo Retail Demo`}
-    description={intro}
+    description={product.description}
     canonicalPath={`/shop/demo/${product.id}`}
-    ogImagePath={product.imageUrl?.startsWith('/') ? product.imageUrl : undefined}
+    ogImagePath={source?.imageUrl?.startsWith('/') ? source.imageUrl : undefined}
     ogImageAlt={`${product.name} — Kersivo demo grooming shop`}
     jsonLd={demoBreadcrumbJsonLd!}
     navbarVariant="shop"
@@ -170,106 +83,22 @@ const demoBreadcrumbJsonLd = product
     noindex
     robotsFollow
   >
-    <main class="container product-page">
-      <a href="/shop" class="product-back-link">← Back to retail demo</a>
+    <main class="container shop-page">
       <DemoNotice />
-
-      <section class="product-hero" aria-label="Product details">
-        <div class="product-media">
-          {product.imageUrl ? <img src={product.imageUrl} alt={product.name} class="product-image" loading="eager" /> : <div class="product-image-placeholder">No image available</div>}
-        </div>
-
-        <div class="product-content">
-          <p class="product-overline">{CATEGORY_LABELS[product.category] ?? 'Styling'}</p>
-          <h1>{product.name}</h1>
-          <p class="product-price">{formatGbp(product.pricePence)}</p>
-          <p class="product-intro">{intro}</p>
-
-          {highlights.length > 0 ? (
-            <ul class="product-highlights" aria-label="Product highlights">
-              {highlights.map((item) => <li>{item}</li>)}
-            </ul>
-          ) : null}
-
-          <div class="product-actions">
-            <button
-              type="button"
-              class="btn btn--primary"
-              data-add-to-cart
-              data-product-id={product.id}
-              data-product-name={product.name}
-              data-product-price-pence={String(product.pricePence)}
-              data-product-image-url={product.imageUrl ?? ''}
-            >
-              Add to cart
-            </button>
-            <a href="/shop" class="btn btn--secondary">Continue shopping</a>
-          </div>
-
-          <aside class="pickup-box" aria-label="Pickup information">
-            <p class="pickup-box-title">Demo pickup</p>
-            <p>Add to the demo bag and complete a simulated order. No payment is taken and no real order is created.</p>
-          </aside>
-        </div>
-      </section>
-
-      {details ? (
-        <section class="product-detail-section" aria-label="Product information">
-          <h2>Details</h2>
-          <p>{details}</p>
-        </section>
-      ) : null}
-
-      {relatedProductsForCarousel.length > 0 ? (
-        <section class="related-products" aria-label="Related products">
-          <header class="related-products-header">
-            <h2>You may also like</h2>
-            <p>More barber-approved essentials from the same curated range.</p>
-          </header>
-
-          <div class="related-products-carousel" data-related-carousel-root>
-            <div class="related-products-grid" data-related-carousel>
-              {relatedProductsForCarousel.map((item, index) => (
-                <article
-                  class:list={["shop-card", index >= DESKTOP_RELATED_PRODUCT_COUNT && 'related-card--mobile-only']}
-                  data-category={item.category}
-                >
-                  <a href={`/shop/demo/${item.id}`} class="shop-media-link" aria-label={`View ${item.name}`}>
-                    <div class="shop-media">
-                      {item.imageUrl ? (
-                        <img src={item.imageUrl} alt={item.name} class="shop-image" loading="lazy" />
-                      ) : (
-                        <div class="shop-image shop-image--placeholder" aria-hidden="true"></div>
-                      )}
-                    </div>
-                  </a>
-                  <div class="shop-card-body">
-                    <p class="shop-category">{CATEGORY_LABELS[item.category] ?? 'Styling'}</p>
-                    <h3><a href={`/shop/demo/${item.id}`}>{item.name}</a></h3>
-                    <p class="shop-price">{formatGbp(item.pricePence)}</p>
-                    <div class="shop-card-actions">
-                      <button
-                        type="button"
-                        class="btn btn--primary btn--atc"
-                        data-add-to-cart
-                        data-product-id={item.id}
-                        data-product-name={item.name}
-                        data-product-price-pence={String(item.pricePence)}
-                        data-product-image-url={item.imageUrl ?? ''}
-                        data-atc-label="Add to cart"
-                      >
-                        Add to cart
-                      </button>
-                    </div>
-                  </div>
-                </article>
-              ))}
-            </div>
-          </div>
-        </section>
-      ) : null}
+      <StorefrontProductDetail
+        client:load
+        product={product}
+        related={related}
+        themeId="kersivo"
+        shopName="KERSIVO"
+        backHref="/shop"
+        productHrefPrefix="/shop/demo"
+        priceFormat="gbp"
+        imageFallback="initial"
+        fulfilmentLabel="Demo pickup — no payment is taken and no real order is created."
+        addToBagLabel="Add to bag"
+      />
     </main>
-
     <Footer50 {...FOOTER_PROPS} />
   </MainLayout>
 )}

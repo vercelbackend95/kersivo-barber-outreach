@@ -41,6 +41,14 @@
   box-shadow: 0 0 0 4px color-mix(in srgb, var(--accent) 55%, transparent);
 }
 
+.admin-sidebar-launch-cta--conversion {
+  align-items: center;
+}
+
+.admin-sidebar-launch-cta--conversion .admin-sidebar-launch-cta__icon {
+  margin-top: 0;
+}
+
 .admin-sidebar-launch-cta__icon {
   display: inline-flex;
   flex-shrink: 0;

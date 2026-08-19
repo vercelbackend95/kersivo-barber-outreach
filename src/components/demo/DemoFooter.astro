@@ -1,4 +1,5 @@
 ---
+import BlacklineWordmark from '@/components/demo/BlacklineWordmark';
 import {
   DEMO_FOOTER_NAV,
   DEMO_HOME_HREF,
@@ -15,10 +16,10 @@ import {
 const currentYear = new Date().getFullYear();
 ---
 
-<footer class="bl-footer" aria-label="BLACKLINE site footer" transition:persist="bl-footer">
+<footer class="bl-footer" aria-label="BLACKLINE site footer" transition:persist="bl-footer" data-sf-header-inert>
   <div class="bl-footer-layout">
     <a class="bl-footer-wordmark" href={DEMO_HOME_HREF} aria-label="BLACKLINE demo home">
-      BLACKLINE
+      <BlacklineWordmark size="display" />
     </a>
 
     <div class="bl-footer-meta">

@@ -81,6 +81,8 @@ describe('BLACKLINE demo checkout', () => {
     });
     expect(getItems()).toEqual([]);
     expect(window.sessionStorage.getItem(BLACKLINE_CONFIRMATION_STORAGE_KEY)).toContain('3800');
+    expect(window.sessionStorage.getItem('kersivo.blackline.session-orders.v1')).toContain('Ironclad Pomade');
+    expect(window.sessionStorage.getItem('kersivo.blackline.session-orders.v1')).toContain('3800');
   });
 
   it('ignores a duplicate complete while the first request is in flight', async () => {

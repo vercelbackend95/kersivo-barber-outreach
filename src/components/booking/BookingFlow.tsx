@@ -27,6 +27,7 @@ type Service = {
   pricePence: number;
   category?: string | null;
   displayOrder?: number;
+  featured?: boolean;
 };
 
 type Barber = {
@@ -116,6 +117,8 @@ type Props = {
   initialBarberId?: string;
   /** Host-specific copy and confirmation CTAs. Defaults keep the Kersivo `/book` sandbox. */
   presentation?: BookingFlowPresentation;
+  /** Preferred category order for the service picker. Unknown keys follow default then alpha. */
+  categoryOrder?: readonly string[];
 };
 
 const DEFAULT_BOOKING_TIMEZONE = 'Europe/London';
@@ -325,6 +328,7 @@ export default function BookingFlow({
   initialServiceId,
   initialBarberId,
   presentation,
+  categoryOrder,
 }: Props) {
   const bookingTimezone = shopDetails?.timezone || DEFAULT_BOOKING_TIMEZONE;
   const resolvedInitialServiceId = resolveInitialServiceId(services, initialServiceId);
@@ -389,7 +393,10 @@ export default function BookingFlow({
   }, [availableBarbers]);
 
   const selectedService = useMemo(() => services.find((service) => service.id === serviceId), [serviceId, services]);
-  const serviceGroups = useMemo(() => groupServicesByCategory(services), [services]);
+  const serviceGroups = useMemo(
+    () => groupServicesByCategory(services, categoryOrder?.length ? { categoryOrder } : undefined),
+    [services, categoryOrder],
+  );
   const selectedBarber = useMemo(() => availableBarbers.find((barber) => barber.id === barberId), [availableBarbers, barberId]);
   const selectedBarberLabel = barberId === ANY_BARBER_ID ? ANY_BARBER_NAME : selectedBarber?.name;
   const normalizedDate = normalizeToIsoDate(date);

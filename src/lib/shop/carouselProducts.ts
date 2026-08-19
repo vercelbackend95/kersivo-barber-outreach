@@ -1,3 +1,4 @@
+import { SHOP_FILTER_LABELS } from '@/lib/shop/productPresentation';
 import { getDemoCatalogProducts } from '@/lib/shop/demoCatalog';
 
 export const MIN_CAROUSEL_ITEMS = 10;
@@ -10,14 +11,7 @@ export type CarouselProduct = {
   imageUrl: string | null;
 };
 
-export const CATEGORY_LABELS: Record<string, string> = {
-  POMADES_AND_CLAYS: 'Pomades',
-  BEARD_CARE: 'Beard',
-  HAIR_WASH: 'Wash',
-  STYLING: 'Styling',
-  TOOLS: 'Tools',
-  GIFT_SETS: 'Sets',
-};
+export const CATEGORY_LABELS: Record<string, string> = { ...SHOP_FILTER_LABELS };
 
 export function expandCarouselProducts(products: CarouselProduct[]): CarouselProduct[] {
   if (products.length === 0) {

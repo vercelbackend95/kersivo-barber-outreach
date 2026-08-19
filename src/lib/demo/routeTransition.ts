@@ -34,7 +34,7 @@ export {
 };
 
 export const NAV_ACTIVE_SELECTORS =
-  '.bl-nav-link, .bl-nav-index-link, .bl-header-cta, .bl-header-book, [data-bl-nav-book]';
+  '.sf-nav-link, .sf-nav-index-link, .sf-header-cta, .sf-header-book, [data-sf-nav-book], .bl-nav-link, .bl-nav-index-link, .bl-header-cta, .bl-header-book, [data-bl-nav-book]';
 
 export function isBlacklineCustomerPath(pathname: string): boolean {
   return getRouteFamily(pathname) === 'demo';
@@ -79,12 +79,12 @@ export function syncDemoNavActive(header: HTMLElement, pathname: string): void {
     if (active) link.setAttribute('aria-current', 'page');
     else link.removeAttribute('aria-current');
 
-    const copy = link.querySelector('.bl-nav-index-copy');
+    const copy = link.querySelector('.sf-nav-index-copy, .bl-nav-index-copy');
     if (!(copy instanceof HTMLElement)) return;
-    const current = copy.querySelector('.bl-nav-index-current');
+    const current = copy.querySelector('.sf-nav-index-current, .bl-nav-index-current');
     if (active && !current) {
       const mark = header.ownerDocument.createElement('span');
-      mark.className = 'bl-nav-index-current';
+      mark.className = 'sf-nav-index-current bl-nav-index-current';
       mark.textContent = 'Current';
       copy.appendChild(mark);
     } else if (!active && current) {

@@ -1,29 +1,45 @@
-export type ProductCategory =
-  | 'POMADES_AND_CLAYS'
-  | 'BEARD_CARE'
-  | 'HAIR_WASH'
-  | 'STYLING'
-  | 'TOOLS'
-  | 'GIFT_SETS';
+export const PRODUCT_CATEGORY_VALUES = [
+  'STYLING',
+  'HAIR_WASH',
+  'BEARD_CARE',
+  'SHAVE_AND_SKIN',
+  'TOOLS',
+  'GIFT_SETS',
+  'POMADES_AND_CLAYS',
+] as const;
 
-/** Short labels for storefront overlines / filters */
+export type ProductCategory = (typeof PRODUCT_CATEGORY_VALUES)[number];
+
+/** Merchandising labels for storefront and admin. */
 export const CATEGORY_LABELS: Record<ProductCategory, string> = {
-  POMADES_AND_CLAYS: 'Pomades',
-  BEARD_CARE: 'Beard care',
-  HAIR_WASH: 'Hair wash',
   STYLING: 'Styling',
-  TOOLS: 'Tools',
-  GIFT_SETS: 'Gift sets',
+  HAIR_WASH: 'Hair & Scalp',
+  BEARD_CARE: 'Beard Care',
+  SHAVE_AND_SKIN: 'Shave & Skin',
+  TOOLS: 'Tools & Accessories',
+  GIFT_SETS: 'Sets & Gifts',
+  POMADES_AND_CLAYS: 'Pomades & Clays',
 };
 
 /** Compact chip labels for storefront filters */
 export const SHOP_FILTER_LABELS: Record<ProductCategory, string> = {
-  POMADES_AND_CLAYS: 'Pomades',
-  BEARD_CARE: 'Beard',
-  HAIR_WASH: 'Wash',
   STYLING: 'Styling',
+  HAIR_WASH: 'Hair',
+  BEARD_CARE: 'Beard',
+  SHAVE_AND_SKIN: 'Shave',
   TOOLS: 'Tools',
   GIFT_SETS: 'Sets',
+  POMADES_AND_CLAYS: 'Pomades',
+};
+
+export const CATEGORY_DESCRIPTIONS: Partial<Record<ProductCategory, string>> = {
+  STYLING: 'Hold, texture and finish for the cut.',
+  HAIR_WASH: 'Wash and scalp care before the style.',
+  BEARD_CARE: 'Oil, balm and wash for facial hair.',
+  SHAVE_AND_SKIN: 'Shave cream, balm and face care.',
+  TOOLS: 'Combs, brushes and chair-side kit.',
+  GIFT_SETS: 'Ready-to-collect bundles.',
+  POMADES_AND_CLAYS: 'Classic pomades and clays.',
 };
 
 const DESCRIPTION_HIGHLIGHTS = [
@@ -78,6 +94,10 @@ export function createHighlights(description: string | null, category: string) {
     highlights.add('Beard care');
   }
 
+  if (category === 'SHAVE_AND_SKIN') {
+    highlights.add('Shave & skin');
+  }
+
   if (category === 'POMADES_AND_CLAYS' || category === 'STYLING') {
     highlights.add('Daily styling');
   }
@@ -88,5 +108,5 @@ export function createHighlights(description: string | null, category: string) {
 }
 
 export function isProductCategory(value: string): value is ProductCategory {
-  return value in CATEGORY_LABELS;
+  return (PRODUCT_CATEGORY_VALUES as readonly string[]).includes(value);
 }

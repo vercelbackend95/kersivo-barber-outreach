@@ -1,6 +1,6 @@
 import { readFileSync } from 'node:fs';
 import { describe, expect, it } from 'vitest';
-import { BLACKLINE_ADMIN_DEMO_PATH, CREATE_OWN_BARBERSHOP_HREF, blacklineAdminHref } from '@/lib/admin/demoConfig';
+import { BLACKLINE_ADMIN_DEMO_PATH, CREATE_OWN_BARBERSHOP_HREF, KERSIVO_PLANS_HREF, blacklineAdminHref } from '@/lib/admin/demoConfig';
 import { DEMO_NAV } from '@/lib/demo/nav';
 
 const pageSource = readFileSync(new URL('../../pages/demo/admin.astro', import.meta.url), 'utf8');
@@ -23,6 +23,8 @@ describe('BLACKLINE owner dashboard page', () => {
     expect(pageSource).toContain('getBlacklineBookingsResponse');
     expect(pageSource).toContain('data-demo-tenant="blackline"');
     expect(pageSource).toContain('view="admin"');
+    expect(pageSource).toContain('fonts-blackline.css');
+    expect(pageSource).toContain('blackline-wordmark.css');
     expect(pageSource).not.toContain('READY TO LAUNCH');
     expect(pageSource).not.toContain('Continue setup');
     expect(BLACKLINE_ADMIN_DEMO_PATH).toBe('/demo/admin');
@@ -34,6 +36,8 @@ describe('BLACKLINE owner dashboard page', () => {
     expect(adminDemoSource).toContain('getDemoBookingsResponse');
     expect(genericRouter).toContain("from './demoFixtures'");
     expect(genericRouter).not.toContain('blacklineDemoFixtures');
+    expect(adminDemoSource).not.toContain('blackline-wordmark.css');
+    expect(adminDemoSource).not.toContain('BlacklineWordmark');
     expect(blacklineRouter).toContain('/api/demo/admin');
     expect(blacklineRouter).not.toContain('Jamie Reed');
   });
@@ -42,12 +46,20 @@ describe('BLACKLINE owner dashboard page', () => {
     expect(pageSource).toContain('view="admin"');
     expect(adminLayoutSource).not.toContain('admin-blackline-notice');
     expect(adminLayoutSource).not.toContain('BLACKLINE OWNER DEMO');
-    expect(adminLayoutSource).toContain('BlacklineDemoStatusCard');
+    expect(adminLayoutSource).toContain('BlacklineConversionCard');
+    expect(adminLayoutSource).not.toContain('BlacklineDemoStatusCard');
+    expect(adminLayoutSource).not.toContain('admin-blackline-status-card');
+    expect(adminLayoutSource).not.toContain('MAKE IT YOURS');
+    expect(adminLayoutSource).toContain('BlacklineWordmark');
+    expect(adminLayoutSource).toContain('Powered by KERSIVO');
+    expect(adminLayoutSource).toContain('DEFAULT_SIDEBAR_LOGO');
+    expect(adminLayoutSource).toContain('/images/logo_nobg.png');
     expect(profileSource).toContain('Create your own barbershop');
     expect(profileSource).toContain('Preview BLACKLINE website');
     expect(profileSource).toContain('Back to Kersivo');
     expect(profileSource).toContain('href={createShopHref}');
     expect(CREATE_OWN_BARBERSHOP_HREF).toBe('/admin/onboarding');
+    expect(KERSIVO_PLANS_HREF).toBe('/#pricing');
   });
 
   it('wires banner navigation between customer and owner views', () => {

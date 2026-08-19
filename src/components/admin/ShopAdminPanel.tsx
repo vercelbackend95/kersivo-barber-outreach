@@ -20,6 +20,9 @@ import { AdminFetchError, adminFetchJson, isPublicAdminDemoMode, notifyAdminDemo
 import { resolveClientIdForBooking } from '../../lib/admin/resolveClientIdForBooking';
 import RetailOnboardingWelcome from './retail-onboarding/RetailOnboardingWelcome';
 import RetailOnboardingTaskCard from './retail-onboarding/RetailOnboardingTaskCard';
+import BlacklineRetailTaskCard from './BlacklineRetailTaskCard';
+import BlacklineDemoSaleCard from './BlacklineDemoSaleCard';
+import TapHandHint from '@/components/TapHandHint';
 import ProductWizard from './product-wizard/ProductWizard';
 import AdminWizardSheetLayer from './AdminWizardSheetLayer';
 import AdminPremiumSearchBar from './AdminPremiumSearchBar';
@@ -30,6 +33,28 @@ import {
   type ProductCategory,
   type ProductForm
 } from './product-wizard/productWizardTypes';
+import { applyBlacklineRetailFocusCleanup } from '@/lib/admin/demoConfig';
+import {
+  completeBlacklineRetailJourney,
+  getBlacklineRetailJourney,
+  getBlacklineSessionOrder,
+  isBlacklineSessionOrderId,
+  listBlacklineSessionOrders,
+  mergeBlacklineSessionOrders,
+  mergeBlacklineSessionSales,
+  toAdminOrderDetail,
+} from '@/lib/demo/blacklineSessionOrders';
+import { prefersReducedMotion } from '@/lib/landing/liveTimelineScroll';
+import {
+  TAP_HAND_AUTO_DISMISS_MS,
+  blacklineRetailCollectHintKey,
+  blacklineRetailSaleHintKey,
+  hasSeenBlacklineTapHint,
+  markBlacklineTapHintSeen,
+  positionTapHand,
+  waitForScrollSettled,
+  type TapHandPosition,
+} from '@/lib/ui/tapHandHint';
 
 type ShopTab = 'products' | 'orders' | 'sales';
 type SalesRangePreset = '7' | '30' | '90' | 'custom';
@@ -500,6 +525,7 @@ function useProductSeriesSelection(allSalesSeries: SalesChartSeries[]) {
 
 type ShopAdminPanelProps = {
   initialTab?: ShopTab;
+  isBlacklineDemo?: boolean;
 };
 
 const RETAIL_WALKTHROUGH_COMPLETE_DISMISSED_KEY = 'kersivo:retail-walkthrough-complete-dismissed';
@@ -526,7 +552,24 @@ function markRetailWalkthroughCompleteDismissed(orderId: string) {
   }
 }
 
-export default function ShopAdminPanel({ initialTab = 'products' }: ShopAdminPanelProps) {
+function readRetailDeepLinkFromUrl(): { orderId: string | null; demoJourney: string | null } {
+  if (typeof window === 'undefined') return { orderId: null, demoJourney: null };
+  const params = new URLSearchParams(window.location.search);
+  return {
+    orderId: params.get('order')?.trim() || null,
+    demoJourney: params.get('demoJourney')?.trim() || null,
+  };
+}
+
+function clearRetailFocusParamsFromUrl() {
+  if (typeof window === 'undefined') return;
+  const next = applyBlacklineRetailFocusCleanup(window.location.href);
+  const current = `${window.location.pathname}${window.location.search}${window.location.hash}`;
+  if (next === current) return;
+  window.history.replaceState(window.history.state, '', next);
+}
+
+export default function ShopAdminPanel({ initialTab = 'products', isBlacklineDemo = false }: ShopAdminPanelProps) {
   const [activeTab, setActiveTab] = useState<ShopTab>(initialTab);
 
   const [products, setProducts] = useState<Product[]>([]);
@@ -553,6 +596,18 @@ export default function ShopAdminPanel({ initialTab = 'products' }: ShopAdminPan
   const [highlightedOrderId, setHighlightedOrderId] = useState<string | null>(null);
   const [walkthroughOrderId, setWalkthroughOrderId] = useState<string | null>(null);
   const [showRetailWalkthroughComplete, setShowRetailWalkthroughComplete] = useState(false);
+  const [tapHintVisible, setTapHintVisible] = useState(false);
+  const [tapHintPos, setTapHintPos] = useState<TapHandPosition | null>(null);
+  const [tapHintKind, setTapHintKind] = useState<'collect' | 'sale' | null>(null);
+  const ordersHintRootRef = useRef<HTMLDivElement | null>(null);
+  const salesHintRootRef = useRef<HTMLDivElement | null>(null);
+  const retailFocusConsumedRef = useRef(false);
+  const salesFocusConsumedRef = useRef(false);
+  const retailDeepLinkRef = useRef<string | null>(
+    isBlacklineDemo && readRetailDeepLinkFromUrl().demoJourney === 'retail'
+      ? readRetailDeepLinkFromUrl().orderId
+      : null,
+  );
 
   const [salesPreset, setSalesPreset] = useState<SalesRangePreset>('7');
   const [salesFrom, setSalesFrom] = useState(() => getRangeDates('7').from);
@@ -895,8 +950,26 @@ export default function ShopAdminPanel({ initialTab = 'products' }: ShopAdminPan
     [ordersSafe, walkthroughOrderId],
   );
 
+  const sessionOrderIds = useMemo(
+    () => (isBlacklineDemo ? new Set(listBlacklineSessionOrders().map((row) => row.id)) : new Set<string>()),
+    [isBlacklineDemo, ordersSafe],
+  );
+
+  const retailJourney = isBlacklineDemo ? getBlacklineRetailJourney() : null;
+  const retailJourneyOrder = retailJourney ? getBlacklineSessionOrder(retailJourney.orderId) : null;
+  const showBlacklineRetailTask =
+    isBlacklineDemo &&
+    activeTab === 'orders' &&
+    Boolean(retailJourneyOrder) &&
+    (retailJourney?.stage === 'collect' || retailJourney?.stage === 'view_sale');
+  const focusedSaleOrder =
+    isBlacklineDemo && activeTab === 'sales' && retailDeepLinkRef.current
+      ? getBlacklineSessionOrder(retailDeepLinkRef.current)
+      : null;
+
   useEffect(() => {
     if (walkthroughOrder?.status !== 'COLLECTED') return;
+    if (isBlacklineSessionOrderId(walkthroughOrder.id)) return;
     if (isRetailWalkthroughCompleteDismissed(walkthroughOrder.id)) {
       setShowRetailWalkthroughComplete(false);
       return;
@@ -932,8 +1005,10 @@ export default function ShopAdminPanel({ initialTab = 'products' }: ShopAdminPan
     if (typeof window === 'undefined' || activeTab !== 'orders') return;
     const params = new URLSearchParams(window.location.search);
     const orderId = params.get('order')?.trim() || null;
+    const demoJourney = params.get('demoJourney')?.trim();
     const retailWalkthrough = params.get('retailWalkthrough') === '1';
     if (!orderId) return;
+    if (isBlacklineDemo && demoJourney === 'retail') return;
 
     setHighlightedOrderId(orderId);
     if (retailWalkthrough) {
@@ -957,7 +1032,154 @@ export default function ShopAdminPanel({ initialTab = 'products' }: ShopAdminPan
       window.clearTimeout(scrollTimer);
       window.clearTimeout(clearHighlightTimer);
     };
-  }, [activeTab, ordersLoading]);
+  }, [activeTab, ordersLoading, isBlacklineDemo]);
+
+  useEffect(() => {
+    if (!isBlacklineDemo || activeTab !== 'orders' || ordersLoading) return;
+    const orderId = retailDeepLinkRef.current;
+    if (!orderId || retailFocusConsumedRef.current) return;
+    if (!isBlacklineSessionOrderId(orderId)) return;
+    if (!orders.some((order) => order.id === orderId)) return;
+
+    retailFocusConsumedRef.current = true;
+    setOrdersSearchQuery('');
+    setDebouncedOrdersSearchQuery('');
+    setHighlightedOrderId(orderId);
+    setExpandedOrderId(orderId);
+    void fetchOrderDetails(orderId);
+
+    const reducedMotion = prefersReducedMotion();
+    const scrollTimer = window.setTimeout(() => {
+      const row = document.getElementById(`admin-order-${orderId}`);
+      row?.scrollIntoView({
+        behavior: reducedMotion ? 'auto' : 'smooth',
+        block: 'center',
+      });
+      const scroller = (document.scrollingElement as HTMLElement | null) ?? document.documentElement;
+      waitForScrollSettled(
+        scroller,
+        () => {
+          clearRetailFocusParamsFromUrl();
+          const hintKey = blacklineRetailCollectHintKey(orderId);
+          if (!hasSeenBlacklineTapHint(hintKey)) {
+            setTapHintKind('collect');
+          }
+        },
+        { reducedMotion },
+      );
+    }, reducedMotion ? 0 : 350);
+
+    const clearHighlightTimer = window.setTimeout(() => {
+      setHighlightedOrderId((current) => (current === orderId ? null : current));
+    }, 8000);
+
+    return () => {
+      window.clearTimeout(scrollTimer);
+      window.clearTimeout(clearHighlightTimer);
+    };
+  }, [activeTab, isBlacklineDemo, ordersLoading]);
+
+  useEffect(() => {
+    if (!isBlacklineDemo || activeTab !== 'sales') return;
+    const orderId = retailDeepLinkRef.current;
+    if (!orderId || salesFocusConsumedRef.current) return;
+    if (!isBlacklineSessionOrderId(orderId)) return;
+
+    salesFocusConsumedRef.current = true;
+    const reducedMotion = prefersReducedMotion();
+    const scrollTimer = window.setTimeout(() => {
+      document.getElementById(`admin-demo-sale-${orderId}`)?.scrollIntoView({
+        behavior: reducedMotion ? 'auto' : 'smooth',
+        block: 'center',
+      });
+      const scroller = (document.scrollingElement as HTMLElement | null) ?? document.documentElement;
+      waitForScrollSettled(
+        scroller,
+        () => {
+          clearRetailFocusParamsFromUrl();
+          completeBlacklineRetailJourney(orderId);
+          const hintKey = blacklineRetailSaleHintKey(orderId);
+          if (!hasSeenBlacklineTapHint(hintKey)) {
+            setTapHintKind('sale');
+          }
+        },
+        { reducedMotion },
+      );
+    }, reducedMotion ? 0 : 350);
+
+    return () => {
+      window.clearTimeout(scrollTimer);
+    };
+  }, [activeTab, isBlacklineDemo]);
+
+  useEffect(() => {
+    if (!tapHintKind) return undefined;
+    const orderId = retailDeepLinkRef.current;
+    if (!orderId) return undefined;
+    const root = tapHintKind === 'collect' ? ordersHintRootRef.current : salesHintRootRef.current;
+    if (!root) return undefined;
+
+    const target = () =>
+      tapHintKind === 'collect'
+        ? (document.querySelector(
+            `#admin-order-${orderId} .admin-orders-grid-collect-btn`,
+          ) as HTMLElement | null)
+        : (document.getElementById(`admin-demo-sale-${orderId}`) as HTMLElement | null);
+
+    const hintKey =
+      tapHintKind === 'collect'
+        ? blacklineRetailCollectHintKey(orderId)
+        : blacklineRetailSaleHintKey(orderId);
+
+    const show = () => {
+      const node = target();
+      const hintRoot = tapHintKind === 'collect' ? ordersHintRootRef.current : salesHintRootRef.current;
+      if (!node || !hintRoot) return;
+      setTapHintPos(positionTapHand(hintRoot, node));
+      setTapHintVisible(true);
+      markBlacklineTapHintSeen(hintKey);
+    };
+
+    show();
+
+    const onKey = (event: KeyboardEvent) => {
+      if (event.key === 'Escape') {
+        setTapHintVisible(false);
+        setTapHintKind(null);
+      }
+    };
+    const onPointer = (event: Event) => {
+      const node = event.target as Element | null;
+      const selector =
+        tapHintKind === 'collect'
+          ? `#admin-order-${orderId} .admin-orders-grid-collect-btn`
+          : `#admin-demo-sale-${orderId}`;
+      if (node?.closest?.(selector)) {
+        setTapHintVisible(false);
+        setTapHintKind(null);
+      }
+    };
+    const onResize = () => {
+      const node = target();
+      const hintRoot = tapHintKind === 'collect' ? ordersHintRootRef.current : salesHintRootRef.current;
+      if (!node || !hintRoot) return;
+      setTapHintPos(positionTapHand(hintRoot, node));
+    };
+    window.addEventListener('keydown', onKey);
+    document.addEventListener('click', onPointer, true);
+    window.addEventListener('resize', onResize);
+    const timeoutId = window.setTimeout(() => {
+      setTapHintVisible(false);
+      setTapHintKind(null);
+    }, TAP_HAND_AUTO_DISMISS_MS);
+
+    return () => {
+      window.removeEventListener('keydown', onKey);
+      document.removeEventListener('click', onPointer, true);
+      window.removeEventListener('resize', onResize);
+      window.clearTimeout(timeoutId);
+    };
+  }, [tapHintKind]);
 
 
   const handleAddSeriesSelection = (seriesKey: string) => {
@@ -1094,7 +1316,8 @@ export default function ShopAdminPanel({ initialTab = 'products' }: ShopAdminPan
       const payload = await adminFetchJson<{ orders: OrderListItem[] }>('/api/admin/shop/orders', {
         errorMessage: 'Could not fetch orders.',
       });
-      setOrders(payload.orders as OrderListItem[]);
+      const incoming = payload.orders as OrderListItem[];
+      setOrders(isBlacklineDemo ? mergeBlacklineSessionOrders(incoming) : incoming);
     } catch (fetchError) {
       if (fetchError instanceof AdminFetchError && fetchError.status === 401) {
         setOrders([]);
@@ -1113,6 +1336,14 @@ export default function ShopAdminPanel({ initialTab = 'products' }: ShopAdminPan
 
   async function fetchOrderDetails(orderId: string) {
     setError(null);
+    if (isBlacklineDemo) {
+      const session = getBlacklineSessionOrder(orderId);
+      if (session) {
+        const detail = toAdminOrderDetail(session) as OrderDetail;
+        setOrderDetailsById((previous) => ({ ...previous, [detail.id]: detail }));
+        return;
+      }
+    }
     setOrderDetailsLoadingId(orderId);
     try {
       const payload = await adminFetchJson<{ order: OrderDetail }>(`/api/admin/shop/orders/${orderId}`, {
@@ -1158,7 +1389,10 @@ export default function ShopAdminPanel({ initialTab = 'products' }: ShopAdminPan
         errorMessage: 'Could not fetch sales analytics.',
       });
       if (salesFetchRequestRef.current !== requestId) return;
-      setSalesData(payload as SalesResponse);
+      const next = isBlacklineDemo
+        ? mergeBlacklineSessionSales(payload as SalesResponse)
+        : (payload as SalesResponse);
+      setSalesData(next);
     } catch (fetchError) {
       if (salesFetchRequestRef.current !== requestId) return;
       setSalesError(fetchError instanceof Error ? fetchError.message : 'Could not fetch sales analytics.');
@@ -1279,7 +1513,11 @@ export default function ShopAdminPanel({ initialTab = 'products' }: ShopAdminPan
       await fetchOrders();
       await fetchOrderDetails(orderId);
       setSuccess('Order marked as collected.');
-      if (walkthroughOrderId === orderId && !isRetailWalkthroughCompleteDismissed(orderId)) {
+      if (
+        walkthroughOrderId === orderId &&
+        !isRetailWalkthroughCompleteDismissed(orderId) &&
+        !isBlacklineSessionOrderId(orderId)
+      ) {
         setShowRetailWalkthroughComplete(true);
       }
     } catch (collectError) {
@@ -1691,7 +1929,7 @@ export default function ShopAdminPanel({ initialTab = 'products' }: ShopAdminPan
       )}
 
       {activeTab === 'orders' && (
-        <div className="admin-orders-panel">
+        <div className="admin-orders-panel admin-timeline-tap-hand-root" ref={ordersHintRootRef}>
           {error ? (
             <div className="admin-inline-error" role="alert">
               <p>{error}</p>
@@ -1714,7 +1952,13 @@ export default function ShopAdminPanel({ initialTab = 'products' }: ShopAdminPan
             </div>
           ) : null}
 
-          {showRetailWalkthroughComplete ? (
+          {showBlacklineRetailTask && retailJourney && retailJourneyOrder ? (
+            <BlacklineRetailTaskCard
+              stage={retailJourney.stage === 'view_sale' ? 'view_sale' : 'collect'}
+              orderId={retailJourneyOrder.id}
+              compact
+            />
+          ) : showRetailWalkthroughComplete ? (
             <div className="admin-retail-walkthrough-complete" role="status">
               <h3>Retail setup complete</h3>
               <p>
@@ -1759,6 +2003,7 @@ export default function ShopAdminPanel({ initialTab = 'products' }: ShopAdminPan
             onLoadOrderDetails={(orderId) => void fetchOrderDetails(orderId)}
             highlightedOrderId={highlightedOrderId}
             walkthroughOrderId={walkthroughOrderId}
+            sessionOrderIds={sessionOrderIds}
             onOpenClientProfile={(contact) => void handleOpenClientProfile(contact)}
             ordersUnauthorized={ordersUnauthorized}
                         emptyMessage={debouncedOrdersSearchQuery ? 'No orders match your search.' : 'No orders yet.'}
@@ -1790,10 +2035,12 @@ export default function ShopAdminPanel({ initialTab = 'products' }: ShopAdminPan
             }
           />
 
+          <TapHandHint visible={tapHintVisible && tapHintKind === 'collect'} position={tapHintPos} />
         </div>
       )}
       {activeTab === 'sales' && (
-        <div className="admin-reports admin-sales-panel">
+        <div className="admin-reports admin-sales-panel admin-timeline-tap-hand-root" ref={salesHintRootRef}>
+          {focusedSaleOrder ? <BlacklineDemoSaleCard order={focusedSaleOrder} /> : null}
           {salesError ? (
             <div className="admin-inline-error" role="alert">
               <p>{salesError}</p>
@@ -1831,7 +2078,7 @@ export default function ShopAdminPanel({ initialTab = 'products' }: ShopAdminPan
             headlineValue={
               salesLoading && !salesData
                 ? <span className="admin-analytics-studio__headline-skeleton" aria-hidden="true" />
-                : salesHeroValue
+                : <span data-blackline-sales-revenue={salesMetric === 'revenue' ? String(salesData?.kpis.revenuePence ?? 0) : undefined}>{salesHeroValue}</span>
             }
             headlineDelta={
               salesKpiDeltas ? (
@@ -1937,6 +2184,7 @@ export default function ShopAdminPanel({ initialTab = 'products' }: ShopAdminPan
             emptyLabel="No paid order items in this range."
             rows={salesLeaderboardRows}
           />
+          <TapHandHint visible={tapHintVisible && tapHintKind === 'sale'} position={tapHintPos} />
         </div>
       )}
 

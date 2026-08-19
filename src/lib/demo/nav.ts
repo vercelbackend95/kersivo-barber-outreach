@@ -1,3 +1,5 @@
+import { isStorefrontNavActive } from '@/lib/shop/storefrontNav';
+
 export type DemoNavItem = {
   href: string;
   label: string;
@@ -31,21 +33,8 @@ export const DEMO_FOOTER_NAV: DemoNavItem[] = [
   { href: DEMO_BOOK_HREF, label: 'Book an appointment' },
 ];
 
-function normalizePath(pathname: string): string {
-  if (pathname.length > 1 && pathname.endsWith('/')) {
-    return pathname.slice(0, -1);
-  }
-  return pathname || '/';
-}
-
-export function formatNavIndex(index: number): string {
-  return String(index + 1).padStart(2, '0');
-}
+export { formatNavIndex } from '@/lib/shop/storefrontNav';
 
 export function isDemoNavActive(pathname: string, href: string): boolean {
-  const current = normalizePath(pathname);
-  if (href === '/demo') {
-    return current === '/demo';
-  }
-  return current === href || current.startsWith(`${href}/`);
+  return isStorefrontNavActive(pathname, href, DEMO_HOME_HREF);
 }

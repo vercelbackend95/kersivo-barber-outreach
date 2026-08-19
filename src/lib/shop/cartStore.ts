@@ -1,5 +1,7 @@
 // src/lib/shop/cartStore.ts
 export const CART_STORAGE_KEY = 'kersivo_shop_cart_v2';
+export const CART_MAX_QUANTITY = 10;
+export const CART_OPEN_REQUEST_EVENT = 'kersivo:cart-open-request';
 
 export function cartStorageKeyForShop(shopId?: string | null): string {
   const id = shopId?.trim();
@@ -97,7 +99,7 @@ function toSafeItem(item: Partial<CartItem>): CartItem | null {
   const productId = String(item.productId ?? '').trim();
   const name = String(item.name ?? '').trim();
   const pricePence = Math.max(0, Math.floor(Number(item.pricePence ?? 0)));
-  const quantity = Math.max(1, Math.floor(Number(item.quantity ?? 1)));
+  const quantity = clampQuantity(item.quantity ?? 1);
 
   if (!productId || !name) {
     return null;
@@ -110,6 +112,14 @@ function toSafeItem(item: Partial<CartItem>): CartItem | null {
     imageUrl: item.imageUrl ? String(item.imageUrl) : undefined,
     quantity,
   };
+}
+
+function clampQuantity(value: number, fallback = 1): number {
+  const next = Math.floor(Number(value));
+  if (!Number.isFinite(next)) {
+    return fallback;
+  }
+  return Math.min(CART_MAX_QUANTITY, Math.max(1, next));
 }
 
 function filterAllowed(items: CartItem[]): CartItem[] {
@@ -250,7 +260,7 @@ export function addItem(input: AddCartItemInput) {
   const safeProductId = String(input.productId).trim();
   const safeName = String(input.name).trim();
   const safePrice = Math.max(0, Math.floor(Number(input.pricePence)));
-  const quantity = Math.max(1, Math.floor(Number(input.quantity ?? 1)));
+  const quantity = clampQuantity(input.quantity ?? 1);
 
   if (!safeProductId || !safeName) {
     return;
@@ -281,7 +291,7 @@ export function addItem(input: AddCartItemInput) {
     name: safeName,
     pricePence: safePrice,
     imageUrl: input.imageUrl ?? nextItems[existingIndex].imageUrl,
-    quantity: nextItems[existingIndex].quantity + quantity,
+    quantity: clampQuantity(nextItems[existingIndex].quantity + quantity),
   };
   updateItems(nextItems);
 }
@@ -293,14 +303,14 @@ export function removeItem(productId: string) {
 
 export function setQuantity(productId: string, quantity: number) {
   ensureHydrated();
-  const nextQuantity = Math.floor(Number(quantity));
+  const rawQuantity = Math.floor(Number(quantity));
   const nextItems = [...store.state.items];
   const itemIndex = nextItems.findIndex((item) => item.productId === productId);
   if (itemIndex === -1) {
     return;
   }
 
-  if (nextQuantity <= 0) {
+  if (!Number.isFinite(rawQuantity) || rawQuantity <= 0) {
     nextItems.splice(itemIndex, 1);
     updateItems(nextItems);
     return;
@@ -308,7 +318,7 @@ export function setQuantity(productId: string, quantity: number) {
 
   nextItems[itemIndex] = {
     ...nextItems[itemIndex],
-    quantity: nextQuantity,
+    quantity: clampQuantity(rawQuantity),
   };
   updateItems(nextItems);
 }

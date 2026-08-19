@@ -8,10 +8,17 @@ import {
   BLACKLINE_SHOP_ID,
   DEMO_PRODUCTS,
   mergeBlacklineProductRow,
+  resolveBlacklineSeedImageUrl,
   type DemoProduct,
 } from './products';
 
-type ProductClient = Pick<PrismaClient, 'shopSettings' | 'product'>;
+type ProductClient = {
+  shopSettings: PrismaClient['shopSettings'];
+  product: {
+    findUnique: PrismaClient['product']['findUnique'];
+    upsert: PrismaClient['product']['upsert'];
+  };
+};
 
 export async function seedBlacklineDemoCatalog(client: ProductClient): Promise<void> {
   await client.shopSettings.upsert({
@@ -40,6 +47,12 @@ export async function seedBlacklineDemoCatalog(client: ProductClient): Promise<v
   });
 
   for (const product of DEMO_PRODUCTS) {
+    const existing = await client.product.findUnique({
+      where: { id: product.id },
+      select: { imageUrl: true },
+    });
+    const imageUrl = resolveBlacklineSeedImageUrl(existing?.imageUrl, product.image.src);
+
     await client.product.upsert({
       where: { id: product.id },
       update: {
@@ -47,7 +60,7 @@ export async function seedBlacklineDemoCatalog(client: ProductClient): Promise<v
         name: product.name,
         description: product.description,
         pricePence: product.pricePence,
-        imageUrl: product.image.src,
+        ...(imageUrl !== undefined ? { imageUrl } : {}),
         active: product.active,
         featured: product.featured,
         category: product.category,
@@ -59,7 +72,7 @@ export async function seedBlacklineDemoCatalog(client: ProductClient): Promise<v
         name: product.name,
         description: product.description,
         pricePence: product.pricePence,
-        imageUrl: product.image.src,
+        imageUrl,
         active: product.active,
         featured: product.featured,
         category: product.category,
