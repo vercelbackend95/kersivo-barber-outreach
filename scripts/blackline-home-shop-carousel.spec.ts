@@ -215,7 +215,7 @@ test.describe('BLACKLINE home shop product rail', () => {
         footerDisplay: footerStyle.display,
         footerJustifyContent: footerStyle.justifyContent,
       };
-    }, '.sf-shop--blackline .sf-grid .sf-card');
+    }, '.sf-shop .sf-grid .sf-card');
     expect(shopStyles).not.toBeNull();
 
     await page.goto('/demo', { waitUntil: 'networkidle' });
@@ -344,7 +344,7 @@ test.describe('BLACKLINE home shop product rail', () => {
     await page.setViewportSize({ width: 1440, height: 900 });
     await page.goto('/demo/shop', { waitUntil: 'networkidle' });
     const shadow = await page.evaluate(() => {
-      const card = document.querySelector('.sf-shop--blackline .sf-card') as HTMLElement | null;
+      const card = document.querySelector('.sf-shop .sf-card') as HTMLElement | null;
       if (!card) return null;
       return getComputedStyle(card).boxShadow;
     });

@@ -1,0 +1,207 @@
+/* Shared on-site checkout surface — always dark, tenant accent only. */
+
+.checkout-surface {
+  --checkout-bg: #0b0c0e;
+  --checkout-surface: #14161a;
+  --checkout-surface-raised: #1a1d22;
+  --checkout-text: #f4f1ea;
+  --checkout-text-muted: #a7abb2;
+  --checkout-border: rgba(244, 241, 234, 0.16);
+  --checkout-accent: var(--theme-accent, #315ef5);
+  --checkout-accent-contrast: #ffffff;
+  --checkout-danger: #f07178;
+  --checkout-focus: var(--checkout-accent);
+  color-scheme: dark;
+  background: var(--checkout-bg);
+  color: var(--checkout-text);
+}
+
+.checkout-surface .bl-checkout-heading,
+.checkout-surface .bl-checkout-subhead,
+.checkout-surface .bl-bag-empty-heading,
+.checkout-surface .bl-bag-subtotal,
+.checkout-surface .bl-confirm-reference,
+.checkout-surface .bl-confirm-method,
+.checkout-surface .checkout-line-name,
+.checkout-surface .checkout-line-total {
+  color: var(--checkout-text);
+}
+
+.checkout-surface .bl-checkout-lede,
+.checkout-surface .bl-checkout-copy,
+.checkout-surface .bl-checkout-kicker,
+.checkout-surface .bl-checkout-facts dt,
+.checkout-surface .bl-page-safety,
+.checkout-surface .bl-checkout-safety,
+.checkout-surface .bl-confirm-safety,
+.checkout-surface .checkout-line-meta,
+.checkout-surface .checkout-line-variant,
+.checkout-surface .bl-edit-intro-eyebrow {
+  color: var(--checkout-text-muted);
+}
+
+.checkout-surface {
+  /* Isolate from parent light-surface token flips */
+  --theme-background: var(--checkout-bg);
+  --theme-surface: var(--checkout-surface);
+  --theme-text: var(--checkout-text);
+  --theme-text-muted: var(--checkout-text-muted);
+  --theme-border: var(--checkout-border);
+  --theme-line: var(--checkout-border);
+  --theme-focus: var(--checkout-focus);
+  --theme-accent: var(--checkout-accent);
+}
+
+.checkout-surface .bl-checkout,
+.checkout-surface.bl-checkout {
+  background: var(--checkout-bg);
+  color: var(--checkout-text);
+  padding-block: clamp(3.5rem, 8vw, 6.5rem);
+}
+
+.checkout-line {
+  display: grid;
+  grid-template-columns: 4.5rem minmax(0, 1fr) auto;
+  gap: 0.85rem;
+  align-items: start;
+  padding-bottom: 1rem;
+  border-bottom: 1px solid var(--checkout-border);
+}
+
+.checkout-line-media {
+  width: 4.5rem;
+  height: 4.5rem;
+  aspect-ratio: 1;
+  overflow: hidden;
+  border-radius: 12px;
+  border: 1px solid var(--checkout-border);
+  background: var(--checkout-surface-raised);
+  flex-shrink: 0;
+}
+
+.checkout-line-media-inner,
+.checkout-line-media .sf-media {
+  width: 100%;
+  height: 100%;
+  min-height: 0;
+  aspect-ratio: 1;
+}
+
+.checkout-line-media .sf-media-img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: center;
+  padding: 0;
+}
+
+.checkout-line-media .sf-media--fallback {
+  background: var(--checkout-surface-raised);
+  color: var(--checkout-text-muted);
+}
+
+.checkout-line-copy {
+  min-width: 0;
+  display: grid;
+  gap: 0.2rem;
+}
+
+.checkout-line-name {
+  margin: 0;
+  font-weight: 700;
+  line-height: 1.25;
+  overflow-wrap: anywhere;
+}
+
+.checkout-line-variant,
+.checkout-line-meta,
+.checkout-line-total {
+  margin: 0;
+  font-size: 0.9rem;
+  font-variant-numeric: tabular-nums;
+}
+
+.checkout-line-qty {
+  justify-self: end;
+}
+
+.checkout-surface .bl-qty-btn {
+  border-color: var(--checkout-border);
+  color: var(--checkout-text);
+  background: var(--checkout-surface);
+}
+
+.checkout-surface .bl-qty-btn:hover:not(:disabled) {
+  border-color: color-mix(in srgb, var(--checkout-text) 28%, transparent);
+  background: var(--checkout-surface-raised);
+}
+
+.checkout-surface .bl-qty-btn:focus-visible,
+.checkout-surface .bl-checkout-submit:focus-visible,
+.checkout-surface .bl-btn:focus-visible {
+  outline: 2px solid var(--checkout-focus);
+  outline-offset: 3px;
+}
+
+.checkout-surface .bl-checkout-error {
+  color: var(--checkout-danger);
+  border-left: 2px solid var(--checkout-danger);
+}
+
+.checkout-surface input,
+.checkout-surface select,
+.checkout-surface textarea {
+  background: var(--checkout-surface);
+  color: var(--checkout-text);
+  border-color: var(--checkout-border);
+}
+
+.checkout-surface input::placeholder,
+.checkout-surface textarea::placeholder {
+  color: var(--checkout-text-muted);
+  opacity: 0.85;
+}
+
+.checkout-surface input:-webkit-autofill,
+.checkout-surface input:-webkit-autofill:hover,
+.checkout-surface input:-webkit-autofill:focus {
+  -webkit-text-fill-color: var(--checkout-text);
+  box-shadow: 0 0 0 1000px var(--checkout-surface) inset;
+  transition: background-color 99999s ease-out;
+}
+
+.checkout-surface .bl-btn--primary,
+.checkout-surface .bl-checkout-submit {
+  background: var(--checkout-accent);
+  color: var(--checkout-accent-contrast);
+}
+
+.checkout-surface .bl-btn--primary:disabled,
+.checkout-surface .bl-checkout-submit:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+}
+
+@media (max-width: 520px) {
+  .checkout-line {
+    grid-template-columns: 4rem minmax(0, 1fr);
+    grid-template-areas:
+      'media copy'
+      'qty qty';
+  }
+
+  .checkout-line-media {
+    grid-area: media;
+    width: 4rem;
+    height: 4rem;
+  }
+
+  .checkout-line-copy {
+    grid-area: copy;
+  }
+
+  .checkout-line-qty {
+    grid-area: qty;
+    justify-self: start;
+  }
+}

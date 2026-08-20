@@ -156,4 +156,49 @@ describe('BLACKLINE demo checkout', () => {
     expect(getItems()).toHaveLength(1);
     expect(navigateSpy).not.toHaveBeenCalled();
   });
+
+  it('renders product thumbnails from cart imageUrl and a placeholder when missing', () => {
+    bindCartNamespace({
+      shopId: BLACKLINE_SHOP_ID,
+      allowedProductIds: ['bl-product-ironclad-pomade', 'bl-product-essential-styling-set'],
+    });
+    addItem({
+      productId: 'bl-product-ironclad-pomade',
+      name: 'Ironclad Pomade',
+      pricePence: 1900,
+      quantity: 1,
+      imageUrl: '/demo/products/ironclad-pomade.webp',
+    });
+    addItem({
+      productId: 'bl-product-essential-styling-set',
+      name: 'Essential Styling Set',
+      pricePence: 4200,
+      quantity: 1,
+      imageUrl: '',
+    });
+
+    const { container } = render(<DemoCheckout />);
+    const img = container.querySelector(
+      'img[src="/demo/products/ironclad-pomade.webp"]',
+    ) as HTMLImageElement | null;
+    expect(img).toBeTruthy();
+    expect(img?.alt).toBe('Ironclad Pomade');
+    expect(container.querySelectorAll('.checkout-line')).toHaveLength(2);
+    expect(container.querySelectorAll('.sf-media--fallback').length).toBeGreaterThan(0);
+    expect(container.querySelectorAll('img[src=""]')).toHaveLength(0);
+  });
+
+  it('keeps quantity controls wired to the shared cart store', () => {
+    addItem({
+      productId: 'bl-product-ironclad-pomade',
+      name: 'Ironclad Pomade',
+      pricePence: 1900,
+      quantity: 1,
+      imageUrl: '/demo/products/ironclad-pomade.webp',
+    });
+    render(<DemoCheckout />);
+    fireEvent.click(screen.getByRole('button', { name: /increase quantity of ironclad pomade/i }));
+    expect(getItems()[0]?.quantity).toBe(2);
+    expect(screen.getByText(/2 ×/i)).toBeTruthy();
+  });
 });

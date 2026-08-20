@@ -319,6 +319,7 @@ describe('StorefrontCartDrawer BLACKLINE href checkout', () => {
         shopName="Blackline Barbers"
         themeId="blackline"
         priceFormat="demo"
+        imageFallback="wordmark"
         exploreHref="/demo/shop"
         checkout={{ type: 'href', href: '/demo/shop/checkout' }}
       />,

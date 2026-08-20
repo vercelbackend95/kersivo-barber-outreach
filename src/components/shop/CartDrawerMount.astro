@@ -3,6 +3,7 @@ import StorefrontCartDrawer from './storefront/StorefrontCartDrawer';
 import type { StorefrontCartMode, StorefrontCartThemeId } from './storefront/StorefrontCartDrawer';
 import type { StorefrontPriceFormat } from '@/lib/shop/storefrontCatalog';
 import type { StorefrontCheckoutConfig } from '@/lib/shop/storefrontCheckout';
+import type { StorefrontImageFallback } from '@/lib/shop/storefrontTheme';
 import '@/styles/components/storefront-cart.css';
 
 type Props = {
@@ -11,6 +12,7 @@ type Props = {
   shopName: string;
   themeId: StorefrontCartThemeId;
   priceFormat?: StorefrontPriceFormat;
+  imageFallback?: StorefrontImageFallback;
   exploreHref: string;
   maxQuantity?: number;
   checkout: StorefrontCheckoutConfig;
@@ -23,6 +25,7 @@ const {
   shopName,
   themeId,
   priceFormat = 'gbp',
+  imageFallback = 'initial',
   exploreHref,
   maxQuantity,
   checkout,
@@ -37,6 +40,7 @@ const {
   shopName={shopName}
   themeId={themeId}
   priceFormat={priceFormat}
+  imageFallback={imageFallback}
   exploreHref={exploreHref}
   maxQuantity={maxQuantity}
   checkout={checkout}

@@ -6504,11 +6504,11 @@ html[data-theme='blackline']::view-transition-new(root) {
   list-style: none;
 }
 
-[data-theme='blackline'] .bl-checkout-lines li {
-  display: grid;
-  gap: 0.25rem;
+[data-theme='blackline'] .bl-checkout-lines li,
+[data-theme='blackline'] .bl-checkout-lines .checkout-line {
+  /* Layout owned by shared checkout.css (.checkout-line) */
   padding-bottom: var(--bl-space-4);
-  border-bottom: 1px solid var(--theme-line);
+  border-bottom: 1px solid var(--theme-line, var(--checkout-border));
 }
 
 [data-theme='blackline'] .bl-checkout-error {

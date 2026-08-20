@@ -1,4 +1,5 @@
 import { useEffect, useId, useRef, useState, useSyncExternalStore, type FormEvent } from 'react';
+import CheckoutOrderLine from '@/components/shop/storefront/CheckoutOrderLine';
 import {
   BLACKLINE_CONFIRMATION_STORAGE_KEY,
   BLACKLINE_MAX_QUANTITY,
@@ -6,12 +7,13 @@ import {
   DEMO_PRODUCT_IDS,
 } from '@/lib/demo/products';
 import { formatDemoPriceGbp } from '@/lib/demo/services';
-import { DEMO_HOURS, DEMO_LOCATION } from '@/lib/demo/site';
+import { DEMO_HOURS, DEMO_LOCATION, DEMO_SHOP_NAME } from '@/lib/demo/site';
 import { navigateDemoPath } from '@/lib/demo/clientNavigate';
 import {
   addBlacklineSessionOrder,
   toConfirmationSnapshot,
 } from '@/lib/demo/blacklineSessionOrders';
+import { cartItemToCheckoutLine } from '@/lib/shop/checkoutLineItem';
 import {
   bindCartNamespace,
   clear,
@@ -20,6 +22,8 @@ import {
   setQuantity,
   subscribe,
 } from '@/lib/shop/cartStore';
+import '@/styles/components/checkout.css';
+import '@/styles/components/storefront.css';
 
 function useCartSnapshot() {
   return useSyncExternalStore(subscribe, getSnapshot, getServerSnapshot);
@@ -145,35 +149,22 @@ export default function DemoCheckout() {
       <aside className="bl-checkout-summary">
         <p className="bl-checkout-kicker">Order summary</p>
         <ul className="bl-checkout-lines">
-          {items.map((item) => (
-            <li key={item.productId}>
-              <span>{item.name}</span>
-              <span>
-                {item.quantity} × {formatDemoPriceGbp(item.pricePence)}
-              </span>
-              <div className="bl-qty" role="group" aria-label={`Quantity for ${item.name}`}>
-                <button
-                  type="button"
-                  className="bl-qty-btn"
-                  aria-label={`Decrease quantity of ${item.name}`}
-                  disabled={submitting}
-                  onClick={() => setQuantity(item.productId, item.quantity - 1)}
-                >
-                  −
-                </button>
-                <span className="bl-qty-value">{item.quantity}</span>
-                <button
-                  type="button"
-                  className="bl-qty-btn"
-                  aria-label={`Increase quantity of ${item.name}`}
-                  disabled={submitting || item.quantity >= BLACKLINE_MAX_QUANTITY}
-                  onClick={() => setQuantity(item.productId, item.quantity + 1)}
-                >
-                  +
-                </button>
-              </div>
-            </li>
-          ))}
+          {items.map((item) => {
+            const line = cartItemToCheckoutLine(item);
+            return (
+              <CheckoutOrderLine
+                key={item.productId}
+                item={line}
+                shopName={DEMO_SHOP_NAME}
+                imageFallback="wordmark"
+                formatPrice={formatDemoPriceGbp}
+                maxQuantity={BLACKLINE_MAX_QUANTITY}
+                disabled={submitting}
+                onDecrease={() => setQuantity(item.productId, item.quantity - 1)}
+                onIncrease={() => setQuantity(item.productId, item.quantity + 1)}
+              />
+            );
+          })}
         </ul>
         <p className="bl-bag-subtotal">
           <span>Subtotal</span>

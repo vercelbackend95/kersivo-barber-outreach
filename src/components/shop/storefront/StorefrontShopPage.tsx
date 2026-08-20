@@ -54,6 +54,9 @@ export type StorefrontShopPageProps = {
   emptyDescription?: string;
   emptyActionHref?: string;
   emptyActionLabel?: string;
+  emptyFilterDescription?: string;
+  showingLabel?: (loaded: number, total: number) => string;
+  loadMoreLabel?: string;
 };
 
 function readLoadedCount(key: string): number {
@@ -73,7 +76,6 @@ export default function StorefrontShopPage({
   selectedCategory: selectedCategoryProp,
   shopKey,
   intro,
-  collectionHeading,
   copy: copyOverrides,
   featuredAddedLabel,
   highlightProductId = null,
@@ -83,6 +85,9 @@ export default function StorefrontShopPage({
   emptyDescription = 'Check back soon or ask the barbershop in person.',
   emptyActionHref,
   emptyActionLabel,
+  emptyFilterDescription = 'Try another category or browse all products.',
+  showingLabel = (loaded, total) => `${loaded} of ${total} products`,
+  loadMoreLabel = 'Show more products',
 }: StorefrontShopPageProps) {
   const copy: StorefrontCopy = { ...DEFAULT_STOREFRONT_COPY, ...copyOverrides };
   const categoryOptions = useMemo(() => storefrontCategoryOptions(products), [products]);
@@ -90,16 +95,11 @@ export default function StorefrontShopPage({
     () => categoryOptions.map((option) => option.value),
     [categoryOptions],
   );
-  const isBlackline = themeId === 'blackline';
   const namespace = shopKey || productHrefPrefix;
 
-  const normalizeQuery = useCallback(
-    (raw: StorefrontQuery): StorefrontQuery => {
-      if (!isBlackline) return raw;
-      return { ...raw, q: '' };
-    },
-    [isBlackline],
-  );
+  const normalizeQuery = useCallback((raw: StorefrontQuery): StorefrontQuery => {
+    return { ...raw, q: '' };
+  }, []);
 
   const [query, setQuery] = useState<StorefrontQuery>(() =>
     normalizeQuery(
@@ -115,7 +115,7 @@ export default function StorefrontShopPage({
   const collectionRef = useRef<HTMLDivElement>(null);
 
   const applyQuery = useCallback(
-    (patch: Partial<StorefrontQuery>, syncUrl: boolean, scrollCollection: boolean) => {
+    (patch: Partial<StorefrontQuery>, syncUrl: boolean) => {
       setQuery((current) => {
         const next = normalizeQuery({
           ...current,
@@ -123,7 +123,7 @@ export default function StorefrontShopPage({
           ...(patch.category !== undefined
             ? { category: parseStorefrontCategoryParam(patch.category, validCategories) }
             : {}),
-          ...(isBlackline ? { q: '' } : {}),
+          q: '',
         });
         if (!syncUrl || typeof window === 'undefined') return next;
         const href = `${window.location.pathname}${storefrontQuerySearch(next)}${window.location.hash}`;
@@ -134,12 +134,8 @@ export default function StorefrontShopPage({
         return next;
       });
       setLoadedCount(STOREFRONT_PAGE_SIZE);
-      if (scrollCollection && !isBlackline && collectionRef.current) {
-        const reduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-        collectionRef.current.scrollIntoView({ block: 'start', behavior: reduced ? 'auto' : 'smooth' });
-      }
     },
-    [isBlackline, normalizeQuery, validCategories],
+    [normalizeQuery, validCategories],
   );
 
   useEffect(() => {
@@ -149,11 +145,11 @@ export default function StorefrontShopPage({
     setQuery(initial);
     setLoadedCount(readLoadedCount(storefrontLoadedStorageKey(namespace, initial)));
 
-    if (isBlackline && params.has('q')) {
+    if (params.has('q')) {
       const cleaned = `${window.location.pathname}${storefrontQuerySearch(initial)}${window.location.hash}`;
       window.history.replaceState(initial, '', cleaned);
     }
-  }, [isBlackline, namespace, normalizeQuery, validCategories]);
+  }, [namespace, normalizeQuery, validCategories]);
 
   useEffect(() => {
     const root = document.querySelector('.shop-page');
@@ -162,7 +158,7 @@ export default function StorefrontShopPage({
 
     const onSetCategory = (event: Event) => {
       const detail = (event as CustomEvent<{ category?: string }>).detail;
-      applyQuery({ category: detail?.category ?? STOREFRONT_ALL_CATEGORY }, true, true);
+      applyQuery({ category: detail?.category ?? STOREFRONT_ALL_CATEGORY }, true);
     };
     const onPop = () => {
       const next = normalizeQuery(
@@ -170,7 +166,7 @@ export default function StorefrontShopPage({
       );
       setQuery(next);
       setLoadedCount(readLoadedCount(storefrontLoadedStorageKey(namespace, next)));
-      if (isBlackline && new URLSearchParams(window.location.search).has('q')) {
+      if (new URLSearchParams(window.location.search).has('q')) {
         const cleaned = `${window.location.pathname}${storefrontQuerySearch(next)}${window.location.hash}`;
         window.history.replaceState(next, '', cleaned);
       }
@@ -182,7 +178,7 @@ export default function StorefrontShopPage({
       window.removeEventListener('kersivo:shop-set-category', onSetCategory);
       window.removeEventListener('popstate', onPop);
     };
-  }, [applyQuery, isBlackline, namespace, normalizeQuery, query.category, validCategories]);
+  }, [applyQuery, namespace, normalizeQuery, query.category, validCategories]);
 
   const featured = featuredProducts(products);
   const matched = collectStorefrontProducts(products, query);
@@ -195,18 +191,16 @@ export default function StorefrontShopPage({
     : page.visible;
   const catalog = visibleProducts(products);
   const hasVisibleProducts = catalog.length > 0;
-  const filtersActive =
-    query.category !== STOREFRONT_ALL_CATEGORY || Boolean(query.q) || query.sort !== 'recommended';
 
   useEffect(() => {
-    if (!isBlackline || typeof window === 'undefined') return;
+    if (typeof window === 'undefined') return;
     const params = new URLSearchParams(window.location.search);
     if (!params.has('q')) return;
     const cleaned = `${window.location.pathname}${storefrontQuerySearch({ ...query, q: '' })}${window.location.hash}`;
     if (`${window.location.pathname}${window.location.search}${window.location.hash}` !== cleaned) {
       window.history.replaceState(query, '', cleaned);
     }
-  }, [isBlackline, query]);
+  }, [query]);
 
   useEffect(() => {
     if (typeof window === 'undefined') return;
@@ -232,7 +226,6 @@ export default function StorefrontShopPage({
           imageFallback={imageFallback}
           shopName={shopName}
           copy={copy}
-          themeId={themeId}
           featuredAddedLabel={featuredAddedLabel}
         />
       ) : null}
@@ -242,46 +235,34 @@ export default function StorefrontShopPage({
           <ShopDiscoveryBar
             options={categoryOptions}
             selected={query.category}
-            onSelect={(next) => applyQuery({ category: next }, true, true)}
-            query={isBlackline ? '' : query.q}
-            onQueryChange={(value) => {
-              if (isBlackline) return;
-              applyQuery({ q: value }, true, false);
-            }}
+            onSelect={(next) => applyQuery({ category: next }, true)}
+            query=""
+            onQueryChange={() => undefined}
             sort={query.sort}
-            onSortChange={(sort: StorefrontSort) => applyQuery({ sort }, true, true)}
+            onSortChange={(sort: StorefrontSort) => applyQuery({ sort }, true)}
             showSort
             count={page.visible.length}
             total={matched.length}
-            heading={isBlackline ? undefined : collectionHeading}
-            searchPlaceholder={isBlackline ? 'Search products' : 'Search'}
-            clearLabel={isBlackline ? 'Clear filters' : 'Clear'}
+            showClear={false}
+            showSearch={false}
+            showSummary={false}
+            variant="compact"
             onClear={() =>
               applyQuery(
                 { category: STOREFRONT_ALL_CATEGORY, q: '', sort: 'recommended', availability: 'all' },
                 true,
-                true,
               )
             }
-            showClear={!isBlackline && filtersActive}
-            showSearch={!isBlackline}
-            showSummary={!isBlackline}
-            variant={isBlackline ? 'compact' : 'default'}
           />
           {matched.length === 0 ? (
             <ShopEmptyState
               title="No products found"
-              description={
-                isBlackline
-                  ? 'Try another category or browse all products.'
-                  : 'Try a different search or browse all products.'
-              }
+              description={emptyFilterDescription}
               actionLabel="Clear filters"
               onAction={() =>
                 applyQuery(
                   { category: STOREFRONT_ALL_CATEGORY, q: '', sort: 'recommended', availability: 'all' },
                   true,
-                  false,
                 )
               }
             />
@@ -296,21 +277,16 @@ export default function StorefrontShopPage({
                 copy={copy}
                 highlightProductId={highlightProductId}
                 itemIdPrefix={itemIdPrefix}
-                filterKey={`${query.category}:${query.q}:${query.sort}`}
-                showAtcIcon={isBlackline}
+                filterKey={`${query.category}:${query.sort}`}
               />
-              <p className="sf-showing">
-                {isBlackline
-                  ? `${page.loadedCount} of ${page.total} products`
-                  : `Showing ${page.loadedCount} of ${page.total}`}
-              </p>
+              <p className="sf-showing">{showingLabel(page.loadedCount, page.total)}</p>
               {page.hasMore ? (
                 <button
                   type="button"
                   className="sf-load-more"
                   onClick={() => setLoadedCount((count) => count + STOREFRONT_PAGE_SIZE)}
                 >
-                  {isBlackline ? 'Show more products' : 'Load more'}
+                  {loadMoreLabel}
                 </button>
               ) : null}
             </>

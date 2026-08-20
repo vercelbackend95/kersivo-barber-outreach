@@ -8,7 +8,6 @@ import { cardImageSizes, type StorefrontCardSharedProps, type StorefrontProduct 
 type StorefrontProductCardProps = StorefrontCardSharedProps & {
   product: StorefrontProduct;
   highlight?: boolean;
-  showAtcIcon?: boolean;
 };
 
 export default function StorefrontProductCard({
@@ -20,7 +19,6 @@ export default function StorefrontProductCard({
   copy,
   priority = false,
   highlight = false,
-  showAtcIcon = false,
 }: StorefrontProductCardProps) {
   const soldOut = !product.available;
   const classes = [
@@ -59,7 +57,6 @@ export default function StorefrontProductCard({
               addedLabel={copy.addedLabel}
               chooseOptionsLabel={copy.chooseOptionsLabel}
               soldOutLabel={copy.soldOutLabel}
-              showIcon={showAtcIcon}
             />
           </div>
         </div>

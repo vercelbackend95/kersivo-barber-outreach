@@ -10,7 +10,7 @@ export type StorefrontCopy = {
 };
 
 export const DEFAULT_STOREFRONT_COPY: StorefrontCopy = {
-  addToBagLabel: 'Add',
+  addToBagLabel: 'Add to bag',
   addedLabel: 'Added',
   viewProductLabel: 'View product',
   chooseOptionsLabel: 'Choose options',

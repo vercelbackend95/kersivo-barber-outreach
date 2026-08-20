@@ -17,12 +17,12 @@ describe('BlacklineConversionCard', () => {
     const { container } = render(<BlacklineConversionCard />);
 
     const cta = screen.getByRole('link', {
-      name: 'Launch my barbershop. Review setup and choose your plan',
+      name: 'Launch my barbershop. Review your setup and go live',
     });
     expect(cta.getAttribute('href')).toBe(OWNER_LAUNCH_HREF);
     expect(cta.getAttribute('href')).toBe('/admin/launch');
     expect(cta.getAttribute('aria-label')).toBe(
-      'Launch my barbershop. Review setup and choose your plan',
+      'Launch my barbershop. Review your setup and go live',
     );
     expect(cta.className).toContain('admin-sidebar-launch-cta');
     expect(cta.className).toContain('admin-sidebar-launch-cta--conversion');
@@ -36,9 +36,11 @@ describe('BlacklineConversionCard', () => {
       'Launch my barbershop',
     );
     expect(cta.querySelector('.admin-sidebar-launch-cta__supporting')?.textContent).toBe(
-      'Review setup & choose your plan',
+      'Review your setup & go live',
     );
 
+    expect(screen.queryByText(/choose your plan/i)).toBeNull();
+    expect(container.textContent).not.toMatch(/choose your plan/i);
     expect(screen.queryByText('MAKE IT YOURS')).toBeNull();
     expect(screen.queryByText('CREATE MY SYSTEM')).toBeNull();
     expect(screen.queryByText('VIEW PLANS')).toBeNull();

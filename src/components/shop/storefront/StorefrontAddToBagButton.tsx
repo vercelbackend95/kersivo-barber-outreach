@@ -1,6 +1,6 @@
+import { ShoppingBag } from '../../lucide-react';
 import { useEffect, useRef, useState } from 'react';
 import type { StorefrontProduct } from '@/lib/shop/storefrontCatalog';
-import { ShoppingBag } from '../../lucide-react';
 
 type StorefrontAddToBagButtonProps = {
   product: Pick<StorefrontProduct, 'id' | 'name' | 'pricePence' | 'image' | 'available' | 'requiresOptions'>;
@@ -11,7 +11,6 @@ type StorefrontAddToBagButtonProps = {
   soldOutLabel: string;
   className?: string;
   quantity?: number;
-  showIcon?: boolean;
 };
 
 const ADDED_HOLD_MS = 1100;
@@ -26,7 +25,6 @@ export default function StorefrontAddToBagButton({
   soldOutLabel,
   className = '',
   quantity = 1,
-  showIcon = false,
 }: StorefrontAddToBagButtonProps) {
   const [added, setAdded] = useState(false);
   const timerRef = useRef<number | null>(null);
@@ -64,7 +62,7 @@ export default function StorefrontAddToBagButton({
   return (
     <button
       type="button"
-      className={`sf-atc ${showIcon ? 'sf-atc--icon' : ''} ${added ? 'is-added' : ''} ${className}`.trim()}
+      className={`sf-atc sf-atc--icon ${added ? 'is-added' : ''} ${className}`.trim()}
       data-add-to-cart=""
       data-product-id={product.id}
       data-product-name={product.name}
@@ -81,7 +79,7 @@ export default function StorefrontAddToBagButton({
       }}
       style={{ transitionDuration: `${MORPH_MS}ms` }}
     >
-      {showIcon ? <ShoppingBag width={16} height={16} aria-hidden="true" /> : null}
+      <ShoppingBag width={16} height={16} aria-hidden="true" />
       <span className="sf-atc-label-full">{visibleLabel}</span>
       <span className="sf-atc-label-short" aria-hidden="true">
         {visibleLabel}

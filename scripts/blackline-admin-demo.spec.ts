@@ -68,11 +68,12 @@ test.describe('BLACKLINE owner dashboard', () => {
     await expect(conversionCta).toHaveAttribute('href', '/admin/launch');
     await expect(conversionCta).toHaveAttribute(
       'aria-label',
-      'Launch my barbershop. Review setup and choose your plan',
+      'Launch my barbershop. Review your setup and go live',
     );
     await expect(conversionCta).toContainText('Launch my barbershop');
     await expect(conversionCta).toContainText('YOUR SHOP IS READY');
-    await expect(conversionCta).toContainText('Review setup & choose your plan');
+    await expect(conversionCta).toContainText('Review your setup & go live');
+    await expect(conversionCta).not.toContainText(/choose your plan/i);
     await expect(conversionCta.locator('.admin-sidebar-launch-cta__icon svg')).toHaveCount(1);
     await expect(conversionCta.locator('.admin-sidebar-launch-cta__checklist')).toHaveCount(0);
     await expect(page.getByText('MAKE IT YOURS')).toHaveCount(0);
@@ -123,10 +124,11 @@ test.describe('BLACKLINE owner dashboard', () => {
     await expect(drawerCta).toHaveAttribute('href', '/admin/launch');
     await expect(drawerCta).toHaveAttribute(
       'aria-label',
-      'Launch my barbershop. Review setup and choose your plan',
+      'Launch my barbershop. Review your setup and go live',
     );
     await expect(drawerCta).toContainText('Launch my barbershop');
-    await expect(drawerCta).toContainText('Review setup & choose your plan');
+    await expect(drawerCta).toContainText('Review your setup & go live');
+    await expect(drawerCta).not.toContainText(/choose your plan/i);
     await expect(drawerCta.getByText('Sample data')).toHaveCount(0);
     await expect(drawerCta.getByText(/next task|% complete|checklist/i)).toHaveCount(0);
     await expect(drawerCta.locator('.admin-sidebar-launch-cta__checklist')).toHaveCount(0);

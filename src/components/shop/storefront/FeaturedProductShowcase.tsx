@@ -12,8 +12,6 @@ import {
 } from 'react';
 import { CATEGORY_LABELS } from '@/lib/shop/productPresentation';
 import { formatStorefrontPrice, type StorefrontProduct } from '@/lib/shop/storefrontCatalog';
-import type { StorefrontThemeId } from '@/lib/shop/storefrontTheme';
-import { ArrowRight } from '../../lucide-react';
 import ProductAvailabilityBadge from './ProductAvailabilityBadge';
 import ProductMediaFallback, { type ProductMediaPresentation } from './ProductMediaFallback';
 import StorefrontAddToBagButton from './StorefrontAddToBagButton';
@@ -22,7 +20,6 @@ import { cardImageSizes, type StorefrontCardSharedProps } from './types';
 type FeaturedProductShowcaseProps = Omit<StorefrontCardSharedProps, 'href'> & {
   products: StorefrontProduct[];
   productHref: (id: string) => string;
-  themeId?: StorefrontThemeId;
   featuredAddedLabel?: string;
 };
 
@@ -69,7 +66,6 @@ function FeaturedStory({
   copy,
   index,
   total,
-  showIcon,
   presentation = 'default',
   headingId,
   interactive = true,
@@ -77,7 +73,6 @@ function FeaturedStory({
   product: StorefrontProduct;
   index: number;
   total: number;
-  showIcon?: boolean;
   presentation?: ProductMediaPresentation;
   headingId?: string;
   interactive?: boolean;
@@ -133,7 +128,6 @@ function FeaturedStory({
             addedLabel={copy.addedLabel}
             chooseOptionsLabel={copy.chooseOptionsLabel}
             soldOutLabel={copy.soldOutLabel}
-            showIcon={showIcon}
           />
         </div>
       </div>
@@ -212,7 +206,7 @@ function FeaturedProgressNav({
   );
 }
 
-function BlacklineFeaturedCarousel({
+function StorefrontFeaturedCarousel({
   products,
   productHref,
   priceFormat,
@@ -542,7 +536,6 @@ function BlacklineFeaturedCarousel({
           copy={copy}
           index={0}
           total={1}
-          showIcon
           presentation="featured-product"
         />
       </section>
@@ -588,7 +581,6 @@ function BlacklineFeaturedCarousel({
                   copy={copy}
                   index={slide.logical}
                   total={total}
-                  showIcon
                   presentation="featured-product"
                   headingId={slide.headingId}
                   interactive={isActiveReal}
@@ -617,128 +609,19 @@ export default function FeaturedProductShowcase({
   imageFallback,
   shopName,
   copy,
-  themeId = 'kersivo',
   featuredAddedLabel,
 }: FeaturedProductShowcaseProps) {
-  const labelId = useId();
-  const [index, setIndex] = useState(0);
-  const total = products.length;
-  const touchStartX = useRef<number | null>(null);
-  const isBlackline = themeId === 'blackline';
+  if (products.length === 0) return null;
   const featuredCopy = featuredAddedLabel ? { ...copy, addedLabel: featuredAddedLabel } : copy;
 
-  useEffect(() => {
-    if (index >= total) setIndex(0);
-  }, [index, total]);
-
-  if (total === 0) return null;
-
-  if (isBlackline) {
-    return (
-      <BlacklineFeaturedCarousel
-        products={products}
-        productHref={productHref}
-        priceFormat={priceFormat}
-        imageFallback={imageFallback}
-        shopName={shopName}
-        copy={featuredCopy}
-      />
-    );
-  }
-
-  const go = (direction: -1 | 1) => {
-    setIndex((current) => (current + direction + total) % total);
-  };
-
-  const current = products[Math.min(index, total - 1)]!;
-
-  const controls =
-    total > 1 ? (
-      <div className="sf-featured-rail-controls sf-spotlight-controls">
-        <button type="button" className="sf-rail-btn" aria-label="Previous featured product" onClick={() => go(-1)}>
-          <ArrowRight width={16} height={16} aria-hidden="true" style={{ transform: 'scaleX(-1)' }} />
-        </button>
-        <button type="button" className="sf-rail-btn" aria-label="Next featured product" onClick={() => go(1)}>
-          <ArrowRight width={16} height={16} aria-hidden="true" />
-        </button>
-      </div>
-    ) : null;
-
-  const onTouchStart = (event: TouchEvent) => {
-    touchStartX.current = event.changedTouches[0]?.clientX ?? null;
-  };
-  const onTouchEnd = (event: TouchEvent) => {
-    if (touchStartX.current == null || total < 2) return;
-    const endX = event.changedTouches[0]?.clientX ?? touchStartX.current;
-    const delta = endX - touchStartX.current;
-    touchStartX.current = null;
-    if (Math.abs(delta) < SWIPE_THRESHOLD) return;
-    go(delta > 0 ? -1 : 1);
-  };
-
-  if (total === 1) {
-    return (
-      <section className="sf-featured sf-spotlight" aria-label="Featured product">
-        <FeaturedStory
-          product={current}
-          href={productHref(current.id)}
-          priceFormat={priceFormat}
-          imageFallback={imageFallback}
-          shopName={shopName}
-          copy={copy}
-          index={0}
-          total={1}
-        />
-      </section>
-    );
-  }
-
   return (
-    <section
-      className="sf-featured sf-spotlight"
-      aria-labelledby={labelId}
-      onTouchStart={onTouchStart}
-      onTouchEnd={onTouchEnd}
-    >
-      <div className="sf-featured-rail-head">
-        <h2 className="sf-featured-rail-title" id={labelId}>
-          Featured
-        </h2>
-        {controls}
-      </div>
-      <div className="sf-spotlight-desktop">
-        <FeaturedStory
-          product={current}
-          href={productHref(current.id)}
-          priceFormat={priceFormat}
-          imageFallback={imageFallback}
-          shopName={shopName}
-          copy={copy}
-          index={index}
-          total={total}
-        />
-      </div>
-      <div
-        className="sf-spotlight-mobile"
-        tabIndex={0}
-        role="region"
-        aria-label="Featured products"
-        style={{ scrollBehavior: prefersReducedMotion() ? 'auto' : 'smooth' }}
-      >
-        {products.map((product, productIndex) => (
-          <FeaturedStory
-            key={product.id}
-            product={product}
-            href={productHref(product.id)}
-            priceFormat={priceFormat}
-            imageFallback={imageFallback}
-            shopName={shopName}
-            copy={copy}
-            index={productIndex}
-            total={total}
-          />
-        ))}
-      </div>
-    </section>
+    <StorefrontFeaturedCarousel
+      products={products}
+      productHref={productHref}
+      priceFormat={priceFormat}
+      imageFallback={imageFallback}
+      shopName={shopName}
+      copy={featuredCopy}
+    />
   );
 }

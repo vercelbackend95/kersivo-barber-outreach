@@ -16,6 +16,7 @@ import {
   type CartItem,
 } from '@/lib/shop/cartStore';
 import { formatStorefrontPrice, type StorefrontPriceFormat } from '@/lib/shop/storefrontCatalog';
+import type { StorefrontImageFallback } from '@/lib/shop/storefrontTheme';
 import ProductMediaFallback from '@/components/shop/storefront/ProductMediaFallback';
 import {
   emptyBagCheckoutMessage,
@@ -44,6 +45,7 @@ export type StorefrontCartDrawerProps = {
   shopName: string;
   themeId: StorefrontCartThemeId;
   priceFormat?: StorefrontPriceFormat;
+  imageFallback?: StorefrontImageFallback;
   exploreHref: string;
   maxQuantity?: number;
   checkout: StorefrontCheckoutConfig;
@@ -115,6 +117,7 @@ export default function StorefrontCartDrawer({
   shopName,
   themeId,
   priceFormat = 'gbp',
+  imageFallback = 'initial',
   exploreHref,
   maxQuantity = CART_MAX_QUANTITY,
   checkout,
@@ -586,7 +589,7 @@ export default function StorefrontCartDrawer({
                             image={{ src: item.imageUrl ?? '', alt: item.name }}
                             name={item.name}
                             shopName={shopName}
-                            fallback={themeId === 'blackline' ? 'wordmark' : 'initial'}
+                            fallback={imageFallback}
                             decorative
                           />
                           <div className="sf-cart-line-copy">

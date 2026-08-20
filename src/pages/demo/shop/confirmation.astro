@@ -2,6 +2,7 @@
 import DemoLayout from '@/layouts/DemoLayout.astro';
 import DemoConfirmation from '@/components/demo/DemoConfirmation';
 import { DEMO_SHOP_NAME } from '@/lib/demo/site';
+import '@/styles/components/checkout.css';
 ---
 
 <DemoLayout
@@ -9,13 +10,17 @@ import { DEMO_SHOP_NAME } from '@/lib/demo/site';
   description="A fictional Blackline demo purchase. No payment was taken."
   canonicalPath="/demo/shop/confirmation"
 >
-  <section class="bl-checkout" data-surface="light" aria-labelledby="blackline-confirm-heading">
+  <section
+    class="checkout-surface bl-checkout"
+    data-checkout-surface
+    aria-labelledby="blackline-confirm-heading"
+  >
     <div class="bl-container">
       <header class="bl-checkout-hero">
         <p class="bl-edit-intro-eyebrow">Demo Order Complete</p>
         <h1 class="bl-checkout-heading" id="blackline-confirm-heading">Ready for collection.</h1>
         <p class="bl-page-safety">
-          This was a fictional BLACKLINE demo purchase. No payment was taken and no real order was placed.
+          This was a fictional {DEMO_SHOP_NAME} demo purchase. No payment was taken and no real order was placed.
         </p>
       </header>
       <DemoConfirmation client:load />

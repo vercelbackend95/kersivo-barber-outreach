@@ -1015,7 +1015,9 @@ export default function LaunchWizard() {
             </div>
 
             <div className="admin-onboarding__summary-card admin-launch__review">
-              <p className="admin-launch__card-heading">Your plan</p>
+              <p className="admin-launch__card-heading">
+                {ENABLE_SETUP_FEES ? 'Your plan' : 'Your subscription'}
+              </p>
               {ENABLE_SETUP_FEES && plan ? (
                 <>
                   <div className="admin-launch__review-row">
@@ -1105,7 +1107,7 @@ export default function LaunchWizard() {
                 onClick={goBackFromReview}
                 disabled={paying || savingWorkspace}
               >
-                {isGuest ? 'Back' : ENABLE_SETUP_FEES ? 'Change plan' : 'Back to KERSIVO'}
+                {isGuest ? 'Back' : ENABLE_SETUP_FEES ? 'Back' : 'Back to KERSIVO'}
               </button>
               <button
                 type="button"
@@ -1129,15 +1131,15 @@ export default function LaunchWizard() {
                 type="button"
                 className="btn btn--secondary btn--lg"
                 onClick={() => {
-                  if (!ENABLE_SETUP_FEES || planFromQuery) {
-                    window.location.assign('/#pricing');
+                  if (ENABLE_SETUP_FEES && !planFromQuery) {
+                    setGuestPhase('choose');
+                    setWorkspaceError(null);
                     return;
                   }
-                  setGuestPhase('choose');
-                  setWorkspaceError(null);
+                  window.location.assign(isGuest ? '/' : '/admin');
                 }}
               >
-                {!ENABLE_SETUP_FEES || planFromQuery ? 'Back to pricing' : 'Back'}
+                {ENABLE_SETUP_FEES && !planFromQuery ? 'Back' : 'Back to KERSIVO'}
               </button>
               <button
                 type="button"

@@ -35,7 +35,10 @@ describe('BLACKLINE shop pages', () => {
     expect(shopPage).not.toContain('DemoShopHero');
     expect(shopPage).not.toContain('DemoShopCollection');
     expect(shopPage).not.toContain('BLACKLINE_PRODUCT_LAYOUT');
-    expect(checkout).toContain('Collect at Blackline.');
+    expect(checkout).toContain('Collect at {DEMO_SHOP_NAME}');
+    expect(checkout).toContain('checkout-surface');
+    expect(checkout).not.toContain('data-surface="light"');
+    expect(checkout).not.toContain('Collect at Blackline.');
     expect(checkout).toContain('No payment will be taken and no real fulfilment will begin.');
     expect(confirmation).toContain('Ready for collection.');
     expect(confirmation).toContain('No payment was taken and no real order was placed.');
@@ -48,6 +51,7 @@ describe('BLACKLINE shop pages', () => {
     expect(layout).toContain('__KERSIVO_CART_NAMESPACE__');
     expect(layout).toContain('CartDrawerMount');
     expect(layout).toContain('themeId="blackline"');
+    expect(layout).toContain('imageFallback="wordmark"');
     expect(layout).toContain('/demo/shop/checkout');
     expect(layout).not.toContain('DemoBagDrawer');
     expect(layout).not.toContain("shop.css");
@@ -56,6 +60,13 @@ describe('BLACKLINE shop pages', () => {
     expect(readFileSync(new URL('../../styles/components/storefront.css', import.meta.url), 'utf8')).toContain(
       '--sf-accent: var(--theme-accent, var(--bl-cobalt, #315ef5));',
     );
+  });
+
+  it('keeps shared shop page free of theme structural forks', () => {
+    expect(storefrontPage).not.toContain('isBlackline');
+    expect(storefrontPage).not.toContain("themeId === 'blackline'");
+    expect(storefrontPage).toContain('variant="compact"');
+    expect(storefrontPage).toContain('showSearch={false}');
   });
 
   it('loads the catalog from the BLACKLINE loader rather than another tenant', () => {

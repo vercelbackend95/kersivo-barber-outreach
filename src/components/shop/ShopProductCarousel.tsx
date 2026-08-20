@@ -25,7 +25,7 @@ export function ShopProductCarousel({
     className,
     showControls,
     previewMode,
-    variant: 'kersivo',
+    variant: 'legacy',
     density: 'compact',
     showAction: previewMode ? 'none' : 'add-to-cart',
     showProgress: false,

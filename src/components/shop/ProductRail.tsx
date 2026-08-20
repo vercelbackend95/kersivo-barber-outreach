@@ -7,13 +7,18 @@ import StorefrontProductCard from '@/components/shop/storefront/StorefrontProduc
 import { CATEGORY_LABELS, type CarouselProduct } from '@/lib/shop/carouselProducts';
 import { destroyProductRails, initProductRails } from '@/lib/shop/initProductRail';
 import { formatGbp } from '@/lib/shop/money';
-import { toStorefrontProduct, type StorefrontProduct } from '@/lib/shop/storefrontCatalog';
+import {
+  toStorefrontProduct,
+  type StorefrontPriceFormat,
+  type StorefrontProduct,
+} from '@/lib/shop/storefrontCatalog';
+import type { StorefrontImageFallback } from '@/lib/shop/storefrontTheme';
 import { cn } from '@/lib/utils';
 import '@/styles/components/productRail.css';
 import '@/styles/components/shop.css';
 import '@/styles/components/storefront.css';
 
-export type ProductRailVariant = 'kersivo' | 'blackline' | 'inherit';
+export type ProductRailVariant = 'storefront' | 'legacy' | 'inherit';
 export type ProductRailDensity = 'editorial' | 'compact';
 export type ProductRailAction = 'none' | 'add-to-cart';
 
@@ -32,6 +37,8 @@ export type ProductRailProps = {
   ariaLabel?: string;
   fallbackBrandMark?: string;
   shopName?: string;
+  imageFallback?: StorefrontImageFallback;
+  priceFormat?: StorefrontPriceFormat;
   addToBagLabel?: string;
   addedLabel?: string;
   chooseOptionsLabel?: string;
@@ -80,7 +87,7 @@ export function ProductRail({
   className,
   productHrefBase,
   previewMode = false,
-  variant = 'kersivo',
+  variant = 'legacy',
   showCategory = true,
   showPrice = true,
   showAction,
@@ -90,6 +97,8 @@ export function ProductRail({
   ariaLabel = 'Featured products',
   fallbackBrandMark = 'BL',
   shopName = 'Shop',
+  imageFallback = 'initial',
+  priceFormat = 'gbp',
   addToBagLabel = 'Add to bag',
   addedLabel = 'Added',
   chooseOptionsLabel = 'Choose options',
@@ -101,9 +110,8 @@ export function ProductRail({
     showAction ?? (previewMode || density === 'editorial' ? 'none' : 'add-to-cart');
   const displayProducts = previewMode ? products.slice(0, 10) : products;
   const total = displayProducts.length;
-  const imageFallback = variant === 'blackline' ? 'wordmark' : 'initial';
   const showHeader = (showControls || showProgress) && total > 0;
-  const useStorefrontCards = variant === 'blackline' && action === 'add-to-cart';
+  const useStorefrontCards = variant === 'storefront' && action === 'add-to-cart';
 
   useEffect(() => {
     const root = rootRef.current;
@@ -117,13 +125,7 @@ export function ProductRail({
   return (
     <div
       ref={rootRef}
-      className={cn(
-        'product-rail',
-        'shop6__carousel',
-        `product-rail--${density}`,
-        variant === 'blackline' && 'sf-shop--blackline',
-        className,
-      )}
+      className={cn('product-rail', 'shop6__carousel', `product-rail--${density}`, className)}
       data-product-rail-root
       data-shop6-carousel-root
       data-product-rail-variant={variant}
@@ -205,8 +207,8 @@ export function ProductRail({
                   <StorefrontProductCard
                     product={carouselProductToStorefront(product)}
                     href={href}
-                    priceFormat="demo"
-                    imageFallback="wordmark"
+                    priceFormat={priceFormat}
+                    imageFallback={imageFallback}
                     shopName={shopName}
                     copy={{
                       addToBagLabel,
@@ -216,7 +218,6 @@ export function ProductRail({
                       viewProductLabel,
                     }}
                     priority={index < 2}
-                    showAtcIcon
                   />
                 </li>
               );

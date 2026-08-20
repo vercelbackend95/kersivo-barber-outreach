@@ -1,11 +1,16 @@
 import { useEffect, useMemo, useState } from 'react';
+import CheckoutOrderLine from '@/components/shop/storefront/CheckoutOrderLine';
 import { BLACKLINE_CONFIRMATION_STORAGE_KEY } from '@/lib/demo/products';
 import { formatDemoPriceGbp } from '@/lib/demo/services';
+import { DEMO_SHOP_NAME } from '@/lib/demo/site';
 import { buildBlacklineRetailHref } from '@/lib/admin/demoConfig';
 import {
   getBlacklineSessionOrder,
   type BlacklineConfirmationSnapshot,
 } from '@/lib/demo/blacklineSessionOrders';
+import { normalizeCheckoutMedia, type CheckoutLineItem } from '@/lib/shop/checkoutLineItem';
+import '@/styles/components/checkout.css';
+import '@/styles/components/storefront.css';
 
 const DASHBOARD_CTA = 'See your order in the dashboard';
 
@@ -41,6 +46,21 @@ function readConfirmationSnapshot(): BlacklineConfirmationSnapshot | null {
   } catch {
     return null;
   }
+}
+
+function toCheckoutLine(item: BlacklineConfirmationSnapshot['items'][number]): CheckoutLineItem {
+  const media = normalizeCheckoutMedia({
+    imageUrl: item.imageUrl,
+    name: item.name,
+  });
+  return {
+    productId: item.productId,
+    name: item.name,
+    imageUrl: media.src || undefined,
+    imageAlt: media.alt,
+    quantity: item.quantity,
+    unitPrice: item.unitPricePence,
+  };
 }
 
 export default function DemoConfirmation() {
@@ -86,13 +106,14 @@ export default function DemoConfirmation() {
       ) : null}
       <ul className="bl-checkout-lines">
         {order.items.map((item) => (
-          <li key={`${item.productId}-${item.quantity}`}>
-            <span>{item.name}</span>
-            <span>
-              {item.quantity} × {formatDemoPriceGbp(item.unitPricePence)}
-            </span>
-            <span>{formatDemoPriceGbp(item.lineTotalPence)}</span>
-          </li>
+          <CheckoutOrderLine
+            key={`${item.productId}-${item.quantity}`}
+            item={toCheckoutLine(item)}
+            shopName={DEMO_SHOP_NAME}
+            imageFallback="wordmark"
+            formatPrice={formatDemoPriceGbp}
+            showLineTotal
+          />
         ))}
       </ul>
       <p className="bl-bag-subtotal">

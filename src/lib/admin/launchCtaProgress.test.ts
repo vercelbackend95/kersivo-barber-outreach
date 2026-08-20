@@ -29,6 +29,8 @@ describe('buildLaunchProgress', () => {
     expect(full.complete).toBe(true);
     expect(full.steps.every((s) => s.done)).toBe(true);
     expect(full.nextHref).toBeNull();
+    // Ready status is checklist-only — no selected SaaS plan required.
+    expect(JSON.stringify(full)).not.toMatch(/plan/i);
   });
 
   it('marks first barber when at least one team profile exists', () => {

@@ -14,7 +14,6 @@ type ProductGridProps = {
   highlightProductId?: string | null;
   itemIdPrefix?: string;
   filterKey?: string;
-  showAtcIcon?: boolean;
 };
 
 export default function ProductGrid({
@@ -27,7 +26,6 @@ export default function ProductGrid({
   highlightProductId,
   itemIdPrefix,
   filterKey,
-  showAtcIcon = false,
 }: ProductGridProps) {
   return (
     <ul className="sf-grid" aria-label="Products" data-filter-key={filterKey || undefined} key={filterKey}>
@@ -50,7 +48,6 @@ export default function ProductGrid({
             copy={copy}
             priority={index < 2}
             highlight={highlightProductId === product.id}
-            showAtcIcon={showAtcIcon}
           />
         </li>
       ))}

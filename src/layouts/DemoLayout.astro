@@ -95,6 +95,7 @@ const currentPath = Astro.url.pathname;
           shopName={DEMO_SHOP_NAME}
           themeId="blackline"
           priceFormat="demo"
+          imageFallback="wordmark"
           exploreHref="/demo/shop"
           checkout={{ type: 'href', href: '/demo/shop/checkout' }}
           allowedProductIds={[...DEMO_PRODUCT_IDS]}

@@ -42,18 +42,19 @@ const products: CarouselProduct[] = [
 ];
 
 describe('ProductRail', () => {
-  it('links BLACKLINE products through productHrefBase and never renders empty img src', () => {
+  it('links products through productHrefBase and never renders empty img src', () => {
     const { container, getByRole } = render(
       <ProductRail
         products={products}
         productHrefBase="/demo/shop"
-        variant="blackline"
+        variant="legacy"
         density="editorial"
         showAction="none"
         showControls
         showProgress
         fallbackBrandMark="BL"
-        ariaLabel="Featured Blackline products"
+        imageFallback="wordmark"
+        ariaLabel="Featured products"
       />,
     );
 
@@ -75,7 +76,7 @@ describe('ProductRail', () => {
 
   it('keeps preview mode pointing at /shop without nested cart actions', () => {
     const { getAllByRole, queryByRole } = render(
-      <ProductRail products={products} previewMode variant="kersivo" showControls={false} />,
+      <ProductRail products={products} previewMode variant="legacy" showControls={false} />,
     );
 
     for (const link of getAllByRole('link', { name: /view /i })) {
@@ -90,7 +91,7 @@ describe('ProductRail', () => {
         products={products}
         showControls
         showProgress
-        variant="blackline"
+        variant="storefront"
         density="editorial"
         showAction="none"
       />,
@@ -101,16 +102,18 @@ describe('ProductRail', () => {
     expect(container.querySelector('[data-product-rail-status]')?.textContent).toMatch(/01 \/ 04/);
   });
 
-  it('renders StorefrontProductCard with bag icon for BLACKLINE ATC', () => {
+  it('renders StorefrontProductCard with bag icon for storefront ATC', () => {
     const { container, getByRole, queryByText } = render(
       <ProductRail
         products={products.slice(0, 2)}
         productHrefBase="/demo/shop"
-        variant="blackline"
+        variant="storefront"
         density="editorial"
         showAction="add-to-cart"
         addToBagLabel="Add to bag"
         shopName="BLACKLINE"
+        imageFallback="wordmark"
+        priceFormat="demo"
       />,
     );
 

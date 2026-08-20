@@ -2,6 +2,7 @@
 import DemoLayout from '@/layouts/DemoLayout.astro';
 import DemoCheckout from '@/components/demo/DemoCheckout';
 import { DEMO_SHOP_NAME } from '@/lib/demo/site';
+import '@/styles/components/checkout.css';
 ---
 
 <DemoLayout
@@ -9,11 +10,17 @@ import { DEMO_SHOP_NAME } from '@/lib/demo/site';
   description="Review a fictional Blackline collection order. No payment will be taken."
   canonicalPath="/demo/shop/checkout"
 >
-  <section class="bl-checkout" data-surface="light" aria-labelledby="blackline-checkout-heading">
+  <section
+    class="checkout-surface bl-checkout"
+    data-checkout-surface
+    aria-labelledby="blackline-checkout-heading"
+  >
     <div class="bl-container">
       <header class="bl-checkout-hero">
         <p class="bl-edit-intro-eyebrow">Demo Checkout</p>
-        <h1 class="bl-checkout-heading" id="blackline-checkout-heading">Collect at Blackline.</h1>
+        <h1 class="bl-checkout-heading" id="blackline-checkout-heading">
+          Collect at {DEMO_SHOP_NAME}.
+        </h1>
         <p class="bl-checkout-lede">Review your demo order and complete the fictional collection journey.</p>
         <p class="bl-page-safety">No payment will be taken and no real fulfilment will begin.</p>
       </header>

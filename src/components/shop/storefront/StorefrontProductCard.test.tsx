@@ -36,16 +36,18 @@ describe('StorefrontProductCard', () => {
       />,
     );
 
-    const button = screen.getByRole('button', { name: /add: matte pomade/i });
+    const button = screen.getByRole('button', { name: /add to bag: matte pomade/i });
     expect(button.hasAttribute('data-add-to-cart')).toBe(true);
     expect(button.getAttribute('data-product-id')).toBe('prod-1');
     expect(button.getAttribute('data-product-name')).toBe('Matte Pomade');
     expect(button.getAttribute('data-product-price-pence')).toBe('1800');
     expect(button.getAttribute('data-product-image-url')).toBe('/images/demoshop/matte-pomade.png');
+    expect(button.classList.contains('sf-atc--icon')).toBe(true);
+    expect(button.querySelector('svg')).toBeTruthy();
     expect(container.querySelector('a .sf-atc, a button')).toBeNull();
     expect(screen.queryByText('Featured')).toBeNull();
-    expect(container.querySelector('.sf-atc-label-full')?.textContent).toBe('Add');
-    expect(container.querySelector('.sf-atc-label-short')?.textContent).toBe('Add');
+    expect(container.querySelector('.sf-atc-label-full')?.textContent).toBe('Add to bag');
+    expect(container.querySelector('.sf-atc-label-short')?.textContent).toBe('Add to bag');
     expect(screen.getByText('£18.00')).toBeTruthy();
   });
 
@@ -114,8 +116,8 @@ describe('StorefrontProductCard', () => {
         copy={DEFAULT_STOREFRONT_COPY}
       />,
     );
-    fireEvent.click(screen.getByRole('button', { name: /add: matte pomade/i }));
-    const button = screen.getByRole('button', { name: /add: matte pomade/i });
+    fireEvent.click(screen.getByRole('button', { name: /add to bag: matte pomade/i }));
+    const button = screen.getByRole('button', { name: /add to bag: matte pomade/i });
     expect(button.querySelector('.sf-atc-label-full')?.textContent).toBe('Added');
     expect(button.querySelector('.sf-atc-label-short')?.textContent).toBe('Added');
   });
