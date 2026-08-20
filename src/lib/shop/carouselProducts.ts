@@ -9,6 +9,8 @@ export type CarouselProduct = {
   category: string;
   pricePence: number;
   imageUrl: string | null;
+  available?: boolean;
+  requiresOptions?: boolean;
 };
 
 export const CATEGORY_LABELS: Record<string, string> = { ...SHOP_FILTER_LABELS };

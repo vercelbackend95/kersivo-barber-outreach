@@ -29,13 +29,20 @@ test.describe('BLACKLINE service menu', () => {
     await expect(page.locator('.bl-service-group')).toHaveCount(4);
     await expect(page.locator('.bl-service-group[hidden]')).toHaveCount(0);
     await expect(page.locator('.bl-service-item')).toHaveCount(18);
-    await expect(page.getByRole('heading', { name: /Cuts & Fades/i })).toBeVisible();
-    await expect(page.getByRole('heading', { name: /Beard & Shave/i })).toBeVisible();
-    await expect(page.getByRole('heading', { name: /Hair & Beard Combos/i })).toBeVisible();
-    await expect(page.getByRole('heading', { name: /Grooming & Care/i })).toBeVisible();
+    await expect(page.getByRole('heading', { name: /^Cuts & Fades$/i })).toBeVisible();
+    await expect(page.getByRole('heading', { name: /^Beard & Shave$/i })).toBeVisible();
+    await expect(page.getByRole('heading', { name: /^Hair & Beard Combos$/i })).toBeVisible();
+    await expect(page.getByRole('heading', { name: /^Grooming & Care$/i })).toBeVisible();
+    await expect(page.locator('.bl-service-group-name')).toHaveCount(4);
+    await expect(page.locator('.bl-service-group-index')).toHaveCount(0);
+    await expect(page.locator('.bl-services-viewing-index, [data-bl-viewing-index]')).toHaveCount(0);
+    for (const heading of await page.locator('.bl-service-group-name').all()) {
+      await expect(heading).not.toHaveText(/^\d/);
+    }
+    await expect(page.locator('.bl-service-index').first()).toBeVisible();
     await expect(page.getByRole('complementary', { name: 'Current service category' })).toBeVisible();
     await expect(page.locator('[data-bl-viewing-name]')).toHaveText(/Cuts & Fades/i);
-    await expect(page.locator('[data-bl-viewing-index]')).toHaveText(/01\s*\/\s*04/);
+    await expect(page.locator('[data-bl-viewing-meta]')).toBeVisible();
     await expect(page).not.toHaveURL(/category=/);
   });
 
@@ -45,15 +52,13 @@ test.describe('BLACKLINE service menu', () => {
 
     await page.locator('#beard-and-shave').scrollIntoViewIfNeeded();
     await expect(page.locator('[data-bl-viewing-name]')).toHaveText(/Beard & Shave/i);
-    await expect(page.locator('[data-bl-viewing-index]')).toHaveText(/02\s*\/\s*04/);
+    await expect(page.locator('[data-bl-viewing-meta]')).toContainText(/service/i);
 
     await page.locator('#hair-and-beard-combos').scrollIntoViewIfNeeded();
     await expect(page.locator('[data-bl-viewing-name]')).toHaveText(/Hair & Beard Combos/i);
-    await expect(page.locator('[data-bl-viewing-index]')).toHaveText(/03\s*\/\s*04/);
 
     await page.locator('#grooming-and-care').scrollIntoViewIfNeeded();
     await expect(page.locator('[data-bl-viewing-name]')).toHaveText(/Grooming & Care/i);
-    await expect(page.locator('[data-bl-viewing-index]')).toHaveText(/04\s*\/\s*04/);
 
     await page.locator('.bl-services-close').scrollIntoViewIfNeeded();
     await expect(page.locator('[data-bl-viewing-name]')).toHaveText(/Grooming & Care/i);
@@ -78,6 +83,99 @@ test.describe('BLACKLINE service menu', () => {
     await page.locator('.bl-service-item[data-service-slug="hot-towel-shave"] .bl-service-book').focus();
     await expect(page.locator('.bl-service-item[data-service-slug="hot-towel-shave"] .bl-service-book')).toBeFocused();
     await expect(page.locator('.bl-service-group[data-category-slug="cuts-fades"]')).toBeVisible();
+  });
+
+  test('keeps reverse category panels, larger titles, and stable Featured slots', async ({ page }) => {
+    await page.setViewportSize({ width: 1440, height: 900 });
+    await page.goto('/demo/services', { waitUntil: 'domcontentloaded' });
+
+    const metrics = await page.evaluate(() => {
+      const groups = Array.from(document.querySelectorAll('.bl-service-group'));
+      return groups.map((group) => {
+        const head = group.querySelector('.bl-service-group-head') as HTMLElement | null;
+        const name = group.querySelector('.bl-service-group-name') as HTMLElement | null;
+        const count = group.querySelector('.bl-service-group-count') as HTMLElement | null;
+        const service = group.querySelector('.bl-service-name') as HTMLElement | null;
+        const copy = group.querySelector('.bl-service-copy') as HTMLElement | null;
+        if (!head || !name || !count || !service || !copy) return null;
+        const nameBox = name.getBoundingClientRect();
+        const countBox = count.getBoundingClientRect();
+        const serviceBox = service.getBoundingClientRect();
+        const copyBox = copy.getBoundingClientRect();
+        const headStyle = getComputedStyle(head);
+        const overlaps =
+          nameBox.left < countBox.right &&
+          nameBox.right > countBox.left &&
+          nameBox.top < countBox.bottom &&
+          nameBox.bottom > countBox.top;
+        return {
+          categoryLabel: name.textContent?.trim() ?? '',
+          categorySize: Number.parseFloat(getComputedStyle(name).fontSize),
+          serviceSize: Number.parseFloat(getComputedStyle(service).fontSize),
+          overlaps,
+          serviceOverflows: service.scrollWidth > copyBox.width + 1,
+          headBackground: headStyle.backgroundColor,
+          headColor: headStyle.color,
+          headShadow: headStyle.boxShadow,
+        };
+      });
+    });
+
+    expect(metrics.every(Boolean)).toBe(true);
+    for (const row of metrics) {
+      expect(row!.overlaps).toBe(false);
+      expect(row!.categorySize).toBeGreaterThan(row!.serviceSize);
+      expect(row!.serviceOverflows).toBe(false);
+      expect(row!.categoryLabel).not.toMatch(/^\d/);
+      expect(row!.headShadow === 'none' || row!.headShadow === '').toBe(true);
+      expect(row!.headBackground).toMatch(/rgb\(\s*11,\s*12,\s*14\s*\)/);
+    }
+
+    const chipAlignment = await page.evaluate(() => {
+      const chips = Array.from(document.querySelectorAll('.bl-service-chip')) as HTMLElement[];
+      if (chips.length < 2) return { ok: false, reason: 'not-enough-chips', tops: [] as number[], rights: [] as number[] };
+      const tops = chips.map((chip) => Math.round(chip.getBoundingClientRect().top));
+      const rights = chips.map((chip) => Math.round(chip.getBoundingClientRect().right));
+      const firstTop = tops[0]!;
+      const firstRight = rights[0]!;
+      // Featured chips sit in different service rows, so tops differ; right edges should share the slot column.
+      const rightAligned = rights.every((right) => Math.abs(right - firstRight) <= 2);
+      const slots = Array.from(document.querySelectorAll('.bl-service-chip-slot')) as HTMLElement[];
+      const slotRights = slots
+        .filter((slot) => slot.querySelector('.bl-service-chip'))
+        .map((slot) => Math.round(slot.getBoundingClientRect().right));
+      const slotAligned = slotRights.every((right) => Math.abs(right - slotRights[0]!) <= 2);
+      const collisions = chips.some((chip) => {
+        const name = chip.closest('.bl-service-heading')?.querySelector('.bl-service-name');
+        if (!(name instanceof HTMLElement)) return true;
+        const chipBox = chip.getBoundingClientRect();
+        const nameBox = name.getBoundingClientRect();
+        return (
+          nameBox.left < chipBox.right &&
+          nameBox.right > chipBox.left &&
+          nameBox.top < chipBox.bottom &&
+          nameBox.bottom > chipBox.top
+        );
+      });
+      return {
+        ok: rightAligned && slotAligned && !collisions,
+        reason: !slotAligned ? 'slot-misaligned' : collisions ? 'collision' : 'ok',
+        tops,
+        rights: slotRights,
+        firstTop,
+      };
+    });
+    expect(chipAlignment.reason, JSON.stringify(chipAlignment)).toBe('ok');
+    expect(chipAlignment.ok).toBe(true);
+
+    const longService = page.locator('.bl-service-item[data-service-slug="haircut-beard"] .bl-service-name');
+    await expect(longService).toBeVisible();
+    const longOverflow = await longService.evaluate((el) => {
+      const copy = el.closest('.bl-service-copy') as HTMLElement | null;
+      if (!copy) return true;
+      return el.scrollWidth > copy.clientWidth + 1;
+    });
+    expect(longOverflow).toBe(false);
   });
 
   test('turns motion off when the user prefers reduced motion', async ({ page }) => {

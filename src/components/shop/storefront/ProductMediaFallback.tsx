@@ -11,6 +11,8 @@ type ProductMediaFallbackProps = {
   priority?: boolean;
   className?: string;
   decorative?: boolean;
+  /** Wordmark badge text (e.g. BL). Not used for initial-only fallback. */
+  brandMark?: string;
 };
 
 export default function ProductMediaFallback({
@@ -22,6 +24,7 @@ export default function ProductMediaFallback({
   priority = false,
   className = '',
   decorative = false,
+  brandMark = 'BL',
 }: ProductMediaFallbackProps) {
   const src = image.src?.trim() ?? '';
   const [failed, setFailed] = useState(false);
@@ -42,7 +45,7 @@ export default function ProductMediaFallback({
           <>
             <span className="sf-media-stage" aria-hidden="true" />
             <span className="sf-media-mark" aria-hidden="true">
-              BL
+              {brandMark}
             </span>
             <span className="sf-media-initial" aria-hidden="true">
               {initials}

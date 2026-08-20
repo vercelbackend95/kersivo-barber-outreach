@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { overlayBlacklineRetailProducts, seedBlacklineDemoCatalog } from './blacklineShop';
+import { overlayBlacklineRetailProducts, seedBlacklineDemoCatalog, selectBlacklineLandingRailProducts, toBlacklineCarouselProducts } from './blacklineShop';
 import { blacklineShopProductsResponse } from '@/lib/admin/blacklineDemoFixtures/catalog';
 import { BLACKLINE_SHOP_ID, DEMO_PRODUCTS } from './products';
 
@@ -144,5 +144,32 @@ describe('overlayBlacklineRetailProducts', () => {
     );
     expect(products.find((product) => product.id === 'bl-product-shave-cream')?.image.src).toBe('');
     expect(products.every((product) => !product.image.src.startsWith('http://placehold'))).toBe(true);
+  });
+
+  it('maps featured retail products to carousel shape without empty image URLs', () => {
+    const featured = DEMO_PRODUCTS.filter((product) => product.featured);
+    const carousel = toBlacklineCarouselProducts(featured);
+
+    expect(carousel).toHaveLength(4);
+    expect(carousel.map((product) => product.id)).toEqual(featured.map((product) => product.id));
+    for (const product of carousel) {
+      expect(product.imageUrl === null || product.imageUrl.length > 0).toBe(true);
+      expect(product.imageUrl).not.toBe('');
+      expect(product.available).toBe(true);
+      expect(product.requiresOptions).toBe(false);
+    }
+    const stylingSet = carousel.find((product) => product.id === 'bl-product-essential-styling-set');
+    expect(stylingSet?.imageUrl).toBeNull();
+    expect(stylingSet?.pricePence).toBeGreaterThan(0);
+  });
+
+  it('selects ten unique landing rail products with featured first', () => {
+    const active = DEMO_PRODUCTS.filter((product) => product.active);
+    const selected = selectBlacklineLandingRailProducts(active, 10);
+    const featuredIds = active.filter((product) => product.featured).map((product) => product.id);
+
+    expect(selected).toHaveLength(10);
+    expect(new Set(selected.map((product) => product.id)).size).toBe(10);
+    expect(selected.slice(0, featuredIds.length).map((product) => product.id)).toEqual(featuredIds);
   });
 });

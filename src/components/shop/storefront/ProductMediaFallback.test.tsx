@@ -22,4 +22,18 @@ describe('ProductMediaFallback', () => {
     expect(media.querySelector('.sf-media-soon')?.textContent).toBe('Image coming soon');
     expect(media.querySelector('.sf-media-mark')?.textContent).toBe('BL');
   });
+
+  it('uses a configurable brand mark for wordmark fallback', () => {
+    const { getByRole } = render(
+      <ProductMediaFallback
+        image={{ src: '   ', alt: 'Pomade' }}
+        name="Ironclad Pomade"
+        shopName="KERSIVO"
+        fallback="wordmark"
+        brandMark="KV"
+      />,
+    );
+    const media = getByRole('img', { name: /pomade/i });
+    expect(media.querySelector('.sf-media-mark')?.textContent).toBe('KV');
+  });
 });

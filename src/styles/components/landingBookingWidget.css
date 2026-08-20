@@ -22,10 +22,17 @@
   min-width: 0;
   max-width: 100%;
   max-height: clamp(26rem, 64vh, 36rem);
-  overflow-x: hidden;
+  overflow-x: clip;
   overflow-y: auto;
   overscroll-behavior: contain;
   scrollbar-width: none;
+}
+
+/* Preview fills the host column; shared desktop 2-col services apply from booking-flow.css */
+.lbw .booking-flow--wizard.booking-flow--preview .booking-flow__layout:not(:has(.booking-flow__right)),
+.lbw .booking-flow--wizard.booking-flow--preview .booking-flow__main {
+  max-width: none;
+  width: 100%;
 }
 
 .lbw__scroll::-webkit-scrollbar {

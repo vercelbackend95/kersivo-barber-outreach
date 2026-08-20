@@ -1,13 +1,17 @@
 ---
+import { ProductRail } from '@/components/shop/ProductRail';
+import { toBlacklineCarouselProducts } from '@/lib/demo/blacklineShop';
 import { DEMO_SHOP_HREF } from '@/lib/demo/nav';
-import { demoProductHref, type DemoProduct } from '@/lib/demo/products';
-import { formatDemoPriceGbp } from '@/lib/demo/services';
+import type { DemoProduct } from '@/lib/demo/products';
+import '@/styles/components/productRail.css';
+import '@/styles/components/storefront.css';
 
 interface Props {
   products: DemoProduct[];
 }
 
 const { products } = Astro.props;
+const carouselProducts = toBlacklineCarouselProducts(products);
 ---
 
 <section
@@ -27,29 +31,27 @@ const { products } = Astro.props;
     </h2>
     <p class="bl-shop-lede">Order online and collect from the shop.</p>
 
-    <ul class="bl-shop-runway">
-      {
-        products.map((product) => (
-          <li class={`bl-shop-item bl-shop-item--${product.slug}`}>
-            <a class="bl-shop-stage" href={demoProductHref(product.id)}>
-              <img
-                src={product.image.src}
-                alt={product.image.alt}
-                width={product.image.width}
-                height={product.image.height}
-                sizes={product.image.sizes}
-                loading="lazy"
-                decoding="async"
-              />
-            </a>
-            <h3 class="bl-shop-name">
-              <a href={demoProductHref(product.id)}>{product.name}</a>
-            </h3>
-            <p class="bl-shop-price">{formatDemoPriceGbp(product.pricePence)}</p>
-          </li>
-        ))
-      }
-    </ul>
+    <div class="bl-shop-rail">
+      <ProductRail
+        client:visible
+        products={carouselProducts}
+        productHrefBase="/demo/shop"
+        variant="blackline"
+        density="editorial"
+        showAction="add-to-cart"
+        showControls={true}
+        showProgress={true}
+        showCategory={true}
+        showPrice={true}
+        fallbackBrandMark="BL"
+        shopName="BLACKLINE"
+        addToBagLabel="Add to bag"
+        addedLabel="Added"
+        chooseOptionsLabel="Choose options"
+        soldOutLabel="Sold out"
+        ariaLabel="Blackline products"
+      />
+    </div>
 
     <a class="bl-shop-cta" href={DEMO_SHOP_HREF}>
       <span>Shop products</span>

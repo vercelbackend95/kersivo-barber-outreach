@@ -1,0 +1,495 @@
+/* Canonical KERSIVO product rail — also aliased as .shop6__* for legacy consumers */
+
+.product-rail,
+.shop6__carousel {
+  --product-rail-gap: 0.75rem;
+  --product-rail-padding: 0px;
+  --product-rail-visible-cards: 3.25;
+  --product-rail-surface: var(--surface, #fff);
+  --product-rail-text: var(--fg, #111);
+  --product-rail-muted: var(--muted, #666);
+  --product-rail-accent: var(--accent, #315ef5);
+  --product-rail-border: var(--border, rgba(0, 0, 0, 0.12));
+  --product-rail-radius: 16px;
+  --product-rail-shadow: 0 8px 20px color-mix(in srgb, #000 10%, transparent);
+  --product-rail-shadow-hover: 0 14px 28px color-mix(in srgb, #000 14%, transparent);
+
+  min-width: 0;
+  display: grid;
+  gap: 0.56rem;
+  overflow-x: clip;
+  color: var(--product-rail-text);
+}
+
+.product-rail:focus {
+  outline: none;
+}
+
+.product-rail:focus-visible {
+  outline: 2px solid var(--product-rail-accent);
+  outline-offset: 4px;
+}
+
+.product-rail__header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  min-height: 2.75rem;
+}
+
+.product-rail__header-spacer {
+  flex: 1;
+}
+
+.product-rail__progress {
+  margin: 0;
+  font-family: var(--font-body, system-ui, sans-serif);
+  font-size: 0.72rem;
+  font-weight: 600;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--product-rail-muted);
+  font-variant-numeric: tabular-nums;
+}
+
+.product-rail__controls,
+.shop6__controls {
+  display: flex;
+  justify-content: flex-end;
+  gap: 0.4rem;
+  flex-wrap: wrap;
+}
+
+.product-rail__control,
+.shop6__control {
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.2rem;
+  min-width: 2.75rem;
+  min-height: 2.75rem;
+  padding: 0.32rem 0.72rem;
+  border: 1px solid var(--product-rail-border);
+  border-radius: 999px;
+  background: var(--product-rail-surface);
+  color: var(--product-rail-text);
+  font-family: var(--font-body, system-ui, sans-serif);
+  font-size: 0.72rem;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  transition:
+    background-color 160ms ease,
+    border-color 160ms ease,
+    color 160ms ease,
+    opacity 160ms ease;
+}
+
+.product-rail__control:hover:not(:disabled),
+.shop6__control:hover:not(:disabled) {
+  border-color: var(--product-rail-accent);
+  color: var(--product-rail-accent);
+}
+
+.product-rail__control:focus-visible,
+.shop6__control:focus-visible {
+  outline: 2px solid var(--product-rail-accent);
+  outline-offset: 2px;
+}
+
+.product-rail__control:disabled,
+.shop6__control:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+.product-rail--editorial .product-rail__control-label {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+.product-rail__track,
+.shop6__grid {
+  list-style: none;
+  margin: 0;
+  padding: 0 0 0.45rem;
+  display: flex;
+  flex-wrap: nowrap;
+  gap: var(--product-rail-gap);
+  min-width: 0;
+  overflow-x: auto;
+  overflow-y: hidden;
+  overscroll-behavior-x: contain;
+  -webkit-overflow-scrolling: touch;
+  touch-action: pan-x pan-y pinch-zoom;
+  scroll-snap-type: x mandatory;
+  scroll-padding-inline: var(--product-rail-padding);
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+}
+
+.product-rail__track::-webkit-scrollbar,
+.shop6__grid::-webkit-scrollbar {
+  display: none;
+}
+
+.product-rail__item,
+.shop6__item {
+  box-sizing: border-box;
+  min-width: 0;
+  display: flex;
+  flex-grow: 0;
+  flex-shrink: 0;
+  /* Keep calc on width — avoid flex shorthand with '/' and avoid % calc in custom props */
+  width: calc(
+    (100% - (2 * var(--product-rail-padding, 0px)) - (var(--product-rail-gap) * (var(--product-rail-visible-cards) - 1))) /
+      var(--product-rail-visible-cards)
+  );
+  max-width: calc(
+    (100% - (2 * var(--product-rail-padding, 0px)) - (var(--product-rail-gap) * (var(--product-rail-visible-cards) - 1))) /
+      var(--product-rail-visible-cards)
+  );
+  scroll-snap-align: start;
+  scroll-snap-stop: always;
+}
+
+.product-rail__card,
+:is(.product-rail, .shop6__carousel, .feature261-retail-carousel) .shop-card {
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+  min-height: 100%;
+  border: 1px solid var(--product-rail-border);
+  border-radius: var(--product-rail-radius);
+  background: var(--product-rail-surface);
+  box-shadow: var(--product-rail-shadow);
+  overflow: hidden;
+  color: inherit;
+  text-decoration: none;
+  transition:
+    transform 180ms ease,
+    border-color 180ms ease,
+    box-shadow 180ms ease;
+}
+
+.product-rail__card--link:hover,
+.product-rail__card--link:focus-visible,
+:is(.product-rail, .shop6__carousel, .feature261-retail-carousel) .shop-card:hover {
+  transform: translateY(-2px);
+  border-color: color-mix(in srgb, var(--product-rail-accent) 35%, var(--product-rail-border));
+  box-shadow: var(--product-rail-shadow-hover);
+}
+
+.product-rail__card--link:focus-visible {
+  outline: 2px solid var(--product-rail-accent);
+  outline-offset: 2px;
+}
+
+.product-rail__media,
+:is(.product-rail, .shop6__carousel, .feature261-retail-carousel) .shop-media {
+  position: relative;
+  display: block;
+  aspect-ratio: 1 / 1;
+  overflow: hidden;
+  padding: 0;
+  border-bottom: 1px solid color-mix(in srgb, var(--product-rail-border) 90%, transparent);
+  background: color-mix(in srgb, var(--product-rail-surface) 88%, #000);
+}
+
+.product-rail__sf-media,
+.product-rail__media .sf-media {
+  width: 100%;
+  height: 100%;
+  min-height: 100%;
+  aspect-ratio: 1 / 1;
+}
+
+.product-rail__media .sf-media-img,
+:is(.product-rail, .shop6__carousel, .feature261-retail-carousel) .shop-image {
+  width: 100%;
+  height: 100%;
+  max-width: none;
+  max-height: none;
+  object-fit: cover;
+  object-position: center;
+  aspect-ratio: auto;
+  transition: transform 220ms ease;
+  background: transparent;
+}
+
+.product-rail__card:hover .sf-media-img,
+.product-rail__card:hover .shop-image,
+:is(.product-rail, .shop6__carousel) .shop-card:hover .shop-image {
+  transform: scale(1.03);
+}
+
+.product-rail__body,
+:is(.product-rail, .shop6__carousel, .feature261-retail-carousel) .shop-card-body {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  align-items: stretch;
+  gap: 0.28rem;
+  padding: 0.75rem 0.85rem 0.9rem;
+}
+
+.product-rail__category,
+:is(.product-rail, .shop6__carousel, .feature261-retail-carousel) .shop-category {
+  margin: 0;
+  color: var(--product-rail-muted);
+  font-size: 0.65rem;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  font-weight: 600;
+}
+
+.product-rail__title,
+:is(.product-rail, .shop6__carousel, .feature261-retail-carousel) .shop-card h3 {
+  margin: 0;
+  font-size: 0.95rem;
+  font-weight: 600;
+  line-height: 1.3;
+  min-height: calc(2 * 1.3em);
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+  color: var(--product-rail-text);
+}
+
+.product-rail__title a {
+  color: inherit;
+  text-decoration: none;
+}
+
+.product-rail__price,
+:is(.product-rail, .shop6__carousel, .feature261-retail-carousel) .shop-price {
+  margin: 0;
+  margin-top: auto;
+  font-size: 0.95rem;
+  font-weight: 700;
+  color: var(--product-rail-text);
+}
+
+.product-rail__affordance {
+  margin-top: 0.15rem;
+  font-size: 0.62rem;
+  font-weight: 600;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: color-mix(in srgb, var(--product-rail-accent) 72%, var(--product-rail-muted));
+}
+
+.product-rail__actions {
+  margin-top: auto;
+  padding-top: 0.35rem;
+}
+
+/* Media fallback (shared with storefront wordmark language) */
+.product-rail .sf-media {
+  position: relative;
+  display: grid;
+  place-items: center;
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+  background: color-mix(in srgb, var(--product-rail-surface) 92%, #000);
+}
+
+.product-rail .sf-media--fallback {
+  color: var(--product-rail-muted);
+}
+
+.product-rail .sf-media--wordmark {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 0.35rem;
+  isolation: isolate;
+}
+
+.product-rail .sf-media-stage {
+  position: absolute;
+  inset: 0;
+  background:
+    radial-gradient(
+      120% 80% at 20% 10%,
+      color-mix(in srgb, var(--product-rail-accent) 16%, transparent),
+      transparent 48%
+    ),
+    linear-gradient(160deg, #1a1d22 0%, #101216 55%, #0c0d10 100%);
+}
+
+.product-rail .sf-media-stage::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  opacity: 0.18;
+  background-image:
+    linear-gradient(color-mix(in srgb, var(--product-rail-text) 18%, transparent) 1px, transparent 1px),
+    linear-gradient(90deg, color-mix(in srgb, var(--product-rail-text) 18%, transparent) 1px, transparent 1px);
+  background-size: 22px 22px;
+}
+
+.product-rail .sf-media-mark,
+.product-rail .sf-media-initial,
+.product-rail .sf-media-soon {
+  position: relative;
+  z-index: 1;
+}
+
+.product-rail .sf-media-mark {
+  display: grid;
+  place-items: center;
+  width: 2.4rem;
+  height: 2.4rem;
+  border: 1px solid color-mix(in srgb, var(--product-rail-text) 22%, transparent);
+  border-radius: 8px;
+  font-size: 0.85rem;
+  letter-spacing: 0.08em;
+  color: var(--product-rail-text);
+}
+
+.product-rail .sf-media-initial {
+  font-size: 0.82rem;
+  font-weight: 700;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  opacity: 0.7;
+}
+
+.product-rail .sf-media-soon {
+  font-size: 0.62rem;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  opacity: 0.55;
+}
+
+/* Variants */
+[data-product-rail-variant='blackline'] {
+  --product-rail-surface: #14161a;
+  --product-rail-text: #f4f1ea;
+  --product-rail-muted: #a7abb2;
+  --product-rail-accent: #315ef5;
+  --product-rail-border: color-mix(in srgb, #f4f1ea 16%, transparent);
+  --product-rail-radius: 20px;
+  --product-rail-shadow: none;
+  --product-rail-shadow-hover: none;
+  --product-rail-gap: 0.85rem;
+}
+
+[data-product-rail-variant='kersivo'],
+[data-product-rail-variant='inherit'] {
+  --product-rail-surface: var(--surface);
+  --product-rail-text: var(--fg);
+  --product-rail-muted: var(--muted);
+  --product-rail-accent: var(--accent);
+  --product-rail-border: var(--border);
+  --product-rail-radius: var(--radius-4, 12px);
+}
+
+/* Legacy empty card */
+.shop6__card {
+  border: 1px solid var(--product-rail-border);
+  background: var(--product-rail-surface);
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+}
+
+.shop6__card-body {
+  padding: 0.75rem;
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  gap: 0.35rem;
+}
+
+/* Breakpoints — one horizontal row everywhere */
+@media (max-width: 47.99rem) {
+  .product-rail,
+  .shop6__carousel {
+    --product-rail-gap: 0.65rem;
+    --product-rail-padding: 0.9rem;
+    --product-rail-visible-cards: 1.22;
+  }
+
+  .product-rail__track,
+  .shop6__grid {
+    padding: 0 var(--product-rail-padding) 0.45rem;
+    margin-inline: calc(var(--product-rail-padding) * -1);
+  }
+
+  .product-rail--editorial .product-rail__controls {
+    display: flex;
+  }
+
+  .product-rail:not(.product-rail--editorial) .product-rail__controls.shop6__controls,
+  .shop6__carousel:not(.product-rail--editorial) > .product-rail__header .shop6__controls {
+    display: none;
+  }
+}
+
+@media (max-width: 28rem) {
+  .product-rail,
+  .shop6__carousel {
+    --product-rail-visible-cards: 1.15;
+    --product-rail-gap: 0.55rem;
+    --product-rail-padding: 0.8rem;
+  }
+}
+
+@media (min-width: 40rem) and (max-width: 63.99rem) {
+  .product-rail,
+  .shop6__carousel {
+    --product-rail-visible-cards: 2.35;
+    --product-rail-gap: 0.7rem;
+  }
+}
+
+@media (min-width: 64rem) {
+  .product-rail,
+  .shop6__carousel {
+    --product-rail-visible-cards: 3.25;
+    --product-rail-gap: 0.85rem;
+  }
+}
+
+@media (min-width: 90rem) {
+  .product-rail,
+  .shop6__carousel {
+    --product-rail-visible-cards: 3.6;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .product-rail__card,
+  .product-rail__card--link,
+  .product-rail__media .sf-media-img,
+  .product-rail__media .shop-image,
+  :is(.product-rail, .shop6__carousel) .shop-card,
+  :is(.product-rail, .shop6__carousel) .shop-image {
+    transition: none !important;
+  }
+
+  .product-rail__card--link:hover,
+  .product-rail__card--link:focus-visible,
+  :is(.product-rail, .shop6__carousel) .shop-card:hover {
+    transform: none;
+  }
+
+  .product-rail__card:hover .sf-media-img,
+  .product-rail__card:hover .shop-image,
+  :is(.product-rail, .shop6__carousel) .shop-card:hover .shop-image {
+    transform: none;
+  }
+}

@@ -225,10 +225,12 @@ test.describe('BLACKLINE shop purchase to Orders and Sales', () => {
     await page.getByRole('button', { name: 'Show more products' }).click();
     await expect(page.locator('.sf-grid [data-product-item]')).toHaveCount(30);
 
-    await page.getByPlaceholder('Search products').fill('Fibre Paste');
-    await expect(page.locator('.sf-grid [data-product-item]')).toHaveCount(1);
-    await expect(page.getByRole('heading', { name: 'Fibre Paste' })).toBeVisible();
-    await expect(page.locator('.sf-grid .sf-media--fallback')).toHaveCount(1);
+    await expect(page.locator('[data-shop-search]')).toHaveCount(0);
+    await expect(page.getByPlaceholder('Search products')).toHaveCount(0);
+
+    await page.getByRole('tab', { name: 'Styling' }).click();
+    await expect(page).toHaveURL(/category=STYLING/);
+    await expect(page.locator('.sf-grid [data-product-item]').first()).toBeVisible();
 
     await page.goto('/demo/shop/bl-product-ironclad-pomade', { waitUntil: 'domcontentloaded' });
     await expect(page.getByRole('heading', { name: /ironclad pomade/i })).toBeVisible();
@@ -241,6 +243,81 @@ test.describe('BLACKLINE shop purchase to Orders and Sales', () => {
     await expect(page.locator('.sf-pdp-hero img')).toHaveCount(0);
     await page.getByRole('button', { name: 'Add to bag: Shave Cream' }).click();
     await expect(page.locator('[data-sf-cart-toast]')).toContainText('Shave Cream added to bag');
+  });
+
+  test('compact discovery keeps one sticky row without search or shelf heading', async ({ page }) => {
+    test.setTimeout(180_000);
+    const viewports = [
+      { width: 390, height: 844 },
+      { width: 430, height: 932 },
+      { width: 768, height: 1024 },
+      { width: 1024, height: 768 },
+      { width: 1280, height: 800 },
+      { width: 1440, height: 900 },
+      { width: 1920, height: 1080 },
+    ] as const;
+    const heights: Array<{ width: number; height: number }> = [];
+
+    for (const viewport of viewports) {
+      await page.setViewportSize(viewport);
+      await page.goto('/demo/shop', { waitUntil: 'domcontentloaded' });
+      await expect(page.locator('[data-sf-discovery-variant="compact"]')).toBeVisible();
+
+      await expect(page.locator('[data-shop-search]')).toHaveCount(0);
+      await expect(page.getByText(/shop the shelf/i)).toHaveCount(0);
+      await expect(page.locator('.sf-toolbar-heading')).toHaveCount(0);
+      await expect(page.locator('.sf-toolbar-count')).toHaveCount(0);
+      await expect(page.locator('.sf-clear')).toHaveCount(0);
+      await expect(page.locator('.sf-discovery-row')).toHaveCount(1);
+
+      const metrics = await page.evaluate(() => {
+        const root = document.querySelector('.sf-discovery--compact') as HTMLElement | null;
+        const row = document.querySelector('.sf-discovery-row') as HTMLElement | null;
+        const sort = document.querySelector('.sf-discovery-sort') as HTMLElement | null;
+        const tabs = Array.from(
+          document.querySelectorAll('.sf-discovery--compact .sf-rail-tab'),
+        ) as HTMLElement[];
+        if (!root || !row || !sort || tabs.length < 2) {
+          return null;
+        }
+        const rootBox = root.getBoundingClientRect();
+        const rowBox = row.getBoundingClientRect();
+        const sortBox = sort.getBoundingClientRect();
+        const tops = tabs.map((tab) => Math.round(tab.getBoundingClientRect().top));
+        return {
+          height: Math.round(rootBox.height),
+          wrapped: !tops.every((top) => Math.abs(top - tops[0]!) <= 2),
+          sortDropped: Math.abs(sortBox.top - rowBox.top) > 8,
+          scrollWidth: document.documentElement.scrollWidth,
+          clientWidth: document.documentElement.clientWidth,
+        };
+      });
+
+      expect(metrics).not.toBeNull();
+      expect(metrics!.wrapped).toBe(false);
+      expect(metrics!.sortDropped).toBe(false);
+      expect(metrics!.height).toBeGreaterThanOrEqual(48);
+      expect(metrics!.height).toBeLessThanOrEqual(72);
+      expect(metrics!.scrollWidth).toBeLessThanOrEqual(metrics!.clientWidth + 1);
+      heights.push({ width: viewport.width, height: metrics!.height });
+    }
+
+    expect(heights).toHaveLength(viewports.length);
+
+    await page.setViewportSize({ width: 390, height: 844 });
+    await page.goto('/demo/shop?q=pomade&category=STYLING', { waitUntil: 'networkidle' });
+    await expect(page.locator('[data-sf-discovery-variant="compact"]')).toBeVisible();
+    await expect.poll(() => page.url()).toMatch(/category=STYLING/);
+    await expect.poll(() => page.url()).not.toMatch(/[?&]q=/);
+    await expect(page.locator('[data-shop-search]')).toHaveCount(0);
+    await expect(page.getByRole('tab', { name: 'Styling' })).toHaveAttribute('aria-selected', 'true');
+
+    await page.getByRole('tab', { name: 'All products' }).click();
+    await expect.poll(() => page.url()).not.toMatch(/category=/);
+    const sort = page.locator('[data-shop-sort]');
+    await expect(sort).toBeVisible();
+    await sort.selectOption('price-asc');
+    await expect.poll(() => page.url()).toMatch(/sort=price-asc/);
   });
 
   test('kersivo marketing shop uses a separate catalog from BLACKLINE', async ({ page }) => {

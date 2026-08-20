@@ -143,9 +143,15 @@ const currentYear = new Date().getFullYear();
 </script>
 
 <script>
-  import { initShop6Carousels } from '@/lib/shop/initShop6Carousel';
+  import { destroyProductRails, initProductRails } from '@/lib/shop/initProductRail';
 
-  initShop6Carousels();
+  const bootProductRails = () => {
+    destroyProductRails();
+    initProductRails();
+  };
+
+  bootProductRails();
+  document.addEventListener('astro:page-load', bootProductRails);
 </script>
 
 <style>

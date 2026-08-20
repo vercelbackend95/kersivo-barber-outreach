@@ -59,9 +59,7 @@ import { DEMO_SHOP_NAME } from '@/lib/demo/site';
     menu.dataset.blMenuBound = 'true';
 
     const sections = [...menu.querySelectorAll<HTMLElement>('.bl-service-group[data-category-slug]')];
-    const viewing = menu.querySelector('[data-bl-services-viewing]');
     const copy = menu.querySelector('[data-bl-viewing-copy]');
-    const indexEl = menu.querySelector('[data-bl-viewing-index]');
     const nameEl = menu.querySelector('[data-bl-viewing-name]');
     const metaEl = menu.querySelector('[data-bl-viewing-meta]');
     const progressEl = menu.querySelector<HTMLElement>('[data-bl-viewing-progress]');
@@ -76,8 +74,6 @@ import { DEMO_SHOP_NAME } from '@/lib/demo/site';
       const changed = slug !== activeSlug;
       activeSlug = slug;
       menu.dataset.activeCategory = slug;
-      const total = section.dataset.categoryTotal ?? String(sections.length);
-      if (indexEl) indexEl.textContent = `${section.dataset.indexLabel ?? '01'} / ${total.padStart(2, '0')}`;
       if (nameEl) nameEl.textContent = section.dataset.categoryLabel ?? '';
       if (metaEl) {
         metaEl.textContent = `${section.dataset.countLabel ?? ''} · ${section.dataset.fromPrice ?? ''}`.replace(

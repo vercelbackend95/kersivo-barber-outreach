@@ -108,4 +108,34 @@ describe('BLACKLINE Services page', () => {
       /prefers-reduced-motion: reduce[\s\S]*\.bl-service-arrow[\s\S]*transform: rotate\(45deg\)/,
     );
   });
+
+  it('uses reverse-colour category panels without visible category numbers', () => {
+    expect(menuSource).toContain('class="bl-service-group-head"');
+    expect(menuSource).toContain('class="bl-service-group-title-block"');
+    expect(menuSource).toContain('class="bl-service-group-kicker"');
+    expect(menuSource).toContain('Service category');
+    expect(menuSource).toContain('class="bl-service-group-summary"');
+    expect(menuSource).toContain('class="bl-service-group-name" id={`blackline-category-${group.slug}`}');
+    expect(menuSource).toContain('aria-labelledby={`blackline-category-${group.slug}`}');
+    expect(menuSource).toContain('<p class="bl-service-group-count">');
+    expect(menuSource).not.toContain('bl-service-group-index');
+    expect(menuSource).not.toContain('data-bl-viewing-index');
+    expect(menuSource).not.toContain('bl-services-viewing-index');
+    expect(menuSource).toContain('class="bl-service-heading"');
+    expect(menuSource).toContain('class="bl-service-chip-slot"');
+    expect(menuSource).not.toContain('bl-service-name-row');
+    expect(cssSource).not.toContain("'index name description'");
+    expect(cssSource).not.toContain("'index count description'");
+    expect(cssSource).toMatch(
+      /\.bl-service-group-head\s*\{[^}]*background:\s*var\(--bl-carbon\)/,
+    );
+    expect(cssSource).toMatch(
+      /\.bl-service-group-name\s*\{[^}]*font-size:\s*clamp\(2\.75rem,\s*4vw,\s*4\.5rem\)/,
+    );
+    expect(cssSource).toMatch(
+      /\.bl-service-name\s*\{[^}]*font-size:\s*clamp\(1\.9rem,\s*2\.7vw,\s*3rem\)/,
+    );
+    expect(cssSource).toContain('min-height: 8.5rem');
+    expect(cssSource).not.toContain('.bl-service-group-name .bl-service-group-index');
+  });
 });

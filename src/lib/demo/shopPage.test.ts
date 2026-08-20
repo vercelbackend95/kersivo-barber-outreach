@@ -27,7 +27,8 @@ describe('BLACKLINE shop pages', () => {
     expect(shopPage).toContain('COLLECT IN SHOP');
     expect(shopPage).toContain('DEMO CHECKOUT');
     expect(shopPage).not.toContain('safetyNote');
-    expect(shopPage).toContain('Shop the shelf.');
+    expect(shopPage).not.toContain('Shop the shelf.');
+    expect(shopPage).not.toContain('collectionHeading');
     expect(shopPage).toContain("addToBagLabel: 'Add to bag'");
     expect(shopPage).toContain('featuredAddedLabel="Added to bag"');
     expect(shopPage).not.toContain('ADD TO BAG');

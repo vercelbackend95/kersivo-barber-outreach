@@ -2455,92 +2455,15 @@ html[data-theme='blackline']::view-transition-new(root) {
   color: var(--theme-text-muted);
 }
 
-[data-theme='blackline'] .bl-shop-runway {
+[data-theme='blackline'] .bl-shop-rail {
   grid-area: runway;
-  display: grid;
-  gap: var(--bl-space-4);
+  min-width: 0;
   margin: clamp(2.5rem, 5vw, 4rem) 0 0;
-  padding: 0;
-  list-style: none;
+  overflow-x: clip;
 }
 
 [data-theme='blackline'] .bl-shop-index {
   margin-top: clamp(2.5rem, 5vw, 4rem);
-}
-
-[data-theme='blackline'] .bl-shop-item {
-  display: grid;
-  grid-template-columns: minmax(112px, 42%) 1fr;
-  grid-template-areas:
-    'stage name'
-    'stage price';
-  column-gap: var(--bl-space-4);
-  row-gap: var(--bl-space-2);
-  align-items: center;
-  min-width: 0;
-}
-
-[data-theme='blackline'] .bl-shop-item + .bl-shop-item {
-  border-top: 1px solid var(--theme-line);
-  padding-top: var(--bl-space-4);
-}
-
-[data-theme='blackline'] .bl-shop-stage {
-  grid-area: stage;
-  position: relative;
-  aspect-ratio: 4 / 5;
-  overflow: hidden;
-  background: var(--bl-graphite);
-  border: 1px solid var(--theme-line);
-}
-
-[data-theme='blackline'] .bl-shop-stage img {
-  display: block;
-  width: 100%;
-  height: 100%;
-  object-fit: contain;
-  object-position: center bottom;
-  transform: scale(var(--bl-shop-scale, 1));
-  transform-origin: center bottom;
-  transition: transform 240ms cubic-bezier(0.2, 0.8, 0.2, 1);
-}
-
-[data-theme='blackline'] .bl-shop-item--beard-balm {
-  --bl-shop-scale: 1.14;
-}
-
-[data-theme='blackline'] .bl-shop-item--ironclad-pomade {
-  --bl-shop-scale: 1.06;
-}
-
-[data-theme='blackline'] .bl-shop-item--barber-wash {
-  --bl-shop-scale: 0.92;
-}
-
-[data-theme='blackline'] .bl-shop-name {
-  grid-area: name;
-  margin: 0;
-  min-width: 0;
-  align-self: end;
-  font-family: var(--bl-font-display);
-  font-size: clamp(1.5rem, 5vw, 1.85rem);
-  font-weight: 700;
-  letter-spacing: 0.02em;
-  line-height: 1.05;
-  text-transform: uppercase;
-  color: var(--theme-text);
-}
-
-[data-theme='blackline'] .bl-shop-price {
-  grid-area: price;
-  margin: 0;
-  align-self: start;
-  font-family: var(--bl-font-body);
-  font-size: 1rem;
-  font-weight: 600;
-  line-height: 1.4;
-  color: var(--theme-text-muted);
-  font-variant-numeric: tabular-nums;
 }
 
 [data-theme='blackline'] .bl-shop-cta {
@@ -2591,31 +2514,8 @@ html[data-theme='blackline']::view-transition-new(root) {
     letter-spacing: -0.035em;
   }
 
-  [data-theme='blackline'] .bl-shop-runway {
-    grid-template-columns: repeat(3, minmax(0, 1fr));
-    gap: clamp(18px, 2.2vw, 36px);
+  [data-theme='blackline'] .bl-shop-rail {
     margin-top: clamp(3rem, 6vw, 5.5rem);
-  }
-
-  [data-theme='blackline'] .bl-shop-item {
-    grid-template-columns: minmax(0, 1fr);
-    grid-template-areas:
-      'stage'
-      'name'
-      'price';
-    align-items: stretch;
-    row-gap: var(--bl-space-3);
-  }
-
-  [data-theme='blackline'] .bl-shop-item + .bl-shop-item {
-    border-top: 0;
-    padding-top: 0;
-  }
-
-  [data-theme='blackline'] .bl-shop-name {
-    align-self: start;
-    margin-top: var(--bl-space-1);
-    font-size: clamp(1.5rem, 2vw, 2rem);
   }
 }
 
@@ -2648,18 +2548,7 @@ html[data-theme='blackline']::view-transition-new(root) {
   }
 }
 
-@media (hover: hover) and (pointer: fine) {
-  [data-theme='blackline'] .bl-shop-item:hover .bl-shop-stage img {
-    transform: translateY(-4px) scale(calc(var(--bl-shop-scale, 1) * 1.015));
-  }
-}
-
 @media (prefers-reduced-motion: reduce) {
-  [data-theme='blackline'] .bl-shop-stage img,
-  [data-theme='blackline'] .bl-shop-item:hover .bl-shop-stage img {
-    transform: scale(var(--bl-shop-scale, 1));
-  }
-
   [data-theme='blackline'] .bl-shop-cta:hover .bl-shop-arrow {
     transform: rotate(45deg);
   }
@@ -3783,7 +3672,6 @@ html[data-theme='blackline']::view-transition-new(root) {
   min-height: 2.6rem;
 }
 
-[data-theme='blackline'] .bl-services-viewing-index,
 [data-theme='blackline'] .bl-services-viewing-meta {
   margin: 0;
   font-family: var(--bl-font-display);
@@ -3941,59 +3829,76 @@ html[data-theme='blackline']::view-transition-new(root) {
 
 [data-theme='blackline'] .bl-service-group-head {
   display: grid;
-  gap: 0.4rem;
+  grid-template-columns: minmax(0, 1fr);
+  gap: 1rem;
+  width: 100%;
   margin-bottom: 1.35rem;
-  padding-bottom: 1rem;
-  border-bottom: 1px solid var(--theme-line);
+  padding: clamp(1.15rem, 3.5vw, 1.65rem) clamp(1rem, 3vw, 1.5rem);
+  border: 1px solid color-mix(in srgb, var(--bl-ivory) 18%, transparent);
+  border-radius: var(--bl-radius-card);
+  background: var(--bl-carbon);
+  color: var(--bl-ivory);
+  box-shadow: none;
 }
 
-[data-theme='blackline'] .bl-service-group-index,
+[data-theme='blackline'] .bl-service-group-title-block,
+[data-theme='blackline'] .bl-service-group-summary {
+  display: grid;
+  gap: 0.45rem;
+  min-width: 0;
+}
+
+[data-theme='blackline'] .bl-service-group-kicker {
+  margin: 0;
+  font-family: var(--bl-font-display);
+  font-size: 0.6875rem;
+  font-weight: 600;
+  letter-spacing: 0.18em;
+  line-height: 1.2;
+  text-transform: uppercase;
+  color: var(--theme-accent);
+}
+
 [data-theme='blackline'] .bl-service-group-count {
   margin: 0;
   font-family: var(--bl-font-display);
-  font-size: 0.8125rem;
+  font-size: 0.75rem;
   font-weight: 600;
   letter-spacing: 0.16em;
   text-transform: uppercase;
   font-variant-numeric: tabular-nums;
-}
-
-[data-theme='blackline'] .bl-service-group-index {
   color: var(--theme-accent);
-}
-
-[data-theme='blackline'] .bl-service-group-count {
-  color: var(--theme-text-muted);
+  white-space: nowrap;
 }
 
 [data-theme='blackline'] .bl-service-group-name {
   margin: 0;
+  min-width: 0;
   font-family: var(--bl-font-display);
-  font-size: clamp(1.65rem, 6vw, 2.35rem);
+  font-size: clamp(2.35rem, 8vw, 3.25rem);
   font-weight: 700;
   letter-spacing: -0.03em;
-  line-height: 0.95;
+  line-height: 0.92;
   text-transform: uppercase;
-  color: var(--theme-text);
-}
-
-[data-theme='blackline'] .bl-service-group-name .bl-service-group-index {
-  color: var(--theme-accent);
+  color: var(--bl-ivory);
+  text-wrap: balance;
+  overflow-wrap: break-word;
 }
 
 [data-theme='blackline'] .bl-service-group-desc {
-  margin: 0.45rem 0 0;
+  margin: 0;
+  min-width: 0;
   max-width: 42ch;
   font-family: var(--bl-font-body);
   font-size: 0.975rem;
   font-weight: 500;
-  line-height: 1.55;
-  color: var(--theme-text-muted);
+  line-height: 1.5;
+  color: color-mix(in srgb, var(--bl-ivory) 72%, transparent);
 }
 
 [data-theme='blackline'] .bl-services-list {
   display: grid;
-  gap: clamp(3.5rem, 10vw, 5rem);
+  gap: clamp(1.5rem, 4vw, 2.5rem);
   margin: 0;
   padding: 0;
   list-style: none;
@@ -4001,7 +3906,7 @@ html[data-theme='blackline']::view-transition-new(root) {
 
 [data-theme='blackline'] .bl-service-item {
   border-top: 1px solid var(--theme-line);
-  padding-top: 1.35rem;
+  padding-top: 1.1rem;
 }
 
 [data-theme='blackline'] .bl-service-row {
@@ -4030,49 +3935,69 @@ html[data-theme='blackline']::view-transition-new(root) {
   transition: color var(--bl-duration-fast) var(--bl-ease-standard);
 }
 
-[data-theme='blackline'] .bl-service-name-row {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: flex-start;
-  gap: 0.55rem 0.8rem;
+[data-theme='blackline'] .bl-service-heading {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  grid-template-areas:
+    'chip'
+    'name';
+  gap: 0.45rem 0.85rem;
+  align-items: start;
 }
 
 [data-theme='blackline'] .bl-service-name {
+  grid-area: name;
   margin: 0;
+  min-width: 0;
   max-width: 100%;
   font-family: var(--bl-font-display);
-  font-size: clamp(2.15rem, 10vw, 3.5rem);
+  font-size: clamp(1.55rem, 5.5vw, 2.15rem);
   font-weight: 700;
   letter-spacing: -0.035em;
-  line-height: 0.92;
+  line-height: 0.95;
   text-transform: uppercase;
   color: var(--theme-text);
   overflow-wrap: anywhere;
   transition: transform var(--bl-duration-fast) var(--bl-ease-standard);
 }
 
+[data-theme='blackline'] .bl-service-chip-slot {
+  grid-area: chip;
+  display: flex;
+  align-items: flex-start;
+  justify-content: flex-start;
+  min-width: 5.75rem;
+  min-height: 1.5rem;
+}
+
 [data-theme='blackline'] .bl-service-chip {
   display: inline-flex;
   align-items: center;
+  justify-content: center;
+  box-sizing: border-box;
+  min-width: 5.75rem;
   min-height: 1.5rem;
-  padding: 0 0.5rem;
-  margin-top: 0.35rem;
+  height: 1.5rem;
+  padding: 0 0.55rem;
   border: 1px solid var(--theme-accent);
+  background: color-mix(in srgb, var(--theme-accent) 10%, transparent);
   font-family: var(--bl-font-display);
   font-size: 0.6875rem;
   font-weight: 600;
   letter-spacing: 0.16em;
+  line-height: 1;
   text-transform: uppercase;
   color: var(--theme-accent);
+  box-shadow: none;
 }
 
 [data-theme='blackline'] .bl-service-desc {
-  margin: 0.7rem 0 0;
+  margin: 0.45rem 0 0;
   max-width: 34ch;
   font-family: var(--bl-font-body);
   font-size: 1rem;
   font-weight: 500;
-  line-height: 1.6;
+  line-height: 1.55;
   color: var(--theme-text-muted);
 }
 
@@ -4362,6 +4287,29 @@ html[data-theme='blackline']::view-transition-new(root) {
 }
 
 @media (min-width: 768px) {
+  [data-theme='blackline'] .bl-service-heading {
+    grid-template-columns: minmax(0, 1fr) auto;
+    grid-template-areas: 'name chip';
+    column-gap: 0.85rem;
+  }
+
+  [data-theme='blackline'] .bl-service-chip-slot {
+    justify-content: flex-end;
+    padding-top: 0.15rem;
+  }
+
+  [data-theme='blackline'] .bl-service-name {
+    font-size: clamp(1.7rem, 3.2vw, 2.4rem);
+  }
+}
+
+@media (max-width: 767px) {
+  [data-theme='blackline'] .bl-service-chip-slot:empty {
+    display: none;
+  }
+}
+
+@media (min-width: 768px) {
 
   [data-theme='blackline'] .bl-services-menu-heading {
     font-size: clamp(3.5rem, 6vw, 7rem);
@@ -4415,11 +4363,6 @@ html[data-theme='blackline']::view-transition-new(root) {
   [data-theme='blackline'] .bl-services-viewing-copy {
     min-height: 8.5rem;
     gap: 0.45rem;
-  }
-
-  [data-theme='blackline'] .bl-services-viewing-index {
-    color: var(--bl-silver);
-    font-size: 0.8125rem;
   }
 
   [data-theme='blackline'] .bl-services-viewing-name {
@@ -4611,9 +4554,25 @@ html[data-theme='blackline']::view-transition-new(root) {
   }
 
   [data-theme='blackline'] .bl-service-group-head {
-    grid-template-columns: 3rem minmax(0, 1fr) auto;
-    align-items: end;
-    column-gap: 1rem;
+    grid-template-columns: minmax(0, 1.15fr) minmax(14rem, 0.85fr);
+    column-gap: clamp(1.5rem, 3vw, 2.75rem);
+    row-gap: 0;
+    align-items: center;
+    padding: clamp(1.35rem, 2.4vw, 1.85rem) clamp(1.25rem, 2.2vw, 1.75rem);
+  }
+
+  [data-theme='blackline'] .bl-service-group-name {
+    font-size: clamp(2.75rem, 4vw, 4.5rem);
+    line-height: 0.9;
+  }
+
+  [data-theme='blackline'] .bl-service-group-summary {
+    justify-items: start;
+    align-content: center;
+  }
+
+  [data-theme='blackline'] .bl-service-group-desc {
+    max-width: none;
   }
 
   [data-theme='blackline'] .bl-service-row {
@@ -4623,7 +4582,7 @@ html[data-theme='blackline']::view-transition-new(root) {
       'index copy track track book';
     align-items: end;
     column-gap: 1.25rem;
-    min-height: 10.5rem;
+    min-height: 7.25rem;
   }
 
   [data-theme='blackline'] .bl-service-index {
@@ -4636,8 +4595,20 @@ html[data-theme='blackline']::view-transition-new(root) {
     grid-area: copy;
   }
 
+  [data-theme='blackline'] .bl-service-heading {
+    grid-template-columns: minmax(0, 1fr) auto;
+    grid-template-areas: 'name chip';
+    column-gap: 0.85rem;
+  }
+
+  [data-theme='blackline'] .bl-service-chip-slot {
+    justify-content: flex-end;
+    padding-top: 0.2rem;
+  }
+
   [data-theme='blackline'] .bl-service-name {
-    font-size: clamp(2.4rem, 4vw, 4.75rem);
+    font-size: clamp(1.9rem, 2.7vw, 3rem);
+    line-height: 0.95;
   }
 
   [data-theme='blackline'] .bl-service-duration {
@@ -6130,21 +6101,6 @@ html[data-theme='blackline']::view-transition-new(root) {
   [data-theme='blackline'] .bl-contact-submit:focus-visible .bl-contact-submit-arrow {
     transform: rotate(45deg);
   }
-}
-
-[data-theme='blackline'] .bl-shop-stage {
-  color: inherit;
-  text-decoration: none;
-}
-
-[data-theme='blackline'] .bl-shop-name a {
-  color: inherit;
-  text-decoration: none;
-}
-
-[data-theme='blackline'] .bl-shop-name a:focus-visible {
-  outline: 2px solid var(--theme-focus);
-  outline-offset: 3px;
 }
 
 [data-theme='blackline'] .bl-shop-page,

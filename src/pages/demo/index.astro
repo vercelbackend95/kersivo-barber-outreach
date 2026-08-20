@@ -8,12 +8,16 @@ import DemoStory from '@/components/demo/DemoStory.astro';
 import DemoTeamPreview from '@/components/demo/DemoTeamPreview.astro';
 import DemoVisit from '@/components/demo/DemoVisit.astro';
 import DemoLayout from '@/layouts/DemoLayout.astro';
-import { getBlacklineRetailProducts } from '@/lib/demo/blacklineShop';
+import {
+  getBlacklineRetailProducts,
+  selectBlacklineLandingRailProducts,
+} from '@/lib/demo/blacklineShop';
 import { DEMO_SHOP_NAME, DEMO_SHOP_TAGLINE } from '@/lib/demo/site';
 
 export const prerender = false;
 
-const featuredProducts = (await getBlacklineRetailProducts()).filter((product) => product.featured);
+const catalog = await getBlacklineRetailProducts();
+const carouselProducts = selectBlacklineLandingRailProducts(catalog, 10);
 
 ---
 
@@ -70,9 +74,21 @@ const featuredProducts = (await getBlacklineRetailProducts()).filter((product) =
 
   <DemoGalleryPreview />
 
-  <DemoShopPreview products={featuredProducts} />
+  <DemoShopPreview products={carouselProducts} />
 
   <DemoVisit />
 
   <DemoFinalCta />
 </DemoLayout>
+
+<script>
+  import { destroyProductRails, initProductRails } from '@/lib/shop/initProductRail';
+
+  const bootProductRails = () => {
+    destroyProductRails();
+    initProductRails();
+  };
+
+  bootProductRails();
+  document.addEventListener('astro:page-load', bootProductRails);
+</script>

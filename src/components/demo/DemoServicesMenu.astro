@@ -30,9 +30,6 @@ const categoryCount = groups.length;
       <aside class="bl-services-viewing" aria-label="Current service category" data-bl-services-viewing>
         <p class="bl-services-viewing-eyebrow">Now viewing</p>
         <div class="bl-services-viewing-copy" data-bl-viewing-copy>
-          <p class="bl-services-viewing-index" data-bl-viewing-index>
-            {initial.indexLabel} / {demoServiceIndex(categoryCount - 1)}
-          </p>
           <p class="bl-services-viewing-name" data-bl-viewing-name>{initial.label}</p>
           <p class="bl-services-viewing-meta" data-bl-viewing-meta>
             {initial.countLabel} · {initial.fromPriceLabel}
@@ -73,54 +70,68 @@ const categoryCount = groups.length;
               aria-labelledby={`blackline-category-${group.slug}`}
             >
               <header class="bl-service-group-head">
-                <h3 class="bl-service-group-name" id={`blackline-category-${group.slug}`}>
-                  <span class="bl-service-group-index">{group.indexLabel}</span>
-                  <span aria-hidden="true"> · </span>
-                  {group.label}
-                </h3>
-                <p class="bl-service-group-count">{group.countLabel}</p>
-                <p class="bl-service-group-desc">{group.description}</p>
+                <div class="bl-service-group-title-block">
+                  <p class="bl-service-group-kicker">Service category</p>
+                  <h3 class="bl-service-group-name" id={`blackline-category-${group.slug}`}>
+                    {group.label}
+                  </h3>
+                </div>
+                <div class="bl-service-group-summary">
+                  <p class="bl-service-group-count">{group.countLabel}</p>
+                  <p class="bl-service-group-desc">{group.description}</p>
+                </div>
               </header>
 
               <ol class="bl-services-list">
-                {group.services.map((service, index) => (
-                  <li
-                    class="bl-service-item"
-                    data-service-slug={service.slug}
-                    data-service-name={service.name}
-                    data-category-label={group.label}
-                    data-duration={`${service.durationMinutes} min`}
-                    data-price={formatDemoPriceGbp(service.pricePence)}
-                    data-book-href={demoBookingHref(service.slug)}
-                    style={`--bl-service-duration-ratio: ${demoServiceDurationRatio(service.durationMinutes, maxDuration)}; --bl-stagger-index: ${index}`}
-                  >
-                    <article class="bl-service-row" aria-labelledby={`blackline-service-${service.slug}`}>
-                      <p class="bl-service-index">{demoServiceIndex(index)}</p>
-                      <div class="bl-service-copy">
-                        <div class="bl-service-name-row">
-                          <h4 class="bl-service-name" id={`blackline-service-${service.slug}`}>
-                            {service.name}
-                          </h4>
-                          {isDemoFeaturedService(service.id) ? <span class="bl-service-chip">Featured</span> : null}
+                {group.services.map((service, index) => {
+                  const featured = isDemoFeaturedService(service.id);
+                  return (
+                    <li
+                      class="bl-service-item"
+                      data-service-slug={service.slug}
+                      data-service-name={service.name}
+                      data-category-label={group.label}
+                      data-duration={`${service.durationMinutes} min`}
+                      data-price={formatDemoPriceGbp(service.pricePence)}
+                      data-book-href={demoBookingHref(service.slug)}
+                      style={`--bl-service-duration-ratio: ${demoServiceDurationRatio(service.durationMinutes, maxDuration)}; --bl-stagger-index: ${index}`}
+                    >
+                      <article class="bl-service-row" aria-labelledby={`blackline-service-${service.slug}`}>
+                        <p class="bl-service-index">{demoServiceIndex(index)}</p>
+                        <div class="bl-service-copy">
+                          <div class="bl-service-heading">
+                            <h4 class="bl-service-name" id={`blackline-service-${service.slug}`}>
+                              {service.name}
+                            </h4>
+                            {
+                              featured ? (
+                                <span class="bl-service-chip-slot">
+                                  <span class="bl-service-chip">Featured</span>
+                                </span>
+                              ) : (
+                                <span class="bl-service-chip-slot" aria-hidden="true"></span>
+                              )
+                            }
+                          </div>
+                          <p class="bl-service-desc">{service.description}</p>
                         </div>
-                        <p class="bl-service-desc">{service.description}</p>
-                      </div>
-                      <p class="bl-service-duration">{service.durationMinutes} min</p>
-                      <p class="bl-service-price">{formatDemoPriceGbp(service.pricePence)}</p>
-                      <span class="bl-service-duration-track" aria-hidden="true">
-                        <span class="bl-service-duration-fill"></span>
-                      </span>
-                      <a
-                        class="bl-service-book"
-                        href={demoBookingHref(service.slug)}
-                        aria-label={demoServiceAccessibleName(service)}
-                      >
-                        <span>Book this service</span>
-                        <span class="bl-service-arrow" aria-hidden="true"></span>
-                      </a>
-                    </article>
-                  </li>
-                ))}
+                        <p class="bl-service-duration">{service.durationMinutes} min</p>
+                        <p class="bl-service-price">{formatDemoPriceGbp(service.pricePence)}</p>
+                        <span class="bl-service-duration-track" aria-hidden="true">
+                          <span class="bl-service-duration-fill"></span>
+                        </span>
+                        <a
+                          class="bl-service-book"
+                          href={demoBookingHref(service.slug)}
+                          aria-label={demoServiceAccessibleName(service)}
+                        >
+                          <span>Book this service</span>
+                          <span class="bl-service-arrow" aria-hidden="true"></span>
+                        </a>
+                      </article>
+                    </li>
+                  );
+                })}
               </ol>
             </section>
           ))
