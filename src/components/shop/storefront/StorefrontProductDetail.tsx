@@ -1,8 +1,10 @@
 import { useState } from 'react';
+import { ProductRail } from '@/components/shop/ProductRail';
 import { CATEGORY_LABELS } from '@/lib/shop/productPresentation';
 import {
   formatStorefrontPrice,
   storefrontProductHref,
+  storefrontProductToCarousel,
   type StorefrontPriceFormat,
   type StorefrontProduct,
 } from '@/lib/shop/storefrontCatalog';
@@ -98,6 +100,7 @@ export default function StorefrontProductDetail({
             chooseOptionsLabel={copy.chooseOptionsLabel}
             soldOutLabel={copy.soldOutLabel}
             quantity={quantity}
+            showIcon={themeId === 'blackline'}
           />
           <a className="sf-atc sf-atc--options" href={backHref}>
             Continue shopping
@@ -105,22 +108,42 @@ export default function StorefrontProductDetail({
         </div>
       </section>
       {related.length > 0 ? (
-        <section className="sf-pdp" aria-label="Related products">
+        <section className="sf-pdp sf-pdp-related" aria-label="Related products">
           <h2 className="sf-toolbar-heading">You may also like</h2>
-          <ul className="sf-grid">
-            {related.map((item) => (
-              <li key={item.id}>
-                <StorefrontProductCard
-                  product={item}
-                  href={storefrontProductHref(productHrefPrefix, item.id)}
-                  priceFormat={priceFormat}
-                  imageFallback={imageFallback}
-                  shopName={shopName}
-                  copy={copy}
-                />
-              </li>
-            ))}
-          </ul>
+          {themeId === 'blackline' ? (
+            <ProductRail
+              products={related.map(storefrontProductToCarousel)}
+              productHrefBase={productHrefPrefix}
+              variant="blackline"
+              density="editorial"
+              showAction="add-to-cart"
+              showControls
+              showProgress
+              shopName={shopName}
+              ariaLabel="You may also like"
+              addToBagLabel={copy.addToBagLabel}
+              addedLabel={copy.addedLabel}
+              chooseOptionsLabel={copy.chooseOptionsLabel}
+              soldOutLabel={copy.soldOutLabel}
+              viewProductLabel={copy.viewProductLabel}
+            />
+          ) : (
+            <ul className="sf-grid">
+              {related.map((item) => (
+                <li key={item.id}>
+                  <StorefrontProductCard
+                    product={item}
+                    href={storefrontProductHref(productHrefPrefix, item.id)}
+                    priceFormat={priceFormat}
+                    imageFallback={imageFallback}
+                    shopName={shopName}
+                    copy={copy}
+                    showAtcIcon={themeId === 'blackline'}
+                  />
+                </li>
+              ))}
+            </ul>
+          )}
         </section>
       ) : null}
       {showPoweredBy ? (

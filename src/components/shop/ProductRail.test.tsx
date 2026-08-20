@@ -1,7 +1,6 @@
 /**
  * @vitest-environment jsdom
  */
-import React from 'react';
 import { afterEach, describe, expect, it } from 'vitest';
 import { cleanup, render, within } from '@testing-library/react';
 import { ProductRail } from './ProductRail';
@@ -102,7 +101,7 @@ describe('ProductRail', () => {
     expect(container.querySelector('[data-product-rail-status]')?.textContent).toMatch(/01 \/ 04/);
   });
 
-  it('renders StorefrontAddToBagButton without nesting it inside a card link', () => {
+  it('renders StorefrontProductCard with bag icon for BLACKLINE ATC', () => {
     const { container, getByRole, queryByText } = render(
       <ProductRail
         products={products.slice(0, 2)}
@@ -111,14 +110,23 @@ describe('ProductRail', () => {
         density="editorial"
         showAction="add-to-cart"
         addToBagLabel="Add to bag"
+        shopName="BLACKLINE"
       />,
     );
 
     const atc = getByRole('button', { name: /add to bag: ironclad pomade/i });
     expect(atc.hasAttribute('data-add-to-cart')).toBe(true);
+    expect(atc.classList.contains('sf-atc--icon')).toBe(true);
+    expect(atc.querySelector('svg')).toBeTruthy();
     expect(atc.closest('a')).toBeNull();
     expect(queryByText(/^View$/)).toBeNull();
     expect(container.querySelectorAll('a.product-rail__card--link')).toHaveLength(0);
-    expect(container.querySelectorAll('article.product-rail__card')).toHaveLength(2);
+    expect(container.querySelectorAll('article.product-rail__card')).toHaveLength(0);
+    expect(container.querySelectorAll('article.sf-card.shop-card')).toHaveLength(2);
+    expect(container.querySelector('.sf-card-body')).toBeTruthy();
+    expect(container.querySelector('.sf-card-footer')).toBeTruthy();
+    expect(getByRole('link', { name: /view product: ironclad pomade/i }).getAttribute('href')).toBe(
+      '/demo/shop/bl-product-ironclad-pomade',
+    );
   });
 });

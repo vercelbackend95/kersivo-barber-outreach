@@ -50,7 +50,7 @@ test.describe('BLACKLINE home shop product rail', () => {
     });
   }
 
-  test('shows ten products, no card shadows, real ATC, and shared cart updates', async ({ page }) => {
+  test('shows ten storefront cards, ATC icons, and shared cart updates', async ({ page }) => {
     await page.setViewportSize({ width: 1440, height: 900 });
     await page.goto('/demo', { waitUntil: 'networkidle' });
 
@@ -58,6 +58,7 @@ test.describe('BLACKLINE home shop product rail', () => {
     await rail.scrollIntoViewIfNeeded();
 
     await expect(page.locator('.bl-shop-rail .product-rail__item')).toHaveCount(10);
+    await expect(page.locator('.bl-shop-rail .sf-card')).toHaveCount(10);
     await expect(rail.locator('[data-product-rail-status]')).toHaveText(/01\s*\/\s*10/);
 
     const ids = await page
@@ -67,27 +68,94 @@ test.describe('BLACKLINE home shop product rail', () => {
       );
     expect(new Set(ids).size).toBe(10);
 
-    const shadow = await page.evaluate(() => {
-      const card = document.querySelector('.bl-shop-rail .product-rail__card') as HTMLElement | null;
+    const atcIcons = page.locator('.bl-shop-rail .sf-atc--icon');
+    await expect(atcIcons).toHaveCount(10);
+    expect(await atcIcons.evaluateAll((nodes) => nodes.every((node) => Boolean(node.querySelector('svg'))))).toBe(
+      true,
+    );
+
+    await expect(page.locator('.bl-shop-rail .sf-card-body')).toHaveCount(10);
+    await expect(page.locator('.bl-shop-rail .sf-card-footer')).toHaveCount(10);
+
+    const cardChrome = await page.evaluate(() => {
+      const card = document.querySelector('.bl-shop-rail .sf-card') as HTMLElement | null;
       if (!card) return null;
       const style = getComputedStyle(card);
-      return { boxShadow: style.boxShadow, filter: style.filter };
+      const borderTopColor = style.borderTopColor;
+      const canvas = document.createElement('canvas');
+      canvas.width = 1;
+      canvas.height = 1;
+      const ctx = canvas.getContext('2d');
+      let rgb: [number, number, number] | null = null;
+      if (ctx) {
+        ctx.fillStyle = '#000';
+        ctx.fillStyle = borderTopColor;
+        ctx.fillRect(0, 0, 1, 1);
+        const data = ctx.getImageData(0, 0, 1, 1).data;
+        rgb = [data[0]!, data[1]!, data[2]!];
+      }
+      return {
+        boxShadow: style.boxShadow,
+        borderTopWidth: style.borderTopWidth,
+        borderRightWidth: style.borderRightWidth,
+        borderBottomWidth: style.borderBottomWidth,
+        borderLeftWidth: style.borderLeftWidth,
+        borderTopStyle: style.borderTopStyle,
+        borderTopColor,
+        borderRgb: rgb,
+      };
     });
-    expect(shadow?.boxShadow === 'none' || shadow?.boxShadow === '').toBe(true);
-    expect(shadow?.filter === 'none' || shadow?.filter === '').toBe(true);
+    expect(cardChrome).not.toBeNull();
+    // Full perimeter border (matches shop grid) — not inset stroke covered by media
+    expect(cardChrome!.borderTopWidth).toBe('1px');
+    expect(cardChrome!.borderRightWidth).toBe('1px');
+    expect(cardChrome!.borderBottomWidth).toBe('1px');
+    expect(cardChrome!.borderLeftWidth).toBe('1px');
+    expect(cardChrome!.borderTopStyle).toBe('solid');
+    expect(cardChrome!.borderTopColor).not.toMatch(/rgba\(0,\s*0,\s*0,\s*0\)|transparent/i);
+    // Light landing: carbon hairline (not ivory shop-border, which vanishes on ivory page)
+    expect(cardChrome!.borderTopColor).not.toMatch(/rgba?\(\s*244\s*,\s*241\s*,\s*234/i);
+    expect(cardChrome!.borderRgb).not.toBeNull();
+    expect(cardChrome!.borderRgb![0]).toBeLessThan(80);
+    expect(cardChrome!.borderRgb![1]).toBeLessThan(80);
+    expect(cardChrome!.borderRgb![2]).toBeLessThan(80);
+    expect(cardChrome!.boxShadow === 'none' || cardChrome!.boxShadow === '').toBe(true);
+
+    const footerLayout = await page.evaluate(() => {
+      const footer = document.querySelector('.bl-shop-rail .sf-card-footer') as HTMLElement | null;
+      const price = footer?.querySelector('.sf-card-price') as HTMLElement | null;
+      const actions = footer?.querySelector('.sf-card-actions') as HTMLElement | null;
+      const cta = footer?.querySelector('.sf-atc') as HTMLElement | null;
+      if (!footer || !price || !actions || !cta) return null;
+      const footerBox = footer.getBoundingClientRect();
+      const priceBox = price.getBoundingClientRect();
+      const actionsBox = actions.getBoundingClientRect();
+      const ctaStyle = getComputedStyle(cta);
+      return {
+        priceLeft: priceBox.left < actionsBox.left,
+        footerDisplay: getComputedStyle(footer).display,
+        footerJustify: getComputedStyle(footer).justifyContent,
+        ctaWidthRatio: cta.getBoundingClientRect().width / footerBox.width,
+        ctaWidth: ctaStyle.width,
+      };
+    });
+    expect(footerLayout).not.toBeNull();
+    expect(footerLayout!.priceLeft).toBe(true);
+    expect(footerLayout!.footerDisplay).toBe('flex');
+    expect(footerLayout!.ctaWidthRatio).toBeLessThan(0.7);
 
     await expect(page.locator('.bl-shop-rail .product-rail__affordance')).toHaveCount(0);
     await expect(page.locator('.bl-shop-rail img[src=""]')).toHaveCount(0);
-    await expect(page.getByRole('link', { name: /view ironclad pomade/i })).toHaveAttribute(
+    await expect(page.getByRole('link', { name: /view product: ironclad pomade/i })).toHaveAttribute(
       'href',
       /\/demo\/shop\/bl-product-ironclad-pomade/,
     );
-    await expect(page.getByRole('link', { name: /view essential styling set/i })).toHaveAttribute(
+    await expect(page.getByRole('link', { name: /view product: essential styling set/i })).toHaveAttribute(
       'href',
       /\/demo\/shop\/bl-product-essential-styling-set/,
     );
 
-    const styling = page.getByRole('link', { name: /view essential styling set/i });
+    const styling = page.locator('.bl-shop-rail article').filter({ hasText: 'Essential Styling Set' });
     await expect(styling.locator('.sf-media--fallback, .sf-media--wordmark')).toBeVisible();
 
     const bagCount = page.locator('[data-bl-bag-count]').first();
@@ -115,6 +183,161 @@ test.describe('BLACKLINE home shop product rail', () => {
     await expect(prev).toBeEnabled();
 
     await expect(page.locator('.bl-shop-cta')).toHaveAttribute('href', '/demo/shop');
+  });
+
+  test('matches key computed styles with /demo/shop product cards', async ({ page }) => {
+    await page.setViewportSize({ width: 1440, height: 900 });
+
+    await page.goto('/demo/shop', { waitUntil: 'networkidle' });
+    const shopStyles = await page.evaluate((sel) => {
+      const card = document.querySelector(sel) as HTMLElement | null;
+      if (!card) return null;
+      const body = card.querySelector('.sf-card-body') as HTMLElement | null;
+      const media = card.querySelector('.sf-card-media') as HTMLElement | null;
+      const title = card.querySelector('.sf-card-name') as HTMLElement | null;
+      const footer = card.querySelector('.sf-card-footer') as HTMLElement | null;
+      const cta = card.querySelector('.sf-atc') as HTMLElement | null;
+      if (!body || !media || !title || !footer || !cta) return null;
+      const cardStyle = getComputedStyle(card);
+      const bodyStyle = getComputedStyle(body);
+      const mediaStyle = getComputedStyle(media);
+      const titleStyle = getComputedStyle(title);
+      const footerStyle = getComputedStyle(footer);
+      const ctaStyle = getComputedStyle(cta);
+      return {
+        borderRadius: cardStyle.borderRadius,
+        backgroundColor: cardStyle.backgroundColor,
+        bodyPadding: bodyStyle.padding,
+        mediaAspectRatio: mediaStyle.aspectRatio,
+        ctaHeight: ctaStyle.height,
+        ctaBorderRadius: ctaStyle.borderRadius,
+        titleFontSize: titleStyle.fontSize,
+        footerDisplay: footerStyle.display,
+        footerJustifyContent: footerStyle.justifyContent,
+      };
+    }, '.sf-shop--blackline .sf-grid .sf-card');
+    expect(shopStyles).not.toBeNull();
+
+    await page.goto('/demo', { waitUntil: 'networkidle' });
+    await page.locator('.bl-shop-rail [data-product-rail-root]').scrollIntoViewIfNeeded();
+    const landingStyles = await page.evaluate((sel) => {
+      const card = document.querySelector(sel) as HTMLElement | null;
+      if (!card) return null;
+      const body = card.querySelector('.sf-card-body') as HTMLElement | null;
+      const media = card.querySelector('.sf-card-media') as HTMLElement | null;
+      const title = card.querySelector('.sf-card-name') as HTMLElement | null;
+      const footer = card.querySelector('.sf-card-footer') as HTMLElement | null;
+      const cta = card.querySelector('.sf-atc') as HTMLElement | null;
+      if (!body || !media || !title || !footer || !cta) return null;
+      const cardStyle = getComputedStyle(card);
+      const bodyStyle = getComputedStyle(body);
+      const mediaStyle = getComputedStyle(media);
+      const titleStyle = getComputedStyle(title);
+      const footerStyle = getComputedStyle(footer);
+      const ctaStyle = getComputedStyle(cta);
+      return {
+        borderRadius: cardStyle.borderRadius,
+        backgroundColor: cardStyle.backgroundColor,
+        bodyPadding: bodyStyle.padding,
+        mediaAspectRatio: mediaStyle.aspectRatio,
+        ctaHeight: ctaStyle.height,
+        ctaBorderRadius: ctaStyle.borderRadius,
+        titleFontSize: titleStyle.fontSize,
+        footerDisplay: footerStyle.display,
+        footerJustifyContent: footerStyle.justifyContent,
+      };
+    }, '.bl-shop-rail .sf-card');
+    expect(landingStyles).not.toBeNull();
+    expect(landingStyles).toEqual(shopStyles);
+  });
+
+  test('keeps hover lift unclipped inside the rail track', async ({ page }) => {
+    await page.setViewportSize({ width: 1440, height: 900 });
+    await page.goto('/demo', { waitUntil: 'networkidle' });
+    const rail = page.locator('.bl-shop-rail [data-product-rail-root]');
+    await rail.scrollIntoViewIfNeeded();
+
+    const card = page.locator('.bl-shop-rail .sf-card').first();
+    await card.hover();
+
+    const hoverMetrics = await page.evaluate(() => {
+      const track = document.querySelector('.bl-shop-rail [data-product-rail-track]') as HTMLElement | null;
+      const hovered = document.querySelector('.bl-shop-rail .sf-card') as HTMLElement | null;
+      if (!track || !hovered) return null;
+      const trackBox = track.getBoundingClientRect();
+      const cardBox = hovered.getBoundingClientRect();
+      const transform = getComputedStyle(hovered).transform;
+      return {
+        transform,
+        cardTop: cardBox.top,
+        trackTop: trackBox.top,
+      };
+    });
+    expect(hoverMetrics).not.toBeNull();
+    expect(hoverMetrics!.transform === 'none' || hoverMetrics!.transform === '').toBe(false);
+    expect(hoverMetrics!.cardTop).toBeGreaterThanOrEqual(hoverMetrics!.trackTop - 1);
+  });
+
+  test('shows a right-edge fade while more products remain, then hides it at the end', async ({
+    page,
+  }) => {
+    await page.setViewportSize({ width: 1440, height: 900 });
+    await page.goto('/demo', { waitUntil: 'networkidle' });
+    const rail = page.locator('.bl-shop-rail [data-product-rail-root]');
+    await rail.scrollIntoViewIfNeeded();
+    const track = page.locator('.bl-shop-rail [data-product-rail-track]');
+
+    await expect(rail).toHaveAttribute('data-can-scroll-right', 'true');
+    const fadeWhileScrollable = await track.evaluate((el) => {
+      const style = getComputedStyle(el);
+      const mask = style.maskImage || style.webkitMaskImage || '';
+      return { mask };
+    });
+    expect(fadeWhileScrollable.mask).toMatch(/linear-gradient/i);
+    expect(fadeWhileScrollable.mask).not.toBe('none');
+    // Multi-stop ease (not a hard two-stop wash)
+    expect((fadeWhileScrollable.mask.match(/rgba?\(/g) || []).length).toBeGreaterThanOrEqual(2);
+
+    // Header controls must stay outside the track mask (not washed out)
+    const controlsClear = await page.evaluate(() => {
+      const next = document.querySelector(
+        '.bl-shop-rail [data-product-rail-next]',
+      ) as HTMLElement | null;
+      const trackEl = document.querySelector(
+        '.bl-shop-rail [data-product-rail-track]',
+      ) as HTMLElement | null;
+      if (!next || !trackEl) return null;
+      const nextBox = next.getBoundingClientRect();
+      const trackBox = trackEl.getBoundingClientRect();
+      return nextBox.bottom <= trackBox.top + 1;
+    });
+    expect(controlsClear).toBe(true);
+
+    // Mid-scroll: both edges can fade
+    await track.evaluate((el) => {
+      el.scrollLeft = Math.round(el.scrollWidth * 0.35);
+      el.dispatchEvent(new Event('scroll'));
+    });
+    await expect(rail).toHaveAttribute('data-can-scroll-left', 'true');
+    await expect(rail).toHaveAttribute('data-can-scroll-right', 'true');
+
+    await track.evaluate((el) => {
+      el.scrollLeft = el.scrollWidth;
+      el.dispatchEvent(new Event('scroll'));
+    });
+    await expect(rail).toHaveAttribute('data-can-scroll-right', 'false');
+    await expect(rail.locator('[data-product-rail-next]').first()).toBeDisabled();
+
+    const fadeAtEnd = await track.evaluate((el) => {
+      const style = getComputedStyle(el);
+      const mask = style.maskImage || style.webkitMaskImage || '';
+      return { mask };
+    });
+    // At end: no right fade; left-only mask may remain
+    expect(fadeAtEnd.mask === 'none' || fadeAtEnd.mask.includes('linear-gradient')).toBe(true);
+    if (fadeAtEnd.mask !== 'none' && fadeAtEnd.mask !== '') {
+      await expect(rail).toHaveAttribute('data-can-scroll-left', 'true');
+    }
   });
 
   test('keeps shop page card shadows intact', async ({ page }) => {

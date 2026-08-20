@@ -1,9 +1,13 @@
 import { ChevronLeft, ChevronRight } from 'lucide-react';
+import { useEffect, useRef } from 'react';
 
 import ProductMediaFallback from '@/components/shop/storefront/ProductMediaFallback';
 import StorefrontAddToBagButton from '@/components/shop/storefront/StorefrontAddToBagButton';
+import StorefrontProductCard from '@/components/shop/storefront/StorefrontProductCard';
 import { CATEGORY_LABELS, type CarouselProduct } from '@/lib/shop/carouselProducts';
+import { destroyProductRails, initProductRails } from '@/lib/shop/initProductRail';
 import { formatGbp } from '@/lib/shop/money';
+import { toStorefrontProduct, type StorefrontProduct } from '@/lib/shop/storefrontCatalog';
 import { cn } from '@/lib/utils';
 import '@/styles/components/productRail.css';
 import '@/styles/components/shop.css';
@@ -32,6 +36,7 @@ export type ProductRailProps = {
   addedLabel?: string;
   chooseOptionsLabel?: string;
   soldOutLabel?: string;
+  viewProductLabel?: string;
 };
 
 function resolveProductHref(
@@ -58,6 +63,18 @@ function toStorefrontImage(imageUrl: string | null, name: string) {
   };
 }
 
+function carouselProductToStorefront(product: CarouselProduct): StorefrontProduct {
+  return toStorefrontProduct({
+    id: product.id,
+    name: product.name,
+    pricePence: product.pricePence,
+    category: product.category,
+    imageUrl: product.imageUrl,
+    active: product.available !== false,
+    requiresOptions: Boolean(product.requiresOptions),
+  });
+}
+
 export function ProductRail({
   products,
   className,
@@ -77,16 +94,29 @@ export function ProductRail({
   addedLabel = 'Added',
   chooseOptionsLabel = 'Choose options',
   soldOutLabel = 'Sold out',
+  viewProductLabel = 'View product',
 }: ProductRailProps) {
+  const rootRef = useRef<HTMLDivElement>(null);
   const action: ProductRailAction =
     showAction ?? (previewMode || density === 'editorial' ? 'none' : 'add-to-cart');
   const displayProducts = previewMode ? products.slice(0, 10) : products;
   const total = displayProducts.length;
   const imageFallback = variant === 'blackline' ? 'wordmark' : 'initial';
   const showHeader = (showControls || showProgress) && total > 0;
+  const useStorefrontCards = variant === 'blackline' && action === 'add-to-cart';
+
+  useEffect(() => {
+    const root = rootRef.current;
+    if (!root) return;
+    initProductRails(root);
+    return () => {
+      destroyProductRails(root);
+    };
+  }, [displayProducts.length, density, showControls, showProgress, variant, action]);
 
   return (
     <div
+      ref={rootRef}
       className={cn(
         'product-rail',
         'shop6__carousel',
@@ -168,6 +198,30 @@ export function ProductRail({
             const href = resolveProductHref(product, previewMode, productHrefBase);
             const categoryLabel = CATEGORY_LABELS[product.category] ?? 'Styling';
             const image = toStorefrontImage(product.imageUrl, product.name);
+
+            if (useStorefrontCards) {
+              return (
+                <li key={`${product.id}-${index}`} className="product-rail__item shop6__item">
+                  <StorefrontProductCard
+                    product={carouselProductToStorefront(product)}
+                    href={href}
+                    priceFormat="demo"
+                    imageFallback="wordmark"
+                    shopName={shopName}
+                    copy={{
+                      addToBagLabel,
+                      addedLabel,
+                      chooseOptionsLabel,
+                      soldOutLabel,
+                      viewProductLabel,
+                    }}
+                    priority={index < 2}
+                    showAtcIcon
+                  />
+                </li>
+              );
+            }
+
             const media = (
               <div className="product-rail__media shop-media">
                 <ProductMediaFallback

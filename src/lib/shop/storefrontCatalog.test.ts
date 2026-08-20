@@ -25,6 +25,7 @@ import {
   storefrontProductFromCatalog,
   storefrontProductFromDemo,
   storefrontProductHref,
+  storefrontProductToCarousel,
   storefrontQuerySearch,
   toStorefrontProduct,
   visibleCategories,
@@ -293,5 +294,45 @@ describe('storefrontCatalog', () => {
     expect(paginateStorefrontProducts(list, 48).visible).toHaveLength(30);
     expect(relatedStorefrontProducts(list, 'p-1').every((item) => item.category === 'BEARD_CARE')).toBe(true);
     expect(relatedStorefrontProducts(list, 'p-1').map((item) => item.id)).not.toContain('p-1');
+  });
+
+  it('relatedStorefrontProducts fill pads with other categories up to limit', () => {
+    const list = Array.from({ length: 12 }, (_, index) =>
+      product({
+        id: `p-${index}`,
+        name: `Product ${String(index).padStart(2, '0')}`,
+        sortOrder: index,
+        category: index < 3 ? 'BEARD_CARE' : 'STYLING',
+      }),
+    );
+
+    const sameOnly = relatedStorefrontProducts(list, 'p-0');
+    expect(sameOnly).toHaveLength(2);
+    expect(sameOnly.every((item) => item.category === 'BEARD_CARE')).toBe(true);
+
+    const filled = relatedStorefrontProducts(list, 'p-0', { limit: 10, fill: true });
+    expect(filled).toHaveLength(10);
+    expect(filled.slice(0, 2).every((item) => item.category === 'BEARD_CARE')).toBe(true);
+    expect(filled.slice(2).some((item) => item.category === 'STYLING')).toBe(true);
+    expect(filled.map((item) => item.id)).not.toContain('p-0');
+  });
+
+  it('storefrontProductToCarousel maps image src and availability', () => {
+    const source = product({
+      id: 'p-rail',
+      name: 'Rail Item',
+      category: 'STYLING',
+      available: true,
+      requiresOptions: false,
+    });
+    expect(storefrontProductToCarousel(source)).toEqual({
+      id: 'p-rail',
+      name: 'Rail Item',
+      category: 'STYLING',
+      pricePence: 1800,
+      imageUrl: '/images/example.png',
+      available: true,
+      requiresOptions: false,
+    });
   });
 });

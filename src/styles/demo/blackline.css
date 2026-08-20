@@ -2459,6 +2459,7 @@ html[data-theme='blackline']::view-transition-new(root) {
   grid-area: runway;
   min-width: 0;
   margin: clamp(2.5rem, 5vw, 4rem) 0 0;
+  padding-top: 6px;
   overflow-x: clip;
 }
 

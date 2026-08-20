@@ -4,11 +4,11 @@ import {
   useId,
   useRef,
   useState,
+  type CSSProperties,
   type ReactNode,
   type TouchEvent,
   type TransitionEvent,
 } from 'react';
-import { ChevronLeft, ChevronRight } from 'lucide-react';
 import { CATEGORY_LABELS } from '@/lib/shop/productPresentation';
 import { formatStorefrontPrice, type StorefrontProduct } from '@/lib/shop/storefrontCatalog';
 import type { StorefrontThemeId } from '@/lib/shop/storefrontTheme';
@@ -26,6 +26,7 @@ type FeaturedProductShowcaseProps = Omit<StorefrontCardSharedProps, 'href'> & {
 };
 
 const SWIPE_THRESHOLD = 40;
+export const FEATURED_AUTOPLAY_MS = 6000;
 
 function prefersReducedMotion() {
   return typeof window !== 'undefined' && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
@@ -41,7 +42,7 @@ function FeaturedStory({
   index,
   total,
   showIcon,
-  controls,
+  progressFooter,
   presentation = 'default',
   headingId,
   interactive = true,
@@ -51,7 +52,7 @@ function FeaturedStory({
   index: number;
   total: number;
   showIcon?: boolean;
-  controls?: ReactNode;
+  progressFooter?: ReactNode;
   presentation?: ProductMediaPresentation;
   headingId?: string;
   interactive?: boolean;
@@ -91,10 +92,7 @@ function FeaturedStory({
               <span className="sf-sr-only">Featured product </span>
               {padded} / {totalPadded}
             </p>
-          ) : (
-            <span />
-          )}
-          {controls}
+          ) : null}
         </div>
         <ProductAvailabilityBadge soldOut={!product.available} />
         <p className="sf-card-category">{CATEGORY_LABELS[product.category]}</p>
@@ -115,43 +113,61 @@ function FeaturedStory({
           />
         </div>
       </div>
+      {progressFooter}
     </article>
   );
 }
 
-function SpotlightNav({
-  viewportId,
-  locked,
-  onPrev,
-  onNext,
+function FeaturedProgressNav({
+  products,
+  activeIndex,
+  progressPaused,
+  progressToken,
+  reducedMotion,
+  onSelect,
 }: {
-  viewportId: string;
-  locked: boolean;
-  onPrev: () => void;
-  onNext: () => void;
+  products: StorefrontProduct[];
+  activeIndex: number;
+  progressPaused: boolean;
+  progressToken: number;
+  reducedMotion: boolean;
+  onSelect: (index: number) => void;
 }) {
+  const total = products.length;
+
   return (
-    <div className="sf-spotlight-nav" role="group" aria-label="Featured products">
-      <button
-        type="button"
-        className="sf-spotlight-nav-btn"
-        aria-label="Previous featured product"
-        aria-controls={viewportId}
-        disabled={locked}
-        onClick={onPrev}
-      >
-        <ChevronLeft width={18} height={18} strokeWidth={2} aria-hidden="true" />
-      </button>
-      <button
-        type="button"
-        className="sf-spotlight-nav-btn"
-        aria-label="Next featured product"
-        aria-controls={viewportId}
-        disabled={locked}
-        onClick={onNext}
-      >
-        <ChevronRight width={18} height={18} strokeWidth={2} aria-hidden="true" />
-      </button>
+    <div className="sf-spotlight-progress" role="group" aria-label="Featured products">
+      <div className="sf-spotlight-progress-track">
+        {products.map((product, index) => {
+          const isActive = index === activeIndex;
+          const isComplete = index < activeIndex;
+          return (
+            <button
+              key={product.id}
+              type="button"
+              className="sf-spotlight-progress-seg"
+              aria-label={`Show featured product ${index + 1} of ${total}: ${product.name}`}
+              aria-current={isActive ? 'true' : undefined}
+              onClick={() => onSelect(index)}
+            >
+              <span className="sf-spotlight-progress-rail" aria-hidden="true">
+                <span
+                  key={isActive ? `active-${progressToken}` : `seg-${index}-${isComplete ? 'done' : 'idle'}`}
+                  className={[
+                    'sf-spotlight-progress-fill',
+                    isComplete ? 'is-complete' : '',
+                    isActive ? 'is-active' : '',
+                    isActive && progressPaused ? 'is-paused' : '',
+                    isActive && reducedMotion ? 'is-static' : '',
+                  ]
+                    .filter(Boolean)
+                    .join(' ')}
+                />
+              </span>
+            </button>
+          );
+        })}
+      </div>
     </div>
   );
 }
@@ -174,23 +190,74 @@ function BlacklineFeaturedCarousel({
   const labelId = useId();
   const viewportId = useId();
   const total = products.length;
+  const rootRef = useRef<HTMLElement>(null);
   const touchStartX = useRef<number | null>(null);
   const trackRef = useRef<HTMLDivElement>(null);
   const transitioningRef = useRef(false);
+  const logicalIndexRef = useRef(0);
+  const progressPausedRef = useRef(false);
+  const remainingMsRef = useRef(FEATURED_AUTOPLAY_MS);
+  const tickStartedAtRef = useRef(0);
   const [visualIndex, setVisualIndex] = useState(1);
   const [animate, setAnimate] = useState(true);
   const [locked, setLocked] = useState(false);
   const [announce, setAnnounce] = useState(products[0]?.name ?? '');
+  const [progressToken, setProgressToken] = useState(0);
+  const [inView, setInView] = useState(false);
+  const [docHidden, setDocHidden] = useState(false);
+  const [pointerPaused, setPointerPaused] = useState(false);
+  const [reducedMotion, setReducedMotion] = useState(false);
 
   const logicalIndex = (() => {
     if (visualIndex <= 0) return total - 1;
     if (visualIndex >= total + 1) return 0;
     return visualIndex - 1;
   })();
+  logicalIndexRef.current = logicalIndex;
+
+  const restartProgress = useCallback(() => {
+    remainingMsRef.current = FEATURED_AUTOPLAY_MS;
+    setProgressToken((token) => token + 1);
+  }, []);
 
   useEffect(() => {
     if (visualIndex > total + 1) setVisualIndex(1);
   }, [total, visualIndex]);
+
+  useEffect(() => {
+    const media = window.matchMedia('(prefers-reduced-motion: reduce)');
+    const sync = () => setReducedMotion(media.matches);
+    sync();
+    media.addEventListener('change', sync);
+    return () => media.removeEventListener('change', sync);
+  }, []);
+
+  useEffect(() => {
+    const root = rootRef.current;
+    if (!root || total < 2) return;
+    const observer = new IntersectionObserver(
+      ([entry]) => {
+        setInView(Boolean(entry?.isIntersecting));
+      },
+      { threshold: 0.35 },
+    );
+    observer.observe(root);
+    return () => observer.disconnect();
+  }, [total]);
+
+  useEffect(() => {
+    const onVisibility = () => setDocHidden(document.hidden);
+    onVisibility();
+    document.addEventListener('visibilitychange', onVisibility);
+    return () => document.removeEventListener('visibilitychange', onVisibility);
+  }, []);
+
+  useEffect(() => {
+    const src = products[(logicalIndex + 1) % total]?.image?.src?.trim();
+    if (!src) return;
+    const image = new Image();
+    image.src = src;
+  }, [logicalIndex, products, total]);
 
   const jumpWithoutAnimation = useCallback((nextVisual: number) => {
     setAnimate(false);
@@ -200,19 +267,21 @@ function BlacklineFeaturedCarousel({
         setAnimate(true);
         transitioningRef.current = false;
         setLocked(false);
+        restartProgress();
       });
     });
-  }, []);
+  }, [restartProgress]);
 
-  const go = useCallback(
+  const goBy = useCallback(
     (direction: -1 | 1) => {
       if (total < 2) return;
       if (transitioningRef.current) return;
 
       if (prefersReducedMotion()) {
-        const nextLogical = (logicalIndex + direction + total) % total;
+        const nextLogical = (logicalIndexRef.current + direction + total) % total;
         setVisualIndex(nextLogical + 1);
         setAnnounce(products[nextLogical]?.name ?? '');
+        restartProgress();
         return;
       }
 
@@ -220,7 +289,39 @@ function BlacklineFeaturedCarousel({
       setLocked(true);
       setVisualIndex((current) => current + direction);
     },
-    [logicalIndex, products, total],
+    [products, restartProgress, total],
+  );
+
+  const goTo = useCallback(
+    (targetLogical: number) => {
+      if (total < 2) return;
+      if (targetLogical < 0 || targetLogical >= total) return;
+      if (transitioningRef.current) return;
+
+      const currentLogical = logicalIndexRef.current;
+      if (targetLogical === currentLogical) {
+        restartProgress();
+        return;
+      }
+
+      const forward = (targetLogical - currentLogical + total) % total;
+      const backward = (currentLogical - targetLogical + total) % total;
+      const useForward = forward <= backward;
+      const steps = useForward ? forward : backward;
+      const direction = (useForward ? 1 : -1) as -1 | 1;
+
+      if (prefersReducedMotion()) {
+        setVisualIndex(targetLogical + 1);
+        setAnnounce(products[targetLogical]?.name ?? '');
+        restartProgress();
+        return;
+      }
+
+      transitioningRef.current = true;
+      setLocked(true);
+      setVisualIndex((current) => current + direction * steps);
+    },
+    [products, restartProgress, total],
   );
 
   const onTransitionEnd = (event: TransitionEvent<HTMLDivElement>) => {
@@ -239,6 +340,7 @@ function BlacklineFeaturedCarousel({
     transitioningRef.current = false;
     setLocked(false);
     setAnnounce(products[logicalIndex]?.name ?? '');
+    restartProgress();
   };
 
   const onTouchStart = (event: TouchEvent) => {
@@ -250,8 +352,33 @@ function BlacklineFeaturedCarousel({
     const delta = endX - touchStartX.current;
     touchStartX.current = null;
     if (Math.abs(delta) < SWIPE_THRESHOLD) return;
-    go(delta > 0 ? -1 : 1);
+    goBy(delta > 0 ? -1 : 1);
   };
+
+  const progressPaused =
+    reducedMotion ||
+    !inView ||
+    docHidden ||
+    pointerPaused ||
+    locked;
+  progressPausedRef.current = progressPaused;
+
+  // JS timer kept in lockstep with CSS fill (--featured-autoplay-ms / FEATURED_AUTOPLAY_MS)
+  useEffect(() => {
+    if (total < 2 || reducedMotion || progressPaused) return;
+    tickStartedAtRef.current = Date.now();
+    const delay = Math.max(0, remainingMsRef.current);
+    const timer = window.setTimeout(() => {
+      if (progressPausedRef.current) return;
+      remainingMsRef.current = FEATURED_AUTOPLAY_MS;
+      goBy(1);
+    }, delay);
+    return () => {
+      window.clearTimeout(timer);
+      const elapsed = Date.now() - tickStartedAtRef.current;
+      remainingMsRef.current = Math.max(0, remainingMsRef.current - elapsed);
+    };
+  }, [goBy, progressPaused, progressToken, reducedMotion, total]);
 
   const slides: Array<{
     key: string;
@@ -289,10 +416,21 @@ function BlacklineFeaturedCarousel({
     });
   }
 
-  const nav =
+  const progressNav =
     total > 1 ? (
-      <SpotlightNav viewportId={viewportId} locked={locked} onPrev={() => go(-1)} onNext={() => go(1)} />
+      <FeaturedProgressNav
+        products={products}
+        activeIndex={logicalIndex}
+        progressPaused={progressPaused}
+        progressToken={progressToken}
+        reducedMotion={reducedMotion}
+        onSelect={goTo}
+      />
     ) : null;
+
+  const rootStyle = {
+    ['--featured-autoplay-ms' as string]: `${FEATURED_AUTOPLAY_MS}ms`,
+  } as CSSProperties;
 
   if (total === 1) {
     const only = products[0]!;
@@ -316,10 +454,20 @@ function BlacklineFeaturedCarousel({
 
   return (
     <section
+      ref={rootRef}
       className="sf-featured sf-spotlight sf-spotlight--unified"
       aria-labelledby={labelId}
+      style={rootStyle}
       onTouchStart={onTouchStart}
       onTouchEnd={onTouchEnd}
+      onMouseEnter={() => setPointerPaused(true)}
+      onMouseLeave={() => setPointerPaused(false)}
+      onFocusCapture={() => setPointerPaused(true)}
+      onBlurCapture={(event) => {
+        const next = event.relatedTarget;
+        if (next instanceof Node && event.currentTarget.contains(next)) return;
+        setPointerPaused(false);
+      }}
     >
       <h2 className="sf-sr-only" id={labelId}>
         Featured
@@ -352,7 +500,7 @@ function BlacklineFeaturedCarousel({
                   headingId={slide.headingId}
                   interactive={isActiveReal}
                   showCounter={isActiveReal}
-                  controls={isActiveReal ? nav : null}
+                  progressFooter={isActiveReal ? progressNav : null}
                 />
               </div>
             );

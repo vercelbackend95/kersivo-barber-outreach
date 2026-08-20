@@ -211,11 +211,22 @@ function initProductRailRoot(root: HTMLElement): void {
   updateControls();
 }
 
-export function destroyProductRails(scope: ParentNode = document): void {
-  const roots = scope.querySelectorAll(ROOT_SELECTOR);
-  roots.forEach((root) => {
-    if (!(root instanceof HTMLElement)) return;
+function collectProductRailRoots(scope: ParentNode): HTMLElement[] {
+  const roots: HTMLElement[] = [];
+  if (scope instanceof Element && scope.matches(ROOT_SELECTOR) && scope instanceof HTMLElement) {
+    roots.push(scope);
+  }
+  for (const node of scope.querySelectorAll(ROOT_SELECTOR)) {
+    if (node instanceof HTMLElement && !roots.includes(node)) {
+      roots.push(node);
+    }
+  }
+  return roots;
+}
 
+export function destroyProductRails(scope: ParentNode = document): void {
+  const roots = collectProductRailRoots(scope);
+  roots.forEach((root) => {
     const instance = instances.get(root);
     if (!instance) return;
 
@@ -234,9 +245,7 @@ export function destroyProductRails(scope: ParentNode = document): void {
 export function initProductRails(scope: ParentNode = document): void {
   destroyProductRails(scope);
 
-  const roots = Array.from(scope.querySelectorAll(ROOT_SELECTOR)).filter(
-    (root): root is HTMLElement => root instanceof HTMLElement,
-  );
+  const roots = collectProductRailRoots(scope);
 
   if (roots.length === 0) return;
 

@@ -1,0 +1,40 @@
+﻿---
+description: Official Kersivo product carousel (ProductRail) — reuse this asset; do not build parallel carousels
+globs: "**/ProductRail*","**/initProductRail*","**/productRail.css","**/DemoShopPreview*","**/StorefrontProductDetail*","scripts/blackline-*-carousel*"
+alwaysApply: false
+---
+
+# Kersivo ProductRail
+
+[`ProductRail`](src/components/shop/ProductRail.tsx) + [`initProductRail.ts`](src/lib/shop/initProductRail.ts) + [`productRail.css`](src/styles/components/productRail.css) is the **official Kersivo product carousel**. Reuse it for product strips (landing shop preview, PDP "You may also like", etc.). Do not invent a second horizontal product carousel.
+
+## BLACKLINE mount (canonical)
+
+```tsx
+<ProductRail
+  products={carouselProducts}
+  productHrefBase="/demo/shop" // required for real PDP hrefs
+  variant="blackline"
+  density="editorial"
+  showAction="add-to-cart"
+  showControls
+  showProgress
+  shopName="BLACKLINE"
+/>
+```
+
+- BLACKLINE + ATC renders [`StorefrontProductCard`](src/components/shop/storefront/StorefrontProductCard.tsx) (bag icon, demo prices). Do not reimplement those cards in the rail.
+- Edge "more content" fade lives in `productRail.css` (mask on the track via `data-can-scroll-*`). Do not add a white overlay.
+- Section titles (e.g. "You may also like", "THE PRODUCTS WE USE") stay **outside** the rail; the rail header is controls + progress only.
+- Map `StorefrontProduct` → `CarouselProduct` with `storefrontProductToCarousel` when the host already has storefront products.
+
+## Init
+
+`ProductRail` self-binds on mount (`initProductRails` / `destroyProductRails` on its root). Host pages may still call `initProductRails()` globally (idempotent). Do not require every host to remember init for a drop-in reuse.
+
+## Anti-patterns
+
+- New `.related-products-carousel` / custom snap rails for products
+- Duplicating edge-fade or ATC icon styles outside `productRail.css` / storefront card path
+- `previewMode` on BLACKLINE (Kersivo marketing only)
+- `density="editorial"` without `showAction="add-to-cart"` when you need ATC storefront cards

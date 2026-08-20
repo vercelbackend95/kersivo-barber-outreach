@@ -162,7 +162,11 @@
 }
 
 .product-rail__card,
-:is(.product-rail, .shop6__carousel, .feature261-retail-carousel) .shop-card {
+:is(
+  .product-rail:not(.sf-shop--blackline),
+  .shop6__carousel:not(.sf-shop--blackline),
+  .feature261-retail-carousel
+) .shop-card {
   display: flex;
   flex-direction: column;
   width: 100%;
@@ -180,9 +184,137 @@
     box-shadow 180ms ease;
 }
 
+/* BLACKLINE landing rail: shop border tokens, no drop-shadow; room for hover lift */
+.product-rail.sf-shop--blackline .product-rail__track {
+  padding-top: 6px;
+  padding-bottom: 2px;
+  --rail-edge-fade: clamp(2.75rem, 5vw, 3.75rem);
+  -webkit-mask-repeat: no-repeat;
+  mask-repeat: no-repeat;
+  -webkit-mask-size: 100% 100%;
+  mask-size: 100% 100%;
+}
+
+.product-rail.sf-shop--blackline .product-rail__item > .sf-card {
+  width: 100%;
+  min-height: 100%;
+  /* Real border (not inset) so media cannot cover the stroke — matches shop grid */
+  border: 1px solid var(--shop-border, var(--bl-line-dark, rgba(244, 241, 234, 0.16)));
+  border-radius: var(--shop-radius-lg, 20px);
+  background: var(--shop-surface, var(--bl-graphite, #14161a));
+  box-shadow: none;
+}
+
+.product-rail.sf-shop--blackline .product-rail__item > .sf-card:hover {
+  border-color: var(--shop-border-hover, rgba(244, 241, 234, 0.28));
+  box-shadow: none;
+}
+
+/*
+ * Landing The Shop is light ivory — ivory shop-border disappears against the page.
+ * Use carbon hairline (same pattern as other light-surface BLACKLINE cards).
+ */
+[data-theme='blackline'] .bl-shop .product-rail.sf-shop--blackline .product-rail__item > .sf-card {
+  border-color: color-mix(in srgb, var(--bl-carbon, #0b0c0e) 20%, transparent);
+}
+
+[data-theme='blackline'] .bl-shop .product-rail.sf-shop--blackline .product-rail__item > .sf-card:hover {
+  border-color: color-mix(in srgb, var(--bl-carbon, #0b0c0e) 32%, transparent);
+}
+
+/*
+ * Edge “more content” hint: soft multi-stop mask on the track only
+ * (header/controls stay sharp; no opaque white overlay).
+ */
+.product-rail.sf-shop--blackline[data-can-scroll-right='true']:not([data-can-scroll-left='true'])
+  .product-rail__track {
+  -webkit-mask-image: linear-gradient(
+    to right,
+    #000 0%,
+    #000 calc(100% - var(--rail-edge-fade)),
+    rgba(0, 0, 0, 0.88) calc(100% - var(--rail-edge-fade) * 0.68),
+    rgba(0, 0, 0, 0.48) calc(100% - var(--rail-edge-fade) * 0.36),
+    rgba(0, 0, 0, 0.14) calc(100% - var(--rail-edge-fade) * 0.14),
+    transparent 100%
+  );
+  mask-image: linear-gradient(
+    to right,
+    #000 0%,
+    #000 calc(100% - var(--rail-edge-fade)),
+    rgba(0, 0, 0, 0.88) calc(100% - var(--rail-edge-fade) * 0.68),
+    rgba(0, 0, 0, 0.48) calc(100% - var(--rail-edge-fade) * 0.36),
+    rgba(0, 0, 0, 0.14) calc(100% - var(--rail-edge-fade) * 0.14),
+    transparent 100%
+  );
+}
+
+.product-rail.sf-shop--blackline[data-can-scroll-left='true']:not([data-can-scroll-right='true'])
+  .product-rail__track {
+  -webkit-mask-image: linear-gradient(
+    to right,
+    transparent 0%,
+    rgba(0, 0, 0, 0.14) calc(var(--rail-edge-fade) * 0.14),
+    rgba(0, 0, 0, 0.48) calc(var(--rail-edge-fade) * 0.36),
+    rgba(0, 0, 0, 0.88) calc(var(--rail-edge-fade) * 0.68),
+    #000 var(--rail-edge-fade),
+    #000 100%
+  );
+  mask-image: linear-gradient(
+    to right,
+    transparent 0%,
+    rgba(0, 0, 0, 0.14) calc(var(--rail-edge-fade) * 0.14),
+    rgba(0, 0, 0, 0.48) calc(var(--rail-edge-fade) * 0.36),
+    rgba(0, 0, 0, 0.88) calc(var(--rail-edge-fade) * 0.68),
+    #000 var(--rail-edge-fade),
+    #000 100%
+  );
+}
+
+.product-rail.sf-shop--blackline[data-can-scroll-left='true'][data-can-scroll-right='true']
+  .product-rail__track {
+  -webkit-mask-image: linear-gradient(
+    to right,
+    transparent 0%,
+    rgba(0, 0, 0, 0.14) calc(var(--rail-edge-fade) * 0.14),
+    rgba(0, 0, 0, 0.48) calc(var(--rail-edge-fade) * 0.36),
+    rgba(0, 0, 0, 0.88) calc(var(--rail-edge-fade) * 0.68),
+    #000 var(--rail-edge-fade),
+    #000 calc(100% - var(--rail-edge-fade)),
+    rgba(0, 0, 0, 0.88) calc(100% - var(--rail-edge-fade) * 0.68),
+    rgba(0, 0, 0, 0.48) calc(100% - var(--rail-edge-fade) * 0.36),
+    rgba(0, 0, 0, 0.14) calc(100% - var(--rail-edge-fade) * 0.14),
+    transparent 100%
+  );
+  mask-image: linear-gradient(
+    to right,
+    transparent 0%,
+    rgba(0, 0, 0, 0.14) calc(var(--rail-edge-fade) * 0.14),
+    rgba(0, 0, 0, 0.48) calc(var(--rail-edge-fade) * 0.36),
+    rgba(0, 0, 0, 0.88) calc(var(--rail-edge-fade) * 0.68),
+    #000 var(--rail-edge-fade),
+    #000 calc(100% - var(--rail-edge-fade)),
+    rgba(0, 0, 0, 0.88) calc(100% - var(--rail-edge-fade) * 0.68),
+    rgba(0, 0, 0, 0.48) calc(100% - var(--rail-edge-fade) * 0.36),
+    rgba(0, 0, 0, 0.14) calc(100% - var(--rail-edge-fade) * 0.14),
+    transparent 100%
+  );
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .product-rail.sf-shop--blackline[data-can-scroll-right='true'] .product-rail__track,
+  .product-rail.sf-shop--blackline[data-can-scroll-left='true'] .product-rail__track {
+    /* Keep a shorter, simpler edge cue when motion is reduced */
+    --rail-edge-fade: 2.25rem;
+  }
+}
+
 .product-rail__card--link:hover,
 .product-rail__card--link:focus-visible,
-:is(.product-rail, .shop6__carousel, .feature261-retail-carousel) .shop-card:hover {
+:is(
+  .product-rail:not(.sf-shop--blackline),
+  .shop6__carousel:not(.sf-shop--blackline),
+  .feature261-retail-carousel
+) .shop-card:hover {
   transform: translateY(-2px);
   border-color: color-mix(in srgb, var(--product-rail-accent) 35%, var(--product-rail-border));
   box-shadow: var(--product-rail-shadow-hover);
@@ -194,7 +326,11 @@
 }
 
 .product-rail__media,
-:is(.product-rail, .shop6__carousel, .feature261-retail-carousel) .shop-media {
+:is(
+  .product-rail:not(.sf-shop--blackline),
+  .shop6__carousel:not(.sf-shop--blackline),
+  .feature261-retail-carousel
+) .shop-media {
   position: relative;
   display: block;
   aspect-ratio: 1 / 1;
@@ -213,7 +349,11 @@
 }
 
 .product-rail__media .sf-media-img,
-:is(.product-rail, .shop6__carousel, .feature261-retail-carousel) .shop-image {
+:is(
+  .product-rail:not(.sf-shop--blackline),
+  .shop6__carousel:not(.sf-shop--blackline),
+  .feature261-retail-carousel
+) .shop-image {
   width: 100%;
   height: 100%;
   max-width: none;
@@ -227,12 +367,18 @@
 
 .product-rail__card:hover .sf-media-img,
 .product-rail__card:hover .shop-image,
-:is(.product-rail, .shop6__carousel) .shop-card:hover .shop-image {
+:is(.product-rail:not(.sf-shop--blackline), .shop6__carousel:not(.sf-shop--blackline))
+  .shop-card:hover
+  .shop-image {
   transform: scale(1.03);
 }
 
 .product-rail__body,
-:is(.product-rail, .shop6__carousel, .feature261-retail-carousel) .shop-card-body {
+:is(
+  .product-rail:not(.sf-shop--blackline),
+  .shop6__carousel:not(.sf-shop--blackline),
+  .feature261-retail-carousel
+) .shop-card-body {
   display: flex;
   flex: 1;
   flex-direction: column;
@@ -242,7 +388,11 @@
 }
 
 .product-rail__category,
-:is(.product-rail, .shop6__carousel, .feature261-retail-carousel) .shop-category {
+:is(
+  .product-rail:not(.sf-shop--blackline),
+  .shop6__carousel:not(.sf-shop--blackline),
+  .feature261-retail-carousel
+) .shop-category {
   margin: 0;
   color: var(--product-rail-muted);
   font-size: 0.65rem;
@@ -252,7 +402,11 @@
 }
 
 .product-rail__title,
-:is(.product-rail, .shop6__carousel, .feature261-retail-carousel) .shop-card h3 {
+:is(
+  .product-rail:not(.sf-shop--blackline),
+  .shop6__carousel:not(.sf-shop--blackline),
+  .feature261-retail-carousel
+) .shop-card h3 {
   margin: 0;
   font-size: 0.95rem;
   font-weight: 600;
@@ -271,7 +425,11 @@
 }
 
 .product-rail__price,
-:is(.product-rail, .shop6__carousel, .feature261-retail-carousel) .shop-price {
+:is(
+  .product-rail:not(.sf-shop--blackline),
+  .shop6__carousel:not(.sf-shop--blackline),
+  .feature261-retail-carousel
+) .shop-price {
   margin: 0;
   margin-top: auto;
   font-size: 0.95rem;
@@ -293,8 +451,10 @@
   padding-top: 0.35rem;
 }
 
-/* Media fallback (shared with storefront wordmark language) */
-.product-rail .sf-media {
+/* Media fallback for legacy rail cards only (not BLACKLINE StorefrontProductCard) */
+.product-rail:not(.sf-shop--blackline) .sf-media,
+.product-rail__card .sf-media,
+.product-rail__media .sf-media {
   position: relative;
   display: grid;
   place-items: center;
@@ -304,11 +464,15 @@
   background: color-mix(in srgb, var(--product-rail-surface) 92%, #000);
 }
 
-.product-rail .sf-media--fallback {
+.product-rail:not(.sf-shop--blackline) .sf-media--fallback,
+.product-rail__card .sf-media--fallback,
+.product-rail__media .sf-media--fallback {
   color: var(--product-rail-muted);
 }
 
-.product-rail .sf-media--wordmark {
+.product-rail:not(.sf-shop--blackline) .sf-media--wordmark,
+.product-rail__card .sf-media--wordmark,
+.product-rail__media .sf-media--wordmark {
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -317,7 +481,9 @@
   isolation: isolate;
 }
 
-.product-rail .sf-media-stage {
+.product-rail:not(.sf-shop--blackline) .sf-media-stage,
+.product-rail__card .sf-media-stage,
+.product-rail__media .sf-media-stage {
   position: absolute;
   inset: 0;
   background:
@@ -329,7 +495,9 @@
     linear-gradient(160deg, #1a1d22 0%, #101216 55%, #0c0d10 100%);
 }
 
-.product-rail .sf-media-stage::after {
+.product-rail:not(.sf-shop--blackline) .sf-media-stage::after,
+.product-rail__card .sf-media-stage::after,
+.product-rail__media .sf-media-stage::after {
   content: '';
   position: absolute;
   inset: 0;
@@ -340,14 +508,22 @@
   background-size: 22px 22px;
 }
 
-.product-rail .sf-media-mark,
-.product-rail .sf-media-initial,
-.product-rail .sf-media-soon {
+.product-rail:not(.sf-shop--blackline) .sf-media-mark,
+.product-rail:not(.sf-shop--blackline) .sf-media-initial,
+.product-rail:not(.sf-shop--blackline) .sf-media-soon,
+.product-rail__card .sf-media-mark,
+.product-rail__card .sf-media-initial,
+.product-rail__card .sf-media-soon,
+.product-rail__media .sf-media-mark,
+.product-rail__media .sf-media-initial,
+.product-rail__media .sf-media-soon {
   position: relative;
   z-index: 1;
 }
 
-.product-rail .sf-media-mark {
+.product-rail:not(.sf-shop--blackline) .sf-media-mark,
+.product-rail__card .sf-media-mark,
+.product-rail__media .sf-media-mark {
   display: grid;
   place-items: center;
   width: 2.4rem;
@@ -359,7 +535,9 @@
   color: var(--product-rail-text);
 }
 
-.product-rail .sf-media-initial {
+.product-rail:not(.sf-shop--blackline) .sf-media-initial,
+.product-rail__card .sf-media-initial,
+.product-rail__media .sf-media-initial {
   font-size: 0.82rem;
   font-weight: 700;
   letter-spacing: 0.16em;
@@ -367,7 +545,9 @@
   opacity: 0.7;
 }
 
-.product-rail .sf-media-soon {
+.product-rail:not(.sf-shop--blackline) .sf-media-soon,
+.product-rail__card .sf-media-soon,
+.product-rail__media .sf-media-soon {
   font-size: 0.62rem;
   letter-spacing: 0.1em;
   text-transform: uppercase;
@@ -476,20 +656,22 @@
   .product-rail__card--link,
   .product-rail__media .sf-media-img,
   .product-rail__media .shop-image,
-  :is(.product-rail, .shop6__carousel) .shop-card,
-  :is(.product-rail, .shop6__carousel) .shop-image {
-    transition: none !important;
+  :is(.product-rail:not(.sf-shop--blackline), .shop6__carousel:not(.sf-shop--blackline)) .shop-card,
+  :is(.product-rail:not(.sf-shop--blackline), .shop6__carousel:not(.sf-shop--blackline)) .shop-image {
+    transition: none;
   }
 
   .product-rail__card--link:hover,
   .product-rail__card--link:focus-visible,
-  :is(.product-rail, .shop6__carousel) .shop-card:hover {
+  :is(.product-rail:not(.sf-shop--blackline), .shop6__carousel:not(.sf-shop--blackline)) .shop-card:hover {
     transform: none;
   }
 
   .product-rail__card:hover .sf-media-img,
   .product-rail__card:hover .shop-image,
-  :is(.product-rail, .shop6__carousel) .shop-card:hover .shop-image {
+  :is(.product-rail:not(.sf-shop--blackline), .shop6__carousel:not(.sf-shop--blackline))
+    .shop-card:hover
+    .shop-image {
     transform: none;
   }
 }

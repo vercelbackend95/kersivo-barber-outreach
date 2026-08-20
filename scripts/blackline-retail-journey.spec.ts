@@ -235,6 +235,9 @@ test.describe('BLACKLINE shop purchase to Orders and Sales', () => {
     await page.goto('/demo/shop/bl-product-ironclad-pomade', { waitUntil: 'domcontentloaded' });
     await expect(page.getByRole('heading', { name: /ironclad pomade/i })).toBeVisible();
     await expect(page.locator('.sf-pdp-hero img.sf-media-img')).toBeVisible();
+    const pdpAtc = page.locator('.sf-pdp-hero .sf-atc').first();
+    await expect(pdpAtc).toHaveClass(/sf-atc--icon/);
+    await expect(pdpAtc.locator('svg')).toBeVisible();
 
     await page.goto('/demo/shop/bl-product-shave-cream', { waitUntil: 'domcontentloaded' });
     await waitForCartIsland(page);
@@ -288,24 +291,48 @@ test.describe('BLACKLINE shop purchase to Orders and Sales', () => {
     }
 
     const featuredHeights: Array<{ width: number; height: number }> = [];
-    for (const width of [1280, 1440, 1920] as const) {
+    for (const width of [1280, 1440, 1920]) {
       await page.setViewportSize({ width, height: 900 });
       await page.goto('/demo/shop', { waitUntil: 'domcontentloaded' });
-      const height = await page.evaluate(() => {
+      const metrics = await page.evaluate(() => {
         const story = document.querySelector(
           '.sf-shop--blackline .sf-spotlight--unified .sf-spotlight-slide .sf-spotlight-story:not([aria-hidden="true"])',
         ) as HTMLElement | null;
-        return story ? Math.round(story.getBoundingClientRect().height) : null;
+        const media = story?.querySelector('.sf-featured-media') as HTMLElement | null;
+        const copy = story?.querySelector('.sf-featured-copy') as HTMLElement | null;
+        const progress = story?.querySelector('.sf-spotlight-progress') as HTMLElement | null;
+        const product = story?.querySelector('.sf-featured-media-product') as HTMLElement | null;
+        if (!story || !media || !copy || !progress) return null;
+        const storyBox = story.getBoundingClientRect();
+        const mediaBox = media.getBoundingClientRect();
+        const copyBox = copy.getBoundingClientRect();
+        const progressBox = progress.getBoundingClientRect();
+        return {
+          height: Math.round(storyBox.height),
+          mediaHeight: Math.round(mediaBox.height),
+          copyHeight: Math.round(copyBox.height),
+          progressTop: Math.round(progressBox.top),
+          storyBottom: Math.round(storyBox.bottom),
+          progressWidth: Math.round(progressBox.width),
+          storyWidth: Math.round(storyBox.width),
+          copyWidth: Math.round(copyBox.width),
+          productFit: product ? getComputedStyle(product).objectFit : null,
+        };
       });
-      expect(height).not.toBeNull();
-      expect(height!).toBeGreaterThanOrEqual(300);
-      expect(height!).toBeLessThanOrEqual(416);
-      featuredHeights.push({ width, height: height! });
+      expect(metrics).not.toBeNull();
+      expect(metrics!.height).toBeGreaterThanOrEqual(360);
+      expect(metrics!.height).toBeLessThanOrEqual(520);
+      expect(Math.abs(metrics!.mediaHeight - metrics!.copyHeight)).toBeLessThanOrEqual(2);
+      expect(metrics!.storyBottom - metrics!.progressTop).toBeLessThanOrEqual(72);
+      expect(metrics!.progressWidth).toBeGreaterThan(metrics!.copyWidth + 40);
+      expect(Math.abs(metrics!.progressWidth - metrics!.storyWidth)).toBeLessThanOrEqual(56);
+      expect(metrics!.productFit).toBe('cover');
+      featuredHeights.push({ width, height: metrics!.height });
     }
     expect(featuredHeights).toHaveLength(3);
   });
 
-  test('featured carousel covers product images and slides horizontally', async ({ page }) => {
+  test('featured carousel covers product images and uses progress autoplay', async ({ page }) => {
     await page.setViewportSize({ width: 1440, height: 900 });
     await page.goto('/demo/shop', { waitUntil: 'domcontentloaded' });
 
@@ -328,26 +355,99 @@ test.describe('BLACKLINE shop purchase to Orders and Sales', () => {
     expect(media!.productPadding).toBe('0px');
     expect(media!.ambientPresent).toBe(false);
 
-    await expect(page.locator('.sf-spotlight-nav-btn')).toHaveCount(2);
+    await expect(page.locator('.sf-spotlight-nav-btn')).toHaveCount(0);
+    await expect(page.getByRole('button', { name: /Previous featured product|Next featured product/i })).toHaveCount(0);
+    await expect(page.locator('.sf-spotlight-progress-seg')).toHaveCount(4);
+    await expect(page.getByRole('button', { name: /Pause featured products|Resume featured products/i })).toHaveCount(0);
+
+    const activeStory = page.locator('.sf-spotlight-story:not([aria-hidden="true"])');
+    await expect(activeStory.locator('.sf-spotlight-index')).toContainText('01 / 04');
+    await expect(activeStory.locator('.sf-featured-name')).toHaveText(/ironclad pomade/i);
+
     const track = page.locator('.sf-spotlight-track');
     const before = await track.evaluate((el) => getComputedStyle(el).transform);
-    await page.getByRole('button', { name: 'Next featured product' }).click();
-    await expect.poll(async () => track.evaluate((el) => getComputedStyle(el).transform)).not.toBe(before);
 
-    await expect(page.locator('.sf-spotlight-story:not([aria-hidden="true"]) .sf-atc').first()).toBeVisible();
+    await page.getByRole('button', { name: /Show featured product 2 of 4: Beard Balm/i }).click();
+    await expect.poll(async () => track.evaluate((el) => getComputedStyle(el).transform)).not.toBe(before);
+    await expect(activeStory.locator('.sf-featured-name')).toHaveText(/beard balm/i);
+    await expect(activeStory.locator('.sf-spotlight-index')).toContainText('02 / 04');
+    await expect(page.getByRole('button', { name: /Show featured product 2 of 4: Beard Balm/i })).toHaveAttribute(
+      'aria-current',
+      'true',
+    );
+
+    await expect(activeStory.locator('.sf-atc').first()).toBeVisible();
     await assertNoHorizontalOverflow(page);
 
+    await page.clock.install();
+
+    // Leave hover/focus so autoplay is armed, then restart timer under the fake clock
+    await page.mouse.move(0, 0);
+    await page.evaluate(() => (document.activeElement as HTMLElement | null)?.blur());
+    await page.getByRole('button', { name: /Show featured product 2 of 4: Beard Balm/i }).click();
+    await page.mouse.move(0, 0);
+    await page.evaluate(() => (document.activeElement as HTMLElement | null)?.blur());
+
+    await page.clock.fastForward(6000);
+    await expect(activeStory.locator('.sf-featured-name')).toHaveText(/barber wash/i);
+    await expect(activeStory.locator('.sf-spotlight-index')).toContainText('03 / 04');
+
+    // Loop last → first
+    await page.getByRole('button', { name: /Show featured product 4 of 4/i }).click();
+    await expect(activeStory.locator('.sf-spotlight-index')).toContainText('04 / 04');
+    await page.mouse.move(0, 0);
+    await page.evaluate(() => (document.activeElement as HTMLElement | null)?.blur());
+    await page.getByRole('button', { name: /Show featured product 4 of 4/i }).click();
+    await page.mouse.move(0, 0);
+    await page.evaluate(() => (document.activeElement as HTMLElement | null)?.blur());
+    await page.clock.fastForward(6000);
+    await expect(activeStory.locator('.sf-featured-name')).toHaveText(/ironclad pomade/i);
+    await expect(activeStory.locator('.sf-spotlight-index')).toContainText('01 / 04');
+
+    // Hover pause freezes autoplay
+    await page.locator('.sf-spotlight--unified').hover();
+    const pausedName = (await activeStory.locator('.sf-featured-name').textContent())?.trim() ?? '';
+    await page.clock.fastForward(6000);
+    await expect(activeStory.locator('.sf-featured-name')).toHaveText(pausedName);
+    await page.mouse.move(0, 0);
+
+    // Document hidden pauses progress fill
+    await page.evaluate(() => {
+      Object.defineProperty(document, 'hidden', { configurable: true, get: () => true });
+      document.dispatchEvent(new Event('visibilitychange'));
+    });
+    await expect(page.locator('.sf-spotlight-progress-fill.is-active')).toHaveClass(/is-paused/);
+    await page.evaluate(() => {
+      Object.defineProperty(document, 'hidden', { configurable: true, get: () => false });
+      document.dispatchEvent(new Event('visibilitychange'));
+    });
+
+    // Reduced motion: segment click still works
     await page.emulateMedia({ reducedMotion: 'reduce' });
+    await page.clock.resume();
     await page.goto('/demo/shop', { waitUntil: 'domcontentloaded' });
-    const reducedTrack = page.locator('.sf-spotlight-track');
-    const reducedBefore = await reducedTrack.evaluate((el) => getComputedStyle(el).transform);
-    const firstName = await page.locator('.sf-spotlight-story:not([aria-hidden="true"]) .sf-featured-name').innerText();
-    await page.getByRole('button', { name: 'Next featured product' }).click();
-    await expect
-      .poll(async () => reducedTrack.evaluate((el) => getComputedStyle(el).transform), { timeout: 1000 })
-      .not.toBe(reducedBefore);
-    await expect(page.locator('.sf-spotlight-story:not([aria-hidden="true"]) .sf-featured-name')).not.toHaveText(firstName);
+    await expect(page.getByRole('button', { name: /Pause featured products|Resume featured products/i })).toHaveCount(0);
+    const reducedName = await page.locator('.sf-spotlight-story:not([aria-hidden="true"]) .sf-featured-name').innerText();
+    await page.getByRole('button', { name: /Show featured product 3 of 4/i }).click();
+    await expect(page.locator('.sf-spotlight-story:not([aria-hidden="true"]) .sf-featured-name')).not.toHaveText(
+      reducedName,
+    );
     await expect(page.locator('.sf-spotlight-story:not([aria-hidden="true"]) .sf-atc').first()).toBeVisible();
+  });
+
+  test('featured progress autoplay ATC and landing rail stay isolated', async ({ page }) => {
+    await page.setViewportSize({ width: 390, height: 844 });
+    await page.goto('/demo/shop', { waitUntil: 'domcontentloaded' });
+    await waitForCartIsland(page);
+    await assertNoHorizontalOverflow(page);
+
+    const featuredAtc = page.locator('.sf-spotlight-story:not([aria-hidden="true"]) .sf-atc').first();
+    await featuredAtc.click();
+    await expect(page.locator('[data-sf-cart-toast]')).toContainText(/added to bag/i);
+
+    await page.goto('/demo', { waitUntil: 'domcontentloaded' });
+    await expect(page.locator('.bl-shop-rail [data-product-rail-root]')).toBeVisible();
+    await expect(page.locator('.bl-shop-rail .sf-spotlight-progress')).toHaveCount(0);
   });
 
   test('compact discovery keeps one sticky row without search or shelf heading', async ({ page }) => {
@@ -554,6 +654,32 @@ test.describe('BLACKLINE shop purchase to Orders and Sales', () => {
     );
     await page.locator('[data-bl-bag-button]').click();
     await expect(page.locator('.sf-cart.is-open')).toBeVisible();
+  });
+
+  test('PDP You may also like reuses ProductRail with storefront cards', async ({ page }) => {
+    await page.setViewportSize({ width: 1440, height: 900 });
+    await page.goto('/demo/shop/bl-product-ironclad-pomade', { waitUntil: 'domcontentloaded' });
+
+    const related = page.locator('section[aria-label="Related products"]');
+    await expect(related.getByRole('heading', { name: 'You may also like' })).toBeVisible();
+
+    const rail = related.locator('[data-product-rail-root]');
+    await expect(rail).toBeVisible();
+    await expect(related.locator('ul.sf-grid')).toHaveCount(0);
+    await expect(rail.locator('.product-rail__item .sf-card')).toHaveCount(10);
+
+    await expect(rail).toHaveAttribute('data-can-scroll-right', 'true');
+    await expect(rail.locator('[data-product-rail-next]').first()).toBeEnabled();
+
+    const track = rail.locator('[data-product-rail-track]');
+    const fade = await track.evaluate((el) => {
+      const style = getComputedStyle(el);
+      return style.maskImage || style.webkitMaskImage || '';
+    });
+    expect(fade).toMatch(/linear-gradient/i);
+
+    await rail.locator('[data-product-rail-next]').first().click();
+    await expect(rail).toHaveAttribute('data-can-scroll-left', 'true');
   });
 
   test('mobile header shows bag, hides BOOK at 320px, and keeps booking in the menu', async ({ page }) => {

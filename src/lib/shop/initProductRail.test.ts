@@ -173,4 +173,20 @@ describe('initProductRails', () => {
     rail.next.click();
     expect(rail.scrollToSpy).toHaveBeenCalled();
   });
+
+  it('initProductRails accepts the root element as scope', async () => {
+    const rail = mountRail();
+    initProductRails(rail.root);
+    await Promise.resolve();
+
+    expect(rail.prev.disabled).toBe(true);
+    expect(rail.next.disabled).toBe(false);
+    rail.next.click();
+    expect(rail.scrollToSpy).toHaveBeenCalled();
+
+    destroyProductRails(rail.root);
+    rail.scrollToSpy.mockClear();
+    rail.next.click();
+    expect(rail.scrollToSpy).not.toHaveBeenCalled();
+  });
 });

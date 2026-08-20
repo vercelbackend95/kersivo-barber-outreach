@@ -16,7 +16,7 @@ if (!product) {
   return Astro.redirect('/demo/shop');
 }
 
-const related = relatedStorefrontProducts(products, product.id);
+const related = relatedStorefrontProducts(products, product.id, { limit: 10, fill: true });
 ---
 
 <DemoLayout

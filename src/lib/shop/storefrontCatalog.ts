@@ -1,5 +1,6 @@
 import { formatDemoPriceGbp } from '@/lib/demo/services';
 import type { DemoProduct } from '@/lib/demo/products';
+import type { CarouselProduct } from '@/lib/shop/carouselProducts';
 import type { DemoCatalogProduct } from '@/lib/shop/demoCatalog';
 import { formatGbp } from '@/lib/shop/money';
 import {
@@ -291,17 +292,57 @@ export function paginateStorefrontProducts(
   };
 }
 
+export type RelatedStorefrontProductsOptions = {
+  limit?: number;
+  /** When true, pad with other categories after same-category matches. */
+  fill?: boolean;
+};
+
 export function relatedStorefrontProducts(
   list: readonly StorefrontProduct[],
   productId: string,
-  limit = 4,
+  limitOrOptions: number | RelatedStorefrontProductsOptions = 4,
 ): StorefrontProduct[] {
+  const options: RelatedStorefrontProductsOptions =
+    typeof limitOrOptions === 'number' ? { limit: limitOrOptions } : limitOrOptions;
+  const limit = options.limit ?? 4;
+  const fill = options.fill === true;
+
   const current = list.find((product) => product.id === productId);
   if (!current) return [];
-  return visibleProducts(list)
+
+  const active = visibleProducts(list);
+  const sortRelated = (a: StorefrontProduct, b: StorefrontProduct) =>
+    a.sortOrder - b.sortOrder || a.name.localeCompare(b.name);
+
+  const sameCategory = active
     .filter((product) => product.id !== productId && product.category === current.category)
-    .sort((a, b) => a.sortOrder - b.sortOrder || a.name.localeCompare(b.name))
-    .slice(0, limit);
+    .sort(sortRelated);
+
+  if (!fill || sameCategory.length >= limit) {
+    return sameCategory.slice(0, limit);
+  }
+
+  const sameIds = new Set(sameCategory.map((product) => product.id));
+  const fillers = active
+    .filter((product) => product.id !== productId && !sameIds.has(product.id))
+    .sort(sortRelated);
+
+  return [...sameCategory, ...fillers].slice(0, limit);
+}
+
+/** Map storefront catalog products into the ProductRail / CarouselProduct shape. */
+export function storefrontProductToCarousel(product: StorefrontProduct): CarouselProduct {
+  const src = product.image?.src?.trim() ?? '';
+  return {
+    id: product.id,
+    name: product.name,
+    category: product.category,
+    pricePence: product.pricePence,
+    imageUrl: src.length > 0 ? src : null,
+    available: product.available,
+    requiresOptions: product.requiresOptions,
+  };
 }
 
 export function visibleCategories(list: readonly StorefrontProduct[]): ProductCategory[] {

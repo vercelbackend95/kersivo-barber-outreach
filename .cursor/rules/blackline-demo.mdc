@@ -14,6 +14,7 @@ Follow [docs/design/BLACKLINE_DESIGN_SYSTEM.md](docs/design/BLACKLINE_DESIGN_SYS
 - Alternate `data-surface="dark"` / `"light"`. Interactive pieces need hover, focus, disabled, and `prefers-reduced-motion`.
 - Do not introduce Kersivo red, gold, neon, gradients, glassmorphism, or barber clichés.
 - Keep WCAG AA contrast, visible focus (`--theme-focus`), and ≥44px targets.
+- Product strips / PDP “You may also like”: reuse [`ProductRail`](src/components/shop/ProductRail.tsx) — see `.cursor/rules/kersivo-product-rail.mdc`. Do not build a parallel product carousel.
 
 ```css
 /* BAD */
