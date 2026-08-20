@@ -33,7 +33,7 @@ export default function StorefrontProductCard({
   return (
     <article className={classes} data-category={product.category} aria-labelledby={`sf-card-${product.id}`}>
       <a className="sf-card-hit" href={href} aria-label={`${copy.viewProductLabel}: ${product.name}`} />
-      <div className="sf-card-media shop-media">
+      <div className="sf-card-media shop-media sf-card-media--cover">
         <ProductAvailabilityBadge soldOut={soldOut} />
         <ProductMediaFallback
           image={product.image}

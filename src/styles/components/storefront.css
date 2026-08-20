@@ -1007,36 +1007,30 @@
   box-shadow: var(--shop-shadow);
 }
 
-@media (min-width: 768px) {
-  .sf-shop--blackline .sf-spotlight--unified .sf-spotlight-story {
-    grid-template-columns: minmax(0, 1.15fr) minmax(0, 0.95fr);
-    align-items: stretch;
-  }
-}
-
 .sf-shop--blackline .sf-spotlight--unified .sf-featured-media,
+.sf-shop--blackline .sf-spotlight--unified .sf-featured-media.sf-media,
 .sf-shop--blackline .sf-spotlight--unified .sf-media {
-  min-height: 16rem;
-  aspect-ratio: 4 / 5;
+  width: 100%;
+  min-height: 0;
+  max-height: 18rem;
+  aspect-ratio: 4 / 3;
   background: color-mix(in srgb, var(--shop-bg) 55%, var(--shop-surface));
 }
 
-@media (min-width: 768px) {
-  .sf-shop--blackline .sf-spotlight--unified .sf-featured-media,
-  .sf-shop--blackline .sf-spotlight--unified .sf-media {
-    aspect-ratio: auto;
-    height: 100%;
-    min-height: 22rem;
-  }
-}
-
 .sf-shop--blackline .sf-spotlight--unified .sf-media-img {
+  width: 100%;
+  height: 100%;
   object-fit: cover;
+  object-position: center;
+  padding: 0;
 }
 
 .sf-shop--blackline .sf-spotlight--unified .sf-featured-copy {
-  gap: 0.55rem;
-  padding: 1.15rem 1.15rem 1.25rem;
+  display: grid;
+  gap: 0.4rem;
+  align-content: center;
+  padding: clamp(1rem, 1.7vw, 1.4rem);
+  min-height: 0;
 }
 
 .sf-shop--blackline .sf-spotlight-controls {
@@ -1071,15 +1065,63 @@
 }
 
 .sf-shop--blackline .sf-featured-name {
-  font-size: clamp(1.7rem, 3vw, 2.35rem);
+  font-size: clamp(1.45rem, 2.6vw, 2rem);
+  line-height: 1.05;
 }
 
 .sf-shop--blackline .sf-featured-desc {
-  -webkit-line-clamp: 4;
+  -webkit-line-clamp: 3;
 }
 
 .sf-shop--blackline .sf-spotlight--unified .sf-atc {
   width: 100%;
+}
+
+@media (min-width: 768px) and (max-width: 1023px) {
+  .sf-shop--blackline .sf-spotlight--unified .sf-spotlight-story {
+    grid-template-columns: minmax(0, 1.08fr) minmax(18rem, 0.92fr);
+    align-items: stretch;
+    height: clamp(20rem, 32vw, 23rem);
+    min-height: 20rem;
+    max-height: 23rem;
+  }
+
+  .sf-shop--blackline .sf-spotlight--unified .sf-featured-media,
+  .sf-shop--blackline .sf-spotlight--unified .sf-featured-media.sf-media,
+  .sf-shop--blackline .sf-spotlight--unified .sf-media {
+    aspect-ratio: auto;
+    height: 100%;
+    max-height: none;
+    min-height: 0;
+  }
+
+  .sf-shop--blackline .sf-featured-desc {
+    -webkit-line-clamp: 2;
+  }
+}
+
+@media (min-width: 1024px) {
+  .sf-shop--blackline .sf-spotlight--unified .sf-spotlight-story {
+    grid-template-columns: minmax(0, 1.08fr) minmax(20rem, 0.92fr);
+    align-items: stretch;
+    height: clamp(20rem, 27vw, 26rem);
+    min-height: 20rem;
+    max-height: 26rem;
+  }
+
+  .sf-shop--blackline .sf-spotlight--unified .sf-featured-media,
+  .sf-shop--blackline .sf-spotlight--unified .sf-featured-media.sf-media,
+  .sf-shop--blackline .sf-spotlight--unified .sf-media {
+    aspect-ratio: auto;
+    width: 100%;
+    height: 100%;
+    max-height: none;
+    min-height: 0;
+  }
+
+  .sf-shop--blackline .sf-featured-desc {
+    -webkit-line-clamp: 3;
+  }
 }
 
 .sf-shop--blackline .sf-discovery--sticky {
@@ -1408,9 +1450,61 @@
   background: color-mix(in srgb, var(--shop-bg) 40%, var(--shop-surface-elevated));
 }
 
+.sf-shop--blackline .sf-card-media.shop-media.sf-card-media--cover {
+  position: relative;
+  width: 100%;
+  aspect-ratio: 1 / 1;
+  overflow: hidden;
+  background: color-mix(in srgb, var(--shop-bg) 40%, var(--shop-surface-elevated));
+}
+
+.sf-shop--blackline .sf-card-media.shop-media.sf-card-media--cover > .sf-media {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  min-height: 0;
+  aspect-ratio: auto;
+  overflow: hidden;
+  background: transparent;
+}
+
+.sf-shop--blackline .sf-card .sf-card-media--cover .sf-media-img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  padding: 0;
+  margin: 0;
+  object-fit: cover;
+  object-position: center;
+}
+
+.sf-shop--blackline .sf-card-media--cover > .sf-media--fallback {
+  display: grid;
+  place-items: center;
+  width: 100%;
+  height: 100%;
+  min-height: 0;
+  padding: 0;
+  margin: 0;
+  background: var(--bl-graphite, #14161a);
+}
+
+.sf-shop--blackline .sf-card-media--cover > .sf-media--fallback .sf-media-stage {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+}
+
 .sf-shop--blackline .sf-card .sf-media-img {
   object-fit: contain;
   padding: 7%;
+}
+
+.sf-shop--blackline .sf-card .sf-card-media--cover .sf-media-img {
+  object-fit: cover;
+  padding: 0;
 }
 
 .sf-shop--blackline .sf-card-body {

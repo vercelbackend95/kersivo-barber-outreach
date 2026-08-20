@@ -245,6 +245,66 @@ test.describe('BLACKLINE shop purchase to Orders and Sales', () => {
     await expect(page.locator('[data-sf-cart-toast]')).toContainText('Shave Cream added to bag');
   });
 
+  test('card media fills cover frame and Featured spotlight stays compact', async ({ page }) => {
+    await page.setViewportSize({ width: 1440, height: 900 });
+    await page.goto('/demo/shop', { waitUntil: 'domcontentloaded' });
+
+    const cardMedia = await page.evaluate(() => {
+      const media = document.querySelector(
+        '.sf-shop--blackline .sf-grid .sf-card-media--cover',
+      ) as HTMLElement | null;
+      const inner = media?.querySelector(':scope > .sf-media') as HTMLElement | null;
+      const img = media?.querySelector('.sf-media-img') as HTMLElement | null;
+      if (!media || !inner) return null;
+      const mediaStyle = getComputedStyle(media);
+      const innerStyle = getComputedStyle(inner);
+      const imgStyle = img ? getComputedStyle(img) : null;
+      const mediaBox = media.getBoundingClientRect();
+      const innerBox = inner.getBoundingClientRect();
+      return {
+        mediaAspect: mediaStyle.aspectRatio,
+        innerAspect: innerStyle.aspectRatio,
+        imgFit: imgStyle?.objectFit ?? null,
+        imgPadding: imgStyle?.padding ?? null,
+        mediaWidth: Math.round(mediaBox.width),
+        mediaHeight: Math.round(mediaBox.height),
+        innerWidth: Math.round(innerBox.width),
+        innerHeight: Math.round(innerBox.height),
+        leftGap: Math.abs(innerBox.left - mediaBox.left),
+        topGap: Math.abs(innerBox.top - mediaBox.top),
+      };
+    });
+
+    expect(cardMedia).not.toBeNull();
+    expect(cardMedia!.mediaAspect).toMatch(/1\s*\/\s*1/);
+    expect(cardMedia!.innerAspect === 'auto' || cardMedia!.innerAspect === 'none').toBe(true);
+    expect(cardMedia!.leftGap).toBeLessThanOrEqual(1);
+    expect(cardMedia!.topGap).toBeLessThanOrEqual(1);
+    expect(Math.abs(cardMedia!.innerWidth - cardMedia!.mediaWidth)).toBeLessThanOrEqual(1);
+    expect(Math.abs(cardMedia!.innerHeight - cardMedia!.mediaHeight)).toBeLessThanOrEqual(1);
+    if (cardMedia!.imgFit) {
+      expect(cardMedia!.imgFit).toBe('cover');
+      expect(cardMedia!.imgPadding).toBe('0px');
+    }
+
+    const featuredHeights: Array<{ width: number; height: number }> = [];
+    for (const width of [1280, 1440, 1920] as const) {
+      await page.setViewportSize({ width, height: 900 });
+      await page.goto('/demo/shop', { waitUntil: 'domcontentloaded' });
+      const height = await page.evaluate(() => {
+        const story = document.querySelector(
+          '.sf-shop--blackline .sf-spotlight--unified .sf-spotlight-story',
+        ) as HTMLElement | null;
+        return story ? Math.round(story.getBoundingClientRect().height) : null;
+      });
+      expect(height).not.toBeNull();
+      expect(height!).toBeGreaterThanOrEqual(300);
+      expect(height!).toBeLessThanOrEqual(416);
+      featuredHeights.push({ width, height: height! });
+    }
+    expect(featuredHeights).toHaveLength(3);
+  });
+
   test('compact discovery keeps one sticky row without search or shelf heading', async ({ page }) => {
     test.setTimeout(180_000);
     const viewports = [
