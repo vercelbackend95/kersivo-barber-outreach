@@ -44,7 +44,8 @@ describe('StorefrontProductCard', () => {
     expect(button.getAttribute('data-product-image-url')).toBe('/images/demoshop/matte-pomade.png');
     expect(container.querySelector('a .sf-atc, a button')).toBeNull();
     expect(screen.queryByText('Featured')).toBeNull();
-    expect(screen.getByText('Add')).toBeTruthy();
+    expect(container.querySelector('.sf-atc-label-full')?.textContent).toBe('Add');
+    expect(container.querySelector('.sf-atc-label-short')?.textContent).toBe('Add');
     expect(screen.getByText('£18.00')).toBeTruthy();
   });
 
@@ -114,6 +115,8 @@ describe('StorefrontProductCard', () => {
       />,
     );
     fireEvent.click(screen.getByRole('button', { name: /add: matte pomade/i }));
-    expect(screen.getByRole('button', { name: /add: matte pomade/i }).textContent).toBe('Added');
+    const button = screen.getByRole('button', { name: /add: matte pomade/i });
+    expect(button.querySelector('.sf-atc-label-full')?.textContent).toBe('Added');
+    expect(button.querySelector('.sf-atc-label-short')?.textContent).toBe('Added');
   });
 });

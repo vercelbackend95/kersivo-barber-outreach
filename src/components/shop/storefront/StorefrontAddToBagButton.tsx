@@ -40,7 +40,10 @@ export default function StorefrontAddToBagButton({
   if (product.requiresOptions) {
     return (
       <a className={`sf-atc sf-atc--options ${className}`.trim()} href={href}>
-        {chooseOptionsLabel}
+        <span className="sf-atc-label-full">{chooseOptionsLabel}</span>
+        <span className="sf-atc-label-short" aria-hidden="true">
+          {chooseOptionsLabel}
+        </span>
       </a>
     );
   }
@@ -48,10 +51,15 @@ export default function StorefrontAddToBagButton({
   if (!product.available) {
     return (
       <button type="button" className={`sf-atc sf-atc--sold ${className}`.trim()} disabled>
-        {soldOutLabel}
+        <span className="sf-atc-label-full">{soldOutLabel}</span>
+        <span className="sf-atc-label-short" aria-hidden="true">
+          {soldOutLabel}
+        </span>
       </button>
     );
   }
+
+  const visibleLabel = added ? addedLabel : addToBagLabel;
 
   return (
     <button
@@ -74,7 +82,10 @@ export default function StorefrontAddToBagButton({
       style={{ transitionDuration: `${MORPH_MS}ms` }}
     >
       {showIcon ? <ShoppingBag width={16} height={16} aria-hidden="true" /> : null}
-      {added ? addedLabel : addToBagLabel}
+      <span className="sf-atc-label-full">{visibleLabel}</span>
+      <span className="sf-atc-label-short" aria-hidden="true">
+        {visibleLabel}
+      </span>
     </button>
   );
 }

@@ -26,3 +26,15 @@ export function pickActiveServiceCategory(
 export function serviceMenuReadingY(headerHeight: number, offset = 88): number {
   return Math.max(0, headerHeight) + offset;
 }
+
+/** Prefer the sticky "Now viewing" bar bottom when available. */
+export function serviceMenuReadingYFromViewing(
+  viewingBottom: number | null | undefined,
+  headerHeight: number,
+  offset = 88,
+): number {
+  if (typeof viewingBottom === 'number' && Number.isFinite(viewingBottom) && viewingBottom > 0) {
+    return viewingBottom;
+  }
+  return serviceMenuReadingY(headerHeight, offset);
+}

@@ -36,6 +36,10 @@ type ScrollSnapshot = {
   width: string;
   left: string;
   right: string;
+  bodyOverflow: string;
+  bodyOverscroll: string;
+  htmlOverflow: string;
+  htmlOverscroll: string;
 };
 
 export function createScrollLock(doc: Document, win: Window) {
@@ -47,30 +51,44 @@ export function createScrollLock(doc: Document, win: Window) {
     lock() {
       if (locked) return;
       const body = doc.body;
-      scrollY = win.scrollY || doc.documentElement.scrollTop || 0;
+      const html = doc.documentElement;
+      scrollY = win.scrollY || html.scrollTop || 0;
       previous = {
         position: body.style.position,
         top: body.style.top,
         width: body.style.width,
         left: body.style.left,
         right: body.style.right,
+        bodyOverflow: body.style.overflow,
+        bodyOverscroll: body.style.overscrollBehavior,
+        htmlOverflow: html.style.overflow,
+        htmlOverscroll: html.style.overscrollBehavior,
       };
       body.style.position = 'fixed';
       body.style.top = `-${scrollY}px`;
       body.style.left = '0';
       body.style.right = '0';
       body.style.width = '100%';
+      body.style.overflow = 'hidden';
+      body.style.overscrollBehavior = 'none';
+      html.style.overflow = 'hidden';
+      html.style.overscrollBehavior = 'none';
       locked = true;
     },
     unlock() {
       if (!locked) return;
       const body = doc.body;
+      const html = doc.documentElement;
       if (previous) {
         body.style.position = previous.position;
         body.style.top = previous.top;
         body.style.width = previous.width;
         body.style.left = previous.left;
         body.style.right = previous.right;
+        body.style.overflow = previous.bodyOverflow;
+        body.style.overscrollBehavior = previous.bodyOverscroll;
+        html.style.overflow = previous.htmlOverflow;
+        html.style.overscrollBehavior = previous.htmlOverscroll;
       }
       locked = false;
       previous = null;
@@ -193,6 +211,10 @@ export function bindMobileNav(options: BindMobileNavOptions): () => void {
     syncOverlayTop();
     lock.lock();
     setBackgroundInert(true);
+    syncOverlayTop();
+    win.requestAnimationFrame(() => {
+      syncOverlayTop();
+    });
     overlay.getBoundingClientRect();
 
     const instant = reducedMotion();

@@ -1,5 +1,9 @@
 import { describe, expect, it } from 'vitest';
-import { pickActiveServiceCategory, serviceMenuReadingY } from './serviceMenuSpy';
+import {
+  pickActiveServiceCategory,
+  serviceMenuReadingY,
+  serviceMenuReadingYFromViewing,
+} from './serviceMenuSpy';
 
 const sections = [
   { id: 'cuts-and-fades', top: 400, bottom: 900 },
@@ -28,10 +32,27 @@ describe('pickActiveServiceCategory', () => {
     expect(pickActiveServiceCategory(sections, 1900)).toBe('grooming-and-care');
     expect(pickActiveServiceCategory(sections, 2200, 2100)).toBe('grooming-and-care');
   });
+
+  it('uses the sticky viewing bar bottom as the reading line', () => {
+    const viewingBottom = 158;
+    expect(pickActiveServiceCategory(sections, viewingBottom)).toBe('cuts-and-fades');
+    expect(pickActiveServiceCategory(sections, 900)).toBe('beard-and-shave');
+  });
 });
 
 describe('serviceMenuReadingY', () => {
   it('places the reading line below the fixed header', () => {
     expect(serviceMenuReadingY(66, 88)).toBe(154);
+  });
+});
+
+describe('serviceMenuReadingYFromViewing', () => {
+  it('prefers the sticky bar bottom when present', () => {
+    expect(serviceMenuReadingYFromViewing(172, 66, 88)).toBe(172);
+  });
+
+  it('falls back to header + offset when the bar is missing', () => {
+    expect(serviceMenuReadingYFromViewing(null, 66, 88)).toBe(154);
+    expect(serviceMenuReadingYFromViewing(0, 66, 88)).toBe(154);
   });
 });

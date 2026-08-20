@@ -4,8 +4,9 @@ import {
   useId,
   useRef,
   useState,
+  useSyncExternalStore,
   type CSSProperties,
-  type ReactNode,
+  type MouseEvent as ReactMouseEvent,
   type TouchEvent,
   type TransitionEvent,
 } from 'react';
@@ -27,9 +28,36 @@ type FeaturedProductShowcaseProps = Omit<StorefrontCardSharedProps, 'href'> & {
 
 const SWIPE_THRESHOLD = 40;
 export const FEATURED_AUTOPLAY_MS = 6000;
+const FINE_HOVER_MQ = '(hover: hover) and (pointer: fine)';
+const DESKTOP_PROGRESS_MQ = '(min-width: 768px)';
 
 function prefersReducedMotion() {
   return typeof window !== 'undefined' && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+}
+
+function subscribeMediaQuery(query: string, onChange: () => void) {
+  const media = window.matchMedia(query);
+  media.addEventListener('change', onChange);
+  return () => media.removeEventListener('change', onChange);
+}
+
+function useMediaQuery(query: string, serverSnapshot = false) {
+  return useSyncExternalStore(
+    (onChange) => (typeof window === 'undefined' ? () => {} : subscribeMediaQuery(query, onChange)),
+    () => (typeof window === 'undefined' ? serverSnapshot : window.matchMedia(query).matches),
+    () => serverSnapshot,
+  );
+}
+
+function preloadFeaturedImages(products: StorefrontProduct[]) {
+  for (const product of products) {
+    const src = product.image?.src?.trim();
+    if (!src) continue;
+    const image = new Image();
+    image.decoding = 'async';
+    image.src = src;
+    void image.decode?.().catch(() => undefined);
+  }
 }
 
 function FeaturedStory({
@@ -42,21 +70,17 @@ function FeaturedStory({
   index,
   total,
   showIcon,
-  progressFooter,
   presentation = 'default',
   headingId,
   interactive = true,
-  showCounter = true,
 }: StorefrontCardSharedProps & {
   product: StorefrontProduct;
   index: number;
   total: number;
   showIcon?: boolean;
-  progressFooter?: ReactNode;
   presentation?: ProductMediaPresentation;
   headingId?: string;
   interactive?: boolean;
-  showCounter?: boolean;
 }) {
   const padded = String(index + 1).padStart(2, '0');
   const totalPadded = String(total).padStart(2, '0');
@@ -87,7 +111,7 @@ function FeaturedStory({
       />
       <div className="sf-featured-copy">
         <div className="sf-featured-copy-head">
-          {showCounter && total > 1 ? (
+          {total > 1 ? (
             <p className="sf-spotlight-index">
               <span className="sf-sr-only">Featured product </span>
               {padded} / {totalPadded}
@@ -113,7 +137,6 @@ function FeaturedStory({
           />
         </div>
       </div>
-      {progressFooter}
     </article>
   );
 }
@@ -133,14 +156,44 @@ function FeaturedProgressNav({
   reducedMotion: boolean;
   onSelect: (index: number) => void;
 }) {
+  const interactive = useMediaQuery(DESKTOP_PROGRESS_MQ, false);
   const total = products.length;
 
   return (
-    <div className="sf-spotlight-progress" role="group" aria-label="Featured products">
+    <div
+      className={`sf-spotlight-progress${interactive ? '' : ' sf-spotlight-progress--static'}`}
+      role={interactive ? 'group' : 'presentation'}
+      aria-label={interactive ? 'Featured products' : undefined}
+    >
       <div className="sf-spotlight-progress-track">
         {products.map((product, index) => {
           const isActive = index === activeIndex;
           const isComplete = index < activeIndex;
+          const fill = (
+            <span className="sf-spotlight-progress-rail" aria-hidden="true">
+              <span
+                key={isActive ? `active-${progressToken}` : `seg-${index}-${isComplete ? 'done' : 'idle'}`}
+                className={[
+                  'sf-spotlight-progress-fill',
+                  isComplete ? 'is-complete' : '',
+                  isActive ? 'is-active' : '',
+                  isActive && progressPaused ? 'is-paused' : '',
+                  isActive && reducedMotion ? 'is-static' : '',
+                ]
+                  .filter(Boolean)
+                  .join(' ')}
+              />
+            </span>
+          );
+
+          if (!interactive) {
+            return (
+              <div key={product.id} className="sf-spotlight-progress-seg" aria-hidden="true">
+                {fill}
+              </div>
+            );
+          }
+
           return (
             <button
               key={product.id}
@@ -150,20 +203,7 @@ function FeaturedProgressNav({
               aria-current={isActive ? 'true' : undefined}
               onClick={() => onSelect(index)}
             >
-              <span className="sf-spotlight-progress-rail" aria-hidden="true">
-                <span
-                  key={isActive ? `active-${progressToken}` : `seg-${index}-${isComplete ? 'done' : 'idle'}`}
-                  className={[
-                    'sf-spotlight-progress-fill',
-                    isComplete ? 'is-complete' : '',
-                    isActive ? 'is-active' : '',
-                    isActive && progressPaused ? 'is-paused' : '',
-                    isActive && reducedMotion ? 'is-static' : '',
-                  ]
-                    .filter(Boolean)
-                    .join(' ')}
-                />
-              </span>
+              {fill}
             </button>
           );
         })}
@@ -192,21 +232,26 @@ function BlacklineFeaturedCarousel({
   const total = products.length;
   const rootRef = useRef<HTMLElement>(null);
   const touchStartX = useRef<number | null>(null);
+  const touchStartY = useRef<number | null>(null);
+  const swipeActiveRef = useRef(false);
   const trackRef = useRef<HTMLDivElement>(null);
   const transitioningRef = useRef(false);
   const logicalIndexRef = useRef(0);
   const progressPausedRef = useRef(false);
   const remainingMsRef = useRef(FEATURED_AUTOPLAY_MS);
   const tickStartedAtRef = useRef(0);
+  const timerGenerationRef = useRef(0);
   const [visualIndex, setVisualIndex] = useState(1);
   const [animate, setAnimate] = useState(true);
   const [locked, setLocked] = useState(false);
+  const [swiping, setSwiping] = useState(false);
   const [announce, setAnnounce] = useState(products[0]?.name ?? '');
   const [progressToken, setProgressToken] = useState(0);
   const [inView, setInView] = useState(false);
   const [docHidden, setDocHidden] = useState(false);
-  const [pointerPaused, setPointerPaused] = useState(false);
+  const [hoverPaused, setHoverPaused] = useState(false);
   const [reducedMotion, setReducedMotion] = useState(false);
+  const fineHover = useMediaQuery(FINE_HOVER_MQ, false);
 
   const logicalIndex = (() => {
     if (visualIndex <= 0) return total - 1;
@@ -253,24 +298,29 @@ function BlacklineFeaturedCarousel({
   }, []);
 
   useEffect(() => {
-    const src = products[(logicalIndex + 1) % total]?.image?.src?.trim();
-    if (!src) return;
-    const image = new Image();
-    image.src = src;
-  }, [logicalIndex, products, total]);
+    if (!inView || total < 1) return;
+    preloadFeaturedImages(products);
+  }, [inView, products, total]);
 
-  const jumpWithoutAnimation = useCallback((nextVisual: number) => {
-    setAnimate(false);
-    setVisualIndex(nextVisual);
-    requestAnimationFrame(() => {
+  useEffect(() => {
+    if (!fineHover) setHoverPaused(false);
+  }, [fineHover]);
+
+  const jumpWithoutAnimation = useCallback(
+    (nextVisual: number) => {
+      setAnimate(false);
+      setVisualIndex(nextVisual);
       requestAnimationFrame(() => {
-        setAnimate(true);
-        transitioningRef.current = false;
-        setLocked(false);
-        restartProgress();
+        requestAnimationFrame(() => {
+          setAnimate(true);
+          transitioningRef.current = false;
+          setLocked(false);
+          restartProgress();
+        });
       });
-    });
-  }, [restartProgress]);
+    },
+    [restartProgress],
+  );
 
   const goBy = useCallback(
     (direction: -1 | 1) => {
@@ -324,9 +374,10 @@ function BlacklineFeaturedCarousel({
     [products, restartProgress, total],
   );
 
-  const onTransitionEnd = (event: TransitionEvent<HTMLDivElement>) => {
-    if (event.target !== trackRef.current) return;
-    if (event.propertyName !== 'transform') return;
+  const settleAfterTransition = useCallback(() => {
+    if (!transitioningRef.current) return;
+    transitioningRef.current = false;
+
     if (visualIndex === 0) {
       jumpWithoutAnimation(total);
       setAnnounce(products[total - 1]?.name ?? '');
@@ -337,44 +388,102 @@ function BlacklineFeaturedCarousel({
       setAnnounce(products[0]?.name ?? '');
       return;
     }
-    transitioningRef.current = false;
+
     setLocked(false);
     setAnnounce(products[logicalIndex]?.name ?? '');
     restartProgress();
+  }, [jumpWithoutAnimation, logicalIndex, products, restartProgress, total, visualIndex]);
+
+  const onTransitionEnd = (event: TransitionEvent<HTMLDivElement>) => {
+    if (event.target !== trackRef.current) return;
+    if (event.propertyName !== 'transform') return;
+    settleAfterTransition();
+  };
+
+  useEffect(() => {
+    if (!locked || reducedMotion) return;
+    const failsafe = window.setTimeout(() => {
+      settleAfterTransition();
+    }, 700);
+    return () => window.clearTimeout(failsafe);
+  }, [locked, reducedMotion, settleAfterTransition, visualIndex]);
+
+  const endSwipeGesture = () => {
+    touchStartX.current = null;
+    touchStartY.current = null;
+    swipeActiveRef.current = false;
+    setSwiping(false);
   };
 
   const onTouchStart = (event: TouchEvent) => {
-    touchStartX.current = event.changedTouches[0]?.clientX ?? null;
-  };
-  const onTouchEnd = (event: TouchEvent) => {
-    if (touchStartX.current == null || total < 2) return;
-    const endX = event.changedTouches[0]?.clientX ?? touchStartX.current;
-    const delta = endX - touchStartX.current;
-    touchStartX.current = null;
-    if (Math.abs(delta) < SWIPE_THRESHOLD) return;
-    goBy(delta > 0 ? -1 : 1);
+    const touch = event.changedTouches[0];
+    touchStartX.current = touch?.clientX ?? null;
+    touchStartY.current = touch?.clientY ?? null;
+    swipeActiveRef.current = false;
   };
 
-  const progressPaused =
-    reducedMotion ||
-    !inView ||
-    docHidden ||
-    pointerPaused ||
-    locked;
+  const onTouchMove = (event: TouchEvent) => {
+    if (touchStartX.current == null || touchStartY.current == null) return;
+    const touch = event.changedTouches[0];
+    if (!touch) return;
+    const deltaX = touch.clientX - touchStartX.current;
+    const deltaY = touch.clientY - touchStartY.current;
+    if (Math.abs(deltaX) < 12) return;
+    if (Math.abs(deltaX) <= Math.abs(deltaY)) return;
+    if (swipeActiveRef.current) return;
+    swipeActiveRef.current = true;
+    setSwiping(true);
+  };
+
+  const onTouchCancel = () => {
+    endSwipeGesture();
+  };
+
+  const onTouchEnd = (event: TouchEvent) => {
+    const startX = touchStartX.current;
+    const startY = touchStartY.current;
+    endSwipeGesture();
+    if (startX == null || total < 2) return;
+    const endTouch = event.changedTouches[0];
+    const endX = endTouch?.clientX ?? startX;
+    const endY = endTouch?.clientY ?? startY ?? 0;
+    const deltaX = endX - startX;
+    const deltaY = endY - (startY ?? endY);
+    if (Math.abs(deltaX) < SWIPE_THRESHOLD) return;
+    if (Math.abs(deltaX) < Math.abs(deltaY)) return;
+    goBy(deltaX > 0 ? -1 : 1);
+  };
+
+  const onMouseEnter = () => {
+    if (!fineHover) return;
+    setHoverPaused(true);
+  };
+
+  const onMouseLeave = (event: ReactMouseEvent<HTMLElement>) => {
+    if (!fineHover) return;
+    const next = event.relatedTarget;
+    if (next instanceof Node && event.currentTarget.contains(next)) return;
+    setHoverPaused(false);
+  };
+
+  const progressPaused = reducedMotion || !inView || docHidden || hoverPaused || locked || swiping;
   progressPausedRef.current = progressPaused;
 
   // JS timer kept in lockstep with CSS fill (--featured-autoplay-ms / FEATURED_AUTOPLAY_MS)
   useEffect(() => {
     if (total < 2 || reducedMotion || progressPaused) return;
+    const generation = ++timerGenerationRef.current;
     tickStartedAtRef.current = Date.now();
     const delay = Math.max(0, remainingMsRef.current);
     const timer = window.setTimeout(() => {
+      if (generation !== timerGenerationRef.current) return;
       if (progressPausedRef.current) return;
       remainingMsRef.current = FEATURED_AUTOPLAY_MS;
       goBy(1);
     }, delay);
     return () => {
       window.clearTimeout(timer);
+      if (generation !== timerGenerationRef.current) return;
       const elapsed = Date.now() - tickStartedAtRef.current;
       remainingMsRef.current = Math.max(0, remainingMsRef.current - elapsed);
     };
@@ -416,18 +525,6 @@ function BlacklineFeaturedCarousel({
     });
   }
 
-  const progressNav =
-    total > 1 ? (
-      <FeaturedProgressNav
-        products={products}
-        activeIndex={logicalIndex}
-        progressPaused={progressPaused}
-        progressToken={progressToken}
-        reducedMotion={reducedMotion}
-        onSelect={goTo}
-      />
-    ) : null;
-
   const rootStyle = {
     ['--featured-autoplay-ms' as string]: `${FEATURED_AUTOPLAY_MS}ms`,
   } as CSSProperties;
@@ -459,15 +556,11 @@ function BlacklineFeaturedCarousel({
       aria-labelledby={labelId}
       style={rootStyle}
       onTouchStart={onTouchStart}
+      onTouchMove={onTouchMove}
       onTouchEnd={onTouchEnd}
-      onMouseEnter={() => setPointerPaused(true)}
-      onMouseLeave={() => setPointerPaused(false)}
-      onFocusCapture={() => setPointerPaused(true)}
-      onBlurCapture={(event) => {
-        const next = event.relatedTarget;
-        if (next instanceof Node && event.currentTarget.contains(next)) return;
-        setPointerPaused(false);
-      }}
+      onTouchCancel={onTouchCancel}
+      onMouseEnter={onMouseEnter}
+      onMouseLeave={onMouseLeave}
     >
       <h2 className="sf-sr-only" id={labelId}>
         Featured
@@ -499,14 +592,20 @@ function BlacklineFeaturedCarousel({
                   presentation="featured-product"
                   headingId={slide.headingId}
                   interactive={isActiveReal}
-                  showCounter={isActiveReal}
-                  progressFooter={isActiveReal ? progressNav : null}
                 />
               </div>
             );
           })}
         </div>
       </div>
+      <FeaturedProgressNav
+        products={products}
+        activeIndex={logicalIndex}
+        progressPaused={progressPaused}
+        progressToken={progressToken}
+        reducedMotion={reducedMotion}
+        onSelect={goTo}
+      />
     </section>
   );
 }

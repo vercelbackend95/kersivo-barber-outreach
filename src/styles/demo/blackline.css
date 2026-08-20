@@ -3652,6 +3652,18 @@ html[data-theme='blackline']::view-transition-new(root) {
   border-bottom: 1px solid var(--theme-line);
 }
 
+@media (max-width: 1099px) {
+  [data-theme='blackline'] .bl-services-viewing {
+    width: calc(100% + (2 * var(--bl-page-gutter)));
+    max-width: none;
+    margin-inline: calc(-1 * var(--bl-page-gutter));
+    padding-inline: var(--bl-page-gutter);
+    box-sizing: border-box;
+    background: var(--theme-background);
+    z-index: 12;
+  }
+}
+
 [data-theme='blackline'] .bl-services-viewing-eyebrow,
 [data-theme='blackline'] .bl-services-viewing-hint {
   margin: 0;

@@ -95,12 +95,14 @@ describe('BLACKLINE Services page', () => {
     expect(pageSource).toContain("removeAttribute('data-bl-services-motion'");
     expect(pageSource).toContain('IntersectionObserver');
     expect(pageSource).toContain('pickActiveServiceCategory');
+    expect(pageSource).toContain('serviceMenuReadingYFromViewing');
+    expect(pageSource).toContain('requestAnimationFrame');
+    expect(pageSource).toContain("addEventListener('scroll', scheduleUpdate, { passive: true })");
     expect(pageSource).toContain('unobserve');
     expect(pageSource).toContain('disconnect');
     expect(pageSource).toContain('pageshow');
     expect(pageSource).not.toContain('pointerenter');
     expect(pageSource).not.toContain("url.searchParams.set('category'");
-    expect(pageSource).not.toMatch(/addEventListener\(['"]scroll['"]/);
     expect(menuSource).toContain('href={demoBookingHref(service.slug)}');
     expect(menuSource).not.toContain('is-inview');
     expect(closeSource).toContain('href={DEMO_BOOK_HREF}');

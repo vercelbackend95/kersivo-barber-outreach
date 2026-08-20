@@ -77,10 +77,16 @@ describe('createScrollLock', () => {
     expect(lock.isLocked()).toBe(true);
     expect(document.body.style.position).toBe('fixed');
     expect(document.body.style.top).toBe('-240px');
+    expect(document.body.style.overflow).toBe('hidden');
+    expect(document.body.style.overscrollBehavior).toBe('none');
+    expect(document.documentElement.style.overflow).toBe('hidden');
+    expect(document.documentElement.style.overscrollBehavior).toBe('none');
 
     lock.unlock();
     expect(lock.isLocked()).toBe(false);
     expect(document.body.style.position).toBe('');
+    expect(document.body.style.overflow).toBe('');
+    expect(document.documentElement.style.overflow).toBe('');
     expect(scrollTo).toHaveBeenCalledWith(0, 240);
   });
 });
@@ -94,6 +100,7 @@ describe('bindMobileNav', () => {
   afterEach(() => {
     document.body.innerHTML = '';
     document.body.removeAttribute('style');
+    document.documentElement.removeAttribute('style');
     vi.useRealTimers();
     vi.restoreAllMocks();
   });

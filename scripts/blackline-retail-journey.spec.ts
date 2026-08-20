@@ -295,12 +295,15 @@ test.describe('BLACKLINE shop purchase to Orders and Sales', () => {
       await page.setViewportSize({ width, height: 900 });
       await page.goto('/demo/shop', { waitUntil: 'domcontentloaded' });
       const metrics = await page.evaluate(() => {
-        const story = document.querySelector(
-          '.sf-shop--blackline .sf-spotlight--unified .sf-spotlight-slide .sf-spotlight-story:not([aria-hidden="true"])',
+        const root = document.querySelector(
+          '.sf-shop--blackline .sf-spotlight--unified',
+        ) as HTMLElement | null;
+        const story = root?.querySelector(
+          '.sf-spotlight-slide .sf-spotlight-story:not([aria-hidden="true"])',
         ) as HTMLElement | null;
         const media = story?.querySelector('.sf-featured-media') as HTMLElement | null;
         const copy = story?.querySelector('.sf-featured-copy') as HTMLElement | null;
-        const progress = story?.querySelector('.sf-spotlight-progress') as HTMLElement | null;
+        const progress = root?.querySelector(':scope > .sf-spotlight-progress') as HTMLElement | null;
         const product = story?.querySelector('.sf-featured-media-product') as HTMLElement | null;
         if (!story || !media || !copy || !progress) return null;
         const storyBox = story.getBoundingClientRect();
@@ -313,6 +316,7 @@ test.describe('BLACKLINE shop purchase to Orders and Sales', () => {
           copyHeight: Math.round(copyBox.height),
           progressTop: Math.round(progressBox.top),
           storyBottom: Math.round(storyBox.bottom),
+          mediaBottom: Math.round(mediaBox.bottom),
           progressWidth: Math.round(progressBox.width),
           storyWidth: Math.round(storyBox.width),
           copyWidth: Math.round(copyBox.width),
@@ -323,7 +327,8 @@ test.describe('BLACKLINE shop purchase to Orders and Sales', () => {
       expect(metrics!.height).toBeGreaterThanOrEqual(360);
       expect(metrics!.height).toBeLessThanOrEqual(520);
       expect(Math.abs(metrics!.mediaHeight - metrics!.copyHeight)).toBeLessThanOrEqual(2);
-      expect(metrics!.storyBottom - metrics!.progressTop).toBeLessThanOrEqual(72);
+      expect(metrics!.storyBottom - metrics!.mediaBottom).toBeLessThanOrEqual(2);
+      expect(metrics!.storyBottom - metrics!.progressTop).toBeLessThanOrEqual(40);
       expect(metrics!.progressWidth).toBeGreaterThan(metrics!.copyWidth + 40);
       expect(Math.abs(metrics!.progressWidth - metrics!.storyWidth)).toBeLessThanOrEqual(56);
       expect(metrics!.productFit).toBe('cover');
@@ -357,14 +362,31 @@ test.describe('BLACKLINE shop purchase to Orders and Sales', () => {
 
     await expect(page.locator('.sf-spotlight-nav-btn')).toHaveCount(0);
     await expect(page.getByRole('button', { name: /Previous featured product|Next featured product/i })).toHaveCount(0);
+    await expect(page.locator('.sf-spotlight--unified > .sf-spotlight-progress')).toHaveCount(1);
     await expect(page.locator('.sf-spotlight-progress-seg')).toHaveCount(4);
     await expect(page.getByRole('button', { name: /Pause featured products|Resume featured products/i })).toHaveCount(0);
 
+    const track = page.locator('.sf-spotlight-track');
+    const transitionProperty = await track.evaluate((el) => getComputedStyle(el).transitionProperty);
+    expect(transitionProperty.split(',').map((part) => part.trim())).toEqual(['transform']);
+
     const activeStory = page.locator('.sf-spotlight-story:not([aria-hidden="true"])');
+    await expect(activeStory).toBeVisible();
     await expect(activeStory.locator('.sf-spotlight-index')).toContainText('01 / 04');
     await expect(activeStory.locator('.sf-featured-name')).toHaveText(/ironclad pomade/i);
+    const desktopBoxes = await activeStory.evaluate((story) => {
+      const media = story.querySelector('.sf-featured-media') as HTMLElement | null;
+      const name = story.querySelector('.sf-featured-name') as HTMLElement | null;
+      return {
+        storyHeight: story.getBoundingClientRect().height,
+        mediaHeight: media?.getBoundingClientRect().height ?? 0,
+        nameHeight: name?.getBoundingClientRect().height ?? 0,
+      };
+    });
+    expect(desktopBoxes.storyHeight).toBeGreaterThan(80);
+    expect(desktopBoxes.mediaHeight).toBeGreaterThan(80);
+    expect(desktopBoxes.nameHeight).toBeGreaterThan(16);
 
-    const track = page.locator('.sf-spotlight-track');
     const before = await track.evaluate((el) => getComputedStyle(el).transform);
 
     await page.getByRole('button', { name: /Show featured product 2 of 4: Beard Balm/i }).click();
@@ -375,40 +397,85 @@ test.describe('BLACKLINE shop purchase to Orders and Sales', () => {
       'aria-current',
       'true',
     );
+    await page.mouse.move(0, 0);
+    await expect
+      .poll(async () =>
+        page.locator('.sf-spotlight-progress-fill.is-active').evaluate((el) => el.classList.contains('is-paused')),
+      )
+      .toBe(false);
 
     await expect(activeStory.locator('.sf-atc').first()).toBeVisible();
     await assertNoHorizontalOverflow(page);
 
+    // Keyboard activation of desktop progress segment
+    await page.getByRole('button', { name: /Show featured product 3 of 4/i }).press('Enter');
+    await expect(activeStory.locator('.sf-featured-name')).toHaveText(/barber wash/i);
+    await expect(activeStory.locator('.sf-spotlight-index')).toContainText('03 / 04');
+    await page.mouse.move(0, 0);
+
     await page.clock.install();
 
-    // Leave hover/focus so autoplay is armed, then restart timer under the fake clock
+    // Leave hover so autoplay is armed, then restart timer under the fake clock
     await page.mouse.move(0, 0);
-    await page.evaluate(() => (document.activeElement as HTMLElement | null)?.blur());
     await page.getByRole('button', { name: /Show featured product 2 of 4: Beard Balm/i }).click();
     await page.mouse.move(0, 0);
-    await page.evaluate(() => (document.activeElement as HTMLElement | null)?.blur());
 
     await page.clock.fastForward(6000);
     await expect(activeStory.locator('.sf-featured-name')).toHaveText(/barber wash/i);
     await expect(activeStory.locator('.sf-spotlight-index')).toContainText('03 / 04');
+    await page.clock.fastForward(800);
+    await page.mouse.move(0, 0);
+    await expect
+      .poll(async () =>
+        page.locator('.sf-spotlight-progress-fill.is-active').evaluate((el) => el.classList.contains('is-paused')),
+      )
+      .toBe(false);
 
-    // Loop last → first
+    // Focused ATC must not permanently pause autoplay
+    await activeStory.locator('.sf-atc').first().focus();
+    await expect
+      .poll(async () =>
+        page.locator('.sf-spotlight-progress-fill.is-active').evaluate((el) => el.classList.contains('is-paused')),
+      )
+      .toBe(false);
+    await page.clock.fastForward(6000);
+    await expect(activeStory.locator('.sf-featured-name')).toHaveText(/essential styling set/i);
+    await expect(activeStory.locator('.sf-spotlight-index')).toContainText('04 / 04');
+    await page.clock.fastForward(800);
+    await page.mouse.move(0, 0);
+
+    // Loop last → first with complete content and stable progress
     await page.getByRole('button', { name: /Show featured product 4 of 4/i }).click();
     await expect(activeStory.locator('.sf-spotlight-index')).toContainText('04 / 04');
     await page.mouse.move(0, 0);
-    await page.evaluate(() => (document.activeElement as HTMLElement | null)?.blur());
     await page.getByRole('button', { name: /Show featured product 4 of 4/i }).click();
     await page.mouse.move(0, 0);
-    await page.evaluate(() => (document.activeElement as HTMLElement | null)?.blur());
+    await expect(page.locator('.sf-spotlight--unified > .sf-spotlight-progress')).toHaveCount(1);
     await page.clock.fastForward(6000);
     await expect(activeStory.locator('.sf-featured-name')).toHaveText(/ironclad pomade/i);
     await expect(activeStory.locator('.sf-spotlight-index')).toContainText('01 / 04');
+    await expect(page.locator('.sf-spotlight--unified > .sf-spotlight-progress')).toBeVisible();
+    await page.clock.fastForward(800);
+    await page.mouse.move(0, 0);
 
-    // Hover pause freezes autoplay
+    // Hover pause freezes autoplay (fine pointer)
     await page.locator('.sf-spotlight--unified').hover();
     const pausedName = (await activeStory.locator('.sf-featured-name').textContent())?.trim() ?? '';
     await page.clock.fastForward(6000);
     await expect(activeStory.locator('.sf-featured-name')).toHaveText(pausedName);
+    await page.mouse.move(0, 0);
+
+    // Panel background click must not permanently pause — re-arm a full cycle first
+    await page.getByRole('button', { name: /Show featured product 1 of 4/i }).click();
+    await page.mouse.move(0, 0);
+    await activeStory.locator('.sf-spotlight-index').evaluate((node) => {
+      if (node instanceof HTMLElement) node.click();
+    });
+    await page.mouse.move(0, 0);
+    const afterBgClick = (await activeStory.locator('.sf-featured-name').textContent())?.trim() ?? '';
+    await page.clock.fastForward(6000);
+    await expect(activeStory.locator('.sf-featured-name')).not.toHaveText(afterBgClick);
+    await page.clock.fastForward(800);
     await page.mouse.move(0, 0);
 
     // Document hidden pauses progress fill
@@ -435,6 +502,177 @@ test.describe('BLACKLINE shop purchase to Orders and Sales', () => {
     await expect(page.locator('.sf-spotlight-story:not([aria-hidden="true"]) .sf-atc').first()).toBeVisible();
   });
 
+  test('featured mobile swipe, non-interactive progress, and autoplay resume', async ({ page }) => {
+    await page.setViewportSize({ width: 390, height: 844 });
+    await page.goto('/demo/shop', { waitUntil: 'domcontentloaded' });
+    await waitForCartIsland(page);
+
+    const root = page.locator('.sf-spotlight--unified');
+    const activeStory = page.locator('.sf-spotlight-story:not([aria-hidden="true"])');
+    await expect(activeStory).toBeVisible();
+    await expect(root.locator(':scope > .sf-spotlight-progress')).toHaveCount(1);
+    await expect(root.locator('.sf-spotlight-progress--static')).toHaveCount(1);
+    await expect(page.getByRole('button', { name: /Show featured product/i })).toHaveCount(0);
+    const mobileBoxes = await activeStory.evaluate((story) => {
+      const media = story.querySelector('.sf-featured-media') as HTMLElement | null;
+      const name = story.querySelector('.sf-featured-name') as HTMLElement | null;
+      return {
+        storyHeight: story.getBoundingClientRect().height,
+        mediaHeight: media?.getBoundingClientRect().height ?? 0,
+        nameHeight: name?.getBoundingClientRect().height ?? 0,
+      };
+    });
+    expect(mobileBoxes.storyHeight).toBeGreaterThan(80);
+    expect(mobileBoxes.mediaHeight).toBeGreaterThan(80);
+    expect(mobileBoxes.nameHeight).toBeGreaterThan(16);
+
+    const nameBefore = (await activeStory.locator('.sf-featured-name').textContent())?.trim() ?? '';
+    const indexBefore = (await activeStory.locator('.sf-spotlight-index').textContent())?.trim() ?? '';
+    await root.locator('.sf-spotlight-progress-seg').nth(2).click({ force: true });
+    await expect(activeStory.locator('.sf-featured-name')).toHaveText(nameBefore);
+    await expect(activeStory.locator('.sf-spotlight-index')).toHaveText(indexBefore);
+
+    const focusableProgress = await page.evaluate(() => {
+      const segs = Array.from(document.querySelectorAll('.sf-spotlight--unified .sf-spotlight-progress-seg'));
+      return segs.some((seg) => {
+        if (!(seg instanceof HTMLElement)) return false;
+        const tabIndex = seg.getAttribute('tabindex');
+        return seg.tagName === 'BUTTON' || (tabIndex != null && Number(tabIndex) >= 0);
+      });
+    });
+    expect(focusableProgress).toBe(false);
+
+    const box = await root.boundingBox();
+    expect(box).not.toBeNull();
+
+    // Use touch events only — mouse hover on Chromium still matches (hover:hover) and (pointer:fine)
+    await page.evaluate(() => {
+      const target = document.querySelector('.sf-spotlight--unified') as HTMLElement | null;
+      if (!target) return;
+      const rect = target.getBoundingClientRect();
+      const y = rect.top + rect.height * 0.35;
+      const fire = (type: string, x: number) => {
+        target.dispatchEvent(
+          new TouchEvent(type, {
+            bubbles: true,
+            cancelable: true,
+            touches: type === 'touchend' ? [] : [new Touch({ identifier: 1, target, clientX: x, clientY: y })],
+            changedTouches: [new Touch({ identifier: 1, target, clientX: x, clientY: y })],
+          }),
+        );
+      };
+      fire('touchstart', rect.left + rect.width * 0.85);
+      fire('touchmove', rect.left + rect.width * 0.45);
+      fire('touchend', rect.left + rect.width * 0.2);
+    });
+    await page.mouse.move(0, 0);
+
+    await expect(activeStory.locator('.sf-featured-name')).not.toHaveText(nameBefore);
+    await expect
+      .poll(async () =>
+        page.locator('.sf-spotlight-progress-fill.is-active').evaluate((el) => el.classList.contains('is-paused')),
+      )
+      .toBe(false);
+    const afterSwipeName = (await activeStory.locator('.sf-featured-name').textContent())?.trim() ?? '';
+    const afterSwipeIndex = (await activeStory.locator('.sf-spotlight-index').textContent())?.trim() ?? '';
+    const afterSwipeCategory = (await activeStory.locator('.sf-card-category').textContent())?.trim() ?? '';
+    const afterSwipePrice = (await activeStory.locator('.sf-card-price').textContent())?.trim() ?? '';
+    await expect(root.locator('.sf-spotlight-progress-fill.is-active')).toBeAttached();
+    expect(afterSwipeIndex).toMatch(/\d{2}\s*\/\s*04/);
+
+    // Mixed-product guard: active story fields stay coherent
+    const coherent = await page.evaluate(() => {
+      const story = document.querySelector(
+        '.sf-spotlight-story:not([aria-hidden="true"])',
+      ) as HTMLElement | null;
+      if (!story) return null;
+      return {
+        name: story.querySelector('.sf-featured-name')?.textContent?.trim() ?? '',
+        index: story.querySelector('.sf-spotlight-index')?.textContent?.trim() ?? '',
+        category: story.querySelector('.sf-card-category')?.textContent?.trim() ?? '',
+        price: story.querySelector('.sf-card-price')?.textContent?.trim() ?? '',
+      };
+    });
+    expect(coherent).toEqual({
+      name: afterSwipeName,
+      index: afterSwipeIndex,
+      category: afterSwipeCategory,
+      price: afterSwipePrice,
+    });
+
+    // Clone slides keep counters visible
+    const cloneCounters = await page.evaluate(() =>
+      Array.from(document.querySelectorAll('.sf-spotlight-slide .sf-spotlight-index')).map((node) =>
+        node.textContent?.replace(/\s+/g, ' ').trim(),
+      ),
+    );
+    expect(cloneCounters.length).toBeGreaterThanOrEqual(4);
+    expect(cloneCounters.every((text) => /\d{2}\s*\/\s*04/.test(text ?? ''))).toBe(true);
+
+    await page.clock.install();
+    await page.mouse.move(0, 0);
+    // Create a fresh autoplay timer under the fake clock
+    await page.evaluate(() => {
+      const target = document.querySelector('.sf-spotlight--unified') as HTMLElement | null;
+      if (!target) return;
+      const rect = target.getBoundingClientRect();
+      const y = rect.top + rect.height * 0.35;
+      const fire = (type: string, x: number) => {
+        target.dispatchEvent(
+          new TouchEvent(type, {
+            bubbles: true,
+            cancelable: true,
+            touches: type === 'touchend' ? [] : [new Touch({ identifier: 1, target, clientX: x, clientY: y })],
+            changedTouches: [new Touch({ identifier: 1, target, clientX: x, clientY: y })],
+          }),
+        );
+      };
+      fire('touchstart', rect.left + rect.width * 0.85);
+      fire('touchmove', rect.left + rect.width * 0.45);
+      fire('touchend', rect.left + rect.width * 0.2);
+    });
+    await page.mouse.move(0, 0);
+    await expect
+      .poll(async () =>
+        page.locator('.sf-spotlight-progress-fill.is-active').evaluate((el) => el.classList.contains('is-paused')),
+      )
+      .toBe(false);
+    const armedName = (await activeStory.locator('.sf-featured-name').textContent())?.trim() ?? '';
+    await page.clock.fastForward(6000);
+    await expect(activeStory.locator('.sf-featured-name')).not.toHaveText(armedName);
+    await page.clock.fastForward(800);
+    await page.mouse.move(0, 0);
+
+    // Rapid spam should not double-skip; only one advance while locked
+    await page.clock.resume();
+    const settledName = (await activeStory.locator('.sf-featured-name').textContent())?.trim() ?? '';
+    await page.evaluate(() => {
+      const target = document.querySelector('.sf-spotlight--unified') as HTMLElement | null;
+      if (!target) return;
+      const rect = target.getBoundingClientRect();
+      const y = rect.top + rect.height * 0.35;
+      const fire = (type: string, x: number) => {
+        target.dispatchEvent(
+          new TouchEvent(type, {
+            bubbles: true,
+            cancelable: true,
+            touches: type === 'touchend' ? [] : [new Touch({ identifier: 1, target, clientX: x, clientY: y })],
+            changedTouches: [new Touch({ identifier: 1, target, clientX: x, clientY: y })],
+          }),
+        );
+      };
+      for (let i = 0; i < 4; i += 1) {
+        fire('touchstart', rect.left + rect.width * 0.85);
+        fire('touchmove', rect.left + rect.width * 0.45);
+        fire('touchend', rect.left + rect.width * 0.2);
+      }
+    });
+    await expect(activeStory.locator('.sf-featured-name')).not.toHaveText(settledName);
+    const afterSpam = (await activeStory.locator('.sf-featured-name').textContent())?.trim() ?? '';
+    await page.waitForTimeout(700);
+    await expect(activeStory.locator('.sf-featured-name')).toHaveText(afterSpam);
+  });
+
   test('featured progress autoplay ATC and landing rail stay isolated', async ({ page }) => {
     await page.setViewportSize({ width: 390, height: 844 });
     await page.goto('/demo/shop', { waitUntil: 'domcontentloaded' });
@@ -442,8 +680,49 @@ test.describe('BLACKLINE shop purchase to Orders and Sales', () => {
     await assertNoHorizontalOverflow(page);
 
     const featuredAtc = page.locator('.sf-spotlight-story:not([aria-hidden="true"]) .sf-atc').first();
-    await featuredAtc.click();
+    await featuredAtc.scrollIntoViewIfNeeded();
+    await featuredAtc.evaluate((node) => {
+      if (node instanceof HTMLButtonElement) node.click();
+    });
     await expect(page.locator('[data-sf-cart-toast]')).toContainText(/added to bag/i);
+
+    // ATC focus must not permanently pause autoplay
+    await page.clock.install();
+    await featuredAtc.focus();
+    await page.mouse.move(0, 0);
+    // Restart a full cycle under the fake clock via settled swipe
+    await page.evaluate(() => {
+      const target = document.querySelector('.sf-spotlight--unified') as HTMLElement | null;
+      if (!target) return;
+      const rect = target.getBoundingClientRect();
+      const y = rect.top + rect.height * 0.35;
+      const fire = (type: string, x: number) => {
+        target.dispatchEvent(
+          new TouchEvent(type, {
+            bubbles: true,
+            cancelable: true,
+            touches: type === 'touchend' ? [] : [new Touch({ identifier: 1, target, clientX: x, clientY: y })],
+            changedTouches: [new Touch({ identifier: 1, target, clientX: x, clientY: y })],
+          }),
+        );
+      };
+      fire('touchstart', rect.left + rect.width * 0.85);
+      fire('touchmove', rect.left + rect.width * 0.45);
+      fire('touchend', rect.left + rect.width * 0.2);
+    });
+    await page.mouse.move(0, 0);
+    await expect
+      .poll(async () =>
+        page.locator('.sf-spotlight-progress-fill.is-active').evaluate((el) => el.classList.contains('is-paused')),
+      )
+      .toBe(false);
+    const nameAfterAtc = (await page.locator('.sf-spotlight-story:not([aria-hidden="true"]) .sf-featured-name').textContent())?.trim() ?? '';
+    await featuredAtc.focus();
+    await page.clock.fastForward(6000);
+    await expect(page.locator('.sf-spotlight-story:not([aria-hidden="true"]) .sf-featured-name')).not.toHaveText(
+      nameAfterAtc,
+    );
+    await page.clock.resume();
 
     await page.goto('/demo', { waitUntil: 'domcontentloaded' });
     await expect(page.locator('.bl-shop-rail [data-product-rail-root]')).toBeVisible();
@@ -523,6 +802,238 @@ test.describe('BLACKLINE shop purchase to Orders and Sales', () => {
     await expect(sort).toBeVisible();
     await sort.selectOption('price-asc');
     await expect.poll(() => page.url()).toMatch(/sort=price-asc/);
+  });
+
+  test('mobile grid, discovery, and compact cards stay two-column under 768px', async ({ page }) => {
+    test.setTimeout(180_000);
+    const phones = [320, 360, 375, 390, 430] as const;
+
+    for (const width of phones) {
+      await page.setViewportSize({ width, height: 844 });
+      await page.goto('/demo/shop', { waitUntil: 'domcontentloaded' });
+      await waitForCartIsland(page);
+      await assertNoHorizontalOverflow(page);
+
+      const metrics = await page.evaluate(() => {
+        const shop = document.querySelector('.sf-shop--blackline') as HTMLElement | null;
+        const spotlight = document.querySelector(
+          '.sf-shop--blackline .sf-spotlight--unified',
+        ) as HTMLElement | null;
+        const grid = document.querySelector('.sf-shop--blackline .sf-grid') as HTMLElement | null;
+        const media = document.querySelector(
+          '.sf-shop--blackline .sf-grid .sf-card-media--cover',
+        ) as HTMLElement | null;
+        const card = document.querySelector('.sf-shop--blackline .sf-grid .sf-card') as HTMLElement | null;
+        const atc = document.querySelector(
+          '.sf-shop--blackline .sf-grid .sf-atc[data-add-to-cart]',
+        ) as HTMLElement | null;
+        const prev = document.querySelector('.sf-category-carousel__prev') as HTMLElement | null;
+        const next = document.querySelector('.sf-category-carousel__next') as HTMLElement | null;
+        const sortIcon = document.querySelector('.sf-sort-icon') as HTMLElement | null;
+        const sortSelect = document.querySelector('[data-shop-sort]') as HTMLSelectElement | null;
+        const selected = document.querySelector(
+          '.sf-discovery--compact .sf-rail-tab.is-selected',
+        ) as HTMLElement | null;
+        if (!shop || !spotlight || !grid || !media || !card || !atc || !sortSelect) return null;
+        const gridStyle = getComputedStyle(grid);
+        const mediaBox = media.getBoundingClientRect();
+        const cardBox = card.getBoundingClientRect();
+        const shopBox = shop.getBoundingClientRect();
+        const spotlightBox = spotlight.getBoundingClientRect();
+        const selectedBox = selected?.getBoundingClientRect();
+        const after = document.querySelector('.sf-category-carousel') as HTMLElement | null;
+        const afterStyle = after ? getComputedStyle(after, '::after') : null;
+        const fullLabel = atc.querySelector('.sf-atc-label-full')?.textContent?.trim() ?? '';
+        return {
+          columns: gridStyle.gridTemplateColumns.split(' ').filter(Boolean).length,
+          mediaAspect: getComputedStyle(media).aspectRatio,
+          mediaWidth: mediaBox.width,
+          mediaHeight: mediaBox.height,
+          cardHeight: cardBox.height,
+          atcFull: fullLabel,
+          atcFullDisplay: atc.querySelector('.sf-atc-label-full')
+            ? getComputedStyle(atc.querySelector('.sf-atc-label-full')!).display
+            : null,
+          atcShortDisplay: atc.querySelector('.sf-atc-label-short')
+            ? getComputedStyle(atc.querySelector('.sf-atc-label-short')!).display
+            : null,
+          atcHasSvg: Boolean(atc.querySelector('svg')),
+          atcAria: atc.getAttribute('aria-label'),
+          prevDisplay: prev ? getComputedStyle(prev).display : 'none',
+          nextDisplay: next ? getComputedStyle(next).display : 'none',
+          sortIconDisplay: sortIcon ? getComputedStyle(sortIcon).display : 'none',
+          sortOptions: Array.from(sortSelect.options).map((option) => option.value),
+          sortAria: sortSelect.getAttribute('aria-label'),
+          spotlightWider: spotlightBox.width > shopBox.width + 8,
+          spotlightLeftGutter: Math.round(spotlightBox.left),
+          spotlightRightGutter: Math.round(document.documentElement.clientWidth - spotlightBox.right),
+          scrollY: Math.round(window.scrollY),
+          shopNearFullBleed: Math.abs(shopBox.width - document.documentElement.clientWidth) <= 1,
+          fadeCoversSelected:
+            selectedBox && afterStyle
+              ? afterStyle.opacity !== '0' &&
+                Number.parseFloat(afterStyle.width || '0') > 8 &&
+                selectedBox.right > (after?.getBoundingClientRect().right ?? 0) - 12
+              : false,
+        };
+      });
+
+      expect(metrics).not.toBeNull();
+      expect(metrics!.columns).toBe(2);
+      expect(metrics!.mediaAspect).toMatch(/4\s*\/\s*3/);
+      expect(metrics!.mediaHeight).toBeLessThan(metrics!.mediaWidth * 0.9);
+      expect(metrics!.cardHeight).toBeLessThan(420);
+      expect(metrics!.atcFull).toBe('Add to bag');
+      expect(metrics!.atcFullDisplay).not.toBe('none');
+      expect(metrics!.atcShortDisplay).toBe('none');
+      expect(metrics!.atcHasSvg).toBe(true);
+      expect(metrics!.atcAria).toMatch(/add to bag/i);
+      expect(metrics!.spotlightWider).toBe(false);
+      expect(metrics!.shopNearFullBleed).toBe(true);
+      expect(metrics!.spotlightLeftGutter).toBeGreaterThanOrEqual(3);
+      expect(metrics!.spotlightLeftGutter).toBeLessThanOrEqual(6);
+      expect(metrics!.spotlightRightGutter).toBeGreaterThanOrEqual(3);
+      expect(metrics!.spotlightRightGutter).toBeLessThanOrEqual(6);
+      expect(metrics!.scrollY).toBe(0);
+      expect(metrics!.prevDisplay).toBe('none');
+      expect(metrics!.nextDisplay).toBe('none');
+      expect(metrics!.sortIconDisplay).toMatch(/flex|inline-flex/);
+      expect(metrics!.sortOptions).toEqual(['recommended', 'price-asc', 'price-desc', 'name']);
+      expect(metrics!.sortAria).toMatch(/Sort products\. Current sorting:/i);
+      expect(metrics!.fadeCoversSelected).toBe(false);
+      const recommendedVisible = await page.evaluate(() => {
+        const sort = document.querySelector('.sf-discovery--compact [data-shop-sort]') as HTMLElement | null;
+        const label = document.querySelector('.sf-discovery--compact .sf-sort-label') as HTMLElement | null;
+        if (!sort || !label) return true;
+        const sortStyle = getComputedStyle(sort);
+        const labelStyle = getComputedStyle(label);
+        const labelHidden =
+          labelStyle.position === 'absolute' &&
+          (labelStyle.width === '1px' || labelStyle.clipPath === 'rect(0px 0px 0px 0px)' || labelStyle.clip === 'rect(0px, 0px, 0px, 0px)');
+        return !(labelHidden && Number.parseFloat(sortStyle.opacity || '1') < 0.05);
+      });
+      expect(recommendedVisible).toBe(false);
+    }
+
+    await page.setViewportSize({ width: 390, height: 844 });
+    await page.goto('/demo/shop', { waitUntil: 'domcontentloaded' });
+    await waitForCartIsland(page);
+    await expect(page.locator('[data-sf-discovery-variant="compact"]')).toBeVisible();
+    await expect.poll(async () => page.evaluate(() => Math.round(window.scrollY))).toBe(0);
+
+    const footerTops = await page.evaluate(() => {
+      const cards = Array.from(
+        document.querySelectorAll('.sf-shop--blackline .sf-grid .sf-card'),
+      ).slice(0, 2) as HTMLElement[];
+      return cards.map((card) => {
+        const footer = card.querySelector('.sf-card-footer') as HTMLElement | null;
+        return footer ? Math.round(footer.getBoundingClientRect().top) : -1;
+      });
+    });
+    expect(footerTops).toHaveLength(2);
+    expect(Math.abs(footerTops[0]! - footerTops[1]!)).toBeLessThanOrEqual(2);
+
+    await page.getByRole('button', { name: /Add to bag:/i }).first().click();
+    await expect(page.locator('[data-sf-cart-toast]')).toContainText(/added to bag/i);
+
+    const rail = page.locator('.sf-discovery--compact .sf-rail');
+    await rail.evaluate((node) => {
+      node.scrollLeft = node.scrollWidth;
+    });
+    await page.getByRole('tab', { name: 'Sets & Gifts' }).click();
+    await expect(page.getByRole('tab', { name: 'Sets & Gifts' })).toHaveAttribute(
+      'aria-selected',
+      'true',
+    );
+
+    await page.setViewportSize({ width: 390, height: 844 });
+    await page.goto('/demo/shop/bl-product-ironclad-pomade', { waitUntil: 'domcontentloaded' });
+    await waitForCartIsland(page);
+    await assertNoHorizontalOverflow(page);
+
+    const pdpMetrics = await page.evaluate(() => {
+      const actions = document.querySelector('.sf-pdp-actions') as HTMLElement | null;
+      const back = document.querySelector('.sf-pdp-back') as HTMLElement | null;
+      const hero = document.querySelector('.sf-pdp-hero') as HTMLElement | null;
+      const relatedHeading = document.querySelector(
+        '.sf-pdp-related .sf-toolbar-heading',
+      ) as HTMLElement | null;
+      const buttons = Array.from(
+        document.querySelectorAll('.sf-pdp-actions .sf-atc'),
+      ) as HTMLElement[];
+      if (!actions || !back || !hero || buttons.length < 2) return null;
+      const actionsBox = actions.getBoundingClientRect();
+      const vw = document.documentElement.clientWidth;
+      const widths = buttons.map((button) => Math.round(button.getBoundingClientRect().width));
+      const railAtc = document.querySelector(
+        '.sf-pdp-related .sf-atc[data-add-to-cart]',
+      ) as HTMLElement | null;
+      return {
+        leftGutter: Math.round(actionsBox.left),
+        rightGutter: Math.round(vw - actionsBox.right),
+        backLeft: Math.round(back.getBoundingClientRect().left),
+        heroLeft: Math.round(hero.getBoundingClientRect().left),
+        relatedLeft: relatedHeading ? Math.round(relatedHeading.getBoundingClientRect().left) : -1,
+        widths,
+        railLabel: railAtc?.querySelector('.sf-atc-label-full')?.textContent?.trim() ?? null,
+        railHasSvg: Boolean(railAtc?.querySelector('svg')),
+        railShortDisplay: railAtc?.querySelector('.sf-atc-label-short')
+          ? getComputedStyle(railAtc.querySelector('.sf-atc-label-short')!).display
+          : null,
+      };
+    });
+    expect(pdpMetrics).not.toBeNull();
+    expect(pdpMetrics!.backLeft).toBeGreaterThanOrEqual(16);
+    expect(pdpMetrics!.heroLeft).toBeGreaterThanOrEqual(16);
+    expect(pdpMetrics!.relatedLeft).toBeGreaterThanOrEqual(16);
+    expect(Math.abs(pdpMetrics!.leftGutter - pdpMetrics!.rightGutter)).toBeLessThanOrEqual(1);
+    expect(pdpMetrics!.widths[0]).toBe(pdpMetrics!.widths[1]);
+    expect(pdpMetrics!.widths[0]).toBeGreaterThan(200);
+    expect(pdpMetrics!.railLabel).toBe('Add to bag');
+    expect(pdpMetrics!.railHasSvg).toBe(true);
+    expect(pdpMetrics!.railShortDisplay).toBe('none');
+
+    await page.setViewportSize({ width: 1440, height: 900 });
+    await page.goto('/demo/shop', { waitUntil: 'domcontentloaded' });
+    const desktop = await page.evaluate(() => {
+      const shop = document.querySelector('.sf-shop--blackline') as HTMLElement | null;
+      const spotlight = document.querySelector(
+        '.sf-shop--blackline .sf-spotlight--unified',
+      ) as HTMLElement | null;
+      const media = document.querySelector(
+        '.sf-shop--blackline .sf-grid .sf-card-media--cover',
+      ) as HTMLElement | null;
+      const atc = document.querySelector(
+        '.sf-shop--blackline .sf-grid .sf-atc[data-add-to-cart]',
+      ) as HTMLElement | null;
+      const sortIcon = document.querySelector('.sf-sort-icon') as HTMLElement | null;
+      const sortSelect = document.querySelector('[data-shop-sort]') as HTMLSelectElement | null;
+      const shopBox = shop?.getBoundingClientRect();
+      const spotlightBox = spotlight?.getBoundingClientRect();
+      return {
+        mediaAspect: media ? getComputedStyle(media).aspectRatio : null,
+        atcFullDisplay: atc?.querySelector('.sf-atc-label-full')
+          ? getComputedStyle(atc.querySelector('.sf-atc-label-full')!).display
+          : null,
+        atcShortDisplay: atc?.querySelector('.sf-atc-label-short')
+          ? getComputedStyle(atc.querySelector('.sf-atc-label-short')!).display
+          : null,
+        sortIconDisplay: sortIcon ? getComputedStyle(sortIcon).display : null,
+        sortWidth: sortSelect ? sortSelect.getBoundingClientRect().width : 0,
+        spotlightAligned:
+          shopBox && spotlightBox
+            ? Math.abs(spotlightBox.left - shopBox.left) <= 1 &&
+              Math.abs(spotlightBox.right - shopBox.right) <= 1
+            : false,
+      };
+    });
+    expect(desktop.mediaAspect).toMatch(/1\s*\/\s*1/);
+    expect(desktop.atcFullDisplay).not.toBe('none');
+    expect(desktop.atcShortDisplay).toBe('none');
+    expect(desktop.sortIconDisplay).toBe('none');
+    expect(desktop.sortWidth).toBeGreaterThan(120);
+    expect(desktop.spotlightAligned).toBe(true);
+    await expect(page.locator('.sf-grid .sf-atc-label-full').first()).toContainText(/add to bag/i);
   });
 
   test('kersivo marketing shop uses a separate catalog from BLACKLINE', async ({ page }) => {
@@ -694,9 +1205,41 @@ test.describe('BLACKLINE shop purchase to Orders and Sales', () => {
     await page.setViewportSize({ width: 320, height: 568 });
     await expect(header.locator('.sf-header-cta')).toBeHidden();
     await expect(header.locator('[data-bl-bag-button]')).toBeVisible();
+
+    await page.evaluate(() => window.scrollTo(0, 420));
     await header.locator('.sf-nav-toggle').click();
     await expect(page.locator('[data-bl-nav-book]')).toBeVisible();
     await expect(page.locator('[data-bl-nav-book]')).toHaveAttribute('href', '/demo/book');
+    await expect(header).toHaveAttribute('data-sf-nav-state', 'open');
+
+    const chrome = await page.evaluate(() => {
+      const headerEl = document.querySelector('[data-sf-header]') as HTMLElement | null;
+      const inner = document.querySelector('.sf-header-inner') as HTMLElement | null;
+      const toggle = document.querySelector('[data-sf-nav-toggle]') as HTMLElement | null;
+      const overlay = document.querySelector('[data-sf-nav-panel]') as HTMLElement | null;
+      if (!headerEl || !inner || !toggle || !overlay) return null;
+      const headerBox = headerEl.getBoundingClientRect();
+      const overlayBox = overlay.getBoundingClientRect();
+      return {
+        headerTop: Math.round(headerBox.top),
+        headerBottom: Math.round(headerBox.bottom),
+        overlayTop: Math.round(overlayBox.top),
+        toggleVisible: toggle.getClientRects().length > 0,
+        position: getComputedStyle(headerEl).position,
+        clipPath: getComputedStyle(overlay).clipPath,
+        scrollWidth: document.documentElement.scrollWidth,
+        clientWidth: document.documentElement.clientWidth,
+      };
+    });
+    expect(chrome).not.toBeNull();
+    expect(chrome!.headerTop).toBeLessThanOrEqual(1);
+    expect(chrome!.position).toBe('fixed');
+    expect(chrome!.toggleVisible).toBe(true);
+    expect(chrome!.overlayTop).toBeGreaterThanOrEqual(chrome!.headerBottom - 1);
+    expect(chrome!.clipPath === 'none' || chrome!.clipPath === '').toBe(true);
+    expect(chrome!.scrollWidth).toBeLessThanOrEqual(chrome!.clientWidth + 1);
+    await expect(page.locator('[data-sf-nav-panel]')).toBeVisible();
+    await expect(header.locator('.sf-nav-toggle')).toBeVisible();
   });
 
   test('reduced motion opens the overlay without clip travel', async ({ page }) => {
@@ -706,7 +1249,8 @@ test.describe('BLACKLINE shop purchase to Orders and Sales', () => {
     await page.locator('[data-sf-nav-toggle]').click();
     const overlay = page.locator('[data-sf-nav-panel]');
     await expect(overlay).toBeVisible();
+    await expect(page.locator('[data-sf-header]')).toHaveAttribute('data-sf-nav-state', 'open');
     const clip = await overlay.evaluate((node) => getComputedStyle(node).clipPath);
-    expect(clip === 'none' || clip === 'inset(0px)').toBe(true);
+    expect(clip === 'none' || clip === '').toBe(true);
   });
 });

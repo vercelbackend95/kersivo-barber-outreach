@@ -29,7 +29,7 @@ import { DEMO_SHOP_NAME } from '@/lib/demo/site';
 </DemoLayout>
 
 <script>
-  import { pickActiveServiceCategory, serviceMenuReadingY } from '@/lib/demo/serviceMenuSpy';
+  import { pickActiveServiceCategory, serviceMenuReadingYFromViewing } from '@/lib/demo/serviceMenuSpy';
 
   function prefersReducedMotion() {
     return window.matchMedia('(prefers-reduced-motion: reduce)').matches;
@@ -59,6 +59,7 @@ import { DEMO_SHOP_NAME } from '@/lib/demo/site';
     menu.dataset.blMenuBound = 'true';
 
     const sections = [...menu.querySelectorAll<HTMLElement>('.bl-service-group[data-category-slug]')];
+    const viewing = menu.querySelector('[data-bl-services-viewing]');
     const copy = menu.querySelector('[data-bl-viewing-copy]');
     const nameEl = menu.querySelector('[data-bl-viewing-name]');
     const metaEl = menu.querySelector('[data-bl-viewing-meta]');
@@ -67,6 +68,13 @@ import { DEMO_SHOP_NAME } from '@/lib/demo/site';
 
     const reduceMotion = prefersReducedMotion();
     let activeSlug = menu.dataset.activeCategory || sections[0]?.dataset.categorySlug || '';
+    let ticking = false;
+
+    const readingY = () => {
+      const viewingBottom =
+        viewing instanceof HTMLElement ? viewing.getBoundingClientRect().bottom : null;
+      return serviceMenuReadingYFromViewing(viewingBottom, headerHeight());
+    };
 
     const applyViewing = (section: HTMLElement, animate: boolean) => {
       const slug = section.dataset.categorySlug ?? '';
@@ -104,18 +112,27 @@ import { DEMO_SHOP_NAME } from '@/lib/demo/site';
     };
 
     const updateActive = () => {
-      const readingY = serviceMenuReadingY(headerHeight());
+      const line = readingY();
       const menuBottom = menu.getBoundingClientRect().bottom;
       const picked = pickActiveServiceCategory(
         sections.map((section) => {
           const rect = section.getBoundingClientRect();
           return { id: section.dataset.categorySlug ?? section.id, top: rect.top, bottom: rect.bottom };
         }),
-        readingY,
+        line,
         menuBottom,
       );
       const next = sections.find((section) => (section.dataset.categorySlug ?? section.id) === picked);
       if (next) applyViewing(next, true);
+    };
+
+    const scheduleUpdate = () => {
+      if (ticking) return;
+      ticking = true;
+      requestAnimationFrame(() => {
+        ticking = false;
+        updateActive();
+      });
     };
 
     if (!syncFromHash()) {
@@ -123,21 +140,36 @@ import { DEMO_SHOP_NAME } from '@/lib/demo/site';
       updateActive();
     }
 
+    window.addEventListener('scroll', scheduleUpdate, { passive: true });
+    window.addEventListener('resize', scheduleUpdate);
+
+    const cleanup = () => {
+      window.removeEventListener('scroll', scheduleUpdate);
+      window.removeEventListener('resize', scheduleUpdate);
+    };
+    document.addEventListener('astro:before-swap', cleanup, { once: true });
+
     if (typeof IntersectionObserver === 'undefined') return;
 
     const observer = new IntersectionObserver(
       () => {
-        updateActive();
+        scheduleUpdate();
       },
       {
         root: null,
         threshold: [0, 0.25, 0.5, 0.75, 1],
-        rootMargin: `-${Math.round(headerHeight() + 48)}px 0px -45% 0px`,
+        rootMargin: `-${Math.round(readingY())}px 0px -45% 0px`,
       },
     );
 
     sections.forEach((section) => observer.observe(section));
-    document.addEventListener('astro:before-swap', () => observer.disconnect(), { once: true });
+    document.addEventListener(
+      'astro:before-swap',
+      () => {
+        observer.disconnect();
+      },
+      { once: true },
+    );
   }
 
   function bindBlacklineServicesMotion(root: Element) {

@@ -2,7 +2,7 @@ import { useCallback, useEffect, useRef, useState, type RefObject } from 'react'
 import type { StorefrontCategoryOption, StorefrontSort } from '@/lib/shop/storefrontCatalog';
 import { STOREFRONT_ALL_CATEGORY, STOREFRONT_SORT_MIN_COUNT } from '@/lib/shop/storefrontCatalog';
 import { ChevronLeft, ChevronRight } from 'lucide-react';
-import { Search, X } from '../../lucide-react';
+import { ArrowUpDown, Search, X } from '../../lucide-react';
 
 const SORT_LABELS: Record<StorefrontSort, string> = {
   recommended: 'Recommended',
@@ -76,16 +76,19 @@ function SortControl({
   sort: StorefrontSort;
   onSortChange: (sort: StorefrontSort) => void;
 }) {
+  const sorted = sort !== 'recommended';
   return (
-    <label className="sf-sort">
+    <label className={`sf-sort${sorted ? ' is-sorted' : ''}`}>
       <span className="sf-sort-label">Sort:</span>
-      <span className="sf-sr-only">Sort products</span>
+      <span className="sf-sort-icon" aria-hidden="true">
+        <ArrowUpDown width={18} height={18} />
+      </span>
       <select
         id="sf-sort"
         data-shop-sort
         value={sort}
         onChange={(event) => onSortChange(event.target.value as StorefrontSort)}
-        aria-label={`Sort: ${SORT_LABELS[sort]}`}
+        aria-label={`Sort products. Current sorting: ${SORT_LABELS[sort]}`}
       >
         <option value="recommended">Recommended</option>
         <option value="price-asc">Price: Low to High</option>
@@ -143,9 +146,24 @@ export default function ShopDiscoveryBar({
   }, []);
 
   useEffect(() => {
-    const selectedTab = railRef.current?.querySelector<HTMLElement>('.sf-rail-tab.is-selected');
+    const rail = railRef.current;
+    const selectedTab = rail?.querySelector<HTMLElement>('.sf-rail-tab.is-selected');
+    if (!rail || !selectedTab) return;
+
+    const maxScroll = Math.max(0, rail.scrollWidth - rail.clientWidth);
+    const tabLeft = selectedTab.offsetLeft;
+    const tabRight = tabLeft + selectedTab.offsetWidth;
+    const padding = 8;
+    let nextLeft = rail.scrollLeft;
+    if (tabLeft < rail.scrollLeft + padding) {
+      nextLeft = Math.max(0, tabLeft - padding);
+    } else if (tabRight > rail.scrollLeft + rail.clientWidth - padding) {
+      nextLeft = Math.min(maxScroll, tabRight - rail.clientWidth + padding);
+    }
+    if (Math.abs(nextLeft - rail.scrollLeft) < 1) return;
+
     const reduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-    selectedTab?.scrollIntoView({ inline: 'nearest', block: 'nearest', behavior: reduced ? 'auto' : 'smooth' });
+    rail.scrollTo({ left: nextLeft, behavior: reduced ? 'auto' : 'smooth' });
   }, [selected]);
 
   useEffect(() => {

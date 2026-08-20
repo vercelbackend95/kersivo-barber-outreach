@@ -92,19 +92,21 @@ export default function StorefrontProductDetail({
               +
             </button>
           </div>
-          <StorefrontAddToBagButton
-            product={product}
-            href={storefrontProductHref(productHrefPrefix, product.id)}
-            addToBagLabel={copy.addToBagLabel}
-            addedLabel={copy.addedLabel}
-            chooseOptionsLabel={copy.chooseOptionsLabel}
-            soldOutLabel={copy.soldOutLabel}
-            quantity={quantity}
-            showIcon={themeId === 'blackline'}
-          />
-          <a className="sf-atc sf-atc--options" href={backHref}>
-            Continue shopping
-          </a>
+          <div className="sf-pdp-actions">
+            <StorefrontAddToBagButton
+              product={product}
+              href={storefrontProductHref(productHrefPrefix, product.id)}
+              addToBagLabel={copy.addToBagLabel}
+              addedLabel={copy.addedLabel}
+              chooseOptionsLabel={copy.chooseOptionsLabel}
+              soldOutLabel={copy.soldOutLabel}
+              quantity={quantity}
+              showIcon={themeId === 'blackline'}
+            />
+            <a className="sf-atc sf-atc--options" href={backHref}>
+              Continue shopping
+            </a>
+          </div>
         </div>
       </section>
       {related.length > 0 ? (
@@ -138,7 +140,7 @@ export default function StorefrontProductDetail({
                     imageFallback={imageFallback}
                     shopName={shopName}
                     copy={copy}
-                    showAtcIcon={themeId === 'blackline'}
+                    showAtcIcon={false}
                   />
                 </li>
               ))}
