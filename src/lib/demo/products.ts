@@ -22,6 +22,7 @@ export type DemoProduct = {
     height: number;
     alt: string;
     sizes: string;
+    focalPoint?: { x: number; y: number };
   };
 };
 
@@ -32,8 +33,9 @@ function packshot(
   alt: string,
   width: number,
   height: number,
+  focalPoint?: { x: number; y: number },
 ): DemoProduct['image'] {
-  return { src, width, height, alt, sizes: PRODUCT_IMAGE_SIZES };
+  return { src, width, height, alt, sizes: PRODUCT_IMAGE_SIZES, ...(focalPoint ? { focalPoint } : {}) };
 }
 
 function untitled(name: string): DemoProduct['image'] {
@@ -98,6 +100,7 @@ export const DEMO_PRODUCTS: readonly DemoProduct[] = [
       'Black pump bottle labelled Barber Wash in the fictional BLACKLINE shop.',
       1254,
       1254,
+      { x: 50, y: 44 },
     ),
   },
   {

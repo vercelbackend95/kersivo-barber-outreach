@@ -988,6 +988,29 @@
   margin-bottom: 1.5rem;
 }
 
+.sf-shop--blackline .sf-spotlight--unified .sf-spotlight-viewport {
+  overflow: hidden;
+  width: 100%;
+  min-width: 0;
+}
+
+.sf-shop--blackline .sf-spotlight--unified .sf-spotlight-track {
+  display: flex;
+  width: 100%;
+  will-change: transform;
+  transform: translate3d(0, 0, 0);
+}
+
+.sf-shop--blackline .sf-spotlight--unified .sf-spotlight-track.is-animated {
+  transition: transform 450ms cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.sf-shop--blackline .sf-spotlight--unified .sf-spotlight-slide {
+  flex: 0 0 100%;
+  min-width: 0;
+  max-width: 100%;
+}
+
 .sf-shop--blackline .sf-spotlight--unified .sf-spotlight-story {
   display: grid;
   grid-template-columns: 1fr;
@@ -1010,19 +1033,40 @@
 .sf-shop--blackline .sf-spotlight--unified .sf-featured-media,
 .sf-shop--blackline .sf-spotlight--unified .sf-featured-media.sf-media,
 .sf-shop--blackline .sf-spotlight--unified .sf-media {
+  position: relative;
   width: 100%;
   min-height: 0;
   max-height: 18rem;
   aspect-ratio: 4 / 3;
+  overflow: hidden;
   background: color-mix(in srgb, var(--shop-bg) 55%, var(--shop-surface));
 }
 
-.sf-shop--blackline .sf-spotlight--unified .sf-media-img {
+.sf-shop--blackline .sf-spotlight--unified .sf-featured-media--product {
+  position: relative;
   width: 100%;
   height: 100%;
-  object-fit: cover;
-  object-position: center;
+  min-width: 0;
+  overflow: hidden;
+}
+
+.sf-shop--blackline .sf-spotlight--unified .sf-featured-media-product {
+  position: absolute;
+  inset: 0;
+  display: block;
+  width: 100%;
+  height: 100%;
+  max-width: none;
+  max-height: none;
   padding: 0;
+  object-fit: cover;
+  object-position: var(--sf-featured-object-position, 50% 50%);
+  transform: none;
+}
+
+.sf-shop--blackline .sf-spotlight--unified .sf-spotlight-story:hover .sf-featured-media-product,
+.sf-shop--blackline .sf-spotlight--unified .sf-spotlight-story:hover .sf-media-img.sf-featured-media-product {
+  transform: none;
 }
 
 .sf-shop--blackline .sf-spotlight--unified .sf-featured-copy {
@@ -1031,6 +1075,62 @@
   align-content: center;
   padding: clamp(1rem, 1.7vw, 1.4rem);
   min-height: 0;
+}
+
+.sf-shop--blackline .sf-spotlight-nav {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.2rem;
+  padding: 0.2rem;
+  border-radius: 999px;
+  border: 1px solid color-mix(in srgb, var(--bl-ivory, #f4f1ea) 22%, transparent);
+  background:
+    linear-gradient(
+      180deg,
+      color-mix(in srgb, var(--shop-surface-elevated) 88%, #fff 8%),
+      color-mix(in srgb, var(--shop-bg) 70%, var(--shop-surface-elevated))
+    );
+  box-shadow: inset 0 1px 0 color-mix(in srgb, #fff 10%, transparent);
+}
+
+.sf-shop--blackline .sf-spotlight-nav-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 2.75rem;
+  height: 2.75rem;
+  min-width: 2.75rem;
+  min-height: 2.75rem;
+  padding: 0;
+  border: 0;
+  border-radius: 999px;
+  background: transparent;
+  color: var(--shop-text);
+  cursor: pointer;
+  transition:
+    background 160ms ease,
+    color 160ms ease,
+    transform 120ms ease;
+}
+
+.sf-shop--blackline .sf-spotlight-nav-btn:hover:not(:disabled) {
+  background: color-mix(in srgb, var(--shop-accent) 18%, transparent);
+  color: var(--shop-accent);
+}
+
+.sf-shop--blackline .sf-spotlight-nav-btn:active:not(:disabled) {
+  transform: scale(0.94);
+  background: color-mix(in srgb, var(--shop-accent) 28%, transparent);
+}
+
+.sf-shop--blackline .sf-spotlight-nav-btn:focus-visible {
+  outline: 2px solid var(--shop-accent);
+  outline-offset: 2px;
+}
+
+.sf-shop--blackline .sf-spotlight-nav-btn:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
 }
 
 .sf-shop--blackline .sf-spotlight-controls {
@@ -1121,6 +1221,12 @@
 
   .sf-shop--blackline .sf-featured-desc {
     -webkit-line-clamp: 3;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .sf-shop--blackline .sf-spotlight--unified .sf-spotlight-track.is-animated {
+    transition: none;
   }
 }
 

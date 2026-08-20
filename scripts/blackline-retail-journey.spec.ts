@@ -293,7 +293,7 @@ test.describe('BLACKLINE shop purchase to Orders and Sales', () => {
       await page.goto('/demo/shop', { waitUntil: 'domcontentloaded' });
       const height = await page.evaluate(() => {
         const story = document.querySelector(
-          '.sf-shop--blackline .sf-spotlight--unified .sf-spotlight-story',
+          '.sf-shop--blackline .sf-spotlight--unified .sf-spotlight-slide .sf-spotlight-story:not([aria-hidden="true"])',
         ) as HTMLElement | null;
         return story ? Math.round(story.getBoundingClientRect().height) : null;
       });
@@ -303,6 +303,51 @@ test.describe('BLACKLINE shop purchase to Orders and Sales', () => {
       featuredHeights.push({ width, height: height! });
     }
     expect(featuredHeights).toHaveLength(3);
+  });
+
+  test('featured carousel covers product images and slides horizontally', async ({ page }) => {
+    await page.setViewportSize({ width: 1440, height: 900 });
+    await page.goto('/demo/shop', { waitUntil: 'domcontentloaded' });
+
+    const media = await page.evaluate(() => {
+      const product = document.querySelector(
+        '.sf-shop--blackline .sf-spotlight--unified .sf-featured-media-product',
+      ) as HTMLElement | null;
+      const ambient = document.querySelector(
+        '.sf-shop--blackline .sf-spotlight--unified .sf-featured-media-ambient',
+      );
+      if (!product) return null;
+      return {
+        productFit: getComputedStyle(product).objectFit,
+        productPadding: getComputedStyle(product).padding,
+        ambientPresent: Boolean(ambient),
+      };
+    });
+    expect(media).not.toBeNull();
+    expect(media!.productFit).toBe('cover');
+    expect(media!.productPadding).toBe('0px');
+    expect(media!.ambientPresent).toBe(false);
+
+    await expect(page.locator('.sf-spotlight-nav-btn')).toHaveCount(2);
+    const track = page.locator('.sf-spotlight-track');
+    const before = await track.evaluate((el) => getComputedStyle(el).transform);
+    await page.getByRole('button', { name: 'Next featured product' }).click();
+    await expect.poll(async () => track.evaluate((el) => getComputedStyle(el).transform)).not.toBe(before);
+
+    await expect(page.locator('.sf-spotlight-story:not([aria-hidden="true"]) .sf-atc').first()).toBeVisible();
+    await assertNoHorizontalOverflow(page);
+
+    await page.emulateMedia({ reducedMotion: 'reduce' });
+    await page.goto('/demo/shop', { waitUntil: 'domcontentloaded' });
+    const reducedTrack = page.locator('.sf-spotlight-track');
+    const reducedBefore = await reducedTrack.evaluate((el) => getComputedStyle(el).transform);
+    const firstName = await page.locator('.sf-spotlight-story:not([aria-hidden="true"]) .sf-featured-name').innerText();
+    await page.getByRole('button', { name: 'Next featured product' }).click();
+    await expect
+      .poll(async () => reducedTrack.evaluate((el) => getComputedStyle(el).transform), { timeout: 1000 })
+      .not.toBe(reducedBefore);
+    await expect(page.locator('.sf-spotlight-story:not([aria-hidden="true"]) .sf-featured-name')).not.toHaveText(firstName);
+    await expect(page.locator('.sf-spotlight-story:not([aria-hidden="true"]) .sf-atc').first()).toBeVisible();
   });
 
   test('compact discovery keeps one sticky row without search or shelf heading', async ({ page }) => {

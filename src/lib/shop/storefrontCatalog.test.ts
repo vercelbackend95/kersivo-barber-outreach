@@ -31,6 +31,7 @@ import {
   visibleProducts,
   productInitials,
   shopInitial,
+  clampStorefrontFocalPoint,
   type StorefrontProduct,
 } from './storefrontCatalog';
 
@@ -59,6 +60,31 @@ describe('storefrontCatalog', () => {
     const marketing = storefrontProductFromCatalog(DEMO_CATALOG_PRODUCTS[0]!);
     expect(marketing.id).toBe('demo-product-matte-pomade');
     expect(marketing.image.src).toContain('/images/demoshop/');
+  });
+
+  it('clamps focal points and preserves them through demo product mapping', () => {
+    expect(clampStorefrontFocalPoint()).toEqual({ x: 50, y: 50 });
+    expect(clampStorefrontFocalPoint({ x: -10, y: 140 })).toEqual({ x: 0, y: 100 });
+    expect(clampStorefrontFocalPoint({ x: Number.NaN, y: 12 })).toEqual({ x: 50, y: 12 });
+
+    const barberWash = storefrontProductFromDemo(
+      DEMO_PRODUCTS.find((product) => product.id === 'bl-product-barber-wash')!,
+    );
+    expect(barberWash.image.focalPoint).toEqual({ x: 50, y: 44 });
+
+    const ironclad = storefrontProductFromDemo(
+      DEMO_PRODUCTS.find((product) => product.id === 'bl-product-ironclad-pomade')!,
+    );
+    expect(ironclad.image.focalPoint).toBeUndefined();
+
+    const clamped = toStorefrontProduct({
+      id: 'focal-test',
+      name: 'Focal Test',
+      pricePence: 1000,
+      category: 'STYLING',
+      image: { src: '/demo/products/x.webp', alt: 'X', focalPoint: { x: 200, y: -5 } },
+    });
+    expect(clamped.image.focalPoint).toEqual({ x: 100, y: 0 });
   });
 
   it('hides inactive products and does not auto-feature the first item', () => {

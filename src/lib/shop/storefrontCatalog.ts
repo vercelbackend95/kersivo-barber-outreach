@@ -26,12 +26,19 @@ export type StorefrontQuery = {
   availability: StorefrontAvailability;
 };
 
+export type StorefrontFocalPoint = {
+  x: number;
+  y: number;
+};
+
 export type StorefrontImage = {
   src: string;
   alt: string;
   width?: number;
   height?: number;
   sizes?: string;
+  /** Percentages 0–100; used by featured full-bleed cover crop. */
+  focalPoint?: StorefrontFocalPoint;
 };
 
 export type StorefrontProduct = {
@@ -65,6 +72,7 @@ export type StorefrontProductSource = {
     width?: number;
     height?: number;
     sizes?: string;
+    focalPoint?: StorefrontFocalPoint;
   };
 };
 
@@ -144,15 +152,33 @@ function resolveCategory(value: string): ProductCategory {
   return isProductCategory(value) ? value : 'STYLING';
 }
 
+export function clampStorefrontFocalPoint(
+  focalPoint?: StorefrontFocalPoint | null,
+): StorefrontFocalPoint {
+  const clamp = (value: unknown, fallback: number) => {
+    const n = typeof value === 'number' ? value : Number(value);
+    if (!Number.isFinite(n)) return fallback;
+    return Math.min(100, Math.max(0, n));
+  };
+  return {
+    x: clamp(focalPoint?.x, 50),
+    y: clamp(focalPoint?.y, 50),
+  };
+}
+
 function resolveImage(source: StorefrontProductSource): StorefrontImage {
   if (source.image?.src) {
-    return {
+    const image: StorefrontImage = {
       src: source.image.src,
       alt: source.image.alt?.trim() || source.name,
       width: source.image.width,
       height: source.image.height,
       sizes: source.image.sizes,
     };
+    if (source.image.focalPoint) {
+      image.focalPoint = clampStorefrontFocalPoint(source.image.focalPoint);
+    }
+    return image;
   }
 
   return {
