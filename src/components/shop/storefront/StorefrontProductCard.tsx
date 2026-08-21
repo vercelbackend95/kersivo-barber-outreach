@@ -54,6 +54,7 @@ export default function StorefrontProductCard({
               product={product}
               href={href}
               addToBagLabel={copy.addToBagLabel}
+              addToBagShortLabel={copy.addToBagShortLabel}
               addedLabel={copy.addedLabel}
               chooseOptionsLabel={copy.chooseOptionsLabel}
               soldOutLabel={copy.soldOutLabel}

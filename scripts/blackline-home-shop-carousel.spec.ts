@@ -27,6 +27,160 @@ async function assertSingleProductRow(page: Page) {
 }
 
 test.describe('BLACKLINE home shop product rail', () => {
+  test('matches locked You may also like mobile contract', async ({ page }) => {
+    const mobileWidths = [320, 360, 375, 390, 430];
+
+    for (const width of mobileWidths) {
+      await page.setViewportSize({ width, height: 844 });
+      await page.goto('/demo', { waitUntil: 'domcontentloaded' });
+
+      const rail = page.locator('.bl-shop-rail [data-product-rail-root]');
+      await expect(rail).toBeVisible();
+      await rail.scrollIntoViewIfNeeded();
+
+      const metrics = await page.evaluate(() => {
+        const root = document.querySelector('.bl-shop-rail [data-product-rail-root]') as HTMLElement | null;
+        const track = root?.querySelector('[data-product-rail-track]') as HTMLElement | null;
+        const progress = root?.querySelector('.product-rail__progress') as HTMLElement | null;
+        const nextBtn = root?.querySelector('[data-product-rail-next]') as HTMLElement | null;
+        const atc = root?.querySelector('.sf-atc[data-add-to-cart]') as HTMLElement | null;
+        const firstItem = track?.querySelector('.product-rail__item') as HTMLElement | null;
+        if (!root || !track || !atc || !firstItem) return null;
+        const items = [...track.querySelectorAll('.product-rail__item')] as HTMLElement[];
+        const trackRect = track.getBoundingClientRect();
+        let fullyVisible = 0;
+        let partialVisible = 0;
+        for (const item of items) {
+          const r = item.getBoundingClientRect();
+          const visible = Math.max(0, Math.min(r.right, trackRect.right) - Math.max(r.left, trackRect.left));
+          if (visible <= 1) continue;
+          if (visible >= r.width - 2) fullyVisible += 1;
+          else if (visible >= r.width * 0.35) partialVisible += 1;
+        }
+        const full = atc.querySelector('.sf-atc-label-full') as HTMLElement | null;
+        const short = atc.querySelector('.sf-atc-label-short') as HTMLElement | null;
+        const progressBox = progress?.getBoundingClientRect();
+        const nextBox = nextBtn?.getBoundingClientRect();
+        const vw = document.documentElement.clientWidth;
+        return {
+          token: getComputedStyle(root).getPropertyValue('--product-rail-visible-cards').trim(),
+          railPadding: getComputedStyle(root).getPropertyValue('--product-rail-padding').trim(),
+          trackLeft: Math.round(trackRect.left),
+          firstCardLeft: Math.round(firstItem.getBoundingClientRect().left),
+          progressFullyVisible: progressBox
+            ? progressBox.left >= 0 && progressBox.right <= vw + 0.5
+            : false,
+          nextFullyVisible: nextBox ? nextBox.left >= 0 && nextBox.right <= vw + 0.5 : false,
+          fullyVisible,
+          partialVisible,
+          scrollWidth: document.documentElement.scrollWidth,
+          clientWidth: vw,
+          ariaLabel: atc.getAttribute('aria-label') ?? '',
+          fullText: full?.textContent?.trim() ?? '',
+          shortText: short?.textContent?.trim() ?? '',
+          fullDisplay: full ? getComputedStyle(full).display : '',
+          shortDisplay: short ? getComputedStyle(short).display : '',
+        };
+      });
+
+      expect(metrics).not.toBeNull();
+      expect(metrics!.token).toBe('2.5');
+      expect(metrics!.railPadding).toBe('0px');
+      expect(metrics!.trackLeft).toBe(4);
+      expect(metrics!.firstCardLeft).toBe(4);
+      expect(metrics!.progressFullyVisible).toBe(true);
+      expect(metrics!.nextFullyVisible).toBe(true);
+      expect(metrics!.fullyVisible).toBe(2);
+      expect(metrics!.partialVisible).toBeGreaterThanOrEqual(1);
+      expect(metrics!.scrollWidth).toBeLessThanOrEqual(metrics!.clientWidth + 1);
+      expect(metrics!.ariaLabel).toMatch(/^Add to bag:/i);
+      expect(metrics!.fullText).toBe('Add to bag');
+      expect(metrics!.shortText).toBe('Add');
+      expect(metrics!.fullDisplay).toBe('none');
+      expect(metrics!.shortDisplay).not.toBe('none');
+    }
+
+    await page.setViewportSize({ width: 768, height: 900 });
+    await page.goto('/demo', { waitUntil: 'domcontentloaded' });
+    const tablet = await page.evaluate(() => {
+      const root = document.querySelector('.bl-shop-rail [data-product-rail-root]') as HTMLElement | null;
+      const atc = root?.querySelector('.sf-atc[data-add-to-cart]') as HTMLElement | null;
+      const full = atc?.querySelector('.sf-atc-label-full') as HTMLElement | null;
+      const short = atc?.querySelector('.sf-atc-label-short') as HTMLElement | null;
+      return {
+        token: root
+          ? getComputedStyle(root).getPropertyValue('--product-rail-visible-cards').trim()
+          : '',
+        fullDisplay: full ? getComputedStyle(full).display : '',
+        shortDisplay: short ? getComputedStyle(short).display : '',
+        fullText: full?.textContent?.trim() ?? '',
+      };
+    });
+    expect(tablet.token).toBe('2.35');
+    expect(tablet.fullText).toBe('Add to bag');
+    expect(tablet.fullDisplay).not.toBe('none');
+    expect(tablet.shortDisplay).toBe('none');
+  });
+
+  test('landing rail card chrome matches PDP You may also like', async ({ page }) => {
+    await page.setViewportSize({ width: 390, height: 844 });
+
+    await page.goto('/demo/shop/bl-product-ironclad-pomade', { waitUntil: 'domcontentloaded' });
+    const relatedChrome = await page.evaluate(() => {
+      const card = document.querySelector('.sf-pdp-related .sf-card') as HTMLElement | null;
+      const atc = document.querySelector('.sf-pdp-related .sf-atc[data-add-to-cart]') as HTMLElement | null;
+      const footer = document.querySelector('.sf-pdp-related .sf-card-footer') as HTMLElement | null;
+      if (!card || !atc || !footer) return null;
+      const cardStyle = getComputedStyle(card);
+      const atcStyle = getComputedStyle(atc);
+      const footerStyle = getComputedStyle(footer);
+      return {
+        hostHasShop: Boolean(document.querySelector('.sf-shop.sf-shop--blackline')),
+        display: cardStyle.display,
+        flexDirection: cardStyle.flexDirection,
+        background: cardStyle.backgroundColor,
+        atcBackground: atcStyle.backgroundColor,
+        footerDisplay: footerStyle.display,
+        footerJustify: footerStyle.justifyContent,
+        nameMinHeight: getComputedStyle(card.querySelector('.sf-card-name') as HTMLElement).minHeight,
+      };
+    });
+
+    await page.goto('/demo', { waitUntil: 'domcontentloaded' });
+    const landingChrome = await page.evaluate(() => {
+      const host = document.querySelector('.bl-shop-rail') as HTMLElement | null;
+      const card = document.querySelector('.bl-shop-rail .sf-card') as HTMLElement | null;
+      const atc = document.querySelector('.bl-shop-rail .sf-atc[data-add-to-cart]') as HTMLElement | null;
+      const footer = document.querySelector('.bl-shop-rail .sf-card-footer') as HTMLElement | null;
+      if (!host || !card || !atc || !footer) return null;
+      const cardStyle = getComputedStyle(card);
+      const atcStyle = getComputedStyle(atc);
+      const footerStyle = getComputedStyle(footer);
+      return {
+        hostHasShop: host.classList.contains('sf-shop') && host.classList.contains('sf-shop--blackline'),
+        display: cardStyle.display,
+        flexDirection: cardStyle.flexDirection,
+        background: cardStyle.backgroundColor,
+        atcBackground: atcStyle.backgroundColor,
+        footerDisplay: footerStyle.display,
+        footerJustify: footerStyle.justifyContent,
+        nameMinHeight: getComputedStyle(card.querySelector('.sf-card-name') as HTMLElement).minHeight,
+      };
+    });
+
+    expect(relatedChrome).not.toBeNull();
+    expect(landingChrome).not.toBeNull();
+    expect(landingChrome!.hostHasShop).toBe(true);
+    expect(landingChrome!.display).toBe(relatedChrome!.display);
+    expect(landingChrome!.flexDirection).toBe(relatedChrome!.flexDirection);
+    expect(landingChrome!.background).toBe(relatedChrome!.background);
+    expect(landingChrome!.atcBackground).toBe(relatedChrome!.atcBackground);
+    expect(landingChrome!.footerDisplay).toBe(relatedChrome!.footerDisplay);
+    expect(landingChrome!.footerJustify).toBe(relatedChrome!.footerJustify);
+    expect(landingChrome!.nameMinHeight).toBe(relatedChrome!.nameMinHeight);
+    expect(landingChrome!.atcBackground).not.toMatch(/rgba\(0,\s*0,\s*0,\s*0\)|transparent/i);
+  });
+
   for (const viewport of [
     { width: 390, height: 844 },
     { width: 768, height: 1024 },
@@ -106,19 +260,16 @@ test.describe('BLACKLINE home shop product rail', () => {
       };
     });
     expect(cardChrome).not.toBeNull();
-    // Full perimeter border (matches shop grid) — not inset stroke covered by media
+    // Full perimeter border (matches shop grid / PDP related) — not inset stroke covered by media
     expect(cardChrome!.borderTopWidth).toBe('1px');
     expect(cardChrome!.borderRightWidth).toBe('1px');
     expect(cardChrome!.borderBottomWidth).toBe('1px');
     expect(cardChrome!.borderLeftWidth).toBe('1px');
     expect(cardChrome!.borderTopStyle).toBe('solid');
     expect(cardChrome!.borderTopColor).not.toMatch(/rgba\(0,\s*0,\s*0,\s*0\)|transparent/i);
-    // Light landing: carbon hairline (not ivory shop-border, which vanishes on ivory page)
-    expect(cardChrome!.borderTopColor).not.toMatch(/rgba?\(\s*244\s*,\s*241\s*,\s*234/i);
-    expect(cardChrome!.borderRgb).not.toBeNull();
-    expect(cardChrome!.borderRgb![0]).toBeLessThan(80);
-    expect(cardChrome!.borderRgb![1]).toBeLessThan(80);
-    expect(cardChrome!.borderRgb![2]).toBeLessThan(80);
+    // Canonical dark cards: ivory shop-border (same as PDP You may also like)
+    expect(cardChrome!.borderTopColor).toMatch(/rgba?\(\s*244\s*,\s*241\s*,\s*234/i);
+    // Storefront rail cards keep shadow none (productRail storefront rule)
     expect(cardChrome!.boxShadow === 'none' || cardChrome!.boxShadow === '').toBe(true);
 
     const footerLayout = await page.evaluate(() => {

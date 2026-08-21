@@ -67,6 +67,11 @@ async function chooseDate(dayKey: string) {
 
 async function completeNoahHaircut() {
   fireEvent.click(screen.getByRole('radio', { name: /^Noah Reid$/i }));
+  expect(screen.getByRole('heading', { name: 'Choose a barber' })).toBeTruthy();
+  fireEvent.click(screen.getByRole('button', { name: 'Continue' }));
+  await waitFor(() => {
+    expect(screen.getByRole('heading', { name: 'Pick a time' })).toBeTruthy();
+  });
   await chooseDate(WEDNESDAY);
   await waitFor(() => {
     const slotButtons = screen
@@ -178,6 +183,11 @@ describe('BookingFlow BLACKLINE host', () => {
     render(<BookingFlow {...blacklineFlowProps()} initialServiceId="bl-svc-haircut-finish" />);
 
     fireEvent.click(screen.getByRole('radio', { name: /Any barber/i }));
+    expect(screen.getByRole('heading', { name: 'Choose a barber' })).toBeTruthy();
+    fireEvent.click(screen.getByRole('button', { name: 'Continue' }));
+    await waitFor(() => {
+      expect(screen.getByRole('heading', { name: 'Pick a time' })).toBeTruthy();
+    });
     await chooseDate(WEDNESDAY);
     await waitFor(() => {
       const slotButtons = screen
@@ -207,7 +217,7 @@ describe('BookingFlow BLACKLINE host', () => {
     expect(screen.getByText(stored[0]!.barberName)).toBeTruthy();
   });
 
-  it('keeps a valid initialBarberId and skips the barber step after a service is chosen', async () => {
+  it('keeps a valid initialBarberId after service choice and advances only via Continue', async () => {
     render(
       <BookingFlow
         publicDemoMode
@@ -222,6 +232,16 @@ describe('BookingFlow BLACKLINE host', () => {
     expect(screen.queryByRole('radio', { name: /^Ellis Ward$/i })).toBeNull();
 
     fireEvent.click(screen.getByRole('radio', { name: skinFadeButtonName }));
+    expect(screen.getByRole('heading', { name: 'Choose a service' })).toBeTruthy();
+    fireEvent.click(screen.getByRole('button', { name: 'Continue' }));
+    await waitFor(() => {
+      expect(screen.getByRole('heading', { name: 'Choose a barber' })).toBeTruthy();
+    });
+
+    expect(screen.getByRole('radio', { name: /^Ellis Ward$/i }).getAttribute('aria-checked')).toBe(
+      'true',
+    );
+    fireEvent.click(screen.getByRole('button', { name: 'Continue' }));
 
     await waitFor(() => {
       expect(screen.getByRole('heading', { name: 'Pick a time' })).toBeTruthy();
@@ -229,10 +249,9 @@ describe('BookingFlow BLACKLINE host', () => {
     });
 
     expect(screen.getAllByText('Ellis Ward').length).toBeGreaterThan(0);
-    expect(screen.queryByRole('heading', { name: 'Choose a barber' })).toBeNull();
   });
 
-  it('ignores an invalid initialBarberId and stays on BLACKLINE barber selection', () => {
+  it('ignores an invalid initialBarberId and stays on BLACKLINE barber selection', async () => {
     render(
       <BookingFlow
         publicDemoMode
@@ -244,8 +263,12 @@ describe('BookingFlow BLACKLINE host', () => {
     );
 
     fireEvent.click(screen.getByRole('radio', { name: skinFadeButtonName }));
+    expect(screen.getByRole('heading', { name: 'Choose a service' })).toBeTruthy();
+    fireEvent.click(screen.getByRole('button', { name: 'Continue' }));
+    await waitFor(() => {
+      expect(screen.getByRole('heading', { name: 'Choose a barber' })).toBeTruthy();
+    });
 
-    expect(screen.getByRole('heading', { name: 'Choose a barber' })).toBeTruthy();
     expect(screen.getByRole('radio', { name: /^Ellis Ward$/i })).toBeTruthy();
     expect(screen.queryByRole('heading', { name: 'Pick a time' })).toBeNull();
   });

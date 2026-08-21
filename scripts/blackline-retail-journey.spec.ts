@@ -110,13 +110,6 @@ test.describe('BLACKLINE shop purchase to Orders and Sales', () => {
 
     const collectBtn = row.locator('.admin-orders-grid-collect-btn');
     await expect(collectBtn).toBeVisible();
-    const hand = page.locator('[data-tap-hand-hint]');
-    await expect(hand).toBeVisible();
-    const handBox = await hand.boundingBox();
-    const collectBox = await collectBtn.boundingBox();
-    expect(handBox).toBeTruthy();
-    expect(collectBox).toBeTruthy();
-    expect(Math.abs((handBox!.x + handBox!.width / 2) - (collectBox!.x + collectBox!.width / 2))).toBeLessThan(180);
 
     const toCollectBefore = await page.getByText(/\d+ to collect/).innerText();
     await collectBtn.click();
@@ -1191,6 +1184,123 @@ test.describe('BLACKLINE shop purchase to Orders and Sales', () => {
 
     await rail.locator('[data-product-rail-next]').first().click();
     await expect(rail).toHaveAttribute('data-can-scroll-left', 'true');
+  });
+
+  test('PDP You may also like shows 2.5 cards on mobile only', async ({ page }) => {
+    const mobileWidths = [320, 360, 375, 390, 430];
+
+    for (const width of mobileWidths) {
+      await page.setViewportSize({ width, height: 844 });
+      await page.goto('/demo/shop/bl-product-ironclad-pomade', { waitUntil: 'domcontentloaded' });
+
+      const related = page.locator('section.sf-pdp-related');
+      const rail = related.locator('[data-product-rail-root]');
+      await expect(rail).toBeVisible();
+
+      const metrics = await page.evaluate(() => {
+        const section = document.querySelector('section.sf-pdp-related') as HTMLElement | null;
+        const heading = section?.querySelector('.sf-toolbar-heading') as HTMLElement | null;
+        const root = section?.querySelector('[data-product-rail-root]') as HTMLElement | null;
+        const track = root?.querySelector('[data-product-rail-track]') as HTMLElement | null;
+        const progress = root?.querySelector('.product-rail__progress') as HTMLElement | null;
+        const nextBtn = root?.querySelector('[data-product-rail-next]') as HTMLElement | null;
+        const atc = root?.querySelector('.sf-atc[data-add-to-cart]') as HTMLElement | null;
+        const firstItem = track?.querySelector('.product-rail__item') as HTMLElement | null;
+        if (!section || !heading || !root || !track || !atc || !firstItem) return null;
+        const items = [...track.querySelectorAll('.product-rail__item')] as HTMLElement[];
+        const trackRect = track.getBoundingClientRect();
+        let fullyVisible = 0;
+        let partialVisible = 0;
+        for (const item of items) {
+          const r = item.getBoundingClientRect();
+          const visible = Math.max(0, Math.min(r.right, trackRect.right) - Math.max(r.left, trackRect.left));
+          if (visible <= 1) continue;
+          if (visible >= r.width - 2) fullyVisible += 1;
+          else if (visible >= r.width * 0.35) partialVisible += 1;
+        }
+        const full = atc.querySelector('.sf-atc-label-full') as HTMLElement | null;
+        const short = atc.querySelector('.sf-atc-label-short') as HTMLElement | null;
+        const headingBox = heading.getBoundingClientRect();
+        const progressBox = progress?.getBoundingClientRect();
+        const nextBox = nextBtn?.getBoundingClientRect();
+        const itemBox = firstItem.getBoundingClientRect();
+        const vw = document.documentElement.clientWidth;
+        return {
+          token: getComputedStyle(root).getPropertyValue('--product-rail-visible-cards').trim(),
+          railPadding: getComputedStyle(root).getPropertyValue('--product-rail-padding').trim(),
+          headingLeft: Math.round(headingBox.left),
+          trackLeft: Math.round(trackRect.left),
+          firstCardLeft: Math.round(itemBox.left),
+          progressFullyVisible: progressBox
+            ? progressBox.left >= 0 && progressBox.right <= vw + 0.5
+            : false,
+          nextFullyVisible: nextBox ? nextBox.left >= 0 && nextBox.right <= vw + 0.5 : false,
+          fullyVisible,
+          partialVisible,
+          scrollWidth: document.documentElement.scrollWidth,
+          clientWidth: vw,
+          ariaLabel: atc.getAttribute('aria-label') ?? '',
+          fullText: full?.textContent?.trim() ?? '',
+          shortText: short?.textContent?.trim() ?? '',
+          fullDisplay: full ? getComputedStyle(full).display : '',
+          shortDisplay: short ? getComputedStyle(short).display : '',
+        };
+      });
+
+      expect(metrics).not.toBeNull();
+      expect(metrics!.token).toBe('2.5');
+      expect(metrics!.railPadding).toBe('0px');
+      expect(metrics!.headingLeft).toBeGreaterThan(4);
+      expect(metrics!.trackLeft).toBe(4);
+      expect(metrics!.firstCardLeft).toBe(4);
+      expect(metrics!.progressFullyVisible).toBe(true);
+      expect(metrics!.nextFullyVisible).toBe(true);
+      expect(metrics!.fullyVisible).toBe(2);
+      expect(metrics!.partialVisible).toBeGreaterThanOrEqual(1);
+      expect(metrics!.scrollWidth).toBeLessThanOrEqual(metrics!.clientWidth + 1);
+      expect(metrics!.ariaLabel).toMatch(/^Add to bag:/i);
+      expect(metrics!.fullText).toBe('Add to bag');
+      expect(metrics!.shortText).toBe('Add');
+      expect(metrics!.fullDisplay).toBe('none');
+      expect(metrics!.shortDisplay).not.toBe('none');
+    }
+
+    await page.setViewportSize({ width: 768, height: 900 });
+    await page.goto('/demo/shop/bl-product-ironclad-pomade', { waitUntil: 'domcontentloaded' });
+    const tablet = await page.evaluate(() => {
+      const root = document.querySelector(
+        'section.sf-pdp-related [data-product-rail-root]',
+      ) as HTMLElement | null;
+      const atc = root?.querySelector('.sf-atc[data-add-to-cart]') as HTMLElement | null;
+      const full = atc?.querySelector('.sf-atc-label-full') as HTMLElement | null;
+      const short = atc?.querySelector('.sf-atc-label-short') as HTMLElement | null;
+      return {
+        token: root
+          ? getComputedStyle(root).getPropertyValue('--product-rail-visible-cards').trim()
+          : '',
+        fullDisplay: full ? getComputedStyle(full).display : '',
+        shortDisplay: short ? getComputedStyle(short).display : '',
+        fullText: full?.textContent?.trim() ?? '',
+      };
+    });
+    expect(tablet.token).toBe('2.35');
+    expect(tablet.fullText).toBe('Add to bag');
+    expect(tablet.fullDisplay).not.toBe('none');
+    expect(tablet.shortDisplay).toBe('none');
+
+    await page.setViewportSize({ width: 1280, height: 900 });
+    await page.goto('/demo/shop/bl-product-ironclad-pomade', { waitUntil: 'domcontentloaded' });
+    const desktopToken = await page
+      .locator('section.sf-pdp-related [data-product-rail-root]')
+      .evaluate((root) => getComputedStyle(root).getPropertyValue('--product-rail-visible-cards').trim());
+    expect(desktopToken).toBe('3.25');
+
+    await page.setViewportSize({ width: 390, height: 844 });
+    await page.goto('/demo', { waitUntil: 'domcontentloaded' });
+    const homeRailToken = await page
+      .locator('.bl-shop-rail [data-product-rail-root]')
+      .evaluate((root) => getComputedStyle(root).getPropertyValue('--product-rail-visible-cards').trim());
+    expect(homeRailToken).toBe('2.5');
   });
 
   test('mobile header shows bag, hides BOOK at 320px, and keeps booking in the menu', async ({ page }) => {

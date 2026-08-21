@@ -40,6 +40,7 @@ export type ProductRailProps = {
   imageFallback?: StorefrontImageFallback;
   priceFormat?: StorefrontPriceFormat;
   addToBagLabel?: string;
+  addToBagShortLabel?: string;
   addedLabel?: string;
   chooseOptionsLabel?: string;
   soldOutLabel?: string;
@@ -100,6 +101,7 @@ export function ProductRail({
   imageFallback = 'initial',
   priceFormat = 'gbp',
   addToBagLabel = 'Add to bag',
+  addToBagShortLabel,
   addedLabel = 'Added',
   chooseOptionsLabel = 'Choose options',
   soldOutLabel = 'Sold out',
@@ -212,6 +214,7 @@ export function ProductRail({
                     shopName={shopName}
                     copy={{
                       addToBagLabel,
+                      addToBagShortLabel,
                       addedLabel,
                       chooseOptionsLabel,
                       soldOutLabel,
@@ -292,6 +295,7 @@ export function ProductRail({
                         }}
                         href={href}
                         addToBagLabel={addToBagLabel}
+                        addToBagShortLabel={addToBagShortLabel}
                         addedLabel={addedLabel}
                         chooseOptionsLabel={chooseOptionsLabel}
                         soldOutLabel={soldOutLabel}

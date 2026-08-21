@@ -60,7 +60,12 @@ describe('BookingFlow publicShopId availability', () => {
     );
 
     fireEvent.click(screen.getByRole('radio', { name: /Skin Fade/i }));
+    fireEvent.click(screen.getByRole('button', { name: 'Continue' }));
+    await waitFor(() => {
+      expect(screen.getByRole('heading', { name: 'Choose a barber' })).toBeTruthy();
+    });
     fireEvent.click(screen.getByRole('radio', { name: /^Jamie$/i }));
+    fireEvent.click(screen.getByRole('button', { name: 'Continue' }));
 
     await waitFor(() => {
       expect(fetchSpy).toHaveBeenCalled();
@@ -87,7 +92,12 @@ describe('BookingFlow publicShopId availability', () => {
     );
 
     fireEvent.click(screen.getByRole('radio', { name: /Skin Fade/i }));
+    fireEvent.click(screen.getByRole('button', { name: 'Continue' }));
+    await waitFor(() => {
+      expect(screen.getByRole('heading', { name: 'Choose a barber' })).toBeTruthy();
+    });
     fireEvent.click(screen.getByRole('radio', { name: /^Jamie$/i }));
+    fireEvent.click(screen.getByRole('button', { name: 'Continue' }));
 
     await waitFor(() => {
       expect(fetchSpy).toHaveBeenCalled();
@@ -96,6 +106,10 @@ describe('BookingFlow publicShopId availability', () => {
     const calledUrl = String(fetchSpy.mock.calls[0]?.[0] ?? '');
     expect(calledUrl.startsWith('/api/availability?')).toBe(true);
     expect(calledUrl).not.toContain('/api/public/bookings/');
+
+    await waitFor(() => {
+      expect(screen.getByRole('radio', { name: '10:00' })).toBeTruthy();
+    });
   });
 
   it('aborts stale availability and keeps the latest date’s slots', async () => {
@@ -138,10 +152,18 @@ describe('BookingFlow publicShopId availability', () => {
     );
 
     fireEvent.click(screen.getByRole('radio', { name: /Skin Fade/i }));
+    fireEvent.click(screen.getByRole('button', { name: 'Continue' }));
+    await waitFor(() => {
+      expect(screen.getByRole('heading', { name: 'Choose a barber' })).toBeTruthy();
+    });
     fireEvent.click(screen.getByRole('radio', { name: /^Jamie$/i }));
+    fireEvent.click(screen.getByRole('button', { name: 'Continue' }));
 
     await waitFor(() => {
       expect(fetchSpy).toHaveBeenCalled();
+    });
+    await waitFor(() => {
+      expect(screen.getByLabelText('Select booking date')).toBeTruthy();
     });
 
     const dateInput = screen.getByLabelText('Select booking date') as HTMLInputElement;
@@ -153,5 +175,7 @@ describe('BookingFlow publicShopId availability', () => {
       expect(screen.getByRole('radio', { name: '16:00' })).toBeTruthy();
     });
     expect(screen.queryByRole('button', { name: '09:00' })).toBeNull();
+    // Let the delayed first availability response settle while still mounted.
+    await new Promise((resolve) => setTimeout(resolve, 120));
   });
 });

@@ -1,40 +1,66 @@
 ﻿---
-description: Official Kersivo product carousel (ProductRail) — reuse this asset; do not build parallel carousels
-globs: "**/ProductRail*","**/initProductRail*","**/productRail.css","**/DemoShopPreview*","**/StorefrontProductDetail*","scripts/blackline-*-carousel*"
+description: Locked Kersivo ProductRail visual contract — do not change without explicit user request
+globs: "**/ProductRail*","**/initProductRail*","**/productRail.css","**/storefront.css","**/DemoShopPreview*","**/StorefrontProductDetail*","**/blackline.css","scripts/blackline-*-carousel*","scripts/blackline-retail-journey*"
 alwaysApply: false
 ---
 
-# Kersivo ProductRail
+# Kersivo ProductRail (locked asset)
 
-[`ProductRail`](src/components/shop/ProductRail.tsx) + [`initProductRail.ts`](src/lib/shop/initProductRail.ts) + [`productRail.css`](src/styles/components/productRail.css) is the **official Kersivo product carousel**. Reuse it for product strips (landing shop preview, PDP "You may also like", etc.). Do not invent a second horizontal product carousel.
+[`ProductRail`](src/components/shop/ProductRail.tsx) + [`initProductRail.ts`](src/lib/shop/initProductRail.ts) + [`productRail.css`](src/styles/components/productRail.css) + mobile overrides in [`storefront.css`](src/styles/components/storefront.css) is the **official Kersivo product carousel**.
 
-## BLACKLINE mount (canonical)
+**Do not change this visual contract unless the user explicitly asks.** Prefer reuse over forks. Do not invent a second horizontal product carousel.
 
-```tsx
-<ProductRail
-  products={carouselProducts}
-  productHrefBase="/demo/shop" // required for real PDP hrefs
-  variant="blackline"
-  density="editorial"
-  showAction="add-to-cart"
-  showControls
-  showProgress
-  shopName="BLACKLINE"
-/>
+## Locked visual contract
+
+Canonical look = PDP “You may also like” (`.sf-pdp-related` inside `.sf-shop.sf-shop--blackline`). Landing demo shop strip must match on every breakpoint — **same card chrome and ATC**.
+
+| Breakpoint | Behavior |
+|---|---|
+| Mobile `≤39.99rem` | `--product-rail-visible-cards: 2.5`; track bleeds to Featured inset (`4px` / `8px` total); section title / progress / prev-next stay in the normal gutter; ATC visible short label `Add`; full `aria-label` keeps `Add to bag: …` |
+| `≥40rem` | Global tokens from `productRail.css` only: `2.35` → `3.25` → `3.6` — no local forks |
+
+Shared mobile CSS selectors (both mounts): `.sf-pdp-related` and `.bl-shop-rail` in `storefront.css`.
+
+## Canonical mounts
+
+**PDP related** — already under `.sf-shop.sf-shop--blackline`.
+
+**Landing shop rail** — host **must** include shop scope so `.sf-shop .sf-card` / `.sf-shop .sf-atc` apply:
+
+```html
+<div class="bl-shop-rail sf-shop sf-shop--blackline" data-sf-theme="blackline">
+  <ProductRail
+    products={carouselProducts}
+    productHrefBase="/demo/shop"
+    variant="storefront"
+    density="editorial"
+    showAction="add-to-cart"
+    showControls
+    showProgress
+    shopName="BLACKLINE"
+    addToBagShortLabel="Add"
+  />
+</div>
 ```
 
-- BLACKLINE + ATC renders [`StorefrontProductCard`](src/components/shop/storefront/StorefrontProductCard.tsx) (bag icon, demo prices). Do not reimplement those cards in the rail.
-- Edge "more content" fade lives in `productRail.css` (mask on the track via `data-can-scroll-*`). Do not add a white overlay.
-- Section titles (e.g. "You may also like", "THE PRODUCTS WE USE") stay **outside** the rail; the rail header is controls + progress only.
-- Map `StorefrontProduct` → `CarouselProduct` with `storefrontProductToCarousel` when the host already has storefront products.
+- Neutralize page-shell box model via `.bl-shop-rail.sf-shop` in `storefront.css` (full width, no extra padding/margin).
+- Storefront + ATC renders [`StorefrontProductCard`](src/components/shop/storefront/StorefrontProductCard.tsx). Do not reimplement cards in the rail.
+- Edge “more content” fade lives in `productRail.css` (mask on the track via `data-can-scroll-*`). Do not add a white overlay.
+- Section titles (“You may also like”, “THE PRODUCTS WE USE”) stay **outside** the rail; rail header is controls + progress only.
+- Do not re-apply the light-surface carbon hairline border to `.bl-shop-rail.sf-shop--blackline` cards — they keep ivory `--shop-border` like PDP.
 
 ## Init
 
-`ProductRail` self-binds on mount (`initProductRails` / `destroyProductRails` on its root). Host pages may still call `initProductRails()` globally (idempotent). Do not require every host to remember init for a drop-in reuse.
+`ProductRail` self-binds on mount (`initProductRails` / `destroyProductRails` on its root). Host pages may still call `initProductRails()` globally (idempotent).
 
 ## Anti-patterns
 
-- New `.related-products-carousel` / custom snap rails for products
+- Landing rail **without** `sf-shop sf-shop--blackline` (breaks card height, ATC color, footer layout)
+- New related-products / custom snap rails for products
+- Changing mobile `2.5` / track bleed / short `Add` without an explicit user request
+- Regressing these mounts back to global `1.15` / `1.22` visible cards
+- Expanding the whole related section (heading + controls) to the viewport edge — only the **track** bleeds
 - Duplicating edge-fade or ATC icon styles outside `productRail.css` / storefront card path
-- `previewMode` on BLACKLINE (Kersivo marketing only)
-- `density="editorial"` without `showAction="add-to-cart"` when you need ATC storefront cards
+- `previewMode` on BLACKLINE demo mounts
+- `density="editorial"` without `showAction="add-to-cart"` when ATC storefront cards are required
+- `variant="blackline"` (use `storefront`)

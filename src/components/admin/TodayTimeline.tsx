@@ -384,6 +384,7 @@ const BookingExpansionCard = memo(function BookingExpansionCard({
   const swipeStateRef = useRef<SwipeState>('closed');
   const trackRef = useRef<HTMLDivElement>(null);
   const swipeRootRef = useRef<HTMLDivElement>(null);
+  const actionsPanelRef = useRef<HTMLDivElement>(null);
   const touchStartX = useRef(0);
   const touchStartY = useRef(0);
   const swipeAxis = useRef<'undecided' | 'h' | 'v'>('undecided');
@@ -391,6 +392,11 @@ const BookingExpansionCard = memo(function BookingExpansionCard({
   const didDragRef = useRef(false);
   const wheelCooldownRef = useRef(0);
   const [hintVisible, setHintVisible] = useState(showSwipeHint);
+  const [desktopPopoverPos, setDesktopPopoverPos] = useState<{
+    top: number;
+    left: number;
+    maxHeight: number;
+  } | null>(null);
 
   useEffect(() => {
     swipeStateRef.current = swipeState;
@@ -452,6 +458,45 @@ const BookingExpansionCard = memo(function BookingExpansionCard({
       document.body.style.overflow = prev;
     };
   }, [isMobileView, isStatusSheetOpen, isServiceSheetOpen]);
+
+  const updateDesktopPopoverPosition = useCallback(() => {
+    const panel = actionsPanelRef.current;
+    if (!panel) return;
+    const rect = panel.getBoundingClientRect();
+    const maxHeight = Math.min(window.innerHeight * 0.52, 22 * 16);
+    const width = Math.min(19 * 16, window.innerWidth * 0.72);
+    const gap = 8;
+    const margin = 8;
+    let left = rect.left - width - gap;
+    if (left < margin) {
+      left = Math.min(rect.right + gap, window.innerWidth - width - margin);
+    }
+    left = Math.max(margin, Math.min(left, window.innerWidth - width - margin));
+    const half = maxHeight / 2;
+    let top = rect.top + rect.height / 2;
+    top = Math.max(half + margin, Math.min(top, window.innerHeight - half - margin));
+    setDesktopPopoverPos({ top, left, maxHeight });
+  }, []);
+
+  useEffect(() => {
+    if (isMobileView) {
+      setDesktopPopoverPos(null);
+      return undefined;
+    }
+    if (!(isStatusSheetOpen || isServiceSheetOpen)) {
+      setDesktopPopoverPos(null);
+      return undefined;
+    }
+    updateDesktopPopoverPosition();
+    const scrollRoot = swipeRootRef.current?.closest('.admin-vtl-scroll');
+    const onReposition = () => updateDesktopPopoverPosition();
+    scrollRoot?.addEventListener('scroll', onReposition, { passive: true });
+    window.addEventListener('resize', onReposition);
+    return () => {
+      scrollRoot?.removeEventListener('scroll', onReposition);
+      window.removeEventListener('resize', onReposition);
+    };
+  }, [isMobileView, isStatusSheetOpen, isServiceSheetOpen, updateDesktopPopoverPosition]);
 
   useEffect(() => {
     if (!(isStatusSheetOpen || isServiceSheetOpen)) return undefined;
@@ -1009,29 +1054,50 @@ const BookingExpansionCard = memo(function BookingExpansionCard({
       : null;
 
   const desktopActionPopover =
-    !isMobileView && (isStatusSheetOpen || isServiceSheetOpen) ? (
-      <div
-        className="admin-vtl-action-popover"
-        role="dialog"
-        aria-labelledby={`admin-vtl-action-popover-title-${booking.id}`}
-        onClick={(e) => e.stopPropagation()}
-      >
-        <div className="admin-vtl-action-popover-header">
-          <p id={`admin-vtl-action-popover-title-${booking.id}`} className="admin-vtl-action-popover-title">
-            {isStatusSheetOpen ? 'Status' : 'Service'}
-          </p>
-          <button
-            type="button"
-            className="admin-vtl-action-popover-close"
-            onClick={closeActionSheets}
-            aria-label="Close actions menu"
-          >
-            <X className="admin-vtl-action-popover-close-icon" aria-hidden />
-          </button>
-        </div>
-        {isStatusSheetOpen ? statusActionsContent : serviceActionsContent}
-      </div>
-    ) : null;
+    !isMobileView && (isStatusSheetOpen || isServiceSheetOpen) && desktopPopoverPos
+      ? createPortal(
+          <>
+            <div
+              className="admin-vtl-action-popover-backdrop"
+              aria-hidden="true"
+              onClick={(e) => {
+                e.stopPropagation();
+                closeActionSheets();
+              }}
+            />
+            <div
+              className="admin-vtl-action-popover admin-vtl-action-popover--portal"
+              role="dialog"
+              aria-labelledby={`admin-vtl-action-popover-title-${booking.id}`}
+              style={{
+                top: desktopPopoverPos.top,
+                left: desktopPopoverPos.left,
+                maxHeight: desktopPopoverPos.maxHeight,
+              }}
+              onClick={(e) => e.stopPropagation()}
+            >
+              <div className="admin-vtl-action-popover-header">
+                <p
+                  id={`admin-vtl-action-popover-title-${booking.id}`}
+                  className="admin-vtl-action-popover-title"
+                >
+                  {isStatusSheetOpen ? 'Status' : 'Service'}
+                </p>
+                <button
+                  type="button"
+                  className="admin-vtl-action-popover-close"
+                  onClick={closeActionSheets}
+                  aria-label="Close actions menu"
+                >
+                  <X className="admin-vtl-action-popover-close-icon" aria-hidden />
+                </button>
+              </div>
+              {isStatusSheetOpen ? statusActionsContent : serviceActionsContent}
+            </div>
+          </>,
+          document.body,
+        )
+      : null;
 
   return (
     <div className="admin-vtl-swipe-shell" data-booking-id={booking.id} tabIndex={-1}>
@@ -1192,7 +1258,11 @@ const BookingExpansionCard = memo(function BookingExpansionCard({
         </div>
 
         {/* ── Right: booking actions panel ── */}
-        <div className="admin-vtl-actions-panel" aria-hidden={swipeState !== 'right'}>
+        <div
+          ref={actionsPanelRef}
+          className="admin-vtl-actions-panel"
+          aria-hidden={swipeState !== 'right'}
+        >
           {canMutateBooking ? (
             <button
               type="button"
@@ -1234,11 +1304,10 @@ const BookingExpansionCard = memo(function BookingExpansionCard({
               <span className="admin-vtl-ap-circle-label">Service</span>
             </button>
           ) : null}
-
-          {desktopActionPopover}
         </div>
 
           {bottomSheetPortal}
+          {desktopActionPopover}
         </div>
 
         <div className="admin-vtl-swipe-nav">

@@ -211,8 +211,9 @@
 }
 
 /*
- * Landing The Shop is light ivory — ivory shop-border disappears against the page.
- * Use carbon hairline (same pattern as other light-surface BLACKLINE cards).
+ * Landing The Shop is light ivory — ivory shop-border disappears against the page
+ * when cards are translucent. Canonical dark shop cards (`.bl-shop-rail.sf-shop--blackline`)
+ * keep the standard ivory hairline like PDP “You may also like”.
  */
 [data-theme='blackline'] .bl-shop .product-rail[data-product-rail-variant='storefront'] .product-rail__item > .sf-card {
   border-color: color-mix(in srgb, var(--bl-carbon, #0b0c0e) 20%, transparent);
@@ -220,6 +221,24 @@
 
 [data-theme='blackline'] .bl-shop .product-rail[data-product-rail-variant='storefront'] .product-rail__item > .sf-card:hover {
   border-color: color-mix(in srgb, var(--bl-carbon, #0b0c0e) 32%, transparent);
+}
+
+[data-theme='blackline']
+  .bl-shop
+  .bl-shop-rail.sf-shop--blackline
+  .product-rail[data-product-rail-variant='storefront']
+  .product-rail__item
+  > .sf-card {
+  border-color: var(--shop-border, var(--bl-line-dark, rgba(244, 241, 234, 0.16)));
+}
+
+[data-theme='blackline']
+  .bl-shop
+  .bl-shop-rail.sf-shop--blackline
+  .product-rail[data-product-rail-variant='storefront']
+  .product-rail__item
+  > .sf-card:hover {
+  border-color: var(--shop-border-hover, color-mix(in srgb, var(--bl-ivory, #f4f1ea) 28%, transparent));
 }
 
 /*

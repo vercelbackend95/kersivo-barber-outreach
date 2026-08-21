@@ -4172,7 +4172,8 @@ button.admin-sidebar-brand--button:focus-visible {
     }
   }
 
-  /* Fixed stack: subscribe/paused banner + mobile header (+ next strip) as one measured chrome unit */
+  /* Fixed stack: subscribe/paused banner + mobile header (+ next strip) as one measured chrome unit.
+   * BLACKLINE owner demo banner sits above this stack (sticky) — offset via --admin-demo-banner-h. */
   .admin-mobile-top-chrome {
     display: flex;
     flex-direction: column;
@@ -4181,7 +4182,7 @@ button.admin-sidebar-brand--button:focus-visible {
     position: fixed;
     left: 0;
     right: 0;
-    top: 0;
+    top: var(--admin-demo-banner-h, 0px);
     width: auto;
     z-index: var(--admin-z-app-chrome, 260);
     margin: 0;
@@ -14087,6 +14088,7 @@ button.admin-sidebar-brand--button:focus-visible {
   transform: translateY(-50%);
   width: min(19rem, 72vw);
   display: grid;
+  grid-template-rows: auto minmax(0, 1fr);
   gap: 0;
   border-radius: var(--radius-sm);
   border: 1px solid color-mix(in srgb, var(--border) 75%, transparent);
@@ -14094,6 +14096,21 @@ button.admin-sidebar-brand--button:focus-visible {
   box-shadow: 0 14px 34px color-mix(in srgb, var(--bg) 70%, transparent);
   z-index: 12;
   overflow: hidden;
+}
+
+.admin-vtl-action-popover-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 2005;
+  background: transparent;
+}
+
+.admin-vtl-action-popover--portal {
+  position: fixed;
+  right: auto;
+  transform: translateY(-50%);
+  z-index: 2010;
+  max-height: min(52vh, 22rem);
 }
 
 .admin-vtl-action-popover-header {
@@ -14140,6 +14157,11 @@ button.admin-sidebar-brand--button:focus-visible {
   padding: 0.55rem 0.65rem 0.65rem;
   max-height: min(52vh, 22rem);
   overflow-y: auto;
+  min-height: 0;
+}
+
+.admin-vtl-action-popover--portal .admin-vtl-action-sheet-content {
+  max-height: none;
 }
 
 .admin-vtl-bottom-sheet-backdrop {

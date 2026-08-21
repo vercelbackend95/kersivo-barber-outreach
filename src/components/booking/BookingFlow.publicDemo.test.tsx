@@ -37,8 +37,15 @@ const barbers = [
 
 async function completeThroughSchedule() {
   fireEvent.click(screen.getByRole('radio', { name: /Skin Fade/i }));
-  fireEvent.click(screen.getByRole('radio', { name: /^Jamie$/i }));
+  expect(screen.getByRole('heading', { name: 'Choose a service' })).toBeTruthy();
+  fireEvent.click(screen.getByRole('button', { name: 'Continue' }));
+  await waitFor(() => {
+    expect(screen.getByRole('heading', { name: 'Choose a barber' })).toBeTruthy();
+  });
 
+  fireEvent.click(screen.getByRole('radio', { name: /^Jamie$/i }));
+  expect(screen.getByRole('heading', { name: 'Choose a barber' })).toBeTruthy();
+  fireEvent.click(screen.getByRole('button', { name: 'Continue' }));
   await waitFor(() => {
     expect(screen.getByRole('radio', { name: '09:00' })).toBeTruthy();
   });
@@ -59,6 +66,16 @@ describe('BookingFlow publicDemoMode', () => {
     fetchSpy.mockReset();
     vi.stubGlobal('fetch', fetchSpy);
     Element.prototype.scrollIntoView = vi.fn();
+    window.matchMedia = vi.fn().mockImplementation((query: string) => ({
+      matches: false,
+      media: query,
+      onchange: null,
+      addListener: vi.fn(),
+      removeListener: vi.fn(),
+      addEventListener: vi.fn(),
+      removeEventListener: vi.fn(),
+      dispatchEvent: vi.fn(),
+    }));
   });
 
   afterEach(() => {
@@ -79,14 +96,70 @@ describe('BookingFlow publicDemoMode', () => {
     expect(option.getAttribute('aria-checked')).toBe('false');
     expect(screen.getByText('A seamless fade taken down to skin.')).toBeTruthy();
     fireEvent.click(option);
+    expect(option.getAttribute('aria-checked')).toBe('true');
+    expect(screen.getByRole('heading', { name: 'Choose a service' })).toBeTruthy();
+    expect(screen.getByRole('button', { name: 'Continue' })).toHaveProperty('disabled', false);
+  });
+
+  it('advances only via Continue after service and barber selection', async () => {
+    render(<BookingFlow publicDemoMode services={services} barbers={barbers} />);
+
+    expect(screen.getByRole('button', { name: 'Continue' })).toHaveProperty('disabled', true);
+    fireEvent.click(screen.getByRole('radio', { name: /Skin Fade/i }));
+    expect(screen.getByRole('heading', { name: 'Choose a service' })).toBeTruthy();
+    fireEvent.click(screen.getByRole('button', { name: 'Continue' }));
+    await waitFor(() => {
+      expect(screen.getByRole('heading', { name: 'Choose a barber' })).toBeTruthy();
+    });
+
+    fireEvent.click(screen.getByRole('radio', { name: /^Jamie$/i }));
     expect(screen.getByRole('heading', { name: 'Choose a barber' })).toBeTruthy();
+    fireEvent.click(screen.getByRole('button', { name: 'Continue' }));
+    await waitFor(() => {
+      expect(screen.getByRole('heading', { name: 'Pick a time' })).toBeTruthy();
+    });
+  });
+
+  it('on mobile Continue scrolls the step indicator into view', async () => {
+    window.matchMedia = vi.fn().mockImplementation((query: string) => ({
+      matches: query.includes('max-width: 39.99rem'),
+      media: query,
+      onchange: null,
+      addListener: vi.fn(),
+      removeListener: vi.fn(),
+      addEventListener: vi.fn(),
+      removeEventListener: vi.fn(),
+      dispatchEvent: vi.fn(),
+    }));
+    const scrollSpy = vi.fn();
+    Element.prototype.scrollIntoView = scrollSpy;
+
+    render(<BookingFlow publicDemoMode services={services} barbers={barbers} />);
+    fireEvent.click(screen.getByRole('radio', { name: /Skin Fade/i }));
+    fireEvent.click(screen.getByRole('button', { name: 'Continue' }));
+
+    await waitFor(() => {
+      expect(screen.getByRole('heading', { name: 'Choose a barber' })).toBeTruthy();
+    });
+
+    await waitFor(() => {
+      expect(scrollSpy).toHaveBeenCalled();
+    });
+
+    const indicator = screen.getByRole('navigation', { name: 'Booking progress' });
+    expect(scrollSpy.mock.contexts.some((ctx) => ctx === indicator)).toBe(true);
   });
 
   it('uses static slots and never calls availability, create, or lead APIs', async () => {
     render(<BookingFlow publicDemoMode services={services} barbers={barbers} />);
 
     fireEvent.click(screen.getByRole('radio', { name: /Skin Fade/i }));
+    fireEvent.click(screen.getByRole('button', { name: 'Continue' }));
+    await waitFor(() => {
+      expect(screen.getByRole('heading', { name: 'Choose a barber' })).toBeTruthy();
+    });
     fireEvent.click(screen.getByRole('radio', { name: /^Jamie$/i }));
+    fireEvent.click(screen.getByRole('button', { name: 'Continue' }));
 
     await waitFor(() => {
       expect(screen.getByRole('radio', { name: '09:00' })).toBeTruthy();

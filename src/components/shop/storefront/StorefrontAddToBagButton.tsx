@@ -6,6 +6,8 @@ type StorefrontAddToBagButtonProps = {
   product: Pick<StorefrontProduct, 'id' | 'name' | 'pricePence' | 'image' | 'available' | 'requiresOptions'>;
   href: string;
   addToBagLabel: string;
+  /** Visible short label (e.g. mobile rail); defaults to addToBagLabel. aria-label always uses full label. */
+  addToBagShortLabel?: string;
   addedLabel: string;
   chooseOptionsLabel: string;
   soldOutLabel: string;
@@ -20,6 +22,7 @@ export default function StorefrontAddToBagButton({
   product,
   href,
   addToBagLabel,
+  addToBagShortLabel,
   addedLabel,
   chooseOptionsLabel,
   soldOutLabel,
@@ -28,6 +31,7 @@ export default function StorefrontAddToBagButton({
 }: StorefrontAddToBagButtonProps) {
   const [added, setAdded] = useState(false);
   const timerRef = useRef<number | null>(null);
+  const shortLabel = addToBagShortLabel ?? addToBagLabel;
 
   useEffect(() => {
     return () => {
@@ -57,7 +61,8 @@ export default function StorefrontAddToBagButton({
     );
   }
 
-  const visibleLabel = added ? addedLabel : addToBagLabel;
+  const visibleFullLabel = added ? addedLabel : addToBagLabel;
+  const visibleShortLabel = added ? addedLabel : shortLabel;
 
   return (
     <button
@@ -80,9 +85,9 @@ export default function StorefrontAddToBagButton({
       style={{ transitionDuration: `${MORPH_MS}ms` }}
     >
       <ShoppingBag width={16} height={16} aria-hidden="true" />
-      <span className="sf-atc-label-full">{visibleLabel}</span>
+      <span className="sf-atc-label-full">{visibleFullLabel}</span>
       <span className="sf-atc-label-short" aria-hidden="true">
-        {visibleLabel}
+        {visibleShortLabel}
       </span>
     </button>
   );

@@ -246,6 +246,7 @@ export default function AdminLayout({
   const mobileDrawerRef = useRef<HTMLDivElement | null>(null);
   const mobileOpenButtonRef = useRef<HTMLButtonElement | null>(null);
   const lastPublishedHeaderInsetPxRef = useRef<number | null>(null);
+  const lastPublishedDemoBannerHPxRef = useRef<number | null>(null);
   const prevActiveSectionRef = useRef(activeSection);
   const [mobileChromeMounted, setMobileChromeMounted] = useState(false);
   const isBlacklineDemo = demoTenant === 'blackline';
@@ -571,26 +572,57 @@ export default function AdminLayout({
     let ro: ResizeObserver | null = null;
     let rafId = 0;
 
+    const clearDemoBannerVar = () => {
+      lastPublishedDemoBannerHPxRef.current = null;
+      document.documentElement.style.removeProperty('--admin-demo-banner-h');
+    };
+
+    const clearHeaderInsetVars = () => {
+      lastPublishedHeaderInsetPxRef.current = null;
+      mainEl.style.removeProperty('--admin-mobile-measured-header-bottom');
+      document.documentElement.style.removeProperty('--admin-mobile-measured-header-bottom');
+    };
+
     const clearWindowListeners = () => {
       window.removeEventListener('resize', schedulePublish);
       window.visualViewport?.removeEventListener('resize', schedulePublish);
     };
 
+    const publishDemoBannerHeight = () => {
+      if (!mq.matches) {
+        clearDemoBannerVar();
+        return;
+      }
+      const bannerEl = document.querySelector<HTMLElement>('aside.bl-demo-banner--admin');
+      const bannerPx = bannerEl ? Math.ceil(bannerEl.getBoundingClientRect().height) : 0;
+      const previous = lastPublishedDemoBannerHPxRef.current;
+      if (previous !== null && Math.abs(previous - bannerPx) < 2) {
+        return;
+      }
+      if (previous === bannerPx) {
+        return;
+      }
+      lastPublishedDemoBannerHPxRef.current = bannerPx;
+      if (bannerPx > 0) {
+        document.documentElement.style.setProperty('--admin-demo-banner-h', `${bannerPx}px`);
+      } else {
+        document.documentElement.style.removeProperty('--admin-demo-banner-h');
+      }
+    };
+
     const publish = () => {
       if (!mq.matches) {
-        lastPublishedHeaderInsetPxRef.current = null;
-        mainEl.style.removeProperty('--admin-mobile-measured-header-bottom');
-        document.documentElement.style.removeProperty('--admin-mobile-measured-header-bottom');
+        clearHeaderInsetVars();
+        clearDemoBannerVar();
         return;
       }
+      publishDemoBannerHeight();
       const chromeEl = mainEl.querySelector<HTMLElement>('.admin-mobile-top-chrome');
       if (!chromeEl) {
-        lastPublishedHeaderInsetPxRef.current = null;
-        mainEl.style.removeProperty('--admin-mobile-measured-header-bottom');
-        document.documentElement.style.removeProperty('--admin-mobile-measured-header-bottom');
+        clearHeaderInsetVars();
         return;
       }
-      /* Fixed top chrome: spacer height == banner + header (+ next strip); height is stabler than rect.bottom during vv jitter. */
+      /* Fixed top chrome height only (demo banner is separate, above chrome via --admin-demo-banner-h). */
       const insetPx = Math.ceil(chromeEl.getBoundingClientRect().height);
       const previous = lastPublishedHeaderInsetPxRef.current;
       if (previous !== null && Math.abs(previous - insetPx) < 2) {
@@ -620,23 +652,23 @@ export default function AdminLayout({
       clearWindowListeners();
 
       if (!mq.matches) {
-        lastPublishedHeaderInsetPxRef.current = null;
-        mainEl.style.removeProperty('--admin-mobile-measured-header-bottom');
-        document.documentElement.style.removeProperty('--admin-mobile-measured-header-bottom');
+        clearHeaderInsetVars();
+        clearDemoBannerVar();
         return;
       }
 
       const chromeEl = mainEl.querySelector<HTMLElement>('.admin-mobile-top-chrome');
+      const bannerEl = document.querySelector<HTMLElement>('aside.bl-demo-banner--admin');
       if (!chromeEl) {
-        lastPublishedHeaderInsetPxRef.current = null;
-        mainEl.style.removeProperty('--admin-mobile-measured-header-bottom');
-        document.documentElement.style.removeProperty('--admin-mobile-measured-header-bottom');
+        clearHeaderInsetVars();
+        publishDemoBannerHeight();
         return;
       }
 
       publish();
       ro = new ResizeObserver(schedulePublish);
       ro.observe(chromeEl);
+      if (bannerEl) ro.observe(bannerEl);
       window.addEventListener('resize', schedulePublish);
       window.visualViewport?.addEventListener('resize', schedulePublish);
     };
@@ -649,9 +681,8 @@ export default function AdminLayout({
       ro?.disconnect();
       clearWindowListeners();
       if (rafId !== 0) window.cancelAnimationFrame(rafId);
-      lastPublishedHeaderInsetPxRef.current = null;
-      mainEl.style.removeProperty('--admin-mobile-measured-header-bottom');
-      document.documentElement.style.removeProperty('--admin-mobile-measured-header-bottom');
+      clearHeaderInsetVars();
+      clearDemoBannerVar();
     };
   }, [mobileTopExtension, activeSectionLabel, previewUnderConstruction, publicActivityPaused, showPreviewSubscribeBanner]);
 

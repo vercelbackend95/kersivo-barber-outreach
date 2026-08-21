@@ -690,6 +690,50 @@
   min-width: 0;
 }
 
+/* Landing rail reuses .sf-shop card/ATC chrome without page-shell layout */
+.bl-shop-rail.sf-shop {
+  width: 100%;
+  max-width: none;
+  margin-inline: 0;
+  padding-block: 0;
+  overflow-x: clip;
+  color: var(--sf-text);
+}
+
+/* Locked Kersivo ProductRail mobile contract — related + landing shop rail */
+@media (max-width: 39.99rem) {
+  .sf-shop.sf-pdp-page,
+  [data-theme='blackline'] .bl-shop-rail {
+    overflow-x: visible;
+  }
+
+  .sf-pdp-related .product-rail,
+  .bl-shop-rail .product-rail {
+    --product-rail-visible-cards: 2.5;
+    --product-rail-padding: 0px;
+    overflow-x: visible;
+  }
+
+  .sf-pdp-related .product-rail__track,
+  .bl-shop-rail .product-rail__track {
+    box-sizing: border-box;
+    width: calc(100% + (2 * var(--sf-gutter, var(--bl-gutter, 1.25rem))) - 8px);
+    max-width: none;
+    margin-inline: calc(4px - var(--sf-gutter, var(--bl-gutter, 1.25rem)));
+    padding-inline: 0;
+  }
+
+  .sf-shop.sf-pdp-page .sf-pdp-related .sf-card .sf-atc .sf-atc-label-full,
+  .bl-shop-rail.sf-shop .sf-card .sf-atc .sf-atc-label-full {
+    display: none;
+  }
+
+  .sf-shop.sf-pdp-page .sf-pdp-related .sf-card .sf-atc .sf-atc-label-short,
+  .bl-shop-rail.sf-shop .sf-card .sf-atc .sf-atc-label-short {
+    display: inline;
+  }
+}
+
 .sf-pdp-back {
   color: var(--sf-muted);
   font-size: 0.82rem;

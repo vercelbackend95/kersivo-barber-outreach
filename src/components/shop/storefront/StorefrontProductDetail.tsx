@@ -123,6 +123,7 @@ export default function StorefrontProductDetail({
             priceFormat={priceFormat}
             ariaLabel="You may also like"
             addToBagLabel={copy.addToBagLabel}
+            addToBagShortLabel="Add"
             addedLabel={copy.addedLabel}
             chooseOptionsLabel={copy.chooseOptionsLabel}
             soldOutLabel={copy.soldOutLabel}

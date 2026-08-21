@@ -11,7 +11,6 @@ const BookingsReportsSection = lazy(() => import('./BookingsReportsSection'));
 import { addDays } from 'date-fns';
 import { formatInTimeZone, fromZonedTime, toZonedTime } from 'date-fns-tz';
 import TodayTimeline, { type TimelineBooking } from './TodayTimeline';
-import TapHandHint from '@/components/TapHandHint';
 import ClientProfilePanel from './ClientProfilePanel';
 import { resolveClientIdForBooking } from '@/lib/admin/resolveClientIdForBooking';
 import AdminErrorBoundary from './AdminErrorBoundary';
@@ -40,16 +39,7 @@ import { countBookingsByStatusTone, getBookingStatusTone, isCancelledBookingStat
 import { adminFetchJson, notifyAdminDemoBlocked } from './adminAuth';
 import { normalizeWorkingHourRows } from '../../lib/admin/normalizeWorkingHourRows';
 import { fetchBarbersListRefresh } from '@/lib/admin/teamRefreshFetch';
-import { mergeBlacklineSessionBookings, isBlacklineSessionBookingId } from '@/lib/demo/blacklineSessionBookings';
-import {
-  TAP_HAND_AUTO_DISMISS_MS,
-  hasSeenBlacklineTapHint,
-  markBlacklineTapHintSeen,
-  positionTapHand,
-  waitForScrollSettled,
-  type TapHandPosition,
-} from '@/lib/ui/tapHandHint';
-import { prefersReducedMotion } from '@/lib/landing/liveTimelineScroll';
+import { mergeBlacklineSessionBookings } from '@/lib/demo/blacklineSessionBookings';
 type DepositRefundSummary = {
   status: 'REFUND_PENDING' | 'REFUNDED' | 'REFUND_FAILED';
   amountPence: number;
@@ -238,11 +228,6 @@ function readInitialBookingIdFromUrl(): string | null {
   if (typeof window === 'undefined') return null;
   const raw = new URLSearchParams(window.location.search).get('bookingId')?.trim();
   return raw || null;
-}
-
-function readDemoJourneyFromUrl(): string | null {
-  if (typeof window === 'undefined') return null;
-  return new URLSearchParams(window.location.search).get('demoJourney')?.trim() || null;
 }
 
 function clearTimelineDeepLinkParamsFromUrl() {
@@ -725,13 +710,6 @@ export default function BookingsAdminPanel({
   const [selectedDate, setSelectedDate] = useState(() => urlBookingDate ?? getTodayLondonDate());
   const [timelineFocusBookingId, setTimelineFocusBookingId] = useState<string | null>(() => urlBookingId);
   const deepLinkBookingIdRef = useRef<string | null>(urlBookingId);
-  const demoJourneyBookingRef = useRef<string | null>(
-    isBlacklineDemo && readDemoJourneyFromUrl() === 'booking' ? urlBookingId : null,
-  );
-  const timelineHintRootRef = useRef<HTMLDivElement | null>(null);
-  const [tapHintVisible, setTapHintVisible] = useState(false);
-  const [tapHintPos, setTapHintPos] = useState<TapHandPosition | null>(null);
-  const [tapHintBookingId, setTapHintBookingId] = useState<string | null>(null);
   const [historyBarberId, setHistoryBarberId] = useState<string>('all');
   const [historyDateRange, setHistoryDateRange] = useState<HistoryDateRange | null>(null);
   const [isHistoryMoreOpen, setIsHistoryMoreOpen] = useState(false);
@@ -1590,17 +1568,6 @@ export default function BookingsAdminPanel({
     pendingTimelineScrollBookingIdRef.current = deepLinkId;
   }, [mode]);
 
-  const maybeStartBookingTapHint = useCallback(
-    (bookingId: string) => {
-      if (!isBlacklineDemo) return;
-      if (demoJourneyBookingRef.current !== bookingId) return;
-      if (!isBlacklineSessionBookingId(bookingId)) return;
-      if (hasSeenBlacklineTapHint(bookingId)) return;
-      setTapHintBookingId(bookingId);
-    },
-    [isBlacklineDemo],
-  );
-
   const handleTimelineFocusBookingHandled = useCallback((bookingId: string) => {
     if (deepLinkBookingIdRef.current === bookingId) {
       deepLinkBookingIdRef.current = null;
@@ -1608,8 +1575,7 @@ export default function BookingsAdminPanel({
     }
     pendingTimelineScrollBookingIdRef.current = null;
     setTimelineFocusBookingId((current) => (current === bookingId ? null : current));
-    maybeStartBookingTapHint(bookingId);
-  }, [maybeStartBookingTapHint]);
+  }, []);
 
   const jumpToTimelineBooking = useCallback(
     (booking: AdminBookingsOpsSearchBooking) => {
@@ -1644,66 +1610,10 @@ export default function BookingsAdminPanel({
 
   const handleTimelineBookingClick = useCallback(
     (booking: TimelineBooking) => {
-      if (tapHintBookingId === booking.id) {
-        setTapHintVisible(false);
-        setTapHintBookingId(null);
-      }
       void openClientProfileForBooking(booking);
     },
-    [openClientProfileForBooking, tapHintBookingId]
+    [openClientProfileForBooking]
   );
-
-  useEffect(() => {
-    if (!tapHintBookingId) return undefined;
-    const root = timelineHintRootRef.current;
-    const scroller = timelineScrollRef.current;
-    if (!root) return undefined;
-
-    const target = () =>
-      document.querySelector(`[data-booking-id="${tapHintBookingId}"]`) as HTMLElement | null;
-
-    const show = () => {
-      const card = target();
-      if (!card || !timelineHintRootRef.current) return;
-      setTapHintPos(positionTapHand(timelineHintRootRef.current, card));
-      setTapHintVisible(true);
-      markBlacklineTapHintSeen(tapHintBookingId);
-    };
-
-    const cleanupScroll = scroller
-      ? waitForScrollSettled(scroller, show, { reducedMotion: prefersReducedMotion() })
-      : (() => {
-          show();
-          return () => undefined;
-        })();
-
-    const onKey = (event: KeyboardEvent) => {
-      if (event.key === 'Escape') {
-        setTapHintVisible(false);
-        setTapHintBookingId(null);
-      }
-    };
-    const onPointer = (event: Event) => {
-      const node = event.target as Element | null;
-      if (node?.closest?.(`[data-booking-id="${tapHintBookingId}"]`)) {
-        setTapHintVisible(false);
-        setTapHintBookingId(null);
-      }
-    };
-    window.addEventListener('keydown', onKey);
-    document.addEventListener('click', onPointer, true);
-    const timeoutId = window.setTimeout(() => {
-      setTapHintVisible(false);
-      setTapHintBookingId(null);
-    }, TAP_HAND_AUTO_DISMISS_MS);
-
-    return () => {
-      cleanupScroll();
-      window.removeEventListener('keydown', onKey);
-      document.removeEventListener('click', onPointer, true);
-      window.clearTimeout(timeoutId);
-    };
-  }, [tapHintBookingId]);
 
   useEffect(() => {
     const pendingBookingId = pendingTimelineScrollBookingIdRef.current;
@@ -1715,9 +1625,8 @@ export default function BookingsAdminPanel({
         clearTimelineDeepLinkParamsFromUrl();
       }
       setTimelineFocusBookingId((current) => (current === pendingBookingId ? null : current));
-      maybeStartBookingTapHint(pendingBookingId);
     }
-  }, [activeView, maybeStartBookingTapHint, scrollToTimelineBooking, visibleBookings]);
+  }, [activeView, scrollToTimelineBooking, visibleBookings]);
 
   useEffect(() => {
     const pendingId = pendingListScrollBookingIdRef.current;
@@ -2495,7 +2404,6 @@ export default function BookingsAdminPanel({
                   style={{ width: '100%' }}
                 >
                   <AdminErrorBoundary>
-                    <div className="admin-timeline-tap-hand-root" ref={timelineHintRootRef}>
                     <TodayTimeline
                       barbers={activeBarbers}
                       bookings={visibleBookings}
@@ -2524,8 +2432,6 @@ export default function BookingsAdminPanel({
                         ) : null
                       }
                     />
-                    <TapHandHint visible={tapHintVisible} position={tapHintPos} />
-                    </div>
                   </AdminErrorBoundary>
                 </motion.div>
               ) : (

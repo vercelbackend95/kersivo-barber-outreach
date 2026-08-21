@@ -12,8 +12,6 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 
 import TodayTimeline from '@/components/admin/TodayTimeline';
-import TapHandHint from '@/components/TapHandHint';
-import { positionTapHand, waitForScrollSettled, type TapHandPosition } from '@/lib/ui/tapHandHint';
 import '@/styles/components/admin-demo.css';
 import '@/styles/components/booking.css';
 import '@/styles/components/insideSystemLiveWidget.css';
@@ -33,7 +31,6 @@ import {
 import { adminDemoHref } from '@/lib/admin/demoConfig';
 
 const ADMIN_DEMO_HREF = adminDemoHref('timeline');
-const SCROLL_END_FALLBACK_MS = 700;
 
 function readTimeLabel(node: HTMLElement): string {
   const fromData = node.getAttribute('data-vtl-time')?.trim();
@@ -49,13 +46,8 @@ export function InsideSystemLiveWidget({
   barbers?: LandingBarber[];
 } = {}) {
   const [lockOpen, setLockOpen] = useState(false);
-  const [tapHintVisible, setTapHintVisible] = useState(false);
-  const [tapHintPos, setTapHintPos] = useState<TapHandPosition | null>(null);
   const scrollRef = useRef<HTMLDivElement | null>(null);
-  const stageRef = useRef<HTMLDivElement | null>(null);
   const rootRef = useRef<HTMLDivElement | null>(null);
-  const tapHintShownRef = useRef(false);
-  const tapHintDismissedRef = useRef(false);
 
   const data = useMemo(() => getLandingTimelineData(barbers), [barbers]);
 
@@ -74,54 +66,12 @@ export function InsideSystemLiveWidget({
     // Animate to mid-afternoon only when the widget enters the viewport —
     // never scrollIntoView (which would jump the whole landing page).
     const root = rootRef.current;
-    const stage = stageRef.current;
     if (!root) return undefined;
 
     let done = false;
-    let scrollEndCleanup: (() => void) | undefined;
     let retryTimer: number | undefined;
 
-    const dismissTapHint = () => {
-      if (tapHintDismissedRef.current) return;
-      tapHintDismissedRef.current = true;
-      setTapHintVisible(false);
-    };
-
     const getScrollContainer = () => scrollRef.current;
-
-    const positionTapHint = () => {
-      const container = getScrollContainer();
-      if (!stage || !container || tapHintDismissedRef.current || tapHintShownRef.current) return;
-
-      const timeNodes = Array.from(container.querySelectorAll<HTMLElement>('[data-vtl-time]'));
-      const timeNode = timeNodes.find(
-        (node) => readTimeLabel(node) === LANDING_TIMELINE_SCROLL_FOCUS,
-      );
-      if (!timeNode) return;
-
-      const slot =
-        timeNode.closest<HTMLElement>('.admin-vtl-slot, .admin-vtl-now-row') ?? timeNode;
-      const line =
-        slot.querySelector<HTMLElement>('.admin-vtl-progress-track .admin-vtl-slot-line') ??
-        slot.querySelector<HTMLElement>('.admin-vtl-slot-line');
-      const anchor = line ?? slot;
-
-      // Anchor = tip of the finger sits just above the slot line center.
-      setTapHintPos(positionTapHand(stage, anchor));
-      tapHintShownRef.current = true;
-      setTapHintVisible(true);
-    };
-
-    const afterScrollSettled = (container: HTMLElement) => {
-      scrollEndCleanup?.();
-      const show = () => {
-        window.requestAnimationFrame(positionTapHint);
-      };
-      scrollEndCleanup = waitForScrollSettled(container, show, {
-        reducedMotion: prefersReducedMotion(),
-        fallbackMs: SCROLL_END_FALLBACK_MS,
-      });
-    };
 
     const centerFocusTime = (attempt = 0) => {
       const container = getScrollContainer();
@@ -163,18 +113,7 @@ export function InsideSystemLiveWidget({
       );
       const behavior: ScrollBehavior = prefersReducedMotion() ? 'auto' : 'smooth';
       container.scrollTo({ top, behavior });
-      afterScrollSettled(container);
     };
-
-    const onFocusSlotClick = (event: Event) => {
-      const target = event.target as Element | null;
-      const slot = target?.closest?.('.admin-vtl-slot--interactive');
-      if (!slot) return;
-      const timeNode = slot.querySelector<HTMLElement>('[data-vtl-time]');
-      if (!timeNode || readTimeLabel(timeNode) !== LANDING_TIMELINE_SCROLL_FOCUS) return;
-      dismissTapHint();
-    };
-    root.addEventListener('click', onFocusSlotClick);
 
     const observer = new IntersectionObserver(
       (entries) => {
@@ -191,8 +130,6 @@ export function InsideSystemLiveWidget({
 
     return () => {
       observer.disconnect();
-      root.removeEventListener('click', onFocusSlotClick);
-      scrollEndCleanup?.();
       if (retryTimer !== undefined) window.clearTimeout(retryTimer);
     };
   }, []);
@@ -208,7 +145,7 @@ export function InsideSystemLiveWidget({
 
   return (
     <div ref={rootRef} className={`isw${lockOpen ? ' is-dimmed' : ''}`}>
-      <div className="isw__stage" ref={stageRef}>
+      <div className="isw__stage">
         <div aria-hidden={lockOpen ? 'true' : undefined}>
           <TodayTimeline
             barbers={data.barbers}
@@ -222,8 +159,6 @@ export function InsideSystemLiveWidget({
             onClientProfileIntercept={() => setLockOpen(true)}
           />
         </div>
-
-        <TapHandHint visible={tapHintVisible} position={tapHintPos} />
 
         {lockOpen && (
           <div

@@ -1,4 +1,4 @@
-import React, { useCallback, useEffect, useMemo, useRef, useState, type PointerEvent } from 'react';
+import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import BookingConfirmationPanel, { type BookingSummary } from './BookingConfirmationPanel';
 import {
   buildAdminTimelineHref,
@@ -303,20 +303,6 @@ function calculateEndTime(startTime: string, durationMinutes: number): string | 
   return `${String(nextHours).padStart(2, '0')}:${String(nextMinutes).padStart(2, '0')}`;
 }
 
-function openNativeDatePicker(input: HTMLInputElement) {
-  if (typeof input.showPicker === 'function') {
-    try {
-      input.showPicker();
-      return;
-    } catch {
-      // showPicker can throw if not triggered by a user gesture; fall through.
-    }
-  }
-
-  input.focus();
-  input.click();
-}
-
 const STEP_COPY: Record<WizardStepId, { title: string; hint: string }> = {
   service: { title: 'Choose a service', hint: 'Pick what you need' },
   barber: { title: 'Choose a barber', hint: 'Who should take you' },
@@ -369,17 +355,14 @@ export default function BookingFlow({
     resolveInitialWizardStep(resolvedInitialServiceId, resolvedInitialBarberId),
   );
   const [stepKey, setStepKey] = useState(0);
+  const [isAdvancing, setIsAdvancing] = useState(false);
   const confirmationRef = useRef<HTMLElement | null>(null);
+  const bookingShellRef = useRef<HTMLElement | null>(null);
+  const stepIndicatorRef = useRef<HTMLElement | null>(null);
+  const isAdvancingRef = useRef(false);
   const hasTrackedPublicDemoRef = useRef(false);
   const idempotencyKeyRef = useRef<string | null>(null);
-  const dateInputRef = useRef<HTMLInputElement | null>(null);
 
-  const handleDateTabPointerDown = useCallback((event: PointerEvent<HTMLLabelElement>) => {
-    event.preventDefault();
-    const input = dateInputRef.current;
-    if (!input) return;
-    openNativeDatePicker(input);
-  }, []);
   const [confirmation, setConfirmation] = useState<{
     type: 'booked' | 'rescheduled' | 'demo';
     summary: BookingSummary;
@@ -442,6 +425,34 @@ export default function BookingFlow({
     setMessage('');
   }, [maxStep]);
 
+  const advanceFromContinue = useCallback(() => {
+    if (isAdvancingRef.current) return false;
+    isAdvancingRef.current = true;
+    setIsAdvancing(true);
+    goToStep(wizardStep + 1);
+
+    const matchMedia =
+      typeof window !== 'undefined' && typeof window.matchMedia === 'function'
+        ? window.matchMedia.bind(window)
+        : null;
+    const reduceMotion = matchMedia?.('(prefers-reduced-motion: reduce)').matches ?? false;
+    const isMobile = matchMedia?.('(max-width: 39.99rem)').matches ?? false;
+    const behavior: ScrollBehavior = reduceMotion ? 'auto' : 'smooth';
+
+    requestAnimationFrame(() => {
+      requestAnimationFrame(() => {
+        const target = isMobile ? stepIndicatorRef.current : bookingShellRef.current;
+        target?.scrollIntoView({ behavior, block: 'start' });
+      });
+    });
+    return true;
+  }, [goToStep, wizardStep]);
+
+  useEffect(() => {
+    isAdvancingRef.current = false;
+    setIsAdvancing(false);
+  }, [wizardStep]);
+
   const selectService = useCallback((id: string) => {
     setServiceId(id);
     setTime('');
@@ -450,19 +461,15 @@ export default function BookingFlow({
       barberId &&
         barbers.some((barber) => barber.id === barberId && barberOffersService(barber, id)),
     );
-    if (keepBarber) {
-      goToStep(3);
-      return;
+    if (!keepBarber) {
+      setBarberId('');
     }
-    setBarberId('');
-    goToStep(2);
-  }, [barberId, barbers, goToStep]);
+  }, [barberId, barbers]);
 
   const selectBarber = useCallback((id: string) => {
     setBarberId(id);
     setTime('');
-    goToStep(3);
-  }, [goToStep]);
+  }, []);
 
   const selectTime = useCallback((slot: string) => {
     setTime(slot);
@@ -890,12 +897,12 @@ export default function BookingFlow({
 
   function handlePrimaryAction() {
     if (wizardStep < maxStep) {
-      if (!canContinue) return;
+      if (!canContinue || isAdvancingRef.current) return;
       if (wizardStep === 3 && !isCreateMode && !previewMode) {
         void submit();
         return;
       }
-      goToStep(wizardStep + 1);
+      advanceFromContinue();
       return;
     }
     void submit();
@@ -916,6 +923,7 @@ export default function BookingFlow({
 
   const primaryDisabled =
     isSubmitting ||
+    isAdvancing ||
     (wizardStep < maxStep
       ? wizardStep === 3 && !isCreateMode && !previewMode
         ? isSubmitDisabled
@@ -970,6 +978,7 @@ export default function BookingFlow({
 
   return (
     <section
+      ref={bookingShellRef}
       className={`surface booking-shell booking-flow booking-flow--wizard${previewMode ? ' booking-flow--preview' : ''}${publicDemoMode ? ' booking-flow--public-demo' : ''}`}
       aria-live="polite"
     >
@@ -988,7 +997,7 @@ export default function BookingFlow({
               </p>
             ) : null}
           </div>
-          <BookingStepIndicator currentStep={wizardStep} steps={bookingSteps} />
+          <BookingStepIndicator ref={stepIndicatorRef} currentStep={wizardStep} steps={bookingSteps} />
         </header>
 
         {message ? <p className="admin-inline-error">{message}</p> : null}
@@ -1113,7 +1122,6 @@ export default function BookingFlow({
                           className="booking-date-tab"
                           htmlFor="booking-date"
                           aria-label={`Select date, currently ${bookingDateLabel}`}
-                          onPointerDown={handleDateTabPointerDown}
                         >
                           <span className="booking-date-tab__main">{bookingDateLabel}</span>
                           <span className="booking-date-tab__calendar" aria-hidden="true">
@@ -1122,7 +1130,6 @@ export default function BookingFlow({
                             </svg>
                           </span>
                           <input
-                            ref={dateInputRef}
                             id="booking-date"
                             type="date"
                             className="booking-date-tab__input"
@@ -1231,38 +1238,36 @@ export default function BookingFlow({
                 ) : null}
               </div>
 
-              {!previewMode ? (
-                <div className={`booking-action-bar${isSubmitting ? ' is-submitting' : ''}`} aria-live="polite">
-                  {compactBookingSummary ? (
-                    <div className="booking-action-bar__summary">
-                      <strong>{compactBookingSummary}</strong>
-                    </div>
-                  ) : null}
-                  <div className="booking-action-bar__nav">
-                    {wizardStep > 1 ? (
-                      <button
-                        type="button"
-                        className="btn btn--secondary booking-action-bar__back"
-                        onClick={() => goToStep(wizardStep - 1)}
-                        disabled={isSubmitting}
-                      >
-                        Back
-                      </button>
-                    ) : null}
+              <div className={`booking-action-bar${isSubmitting ? ' is-submitting' : ''}`} aria-live="polite">
+                {compactBookingSummary ? (
+                  <div className="booking-action-bar__summary">
+                    <strong>{compactBookingSummary}</strong>
+                  </div>
+                ) : null}
+                <div className="booking-action-bar__nav">
+                  {wizardStep > 1 ? (
                     <button
                       type="button"
-                      className="btn btn--primary booking-action-bar__button"
-                      disabled={primaryDisabled}
-                      aria-disabled={primaryDisabled}
-                      aria-busy={isSubmitting}
-                      onClick={handlePrimaryAction}
+                      className="btn btn--secondary booking-action-bar__back"
+                      onClick={() => goToStep(wizardStep - 1)}
+                      disabled={isSubmitting || isAdvancing}
                     >
-                      {isSubmitting ? <span className="booking-action-bar__spinner" aria-hidden="true" /> : null}
-                      <span>{primaryLabel}</span>
+                      Back
                     </button>
-                  </div>
+                  ) : null}
+                  <button
+                    type="button"
+                    className="btn btn--primary booking-action-bar__button"
+                    disabled={primaryDisabled}
+                    aria-disabled={primaryDisabled}
+                    aria-busy={isSubmitting}
+                    onClick={handlePrimaryAction}
+                  >
+                    {isSubmitting ? <span className="booking-action-bar__spinner" aria-hidden="true" /> : null}
+                    <span>{primaryLabel}</span>
+                  </button>
                 </div>
-              ) : null}
+              </div>
             </div>
           </div>
 

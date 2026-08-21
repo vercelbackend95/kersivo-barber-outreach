@@ -13,15 +13,18 @@ test.describe('KERSIVO sandbox booking', () => {
       test.skip(true, 'Sandbox catalogue is unavailable in this environment');
     }
 
-    await expect(page.locator('.booking-experience')).toHaveAttribute('data-booking-theme', 'kersivo');
     await expect(page.getByRole('heading', { name: 'Try the booking flow' })).toBeVisible();
     await expect(page.getByRole('heading', { name: /Choose a service/i })).toBeVisible();
 
     const service = page.locator('button.booking-choice-card--service').first();
     await expect(service).toBeVisible();
     await service.click();
+    await expect(page.getByRole('heading', { name: /Choose a service/i })).toBeVisible();
+    await page.getByRole('button', { name: 'Continue' }).click();
     await expect(page.getByRole('heading', { name: /Choose a barber/i })).toBeVisible();
-    await page.getByRole('button', { name: /Any barber/i }).click();
+    await page.getByRole('radio', { name: /Any barber/i }).click();
+    await expect(page.getByRole('heading', { name: /Choose a barber/i })).toBeVisible();
+    await page.getByRole('button', { name: 'Continue' }).click();
 
     const slot = page.locator('button.booking-slot').first();
     await expect(slot).toBeVisible();

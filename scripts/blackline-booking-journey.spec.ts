@@ -44,8 +44,12 @@ test.describe('BLACKLINE booking confirmation to owner timeline', () => {
     await expect(page.locator('.booking-choice-card--service')).toHaveCount(18);
 
     await page.getByRole('radio', { name: /Skin Fade A seamless fade/i }).click();
+    await expect(page.getByRole('heading', { name: /Choose a service/i })).toBeVisible();
+    await page.getByRole('button', { name: 'Continue' }).click();
     await expect(page.getByRole('heading', { name: /Choose a barber/i })).toBeVisible();
     await page.getByRole('radio', { name: /^Ellis Ward$/i }).click();
+    await expect(page.getByRole('heading', { name: /Choose a barber/i })).toBeVisible();
+    await page.getByRole('button', { name: 'Continue' }).click();
     const time = await pickFirstAvailableSlot(page);
     await page.getByRole('button', { name: 'Continue' }).click();
 
@@ -89,15 +93,6 @@ test.describe('BLACKLINE booking confirmation to owner timeline', () => {
         }),
       )
       .toBe(true);
-
-    const hand = page.locator('[data-tap-hand-hint]');
-    await expect(hand).toBeVisible();
-    const handBox = await hand.boundingBox();
-    const cardBox = await card.boundingBox();
-    expect(handBox).toBeTruthy();
-    expect(cardBox).toBeTruthy();
-    expect(Math.abs((handBox!.x + handBox!.width / 2) - (cardBox!.x + cardBox!.width / 2))).toBeLessThan(160);
-    expect(Math.abs((handBox!.y + handBox!.height) - cardBox!.y)).toBeLessThan(180);
 
     await expect.poll(async () => page.url()).not.toContain('demoJourney=');
     await expect.poll(async () => page.url()).not.toContain('bookingId=');

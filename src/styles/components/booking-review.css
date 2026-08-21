@@ -162,6 +162,12 @@
   width: 100%;
 }
 
+@media (max-width: 39.99rem) {
+  .booking-step-indicator {
+    scroll-margin-top: 0.75rem;
+  }
+}
+
 .booking-step-indicator__list {
   display: flex;
   flex-direction: row;

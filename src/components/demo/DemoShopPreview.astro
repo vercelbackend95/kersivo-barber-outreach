@@ -31,7 +31,7 @@ const carouselProducts = toBlacklineCarouselProducts(products);
     </h2>
     <p class="bl-shop-lede">Order online and collect from the shop.</p>
 
-    <div class="bl-shop-rail">
+    <div class="bl-shop-rail sf-shop sf-shop--blackline" data-sf-theme="blackline">
       <ProductRail
         client:visible
         products={carouselProducts}
@@ -48,6 +48,7 @@ const carouselProducts = toBlacklineCarouselProducts(products);
         fallbackBrandMark="BL"
         shopName="BLACKLINE"
         addToBagLabel="Add to bag"
+        addToBagShortLabel="Add"
         addedLabel="Added"
         chooseOptionsLabel="Choose options"
         soldOutLabel="Sold out"

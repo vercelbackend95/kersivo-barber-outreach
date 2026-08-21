@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { forwardRef } from 'react';
 
 type Step = {
   label: string;
@@ -15,9 +15,12 @@ function getStepState(stepNumber: number, currentStep: number): 'completed' | 'a
   return 'pending';
 }
 
-export default function BookingStepIndicator({ steps, currentStep }: Props) {
+const BookingStepIndicator = forwardRef<HTMLElement, Props>(function BookingStepIndicator(
+  { steps, currentStep },
+  ref,
+) {
   return (
-    <nav className="booking-step-indicator" aria-label="Booking progress">
+    <nav ref={ref} className="booking-step-indicator" aria-label="Booking progress">
       <ol className="booking-step-indicator__list">
         {steps.map((step, index) => {
           const stepNumber = index + 1;
@@ -58,4 +61,6 @@ export default function BookingStepIndicator({ steps, currentStep }: Props) {
       </ol>
     </nav>
   );
-}
+});
+
+export default BookingStepIndicator;

@@ -300,6 +300,26 @@
   padding-right: env(safe-area-inset-right, 0px);
 }
 
+/* Mobile admin: keep demo banner visible above fixed top chrome (avoids covered-but-in-flow gap). */
+@media (max-width: 48rem) {
+  .bl-demo-banner--admin {
+    position: sticky;
+    top: 0;
+    z-index: calc(var(--admin-z-app-chrome, 260) + 1);
+    /* Notch: banner is the topmost sticky surface when present */
+    padding-top: env(safe-area-inset-top, 0px);
+  }
+
+  /* Safe-area already on demo banner above the chrome stack */
+  body:has(.bl-demo-banner--admin) .admin-mobile-top-chrome .admin-mobile-header {
+    padding-top: 0.35rem;
+  }
+
+  body:has(.bl-demo-banner--admin) .admin-mobile-top-chrome .admin-barbershop-paused-banner {
+    padding-top: 0.4rem;
+  }
+}
+
 .bl-demo-banner--admin .bl-demo-banner-inner {
   display: flex;
   flex-direction: column;

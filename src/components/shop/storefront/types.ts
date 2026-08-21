@@ -3,6 +3,8 @@ import type { StorefrontPriceFormat, StorefrontProduct } from '@/lib/shop/storef
 
 export type StorefrontCopy = {
   addToBagLabel: string;
+  /** Optional short visible ATC label (e.g. "Add"); aria always uses addToBagLabel. */
+  addToBagShortLabel?: string;
   addedLabel: string;
   viewProductLabel: string;
   chooseOptionsLabel: string;

@@ -41,6 +41,8 @@ test.describe('Booking rebuild screenshots', () => {
       await expect(page.locator('.booking-experience')).toBeVisible();
       await shot(page, `blackline-service-${viewport.name}`);
       await page.locator('button.booking-choice-card--service').first().click();
+      await expect(page.getByRole('heading', { name: /Choose a service/i })).toBeVisible();
+      await page.getByRole('button', { name: 'Continue' }).click();
       await expect(page.getByRole('heading', { name: /Choose a barber/i })).toBeVisible();
       await shot(page, `blackline-barber-${viewport.name}`);
     });

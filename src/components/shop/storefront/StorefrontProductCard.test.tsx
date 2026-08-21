@@ -51,6 +51,24 @@ describe('StorefrontProductCard', () => {
     expect(screen.getByText('£18.00')).toBeTruthy();
   });
 
+  it('supports a short ATC label while keeping the full aria-label', () => {
+    const { container } = render(
+      <StorefrontProductCard
+        product={baseProduct}
+        href="/shop/demo/prod-1"
+        priceFormat="gbp"
+        imageFallback="initial"
+        shopName="KERSIVO"
+        copy={{ ...DEFAULT_STOREFRONT_COPY, addToBagShortLabel: 'Add' }}
+      />,
+    );
+
+    const button = screen.getByRole('button', { name: /add to bag: matte pomade/i });
+    expect(button.querySelector('svg')).toBeTruthy();
+    expect(container.querySelector('.sf-atc-label-full')?.textContent).toBe('Add to bag');
+    expect(container.querySelector('.sf-atc-label-short')?.textContent).toBe('Add');
+  });
+
   it('sends option products to the PDP instead of adding to the bag', () => {
     const product = toStorefrontProduct({
       ...baseProduct,

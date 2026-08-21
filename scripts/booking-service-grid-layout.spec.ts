@@ -96,13 +96,17 @@ test.describe('shared booking service grid layout', () => {
     const metrics = await serviceGridMetrics(page, '.lbw .booking-choice-grid--services');
     expect(metrics!.columnCount).toBeGreaterThanOrEqual(2);
 
-    // Wait for the Astro island to hydrate so service clicks advance the wizard.
+    // Wait for the Astro island to hydrate; selection stays on step 1 until Continue.
     await expect
       .poll(
         async () => {
           const service = widget.locator('button.booking-choice-card--service').first();
           if (!(await service.count())) return 'missing';
           await service.click({ force: true });
+          const continueBtn = widget.getByRole('button', { name: 'Continue' });
+          if (!(await continueBtn.count())) return 'no-continue';
+          if (await continueBtn.isDisabled()) return 'disabled';
+          await continueBtn.click({ force: true });
           const title = await widget.locator('h2').first().textContent();
           return title?.trim() ?? '';
         },
@@ -111,6 +115,7 @@ test.describe('shared booking service grid layout', () => {
       .toMatch(/Choose a barber/i);
 
     await widget.getByRole('radio', { name: /Any barber/i }).click({ force: true });
+    await widget.getByRole('button', { name: 'Continue' }).click({ force: true });
 
     const slot = widget.locator('button.booking-slot').first();
     await expect(slot).toBeVisible({ timeout: 15000 });

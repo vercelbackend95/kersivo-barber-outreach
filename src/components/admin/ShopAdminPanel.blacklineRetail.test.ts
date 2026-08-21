@@ -19,7 +19,6 @@ describe('BLACKLINE retail dashboard wiring', () => {
     expect(panel).toContain('demoJourney');
     expect(panel).toContain('BlacklineRetailTaskCard');
     expect(panel).toContain('BlacklineDemoSaleCard');
-    expect(panel).toContain('TapHandHint');
     expect(panel).not.toContain("window.location.assign('/admin?section=shop_orders");
   });
 

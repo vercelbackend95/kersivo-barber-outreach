@@ -22,7 +22,6 @@ import RetailOnboardingWelcome from './retail-onboarding/RetailOnboardingWelcome
 import RetailOnboardingTaskCard from './retail-onboarding/RetailOnboardingTaskCard';
 import BlacklineRetailTaskCard from './BlacklineRetailTaskCard';
 import BlacklineDemoSaleCard from './BlacklineDemoSaleCard';
-import TapHandHint from '@/components/TapHandHint';
 import ProductWizard from './product-wizard/ProductWizard';
 import AdminWizardSheetLayer from './AdminWizardSheetLayer';
 import AdminPremiumSearchBar from './AdminPremiumSearchBar';
@@ -45,16 +44,6 @@ import {
   toAdminOrderDetail,
 } from '@/lib/demo/blacklineSessionOrders';
 import { prefersReducedMotion } from '@/lib/landing/liveTimelineScroll';
-import {
-  TAP_HAND_AUTO_DISMISS_MS,
-  blacklineRetailCollectHintKey,
-  blacklineRetailSaleHintKey,
-  hasSeenBlacklineTapHint,
-  markBlacklineTapHintSeen,
-  positionTapHand,
-  waitForScrollSettled,
-  type TapHandPosition,
-} from '@/lib/ui/tapHandHint';
 
 type ShopTab = 'products' | 'orders' | 'sales';
 type SalesRangePreset = '7' | '30' | '90' | 'custom';
@@ -596,11 +585,6 @@ export default function ShopAdminPanel({ initialTab = 'products', isBlacklineDem
   const [highlightedOrderId, setHighlightedOrderId] = useState<string | null>(null);
   const [walkthroughOrderId, setWalkthroughOrderId] = useState<string | null>(null);
   const [showRetailWalkthroughComplete, setShowRetailWalkthroughComplete] = useState(false);
-  const [tapHintVisible, setTapHintVisible] = useState(false);
-  const [tapHintPos, setTapHintPos] = useState<TapHandPosition | null>(null);
-  const [tapHintKind, setTapHintKind] = useState<'collect' | 'sale' | null>(null);
-  const ordersHintRootRef = useRef<HTMLDivElement | null>(null);
-  const salesHintRootRef = useRef<HTMLDivElement | null>(null);
   const retailFocusConsumedRef = useRef(false);
   const salesFocusConsumedRef = useRef(false);
   const retailDeepLinkRef = useRef<string | null>(
@@ -1055,18 +1039,7 @@ export default function ShopAdminPanel({ initialTab = 'products', isBlacklineDem
         behavior: reducedMotion ? 'auto' : 'smooth',
         block: 'center',
       });
-      const scroller = (document.scrollingElement as HTMLElement | null) ?? document.documentElement;
-      waitForScrollSettled(
-        scroller,
-        () => {
-          clearRetailFocusParamsFromUrl();
-          const hintKey = blacklineRetailCollectHintKey(orderId);
-          if (!hasSeenBlacklineTapHint(hintKey)) {
-            setTapHintKind('collect');
-          }
-        },
-        { reducedMotion },
-      );
+      clearRetailFocusParamsFromUrl();
     }, reducedMotion ? 0 : 350);
 
     const clearHighlightTimer = window.setTimeout(() => {
@@ -1092,94 +1065,14 @@ export default function ShopAdminPanel({ initialTab = 'products', isBlacklineDem
         behavior: reducedMotion ? 'auto' : 'smooth',
         block: 'center',
       });
-      const scroller = (document.scrollingElement as HTMLElement | null) ?? document.documentElement;
-      waitForScrollSettled(
-        scroller,
-        () => {
-          clearRetailFocusParamsFromUrl();
-          completeBlacklineRetailJourney(orderId);
-          const hintKey = blacklineRetailSaleHintKey(orderId);
-          if (!hasSeenBlacklineTapHint(hintKey)) {
-            setTapHintKind('sale');
-          }
-        },
-        { reducedMotion },
-      );
+      clearRetailFocusParamsFromUrl();
+      completeBlacklineRetailJourney(orderId);
     }, reducedMotion ? 0 : 350);
 
     return () => {
       window.clearTimeout(scrollTimer);
     };
   }, [activeTab, isBlacklineDemo]);
-
-  useEffect(() => {
-    if (!tapHintKind) return undefined;
-    const orderId = retailDeepLinkRef.current;
-    if (!orderId) return undefined;
-    const root = tapHintKind === 'collect' ? ordersHintRootRef.current : salesHintRootRef.current;
-    if (!root) return undefined;
-
-    const target = () =>
-      tapHintKind === 'collect'
-        ? (document.querySelector(
-            `#admin-order-${orderId} .admin-orders-grid-collect-btn`,
-          ) as HTMLElement | null)
-        : (document.getElementById(`admin-demo-sale-${orderId}`) as HTMLElement | null);
-
-    const hintKey =
-      tapHintKind === 'collect'
-        ? blacklineRetailCollectHintKey(orderId)
-        : blacklineRetailSaleHintKey(orderId);
-
-    const show = () => {
-      const node = target();
-      const hintRoot = tapHintKind === 'collect' ? ordersHintRootRef.current : salesHintRootRef.current;
-      if (!node || !hintRoot) return;
-      setTapHintPos(positionTapHand(hintRoot, node));
-      setTapHintVisible(true);
-      markBlacklineTapHintSeen(hintKey);
-    };
-
-    show();
-
-    const onKey = (event: KeyboardEvent) => {
-      if (event.key === 'Escape') {
-        setTapHintVisible(false);
-        setTapHintKind(null);
-      }
-    };
-    const onPointer = (event: Event) => {
-      const node = event.target as Element | null;
-      const selector =
-        tapHintKind === 'collect'
-          ? `#admin-order-${orderId} .admin-orders-grid-collect-btn`
-          : `#admin-demo-sale-${orderId}`;
-      if (node?.closest?.(selector)) {
-        setTapHintVisible(false);
-        setTapHintKind(null);
-      }
-    };
-    const onResize = () => {
-      const node = target();
-      const hintRoot = tapHintKind === 'collect' ? ordersHintRootRef.current : salesHintRootRef.current;
-      if (!node || !hintRoot) return;
-      setTapHintPos(positionTapHand(hintRoot, node));
-    };
-    window.addEventListener('keydown', onKey);
-    document.addEventListener('click', onPointer, true);
-    window.addEventListener('resize', onResize);
-    const timeoutId = window.setTimeout(() => {
-      setTapHintVisible(false);
-      setTapHintKind(null);
-    }, TAP_HAND_AUTO_DISMISS_MS);
-
-    return () => {
-      window.removeEventListener('keydown', onKey);
-      document.removeEventListener('click', onPointer, true);
-      window.removeEventListener('resize', onResize);
-      window.clearTimeout(timeoutId);
-    };
-  }, [tapHintKind]);
 
 
   const handleAddSeriesSelection = (seriesKey: string) => {
@@ -1942,7 +1835,7 @@ export default function ShopAdminPanel({ initialTab = 'products', isBlacklineDem
       )}
 
       {activeTab === 'orders' && (
-        <div className="admin-orders-panel admin-timeline-tap-hand-root" ref={ordersHintRootRef}>
+        <div className="admin-orders-panel">
           {error ? (
             <div className="admin-inline-error" role="alert">
               <p>{error}</p>
@@ -2048,11 +1941,10 @@ export default function ShopAdminPanel({ initialTab = 'products', isBlacklineDem
             }
           />
 
-          <TapHandHint visible={tapHintVisible && tapHintKind === 'collect'} position={tapHintPos} />
         </div>
       )}
       {activeTab === 'sales' && (
-        <div className="admin-reports admin-sales-panel admin-timeline-tap-hand-root" ref={salesHintRootRef}>
+        <div className="admin-reports admin-sales-panel">
           {focusedSaleOrder ? <BlacklineDemoSaleCard order={focusedSaleOrder} /> : null}
           {salesError ? (
             <div className="admin-inline-error" role="alert">
@@ -2197,7 +2089,6 @@ export default function ShopAdminPanel({ initialTab = 'products', isBlacklineDem
             emptyLabel="No paid order items in this range."
             rows={salesLeaderboardRows}
           />
-          <TapHandHint visible={tapHintVisible && tapHintKind === 'sale'} position={tapHintPos} />
         </div>
       )}
 
