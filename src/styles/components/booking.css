@@ -4173,7 +4173,7 @@ button.admin-sidebar-brand--button:focus-visible {
   }
 
   /* Fixed stack: subscribe/paused banner + mobile header (+ next strip) as one measured chrome unit.
-   * BLACKLINE owner demo banner sits above this stack (sticky) — offset via --admin-demo-banner-h. */
+   * BLACKLINE owner demo banner sits above this stack (fixed) — offset via --admin-demo-banner-h. */
   .admin-mobile-top-chrome {
     display: flex;
     flex-direction: column;

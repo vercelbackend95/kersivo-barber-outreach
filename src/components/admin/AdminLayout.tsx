@@ -594,8 +594,8 @@ export default function AdminLayout({
         return;
       }
       const bannerEl = document.querySelector<HTMLElement>('aside.bl-demo-banner--admin');
-      /* Sticky banner is top: 0 — .bottom is the viewport edge the fixed chrome should meet. */
-      const bannerPx = bannerEl ? Math.round(bannerEl.getBoundingClientRect().bottom) : 0;
+      /* Fixed banner height — do not use .bottom (moves during overscroll and jumps chrome). */
+      const bannerPx = bannerEl ? Math.round(bannerEl.getBoundingClientRect().height) : 0;
       const previous = lastPublishedDemoBannerHPxRef.current;
       if (previous !== null && Math.abs(previous - bannerPx) < 0.5) {
         return;

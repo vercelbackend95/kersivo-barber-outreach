@@ -300,17 +300,29 @@
   padding-right: env(safe-area-inset-right, 0px);
 }
 
-/* Mobile admin: keep demo banner visible above fixed top chrome (avoids covered-but-in-flow gap). */
+/* Mobile admin: fixed banner + in-flow spacer so banner/header stay rigid (no sticky bounce). */
+.bl-demo-banner-admin-spacer {
+  display: none;
+}
+
 @media (max-width: 48rem) {
   .bl-demo-banner--admin {
-    position: sticky;
+    position: fixed;
     top: 0;
+    left: 0;
+    right: 0;
     z-index: calc(var(--admin-z-app-chrome, 260) + 1);
-    /* Notch: banner is the topmost sticky surface when present */
+    /* Notch: banner is the topmost fixed surface when present */
     padding-top: env(safe-area-inset-top, 0px);
   }
 
-  /* Overlap 1px so ceil/subpixel banner height cannot leave a page-bg slit. */
+  .bl-demo-banner-admin-spacer {
+    display: block;
+    height: var(--admin-demo-banner-h, 7.75rem);
+    pointer-events: none;
+  }
+
+  /* 1px under banner so subpixel round cannot leave a page-bg slit */
   body:has(.bl-demo-banner--admin) .admin-mobile-top-chrome {
     top: calc(var(--admin-demo-banner-h, 0px) - 1px);
   }
