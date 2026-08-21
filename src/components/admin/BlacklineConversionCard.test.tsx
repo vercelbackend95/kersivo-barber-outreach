@@ -17,12 +17,12 @@ describe('BlacklineConversionCard', () => {
     const { container } = render(<BlacklineConversionCard />);
 
     const cta = screen.getByRole('link', {
-      name: 'Launch my barbershop. Review your setup and go live',
+      name: 'Ready to make it yours? Get Kersivo for my shop. Start with your shop details, £39 per month',
     });
     expect(cta.getAttribute('href')).toBe(OWNER_LAUNCH_HREF);
     expect(cta.getAttribute('href')).toBe('/admin/launch');
     expect(cta.getAttribute('aria-label')).toBe(
-      'Launch my barbershop. Review your setup and go live',
+      'Ready to make it yours? Get Kersivo for my shop. Start with your shop details, £39 per month',
     );
     expect(cta.className).toContain('admin-sidebar-launch-cta');
     expect(cta.className).toContain('admin-sidebar-launch-cta--conversion');
@@ -30,13 +30,13 @@ describe('BlacklineConversionCard', () => {
     expect(cta.querySelector('.admin-sidebar-launch-cta__icon svg')).toBeTruthy();
     expect(cta.querySelector('.admin-sidebar-launch-cta__arrow svg')).toBeTruthy();
     expect(cta.querySelector('.admin-sidebar-launch-cta__status')?.textContent).toBe(
-      'YOUR SHOP IS READY',
+      'READY TO MAKE IT YOURS?',
     );
     expect(cta.querySelector('.admin-sidebar-launch-cta__title')?.textContent).toBe(
-      'Launch my barbershop',
+      'Get KERSIVO for my shop',
     );
     expect(cta.querySelector('.admin-sidebar-launch-cta__supporting')?.textContent).toBe(
-      'Review your setup & go live',
+      'Start with your shop details · £39/month',
     );
 
     expect(screen.queryByText(/choose your plan/i)).toBeNull();

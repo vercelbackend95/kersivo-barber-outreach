@@ -25,6 +25,10 @@ const heroSource = readFileSync(new URL('../../components/demo/DemoContactHero.a
 const indexSource = readFileSync(new URL('../../components/demo/DemoContactIndex.astro', import.meta.url), 'utf8');
 const hoursSource = readFileSync(new URL('../../components/demo/DemoContactHours.astro', import.meta.url), 'utf8');
 const enquirySource = readFileSync(new URL('../../components/demo/DemoContactEnquiry.astro', import.meta.url), 'utf8');
+const kersivoEnquirySource = readFileSync(
+  new URL('../../components/demo/DemoKersivoEnquiry.astro', import.meta.url),
+  'utf8',
+);
 const mapSource = readFileSync(new URL('../../components/demo/DemoLocationMap.astro', import.meta.url), 'utf8');
 const cssSource = readFileSync(new URL('../../styles/demo/blackline.css', import.meta.url), 'utf8');
 const sources = [pageSource, heroSource, indexSource, hoursSource, enquirySource, mapSource].join('\n');
@@ -36,6 +40,7 @@ describe('BLACKLINE Contact page', () => {
     expect(pageSource).toContain('DemoContactIndex');
     expect(pageSource).toContain('DemoContactHours');
     expect(pageSource).toContain('DemoContactEnquiry');
+    expect(pageSource).toContain('DemoKersivoEnquiry');
     expect(pageSource).toContain('canonicalPath="/demo/contact"');
     expect(DEMO_CONTACT_HREF).toBe('/demo/contact');
     expect(heroSource).toContain("from '@/components/demo/DemoPageHero.astro'");
@@ -128,7 +133,21 @@ describe('BLACKLINE Contact page', () => {
     expect(pageSource).not.toContain('sessionStorage');
     expect(pageSource).not.toContain('console.log');
     expect(enquirySource).not.toContain('server:action');
+    expect(enquirySource).not.toContain('/api/demo/blackline-contact');
+    expect(enquirySource).not.toContain('fetch(');
     expect(DEMO_CONTACT_SUCCESS.toLowerCase()).not.toMatch(/we’ll get back|message sent|we’ll be in touch|has been received/);
+  });
+
+  it('mounts a separate real KERSIVO lead section below the BLACKLINE demo enquiry', () => {
+    expect(pageSource).toContain('DemoKersivoEnquiry');
+    expect(kersivoEnquirySource).toContain('QUESTIONS ABOUT KERSIVO?');
+    expect(kersivoEnquirySource).toContain('Like what you’re seeing but want to ask something first?');
+    expect(kersivoEnquirySource).toContain('BlacklineKersivoContactForm');
+    expect(kersivoEnquirySource).toContain('This form emails the real KERSIVO team');
+    expect(cssSource).toContain('.bl-kersivo-enquiry');
+    expect(cssSource).toContain('.bl-kersivo-contact-form .hp-field');
+    expect(enquirySource).not.toContain('Ask KERSIVO');
+    expect(enquirySource).not.toContain('QUESTIONS ABOUT KERSIVO?');
   });
 
   it('progressively enhances motion without hiding booking or submit controls', () => {

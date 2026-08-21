@@ -39,7 +39,14 @@ import { countBookingsByStatusTone, getBookingStatusTone, isCancelledBookingStat
 import { adminFetchJson, notifyAdminDemoBlocked } from './adminAuth';
 import { normalizeWorkingHourRows } from '../../lib/admin/normalizeWorkingHourRows';
 import { fetchBarbersListRefresh } from '@/lib/admin/teamRefreshFetch';
-import { mergeBlacklineSessionBookings } from '@/lib/demo/blacklineSessionBookings';
+import { mergeBlacklineSessionBookings, isBlacklineSessionBookingId } from '@/lib/demo/blacklineSessionBookings';
+import {
+  dismissBookingProof,
+  getBookingProofRevealDelayMs,
+  isBookingProofDismissed,
+  shouldArmBlacklineBookingProof,
+} from '@/lib/demo/blacklineBookingProof';
+import BlacklineBookingProofCard from './BlacklineBookingProofCard';
 type DepositRefundSummary = {
   status: 'REFUND_PENDING' | 'REFUNDED' | 'REFUND_FAILED';
   amountPence: number;
@@ -228,6 +235,11 @@ function readInitialBookingIdFromUrl(): string | null {
   if (typeof window === 'undefined') return null;
   const raw = new URLSearchParams(window.location.search).get('bookingId')?.trim();
   return raw || null;
+}
+
+function readInitialDemoJourneyFromUrl(): string | null {
+  if (typeof window === 'undefined') return null;
+  return new URLSearchParams(window.location.search).get('demoJourney')?.trim() || null;
 }
 
 function clearTimelineDeepLinkParamsFromUrl() {
@@ -657,6 +669,7 @@ export default function BookingsAdminPanel({
   const [canEditTeam, setCanEditTeam] = useState(true);
   const urlBookingDate = readInitialBookingDateFromUrl();
   const urlBookingId = readInitialBookingIdFromUrl();
+  const urlDemoJourney = readInitialDemoJourneyFromUrl();
   const [bookings, setBookings] = useState<Booking[]>(() => initialBookings ?? []);
   const [bookingsInitialLoading, setBookingsInitialLoading] = useState(() => initialBookings == null);
   /** True only after a successful fetch (or seeded payload promoted after mount) — never show 0 TODAY on failure. */
@@ -710,6 +723,22 @@ export default function BookingsAdminPanel({
   const [selectedDate, setSelectedDate] = useState(() => urlBookingDate ?? getTodayLondonDate());
   const [timelineFocusBookingId, setTimelineFocusBookingId] = useState<string | null>(() => urlBookingId);
   const deepLinkBookingIdRef = useRef<string | null>(urlBookingId);
+  const bookingProofArmedIdRef = useRef<string | null>(
+    shouldArmBlacklineBookingProof({
+      isBlacklineDemo,
+      demoJourney: urlDemoJourney,
+      bookingId: urlBookingId,
+      isSessionBooking: Boolean(urlBookingId && isBlacklineSessionBookingId(urlBookingId)),
+    })
+      ? urlBookingId
+      : null,
+  );
+  const bookingProofFocusHandledRef = useRef(false);
+  const bookingProofRevealTimeoutRef = useRef<number | null>(null);
+  const [bookingProofVisible, setBookingProofVisible] = useState(false);
+  const [bookingProofBookingId, setBookingProofBookingId] = useState<string | null>(
+    bookingProofArmedIdRef.current,
+  );
   const [historyBarberId, setHistoryBarberId] = useState<string>('all');
   const [historyDateRange, setHistoryDateRange] = useState<HistoryDateRange | null>(null);
   const [isHistoryMoreOpen, setIsHistoryMoreOpen] = useState(false);
@@ -1495,6 +1524,7 @@ export default function BookingsAdminPanel({
     isAddBarberSheetOpen ||
     showHolidayModal ||
     openClientId !== null ||
+    bookingProofVisible ||
     (barberProfileContextActive && (selectedBarberId !== null || Boolean(profileMemberMeta?.memberOnly)));
   useBodyScrollLock(isAnyOverlayOpen);
 
@@ -1568,6 +1598,46 @@ export default function BookingsAdminPanel({
     pendingTimelineScrollBookingIdRef.current = deepLinkId;
   }, [mode]);
 
+  const scheduleBookingProofReveal = useCallback(
+    (bookingId: string) => {
+      if (!isBlacklineDemo) return;
+      if (bookingProofArmedIdRef.current !== bookingId) return;
+      if (bookingProofFocusHandledRef.current) return;
+      if (isBookingProofDismissed(bookingId)) return;
+      bookingProofFocusHandledRef.current = true;
+      setBookingProofBookingId(bookingId);
+      if (bookingProofRevealTimeoutRef.current != null) {
+        window.clearTimeout(bookingProofRevealTimeoutRef.current);
+      }
+      const delayMs = getBookingProofRevealDelayMs(Boolean(reduceMotion));
+      bookingProofRevealTimeoutRef.current = window.setTimeout(() => {
+        bookingProofRevealTimeoutRef.current = null;
+        if (isBookingProofDismissed(bookingId)) return;
+        setBookingProofVisible(true);
+      }, delayMs);
+    },
+    [isBlacklineDemo, reduceMotion],
+  );
+
+  const dismissBookingProofCard = useCallback(() => {
+    const id = bookingProofBookingId ?? bookingProofArmedIdRef.current;
+    if (id) dismissBookingProof(id);
+    bookingProofArmedIdRef.current = null;
+    if (bookingProofRevealTimeoutRef.current != null) {
+      window.clearTimeout(bookingProofRevealTimeoutRef.current);
+      bookingProofRevealTimeoutRef.current = null;
+    }
+    setBookingProofVisible(false);
+  }, [bookingProofBookingId]);
+
+  useEffect(() => {
+    return () => {
+      if (bookingProofRevealTimeoutRef.current != null) {
+        window.clearTimeout(bookingProofRevealTimeoutRef.current);
+      }
+    };
+  }, []);
+
   const handleTimelineFocusBookingHandled = useCallback((bookingId: string) => {
     if (deepLinkBookingIdRef.current === bookingId) {
       deepLinkBookingIdRef.current = null;
@@ -1575,7 +1645,8 @@ export default function BookingsAdminPanel({
     }
     pendingTimelineScrollBookingIdRef.current = null;
     setTimelineFocusBookingId((current) => (current === bookingId ? null : current));
-  }, []);
+    scheduleBookingProofReveal(bookingId);
+  }, [scheduleBookingProofReveal]);
 
   const jumpToTimelineBooking = useCallback(
     (booking: AdminBookingsOpsSearchBooking) => {
@@ -1625,8 +1696,9 @@ export default function BookingsAdminPanel({
         clearTimelineDeepLinkParamsFromUrl();
       }
       setTimelineFocusBookingId((current) => (current === pendingBookingId ? null : current));
+      scheduleBookingProofReveal(pendingBookingId);
     }
-  }, [activeView, scrollToTimelineBooking, visibleBookings]);
+  }, [activeView, scheduleBookingProofReveal, scrollToTimelineBooking, visibleBookings]);
 
   useEffect(() => {
     const pendingId = pendingListScrollBookingIdRef.current;
@@ -2380,6 +2452,12 @@ export default function BookingsAdminPanel({
       ref={bookingShellRef}
       className={`surface booking-shell${mode === 'reports' ? ' booking-shell--reports' : ''}${mode === 'blocks' ? ' admin-services-shell' : ''}`}
     >
+      {isBlacklineDemo && bookingProofVisible && bookingProofBookingId ? (
+        <BlacklineBookingProofCard
+          bookingId={bookingProofBookingId}
+          onDismiss={dismissBookingProofCard}
+        />
+      ) : null}
       {mode === 'dashboard' ? (
         <div data-feature261-booking-overview-shot="">
           <AdminSectionHeader

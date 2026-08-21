@@ -5730,6 +5730,126 @@ html[data-theme='blackline']::view-transition-new(root) {
   color: var(--bl-ivory);
 }
 
+/* Real KERSIVO lead section — visually separated from fictional BLACKLINE enquiry */
+[data-theme='blackline'] .bl-kersivo-enquiry {
+  background: color-mix(in srgb, var(--bl-ivory) 4%, var(--theme-background));
+  color: var(--theme-text);
+  padding-block: clamp(4.5rem, 9vw, 8.5rem);
+  border-top: 1px solid color-mix(in srgb, var(--bl-ivory) 18%, transparent);
+}
+
+[data-theme='blackline'] .bl-kersivo-enquiry-inner {
+  display: grid;
+  gap: 0;
+  max-width: 40rem;
+}
+
+[data-theme='blackline'] .bl-kersivo-enquiry-brand {
+  margin: 0 0 1.25rem;
+  font-family: var(--bl-font-display);
+  font-size: 0.6875rem;
+  font-weight: 700;
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
+  color: var(--theme-accent);
+}
+
+[data-theme='blackline'] .bl-kersivo-enquiry-eyebrow {
+  margin: 0;
+  font-family: var(--bl-font-display);
+  font-size: 0.75rem;
+  font-weight: 600;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--bl-silver);
+}
+
+[data-theme='blackline'] .bl-kersivo-enquiry-heading {
+  margin: 0.85rem 0 0;
+  font-family: var(--bl-font-display);
+  font-size: clamp(2rem, 4.5vw, 3.25rem);
+  font-weight: 400;
+  line-height: 1.08;
+  letter-spacing: -0.02em;
+  color: var(--bl-ivory);
+  max-width: 18ch;
+}
+
+[data-theme='blackline'] .bl-kersivo-enquiry-lede {
+  margin: 1.25rem 0 0;
+  font-family: var(--bl-font-body);
+  font-size: 1.0625rem;
+  line-height: 1.55;
+  color: color-mix(in srgb, var(--bl-ivory) 72%, transparent);
+  max-width: 38ch;
+}
+
+[data-theme='blackline'] .bl-kersivo-enquiry-note {
+  margin: 1rem 0 0;
+  font-family: var(--bl-font-display);
+  font-size: 0.6875rem;
+  font-weight: 600;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--theme-accent);
+}
+
+[data-theme='blackline'] .bl-kersivo-contact-form {
+  display: grid;
+  gap: 1.5rem;
+  margin-top: 2rem;
+  position: relative;
+}
+
+/* Honeypot: off-screen for bots; DemoLayout does not load global.css `.hp-field`. */
+[data-theme='blackline'] .bl-kersivo-contact-form .hp-field {
+  position: absolute;
+  left: -10000px;
+  top: auto;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  margin: 0;
+  padding: 0;
+  border: 0;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+}
+
+[data-theme='blackline'] .bl-kersivo-contact-optional {
+  font-weight: 500;
+  letter-spacing: 0.08em;
+  text-transform: none;
+  color: color-mix(in srgb, var(--bl-silver) 70%, transparent);
+}
+
+[data-theme='blackline'] .bl-kersivo-contact-status {
+  margin: 0;
+  min-height: 1.4em;
+  font-family: var(--bl-font-body);
+  font-size: 1rem;
+  font-weight: 500;
+  line-height: 1.5;
+  color: var(--bl-ivory);
+}
+
+[data-theme='blackline'] .bl-kersivo-contact-status:empty {
+  display: none;
+}
+
+[data-theme='blackline'] .bl-kersivo-contact-status--success {
+  color: var(--bl-ivory);
+}
+
+[data-theme='blackline'] .bl-kersivo-contact-status--error {
+  color: var(--bl-ivory);
+}
+
+[data-theme='blackline'] .bl-kersivo-contact-form .bl-contact-submit:disabled {
+  opacity: 0.65;
+  cursor: wait;
+}
+
 [data-theme='blackline'][data-bl-contact-motion] .bl-contact-index-eyebrow,
 [data-theme='blackline'][data-bl-contact-motion] .bl-contact-index-heading,
 [data-theme='blackline'][data-bl-contact-motion] .bl-contact-index-lede,

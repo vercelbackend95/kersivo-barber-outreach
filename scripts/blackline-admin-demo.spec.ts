@@ -68,15 +68,15 @@ test.describe('BLACKLINE owner dashboard', () => {
     await expect(conversionCta).toHaveAttribute('href', '/admin/launch');
     await expect(conversionCta).toHaveAttribute(
       'aria-label',
-      'Launch my barbershop. Review your setup and go live',
+      'Ready to make it yours? Get Kersivo for my shop. Start with your shop details, £39 per month',
     );
-    await expect(conversionCta).toContainText('Launch my barbershop');
-    await expect(conversionCta).toContainText('YOUR SHOP IS READY');
-    await expect(conversionCta).toContainText('Review your setup & go live');
+    await expect(conversionCta).toContainText('Get KERSIVO for my shop');
+    await expect(conversionCta).toContainText('READY TO MAKE IT YOURS?');
+    await expect(conversionCta).toContainText('Start with your shop details · £39/month');
     await expect(conversionCta).not.toContainText(/choose your plan/i);
     await expect(conversionCta.locator('.admin-sidebar-launch-cta__icon svg')).toHaveCount(1);
     await expect(conversionCta.locator('.admin-sidebar-launch-cta__checklist')).toHaveCount(0);
-    await expect(page.getByText('MAKE IT YOURS')).toHaveCount(0);
+    await expect(page.getByText('MAKE IT YOURS', { exact: true })).toHaveCount(0);
     await expect(page.getByText('CREATE MY SYSTEM')).toHaveCount(0);
     await expect(page.getByRole('link', { name: 'VIEW PLANS' })).toHaveCount(0);
     await expect(conversionCta.locator('form, input, progress, [type="checkbox"]')).toHaveCount(0);
@@ -124,10 +124,11 @@ test.describe('BLACKLINE owner dashboard', () => {
     await expect(drawerCta).toHaveAttribute('href', '/admin/launch');
     await expect(drawerCta).toHaveAttribute(
       'aria-label',
-      'Launch my barbershop. Review your setup and go live',
+      'Ready to make it yours? Get Kersivo for my shop. Start with your shop details, £39 per month',
     );
-    await expect(drawerCta).toContainText('Launch my barbershop');
-    await expect(drawerCta).toContainText('Review your setup & go live');
+    await expect(drawerCta).toContainText('Get KERSIVO for my shop');
+    await expect(drawerCta).toContainText('READY TO MAKE IT YOURS?');
+    await expect(drawerCta).toContainText('Start with your shop details · £39/month');
     await expect(drawerCta).not.toContainText(/choose your plan/i);
     await expect(drawerCta.getByText('Sample data')).toHaveCount(0);
     await expect(drawerCta.getByText(/next task|% complete|checklist/i)).toHaveCount(0);

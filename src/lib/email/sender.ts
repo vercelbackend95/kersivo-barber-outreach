@@ -10,6 +10,7 @@ import {
   PRICE_VAT_DISCLAIMER,
 } from '@/lib/pricing/claimsPolicy';
 import { SAAS_MONTHLY_GBP } from '@/lib/seo/defaults';
+import { BLACKLINE_DEMO_CONTACT_SOURCE } from '@/lib/demo/kersivoContact';
 
 const RESEND_API_KEY = import.meta.env.RESEND_API_KEY ?? process.env.RESEND_API_KEY;
 const FROM_EMAIL = import.meta.env.FROM_EMAIL ?? process.env.FROM_EMAIL ?? 'onboarding@resend.dev';
@@ -633,6 +634,43 @@ export async function sendContactInquiryEmail(input: {
       currentStack: input.currentStack,
       intent: input.intent ?? '',
       message: input.message,
+    },
+  });
+}
+
+export async function sendBlacklineDemoContactEmail(input: {
+  name: string;
+  email: string;
+  message: string;
+  shopName?: string;
+}) {
+  const inbox = getContactInboxEmail();
+  const shopLabel = input.shopName?.trim() || '—';
+  const subjectLabel = input.shopName?.trim() || input.name;
+  const timestamp = new Date().toISOString();
+
+  const html = `<p><strong>KERSIVO demo enquiry</strong> (BLACKLINE /demo/contact)</p>
+  <p><strong>Name:</strong> ${escapeHtml(input.name)}</p>
+  <p><strong>Email:</strong> ${escapeHtml(input.email)}</p>
+  <p><strong>Barbershop name:</strong> ${escapeHtml(shopLabel)}</p>
+  <p><strong>Message:</strong></p><p>${escapeHtml(input.message).replace(/\n/g, '<br/>')}</p>
+  <p><strong>Source:</strong> ${BLACKLINE_DEMO_CONTACT_SOURCE}</p>
+  <p><strong>Timestamp:</strong> ${escapeHtml(timestamp)}</p>`;
+
+  return sendEmail({
+    to: inbox,
+    subject: `KERSIVO demo enquiry — ${subjectLabel}`,
+    html,
+    replyTo: input.email,
+    devLogLabel: '[DEV EMAIL] BLACKLINE demo contact',
+    devPayload: {
+      to: inbox,
+      name: input.name,
+      email: input.email,
+      shopName: input.shopName ?? '',
+      message: input.message,
+      source: BLACKLINE_DEMO_CONTACT_SOURCE,
+      timestamp,
     },
   });
 }

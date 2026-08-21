@@ -48,6 +48,15 @@ export const FUNNEL_EVENTS = {
   blackline_admin_conversion_card_viewed: 'blackline_admin_conversion_card_viewed',
   blackline_admin_create_system_click: 'blackline_admin_create_system_click',
   blackline_admin_view_plans_click: 'blackline_admin_view_plans_click',
+  /** BLACKLINE /demo/contact — real KERSIVO lead form. */
+  blackline_demo_contact_submit_attempt: 'blackline_demo_contact_submit_attempt',
+  blackline_demo_contact_submit: 'blackline_demo_contact_submit',
+  /** BLACKLINE demo booking → timeline proof card. */
+  blackline_booking_proof_card_viewed: 'blackline_booking_proof_card_viewed',
+  blackline_booking_proof_order_clicked: 'blackline_booking_proof_order_clicked',
+  blackline_booking_proof_explore_clicked: 'blackline_booking_proof_explore_clicked',
+  blackline_booking_proof_get_kersivo_clicked: 'blackline_booking_proof_get_kersivo_clicked',
+  blackline_booking_proof_dismissed: 'blackline_booking_proof_dismissed',
 } as const;
 
 export type FunnelEventName = (typeof FUNNEL_EVENTS)[keyof typeof FUNNEL_EVENTS];
@@ -66,6 +75,12 @@ export const MICRO_CONVERSION_EVENTS = new Set<FunnelEventName>([
   FUNNEL_EVENTS.public_shop_demo_completed,
   FUNNEL_EVENTS.blackline_admin_conversion_card_viewed,
   FUNNEL_EVENTS.blackline_admin_create_system_click,
+  FUNNEL_EVENTS.blackline_demo_contact_submit_attempt,
+  FUNNEL_EVENTS.blackline_booking_proof_card_viewed,
+  FUNNEL_EVENTS.blackline_booking_proof_order_clicked,
+  FUNNEL_EVENTS.blackline_booking_proof_explore_clicked,
+  FUNNEL_EVENTS.blackline_booking_proof_get_kersivo_clicked,
+  FUNNEL_EVENTS.blackline_booking_proof_dismissed,
 ]);
 
 /** Lead-quality signals. */
@@ -74,6 +89,7 @@ export const LEAD_EVENTS = new Set<FunnelEventName>([
   FUNNEL_EVENTS.shop_details_completed,
   FUNNEL_EVENTS.setup_enquiry_submit,
   FUNNEL_EVENTS.demo_pricing_capture_submit,
+  FUNNEL_EVENTS.blackline_demo_contact_submit,
 ]);
 
 /** Product-qualified lead signals (used product meaningfully). */
