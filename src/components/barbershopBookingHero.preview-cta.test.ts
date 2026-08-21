@@ -15,8 +15,8 @@ describe('barbershopBookingHero CTAs', () => {
     expect(hero).not.toMatch(/href="#pricing"\s+data-track="plan_my_setup_click"/);
   });
 
-  it('See KERSIVO in action points to /preview/onboarding', () => {
-    expect(hero).toContain('href="/preview/onboarding"');
+  it('See KERSIVO in action points to /demo', () => {
+    expect(hero).toContain('href="/demo"');
     expect(hero).toContain('See KERSIVO in action');
     expect(hero).not.toMatch(/data-system-chooser-open[\s\S]{0,80}See KERSIVO in action/);
   });

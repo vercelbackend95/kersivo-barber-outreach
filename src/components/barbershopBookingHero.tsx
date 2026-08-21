@@ -82,7 +82,7 @@ const BarbershopBookingHero = ({ className }: BarbershopBookingHeroProps) => {
                   className="hero227-cta-demo text-md rounded-2xl font-medium"
                   asChild
                 >
-                  <a href="/preview/onboarding" data-track="view_live_demo_click">
+                  <a href="/demo" data-track="view_live_demo_click">
                     See KERSIVO in action
                   </a>
                 </Button>
