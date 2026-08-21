@@ -1,4 +1,5 @@
 import { type MouseEvent, type ReactNode, useEffect, useMemo, useState } from 'react';
+import { createPortal } from 'react-dom';
 import EmptyState from '../EmptyState';
 import { ChevronDown, ChevronUp, Package, ShoppingBag } from '../lucide-react';
 
@@ -472,80 +473,83 @@ export default function OrdersDataTable22({
         )}
       </div>
 
-      {confirmOrder && confirmIdentity ? (
-        <div className="admin-product-delete-confirm-layer" role="presentation">
-          <button
-            type="button"
-            className="admin-product-delete-confirm-backdrop"
-            onClick={closeCollectConfirm}
-            aria-label="Close confirmation dialog"
-          />
-          <div
-            className="admin-product-delete-confirm-dialog admin-collect-receipt-dialog"
-            role="dialog"
-            aria-modal="true"
-            aria-labelledby="collect-order-confirm-title"
-            aria-describedby="collect-order-confirm-body"
-          >
-            <h4 id="collect-order-confirm-title" className="admin-product-delete-confirm-title">
-              Mark as collected?
-            </h4>
-            <div id="collect-order-confirm-body" className="admin-product-delete-confirm-body">
-              <div className="admin-collect-receipt__customer">
-                <p className="admin-collect-receipt__customer-name">{confirmIdentity.displayName}</p>
-                <p className="admin-collect-receipt__customer-email">{confirmIdentity.email}</p>
-              </div>
-
-              <div className="admin-collect-receipt">
-                <p className="admin-collect-receipt__eyebrow">
-                  Order {getOrderNumberLabel(confirmOrder)}
-                </p>
-
-                {confirmDetailLoading ? (
-                  <p className="admin-collect-receipt__loading">Loading receipt…</p>
-                ) : null}
-
-                {!confirmDetailLoading && confirmDetail ? (
-                  <>
-                    <ul className="admin-collect-receipt__items">
-                      {confirmDetail.items.map((item) => (
-                        <li key={item.id} className="admin-collect-receipt__item">
-                          <span className="admin-collect-receipt__item-name">
-                            {item.nameSnapshot}
-                            <span className="admin-collect-receipt__item-qty"> × {item.quantity}</span>
-                          </span>
-                          <span className="admin-collect-receipt__item-price">
-                            {formatPrice(item.lineTotalPence)}
-                          </span>
-                        </li>
-                      ))}
-                    </ul>
-                    <div className="admin-collect-receipt__total">
-                      <span>Total</span>
-                      <span>{formatPrice(confirmDetail.totalPence)}</span>
-                    </div>
-                  </>
-                ) : null}
-
-                {!confirmDetailLoading && !confirmDetail ? (
-                  <div className="admin-collect-receipt__total">
-                    <span>Total</span>
-                    <span>{formatPrice(confirmOrder.totalPence)}</span>
+      {confirmOrder && confirmIdentity && typeof document !== 'undefined'
+        ? createPortal(
+            <div className="admin-product-delete-confirm-layer" role="presentation">
+              <button
+                type="button"
+                className="admin-product-delete-confirm-backdrop"
+                onClick={closeCollectConfirm}
+                aria-label="Close confirmation dialog"
+              />
+              <div
+                className="admin-product-delete-confirm-dialog admin-collect-receipt-dialog"
+                role="dialog"
+                aria-modal="true"
+                aria-labelledby="collect-order-confirm-title"
+                aria-describedby="collect-order-confirm-body"
+              >
+                <h4 id="collect-order-confirm-title" className="admin-product-delete-confirm-title">
+                  Mark as collected?
+                </h4>
+                <div id="collect-order-confirm-body" className="admin-product-delete-confirm-body">
+                  <div className="admin-collect-receipt__customer">
+                    <p className="admin-collect-receipt__customer-name">{confirmIdentity.displayName}</p>
+                    <p className="admin-collect-receipt__customer-email">{confirmIdentity.email}</p>
                   </div>
-                ) : null}
+
+                  <div className="admin-collect-receipt">
+                    <p className="admin-collect-receipt__eyebrow">
+                      Order {getOrderNumberLabel(confirmOrder)}
+                    </p>
+
+                    {confirmDetailLoading ? (
+                      <p className="admin-collect-receipt__loading">Loading receipt…</p>
+                    ) : null}
+
+                    {!confirmDetailLoading && confirmDetail ? (
+                      <>
+                        <ul className="admin-collect-receipt__items">
+                          {confirmDetail.items.map((item) => (
+                            <li key={item.id} className="admin-collect-receipt__item">
+                              <span className="admin-collect-receipt__item-name">
+                                {item.nameSnapshot}
+                                <span className="admin-collect-receipt__item-qty"> × {item.quantity}</span>
+                              </span>
+                              <span className="admin-collect-receipt__item-price">
+                                {formatPrice(item.lineTotalPence)}
+                              </span>
+                            </li>
+                          ))}
+                        </ul>
+                        <div className="admin-collect-receipt__total">
+                          <span>Total</span>
+                          <span>{formatPrice(confirmDetail.totalPence)}</span>
+                        </div>
+                      </>
+                    ) : null}
+
+                    {!confirmDetailLoading && !confirmDetail ? (
+                      <div className="admin-collect-receipt__total">
+                        <span>Total</span>
+                        <span>{formatPrice(confirmOrder.totalPence)}</span>
+                      </div>
+                    ) : null}
+                  </div>
+                </div>
+                <div className="admin-product-delete-confirm-actions">
+                  <button type="button" className="btn btn--secondary" onClick={closeCollectConfirm}>
+                    Cancel
+                  </button>
+                  <button type="button" className="btn btn--primary" onClick={confirmCollect}>
+                    Confirm
+                  </button>
+                </div>
               </div>
-            </div>
-            <div className="admin-product-delete-confirm-actions">
-              <button type="button" className="btn btn--secondary" onClick={closeCollectConfirm}>
-                Cancel
-              </button>
-              <button type="button" className="btn btn--primary" onClick={confirmCollect}>
-                Confirm
-              </button>
-            </div>
-          </div>
-        </div>
-      ) : null}
+            </div>,
+            document.body,
+          )
+        : null}
     </section>
   );
 }

@@ -1004,7 +1004,7 @@ export default function ShopAdminPanel({ initialTab = 'products', isBlacklineDem
     const scrollTimer = window.setTimeout(() => {
       document.getElementById(`admin-order-${orderId}`)?.scrollIntoView({
         behavior: 'smooth',
-        block: 'center',
+        block: 'start',
       });
     }, 350);
 
@@ -1037,7 +1037,7 @@ export default function ShopAdminPanel({ initialTab = 'products', isBlacklineDem
       const row = document.getElementById(`admin-order-${orderId}`);
       row?.scrollIntoView({
         behavior: reducedMotion ? 'auto' : 'smooth',
-        block: 'center',
+        block: 'start',
       });
       clearRetailFocusParamsFromUrl();
     }, reducedMotion ? 0 : 350);

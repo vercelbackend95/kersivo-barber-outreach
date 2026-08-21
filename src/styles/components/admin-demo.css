@@ -310,9 +310,17 @@
     padding-top: env(safe-area-inset-top, 0px);
   }
 
+  /* Overlap 1px so ceil/subpixel banner height cannot leave a page-bg slit. */
+  body:has(.bl-demo-banner--admin) .admin-mobile-top-chrome {
+    top: calc(var(--admin-demo-banner-h, 0px) - 1px);
+  }
+
   /* Safe-area already on demo banner above the chrome stack */
   body:has(.bl-demo-banner--admin) .admin-mobile-top-chrome .admin-mobile-header {
     padding-top: 0.35rem;
+    border-top: none;
+    border-top-left-radius: 0;
+    border-top-right-radius: 0;
   }
 
   body:has(.bl-demo-banner--admin) .admin-mobile-top-chrome .admin-barbershop-paused-banner {

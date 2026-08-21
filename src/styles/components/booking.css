@@ -6678,6 +6678,17 @@ button.admin-sidebar-brand--button:focus-visible {
   scroll-margin-bottom: 2rem;
 }
 
+@media (max-width: 48rem) {
+  .admin-orders-grid-item,
+  .admin-orders-grid-item--highlight {
+    scroll-margin-top: calc(
+      var(--admin-demo-banner-h, 0px) +
+        var(--admin-mobile-measured-header-bottom, var(--admin-mobile-header-h, 6.5rem)) +
+        0.5rem
+    );
+  }
+}
+
 .admin-orders-grid-item[data-session-order='true'] .admin-orders-grid-collect-btn {
   width: 44px;
   min-width: 44px;
