@@ -3339,22 +3339,6 @@ html[data-theme='blackline']::view-transition-new(root) {
   pointer-events: auto;
 }
 
-[data-theme='blackline'][data-bl-barbers-motion] .bl-roster-figure {
-  clip-path: inset(0 100% 0 0);
-}
-
-[data-theme='blackline'][data-bl-barbers-motion] .bl-roster-item--invert .bl-roster-figure {
-  clip-path: inset(0 0 0 100%);
-}
-
-[data-theme='blackline'][data-bl-barbers-motion] .bl-roster-figure::after {
-  transform: scaleY(0);
-}
-
-[data-theme='blackline'][data-bl-barbers-motion] .bl-roster-figure img {
-  transform: scale(1.03);
-}
-
 [data-theme='blackline'][data-bl-barbers-motion] .bl-roster-index,
 [data-theme='blackline'][data-bl-barbers-motion] .bl-roster-name,
 [data-theme='blackline'][data-bl-barbers-motion] .bl-roster-spec,
@@ -3362,21 +3346,6 @@ html[data-theme='blackline']::view-transition-new(root) {
 [data-theme='blackline'][data-bl-barbers-motion] .bl-roster-book {
   opacity: 0;
   transform: translateY(14px);
-}
-
-[data-theme='blackline'][data-bl-barbers-motion] .bl-roster-item.is-inview .bl-roster-figure {
-  clip-path: inset(0);
-  transition: clip-path var(--bl-duration-emphasis) var(--bl-ease-out);
-}
-
-[data-theme='blackline'][data-bl-barbers-motion] .bl-roster-item.is-inview .bl-roster-figure img {
-  transform: scale(1);
-  transition: transform var(--bl-duration-emphasis) var(--bl-ease-out);
-}
-
-[data-theme='blackline'][data-bl-barbers-motion] .bl-roster-item.is-inview .bl-roster-figure::after {
-  transform: scaleY(1);
-  transition: transform var(--bl-duration-reveal) var(--bl-ease-out) 80ms;
 }
 
 [data-theme='blackline'][data-bl-barbers-motion] .bl-roster-item.is-inview .bl-roster-index,
@@ -3450,9 +3419,6 @@ html[data-theme='blackline']::view-transition-new(root) {
     transform 480ms var(--bl-ease-out) 120ms;
 }
 
-[data-theme='blackline'][data-bl-barbers-motion] .is-settled .bl-roster-figure,
-[data-theme='blackline'][data-bl-barbers-motion] .is-settled .bl-roster-figure img,
-[data-theme='blackline'][data-bl-barbers-motion] .is-settled .bl-roster-figure::after,
 [data-theme='blackline'][data-bl-barbers-motion] .is-settled .bl-roster-index,
 [data-theme='blackline'][data-bl-barbers-motion] .is-settled .bl-roster-name,
 [data-theme='blackline'][data-bl-barbers-motion] .is-settled .bl-roster-spec,
@@ -3461,9 +3427,6 @@ html[data-theme='blackline']::view-transition-new(root) {
 [data-theme='blackline'][data-bl-barbers-motion] .is-settled .bl-barbers-close-eyebrow,
 [data-theme='blackline'][data-bl-barbers-motion] .is-settled .bl-barbers-close-heading,
 [data-theme='blackline'][data-bl-barbers-motion] .is-settled .bl-barbers-close-lede,
-[data-theme='blackline'][data-bl-barbers-instant][data-bl-barbers-motion] [data-bl-reveal] .bl-roster-figure,
-[data-theme='blackline'][data-bl-barbers-instant][data-bl-barbers-motion] [data-bl-reveal] .bl-roster-figure img,
-[data-theme='blackline'][data-bl-barbers-instant][data-bl-barbers-motion] [data-bl-reveal] .bl-roster-figure::after,
 [data-theme='blackline'][data-bl-barbers-instant][data-bl-barbers-motion] [data-bl-reveal] .bl-roster-index,
 [data-theme='blackline'][data-bl-barbers-instant][data-bl-barbers-motion] [data-bl-reveal] .bl-roster-name,
 [data-theme='blackline'][data-bl-barbers-instant][data-bl-barbers-motion] [data-bl-reveal] .bl-roster-spec,
@@ -3473,7 +3436,6 @@ html[data-theme='blackline']::view-transition-new(root) {
 [data-theme='blackline'][data-bl-barbers-instant][data-bl-barbers-motion] [data-bl-reveal] .bl-barbers-close-heading,
 [data-theme='blackline'][data-bl-barbers-instant][data-bl-barbers-motion] [data-bl-reveal] .bl-barbers-close-lede {
   opacity: 1;
-  clip-path: none;
   transform: none;
   transition: none;
 }
@@ -3488,24 +3450,6 @@ html[data-theme='blackline']::view-transition-new(root) {
   [data-theme='blackline'][data-bl-barbers-motion] .bl-barbers-close-heading,
   [data-theme='blackline'][data-bl-barbers-motion] .bl-barbers-close-lede {
     transform: translateY(12px);
-  }
-
-  [data-theme='blackline'][data-bl-barbers-motion] .bl-roster-figure,
-  [data-theme='blackline'][data-bl-barbers-motion] .bl-roster-item--invert .bl-roster-figure {
-    clip-path: inset(0 0 100% 0);
-  }
-
-  [data-theme='blackline'][data-bl-barbers-motion] .bl-roster-figure img {
-    transform: none;
-  }
-
-  [data-theme='blackline'][data-bl-barbers-motion] .bl-roster-item.is-inview .bl-roster-figure {
-    transition: clip-path 640ms var(--bl-ease-out);
-  }
-
-  [data-theme='blackline'][data-bl-barbers-motion] .bl-roster-item.is-inview .bl-roster-figure img {
-    transform: none;
-    transition: none;
   }
 
   [data-theme='blackline'][data-bl-barbers-motion] .bl-roster-item.is-inview .bl-roster-name,
@@ -4704,6 +4648,10 @@ html[data-theme='blackline']::view-transition-new(root) {
   padding-block: 0 clamp(2.5rem, 6vw, 4.5rem);
 }
 
+[data-theme='blackline'] .bl-work-index--editorial > .bl-container {
+  --bl-container-max: 90rem;
+}
+
 [data-theme='blackline'] .bl-work-intro {
   max-width: 40rem;
 }
@@ -4740,46 +4688,40 @@ html[data-theme='blackline']::view-transition-new(root) {
   color: var(--theme-text-muted);
 }
 
-[data-theme='blackline'] .bl-work-grid {
+[data-theme='blackline'] .bl-work-clusters {
   display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-  grid-auto-rows: clamp(140px, 36vw, 180px);
-  column-gap: 10px;
-  row-gap: 10px;
-  margin: 0;
-  padding: 0;
-  list-style: none;
+  gap: clamp(2.5rem, 5vw, 4rem);
+}
+
+[data-theme='blackline'] .bl-work-cluster {
+  display: grid;
+  gap: clamp(1.25rem, 3.5vw, 1.5rem);
+  min-width: 0;
+}
+
+[data-theme='blackline'] .bl-work-cluster-stack {
+  display: grid;
+  gap: inherit;
+  min-width: 0;
 }
 
 [data-theme='blackline'] .bl-work-item,
 [data-theme='blackline'] .bl-work-frame {
   min-width: 0;
   min-height: 0;
-  height: 100%;
 }
 
 [data-theme='blackline'] .bl-work-frame {
   margin: 0;
-  display: grid;
-  grid-template-rows: minmax(0, 1fr) auto;
-  height: 100%;
-}
-
-[data-theme='blackline'] .bl-work-tile--feature {
-  grid-column: 1 / -1;
-  grid-row: span 2;
-  max-height: 280px;
-}
-
-[data-theme='blackline'] .bl-work-tile--remainder-one {
-  grid-column: span 1;
-  max-width: 100%;
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
 }
 
 [data-theme='blackline'] .bl-work-open {
   display: block;
   width: 100%;
-  height: 100%;
+  height: auto;
   min-height: 0;
   margin: 0;
   padding: 0;
@@ -4802,11 +4744,12 @@ html[data-theme='blackline']::view-transition-new(root) {
   display: block;
   overflow: hidden;
   width: 100%;
-  height: 100%;
-  min-height: 0;
+  aspect-ratio: var(--bl-work-ratio-mobile, var(--bl-work-ratio, 4 / 3));
+  max-height: min(72vh, 36rem);
   border-radius: 16px;
   border: 1px solid color-mix(in srgb, var(--bl-carbon) 18%, transparent);
   isolation: isolate;
+  background: color-mix(in srgb, var(--bl-carbon) 6%, transparent);
 }
 
 [data-theme='blackline'] .bl-work-stage img {
@@ -4854,14 +4797,15 @@ html[data-theme='blackline']::view-transition-new(root) {
 
 [data-theme='blackline'] .bl-work-meta {
   display: grid;
-  gap: 0.2rem;
-  margin-top: 0.55rem;
+  gap: 0.15rem;
+  margin-top: 0.45rem;
+  flex: 0 0 auto;
 }
 
 [data-theme='blackline'] .bl-work-index-label {
   margin: 0;
   font-family: var(--bl-font-display);
-  font-size: 0.8125rem;
+  font-size: 0.75rem;
   font-weight: 600;
   letter-spacing: 0.16em;
   line-height: 1.2;
@@ -4873,11 +4817,11 @@ html[data-theme='blackline']::view-transition-new(root) {
 
 [data-theme='blackline'] .bl-work-caption {
   margin: 0;
-  max-width: 28ch;
+  max-width: 32ch;
   font-family: var(--bl-font-body);
-  font-size: 1rem;
+  font-size: 0.9375rem;
   font-weight: 500;
-  line-height: 1.5;
+  line-height: 1.45;
   color: var(--theme-text);
 }
 
@@ -5170,27 +5114,22 @@ html[data-theme='blackline']::view-transition-new(root) {
     transform var(--bl-duration-reveal) var(--bl-ease-out) 120ms;
 }
 
-[data-theme='blackline'][data-bl-gallery-motion] .bl-work-stage {
-  clip-path: inset(12% 8% 12% 8%);
-}
-
-[data-theme='blackline'][data-bl-gallery-motion] .bl-work-stage img {
-  transform: scale(1.025);
+[data-theme='blackline'][data-bl-gallery-motion] .bl-work-item {
+  opacity: 0;
+  transform: translateY(14px);
 }
 
 [data-theme='blackline'][data-bl-gallery-motion] .bl-work-meta {
   opacity: 0;
-  transform: translateY(16px);
+  transform: translateY(10px);
 }
 
-[data-theme='blackline'][data-bl-gallery-motion] .bl-work-item.is-inview .bl-work-stage {
-  clip-path: inset(0);
-  transition: clip-path var(--bl-duration-emphasis) var(--bl-ease-out);
-}
-
-[data-theme='blackline'][data-bl-gallery-motion] .bl-work-item.is-inview .bl-work-stage img {
+[data-theme='blackline'][data-bl-gallery-motion] .bl-work-item.is-inview {
+  opacity: 1;
   transform: none;
-  transition: transform var(--bl-duration-emphasis) var(--bl-ease-out);
+  transition:
+    opacity var(--bl-duration-reveal) var(--bl-ease-out),
+    transform var(--bl-duration-reveal) var(--bl-ease-out);
 }
 
 [data-theme='blackline'][data-bl-gallery-motion] .bl-work-item.is-inview .bl-work-meta {
@@ -5236,23 +5175,20 @@ html[data-theme='blackline']::view-transition-new(root) {
 [data-theme='blackline'][data-bl-gallery-motion] .is-settled .bl-work-intro-eyebrow,
 [data-theme='blackline'][data-bl-gallery-motion] .is-settled .bl-work-intro-heading,
 [data-theme='blackline'][data-bl-gallery-motion] .is-settled .bl-work-intro-lede,
-[data-theme='blackline'][data-bl-gallery-motion] .is-settled .bl-work-stage,
-[data-theme='blackline'][data-bl-gallery-motion] .is-settled .bl-work-stage img,
+[data-theme='blackline'][data-bl-gallery-motion] .is-settled.bl-work-item,
 [data-theme='blackline'][data-bl-gallery-motion] .is-settled .bl-work-meta,
 [data-theme='blackline'][data-bl-gallery-motion] .is-settled .bl-work-close-eyebrow,
 [data-theme='blackline'][data-bl-gallery-motion] .is-settled .bl-work-close-heading,
 [data-theme='blackline'][data-bl-gallery-motion] .is-settled .bl-work-close-lede,
+[data-theme='blackline'][data-bl-gallery-instant][data-bl-gallery-motion] [data-bl-reveal].bl-work-item,
 [data-theme='blackline'][data-bl-gallery-instant][data-bl-gallery-motion] [data-bl-reveal] .bl-work-intro-eyebrow,
 [data-theme='blackline'][data-bl-gallery-instant][data-bl-gallery-motion] [data-bl-reveal] .bl-work-intro-heading,
 [data-theme='blackline'][data-bl-gallery-instant][data-bl-gallery-motion] [data-bl-reveal] .bl-work-intro-lede,
-[data-theme='blackline'][data-bl-gallery-instant][data-bl-gallery-motion] [data-bl-reveal] .bl-work-stage,
-[data-theme='blackline'][data-bl-gallery-instant][data-bl-gallery-motion] [data-bl-reveal] .bl-work-stage img,
 [data-theme='blackline'][data-bl-gallery-instant][data-bl-gallery-motion] [data-bl-reveal] .bl-work-meta,
 [data-theme='blackline'][data-bl-gallery-instant][data-bl-gallery-motion] [data-bl-reveal] .bl-work-close-eyebrow,
 [data-theme='blackline'][data-bl-gallery-instant][data-bl-gallery-motion] [data-bl-reveal] .bl-work-close-heading,
 [data-theme='blackline'][data-bl-gallery-instant][data-bl-gallery-motion] [data-bl-reveal] .bl-work-close-lede {
   opacity: 1;
-  clip-path: none;
   transform: none;
   transition: none;
 }
@@ -5272,10 +5208,11 @@ html[data-theme='blackline']::view-transition-new(root) {
   }
 }
 
-@media (min-width: 720px) {
+@media (min-width: 700px) {
   [data-theme='blackline'][data-bl-gallery-motion] .bl-work-intro-eyebrow,
   [data-theme='blackline'][data-bl-gallery-motion] .bl-work-intro-heading,
   [data-theme='blackline'][data-bl-gallery-motion] .bl-work-intro-lede,
+  [data-theme='blackline'][data-bl-gallery-motion] .bl-work-item,
   [data-theme='blackline'][data-bl-gallery-motion] .bl-work-meta,
   [data-theme='blackline'][data-bl-gallery-motion] .bl-work-close-eyebrow,
   [data-theme='blackline'][data-bl-gallery-motion] .bl-work-close-heading,
@@ -5283,32 +5220,26 @@ html[data-theme='blackline']::view-transition-new(root) {
     transform: translateY(12px);
   }
 
-  [data-theme='blackline'] .bl-work-grid {
-    grid-template-columns: repeat(6, minmax(0, 1fr));
-    grid-auto-rows: clamp(160px, 18vw, 220px);
-    column-gap: 12px;
-    row-gap: 12px;
+  [data-theme='blackline'] .bl-work-clusters {
+    gap: clamp(2.75rem, 4.5vw, 3.75rem);
   }
 
-  [data-theme='blackline'] .bl-work-tile--feature {
-    max-height: none;
-    grid-row: span 2;
+  [data-theme='blackline'] .bl-work-cluster {
+    gap: 1rem;
   }
 
-  [data-theme='blackline'] .bl-work-tile--feature.bl-work-tile--left {
-    grid-column: 1 / 5;
+  [data-theme='blackline'] .bl-work-stage {
+    aspect-ratio: var(--bl-work-ratio, 4 / 3);
+    max-height: min(70vh, 42rem);
   }
 
-  [data-theme='blackline'] .bl-work-tile--feature.bl-work-tile--right {
-    grid-column: 3 / 7;
+  [data-theme='blackline'] .bl-work-cluster--primary .bl-work-cluster-stack {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 1rem;
   }
 
-  [data-theme='blackline'] .bl-work-tile--standard {
-    grid-column: span 2;
-  }
-
-  [data-theme='blackline'] .bl-work-tile--remainder-one {
-    grid-column: 1 / 4;
+  [data-theme='blackline'] .bl-work-cluster--secondary {
+    grid-template-columns: minmax(0, 1fr);
   }
 }
 
@@ -5323,37 +5254,106 @@ html[data-theme='blackline']::view-transition-new(root) {
 }
 
 @media (min-width: 1100px) {
-  [data-theme='blackline'] .bl-work-grid {
-    grid-template-columns: repeat(12, minmax(0, 1fr));
-    grid-auto-rows: clamp(200px, 22vw, 280px);
-    column-gap: 16px;
-    row-gap: 16px;
+  [data-theme='blackline'] .bl-work-clusters {
+    gap: clamp(3rem, 4vw, 4.5rem);
   }
 
-  [data-theme='blackline'] .bl-work-tile--feature.bl-work-tile--left {
-    grid-column: 1 / 7;
-    grid-row: span 2;
+  [data-theme='blackline'] .bl-work-cluster {
+    gap: 1.25rem;
   }
 
-  [data-theme='blackline'] .bl-work-tile--feature.bl-work-tile--right {
-    grid-column: 7 / 13;
-    grid-row: span 2;
+  [data-theme='blackline'] .bl-work-stage {
+    max-height: none;
   }
 
-  [data-theme='blackline'] .bl-work-tile--standard {
-    grid-column: span 3;
+  /* Primary: 01 | stacked 02/03 — right column fills left column height */
+  [data-theme='blackline'] .bl-work-cluster--primary {
+    grid-template-columns: minmax(0, 2fr) minmax(0, 1fr);
+    align-items: stretch;
+    gap: 1.25rem;
   }
 
-  [data-theme='blackline'] .bl-work-tile--remainder-one {
-    grid-column: 1 / 7;
+  [data-theme='blackline'] .bl-work-cluster--primary > .bl-work-tile--featured .bl-work-stage {
+    aspect-ratio: 3 / 2;
   }
 
-  [data-theme='blackline'] .bl-work-tile--remainder-pair {
-    grid-column: span 3;
+  [data-theme='blackline'] .bl-work-cluster--primary .bl-work-cluster-stack {
+    display: flex;
+    flex-direction: column;
+    grid-template-columns: none;
+    height: 100%;
+    min-height: 0;
+    gap: 1.25rem;
   }
 
-  [data-theme='blackline'] .bl-work-tile--remainder-four {
-    grid-column: span 3;
+  [data-theme='blackline'] .bl-work-cluster--primary .bl-work-cluster-stack > .bl-work-item {
+    display: flex;
+    flex: 1 1 0;
+    flex-direction: column;
+    min-height: 0;
+  }
+
+  [data-theme='blackline'] .bl-work-cluster--primary .bl-work-cluster-stack .bl-work-frame {
+    flex: 1;
+    height: 100%;
+  }
+
+  [data-theme='blackline'] .bl-work-cluster--primary .bl-work-cluster-stack .bl-work-open {
+    display: flex;
+    flex: 1 1 auto;
+    flex-direction: column;
+    min-height: 0;
+  }
+
+  [data-theme='blackline'] .bl-work-cluster--primary .bl-work-cluster-stack .bl-work-stage {
+    aspect-ratio: auto;
+    flex: 1 1 auto;
+    height: 100%;
+    min-height: 0;
+  }
+
+  /* Secondary: 05 sets stage band via 4/5; 04 fills same band — no dead zone */
+  [data-theme='blackline'] .bl-work-cluster--secondary {
+    grid-template-columns: minmax(0, 42fr) minmax(0, 58fr);
+    align-items: stretch;
+    gap: 1.25rem;
+  }
+
+  [data-theme='blackline'] .bl-work-cluster--secondary > .bl-work-item {
+    display: flex;
+    flex-direction: column;
+    min-height: 0;
+  }
+
+  [data-theme='blackline'] .bl-work-cluster--secondary .bl-work-frame {
+    flex: 1;
+    height: 100%;
+  }
+
+  [data-theme='blackline'] .bl-work-cluster--secondary .bl-work-tile--large .bl-work-open {
+    flex: 0 0 auto;
+  }
+
+  [data-theme='blackline'] .bl-work-cluster--secondary .bl-work-tile--large .bl-work-stage {
+    aspect-ratio: 4 / 5;
+  }
+
+  [data-theme='blackline'] .bl-work-cluster--secondary .bl-work-tile--medium .bl-work-open {
+    display: flex;
+    flex: 1 1 auto;
+    flex-direction: column;
+    min-height: 0;
+  }
+
+  [data-theme='blackline'] .bl-work-cluster--secondary .bl-work-tile--medium .bl-work-stage {
+    aspect-ratio: auto;
+    flex: 1 1 auto;
+    height: 100%;
+    min-height: 0;
+  }
+
+  [data-theme='blackline'] .bl-work-cluster--closing .bl-work-stage {
+    aspect-ratio: 16 / 10;
   }
 }
 
@@ -5372,8 +5372,6 @@ html[data-theme='blackline']::view-transition-new(root) {
     border-color: color-mix(in srgb, var(--bl-carbon) 42%, transparent);
   }
 
-  [data-theme='blackline'] .bl-work-open:hover .bl-work-stage::after,
-  [data-theme='blackline'] .bl-work-open:focus-visible .bl-work-stage::after,
   [data-theme='blackline'] .bl-work-open:hover .bl-work-view,
   [data-theme='blackline'] .bl-work-open:focus-visible .bl-work-view {
     opacity: 1;
@@ -5381,7 +5379,7 @@ html[data-theme='blackline']::view-transition-new(root) {
 
   [data-theme='blackline'] .bl-work-open:hover img,
   [data-theme='blackline'] .bl-work-open:focus-visible img {
-    transform: scale(1.03);
+    transform: scale(1.02);
   }
 
   [data-theme='blackline'] .bl-work-close-cta:hover .bl-work-close-arrow,
@@ -6080,9 +6078,6 @@ html[data-theme='blackline']::view-transition-new(root) {
     transition-duration: 0s !important;
   }
 
-  [data-theme='blackline'][data-bl-barbers-motion] .bl-roster-figure,
-  [data-theme='blackline'][data-bl-barbers-motion] .bl-roster-figure img,
-  [data-theme='blackline'][data-bl-barbers-motion] .bl-roster-figure::after,
   [data-theme='blackline'][data-bl-barbers-motion] .bl-roster-index,
   [data-theme='blackline'][data-bl-barbers-motion] .bl-roster-name,
   [data-theme='blackline'][data-bl-barbers-motion] .bl-roster-spec,
@@ -6092,7 +6087,6 @@ html[data-theme='blackline']::view-transition-new(root) {
   [data-theme='blackline'][data-bl-barbers-motion] .bl-barbers-close-heading,
   [data-theme='blackline'][data-bl-barbers-motion] .bl-barbers-close-lede {
     opacity: 1;
-    clip-path: none;
     transform: none;
     transition: none;
   }
@@ -6151,14 +6145,12 @@ html[data-theme='blackline']::view-transition-new(root) {
   [data-theme='blackline'][data-bl-gallery-motion] .bl-work-intro-eyebrow,
   [data-theme='blackline'][data-bl-gallery-motion] .bl-work-intro-heading,
   [data-theme='blackline'][data-bl-gallery-motion] .bl-work-intro-lede,
-  [data-theme='blackline'][data-bl-gallery-motion] .bl-work-stage,
-  [data-theme='blackline'][data-bl-gallery-motion] .bl-work-stage img,
+  [data-theme='blackline'][data-bl-gallery-motion] .bl-work-item,
   [data-theme='blackline'][data-bl-gallery-motion] .bl-work-meta,
   [data-theme='blackline'][data-bl-gallery-motion] .bl-work-close-eyebrow,
   [data-theme='blackline'][data-bl-gallery-motion] .bl-work-close-heading,
   [data-theme='blackline'][data-bl-gallery-motion] .bl-work-close-lede {
     opacity: 1;
-    clip-path: none;
     transform: none;
     transition: none;
   }

@@ -35,7 +35,7 @@ export const DEMO_GALLERY: readonly DemoGalleryImage[] = [
     role: 'offset',
     sequence: 2,
     objectPosition: { desktop: '48% 22%', mobile: '50% 20%' },
-    sizes: '(max-width: 639px) 100vw, (max-width: 1023px) 100vw, 50vw',
+    sizes: '(max-width: 699px) 100vw, (max-width: 1099px) 50vw, 32vw',
   },
   {
     id: 'hairline',
@@ -47,7 +47,7 @@ export const DEMO_GALLERY: readonly DemoGalleryImage[] = [
     role: 'portrait',
     sequence: 3,
     objectPosition: { desktop: '42% 38%', mobile: '45% 36%' },
-    sizes: '(max-width: 639px) 50vw, (max-width: 1023px) 50vw, 25vw',
+    sizes: '(max-width: 699px) 100vw, (max-width: 1099px) 50vw, 32vw',
   },
   {
     id: 'barber-at-work',
@@ -59,7 +59,7 @@ export const DEMO_GALLERY: readonly DemoGalleryImage[] = [
     role: 'wide',
     sequence: 1,
     objectPosition: { desktop: '46% 42%', mobile: '46% 42%' },
-    sizes: '(max-width: 639px) 50vw, (max-width: 1023px) 50vw, 25vw',
+    sizes: '(max-width: 699px) 100vw, (max-width: 1099px) 100vw, 68vw',
   },
   {
     id: 'beard',
@@ -71,7 +71,7 @@ export const DEMO_GALLERY: readonly DemoGalleryImage[] = [
     role: 'landscape',
     sequence: 4,
     objectPosition: { desktop: '58% 46%', mobile: '52% 48%' },
-    sizes: '(max-width: 639px) 50vw, (max-width: 1023px) 100vw, 50vw',
+    sizes: '(max-width: 699px) 100vw, (max-width: 1099px) 100vw, 42vw',
   },
   {
     id: 'scissor-cut',
@@ -83,7 +83,7 @@ export const DEMO_GALLERY: readonly DemoGalleryImage[] = [
     role: 'portrait',
     sequence: 5,
     objectPosition: { desktop: '50% 42%', mobile: '50% 40%' },
-    sizes: '(max-width: 639px) 50vw, (max-width: 1023px) 50vw, 42vw',
+    sizes: '(max-width: 699px) 100vw, (max-width: 1099px) 100vw, 58vw',
   },
   {
     id: 'interior-detail',
@@ -95,7 +95,7 @@ export const DEMO_GALLERY: readonly DemoGalleryImage[] = [
     role: 'full',
     sequence: 6,
     objectPosition: { desktop: '42% 82%', mobile: '45% 80%' },
-    sizes: '(max-width: 639px) 100vw, (max-width: 1023px) 50vw, 58vw',
+    sizes: '(max-width: 699px) 100vw, min(90rem, 100vw)',
   },
 ] as const;
 

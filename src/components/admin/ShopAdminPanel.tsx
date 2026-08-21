@@ -558,6 +558,35 @@ function clearRetailFocusParamsFromUrl() {
   window.history.replaceState(window.history.state, '', next);
 }
 
+function scrollOrderRowBelowAdminChrome(orderId: string, behavior: ScrollBehavior) {
+  const row = document.getElementById(`admin-order-${orderId}`);
+  if (!row) return;
+  const root = document.documentElement;
+  const bannerH = parseFloat(root.style.getPropertyValue('--admin-demo-banner-h')) || 0;
+  const measuredChrome = parseFloat(root.style.getPropertyValue('--admin-mobile-measured-header-bottom'));
+  const fallbackChrome = parseFloat(
+    getComputedStyle(document.querySelector('.admin-main-content') ?? root).getPropertyValue(
+      '--admin-mobile-header-h',
+    ),
+  );
+  const chromeH = (Number.isFinite(measuredChrome) && measuredChrome > 0
+    ? measuredChrome
+    : Number.isFinite(fallbackChrome) && fallbackChrome > 0
+      ? fallbackChrome
+      : 0);
+  const pad = 8;
+  const top = row.getBoundingClientRect().top + window.scrollY - bannerH - chromeH - pad;
+  window.scrollTo({ top: Math.max(0, top), behavior });
+}
+
+function scheduleScrollOrderRowBelowAdminChrome(orderId: string, behavior: ScrollBehavior) {
+  window.requestAnimationFrame(() => {
+    window.requestAnimationFrame(() => {
+      scrollOrderRowBelowAdminChrome(orderId, behavior);
+    });
+  });
+}
+
 export default function ShopAdminPanel({ initialTab = 'products', isBlacklineDemo = false }: ShopAdminPanelProps) {
   const [activeTab, setActiveTab] = useState<ShopTab>(initialTab);
 
@@ -1002,10 +1031,7 @@ export default function ShopAdminPanel({ initialTab = 'products', isBlacklineDem
     void fetchOrderDetails(orderId);
 
     const scrollTimer = window.setTimeout(() => {
-      document.getElementById(`admin-order-${orderId}`)?.scrollIntoView({
-        behavior: 'smooth',
-        block: 'start',
-      });
+      scheduleScrollOrderRowBelowAdminChrome(orderId, 'smooth');
     }, 350);
 
     const clearHighlightTimer = window.setTimeout(() => {
@@ -1034,11 +1060,7 @@ export default function ShopAdminPanel({ initialTab = 'products', isBlacklineDem
 
     const reducedMotion = prefersReducedMotion();
     const scrollTimer = window.setTimeout(() => {
-      const row = document.getElementById(`admin-order-${orderId}`);
-      row?.scrollIntoView({
-        behavior: reducedMotion ? 'auto' : 'smooth',
-        block: 'start',
-      });
+      scheduleScrollOrderRowBelowAdminChrome(orderId, reducedMotion ? 'auto' : 'smooth');
       clearRetailFocusParamsFromUrl();
     }, reducedMotion ? 0 : 350);
 

@@ -30,7 +30,6 @@ describe('BLACKLINE Gallery page', () => {
     expect(heroSource).not.toContain('<DemoPageHero');
     expect(heroSource).toContain('id="blackline-gallery-heading"');
     expect(indexSource).toContain('aria-labelledby="blackline-gallery-heading"');
-    expect(indexSource).toContain('<ol');
     expect(indexSource).toContain('<figure');
     expect(indexSource).toContain('<dialog');
     expect(indexSource).toContain('role="dialog"');
@@ -51,7 +50,7 @@ describe('BLACKLINE Gallery page', () => {
     expect(sources).not.toMatch(/luxury|award-winning|best in Manchester|expert|master|guaranteed|available today/i);
   });
 
-  it('renders the six unique frames from a bento helper without duplicating sources', () => {
+  it('renders the six unique frames from curated clusters without duplicating sources', () => {
     expect(demoGallerySequence().map((image) => image.id)).toEqual([
       'barber-at-work',
       'fade',
@@ -63,7 +62,12 @@ describe('BLACKLINE Gallery page', () => {
     expect(DEMO_GALLERY.every((image) => image.src.startsWith('/demo/gallery/') && image.src.endsWith('.webp'))).toBe(
       true,
     );
-    expect(indexSource).toContain('demoGalleryBentoTiles');
+    expect(indexSource).toContain('demoGalleryBentoClusters');
+    expect(indexSource).toContain('bl-work-clusters');
+    expect(indexSource).toContain('bl-work-cluster--primary');
+    expect(indexSource).toContain('bl-work-cluster--secondary');
+    expect(indexSource).toContain('bl-work-cluster--closing');
+    expect(indexSource).toContain('bl-work-cluster-stack');
     expect(indexSource).toContain('demoGalleryOpenLabel');
     expect(indexSource).toContain('data-work-open');
     expect(indexSource).toContain('data-work-alt');
@@ -79,7 +83,8 @@ describe('BLACKLINE Gallery page', () => {
     expect(indexSource.match(/data-work-close[\s\S]*?<svg/)).toBeTruthy();
     expect(indexSource).not.toContain('bl-work-dialog-nav');
     expect(indexSource).not.toMatch(/>Close</);
-    expect(indexSource).toContain("loading={tile.index < 2 ? 'eager' : 'lazy'}");
+    expect(indexSource).toContain('loading="eager"');
+    expect(indexSource).toContain('loading="lazy"');
     expect(closeSource).toContain('href={DEMO_BOOK_HREF}');
     expect(DEMO_BOOK_HREF).toBe('/demo/book');
     expect(sources).not.toMatch(/src=["']https?:\/\//);
@@ -91,11 +96,15 @@ describe('BLACKLINE Gallery page', () => {
     expect(cssSource).toContain("[data-theme='blackline'][data-bl-gallery-motion]");
     expect(cssSource).toContain("[data-theme='blackline'] .bl-gallery-page *");
     expect(cssSource).toContain('transition-duration: 0s !important');
-    expect(cssSource).toContain('@media (min-width: 720px)');
+    expect(cssSource).toContain('@media (min-width: 700px)');
     expect(cssSource).toContain('@media (min-width: 1100px)');
     expect(cssSource).toContain("@media (hover: hover) and (pointer: fine)");
-    expect(workCss).toContain('grid-template-columns: repeat(12, minmax(0, 1fr))');
-    expect(workCss).toContain('grid-auto-rows: clamp(200px, 22vw, 280px)');
+    expect(workCss).toContain('.bl-work-clusters');
+    expect(workCss).toContain('.bl-work-cluster--primary');
+    expect(workCss).toContain('aspect-ratio: var(--bl-work-ratio');
+    expect(workCss).not.toContain('grid-template-columns: repeat(12, minmax(0, 1fr))');
+    expect(workCss).not.toContain('grid-auto-rows: clamp(200px, 22vw, 280px)');
+    expect(workCss).not.toContain('grid-auto-rows: clamp(140px, 36vw, 180px)');
     expect(workCss).toContain('object-fit: contain');
     expect(workCss).toContain('max-width: 92vw');
     expect(workCss).toContain('max-height: 86vh');
@@ -114,17 +123,28 @@ describe('BLACKLINE Gallery page', () => {
     expect(previewSource).not.toContain('bl-work-');
   });
 
-  it('uses explicit bento placement instead of oversized editorial stages', () => {
-    expect(workCss).toContain('.bl-work-tile--feature.bl-work-tile--left');
-    expect(workCss).toContain('grid-column: 1 / 7');
-    expect(workCss).toContain('.bl-work-tile--feature.bl-work-tile--right');
-    expect(workCss).toContain('grid-column: 7 / 13');
-    expect(workCss).toContain('.bl-work-tile--remainder-one');
-    expect(workCss).toContain('scale(1.03)');
-    expect(workCss).not.toContain('.bl-work-item--wide .bl-work-stage');
-    expect(workCss).not.toContain('.bl-work-item--full .bl-work-stage');
-    expect(workCss).not.toContain('row-gap: clamp(56px, 12vw, 88px)');
+  it('uses nested editorial clusters instead of one fragile global bento grid', () => {
+    expect(indexSource).toContain('bl-work-index--editorial');
+    expect(indexSource).toContain('--bl-work-ratio');
+    expect(indexSource).toContain('--bl-work-ratio-mobile');
+    expect(workCss).toContain('--bl-container-max: 90rem');
+    expect(workCss).toContain('grid-template-columns: minmax(0, 2fr) minmax(0, 1fr)');
+    expect(workCss).toContain('grid-template-columns: minmax(0, 42fr) minmax(0, 58fr)');
+    expect(workCss).toContain('.bl-work-tile--featured');
+    expect(workCss).toContain('.bl-work-cluster-stack');
+    expect(workCss).toContain('.bl-work-tile--medium');
+    expect(workCss).toContain('.bl-work-tile--large');
+    expect(workCss).toContain('.bl-work-cluster--closing');
+    expect(workCss).toContain('scale(1.02)');
+    expect(workCss).toContain('translateY(14px)');
+    expect(workCss).not.toContain('clip-path: inset(12% 8% 12% 8%)');
+    expect(workCss).not.toContain('grid-column: 1 / 9');
+    expect(workCss).not.toContain('grid-column: 1 / 6');
+    expect(workCss).not.toContain('grid-column: 6 / 13');
+    expect(workCss).not.toContain('.bl-work-tile--feature.bl-work-tile--left');
+    expect(workCss).not.toContain('.bl-work-tile--remainder-one');
     expect(workCss).not.toContain('masonry');
+    expect(workCss).not.toMatch(/(?<![-\w])columns\s*:/);
     expect(indexSource).not.toContain('nth-child');
     expect(cssSource).toContain('.bl-work-dialog-control');
     expect(cssSource).toContain('min-width: 48px');

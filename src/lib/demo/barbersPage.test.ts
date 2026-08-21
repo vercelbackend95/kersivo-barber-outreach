@@ -84,8 +84,8 @@ describe('BLACKLINE Our Barbers page', () => {
     expect(cssSource).toContain("[data-theme='blackline'][data-bl-barbers-motion]");
     expect(cssSource).toContain("[data-theme='blackline'][data-bl-barbers-motion] .bl-barbers-close-eyebrow");
     expect(cssSource).not.toContain("[data-theme='blackline'][data-bl-barbers-motion] .bl-barbers-close-cta");
-    expect(cssSource).toContain('clip-path: inset(0 100% 0 0)');
-    expect(cssSource).toContain('clip-path: inset(0 0 0 100%)');
+    expect(cssSource).not.toContain('clip-path: inset(0 100% 0 0)');
+    expect(cssSource).not.toContain('clip-path: inset(0 0 0 100%)');
     expect(cssSource).toContain("@media (hover: hover) and (pointer: fine)");
     expect(cssSource).toContain('transition-duration: 0s !important');
     expect(cssSource).toMatch(

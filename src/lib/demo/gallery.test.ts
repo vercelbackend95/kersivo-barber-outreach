@@ -7,9 +7,13 @@ import {
   demoGalleryOpenLabel,
   demoGalleryPrevIndex,
   demoGallerySequence,
-  type DemoGalleryImage,
 } from './gallery';
-import { demoGalleryBentoClassName, demoGalleryBentoSizes, demoGalleryBentoTiles } from './galleryBento';
+import {
+  demoGalleryBentoClassName,
+  demoGalleryBentoClusters,
+  demoGalleryBentoSizes,
+  demoGalleryBentoTiles,
+} from './galleryBento';
 
 describe('BLACKLINE demo gallery', () => {
   it('exposes six unique local WebP frames', () => {
@@ -92,69 +96,43 @@ describe('BLACKLINE demo gallery', () => {
   });
 });
 
-describe('BLACKLINE gallery bento assignment', () => {
-  const prototype = DEMO_GALLERY[0]!;
-
-  function frames(count: number): DemoGalleryImage[] {
-    return Array.from({ length: count }, (_, index) => ({
-      ...prototype,
-      src: `/demo/gallery/frame-${index}.webp`,
-      sequence: index + 1,
-    }));
-  }
-
-  it('maps six frames to a left feature group and one remainder', () => {
+describe('BLACKLINE gallery bento clusters', () => {
+  it('maps six frames into primary, secondary, and closing clusters without duplicating sources', () => {
     const tiles = demoGalleryBentoTiles();
+    const clusters = demoGalleryBentoClusters();
+
     expect(tiles.map((tile) => tile.image.src)).toEqual(demoGallerySequence().map((image) => image.src));
     expect(new Set(tiles.map((tile) => tile.image.src)).size).toBe(6);
-    expect(tiles).toHaveLength(6);
-    expect(tiles.slice(0, 5).map((tile) => tile.size)).toEqual([
-      'feature',
-      'standard',
-      'standard',
-      'standard',
-      'standard',
+    expect(tiles.map((tile) => tile.variant)).toEqual([
+      'featured',
+      'stack-top',
+      'stack-bottom',
+      'medium',
+      'large',
+      'wide',
     ]);
-    expect(tiles.slice(0, 5).every((tile) => tile.side === 'left' && !tile.remainder)).toBe(true);
-    expect(tiles[5]).toMatchObject({
-      size: 'standard',
-      remainder: true,
-      remainderKind: 'one',
-    });
+
+    expect(clusters.primary.featured.variant).toBe('featured');
+    expect(clusters.primary.stack.map((tile) => tile.variant)).toEqual(['stack-top', 'stack-bottom']);
+    expect(clusters.secondary.map((tile) => tile.variant)).toEqual(['medium', 'large']);
+    expect(clusters.closing.variant).toBe('wide');
+
+    expect([
+      clusters.primary.featured,
+      ...clusters.primary.stack,
+      ...clusters.secondary,
+      clusters.closing,
+    ].map((tile) => tile.image.id)).toEqual(demoGallerySequence().map((image) => image.id));
   });
 
-  it('assigns feature side by group and remainder layouts without duplicating sources', () => {
-    const five = demoGalleryBentoTiles(frames(5));
-    expect(five).toHaveLength(5);
-    expect(five[0]).toMatchObject({ size: 'feature', side: 'left', remainder: false });
-    expect(five.every((tile) => !tile.remainder)).toBe(true);
-
-    const seven = demoGalleryBentoTiles(frames(7));
-    expect(seven).toHaveLength(7);
-    expect(seven.slice(5).map((tile) => tile.remainderKind)).toEqual(['pair', 'pair']);
-    expect(seven.slice(5).every((tile) => tile.size === 'standard')).toBe(true);
-
-    const eight = demoGalleryBentoTiles(frames(8));
-    expect(eight).toHaveLength(8);
-    expect(eight[5]).toMatchObject({ size: 'feature', remainder: true, remainderKind: 'partial' });
-    expect(eight.slice(6).every((tile) => tile.size === 'standard' && tile.remainderKind === 'partial')).toBe(true);
-
-    const nine = demoGalleryBentoTiles(frames(9));
-    expect(nine).toHaveLength(9);
-    expect(nine.slice(5).every((tile) => tile.size === 'standard' && tile.remainderKind === 'four')).toBe(true);
-
-    const ten = demoGalleryBentoTiles(frames(10));
-    expect(ten).toHaveLength(10);
-    expect(ten[5]).toMatchObject({ size: 'feature', side: 'right', remainder: false });
-    expect(new Set(ten.map((tile) => tile.image.src)).size).toBe(10);
-  });
-
-  it('keeps reading order identical to sequence and never asks CSS for masonry', () => {
+  it('keeps reading order and emits viewport-aware sizes for large stages', () => {
     const tiles = demoGalleryBentoTiles();
-    expect(tiles.map((tile) => tile.image.id)).toEqual(demoGallerySequence().map((image) => image.id));
-    expect(demoGalleryBentoClassName(tiles[0]!)).toContain('bl-work-tile--feature');
-    expect(demoGalleryBentoClassName(tiles[0]!)).toContain('bl-work-tile--left');
-    expect(demoGalleryBentoClassName(tiles[5]!)).toContain('bl-work-tile--remainder-one');
-    expect(demoGalleryBentoSizes(tiles[0]!)).toContain('50vw');
+    expect(demoGalleryBentoClassName(tiles[0]!)).toBe('bl-work-item bl-work-tile bl-work-tile--featured');
+    expect(demoGalleryBentoClassName(tiles[1]!)).toContain('bl-work-tile--stack-top');
+    expect(demoGalleryBentoClassName(tiles[5]!)).toContain('bl-work-tile--wide');
+    expect(demoGalleryBentoSizes(tiles[0]!)).toContain('68vw');
+    expect(demoGalleryBentoSizes(tiles[1]!)).toContain('32vw');
+    expect(demoGalleryBentoSizes(tiles[5]!)).toContain('90rem');
+    expect(demoGalleryBentoSizes(tiles[0]!)).not.toContain('25vw');
   });
 });

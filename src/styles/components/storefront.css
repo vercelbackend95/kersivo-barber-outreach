@@ -1311,6 +1311,21 @@
     margin-inline: auto;
   }
 
+  .sf-shop .sf-spotlight--unified > .sf-spotlight-progress {
+    top: 0;
+    bottom: auto;
+    background: linear-gradient(
+      0deg,
+      transparent 0%,
+      color-mix(in srgb, var(--shop-surface) 55%, transparent) 45%,
+      color-mix(in srgb, var(--shop-surface) 88%, transparent) 100%
+    );
+  }
+
+  .sf-shop .sf-spotlight--unified .sf-featured-copy {
+    padding-bottom: clamp(1rem, 1.7vw, 1.4rem);
+  }
+
   .sf-shop .sf-spotlight-progress-seg {
     cursor: default;
   }

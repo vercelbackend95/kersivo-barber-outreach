@@ -6681,11 +6681,8 @@ button.admin-sidebar-brand--button:focus-visible {
 @media (max-width: 48rem) {
   .admin-orders-grid-item,
   .admin-orders-grid-item--highlight {
-    scroll-margin-top: calc(
-      var(--admin-demo-banner-h, 0px) +
-        var(--admin-mobile-measured-header-bottom, var(--admin-mobile-header-h, 6.5rem)) +
-        0.5rem
-    );
+    /* Deep-link scroll uses JS chrome offset; keep a small margin for other scrolls. */
+    scroll-margin-top: 0.5rem;
   }
 }
 

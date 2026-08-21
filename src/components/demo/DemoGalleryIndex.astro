@@ -6,60 +6,183 @@ import {
 } from '@/lib/demo/gallery';
 import {
   demoGalleryBentoClassName,
+  demoGalleryBentoClusters,
   demoGalleryBentoSizes,
-  demoGalleryBentoTiles,
+  type DemoGalleryBentoTile,
 } from '@/lib/demo/galleryBento';
 
 const frames = demoGallerySequence();
-const tiles = demoGalleryBentoTiles(frames);
+const clusters = demoGalleryBentoClusters(frames);
 const total = frames.length;
 const firstFrame = frames[0];
+
+function tileStyle(tile: DemoGalleryBentoTile): string {
+  return `--bl-work-pos: ${tile.image.objectPosition.desktop}; --bl-work-pos-mobile: ${tile.image.objectPosition.mobile}; --bl-work-ratio: ${tile.ratio}; --bl-work-ratio-mobile: ${tile.ratioMobile}`;
+}
 ---
 
 <section
-  class="bl-work-index"
+  class="bl-work-index bl-work-index--editorial"
   data-surface="light"
   aria-labelledby="blackline-gallery-heading"
 >
   <div class="bl-container">
-    <ol class="bl-work-grid">
-      {
-        tiles.map((tile) => (
-          <li
-            class={demoGalleryBentoClassName(tile)}
-            data-bl-reveal
-            style={`--bl-work-pos: ${tile.image.objectPosition.desktop}; --bl-work-pos-mobile: ${tile.image.objectPosition.mobile}`}
-          >
-            <figure class="bl-work-frame">
-              <button
-                class="bl-work-open"
-                type="button"
-                data-work-open={String(tile.index)}
-                data-work-alt={tile.image.alt}
-                aria-label={demoGalleryOpenLabel(tile.image, tile.index, total)}
+    <div class="bl-work-clusters">
+      <div class="bl-work-cluster bl-work-cluster--primary">
+        <article
+          class={demoGalleryBentoClassName(clusters.primary.featured)}
+          data-bl-reveal
+          style={tileStyle(clusters.primary.featured)}
+        >
+          <figure class="bl-work-frame">
+            <button
+              class="bl-work-open"
+              type="button"
+              data-work-open={String(clusters.primary.featured.index)}
+              data-work-alt={clusters.primary.featured.image.alt}
+              aria-label={demoGalleryOpenLabel(
+                clusters.primary.featured.image,
+                clusters.primary.featured.index,
+                total,
+              )}
+            >
+              <span class="bl-work-stage">
+                <img
+                  src={clusters.primary.featured.image.src}
+                  alt=""
+                  width={clusters.primary.featured.image.width}
+                  height={clusters.primary.featured.image.height}
+                  sizes={demoGalleryBentoSizes(clusters.primary.featured)}
+                  loading="eager"
+                  decoding="async"
+                  fetchpriority="high"
+                />
+                <span class="bl-work-view" aria-hidden="true">View image</span>
+              </span>
+            </button>
+            <figcaption class="bl-work-meta">
+              <p class="bl-work-index-label">
+                {demoGalleryIndexLabel(clusters.primary.featured.index, total)}
+              </p>
+              <p class="bl-work-caption">{clusters.primary.featured.image.caption}</p>
+            </figcaption>
+          </figure>
+        </article>
+
+        <div class="bl-work-cluster-stack">
+          {
+            clusters.primary.stack.map((tile) => (
+              <article
+                class={demoGalleryBentoClassName(tile)}
+                data-bl-reveal
+                style={tileStyle(tile)}
               >
-                <span class="bl-work-stage">
-                  <img
-                    src={tile.image.src}
-                    alt=""
-                    width={tile.image.width}
-                    height={tile.image.height}
-                    sizes={demoGalleryBentoSizes(tile)}
-                    loading={tile.index < 2 ? 'eager' : 'lazy'}
-                    decoding="async"
-                  />
-                  <span class="bl-work-view" aria-hidden="true">View image</span>
-                </span>
-              </button>
-              <figcaption class="bl-work-meta">
-                <p class="bl-work-index-label">{demoGalleryIndexLabel(tile.index, total)}</p>
-                <p class="bl-work-caption">{tile.image.caption}</p>
-              </figcaption>
-            </figure>
-          </li>
-        ))
-      }
-    </ol>
+                <figure class="bl-work-frame">
+                  <button
+                    class="bl-work-open"
+                    type="button"
+                    data-work-open={String(tile.index)}
+                    data-work-alt={tile.image.alt}
+                    aria-label={demoGalleryOpenLabel(tile.image, tile.index, total)}
+                  >
+                    <span class="bl-work-stage">
+                      <img
+                        src={tile.image.src}
+                        alt=""
+                        width={tile.image.width}
+                        height={tile.image.height}
+                        sizes={demoGalleryBentoSizes(tile)}
+                        loading={tile.index < 2 ? 'eager' : 'lazy'}
+                        decoding="async"
+                      />
+                      <span class="bl-work-view" aria-hidden="true">View image</span>
+                    </span>
+                  </button>
+                  <figcaption class="bl-work-meta">
+                    <p class="bl-work-index-label">{demoGalleryIndexLabel(tile.index, total)}</p>
+                    <p class="bl-work-caption">{tile.image.caption}</p>
+                  </figcaption>
+                </figure>
+              </article>
+            ))
+          }
+        </div>
+      </div>
+
+      <div class="bl-work-cluster bl-work-cluster--secondary">
+        {
+          clusters.secondary.map((tile) => (
+            <article
+              class={demoGalleryBentoClassName(tile)}
+              data-bl-reveal
+              style={tileStyle(tile)}
+            >
+              <figure class="bl-work-frame">
+                <button
+                  class="bl-work-open"
+                  type="button"
+                  data-work-open={String(tile.index)}
+                  data-work-alt={tile.image.alt}
+                  aria-label={demoGalleryOpenLabel(tile.image, tile.index, total)}
+                >
+                  <span class="bl-work-stage">
+                    <img
+                      src={tile.image.src}
+                      alt=""
+                      width={tile.image.width}
+                      height={tile.image.height}
+                      sizes={demoGalleryBentoSizes(tile)}
+                      loading="lazy"
+                      decoding="async"
+                    />
+                    <span class="bl-work-view" aria-hidden="true">View image</span>
+                  </span>
+                </button>
+                <figcaption class="bl-work-meta">
+                  <p class="bl-work-index-label">{demoGalleryIndexLabel(tile.index, total)}</p>
+                  <p class="bl-work-caption">{tile.image.caption}</p>
+                </figcaption>
+              </figure>
+            </article>
+          ))
+        }
+      </div>
+
+      <div class="bl-work-cluster bl-work-cluster--closing">
+        <article
+          class={demoGalleryBentoClassName(clusters.closing)}
+          data-bl-reveal
+          style={tileStyle(clusters.closing)}
+        >
+          <figure class="bl-work-frame">
+            <button
+              class="bl-work-open"
+              type="button"
+              data-work-open={String(clusters.closing.index)}
+              data-work-alt={clusters.closing.image.alt}
+              aria-label={demoGalleryOpenLabel(clusters.closing.image, clusters.closing.index, total)}
+            >
+              <span class="bl-work-stage">
+                <img
+                  src={clusters.closing.image.src}
+                  alt=""
+                  width={clusters.closing.image.width}
+                  height={clusters.closing.image.height}
+                  sizes={demoGalleryBentoSizes(clusters.closing)}
+                  loading="lazy"
+                  decoding="async"
+                />
+                <span class="bl-work-view" aria-hidden="true">View image</span>
+              </span>
+            </button>
+            <figcaption class="bl-work-meta">
+              <p class="bl-work-index-label">{demoGalleryIndexLabel(clusters.closing.index, total)}</p>
+              <p class="bl-work-caption">{clusters.closing.image.caption}</p>
+            </figcaption>
+          </figure>
+        </article>
+      </div>
+    </div>
   </div>
 
   <dialog
