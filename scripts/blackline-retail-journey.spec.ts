@@ -948,6 +948,12 @@ test.describe('BLACKLINE shop purchase to Orders and Sales', () => {
       const actions = document.querySelector('.sf-pdp-actions') as HTMLElement | null;
       const back = document.querySelector('.sf-pdp-back') as HTMLElement | null;
       const hero = document.querySelector('.sf-pdp-hero') as HTMLElement | null;
+      const media = document.querySelector(
+        '.sf-pdp-hero .sf-pdp-media--cover',
+      ) as HTMLElement | null;
+      const img = document.querySelector(
+        '.sf-pdp-hero .sf-media-img',
+      ) as HTMLElement | null;
       const relatedHeading = document.querySelector(
         '.sf-pdp-related .sf-toolbar-heading',
       ) as HTMLElement | null;
@@ -961,6 +967,8 @@ test.describe('BLACKLINE shop purchase to Orders and Sales', () => {
       const railAtc = document.querySelector(
         '.sf-pdp-related .sf-atc[data-add-to-cart]',
       ) as HTMLElement | null;
+      const mediaBox = media?.getBoundingClientRect();
+      const imgBox = img?.getBoundingClientRect();
       return {
         leftGutter: Math.round(actionsBox.left),
         rightGutter: Math.round(vw - actionsBox.right),
@@ -973,6 +981,9 @@ test.describe('BLACKLINE shop purchase to Orders and Sales', () => {
         railShortDisplay: railAtc?.querySelector('.sf-atc-label-short')
           ? getComputedStyle(railAtc.querySelector('.sf-atc-label-short')!).display
           : null,
+        imgFit: img ? getComputedStyle(img).objectFit : null,
+        mediaWidth: mediaBox ? Math.round(mediaBox.width) : null,
+        imgWidth: imgBox ? Math.round(imgBox.width) : null,
       };
     });
     expect(pdpMetrics).not.toBeNull();
@@ -985,6 +996,10 @@ test.describe('BLACKLINE shop purchase to Orders and Sales', () => {
     expect(pdpMetrics!.railLabel).toBe('Add to bag');
     expect(pdpMetrics!.railHasSvg).toBe(true);
     expect(pdpMetrics!.railShortDisplay).toBe('none');
+    expect(pdpMetrics!.imgFit).toBe('cover');
+    expect(pdpMetrics!.mediaWidth).not.toBeNull();
+    expect(pdpMetrics!.imgWidth).not.toBeNull();
+    expect(Math.abs(pdpMetrics!.mediaWidth! - pdpMetrics!.imgWidth!)).toBeLessThanOrEqual(1);
 
     await page.setViewportSize({ width: 1440, height: 900 });
     await page.goto('/demo/shop', { waitUntil: 'domcontentloaded' });

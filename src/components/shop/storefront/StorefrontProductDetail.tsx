@@ -55,14 +55,16 @@ export default function StorefrontProductDetail({
         ← Back to shop
       </a>
       <section className="sf-pdp-hero" aria-label="Product details">
-        <ProductMediaFallback
-          image={product.image}
-          name={product.name}
-          shopName={shopName}
-          fallback={imageFallback}
-          sizes="(max-width: 767px) 92vw, 48vw"
-          priority
-        />
+        <div className="sf-pdp-media sf-pdp-media--cover">
+          <ProductMediaFallback
+            image={product.image}
+            name={product.name}
+            shopName={shopName}
+            fallback={imageFallback}
+            sizes="(max-width: 767px) 92vw, 48vw"
+            priority
+          />
+        </div>
         <div className="sf-pdp-copy">
           <p className="sf-card-category">{CATEGORY_LABELS[product.category]}</p>
           <h1 className="sf-pdp-name" id="storefront-pdp-heading">
