@@ -198,16 +198,16 @@ test.describe('BLACKLINE shop purchase to Orders and Sales', () => {
   test('load more reveals the rest of the filtered catalog', async ({ page }) => {
     await page.setViewportSize({ width: 1440, height: 900 });
     await page.goto('/demo/shop', { waitUntil: 'domcontentloaded' });
-    await expect(page.getByText(/24 of 30 products/i)).toBeVisible();
+    await expect(page.getByText(/24 of 29 products/i)).toBeVisible();
     await page.getByRole('button', { name: 'Show more products' }).click();
-    await expect(page.getByText(/30 of 30 products/i)).toBeVisible();
+    await expect(page.getByText(/29 of 29 products/i)).toBeVisible();
   });
 
-  test('lists 30 Live products, six derived categories, and untitled PDP placeholders', async ({ page }) => {
+  test('lists 29 Live products, six derived categories, and packshot PDP media', async ({ page }) => {
     await page.setViewportSize({ width: 1440, height: 900 });
     await page.goto('/demo/shop', { waitUntil: 'domcontentloaded' });
     await expect(page.getByRole('tab', { name: 'All products' })).toBeVisible();
-    await expect(page.getByRole('tab', { name: 'All products' }).locator('.sf-rail-count')).toHaveText('30');
+    await expect(page.getByRole('tab', { name: 'All products' }).locator('.sf-rail-count')).toHaveText('29');
     await expect(page.getByRole('tab', { name: 'Styling' })).toBeVisible();
     await expect(page.getByRole('tab', { name: 'Hair & Scalp' })).toBeVisible();
     await expect(page.getByRole('tab', { name: 'Beard Care' })).toBeVisible();
@@ -216,7 +216,7 @@ test.describe('BLACKLINE shop purchase to Orders and Sales', () => {
     await expect(page.getByRole('tab', { name: 'Sets & Gifts' })).toBeVisible();
 
     await page.getByRole('button', { name: 'Show more products' }).click();
-    await expect(page.locator('.sf-grid [data-product-item]')).toHaveCount(30);
+    await expect(page.locator('.sf-grid [data-product-item]')).toHaveCount(29);
 
     await expect(page.locator('[data-shop-search]')).toHaveCount(0);
     await expect(page.getByPlaceholder('Search products')).toHaveCount(0);
@@ -235,8 +235,8 @@ test.describe('BLACKLINE shop purchase to Orders and Sales', () => {
     await page.goto('/demo/shop/bl-product-shave-cream', { waitUntil: 'domcontentloaded' });
     await waitForCartIsland(page);
     await expect(page.getByRole('heading', { name: /shave cream/i })).toBeVisible();
-    await expect(page.locator('.sf-pdp-hero .sf-media--fallback')).toBeVisible();
-    await expect(page.locator('.sf-pdp-hero img')).toHaveCount(0);
+    await expect(page.locator('.sf-pdp-hero img.sf-media-img')).toBeVisible();
+    await expect(page.locator('.sf-pdp-hero .sf-media--fallback')).toHaveCount(0);
     await page.getByRole('button', { name: 'Add to bag: Shave Cream' }).click();
     await expect(page.locator('[data-sf-cart-toast]')).toContainText('Shave Cream added to bag');
   });

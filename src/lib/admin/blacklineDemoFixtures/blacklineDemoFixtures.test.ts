@@ -46,7 +46,7 @@ describe('BLACKLINE admin fixtures', () => {
     expect(blacklineShopProductsResponse.products.map((row) => row.id)).toEqual(
       DEMO_PRODUCTS.map((row) => row.id),
     );
-    expect(blacklineShopProductsResponse.products).toHaveLength(30);
+    expect(blacklineShopProductsResponse.products).toHaveLength(29);
   });
 
   it('builds a deterministic working weekday with gaps and no chair overlaps', () => {

@@ -137,9 +137,9 @@ describe('storefrontCatalog', () => {
     expect(shopInitial('BLACKLINE')).toBe('B');
   });
 
-  it('keeps the Live BLACKLINE catalog at 30 SKUs with four featured items and six shop categories', () => {
+  it('keeps the Live BLACKLINE catalog at 29 SKUs with four featured items and six shop categories', () => {
     const list = DEMO_PRODUCTS.filter((item) => item.active).map(storefrontProductFromDemo);
-    expect(list).toHaveLength(30);
+    expect(list).toHaveLength(29);
     expect(featuredProducts(list).map((item) => item.name)).toEqual([
       'Ironclad Pomade',
       'Beard Balm',

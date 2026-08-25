@@ -50,7 +50,7 @@ function createMemoryClient() {
 }
 
 describe('BLACKLINE product seed', () => {
-  it('upserts the isolated tenant and thirty products without duplicates', async () => {
+  it('upserts the isolated tenant and twenty-nine products without duplicates', async () => {
     const client = createMemoryClient();
     await seedBlacklineDemoCatalog(client as never);
     await seedBlacklineDemoCatalog(client as never);
@@ -59,7 +59,7 @@ describe('BLACKLINE product seed', () => {
     expect(client.shops.get(BLACKLINE_SHOP_ID)?.id).toBe(BLACKLINE_SHOP_ID);
     expect(client.shops.get(BLACKLINE_SHOP_ID)?.retailEnabled).toBe(false);
     expect(client.products.size).toBe(DEMO_PRODUCTS.length);
-    expect(client.products.size).toBe(30);
+    expect(client.products.size).toBe(29);
     expect([...client.products.values()].every((product) => product.shopId === BLACKLINE_SHOP_ID)).toBe(true);
     expect([...client.products.keys()].some((id) => id.startsWith('demo-product-'))).toBe(false);
     expect(new Set([...client.products.values()].map((product) => product.sortOrder)).size).toBe(
@@ -80,11 +80,20 @@ describe('BLACKLINE product seed', () => {
     expect(client.products.get('bl-product-ironclad-pomade')?.imageUrl).toBe(
       'https://cdn.example/custom-ironclad.jpg',
     );
-    expect(client.products.get('bl-product-shave-cream')?.imageUrl).toBeNull();
+    expect(client.products.get('bl-product-shave-cream')?.imageUrl).toBe('/demo/products/shave-cream.webp');
   });
 });
 
 describe('overlayBlacklineRetailProducts', () => {
+  const LEGACY_DB_PACKSHOT_IDS = [
+    'bl-product-ironclad-pomade',
+    'bl-product-beard-balm',
+    'bl-product-barber-wash',
+    'bl-product-matte-pomade',
+    'bl-product-sea-salt-texture-spray',
+    'bl-product-beard-oil',
+    'bl-product-forge-styling-powder',
+  ] as const;
   const packshotRow = {
     id: 'bl-product-ironclad-pomade',
     name: 'Ironclad Pomade',
@@ -97,8 +106,10 @@ describe('overlayBlacklineRetailProducts', () => {
     sortOrder: 0,
   };
 
-  it('keeps all Live fixture products when Prisma only has the seven packshots', () => {
-    const seven = DEMO_PRODUCTS.filter((product) => product.image.src).map((product) => ({
+  it('keeps all Live fixture products when Prisma only has the seven legacy packshots', () => {
+    const seven = DEMO_PRODUCTS.filter((product) =>
+      (LEGACY_DB_PACKSHOT_IDS as readonly string[]).includes(product.id),
+    ).map((product) => ({
       id: product.id,
       name: product.name,
       description: product.description,
@@ -112,7 +123,7 @@ describe('overlayBlacklineRetailProducts', () => {
     expect(seven).toHaveLength(7);
 
     const products = overlayBlacklineRetailProducts(seven);
-    expect(products).toHaveLength(30);
+    expect(products).toHaveLength(29);
     expect(products.map((product) => product.id).sort()).toEqual(
       DEMO_PRODUCTS.filter((product) => product.active)
         .map((product) => product.id)
@@ -123,7 +134,7 @@ describe('overlayBlacklineRetailProducts', () => {
     );
   });
 
-  it('overlays a later uploaded image and leaves untitled src empty', () => {
+  it('overlays a later uploaded image and falls back to fixture packshots', () => {
     const products = overlayBlacklineRetailProducts([
       { ...packshotRow, imageUrl: 'https://cdn.example/custom-ironclad.jpg' },
       {
@@ -142,7 +153,9 @@ describe('overlayBlacklineRetailProducts', () => {
     expect(products.find((product) => product.id === 'bl-product-ironclad-pomade')?.image.src).toBe(
       'https://cdn.example/custom-ironclad.jpg',
     );
-    expect(products.find((product) => product.id === 'bl-product-shave-cream')?.image.src).toBe('');
+    expect(products.find((product) => product.id === 'bl-product-shave-cream')?.image.src).toBe(
+      '/demo/products/shave-cream.webp',
+    );
     expect(products.every((product) => !product.image.src.startsWith('http://placehold'))).toBe(true);
   });
 
@@ -159,8 +172,8 @@ describe('overlayBlacklineRetailProducts', () => {
       expect(product.requiresOptions).toBe(false);
     }
     const stylingSet = carousel.find((product) => product.id === 'bl-product-essential-styling-set');
-    expect(stylingSet?.imageUrl).toBeNull();
-    expect(stylingSet?.pricePence).toBeGreaterThan(0);
+    expect(stylingSet?.imageUrl).toBe('/demo/products/essential-styling-set.webp');
+    expect(stylingSet?.pricePence).toBe(3800);
   });
 
   it('selects ten unique landing rail products with featured first', () => {

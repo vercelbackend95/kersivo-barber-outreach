@@ -38,15 +38,6 @@ function packshot(
   return { src, width, height, alt, sizes: PRODUCT_IMAGE_SIZES, ...(focalPoint ? { focalPoint } : {}) };
 }
 
-function untitled(name: string): DemoProduct['image'] {
-  return {
-    src: '',
-    width: 1200,
-    height: 1200,
-    alt: `${name} in the fictional BLACKLINE shop.`,
-    sizes: PRODUCT_IMAGE_SIZES,
-  };
-}
 
 type ProductDraft = Omit<DemoProduct, 'image'> & { image: DemoProduct['image'] };
 
@@ -108,12 +99,17 @@ export const DEMO_PRODUCTS: readonly DemoProduct[] = [
     slug: 'essential-styling-set',
     name: 'Essential Styling Set',
     description: 'Pomade, powder and a pocket comb packed for the chair or the kit bag.',
-    pricePence: 3200,
+    pricePence: 3800,
     featured: true,
     category: 'GIFT_SETS',
     sortOrder: 3,
     active: true,
-    image: untitled('Essential Styling Set'),
+    image: packshot(
+      '/demo/products/essential-styling-set.webp',
+      'Essential Styling Set with texture spray, barber wash and styling clay in the fictional BLACKLINE shop.',
+      1254,
+      1254,
+    ),
   },
   {
     id: 'bl-product-matte-pomade',
@@ -193,7 +189,12 @@ export const DEMO_PRODUCTS: readonly DemoProduct[] = [
     category: 'STYLING',
     sortOrder: 8,
     active: true,
-    image: untitled('Fibre Paste'),
+    image: packshot(
+      '/demo/products/fibre-paste.webp',
+      'Black jar labelled Fibre Paste in the fictional BLACKLINE shop.',
+      1254,
+      1254,
+    ),
   },
   {
     id: 'bl-product-matte-clay',
@@ -205,7 +206,12 @@ export const DEMO_PRODUCTS: readonly DemoProduct[] = [
     category: 'STYLING',
     sortOrder: 9,
     active: true,
-    image: untitled('Matte Clay'),
+    image: packshot(
+      '/demo/products/matte-clay.webp',
+      'Matte black tin labelled Matte Clay in the fictional BLACKLINE shop.',
+      1122,
+      1402,
+    ),
   },
   {
     id: 'bl-product-styling-cream',
@@ -217,7 +223,12 @@ export const DEMO_PRODUCTS: readonly DemoProduct[] = [
     category: 'STYLING',
     sortOrder: 10,
     active: true,
-    image: untitled('Styling Cream'),
+    image: packshot(
+      '/demo/products/styling-cream.webp',
+      'Black tube labelled Styling Cream in the fictional BLACKLINE shop.',
+      1122,
+      1402,
+    ),
   },
   {
     id: 'bl-product-daily-conditioner',
@@ -229,7 +240,12 @@ export const DEMO_PRODUCTS: readonly DemoProduct[] = [
     category: 'HAIR_WASH',
     sortOrder: 11,
     active: true,
-    image: untitled('Daily Conditioner'),
+    image: packshot(
+      '/demo/products/daily-conditioner.webp',
+      'Black bottle labelled Daily Conditioner in the fictional BLACKLINE shop.',
+      1122,
+      1402,
+    ),
   },
   {
     id: 'bl-product-scalp-scrub',
@@ -241,7 +257,12 @@ export const DEMO_PRODUCTS: readonly DemoProduct[] = [
     category: 'HAIR_WASH',
     sortOrder: 12,
     active: true,
-    image: untitled('Scalp Scrub'),
+    image: packshot(
+      '/demo/products/scalp-scrub.webp',
+      'Jar labelled Scalp Scrub in the fictional BLACKLINE shop.',
+      1122,
+      1402,
+    ),
   },
   {
     id: 'bl-product-clarifying-rinse',
@@ -253,7 +274,12 @@ export const DEMO_PRODUCTS: readonly DemoProduct[] = [
     category: 'HAIR_WASH',
     sortOrder: 13,
     active: true,
-    image: untitled('Clarifying Rinse'),
+    image: packshot(
+      '/demo/products/clarifying-rinse.webp',
+      'Bottle labelled Clarifying Rinse in the fictional BLACKLINE shop.',
+      1122,
+      1402,
+    ),
   },
   {
     id: 'bl-product-beard-wash',
@@ -265,7 +291,12 @@ export const DEMO_PRODUCTS: readonly DemoProduct[] = [
     category: 'BEARD_CARE',
     sortOrder: 14,
     active: true,
-    image: untitled('Beard Wash'),
+    image: packshot(
+      '/demo/products/beard-wash.webp',
+      'Black bottle labelled Beard Wash in the fictional BLACKLINE shop.',
+      1122,
+      1402,
+    ),
   },
   {
     id: 'bl-product-beard-butter',
@@ -277,7 +308,12 @@ export const DEMO_PRODUCTS: readonly DemoProduct[] = [
     category: 'BEARD_CARE',
     sortOrder: 15,
     active: true,
-    image: untitled('Beard Butter'),
+    image: packshot(
+      '/demo/products/beard-butter.webp',
+      'Tin labelled Beard Butter in the fictional BLACKLINE shop.',
+      1122,
+      1402,
+    ),
   },
   {
     id: 'bl-product-moustache-wax',
@@ -289,7 +325,12 @@ export const DEMO_PRODUCTS: readonly DemoProduct[] = [
     category: 'BEARD_CARE',
     sortOrder: 16,
     active: true,
-    image: untitled('Moustache Wax'),
+    image: packshot(
+      '/demo/products/moustache-wax.webp',
+      'Small tin labelled Moustache Wax in the fictional BLACKLINE shop.',
+      1254,
+      1254,
+    ),
   },
   {
     id: 'bl-product-shave-cream',
@@ -301,7 +342,12 @@ export const DEMO_PRODUCTS: readonly DemoProduct[] = [
     category: 'SHAVE_AND_SKIN',
     sortOrder: 17,
     active: true,
-    image: untitled('Shave Cream'),
+    image: packshot(
+      '/demo/products/shave-cream.webp',
+      'Tin labelled Shave Cream in the fictional BLACKLINE shop.',
+      1122,
+      1402,
+    ),
   },
   {
     id: 'bl-product-aftershave-balm',
@@ -313,7 +359,12 @@ export const DEMO_PRODUCTS: readonly DemoProduct[] = [
     category: 'SHAVE_AND_SKIN',
     sortOrder: 18,
     active: true,
-    image: untitled('Aftershave Balm'),
+    image: packshot(
+      '/demo/products/aftershave-balm.webp',
+      'Tube labelled Aftershave Balm in the fictional BLACKLINE shop.',
+      1122,
+      1402,
+    ),
   },
   {
     id: 'bl-product-face-wash',
@@ -325,7 +376,12 @@ export const DEMO_PRODUCTS: readonly DemoProduct[] = [
     category: 'SHAVE_AND_SKIN',
     sortOrder: 19,
     active: true,
-    image: untitled('Face Wash'),
+    image: packshot(
+      '/demo/products/face-wash.webp',
+      'Tube labelled Face Wash in the fictional BLACKLINE shop.',
+      1122,
+      1402,
+    ),
   },
   {
     id: 'bl-product-daily-moisturiser',
@@ -337,7 +393,12 @@ export const DEMO_PRODUCTS: readonly DemoProduct[] = [
     category: 'SHAVE_AND_SKIN',
     sortOrder: 20,
     active: true,
-    image: untitled('Daily Moisturiser'),
+    image: packshot(
+      '/demo/products/daily-moisturiser.webp',
+      'Pump bottle labelled Daily Moisturiser in the fictional BLACKLINE shop.',
+      1122,
+      1402,
+    ),
   },
   {
     id: 'bl-product-cutting-comb',
@@ -349,7 +410,12 @@ export const DEMO_PRODUCTS: readonly DemoProduct[] = [
     category: 'TOOLS',
     sortOrder: 21,
     active: true,
-    image: untitled('Cutting Comb'),
+    image: packshot(
+      '/demo/products/cutting-comb.webp',
+      'Black cutting comb in the fictional BLACKLINE shop.',
+      1254,
+      1254,
+    ),
   },
   {
     id: 'bl-product-boar-brush',
@@ -361,7 +427,12 @@ export const DEMO_PRODUCTS: readonly DemoProduct[] = [
     category: 'TOOLS',
     sortOrder: 22,
     active: true,
-    image: untitled('Boar Bristle Brush'),
+    image: packshot(
+      '/demo/products/boar-bristle-brush.webp',
+      'Boar bristle brush in the fictional BLACKLINE shop.',
+      1254,
+      1254,
+    ),
   },
   {
     id: 'bl-product-neck-duster',
@@ -373,79 +444,97 @@ export const DEMO_PRODUCTS: readonly DemoProduct[] = [
     category: 'TOOLS',
     sortOrder: 23,
     active: true,
-    image: untitled('Neck Duster'),
+    image: packshot(
+      '/demo/products/neck-duster.webp',
+      'Neck duster brush in the fictional BLACKLINE shop.',
+      1122,
+      1402,
+    ),
   },
   {
     id: 'bl-product-clipper-guard-set',
     slug: 'clipper-guard-set',
     name: 'Clipper Guard Set',
     description: 'Numbered guards for home tidy-ups between appointments.',
-    pricePence: 1900,
+    pricePence: 3400,
     featured: false,
     category: 'TOOLS',
     sortOrder: 24,
     active: true,
-    image: untitled('Clipper Guard Set'),
-  },
-  {
-    id: 'bl-product-barber-cape',
-    slug: 'barber-cape',
-    name: 'Barber Cape',
-    description: 'Lightweight cape that packs small. Collect from the shop.',
-    pricePence: 2400,
-    featured: false,
-    category: 'TOOLS',
-    sortOrder: 25,
-    active: true,
-    image: untitled('Barber Cape'),
+    image: packshot(
+      '/demo/products/clipper-guard-set.webp',
+      'Clipper guard set in a presentation box in the fictional BLACKLINE shop.',
+      1254,
+      1254,
+    ),
   },
   {
     id: 'bl-product-beard-kit',
     slug: 'beard-kit',
     name: 'Beard Kit',
     description: 'Wash, oil and balm together for a full beard routine.',
-    pricePence: 4200,
+    pricePence: 5800,
     featured: false,
     category: 'GIFT_SETS',
     sortOrder: 26,
     active: true,
-    image: untitled('Beard Kit'),
+    image: packshot(
+      '/demo/products/beard-kit.webp',
+      'Beard Kit with wash, oil, balm and grooming tools in the fictional BLACKLINE shop.',
+      1402,
+      1122,
+    ),
   },
   {
     id: 'bl-product-travel-grooming-set',
     slug: 'travel-grooming-set',
     name: 'Travel Grooming Set',
     description: 'Wash, cream and a comb sized for a week away.',
-    pricePence: 2800,
+    pricePence: 4200,
     featured: false,
     category: 'GIFT_SETS',
     sortOrder: 27,
     active: true,
-    image: untitled('Travel Grooming Set'),
+    image: packshot(
+      '/demo/products/travel-grooming-set.webp',
+      'Travel grooming set with pouch, wash, oil, brush, comb and scissors in the fictional BLACKLINE shop.',
+      1402,
+      1122,
+    ),
   },
   {
     id: 'bl-product-shop-gift-box',
     slug: 'shop-gift-box',
     name: 'Shop Gift Box',
     description: 'A ready-to-collect box: styling, wash and a finishing tool.',
-    pricePence: 4500,
+    pricePence: 6500,
     featured: false,
     category: 'GIFT_SETS',
     sortOrder: 28,
     active: true,
-    image: untitled('Shop Gift Box'),
+    image: packshot(
+      '/demo/products/shop-gift-box.webp',
+      'Shop gift box with styling, wash and finishing tools in the fictional BLACKLINE shop.',
+      1402,
+      1122,
+    ),
   },
   {
     id: 'bl-product-hot-towel-kit',
     slug: 'hot-towel-kit',
     name: 'Hot Towel Home Kit',
-    description: 'Shave cream and aftershave balm for a slower shave at home.',
-    pricePence: 2800,
+    description: 'Towel warmer, barber towels, refresh spray and shave accessories for a slower shave at home.',
+    pricePence: 9800,
     featured: false,
     category: 'GIFT_SETS',
     sortOrder: 29,
     active: true,
-    image: untitled('Hot Towel Home Kit'),
+    image: packshot(
+      '/demo/products/hot-towel-kit.webp',
+      'Hot Towel Home Kit with towel warmer and shave accessories in the fictional BLACKLINE shop.',
+      1402,
+      1122,
+    ),
   },
 ] as const satisfies readonly ProductDraft[];
 
