@@ -1,6 +1,13 @@
 ---
 import { CONSENT_COOKIE_NAME, CONSENT_VERSION } from '@/lib/consent/config';
 
+interface Props {
+  /** Sent as a GA4 event parameter — register `site_section` as a custom dimension to report on it. */
+  siteSection?: string;
+}
+
+const { siteSection = '' } = Astro.props;
+
 /** Empty when unset — Basic Consent Mode will not load GA4 without an explicit public ID. */
 const gaMeasurementId = (
   import.meta.env.PUBLIC_GA4_MEASUREMENT_ID ??
@@ -17,6 +24,8 @@ const googleAdsId = (
 )
   .toString()
   .trim();
+
+const gaSiteSection = siteSection.trim();
 ---
 
 {/* Consent Mode v2 defaults must run before any Google tag. Basic mode: do not load gtag.js until consent. */}
@@ -25,6 +34,7 @@ const googleAdsId = (
   define:vars={{
     gaMeasurementId,
     googleAdsId,
+    gaSiteSection,
     consentCookieName: CONSENT_COOKIE_NAME,
     consentVersion: CONSENT_VERSION,
   }}
@@ -90,6 +100,12 @@ const googleAdsId = (
       document.head.appendChild(script);
     }
 
+    function gaConfig() {
+      var cfg = { anonymize_ip: true };
+      if (gaSiteSection) cfg.site_section = gaSiteSection;
+      return cfg;
+    }
+
     function syncTags(prefs) {
       var adsGranted = prefs.advertisingMeasurement || prefs.personalisedAdvertising;
       var wantAnalytics = prefs.analytics && gaMeasurementId;
@@ -106,8 +122,8 @@ const googleAdsId = (
       var primaryId = wantAnalytics ? gaMeasurementId : googleAdsId;
       loadScript(primaryId, function () {
         gtag('js', new Date());
-        if (wantAnalytics && !window.__kersivoGa4Configured) {
-          gtag('config', gaMeasurementId, { anonymize_ip: true });
+        if (wantAnalytics) {
+          gtag('config', gaMeasurementId, gaConfig());
           window.__kersivoGa4Configured = true;
         }
         if (wantAds && !window.__kersivoAdsConfigured) {
@@ -116,6 +132,27 @@ const googleAdsId = (
         }
       });
     }
+
+    function trackSpaPageView() {
+      if (!gaSiteSection || typeof gtag !== 'function' || !gaMeasurementId) return;
+      var prefs = readPrefs();
+      if (!prefs || !prefs.analytics) return;
+      gtag('config', gaMeasurementId, {
+        page_path: window.location.pathname + window.location.search,
+        page_title: document.title,
+        site_section: gaSiteSection,
+        anonymize_ip: true,
+      });
+    }
+
+    var spaPageLoadSeen = false;
+    document.addEventListener('astro:page-load', function () {
+      if (!spaPageLoadSeen) {
+        spaPageLoadSeen = true;
+        return;
+      }
+      trackSpaPageView();
+    });
 
     window.__kersivoTagIds = {
       gaMeasurementId: gaMeasurementId,

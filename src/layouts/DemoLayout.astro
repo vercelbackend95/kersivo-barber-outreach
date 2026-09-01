@@ -1,8 +1,11 @@
 ---
 import { ClientRouter } from 'astro:transitions';
+import CookieConsentMount from '@/components/consent/CookieConsentMount.astro';
 import DemoBanner from '@/components/demo/DemoBanner.astro';
 import DemoFooter from '@/components/demo/DemoFooter.astro';
 import DemoNav from '@/components/demo/DemoNav.astro';
+import InitDataTrackScript from '@/components/InitDataTrackScript.astro';
+import GoogleAnalytics from '@/components/seo/GoogleAnalytics.astro';
 import CartDrawerMount from '@/components/shop/CartDrawerMount.astro';
 import { BLACKLINE_SHOP_ID, DEMO_PRODUCT_IDS } from '@/lib/demo/products';
 import { DEMO_DEFAULT_DESCRIPTION, DEMO_SHOP_NAME } from '@/lib/demo/site';
@@ -38,8 +41,9 @@ const currentPath = Astro.url.pathname;
 ---
 
 <!doctype html>
-<html lang="en-GB" data-theme="blackline" transition:animate="none">
+<html lang="en-GB" data-theme="blackline" data-app="demo" transition:animate="none">
   <head>
+    <GoogleAnalytics siteSection="demo" />
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
     <title>{title}</title>
@@ -102,6 +106,10 @@ const currentPath = Astro.url.pathname;
         />
       </div>
     </div>
+    <div transition:persist="ks-cookie">
+      <CookieConsentMount />
+    </div>
+    <InitDataTrackScript />
     <script>
       import { bindRouteTransition } from '@/lib/demo/routeTransition';
 
