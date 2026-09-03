@@ -77,6 +77,20 @@ enum ProductCategory {
   SHAVE_AND_SKIN
 }
 
+enum RecommendationSetStatus {
+  BUILDING
+  READY
+  SUPERSEDED
+  FAILED
+}
+
+enum RecommendationJobStatus {
+  IDLE
+  PENDING
+  PROCESSING
+  FAILED
+}
+
 // Dashboard login role within one shop (shopId).
 enum ShopRole {
   OWNER
@@ -230,6 +244,11 @@ model ShopSettings {
   clientOnboardingBarberProfiles     ClientOnboardingBarberProfile[]
   clientOnboardingAssets             ClientOnboardingAsset[]
   previewSessions                    ShopPreviewSession[]
+  recommendationState                ShopRecommendationState?
+  serviceSemanticProfiles            ServiceSemanticProfile[]
+  productSemanticProfiles            ProductSemanticProfile[]
+  recommendationSets                 RecommendationSet[]
+  recommendationSetItems             RecommendationSetItem[]
 }
 
 // Login membership for one shop — roles never keyed by shop name.
@@ -351,6 +370,8 @@ model Service {
   shop            ShopSettings    @relation(fields: [shopId], references: [id], onDelete: Cascade)
   bookings        Booking[]
   barberServices  BarberService[]
+  semanticProfile ServiceSemanticProfile?
+  recommendationSetItems RecommendationSetItem[]
 
   @@index([shopId, isActive, displayOrder])
   @@index([isActive, displayOrder])
@@ -624,6 +645,8 @@ model Product {
 
   shop       ShopSettings @relation(fields: [shopId], references: [id], onDelete: Cascade)
   orderItems OrderItem[]
+  semanticProfile ProductSemanticProfile?
+  recommendationSetItems RecommendationSetItem[]
 
   @@unique([shopId, sortOrder])
   @@index([shopId, active])
@@ -990,6 +1013,130 @@ model ClientOnboardingAsset {
   @@index([shopId, kind])
   @@index([onboardingId])
   @@unique([onboardingId, storagePath])
+}
+
+/// Per-shop Smart Retail recommendation catalogue state (versioning, debounce, publish pointer).
+model ShopRecommendationState {
+  shopId                     String                  @id
+  catalogueVersion           Int                     @default(0)
+  publishedCatalogueVersion  Int                     @default(0)
+  publishedSetId             String?
+  /// Points at RecommendationSet.id; same-shop + READY status enforced in reader/publish (no composite DB FK).
+  pendingCatalogueVersion    Int?
+  rebuildAfter               DateTime?
+  jobStatus                  RecommendationJobStatus @default(IDLE)
+  processingCatalogueVersion Int?
+  processingLockId           String?
+  processingLockExpiresAt    DateTime?
+  attemptCount               Int                     @default(0)
+  nextAttemptAt              DateTime?
+  lastErrorCode              String?
+  lastErrorAt                DateTime?
+  taxonomyVersion            String                  @default("2026-09-v1")
+  createdAt                  DateTime                @default(now())
+  updatedAt                  DateTime                @updatedAt
+
+  shop         ShopSettings      @relation(fields: [shopId], references: [id], onDelete: Cascade)
+  publishedSet RecommendationSet? @relation("PublishedRecommendationSet", fields: [publishedSetId], references: [id], onDelete: SetNull)
+
+  @@index([rebuildAfter, jobStatus])
+  @@index([nextAttemptAt, jobStatus])
+}
+
+/// AI-generated semantic profile for a service (catalogue text only).
+model ServiceSemanticProfile {
+  id              String   @id @default(cuid())
+  shopId          String
+  serviceId       String   @unique
+  contentHash     String
+  taxonomyVersion String
+  schemaVersion   String
+  profile         Json
+  confidence      Float
+  modelId         String
+  promptVersion   String
+  classifiedAt    DateTime
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  shop    ShopSettings @relation(fields: [shopId], references: [id], onDelete: Cascade)
+  service Service      @relation(fields: [serviceId], references: [id], onDelete: Cascade)
+
+  @@index([shopId])
+  @@index([shopId, contentHash])
+}
+
+/// AI-generated semantic profile for a product (catalogue text only).
+model ProductSemanticProfile {
+  id              String   @id @default(cuid())
+  shopId          String
+  productId       String   @unique
+  contentHash     String
+  taxonomyVersion String
+  schemaVersion   String
+  profile         Json
+  confidence      Float
+  modelId         String
+  promptVersion   String
+  classifiedAt    DateTime
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  shop    ShopSettings @relation(fields: [shopId], references: [id], onDelete: Cascade)
+  product Product      @relation(fields: [productId], references: [id], onDelete: Cascade)
+
+  @@index([shopId])
+  @@index([shopId, contentHash])
+}
+
+/// Immutable recommendation set built for a catalogue version.
+model RecommendationSet {
+  id               String                  @id @default(cuid())
+  shopId           String
+  catalogueVersion Int
+  taxonomyVersion  String
+  schemaVersion    String
+  status           RecommendationSetStatus
+  modelId          String?
+  rerankModelId    String?
+  promptVersion    String
+  buildStartedAt   DateTime
+  buildFinishedAt  DateTime?
+  errorCode        String?
+  stats            Json?
+  createdAt        DateTime                @default(now())
+
+  shop              ShopSettings              @relation(fields: [shopId], references: [id], onDelete: Cascade)
+  items             RecommendationSetItem[]
+  publishedForShops ShopRecommendationState[] @relation("PublishedRecommendationSet")
+
+  @@index([shopId, catalogueVersion])
+  @@index([shopId, status])
+}
+
+/// Service–product recommendation edge within a set (max 4 ranks per service).
+model RecommendationSetItem {
+  id                 String   @id @default(cuid())
+  setId              String
+  shopId             String
+  serviceId          String
+  productId          String
+  rank               Int
+  deterministicScore Float
+  rerankPosition     Int?
+  reasonCodes        String[] @default([])
+  confidenceGate     Float
+  createdAt          DateTime @default(now())
+
+  set     RecommendationSet @relation(fields: [setId], references: [id], onDelete: Cascade)
+  shop    ShopSettings      @relation(fields: [shopId], references: [id], onDelete: Cascade)
+  service Service           @relation(fields: [serviceId], references: [id], onDelete: Cascade)
+  product Product           @relation(fields: [productId], references: [id], onDelete: Cascade)
+
+  @@unique([setId, serviceId, productId])
+  @@unique([setId, serviceId, rank])
+  @@index([setId, serviceId])
+  @@index([shopId, serviceId])
 }
 
 /// Guest (no-login) workspace onboarding — opaque cookie binds to provisional shop.

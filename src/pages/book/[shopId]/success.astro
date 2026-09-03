@@ -1,6 +1,7 @@
 ---
 import MinimalLayout from '@/layouts/MinimalLayout.astro';
 import BookingConfirmationPanel from '@/components/booking/BookingConfirmationPanel';
+import BookingRecommendationsRail from '@/components/booking/BookingRecommendationsRail';
 import BookingThemeRoot from '@/components/booking/BookingThemeRoot';
 import { prisma } from '@/lib/db/client';
 import { retrieveBookingDepositSession } from '@/lib/shop/stripeConnect';
@@ -31,6 +32,7 @@ type ConfirmSummary = {
 let ok = false;
 let errorMessage = 'Unable to confirm deposit payment.';
 let summary: ConfirmSummary | null = null;
+let serviceId: string | null = null;
 let shopTimezone = 'Europe/London';
 
 if (shopId && sessionId) {
@@ -67,6 +69,7 @@ if (shopId && sessionId) {
         ) {
           const confirmed = result.booking;
           const serviceName = confirmed.serviceNameAtBooking ?? confirmed.service.name;
+          serviceId = confirmed.service.id;
           summary = {
             service: serviceName,
             barber: confirmed.barber.name,
@@ -113,16 +116,28 @@ const calendarHref =
       <div class="booking-form-content">
         {
           ok && summary ? (
-            <BookingConfirmationPanel
-              client:load
-              variant="booked"
-              summary={summary}
-              postConfirmCta={
-                calendarHref
-                  ? { label: 'Add to your calendar', href: calendarHref }
-                  : null
-              }
-            />
+            <>
+              <BookingConfirmationPanel
+                client:load
+                variant="booked"
+                summary={summary}
+                postConfirmCta={
+                  calendarHref
+                    ? { label: 'Add to your calendar', href: calendarHref }
+                    : null
+                }
+              />
+              {serviceId ? (
+                <BookingRecommendationsRail
+                  client:load
+                  shopId={shopId}
+                  serviceId={serviceId}
+                  productHrefBase={`/shop/${shopId}`}
+                  themeId="kersivo"
+                  priceFormat="gbp"
+                />
+              ) : null}
+            </>
           ) : (
             <section class="booking-confirmation booking-confirmation--error" role="alert">
               <div class="booking-confirmation__header">

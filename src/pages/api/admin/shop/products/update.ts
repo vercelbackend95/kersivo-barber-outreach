@@ -7,6 +7,8 @@ import { runSerializableTransaction } from '../../../../../lib/db/serializableTr
 import { normalizeRequestedProductSortOrder, reorderProductWithinShop } from '../../../../../lib/products/sortOrder';
 import { makeBlobPath, uploadPublicImageToBlob } from '../../../../../lib/storage/vercelBlob';
 import { PRODUCT_CATEGORY_VALUES } from '../../../../../lib/shop/productPresentation';
+import { productSemanticFieldsChanged } from '@/lib/recommendations/hash';
+import { scheduleCatalogueRebuild } from '@/lib/recommendations/scheduleCatalogueRebuild';
 const PRODUCT_DESCRIPTION_MAX_LENGTH = 2000;
 const imageUrlSchema = z.string().trim().refine((value) => {
   if (!value) return true;
@@ -31,12 +33,18 @@ async function updateProductWithReorder(shopId: string, payload: UpdatePayload, 
   return runSerializableTransaction(async (tx) => {
     const existing = await tx.product.findFirst({
       where: { id: payload.id, shopId },
-      select: { id: true }
+      select: { id: true, name: true, description: true, category: true, active: true },
     });
 
     if (!existing) {
       throw new Error('Product not found.');
     }
+
+    const beforeSemantic = {
+      name: existing.name,
+      description: existing.description,
+      category: existing.category,
+    };
 
     const requestedSortOrder = normalizeRequestedProductSortOrder(payload.sortOrder);
 
@@ -54,6 +62,16 @@ async function updateProductWithReorder(shopId: string, payload: UpdatePayload, 
     });
 
     const sortOrder = await reorderProductWithinShop(tx, shopId, payload.id, requestedSortOrder);
+
+    const afterSemantic = {
+      name: product.name,
+      description: product.description,
+      category: product.category,
+    };
+    const availabilityChanged = existing.active !== product.active;
+    if (productSemanticFieldsChanged(beforeSemantic, afterSemantic) || availabilityChanged) {
+      await scheduleCatalogueRebuild(shopId, tx);
+    }
 
     return { ...product, sortOrder };
   });

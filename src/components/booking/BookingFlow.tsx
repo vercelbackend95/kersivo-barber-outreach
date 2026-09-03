@@ -1,5 +1,6 @@
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import BookingConfirmationPanel, { type BookingSummary } from './BookingConfirmationPanel';
+import BookingRecommendationsRail from './BookingRecommendationsRail';
 import {
   buildAdminTimelineHref,
   type BookingFlowPresentation,
@@ -19,6 +20,7 @@ import {
   listBlacklineAvailableSlots,
   resolveBlacklineBarberForSlot,
 } from '@/lib/demo/blacklineAvailability';
+import { getDemoRecommendationProducts } from '@/lib/demo/recommendations';
 
 type Service = {
   id: string;
@@ -367,6 +369,7 @@ export default function BookingFlow({
     type: 'booked' | 'rescheduled' | 'demo';
     summary: BookingSummary;
     bookingId?: string;
+    serviceId?: string;
     startAt?: string;
     date?: string;
   } | null>(null);
@@ -778,6 +781,7 @@ export default function BookingFlow({
             reference: sessionReference,
           },
           bookingId: sessionBookingId,
+          serviceId: selectedService?.id,
           date: normalizedDate,
         });
         if (!presentation?.skipCompletionAnalytics && !hasTrackedPublicDemoRef.current) {
@@ -828,6 +832,7 @@ export default function BookingFlow({
             time,
           },
           bookingId: data.booking?.id,
+          serviceId,
           startAt: data.booking?.startAt,
           date: normalizedDate,
         });
@@ -887,6 +892,7 @@ export default function BookingFlow({
           time,
         },
         bookingId: data.booking?.id,
+        serviceId,
         startAt: data.booking?.startAt,
         date: normalizedDate,
       });
@@ -971,6 +977,26 @@ export default function BookingFlow({
                 : null
             }
           />
+          {confirmation.serviceId && publicShopId && (confirmation.type === 'booked' || confirmation.type === 'rescheduled') ? (
+            <BookingRecommendationsRail
+              shopId={publicShopId}
+              serviceId={confirmation.serviceId}
+              productHrefBase={`/shop/${publicShopId}`}
+              themeId="kersivo"
+              priceFormat="gbp"
+            />
+          ) : null}
+          {confirmation.serviceId && persistDemoSessionBooking && confirmation.type === 'demo' ? (
+            <BookingRecommendationsRail
+              shopId="blackline-barbers-demo"
+              serviceId={confirmation.serviceId}
+              productHrefBase="/demo/shop"
+              themeId="blackline"
+              priceFormat="demo"
+              imageFallback="wordmark"
+              demoProducts={getDemoRecommendationProducts(confirmation.serviceId)}
+            />
+          ) : null}
         </div>
       </section>
     );

@@ -57,6 +57,10 @@ export const FUNNEL_EVENTS = {
   blackline_booking_proof_explore_clicked: 'blackline_booking_proof_explore_clicked',
   blackline_booking_proof_get_kersivo_clicked: 'blackline_booking_proof_get_kersivo_clicked',
   blackline_booking_proof_dismissed: 'blackline_booking_proof_dismissed',
+  /** Smart Retail — booking confirmation rail (Phase J prep). */
+  recommendation_set_served: 'recommendation_set_served',
+  recommendation_rail_impression: 'recommendation_rail_impression',
+  recommendation_product_click: 'recommendation_product_click',
 } as const;
 
 export type FunnelEventName = (typeof FUNNEL_EVENTS)[keyof typeof FUNNEL_EVENTS];

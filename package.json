@@ -30,6 +30,8 @@
     "seed:enrich-connor-walsh": "tsx scripts/enrich-client-connor-walsh.ts",
     "seed:client-notes-oliver-reed": "tsx scripts/seed-client-notes-oliver-reed.ts",
     "test": "vitest run",
+    "recommendations:calibrate:dry": "tsx scripts/recommendations/calibrate.ts",
+    "recommendations:calibrate:live": "tsx scripts/recommendations/calibrate.ts --live",
     "typecheck:app": "astro check --tsconfig tsconfig.app.json --minimumFailingSeverity error",
     "typecheck": "npm run typecheck:app",
     "test:consent": "playwright test --config=scripts/consent-verify.playwright.config.mjs",

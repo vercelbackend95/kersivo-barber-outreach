@@ -8,6 +8,7 @@ import { insertProductIntoShopOrder, normalizeRequestedProductSortOrder } from '
 import { makeBlobPath, uploadPublicImageToBlob } from '../../../../../lib/storage/vercelBlob';
 import { prisma } from '../../../../../lib/db/client';
 import { PRODUCT_CATEGORY_VALUES } from '../../../../../lib/shop/productPresentation';
+import { scheduleCatalogueRebuild } from '@/lib/recommendations/scheduleCatalogueRebuild';
 const PRODUCT_DESCRIPTION_MAX_LENGTH = 2000;
 const imageUrlSchema = z.string().trim().refine((value) => {
   if (!value) return true;
@@ -59,6 +60,8 @@ async function createProductWithReorder(shopId: string, payload: CreatePayload, 
     });
 
     const sortOrder = await insertProductIntoShopOrder(tx, shopId, product.id, requestedSortOrder);
+
+    await scheduleCatalogueRebuild(shopId, tx);
 
     return { ...product, sortOrder };
   });

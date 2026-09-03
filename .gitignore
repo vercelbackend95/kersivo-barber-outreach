@@ -32,3 +32,7 @@ public/videos/
 
 # local QA / agent scratch
 tmp/
+
+# Smart Retail calibration harness (fictional data only)
+.calibration-cache/
+calibration-output/

@@ -4,6 +4,7 @@ import type { APIRoute } from 'astro';
 import { z } from 'zod';
 import { requireAdminPermission } from '../../../../../lib/admin/auth';
 import { prisma } from '../../../../../lib/db/client';
+import { scheduleCatalogueRebuild } from '@/lib/recommendations/scheduleCatalogueRebuild';
 
 const toggleSchema = z.object({
   id: z.string().min(1),
@@ -22,19 +23,33 @@ export const POST: APIRoute = async (ctx) => {
 
   try {
     const shopId = access.shopId;
-    const existing = await prisma.product.findFirst({ where: { id: parsed.data.id, shopId }, select: { id: true } });
-    if (!existing) {
-      return new Response(JSON.stringify({ error: 'Product not found.' }), { status: 404 });
-    }
+    const product = await prisma.$transaction(async (tx) => {
+      const existing = await tx.product.findFirst({
+        where: { id: parsed.data.id, shopId },
+        select: { id: true, active: true },
+      });
+      if (!existing) {
+        throw new Error('Product not found.');
+      }
 
-    const product = await prisma.product.update({
-      where: { id: parsed.data.id },
-      data: { [parsed.data.field]: parsed.data.value }
+      const updated = await tx.product.update({
+        where: { id: parsed.data.id },
+        data: { [parsed.data.field]: parsed.data.value }
+      });
+
+      if (parsed.data.field === 'active' && existing.active !== parsed.data.value) {
+        await scheduleCatalogueRebuild(shopId, tx);
+      }
+
+      return updated;
     });
 
     return new Response(JSON.stringify({ product }), { status: 200 });
   } catch (error) {
     console.error('Failed to toggle product field', error);
+    if (error instanceof Error && error.message === 'Product not found.') {
+      return new Response(JSON.stringify({ error: error.message }), { status: 404 });
+    }
     return new Response(JSON.stringify({ error: 'Unable to update product.' }), { status: 500 });
   }
 };

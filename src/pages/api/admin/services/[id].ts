@@ -10,6 +10,8 @@ import {
 } from '../../../../lib/admin/serviceCategories';
 import { unfeatureOtherServicesInCategory } from '../../../../lib/admin/serviceFeatured';
 import { prisma } from '../../../../lib/db/client';
+import { serviceSemanticFieldsChanged } from '@/lib/recommendations/hash';
+import { scheduleCatalogueRebuild } from '@/lib/recommendations/scheduleCatalogueRebuild';
 
 const updateSchema = z.object({
   name: z.string().trim().min(1).max(120).optional(),
@@ -47,9 +49,22 @@ export const PATCH: APIRoute = async (ctx) => {
 
   const owned = await prisma.service.findFirst({
     where: { id, shopId },
-    select: { id: true, category: true, featured: true }
+    select: {
+      id: true,
+      category: true,
+      featured: true,
+      name: true,
+      description: true,
+      isActive: true,
+    },
   });
   if (!owned) return new Response(JSON.stringify({ error: 'Service not found.' }), { status: 404 });
+
+  const beforeSemantic = {
+    name: owned.name,
+    description: owned.description,
+    category: owned.category,
+  };
 
   const nextFeatured = data.featured ?? owned.featured;
   const effectiveCategory = normalizedCategory ?? owned.category;
@@ -114,6 +129,16 @@ export const PATCH: APIRoute = async (ctx) => {
       normalizedCategory !== undefined
         ? await ensureCustomServiceCategory(shopId, normalizedCategory, tx)
         : await loadMergedServiceCategories(shopId, tx);
+
+    const afterSemantic = {
+      name: updated.name,
+      description: updated.description,
+      category: updated.category,
+    };
+    const availabilityChanged = owned.isActive !== updated.isActive;
+    if (serviceSemanticFieldsChanged(beforeSemantic, afterSemantic) || availabilityChanged) {
+      await scheduleCatalogueRebuild(shopId, tx);
+    }
 
     return { service: updated, categories: nextCategories };
   });

@@ -11,6 +11,7 @@ import {
 } from '../../../lib/admin/serviceCategories';
 import { unfeatureOtherServicesInCategory } from '../../../lib/admin/serviceFeatured';
 import { prisma } from '../../../lib/db/client';
+import { scheduleCatalogueRebuild } from '@/lib/recommendations/scheduleCatalogueRebuild';
 
 const createSchema = z.object({
   name: z.string().trim().min(1, 'Name is required').max(120),
@@ -139,6 +140,7 @@ export const POST: APIRoute = async (ctx) => {
     }
 
     const nextCategories = await ensureCustomServiceCategory(shopId, category, tx);
+    await scheduleCatalogueRebuild(shopId, tx);
     return { service: created, categories: nextCategories };
   });
 

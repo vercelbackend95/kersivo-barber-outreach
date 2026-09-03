@@ -45,6 +45,10 @@
       "schedule": "*/5 * * * *"
     },
     {
+      "path": "/api/cron/recommendation-rebuild",
+      "schedule": "*/2 * * * *"
+    },
+    {
       "path": "/api/cron/saas-lifecycle",
       "schedule": "0 6 * * *"
     },
