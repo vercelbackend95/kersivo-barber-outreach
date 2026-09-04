@@ -10,6 +10,7 @@ import {
   requireOnboardingAccess,
 } from '@/lib/admin/onboarding';
 import { prisma } from '@/lib/db/client';
+import { scheduleCatalogueRebuild } from '@/lib/recommendations/scheduleCatalogueRebuild';
 
 const serviceSchema = z.object({
   id: z.string().trim().min(1).optional(),
@@ -87,6 +88,8 @@ export const PUT: APIRoute = async (ctx) => {
           data: { isActive: false },
         });
       }
+
+      await scheduleCatalogueRebuild(shopId, tx);
     });
 
     await linkAllServicesToAllBarbers(shopId);

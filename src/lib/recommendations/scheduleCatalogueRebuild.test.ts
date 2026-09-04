@@ -15,7 +15,7 @@ vi.mock('@/lib/db/client', () => ({
   },
 }));
 
-import { REBUILD_DEBOUNCE_MS } from './constants';
+import { REBUILD_DEBOUNCE_MS, TAXONOMY_VERSION } from './constants';
 import { bumpCatalogueVersionOnce, scheduleCatalogueRebuild } from './scheduleCatalogueRebuild';
 
 describe('scheduleCatalogueRebuild', () => {
@@ -50,12 +50,28 @@ describe('scheduleCatalogueRebuild', () => {
         nextAttemptAt: null,
         lastErrorCode: null,
         lastErrorAt: null,
+        taxonomyVersion: TAXONOMY_VERSION,
       },
     });
     const data = updateMany.mock.calls[0]?.[0]?.data as Record<string, unknown>;
     expect(data).not.toHaveProperty('processingLockId');
     expect(data).not.toHaveProperty('processingLockExpiresAt');
     expect(data).not.toHaveProperty('processingCatalogueVersion');
+  });
+
+  it('creates ShopRecommendationState with active TAXONOMY_VERSION', async () => {
+    findUniqueOrThrow.mockResolvedValue({ catalogueVersion: 0 });
+    updateMany.mockResolvedValue({ count: 1 });
+
+    await scheduleCatalogueRebuild('shop-abc');
+
+    expect(upsert).toHaveBeenCalledWith(
+      expect.objectContaining({
+        create: expect.objectContaining({
+          taxonomyVersion: '2026-09-v2',
+        }),
+      }),
+    );
   });
 
   it('retries CAS when concurrent writers collide so versions become N+1 then N+2', async () => {

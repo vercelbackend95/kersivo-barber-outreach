@@ -43,6 +43,7 @@ import {
 import { createRerankPool } from './rerankPool';
 import { createEmptyRerankStats, recordRerankFallback } from './rerankStats';
 import { scoreEligibleCandidatesForService } from './scorer';
+import { bootstrapEligibleRecommendationShops } from './bootstrapEligibleShops';
 import {
   acquireShopLock,
   buildOwnedStateWhere,
@@ -86,6 +87,7 @@ async function publishAtomically(
         nextAttemptAt: null,
         lastErrorCode: null,
         lastErrorAt: null,
+        taxonomyVersion: TAXONOMY_VERSION,
       },
     });
 
@@ -514,6 +516,8 @@ async function processShop(shopId: string, targetVersion: number): Promise<boole
 }
 
 export async function processDueRecommendationRebuilds(now = new Date()): Promise<ProcessorSummary> {
+  await bootstrapEligibleRecommendationShops(now);
+
   const due = await prisma.shopRecommendationState.findMany({
     where: {
       OR: [

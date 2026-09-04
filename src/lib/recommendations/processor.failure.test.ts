@@ -11,11 +11,17 @@ import {
 import { createInMemoryRecommendationDb } from './testStateStore';
 
 const shopFindMany = vi.fn();
+const shopSettingsFindMany = vi.fn();
+const stateFindUnique = vi.fn();
 
 vi.mock('@/lib/db/client', () => ({
   prisma: {
+    shopSettings: {
+      findMany: (...args: unknown[]) => shopSettingsFindMany(...args),
+    },
     shopRecommendationState: {
       findMany: (...args: unknown[]) => shopFindMany(...args),
+      findUnique: (...args: unknown[]) => stateFindUnique(...args),
     },
   },
 }));
@@ -24,6 +30,11 @@ import { processDueRecommendationRebuilds } from './processor';
 
 describe('processor failure lifecycle (Phase 3B)', () => {
   const ctx = { shopId: 'shop-1', lockId: 'lock-worker-2', targetVersion: 2 };
+
+  beforeEach(() => {
+    shopSettingsFindMany.mockResolvedValue([]);
+    stateFindUnique.mockResolvedValue(null);
+  });
 
   it('stale failure after catalogue bump marks SUPERSEDED and releases lock without attempt increment', async () => {
     const store = createInMemoryRecommendationDb({

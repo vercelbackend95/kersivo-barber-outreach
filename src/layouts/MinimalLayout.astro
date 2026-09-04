@@ -5,6 +5,7 @@ import CookieConsentMount from '@/components/consent/CookieConsentMount.astro';
 import FaviconLinks from '@/components/seo/FaviconLinks.astro';
 import SeoHead from '@/components/seo/SeoHead.astro';
 import RouteTransitionRoot from '@/components/navigation/RouteTransitionRoot.astro';
+import CartDrawerMount from '@/components/shop/CartDrawerMount.astro';
 import type { PageSeo } from '@/lib/seo/meta';
 import '@/styles/motion.css';
 import '@/styles/components/route-transition.css';
@@ -17,6 +18,13 @@ interface Props extends PageSeo {
   viewportContent?: string;
   /** When false, skip cookie banner/launcher (e.g. /book* sticky CTA). Default true. */
   showCookieConsent?: boolean;
+  /**
+   * Opt-in production retail cart for real tenant booking pages.
+   * Do not enable for demo, preview, or admin test-book flows.
+   */
+  enableProductionCart?: boolean;
+  shopId?: string;
+  shopName?: string;
 }
 
 const {
@@ -34,6 +42,9 @@ const {
   htmlClass,
   viewportContent = 'width=device-width, initial-scale=1',
   showCookieConsent = true,
+  enableProductionCart = false,
+  shopId,
+  shopName,
 } = Astro.props;
 
 const path = Astro.url.pathname;
@@ -44,6 +55,12 @@ const isAdminSurface =
   path === '/demo/admin' ||
   path.startsWith('/demo/admin/');
 const app = isAdminSurface ? 'admin' : 'flow';
+
+const productionCartShopId = enableProductionCart ? shopId?.trim() || '' : '';
+const productionCartEnabled = Boolean(productionCartShopId);
+const cartNamespace = productionCartEnabled ? { shopId: productionCartShopId } : null;
+const cartShopName = shopName?.trim() || 'Shop';
+const cartExploreHref = productionCartEnabled ? `/shop/${productionCartShopId}` : '/shop';
 ---
 
 <html lang="en-GB" class={htmlClass} data-app={app} transition:animate="none">
@@ -74,12 +91,34 @@ const app = isAdminSurface ? 'admin' : 'flow';
       }
     </style>
     <ClientRouter fallback="swap" />
+    {
+      cartNamespace ? (
+        <script is:inline define:vars={{ cartNamespace }}>
+          window.__KERSIVO_CART_NAMESPACE__ = cartNamespace;
+        </script>
+      ) : null
+    }
     <slot name="head" />
   </head>
   <body class={bodyClass}>
     <RouteTransitionRoot variant="flow">
       <slot />
     </RouteTransitionRoot>
+    {
+      productionCartEnabled ? (
+        <div transition:persist="ks-cart">
+          <CartDrawerMount
+            mode="production"
+            shopId={productionCartShopId}
+            shopName={cartShopName}
+            themeId="kersivo"
+            priceFormat="gbp"
+            exploreHref={cartExploreHref}
+            checkout={{ type: 'live' }}
+          />
+        </div>
+      ) : null
+    }
     {showCookieConsent ? (
       <div transition:persist="ks-cookie">
         <CookieConsentMount />

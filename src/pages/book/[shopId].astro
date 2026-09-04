@@ -134,6 +134,9 @@ const createUrl = `/api/public/bookings/${shop.id}/create`;
   canonicalPath={`/book/${shop.id}`}
   bodyClass="admin-theme-premium-black"
   showCookieConsent={false}
+  enableProductionCart={true}
+  shopId={shop.id}
+  shopName={shop.name}
 >
   {
     bookingUnavailable ? (

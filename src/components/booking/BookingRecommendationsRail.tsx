@@ -1,9 +1,12 @@
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useRef, useState, type MouseEvent } from 'react';
 
 import { ProductRail } from '@/components/shop/ProductRail';
 import { FUNNEL_EVENTS } from '@/lib/analytics/funnelEvents';
 import { trackConsentedEvent } from '@/lib/consent/events';
-import { storeRecommendationExposureId } from '@/lib/recommendations/exposureSession';
+import {
+  readRecommendationExposureId,
+  storeRecommendationExposureId,
+} from '@/lib/recommendations/exposureSession';
 import type { CarouselProduct } from '@/lib/shop/carouselProducts';
 import type { PublicRecommendationProductV1, PublicRecommendationResponseV1 } from '@/lib/recommendations/contracts';
 
@@ -32,6 +35,14 @@ function toCarouselProducts(products: PublicRecommendationProductV1[]): Carousel
   }));
 }
 
+function productIdFromHref(href: string | null, productHrefBase: string): string | null {
+  if (!href) return null;
+  const base = productHrefBase.replace(/\/$/, '');
+  if (!href.startsWith(`${base}/`)) return null;
+  const id = href.slice(base.length + 1).split(/[?#]/)[0]?.trim();
+  return id || null;
+}
+
 export default function BookingRecommendationsRail({
   shopId,
   serviceId,
@@ -51,6 +62,9 @@ export default function BookingRecommendationsRail({
     if (demoProducts) {
       setProducts(demoProducts);
       setReady(true);
+      if (!readRecommendationExposureId()) {
+        storeRecommendationExposureId(`demo-${shopId}-${serviceId}`);
+      }
       return;
     }
 
@@ -96,6 +110,43 @@ export default function BookingRecommendationsRail({
     });
   }, [ready, products.length, shopId, serviceId, demoProducts]);
 
+  function onRecommendationInteraction(event: MouseEvent<HTMLElement>) {
+    const target = event.target as HTMLElement | null;
+    if (!target) return;
+    if (target.closest('[data-product-rail-prev], [data-product-rail-next]')) return;
+
+    const addButton = target.closest('[data-add-to-cart]') as HTMLElement | null;
+    let productId: string | null = null;
+    let interactionType: 'quick_add' | 'product_open' | null = null;
+
+    if (addButton) {
+      productId = addButton.getAttribute('data-product-id')?.trim() || null;
+      interactionType = 'quick_add';
+    } else {
+      const hit = target.closest('.sf-card-hit') as HTMLAnchorElement | null;
+      if (!hit) return;
+      productId = productIdFromHref(hit.getAttribute('href'), productHrefBase);
+      interactionType = 'product_open';
+    }
+
+    if (!productId || !interactionType) return;
+    const position = products.findIndex((product) => product.id === productId);
+    if (position < 0) return;
+
+    trackConsentedEvent(
+      FUNNEL_EVENTS.recommendation_product_click,
+      {
+        exposure_id: readRecommendationExposureId() ?? undefined,
+        shop_id: shopId,
+        service_id: serviceId,
+        product_id: productId,
+        product_position: position + 1,
+        interaction_type: interactionType,
+      },
+      'analytics',
+    );
+  }
+
   if (!ready || products.length < 2) {
     return null;
   }
@@ -107,6 +158,7 @@ export default function BookingRecommendationsRail({
       className={`booking-recommendations sf-pdp-related ${themeClass} ${className ?? ''}`.trim()}
       aria-label="Recommended products"
       data-sf-theme={themeId}
+      onClick={onRecommendationInteraction}
     >
       <h2 className="sf-toolbar-heading">You may also like</h2>
       <p className="booking-recommendations__lede">Collect from the shop on your visit.</p>

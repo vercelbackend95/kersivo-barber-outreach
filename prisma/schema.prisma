@@ -1032,7 +1032,7 @@ model ShopRecommendationState {
   nextAttemptAt              DateTime?
   lastErrorCode              String?
   lastErrorAt                DateTime?
-  taxonomyVersion            String                  @default("2026-09-v1")
+  taxonomyVersion            String                  @default("2026-09-v2")
   createdAt                  DateTime                @default(now())
   updatedAt                  DateTime                @updatedAt
 

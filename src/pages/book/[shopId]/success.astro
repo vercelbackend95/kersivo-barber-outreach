@@ -34,64 +34,70 @@ let errorMessage = 'Unable to confirm deposit payment.';
 let summary: ConfirmSummary | null = null;
 let serviceId: string | null = null;
 let shopTimezone = 'Europe/London';
+let shopName = 'Shop';
 
-if (shopId && sessionId) {
-  try {
-    const shopForConnect = await prisma.shopSettings.findUnique({
-      where: { id: shopId },
-      select: { name: true, timezone: true, stripeConnectAccountId: true },
-    });
-    const connectAccountId = shopForConnect?.stripeConnectAccountId?.trim();
-    if (!connectAccountId) {
-      errorMessage = 'This shop is not ready to confirm deposit payments.';
-    } else {
-      const session = await retrieveBookingDepositSession(sessionId, connectAccountId);
-      const metadata = session.metadata ?? {};
-      if (
-        metadata.type === BOOKING_DEPOSIT_METADATA_TYPE &&
-        metadata.shopId === shopId &&
-        metadata.bookingId &&
-        (session.payment_status ?? '').toLowerCase() === 'paid'
-      ) {
-        shopTimezone = shopForConnect?.timezone?.trim() || 'Europe/London';
+if (shopId) {
+  const shopForConnect = await prisma.shopSettings.findUnique({
+    where: { id: shopId },
+    select: { name: true, timezone: true, stripeConnectAccountId: true },
+  });
+  shopName = shopForConnect?.name?.trim() || shopName;
+  shopTimezone = shopForConnect?.timezone?.trim() || shopTimezone;
 
-        const result = await confirmPaidDeposit({
-          bookingId: metadata.bookingId,
-          shopId,
-          sessionId,
-          paymentIntentId: getCheckoutPaymentIntentId(session),
-        });
-
-        if (
-          result.outcome === 'confirmed' ||
-          result.outcome === 'duplicate' ||
-          result.outcome === 'reinstated'
-        ) {
-          const confirmed = result.booking;
-          const serviceName = confirmed.serviceNameAtBooking ?? confirmed.service.name;
-          serviceId = confirmed.service.id;
-          summary = {
-            service: serviceName,
-            barber: confirmed.barber.name,
-            date: formatInTimeZone(confirmed.startAt, shopTimezone, 'EEE, d MMM yyyy'),
-            time: formatInTimeZone(confirmed.startAt, shopTimezone, 'HH:mm'),
-          };
-          ok = true;
-        } else if (result.outcome === 'late_refunded') {
-          errorMessage =
-            'Your payment was received, but this appointment slot was released after the payment window closed and is no longer available. Your deposit is being refunded to the original payment method.';
-        } else if (result.outcome === 'not_found') {
-          errorMessage = 'Booking not found for this payment.';
-        } else {
-          errorMessage =
-            'Payment is already recorded for this booking. If you were charged twice, contact the barbershop.';
-        }
+  if (sessionId) {
+    try {
+      const connectAccountId = shopForConnect?.stripeConnectAccountId?.trim();
+      if (!connectAccountId) {
+        errorMessage = 'This shop is not ready to confirm deposit payments.';
       } else {
-        errorMessage = 'Payment is not complete yet. If you were charged, contact the barbershop.';
+        const session = await retrieveBookingDepositSession(sessionId, connectAccountId);
+        const metadata = session.metadata ?? {};
+        if (
+          metadata.type === BOOKING_DEPOSIT_METADATA_TYPE &&
+          metadata.shopId === shopId &&
+          metadata.bookingId &&
+          (session.payment_status ?? '').toLowerCase() === 'paid'
+        ) {
+          const result = await confirmPaidDeposit({
+            bookingId: metadata.bookingId,
+            shopId,
+            sessionId,
+            paymentIntentId: getCheckoutPaymentIntentId(session),
+          });
+
+          if (
+            result.outcome === 'confirmed' ||
+            result.outcome === 'duplicate' ||
+            result.outcome === 'reinstated'
+          ) {
+            const confirmed = result.booking;
+            const serviceName = confirmed.serviceNameAtBooking ?? confirmed.service.name;
+            serviceId = confirmed.service.id;
+            summary = {
+              service: serviceName,
+              barber: confirmed.barber.name,
+              date: formatInTimeZone(confirmed.startAt, shopTimezone, 'EEE, d MMM yyyy'),
+              time: formatInTimeZone(confirmed.startAt, shopTimezone, 'HH:mm'),
+            };
+            ok = true;
+          } else if (result.outcome === 'late_refunded') {
+            errorMessage =
+              'Your payment was received, but this appointment slot was released after the payment window closed and is no longer available. Your deposit is being refunded to the original payment method.';
+          } else if (result.outcome === 'not_found') {
+            errorMessage = 'Booking not found for this payment.';
+          } else {
+            errorMessage =
+              'Payment is already recorded for this booking. If you were charged twice, contact the barbershop.';
+          }
+        } else {
+          errorMessage = 'Payment is not complete yet. If you were charged, contact the barbershop.';
+        }
       }
+    } catch {
+      errorMessage = 'Payment confirmation failed. If you were charged, contact the barbershop.';
     }
-  } catch {
-    errorMessage = 'Payment confirmation failed. If you were charged, contact the barbershop.';
+  } else {
+    errorMessage = 'Missing payment session. Return from Stripe checkout and try again.';
   }
 } else {
   errorMessage = 'Missing payment session. Return from Stripe checkout and try again.';
@@ -109,6 +115,9 @@ const calendarHref =
   canonicalPath={shopId ? `/book/${shopId}/success` : '/book'}
   bodyClass="admin-theme-premium-black"
   showCookieConsent={false}
+  enableProductionCart={Boolean(shopId)}
+  shopId={shopId || undefined}
+  shopName={shopName}
 >
   <main class="container page-wrap booking-page-wrap">
     <BookingThemeRoot client:load preset="kersivo">

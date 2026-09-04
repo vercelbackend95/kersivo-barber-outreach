@@ -52,6 +52,7 @@ export async function bumpCatalogueVersionOnce(
       nextAttemptAt: null,
       lastErrorCode: null,
       lastErrorAt: null,
+      taxonomyVersion: TAXONOMY_VERSION,
     },
   });
 
