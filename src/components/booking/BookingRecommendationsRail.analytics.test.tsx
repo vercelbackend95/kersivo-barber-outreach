@@ -70,7 +70,7 @@ describe('BookingRecommendationsRail click analytics', () => {
     expect(clickCalls).toHaveLength(1);
     const params = clickCalls[0]?.[1] as Record<string, unknown>;
     expect(params).toEqual({
-      exposure_id: 'exp-click-1',
+      exposure_id: 'demo-shop-1-svc-1',
       shop_id: 'shop-1',
       service_id: 'svc-1',
       product_id: 'prod-fibre',

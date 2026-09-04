@@ -14,6 +14,8 @@ export type BookingRecommendationsRailProps = {
   shopId: string;
   serviceId: string;
   shopName?: string;
+  /** Booked service display name for conversion heading. */
+  serviceName?: string;
   productHrefBase: string;
   themeId?: 'kersivo' | 'blackline';
   priceFormat?: 'gbp' | 'demo';
@@ -47,6 +49,7 @@ export default function BookingRecommendationsRail({
   shopId,
   serviceId,
   shopName = 'Shop',
+  serviceName,
   productHrefBase,
   themeId = 'kersivo',
   priceFormat = 'gbp',
@@ -59,14 +62,16 @@ export default function BookingRecommendationsRail({
   const impressionTracked = useRef(false);
 
   useEffect(() => {
+    impressionTracked.current = false;
     if (demoProducts) {
       setProducts(demoProducts);
       setReady(true);
-      if (!readRecommendationExposureId()) {
-        storeRecommendationExposureId(`demo-${shopId}-${serviceId}`);
-      }
+      storeRecommendationExposureId(`demo-${shopId}-${serviceId}`);
       return;
     }
+
+    setProducts([]);
+    setReady(false);
 
     let cancelled = false;
     const url = `/api/public/recommendations/${encodeURIComponent(shopId)}?serviceId=${encodeURIComponent(serviceId)}`;
@@ -151,6 +156,11 @@ export default function BookingRecommendationsRail({
     return null;
   }
 
+  const trimmedServiceName = serviceName?.trim() || '';
+  const heading = trimmedServiceName
+    ? `Recommended for your ${trimmedServiceName}`
+    : 'Recommended for you';
+
   const themeClass = themeId === 'blackline' ? 'sf-shop sf-shop--blackline' : 'sf-shop sf-shop--kersivo';
 
   return (
@@ -160,8 +170,12 @@ export default function BookingRecommendationsRail({
       data-sf-theme={themeId}
       onClick={onRecommendationInteraction}
     >
-      <h2 className="sf-toolbar-heading">You may also like</h2>
-      <p className="booking-recommendations__lede">Collect from the shop on your visit.</p>
+      <div className="booking-recommendations__header">
+        <h2 className="booking-recommendations__heading sf-toolbar-heading">{heading}</h2>
+        <p className="booking-recommendations__lede">
+          Chosen to suit your booking. Add now and collect at your appointment.
+        </p>
+      </div>
       <ProductRail
         products={products}
         productHrefBase={productHrefBase}

@@ -106,10 +106,33 @@ describe('BookingRecommendationsRail → cart integration', () => {
     );
 
     await waitFor(() => {
-      expect(screen.getByRole('heading', { name: 'You may also like' })).toBeTruthy();
+      expect(screen.getByRole('heading', { name: 'Recommended for you' })).toBeTruthy();
     });
     expect(screen.getByText('Hair Fibre')).toBeTruthy();
     expect(screen.getByText('Matte Clay')).toBeTruthy();
+  });
+
+  it('uses service-specific conversion heading when serviceName is provided', async () => {
+    fetchSpy.mockResolvedValue({
+      ok: true,
+      json: async () => twoProducts,
+    });
+
+    render(
+      <BookingRecommendationsRail
+        shopId={SHOP_ID}
+        serviceId={SERVICE_ID}
+        serviceName="Skin Fade"
+        productHrefBase={`/shop/${SHOP_ID}`}
+      />,
+    );
+
+    await waitFor(() => {
+      expect(screen.getByRole('heading', { name: 'Recommended for your Skin Fade' })).toBeTruthy();
+    });
+    expect(
+      screen.getByText('Chosen to suit your booking. Add now and collect at your appointment.'),
+    ).toBeTruthy();
   });
 
   it('quick-add mutates tenant cartStore and shows View bag toast', async () => {
@@ -130,7 +153,7 @@ describe('BookingRecommendationsRail → cart integration', () => {
     );
 
     await waitFor(() => {
-      expect(screen.getByRole('heading', { name: 'You may also like' })).toBeTruthy();
+      expect(screen.getByRole('heading', { name: 'Recommended for you' })).toBeTruthy();
     });
 
     const addButtons = screen.getAllByRole('button', { name: /Add to bag:/i });
@@ -173,7 +196,7 @@ describe('BookingRecommendationsRail → cart integration', () => {
     );
 
     await waitFor(() => {
-      expect(screen.getByRole('heading', { name: 'You may also like' })).toBeTruthy();
+      expect(screen.getByRole('heading', { name: 'Recommended for you' })).toBeTruthy();
     });
 
     fireEvent.click(screen.getAllByRole('button', { name: /Add to bag:/i })[0]!);
@@ -207,7 +230,7 @@ describe('BookingRecommendationsRail → cart integration', () => {
     await waitFor(() => {
       expect(fetchSpy).toHaveBeenCalled();
     });
-    expect(empty.queryByRole('heading', { name: 'You may also like' })).toBeNull();
+    expect(empty.queryByRole('heading', { name: /Recommended for/i })).toBeNull();
     expect(empty.getByText('Booking confirmed')).toBeTruthy();
     empty.unmount();
 
@@ -226,7 +249,7 @@ describe('BookingRecommendationsRail → cart integration', () => {
     await waitFor(() => {
       expect(fetchSpy).toHaveBeenCalledTimes(2);
     });
-    expect(one.queryByRole('heading', { name: 'You may also like' })).toBeNull();
+    expect(one.queryByRole('heading', { name: /Recommended for/i })).toBeNull();
   });
 
   it('keeps confirmation intact and hides rail when the API rejects', async () => {
@@ -247,8 +270,146 @@ describe('BookingRecommendationsRail → cart integration', () => {
       expect(fetchSpy).toHaveBeenCalled();
     });
     expect(screen.getByText('Booking confirmed')).toBeTruthy();
-    expect(screen.queryByRole('heading', { name: 'You may also like' })).toBeNull();
+    expect(screen.queryByRole('heading', { name: /Recommended for/i })).toBeNull();
     expect(getSnapshot().items).toHaveLength(0);
+  });
+
+  it('demo fixtures write into the BLACKLINE cart namespace and link to demo PDPs', async () => {
+    const DEMO_SHOP = 'blackline-barbers-demo';
+    window.__KERSIVO_CART_NAMESPACE__ = {
+      shopId: DEMO_SHOP,
+      allowedProductIds: ['bl-product-matte-clay', 'bl-product-matte-pomade', 'bl-product-fibre-paste'],
+    };
+
+    const demoProducts = [
+      {
+        id: 'bl-product-matte-clay',
+        name: 'Matte Clay',
+        category: 'STYLING',
+        pricePence: 1700,
+        imageUrl: '/demo/products/matte-clay.webp',
+        available: true,
+        requiresOptions: false,
+      },
+      {
+        id: 'bl-product-fibre-paste',
+        name: 'Fibre Paste',
+        category: 'STYLING',
+        pricePence: 1600,
+        imageUrl: '/demo/products/fibre-paste.webp',
+        available: true,
+        requiresOptions: false,
+      },
+    ];
+
+    render(
+      <>
+        <StorefrontCartDrawer
+          mode="demo"
+          shopId={DEMO_SHOP}
+          shopName="BLACKLINE"
+          themeId="blackline"
+          priceFormat="demo"
+          exploreHref="/demo/shop"
+          checkout={{ type: 'href', href: '/demo/shop/checkout' }}
+        />
+        <BookingRecommendationsRail
+          shopId={DEMO_SHOP}
+          serviceId="bl-svc-skin-fade"
+          serviceName="Skin Fade"
+          productHrefBase="/demo/shop"
+          themeId="blackline"
+          priceFormat="demo"
+          demoProducts={demoProducts}
+        />
+      </>,
+    );
+
+    expect(screen.getByRole('heading', { name: 'Recommended for your Skin Fade' })).toBeTruthy();
+    const productHit = document.querySelector(
+      'a.sf-card-hit[href="/demo/shop/bl-product-matte-clay"]',
+    );
+    expect(productHit).toBeTruthy();
+
+    fireEvent.click(screen.getAllByRole('button', { name: /Add to bag:/i })[0]!);
+    await waitFor(() => {
+      expect(getSnapshot().items.map((item) => item.productId)).toContain('bl-product-matte-clay');
+    });
+    const stored = JSON.parse(
+      window.localStorage.getItem(cartStorageKeyForShop(DEMO_SHOP)) ?? '[]',
+    ) as Array<{ productId: string }>;
+    expect(stored.some((item) => item.productId === 'bl-product-matte-clay')).toBe(true);
+    expect(fetchSpy).not.toHaveBeenCalled();
+  });
+
+  it('resets products when serviceId changes so a second booking is not stale', async () => {
+    const first = [
+      {
+        id: 'bl-product-matte-clay',
+        name: 'Matte Clay',
+        category: 'STYLING',
+        pricePence: 1700,
+        imageUrl: null,
+        available: true,
+        requiresOptions: false,
+      },
+      {
+        id: 'bl-product-fibre-paste',
+        name: 'Fibre Paste',
+        category: 'STYLING',
+        pricePence: 1600,
+        imageUrl: null,
+        available: true,
+        requiresOptions: false,
+      },
+    ];
+    const second = [
+      {
+        id: 'bl-product-beard-oil',
+        name: 'Beard Oil',
+        category: 'BEARD_CARE',
+        pricePence: 2200,
+        imageUrl: null,
+        available: true,
+        requiresOptions: false,
+      },
+      {
+        id: 'bl-product-beard-balm',
+        name: 'Beard Balm',
+        category: 'BEARD_CARE',
+        pricePence: 1600,
+        imageUrl: null,
+        available: true,
+        requiresOptions: false,
+      },
+    ];
+
+    const { rerender } = render(
+      <BookingRecommendationsRail
+        shopId="blackline-barbers-demo"
+        serviceId="bl-svc-skin-fade"
+        serviceName="Skin Fade"
+        productHrefBase="/demo/shop"
+        demoProducts={first}
+      />,
+    );
+
+    expect(screen.getByText('Matte Clay')).toBeTruthy();
+    expect(screen.queryByText('Beard Oil')).toBeNull();
+
+    rerender(
+      <BookingRecommendationsRail
+        shopId="blackline-barbers-demo"
+        serviceId="bl-svc-beard-trim"
+        serviceName="Beard Trim & Shape"
+        productHrefBase="/demo/shop"
+        demoProducts={second}
+      />,
+    );
+
+    expect(screen.getByRole('heading', { name: 'Recommended for your Beard Trim & Shape' })).toBeTruthy();
+    expect(screen.getByText('Beard Oil')).toBeTruthy();
+    expect(screen.queryByText('Matte Clay')).toBeNull();
   });
 });
 

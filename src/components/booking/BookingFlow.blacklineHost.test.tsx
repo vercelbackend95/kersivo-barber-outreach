@@ -176,7 +176,14 @@ describe('BookingFlow BLACKLINE host', () => {
     expect(screen.queryByRole('link', { name: 'View services' })).toBeNull();
     expect(screen.queryByRole('link', { name: 'See pricing' })).toBeNull();
     expect(fetchSpy).not.toHaveBeenCalled();
-    expect(trackSpy).not.toHaveBeenCalled();
+    expect(
+      screen.getByRole('heading', { name: 'Recommended for your Classic Cut & Finish' }),
+    ).toBeTruthy();
+    const trackedEvents = trackSpy.mock.calls.map(([eventName]) => eventName);
+    expect(trackedEvents).toContain('recommendation_rail_impression');
+    expect(trackedEvents.every((eventName) => String(eventName).startsWith('recommendation_'))).toBe(
+      true,
+    );
   });
 
   it('resolves Any barber to a concrete BLACKLINE barber on confirm', async () => {

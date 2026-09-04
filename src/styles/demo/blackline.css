@@ -1712,6 +1712,27 @@ html[data-theme='blackline']::view-transition-new(root) {
   color: inherit;
 }
 
+[data-theme='blackline'] .bl-booking .booking-recommendations.sf-shop {
+  border-top-color: var(--bl-line-dark);
+  color: var(--bl-ivory);
+}
+
+[data-theme='blackline'] .bl-booking .booking-recommendations__heading {
+  font-family: var(--bl-font-display);
+  color: var(--bl-ivory);
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+[data-theme='blackline'] .bl-booking .booking-recommendations__lede {
+  color: var(--bl-silver);
+  font-family: var(--bl-font-body);
+}
+
+[data-theme='blackline'] .bl-booking .booking-recommendations :focus-visible {
+  outline-color: var(--bl-cobalt);
+}
+
 [data-theme='blackline'] .bl-booking .muted {
   color: var(--muted);
 }

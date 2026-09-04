@@ -981,6 +981,7 @@ export default function BookingFlow({
             <BookingRecommendationsRail
               shopId={publicShopId}
               serviceId={confirmation.serviceId}
+              serviceName={confirmation.summary.service}
               productHrefBase={`/shop/${publicShopId}`}
               themeId="kersivo"
               priceFormat="gbp"
@@ -990,6 +991,7 @@ export default function BookingFlow({
             <BookingRecommendationsRail
               shopId="blackline-barbers-demo"
               serviceId={confirmation.serviceId}
+              serviceName={confirmation.summary.service}
               productHrefBase="/demo/shop"
               themeId="blackline"
               priceFormat="demo"
