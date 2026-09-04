@@ -24,6 +24,9 @@ function minimalCalibrationReport(): CalibrationReport {
     schemaVersion: '2',
     promptVersion: '1',
     datasetVersion: '1',
+    cachePolicy: 'reuse',
+    providerRunKind: 'CACHE_ONLY_REPLAY',
+    providerConnectivityVerified: false,
     harnessSelfCheckStatus: 'PASSED',
     liveEvaluationStatus: 'NOT_RUN',
     releaseGateStatus: 'NOT_RUN',
@@ -72,6 +75,12 @@ function minimalCalibrationReport(): CalibrationReport {
       ambiguousFailClosedRate: null,
       evaluatedEntityCount: 0,
       failedEntityIds: [],
+      providerAttemptedCount: 0,
+      providerSuccessfulCount: 0,
+      semanticConsistencyFailureCount: 0,
+      semanticConsistencyFailedEntityIds: [],
+      missingRequiredProfileCount: 0,
+      endToEndClassificationSuccessRate: null,
     },
     recommendationMetrics: {
       precisionAt4: null,
@@ -197,6 +206,35 @@ describe('runCalibrationCli live guard order', () => {
     const code = await runCalibrationCli(liveArgv(), deps);
     expect(code).toBe(0);
     expect(deps.callOrder).toEqual(['loadEnv', 'createClient', 'createProvider', 'runCalibration']);
+    expect(deps.runCalibration).toHaveBeenCalledWith(
+      expect.objectContaining({ cachePolicy: 'reuse' }),
+      expect.objectContaining({
+        liveDeps: expect.objectContaining({ cacheProducerKind: 'OPENAI_LIVE' }),
+      }),
+    );
+  });
+
+  it('readonly live skips env/client/provider and does not need API key', async () => {
+    const deps = makeDeps();
+    const code = await runCalibrationCli([...liveArgv(), '--cache-policy=readonly'], deps);
+    expect(code).toBe(0);
+    expect(deps.loadEnv).not.toHaveBeenCalled();
+    expect(deps.createClient).not.toHaveBeenCalled();
+    expect(deps.createProvider).not.toHaveBeenCalled();
+    expect(deps.runCalibration).toHaveBeenCalledWith(
+      expect.objectContaining({ cachePolicy: 'readonly' }),
+      expect.anything(),
+    );
+  });
+
+  it('rejects invalid cache policy before env/client/provider', async () => {
+    const deps = makeDeps();
+    const code = await runCalibrationCli([...liveArgv(), '--cache-policy=bogus'], deps);
+    expect(code).toBe(1);
+    expect(deps.loadEnv).not.toHaveBeenCalled();
+    expect(deps.createClient).not.toHaveBeenCalled();
+    expect(deps.createProvider).not.toHaveBeenCalled();
+    expect(deps.runCalibration).not.toHaveBeenCalled();
   });
 
   it('dry-run does not load env', async () => {

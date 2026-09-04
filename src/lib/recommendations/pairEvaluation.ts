@@ -1,6 +1,7 @@
 import { MATCH_SCORE_MIN } from './constants';
 import { checkProductConfidenceGates, checkServiceConfidenceGates } from './confidenceGates';
 import type { ProductSemanticProfileV2, ScoredCandidate, ServiceSemanticProfileV2 } from './contracts';
+import { audienceMismatchChildOnly } from './catalogueAudienceEvidence';
 import { evaluateHardEligibility } from './hardEligibility';
 import { computeDeterministicScore } from './scoreComponents';
 
@@ -14,11 +15,13 @@ export type PairRejectionCode =
   | 'NO_RETAIL_NEED_OVERLAP'
   | 'NO_TARGET_AREA_OVERLAP'
   | 'HAIR_LENGTH_MISMATCH'
+  | 'HAIR_LENGTH_UNRESOLVED_FOR_EXCLUSIVE_PRODUCT'
   | 'BEARD_ONLY_PRODUCT'
   | 'HAIR_ONLY_PRODUCT'
   | 'POST_SHAVE_ONLY_PRODUCT'
   | 'NOT_FOR_BEARD'
   | 'NOT_FOR_SHAVE'
+  | 'AUDIENCE_MISMATCH_CHILD_ONLY'
   | 'MATCH_SCORE_BELOW_THRESHOLD';
 
 export type PairEvaluation =
@@ -37,6 +40,23 @@ export function evaluateServiceProductPair(input: EvaluatePairInput): PairEvalua
 
   const productGate = checkProductConfidenceGates(input.product);
   if (productGate) return { eligible: false, reasonCode: productGate };
+
+  if (
+    audienceMismatchChildOnly(
+      {
+        name: input.service.sourceSnapshot.name,
+        description: input.service.sourceSnapshot.description,
+        category: input.service.sourceSnapshot.category,
+      },
+      {
+        name: input.product.sourceSnapshot.name,
+        description: input.product.sourceSnapshot.description,
+        category: input.product.sourceSnapshot.category,
+      },
+    )
+  ) {
+    return { eligible: false, reasonCode: 'AUDIENCE_MISMATCH_CHILD_ONLY' };
+  }
 
   const hard = evaluateHardEligibility(input.service, input.product);
   if (!hard.ok) return { eligible: false, reasonCode: hard.reasonCode };

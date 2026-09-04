@@ -34,6 +34,10 @@ import type {
 } from './contracts';
 import { computeProductSemanticHash, computeServiceSemanticHash } from './hash';
 import { isStoredProfileReusable } from './profileReuse';
+import {
+  applyAuthoritativeSourceToReusedProduct,
+  applyAuthoritativeSourceToReusedService,
+} from './profileReuseSourceAuthority';
 import { applyBoundedRerank } from './boundedRerank';
 import { selectDiverseCandidates } from './candidateSelection';
 import {
@@ -167,8 +171,17 @@ async function loadOrClassifyProfiles(
         modelId,
       })
     ) {
-      serviceProfileMap.set(service.id, profileFromJson(existing.profile));
-      continue;
+      const reused = profileFromJson(existing.profile) as ServiceSemanticProfileV2;
+      const authoritative = applyAuthoritativeSourceToReusedService(reused, {
+        name: service.name,
+        description: service.description,
+        category: service.category,
+      });
+      if (authoritative.ok) {
+        serviceProfileMap.set(service.id, authoritative.profile);
+        continue;
+      }
+      // Fall through to reclassify when stored profile is semantically contradictory.
     }
 
     const classified = await classifyServiceEntity(client, {
@@ -237,8 +250,18 @@ async function loadOrClassifyProfiles(
         modelId,
       })
     ) {
-      productProfileMap.set(product.id, profileFromJson(existing.profile));
-      continue;
+      const reused = profileFromJson(existing.profile) as ProductSemanticProfileV2;
+      const authoritative = applyAuthoritativeSourceToReusedProduct(reused, {
+        name: product.name,
+        description: product.description,
+        category: product.category,
+      });
+      if (authoritative.ok) {
+        productProfileMap.set(product.id, authoritative.profile);
+        continue;
+      }
+      // Fall through to reclassify when stored profile lacks source-backed constraints
+      // or is semantically contradictory.
     }
 
     const classified = await classifyProductEntity(client, {

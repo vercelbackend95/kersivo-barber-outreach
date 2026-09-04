@@ -159,6 +159,7 @@ describe('calibration live guards', () => {
       maxCostUsd: smokePlan.estimatedMaxCostUsd + 0.01,
       outputDir: 'calibration-output/live-smoke',
       outputDirExplicit: true,
+      cachePolicy: 'reuse',
     });
     expect(result.ok).toBe(true);
   });
@@ -174,8 +175,50 @@ describe('calibration live guards', () => {
       maxCostUsd: LIVE_MAX_COST_USD_CAP,
       outputDir: 'calibration-output/live-smoke',
       outputDirExplicit: true,
+      cachePolicy: 'reuse',
     });
     expect(result.ok).toBe(false);
     if (!result.ok) expect(result.code).toBe('MAX_CALLS_EXCEEDED');
+  });
+
+  it('parses --cache-policy space and equals forms with default reuse', () => {
+    const defaulted = parseCalibrationArgv([]);
+    expect(defaulted.ok).toBe(true);
+    if (defaulted.ok) expect(defaulted.args.cachePolicy).toBe('reuse');
+
+    const spaced = parseCalibrationArgv(['--cache-policy', 'refresh']);
+    expect(spaced.ok).toBe(true);
+    if (spaced.ok) expect(spaced.args.cachePolicy).toBe('refresh');
+
+    const equals = parseCalibrationArgv(['--cache-policy=readonly']);
+    expect(equals.ok).toBe(true);
+    if (equals.ok) expect(equals.args.cachePolicy).toBe('readonly');
+  });
+
+  it('rejects invalid cache policy before live activation', () => {
+    const result = parseCalibrationArgv(['--cache-policy', 'rewrite']);
+    expect(result.ok).toBe(false);
+    if (!result.ok) expect(result.code).toBe('CACHE_POLICY_INVALID');
+  });
+
+  it('allows readonly live activation without spend confirmation', () => {
+    const parsed = parseCalibrationArgv([
+      '--live',
+      '--scope',
+      'smoke',
+      '--model',
+      model,
+      '--max-calls',
+      String(LIVE_MAX_CALLS_CAP),
+      '--max-cost-usd',
+      String(LIVE_MAX_COST_USD_CAP),
+      '--output-dir',
+      'calibration-output/live-smoke',
+      '--cache-policy=readonly',
+    ]);
+    expect(parsed.ok).toBe(true);
+    if (!parsed.ok) return;
+    const result = validateLiveActivation(parsed.args);
+    expect(result.ok).toBe(true);
   });
 });

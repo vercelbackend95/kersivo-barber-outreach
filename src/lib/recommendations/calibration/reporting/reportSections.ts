@@ -22,12 +22,22 @@ export function formatClassificationMetricsBlock(report: CalibrationReport): str
   const cls = report.classificationMetrics;
   const rate = (value: number | null) => (value == null ? 'N/A' : `${(value * 100).toFixed(1)}%`);
   return [
-    `| structured parse success | ${rate(cls.structuredParseSuccessRate)} |`,
-    `| required field accuracy | ${rate(cls.requiredFieldAccuracy)} |`,
-    `| forbidden field violation rate | ${rate(cls.forbiddenFieldViolationRate)} |`,
-    `| confidence gate correctness | ${rate(cls.confidenceGateCorrectness)} |`,
-    `| ambiguous fail-closed rate | ${rate(cls.ambiguousFailClosedRate)} |`,
-    `| evaluated entities | ${cls.evaluatedEntityCount} |`,
+    '### Gold-scoped classification metrics',
+    `| structured parse success (gold) | ${rate(cls.structuredParseSuccessRate)} |`,
+    `| required field accuracy (gold) | ${rate(cls.requiredFieldAccuracy)} |`,
+    `| forbidden field violation rate (gold) | ${rate(cls.forbiddenFieldViolationRate)} |`,
+    `| confidence gate correctness (gold) | ${rate(cls.confidenceGateCorrectness)} |`,
+    `| ambiguous fail-closed rate (gold) | ${rate(cls.ambiguousFailClosedRate)} |`,
+    `| evaluated gold entities | ${cls.evaluatedEntityCount} |`,
+    `| gold failed entity ids | ${cls.failedEntityIds.length === 0 ? '(none)' : cls.failedEntityIds.join(', ')} |`,
+    '',
+    '### End-to-end classification diagnostics (classify_service + classify_product only; excludes rerank)',
+    `| provider classify attempted | ${cls.providerAttemptedCount} |`,
+    `| provider classify successful | ${cls.providerSuccessfulCount} |`,
+    `| semantic consistency failures | ${cls.semanticConsistencyFailureCount} |`,
+    `| semantic consistency failed entity ids | ${cls.semanticConsistencyFailedEntityIds.length === 0 ? '(none)' : cls.semanticConsistencyFailedEntityIds.join(', ')} |`,
+    `| missing required profiles | ${cls.missingRequiredProfileCount} |`,
+    `| end-to-end classification success | ${rate(cls.endToEndClassificationSuccessRate)} |`,
   ].join('\n');
 }
 

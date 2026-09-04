@@ -17,11 +17,18 @@ export const RELEASE_GATE_THRESHOLDS = {
   expectedEmptyPassRate: 1,
 } as const;
 
-const NOT_EVALUATED_ACTUAL = 'N/A (no provider calls)';
+const NOT_EVALUATED_NO_PROVIDER_CALLS = 'N/A (no provider calls)';
+const NOT_EVALUATED_INCOMPLETE_CLASSIFICATIONS = 'N/A (incomplete provider classifications)';
 const NOT_APPLICABLE_ACTUAL = 'N/A (not applicable)';
 
-function formatRate(value: number | null): string {
-  if (value == null) return NOT_EVALUATED_ACTUAL;
+export function notEvaluatedGateActual(providerAttemptedCount: number): string {
+  return providerAttemptedCount > 0
+    ? NOT_EVALUATED_INCOMPLETE_CLASSIFICATIONS
+    : NOT_EVALUATED_NO_PROVIDER_CALLS;
+}
+
+function formatRate(value: number | null, providerAttemptedCount: number): string {
+  if (value == null) return notEvaluatedGateActual(providerAttemptedCount);
   return `${(value * 100).toFixed(1)}%`;
 }
 
@@ -31,6 +38,7 @@ export function evaluateReleaseGates(
   options?: { liveEvaluation?: boolean },
 ): ReleaseGateResult[] {
   const live = options?.liveEvaluation === true;
+  const notEvaluatedActual = notEvaluatedGateActual(classification.providerAttemptedCount ?? 0);
 
   const gate = (
     id: string,
@@ -42,7 +50,7 @@ export function evaluateReleaseGates(
     id,
     label,
     threshold,
-    actual: live ? actualValue : NOT_EVALUATED_ACTUAL,
+    actual: live ? actualValue : notEvaluatedActual,
     passed: live ? passed : true,
     skipped: !live,
     notEvaluated: !live,
@@ -53,7 +61,7 @@ export function evaluateReleaseGates(
       'structured-parse-success',
       'Structured parse success',
       '100%',
-      formatRate(classification.structuredParseSuccessRate),
+      formatRate(classification.structuredParseSuccessRate, classification.providerAttemptedCount),
       classification.structuredParseSuccessRate != null &&
         classification.structuredParseSuccessRate >= RELEASE_GATE_THRESHOLDS.structuredParseSuccess,
     ),
@@ -68,7 +76,7 @@ export function evaluateReleaseGates(
       'must-exclude-pass',
       'Must-exclude pass rate',
       '100%',
-      formatRate(recommendation.mustExcludePassRate),
+      formatRate(recommendation.mustExcludePassRate, classification.providerAttemptedCount),
       recommendation.mustExcludePassRate != null &&
         recommendation.mustExcludePassRate >= RELEASE_GATE_THRESHOLDS.mustExcludePassRate,
     ),
@@ -76,7 +84,7 @@ export function evaluateReleaseGates(
       'precision-at-4',
       'precision@4',
       '≥ 95%',
-      formatRate(recommendation.precisionAt4),
+      formatRate(recommendation.precisionAt4, classification.providerAttemptedCount),
       recommendation.precisionAt4 != null &&
         recommendation.precisionAt4 >= RELEASE_GATE_THRESHOLDS.precisionAt4,
     ),
@@ -84,7 +92,7 @@ export function evaluateReleaseGates(
       'must-include-recall',
       'Must-include recall',
       '≥ 90%',
-      formatRate(recommendation.mustIncludeRecall),
+      formatRate(recommendation.mustIncludeRecall, classification.providerAttemptedCount),
       recommendation.mustIncludeRecall != null &&
         recommendation.mustIncludeRecall >= RELEASE_GATE_THRESHOLDS.mustIncludeRecall,
     ),
@@ -92,7 +100,7 @@ export function evaluateReleaseGates(
       'ambiguous-fail-closed',
       'Ambiguous fail-closed rate',
       '100%',
-      formatRate(classification.ambiguousFailClosedRate),
+      formatRate(classification.ambiguousFailClosedRate, classification.providerAttemptedCount),
       classification.ambiguousFailClosedRate != null &&
         classification.ambiguousFailClosedRate >= RELEASE_GATE_THRESHOLDS.ambiguousFailClosedRate,
     ),
@@ -100,7 +108,7 @@ export function evaluateReleaseGates(
       'deterministic-repeatability',
       'Deterministic repeatability',
       '100%',
-      formatRate(recommendation.deterministicRepeatability),
+      formatRate(recommendation.deterministicRepeatability, classification.providerAttemptedCount),
       recommendation.deterministicRepeatability != null &&
         recommendation.deterministicRepeatability >= RELEASE_GATE_THRESHOLDS.deterministicRepeatability,
     ),
@@ -115,7 +123,7 @@ export function evaluateReleaseGates(
       'pair-assertion-pass',
       'Pair assertion pass rate',
       '100%',
-      formatRate(recommendation.pairAssertionPassRate),
+      formatRate(recommendation.pairAssertionPassRate, classification.providerAttemptedCount),
       recommendation.pairAssertionPassRate != null &&
         recommendation.pairAssertionPassRate >= RELEASE_GATE_THRESHOLDS.pairAssertionPassRate,
     ),
@@ -125,7 +133,7 @@ export function evaluateReleaseGates(
       recommendation.expectedEmptyScenarioCount > 0 ? '100%' : NOT_APPLICABLE_ACTUAL,
       recommendation.expectedEmptyScenarioCount === 0
         ? NOT_APPLICABLE_ACTUAL
-        : formatRate(recommendation.expectedEmptyPassRate),
+        : formatRate(recommendation.expectedEmptyPassRate, classification.providerAttemptedCount),
       recommendation.expectedEmptyScenarioCount === 0
         ? true
         : recommendation.expectedEmptyPassRate != null &&

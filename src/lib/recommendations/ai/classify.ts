@@ -6,6 +6,13 @@ import type { z } from 'zod';
 import type { ProductSemanticProfileAiV2, ServiceSemanticProfileAiV2 } from '../contracts';
 import type { RerankDecision } from '../boundedRerank';
 import {
+  applyExplicitHairLengthToProductDraft,
+  CATALOGUE_HAIR_LENGTH_RESTRICTION_CONFLICT,
+} from '../explicitHairLengthRestriction';
+import { canonicalizeProductDraftFromSource } from '../canonicalizeProductDraft';
+import { mergeServiceSemanticEvidence } from '../serviceSemanticEvidence';
+import { stripProductOnlyServiceIncompatibilities } from '../serviceIncompatibilitySanitize';
+import {
   buildCatalogueEntityUserPayload,
   buildProductClassifierSystemPrompt,
   buildRerankSystemPrompt,
@@ -29,6 +36,10 @@ import { validateRerankTransport } from './rerankValidation';
 import { emitTelemetrySafe } from './safeTelemetry';
 import type { TelemetryOptions } from './telemetry';
 import { RECOMMENDATION_OPERATION_LIMITS } from './operationLimits';
+import {
+  SemanticConsistencyError,
+  assertServiceSemanticConsistency,
+} from '../semanticConsistency';
 
 const OPENAI_TIMEOUT_MS = 30_000;
 const OPENAI_MAX_RETRIES = 2;
@@ -200,7 +211,24 @@ export async function classifyServiceEntity(
   });
 
   if (!parsed.ok) return parsed;
-  return { ok: true, data: mapServiceTransportToProfile(parsed.data) };
+  try {
+    const mapped = mapServiceTransportToProfile(parsed.data);
+    const sanitized = {
+      ...mapped,
+      incompatibilities: stripProductOnlyServiceIncompatibilities(mapped.incompatibilities),
+    };
+    const enriched = mergeServiceSemanticEvidence(sanitized, {
+      name: entity.name,
+      description: entity.description,
+      category: entity.category,
+    });
+    return { ok: true, data: assertServiceSemanticConsistency(enriched) };
+  } catch (error) {
+    if (error instanceof SemanticConsistencyError) {
+      return { ok: false, error: error.code };
+    }
+    throw error;
+  }
 }
 
 export async function classifyProductEntity(
@@ -222,8 +250,29 @@ export async function classifyProductEntity(
   });
 
   if (!parsed.ok) return parsed;
-  return { ok: true, data: mapProductTransportToProfile(parsed.data) };
+  try {
+    const mapped = mapProductTransportToProfile(parsed.data);
+    const canonical = canonicalizeProductDraftFromSource(mapped, {
+      name: entity.name,
+      description: entity.description,
+      category: entity.category,
+    });
+    if (!canonical.ok) {
+      return { ok: false, error: canonical.error };
+    }
+    return { ok: true, data: canonical.draft };
+  } catch (error) {
+    if (error instanceof SemanticConsistencyError) {
+      return { ok: false, error: error.code };
+    }
+    throw error;
+  }
 }
+
+export {
+  applyExplicitHairLengthToProductDraft,
+  CATALOGUE_HAIR_LENGTH_RESTRICTION_CONFLICT,
+};
 
 export async function rerankEligibleCandidates(
   client: OpenAI,

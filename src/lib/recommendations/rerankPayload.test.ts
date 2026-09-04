@@ -95,6 +95,14 @@ function scoredCandidate(): ScoredCandidate {
       hairLengthSuitability: 1,
       techniqueProductAffinity: 0.5,
       confidenceQuality: 0.88,
+      hairLengthApplicable: true,
+      appliedWeights: {
+        retailNeedRelevance: 0.55,
+        targetAreaRelevance: 0.2,
+        hairLengthSuitability: 0.1,
+        techniqueProductAffinity: 0.1,
+        confidenceQuality: 0.05,
+      },
     },
   };
 }

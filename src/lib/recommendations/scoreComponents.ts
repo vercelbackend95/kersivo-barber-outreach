@@ -29,34 +29,45 @@ function jaccard(a: string[], b: string[]): number {
   return union === 0 ? 0 : intersection / union;
 }
 
+type HairLengthScore = {
+  applicable: boolean;
+  score: number;
+  reasonCodes: PositiveReasonCode[];
+};
+
 function scoreHairLength(
   service: ServiceSemanticProfileV2,
   product: ProductSemanticProfileV2,
   matchedAreas: TargetArea[],
-): { score: number; reasonCodes: PositiveReasonCode[] } {
-  const reasonCodes: PositiveReasonCode[] = [];
+): HairLengthScore {
   if (!matchedAreas.includes('HAIR')) {
-    return { score: 1, reasonCodes: ['HAIR_LENGTH_NOT_APPLICABLE'] };
+    return { applicable: false, score: 0, reasonCodes: ['HAIR_LENGTH_NOT_APPLICABLE'] };
   }
 
   const serviceLength = service.typicalHairLength;
   const productLength = product.hairLengthSuitability;
 
-  if (productLength === 'ANY') {
-    reasonCodes.push('HAIR_LENGTH_ANY');
-    return { score: 1, reasonCodes };
+  // NOT_APPLICABLE on either side: exclude from denominator — never invent a numeric length score.
+  if (serviceLength === 'NOT_APPLICABLE' || productLength === 'NOT_APPLICABLE') {
+    return { applicable: false, score: 0, reasonCodes: ['HAIR_LENGTH_NOT_APPLICABLE'] };
   }
-  if (serviceLength === productLength) {
-    reasonCodes.push('HAIR_LENGTH_EXACT_MATCH');
-    return { score: 1, reasonCodes };
-  }
+
+  // UNKNOWN = missing evidence: exclude component from denominator (not a soft penalty).
   if (serviceLength === 'UNKNOWN' || productLength === 'UNKNOWN') {
-    return { score: 0.45, reasonCodes };
+    return { applicable: false, score: 0, reasonCodes: ['HAIR_LENGTH_UNKNOWN_NOT_USED'] };
+  }
+
+  if (productLength === 'ANY') {
+    return { applicable: true, score: 1, reasonCodes: ['HAIR_LENGTH_ANY'] };
+  }
+
+  if (serviceLength === productLength) {
+    return { applicable: true, score: 1, reasonCodes: ['HAIR_LENGTH_EXACT_MATCH'] };
   }
   if (serviceLength === 'MEDIUM' || productLength === 'MEDIUM') {
-    return { score: 0.65, reasonCodes };
+    return { applicable: true, score: 0.65, reasonCodes: [] };
   }
-  return { score: 0.4, reasonCodes };
+  return { applicable: true, score: 0.4, reasonCodes: [] };
 }
 
 function scoreTechniqueAffinity(
@@ -108,6 +119,22 @@ function scoreTechniqueAffinity(
   };
 }
 
+function renormalizeWeights(hairLengthApplicable: boolean): ScoreBreakdown['appliedWeights'] {
+  const base = { ...WEIGHTS };
+  if (hairLengthApplicable) {
+    return { ...base };
+  }
+  const { hairLengthSuitability: _omit, ...rest } = base;
+  const sum = Object.values(rest).reduce((total, weight) => total + weight, 0);
+  return {
+    retailNeedRelevance: rest.retailNeedRelevance / sum,
+    targetAreaRelevance: rest.targetAreaRelevance / sum,
+    hairLengthSuitability: 0,
+    techniqueProductAffinity: rest.techniqueProductAffinity / sum,
+    confidenceQuality: rest.confidenceQuality / sum,
+  };
+}
+
 export function computeDeterministicScore(
   service: ServiceSemanticProfileV2,
   product: ProductSemanticProfileV2,
@@ -115,13 +142,13 @@ export function computeDeterministicScore(
 ): { score: number; breakdown: ScoreBreakdown; reasonCodes: PositiveReasonCode[] } {
   const reasonCodes: PositiveReasonCode[] = [];
 
-  const retailNeedRelevance = context.retailNeedF1;
+  const retailNeedRelevance = context.pairRetailNeedF1;
   if (retailNeedRelevance >= 0.75) reasonCodes.push('RETAIL_NEED_STRONG_MATCH');
   else if (retailNeedRelevance >= 0.4) reasonCodes.push('RETAIL_NEED_PARTIAL_MATCH');
 
   const targetAreaRelevance = jaccard(
-    concreteAreas(context.serviceConcreteAreas),
-    concreteAreas(context.productConcreteAreas),
+    concreteAreas(context.pairServiceConcreteAreas),
+    concreteAreas(context.pairProductConcreteAreas),
   );
   if (targetAreaRelevance > 0) reasonCodes.push('TARGET_AREA_EXACT_MATCH');
 
@@ -136,20 +163,25 @@ export function computeDeterministicScore(
     reasonCodes.push('HIGH_CONFIDENCE_MATCH');
   }
 
+  const appliedWeights = renormalizeWeights(hairLength.applicable);
+  const score =
+    appliedWeights.retailNeedRelevance * retailNeedRelevance +
+    appliedWeights.targetAreaRelevance * targetAreaRelevance +
+    (hairLength.applicable
+      ? appliedWeights.hairLengthSuitability * hairLength.score
+      : 0) +
+    appliedWeights.techniqueProductAffinity * technique.score +
+    appliedWeights.confidenceQuality * confidenceQuality;
+
   const breakdown: ScoreBreakdown = {
     retailNeedRelevance,
     targetAreaRelevance,
-    hairLengthSuitability: hairLength.score,
+    hairLengthSuitability: hairLength.applicable ? hairLength.score : 0,
     techniqueProductAffinity: technique.score,
     confidenceQuality,
+    hairLengthApplicable: hairLength.applicable,
+    appliedWeights,
   };
-
-  const score =
-    WEIGHTS.retailNeedRelevance * breakdown.retailNeedRelevance +
-    WEIGHTS.targetAreaRelevance * breakdown.targetAreaRelevance +
-    WEIGHTS.hairLengthSuitability * breakdown.hairLengthSuitability +
-    WEIGHTS.techniqueProductAffinity * breakdown.techniqueProductAffinity +
-    WEIGHTS.confidenceQuality * breakdown.confidenceQuality;
 
   return {
     score: Math.min(1, Math.max(0, score)),

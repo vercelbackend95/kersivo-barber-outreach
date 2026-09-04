@@ -34,7 +34,10 @@ import {
   validateCalibrationDatasetCounts,
 } from '../dataset/loaders';
 import { getCalibrationGoldExpectations } from '../expectations/gold';
-import { computeClassificationMetrics } from '../metrics/classificationMetrics';
+import {
+  computeClassificationMetrics,
+  withEndToEndClassificationDiagnostics,
+} from '../metrics/classificationMetrics';
 import { computeRecommendationMetrics } from '../metrics/recommendationMetrics';
 import {
   evaluateLiveReleaseGateStatus,
@@ -64,6 +67,7 @@ import {
   OperationAccounting,
   type OperationSkipReason,
 } from './operationAccounting';
+import { resolveProviderRunKind } from './resolveProviderRunKind';
 
 const CALIBRATION_SHOP_ID = 'calibration-shop';
 const DEFAULT_CACHE_DIR = '.calibration-cache';
@@ -71,8 +75,12 @@ const DEFAULT_CACHE_DIR = '.calibration-cache';
 const STOP_SPENDING_ERRORS = new Set(['OPENAI_AUTH_ERROR', 'OPENAI_BILLING_ERROR']);
 
 export type LiveSmokeCalibrationDeps = {
-  provider: CalibrationProvider;
+  /** Required unless cachePolicy is readonly. */
+  provider?: CalibrationProvider;
   cacheDir?: string;
+  /** Defaults to TEST_MOCK so mocks never label as OPENAI_LIVE. */
+  cacheProducerKind?: 'OPENAI_LIVE' | 'TEST_MOCK';
+  onCacheReadAttempt?: () => void;
 };
 
 function tryResolveGitSha(): string | undefined {
@@ -168,6 +176,7 @@ export async function runLiveSmokeCalibration(
   args: CalibrationCliArgs,
   deps: LiveSmokeCalibrationDeps,
 ): Promise<CalibrationRunResult> {
+  const cachePolicy = args.cachePolicy ?? 'reuse';
   const catalogue = loadCalibrationCatalogue();
   validateCalibrationDatasetCounts(catalogue);
   const fullGold = getCalibrationGoldExpectations();
@@ -175,11 +184,17 @@ export async function runLiveSmokeCalibration(
   const gold = filterGoldByScope(fullGold, scopeEntities);
   validateSmokeManifestClosure(fullGold, catalogue);
 
-  const modelId = deps.provider.modelId;
+  if (cachePolicy !== 'readonly' && !deps.provider) {
+    throw new Error('LIVE_PROVIDER_MISSING');
+  }
+
+  const modelId = deps.provider?.modelId ?? args.model!;
   const plan = buildLiveSmokeCallPlan(catalogue, modelId);
   const ledger = new CalibrationBudgetLedger(args.maxCalls!, args.maxCostUsd!, modelId);
   const cacheDir = deps.cacheDir ?? DEFAULT_CACHE_DIR;
   const accounting = new OperationAccounting(plan.operations);
+  const runId = randomUUID();
+  const cacheProducerKind = deps.cacheProducerKind ?? 'TEST_MOCK';
 
   const services = new Map<string, ServiceSemanticProfileV2>();
   const products = new Map<string, ProductSemanticProfileV2>();
@@ -205,11 +220,39 @@ export async function runLiveSmokeCalibration(
     rerankFallback: 0,
   };
 
+  /** Classify-only provider accounting (excludes rerank). */
+  const classifyCalls = {
+    attempted: 0,
+    successful: 0,
+    failed: 0,
+  };
+
   const tokens = { prompt: 0, completion: 0, total: 0, knownCallCount: 0, unknownCallCount: 0 };
   const costState = { observedUsdKnown: true, observedUsd: 0 };
 
   const serviceById = new Map(catalogue.services.map((s) => [s.id, s]));
   const productById = new Map(catalogue.products.map((p) => [p.id, p]));
+
+  async function tryReadCache(cacheKey: CalibrationCacheKey): Promise<unknown | null> {
+    if (cachePolicy === 'refresh') return null;
+    deps.onCacheReadAttempt?.();
+    return readCalibrationCache(cacheDir, cacheKey);
+  }
+
+  async function writeCache(cacheKey: CalibrationCacheKey, payload: unknown): Promise<void> {
+    if (cachePolicy === 'readonly') return;
+    await writeCalibrationCache(cacheDir, cacheKey, payload, {
+      producerKind: cacheProducerKind,
+      producingRunId: runId,
+    });
+  }
+
+  function markReadonlyMiss(entityId: string, entityType: 'SERVICE' | 'PRODUCT', opIndex: number): void {
+    recordError(errorCodeCounts, 'CACHE_MISS_READONLY');
+    missingProfileDiagnostics.push({ entityId, entityType, errorCode: 'CACHE_MISS_READONLY' });
+    accounting.setState(plan.operations[opIndex]!, { status: 'skipped', reason: 'CACHE_MISS_READONLY' });
+    calls.skipped += 1;
+  }
 
   function markRemainingSkipped(fromIndex: number, reason: OperationSkipReason): void {
     for (let i = fromIndex; i < plan.operations.length; i += 1) {
@@ -245,7 +288,7 @@ export async function runLiveSmokeCalibration(
       category: raw.category,
     });
     const cacheKey = buildClassifyCacheKey(entityId, contentHash, modelId, 'classify_service');
-    const cachedRaw = await readCalibrationCache(cacheDir, cacheKey);
+    const cachedRaw = await tryReadCache(cacheKey);
     if (cachedRaw != null) {
       const validated = validateCachedServiceProfile(cachedRaw, cacheKey);
       if (validated.ok) {
@@ -255,6 +298,11 @@ export async function runLiveSmokeCalibration(
         return;
       }
       invalidCacheDiagnostics.push({ entityId, operation: 'classify_service', reason: validated.reason });
+    }
+
+    if (cachePolicy === 'readonly') {
+      markReadonlyMiss(entityId, 'SERVICE', opIndex);
+      return;
     }
 
     if (stopSpending) {
@@ -274,7 +322,8 @@ export async function runLiveSmokeCalibration(
     }
 
     calls.attempted += 1;
-    const result = await deps.provider.classifyService(
+    classifyCalls.attempted += 1;
+    const result = await deps.provider!.classifyService(
       { id: raw.id, name: raw.name, description: raw.description, category: raw.category ?? '' },
       { fixtureId: entityId },
     );
@@ -283,6 +332,7 @@ export async function runLiveSmokeCalibration(
 
     if (!result.ok) {
       calls.failed += 1;
+      classifyCalls.failed += 1;
       recordError(errorCodeCounts, result.error);
       sanitizedFailures.push({ fixtureId: entityId, code: result.error });
       missingProfileDiagnostics.push({ entityId, entityType: 'SERVICE', errorCode: result.error });
@@ -306,8 +356,9 @@ export async function runLiveSmokeCalibration(
     );
     services.set(entityId, envelope);
     calls.successful += 1;
+    classifyCalls.successful += 1;
     accounting.setState(plan.operations[opIndex]!, { status: 'provider_attempted', success: true });
-    await writeCalibrationCache(cacheDir, cacheKey, envelope);
+    await writeCache(cacheKey, envelope);
   }
 
   async function classifyProduct(entityId: string, opIndex: number): Promise<void> {
@@ -329,7 +380,7 @@ export async function runLiveSmokeCalibration(
       category: raw.category,
     });
     const cacheKey = buildClassifyCacheKey(entityId, contentHash, modelId, 'classify_product');
-    const cachedRaw = await readCalibrationCache(cacheDir, cacheKey);
+    const cachedRaw = await tryReadCache(cacheKey);
     if (cachedRaw != null) {
       const validated = validateCachedProductProfile(cachedRaw, cacheKey);
       if (validated.ok) {
@@ -339,6 +390,11 @@ export async function runLiveSmokeCalibration(
         return;
       }
       invalidCacheDiagnostics.push({ entityId, operation: 'classify_product', reason: validated.reason });
+    }
+
+    if (cachePolicy === 'readonly') {
+      markReadonlyMiss(entityId, 'PRODUCT', opIndex);
+      return;
     }
 
     if (stopSpending) {
@@ -358,7 +414,8 @@ export async function runLiveSmokeCalibration(
     }
 
     calls.attempted += 1;
-    const result = await deps.provider.classifyProduct(
+    classifyCalls.attempted += 1;
+    const result = await deps.provider!.classifyProduct(
       { id: raw.id, name: raw.name, description: raw.description, category: raw.category },
       { fixtureId: entityId },
     );
@@ -367,6 +424,7 @@ export async function runLiveSmokeCalibration(
 
     if (!result.ok) {
       calls.failed += 1;
+      classifyCalls.failed += 1;
       recordError(errorCodeCounts, result.error);
       sanitizedFailures.push({ fixtureId: entityId, code: result.error });
       missingProfileDiagnostics.push({ entityId, entityType: 'PRODUCT', errorCode: result.error });
@@ -390,8 +448,9 @@ export async function runLiveSmokeCalibration(
     );
     products.set(entityId, envelope);
     calls.successful += 1;
+    classifyCalls.successful += 1;
     accounting.setState(plan.operations[opIndex]!, { status: 'provider_attempted', success: true });
-    await writeCalibrationCache(cacheDir, cacheKey, envelope);
+    await writeCache(cacheKey, envelope);
   }
 
   async function executeRerank(serviceId: string, opIndex: number): Promise<void> {
@@ -435,7 +494,7 @@ export async function runLiveSmokeCalibration(
     );
     const contentHash = computeRerankContentHash({ serviceProfile, rerankPoolIds, candidateSummaries });
     const cacheKey = buildRerankCacheKey(serviceId, contentHash, modelId);
-    const cachedRaw = await readCalibrationCache(cacheDir, cacheKey);
+    const cachedRaw = await tryReadCache(cacheKey);
 
     let rerankDecision: import('../../boundedRerank').RerankDecision | undefined;
 
@@ -451,6 +510,15 @@ export async function runLiveSmokeCalibration(
     }
 
     if (!rerankDecision) {
+      if (cachePolicy === 'readonly') {
+        recordError(errorCodeCounts, 'CACHE_MISS_READONLY');
+        accounting.setState(plan.operations[opIndex]!, { status: 'skipped', reason: 'CACHE_MISS_READONLY' });
+        calls.skipped += 1;
+        const ranking = buildLiveServiceRanking(serviceProfile, productEntries);
+        liveRankings.set(serviceId, ranking);
+        return;
+      }
+
       if (stopSpending) {
         calls.skipped += 1;
         accounting.setState(plan.operations[opIndex]!, { status: 'skipped', reason: stopReason ?? 'SPENDING_STOPPED' });
@@ -471,7 +539,7 @@ export async function runLiveSmokeCalibration(
       calls.attempted += 1;
       calls.rerankAttempted += 1;
       const serviceSummary = buildServiceRerankSummary(serviceProfile);
-      const result = await deps.provider.rerank(
+      const result = await deps.provider!.rerank(
         serviceId,
         serviceSummary,
         candidateSummaries,
@@ -504,7 +572,7 @@ export async function runLiveSmokeCalibration(
       calls.successful += 1;
       rerankDecision = result.data;
       accounting.setState(plan.operations[opIndex]!, { status: 'provider_attempted', success: true });
-      await writeCalibrationCache(cacheDir, cacheKey, result.data);
+      await writeCache(cacheKey, result.data);
     }
 
     rerankDecisions.set(serviceId, rerankDecision!);
@@ -554,7 +622,19 @@ export async function runLiveSmokeCalibration(
   for (const [id, profile] of services) allProfiles.set(id, profile);
   for (const [id, profile] of products) allProfiles.set(id, profile);
 
-  const classificationMetrics = computeClassificationMetrics(allProfiles, smokeClassificationExpectations);
+  const requiredClassificationCount =
+    scopeEntities.serviceIds.size + scopeEntities.productIds.size;
+
+  const classificationMetrics = withEndToEndClassificationDiagnostics(
+    computeClassificationMetrics(allProfiles, smokeClassificationExpectations),
+    {
+      providerAttemptedCount: classifyCalls.attempted,
+      providerSuccessfulCount: classifyCalls.successful,
+      sanitizedFailures,
+      missingRequiredProfileCount: missingProfileDiagnostics.length,
+      requiredClassificationCount,
+    },
+  );
 
   const requiredClassificationsComplete =
     smokeClassificationExpectations.every((e) => allProfiles.has(e.entityId)) &&
@@ -625,8 +705,13 @@ export async function runLiveSmokeCalibration(
   );
 
   const ledgerSnapshot = ledger.snapshot();
-  const runId = randomUUID();
   const timestampUtc = new Date().toISOString();
+  const { providerRunKind, providerConnectivityVerified } = resolveProviderRunKind({
+    cachePolicy,
+    attempted: calls.attempted,
+    successful: calls.successful,
+    cacheHits: calls.cacheHits,
+  });
 
   const observedUsdKnown = calls.attempted === 0 ? true : costState.observedUsdKnown;
   const observedUsd = observedUsdKnown ? (calls.attempted === 0 ? 0 : costState.observedUsd) : null;
@@ -650,6 +735,9 @@ export async function runLiveSmokeCalibration(
     schemaVersion: SCHEMA_VERSION,
     promptVersion: PROMPT_VERSION,
     datasetVersion: getCalibrationDatasetVersion(),
+    cachePolicy,
+    providerRunKind,
+    providerConnectivityVerified,
     harnessSelfCheckStatus: harness.status,
     liveEvaluationStatus,
     releaseGateStatus,

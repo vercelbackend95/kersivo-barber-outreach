@@ -4,6 +4,10 @@ import { join } from 'node:path';
 
 import { containsSecretLikeContent, sanitizePayloadForCache } from '../reporting/sanitizeReport';
 
+export const CACHE_FORMAT_VERSION = 1;
+
+export type CacheProducerKind = 'OPENAI_LIVE' | 'TEST_MOCK' | 'UNKNOWN_LEGACY';
+
 export type CalibrationCacheKey = {
   entityId: string;
   contentHash: string;
@@ -23,6 +27,14 @@ export type CalibrationCacheEntry = {
   modelId: string;
   operation: CalibrationCacheKey['operation'];
   payload: unknown;
+  cacheFormatVersion?: number;
+  producerKind?: CacheProducerKind;
+  producingRunId?: string;
+};
+
+export type WriteCalibrationCacheOptions = {
+  producerKind: 'OPENAI_LIVE' | 'TEST_MOCK';
+  producingRunId: string;
 };
 
 export function buildCacheKeyString(key: CalibrationCacheKey): string {
@@ -54,25 +66,46 @@ function validateCacheEntry(entry: CalibrationCacheEntry, key: CalibrationCacheK
   return true;
 }
 
-export async function readCalibrationCache(
+/** Resolve provenance for reporting; missing fields → UNKNOWN_LEGACY (not connectivity proof). */
+export function resolveCacheProducerKind(entry: CalibrationCacheEntry): CacheProducerKind {
+  if (
+    entry.producerKind === 'OPENAI_LIVE' ||
+    entry.producerKind === 'TEST_MOCK' ||
+    entry.producerKind === 'UNKNOWN_LEGACY'
+  ) {
+    return entry.producerKind;
+  }
+  return 'UNKNOWN_LEGACY';
+}
+
+export async function readCalibrationCacheEntry(
   baseDir: string,
   key: CalibrationCacheKey,
-): Promise<unknown | null> {
+): Promise<CalibrationCacheEntry | null> {
   const filePath = getCacheFilePath(baseDir, key);
   try {
     const raw = await readFile(filePath, 'utf8');
     const parsed = JSON.parse(raw) as CalibrationCacheEntry;
     if (!validateCacheEntry(parsed, key)) return null;
-    return parsed.payload;
+    return parsed;
   } catch {
     return null;
   }
+}
+
+export async function readCalibrationCache(
+  baseDir: string,
+  key: CalibrationCacheKey,
+): Promise<unknown | null> {
+  const entry = await readCalibrationCacheEntry(baseDir, key);
+  return entry?.payload ?? null;
 }
 
 export async function writeCalibrationCache(
   baseDir: string,
   key: CalibrationCacheKey,
   payload: unknown,
+  options: WriteCalibrationCacheOptions,
 ): Promise<void> {
   await mkdir(baseDir, { recursive: true });
   const sanitizedPayload = sanitizePayloadForCache(payload);
@@ -85,6 +118,9 @@ export async function writeCalibrationCache(
     modelId: key.modelId,
     operation: key.operation,
     payload: sanitizedPayload,
+    cacheFormatVersion: CACHE_FORMAT_VERSION,
+    producerKind: options.producerKind,
+    producingRunId: options.producingRunId,
   };
   const serialized = JSON.stringify(entry, null, 2);
   if (containsSecretLikeContent(serialized)) {

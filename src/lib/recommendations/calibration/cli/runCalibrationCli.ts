@@ -56,6 +56,29 @@ export async function runCalibrationCli(
     const catalogue = loadCalibrationCatalogue();
     buildLiveSmokeCallPlan(catalogue, activation.args.model);
 
+    const liveArgs: CalibrationCliArgs = {
+      ...args,
+      model: activation.args.model,
+      maxCalls: activation.args.maxCalls,
+      maxCostUsd: activation.args.maxCostUsd,
+      scope: activation.args.scope,
+      outputDir: activation.args.outputDir,
+      cachePolicy: activation.args.cachePolicy,
+    };
+
+    if (args.cachePolicy === 'readonly') {
+      try {
+        const result = await deps.runCalibration(liveArgs, { liveDeps: {} });
+        deps.log(result.planSummary ?? 'Live calibration complete.');
+        deps.log(`Report written to ${liveArgs.outputDir}/calibration-report.json`);
+        return result.exitCode;
+      } catch (error) {
+        const message = error instanceof Error ? error.message : String(error);
+        deps.logError(`Calibration failed: ${message}`);
+        return 1;
+      }
+    }
+
     let env;
     try {
       env = deps.loadEnv({
@@ -74,17 +97,10 @@ export async function runCalibrationCli(
     const client = deps.createClient(env.apiKey);
     const provider = deps.createProvider({ client, modelId: activation.args.model });
 
-    const liveArgs: CalibrationCliArgs = {
-      ...args,
-      model: activation.args.model,
-      maxCalls: activation.args.maxCalls,
-      maxCostUsd: activation.args.maxCostUsd,
-      scope: activation.args.scope,
-      outputDir: activation.args.outputDir,
-    };
-
     try {
-      const result = await deps.runCalibration(liveArgs, { liveDeps: { provider } });
+      const result = await deps.runCalibration(liveArgs, {
+        liveDeps: { provider, cacheProducerKind: 'OPENAI_LIVE' },
+      });
       deps.log(result.planSummary ?? 'Live calibration complete.');
       deps.log(`Report written to ${liveArgs.outputDir}/calibration-report.json`);
       return result.exitCode;

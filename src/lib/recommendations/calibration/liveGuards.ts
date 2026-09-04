@@ -1,4 +1,8 @@
-import type { CalibrationCliArgs, CalibrationScope } from './types';
+import type {
+  CalibrationCachePolicy,
+  CalibrationCliArgs,
+  CalibrationScope,
+} from './types';
 import { buildCalibrationCallPlan } from './costEstimator';
 import { loadCalibrationCatalogue } from './dataset/loaders';
 import {
@@ -13,7 +17,9 @@ export const CALIBRATION_MODEL_SNAPSHOT = CALIBRATION_MODEL_ALLOWLIST[0];
 export const LIVE_MAX_CALLS_CAP = 20;
 export const LIVE_MAX_COST_USD_CAP = 0.05;
 
-const KNOWN_FLAGS = new Set([
+export const CALIBRATION_CACHE_POLICIES = ['reuse', 'refresh', 'readonly'] as const;
+
+const KNOWN_FLAG_NAMES = new Set([
   '--live',
   '--scope',
   '--model',
@@ -21,9 +27,10 @@ const KNOWN_FLAGS = new Set([
   '--max-calls',
   '--max-cost-usd',
   '--output-dir',
+  '--cache-policy',
 ]);
 
-const SINGLETON_FLAGS = new Set([
+const SINGLETON_FLAG_NAMES = new Set([
   '--live',
   '--scope',
   '--model',
@@ -31,15 +38,17 @@ const SINGLETON_FLAGS = new Set([
   '--max-calls',
   '--max-cost-usd',
   '--output-dir',
+  '--cache-policy',
 ]);
 
-const VALUE_FLAGS = new Set([
+const VALUE_FLAG_NAMES = new Set([
   '--scope',
   '--model',
   '--confirm-spend',
   '--max-calls',
   '--max-cost-usd',
   '--output-dir',
+  '--cache-policy',
 ]);
 
 export type ParseArgvResult =
@@ -50,7 +59,17 @@ function isUnsafeOutputDir(outputDir: string): boolean {
   return outputDir.includes('..') || outputDir.includes('\0');
 }
 
-export function parseCalibrationArgv(argv: string[]): ParseArgvResult {
+function isCalibrationCachePolicy(value: string): value is CalibrationCachePolicy {
+  return (CALIBRATION_CACHE_POLICIES as readonly string[]).includes(value);
+}
+
+type ParsedFlag = { name: string; value?: string };
+
+type TokenizeOk = { ok: true; flags: ParsedFlag[] };
+type TokenizeResult = TokenizeOk | { ok: false; code: string; message: string };
+
+function tokenizeArgv(argv: string[]): TokenizeResult {
+  const flags: ParsedFlag[] = [];
   const seenSingletons = new Set<string>();
 
   for (let i = 0; i < argv.length; i += 1) {
@@ -58,48 +77,91 @@ export function parseCalibrationArgv(argv: string[]): ParseArgvResult {
     if (!token.startsWith('--')) {
       return { ok: false, code: 'UNKNOWN_ARG', message: `Unknown argument: ${token}` };
     }
-    if (!KNOWN_FLAGS.has(token)) {
-      return { ok: false, code: 'UNKNOWN_FLAG', message: `Unknown flag: ${token}` };
+
+    let name = token;
+    let inlineValue: string | undefined;
+    const eqIdx = token.indexOf('=');
+    if (eqIdx >= 0) {
+      name = token.slice(0, eqIdx);
+      inlineValue = token.slice(eqIdx + 1);
     }
-    if (SINGLETON_FLAGS.has(token)) {
-      if (seenSingletons.has(token)) {
-        return { ok: false, code: 'DUPLICATE_FLAG', message: `Duplicate flag: ${token}` };
+
+    if (!KNOWN_FLAG_NAMES.has(name)) {
+      return { ok: false, code: 'UNKNOWN_FLAG', message: `Unknown flag: ${name}` };
+    }
+
+    if (SINGLETON_FLAG_NAMES.has(name)) {
+      if (seenSingletons.has(name)) {
+        return { ok: false, code: 'DUPLICATE_FLAG', message: `Duplicate flag: ${name}` };
       }
-      seenSingletons.add(token);
+      seenSingletons.add(name);
     }
-    if (VALUE_FLAGS.has(token)) {
-      const value = argv[i + 1];
-      if (!value || value.startsWith('--')) {
-        return { ok: false, code: 'MISSING_FLAG_VALUE', message: `Missing value for ${token}` };
+
+    if (!VALUE_FLAG_NAMES.has(name)) {
+      if (inlineValue !== undefined) {
+        return { ok: false, code: 'UNEXPECTED_FLAG_VALUE', message: `${name} does not take a value` };
       }
-      i += 1;
+      flags.push({ name });
+      continue;
     }
+
+    if (inlineValue !== undefined) {
+      if (inlineValue.length === 0) {
+        return { ok: false, code: 'MISSING_FLAG_VALUE', message: `Missing value for ${name}` };
+      }
+      flags.push({ name, value: inlineValue });
+      continue;
+    }
+
+    const next = argv[i + 1];
+    if (!next || next.startsWith('--')) {
+      return { ok: false, code: 'MISSING_FLAG_VALUE', message: `Missing value for ${name}` };
+    }
+    flags.push({ name, value: next });
+    i += 1;
   }
 
-  const isLive = argv.includes('--live');
-  const scopeIdx = argv.indexOf('--scope');
-  const scopeRaw = scopeIdx >= 0 ? argv[scopeIdx + 1] : 'full';
+  return { ok: true, flags };
+}
+
+function flagValue(flags: ParsedFlag[], name: string): string | undefined {
+  return flags.find((flag) => flag.name === name)?.value;
+}
+
+export function parseCalibrationArgv(argv: string[]): ParseArgvResult {
+  const tokenized = tokenizeArgv(argv);
+  if (!tokenized.ok) {
+    return { ok: false, code: tokenized.code, message: tokenized.message };
+  }
+
+  const { flags } = tokenized;
+  const isLive = flags.some((flag) => flag.name === '--live');
+
+  const scopeRaw = flagValue(flags, '--scope') ?? 'full';
   if (!isCalibrationScope(scopeRaw)) {
     return { ok: false, code: 'SCOPE_INVALID', message: `Unknown scope: ${scopeRaw}` };
   }
   const scope = scopeRaw as CalibrationScope;
 
-  const outputIdx = argv.indexOf('--output-dir');
-  const outputDirExplicit = outputIdx >= 0;
-  const outputDir = outputDirExplicit && argv[outputIdx + 1] ? argv[outputIdx + 1]! : 'calibration-output';
+  const outputDirExplicit = flags.some((flag) => flag.name === '--output-dir');
+  const outputDir = flagValue(flags, '--output-dir') ?? 'calibration-output';
   if (isUnsafeOutputDir(outputDir)) {
     return { ok: false, code: 'OUTPUT_DIR_INVALID', message: 'Invalid output directory' };
   }
 
-  const modelIdx = argv.indexOf('--model');
-  const confirmIdx = argv.indexOf('--confirm-spend');
-  const maxCallsIdx = argv.indexOf('--max-calls');
-  const maxCostIdx = argv.indexOf('--max-cost-usd');
+  const cachePolicyRaw = flagValue(flags, '--cache-policy') ?? 'reuse';
+  if (!isCalibrationCachePolicy(cachePolicyRaw)) {
+    return {
+      ok: false,
+      code: 'CACHE_POLICY_INVALID',
+      message: `--cache-policy must be one of: ${CALIBRATION_CACHE_POLICIES.join(', ')}`,
+    };
+  }
 
   let maxCalls: number | undefined;
-  if (maxCallsIdx >= 0) {
-    const raw = argv[maxCallsIdx + 1]!;
-    const parsed = Number(raw);
+  const maxCallsRaw = flagValue(flags, '--max-calls');
+  if (maxCallsRaw != null) {
+    const parsed = Number(maxCallsRaw);
     if (!Number.isInteger(parsed) || parsed <= 0) {
       return { ok: false, code: 'MAX_CALLS_INVALID', message: '--max-calls must be a positive integer' };
     }
@@ -107,8 +169,9 @@ export function parseCalibrationArgv(argv: string[]): ParseArgvResult {
   }
 
   let maxCostUsd: number | undefined;
-  if (maxCostIdx >= 0) {
-    const parsed = Number(argv[maxCostIdx + 1]);
+  const maxCostRaw = flagValue(flags, '--max-cost-usd');
+  if (maxCostRaw != null) {
+    const parsed = Number(maxCostRaw);
     if (!Number.isFinite(parsed) || parsed <= 0) {
       return { ok: false, code: 'MAX_COST_INVALID', message: '--max-cost-usd must be a positive finite number' };
     }
@@ -120,18 +183,19 @@ export function parseCalibrationArgv(argv: string[]): ParseArgvResult {
     args: {
       mode: isLive ? 'live' : 'dry-run',
       scope,
-      model: modelIdx >= 0 ? argv[modelIdx + 1] : undefined,
-      confirmSpend: confirmIdx >= 0 ? argv[confirmIdx + 1] : undefined,
+      model: flagValue(flags, '--model'),
+      confirmSpend: flagValue(flags, '--confirm-spend'),
       maxCalls,
       maxCostUsd,
       outputDir,
       outputDirExplicit,
+      cachePolicy: cachePolicyRaw,
     },
   };
 }
 
 export type LiveGuardResult =
-  | { ok: true; args: Required<Pick<CalibrationCliArgs, 'model' | 'maxCalls' | 'maxCostUsd' | 'scope' | 'outputDir'>> }
+  | { ok: true; args: Required<Pick<CalibrationCliArgs, 'model' | 'maxCalls' | 'maxCostUsd' | 'scope' | 'outputDir' | 'cachePolicy'>> }
   | { ok: false; code: string; message: string };
 
 export function validateLiveGuards(args: CalibrationCliArgs): LiveGuardResult {
@@ -143,7 +207,9 @@ export function validateLiveActivation(args: CalibrationCliArgs): LiveGuardResul
     return { ok: false, code: 'LIVE_MODE_NOT_REQUESTED', message: 'Live mode requires --live flag' };
   }
 
-  if (args.confirmSpend !== LIVE_CONFIRM_PHRASE) {
+  const readonly = args.cachePolicy === 'readonly';
+
+  if (!readonly && args.confirmSpend !== LIVE_CONFIRM_PHRASE) {
     return {
       ok: false,
       code: 'CONFIRM_SPEND_MISSING',
@@ -254,6 +320,7 @@ export function validateLiveActivation(args: CalibrationCliArgs): LiveGuardResul
       maxCostUsd: args.maxCostUsd,
       scope: args.scope,
       outputDir: args.outputDir,
+      cachePolicy: args.cachePolicy,
     },
   };
 }

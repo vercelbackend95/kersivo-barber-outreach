@@ -61,4 +61,25 @@ describe('recommendations/ai/prompts', () => {
     expect(prompt).toContain('HAIR_CURL_DEFINITION');
     expect(prompt).toContain('not broad HAIR_STYLING_CONTROL');
   });
+
+  it('product prompt encodes suitability vs exclusivity hair-length policy', () => {
+    const prompt = buildProductClassifierSystemPrompt();
+    expect(prompt).toContain('hairLengthSuitability expresses supported or preferred suitability');
+    expect(prompt).toContain(
+      'Hard hair-length exclusivity (FOR_SHORT_HAIR_ONLY / FOR_LONG_HAIR_ONLY) is derived separately from catalogue source text',
+    );
+    expect(prompt).toContain('do not emit FOR_SHORT_HAIR_ONLY or FOR_LONG_HAIR_ONLY');
+    expect(prompt).toContain('for short styles');
+    expect(prompt).toContain('Incompatibility tags are material hard constraints');
+    expect(prompt).toContain('Beard Oil must never produce NOT_FOR_BEARD');
+    expect(prompt).toContain('Shave Cream must never produce NOT_FOR_SHAVE');
+  });
+
+  it('service prompt encodes generic haircut UNKNOWN hair-length policy', () => {
+    const prompt = buildServiceClassifierSystemPrompt();
+    expect(prompt).toContain('Generic Haircut, Haircut & Beard, Scissor Cut');
+    expect(prompt).toContain('must use UNKNOWN unless the name or description explicitly establishes length');
+    expect(prompt).toContain('UNKNOWN means missing length evidence');
+    expect(prompt).toContain('Do not emit product-only hard restriction tags on services');
+  });
 });

@@ -1,6 +1,12 @@
 import { describe, expect, it } from 'vitest';
 
-import { PROMPT_VERSION, SCHEMA_VERSION, TAXONOMY_VERSION } from './constants';
+import {
+  CRITICAL_FIELD_CONFIDENCE_MIN,
+  PROMPT_VERSION,
+  SCHEMA_VERSION,
+  SOURCE_EVIDENCE_CONFIDENCE,
+  TAXONOMY_VERSION,
+} from './constants';
 import { buildServiceProfileEnvelope, CLASSIFIER_PROMPT_VERSION } from './ai/prompts';
 import type { ServiceSemanticProfileAiV2 } from './contracts';
 
@@ -19,8 +25,8 @@ const validServiceAi: ServiceSemanticProfileAiV2 = {
 };
 
 describe('recommendations/constants', () => {
-  it('exports PROMPT_VERSION v4 with unchanged taxonomy and schema versions', () => {
-    expect(PROMPT_VERSION).toBe('2026-09-v4');
+  it('exports PROMPT_VERSION v8 with unchanged taxonomy and schema versions', () => {
+    expect(PROMPT_VERSION).toBe('2026-09-v8');
     expect(TAXONOMY_VERSION).toBe('2026-09-v2');
     expect(SCHEMA_VERSION).toBe('2');
     expect(CLASSIFIER_PROMPT_VERSION).toBe(PROMPT_VERSION);
@@ -38,6 +44,10 @@ describe('recommendations/constants', () => {
       validServiceAi,
       'gpt-4o-mini',
     );
-    expect(envelope.promptVersion).toBe('2026-09-v4');
+    expect(envelope.promptVersion).toBe('2026-09-v8');
+  });
+
+  it('exports SOURCE_EVIDENCE_CONFIDENCE above critical field minimum', () => {
+    expect(SOURCE_EVIDENCE_CONFIDENCE).toBeGreaterThanOrEqual(CRITICAL_FIELD_CONFIDENCE_MIN);
   });
 });

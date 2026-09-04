@@ -13,6 +13,11 @@ export type ScenarioPairAssertionDiagnostic = {
 
 export type CalibrationMode = 'dry-run' | 'live';
 export type CalibrationScope = 'smoke' | 'full';
+export type CalibrationCachePolicy = 'reuse' | 'refresh' | 'readonly';
+export type ProviderRunKind =
+  | 'FRESH_PROVIDER_RUN'
+  | 'MIXED_CACHE_PROVIDER_RUN'
+  | 'CACHE_ONLY_REPLAY';
 export type HarnessSelfCheckStatus = 'PASSED' | 'FAILED';
 export type LiveEvaluationStatus = 'NOT_RUN' | 'PASSED' | 'FAILED';
 export type ReleaseGateStatus = 'NOT_RUN' | 'PASSED' | 'FAILED';
@@ -98,6 +103,7 @@ export type CalibrationCliArgs = {
   maxCostUsd?: number;
   outputDir: string;
   outputDirExplicit?: boolean;
+  cachePolicy: CalibrationCachePolicy;
 };
 
 export type CalibrationCallPlan = {
@@ -137,13 +143,22 @@ export type HarnessFixtureMetrics = {
 };
 
 export type ClassificationMetrics = {
+  /** Gold-scoped field/expectation metrics (smoke gold subset when live). */
   structuredParseSuccessRate: number | null;
   requiredFieldAccuracy: number | null;
   forbiddenFieldViolationRate: number | null;
   confidenceGateCorrectness: number | null;
   ambiguousFailClosedRate: number | null;
   evaluatedEntityCount: number;
+  /** Gold-scoped expectation failures / missing gold entities only. */
   failedEntityIds: string[];
+  /** End-to-end provider accounting (all classify attempts in the run). */
+  providerAttemptedCount: number;
+  providerSuccessfulCount: number;
+  semanticConsistencyFailureCount: number;
+  semanticConsistencyFailedEntityIds: string[];
+  missingRequiredProfileCount: number;
+  endToEndClassificationSuccessRate: number | null;
 };
 
 export type RecommendationMetrics = {
@@ -222,6 +237,9 @@ export type CalibrationReport = {
   schemaVersion: string;
   promptVersion: string;
   datasetVersion: string;
+  cachePolicy: CalibrationCachePolicy;
+  providerRunKind: ProviderRunKind;
+  providerConnectivityVerified: boolean;
   harnessSelfCheckStatus: HarnessSelfCheckStatus;
   liveEvaluationStatus: LiveEvaluationStatus;
   releaseGateStatus: ReleaseGateStatus;

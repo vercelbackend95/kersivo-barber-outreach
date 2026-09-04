@@ -13,7 +13,13 @@ import type { ProductSemanticInput, ServiceSemanticInput } from '../hash';
 import { computeProductSemanticHash, computeServiceSemanticHash } from '../hash';
 import { canonicalizeRetailNeeds } from '../retailNeeds';
 import {
-  clampEnumArray,
+  assertProductSemanticConsistency,
+  assertServiceSemanticConsistency,
+} from '../semanticConsistency';
+import { stripProductOnlyServiceIncompatibilities } from '../serviceIncompatibilitySanitize';
+import { canonicalizeProductDraftFromSource } from '../canonicalizeProductDraft';
+import { clampAndCanonicalizeEnumArray } from '../canonicalizeClosedEnumArray';
+import {
   clampToEnum,
   type AftercareNeed,
   type FinishType,
@@ -48,52 +54,72 @@ function stripMedicalClaims(warnings: string[]): string[] {
 }
 
 export function normalizeServiceAiDraft(raw: ServiceSemanticProfileAiV2): ServiceSemanticProfileAiV2 {
-  return {
-    targetAreas: clampEnumArray(TARGET_AREAS, raw.targetAreas, 'UNKNOWN' as TargetArea),
+  const draft: ServiceSemanticProfileAiV2 = {
+    targetAreas: clampAndCanonicalizeEnumArray(TARGET_AREAS, raw.targetAreas, 'UNKNOWN' as TargetArea),
     typicalHairLength: clampToEnum(HAIR_LENGTHS, raw.typicalHairLength, 'UNKNOWN' as HairLengthSuitability),
-    techniques: clampEnumArray(SERVICE_TECHNIQUES, raw.techniques, 'UNKNOWN' as ServiceTechnique),
-    outcomes: clampEnumArray(SERVICE_OUTCOMES, raw.outcomes, 'UNKNOWN' as ServiceOutcome),
-    aftercareNeeds: clampEnumArray(AFTERCARE_NEEDS, raw.aftercareNeeds, 'UNKNOWN' as AftercareNeed),
-    incompatibilities: clampEnumArray(
-      INCOMPATIBILITY_TAGS,
-      raw.incompatibilities,
-      'UNKNOWN' as IncompatibilityTag,
+    techniques: clampAndCanonicalizeEnumArray(
+      SERVICE_TECHNIQUES,
+      raw.techniques,
+      'UNKNOWN' as ServiceTechnique,
+    ),
+    outcomes: clampAndCanonicalizeEnumArray(
+      SERVICE_OUTCOMES,
+      raw.outcomes,
+      'UNKNOWN' as ServiceOutcome,
+    ),
+    aftercareNeeds: clampAndCanonicalizeEnumArray(
+      AFTERCARE_NEEDS,
+      raw.aftercareNeeds,
+      'UNKNOWN' as AftercareNeed,
+    ),
+    incompatibilities: stripProductOnlyServiceIncompatibilities(
+      clampAndCanonicalizeEnumArray(
+        INCOMPATIBILITY_TAGS,
+        raw.incompatibilities,
+        'UNKNOWN' as IncompatibilityTag,
+      ),
     ),
     retailNeeds: canonicalizeRetailNeeds(
-      clampEnumArray(RETAIL_NEEDS, raw.retailNeeds, 'UNKNOWN' as RetailNeed),
+      clampAndCanonicalizeEnumArray(RETAIL_NEEDS, raw.retailNeeds, 'UNKNOWN' as RetailNeed),
     ),
     confidence: Math.min(1, Math.max(0, raw.confidence)),
     fieldConfidence: raw.fieldConfidence ?? {},
     evidenceCodes: raw.evidenceCodes ?? [],
     warnings: stripMedicalClaims(raw.warnings ?? []),
   };
+  return assertServiceSemanticConsistency(draft);
 }
 
 export function normalizeProductAiDraft(raw: ProductSemanticProfileAiV2): ProductSemanticProfileAiV2 {
-  return {
-    targetAreas: clampEnumArray(TARGET_AREAS, raw.targetAreas, 'UNKNOWN' as TargetArea),
+  const draft: ProductSemanticProfileAiV2 = {
+    targetAreas: clampAndCanonicalizeEnumArray(TARGET_AREAS, raw.targetAreas, 'UNKNOWN' as TargetArea),
     hairLengthSuitability: clampToEnum(
       HAIR_LENGTHS,
       raw.hairLengthSuitability,
       'UNKNOWN' as HairLengthSuitability,
     ),
     productFamily: clampToEnum(PRODUCT_FAMILIES, raw.productFamily, 'UNKNOWN' as ProductFamily),
-    benefits: clampEnumArray(PRODUCT_BENEFITS, raw.benefits, 'UNKNOWN' as ProductBenefit),
+    benefits: clampAndCanonicalizeEnumArray(
+      PRODUCT_BENEFITS,
+      raw.benefits,
+      'UNKNOWN' as ProductBenefit,
+    ),
     holdStrength: clampToEnum(HOLD_STRENGTHS, raw.holdStrength, 'UNKNOWN' as HoldStrength),
     finish: clampToEnum(FINISH_TYPES, raw.finish, 'UNKNOWN' as FinishType),
-    incompatibilities: clampEnumArray(
+    incompatibilities: clampAndCanonicalizeEnumArray(
       INCOMPATIBILITY_TAGS,
       raw.incompatibilities,
       'UNKNOWN' as IncompatibilityTag,
     ),
     retailNeeds: canonicalizeRetailNeeds(
-      clampEnumArray(RETAIL_NEEDS, raw.retailNeeds, 'UNKNOWN' as RetailNeed),
+      clampAndCanonicalizeEnumArray(RETAIL_NEEDS, raw.retailNeeds, 'UNKNOWN' as RetailNeed),
     ),
     confidence: Math.min(1, Math.max(0, raw.confidence)),
     fieldConfidence: raw.fieldConfidence ?? {},
     evidenceCodes: raw.evidenceCodes ?? [],
     warnings: stripMedicalClaims(raw.warnings ?? []),
   };
+  return assertProductSemanticConsistency(draft);
 }
 
 export function parseServiceAiResponse(raw: unknown): ServiceSemanticProfileAiV2 {
@@ -135,8 +161,17 @@ export function buildProductProfileEnvelope(
   modelId: string,
 ): ProductSemanticProfileV2 {
   const contentHash = computeProductSemanticHash(input);
+  const normalized = normalizeProductAiDraft(ai);
+  const canonical = canonicalizeProductDraftFromSource(normalized, {
+    name: input.name,
+    description: input.description ?? null,
+    category: input.category ?? null,
+  });
+  if (!canonical.ok) {
+    throw new Error(canonical.error);
+  }
   return {
-    ...normalizeProductAiDraft(ai),
+    ...canonical.draft,
     schemaVersion: '2',
     taxonomyVersion: TAXONOMY_VERSION,
     entityType: 'PRODUCT',
@@ -185,6 +220,15 @@ const SERVICE_RETAIL_NEED_POLICY = [
   'Hot Towel Shave → POST_SHAVE_SOOTHING and/or SHAVE_PREPARATION.',
 ];
 
+const SERVICE_HAIR_LENGTH_POLICY = [
+  'typicalHairLength must reflect explicit catalogue evidence only.',
+  'Skin Fade and Buzz Cut normally support SHORT when the service wording clearly establishes a short style.',
+  'Long Hair Restyle supports LONG when the wording clearly establishes long hair.',
+  'Generic Haircut, Haircut & Beard, Scissor Cut, or similarly broad services must use UNKNOWN unless the name or description explicitly establishes length.',
+  'UNKNOWN means missing length evidence — it must not reduce overall understanding of a service when targetAreas and retailNeeds are otherwise clear; keep overall and domain/need field confidence appropriately high in that case.',
+  'Do not guess SHORT or LONG for ambiguous combo or generic haircut wording.',
+];
+
 const PRODUCT_RETAIL_NEED_POLICY = [
   'For products, retailNeeds means the actual grooming needs this product fulfils according to its name, description and category.',
   'Describe what the product actually does, not every area where it could theoretically be used.',
@@ -194,11 +238,32 @@ const PRODUCT_RETAIL_NEED_POLICY = [
   'Curl Defining Cream → HAIR_CURL_DEFINITION (and optionally HAIR_SMOOTHING_FRIZZ_CONTROL when supported); not broad HAIR_STYLING_CONTROL or HAIR_TEXTURE_DEFINITION merely because it is a styling cream.',
 ];
 
+const PRODUCT_HAIR_LENGTH_POLICY = [
+  'hairLengthSuitability expresses supported or preferred suitability — not exclusivity.',
+  'Hard hair-length exclusivity (FOR_SHORT_HAIR_ONLY / FOR_LONG_HAIR_ONLY) is derived separately from catalogue source text; do not emit FOR_SHORT_HAIR_ONLY or FOR_LONG_HAIR_ONLY.',
+  'Phrases such as \"for short styles\" or \"ideal for long hair\" support soft SHORT or LONG suitability only.',
+  'Incompatibility tags are material hard constraints. Do not infer negative or exclusive constraints from ordinary positive product wording.',
+  'When no explicit exclusion exists, use UNKNOWN rather than inventing NOT_FOR_* or domain-only tags.',
+  'Positive target-area wording is not evidence for a contradictory NOT_FOR_* tag.',
+  'Beard Oil must never produce NOT_FOR_BEARD. Shave Cream must never produce NOT_FOR_SHAVE.',
+  'A Hair and Beard product must not be arbitrarily reduced to one exclusive domain (do not emit HAIR_ONLY or BEARD_ONLY from dual-purpose wording).',
+  'Never emit mutually exclusive incompatibility tags together (HAIR_ONLY with BEARD_ONLY; BEARD_ONLY with NOT_FOR_BEARD; POST_SHAVE_ONLY with NOT_FOR_SHAVE; LEAVE_IN_ONLY with RINSE_OUT_ONLY).',
+  'If evidence is insufficient, use UNKNOWN rather than guessing.',
+  'Non-hair products must not carry SHORT/LONG suitability; use NOT_APPLICABLE or ANY as appropriate.',
+];
+
+const SERVICE_INCOMPATIBILITY_POLICY = [
+  'Do not emit product-only hard restriction tags on services (FOR_SHORT_HAIR_ONLY, FOR_LONG_HAIR_ONLY, HAIR_ONLY, BEARD_ONLY, NOT_FOR_BEARD, NOT_FOR_SHAVE, POST_SHAVE_ONLY, LEAVE_IN_ONLY, RINSE_OUT_ONLY).',
+  'Prefer UNKNOWN incompatibilities for services unless a clearly defined service-side constraint applies.',
+];
+
 export function buildServiceClassifierSystemPrompt(): string {
   return [
     'You classify barbershop services for retail recommendations.',
     ...PROMPT_SAFETY_BASE,
     ...SERVICE_RETAIL_NEED_POLICY,
+    ...SERVICE_HAIR_LENGTH_POLICY,
+    ...SERVICE_INCOMPATIBILITY_POLICY,
     `Taxonomy version: ${TAXONOMY_VERSION}. Schema version: ${SCHEMA_VERSION}.`,
   ].join(' ');
 }
@@ -208,6 +273,7 @@ export function buildProductClassifierSystemPrompt(): string {
     'You classify barbershop retail products for service recommendations.',
     ...PROMPT_SAFETY_BASE,
     ...PRODUCT_RETAIL_NEED_POLICY,
+    ...PRODUCT_HAIR_LENGTH_POLICY,
     `Taxonomy version: ${TAXONOMY_VERSION}. Schema version: ${SCHEMA_VERSION}.`,
   ].join(' ');
 }

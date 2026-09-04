@@ -6,6 +6,12 @@ import {
 } from '../../contracts';
 import type { RerankDecision } from '../../boundedRerank';
 import type { ProductSemanticProfileV2, ServiceSemanticProfileV2 } from '../../contracts';
+import { canonicalizeProductDraftFromSource, canonicalizeServiceEnumArrays } from '../../canonicalizeProductDraft';
+import { stripProductOnlyServiceIncompatibilities } from '../../serviceIncompatibilitySanitize';
+import {
+  validateStoredProductProfileConsistency,
+  validateStoredServiceProfileConsistency,
+} from '../../semanticConsistency';
 import type { CalibrationCacheKey } from './calibrationCache';
 
 const envelopeMetadataSchema = z.object({
@@ -94,7 +100,18 @@ export function validateCachedServiceProfile(
   if (!meta.ok) return meta;
   const ai = serviceSemanticProfileAiV2Schema.safeParse(pickServiceAi(payload as Record<string, unknown>));
   if (!ai.success) return { ok: false, reason: 'CACHE_SERVICE_SHAPE_INVALID' };
-  return { ok: true, profile: payload as ServiceSemanticProfileV2 };
+  const sanitized = canonicalizeServiceEnumArrays({
+    ...ai.data,
+    incompatibilities: stripProductOnlyServiceIncompatibilities(ai.data.incompatibilities),
+  });
+  const consistency = validateStoredServiceProfileConsistency(sanitized);
+  if (!consistency.ok) {
+    return { ok: false, reason: `CACHE_SERVICE_SEMANTIC_INCONSISTENT:${consistency.code}` };
+  }
+  return {
+    ok: true,
+    profile: { ...(payload as ServiceSemanticProfileV2), ...sanitized },
+  };
 }
 
 export function validateCachedProductProfile(
@@ -103,9 +120,26 @@ export function validateCachedProductProfile(
 ): { ok: true; profile: ProductSemanticProfileV2 } | { ok: false; reason: string } {
   const meta = validateMetadata(payload, key, 'PRODUCT');
   if (!meta.ok) return meta;
+  const record = payload as ProductSemanticProfileV2;
   const ai = productSemanticProfileAiV2Schema.safeParse(pickProductAi(payload as Record<string, unknown>));
   if (!ai.success) return { ok: false, reason: 'CACHE_PRODUCT_SHAPE_INVALID' };
-  return { ok: true, profile: payload as ProductSemanticProfileV2 };
+  const source = record.sourceSnapshot ?? { name: '', description: null, category: '' };
+  const canonical = canonicalizeProductDraftFromSource(ai.data, {
+    name: source.name,
+    description: source.description,
+    category: source.category,
+  });
+  if (!canonical.ok) {
+    return { ok: false, reason: `CACHE_PRODUCT_SOURCE_CONSTRAINT:${canonical.error}` };
+  }
+  const consistency = validateStoredProductProfileConsistency(canonical.draft);
+  if (!consistency.ok) {
+    return { ok: false, reason: `CACHE_PRODUCT_SEMANTIC_INCONSISTENT:${consistency.code}` };
+  }
+  return {
+    ok: true,
+    profile: { ...record, ...canonical.draft },
+  };
 }
 
 export function validateCachedRerankDecision(

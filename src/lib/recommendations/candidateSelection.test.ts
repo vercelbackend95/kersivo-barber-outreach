@@ -92,6 +92,110 @@ describe('candidateSelection', () => {
     expect(ids.some((id) => id.startsWith('beard'))).toBe(true);
   });
 
+  it('preselects dual-domain candidate before specialists for combo services', () => {
+    const selected = selectDiverseCandidates(
+      [
+        candidate('hair-1', 0.97, 'POMADE', ['HAIR']),
+        candidate('hair-2', 0.96, 'GEL', ['HAIR']),
+        candidate('hair-3', 0.95, 'CLAY', ['HAIR']),
+        candidate('dual', 0.86, 'BALM', ['HAIR', 'BEARD']),
+        candidate('beard-1', 0.94, 'OIL', ['BEARD']),
+      ],
+      4,
+      2,
+      comboService(),
+    );
+    const ids = selected.map((row) => row.productId);
+    // 0.86 + 0.12 gap >= weaker specialist 0.94 → dual preselected
+    expect(ids).toContain('dual');
+    expect(ids).toContain('hair-1');
+    expect(ids).toEqual(expect.arrayContaining(['dual', 'hair-1', 'hair-2', 'hair-3']));
+  });
+
+  it('does not force a weak dual over clearly superior specialists', () => {
+    const selected = selectDiverseCandidates(
+      [
+        candidate('hair-1', 0.97, 'POMADE', ['HAIR']),
+        candidate('hair-2', 0.96, 'GEL', ['HAIR']),
+        candidate('hair-3', 0.95, 'CLAY', ['HAIR']),
+        candidate('dual', 0.56, 'BALM', ['HAIR', 'BEARD']),
+        candidate('beard-1', 0.94, 'OIL', ['BEARD']),
+      ],
+      4,
+      2,
+      comboService(),
+    );
+    const ids = selected.map((row) => row.productId);
+    expect(ids).toContain('hair-1');
+    expect(ids).toContain('beard-1');
+    expect(ids).not.toContain('dual');
+  });
+
+  it('does not force a weak dual via inflated selectionScore outside the gap guard', () => {
+    const weakDual: ScoredCandidate = {
+      ...candidate('dual', 0.56, 'BALM', ['HAIR', 'BEARD']),
+      selectionScore: 0.58,
+    };
+    const selected = selectDiverseCandidates(
+      [
+        candidate('hair-1', 0.97, 'POMADE', ['HAIR']),
+        candidate('beard-1', 0.94, 'OIL', ['BEARD']),
+        weakDual,
+        candidate('hair-2', 0.9, 'GEL', ['HAIR']),
+      ],
+      3,
+      2,
+      comboService(),
+    );
+    expect(selected.map((row) => row.productId)).not.toContain('dual');
+    expect(selected.map((row) => row.productId)).toEqual(
+      expect.arrayContaining(['hair-1', 'beard-1']),
+    );
+  });
+
+  it('may still select a strong dual by score when specialists already cover both domains', () => {
+    const selected = selectDiverseCandidates(
+      [
+        candidate('hair-1', 0.9, 'POMADE', ['HAIR']),
+        candidate('dual', 0.95, 'BALM', ['HAIR', 'BEARD']),
+        candidate('beard-1', 0.88, 'OIL', ['BEARD']),
+        candidate('hair-2', 0.7, 'GEL', ['HAIR']),
+      ],
+      3,
+      2,
+      comboService(),
+    );
+    const ids = selected.map((row) => row.productId);
+    expect(ids).toContain('dual');
+    expect(ids).toContain('hair-1');
+    expect(ids).toContain('beard-1');
+  });
+
+  it('preselects dual then fills remaining specialist coverage', () => {
+    const selected = selectDiverseCandidates(
+      [
+        candidate('dual', 0.8, 'BALM', ['HAIR', 'BEARD']),
+        candidate('hair-only', 0.95, 'CLAY', ['HAIR']),
+      ],
+      2,
+      2,
+      comboService(),
+    );
+
+    expect(selected.map((row) => row.productId)).toContain('dual');
+    expect(selected.map((row) => row.productId)).toContain('hair-only');
+  });
+
+  it('selects only-dual when no specialists exist', () => {
+    const selected = selectDiverseCandidates(
+      [candidate('dual', 0.8, 'BALM', ['HAIR', 'BEARD']), candidate('dual-2', 0.7, 'SET', ['HAIR', 'BEARD'])],
+      2,
+      2,
+      comboService(),
+    );
+    expect(selected.map((row) => row.productId)).toEqual(['dual', 'dual-2']);
+  });
+
   it('respects family cap when preselecting hair and beard domains', () => {
     const selected = selectDiverseCandidates(
       [
@@ -124,21 +228,6 @@ describe('candidateSelection', () => {
     expect(selectedIds).toContain('hair-only-match');
     expect(selectedIds).toContain('beard-only');
     expect(selectedIds).not.toContain('raw-dual-but-hair-only');
-  });
-
-  it('allows true pair-specific dual-domain candidate to satisfy both domains', () => {
-    const selected = selectDiverseCandidates(
-      [
-        candidate('dual', 0.8, 'BALM', ['HAIR', 'BEARD']),
-        candidate('hair-only', 0.95, 'CLAY', ['HAIR']),
-      ],
-      2,
-      2,
-      comboService(),
-    );
-
-    expect(selected.map((row) => row.productId)).toContain('dual');
-    expect(selected.map((row) => row.productId)).toContain('hair-only');
   });
 
   it('is invariant to shuffled input order', () => {

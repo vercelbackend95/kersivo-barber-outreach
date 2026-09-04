@@ -8,7 +8,8 @@ export type OperationSkipReason =
   | 'RERANK_SERVICE_PROFILE_MISSING'
   | 'CATALOGUE_SERVICE_MISSING'
   | 'CATALOGUE_PRODUCT_MISSING'
-  | 'SPENDING_STOPPED';
+  | 'SPENDING_STOPPED'
+  | 'CACHE_MISS_READONLY';
 
 export type OperationTerminalState =
   | { status: 'provider_attempted'; success: boolean; errorCode?: string }

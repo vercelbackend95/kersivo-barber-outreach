@@ -132,6 +132,7 @@ export type PositiveReasonCode =
   | 'HAIR_LENGTH_EXACT_MATCH'
   | 'HAIR_LENGTH_ANY'
   | 'HAIR_LENGTH_NOT_APPLICABLE'
+  | 'HAIR_LENGTH_UNKNOWN_NOT_USED'
   | 'TECHNIQUE_PRODUCT_AFFINITY'
   | 'HIGH_CONFIDENCE_MATCH';
 
@@ -141,6 +142,16 @@ export type ScoreBreakdown = {
   hairLengthSuitability: number;
   techniqueProductAffinity: number;
   confidenceQuality: number;
+  /** When false, hairLengthSuitability was excluded from the weighted denominator. */
+  hairLengthApplicable: boolean;
+  /** Weights used after applicability renormalization (sum to 1). */
+  appliedWeights: {
+    retailNeedRelevance: number;
+    targetAreaRelevance: number;
+    hairLengthSuitability: number;
+    techniqueProductAffinity: number;
+    confidenceQuality: number;
+  };
 };
 
 export type ScoredCandidate = {

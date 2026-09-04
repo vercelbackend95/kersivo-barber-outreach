@@ -3,7 +3,13 @@ export const TAXONOMY_VERSION = '2026-09-v2';
 
 export const SCHEMA_VERSION = '2';
 
-export const PROMPT_VERSION = '2026-09-v4';
+export const PROMPT_VERSION = '2026-09-v8';
+
+/**
+ * Confidence floor applied when catalogue source evidence establishes a semantic field.
+ * Must remain above CRITICAL_FIELD_CONFIDENCE_MIN.
+ */
+export const SOURCE_EVIDENCE_CONFIDENCE = 0.85;
 
 /** Debounce window after the last semantic catalogue change (ms). */
 export const REBUILD_DEBOUNCE_MS = 120_000;
@@ -25,6 +31,17 @@ export const CRITICAL_FIELD_CONFIDENCE_MIN = 0.6;
 
 /** Minimum semantic match score to include in set. */
 export const MATCH_SCORE_MIN = 0.55;
+
+/**
+ * Max gap between a dual-domain candidate's effective selection score and the
+ * weaker hair/beard specialist before dual is preselected when both domains
+ * are already coverable by specialists.
+ *
+ * Sized to keep a genuinely competitive dual (within ~one soft score band of
+ * the weaker specialist) while still rejecting barely-above-MATCH_SCORE_MIN
+ * duals that would displace clearly superior specialists.
+ */
+export const COMBO_DUAL_PRESELECT_MAX_SCORE_GAP = 0.12;
 
 /** Retail-need F1 threshold for GENERAL_GROOMING target-area neutral bridge. */
 export const GENERAL_GROOMING_RETAIL_NEED_F1_MIN = 0.75;

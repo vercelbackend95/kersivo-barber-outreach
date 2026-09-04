@@ -278,6 +278,95 @@ describe('hardEligibility', () => {
     if (!result.ok) expect(result.reasonCode).toBe('HAIR_LENGTH_MISMATCH');
   });
 
+  it('Skin Fade SHORT + valid SHORT Matte Clay is eligible', () => {
+    const result = evaluateHardEligibility(
+      service({ typicalHairLength: 'SHORT', techniques: ['SKIN_FADE'] }),
+      product({ hairLengthSuitability: 'SHORT', incompatibilities: [], productFamily: 'CLAY' }),
+    );
+    expect(result.ok).toBe(true);
+    if (result.ok) expect(result.context.matchedAreas).toEqual(['HAIR']);
+  });
+
+  it('Skin Fade SHORT + explicit FOR_LONG_HAIR_ONLY product is rejected', () => {
+    const result = evaluateHardEligibility(
+      service({ typicalHairLength: 'SHORT' }),
+      product({ hairLengthSuitability: 'LONG', incompatibilities: ['FOR_LONG_HAIR_ONLY'] }),
+    );
+    expect(result.ok).toBe(false);
+    if (!result.ok) expect(result.reasonCode).toBe('HAIR_LENGTH_MISMATCH');
+  });
+
+  it('SHORT service + soft LONG suitability without exclusivity is not hard-rejected', () => {
+    const result = evaluateHardEligibility(
+      service({ typicalHairLength: 'SHORT' }),
+      product({ hairLengthSuitability: 'LONG', incompatibilities: [] }),
+    );
+    expect(result.ok).toBe(true);
+  });
+
+  it('generic Haircut UNKNOWN + universal ANY styling product is eligible', () => {
+    const result = evaluateHardEligibility(
+      service({ typicalHairLength: 'UNKNOWN', techniques: ['SCISSOR_CUT'] }),
+      product({ hairLengthSuitability: 'ANY', incompatibilities: [] }),
+    );
+    expect(result.ok).toBe(true);
+  });
+
+  it('generic Haircut UNKNOWN + merely SHORT-suitable non-exclusive product is not hard-rejected', () => {
+    const result = evaluateHardEligibility(
+      service({ typicalHairLength: 'UNKNOWN', techniques: ['SCISSOR_CUT'] }),
+      product({ hairLengthSuitability: 'SHORT', incompatibilities: [] }),
+    );
+    expect(result.ok).toBe(true);
+  });
+
+  it('generic Haircut UNKNOWN + FOR_SHORT_HAIR_ONLY is unresolved', () => {
+    const result = evaluateHardEligibility(
+      service({ typicalHairLength: 'UNKNOWN', techniques: ['SCISSOR_CUT'] }),
+      product({ hairLengthSuitability: 'SHORT', incompatibilities: ['FOR_SHORT_HAIR_ONLY'] }),
+    );
+    expect(result.ok).toBe(false);
+    if (!result.ok) expect(result.reasonCode).toBe('HAIR_LENGTH_UNRESOLVED_FOR_EXCLUSIVE_PRODUCT');
+  });
+
+  it('known LONG service + merely SHORT-suitable non-exclusive product is not hard-rejected', () => {
+    const result = evaluateHardEligibility(
+      service({ typicalHairLength: 'LONG', techniques: ['SCISSOR_CUT'] }),
+      product({ hairLengthSuitability: 'SHORT', incompatibilities: [] }),
+    );
+    expect(result.ok).toBe(true);
+  });
+
+  it('known LONG service + FOR_SHORT_HAIR_ONLY is rejected', () => {
+    const result = evaluateHardEligibility(
+      service({ typicalHairLength: 'LONG' }),
+      product({ hairLengthSuitability: 'SHORT', incompatibilities: ['FOR_SHORT_HAIR_ONLY'] }),
+    );
+    expect(result.ok).toBe(false);
+    if (!result.ok) expect(result.reasonCode).toBe('HAIR_LENGTH_MISMATCH');
+  });
+
+  it('exposes pair-scoped retail need fields on combo matches', () => {
+    const result = evaluateHardEligibility(
+      service({
+        targetAreas: ['HAIR', 'BEARD'],
+        typicalHairLength: 'UNKNOWN',
+        retailNeeds: ['HAIR_STYLING_CONTROL', 'BEARD_SOFTENING', 'BEARD_SHAPING'],
+      }),
+      product({
+        targetAreas: ['HAIR'],
+        retailNeeds: ['HAIR_STYLING_CONTROL'],
+        incompatibilities: ['HAIR_ONLY'],
+      }),
+    );
+    expect(result.ok).toBe(true);
+    if (!result.ok) return;
+    expect(result.context.matchedAreas).toEqual(['HAIR']);
+    expect(result.context.matchedServiceNeeds).toEqual(['HAIR_STYLING_CONTROL']);
+    expect(result.context.matchedProductNeeds).toEqual(['HAIR_STYLING_CONTROL']);
+    expect(result.context.pairRetailNeedF1).toBeCloseTo(1, 5);
+  });
+
   it('rejects post-shave-only without shave context', () => {
     const result = evaluateHardEligibility(
       service({

@@ -50,6 +50,9 @@ export async function runCalibration(
     if (!activation.ok) {
       throw new Error(`${activation.code}: ${activation.message}`);
     }
+    if (args.cachePolicy === 'readonly') {
+      return runLiveSmokeCalibration(args, { ...options?.liveDeps, provider: undefined });
+    }
     if (!options?.liveDeps?.provider) {
       throw new Error('LIVE_PROVIDER_MISSING');
     }
@@ -105,6 +108,9 @@ export async function runCalibration(
     schemaVersion: SCHEMA_VERSION,
     promptVersion: PROMPT_VERSION,
     datasetVersion,
+    cachePolicy: args.cachePolicy ?? 'reuse',
+    providerRunKind: 'CACHE_ONLY_REPLAY',
+    providerConnectivityVerified: false,
     harnessSelfCheckStatus: harness.status,
     liveEvaluationStatus: 'NOT_RUN',
     releaseGateStatus: 'NOT_RUN',

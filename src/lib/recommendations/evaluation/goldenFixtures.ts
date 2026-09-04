@@ -170,7 +170,7 @@ export const GOLDEN_PRODUCTS: Record<string, ProductSemanticProfileV2> = {
       benefits: ['TEXTURE', 'VOLUME'],
       holdStrength: 'LIGHT',
       finish: 'NATURAL',
-      incompatibilities: [],
+      incompatibilities: ['FOR_LONG_HAIR_ONLY'],
       retailNeeds: ['HAIR_STYLING_CONTROL', 'HAIR_SMOOTHING_FRIZZ_CONTROL'],
       confidence: 0.87,
       fieldConfidence: GOLDEN_CRITICAL_FIELD_CONFIDENCE,

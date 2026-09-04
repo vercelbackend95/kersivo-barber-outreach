@@ -40,7 +40,7 @@ const FULL_FIELD_CONFIDENCE = {
   retailNeeds: 0.85,
 };
 
-function liveArgs(outputDir: string) {
+function liveArgs(outputDir: string, cachePolicy: 'reuse' | 'refresh' | 'readonly' = 'reuse') {
   return {
     mode: 'live' as const,
     scope: 'smoke' as const,
@@ -50,6 +50,7 @@ function liveArgs(outputDir: string) {
     maxCostUsd: LIVE_MAX_COST_USD_CAP,
     outputDir,
     outputDirExplicit: true,
+    cachePolicy,
   };
 }
 
@@ -357,7 +358,10 @@ describe('runLiveSmokeCalibration', () => {
       }),
       CALIBRATION_MODEL_SNAPSHOT,
     );
-    await writeCalibrationCache(cacheDir, v3Key, envelope);
+    await writeCalibrationCache(cacheDir, v3Key, envelope, {
+      producerKind: 'TEST_MOCK',
+      producingRunId: 'legacy-test',
+    });
 
     const outputDir = await mkdtemp(join(tmpdir(), 'live-cal-'));
     const provider = stubSuccessProvider();
@@ -381,6 +385,141 @@ describe('runLiveSmokeCalibration', () => {
       const html = await readFile(join(outputDir, 'calibration-review.html'), 'utf8');
       expect(html).toContain('LIVE MODEL OUTPUT');
       expect(html).not.toMatch(/sk-proj-fake/);
+    } finally {
+      await rm(outputDir, { recursive: true, force: true });
+      await rm(cacheDir, { recursive: true, force: true });
+    }
+  });
+
+  it('refresh performs zero cache reads, calls provider, and reports FRESH_PROVIDER_RUN', async () => {
+    const outputDir = await mkdtemp(join(tmpdir(), 'live-cal-'));
+    const cacheDir = await mkdtemp(join(tmpdir(), 'live-cache-'));
+    const seedProvider = stubSuccessProvider();
+    const provider = stubSuccessProvider();
+    let cacheReads = 0;
+    try {
+      await runLiveSmokeCalibration(liveArgs(outputDir), { provider: seedProvider, cacheDir });
+      const result = await runLiveSmokeCalibration(liveArgs(outputDir, 'refresh'), {
+        provider,
+        cacheDir,
+        onCacheReadAttempt: () => {
+          cacheReads += 1;
+        },
+      });
+      expect(cacheReads).toBe(0);
+      expect(provider.calls.length).toBeGreaterThan(0);
+      expect(result.report.calls.cacheHits).toBe(0);
+      expect(result.report.calls.attempted).toBeGreaterThan(0);
+      expect(result.report.cachePolicy).toBe('refresh');
+      expect(result.report.providerRunKind).toBe('FRESH_PROVIDER_RUN');
+      expect(result.report.providerConnectivityVerified).toBe(true);
+      expect(result.report.operationAccountingReconciliation?.ok).toBe(true);
+    } finally {
+      await rm(outputDir, { recursive: true, force: true });
+      await rm(cacheDir, { recursive: true, force: true });
+    }
+  });
+
+  it('refresh provider failure does not fall back to old cached payload', async () => {
+    const outputDir = await mkdtemp(join(tmpdir(), 'live-cal-'));
+    const cacheDir = await mkdtemp(join(tmpdir(), 'live-cache-'));
+    const seedProvider = stubSuccessProvider();
+    try {
+      await runLiveSmokeCalibration(liveArgs(outputDir), { provider: seedProvider, cacheDir });
+      const failProvider = createMockCalibrationProvider({
+        modelId: CALIBRATION_MODEL_SNAPSHOT,
+        defaultServiceResponse: {
+          ok: false,
+          error: 'OPENAI_AUTH_ERROR',
+          usage: mockUsage({ operation: 'classify_service' }),
+        },
+        defaultProductResponse: {
+          ok: false,
+          error: 'OPENAI_AUTH_ERROR',
+          usage: mockUsage({ operation: 'classify_product' }),
+        },
+      });
+      const result = await runLiveSmokeCalibration(liveArgs(outputDir, 'refresh'), {
+        provider: failProvider,
+        cacheDir,
+      });
+      expect(result.report.calls.cacheHits).toBe(0);
+      expect(result.report.missingProfileDiagnostics?.length).toBeGreaterThan(0);
+      expect(result.report.finalOutcome).toBe('INCOMPLETE');
+    } finally {
+      await rm(outputDir, { recursive: true, force: true });
+      await rm(cacheDir, { recursive: true, force: true });
+    }
+  });
+
+  it('reuse warm cache reports CACHE_ONLY_REPLAY with connectivity false', async () => {
+    const outputDir = await mkdtemp(join(tmpdir(), 'live-cal-'));
+    const cacheDir = await mkdtemp(join(tmpdir(), 'live-cache-'));
+    const provider = stubSuccessProvider();
+    try {
+      await runLiveSmokeCalibration(liveArgs(outputDir), { provider, cacheDir });
+      provider.calls.length = 0;
+      const second = await runLiveSmokeCalibration(liveArgs(outputDir, 'reuse'), { provider, cacheDir });
+      expect(provider.calls.length).toBe(0);
+      expect(second.report.providerRunKind).toBe('CACHE_ONLY_REPLAY');
+      expect(second.report.providerConnectivityVerified).toBe(false);
+      expect(second.report.cachePolicy).toBe('reuse');
+    } finally {
+      await rm(outputDir, { recursive: true, force: true });
+      await rm(cacheDir, { recursive: true, force: true });
+    }
+  });
+
+  it('readonly performs zero provider calls and fails clearly on cache miss', async () => {
+    const outputDir = await mkdtemp(join(tmpdir(), 'live-cal-'));
+    const cacheDir = await mkdtemp(join(tmpdir(), 'live-cache-'));
+    try {
+      const result = await runLiveSmokeCalibration(liveArgs(outputDir, 'readonly'), { cacheDir });
+      expect(result.report.calls.attempted).toBe(0);
+      expect(result.report.providerRunKind).toBe('CACHE_ONLY_REPLAY');
+      expect(result.report.providerConnectivityVerified).toBe(false);
+      expect(result.report.errorCodeCounts?.CACHE_MISS_READONLY).toBeGreaterThan(0);
+      expect(result.report.finalOutcome).toBe('INCOMPLETE');
+      expect(result.report.operationAccountingReconciliation?.ok).toBe(true);
+    } finally {
+      await rm(outputDir, { recursive: true, force: true });
+      await rm(cacheDir, { recursive: true, force: true });
+    }
+  });
+
+  it('readonly replays warm cache without provider', async () => {
+    const outputDir = await mkdtemp(join(tmpdir(), 'live-cal-'));
+    const cacheDir = await mkdtemp(join(tmpdir(), 'live-cache-'));
+    const provider = stubSuccessProvider();
+    try {
+      await runLiveSmokeCalibration(liveArgs(outputDir), { provider, cacheDir });
+      const result = await runLiveSmokeCalibration(liveArgs(outputDir, 'readonly'), { cacheDir });
+      expect(result.report.calls.attempted).toBe(0);
+      expect(result.report.calls.cacheHits).toBeGreaterThan(0);
+      expect(result.report.providerRunKind).toBe('CACHE_ONLY_REPLAY');
+      expect(result.report.providerConnectivityVerified).toBe(false);
+    } finally {
+      await rm(outputDir, { recursive: true, force: true });
+      await rm(cacheDir, { recursive: true, force: true });
+    }
+  });
+
+  it('writes TEST_MOCK provenance from mock provider runs', async () => {
+    const outputDir = await mkdtemp(join(tmpdir(), 'live-cal-'));
+    const cacheDir = await mkdtemp(join(tmpdir(), 'live-cache-'));
+    const provider = stubSuccessProvider();
+    try {
+      await runLiveSmokeCalibration(liveArgs(outputDir), {
+        provider,
+        cacheDir,
+        cacheProducerKind: 'TEST_MOCK',
+      });
+      const { readdir } = await import('node:fs/promises');
+      const files = await readdir(cacheDir);
+      expect(files.length).toBeGreaterThan(0);
+      const raw = await readFile(join(cacheDir, files[0]!), 'utf8');
+      expect(raw).toContain('"producerKind": "TEST_MOCK"');
+      expect(raw).not.toContain('OPENAI_LIVE');
     } finally {
       await rm(outputDir, { recursive: true, force: true });
       await rm(cacheDir, { recursive: true, force: true });

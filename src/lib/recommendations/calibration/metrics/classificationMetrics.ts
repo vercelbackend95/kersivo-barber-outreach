@@ -1,5 +1,7 @@
 import { PROFILE_CONFIDENCE_MIN } from '../../constants';
 import type { ProductSemanticProfileV2, ServiceSemanticProfileV2 } from '../../contracts';
+import { CATALOGUE_HAIR_LENGTH_RESTRICTION_CONFLICT } from '../../explicitHairLengthRestriction';
+import { SEMANTIC_CONTRADICTION_CODES } from '../../semanticConsistency';
 import type {
   ClassificationFieldExpectation,
   ClassificationGoldExpectation,
@@ -147,5 +149,85 @@ export function computeClassificationMetrics(
     ambiguousFailClosedRate: ambiguousTotal === 0 ? 1 : ambiguousFailClosed / ambiguousTotal,
     evaluatedEntityCount,
     failedEntityIds,
+    providerAttemptedCount: 0,
+    providerSuccessfulCount: 0,
+    semanticConsistencyFailureCount: 0,
+    semanticConsistencyFailedEntityIds: [],
+    missingRequiredProfileCount: 0,
+    endToEndClassificationSuccessRate: null,
+  };
+}
+
+const SEMANTIC_FAILURE_CODES = new Set<string>([
+  ...SEMANTIC_CONTRADICTION_CODES,
+  CATALOGUE_HAIR_LENGTH_RESTRICTION_CONFLICT,
+]);
+
+export function isSemanticConsistencyFailureCode(code: string): boolean {
+  return SEMANTIC_FAILURE_CODES.has(code);
+}
+
+/**
+ * Derive overall vs classification-only provider counts for smoke accounting.
+ * Rerank is included in overall attempted but excluded from classification metrics.
+ */
+export function splitSmokeProviderAccounting(input: {
+  classifyServiceAttempted: number;
+  classifyProductAttempted: number;
+  classifyServiceSuccessful: number;
+  classifyProductSuccessful: number;
+  rerankAttempted: number;
+}): {
+  overallAttempted: number;
+  classifyAttempted: number;
+  classifySuccessful: number;
+  rerankAttempted: number;
+} {
+  const classifyAttempted = input.classifyServiceAttempted + input.classifyProductAttempted;
+  const classifySuccessful =
+    input.classifyServiceSuccessful + input.classifyProductSuccessful;
+  return {
+    overallAttempted: classifyAttempted + input.rerankAttempted,
+    classifyAttempted,
+    classifySuccessful,
+    rerankAttempted: input.rerankAttempted,
+  };
+}
+
+export type EndToEndClassificationDiagnosticsInput = {
+  providerAttemptedCount: number;
+  providerSuccessfulCount: number;
+  sanitizedFailures: Array<{ fixtureId: string; code: string }>;
+  missingRequiredProfileCount: number;
+  requiredClassificationCount: number;
+};
+
+/** Attach provider/end-to-end diagnostics without altering gold-scoped rates. */
+export function withEndToEndClassificationDiagnostics(
+  metrics: ClassificationMetrics,
+  input: EndToEndClassificationDiagnosticsInput,
+): ClassificationMetrics {
+  const semanticConsistencyFailedEntityIds = [
+    ...new Set(
+      input.sanitizedFailures
+        .filter((failure) => isSemanticConsistencyFailureCode(failure.code))
+        .map((failure) => failure.fixtureId),
+    ),
+  ].sort();
+
+  const endToEndClassificationSuccessRate =
+    input.requiredClassificationCount === 0
+      ? 1
+      : (input.requiredClassificationCount - input.missingRequiredProfileCount) /
+        input.requiredClassificationCount;
+
+  return {
+    ...metrics,
+    providerAttemptedCount: input.providerAttemptedCount,
+    providerSuccessfulCount: input.providerSuccessfulCount,
+    semanticConsistencyFailureCount: semanticConsistencyFailedEntityIds.length,
+    semanticConsistencyFailedEntityIds,
+    missingRequiredProfileCount: input.missingRequiredProfileCount,
+    endToEndClassificationSuccessRate,
   };
 }

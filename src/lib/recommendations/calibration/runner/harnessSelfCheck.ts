@@ -157,6 +157,12 @@ export function buildNullLiveClassificationMetrics(
     ambiguousFailClosedRate: null,
     evaluatedEntityCount,
     failedEntityIds: [],
+    providerAttemptedCount: 0,
+    providerSuccessfulCount: 0,
+    semanticConsistencyFailureCount: 0,
+    semanticConsistencyFailedEntityIds: [],
+    missingRequiredProfileCount: 0,
+    endToEndClassificationSuccessRate: null,
   };
 }
 

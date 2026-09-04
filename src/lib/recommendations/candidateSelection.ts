@@ -1,4 +1,5 @@
 import type { ScoredCandidate, ServiceSemanticProfileV2 } from './contracts';
+import { COMBO_DUAL_PRESELECT_MAX_SCORE_GAP } from './constants';
 import { isHairAndBeardComboService } from './hardEligibility';
 
 export function effectiveSelectionScore(candidate: ScoredCandidate): number {
@@ -84,6 +85,31 @@ function greedyFill(
   return result;
 }
 
+/**
+ * Dual is preselected when it fills a missing domain, or when competitive with
+ * the weaker specialist (within COMBO_DUAL_PRESELECT_MAX_SCORE_GAP).
+ */
+export function shouldPreselectDualDomain(args: {
+  dual: ScoredCandidate;
+  bestHairSpecialist?: ScoredCandidate;
+  bestBeardSpecialist?: ScoredCandidate;
+}): boolean {
+  const { dual, bestHairSpecialist, bestBeardSpecialist } = args;
+  const fillsMissingHair = !bestHairSpecialist;
+  const fillsMissingBeard = !bestBeardSpecialist;
+  if (fillsMissingHair || fillsMissingBeard) return true;
+
+  const specialistScores = [bestHairSpecialist, bestBeardSpecialist]
+    .filter((c): c is ScoredCandidate => c != null)
+    .map((c) => effectiveSelectionScore(c));
+  if (specialistScores.length === 0) return true;
+
+  const weakerSpecialist = Math.min(...specialistScores);
+  return (
+    effectiveSelectionScore(dual) + COMBO_DUAL_PRESELECT_MAX_SCORE_GAP >= weakerSpecialist
+  );
+}
+
 export function selectDiverseCandidates(
   candidates: ScoredCandidate[],
   maxItems: number,
@@ -96,8 +122,13 @@ export function selectDiverseCandidates(
     return greedyFill(ordered, [], maxItems, maxPerFamily).slice(0, maxItems);
   }
 
-  const bestHair = ordered.find((candidate) => isHairDomain(candidate.matchedAreas));
-  const bestBeard = ordered.find((candidate) => isBeardDomain(candidate.matchedAreas));
+  const bestHairSpecialist = ordered.find(
+    (candidate) => isHairDomain(candidate.matchedAreas) && !isBeardDomain(candidate.matchedAreas),
+  );
+  const bestBeardSpecialist = ordered.find(
+    (candidate) => isBeardDomain(candidate.matchedAreas) && !isHairDomain(candidate.matchedAreas),
+  );
+  const dualDomain = ordered.find((candidate) => hasDualDomainCoverage(candidate.matchedAreas));
 
   const preselected: ScoredCandidate[] = [];
   const preselectedIds = new Set<string>();
@@ -109,17 +140,21 @@ export function selectDiverseCandidates(
     preselectedIds.add(candidate.productId);
   };
 
-  const dualDomain = ordered.find((candidate) => hasDualDomainCoverage(candidate.matchedAreas));
-
-  if (bestHair && bestBeard && bestHair.productId !== bestBeard.productId) {
-    tryPreselect(bestHair);
-    tryPreselect(bestBeard);
-  } else if (dualDomain) {
+  if (
+    dualDomain &&
+    shouldPreselectDualDomain({
+      dual: dualDomain,
+      bestHairSpecialist,
+      bestBeardSpecialist,
+    })
+  ) {
     tryPreselect(dualDomain);
-  } else {
-    tryPreselect(bestHair);
-    tryPreselect(bestBeard);
   }
+
+  const coveredHair = preselected.some((c) => isHairDomain(c.matchedAreas));
+  const coveredBeard = preselected.some((c) => isBeardDomain(c.matchedAreas));
+  if (!coveredHair) tryPreselect(bestHairSpecialist);
+  if (!coveredBeard) tryPreselect(bestBeardSpecialist);
 
   const filled = greedyFill(ordered, preselected, maxItems, maxPerFamily);
   return sortSelectionCandidates(filled).slice(0, maxItems);

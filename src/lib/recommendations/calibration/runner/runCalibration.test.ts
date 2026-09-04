@@ -20,6 +20,7 @@ describe('runCalibration dry-run', () => {
         mode: 'dry-run',
         scope: 'full',
         outputDir,
+        cachePolicy: 'reuse',
       });
 
       expect(result.report.mode).toBe('dry-run');
@@ -30,7 +31,7 @@ describe('runCalibration dry-run', () => {
       expect(result.report.classificationMetrics.structuredParseSuccessRate).toBeNull();
       expect(result.report.recommendationMetrics.precisionAt4).toBeNull();
       expect(result.report.harnessFixtureMetrics.precisionAt4).toBeGreaterThanOrEqual(0.95);
-      expect(result.report.promptVersion).toBe('2026-09-v4');
+      expect(result.report.promptVersion).toBe('2026-09-v8');
       expect(result.report.scenarioDiagnostics.length).toBeGreaterThan(0);
       expect(result.exitCode).toBe(0);
       expect(classifySpy).not.toHaveBeenCalled();

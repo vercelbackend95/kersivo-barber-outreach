@@ -2,7 +2,7 @@ import { GENERAL_GROOMING_RETAIL_NEED_F1_MIN } from './constants';
 import type { ProductSemanticProfileV2, ServiceSemanticProfileV2 } from './contracts';
 import type { PairRejectionCode } from './pairEvaluation';
 import { knownRetailNeeds, retailNeedOverlap } from './retailNeeds';
-import { domainsForOverlapNeeds } from './retailNeedDomains';
+import { domainsForOverlapNeeds, RETAIL_NEED_DOMAINS } from './retailNeedDomains';
 import type {
   HairLengthSuitability,
   IncompatibilityTag,
@@ -14,11 +14,22 @@ export type HardEligibilityContext = {
   serviceKnownNeeds: ReturnType<typeof knownRetailNeeds>;
   productKnownNeeds: ReturnType<typeof knownRetailNeeds>;
   overlapNeeds: ReturnType<typeof retailNeedOverlap>;
+  /** Whole-profile retail F1 (legacy diagnostic). Prefer pairRetailNeedF1 for scoring. */
   retailNeedF1: number;
+  /** Service known needs whose domains intersect matchedAreas. */
+  matchedServiceNeeds: RetailNeed[];
+  /** Product known needs whose domains intersect matchedAreas. */
+  matchedProductNeeds: RetailNeed[];
+  /** Pair-scoped retail-need F1 used for scoring. */
+  pairRetailNeedF1: number;
   serviceKnownAreas: TargetArea[];
   productKnownAreas: TargetArea[];
   serviceConcreteAreas: TargetArea[];
   productConcreteAreas: TargetArea[];
+  /** Concrete service areas restricted to matched semantic domains. */
+  pairServiceConcreteAreas: TargetArea[];
+  /** Concrete product areas restricted to matched semantic domains. */
+  pairProductConcreteAreas: TargetArea[];
   matchedAreas: TargetArea[];
   matchedComponent: TargetArea | null;
 };
@@ -61,17 +72,31 @@ function sortMatchedAreas(areas: TargetArea[]): TargetArea[] {
   return DOMAIN_PRIORITY.filter((area) => unique.includes(area));
 }
 
-function computeRetailNeedF1(
-  serviceNeeds: ReturnType<typeof knownRetailNeeds>,
-  productNeeds: ReturnType<typeof knownRetailNeeds>,
-  overlap: ReturnType<typeof retailNeedOverlap>,
+export function computeRetailNeedF1(
+  serviceNeeds: readonly RetailNeed[],
+  productNeeds: readonly RetailNeed[],
+  overlap: readonly RetailNeed[],
 ): number {
   if (overlap.length === 0) return 0;
+  if (productNeeds.length === 0 || serviceNeeds.length === 0) return 0;
   const precision = overlap.length / productNeeds.length;
   const recall = overlap.length / serviceNeeds.length;
   const denominator = precision + recall;
   if (denominator === 0) return 0;
   return (2 * precision * recall) / denominator;
+}
+
+function needIntersectsMatchedAreas(need: RetailNeed, matchedAreas: readonly TargetArea[]): boolean {
+  const domains = RETAIL_NEED_DOMAINS[need];
+  if (domains.length === 0) return false;
+  return domains.some((domain) => matchedAreas.includes(domain));
+}
+
+export function filterNeedsForMatchedAreas(
+  needs: readonly RetailNeed[],
+  matchedAreas: readonly TargetArea[],
+): RetailNeed[] {
+  return needs.filter((need) => needIntersectsMatchedAreas(need, matchedAreas));
 }
 
 function intersectWithNeedDomains(areas: TargetArea[], needDomains: TargetArea[]): TargetArea[] {
@@ -160,16 +185,31 @@ function applyDomainConstraints(
   return { ok: true, matchedAreas: sortMatchedAreas(areas) };
 }
 
-function hairLengthHardConflict(
+function hasExclusivityTag(productIncompat: IncompatibilityTag[]): boolean {
+  return (
+    hasTag(productIncompat, 'FOR_LONG_HAIR_ONLY') || hasTag(productIncompat, 'FOR_SHORT_HAIR_ONLY')
+  );
+}
+
+/**
+ * Hard hair-length conflict uses exclusivity tags only.
+ * Suitability SHORT/LONG alone is soft evidence and must not hard-reject.
+ */
+function exclusivityHardRejection(
   serviceLength: HairLengthSuitability,
-  productLength: HairLengthSuitability,
   productIncompat: IncompatibilityTag[],
-): boolean {
-  if (hasTag(productIncompat, 'FOR_LONG_HAIR_ONLY') && serviceLength === 'SHORT') return true;
-  if (hasTag(productIncompat, 'FOR_SHORT_HAIR_ONLY') && serviceLength === 'LONG') return true;
-  if (productLength === 'LONG' && serviceLength === 'SHORT') return true;
-  if (productLength === 'SHORT' && serviceLength === 'LONG') return true;
-  return false;
+): PairRejectionCode | null {
+  const longOnly = hasTag(productIncompat, 'FOR_LONG_HAIR_ONLY');
+  const shortOnly = hasTag(productIncompat, 'FOR_SHORT_HAIR_ONLY');
+
+  if (!longOnly && !shortOnly) return null;
+
+  if (serviceLength === 'UNKNOWN') {
+    return 'HAIR_LENGTH_UNRESOLVED_FOR_EXCLUSIVE_PRODUCT';
+  }
+  if (longOnly && serviceLength === 'SHORT') return 'HAIR_LENGTH_MISMATCH';
+  if (shortOnly && serviceLength === 'LONG') return 'HAIR_LENGTH_MISMATCH';
+  return null;
 }
 
 function applyHairLengthConstraints(
@@ -181,21 +221,21 @@ function applyHairLengthConstraints(
     return { ok: true, matchedAreas };
   }
 
-  if (
-    hairLengthHardConflict(
-      service.typicalHairLength,
-      product.hairLengthSuitability,
-      product.incompatibilities,
-    )
-  ) {
-    const withoutHair = matchedAreas.filter((area) => area !== 'HAIR');
-    if (withoutHair.length === 0) {
-      return { ok: false, reasonCode: 'HAIR_LENGTH_MISMATCH' };
-    }
-    return { ok: true, matchedAreas: sortMatchedAreas(withoutHair) };
+  const rejection = exclusivityHardRejection(
+    service.typicalHairLength,
+    product.incompatibilities,
+  );
+  if (!rejection) {
+    return { ok: true, matchedAreas };
   }
 
-  return { ok: true, matchedAreas };
+  const withoutHair = matchedAreas.filter((area) => area !== 'HAIR');
+  if (withoutHair.length === 0) {
+    return { ok: false, reasonCode: rejection };
+  }
+  // Combo salvage: exclusivity blocks HAIR component only.
+  // UNRESOLVED exclusivity still strips HAIR when other domains remain.
+  return { ok: true, matchedAreas: sortMatchedAreas(withoutHair) };
 }
 
 export function evaluateHardEligibility(
@@ -255,6 +295,15 @@ export function evaluateHardEligibility(
   if (!hairLengthConstraints.ok) return hairLengthConstraints;
   matchedAreas = hairLengthConstraints.matchedAreas;
 
+  const matchedServiceNeeds = filterNeedsForMatchedAreas(serviceKnownNeeds, matchedAreas);
+  const matchedProductNeeds = filterNeedsForMatchedAreas(productKnownNeeds, matchedAreas);
+  const pairOverlap = matchedServiceNeeds.filter((need) => matchedProductNeeds.includes(need));
+  const pairRetailNeedF1 = computeRetailNeedF1(matchedServiceNeeds, matchedProductNeeds, pairOverlap);
+
+  const matchedAreaSet = new Set(matchedAreas);
+  const pairServiceConcreteAreas = serviceConcreteAreas.filter((area) => matchedAreaSet.has(area));
+  const pairProductConcreteAreas = productConcreteAreas.filter((area) => matchedAreaSet.has(area));
+
   const matchedComponent = pickMatchedComponent(matchedAreas);
 
   return {
@@ -264,10 +313,15 @@ export function evaluateHardEligibility(
       productKnownNeeds,
       overlapNeeds,
       retailNeedF1,
+      matchedServiceNeeds,
+      matchedProductNeeds,
+      pairRetailNeedF1,
       serviceKnownAreas,
       productKnownAreas,
       serviceConcreteAreas,
       productConcreteAreas,
+      pairServiceConcreteAreas,
+      pairProductConcreteAreas,
       matchedAreas,
       matchedComponent,
     },
@@ -295,4 +349,9 @@ export function isBeardFocusedProduct(product: ProductSemanticProfileV2): boolea
 export function isHairAndBeardComboService(service: ServiceSemanticProfileV2): boolean {
   const areas = knownAreas(service.targetAreas);
   return areas.includes('HAIR') && areas.some((area) => area === 'BEARD' || area === 'MOUSTACHE');
+}
+
+/** @deprecated Exported for tests that previously probed suitability-only hard conflict. */
+export function hasHairLengthExclusivity(productIncompat: IncompatibilityTag[]): boolean {
+  return hasExclusivityTag(productIncompat);
 }

@@ -6,7 +6,7 @@ const BASE: StoredProfileMetadata = {
   contentHash: 'hash-1',
   taxonomyVersion: '2026-09-v2',
   schemaVersion: '2',
-  promptVersion: '2026-09-v4',
+  promptVersion: '2026-09-v8',
   modelId: 'gpt-4o-mini',
 };
 
@@ -39,11 +39,11 @@ describe('isStoredProfileReusable', () => {
     ).toBe(false);
   });
 
-  it('returns false when stored v3 profile is checked against v4 expected', () => {
+  it('returns false when stored v7 profile is checked against v8 expected', () => {
     expect(
       isStoredProfileReusable(
-        { ...BASE, promptVersion: '2026-09-v3' },
-        { ...BASE, promptVersion: '2026-09-v4' },
+        { ...BASE, promptVersion: '2026-09-v7' },
+        { ...BASE, promptVersion: '2026-09-v8' },
       ),
     ).toBe(false);
   });

@@ -121,8 +121,94 @@ describe('scoreComponents', () => {
     if (!hard.ok) return;
 
     const scored = computeDeterministicScore(svc, prod, hard.context);
-    expect(scored.breakdown.hairLengthSuitability).toBe(1);
+    expect(scored.breakdown.hairLengthApplicable).toBe(false);
+    expect(scored.breakdown.hairLengthSuitability).toBe(0);
+    expect(scored.breakdown.appliedWeights.hairLengthSuitability).toBe(0);
     expect(scored.reasonCodes).toContain('HAIR_LENGTH_NOT_APPLICABLE');
     expect(scored.reasonCodes).not.toContain('HAIR_LENGTH_ANY');
+  });
+
+  it('excludes UNKNOWN hair length from the score denominator', () => {
+    const svc = service({ typicalHairLength: 'UNKNOWN' });
+    const prod = product({ hairLengthSuitability: 'SHORT' });
+    const hard = evaluateHardEligibility(svc, prod);
+    expect(hard.ok).toBe(true);
+    if (!hard.ok) return;
+
+    const scored = computeDeterministicScore(svc, prod, hard.context);
+    expect(scored.breakdown.hairLengthApplicable).toBe(false);
+    expect(scored.reasonCodes).toContain('HAIR_LENGTH_UNKNOWN_NOT_USED');
+    expect(scored.breakdown.appliedWeights.hairLengthSuitability).toBe(0);
+    const weightSum = Object.values(scored.breakdown.appliedWeights).reduce((a, b) => a + b, 0);
+    expect(weightSum).toBeCloseTo(1, 5);
+  });
+
+  it('excludes NOT_APPLICABLE service hair length from the score denominator', () => {
+    const svc = service({
+      targetAreas: ['HAIR', 'SHAVE'],
+      typicalHairLength: 'NOT_APPLICABLE',
+      techniques: ['HOT_TOWEL_SHAVE'],
+      retailNeeds: ['POST_SHAVE_SOOTHING'],
+    });
+    const prod = product({
+      targetAreas: ['FACE', 'SHAVE'],
+      hairLengthSuitability: 'ANY',
+      retailNeeds: ['POST_SHAVE_SOOTHING'],
+      productFamily: 'BALM',
+    });
+    const hard = evaluateHardEligibility(svc, prod);
+    expect(hard.ok).toBe(true);
+    if (!hard.ok) return;
+
+    const scored = computeDeterministicScore(svc, prod, hard.context);
+    expect(scored.breakdown.hairLengthApplicable).toBe(false);
+    expect(scored.reasonCodes).toContain('HAIR_LENGTH_NOT_APPLICABLE');
+    expect(scored.reasonCodes).not.toContain('HAIR_LENGTH_ANY');
+    expect(scored.breakdown.appliedWeights.hairLengthSuitability).toBe(0);
+  });
+
+  it('excludes NOT_APPLICABLE product hair length from the score denominator', () => {
+    const svc = service({
+      targetAreas: ['HAIR'],
+      typicalHairLength: 'SHORT',
+      retailNeeds: ['HAIR_STYLING_CONTROL'],
+    });
+    const prod = product({
+      targetAreas: ['HAIR'],
+      hairLengthSuitability: 'NOT_APPLICABLE',
+      retailNeeds: ['HAIR_STYLING_CONTROL'],
+    });
+    const hard = evaluateHardEligibility(svc, prod);
+    expect(hard.ok).toBe(true);
+    if (!hard.ok) return;
+
+    const scored = computeDeterministicScore(svc, prod, hard.context);
+    expect(scored.breakdown.hairLengthApplicable).toBe(false);
+    expect(scored.reasonCodes).toContain('HAIR_LENGTH_NOT_APPLICABLE');
+    expect(scored.breakdown.appliedWeights.hairLengthSuitability).toBe(0);
+  });
+
+  it('pair-scopes combo retail needs so hair products are not diluted by beard needs', () => {
+    const svc = service({
+      targetAreas: ['HAIR', 'BEARD'],
+      typicalHairLength: 'UNKNOWN',
+      techniques: ['SCISSOR_CUT', 'BEARD_TRIM'],
+      retailNeeds: ['HAIR_STYLING_CONTROL', 'BEARD_SOFTENING', 'BEARD_SHAPING'],
+    });
+    const prod = product({
+      retailNeeds: ['HAIR_STYLING_CONTROL'],
+      incompatibilities: [],
+    });
+    const hard = evaluateHardEligibility(svc, prod);
+    expect(hard.ok).toBe(true);
+    if (!hard.ok) return;
+    expect(hard.context.matchedAreas).toEqual(['HAIR']);
+    expect(hard.context.pairRetailNeedF1).toBeCloseTo(1, 5);
+    expect(hard.context.retailNeedF1).toBeLessThan(hard.context.pairRetailNeedF1);
+
+    const scored = computeDeterministicScore(svc, prod, hard.context);
+    expect(scored.breakdown.retailNeedRelevance).toBeCloseTo(1, 5);
+    expect(scored.breakdown.targetAreaRelevance).toBeCloseTo(1, 5);
+    expect(scored.score).toBeGreaterThanOrEqual(MATCH_SCORE_MIN);
   });
 });
