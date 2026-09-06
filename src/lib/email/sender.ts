@@ -871,3 +871,57 @@ export async function sendEmailVerificationEmail(input: {
   });
 }
 
+/** Pure builder for Better Auth password-reset emails (escaped HTML). */
+export function buildPasswordResetEmail(input: {
+  name?: string | null;
+  url: string;
+}): { subject: string; html: string } {
+  const name = (input.name ?? '').trim() || 'there';
+  const subject = 'Reset your KERSIVO password';
+  const html = `<p>Hi ${escapeHtml(name)},</p>
+  <h2>Reset your KERSIVO password</h2>
+  <p>We received a request to reset the password for your KERSIVO account.</p>
+  <p><strong><a href="${escapeHtml(input.url)}">Choose a new password</a></strong></p>
+  <p>If you did not request this, you can ignore this message. The link expires soon.</p>`;
+  return { subject, html };
+}
+
+/**
+ * Better Auth password-reset link.
+ * Never logs the reset URL or token (only destination address / subject).
+ */
+export async function sendPasswordResetEmail(input: {
+  to: string;
+  name?: string | null;
+  url: string;
+}) {
+  if (!isEmailDeliveryConfigured()) {
+    console.error('[EMAIL] RESEND_API_KEY missing; password reset email was not sent.', {
+      to: input.to,
+    });
+    if (isProductionRuntime()) {
+      throw new EmailDeliveryError('RESEND_API_KEY is not configured.', null);
+    }
+    console.warn('[DEV EMAIL] Password reset (not sent — Resend not configured)', {
+      to: input.to,
+    });
+    return { messageId: null };
+  }
+
+  const { subject, html } = buildPasswordResetEmail({
+    name: input.name,
+    url: input.url,
+  });
+
+  return sendEmail({
+    to: input.to,
+    subject,
+    html,
+    // Omit url/token from logs — only confirm destination.
+    devLogLabel: '[DEV EMAIL] Password reset',
+    devPayload: {
+      to: input.to,
+    },
+  });
+}
+

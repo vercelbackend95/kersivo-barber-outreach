@@ -429,6 +429,14 @@ a.admin-profile-menu__item:focus-visible,
   color: var(--muted);
 }
 
+.private-demo-auth__info {
+  margin: 0;
+  font-size: 0.85rem;
+  line-height: 1.4;
+  color: var(--muted);
+  text-align: center;
+}
+
 .private-demo-auth__switch-btn {
   border: none;
   background: transparent;

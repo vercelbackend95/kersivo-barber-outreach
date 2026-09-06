@@ -57,6 +57,9 @@ const view = resolveOpsPageView(auth);
             callbackURL="/ops/recommendations"
             title="Operator sign in"
             subtitle="Platform operators only. This is not shop admin access."
+            showGoogle={false}
+            allowSignup={false}
+            passwordResetRedirectTo="/ops/reset-password"
           />
         </div>
       ) : null

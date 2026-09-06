@@ -275,6 +275,9 @@ describe('ops detail page source gates', () => {
     expect(src).toContain('enableClientRouter={false}');
     expect(src).toContain('showCookieConsent={false}');
     expect(src).toContain("Cache-Control', 'private, no-store'");
+    expect(src).toContain('showGoogle={false}');
+    expect(src).toContain('allowSignup={false}');
+    expect(src).toContain('passwordResetRedirectTo="/ops/reset-password"');
     expect(src).not.toContain('access.email');
     expect(src).not.toContain('KERSIVO_OPS_EMAILS');
     expect(src).not.toContain('resolveAdminAccess');

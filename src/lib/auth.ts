@@ -9,6 +9,7 @@ import {
 import {
   isEmailDeliveryConfigured,
   sendEmailVerificationEmail,
+  sendPasswordResetEmail,
 } from '@/lib/email/sender';
 
 function resolveAuthBaseUrl(): string {
@@ -149,6 +150,20 @@ export const auth = betterAuth({
     minPasswordLength: 8,
     // Soft gate: sign-in works without verification; invites + billing require it.
     requireEmailVerification: false,
+    revokeSessionsOnPasswordReset: true,
+    sendResetPassword: async ({ user, url }) => {
+      // Never log url/token — only that delivery was attempted for this user id.
+      if (!isEmailDeliveryConfigured()) {
+        console.error('[auth] RESEND_API_KEY missing; password reset email not sent.', {
+          userId: user.id,
+        });
+      }
+      await sendPasswordResetEmail({
+        to: user.email,
+        name: user.name,
+        url,
+      });
+    },
   },
   emailVerification: {
     sendOnSignUp: true,

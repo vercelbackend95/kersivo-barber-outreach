@@ -5,6 +5,9 @@ import '@/styles/components/admin-profile.css';
 type Mode = 'signup' | 'login';
 type Step = 'email' | 'credentials';
 
+const PASSWORD_RESET_SENT_MESSAGE =
+  'If an account exists for this email, we’ve sent a password reset link.';
+
 type PrivateDemoAuthPanelProps = {
   initialMode?: Mode;
   onSuccess?: () => void;
@@ -18,7 +21,25 @@ type PrivateDemoAuthPanelProps = {
   subtitle?: string;
   /** Override default signup submit label (“Create account”). */
   signupButtonLabel?: string;
+  /** When false, hide Google social sign-in (operator mode). Default true. */
+  showGoogle?: boolean;
+  /** When false, force login and hide create-account switch. Default true. */
+  allowSignup?: boolean;
+  /**
+   * Same-origin path for password-reset redirect (e.g. `/ops/reset-password`).
+   * When set, shows “Forgot password?” on the login credentials step.
+   */
+  passwordResetRedirectTo?: string;
 };
+
+function resolveSameOriginRedirect(path: string): string {
+  if (typeof window === 'undefined') return path;
+  try {
+    return new URL(path, window.location.origin).toString();
+  } catch {
+    return path;
+  }
+}
 
 function GoogleGIcon() {
   return (
@@ -52,15 +73,23 @@ export default function PrivateDemoAuthPanel({
   title = 'Log in or sign up',
   subtitle = 'Create your shop admin — add barbers, services and bookings.',
   signupButtonLabel = 'Create account',
+  showGoogle = true,
+  allowSignup = true,
+  passwordResetRedirectTo,
 }: PrivateDemoAuthPanelProps) {
   const [step, setStep] = useState<Step>('email');
-  const [mode, setMode] = useState<Mode>(initialMode);
+  const [mode, setMode] = useState<Mode>(allowSignup ? initialMode : 'login');
   const [email, setEmail] = useState('');
   const [name, setName] = useState('');
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
   const [error, setError] = useState('');
+  const [info, setInfo] = useState('');
   const [busy, setBusy] = useState(false);
+
+  const effectiveMode: Mode = allowSignup ? mode : 'login';
+  const showForgotPassword =
+    Boolean(passwordResetRedirectTo) && effectiveMode === 'login' && step === 'credentials';
 
   const finish = () => {
     if (onSuccess) onSuccess();
@@ -69,6 +98,7 @@ export default function PrivateDemoAuthPanel({
 
   const handleGoogle = async () => {
     setError('');
+    setInfo('');
     setBusy(true);
     try {
       const result = await authClient.signIn.social({
@@ -108,6 +138,7 @@ export default function PrivateDemoAuthPanel({
   const handleEmailContinue = (event: React.FormEvent) => {
     event.preventDefault();
     setError('');
+    setInfo('');
     if (!email.trim() || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email.trim())) {
       setError('Enter a valid email address.');
       return;
@@ -115,9 +146,34 @@ export default function PrivateDemoAuthPanel({
     setStep('credentials');
   };
 
+  const handleForgotPassword = async () => {
+    if (busy || !passwordResetRedirectTo) return;
+    setError('');
+    setInfo('');
+    const trimmed = email.trim();
+    if (!trimmed || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(trimmed)) {
+      setError('Enter a valid email address.');
+      return;
+    }
+
+    setBusy(true);
+    try {
+      await authClient.requestPasswordReset({
+        email: trimmed,
+        redirectTo: resolveSameOriginRedirect(passwordResetRedirectTo),
+      });
+    } catch {
+      // Always show the same neutral confirmation (no account enumeration).
+    } finally {
+      setInfo(PASSWORD_RESET_SENT_MESSAGE);
+      setBusy(false);
+    }
+  };
+
   const handleCredentialsSubmit = async (event: React.FormEvent) => {
     event.preventDefault();
     setError('');
+    setInfo('');
 
     if (!password) {
       setError('Password is required.');
@@ -128,7 +184,7 @@ export default function PrivateDemoAuthPanel({
       return;
     }
 
-    if (mode === 'signup') {
+    if (effectiveMode === 'signup') {
       if (!name.trim()) {
         setError('Name is required.');
         return;
@@ -141,7 +197,7 @@ export default function PrivateDemoAuthPanel({
 
     setBusy(true);
     try {
-      if (mode === 'login') {
+      if (effectiveMode === 'login') {
         const result = await authClient.signIn.email({
           email: email.trim(),
           password,
@@ -203,27 +259,31 @@ export default function PrivateDemoAuthPanel({
 
       {step === 'email' ? (
         <>
-          <button
-            type="button"
-            className="private-demo-auth__social"
-            onClick={() => void handleGoogle()}
-            disabled={busy}
-          >
-            <GoogleGIcon />
-            Continue with Google
-          </button>
+          {showGoogle ? (
+            <>
+              <button
+                type="button"
+                className="private-demo-auth__social"
+                onClick={() => void handleGoogle()}
+                disabled={busy}
+              >
+                <GoogleGIcon />
+                Continue with Google
+              </button>
+
+              <div className="private-demo-auth__or" role="separator" aria-label="or">
+                <span className="private-demo-auth__or-line" aria-hidden="true" />
+                <span className="private-demo-auth__or-text">OR</span>
+                <span className="private-demo-auth__or-line" aria-hidden="true" />
+              </div>
+            </>
+          ) : null}
 
           {error && step === 'email' ? (
             <p className="private-demo-auth__error" role="alert">
               {error}
             </p>
           ) : null}
-
-          <div className="private-demo-auth__or" role="separator" aria-label="or">
-            <span className="private-demo-auth__or-line" aria-hidden="true" />
-            <span className="private-demo-auth__or-text">OR</span>
-            <span className="private-demo-auth__or-line" aria-hidden="true" />
-          </div>
 
           <form className="private-demo-auth__form" onSubmit={handleEmailContinue}>
             <label className="sr-only" htmlFor="pda-email">
@@ -238,6 +298,7 @@ export default function PrivateDemoAuthPanel({
               onChange={(e) => {
                 setEmail(e.target.value);
                 if (error) setError('');
+                if (info) setInfo('');
               }}
               autoComplete="email"
               disabled={busy}
@@ -257,6 +318,7 @@ export default function PrivateDemoAuthPanel({
               onClick={() => {
                 setStep('email');
                 setError('');
+                setInfo('');
                 setPassword('');
                 setConfirmPassword('');
               }}
@@ -266,7 +328,7 @@ export default function PrivateDemoAuthPanel({
             <span>{email.trim()}</span>
           </p>
 
-          {mode === 'signup' ? (
+          {effectiveMode === 'signup' ? (
             <>
               <label className="sr-only" htmlFor="pda-name">
                 Name
@@ -294,13 +356,13 @@ export default function PrivateDemoAuthPanel({
             placeholder="Password"
             value={password}
             onChange={(e) => setPassword(e.target.value)}
-            autoComplete={mode === 'signup' ? 'new-password' : 'current-password'}
+            autoComplete={effectiveMode === 'signup' ? 'new-password' : 'current-password'}
             disabled={busy}
             required
             minLength={8}
           />
 
-          {mode === 'signup' ? (
+          {effectiveMode === 'signup' ? (
             <>
               <label className="sr-only" htmlFor="pda-confirm">
                 Confirm password
@@ -326,42 +388,65 @@ export default function PrivateDemoAuthPanel({
             </p>
           ) : null}
 
+          {info ? (
+            <p className="private-demo-auth__info" role="status">
+              {info}
+            </p>
+          ) : null}
+
           <button type="submit" className="btn btn--primary private-demo-auth__submit" disabled={busy}>
-            {busy ? 'Please wait…' : mode === 'signup' ? signupButtonLabel : 'Sign in'}
+            {busy ? 'Please wait…' : effectiveMode === 'signup' ? signupButtonLabel : 'Sign in'}
           </button>
 
-          <p className="private-demo-auth__switch">
-            {mode === 'signup' ? (
-              <>
-                Already have an account?{' '}
-                <button
-                  type="button"
-                  className="private-demo-auth__switch-btn"
-                  onClick={() => {
-                    setMode('login');
-                    setError('');
-                    setConfirmPassword('');
-                  }}
-                >
-                  Sign in
-                </button>
-              </>
-            ) : (
-              <>
-                Need an account?{' '}
-                <button
-                  type="button"
-                  className="private-demo-auth__switch-btn"
-                  onClick={() => {
-                    setMode('signup');
-                    setError('');
-                  }}
-                >
-                  Create account
-                </button>
-              </>
-            )}
-          </p>
+          {showForgotPassword ? (
+            <p className="private-demo-auth__switch">
+              <button
+                type="button"
+                className="private-demo-auth__switch-btn"
+                onClick={() => void handleForgotPassword()}
+                disabled={busy}
+              >
+                Forgot password?
+              </button>
+            </p>
+          ) : null}
+
+          {allowSignup ? (
+            <p className="private-demo-auth__switch">
+              {effectiveMode === 'signup' ? (
+                <>
+                  Already have an account?{' '}
+                  <button
+                    type="button"
+                    className="private-demo-auth__switch-btn"
+                    onClick={() => {
+                      setMode('login');
+                      setError('');
+                      setInfo('');
+                      setConfirmPassword('');
+                    }}
+                  >
+                    Sign in
+                  </button>
+                </>
+              ) : (
+                <>
+                  Need an account?{' '}
+                  <button
+                    type="button"
+                    className="private-demo-auth__switch-btn"
+                    onClick={() => {
+                      setMode('signup');
+                      setError('');
+                      setInfo('');
+                    }}
+                  >
+                    Create account
+                  </button>
+                </>
+              )}
+            </p>
+          ) : null}
         </form>
       )}
     </div>
@@ -375,3 +460,5 @@ export default function PrivateDemoAuthPanel({
     </div>
   );
 }
+
+export { PASSWORD_RESET_SENT_MESSAGE };

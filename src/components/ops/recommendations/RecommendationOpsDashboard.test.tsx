@@ -437,6 +437,9 @@ describe('ops recommendations page source gates', () => {
     expect(src).toContain("view === 'dashboard'");
     expect(src).toContain('PrivateDemoAuthPanel');
     expect(src).toContain('callbackURL="/ops/recommendations"');
+    expect(src).toContain('showGoogle={false}');
+    expect(src).toContain('allowSignup={false}');
+    expect(src).toContain('passwordResetRedirectTo="/ops/reset-password"');
     expect(src).not.toContain('resolveAdminAccess');
     expect(src).not.toContain('ADMIN_SECRET');
     expect(src).not.toContain('CRON_SECRET');
