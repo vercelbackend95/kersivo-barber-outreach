@@ -18,6 +18,10 @@ interface Props extends PageSeo {
   viewportContent?: string;
   /** When false, skip cookie banner/launcher (e.g. /book* sticky CTA). Default true. */
   showCookieConsent?: boolean;
+  /** When false, omit Google Analytics. Default true. */
+  enableAnalytics?: boolean;
+  /** When false, omit Astro ClientRouter. Default true. */
+  enableClientRouter?: boolean;
   /**
    * Opt-in production retail cart for real tenant booking pages.
    * Do not enable for demo, preview, or admin test-book flows.
@@ -42,6 +46,8 @@ const {
   htmlClass,
   viewportContent = 'width=device-width, initial-scale=1',
   showCookieConsent = true,
+  enableAnalytics = true,
+  enableClientRouter = true,
   enableProductionCart = false,
   shopId,
   shopName,
@@ -53,7 +59,9 @@ const isAdminSurface =
   path === '/admin-demo' ||
   path.startsWith('/admin/') ||
   path === '/demo/admin' ||
-  path.startsWith('/demo/admin/');
+  path.startsWith('/demo/admin/') ||
+  path === '/ops' ||
+  path.startsWith('/ops/');
 const app = isAdminSurface ? 'admin' : 'flow';
 
 const productionCartShopId = enableProductionCart ? shopId?.trim() || '' : '';
@@ -65,7 +73,7 @@ const cartExploreHref = productionCartEnabled ? `/shop/${productionCartShopId}` 
 
 <html lang="en-GB" class={htmlClass} data-app={app} transition:animate="none">
   <head>
-    <GoogleAnalytics />
+    {enableAnalytics ? <GoogleAnalytics /> : null}
     <meta charset="utf-8" />
     <FaviconLinks />
     <meta name="viewport" content={viewportContent} />
@@ -90,7 +98,7 @@ const cartExploreHref = productionCartEnabled ? `/shop/${productionCartShopId}` 
         background: #030303;
       }
     </style>
-    <ClientRouter fallback="swap" />
+    {enableClientRouter ? <ClientRouter fallback="swap" /> : null}
     {
       cartNamespace ? (
         <script is:inline define:vars={{ cartNamespace }}>

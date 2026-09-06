@@ -1,0 +1,91 @@
+---
+export const prerender = false;
+
+import MinimalLayout from '@/layouts/MinimalLayout.astro';
+import PrivateDemoAuthPanel from '@/components/admin/PrivateDemoAuthPanel';
+import RecommendationOpsShopDetail from '@/components/ops/recommendations/detail/RecommendationOpsShopDetail';
+import {
+  OpsAccessDenied,
+  OpsAccessUnconfigured,
+} from '@/components/ops/recommendations/OpsPageGates';
+import { resolveOperatorAccess } from '@/lib/ops/operatorAuth';
+import { resolveOpsPageView } from '@/lib/ops/opsPageView';
+import { parseOpsShopId } from '@/lib/recommendations/ops/shopId';
+import '@/styles/tokens.css';
+import '@/styles/fonts-admin.css';
+import '@/styles/global.css';
+import '@/styles/components/inputs.css';
+import '@/styles/components/buttons.css';
+import '@/styles/components/badge.css';
+import '@/styles/components/admin-login.css';
+import '@/styles/components/empty-state.css';
+import '@/styles/components/skeleton.css';
+import '@/styles/components/table.css';
+import '@/styles/components/ops-recommendations.css';
+
+Astro.response.headers.set('Cache-Control', 'private, no-store');
+Astro.response.headers.set('Vary', 'Cookie');
+
+const auth = await resolveOperatorAccess(Astro.request);
+const view = resolveOpsPageView(auth);
+const parsed = parseOpsShopId(Astro.params.shopId);
+const shopId = parsed.ok ? parsed.shopId : null;
+const signInCallback = shopId
+  ? `/ops/recommendations/${encodeURIComponent(shopId)}`
+  : '/ops/recommendations';
+---
+
+<MinimalLayout
+  title="Shop detail | KERSIVO Ops"
+  description="Internal read-only Smart Retail shop diagnostics."
+  canonicalPath="/ops/recommendations"
+  htmlClass="admin-app-scroll"
+  bodyClass="admin-theme-premium-black ops-app"
+  noindex={true}
+  robotsFollow={false}
+  showCookieConsent={false}
+  enableAnalytics={false}
+  enableClientRouter={false}
+  viewportContent="width=device-width, initial-scale=1, viewport-fit=cover"
+>
+  <main class="container page-wrap">
+    {
+      view === 'sign_in' ? (
+        <div class="ops-gate">
+          <p class="ops-gate__brand">KERSIVO Ops</p>
+          <h1 class="ops-gate__title">Smart Retail Control Room</h1>
+          <p class="ops-gate__body">
+            Sign in with an authorized operator account to continue.
+          </p>
+          <PrivateDemoAuthPanel
+            client:load
+            initialMode="login"
+            callbackURL={signInCallback}
+            title="Operator sign in"
+            subtitle="Platform operators only. This is not shop admin access."
+          />
+        </div>
+      ) : null
+    }
+    {view === 'denied' ? <OpsAccessDenied /> : null}
+    {view === 'unconfigured' ? <OpsAccessUnconfigured /> : null}
+    {
+      view === 'dashboard' && !shopId ? (
+        <div class="ops-empty">
+          <h1 class="ops-empty__title">Shop not found</h1>
+          <p class="ops-empty__body">
+            This shop is unavailable or the identifier is not valid for Ops.
+          </p>
+          <a class="btn btn--secondary" href="/ops/recommendations">
+            Back to overview
+          </a>
+        </div>
+      ) : null
+    }
+    {
+      view === 'dashboard' && shopId ? (
+        <RecommendationOpsShopDetail client:load shopId={shopId} />
+      ) : null
+    }
+  </main>
+</MinimalLayout>

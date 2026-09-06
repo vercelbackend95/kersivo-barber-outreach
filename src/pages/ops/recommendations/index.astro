@@ -1,0 +1,68 @@
+---
+export const prerender = false;
+
+import MinimalLayout from '@/layouts/MinimalLayout.astro';
+import PrivateDemoAuthPanel from '@/components/admin/PrivateDemoAuthPanel';
+import RecommendationOpsDashboard from '@/components/ops/recommendations/RecommendationOpsDashboard';
+import {
+  OpsAccessDenied,
+  OpsAccessUnconfigured,
+} from '@/components/ops/recommendations/OpsPageGates';
+import { resolveOperatorAccess } from '@/lib/ops/operatorAuth';
+import { resolveOpsPageView } from '@/lib/ops/opsPageView';
+import '@/styles/tokens.css';
+import '@/styles/fonts-admin.css';
+import '@/styles/global.css';
+import '@/styles/components/inputs.css';
+import '@/styles/components/buttons.css';
+import '@/styles/components/badge.css';
+import '@/styles/components/admin-login.css';
+import '@/styles/components/empty-state.css';
+import '@/styles/components/skeleton.css';
+import '@/styles/components/table.css';
+import '@/styles/components/ops-recommendations.css';
+
+Astro.response.headers.set('Cache-Control', 'private, no-store');
+Astro.response.headers.set('Vary', 'Cookie');
+
+const auth = await resolveOperatorAccess(Astro.request);
+const view = resolveOpsPageView(auth);
+---
+
+<MinimalLayout
+  title="Smart Retail Control Room | KERSIVO Ops"
+  description="Internal read-only Smart Retail operations monitoring."
+  canonicalPath="/ops/recommendations"
+  htmlClass="admin-app-scroll"
+  bodyClass="admin-theme-premium-black ops-app"
+  noindex={true}
+  robotsFollow={false}
+  showCookieConsent={false}
+  enableAnalytics={false}
+  enableClientRouter={false}
+  viewportContent="width=device-width, initial-scale=1, viewport-fit=cover"
+>
+  <main class="container page-wrap">
+    {
+      view === 'sign_in' ? (
+        <div class="ops-gate">
+          <p class="ops-gate__brand">KERSIVO Ops</p>
+          <h1 class="ops-gate__title">Smart Retail Control Room</h1>
+          <p class="ops-gate__body">
+            Sign in with an authorized operator account to continue.
+          </p>
+          <PrivateDemoAuthPanel
+            client:load
+            initialMode="login"
+            callbackURL="/ops/recommendations"
+            title="Operator sign in"
+            subtitle="Platform operators only. This is not shop admin access."
+          />
+        </div>
+      ) : null
+    }
+    {view === 'denied' ? <OpsAccessDenied /> : null}
+    {view === 'unconfigured' ? <OpsAccessUnconfigured /> : null}
+    {view === 'dashboard' ? <RecommendationOpsDashboard client:load /> : null}
+  </main>
+</MinimalLayout>

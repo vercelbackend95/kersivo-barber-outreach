@@ -2,7 +2,7 @@ import type { APIContext } from 'astro';
 
 import { OPS_API_HEADERS, requireOperatorAccess } from '@/lib/ops/operatorAuth';
 import { getRecommendationOpsShopDetail } from '@/lib/recommendations/ops/readModel';
-import { DETAIL_MAX_SHOP_ID_LENGTH } from '@/lib/recommendations/ops/types';
+import { parseOpsShopId } from '@/lib/recommendations/ops/shopId';
 
 export const prerender = false;
 
@@ -13,26 +13,12 @@ function json(body: unknown, status = 200): Response {
   });
 }
 
-function parseShopIdParam(
-  raw: string | undefined,
-): { ok: true; shopId: string } | { ok: false; code: 'INVALID_QUERY' } {
-  if (raw == null) return { ok: false, code: 'INVALID_QUERY' };
-  const shopId = raw.trim();
-  if (!shopId || shopId.length > DETAIL_MAX_SHOP_ID_LENGTH) {
-    return { ok: false, code: 'INVALID_QUERY' };
-  }
-  if (!/^[A-Za-z0-9_-]+$/.test(shopId)) {
-    return { ok: false, code: 'INVALID_QUERY' };
-  }
-  return { ok: true, shopId };
-}
-
 export async function GET(context: APIContext): Promise<Response> {
   const access = await requireOperatorAccess(context);
   if (access instanceof Response) return access;
 
   try {
-    const parsed = parseShopIdParam(context.params.shopId);
+    const parsed = parseOpsShopId(context.params.shopId);
     if (!parsed.ok) {
       return json({ ok: false, error: { code: 'INVALID_QUERY' } }, 400);
     }
