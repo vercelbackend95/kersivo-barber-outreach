@@ -3,18 +3,29 @@ import { prismaAdapter } from 'better-auth/adapters/prisma';
 import { prisma } from '@/lib/db/client';
 import { provisionShopForUser } from '@/lib/auth/provisionShop';
 import {
+  resolveBetterAuthBaseUrl,
+  resolveVercelPreviewTrustedOrigins,
+} from '@/lib/auth/vercelPreviewOrigins';
+import {
   isEmailDeliveryConfigured,
   sendEmailVerificationEmail,
 } from '@/lib/email/sender';
 
 function resolveAuthBaseUrl(): string {
-  const fromEnv =
-    process.env.BETTER_AUTH_URL ||
-    import.meta.env.BETTER_AUTH_URL ||
-    process.env.PUBLIC_SITE_URL ||
-    import.meta.env.PUBLIC_SITE_URL;
-  if (fromEnv) return String(fromEnv).replace(/\/$/, '');
-  return 'http://localhost:4321';
+  return resolveBetterAuthBaseUrl(
+    {
+      VERCEL_ENV: process.env.VERCEL_ENV ?? import.meta.env.VERCEL_ENV,
+      VERCEL_BRANCH_URL:
+        process.env.VERCEL_BRANCH_URL ?? import.meta.env.VERCEL_BRANCH_URL,
+      VERCEL_URL: process.env.VERCEL_URL ?? import.meta.env.VERCEL_URL,
+    },
+    {
+      betterAuthUrl:
+        process.env.BETTER_AUTH_URL || import.meta.env.BETTER_AUTH_URL,
+      publicSiteUrl:
+        process.env.PUBLIC_SITE_URL || import.meta.env.PUBLIC_SITE_URL,
+    },
+  );
 }
 
 function isAuthProd(): boolean {
@@ -67,6 +78,12 @@ function staticTrustedOrigins(): string[] {
     'https://kersivo.co.uk',
     'https://www.kersivo.co.uk',
     ...envTrustedOrigins(),
+    ...resolveVercelPreviewTrustedOrigins({
+      VERCEL_ENV: process.env.VERCEL_ENV ?? import.meta.env.VERCEL_ENV,
+      VERCEL_BRANCH_URL:
+        process.env.VERCEL_BRANCH_URL ?? import.meta.env.VERCEL_BRANCH_URL,
+      VERCEL_URL: process.env.VERCEL_URL ?? import.meta.env.VERCEL_URL,
+    }),
   ];
 }
 
