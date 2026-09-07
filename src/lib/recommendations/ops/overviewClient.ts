@@ -3,6 +3,8 @@
  * No Prisma, auth, or server read-model imports.
  */
 
+import { isIsoTimestamp, isOpsOverviewShopPayload } from './payloadGuards';
+
 export type OpsHealthSeverity = 'OK' | 'INFO' | 'WARNING' | 'CRITICAL';
 
 export type OpsHealthCode =
@@ -80,6 +82,12 @@ export type OpsShopOverview = {
     totalStoredItems: number;
     totalReadableActiveItems: number;
   };
+  control: {
+    railPaused: boolean;
+    railPausedAt: string | null;
+    railPausedByUserId: string | null;
+    railPauseReason: string | null;
+  };
   health: {
     code: OpsHealthCode | string;
     severity: OpsHealthSeverity | string;
@@ -100,6 +108,22 @@ export type OpsOverviewApiError = {
   ok: false;
   error: { code: string };
 };
+
+export function isOpsOverviewShop(value: unknown): value is OpsShopOverview {
+  return isOpsOverviewShopPayload(value);
+}
+
+export function isOpsOverviewPayload(value: unknown): value is OpsOverviewApiSuccess {
+  if (!value || typeof value !== 'object') return false;
+  const v = value as Record<string, unknown>;
+  if (v.ok !== true) return false;
+  if (!isIsoTimestamp(v.generatedAt)) return false;
+  if (v.nextCursor !== null && typeof v.nextCursor !== 'string') return false;
+  if (!v.data || typeof v.data !== 'object' || Array.isArray(v.data)) return false;
+  const data = v.data as Record<string, unknown>;
+  if (!Array.isArray(data.shops)) return false;
+  return data.shops.every(isOpsOverviewShop);
+}
 
 export type OpsClientFilter =
   | 'all'

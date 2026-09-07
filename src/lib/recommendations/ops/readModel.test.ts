@@ -112,6 +112,13 @@ function createCountingDb(shopCount: number) {
           updatedAt: NOW,
         })),
     },
+    shopRecommendationControl: {
+      findMany: () => track(async () => []),
+      findUnique: () => track(async () => null),
+    },
+    recommendationOpsAction: {
+      findMany: () => track(async () => []),
+    },
     recommendationSet: {
       findMany: () =>
         track(async () =>
@@ -215,8 +222,8 @@ describe('listRecommendationOpsOverview bulk loading', () => {
     expect(calls1).toBeLessThanOrEqual(10);
     expect(calls50).toBeLessThanOrEqual(10);
     expect(Math.abs(calls50 - calls1)).toBeLessThanOrEqual(1);
-    expect(calls1).toBe(7);
-    expect(calls50).toBe(7);
+    expect(calls1).toBe(8);
+    expect(calls50).toBe(8);
   });
 
   it('excludes demo ids in shop query and never leaks Stripe account ids', async () => {

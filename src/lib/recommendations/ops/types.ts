@@ -2,6 +2,11 @@ import type { RecommendationJobStatus, RecommendationSetStatus } from '@prisma/c
 
 import type { RetailGateReason } from '@/lib/shop/cardPaymentsGate';
 import type { RecommendationSetStats } from '@/lib/recommendations/contracts';
+import type {
+  OpsActionErrorCode,
+  OpsRecommendationAction,
+  OpsRecommendationOutcome,
+} from './actions/types';
 
 export type RecommendationHealthSeverity = 'OK' | 'INFO' | 'WARNING' | 'CRITICAL';
 
@@ -179,5 +184,21 @@ export type RecommendationOpsShopOverview = {
     totalStoredItems: number;
     totalReadableActiveItems: number;
   };
+  control: {
+    railPaused: boolean;
+    railPausedAt: string | null;
+    railPausedByUserId: string | null;
+    railPauseReason: string | null;
+  };
   health: RecommendationHealthResult;
+};
+
+export type RecommendationOpsRecentAction = {
+  id: string;
+  action: OpsRecommendationAction;
+  outcome: OpsRecommendationOutcome;
+  actorEmail: string;
+  reason: string | null;
+  errorCode: OpsActionErrorCode | null;
+  createdAt: string;
 };

@@ -63,6 +63,12 @@ function detail(): OpsShopDetail {
         totalStoredItems: 1,
         totalReadableActiveItems: 1,
       },
+      control: {
+        railPaused: false,
+        railPausedAt: null,
+        railPausedByUserId: null,
+        railPauseReason: null,
+      },
       health: {
         code: 'HEALTHY',
         severity: 'OK',
@@ -71,6 +77,7 @@ function detail(): OpsShopDetail {
         generatedAt: '2026-09-06T12:00:00.000Z',
       },
     },
+    recentActions: [],
     recentSets: [
       {
         id: 'set1',

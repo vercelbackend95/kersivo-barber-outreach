@@ -3,6 +3,7 @@ import { beforeEach, describe, expect, it, vi } from 'vitest';
 const findUniqueShop = vi.fn();
 const findManyServices = vi.fn();
 const findUniqueState = vi.fn();
+const findUniqueControl = vi.fn();
 const findFirstSet = vi.fn();
 const findManyItems = vi.fn();
 const findManyProducts = vi.fn();
@@ -12,6 +13,7 @@ vi.mock('@/lib/db/client', () => ({
     shopSettings: { findUnique: (...args: unknown[]) => findUniqueShop(...args) },
     service: { findMany: (...args: unknown[]) => findManyServices(...args) },
     shopRecommendationState: { findUnique: (...args: unknown[]) => findUniqueState(...args) },
+    shopRecommendationControl: { findUnique: (...args: unknown[]) => findUniqueControl(...args) },
     recommendationSet: { findFirst: (...args: unknown[]) => findFirstSet(...args) },
     recommendationSetItem: { findMany: (...args: unknown[]) => findManyItems(...args) },
     product: { findMany: (...args: unknown[]) => findManyProducts(...args) },
@@ -52,6 +54,7 @@ describe('readPublishedRecommendations', () => {
     vi.clearAllMocks();
     vi.mocked(canSellRetail).mockReturnValue(true);
     findUniqueShop.mockResolvedValue(readyShop);
+    findUniqueControl.mockResolvedValue(null);
     findManyServices.mockResolvedValue([{ id: 'svc-1' }]);
     findUniqueState.mockResolvedValue({ publishedSetId: 'set-1' });
     findFirstSet.mockResolvedValue({ id: 'set-1' });
@@ -138,6 +141,23 @@ describe('readPublishedRecommendations', () => {
     });
     expect(result.ok).toBe(true);
     if (result.ok) expect(result.response.products).toEqual([]);
+  });
+
+  it('returns empty when operator rail is paused without exposing reason', async () => {
+    findUniqueControl.mockResolvedValue({
+      railPaused: true,
+      railPauseReason: 'secret-ops-reason',
+    });
+    const result = await readPublishedRecommendations({
+      shopId: 'shop-1',
+      serviceIds: ['svc-1'],
+    });
+    expect(result.ok).toBe(true);
+    if (result.ok) {
+      expect(result.response.products).toEqual([]);
+      expect(JSON.stringify(result.response)).not.toContain('secret-ops-reason');
+    }
+    expect(findManyItems).not.toHaveBeenCalled();
   });
 
   it('rejects more than MAX_SERVICE_IDS serviceId values', async () => {

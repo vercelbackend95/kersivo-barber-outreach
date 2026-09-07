@@ -118,4 +118,29 @@ describe('scheduleCatalogueRebuild', () => {
     expect(data).not.toHaveProperty('processingLockExpiresAt');
     expect(data).not.toHaveProperty('processingCatalogueVersion');
   });
+
+  it('supports immediate due for operator rebuilds', async () => {
+    const now = new Date('2026-09-02T12:00:00.000Z');
+    const db = {
+      shopRecommendationState: {
+        upsert,
+        findUniqueOrThrow,
+        updateMany,
+      },
+    };
+
+    findUniqueOrThrow.mockResolvedValue({ catalogueVersion: 3 });
+    updateMany.mockResolvedValue({ count: 1 });
+
+    await scheduleCatalogueRebuild('shop-abc', db as never, now, { due: 'immediate' });
+
+    expect(updateMany).toHaveBeenCalledWith({
+      where: { shopId: 'shop-abc', catalogueVersion: 3 },
+      data: expect.objectContaining({
+        rebuildAfter: now,
+        catalogueVersion: 4,
+        pendingCatalogueVersion: 4,
+      }),
+    });
+  });
 });

@@ -52,6 +52,12 @@ function makeShop(id: string, name: string, code = 'HEALTHY', severity = 'OK'): 
       totalStoredItems: 6,
       totalReadableActiveItems: 6,
     },
+    control: {
+      railPaused: false,
+      railPausedAt: null,
+      railPausedByUserId: null,
+      railPauseReason: null,
+    },
     health: {
       code,
       severity,
@@ -121,9 +127,10 @@ describe('RecommendationOpsDashboard', () => {
     });
     await vi.advanceTimersByTimeAsync(350);
     await waitFor(() => expectShopName('Alpha'));
-    const lastUrl = String((fetchImpl.mock.calls.at(-1) as unknown as [string])[0]);
-    expect(lastUrl).toContain('q=Alpha');
-    expect(lastUrl).not.toContain('cursor=');
+    await waitFor(() => {
+      const urls = fetchImpl.mock.calls.map((call) => String((call as unknown as [string])[0]));
+      expect(urls.some((u) => u.includes('q=Alpha') && !u.includes('cursor='))).toBe(true);
+    });
   });
 
   it('ignores stale responses when a newer request completes first', async () => {

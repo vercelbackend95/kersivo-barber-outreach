@@ -227,6 +227,12 @@ function assembleOverview(input: {
     productId: string;
     product: { id: string; active: boolean; shopId: string } | null;
   }>;
+  control?: {
+    railPaused: boolean;
+    railPausedAt: Date | null;
+    railPausedByUserId: string | null;
+    railPauseReason: string | null;
+  } | null;
 }): RecommendationOpsShopOverview {
   const { shop, now, state, publishedSet } = input;
   const retailEval = evaluateRetailSelling(shop);
@@ -355,6 +361,12 @@ function assembleOverview(input: {
       totalStoredItems: coverage.totalStoredItems,
       totalReadableActiveItems: coverage.totalReadableActiveItems,
     },
+    control: {
+      railPaused: input.control?.railPaused === true,
+      railPausedAt: iso(input.control?.railPausedAt ?? null),
+      railPausedByUserId: input.control?.railPausedByUserId ?? null,
+      railPauseReason: input.control?.railPauseReason ?? null,
+    },
     health,
   };
 }
@@ -421,7 +433,7 @@ export async function listRecommendationOpsOverview(
   }
 
   // 2–6) Fixed bulk queries (does not grow with shop count on the page)
-  const [serviceCounts, productCounts, states, activeServices] = await Promise.all([
+  const [serviceCounts, productCounts, states, activeServices, controls] = await Promise.all([
     db.service.groupBy({
       by: ['shopId'],
       where: { shopId: { in: shopIds }, isActive: true },
@@ -439,8 +451,19 @@ export async function listRecommendationOpsOverview(
       where: { shopId: { in: shopIds }, isActive: true },
       select: { id: true, shopId: true },
     }),
+    db.shopRecommendationControl.findMany({
+      where: { shopId: { in: shopIds } },
+      select: {
+        shopId: true,
+        railPaused: true,
+        railPausedAt: true,
+        railPausedByUserId: true,
+        railPauseReason: true,
+      },
+    }),
   ]);
 
+  const controlByShop = new Map(controls.map((c) => [c.shopId, c]));
   const stateByShop = new Map(states.map((s) => [s.shopId, s as StateRow]));
   const publishedPairs = states
     .filter((s) => s.publishedSetId)
@@ -521,6 +544,7 @@ export async function listRecommendationOpsOverview(
       publishedSet,
       activeServiceIds: servicesByShop.get(shop.id) ?? [],
       coverageItems,
+      control: controlByShop.get(shop.id) ?? null,
     });
   });
 
@@ -538,6 +562,15 @@ export async function listRecommendationOpsOverview(
 
 export type RecommendationOpsShopDetail = {
   overview: RecommendationOpsShopOverview;
+  recentActions: Array<{
+    id: string;
+    action: string;
+    outcome: string;
+    actorEmail: string;
+    reason: string | null;
+    errorCode: string | null;
+    createdAt: string;
+  }>;
   recentSets: Array<{
     id: string;
     catalogueVersion: number;
@@ -644,6 +677,8 @@ export async function getRecommendationOpsShopDetail(
     recentSets,
     servicesWithCurrentProfile,
     productsWithCurrentProfile,
+    control,
+    recentActions,
   ] = await Promise.all([
     db.service.count({ where: { shopId, isActive: true } }),
     db.product.count({ where: { shopId, active: true } }),
@@ -683,6 +718,29 @@ export async function getRecommendationOpsShopDetail(
         promptVersion: PROMPT_VERSION,
         modelId,
         product: { active: true, shopId },
+      },
+    }),
+    db.shopRecommendationControl.findUnique({
+      where: { shopId },
+      select: {
+        railPaused: true,
+        railPausedAt: true,
+        railPausedByUserId: true,
+        railPauseReason: true,
+      },
+    }),
+    db.recommendationOpsAction.findMany({
+      where: { shopId },
+      orderBy: [{ createdAt: 'desc' }, { id: 'desc' }],
+      take: 25,
+      select: {
+        id: true,
+        action: true,
+        outcome: true,
+        actorEmail: true,
+        reason: true,
+        errorCode: true,
+        createdAt: true,
       },
     }),
   ]);
@@ -772,6 +830,7 @@ export async function getRecommendationOpsShopDetail(
       productId: i.productId,
       product: i.product,
     })),
+    control,
   });
 
   const serviceProfileById = new Map(serviceProfiles.map((p) => [p.serviceId, p]));
@@ -859,6 +918,15 @@ export async function getRecommendationOpsShopDetail(
 
   return {
     overview,
+    recentActions: recentActions.map((a) => ({
+      id: a.id,
+      action: a.action,
+      outcome: a.outcome,
+      actorEmail: a.actorEmail,
+      reason: a.reason,
+      errorCode: a.errorCode,
+      createdAt: a.createdAt.toISOString(),
+    })),
     recentSets: recentSets.map((set) => ({
       id: set.id,
       catalogueVersion: set.catalogueVersion,

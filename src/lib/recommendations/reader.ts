@@ -74,6 +74,14 @@ export async function readPublishedRecommendations(
     return { ok: true, response: emptyResponse(shopId, serviceIds) };
   }
 
+  const railControl = await prisma.shopRecommendationControl.findUnique({
+    where: { shopId },
+    select: { railPaused: true },
+  });
+  if (railControl?.railPaused === true) {
+    return { ok: true, response: emptyResponse(shopId, serviceIds) };
+  }
+
   const ownedServices = await prisma.service.findMany({
     where: { shopId, id: { in: serviceIds }, isActive: true },
     select: { id: true },

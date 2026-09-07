@@ -6,6 +6,7 @@ import {
   computePageSummary,
   filterShops,
   healthCodeLabel,
+  isOpsOverviewPayload,
   reasonShortLabel,
   severityLabel,
   shopMatchesFilter,
@@ -60,6 +61,12 @@ function shop(partial: {
       servicesWithReadableRail: partial.readable ?? 0,
       totalStoredItems: 0,
       totalReadableActiveItems: 0,
+    },
+    control: {
+      railPaused: false,
+      railPausedAt: null,
+      railPausedByUserId: null,
+      railPauseReason: null,
     },
     health: {
       code: partial.code,
@@ -164,5 +171,32 @@ describe('overviewClient presentation', () => {
     expect(reasonShortLabel(['HEALTHY', 'all_service_rails_ok'], 'HEALTHY')).toBe('All rails OK');
     expect(reasonShortLabel(['HEALTHY'], 'HEALTHY')).toBe('Healthy');
     expect(reasonShortLabel([], 'STALE')).toBe('Published recommendations are outdated');
+  });
+
+  it('rejects malformed overview payloads even when control is valid', () => {
+    const s = shop({ id: 'a', code: 'HEALTHY', severity: 'OK' });
+    const at = '2026-09-06T12:00:00.000Z';
+    const wrap = (shops: unknown[]) =>
+      isOpsOverviewPayload({
+        ok: true,
+        generatedAt: at,
+        data: { shops },
+        nextCursor: null,
+      });
+
+    expect(wrap([s])).toBe(true);
+    expect(wrap([{ ...s, control: { railPaused: 'no' } }])).toBe(false);
+    expect(wrap([{ ...s, control: [] }])).toBe(false);
+    expect(wrap([{ ...s, health: undefined }])).toBe(false);
+    expect(
+      wrap([{ ...s, health: { ...s.health, severity: false } }]),
+    ).toBe(false);
+    expect(
+      wrap([{ ...s, coverage: { ...s.coverage, activeServices: '5' } }]),
+    ).toBe(false);
+    expect(wrap([{ ...s, shop: { ...s.shop, name: undefined } }])).toBe(false);
+    expect(
+      wrap([{ ...s, state: { ...s.state, catalogueVersion: -1 } }]),
+    ).toBe(false);
   });
 });

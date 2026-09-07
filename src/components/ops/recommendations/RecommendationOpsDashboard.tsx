@@ -7,6 +7,7 @@ import {
   filterShops,
   formatExactTime,
   formatRelativeTime,
+  isOpsOverviewPayload,
   userMessageForFetchError,
   type OpsClientFilter,
   type OpsFetchErrorKind,
@@ -112,7 +113,7 @@ export default function RecommendationOpsDashboard({ fetchImpl = fetch }: Props)
 
         if (gen !== requestGen.current) return;
 
-        if (!res.ok || !body || body.ok !== true) {
+        if (!res.ok || !body || !isOpsOverviewPayload(body)) {
           const code =
             body && typeof body === 'object' && 'error' in body
               ? (body as OpsOverviewApiError).error?.code

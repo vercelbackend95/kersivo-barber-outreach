@@ -51,6 +51,12 @@ function minimalDetail(): OpsShopDetail {
         totalStoredItems: 1,
         totalReadableActiveItems: 1,
       },
+      control: {
+        railPaused: false,
+        railPausedAt: null,
+        railPausedByUserId: null,
+        railPauseReason: null,
+      },
       health: {
         code: 'HEALTHY',
         severity: 'OK',
@@ -59,6 +65,7 @@ function minimalDetail(): OpsShopDetail {
         generatedAt: '2026-09-06T12:00:00.000Z',
       },
     },
+    recentActions: [],
     recentSets: [],
     services: [
       {
@@ -156,16 +163,178 @@ describe('detailClient', () => {
   });
 
   it('validates success payload shape', () => {
+    const at = '2026-09-06T12:00:00.000Z';
     expect(
       isOpsDetailPayload({
         ok: true,
-        generatedAt: 'x',
+        generatedAt: at,
         data: minimalDetail(),
         nextCursor: null,
       }),
     ).toBe(true);
     expect(isOpsDetailPayload({ ok: true, data: { overview: {} } })).toBe(false);
     expect(isOpsDetailPayload({ ok: false, error: { code: 'NOT_FOUND' } })).toBe(false);
+    expect(
+      isOpsDetailPayload({
+        ok: true,
+        generatedAt: 'not-iso',
+        data: minimalDetail(),
+        nextCursor: null,
+      }),
+    ).toBe(false);
+  });
+
+  it('rejects malformed payloads even when control is valid', () => {
+    const at = '2026-09-06T12:00:00.000Z';
+    const good = minimalDetail();
+    const control = good.overview.control;
+    const wrap = (data: unknown) =>
+      isOpsDetailPayload({ ok: true, generatedAt: at, data, nextCursor: null });
+
+    expect(wrap({ ...good, overview: { ...good.overview, control, health: undefined } })).toBe(
+      false,
+    );
+    expect(
+      wrap({
+        ...good,
+        overview: {
+          ...good.overview,
+          control,
+          health: { ...good.overview.health, severity: 1 },
+        },
+      }),
+    ).toBe(false);
+    expect(
+      wrap({
+        ...good,
+        overview: {
+          ...good.overview,
+          control,
+          coverage: { ...good.overview.coverage, activeServices: -1 },
+        },
+      }),
+    ).toBe(false);
+    expect(
+      wrap({
+        ...good,
+        overview: {
+          ...good.overview,
+          control,
+          shop: { ...good.overview.shop, name: 99 },
+        },
+      }),
+    ).toBe(false);
+    expect(
+      wrap({
+        ...good,
+        overview: {
+          ...good.overview,
+          control,
+          state: { ...good.overview.state, catalogueVersion: 1.5 },
+        },
+      }),
+    ).toBe(false);
+    expect(
+      wrap({
+        ...good,
+        services: [{ ...good.services[0], name: 123 }],
+      }),
+    ).toBe(false);
+    expect(
+      wrap({
+        ...good,
+        services: [
+          {
+            ...good.services[0],
+            recommendations: [{ ...good.services[0].recommendations[0], rank: -1 }],
+          },
+        ],
+      }),
+    ).toBe(false);
+    expect(
+      wrap({
+        ...good,
+        products: [{ ...good.products[0], active: 'yes' }],
+      }),
+    ).toBe(false);
+    expect(
+      wrap({
+        ...good,
+        recentSets: [{ id: 's', catalogueVersion: 1, buildStartedAt: 'nope' }],
+      }),
+    ).toBe(false);
+    expect(
+      wrap({
+        ...good,
+        recentActions: [
+          {
+            id: 'a1',
+            action: 'UNKNOWN',
+            outcome: 'QUEUED',
+            actorEmail: 'a@b.co',
+            reason: null,
+            errorCode: null,
+            createdAt: at,
+          },
+        ],
+      }),
+    ).toBe(false);
+    expect(
+      wrap({
+        ...good,
+        recentActions: [
+          {
+            id: 'a1',
+            action: 'REBUILD',
+            outcome: 'MAYBE',
+            actorEmail: 'a@b.co',
+            reason: null,
+            errorCode: null,
+            createdAt: at,
+          },
+        ],
+      }),
+    ).toBe(false);
+    expect(
+      wrap({
+        ...good,
+        recentActions: [
+          {
+            id: 'a1',
+            action: 'REBUILD',
+            outcome: 'QUEUED',
+            actorEmail: 'a@b.co',
+            reason: null,
+            errorCode: null,
+            createdAt: 'yesterday',
+          },
+        ],
+      }),
+    ).toBe(false);
+    expect(
+      wrap({
+        ...good,
+        profileSummary: { activeServicesTotal: 'x' },
+      }),
+    ).toBe(false);
+    expect(wrap({ ...good, returned: { services: true, products: 1 } })).toBe(false);
+    expect(wrap({ ...good, truncation: { services: 'yes', products: false } })).toBe(false);
+    expect(
+      wrap({
+        ...good,
+        recentActions: [
+          {
+            id: 'a1',
+            action: 'REBUILD',
+            outcome: 'QUEUED',
+            actorEmail: 'hello@kersivo.co.uk',
+            reason: null,
+            errorCode: null,
+            createdAt: at,
+          },
+        ],
+      }),
+    ).toBe(true);
   });
 
   it('formats scores, confidence, duration, and stats whitelist', () => {

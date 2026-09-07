@@ -173,46 +173,46 @@ model Verification {
 }
 
 model ShopSettings {
-  id                                 String             @id @default(cuid())
+  id                                 String                          @id @default(cuid())
   name                               String
-  timezone                           String             @default("Europe/London")
-  cancellationWindowHours            Int                @default(24)
-  rescheduleWindowHours              Int                @default(24)
-  maxClientReschedules               Int                @default(2)
-  pendingConfirmationMins            Int                @default(15)
-  slotIntervalMinutes                Int                @default(15)
-  defaultBufferMinutes               Int                @default(0)
-  customServiceCategories            String[]           @default([])
+  timezone                           String                          @default("Europe/London")
+  cancellationWindowHours            Int                             @default(24)
+  rescheduleWindowHours              Int                             @default(24)
+  maxClientReschedules               Int                             @default(2)
+  pendingConfirmationMins            Int                             @default(15)
+  slotIntervalMinutes                Int                             @default(15)
+  defaultBufferMinutes               Int                             @default(0)
+  customServiceCategories            String[]                        @default([])
   townCity                           String?
   logoUrl                            String?
-  publicActivityPaused               Boolean            @default(false)
+  publicActivityPaused               Boolean                         @default(false)
   publicActivityPausedAt             DateTime?
   publicActivityPauseFrom            DateTime?
   publicActivityPauseUntil           DateTime?
   publicActivityPauseReason          String?
-  onboardingCompleted                Boolean            @default(false)
-  onboardingCurrentStep              Int                @default(0)
+  onboardingCompleted                Boolean                         @default(false)
+  onboardingCurrentStep              Int                             @default(0)
   onboardingCompletedAt              DateTime?
-  retailOnboardingCompleted          Boolean            @default(false)
-  retailOnboardingSkipped            Boolean            @default(false)
+  retailOnboardingCompleted          Boolean                         @default(false)
+  retailOnboardingSkipped            Boolean                         @default(false)
   retailOnboardingCompletedAt        DateTime?
   retailOnboardingProductId          String?
   retailTestOrderId                  String?
   retailTestOrderCompletedAt         DateTime?
   retailPickupWalkthroughCompletedAt DateTime?
-  analyticsIncludeTestActivity       Boolean            @default(true)
+  analyticsIncludeTestActivity       Boolean                         @default(true)
   /// Set true on paid SaaS subscription webhook; SMS cron skips shops where false.
-  smsRemindersEnabled                Boolean            @default(false)
+  smsRemindersEnabled                Boolean                         @default(false)
   /// Shared paid-tenant marker (SaaS webhook). Prefer this over coupling features to SMS flag.
   shopPaidAt                         DateTime?
   /// Owner toggle: require £5 deposit on online bookings (paid shops + Connect only).
-  depositsEnabled                    Boolean            @default(false)
+  depositsEnabled                    Boolean                         @default(false)
   /// Owner toggle: accept public retail checkout on Connect (paid shops + Connect only).
-  retailEnabled                      Boolean            @default(false)
+  retailEnabled                      Boolean                         @default(false)
   /// Stripe Connect Express account id for booking deposits (and future shop payouts).
   stripeConnectAccountId             String?
-  stripeConnectChargesEnabled        Boolean            @default(false)
-  stripeConnectDetailsSubmitted      Boolean            @default(false)
+  stripeConnectChargesEnabled        Boolean                         @default(false)
+  stripeConnectDetailsSubmitted      Boolean                         @default(false)
   /// Stripe event.created of the last applied account.updated (ordering guard).
   connectStatusEventAt               DateTime?
   /// Private preview URL set by OPS when tenant site is ready for owner review.
@@ -227,10 +227,10 @@ model ShopSettings {
   launchApprovedVersion              String?
   /// Recorded at approve time; physical DNS switch = OPS.
   goLiveAt                           DateTime?
-  ownerUserId                        String?            @unique
-  createdAt                          DateTime           @default(now())
-  updatedAt                          DateTime           @updatedAt
-  owner                              User?              @relation(fields: [ownerUserId], references: [id], onDelete: SetNull)
+  ownerUserId                        String?                         @unique
+  createdAt                          DateTime                        @default(now())
+  updatedAt                          DateTime                        @updatedAt
+  owner                              User?                           @relation(fields: [ownerUserId], references: [id], onDelete: SetNull)
   members                            ShopMember[]
   invites                            ShopInvite[]
   clients                            Client[]
@@ -245,6 +245,8 @@ model ShopSettings {
   clientOnboardingAssets             ClientOnboardingAsset[]
   previewSessions                    ShopPreviewSession[]
   recommendationState                ShopRecommendationState?
+  recommendationControl              ShopRecommendationControl?
+  recommendationOpsActions           RecommendationOpsAction[]
   serviceSemanticProfiles            ServiceSemanticProfile[]
   productSemanticProfiles            ProductSemanticProfile[]
   recommendationSets                 RecommendationSet[]
@@ -353,24 +355,24 @@ model ClientNoteLike {
 }
 
 model Service {
-  id              String          @id @default(cuid())
-  shopId          String
-  name            String
-  description     String?
-  imageUrl        String?
-  pricePence      Int
-  durationMinutes Int
-  bufferMinutes   Int             @default(0)
-  displayOrder    Int             @default(0)
-  category        String?
-  featured        Boolean         @default(false)
-  isActive        Boolean         @default(true) @map("active")
-  createdAt       DateTime        @default(now())
-  updatedAt       DateTime        @updatedAt
-  shop            ShopSettings    @relation(fields: [shopId], references: [id], onDelete: Cascade)
-  bookings        Booking[]
-  barberServices  BarberService[]
-  semanticProfile ServiceSemanticProfile?
+  id                     String                  @id @default(cuid())
+  shopId                 String
+  name                   String
+  description            String?
+  imageUrl               String?
+  pricePence             Int
+  durationMinutes        Int
+  bufferMinutes          Int                     @default(0)
+  displayOrder           Int                     @default(0)
+  category               String?
+  featured               Boolean                 @default(false)
+  isActive               Boolean                 @default(true) @map("active")
+  createdAt              DateTime                @default(now())
+  updatedAt              DateTime                @updatedAt
+  shop                   ShopSettings            @relation(fields: [shopId], references: [id], onDelete: Cascade)
+  bookings               Booking[]
+  barberServices         BarberService[]
+  semanticProfile        ServiceSemanticProfile?
   recommendationSetItems RecommendationSetItem[]
 
   @@index([shopId, isActive, displayOrder])
@@ -378,28 +380,28 @@ model Service {
 }
 
 model Barber {
-  id             String             @id @default(cuid())
-  shopId         String
-  userId         String?            @unique
-  name           String
-  email          String?
-  avatarUrl      String?
-  active         Boolean            @default(true)
-  sortOrder      Int                @default(0)
+  id                      String                         @id @default(cuid())
+  shopId                  String
+  userId                  String?                        @unique
+  name                    String
+  email                   String?
+  avatarUrl               String?
+  active                  Boolean                        @default(true)
+  sortOrder               Int                            @default(0)
   // Intended dashboard role when Owner later invites this seat (MANAGER | BARBER).
-  intendedRole   ShopRole           @default(BARBER)
-  createdAt      DateTime           @default(now())
-  updatedAt      DateTime           @updatedAt
-  shop           ShopSettings       @relation(fields: [shopId], references: [id], onDelete: Cascade)
-  user           User?              @relation(fields: [userId], references: [id], onDelete: SetNull)
-  membership     ShopMember?
-  bookings       Booking[]
-  rules          AvailabilityRule[]
-  timeOff        BarberTimeOff[]
-  timeBlocks     TimeBlock[]
-  barberServices BarberService[]
-  clientNotes    ClientNote[]
-  noteLikes      ClientNoteLike[]
+  intendedRole            ShopRole                       @default(BARBER)
+  createdAt               DateTime                       @default(now())
+  updatedAt               DateTime                       @updatedAt
+  shop                    ShopSettings                   @relation(fields: [shopId], references: [id], onDelete: Cascade)
+  user                    User?                          @relation(fields: [userId], references: [id], onDelete: SetNull)
+  membership              ShopMember?
+  bookings                Booking[]
+  rules                   AvailabilityRule[]
+  timeOff                 BarberTimeOff[]
+  timeBlocks              TimeBlock[]
+  barberServices          BarberService[]
+  clientNotes             ClientNote[]
+  noteLikes               ClientNoteLike[]
   clientOnboardingProfile ClientOnboardingBarberProfile?
 
   @@index([shopId, active, sortOrder])
@@ -643,9 +645,9 @@ model Product {
   createdAt   DateTime        @default(now())
   updatedAt   DateTime        @updatedAt
 
-  shop       ShopSettings @relation(fields: [shopId], references: [id], onDelete: Cascade)
-  orderItems OrderItem[]
-  semanticProfile ProductSemanticProfile?
+  shop                   ShopSettings            @relation(fields: [shopId], references: [id], onDelete: Cascade)
+  orderItems             OrderItem[]
+  semanticProfile        ProductSemanticProfile?
   recommendationSetItems RecommendationSetItem[]
 
   @@unique([shopId, sortOrder])
@@ -906,49 +908,49 @@ model ClientOnboarding {
   updatedAt   DateTime               @updatedAt
 
   /// Business / contact (delivery snapshot — not a second ShopSettings)
-  legalBusinessName  String?
-  businessType       String?
-  companyNumber      String?
-  addressLine1       String?
-  addressLine2       String?
-  townCity           String?
-  postcode           String?
-  publicEmail        String?
-  publicPhone        String?
-  primaryContactName String?
+  legalBusinessName   String?
+  businessType        String?
+  companyNumber       String?
+  addressLine1        String?
+  addressLine2        String?
+  townCity            String?
+  postcode            String?
+  publicEmail         String?
+  publicPhone         String?
+  primaryContactName  String?
   primaryContactEmail String?
 
   /// Website / brand
-  tagline                 String?
-  shopDescription         String? @db.Text
-  websiteNotes            String? @db.Text
-  currentWebsiteUrl       String?
-  instagramUrl            String?
-  facebookUrl             String?
-  tiktokUrl               String?
-  otherSocialUrl          String?
-  brandNotes              String? @db.Text
-  preferredPrimaryColour  String?
+  tagline                  String?
+  shopDescription          String? @db.Text
+  websiteNotes             String? @db.Text
+  currentWebsiteUrl        String?
+  instagramUrl             String?
+  facebookUrl              String?
+  tiktokUrl                String?
+  otherSocialUrl           String?
+  brandNotes               String? @db.Text
+  preferredPrimaryColour   String?
   preferredSecondaryColour String?
 
   /// Domain
-  domainMode                       ClientOnboardingDomainMode @default(UNDECIDED)
-  existingDomain                   String?
-  domainRegistrar                  String?
-  preferredDomain1                 String?
-  preferredDomain2                 String?
-  preferredDomain3                 String?
-  domainRegistrationAuthorised     Boolean                   @default(false)
-  domainRegistrationAuthorisedAt   DateTime?
+  domainMode                     ClientOnboardingDomainMode @default(UNDECIDED)
+  existingDomain                 String?
+  domainRegistrar                String?
+  preferredDomain1               String?
+  preferredDomain2               String?
+  preferredDomain3               String?
+  domainRegistrationAuthorised   Boolean                    @default(false)
+  domainRegistrationAuthorisedAt DateTime?
 
   /// Migration intake (no automated import in this foundation)
   /// Tri-state: null = unanswered, false = explicit No, true = Yes (requires lawful confirmation).
-  migrationRequested            Boolean?
-  migrationSource               String?
-  migrationSourceOther          String?
-  migrationNotes                String? @db.Text
-  migrationDataConfirmedLawful  Boolean @default(false)
-  migrationDataConfirmedAt      DateTime?
+  migrationRequested           Boolean?
+  migrationSource              String?
+  migrationSourceOther         String?
+  migrationNotes               String?   @db.Text
+  migrationDataConfirmedLawful Boolean   @default(false)
+  migrationDataConfirmedAt     DateTime?
 
   /// Launch preferences
   launchRetail             Boolean?
@@ -958,18 +960,18 @@ model ClientOnboarding {
   additionalNotes          String?  @db.Text
 
   /// Optional marketing / portfolio permissions — never default true
-  portfolioConsent           Boolean   @default(false)
-  socialMediaConsent         Boolean   @default(false)
-  advertisingConsent         Boolean   @default(false)
-  caseStudyConsent           Boolean   @default(false)
-  marketingConsentUpdatedAt  DateTime?
+  portfolioConsent          Boolean   @default(false)
+  socialMediaConsent        Boolean   @default(false)
+  advertisingConsent        Boolean   @default(false)
+  caseStudyConsent          Boolean   @default(false)
+  marketingConsentUpdatedAt DateTime?
 
   /// Final declarations
   contentRightsConfirmed       Boolean   @default(false)
   informationAccuracyConfirmed Boolean   @default(false)
   declarationsConfirmedAt      DateTime?
 
-  shop           ShopSettings                   @relation(fields: [shopId], references: [id], onDelete: Cascade)
+  shop           ShopSettings                    @relation(fields: [shopId], references: [id], onDelete: Cascade)
   barberProfiles ClientOnboardingBarberProfile[]
   assets         ClientOnboardingAsset[]
 
@@ -978,14 +980,14 @@ model ClientOnboarding {
 
 /// Delivery-only website profile for a workspace Barber (bio / showOnWebsite). Avatar stays on Barber.
 model ClientOnboardingBarberProfile {
-  id             String   @id @default(cuid())
-  shopId         String
-  onboardingId   String
-  barberId       String   @unique
-  bio            String?  @db.Text
-  showOnWebsite  Boolean  @default(true)
-  createdAt      DateTime @default(now())
-  updatedAt      DateTime @updatedAt
+  id            String   @id @default(cuid())
+  shopId        String
+  onboardingId  String
+  barberId      String   @unique
+  bio           String?  @db.Text
+  showOnWebsite Boolean  @default(true)
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
 
   shop       ShopSettings     @relation(fields: [shopId], references: [id], onDelete: Cascade)
   onboarding ClientOnboarding @relation(fields: [onboardingId], references: [id], onDelete: Cascade)
@@ -1010,9 +1012,9 @@ model ClientOnboardingAsset {
   shop       ShopSettings     @relation(fields: [shopId], references: [id], onDelete: Cascade)
   onboarding ClientOnboarding @relation(fields: [onboardingId], references: [id], onDelete: Cascade)
 
+  @@unique([onboardingId, storagePath])
   @@index([shopId, kind])
   @@index([onboardingId])
-  @@unique([onboardingId, storagePath])
 }
 
 /// Per-shop Smart Retail recommendation catalogue state (versioning, debounce, publish pointer).
@@ -1036,11 +1038,49 @@ model ShopRecommendationState {
   createdAt                  DateTime                @default(now())
   updatedAt                  DateTime                @updatedAt
 
-  shop         ShopSettings      @relation(fields: [shopId], references: [id], onDelete: Cascade)
+  shop         ShopSettings       @relation(fields: [shopId], references: [id], onDelete: Cascade)
   publishedSet RecommendationSet? @relation("PublishedRecommendationSet", fields: [publishedSetId], references: [id], onDelete: SetNull)
 
   @@index([rebuildAfter, jobStatus])
   @@index([nextAttemptAt, jobStatus])
+}
+
+/// Operator-controlled Smart Retail rail pause (1:1 with shop). Not retailEnabled.
+model ShopRecommendationControl {
+  shopId             String    @id
+  railPaused         Boolean   @default(false)
+  railPausedAt       DateTime?
+  railPausedByUserId String?
+  railPauseReason    String?
+  /// Last accepted REBUILD/RETRY_FAILED action time (shared 5-minute cooldown claim).
+  lastBuildActionAt  DateTime?
+  createdAt          DateTime  @default(now())
+  updatedAt          DateTime  @updatedAt
+
+  shop ShopSettings @relation(fields: [shopId], references: [id], onDelete: Cascade)
+}
+
+/// Immutable operator audit trail for Smart Retail ops actions (action/outcome are TS unions, not PG enums).
+model RecommendationOpsAction {
+  id             String   @id @default(cuid())
+  idempotencyKey String   @unique
+  shopId         String?
+  shopIdSnapshot String
+  actorUserId    String
+  actorEmail     String
+  action         String
+  outcome        String
+  reason         String?
+  errorCode      String?
+  beforeState    Json?
+  afterState     Json?
+  createdAt      DateTime @default(now())
+
+  shop ShopSettings? @relation(fields: [shopId], references: [id], onDelete: SetNull)
+
+  @@index([shopId, createdAt])
+  @@index([actorUserId, createdAt])
+  @@index([action, createdAt])
 }
 
 /// AI-generated semantic profile for a service (catalogue text only).

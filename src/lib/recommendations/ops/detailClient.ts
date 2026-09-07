@@ -17,6 +17,26 @@ import {
   type OpsFetchErrorKind,
   type OpsShopOverview,
 } from './overviewClient';
+import { isIsoTimestamp, isOpsShopDetailDataPayload } from './payloadGuards';
+import type {
+  OpsActionErrorCode,
+  OpsRecommendationAction,
+  OpsRecommendationOutcome,
+} from './actions/types';
+
+export type { OpsFetchErrorKind };
+export {
+  classifyOpsFetchError,
+  formatExactTime,
+  formatRelativeTime,
+  healthCodeLabel,
+  jobStatusLabel,
+  reasonListLabels,
+  reasonShortLabel,
+  severityClass,
+  severityLabel,
+  userMessageForFetchError,
+};
 
 export type OpsDetailRecommendation = {
   productId: string;
@@ -93,6 +113,15 @@ export type OpsDetailStats = {
 
 export type OpsShopDetail = {
   overview: OpsShopOverview;
+  recentActions: Array<{
+    id: string;
+    action: OpsRecommendationAction;
+    outcome: OpsRecommendationOutcome;
+    actorEmail: string;
+    reason: string | null;
+    errorCode: OpsActionErrorCode | null;
+    createdAt: string;
+  }>;
   recentSets: OpsDetailRecentSet[];
   services: OpsDetailService[];
   products: OpsDetailProduct[];
@@ -123,20 +152,6 @@ export type OpsDetailTab = 'overview' | 'services' | 'products' | 'builds';
 export type OpsServiceFilter = 'all' | 'rail_visible' | 'no_rail' | 'profile_issue';
 export type OpsProductFilter = 'all' | 'current' | 'missing' | 'outdated';
 
-export {
-  classifyOpsFetchError,
-  formatExactTime,
-  formatRelativeTime,
-  healthCodeLabel,
-  jobStatusLabel,
-  reasonListLabels,
-  reasonShortLabel,
-  severityClass,
-  severityLabel,
-  userMessageForFetchError,
-};
-export type { OpsFetchErrorKind };
-
 export function buildDetailUrl(shopId: string): string {
   return `/api/ops/recommendations/${encodeURIComponent(shopId)}`;
 }
@@ -145,13 +160,10 @@ export function isOpsDetailPayload(value: unknown): value is OpsDetailApiSuccess
   if (!value || typeof value !== 'object') return false;
   const v = value as Record<string, unknown>;
   if (v.ok !== true) return false;
+  if (!isIsoTimestamp(v.generatedAt)) return false;
+  if (v.nextCursor !== null) return false;
   if (!v.data || typeof v.data !== 'object' || Array.isArray(v.data)) return false;
-  const data = v.data as Record<string, unknown>;
-  if (!data.overview || typeof data.overview !== 'object') return false;
-  if (!Array.isArray(data.services) || !Array.isArray(data.products) || !Array.isArray(data.recentSets)) {
-    return false;
-  }
-  return true;
+  return isOpsShopDetailDataPayload(v.data);
 }
 
 export function formatScore(value: number | null | undefined): string {

@@ -26,6 +26,6 @@ export const GET: APIRoute = async (ctx) => {
   }
 
   return json(result.response, 200, {
-    'Cache-Control': 'private, max-age=60',
+    'Cache-Control': 'private, no-store',
   });
 };
