@@ -106,7 +106,7 @@ describe('BookingRecommendationsRail → cart integration', () => {
     );
 
     await waitFor(() => {
-      expect(screen.getByRole('heading', { name: 'Picked for your appointment' })).toBeTruthy();
+      expect(screen.getByRole('heading', { name: 'Keep the finish going' })).toBeTruthy();
     });
     expect(screen.getByText('Hair Fibre')).toBeTruthy();
     expect(screen.getByText('Matte Clay')).toBeTruthy();
@@ -128,9 +128,9 @@ describe('BookingRecommendationsRail → cart integration', () => {
     );
 
     await waitFor(() => {
-      expect(screen.getByRole('heading', { name: 'Picked for your Skin Fade' })).toBeTruthy();
+      expect(screen.getByRole('heading', { name: 'Keep the finish going' })).toBeTruthy();
     });
-    expect(screen.getByText('Add now. Collect at your appointment.')).toBeTruthy();
+    expect(screen.getByText(/Picked for your .+\. Add now and collect at your appointment\./)).toBeTruthy();
   });
 
   it('quick-add mutates tenant cartStore and shows View bag toast', async () => {
@@ -151,7 +151,7 @@ describe('BookingRecommendationsRail → cart integration', () => {
     );
 
     await waitFor(() => {
-      expect(screen.getByRole('heading', { name: 'Picked for your appointment' })).toBeTruthy();
+      expect(screen.getByRole('heading', { name: 'Keep the finish going' })).toBeTruthy();
     });
 
     const addButtons = screen.getAllByRole('button', { name: /Add to bag:/i });
@@ -194,7 +194,7 @@ describe('BookingRecommendationsRail → cart integration', () => {
     );
 
     await waitFor(() => {
-      expect(screen.getByRole('heading', { name: 'Picked for your appointment' })).toBeTruthy();
+      expect(screen.getByRole('heading', { name: 'Keep the finish going' })).toBeTruthy();
     });
 
     fireEvent.click(screen.getAllByRole('button', { name: /Add to bag:/i })[0]!);
@@ -228,7 +228,7 @@ describe('BookingRecommendationsRail → cart integration', () => {
     await waitFor(() => {
       expect(fetchSpy).toHaveBeenCalled();
     });
-    expect(empty.queryByRole('heading', { name: /Picked for your/i })).toBeNull();
+    expect(empty.queryByRole('heading', { name: /Keep the finish going/i })).toBeNull();
     expect(empty.getByText('Booking confirmed')).toBeTruthy();
     empty.unmount();
 
@@ -247,7 +247,7 @@ describe('BookingRecommendationsRail → cart integration', () => {
     await waitFor(() => {
       expect(fetchSpy).toHaveBeenCalledTimes(2);
     });
-    expect(one.queryByRole('heading', { name: /Picked for your/i })).toBeNull();
+    expect(one.queryByRole('heading', { name: /Keep the finish going/i })).toBeNull();
   });
 
   it('keeps confirmation intact and hides rail when the API rejects', async () => {
@@ -268,7 +268,7 @@ describe('BookingRecommendationsRail → cart integration', () => {
       expect(fetchSpy).toHaveBeenCalled();
     });
     expect(screen.getByText('Booking confirmed')).toBeTruthy();
-    expect(screen.queryByRole('heading', { name: /Picked for your/i })).toBeNull();
+    expect(screen.queryByRole('heading', { name: /Keep the finish going/i })).toBeNull();
     expect(getSnapshot().items).toHaveLength(0);
   });
 
@@ -323,7 +323,7 @@ describe('BookingRecommendationsRail → cart integration', () => {
       </>,
     );
 
-    expect(screen.getByRole('heading', { name: 'Picked for your Skin Fade' })).toBeTruthy();
+    expect(screen.getByRole('heading', { name: 'Keep the finish going' })).toBeTruthy();
     const productHit = document.querySelector(
       'a.sf-card-hit[href="/demo/shop/bl-product-matte-clay"]',
     );
@@ -405,7 +405,7 @@ describe('BookingRecommendationsRail → cart integration', () => {
       />,
     );
 
-    expect(screen.getByRole('heading', { name: 'Picked for your Beard Trim & Shape' })).toBeTruthy();
+    expect(screen.getByRole('heading', { name: 'Keep the finish going' })).toBeTruthy();
     expect(screen.getByText('Beard Oil')).toBeTruthy();
     expect(screen.queryByText('Matte Clay')).toBeNull();
   });

@@ -1,6 +1,6 @@
 import { expect, test, type Page } from '@playwright/test';
 
-const TIMELINE_CTA = 'See your booking on the timeline';
+const TIMELINE_CTA = 'View booking timeline';
 
 async function assertNoHorizontalOverflow(page: Page) {
   const metrics = await page.evaluate(() => ({
@@ -61,7 +61,7 @@ test.describe('BLACKLINE booking confirmation to owner timeline', () => {
     await page.getByLabel(/^Email$/i).fill('alex@example.com');
     await page.getByRole('button', { name: 'Complete demo booking' }).click();
 
-    await expect(page.getByRole('heading', { name: /Demo booking complete/i })).toBeVisible();
+    await expect(page.getByRole('heading', { name: /You're all set/i })).toBeVisible();
     const reference = (await page.locator('.booking-confirmation__pass').getByText(/^BL-\d{4}$/).innerText()).trim();
     const timelineLink = page.getByRole('link', { name: TIMELINE_CTA });
     const href = await timelineLink.getAttribute('href');

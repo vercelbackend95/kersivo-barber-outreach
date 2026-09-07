@@ -1,6 +1,6 @@
 /*
- * Client booking wizard — /book + LandingBookingWidget.
- * Premium-black, minimal multi-step: Service → Barber → Schedule → Details.
+ * Client booking wizard â€” /book + LandingBookingWidget.
+ * Premium-black, minimal multi-step: Service â†’ Barber â†’ Schedule â†’ Details.
  */
 
 .booking-page-wrap {
@@ -51,7 +51,7 @@
   margin-inline: auto;
 }
 
-/* ── Hero + progress ─────────────────────────────────────────── */
+/* â”€â”€ Hero + progress â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
 
 .booking-flow--wizard .booking-flow__hero {
   display: grid;
@@ -107,7 +107,7 @@
   text-align: center;
 }
 
-/* ── Layout ──────────────────────────────────────────────────── */
+/* â”€â”€ Layout â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
 
 .booking-flow--wizard .booking-flow__layout {
   display: grid;
@@ -125,7 +125,7 @@
   display: none;
 }
 
-/* ── Step stage (frameless) ──────────────────────────────────── */
+/* â”€â”€ Step stage (frameless) â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
 
 .booking-flow--wizard .booking-step {
   display: grid;
@@ -181,7 +181,7 @@
   line-height: 1.45;
 }
 
-/* ── Service catalog (list on mobile, 2-col desktop) ─────────── */
+/* â”€â”€ Service catalog (list on mobile, 2-col desktop) â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
 
 .booking-flow--wizard .booking-service-catalog {
   display: grid;
@@ -373,7 +373,7 @@
   color: var(--booking-choice-text);
 }
 
-/* ── Barbers ─────────────────────────────────────────────────── */
+/* â”€â”€ Barbers â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
 
 .booking-flow--wizard .booking-choice-grid--barbers {
   grid-template-columns: repeat(2, minmax(0, 1fr));
@@ -443,7 +443,7 @@
   line-height: 1;
 }
 
-/* ── Date + slots ────────────────────────────────────────────── */
+/* â”€â”€ Date + slots â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
 
 .booking-flow--wizard .booking-date-panel {
   display: grid;
@@ -499,7 +499,7 @@
   fill: currentColor;
 }
 
-/* Full-row native hit target — required for reliable mobile date pickers */
+/* Full-row native hit target â€” required for reliable mobile date pickers */
 .booking-flow--wizard .booking-date-tab__input {
   -webkit-appearance: none;
   appearance: none;
@@ -584,7 +584,7 @@
   border-radius: var(--radius-12, 12px);
 }
 
-/* ── Details inputs ──────────────────────────────────────────── */
+/* â”€â”€ Details inputs â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
 
 .booking-flow--wizard .booking-flow__grid--details {
   display: grid;
@@ -653,7 +653,7 @@
   transition: background-color 99999s ease-out 0s;
 }
 
-/* ── Sticky action bar ───────────────────────────────────────── */
+/* â”€â”€ Sticky action bar â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
 
 .booking-flow--wizard .booking-action-bar {
   position: fixed;
@@ -735,19 +735,92 @@
   to { transform: rotate(360deg); }
 }
 
-/* ── Confirmation ────────────────────────────────────────────── */
+/* â”€â”€ Confirmation â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
 
 .booking-flow--wizard .booking-confirmation-experience {
   display: grid;
-  gap: 0.85rem;
+  grid-template-columns: minmax(0, 1fr);
+  grid-template-areas:
+    'primary'
+    'recommendations';
+  gap: 0.85rem 1.25rem;
+  align-items: start;
   width: 100%;
-  max-width: min(46rem, 100%);
+  max-width: min(36rem, 100%);
   margin-inline: auto;
-  padding: 0.35rem 0 0.75rem;
+  padding: 0.5rem 0 1rem;
   text-align: left;
   box-sizing: border-box;
 }
 
+.booking-flow--wizard .booking-confirmation-experience:has(.booking-recommendations) {
+  max-width: min(75rem, 100%);
+}
+
+.booking-flow--wizard .booking-confirmation-experience__primary {
+  grid-area: primary;
+  display: flex;
+  flex-direction: column;
+  gap: 0.85rem;
+  min-width: 0;
+}
+
+.booking-flow--wizard .booking-confirmation-experience__confirm {
+  min-width: 0;
+}
+
+.booking-flow--wizard .booking-confirmation-experience__actions {
+  display: flex;
+  flex-direction: column;
+  flex-wrap: wrap;
+  gap: 0.55rem;
+  align-items: stretch;
+  margin: 0;
+  padding: 0;
+}
+
+.booking-flow--wizard .booking-confirmation-experience__recommendations {
+  grid-area: recommendations;
+  min-width: 0;
+}
+
+.booking-flow--wizard .booking-confirmation-experience__recommendations:not(:has(.booking-recommendations)) {
+  display: none;
+}
+
+.booking-flow--wizard .booking-confirmation-experience__cta {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 44px;
+  min-width: 44px;
+  padding: 0.65rem 1rem;
+  box-sizing: border-box;
+  font-size: 0.95rem;
+  font-weight: 700;
+  line-height: 1.2;
+  text-decoration: none;
+  border-radius: var(--radius-12, 12px);
+}
+
+.booking-flow--wizard .booking-confirmation-experience__cta--primary {
+  width: 100%;
+}
+
+.booking-flow--wizard .booking-confirmation-experience__cta--secondary {
+  width: 100%;
+  color: var(--fg);
+  border: 1px solid color-mix(in srgb, var(--border) 85%, transparent);
+  background: transparent;
+}
+
+.booking-flow--wizard .booking-confirmation-experience__cta--secondary:hover,
+.booking-flow--wizard .booking-confirmation-experience__cta--secondary:focus-visible {
+  border-color: color-mix(in srgb, var(--accent, var(--fg)) 55%, var(--border));
+  color: var(--accent, var(--fg));
+}
+
+/* Back-compat alias if any leftover markup still uses __secondary / __link */
 .booking-flow--wizard .booking-confirmation-experience__secondary {
   display: flex;
   flex-wrap: wrap;
@@ -772,14 +845,9 @@
   text-decoration-thickness: 1px;
 }
 
-.booking-flow--wizard .booking-confirmation-experience__link:hover,
-.booking-flow--wizard .booking-confirmation-experience__link:focus-visible {
-  color: var(--accent, var(--fg));
-}
-
 .booking-flow--wizard .booking-confirmation {
   display: grid;
-  gap: 0.75rem;
+  gap: 0.85rem;
   padding: 0;
   border: none;
   background: transparent;
@@ -842,46 +910,114 @@
 .booking-flow--wizard .booking-confirmation__heading {
   margin: 0;
   font-family: var(--font-heading);
-  font-size: clamp(1.35rem, 3.8vw, 1.85rem);
+  font-size: clamp(1.45rem, 3.8vw, 1.95rem);
   text-transform: none;
   letter-spacing: 0.01em;
-  line-height: 1.15;
+  line-height: 1.12;
   color: var(--fg);
 }
 
 .booking-flow--wizard .booking-confirmation__body {
   margin: 0;
-  max-width: 42ch;
+  max-width: 36ch;
   color: var(--muted);
   font-size: 0.9rem;
   line-height: 1.4;
 }
 
+/* Appointment note â€” ticket hierarchy, not admin field grid */
 .booking-flow--wizard .booking-confirmation--pass .booking-confirmation__pass,
 .booking-flow--wizard .booking-confirmation--pass .booking-confirmation__summary {
+  position: relative;
   margin: 0;
   display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 0.45rem 0.85rem;
+  grid-template-columns: minmax(0, 1fr);
+  gap: 0.35rem 0.75rem;
   text-align: left;
-  padding: 0.7rem 0.85rem;
-  border: 1px solid color-mix(in srgb, var(--border) 75%, transparent);
+  padding: 0.85rem 0.95rem;
+  border: 1px solid color-mix(in srgb, var(--border) 70%, transparent);
+  border-left: 3px solid color-mix(in srgb, var(--accent, var(--fg)) 55%, var(--border));
   border-radius: var(--radius-12, 12px);
-  background: color-mix(in srgb, var(--surface-2, var(--surface)) 80%, var(--bg));
+  background: color-mix(in srgb, var(--surface-2, var(--surface)) 88%, var(--bg));
+  box-shadow: inset 0 1px 0 color-mix(in srgb, var(--fg) 4%, transparent);
 }
 
 .booking-flow--wizard .booking-confirmation--pass .booking-confirmation__pass-field,
 .booking-flow--wizard .booking-confirmation--pass .booking-confirmation__summary-row {
   display: grid;
-  gap: 0.12rem;
+  gap: 0.1rem;
   min-width: 0;
   padding: 0;
   border: none;
 }
 
+.booking-flow--wizard .booking-confirmation--pass .booking-confirmation__pass-field--service {
+  margin-bottom: 0.15rem;
+}
+
+.booking-flow--wizard .booking-confirmation--pass .booking-confirmation__pass-field--service dt {
+  font-size: 0.62rem;
+  letter-spacing: 0.14em;
+}
+
+.booking-flow--wizard .booking-confirmation--pass .booking-confirmation__pass-field--service dd {
+  font-family: var(--font-heading);
+  font-size: clamp(1.05rem, 2.6vw, 1.28rem);
+  font-weight: 700;
+  line-height: 1.2;
+  overflow-wrap: anywhere;
+}
+
+/* Visually combine date + time; keep dt/dd for a11y */
+.booking-flow--wizard .booking-confirmation--pass .booking-confirmation__pass-field--date,
+.booking-flow--wizard .booking-confirmation--pass .booking-confirmation__pass-field--time {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+.booking-flow--wizard .booking-confirmation--pass .booking-confirmation__pass-when {
+  font-size: 0.98rem;
+  font-weight: 600;
+  line-height: 1.35;
+  color: var(--fg);
+  overflow-wrap: anywhere;
+}
+
+.booking-flow--wizard .booking-confirmation--pass .booking-confirmation__pass-field--barber dt {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+.booking-flow--wizard .booking-confirmation--pass .booking-confirmation__pass-field--barber dd {
+  font-size: 0.9rem;
+  font-weight: 500;
+  color: var(--muted);
+  overflow-wrap: anywhere;
+}
+
+.booking-flow--wizard .booking-confirmation--pass .booking-confirmation__pass-with {
+  font-weight: 500;
+}
+
 .booking-flow--wizard .booking-confirmation--pass .booking-confirmation__pass-field--ref {
-  grid-column: 1 / -1;
-  opacity: 0.82;
+  margin-top: 0.35rem;
+  padding-top: 0.45rem;
+  border-top: 1px solid color-mix(in srgb, var(--border) 65%, transparent);
+  opacity: 0.9;
 }
 
 .booking-flow--wizard .booking-confirmation--pass .booking-confirmation__pass-field dt,
@@ -905,8 +1041,9 @@
 }
 
 .booking-flow--wizard .booking-confirmation--pass .booking-confirmation__pass-field--ref dd {
-  font-size: 0.8rem;
+  font-size: 0.78rem;
   font-weight: 500;
+  letter-spacing: 0.04em;
   color: var(--muted);
 }
 
@@ -963,17 +1100,54 @@
   min-width: min(100%, 14rem);
 }
 
-@media (min-width: 40rem) {
-  .booking-flow--wizard .booking-confirmation--pass .booking-confirmation__pass,
-  .booking-flow--wizard .booking-confirmation--pass .booking-confirmation__summary {
-    grid-template-columns: repeat(4, minmax(0, 1fr));
-    align-items: start;
-    gap: 0.55rem 1rem;
-    padding: 0.75rem 1rem;
+@media (min-width: 64rem) {
+  .booking-flow--wizard .booking-confirmation-experience:has(.booking-recommendations) {
+    grid-template-columns: minmax(0, 0.38fr) minmax(0, 0.62fr);
+    grid-template-areas: 'primary recommendations';
+    gap: 1rem 1.75rem;
+    max-width: min(75rem, 100%);
+    padding: 0.65rem 0 1.25rem;
+    padding-inline: 0.25rem;
   }
 
-  .booking-flow--wizard .booking-confirmation--pass .booking-confirmation__pass-field--ref {
-    grid-column: auto;
+  .booking-flow--wizard .booking-confirmation-experience:not(:has(.booking-recommendations)) {
+    max-width: min(36rem, 100%);
+    grid-template-columns: minmax(0, 1fr);
+    grid-template-areas: 'primary';
+  }
+
+  .booking-flow--wizard .booking-confirmation-experience__primary {
+    gap: 1.15rem;
+  }
+
+  .booking-flow--wizard .booking-confirmation-experience__actions {
+    flex-direction: row;
+    flex-wrap: wrap;
+    align-items: center;
+  }
+
+  .booking-flow--wizard .booking-confirmation-experience__cta--primary {
+    width: auto;
+    min-width: min(100%, 14rem);
+    flex: 1 1 12rem;
+  }
+
+  .booking-flow--wizard .booking-confirmation-experience__cta--secondary {
+    width: auto;
+    flex: 0 1 auto;
+    padding-inline: 0.85rem;
+  }
+
+  .booking-flow--wizard .booking-confirmation-experience__recommendations:has(.booking-recommendations) {
+    align-self: stretch;
+    padding: 0.85rem 1rem 1rem;
+    border: 1px solid color-mix(in srgb, var(--border) 70%, transparent);
+    border-radius: var(--radius-12, 12px);
+    background: color-mix(in srgb, var(--surface-2, var(--surface)) 70%, var(--bg));
+  }
+
+  .booking-page-wrap:has(.booking-flow--confirmation) {
+    width: min(100% - 2.5rem, 78rem);
   }
 }
 
@@ -984,7 +1158,7 @@
   line-height: 1.45;
 }
 
-/* ── Preview mode (landing) ──────────────────────────────────── */
+/* â”€â”€ Preview mode (landing) â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
 
 .booking-flow--wizard.booking-flow--preview .booking-form-content {
   max-width: none;
@@ -998,7 +1172,7 @@
   padding-bottom: 0;
 }
 
-/* ── Tablet+ ─────────────────────────────────────────────────── */
+/* â”€â”€ Tablet+ â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
 
 @media (min-width: 640px) {
   .booking-flow--wizard .slot-grid {
@@ -1016,7 +1190,7 @@
   }
 }
 
-/* ── Desktop: centered stage + slim review ───────────────────── */
+/* â”€â”€ Desktop: centered stage + slim review â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
 
 @media (min-width: 1024px) {
   .booking-page-wrap {
@@ -1084,7 +1258,7 @@
 
   /* When review CTA is available on details, keep sticky nav for Continue on earlier steps */
   .booking-flow--wizard .booking-flow__right:has(.booking-review-panel__cta) ~ * {
-    /* no-op placeholder — specificity handled below */
+    /* no-op placeholder â€” specificity handled below */
   }
 }
 
@@ -1105,7 +1279,7 @@
   }
 }
 
-/* ── Booking confirmation recommendations rail ───────────────── */
+/* â”€â”€ Booking confirmation recommendations rail â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
 
 .booking-flow--wizard .booking-recommendations.sf-shop {
   display: grid;
@@ -1166,9 +1340,51 @@
   outline-offset: 2px;
 }
 
-/* Booking-scoped compact card geometry — does not affect shop/PDP rails */
+/* Booking-scoped card geometry â€” does not affect shop/PDP rails */
+.booking-flow--wizard .booking-recommendations--confirm {
+  gap: 0.25rem;
+  padding-top: 0.25rem;
+  border-top: none;
+}
+
+.booking-flow--wizard .booking-recommendations--confirm .booking-recommendations__header {
+  gap: 0.1rem;
+  margin-bottom: 0;
+}
+
+.booking-flow--wizard .booking-recommendations--confirm .booking-recommendations__eyebrow {
+  margin: 0;
+  font-size: 0.62rem;
+  font-weight: 700;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--muted);
+}
+
+.booking-flow--wizard .booking-recommendations--confirm .booking-recommendations__heading {
+  font-size: clamp(1.15rem, 2.6vw, 1.45rem);
+}
+
+.booking-flow--wizard .booking-recommendations--confirm .booking-recommendations__lede {
+  font-size: 0.8rem;
+  max-width: 42rem;
+}
+
 .booking-flow--wizard .booking-recommendations--confirm .product-rail {
-  --product-rail-visible-cards: 3.15;
+  --product-rail-visible-cards: 2.55;
+}
+
+.booking-flow--wizard .booking-recommendations--confirm .product-rail__header {
+  margin-bottom: 0;
+  gap: 0.25rem;
+  min-height: 0;
+  padding-bottom: 0;
+}
+
+.booking-flow--wizard .booking-recommendations--confirm .product-rail__viewport,
+.booking-flow--wizard .booking-recommendations--confirm .product-rail__track {
+  margin-top: 0;
+  padding-top: 0;
 }
 
 .booking-flow--wizard .booking-recommendations--confirm .sf-card-category {
@@ -1181,44 +1397,44 @@
 .booking-flow--wizard .booking-recommendations--confirm .product-rail__sf-media,
 .booking-flow--wizard .booking-recommendations--confirm .product-rail__media .sf-media,
 .booking-flow--wizard .booking-recommendations--confirm .sf-media {
-  aspect-ratio: 5 / 4 !important;
-  max-height: 7rem;
+  aspect-ratio: 4 / 3 !important;
+  max-height: none;
   min-height: 0;
   height: auto;
+  object-fit: cover;
+  object-position: center 30%;
 }
 
 .booking-flow--wizard .booking-recommendations--confirm .sf-card-body {
-  gap: 0.12rem;
-  padding: 0.35rem 0.5rem 0.45rem;
+  gap: 0.2rem;
+  padding: 0.45rem 0.55rem 0.55rem;
 }
 
 .booking-flow--wizard .booking-recommendations--confirm .sf-card-footer {
-  gap: 0.35rem;
-  margin-top: 0.15rem;
+  gap: 0.4rem;
+  margin-top: 0.2rem;
 }
 
 .booking-flow--wizard .booking-recommendations--confirm .sf-card-name {
-  font-size: 0.86rem;
-  line-height: 1.2;
+  font-size: 0.92rem;
+  font-weight: 700;
+  line-height: 1.25;
 }
 
 .booking-flow--wizard .booking-recommendations--confirm .sf-card-price {
-  font-size: 0.82rem;
-}
-
-.booking-flow--wizard .booking-recommendations--confirm .product-rail__header {
-  margin-bottom: 0.15rem;
+  font-size: 0.86rem;
+  font-weight: 600;
 }
 
 @media (max-width: 39.99rem) {
   .booking-flow--wizard .booking-recommendations.sf-shop {
     overflow-x: visible;
-    padding-top: 0.55rem;
+    padding-top: 0.35rem;
     margin-top: 0;
   }
 
   .booking-flow--wizard .booking-recommendations--confirm .product-rail {
-    --product-rail-visible-cards: 1.28;
+    --product-rail-visible-cards: 1.22; /* ~80vw card + peek */
     --product-rail-padding: 0px;
   }
 
@@ -1232,12 +1448,14 @@
   .booking-flow--wizard .booking-recommendations--confirm .product-rail__sf-media,
   .booking-flow--wizard .booking-recommendations--confirm .product-rail__media .sf-media,
   .booking-flow--wizard .booking-recommendations--confirm .sf-media {
-    max-height: 6.25rem;
+    aspect-ratio: 1 / 1 !important;
+    max-height: none;
   }
 
   .booking-flow--wizard .booking-recommendations .product-rail__header {
     align-items: flex-start;
-    gap: 0.5rem;
+    gap: 0.25rem;
+    margin-bottom: 0.15rem;
   }
 
   .booking-flow--wizard .booking-recommendations .sf-card .sf-atc .sf-atc-label-full {
@@ -1247,16 +1465,21 @@
   .booking-flow--wizard .booking-recommendations .sf-card .sf-atc .sf-atc-label-short {
     display: inline;
   }
+
+  .booking-flow--wizard .booking-recommendations--confirm .booking-recommendations__lede {
+    font-size: 0.76rem;
+  }
 }
 
 @media (min-width: 64rem) {
   .booking-flow--wizard .booking-recommendations.sf-shop {
     margin-top: 0;
-    padding-top: 0.7rem;
+    padding-top: 0;
+    border-top: none;
   }
 
   .booking-flow--wizard .booking-recommendations--confirm .product-rail {
-    --product-rail-visible-cards: 3.4;
+    --product-rail-visible-cards: 2.65;
   }
 
   .booking-flow--wizard .booking-recommendations--confirm .sf-card-media,
@@ -1265,6 +1488,97 @@
   .booking-flow--wizard .booking-recommendations--confirm .product-rail__sf-media,
   .booking-flow--wizard .booking-recommendations--confirm .product-rail__media .sf-media,
   .booking-flow--wizard .booking-recommendations--confirm .sf-media {
-    max-height: 7.5rem;
+    aspect-ratio: 4 / 3 !important;
+  }
+}
+
+/* Ultra-short phones: keep note + rail eyebrow/heading above the fold */
+@media (max-width: 22.5rem) {
+  .booking-flow--wizard .booking-confirmation-experience {
+    gap: 0.65rem;
+    padding: 0.25rem 0 0.75rem;
+  }
+
+  .booking-flow--wizard .booking-confirmation-experience__primary {
+    gap: 0.75rem;
+  }
+
+  .booking-flow--wizard .booking-confirmation--pass .booking-confirmation__announce {
+    gap: 0.45rem 0.55rem;
+  }
+
+  .booking-flow--wizard .booking-confirmation__icon {
+    width: 1.85rem;
+    height: 1.85rem;
+  }
+
+  .booking-flow--wizard .booking-confirmation__heading {
+    font-size: clamp(1.25rem, 5.5vw, 1.55rem);
+  }
+
+  .booking-flow--wizard .booking-confirmation__body {
+    font-size: 0.84rem;
+    line-height: 1.35;
+  }
+
+  .booking-flow--wizard .booking-confirmation--pass .booking-confirmation__pass,
+  .booking-flow--wizard .booking-confirmation--pass .booking-confirmation__summary {
+    padding: 0.65rem 0.75rem;
+    gap: 0.25rem 0.5rem;
+  }
+
+  .booking-flow--wizard .booking-confirmation--pass .booking-confirmation__pass-field--service dd {
+    font-size: clamp(0.98rem, 4.2vw, 1.12rem);
+  }
+
+  .booking-flow--wizard .booking-confirmation--pass .booking-confirmation__pass-field--ref {
+    margin-top: 0.2rem;
+    padding-top: 0.3rem;
+    display: flex;
+    flex-wrap: wrap;
+    align-items: baseline;
+    gap: 0.35rem 0.55rem;
+  }
+
+  .booking-flow--wizard .booking-confirmation--pass .booking-confirmation__pass-field--ref dt,
+  .booking-flow--wizard .booking-confirmation--pass .booking-confirmation__pass-field--ref dd {
+    display: inline;
+  }
+
+  .booking-flow--wizard .booking-confirmation-experience__actions {
+    gap: 0.25rem;
+  }
+
+  .booking-flow--wizard .booking-confirmation-experience__cta--primary {
+    padding: 0.55rem 0.85rem;
+  }
+
+  .booking-flow--wizard .booking-confirmation-experience__cta--secondary {
+    border: none;
+    background: transparent;
+    padding: 0.35rem 0.15rem;
+    font-size: 0.88rem;
+    font-weight: 600;
+    justify-content: flex-start;
+    text-decoration: underline;
+    text-underline-offset: 0.15em;
+  }
+
+  .booking-flow--wizard .booking-recommendations--confirm .booking-recommendations__header {
+    gap: 0.15rem;
+    margin-bottom: 0.1rem;
+  }
+
+  .booking-flow--wizard .booking-recommendations--confirm .booking-recommendations__eyebrow {
+    font-size: 0.62rem;
+  }
+
+  .booking-flow--wizard .booking-recommendations--confirm .booking-recommendations__heading {
+    font-size: 1.05rem;
+    line-height: 1.2;
+  }
+
+  .booking-flow--wizard .booking-recommendations--confirm .booking-recommendations__lede {
+    display: none;
   }
 }

@@ -960,21 +960,53 @@ export default function BookingFlow({
         : null;
 
     const secondaryActions = [
-      ...(timelineCta ? [timelineCta] : []),
+      ...(timelineCta ? [{ ...timelineCta, variant: 'primary' as const }] : []),
       ...(confirmation.type === 'demo' && publicDemoMode
-        ? (presentation?.confirmCtas ?? []).map((cta) => ({ label: cta.label, href: cta.href }))
+        ? (presentation?.confirmCtas ?? []).map((cta) => ({
+            label: cta.label,
+            href: cta.href,
+            variant: (cta.primary ? 'primary' : 'secondary') as 'primary' | 'secondary',
+          }))
         : confirmation.type === 'demo'
           ? [
-              { label: 'See pricing', href: '/#pricing' },
-              { label: 'Ask about my setup', href: '/#contact' },
+              { label: 'See pricing', href: '/#pricing', variant: 'secondary' as const },
+              { label: 'Ask about my setup', href: '/#contact', variant: 'secondary' as const },
             ]
           : []),
     ];
 
+    const demoRecommendationProducts =
+      confirmation.serviceId && persistDemoSessionBooking && confirmation.type === 'demo'
+        ? getDemoRecommendationProducts(confirmation.serviceId)
+        : null;
+
+    const recommendationsRail =
+      confirmation.serviceId && publicShopId && (confirmation.type === 'booked' || confirmation.type === 'rescheduled') ? (
+        <BookingRecommendationsRail
+          shopId={publicShopId}
+          serviceId={confirmation.serviceId}
+          serviceName={confirmation.summary.service}
+          productHrefBase={`/shop/${publicShopId}`}
+          themeId="kersivo"
+          priceFormat="gbp"
+        />
+      ) : demoRecommendationProducts && demoRecommendationProducts.length >= 2 ? (
+        <BookingRecommendationsRail
+          shopId="blackline-barbers-demo"
+          serviceId={confirmation.serviceId!}
+          serviceName={confirmation.summary.service}
+          productHrefBase="/demo/shop"
+          themeId="blackline"
+          priceFormat="demo"
+          imageFallback="wordmark"
+          demoProducts={demoRecommendationProducts}
+        />
+      ) : null;
+
     return (
       <section className="surface booking-shell booking-flow booking-flow--wizard booking-flow--confirmation">
         <div className="booking-form-content">
-          <BookingConfirmationExperience secondaryActions={secondaryActions}>
+          <BookingConfirmationExperience secondaryActions={secondaryActions} recommendations={recommendationsRail}>
             <BookingConfirmationPanel
               ref={confirmationRef}
               variant={confirmation.type}
@@ -989,28 +1021,6 @@ export default function BookingFlow({
                   : null
               }
             />
-            {confirmation.serviceId && publicShopId && (confirmation.type === 'booked' || confirmation.type === 'rescheduled') ? (
-              <BookingRecommendationsRail
-                shopId={publicShopId}
-                serviceId={confirmation.serviceId}
-                serviceName={confirmation.summary.service}
-                productHrefBase={`/shop/${publicShopId}`}
-                themeId="kersivo"
-                priceFormat="gbp"
-              />
-            ) : null}
-            {confirmation.serviceId && persistDemoSessionBooking && confirmation.type === 'demo' ? (
-              <BookingRecommendationsRail
-                shopId="blackline-barbers-demo"
-                serviceId={confirmation.serviceId}
-                serviceName={confirmation.summary.service}
-                productHrefBase="/demo/shop"
-                themeId="blackline"
-                priceFormat="demo"
-                imageFallback="wordmark"
-                demoProducts={getDemoRecommendationProducts(confirmation.serviceId)}
-              />
-            ) : null}
           </BookingConfirmationExperience>
         </div>
       </section>

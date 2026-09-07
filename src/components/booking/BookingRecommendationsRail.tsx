@@ -157,9 +157,9 @@ export default function BookingRecommendationsRail({
   }
 
   const trimmedServiceName = serviceName?.trim() || '';
-  const heading = trimmedServiceName
-    ? `Picked for your ${trimmedServiceName}`
-    : 'Picked for your appointment';
+  const lede = trimmedServiceName
+    ? `Picked for your ${trimmedServiceName}. Add now and collect at your appointment.`
+    : 'Picked for your appointment. Add now and collect at your appointment.';
 
   const themeClass = themeId === 'blackline' ? 'sf-shop sf-shop--blackline' : 'sf-shop sf-shop--kersivo';
 
@@ -171,8 +171,9 @@ export default function BookingRecommendationsRail({
       onClick={onRecommendationInteraction}
     >
       <div className="booking-recommendations__header">
-        <h2 className="booking-recommendations__heading sf-toolbar-heading">{heading}</h2>
-        <p className="booking-recommendations__lede">Add now. Collect at your appointment.</p>
+        <p className="booking-recommendations__eyebrow">Recommended for your appointment</p>
+        <h2 className="booking-recommendations__heading sf-toolbar-heading">Keep the finish going</h2>
+        <p className="booking-recommendations__lede">{lede}</p>
       </div>
       <ProductRail
         products={products}
