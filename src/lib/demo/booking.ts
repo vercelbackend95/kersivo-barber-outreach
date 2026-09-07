@@ -8,9 +8,8 @@ export const BLACKLINE_BOOKING_PRESENTATION: BookingFlowPresentation = {
   sandboxNote:
     'This is a fictional Blackline Barbers booking. No appointment is created, no payment is taken, and your demo details stay in this browser session and are cleared automatically.',
   confirmEyebrow: 'Demo complete',
-  confirmHeading: 'That’s the Blackline booking experience',
-  confirmBody:
-    'Your demo appointment has been added to this browser session. No real appointment was created and no email was sent.',
+  confirmHeading: 'Demo booking complete',
+  confirmBody: 'Saved in this browser only — no real appointment or email.',
   confirmCtas: [{ label: 'Back to Blackline', href: '/demo', primary: false }],
   demoReferencePrefix: 'BL',
   skipCompletionAnalytics: true,

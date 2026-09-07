@@ -36,6 +36,6 @@ test.describe('KERSIVO sandbox booking', () => {
     await page.getByRole('button', { name: 'Complete demo booking' }).click();
 
     await expect(page.getByText('Demo complete')).toBeVisible();
-    await expect(page.getByText('That’s the KERSIVO booking experience')).toBeVisible();
+    await expect(page.getByText('Demo booking complete')).toBeVisible();
   });
 });

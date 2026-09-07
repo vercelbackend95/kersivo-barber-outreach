@@ -34,6 +34,10 @@ test.describe('BLACKLINE booking confirmation to owner timeline', () => {
   test('creates a session booking and focuses it on the owner timeline', async ({ page }) => {
     await page.setViewportSize({ width: 1440, height: 900 });
     await page.goto('/demo/book', { waitUntil: 'domcontentloaded' });
+    const accept = page.getByRole('button', { name: 'Accept all' });
+    if (await accept.isVisible().catch(() => false)) {
+      await accept.click();
+    }
     const bookingSection = page.locator('.bl-booking');
     await expect(bookingSection).toHaveCSS('background-color', 'rgb(11, 12, 14)');
     await expect(page.getByRole('heading', { name: /Choose a service/i })).toHaveCSS(
@@ -57,8 +61,8 @@ test.describe('BLACKLINE booking confirmation to owner timeline', () => {
     await page.getByLabel(/^Email$/i).fill('alex@example.com');
     await page.getByRole('button', { name: 'Complete demo booking' }).click();
 
-    await expect(page.getByRole('heading', { name: /That’s the Blackline booking experience/i })).toBeVisible();
-    const reference = (await page.locator('.booking-confirmation__summary').getByText(/^BL-\d{4}$/).innerText()).trim();
+    await expect(page.getByRole('heading', { name: /Demo booking complete/i })).toBeVisible();
+    const reference = (await page.locator('.booking-confirmation__pass').getByText(/^BL-\d{4}$/).innerText()).trim();
     const timelineLink = page.getByRole('link', { name: TIMELINE_CTA });
     const href = await timelineLink.getAttribute('href');
     expect(href).toBeTruthy();

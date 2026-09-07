@@ -77,7 +77,7 @@ async function completeFromBarberStep() {
   fireEvent.change(screen.getByLabelText(/^Email$/i), { target: { value: 'alex@example.com' } });
   fireEvent.click(screen.getByRole('button', { name: 'Complete demo booking' }));
   await waitFor(() => {
-    expect(screen.getByText('That’s the Blackline booking experience')).toBeTruthy();
+    expect(screen.getByText('Demo booking complete')).toBeTruthy();
   });
 }
 
@@ -109,11 +109,9 @@ describe('BookingFlow BLACKLINE confirmation recommendations', () => {
     await completeFromBarberStep();
 
     expect(
-      screen.getByRole('heading', { name: `Recommended for your ${serviceName}` }),
+      screen.getByRole('heading', { name: `Picked for your ${serviceName}` }),
     ).toBeTruthy();
-    expect(
-      screen.getByText('Chosen to suit your booking. Add now and collect at your appointment.'),
-    ).toBeTruthy();
+    expect(screen.getByText('Add now. Collect at your appointment.')).toBeTruthy();
     expect(screen.getByText(expected[0]!.name)).toBeTruthy();
     expect(fetchSpy).not.toHaveBeenCalled();
   });
@@ -124,8 +122,8 @@ describe('BookingFlow BLACKLINE confirmation recommendations', () => {
     render(<BookingFlow {...flowProps('bl-svc-grey-blending')} />);
     await completeFromBarberStep();
 
-    expect(screen.getByText('That’s the Blackline booking experience')).toBeTruthy();
-    expect(screen.queryByRole('heading', { name: /Recommended for/i })).toBeNull();
+    expect(screen.getByText('Demo booking complete')).toBeTruthy();
+    expect(screen.queryByRole('heading', { name: /Picked for your/i })).toBeNull();
     expect(screen.queryByLabelText('Recommended products')).toBeNull();
   });
 });

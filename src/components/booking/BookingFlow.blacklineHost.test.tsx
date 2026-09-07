@@ -92,7 +92,7 @@ async function completeNoahHaircut() {
   fireEvent.change(screen.getByLabelText(/^Email$/i), { target: { value: 'alex@example.com' } });
   fireEvent.click(screen.getByRole('button', { name: 'Complete demo booking' }));
   await waitFor(() => {
-    expect(screen.getByText('That’s the Blackline booking experience')).toBeTruthy();
+    expect(screen.getByText('Demo booking complete')).toBeTruthy();
   });
   return slot;
 }
@@ -177,7 +177,7 @@ describe('BookingFlow BLACKLINE host', () => {
     expect(screen.queryByRole('link', { name: 'See pricing' })).toBeNull();
     expect(fetchSpy).not.toHaveBeenCalled();
     expect(
-      screen.getByRole('heading', { name: 'Recommended for your Classic Cut & Finish' }),
+      screen.getByRole('heading', { name: 'Picked for your Classic Cut & Finish' }),
     ).toBeTruthy();
     const trackedEvents = trackSpy.mock.calls.map(([eventName]) => eventName);
     expect(trackedEvents).toContain('recommendation_rail_impression');
@@ -214,7 +214,7 @@ describe('BookingFlow BLACKLINE host', () => {
     fireEvent.change(screen.getByLabelText(/^Email$/i), { target: { value: 'alex@example.com' } });
     fireEvent.click(screen.getByRole('button', { name: 'Complete demo booking' }));
     await waitFor(() => {
-      expect(screen.getByText('That’s the Blackline booking experience')).toBeTruthy();
+      expect(screen.getByText('Demo booking complete')).toBeTruthy();
     });
 
     const stored = listBlacklineSessionBookings();

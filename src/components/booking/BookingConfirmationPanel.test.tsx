@@ -19,19 +19,23 @@ describe('BookingConfirmationPanel', () => {
       />,
     );
 
+    expect(screen.getByText('Booking confirmed')).toBeTruthy();
     expect(screen.getByText("You're booked")).toBeTruthy();
-    expect(screen.getByText(/A confirmation email is on the way/i)).toBeTruthy();
+    expect(screen.getByText(/Your appointment details are on their way by email/i)).toBeTruthy();
     expect(screen.queryByText('Demo complete')).toBeNull();
+    expect(screen.getByText('Fade')).toBeTruthy();
+    expect(screen.getByText('Jamie')).toBeTruthy();
   });
 
   it('keeps rescheduled copy promising a fresh email', () => {
     render(<BookingConfirmationPanel variant="rescheduled" />);
 
-    expect(screen.getByText('Booking rescheduled')).toBeTruthy();
-    expect(screen.getByText(/A fresh email with the updated details is on the way/i)).toBeTruthy();
+    expect(screen.getByText('Booking updated')).toBeTruthy();
+    expect(screen.getByText('Your new time is confirmed')).toBeTruthy();
+    expect(screen.getByText(/Updated appointment details are on their way by email/i)).toBeTruthy();
   });
 
-  it('demo variant does not promise email and offers voluntary CTAs', () => {
+  it('demo variant does not promise email', () => {
     render(
       <BookingConfirmationPanel
         variant="demo"
@@ -40,15 +44,14 @@ describe('BookingConfirmationPanel', () => {
     );
 
     expect(screen.getByText('Demo complete')).toBeTruthy();
-    expect(screen.getByText('That’s the KERSIVO booking experience')).toBeTruthy();
-    expect(screen.getByText(/No appointment was created and no email was sent/i)).toBeTruthy();
-    expect(screen.queryByText(/confirmation email is on the way/i)).toBeNull();
+    expect(screen.getByText('Demo booking complete')).toBeTruthy();
+    expect(screen.getByText(/Saved in this browser only/i)).toBeTruthy();
+    expect(screen.queryByText(/on their way by email/i)).toBeNull();
     expect(screen.queryByText("You're booked")).toBeNull();
-    expect(screen.getByRole('link', { name: 'See pricing' })).toBeTruthy();
-    expect(screen.getByRole('link', { name: 'Ask about my setup' })).toBeTruthy();
+    expect(screen.queryByRole('link')).toBeNull();
   });
 
-  it('uses host demo copy, CTAs, and a demo reference when provided', () => {
+  it('uses host demo copy and shows subordinate reference', () => {
     render(
       <BookingConfirmationPanel
         variant="demo"
@@ -60,24 +63,28 @@ describe('BookingConfirmationPanel', () => {
           reference: 'BL-4821',
         }}
         demoCopy={{
-          heading: 'That’s the Blackline booking experience',
-          body: 'Your demo appointment has been added to this browser session. No real appointment was created and no email was sent.',
-          ctas: [{ label: 'Back to Blackline', href: '/demo', primary: false }],
-        }}
-        postConfirmCta={{
-          label: 'See your booking on the timeline',
-          href: '/demo/admin?section=bookings_dashboard&bookingId=abc&bookingDate=2026-08-12&demoJourney=booking',
+          heading: 'Demo booking complete',
+          body: 'Saved in this browser only — no real appointment or email.',
         }}
       />,
     );
 
-    expect(screen.getByText('That’s the Blackline booking experience')).toBeTruthy();
+    expect(screen.getByText('Demo booking complete')).toBeTruthy();
     expect(screen.getByText('BL-4821')).toBeTruthy();
-    expect(screen.getByRole('link', { name: 'See your booking on the timeline' }).getAttribute('href')).toContain(
-      '/demo/admin',
+    expect(screen.getByLabelText('Booking summary')).toBeTruthy();
+  });
+
+  it('scopes the live region to the success announcement only', () => {
+    const { container } = render(
+      <BookingConfirmationPanel
+        variant="booked"
+        summary={{ service: 'Fade', barber: 'Jamie', date: '18 Jul 2026', time: '09:00' }}
+      />,
     );
-    expect(screen.getByRole('link', { name: 'Back to Blackline' }).getAttribute('href')).toBe('/demo');
-    expect(screen.queryByRole('link', { name: 'View services' })).toBeNull();
-    expect(screen.queryByRole('link', { name: 'See pricing' })).toBeNull();
+
+    const live = container.querySelector('[role="status"][aria-live="polite"]');
+    expect(live).toBeTruthy();
+    expect(live?.classList.contains('booking-confirmation__announce')).toBe(true);
+    expect(live?.querySelector('.booking-confirmation__pass')).toBeNull();
   });
 });

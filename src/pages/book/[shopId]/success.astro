@@ -121,32 +121,35 @@ const calendarHref =
 >
   <main class="container page-wrap booking-page-wrap">
     <BookingThemeRoot client:load preset="kersivo">
-    <section class="surface booking-shell booking-flow booking-flow--wizard" aria-live="polite">
+    <section class="surface booking-shell booking-flow booking-flow--wizard booking-flow--confirmation">
       <div class="booking-form-content">
         {
           ok && summary ? (
-            <>
-              <BookingConfirmationPanel
-                client:load
-                variant="booked"
-                summary={summary}
-                postConfirmCta={
-                  calendarHref
-                    ? { label: 'Add to your calendar', href: calendarHref }
-                    : null
-                }
-              />
-              {serviceId ? (
-                <BookingRecommendationsRail
-                  client:load
-                  shopId={shopId}
-                  serviceId={serviceId}
-                  productHrefBase={`/shop/${shopId}`}
-                  themeId="kersivo"
-                  priceFormat="gbp"
-                />
-              ) : null}
-            </>
+            <div class="booking-confirmation-experience" data-booking-confirmation-experience>
+              <BookingConfirmationPanel client:load variant="booked" summary={summary} />
+              {
+                serviceId ? (
+                  <BookingRecommendationsRail
+                    client:load
+                    shopId={shopId}
+                    serviceId={serviceId}
+                    serviceName={summary.service}
+                    productHrefBase={`/shop/${shopId}`}
+                    themeId="kersivo"
+                    priceFormat="gbp"
+                  />
+                ) : null
+              }
+              {
+                calendarHref ? (
+                  <nav class="booking-confirmation-experience__secondary" aria-label="Next steps">
+                    <a class="booking-confirmation-experience__link" href={calendarHref}>
+                      Add to your calendar
+                    </a>
+                  </nav>
+                ) : null
+              }
+            </div>
           ) : (
             <section class="booking-confirmation booking-confirmation--error" role="alert">
               <div class="booking-confirmation__header">

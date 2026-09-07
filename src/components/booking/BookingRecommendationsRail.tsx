@@ -158,29 +158,27 @@ export default function BookingRecommendationsRail({
 
   const trimmedServiceName = serviceName?.trim() || '';
   const heading = trimmedServiceName
-    ? `Recommended for your ${trimmedServiceName}`
-    : 'Recommended for you';
+    ? `Picked for your ${trimmedServiceName}`
+    : 'Picked for your appointment';
 
   const themeClass = themeId === 'blackline' ? 'sf-shop sf-shop--blackline' : 'sf-shop sf-shop--kersivo';
 
   return (
     <section
-      className={`booking-recommendations sf-pdp-related ${themeClass} ${className ?? ''}`.trim()}
+      className={`booking-recommendations booking-recommendations--confirm sf-pdp-related ${themeClass} ${className ?? ''}`.trim()}
       aria-label="Recommended products"
       data-sf-theme={themeId}
       onClick={onRecommendationInteraction}
     >
       <div className="booking-recommendations__header">
         <h2 className="booking-recommendations__heading sf-toolbar-heading">{heading}</h2>
-        <p className="booking-recommendations__lede">
-          Chosen to suit your booking. Add now and collect at your appointment.
-        </p>
+        <p className="booking-recommendations__lede">Add now. Collect at your appointment.</p>
       </div>
       <ProductRail
         products={products}
         productHrefBase={productHrefBase}
         variant="storefront"
-        density="editorial"
+        density="compact"
         showAction="add-to-cart"
         showControls
         showProgress

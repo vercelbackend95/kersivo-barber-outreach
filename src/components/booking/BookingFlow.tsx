@@ -1,4 +1,5 @@
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import BookingConfirmationExperience from './BookingConfirmationExperience';
 import BookingConfirmationPanel, { type BookingSummary } from './BookingConfirmationPanel';
 import BookingRecommendationsRail from './BookingRecommendationsRail';
 import {
@@ -358,7 +359,7 @@ export default function BookingFlow({
   );
   const [stepKey, setStepKey] = useState(0);
   const [isAdvancing, setIsAdvancing] = useState(false);
-  const confirmationRef = useRef<HTMLElement | null>(null);
+  const confirmationRef = useRef<HTMLDivElement | null>(null);
   const bookingShellRef = useRef<HTMLElement | null>(null);
   const stepIndicatorRef = useRef<HTMLElement | null>(null);
   const isAdvancingRef = useRef(false);
@@ -942,7 +943,7 @@ export default function BookingFlow({
 
   if (confirmation) {
     const allowDemoCta = confirmation.type !== 'demo' || Boolean(postConfirmCta?.availableForDemo);
-    const cta =
+    const timelineCta =
       allowDemoCta &&
       postConfirmCta?.destination === 'admin-timeline' &&
       confirmation.bookingId &&
@@ -958,47 +959,59 @@ export default function BookingFlow({
           }
         : null;
 
+    const secondaryActions = [
+      ...(timelineCta ? [timelineCta] : []),
+      ...(confirmation.type === 'demo' && publicDemoMode
+        ? (presentation?.confirmCtas ?? []).map((cta) => ({ label: cta.label, href: cta.href }))
+        : confirmation.type === 'demo'
+          ? [
+              { label: 'See pricing', href: '/#pricing' },
+              { label: 'Ask about my setup', href: '/#contact' },
+            ]
+          : []),
+    ];
+
     return (
-      <section className="surface booking-shell booking-flow booking-flow--wizard" aria-live="polite">
+      <section className="surface booking-shell booking-flow booking-flow--wizard booking-flow--confirmation">
         <div className="booking-form-content">
-          <BookingConfirmationPanel
-            ref={confirmationRef}
-            variant={confirmation.type}
-            summary={confirmation.summary}
-            postConfirmCta={cta}
-            demoCopy={
-              publicDemoMode
-                ? {
-                    eyebrow: presentation?.confirmEyebrow,
-                    heading: presentation?.confirmHeading,
-                    body: presentation?.confirmBody,
-                    ctas: presentation?.confirmCtas,
-                  }
-                : null
-            }
-          />
-          {confirmation.serviceId && publicShopId && (confirmation.type === 'booked' || confirmation.type === 'rescheduled') ? (
-            <BookingRecommendationsRail
-              shopId={publicShopId}
-              serviceId={confirmation.serviceId}
-              serviceName={confirmation.summary.service}
-              productHrefBase={`/shop/${publicShopId}`}
-              themeId="kersivo"
-              priceFormat="gbp"
+          <BookingConfirmationExperience secondaryActions={secondaryActions}>
+            <BookingConfirmationPanel
+              ref={confirmationRef}
+              variant={confirmation.type}
+              summary={confirmation.summary}
+              demoCopy={
+                publicDemoMode
+                  ? {
+                      eyebrow: presentation?.confirmEyebrow,
+                      heading: presentation?.confirmHeading,
+                      body: presentation?.confirmBody,
+                    }
+                  : null
+              }
             />
-          ) : null}
-          {confirmation.serviceId && persistDemoSessionBooking && confirmation.type === 'demo' ? (
-            <BookingRecommendationsRail
-              shopId="blackline-barbers-demo"
-              serviceId={confirmation.serviceId}
-              serviceName={confirmation.summary.service}
-              productHrefBase="/demo/shop"
-              themeId="blackline"
-              priceFormat="demo"
-              imageFallback="wordmark"
-              demoProducts={getDemoRecommendationProducts(confirmation.serviceId)}
-            />
-          ) : null}
+            {confirmation.serviceId && publicShopId && (confirmation.type === 'booked' || confirmation.type === 'rescheduled') ? (
+              <BookingRecommendationsRail
+                shopId={publicShopId}
+                serviceId={confirmation.serviceId}
+                serviceName={confirmation.summary.service}
+                productHrefBase={`/shop/${publicShopId}`}
+                themeId="kersivo"
+                priceFormat="gbp"
+              />
+            ) : null}
+            {confirmation.serviceId && persistDemoSessionBooking && confirmation.type === 'demo' ? (
+              <BookingRecommendationsRail
+                shopId="blackline-barbers-demo"
+                serviceId={confirmation.serviceId}
+                serviceName={confirmation.summary.service}
+                productHrefBase="/demo/shop"
+                themeId="blackline"
+                priceFormat="demo"
+                imageFallback="wordmark"
+                demoProducts={getDemoRecommendationProducts(confirmation.serviceId)}
+              />
+            ) : null}
+          </BookingConfirmationExperience>
         </div>
       </section>
     );

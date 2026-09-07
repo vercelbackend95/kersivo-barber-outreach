@@ -1717,6 +1717,54 @@ html[data-theme='blackline']::view-transition-new(root) {
   color: var(--bl-ivory);
 }
 
+/* Compact confirmation: reclaim section/header space so commerce fits above the fold */
+[data-theme='blackline'] .bl-booking:has(.booking-flow--confirmation) {
+  padding-block: 0.65rem 1.1rem;
+}
+
+[data-theme='blackline']:has(.booking-flow--confirmation) .bl-demo-banner-text {
+  display: none;
+}
+
+[data-theme='blackline']:has(.booking-flow--confirmation) .bl-demo-banner-inner {
+  flex-direction: row;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem;
+  padding-block: 0.35rem;
+}
+
+[data-theme='blackline']:has(.booking-flow--confirmation) .bl-demo-banner-back,
+[data-theme='blackline']:has(.booking-flow--confirmation) .bl-demo-banner-switch {
+  min-height: 2.5rem;
+}
+
+/* Compact confirmation header: keep shop identity + Bag, simplify chrome */
+[data-theme='blackline']:has(.booking-flow--confirmation) .sf-header .sf-nav,
+[data-theme='blackline']:has(.booking-flow--confirmation) .sf-header .sf-header-cta,
+[data-theme='blackline']:has(.booking-flow--confirmation) .sf-header .sf-nav-toggle,
+[data-theme='blackline']:has(.booking-flow--confirmation) .sf-header .sf-nav-layer,
+[data-theme='blackline']:has(.booking-flow--confirmation) .sf-header .bl-nav,
+[data-theme='blackline']:has(.booking-flow--confirmation) .sf-header .bl-header-cta,
+[data-theme='blackline']:has(.booking-flow--confirmation) .sf-header .bl-nav-toggle,
+[data-theme='blackline']:has(.booking-flow--confirmation) .sf-header .bl-nav-layer {
+  display: none;
+}
+
+[data-theme='blackline']:has(.booking-flow--confirmation) .sf-header-inner {
+  min-height: 3.25rem;
+  gap: 0.75rem;
+}
+
+[data-theme='blackline']:has(.booking-flow--confirmation) .sf-header-actions {
+  margin-left: auto;
+}
+
+[data-theme='blackline']:has(.booking-flow--confirmation) .sf-bag-button,
+[data-theme='blackline']:has(.booking-flow--confirmation) .bl-bag-button {
+  display: inline-flex;
+}
+
 [data-theme='blackline'] .bl-booking .booking-recommendations__heading {
   font-family: var(--bl-font-display);
   color: var(--bl-ivory);
